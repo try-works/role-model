@@ -6,6 +6,7 @@ import path from "node:path";
 import {
   runTrackBLearningPass,
 } from "../src/track-b-learning-pass.js";
+import { emitRoutePackageAttributionForPromotion } from "../src/track-b-contract-emission.js";
 import { resolveRoutePackageDescriptorFromRollouts } from "../src/track-b-runtime.js";
 
 /**
@@ -303,4 +304,91 @@ test("run150 item 6 a caller that names no contract state root still writes noth
     passInput({ routePackageDescriptor: { ...descriptor } }),
   );
   expect(existsSync(contractsDirectory(stateRoot))).toBe(false);
+});
+
+/**
+ * The learner sweep in `cli.ts` is the second live promoter: measured on the rebuilt runtime today, a pack
+ * was promoted by the sweep's own `knowledge:promote-candidate` call (`pack-89a530d7...`, 2026-09-25T05:23:58Z)
+ * with no attribution beside it. Both promoters therefore go through one emitter, so the artifact's shape and
+ * its refusal vocabulary cannot drift between the two paths.
+ */
+test("run150 item 6 the shared emitter names the member that is missing instead of publishing a partial claim", () => {
+  const stateRoot = mkdtempSync(path.join(tmpdir(), "run150-attribution-"));
+  const base = {
+    stateRoot,
+    scopeId: "standalone-runtime-stage",
+    channel: "stage",
+    packId: "pack:1",
+    scope: { taskTypeId: "task:route-selection", endpointId: routePackage },
+    nowMs: Date.parse("2026-09-25T10:00:00Z"),
+  } as const;
+
+  const emitted = emitRoutePackageAttributionForPromotion({
+    ...base,
+    receipt: { ...validationReceipt },
+    descriptor: { ...descriptor },
+  });
+  expect(emitted.emitted).toBe(true);
+
+  const withoutKey = (key: string): Record<string, unknown> => {
+    const copy: Record<string, unknown> = { ...validationReceipt };
+    delete copy[key];
+    return copy;
+  };
+  const cases: ReadonlyArray<{
+    label: string;
+    receipt: Record<string, unknown>;
+    descriptor: typeof descriptor | null;
+    reason: string;
+  }> = [
+    {
+      label: "no descriptor",
+      receipt: { ...validationReceipt },
+      descriptor: null,
+      reason: "the caller did not resolve the promoted package's endpoint and model",
+    },
+    {
+      label: "no manifest ref",
+      receipt: withoutKey("caseManifestRef"),
+      descriptor: { ...descriptor },
+      reason: "the validation receipt carries no case manifest reference",
+    },
+    {
+      label: "no baseline",
+      receipt: withoutKey("baselineId"),
+      descriptor: { ...descriptor },
+      reason: "the validation receipt carries no baseline package",
+    },
+    {
+      label: "no quality delta",
+      receipt: withoutKey("qualityDelta"),
+      descriptor: { ...descriptor },
+      reason: "the validation receipt carries no measured quality delta",
+    },
+    {
+      label: "no confidence",
+      receipt: withoutKey("confidenceLower"),
+      descriptor: { ...descriptor },
+      reason: "the validation receipt carries no confidence lower bound",
+    },
+    {
+      label: "no sample count",
+      receipt: withoutKey("holdoutSampleCount"),
+      descriptor: { ...descriptor },
+      reason: "the validation receipt carries no holdout sample count",
+    },
+  ];
+
+  for (const row of cases) {
+    const result = emitRoutePackageAttributionForPromotion({
+      ...base,
+      packId: `pack:${row.label}`,
+      receipt: row.receipt,
+      descriptor: row.descriptor,
+    });
+    expect(result, row.label).toMatchObject({ emitted: false, reason: row.reason });
+  }
+
+  const files = readdirSync(contractsDirectory(stateRoot));
+  expect(files.filter((name) => name.startsWith("RoutePackageAttributionV1-"))).toHaveLength(1);
 });

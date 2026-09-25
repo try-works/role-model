@@ -4,6 +4,7 @@ import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "
 import { readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { DatabaseSync } from "node:sqlite";
 import { parseArgs } from "node:util";
 
 import type { NormalizedCatalog } from "@role-model-router/catalog";
@@ -144,6 +145,37 @@ import {
  * source that cannot be read resolves through `readLearningPolicyFile` to the base route, whose
  * `production_only` default keeps production guarded.
  */
+/**
+ * Run 100 addendum 15 item 6: the learner sweep promotes packs for candidates whose comparison was
+ * finalized by the extension's own sweeps, and it holds the route package (an endpoint id) but not the
+ * model behind it. The endpoint registry is the durable authority for that mapping - `<stateRoot>/<scopeId>/
+ * memory/memory.sqlite`, the same location the public runtime adapter is configured with - so the lookup
+ * reads it and answers `null` when the endpoint is unknown (the emitter then refuses the artifact by name
+ * rather than attributing the evidence to a model nobody recorded).
+ */
+function readEndpointModelIdForRoutePackage(input: {
+  readonly runtimeStateRoot: string;
+  readonly scopeId: string;
+  readonly routePackage: string;
+}): string | null {
+  const routePackage = input.routePackage.trim();
+  if (!routePackage) return null;
+  const databasePath = path.join(input.runtimeStateRoot, input.scopeId, "memory", "memory.sqlite");
+  if (!existsSync(databasePath)) return null;
+  let database: DatabaseSync | null = null;
+  try {
+    database = new DatabaseSync(databasePath, { readOnly: true });
+    const row = database
+      .prepare("SELECT model_id FROM runtime_endpoints WHERE endpoint_id = ?")
+      .get(routePackage) as { model_id?: unknown } | undefined;
+    return typeof row?.model_id === "string" && row.model_id.trim() ? row.model_id.trim() : null;
+  } catch {
+    return null;
+  } finally {
+    database?.close();
+  }
+}
+
 function resolveChannelScopedReplayLedgerLimits(input: {
   readonly repoRoot: string;
   readonly runtimeStateRoot: string;
@@ -189,6 +221,7 @@ import {
   buildExperiencePackCandidate,
   buildRouteLearningValidationReceipt,
   emitTrackBContract,
+  emitRoutePackageAttributionForPromotion,
 } from "./track-b-contract-emission.js";
 import {
   TRACK_B_CANONICAL_EXTENSION_IDS,
@@ -5134,6 +5167,70 @@ export async function main(): Promise<void> {
                       `[run107] learner sweep: pack ${packId.slice(0, 24)} was not emitted as a contract: ${String(
                         (error as { message?: unknown })?.message ?? error,
                       ).slice(0, 200)}`,
+                    );
+                  }
+                  /**
+                   * Run 100 addendum 15 item 6, second half. Measured on the rebuilt stage runtime
+                   * 2026-09-25: this sweep promoted `pack-89a530d7...` at 05:23:58Z and `contracts\` held
+                   * zero `RoutePackageAttributionV1` beside it, because only the shadow pipeline's learning
+                   * pass had the emitter. Both promoters now go through one emitter, so a promoted package
+                   * always names the route package the evidence belongs to and the numbers the gate used.
+                   * A member the sweep cannot resolve refuses the artifact by name (logged, never thrown):
+                   * the promotion itself must not depend on the artifact.
+                   */
+                  try {
+                    const packScope =
+                      packCandidate.scope &&
+                      typeof packCandidate.scope === "object" &&
+                      !Array.isArray(packCandidate.scope)
+                        ? (packCandidate.scope as Record<string, unknown>)
+                        : {};
+                    const attributionEndpointId =
+                      typeof packScope.endpointId === "string" && packScope.endpointId.trim()
+                        ? packScope.endpointId.trim()
+                        : routePackage;
+                    const taskTypeId =
+                      typeof candidateScope.taskTypeId === "string" && candidateScope.taskTypeId.trim()
+                        ? candidateScope.taskTypeId.trim()
+                        : typeof comparability.taskTypeId === "string" &&
+                            comparability.taskTypeId.trim()
+                          ? comparability.taskTypeId.trim()
+                          : "task:route-selection";
+                    const roleId =
+                      typeof candidateScope.roleId === "string" && candidateScope.roleId.trim()
+                        ? candidateScope.roleId.trim()
+                        : null;
+                    const attribution = emitRoutePackageAttributionForPromotion({
+                      stateRoot: options.runtimeStateRoot,
+                      scopeId: options.scopeId,
+                      channel,
+                      packId,
+                      receipt,
+                      descriptor: {
+                        endpointId: attributionEndpointId,
+                        modelId:
+                          readEndpointModelIdForRoutePackage({
+                            runtimeStateRoot: options.runtimeStateRoot,
+                            scopeId: options.scopeId,
+                            routePackage: attributionEndpointId,
+                          }) ?? "",
+                      },
+                      scope: {
+                        taskTypeId,
+                        endpointId: attributionEndpointId,
+                        ...(roleId ? { roleId } : {}),
+                      },
+                    });
+                    if (!attribution.emitted) {
+                      console.error(
+                        `[run150] learner sweep: attribution for ${packId.slice(0, 24)} was not emitted: ${attribution.reason}`,
+                      );
+                    }
+                  } catch (error) {
+                    console.error(
+                      `[run150] learner sweep: attribution for ${packId.slice(0, 24)} was not emitted as a contract: ${String(
+                        (error as { message?: unknown })?.message ?? error,
+                      ).slice(0, 600)}`,
                     );
                   }
                   /**

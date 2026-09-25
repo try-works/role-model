@@ -384,6 +384,133 @@ export function buildRoutePackageAttribution(input: RoutePackageAttributionInput
   };
 }
 
+const boundedText = (value: unknown): string | null =>
+  typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
+
+const boundedNumber = (value: unknown): number | null =>
+  typeof value === "number" && Number.isFinite(value) ? value : null;
+
+export interface RoutePackageAttributionDescriptor {
+  readonly endpointId: string;
+  readonly modelId: string;
+  readonly modelRevision?: string | null;
+  readonly samplingProfileId?: string | null;
+  readonly promptAdapterId?: string | null;
+  readonly toolPolicyId?: string | null;
+  readonly experiencePackId?: string | null;
+}
+
+export type RoutePackageAttributionEmission =
+  | { readonly emitted: true; readonly emission: TrackBContractEmission }
+  | { readonly emitted: false; readonly reason: string };
+
+/**
+ * Run 100 addendum 15 item 6, second half: two live paths promote a pack - the shadow pipeline's learning
+ * pass and the learner sweep in `cli.ts` - and measured on 2026-09-25 the sweep promoted a pack
+ * (`pack-89a530d7...`, 05:23:58Z) while `contracts\` still held zero `RoutePackageAttributionV1`. Both
+ * promoters go through this one emitter so the artifact's shape and its refusal vocabulary cannot drift
+ * apart between them.
+ *
+ * Every member is durable evidence: the promoted pack as `packageId`, the arm's endpoint/model as its
+ * identity, and the validation receipt's own baseline, case manifest reference, quality delta, confidence
+ * lower bound and holdout sample count. A member that cannot be resolved refuses the artifact by name -
+ * the caller logs that reason - because an attribution whose manifest ref or deltas are absent would claim
+ * evidence nobody can check.
+ */
+export function emitRoutePackageAttributionForPromotion(input: {
+  readonly stateRoot: string;
+  readonly scopeId: string;
+  readonly channel: string;
+  readonly packId: string;
+  readonly receipt: Readonly<Record<string, unknown>>;
+  readonly descriptor: RoutePackageAttributionDescriptor | null;
+  readonly scope: Record<string, unknown>;
+  readonly nowMs?: number;
+}): RoutePackageAttributionEmission {
+  const endpointId = boundedText(input.descriptor?.endpointId);
+  const modelId = boundedText(input.descriptor?.modelId);
+  const baselinePackageId = boundedText(input.receipt.baselineId);
+  const evidenceManifestRef = boundedText(input.receipt.caseManifestRef);
+  const qualityDelta = boundedNumber(input.receipt.qualityDelta);
+  const confidence = boundedNumber(input.receipt.confidenceLower);
+  const sampleCount = boundedNumber(input.receipt.holdoutSampleCount);
+  const refusal =
+    !endpointId || !modelId
+      ? "the caller did not resolve the promoted package's endpoint and model"
+      : !evidenceManifestRef
+        ? "the validation receipt carries no case manifest reference"
+        : !baselinePackageId
+          ? "the validation receipt carries no baseline package"
+          : qualityDelta === null
+            ? "the validation receipt carries no measured quality delta"
+            : confidence === null
+              ? "the validation receipt carries no confidence lower bound"
+              : sampleCount === null
+                ? "the validation receipt carries no holdout sample count"
+                : null;
+  if (
+    refusal ||
+    !endpointId ||
+    !modelId ||
+    !baselinePackageId ||
+    !evidenceManifestRef ||
+    qualityDelta === null ||
+    confidence === null ||
+    sampleCount === null
+  ) {
+    return { emitted: false, reason: refusal ?? "the attribution could not be completed" };
+  }
+  const promptAdapterId = boundedText(input.descriptor?.promptAdapterId);
+  const toolPolicyId = boundedText(input.descriptor?.toolPolicyId);
+  const experiencePackId = boundedText(input.descriptor?.experiencePackId);
+  return {
+    emitted: true,
+    emission: emitTrackBContract({
+      stateRoot: input.stateRoot,
+      scopeId: input.scopeId,
+      contract: buildRoutePackageAttribution({
+        attributionId: `attribution:${input.packId}`,
+        routePackage: {
+          packageId: input.packId,
+          endpointId,
+          modelId,
+          /**
+           * The runtime's endpoints and catalog entries declare no model revision, so the honest value is the
+           * one the closed contract's required member can carry: "unversioned" says the arm's identity is its
+           * endpoint and model, not a model snapshot the runtime cannot attest. A caller that knows a revision
+           * passes it through unchanged.
+           */
+          modelRevision: boundedText(input.descriptor?.modelRevision) ?? "unversioned",
+          samplingProfileId: boundedText(input.descriptor?.samplingProfileId) ?? "unversioned",
+          ...(promptAdapterId ? { promptAdapterId } : {}),
+          ...(toolPolicyId ? { toolPolicyId } : {}),
+          ...(experiencePackId ? { experiencePackId } : {}),
+        },
+        scope: input.scope,
+        baselinePackageId,
+        qualityDelta,
+        /**
+         * The receipt records a quality comparison only. Neither live promotion path measures a
+         * per-comparison cost or latency delta, so both stay at the contract's zero rather than at a number
+         * nobody measured.
+         */
+        costDelta: 0,
+        latencyDelta: 0,
+        sampleCount: Math.max(0, Math.trunc(sampleCount)),
+        /**
+         * The gate's own floor is `confidenceLower`, so that is the confidence the artifact reports: a reader
+         * can reproduce the promotion decision from the artifact and the receipt.
+         */
+        confidence,
+        evidenceManifestRef,
+        channel: input.channel,
+        scopeId: input.scopeId,
+        createdAtMs: input.nowMs ?? Date.now(),
+      }),
+    }),
+  };
+}
+
 export interface RoutePackageActivationReceiptInput {
   readonly receiptId: string;
   readonly packageId: string;
