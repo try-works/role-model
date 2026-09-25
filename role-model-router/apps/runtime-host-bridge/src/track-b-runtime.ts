@@ -12077,8 +12077,30 @@ export function createOwnedTrackBSidecarSpec(options: {
       let ready = false;
       let stderr = "";
       child.stderr.setEncoding("utf8");
+      /**
+       * Run 100 addendum 15: the sidecar's stderr was accumulated into a 16 KB string used only for readiness-failure
+       * messages and never forwarded, so every diagnostic written inside `runtime-operations-server.mjs` was
+       * invisible in the stage logs - measured across `run137` and `run138`, where instrumented profile-readback lines
+       * never appeared in either log while the sidecar demonstrably ran that code. The rolling buffer stays (it makes
+       * a startup refusal readable), and each line is now also forwarded to the host's stderr, where the stage logs
+       * capture it. Lines are bounded so a chatty sidecar cannot flood the log.
+       */
+      let stderrCarry = "";
+      const forwardStderrLine = (line: string): void => {
+        const trimmed = line.trim();
+        if (!trimmed) return;
+        console.error(`[track-b-sidecar] ${trimmed.slice(0, 400)}`);
+      };
       child.stderr.on("data", (chunk: string) => {
         stderr = `${stderr}${chunk}`.slice(-16_384);
+        stderrCarry += chunk;
+        const parts = stderrCarry.split("\n");
+        stderrCarry = parts.pop() ?? "";
+        for (const line of parts) forwardStderrLine(line);
+      });
+      child.stderr.on("end", () => {
+        if (stderrCarry) forwardStderrLine(stderrCarry);
+        stderrCarry = "";
       });
       child.once("exit", () => {
         exited = true;
