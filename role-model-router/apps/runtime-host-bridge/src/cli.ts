@@ -174,6 +174,7 @@ import {
   LEARNING_GROUP_PAGE_LIMIT,
   activationStageAllowsPackActivation,
   assembleDurableLearnerValidationValue,
+  serveLearnerSweepRetrieval,
   buildTrackBLearningEvidenceSummary,
   classifyPackActivationAnswer,
   collectPagedComparisonGroups,
@@ -4789,6 +4790,35 @@ export async function main(): Promise<void> {
           } catch (error) {
             console.error(
               `[run101] retrieval index rebuild refused: ${String(
+                (error as { message?: unknown })?.message ?? error,
+              ).slice(0, 160)}`,
+            );
+          }
+          /**
+           * Run 100 addendum 15 / item 7: the index has a driver; the *retrieval* had none. One bounded shadow
+           * query per tick, with its receipt recorded durably by the Knowledge Store, is what makes the ranking
+           * path observable at all (`knowledge_retrieval_receipts` read 0 while the index was fully built).
+           */
+          try {
+            const served = await serveLearnerSweepRetrieval({
+              scopeId: options.scopeId,
+              invoke: (extensionId, capability, value) =>
+                runtime.invoke(extensionId, envelopeFor(extensionId, capability, value)),
+            });
+            if (served.served) {
+              console.error(
+                `[run146] learner sweep served retrieval results=${served.resultCount} matches=${served.matchCount} receipt=${
+                  served.receiptId ?? "-"
+                } recorded=${served.durableReceipt.recorded}`,
+              );
+            } else {
+              console.error(
+                `[run146] learner sweep retrieval not served: ${String(served.reason ?? "unknown").slice(0, 160)}`,
+              );
+            }
+          } catch (error) {
+            console.error(
+              `[run146] learner sweep retrieval failed: ${String(
                 (error as { message?: unknown })?.message ?? error,
               ).slice(0, 160)}`,
             );

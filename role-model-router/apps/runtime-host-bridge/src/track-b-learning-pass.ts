@@ -295,6 +295,115 @@ export function assembleDurableLearnerValidationValue(
   };
 }
 
+/**
+ * Run 100 addendum 15 / item 7 (S19): the retrieval plane's *served* half.
+ *
+ * Measured live (`run138-cdaeaf3f`, `run144-092d5a26`): the knowledge worker's index is built and current
+ * (`knowledge_worker_candidates` 291 -> 435, FTS rows equal to it, 25 -> 31 index generations) while
+ * `knowledge_retrieval_receipts` reads 0 in the durable Knowledge Store. The index has a driver (one
+ * `knowledge:rebuild-index` per learner sweep) but nothing ever *serves* a retrieval, so the ranking path, its
+ * bounded receipt and the readback the Learning surface would render can never be observed - a retrieval that never
+ * runs is indistinguishable from one that is broken.
+ *
+ * The sweep therefore serves exactly one bounded shadow query per tick and records its receipt durably. Two rules
+ * travel with it, matching the sidecar composition: a store refusal degrades the *receipt* (the retrieval was still
+ * served) and a worker refusal is reported, never thrown into the sweep.
+ */
+export const RUN100_SWEEP_RETRIEVAL_QUERY = "outperformed holdout routing";
+/** The worker's own bound is 64; the sweep asks for a page, not the whole corpus. */
+export const RUN100_SWEEP_RETRIEVAL_LIMIT = 8;
+
+export interface ServeLearnerSweepRetrievalInput {
+  readonly scopeId: string;
+  readonly query?: string;
+  readonly limit?: number;
+  readonly invoke: (
+    extensionId: string,
+    capability: string,
+    value: Record<string, unknown>,
+  ) => Promise<unknown>;
+}
+
+export interface ServedLearnerSweepRetrieval {
+  readonly served: boolean;
+  readonly resultCount: number;
+  readonly matchCount: number;
+  readonly queryHash: string | null;
+  readonly receiptId: string | null;
+  readonly durableReceipt: { readonly recorded: boolean; readonly reason?: string };
+  readonly reason?: string;
+}
+
+function asBoundedRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+export async function serveLearnerSweepRetrieval(
+  input: ServeLearnerSweepRetrievalInput,
+): Promise<ServedLearnerSweepRetrieval> {
+  const query =
+    typeof input.query === "string" && input.query.trim().length > 0
+      ? input.query.trim().slice(0, 128)
+      : RUN100_SWEEP_RETRIEVAL_QUERY;
+  const requestedLimit = Number.isSafeInteger(input.limit) ? Number(input.limit) : RUN100_SWEEP_RETRIEVAL_LIMIT;
+  const limit = Math.min(Math.max(requestedLimit, 1), 64);
+  let receipt: Record<string, unknown>;
+  try {
+    receipt = asBoundedRecord(
+      await input.invoke("knowledge-worker", "knowledge:retrieve", {
+        plane: "shadow",
+        scopeId: input.scopeId,
+        query,
+        filters: { activeOnly: true },
+        limit,
+      }),
+    );
+  } catch (error) {
+    return {
+      served: false,
+      resultCount: 0,
+      matchCount: 0,
+      queryHash: null,
+      receiptId: null,
+      durableReceipt: { recorded: false },
+      reason: String((error as { message?: unknown })?.message ?? error).slice(0, 200),
+    };
+  }
+  const resultCount = Number.isFinite(Number(receipt.resultCount)) ? Number(receipt.resultCount) : 0;
+  const matchCount = Number.isFinite(Number(receipt.matchCount)) ? Number(receipt.matchCount) : 0;
+  const queryHash = typeof receipt.queryHash === "string" && receipt.queryHash ? receipt.queryHash : null;
+  try {
+    const recorded = asBoundedRecord(
+      await input.invoke("knowledge-store", "knowledge:record-retrieval", { receipt }),
+    );
+    const receiptId = typeof recorded.receiptId === "string" && recorded.receiptId ? recorded.receiptId : null;
+    return {
+      served: true,
+      resultCount,
+      matchCount,
+      queryHash,
+      receiptId,
+      durableReceipt: receiptId
+        ? { recorded: true }
+        : { recorded: false, reason: "the store answered no receipt id" },
+    };
+  } catch (error) {
+    return {
+      served: true,
+      resultCount,
+      matchCount,
+      queryHash,
+      receiptId: null,
+      durableReceipt: {
+        recorded: false,
+        reason: String((error as { message?: unknown })?.message ?? error).slice(0, 200),
+      },
+    };
+  }
+}
+
 export interface DurableLearnerDerivationInput {
   readonly channel: string;
   readonly scope: string;
