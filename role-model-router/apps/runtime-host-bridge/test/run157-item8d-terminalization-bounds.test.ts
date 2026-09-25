@@ -1,7 +1,10 @@
 import { expect, test } from "vitest";
 
 import { terminalizeAbandonedEvaluation } from "../src/evaluation-orphan-terminalization.js";
-import { evaluationJobExistsFromGetJobAnswer } from "../src/cli.js";
+import {
+  evaluationJobExistsFromGetJobAnswer,
+  evaluationJobStatusFromGetJobAnswer,
+} from "../src/cli.js";
 
 /**
  * Run 100 addendum 16 item 8d — delegated census, 2026-09-25 (`E:\tmp\run100-item8d-report.md`).
@@ -205,6 +208,95 @@ test("run157 item 8d an unknown existence answer still attempts the cancel", asy
     },
   });
   expect(seen).toEqual([ENTRY.scope]);
+});
+
+/**
+ * Run 100 — the evaluation audit's operator-signal finding: **156 cancel refusals per process start** (153
+ * already `failed`, 3 already `completed`) produced 312 log lines per start (156 `invoke-failed` from the host
+ * bridge plus 156 `terminalization not applied`), and the cross-cutting audit measured **496 of 509**
+ * `invoke-failed` lines per start as exactly this no-op bookkeeping — noise that camouflaged the 7 SQLite lock
+ * failures and 6 frame refusals.
+ *
+ * The durable store already reports those rows as terminal, so the give-up must not ask the boundary to cancel
+ * them: a job the store reports `completed`/`failed`/`cancelled` is a benign no-op with **no invoke at all**.
+ * Anything the store reports as non-terminal is still cancelled, and an unknown answer keeps the old path.
+ */
+test("run157 item 8d a job the store already reports terminal is a no-op, not a cancel", async () => {
+  const seen: string[] = [];
+  for (const status of ["completed", "failed", "cancelled"]) {
+    const result = await terminalizeAbandonedEvaluation({
+      entry: { ...ENTRY, evaluationJobId: `evaluation-replay-terminal-${status}-${Date.now()}` },
+      channel: "stage",
+      operatorScope: "standalone-runtime-stage",
+      reason: "give up",
+      jobStatus: async () => status,
+      invoke: async (_capability, _value, scope) => {
+        seen.push(scope);
+        return { capability: "evaluation:cancel-job", scope };
+      },
+    });
+    expect(result, status).toMatchObject({ cancelled: false, benign: true });
+    expect(result.detail, status).toContain(status);
+  }
+  expect(seen).toEqual([]);
+});
+
+test("run157 item 8d a job the store reports in flight is still cancelled", async () => {
+  const seen: string[] = [];
+  const result = await terminalizeAbandonedEvaluation({
+    entry: { ...ENTRY, evaluationJobId: `evaluation-replay-inflight-${Date.now()}` },
+    channel: "stage",
+    operatorScope: "standalone-runtime-stage",
+    reason: "give up",
+    jobStatus: async (scope: string) => (scope === ENTRY.scope ? "queued" : null),
+    invoke: async (_capability, _value, scope) => {
+      seen.push(scope);
+      return { capability: "evaluation:cancel-job", scope };
+    },
+  });
+  expect(seen).toEqual([ENTRY.scope]);
+  expect(result).toMatchObject({ cancelled: true, scope: ENTRY.scope });
+});
+
+test("run157 item 8d an unknown status keeps the previous behaviour", async () => {
+  const seen: string[] = [];
+  await terminalizeAbandonedEvaluation({
+    entry: { ...ENTRY, evaluationJobId: `evaluation-replay-unknownstatus-${Date.now()}` },
+    channel: "stage",
+    operatorScope: "standalone-runtime-stage",
+    reason: "give up",
+    jobStatus: async () => undefined,
+    invoke: async (_capability, _value, scope) => {
+      seen.push(scope);
+      return { capability: "evaluation:cancel-job", scope };
+    },
+  });
+  expect(seen).toEqual([ENTRY.scope]);
+});
+
+test("run157 item 8d the status reader handles the record, the marker and the degradation receipt", () => {
+  expect(evaluationJobStatusFromGetJobAnswer(null)).toBeNull();
+  expect(evaluationJobStatusFromGetJobAnswer({ jobId: "evaluation:1", status: "completed" })).toBe(
+    "completed",
+  );
+  /**
+   * A large job arrives behind the extension's externalization marker; the status lives beside the payload or
+   * inside it, and reading either is what turns the no-op into a suppressed cancel.
+   */
+  expect(
+    evaluationJobStatusFromGetJobAnswer({ transferState: "externalized", businessOutput: { status: "failed" } }),
+  ).toBe("failed");
+  expect(
+    evaluationJobStatusFromGetJobAnswer({
+      transferState: "externalized",
+      businessOutput: { value: { jobId: "evaluation:1", status: "cancelled" } },
+    }),
+  ).toBe("cancelled");
+  // A read that failed says nothing about the row: unknown, so the caller keeps the previous behaviour.
+  expect(
+    evaluationJobStatusFromGetJobAnswer({ schemaVersion: "role-model.degradation-receipt.v1", code: "timeout" }),
+  ).toBeUndefined();
+  expect(evaluationJobStatusFromGetJobAnswer({ transferState: "externalized" })).toBeUndefined();
 });
 
 /**

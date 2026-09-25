@@ -39,7 +39,23 @@ export interface AbandonedEvaluationTerminalizationInput {
    * the old path exactly.
    */
   readonly jobExists?: (scope: string) => Promise<boolean | null>;
+  /**
+   * Run 100 (evaluation audit's operator-signal finding): the durable status of the job in this scope, so a row
+   * the store already reports terminal is a **benign no-op with no invoke at all**. Measured before this:
+   * 156 cancel refusals per process start (153 already `failed`, 3 already `completed`) produced 312 log lines,
+   * and 496 of 509 `invoke-failed` lines per start were exactly this bookkeeping — noise that camouflaged the
+   * real lock and frame failures. `null` means the row is absent in that scope, `undefined` means unknown; both
+   * keep the previous behaviour.
+   */
+  readonly jobStatus?: (scope: string) => Promise<string | null | undefined>;
 }
+
+/** The extension's terminal set (`TERMINAL_EVALUATION_JOB_STATUSES`): these can never be cancelled. */
+const TERMINAL_EVALUATION_STATUSES: ReadonlySet<string> = new Set([
+  "cancelled",
+  "completed",
+  "failed",
+]);
 
 export interface AbandonedEvaluationTerminalizationResult {
   readonly cancelled: boolean;
@@ -123,6 +139,27 @@ export async function terminalizeAbandonedEvaluation(
   let detail: string | null = null;
   let attempted = 0;
   for (const scope of scopes) {
+    /**
+     * Ask the durable authority before paying for a cancel: a terminal row needs no cancelling, and a scope that
+     * does not hold the row needs no cancel either. Both answers are reads, so neither produces the bridge's
+     * `invoke-failed` line.
+     */
+    if (input.jobStatus) {
+      const status = await input.jobStatus(scope).catch(() => undefined);
+      if (typeof status === "string" && status.trim()) {
+        const normalized = status.trim().toLowerCase();
+        if (TERMINAL_EVALUATION_STATUSES.has(normalized)) {
+          return {
+            cancelled: false,
+            scope,
+            detail: `evaluation job is already ${normalized}`,
+            benign: true,
+          };
+        }
+      } else if (status === null) {
+        continue;
+      }
+    }
     /**
      * Run 100 addendum 28 §2: skip a scope the caller can prove does not hold the row. This is what removes the
      * measured `invoke-failed … evaluation job not found` stream (~11 lines/min) for the 305-of-321 stale ids,

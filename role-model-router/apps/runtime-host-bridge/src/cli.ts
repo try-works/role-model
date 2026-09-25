@@ -318,6 +318,36 @@ export function evaluationJobExistsFromGetJobAnswer(answer: unknown): boolean | 
   return null;
 }
 
+/**
+ * Run 100 (evaluation audit): the same `evaluation:get-job` answer also carries the durable status, which is what
+ * lets the give-up path recognise a row the store already reports terminal instead of paying for a cancel the
+ * extension must refuse (156 per start, 312 log lines, measured). A large-but-present job comes back behind the
+ * extension's externalization marker, so the status is read from the record, from its `businessOutput`, or from
+ * `businessOutput.value` — and an answer that carries no status at all is *unknown* (`undefined`), which keeps
+ * the previous behaviour rather than suppressing a cancel that may be needed.
+ */
+export function evaluationJobStatusFromGetJobAnswer(answer: unknown): string | null | undefined {
+  if (answer === null || answer === undefined) return null;
+  if (typeof answer !== "object" || Array.isArray(answer)) return undefined;
+  const record = answer as Record<string, unknown>;
+  const schemaVersion = typeof record.schemaVersion === "string" ? record.schemaVersion : "";
+  if (schemaVersion.startsWith("role-model.degradation-receipt")) return undefined;
+  const statusOf = (value: unknown): string | undefined => {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+    const status = (value as Record<string, unknown>).status;
+    return typeof status === "string" && status.trim() ? status.trim() : undefined;
+  };
+  const direct = statusOf(record);
+  if (direct) return direct;
+  const businessOutput = statusOf(record.businessOutput);
+  if (businessOutput) return businessOutput;
+  const nested = record.businessOutput && typeof record.businessOutput === "object"
+    ? statusOf((record.businessOutput as Record<string, unknown>).value)
+    : undefined;
+  if (nested) return nested;
+  return undefined;
+}
+
 export function readPersistedControllerEndpointId(input: {
   readonly runtimeStateRoot: string;
   readonly scopeId: string;
@@ -8282,6 +8312,26 @@ export async function main(): Promise<void> {
                     );
                   }
                   return verdict;
+                },
+                /**
+                 * Run 100 (evaluation audit): the same read answers the durable status, so a row the store
+                 * already reports terminal is a benign no-op instead of a cancel that the extension refuses —
+                 * measured as 156 such refusals and 312 log lines per process start.
+                 */
+                jobStatus: async (invokeScope) => {
+                  evaluationJobExistsProbeCounter += 1;
+                  const answer = await activeRuntime.invoke("evaluation-core", {
+                    requestId: `evaluation:get-job:${entry.evaluationJobId}:${evaluationJobExistsProbeCounter}`,
+                    sessionId: `evaluation:get-job:${options.scopeId}`,
+                    protocolVersion: "1.1.0",
+                    channel,
+                    scope: invokeScope,
+                    authorizationEpoch: 1,
+                    capability: "evaluation:get-job",
+                    value: { jobId: entry.evaluationJobId },
+                  });
+                  const decoded = unwrapCapabilityPayload(answer);
+                  return evaluationJobStatusFromGetJobAnswer(decoded);
                 },
                 invoke: (capability, value, invokeScope) =>
                   activeRuntime.invoke("evaluation-core", {
