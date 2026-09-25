@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
 
 import { terminalizeAbandonedEvaluation } from "../src/evaluation-orphan-terminalization.js";
+import { evaluationJobExistsFromGetJobAnswer } from "../src/cli.js";
 
 /**
  * Run 100 addendum 16 item 8d — delegated census, 2026-09-25 (`E:\tmp\run100-item8d-report.md`).
@@ -204,4 +205,35 @@ test("run157 item 8d an unknown existence answer still attempts the cancel", asy
     },
   });
   expect(seen).toEqual([ENTRY.scope]);
+});
+
+/**
+ * Run 100 addendum 28 §2 follow-up, measured on run162: with the pre-check wired, `evaluation:get-job` was
+ * called but the cancel still failed for part of the stream. The check was reading *any* object answer as
+ * "the job exists", and the host answers a failed or degraded read with a degradation receipt — so the pass
+ * cancelled a row that the same store then reported missing. The predicate now recognises only what proves
+ * existence: a job identity, or the externalization marker a large-but-present job is delivered behind.
+ */
+test("run157 item 8d only a real job answer proves existence", () => {
+  expect(evaluationJobExistsFromGetJobAnswer(null)).toBe(false);
+  expect(evaluationJobExistsFromGetJobAnswer(undefined)).toBe(false);
+  expect(evaluationJobExistsFromGetJobAnswer({ jobId: "evaluation-replay-1", status: "scored" })).toBe(
+    true,
+  );
+  // A large job arrives as a transfer marker; it still proves the row is there.
+  expect(
+    evaluationJobExistsFromGetJobAnswer({
+      schemaVersion: "role-model.extension-output-transfer.v1",
+      outputKey: "sha256:abc",
+    }),
+  ).toBe(true);
+  // A degradation receipt says the *read* failed, not that the job is absent: unknown, so the caller keeps
+  // the previous behaviour instead of skipping a row that may exist.
+  expect(
+    evaluationJobExistsFromGetJobAnswer({
+      schemaVersion: "role-model.degradation-receipt.v1",
+      code: "timeout",
+    }),
+  ).toBeNull();
+  expect(evaluationJobExistsFromGetJobAnswer({ unexpected: true })).toBeNull();
 });

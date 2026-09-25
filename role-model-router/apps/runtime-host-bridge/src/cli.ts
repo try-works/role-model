@@ -224,6 +224,31 @@ export function supervisedReplayBranchCaptureRequestId(input: {
   return `replay-${input.requestId}-${candidateHash}-${input.phase}-${input.attemptToken}${contentTag}`;
 }
 
+/**
+ * Run 100 addendum 28 §2 follow-up (measured on run162): the existence pre-check must accept only an answer
+ * that *proves* the row is there. The host answers a failed or degraded read with a degradation receipt, and
+ * reading any object as "exists" made the pass cancel rows the same store then reported missing — the
+ * `invoke-failed … evaluation job not found` stream continued. A real job answer carries a job identity, and a
+ * large-but-present job arrives behind the extension's externalization marker; anything else is *unknown*
+ * (`null`), which keeps the previous behaviour instead of skipping a row that may exist.
+ */
+export function evaluationJobExistsFromGetJobAnswer(answer: unknown): boolean | null {
+  if (answer === null || answer === undefined) return false;
+  if (typeof answer !== "object" || Array.isArray(answer)) return null;
+  const record = answer as Record<string, unknown>;
+  const schemaVersion = typeof record.schemaVersion === "string" ? record.schemaVersion : "";
+  if (schemaVersion.startsWith("role-model.degradation-receipt")) return null;
+  if (typeof record.jobId === "string" && record.jobId.trim().length > 0) return true;
+  if (
+    typeof record.outputKey === "string" ||
+    typeof record.resultHash === "string" ||
+    typeof record.durableLocator === "object"
+  ) {
+    return true;
+  }
+  return null;
+}
+
 export function readPersistedControllerEndpointId(input: {
   readonly runtimeStateRoot: string;
   readonly scopeId: string;
@@ -8128,9 +8153,13 @@ export async function main(): Promise<void> {
                     value: { jobId: entry.evaluationJobId },
                   });
                   const decoded = unwrapCapabilityPayload(answer);
-                  if (decoded === null || decoded === undefined) return false;
-                  // A live job may be externalized behind a transfer marker, which still proves existence.
-                  return true;
+                  /**
+                   * Only an answer that proves the row is there counts as existing: a job identity, or the
+                   * externalization marker a large-but-present job is delivered behind. A degradation receipt
+                   * (or any unexpected shape) is *unknown*, which keeps the previous behaviour rather than
+                   * skipping a row that may exist.
+                   */
+                  return evaluationJobExistsFromGetJobAnswer(decoded);
                 },
                 invoke: (capability, value, invokeScope) =>
                   activeRuntime.invoke("evaluation-core", {
