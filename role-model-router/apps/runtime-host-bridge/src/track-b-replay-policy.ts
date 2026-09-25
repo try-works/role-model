@@ -29,11 +29,61 @@ export const REPLAY_REFUSAL_CODES = [
    */
   "replay_window_elapsed",
   /**
+   * Run 100 addendum `00-requirements.benchmark-traffic-exclusion.addendum-01` (operator instruction
+   * 2026-09-22: "benchmark traffic should never become considered for replay and evaluation, it must
+   * always be excluded from replay and evals"). A benchmark run measures routing and answer quality
+   * with its own pinned candidates and its own store; it is never a source of counterfactual replay
+   * evidence. Terminal by design, so it is refused once and never re-queued.
+   */
+  "benchmark_source_not_replayable",
+  /**
+   * Run 100 addendum 16 item 3 / 8a: the capture's own durable evidence says its recorded reply is the
+   * marker its instruction demanded ("Reply with exactly: ok", the alias and agent-path smoke probes).
+   * Every arm that follows the instruction answers the same token, so a battle over it can only end as
+   * a `single_outcome` tie - measured live: 31 of the newest 60 admissions (52%) were that class and 11
+   * of the newest 16 finalized comparisons were the ties they produce. Terminal by design: the capture
+   * cannot become discriminating evidence, so it is refused once and never re-queued or re-paid for.
+   * The class travels on the capture (`replayEvidenceClass`, written with the root artifact) rather
+   * than being inferred here from prompt size.
+   */
+  "synthetic_probe_not_replayable",
+  /**
    * Run 98 addendum 56 §6: the capture's own endpoint is the endpoint that judges comparisons, so a battle would
    * have the judge score itself (the `judge_candidate_overlap` protection of addenda 30/33). Deferrable, because
    * the operator can change the controller; named, so the class is countable instead of arriving as `replay_failed`.
    */
   "judge_candidate_overlap",
+  /**
+   * Run 108: the configured judge could not be resolved for this capture (the controller-assignment read is
+   * per capture, and its failure is silent: `resolveControllerJudge` answers `""`). Without the judge the arm
+   * planner cannot exclude it, and the strongest alternative arm is planned - then judged by the controller
+   * itself. Measured live: 45 of the newest 300 comparison groups carry `judge_self_evaluation`, and in the
+   * newest 400 measured cases 142 of 144 have the judge as the counterfactual arm, interleaved with clean ones.
+   * Deferrable: the assignment read usually succeeds on the next tick, and a capture is cheaper than a
+   * comparison whose judge is one of its own arms.
+   */
+  "judge_unresolved",
+  /**
+   * Run 100 addendum 16 item 8a (live census 2026-09-25): the private Track B boundary was between
+   * restarts, so the capture was skipped and is retryable — but the class arrived as `replay_failed`,
+   * which names nothing and cannot be counted. Deferrable by design; the wait is now visible.
+   */
+  "replay_boundary_unavailable",
+  /**
+   * Run 100 addendum 16 item 8a: the boundary refuses the same capture idempotency key carrying different
+   * immutable bytes. That is deterministic by construction (24 refused / 3 deferred lifetime), so it is
+   * terminal on the first observation instead of spending the deferral budget and landing in
+   * `replay_failed` wearing a code that says nothing.
+   */
+  "replay_capture_idempotency_conflict",
+  /**
+   * Run 100 addendum 24 §3 (census): two more live classes, named so they stop arriving as `replay_failed`.
+   * Both are recoverable rather than terminal — a job in `awaiting_evaluation` with no evaluation id is exactly
+   * what `isRecoverableHandoff` rebuilds from durable evidence, and a paid-for branch with no host dispatch
+   * receipt is rebuilt from the dispatch's persisted `providerResultRef` — so both stay deferrable.
+   */
+  "replay_evaluation_receipt_missing",
+  "replay_branch_append_unavailable",
 ] as const;
 
 export type ReplayRefusalCode = (typeof REPLAY_REFUSAL_CODES)[number];
@@ -49,8 +99,25 @@ export interface ReplayAdmissionInput {
   readonly budgetAvailable: boolean;
   readonly alreadyProcessed: boolean;
   readonly sourceIsReplayProduced: boolean;
+  /**
+   * Run 100 addendum `00-requirements.benchmark-traffic-exclusion.addendum-01`: the capture's request is
+   * benchmark-originated, so it may never become replay or evaluation input.
+   */
+  readonly sourceIsBenchmark: boolean;
+  /**
+   * Run 100 addendum 16 item 3 / 8a: the capture carries the non-discriminating class its own durable
+   * evidence proved (see `synthetic_probe_not_replayable`). Optional, so a caller that has no capture
+   * class to state keeps its behaviour.
+   */
+  readonly sourceIsSyntheticProbe?: boolean;
   readonly policyIdsResolvable: boolean;
   readonly dependenciesAvailable: boolean;
+  /**
+   * Run 108: `false` when the caller plans arms and could not resolve the configured judge, so the exclusion
+   * that keeps the judge out of its own comparison is unavailable. Omit it where the caller does not plan arms
+   * (the automatic tick's pre-filter), which is why it is optional and defaults to "resolved".
+   */
+  readonly judgeResolved?: boolean;
 }
 
 export type ReplayAdmissionDecision =
@@ -80,6 +147,39 @@ export function decideReplayAdmission(input: ReplayAdmissionInput): ReplayAdmiss
   if (!input.privacyReplayable) {
     return refuse("privacy_denied", "the capture classification does not permit replay");
   }
+  /**
+   * Checked before candidate selection and budget, because it is a property of the source rather than
+   * of the work: a benchmark capture must not even reserve capacity.
+   */
+  if (input.sourceIsBenchmark) {
+    return refuse(
+      "benchmark_source_not_replayable",
+      "benchmark traffic is never a replay or evaluation source",
+    );
+  }
+  /**
+   * Run 100 addendum 16 item 3 / 8a: checked with the benchmark rule and before candidate selection or
+   * budget, because it is a property of the capture rather than of the work: a comparison over a reply
+   * that is the marker the instruction demanded cannot discriminate two candidates, so it must not
+   * reserve capacity, dispatch arms or reach evaluation at all.
+   */
+  if (input.sourceIsSyntheticProbe === true) {
+    return refuse(
+      "synthetic_probe_not_replayable",
+      "the recorded reply is the marker the instruction demanded, so no battle over it can discriminate two candidates",
+    );
+  }
+  /**
+   * Run 108: checked before the arms are planned, because an unresolvable judge means the exclusion that keeps
+   * the judge out of its own comparison is missing - and a comparison the judge is an arm of is ineligible
+   * promotion evidence (`guidance/11`), so it would be paid for and then discarded.
+   */
+  if (input.judgeResolved === false) {
+    return refuse(
+      "judge_unresolved",
+      "the configured judge could not be resolved, so the arms cannot exclude it",
+    );
+  }
   if (!Number.isSafeInteger(input.distinctCandidateCount) || input.distinctCandidateCount < 1) {
     return refuse(
       "no_distinct_candidate_configured",
@@ -108,6 +208,60 @@ export function decideReplayAdmission(input: ReplayAdmissionInput): ReplayAdmiss
 }
 
 export const DEFAULT_REPLAY_CANDIDATE_CAP = 3;
+
+/**
+ * Run 100 addendum `00-requirements.benchmark-traffic-exclusion.addendum-01`: the benchmark harness is
+ * the only writer of these request-id shapes (`bench-<case>-<endpoint>-turnN-<uuid>`,
+ * `bench-judge-…`, `bench-judge-compare-…`, `bench-<runId>-…`), and the runtime prefixes its own
+ * synthetic ids with `req-`, `replay-` or `replay-judge-`. The predicate is deliberately a prefix test
+ * on the capture ref the queue already carries, so the rule is enforced at the boundary rather than
+ * inferred from a payload field a future caller could omit.
+ */
+export function isBenchmarkReplaySourceRef(requestRef: unknown): boolean {
+  return typeof requestRef === "string" && /^bench[-_]/u.test(requestRef.trim());
+}
+
+/**
+ * Run 100 addendum 16 item 3 / 8a: the class a capture carries when its own durable evidence says the
+ * recorded reply is the marker its instruction demanded. The private producer writes it with the
+ * capture root (`replayEvidenceClass.class`), the pending projection forwards it as `sourceClass`, and
+ * the admission decision reads it here - one name, three boundaries, no re-derivation.
+ */
+export const SYNTHETIC_PROBE_SOURCE_CLASS = "marker_echo_probe";
+
+export function isSyntheticProbeSourceClass(value: unknown): boolean {
+  // Exact: the class is a name this runtime writes, not free text. A caller that carries the name with
+  // padding is not stating the class, and the boundary that reads the projection trims before asking.
+  return value === SYNTHETIC_PROBE_SOURCE_CLASS;
+}
+
+/**
+ * Run 100 phase-5 repair (operator instruction 2026-09-21: "the daily dispatch ceiling is only for the
+ * production release, not for dev or stage, disregard it").
+ *
+ * The daily counterfactual/dispatch ceiling is a production delivery guard. On dev and stage the loop
+ * must keep gathering evidence, so the ceiling is measured and receipted but must not refuse work.
+ * The value is versioned configuration (`replayBudgetEnforcement`), resolved by the host and handed to
+ * the ledger; this helper is the single place that turns it plus the runtime channel into a boolean.
+ */
+export type ReplayBudgetEnforcement = "production_only" | "always" | "never";
+
+export const REPLAY_BUDGET_ENFORCEMENT_VALUES: readonly ReplayBudgetEnforcement[] = Object.freeze([
+  "production_only",
+  "always",
+  "never",
+]);
+
+export function replayBudgetEnforcedForChannel(
+  value: ReplayBudgetEnforcement | string | undefined,
+  channel: string | undefined,
+): boolean {
+  if (value === "always") return true;
+  if (value === "never") return false;
+  // `production_only` is the shipped default: every other channel (stage, development, an unknown
+  // channel) keeps gathering evidence.
+  return (channel ?? "").trim().toLowerCase() === "production";
+}
 
 export function selectReplayCandidates(input: {
   readonly configuredEndpointIds: readonly string[];

@@ -1119,7 +1119,15 @@ describe("execution circuit breaker policy", () => {
     expect(fixedToolsPlan.routingRequest.requiredCapabilities).toEqual(
       expect.arrayContaining(["text.chat", "tools.function_calling"]),
     );
-    expect(fixedToolsPlan.routingRequest.allowEndpoints).toEqual([endpoints.fixedHighTools]);
+    // Run 100 addendum 10 E3: the `high` effort orders the alias pool instead of replacing it, so the tool-capable
+    // siblings stay eligible (the payload's `tools.function_calling` requirement is what removes the text-only rows)
+    // and the fixed-high tool-capable instance is the router's preference. The matrix below then exercises the
+    // sibling circuits on a pool that still has members.
+    expect(fixedToolsPlan.routingRequest.allowEndpoints).toEqual([
+      endpoints.fixedHighTools,
+      endpoints.fixedMax,
+    ]);
+    expect(fixedToolsPlan.routingModel?.preferredEndpointIds).toEqual([endpoints.fixedHighTools]);
     const durableAdmission = Object.fromEntries(
       Object.values(endpoints).map((endpointId) => [
         endpointId,

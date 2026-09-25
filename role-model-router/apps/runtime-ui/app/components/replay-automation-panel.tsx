@@ -4,6 +4,7 @@ import {
   controlActionFor,
   formatLearningSummary,
   formatReplayBudget,
+  formatReplayLiveness,
 } from "../lib/replay-status";
 
 /**
@@ -40,6 +41,17 @@ export function ReplayAutomationPanelView({
               : "replay automation unavailable"}
           </p>
           <p className="text-xs text-[var(--rm-fg-muted)]">{formatReplayBudget(view)}</p>
+          {formatReplayLiveness(view) ? (
+            <p
+              className={`text-xs ${
+                view.liveness.strandedEvaluations > 0
+                  ? "text-[var(--rm-danger)]"
+                  : "text-[var(--rm-fg-muted)]"
+              }`}
+            >
+              {formatReplayLiveness(view)}
+            </p>
+          ) : null}
           {learning ? (
             <p className="text-xs text-[var(--rm-fg-muted)]">{formatLearningSummary(learning)}</p>
           ) : null}

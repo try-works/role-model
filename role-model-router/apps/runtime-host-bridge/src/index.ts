@@ -169,7 +169,10 @@ import {
   type DerivedTaxonomyClassification,
   deriveTaxonomyClassification,
 } from "./taxonomy-derivation.js";
-import { createTrackBRouteCaptureQueue } from "./track-b-capture-queue.js";
+import {
+  createTrackBRouteCaptureQueue,
+  resolveDeferredCaptureMaxBytes,
+} from "./track-b-capture-queue.js";
 export type {
   RuntimeContributionOutcome,
   RuntimeContributionObservation,
@@ -3178,6 +3181,8 @@ export interface StartBridgeServerOptions {
   readonly runTrackBSupervisedReplay?: (body: Record<string, unknown>) => Promise<unknown>;
   /** Automatic replay operator surface: bounded loop status and pause/resume control. */
   readonly readTrackBReplayStatus?: () => Promise<unknown> | unknown;
+  /** S42: can the boundary read this capture back, and if not, why. */
+  readonly readCaptureEvidence?: (requestId: string) => Promise<unknown> | unknown;
   readonly controlTrackBReplay?: (body: Record<string, unknown>) => Promise<unknown>;
   /** Bounded Evaluation Core and learner counters for the operator surface. */
   readonly readTrackBLearningSummary?: () => Promise<unknown> | unknown;
@@ -3903,6 +3908,8 @@ export interface CreateRuntimeBridgeBackendOptions {
   readonly runTrackBSupervisedReplay?: (body: Record<string, unknown>) => Promise<unknown>;
   /** Automatic replay operator surface: bounded loop status and pause/resume control. */
   readonly readTrackBReplayStatus?: () => Promise<unknown> | unknown;
+  /** S42: can the boundary read this capture back, and if not, why. */
+  readonly readCaptureEvidence?: (requestId: string) => Promise<unknown> | unknown;
   readonly controlTrackBReplay?: (body: Record<string, unknown>) => Promise<unknown>;
   /** Bounded Evaluation Core and learner counters for the operator surface. */
   readonly readTrackBLearningSummary?: () => Promise<unknown> | unknown;
@@ -9009,6 +9016,55 @@ function resolveAliasRoutingModel(
     : undefined;
 }
 
+/**
+ * The endpoints in the pool that can execute the requested effort: the instances whose fixed effort equals it, or -
+ * when the pool has no such instance - the provider-default instances that declare the level. `[]` means the
+ * requested effort is not executable on this pool. Shared by the strict filter and the alias bias, so the two can
+ * never disagree about which instances an effort names.
+ */
+function selectReasoningEffortInstanceIds(input: {
+  readonly registry: EndpointRegistryResult;
+  readonly allowEndpoints: readonly string[];
+  readonly requestedEffort: string;
+}): readonly string[] {
+  const allowed = new Set(input.allowEndpoints);
+  const matchingFixedEndpointIds = input.registry.endpoints
+    .filter(
+      (endpoint) =>
+        allowed.has(endpoint.identity.endpoint_id) &&
+        (endpoint.identity.reasoning_effort?.trim() || null) === input.requestedEffort,
+    )
+    .map((endpoint) => endpoint.identity.endpoint_id);
+  if (matchingFixedEndpointIds.length > 0) {
+    return input.allowEndpoints.filter((endpointId) =>
+      matchingFixedEndpointIds.includes(endpointId),
+    );
+  }
+
+  // Provider-declared levels are executable on the provider-default instance:
+  // the request keeps the client effort and the receipt records "client".
+  const providerDeclaredEffortEndpointIds = input.registry.endpoints
+    .filter(
+      (endpoint) =>
+        allowed.has(endpoint.identity.endpoint_id) &&
+        (endpoint.identity.reasoning_effort?.trim() || null) === null &&
+        (endpoint.declared.reasoning_effort_levels ?? []).some(
+          (level) => level.trim() === input.requestedEffort,
+        ),
+    )
+    .map((endpoint) => endpoint.identity.endpoint_id);
+  if (providerDeclaredEffortEndpointIds.length > 0) {
+    return input.allowEndpoints.filter((endpointId) =>
+      providerDeclaredEffortEndpointIds.includes(endpointId),
+    );
+  }
+
+  // Provider-default is its own endpoint instance. An unsupported requested
+  // effort must not silently change the base endpoint's identity and semantics
+  // at execution time.
+  return [];
+}
+
 function filterRequestedModelPoolByReasoningEffort(input: {
   readonly registry: EndpointRegistryResult;
   readonly requestedModel: string;
@@ -9031,42 +9087,99 @@ function filterRequestedModelPoolByReasoningEffort(input: {
     return input.allowEndpoints;
   }
 
-  const allowed = new Set(input.allowEndpoints);
-  const matchingFixedEndpointIds = input.registry.endpoints
-    .filter(
-      (endpoint) =>
-        allowed.has(endpoint.identity.endpoint_id) &&
-        (endpoint.identity.reasoning_effort?.trim() || null) === requestedEffort,
-    )
-    .map((endpoint) => endpoint.identity.endpoint_id);
-  if (matchingFixedEndpointIds.length > 0) {
-    return input.allowEndpoints.filter((endpointId) =>
-      matchingFixedEndpointIds.includes(endpointId),
-    );
-  }
+  return selectReasoningEffortInstanceIds({
+    registry: input.registry,
+    allowEndpoints: input.allowEndpoints,
+    requestedEffort,
+  });
+}
 
-  // Provider-declared levels are executable on the provider-default instance:
-  // the request keeps the client effort and the receipt records "client".
-  const providerDeclaredEffortEndpointIds = input.registry.endpoints
-    .filter(
-      (endpoint) =>
-        allowed.has(endpoint.identity.endpoint_id) &&
-        (endpoint.identity.reasoning_effort?.trim() || null) === null &&
-        (endpoint.declared.reasoning_effort_levels ?? []).some(
-          (level) => level.trim() === requestedEffort,
-        ),
-    )
-    .map((endpoint) => endpoint.identity.endpoint_id);
-  if (providerDeclaredEffortEndpointIds.length > 0) {
-    return input.allowEndpoints.filter((endpointId) =>
-      providerDeclaredEffortEndpointIds.includes(endpointId),
-    );
-  }
+/**
+ * Run 100 addendum 10, E1 follow-on: which pass produced a routing verdict.
+ *
+ * The live pass and the replay executor's counterfactual passes share this call site, so the pass cannot be assumed
+ * from the call stack. Measured live on `run118-d26c8343`: a counterfactual pass (`requestId` `replay-req-...`)
+ * reported `pass=live` because the host labelled every call the same way. The replay executor is the only producer
+ * that names its requests with the `replay-` prefix; an unattributed request is reported as `-` rather than guessed to
+ * be live.
+ */
+export function classifyBridgeRoutePass(input: {
+  readonly requestId?: string | null;
+  readonly denyCount: number;
+}): string {
+  const requestId = typeof input.requestId === "string" ? input.requestId.trim() : "";
+  if (requestId.length === 0) return "-";
+  if (requestId.startsWith("replay-")) return "replay";
+  return input.denyCount > 0 ? "live:reroute" : "live";
+}
 
-  // Provider-default is its own endpoint instance. An unsupported requested
-  // effort must not silently change the base endpoint's identity and semantics
-  // at execution time.
-  return [];
+export interface ReasoningEffortPoolApplication {
+  readonly allowEndpoints: readonly string[];
+  readonly preferredEndpointIds: readonly string[];
+}
+
+/**
+ * Run 100 addendum 10, E3: how a requested reasoning effort applies to an already-resolved model pool.
+ *
+ * Measured live (`:3457`, 2026-09-24/25) through the E0 eligibility line: an alias request resolves to all seven
+ * endpoints, and then `filterRequestedModelPoolByReasoningEffort` replaces that pool with the endpoints whose fixed
+ * effort equals the requested one - `baseline.remote-only` + `high` reported `eligible=2`,
+ * `codes=POLICY_DENY_ENDPOINT=5`, and `low` reported `eligible=1` with six denials. The alias's pool is a property
+ * of the alias, not of the effort: the effort belongs in the router's preference channel
+ * (`routingModelRank`), where a preferred instance that is unhealthy, cooling down or over budget is a reason to
+ * pick the next candidate rather than a reason for the pool to have one member.
+ *
+ * An explicit model id or endpoint row is different: there the client named the instance, so exact
+ * effort-instance selection (run 91) stays authoritative, including the documented refusal when the requested
+ * effort is not executable on that pool.
+ */
+export function applyReasoningEffortToModelPool(input: {
+  readonly registry: EndpointRegistryResult;
+  readonly requestedModel: string;
+  readonly requestedEffort?: string | null;
+  readonly allowEndpoints: readonly string[];
+  readonly preferredEndpointIds: readonly string[];
+  readonly aliasRequest: boolean;
+}): ReasoningEffortPoolApplication {
+  const requestedEffort = input.requestedEffort?.trim() || null;
+  if (!input.aliasRequest) {
+    return {
+      allowEndpoints: filterRequestedModelPoolByReasoningEffort({
+        registry: input.registry,
+        requestedModel: input.requestedModel,
+        requestedEffort,
+        allowEndpoints: input.allowEndpoints,
+      }),
+      preferredEndpointIds: input.preferredEndpointIds,
+    };
+  }
+  if (requestedEffort === null) {
+    return {
+      allowEndpoints: input.allowEndpoints,
+      preferredEndpointIds: input.preferredEndpointIds,
+    };
+  }
+  const effortInstanceIds = selectReasoningEffortInstanceIds({
+    registry: input.registry,
+    allowEndpoints: input.allowEndpoints,
+    requestedEffort,
+  });
+  if (effortInstanceIds.length === 0) {
+    // An effort that names no instance in this pool is not executable at all, and it keeps the bounded
+    // `reasoning_effort_unavailable` refusal the callers already raise on an empty pool (run 98). The alias rule is
+    // about the pool's *membership*: an effort that does name instances may order them, never trim them.
+    return {
+      allowEndpoints: [],
+      preferredEndpointIds: [],
+    };
+  }
+  return {
+    allowEndpoints: input.allowEndpoints,
+    preferredEndpointIds: [
+      ...effortInstanceIds,
+      ...input.preferredEndpointIds.filter((endpointId) => !effortInstanceIds.includes(endpointId)),
+    ],
+  };
 }
 
 function applyRequestedEndpointOverride(input: {
@@ -9897,10 +10010,15 @@ export function mapChatCompletionsRequest(
   const effectiveTaxonomyTaskTypeId = taxonomyIdentity.taskTypeId;
   const {
     allowEndpoints: modelAllowEndpoints,
-    preferredEndpointIds: aliasPreferredEndpointIds,
+    preferredEndpointIds: modelPreferredEndpointIds,
     routingDiagnostics,
   } = resolveRequestedModelPool(registry, body.model, modelAliases, inventory);
-  const allowEndpoints = filterRequestedModelPoolByReasoningEffort({
+  /**
+   * E3: an alias is a pool plus a bias. The requested effort orders the pool it already had
+   * (`applyReasoningEffortToModelPool`); only an explicit model id or endpoint row narrows it, so a client that always
+   * sends `reasoning_effort` still sees every candidate the alias offers.
+   */
+  const effortAppliedToModelPool = applyReasoningEffortToModelPool({
     registry,
     requestedModel: body.model,
     requestedEffort: reasoning?.effort,
@@ -9909,7 +10027,11 @@ export function mapChatCompletionsRequest(
       allowEndpoints: modelAllowEndpoints,
       requestOptions,
     }),
+    preferredEndpointIds: modelPreferredEndpointIds,
+    aliasRequest: routingDiagnostics?.aliasResolution !== undefined,
   });
+  const allowEndpoints = effortAppliedToModelPool.allowEndpoints;
+  const aliasPreferredEndpointIds = effortAppliedToModelPool.preferredEndpointIds;
   const effectiveRoutingMode = resolveEffectiveRoutingMode({
     requestedModel: body.model,
     modelAliases,
@@ -10124,10 +10246,12 @@ export function mapResponsesRequest(
   const effectiveTaxonomyTaskTypeId = taxonomyIdentity.taskTypeId;
   const {
     allowEndpoints: modelAllowEndpoints,
-    preferredEndpointIds: aliasPreferredEndpointIds,
+    preferredEndpointIds: modelPreferredEndpointIds,
     routingDiagnostics,
   } = resolveRequestedModelPool(registry, body.model, modelAliases, inventory);
-  const allowEndpoints = filterRequestedModelPoolByReasoningEffort({
+  // E3: the responses path resolves the pool the same way the chat path does - effort biases an alias pool and
+  // narrows only an explicitly named model or endpoint.
+  const effortAppliedToModelPool = applyReasoningEffortToModelPool({
     registry,
     requestedModel: body.model,
     requestedEffort: reasoning?.effort,
@@ -10136,7 +10260,11 @@ export function mapResponsesRequest(
       allowEndpoints: modelAllowEndpoints,
       requestOptions,
     }),
+    preferredEndpointIds: modelPreferredEndpointIds,
+    aliasRequest: routingDiagnostics?.aliasResolution !== undefined,
   });
+  const allowEndpoints = effortAppliedToModelPool.allowEndpoints;
+  const aliasPreferredEndpointIds = effortAppliedToModelPool.preferredEndpointIds;
   const requestedReasoningEffort = reasoning?.effort?.trim() || null;
   if (
     requestedReasoningEffort !== null &&
@@ -15811,6 +15939,97 @@ function writeOperatorUnavailable(response: ServerResponse, capability: string):
   writeJson(response, 503, unavailableOperatorPayload(capability));
 }
 
+/**
+ * Run 113 (addendum 09 R7): the profile learner's own generation document is the authority, and this route
+ * used to discard it. Measured live 2026-09-24: the store held an active estimate with route-package
+ * attribution (`state: "active"`, `effects` as an object) while every profile readback answered "no current
+ * estimate for this scope yet", because the usable-document check accepted only `state` in {available,
+ * unavailable} or an array-valued `effects`. The projection keeps the learner's own document (digest,
+ * generation, effects) in the bounded shape the Learning overview renders, and invents nothing.
+ */
+export function projectLearningProfileEstimate(value: unknown): Record<string, unknown> | null {
+  const record =
+    value && typeof value === "object" && !Array.isArray(value)
+      ? (value as Record<string, unknown>)
+      : null;
+  if (!record) return null;
+  const effects =
+    record.effects && typeof record.effects === "object" && !Array.isArray(record.effects)
+      ? (record.effects as Record<string, unknown>)
+      : null;
+  const generationDocument =
+    String(record.schemaVersion ?? "") === "role-model.profile-estimate-generation.v1";
+  if (!generationDocument && !(record.state === "active" && effects)) return null;
+  let sampleCount = 0;
+  for (const dimension of Object.values(effects ?? {})) {
+    const groups = Array.isArray((dimension as { groups?: unknown })?.groups)
+      ? ((dimension as { groups: unknown[] }).groups as Record<string, unknown>[])
+      : [];
+    for (const group of groups) {
+      const value = Number(group?.sampleCount);
+      if (Number.isFinite(value) && value > 0) sampleCount += value;
+    }
+  }
+  return {
+    schemaVersion: "role-model.learning-profile-inspection.v1",
+    state: "available",
+    reason: null,
+    generationKey: typeof record.generationKey === "string" ? record.generationKey : "default",
+    generation: Number.isSafeInteger(record.generation) ? record.generation : null,
+    estimateDigest: typeof record.estimateDigest === "string" ? record.estimateDigest : null,
+    estimateState: typeof record.state === "string" ? record.state : null,
+    sampleCount,
+    effects: effects ?? {},
+  };
+}
+
+/**
+ * Run 110: the profile readback is the one Learning route whose packaged composition resolves through the
+ * private-endpoint client (measured live: 503 `operator_capability_unavailable` with `detail: private transport
+ * answered null for operator/learning/profile`, while `records`, `decisions`, `policy` and `rollout` answer 200
+ * on the same build). The state readback carries the *same* profile projection and does answer in-process, so
+ * the route projects it from there instead of failing - and when neither source has an estimate, the answer is
+ * the bounded state the Learning overview already renders, not a transport error.
+ */
+export function resolveLearningProfileRouteResult(input: {
+  readonly profileReadback?: unknown;
+  readonly stateReadback?: unknown;
+}): Record<string, unknown> {
+  const usable = (value: unknown): Record<string, unknown> | null => {
+    const record =
+      value && typeof value === "object" && !Array.isArray(value)
+        ? (value as Record<string, unknown>)
+        : null;
+    if (!record) return null;
+    if (record.error === "operator_capability_unavailable") return null;
+    if (
+      record.state === "available" ||
+      record.state === "unavailable" ||
+      typeof record.confidence === "number" ||
+      Array.isArray(record.effects) ||
+      Array.isArray(record.generations)
+    ) {
+      return record;
+    }
+    return projectLearningProfileEstimate(record);
+  };
+  const direct = usable(input.profileReadback);
+  if (direct) return direct;
+  const state =
+    input.stateReadback &&
+    typeof input.stateReadback === "object" &&
+    !Array.isArray(input.stateReadback)
+      ? (input.stateReadback as Record<string, unknown>)
+      : null;
+  const projected = usable(state?.profile);
+  if (projected) return projected;
+  return {
+    schemaVersion: "role-model.learning-profile-inspection.v1",
+    state: "unavailable",
+    reason: "no current estimate for this scope yet",
+  };
+}
+
 function writeOperatorResult(response: ServerResponse, result: unknown): void {
   const isUnavailable =
     result &&
@@ -16033,6 +16252,29 @@ function createRequestHandler(options: StartBridgeServerOptions) {
           context: options.operatorContext,
         });
 
+        /**
+         * Run 100 addendum `handoff-evidence-durability.addendum-06` S42: the operator readback for capture
+         * evidence.
+         *
+         * The spine's completions depend on reading a durable capture back from the private boundary, and when
+         * that read fails the only trace was a reason string on a resume entry (`capture_missing`, then a
+         * disposition). The runtime can answer the question directly - does *this* request id resolve, and if
+         * not, why - which is what an operator needs to tell "the evidence is gone" from "the boundary cannot
+         * read it".
+         */
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/role-model/operator/capture-evidence"
+        ) {
+          if (!options.readCaptureEvidence) {
+            writeOperatorUnavailable(response, "capture evidence readback");
+            return;
+          }
+          const requestId = url.searchParams.get("requestId") ?? "";
+          writeOperatorResult(response, await options.readCaptureEvidence(requestId));
+          return;
+        }
+
         if (request.method === "GET" && url.pathname === "/api/role-model/operator/status") {
           if (!options.readOperatorStatus) {
             writeOperatorUnavailable(response, "operator status");
@@ -16244,11 +16486,30 @@ function createRequestHandler(options: StartBridgeServerOptions) {
           request.method === "GET" &&
           url.pathname === "/api/role-model/operator/learning/profile"
         ) {
-          if (!options.readLearningProfile) {
-            writeOperatorUnavailable(response, "learning profile inspection");
-            return;
-          }
-          writeOperatorResult(response, await options.readLearningProfile());
+          /**
+           * Run 110: this is the one Learning route whose packaged composition resolves through the
+           * private-endpoint client, which the packaged runtime is not given (measured live: 503 with
+           * `detail: private transport answered null for operator/learning/profile`, while its siblings answer
+           * 200). The state readback carries the same profile projection in-process, so the route projects it
+           * from there; with no estimate in either source it answers the bounded state the UI renders.
+           */
+          /**
+           * `Promise.resolve` around each call: the packaged callbacks are typed as async, but a composition
+           * that answers synchronously must not turn a readback into a 409 - measured by the route-parity suite,
+           * which drives this route with plain-object callbacks.
+           */
+          const [profileReadback, stateReadback] = await Promise.all([
+            options.readLearningProfile
+              ? Promise.resolve(options.readLearningProfile()).catch(() => null)
+              : Promise.resolve(null),
+            options.readLearningState
+              ? Promise.resolve(options.readLearningState()).catch(() => null)
+              : Promise.resolve(null),
+          ]);
+          writeOperatorResult(
+            response,
+            resolveLearningProfileRouteResult({ profileReadback, stateReadback }),
+          );
           return;
         }
         if (
@@ -18934,6 +19195,12 @@ export async function createRuntimeBridgeBackend(
           options.scopeId,
           "track-b",
           "deferred-route-captures.sqlite",
+        ),
+        // Run 100 addendum `replay-dispatch-envelope-repair.addendum-03` S2: aligned with the admission
+        // decision (20 MiB default, operator-tunable) so a real 750-800 KB dsh capture is queued rather
+        // than refused before it can ever be replayed.
+        maxPayloadBytes: resolveDeferredCaptureMaxBytes(
+          process.env.ROLE_MODEL_DEFERRED_CAPTURE_MAX_BYTES,
         ),
       })
     : null;
@@ -25045,6 +25312,25 @@ export async function createRuntimeBridgeBackend(
             ...plan.routingRequest,
             ...(deny.length > 0 ? { denyEndpoints: deny } : {}),
           },
+          /**
+           * Run 100 addendum 10, E1: name the request, the alias, the requested effort and the pass on the verdict
+           * line, so an eligibility count can be attributed without a store query. The live pass and its reroutes
+           * share this call; the counterfactual/replay passes take their own path, which is exactly why the pass name
+           * has to be recorded rather than assumed.
+           */
+          attribution: {
+            requestId: plan.routingRequest.requestId,
+            aliasId: plan.routingDiagnostics?.aliasResolution?.aliasId ?? null,
+            requestedModel: plan.routingDiagnostics?.aliasResolution?.requestedModel ?? null,
+            requestedEffort:
+              typeof plan.executionRequest.reasoning?.effort === "string"
+                ? plan.executionRequest.reasoning.effort.trim()
+                : null,
+            pass: classifyBridgeRoutePass({
+              requestId: plan.routingRequest.requestId,
+              denyCount: deny.length,
+            }),
+          },
           registry: executionSnapshot.registry,
           catalog: executionSnapshot.executionCatalog,
           observedProfilesByEndpointId: runtimeObservedProfiles.observedProfilesByEndpointId,
@@ -27627,6 +27913,41 @@ export async function createRuntimeBridgeBackend(
         items: entries.map((entry) => entry.metric),
         returned: entries.length,
       };
+    },
+    /**
+     * Run 100 addendum `handoff-evidence-durability.addendum-06` S42: the operator readback for capture
+     * evidence - the runtime asks its own boundary the question the spine depends on, and answers with the
+     * outcome instead of leaving a reason string on a resume entry.
+     */
+    async readCaptureEvidence(requestId: string): Promise<unknown> {
+      const id = String(requestId ?? "").trim();
+      if (!id) return { status: "invalid", reason: "requestId is required" };
+      if (!configuredTrackBOperationsEndpoint) {
+        return { status: "unconfigured", reason: "the operations boundary is not configured" };
+      }
+      try {
+        const capture = (await readExactRouteCapture(id)) as Record<string, unknown> | null;
+        if (!capture) return { status: "missing", requestId: id };
+        return {
+          status: "ok",
+          requestId: id,
+          scope: typeof capture.scope === "string" ? capture.scope : null,
+          endpointId: typeof capture.endpointId === "string" ? capture.endpointId : null,
+          modelId: typeof capture.modelId === "string" ? capture.modelId : null,
+          rootArtifactId:
+            typeof capture.rootArtifactId === "string" ? capture.rootArtifactId : null,
+          branchKind: typeof capture.branchKind === "string" ? capture.branchKind : null,
+          hasResponseText:
+            typeof capture.responseText === "string" && capture.responseText.length > 0,
+          messageCount: Array.isArray(capture.messages) ? capture.messages.length : null,
+        };
+      } catch (error) {
+        return {
+          status: "unreadable",
+          requestId: id,
+          reason: String((error as { message?: unknown })?.message ?? error).slice(0, 300),
+        };
+      }
     },
     async readActivityCapture(captureId: number | string): Promise<unknown | null> {
       if (typeof captureId === "string") {

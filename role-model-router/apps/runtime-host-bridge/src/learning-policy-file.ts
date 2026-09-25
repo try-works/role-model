@@ -122,6 +122,13 @@ export interface LearningPolicySnapshot {
      * enforces — evidence older than this is reported stale until the scope is revalidated.
      */
     readonly revalidationIntervalDays: number;
+    /**
+     * Run 100 phase-5 repair (operator instruction 2026-09-21: "the daily dispatch ceiling is only for
+     * the production release, not for dev or stage, disregard it"): where the daily replay
+     * counterfactual/dispatch ceiling may refuse work. The ceilings are still measured and recorded on
+     * every channel; this only decides whether they can starve the loop.
+     */
+    readonly replayBudgetEnforcement: "production_only" | "always" | "never";
   };
   /**
    * Run 98 addendum 44 `A44-S4`: present when the resolved policy did not come from a valid source. The
@@ -178,6 +185,7 @@ const DEFAULT_EFFECTIVE: LearningPolicySnapshot["effective"] = Object.freeze({
   promotionSelectionFamilySize: 1,
   advisorySourceMaxAgeMs: 900_000,
   revalidationIntervalDays: 7,
+  replayBudgetEnforcement: "production_only",
 });
 
 /**
@@ -691,6 +699,12 @@ export function readLearningPolicyFile(input: {
         finiteOr(merged.revalidationIntervalDays, DEFAULT_EFFECTIVE.revalidationIntervalDays),
       ),
     ),
+    // Run 100 phase-5 repair: an absent or malformed selector keeps the shipped scoping, so a broken
+    // config can never widen the production guard onto the stage channel.
+    replayBudgetEnforcement:
+      merged.replayBudgetEnforcement === "always" || merged.replayBudgetEnforcement === "never"
+        ? merged.replayBudgetEnforcement
+        : "production_only",
     judgeMode: merged.judgeMode === "identity_blind" ? "identity_blind" : "identified",
     judgeOrderPolicy: merged.judgeOrderPolicy === "dual_order" ? "dual_order" : "source_first",
     judgeOrderAggregation:

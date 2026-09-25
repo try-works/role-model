@@ -128,6 +128,28 @@ describe("LearningRoute", () => {
     }
   });
 
+  /**
+   * Run 100 R6.1: the operator must be able to see *why* evidence is excluded without reading stores.
+   * The evidence page renders the learner's own receipts - per-family evidence against the floor and
+   * the exclusions by reason - from the learning summary's `learnerEvidence` section. Phase 5 inspects
+   * the rendered page against the same readback with live traffic; this test pins the contract.
+   */
+  test("run100 r6.1: the evidence page renders per-family evidence and exclusions by reason", () => {
+    const routeSource = readFileSync(new URL("./learning.tsx", import.meta.url), "utf8");
+    for (const token of [
+      "learnerEvidence",
+      "excludedByReason",
+      "byFamily",
+      "Evidence loss by reason",
+      "Exclusion reason",
+      "Distinct captures",
+      "Floor met",
+      "No learner validation receipt has been recorded yet.",
+    ]) {
+      expect(routeSource).toContain(token);
+    }
+  });
+
   test("run98 a47: a policy field's range shows enum values, not an empty numeric span", () => {
     const field = (overrides: Partial<LearningPolicyField>): LearningPolicyField =>
       ({

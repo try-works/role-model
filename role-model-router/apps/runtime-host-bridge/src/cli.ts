@@ -4,6 +4,7 @@ import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "
 import { readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { DatabaseSync } from "node:sqlite";
 import { parseArgs } from "node:util";
 
 import type { NormalizedCatalog } from "@role-model-router/catalog";
@@ -14,6 +15,9 @@ import {
   negotiateDevelopmentVerificationCapability,
   parseDevelopmentVerificationTrustMaterial,
 } from "./development-verification.js";
+// Run 100 addendum `evaluation-lease-wedge-repair.addendum-02` S3: a give-up must terminalize the
+// evaluation half of the handoff too, or the row stays "in flight" with no lease forever.
+import { terminalizeAbandonedEvaluation } from "./evaluation-orphan-terminalization.js";
 import {
   type CreateRuntimeBridgeBackendOptions,
   type RuntimeBridgeBackend,
@@ -41,23 +45,62 @@ import {
 import { migrateLegacyProductionState } from "./runtime-state-migration.js";
 import { resolveRun88StageRuntimeIdentity } from "./runtime-version.js";
 import {
+  HANDOFF_EVIDENCE_HOLD_TTL_MS,
+  HANDOFF_EVIDENCE_OUTSIDE_RETENTION_WINDOW,
+  HandoffEvidenceUnavailableError,
   createSupervisedReplayEvaluationResumeStore,
+  handoffEvidenceHoldRequestIds,
   resolveSupervisedReplayEvaluationResumePath,
   resumePendingSupervisedReplayEvaluations,
 } from "./supervised-replay-evaluation-resume.js";
+// Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S7: a replay that handed its branches off and was
+// interrupted before its evaluation job existed is recovered from the durable job itself.
+import {
+  type DurableReplayJobSummary,
+  MAX_HANDOFF_RECOVERY_CHECKS_PER_SWEEP,
+  MAX_HANDOFF_RECOVERY_LIST_PAGE,
+  type RecoveryPageCursor,
+  branchCaptureRequestIdCandidatesFromJob,
+  branchCaptureRequestIdsFromJob,
+  captureRefFromReplayJob,
+  carriedEvaluationJobId,
+  coerceDurableReplayJobRecord,
+  describeUnresolvedArms,
+  nextHandoffRecoveryCursor,
+  recoveredHandoffEntry,
+  resolveDurableReplayJobScope,
+  resolveResumedArmEvidence,
+  selectRecoverableHandoffs,
+  selectUnevaluatedHandoffs,
+  terminalRecoveryListingValue,
+  unresolvedArmsArePermanent,
+  unwrapCapabilityPayload,
+} from "./supervised-replay-handoff-recovery.js";
+/**
+ * How many handed-off replays one liveness sweep may recover. Each recovery is one extension listing plus a
+ * durable store write, and the completion they feed is the expensive part, so the pass stays bounded like the
+ * abandoned-entry drain (addendum 04 S5).
+ */
+const MAX_HANDOFF_RECOVERIES_PER_SWEEP = 3;
+/** How often the handed-off-replay recovery pass may list the durable jobs (measured on the live root). */
+const HANDOFF_RECOVERY_INTERVAL_MS = 120_000;
 import {
   autoReplayExecutionFromCommandReceipt,
   startAutoReplayLoop,
 } from "./track-b-auto-replay-runtime.js";
 import {
   buildAutoReplayIdempotencyKey,
+  dedupeJudgeAgainstPair,
   isReplayInFlightFailure,
   isReplayJobLeasedFailure,
+  replayDispatchCaptureToken,
   resolveAutoReplayDeadlineMaxMs,
   resolveAutoReplayDeadlineMs,
   resolveAutoReplayDeadlinePerCandidateMs,
   resolveAutoReplayReservationTtlMs,
   resolveAutoReplayTickBudgetMs,
+  resolveReplayJudgeFallbackEndpointIds,
+  resolveReplayProviderCallBudget,
   retryLeasedReplayDispatch,
 } from "./track-b-auto-replay.js";
 import { createJudgeConsistencyLedger } from "./track-b-judge-consistency.js";
@@ -73,16 +116,368 @@ import {
   extractSourceOutputText,
   extractTaskInstructionText,
 } from "./track-b-replay-evaluation-criteria.js";
-import { createReplayLedger, resolveReplayLedgerLimits } from "./track-b-replay-ledger.js";
+import {
+  type ReplayLedgerLimits,
+  createReplayLedger,
+  replayBudgetAvailable,
+  resolveReplayLedgerLimits,
+} from "./track-b-replay-ledger.js";
 import {
   buildReplayPolicySet,
   decideReplayAdmission,
   hasRecordedToolResults,
   hasToolCalls,
+  isBenchmarkReplaySourceRef,
+  isSyntheticProbeSourceClass,
+  replayBudgetEnforcedForChannel,
   resolveReplayPolicySet,
   resolveReplayToolPolicy,
   selectReplayCandidates,
 } from "./track-b-replay-policy.js";
+
+/**
+ * Run 100 phase-5 repair (operator instruction 2026-09-21: "the daily dispatch ceiling is only for the
+ * production release, not for dev or stage, disregard it").
+ *
+ * Live stage evidence 2026-09-22T06:26Z: the verification window reached `dispatches 296 /
+ * dispatchLimit 300` and deferred eight captures as `budget_exhausted`, so the learning loop starved
+ * itself on a delivery guard. The ledger keeps its accounting on every channel; only the refusal is
+ * scoped, by the versioned `replayBudgetEnforcement` policy (`production_only` by default).
+ *
+ * Precedence: an explicit `ROLE_MODEL_REPLAY_BUDGET_ENFORCEMENT` env value is an operator act at the
+ * process boundary and wins; otherwise the versioned policy plus the runtime channel decides. A policy
+ * source that cannot be read resolves through `readLearningPolicyFile` to the base route, whose
+ * `production_only` default keeps production guarded.
+ */
+/**
+ * Run 100 addendum 15 item 6: the learner sweep promotes packs for candidates whose comparison was
+ * finalized by the extension's own sweeps, and it holds the route package (an endpoint id) but not the
+ * model behind it. The endpoint registry is the durable authority for that mapping - `<stateRoot>/<scopeId>/
+ * memory/memory.sqlite`, the same location the public runtime adapter is configured with - so the lookup
+ * reads it and answers `null` when the endpoint is unknown (the emitter then refuses the artifact by name
+ * rather than attributing the evidence to a model nobody recorded).
+ */
+function readEndpointModelIdForRoutePackage(input: {
+  readonly runtimeStateRoot: string;
+  readonly scopeId: string;
+  readonly routePackage: string;
+}): string | null {
+  const routePackage = input.routePackage.trim();
+  if (!routePackage) return null;
+  const databasePath = path.join(input.runtimeStateRoot, input.scopeId, "memory", "memory.sqlite");
+  if (!existsSync(databasePath)) return null;
+  let database: DatabaseSync | null = null;
+  try {
+    database = new DatabaseSync(databasePath, { readOnly: true });
+    const row = database
+      .prepare("SELECT model_id FROM runtime_endpoints WHERE endpoint_id = ?")
+      .get(routePackage) as { model_id?: unknown } | undefined;
+    return typeof row?.model_id === "string" && row.model_id.trim() ? row.model_id.trim() : null;
+  } catch {
+    return null;
+  } finally {
+    database?.close();
+  }
+}
+
+/**
+ * Run 100 addendum 19 (item 8c, measured live 2026-09-25). The auto-replay tick's judge goes through the
+ * in-process `readControllerAssignment` binding, and the narrow options object the loop is started with
+ * does not always carry that binding - so the tick's judge resolved to nothing while the durable row was
+ * present and correct. The measured cost: 30 of the 64 replay jobs created in 24 h were planned with
+ * `deepseek…flash-high` (the configured controller, therefore the judge) as their **source** arm, and the
+ * tick's named deferral for exactly that shape, `judge_candidate_overlap`, has never appeared in 5804
+ * dispositions. Those comparisons are the ones Evaluation Core later excludes as `judge_self_evaluation`.
+ *
+ * The durable assignment is the fallback the run's addendum names ("last known assignment rather than a
+ * per-tick read"): a scope-specific row wins over the global one, and an absent database, table or row
+ * answers null so the tick behaves exactly as before.
+ */
+/**
+ * Run 100 addendum 16 item 8d (delegated census, 2026-09-25): a supervised-replay branch capture id must be
+ * unique per attempt, because the capture boundary keys idempotency on the capture request id and refuses the
+ * same key carrying different bytes. Measured live on `req-f8020a96…`: the *prepared* branch id carries the
+ * attempt token and was re-presented idempotently (8 572 ms), while the **failure** branch id — the only
+ * sibling without a token — was refused 6 ms later with "route capture idempotency key was reused with
+ * different immutable bytes". All five live hits that day were `-failure` ids while no two jobs shared a key
+ * (1860 jobs, 0 duplicates), so the conflict was re-attempt bytes under a stable id.
+ */
+export function supervisedReplayBranchCaptureRequestId(input: {
+  readonly requestId: string;
+  readonly candidateEndpointId: string;
+  readonly phase: "prepared" | "failure";
+  readonly attemptToken: string;
+  /**
+   * Run 100 addendum 24 §1 residual (measured 08:58:17Z on run159): a per-attempt id was not enough —
+   * `req-0071aa21…` presented `…-failure-26a1d43a7a29` twice with different bytes during one attempt (the
+   * job sits in `failure_append_pending`, so a recovery re-append changed the payload). The tag recognises
+   * the payload, so identical retries stay idempotent under one key and changed bytes get their own.
+   */
+  readonly contentTag?: string | null;
+}): string {
+  const candidateHash = createHash("sha256")
+    .update(input.candidateEndpointId)
+    .digest("hex")
+    .slice(0, 16);
+  const contentTag =
+    typeof input.contentTag === "string" && input.contentTag.trim().length > 0
+      ? `-${input.contentTag.trim().slice(0, 16)}`
+      : "";
+  return `replay-${input.requestId}-${candidateHash}-${input.phase}-${input.attemptToken}${contentTag}`;
+}
+
+/**
+ * Run 100 addendum 28 §2 follow-up (measured on run162): the existence pre-check must accept only an answer
+ * that *proves* the row is there. The host answers a failed or degraded read with a degradation receipt, and
+ * reading any object as "exists" made the pass cancel rows the same store then reported missing — the
+ * `invoke-failed … evaluation job not found` stream continued. A real job answer carries a job identity, and a
+ * large-but-present job arrives behind the extension's externalization marker; anything else is *unknown*
+ * (`null`), which keeps the previous behaviour instead of skipping a row that may exist.
+ */
+/**
+ * Run 100 addendum 31 — item 8's `capture_missing` class, measured on the live store 2026-09-25.
+ *
+ * The handoff-recovery pass reads each arm's branch capture through the operations boundary and reports
+ * `capture_missing(<requestId>)` when that read answers nothing (1-2 lines per build window, e.g.
+ * `[run101] resumed handoff … could not read 3 arm(s): …=capture_missing(replay-req-0673e0e4-…)`). Measured
+ * against the same request id, the capture queue's own durable receipt store holds **three** receipts with
+ * `status: "captured"` and a ~6 KB record naming the arm's endpoint, model, effort and classification.
+ *
+ * The evidence is therefore not gone; the boundary read cannot see it. This reader returns the capture the
+ * queue already wrote, so an arm whose capture is durably recorded is no longer reported missing — and it
+ * answers `null` (never throws) for an unknown id, a malformed receipt or an absent store, so a caller can use
+ * it as a fallback without changing the previous behaviour.
+ */
+export function readRouteCaptureFromQueueReceipt(input: {
+  readonly runtimeStateRoot: string;
+  readonly scopeId: string;
+  readonly requestId: string;
+}): Record<string, unknown> | null {
+  const requestId = typeof input.requestId === "string" ? input.requestId.trim() : "";
+  if (!requestId) return null;
+  const databasePath = path.join(
+    input.runtimeStateRoot,
+    input.scopeId,
+    "track-b",
+    "deferred-route-captures.sqlite",
+  );
+  if (!existsSync(databasePath)) return null;
+  let database: DatabaseSync | null = null;
+  try {
+    database = new DatabaseSync(databasePath, { readOnly: true });
+    const row = database
+      .prepare("SELECT result_json FROM track_b_route_capture_receipts WHERE request_id = ?")
+      .get(requestId) as { result_json?: unknown } | undefined;
+    const text = typeof row?.result_json === "string" ? row.result_json : "";
+    if (!text) return null;
+    const parsed = JSON.parse(text) as unknown;
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+    const record = parsed as Record<string, unknown>;
+    /**
+     * Two shapes live in that column: the queue's own `{status: "delivered", result: {…}}` envelope, and a
+     * bare capture record written by an older producer. Both are accepted; anything without a request id is
+     * not a capture and answers null.
+     */
+    const inner =
+      record.result && typeof record.result === "object" && !Array.isArray(record.result)
+        ? (record.result as Record<string, unknown>)
+        : record;
+    return typeof inner.requestId === "string" && inner.requestId.trim().length > 0 ? inner : null;
+  } catch {
+    return null;
+  } finally {
+    database?.close();
+  }
+}
+
+export function evaluationJobExistsFromGetJobAnswer(answer: unknown): boolean | null {
+  if (answer === null || answer === undefined) return false;
+  /**
+   * A serialized job record (the host's business-output shape for this capability) proves the row is there just
+   * as an object one does.
+   */
+  if (typeof answer === "string") {
+    const text = answer.trim();
+    if (!text.startsWith("{")) return null;
+    try {
+      const parsed = JSON.parse(text) as unknown;
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+      const record = parsed as Record<string, unknown>;
+      return typeof record.status === "string" && record.status.trim() ? true : null;
+    } catch {
+      return null;
+    }
+  }
+  if (typeof answer !== "object" || Array.isArray(answer)) return null;
+  const record = answer as Record<string, unknown>;
+  const schemaVersion = typeof record.schemaVersion === "string" ? record.schemaVersion : "";
+  if (schemaVersion.startsWith("role-model.degradation-receipt")) return null;
+  /**
+   * A *record* proves the row exists: it carries an identity **and** a status. Measured on run163, a bare
+   * `jobId` is not proof — a failure or degradation envelope can echo the requested id back with no row behind
+   * it, which is exactly how the pass came to cancel rows the store then reported missing.
+   */
+  if (
+    typeof record.jobId === "string" &&
+    record.jobId.trim().length > 0 &&
+    typeof record.status === "string" &&
+    record.status.trim().length > 0
+  ) {
+    return true;
+  }
+  if (
+    typeof record.outputKey === "string" ||
+    typeof record.resultHash === "string" ||
+    typeof record.durableLocator === "object"
+  ) {
+    return true;
+  }
+  return null;
+}
+
+/**
+ * Run 100 (evaluation audit): the same `evaluation:get-job` answer also carries the durable status, which is what
+ * lets the give-up path recognise a row the store already reports terminal instead of paying for a cancel the
+ * extension must refuse (156 per start, 312 log lines, measured). A large-but-present job comes back behind the
+ * extension's externalization marker, so the status is read from the record, from its `businessOutput`, or from
+ * `businessOutput.value` — and an answer that carries no status at all is *unknown* (`undefined`), which keeps
+ * the previous behaviour rather than suppressing a cancel that may be needed.
+ */
+export function evaluationJobStatusFromGetJobAnswer(answer: unknown): string | null | undefined {
+  /**
+   * Run 170 follow-up (measured: the short-circuit did not suppress the stream): a business result crossing the
+   * packaged extension host arrives as `businessOutput`, and for this capability that is a **JSON string** — the
+   * same shape `decodeExtensionTextOutput` documents. Look through the serialization before reading fields.
+   */
+  const parseSerialized = (value: unknown): Record<string, unknown> | undefined => {
+    if (typeof value !== "string") return undefined;
+    const text = value.trim();
+    if (!text.startsWith("{")) return undefined;
+    try {
+      const parsed = JSON.parse(text) as unknown;
+      return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+        ? (parsed as Record<string, unknown>)
+        : undefined;
+    } catch {
+      return undefined;
+    }
+  };
+  const resolveRecord = (value: unknown): Record<string, unknown> | undefined => {
+    const serialized = parseSerialized(value);
+    if (serialized) return serialized;
+    return value && typeof value === "object" && !Array.isArray(value)
+      ? (value as Record<string, unknown>)
+      : undefined;
+  };
+  if (answer === null || answer === undefined) return null;
+  const record = resolveRecord(answer);
+  if (!record) return undefined;
+  const schemaVersion = typeof record.schemaVersion === "string" ? record.schemaVersion : "";
+  if (schemaVersion.startsWith("role-model.degradation-receipt")) return undefined;
+  const statusOf = (value: unknown): string | undefined => {
+    const candidate = resolveRecord(value);
+    if (!candidate) return undefined;
+    const status = candidate.status;
+    return typeof status === "string" && status.trim() ? status.trim() : undefined;
+  };
+  /**
+   * Measured on run172: the live answer is a **pair of nested externalization markers** — the outer record's
+   * `businessOutput` is itself a marker — so the status sits one or more envelope layers down. Walk
+   * `businessOutput`/`value` up to a bounded depth and read the status at any layer; a locator that never
+   * reaches a record stays unknown rather than guessed.
+   */
+  const MAX_ENVELOPE_DEPTH = 6;
+  let current: Record<string, unknown> | undefined = record;
+  for (let depth = 0; depth < MAX_ENVELOPE_DEPTH && current; depth += 1) {
+    const status = statusOf(current);
+    if (status) return status;
+    const next: Record<string, unknown> | undefined =
+      resolveRecord(current.businessOutput) ??
+      resolveRecord((current.businessOutput as Record<string, unknown> | undefined)?.value) ??
+      resolveRecord(current.value);
+    current = next && next !== current ? next : undefined;
+  }
+  return undefined;
+}
+
+export function readPersistedControllerEndpointId(input: {
+  readonly runtimeStateRoot: string;
+  readonly scopeId: string;
+}): string | null {
+  const databasePath = path.join(input.runtimeStateRoot, input.scopeId, "memory", "memory.sqlite");
+  if (!existsSync(databasePath)) return null;
+  let database: DatabaseSync | null = null;
+  try {
+    database = new DatabaseSync(databasePath, { readOnly: true });
+    const row = database
+      .prepare(
+        "SELECT endpoint_id FROM runtime_controller_assignments WHERE scope = ? OR scope = 'global' ORDER BY CASE WHEN scope = ? THEN 0 ELSE 1 END, updated_at_ms DESC LIMIT 1",
+      )
+      .get(input.scopeId, input.scopeId) as { endpoint_id?: unknown } | undefined;
+    return typeof row?.endpoint_id === "string" && row.endpoint_id.trim()
+      ? row.endpoint_id.trim()
+      : null;
+  } catch {
+    return null;
+  } finally {
+    database?.close();
+  }
+}
+
+function resolveChannelScopedReplayLedgerLimits(input: {
+  readonly repoRoot: string;
+  readonly runtimeStateRoot: string;
+  readonly scopeId: string;
+  readonly channel: string;
+}): Partial<ReplayLedgerLimits> {
+  const resolved = resolveReplayLedgerLimits();
+  if (resolved.enforced !== undefined) return resolved;
+  const snapshot = readLearningPolicyFile({
+    repoRoot: input.repoRoot,
+    stateRoot: resolveLearningPolicyStateRoot({
+      runtimeStateRoot: input.runtimeStateRoot,
+      scopeId: input.scopeId,
+    }),
+    channel: input.channel,
+    scopeId: input.scopeId,
+  });
+  return {
+    ...resolved,
+    enforced: replayBudgetEnforcedForChannel(
+      // A missing policy source falls through to the documented default scoping (production only).
+      snapshot?.effective.replayBudgetEnforcement,
+      input.channel,
+    ),
+  };
+}
+import {
+  buildExperiencePackCandidate,
+  buildRouteLearningValidationReceipt,
+  emitRoutePackageAttributionForPromotion,
+  emitTrackBContract,
+} from "./track-b-contract-emission.js";
+import {
+  type LearnerDerivationEvidenceRead,
+  type LearnerDerivationInvoke,
+  analyzeFinalizedEvaluationSignal,
+  deriveLearnerCandidatesFromDurableEvidence,
+  durableReplayIdForComparison,
+  learnableComparisonMembers,
+  normalizedComparisonGroup,
+  orderComparisonGroupsNewestFirst,
+  readPersistedSignalReportForGroup,
+} from "./track-b-learner-derivation.js";
+import {
+  DEFAULT_EVIDENCE_HALF_LIFE_DAYS,
+  LEARNING_GROUP_PAGE_LIMIT,
+  activationStageAllowsPackActivation,
+  assembleDurableLearnerValidationValue,
+  buildTrackBLearningEvidenceSummary,
+  classifyPackActivationAnswer,
+  collectPagedComparisonGroups,
+  selectDurableComparisonGroupId,
+  serveLearnerSweepRetrieval,
+} from "./track-b-learning-pass.js";
 import {
   TRACK_B_CANONICAL_EXTENSION_IDS,
   type TrackBExtensionClosure,
@@ -109,6 +504,7 @@ import {
   readTrackBRouteAdvisorySourceFromRuntime,
   rememberTrackBDurableRouteAdvisory,
   requireReplayRouterDecisionId,
+  resolveDurableEvaluationAuthority,
   resolveManagedArtifactKeyFiles,
   resolveMaxCounterfactualArms,
   runSupervisedReplay,
@@ -135,6 +531,22 @@ const DURABLE_ARTIFACT_ID = /^[a-f0-9]{64}$/u;
  * holder is the single shared reference for status and pause/resume control.
  */
 let activeAutoReplayLoop: ReturnType<typeof startAutoReplayLoop> | null = null;
+/** Run 100 addendum 19: the durable controller fallback is reported once, not on every tick. */
+let persistedControllerFallbackLogged = false;
+/** Run 100 addendum 16 item 8d: benign terminalization no-ops are named once, then counted. */
+let terminalizationBenignCount = 0;
+/** Run 100 addendum 28 §2: the first few existence-check answers are named, so their shape is measurable. */
+let evaluationJobExistsAnswerLogged = 0;
+/**
+ * Run 100 addendum 29 follow-up: the answer the tick receives carries a `durableLocator`, so a *repeated*
+ * request id can be served the externalized answer of an earlier call. The pass revisits the same resume
+ * entries every cycle, so its existence check must ask a fresh question each time — otherwise a job that has
+ * since aged out is still reported present, and the cancel that follows is correctly refused as not found.
+ */
+let evaluationJobExistsProbeCounter = 0;
+/** Run 100: the status probe's answer shape is named a few times, then counted. */
+let evaluationJobStatusShapeLogged = 0;
+const TERMINAL_STATUS_HINT: ReadonlySet<string> = new Set(["cancelled", "completed", "failed"]);
 let activeLearningSummaryReader: (() => Promise<unknown>) | null = null;
 
 type DurableReplayCapture = Readonly<Record<string, unknown>>;
@@ -598,6 +1010,341 @@ export function deriveSupervisedReplayTrajectoryEvents(input: {
       )
       .slice(0, 128)
   );
+}
+
+/**
+ * Run 100 item S13 follow-up (2026-09-25): the derivation sweep's capture wiring, kept as a pure function so the
+ * call site is testable without standing up the sweep.
+ *
+ * The replay job names its source capture through the durable locator the host stamped on the decision
+ * (`decision-<captureRef>`), and each counterfactual arm through its dispatch's `providerResultRef`
+ * (`route-capture:<replayRequestId>`, whose branch capture is written as `<replayRequestId>-branch`). Both are
+ * durable facts, so the events are derived from recorded captures - never invented. A capture the retention ring no
+ * longer serves is a named unavailability.
+ */
+export async function deriveLearnerTrajectoryEvidenceForReplay(input: {
+  readonly job: Readonly<Record<string, unknown>>;
+  readonly readCapture: (requestId: string) => Promise<Record<string, unknown> | null>;
+  readonly deriveEvents?: (input: {
+    readonly sourceCapture: DurableReplayCapture;
+    readonly counterfactualCaptures: readonly DurableReplayCapture[];
+  }) => readonly Record<string, unknown>[];
+}): Promise<
+  | {
+      readonly kind: "evidence";
+      readonly events: readonly Record<string, unknown>[];
+      readonly graphRef: string;
+      readonly replayRef: string;
+    }
+  | { readonly kind: "unavailable"; readonly reason: string }
+  | { readonly kind: "refused"; readonly reason: string }
+> {
+  const recordOf = (value: unknown): Record<string, unknown> | null =>
+    value && typeof value === "object" && !Array.isArray(value)
+      ? (value as Record<string, unknown>)
+      : null;
+  try {
+    const captureRef = captureRefFromReplayJob(input.job as unknown as DurableReplayJobSummary);
+    if (!captureRef) {
+      return {
+        kind: "unavailable",
+        reason: `the replay job names no source capture (${
+          typeof input.job.sourceDecisionId === "string"
+            ? input.job.sourceDecisionId
+            : "no decision"
+        })`,
+      };
+    }
+    const sourceCapture = await input.readCapture(captureRef);
+    if (!sourceCapture) {
+      return {
+        kind: "unavailable",
+        reason: `capture ${captureRef} is outside the retention window`,
+      };
+    }
+    const counterfactualCaptures: Record<string, unknown>[] = [];
+    const dispatches = recordOf(input.job.dispatches);
+    /**
+     * The run's own derivation of each arm's branch-capture request id (attempt-scoped appends first, then the
+     * `providerResultRef` naming, then the legacy token), so the sweep asks for exactly the captures the executor
+     * wrote rather than re-deriving a name of its own.
+     */
+    const branchRequestIds = branchCaptureRequestIdsFromJob({
+      replayJobId: typeof input.job.jobId === "string" ? input.job.jobId : captureRef,
+      requestId: captureRef,
+      dispatches: input.job.dispatches,
+      candidateEndpointIds: dispatches ? Object.keys(dispatches) : [],
+    });
+    for (const branchRequestId of branchRequestIds.values()) {
+      const branchCapture = await input.readCapture(branchRequestId);
+      if (!branchCapture) {
+        return {
+          kind: "unavailable",
+          reason: `branch capture ${branchRequestId} is outside the retention window`,
+        };
+      }
+      counterfactualCaptures.push(branchCapture);
+    }
+    const replayRef =
+      typeof input.job.sharedPrefixRef === "string" && input.job.sharedPrefixRef.trim().length > 0
+        ? input.job.sharedPrefixRef.trim()
+        : null;
+    if (!replayRef) {
+      return {
+        kind: "unavailable",
+        reason: `replay ${captureRef} records no shared prefix reference`,
+      };
+    }
+    const deriveEvents = input.deriveEvents ?? deriveSupervisedReplayTrajectoryEvents;
+    const events = deriveEvents({
+      sourceCapture: sourceCapture as DurableReplayCapture,
+      counterfactualCaptures: counterfactualCaptures as readonly DurableReplayCapture[],
+    });
+    if (events.length === 0) {
+      return {
+        kind: "unavailable",
+        reason: `capture ${captureRef} records no derivable trajectory events`,
+      };
+    }
+    return {
+      kind: "evidence",
+      events,
+      graphRef: durableCaptureArtifactReference(
+        sourceCapture as DurableReplayCapture,
+        "rootArtifactId",
+        `capture ${captureRef} root`,
+      ),
+      replayRef,
+    };
+  } catch (error) {
+    return {
+      kind: "refused",
+      reason: String((error as { message?: unknown })?.message ?? error).slice(0, 200),
+    };
+  }
+}
+
+/**
+ * Run 100 addendum 39 (2026-09-26): the post-finalization signals sweep.
+ *
+ * Measured live on run175c/`b7f04039` (`:3457`, 00:15-01:05): the learner's derivation pass computes the report it
+ * is missing, but it walks the `evaluation:list-groups` page (`group_id ASC`) oldest-first and meets an aged
+ * prefix - 9 `signals:analyze-finalized-evaluation` invocations against 79 `capture … is outside the retention
+ * window` skips. The proposal's chain (`normal usage episode -> trajectory-signals computes model-free signal
+ * report -> …`) puts the model-free report *before* replay/evaluation, and the retention ladder keeps raw captures
+ * for hours, not weeks - so the producer has to run while the evidence is still durable, not when the learner
+ * finally reaches the comparison.
+ *
+ * This sweep is that producer: each tick it walks a bounded page of finalized, learnable comparison groups
+ * newest-first, skips the ones whose own report already exists, resolves the durable capture evidence exactly as
+ * the derivation pass does (`deriveLearnerTrajectoryEvidenceForReplay`: operations-boundary capture readback) and
+ * invokes the analyze capability through the *same* helper, so the envelope it builds and the degradation receipt
+ * it classifies cannot drift from the fallback producer.
+ */
+export interface FinalizationSignalsSweepSummary {
+  /** Candidate groups the walk inspected this tick. */
+  readonly examined: number;
+  /** Reports produced through `signals:analyze-finalized-evaluation`. */
+  readonly analyzed: number;
+  /** Named skips: an already-persisted report, missing evidence, a degraded analysis, no durable replay. */
+  readonly skipped: number;
+  /** Candidates whose resolution threw. The group stays for the next tick. */
+  readonly refused: number;
+  /** Candidates the per-tick compute bound or the wall-clock budget left for the next tick. */
+  readonly deferred: number;
+}
+
+/** How many candidates one tick may inspect. Evidence resolution costs one capture readback per candidate. */
+export const FINALIZATION_SIGNALS_EXAMINED_LIMIT = 64;
+
+/**
+ * How many reports the post-finalization sweep may compute per tick. Measured live: one tick lands every ~1.8
+ * minutes, `signals:analyze-finalized-evaluation` is model-free and persists its answer, and the derivation pass
+ * proves 24 computes per tick are affordable - the sweep stays deliberately below that so the tick's replay work is
+ * never displaced by its own producer.
+ */
+export const FINALIZATION_SIGNALS_COMPUTE_LIMIT = 16;
+
+/** How long one tick's post-finalization walk may spend before it leaves the rest for the next tick. */
+export const FINALIZATION_SIGNALS_BUDGET_MS = 30_000;
+
+/** A capability answer the sweep's caller has already decoded; anything else is not a record. */
+function finalizationSignalRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function finalizationSignalText(value: unknown): string | null {
+  return typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
+}
+
+export async function sweepFinalizationSignalsForGroups(input: {
+  readonly invoke: LearnerDerivationInvoke;
+  /** The `evaluation:list-groups` page, in the extension's own order (`group_id ASC`). */
+  readonly groups: readonly Record<string, unknown>[];
+  readonly readDurableTrajectoryEvidence: LearnerDerivationEvidenceRead;
+  /**
+   * Groups this process has already settled: a report is persisted for them, their evidence has aged out of the
+   * retention ring, or the analyzer returned a degradation receipt. Settlement is monotonic (a pruned capture never
+   * comes back), so the walk does not re-read them on every tick - without it the newest end of the store would
+   * starve the candidates behind it.
+   */
+  readonly settledGroupIds?: Set<string>;
+  /** Bounded computes per tick: the report-writing invocations this sweep may start. */
+  readonly computeLimit: number;
+  readonly examinedLimit?: number;
+  readonly wallClockBudgetMs: number;
+  readonly now?: () => number;
+  readonly log?: (message: string) => void;
+}): Promise<FinalizationSignalsSweepSummary> {
+  const now = input.now ?? Date.now;
+  const examinedLimit = input.examinedLimit ?? FINALIZATION_SIGNALS_EXAMINED_LIMIT;
+  const startedAtMs = now();
+  /**
+   * The walk order is the shared newest-first order (`orderComparisonGroupsNewestFirst`): the page arrives
+   * `group_id ASC`, so its newest end is consumed first, and the filtered-out groups below keep that order.
+   */
+  const candidates = orderComparisonGroupsNewestFirst(input.groups)
+    .map((group) => {
+      const normalized = normalizedComparisonGroup(group);
+      const groupId =
+        typeof normalized.groupId === "string" && normalized.groupId.trim()
+          ? normalized.groupId.trim()
+          : typeof normalized.comparisonId === "string" && normalized.comparisonId.trim()
+            ? normalized.comparisonId.trim()
+            : null;
+      return { group, normalized, groupId };
+    })
+    .filter(
+      (candidate) =>
+        candidate.groupId !== null &&
+        input.settledGroupIds?.has(candidate.groupId) !== true &&
+        candidate.normalized.status === "finalized" &&
+        learnableComparisonMembers(candidate.normalized) !== null,
+    );
+  const ordered = candidates;
+  let examined = 0;
+  let analyzed = 0;
+  let skipped = 0;
+  let refused = 0;
+  let deferred = 0;
+  /** Analyze invocations started: a degradation receipt consumed a compute even though it wrote nothing. */
+  let computed = 0;
+  for (let index = 0; index < ordered.length; index += 1) {
+    const candidate = ordered[index];
+    const groupId = candidate.groupId as string;
+    if (examined >= examinedLimit) {
+      deferred += ordered.length - index;
+      break;
+    }
+    if (now() - startedAtMs > input.wallClockBudgetMs) {
+      deferred += ordered.length - index;
+      input.log?.(
+        `finalization signals deferred ${ordered.length - index} group(s): the tick's wall-clock budget (${input.wallClockBudgetMs}ms) is spent`,
+      );
+      break;
+    }
+    if (computed >= input.computeLimit) {
+      // Newest-first: the remaining candidates are older than the ones already analyzed, so the bound defers them
+      // as a class instead of spending one evidence readback per candidate to count them.
+      deferred += ordered.length - index;
+      break;
+    }
+    examined += 1;
+    const replayId = durableReplayIdForComparison(candidate.normalized);
+    if (!replayId) {
+      skipped += 1;
+      input.settledGroupIds?.add(groupId);
+      input.log?.(
+        `finalization signals skipped ${groupId}: the comparison names no durable replay`,
+      );
+      continue;
+    }
+    try {
+      const job = finalizationSignalRecord(
+        await input.invoke("replay-core", "replay:job", { jobId: replayId }),
+      );
+      const sourceDecisionId = finalizationSignalText(job?.sourceDecisionId);
+      if (!job || !sourceDecisionId) {
+        skipped += 1;
+        input.log?.(
+          `finalization signals skipped ${groupId}: replay ${replayId.slice(0, 12)} carries no provenance yet`,
+        );
+        continue;
+      }
+      const persisted = await readPersistedSignalReportForGroup({
+        invoke: input.invoke,
+        sourceDecisionId,
+        groupId,
+      });
+      if (persisted.kind === "unavailable") {
+        // A transport failure is not evidence that the report is missing; the group stays reachable next tick.
+        skipped += 1;
+        input.log?.(`finalization signals skipped ${groupId}: ${persisted.reason}`);
+        continue;
+      }
+      if (persisted.kind === "report") {
+        skipped += 1;
+        input.settledGroupIds?.add(groupId);
+        input.log?.(`finalization signals skipped ${groupId}: its report is already persisted`);
+        continue;
+      }
+      const evidence = await input.readDurableTrajectoryEvidence({
+        job,
+        sourceDecisionId,
+        replayId,
+      });
+      if (evidence.kind !== "evidence") {
+        /**
+         * Missing or pruned evidence stays unknown: the group is a named skip and the compute bound is untouched,
+         * because nothing was computed (guidance/12: "Unknown or pruned source spans must be reported rather than
+         * reconstructed from signal snippets").
+         */
+        skipped += 1;
+        input.settledGroupIds?.add(groupId);
+        input.log?.(`finalization signals skipped ${groupId}: ${evidence.reason.slice(0, 200)}`);
+        continue;
+      }
+      const winnerRef =
+        finalizationSignalText(
+          finalizationSignalRecord(candidate.normalized.comparability)?.counterfactualCandidateRef,
+        ) ??
+        finalizationSignalText(
+          learnableComparisonMembers(candidate.normalized)?.positive[0]?.candidateRef,
+        );
+      computed += 1;
+      const analysis = await analyzeFinalizedEvaluationSignal({
+        invoke: input.invoke,
+        groupId,
+        sourceDecisionId,
+        finalizedEvaluation: candidate.normalized,
+        evidence,
+        routePackage: winnerRef,
+      });
+      if (analysis.kind === "degraded") {
+        skipped += 1;
+        input.settledGroupIds?.add(groupId);
+        input.log?.(`finalization signals skipped ${groupId}: ${analysis.reason}`);
+        continue;
+      }
+      analyzed += 1;
+      input.settledGroupIds?.add(groupId);
+      input.log?.(
+        `finalization signals analyzed ${groupId} (decision ${sourceDecisionId.slice(0, 12)}, ${
+          evidence.events.length
+        } event(s))`,
+      );
+    } catch (error) {
+      refused += 1;
+      input.log?.(
+        `finalization signals refused ${groupId}: ${String(
+          (error as { message?: unknown })?.message ?? error,
+        ).slice(0, 200)}`,
+      );
+    }
+  }
+  return { examined, analyzed, skipped, refused, deferred };
 }
 
 /**
@@ -1087,6 +1834,14 @@ export function createSupervisedReplayEvaluationCompleter(input: {
       multiplicityAdjustment: "none" | "holm_bonferroni";
     }>;
     evidenceMaxAgeMs?: number;
+    /**
+     * Run 100 R1/R7: the operator policy behind judge-independent arms. `exclude` (default) drops the
+     * comparison's judge from its arms, `warn` does the same and records the exclusion, `off` leaves the
+     * arm set as configured.
+     */
+    judgeArmExclusion?: "exclude" | "warn" | "off";
+    /** Run 100 R7: the policy arm bound (falls back to the resolved environment value when absent). */
+    maxCounterfactualArms?: number;
   }>;
   readonly runPipeline?: typeof runTrackBShadowPipeline;
   /**
@@ -1146,8 +1901,56 @@ export function createSupervisedReplayEvaluationCompleter(input: {
     if (!evaluationJobId || !replayJobId) {
       throw new Error("durable replay evaluation is missing its evaluation job identity");
     }
-    const counterfactuals = await Promise.all(
-      input.counterfactualPackages.map(async (candidate) => {
+    /**
+     * Run 100 R2 (live stage, released candidate `d19dcff3`): an arm's comparable output comes from its
+     * durable branch capture. Two live classes discarded the whole capture instead:
+     *
+     *  - `durable replay evaluation is missing counterfactual output evidence` (23:04:00Z) - the arm's
+     *    durable answer was tool-call shaped (no assistant text), so the text-only projection found
+     *    nothing even though the capture carried the calls.
+     *  - `durable replay evaluation is missing branch capture for <endpoint>` (HTTP 409, 23:09:55Z and
+     *    23:30:33Z) - the arm's capture was skipped by the deferred-capture budget (the same window logs
+     *    `route capture skipped: 4000446 bytes exceeds the 524288-byte deferred capture budget`).
+     *
+     * The requirement is explicit: a tool-call-shaped answer is comparable evidence, and an arm whose
+     * capture genuinely cannot be produced is a **named per-arm exclusion** that must not cost the other
+     * arms' evidence. Only those two availability classes are excludable; provenance failures still fail
+     * the capture.
+     */
+    const counterfactualExclusions: Array<{ endpointId: string; reason: string }> = [];
+    const excludableArmReason =
+      /missing branch capture for |missing counterfactual output evidence/u;
+    const projectArmOutput = (
+      capture: Record<string, unknown>,
+      dispatched: string | null,
+      recovered: Record<string, unknown> | null,
+    ): string | null => {
+      const text =
+        dispatched ??
+        (typeof capture.responseText === "string" && capture.responseText.trim()
+          ? capture.responseText
+          : null) ??
+        (typeof recovered?.content === "string" && recovered.content.trim()
+          ? recovered.content
+          : null) ??
+        (typeof capture.outputText === "string" && capture.outputText.trim()
+          ? capture.outputText
+          : null);
+      if (text) return text;
+      // A tool-call-shaped answer is the arm's answer: serialise the captured calls, bounded.
+      const tools = Array.isArray(capture.tools) ? (capture.tools as unknown[]) : [];
+      if (tools.length === 0) return null;
+      return `tool-calls:${JSON.stringify(tools.slice(0, 16)).slice(0, 4_096)}`;
+    };
+    const resolvedCounterfactuals: Array<{
+      candidate: (typeof input.counterfactualPackages)[number];
+      replayRequestId: string;
+      output: string;
+      outputSha256: string;
+      branchCapture: Record<string, unknown>;
+    }> = [];
+    for (const candidate of input.counterfactualPackages) {
+      try {
         const dispatchedCandidate = input.getDispatched(candidate.endpointId);
         const durableDispatch = replayDispatches[candidate.endpointId] as
           | Record<string, unknown>
@@ -1200,24 +2003,74 @@ export function createSupervisedReplayEvaluationCompleter(input: {
           branchCapture.response && typeof branchCapture.response === "object"
             ? (branchCapture.response as Record<string, unknown>)
             : null;
-        const output =
-          (typeof dispatchedExecution?.outputText === "string"
+        const output = projectArmOutput(
+          branchCapture,
+          typeof dispatchedExecution?.outputText === "string" && dispatchedExecution.outputText
             ? dispatchedExecution.outputText
-            : null) ??
-          (typeof recoveredResponse?.content === "string" ? recoveredResponse.content : null) ??
-          (typeof branchCapture.outputText === "string" ? branchCapture.outputText : null);
+            : null,
+          recoveredResponse,
+        );
         if (!output) {
           throw new Error("durable replay evaluation is missing counterfactual output evidence");
         }
-        return {
+        resolvedCounterfactuals.push({
           candidate,
-          replayRequestId,
+          // The later provenance gate refuses an empty id; the array's type is the non-null shape.
+          replayRequestId: replayRequestId ?? "",
           output,
           outputSha256: createHash("sha256").update(output, "utf8").digest("hex"),
           branchCapture,
-        };
-      }),
-    );
+        });
+      } catch (armError) {
+        const reason = String(
+          (armError as { message?: unknown })?.message ?? armError ?? "unknown",
+        ).slice(0, 200);
+        if (!excludableArmReason.test(reason)) throw armError;
+        counterfactualExclusions.push({ endpointId: candidate.endpointId, reason });
+      }
+    }
+    if (resolvedCounterfactuals.length === 0) {
+      throw new Error(
+        `durable replay evaluation has no comparable counterfactual arm: excluded ${counterfactualExclusions
+          .map((entry) => `${entry.endpointId} (${entry.reason})`)
+          .join("; ")}`.slice(0, 512),
+      );
+    }
+    /**
+     * Run 100 R1 (live stage, released candidate `d19dcff3`): the comparison's judge must not be one of
+     * its arms. Evaluation Core derives `judge_self_evaluation` from the comparison's scored trial set,
+     * and the learner then discards the comparison - the largest exclusion bucket in the newest
+     * receipts (`incomparable:judge_self_evaluation` 152-154). The exclusion happens *here*, where the
+     * arms, their per-case reference proofs and the comparison are built together, so every downstream
+     * artefact (cases, references, comparability, the finalize pair) describes the same arm set.
+     */
+    const judgeEndpointId =
+      typeof input.judge?.endpointId === "string" ? input.judge.endpointId.trim() : "";
+    /**
+     * Run 100 R7: whether the judge is excluded from the arm set is operator policy
+     * (`judgeArmExclusion`, default `exclude`). `off` keeps the arm set as configured and leaves the
+     * resulting self-judged evidence to the learner's exclusion, which is the pre-run-100 behaviour.
+     */
+    const judgeArmExclusion = input.learningPolicy?.judgeArmExclusion ?? "exclude";
+    const counterfactuals =
+      judgeEndpointId && judgeArmExclusion !== "off"
+        ? resolvedCounterfactuals.filter((entry) => {
+            if (entry.candidate.endpointId !== judgeEndpointId) return true;
+            counterfactualExclusions.push({
+              endpointId: entry.candidate.endpointId,
+              reason: `judge_arm_excluded: the comparison's judge cannot be one of its arms (policy ${judgeArmExclusion})`,
+            });
+            return false;
+          })
+        : resolvedCounterfactuals;
+    if (judgeEndpointId && judgeArmExclusion !== "off" && counterfactuals.length === 0) {
+      throw new Error(
+        `R14_ALL_CANDIDATES_ARE_JUDGE: the configured counterfactual pool only contains the comparison's judge ${judgeEndpointId}`.slice(
+          0,
+          320,
+        ),
+      );
+    }
     if (counterfactuals.some(({ replayRequestId }) => !replayRequestId)) {
       throw new Error("durable replay evaluation cannot recover counterfactual request provenance");
     }
@@ -1419,8 +2272,29 @@ export function createSupervisedReplayEvaluationCompleter(input: {
       // `deepseek-flash-max` — and refused candidates that are not today's judge at all, so real
       // captures deferred to refusal (`judge_candidate_overlap`).
       ...(input.judge?.endpointId ? { judgeEndpointId: input.judge.endpointId } : {}),
+      /**
+       * S44 (measured live: a recovered handoff with resolvable evidence was refused with
+       * `judge_candidate_overlap … is the judge declared by scorer set run96-routing-shadow-v3`): the judge's
+       * source has to be declared, because Evaluation Core only skips the historical-manifest scan when the
+       * job says where its judge comes from. The rule is the operator's: the judge is the controller.
+       */
+      judgeSource:
+        (input.judge as { judgeSource?: "controller" | "disabled" } | undefined)?.judgeSource ??
+        "controller",
       // Run 98 addendum 45 J2: the comparison also records where that judge came from (the controller
       // assignment, and when that assignment last changed), so a controller switch is visible on the job.
+      /**
+       * Run 100 addendum `handoff-evidence-durability.addendum-06` S44 (measured live: a recovered handoff
+       * that had finally resolved its evidence was refused with `judge_candidate_overlap: candidate
+       * deepseek…flash-high is the judge declared by scorer set run96-routing-shadow-v3`).
+       *
+       * The operator's judge rule is "the judge is the configured controller, resolved at judge time" - no
+       * endpoint or model id is pinned - but this comparability only carried `judgeSource` when a judge object
+       * happened to be resolved, so a job created without one fell through to Evaluation Core's legacy scan of
+       * *historical* manifests sharing the scorer-set version and refused a candidate that is not today's
+       * judge at all. The repair belongs here: the comparability must declare the source even when no judge
+       * object was resolved (`judgeSource: "controller"`), because that is the rule the harness applies.
+       */
       ...(input.judge?.judgeSource ? { judgeSource: input.judge.judgeSource } : {}),
       ...(input.judge?.judgeAssignmentUpdatedAtMs === undefined ||
       input.judge?.judgeAssignmentUpdatedAtMs === null
@@ -1554,7 +2428,19 @@ export function createSupervisedReplayEvaluationCompleter(input: {
         );
       }
     }
-    const comparison = evaluated.evaluation as Record<string, unknown>;
+    /**
+     * Run 100 R3 (live finding, clean verification window 2026-09-22): the pipeline's normal return
+     * carries the observation's own `evaluation` beside the comparison it validated, so the completion
+     * path reads the comparison from its own key when it is present and keeps the previous field as the
+     * fallback for every other producer of this record.
+     */
+    const evaluatedRecordForComparison =
+      evaluated && typeof evaluated === "object" && !Array.isArray(evaluated)
+        ? (evaluated as Record<string, unknown>)
+        : {};
+    const comparison = (evaluatedRecordForComparison.comparison ??
+      evaluatedRecordForComparison.evaluation ??
+      {}) as Record<string, unknown>;
     const outcome = comparison.outcome;
     const comparisonGroupId = comparison.groupId;
     if (
@@ -1570,7 +2456,37 @@ export function createSupervisedReplayEvaluationCompleter(input: {
         "disagreement",
       ].includes(String(outcome))
     ) {
-      throw new Error("durable replay evaluation did not finalize a valid comparison");
+      /**
+       * Run 100 R3 legibility (live finding, clean verification window 2026-09-22): three captures
+       * carried only this sentence, while the pipeline had returned a *decline record* whose own reason
+       * was bounded and available (`state`, `reason`, `refusal.code`, the comparison's `outcome`). The
+       * refusal now names what arrived, so the disposition says which branch declined instead of
+       * collapsing every shape into one sentence.
+       */
+      const evaluatedRecord =
+        evaluated && typeof evaluated === "object" && !Array.isArray(evaluated)
+          ? (evaluated as Record<string, unknown>)
+          : {};
+      const refusal =
+        evaluatedRecord.refusal && typeof evaluatedRecord.refusal === "object"
+          ? (evaluatedRecord.refusal as Record<string, unknown>)
+          : {};
+      const detail = [
+        typeof evaluatedRecord.state === "string" ? `state=${evaluatedRecord.state}` : "",
+        typeof evaluatedRecord.reason === "string" ? `reason=${evaluatedRecord.reason}` : "",
+        typeof refusal.code === "string" ? `refusal=${refusal.code}` : "",
+        outcome === undefined || outcome === null ? "outcome=absent" : `outcome=${String(outcome)}`,
+        comparisonGroupId ? `group=${String(comparisonGroupId).slice(0, 48)}` : "group=absent",
+        // Run 100 R3 (second live read): with none of the fields above present, the record itself is the
+        // only remaining evidence - its own keys name the shape the pipeline returned (a wrapper, a
+        // transport envelope, or a record with the comparison nested elsewhere).
+        `keys=${Object.keys(evaluatedRecord).slice(0, 12).join(",") || "none"}`,
+      ]
+        .filter(Boolean)
+        .join(" ");
+      throw new Error(
+        `durable replay evaluation did not finalize a valid comparison: ${detail}`.slice(0, 512),
+      );
     }
     /**
      * Run 98 addendum 34 S1 (live stage v211-v218: 503 groups, every one of them two members,
@@ -1667,6 +2583,11 @@ export function createSupervisedReplayEvaluationCompleter(input: {
       comparisonGroupId,
       outcome,
       comparisonDigest: `sha256:${createHash("sha256").update(JSON.stringify(comparison)).digest("hex")}`,
+      /**
+       * Run 100 R2: the arms this capture could not compare travel with the result so the disposition
+       * and the Learning evidence view can show *why* evidence was lost instead of a generic deferral.
+       */
+      counterfactualExclusions,
       ...(extraComparisons.length > 0 ? { extraComparisons } : {}),
     };
   };
@@ -2789,6 +3710,10 @@ export function createCliServerOptions(
     listActivityMetricsPage: bindBackendMethod(
       "listActivityMetricsPage",
     ) as StartBridgeServerOptions["listActivityMetricsPage"],
+    /** S42: the operator readback for whether the boundary can return a capture's evidence, and why not. */
+    readCaptureEvidence: (bindBackendMethod as unknown as (method: string) => unknown)(
+      "readCaptureEvidence",
+    ) as StartBridgeServerOptions["readCaptureEvidence"],
     readActivityCapture: bindBackendMethod(
       "readActivityCapture",
     ) as StartBridgeServerOptions["readActivityCapture"],
@@ -3349,6 +4274,14 @@ type ProductionReplayAdapterOptions = Omit<
 const PRODUCTION_REPLAY_DISPATCH_LEDGER_SCHEMA =
   "role-model.replay-dispatch-idempotency-ledger.v1" as const;
 
+/**
+ * Run 108: how long an `in_flight` dispatch owned by another instance is still treated as possibly running.
+ * Past it the attempt is abandoned and its arm may be re-driven (see `begin`); within it the guard still
+ * refuses, so a live dispatch can never be doubled. The window is deliberately generous - being slow to
+ * re-drive costs one capture, doubling a provider call costs money and evidence integrity.
+ */
+const PRODUCTION_REPLAY_DISPATCH_STALE_MS = 30 * 60 * 1_000;
+
 type ProductionReplayDispatchLedgerRecord = {
   readonly requestDigest: string;
   readonly ownerInstanceId: string;
@@ -3432,7 +4365,7 @@ export function resolveProductionReplayDispatchLedgerPath(input: {
   );
 }
 
-function createProductionReplayDispatchLedger(filePath: string) {
+export function createProductionReplayDispatchLedger(filePath: string) {
   if (typeof filePath !== "string" || !filePath.trim()) {
     throw new Error("production replay dispatch ledger path is required");
   }
@@ -3517,6 +4450,18 @@ function createProductionReplayDispatchLedger(filePath: string) {
           };
         }
         if (existing.ownerInstanceId !== ownerInstanceId) {
+          /**
+           * Run 108 note (measured on the live ledger: 3642 records - 3322 `complete`, 274 `failed`, 46
+           * `in_flight`): this refusal is what stranded arms whose dispatching host went away, and the captured
+           * consequence is `replay_failed` after the deferral budget. It was tempting to relax it - a `failed`
+           * record looks terminal, and an `in_flight` record older than a bounded window cannot still be
+           * running - and doing so broke two of this repo's own safety tests
+           * (`run96 F190: an indeterminate restart cannot repeat a provider dispatch`,
+           * `run99 R33: keeps the re-authorized dispatch idempotent across a host restart`). The guard is
+           * therefore deliberately left fail-closed: a provider call that may already have been made is never
+           * repeated under the same dispatch identity. Progress for such an arm has to come from a *new*
+           * attempt identity, not from a weaker guard.
+           */
           const error = new Error(
             "REPLAY_DISPATCH_INDETERMINATE: an earlier replay dispatch did not record completion; refusing to repeat it after restart",
           );
@@ -4045,6 +4990,54 @@ export async function main(): Promise<void> {
     // available at runtime.
     const currentPostObservationOperations = (): ReturnType<typeof createTrackBOperations> | null =>
       postObservationOperations;
+    /**
+     * Run 100 addendum `handoff-evidence-durability.addendum-06` S22 (RC-6).
+     *
+     * Measured on `:3457`: a handoff's intent is durable (the replay job, the dispatch receipt, the resume
+     * entry) and its evidence is not - the route-capture ring keeps only the newest pointers, so a handoff
+     * that outlives the ring takes the terminal disposition `evidence_outside_retention_window` (36 of them
+     * and counting, 252 more already lost before the class was measured). The pin is addressed by the replay
+     * job, so recording, renewing and re-reading a handoff all extend the *same* hold instead of racing to
+     * create different ones.
+     *
+     * Both calls are best-effort and always logged: a runtime whose private boundary refuses the pin still
+     * runs, but the operator sees that evidence is unprotected instead of assuming it is held.
+     */
+    const holdHandoffEvidence = async (
+      replayJobId: string,
+      input: Parameters<typeof handoffEvidenceHoldRequestIds>[0],
+    ) => {
+      const operations = currentPostObservationOperations();
+      if (!operations) return;
+      const requestIds = handoffEvidenceHoldRequestIds(input);
+      if (requestIds.length === 0) return;
+      try {
+        await operations.holdLocalRouteCaptures({
+          holderId: replayJobId,
+          requestIds,
+          ttlMs: HANDOFF_EVIDENCE_HOLD_TTL_MS,
+        });
+      } catch (error) {
+        console.error(
+          `[run101] handoff evidence hold declined:${replayJobId} ${String(
+            (error as { message?: unknown })?.message ?? error,
+          ).slice(0, 200)}`,
+        );
+      }
+    };
+    const releaseHandoffEvidence = async (replayJobId: string) => {
+      const operations = currentPostObservationOperations();
+      if (!operations) return;
+      try {
+        await operations.releaseLocalRouteCaptures({ holderId: replayJobId });
+      } catch (error) {
+        console.error(
+          `[run101] handoff evidence release declined:${replayJobId} ${String(
+            (error as { message?: unknown })?.message ?? error,
+          ).slice(0, 200)}`,
+        );
+      }
+    };
     // Automatic replay: read pending captures from the private boundary, replay them
     // through the public replay endpoint, and persist every disposition. Production
     // stays disabled; failures degrade the loop instead of affecting routing.
@@ -4059,8 +5052,33 @@ export async function main(): Promise<void> {
      */
     const resumeEvaluationsRef: {
       current:
-        | (() => Promise<{ resumed: number; completed: number; failed: number; remaining: number }>)
+        | (() => Promise<{
+            resumed: number;
+            completed: number;
+            failed: number;
+            /** S23: handoffs terminated because their evidence is outside the capture retention window. */
+            outsideRetentionWindow: number;
+            /** S25: abandoned handoffs the drain renewed because their evidence may still exist. */
+            renewedFromDrain: number;
+            remaining: number;
+          }>)
         | null;
+    } = { current: null };
+    /**
+     * Run 100 addendum `handoff-evidence-durability.addendum-06` S27: the durable replay jobs' scope is
+     * resolved in the liveness-sweep scope (which sees the captures) and is needed by the resume sweep's
+     * terminalization (which runs in the replay command handler's scope), so it travels through a ref the same
+     * way the resume sweep does.
+     */
+    const replayJobScopeRef: { current: (() => Promise<string | null>) | null } = { current: null };
+    /**
+     * Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S7: the handed-off-replay recovery pass in
+     * the liveness sweep records the resume entries it discovers, and the store itself lives with the replay
+     * command handler (created later), so it is reached through this ref the same way `resumeEvaluationsRef`
+     * reaches the sweep.
+     */
+    const evaluationResumeStoreRef: {
+      current: ReturnType<typeof createSupervisedReplayEvaluationResumeStore> | null;
     } = { current: null };
     const startHostAutoReplayLoop = (
       endpoints: () => readonly string[],
@@ -4077,7 +5095,12 @@ export async function main(): Promise<void> {
           options.scopeId,
           "track-b-replay-ledger.json",
         ),
-        limits: resolveReplayLedgerLimits(),
+        limits: resolveChannelScopedReplayLedgerLimits({
+          repoRoot: options.repoRoot,
+          runtimeStateRoot: options.runtimeStateRoot,
+          scopeId: options.scopeId,
+          channel,
+        }),
       });
       const policySet = buildReplayPolicySet();
       const intervalMs = Number(process.env.ROLE_MODEL_AUTO_REPLAY_INTERVAL_MS ?? 30_000);
@@ -4086,6 +5109,102 @@ export async function main(): Promise<void> {
       // produce). It is learned from the capture the executor reads each tick so the
       // expiration sweep targets the same authority the jobs were created under.
       let lastReplayCaptureScope: string | null = null;
+      // Run 100 addendum 04 S7: when the handed-off-replay recovery pass last listed the durable jobs.
+      let lastHandoffRecoveryAtMs = 0;
+      /**
+       * Run 100 addendum `handoff-evidence-durability.addendum-06` S24: where the terminal recovery page
+       * resumes. Process-lifetime by design: the durable stores are the record of what still needs doing, and
+       * a restart re-scans from the beginning, which is cheap now that the listing only projects summaries.
+       */
+      let handoffRecoveryCursor: RecoveryPageCursor | null = null;
+      /** P6: where the learner sweep resumes in the candidate listing (creation-time order). */
+      let learnerCandidateCursor: { createdAtMs: number; candidateId: string } | null = null;
+      /**
+       * S13: groups this process already presented to the consumer. A group whose evidence is not complete yet stays
+       * in the durable backlog; the set only stops one process re-deriving the same group on every tick, and a
+       * restart re-scans from the beginning (the worker dedupes a repeated presentation).
+       */
+      const learnerDerivationAttempts = new Set<string>();
+      /**
+       * Addendum 39: groups the post-finalization signals sweep has settled for this process - its report is
+       * persisted, its captures have aged out of the retention ring, or the analyzer answered a degradation receipt.
+       * Settlement is monotonic, so the sweep does not spend its bounded page re-reading the newest end of the store
+       * on every tick; a restart re-scans from the newest end (the reads are idempotent).
+       */
+      const finalizationSignalsSettled = new Set<string>();
+      /** S27 diagnostics: report the resolved job scope and an empty recovery page once per process. */
+      let replayJobScopeReported = false;
+      let emptyRecoveryPageReported = false;
+      /** S29 diagnostics: report a page payload that is not the page itself, once per process. */
+      let examinedShapeUnreported = true;
+      /** S33 diagnostics: report the answer to a lookup of an evaluation that does not exist, once. */
+      let existingLookupShapeReported = false;
+      /** S36 diagnostics: report a job read that yields no record, once per process. */
+      let jobReadShapeReported = false;
+      /** S37 diagnostics: report a candidate that could not become a resume entry, once per process. */
+      let entrySynthesisReported = false;
+      /**
+       * Run 100 addendum `handoff-evidence-durability.addendum-06` S27: the scope the durable replay jobs were
+       * created under. The producer learns it from the captures it dispatches, and a runtime that has just
+       * restarted has none - in that window its listings bound the operator scope, `assertJobSummaryBinding`
+       * skipped every job, and the recovery page came back empty (measured live: the log filled with
+       * `replay persisted job scope binding mismatch` while the terminal set stayed invisible). When the scope
+       * is unknown it is discovered from the store itself, with a listing that does not bind the scope it is
+       * trying to find.
+       */
+      const resolveReplayJobScope = async (): Promise<string | null> => {
+        if (lastReplayCaptureScope) {
+          if (!replayJobScopeReported) {
+            replayJobScopeReported = true;
+            console.error(`[run101] replay job scope: learned ${lastReplayCaptureScope}`);
+          }
+          return lastReplayCaptureScope;
+        }
+        /**
+         * S28: the scope is *computable*, not discoverable. Measured live: a scope-less listing is refused by
+         * the runtime host before the extension's binding check runs
+         * (`envelope identity or capability is incomplete or incompatible`), so the pass bound the operator
+         * scope and the page came back empty. The derivation below is the one the private boundary uses to
+         * stamp the captures these jobs were built from.
+         */
+        const derived = resolveDurableReplayJobScope({
+          channel,
+          runtimeStateRoot: options.runtimeStateRoot,
+          scopeId: options.scopeId,
+        });
+        if (!replayJobScopeReported) {
+          replayJobScopeReported = true;
+          console.error(`[run101] replay job scope: derived ${derived}`);
+        }
+        return derived;
+      };
+      replayJobScopeRef.current = resolveReplayJobScope;
+      /**
+       * Run 100 addendum 39: the learner-facing sweeps reach the extensions through the same envelope shape (protocol
+       * version, channel, authorization epoch and the durable evaluation authority), so it is built once and only the
+       * request prefix differs between the consume/derive sweeps and the post-finalization signals sweep.
+       */
+      const learnerSweepEnvelope = (input: {
+        readonly requestPrefix: string;
+        readonly extensionId: string;
+        readonly capability: string;
+        readonly value: Record<string, unknown>;
+        readonly evaluationAuthoritySecret: string;
+        readonly scopeOverride?: string;
+        readonly query?: Record<string, unknown>;
+      }) => ({
+        requestId: `${input.requestPrefix}:${input.capability}:${Date.now()}`,
+        sessionId: `${input.requestPrefix}:${options.scopeId}`,
+        protocolVersion: "1.1.0",
+        channel,
+        scope: input.scopeOverride ?? options.scopeId,
+        authorizationEpoch: 1,
+        capability: input.capability,
+        value: input.value,
+        ...(input.query ? { query: input.query } : {}),
+        ...(input.extensionId === "knowledge-store" ? { payload: input.value } : {}),
+        evaluationAuthoritySecret: input.evaluationAuthoritySecret,
+      });
       // RC07 (L2): the bounded expiration sweep goes straight through the extension
       // host the producer already uses for replay-core, because the operator boundary's
       // replay domain does not expose the sweep in the packaged composition
@@ -4126,9 +5245,1499 @@ export async function main(): Promise<void> {
          */
         async resumePendingEvaluations() {
           if (!resumeEvaluationsRef.current) {
-            return { resumed: 0, completed: 0, failed: 0, remaining: 0 };
+            return {
+              resumed: 0,
+              completed: 0,
+              failed: 0,
+              outsideRetentionWindow: 0,
+              renewedFromDrain: 0,
+              remaining: 0,
+            };
           }
-          return resumeEvaluationsRef.current();
+          const result = await resumeEvaluationsRef.current();
+          /**
+           * Run 100 addendum `handoff-evidence-durability.addendum-06` S23: this is the operator readback for
+           * the named disposition. Measured on `:3457`: 252 of 265 lost handoffs cannot be completed by any
+           * retry (their branch captures are outside the capture retention ring), and before this counter
+           * they were indistinguishable from a defect - they simply appeared as `abandoned` after eight
+           * attempts. The count is the signal; the disposition is on the entry and on the replay job.
+           */
+          if (result.outsideRetentionWindow > 0) {
+            console.error(
+              `[run101] ${result.outsideRetentionWindow} handoff(s) disposed as ${HANDOFF_EVIDENCE_OUTSIDE_RETENTION_WINDOW}`,
+            );
+          }
+          if (result.renewedFromDrain > 0) {
+            console.error(
+              `[run101] ${result.renewedFromDrain} abandoned handoff(s) renewed while their evidence may still exist`,
+            );
+          }
+          return result;
+        },
+        /**
+         * Run 100 addendum `evaluation-lease-wedge-repair.addendum-02` S1: one bounded reconciliation of
+         * *evaluation* jobs per auto-replay tick.
+         *
+         * `evaluation:reconcile-jobs` is the only pass that completes a job whose comparison group is
+         * finalized, marks a job with no live lease and no non-terminal trial as stranded, and reclaims it
+         * once the grace has elapsed. It shipped with unit coverage and **no production caller** (the same
+         * shape as the run 98 addendum 34 rescue calls), so 18 rows stayed non-terminal on the live stage
+         * store for two days while the operator surface reported them "in flight". Evaluation jobs live in
+         * the operator scope's evaluation store - the resume sweep above reads them with the same scope.
+         */
+        /**
+         * Run 100 addendum `replay-evaluation-learner-spine-completion.addendum-07` P6 - the learner's own
+         * liveness.
+         *
+         * Measured live: 162 knowledge-worker candidates, only 148 with a `validation_receipt` in the knowledge
+         * store, and the only thing that ever wrote one was the inline learner step inside
+         * `runTrackBShadowPipeline`. A comparison finalized by the extension's sweep (or a pipeline run interrupted
+         * after it derived its candidate) therefore left a candidate that no later process would ever validate -
+         * `knowledge_learning_records` stopped at 2026-09-21T22:56:38Z while 549 completion receipts accrued.
+         *
+         * The sweep drives the worker's own steps with durable evidence only (exactly the records the pass writes,
+         * in the same shapes and with the same identity), bounded to a couple of candidates per tick:
+         *   `knowledge:list-candidates` -> candidates the store has no receipt for ->
+         *   `knowledge:validate-candidate` -> `knowledge:record-learning` (validation_receipt) ->
+         *   `knowledge:promote-candidate` when the receipt says `validate` -> `knowledge:record-learning` (pack).
+         * It never dispatches a provider call and never mutates a route.
+         */
+        async learnFromUnconsumedCandidates() {
+          const runtime = extensionRuntimeRef.current;
+          if (!runtime) return { scanned: 0, consumed: 0, remaining: 0 };
+          const authority = await (async () => {
+            try {
+              return await resolveDurableEvaluationAuthority({
+                channel,
+                stateRoot: options.runtimeStateRoot,
+                scopeId: options.scopeId,
+              });
+            } catch {
+              return null;
+            }
+          })();
+          if (!authority) return { scanned: 0, consumed: 0, remaining: 0 };
+          const envelopeFor = (
+            extensionId: string,
+            capability: string,
+            value: Record<string, unknown>,
+          ) => ({
+            requestId: `learner-sweep:${capability}:${Date.now()}`,
+            sessionId: `learner-sweep:${options.scopeId}`,
+            protocolVersion: "1.1.0",
+            channel,
+            scope: options.scopeId,
+            authorizationEpoch: 1,
+            capability,
+            value,
+            ...(extensionId === "knowledge-store" ? { payload: value } : {}),
+            evaluationAuthoritySecret: authority.authoritySecret,
+          });
+          const listing = await runtime.invoke(
+            "knowledge-worker",
+            envelopeFor("knowledge-worker", "knowledge:list-candidates", {
+              /**
+               * P6: the sweep walks the candidate set with a cursor instead of re-reading its newest page (the
+               * fixed-window class this run keeps meeting) - the consumed set lives in the knowledge store, so
+               * only a page that advances can reach a candidate nothing ever validated.
+               */
+              limit: 32,
+              ...(learnerCandidateCursor === null
+                ? {}
+                : {
+                    afterCreatedAtMs: learnerCandidateCursor.createdAtMs,
+                    afterCandidateId: learnerCandidateCursor.candidateId,
+                  }),
+            }),
+          );
+          const candidates = (() => {
+            const decoded = decodeExternalizedOperatorReadback({
+              stateRoot: options.runtimeStateRoot,
+              scopeId: options.scopeId,
+              value: unwrapCapabilityPayload(listing),
+            });
+            const rows = Array.isArray(decoded)
+              ? decoded
+              : Array.isArray((decoded as { candidates?: unknown[] })?.candidates)
+                ? (decoded as { candidates: unknown[] }).candidates
+                : [];
+            return rows.filter(
+              (row): row is Record<string, unknown> => Boolean(row) && typeof row === "object",
+            );
+          })();
+          if (candidates.length === 0) return { scanned: 0, consumed: 0, remaining: 0 };
+          const lastListed = candidates[candidates.length - 1];
+          learnerCandidateCursor =
+            candidates.length < 32 &&
+            typeof lastListed?.candidateId === "string" &&
+            Number.isSafeInteger(lastListed?.createdAtMs)
+              ? null
+              : typeof lastListed?.candidateId === "string" &&
+                  Number.isSafeInteger(lastListed?.createdAtMs)
+                ? {
+                    createdAtMs: Number(lastListed.createdAtMs),
+                    candidateId: lastListed.candidateId,
+                  }
+                : null;
+          const records = await runtime.invoke(
+            "knowledge-store",
+            envelopeFor("knowledge-store", "knowledge:list-learning", {
+              scopeId: options.scopeId,
+              kind: "validation_receipt",
+              limit: 512,
+            }),
+          );
+          const recordedCandidateIds = new Set(
+            (() => {
+              /**
+               * P6, third pass: the listing is read through the same externalization decoder as every other
+               * operator readback. Without it a page whose records are externalized parses to markers, no
+               * candidate id matches, and the sweep reports the whole page as "without a validation receipt"
+               * (measured live on `stage-run105`: "32 candidate(s) without a validation receipt" while 149 of
+               * the 164 candidates carried one). A readback that cannot be read is reported, never assumed.
+               */
+              const decoded = decodeExternalizedOperatorReadback({
+                stateRoot: options.runtimeStateRoot,
+                scopeId: options.scopeId,
+                value: unwrapCapabilityPayload(records),
+              });
+              const rows = Array.isArray(decoded)
+                ? decoded
+                : Array.isArray((decoded as { records?: unknown[] })?.records)
+                  ? (decoded as { records: unknown[] }).records
+                  : [];
+              return rows
+                .map((row) => {
+                  const record =
+                    row && typeof row === "object" && !Array.isArray(row)
+                      ? (row as Record<string, unknown>)
+                      : {};
+                  const parsed = (() => {
+                    if (record.record && typeof record.record === "object") {
+                      return record.record as Record<string, unknown>;
+                    }
+                    // The store answers parsed records; a page that has been through an inline frame may
+                    // still carry the raw JSON, and a receipt that cannot be attributed is not a receipt.
+                    if (typeof record.record_json === "string") {
+                      try {
+                        return JSON.parse(record.record_json) as Record<string, unknown>;
+                      } catch {
+                        return {};
+                      }
+                    }
+                    return record;
+                  })();
+                  const candidateId = parsed.candidateId ?? record.candidateId;
+                  return typeof candidateId === "string" ? candidateId : null;
+                })
+                .filter((value): value is string => value !== null);
+            })(),
+          );
+          if (recordedCandidateIds.size === 0 && candidates.length > 0) {
+            console.error(
+              "[run101] learner sweep: the validation-receipt listing named no candidate - every candidate would look unvalidated",
+            );
+          }
+          /**
+           * P2/P6: the retrieval index has no driver of its own - the retrieval plane is wired (durable index +
+           * durable receipts) but nothing calls `knowledge:rebuild-index`, so the live store reads 0 FTS rows,
+           * no index-state row and 0 retrieval receipts. One call per sweep keeps it current: it is idempotent
+           * and answers a readback (`rebuilt:false`) when the candidate backlog has not changed.
+           */
+          try {
+            const rebuilt = unwrapCapabilityPayload(
+              await runtime.invoke(
+                "knowledge-worker",
+                envelopeFor("knowledge-worker", "knowledge:rebuild-index", {}),
+              ),
+            );
+            const record =
+              rebuilt && typeof rebuilt === "object" && !Array.isArray(rebuilt)
+                ? (rebuilt as Record<string, unknown>)
+                : {};
+            if (record.rebuilt === true) {
+              console.error(
+                `[run101] retrieval index rebuilt: ${String(record.indexedDocuments ?? "?")} document(s)`,
+              );
+            }
+          } catch (error) {
+            console.error(
+              `[run101] retrieval index rebuild refused: ${String(
+                (error as { message?: unknown })?.message ?? error,
+              ).slice(0, 160)}`,
+            );
+          }
+          /**
+           * Run 100 addendum 15 / item 7: the index has a driver; the *retrieval* had none. One bounded shadow
+           * query per tick, with its receipt recorded durably by the Knowledge Store, is what makes the ranking
+           * path observable at all (`knowledge_retrieval_receipts` read 0 while the index was fully built).
+           */
+          try {
+            const served = await serveLearnerSweepRetrieval({
+              scopeId: options.scopeId,
+              invoke: (extensionId, capability, value) =>
+                runtime.invoke(extensionId, envelopeFor(extensionId, capability, value)),
+            });
+            if (served.served) {
+              console.error(
+                `[run146] learner sweep served retrieval results=${served.resultCount} matches=${served.matchCount} receipt=${
+                  served.receiptId ?? "-"
+                } recorded=${served.durableReceipt.recorded}`,
+              );
+            } else {
+              console.error(
+                `[run146] learner sweep retrieval not served: ${String(served.reason ?? "unknown").slice(0, 160)}`,
+              );
+            }
+          } catch (error) {
+            console.error(
+              `[run146] learner sweep retrieval failed: ${String(
+                (error as { message?: unknown })?.message ?? error,
+              ).slice(0, 160)}`,
+            );
+          }
+          const pending = candidates.filter((candidate) => {
+            const candidateId =
+              typeof candidate.candidateId === "string" ? candidate.candidateId : null;
+            return candidateId !== null && !recordedCandidateIds.has(candidateId);
+          });
+          if (pending.length === 0)
+            return { scanned: candidates.length, consumed: 0, remaining: 0 };
+          /**
+           * Run 100 addendum 07 P6, second pass: the first version of this sweep presented only
+           * `{ candidateId }`, and `validateCandidate` refuses that with "scorer and judge identity
+           * required for validation" - so the sweep could never consume anything. A durable caller has to
+           * present the value the pipeline presents: the scoring identity and scope the worker re-checks
+           * against the candidate record, the finalized comparison readback, and the two receipts the
+           * worker verifies with the evidence authority. Both receipts are HMACs over durable facts and
+           * the authority is now derived from the runtime's managed key, so `assembleDurableLearnerValidationValue`
+           * mints exactly what a pipeline run mints (see its suite for the recipe).
+           */
+          const readComparisonGroups = async (): Promise<Record<string, unknown>[]> => {
+            try {
+              /**
+               * Run 107 P1: the learner's evidence is the whole durable group set. A single
+               * argument-less call answered one fixed 256-row page, so with 699 live groups the
+               * summary could never see the 443 that sat outside the window and the promotion gate
+               * had nothing to count. The readback now walks the capability's cursor.
+               */
+              return await collectPagedComparisonGroups({
+                readPage: async (cursor) => {
+                  const decoded = decodeExternalizedOperatorReadback({
+                    stateRoot: options.runtimeStateRoot,
+                    scopeId: options.scopeId,
+                    value: unwrapCapabilityPayload(
+                      await runtime.invoke(
+                        "evaluation-core",
+                        envelopeFor("evaluation-core", "evaluation:list-groups", {
+                          page: true,
+                          limit: LEARNING_GROUP_PAGE_LIMIT,
+                          ...(cursor ? { cursor } : {}),
+                        }),
+                      ),
+                    ),
+                  });
+                  return decoded;
+                },
+              });
+            } catch {
+              return [];
+            }
+          };
+          const groups = await readComparisonGroups();
+          let consumed = 0;
+          /** Run 107 P6: validated packs this sweep put into the rollout (see the activation step below). */
+          let activated = 0;
+          for (const candidate of pending.slice(0, 2)) {
+            const candidateId = String(candidate.candidateId);
+            const scorerSetVersion =
+              typeof candidate.scorerSetVersion === "string" ? candidate.scorerSetVersion : null;
+            if (!scorerSetVersion) continue;
+            try {
+              const candidateScope =
+                candidate.scope && typeof candidate.scope === "object"
+                  ? (candidate.scope as Record<string, unknown>)
+                  : {};
+              const routePackage =
+                typeof candidateScope.routePackage === "string" && candidateScope.routePackage
+                  ? candidateScope.routePackage
+                  : typeof candidate.routePackage === "string"
+                    ? candidate.routePackage
+                    : null;
+              /**
+               * P6, third pass (measured live on `stage-run105`): the candidate carries the comparability
+               * key first and the durable comparison group second, so reading `groupIds[0]` refused every
+               * candidate with "durable evaluation comparison group not found" while the group it needed
+               * was finalized in the store. `selectDurableComparisonGroupId` picks the id Evaluation Core
+               * can actually read back, and every candidate id is still tried in order as a fallback.
+               */
+              const comparisonIds = [
+                selectDurableComparisonGroupId(candidate),
+                ...(Array.isArray(candidate.groupIds) ? candidate.groupIds : []),
+              ].filter(
+                (value, index, all): value is string =>
+                  typeof value === "string" && value.length > 0 && all.indexOf(value) === index,
+              );
+              if (!routePackage || comparisonIds.length === 0) {
+                console.error(
+                  `[run101] learner sweep: candidate ${candidateId.slice(0, 16)} carries no comparison group`,
+                );
+                continue;
+              }
+              let groupId = comparisonIds[0];
+              let group: Record<string, unknown> = {};
+              // A candidate may carry more than one group-shaped id (a comparability key and the durable
+              // comparison group); read each in order and keep the one Evaluation Core resolves to a
+              // finalized comparison, so a foreign hash cannot mask a group that is present.
+              for (const candidateGroupId of comparisonIds.slice(0, 3)) {
+                const readback = decodeExternalizedOperatorReadback({
+                  stateRoot: options.runtimeStateRoot,
+                  scopeId: options.scopeId,
+                  value: unwrapCapabilityPayload(
+                    await runtime
+                      .invoke(
+                        "evaluation-core",
+                        envelopeFor("evaluation-core", "evaluation:read-comparison-group", {
+                          groupId: candidateGroupId,
+                        }),
+                      )
+                      .catch(() => null),
+                  ),
+                });
+                const candidateGroup =
+                  readback && typeof readback === "object" && !Array.isArray(readback)
+                    ? (readback as Record<string, unknown>)
+                    : {};
+                if (
+                  candidateGroup.status === "finalized" &&
+                  Array.isArray(candidateGroup.members)
+                ) {
+                  group = candidateGroup;
+                  groupId = candidateGroupId;
+                  break;
+                }
+              }
+              if (group.status !== "finalized" || !Array.isArray(group.members)) {
+                console.error(
+                  `[run101] learner sweep: candidate ${candidateId.slice(0, 16)} has no finalized comparison readback for ${comparisonIds
+                    .slice(0, 3)
+                    .map((value) => value.slice(0, 24))
+                    .join(", ")}`,
+                );
+                continue;
+              }
+              const comparability =
+                group.comparability && typeof group.comparability === "object"
+                  ? (group.comparability as Record<string, unknown>)
+                  : {};
+              // The same projection the pipeline builds from the durable readback (`track-b-runtime.ts`),
+              // so the worker's holdout/membership checks see the record it already accepted.
+              const finalizedComparison = {
+                groupId: typeof group.groupId === "string" ? group.groupId : groupId,
+                comparisonId: typeof group.groupId === "string" ? group.groupId : groupId,
+                status: group.status,
+                outcome: group.outcome,
+                holdout: group.holdout,
+                ...(group.primaryMetric ? { primaryMetric: group.primaryMetric } : {}),
+                ...(Array.isArray(group.scorerOutcomes)
+                  ? { scorerOutcomes: group.scorerOutcomes }
+                  : {}),
+                members: group.members,
+              };
+              const evidenceSummary = buildTrackBLearningEvidenceSummary({
+                groups,
+                routePackage,
+                nowMs: Date.now(),
+                evidenceMaxAgeMs: 30 * 24 * 60 * 60 * 1_000,
+                evidenceHalfLifeDays: DEFAULT_EVIDENCE_HALF_LIFE_DAYS,
+              });
+              const validationValue = assembleDurableLearnerValidationValue({
+                candidateId,
+                routePackage,
+                channel,
+                scope: options.scopeId,
+                scorerSetVersion,
+                judgeEndpointId:
+                  typeof candidate.judgeEndpointId === "string" ? candidate.judgeEndpointId : null,
+                evaluationAuthoritySecret: authority.authoritySecret,
+                finalizedComparison,
+                evidenceSummary,
+                sourceEvidenceRef:
+                  typeof comparability.sourceEvidenceRef === "string"
+                    ? comparability.sourceEvidenceRef
+                    : null,
+                counterfactualEvidenceRef:
+                  typeof comparability.counterfactualEvidenceRef === "string"
+                    ? comparability.counterfactualEvidenceRef
+                    : null,
+                taskTypeId:
+                  typeof candidateScope.taskTypeId === "string"
+                    ? candidateScope.taskTypeId
+                    : typeof comparability.taskTypeId === "string"
+                      ? comparability.taskTypeId
+                      : null,
+                taxonomyVersion:
+                  typeof candidateScope.taxonomyVersion === "string"
+                    ? candidateScope.taxonomyVersion
+                    : typeof comparability.taxonomyVersion === "string"
+                      ? comparability.taxonomyVersion
+                      : null,
+              });
+              const validation = unwrapCapabilityPayload(
+                await runtime.invoke(
+                  "knowledge-worker",
+                  envelopeFor("knowledge-worker", "knowledge:validate-candidate", validationValue),
+                ),
+              );
+              const validationRecord =
+                validation && typeof validation === "object" && !Array.isArray(validation)
+                  ? (validation as Record<string, unknown>)
+                  : {};
+              const receipt =
+                validationRecord.receipt && typeof validationRecord.receipt === "object"
+                  ? (validationRecord.receipt as Record<string, unknown>)
+                  : null;
+              const receiptId = typeof receipt?.receiptId === "string" ? receipt.receiptId : null;
+              if (!receipt || !receiptId) {
+                console.error(
+                  `[run101] learner sweep: candidate ${candidateId.slice(0, 16)} produced no validation receipt`,
+                );
+                continue;
+              }
+              await runtime.invoke(
+                "knowledge-store",
+                envelopeFor("knowledge-store", "knowledge:record-learning", {
+                  record: {
+                    recordId: receiptId,
+                    kind: "validation_receipt",
+                    state:
+                      typeof receipt.decision === "string"
+                        ? receipt.decision
+                        : "insufficient_evidence",
+                    scopeId: options.scopeId,
+                    identity: { scorerSetVersion, judgeEndpointId: null },
+                    record: {
+                      ...receipt,
+                      ...(validationRecord.familyEvidence &&
+                      typeof validationRecord.familyEvidence === "object"
+                        ? { familyEvidence: validationRecord.familyEvidence }
+                        : {}),
+                    },
+                  },
+                }),
+              );
+              consumed += 1;
+              /**
+               * Run 107 P13: the durable record is the runtime's own shape and keeps the family evidence; the
+               * *contract* artifact is the documented vocabulary, and until this slice nothing emitted one -
+               * `contracts\` held zero `RouteLearningValidationReceiptV1` files while 149 receipts accrued.
+               * The projection is validated by `emitTrackBContract` before it writes, so a record that cannot
+               * be expressed in the contract is a named degradation here instead of a silent absence.
+               */
+              try {
+                emitTrackBContract({
+                  stateRoot: options.runtimeStateRoot,
+                  scopeId: options.scopeId,
+                  contract: buildRouteLearningValidationReceipt({
+                    receipt,
+                    channel,
+                    scopeId: options.scopeId,
+                  }),
+                });
+              } catch (error) {
+                console.error(
+                  `[run107] learner sweep: validation receipt ${receiptId.slice(0, 24)} was not emitted as a contract: ${String(
+                    (error as { message?: unknown })?.message ?? error,
+                  ).slice(0, 200)}`,
+                );
+              }
+              if (receipt.decision === "validate") {
+                const promotion = unwrapCapabilityPayload(
+                  await runtime.invoke(
+                    "knowledge-worker",
+                    envelopeFor("knowledge-worker", "knowledge:promote-candidate", {
+                      candidateId,
+                      validationReceiptId: receiptId,
+                      ...(typeof receipt.baselineId === "string"
+                        ? { baselinePackId: receipt.baselineId }
+                        : {}),
+                    }),
+                  ),
+                );
+                const packCandidate =
+                  promotion && typeof promotion === "object" && !Array.isArray(promotion)
+                    ? ((promotion as Record<string, unknown>).packCandidate as
+                        | Record<string, unknown>
+                        | undefined)
+                    : undefined;
+                const packId =
+                  typeof packCandidate?.packId === "string" ? packCandidate.packId : null;
+                if (packCandidate && packId) {
+                  await runtime.invoke(
+                    "knowledge-store",
+                    envelopeFor("knowledge-store", "knowledge:record-learning", {
+                      record: {
+                        recordId: packId,
+                        kind: "pack",
+                        state:
+                          typeof packCandidate.status === "string"
+                            ? packCandidate.status
+                            : "validated",
+                        scopeId: options.scopeId,
+                        identity: { scorerSetVersion, judgeEndpointId: null },
+                        record: { ...packCandidate },
+                      },
+                    }),
+                  );
+                  // Run 107 P13: the promoted pack is emitted in the documented vocabulary too, so the
+                  // learner's output is readable as the contract the proposal names (and not only as the
+                  // knowledge store's own record).
+                  try {
+                    emitTrackBContract({
+                      stateRoot: options.runtimeStateRoot,
+                      scopeId: options.scopeId,
+                      contract: buildExperiencePackCandidate({
+                        pack: packCandidate,
+                        channel,
+                        scopeId: options.scopeId,
+                      }),
+                    });
+                  } catch (error) {
+                    console.error(
+                      `[run107] learner sweep: pack ${packId.slice(0, 24)} was not emitted as a contract: ${String(
+                        (error as { message?: unknown })?.message ?? error,
+                      ).slice(0, 200)}`,
+                    );
+                  }
+                  /**
+                   * Run 100 addendum 15 item 6, second half. Measured on the rebuilt stage runtime
+                   * 2026-09-25: this sweep promoted `pack-89a530d7...` at 05:23:58Z and `contracts\` held
+                   * zero `RoutePackageAttributionV1` beside it, because only the shadow pipeline's learning
+                   * pass had the emitter. Both promoters now go through one emitter, so a promoted package
+                   * always names the route package the evidence belongs to and the numbers the gate used.
+                   * A member the sweep cannot resolve refuses the artifact by name (logged, never thrown):
+                   * the promotion itself must not depend on the artifact.
+                   */
+                  try {
+                    const packScope =
+                      packCandidate.scope &&
+                      typeof packCandidate.scope === "object" &&
+                      !Array.isArray(packCandidate.scope)
+                        ? (packCandidate.scope as Record<string, unknown>)
+                        : {};
+                    const attributionEndpointId =
+                      typeof packScope.endpointId === "string" && packScope.endpointId.trim()
+                        ? packScope.endpointId.trim()
+                        : routePackage;
+                    const taskTypeId =
+                      typeof candidateScope.taskTypeId === "string" &&
+                      candidateScope.taskTypeId.trim()
+                        ? candidateScope.taskTypeId.trim()
+                        : typeof comparability.taskTypeId === "string" &&
+                            comparability.taskTypeId.trim()
+                          ? comparability.taskTypeId.trim()
+                          : "task:route-selection";
+                    const roleId =
+                      typeof candidateScope.roleId === "string" && candidateScope.roleId.trim()
+                        ? candidateScope.roleId.trim()
+                        : null;
+                    const attribution = emitRoutePackageAttributionForPromotion({
+                      stateRoot: options.runtimeStateRoot,
+                      scopeId: options.scopeId,
+                      channel,
+                      packId,
+                      receipt,
+                      descriptor: {
+                        endpointId: attributionEndpointId,
+                        modelId:
+                          readEndpointModelIdForRoutePackage({
+                            runtimeStateRoot: options.runtimeStateRoot,
+                            scopeId: options.scopeId,
+                            routePackage: attributionEndpointId,
+                          }) ?? "",
+                      },
+                      scope: {
+                        taskTypeId,
+                        endpointId: attributionEndpointId,
+                        ...(roleId ? { roleId } : {}),
+                      },
+                    });
+                    if (!attribution.emitted) {
+                      console.error(
+                        `[run150] learner sweep: attribution for ${packId.slice(0, 24)} was not emitted: ${attribution.reason}`,
+                      );
+                    }
+                  } catch (error) {
+                    console.error(
+                      `[run150] learner sweep: attribution for ${packId.slice(0, 24)} was not emitted as a contract: ${String(
+                        (error as { message?: unknown })?.message ?? error,
+                      ).slice(0, 600)}`,
+                    );
+                  }
+                  /**
+                   * Run 107 P6: the promotion has a second half - the pack has to reach the *rollout*.
+                   *
+                   * Measured live before this slice: the learner could write a validated pack (it did, at
+                   * 2026-09-24T01:03:56Z, the first since 2026-09-21) and the router never saw it, because
+                   * `route-advisory-source.ts` reads `rollout.activePackageId` and no writer ever set it
+                   * from this path - the newest activation receipt was 2026-09-22T07:40Z. A pack that
+                   * nothing activates is a receipt, not a learned route.
+                   *
+                   * Activation is the operator's stage, not the sweep's opinion: the sweep activates only
+                   * when the effective policy stage for this channel/scope is one that already applies
+                   * learned evidence (S2 advisory-considered and above), and it names the stage in the
+                   * policy gate id so the receipt says which setting allowed it. `knowledge:activate-pack`
+                   * keeps the cohort ladder, refuses a re-activation of a rolled-back pack without a new
+                   * validation receipt, and keys its receipt by the pack, scope, gate and receipt id, so a
+                   * repeated sweep is idempotent rather than a second activation.
+                   */
+                  const activationStage = (() => {
+                    try {
+                      // A damaged durable policy degrades to no stage, and no stage means no
+                      // activation - the sweep never invents an operator setting.
+                      return (
+                        readLearningPolicyFile({
+                          repoRoot: options.repoRoot,
+                          stateRoot: resolveLearningPolicyStateRoot({
+                            runtimeStateRoot: options.runtimeStateRoot,
+                            scopeId: options.scopeId,
+                          }),
+                          channel,
+                          scopeId: options.scopeId,
+                        })?.effective?.stage ?? null
+                      );
+                    } catch {
+                      return null;
+                    }
+                  })();
+                  if (activationStageAllowsPackActivation(activationStage)) {
+                    try {
+                      const activationAnswer = unwrapCapabilityPayload(
+                        await runtime.invoke(
+                          "knowledge-store",
+                          envelopeFor("knowledge-store", "knowledge:activate-pack", {
+                            scopeId: options.scopeId,
+                            packId,
+                            validationReceiptId: receiptId,
+                            channel,
+                            policyGateId: `gate:route-package-activation@${activationStage}`,
+                          }),
+                        ),
+                      );
+                      /**
+                       * P11: the store answers a bounded degradation receipt instead of throwing, so a
+                       * counter that only watched for exceptions reported activations that never reached
+                       * the rollout. The answer is read back and classified.
+                       */
+                      const activationVerdict = classifyPackActivationAnswer(
+                        activationAnswer,
+                        packId,
+                      );
+                      if (activationVerdict.activated) {
+                        activated += 1;
+                      } else {
+                        console.error(
+                          `[run107] learner sweep: pack ${packId.slice(0, 24)} was not activated: ${String(
+                            activationVerdict.reason ?? "no activation receipt",
+                          ).slice(0, 160)}`,
+                        );
+                      }
+                    } catch (error) {
+                      console.error(
+                        `[run107] learner sweep: pack ${packId.slice(0, 24)} recorded but not activated: ${String(
+                          (error as { message?: unknown })?.message ?? error,
+                        ).slice(0, 160)}`,
+                      );
+                    }
+                  }
+                }
+              }
+            } catch (error) {
+              console.error(
+                `[run101] learner sweep: candidate ${candidateId.slice(0, 16)} refused ${String(
+                  (error as { message?: unknown })?.message ?? error,
+                ).slice(0, 160)}`,
+              );
+            }
+          }
+          if (pending.length > 0 || consumed > 0) {
+            console.error(
+              `[run101] learner sweep: ${pending.length} candidate(s) without a validation receipt, consumed ${consumed}${
+                activated > 0 ? `, activated ${activated} pack(s)` : ""
+              }`,
+            );
+          }
+          return {
+            scanned: candidates.length,
+            consumed,
+            activated,
+            remaining: Math.max(0, pending.length - consumed),
+          };
+        },
+        /**
+         * Run 100 addendum 10, S13: the learner's durable derivation half.
+         *
+         * Measured 2026-09-25 on the live root: 483 learnable finalized comparisons, 202 candidates and **281
+         * learnable groups with no candidate**, because `knowledge:eval-consumer` has no caller outside
+         * `runTrackBShadowPipeline` - a comparison the pipeline never carried is durable evidence no learner can
+         * reach. All 281 resolve a replay job through `holdout.caseIds` and 136 already carry a persisted
+         * `trajectory_signal_reports` row for the capture's live decision, so those can be derived from evidence that
+         * already exists: replay provenance from `replay:job`, the signal report from `signals:read`, the profile
+         * estimate over the comparison's own rows, and the two receipts minted with the durable authority. Bounded to
+         * two groups per tick, idempotent, and it never dispatches a provider call or invents a trajectory.
+         */
+        async deriveLearnerCandidates() {
+          const runtime = extensionRuntimeRef.current;
+          if (!runtime) return { examined: 0, derived: 0, pending: 0 };
+          const authority = await (async () => {
+            try {
+              return await resolveDurableEvaluationAuthority({
+                channel,
+                stateRoot: options.runtimeStateRoot,
+                scopeId: options.scopeId,
+              });
+            } catch {
+              return null;
+            }
+          })();
+          if (!authority) return { examined: 0, derived: 0, pending: 0 };
+          /**
+           * S13 follow-on (measured live on `run121-0bda121a`): every derivation tick was refused with `replay
+           * persisted job scope binding mismatch`, because durable replay jobs carry the *capture* scope
+           * (`runtime:<hash>`) and the operator scope the runtime is configured with is not it - the same binding
+           * addendum 06 S27/S28 documented for the handoff recovery pass. The scope is computable, not discoverable,
+           * so the replay readback is bound to it while the evaluator/worker reads stay on the operator scope.
+           */
+          const replayJobScope = resolveDurableReplayJobScope({
+            channel,
+            runtimeStateRoot: options.runtimeStateRoot,
+            scopeId: options.scopeId,
+          });
+          /**
+           * Addendum 11: the consumer's evidence references are resolved by the worker's *own* artifact-store
+           * resolver, and that resolver queries `artifacts WHERE scope_id = <invocation scope>`. Every group's
+           * evidence lives in the capture scope (`runtime:714f4a87...`; 38/38 pipeline-processed and 82/82 gap
+           * groups, none in the operator store), so the consumer call is bound to that scope exactly like the replay
+           * readback. A caller-supplied resolver function cannot help here: measured live on `run133-100474c9`, the
+           * packaged runtime drops it and the refusal names the packaged resolver
+           * (`resolver=evaluation-reference-store`) without ever invoking the function.
+           */
+          const captureScopeForEvidence = replayJobScope;
+          const envelopeFor = (
+            extensionId: string,
+            capability: string,
+            value: Record<string, unknown>,
+            scopeOverride?: string,
+            query?: Record<string, unknown>,
+          ) =>
+            learnerSweepEnvelope({
+              requestPrefix: "learner-derivation",
+              extensionId,
+              capability,
+              value,
+              scopeOverride,
+              query,
+              evaluationAuthoritySecret: authority.authoritySecret,
+            });
+          const groups = (
+            await collectPagedComparisonGroups({
+              readPage: async (cursor) => {
+                const decoded = decodeExternalizedOperatorReadback({
+                  stateRoot: options.runtimeStateRoot,
+                  scopeId: options.scopeId,
+                  value: unwrapCapabilityPayload(
+                    await runtime.invoke(
+                      "evaluation-core",
+                      envelopeFor("evaluation-core", "evaluation:list-groups", {
+                        page: true,
+                        limit: LEARNING_GROUP_PAGE_LIMIT,
+                        ...(cursor ? { cursor } : {}),
+                      }),
+                    ),
+                  ),
+                });
+                return decoded;
+              },
+            }).catch(() => [])
+          ).filter((group): group is Record<string, unknown> => {
+            return Boolean(group) && typeof group === "object" && !Array.isArray(group);
+          });
+          const summary = await deriveLearnerCandidatesFromDurableEvidence({
+            invoke: async (extensionId, capability, value, query) => {
+              const answer = await runtime.invoke(
+                extensionId,
+                envelopeFor(
+                  extensionId,
+                  capability,
+                  value,
+                  extensionId === "replay-core"
+                    ? replayJobScope
+                    : extensionId === "knowledge-worker" && capability === "knowledge:eval-consumer"
+                      ? captureScopeForEvidence
+                      : undefined,
+                  query,
+                ),
+              );
+              /**
+               * A capability answer larger than the inline frame arrives as a transfer marker
+               * (`transferState`/`resultHash`/`byteLength`) - measured live on `run127-f8f5b967`, where the profile
+               * estimate came back that way and the derivation read the marker as the estimate, refusing all 24
+               * reachable groups. Every operator readback in this sweep is decoded through the same helper.
+               */
+              return decodeExternalizedOperatorReadback({
+                stateRoot: options.runtimeStateRoot,
+                scopeId: options.scopeId,
+                value: unwrapCapabilityPayload(answer),
+              });
+            },
+            groups,
+            attemptedGroupIds: learnerDerivationAttempts,
+            /**
+             * Measured live on `run175-a6d8612d` (2026-09-26 00:15-00:24): a tick lands every ~1.8 minutes and two
+             * derivations per tick drain ~1.2 learnable groups/minute - ~6.7 h for the 485-group backlog. The bound is
+             * therefore raised deliberately: with 24 per tick the same backlog drains in ~20 ticks (~36 min), while
+             * the compute step stays bounded to durable evidence and a group whose capture has aged out skips cheaply.
+             */
+            limit: 24,
+            /**
+             * S13 follow-up: the group's report may never have been written (its live pipeline never ran), so the
+             * sweep computes it through the capability that persists reports - bounded per tick (see `limit`), from
+             * durable capture evidence only, and never for a group whose report already exists.
+             */
+            derivedReportLimit: 24,
+            readDurableTrajectoryEvidence: async ({ job: durableJob }) => {
+              const operations = currentPostObservationOperations();
+              if (!operations) {
+                return { kind: "unavailable", reason: "the operations boundary is unavailable" };
+              }
+              return deriveLearnerTrajectoryEvidenceForReplay({
+                job: durableJob,
+                readCapture: async (requestId) =>
+                  (await operations.readLocalRouteCapture({ requestId })) as Record<
+                    string,
+                    unknown
+                  > | null,
+              });
+            },
+            channel,
+            /**
+             * The consumer's value must declare the same scope as its envelope (the worker rejects a proof from
+             * another context), and its evidence is only resolvable under the capture scope - so the derived
+             * candidate carries that scope, while the sweep's own readbacks stay on the operator scope.
+             */
+            scope: captureScopeForEvidence,
+            evaluationAuthoritySecret: authority.authoritySecret,
+            log: (message) => console.error(`[run120] ${message}`),
+          });
+          const pending = groups.filter((group) => {
+            const groupId = typeof group.groupId === "string" ? group.groupId : null;
+            return (
+              groupId !== null &&
+              group.status === "finalized" &&
+              learnableComparisonMembers(group) !== null &&
+              !learnerDerivationAttempts.has(groupId)
+            );
+          }).length;
+          if (summary.examined > 0) {
+            console.error(
+              `[run120] learner derivation: examined ${summary.examined}, derived ${summary.derived}, skipped ${summary.skipped}, refused ${summary.refused}, backlog ${pending}`,
+            );
+          }
+          return { ...summary, pending };
+        },
+        /**
+         * Run 100 addendum `handoff-evidence-durability.addendum-06` S46: the production caller for
+         * `evaluation:retro-finalize-comparisons`.
+         *
+         * Measured live: the newest durable evaluation jobs hold 2-4 **scored** trials with their declared
+         * source/counterfactual pair satisfied and **no** comparison group, and were released as
+         * `evaluation_job_stranded_without_finalized_comparison` (148 failed / 19 cancelled, all after
+         * 2026-09-21). The capability exists, the core method exists (`retroFinalizeComparisons`, bounded to
+         * 32), and nothing called it - so paid-for, fully scored evidence never became a comparison and the
+         * learner had nothing to consume. This sweep is bounded to a few groups per tick, exactly like the
+         * other liveness sweeps.
+         */
+        async retroFinalizeEvaluations() {
+          const runtime = extensionRuntimeRef.current;
+          if (!runtime) return { finalized: 0 };
+          const result = await runtime.invoke("evaluation-core", {
+            requestId: `evaluation-retro-finalize:${Date.now()}`,
+            sessionId: `evaluation-retro-finalize:${options.scopeId}`,
+            protocolVersion: "1.1.0",
+            channel,
+            scope: options.scopeId,
+            authorizationEpoch: 1,
+            capability: "evaluation:retro-finalize-comparisons",
+            value: { limit: 4 },
+          });
+          const record =
+            result && typeof result === "object" && !Array.isArray(result)
+              ? (result as Record<string, unknown>)
+              : {};
+          const finalized = Array.isArray(record.finalized) ? record.finalized.length : 0;
+          if (finalized > 0) {
+            console.error(`[run101] retro-finalized ${finalized} comparison group(s)`);
+          }
+          return record;
+        },
+        /**
+         * Run 100 addendum 39 (2026-09-26): the production caller for the post-finalization signals sweep.
+         *
+         * Measured live on run175c/`b7f04039` (`:3457`, 00:15-01:05): the learner's derivation pass *can* compute the
+         * missing report, but it walks oldest-first and met 79 `capture … is outside the retention window` skips for
+         * 9 analyses - by the time it reached a comparison, the captures that report needed were gone. The proposal
+         * chain puts the model-free signal report before replay/evaluation, so this sweep runs directly after
+         * `retroFinalizeEvaluations` (which is what makes a comparison exist at all) and produces the report while
+         * its captures are still in the retention ring. Bounded page, bounded computes, wall-clock budget, and
+         * idempotent: a group whose own report already exists is settled and never re-analyzed.
+         */
+        async sweepFinalizationSignals() {
+          const runtime = extensionRuntimeRef.current;
+          if (!runtime) return { examined: 0, analyzed: 0, skipped: 0, refused: 0, deferred: 0 };
+          const authority = await (async () => {
+            try {
+              return await resolveDurableEvaluationAuthority({
+                channel,
+                stateRoot: options.runtimeStateRoot,
+                scopeId: options.scopeId,
+              });
+            } catch {
+              return null;
+            }
+          })();
+          if (!authority) return { examined: 0, analyzed: 0, skipped: 0, refused: 0, deferred: 0 };
+          /**
+           * The replay jobs (and the captures the evidence resolver reads back) live in the *capture* scope, exactly
+           * as the derivation pass documents; the signals reads stay on the operator scope.
+           */
+          const replayJobScope = resolveDurableReplayJobScope({
+            channel,
+            runtimeStateRoot: options.runtimeStateRoot,
+            scopeId: options.scopeId,
+          });
+          const envelopeFor = (
+            extensionId: string,
+            capability: string,
+            value: Record<string, unknown>,
+            scopeOverride?: string,
+            query?: Record<string, unknown>,
+          ) =>
+            learnerSweepEnvelope({
+              requestPrefix: "finalization-signals",
+              extensionId,
+              capability,
+              value,
+              scopeOverride,
+              query,
+              evaluationAuthoritySecret: authority.authoritySecret,
+            });
+          /**
+           * One bounded listing of the *finalized* groups (the extension filters on `status` before its keyset cursor
+           * advances, so the page carries comparisons that can actually have a report). The listing is the only
+           * ordering the readback offers - a comparison group carries no timestamp - so the sweep consumes its
+           * newest end first.
+           */
+          const groups = (
+            await collectPagedComparisonGroups({
+              readPage: async (cursor) => {
+                const decoded = decodeExternalizedOperatorReadback({
+                  stateRoot: options.runtimeStateRoot,
+                  scopeId: options.scopeId,
+                  value: unwrapCapabilityPayload(
+                    await runtime.invoke(
+                      "evaluation-core",
+                      envelopeFor("evaluation-core", "evaluation:list-groups", {
+                        page: true,
+                        status: "finalized",
+                        limit: LEARNING_GROUP_PAGE_LIMIT,
+                        ...(cursor ? { cursor } : {}),
+                      }),
+                    ),
+                  ),
+                });
+                return decoded;
+              },
+            }).catch(() => [])
+          ).filter((group): group is Record<string, unknown> => {
+            return Boolean(group) && typeof group === "object" && !Array.isArray(group);
+          });
+          const summary = await sweepFinalizationSignalsForGroups({
+            invoke: async (extensionId, capability, value, query) => {
+              const answer = await runtime.invoke(
+                extensionId,
+                envelopeFor(
+                  extensionId,
+                  capability,
+                  value,
+                  extensionId === "replay-core" ? replayJobScope : undefined,
+                  query,
+                ),
+              );
+              return decodeExternalizedOperatorReadback({
+                stateRoot: options.runtimeStateRoot,
+                scopeId: options.scopeId,
+                value: unwrapCapabilityPayload(answer),
+              });
+            },
+            groups,
+            settledGroupIds: finalizationSignalsSettled,
+            computeLimit: FINALIZATION_SIGNALS_COMPUTE_LIMIT,
+            examinedLimit: FINALIZATION_SIGNALS_EXAMINED_LIMIT,
+            wallClockBudgetMs: FINALIZATION_SIGNALS_BUDGET_MS,
+            readDurableTrajectoryEvidence: async ({ job: durableJob }) => {
+              const operations = currentPostObservationOperations();
+              if (!operations) {
+                return { kind: "unavailable", reason: "the operations boundary is unavailable" };
+              }
+              return deriveLearnerTrajectoryEvidenceForReplay({
+                job: durableJob,
+                readCapture: async (requestId) =>
+                  (await operations.readLocalRouteCapture({ requestId })) as Record<
+                    string,
+                    unknown
+                  > | null,
+              });
+            },
+            log: (message) => console.error(`[run176] ${message}`),
+          });
+          if (summary.examined > 0) {
+            console.error(
+              `[run176] finalization signals: examined ${summary.examined}, analyzed ${summary.analyzed}, skipped ${summary.skipped}, refused ${summary.refused}, deferred ${summary.deferred}`,
+            );
+          }
+          return summary;
+        },
+        async reconcileEvaluationJobs() {
+          const runtime = extensionRuntimeRef.current;
+          if (!runtime) return { scanned: 0, completed: [], stranded: [], reclaimed: [] };
+          const record = (await runtime.invoke("evaluation-core", {
+            requestId: `evaluation-reconcile-jobs:${Date.now()}`,
+            sessionId: `evaluation-reconcile-jobs:${options.scopeId}`,
+            protocolVersion: "1.1.0",
+            channel,
+            scope: options.scopeId,
+            authorizationEpoch: 1,
+            capability: "evaluation:reconcile-jobs",
+            value: { limit: 200 },
+          })) as Record<string, unknown> | null;
+          return record && typeof record === "object" && !Array.isArray(record)
+            ? record
+            : { scanned: 0, completed: [], stranded: [], reclaimed: [] };
+        },
+        /**
+         * Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S7 (live on `:3457`: 13 replay jobs
+         * reached `awaiting_evaluation` with all their branches appended, and not one of them ever produced
+         * an evaluation job, so the Evaluation stage stayed empty for eleven hours).
+         *
+         * `recordBranchAppend` moves the durable job to `evaluating`/`awaiting_evaluation` *before* the host
+         * records its resume entry and runs the completer, and `claimJob` refuses a job in that state. An
+         * attempt interrupted in that window therefore wedges the replay and its capture for good.
+         *
+         * This pass closes the window from the other side: it lists the durable jobs of the capture scope the
+         * producer is working, and for every job that handed off without an evaluation job id it records the
+         * resume entry the existing sweep already knows how to complete (the entry's criteria, capture and
+         * branch captures are all re-derived from durable state by that completion).
+         */
+        async recoverHandedOffEvaluations() {
+          const runtime = extensionRuntimeRef.current;
+          if (!runtime) return { scanned: 0, recovered: 0, skipped: 0 };
+          // Cadence guard (measured need): the listing used to clone every durable job of the scope on every
+          // sweep, which starved the loop it was meant to unblock. The filtered listing below is cheap; the
+          // guard keeps even that off the hot path when nothing can have changed.
+          const nowMs = Date.now();
+          if (nowMs - lastHandoffRecoveryAtMs < HANDOFF_RECOVERY_INTERVAL_MS) {
+            return { scanned: 0, recovered: 0, skipped: 0 };
+          }
+          lastHandoffRecoveryAtMs = nowMs;
+          const scope = (await resolveReplayJobScope()) ?? options.scopeId;
+          const listing = (await runtime.invoke("replay-core", {
+            requestId: `replay-list-jobs:${Date.now()}`,
+            sessionId: `replay-list-jobs:${options.scopeId}`,
+            protocolVersion: "1.1.0",
+            channel,
+            scope,
+            authorizationEpoch: 1,
+            capability: "replay:list-jobs",
+            /**
+             * Only the handoff states, and only a small page. Run 100 addendum 04 S10: the extension
+             * protocol inlines an envelope of at most 16 KiB and refuses anything larger
+             * (`frame exceeds inline limit; use a channel-local transfer artifact` - measured live when this
+             * pass asked for 25 jobs, each carrying candidate packages, branch references, dispatch results
+             * and per-endpoint metric maps). The caller's page size is what has to respect that bound; three
+             * entries fit comfortably and match the per-sweep recovery bound below.
+             */
+            value: {
+              state: ["awaiting_evaluation", "evaluating"],
+              limit: MAX_HANDOFF_RECOVERY_LIST_PAGE,
+            },
+          })) as { readonly jobs?: unknown } | readonly unknown[] | null;
+          const jobs = Array.isArray(listing)
+            ? listing
+            : listing &&
+                typeof listing === "object" &&
+                Array.isArray((listing as { jobs?: unknown }).jobs)
+              ? ((listing as { jobs?: readonly unknown[] }).jobs as readonly unknown[])
+              : [];
+          const recoverable = selectRecoverableHandoffs(
+            jobs as readonly DurableReplayJobSummary[],
+            MAX_HANDOFF_RECOVERIES_PER_SWEEP,
+          );
+          let recovered = 0;
+          let skipped = 0;
+          /**
+           * Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S14 (measured on the real-traffic root:
+           * 254 replay jobs carried an evaluation job id that Evaluation Core has never seen). The S7 pass
+           * above only looks at handoffs *without* an id, so these were invisible: the completing attempt was
+           * interrupted after the handoff recorded the id but before the evaluation was created. The terminal
+           * states are listed here (a small page, same inline-frame bound) and each candidate is checked
+           * against Evaluation Core; only the ones whose evaluation is genuinely missing are recorded, so the
+           * ordinary evaluation sweep creates them from the branches the capture already paid for.
+           */
+          const terminalListing = (await runtime.invoke("replay-core", {
+            requestId: `replay-list-terminal-jobs:${Date.now()}`,
+            sessionId: `replay-list-terminal-jobs:${options.scopeId}`,
+            protocolVersion: "1.1.0",
+            channel,
+            scope,
+            authorizationEpoch: 1,
+            capability: "replay:list-jobs",
+            /**
+             * S24: the page carries the cursor (without it this was a fixed window - the same three jobs every
+             * sweep, all already evaluated, for ever) and asks for the summary projection, because a page of
+             * whole jobs overruns the extension protocol's 16 KiB inline frame at two entries. The full record
+             * is read for the jobs this sweep actually recovers.
+             */
+            value: terminalRecoveryListingValue({ cursor: handoffRecoveryCursor }),
+          })) as { readonly jobs?: unknown } | readonly unknown[] | null;
+          /**
+           * S29: a large capability answer crosses the boundary as an externalized transfer marker instead of
+           * the payload itself (the same class that made the Learning packs page render empty in R28), and this
+           * page parses `jobs` directly - so an externalized answer looked like an empty page and the recovery
+           * pass silently did nothing. Decode it the way every other readback in this file does.
+           */
+          const terminalPayload = decodeExternalizedOperatorReadback({
+            stateRoot: options.runtimeStateRoot,
+            scopeId: options.scopeId,
+            value: terminalListing,
+          });
+          if (examinedShapeUnreported && !Array.isArray(terminalPayload)) {
+            examinedShapeUnreported = false;
+            console.error(
+              `[run101] recovery page payload shape: ${
+                Object.keys((terminalPayload as Record<string, unknown>) ?? {}).join(",") ||
+                typeof terminalPayload
+              }`,
+            );
+          }
+          const pageRows = (payload: unknown): readonly unknown[] => {
+            if (Array.isArray(payload)) return payload;
+            if (!payload || typeof payload !== "object") return [];
+            const record = payload as { value?: unknown; jobs?: unknown };
+            if (Array.isArray(record.value)) return record.value;
+            if (Array.isArray(record.jobs)) return record.jobs;
+            return [];
+          };
+          const terminalJobs = pageRows(terminalPayload) as readonly DurableReplayJobSummary[];
+          const recoveredJobs: DurableReplayJobSummary[] = [];
+          let examined = 0;
+          let candidates = 0;
+          /** S31 diagnostics: the first reason a candidate could not become a resume entry. */
+          let firstSkipReason: string | null = null;
+          /** S32 diagnostics: the first job whose evaluation is genuinely missing on this page. */
+          let firstMissingEvaluation: string | null = null;
+          for (const job of terminalJobs as readonly DurableReplayJobSummary[]) {
+            /**
+             * S24: each examination costs a cross-boundary `evaluation:get-job`, so the sweep pays for a
+             * bounded number of them per tick; the cursor advances past exactly the jobs it examined, which
+             * is what makes the pass converge instead of repeating its first page.
+             */
+            if (examined >= MAX_HANDOFF_RECOVERY_CHECKS_PER_SWEEP) break;
+            if (recoveredJobs.length >= MAX_HANDOFF_RECOVERIES_PER_SWEEP) break;
+            examined += 1;
+            if (selectUnevaluatedHandoffs([job], 1).length === 0) continue;
+            candidates += 1;
+            const carriedId = carriedEvaluationJobId(job);
+            if (!carriedId) continue;
+            let fullJob: DurableReplayJobSummary | null = null;
+            try {
+              /**
+               * S18c: the listing returns the summary projection (identity, state, binding, evaluation id,
+               * branch count) while the resume entry needs the job's candidate packages. Only the jobs that
+               * reach this point are read in full, so the cost is bounded by the per-sweep recovery bound and
+               * the projection stays lean for every other caller.
+               */
+              /**
+               * S40 (measured live on ade5b26f: `[run101] job read answer shape: null`): the full-record read
+               * was wrapped in `.catch(() => null)`, so a *refused* read and an *absent* record looked
+               * identical - and a candidate whose evaluation is missing, whose record the listing had just
+               * returned, was dropped without a reason. The failure is now named.
+               */
+              let jobReadFailure: string | null = null;
+              let rawFullJob: unknown = null;
+              try {
+                rawFullJob = await runtime.invoke("replay-core", {
+                  requestId: `replay-job-read:${carriedId}`,
+                  sessionId: `replay-job-read:${options.scopeId}`,
+                  protocolVersion: "1.1.0",
+                  channel,
+                  scope,
+                  authorizationEpoch: 1,
+                  capability: "replay:job",
+                  value: { jobId: job.jobId },
+                });
+              } catch (error) {
+                jobReadFailure = String(
+                  (error as { message?: unknown })?.message ?? error ?? "unknown",
+                ).slice(0, 160);
+              }
+              fullJob = rawFullJob as DurableReplayJobSummary | null;
+              /**
+               * S31: the full record crosses the same boundary as every other readback, so it may arrive as an
+               * externalized transfer marker (the class that made the Learning packs page render empty). The
+               * pass decoded nothing here, and a marker silently became "no full job" - one of the two silent
+               * paths that made a page of candidates produce zero recoveries.
+               */
+              /**
+               * S36: the record sits inside one or more envelope layers, so it is coerced (bounded, until the
+               * record itself appears) rather than trusted after a single unwrap; a read that still yields no
+               * record reports its shape once.
+               */
+              const coercedJob = coerceDurableReplayJobRecord(
+                decodeExternalizedOperatorReadback({
+                  stateRoot: options.runtimeStateRoot,
+                  scopeId: options.scopeId,
+                  value: fullJob,
+                }),
+              );
+              if (!coercedJob && !jobReadShapeReported) {
+                jobReadShapeReported = true;
+                console.error(
+                  `[run101] job read answer shape: ${JSON.stringify(fullJob).slice(0, 220)}${
+                    jobReadFailure === null ? "" : ` failed=${jobReadFailure}`
+                  }`,
+                );
+              }
+              fullJob = coercedJob as DurableReplayJobSummary | null;
+              if (!fullJob) {
+                skipped += 1;
+                firstSkipReason ??= "job record unavailable";
+                continue;
+              }
+              const existingEvaluation = await runtime.invoke("evaluation-core", {
+                requestId: `evaluation-get-job:${carriedId}`,
+                sessionId: `evaluation-get-job:${options.scopeId}`,
+                protocolVersion: "1.1.0",
+                channel,
+                scope: options.scopeId,
+                authorizationEpoch: 1,
+                capability: "evaluation:get-job",
+                value: { jobId: carriedId },
+              });
+              /**
+               * S32 (measured live: a page of candidates produced zero recoveries with no named reason): the
+               * existence check treated *any* answer as "the evaluation exists", so a job whose evaluation was
+               * never created - answered with an error envelope the host turns into a value instead of a
+               * throw - was counted `skipped` and the pass never recovered it. Existence is now read from the
+               * record's identity, and a non-record answer is the missing case this pass exists for.
+               */
+              const decodedExisting = unwrapCapabilityPayload(
+                decodeExternalizedOperatorReadback({
+                  stateRoot: options.runtimeStateRoot,
+                  scopeId: options.scopeId,
+                  value: existingEvaluation,
+                }),
+              );
+              const existingRecord =
+                decodedExisting &&
+                typeof decodedExisting === "object" &&
+                !Array.isArray(decodedExisting)
+                  ? (decodedExisting as Record<string, unknown>)
+                  : null;
+              /**
+               * S33 (measured live: the sweep reported "every candidate already has its evaluation" while the
+               * store says the third job in `jobId` order has none): an answer that names a job that does not
+               * exist still carries an identity, so *existence* - not identity - is what has to be read. A
+               * durable evaluation job is a record with a state-machine status; anything else is the missing
+               * case this pass exists for.
+               */
+              const existingStatus =
+                typeof existingRecord?.status === "string" ? existingRecord.status.trim() : "";
+              const evaluationExists = [
+                "queued",
+                "leased",
+                "scoring",
+                "retry_wait",
+                "completed",
+                "failed",
+                "cancelled",
+              ].includes(existingStatus);
+              if (!evaluationExists && !existingLookupShapeReported) {
+                existingLookupShapeReported = true;
+                console.error(
+                  `[run101] evaluation lookup answer for a missing job: ${JSON.stringify(
+                    decodedExisting ?? existingEvaluation,
+                  ).slice(0, 220)}`,
+                );
+              }
+              if (evaluationExists) {
+                // The evaluation exists (terminal or not): nothing to recover for this job.
+                skipped += 1;
+              } else if (fullJob) {
+                recoveredJobs.push(fullJob);
+              } else {
+                skipped += 1;
+                firstSkipReason ??= `missing evaluation for ${carriedId} without a full job record`;
+              }
+            } catch {
+              // The entry is synthesized from the full record (candidate packages), not the summary.
+              if (fullJob) {
+                recoveredJobs.push(fullJob);
+                firstMissingEvaluation ??= carriedId;
+              } else {
+                skipped += 1;
+                firstSkipReason ??= `evaluation lookup failed for ${carriedId}`;
+              }
+            }
+          }
+          /**
+           * Run 100 addendum `handoff-evidence-durability.addendum-06` S26: a page the filter cannot read is a
+           * silent no-op - measured live, the pass stopped producing anything at all when its listing became a
+           * summary page and the projection no longer carried the field the filter reads. The pass now says so.
+           */
+          if (examined > 0 && candidates === 0) {
+            console.error(
+              `[run101] recovery page carried no entry the filter could read: ${examined} examined, 0 candidates`,
+            );
+          }
+          if (examined > 0 && recoveredJobs.length === 0 && recovered === 0 && firstSkipReason) {
+            console.error(
+              `[run101] recovery sweep: examined=${examined} candidates=${candidates} recovered=0 firstSkip=${firstSkipReason.slice(0, 160)}`,
+            );
+          }
+          if (
+            examined > 0 &&
+            recovered === 0 &&
+            candidates > 0 &&
+            firstMissingEvaluation === null
+          ) {
+            console.error(
+              `[run101] recovery sweep: examined=${examined} candidates=${candidates} recovered=0 - every candidate already has its evaluation`,
+            );
+          }
+          if (examined === 0 && !emptyRecoveryPageReported) {
+            emptyRecoveryPageReported = true;
+            console.error(
+              `[run101] recovery page came back empty: scope=${scope} channel=${channel} cursor=${
+                handoffRecoveryCursor === null
+                  ? "start"
+                  : `${handoffRecoveryCursor.jobId.slice(0, 8)}@${handoffRecoveryCursor.createdAtMs}`
+              }`,
+            );
+          }
+          handoffRecoveryCursor = nextHandoffRecoveryCursor({
+            currentCursor: handoffRecoveryCursor,
+            /**
+             * S38: the cursor is a place in the recency order, so it carries the timestamp as well as the id -
+             * a pass that walked the set in `jobId` order spent its time on old, unfixable work before reaching
+             * the handoffs whose evidence is still retained.
+             */
+            pageEntries: (terminalJobs as readonly DurableReplayJobSummary[])
+              .map((job) => ({
+                jobId: typeof job.jobId === "string" ? job.jobId : "",
+                createdAtMs: Number.isSafeInteger(job.createdAtMs) ? Number(job.createdAtMs) : 0,
+              }))
+              .filter((entry) => entry.jobId.length > 0),
+            examinedCount: examined,
+            pageSize: MAX_HANDOFF_RECOVERY_LIST_PAGE,
+          });
+          for (const job of [...recoverable, ...recoveredJobs]) {
+            const entry = recoveredHandoffEntry(job, { scopeFallback: scope });
+            if (!entry) {
+              /**
+               * S37 diagnostics: synthesis has four guards (a handoff state, the capture ref the source decision
+               * names, and a non-empty candidate package list) and a failure only incremented `skipped`, so a
+               * candidate with a genuinely missing evaluation could vanish here without a trace.
+               */
+              if (!entrySynthesisReported) {
+                entrySynthesisReported = true;
+                const record = job as unknown as Record<string, unknown>;
+                console.error(
+                  `[run101] handoff entry synthesis failed: state=${String(record.state)} sourceDecisionId=${String(record.sourceDecisionId)} packages=${
+                    Array.isArray(record.candidatePackages)
+                      ? record.candidatePackages.length
+                      : "none"
+                  } keys=${Object.keys(record).slice(0, 16).join(",")}`,
+                );
+              }
+              skipped += 1;
+              continue;
+            }
+            try {
+              const resumeStore = evaluationResumeStoreRef.current;
+              if (!resumeStore) {
+                skipped += 1;
+                continue;
+              }
+              const existingEntry = resumeStore.get(entry.replayJobId);
+              if (existingEntry) {
+                /**
+                 * Run 100 addendum `replay-evaluation-spine-repair.addendum-05` S17: an entry that already
+                 * gave up was abandoned while the completion could not create a missing evaluation - the
+                 * capability this recovery pass exists to use. `record()` deliberately never resets attempts,
+                 * so the renewal is explicit and bounded; past its bound the give-up stands.
+                 */
+                const renewed =
+                  existingEntry.outcome === "abandoned"
+                    ? resumeStore.renew(entry.replayJobId, {
+                        reason: "recovery: the handoff can now be completed from durable evidence",
+                      })
+                    : null;
+                if (renewed) {
+                  recovered += 1;
+                  // S22: a renewal is a *live* handoff again, so its evidence is pinned again (the pin is
+                  // idempotent per holder, so a re-hold only extends the TTL).
+                  await holdHandoffEvidence(entry.replayJobId, {
+                    requestId: entry.requestId,
+                    sourceCaptureRequestId: entry.sourceCaptureRequestId,
+                  });
+                } else skipped += 1;
+                continue;
+              }
+              resumeStore.record({
+                schemaVersion: "role-model.supervised-replay-evaluation-resume.v1",
+                replayJobId: entry.replayJobId,
+                evaluationJobId: entry.evaluationJobId,
+                requestId: entry.requestId,
+                sourceCaptureRequestId: entry.sourceCaptureRequestId,
+                sourceEndpointId: entry.sourceEndpointId,
+                sourceModelId: entry.sourceModelId,
+                counterfactualPackages: entry.counterfactualPackages,
+                evaluationCriteria: {},
+                evaluationCriteriaDigest: "",
+                scope: entry.scope,
+                recordedAtMs: Date.now(),
+                attempts: 0,
+                resolvedAtMs: null,
+                outcome: null,
+                lastError: null,
+              });
+              // S22: the recovered handoff now owes the source capture it will read again; pin it before
+              // anything else can evict it.
+              await holdHandoffEvidence(entry.replayJobId, {
+                requestId: entry.requestId,
+                sourceCaptureRequestId: entry.sourceCaptureRequestId,
+              });
+              recovered += 1;
+            } catch (error) {
+              skipped += 1;
+              console.error(
+                `[run100l] handed-off replay recovery declined:${entry.replayJobId} ${String(
+                  (error as { message?: unknown })?.message ?? error,
+                ).slice(0, 160)}`,
+              );
+            }
+          }
+          return { scanned: jobs.length, recovered, skipped };
         },
       };
       return startAutoReplayLoop({
@@ -4163,7 +6772,26 @@ export async function main(): Promise<void> {
             assignment && typeof assignment === "object" && !Array.isArray(assignment)
               ? (assignment as Record<string, unknown>).endpointId
               : null;
-          return typeof endpointId === "string" && endpointId.length > 0 ? endpointId : null;
+          if (typeof endpointId === "string" && endpointId.length > 0) return endpointId;
+          /**
+           * Run 100 addendum 19 (item 8c): the in-process binding answered nothing, so fall back to the
+           * durable assignment the operator configured. Logged once per process - the fallback is a
+           * repaired dependency, and a silent one would hide the next regression in this wiring.
+           */
+          const persisted = readPersistedControllerEndpointId({
+            runtimeStateRoot: options.runtimeStateRoot,
+            scopeId: options.scopeId,
+          });
+          if (persisted) {
+            if (!persistedControllerFallbackLogged) {
+              persistedControllerFallbackLogged = true;
+              console.error(
+                `[run153] auto-replay judge resolved from the durable controller assignment:${persisted}`,
+              );
+            }
+            return persisted;
+          }
+          return null;
         },
         executor: async ({ capture, candidates, reservationId }) => {
           const sourceCapture = (await operations.readLocalRouteCapture({
@@ -4224,12 +6852,19 @@ export async function main(): Promise<void> {
               captureRef: capture.captureRef,
               policySetDigest: policySet.policySetDigest,
               candidateEndpointIds: candidates,
+              // S12: the key covers the job contract its budget mints, so a contract revision cannot collide
+              // with a job created under the previous one.
+              providerCallBudget: resolveReplayProviderCallBudget(candidates.length),
             }),
             candidateEndpointIds: candidates,
             evaluationCriteria: derivedCriteria.criteria,
             budget: {
               maxCandidates: candidates.length,
-              maxProviderCalls: candidates.length,
+              // Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S11: one call per candidate left no
+              // room for an interrupted arm to be re-driven, so a re-claimed job answered `replay provider
+              // call budget is exhausted` and the capture was refused. The bounded allowance below covers one
+              // retry per candidate and still fails closed on a job that keeps retrying.
+              maxProviderCalls: resolveReplayProviderCallBudget(candidates.length),
               maxCostMicros: 1_000_000,
               maxBytes: 8_388_608,
               // RC16 (W3): the dispatches are serialized, so the deadline scales with
@@ -4375,6 +7010,36 @@ export async function main(): Promise<void> {
               channel: packagedProfile?.channel ?? "development",
               scopeId: options.scopeId,
             })?.effective.judgeOrderPolicy ?? null,
+          /**
+           * Run 100 R1 (live finding, clean verification window): the routing-shadow path planned its
+           * arms without consulting the judge, so a capture whose configured candidates include the
+           * controller endpoint created a durable job with the judge among its cases and
+           * `evaluation-core` refused it (`judge_candidate_overlap`, capture `req-26a7d08a-034e-424a`,
+           * no job row). The replay path already resolves the judge per tick for exactly this reason;
+           * the post-observation path now resolves it per observation and excludes it from the arms.
+           */
+          resolveJudgeEndpointId: async () => {
+            const readControllerAssignment = (
+              options as { readControllerAssignment?: () => Promise<unknown> }
+            ).readControllerAssignment;
+            const assignment = await Promise.resolve(readControllerAssignment?.()).catch(
+              () => null,
+            );
+            const endpointId =
+              assignment && typeof assignment === "object" && !Array.isArray(assignment)
+                ? (assignment as Record<string, unknown>).endpointId
+                : null;
+            if (typeof endpointId === "string" && endpointId.length > 0) return endpointId;
+            /**
+             * Run 100 addendum 19 (item 8c): the same durable fallback the auto-replay tick uses. A judge
+             * that resolves to nothing here is the measured cause of the judge being planned as an arm and
+             * of the tick's `judge_candidate_overlap` guard never firing.
+             */
+            return readPersistedControllerEndpointId({
+              runtimeStateRoot: options.runtimeStateRoot,
+              scopeId: options.scopeId,
+            });
+          },
         } as const;
         const operations = postObservationOperations;
         return operations
@@ -4626,7 +7291,12 @@ export async function main(): Promise<void> {
               options.scopeId,
               "track-b-replay-ledger.json",
             ),
-            limits: resolveReplayLedgerLimits(),
+            limits: resolveChannelScopedReplayLedgerLimits({
+              repoRoot: options.repoRoot,
+              runtimeStateRoot: options.runtimeStateRoot,
+              scopeId: options.scopeId,
+              channel: packagedProfile?.channel ?? "development",
+            }),
           });
           const replayLedgerStatus = replayLedger.status();
           const admission = decideReplayAdmission({
@@ -4637,9 +7307,20 @@ export async function main(): Promise<void> {
             retentionReplayable: true,
             privacyReplayable: true,
             distinctCandidateCount: distinctReplayCandidates.length,
-            budgetAvailable:
-              replayLedgerStatus.dispatches + replayLedgerStatus.reservedDispatches <
-              replayLedgerStatus.dispatchLimit,
+            /**
+             * Run 100 addendum `00-requirements.benchmark-traffic-exclusion.addendum-01`: the on-demand
+             * replay path refuses benchmark captures by name for the same reason the producer does.
+             */
+            sourceIsBenchmark: isBenchmarkReplaySourceRef(requestId),
+            /**
+             * Run 100 addendum 16 item 3 / 8a: the recovered capture carries the class its own durable
+             * evidence proved, so the on-demand path refuses a marker-echo probe for the same reason the
+             * automatic producer does rather than re-deriving it from the transcript.
+             */
+            sourceIsSyntheticProbe: isSyntheticProbeSourceClass(
+              (sourceCapture.replayEvidenceClass as Record<string, unknown> | undefined)?.class,
+            ),
+            budgetAvailable: replayBudgetAvailable(replayLedgerStatus),
             alreadyProcessed: replayLedger.hasTerminalCounterfactual(
               requestId,
               replayPolicySet.policySetDigest,
@@ -4648,6 +7329,13 @@ export async function main(): Promise<void> {
               sourceReplay !== null && sourceReplay.parentTraceId !== undefined,
             policyIdsResolvable: resolveReplayPolicySet(replayPolicySet).ok,
             dependenciesAvailable: true,
+            /**
+             * Run 108: this caller is the one that plans arms, so it must say whether the judge it will exclude
+             * is known. `evalJudgeEndpointId` is resolved for this capture above and is `""` when the
+             * controller-assignment read fails; admitting the capture then plans arms that may contain the
+             * judge, and the judge (resolved again at completion) then scores its own comparison.
+             */
+            judgeResolved: Boolean(evalJudgeEndpointId),
           });
           if (!admission.admitted) {
             throw new Error(`${admission.code}: ${admission.detail}`);
@@ -4785,17 +7473,21 @@ export async function main(): Promise<void> {
               );
               if (!candidate)
                 throw new Error("replay dispatch candidate package is not host-authorized");
-              // R13/R7: every capture this attempt writes must be attempt-scoped. The
-              // durable replay job identity (not the per-tick idempotency key) makes a
-              // retry inside one attempt idempotent while a later attempt of the same
-              // source capture appends new bytes instead of colliding with the previous
-              // attempt's immutable capture under the same request id.
+              // R13/R7: every capture this attempt writes must be attempt-scoped. Run 100 addendum
+              // `replay-dispatch-lifecycle.addendum-04` S9: the identity is scoped by the dispatch envelope's
+              // per-attempt nonce, not just by the job and candidate - a retry inside one attempt stays
+              // idempotent, while a re-claimed job's fresh attempt (which replay-core mints a new nonce for)
+              // writes new bytes under a new capture id instead of colliding with the previous attempt's
+              // immutable capture (`route capture idempotency key was reused with different immutable bytes`,
+              // measured live on `:3457`).
               const replayJobId =
                 typeof envelope.replayJobId === "string" ? envelope.replayJobId : "";
-              const replayAttemptToken = createHash("sha256")
-                .update(`${replayJobId}\u0000${candidateEndpointId}`)
-                .digest("hex")
-                .slice(0, 16);
+              const replayAttemptToken = replayDispatchCaptureToken({
+                replayJobId,
+                candidateEndpointId,
+                dispatchNonce:
+                  typeof envelope.nonce === "string" && envelope.nonce ? envelope.nonce : null,
+              });
               const replayRequestId = `replay-${requestId}-${replayAttemptToken}`;
               const execution = await created.executeChatCompletions(
                 {
@@ -4920,7 +7612,12 @@ export async function main(): Promise<void> {
                 throw new Error("replay branch preparation candidate is not host-authorized");
               const existing = preparedBranches.get(candidateEndpointId);
               if (existing) return { branchRootRef: existing.branchRootRef };
-              const branchRequestId = `replay-${requestId}-${createHash("sha256").update(candidateEndpointId).digest("hex").slice(0, 16)}-prepared-${replayAttemptToken}`;
+              const branchRequestId = supervisedReplayBranchCaptureRequestId({
+                requestId,
+                candidateEndpointId,
+                phase: "prepared",
+                attemptToken: replayAttemptToken,
+              });
               // A candidate without a reasoning effort is captured with `none`, not
               // `variant`: the durable capture contract couples a null effort to the
               // `none` source, and a mixed pair is rejected at the capture boundary.
@@ -4949,7 +7646,7 @@ export async function main(): Promise<void> {
                 branchRootRef: branch.rootArtifactId,
                 branchRequestId,
               });
-              return { branchRootRef: branch.rootArtifactId };
+              return { branchRootRef: branch.rootArtifactId, branchRequestId };
             },
             appendBranch: async (branchRequest) => {
               const candidateEndpointId = String(branchRequest.candidateEndpointId ?? "");
@@ -4972,10 +7669,35 @@ export async function main(): Promise<void> {
                   throw new Error(
                     "durable replay failure branch append requires its prepared branch root",
                   );
-                const failureRequestId = `replay-${requestId}-${createHash("sha256")
-                  .update(candidateEndpointId)
+                /**
+                 * Run 100 addendum 24 §1 residual: the failure bytes are not stable across a recovery
+                 * re-append (the message can carry a fresh diagnostic), so the id also carries a digest of
+                 * exactly the fields that go into the capture. Identical retries keep one key; changed bytes
+                 * get their own instead of being refused as a reuse.
+                 */
+                const failureContentTag = createHash("sha256")
+                  .update(
+                    JSON.stringify({
+                      errorClass: String(failure.code ?? "router_dispatch_error"),
+                      message: String(failure.message ?? "replay provider dispatch failed").slice(
+                        0,
+                        512,
+                      ),
+                      preparedBranchRootRef,
+                      endpointId: candidateEndpointId,
+                      modelId: candidate.modelId ?? null,
+                      reasoningEffort: candidate.reasoningEffort ?? null,
+                    }),
+                  )
                   .digest("hex")
-                  .slice(0, 16)}-failure`;
+                  .slice(0, 16);
+                const failureRequestId = supervisedReplayBranchCaptureRequestId({
+                  requestId,
+                  candidateEndpointId,
+                  phase: "failure",
+                  attemptToken: replayAttemptToken,
+                  contentTag: failureContentTag,
+                });
                 const failureEffort =
                   typeof candidate.reasoningEffort === "string" && candidate.reasoningEffort
                     ? {
@@ -5007,7 +7729,10 @@ export async function main(): Promise<void> {
                     "operations boundary did not return a durable replay failure branch root",
                   );
                 }
-                return { branchRootRef: failureBranch.rootArtifactId };
+                return {
+                  branchRootRef: failureBranch.rootArtifactId,
+                  branchRequestId: failureRequestId,
+                };
               }
               let dispatch = dispatched.get(candidateEndpointId);
               if (!dispatch) {
@@ -5086,7 +7811,7 @@ export async function main(): Promise<void> {
               if (typeof branch.rootArtifactId !== "string" || !branch.rootArtifactId) {
                 throw new Error("operations boundary did not return a durable replay branch root");
               }
-              return { branchRootRef: branch.rootArtifactId };
+              return { branchRootRef: branch.rootArtifactId, branchRequestId };
             },
             handoffEvaluation: async ({ replayJobId }) => {
               const evaluationJobId = `evaluation-replay-${createHash("sha256").update(String(replayJobId)).digest("hex").slice(0, 20)}`;
@@ -5097,7 +7822,28 @@ export async function main(): Promise<void> {
               // comparison is completed, so switching the controller changes the next comparison's judge
               // without a policy write and without a restart.
               return async (request: Readonly<Record<string, unknown>>) => {
-                const judge = await resolveControllerJudge(created, learningPolicySnapshot);
+                /**
+                 * Run 100 addendum 22 follow-up (requirement 3): the comparison's judge has to be the endpoint that
+                 * actually scores it. Resolved from the controller alone, this is the very endpoint the tick
+                 * substituted away from when it was an arm of this pair - so the job's comparability, the registered
+                 * manifest and the runner's judge receipt would all name a judge that scored nothing. De-conflict
+                 * here with the same deterministic rule the tick uses, against the pair this completer is about to
+                 * score; with no usable alternative the judge is left untouched and the evaluator's own factory
+                 * records judge missingness exactly as before.
+                 */
+                const judge = dedupeJudgeAgainstPair(
+                  await resolveControllerJudge(created, learningPolicySnapshot),
+                  {
+                    sourceEndpointId,
+                    counterfactualEndpointIds: counterfactualPackages.map(
+                      (candidate) => candidate.endpointId,
+                    ),
+                    fallbackEndpointIds: resolveReplayJudgeFallbackEndpointIds(process.env),
+                    configuredEndpointIds: created.effectiveRegistry.endpoints.map(
+                      (endpoint) => endpoint.identity.endpoint_id,
+                    ),
+                  },
+                );
                 const evaluationCompleter = buildSupervisedReplayEvaluationCompleter({
                   // Addendum 58 §19: the live completion resolves externalized answers under this root too.
                   contractStateRoot: options.runtimeStateRoot,
@@ -5178,6 +7924,11 @@ export async function main(): Promise<void> {
                     );
                   }
                 }
+                // S22: the entry just recorded is a live handoff; pin the source capture it will read again.
+                await holdHandoffEvidence(replayJobId, {
+                  requestId,
+                  sourceCaptureRequestId,
+                });
                 const completed = await evaluationCompleter(request);
                 try {
                   const record = completed as Record<string, unknown>;
@@ -5351,7 +8102,14 @@ export async function main(): Promise<void> {
           runtimeStateRoot: options.runtimeStateRoot,
           scopeId: options.scopeId,
         }),
+        // S22: every terminal transition releases the evidence pin that entry created - completion, the
+        // named disposition, or the attempt cap. The store owns that moment, so the release cannot be
+        // forgotten by a caller that resolves an entry somewhere else.
+        onReleased: (entry) => releaseHandoffEvidence(entry.replayJobId),
       });
+      // Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S7: the auto-replay liveness sweep records
+      // the resume entries it recovers for handed-off replays through this ref.
+      evaluationResumeStoreRef.current = evaluationResumeStore;
       /**
        * Run 98 addendum 33 S2: the durable per-judge position-consistency ledger. The pairwise dispatch
        * already measures a flip per pair (dual_order) and reports it through `recordJudgeObservation`;
@@ -5623,7 +8381,15 @@ export async function main(): Promise<void> {
         const runtime = extensionRuntimeRef.current;
         const operations = currentPostObservationOperations();
         if (!runtime || !operations) {
-          return { resumed: 0, completed: 0, failed: 0, remaining: 0 };
+          return {
+            resumed: 0,
+            completed: 0,
+            failed: 0,
+            outsideRetentionWindow: 0,
+            renewedFromDrain: 0,
+            reconciled: 0,
+            remaining: 0,
+          };
         }
         const channel = packagedProfile?.channel ?? "development";
         return resumePendingSupervisedReplayEvaluations({
@@ -5701,24 +8467,40 @@ export async function main(): Promise<void> {
             } catch {
               storedCriteria = null;
             }
+            /**
+             * Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S7: a replay that handed its branches
+             * off and was interrupted *before* the evaluation job was created has no durable evaluation job
+             * to read back - that is exactly the state the recovery pass discovers. The completion below
+             * creates the job from the durable source capture and branch captures (idempotent by request id
+             * and criteria digest), so a missing readback is no longer a dead end: the stored criteria, when
+             * they exist, still win over the re-derived ones so an existing job's immutable bytes are
+             * re-presented unchanged.
+             */
             if (!storedJobId) {
-              // Nothing durable to finalize: the evaluation job never reached its create step, so the
-              // sweep reports it instead of manufacturing a comparison from thin air.
-              throw new Error(
-                `durable evaluation job ${entry.evaluationJobId} is unavailable for resume`,
+              console.error(
+                `[run100l] durable evaluation job ${entry.evaluationJobId} is absent; completion will create it from durable evidence`,
               );
             }
             const sourceCapture = (await operations.readLocalRouteCapture({
               requestId: entry.sourceCaptureRequestId,
             })) as Record<string, unknown> | null;
             if (!sourceCapture || typeof sourceCapture !== "object") {
-              throw new Error(
-                `durable replay evaluation is missing its source capture ${entry.sourceCaptureRequestId}`,
+              /**
+               * S34 (measured live on f1db34b8: four renewed handoffs all reported
+               * `durable replay evaluation is missing its source capture …` and spent attempts on it): a source
+               * capture that is no longer in the store is the *same* permanent class as an arm capture that is
+               * gone - the evidence is outside the retention window - so it takes the named disposition instead
+               * of burning the attempt budget and ending as an unqualified `abandoned`.
+               */
+              throw new HandoffEvidenceUnavailableError(
+                `source_capture_missing:${entry.sourceCaptureRequestId}`,
               );
             }
             const sourceOutput = extractSourceOutputText(sourceCapture);
             if (!sourceOutput) {
-              throw new Error("durable replay evaluation is missing its source output evidence");
+              throw new HandoffEvidenceUnavailableError(
+                `source_output_unreadable:${entry.sourceCaptureRequestId}`,
+              );
             }
             const captureScope =
               typeof sourceCapture.scope === "string" && sourceCapture.scope.trim()
@@ -5741,46 +8523,133 @@ export async function main(): Promise<void> {
               modelId: string;
               reasoningEffort: string | null;
             }[] = [];
-            for (const candidate of entry.counterfactualPackages) {
-              const replayRequestId = `replay-${entry.requestId}-${createHash("sha256")
-                .update(`${entry.replayJobId}\u0000${candidate.endpointId}`)
-                .digest("hex")
-                .slice(0, 16)}`;
-              const branchCapture = (await operations.readLocalRouteCapture({
-                requestId: `${replayRequestId}-branch`,
+            /**
+             * Run 100 addendum `replay-evaluation-spine-repair.addendum-05` S18 (live on `:3457`, immediately
+             * after renewals started re-driving handoffs): the completion re-derived each arm's branch-capture
+             * id, but the dispatch capture became attempt-scoped (addendum 04 S9), so the derived name no
+             * longer existed and every renewed handoff failed with `durable replay evaluation has no recorded
+             * counterfactual branch to evaluate`. The durable job names the capture each arm wrote, so the
+             * completion reads that first and keeps the old derivation only as the legacy fallback.
+             */
+            /**
+             * Run 100 addendum `handoff-evidence-durability.addendum-06` S21c (measured live): the durable job
+             * read was swallowed (`.catch(() => null)`) and the completion then fell back to the pre-S9 branch
+             * capture naming, which no longer exists. Every arm therefore resolved to nothing and the handoff
+             * was disposed as if its evidence had been evicted - while the store held the pointers and the
+             * artifacts. A failed read of the record that *names* the captures is not "no evidence": it is
+             * "cannot tell", which is retryable and must say so.
+             */
+            let durableReplayJob: Record<string, unknown> | null = null;
+            let jobReadFailure: string | null = null;
+            try {
+              durableReplayJob = (await runtime.invoke("replay-core", {
+                requestId: `replay-job-read:${entry.replayJobId}`,
+                sessionId: `replay-job-read:${options.scopeId}`,
+                protocolVersion: "1.1.0",
+                channel,
+                scope: captureScope,
+                authorizationEpoch: 1,
+                capability: "replay:job",
+                value: { jobId: entry.replayJobId },
               })) as Record<string, unknown> | null;
-              if (!branchCapture || typeof branchCapture !== "object") continue;
-              const response =
-                branchCapture.response && typeof branchCapture.response === "object"
-                  ? (branchCapture.response as Record<string, unknown>)
-                  : null;
-              const outputText =
-                (typeof response?.content === "string" ? response.content : null) ??
-                (typeof branchCapture.outputText === "string" ? branchCapture.outputText : null);
-              if (!outputText) continue;
+            } catch (error) {
+              jobReadFailure = String(
+                (error as { message?: unknown })?.message ?? error ?? "unknown",
+              ).slice(0, 200);
+            }
+            if (jobReadFailure !== null || !durableReplayJob) {
+              throw new Error(
+                `resumed handoff job record is unreadable: ${
+                  jobReadFailure ?? "the durable job returned no record"
+                }`,
+              );
+            }
+            /**
+             * Run 100 item 8 (`capture_missing`): the audit measured that the derived `…-branch` name has no
+             * producer while the arm's capture sits under the provider-result id, so the reader gets every id
+             * the job can support, in order, instead of the single derived name.
+             */
+            const branchCaptureRequestIds = branchCaptureRequestIdCandidatesFromJob({
+              replayJobId: entry.replayJobId,
+              requestId: entry.requestId,
+              dispatches: durableReplayJob?.dispatches,
+              candidateEndpointIds: entry.counterfactualPackages.map(
+                (candidate) => candidate.endpointId,
+              ),
+            });
+            /**
+             * S22: this is the one place the durable job names *every* capture the handoff owes - the source
+             * it replays and the arms it compares - so the pin is extended here before any reader touches
+             * them. A resumed handoff reads its arms minutes or hours after the record was written, which is
+             * exactly the window in which the ring would have evicted them.
+             */
+            await holdHandoffEvidence(entry.replayJobId, {
+              requestId: entry.requestId,
+              sourceCaptureRequestId: entry.sourceCaptureRequestId,
+              // Run 100 item 8: each arm now names ordered candidates, so the pin covers all of them.
+              branchCaptureRequestIds: [...branchCaptureRequestIds.values()].flat(),
+            });
+            /**
+             * Run 100 addendum `handoff-evidence-durability.addendum-06` S21/S23: the arm evidence resolves
+             * through the same canonical reader the source half uses, and every arm it cannot resolve is
+             * *named*. Measured on `:3457`: the inline reader here accepted only a string `response.content`
+             * or a string `outputText`, so thirteen handoffs whose captures were present, named and readable
+             * were refused as `durable replay evaluation has no recorded counterfactual branch to evaluate`
+             * - a claim about durable state the stores disprove - and each burned eight attempts before an
+             * unqualified `abandoned`. Silence was the defect; the reasons are now part of the record.
+             */
+            const armEvidence = await resolveResumedArmEvidence({
+              counterfactualPackages: entry.counterfactualPackages,
+              branchCaptureRequestIds,
+              readCapture: async (requestId) => {
+                const answer = (await operations.readLocalRouteCapture({ requestId })) as Record<
+                  string,
+                  unknown
+                > | null;
+                if (answer) return answer;
+                /**
+                 * Run 100 addendum 31: the boundary answered nothing for an arm whose capture the queue
+                 * durably recorded (`status: "captured"`), which is the measured `capture_missing` class. Fall
+                 * back to that receipt before reporting the evidence gone.
+                 */
+                return readRouteCaptureFromQueueReceipt({
+                  runtimeStateRoot: options.runtimeStateRoot,
+                  scopeId: options.scopeId,
+                  requestId,
+                });
+              },
+            });
+            for (const arm of armEvidence.arms) {
               counterfactualPackages.push({
-                endpointId: candidate.endpointId,
-                modelId:
-                  typeof branchCapture.modelId === "string" && branchCapture.modelId.trim()
-                    ? branchCapture.modelId.trim()
-                    : candidate.modelId,
-                reasoningEffort:
-                  typeof branchCapture.reasoningEffort === "string"
-                    ? branchCapture.reasoningEffort
-                    : candidate.reasoningEffort,
+                endpointId: arm.endpointId,
+                modelId: arm.modelId,
+                reasoningEffort: arm.reasoningEffort,
               });
-              dispatched.set(candidate.endpointId, {
-                replayRequestId,
+              dispatched.set(arm.endpointId, {
+                replayRequestId: arm.replayRequestId,
                 execution: {
-                  routingDecisionId: String(branchCapture.routingDecisionId ?? ""),
-                  outputText,
+                  routingDecisionId: arm.routingDecisionId,
+                  outputText: arm.outputText,
                 },
               });
             }
-            if (dispatched.size === 0) {
-              throw new Error(
-                "durable replay evaluation has no recorded counterfactual branch to evaluate",
+            if (armEvidence.unreadable.length > 0) {
+              console.error(
+                `[run101] resumed handoff ${entry.replayJobId} could not read ${armEvidence.unreadable.length} arm(s): ${describeUnresolvedArms(armEvidence.unreadable)}`,
               );
+            }
+            if (dispatched.size === 0) {
+              const detail = describeUnresolvedArms(armEvidence.unreadable);
+              /**
+               * S21/S23: only evidence that is *gone* is a terminal disposition. A boundary that failed to
+               * answer is an ordinary retryable failure - the attempt budget and the bounded renewal exist
+               * for exactly that - and reporting it as a dead end would retire work that can still complete
+               * (measured live: the first version collapsed both into `capture_missing`).
+               */
+              if (unresolvedArmsArePermanent(armEvidence.unreadable)) {
+                throw new HandoffEvidenceUnavailableError(detail);
+              }
+              throw new Error(`resumed handoff evidence is unreadable: ${detail}`);
             }
             const evaluationCriteria = storedCriteria
               ? normalizeTrackBSemanticEvaluationCriteria(storedCriteria)
@@ -5814,8 +8683,25 @@ export async function main(): Promise<void> {
               evaluationCriteria: effectiveCriteria as unknown as Readonly<Record<string, unknown>>,
               evaluationCriteriaDigest: digestTrackBSemanticEvaluationCriteria(effectiveCriteria),
               learningPolicySnapshot: readEvaluationLearningPolicySnapshot(),
-              // Run 98 addendum 45 J2: a resumed completion resolves the judge the same way a live one does.
-              judge: await resolveControllerJudge(created, readEvaluationLearningPolicySnapshot()),
+              /**
+               * Run 98 addendum 45 J2: a resumed completion resolves the judge the same way a live one does.
+               * Run 100 addendum 22 follow-up: and it de-conflicts it the same way too, against the pair this
+               * resumed completion is about to score, so a capture the tick substituted a judge for is not
+               * recorded as judged by an arm of its own comparison.
+               */
+              judge: dedupeJudgeAgainstPair(
+                await resolveControllerJudge(created, readEvaluationLearningPolicySnapshot()),
+                {
+                  sourceEndpointId,
+                  counterfactualEndpointIds: counterfactualPackages.map(
+                    (candidate) => candidate.endpointId,
+                  ),
+                  fallbackEndpointIds: resolveReplayJudgeFallbackEndpointIds(process.env),
+                  configuredEndpointIds: created.effectiveRegistry.endpoints.map(
+                    (endpoint) => endpoint.identity.endpoint_id,
+                  ),
+                },
+              ),
               // A resumed completion performs no candidate dispatch, so its judge has no live
               // reservation to charge.
               replayLedger: createReplayLedger({
@@ -5824,7 +8710,12 @@ export async function main(): Promise<void> {
                   options.scopeId,
                   "track-b-replay-ledger.json",
                 ),
-                limits: resolveReplayLedgerLimits(),
+                limits: resolveChannelScopedReplayLedgerLimits({
+                  repoRoot: options.repoRoot,
+                  runtimeStateRoot: options.runtimeStateRoot,
+                  scopeId: options.scopeId,
+                  channel,
+                }),
               }),
               replayPolicySet: buildReplayPolicySet(),
               getDispatched: (endpointId: string) => dispatched.get(endpointId),
@@ -5878,6 +8769,9 @@ export async function main(): Promise<void> {
             } catch {
               // The capture may be gone (retention); the remaining candidates still apply.
             }
+            // S27: the store knows the scope the job was created under even when the entry predates the field
+            // and its capture is gone - which is exactly the `legacy_scope_unresolved` class in the live log.
+            if (replayJobScopeRef.current) pushScope(await replayJobScopeRef.current());
             pushScope(options.scopeId);
             try {
               const invokeFailJob = async (invokeScope: string) =>
@@ -5929,6 +8823,186 @@ export async function main(): Promise<void> {
                   `[run98] replay job terminalization declined:${entry.replayJobId} ${message.slice(0, 200)}`,
                 );
               }
+            }
+            /**
+             * Run 100 addendum `evaluation-lease-wedge-repair.addendum-02` S3 (operator report
+             * 2026-09-23: "18 evals have been stuck in flight for hours").
+             *
+             * `replay:fail-job` closes the replay half of the handoff. The *evaluation* job behind the
+             * same handoff was left non-terminal with no lease at all: `evaluation:claim-job` accepts
+             * only `queued` or an expired `leased` row, and a NULL expiry never satisfies it, so the row
+             * could never be claimed again. The operator surface then reported it "in flight" for days.
+             * The give-up therefore terminalizes both halves with the same recorded reason. This is
+             * independent of the replay half: a refused or already-terminal replay job must not stop the
+             * evaluation row from being closed.
+             */
+            try {
+              const terminalization = await terminalizeAbandonedEvaluation({
+                entry: {
+                  replayJobId: entry.replayJobId,
+                  evaluationJobId: entry.evaluationJobId,
+                  scope: entry.scope,
+                },
+                channel,
+                operatorScope: options.scopeId,
+                reason,
+                /**
+                 * Run 100 addendum 28 §2: ask whether the row is in this scope before cancelling there.
+                 * `evaluation:get-job` answers `null` for a missing id without throwing, so a stale id costs one
+                 * cheap read instead of a failed cancel that the host bridge logs as `invoke-failed` (measured:
+                 * ~11 lines/min for the 305-of-321 ids the census found absent).
+                 */
+                jobExists: async (invokeScope) => {
+                  evaluationJobExistsProbeCounter += 1;
+                  const answer = await activeRuntime.invoke("evaluation-core", {
+                    /**
+                     * A fresh request id per check: the answer is externalized behind a `durableLocator`, and a
+                     * repeated id can be served an earlier call's answer, which would report a row that has
+                     * since aged out as present.
+                     */
+                    requestId: `evaluation:get-job:${entry.evaluationJobId}:${evaluationJobExistsProbeCounter}`,
+                    sessionId: `evaluation:get-job:${options.scopeId}`,
+                    protocolVersion: "1.1.0",
+                    channel,
+                    scope: invokeScope,
+                    authorizationEpoch: 1,
+                    capability: "evaluation:get-job",
+                    value: { jobId: entry.evaluationJobId },
+                  });
+                  /**
+                   * Run 173 follow-up (run172's shape probe): the live answer is a chain of externalization
+                   * markers whose innermost layer carries no payload — only a durable locator — so the record has
+                   * to be read back through the documented decoder instead of unwrapped from the envelope.
+                   */
+                  const decoded = decodeExternalizedOperatorReadback({
+                    stateRoot: options.runtimeStateRoot,
+                    scopeId: options.scopeId,
+                    value: unwrapCapabilityPayload(answer),
+                  });
+                  /**
+                   * Only an answer that proves the row is there counts as existing: a job identity, or the
+                   * externalization marker a large-but-present job is delivered behind. A degradation receipt
+                   * (or any unexpected shape) is *unknown*, which keeps the previous behaviour rather than
+                   * skipping a row that may exist.
+                   */
+                  const verdict = evaluationJobExistsFromGetJobAnswer(decoded);
+                  if (verdict !== false && evaluationJobExistsAnswerLogged < 3) {
+                    evaluationJobExistsAnswerLogged += 1;
+                    const marker = (decoded ?? {}) as Record<string, unknown>;
+                    const locator =
+                      marker.durableLocator && typeof marker.durableLocator === "object"
+                        ? (marker.durableLocator as Record<string, unknown>)
+                        : null;
+                    const business =
+                      marker.businessOutput && typeof marker.businessOutput === "object"
+                        ? (marker.businessOutput as Record<string, unknown>)
+                        : null;
+                    console.error(
+                      `[run164] evaluation existence check id=${entry.evaluationJobId.slice(0, 24)} verdict=${String(
+                        verdict,
+                      )} locatorRequest=${String(locator?.requestId ?? "-").slice(-24)} businessStatus=${String(
+                        business?.status ?? "-",
+                      )}`,
+                    );
+                  }
+                  return verdict;
+                },
+                /**
+                 * Run 100 (evaluation audit): the same read answers the durable status, so a row the store
+                 * already reports terminal is a benign no-op instead of a cancel that the extension refuses —
+                 * measured as 156 such refusals and 312 log lines per process start.
+                 */
+                jobStatus: async (invokeScope) => {
+                  evaluationJobExistsProbeCounter += 1;
+                  const answer = await activeRuntime.invoke("evaluation-core", {
+                    requestId: `evaluation:get-job:${entry.evaluationJobId}:${evaluationJobExistsProbeCounter}`,
+                    sessionId: `evaluation:get-job:${options.scopeId}`,
+                    protocolVersion: "1.1.0",
+                    channel,
+                    scope: invokeScope,
+                    authorizationEpoch: 1,
+                    capability: "evaluation:get-job",
+                    value: { jobId: entry.evaluationJobId },
+                  });
+                  const decoded = decodeExternalizedOperatorReadback({
+                    stateRoot: options.runtimeStateRoot,
+                    scopeId: options.scopeId,
+                    value: unwrapCapabilityPayload(answer),
+                  });
+                  const status = evaluationJobStatusFromGetJobAnswer(decoded);
+                  /**
+                   * Bounded diagnostic (three per process): three deployed attempts at this short-circuit did not
+                   * suppress the stream, so the answer shape has to be named rather than inferred.
+                   */
+                  if (
+                    (status === undefined ||
+                      (typeof status === "string" && !TERMINAL_STATUS_HINT.has(status))) &&
+                    evaluationJobStatusShapeLogged < 3
+                  ) {
+                    evaluationJobStatusShapeLogged += 1;
+                    const record =
+                      decoded && typeof decoded === "object" && !Array.isArray(decoded)
+                        ? (decoded as Record<string, unknown>)
+                        : null;
+                    const business = record?.businessOutput;
+                    console.error(
+                      `[run171] evaluation status probe: typeof=${typeof decoded} decodedKeys=${Object.keys(
+                        record ?? {},
+                      )
+                        .slice(0, 6)
+                        .join(",")} businessType=${typeof business} businessKeys=${
+                        business && typeof business === "object"
+                          ? Object.keys(business as Record<string, unknown>)
+                              .slice(0, 6)
+                              .join(",")
+                          : "-"
+                      } status=${String(status)} head=${typeof decoded === "string" ? decoded.slice(0, 80) : "-"}`,
+                    );
+                  }
+                  return status;
+                },
+                invoke: (capability, value, invokeScope) =>
+                  activeRuntime.invoke("evaluation-core", {
+                    requestId: `${capability}:${entry.evaluationJobId}`,
+                    sessionId: `${capability}:${options.scopeId}`,
+                    protocolVersion: "1.1.0",
+                    channel,
+                    scope: invokeScope,
+                    authorizationEpoch: 1,
+                    capability,
+                    value,
+                  }),
+              });
+              if (!terminalization.cancelled) {
+                // A job that is already terminal is the expected second visit; anything else is worth a
+                // line in the log rather than silence, because silence is what hid this defect.
+                /**
+                 * Run 100 addendum 16 item 8d: a job id that exists in none of the candidate scopes has nothing
+                 * to terminalize — the delegated census measured 305 of 321 target ids absent from the live
+                 * evaluation store, and reporting each one produced hundreds of self-defeating lines per window.
+                 * The first occurrence per process is still named (so the class stays visible), the rest are
+                 * counted, not printed.
+                 */
+                if (terminalization.benign === true) {
+                  terminalizationBenignCount += 1;
+                  if (terminalizationBenignCount === 1) {
+                    console.error(
+                      `[run100h] evaluation job terminalization no-op:${entry.evaluationJobId} the id exists in none of the candidate scopes (counted, not per-job)`,
+                    );
+                  }
+                } else {
+                  console.error(
+                    `[run100h] evaluation job terminalization not applied:${entry.evaluationJobId} scope=${terminalization.scope ?? "unresolved"} ${String(terminalization.detail ?? "job is already terminal").slice(0, 160)}`,
+                  );
+                }
+              }
+            } catch (terminalizationError) {
+              const message = String(
+                (terminalizationError as { message?: unknown })?.message ?? terminalizationError,
+              );
+              console.error(
+                `[run100h] evaluation job terminalization failed:${entry.evaluationJobId} ${message.slice(0, 200)}`,
+              );
             }
           },
         });

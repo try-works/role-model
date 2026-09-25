@@ -297,7 +297,17 @@ describe("Run 91 effort instance identity", () => {
     expect(plan.routingRequest.allowEndpoints).toEqual(["account.global.deepseek-v4-pro-medium"]);
   });
 
-  test("routes an alias with explicit reasoning effort only to matching fixed variants", () => {
+  /**
+   * Revised by run 100 addendum 10 E3 (operator rule, measured live on `:3457` 2026-09-24/25): an alias is a pool
+   * plus a bias. A client that sends `reasoning_effort` - pi and DSH always do - collapsed the seven-endpoint alias
+   * to the two (or one) endpoints whose fixed effort matched, and the router then reported the collapse as routing
+   * ineligibility (`eligible=2 codes=POLICY_DENY_ENDPOINT=5`, `eligible=1` for `low`). The effort now orders the pool
+   * through `routingModel.preferredEndpointIds` (the core router's `routingModelRank` adjustment) and no longer
+   * removes members. Exact instance selection still applies to an explicit model id or endpoint row - see the
+   * "keeps an exact fixed endpoint authoritative" and "fails closed when an alias effort has neither a matching
+   * variant nor provider-default" cases below.
+   */
+  test("routes an alias with explicit reasoning effort across the pool while preferring matching fixed variants", () => {
     const aliases = [
       {
         aliasId: "baseline.remote-only",
@@ -327,10 +337,21 @@ describe("Run 91 effort instance identity", () => {
       aliases,
     );
 
-    expect(mediumPlan.routingRequest.allowEndpoints).toEqual([
+    expect(mediumPlan.routingRequest.allowEndpoints).toEqual(
+      expect.arrayContaining([
+        "account.global.deepseek-v4-pro",
+        "account.global.deepseek-v4-pro-medium",
+        "account.global.deepseek-v4-pro-max",
+      ]),
+    );
+    expect(mediumPlan.routingRequest.allowEndpoints).toHaveLength(3);
+    expect(mediumPlan.routingModel?.preferredEndpointIds).toEqual([
       "account.global.deepseek-v4-pro-medium",
     ]);
-    expect(maxPlan.routingRequest.allowEndpoints).toEqual(["account.global.deepseek-v4-pro-max"]);
+    expect(maxPlan.routingRequest.allowEndpoints).toHaveLength(3);
+    expect(maxPlan.routingModel?.preferredEndpointIds).toEqual([
+      "account.global.deepseek-v4-pro-max",
+    ]);
   });
 
   test("fails closed rather than treating provider-default as an unconfigured effort variant", () => {

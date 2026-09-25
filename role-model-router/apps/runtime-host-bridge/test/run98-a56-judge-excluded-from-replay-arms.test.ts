@@ -65,7 +65,14 @@ test("the configured judge is never planned as a counterfactual arm", async () =
   }
 });
 
-test("a capture whose source is the judge defers with the named code instead of dispatching", async () => {
+/**
+ * Run 100 addendum 22 (run155) changed the first half of this contract: when the capture's own endpoint is the
+ * configured judge, the tick now substitutes a deterministic alternative judge and *dispatches* the capture
+ * (`test/run155-judge-dedup-tick.test.ts` pins that), because refusing it lost ~47% of real replay volume under the
+ * operator's "replay everything" directive. The named refusal below is what remains: it is kept for the case with
+ * no usable substitute, so a guaranteed refusal is still never dispatched.
+ */
+test("a capture whose source is the judge and has no substitute judge defers with the named code", async () => {
   const { ledger, cleanup } = tempLedger();
   try {
     let executed = 0;
@@ -79,6 +86,8 @@ test("a capture whose source is the judge defers with the named code instead of 
       ],
       configuredEndpointIds: configured,
       judgeEndpointId: "endpoint-judge",
+      // The only fallback candidate is the judge itself, which is an arm of the pair: there is no substitute.
+      judgeFallbackEndpointIds: ["endpoint-judge"],
       ledger,
       policySet: buildReplayPolicySet(),
       executor: async () => {
