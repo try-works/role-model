@@ -8312,6 +8312,49 @@ export function createRun97PairwiseJudgeScorer(input: {
   };
 }
 
+/**
+ * Run 100 addendum 15 item 6, second half: the promoted package's attribution has to name the route
+ * package the evidence was gathered for - its endpoint and its model. The compared rollouts are the only
+ * place the runtime holds that identity (the route-package id is the endpoint id, the model id travels on
+ * the rollout, and the sampling profile/adapter/experience pack travel with the candidate when the caller
+ * knows them). A rollout that cannot name its model yields no descriptor at all: an attribution to a model
+ * the runtime never ran is worse than a missing artifact, and the learning pass logs the refusal by name.
+ */
+export function resolveRoutePackageDescriptorFromRollouts(
+  routePackage: string,
+  rollouts: readonly Record<string, unknown>[],
+): {
+  readonly endpointId: string;
+  readonly modelId: string;
+  readonly modelRevision: string | null;
+  readonly samplingProfileId: string | null;
+  readonly promptAdapterId: string | null;
+  readonly toolPolicyId: string | null;
+  readonly experiencePackId: string | null;
+} | null {
+  const wanted = typeof routePackage === "string" ? routePackage.trim() : "";
+  if (!wanted) return null;
+  const text = (value: unknown): string | null =>
+    typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
+  const row =
+    rollouts.find((rollout) => text(rollout.routePackage) === wanted) ??
+    rollouts.find((rollout) => text(rollout.endpointId) === wanted) ??
+    null;
+  if (!row) return null;
+  const endpointId = text(row.endpointId) ?? wanted;
+  const modelId = text(row.modelId);
+  if (!endpointId || !modelId) return null;
+  return {
+    endpointId,
+    modelId,
+    modelRevision: text(row.modelRevision),
+    samplingProfileId: text(row.samplingProfileId),
+    promptAdapterId: text(row.promptAdapterId),
+    toolPolicyId: text(row.toolPolicy) ?? text(row.toolPolicyId),
+    experiencePackId: text(row.experiencePackId),
+  };
+}
+
 export async function runTrackBShadowPipeline(
   runtime: TrackBShadowPipelineRuntime,
   input: TrackBShadowPipelineInput,
@@ -10350,6 +10393,15 @@ export async function runTrackBShadowPipeline(
         ? candidateScorerIdentity.scorerSetVersion
         : null;
     if (scorerSetVersion) {
+      /**
+       * Run 100 addendum 15 item 6: the promoted pack's attribution names the route package the evidence
+       * belongs to, so the pass needs that arm's own identity. It is resolved from the rollouts the
+       * comparison was built from - the pipeline's own record of which endpoint and model each arm was.
+       */
+      const learningRoutePackageDescriptor = resolveRoutePackageDescriptorFromRollouts(
+        learningRoutePackage,
+        [...(sourceRollout ? [sourceRollout] : []), ...counterfactualRollouts],
+      );
       try {
         learningPass = await runTrackBLearningPass(runtime, {
           requestId: input.requestId,
@@ -10404,6 +10456,13 @@ export async function runTrackBShadowPipeline(
             : {}),
           // Run 98 addendum 33 S2: the judge's measured consistency, resolved by the caller.
           ...(input.judgeConsistency ? { judgeConsistency: input.judgeConsistency } : {}),
+          // Run 98 addendum 58 §38: the attribution carries the same role dimension as the consumer.
+          ...(typeof input.roleId === "string" && input.roleId.trim()
+            ? { roleId: input.roleId.trim() }
+            : {}),
+          ...(learningRoutePackageDescriptor
+            ? { routePackageDescriptor: learningRoutePackageDescriptor }
+            : {}),
           envelope: (capability, value) => envelope(capability, value),
           // The packaged host externalizes oversized business results, so the pass decodes the
           // comparison-group list exactly like the pipeline decodes its own extension answers.

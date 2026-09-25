@@ -27,6 +27,7 @@ import { createHash, createHmac } from "node:crypto";
 import { POSITION_ORDER_DISAGREEMENT } from "./track-b-shadow-judge-dispatch.js";
 import {
   buildExperiencePackCandidate,
+  buildRoutePackageAttribution,
   buildRoutePackageActivationReceipt,
   buildRouteLearningValidationReceipt,
   emitTrackBContract,
@@ -874,6 +875,15 @@ function boundedText(value: unknown): string | null {
 }
 
 /**
+ * Run 100 addendum 15 item 6: the attribution carries the numbers the promotion gate decided on, so a
+ * value that is not a finite number is absent rather than zero - a fabricated `0` would read as "this
+ * package measured no improvement", which is a claim the receipt never made.
+ */
+function boundedNumber(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+/**
  * Run 107 P1: read the whole comparison-group set through the capability's keyset cursor.
  *
  * The shape accepted from a page is deliberately generous, because three callers decode the same
@@ -1388,8 +1398,33 @@ export interface TrackBLearningPassInput {
   /** Run 99 R33: the task family of the capture this candidate was derived from. */
   readonly taskTypeId?: string | null;
   readonly taxonomyVersion?: string | null;
+  /**
+   * Run 98 addendum 58 §38: the taxonomy role the capture was classified under, so the receipt, the pack and
+   * the attribution all carry the same scope dimensions the consumer resolved.
+   */
+  readonly roleId?: string | null;
   readonly candidateId: string;
   readonly routePackage: string;
+  /**
+   * Run 100 addendum 15 item 6, second half. Measured live on :3457 (2026-09-25): the scope's
+   * `track-b\contracts\` directory held 2271 artifacts - 72 `RouteLearningValidationReceiptV1` and 23
+   * `ExperiencePackCandidateV1` among them - and **zero** `RoutePackageAttributionV1`. The builder was
+   * unit-tested with no caller on the path that promotes packs on real traffic, so the documented
+   * attribution of a promoted package to the evidence behind it did not exist as an artifact.
+   *
+   * The descriptor is the caller's own rollout identity for the package the evidence is about (the
+   * compared arm's endpoint and model). The pass never invents an endpoint or a model: a caller that
+   * cannot name them gets no artifact and a bounded refusal line instead.
+   */
+  readonly routePackageDescriptor?: Readonly<{
+    readonly endpointId: string;
+    readonly modelId: string;
+    readonly modelRevision?: string | null;
+    readonly samplingProfileId?: string | null;
+    readonly promptAdapterId?: string | null;
+    readonly toolPolicyId?: string | null;
+    readonly experiencePackId?: string | null;
+  }> | null;
   /** The finalized comparison the candidate was derived from, as Evaluation Core returned it. */
   readonly finalizedComparison: Readonly<Record<string, unknown>>;
   readonly finalizedComparisonReceipt: Readonly<Record<string, unknown>>;
@@ -1861,6 +1896,116 @@ export async function runTrackBLearningPass(
         } catch (error) {
           console.error(
             `[run139] learning pass: activation receipt for ${packId.slice(0, 24)} was not emitted as a contract: ${String(
+              (error as { message?: unknown })?.message ?? error,
+            ).slice(0, 600)}`,
+          );
+        }
+      }
+      /**
+       * Run 100 addendum 15 item 6, second half: the attribution is the artifact that binds a promoted
+       * package to the route package the evidence was gathered for and to the numbers the gate decided on.
+       * Every member is durable evidence - the validation receipt the promotion consumed (`caseManifestRef`,
+       * `qualityDelta`, `confidenceLower`, `holdoutSampleCount`, `baselineId`) plus the caller's own rollout
+       * identity - and a missing member refuses the artifact by name instead of publishing a claim nobody
+       * can check. The refusal is logged, never thrown: a contract write must not fail a promotion.
+       */
+      const attributionDescriptor = input.routePackageDescriptor ?? null;
+      const attributionEndpointId = boundedText(attributionDescriptor?.endpointId);
+      const attributionModelId = boundedText(attributionDescriptor?.modelId);
+      const attributionBaselineId = boundedText(receipt.baselineId);
+      const attributionManifestRef = boundedText(receipt.caseManifestRef);
+      const attributionQualityDelta = boundedNumber(receipt.qualityDelta);
+      const attributionConfidence = boundedNumber(receipt.confidenceLower);
+      const attributionSampleCount = boundedNumber(receipt.holdoutSampleCount);
+      const attributionRefusal =
+        !attributionEndpointId || !attributionModelId
+          ? "the caller did not resolve the promoted package's endpoint and model"
+          : !attributionManifestRef
+            ? "the validation receipt carries no case manifest reference"
+            : !attributionBaselineId
+              ? "the validation receipt carries no baseline package"
+              : attributionQualityDelta === null
+                ? "the validation receipt carries no measured quality delta"
+                : attributionConfidence === null
+                  ? "the validation receipt carries no confidence lower bound"
+                  : attributionSampleCount === null
+                    ? "the validation receipt carries no holdout sample count"
+                    : null;
+      if (attributionRefusal) {
+        console.error(
+          `[run150] learning pass: attribution for ${packId.slice(0, 24)} was not emitted: ${attributionRefusal}`,
+        );
+      } else if (
+        attributionEndpointId &&
+        attributionModelId &&
+        attributionBaselineId &&
+        attributionManifestRef &&
+        attributionQualityDelta !== null &&
+        attributionConfidence !== null &&
+        attributionSampleCount !== null
+      ) {
+        try {
+          const promptAdapterId = boundedText(attributionDescriptor?.promptAdapterId);
+          const toolPolicyId = boundedText(attributionDescriptor?.toolPolicyId);
+          const experiencePackId = boundedText(attributionDescriptor?.experiencePackId);
+          const roleId = boundedText(input.roleId);
+          emitTrackBContract({
+            stateRoot: input.contractStateRoot,
+            scopeId: input.scope,
+            contract: buildRoutePackageAttribution({
+              attributionId: `attribution:${packId}`,
+              routePackage: {
+                packageId: packId,
+                endpointId: attributionEndpointId,
+                modelId: attributionModelId,
+                /**
+                 * The runtime's endpoints and catalog entries declare no model revision, so the honest
+                 * value is the one the closed contract's required member can carry: "unversioned" says the
+                 * arm's identity is its endpoint and model, not a model snapshot the runtime cannot attest.
+                 * A caller that knows a revision passes it through unchanged.
+                 */
+                modelRevision: boundedText(attributionDescriptor?.modelRevision) ?? "unversioned",
+                samplingProfileId:
+                  boundedText(attributionDescriptor?.samplingProfileId) ?? "unversioned",
+                ...(promptAdapterId ? { promptAdapterId } : {}),
+                ...(toolPolicyId ? { toolPolicyId } : {}),
+                ...(experiencePackId ? { experiencePackId } : {}),
+              },
+              /**
+               * The closed `$defs.scope` accepts taxonomy/route identity members only - measured live while
+               * landing the pack emission, a record carrying `taxonomyVersion` in its scope failed
+               * `/scope must NOT have additional properties`. The attribution therefore carries the family,
+               * the endpoint and the role the evidence belongs to, and nothing the scope cannot hold.
+               */
+              scope: {
+                taskTypeId: boundedText(input.taskTypeId) ?? "task:route-selection",
+                endpointId: attributionEndpointId,
+                ...(roleId ? { roleId } : {}),
+                ...(promptAdapterId ? { promptAdapterId } : {}),
+              },
+              baselinePackageId: attributionBaselineId,
+              qualityDelta: attributionQualityDelta,
+              /**
+               * The receipt records a quality comparison only. This path measures no per-comparison cost or
+               * latency delta, so both stay at the contract's zero rather than at a number nobody measured.
+               */
+              costDelta: 0,
+              latencyDelta: 0,
+              sampleCount: Math.max(0, Math.trunc(attributionSampleCount)),
+              /**
+               * The gate's own floor is `confidenceLower`, so that is the confidence the artifact reports:
+               * a reader can reproduce the promotion decision from the artifact and the receipt.
+               */
+              confidence: attributionConfidence,
+              evidenceManifestRef: attributionManifestRef,
+              channel: input.channel,
+              scopeId: input.scope,
+              createdAtMs: Date.now(),
+            }),
+          });
+        } catch (error) {
+          console.error(
+            `[run150] learning pass: attribution for ${packId.slice(0, 24)} was not emitted as a contract: ${String(
               (error as { message?: unknown })?.message ?? error,
             ).slice(0, 600)}`,
           );
