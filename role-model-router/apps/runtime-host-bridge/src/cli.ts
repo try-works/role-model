@@ -8338,7 +8338,16 @@ export async function main(): Promise<void> {
                     capability: "evaluation:get-job",
                     value: { jobId: entry.evaluationJobId },
                   });
-                  const decoded = unwrapCapabilityPayload(answer);
+                  /**
+                   * Run 173 follow-up (run172's shape probe): the live answer is a chain of externalization
+                   * markers whose innermost layer carries no payload — only a durable locator — so the record has
+                   * to be read back through the documented decoder instead of unwrapped from the envelope.
+                   */
+                  const decoded = decodeExternalizedOperatorReadback({
+                    stateRoot: options.runtimeStateRoot,
+                    scopeId: options.scopeId,
+                    value: unwrapCapabilityPayload(answer),
+                  });
                   /**
                    * Only an answer that proves the row is there counts as existing: a job identity, or the
                    * externalization marker a large-but-present job is delivered behind. A degradation receipt
@@ -8384,7 +8393,11 @@ export async function main(): Promise<void> {
                     capability: "evaluation:get-job",
                     value: { jobId: entry.evaluationJobId },
                   });
-                  const decoded = unwrapCapabilityPayload(answer);
+                  const decoded = decodeExternalizedOperatorReadback({
+                    stateRoot: options.runtimeStateRoot,
+                    scopeId: options.scopeId,
+                    value: unwrapCapabilityPayload(answer),
+                  });
                   const status = evaluationJobStatusFromGetJobAnswer(decoded);
                   /**
                    * Bounded diagnostic (three per process): three deployed attempts at this short-circuit did not
