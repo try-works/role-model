@@ -5822,13 +5822,19 @@ export async function main(): Promise<void> {
             },
             groups,
             attemptedGroupIds: learnerDerivationAttempts,
-            limit: 2,
+            /**
+             * Measured live on `run175-a6d8612d` (2026-09-26 00:15-00:24): a tick lands every ~1.8 minutes and two
+             * derivations per tick drain ~1.2 learnable groups/minute - ~6.7 h for the 485-group backlog. The bound is
+             * therefore raised deliberately: with 24 per tick the same backlog drains in ~20 ticks (~36 min), while
+             * the compute step stays bounded to durable evidence and a group whose capture has aged out skips cheaply.
+             */
+            limit: 24,
             /**
              * S13 follow-up: the group's report may never have been written (its live pipeline never ran), so the
-             * sweep computes it through the capability that persists reports - bounded to two per tick, from durable
-             * capture evidence only, and never for a group whose report already exists.
+             * sweep computes it through the capability that persists reports - bounded per tick (see `limit`), from
+             * durable capture evidence only, and never for a group whose report already exists.
              */
-            derivedReportLimit: 2,
+            derivedReportLimit: 24,
             readDurableTrajectoryEvidence: async ({ job: durableJob }) => {
               const operations = currentPostObservationOperations();
               if (!operations) {
