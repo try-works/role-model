@@ -435,6 +435,23 @@ const observeLogsRoute = createRoute({
     "Preserved raw-host logs stay adjacent to canonical telemetry with request-level handoffs when correlation exists.",
 });
 
+/**
+ * Run 101 R10: queue truth gets its own Observe page - depth per queue plus a
+ * job drill-in with attempts, lock owner and the handler's named error, which is
+ * what makes a stalled or failing plane actionable.
+ */
+const observeQueuesRoute = createRoute({
+  id: "observe-queues",
+  to: "/app/observe/queues",
+  label: "Queues",
+  section: "Observe",
+  icon: ListChecks,
+  template: "ledger-inspector",
+  title: "Queue state",
+  description:
+    "Replay, evaluation and learner queues read straight from the shared store: depth, activity, retries, stalls, and per-job attempts with the named failure that stopped them.",
+});
+
 const integrationsDownstreamRoute = createRoute({
   id: "connect-downstream",
   to: "/app/connect/downstream",
@@ -636,6 +653,7 @@ const runtimeRouteDefinitions = [
   observeRequestsRoute,
   observeRoutingRoute,
   observeLogsRoute,
+  observeQueuesRoute,
   integrationsDownstreamRoute,
   integrationsUpstreamRoute,
   systemRuntimeRoute,
@@ -709,7 +727,13 @@ export const runtimeNavigationSections: readonly RuntimeNavigationSection[] = [
   {
     title: "Observe",
     icon: Activity,
-    items: [observeRequestsRoute, observeRoutingRoute, observeActivityRoute, observeLogsRoute],
+    items: [
+      observeRequestsRoute,
+      observeRoutingRoute,
+      observeQueuesRoute,
+      observeActivityRoute,
+      observeLogsRoute,
+    ],
   },
   {
     title: "Connect",

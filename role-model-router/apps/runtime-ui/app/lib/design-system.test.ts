@@ -381,6 +381,9 @@ describe("runtime design system", () => {
         routes: [
           "/app/observe/requests",
           "/app/observe/routing",
+          // Run 101 R10: queue truth has its own Observe page (depth per queue
+          // plus a job drill-in with attempts and the named failure).
+          "/app/observe/queues",
           "/app/observe/activity",
           "/app/observe/logs",
         ],
