@@ -20,6 +20,7 @@ import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { resolveLearningPolicyStateRoot } from "../src/learning-policy-file.js";
+import { startReplayQueueRuntime } from "../src/queue-runtime/index.js";
 import {
   LEGACY_QUEUE_POLICY_STATE_RELATIVE_PATH,
   QUEUE_POLICY_STATE_RELATIVE_PATH,
@@ -27,7 +28,6 @@ import {
   resolveQueuePolicyPaths,
   resolveQueueStateRoot,
 } from "../src/queue-runtime/policy.js";
-import { startReplayQueueRuntime } from "../src/queue-runtime/index.js";
 import { QUEUE_STORE_RELATIVE_PATH, resolveQueueStorePath } from "../src/queue-runtime/store.js";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "..");
@@ -83,10 +83,7 @@ describe("@recursive:101-effect-mq-queue-rebuild @sp4 addendum01 queue plane roo
   });
 
   it("resolves one policy document and one store for both host forms", () => {
-    const expectedPolicy = path.join(
-      scopeRoot(),
-      ...QUEUE_POLICY_STATE_RELATIVE_PATH.split("/"),
-    );
+    const expectedPolicy = path.join(scopeRoot(), ...QUEUE_POLICY_STATE_RELATIVE_PATH.split("/"));
     const expectedStore = path.join(scopeRoot(), ...QUEUE_STORE_RELATIVE_PATH.split("/"));
     for (const root of [scopeRoot(), trackBRoot()]) {
       const { stateFilePath } = resolveQueuePolicyPaths({ stateRoot: root });
@@ -100,7 +97,9 @@ describe("@recursive:101-effect-mq-queue-rebuild @sp4 addendum01 queue plane roo
     const canonical = path.join(scopeRoot(), ...QUEUE_POLICY_STATE_RELATIVE_PATH.split("/"));
     await mkdir(path.dirname(canonical), { recursive: true });
     await writeFile(canonical, JSON.stringify(policyDocument("queue")), "utf8");
-    expect(readQueuePolicy({ stateRoot: trackBRoot() }).queues["replay.dispatch"]?.mode).toBe("queue");
+    expect(readQueuePolicy({ stateRoot: trackBRoot() }).queues["replay.dispatch"]?.mode).toBe(
+      "queue",
+    );
 
     // A state root that has not been migrated yet still resolves the operator's own
     // document rather than the shipped all-legacy fallback.
