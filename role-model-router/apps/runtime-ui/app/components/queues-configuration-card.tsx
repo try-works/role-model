@@ -78,6 +78,13 @@ export function QueuesConfigurationCard() {
           retention, and the plane mode. Bounds are enforced server-side, and every change is
           receipted.
         </p>
+        {/* Run 101 R3/R13: the card cites the canonical parameter document, so an operator
+            changing a bound has the description, the defaults table and the rollback rule one
+            reference away instead of inferring them from this page. */}
+        <p className="text-xs opacity-60" data-testid="queues-canonical-reference">
+          Canonical reference: <code>docs/operations/queue-parameters.md</code> (registry:{" "}
+          <code>shared/queues/queue-policy.mjs</code>)
+        </p>
       </header>
 
       {error ? <p className="mt-3 text-sm text-red-500">{error}</p> : null}

@@ -9,16 +9,21 @@
 import { useEffect, useState } from "react";
 
 import {
+  type QueueAdminActionResponse,
   type QueueJobDetailResponse,
   type QueueJobRow,
   type QueueListResponse,
+  cancelQueueJob,
   fetchQueueJob,
   fetchQueueJobs,
   fetchQueues,
+  retryQueueJob,
+  setQueueDrain,
   formatQueueAge,
 } from "../lib/queue-api";
 
-const JOB_STATES = ["pending", "completed", "failed"] as const;
+const JOB_STATES = ["pending", "completed", "failed", "cancelled"] as const;
+const TERMINAL_JOB_STATES = new Set(["completed", "failed", "cancelled"]);
 
 export default function ObserveQueuesRoute() {
   const [queues, setQueues] = useState<QueueListResponse | null>(null);
@@ -26,6 +31,12 @@ export default function ObserveQueuesRoute() {
   const [stateFilter, setStateFilter] = useState<string | null>(null);
   const [jobs, setJobs] = useState<readonly QueueJobRow[]>([]);
   const [detail, setDetail] = useState<QueueJobDetailResponse | null>(null);
+  /**
+   * Run 101 R9: the admin actions answer `{ ok, reason }` rather than an error status, so the
+   * page reports the named refusal ("not_terminal", "already_terminal") instead of hiding it,
+   * and refreshes both readbacks so the operator sees the state the action produced.
+   */
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -79,6 +90,24 @@ export default function ObserveQueuesRoute() {
     }
   };
 
+  const runAdminAction = async (
+    label: string,
+    action: () => Promise<QueueAdminActionResponse>,
+  ) => {
+    try {
+      const result = await action();
+      setActionMessage(
+        result.ok
+          ? `${label}: ok`
+          : `${label}: ${result.reason ?? "refused"}${result.state ? ` (${result.state})` : ""}`,
+      );
+      setQueues(await fetchQueues());
+      if (selected) setJobs((await fetchQueueJobs(selected, { state: stateFilter })).jobs);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "queue admin action failed");
+    }
+  };
+
   return (
     <section className="flex flex-col gap-6 p-6">
       <header className="flex flex-col gap-1">
@@ -90,6 +119,11 @@ export default function ObserveQueuesRoute() {
       </header>
 
       {error ? <p className="text-sm text-red-500">{error}</p> : null}
+      {actionMessage ? (
+        <p className="text-sm text-emerald-500" data-testid="queue-admin-action">
+          {actionMessage}
+        </p>
+      ) : null}
 
       {queues && !queues.available ? (
         <p className="text-sm opacity-70">
@@ -112,6 +146,7 @@ export default function ObserveQueuesRoute() {
             <th className="py-1">p50</th>
             <th className="py-1">p95</th>
             <th className="py-1">Last error</th>
+            <th className="py-1">Drain</th>
           </tr>
         </thead>
         <tbody>
@@ -144,6 +179,20 @@ export default function ObserveQueuesRoute() {
               <td className="py-1 max-w-[16rem] truncate" title={queue.lastError ?? ""}>
                 {queue.lastError ?? "—"}
               </td>
+              <td className="py-1">
+                <button
+                  type="button"
+                  className="cursor-pointer rounded border border-white/20 px-2 py-0.5 text-xs"
+                  onClick={() =>
+                    void runAdminAction(
+                      queue.draining ? `resume ${queue.name}` : `drain ${queue.name}`,
+                      () => setQueueDrain(queue.name, !queue.draining),
+                    )
+                  }
+                >
+                  {queue.draining ? "resume" : "drain"}
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>
@@ -174,6 +223,7 @@ export default function ObserveQueuesRoute() {
                 <th className="py-1">Attempts</th>
                 <th className="py-1">Lock owner</th>
                 <th className="py-1">Updated</th>
+                <th className="py-1">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -192,6 +242,32 @@ export default function ObserveQueuesRoute() {
                   <td className="py-1">{job.attempts}</td>
                   <td className="py-1">{job.acquiredBy ?? "—"}</td>
                   <td className="py-1">{job.updatedAt ?? "—"}</td>
+                  <td className="flex gap-2 py-1">
+                    <button
+                      type="button"
+                      className="cursor-pointer rounded border border-white/20 px-2 py-0.5 text-xs disabled:opacity-40"
+                      disabled={!TERMINAL_JOB_STATES.has(job.state)}
+                      onClick={() =>
+                        void runAdminAction(`retry ${job.id}`, () =>
+                          retryQueueJob(selected, job.id),
+                        )
+                      }
+                    >
+                      retry
+                    </button>
+                    <button
+                      type="button"
+                      className="cursor-pointer rounded border border-white/20 px-2 py-0.5 text-xs disabled:opacity-40"
+                      disabled={job.state !== "pending"}
+                      onClick={() =>
+                        void runAdminAction(`cancel ${job.id}`, () =>
+                          cancelQueueJob(selected, job.id),
+                        )
+                      }
+                    >
+                      cancel
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>

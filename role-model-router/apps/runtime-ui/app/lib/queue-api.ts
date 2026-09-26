@@ -27,6 +27,8 @@ export interface QueueSummary {
   readonly oldestWaitingMs: number | null;
   readonly p50Ms?: number | null;
   readonly p95Ms?: number | null;
+  /** Run 101 R9: the operator's drain flag for this queue. */
+  readonly draining?: boolean;
   readonly lastError: string | null;
 }
 
@@ -93,6 +95,82 @@ export async function fetchQueueJob(
     `/api/role-model/operator/queues/${encodeURIComponent(queueName)}/jobs/${encodeURIComponent(jobId)}`,
     fetcher,
   );
+}
+
+/**
+ * Run 101 R9 (Phase 3.5 repair): the admin actions the queue routes expose. Every one answers
+ * `{ ok: boolean, reason?: string, receipt?: ... }` - a refusal is a named answer rather than an
+ * error status, so the page can show *why* nothing moved ("not_terminal", "already_terminal",
+ * "not_found") instead of a generic failure.
+ */
+export interface QueueAdminActionResponse {
+  readonly ok: boolean;
+  readonly reason?: string;
+  readonly state?: string;
+  readonly active?: boolean;
+  readonly draining?: boolean;
+  readonly receipt?: {
+    readonly queue: string;
+    readonly jobId?: string | null;
+    readonly action: string;
+    readonly from?: string | null;
+    readonly to?: string | null;
+    readonly actor: string;
+    readonly reason?: string | null;
+    readonly atMs: number;
+  };
+}
+
+async function postQueueAction(
+  path: string,
+  body: unknown,
+  fetcher: RuntimeFetcher,
+): Promise<QueueAdminActionResponse> {
+  const response = await fetcher(`/api/role-model${path}`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const payload = (await response.json().catch(() => null)) as QueueAdminActionResponse | null;
+  if (!response.ok && !payload) {
+    throw new Error(`queue admin action failed: ${response.status}`);
+  }
+  return payload ?? { ok: false, reason: "empty_response" };
+}
+
+/** Revives a terminal job on the persisted attempt count. */
+export async function retryQueueJob(
+  queueName: string,
+  jobId: string,
+  fetcher: RuntimeFetcher = fetch,
+): Promise<QueueAdminActionResponse> {
+  return postQueueAction(
+    `/operator/queues/${encodeURIComponent(queueName)}/jobs/${encodeURIComponent(jobId)}/retry`,
+    {},
+    fetcher,
+  );
+}
+
+/** Cancels a pending job; a terminal one answers `already_terminal`. */
+export async function cancelQueueJob(
+  queueName: string,
+  jobId: string,
+  fetcher: RuntimeFetcher = fetch,
+): Promise<QueueAdminActionResponse> {
+  return postQueueAction(
+    `/operator/queues/${encodeURIComponent(queueName)}/jobs/${encodeURIComponent(jobId)}/cancel`,
+    {},
+    fetcher,
+  );
+}
+
+/** Stops the queue claiming new work; in-flight attempts still finish. */
+export async function setQueueDrain(
+  queueName: string,
+  draining: boolean,
+  fetcher: RuntimeFetcher = fetch,
+): Promise<QueueAdminActionResponse> {
+  return postQueueAction(`/operator/queues/${encodeURIComponent(queueName)}/drain`, { draining }, fetcher);
 }
 
 /** `oldestWaitingMs` as a short age, for the table cell. */
