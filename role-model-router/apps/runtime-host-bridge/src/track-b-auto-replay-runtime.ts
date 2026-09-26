@@ -275,6 +275,17 @@ export function startAutoReplayLoop(input: {
     }) => Promise<{ readonly enqueued: boolean; readonly reason?: string }>;
   };
   /**
+   * Run 101 R7: once a plane's queue is authoritative, the loops the queue
+   * replaced must stop being schedulers. The caller passes each plane's mode;
+   * `legacy` (the shipped default) keeps every sweep running exactly as before,
+   * so a rollback restores the old behaviour with no other change.
+   */
+  readonly planeModes?: {
+    readonly replay?: "legacy" | "shadow" | "queue";
+    readonly evaluation?: "legacy" | "shadow" | "queue";
+    readonly learner?: "legacy" | "shadow" | "queue";
+  };
+  /**
    * Run 98 addendum 56 §6: resolves the endpoint that currently judges comparisons (the configured controller).
    * Resolved per tick so a controller change takes effect without a restart, exactly like the judge itself.
    */
@@ -458,7 +469,17 @@ export function startAutoReplayLoop(input: {
       // Run 99 R33: the same bounded shape for interrupted supervised-replay evaluations. Without it
       // a stranded evaluation is never retried, because the producer only drives replay jobs and
       // those are already terminal.
-      if (typeof input.operations.resumePendingEvaluations === "function") {
+      /**
+       * Run 101 R7: the evaluation queue owns this work once its plane is
+       * authoritative, so the sweep steps aside rather than racing it. `shadow`
+       * keeps the sweep authoritative and lets the queue's job be the recorded
+       * comparison.
+       */
+      const evaluationQueueAuthoritative = input.planeModes?.evaluation === "queue";
+      if (
+        !evaluationQueueAuthoritative &&
+        typeof input.operations.resumePendingEvaluations === "function"
+      ) {
         try {
           const sweep = (await input.operations.resumePendingEvaluations({
             window,
@@ -478,7 +499,10 @@ export function startAutoReplayLoop(input: {
       // Run 100 addendum 02 S1: the reconcile pass is what completes a job whose comparison finalized and
       // reclaims one that is stranded beyond the grace. It had no production caller, so a job that lost its
       // lease without a terminal trial stayed non-terminal indefinitely and was reported "in flight".
-      if (typeof input.operations.reconcileEvaluationJobs === "function") {
+      if (
+        !evaluationQueueAuthoritative &&
+        typeof input.operations.reconcileEvaluationJobs === "function"
+      ) {
         try {
           const sweep = (await input.operations.reconcileEvaluationJobs({
             window,
@@ -509,7 +533,10 @@ export function startAutoReplayLoop(input: {
        * production caller. Finalizing them needs no provider work: the trials are already scored, so this sweep
        * converts paid-for evidence into comparisons the learner can consume.
        */
-      if (typeof input.operations.retroFinalizeEvaluations === "function") {
+      if (
+        !evaluationQueueAuthoritative &&
+        typeof input.operations.retroFinalizeEvaluations === "function"
+      ) {
         try {
           const sweep = (await input.operations.retroFinalizeEvaluations({
             window,
@@ -552,7 +579,16 @@ export function startAutoReplayLoop(input: {
        * comparison finalized this tick is available as evidence on the next one, and stays bounded (two
        * candidates per tick) like every other liveness step.
        */
-      if (typeof input.operations.learnFromUnconsumedCandidates === "function") {
+      /**
+       * Run 101 R7: the learner queues own derivation and promotion once their
+       * plane is authoritative, so both learner sweeps step aside together -
+       * leaving one of them running would race the queue for the same work.
+       */
+      const learnerQueueAuthoritative = input.planeModes?.learner === "queue";
+      if (
+        !learnerQueueAuthoritative &&
+        typeof input.operations.learnFromUnconsumedCandidates === "function"
+      ) {
         try {
           const sweep = (await input.operations.learnFromUnconsumedCandidates({
             window,
@@ -574,7 +610,10 @@ export function startAutoReplayLoop(input: {
        * S13: derive a candidate for a learnable finalized comparison that has none. Runs after the consume sweep so a
        * candidate created this tick can be validated on the next one, and stays bounded (two groups per tick).
        */
-      if (typeof input.operations.deriveLearnerCandidates === "function") {
+      if (
+        !learnerQueueAuthoritative &&
+        typeof input.operations.deriveLearnerCandidates === "function"
+      ) {
         try {
           const sweep = (await input.operations.deriveLearnerCandidates({
             window,

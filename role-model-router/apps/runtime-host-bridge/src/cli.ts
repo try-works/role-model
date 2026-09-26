@@ -6836,6 +6836,22 @@ export async function main(): Promise<void> {
           queueRuntime?.dispatchQueue?.offer(job) ??
           Promise.resolve({ enqueued: false, reason: "queue_runtime_not_started" }),
       };
+      /**
+       * Run 101 R7: the loop asks each plane's mode per tick, so the sweeps a
+       * queue has replaced retire as soon as that queue becomes authoritative -
+       * and come back if the operator rolls the plane back to `legacy`.
+       */
+      const lateBoundPlaneModes = {
+        get replay() {
+          return queueRuntime?.dispatchQueue?.mode ?? "legacy";
+        },
+        get evaluation() {
+          return evaluationQueueRuntime?.dispatchQueue?.mode ?? "legacy";
+        },
+        get learner() {
+          return learnerDeriveQueueRuntime?.dispatchQueue?.mode ?? "legacy";
+        },
+      };
       const loop = startAutoReplayLoop({
         operations: sweepOperations,
         ledger,
@@ -6845,6 +6861,7 @@ export async function main(): Promise<void> {
         // Run 101 R4: the replay plane's queue, whose mode comes from the
         // operator's policy document rather than from this composition.
         dispatchQueue: lateBoundDispatchQueue,
+        planeModes: lateBoundPlaneModes,
         intervalMs,
         // Run 98 addendum 04 follow-on: bound one tick's wall clock so a tick made of several
         // minutes-long replays leaves the remaining captures for the next tick. Operators can tune it
