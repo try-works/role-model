@@ -104,3 +104,72 @@ export function formatQueueAge(ageMs: number | null): string {
   if (hours < 24) return `${hours}h`;
   return `${Math.floor(hours / 24)}d`;
 }
+
+export interface QueuePolicyField {
+  readonly name: string;
+  readonly type: "enum" | "integer" | "boolean" | string;
+  readonly unit: string;
+  readonly default: unknown;
+  readonly min?: number;
+  readonly max?: number;
+  readonly values?: readonly string[];
+  readonly uiEditable: boolean;
+  readonly description: string;
+}
+
+export interface QueueConfigResponse {
+  readonly schemaVersion: string;
+  readonly policyVersion: number;
+  readonly updatedAt: number | null;
+  readonly path: string;
+  readonly global: Record<string, unknown>;
+  readonly catalogue: readonly {
+    readonly name: string;
+    readonly owner: string;
+    readonly jobIdRule: string;
+    readonly fields: readonly QueuePolicyField[];
+  }[];
+  readonly effective: readonly (Record<string, unknown> & { readonly queue: string })[];
+  readonly receipts: readonly Record<string, unknown>[];
+}
+
+export interface QueueConfigChangeResponse {
+  readonly ok: boolean;
+  readonly receipt: {
+    readonly queue: string;
+    readonly name: string;
+    readonly from: unknown;
+    readonly to: unknown;
+    readonly actor: string;
+    readonly at: number;
+    readonly policyVersion: number;
+  };
+  readonly effective: Record<string, unknown> & { readonly queue: string };
+}
+
+/** The catalogue, its bounds and the values in force right now. */
+export async function fetchQueueConfig(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<QueueConfigResponse> {
+  return fetchJson<QueueConfigResponse>("/api/role-model/operator/queues/config", fetcher);
+}
+
+/**
+ * One operator change. The bounds are enforced server-side; a refused value
+ * comes back as an error naming the queue and field rather than a new value.
+ */
+export async function setQueueParameter(
+  change: {
+    readonly queue: string;
+    readonly name: string;
+    readonly value: unknown;
+    readonly reason?: string;
+  },
+  fetcher: RuntimeFetcher = fetch,
+): Promise<QueueConfigChangeResponse> {
+  return fetchJson<QueueConfigChangeResponse>("/api/role-model/operator/queues/config", fetcher, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(change),
+  });
+}
