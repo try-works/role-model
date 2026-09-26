@@ -109,6 +109,8 @@ export default function ObserveQueuesRoute() {
             <th className="py-1">Failed</th>
             <th className="py-1">Stalled</th>
             <th className="py-1">Oldest waiting</th>
+            <th className="py-1">p50</th>
+            <th className="py-1">p95</th>
             <th className="py-1">Last error</th>
           </tr>
         </thead>
@@ -137,6 +139,8 @@ export default function ObserveQueuesRoute() {
               <td className="py-1">{queue.failed}</td>
               <td className="py-1">{queue.stalled}</td>
               <td className="py-1">{formatQueueAge(queue.oldestWaitingMs)}</td>
+              <td className="py-1">{formatQueueAge(queue.p50Ms ?? null)}</td>
+              <td className="py-1">{formatQueueAge(queue.p95Ms ?? null)}</td>
               <td className="py-1 max-w-[16rem] truncate" title={queue.lastError ?? ""}>
                 {queue.lastError ?? "—"}
               </td>

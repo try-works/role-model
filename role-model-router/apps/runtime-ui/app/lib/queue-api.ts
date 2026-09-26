@@ -25,6 +25,8 @@ export interface QueueSummary {
   readonly completedRecent: number;
   readonly stalled: number;
   readonly oldestWaitingMs: number | null;
+  readonly p50Ms?: number | null;
+  readonly p95Ms?: number | null;
   readonly lastError: string | null;
 }
 
