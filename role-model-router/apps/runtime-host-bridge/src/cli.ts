@@ -52,6 +52,8 @@ import {
   handoffEvidenceHoldRequestIds,
   resolveSupervisedReplayEvaluationResumePath,
   resumePendingSupervisedReplayEvaluations,
+  // Run 101 R5: scope the resume pass to the single handoff an evaluation job names.
+  scopeResumeStoreToReplayJob,
 } from "./supervised-replay-evaluation-resume.js";
 // Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S7: a replay that handed its branches off and was
 // interrupted before its evaluation job existed is recovered from the durable job itself.
@@ -90,7 +92,7 @@ import {
 } from "./track-b-auto-replay-runtime.js";
 // Run 101 R4: the replay plane's queue runtime (policy-driven mode, offer and
 // worker). Imported here so the auto-replay loop's composition can start it.
-import { startReplayQueueRuntime } from "./queue-runtime/index.js";
+import { startEvaluationQueueRuntime, startReplayQueueRuntime } from "./queue-runtime/index.js";
 import {
   buildAutoReplayIdempotencyKey,
   dedupeJudgeAgainstPair,
@@ -5055,7 +5057,7 @@ export async function main(): Promise<void> {
      */
     const resumeEvaluationsRef: {
       current:
-        | (() => Promise<{
+        | ((scope?: { readonly onlyReplayJobId?: string }) => Promise<{
             resumed: number;
             completed: number;
             failed: number;
@@ -5067,6 +5069,26 @@ export async function main(): Promise<void> {
           }>)
         | null;
     } = { current: null };
+    /**
+     * Run 101 R5: the evaluation plane's queue holder. It is declared at this
+     * level because two sibling closures use it - the auto-replay starter
+     * starts the runtime, and the replay handoff (which lives with the
+     * post-observation handler) offers the job. Until the runtime is started it
+     * reads `legacy`, so an unwired start is baseline behaviour.
+     */
+    let evaluationQueueRuntime: ReturnType<typeof startEvaluationQueueRuntime> | null = null;
+    const lateBoundEvaluationQueue = {
+      get mode() {
+        return evaluationQueueRuntime?.dispatchQueue?.mode ?? "legacy";
+      },
+      offer: (job: {
+        readonly origin: string;
+        readonly groupId?: string | null;
+        readonly replayJobId?: string | null;
+      }) =>
+        evaluationQueueRuntime?.dispatchQueue?.offer(job) ??
+        Promise.resolve({ enqueued: false, reason: "evaluation_queue_not_started" }),
+    };
     /**
      * Run 100 addendum `handoff-evidence-durability.addendum-06` S27: the durable replay jobs' scope is
      * resolved in the liveness-sweep scope (which sees the captures) and is needed by the resume sweep's
@@ -7003,6 +7025,43 @@ export async function main(): Promise<void> {
           }`,
         );
       }
+      /**
+       * Run 101 R5: the evaluation worker runs beside the replay loop and drives
+       * exactly the handoff its job names through the same resume implementation
+       * the tick's sweep uses (`resumeEvaluationsRef`), which is what keeps
+       * evidence writing in one place.
+       */
+      evaluationQueueRuntime = startEvaluationQueueRuntime({
+        stateRoot: options.runtimeStateRoot,
+        shippedRoot: options.repoRoot,
+        handler: async (job) => {
+          const resume = resumeEvaluationsRef.current;
+          if (!resume) throw new Error("evaluation resume implementation is not available yet");
+          const scope = job.replayJobId ? { onlyReplayJobId: job.replayJobId } : undefined;
+          const result = await resume(scope);
+          const progressed =
+            result.resumed + result.completed + result.failed + result.outsideRetentionWindow > 0;
+          if (!progressed) {
+            throw new Error(
+              `evaluation job ${job.groupId ?? job.replayJobId ?? "unknown"} made no progress`,
+            );
+          }
+        },
+        onAttemptFailure: (error, job) => {
+          console.error(
+            `[run101] evaluation attempt failed:${job.groupId ?? job.replayJobId ?? "unknown"} ${String(
+              (error as { message?: unknown })?.message ?? error,
+            ).slice(0, 200)}`,
+          );
+        },
+      });
+      if (evaluationQueueRuntime.mode !== "legacy") {
+        console.error(
+          `[run101] evaluation queue plane:${evaluationQueueRuntime.mode} worker:${
+            evaluationQueueRuntime.worker ? "running" : "none"
+          }`,
+        );
+      }
       return loop;
     };
     const postObservationHandler =
@@ -7864,6 +7923,23 @@ export async function main(): Promise<void> {
             },
             handoffEvaluation: async ({ replayJobId }) => {
               const evaluationJobId = `evaluation-replay-${createHash("sha256").update(String(replayJobId)).digest("hex").slice(0, 20)}`;
+              // Run 101 R5: the handoff is where the replay plane learns the
+              // unit of evaluation work, so it is where the job is offered.
+              // `legacy` keeps this a no-op, and a refused offer is logged
+              // rather than thrown: the handoff itself already succeeded.
+              if (lateBoundEvaluationQueue.mode !== "legacy") {
+                const offered = await lateBoundEvaluationQueue
+                  .offer({ origin: "replay", replayJobId: String(replayJobId) })
+                  .catch((error: unknown) => ({
+                    enqueued: false,
+                    reason: String((error as { message?: unknown })?.message ?? error).slice(0, 160),
+                  }));
+                if (!offered.enqueued) {
+                  console.error(
+                    `[run101] evaluation queue offer declined:${replayJobId} ${offered.reason ?? "unknown"}`,
+                  );
+                }
+              }
               return { evaluationJobId };
             },
             completeEvaluation: (() => {
@@ -8426,7 +8502,13 @@ export async function main(): Promise<void> {
        * already-scored durable trials, so this finalizes the existing comparison group and lets the
        * learner consume it instead of needing a fresh provider dispatch.
        */
-      const resumePendingEvaluations = async () => {
+      /**
+       * Run 101 R5: `onlyReplayJobId` lets the evaluation queue drive exactly
+       * the handoff its job names, through the same body the sweep uses, so the
+       * comparison is finalized once and evidence writing stays in one place.
+       * Without it the sweep behaves exactly as before.
+       */
+      const resumePendingEvaluations = async (scope?: { readonly onlyReplayJobId?: string }) => {
         const runtime = extensionRuntimeRef.current;
         const operations = currentPostObservationOperations();
         if (!runtime || !operations) {
@@ -8442,7 +8524,10 @@ export async function main(): Promise<void> {
         }
         const channel = packagedProfile?.channel ?? "development";
         return resumePendingSupervisedReplayEvaluations({
-          store: evaluationResumeStore,
+          store: scope?.onlyReplayJobId
+            ? scopeResumeStoreToReplayJob(evaluationResumeStore, scope.onlyReplayJobId)
+            : evaluationResumeStore,
+          ...(scope?.onlyReplayJobId ? { limit: 1 } : {}),
           isEvaluationComplete: async (entry) => {
             try {
               const rawJob = await runtime.invoke("evaluation-core", {

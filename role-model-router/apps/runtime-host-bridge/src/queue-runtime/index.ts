@@ -24,6 +24,9 @@ import {
 } from "./queues.js";
 import { storeLayerForQueuePolicy } from "./store.js";
 import { runReplayDispatchWorker, type ReplayDispatchWorker } from "./workers.js";
+import { runEvaluationScoreWorker } from "./workers.js";
+import { EVALUATION_SCORE_QUEUE, enqueueEvaluationScore, makeEvaluationScoreQueue } from "./evaluation.js";
+import type { EvaluationScoreJob } from "./evaluation.js";
 
 export interface ReplayQueueRuntimeOptions {
   readonly stateRoot: string;
@@ -141,6 +144,98 @@ export function startReplayQueueRuntime(options: ReplayQueueRuntimeOptions): Rep
     mode,
     policy,
     dispatchQueue: offer,
+    ...(worker ? { worker } : {}),
+    async stop() {
+      await worker?.stop();
+    },
+  };
+}
+
+export interface EvaluationQueueRuntimeOptions {
+  readonly stateRoot: string;
+  readonly shippedRoot?: string;
+  /**
+   * Runs one evaluation attempt for the job's unit of work. The handler owns
+   * evidence-before-ack: it finalizes (and records) the comparison before
+   * returning, and a throw leaves the job claimable.
+   */
+  readonly handler?: (job: EvaluationScoreJob, context: { readonly attempt: number }) => Promise<void>;
+  readonly onAttemptFailure?: (error: unknown, job: EvaluationScoreJob) => void;
+}
+
+export interface EvaluationQueueRuntime {
+  readonly mode: QueueMode;
+  readonly dispatchQueue?: {
+    readonly mode: QueueMode;
+    readonly offer: (job: {
+      readonly origin: string;
+      readonly groupId?: string | null;
+      readonly replayJobId?: string | null;
+    }) => Promise<{ readonly enqueued: boolean; readonly reason?: string }>;
+  };
+  readonly worker?: ReplayDispatchWorker;
+  stop(): Promise<void>;
+}
+
+/**
+ * Composes the evaluation queue for a running host. Same safety property as the
+ * replay plane: an unreadable policy leaves the plane on `legacy`.
+ */
+export function startEvaluationQueueRuntime(
+  options: EvaluationQueueRuntimeOptions,
+): EvaluationQueueRuntime {
+  let policy: ResolvedQueuePolicy;
+  try {
+    const document = readQueuePolicy({ stateRoot: options.stateRoot, shippedRoot: options.shippedRoot });
+    policy = resolveQueuePolicy(document, { queue: EVALUATION_SCORE_QUEUE });
+  } catch (error) {
+    console.error(
+      `[run101] evaluation queue stays legacy: ${String(
+        (error as { message?: unknown })?.message ?? error,
+      ).slice(0, 200)}`,
+    );
+    return { mode: "legacy", async stop() {} };
+  }
+
+  const mode = QUEUE_MODES.includes(policy.mode) ? policy.mode : "legacy";
+  if (mode === "legacy") {
+    return { mode, async stop() {} };
+  }
+
+  const layer = storeLayerForQueuePolicy({ stateRoot: options.stateRoot, policy });
+  const dispatchQueue: EvaluationQueueRuntime["dispatchQueue"] = {
+    mode,
+    async offer(job) {
+      try {
+        return await Effect.runPromise(
+          Effect.gen(function* () {
+            const queue = yield* makeEvaluationScoreQueue(policy);
+            return yield* enqueueEvaluationScore({ queue, job });
+          }).pipe(Effect.provide(layer), Effect.scoped),
+        );
+      } catch (error) {
+        return {
+          enqueued: false,
+          reason: `queue_offer_failed: ${String((error as { message?: unknown })?.message ?? error).slice(0, 160)}`,
+        };
+      }
+    },
+  };
+
+  const worker =
+    mode === "queue" && options.handler
+      ? runEvaluationScoreWorker({
+          stateRoot: options.stateRoot,
+          policy,
+          handler: options.handler,
+          onAttemptFailure: options.onAttemptFailure,
+          shippedRoot: options.shippedRoot,
+        })
+      : undefined;
+
+  return {
+    mode,
+    dispatchQueue,
     ...(worker ? { worker } : {}),
     async stop() {
       await worker?.stop();
