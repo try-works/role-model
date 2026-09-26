@@ -88,6 +88,9 @@ import {
   autoReplayExecutionFromCommandReceipt,
   startAutoReplayLoop,
 } from "./track-b-auto-replay-runtime.js";
+// Run 101 R4: the replay plane's queue runtime (policy-driven mode, offer and
+// worker). Imported here so the auto-replay loop's composition can start it.
+import { startReplayQueueRuntime } from "./queue-runtime/index.js";
 import {
   buildAutoReplayIdempotencyKey,
   dedupeJudgeAgainstPair,
@@ -6740,12 +6743,36 @@ export async function main(): Promise<void> {
           return { scanned: jobs.length, recovered, skipped };
         },
       };
-      return startAutoReplayLoop({
+      /**
+       * Run 101 R4: the replay queue is composed beside the loop and late-bound,
+       * because each needs the other - the loop offers admitted captures while
+       * the queue's worker drives its claims back through the loop's own
+       * `dispatchCapture`. Until the runtime is started the plane reads
+       * `legacy`, so an unwired or failed start is baseline behaviour rather
+       * than a stalled queue.
+       */
+      let queueRuntime: ReturnType<typeof startReplayQueueRuntime> | null = null;
+      const lateBoundDispatchQueue = {
+        get mode() {
+          return queueRuntime?.dispatchQueue?.mode ?? "legacy";
+        },
+        offer: (job: {
+          readonly captureRef: string;
+          readonly endpointIds: readonly string[];
+          readonly policySetDigest: string;
+        }) =>
+          queueRuntime?.dispatchQueue?.offer(job) ??
+          Promise.resolve({ enqueued: false, reason: "queue_runtime_not_started" }),
+      };
+      const loop = startAutoReplayLoop({
         operations: sweepOperations,
         ledger,
         policySet,
         configuredEndpointIds: endpoints,
         healthyEndpointIds: healthyEndpoints,
+        // Run 101 R4: the replay plane's queue, whose mode comes from the
+        // operator's policy document rather than from this composition.
+        dispatchQueue: lateBoundDispatchQueue,
         intervalMs,
         // Run 98 addendum 04 follow-on: bound one tick's wall clock so a tick made of several
         // minutes-long replays leaves the remaining captures for the next tick. Operators can tune it
@@ -6955,6 +6982,28 @@ export async function main(): Promise<void> {
           );
         },
       });
+      queueRuntime = startReplayQueueRuntime({
+        stateRoot: options.runtimeStateRoot,
+        shippedRoot: options.repoRoot,
+        handler: async (job) => {
+          await loop.dispatchCapture(job.captureRef);
+        },
+        onAttemptFailure: (error, job) => {
+          console.error(
+            `[run101] replay dispatch attempt failed:${job.captureRef} ${String(
+              (error as { message?: unknown })?.message ?? error,
+            ).slice(0, 200)}`,
+          );
+        },
+      });
+      if (queueRuntime.mode !== "legacy") {
+        console.error(
+          `[run101] replay queue plane:${queueRuntime.mode} queue:${queueRuntime.policy.queue} worker:${
+            queueRuntime.worker ? "running" : "none"
+          }`,
+        );
+      }
+      return loop;
     };
     const postObservationHandler =
       (runtime: Awaited<ReturnType<typeof createProductionExtensionRuntime>>) =>
