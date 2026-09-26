@@ -18,6 +18,7 @@ import {
   resolveExtensionHostModuleUrl,
   stageTrackBRuntimeDistribution,
 } from "../src/track-b-runtime.js";
+import { queuePolicyFixture } from "./fixtures/queue-policy.js";
 
 const roots: string[] = [];
 
@@ -669,6 +670,9 @@ describe("production Track B composition", () => {
         scopes: {},
       }),
     );
+    // Run 101 R3: the release staging requires the queue policy too, because the packaged host
+    // resolves it from `<repo-root>/shared/queue-policy.json` and fails closed to `legacy`.
+    await writeFile(path.join(sourceRoot, "shared", "queue-policy.json"), queuePolicyFixture());
     const extensions = await Promise.all(
       Array.from({ length: 13 }, async (_, index) => {
         const id = `extension-${index + 1}`;

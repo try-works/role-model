@@ -10,6 +10,7 @@ import {
   verifyPackagedRuntimeArtifactClosure,
 } from "../src/package-sea.js";
 import { stageTrackBRuntimeDistribution } from "../src/track-b-runtime.js";
+import { queuePolicyFixture } from "./fixtures/queue-policy.js";
 
 const temporaryRoots: string[] = [];
 
@@ -166,6 +167,9 @@ describe("Run 96 packaged runtime artifact closure", () => {
       "shared/route-learning-activation-policy.json",
       activationPolicyJson,
     );
+    // Run 101 R3: the queue policy is a required boot document too - without it a packaged
+    // runtime keeps every queue plane on `legacy`, which is the defect this fixture now pins.
+    await writeArtifact(sourceRoot, "shared/queue-policy.json", queuePolicyFixture());
     const contractFiles = [
       ["contracts/package-registry.json", "registry"],
       ["contracts/contract-registry.schema.json", "registry-schema"],
@@ -331,6 +335,7 @@ describe("Run 96 packaged runtime artifact closure", () => {
         scopes: {},
       }),
     );
+    await writeArtifact(sourceRoot, "shared/queue-policy.json", queuePolicyFixture());
     const sidecar = await writeArtifact(sourceRoot, "runtime-operations-server.mjs", "sidecar");
     const extensionHostSha256 = await writeArtifact(
       sourceRoot,

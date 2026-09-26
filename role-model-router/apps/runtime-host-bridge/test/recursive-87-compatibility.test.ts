@@ -10,6 +10,7 @@ import {
   stageTrackBRuntimeDistribution,
   trackBDistributionRequiresSQLiteMaintenance,
 } from "../src/track-b-runtime.js";
+import { queuePolicyFixture } from "./fixtures/queue-policy.js";
 
 const graphRegistryKinds = [{ id: "core.message", version: 1, category: "message", fields: [] }];
 const graphRegistry = {
@@ -102,6 +103,8 @@ test("SP7 stages N and N-1 distributions and refuses unsupported future versions
         scopes: {},
       }),
     );
+    // Run 101 R3: the queue policy is a required boot document beside the activation policy.
+    await writeFile(path.join(root, "shared", "queue-policy.json"), queuePolicyFixture());
     await writeFile(path.join(root, "sidecar.mjs"), bytes);
     await writeFile(path.join(root, "public-extension-host.mjs"), extensionHostBytes);
     await writeFile(path.join(root, "worker-runtime.mjs"), extensionHostBytes);
