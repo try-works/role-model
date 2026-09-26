@@ -6874,6 +6874,20 @@ export async function main(): Promise<void> {
        * `legacy`, so an unwired or failed start is baseline behaviour rather
        * than a stalled queue.
        */
+      /**
+       * Run 101 addendum 01: the queue plane's state root. Measured live on
+       * `stage-rc-165e143f8092`: this composition used to pass
+       * `options.runtimeStateRoot` (the base root), so the policy lookup missed
+       * the operator's document at `<base>/<scopeId>/track-b/queues/queue-policy.json`,
+       * fell back to the shipped all-`legacy` document, and the plane silently
+       * stayed baseline while the UI showed `mode: queue`. The same helper every
+       * other per-scope artifact uses resolves the scope root the sidecar is
+       * rooted at, so both hosts read one document and open one store.
+       */
+      const queueStateRoot = resolveLearningPolicyStateRoot({
+        runtimeStateRoot: options.runtimeStateRoot,
+        scopeId: options.scopeId,
+      });
       let queueRuntime: ReturnType<typeof startReplayQueueRuntime> | null = null;
       const lateBoundDispatchQueue = {
         get mode() {
@@ -7123,7 +7137,7 @@ export async function main(): Promise<void> {
         },
       });
       queueRuntime = startReplayQueueRuntime({
-        stateRoot: options.runtimeStateRoot,
+        stateRoot: queueStateRoot,
         shippedRoot: options.repoRoot,
         handler: async (job) => {
           await loop.dispatchCapture(job.captureRef);
@@ -7150,7 +7164,7 @@ export async function main(): Promise<void> {
        * evidence writing in one place.
        */
       evaluationQueueRuntime = startEvaluationQueueRuntime({
-        stateRoot: options.runtimeStateRoot,
+        stateRoot: queueStateRoot,
         shippedRoot: options.repoRoot,
         handler: async (job) => {
           const resume = resumeEvaluationsRef.current;
@@ -7189,7 +7203,7 @@ export async function main(): Promise<void> {
       learnerDeriveQueueRuntime = startLearnerQueueRuntime({
         kind: "learner.derive",
         options: {
-          stateRoot: options.runtimeStateRoot,
+          stateRoot: queueStateRoot,
           shippedRoot: options.repoRoot,
           deriveHandler: async (job) => {
             const derive = sweepOperations.deriveLearnerCandidates;
@@ -7246,7 +7260,7 @@ export async function main(): Promise<void> {
       learnerPromoteQueueRuntime = startLearnerQueueRuntime({
         kind: "learner.promote",
         options: {
-          stateRoot: options.runtimeStateRoot,
+          stateRoot: queueStateRoot,
           shippedRoot: options.repoRoot,
           promoteHandler: async (job) => {
             const consume = sweepOperations.learnFromUnconsumedCandidates;

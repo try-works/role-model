@@ -19,7 +19,16 @@ import { SqliteClient } from "@effect/sql-sqlite-node";
 import { Duration, Layer } from "effect";
 import { PersistedQueue } from "effect/unstable/persistence";
 
-/** State-root-relative location of the queue database. */
+import { resolveQueueStateRoot } from "./policy.js";
+
+/**
+ * State-root-relative location of the queue database.
+ *
+ * The path is `<scopeRoot>/track-b/queues/queues.sqlite`: `stateRoot` may be the
+ * scope root or that scope's `track-b` directory - `resolveQueueStateRoot` folds
+ * the second form back to the first, so this host and the Track B sidecar open
+ * the same file (Run 101 addendum 01).
+ */
 export const QUEUE_STORE_RELATIVE_PATH = "track-b/queues/queues.sqlite";
 
 /** Library-owned table name for the `effect_queue` rows. */
@@ -60,7 +69,7 @@ export function resolveQueueStorePath({
   if (!relativePath || relativePath.includes("..")) {
     throw new Error("queue store relative path must stay inside the state root");
   }
-  return path.join(stateRoot, ...relativePath.split("/"));
+  return path.join(resolveQueueStateRoot(stateRoot), ...relativePath.split("/"));
 }
 
 export interface QueueStoreLayerOptions {
