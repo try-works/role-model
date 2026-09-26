@@ -6,15 +6,15 @@
     "tag": "effect@4.0.0-rc.117",
     "commit": "14a3f140095fdebbff9162944fe7d4ea83e054e6",
     "commitDate": "2026-09-20T23:56:33Z",
-    "license": "MIT"
+    "license": "MIT (Copyright (c) 2023 Effectful Technologies Inc)"
   },
   "vendoredInto": "role-model",
-  "vendoredAt": "2026-09-25T23:38:39.006Z",
+  "vendoredAt": "2026-09-26T00:10:11.819Z",
   "payload": {
     "root": "vendor/effect",
     "includes": [
       "packages/**",
-      "LICENSE",
+      "LICENSE/**",
       "README.md",
       "MIGRATION.md"
     ],
@@ -24,7 +24,8 @@
       "*.tsbuildinfo",
       "ai-docs/**",
       "scripts/**",
-      ".github/**"
+      ".github/**",
+      "patches/**"
     ]
   },
   "fileCount": 1825,

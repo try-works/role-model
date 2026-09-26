@@ -1,0 +1,381 @@
+/**
+ * Drizzle schema factories for effect-mq's Postgres tables.
+ *
+ * Re-export these from your own drizzle schema so drizzle-kit owns the
+ * migrations and your queries are fully typed — including the job `name`
+ * column typed to the union of your job tags:
+ *
+ * ```ts
+ * // schema.ts
+ * import { mqJobAttempts, mqJobs } from "effect-mq/drizzle-postgres"
+ *
+ * type DurableJobs = typeof GenerateInvoice._tag | typeof GenerateReport._tag
+ * export const jobs = mqJobs<DurableJobs>()
+ * export const jobAttempts = mqJobAttempts(jobs)
+ * ```
+ *
+ * Every factory accepts an `extraConfig` callback — the same shape as
+ * drizzle's own third `pgTable` argument — to add your own indexes (or
+ * checks/policies) on top of the built-in ones:
+ *
+ * ```ts
+ * export const jobs = mqJobs<DurableJobs>("effect_mq_jobs", {
+ *   extraConfig: (t) => [index("jobs_name_recent_idx").on(t.name, t.enqueuedAt.desc())]
+ * })
+ * ```
+ *
+ * Then `drizzle-kit generate` emits the CREATE TABLE migrations into your
+ * pipeline like any other table. Reads through drizzle are encouraged;
+ * writes must go through the `JobStore` (e.g. `store.retry`) so locking and
+ * wake-up invariants hold.
+ *
+ * @since 0.1.0
+ */
+import type * as JobStore from "../JobStore.ts"
+import { sql } from "drizzle-orm"
+import {
+  type AnyPgColumnBuilder,
+  bigint,
+  bigserial,
+  boolean,
+  index,
+  integer,
+  jsonb,
+  type PgBuildExtraConfigColumns,
+  pgTable,
+  type PgTableExtraConfigValue,
+  primaryKey,
+  text,
+  timestamp
+} from "drizzle-orm/pg-core"
+
+type JobId = JobStore.JobId
+type QueueName = JobStore.QueueName
+type ScheduleKey = JobStore.ScheduleKey
+type JobState = JobStore.JobState
+type BackoffPolicy = JobStore.BackoffPolicy
+type KeepPolicy = JobStore.KeepPolicy
+type AttemptOutcome = JobStore.AttemptRecord["outcome"]
+type TraceContext = JobStore.TraceContext
+type ParentEnvelope = JobStore.ParentEnvelope
+type EnqueueRequest = JobStore.EnqueueRequest
+type FlowChildStatus = JobStore.FlowChildRecord["status"]
+type FlowChildReport = JobStore.FlowChildReport
+
+/**
+ * Table-factory options: `extraConfig` receives the table's columns (exactly
+ * like drizzle's third `pgTable` argument) and returns additional indexes,
+ * checks, or policies, appended after the built-in ones.
+ *
+ * @since 0.2.1
+ */
+export interface MqTableOptions<Columns extends Record<string, AnyPgColumnBuilder>> {
+  readonly extraConfig?:
+    | ((table: PgBuildExtraConfigColumns<Columns>) => Array<PgTableExtraConfigValue>)
+    | undefined
+}
+
+const jobsColumns = <JobName extends string, Queue extends string>() => ({
+  id: text("id").primaryKey().$type<JobId>(),
+  name: text("name").notNull().$type<JobName>(),
+  queue: text("queue").notNull().$type<Queue>(),
+  state: text("state").notNull().$type<JobState>(),
+  priority: integer("priority").notNull().default(0),
+  /** FIFO order within a priority; bumped on retry so retries go to the tail. */
+  seq: bigint("seq", { mode: "number" }).notNull().generatedByDefaultAsIdentity(),
+  payload: jsonb("payload"),
+  metadata: jsonb("metadata").notNull().default({}).$type<Record<string, string>>(),
+  attemptsMax: integer("attempts_max").notNull(),
+  attemptsMade: integer("attempts_made").notNull().default(0),
+  stalledCount: integer("stalled_count").notNull().default(0),
+  backoff: jsonb("backoff").$type<BackoffPolicy>(),
+  keep: jsonb("keep").$type<KeepPolicy>(),
+  timeoutMs: bigint("timeout_ms", { mode: "number" }),
+  cancelRequested: boolean("cancel_requested").notNull().default(false),
+  dedupeKey: text("dedupe_key"),
+  trace: jsonb("trace").$type<TraceContext>(),
+  /** Flow-parent link on child jobs (opaque envelope, like `trace`). */
+  parent: jsonb("parent").$type<ParentEnvelope>(),
+  /** Flow bookkeeping: NULL together until a FanOut ack lands the manifest. */
+  flowFailFast: boolean("flow_fail_fast"),
+  flowPending: integer("flow_pending"),
+  flowCompleted: integer("flow_completed"),
+  flowFailed: integer("flow_failed"),
+  flowCancelled: integer("flow_cancelled"),
+  runAt: timestamp("run_at", { withTimezone: true, mode: "date" }).notNull(),
+  enqueuedAt: timestamp("enqueued_at", { withTimezone: true, mode: "date" }).notNull(),
+  processedAt: timestamp("processed_at", { withTimezone: true, mode: "date" }),
+  finishedAt: timestamp("finished_at", { withTimezone: true, mode: "date" }),
+  exit: jsonb("exit"),
+  failedReason: text("failed_reason"),
+  lockToken: text("lock_token"),
+  lockExpiresAt: timestamp("lock_expires_at", { withTimezone: true, mode: "date" })
+})
+
+/**
+ * The jobs table factory. `JobName` types the `name` column — derive it from
+ * your job definitions: `mqJobs<typeof GenerateInvoice._tag | typeof Report._tag>()`.
+ * `Queue` types the `queue` column the same way — pass your own branded type
+ * or literal union (defaults to effect-mq's `QueueName` brand).
+ *
+ * `extend` adds your own columns (tenant ids, object ids, ...) to the table.
+ * At enqueue the Postgres store fills each extended column from the job's
+ * `metadata` entry with the same TS key (NULL when absent); override the
+ * mapping with the store's `extraValues` option. Extended columns are yours
+ * to read with plain drizzle queries — FKs, RLS policies, and `extraConfig`
+ * indexes all work:
+ *
+ * ```ts
+ * export const jobs = mqJobs<JobNames>("effect_mq_jobs", {
+ *   extend: {
+ *     companyId: text("company_id").notNull(),
+ *     objectId: text("object_id")
+ *   },
+ *   extraConfig: (t) => [index("jobs_company_idx").on(t.companyId, t.state)]
+ * })
+ * ```
+ *
+ * @since 0.1.0
+ */
+export const mqJobs = <
+  JobName extends string = string,
+  Queue extends string = QueueName,
+  Extend extends Record<string, AnyPgColumnBuilder> = Record<never, never>
+>(
+  tableName = "effect_mq_jobs",
+  options?: MqTableOptions<ReturnType<typeof jobsColumns<JobName, Queue>> & Extend> & {
+    /** Extra columns appended to the factory's own (see the JSDoc example). */
+    readonly extend?: Extend | undefined
+  }
+) =>
+  pgTable(tableName, {
+    ...jobsColumns<JobName, Queue>(),
+    // SAFETY: when `extend` is absent, `Extend` was never inferred from a
+    // value and stays at its empty-record default, which {} satisfies.
+    ...options?.extend ?? ({} as Extend)
+  }, (table) => [
+    // Claim path: pop highest priority, FIFO within it.
+    index(`${tableName}_ready_idx`)
+      .on(table.queue, table.priority.desc(), table.seq.asc())
+      .where(sql`${table.state} = 'waiting'`),
+    // Delayed promotion + nextRunAt.
+    index(`${tableName}_delayed_idx`)
+      .on(table.queue, table.runAt)
+      .where(sql`${table.state} = 'delayed'`),
+    // Stalled sweep.
+    index(`${tableName}_active_idx`)
+      .on(table.lockExpiresAt)
+      .where(sql`${table.state} = 'active'`),
+    // History/retention queries (leading `name` also serves name-only filters).
+    index(`${tableName}_history_idx`).on(table.name, table.state, table.finishedAt),
+    // Listing (newest first, keyset pagination).
+    index(`${tableName}_listing_idx`).on(table.enqueuedAt.desc(), table.id.desc()),
+    // Metadata containment queries.
+    index(`${tableName}_metadata_idx`).using("gin", table.metadata.op("jsonb_path_ops")),
+    ...options?.extraConfig?.(table) ?? []
+  ])
+
+const attemptsColumns = (jobs: MqJobsTable) => ({
+  jobId: text("job_id").notNull().references(() => jobs.id, { onDelete: "cascade" }).$type<JobId>(),
+  attempt: integer("attempt").notNull(),
+  outcome: text("outcome").notNull().$type<AttemptOutcome>(),
+  startedAt: timestamp("started_at", { withTimezone: true, mode: "date" }),
+  finishedAt: timestamp("finished_at", { withTimezone: true, mode: "date" }).notNull(),
+  exit: jsonb("exit")
+})
+
+/**
+ * The job run-ledger table factory (one row per attempt, including
+ * successes and stall recoveries).
+ *
+ * @since 0.1.0
+ */
+export const mqJobAttempts = (
+  jobs: MqJobsTable,
+  tableName = "effect_mq_job_attempts",
+  options?: MqTableOptions<ReturnType<typeof attemptsColumns>>
+) =>
+  pgTable(tableName, attemptsColumns(jobs), (table) => [
+    primaryKey({ columns: [table.jobId, table.attempt] }),
+    ...options?.extraConfig?.(table) ?? []
+  ])
+
+const schedulesColumns = <JobName extends string, Queue extends string>() => ({
+  key: text("key").primaryKey().$type<ScheduleKey>(),
+  jobName: text("job_name").notNull().$type<JobName>(),
+  queue: text("queue").notNull().$type<Queue>(),
+  cron: text("cron"),
+  tz: text("tz"),
+  everyMs: bigint("every_ms", { mode: "number" }),
+  payload: jsonb("payload"),
+  metadata: jsonb("metadata").notNull().default({}).$type<Record<string, string>>(),
+  priority: integer("priority").notNull().default(0),
+  attemptsMax: integer("attempts_max").notNull(),
+  backoff: jsonb("backoff").$type<BackoffPolicy>(),
+  keep: jsonb("keep").$type<KeepPolicy>(),
+  timeoutMs: bigint("timeout_ms", { mode: "number" }),
+  /** Ownership label for declarative reconciliation; NULL = never pruned. */
+  group: text("group_name"),
+  nextRunAt: timestamp("next_run_at", { withTimezone: true, mode: "date" }).notNull()
+})
+
+/**
+ * Repeatable-job schedules (one row per `Job.schedule` key).
+ *
+ * `JobName` and `Queue` type the `jobName`/`queue` columns, exactly like
+ * `mqJobs` (both default to plain string / effect-mq's `QueueName` brand).
+ *
+ * @since 0.2.0
+ */
+export const mqSchedules = <JobName extends string = string, Queue extends string = QueueName>(
+  tableName = "effect_mq_schedules",
+  options?: MqTableOptions<ReturnType<typeof schedulesColumns<JobName, Queue>>>
+) =>
+  pgTable(tableName, schedulesColumns<JobName, Queue>(), (table) => [
+    index(`${tableName}_due_idx`).on(table.nextRunAt),
+    ...options?.extraConfig?.(table) ?? []
+  ])
+
+const dedupeColumns = <JobName extends string>() => ({
+  name: text("name").notNull().$type<JobName>(),
+  key: text("key").notNull(),
+  jobId: text("job_id").notNull().$type<JobId>(),
+  /** Set for ttl/throttle windows; NULL rows live as long as their job is pending. */
+  windowExpiresAt: timestamp("window_expires_at", { withTimezone: true, mode: "date" })
+})
+
+/**
+ * Dedup-key registry (one row per job name + dedup key; see `DedupePolicy`).
+ *
+ * @since 0.3.0
+ */
+export const mqDedupe = <JobName extends string = string>(
+  tableName = "effect_mq_dedupe",
+  options?: MqTableOptions<ReturnType<typeof dedupeColumns<JobName>>>
+) =>
+  pgTable(tableName, dedupeColumns<JobName>(), (table) => [
+    primaryKey({ columns: [table.name, table.key] }),
+    ...options?.extraConfig?.(table) ?? []
+  ])
+
+const flowChildrenColumns = () => ({
+  /** The parent (flow) job's id in this store. */
+  flowId: text("flow_id").notNull().$type<JobId>(),
+  /** Unique within the flow (the idempotency mechanism). */
+  childKey: text("child_key").notNull(),
+  /** The child job's name (projection of `spec.name` for dashboards). */
+  name: text("name").notNull(),
+  /** The CHILD store's context-key string (children may live elsewhere). */
+  storeKey: text("store_key").notNull(),
+  /** The FULL `EnqueueRequest`, so the sweeper can re-enqueue from storage. */
+  spec: jsonb("spec").notNull().$type<EnqueueRequest>(),
+  status: text("status").notNull().$type<FlowChildStatus>(),
+  /** The child's schema-encoded exit; NULL for store-side failures. */
+  exit: jsonb("exit"),
+  failedReason: text("failed_reason"),
+  /** True once no cancel needs delivering into the child's store. */
+  cascaded: boolean("cascaded").notNull(),
+  pendingSince: timestamp("pending_since", { withTimezone: true, mode: "date" }).notNull()
+})
+
+/**
+ * Flow dependency rows (one per fan-out child; see `JobStore.FlowChildRecord`).
+ * Lives next to the PARENT store's jobs table.
+ *
+ * @since 0.6.0
+ */
+export const mqFlowChildren = (
+  tableName = "effect_mq_flow_children",
+  options?: MqTableOptions<ReturnType<typeof flowChildrenColumns>>
+) =>
+  pgTable(tableName, flowChildrenColumns(), (table) => [
+    primaryKey({ columns: [table.flowId, table.childKey] }),
+    // flowSweepWork reconcile: pending rows older than the threshold.
+    index(`${tableName}_pending_idx`)
+      .on(table.pendingSince)
+      .where(sql`${table.status} = 'pending'`),
+    // flowSweepWork cascade: cancelled rows not yet delivered.
+    index(`${tableName}_cascade_idx`)
+      .on(table.flowId)
+      .where(sql`${table.status} = 'cancelled' AND NOT ${table.cascaded}`),
+    ...options?.extraConfig?.(table) ?? []
+  ])
+
+const flowOutboxColumns = () => ({
+  /** Store-assigned, oldest-first; exposed to callers as an opaque string. */
+  id: bigserial("id", { mode: "number" }).primaryKey(),
+  /** The flow definition's name, for relay routing. */
+  flowName: text("flow_name").notNull(),
+  /** The PARENT store's context-key string, for relay routing. */
+  parentStoreKey: text("parent_store_key").notNull(),
+  /** The full `FlowChildReport` to deliver into the parent store. */
+  report: jsonb("report").notNull().$type<FlowChildReport>()
+})
+
+/**
+ * Undelivered child-result reports (one per terminal transition of an
+ * envelope-carrying job; see `JobStore.OutboxEntry`). Lives next to the
+ * CHILD store's jobs table.
+ *
+ * @since 0.6.0
+ */
+export const mqFlowOutbox = (
+  tableName = "effect_mq_flow_outbox",
+  options?: MqTableOptions<ReturnType<typeof flowOutboxColumns>>
+) =>
+  pgTable(tableName, flowOutboxColumns(), (table) => [
+    ...options?.extraConfig?.(table) ?? []
+  ])
+
+const queueControlColumns = <Queue extends string>() => ({
+  queue: text("queue").primaryKey().$type<Queue>(),
+  paused: boolean("paused").notNull().default(false)
+})
+
+/**
+ * Durable queue control flags (pause/resume).
+ *
+ * @since 0.2.0
+ */
+export const mqQueueControl = <Queue extends string = QueueName>(
+  tableName = "effect_mq_queue_control",
+  options?: MqTableOptions<ReturnType<typeof queueControlColumns<Queue>>>
+) =>
+  pgTable(tableName, queueControlColumns<Queue>(), (table) => [
+    ...options?.extraConfig?.(table) ?? []
+  ])
+
+/**
+ * @since 0.1.0
+ */
+export type MqJobsTable = ReturnType<typeof mqJobs<any, any>>
+
+/**
+ * @since 0.1.0
+ */
+export type MqJobAttemptsTable = ReturnType<typeof mqJobAttempts>
+
+/**
+ * @since 0.2.0
+ */
+export type MqSchedulesTable = ReturnType<typeof mqSchedules<any, any>>
+
+/**
+ * @since 0.2.0
+ */
+export type MqQueueControlTable = ReturnType<typeof mqQueueControl<any>>
+
+/**
+ * @since 0.3.0
+ */
+export type MqDedupeTable = ReturnType<typeof mqDedupe<any>>
+
+/**
+ * @since 0.6.0
+ */
+export type MqFlowChildrenTable = ReturnType<typeof mqFlowChildren>
+
+/**
+ * @since 0.6.0
+ */
+export type MqFlowOutboxTable = ReturnType<typeof mqFlowOutbox>
