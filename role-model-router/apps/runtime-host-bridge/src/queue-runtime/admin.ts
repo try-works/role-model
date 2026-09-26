@@ -17,7 +17,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 
-import { QUEUE_STORE_RELATIVE_PATH, QUEUE_STORE_TABLE } from "./store.js";
+import { QUEUE_STORE_TABLE, resolveQueueStorePath } from "./store.js";
 
 /** The control table the operator surface writes; absent means "not draining". */
 export const QUEUE_CONTROL_TABLE = "queue_control";
@@ -34,7 +34,9 @@ export class QueueJobCancelledError extends Error {
 }
 
 function openReadOnly(stateRoot: string): DatabaseSync | null {
-  const filePath = path.join(stateRoot, ...QUEUE_STORE_RELATIVE_PATH.split("/"));
+  // Run 101 addendum 01: the fold keeps a `track-b` root (the sidecar's form)
+  // and a scope root (the host's form) on the same file.
+  const filePath = resolveQueueStorePath({ stateRoot });
   if (!existsSync(filePath)) return null;
   try {
     return new DatabaseSync(filePath, { readOnly: true });

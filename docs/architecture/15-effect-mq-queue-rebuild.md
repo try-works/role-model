@@ -390,14 +390,29 @@ and the lock parameters, and it creates the directory when it is missing. The st
 rebuildable_scheduler_state`, `rollbackStrategy: delete_store_rebuild_from_evidence`), and `storage-audit.mjs`
 inventories it so the storage-retention surface reports its real footprint.
 
+**Addendum 01 (measured live on `stage-rc-165e143f8092`): `<stateRoot>` here is the *queue state root*, and it is the
+scope root `\<runtimeStateRoot\>/\<scopeId\>`.** The packaged host is launched with the base runtime state root and the
+Track B sidecar with that scope's `track-b` directory, so every queue reader resolves its paths through
+`resolveQueueStateRoot` (`shared/queues/queue-root.mjs`, mirrored in
+`apps/runtime-host-bridge/src/queue-runtime/policy.ts`): a `track-b` root folds back to its parent and a scope root is
+used as it stands. Before that rule existed the two hosts derived two answers - the sidecar read the operator's
+document while the host fell back to the shipped all-`legacy` document, and the store path gained a second `track-b`
+segment on the sidecar's side - so the cutover was invisible in the UI even though the policy said `queue`.
+
 ### 10.3 Parameters, API and UI (§3.2, §4)
 
 `shared/queues/queue-policy.mjs` + `shared/queue-policy.json` hold the catalogue (four queues, eight parameters each,
 type/unit/bounds/default/description, global kill switch). The effective document lives at
-`<stateRoot>/queues/queue-policy.json`: the state-root document wins, the shipped document is the fallback, and
+`<queueStateRoot>/queues/queue-policy.json` (§10.2): the state-root document wins, the shipped document is the
+fallback, and
 neither being present is a named error. `GET/POST /operator/queues/config` reads and writes it with server-side
 bounds and a receipt per change; the host reads the same document read-only through
 `apps/runtime-host-bridge/src/queue-runtime/policy.ts`.
+
+A document written before addendum 01 - the operator API used to put it at
+`<queueStateRoot>/track-b/queues/queue-policy.json`, because that is its own `--state-root` - stays readable until the
+operator's store moves it: the move validates first, writes through a temporary file plus rename, keeps the old file
+as `<file>.migrated`, and runs only when the canonical document is absent, so no operator change or receipt is lost.
 
 The frontend is three surfaces: **Observe -> Queues** (`/app/observe/queues`) with the queue table (mode, depth,
 stalls, oldest waiting, p50/p95, last error) and a job drill-in (attempts, lock owner, named failure, payload);

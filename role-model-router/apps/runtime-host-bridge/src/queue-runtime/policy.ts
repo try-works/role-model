@@ -14,6 +14,33 @@ import path from "node:path";
 export const QUEUE_POLICY_SCHEMA_VERSION = "role-model.queue-policy.v1";
 export const QUEUE_POLICY_STATE_RELATIVE_PATH = "queues/queue-policy.json";
 export const QUEUE_POLICY_SHIPPED_RELATIVE_PATH = "shared/queue-policy.json";
+/**
+ * Run 101 addendum 01: the pre-repair location the operator API wrote to. The
+ * sidecar's own state root is `<scope>/track-b`, so this file - and not the
+ * canonical one - is what a live stage root carries today. The host reads it as
+ * a fallback so the cutover does not depend on which process boots first, and
+ * the operator's store moves it to the canonical path on first read/write.
+ */
+export const LEGACY_QUEUE_POLICY_STATE_RELATIVE_PATH = "track-b/queues/queue-policy.json";
+
+/** The directory name that distinguishes a Track B state root from its scope root. */
+export const TRACK_B_STATE_DIRECTORY_NAME = "track-b";
+
+/**
+ * The one definition of the queue plane's state root (public mirror of
+ * `shared/queues/queue-root.mjs`; a private-side test asserts the two agree).
+ *
+ * The queue root is the scope root, `<runtimeStateRoot>/<scopeId>`. The packaged
+ * host is launched with the base runtime state root and the sidecar with that
+ * scope's `track-b` directory, so a `track-b` root folds back to its parent and
+ * both hosts resolve the same document and the same store.
+ */
+export function resolveQueueStateRoot(stateRoot: string): string {
+  const resolved = path.resolve(stateRoot);
+  if (path.basename(resolved) !== TRACK_B_STATE_DIRECTORY_NAME) return resolved;
+  const parent = path.dirname(resolved);
+  return parent === resolved ? resolved : parent;
+}
 
 export const QUEUE_MODES = ["legacy", "shadow", "queue"] as const;
 export type QueueMode = (typeof QUEUE_MODES)[number];
@@ -121,8 +148,13 @@ export interface QueuePolicyPaths {
 }
 
 export function resolveQueuePolicyPaths({ stateRoot, shippedRoot }: QueuePolicyPaths) {
+  const queueRoot = resolveQueueStateRoot(stateRoot);
   return {
-    stateFilePath: path.join(stateRoot, ...QUEUE_POLICY_STATE_RELATIVE_PATH.split("/")),
+    stateFilePath: path.join(queueRoot, ...QUEUE_POLICY_STATE_RELATIVE_PATH.split("/")),
+    legacyStateFilePath: path.join(
+      queueRoot,
+      ...LEGACY_QUEUE_POLICY_STATE_RELATIVE_PATH.split("/"),
+    ),
     shippedFilePath: shippedRoot
       ? path.join(shippedRoot, ...QUEUE_POLICY_SHIPPED_RELATIVE_PATH.split("/"))
       : null,
@@ -139,8 +171,15 @@ function readJsonFile(filePath: string): unknown {
  * instead of a guessed default.
  */
 export function readQueuePolicy({ stateRoot, shippedRoot }: QueuePolicyPaths): QueuePolicyDocument {
-  const { stateFilePath, shippedFilePath } = resolveQueuePolicyPaths({ stateRoot, shippedRoot });
-  for (const candidate of [stateFilePath, shippedFilePath]) {
+  const { stateFilePath, legacyStateFilePath, shippedFilePath } = resolveQueuePolicyPaths({
+    stateRoot,
+    shippedRoot,
+  });
+  for (const candidate of [
+    stateFilePath,
+    legacyStateFilePath === stateFilePath ? null : legacyStateFilePath,
+    shippedFilePath,
+  ]) {
     if (!candidate) continue;
     try {
       return validateQueuePolicy(readJsonFile(candidate));
