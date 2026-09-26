@@ -14,13 +14,36 @@
  * GREEN once the workspace packages exist and both pipelines resolve them.
  */
 import { createRequire } from "node:module";
+import { execFileSync } from "node:child_process";
+import { existsSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
 import { describe, expect, it } from "vitest";
 
 const require = createRequire(import.meta.url);
+const testDir = path.dirname(fileURLToPath(import.meta.url));
+const repoRoot = path.resolve(testDir, "..", "..", "..", "..");
 
 const EFFECT_WRAPPER = "effect";
 const EFFECT_MQ_WRAPPER = "effect-mq";
+
+/**
+ * The wrapper packages ship built entry points that are gitignored like every
+ * other package's `dist/`, so a targeted test run (without the root build) must
+ * build them first rather than reporting a resolution failure that is really a
+ * missing artefact.
+ */
+function ensureWrapperBuilt(packageDirName: string): void {
+  const packageDir = path.join(repoRoot, "role-model-router", "packages", packageDirName);
+  if (existsSync(path.join(packageDir, "dist", "index.js"))) {
+    return;
+  }
+  execFileSync(process.execPath, ["build.mjs"], { cwd: packageDir, stdio: "pipe" });
+}
+
+ensureWrapperBuilt("effect");
+ensureWrapperBuilt("effect-mq");
 
 async function importSpecifier<T = Record<string, unknown>>(specifier: string): Promise<T> {
   return (await import(/* @vite-ignore */ specifier)) as T;
