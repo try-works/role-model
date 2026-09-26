@@ -11,20 +11,10 @@
       "runtime": "./dist/index.js",
       "default": "./dist/index.js"
     },
-    "./unstable/persistence": {
-      "types": "./src/unstable-persistence.ts",
-      "runtime": "./dist/unstable-persistence.js",
-      "default": "./dist/unstable-persistence.js"
-    },
-    "./unstable/sql": {
-      "types": "./src/unstable-sql.ts",
-      "runtime": "./dist/unstable-sql.js",
-      "default": "./dist/unstable-sql.js"
-    },
-    "./unstable/workflow": {
-      "types": "./src/unstable-workflow.ts",
-      "runtime": "./dist/unstable-workflow.js",
-      "default": "./dist/unstable-workflow.js"
+    "./*": {
+      "types": "./src/*.ts",
+      "runtime": "./dist/*.js",
+      "default": "./dist/*.js"
     }
   },
   "files": [

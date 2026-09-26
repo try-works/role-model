@@ -213,6 +213,9 @@ importers:
 
   role-model-router/apps/runtime-host-bridge:
     dependencies:
+      '@effect/sql-sqlite-node':
+        specifier: workspace:*
+        version: link:../../packages/sql-sqlite-node
       '@role-model-router/adapter-execution':
         specifier: workspace:*
         version: link:../../packages/adapter-execution
@@ -568,6 +571,12 @@ importers:
         version: link:../../../packages/protocol-types
 
   role-model-router/packages/runtime-web: {}
+
+  role-model-router/packages/sql-sqlite-node:
+    dependencies:
+      effect:
+        specifier: workspace:*
+        version: link:../effect
 
   role-model-router/packages/sqlite-memory:
     dependencies:
