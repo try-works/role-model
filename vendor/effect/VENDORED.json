@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "role-model.vendored-upstream.v1",
+  "upstream": {
+    "name": "effect",
+    "url": "https://github.com/Effect-TS/effect",
+    "tag": "effect@4.0.0-rc.117",
+    "commit": "14a3f140095fdebbff9162944fe7d4ea83e054e6",
+    "commitDate": "2026-09-20T23:56:33Z",
+    "license": "MIT"
+  },
+  "vendoredInto": "role-model",
+  "vendoredAt": "2026-09-25T23:38:39.006Z",
+  "payload": {
+    "root": "vendor/effect",
+    "includes": [
+      "packages/**",
+      "LICENSE",
+      "README.md",
+      "MIGRATION.md"
+    ],
+    "excludes": [
+      ".git",
+      "node_modules",
+      "*.tsbuildinfo",
+      "ai-docs/**",
+      "scripts/**",
+      ".github/**"
+    ]
+  },
+  "fileCount": 1825,
+  "byteCount": 38546418,
+  "contentDigest": "7f07b8268d769a4096f5550cd6f6be5a47a1463f3a2f7d445cf543d8a960020d",
+  "wiring": "not a workspace package and not imported by any build; a lint-ignored source drop only"
+}
