@@ -108,3 +108,25 @@ export function makeQueueStoreLayer({
   });
   return PersistedQueue.layer.pipe(Layer.provide(store), Layer.provide(client));
 }
+
+/**
+ * Builds the store layer for one queue from its *resolved policy*, so the lock
+ * values the workers honour come from the operator's document rather than from
+ * this module's constants. Only the poll interval stays store-level: it is how
+ * often a host looks for claimable work, not a per-queue contract.
+ */
+export function storeLayerForQueuePolicy({
+  stateRoot,
+  policy,
+  filePath,
+}: {
+  readonly stateRoot: string;
+  readonly policy: { readonly lockRefreshMs: number; readonly lockExpirationMs: number };
+  readonly filePath?: string;
+}) {
+  return makeQueueStoreLayer({
+    filePath: filePath ?? resolveQueueStorePath({ stateRoot }),
+    lockRefreshIntervalMs: policy.lockRefreshMs,
+    lockExpirationMs: policy.lockExpirationMs,
+  });
+}
