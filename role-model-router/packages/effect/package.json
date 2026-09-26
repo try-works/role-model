@@ -1,0 +1,25 @@
+{
+  "name": "effect",
+  "version": "4.0.0-rc.117",
+  "private": true,
+  "type": "module",
+  "description": "Workspace entry point for the vendored Effect v4 tree (vendor/effect, effect@4.0.0-rc.117). The sources are re-exported in place so a single copy of the runtime is bundled.",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "runtime": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./*": {
+      "types": "./dist/types/*.d.ts",
+      "runtime": "./dist/*.js",
+      "default": "./dist/*.js"
+    }
+  },
+  "files": ["src", "dist"],
+  "sideEffects": ["./src/index.ts"],
+  "scripts": {
+    "build": "node build.mjs"
+  }
+}

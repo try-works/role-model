@@ -1,0 +1,22 @@
+{
+  "name": "@effect/sql-sqlite-node",
+  "version": "4.0.0-rc.117",
+  "private": true,
+  "type": "module",
+  "description": "Workspace entry point for the vendored @effect/sql-sqlite-node client (vendor/effect, rc.117). `effect` stays external so the runtime stays single-instance.",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "runtime": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": ["src", "dist"],
+  "peerDependencies": {
+    "effect": "workspace:*"
+  },
+  "scripts": {
+    "build": "node build.mjs"
+  }
+}

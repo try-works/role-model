@@ -207,6 +207,7 @@ const emptyResult = (): AutoReplayTickResult => ({
   replayed: 0,
   refused: 0,
   deferred: 0,
+  queued: 0,
   dispositions: [],
   cursor: null,
   budgetExhausted: false,
@@ -260,6 +261,31 @@ export function startAutoReplayLoop(input: {
    */
   readonly reservationTtlMs?: number;
   /**
+   * Run 101 R4: the replay plane's queue, resolved by the caller from the queue
+   * policy. Omitted keeps the hand-rolled path authoritative; `shadow` feeds the
+   * queue while the loop stays authoritative; `queue` hands the work to a worker
+   * and this loop stops dispatching it.
+   */
+  readonly dispatchQueue?: {
+    readonly mode: "legacy" | "shadow" | "queue";
+    readonly offer: (job: {
+      readonly captureRef: string;
+      readonly endpointIds: readonly string[];
+      readonly policySetDigest: string;
+    }) => Promise<{ readonly enqueued: boolean; readonly reason?: string }>;
+  };
+  /**
+   * Run 101 R7: once a plane's queue is authoritative, the loops the queue
+   * replaced must stop being schedulers. The caller passes each plane's mode;
+   * `legacy` (the shipped default) keeps every sweep running exactly as before,
+   * so a rollback restores the old behaviour with no other change.
+   */
+  readonly planeModes?: {
+    readonly replay?: "legacy" | "shadow" | "queue";
+    readonly evaluation?: "legacy" | "shadow" | "queue";
+    readonly learner?: "legacy" | "shadow" | "queue";
+  };
+  /**
    * Run 98 addendum 56 §6: resolves the endpoint that currently judges comparisons (the configured controller).
    * Resolved per tick so a controller change takes effect without a restart, exactly like the judge itself.
    */
@@ -269,6 +295,14 @@ export function startAutoReplayLoop(input: {
   readonly clearIntervalFn?: (handle: unknown) => void;
 }): {
   tick(): Promise<AutoReplayTickResult & { readonly skipped?: boolean }>;
+  /**
+   * Run 101 R4: the single-capture entry the replay queue's worker uses. It is
+   * the same body as `tick()`, restricted to one capture and run with the queue
+   * disabled so a queued job cannot re-enqueue itself.
+   */
+  dispatchCapture(
+    captureRef: string,
+  ): Promise<AutoReplayTickResult & { readonly skipped?: boolean }>;
   stop(): void;
   pause(): void;
   resume(): void;
@@ -435,7 +469,17 @@ export function startAutoReplayLoop(input: {
       // Run 99 R33: the same bounded shape for interrupted supervised-replay evaluations. Without it
       // a stranded evaluation is never retried, because the producer only drives replay jobs and
       // those are already terminal.
-      if (typeof input.operations.resumePendingEvaluations === "function") {
+      /**
+       * Run 101 R7: the evaluation queue owns this work once its plane is
+       * authoritative, so the sweep steps aside rather than racing it. `shadow`
+       * keeps the sweep authoritative and lets the queue's job be the recorded
+       * comparison.
+       */
+      const evaluationQueueAuthoritative = input.planeModes?.evaluation === "queue";
+      if (
+        !evaluationQueueAuthoritative &&
+        typeof input.operations.resumePendingEvaluations === "function"
+      ) {
         try {
           const sweep = (await input.operations.resumePendingEvaluations({
             window,
@@ -455,7 +499,10 @@ export function startAutoReplayLoop(input: {
       // Run 100 addendum 02 S1: the reconcile pass is what completes a job whose comparison finalized and
       // reclaims one that is stranded beyond the grace. It had no production caller, so a job that lost its
       // lease without a terminal trial stayed non-terminal indefinitely and was reported "in flight".
-      if (typeof input.operations.reconcileEvaluationJobs === "function") {
+      if (
+        !evaluationQueueAuthoritative &&
+        typeof input.operations.reconcileEvaluationJobs === "function"
+      ) {
         try {
           const sweep = (await input.operations.reconcileEvaluationJobs({
             window,
@@ -486,7 +533,10 @@ export function startAutoReplayLoop(input: {
        * production caller. Finalizing them needs no provider work: the trials are already scored, so this sweep
        * converts paid-for evidence into comparisons the learner can consume.
        */
-      if (typeof input.operations.retroFinalizeEvaluations === "function") {
+      if (
+        !evaluationQueueAuthoritative &&
+        typeof input.operations.retroFinalizeEvaluations === "function"
+      ) {
         try {
           const sweep = (await input.operations.retroFinalizeEvaluations({
             window,
@@ -529,7 +579,16 @@ export function startAutoReplayLoop(input: {
        * comparison finalized this tick is available as evidence on the next one, and stays bounded (two
        * candidates per tick) like every other liveness step.
        */
-      if (typeof input.operations.learnFromUnconsumedCandidates === "function") {
+      /**
+       * Run 101 R7: the learner queues own derivation and promotion once their
+       * plane is authoritative, so both learner sweeps step aside together -
+       * leaving one of them running would race the queue for the same work.
+       */
+      const learnerQueueAuthoritative = input.planeModes?.learner === "queue";
+      if (
+        !learnerQueueAuthoritative &&
+        typeof input.operations.learnFromUnconsumedCandidates === "function"
+      ) {
         try {
           const sweep = (await input.operations.learnFromUnconsumedCandidates({
             window,
@@ -551,7 +610,10 @@ export function startAutoReplayLoop(input: {
        * S13: derive a candidate for a learnable finalized comparison that has none. Runs after the consume sweep so a
        * candidate created this tick can be validated on the next one, and stays bounded (two groups per tick).
        */
-      if (typeof input.operations.deriveLearnerCandidates === "function") {
+      if (
+        !learnerQueueAuthoritative &&
+        typeof input.operations.deriveLearnerCandidates === "function"
+      ) {
         try {
           const sweep = (await input.operations.deriveLearnerCandidates({
             window,
@@ -607,7 +669,16 @@ export function startAutoReplayLoop(input: {
     };
   };
 
-  const tick = async (): Promise<AutoReplayTickResult & { readonly skipped?: boolean }> => {
+  /**
+   * Run 101 R4: `onlyCaptureRefs` lets the queue's worker drive exactly the
+   * capture it claimed through the *same* body the interval tick uses, so
+   * admission, reservation, execution and disposition writing exist once. The
+   * worker calls it with the queue disabled, which is what keeps a queued job
+   * from re-enqueueing itself.
+   */
+  const tick = async (options?: { readonly onlyCaptureRefs?: readonly string[] }): Promise<
+    AutoReplayTickResult & { readonly skipped?: boolean }
+  > => {
     if (running || paused) {
       // `L7`: this is the interval path while a long work tick is in flight. Run the liveness sweeps
       // here instead of skipping them, so an overdue job is still expired on schedule.
@@ -633,6 +704,10 @@ export function startAutoReplayLoop(input: {
         limit: maxCapturesPerTick * 4,
       });
       const captures = pendingCaptures(pending);
+      const onlyCaptureRefs = options?.onlyCaptureRefs;
+      const scopedCaptures = onlyCaptureRefs
+        ? captures.filter((capture) => onlyCaptureRefs.includes(capture.captureRef))
+        : captures;
       const configuredEndpointIds =
         typeof input.configuredEndpointIds === "function"
           ? input.configuredEndpointIds()
@@ -676,7 +751,7 @@ export function startAutoReplayLoop(input: {
             );
           });
       const result = await runAutoReplayTick({
-        captures,
+        captures: scopedCaptures,
         configuredEndpointIds,
         // Run 98 addendum 56 §6: the judge is excluded from the planned arms, and a capture whose own endpoint
         // is the judge is deferred with the named code rather than dispatched into a refusal.
@@ -714,6 +789,7 @@ export function startAutoReplayLoop(input: {
         ...(Number.isSafeInteger(input.reservationTtlMs) && (input.reservationTtlMs ?? 0) > 0
           ? { reservationTtlMs: Number(input.reservationTtlMs) }
           : {}),
+        ...(input.dispatchQueue ? { dispatchQueue: input.dispatchQueue } : {}),
         now,
       });
       await Promise.all(dispositionWrites);
@@ -759,6 +835,27 @@ export function startAutoReplayLoop(input: {
 
   return {
     tick,
+    /**
+     * Run 101 R4: what the `replay.dispatch` worker calls for the capture it
+     * claimed. It is the interval tick restricted to that capture, with the
+     * queue disabled - so the job is executed through the path this loop has
+     * always used, and a failure is the worker's retry signal.
+     */
+    async dispatchCapture(captureRef: string) {
+      if (!captureRef || typeof captureRef !== "string") {
+        throw new Error("dispatchCapture requires a capture ref");
+      }
+      const result = await tick({ onlyCaptureRefs: [captureRef] });
+      const executed =
+        result.queued === 0 && result.replayed + result.refused + result.deferred > 0;
+      if (!executed) {
+        // Nothing ran for this capture: it is not pending any more (already
+        // handled) or the tick was skipped. Reporting it lets the queue's
+        // attempt accounting decide what happens next.
+        throw new Error(`queued capture ${captureRef} was not dispatched`);
+      }
+      return result;
+    },
     stop() {
       if (timer) {
         const clearIntervalFn =

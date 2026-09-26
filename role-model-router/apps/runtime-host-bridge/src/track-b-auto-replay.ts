@@ -420,6 +420,12 @@ export interface AutoReplayTickResult {
   readonly replayed: number;
   readonly refused: number;
   readonly deferred: number;
+  /**
+   * Run 101 R4: captures this tick handed to `replay.dispatch` instead of
+   * executing locally (`queue` mode only; `shadow` counts them as replayed
+   * because the legacy path still did the work).
+   */
+  readonly queued: number;
   readonly dispositions: readonly AutoReplayDisposition[];
   readonly cursor: string | null;
   /**
@@ -794,6 +800,25 @@ export async function runAutoReplayTick(input: {
    * dormant until the hook genuinely resolves a judge here.
    */
   readonly requireResolvedJudge?: boolean;
+  /**
+   * Run 101 R4: the replay plane's queue. Omitted means the hand-rolled path is
+   * authoritative (`legacy`). `shadow` offers the admitted capture to
+   * `replay.dispatch` and still executes it here, so the queue's behaviour can
+   * be compared with the authoritative path; `queue` offers it and skips the
+   * local execution because a worker owns it now.
+   *
+   * The offer happens *after* admission and the ledger reservation, so the
+   * budget and benchmark invariants stay where they are decided: a refused
+   * capture is never offered.
+   */
+  readonly dispatchQueue?: {
+    readonly mode: "legacy" | "shadow" | "queue";
+    readonly offer: (job: {
+      readonly captureRef: string;
+      readonly endpointIds: readonly string[];
+      readonly policySetDigest: string;
+    }) => Promise<{ readonly enqueued: boolean; readonly reason?: string }>;
+  };
 }): Promise<AutoReplayTickResult> {
   const maxCapturesPerTick = input.maxCapturesPerTick ?? DEFAULT_MAX_CAPTURES_PER_TICK;
   const tickBudgetMs = input.tickBudgetMs ?? DEFAULT_TICK_BUDGET_MS;
@@ -825,6 +850,7 @@ export async function runAutoReplayTick(input: {
   let replayed = 0;
   let refused = 0;
   let deferred = 0;
+  let queued = 0;
   let cursor: string | null = input.startCursor ?? null;
   let budgetExhausted = false;
 
@@ -967,6 +993,30 @@ export async function runAutoReplayTick(input: {
     const { toolPolicy } = resolveReplayToolPolicy({
       hasRecordedToolResults: capture.hasRecordedToolResults,
     });
+    // Run 101 R4: the queue is offered the capture the tick just admitted and
+    // reserved. In `queue` mode the worker owns the work, so this tick stops
+    // here; in `shadow` mode the legacy execution below stays authoritative and
+    // the offer is the recorded comparison.
+    if (input.dispatchQueue && input.dispatchQueue.mode !== "legacy") {
+      const offered = await input.dispatchQueue.offer({
+        captureRef: capture.captureRef,
+        endpointIds: [...candidates],
+        policySetDigest: input.policySet.policySetDigest,
+      });
+      if (!offered.enqueued) {
+        // The offer can only be refused by the queue's own id/validation rules;
+        // the capture then stays on the legacy path rather than being lost.
+        emit({
+          captureRef: capture.captureRef,
+          outcome: "deferred",
+          code: "replay_dispatch_offer_refused",
+          detail: offered.reason ?? "the replay queue refused the offer",
+        });
+      } else if (input.dispatchQueue.mode === "queue") {
+        queued += 1;
+        continue;
+      }
+    }
     let execution: AutoReplayExecution;
     try {
       execution = await runBoundedExecutor(input, {
@@ -1102,5 +1152,5 @@ export async function runAutoReplayTick(input: {
     });
   }
 
-  return { processed, replayed, refused, deferred, dispositions, cursor, budgetExhausted };
+  return { processed, replayed, refused, deferred, queued, dispositions, cursor, budgetExhausted };
 }

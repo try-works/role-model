@@ -15,6 +15,8 @@ import {
   LoadingState,
   SectionCard,
 } from "../components/page-primitives";
+// Run 101 R10: the queue planes' bounded parameters render beside the learning policy.
+import { QueuesConfigurationCard } from "../components/queues-configuration-card";
 import {
   compactTitleClassName,
   fieldClassName,
@@ -645,6 +647,9 @@ export function LearningConfigurationPage() {
                 Roll back policy
               </button>
             </div>
+            {/* Run 101 R10: the queue planes' own bounded parameters live beside
+                the learning policy, because both are operator-owned policy. */}
+            <QueuesConfigurationCard />
             <p className={`mt-2 ${supportingTextClassName}`}>
               Saving writes a new policy version with a receipt (previous/new digest, operator,
               effective time) and is rejected if another client changed the policy first

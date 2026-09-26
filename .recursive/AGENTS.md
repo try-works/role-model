@@ -10,6 +10,7 @@ It exists to reduce blind doc-by-doc scanning. It is not a second workflow spec.
 
 - Treat `/.recursive/RECURSIVE.md` as the single workflow source of truth.
 - If this file conflicts with `/.recursive/RECURSIVE.md`, follow `/.recursive/RECURSIVE.md`.
+- Prefer Effect (vendored `vendor/effect` and `vendor/effect-mq`) for new work wherever it is possible and suitable; see `/.recursive/RECURSIVE.md` § "Effect-first implementation rule".
 
 ## Suggested Read Order
 

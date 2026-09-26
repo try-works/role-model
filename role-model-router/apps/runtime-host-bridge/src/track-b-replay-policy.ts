@@ -23,6 +23,13 @@ export const REPLAY_REFUSAL_CODES = [
   "policy_unknown",
   "dependency_unavailable",
   /**
+   * Run 101 R4: `replay.dispatch` refused a capture the tick had already
+   * admitted. The queue dedupes on `captureRef` and validates the payload, so
+   * this is a defect signal rather than an admission decision; the capture stays
+   * on the legacy path for that tick instead of being lost.
+   */
+  "replay_dispatch_offer_refused",
+  /**
    * Run 98 R2: the capture's durable replay job already failed terminally (timed_out,
    * expired, failed, cancelled), so its frozen window can never dispatch again. The
    * capture is retired instead of being re-deferred on every tick forever.

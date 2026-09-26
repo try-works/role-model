@@ -23,6 +23,20 @@ Before opening or merging a pull request, read `CONTRIBUTING.md` and `docs/opera
 
 Keep channel state, logs, locks, process identity, and artifacts isolated. Use the lowercase project name `role-model` in current user-facing names.
 
+## Effect-first implementation rule
+
+Use the vendored Effect v4 (`vendor/effect`) and `effect-mq` (`vendor/effect-mq`) whenever it is possible and
+suitable: effects, services/layers, resource scopes, concurrency, streaming, schema, retries and schedules, and
+background job queues, workers and flows (`PersistedQueue`, `Job`, `Worker`, `JobStore`) instead of hand-rolling that
+machinery.
+
+"Possible and suitable" means the code can actually reach the dependency, it does not break the packaged-SEA and
+local-first SQLite constraints or add a server dependency, it does not silently change a public contract or a locked
+artifact, and it is not a one-off that a plain effect expresses more clearly. When Effect is the obvious shape and you
+do not use it, say why in the change (code comment, addendum, or pull-request body).
+
+The enforced rule and the per-need map live in `.recursive/RECURSIVE.md` § "Effect-first implementation rule".
+
 ## recursive-mode
 
 When starting or resuming recursive-mode work, read `.codex/AGENTS.md` and the canonical `.recursive/RECURSIVE.md` before acting. Durable workflow memory lives under `.recursive/memory/`.
