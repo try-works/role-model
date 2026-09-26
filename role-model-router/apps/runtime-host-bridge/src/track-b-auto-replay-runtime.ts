@@ -261,6 +261,20 @@ export function startAutoReplayLoop(input: {
    */
   readonly reservationTtlMs?: number;
   /**
+   * Run 101 R4: the replay plane's queue, resolved by the caller from the queue
+   * policy. Omitted keeps the hand-rolled path authoritative; `shadow` feeds the
+   * queue while the loop stays authoritative; `queue` hands the work to a worker
+   * and this loop stops dispatching it.
+   */
+  readonly dispatchQueue?: {
+    readonly mode: "legacy" | "shadow" | "queue";
+    readonly offer: (job: {
+      readonly captureRef: string;
+      readonly endpointIds: readonly string[];
+      readonly policySetDigest: string;
+    }) => Promise<{ readonly enqueued: boolean; readonly reason?: string }>;
+  };
+  /**
    * Run 98 addendum 56 §6: resolves the endpoint that currently judges comparisons (the configured controller).
    * Resolved per tick so a controller change takes effect without a restart, exactly like the judge itself.
    */
@@ -715,6 +729,7 @@ export function startAutoReplayLoop(input: {
         ...(Number.isSafeInteger(input.reservationTtlMs) && (input.reservationTtlMs ?? 0) > 0
           ? { reservationTtlMs: Number(input.reservationTtlMs) }
           : {}),
+        ...(input.dispatchQueue ? { dispatchQueue: input.dispatchQueue } : {}),
         now,
       });
       await Promise.all(dispositionWrites);

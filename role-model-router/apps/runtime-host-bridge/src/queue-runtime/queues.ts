@@ -65,8 +65,17 @@ export interface AdmissionDecision {
 }
 
 export interface EnqueueReplayDispatchOptions {
+  /**
+   * The queue service, typed to the minimum this helper needs. The vendored
+   * `offer` takes an optional `{ id }` whose property is required when the
+   * options object is passed, so the shape is mirrored exactly rather than
+   * loosened - a looser declaration is what fails assignability.
+   */
   readonly queue: {
-    offer: (value: ReplayDispatchJob, options?: { readonly id?: string }) => Effect.Effect<unknown, unknown>;
+    offer: (
+      value: ReplayDispatchJob,
+      options?: { readonly id: string | undefined },
+    ) => Effect.Effect<unknown, unknown, never>;
   };
   readonly capture: ReplayDispatchJob;
   readonly admission?: AdmissionDecision;
