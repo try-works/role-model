@@ -16,6 +16,12 @@ import { Duration, Effect, Fiber } from "effect";
 import { killSwitchEngaged, readQueuePolicy, type ResolvedQueuePolicy } from "./policy.js";
 import { makeReplayDispatchQueue, type ReplayDispatchJob } from "./queues.js";
 import { makeEvaluationScoreQueue, type EvaluationScoreJob } from "./evaluation.js";
+import {
+  makeLearnerDeriveQueue,
+  makeLearnerPromoteQueue,
+  type LearnerDeriveJob,
+  type LearnerPromoteJob,
+} from "./learner.js";
 import { storeLayerForQueuePolicy } from "./store.js";
 
 export interface ReplayDispatchWorkerOptions {
@@ -48,6 +54,143 @@ export interface EvaluationScoreWorkerOptions {
   readonly onAttemptFailure?: (error: unknown, job: EvaluationScoreJob) => void;
   readonly shippedRoot?: string;
   readonly killSwitchPollIntervalMs?: number;
+}
+
+export interface LearnerDeriveWorkerOptions {
+  readonly stateRoot: string;
+  readonly policy: ResolvedQueuePolicy;
+  /**
+   * Derives a candidate for one group. A *named skip* is a throw: the group
+   * stays claimable and is retried under the policy's attempt bound instead of
+   * being consumed by a process-local set, and an operator sees the named
+   * reason in the queue's history.
+   */
+  readonly handler: (job: LearnerDeriveJob, context: { readonly attempt: number }) => Promise<void>;
+  readonly onAttemptFailure?: (error: unknown, job: LearnerDeriveJob) => void;
+  readonly shippedRoot?: string;
+  readonly killSwitchPollIntervalMs?: number;
+}
+
+export interface LearnerPromoteWorkerOptions {
+  readonly stateRoot: string;
+  readonly policy: ResolvedQueuePolicy;
+  /** Promotes one candidate; serialized by the queue's concurrency. */
+  readonly handler: (job: LearnerPromoteJob, context: { readonly attempt: number }) => Promise<void>;
+  readonly onAttemptFailure?: (error: unknown, job: LearnerPromoteJob) => void;
+  readonly shippedRoot?: string;
+  readonly killSwitchPollIntervalMs?: number;
+}
+
+/**
+ * The claim-loop contract shared by every queue in this runtime: `take` claims
+ * one element and returns the handler's failure once the store records the
+ * retry, so the loop is ours; the kill switch is re-read before each claim; the
+ * lock values come from the resolved policy.
+ */
+function runClaimLoopWorker<Job>({
+  stateRoot,
+  shippedRoot,
+  policy,
+  makeQueue,
+  handler,
+  onAttemptFailure,
+  killSwitchPollIntervalMs,
+}: {
+  readonly stateRoot: string;
+  readonly shippedRoot?: string;
+  readonly policy: ResolvedQueuePolicy;
+  readonly makeQueue: (policy: ResolvedQueuePolicy) => Effect.Effect<
+    {
+      take: (
+        handler: (job: Job, info: { readonly attempts: number }) => Effect.Effect<unknown, unknown, never>,
+      ) => Effect.Effect<unknown, unknown, never>;
+    },
+    never,
+    never
+  >;
+  readonly handler: (job: Job, context: { readonly attempt: number }) => Promise<void>;
+  readonly onAttemptFailure?: (error: unknown, job: Job) => void;
+  readonly killSwitchPollIntervalMs?: number;
+}): ReplayDispatchWorker {
+  const layer = storeLayerForQueuePolicy({ stateRoot, policy });
+  const pollMs = killSwitchPollIntervalMs ?? 1_000;
+  let stopped = false;
+  let signalStop: () => void = () => undefined;
+  const stopSignal = new Promise<void>((resolve) => {
+    signalStop = resolve;
+  });
+
+  const claimLoop = Effect.gen(function* () {
+    const queue = yield* makeQueue(policy);
+    while (!stopped) {
+      let killed = false;
+      try {
+        killed = killSwitchEngaged(readQueuePolicy({ stateRoot, shippedRoot }));
+      } catch {
+        killed = true;
+      }
+      if (killed) {
+        yield* Effect.sleep(Duration.millis(pollMs));
+        continue;
+      }
+      yield* queue
+        .take((job, info) =>
+          Effect.tryPromise({
+            try: () => handler(job, { attempt: info.attempts }),
+            catch: (error) => {
+              onAttemptFailure?.(error, job);
+              return error;
+            },
+          }),
+        )
+        .pipe(Effect.catchCause(() => Effect.void));
+    }
+  }).pipe(Effect.provide(layer), Effect.scoped);
+
+  const running = Effect.runPromise(
+    Effect.gen(function* () {
+      const fibers: Array<Fiber.Fiber<void, unknown>> = [];
+      for (let index = 0; index < Math.max(1, policy.concurrency); index += 1) {
+        fibers.push(yield* Effect.forkChild(claimLoop));
+      }
+      yield* Effect.promise(() => stopSignal);
+      for (const fiber of fibers) {
+        yield* Fiber.interrupt(fiber);
+      }
+    }),
+  );
+
+  return {
+    async stop() {
+      stopped = true;
+      signalStop();
+      await running.catch(() => undefined);
+    },
+  };
+}
+
+export function runLearnerDeriveWorker(options: LearnerDeriveWorkerOptions): ReplayDispatchWorker {
+  return runClaimLoopWorker<LearnerDeriveJob>({
+    stateRoot: options.stateRoot,
+    shippedRoot: options.shippedRoot,
+    policy: options.policy,
+    makeQueue: makeLearnerDeriveQueue as never,
+    handler: options.handler,
+    onAttemptFailure: options.onAttemptFailure,
+    killSwitchPollIntervalMs: options.killSwitchPollIntervalMs,
+  });
+}
+
+export function runLearnerPromoteWorker(options: LearnerPromoteWorkerOptions): ReplayDispatchWorker {
+  return runClaimLoopWorker<LearnerPromoteJob>({
+    stateRoot: options.stateRoot,
+    shippedRoot: options.shippedRoot,
+    policy: options.policy,
+    makeQueue: makeLearnerPromoteQueue as never,
+    handler: options.handler,
+    onAttemptFailure: options.onAttemptFailure,
+    killSwitchPollIntervalMs: options.killSwitchPollIntervalMs,
+  });
 }
 
 /** Same claim-loop contract as the replay worker, for `evaluation.score`. */
