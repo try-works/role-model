@@ -15,6 +15,7 @@ import { Duration, Effect, Fiber } from "effect";
 
 import { killSwitchEngaged, readQueuePolicy, type ResolvedQueuePolicy } from "./policy.js";
 import { makeReplayDispatchQueue, type ReplayDispatchJob } from "./queues.js";
+import { makeEvaluationScoreQueue, type EvaluationScoreJob } from "./evaluation.js";
 import { storeLayerForQueuePolicy } from "./store.js";
 
 export interface ReplayDispatchWorkerOptions {
@@ -33,6 +34,80 @@ export interface ReplayDispatchWorkerOptions {
 export interface ReplayDispatchWorker {
   /** Stops claiming; in-flight attempts are allowed to finish. */
   stop(): Promise<void>;
+}
+
+export interface EvaluationScoreWorkerOptions {
+  readonly stateRoot: string;
+  readonly policy: ResolvedQueuePolicy;
+  /**
+   * Runs one evaluation attempt. The handler owns the evidence-before-ack rule:
+   * it writes (or updates) the evaluation evidence row before returning, and a
+   * throw leaves the job claimable so the store retries it.
+   */
+  readonly handler: (job: EvaluationScoreJob, context: { readonly attempt: number }) => Promise<void>;
+  readonly onAttemptFailure?: (error: unknown, job: EvaluationScoreJob) => void;
+  readonly shippedRoot?: string;
+  readonly killSwitchPollIntervalMs?: number;
+}
+
+/** Same claim-loop contract as the replay worker, for `evaluation.score`. */
+export function runEvaluationScoreWorker(options: EvaluationScoreWorkerOptions): ReplayDispatchWorker {
+  const { stateRoot, policy, handler, onAttemptFailure } = options;
+  const killSwitchPollIntervalMs = options.killSwitchPollIntervalMs ?? 1_000;
+  const layer = storeLayerForQueuePolicy({ stateRoot, policy });
+  let stopped = false;
+  let signalStop: () => void = () => undefined;
+  const stopSignal = new Promise<void>((resolve) => {
+    signalStop = resolve;
+  });
+
+  const claimLoop = Effect.gen(function* () {
+    const queue = yield* makeEvaluationScoreQueue(policy);
+    while (!stopped) {
+      let killed = false;
+      try {
+        killed = killSwitchEngaged(readQueuePolicy({ stateRoot, shippedRoot: options.shippedRoot }));
+      } catch {
+        killed = true;
+      }
+      if (killed) {
+        yield* Effect.sleep(Duration.millis(killSwitchPollIntervalMs));
+        continue;
+      }
+      yield* queue
+        .take((job, info) =>
+          Effect.tryPromise({
+            try: () => handler(job, { attempt: info.attempts }),
+            catch: (error) => {
+              onAttemptFailure?.(error, job);
+              return error;
+            },
+          }),
+        )
+        .pipe(Effect.catchCause(() => Effect.void));
+    }
+  }).pipe(Effect.provide(layer), Effect.scoped);
+
+  const running = Effect.runPromise(
+    Effect.gen(function* () {
+      const fibers: Array<Fiber.Fiber<void, unknown>> = [];
+      for (let index = 0; index < Math.max(1, policy.concurrency); index += 1) {
+        fibers.push(yield* Effect.forkChild(claimLoop));
+      }
+      yield* Effect.promise(() => stopSignal);
+      for (const fiber of fibers) {
+        yield* Fiber.interrupt(fiber);
+      }
+    }),
+  );
+
+  return {
+    async stop() {
+      stopped = true;
+      signalStop();
+      await running.catch(() => undefined);
+    },
+  };
 }
 
 /**
