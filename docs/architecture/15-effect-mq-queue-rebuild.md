@@ -355,6 +355,100 @@ cutover is the learner or the replay queue (6, phase order).
 
 ## 9. References
 
+## 10. As built (2026-09-26, run 101)
+
+This section records what the design above actually became. It is written after the implementation, and it is the
+*effective* reference for anyone working on the queues from here: where a choice below differs from a section above,
+this section wins and the difference is stated.
+
+### 10.1 How the vendored trees are consumed (§2, §5.1)
+
+The trees are published as **workspace packages carrying the upstream names**, not as `@role-model-router/vendor-*`
+wrappers:
+
+| package | repository | source |
+| --- | --- | --- |
+| `effect` | both (`role-model-router/packages/effect`, `shared/effect`) | `vendor/effect` |
+| `effect-mq` | both (`role-model-router/packages/effect-mq`, `shared/effect-mq`) | `vendor/effect-mq` |
+| `@effect/sql-sqlite-node` | both (`role-model-router/packages/sql-sqlite-node`, `shared/sql-sqlite-node`) | `vendor/effect/packages/sql/sqlite-node` |
+
+The reason is effect-mq: it imports `effect` **by name**, so publishing the vendored Effect under that name is what
+makes the single-runtime-instance property hold by construction rather than by aliasing. Each package builds
+`dist/*.js` with esbuild (`splitting: true`, so one shared core chunk) and emits declarations with
+`tsc --noCheck --emitDeclarationOnly`, rewriting the emitted `.ts` specifiers to `.js` because the vendored sources
+import each other with explicit extensions. The build writes **only** into `dist/` (gitignored): an earlier version
+generated type shims into `src/`, which made a built worktree dirty and broke the paired distribution's
+clean-worktree guard in CI.
+
+### 10.2 The store (§3.2, §5.4)
+
+One SQLite database per state root: `<stateRoot>/track-b/queues/queues.sqlite`, opened by the vendored
+`PersistedQueue.layerStoreSql` over `SqliteClient.layer` (WAL by default, `busyTimeout` 5 s), composed as the queue
+**factory** layer `PersistedQueue.layer`. The library owns the schema (`effect_queue`); the module owns only the path
+and the lock parameters, and it creates the directory when it is missing. The store is registered in
+`shared/retention/index.mjs` as class `queue_store` (owner `queue-runtime`, `retentionPolicy:
+rebuildable_scheduler_state`, `rollbackStrategy: delete_store_rebuild_from_evidence`), and `storage-audit.mjs`
+inventories it so the storage-retention surface reports its real footprint.
+
+### 10.3 Parameters, API and UI (§3.2, §4)
+
+`shared/queues/queue-policy.mjs` + `shared/queue-policy.json` hold the catalogue (four queues, eight parameters each,
+type/unit/bounds/default/description, global kill switch). The effective document lives at
+`<stateRoot>/queues/queue-policy.json`: the state-root document wins, the shipped document is the fallback, and
+neither being present is a named error. `GET/POST /operator/queues/config` reads and writes it with server-side
+bounds and a receipt per change; the host reads the same document read-only through
+`apps/runtime-host-bridge/src/queue-runtime/policy.ts`.
+
+The frontend is three surfaces: **Observe -> Queues** (`/app/observe/queues`) with the queue table (mode, depth,
+stalls, oldest waiting, p50/p95, last error) and a job drill-in (attempts, lock owner, named failure, payload);
+the **Learning Configuration** Queues card, rendered from the operator catalogue so bounds and defaults cannot
+drift; and the **Overview** pipeline rows, which read queue truth once a plane leaves `legacy` and keep the
+store-derived numbers as the fallback.
+
+### 10.4 The four queues, their hosts and the chain (§3.1, §3.4, §3.6)
+
+| queue | job id | worker host | notes |
+| --- | --- | --- | --- |
+| `replay.dispatch` | `captureRef` | operator host | offered after admission and the ledger reservation, so a refused capture is never enqueued |
+| `evaluation.score` | `evaluation:<origin>:<key>` | operator host (**not** the sidecar - see 10.5) | key is the comparison's `groupId` for the observation origin and the `replayJobId` for the replay origin |
+| `learner.derive` | `learner.derive:<groupId>` | operator host | a named skip is a failed attempt, so the group stays claimable |
+| `learner.promote` | `learner.promote:<candidateId>` | operator host | serialized by the queue's concurrency; fed by the derivation's `onDerivedCandidate` callback |
+
+The chain is completion-driven: the auto-replay tick offers admitted captures; the replay worker claims one and drives
+it through `dispatchCapture` (the loop's own body, restricted to that capture, with the queue disabled so a job cannot
+re-enqueue itself); the handoff offers `evaluation.score`; the evaluation worker claims it and drives the resume pass
+**scoped to that handoff** (`scopeResumeStoreToReplayJob`); a finalized comparison offers `learner.derive`; and a
+derivation that persisted a candidate offers `learner.promote`.
+
+Once a plane's mode is `queue`, the loop steps aside: `resumePendingEvaluations`, `reconcileEvaluationJobs` and
+`retroFinalizeEvaluations` retire for the evaluation plane, and `learnFromUnconsumedCandidates` and
+`deriveLearnerCandidates` retire for the learner plane. `sweepFinalizationSignals` keeps running in every mode
+because it is an evidence producer, not scheduling. The modes are read per tick, so a rollback restores the sweeps
+with no restart.
+
+### 10.5 Deviations from the design, and why
+
+1. **The evaluation worker runs in the operator host, not the sidecar** (§3.4). The capability calls it drives
+   (materialize-trials, scoring, resume) live in the host's operations surface; placing the worker in the sidecar
+   would add a cross-process RPC purely to move scheduling. Both hosts share the one store, so relocating it later is
+   a wiring change.
+2. **The learner plane uses `PersistedQueue`, not the effect-mq tier** (§7.6). effect-mq ships Postgres and Redis
+   `JobStore` drivers and no SQLite one, and this runtime must keep its store on its own state root. The learner's
+   contract - durable progress, claimable skips, serialized promotion - is delivered; moving the plane to effect-mq
+   needs the SQLite driver work, tracked as an addendum candidate.
+3. **The observation-origin producer is not wired.** The shadow pipeline creates and completes its evaluation job
+   inline (`requestKind: "routing_shadow_durable"`), and scheduling that path through the queue is a pipeline
+   refactor rather than a wiring change. Recorded as an explicit deferral, not silently omitted.
+
+### 10.6 Two measured behaviours worth knowing before changing a worker
+
+- `PersistedQueue.take` **returns the handler's failure** once the store has recorded the retry (`visible_at` moves,
+  `attempts` increments); the retry is picked up by the *next* claim. The vendor only auto-loops for dead letters, so
+  the claim loop is the runtime's responsibility - a worker that calls `take` once retries zero times.
+- The SQL store writes `visible_at` with **whole-second resolution** (`Math.ceil`), so no retry lands sooner than 1 s
+  regardless of `backoffBaseMs`. The policy's 100 ms floor is honest at the store level but effectively 1 s at the
+  retry level.
+
 - Vendored Effect: `vendor/effect/PROVENANCE.md`, `vendor/effect/packages/effect/src/unstable/persistence/PersistedQueue.ts`,
   `vendor/effect/packages/sql/sqlite-node/src/SqliteClient.ts`.
 - Vendored effect-mq: `vendor/effect-mq/PROVENANCE.md`, `packages/effect-mq/src/{Job,Worker,JobStore,Flow,JobSchedules}.ts`,
