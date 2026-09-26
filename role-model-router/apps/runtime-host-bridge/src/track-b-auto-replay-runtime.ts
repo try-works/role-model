@@ -789,7 +789,16 @@ export function startAutoReplayLoop(input: {
         ...(Number.isSafeInteger(input.reservationTtlMs) && (input.reservationTtlMs ?? 0) > 0
           ? { reservationTtlMs: Number(input.reservationTtlMs) }
           : {}),
-        ...(input.dispatchQueue ? { dispatchQueue: input.dispatchQueue } : {}),
+        /**
+         * Run 101 addendum 02: a tick restricted to a capture the queue's worker *claimed*
+         * must never offer that capture back to its own queue. Measured live on
+         * `stage-rc-35c4a84fb643`: the worker's attempt re-enqueued the job, the tick then
+         * skipped the legacy execution R4 only skips for unclaimed work, and every attempt
+         * failed with `queued capture <ref> was not dispatched` until the job was terminal -
+         * so the capture was never replayed. The queue is the scheduling authority; the
+         * handler is the execution authority.
+         */
+        ...(input.dispatchQueue && !onlyCaptureRefs ? { dispatchQueue: input.dispatchQueue } : {}),
         now,
       });
       await Promise.all(dispositionWrites);
