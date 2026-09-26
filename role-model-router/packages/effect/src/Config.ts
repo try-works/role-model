@@ -1,2 +1,2 @@
 /** Run 101 / R1: generated type shim for `effect/Config` - see build.mjs. */
-export * from "src/Config.ts";
+export * from "../../../../vendor/effect/packages/effect/src/Config.ts";

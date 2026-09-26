@@ -14,6 +14,8 @@
  * exactly the `effect/<subpath>` specifiers the runtime actually imports.
  */
 import { build } from "esbuild";
+import { execFileSync } from "node:child_process";
+import { existsSync } from "node:fs";
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
@@ -83,19 +85,26 @@ for (const subpath of subpaths) {
   const resolved = await resolveEntry(subpath);
   if (!resolved) continue;
   entries[subpath] = resolved;
-  shims.push([subpath, path.relative(path.join(vendored, ".."), resolved).replaceAll("\\", "/")]);
+  shims.push([subpath, resolved]);
 }
 
 await mkdir(path.join(here, "dist"), { recursive: true });
 await mkdir(path.join(here, "src"), { recursive: true });
-for (const [subpath, relativeTarget] of shims) {
+for (const [subpath, resolvedTarget] of shims) {
   const shimPath = path.join(here, "src", `${subpath}.ts`);
   await mkdir(path.dirname(shimPath), { recursive: true });
+  // The import is resolved against the shim's own directory, and a bare
+  // `src/...` specifier would be read as a package id - so compute the relative
+  // path from the shim directory and prefix it explicitly.
+  const relativeTarget = path
+    .relative(path.dirname(shimPath), resolvedTarget)
+    .replaceAll("\\", "/");
+  const target = relativeTarget.startsWith(".") ? relativeTarget : `./${relativeTarget}`;
   await writeFile(
     shimPath,
     [
       `/** Run 101 / R1: generated type shim for \`effect/${subpath}\` - see build.mjs. */`,
-      `export * from "${relativeTarget}";`,
+      `export * from "${target}";`,
       "",
     ].join("\n"),
     "utf8",
@@ -118,4 +127,105 @@ await build({
   logLevel: "warning",
 });
 
-console.log(JSON.stringify({ status: "PASS", package: "effect", entries: Object.keys(entries).sort() }));
+/**
+ * Declarations: the vendored tree imports its own modules with explicit `.ts`
+ * extensions, which TypeScript only accepts under `allowImportingTsExtensions`
+ * - and that flag is only legal with `noEmit`/`emitDeclarationOnly`. Emitting
+ * declarations here (with `--noCheck`, so the vendored tree's own type state
+ * cannot fail the build) and rewriting the emitted `.ts` specifiers to `.js`
+ * gives consumers real types without changing vendored bytes.
+ */
+const typesDir = path.join(here, "dist", "types");
+await mkdir(typesDir, { recursive: true });
+/**
+ * Declaration emit covers the subpaths the queue stack consumes: every core
+ * namespace plus `unstable/persistence`, `unstable/sql/*` and
+ * `unstable/reactivity/*`. The remaining published subpaths are runtime-only in
+ * this run - emitting them would drag optional peers (for example the AI and
+ * CLI trees) into the declaration program, which `--noCheck` still has to
+ * resolve.
+ */
+const declarationEntries = Object.entries(entries).filter(([subpath]) =>
+  !subpath.includes("/") ||
+  subpath === "index" ||
+  subpath.startsWith("unstable/persistence") ||
+  subpath.startsWith("unstable/sql/") ||
+  subpath === "unstable/sql" ||
+  subpath.startsWith("unstable/reactivity"),
+);
+const declarationEntryFiles = declarationEntries.map(([, file]) => file);
+try {
+  execFileSync(
+    process.execPath,
+    [
+      path.join(repoRoot, "node_modules", "typescript", "bin", "tsc"),
+      "--noCheck",
+      "--emitDeclarationOnly",
+      "--declaration",
+      "--allowImportingTsExtensions",
+      "--module",
+      "nodenext",
+      "--moduleResolution",
+      "nodenext",
+      "--target",
+      "es2022",
+      "--skipLibCheck",
+      "--outDir",
+      typesDir,
+      ...declarationEntryFiles,
+    ],
+    { stdio: "pipe" },
+  );
+} catch {
+  // The vendored tree references optional peers (for example the test helpers)
+  // that are not part of this repository; tsc reports them after emitting the
+  // declarations we need. The per-entry check below is the real gate.
+}
+const missingDeclarations = declarationEntryFiles.filter((entryFile) => {
+  const relative = path.relative(vendored, entryFile).replace(/\.ts$/, ".d.ts");
+  return !existsSync(path.join(typesDir, relative));
+});
+if (missingDeclarations.length > 0) {
+  throw new Error(
+    `declaration emit missed ${missingDeclarations.length} entry point(s): ${missingDeclarations
+      .slice(0, 3)
+      .join(", ")}`,
+  );
+}
+/**
+ * The `./*` export map points `types` at `dist/types/<subpath>.d.ts`, while tsc
+ * mirrors the source layout (a directory entry emits `<subpath>/index.d.ts`).
+ * Write the thin shim so both shapes resolve.
+ */
+for (const [subpath, entryFile] of declarationEntries) {
+  const emitted = path.join(typesDir, path.relative(vendored, entryFile).replace(/\.ts$/, ".d.ts"));
+  const shimPath = path.join(typesDir, `${subpath}.d.ts`);
+  if (!existsSync(emitted) || existsSync(shimPath)) continue;
+  const relativeTarget = path
+    .relative(path.dirname(shimPath), emitted)
+    .replaceAll("\\", "/")
+    .replace(/\.d\.ts$/, ".js");
+  const target = relativeTarget.startsWith(".") ? relativeTarget : `./${relativeTarget}`;
+  await mkdir(path.dirname(shimPath), { recursive: true });
+  await writeFile(
+    shimPath,
+    `/** Run 101 / R1: generated declaration shim for \`effect/${subpath}\` - see build.mjs. */\nexport * from "${target}";\n`,
+    "utf8",
+  );
+}
+for (const file of await readdir(typesDir, { recursive: true, withFileTypes: true })) {
+  if (!file.isFile() || !file.name.endsWith(".d.ts")) continue;
+  const filePath = path.join(file.parentPath ?? file.path, file.name);
+  const source = await readFile(filePath, "utf8");
+  const rewritten = source.replace(
+    /(from\s+|import\()(["'])([^"']+)\.ts\2/g,
+    (_match, prefix, quote, specifier) => `${prefix}${quote}${specifier}.js${quote}`,
+  );
+  if (rewritten !== source) {
+    await writeFile(filePath, rewritten, "utf8");
+  }
+}
+
+console.log(
+  JSON.stringify({ status: "PASS", package: "effect", entries: Object.keys(entries).sort(), types: typesDir }),
+);

@@ -1,2 +1,2 @@
 /** Run 101 / R1: generated type shim for `effect/unstable/http/Headers` - see build.mjs. */
-export * from "src/unstable/http/Headers.ts";
+export * from "../../../../../../vendor/effect/packages/effect/src/unstable/http/Headers.ts";

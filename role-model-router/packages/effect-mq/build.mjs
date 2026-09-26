@@ -9,8 +9,11 @@ import { build } from "esbuild";
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 
+import { emitVendoredDeclarations } from "../emit-vendored-declarations.mjs";
+
 const here = import.meta.dirname;
-const vendored = path.resolve(here, "..", "..", "..", "vendor", "effect-mq", "packages", "effect-mq", "src");
+const repoRoot = path.resolve(here, "..", "..", "..");
+const vendored = path.resolve(repoRoot, "vendor", "effect-mq", "packages", "effect-mq", "src");
 
 const entries = {
   index: path.join(vendored, "index.ts"),
@@ -33,3 +36,8 @@ await build({
 });
 
 console.log(JSON.stringify({ status: "PASS", package: "effect-mq", entries: Object.keys(entries) }));
+await emitVendoredDeclarations({
+  repoRoot,
+  entryFiles: Object.values(entries),
+  typesDir: path.join(here, "dist", "types"),
+});

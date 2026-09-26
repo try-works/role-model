@@ -7,6 +7,8 @@ import { build } from "esbuild";
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 
+import { emitVendoredDeclarations } from "../emit-vendored-declarations.mjs";
+
 const here = import.meta.dirname;
 const repoRoot = path.resolve(here, "..", "..", "..");
 const vendored = path.join(repoRoot, "vendor", "effect", "packages", "sql", "sqlite-node", "src");
@@ -27,3 +29,8 @@ await build({
 });
 
 console.log(JSON.stringify({ status: "PASS", package: "@effect/sql-sqlite-node", entries: ["index"] }));
+await emitVendoredDeclarations({
+  repoRoot,
+  entryFiles: [path.join(vendored, "index.ts")],
+  typesDir: path.join(here, "dist", "types"),
+});

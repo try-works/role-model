@@ -1,2 +1,2 @@
 /** Run 101 / R1: generated type shim for `effect/MutableList` - see build.mjs. */
-export * from "src/MutableList.ts";
+export * from "../../../../vendor/effect/packages/effect/src/MutableList.ts";

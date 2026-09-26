@@ -7,12 +7,12 @@
   "exports": {
     "./package.json": "./package.json",
     ".": {
-      "types": "./src/index.ts",
+      "types": "./dist/types/index.d.ts",
       "runtime": "./dist/index.js",
       "default": "./dist/index.js"
     },
     "./testing": {
-      "types": "./src/testing.ts",
+      "types": "./dist/types/testing.d.ts",
       "runtime": "./dist/testing.js",
       "default": "./dist/testing.js"
     }
