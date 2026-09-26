@@ -1,0 +1,31 @@
+{
+  "name": "effect-mq",
+  "version": "0.7.0",
+  "private": true,
+  "type": "module",
+  "description": "Workspace entry point for the vendored effect-mq tree (vendor/effect-mq, v0.7.0). Re-exported in place so its internal `effect` imports resolve to the same vendored runtime.",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./src/index.ts",
+      "runtime": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./testing": {
+      "types": "./src/testing.ts",
+      "runtime": "./dist/testing.js",
+      "default": "./dist/testing.js"
+    }
+  },
+  "files": [
+    "src",
+    "dist"
+  ],
+  "sideEffects": false,
+  "peerDependencies": {
+    "effect": "workspace:*"
+  },
+  "scripts": {
+    "build": "node build.mjs"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "name": "effect",
+  "version": "4.0.0-rc.117",
+  "private": true,
+  "type": "module",
+  "description": "Workspace entry point for the vendored Effect v4 tree (vendor/effect, effect@4.0.0-rc.117). The sources are re-exported in place so a single copy of the runtime is bundled.",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./src/index.ts",
+      "runtime": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./unstable/persistence": {
+      "types": "./src/unstable-persistence.ts",
+      "runtime": "./dist/unstable-persistence.js",
+      "default": "./dist/unstable-persistence.js"
+    },
+    "./unstable/sql": {
+      "types": "./src/unstable-sql.ts",
+      "runtime": "./dist/unstable-sql.js",
+      "default": "./dist/unstable-sql.js"
+    },
+    "./unstable/workflow": {
+      "types": "./src/unstable-workflow.ts",
+      "runtime": "./dist/unstable-workflow.js",
+      "default": "./dist/unstable-workflow.js"
+    }
+  },
+  "files": [
+    "src",
+    "dist"
+  ],
+  "sideEffects": [
+    "./src/index.ts"
+  ],
+  "scripts": {
+    "build": "node build.mjs"
+  }
+}

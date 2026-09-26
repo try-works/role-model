@@ -285,6 +285,12 @@ importers:
       '@role-model/protocol-types':
         specifier: workspace:*
         version: link:../../../packages/protocol-types
+      effect:
+        specifier: workspace:*
+        version: link:../../packages/effect
+      effect-mq:
+        specifier: workspace:*
+        version: link:../../packages/effect-mq
       yaml:
         specifier: ^2.8.1
         version: 2.8.4
@@ -415,6 +421,14 @@ importers:
       '@role-model/protocol-types':
         specifier: workspace:*
         version: link:../../../packages/protocol-types
+
+  role-model-router/packages/effect: {}
+
+  role-model-router/packages/effect-mq:
+    dependencies:
+      effect:
+        specifier: workspace:*
+        version: link:../effect
 
   role-model-router/packages/endpoint-registry:
     dependencies:

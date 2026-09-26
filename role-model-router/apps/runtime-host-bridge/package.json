@@ -35,6 +35,8 @@
     "@role-model-router/vendor-abstraction": "workspace:*",
     "@role-model-router/vendor-llama-swap": "workspace:*",
     "@role-model-router/vendor-litellm": "workspace:*",
+    "effect": "workspace:*",
+    "effect-mq": "workspace:*",
     "yaml": "^2.8.1",
     "@role-model/protocol-types": "workspace:*"
   },
