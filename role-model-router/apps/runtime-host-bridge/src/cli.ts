@@ -2639,6 +2639,15 @@ type RuntimeOperatorCallbacks = Pick<
   | "recordLearningGuardrailBreach"
   | "restoreLearningScenarioActivation"
   | "engageLearningKillSwitch"
+  | "readQueues"
+  | "readQueueJobs"
+  | "readQueueJob"
+  | "readQueueReceipts"
+  | "readQueueConfig"
+  | "setQueueConfig"
+  | "retryQueueJob"
+  | "cancelQueueJob"
+  | "setQueueDrain"
 >;
 
 /**
@@ -2717,6 +2726,20 @@ export function createRuntimeOperatorCallbacks(
       operations.readLearningActivity(query),
     readLearningHistory: (query: Readonly<Record<string, string>> = {}) =>
       operations.readLearningHistory(query),
+    // Run 101 R9 (Phase 5 repair): the queue read model, its configuration and the admin actions.
+    readQueues: (query: Readonly<Record<string, string>> = {}) => operations.readQueues(query),
+    readQueueJobs: (queueName: string, query: Readonly<Record<string, string>> = {}) =>
+      operations.readQueueJobs(queueName, query),
+    readQueueJob: (queueName: string, jobId: string) => operations.readQueueJob(queueName, jobId),
+    readQueueReceipts: (query: Readonly<Record<string, string>> = {}) =>
+      operations.readQueueReceipts(query),
+    readQueueConfig: () => operations.readQueueConfig(),
+    setQueueConfig: (body: Record<string, unknown>) => operations.setQueueConfig(body),
+    retryQueueJob: (queueName: string, jobId: string) => operations.retryQueueJob(queueName, jobId),
+    cancelQueueJob: (queueName: string, jobId: string) =>
+      operations.cancelQueueJob(queueName, jobId),
+    setQueueDrain: (queueName: string, body: Record<string, unknown>) =>
+      operations.setQueueDrain(queueName, body),
     readLearningPolicy: (query: Readonly<Record<string, string>> = {}) =>
       operations.readLearningPolicy(query),
     setLearningPolicy: (body: Record<string, unknown>) => operations.setLearningPolicy(body),
@@ -2800,6 +2823,15 @@ type CliBackend = Pick<
   | "recordLearningGuardrailBreach"
   | "restoreLearningScenarioActivation"
   | "engageLearningKillSwitch"
+  | "readQueues"
+  | "readQueueJobs"
+  | "readQueueJob"
+  | "readQueueReceipts"
+  | "readQueueConfig"
+  | "setQueueConfig"
+  | "retryQueueJob"
+  | "cancelQueueJob"
+  | "setQueueDrain"
   | "measureNoRichCaptureBaseline"
   | "readDevelopmentVerificationStatus"
   | "readGraphMigration"
@@ -3924,6 +3956,25 @@ export function createCliServerOptions(
     readLearningHistory: bindBackendMethod(
       "readLearningHistory",
     ) as StartBridgeServerOptions["readLearningHistory"],
+    // Run 101 R9 (Phase 5 repair): the queue surface the UI calls, forwarded to the sidecar that
+    // owns the queue store.
+    readQueues: bindBackendMethod("readQueues") as StartBridgeServerOptions["readQueues"],
+    readQueueJobs: bindBackendMethod("readQueueJobs") as StartBridgeServerOptions["readQueueJobs"],
+    readQueueJob: bindBackendMethod("readQueueJob") as StartBridgeServerOptions["readQueueJob"],
+    readQueueReceipts: bindBackendMethod(
+      "readQueueReceipts",
+    ) as StartBridgeServerOptions["readQueueReceipts"],
+    readQueueConfig: bindBackendMethod(
+      "readQueueConfig",
+    ) as StartBridgeServerOptions["readQueueConfig"],
+    setQueueConfig: bindBackendMethod(
+      "setQueueConfig",
+    ) as StartBridgeServerOptions["setQueueConfig"],
+    retryQueueJob: bindBackendMethod("retryQueueJob") as StartBridgeServerOptions["retryQueueJob"],
+    cancelQueueJob: bindBackendMethod(
+      "cancelQueueJob",
+    ) as StartBridgeServerOptions["cancelQueueJob"],
+    setQueueDrain: bindBackendMethod("setQueueDrain") as StartBridgeServerOptions["setQueueDrain"],
     readLearningPolicy: bindBackendMethod(
       "readLearningPolicy",
     ) as StartBridgeServerOptions["readLearningPolicy"],

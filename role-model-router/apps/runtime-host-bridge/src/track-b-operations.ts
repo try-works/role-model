@@ -1512,6 +1512,10 @@ export function createTrackBOperations({
     if (pathname.includes("/replay/")) return "replay";
     if (pathname.includes("/evaluation/")) return "evaluation";
     if (pathname.includes("/learning")) return "learning";
+    // Run 101 R9 (Phase 5 repair): the queue read model, its configuration and the admin actions
+    // are a capability of their own; without this branch every queue route threw
+    // "unknown operator route capability" before it reached the sidecar.
+    if (pathname.includes("/queues")) return "queues";
     throw new Error(`unknown operator route capability: ${pathname}`);
   };
   const operatorSensitiveKey =
@@ -1847,6 +1851,69 @@ export function createTrackBOperations({
       return requestOperator(
         "learning history readback",
         `operator/learning/history${operatorQuery(query)}`,
+      );
+    },
+    /**
+     * Run 101 R9 (Phase 5 repair): the queue read model, its bounded configuration and the admin
+     * actions. The host's operator surface is a façade over the sidecar, so every queue route the
+     * UI calls has to be forwarded here - the packaged RC answered 404 for all of them until this
+     * block existed, which left `/app/observe/queues` and the Learning Configuration card empty.
+     */
+    async readQueues(query: Readonly<Record<string, string>> = {}): Promise<unknown> {
+      return requestOperator("queue readback", `operator/queues${operatorQuery(query)}`);
+    },
+    async readQueueJobs(
+      queueName: string,
+      query: Readonly<Record<string, string>> = {},
+    ): Promise<unknown> {
+      return requestOperator(
+        "queue jobs readback",
+        `operator/queues/${encodeURIComponent(queueName)}/jobs${operatorQuery(query)}`,
+      );
+    },
+    async readQueueJob(queueName: string, jobId: string): Promise<unknown> {
+      return requestOperator(
+        "queue job readback",
+        `operator/queues/${encodeURIComponent(queueName)}/jobs/${encodeURIComponent(jobId)}`,
+      );
+    },
+    async readQueueReceipts(query: Readonly<Record<string, string>> = {}): Promise<unknown> {
+      return requestOperator(
+        "queue receipts readback",
+        `operator/queues/receipts${operatorQuery(query)}`,
+      );
+    },
+    async readQueueConfig(): Promise<unknown> {
+      return requestOperator("queue configuration readback", "operator/queues/config");
+    },
+    async setQueueConfig(body: Record<string, unknown>): Promise<unknown> {
+      return requestOperator("queue configuration write", "operator/queues/config", {
+        method: "POST",
+        body,
+      });
+    },
+    async retryQueueJob(queueName: string, jobId: string): Promise<unknown> {
+      return requestOperator(
+        "queue job retry",
+        `operator/queues/${encodeURIComponent(queueName)}/jobs/${encodeURIComponent(jobId)}/retry`,
+        { method: "POST", body: {} },
+      );
+    },
+    async cancelQueueJob(queueName: string, jobId: string): Promise<unknown> {
+      return requestOperator(
+        "queue job cancel",
+        `operator/queues/${encodeURIComponent(queueName)}/jobs/${encodeURIComponent(jobId)}/cancel`,
+        { method: "POST", body: {} },
+      );
+    },
+    async setQueueDrain(queueName: string, body: Record<string, unknown>): Promise<unknown> {
+      return requestOperator(
+        "queue drain",
+        `operator/queues/${encodeURIComponent(queueName)}/drain`,
+        {
+          method: "POST",
+          body,
+        },
       );
     },
     // Run 98 R6/R15/R17: the operator policy readback, change and rollback routes were

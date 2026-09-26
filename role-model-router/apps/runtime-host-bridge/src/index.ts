@@ -3216,6 +3216,22 @@ export interface StartBridgeServerOptions {
   /** Run 99: the Learning UI live activity and history projections. */
   readonly readLearningActivity?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
   readonly readLearningHistory?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  /**
+   * Run 101 R9 (Phase 5 repair): the queue read model, its bounded configuration and the admin
+   * actions, forwarded to the same supervised sidecar that owns the queue store.
+   */
+  readonly readQueues?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  readonly readQueueJobs?: (
+    queueName: string,
+    query?: Readonly<Record<string, string>>,
+  ) => Promise<unknown>;
+  readonly readQueueJob?: (queueName: string, jobId: string) => Promise<unknown>;
+  readonly readQueueReceipts?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  readonly readQueueConfig?: () => Promise<unknown>;
+  readonly setQueueConfig?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly retryQueueJob?: (queueName: string, jobId: string) => Promise<unknown>;
+  readonly cancelQueueJob?: (queueName: string, jobId: string) => Promise<unknown>;
+  readonly setQueueDrain?: (queueName: string, body: Record<string, unknown>) => Promise<unknown>;
   readonly readLearningPolicy?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
   /**
    * Run 98 addendum 44 `A44-S4`: what the *router* resolved for the live scope (source, version, digest and
@@ -3523,6 +3539,16 @@ export interface RuntimeBridgeBackend {
   /** Run 98 addendum 57 slice 1: the operator surface's scenario restore (non-production channels only). */
   restoreLearningScenarioActivation(body: Record<string, unknown>): Promise<unknown>;
   engageLearningKillSwitch(body: Record<string, unknown>): Promise<unknown>;
+  /** Run 101 R9 (Phase 5 repair): the queue read model, its configuration and the admin actions. */
+  readQueues(query?: Readonly<Record<string, string>>): Promise<unknown>;
+  readQueueJobs(queueName: string, query?: Readonly<Record<string, string>>): Promise<unknown>;
+  readQueueJob(queueName: string, jobId: string): Promise<unknown>;
+  readQueueReceipts(query?: Readonly<Record<string, string>>): Promise<unknown>;
+  readQueueConfig(): Promise<unknown>;
+  setQueueConfig(body: Record<string, unknown>): Promise<unknown>;
+  retryQueueJob(queueName: string, jobId: string): Promise<unknown>;
+  cancelQueueJob(queueName: string, jobId: string): Promise<unknown>;
+  setQueueDrain(queueName: string, body: Record<string, unknown>): Promise<unknown>;
   measureNoRichCaptureBaseline(body: Record<string, unknown>): Promise<unknown>;
   readDevelopmentVerificationStatus(): Promise<unknown>;
   readGraphMigration(): Promise<unknown>;
@@ -3944,6 +3970,19 @@ export interface CreateRuntimeBridgeBackendOptions {
   readonly readLearningActivity?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
   readonly readLearningHistory?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
   readonly readLearningPolicy?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  /** Run 101 R9 (Phase 5 repair): the queue read model, its configuration and the admin actions. */
+  readonly readQueues?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  readonly readQueueJobs?: (
+    queueName: string,
+    query?: Readonly<Record<string, string>>,
+  ) => Promise<unknown>;
+  readonly readQueueJob?: (queueName: string, jobId: string) => Promise<unknown>;
+  readonly readQueueReceipts?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  readonly readQueueConfig?: () => Promise<unknown>;
+  readonly setQueueConfig?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly retryQueueJob?: (queueName: string, jobId: string) => Promise<unknown>;
+  readonly cancelQueueJob?: (queueName: string, jobId: string) => Promise<unknown>;
+  readonly setQueueDrain?: (queueName: string, body: Record<string, unknown>) => Promise<unknown>;
   /** Run 99 (option 2): anonymous loopback Learning readbacks (`on`/`off`, default by bind host). */
   readonly anonymousLearningReads?: "on" | "off" | boolean;
   readonly setLearningPolicy?: (body: Record<string, unknown>) => Promise<unknown>;
@@ -16684,6 +16723,111 @@ function createRequestHandler(options: StartBridgeServerOptions) {
           );
           return;
         }
+        /**
+         * Run 101 R9 (Phase 5 repair): the queue read model, its bounded configuration and the
+         * admin actions. Without these routes the packaged runtime answered 404 for every queue
+         * call, so `/app/observe/queues` and the Learning Configuration card rendered empty even
+         * though the sidecar served them.
+         */
+        if (url.pathname === "/api/role-model/operator/queues" && request.method === "GET") {
+          if (!options.readQueues) {
+            writeOperatorUnavailable(response, "queue readback");
+            return;
+          }
+          writeOperatorResult(
+            response,
+            await options.readQueues(Object.fromEntries(url.searchParams)),
+          );
+          return;
+        }
+        if (url.pathname === "/api/role-model/operator/queues/config") {
+          if (request.method === "GET") {
+            if (!options.readQueueConfig) {
+              writeOperatorUnavailable(response, "queue configuration readback");
+              return;
+            }
+            writeOperatorResult(response, await options.readQueueConfig());
+            return;
+          }
+          if (request.method === "POST") {
+            if (!options.setQueueConfig) {
+              writeOperatorUnavailable(response, "queue configuration write");
+              return;
+            }
+            writeOperatorMutationResult(response, await options.setQueueConfig(operatorBody));
+            return;
+          }
+        }
+        if (
+          url.pathname === "/api/role-model/operator/queues/receipts" &&
+          request.method === "GET"
+        ) {
+          if (!options.readQueueReceipts) {
+            writeOperatorUnavailable(response, "queue receipts readback");
+            return;
+          }
+          writeOperatorResult(
+            response,
+            await options.readQueueReceipts(Object.fromEntries(url.searchParams)),
+          );
+          return;
+        }
+        if (url.pathname.startsWith("/api/role-model/operator/queues/")) {
+          const segments = url.pathname
+            .slice("/api/role-model/operator/queues/".length)
+            .split("/")
+            .filter((part) => part.length > 0)
+            .map((part) => decodeURIComponent(part));
+          const [queueName, resource, jobId, action] = segments;
+          if (queueName && resource === "jobs") {
+            if (segments.length === 2 && request.method === "GET") {
+              if (!options.readQueueJobs) {
+                writeOperatorUnavailable(response, "queue jobs readback");
+                return;
+              }
+              writeOperatorResult(
+                response,
+                await options.readQueueJobs(queueName, Object.fromEntries(url.searchParams)),
+              );
+              return;
+            }
+            if (segments.length === 3 && request.method === "GET") {
+              if (!options.readQueueJob) {
+                writeOperatorUnavailable(response, "queue job readback");
+                return;
+              }
+              writeOperatorResult(response, await options.readQueueJob(queueName, jobId));
+              return;
+            }
+            if (segments.length === 4 && request.method === "POST" && action === "retry") {
+              if (!options.retryQueueJob) {
+                writeOperatorUnavailable(response, "queue job retry");
+                return;
+              }
+              writeOperatorMutationResult(response, await options.retryQueueJob(queueName, jobId));
+              return;
+            }
+            if (segments.length === 4 && request.method === "POST" && action === "cancel") {
+              if (!options.cancelQueueJob) {
+                writeOperatorUnavailable(response, "queue job cancel");
+                return;
+              }
+              writeOperatorMutationResult(response, await options.cancelQueueJob(queueName, jobId));
+              return;
+            }
+          }
+          if (queueName && resource === "drain" && request.method === "POST") {
+            if (!options.setQueueDrain) {
+              writeOperatorUnavailable(response, "queue drain");
+              return;
+            }
+            writeOperatorMutationResult(
+              response,
+              await options.setQueueDrain(queueName, operatorBody),
+            );
+            return;
+          }
+        }
         if (
           request.method === "POST" &&
           url.pathname === "/api/role-model/operator/learning/activate-pack"
@@ -29081,6 +29225,52 @@ export async function createRuntimeBridgeBackend(
         options.readLearningHistory?.(query) ??
         unavailableOperatorPayload("learning history readback")
       );
+    },
+    /** Run 101 R9 (Phase 5 repair): the queue surface, backed by the supervised sidecar. */
+    async readQueues(query: Readonly<Record<string, string>> = {}): Promise<unknown> {
+      return options.readQueues?.(query) ?? unavailableOperatorPayload("queue readback");
+    },
+    async readQueueJobs(
+      queueName: string,
+      query: Readonly<Record<string, string>> = {},
+    ): Promise<unknown> {
+      return (
+        options.readQueueJobs?.(queueName, query) ??
+        unavailableOperatorPayload("queue jobs readback")
+      );
+    },
+    async readQueueJob(queueName: string, jobId: string): Promise<unknown> {
+      return (
+        options.readQueueJob?.(queueName, jobId) ?? unavailableOperatorPayload("queue job readback")
+      );
+    },
+    async readQueueReceipts(query: Readonly<Record<string, string>> = {}): Promise<unknown> {
+      return (
+        options.readQueueReceipts?.(query) ?? unavailableOperatorPayload("queue receipts readback")
+      );
+    },
+    async readQueueConfig(): Promise<unknown> {
+      return (
+        options.readQueueConfig?.() ?? unavailableOperatorPayload("queue configuration readback")
+      );
+    },
+    async setQueueConfig(body: Record<string, unknown>): Promise<unknown> {
+      return (
+        options.setQueueConfig?.(body) ?? unavailableOperatorPayload("queue configuration write")
+      );
+    },
+    async retryQueueJob(queueName: string, jobId: string): Promise<unknown> {
+      return (
+        options.retryQueueJob?.(queueName, jobId) ?? unavailableOperatorPayload("queue job retry")
+      );
+    },
+    async cancelQueueJob(queueName: string, jobId: string): Promise<unknown> {
+      return (
+        options.cancelQueueJob?.(queueName, jobId) ?? unavailableOperatorPayload("queue job cancel")
+      );
+    },
+    async setQueueDrain(queueName: string, body: Record<string, unknown>): Promise<unknown> {
+      return options.setQueueDrain?.(queueName, body) ?? unavailableOperatorPayload("queue drain");
     },
     async readLearningPolicy(query: Readonly<Record<string, string>> = {}): Promise<unknown> {
       return (
