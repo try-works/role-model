@@ -284,6 +284,12 @@ export function startAutoReplayLoop(input: {
   readonly clearIntervalFn?: (handle: unknown) => void;
 }): {
   tick(): Promise<AutoReplayTickResult & { readonly skipped?: boolean }>;
+  /**
+   * Run 101 R4: the single-capture entry the replay queue's worker uses. It is
+   * the same body as `tick()`, restricted to one capture and run with the queue
+   * disabled so a queued job cannot re-enqueue itself.
+   */
+  dispatchCapture(captureRef: string): Promise<AutoReplayTickResult & { readonly skipped?: boolean }>;
   stop(): void;
   pause(): void;
   resume(): void;
@@ -622,7 +628,16 @@ export function startAutoReplayLoop(input: {
     };
   };
 
-  const tick = async (): Promise<AutoReplayTickResult & { readonly skipped?: boolean }> => {
+  /**
+   * Run 101 R4: `onlyCaptureRefs` lets the queue's worker drive exactly the
+   * capture it claimed through the *same* body the interval tick uses, so
+   * admission, reservation, execution and disposition writing exist once. The
+   * worker calls it with the queue disabled, which is what keeps a queued job
+   * from re-enqueueing itself.
+   */
+  const tick = async (
+    options?: { readonly onlyCaptureRefs?: readonly string[] },
+  ): Promise<AutoReplayTickResult & { readonly skipped?: boolean }> => {
     if (running || paused) {
       // `L7`: this is the interval path while a long work tick is in flight. Run the liveness sweeps
       // here instead of skipping them, so an overdue job is still expired on schedule.
@@ -648,6 +663,10 @@ export function startAutoReplayLoop(input: {
         limit: maxCapturesPerTick * 4,
       });
       const captures = pendingCaptures(pending);
+      const onlyCaptureRefs = options?.onlyCaptureRefs;
+      const scopedCaptures = onlyCaptureRefs
+        ? captures.filter((capture) => onlyCaptureRefs.includes(capture.captureRef))
+        : captures;
       const configuredEndpointIds =
         typeof input.configuredEndpointIds === "function"
           ? input.configuredEndpointIds()
@@ -691,7 +710,7 @@ export function startAutoReplayLoop(input: {
             );
           });
       const result = await runAutoReplayTick({
-        captures,
+        captures: scopedCaptures,
         configuredEndpointIds,
         // Run 98 addendum 56 §6: the judge is excluded from the planned arms, and a capture whose own endpoint
         // is the judge is deferred with the named code rather than dispatched into a refusal.
@@ -775,6 +794,26 @@ export function startAutoReplayLoop(input: {
 
   return {
     tick,
+    /**
+     * Run 101 R4: what the `replay.dispatch` worker calls for the capture it
+     * claimed. It is the interval tick restricted to that capture, with the
+     * queue disabled - so the job is executed through the path this loop has
+     * always used, and a failure is the worker's retry signal.
+     */
+    async dispatchCapture(captureRef: string) {
+      if (!captureRef || typeof captureRef !== "string") {
+        throw new Error("dispatchCapture requires a capture ref");
+      }
+      const result = await tick({ onlyCaptureRefs: [captureRef] });
+      const executed = result.queued === 0 && result.replayed + result.refused + result.deferred > 0;
+      if (!executed) {
+        // Nothing ran for this capture: it is not pending any more (already
+        // handled) or the tick was skipped. Reporting it lets the queue's
+        // attempt accounting decide what happens next.
+        throw new Error(`queued capture ${captureRef} was not dispatched`);
+      }
+      return result;
+    },
     stop() {
       if (timer) {
         const clearIntervalFn =
