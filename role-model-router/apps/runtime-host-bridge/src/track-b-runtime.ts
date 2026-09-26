@@ -1544,6 +1544,34 @@ export async function stageTrackBRuntimeDistribution(options: {
   );
   await mkdir(path.dirname(hostActivationPolicyDestination), { recursive: true });
   await copyFile(activationPolicySource, hostActivationPolicyDestination);
+  /**
+   * Run 101 R3 (Phase 5 repair): the host resolves the shipped queue policy from
+   * `<repo-root>/shared/queue-policy.json` (`queue-runtime/policy.ts`,
+   * `QUEUE_POLICY_SHIPPED_RELATIVE_PATH`) and fails closed to `legacy` when it cannot read it -
+   * correctly, but invisibly. The private distribution stages the document; the release staging
+   * dropped it for exactly the reason run 99 R23 recorded for the activation policy, so a
+   * packaged runtime kept every queue plane on `legacy` no matter what the operator set. Stage it
+   * beside the activation policy and fail closed when the distribution is incomplete.
+   */
+  const queuePolicySource = path.join(options.sourceRoot, "shared", "queue-policy.json");
+  if (!existsSync(queuePolicySource)) {
+    throw new Error("Track B runtime distribution queue policy config is missing");
+  }
+  const queuePolicy = JSON.parse(await readFile(queuePolicySource, "utf8")) as {
+    readonly schemaVersion?: string;
+  };
+  if (queuePolicy.schemaVersion !== "role-model.queue-policy.v1") {
+    throw new Error(
+      "Track B runtime distribution queue policy config has an unknown schema version",
+    );
+  }
+  for (const destination of [
+    path.join(options.releaseDir, "..", "..", "shared", "queue-policy.json"),
+    path.join(options.releaseDir, "..", "shared", "queue-policy.json"),
+  ]) {
+    await mkdir(path.dirname(destination), { recursive: true });
+    await copyFile(queuePolicySource, destination);
+  }
   if (compatibilityGeneration === "N") {
     const graphRelative = manifest.registryBindings?.graphRegistry?.path;
     const graphSource = graphRelative ? path.join(options.sourceRoot, graphRelative) : null;
