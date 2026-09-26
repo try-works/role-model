@@ -13,6 +13,8 @@
 # host's core.autocrlf (see vendor/effect/PROVENANCE.md for the recorded content digest).
 vendor/effect/** text eol=lf
 vendor/effect/**/*.tar.gz -text
+vendor/effect-mq/** text eol=lf
+vendor/effect-mq/**/*.png -text
 *.go text eol=lf
 *.html text eol=lf
 *.js text eol=lf
