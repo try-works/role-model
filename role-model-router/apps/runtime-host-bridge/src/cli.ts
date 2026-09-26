@@ -92,7 +92,11 @@ import {
 } from "./track-b-auto-replay-runtime.js";
 // Run 101 R4: the replay plane's queue runtime (policy-driven mode, offer and
 // worker). Imported here so the auto-replay loop's composition can start it.
-import { startEvaluationQueueRuntime, startReplayQueueRuntime } from "./queue-runtime/index.js";
+import {
+  startEvaluationQueueRuntime,
+  startLearnerQueueRuntime,
+  startReplayQueueRuntime,
+} from "./queue-runtime/index.js";
 import {
   buildAutoReplayIdempotencyKey,
   dedupeJudgeAgainstPair,
@@ -5090,6 +5094,34 @@ export async function main(): Promise<void> {
         Promise.resolve({ enqueued: false, reason: "evaluation_queue_not_started" }),
     };
     /**
+     * Run 101 R6: the learner plane's queues, late-bound like the others. The
+     * derivation worker needs the completion path (which offers the job) and the
+     * runtime (which is started by the auto-replay starter) to exist first.
+     */
+    let learnerDeriveQueueRuntime: ReturnType<typeof startLearnerQueueRuntime> | null = null;
+    let learnerPromoteQueueRuntime: ReturnType<typeof startLearnerQueueRuntime> | null = null;
+    const lateBoundLearnerQueues = {
+      derive: {
+        get mode() {
+          return learnerDeriveQueueRuntime?.dispatchQueue?.mode ?? "legacy";
+        },
+        offer: (job: { readonly groupId: string; readonly reason?: string | null }) =>
+          learnerDeriveQueueRuntime?.dispatchQueue?.offer(job) ??
+          Promise.resolve({ enqueued: false, reason: "learner_queue_not_started" }),
+      },
+      promote: {
+        get mode() {
+          return learnerPromoteQueueRuntime?.dispatchQueue?.mode ?? "legacy";
+        },
+        offer: (job: { readonly candidateId: string; readonly groupId?: string | null }) =>
+          learnerPromoteQueueRuntime?.dispatchQueue?.offer({
+            candidateId: job.candidateId,
+            ...(job.groupId ? { groupId: job.groupId } : {}),
+          }) ??
+          Promise.resolve({ enqueued: false, reason: "learner_queue_not_started" }),
+      },
+    };
+    /**
      * Run 100 addendum `handoff-evidence-durability.addendum-06` S27: the durable replay jobs' scope is
      * resolved in the liveness-sweep scope (which sees the captures) and is needed by the resume sweep's
      * terminalization (which runs in the replay command handler's scope), so it travels through a ref the same
@@ -5327,7 +5359,7 @@ export async function main(): Promise<void> {
          *   `knowledge:promote-candidate` when the receipt says `validate` -> `knowledge:record-learning` (pack).
          * It never dispatches a provider call and never mutates a route.
          */
-        async learnFromUnconsumedCandidates() {
+        async learnFromUnconsumedCandidates(input: Record<string, unknown> = {}) {
           const runtime = extensionRuntimeRef.current;
           if (!runtime) return { scanned: 0, consumed: 0, remaining: 0 };
           const authority = await (async () => {
@@ -6011,7 +6043,7 @@ export async function main(): Promise<void> {
          * estimate over the comparison's own rows, and the two receipts minted with the durable authority. Bounded to
          * two groups per tick, idempotent, and it never dispatches a provider call or invents a trajectory.
          */
-        async deriveLearnerCandidates() {
+        async deriveLearnerCandidates(input: Record<string, unknown> = {}) {
           const runtime = extensionRuntimeRef.current;
           if (!runtime) return { examined: 0, derived: 0, pending: 0 };
           const authority = await (async () => {
@@ -6123,7 +6155,15 @@ export async function main(): Promise<void> {
              * therefore raised deliberately: with 24 per tick the same backlog drains in ~20 ticks (~36 min), while
              * the compute step stays bounded to durable evidence and a group whose capture has aged out skips cheaply.
              */
-            limit: 24,
+            limit:
+              Array.isArray(input.onlyGroupIds) && input.onlyGroupIds.length > 0
+                ? input.onlyGroupIds.length
+                : 24,
+            // Run 101 R6: a learner.derive job names its group, so the pass
+            // works on that comparison instead of the sweep's page.
+            ...(Array.isArray(input.onlyGroupIds) && input.onlyGroupIds.length > 0
+              ? { onlyGroupIds: input.onlyGroupIds as string[] }
+              : {}),
             /**
              * S13 follow-up: the group's report may never have been written (its live pipeline never ran), so the
              * sweep computes it through the capability that persists reports - bounded per tick (see `limit`), from
@@ -7062,6 +7102,66 @@ export async function main(): Promise<void> {
           }`,
         );
       }
+      /**
+       * Run 101 R6: the learner plane's two workers run beside the replay loop.
+       * Derivation is scoped to the job's group (so a job works on its own
+       * comparison) and promotion consumes candidates the worker has not yet
+       * validated, one at a time.
+       */
+      learnerDeriveQueueRuntime = startLearnerQueueRuntime({
+        kind: "learner.derive",
+        options: {
+          stateRoot: options.runtimeStateRoot,
+          shippedRoot: options.repoRoot,
+          deriveHandler: async (job) => {
+            const derive = sweepOperations.deriveLearnerCandidates;
+            if (typeof derive !== "function") {
+              throw new Error("learner derivation is not available");
+            }
+            const summary = (await derive({ limit: 1, onlyGroupIds: [job.groupId] })) as {
+              derived?: number;
+              examined?: number;
+              refused?: number;
+            };
+            // No examination means the group is gone (or no longer learnable);
+            // a named skip is a retry, not a silent success.
+            if (!summary || (summary.examined ?? 0) === 0) {
+              throw new Error(`no learnable comparison for ${job.groupId}`);
+            }
+          },
+          onDeriveFailure: (error, job) => {
+            console.error(
+              `[run101] learner derive attempt failed:${job.groupId} ${String(
+                (error as { message?: unknown })?.message ?? error,
+              ).slice(0, 200)}`,
+            );
+          },
+        },
+      });
+      learnerPromoteQueueRuntime = startLearnerQueueRuntime({
+        kind: "learner.promote",
+        options: {
+          stateRoot: options.runtimeStateRoot,
+          shippedRoot: options.repoRoot,
+          promoteHandler: async (job) => {
+            const consume = sweepOperations.learnFromUnconsumedCandidates;
+            if (typeof consume !== "function") {
+              throw new Error("learner promotion is not available");
+            }
+            const result = (await consume({ limit: 1 })) as { consumed?: number } | null;
+            if (!result || (result.consumed ?? 0) === 0) {
+              throw new Error(`no candidate was validated for ${job.candidateId}`);
+            }
+          },
+          onPromoteFailure: (error, job) => {
+            console.error(
+              `[run101] learner promote attempt failed:${job.candidateId} ${String(
+                (error as { message?: unknown })?.message ?? error,
+              ).slice(0, 200)}`,
+            );
+          },
+        },
+      });
       return loop;
     };
     const postObservationHandler =
@@ -8070,6 +8170,35 @@ export async function main(): Promise<void> {
                       (error as { message?: unknown })?.message ?? error,
                     ).slice(0, 200)}`,
                   );
+                }
+                /**
+                 * Run 101 R6: the finalized comparison is the unit the learner
+                 * derives from, so the completion path is where the derivation
+                 * job is offered. `legacy` keeps this a no-op, and a refused
+                 * offer is logged rather than thrown - the comparison itself is
+                 * already durable.
+                 */
+                const completedGroupId =
+                  typeof (completed as Record<string, unknown>)?.comparisonGroupId === "string"
+                    ? String((completed as Record<string, unknown>).comparisonGroupId)
+                    : null;
+                if (completedGroupId && lateBoundLearnerQueues.derive.mode !== "legacy") {
+                  const offeredDerive = await lateBoundLearnerQueues.derive
+                    .offer({ groupId: completedGroupId, reason: "comparison-finalized" })
+                    .catch((error: unknown) => ({
+                      enqueued: false,
+                      reason: String((error as { message?: unknown })?.message ?? error).slice(
+                        0,
+                        160,
+                      ),
+                    }));
+                  if (!offeredDerive.enqueued) {
+                    console.error(
+                      `[run101] learner derive offer declined:${completedGroupId} ${
+                        offeredDerive.reason ?? "unknown"
+                      }`,
+                    );
+                  }
                 }
                 // Run 98 addendum 34 S1: the extra pairs this capture adds are completed inside
                 // `createSupervisedReplayEvaluationCompleter` itself, which is the one function every

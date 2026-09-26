@@ -76,6 +76,12 @@ export interface LearnerDerivationInput {
    * presentation bound. A group the bound defers is *not* marked attempted: the next tick reaches it again.
    */
   readonly derivedReportLimit?: number;
+  /**
+   * Run 101 R6: derive for exactly these groups. The learner queue claims one
+   * job per finalized comparison, so its handler must be able to name the group
+   * it is working on rather than walking the sweep's page and hoping.
+   */
+  readonly onlyGroupIds?: readonly string[];
   readonly readDurableTrajectoryEvidence?: LearnerDerivationEvidenceRead;
 }
 
@@ -372,6 +378,7 @@ export async function deriveLearnerCandidatesFromDurableEvidence(
     if (attempted >= input.limit) break;
     const groupId = text(group.groupId) ?? text(group.comparisonId);
     if (!groupId || input.attemptedGroupIds.has(groupId)) continue;
+    if (input.onlyGroupIds && !input.onlyGroupIds.includes(groupId)) continue;
     examined += 1;
     const normalized = normalizedComparisonGroup(group);
     if (text(normalized.status) !== "finalized" || !learnableComparisonMembers(normalized)) {

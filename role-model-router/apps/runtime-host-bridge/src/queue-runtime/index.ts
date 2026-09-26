@@ -27,6 +27,16 @@ import { runReplayDispatchWorker, type ReplayDispatchWorker } from "./workers.js
 import { runEvaluationScoreWorker } from "./workers.js";
 import { EVALUATION_SCORE_QUEUE, enqueueEvaluationScore, makeEvaluationScoreQueue } from "./evaluation.js";
 import type { EvaluationScoreJob } from "./evaluation.js";
+import {
+  LEARNER_DERIVE_QUEUE,
+  LEARNER_PROMOTE_QUEUE,
+  enqueueLearnerDerive,
+  enqueueLearnerPromote,
+  makeLearnerDeriveQueue,
+  makeLearnerPromoteQueue,
+} from "./learner.js";
+import type { LearnerDeriveJob, LearnerPromoteJob } from "./learner.js";
+import { runLearnerDeriveWorker, runLearnerPromoteWorker } from "./workers.js";
 
 export interface ReplayQueueRuntimeOptions {
   readonly stateRoot: string;
@@ -236,6 +246,141 @@ export function startEvaluationQueueRuntime(
   return {
     mode,
     dispatchQueue,
+    ...(worker ? { worker } : {}),
+    async stop() {
+      await worker?.stop();
+    },
+  };
+}
+
+export interface LearnerQueueRuntimeOptions {
+  readonly stateRoot: string;
+  readonly shippedRoot?: string;
+  /**
+   * Runs one derivation for the job's group. A named skip is a throw, which is
+   * what keeps the group claimable instead of consuming it.
+   */
+  readonly deriveHandler?: (
+    job: LearnerDeriveJob,
+    context: { readonly attempt: number },
+  ) => Promise<void>;
+  /** Promotes one candidate; serialized by the queue's concurrency. */
+  readonly promoteHandler?: (
+    job: LearnerPromoteJob,
+    context: { readonly attempt: number },
+  ) => Promise<void>;
+  readonly onDeriveFailure?: (error: unknown, job: LearnerDeriveJob) => void;
+  readonly onPromoteFailure?: (error: unknown, job: LearnerPromoteJob) => void;
+}
+
+export interface LearnerQueueRuntime {
+  readonly kind: "learner.derive" | "learner.promote";
+  readonly mode: QueueMode;
+  readonly dispatchQueue?: {
+    readonly mode: QueueMode;
+    readonly offer: (job: {
+      readonly groupId?: string;
+      readonly candidateId?: string;
+      readonly reason?: string | null;
+    }) => Promise<{ readonly enqueued: boolean; readonly reason?: string }>;
+  };
+  readonly worker?: ReplayDispatchWorker;
+  stop(): Promise<void>;
+}
+
+/**
+ * Composes one learner queue. Both queues share the shape; the only difference
+ * is which job they carry, so one starter covers them and the id rules stay in
+ * `learner.ts`.
+ */
+export function startLearnerQueueRuntime({
+  kind,
+  options,
+}: {
+  readonly kind: "learner.derive" | "learner.promote";
+  readonly options: LearnerQueueRuntimeOptions;
+}): LearnerQueueRuntime {
+  const queueName = kind === "learner.derive" ? LEARNER_DERIVE_QUEUE : LEARNER_PROMOTE_QUEUE;
+  let policy: ResolvedQueuePolicy;
+  try {
+    const document = readQueuePolicy({
+      stateRoot: options.stateRoot,
+      shippedRoot: options.shippedRoot,
+    });
+    policy = resolveQueuePolicy(document, { queue: queueName });
+  } catch (error) {
+    console.error(
+      `[run101] ${queueName} stays legacy: ${String(
+        (error as { message?: unknown })?.message ?? error,
+      ).slice(0, 200)}`,
+    );
+    return { kind, mode: "legacy", async stop() {} };
+  }
+
+  const mode = QUEUE_MODES.includes(policy.mode) ? policy.mode : "legacy";
+  if (mode === "legacy") {
+    return { kind, mode, async stop() {} };
+  }
+
+  const layer = storeLayerForQueuePolicy({ stateRoot: options.stateRoot, policy });
+  const offer = async (job: {
+    readonly groupId?: string;
+    readonly candidateId?: string;
+    readonly reason?: string | null;
+  }) => {
+    try {
+      return await Effect.runPromise(
+        Effect.gen(function* () {
+          if (kind === "learner.derive") {
+            const queue = yield* makeLearnerDeriveQueue(policy);
+            return yield* enqueueLearnerDerive({
+              queue,
+              job: { groupId: String(job.groupId ?? ""), reason: job.reason ?? null },
+            });
+          }
+          const queue = yield* makeLearnerPromoteQueue(policy);
+          return yield* enqueueLearnerPromote({
+            queue,
+            job: {
+              candidateId: String(job.candidateId ?? ""),
+              groupId: job.groupId ?? null,
+            },
+          });
+        }).pipe(Effect.provide(layer), Effect.scoped),
+      );
+    } catch (error) {
+      return {
+        enqueued: false,
+        reason: `queue_offer_failed: ${String((error as { message?: unknown })?.message ?? error).slice(0, 160)}`,
+      };
+    }
+  };
+
+  const worker =
+    mode === "queue"
+      ? kind === "learner.derive" && options.deriveHandler
+        ? runLearnerDeriveWorker({
+            stateRoot: options.stateRoot,
+            policy,
+            handler: options.deriveHandler,
+            onAttemptFailure: options.onDeriveFailure,
+            shippedRoot: options.shippedRoot,
+          })
+        : kind === "learner.promote" && options.promoteHandler
+          ? runLearnerPromoteWorker({
+              stateRoot: options.stateRoot,
+              policy,
+              handler: options.promoteHandler,
+              onAttemptFailure: options.onPromoteFailure,
+              shippedRoot: options.shippedRoot,
+            })
+          : undefined
+      : undefined;
+
+  return {
+    kind,
+    mode,
+    dispatchQueue: { mode, offer },
     ...(worker ? { worker } : {}),
     async stop() {
       await worker?.stop();
