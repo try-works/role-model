@@ -1,3 +1,7 @@
+import { execFileSync } from "node:child_process";
+import { existsSync } from "node:fs";
+import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import path from "node:path";
 /**
  * Run 101 / R1: build the vendored Effect v4 tree into this workspace package's
  * `dist/` entry points.
@@ -14,10 +18,6 @@
  * exactly the `effect/<subpath>` specifiers the runtime actually imports.
  */
 import { build } from "esbuild";
-import { execFileSync } from "node:child_process";
-import { existsSync } from "node:fs";
-import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
-import path from "node:path";
 
 const here = import.meta.dirname;
 const repoRoot = path.resolve(here, "..", "..", "..");
@@ -80,36 +80,13 @@ async function resolveEntry(subpath) {
 
 const subpaths = await discoverEffectSubpaths();
 const entries = { index: path.join(vendored, "index.ts") };
-const shims = [];
 for (const subpath of subpaths) {
   const resolved = await resolveEntry(subpath);
   if (!resolved) continue;
   entries[subpath] = resolved;
-  shims.push([subpath, resolved]);
 }
 
 await mkdir(path.join(here, "dist"), { recursive: true });
-await mkdir(path.join(here, "src"), { recursive: true });
-for (const [subpath, resolvedTarget] of shims) {
-  const shimPath = path.join(here, "src", `${subpath}.ts`);
-  await mkdir(path.dirname(shimPath), { recursive: true });
-  // The import is resolved against the shim's own directory, and a bare
-  // `src/...` specifier would be read as a package id - so compute the relative
-  // path from the shim directory and prefix it explicitly.
-  const relativeTarget = path
-    .relative(path.dirname(shimPath), resolvedTarget)
-    .replaceAll("\\", "/");
-  const target = relativeTarget.startsWith(".") ? relativeTarget : `./${relativeTarget}`;
-  await writeFile(
-    shimPath,
-    [
-      `/** Run 101 / R1: generated type shim for \`effect/${subpath}\` - see build.mjs. */`,
-      `export * from "${target}";`,
-      "",
-    ].join("\n"),
-    "utf8",
-  );
-}
 
 await build({
   entryPoints: entries,
@@ -145,13 +122,14 @@ await mkdir(typesDir, { recursive: true });
  * CLI trees) into the declaration program, which `--noCheck` still has to
  * resolve.
  */
-const declarationEntries = Object.entries(entries).filter(([subpath]) =>
-  !subpath.includes("/") ||
-  subpath === "index" ||
-  subpath.startsWith("unstable/persistence") ||
-  subpath.startsWith("unstable/sql/") ||
-  subpath === "unstable/sql" ||
-  subpath.startsWith("unstable/reactivity"),
+const declarationEntries = Object.entries(entries).filter(
+  ([subpath]) =>
+    !subpath.includes("/") ||
+    subpath === "index" ||
+    subpath.startsWith("unstable/persistence") ||
+    subpath.startsWith("unstable/sql/") ||
+    subpath === "unstable/sql" ||
+    subpath.startsWith("unstable/reactivity"),
 );
 const declarationEntryFiles = declarationEntries.map(([, file]) => file);
 try {
@@ -227,5 +205,10 @@ for (const file of await readdir(typesDir, { recursive: true, withFileTypes: tru
 }
 
 console.log(
-  JSON.stringify({ status: "PASS", package: "effect", entries: Object.keys(entries).sort(), types: typesDir }),
+  JSON.stringify({
+    status: "PASS",
+    package: "effect",
+    entries: Object.keys(entries).sort(),
+    types: typesDir,
+  }),
 );

@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 /**
  * Run 101 / R4 - the host's replay queue runtime.
  *
@@ -10,7 +11,6 @@
  * authoritative.
  */
 import { existsSync } from "node:fs";
-import { execFileSync } from "node:child_process";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -63,7 +63,11 @@ afterEach(async () => {
 
 async function publishPolicy(document: unknown) {
   await mkdir(path.join(stateRoot, "queues"), { recursive: true });
-  await writeFile(path.join(stateRoot, "queues", "queue-policy.json"), JSON.stringify(document), "utf8");
+  await writeFile(
+    path.join(stateRoot, "queues", "queue-policy.json"),
+    JSON.stringify(document),
+    "utf8",
+  );
 }
 
 describe("@recursive:101-effect-mq-queue-rebuild @sp4 R4 replay queue runtime", () => {

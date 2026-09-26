@@ -1,3 +1,5 @@
+import { execFileSync } from "node:child_process";
+import { existsSync } from "node:fs";
 /**
  * Run 101 / R4 - the replay plane on `replay.dispatch`.
  *
@@ -11,8 +13,6 @@
  * exist, so this file fails to import.
  */
 import { mkdtemp, rm } from "node:fs/promises";
-import { existsSync } from "node:fs";
-import { execFileSync } from "node:child_process";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -74,7 +74,12 @@ beforeEach(async () => {
 });
 
 function layerFor(filePath: string) {
-  return makeQueueStoreLayer({ filePath, pollIntervalMs: 20, lockRefreshIntervalMs: 50, lockExpirationMs: 400 });
+  return makeQueueStoreLayer({
+    filePath,
+    pollIntervalMs: 20,
+    lockRefreshIntervalMs: 50,
+    lockExpirationMs: 400,
+  });
 }
 
 describe("@recursive:101-effect-mq-queue-rebuild @sp4 R4 replay.dispatch", () => {
@@ -132,7 +137,9 @@ describe("@recursive:101-effect-mq-queue-rebuild @sp4 R4 replay.dispatch", () =>
 
   it("retries a retryable failure on the persisted attempt count and then succeeds", async () => {
     const filePath = resolveQueueStorePath({ stateRoot });
-    const policy = resolveQueuePolicy(policyDocument({ attempts: 4 }), { queue: REPLAY_DISPATCH_QUEUE });
+    const policy = resolveQueuePolicy(policyDocument({ attempts: 4 }), {
+      queue: REPLAY_DISPATCH_QUEUE,
+    });
 
     const attempts = await Effect.runPromise(
       Effect.gen(function* () {
@@ -205,7 +212,10 @@ describe("@recursive:101-effect-mq-queue-rebuild @sp4 R4 replay.dispatch", () =>
     );
 
     expect(outcome.budgetRefused).toEqual({ enqueued: false, reason: "budget_exhausted" });
-    expect(outcome.benchmarkRefused).toEqual({ enqueued: false, reason: "benchmark_source_not_replayable" });
+    expect(outcome.benchmarkRefused).toEqual({
+      enqueued: false,
+      reason: "benchmark_source_not_replayable",
+    });
     expect(outcome.claimed, "a refused capture must never reach the queue").toHaveLength(0);
   });
 });

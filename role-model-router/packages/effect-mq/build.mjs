@@ -1,3 +1,5 @@
+import { mkdir } from "node:fs/promises";
+import path from "node:path";
 /**
  * Run 101 / R1: build the vendored effect-mq tree into this workspace package's
  * `dist/` entry points.
@@ -6,8 +8,6 @@
  * workspace package instead of carrying a second copy of the runtime.
  */
 import { build } from "esbuild";
-import { mkdir } from "node:fs/promises";
-import path from "node:path";
 
 import { emitVendoredDeclarations } from "../emit-vendored-declarations.mjs";
 
@@ -35,7 +35,9 @@ await build({
   external: ["effect", "effect/*", "@effect/*", "drizzle-orm", "drizzle-orm/*", "redis"],
 });
 
-console.log(JSON.stringify({ status: "PASS", package: "effect-mq", entries: Object.keys(entries) }));
+console.log(
+  JSON.stringify({ status: "PASS", package: "effect-mq", entries: Object.keys(entries) }),
+);
 await emitVendoredDeclarations({
   repoRoot,
   entryFiles: Object.values(entries),

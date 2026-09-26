@@ -81,7 +81,9 @@ describe("@recursive:101-effect-mq-queue-rebuild @sp2 R2 public queue store", ()
     try {
       const row = probe.prepare("PRAGMA journal_mode").get() as { journal_mode?: string };
       expect(String(row.journal_mode).toLowerCase()).toBe("wal");
-      expect(probe.prepare("SELECT name FROM sqlite_master WHERE name = 'effect_queue'").get()).toBeTruthy();
+      expect(
+        probe.prepare("SELECT name FROM sqlite_master WHERE name = 'effect_queue'").get(),
+      ).toBeTruthy();
     } finally {
       probe.close();
       await rm(stateRoot, { recursive: true, force: true });
@@ -100,7 +102,12 @@ describe("@recursive:101-effect-mq-queue-rebuild @sp2 R2 public queue store", ()
         const holder = yield* makeQueue();
         const contender = yield* makeQueue();
         const holderFiber = yield* Effect.forkChild(
-          holder.take(() => Effect.andThen(Effect.sync(() => seen.push("holder")), Effect.never)),
+          holder.take(() =>
+            Effect.andThen(
+              Effect.sync(() => seen.push("holder")),
+              Effect.never,
+            ),
+          ),
         );
         yield* Effect.sleep(Duration.millis(150));
         const contenderFiber = yield* Effect.forkChild(
@@ -125,7 +132,12 @@ describe("@recursive:101-effect-mq-queue-rebuild @sp2 R2 public queue store", ()
         const queue = yield* makeQueue();
         yield* queue.offer({ kind: "abandoned" }, { id: "abandoned" });
         const fiber = yield* Effect.forkChild(
-          queue.take(() => Effect.andThen(Effect.sync(() => undefined), Effect.never)),
+          queue.take(() =>
+            Effect.andThen(
+              Effect.sync(() => undefined),
+              Effect.never,
+            ),
+          ),
         );
         yield* Effect.sleep(Duration.millis(100));
         yield* Fiber.interrupt(fiber);
@@ -136,7 +148,9 @@ describe("@recursive:101-effect-mq-queue-rebuild @sp2 R2 public queue store", ()
       Effect.gen(function* () {
         const queue = yield* makeQueue();
         const seen: string[] = [];
-        const fiber = yield* Effect.forkChild(queue.take(() => Effect.sync(() => seen.push("recovered"))));
+        const fiber = yield* Effect.forkChild(
+          queue.take(() => Effect.sync(() => seen.push("recovered"))),
+        );
         yield* Effect.sleep(Duration.millis(1200));
         yield* Fiber.interrupt(fiber);
         return seen;

@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 /**
  * Run 101 / R6 - the learner plane's queues.
  *
@@ -10,7 +11,6 @@
  *    convention.
  */
 import { existsSync } from "node:fs";
-import { execFileSync } from "node:child_process";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -108,7 +108,10 @@ describe("@recursive:101-effect-mq-queue-rebuild @sp6 R6 learner queues", () => 
       await Effect.runPromise(
         Effect.gen(function* () {
           const queue = yield* makeLearnerDeriveQueue(policy);
-          yield* enqueueLearnerDerive({ queue, job: { groupId: "group-skip", reason: "finalized" } });
+          yield* enqueueLearnerDerive({
+            queue,
+            job: { groupId: "group-skip", reason: "finalized" },
+          });
         }).pipe(Effect.provide(layer), Effect.scoped),
       );
       await new Promise((resolve) => setTimeout(resolve, 3_500));
@@ -125,7 +128,10 @@ describe("@recursive:101-effect-mq-queue-rebuild @sp6 R6 learner queues", () => 
     await Effect.runPromise(
       Effect.gen(function* () {
         const queue = yield* makeLearnerDeriveQueue(policy);
-        yield* enqueueLearnerDerive({ queue, job: { groupId: "group-restart", reason: "finalized" } });
+        yield* enqueueLearnerDerive({
+          queue,
+          job: { groupId: "group-restart", reason: "finalized" },
+        });
       }).pipe(Effect.provide(layer), Effect.scoped),
     );
 

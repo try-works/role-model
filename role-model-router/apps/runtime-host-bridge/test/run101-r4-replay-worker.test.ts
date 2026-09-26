@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 /**
  * Run 101 / R4 - the replay worker.
  *
@@ -13,7 +14,6 @@
  * RED at the frozen baseline: `src/queue-runtime/workers.ts` does not exist.
  */
 import { existsSync } from "node:fs";
-import { execFileSync } from "node:child_process";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -21,7 +21,11 @@ import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { resolveQueuePolicy } from "../src/queue-runtime/policy.js";
-import { REPLAY_DISPATCH_QUEUE, enqueueReplayDispatch, makeReplayDispatchQueue } from "../src/queue-runtime/queues.js";
+import {
+  REPLAY_DISPATCH_QUEUE,
+  enqueueReplayDispatch,
+  makeReplayDispatchQueue,
+} from "../src/queue-runtime/queues.js";
 import { storeLayerForQueuePolicy } from "../src/queue-runtime/store.js";
 import { runReplayDispatchWorker } from "../src/queue-runtime/workers.js";
 
@@ -89,7 +93,11 @@ async function offer(captureRef: string) {
 async function writePolicy(document: Record<string, unknown>) {
   const directory = path.join(stateRoot, "queues");
   await mkdir(directory, { recursive: true });
-  await writeFile(path.join(directory, "queue-policy.json"), JSON.stringify(document, null, 2), "utf8");
+  await writeFile(
+    path.join(directory, "queue-policy.json"),
+    JSON.stringify(document, null, 2),
+    "utf8",
+  );
 }
 
 describe("@recursive:101-effect-mq-queue-rebuild @sp4 R4 replay worker", () => {

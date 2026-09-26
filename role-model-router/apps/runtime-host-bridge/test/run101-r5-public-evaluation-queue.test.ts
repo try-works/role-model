@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 /**
  * Run 101 / R5 (host side) - the `evaluation.score` queue the host can host.
  *
@@ -9,7 +10,6 @@
  * later is a wiring change rather than a redesign.
  */
 import { existsSync } from "node:fs";
-import { execFileSync } from "node:child_process";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";

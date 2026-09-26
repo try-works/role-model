@@ -12,10 +12,7 @@
       "default": "./dist/index.js"
     }
   },
-  "files": [
-    "src",
-    "dist"
-  ],
+  "files": ["src", "dist"],
   "peerDependencies": {
     "effect": "workspace:*"
   },

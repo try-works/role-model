@@ -1,3 +1,5 @@
+import { execFileSync } from "node:child_process";
+import { existsSync } from "node:fs";
 /**
  * Run 101 / R1 - the vendored Effect v4 and effect-mq trees must be consumable
  * by both bundle pipelines.
@@ -14,8 +16,6 @@
  * GREEN once the workspace packages exist and both pipelines resolve them.
  */
 import { createRequire } from "node:module";
-import { execFileSync } from "node:child_process";
-import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
@@ -109,13 +109,17 @@ describe("@recursive:101-effect-mq-queue-rebuild @sp1 R1 vendored Effect resolut
     // wrapped package's built entry (its shared chunks are its own). effect-mq
     // keeps `effect` external, so a second provider can only appear if someone
     // re-adds a source-level copy - which is what the next two assertions catch.
-    const runtimeProviders = inputs.filter((input) => /packages\/effect\/dist\/index\.js$/.test(input));
+    const runtimeProviders = inputs.filter((input) =>
+      /packages\/effect\/dist\/index\.js$/.test(input),
+    );
     expect(runtimeProviders).toHaveLength(1);
 
     // The vendored sources must not be pulled in beside the built wrapper, and
     // effect-mq must not embed its own copy of the runtime.
     expect(inputs.filter((input) => input.includes("vendor/effect/"))).toHaveLength(0);
-    expect(inputs.filter((input) => /vendor\/effect-mq\/.*\/src\/.*\.ts$/.test(input))).toHaveLength(0);
+    expect(
+      inputs.filter((input) => /vendor\/effect-mq\/.*\/src\/.*\.ts$/.test(input)),
+    ).toHaveLength(0);
 
     const bundled = result.outputFiles?.[0]?.text ?? "";
     expect(bundled).toContain("PersistedQueue");

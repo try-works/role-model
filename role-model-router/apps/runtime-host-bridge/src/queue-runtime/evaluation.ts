@@ -32,7 +32,9 @@ export function evaluationJobId({
 }): string {
   const key = groupId ?? replayJobId;
   if (!origin || !key) {
-    throw new Error("evaluation job id requires an origin and either a group id or a replay job id");
+    throw new Error(
+      "evaluation job id requires an origin and either a group id or a replay job id",
+    );
   }
   return `evaluation:${origin}:${key}`;
 }

@@ -86,10 +86,6 @@ import {
 const MAX_HANDOFF_RECOVERIES_PER_SWEEP = 3;
 /** How often the handed-off-replay recovery pass may list the durable jobs (measured on the live root). */
 const HANDOFF_RECOVERY_INTERVAL_MS = 120_000;
-import {
-  autoReplayExecutionFromCommandReceipt,
-  startAutoReplayLoop,
-} from "./track-b-auto-replay-runtime.js";
 // Run 101 R4: the replay plane's queue runtime (policy-driven mode, offer and
 // worker). Imported here so the auto-replay loop's composition can start it.
 import {
@@ -97,6 +93,10 @@ import {
   startLearnerQueueRuntime,
   startReplayQueueRuntime,
 } from "./queue-runtime/index.js";
+import {
+  autoReplayExecutionFromCommandReceipt,
+  startAutoReplayLoop,
+} from "./track-b-auto-replay-runtime.js";
 import {
   buildAutoReplayIdempotencyKey,
   dedupeJudgeAgainstPair,
@@ -5117,8 +5117,7 @@ export async function main(): Promise<void> {
           learnerPromoteQueueRuntime?.dispatchQueue?.offer({
             candidateId: job.candidateId,
             ...(job.groupId ? { groupId: job.groupId } : {}),
-          }) ??
-          Promise.resolve({ enqueued: false, reason: "learner_queue_not_started" }),
+          }) ?? Promise.resolve({ enqueued: false, reason: "learner_queue_not_started" }),
       },
     };
     /**
@@ -8032,7 +8031,10 @@ export async function main(): Promise<void> {
                   .offer({ origin: "replay", replayJobId: String(replayJobId) })
                   .catch((error: unknown) => ({
                     enqueued: false,
-                    reason: String((error as { message?: unknown })?.message ?? error).slice(0, 160),
+                    reason: String((error as { message?: unknown })?.message ?? error).slice(
+                      0,
+                      160,
+                    ),
                   }));
                 if (!offered.enqueued) {
                   console.error(

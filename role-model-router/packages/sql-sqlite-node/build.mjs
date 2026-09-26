@@ -1,11 +1,11 @@
+import { mkdir } from "node:fs/promises";
+import path from "node:path";
 /**
  * Run 101 / R2: build the vendored `@effect/sql-sqlite-node` client into this
  * workspace package's `dist/`. The client only needs `node:sqlite`, which Node
  * 24 ships, so nothing has to be unpacked beside the packaged runtime.
  */
 import { build } from "esbuild";
-import { mkdir } from "node:fs/promises";
-import path from "node:path";
 
 import { emitVendoredDeclarations } from "../emit-vendored-declarations.mjs";
 
@@ -28,7 +28,9 @@ await build({
   external: ["effect", "effect/*", "@effect/*"],
 });
 
-console.log(JSON.stringify({ status: "PASS", package: "@effect/sql-sqlite-node", entries: ["index"] }));
+console.log(
+  JSON.stringify({ status: "PASS", package: "@effect/sql-sqlite-node", entries: ["index"] }),
+);
 await emitVendoredDeclarations({
   repoRoot,
   entryFiles: [path.join(vendored, "index.ts")],

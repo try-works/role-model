@@ -100,7 +100,7 @@ export function enqueueReplayDispatch({
   if (!capture.captureRef) {
     return Effect.succeed({ enqueued: false as const, reason: "capture_ref_required" });
   }
-  return queue.offer(capture, { id: capture.captureRef }).pipe(
-    Effect.as({ enqueued: true as const, jobId: capture.captureRef }),
-  );
+  return queue
+    .offer(capture, { id: capture.captureRef })
+    .pipe(Effect.as({ enqueued: true as const, jobId: capture.captureRef }));
 }

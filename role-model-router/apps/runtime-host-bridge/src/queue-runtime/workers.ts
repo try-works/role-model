@@ -13,22 +13,25 @@
  */
 import { Duration, Effect, Fiber } from "effect";
 
-import { killSwitchEngaged, readQueuePolicy, type ResolvedQueuePolicy } from "./policy.js";
-import { makeReplayDispatchQueue, type ReplayDispatchJob } from "./queues.js";
-import { makeEvaluationScoreQueue, type EvaluationScoreJob } from "./evaluation.js";
+import { type EvaluationScoreJob, makeEvaluationScoreQueue } from "./evaluation.js";
 import {
-  makeLearnerDeriveQueue,
-  makeLearnerPromoteQueue,
   type LearnerDeriveJob,
   type LearnerPromoteJob,
+  makeLearnerDeriveQueue,
+  makeLearnerPromoteQueue,
 } from "./learner.js";
+import { type ResolvedQueuePolicy, killSwitchEngaged, readQueuePolicy } from "./policy.js";
+import { type ReplayDispatchJob, makeReplayDispatchQueue } from "./queues.js";
 import { storeLayerForQueuePolicy } from "./store.js";
 
 export interface ReplayDispatchWorkerOptions {
   readonly stateRoot: string;
   readonly policy: ResolvedQueuePolicy;
   /** Runs one attempt for one job; throwing makes the attempt retryable. */
-  readonly handler: (job: ReplayDispatchJob, context: { readonly attempt: number }) => Promise<void>;
+  readonly handler: (
+    job: ReplayDispatchJob,
+    context: { readonly attempt: number },
+  ) => Promise<void>;
   /** Called after a failed attempt, before the store's backoff elapses. */
   readonly onAttemptFailure?: (error: unknown, job: ReplayDispatchJob) => void;
   /** Where the shipped policy lives when no state-root document exists yet. */
@@ -50,7 +53,10 @@ export interface EvaluationScoreWorkerOptions {
    * it writes (or updates) the evaluation evidence row before returning, and a
    * throw leaves the job claimable so the store retries it.
    */
-  readonly handler: (job: EvaluationScoreJob, context: { readonly attempt: number }) => Promise<void>;
+  readonly handler: (
+    job: EvaluationScoreJob,
+    context: { readonly attempt: number },
+  ) => Promise<void>;
   readonly onAttemptFailure?: (error: unknown, job: EvaluationScoreJob) => void;
   readonly shippedRoot?: string;
   readonly killSwitchPollIntervalMs?: number;
@@ -75,7 +81,10 @@ export interface LearnerPromoteWorkerOptions {
   readonly stateRoot: string;
   readonly policy: ResolvedQueuePolicy;
   /** Promotes one candidate; serialized by the queue's concurrency. */
-  readonly handler: (job: LearnerPromoteJob, context: { readonly attempt: number }) => Promise<void>;
+  readonly handler: (
+    job: LearnerPromoteJob,
+    context: { readonly attempt: number },
+  ) => Promise<void>;
   readonly onAttemptFailure?: (error: unknown, job: LearnerPromoteJob) => void;
   readonly shippedRoot?: string;
   readonly killSwitchPollIntervalMs?: number;
@@ -102,7 +111,10 @@ function runClaimLoopWorker<Job>({
   readonly makeQueue: (policy: ResolvedQueuePolicy) => Effect.Effect<
     {
       take: (
-        handler: (job: Job, info: { readonly attempts: number }) => Effect.Effect<unknown, unknown, never>,
+        handler: (
+          job: Job,
+          info: { readonly attempts: number },
+        ) => Effect.Effect<unknown, unknown, never>,
       ) => Effect.Effect<unknown, unknown, never>;
     },
     never,
@@ -181,7 +193,9 @@ export function runLearnerDeriveWorker(options: LearnerDeriveWorkerOptions): Rep
   });
 }
 
-export function runLearnerPromoteWorker(options: LearnerPromoteWorkerOptions): ReplayDispatchWorker {
+export function runLearnerPromoteWorker(
+  options: LearnerPromoteWorkerOptions,
+): ReplayDispatchWorker {
   return runClaimLoopWorker<LearnerPromoteJob>({
     stateRoot: options.stateRoot,
     shippedRoot: options.shippedRoot,
@@ -194,7 +208,9 @@ export function runLearnerPromoteWorker(options: LearnerPromoteWorkerOptions): R
 }
 
 /** Same claim-loop contract as the replay worker, for `evaluation.score`. */
-export function runEvaluationScoreWorker(options: EvaluationScoreWorkerOptions): ReplayDispatchWorker {
+export function runEvaluationScoreWorker(
+  options: EvaluationScoreWorkerOptions,
+): ReplayDispatchWorker {
   const { stateRoot, policy, handler, onAttemptFailure } = options;
   const killSwitchPollIntervalMs = options.killSwitchPollIntervalMs ?? 1_000;
   const layer = storeLayerForQueuePolicy({ stateRoot, policy });
@@ -209,7 +225,9 @@ export function runEvaluationScoreWorker(options: EvaluationScoreWorkerOptions):
     while (!stopped) {
       let killed = false;
       try {
-        killed = killSwitchEngaged(readQueuePolicy({ stateRoot, shippedRoot: options.shippedRoot }));
+        killed = killSwitchEngaged(
+          readQueuePolicy({ stateRoot, shippedRoot: options.shippedRoot }),
+        );
       } catch {
         killed = true;
       }
@@ -258,7 +276,9 @@ export function runEvaluationScoreWorker(options: EvaluationScoreWorkerOptions):
  * absorbs per-attempt failures so the store's attempt count and backoff drive
  * the retry rather than a hand-rolled budget.
  */
-export function runReplayDispatchWorker(options: ReplayDispatchWorkerOptions): ReplayDispatchWorker {
+export function runReplayDispatchWorker(
+  options: ReplayDispatchWorkerOptions,
+): ReplayDispatchWorker {
   const { stateRoot, policy, handler, onAttemptFailure } = options;
   const killSwitchPollIntervalMs = options.killSwitchPollIntervalMs ?? 1_000;
   const layer = storeLayerForQueuePolicy({ stateRoot, policy });
@@ -273,7 +293,9 @@ export function runReplayDispatchWorker(options: ReplayDispatchWorkerOptions): R
     while (!stopped) {
       let killed = false;
       try {
-        killed = killSwitchEngaged(readQueuePolicy({ stateRoot, shippedRoot: options.shippedRoot }));
+        killed = killSwitchEngaged(
+          readQueuePolicy({ stateRoot, shippedRoot: options.shippedRoot }),
+        );
       } catch {
         // A missing or invalid document is not a reason to keep working: the
         // safe reading of "no policy" is "do not claim".

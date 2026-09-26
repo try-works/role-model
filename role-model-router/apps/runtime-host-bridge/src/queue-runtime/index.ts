@@ -10,22 +10,10 @@
 import { Effect } from "effect";
 
 import {
-  QUEUE_MODES,
-  readQueuePolicy,
-  resolveQueuePolicy,
-  type QueueMode,
-  type ResolvedQueuePolicy,
-} from "./policy.js";
-import {
-  REPLAY_DISPATCH_QUEUE,
-  enqueueReplayDispatch,
-  makeReplayDispatchQueue,
-  type ReplayDispatchJob,
-} from "./queues.js";
-import { storeLayerForQueuePolicy } from "./store.js";
-import { runReplayDispatchWorker, type ReplayDispatchWorker } from "./workers.js";
-import { runEvaluationScoreWorker } from "./workers.js";
-import { EVALUATION_SCORE_QUEUE, enqueueEvaluationScore, makeEvaluationScoreQueue } from "./evaluation.js";
+  EVALUATION_SCORE_QUEUE,
+  enqueueEvaluationScore,
+  makeEvaluationScoreQueue,
+} from "./evaluation.js";
 import type { EvaluationScoreJob } from "./evaluation.js";
 import {
   LEARNER_DERIVE_QUEUE,
@@ -36,6 +24,22 @@ import {
   makeLearnerPromoteQueue,
 } from "./learner.js";
 import type { LearnerDeriveJob, LearnerPromoteJob } from "./learner.js";
+import {
+  QUEUE_MODES,
+  type QueueMode,
+  type ResolvedQueuePolicy,
+  readQueuePolicy,
+  resolveQueuePolicy,
+} from "./policy.js";
+import {
+  REPLAY_DISPATCH_QUEUE,
+  type ReplayDispatchJob,
+  enqueueReplayDispatch,
+  makeReplayDispatchQueue,
+} from "./queues.js";
+import { storeLayerForQueuePolicy } from "./store.js";
+import { type ReplayDispatchWorker, runReplayDispatchWorker } from "./workers.js";
+import { runEvaluationScoreWorker } from "./workers.js";
 import { runLearnerDeriveWorker, runLearnerPromoteWorker } from "./workers.js";
 
 export interface ReplayQueueRuntimeOptions {
@@ -43,7 +47,10 @@ export interface ReplayQueueRuntimeOptions {
   /** Where the shipped policy lives when no state-root document exists yet. */
   readonly shippedRoot?: string;
   /** What a claimed replay job should do. Omitted means "shadow only": nothing claims. */
-  readonly handler?: (job: ReplayDispatchJob, context: { readonly attempt: number }) => Promise<void>;
+  readonly handler?: (
+    job: ReplayDispatchJob,
+    context: { readonly attempt: number },
+  ) => Promise<void>;
   readonly onAttemptFailure?: (error: unknown, job: ReplayDispatchJob) => void;
 }
 
@@ -72,7 +79,10 @@ export interface ReplayQueueRuntime {
 export function startReplayQueueRuntime(options: ReplayQueueRuntimeOptions): ReplayQueueRuntime {
   let policy: ResolvedQueuePolicy;
   try {
-    const document = readQueuePolicy({ stateRoot: options.stateRoot, shippedRoot: options.shippedRoot });
+    const document = readQueuePolicy({
+      stateRoot: options.stateRoot,
+      shippedRoot: options.shippedRoot,
+    });
     policy = resolveQueuePolicy(document, { queue: REPLAY_DISPATCH_QUEUE });
   } catch (error) {
     console.error(
@@ -169,7 +179,10 @@ export interface EvaluationQueueRuntimeOptions {
    * evidence-before-ack: it finalizes (and records) the comparison before
    * returning, and a throw leaves the job claimable.
    */
-  readonly handler?: (job: EvaluationScoreJob, context: { readonly attempt: number }) => Promise<void>;
+  readonly handler?: (
+    job: EvaluationScoreJob,
+    context: { readonly attempt: number },
+  ) => Promise<void>;
   readonly onAttemptFailure?: (error: unknown, job: EvaluationScoreJob) => void;
 }
 
@@ -196,7 +209,10 @@ export function startEvaluationQueueRuntime(
 ): EvaluationQueueRuntime {
   let policy: ResolvedQueuePolicy;
   try {
-    const document = readQueuePolicy({ stateRoot: options.stateRoot, shippedRoot: options.shippedRoot });
+    const document = readQueuePolicy({
+      stateRoot: options.stateRoot,
+      shippedRoot: options.shippedRoot,
+    });
     policy = resolveQueuePolicy(document, { queue: EVALUATION_SCORE_QUEUE });
   } catch (error) {
     console.error(

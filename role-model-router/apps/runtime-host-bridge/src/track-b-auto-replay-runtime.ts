@@ -289,7 +289,9 @@ export function startAutoReplayLoop(input: {
    * the same body as `tick()`, restricted to one capture and run with the queue
    * disabled so a queued job cannot re-enqueue itself.
    */
-  dispatchCapture(captureRef: string): Promise<AutoReplayTickResult & { readonly skipped?: boolean }>;
+  dispatchCapture(
+    captureRef: string,
+  ): Promise<AutoReplayTickResult & { readonly skipped?: boolean }>;
   stop(): void;
   pause(): void;
   resume(): void;
@@ -635,9 +637,9 @@ export function startAutoReplayLoop(input: {
    * worker calls it with the queue disabled, which is what keeps a queued job
    * from re-enqueueing itself.
    */
-  const tick = async (
-    options?: { readonly onlyCaptureRefs?: readonly string[] },
-  ): Promise<AutoReplayTickResult & { readonly skipped?: boolean }> => {
+  const tick = async (options?: { readonly onlyCaptureRefs?: readonly string[] }): Promise<
+    AutoReplayTickResult & { readonly skipped?: boolean }
+  > => {
     if (running || paused) {
       // `L7`: this is the interval path while a long work tick is in flight. Run the liveness sweeps
       // here instead of skipping them, so an overdue job is still expired on schedule.
@@ -805,7 +807,8 @@ export function startAutoReplayLoop(input: {
         throw new Error("dispatchCapture requires a capture ref");
       }
       const result = await tick({ onlyCaptureRefs: [captureRef] });
-      const executed = result.queued === 0 && result.replayed + result.refused + result.deferred > 0;
+      const executed =
+        result.queued === 0 && result.replayed + result.refused + result.deferred > 0;
       if (!executed) {
         // Nothing ran for this capture: it is not pending any more (already
         // handled) or the tick was skipped. Reporting it lets the queue's

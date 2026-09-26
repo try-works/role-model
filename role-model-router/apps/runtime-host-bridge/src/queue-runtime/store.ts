@@ -15,9 +15,9 @@
 import { mkdirSync } from "node:fs";
 import path from "node:path";
 
+import { SqliteClient } from "@effect/sql-sqlite-node";
 import { Duration, Layer } from "effect";
 import { PersistedQueue } from "effect/unstable/persistence";
-import { SqliteClient } from "@effect/sql-sqlite-node";
 
 /** State-root-relative location of the queue database. */
 export const QUEUE_STORE_RELATIVE_PATH = "track-b/queues/queues.sqlite";

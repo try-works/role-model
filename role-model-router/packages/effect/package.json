@@ -17,13 +17,8 @@
       "default": "./dist/*.js"
     }
   },
-  "files": [
-    "src",
-    "dist"
-  ],
-  "sideEffects": [
-    "./src/index.ts"
-  ],
+  "files": ["src", "dist"],
+  "sideEffects": ["./src/index.ts"],
   "scripts": {
     "build": "node build.mjs"
   }

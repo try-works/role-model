@@ -86,7 +86,8 @@ export function validateQueuePolicy(document: unknown): QueuePolicyDocument {
   const queues = candidate.queues;
   if (!isPlainObject(queues)) fail("queues block is required");
   for (const [queueName, block] of Object.entries(queues)) {
-    if (!(QUEUE_NAMES as readonly string[]).includes(queueName)) fail(`unknown queue: ${queueName}`);
+    if (!(QUEUE_NAMES as readonly string[]).includes(queueName))
+      fail(`unknown queue: ${queueName}`);
     if (!isPlainObject(block)) fail(`${queueName} block must be an object`);
     for (const [name, value] of Object.entries(block)) {
       if (name === "mode") {
@@ -97,7 +98,11 @@ export function validateQueuePolicy(document: unknown): QueuePolicyDocument {
       }
       const bounds = (QUEUE_PARAMETER_BOUNDS as Record<string, { min: number; max: number }>)[name];
       if (!bounds) fail(`unknown parameter for ${queueName}: ${name}`);
-      if (!Number.isSafeInteger(value) || (value as number) < bounds.min || (value as number) > bounds.max) {
+      if (
+        !Number.isSafeInteger(value) ||
+        (value as number) < bounds.min ||
+        (value as number) > bounds.max
+      ) {
         fail(`${queueName} ${name} must be an integer between ${bounds.min} and ${bounds.max}`);
       }
     }

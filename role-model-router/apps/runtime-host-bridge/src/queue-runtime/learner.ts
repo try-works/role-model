@@ -86,7 +86,8 @@ export function enqueueLearnerDerive({
   };
   readonly job: { readonly groupId: string; readonly reason?: string | null };
 }) {
-  if (!job?.groupId) return Effect.succeed({ enqueued: false as const, reason: "group_id_required" });
+  if (!job?.groupId)
+    return Effect.succeed({ enqueued: false as const, reason: "group_id_required" });
   const id = deriveJobId({ groupId: job.groupId });
   return queue
     .offer({ groupId: job.groupId, reason: job.reason ?? null }, { id })

@@ -34,7 +34,12 @@ function capture(overrides: Record<string, unknown> = {}) {
 
 function ledger() {
   return {
-    status: () => ({ dispatches: 0, dispatchLimit: 100, counterfactuals: 0, counterfactualLimit: 100 }),
+    status: () => ({
+      dispatches: 0,
+      dispatchLimit: 100,
+      counterfactuals: 0,
+      counterfactualLimit: 100,
+    }),
     hasTerminalCounterfactual: () => false,
     reserve: () => ({ accepted: true, reservationId: "res-1" }),
     record: () => ({ accepted: true }),

@@ -17,10 +17,7 @@
       "default": "./dist/testing.js"
     }
   },
-  "files": [
-    "src",
-    "dist"
-  ],
+  "files": ["src", "dist"],
   "sideEffects": false,
   "peerDependencies": {
     "effect": "workspace:*"
