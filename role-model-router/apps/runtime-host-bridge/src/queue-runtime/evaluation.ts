@@ -39,6 +39,36 @@ export function evaluationJobId({
   return `evaluation:${origin}:${key}`;
 }
 
+/**
+ * Run 101 addendum 03 - what one scoped resume attempt means for its queue job.
+ *
+ * Measured live on `stage-rc-7567799e7105` (`:3457`) with the evaluation plane on
+ * `queue`: the first handoff the worker claimed answered all zeros with
+ * `remaining: 0` - the sweep, or an earlier attempt, had already finalized it -
+ * and the strict "made no progress is a failure" rule spent all four attempts and
+ * left a permanent failure row for work that was already done.
+ *
+ * The queue row is the authority to *attempt*; the worker only reports whether
+ * anything is left to do. `remaining > 0` with nothing progressed is the one
+ * retryable case.
+ */
+export interface EvaluationResumeResult {
+  readonly resumed: number;
+  readonly completed: number;
+  readonly failed: number;
+  readonly outsideRetentionWindow: number;
+  readonly remaining: number;
+}
+
+export type EvaluationAttemptOutcome = "progressed" | "retry" | "no-op";
+
+export function evaluationAttemptOutcome(result: EvaluationResumeResult): EvaluationAttemptOutcome {
+  const progressed =
+    result.resumed + result.completed + result.failed + result.outsideRetentionWindow > 0;
+  if (progressed) return "progressed";
+  return result.remaining > 0 ? "retry" : "no-op";
+}
+
 export function makeEvaluationScoreQueue(policy: ResolvedQueuePolicy) {
   return PersistedQueue.make({
     name: EVALUATION_SCORE_QUEUE,
