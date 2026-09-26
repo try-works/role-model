@@ -207,6 +207,7 @@ const emptyResult = (): AutoReplayTickResult => ({
   replayed: 0,
   refused: 0,
   deferred: 0,
+  queued: 0,
   dispositions: [],
   cursor: null,
   budgetExhausted: false,
