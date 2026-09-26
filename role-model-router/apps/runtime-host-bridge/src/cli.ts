@@ -6163,6 +6163,17 @@ export async function main(): Promise<void> {
             ...(Array.isArray(input.onlyGroupIds) && input.onlyGroupIds.length > 0
               ? { onlyGroupIds: input.onlyGroupIds as string[] }
               : {}),
+            // Run 101 R6: the learner queue chains `learner.promote` on the
+            // candidates this pass persisted, through the callback the caller
+            // supplies, so the pinned five-field summary stays intact.
+            ...(typeof input.onDerivedCandidate === "function"
+              ? {
+                  onDerivedCandidate: input.onDerivedCandidate as (
+                    candidateId: string,
+                    groupId: string,
+                  ) => void,
+                }
+              : {}),
             /**
              * S13 follow-up: the group's report may never have been written (its live pipeline never ran), so the
              * sweep computes it through the capability that persists reports - bounded per tick (see `limit`), from
@@ -7117,11 +7128,38 @@ export async function main(): Promise<void> {
             if (typeof derive !== "function") {
               throw new Error("learner derivation is not available");
             }
-            const summary = (await derive({ limit: 1, onlyGroupIds: [job.groupId] })) as {
-              derived?: number;
-              examined?: number;
-              refused?: number;
-            };
+            const summary = (await derive({
+              limit: 1,
+              onlyGroupIds: [job.groupId],
+              /**
+               * Run 101 R6: the second hop. A derivation that persisted a
+               * candidate is what feeds `learner.promote`, so the chain
+               * continues here rather than waiting for the consume sweep to
+               * notice. A refused offer is logged, not thrown - the candidate is
+               * already durable.
+               */
+              onDerivedCandidate: (candidateId: string, groupId: string) => {
+                if (lateBoundLearnerQueues.promote.mode === "legacy") return;
+                void lateBoundLearnerQueues.promote
+                  .offer({ candidateId, groupId })
+                  .then((offered) => {
+                    if (!offered.enqueued) {
+                      console.error(
+                        `[run101] learner promote offer declined:${candidateId} ${
+                          offered.reason ?? "unknown"
+                        }`,
+                      );
+                    }
+                  })
+                  .catch((error: unknown) => {
+                    console.error(
+                      `[run101] learner promote offer failed:${candidateId} ${String(
+                        (error as { message?: unknown })?.message ?? error,
+                      ).slice(0, 160)}`,
+                    );
+                  });
+              },
+            })) as { derived?: number; examined?: number; refused?: number };
             // No examination means the group is gone (or no longer learnable);
             // a named skip is a retry, not a silent success.
             if (!summary || (summary.examined ?? 0) === 0) {

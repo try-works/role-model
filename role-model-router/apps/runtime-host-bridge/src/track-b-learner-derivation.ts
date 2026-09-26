@@ -82,6 +82,13 @@ export interface LearnerDerivationInput {
    * it is working on rather than walking the sweep's page and hoping.
    */
   readonly onlyGroupIds?: readonly string[];
+  /**
+   * Run 101 R6: called for each candidate this pass persisted. The summary's
+   * five fields are a pinned contract (three suites assert them with `toEqual`),
+   * so the learner queue chains its `learner.promote` job through this callback
+   * rather than through a sixth field.
+   */
+  readonly onDerivedCandidate?: (candidateId: string, groupId: string) => void;
   readonly readDurableTrajectoryEvidence?: LearnerDerivationEvidenceRead;
 }
 
@@ -661,6 +668,8 @@ export async function deriveLearnerCandidatesFromDurableEvidence(
       );
       if (consumed) {
         derived += 1;
+        const candidateId = text(consumed.id);
+        if (candidateId) input.onDerivedCandidate?.(candidateId, groupId);
         input.log?.(
           `learner derivation consumed ${groupId} (${members?.positive.length ?? 0}+/${
             members?.negative.length ?? 0
