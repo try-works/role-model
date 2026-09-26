@@ -17,9 +17,9 @@ import {
   fetchQueueJob,
   fetchQueueJobs,
   fetchQueues,
+  formatQueueAge,
   retryQueueJob,
   setQueueDrain,
-  formatQueueAge,
 } from "../lib/queue-api";
 
 const JOB_STATES = ["pending", "completed", "failed", "cancelled"] as const;
@@ -90,10 +90,7 @@ export default function ObserveQueuesRoute() {
     }
   };
 
-  const runAdminAction = async (
-    label: string,
-    action: () => Promise<QueueAdminActionResponse>,
-  ) => {
+  const runAdminAction = async (label: string, action: () => Promise<QueueAdminActionResponse>) => {
     try {
       const result = await action();
       setActionMessage(

@@ -18,9 +18,9 @@
 import assert from "node:assert/strict";
 import { mkdirSync, rmSync } from "node:fs";
 import { writeFileSync } from "node:fs";
-import { DatabaseSync } from "node:sqlite";
 import os from "node:os";
 import path from "node:path";
+import { DatabaseSync } from "node:sqlite";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { Effect } from "effect";
@@ -35,9 +35,9 @@ import {
   enqueueEvaluationScore,
   makeEvaluationScoreQueue,
 } from "../src/queue-runtime/evaluation.js";
+import { QUEUE_NAMES, QUEUE_POLICY_SCHEMA_VERSION } from "../src/queue-runtime/policy.js";
 import { storeLayerForQueuePolicy } from "../src/queue-runtime/store.js";
 import { runEvaluationScoreWorker } from "../src/queue-runtime/workers.js";
-import { QUEUE_NAMES, QUEUE_POLICY_SCHEMA_VERSION } from "../src/queue-runtime/policy.js";
 
 const workerStoreLayer = storeLayerForQueuePolicy;
 
@@ -144,9 +144,22 @@ describe("run 101 R5/R9 queue admin runtime side", () => {
   it("reads one job's state, and answers null when the row or store is absent", () => {
     const stateRoot = makeStateRoot();
     seedQueueStore(stateRoot, "evaluation:replay:job-1");
-    assert.equal(readQueueJobState({ stateRoot, queue: EVALUATION_SCORE_QUEUE, jobId: "evaluation:replay:job-1" })?.state, "pending");
-    assert.equal(readQueueJobState({ stateRoot, queue: EVALUATION_SCORE_QUEUE, jobId: "nope" }), null);
-    assert.equal(readQueueJobState({ stateRoot: makeStateRoot(), queue: EVALUATION_SCORE_QUEUE, jobId: "x" }), null);
+    assert.equal(
+      readQueueJobState({
+        stateRoot,
+        queue: EVALUATION_SCORE_QUEUE,
+        jobId: "evaluation:replay:job-1",
+      })?.state,
+      "pending",
+    );
+    assert.equal(
+      readQueueJobState({ stateRoot, queue: EVALUATION_SCORE_QUEUE, jobId: "nope" }),
+      null,
+    );
+    assert.equal(
+      readQueueJobState({ stateRoot: makeStateRoot(), queue: EVALUATION_SCORE_QUEUE, jobId: "x" }),
+      null,
+    );
   });
 
   it("claims nothing while the queue is draining, and claims again once it is cleared", async () => {
@@ -202,7 +215,9 @@ describe("run 101 R5/R9 queue admin runtime side", () => {
       // Clear the flag: the same job is claimed, so the gate is a gate and not a loss.
       const reopen = new DatabaseSync(path.join(stateRoot, "track-b", "queues", "queues.sqlite"));
       try {
-        reopen.exec(`UPDATE queue_control SET draining = 0 WHERE queue_name = '${EVALUATION_SCORE_QUEUE}'`);
+        reopen.exec(
+          `UPDATE queue_control SET draining = 0 WHERE queue_name = '${EVALUATION_SCORE_QUEUE}'`,
+        );
       } finally {
         reopen.close();
       }
@@ -272,7 +287,7 @@ describe("run 101 R5/R9 queue admin runtime side", () => {
       });
       try {
         const row = verify
-          .prepare(`SELECT state, attempts FROM effect_queue WHERE queue_name = ?`)
+          .prepare("SELECT state, attempts FROM effect_queue WHERE queue_name = ?")
           .get(EVALUATION_SCORE_QUEUE) as { state: string; attempts: number };
         assert.equal(row.state, "cancelled", "the row stays cancelled");
       } finally {

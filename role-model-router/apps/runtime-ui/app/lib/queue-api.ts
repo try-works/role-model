@@ -170,7 +170,11 @@ export async function setQueueDrain(
   draining: boolean,
   fetcher: RuntimeFetcher = fetch,
 ): Promise<QueueAdminActionResponse> {
-  return postQueueAction(`/operator/queues/${encodeURIComponent(queueName)}/drain`, { draining }, fetcher);
+  return postQueueAction(
+    `/operator/queues/${encodeURIComponent(queueName)}/drain`,
+    { draining },
+    fetcher,
+  );
 }
 
 /** `oldestWaitingMs` as a short age, for the table cell. */
