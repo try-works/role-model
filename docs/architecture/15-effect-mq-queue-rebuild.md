@@ -122,6 +122,14 @@ dependency and contradict the local-first/portable posture. Both libraries there
 | `learner.derive` | learner derivation sweep | `{ groupId }` | `groupId` |
 | `learner.promote` | knowledge-worker consume/validate + learning pass | `{ candidateId, groupId }` | `candidateId` |
 
+**Job identity per origin.** Replay work is one job per capture. Evaluation work has two origins - the replay flow
+(whose durable id is already `evaluation-replay-<replayJobId>`) and the live-observation path (which creates its own
+job id today) - so the queue id is `evaluation:<origin>:<groupId>` with one job per finalized comparison, and the
+existing `evaluation-replay-*` ids stay the evidence ids. The projection/consume plane
+(`shadow:projection-v2:consume`) and the background-evidence-scheduler, which today *emits* replay intents, are not
+additional queues: the scheduler becomes the enqueue producer and the projection consumers run as handlers on
+`evaluation.score`'s completion, so no work keeps its own polling loop.
+
 The pipeline becomes an effect-mq **flow**: `replay.dispatch` completes -> enqueues `evaluation.score` ->
 `evaluation.score` finalizes -> enqueues `learner.derive` -> `learner.derive` produces a candidate -> enqueues
 `learner.promote`. Results travel through the flow outbox, which is exactly the
@@ -160,7 +168,125 @@ Invariants kept from today, in the queue rather than beside it:
 | liveness sweeps as the only scheduler | enqueue at the moment the upstream stage completes (flow outbox) |
 | reader-side terminality inference (`cancel` no-ops) | `JobRecord.state` + `AttemptRecord` history |
 
-## 4. What has to be built before any of this touches the runtime
+### 3.4 Who runs the workers
+
+Two hosts share one state root today: the packaged runtime host (`role-model-stage.exe`) and the Track B sidecar
+(`runtime-operations-server.mjs`). The queue must not recreate that ambiguity:
+
+- **One worker set per queue.** Run `replay.dispatch` and `learner.*` workers in the operator host (which owns the
+  dispatch executor and the liveness loop today) and the `evaluation.score` worker in the sidecar (whose extension
+  workers already execute the trials). The queue store is the only coordination point; neither host reads the other's
+  memory.
+- **Attributable locks.** Each worker sets a distinct worker id, so the UI can name the owner of an in-flight job and
+  a stalled job's last owner.
+- **Bounded concurrency across hosts.** The §3.2 concurrency is a per-queue budget; if a queue is later run in both
+  hosts, the sum must stay inside it, which the store's claim query already enforces.
+- **Host loss is handled by lock expiry**, not by a reclaimer sweep: the surviving host picks the job up when the lock
+  expires, which is the property the hand-rolled `#strandedJobState` reclaimer approximated with a 15-minute grace.
+
+### 3.5 Evidence rows are still written by the handlers
+
+The queue owns *scheduling* state. The evidence that the audits and the UI read - `replay-disposition.sqlite`,
+`evaluation_jobs`/`evaluation_trials`, comparison readback receipts, `trajectory_signal_reports`, the knowledge store
+records and the contract artifacts - is written by the handler as part of doing the work, exactly as today. The rule:
+
+- a handler writes (or updates) its evidence row **before** the job is acked; if the evidence write fails, the
+  handler fails and the queue retries, so the queue can never be the only record that something happened;
+- deleting the queue store must leave every receipt valid, and the queue rows must be reconstructible from the
+  evidence ids (the job ids are derived from them);
+- the UI's evidence views (decisions, receipts, profiles, history) keep reading the evidence stores; only the queue
+  views read the queue store.
+
+### 3.6 Cancellation and the kill switch
+
+Today `POST /operator/replay/jobs/:id/cancel` and `.../evaluation/jobs/:id/cancel` exist, and evaluation learned to
+answer "cannot be cancelled in its current state" (run-100 addendum 36). In the target design:
+
+- cancel is effect-mq job cancellation: the job becomes terminal `cancelled` and the handler is interrupted at the
+  next lock boundary;
+- the operator kill switch stays a **policy flag checked at enqueue and at claim**, not a queue feature, so engaging
+  it mid-flight stops new work while in-flight work still reaches a terminal state;
+- the UI keeps its existing cancel endpoints and gains the queue's own state (cancelled vs already terminal) so the
+  no-op cancel stream cannot reappear.
+
+## 4. Frontend and operator-API wiring
+
+A rebuilt queue is only real to a user if the operator API and the UI are part of the same change. Most of the
+plumbing already exists, and the rebuild must **keep its contract** rather than invent a parallel one.
+
+### 4.1 What already exists (do not rebuild it)
+
+| layer | today | evidence |
+| --- | --- | --- |
+| operator job readbacks | `GET /operator/replay/jobs`, `/operator/replay/jobs/:id`, `/:id/results`, `POST /:id/cancel`, `POST /operator/replay/jobs`, `POST /operator/replay/expire-stale`; `GET /operator/evaluation/jobs`, `/:id`, `/:id/trials`, `/:id/scorers`, `/:id/comparisons`, `/:id/groups`, `POST /:id/cancel`, `POST /:id/retry` | `scripts/track-b/runtime-operations-server.mjs` |
+| UI client + tests | the same paths are already wrapped in `app/lib/runtime-api.ts` and covered by `app/lib/run96-operator-controls.test.ts` | `role-model-router/apps/runtime-ui` |
+| pipeline widget | `GET /operator/learning/activity` already answers `pipeline: [{ stage: capture\|replay\|evaluation\|learner, pending, wedged, recent, active, lastEventAtMs }]` | `learning.tsx`, `learning-api.ts` |
+| refresh conventions | the extensions route polls replay every 15 s, the logs route every 3 s, the app shell polls the runtime summary | `routes/extensions.tsx`, `routes/local-logs.tsx`, `components/app-shell.tsx` |
+| device trust | `app/lib/device-authorization.ts` resolves device-owner sessions | same app |
+| editable parameters | Learning -> Configuration already renders policy `fields[]` with bounds and writes them back | `learning.tsx`, `lib/learning-policy-resolution.ts` |
+
+So the frontend work is: **feed these from the queue store and add what is missing** - not build a new app.
+
+### 4.2 Read model: queue state to operator API
+
+Additions to the operator surface, with every existing path kept working:
+
+- `GET /operator/queues` - one row per queue: `{ name, concurrency, waiting, active, delayed, failed,
+  completedRecent, stalled, oldestWaitingMs, p50Ms, p95Ms, lastError }`.
+- `GET /operator/queues/:name/jobs?state=&limit=&cursor=` - paged job records (id, name, state, `attemptsMade`/
+  `attemptsMax`, priority, `stalledCount`, createdAt, scheduledAt, metadata).
+- `GET /operator/queues/:name/jobs/:id` - one job plus its attempt history (per-attempt outcome and named failure)
+  and the evidence refs its handler wrote.
+- `POST /operator/queues/:name/jobs/:id/retry`, `.../cancel`, `POST /operator/queues/:name/drain` - admin actions;
+  drain stops claiming and lets in-flight work finish.
+
+These are readbacks over the same SQLite queue store the workers use. The existing `/operator/replay/*` and
+`/operator/evaluation/*` responses are re-expressed on top of them, so today's pages keep working unchanged while
+their data becomes queue truth.
+
+### 4.3 UI: where it goes
+
+1. **Learning -> Overview** (existing page): the pipeline widget's `replay` / `evaluation` / `learner` rows are fed
+   from `GET /operator/queues` (pending -> waiting + delayed, wedged -> stalled, active -> active, last event -> last
+   completion). No layout change; the numbers become live queue truth instead of store-derived approximations.
+2. **Learning -> Configuration** (existing page): a **Queues** card with the section 3.2 parameters per queue -
+   concurrency, attempts, backoff base/cap, lock refresh/expiration, retention - each with bounds, a reset to
+   default, and apply-to-running-worker semantics, persisted in the config file below.
+3. **New route `/app/observe/queues`** (sidebar under Observe, beside Requests and Routing): a queue table (depth,
+   active, delayed, failed, stalled, p50/p95) and a drill-in job table with state filters, a detail drawer showing
+   attempt history with named failure reasons, and the admin actions from 4.2. This is the page that turns "18 evals
+   stuck in flight" and "everything is failing or deferred" into a state a user can act on.
+
+### 4.4 Config file and canonical doc
+
+- One config file (`role-model-router/config/queues.json`, with the private worker defaults mirroring it) holds the
+  section 3.2 table; it is schema-validated, and the UI writes it through the operator API with the bounds enforced
+  server-side. This follows the existing pattern of `shared/route-learning-activation-policy.json` plus its
+  canonical doc.
+- This document is the canonical reference for the parameters and their semantics; the UI links to it from the
+  Queues card.
+- Defaults are the section 3.2 values, and every change is auditable (who, when, old -> new).
+
+### 4.5 Freshness and load
+
+- The queue store polls at 1 s (the SQL store default), so the drill-in page is at most ~2 s stale; the Overview
+  pipeline widget keeps its existing 15 s cadence rather than adding load.
+- The jobs list is cursor-paged, never a full scan; the detail drawer reads one job plus its attempts.
+- Queue readbacks must never sit in the routing path: they read the queue store on the operator host, exactly as
+  `/operator/replay/jobs` does today.
+
+### 4.6 Acceptance for the frontend (part of Phase 5)
+
+- Every page and component verified **in the browser** against the running rebuilt runtime while real DSH/pi traffic
+  flows: the Overview pipeline rows move as work is enqueued, claimed and completed; the queue page shows a job
+  moving waiting -> active -> completed; a failing handler shows its named reason and the retry attempt; cancel and
+  drain behave as described; the Configuration card round-trips a parameter and the worker picks it up.
+- The existing pages are regression-verified in the same pass (`/app/learning`, `/app/observe/requests`,
+  `/app/observe/routing`, `/app/system/storage-retention`), because they read the same stores.
+- No queue page may require a manually pasted operator token on the device-owner path; device authorization is the
+  default, matching the rule the Learning UI already implements.
+
+## 5. What has to be built before any of this touches the runtime
 
 1. **Make the vendored trees consumable.** They are source-only, not workspace packages; the runtime is bundled with
    esbuild into a SEA exe. Decide between (a) a workspace package that re-exports the vendored `effect` and
@@ -175,7 +301,7 @@ Invariants kept from today, in the queue rather than beside it:
    `evaluation-core` and `trajectory-signals`) and should use WAL, because the operator host and the sidecar both
    touch the root.
 
-## 5. Migration plan
+## 6. Migration plan
 
 | phase | change | acceptance | rollback |
 | --- | --- | --- | --- |
@@ -187,7 +313,7 @@ Invariants kept from today, in the queue rather than beside it:
 The release coupling is the established one: the host lives in the public repo, the extensions in the private repo,
 so a cutover lands as a paired change with a paired rebuild, a stage candidate and live verification on `:3457`.
 
-## 6. Risks and open decisions
+## 7. Risks and open decisions
 
 1. **Bundling risk.** Effect v4 + effect-mq inside a SEA exe is the largest unknown; it must be proven in phase 0
    before any queue code is written.
@@ -203,7 +329,31 @@ so a cutover lands as a paired change with a paired rebuild, a stage candidate a
    and the flow outbox pay for the driver work - and where its `Metrics`/history answer the cancellation and
    admin-readback gaps this runtime has been patching by hand.
 
-## 7. References
+## 8. Audit notes (2026-09-26)
+
+This plan was audited against the runtime's real operator API, the UI source, and the vendored libraries before any
+implementation. Eight gaps were found in the first draft; each is closed above:
+
+| # | gap in the first draft | now covered by |
+| --- | --- | --- |
+| 1 | no frontend plan at all | section 4 |
+| 2 | ignored that `/operator/replay/jobs*` and `/operator/evaluation/jobs*` (with their UI client and tests) already exist | 4.1, 4.2 - keep the contract |
+| 3 | no statement of which host runs the workers, though two hosts share one state root | 3.4 |
+| 4 | no rule for who writes the evidence rows the audits and the UI read | 3.5 |
+| 5 | cancellation and kill-switch semantics absent | 3.6 |
+| 6 | the queue list omitted the projection/consume plane, the scheduler that emits replay intents, and terminalization/reconcile | 3.1 note, 3.3 |
+| 7 | no config file or parameter surface, despite the run-98 requirement that parameters live in config with a canonical doc | 4.4 |
+| 8 | no freshness/load budget and no browser acceptance criteria for the UI | 4.5, 4.6 |
+
+Two audit observations that do not change the plan but should be recorded: the learner backlog's "attempted" set is
+per process, so the first cutover will show a one-time drop in derived-per-tick as the queue takes over; and
+effect-mq's job history is bounded by `KeepPolicy`, so the audit trail must keep living in the evidence stores
+(3.5) rather than relying on queue history.
+
+Remaining operator decisions: Effect version alignment (7.2), which tier per plane (7.6), and whether the first
+cutover is the learner or the replay queue (6, phase order).
+
+## 9. References
 
 - Vendored Effect: `vendor/effect/PROVENANCE.md`, `vendor/effect/packages/effect/src/unstable/persistence/PersistedQueue.ts`,
   `vendor/effect/packages/sql/sqlite-node/src/SqliteClient.ts`.
