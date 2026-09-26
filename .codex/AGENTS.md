@@ -16,6 +16,7 @@ Bridge guidance only:
 - Treat this file as a harness adapter, not as a second workflow spec.
 - If this file conflicts with `/.recursive/RECURSIVE.md`, follow `/.recursive/RECURSIVE.md`.
 - Control-plane docs live under `/.recursive/`.
+- Prefer Effect (vendored `vendor/effect` and `vendor/effect-mq`) for new work wherever it is possible and suitable; see `/.recursive/RECURSIVE.md` § "Effect-first implementation rule".
 - Runs live under `/.recursive/run/<run-id>/`.
 - Durable memory lives under `/.recursive/memory/`.
 - If recursive-mode is invoked in a repo that does not yet contain the `/.recursive/` scaffold, bootstrap it automatically with the supported install script before continuing. Do not require the user to run a separate manual bootstrap step unless no supported runtime is available.

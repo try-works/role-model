@@ -76,6 +76,19 @@ export interface LearnerDerivationInput {
    * presentation bound. A group the bound defers is *not* marked attempted: the next tick reaches it again.
    */
   readonly derivedReportLimit?: number;
+  /**
+   * Run 101 R6: derive for exactly these groups. The learner queue claims one
+   * job per finalized comparison, so its handler must be able to name the group
+   * it is working on rather than walking the sweep's page and hoping.
+   */
+  readonly onlyGroupIds?: readonly string[];
+  /**
+   * Run 101 R6: called for each candidate this pass persisted. The summary's
+   * five fields are a pinned contract (three suites assert them with `toEqual`),
+   * so the learner queue chains its `learner.promote` job through this callback
+   * rather than through a sixth field.
+   */
+  readonly onDerivedCandidate?: (candidateId: string, groupId: string) => void;
   readonly readDurableTrajectoryEvidence?: LearnerDerivationEvidenceRead;
 }
 
@@ -372,6 +385,7 @@ export async function deriveLearnerCandidatesFromDurableEvidence(
     if (attempted >= input.limit) break;
     const groupId = text(group.groupId) ?? text(group.comparisonId);
     if (!groupId || input.attemptedGroupIds.has(groupId)) continue;
+    if (input.onlyGroupIds && !input.onlyGroupIds.includes(groupId)) continue;
     examined += 1;
     const normalized = normalizedComparisonGroup(group);
     if (text(normalized.status) !== "finalized" || !learnableComparisonMembers(normalized)) {
@@ -654,6 +668,8 @@ export async function deriveLearnerCandidatesFromDurableEvidence(
       );
       if (consumed) {
         derived += 1;
+        const candidateId = text(consumed.id);
+        if (candidateId) input.onDerivedCandidate?.(candidateId, groupId);
         input.log?.(
           `learner derivation consumed ${groupId} (${members?.positive.length ?? 0}+/${
             members?.negative.length ?? 0

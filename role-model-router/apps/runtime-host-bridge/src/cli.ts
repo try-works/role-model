@@ -52,6 +52,8 @@ import {
   handoffEvidenceHoldRequestIds,
   resolveSupervisedReplayEvaluationResumePath,
   resumePendingSupervisedReplayEvaluations,
+  // Run 101 R5: scope the resume pass to the single handoff an evaluation job names.
+  scopeResumeStoreToReplayJob,
 } from "./supervised-replay-evaluation-resume.js";
 // Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S7: a replay that handed its branches off and was
 // interrupted before its evaluation job existed is recovered from the durable job itself.
@@ -84,6 +86,13 @@ import {
 const MAX_HANDOFF_RECOVERIES_PER_SWEEP = 3;
 /** How often the handed-off-replay recovery pass may list the durable jobs (measured on the live root). */
 const HANDOFF_RECOVERY_INTERVAL_MS = 120_000;
+// Run 101 R4: the replay plane's queue runtime (policy-driven mode, offer and
+// worker). Imported here so the auto-replay loop's composition can start it.
+import {
+  startEvaluationQueueRuntime,
+  startLearnerQueueRuntime,
+  startReplayQueueRuntime,
+} from "./queue-runtime/index.js";
 import {
   autoReplayExecutionFromCommandReceipt,
   startAutoReplayLoop,
@@ -5052,7 +5061,7 @@ export async function main(): Promise<void> {
      */
     const resumeEvaluationsRef: {
       current:
-        | (() => Promise<{
+        | ((scope?: { readonly onlyReplayJobId?: string }) => Promise<{
             resumed: number;
             completed: number;
             failed: number;
@@ -5064,6 +5073,53 @@ export async function main(): Promise<void> {
           }>)
         | null;
     } = { current: null };
+    /**
+     * Run 101 R5: the evaluation plane's queue holder. It is declared at this
+     * level because two sibling closures use it - the auto-replay starter
+     * starts the runtime, and the replay handoff (which lives with the
+     * post-observation handler) offers the job. Until the runtime is started it
+     * reads `legacy`, so an unwired start is baseline behaviour.
+     */
+    let evaluationQueueRuntime: ReturnType<typeof startEvaluationQueueRuntime> | null = null;
+    const lateBoundEvaluationQueue = {
+      get mode() {
+        return evaluationQueueRuntime?.dispatchQueue?.mode ?? "legacy";
+      },
+      offer: (job: {
+        readonly origin: string;
+        readonly groupId?: string | null;
+        readonly replayJobId?: string | null;
+      }) =>
+        evaluationQueueRuntime?.dispatchQueue?.offer(job) ??
+        Promise.resolve({ enqueued: false, reason: "evaluation_queue_not_started" }),
+    };
+    /**
+     * Run 101 R6: the learner plane's queues, late-bound like the others. The
+     * derivation worker needs the completion path (which offers the job) and the
+     * runtime (which is started by the auto-replay starter) to exist first.
+     */
+    let learnerDeriveQueueRuntime: ReturnType<typeof startLearnerQueueRuntime> | null = null;
+    let learnerPromoteQueueRuntime: ReturnType<typeof startLearnerQueueRuntime> | null = null;
+    const lateBoundLearnerQueues = {
+      derive: {
+        get mode() {
+          return learnerDeriveQueueRuntime?.dispatchQueue?.mode ?? "legacy";
+        },
+        offer: (job: { readonly groupId: string; readonly reason?: string | null }) =>
+          learnerDeriveQueueRuntime?.dispatchQueue?.offer(job) ??
+          Promise.resolve({ enqueued: false, reason: "learner_queue_not_started" }),
+      },
+      promote: {
+        get mode() {
+          return learnerPromoteQueueRuntime?.dispatchQueue?.mode ?? "legacy";
+        },
+        offer: (job: { readonly candidateId: string; readonly groupId?: string | null }) =>
+          learnerPromoteQueueRuntime?.dispatchQueue?.offer({
+            candidateId: job.candidateId,
+            ...(job.groupId ? { groupId: job.groupId } : {}),
+          }) ?? Promise.resolve({ enqueued: false, reason: "learner_queue_not_started" }),
+      },
+    };
     /**
      * Run 100 addendum `handoff-evidence-durability.addendum-06` S27: the durable replay jobs' scope is
      * resolved in the liveness-sweep scope (which sees the captures) and is needed by the resume sweep's
@@ -5302,7 +5358,7 @@ export async function main(): Promise<void> {
          *   `knowledge:promote-candidate` when the receipt says `validate` -> `knowledge:record-learning` (pack).
          * It never dispatches a provider call and never mutates a route.
          */
-        async learnFromUnconsumedCandidates() {
+        async learnFromUnconsumedCandidates(input: Record<string, unknown> = {}) {
           const runtime = extensionRuntimeRef.current;
           if (!runtime) return { scanned: 0, consumed: 0, remaining: 0 };
           const authority = await (async () => {
@@ -5986,7 +6042,7 @@ export async function main(): Promise<void> {
          * estimate over the comparison's own rows, and the two receipts minted with the durable authority. Bounded to
          * two groups per tick, idempotent, and it never dispatches a provider call or invents a trajectory.
          */
-        async deriveLearnerCandidates() {
+        async deriveLearnerCandidates(input: Record<string, unknown> = {}) {
           const runtime = extensionRuntimeRef.current;
           if (!runtime) return { examined: 0, derived: 0, pending: 0 };
           const authority = await (async () => {
@@ -6098,7 +6154,26 @@ export async function main(): Promise<void> {
              * therefore raised deliberately: with 24 per tick the same backlog drains in ~20 ticks (~36 min), while
              * the compute step stays bounded to durable evidence and a group whose capture has aged out skips cheaply.
              */
-            limit: 24,
+            limit:
+              Array.isArray(input.onlyGroupIds) && input.onlyGroupIds.length > 0
+                ? input.onlyGroupIds.length
+                : 24,
+            // Run 101 R6: a learner.derive job names its group, so the pass
+            // works on that comparison instead of the sweep's page.
+            ...(Array.isArray(input.onlyGroupIds) && input.onlyGroupIds.length > 0
+              ? { onlyGroupIds: input.onlyGroupIds as string[] }
+              : {}),
+            // Run 101 R6: the learner queue chains `learner.promote` on the
+            // candidates this pass persisted, through the callback the caller
+            // supplies, so the pinned five-field summary stays intact.
+            ...(typeof input.onDerivedCandidate === "function"
+              ? {
+                  onDerivedCandidate: input.onDerivedCandidate as (
+                    candidateId: string,
+                    groupId: string,
+                  ) => void,
+                }
+              : {}),
             /**
              * S13 follow-up: the group's report may never have been written (its live pipeline never ran), so the
              * sweep computes it through the capability that persists reports - bounded per tick (see `limit`), from
@@ -6740,12 +6815,53 @@ export async function main(): Promise<void> {
           return { scanned: jobs.length, recovered, skipped };
         },
       };
-      return startAutoReplayLoop({
+      /**
+       * Run 101 R4: the replay queue is composed beside the loop and late-bound,
+       * because each needs the other - the loop offers admitted captures while
+       * the queue's worker drives its claims back through the loop's own
+       * `dispatchCapture`. Until the runtime is started the plane reads
+       * `legacy`, so an unwired or failed start is baseline behaviour rather
+       * than a stalled queue.
+       */
+      let queueRuntime: ReturnType<typeof startReplayQueueRuntime> | null = null;
+      const lateBoundDispatchQueue = {
+        get mode() {
+          return queueRuntime?.dispatchQueue?.mode ?? "legacy";
+        },
+        offer: (job: {
+          readonly captureRef: string;
+          readonly endpointIds: readonly string[];
+          readonly policySetDigest: string;
+        }) =>
+          queueRuntime?.dispatchQueue?.offer(job) ??
+          Promise.resolve({ enqueued: false, reason: "queue_runtime_not_started" }),
+      };
+      /**
+       * Run 101 R7: the loop asks each plane's mode per tick, so the sweeps a
+       * queue has replaced retire as soon as that queue becomes authoritative -
+       * and come back if the operator rolls the plane back to `legacy`.
+       */
+      const lateBoundPlaneModes = {
+        get replay() {
+          return queueRuntime?.dispatchQueue?.mode ?? "legacy";
+        },
+        get evaluation() {
+          return evaluationQueueRuntime?.dispatchQueue?.mode ?? "legacy";
+        },
+        get learner() {
+          return learnerDeriveQueueRuntime?.dispatchQueue?.mode ?? "legacy";
+        },
+      };
+      const loop = startAutoReplayLoop({
         operations: sweepOperations,
         ledger,
         policySet,
         configuredEndpointIds: endpoints,
         healthyEndpointIds: healthyEndpoints,
+        // Run 101 R4: the replay plane's queue, whose mode comes from the
+        // operator's policy document rather than from this composition.
+        dispatchQueue: lateBoundDispatchQueue,
+        planeModes: lateBoundPlaneModes,
         intervalMs,
         // Run 98 addendum 04 follow-on: bound one tick's wall clock so a tick made of several
         // minutes-long replays leaves the remaining captures for the next tick. Operators can tune it
@@ -6955,6 +7071,152 @@ export async function main(): Promise<void> {
           );
         },
       });
+      queueRuntime = startReplayQueueRuntime({
+        stateRoot: options.runtimeStateRoot,
+        shippedRoot: options.repoRoot,
+        handler: async (job) => {
+          await loop.dispatchCapture(job.captureRef);
+        },
+        onAttemptFailure: (error, job) => {
+          console.error(
+            `[run101] replay dispatch attempt failed:${job.captureRef} ${String(
+              (error as { message?: unknown })?.message ?? error,
+            ).slice(0, 200)}`,
+          );
+        },
+      });
+      if (queueRuntime.mode !== "legacy") {
+        console.error(
+          `[run101] replay queue plane:${queueRuntime.mode} queue:${queueRuntime.policy.queue} worker:${
+            queueRuntime.worker ? "running" : "none"
+          }`,
+        );
+      }
+      /**
+       * Run 101 R5: the evaluation worker runs beside the replay loop and drives
+       * exactly the handoff its job names through the same resume implementation
+       * the tick's sweep uses (`resumeEvaluationsRef`), which is what keeps
+       * evidence writing in one place.
+       */
+      evaluationQueueRuntime = startEvaluationQueueRuntime({
+        stateRoot: options.runtimeStateRoot,
+        shippedRoot: options.repoRoot,
+        handler: async (job) => {
+          const resume = resumeEvaluationsRef.current;
+          if (!resume) throw new Error("evaluation resume implementation is not available yet");
+          const scope = job.replayJobId ? { onlyReplayJobId: job.replayJobId } : undefined;
+          const result = await resume(scope);
+          const progressed =
+            result.resumed + result.completed + result.failed + result.outsideRetentionWindow > 0;
+          if (!progressed) {
+            throw new Error(
+              `evaluation job ${job.groupId ?? job.replayJobId ?? "unknown"} made no progress`,
+            );
+          }
+        },
+        onAttemptFailure: (error, job) => {
+          console.error(
+            `[run101] evaluation attempt failed:${job.groupId ?? job.replayJobId ?? "unknown"} ${String(
+              (error as { message?: unknown })?.message ?? error,
+            ).slice(0, 200)}`,
+          );
+        },
+      });
+      if (evaluationQueueRuntime.mode !== "legacy") {
+        console.error(
+          `[run101] evaluation queue plane:${evaluationQueueRuntime.mode} worker:${
+            evaluationQueueRuntime.worker ? "running" : "none"
+          }`,
+        );
+      }
+      /**
+       * Run 101 R6: the learner plane's two workers run beside the replay loop.
+       * Derivation is scoped to the job's group (so a job works on its own
+       * comparison) and promotion consumes candidates the worker has not yet
+       * validated, one at a time.
+       */
+      learnerDeriveQueueRuntime = startLearnerQueueRuntime({
+        kind: "learner.derive",
+        options: {
+          stateRoot: options.runtimeStateRoot,
+          shippedRoot: options.repoRoot,
+          deriveHandler: async (job) => {
+            const derive = sweepOperations.deriveLearnerCandidates;
+            if (typeof derive !== "function") {
+              throw new Error("learner derivation is not available");
+            }
+            const summary = (await derive({
+              limit: 1,
+              onlyGroupIds: [job.groupId],
+              /**
+               * Run 101 R6: the second hop. A derivation that persisted a
+               * candidate is what feeds `learner.promote`, so the chain
+               * continues here rather than waiting for the consume sweep to
+               * notice. A refused offer is logged, not thrown - the candidate is
+               * already durable.
+               */
+              onDerivedCandidate: (candidateId: string, groupId: string) => {
+                if (lateBoundLearnerQueues.promote.mode === "legacy") return;
+                void lateBoundLearnerQueues.promote
+                  .offer({ candidateId, groupId })
+                  .then((offered) => {
+                    if (!offered.enqueued) {
+                      console.error(
+                        `[run101] learner promote offer declined:${candidateId} ${
+                          offered.reason ?? "unknown"
+                        }`,
+                      );
+                    }
+                  })
+                  .catch((error: unknown) => {
+                    console.error(
+                      `[run101] learner promote offer failed:${candidateId} ${String(
+                        (error as { message?: unknown })?.message ?? error,
+                      ).slice(0, 160)}`,
+                    );
+                  });
+              },
+            })) as { derived?: number; examined?: number; refused?: number };
+            // No examination means the group is gone (or no longer learnable);
+            // a named skip is a retry, not a silent success.
+            if (!summary || (summary.examined ?? 0) === 0) {
+              throw new Error(`no learnable comparison for ${job.groupId}`);
+            }
+          },
+          onDeriveFailure: (error, job) => {
+            console.error(
+              `[run101] learner derive attempt failed:${job.groupId} ${String(
+                (error as { message?: unknown })?.message ?? error,
+              ).slice(0, 200)}`,
+            );
+          },
+        },
+      });
+      learnerPromoteQueueRuntime = startLearnerQueueRuntime({
+        kind: "learner.promote",
+        options: {
+          stateRoot: options.runtimeStateRoot,
+          shippedRoot: options.repoRoot,
+          promoteHandler: async (job) => {
+            const consume = sweepOperations.learnFromUnconsumedCandidates;
+            if (typeof consume !== "function") {
+              throw new Error("learner promotion is not available");
+            }
+            const result = (await consume({ limit: 1 })) as { consumed?: number } | null;
+            if (!result || (result.consumed ?? 0) === 0) {
+              throw new Error(`no candidate was validated for ${job.candidateId}`);
+            }
+          },
+          onPromoteFailure: (error, job) => {
+            console.error(
+              `[run101] learner promote attempt failed:${job.candidateId} ${String(
+                (error as { message?: unknown })?.message ?? error,
+              ).slice(0, 200)}`,
+            );
+          },
+        },
+      });
+      return loop;
     };
     const postObservationHandler =
       (runtime: Awaited<ReturnType<typeof createProductionExtensionRuntime>>) =>
@@ -7815,6 +8077,26 @@ export async function main(): Promise<void> {
             },
             handoffEvaluation: async ({ replayJobId }) => {
               const evaluationJobId = `evaluation-replay-${createHash("sha256").update(String(replayJobId)).digest("hex").slice(0, 20)}`;
+              // Run 101 R5: the handoff is where the replay plane learns the
+              // unit of evaluation work, so it is where the job is offered.
+              // `legacy` keeps this a no-op, and a refused offer is logged
+              // rather than thrown: the handoff itself already succeeded.
+              if (lateBoundEvaluationQueue.mode !== "legacy") {
+                const offered = await lateBoundEvaluationQueue
+                  .offer({ origin: "replay", replayJobId: String(replayJobId) })
+                  .catch((error: unknown) => ({
+                    enqueued: false,
+                    reason: String((error as { message?: unknown })?.message ?? error).slice(
+                      0,
+                      160,
+                    ),
+                  }));
+                if (!offered.enqueued) {
+                  console.error(
+                    `[run101] evaluation queue offer declined:${replayJobId} ${offered.reason ?? "unknown"}`,
+                  );
+                }
+              }
               return { evaluationJobId };
             },
             completeEvaluation: (() => {
@@ -7945,6 +8227,35 @@ export async function main(): Promise<void> {
                       (error as { message?: unknown })?.message ?? error,
                     ).slice(0, 200)}`,
                   );
+                }
+                /**
+                 * Run 101 R6: the finalized comparison is the unit the learner
+                 * derives from, so the completion path is where the derivation
+                 * job is offered. `legacy` keeps this a no-op, and a refused
+                 * offer is logged rather than thrown - the comparison itself is
+                 * already durable.
+                 */
+                const completedGroupId =
+                  typeof (completed as Record<string, unknown>)?.comparisonGroupId === "string"
+                    ? String((completed as Record<string, unknown>).comparisonGroupId)
+                    : null;
+                if (completedGroupId && lateBoundLearnerQueues.derive.mode !== "legacy") {
+                  const offeredDerive = await lateBoundLearnerQueues.derive
+                    .offer({ groupId: completedGroupId, reason: "comparison-finalized" })
+                    .catch((error: unknown) => ({
+                      enqueued: false,
+                      reason: String((error as { message?: unknown })?.message ?? error).slice(
+                        0,
+                        160,
+                      ),
+                    }));
+                  if (!offeredDerive.enqueued) {
+                    console.error(
+                      `[run101] learner derive offer declined:${completedGroupId} ${
+                        offeredDerive.reason ?? "unknown"
+                      }`,
+                    );
+                  }
                 }
                 // Run 98 addendum 34 S1: the extra pairs this capture adds are completed inside
                 // `createSupervisedReplayEvaluationCompleter` itself, which is the one function every
@@ -8377,7 +8688,13 @@ export async function main(): Promise<void> {
        * already-scored durable trials, so this finalizes the existing comparison group and lets the
        * learner consume it instead of needing a fresh provider dispatch.
        */
-      const resumePendingEvaluations = async () => {
+      /**
+       * Run 101 R5: `onlyReplayJobId` lets the evaluation queue drive exactly
+       * the handoff its job names, through the same body the sweep uses, so the
+       * comparison is finalized once and evidence writing stays in one place.
+       * Without it the sweep behaves exactly as before.
+       */
+      const resumePendingEvaluations = async (scope?: { readonly onlyReplayJobId?: string }) => {
         const runtime = extensionRuntimeRef.current;
         const operations = currentPostObservationOperations();
         if (!runtime || !operations) {
@@ -8393,7 +8710,10 @@ export async function main(): Promise<void> {
         }
         const channel = packagedProfile?.channel ?? "development";
         return resumePendingSupervisedReplayEvaluations({
-          store: evaluationResumeStore,
+          store: scope?.onlyReplayJobId
+            ? scopeResumeStoreToReplayJob(evaluationResumeStore, scope.onlyReplayJobId)
+            : evaluationResumeStore,
+          ...(scope?.onlyReplayJobId ? { limit: 1 } : {}),
           isEvaluationComplete: async (entry) => {
             try {
               const rawJob = await runtime.invoke("evaluation-core", {

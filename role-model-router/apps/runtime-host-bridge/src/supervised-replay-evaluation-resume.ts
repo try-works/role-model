@@ -161,6 +161,27 @@ export interface SupervisedReplayEvaluationResumeStore {
 }
 
 /**
+ * Run 101 / R5: a single-entry view of the resume store.
+ *
+ * The evaluation queue claims one job at a time, so its handler must drive
+ * exactly the handoff that job names rather than the oldest pending one. The
+ * resume pass already selects from `store.list()`, so scoping it needs a view
+ * rather than a new parameter - and the same view keeps `record`/`renew`
+ * pointing at the real store so progress is still durable.
+ */
+export function scopeResumeStoreToReplayJob(
+  store: SupervisedReplayEvaluationResumeStore,
+  replayJobId: string,
+): SupervisedReplayEvaluationResumeStore {
+  if (!replayJobId) throw new Error("scoping the resume store requires a replay job id");
+  return {
+    ...store,
+    filePath: store.filePath,
+    list: () => store.list().filter((entry) => entry.replayJobId === replayJobId),
+  };
+}
+
+/**
  * Run 100 addendum `handoff-evidence-durability.addendum-06` S22 (RC-6): the captures one unresolved
  * handoff pins. The source capture is what the replay was replayed from; the branch captures are the arms
  * the comparison has to read. Both are named by the durable job, so the pin set is derivable at any point
