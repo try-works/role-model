@@ -105,13 +105,18 @@ test("@recursive:101-effect-mq-queue-rebuild addendum02: the worker executes the
   }
 });
 
-test("@recursive:101-effect-mq-queue-rebuild addendum02: a capture that is no longer pending still rejects", async () => {
+test("@recursive:101-effect-mq-queue-rebuild addendum02/25: a capture that is no longer pending is a no-op the worker acks", async () => {
   const { ledger, cleanup } = harness();
   try {
     const operations = fakeOperations([]);
     const offers: Array<Record<string, unknown>> = [];
     const loop = startLoop({ pending: [], offers, operations, ledger });
-    await expect(loop.dispatchCapture("req-add02-missing")).rejects.toThrow(/was not dispatched/);
+    /**
+     * Run 101 addendum 25 (measured live: 229 dead-lettered `replay.dispatch` jobs): a capture the tick no longer
+     * holds back (`queued === 0`) has nothing left to do, so the worker must ack it instead of burning an attempt.
+     * Only a capture the tick still holds (`queued > 0`) stays an error - `run101-addendum25` covers that side.
+     */
+    await expect(loop.dispatchCapture("req-add02-missing")).resolves.toMatchObject({ queued: 0 });
     loop.stop();
     expect(offers).toHaveLength(0);
   } finally {
