@@ -96,6 +96,7 @@ import {
 } from "./queue-runtime/index.js";
 import {
   autoReplayExecutionFromCommandReceipt,
+  evaluationHandoffRequestFromCommandReceipt,
   startAutoReplayLoop,
 } from "./track-b-auto-replay-runtime.js";
 import {
@@ -7128,13 +7129,35 @@ export async function main(): Promise<void> {
           // externalized transfer marker; parsing the marker made `state` undefined and every
           // such capture was deferred as "durable replay state is unknown" (observed live as
           // recently as 06:26Z). Decode it from the worker durable-output store first.
-          return autoReplayExecutionFromCommandReceipt(
-            decodeExternalizedOperatorReadback({
-              stateRoot: options.runtimeStateRoot,
-              scopeId: options.scopeId,
-              value: leasedDispatch.value,
-            }),
-          );
+          const decodedReplayReceipt = decodeExternalizedOperatorReadback({
+            stateRoot: options.runtimeStateRoot,
+            scopeId: options.scopeId,
+            value: leasedDispatch.value,
+          });
+          /**
+           * Run 101 addendum 26: an `awaiting_evaluation` receipt has produced its branches and now owes a
+           * comparison, and the host owns the evaluation plane - so this is where the offer belongs. Measured live
+           * (2026-09-28 ~06:0x): 134 replays completed and offered nothing, `evaluation.score` never moved and the
+           * learner stayed parked, because the only offer site was the supervised-replay executor the queue worker
+           * does not drive. A refused offer is logged, never thrown: the replay itself already succeeded.
+           */
+          const handoffRequest = evaluationHandoffRequestFromCommandReceipt(decodedReplayReceipt);
+          if (handoffRequest && lateBoundEvaluationQueue.mode !== "legacy") {
+            const offered = await lateBoundEvaluationQueue
+              .offer({ origin: "replay", replayJobId: handoffRequest.replayJobId })
+              .catch((error: unknown) => ({
+                enqueued: false,
+                reason: String((error as { message?: unknown })?.message ?? error).slice(0, 160),
+              }));
+            if (!offered.enqueued) {
+              console.error(
+                `[run101] evaluation queue offer declined:${handoffRequest.replayJobId} ${
+                  offered.reason ?? "unknown"
+                }`,
+              );
+            }
+          }
+          return autoReplayExecutionFromCommandReceipt(decodedReplayReceipt);
         },
       });
       queueRuntime = startReplayQueueRuntime({

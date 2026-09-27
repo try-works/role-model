@@ -24,6 +24,40 @@ const TERMINAL_REPLAY_JOB_STATES = new Set(["timed_out", "expired", "failed", "c
  * branch evidence, but no comparison, so the capture stays retryable and the
  * ledger must not mark it terminal.
  */
+/**
+ * Run 101 addendum 26: a replay receipt that produced branches but no comparison still owes an evaluation.
+ *
+ * Measured on `:3457` (2026-09-28 ~06:0x): 134 replays completed, blobs were written, and **zero** evaluation jobs
+ * were offered - `evaluation.score` stayed at 41 completed with no row newer than 05:41, no
+ * `RoutingEvaluationExecutionContextV1` contract has been written since 27-Sep 20:35, and `learner.derive` sat at
+ * 13. The sidecar's replay receipt returns `state: "awaiting_evaluation"` "produced branches but no comparison, so
+ * it stays retryable" (`cli.ts:7123`), and nothing converted that state into the evaluation offer the host owns:
+ * the host's `handoffEvaluation` (`cli.ts:8149`) is only reached by the supervised-replay executor, which the queue
+ * worker does not drive.
+ *
+ * This predicate is the conversion: an `awaiting_evaluation` receipt that names its replay job is a request for the
+ * evaluation plane to take the job (the same offer the supervised path makes), and anything else - complete,
+ * terminal, or an unnamed receipt - is not.
+ */
+export function evaluationHandoffRequestFromCommandReceipt(
+  receipt: unknown,
+): { readonly replayJobId: string } | null {
+  if (!receipt || typeof receipt !== "object" || Array.isArray(receipt)) {
+    return null;
+  }
+  const record = receipt as Record<string, unknown>;
+  if (record.state !== "awaiting_evaluation") {
+    return null;
+  }
+  for (const field of ["replayJobId", "jobId", "id"] as const) {
+    const value = record[field];
+    if (typeof value === "string" && value.trim().length > 0) {
+      return { replayJobId: value.trim() };
+    }
+  }
+  return null;
+}
+
 export function autoReplayExecutionFromCommandReceipt(receipt: unknown): AutoReplayExecution {
   const record =
     receipt && typeof receipt === "object" && !Array.isArray(receipt)
