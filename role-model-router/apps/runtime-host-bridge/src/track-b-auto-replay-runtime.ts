@@ -855,9 +855,18 @@ export function startAutoReplayLoop(input: {
         throw new Error("dispatchCapture requires a capture ref");
       }
       const result = await tick({ onlyCaptureRefs: [captureRef] });
-      const executed =
-        result.queued === 0 && result.replayed + result.refused + result.deferred > 0;
-      if (!executed) {
+      /**
+       * Run 101 addendum 25. `queued` counts the captures the tick could not enqueue - the ones still pending for
+       * the next tick (`track-b-auto-replay.ts:1016`). A restricted tick that leaves `queued === 0` has nothing left
+       * to do for this capture: it is already handled, expired or absent from the pending set, which is a no-op and
+       * not a failure.
+       *
+       * Measured live on `:3457` (2026-09-27 ~22:0x): `replay.dispatch` showed 229 failed against 59 completed with
+       * the recorded error `queued capture <ref> was not dispatched`, all of them this no-op case - each charged an
+       * attempt, retried and dead-lettered, and `evaluation.score` starved ("made no progress"). Only a capture the
+       * tick still holds back (`queued > 0`) is a real dispatch failure worth an attempt.
+       */
+      if (result.queued > 0) {
         // Nothing ran for this capture: it is not pending any more (already
         // handled) or the tick was skipped. Reporting it lets the queue's
         // attempt accounting decide what happens next.
