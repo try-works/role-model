@@ -19,7 +19,13 @@ import (
 const (
 	runtimeHost           = "127.0.0.1"
 	runtimePort           = 3456
-	serverStartupAttempts = 30
+	/**
+	 * Run 101 addendum 12: measured live, the bootstrap's remote-health stage can take ~17 s (three provider
+	 * probes with their own timeouts) and longer under load, so a 30 s budget killed a runtime that was already
+	 * listening. The budget is three minutes; readiness below is about the server answering, not about every
+	 * endpoint probe having succeeded.
+	 */
+	serverStartupAttempts = 180
 	serverStartupInterval = 1 * time.Second
 	shutdownWaitTimeout   = 10 * time.Second
 	frontendShutdownWait  = 5 * time.Second
@@ -184,7 +190,14 @@ func waitForServerReady(baseURL string, attempts int, interval time.Duration) bo
 		decodeErr := json.NewDecoder(io.LimitReader(resp.Body, 64*1024)).Decode(&health)
 		_ = resp.Body.Close()
 		bootstrapOperational := health.SessionBootstrap.Status == "ready" || health.SessionBootstrap.Status == "degraded"
-		if resp.StatusCode == http.StatusOK && decodeErr == nil && bootstrapOperational {
+		/**
+		 * Run 101 addendum 12: the launcher's job is to wait for a *serving* runtime, not for a perfect one.
+		 * Measured live: a single failed provider probe made `/healthz` answer 503 while chat still served, and
+		 * this check then waited out its whole budget and killed the process. Any HTTP answer that decodes to a
+		 * finished bootstrap (ready or degraded) means the server is up, so the window opens; the readiness
+		 * detail stays visible in the UI and `/healthz`.
+		 */
+		if decodeErr == nil && bootstrapOperational {
 			return true
 		}
 	}
