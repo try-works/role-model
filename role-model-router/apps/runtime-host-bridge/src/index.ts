@@ -25514,9 +25514,18 @@ export async function createRuntimeBridgeBackend(
     let firstStreamedChunkAtMs: number | null = null;
     const trackedStreamWriter: BridgeStreamWriter | undefined = streamWriter
       ? async (chunk, metadata) => {
-          streamedChunkCount += 1;
           firstStreamedChunkAtMs ??= Date.now();
           streamedReasoningDeltaCount += countChatCompletionsReasoningDeltas(chunk);
+          /**
+           * Run 101 addendum 20: this counter is what lets the retry/reroute gate decide whether the client already
+           * holds part of the answer, so it must count *substantive* chunks - the same predicate the ingress uses to
+           * commit the SSE head. Counting every chunk the executor emits kept the gate closed on a role-only opening
+           * delta, which is why the measured `terminated` failures (502, ~75 s, `streamTextDeltaCount: 0`,
+           * `retryCount: 0`, `rerouteCount: 0`) never failed over even after addendum 19 deferred the head write.
+           */
+          if (hasSubstantiveStreamDelta(chunk)) {
+            streamedChunkCount += 1;
+          }
           await streamWriter(chunk, metadata);
         }
       : undefined;
