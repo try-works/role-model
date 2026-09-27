@@ -17228,7 +17228,6 @@ function createRequestHandler(options: StartBridgeServerOptions) {
           const streamWriter: BridgeStreamWriter = async (chunk, metadata) => {
             const serializedChunk = `data: ${JSON.stringify(chunk)}\n\n`;
             if (!wroteStreamChunk) {
-              pendingChunks.push(serializedChunk);
               /**
                * Run 101 addendum 19: commit the downstream stream only once the attempt has delivered something the
                * client can keep - real content or a tool call. A role-only opening delta leaves the buffer intact, so
@@ -17236,6 +17235,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
                * fail over instead of handing pi an open stream that ends without a `finish_reason`.
                */
               if (!metadata || !hasSubstantiveStreamDelta(chunk)) {
+                pendingChunks.push(serializedChunk);
                 return;
               }
               response.writeHead(200, {
