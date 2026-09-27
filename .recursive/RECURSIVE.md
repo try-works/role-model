@@ -2401,3 +2401,21 @@ Use it for recursive-mode prompts such as Implement requirement 'run-id' and pha
 <!-- RECURSIVE-MODE-SKILL:END -->
 <!-- RECURSIVE-MODE-CANONICAL:END -->
 <!-- RECURSIVE-MODE-CANONICAL:END -->
+
+### Learning more about Effect (installed skills)
+
+This repository uses the Effect TypeScript library and installs the upstream Effect agent skills under
+`.agents/skills/`:
+
+- `.agents/skills/effect-ts/SKILL.md` - read this before writing any Effect code. Upstream points at
+  `node_modules/effect/AGENTS.md`; this repository consumes the vendored source drop instead, so the guidance it
+  refers to lives in `vendor/effect/packages/effect/*.md` (`SCHEMA.md`, `CONFIG.md`, `HTTPAPI.md`, `MCP.md`,
+  `OPTIC.md`, `ARBITRARY.md`).
+- `.agents/skills/effect-v3-to-v4/SKILL.md` - the bounded workflow for moving a file, package or module from Effect
+  v3 idioms to v4 against the generated `migration/v3-to-v4.md` reference.
+
+Both skills are verbatim copies of `https://github.com/effect-ts/skills` at commit
+`2309e6f27d9955b434c0e3f394b945c136e89fd2`; each directory carries a `PROVENANCE.md` with the pin and the digest.
+
+If you need to learn more about a particular Effect API or concept the guides do not cover, search the source in
+`role-model-router/packages/effect/src` (the workspace package published as `effect`) and `vendor/effect/packages/**/src`.
