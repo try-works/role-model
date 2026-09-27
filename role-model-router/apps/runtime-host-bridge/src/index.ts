@@ -27075,6 +27075,13 @@ export async function createRuntimeBridgeBackend(
         statusCode: error.statusCode,
         errorClass: error.errorClass,
         latencyMs: failureLatencyMs,
+        /**
+         * Run 101 addendum 23: the failure row must carry what the client actually received. The builder used to
+         * write a literal zero, so a response that had streamed 789 chunks was recorded (and read by this operator)
+         * as `streamTextDeltaCount: 0` - the number that made a post-content drop look like a pre-content failure
+         * for two repair cycles. This is the count of chunks that carried content or tool calls.
+         */
+        streamTextDeltaCount: deliveredSubstantiveChunkCount,
         clientRequestId: executionOptions?.requestOptions?.clientRequestId ?? null,
         requestClass: "live_request",
         sourceType,
