@@ -25505,6 +25505,8 @@ export async function createRuntimeBridgeBackend(
         }),
     );
     let streamedChunkCount = 0;
+    /** Run 101 addendum 20: chunks the client can keep (content / tool calls); the retry/reroute gate reads this. */
+    let deliveredSubstantiveChunkCount = 0;
     let streamedReasoningDeltaCount = 0;
     // Run 98 addendum 40 (L1): the provider phase the client pays for. `latency_ms` on the usage
     // event is only the response-header time; this pair brackets the whole dispatch, and the first
@@ -25517,6 +25519,17 @@ export async function createRuntimeBridgeBackend(
           streamedChunkCount += 1;
           firstStreamedChunkAtMs ??= Date.now();
           streamedReasoningDeltaCount += countChatCompletionsReasoningDeltas(chunk);
+          /**
+           * Run 101 addendum 20: the retry/reroute gate must know whether the *client* already holds part of the
+           * answer, which is the same predicate the ingress uses to commit the SSE head - not every chunk the
+           * executor emits. A dedicated counter keeps `streamedChunkCount`'s telemetry meaning (text deltas, first
+           * token) unchanged while the gate reads delivered content only. Measured on RC `247f383a`: six
+           * `terminated` failures with `streamTextDeltaCount: 0` still carried `retryCount: 0`/`rerouteCount: 0`
+           * because the executor's role-only opening chunk closed the gate.
+           */
+          if (hasSubstantiveStreamDelta(chunk)) {
+            deliveredSubstantiveChunkCount += 1;
+          }
           await streamWriter(chunk, metadata);
         }
       : undefined;
@@ -27156,7 +27169,7 @@ export async function createRuntimeBridgeBackend(
               adapterFamily: failedEndpointRow?.identity.endpoint_kind ?? "",
             },
           );
-          if (!(error instanceof UpstreamExecutionError) || streamedChunkCount > 0) {
+          if (!(error instanceof UpstreamExecutionError) || deliveredSubstantiveChunkCount > 0) {
             if (ownedProbeEndpointId) {
               const released = releaseExecutionCircuitProbe({
                 state: readExecutionCircuitState(initialization.databasePath),
