@@ -57,6 +57,8 @@ export interface QueueParameters {
   readonly mode: QueueMode;
   readonly concurrency: number;
   readonly attempts: number;
+  /** Run 101 addendum 06: one attempt's wall clock bound (ffect-mq 	imeout). */
+  readonly attemptTimeoutMs: number;
   readonly backoffBaseMs: number;
   readonly backoffCapMs: number;
   readonly lockRefreshMs: number;
@@ -81,12 +83,64 @@ export interface QueuePolicyDocument {
 export const QUEUE_PARAMETER_BOUNDS = Object.freeze({
   concurrency: { min: 1, max: 16 },
   attempts: { min: 1, max: 10 },
+  /** Run 101 addendum 06 (effect-mq guidance #3): the per-attempt timeout the handler honours. */
+  attemptTimeoutMs: { min: 5_000, max: 3_600_000 },
   backoffBaseMs: { min: 100, max: 60_000 },
   backoffCapMs: { min: 1_000, max: 900_000 },
   lockRefreshMs: { min: 1_000, max: 300_000 },
   lockExpirationMs: { min: 5_000, max: 3_600_000 },
   retentionDays: { min: 1, max: 730 },
 } as const);
+
+/**
+ * Run 101 addendum 06 (effect-mq guidance #3): the catalogue defaults, mirrored from
+ * `shared/queues/queue-policy.mjs` (the private suite asserts the two tables agree). A
+ * policy document that predates a parameter materializes it from here instead of failing
+ * to validate, so adding a parameter never invalidates an existing operator document.
+ */
+export const QUEUE_PARAMETER_DEFAULTS: Readonly<Record<string, Readonly<Record<string, number>>>> =
+  Object.freeze({
+    "replay.dispatch": Object.freeze({
+      concurrency: 1,
+      attempts: 5,
+      attemptTimeoutMs: 270_000,
+      backoffBaseMs: 1_000,
+      backoffCapMs: 300_000,
+      lockRefreshMs: 30_000,
+      lockExpirationMs: 300_000,
+      retentionDays: 30,
+    }),
+    "evaluation.score": Object.freeze({
+      concurrency: 4,
+      attempts: 4,
+      attemptTimeoutMs: 870_000,
+      backoffBaseMs: 2_000,
+      backoffCapMs: 60_000,
+      lockRefreshMs: 30_000,
+      lockExpirationMs: 900_000,
+      retentionDays: 30,
+    }),
+    "learner.derive": Object.freeze({
+      concurrency: 2,
+      attempts: 3,
+      attemptTimeoutMs: 270_000,
+      backoffBaseMs: 2_000,
+      backoffCapMs: 60_000,
+      lockRefreshMs: 30_000,
+      lockExpirationMs: 300_000,
+      retentionDays: 30,
+    }),
+    "learner.promote": Object.freeze({
+      concurrency: 1,
+      attempts: 3,
+      attemptTimeoutMs: 270_000,
+      backoffBaseMs: 5_000,
+      backoffCapMs: 300_000,
+      lockRefreshMs: 30_000,
+      lockExpirationMs: 300_000,
+      retentionDays: 30,
+    }),
+  });
 
 /** Declared as a function so TypeScript narrows after a failing check. */
 function fail(message: string): never {
@@ -134,7 +188,17 @@ export function validateQueuePolicy(document: unknown): QueuePolicyDocument {
       }
     }
     for (const name of [...Object.keys(QUEUE_PARAMETER_BOUNDS), "mode"]) {
-      if (!(name in block)) fail(`${queueName} ${name} is required`);
+      /**
+       * Run 101 addendum 06: a parameter the document omits is materialized from the catalogue default rather
+       * than rejected, so adding a parameter (this run adds `attemptTimeoutMs`) does not invalidate every
+       * existing document. Unknown names and out-of-bounds values are still refused above.
+       */
+      if (!(name in block)) {
+        if (name === "mode") fail(`${queueName} mode is required`);
+        const fallback = QUEUE_PARAMETER_DEFAULTS[queueName]?.[name];
+        if (fallback === undefined) fail(`${queueName} ${name} is required`);
+        block[name] = fallback;
+      }
     }
   }
   // Every field has been checked above; the cast records that the runtime shape

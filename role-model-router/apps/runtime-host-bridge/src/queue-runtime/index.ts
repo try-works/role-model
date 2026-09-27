@@ -7,7 +7,7 @@
  * document, so switching `legacy` -> `shadow` -> `queue` is a policy write, and
  * a rollback is the same write in reverse.
  */
-import { type Duration, Effect, Fiber, Layer } from "effect";
+import { type Duration, Effect, Fiber, Layer, ManagedRuntime } from "effect";
 
 import {
   EVALUATION_SCORE_QUEUE,
@@ -119,6 +119,7 @@ export function startReplayQueueRuntime(options: ReplayQueueRuntimeOptions): Rep
         mode: "legacy",
         concurrency: 1,
         attempts: 1,
+        attemptTimeoutMs: 300_000,
         backoffBaseMs: 100,
         backoffCapMs: 1_000,
         lockRefreshMs: 30_000,
@@ -145,11 +146,19 @@ export function startReplayQueueRuntime(options: ReplayQueueRuntimeOptions): Rep
   }
 
   const layer = storeLayerForQueuePolicy({ stateRoot: options.stateRoot, policy });
+  /**
+   * Run 101 addendum 07 (Effect guidance D1): a `ManagedRuntime` builds the store layer - the SQLite client,
+   * the migrator and the store's own maps - once and keeps those services for every offer, instead of
+   * rebuilding them per enqueue ("A ManagedRuntime builds the services from a layer, keeps those services
+   * available for repeated effect runs, and releases acquired resources when it is disposed",
+   * `ManagedRuntime.ts`).
+   */
+  const storeRuntime = ManagedRuntime.make(layer);
   const offer: ReplayQueueRuntime["dispatchQueue"] = {
     mode,
     async offer(job) {
       try {
-        return await Effect.runPromise(
+        return await storeRuntime.runPromise(
           Effect.gen(function* () {
             const queue = yield* makeReplayDispatchQueue(policy);
             return yield* enqueueReplayDispatch({
@@ -160,7 +169,7 @@ export function startReplayQueueRuntime(options: ReplayQueueRuntimeOptions): Rep
                 policySetDigest: job.policySetDigest,
               },
             });
-          }).pipe(Effect.provide(layer), Effect.scoped),
+          }),
         );
       } catch (error) {
         return {
@@ -199,6 +208,7 @@ export function startReplayQueueRuntime(options: ReplayQueueRuntimeOptions): Rep
     async stop() {
       await worker?.stop();
       await cleanup?.stop();
+      await storeRuntime.dispose();
     },
   };
 }
@@ -261,15 +271,18 @@ export function startEvaluationQueueRuntime(
   }
 
   const layer = storeLayerForQueuePolicy({ stateRoot: options.stateRoot, policy });
+  // Run 101 addendum 07 (Effect guidance D1): one ManagedRuntime per plane - the store layer is built once
+  // and its services are reused by every offer, instead of a new client + migrator per enqueue.
+  const storeRuntime = ManagedRuntime.make(layer);
   const dispatchQueue: EvaluationQueueRuntime["dispatchQueue"] = {
     mode,
     async offer(job) {
       try {
-        return await Effect.runPromise(
+        return await storeRuntime.runPromise(
           Effect.gen(function* () {
             const queue = yield* makeEvaluationScoreQueue(policy);
             return yield* enqueueEvaluationScore({ queue, job });
-          }).pipe(Effect.provide(layer), Effect.scoped),
+          }),
         );
       } catch (error) {
         return {
@@ -297,6 +310,7 @@ export function startEvaluationQueueRuntime(
     ...(worker ? { worker } : {}),
     async stop() {
       await worker?.stop();
+      await storeRuntime.dispose();
     },
   };
 }
@@ -371,13 +385,15 @@ export function startLearnerQueueRuntime({
   }
 
   const layer = storeLayerForQueuePolicy({ stateRoot: options.stateRoot, policy });
+  // Run 101 addendum 07 (Effect guidance D1): one ManagedRuntime per learner plane, reused across offers.
+  const storeRuntime = ManagedRuntime.make(layer);
   const offer = async (job: {
     readonly groupId?: string;
     readonly candidateId?: string;
     readonly reason?: string | null;
   }) => {
     try {
-      return await Effect.runPromise(
+      return await storeRuntime.runPromise(
         Effect.gen(function* () {
           if (kind === "learner.derive") {
             const queue = yield* makeLearnerDeriveQueue(policy);
@@ -394,7 +410,7 @@ export function startLearnerQueueRuntime({
               groupId: job.groupId ?? null,
             },
           });
-        }).pipe(Effect.provide(layer), Effect.scoped),
+        }),
       );
     } catch (error) {
       return {
@@ -432,6 +448,7 @@ export function startLearnerQueueRuntime({
     ...(worker ? { worker } : {}),
     async stop() {
       await worker?.stop();
+      await storeRuntime.dispose();
     },
   };
 }
