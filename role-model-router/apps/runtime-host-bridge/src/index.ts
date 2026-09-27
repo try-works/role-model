@@ -28021,7 +28021,33 @@ export async function createRuntimeBridgeBackend(
   };
 
   let lastDetectedModel: string | null = null;
-  let sessionBootstrapState: SessionBootstrapState = createPendingBootstrapState();
+/**
+ * Run 101 addendum 11: is the runtime *ready*, given its bootstrap receipts?
+ *
+ * A runtime that is serving is ready. The only runtime-level failures are a blocked bootstrap or a remote-health
+ * stage that found no usable endpoint at all; a partially degraded stage (one probe timeout out of seven, a
+ * single offline provider) is an endpoint-level fact that the router already handles by excluding it.
+ */
+function resolveRuntimeReadiness(state: {
+  readonly status: string;
+  readonly stages: readonly {
+    readonly stageId: string;
+    readonly status: string;
+    readonly details?: unknown;
+  }[];
+}): boolean {
+  if (state.status === "blocked") return true;
+  if (state.status !== "degraded") return false;
+  const remoteHealth = state.stages.find((stage) => stage.stageId === "remote-health");
+  if (!remoteHealth || remoteHealth.status !== "degraded") return true;
+  const details = (remoteHealth.details ?? {}) as { readonly healthy?: unknown };
+  const healthy = typeof details.healthy === "number" ? details.healthy : null;
+  // A degraded remote-health stage with no successful probe at all is a runtime-level failure; one with at
+  // least one healthy endpoint keeps the runtime ready.
+  return healthy !== null && healthy > 0;
+}
+
+let sessionBootstrapState: SessionBootstrapState = createPendingBootstrapState();
   const backend = {
     operatorAuthToken: options.operatorAuthToken,
     get registry(): EndpointRegistryResult {
@@ -28562,8 +28588,14 @@ export async function createRuntimeBridgeBackend(
         litellm: currentLiteLLMVendor?.readStatus() ?? createInactiveVendorStatus("litellm"),
       };
       const summarized = summarizeHealthStatus(vendors);
-      const bootstrapBlocked =
-        sessionBootstrapState.status === "blocked" || sessionBootstrapState.status === "degraded";
+      /**
+       * Run 101 addendum 11. Measured live: one endpoint probe timed out at boot (`reason: "timeout"`) and this
+       * line flipped the whole runtime to `degraded`, so `/healthz` answered 503 for the rest of the process's
+       * life even though routing kept working and six of seven endpoints were healthy. A runtime is ready when
+       * it is serving: a partially degraded remote-health stage is an endpoint-level fact, and only a stage
+       * that leaves *no* usable endpoint (or a blocked bootstrap) is a runtime-level failure.
+       */
+      const bootstrapBlocked = resolveRuntimeReadiness(sessionBootstrapState);
       return {
         runtime: runtimeVersionInfo,
         status: bootstrapBlocked ? "degraded" : summarized.status,
