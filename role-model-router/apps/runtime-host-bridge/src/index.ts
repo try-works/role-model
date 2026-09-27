@@ -10620,10 +10620,19 @@ function createBridgeRequestAbortSignal(
  * ~90 s on others while exact-model requests stayed at 2-4 s - a stalled provider attempt consumed the caller's
  * window. Queue claims got a bound in addendum 06 (`attemptTimeoutMs`); this is the live path's equivalent, and
  * the operator can tune it with `ROLE_MODEL_LIVE_ATTEMPT_TIMEOUT_MS` (bounds 5 s - 10 min, default 2 min).
+ *
+ * Run 101 addendum 16 (measured live on stage RC `11eaf2b19492`): the unset case resolved to the five-second
+ * floor, not the default. `env.ROLE_MODEL_LIVE_ATTEMPT_TIMEOUT_MS ?? ""` makes an unset variable
+ * `Number("") === 0`, which is a safe integer, so the default branch never ran and every live attempt was aborted
+ * 5 s in - streams ended without `finish_reason`, non-streaming calls were answered `400 execution_failed` with
+ * "The operation was aborted due to timeout". An absent, empty, non-numeric, zero or negative value is now the
+ * documented two-minute default; only an explicit positive value is honoured and clamped to the 5 s - 10 min
+ * bounds.
  */
 export function resolveLiveAttemptTimeoutMs(env: NodeJS.ProcessEnv = process.env): number {
-  const raw = Number(env.ROLE_MODEL_LIVE_ATTEMPT_TIMEOUT_MS ?? "");
-  if (!Number.isSafeInteger(raw)) return 120_000;
+  const rawValue = env.ROLE_MODEL_LIVE_ATTEMPT_TIMEOUT_MS?.trim();
+  const raw = rawValue === undefined || rawValue.length === 0 ? Number.NaN : Number(rawValue);
+  if (!Number.isSafeInteger(raw) || raw <= 0) return 120_000;
   if (raw < 5_000) return 5_000;
   return Math.min(raw, 600_000);
 }
