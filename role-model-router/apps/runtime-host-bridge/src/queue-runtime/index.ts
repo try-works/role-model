@@ -7,7 +7,7 @@
  * document, so switching `legacy` -> `shadow` -> `queue` is a policy write, and
  * a rollback is the same write in reverse.
  */
-import { Effect } from "effect";
+import { type Duration, Effect, Fiber, Layer } from "effect";
 
 import {
   EVALUATION_SCORE_QUEUE,
@@ -37,7 +37,7 @@ import {
   enqueueReplayDispatch,
   makeReplayDispatchQueue,
 } from "./queues.js";
-import { storeLayerForQueuePolicy } from "./store.js";
+import { makeQueueStoreCleanupLayer, storeLayerForQueuePolicy } from "./store.js";
 import { type ReplayDispatchWorker, runReplayDispatchWorker } from "./workers.js";
 import { runEvaluationScoreWorker } from "./workers.js";
 import { runLearnerDeriveWorker, runLearnerPromoteWorker } from "./workers.js";
@@ -52,6 +52,28 @@ export interface ReplayQueueRuntimeOptions {
     context: { readonly attempt: number },
   ) => Promise<void>;
   readonly onAttemptFailure?: (error: unknown, job: ReplayDispatchJob) => void;
+}
+
+/**
+ * Run 101 addendum 04 (Effect guidance D5): launches the library's retention layer
+ * for the shared store and hands back a stop handle. `Layer.launch` keeps the layer
+ * (and its cleanup fiber) alive for the host's lifetime; interrupting the fiber
+ * closes the layer's scope, which is how the store's resources are released.
+ */
+export function startQueueStoreCleanup(options: {
+  readonly stateRoot: string;
+  readonly policy: Pick<
+    ResolvedQueuePolicy,
+    "retentionDays" | "lockRefreshMs" | "lockExpirationMs"
+  >;
+  readonly interval?: Duration.Input;
+}): { stop(): Promise<void> } {
+  const fiber = Effect.runFork(Layer.launch(makeQueueStoreCleanupLayer(options)));
+  return {
+    async stop() {
+      await Effect.runPromise(Fiber.interrupt(fiber));
+    },
+  };
 }
 
 export interface ReplayQueueRuntime {
@@ -160,6 +182,15 @@ export function startReplayQueueRuntime(options: ReplayQueueRuntimeOptions): Rep
         })
       : undefined;
 
+  /**
+   * Run 101 addendum 04 (Effect guidance D5): the library's retention runs once per
+   * deployment, beside the replay plane (the first queue this host composes and the
+   * one whose policy carries the catalogue's `retentionDays`). It removes completed
+   * rows and their de-duplication records once the operator's retention elapses;
+   * failed rows stay as the dead-letter record.
+   */
+  const cleanup = startQueueStoreCleanup({ stateRoot: options.stateRoot, policy });
+
   return {
     mode,
     policy,
@@ -167,6 +198,7 @@ export function startReplayQueueRuntime(options: ReplayQueueRuntimeOptions): Rep
     ...(worker ? { worker } : {}),
     async stop() {
       await worker?.stop();
+      await cleanup?.stop();
     },
   };
 }

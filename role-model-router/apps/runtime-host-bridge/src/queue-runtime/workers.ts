@@ -11,7 +11,7 @@
  * new work while in-flight work still reaches a terminal state, and it takes its
  * lock values from the resolved policy via `storeLayerForQueuePolicy`.
  */
-import { Duration, Effect, Fiber } from "effect";
+import { Cause, Duration, Effect, Fiber } from "effect";
 
 import { QueueJobCancelledError, isQueueDraining, readQueueJobState } from "./admin.js";
 import {
@@ -207,7 +207,20 @@ function runClaimLoopWorker<Job>({
           });
           return Effect.raceFirst(attempt, watch);
         })
-        .pipe(Effect.catchCause(() => Effect.void));
+        /**
+         * Run 101 addendum 04 (Effect guidance D2): the vendored store re-raises
+         * interrupt-only causes before turning anything else into a failed job
+         * (`PersistedQueue.ts` `Cause.hasInterruptsOnly(cause) ? Effect.failCause(cause) : …`),
+         * because an interrupt releases the claim without charging an attempt. Swallowing
+         * every cause here hid cancellation from the fiber and charged the job a failure.
+         */
+        .pipe(
+          Effect.catchCause((cause) =>
+            Cause.hasInterruptsOnly(cause)
+              ? Effect.failCause(cause as Cause.Cause<never>)
+              : Effect.void,
+          ),
+        );
     }
   }).pipe(Effect.provide(layer), Effect.scoped);
 
