@@ -199,16 +199,36 @@ function runClaimLoopWorker<Job>({
     signalStop = resolve;
   });
 
+  /**
+   * Run 101 addendum 10 (Effect guidance D3/mq-6). Measured live: with the four planes at `queue` and their
+   * queues idle, `/healthz` stopped answering while chat still worked - the claim loop re-read the kill-switch
+   * document (a synchronous `readFileSync` + parse + validate) and the drain flag (a fresh `DatabaseSync`) on
+   * every iteration, per concurrency slot, and the sidecar was burning a full core. Both reads are now cached
+   * for one poll interval, which is the latency the operator already accepted for a control change.
+   */
+  const controlTtlMs = Math.max(1_000, pollMs);
+  let controlCache: { atMs: number; killed: boolean; draining: boolean } | null = null;
+  const readControl = () => {
+    const now = Date.now();
+    if (controlCache && now - controlCache.atMs < controlTtlMs) return controlCache;
+    let killed = true;
+    let draining = false;
+    try {
+      killed = killSwitchEngaged(readQueuePolicy({ stateRoot, shippedRoot }));
+      if (!killed) draining = isQueueDraining({ stateRoot, queue: queueName });
+    } catch {
+      // No readable policy is not a reason to keep working.
+      killed = true;
+    }
+    controlCache = { atMs: now, killed, draining };
+    return controlCache;
+  };
+
   const claimLoop = Effect.gen(function* () {
     const queue = yield* makeQueue(policy);
     while (!stopped) {
-      let killed = false;
-      try {
-        killed = killSwitchEngaged(readQueuePolicy({ stateRoot, shippedRoot }));
-      } catch {
-        killed = true;
-      }
-      if (killed) {
+      const control = readControl();
+      if (control.killed) {
         yield* Effect.sleep(Duration.millis(pollMs));
         continue;
       }
@@ -217,7 +237,7 @@ function runClaimLoopWorker<Job>({
        * conservative (`false` on any failure) so a control store this loop cannot read never
        * takes the queue down with it.
        */
-      if (isQueueDraining({ stateRoot, queue: queueName })) {
+      if (control.draining) {
         yield* Effect.sleep(Duration.millis(pollMs));
         continue;
       }
@@ -294,7 +314,13 @@ function runClaimLoopWorker<Job>({
           Effect.catchCause((cause) =>
             Cause.hasInterruptsOnly(cause)
               ? Effect.failCause(cause as Cause.Cause<never>)
-              : Effect.void,
+              : /**
+                 * Run 101 addendum 10: a store failure must not become a tight retry. The previous `Effect.void`
+                 * answered "handled" and the loop claimed again immediately - measured live as a silent core
+                 * burn in the sidecar while its queue was empty. A short pause keeps the retry rate sane and
+                 * leaves the event loop to the live path.
+                 */
+                Effect.sleep(Duration.millis(250)),
           ),
         );
     }
