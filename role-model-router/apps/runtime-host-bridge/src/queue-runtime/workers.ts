@@ -45,6 +45,14 @@ export interface ReplayDispatchWorkerOptions {
   ) => Promise<void>;
   /** Called after a failed attempt, before the store's backoff elapses. */
   readonly onAttemptFailure?: (error: unknown, job: ReplayDispatchJob) => void;
+  /** Run 101 addendum 08: the attempt outcome (attempt, budget, willRetry) the guide's onJobFailure carries. */
+  readonly onAttemptOutcome?: (outcome: {
+    readonly error: unknown;
+    readonly job: ReplayDispatchJob;
+    readonly attempt: number;
+    readonly attemptsMax: number;
+    readonly willRetry: boolean;
+  }) => void;
   /** Where the shipped policy lives when no state-root document exists yet. */
   readonly shippedRoot?: string;
   /** How often an engaged kill switch is re-checked. Defaults to 1 s. */
@@ -71,6 +79,14 @@ export interface EvaluationScoreWorkerOptions {
     context: { readonly attempt: number },
   ) => Promise<void>;
   readonly onAttemptFailure?: (error: unknown, job: EvaluationScoreJob) => void;
+  /** Run 101 addendum 08: the attempt outcome (attempt, budget, willRetry) the guide's onJobFailure carries. */
+  readonly onAttemptOutcome?: (outcome: {
+    readonly error: unknown;
+    readonly job: EvaluationScoreJob;
+    readonly attempt: number;
+    readonly attemptsMax: number;
+    readonly willRetry: boolean;
+  }) => void;
   readonly shippedRoot?: string;
   readonly killSwitchPollIntervalMs?: number;
   readonly cancellationPollIntervalMs?: number;
@@ -87,6 +103,14 @@ export interface LearnerDeriveWorkerOptions {
    */
   readonly handler: (job: LearnerDeriveJob, context: { readonly attempt: number }) => Promise<void>;
   readonly onAttemptFailure?: (error: unknown, job: LearnerDeriveJob) => void;
+  /** Run 101 addendum 08: the attempt outcome (attempt, budget, willRetry) the guide's onJobFailure carries. */
+  readonly onAttemptOutcome?: (outcome: {
+    readonly error: unknown;
+    readonly job: LearnerDeriveJob;
+    readonly attempt: number;
+    readonly attemptsMax: number;
+    readonly willRetry: boolean;
+  }) => void;
   readonly shippedRoot?: string;
   readonly killSwitchPollIntervalMs?: number;
   readonly cancellationPollIntervalMs?: number;
@@ -101,6 +125,14 @@ export interface LearnerPromoteWorkerOptions {
     context: { readonly attempt: number },
   ) => Promise<void>;
   readonly onAttemptFailure?: (error: unknown, job: LearnerPromoteJob) => void;
+  /** Run 101 addendum 08: the attempt outcome (attempt, budget, willRetry) the guide's onJobFailure carries. */
+  readonly onAttemptOutcome?: (outcome: {
+    readonly error: unknown;
+    readonly job: LearnerPromoteJob;
+    readonly attempt: number;
+    readonly attemptsMax: number;
+    readonly willRetry: boolean;
+  }) => void;
   readonly shippedRoot?: string;
   readonly killSwitchPollIntervalMs?: number;
   readonly cancellationPollIntervalMs?: number;
@@ -120,6 +152,7 @@ function runClaimLoopWorker<Job>({
   makeQueue,
   handler,
   onAttemptFailure,
+  onAttemptOutcome,
   killSwitchPollIntervalMs,
   cancellationPollIntervalMs,
 }: {
@@ -142,6 +175,18 @@ function runClaimLoopWorker<Job>({
   >;
   readonly handler: (job: Job, context: { readonly attempt: number }) => Promise<void>;
   readonly onAttemptFailure?: (error: unknown, job: Job) => void;
+  /**
+   * Run 101 addendum 08 (effect-mq guidance #5, `workers.md#failure-reporting`): the attempt callback the
+   * guide's `onJobFailure` carries - the attempt number, the job's budget and whether it will be retried -
+   * so a caller can report exhaustion instead of only naming each attempt.
+   */
+  readonly onAttemptOutcome?: (outcome: {
+    readonly error: unknown;
+    readonly job: Job;
+    readonly attempt: number;
+    readonly attemptsMax: number;
+    readonly willRetry: boolean;
+  }) => void;
   readonly killSwitchPollIntervalMs?: number;
   readonly cancellationPollIntervalMs?: number;
 }): ReplayDispatchWorker {
@@ -182,6 +227,28 @@ function runClaimLoopWorker<Job>({
             try: () => handler(job, { attempt: info.attempts }),
             catch: (error) => {
               onAttemptFailure?.(error, job);
+              const outcome = {
+                error,
+                job,
+                attempt: info.attempts,
+                attemptsMax: policy.attempts,
+                willRetry: info.attempts < policy.attempts,
+              };
+              if (onAttemptOutcome) onAttemptOutcome(outcome);
+              else if (!outcome.willRetry) {
+                /**
+                 * Run 101 addendum 08: exhaustion is reported by name even when the caller passed no
+                 * callback - the guide's `onJobFailure` is what makes a terminal failure visible instead
+                 * of readable only from `effect_queue.last_failure`.
+                 */
+                console.error(
+                  `[run101] ${queueName} job failed terminally:${String(info.id).slice(0, 48)} attempts=${
+                    info.attempts
+                  }/${policy.attempts} ${String(
+                    (error as { message?: unknown })?.message ?? error,
+                  ).slice(0, 160)}`,
+                );
+              }
               return error;
             },
           });
@@ -264,6 +331,7 @@ export function runLearnerDeriveWorker(options: LearnerDeriveWorkerOptions): Rep
     makeQueue: makeLearnerDeriveQueue as never,
     handler: options.handler,
     onAttemptFailure: options.onAttemptFailure,
+    onAttemptOutcome: options.onAttemptOutcome,
     killSwitchPollIntervalMs: options.killSwitchPollIntervalMs,
     cancellationPollIntervalMs: options.cancellationPollIntervalMs,
   });
@@ -280,6 +348,7 @@ export function runLearnerPromoteWorker(
     makeQueue: makeLearnerPromoteQueue as never,
     handler: options.handler,
     onAttemptFailure: options.onAttemptFailure,
+    onAttemptOutcome: options.onAttemptOutcome,
     killSwitchPollIntervalMs: options.killSwitchPollIntervalMs,
     cancellationPollIntervalMs: options.cancellationPollIntervalMs,
   });
@@ -300,6 +369,7 @@ export function runEvaluationScoreWorker(
     makeQueue: makeEvaluationScoreQueue as never,
     handler: options.handler,
     onAttemptFailure: options.onAttemptFailure,
+    onAttemptOutcome: options.onAttemptOutcome,
     killSwitchPollIntervalMs: options.killSwitchPollIntervalMs,
     cancellationPollIntervalMs: options.cancellationPollIntervalMs,
   });
@@ -321,6 +391,7 @@ export function runReplayDispatchWorker(
     makeQueue: makeReplayDispatchQueue as never,
     handler: options.handler,
     onAttemptFailure: options.onAttemptFailure,
+    onAttemptOutcome: options.onAttemptOutcome,
     killSwitchPollIntervalMs: options.killSwitchPollIntervalMs,
     cancellationPollIntervalMs: options.cancellationPollIntervalMs,
   });
