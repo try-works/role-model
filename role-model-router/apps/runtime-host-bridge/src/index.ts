@@ -25618,7 +25618,14 @@ export async function createRuntimeBridgeBackend(
            * `terminated` failures with `streamTextDeltaCount: 0` still carried `retryCount: 0`/`rerouteCount: 0`
            * because the executor's role-only opening chunk closed the gate.
            */
-          if (hasSubstantiveStreamDelta(chunk)) {
+          /**
+           * Run 101 addendum 24: the gate must count what the *ingress* wrote, not what the executor emitted. A
+           * substantive chunk without metadata is buffered by the ingress and never reaches the client, yet it used
+           * to close the gate - that is the residual 502 (`terminated`, ~75 s, `retry 0` / `reroute 0`, top-level
+           * endpoint `routing.failed.pre-execution`, client-visible status 502 because the head was never
+           * committed). `metadata && substantive` is exactly the ingress's commit condition.
+           */
+          if (metadata && hasSubstantiveStreamDelta(chunk)) {
             deliveredSubstantiveChunkCount += 1;
           }
           await streamWriter(chunk, metadata);
@@ -27075,6 +27082,13 @@ export async function createRuntimeBridgeBackend(
         statusCode: error.statusCode,
         errorClass: error.errorClass,
         latencyMs: failureLatencyMs,
+        /**
+         * Run 101 addendum 23: the failure row must carry what the client actually received. The builder used to
+         * write a literal zero, so a response that had streamed 789 chunks was recorded (and read by this operator)
+         * as `streamTextDeltaCount: 0` - the number that made a post-content drop look like a pre-content failure
+         * for two repair cycles. This is the count of chunks that carried content or tool calls.
+         */
+        streamTextDeltaCount: deliveredSubstantiveChunkCount,
         clientRequestId: executionOptions?.requestOptions?.clientRequestId ?? null,
         requestClass: "live_request",
         sourceType,

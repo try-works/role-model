@@ -3440,11 +3440,11 @@ function toFailureRuntimeTelemetryRecord(
     cacheReadTokensSupported: true,
     cacheWriteTokens: 0,
     cacheWriteTokensSupported: true,
-    streamTextDeltaCount: 0,
+    streamTextDeltaCount: input.streamTextDeltaCount ?? 0,
     streamTextSupported: true,
-    streamToolCallDeltaCount: 0,
+    streamToolCallDeltaCount: input.streamToolCallDeltaCount ?? 0,
     streamToolCallSupported: true,
-    streamToolArgumentDeltaCount: 0,
+    streamToolArgumentDeltaCount: input.streamToolArgumentDeltaCount ?? 0,
     streamToolArgumentSupported: true,
     toolCallCount: 0,
     toolExecutionCount: 0,
@@ -4864,6 +4864,18 @@ export function persistRuntimeObservationBundle(input: PersistRuntimeObservation
 export interface PersistRuntimeTelemetryFailureInput {
   readonly databasePath: string;
   readonly requestId: string;
+  /**
+   * Run 101 addendum 23: how much of the answer had already been streamed when this attempt failed.
+   *
+   * Measured on `:3457` (2026-09-27 ~20:2x): a failure row read `streamTextDeltaCount: 0` even though the response
+   * had delivered 789 chunks - the failure builder wrote a literal zero, so the value was never measured. That
+   * misreading sent two repair cycles after a pre-content bug that did not exist. The counters are optional so a
+   * caller that cannot observe them still records zero, and a caller that can (the host bridge's execution loop)
+   * records what actually happened.
+   */
+  readonly streamTextDeltaCount?: number;
+  readonly streamToolCallDeltaCount?: number;
+  readonly streamToolArgumentDeltaCount?: number;
   readonly routingDecisionId?: string;
   readonly endpointId?: string;
   readonly reasoningEffort?: string | null;
