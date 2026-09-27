@@ -10588,6 +10588,21 @@ function createBridgeRequestAbortSignal(
   return controller.signal;
 }
 
+/**
+ * Run 101 addendum 13: the live path's per-attempt provider bound.
+ *
+ * Measured live on `:3457`: the same alias answered in 2.5 s on one sample and failed with an empty 400 after
+ * ~90 s on others while exact-model requests stayed at 2-4 s - a stalled provider attempt consumed the caller's
+ * window. Queue claims got a bound in addendum 06 (`attemptTimeoutMs`); this is the live path's equivalent, and
+ * the operator can tune it with `ROLE_MODEL_LIVE_ATTEMPT_TIMEOUT_MS` (bounds 5 s - 10 min, default 2 min).
+ */
+export function resolveLiveAttemptTimeoutMs(env: NodeJS.ProcessEnv = process.env): number {
+  const raw = Number(env.ROLE_MODEL_LIVE_ATTEMPT_TIMEOUT_MS ?? "");
+  if (!Number.isSafeInteger(raw)) return 120_000;
+  if (raw < 5_000) return 5_000;
+  return Math.min(raw, 600_000);
+}
+
 function mergeBridgeRequestAbortSignal(
   requestOptions: BridgeExecutionRequestOptions | undefined,
   abortSignal: AbortSignal,
@@ -16956,7 +16971,14 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       // outcome, including failures written by the outer error handler.
       response.once("finish", recordClientLatency);
       try {
-        const requestAbortSignal = createBridgeRequestAbortSignal(request, response);
+        /**
+         * Run 101 addendum 13: the caller's disconnect signal and the per-attempt provider bound are merged, so
+         * one stalled attempt can no longer hold the request until the client gives up.
+         */
+        const requestAbortSignal = AbortSignal.any([
+          createBridgeRequestAbortSignal(request, response),
+          AbortSignal.timeout(resolveLiveAttemptTimeoutMs()),
+        ]);
         const requestOptions = mergeBridgeRequestAbortSignal(
           readBridgeExecutionRequestOptions(request),
           requestAbortSignal,
