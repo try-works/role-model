@@ -10588,6 +10588,21 @@ function createBridgeRequestAbortSignal(
   return controller.signal;
 }
 
+/**
+ * Run 101 addendum 13: the live path's per-attempt provider bound.
+ *
+ * Measured live on `:3457`: the same alias answered in 2.5 s on one sample and failed with an empty 400 after
+ * ~90 s on others while exact-model requests stayed at 2-4 s - a stalled provider attempt consumed the caller's
+ * window. Queue claims got a bound in addendum 06 (`attemptTimeoutMs`); this is the live path's equivalent, and
+ * the operator can tune it with `ROLE_MODEL_LIVE_ATTEMPT_TIMEOUT_MS` (bounds 5 s - 10 min, default 2 min).
+ */
+export function resolveLiveAttemptTimeoutMs(env: NodeJS.ProcessEnv = process.env): number {
+  const raw = Number(env.ROLE_MODEL_LIVE_ATTEMPT_TIMEOUT_MS ?? "");
+  if (!Number.isSafeInteger(raw)) return 120_000;
+  if (raw < 5_000) return 5_000;
+  return Math.min(raw, 600_000);
+}
+
 function mergeBridgeRequestAbortSignal(
   requestOptions: BridgeExecutionRequestOptions | undefined,
   abortSignal: AbortSignal,
@@ -16956,7 +16971,14 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       // outcome, including failures written by the outer error handler.
       response.once("finish", recordClientLatency);
       try {
-        const requestAbortSignal = createBridgeRequestAbortSignal(request, response);
+        /**
+         * Run 101 addendum 13: the caller's disconnect signal and the per-attempt provider bound are merged, so
+         * one stalled attempt can no longer hold the request until the client gives up.
+         */
+        const requestAbortSignal = AbortSignal.any([
+          createBridgeRequestAbortSignal(request, response),
+          AbortSignal.timeout(resolveLiveAttemptTimeoutMs()),
+        ]);
         const requestOptions = mergeBridgeRequestAbortSignal(
           readBridgeExecutionRequestOptions(request),
           requestAbortSignal,
@@ -28021,6 +28043,32 @@ export async function createRuntimeBridgeBackend(
   };
 
   let lastDetectedModel: string | null = null;
+  /**
+   * Run 101 addendum 11: is the runtime *ready*, given its bootstrap receipts?
+   *
+   * A runtime that is serving is ready. The only runtime-level failures are a blocked bootstrap or a remote-health
+   * stage that found no usable endpoint at all; a partially degraded stage (one probe timeout out of seven, a
+   * single offline provider) is an endpoint-level fact that the router already handles by excluding it.
+   */
+  function resolveRuntimeReadiness(state: {
+    readonly status: string;
+    readonly stages: readonly {
+      readonly stageId: string;
+      readonly status: string;
+      readonly details?: unknown;
+    }[];
+  }): boolean {
+    if (state.status === "blocked") return true;
+    if (state.status !== "degraded") return false;
+    const remoteHealth = state.stages.find((stage) => stage.stageId === "remote-health");
+    if (!remoteHealth || remoteHealth.status !== "degraded") return true;
+    const details = (remoteHealth.details ?? {}) as { readonly healthy?: unknown };
+    const healthy = typeof details.healthy === "number" ? details.healthy : null;
+    // A degraded remote-health stage with no successful probe at all is a runtime-level failure; one with at
+    // least one healthy endpoint keeps the runtime ready.
+    return healthy !== null && healthy > 0;
+  }
+
   let sessionBootstrapState: SessionBootstrapState = createPendingBootstrapState();
   const backend = {
     operatorAuthToken: options.operatorAuthToken,
@@ -28562,8 +28610,14 @@ export async function createRuntimeBridgeBackend(
         litellm: currentLiteLLMVendor?.readStatus() ?? createInactiveVendorStatus("litellm"),
       };
       const summarized = summarizeHealthStatus(vendors);
-      const bootstrapBlocked =
-        sessionBootstrapState.status === "blocked" || sessionBootstrapState.status === "degraded";
+      /**
+       * Run 101 addendum 11. Measured live: one endpoint probe timed out at boot (`reason: "timeout"`) and this
+       * line flipped the whole runtime to `degraded`, so `/healthz` answered 503 for the rest of the process's
+       * life even though routing kept working and six of seven endpoints were healthy. A runtime is ready when
+       * it is serving: a partially degraded remote-health stage is an endpoint-level fact, and only a stage
+       * that leaves *no* usable endpoint (or a blocked bootstrap) is a runtime-level failure.
+       */
+      const bootstrapBlocked = resolveRuntimeReadiness(sessionBootstrapState);
       return {
         runtime: runtimeVersionInfo,
         status: bootstrapBlocked ? "degraded" : summarized.status,
