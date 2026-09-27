@@ -5480,6 +5480,37 @@ export function buildTerminalStreamErrorPayload(error: unknown): {
   };
 }
 
+/**
+ * Run 101 addendum 22: whether a bootstrap state is a *runtime-level* blockage.
+ *
+ * The rule the run documented in addendum 11: a runtime that is serving is ready; the only runtime-level failures
+ * are a blocked bootstrap or a remote-health stage that found no usable endpoint at all. A partially degraded
+ * stage - one probe timeout out of several - is an endpoint-level fact the router already handles by excluding it.
+ *
+ * Measured live on RC `6f769013` (2026-09-27 ~20:3x): the boot probed three endpoints, two answered and
+ * `deepseek-v4-flash-max` timed out, and `/healthz` answered **503 / degraded / ready:false** while chat served
+ * normally. The previous implementation of this predicate answered "ready" for the first two branches and "blocked"
+ * for the last two, so a degraded stage with healthy > 0 was reported as a runtime failure - the exact case the
+ * rule says must not be one.
+ */
+export function isRuntimeBootstrapBlock(state: {
+  readonly status: string;
+  readonly stages: readonly {
+    readonly stageId: string;
+    readonly status: string;
+    readonly details?: unknown;
+  }[];
+}): boolean {
+  if (state.status === "blocked") return true;
+  if (state.status !== "degraded") return false;
+  const remoteHealth = state.stages.find((stage) => stage.stageId === "remote-health");
+  if (!remoteHealth || remoteHealth.status !== "degraded") return false;
+  const details = (remoteHealth.details ?? {}) as { readonly healthy?: unknown };
+  const healthy = typeof details.healthy === "number" ? details.healthy : null;
+  if (healthy === null) return false;
+  return healthy <= 0;
+}
+
 function createVendorError(vendorId: string, message: string): BridgeHttpError {
   const normalized = createVendorNotConfiguredError(vendorId, message);
   return new BridgeHttpError(503, {
@@ -28426,26 +28457,11 @@ export async function createRuntimeBridgeBackend(
    * A runtime that is serving is ready. The only runtime-level failures are a blocked bootstrap or a remote-health
    * stage that found no usable endpoint at all; a partially degraded stage (one probe timeout out of seven, a
    * single offline provider) is an endpoint-level fact that the router already handles by excluding it.
+   *
+   * Run 101 addendum 22: the predicate lives at module scope (`isRuntimeBootstrapBlock`) so the rule is unit-tested
+   * directly - the previous closure-local version answered "ready" for its first two branches and "blocked" for its
+   * last two, which reported a degraded-but-serving runtime as a fifty-three.
    */
-  function resolveRuntimeReadiness(state: {
-    readonly status: string;
-    readonly stages: readonly {
-      readonly stageId: string;
-      readonly status: string;
-      readonly details?: unknown;
-    }[];
-  }): boolean {
-    if (state.status === "blocked") return true;
-    if (state.status !== "degraded") return false;
-    const remoteHealth = state.stages.find((stage) => stage.stageId === "remote-health");
-    if (!remoteHealth || remoteHealth.status !== "degraded") return true;
-    const details = (remoteHealth.details ?? {}) as { readonly healthy?: unknown };
-    const healthy = typeof details.healthy === "number" ? details.healthy : null;
-    // A degraded remote-health stage with no successful probe at all is a runtime-level failure; one with at
-    // least one healthy endpoint keeps the runtime ready.
-    return healthy !== null && healthy > 0;
-  }
-
   let sessionBootstrapState: SessionBootstrapState = createPendingBootstrapState();
   const backend = {
     operatorAuthToken: options.operatorAuthToken,
@@ -28994,7 +29010,7 @@ export async function createRuntimeBridgeBackend(
        * it is serving: a partially degraded remote-health stage is an endpoint-level fact, and only a stage
        * that leaves *no* usable endpoint (or a blocked bootstrap) is a runtime-level failure.
        */
-      const bootstrapBlocked = resolveRuntimeReadiness(sessionBootstrapState);
+      const bootstrapBlocked = isRuntimeBootstrapBlock(sessionBootstrapState);
       return {
         runtime: runtimeVersionInfo,
         status: bootstrapBlocked ? "degraded" : summarized.status,
