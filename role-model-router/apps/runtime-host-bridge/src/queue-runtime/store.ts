@@ -19,6 +19,8 @@ import { SqliteClient } from "@effect/sql-sqlite-node";
 import { Duration, Layer } from "effect";
 import { PersistedQueue } from "effect/unstable/persistence";
 
+import type { ResolvedQueuePolicy } from "./policy.js";
+
 import { resolveQueueStateRoot } from "./policy.js";
 
 /**
@@ -119,6 +121,35 @@ export function makeQueueStoreLayer({
 }
 
 /**
+ * The store services themselves, exposed for the retention layer: `layerCleanup`
+ * requires `PersistedQueueStore`, and the queue-factory layer above keeps that
+ * service private, so retention composes against these two layers directly.
+ */
+function makeQueueStoreServices({
+  filePath,
+  tableName = QUEUE_STORE_PARAMETERS.tableName,
+  pollIntervalMs = QUEUE_STORE_PARAMETERS.pollIntervalMs,
+  lockRefreshIntervalMs = QUEUE_STORE_PARAMETERS.lockRefreshIntervalMs,
+  lockExpirationMs = QUEUE_STORE_PARAMETERS.lockExpirationMs,
+  busyTimeoutMs = QUEUE_STORE_PARAMETERS.busyTimeoutMs,
+  disableWAL = false,
+}: QueueStoreLayerOptions) {
+  mkdirSync(path.dirname(filePath), { recursive: true });
+  const client = SqliteClient.layer({
+    filename: filePath,
+    busyTimeout: Duration.millis(busyTimeoutMs),
+    disableWAL,
+  });
+  const store = PersistedQueue.layerStoreSql({
+    tableName,
+    pollInterval: Duration.millis(pollIntervalMs),
+    lockRefreshInterval: Duration.millis(lockRefreshIntervalMs),
+    lockExpiration: Duration.millis(lockExpirationMs),
+  });
+  return { client, store };
+}
+
+/**
  * Builds the store layer for one queue from its *resolved policy*, so the lock
  * values the workers honour come from the operator's document rather than from
  * this module's constants. Only the poll interval stays store-level: it is how
@@ -138,4 +169,39 @@ export function storeLayerForQueuePolicy({
     lockRefreshIntervalMs: policy.lockRefreshMs,
     lockExpirationMs: policy.lockExpirationMs,
   });
+}
+
+/**
+ * Run 101 addendum 04 (Effect guidance D5): the catalogue's `retentionDays` was
+ * declared, validated and reported, but nothing composed the library's own
+ * retention - so `effect_queue` grew without bound and the operator's contract was
+ * never enforced. `PersistedQueue.layerCleanup` "Run this layer in one instance of
+ * a deployment rather than on every worker" runs `store.cleanup` immediately and
+ * then on a schedule, removing completed rows (and their de-duplication records)
+ * older than `timeToLive`. Failed rows are the dead-letter record and are kept.
+ */
+export function makeQueueStoreCleanupLayer({
+  stateRoot,
+  policy,
+  interval,
+  timeToLive,
+}: {
+  readonly stateRoot: string;
+  readonly policy: Pick<
+    ResolvedQueuePolicy,
+    "retentionDays" | "lockRefreshMs" | "lockExpirationMs"
+  >;
+  readonly interval?: Duration.Input;
+  /** Overrides the catalogue's `retentionDays`; the test uses it to observe a sweep. */
+  readonly timeToLive?: Duration.Input;
+}) {
+  const { client, store } = makeQueueStoreServices({
+    filePath: resolveQueueStorePath({ stateRoot }),
+    lockRefreshIntervalMs: policy.lockRefreshMs,
+    lockExpirationMs: policy.lockExpirationMs,
+  });
+  return PersistedQueue.layerCleanup({
+    timeToLive: timeToLive ?? Duration.days(policy.retentionDays),
+    interval: interval ?? Duration.hours(1),
+  }).pipe(Layer.provide(store), Layer.provide(client));
 }

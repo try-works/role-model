@@ -37,6 +37,13 @@ do not use it, say why in the change (code comment, addendum, or pull-request bo
 
 The enforced rule and the per-need map live in `.recursive/RECURSIVE.md` § "Effect-first implementation rule".
 
+Before writing any Effect code, read `.agents/skills/effect-ts/SKILL.md` (installed from
+`https://github.com/effect-ts/skills`, pinned in its `PROVENANCE.md`). Upstream points at
+`node_modules/effect/AGENTS.md`; this repository consumes the vendored source drop instead, so the guidance it refers
+to lives in `vendor/effect/packages/effect/*.md` (`SCHEMA.md`, `CONFIG.md`, `HTTPAPI.md`, `MCP.md`, `OPTIC.md`,
+`ARBITRARY.md`), and `role-model-router/packages/effect/src` is the workspace package published as `effect`. Use
+`.agents/skills/effect-v3-to-v4/SKILL.md` for v3-to-v4 migrations.
+
 ## recursive-mode
 
 When starting or resuming recursive-mode work, read `.codex/AGENTS.md` and the canonical `.recursive/RECURSIVE.md` before acting. Durable workflow memory lives under `.recursive/memory/`.
