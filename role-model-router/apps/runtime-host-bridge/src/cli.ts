@@ -7143,6 +7143,24 @@ export async function main(): Promise<void> {
            * does not drive. A refused offer is logged, never thrown: the replay itself already succeeded.
            */
           const handoffRequest = evaluationHandoffRequestFromCommandReceipt(decodedReplayReceipt);
+          /**
+           * Run 101 addendum 29 (bounded diagnostic). Two repair cycles have now inferred the receipt's state from
+           * side effects instead of reading it: addendum 26 offers only for `awaiting_evaluation`, addendum 28 made
+           * the indeterminacy refusal terminal, and a fresh capture still produced no disposition row, no evaluation
+           * job and no contract. This names the state the auto-replay execution actually received, once per receipt,
+           * so the next step is decided by the value rather than by a hypothesis. Remove it once the state is known
+           * and handled.
+           */
+          const decodedReceiptState =
+            decodedReplayReceipt &&
+            typeof decodedReplayReceipt === "object" &&
+            !Array.isArray(decodedReplayReceipt) &&
+            typeof (decodedReplayReceipt as Record<string, unknown>).state === "string"
+              ? String((decodedReplayReceipt as Record<string, unknown>).state)
+              : "unknown";
+          console.error(
+            `[run101] replay receipt state=${decodedReceiptState} handoff=${handoffRequest?.replayJobId ?? "-"}`,
+          );
           if (handoffRequest && lateBoundEvaluationQueue.mode !== "legacy") {
             /** Run 101 addendum 27: the offer is an Effect program with a bounded retry (see the helper). */
             const offered = await offerEvaluationHandoff({
