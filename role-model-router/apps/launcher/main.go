@@ -17,8 +17,8 @@ import (
 )
 
 const (
-	runtimeHost           = "127.0.0.1"
-	runtimePort           = 3456
+	runtimeHost = "127.0.0.1"
+	runtimePort = 3456
 	/**
 	 * Run 101 addendum 12: measured live, the bootstrap's remote-health stage can take ~17 s (three provider
 	 * probes with their own timeouts) and longer under load, so a 30 s budget killed a runtime that was already
