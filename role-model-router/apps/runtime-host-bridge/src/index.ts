@@ -4717,7 +4717,15 @@ export function classifyUpstreamExecutionFailure(input: {
     errorClass: "execution_failed",
     message,
     retryable: false,
-    fallbackEligible: false,
+    /**
+     * Run 101 addendum 13 (operator report: "a lot of random 503 requests that must be caused by the router").
+     * This was the last branch of the classifier and it marked every unclassified upstream failure as terminal,
+     * so the reroute loop (`executeCurrentExecutionRequest`, `if (!error.fallbackEligible) throw error`) surfaced
+     * one candidate's failure - the Codex vendor passes `fallbackStatusCode: 503` - as the whole request's
+     * status, even when the alias had other eligible candidates. A 5xx is a candidate-level fact; the request
+     * may still be served. A 4xx stays terminal (it is a verdict on the request itself).
+     */
+    fallbackEligible: statusCode >= 500,
     endpointId: input.endpointId,
     ...baseErrorContext,
     upstreamBody: input.body,
