@@ -119,6 +119,7 @@ export function startReplayQueueRuntime(options: ReplayQueueRuntimeOptions): Rep
         mode: "legacy",
         concurrency: 1,
         attempts: 1,
+        attemptTimeoutMs: 300_000,
         backoffBaseMs: 100,
         backoffCapMs: 1_000,
         lockRefreshMs: 30_000,

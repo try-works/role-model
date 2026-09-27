@@ -205,7 +205,16 @@ function runClaimLoopWorker<Job>({
               }
             }
           });
-          return Effect.raceFirst(attempt, watch);
+          /**
+           * Run 101 addendum 06 (effect-mq guidance #3): a per-attempt timeout from the operator's catalogue,
+           * between the handler's observed p99 and the lock expiration. The vendored guide: the timeout
+           * "interrupts the handler cleanly ... consuming an attempt" (`retries-and-timeouts.md#timeouts`).
+           * Without it a hung handler held its claim until the lock expired.
+           */
+          return Effect.raceFirst(
+            Effect.timeout(attempt, Duration.millis(policy.attemptTimeoutMs)),
+            watch,
+          );
         })
         /**
          * Run 101 addendum 04 (Effect guidance D2): the vendored store re-raises
