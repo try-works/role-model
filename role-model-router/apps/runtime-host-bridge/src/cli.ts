@@ -86,6 +86,7 @@ import {
 const MAX_HANDOFF_RECOVERIES_PER_SWEEP = 3;
 /** How often the handed-off-replay recovery pass may list the durable jobs (measured on the live root). */
 const HANDOFF_RECOVERY_INTERVAL_MS = 120_000;
+import { evaluationAttemptOutcome } from "./queue-runtime/evaluation.js";
 // Run 101 R4: the replay plane's queue runtime (policy-driven mode, offer and
 // worker). Imported here so the auto-replay loop's composition can start it.
 import {
@@ -7171,9 +7172,14 @@ export async function main(): Promise<void> {
           if (!resume) throw new Error("evaluation resume implementation is not available yet");
           const scope = job.replayJobId ? { onlyReplayJobId: job.replayJobId } : undefined;
           const result = await resume(scope);
-          const progressed =
-            result.resumed + result.completed + result.failed + result.outsideRetentionWindow > 0;
-          if (!progressed) {
+          /**
+           * Run 101 addendum 03: a scoped resume with nothing left in the store
+           * (`remaining: 0`) is the handoff being already finalized - a terminal
+           * no-op the worker acks. Only "nothing progressed and work remains" is a
+           * retryable failure; the strict version marked an already-done handoff
+           * failed after four attempts (measured live on `:3457`).
+           */
+          if (evaluationAttemptOutcome(result) === "retry") {
             throw new Error(
               `evaluation job ${job.groupId ?? job.replayJobId ?? "unknown"} made no progress`,
             );
