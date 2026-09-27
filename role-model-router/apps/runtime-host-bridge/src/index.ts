@@ -4645,6 +4645,12 @@ export function classifyUpstreamExecutionFailure(input: {
     searchText.includes("fetch failed") ||
     searchText.includes("network error") ||
     searchText.includes("socket hang up") ||
+    // Run 101 addendum 18: undici reports a connection the peer (or the path) closed as `terminated`, and the
+    // OpenAI-compatible dispatch rethrows it unclassified. Measured live on `:3457`: six requests failed with
+    // `terminated` / `fetch failed` after 21-98 s and none retried or failed over, because the retry/reroute gate
+    // only accepts an `UpstreamExecutionError`. It is a transport fact, so it classifies here as one.
+    searchText.includes("terminated") ||
+    searchText.includes("other side closed") ||
     searchText.includes("econnrefused") ||
     searchText.includes("econnreset") ||
     searchText.includes("ehostunreach") ||
@@ -4756,6 +4762,49 @@ export function shouldRetryUpstreamExecutionOnSameEndpoint(input: {
     return true;
   }
   return !input.fallbackEligible && input.hasOtherEligibleEndpoint;
+}
+
+/**
+ * Run 101 addendum 18: the live loop's retry/reroute gate only understands `UpstreamExecutionError`, so a provider
+ * transport error that escaped its branch unclassified skipped the gate entirely - no retry, no failover, and the
+ * client received a bare `400`. Measured live on `:3457` (2026-09-27 ~18:20): six requests failed with
+ * `terminated` / `fetch failed` after 21-98 s with `retryCount: 0`, `rerouteCount: 0` and zero streamed deltas.
+ *
+ * Classifying at the gate covers every provider path at once: a genuine provider verdict keeps its own class, and a
+ * transport blip becomes retryable and fallback-eligible like any other candidate failure.
+ */
+export function classifyExecutionFailureIfNeeded(
+  error: unknown,
+  endpointId: string,
+  context: {
+    readonly providerId?: string;
+    readonly executionFamily?: string;
+    readonly adapterFamily?: string;
+  } = {},
+): UpstreamExecutionError {
+  if (error instanceof UpstreamExecutionError) {
+    return error;
+  }
+  /**
+   * A rejection that carries the provider's own status keeps it: only the statusless transport errors take the
+   * 502 default (which then reads as a 5xx candidate failure).
+   */
+  const record =
+    typeof error === "object" && error !== null ? (error as Record<string, unknown>) : {};
+  const explicitStatusCode =
+    typeof record.statusCode === "number"
+      ? record.statusCode
+      : typeof record.status === "number"
+        ? record.status
+        : undefined;
+  return classifyUpstreamExecutionFailure({
+    endpointId,
+    message: error instanceof Error ? error.message : "Provider request failed.",
+    providerId: context.providerId ?? "",
+    executionFamily: context.executionFamily ?? "",
+    adapterFamily: context.adapterFamily ?? "",
+    ...(explicitStatusCode === undefined ? {} : { statusCode: explicitStatusCode }),
+  });
 }
 
 function readExecutionCircuitState(databasePath: string): ExecutionCircuitState {
@@ -27043,7 +27092,26 @@ export async function createRuntimeBridgeBackend(
           ownedProbeEndpointId = undefined;
           routingDecisionId = routed.decision.routing_decision_id;
           return result;
-        } catch (error) {
+        } catch (rawError) {
+          /**
+           * Run 101 addendum 18: classify before the gate, so a provider transport error that its branch never
+           * classified still retries and fails over (measured live: `terminated` skipped both).
+           */
+          const failedEndpointRow = executionSnapshot.registry.endpoints.find(
+            (row) => row.identity.endpoint_id === routed.decision.chosen_endpoint_id,
+          );
+          const error = classifyExecutionFailureIfNeeded(
+            rawError,
+            routed.decision.chosen_endpoint_id,
+            {
+              providerId: failedEndpointRow?.identity.provider_kind ?? "",
+              executionFamily:
+                failedEndpointRow?.identity.serving_source ??
+                failedEndpointRow?.identity.endpoint_kind ??
+                "",
+              adapterFamily: failedEndpointRow?.identity.endpoint_kind ?? "",
+            },
+          );
           if (!(error instanceof UpstreamExecutionError) || streamedChunkCount > 0) {
             if (ownedProbeEndpointId) {
               const released = releaseExecutionCircuitProbe({
