@@ -178,7 +178,15 @@ export function storeLayerForQueuePolicy({
  * never enforced. `PersistedQueue.layerCleanup` "Run this layer in one instance of
  * a deployment rather than on every worker" runs `store.cleanup` immediately and
  * then on a schedule, removing completed rows (and their de-duplication records)
- * older than `timeToLive`. Failed rows are the dead-letter record and are kept.
+ * older than `timeToLive`.
+ *
+ * Run 101 addendum 05 (effect-mq guidance #2): the catalogue describes
+ * `retentionDays` as "How long completed **and failed** job rows are kept for
+ * operator readback", and the vendored cleanup keeps failed rows for ever unless
+ * `failedTimeToLive` is set - so both TTLs carry the operator's value here. Letting
+ * failed rows live for ever instead would require rewording the operator contract
+ * (`shared/queues/queue-policy.mjs` and `docs/operations/queue-parameters.md`),
+ * which is recorded as an explicit follow-up rather than left as a silent mismatch.
  */
 export function makeQueueStoreCleanupLayer({
   stateRoot,
@@ -202,6 +210,7 @@ export function makeQueueStoreCleanupLayer({
   });
   return PersistedQueue.layerCleanup({
     timeToLive: timeToLive ?? Duration.days(policy.retentionDays),
+    failedTimeToLive: timeToLive ?? Duration.days(policy.retentionDays),
     interval: interval ?? Duration.hours(1),
   }).pipe(Layer.provide(store), Layer.provide(client));
 }

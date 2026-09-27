@@ -143,6 +143,56 @@ describe("@recursive:101-effect-mq-queue-rebuild addendum04 Effect guidance find
     expect(completedCount(filePath, "retained-fresh")).toBe(1);
   });
 
+  it("addendum05 #2: a FAILED row is pruned by the same retentionDays the catalogue documents", async () => {
+    const policy = resolveQueuePolicy(policyDocument(), { queue: "replay.dispatch" });
+    const filePath = resolveQueueStorePath({ stateRoot });
+    // maxAttempts 1 → the first take failure marks the row failed (the dead-letter record).
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        const queue = yield* PersistedQueue.make({
+          name: "replay.dispatch",
+          schema: JobSchema,
+          maxAttempts: 1,
+        });
+        yield* queue.offer({ kind: "failed-old" }, { id: "failed-old" });
+        const fiber = yield* Effect.forkChild(
+          queue.take(() => Effect.fail(new Error("handler failed"))),
+        );
+        yield* Effect.sleep(Duration.millis(400));
+        yield* Fiber.interrupt(fiber);
+      }).pipe(Effect.provide(storeLayerForQueuePolicy({ stateRoot, policy })), Effect.scoped),
+    );
+    const failedRows = (): number => {
+      const database = new DatabaseSync(filePath, { readOnly: true });
+      try {
+        const row = database
+          .prepare(
+            "SELECT COUNT(*) AS n FROM effect_queue WHERE id = 'failed-old' AND state = 'failed'",
+          )
+          .get() as { n: number };
+        return Number(row.n);
+      } finally {
+        database.close();
+      }
+    };
+    expect(failedRows()).toBe(1);
+    const fiber = Effect.runFork(
+      Layer.launch(
+        makeQueueStoreCleanupLayer({
+          stateRoot,
+          policy,
+          interval: Duration.hours(1),
+          timeToLive: Duration.zero,
+        }),
+      ),
+    );
+    await Effect.runPromise(Effect.sleep(Duration.millis(800)));
+    await Effect.runPromise(Fiber.interrupt(fiber));
+    expect(failedRows(), "the catalogue documents retentionDays as covering failed rows too").toBe(
+      0,
+    );
+  });
+
   it("D2: the claim loop re-raises interrupt-only causes instead of charging a failure", async () => {
     const source = await readFile(
       path.join(
