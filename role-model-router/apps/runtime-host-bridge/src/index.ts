@@ -4807,6 +4807,44 @@ export function classifyExecutionFailureIfNeeded(
   });
 }
 
+/**
+ * Run 101 addendum 19: whether a streamed chat-completions chunk carries the client's actual answer.
+ *
+ * Measured live on `:3457` (2026-09-27 ~18:2x, RC `bb219bfa0224`): of the failures in the last 50 requests, every
+ * one had zero content deltas, and pi still reported "Stream ended without finish_reason" for about one request in
+ * ten. The ingress committed the downstream SSE head on the first chunk that carried *metadata* - which is a
+ * provider's opening role-only delta, not content - so a connection reset before the first token left the client
+ * with an open 200 stream that simply ended, and `streamedChunkCount > 0` then forbade the retry/failover the
+ * attempt still deserved.
+ *
+ * A chunk counts as substantive when it carries non-empty `delta.content` or a non-empty `delta.tool_calls` array.
+ * Role-only, reasoning-only and finish-only chunks do not, so they stay buffered until real content arrives.
+ */
+export function hasSubstantiveStreamDelta(chunk: unknown): boolean {
+  if (typeof chunk !== "object" || chunk === null) {
+    return false;
+  }
+  const choices = (chunk as { readonly choices?: unknown }).choices;
+  if (!Array.isArray(choices)) {
+    return false;
+  }
+  return choices.some((choice) => {
+    if (typeof choice !== "object" || choice === null) {
+      return false;
+    }
+    const delta = (choice as { readonly delta?: unknown }).delta;
+    if (typeof delta !== "object" || delta === null) {
+      return false;
+    }
+    const content = (delta as { readonly content?: unknown }).content;
+    if (typeof content === "string" && content.length > 0) {
+      return true;
+    }
+    const toolCalls = (delta as { readonly tool_calls?: unknown }).tool_calls;
+    return Array.isArray(toolCalls) && toolCalls.length > 0;
+  });
+}
+
 function readExecutionCircuitState(databasePath: string): ExecutionCircuitState {
   const maintenancePolicy = readRuntimeMaintenancePolicy({ databasePath });
   const v2RawValue = maintenancePolicy[EXECUTION_CIRCUIT_BREAKER_MAINTENANCE_KEY];
@@ -17190,7 +17228,13 @@ function createRequestHandler(options: StartBridgeServerOptions) {
           const streamWriter: BridgeStreamWriter = async (chunk, metadata) => {
             const serializedChunk = `data: ${JSON.stringify(chunk)}\n\n`;
             if (!wroteStreamChunk) {
-              if (!metadata) {
+              /**
+               * Run 101 addendum 19: commit the downstream stream only once the attempt has delivered something the
+               * client can keep - real content or a tool call. A role-only opening delta leaves the buffer intact, so
+               * a reset before the first token still leaves `streamedChunkCount === 0` and the attempt can retry or
+               * fail over instead of handing pi an open stream that ends without a `finish_reason`.
+               */
+              if (!metadata || !hasSubstantiveStreamDelta(chunk)) {
                 pendingChunks.push(serializedChunk);
                 return;
               }
