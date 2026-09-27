@@ -5441,6 +5441,76 @@ function slugify(value: string): string {
     .toLowerCase();
 }
 
+/**
+ * Run 101 addendum 21: the terminal frame for a stream that dies after content was delivered.
+ *
+ * Measured live on `:3457` (RC `6f769013`, 2026-09-27 ~20:2x): two of six alias streams ended with no
+ * `finish_reason` and no `[DONE]` while having delivered 389 and 789 chunks (118 KB / 239 KB). The provider
+ * connection died mid-answer; the gate correctly refuses to fail over content the client already holds, so the
+ * router's remaining duty is to fail *cleanly* - a named terminal error frame plus the `[DONE]` sentinel - instead
+ * of closing the connection, which is what a streaming client reports as "Stream ended without finish_reason".
+ */
+export function buildTerminalStreamErrorPayload(error: unknown): {
+  readonly error: {
+    readonly message: string;
+    readonly type: string;
+    readonly code: string;
+    readonly statusCode?: number;
+  };
+} {
+  const record =
+    typeof error === "object" && error !== null ? (error as Record<string, unknown>) : {};
+  const message =
+    typeof record.message === "string" && record.message.length > 0
+      ? record.message
+      : error instanceof Error && error.message.length > 0
+        ? error.message
+        : "The streamed response was interrupted before it completed.";
+  const errorClass =
+    typeof record.errorClass === "string" && record.errorClass.length > 0
+      ? record.errorClass
+      : "upstream_error";
+  return {
+    error: {
+      message,
+      type: errorClass,
+      code: errorClass,
+      ...(typeof record.statusCode === "number" ? { statusCode: record.statusCode } : {}),
+    },
+  };
+}
+
+/**
+ * Run 101 addendum 22: whether a bootstrap state is a *runtime-level* blockage.
+ *
+ * The rule the run documented in addendum 11: a runtime that is serving is ready; the only runtime-level failures
+ * are a blocked bootstrap or a remote-health stage that found no usable endpoint at all. A partially degraded
+ * stage - one probe timeout out of several - is an endpoint-level fact the router already handles by excluding it.
+ *
+ * Measured live on RC `6f769013` (2026-09-27 ~20:3x): the boot probed three endpoints, two answered and
+ * `deepseek-v4-flash-max` timed out, and `/healthz` answered **503 / degraded / ready:false** while chat served
+ * normally. The previous implementation of this predicate answered "ready" for the first two branches and "blocked"
+ * for the last two, so a degraded stage with healthy > 0 was reported as a runtime failure - the exact case the
+ * rule says must not be one.
+ */
+export function isRuntimeBootstrapBlock(state: {
+  readonly status: string;
+  readonly stages: readonly {
+    readonly stageId: string;
+    readonly status: string;
+    readonly details?: unknown;
+  }[];
+}): boolean {
+  if (state.status === "blocked") return true;
+  if (state.status !== "degraded") return false;
+  const remoteHealth = state.stages.find((stage) => stage.stageId === "remote-health");
+  if (!remoteHealth || remoteHealth.status !== "degraded") return false;
+  const details = (remoteHealth.details ?? {}) as { readonly healthy?: unknown };
+  const healthy = typeof details.healthy === "number" ? details.healthy : null;
+  if (healthy === null) return false;
+  return healthy <= 0;
+}
+
 function createVendorError(vendorId: string, message: string): BridgeHttpError {
   const normalized = createVendorNotConfiguredError(vendorId, message);
   return new BridgeHttpError(503, {
@@ -17256,12 +17326,33 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             }
             await writeSseChunk(response, serializedChunk, requestAbortSignal);
           };
-          const result = await options.executeChatCompletions(
-            parsedBody,
-            requestId,
-            streamWriter,
-            requestOptions,
-          );
+          const result = await options
+            .executeChatCompletions(parsedBody, requestId, streamWriter, requestOptions)
+            .catch(async (error: unknown) => {
+              /**
+               * Run 101 addendum 21: once the head is committed the status line is spent, so a failure cannot be
+               * reported as an HTTP status. End the stream with a named error frame and the `[DONE]` sentinel so the
+               * client sees a complete, parseable termination instead of a bare EOF.
+               */
+              if (!wroteStreamChunk) {
+                throw error;
+              }
+              try {
+                await writeSseChunk(
+                  response,
+                  `data: ${JSON.stringify(buildTerminalStreamErrorPayload(error))}\n\n`,
+                  requestAbortSignal,
+                );
+                await writeSseChunk(response, "data: [DONE]\n\n", requestAbortSignal);
+              } catch {
+                // The client is already gone; nothing left to report to.
+              }
+              response.end();
+              return null;
+            });
+          if (result === null) {
+            return;
+          }
           if (!wroteStreamChunk) {
             response.writeHead(200, {
               "content-type": "text/event-stream; charset=utf-8",
@@ -28366,26 +28457,11 @@ export async function createRuntimeBridgeBackend(
    * A runtime that is serving is ready. The only runtime-level failures are a blocked bootstrap or a remote-health
    * stage that found no usable endpoint at all; a partially degraded stage (one probe timeout out of seven, a
    * single offline provider) is an endpoint-level fact that the router already handles by excluding it.
+   *
+   * Run 101 addendum 22: the predicate lives at module scope (`isRuntimeBootstrapBlock`) so the rule is unit-tested
+   * directly - the previous closure-local version answered "ready" for its first two branches and "blocked" for its
+   * last two, which reported a degraded-but-serving runtime as a fifty-three.
    */
-  function resolveRuntimeReadiness(state: {
-    readonly status: string;
-    readonly stages: readonly {
-      readonly stageId: string;
-      readonly status: string;
-      readonly details?: unknown;
-    }[];
-  }): boolean {
-    if (state.status === "blocked") return true;
-    if (state.status !== "degraded") return false;
-    const remoteHealth = state.stages.find((stage) => stage.stageId === "remote-health");
-    if (!remoteHealth || remoteHealth.status !== "degraded") return true;
-    const details = (remoteHealth.details ?? {}) as { readonly healthy?: unknown };
-    const healthy = typeof details.healthy === "number" ? details.healthy : null;
-    // A degraded remote-health stage with no successful probe at all is a runtime-level failure; one with at
-    // least one healthy endpoint keeps the runtime ready.
-    return healthy !== null && healthy > 0;
-  }
-
   let sessionBootstrapState: SessionBootstrapState = createPendingBootstrapState();
   const backend = {
     operatorAuthToken: options.operatorAuthToken,
@@ -28934,7 +29010,7 @@ export async function createRuntimeBridgeBackend(
        * it is serving: a partially degraded remote-health stage is an endpoint-level fact, and only a stage
        * that leaves *no* usable endpoint (or a blocked bootstrap) is a runtime-level failure.
        */
-      const bootstrapBlocked = resolveRuntimeReadiness(sessionBootstrapState);
+      const bootstrapBlocked = isRuntimeBootstrapBlock(sessionBootstrapState);
       return {
         runtime: runtimeVersionInfo,
         status: bootstrapBlocked ? "degraded" : summarized.status,
