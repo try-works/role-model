@@ -11944,17 +11944,21 @@ async function exchangeOpenAICodexAuthorizationCode(input: {
   readonly authorizationCode: string;
   readonly codeVerifier: string;
 }): Promise<StoredCodexAuthPayload> {
-  const response = await input.networkFetcher(OPENAI_CODEX_OAUTH_TOKEN_ENDPOINT, {
-    method: "POST",
-    headers: { "content-type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      grant_type: "authorization_code",
-      client_id: OPENAI_CODEX_OAUTH_CLIENT_ID,
-      code: input.authorizationCode,
-      code_verifier: input.codeVerifier,
-      redirect_uri: "https://auth.openai.com/deviceauth/callback",
-    }),
-  });
+  const response = await fetchOauthDeviceResponse(
+    input.networkFetcher,
+    OPENAI_CODEX_OAUTH_TOKEN_ENDPOINT,
+    {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "authorization_code",
+        client_id: OPENAI_CODEX_OAUTH_CLIENT_ID,
+        code: input.authorizationCode,
+        code_verifier: input.codeVerifier,
+        redirect_uri: "https://auth.openai.com/deviceauth/callback",
+      }),
+    },
+  );
   const payload = await readOpenAICodexJsonResponse(
     response,
     "OpenAI Codex authorization-code exchange failed.",
@@ -12000,15 +12004,123 @@ async function cleanupManagedCodexDeviceCodeSession(
   await removeDirectoryWithRetries(payload.codexHome).catch(() => undefined);
 }
 
+/**
+ * Run 101 addendum 17: the device-authorization route to `auth.openai.com` is intermittently reset from the
+ * operator's network. Measured on `:3457` (2026-09-27): `POST /api/role-model/accounts/device/start` hung for more
+ * than 60 s, and a direct Node fetch to the user-code endpoint failed with `fetch failed | cause: ECONNRESET` after
+ * 10.8 s and again after 71.2 s while `curl` answered the same endpoint in 3.0 s. A single such blip permanently
+ * failed the login session ("the helper stopped"), so each device call now carries a bound and a bounded retry.
+ */
+const OAUTH_DEVICE_HTTP_DEFAULT_TIMEOUT_MS = 30_000;
+const OAUTH_DEVICE_HTTP_MAX_ATTEMPTS = 3;
+
+const TRANSIENT_PROVIDER_TRANSPORT_CODES: ReadonlySet<string> = new Set([
+  "ECONNRESET",
+  "ECONNREFUSED",
+  "ECONNABORTED",
+  "ETIMEDOUT",
+  "EPIPE",
+  "EHOSTUNREACH",
+  "ENETUNREACH",
+  "ENETRESET",
+  "EAI_AGAIN",
+  "UND_ERR_CONNECT_TIMEOUT",
+  "UND_ERR_HEADERS_TIMEOUT",
+  "UND_ERR_BODY_TIMEOUT",
+  "UND_ERR_SOCKET",
+  "UND_ERR_ABORTED",
+]);
+
+/**
+ * Whether a failure is a transport blip the caller may retry rather than the provider's verdict. Walks the cause
+ * chain because undici reports `TypeError: fetch failed` with the socket error underneath.
+ */
+export function isTransientProviderTransportError(error: unknown): boolean {
+  let current: unknown = error;
+  for (let depth = 0; current !== null && current !== undefined && depth < 8; depth += 1) {
+    if (typeof current !== "object") {
+      return false;
+    }
+    const record = current as {
+      readonly name?: unknown;
+      readonly code?: unknown;
+      readonly message?: unknown;
+      readonly cause?: unknown;
+    };
+    const name = typeof record.name === "string" ? record.name : "";
+    if (name === "TimeoutError" || name === "AbortError") {
+      return true;
+    }
+    const code = typeof record.code === "string" ? record.code.toUpperCase() : "";
+    if (code.length > 0 && TRANSIENT_PROVIDER_TRANSPORT_CODES.has(code)) {
+      return true;
+    }
+    const message = typeof record.message === "string" ? record.message.toLowerCase() : "";
+    if (
+      message.includes("fetch failed") ||
+      message.includes("socket hang up") ||
+      message.includes("aborted due to timeout") ||
+      message.includes("other side closed")
+    ) {
+      return true;
+    }
+    current = record.cause;
+  }
+  return false;
+}
+
+/**
+ * The bound for a single device-authorization HTTP call (bounds 1 s - 2 min, default 30 s). Absent, empty,
+ * non-numeric, zero and negative values take the default; the operator can tune it with
+ * `ROLE_MODEL_OAUTH_HTTP_TIMEOUT_MS`.
+ */
+export function resolveOauthDeviceHttpTimeoutMs(env: NodeJS.ProcessEnv = process.env): number {
+  const rawValue = env.ROLE_MODEL_OAUTH_HTTP_TIMEOUT_MS?.trim();
+  const raw = rawValue === undefined || rawValue.length === 0 ? Number.NaN : Number(rawValue);
+  if (!Number.isSafeInteger(raw) || raw <= 0) return OAUTH_DEVICE_HTTP_DEFAULT_TIMEOUT_MS;
+  return Math.min(Math.max(raw, 1_000), 120_000);
+}
+
+/**
+ * A device-authorization call with a per-attempt bound and a bounded retry for transport blips. A non-transient
+ * failure (an HTTP error the provider meant, a malformed body) is raised on the first attempt.
+ */
+async function fetchOauthDeviceResponse(
+  networkFetcher: typeof fetch,
+  url: string,
+  init: RequestInit,
+  options: { readonly attempts?: number; readonly timeoutMs?: number } = {},
+): Promise<Response> {
+  const attempts = Math.max(1, options.attempts ?? OAUTH_DEVICE_HTTP_MAX_ATTEMPTS);
+  const timeoutMs = options.timeoutMs ?? resolveOauthDeviceHttpTimeoutMs();
+  let lastError: unknown = null;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await networkFetcher(url, { ...init, signal: AbortSignal.timeout(timeoutMs) });
+    } catch (error) {
+      lastError = error;
+      if (!isTransientProviderTransportError(error) || attempt === attempts) {
+        throw error;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 250 * attempt));
+    }
+  }
+  throw lastError ?? new Error("The provider authorization request failed.");
+}
+
 function createSystemCodexAuthAdapter(networkFetcher: typeof fetch): CodexAuthAdapter {
   return {
     async startDeviceCodeLogin(input) {
       await mkdir(input.codexHome, { recursive: true });
-      const response = await networkFetcher(OPENAI_CODEX_DEVICE_USER_CODE_ENDPOINT, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ client_id: OPENAI_CODEX_OAUTH_CLIENT_ID }),
-      });
+      const response = await fetchOauthDeviceResponse(
+        networkFetcher,
+        OPENAI_CODEX_DEVICE_USER_CODE_ENDPOINT,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ client_id: OPENAI_CODEX_OAUTH_CLIENT_ID }),
+        },
+      );
       const payload = await readOpenAICodexJsonResponse(
         response,
         "OpenAI Codex device authorization failed.",
@@ -12027,14 +12139,18 @@ function createSystemCodexAuthAdapter(networkFetcher: typeof fetch): CodexAuthAd
       };
     },
     async readAccount(input) {
-      const response = await networkFetcher(OPENAI_CODEX_DEVICE_TOKEN_ENDPOINT, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          device_auth_id: input.loginId,
-          user_code: input.userCode,
-        }),
-      });
+      const response = await fetchOauthDeviceResponse(
+        networkFetcher,
+        OPENAI_CODEX_DEVICE_TOKEN_ENDPOINT,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            device_auth_id: input.loginId,
+            user_code: input.userCode,
+          }),
+        },
+      );
       const payloadText = await response.text();
       const payload =
         payloadText.length > 0 ? (JSON.parse(payloadText) as Record<string, unknown>) : {};
@@ -30917,23 +31033,46 @@ export async function createRuntimeBridgeBackend(
             wsUrl: payload.wsUrl,
             refreshToken: false,
           });
-        } catch {
+        } catch (error) {
+          /**
+           * Run 101 addendum 17: a transport blip is not the operator's verdict. A reset or a stalled attempt used
+           * to permanently fail the session and delete the device session, which is what the operator saw as "the
+           * login helper stopped". A transient failure now stays pending with the real cause recorded, so the next
+           * poll (the UI already polls) continues the same authorization; only a real failure ends the session.
+           */
+          const message = error instanceof Error ? error.message : "transport error";
+          if (isTransientProviderTransportError(error)) {
+            const transientError = `Codex Subscription device authorization is waiting on the network (${message}).`;
+            upsertProviderDeviceAuthSession({
+              databasePath: initialization.databasePath,
+              session: {
+                ...session,
+                lastError: transientError,
+              },
+            });
+            return {
+              authRequestId,
+              providerAccountId: session.providerAccountId,
+              status: "pending",
+              retryAfterSeconds: session.intervalSeconds,
+              lastError: transientError,
+            };
+          }
           await cleanupManagedCodexDeviceCodeSession(payload);
+          const failure = `Codex Subscription login could not be completed (${message}). Reconnect to continue.`;
           upsertProviderDeviceAuthSession({
             databasePath: initialization.databasePath,
             session: {
               ...session,
               status: "failed",
-              lastError:
-                "Codex Subscription login helper stopped before the device authorization completed. Reconnect to continue.",
+              lastError: failure,
             },
           });
           return {
             authRequestId,
             providerAccountId: session.providerAccountId,
             status: "failed",
-            lastError:
-              "Codex Subscription login helper stopped before the device authorization completed. Reconnect to continue.",
+            lastError: failure,
           };
         }
 
