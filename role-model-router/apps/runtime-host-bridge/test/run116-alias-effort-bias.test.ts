@@ -11,8 +11,14 @@ import { applyReasoningEffortToModelPool } from "../src/index.js";
  * seven endpoints and the router then reported `eligible=2 codes=POLICY_DENY_ENDPOINT=5` for `high`, `eligible=1`
  * for `low` - because `filterRequestedModelPoolByReasoningEffort` replaced the pool with the endpoints whose fixed
  * effort equals the requested one. The operator's rule is that an alias is a pool plus a bias: the request's effort
- * may order that pool, it may not empty it. Exact effort-instance selection stays authoritative for an explicit
- * model id or endpoint row (run 91 semantics), which the third case below pins.
+ * may order that pool, it may not empty it.
+ *
+ * Run 101 addendum 15 (measured on `:3457` 2026-09-27): the same filter emptied a *model id's* pool, so pi/DSH
+ * requests that name `chatgpt/gpt-5.6-sol` plus `medium` had one candidate; the first provider flake then had
+ * nowhere to fail over to and the attempt's 503 became the request's status (every 503 row in the 24-hour telemetry
+ * read carried `candidateCount = 1` and `rerouteCount = 0`). A model id is a pool too. Only an endpoint row - the
+ * model value itself or the explicit `endpointId` option - names an instance and keeps the strict
+ * effort-instance selection (run 91 semantics), which the cases below pin.
  */
 
 function endpoint(
@@ -87,7 +93,6 @@ describe("run116 E3: an alias keeps its pool and treats the requested effort as 
       requestedEffort: "high",
       allowEndpoints: aliasPool,
       preferredEndpointIds: [],
-      aliasRequest: true,
     });
 
     expect(applied.allowEndpoints).toHaveLength(aliasPool.length);
@@ -110,7 +115,6 @@ describe("run116 E3: an alias keeps its pool and treats the requested effort as 
       requestedEffort: null,
       allowEndpoints: aliasPool,
       preferredEndpointIds: [flashLow],
-      aliasRequest: true,
     });
 
     expect(applied.allowEndpoints).toHaveLength(aliasPool.length);
@@ -124,7 +128,6 @@ describe("run116 E3: an alias keeps its pool and treats the requested effort as 
       requestedEffort: "ultra",
       allowEndpoints: aliasPool,
       preferredEndpointIds: [flashLow],
-      aliasRequest: true,
     });
 
     // An empty pool is what the callers turn into the bounded `reasoning_effort_unavailable` error (run 98), so an
@@ -134,7 +137,7 @@ describe("run116 E3: an alias keeps its pool and treats the requested effort as 
     expect(applied.preferredEndpointIds).toEqual([]);
   });
 
-  test("an explicit model id keeps exact effort-instance selection", () => {
+  test("a model id is a pool: the requested effort orders it and the pool keeps its members", () => {
     const modelPool = [flashLow, flashHigh, flashMax];
     const applied = applyReasoningEffortToModelPool({
       registry,
@@ -142,11 +145,12 @@ describe("run116 E3: an alias keeps its pool and treats the requested effort as 
       requestedEffort: "high",
       allowEndpoints: modelPool,
       preferredEndpointIds: [],
-      aliasRequest: false,
     });
 
-    expect(applied.allowEndpoints).toEqual([flashHigh]);
-    expect(applied.preferredEndpointIds).toEqual([]);
+    // Run 101 addendum 15: the pool survives, so denying `flashHigh` after a provider flake still leaves
+    // `flashLow`/`flashMax` for the reroute loop instead of surfacing a 503.
+    expect(applied.allowEndpoints).toEqual(modelPool);
+    expect(applied.preferredEndpointIds).toEqual([flashHigh]);
   });
 
   test("an explicit model id with an unsupported effort still refuses the pool", () => {
@@ -157,9 +161,36 @@ describe("run116 E3: an alias keeps its pool and treats the requested effort as 
       requestedEffort: "ultra",
       allowEndpoints: modelPool,
       preferredEndpointIds: [],
-      aliasRequest: false,
     });
 
+    expect(applied.allowEndpoints).toEqual([]);
+  });
+
+  test("an endpoint row as the model value keeps exact instance selection", () => {
+    const applied = applyReasoningEffortToModelPool({
+      registry,
+      requestedModel: flashHigh,
+      requestedEffort: "high",
+      allowEndpoints: [flashHigh],
+      preferredEndpointIds: [],
+    });
+
+    expect(applied.allowEndpoints).toEqual([flashHigh]);
+    expect(applied.preferredEndpointIds).toEqual([]);
+  });
+
+  test("an explicit endpointId option keeps exact instance selection", () => {
+    const applied = applyReasoningEffortToModelPool({
+      registry,
+      requestedModel: FLASH,
+      requestedEndpointId: flashLow,
+      requestedEffort: "high",
+      allowEndpoints: [flashLow],
+      preferredEndpointIds: [],
+    });
+
+    // The instance is named, so the strict filter applies and an effort the named row cannot run stays the bounded
+    // `reasoning_effort_unavailable` refusal rather than being served at another instance.
     expect(applied.allowEndpoints).toEqual([]);
   });
 });

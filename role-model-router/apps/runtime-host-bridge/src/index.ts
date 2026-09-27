@@ -9176,9 +9176,14 @@ export interface ReasoningEffortPoolApplication {
  * (`routingModelRank`), where a preferred instance that is unhealthy, cooling down or over budget is a reason to
  * pick the next candidate rather than a reason for the pool to have one member.
  *
- * An explicit model id or endpoint row is different: there the client named the instance, so exact
- * effort-instance selection (run 91) stays authoritative, including the documented refusal when the requested
- * effort is not executable on that pool.
+ * Run 101 addendum 15 measured the same filter emptying a *model id's* pool: the 24-hour telemetry read on `:3457`
+ * (2026-09-27) showed every 503 row with `candidateCount = 1` and `rerouteCount = 0`, always on the requested
+ * model's effort instance (`chatgpt/gpt-5.6-sol` + `medium` -> `...gpt-5.6-sol-medium`, `deepseek/deepseek-v4-pro`
+ * -> `deepseek-v4-pro-max`). One provider flake ("terminated", TCP reset) is fallback-eligible, but a one-member
+ * pool has nothing to fail over to, so the attempt's own 503 became the request's status - and because replays
+ * dispatch through the same resolution, replay arms failed the same way. A model id names a pool just as an alias
+ * does; only an endpoint row names an instance, so only an endpoint row keeps exact effort-instance selection
+ * (run 91), including the documented refusal when the requested effort is not executable on that instance.
  */
 export function applyReasoningEffortToModelPool(input: {
   readonly registry: EndpointRegistryResult;
@@ -9186,10 +9191,21 @@ export function applyReasoningEffortToModelPool(input: {
   readonly requestedEffort?: string | null;
   readonly allowEndpoints: readonly string[];
   readonly preferredEndpointIds: readonly string[];
-  readonly aliasRequest: boolean;
+  readonly requestedEndpointId?: string | null;
 }): ReasoningEffortPoolApplication {
   const requestedEffort = input.requestedEffort?.trim() || null;
-  if (!input.aliasRequest) {
+  /**
+   * The client named an instance only when it used an endpoint row - as the requested model value or as the
+   * explicit `endpointId` request option. Everything else (an alias, a model id) names a pool.
+   */
+  const instanceSelected =
+    (input.requestedEndpointId?.trim().length ?? 0) > 0 ||
+    input.registry.endpoints.some(
+      (endpoint) =>
+        endpoint.identity.endpoint_id === input.requestedModel ||
+        toLegacyCredentializedEndpointId(endpoint.identity.endpoint_id) === input.requestedModel,
+    );
+  if (instanceSelected) {
     return {
       allowEndpoints: filterRequestedModelPoolByReasoningEffort({
         registry: input.registry,
@@ -9213,7 +9229,7 @@ export function applyReasoningEffortToModelPool(input: {
   });
   if (effortInstanceIds.length === 0) {
     // An effort that names no instance in this pool is not executable at all, and it keeps the bounded
-    // `reasoning_effort_unavailable` refusal the callers already raise on an empty pool (run 98). The alias rule is
+    // `reasoning_effort_unavailable` refusal the callers already raise on an empty pool (run 98). The pool rule is
     // about the pool's *membership*: an effort that does name instances may order them, never trim them.
     return {
       allowEndpoints: [],
@@ -10061,9 +10077,10 @@ export function mapChatCompletionsRequest(
     routingDiagnostics,
   } = resolveRequestedModelPool(registry, body.model, modelAliases, inventory);
   /**
-   * E3: an alias is a pool plus a bias. The requested effort orders the pool it already had
-   * (`applyReasoningEffortToModelPool`); only an explicit model id or endpoint row narrows it, so a client that always
-   * sends `reasoning_effort` still sees every candidate the alias offers.
+   * E3 + addendum 15: a pool plus a bias. The requested effort orders the pool the target already had
+   * (`applyReasoningEffortToModelPool`) for an alias and for a model id alike; only an endpoint row narrows it to
+   * one instance, so a client that always sends `reasoning_effort` still sees every candidate its target offers and
+   * a single provider flake cannot become the request's status.
    */
   const effortAppliedToModelPool = applyReasoningEffortToModelPool({
     registry,
@@ -10075,7 +10092,7 @@ export function mapChatCompletionsRequest(
       requestOptions,
     }),
     preferredEndpointIds: modelPreferredEndpointIds,
-    aliasRequest: routingDiagnostics?.aliasResolution !== undefined,
+    requestedEndpointId: requestOptions?.endpointId ?? null,
   });
   const allowEndpoints = effortAppliedToModelPool.allowEndpoints;
   const aliasPreferredEndpointIds = effortAppliedToModelPool.preferredEndpointIds;
@@ -10296,8 +10313,8 @@ export function mapResponsesRequest(
     preferredEndpointIds: modelPreferredEndpointIds,
     routingDiagnostics,
   } = resolveRequestedModelPool(registry, body.model, modelAliases, inventory);
-  // E3: the responses path resolves the pool the same way the chat path does - effort biases an alias pool and
-  // narrows only an explicitly named model or endpoint.
+  // E3 + addendum 15: the responses path resolves the pool the same way the chat path does - effort biases an alias
+  // or model pool and narrows only an explicitly named endpoint row.
   const effortAppliedToModelPool = applyReasoningEffortToModelPool({
     registry,
     requestedModel: body.model,
@@ -10308,7 +10325,7 @@ export function mapResponsesRequest(
       requestOptions,
     }),
     preferredEndpointIds: modelPreferredEndpointIds,
-    aliasRequest: routingDiagnostics?.aliasResolution !== undefined,
+    requestedEndpointId: requestOptions?.endpointId ?? null,
   });
   const allowEndpoints = effortAppliedToModelPool.allowEndpoints;
   const aliasPreferredEndpointIds = effortAppliedToModelPool.preferredEndpointIds;
@@ -26192,6 +26209,17 @@ export async function createRuntimeBridgeBackend(
         (target.account?.credentialRef.backend === "local-file" ||
           target.account?.credentialRef.backend === "local-encrypted-file")
       ) {
+        /**
+         * Run 101 addendum 14 (operator: "the oauth workflow fallback and credential hot reloading still needs
+         * work, it doesn't by itself resolve and reflect successful oauth"). Measured live: the browser login
+         * wrote a fresh credential file, but the runtime kept presenting the token it had loaded at boot, so the
+         * account stayed auth-blocked until a restart.
+         *
+         * Two steps, in order: try the runtime's own refresh (the existing fallback), and if that fails or yields
+         * nothing new, re-resolve the credential from the store - which is what picks up a credential the
+         * operator replaced out-of-band (a browser login). Whichever value differs from the failed one gets the
+         * retry; if neither changed, the original response is classified as before.
+         */
         const refreshedCredentialValue = await refreshOauthAccessToken(
           options.runtimeStateRoot,
           options.scopeId,
@@ -26201,8 +26229,39 @@ export async function createRuntimeBridgeBackend(
           networkFetcher,
           deviceId,
           rebuildCurrentState,
-        );
-        ({ response, latencyMs } = await performRequest(refreshedCredentialValue));
+        ).catch(() => null);
+        const reResolvedCredentialValue =
+          refreshedCredentialValue ??
+          (await resolveCredentialValue(
+            options.runtimeStateRoot,
+            options.scopeId,
+            target,
+            providerPresets,
+            liteLLMProviders,
+            networkFetcher,
+            deviceId,
+            rebuildCurrentState,
+            providerCredentialEnvironment,
+          ).catch(() => null));
+        const retryCredentialValue =
+          reResolvedCredentialValue && reResolvedCredentialValue !== credentialValue
+            ? reResolvedCredentialValue
+            : null;
+        if (retryCredentialValue) {
+          ({ response, latencyMs } = await performRequest(retryCredentialValue));
+          if (response.status < 400) {
+            /**
+             * A rotated credential heals the endpoint: the auth block that was recorded against the old value is
+             * stale, and leaving it in place keeps the operator's account out of the pool until the next
+             * successful probe or restart (measured live: `gpt-5.6-luna` kept a stale `blocked_auth` record
+             * after a successful browser login).
+             */
+            clearExecutionFailureCooldown({
+              databasePath: initialization.databasePath,
+              endpointId: target.endpointId,
+            });
+          }
+        }
       }
       const measuredVendorMetadata = {
         latencyMs,
