@@ -5441,6 +5441,45 @@ function slugify(value: string): string {
     .toLowerCase();
 }
 
+/**
+ * Run 101 addendum 21: the terminal frame for a stream that dies after content was delivered.
+ *
+ * Measured live on `:3457` (RC `6f769013`, 2026-09-27 ~20:2x): two of six alias streams ended with no
+ * `finish_reason` and no `[DONE]` while having delivered 389 and 789 chunks (118 KB / 239 KB). The provider
+ * connection died mid-answer; the gate correctly refuses to fail over content the client already holds, so the
+ * router's remaining duty is to fail *cleanly* - a named terminal error frame plus the `[DONE]` sentinel - instead
+ * of closing the connection, which is what a streaming client reports as "Stream ended without finish_reason".
+ */
+export function buildTerminalStreamErrorPayload(error: unknown): {
+  readonly error: {
+    readonly message: string;
+    readonly type: string;
+    readonly code: string;
+    readonly statusCode?: number;
+  };
+} {
+  const record =
+    typeof error === "object" && error !== null ? (error as Record<string, unknown>) : {};
+  const message =
+    typeof record.message === "string" && record.message.length > 0
+      ? record.message
+      : error instanceof Error && error.message.length > 0
+        ? error.message
+        : "The streamed response was interrupted before it completed.";
+  const errorClass =
+    typeof record.errorClass === "string" && record.errorClass.length > 0
+      ? record.errorClass
+      : "upstream_error";
+  return {
+    error: {
+      message,
+      type: errorClass,
+      code: errorClass,
+      ...(typeof record.statusCode === "number" ? { statusCode: record.statusCode } : {}),
+    },
+  };
+}
+
 function createVendorError(vendorId: string, message: string): BridgeHttpError {
   const normalized = createVendorNotConfiguredError(vendorId, message);
   return new BridgeHttpError(503, {
@@ -17256,12 +17295,33 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             }
             await writeSseChunk(response, serializedChunk, requestAbortSignal);
           };
-          const result = await options.executeChatCompletions(
-            parsedBody,
-            requestId,
-            streamWriter,
-            requestOptions,
-          );
+          const result = await options
+            .executeChatCompletions(parsedBody, requestId, streamWriter, requestOptions)
+            .catch(async (error: unknown) => {
+              /**
+               * Run 101 addendum 21: once the head is committed the status line is spent, so a failure cannot be
+               * reported as an HTTP status. End the stream with a named error frame and the `[DONE]` sentinel so the
+               * client sees a complete, parseable termination instead of a bare EOF.
+               */
+              if (!wroteStreamChunk) {
+                throw error;
+              }
+              try {
+                await writeSseChunk(
+                  response,
+                  `data: ${JSON.stringify(buildTerminalStreamErrorPayload(error))}\n\n`,
+                  requestAbortSignal,
+                );
+                await writeSseChunk(response, "data: [DONE]\n\n", requestAbortSignal);
+              } catch {
+                // The client is already gone; nothing left to report to.
+              }
+              response.end();
+              return null;
+            });
+          if (result === null) {
+            return;
+          }
           if (!wroteStreamChunk) {
             response.writeHead(200, {
               "content-type": "text/event-stream; charset=utf-8",
