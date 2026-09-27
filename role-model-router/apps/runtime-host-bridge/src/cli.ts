@@ -97,6 +97,7 @@ import {
 import {
   autoReplayExecutionFromCommandReceipt,
   evaluationHandoffRequestFromCommandReceipt,
+  offerEvaluationHandoff,
   startAutoReplayLoop,
 } from "./track-b-auto-replay-runtime.js";
 import {
@@ -7143,12 +7144,11 @@ export async function main(): Promise<void> {
            */
           const handoffRequest = evaluationHandoffRequestFromCommandReceipt(decodedReplayReceipt);
           if (handoffRequest && lateBoundEvaluationQueue.mode !== "legacy") {
-            const offered = await lateBoundEvaluationQueue
-              .offer({ origin: "replay", replayJobId: handoffRequest.replayJobId })
-              .catch((error: unknown) => ({
-                enqueued: false,
-                reason: String((error as { message?: unknown })?.message ?? error).slice(0, 160),
-              }));
+            /** Run 101 addendum 27: the offer is an Effect program with a bounded retry (see the helper). */
+            const offered = await offerEvaluationHandoff({
+              replayJobId: handoffRequest.replayJobId,
+              offer: (request) => lateBoundEvaluationQueue.offer(request),
+            });
             if (!offered.enqueued) {
               console.error(
                 `[run101] evaluation queue offer declined:${handoffRequest.replayJobId} ${

@@ -1,3 +1,5 @@
+import { Effect, Schedule } from "effect";
+
 import {
   type AutoReplayCapture,
   type AutoReplayExecution,
@@ -56,6 +58,37 @@ export function evaluationHandoffRequestFromCommandReceipt(
     }
   }
   return null;
+}
+
+/**
+ * Run 101 addendum 27 (the operator's rule: "implement using effect and effect-mq"): the handoff offer is an Effect
+ * program with a typed failure and a bounded retry - the effect-mq guidance's retry shape - instead of an inline
+ * promise `.catch`. An offer the queue plane refuses is a failure for this program (a transient
+ * `queue_offer_failed: …` deserves the retry), and after the bound it resolves as a value: the replay itself already
+ * succeeded, so a refused handoff is reported, never thrown.
+ */
+export function offerEvaluationHandoff(input: {
+  readonly replayJobId: string;
+  readonly offer: (request: {
+    readonly origin: "replay";
+    readonly replayJobId: string;
+  }) => Promise<{ readonly enqueued: boolean; readonly reason?: string }>;
+}): Promise<{ readonly enqueued: boolean; readonly reason?: string }> {
+  const program = Effect.tryPromise({
+    try: async () => {
+      const offered = await input.offer({ origin: "replay", replayJobId: input.replayJobId });
+      if (!offered.enqueued) {
+        throw new Error(offered.reason ?? "evaluation offer declined");
+      }
+      return offered;
+    },
+    catch: (error) =>
+      error instanceof Error ? error.message.slice(0, 160) : "evaluation offer failed",
+  }).pipe(
+    Effect.retry({ times: 2, schedule: Schedule.spaced("250 millis") }),
+    Effect.catch((reason: string) => Effect.succeed({ enqueued: false, reason })),
+  );
+  return Effect.runPromise(program);
 }
 
 export function autoReplayExecutionFromCommandReceipt(receipt: unknown): AutoReplayExecution {
