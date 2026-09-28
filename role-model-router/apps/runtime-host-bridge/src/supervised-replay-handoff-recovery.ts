@@ -562,6 +562,19 @@ export type ResumedArmEvidenceReason =
   | "capture_missing"
   | "capture_has_no_output"
   /**
+   * Run 101 addendum 38 (measured live on `:3457`, 2026-09-28): the arm's own dispatch record says it did not
+   * complete, so there is no capture to find. Replay job `2f223824749c…` records
+   * `dispatches["…gpt-5.6-terra"] = {status: "retryable_failure", reason: "terminated", disposition:
+   * "retryable"}` and the handoff announced `capture_missing` for it - a transient transport failure wearing
+   * the name of an evicted pointer.
+   *
+   * The distinction decides the disposition: `capture_missing` is permanent, so a replay whose *every* arm
+   * failed to dispatch resolved no arm, took the permanent branch and was terminalized as
+   * `evaluation_unavailable: handoff evidence is outside the capture retention window` - a retryable failure
+   * killing a replay that had already paid for its branches.
+   */
+  | "capture_not_written_dispatch_failed"
+  /**
    * The boundary could not answer for this capture: the pointer may still exist and the failure may be
    * transient. Measured live in addendum 06: the first version of this resolver reported every failure as
    * `capture_missing`, which hid the difference between a gone pointer (permanent) and a failed read
@@ -596,6 +609,12 @@ export async function resolveResumedArmEvidence(input: {
    */
   readonly branchCaptureRequestIds: ReadonlyMap<string, string | readonly string[]>;
   readonly readCapture: (requestId: string) => Promise<Record<string, unknown> | null>;
+  /**
+   * Addendum 38: the durable job's own dispatch record per arm. When an arm's dispatch is present and is not
+   * `complete`, the arm has no capture *because its call did not finish* - a retryable condition - and must be
+   * named that way rather than as evicted evidence.
+   */
+  readonly dispatchOutcomesByEndpoint?: Readonly<Record<string, unknown>>;
 }): Promise<{
   readonly arms: readonly ResumedArmEvidence[];
   readonly unreadable: readonly UnresolvedArmEvidence[];
@@ -641,6 +660,32 @@ export async function resolveResumedArmEvidence(input: {
       continue;
     }
     if (!capture || typeof capture !== "object" || Array.isArray(capture)) {
+      /**
+       * Addendum 38: before calling the evidence gone, ask the job's own dispatch record why the capture is not
+       * there. A dispatch that is present and did not `complete` means the arm's call never produced a capture -
+       * retryable, and never a claim about the retention ring.
+       */
+      const dispatch = input.dispatchOutcomesByEndpoint?.[candidate.endpointId];
+      const dispatchRecord =
+        dispatch && typeof dispatch === "object" && !Array.isArray(dispatch)
+          ? (dispatch as Record<string, unknown>)
+          : null;
+      const dispatchStatus =
+        typeof dispatchRecord?.status === "string" ? dispatchRecord.status.trim() : "";
+      if (dispatchStatus && dispatchStatus !== "complete") {
+        const dispatchReason =
+          typeof dispatchRecord?.reason === "string" && dispatchRecord.reason.trim()
+            ? dispatchRecord.reason.trim()
+            : typeof dispatchRecord?.code === "string" && dispatchRecord.code.trim()
+              ? dispatchRecord.code.trim()
+              : "dispatch did not complete";
+        unreadable.push({
+          endpointId: candidate.endpointId,
+          reason: "capture_not_written_dispatch_failed",
+          detail: `${dispatchStatus}: ${dispatchReason}`.slice(0, 160),
+        });
+        continue;
+      }
       unreadable.push({
         endpointId: candidate.endpointId,
         reason: "capture_missing",
@@ -704,6 +749,11 @@ export function unresolvedArmsArePermanent(unreadable: readonly UnresolvedArmEvi
   return (
     unreadable.length > 0 &&
     unreadable.every(
+      /**
+       * Addendum 38: only a capture the job *names*, on a dispatch that `complete`d, and that the store cannot
+       * serve is an eviction. `capture_not_written_dispatch_failed`, `capture_unreadable` and
+       * `capture_has_no_output` are all retryable and must never terminalize a replay as evicted evidence.
+       */
       (arm) => arm.reason === "capture_missing" || arm.reason === "capture_not_named",
     )
   );

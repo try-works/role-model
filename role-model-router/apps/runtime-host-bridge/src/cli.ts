@@ -7181,23 +7181,13 @@ export async function main(): Promise<void> {
            */
           const handoffRequest = evaluationHandoffRequestFromCommandReceipt(decodedReplayReceipt);
           /**
-           * Run 101 addendum 29 (bounded diagnostic). Two repair cycles have now inferred the receipt's state from
-           * side effects instead of reading it: addendum 26 offers only for `awaiting_evaluation`, addendum 28 made
-           * the indeterminacy refusal terminal, and a fresh capture still produced no disposition row, no evaluation
-           * job and no contract. This names the state the auto-replay execution actually received, once per receipt,
-           * so the next step is decided by the value rather than by a hypothesis. Remove it once the state is known
-           * and handled.
+           * Run 101 addendum 29's diagnostic lived here: it named the decoded receipt state once per receipt, and
+           * it was read on the rebuilt runtime (`[run101] replay receipt state=complete handoff=-`) before the
+           * evaluation path was repaired by addenda 35, 36 and 37. The state is now carried by the planes that
+           * consume it - `replay.disposition` for the outcome, the named unresolved-arm reasons for a handoff that
+           * cannot read its evidence, and the evaluation queue for the offered job - so the bespoke line is
+           * removed, exactly as the addendum's TODO required. The offer below is unchanged.
            */
-          const decodedReceiptState =
-            decodedReplayReceipt &&
-            typeof decodedReplayReceipt === "object" &&
-            !Array.isArray(decodedReplayReceipt) &&
-            typeof (decodedReplayReceipt as Record<string, unknown>).state === "string"
-              ? String((decodedReplayReceipt as Record<string, unknown>).state)
-              : "unknown";
-          console.error(
-            `[run101] replay receipt state=${decodedReceiptState} handoff=${handoffRequest?.replayJobId ?? "-"}`,
-          );
           if (handoffRequest && lateBoundEvaluationQueue.mode !== "legacy") {
             /** Run 101 addendum 27: the offer is an Effect program with a bounded retry (see the helper). */
             const offered = await offerEvaluationHandoff({
@@ -9154,6 +9144,19 @@ export async function main(): Promise<void> {
             const armEvidence = await resolveResumedArmEvidence({
               counterfactualPackages: entry.counterfactualPackages,
               branchCaptureRequestIds,
+              /**
+               * Addendum 38: the decoded job's own dispatch record per arm. `terra` on replay `2f223824749c…`
+               * was reported `capture_missing` while its dispatch said
+               * `{status: "retryable_failure", reason: "terminated", disposition: "retryable"}` - the transport
+               * failure wearing the name of an evicted pointer. Since `capture_missing` is permanent, a replay
+               * whose every arm failed that way was terminalized as `evidence_outside_retention_window`.
+               */
+              dispatchOutcomesByEndpoint: (() => {
+                const dispatches = durableReplayJob?.dispatches;
+                return dispatches && typeof dispatches === "object" && !Array.isArray(dispatches)
+                  ? (dispatches as Record<string, unknown>)
+                  : {};
+              })(),
               readCapture: async (requestId) => {
                 const answer = (await operations.readLocalRouteCapture({ requestId })) as Record<
                   string,
