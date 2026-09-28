@@ -99,6 +99,21 @@ export const REPLAY_REFUSAL_CODES = [
    * early. Deferrable, and named so the class stops arriving as `replay_failed`.
    */
   "replay_job_not_ready_for_evaluation",
+  /**
+   * Run 101 (live census 2026-09-28): the durable replay job has already handed its branches to
+   * Evaluation Core, so a re-lease is refused (`extensions/replay-core/index.mjs:965`). That is work in
+   * progress - the deferral budget already treats it as in-flight - but the refusal arrived as
+   * `replay_failed`, which names nothing. Deferrable, and now countable.
+   */
+  "replay_awaiting_evaluation_in_flight",
+  /**
+   * Run 101 (live `req-752e67dd…` at 08:33:58Z): a trial carries some scores but not the whole batch, so
+   * Evaluation Core refuses it with `partial evaluation trial scores require recovery`
+   * (`extensions/evaluation-core/index.mjs:2943`). Deferrable, and named so it stops arriving as
+   * `replay_failed`. Unlike the in-flight class it *does* spend deferral budget and retires named on
+   * exhaustion, because whether the partial batch is recoverable is not established.
+   */
+  "replay_partial_trial_scores",
 ] as const;
 
 export type ReplayRefusalCode = (typeof REPLAY_REFUSAL_CODES)[number];

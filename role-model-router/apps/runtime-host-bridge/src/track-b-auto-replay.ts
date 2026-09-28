@@ -374,6 +374,18 @@ const RETRYABLE_REPLAY_REFUSAL_CODES: ReadonlySet<string> = new Set([
    * before the replay finished. Deferrable, and named so it stops arriving as `replay_failed`.
    */
   "replay_job_not_ready_for_evaluation",
+  /**
+   * Run 101 (live census 2026-09-28): a job that has handed its branches to Evaluation Core refuses a
+   * re-lease (`extensions/replay-core/index.mjs:965`). Work in progress; deferrable, and named so the
+   * census counts it instead of `replay_failed`.
+   */
+  "replay_awaiting_evaluation_in_flight",
+  /**
+   * Run 101 (live `req-752e67dd…` 08:33:58Z): a trial with some but not all of its scores
+   * (`extensions/evaluation-core/index.mjs:2943`). Deferrable and named; it still spends budget and
+   * retires named, because recoverability is not established.
+   */
+  "replay_partial_trial_scores",
 ]);
 
 export function retryableReplayRefusalCodes(): ReadonlySet<string> {
@@ -715,7 +727,9 @@ export function classifyReplayExecutorFailure(message: string): Readonly<{
     | "replay_capture_idempotency_conflict"
     | "replay_evaluation_receipt_missing"
     | "replay_branch_append_unavailable"
-    | "replay_job_not_ready_for_evaluation";
+    | "replay_job_not_ready_for_evaluation"
+    | "replay_awaiting_evaluation_in_flight"
+    | "replay_partial_trial_scores";
   terminal: boolean;
 }> {
   if (/route capture skipped:\s*boundary unavailable/i.test(message)) {
@@ -757,6 +771,28 @@ export function classifyReplayExecutorFailure(message: string): Readonly<{
    */
   if (/replay job is not awaiting evaluation/i.test(message)) {
     return { code: "replay_job_not_ready_for_evaluation", terminal: false };
+  }
+  /**
+   * Run 101, live census 2026-09-28: `replay job is awaiting evaluation and cannot be re-leased`
+   * (`extensions/replay-core/index.mjs:965`). The job has already handed its branches to Evaluation
+   * Core, so the evaluation owns the clock and a re-lease is correctly refused - the capture is in
+   * flight, not failing. The deferral budget already treats this shape as in-flight
+   * (`tests/track-b/run99-r22-replay-deferral-budget.test.mjs` pins that), so this only gives the class
+   * its name.
+   */
+  if (/awaiting evaluation and cannot be re-leased/i.test(message)) {
+    return { code: "replay_awaiting_evaluation_in_flight", terminal: false };
+  }
+  /**
+   * Run 101, live `req-752e67dd-6028-4fe7-810b-81b393f91cac` at 08:33:58Z: a trial carries some of its
+   * scores but not the full batch, so Evaluation Core refuses the submission with
+   * `partial evaluation trial scores require recovery` (`extensions/evaluation-core/index.mjs:2943`).
+   * Deferrable and named. Unlike the in-flight class above it *does* consume the deferral budget and is
+   * retired `refused` with this name on exhaustion - whether the partial batch can be completed is not
+   * established, and quietly deferring it for ever would hide that.
+   */
+  if (/partial evaluation trial scores require recovery/i.test(message)) {
+    return { code: "replay_partial_trial_scores", terminal: false };
   }
   return { code: "replay_failed", terminal: false };
 }
