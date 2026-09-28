@@ -17,6 +17,7 @@ import {
 } from "node:fs";
 import { copyFile, lstat, mkdir, mkdtemp, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { claimEvaluationTrial } from "./track-b-auto-replay-runtime.js";
 
 import { createInterface } from "node:readline";
 import { DatabaseSync } from "node:sqlite";
@@ -9020,13 +9021,23 @@ export async function runTrackBShadowPipeline(
     ) {
       throw new Error("durable routing-shadow trial is in a terminal state");
     }
+    /**
+     * Run 101 addendum 32 (USE EFFECT): the claim runs as a bounded-retry Effect program - a momentarily busy store
+     * is retried, a trial that is genuinely not claimable resolves as `null`, and the no-claim path below is
+     * unchanged.
+     */
     const claimed = alreadySubmitted
       ? null
-      : await runtime.invoke("evaluation-core", {
-          ...envelope("evaluation:claim-trial", {
-            trialId: trial.trialId,
-            workerId: `runtime-host:${input.requestId}`,
-          }),
+      : await claimEvaluationTrial({
+          trialId: trial.trialId,
+          workerId: `runtime-host:${input.requestId}`,
+          claim: () =>
+            runtime.invoke("evaluation-core", {
+              ...envelope("evaluation:claim-trial", {
+                trialId: trial.trialId,
+                workerId: `runtime-host:${input.requestId}`,
+              }),
+            }),
         });
     if (
       !alreadySubmitted &&
