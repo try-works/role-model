@@ -17,7 +17,6 @@ import {
 } from "node:fs";
 import { copyFile, lstat, mkdir, mkdtemp, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { claimEvaluationTrial } from "./track-b-auto-replay-runtime.js";
 
 import { createInterface } from "node:readline";
 import { DatabaseSync } from "node:sqlite";
@@ -9028,7 +9027,7 @@ export async function runTrackBShadowPipeline(
      */
     const claimed = alreadySubmitted
       ? null
-      : await claimEvaluationTrial({
+      : await (await import("./track-b-auto-replay-runtime.js")).claimEvaluationTrial({
           trialId: trial.trialId,
           workerId: `runtime-host:${input.requestId}`,
           claim: () =>
