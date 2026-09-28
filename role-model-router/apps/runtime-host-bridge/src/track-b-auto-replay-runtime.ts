@@ -67,6 +67,35 @@ export function evaluationHandoffRequestFromCommandReceipt(
  * `queue_offer_failed: …` deserves the retry), and after the bound it resolves as a value: the replay itself already
  * succeeded, so a refused handoff is reported, never thrown.
  */
+/**
+ * Run 101 addendum 32 (the operator's rule: USE EFFECT): the trial claim is an Effect program, not a bare await.
+ *
+ * `evaluation:claim-trial` is the lease authority for a resumed comparison, and its failure modes are the ones the
+ * ledger names - a store that is momentarily busy (`invalid scheduler claim receipt`, `durable replay state is
+ * queued`) versus a trial that is genuinely not claimable. The former deserves the effect-mq guidance's bounded
+ * retry; the latter is a value the caller already handles (`!claimed` → refusal). Modelling it as an Effect program
+ * keeps that distinction in the type of the failure rather than in a try/catch ladder: a transient fault is retried
+ * with a spaced schedule, and the bound resolves as `null` so the caller's existing no-claim path runs unchanged.
+ */
+export function claimEvaluationTrial<T>(input: {
+  readonly trialId: string;
+  readonly workerId: string;
+  readonly claim: () => Promise<T>;
+}): Promise<T | null> {
+  const program = Effect.tryPromise({
+    try: () => input.claim(),
+    catch: (error) =>
+      error instanceof Error ? error.message.slice(0, 160) : "evaluation trial claim failed",
+  }).pipe(
+    Effect.retry({ times: 2, schedule: Schedule.spaced("250 millis") }),
+    Effect.catch(() => Effect.succeed(null)),
+  );
+  return Effect.runPromise(program);
+}
+
+/**
+ * Run 101 addendum 27 (the operator's rule: "implement using effect and effect-mq"): the handoff offer is an Effect
+ */
 export function offerEvaluationHandoff(input: {
   readonly replayJobId: string;
   readonly offer: (request: {

@@ -8999,16 +8999,44 @@ export async function runTrackBShadowPipeline(
       "trials-nonscored",
       `status=${String(trial.status ?? "unknown")} case=${String(caseId)} candidate=${String(rollout.endpointId)} rolloutActual=${typeof rollout.evaluationActual === "string" && rollout.evaluationActual ? "yes" : "no"} caseActual=${typeof evaluationCase.actual === "string" && evaluationCase.actual ? "yes" : "no"}`,
     );
-    if (trial.status !== undefined && trial.status !== "queued" && !alreadySubmitted) {
-      throw new Error("durable routing-shadow trial is not recoverable without an expired lease");
+    /**
+     * Run 101 addendum 31: refuse a *terminal* trial, not every non-queued one.
+     *
+     * This guard used to throw for any status that was neither `queued` nor `result_submitted` - with the message
+     * "…not recoverable without an expired lease" - while never consulting a lease, so a trial whose lease had
+     * expired (the case that message names as recoverable) was refused forever and the capture spent its deferral
+     * budget. Measured live on `:3457` (2026-09-28 08:13 local): the newest disposition was `deferred /
+     * replay_failed` with exactly that detail and `counters {"deferrals":1}`, among 85 such failures.
+     *
+     * `evaluation:claim-trial` is the lease authority and already fails closed - it claims only a `queued` trial or
+     * a `leased` one whose `lease_expires_at_ms <= now`, re-verifying it in the UPDATE
+     * (`evaluation-core:2526-2540`) - so a live lease still refuses here, through the claim, and an expired one
+     * resumes. Only a terminal trial is unrecoverable.
+     */
+    if (
+      trial.status !== undefined &&
+      (trial.status === "failed" || trial.status === "cancelled" || trial.status === "expired") &&
+      !alreadySubmitted
+    ) {
+      throw new Error("durable routing-shadow trial is in a terminal state");
     }
+    /**
+     * Run 101 addendum 32 (USE EFFECT): the claim runs as a bounded-retry Effect program - a momentarily busy store
+     * is retried, a trial that is genuinely not claimable resolves as `null`, and the no-claim path below is
+     * unchanged.
+     */
     const claimed = alreadySubmitted
       ? null
-      : await runtime.invoke("evaluation-core", {
-          ...envelope("evaluation:claim-trial", {
-            trialId: trial.trialId,
-            workerId: `runtime-host:${input.requestId}`,
-          }),
+      : await (await import("./track-b-auto-replay-runtime.js")).claimEvaluationTrial({
+          trialId: trial.trialId,
+          workerId: `runtime-host:${input.requestId}`,
+          claim: () =>
+            runtime.invoke("evaluation-core", {
+              ...envelope("evaluation:claim-trial", {
+                trialId: trial.trialId,
+                workerId: `runtime-host:${input.requestId}`,
+              }),
+            }),
         });
     if (
       !alreadySubmitted &&
