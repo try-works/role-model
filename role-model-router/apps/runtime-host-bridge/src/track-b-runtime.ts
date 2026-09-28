@@ -6759,6 +6759,35 @@ export function resolveExtensionBusinessAnswer(input: {
   );
 }
 
+/**
+ * Run 101 addendum 42 (measured live on `:3457`, 2026-09-28T10:04:36Z) - the trial's durable score rows, read
+ * the same way the judge-reuse rule reads them (addendum 37).
+ *
+ * The answer may arrive wrapped (`{value: …}` / `{businessOutput: …}`) or externalized behind the transfer
+ * marker, and the durable store is the authority either way, so the payload is decoded and then normalized
+ * before anything is matched against it. This is one seam instead of two so a determinism fix cannot drift
+ * from the judge fix it mirrors.
+ */
+async function readDurableTrialScores(input: {
+  readonly runtime: TrackBShadowPipelineRuntime;
+  readonly envelope: (capability: string, value: unknown) => Record<string, unknown>;
+  readonly trialId: string;
+  readonly scope: string;
+  readonly contractStateRoot?: string;
+}): Promise<readonly Record<string, unknown>[]> {
+  const rawScores = await input.runtime.invoke("evaluation-core", {
+    ...input.envelope("evaluation:list-trial-scores", { trialId: input.trialId }),
+  });
+  const decoded =
+    decodeExtensionBusinessResult({
+      result: rawScores,
+      extensionId: "evaluation-core",
+      ...(input.contractStateRoot ? { stateRoot: input.contractStateRoot } : {}),
+      scopeId: input.scope,
+    }) ?? rawScores;
+  return normalizeTrialScoreRows(decoded);
+}
+
 async function resolveTrackBReferenceAttestation(
   runtime: TrackBShadowPipelineRuntime,
   envelope: (capability: string, value: unknown) => Record<string, unknown>,
@@ -9172,19 +9201,52 @@ export async function runTrackBShadowPipeline(
     let correctness: Record<string, unknown> | undefined;
     pipelinePhase("judge", `case=${String(caseId)}`);
     if (deterministicCriteriaVerifiable) {
-      await runtime.invoke("evaluation-core", {
-        ...envelope("evaluation:record-trial-score-batch", {
+      /**
+       * Run 101 addendum 42 (measured live on `:3457`): this batch was the one writer addendum 37 did not
+       * cover. Every pass re-recorded `execution.scores` for every rollout, so a resumed or repeated pass
+       * re-recorded a correctness row that already existed; the extension refuses an existing identity with a
+       * different `score_json` (`evaluation trial score batch conflict`, evaluation-core `index.mjs:2940`) and
+       * the whole replay was deferred as `replay_failed`. The live case is capture
+       * `req-1e9d20ff-9619-4f65-9bd7-78beb9d957db`, whose evaluation job `evaluation-replay-e330a7331f300682b7b2`
+       * held four scored trials: two with both a judge row and a deterministic row, two with the deterministic
+       * row only.
+       *
+       * The durable row is the authority, exactly as it is for the judge: a member that already carries this
+       * scorer's row for this dimension is adopted rather than re-recorded, and only a member that is genuinely
+       * missing one is recorded. A durable row whose score is not finite still throws the named error below
+       * rather than being re-recorded - a second record for the same identity could only be refused.
+       */
+      const durableCorrectness = (
+        await readDurableTrialScores({
+          runtime,
+          envelope,
           trialId: trial.trialId,
-          scores: execution.scores,
-          referenceAttestation: trialReferenceAttestation,
-        }),
-      });
-      correctness = (execution.scores as Record<string, unknown>[]).find(
-        (score) =>
-          score.dimension === "correctness" &&
-          score.scorerId === scorer.id &&
-          score.scorerVersion === scorer.version,
+          scope: input.scope,
+          ...(input.contractStateRoot ? { contractStateRoot: input.contractStateRoot } : {}),
+        })
+      ).find(
+        (row) =>
+          row.dimension === "correctness" &&
+          row.scorerId === scorer.id &&
+          row.scorerVersion === scorer.version,
       );
+      if (durableCorrectness) {
+        correctness = durableCorrectness;
+      } else {
+        await runtime.invoke("evaluation-core", {
+          ...envelope("evaluation:record-trial-score-batch", {
+            trialId: trial.trialId,
+            scores: execution.scores,
+            referenceAttestation: trialReferenceAttestation,
+          }),
+        });
+        correctness = (execution.scores as Record<string, unknown>[]).find(
+          (score) =>
+            score.dimension === "correctness" &&
+            score.scorerId === scorer.id &&
+            score.scorerVersion === scorer.version,
+        );
+      }
       if (!correctness || !Number.isFinite(correctness.score)) {
         throw new Error("durable semantic evaluation did not produce a correctness score");
       }
@@ -9237,17 +9299,13 @@ export async function runTrackBShadowPipeline(
     const durableJudgeScoresByTrial = await (async () => {
       const scoresByTrial: Record<string, readonly Record<string, unknown>[]> = {};
       for (const branch of [sourceBranch, counterfactualBranch]) {
-        const rawScores = await runtime.invoke("evaluation-core", {
-          ...envelope("evaluation:list-trial-scores", { trialId: branch.trialId }),
+        scoresByTrial[branch.trialId] = await readDurableTrialScores({
+          runtime,
+          envelope,
+          trialId: branch.trialId,
+          scope: input.scope,
+          ...(input.contractStateRoot ? { contractStateRoot: input.contractStateRoot } : {}),
         });
-        const decoded =
-          decodeExtensionBusinessResult({
-            result: rawScores,
-            extensionId: "evaluation-core",
-            ...(input.contractStateRoot ? { stateRoot: input.contractStateRoot } : {}),
-            scopeId: input.scope,
-          }) ?? rawScores;
-        scoresByTrial[branch.trialId] = normalizeTrialScoreRows(decoded);
       }
       return selectDurableJudgeScoresByTrial({
         trialIds: [sourceBranch.trialId, counterfactualBranch.trialId],
