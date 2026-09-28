@@ -372,7 +372,9 @@ export interface RuntimeEndpoint {
       | "provider_5xx"
       | "rate_limit"
       | "auth"
-      | "quota";
+      | "quota"
+      // Run 101 addendum 45: the (account, model) pair cannot serve this model at all.
+      | "model_unavailable";
     readonly lastErrorClass: string;
     readonly lastFailureAtMs?: number;
     readonly nextProbeAtMs?: number;

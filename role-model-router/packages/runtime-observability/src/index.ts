@@ -315,7 +315,14 @@ export interface RuntimeExecutionCooldownReceipt {
     | "provider_5xx"
     | "rate_limit"
     | "auth"
-    | "quota";
+    | "quota"
+    /**
+     * Run 101 addendum 45. An endpoint that answered "this model is not supported for this account" is a
+     * durable capability fact about the (account, model) pair, not a request defect, so it has its own
+     * category and its own bounded circuit ladder. Operators read it here; the router skips the pair until
+     * the record clears on a successful probe.
+     */
+    | "model_unavailable";
   readonly sequenceStartedAtMs?: number;
   readonly nextProbeAtMs?: number;
   readonly retryAfterMs?: number;
