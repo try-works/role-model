@@ -9154,6 +9154,19 @@ export async function main(): Promise<void> {
             const armEvidence = await resolveResumedArmEvidence({
               counterfactualPackages: entry.counterfactualPackages,
               branchCaptureRequestIds,
+              /**
+               * Addendum 38: the decoded job's own dispatch record per arm. `terra` on replay `2f223824749c…`
+               * was reported `capture_missing` while its dispatch said
+               * `{status: "retryable_failure", reason: "terminated", disposition: "retryable"}` - the transport
+               * failure wearing the name of an evicted pointer. Since `capture_missing` is permanent, a replay
+               * whose every arm failed that way was terminalized as `evidence_outside_retention_window`.
+               */
+              dispatchOutcomesByEndpoint: (() => {
+                const dispatches = durableReplayJob?.dispatches;
+                return dispatches && typeof dispatches === "object" && !Array.isArray(dispatches)
+                  ? (dispatches as Record<string, unknown>)
+                  : {};
+              })(),
               readCapture: async (requestId) => {
                 const answer = (await operations.readLocalRouteCapture({ requestId })) as Record<
                   string,
