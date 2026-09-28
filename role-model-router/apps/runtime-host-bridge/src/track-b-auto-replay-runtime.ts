@@ -120,6 +120,39 @@ export function offerEvaluationHandoff(input: {
   return Effect.runPromise(program);
 }
 
+/**
+ * Run 101 addendum 36 (measured live on `:3457`, 2026-09-28): the handoff must be recorded *before* its
+ * evaluation job is offered.
+ *
+ * The live path offered the queue row first and only wrote the resume entry later, inside the completion. An
+ * attempt interrupted in that window left a queue row whose scoped resume store held nothing at all — the
+ * worker classified it `no-op`, acked it, and the row was recorded `completed`. 19 of the 46 `evaluation.score`
+ * rows had no resume entry and no Evaluation Core job, and 16 of those were recorded `completed`: the
+ * comparison the replay had already paid for was silently dropped rather than failed.
+ *
+ * Recording first inverts the window: an interruption now leaves a resumable entry, which is what the sweep
+ * exists to finish. The record call is best-effort by construction — a store that refuses the write is a
+ * defect the caller already logs, and it must not turn a successful replay into a failed handoff — so it is
+ * attempted first and the offer runs either way.
+ */
+export function offerRecordedEvaluationHandoff(input: {
+  readonly replayJobId: string;
+  /** Writes (idempotently) this handoff's resume entry. Called before the offer, exactly once. */
+  readonly record: () => void;
+  readonly offer: (request: {
+    readonly origin: "replay";
+    readonly replayJobId: string;
+  }) => Promise<{ readonly enqueued: boolean; readonly reason?: string }>;
+}): Promise<{ readonly enqueued: boolean; readonly reason?: string }> {
+  try {
+    input.record();
+  } catch {
+    // The caller reports its own refusal (a declined entry is logged where it is written); the ordering this
+    // helper owns is "record, then offer", and a store that refuses must not cost the replay its handoff.
+  }
+  return offerEvaluationHandoff({ replayJobId: input.replayJobId, offer: input.offer });
+}
+
 export function autoReplayExecutionFromCommandReceipt(receipt: unknown): AutoReplayExecution {
   const record =
     receipt && typeof receipt === "object" && !Array.isArray(receipt)

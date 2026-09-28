@@ -98,6 +98,7 @@ import {
   autoReplayExecutionFromCommandReceipt,
   evaluationHandoffRequestFromCommandReceipt,
   offerEvaluationHandoff,
+  offerRecordedEvaluationHandoff,
   startAutoReplayLoop,
 } from "./track-b-auto-replay-runtime.js";
 import {
@@ -7261,6 +7262,18 @@ export async function main(): Promise<void> {
               `evaluation job ${job.groupId ?? job.replayJobId ?? "unknown"} made no progress`,
             );
           }
+          /**
+           * Run 101 addendum 36 (G1-b): a `no-op` is a *silent* success — the worker had nothing to resume, so
+           * the row is recorded `completed` and the operator's readback counts it as evaluation throughput.
+           * Measured live on `:3457` (2026-09-28): 16 of the 46 `evaluation.score` rows were exactly that, and
+           * the plane's `completedRecent` could not be told apart from "comparisons were scored". The ack is now
+           * named, so the two are distinguishable in the log without changing the plane's counters.
+           */
+          if (evaluationAttemptOutcome(result) === "no-op") {
+            console.error(
+              `[run101] evaluation job acked with nothing to resume:${job.groupId ?? job.replayJobId ?? "unknown"}`,
+            );
+          }
         },
         onAttemptFailure: (error, job) => {
           console.error(
@@ -7821,6 +7834,61 @@ export async function main(): Promise<void> {
             typeof sourceCapture.scope === "string" && sourceCapture.scope.trim()
               ? sourceCapture.scope.trim()
               : options.scopeId;
+          /**
+           * Run 101 addendum 36 - the single writer for this handoff's resume entry.
+           *
+           * Recorded when the handoff is *offered* (`handoffEvaluation`) as well as when the completion starts
+           * (`completeEvaluation`), so the window between the offer and the completion holds a resumable entry.
+           * Measured live on `:3457` (2026-09-28): 19 of the 46 `evaluation.score` rows had no resume entry and
+           * no Evaluation Core job, and 16 of those were recorded `completed` — the worker's `no-op`
+           * classification acked them and the comparison the replay had already paid for never happened.
+           * `record()` is idempotent (it returns the existing entry unchanged), so the second call is free and
+           * can never overwrite a live entry.
+           */
+          const recordEvaluationResumeEntry = (input: {
+            readonly replayJobId: string;
+            readonly evaluationJobId: string;
+            readonly requestId: string;
+            readonly sourceCaptureRequestId: string;
+            readonly scope: string | null;
+          }): void => {
+            if (!input.replayJobId || !input.evaluationJobId || !input.sourceCaptureRequestId)
+              return;
+            try {
+              evaluationResumeStore.record({
+                schemaVersion: "role-model.supervised-replay-evaluation-resume.v1",
+                replayJobId: input.replayJobId,
+                evaluationJobId: input.evaluationJobId,
+                requestId: input.requestId,
+                sourceCaptureRequestId: input.sourceCaptureRequestId,
+                sourceEndpointId,
+                sourceModelId,
+                counterfactualPackages: counterfactualPackages.map((candidate) => ({
+                  endpointId: candidate.endpointId,
+                  modelId: candidate.modelId,
+                  reasoningEffort: candidate.reasoningEffort ?? null,
+                })),
+                evaluationCriteria: evaluationCriteria as unknown as Readonly<
+                  Record<string, unknown>
+                >,
+                evaluationCriteriaDigest,
+                // Run 98 addendum 34 S5: the durable replay job is bound to this scope, so
+                // terminalizing it later needs the same value (see `onAbandoned`).
+                scope: input.scope,
+                recordedAtMs: Date.now(),
+                attempts: 0,
+                resolvedAtMs: null,
+                outcome: null,
+                lastError: null,
+              });
+            } catch (error) {
+              console.error(
+                `[run99] evaluation resume entry declined:${input.requestId} ${String(
+                  (error as { message?: unknown })?.message ?? error,
+                ).slice(0, 200)}`,
+              );
+            }
+          };
           // R3: the frozen decision snapshot is provenance, not a filter. Captures
           // that do not record one (for example a channel that captured a single
           // eligible endpoint) still replay against the configured candidate set,
@@ -8225,20 +8293,43 @@ export async function main(): Promise<void> {
             },
             handoffEvaluation: async ({ replayJobId }) => {
               const evaluationJobId = `evaluation-replay-${createHash("sha256").update(String(replayJobId)).digest("hex").slice(0, 20)}`;
+              /**
+               * Run 101 addendum 36 (measured live on `:3457`, 2026-09-28).
+               *
+               * The evaluation queue row was offered *here* while the resume entry was only written later, inside
+               * `completeEvaluation`. An attempt interrupted in that window left a queue row whose scoped resume
+               * store held nothing at all: the worker's `no-op` classification acks it, so the row is recorded
+               * `completed` and the comparison the replay already paid for never happens. 19 of the 46 live
+               * `evaluation.score` rows had no resume entry and no Evaluation Core job, and 16 of them were
+               * recorded `completed` — i.e. silently dropped rather than failed.
+               *
+               * The entry is now recorded the moment the handoff is offered, so the window holds a resumable
+               * entry instead of nothing. `record()` is idempotent (it returns the existing entry unchanged), so
+               * the later `completeEvaluation` write is a no-op.
+               */
               // Run 101 R5: the handoff is where the replay plane learns the
               // unit of evaluation work, so it is where the job is offered.
               // `legacy` keeps this a no-op, and a refused offer is logged
               // rather than thrown: the handoff itself already succeeded.
               if (lateBoundEvaluationQueue.mode !== "legacy") {
-                const offered = await lateBoundEvaluationQueue
-                  .offer({ origin: "replay", replayJobId: String(replayJobId) })
-                  .catch((error: unknown) => ({
-                    enqueued: false,
-                    reason: String((error as { message?: unknown })?.message ?? error).slice(
-                      0,
-                      160,
-                    ),
-                  }));
+                /**
+                 * Run 101 addendum 36: `offerRecordedEvaluationHandoff` writes the resume entry *before* offering
+                 * the queue row (see the helper), so the window between the offer and the completion holds a
+                 * resumable entry instead of nothing. The offer itself is still the addendum-27 Effect program.
+                 */
+                const offered = await offerRecordedEvaluationHandoff({
+                  replayJobId: String(replayJobId),
+                  record: () =>
+                    recordEvaluationResumeEntry({
+                      replayJobId: String(replayJobId),
+                      evaluationJobId,
+                      requestId,
+                      sourceCaptureRequestId:
+                        typeof sourceCapture.requestId === "string" ? sourceCapture.requestId : "",
+                      scope: captureScope,
+                    }),
+                  offer: (request) => lateBoundEvaluationQueue.offer(request),
+                });
                 if (!offered.enqueued) {
                   console.error(
                     `[run101] evaluation queue offer declined:${replayJobId} ${offered.reason ?? "unknown"}`,
@@ -8247,6 +8338,12 @@ export async function main(): Promise<void> {
               }
               return { evaluationJobId };
             },
+            /**
+             * Run 101 addendum 36: one writer for the resume entry, called both when the handoff is offered (so
+             * the window between offer and completion is resumable) and when the completion starts (so entries
+             * written before this repair are still recorded). `record()` is idempotent and keeps the first write,
+             * so calling it twice costs nothing and cannot overwrite a live entry.
+             */
             completeEvaluation: (() => {
               // Run 98 addendum 45 J2: the judge is resolved from the controller assignment when the
               // comparison is completed, so switching the controller changes the next comparison's judge
@@ -8315,45 +8412,16 @@ export async function main(): Promise<void> {
                 const evaluationJobId = String(request.evaluationJobId ?? "");
                 const sourceCaptureRequestId =
                   typeof sourceCapture.requestId === "string" ? sourceCapture.requestId : "";
-                if (replayJobId && evaluationJobId && sourceCaptureRequestId) {
-                  try {
-                    evaluationResumeStore.record({
-                      schemaVersion: "role-model.supervised-replay-evaluation-resume.v1",
-                      replayJobId,
-                      evaluationJobId,
-                      requestId,
-                      sourceCaptureRequestId,
-                      sourceEndpointId,
-                      sourceModelId,
-                      counterfactualPackages: counterfactualPackages.map((candidate) => ({
-                        endpointId: candidate.endpointId,
-                        modelId: candidate.modelId,
-                        reasoningEffort: candidate.reasoningEffort ?? null,
-                      })),
-                      evaluationCriteria: evaluationCriteria as unknown as Readonly<
-                        Record<string, unknown>
-                      >,
-                      evaluationCriteriaDigest,
-                      // Run 98 addendum 34 S5: the durable replay job is bound to this scope, so
-                      // terminalizing it later needs the same value (see `onAbandoned`).
-                      scope:
-                        typeof request.scope === "string" && request.scope.trim()
-                          ? request.scope.trim()
-                          : null,
-                      recordedAtMs: Date.now(),
-                      attempts: 0,
-                      resolvedAtMs: null,
-                      outcome: null,
-                      lastError: null,
-                    });
-                  } catch (error) {
-                    console.error(
-                      `[run99] evaluation resume entry declined:${requestId} ${String(
-                        (error as { message?: unknown })?.message ?? error,
-                      ).slice(0, 200)}`,
-                    );
-                  }
-                }
+                recordEvaluationResumeEntry({
+                  replayJobId,
+                  evaluationJobId,
+                  requestId,
+                  sourceCaptureRequestId,
+                  scope:
+                    typeof request.scope === "string" && request.scope.trim()
+                      ? request.scope.trim()
+                      : captureScope,
+                });
                 // S22: the entry just recorded is a live handoff; pin the source capture it will read again.
                 await holdHandoffEvidence(replayJobId, {
                   requestId,
