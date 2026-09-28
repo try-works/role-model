@@ -302,6 +302,42 @@ export function readRouteCaptureFromQueueReceipt(input: {
   }
 }
 
+/**
+ * Run 101 addendum 35 - the durable job record inside whatever envelope the `replay:job` capability answered
+ * with, or `null` when the answer holds no job.
+ *
+ * Measured live on the packaged stage RC (private `cd81be60`) on `:3457`, 2026-09-28: replay job
+ * `09879d72…` appended both branches (`status: "complete"`, 2 provider calls, 218 micros) and then failed 77 s
+ * after it was created with
+ *
+ *   evaluation_unavailable: handoff evidence is outside the capture retention window:
+ *     …gpt-5.6-luna=capture_missing(replay-req-830b5d12-…-0b80e687b109b193-branch),
+ *     …gpt-5.6-sol-medium=capture_missing(replay-req-830b5d12-…-c32d4671cc928618-branch)
+ *
+ * Both ids are the *pre-S9* derivation, which no producer writes. The job itself names the captures the arms
+ * wrote (`result.branchRequestId` / `result.providerResultRef` on each dispatch), and both of those captures
+ * were present in the store and accepted by `readRouteCaptureFromQueueReceipt`'s shape check.
+ *
+ * The completion read `answer.dispatches` directly, and the packaged extension host answers inside a
+ * durable-output envelope (`{value, businessOutput:{value}, durableLocator}`), so `dispatches` was `undefined`,
+ * the candidate list collapsed to the single legacy name, and an arm whose evidence was present was disposed as
+ * evicted. The recovery sweep already decodes this envelope (`decodeExternalizedOperatorReadback` ->
+ * `coerceDurableReplayJobRecord`); this is the same decode, for the completion.
+ */
+export function resolveResumedHandoffJobRecord(input: {
+  readonly answer: unknown;
+  readonly stateRoot: string;
+  readonly scopeId?: string | null;
+}): Record<string, unknown> | null {
+  return coerceDurableReplayJobRecord(
+    decodeExternalizedOperatorReadback({
+      stateRoot: input.stateRoot,
+      scopeId: input.scopeId ?? null,
+      value: input.answer,
+    }),
+  );
+}
+
 export function evaluationJobExistsFromGetJobAnswer(answer: unknown): boolean | null {
   if (answer === null || answer === undefined) return false;
   /**
@@ -8971,10 +9007,10 @@ export async function main(): Promise<void> {
              * artifacts. A failed read of the record that *names* the captures is not "no evidence": it is
              * "cannot tell", which is retryable and must say so.
              */
-            let durableReplayJob: Record<string, unknown> | null = null;
+            let durableReplayJobAnswer: unknown = null;
             let jobReadFailure: string | null = null;
             try {
-              durableReplayJob = (await runtime.invoke("replay-core", {
+              durableReplayJobAnswer = await runtime.invoke("replay-core", {
                 requestId: `replay-job-read:${entry.replayJobId}`,
                 sessionId: `replay-job-read:${options.scopeId}`,
                 protocolVersion: "1.1.0",
@@ -8983,12 +9019,29 @@ export async function main(): Promise<void> {
                 authorizationEpoch: 1,
                 capability: "replay:job",
                 value: { jobId: entry.replayJobId },
-              })) as Record<string, unknown> | null;
+              });
             } catch (error) {
               jobReadFailure = String(
                 (error as { message?: unknown })?.message ?? error ?? "unknown",
               ).slice(0, 200);
             }
+            /**
+             * Run 101 addendum 35 (measured live on the packaged stage RC, 2026-09-28): the answer crosses the
+             * packaged extension host inside a durable-output envelope, so reading `answer.dispatches` yielded
+             * its `dispatches` off the envelope. The candidate builder then had no recorded `branchRequestId`
+             * and no `providerResultRef` to read, collapsed every arm onto the pre-S9 `…-<legacyHash>-branch`
+             * name that no producer writes, and the handoff was terminalized as
+             * `evidence_outside_retention_window` - while both arm captures sat in the store, readable. The
+             * decode below is the one the recovery sweep already performs.
+             */
+            const durableReplayJob: Record<string, unknown> | null =
+              jobReadFailure !== null
+                ? null
+                : resolveResumedHandoffJobRecord({
+                    answer: durableReplayJobAnswer,
+                    stateRoot: options.runtimeStateRoot,
+                    scopeId: options.scopeId,
+                  });
             if (jobReadFailure !== null || !durableReplayJob) {
               throw new Error(
                 `resumed handoff job record is unreadable: ${
