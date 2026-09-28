@@ -139,7 +139,15 @@ function isFailureCategory(value: unknown): value is ExecutionFailureCategory {
     value === "provider_5xx" ||
     value === "rate_limit" ||
     value === "auth" ||
-    value === "quota"
+    value === "quota" ||
+    /**
+     * Run 101 addendum 48 - this is the runtime allow-list, and addendum 45 only widened the *type*. A record
+     * whose category is missing here is dropped by `parseRecord`, and `readExecutionCircuitState` then treats
+     * the parsed state as a normalization of the stored one and writes the cleaned state back - so the record
+     * was written, reported `cooldown_decision: recorded`, and silently erased by the next read. Measured live
+     * on `:3457`: four `400 model_unavailable` probes, one circuit key whose `updated_at_ms` never moved.
+     */
+    value === "model_unavailable"
   );
 }
 
