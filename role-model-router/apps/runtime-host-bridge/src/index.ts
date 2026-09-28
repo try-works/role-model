@@ -4521,6 +4521,23 @@ function isQuotaExhaustedErrorText(text: string): boolean {
   );
 }
 
+/**
+ * Run 101 addendum 45 - the upstream wordings that mean "this account cannot serve this model", as opposed
+ * to "this request is malformed". Matched against `searchText`, which already carries the whole body.
+ *
+ * Deliberately narrow and bounded: each pattern names the *model* as unavailable to the *account*. A
+ * provider that says a parameter is invalid, or that a payload is too large, must not match here.
+ *
+ * Effect-first determination (AGENTS.md, "Effect-first implementation rule"): this is a pure, synchronous
+ * classification over a response body that is already in memory, and the circuit transition it feeds
+ * (`recordExecutionCircuitFailure`, `execution-circuit-breaker.ts`) is a pure function over a serialised
+ * record. There is no effect, resource, concurrency, or schedule to model here, so Effect is not used -
+ * the render-affecting async seams in this family (`offerRecordedEvaluationHandoff`,
+ * `claimEvaluationTrial`) are Effect programs and stay that way.
+ */
+const MODEL_AVAILABILITY_REJECTION =
+  /model is not supported when using|does not have access to (the )?model|you do not have access to model|model[^"]{0,60}not (available|supported) (on|for|with) (this|your) /;
+
 function buildUpstreamErrorPreview(input: {
   readonly statusCode: number;
   readonly message: string;
@@ -4693,6 +4710,37 @@ export function classifyUpstreamExecutionFailure(input: {
       errorClass: "upstream_error",
       message,
       retryable: true,
+      fallbackEligible: true,
+      endpointId: input.endpointId,
+      ...baseErrorContext,
+      upstreamBody: input.body,
+    });
+  }
+
+  /**
+   * Run 101 addendum 45, measured live on `:3457`: an endpoint can be configured, admitted and reported
+   * `healthy` while the account behind it cannot serve the model at all. The instance
+   * `openai.personal.openai-codex-subscription.global.gpt-5.4` was admitted on OAuth alone
+   * (`admitRuntimeEndpoint` skips the model probe for a device-code account), and every request to it came
+   * back `400 {"detail":"The 'gpt-5.4' model is not supported when using Codex with a ChatGPT account."}`.
+   * Telemetry for that one pair reads **19 requests / 19 failures / 0 successes**, and the failure row shows
+   * a second eligible candidate was never tried (`candidateCount: 2`,
+   * `eligibleModelIds: [chatgpt/gpt-5.4, chatgpt/gpt-5.6-sol]`, `rerouteCount: 0`).
+   *
+   * That is a statement about the account's entitlement, not about the request, so it must not share the
+   * classification of a genuinely malformed payload - those are `fallbackEligible: false` on purpose,
+   * because rerouting a bad payload wastes a second call. This one is exactly what fallback exists for.
+   * The body is already in `searchText` (`JSON.stringify(input.body)` above), so the distinction costs
+   * nothing to make, and the match is deliberately narrow: anything else keeps the branch below.
+   */
+  if (MODEL_AVAILABILITY_REJECTION.test(searchText)) {
+    return new UpstreamExecutionError({
+      statusCode,
+      errorClass: "model_unavailable",
+      message,
+      // Not retryable on the *same* endpoint - an entitlement does not change between two attempts - but
+      // fallback-eligible, so the router tries a candidate that can actually serve the request.
+      retryable: false,
       fallbackEligible: true,
       endpointId: input.endpointId,
       ...baseErrorContext,

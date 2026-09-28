@@ -1819,6 +1819,40 @@ export function resolvePostObservationReleaseId(input: {
 }
 
 /**
+ * Run 101 addendum 44 - what a promotion job learned from its consume sweep.
+ *
+ * Measured live on `:3457` (RC `5bbc968a`): `learner.promote` held one terminal failure for
+ * `shadow-70e04977e77f5ecbca32e6cae98afdf4d5…`, exhausted after three attempts with
+ * `Error: no candidate was validated for shadow-70e04977…`. Two things were wrong with that:
+ *
+ * - the handler called the sweep with **no candidate filter** (`{ limit: 1 }`, which the sweep ignores -
+ *   it walks its own cursor page and processes `pending.slice(0, 2)`), so a per-candidate job could
+ *   consume another candidate's work or report failure for a candidate the sweep never looked at;
+ * - the phrase "no candidate was validated" claims a validation verdict the sweep never reached. What
+ *   actually happened is that no finalized comparison was available to validate - a *not-yet* condition
+ *   that this run has had to name repeatedly so it can be counted.
+ *
+ * The observable class is deliberately unchanged: a job that cannot validate stays claimable and retries,
+ * which R6 asks for ("named skips remain claimable"). Acknowledging it instead would be worse than the
+ * bug - the job id is the candidate id and a completed job is never re-enqueued, so an early ack would
+ * drop the candidate permanently.
+ */
+export type LearnerPromotionOutcome =
+  | { readonly kind: "promoted" }
+  | { readonly kind: "not_validatable"; readonly reason: string };
+
+export function classifyLearnerPromotionResult(input: {
+  readonly candidateId: string;
+  readonly result: { readonly consumed?: number } | null | undefined;
+}): LearnerPromotionOutcome {
+  if (input.result && (input.result.consumed ?? 0) > 0) return { kind: "promoted" };
+  return {
+    kind: "not_validatable",
+    reason: `candidate_not_validatable:${input.candidateId}: no finalized comparison was available to validate`,
+  };
+}
+
+/**
  * Production completion callback shared by the fresh and awaiting-evaluation
  * paths. Keeping the callback as a factory makes the durable join directly
  * testable without bypassing the CLI's actual completion registration.
@@ -5643,10 +5677,20 @@ export async function main(): Promise<void> {
               ).slice(0, 160)}`,
             );
           }
+          /**
+           * Run 101 addendum 44: a caller that owns one candidate can scope the sweep to it. The durable
+           * `learner.promote` job is per candidate (`jobIdRule: candidateId`), so a job-scoped consume
+           * must not be satisfied by - or blocked behind - another candidate's work.
+           */
+          const onlyCandidateId =
+            typeof input.candidateId === "string" && input.candidateId.trim()
+              ? input.candidateId.trim()
+              : null;
           const pending = candidates.filter((candidate) => {
             const candidateId =
               typeof candidate.candidateId === "string" ? candidate.candidateId : null;
-            return candidateId !== null && !recordedCandidateIds.has(candidateId);
+            if (candidateId === null || recordedCandidateIds.has(candidateId)) return false;
+            return onlyCandidateId === null || candidateId === onlyCandidateId;
           });
           if (pending.length === 0)
             return { scanned: candidates.length, consumed: 0, remaining: 0 };
@@ -7353,10 +7397,22 @@ export async function main(): Promise<void> {
             if (typeof consume !== "function") {
               throw new Error("learner promotion is not available");
             }
-            const result = (await consume({ limit: 1 })) as { consumed?: number } | null;
-            if (!result || (result.consumed ?? 0) === 0) {
-              throw new Error(`no candidate was validated for ${job.candidateId}`);
-            }
+            /**
+             * Run 101 addendum 44: scoped to this job's candidate - the sweep ignores `limit` and walks
+             * its own page, so without `candidateId` a per-candidate job could consume another
+             * candidate's work. The outcome is classified rather than thrown blindly, so the reason names
+             * what is true ("no finalized comparison was available") instead of claiming a validation
+             * verdict the sweep never reached.
+             */
+            const result = (await consume({
+              limit: 1,
+              candidateId: job.candidateId,
+            })) as { consumed?: number } | null;
+            const outcome = classifyLearnerPromotionResult({
+              candidateId: job.candidateId,
+              result,
+            });
+            if (outcome.kind === "not_validatable") throw new Error(outcome.reason);
           },
           onPromoteFailure: (error, job) => {
             console.error(

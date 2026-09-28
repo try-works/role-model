@@ -11,6 +11,14 @@ export const EXECUTION_RATE_LIMIT_MAX_MS = 5 * 60 * 1_000;
 
 const CONNECTION_OPEN_DURATIONS_MS = [5_000, 15_000, 60_000, 300_000] as const;
 const PROVIDER_5XX_OPEN_DURATIONS_MS = [2_000, 10_000, 30_000, 120_000] as const;
+/**
+ * Run 101 addendum 45 - how long an endpoint that cannot serve its own model is skipped once observed.
+ *
+ * Longer than a transport blip on purpose: an entitlement is a plan fact, not a moment, so re-probing it
+ * every few seconds only spends calls. The escalation is bounded and the record clears the first time the
+ * pair serves a request, so an account that gains the model recovers by itself.
+ */
+const MODEL_UNAVAILABLE_OPEN_DURATIONS_MS = [300_000, 1_800_000, 7_200_000] as const;
 const RATE_LIMIT_DEFAULT_MS = 30_000;
 const MAX_PERSISTED_BYTES = 1_048_576;
 const MAX_IDENTIFIER_LENGTH = 256;
@@ -23,7 +31,8 @@ export type ExecutionFailureCategory =
   | "provider_5xx"
   | "rate_limit"
   | "auth"
-  | "quota";
+  | "quota"
+  | "model_unavailable";
 export type ExecutionCircuitStateName =
   | "probation"
   | "open"
@@ -339,6 +348,14 @@ export function classifyExecutionFailureCategory(
   if (normalized === "quota_exhausted" || statusCode === 402) {
     return "quota";
   }
+  /**
+   * Run 101 addendum 45: without a category, `recordExecutionCircuitFailure` returns the state unchanged
+   * (the `if (!category) ...` guard below), so an endpoint that answered "this model is not available" to
+   * every request stayed `healthy` and kept being selected - one dead pair absorbed 19 requests before this.
+   */
+  if (normalized === "model_unavailable") {
+    return "model_unavailable";
+  }
   if (normalized === "upstream_error" || (typeof statusCode === "number" && statusCode >= 500)) {
     return "provider_5xx";
   }
@@ -421,10 +438,12 @@ export function recordExecutionCircuitFailure(input: {
         ? boundedDuration(CONNECTION_OPEN_DURATIONS_MS, failureCount - 1)
         : category === "provider_5xx"
           ? boundedDuration(PROVIDER_5XX_OPEN_DURATIONS_MS, failureCount)
-          : Math.min(
-              EXECUTION_RATE_LIMIT_MAX_MS,
-              Math.max(0, Math.trunc(input.retryAfterMs ?? RATE_LIMIT_DEFAULT_MS)),
-            );
+          : category === "model_unavailable"
+            ? boundedDuration(MODEL_UNAVAILABLE_OPEN_DURATIONS_MS, failureCount)
+            : Math.min(
+                EXECUTION_RATE_LIMIT_MAX_MS,
+                Math.max(0, Math.trunc(input.retryAfterMs ?? RATE_LIMIT_DEFAULT_MS)),
+              );
     nextProbeAtMs = nowMs + durationMs;
     if (category === "rate_limit") {
       effectiveRetryAfterMs = durationMs;
