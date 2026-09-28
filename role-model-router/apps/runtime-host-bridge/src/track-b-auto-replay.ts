@@ -368,6 +368,12 @@ const RETRYABLE_REPLAY_REFUSAL_CODES: ReadonlySet<string> = new Set([
    * Deferrable: the assignment read usually succeeds on the next tick.
    */
   "judge_unresolved",
+  /**
+   * Run 101 (live, found by the R5 kill-recovery drill): a durable replay job that is still `queued`
+   * because an arm failed retryably is *not* a failed replay - the capture arrived at the handoff
+   * before the replay finished. Deferrable, and named so it stops arriving as `replay_failed`.
+   */
+  "replay_job_not_ready_for_evaluation",
 ]);
 
 export function retryableReplayRefusalCodes(): ReadonlySet<string> {
@@ -708,7 +714,8 @@ export function classifyReplayExecutorFailure(message: string): Readonly<{
     | "replay_boundary_unavailable"
     | "replay_capture_idempotency_conflict"
     | "replay_evaluation_receipt_missing"
-    | "replay_branch_append_unavailable";
+    | "replay_branch_append_unavailable"
+    | "replay_job_not_ready_for_evaluation";
   terminal: boolean;
 }> {
   if (/route capture skipped:\s*boundary unavailable/i.test(message)) {
@@ -733,6 +740,23 @@ export function classifyReplayExecutorFailure(message: string): Readonly<{
    */
   if (/durable replay branch append has no host dispatch receipt/i.test(message)) {
     return { code: "replay_branch_append_unavailable", terminal: false };
+  }
+  /**
+   * Run 101, measured live on the packaged stage RC (2026-09-28): the durable replay job is still
+   * `queued` because one arm failed *retryably* and the job went back for another attempt, so
+   * `recordEvaluationReceipt` (`extensions/replay-core/index.mjs:1888`) refuses the handoff with
+   * `replay job is not awaiting evaluation`. The live job behind the first sighting named both halves:
+   * `dispatches` held `gpt-5.6-terra=complete`, `gpt-5.5=complete`, `gpt-5.4=retryable_failure`.
+   *
+   * The capture had done nothing wrong - it reached the handoff before its replay finished. It was
+   * nonetheless reported as `replay_failed`, the generic fallback this classifier uses for shapes it
+   * does not recognise, which is the collapse the neighbouring branches above exist to remove. It is
+   * deferrable: the next attempt (or the next tick, once the failing arm's retry settles) can complete
+   * the job. The deferral budget was already not being spent on it - `applyReplayDeferralBudget`
+   * recognises the detail as in-flight - so this changes the *name*, not the budget.
+   */
+  if (/replay job is not awaiting evaluation/i.test(message)) {
+    return { code: "replay_job_not_ready_for_evaluation", terminal: false };
   }
   return { code: "replay_failed", terminal: false };
 }
