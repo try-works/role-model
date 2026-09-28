@@ -91,6 +91,14 @@ export const REPLAY_REFUSAL_CODES = [
    */
   "replay_evaluation_receipt_missing",
   "replay_branch_append_unavailable",
+  /**
+   * Run 101 (live, found by the R5 kill-recovery drill): the durable replay job is still `queued`
+   * because one of its arms failed *retryably* and the job went back for another attempt, so the
+   * handoff's `recordEvaluationReceipt` refuses it with `replay job is not awaiting evaluation`
+   * (replay-core `index.mjs:1888`). The replay is not finished, not failing - the capture is simply
+   * early. Deferrable, and named so the class stops arriving as `replay_failed`.
+   */
+  "replay_job_not_ready_for_evaluation",
 ] as const;
 
 export type ReplayRefusalCode = (typeof REPLAY_REFUSAL_CODES)[number];
