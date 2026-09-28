@@ -6775,17 +6775,29 @@ async function readDurableTrialScores(input: {
   readonly scope: string;
   readonly contractStateRoot?: string;
 }): Promise<readonly Record<string, unknown>[]> {
-  const rawScores = await input.runtime.invoke("evaluation-core", {
-    ...input.envelope("evaluation:list-trial-scores", { trialId: input.trialId }),
-  });
-  const decoded =
-    decodeExtensionBusinessResult({
-      result: rawScores,
-      extensionId: "evaluation-core",
-      ...(input.contractStateRoot ? { stateRoot: input.contractStateRoot } : {}),
-      scopeId: input.scope,
-    }) ?? rawScores;
-  return normalizeTrialScoreRows(decoded);
+  /**
+   * Run 101 addendum 42: a read that fails is not fatal, and it must not turn a comparison that worked before
+   * this addendum into a new failure. The caller's fallback is exactly the pre-addendum behaviour - record the
+   * row it would have recorded - and evaluation-core's own identity rule (`UNIQUE(trial_id,scorer_id,
+   * scorer_version,dimension)` plus the conflict refusal) remains the backstop, so an unreadable store costs
+   * the reuse optimisation rather than correctness. The failure is swallowed only here, at the read; every
+   * write below still propagates.
+   */
+  try {
+    const rawScores = await input.runtime.invoke("evaluation-core", {
+      ...input.envelope("evaluation:list-trial-scores", { trialId: input.trialId }),
+    });
+    const decoded =
+      decodeExtensionBusinessResult({
+        result: rawScores,
+        extensionId: "evaluation-core",
+        ...(input.contractStateRoot ? { stateRoot: input.contractStateRoot } : {}),
+        scopeId: input.scope,
+      }) ?? rawScores;
+    return normalizeTrialScoreRows(decoded);
+  } catch {
+    return [];
+  }
 }
 
 async function resolveTrackBReferenceAttestation(
