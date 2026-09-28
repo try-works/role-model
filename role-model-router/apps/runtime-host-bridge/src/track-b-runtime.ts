@@ -3439,10 +3439,14 @@ export async function runSupervisedReplay(input: {
    * Runs the separately durable evaluator only after Replay Core has accepted
    * its handoff receipt.  The callback returns references/digests, never model
    * output, so the replay journal can close without importing business text.
+   *
+   * Run 101 addendum 46: `null` is a supported answer, and it is what the queue-authoritative plane
+   * returns - the comparison is owned by the `evaluation.score` worker, so the replay closes on its handoff
+   * receipt (`awaiting_evaluation`) instead of running the evaluator a second time in this process.
    */
   readonly completeEvaluation?: (
     request: Readonly<Record<string, unknown>>,
-  ) => Promise<Readonly<Record<string, unknown>>>;
+  ) => Promise<Readonly<Record<string, unknown>> | null>;
 }): Promise<Record<string, unknown>> {
   if (!input.requestId || !input.idempotencyKey || !input.intent || !input.leaseOwner) {
     throw new Error("supervised replay identity is required");

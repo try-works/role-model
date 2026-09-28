@@ -1928,6 +1928,17 @@ export function createSupervisedReplayEvaluationCompleter(input: {
   }>;
   readonly runPipeline?: typeof runTrackBShadowPipeline;
   /**
+   * Run 101 addendum 46 (measured live on `:3457`, 2026-09-28): the compare-to-derive hand-off belongs to
+   * whoever finalized the comparison, not to one driver.
+   *
+   * The learner's input is the *finalized comparison* (`R6`), and until this addendum the offer lived only in
+   * the inline `completeEvaluation` wrapper — so when the `evaluation.score` plane became authoritative the
+   * derivation would have stopped being offered by the path that actually finished the work. `learner.derive`'s
+   * `jobIdRule` is `groupId`, so the queue dedupes a second offer for the same group; offering from the shared
+   * completer is therefore idempotent as well as correct.
+   */
+  readonly offerLearnerDerivation?: (comparisonGroupId: string) => Promise<void>;
+  /**
    * Run 98 addendum 33 S2: the judge's measured position consistency for the endpoint that will judge this
    * comparison, resolved by the caller (it owns the ledger and the policy snapshot). It travels into the
    * pipeline so the promotion gate sees the same measurement the ledger records.
@@ -2659,6 +2670,22 @@ export function createSupervisedReplayEvaluationCompleter(input: {
             ).slice(0, 200)}`,
           );
         }
+      }
+    }
+    /**
+     * Run 101 addendum 46: the comparison is final, so the derivation is offered here - by whichever driver
+     * completed it. A refused offer is logged rather than thrown: the comparison is already durable, which is
+     * the same rule the inline wrapper applied before this addendum.
+     */
+    if (comparisonGroupId && input.offerLearnerDerivation) {
+      try {
+        await input.offerLearnerDerivation(comparisonGroupId);
+      } catch (error) {
+        console.error(
+          `[run101] learner derive offer declined:${comparisonGroupId} ${String(
+            (error as { message?: unknown })?.message ?? error,
+          ).slice(0, 160)}`,
+        );
       }
     }
     return {
@@ -8396,6 +8423,45 @@ export async function main(): Promise<void> {
               // without a policy write and without a restart.
               return async (request: Readonly<Record<string, unknown>>) => {
                 /**
+                 * Run 101 addendum 46 (measured live on `:3457`, 2026-09-28T10:04:36Z): this function and the
+                 * `evaluation.score` worker both drive the *same* comparison for the same replay job, with no
+                 * serialization between them. The live evidence: one capture's evaluation was driven twice
+                 * concurrently - inline in `/api/role-model/track-b/replay` right after the handoff offered the
+                 * queue row, and by the worker's scoped resume - and the two read different `actual` strings for
+                 * the same arm (inline prefers the live dispatch text, the resume path the capture's bounded
+                 * `responseText` excerpt), so `json_parses` flipped 1<->0 on the identical identity
+                 * `(trial, run96-semantic-criteria, 3+f0f873dd66c6, correctness)` and Evaluation Core refused the
+                 * second batch as `evaluation trial score batch conflict`.
+                 *
+                 * When the plane is `queue` the worker owns the comparison, so this path records the resume entry
+                 * and pins the evidence (both of which the worker needs, addenda 36 and S22) and then defers. A
+                 * `legacy` or `shadow` plane keeps the inline completion, which is what those modes mean.
+                 */
+                const inlineReplayJobId = String(request.replayJobId ?? "");
+                const inlineSourceCaptureRequestId =
+                  typeof sourceCapture.requestId === "string" ? sourceCapture.requestId : "";
+                recordEvaluationResumeEntry({
+                  replayJobId: inlineReplayJobId,
+                  evaluationJobId: String(request.evaluationJobId ?? ""),
+                  requestId,
+                  sourceCaptureRequestId: inlineSourceCaptureRequestId,
+                  scope:
+                    typeof request.scope === "string" && request.scope.trim()
+                      ? request.scope.trim()
+                      : captureScope,
+                });
+                // S22: the entry just recorded is a live handoff; pin the source capture it will read again.
+                await holdHandoffEvidence(inlineReplayJobId, {
+                  requestId,
+                  sourceCaptureRequestId: inlineSourceCaptureRequestId,
+                });
+                if (lateBoundEvaluationQueue.mode === "queue") {
+                  console.error(
+                    `[run101] evaluation completion deferred to the queue plane:${inlineReplayJobId}`,
+                  );
+                  return null;
+                }
+                /**
                  * Run 100 addendum 22 follow-up (requirement 3): the comparison's judge has to be the endpoint that
                  * actually scores it. Resolved from the controller alone, this is the very endpoint the tick
                  * substituted away from when it was an arm of this pair - so the job's comparability, the registered
@@ -8452,27 +8518,12 @@ export async function main(): Promise<void> {
                   },
                   currentLedgerReservationId: () => ledgerReservationId,
                 });
-                // Run 99 R33: the handoff is recorded before the completion runs, so a restart in
-                // between leaves a retryable resume entry for the sweep instead of a stranded job.
-                const replayJobId = String(request.replayJobId ?? "");
-                const evaluationJobId = String(request.evaluationJobId ?? "");
-                const sourceCaptureRequestId =
-                  typeof sourceCapture.requestId === "string" ? sourceCapture.requestId : "";
-                recordEvaluationResumeEntry({
-                  replayJobId,
-                  evaluationJobId,
-                  requestId,
-                  sourceCaptureRequestId,
-                  scope:
-                    typeof request.scope === "string" && request.scope.trim()
-                      ? request.scope.trim()
-                      : captureScope,
-                });
-                // S22: the entry just recorded is a live handoff; pin the source capture it will read again.
-                await holdHandoffEvidence(replayJobId, {
-                  requestId,
-                  sourceCaptureRequestId,
-                });
+                /**
+                 * Run 99 R33 recorded the resume entry here, before the completion ran; addendum 46 moved that
+                 * (and the S22 evidence pin) to the top of this function, ahead of the queue-mode deferral, so
+                 * the worker always finds a resumable entry and a held capture whichever path runs.
+                 */
+                const replayJobId = inlineReplayJobId;
                 const completed = await evaluationCompleter(request);
                 try {
                   const record = completed as Record<string, unknown>;
@@ -8491,34 +8542,11 @@ export async function main(): Promise<void> {
                   );
                 }
                 /**
-                 * Run 101 R6: the finalized comparison is the unit the learner
-                 * derives from, so the completion path is where the derivation
-                 * job is offered. `legacy` keeps this a no-op, and a refused
-                 * offer is logged rather than thrown - the comparison itself is
-                 * already durable.
+                 * Run 101 R6 offered the derivation from here, and addendum 46 moved that offer into the shared
+                 * completer (`offerLearnerDerivation`) so it fires for whichever driver finalized the
+                 * comparison - this inline path or the evaluation worker's scoped resume - instead of only for
+                 * this one. `learner.derive`'s `groupId` job rule makes a repeat offer a no-op.
                  */
-                const completedGroupId =
-                  typeof (completed as Record<string, unknown>)?.comparisonGroupId === "string"
-                    ? String((completed as Record<string, unknown>).comparisonGroupId)
-                    : null;
-                if (completedGroupId && lateBoundLearnerQueues.derive.mode !== "legacy") {
-                  const offeredDerive = await lateBoundLearnerQueues.derive
-                    .offer({ groupId: completedGroupId, reason: "comparison-finalized" })
-                    .catch((error: unknown) => ({
-                      enqueued: false,
-                      reason: String((error as { message?: unknown })?.message ?? error).slice(
-                        0,
-                        160,
-                      ),
-                    }));
-                  if (!offeredDerive.enqueued) {
-                    console.error(
-                      `[run101] learner derive offer declined:${completedGroupId} ${
-                        offeredDerive.reason ?? "unknown"
-                      }`,
-                    );
-                  }
-                }
                 // Run 98 addendum 34 S1: the extra pairs this capture adds are completed inside
                 // `createSupervisedReplayEvaluationCompleter` itself, which is the one function every
                 // completion path (this fresh path and the resume sweep) funnels through. The
@@ -8712,6 +8740,27 @@ export async function main(): Promise<void> {
        * and the resume sweep differ only in where their dispatch/output evidence comes from, so both
        * go through here and produce identical comparisons and learner rows.
        */
+      /**
+       * Run 101 addendum 46: one place that offers the derivation for a finalized comparison, passed into the
+       * shared completer so the driver that actually finished the work offers it. `legacy` keeps the offer a
+       * no-op, exactly as the inline wrapper had it, and `learner.derive`'s `groupId` job rule dedupes a repeat.
+       */
+      const offerLearnerDerivation = async (comparisonGroupId: string): Promise<void> => {
+        if (lateBoundLearnerQueues.derive.mode === "legacy") return;
+        const offered = await lateBoundLearnerQueues.derive
+          .offer({ groupId: comparisonGroupId, reason: "comparison-finalized" })
+          .catch((error: unknown) => ({
+            enqueued: false,
+            reason: String((error as { message?: unknown })?.message ?? error).slice(0, 160),
+          }));
+        if (!offered.enqueued) {
+          console.error(
+            `[run101] learner derive offer declined:${comparisonGroupId} ${
+              offered.reason ?? "unknown"
+            }`,
+          );
+        }
+      };
       const buildSupervisedReplayEvaluationCompleter = (input: {
         readonly backend: Awaited<ReturnType<typeof createRuntimeBridgeBackend>>;
         readonly runtime: NonNullable<typeof extensionRuntimeRef.current>;
@@ -8768,6 +8817,7 @@ export async function main(): Promise<void> {
           return { ...row, ...evaluateJudgePositionConsistency({ row, floor }) };
         })();
         return createSupervisedReplayEvaluationCompleter({
+          offerLearnerDerivation,
           ...(judgeConsistency ? { judgeConsistency } : {}),
           ...(input.contractStateRoot ? { contractStateRoot: input.contractStateRoot } : {}),
           runtime: input.runtime,
