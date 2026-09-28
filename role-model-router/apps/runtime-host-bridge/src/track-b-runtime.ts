@@ -875,7 +875,36 @@ export function selectDurableJudgeScores(input: {
   readonly scorerVersion: string;
   readonly dimension: string;
 }): readonly Record<string, unknown>[] | null {
-  const selected: Record<string, unknown>[] = [];
+  const byTrial = selectDurableJudgeScoresByTrial(input);
+  if (byTrial.size !== input.trialIds.length || input.trialIds.length === 0) return null;
+  return input.trialIds.map((trialId) => byTrial.get(trialId) as Record<string, unknown>);
+}
+
+/**
+ * Run 101 addendum 37 (measured live on `:3457`, 2026-09-28) - the per-trial half of the durable-judge rule.
+ *
+ * Addendum 33's rule is that a durable judge row is the authority for a resumed comparison, but it was applied
+ * *per pair*: `selectDurableJudgeScores` answers `null` unless **every** branch already carries the judge's
+ * row, and the caller then skipped recording only when that all-or-nothing answer was non-null. On a pair with
+ * one side already judged, the judge was re-dispatched and **both** sides were recorded again.
+ *
+ * A judge receipt is dispatch-unique (`dispatchReceiptId`, `routerDecisionId`, `judgeResultRef` are minted per
+ * dispatch), so the re-recorded side can never be byte-identical to the durable row and the extension refuses
+ * the batch with `evaluation trial score batch conflict` (evaluation-core `index.mjs:2940`). Measured:
+ * `trial:5b85fe6c…` and `trial:eaeb09b3…` carry `confidence` 0.95 where six sibling trials carry 1.0 — the
+ * judge's own confidence varies between invocations, so the divergence is not even hypothetical.
+ *
+ * This selector keeps the same matching rule but reports what it can reuse, so the caller can reuse the rows it
+ * has and record only the branches that are genuinely missing one.
+ */
+export function selectDurableJudgeScoresByTrial(input: {
+  readonly trialIds: readonly string[];
+  readonly scoresByTrial: Readonly<Record<string, readonly Record<string, unknown>[]>>;
+  readonly scorerId: string;
+  readonly scorerVersion: string;
+  readonly dimension: string;
+}): ReadonlyMap<string, Record<string, unknown>> {
+  const selected = new Map<string, Record<string, unknown>>();
   for (const trialId of input.trialIds) {
     const rows = input.scoresByTrial[trialId] ?? [];
     // The stored row is the authority: the judge's version embeds the endpoint and mode, which a
@@ -883,10 +912,9 @@ export function selectDurableJudgeScores(input: {
     const match = rows.find(
       (row) => row.scorerId === input.scorerId && row.dimension === input.dimension,
     );
-    if (!match) return null;
-    selected.push(match);
+    if (match) selected.set(trialId, match);
   }
-  return selected.length === input.trialIds.length && selected.length > 0 ? selected : null;
+  return selected;
 }
 
 /**
@@ -9206,7 +9234,7 @@ export async function runTrackBShadowPipeline(
     // that already carries *this* judge's score keeps the original receipt. Re-judging would dispatch
     // again and then be refused as a score conflict (`evaluation trial score batch conflict` /
     // `partial evaluation trial scores require recovery`), so the durable rows are the authority.
-    const durableJudgeScores = await (async () => {
+    const durableJudgeScoresByTrial = await (async () => {
       const scoresByTrial: Record<string, readonly Record<string, unknown>[]> = {};
       for (const branch of [sourceBranch, counterfactualBranch]) {
         const rawScores = await runtime.invoke("evaluation-core", {
@@ -9221,7 +9249,7 @@ export async function runTrackBShadowPipeline(
           }) ?? rawScores;
         scoresByTrial[branch.trialId] = normalizeTrialScoreRows(decoded);
       }
-      return selectDurableJudgeScores({
+      return selectDurableJudgeScoresByTrial({
         trialIds: [sourceBranch.trialId, counterfactualBranch.trialId],
         scoresByTrial,
         scorerId: judgeScorer.id,
@@ -9229,6 +9257,16 @@ export async function runTrackBShadowPipeline(
         dimension: judgeScorer.dimensions[0],
       });
     })();
+    /**
+     * Addendum 37: `durableJudgeScores` stays the all-or-nothing answer the reuse path needs, while the
+     * per-trial map is what keeps a *partially* judged pair from re-recording the side it already has.
+     */
+    const durableJudgeScores =
+      durableJudgeScoresByTrial.size === 2
+        ? [sourceBranch, counterfactualBranch].map(
+            (branch) => durableJudgeScoresByTrial.get(branch.trialId) as Record<string, unknown>,
+          )
+        : null;
     let judgeScores: Array<Record<string, unknown>>;
     if (durableJudgeScores) {
       judgeScores = [...durableJudgeScores];
@@ -9323,7 +9361,16 @@ export async function runTrackBShadowPipeline(
         }
       }
       if (judgeScoresFromDispatch) {
-        judgeScores = judgeScoresFromDispatch;
+        /**
+         * Addendum 37: a branch that already carries this judge's durable row keeps it - the durable receipt is
+         * the authority, and re-recording it is exactly what the extension refuses. The comparison therefore
+         * reads the durable row for that branch and the fresh decision only for the branches that were missing
+         * one, instead of dispatching a pair it cannot record.
+         */
+        judgeScores = [sourceBranch, counterfactualBranch].map(
+          (branch, index) =>
+            durableJudgeScoresByTrial.get(branch.trialId) ?? judgeScoresFromDispatch[index],
+        );
       } else {
         const error = judgeFailure;
         // guidance/09: a judge failure is persisted as a scorer failure, never as a
@@ -9354,7 +9401,8 @@ export async function runTrackBShadowPipeline(
     }
     for (const [index, branch] of [sourceBranch, counterfactualBranch].entries()) {
       // A reused durable judgement is already recorded; re-recording it is what the extension refuses.
-      if (durableJudgeScores) break;
+      // Addendum 37: decided per branch, so a partially judged pair records only the branch that is missing.
+      if (durableJudgeScoresByTrial.has(branch.trialId)) continue;
       const entry = index === 0 ? sourceEntry : counterfactualEntry;
       await runtime.invoke("evaluation-core", {
         ...envelope("evaluation:record-trial-score-batch", {
