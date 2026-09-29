@@ -388,7 +388,7 @@ describe("LearningRoute", () => {
     expect(markup).toContain("deepseek.personal.deepseek-api-key.global.deepseek-v4-flash");
     expect(markup).toContain("9 decisive · holdout 4");
     expect(markup).toContain("Δ +0.06 over baseline");
-    expect(markup).toContain("judge controller · deepseek.personal");
+    expect(markup).toContain("judge controller · deepseek-v4-flash-max");
     expect(markup).toContain("claim not recorded");
   });
 
@@ -606,5 +606,256 @@ describe("LearningRoute", () => {
     ]) {
       expect(routeSource).toContain(token);
     }
+  });
+});
+
+/**
+ * Run 101 addendum 49: the readback gains the validation-receipt join (`verdict`, `validationRef`,
+ * `qualityDelta`, `claim`, `counts`, `countsState`) and every pack gains its resolved `scope`. These fixtures
+ * carry the operator's own quoted row - comparison `abfb1e72…`, candidate `shadow-b4075c88…`, receipt
+ * `validation-30747b01…` reading `decision: "validate"` with `qualityDelta: 1` - with the endpoint ids the live
+ * runtime records, which is what `A49-R3` displays as leaf model ids.
+ */
+const a49DecisionRowFixture = () => ({
+  decisionId: "decision-req-abfb1e72",
+  requestTaskTypeId: "coder.review",
+  roleId: "writer",
+  taxonomyVersion: "1.0.0-alpha.1",
+  candidateId: "shadow-b4075c888729347c0adbd4cee3f3cf2ae5dce8877af486f84ddb3c23f615853d",
+  evidence: {
+    comparisonId:
+      "comparison:supervised-replay:abfb1e728477a127f10d8eb6790707ea70f41ffa1029272e48d9e1c20612ffc9",
+    judgeEndpointId: "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash-max",
+    judgeSource: "controller",
+    outcome: "candidate",
+    winnerCandidateRef: "openai.personal.openai-codex-subscription.global.gpt-5.5",
+    replayRef: null,
+    captureRef: null,
+    members: [
+      {
+        candidateRef: "openai.personal.openai-codex-subscription.global.gpt-5.5",
+        role: "source",
+        score: 1,
+        disposition: "positive",
+      },
+      {
+        candidateRef: "openai.personal.openai-codex-subscription.global.gpt-5.6-luna",
+        role: "counterfactual",
+        score: 0.5,
+        disposition: "negative",
+      },
+    ],
+    verdict: "validate",
+    validationRef: "validation-30747b01eb9819d7a00f71bb337e1f0fe0481ce82fcd2b249d293ba7981ef5bc",
+    qualityDelta: 1,
+    counts: { comparisons: 3, decisive: 1, holdout: 2 },
+    countsState: "reported",
+  },
+});
+
+const a49PackRowFixture = () => ({
+  recordId: "pack-7f02060cc3fe0c6436a2f2dee6cd2502f2da0d762012998d01ed5cfc92ec57bf",
+  kind: "pack",
+  state: "validated",
+  scopeId: "standalone-runtime-stage",
+  scope: {
+    roleId: "writer",
+    taskTypeId: "coder.explain",
+    taxonomyVersion: "1.0.0-alpha.1",
+    scopeWide: false,
+  },
+  record: {
+    scope: {
+      endpointId: "openai.personal.openai-codex-subscription.global.gpt-5.5",
+      roleId: "writer",
+      taxonomyVersion: "1.0.0-alpha.1",
+    },
+  },
+  evidence: {
+    comparisonId:
+      "comparison:supervised-replay:abfb1e728477a127f10d8eb6790707ea70f41ffa1029272e48d9e1c20612ffc9",
+    judgeEndpointId: "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash-max",
+    judgeSource: "controller",
+    outcome: "candidate",
+    winnerCandidateRef: "openai.personal.openai-codex-subscription.global.gpt-5.5",
+    replayRef: null,
+    captureRef: null,
+    members: [
+      {
+        candidateRef: "openai.personal.openai-codex-subscription.global.gpt-5.5",
+        role: "source",
+        score: 1,
+        disposition: "positive",
+      },
+      {
+        candidateRef: "openai.personal.openai-codex-subscription.global.gpt-5.6-luna",
+        role: "counterfactual",
+        score: 0.5,
+        disposition: "negative",
+      },
+    ],
+    claim:
+      "openai.personal.openai-codex-subscription.global.gpt-5.5 outperformed openai.personal.openai-codex-subscription.global.gpt-5.6-luna for decision-replay-req-1e9d20ff on run96-semantic-criteria@3",
+    validationRef: "validation-30747b01eb9819d7a00f71bb337e1f0fe0481ce82fcd2b249d293ba7981ef5bc",
+    qualityDelta: 1,
+    counts: null,
+    countsState: "receipt_carries_none",
+  },
+});
+
+describe("run101 addendum 49", () => {
+  /**
+   * `A49-R3` (operator-reported): "only the model id should be displayed, gpt-5.5 instead of
+   * openai.personal.openai-codex-subscription.global.gpt-5.5". The visible text is the leaf model; the full
+   * endpoint id stays in the cell's `title`, and no cell prints the dotted path where a model belongs.
+   */
+  test("run101 a49 r3: the model and judge cells show the leaf model id, never a dotted endpoint path", () => {
+    const markup = renderToStaticMarkup(
+      <LearningDecisionRow receipt row={a49DecisionRowFixture()} />,
+    );
+    // Models column: one leaf id per replayed candidate.
+    expect(markup).toContain(">gpt-5.5<");
+    expect(markup).toContain(">gpt-5.6-luna<");
+    // Judge column: the judge is named by its leaf model.
+    expect(markup).toContain(">deepseek-v4-flash-max<");
+    // The endpoint path never appears as a cell's text…
+    expect(markup).not.toContain(">openai.personal");
+    expect(markup).not.toContain(">deepseek.personal");
+    // …and nothing is lost: each cell keeps the full endpoint id in its title.
+    expect(markup).toContain('title="openai.personal.openai-codex-subscription.global.gpt-5.5"');
+    expect(markup).toContain(
+      'title="deepseek.personal.deepseek-api-key.global.deepseek-v4-flash-max"',
+    );
+
+    const packMarkup = renderToStaticMarkup(
+      <LearningPackRow activePackageId={null} onActivate={() => {}} row={a49PackRowFixture()} />,
+    );
+    expect(packMarkup).toContain(">gpt-5.5<");
+    // No cell shows the endpoint path where a model belongs - the claim prose names endpoints as prose, and a
+    // model cell whose `title` is an endpoint id still shows only the leaf.
+    expect(packMarkup).not.toMatch(/title="[^"]*">(?:openai|deepseek)\.personal/);
+    expect(packMarkup).toContain(
+      'title="openai.personal.openai-codex-subscription.global.gpt-5.5"',
+    );
+  });
+
+  /**
+   * `A49-R1`: a candidate with a validation receipt reports it - the verdict word mapped from the receipt's
+   * `decision`, the receipt id, and its `qualityDelta` - instead of `no verdict recorded` /
+   * `validation not reported`.
+   */
+  test("run101 a49 r1: a row whose candidate has a validation receipt names the verdict, receipt and delta", () => {
+    const markup = renderToStaticMarkup(
+      <LearningDecisionRow receipt row={a49DecisionRowFixture()} />,
+    );
+    expect(markup).toContain("promoted");
+    expect(markup).toContain("Δ +1.00");
+    expect(markup).toContain("validation validation-307…f5bc");
+    expect(markup).toContain(
+      'title="validation-30747b01eb9819d7a00f71bb337e1f0fe0481ce82fcd2b249d293ba7981ef5bc"',
+    );
+    expect(markup).toContain("1 dec · 2 holdout");
+    // A verdict word the runtime does not emit still reads as bounded absence rather than a verdict.
+    const unknown = renderToStaticMarkup(
+      <LearningDecisionRow
+        receipt
+        row={{
+          ...a49DecisionRowFixture(),
+          evidence: { ...a49DecisionRowFixture().evidence, verdict: "shadow_validating" },
+        }}
+      />,
+    );
+    expect(unknown).toContain("no verdict recorded");
+    expect(unknown).not.toContain(">shadow_validating<");
+  });
+
+  /**
+   * `A49-R2`: the pack's claim prose is recorded and renders. `claim not recorded` is reserved for a pack whose
+   * candidate genuinely has no text row - it is no longer a hardcoded sentence.
+   */
+  test("run101 a49 r2: a pack renders the claim it carries, and says 'not recorded' only without one", () => {
+    const markup = renderToStaticMarkup(
+      <LearningPackRow activePackageId={null} onActivate={() => {}} row={a49PackRowFixture()} />,
+    );
+    expect(markup).toContain("outperformed");
+    expect(markup).toContain("run96-semantic-criteria@3");
+    expect(markup).not.toContain("claim not recorded");
+
+    const withoutClaim = renderToStaticMarkup(
+      <LearningPackRow
+        activePackageId={null}
+        onActivate={() => {}}
+        row={{
+          ...a49PackRowFixture(),
+          evidence: { ...a49PackRowFixture().evidence, claim: null },
+        }}
+      />,
+    );
+    expect(withoutClaim).toContain("claim not recorded");
+  });
+
+  /**
+   * `A49-R4`: every pack names the role, task and taxonomy it routes for, and a pack that is genuinely
+   * scope-wide says so instead of rendering the same `not reported` a missing value would.
+   */
+  test("run101 a49 r4: a pack names role · task · taxonomy, and a scope-wide pack says so", () => {
+    const markup = renderToStaticMarkup(
+      <LearningPackRow activePackageId={null} onActivate={() => {}} row={a49PackRowFixture()} />,
+    );
+    expect(markup).toContain("writer · coder.explain · taxonomy 1.0.0-alpha.1");
+
+    const scopeWide = renderToStaticMarkup(
+      <LearningPackRow
+        activePackageId={null}
+        onActivate={() => {}}
+        row={{
+          ...a49PackRowFixture(),
+          scope: {
+            roleId: null,
+            taskTypeId: null,
+            taxonomyVersion: null,
+            scopeWide: true,
+          },
+        }}
+      />,
+    );
+    expect(scopeWide).toContain("scope-wide");
+    expect(scopeWide).not.toContain("writer · coder.explain · taxonomy");
+  });
+
+  /**
+   * `A49-R5`: evidence counts are either present or stated absent for a reason - a receipt that carries no
+   * family evidence says so instead of leaving a bare `not reported`.
+   */
+  test("run101 a49 r5: evidence counts are present, or the receipt is said to carry none", () => {
+    const reported = renderToStaticMarkup(
+      <LearningDecisionRow receipt row={a49DecisionRowFixture()} />,
+    );
+    expect(reported).toContain("1 dec · 2 holdout");
+
+    const carriesNone = {
+      ...a49DecisionRowFixture(),
+      evidence: {
+        ...a49DecisionRowFixture().evidence,
+        counts: null,
+        countsState: "receipt_carries_none",
+      },
+    };
+    const absent = renderToStaticMarkup(<LearningDecisionRow receipt row={carriesNone} />);
+    expect(absent).toContain("the receipt carries no comparison counts");
+    expect(absent).not.toContain("dec ·");
+
+    // The pack's claim cell states the same reason in place of its Δ line when no delta was recorded either.
+    const pack = renderToStaticMarkup(
+      <LearningPackRow
+        activePackageId={null}
+        onActivate={() => {}}
+        row={{
+          ...a49PackRowFixture(),
+          evidence: { ...a49PackRowFixture().evidence, qualityDelta: null },
+        }}
+      />,
+    );
+    expect(pack).toContain("the receipt carries no comparison counts");
   });
 });
