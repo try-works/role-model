@@ -302,7 +302,9 @@ describe("LearningRoute", () => {
     expect(markup).toContain("tool classes tools.http, tools.filesystem");
     expect(markup).toContain("request creative.copywriting");
 
-    const absent = renderToStaticMarkup(<LearningDecisionRow row={{ decisionId: "decision-req-1" }} />);
+    const absent = renderToStaticMarkup(
+      <LearningDecisionRow row={{ decisionId: "decision-req-1" }} />,
+    );
     expect(absent).toContain("not reported");
     expect(absent).not.toContain("coder.review");
   });

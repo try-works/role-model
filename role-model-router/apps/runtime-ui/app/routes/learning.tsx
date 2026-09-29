@@ -195,8 +195,7 @@ const tableCellStrongClassName =
 const tableCellMetaClassName = "font-mono text-[11px] leading-4 text-[var(--rm-muted)]";
 const tableCellNoteClassName = "font-sans text-[11px] leading-4 text-[var(--rm-secondary)]";
 /** The design system's green ink, used for the one winning candidate a pack carries. */
-const tableCellWinnerClassName =
-  "font-mono text-[12px] leading-[18px] text-[var(--rm-success)]";
+const tableCellWinnerClassName = "font-mono text-[12px] leading-[18px] text-[var(--rm-success)]";
 const tableCellWinnerMetaClassName = "font-mono text-[11px] leading-4 text-[var(--rm-success)]";
 /** Fixed lanes (`flexShrink: 0`) so every candidate line's score lands in the same column, row to row. */
 const tableScoreLaneClassName = "w-[74px] shrink-0 text-right font-mono tabular-nums";
@@ -343,7 +342,9 @@ export function learningTaskCell(row: Record<string, unknown>): LearningTaskCell
   return {
     task,
     scope:
-      roleId || taxonomy ? `${roleId ?? NOT_REPORTED} · taxonomy ${taxonomy ?? NOT_REPORTED}` : null,
+      roleId || taxonomy
+        ? `${roleId ?? NOT_REPORTED} · taxonomy ${taxonomy ?? NOT_REPORTED}`
+        : null,
     toolClasses,
     requestFamily: requestFamily && requestFamily !== task ? requestFamily : null,
   };
@@ -497,7 +498,10 @@ export function LearningDecisionRow({
           <p className={tableCellMetaClassName} title={evidence.validationRef ?? undefined}>
             {`validation ${shortLearningRef(evidence.validationRef) ?? NOT_REPORTED}`}
           </p>
-          <p className={`mt-0.5 ${tableCellMetaClassName}`} title={evidence.comparisonRef ?? undefined}>
+          <p
+            className={`mt-0.5 ${tableCellMetaClassName}`}
+            title={evidence.comparisonRef ?? undefined}
+          >
             {`comparison ${shortLearningRef(evidence.comparisonRef) ?? NOT_REPORTED}`}
           </p>
           <p className={`mt-0.5 ${tableCellMetaClassName}`}>
@@ -608,7 +612,10 @@ export function LearningPackRow({
         >
           {`judge ${evidence.judgeSource ?? NOT_REPORTED} · ${evidence.judgeEndpointId ?? NOT_REPORTED}`}
         </p>
-        <p className={`mt-0.5 ${tableCellMetaClassName}`} title={evidence.validationRef ?? undefined}>
+        <p
+          className={`mt-0.5 ${tableCellMetaClassName}`}
+          title={evidence.validationRef ?? undefined}
+        >
           {`receipt ${shortLearningRef(evidence.validationRef) ?? NOT_REPORTED}`}
         </p>
       </td>
@@ -816,10 +823,7 @@ export function LearningOverviewPage() {
                 />
                 <tbody>
                   {decisionRows.map((row, index) => (
-                    <LearningDecisionRow
-                      key={`${show(row.decisionId)}-${index}`}
-                      row={row}
-                    />
+                    <LearningDecisionRow key={`${show(row.decisionId)}-${index}`} row={row} />
                   ))}
                 </tbody>
               </table>
@@ -1228,9 +1232,7 @@ export function LearningPacksPage() {
               <tbody>
                 {rows.map((row) => (
                   <LearningPackRow
-                    activePackageId={
-                      textOrNull(rolloutValue.activePackageId) ?? null
-                    }
+                    activePackageId={textOrNull(rolloutValue.activePackageId) ?? null}
                     key={String(row.recordId)}
                     onActivate={(packId) => void act(packId)}
                     row={row}
@@ -1305,11 +1307,20 @@ export function LearningDecisionsPage() {
    * The readback hands the page a bounded window; the table shows it in pages rather than in one wall of rows.
    * Nothing is fetched that was not already read, and the note below says how much of the window is shown.
    */
-  const [visibleCount, setVisibleCount] = useState(50);
-  useEffect(() => {
-    setVisibleCount(50);
-  }, [stateFilter, roleFilter, taskFilter, outcomeFilter, originFilter]);
+  /**
+   * Paging resets to the first page whenever the filter identity changes. This is derived rather than reset from
+   * an effect: the effect form listed the filters as dependencies without reading them, which the repo's lint
+   * rejects, and an effect would also render one frame of the previous page's count after a filter change.
+   */
+  const filterKey = `${stateFilter}|${roleFilter}|${taskFilter}|${outcomeFilter}|${originFilter}`;
+  const [paging, setPaging] = useState({ key: filterKey, visible: 50 });
+  const visibleCount = paging.key === filterKey ? paging.visible : 50;
   const visible = filtered.slice(0, visibleCount);
+  const showMore = () =>
+    setPaging((current) => ({
+      key: filterKey,
+      visible: (current.key === filterKey ? current.visible : 50) + 50,
+    }));
   const roleOptions = distinctOptions(rows.map(roleOf));
   const taskOptions = distinctOptions(rows.map(taskOf));
   const outcomeOptions = distinctOptions(rows.map((row) => learningEvidence(row).verdict));
@@ -1412,11 +1423,7 @@ export function LearningDecisionsPage() {
             </div>
             <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
               {filtered.length > visibleCount ? (
-                <button
-                  className={secondaryButtonClassName}
-                  onClick={() => setVisibleCount((current) => current + 50)}
-                  type="button"
-                >
+                <button className={secondaryButtonClassName} onClick={showMore} type="button">
                   Show more decisions
                 </button>
               ) : null}
