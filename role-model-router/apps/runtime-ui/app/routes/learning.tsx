@@ -528,8 +528,21 @@ export function LearningPackRow({
   const active = Boolean(activePackageId) && activePackageId === row.recordId;
   const roleId = textOrNull(scope.roleId);
   const taxonomy = textOrNull(scope.taxonomyVersion);
-  // `A48-R3`: the pack model is the pack's own routing target, and a pack with no winner names no model.
-  const packModel = evidence.winnerRef ? textOrNull(scope.endpointId) : null;
+  /**
+   * Run 101 addendum 48 follow-up (the `Pack model` correction): the pack model is the pack's own routing target
+   * (`record.scope.endpointId`), which the readback carries independently of the comparison evidence - gating this
+   * cell on a winner made a value the readback already carries read as absent. The winner itself stays a
+   * replay-readback mark in the models column, and a readback that disagrees with the pack's own target is shown
+   * as it states it rather than reconciled here (`A48-R3`).
+   */
+  const packModel = textOrNull(scope.endpointId);
+  const scopeLine =
+    roleId || taxonomy
+      ? `routing target for ${roleId ?? NOT_REPORTED} · taxonomy ${taxonomy ?? NOT_REPORTED}`
+      : "routing target of this pack";
+  const recordedWinner = evidence.winnerRef;
+  const winnerDisagrees =
+    packModel !== null && recordedWinner !== null && recordedWinner !== packModel;
   return (
     <tr className={tableRowClassName}>
       <td className="py-3 pr-3">
@@ -555,15 +568,26 @@ export function LearningPackRow({
       <td className="py-3 pr-3">
         {packModel ? (
           <>
-            <p className={`${tableCellWinnerClassName} truncate`} title={packModel}>
+            {/* A routing target is a full endpoint id, so this lane wraps it rather than hiding the model name. */}
+            <p className={`${tableCellStrongClassName} break-all`} title={packModel}>
               {packModel}
             </p>
-            <p className={`mt-0.5 ${tableCellNoteClassName}`}>routing target of this pack</p>
+            <p className={`mt-0.5 ${tableCellNoteClassName}`}>{scopeLine}</p>
+            {winnerDisagrees ? (
+              <p
+                className={`mt-0.5 truncate ${tableCellMetaClassName}`}
+                title={recordedWinner ?? undefined}
+              >
+                {`readback winner ${recordedWinner}`}
+              </p>
+            ) : null}
           </>
         ) : (
           <>
-            <p className={tableCellMetaClassName}>no winner</p>
-            <p className={`mt-0.5 ${tableCellNoteClassName}`}>pack carries no model</p>
+            <p className={tableCellMetaClassName}>no model recorded</p>
+            <p className={`mt-0.5 ${tableCellNoteClassName}`}>
+              the readback carries no routing target for this pack
+            </p>
           </>
         )}
       </td>
@@ -1182,12 +1206,12 @@ export function LearningPacksPage() {
           <EmptyState label="No pack records have been derived for this scope yet." />
         ) : (
           <div className="mt-4 overflow-x-auto">
-            <table className={`${tableClassName} min-w-[940px]`}>
+            <table className={`${tableClassName} min-w-[1060px]`}>
               <colgroup>
-                <col style={{ width: "160px" }} />
+                <col style={{ width: "150px" }} />
                 <col style={{ width: "210px" }} />
-                <col style={{ width: "146px" }} />
-                <col style={{ width: "236px" }} />
+                <col style={{ width: "280px" }} />
+                <col style={{ width: "220px" }} />
                 <col style={{ width: "72px" }} />
                 <col />
               </colgroup>

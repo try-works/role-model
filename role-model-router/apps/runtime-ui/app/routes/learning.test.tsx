@@ -391,10 +391,12 @@ describe("LearningRoute", () => {
   });
 
   /**
-   * Run 101 addendum 48 `A48-R3`: a pack with no winner says so instead of naming a model, and the pack's own
-   * recorded state is what the State column shows.
+   * Run 101 addendum 48 follow-up (the `Pack model` correction): the pack model is the pack's own routing target,
+   * so `record.scope.endpointId` renders whether or not the comparison `evidence` object has landed yet. Gating the
+   * cell on a winner made a value the live readback already carries read as absent, which is the opposite failure
+   * from the one `A48-R7` guards against.
    */
-  test("run101 a48 a48-r3: a pack with no winner says so instead of naming a model", () => {
+  test("run101 a48 packmodel: a pack without comparison evidence still names its own routing target", () => {
     const markup = renderToStaticMarkup(
       <LearningPackRow
         activePackageId={null}
@@ -412,15 +414,82 @@ describe("LearningRoute", () => {
             },
             qualityDelta: -0.04,
           },
-          evidence: { outcome: "insufficient", winnerCandidateRef: null, members: [] },
         }}
       />,
     );
-    expect(markup).toContain("no winner");
-    expect(markup).toContain("pack carries no model");
-    expect(markup).not.toContain("openai.personal.openai-codex-subscription.global.gpt-5.6-sol-low");
+    expect(markup).toContain("openai.personal.openai-codex-subscription.global.gpt-5.6-sol-low");
+    // The muted second line carries the scope the endpoint was recorded for, and the pack's own state stands.
+    expect(markup).toContain("routing target for tester · taxonomy 1.0.0-alpha.1");
     expect(markup).toContain("validated");
     expect(markup).toContain("Δ -0.04 over baseline");
+    // An endpoint the readback carries is never reported as missing…
+    expect(markup).not.toContain("pack carries no model");
+    expect(markup).not.toContain("no model recorded");
+    // …while the replay-models column still states that nothing was compared for this pack yet.
+    expect(markup).toContain("not reported");
+  });
+
+  /**
+   * Run 101 addendum 48 `A48-R3`: only the winner mark is driven by the replayed comparison's
+   * `winnerCandidateRef` - exactly one line is marked when the readback names a winner and none when it does not -
+   * and a readback that disagrees with the pack's own target is shown as it states it, not reconciled in the UI.
+   */
+  test("run101 a48 packmodel: the winner mark follows the replay readback, not the pack model", () => {
+    const marked = renderToStaticMarkup(
+      <LearningPackRow activePackageId={null} onActivate={() => {}} row={packRowFixture()} />,
+    );
+    expect(marked.match(/>won</g) ?? []).toHaveLength(1);
+    expect(marked).toContain("deepseek.personal.deepseek-api-key.global.deepseek-v4-flash");
+
+    const unmarked = renderToStaticMarkup(
+      <LearningPackRow
+        activePackageId={null}
+        onActivate={() => {}}
+        row={{
+          ...packRowFixture(),
+          evidence: {
+            ...packRowFixture().evidence,
+            outcome: "insufficient",
+            winnerCandidateRef: null,
+          },
+        }}
+      />,
+    );
+    expect(unmarked.match(/>won</g) ?? []).toHaveLength(0);
+    // A pack the comparison did not decide still names the model it routes with.
+    expect(unmarked).toContain("deepseek.personal.deepseek-api-key.global.deepseek-v4-flash");
+
+    const disagreeing = renderToStaticMarkup(
+      <LearningPackRow
+        activePackageId={null}
+        onActivate={() => {}}
+        row={{
+          ...packRowFixture(),
+          evidence: { ...packRowFixture().evidence, winnerCandidateRef: "gpt-5.6-terra" },
+        }}
+      />,
+    );
+    // Both readings stay visible as the readback states them: the pack's own target and its recorded winner.
+    expect(disagreeing).toContain("deepseek.personal.deepseek-api-key.global.deepseek-v4-flash");
+    expect(disagreeing).toContain("readback winner gpt-5.6-terra");
+  });
+
+  /**
+   * Run 101 addendum 48 `A48-R7`: a pack whose scope carries no endpoint says so - the surfaces never invent a
+   * model, and never claim a winner the replay readback did not record.
+   */
+  test("run101 a48 packmodel: a pack with no endpoint in its scope says so instead of inventing one", () => {
+    const markup = renderToStaticMarkup(
+      <LearningPackRow
+        activePackageId={null}
+        onActivate={() => {}}
+        row={{ recordId: "pack-narrowed", state: "validated", record: {} }}
+      />,
+    );
+    expect(markup).toContain("pack-narrowed");
+    expect(markup).toContain("no model recorded");
+    expect(markup).not.toContain("no winner");
+    expect(markup).toContain("validated");
   });
 
   /**
@@ -514,7 +583,7 @@ describe("LearningRoute", () => {
       />,
     );
     expect(narrowedPack).toContain("pack-narrowed");
-    expect(narrowedPack).toContain("no winner");
+    expect(narrowedPack).toContain("no model recorded");
     expect(narrowedPack).toContain("not reported");
     expect(narrowedPack).not.toContain("0.82");
   });
