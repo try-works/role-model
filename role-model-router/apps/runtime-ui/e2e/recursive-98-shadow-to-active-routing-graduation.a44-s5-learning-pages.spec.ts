@@ -17,16 +17,52 @@ const evidenceDir = path.resolve(
 );
 
 const pages = [
-  { route: "/app/learning", heading: /Learning overview/i, shot: "a44-s5-learning.png" },
+  {
+    route: "/app/learning",
+    heading: /Learning overview/i,
+    shot: "a44-s5-learning.png",
+    // Run 101 addendum 48: the approved columns of `Recent decisions`.
+    headers: ["Role · task", "Models · judge score", "Judge", "Evidence", "Decision"],
+  },
   {
     route: "/app/learning/configuration",
     heading: /Learning configuration/i,
     shot: "a44-s5-configuration.png",
+    headers: [],
   },
-  { route: "/app/learning/packs", heading: /Learned packs/i, shot: "a44-s5-packs.png" },
-  { route: "/app/learning/decisions", heading: /Decision receipts/i, shot: "a44-s5-decisions.png" },
-  { route: "/app/learning/evidence", heading: /^Evidence$/i, shot: "a44-s5-evidence.png" },
-  { route: "/app/learning/history", heading: /Learning history/i, shot: "a44-s5-history.png" },
+  {
+    route: "/app/learning/packs",
+    heading: /Learned packs/i,
+    shot: "a44-s5-packs.png",
+    // Run 101 addendum 48: the approved columns of the pack table.
+    headers: [
+      "Pack · scope",
+      "Replay models · score",
+      "Pack model",
+      "Claim · evidence",
+      "State",
+      "Action",
+    ],
+  },
+  {
+    route: "/app/learning/decisions",
+    heading: /Decision receipts/i,
+    shot: "a44-s5-decisions.png",
+    // Run 101 addendum 48: the approved columns of the decision table, including the receipt chain.
+    headers: ["Role · task", "Models · judge score", "Judge", "Evidence", "Decision", "Receipt"],
+  },
+  {
+    route: "/app/learning/evidence",
+    heading: /^Evidence$/i,
+    shot: "a44-s5-evidence.png",
+    headers: [],
+  },
+  {
+    route: "/app/learning/history",
+    heading: /Learning history/i,
+    shot: "a44-s5-history.png",
+    headers: [],
+  },
 ] as const;
 
 test.describe("@recursive:98-shadow-to-active-routing-graduation @a44-s5", () => {
@@ -57,6 +93,15 @@ test.describe("@recursive:98-shadow-to-active-routing-graduation @a44-s5", () =>
       expect(loadingMarker.test(bodyText), `${entry.route} never left its loading state`).toBe(
         false,
       );
+      /**
+       * Run 101 addendum 48 `A48-R6`: the three rebuilt surfaces are the approved column tables - asserted
+       * against the same runtime that just served the page, so a page that silently kept its old markup fails.
+       */
+      for (const header of entry.headers) {
+        await expect(
+          page.getByRole("columnheader", { name: header, exact: true }).first(),
+        ).toBeVisible({ timeout: 30_000 });
+      }
       await page.screenshot({ path: path.join(evidenceDir, entry.shot), fullPage: true });
       const text = await page.locator("body").innerText();
       testInfo.annotations.push({

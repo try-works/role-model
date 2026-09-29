@@ -48,12 +48,49 @@ test.describe("@recursive:98-shadow-to-active-routing-graduation @a44-s3", () =>
     await expect(body).toContainText(`window ${history.guardrailWindowMinutes} min`);
     await expect(body).toContainText("Rollbacks");
 
-    // The packaged stage has no profile-inspection capability: the page must say so with the runtime's reason.
+    /**
+     * Run 101 addendum 48 update: the profile-inspection capability is a property of the runtime the spec is
+     * pointed at. A runtime without it answers 503 and the page must name the reason; the current stage runtime
+     * answers 200 with its own `available`/`unavailable` document, and the page must render that answer - what
+     * the page may never do is report a capability the runtime did not.
+     */
     const profileResponse = await page.request.get("/api/role-model/operator/learning/profile");
-    expect(profileResponse.status()).toBe(503);
-    const profile = (await profileResponse.json()) as { readonly reason?: string };
+    const profile = (await profileResponse.json()) as {
+      readonly state?: string;
+      readonly reason?: string;
+    };
     await expect(body).toContainText("Profile inspection");
-    await expect(body).toContainText(`unavailable · ${profile.reason}`);
+    if (profileResponse.status() === 200 && profile.state !== "unavailable") {
+      await expect(page.getByText("available", { exact: true }).first()).toBeVisible();
+    } else {
+      await expect(body).toContainText(
+        `unavailable${profile.reason ? ` · ${profile.reason}` : ""}`,
+      );
+    }
+
+    /**
+     * Run 101 addendum 48 `A48-R4`/`A48-R6`: `Recent decisions` is the operator-approved five-column table, and
+     * each row's models/judge/evidence/decision cells carry what the readback in this same window carries - a
+     * readback without the evaluation join renders the bounded absence text instead of a plausible score.
+     */
+    for (const header of ["Role · task", "Models · judge score", "Judge", "Evidence", "Decision"]) {
+      await expect(page.getByRole("columnheader", { name: header, exact: true })).toBeVisible();
+    }
+    const decisions = (await (
+      await page.request.get("/api/role-model/operator/learning/decisions?limit=10")
+    ).json()) as {
+      readonly decisions?: readonly {
+        readonly evidence?: {
+          readonly members?: readonly { readonly candidateRef?: string }[];
+        } | null;
+      }[];
+    };
+    const members = decisions.decisions?.[0]?.evidence?.members ?? [];
+    if (members.length > 0) {
+      await expect(body).toContainText(String(members[0]?.candidateRef));
+    } else {
+      await expect(body).toContainText("not reported");
+    }
 
     await page.screenshot({ path: testInfo.outputPath("a44-s3-overview.png"), fullPage: true });
   });
