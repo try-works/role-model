@@ -10,6 +10,7 @@ import {
   LearningPackRow,
   formatLearningScore,
   formatPolicyRange,
+  learningRecentDecisionRows,
   learningVerdictWord,
   selectionNoteForStage,
 } from "./learning";
@@ -213,6 +214,30 @@ describe("LearningRoute", () => {
     const markup = renderToStaticMarkup(<LearningOverviewPage />);
     expect(markup).toContain("Learning overview");
     expect(markup).toContain("Operator token");
+  });
+
+  /**
+   * Run 101 addendum 49 `A49-R8`, found by live verification: the Overview panel asked for the newest ten
+   * observations and rendered them whatever they were. On `rc-5aab133d8025` all ten were candidate-less shadow judge
+   * calls, so the panel showed a grid of `not reported` beside a Decisions page that was fully populated.
+   */
+  test("run101 a49: the overview panel keeps replay decisions and drops candidate-less observations", () => {
+    const decision = decisionRowFixture();
+    const observation = {
+      ...decisionRowFixture(),
+      decisionId: "decision-replay-judge-x",
+      candidateId: null,
+      evidence: null,
+    };
+    const rows = [observation, decision, { ...observation, decisionId: "decision-replay-judge-y" }];
+    const kept = learningRecentDecisionRows(rows);
+    expect(kept).toHaveLength(1);
+    expect(kept[0].decisionId).toBe(decision.decisionId);
+    // A window that holds no replay decision yields nothing, which is the caller's cue to explain rather than
+    // print a table of absences.
+    expect(learningRecentDecisionRows([observation, { ...observation }])).toHaveLength(0);
+    // The limit still bounds what the panel shows.
+    expect(learningRecentDecisionRows([decision, decision, decision], 2)).toHaveLength(2);
   });
 
   /**

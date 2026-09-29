@@ -237,6 +237,29 @@ export function learningVerdictWord(recorded: string | null | undefined): string
   return word ? (VERDICT_WORDS[word] ?? null) : null;
 }
 
+/**
+ * Run 101 addendum 49 `A49-R8` (found by live verification): the Overview's `Recent decisions` panel used to render
+ * the newest observation rows whatever they were. The newest rows are frequently candidate-less shadow judge calls,
+ * which carry no role, task, models, judge or verdict, so the panel rendered a grid of `not reported` beside a
+ * Decisions page showing the same data populated.
+ *
+ * A row is a replay decision when the runtime gave it a candidate or comparison evidence - those are what carry the
+ * five columns. Everything else is an observation, and the panel is right to leave it out; an empty result is the
+ * caller's cue to say so in words rather than to print a table of absences.
+ */
+export function learningRecentDecisionRows(
+  rows: readonly Record<string, unknown>[],
+  limit = 10,
+): readonly Record<string, unknown>[] {
+  return rows
+    .filter(
+      (row) =>
+        Boolean(textOrNull(row.candidateId)) ||
+        (row.evidence !== null && row.evidence !== undefined),
+    )
+    .slice(0, limit);
+}
+
 /** A judge score exactly as the readback records it; a candidate the readback did not score stays unscored. */
 export function formatLearningScore(value: unknown): string | null {
   if (typeof value !== "number" || !Number.isFinite(value)) return null;
@@ -756,7 +779,13 @@ export function LearningOverviewPage() {
     [token],
   );
   const decisions = useOperatorSurface<Record<string, unknown>>(
-    () => fetchLearningDecisions(fetch, token || undefined, { limit: 10 }),
+    /**
+     * `A49-R8`: this panel used to ask for the newest ten observation rows whatever they were. The newest rows are
+     * often candidate-less shadow judge calls, which carry no role, models, judge or verdict, so the panel rendered
+     * a full grid of `not reported` next to a Decisions page that showed the same data populated. It now reads a
+     * bounded window wide enough to contain replay decisions and selects from it below.
+     */
+    () => fetchLearningDecisions(fetch, token || undefined, { limit: 100 }),
     [token],
   );
   const activity = useOperatorSurface<Record<string, unknown>>(
@@ -786,9 +815,11 @@ export function LearningOverviewPage() {
   const receipts = Array.isArray(rolloutValue.receipts) ? rolloutValue.receipts : [];
   const lastRollback = receipts.find((row) => asRecord(row).state === "rolled_back");
   const decisionsValue = asRecord(decisions.value);
-  const decisionRows = Array.isArray(decisionsValue.decisions)
+  const decisionObservationRows = Array.isArray(decisionsValue.decisions)
     ? (decisionsValue.decisions as readonly Record<string, unknown>[])
     : [];
+  const decisionRows = learningRecentDecisionRows(decisionObservationRows);
+  const decisionWindowSize = decisionObservationRows.length;
   // Run 98 addendum 25 §1 (operator-reported): this panel used to assert a hardcoded "stage S1" while
   // the scope ran S2, contradicting the STAGE metric in its own header. The note now follows the live
   // stage readback, and the panel says what a row is: one decision with its observation count (§2).
@@ -876,11 +907,17 @@ export function LearningOverviewPage() {
       />
       <SectionCard
         title="Recent decisions"
-        description={`Advisory observations recorded per decision; ${selectionNote}. Each row is one decision with its observation count.`}
+        description={`The newest replay decisions among the last ${decisionWindowSize} observations; ${selectionNote}. Each row is one decision with its observation count.`}
       >
         {degraded(decisions.loading, decisions.error) ??
           (decisionRows.length === 0 ? (
-            <EmptyState label="No decisions have been observed for this scope yet." />
+            <EmptyState
+              label={
+                decisionWindowSize === 0
+                  ? "No decisions have been observed for this scope yet."
+                  : `The newest ${decisionWindowSize} observations are not replay decisions - they carry no candidate, so there is no role, task, models or verdict to show.`
+              }
+            />
           ) : (
             <div className="overflow-x-auto">
               <table className={`${tableClassName} min-w-[880px]`}>
