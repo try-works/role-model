@@ -175,6 +175,7 @@ function resolveMaxOutputTokens(
 function toCatalogCostEstimateSignals(
   estimate: ReturnType<typeof resolveRoutingCostEstimate>,
 ): CatalogCostEstimateSignals {
+  const costTiers = estimate.economics.costTiers;
   return {
     canonicalModelId: estimate.economics.canonicalModelId,
     tokenEconomicsSource: estimate.economics.source,
@@ -182,6 +183,15 @@ function toCatalogCostEstimateSignals(
     outputPer1M: estimate.economics.outputPer1M,
     estimatedRequestUsd: estimate.estimatedRequestUsd,
     cost_per_1k_tokens_est: estimate.cost_per_1k_tokens_est,
+    ...(costTiers && costTiers.length > 0
+      ? {
+          costTiers: costTiers.map((tier) => ({
+            minContextTokens: tier.minContextTokens,
+            inputPer1M: tier.inputPer1M,
+            outputPer1M: tier.outputPer1M,
+          })),
+        }
+      : {}),
   };
 }
 

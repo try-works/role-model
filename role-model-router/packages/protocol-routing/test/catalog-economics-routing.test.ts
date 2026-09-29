@@ -405,4 +405,90 @@ describe("catalog economics routing", () => {
     expect(kimiCostMetric?.source).toBe("catalog");
     expect(kimiCostMetric?.value ?? 0).toBeLessThan(localCostMetric?.value ?? 0);
   });
+
+  test("projects models.dev context tiers into routing cost signals for long-context requests", async () => {
+    const catalog = await loadNormalizedCatalog();
+    const result = routeRuntimeRequest({
+      request: {
+        requestId: "req-tiered-context",
+        taskType: "text.chat",
+        requiredCapabilities: ["text.chat"],
+        preferredCapabilities: [],
+        requiredModalities: ["text"],
+        contextTokens: 900_000,
+        needsTools: false,
+        strategy: "cost",
+        preferLocal: false,
+      },
+      catalog,
+      registry: {
+        endpoints: [
+          {
+            identity: {
+              endpoint_id: "remote.gpt-6-1-sol",
+              endpoint_kind: "remote_api",
+              provider_kind: "remote_openai_compat",
+              serving_source: "remote-service",
+              model_id: "openai/gpt-6.1-sol",
+              runtime_version: "tier-test",
+              region: "global",
+              host_class: "server",
+              device_class: "server",
+              org_scope: "personal",
+            },
+            declared: {
+              endpoint_id: "remote.gpt-6-1-sol",
+              capabilities: ["text.chat", "tools.function_calling"],
+              modalities: ["text", "image", "pdf"],
+              max_context_tokens: 1_050_000,
+              tool_calling: { supported: true, style: "openai" },
+              supports_embeddings: false,
+              platform_constraints: [],
+            },
+            status: "active",
+          },
+        ],
+        diagnostics: [],
+        lifecycleSummary: { active: 1, degraded: 0, offline: 0 },
+      },
+      envelope: {
+        sessionId: "session-tiered",
+        conversationId: "conversation-tiered",
+        selectedTurns: [],
+        selectedArtifacts: [],
+        latestHandoff: null,
+        estimatedTokenCount: 900_000,
+        diagnostics: [],
+      },
+      observedProfilesByEndpointId: {},
+      retrievalReceipt: {
+        receiptId: "conversation-tiered-receipt",
+        conversationId: "conversation-tiered",
+        summary: {
+          selectedTurns: 0,
+          selectedArtifacts: 0,
+          omittedTurns: 0,
+          omittedArtifacts: 0,
+          estimatedTokens: 900_000,
+        },
+        entries: [],
+      },
+      roleDefinitions: [],
+      taskDefinitions: [],
+      roleBindings: [],
+      maxOutputTokens: 10_000,
+    });
+
+    const signals = result.catalogEconomicsByEndpointId["remote.gpt-6-1-sol"];
+    expect(signals?.costTiers).toEqual([
+      { minContextTokens: 272_000, inputPer1M: 4, outputPer1M: 15 },
+    ]);
+    // 900,000 @ $4 + 10,000 @ $15 rather than the $2 / $10 base rate.
+    expect(signals?.estimatedRequestUsd).toBeCloseTo(3.75, 12);
+    const costMetric = result.decision.scored_candidates.find(
+      (candidate) => candidate.endpoint_id === "remote.gpt-6-1-sol",
+    )?.metric_breakdown.cost;
+    expect(costMetric?.source).toBe("catalog");
+    expect(costMetric?.raw?.estimated_request_usd).toBeCloseTo(3.75, 12);
+  });
 });

@@ -8,6 +8,7 @@ import {
   CANONICAL_MODEL_ID_ALIASES,
   OPERATOR_HIDDEN_CATALOG_PROVIDER_IDS,
   applyAliasedCatalogPricing,
+  estimateRequestCostUsd,
   resolveCanonicalModelId,
   resolveCatalogPricingHints,
   resolveRoutingCostEstimate,
@@ -240,5 +241,93 @@ describe("token-economics", () => {
       expect(model?.pricing).toEqual(canonical?.pricing ?? null);
       expect(model?.pricing).not.toBeNull();
     }
+  });
+
+  test("prices requests above a models.dev context tier at the tier rates", async () => {
+    const catalog = await loadNormalizedCatalog();
+    const atThreshold = resolveRoutingCostEstimate({
+      modelId: "openai/gpt-6.1-sol",
+      catalog,
+      isLocalEndpoint: false,
+      contextTokens: 272_000,
+      maxOutputTokens: 10_000,
+    });
+    const aboveThreshold = resolveRoutingCostEstimate({
+      modelId: "openai/gpt-6.1-sol",
+      catalog,
+      isLocalEndpoint: false,
+      contextTokens: 272_001,
+      maxOutputTokens: 10_000,
+    });
+
+    // Headline rate stays the model's base rate; the tier applies to the request estimate.
+    expect(atThreshold.economics.inputPer1M).toBe(2);
+    expect(aboveThreshold.economics.inputPer1M).toBe(2);
+
+    // Base rate: 272,000 @ $2 + 10,000 @ $10. "Longer than 272k" tier: 272,001 @ $4 + 10,000 @ $15.
+    expect(atThreshold.estimatedRequestUsd).toBeCloseTo(0.644, 12);
+    expect(aboveThreshold.estimatedRequestUsd).toBeCloseTo(1.238004, 12);
+    expect(aboveThreshold.cost_per_1k_tokens_est).toBeCloseTo((1.238004 / 282_001) * 1000, 12);
+  });
+
+  test("applies the highest applicable tier and ignores unrecognized tier metadata", () => {
+    const source = {
+      vendor: "test",
+      commit: "test",
+      capturedAt: "2026-01-01T00:00:00.000Z",
+      schemaVersion: "1",
+    } as const;
+    const catalog = {
+      catalogVersion: "1",
+      source,
+      providers: [],
+      models: [
+        {
+          modelId: "tiered/model",
+          providerId: "tiered",
+          providerKind: "provider-tiered",
+          authFamily: "api-key",
+          displayName: "Tiered",
+          version: "test",
+          capabilities: ["text.chat"],
+          modalities: ["text"],
+          contextWindow: 1_000_000,
+          maxOutputTokens: 100_000,
+          pricing: {
+            inputPer1M: 1,
+            outputPer1M: 2,
+            currency: "USD",
+            costMetadata: {
+              tiers: [
+                { input: 3, output: 4, tier: { type: "context", size: 1000 } },
+                { input: 5, output: 6, tier: { type: "context", size: 100_000 } },
+                // Unrecognized entries must be ignored rather than throwing or repricing.
+                { input: "unknown", output: 9, tier: { type: "context", size: 10 } },
+                { input: 7, output: 8, tier: { type: "context" } },
+                { input: 9, output: 10, tier: { type: "token_budget", size: 500 } },
+              ],
+            },
+          },
+          requestShapeHints: null,
+          experimentalModes: [],
+          extendsProvenance: { baseModelId: null, chain: [] },
+          localOverrideApplied: false,
+          localNotes: [],
+          upstreamProvenance: source,
+        },
+      ],
+    } as unknown as NormalizedCatalog;
+    const economics = resolveTokenEconomics({
+      modelId: "tiered/model",
+      catalog,
+      isLocalEndpoint: false,
+    });
+    const costFor = (contextTokens: number) =>
+      estimateRequestCostUsd({ economics, contextTokens, maxOutputTokens: 0 });
+
+    expect(costFor(1000)).toBeCloseTo(0.001, 12);
+    expect(costFor(1001)).toBeCloseTo(0.003003, 12);
+    expect(costFor(100_000)).toBeCloseTo(0.3, 12);
+    expect(costFor(100_001)).toBeCloseTo(0.500005, 12);
   });
 });
