@@ -3,6 +3,10 @@ import path from "node:path";
 
 import { expect, test } from "@playwright/test";
 
+// Run 101 addendum 50 `A50-R4`: the packs table shortens a recorded claim for display, so the page-vs-readback
+// check below holds the page to the same transform instead of comparing against the raw recorded text.
+import { formatLearningClaim } from "../app/lib/learning-claim";
+
 /**
  * Run 98 addendum 44 `A44-S5` — inspect every Learning page on the live packaged runtime.
  *
@@ -146,5 +150,57 @@ test.describe("@recursive:98-shadow-to-active-routing-graduation @a44-s5", () =>
         page.getByText(policy.routerResolution.stage, { exact: false }).first(),
       ).toBeVisible();
     }
+  });
+
+  /**
+   * Run 101 addendum 50 `A50-R4` (operator-reported): "you shouldn't leak the full endpoint names and evidence
+   * file name into the ui, is too long and not legible for users". Every claim the readback carries in this same
+   * window must be on the page in its shortened form - the form the runtime UI is built to render - and no claim
+   * cell may print a dotted endpoint path or an artifact digest. The whole recorded text stays in the cell's
+   * `title`, which is asserted too, so shortening never means losing the record.
+   */
+  test("the packs table shortens recorded claims instead of printing endpoint paths and digests", async ({
+    page,
+  }) => {
+    await page.goto("/app/learning/packs");
+    await expect(page.getByRole("heading", { name: /Learned packs/i }).first()).toBeVisible({
+      timeout: 150_000,
+    });
+    const readback = (await (
+      await page.request.get("/api/role-model/operator/learning/records?kind=pack&limit=200")
+    ).json()) as {
+      readonly records?: readonly {
+        readonly evidence?: { readonly claim?: string | null } | null;
+      }[];
+    };
+    const claims = (readback.records ?? [])
+      .map((row) => row.evidence?.claim)
+      .filter((claim): claim is string => typeof claim === "string" && claim.trim().length > 0);
+    expect(claims.length).toBeGreaterThan(0);
+
+    const cells = page.locator("table").first().locator("td p");
+    const shortened = claims.map((claim) => formatLearningClaim(claim));
+    expect(shortened.every((claim) => typeof claim === "string")).toBe(true);
+    await expect(async () => {
+      const rendered = await cells.allInnerTexts();
+      for (const claim of shortened) expect(rendered).toContain(claim);
+    }).toPass({ timeout: 60_000 });
+
+    const claimCells = (await cells.allInnerTexts()).filter((cell) =>
+      cell.includes("outperformed"),
+    );
+    expect(claimCells.length).toBeGreaterThan(0);
+    for (const cell of claimCells) {
+      expect(cell).not.toMatch(/artifact:/i);
+      expect(cell).not.toMatch(/[a-z0-9-]+\.[a-z0-9-]+\.[a-z0-9-]+/i);
+    }
+    const titles = await page
+      .locator("table")
+      .first()
+      .locator("td p[title]")
+      .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("title") ?? ""));
+    // The recorded text is carried whole; the only difference the cell makes is trimming the edges.
+    const recordedTitles = titles.map((title) => title.trim());
+    for (const claim of claims) expect(recordedTitles).toContain(claim.trim());
   });
 });
