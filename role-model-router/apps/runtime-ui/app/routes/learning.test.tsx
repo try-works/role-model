@@ -4,7 +4,106 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "vitest";
 
 import type { LearningPolicyField } from "../lib/learning-api";
-import { LearningOverviewPage, formatPolicyRange, selectionNoteForStage } from "./learning";
+import {
+  LearningDecisionRow,
+  LearningOverviewPage,
+  LearningPackRow,
+  formatLearningScore,
+  formatPolicyRange,
+  learningVerdictWord,
+  selectionNoteForStage,
+} from "./learning";
+
+/**
+ * Run 101 addendum 48: the fixtures below are the readback shapes the three rebuilt Learning tables render -
+ * `/learning/decisions` and `/learning/records` rows carrying the addendum's `evidence` object plus the fields
+ * those rows already publish.
+ */
+const decisionRowFixture = () => ({
+  decisionId: "decision-req-c0eb7e1b",
+  requestTaskTypeId: "coder.review",
+  taskTypeId: null,
+  roleId: "coder",
+  taxonomyVersion: "1.0.0-alpha.1",
+  toolClassIds: ["tools.shell"],
+  qualityDelta: 0.06,
+  validationReceiptId: "validation-2403",
+  observedAtMs: 1790633174907,
+  observationCount: 3,
+  decision: "validate",
+  classification: {
+    roleId: "coder",
+    taskTypeId: "coder.review",
+    taxonomyVersion: "1.0.0-alpha.1",
+  },
+  familyEvidence: { decisiveComparisons: 1, holdoutComparisons: 1 },
+  evidence: {
+    comparisonId: "comparison:supervised-replay:9a2a9ab3583fe47f1ea1",
+    judgeEndpointId: "kimi-k3",
+    judgeSource: "controller",
+    outcome: "candidate",
+    winnerCandidateRef: "deepseek-v4-flash",
+    replayRef: null,
+    captureRef: null,
+    members: [
+      {
+        candidateRef: "deepseek-v4-flash",
+        role: "source",
+        score: 0.82,
+        disposition: "positive",
+        dimensionScores: [],
+      },
+      {
+        candidateRef: "deepseek-v4-pro",
+        role: "counterfactual",
+        score: 0.79,
+        disposition: "negative",
+        dimensionScores: [],
+      },
+    ],
+  },
+});
+
+const packRowFixture = () => ({
+  recordId: "pack-3b704362a26e5b599dd502a01fd9894f",
+  kind: "pack",
+  state: "validated",
+  scopeId: "standalone-runtime-stage",
+  record: {
+    scope: {
+      endpointId: "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+      roleId: "writer",
+      taxonomyVersion: "1.0.0-alpha.1",
+    },
+    validationReceiptId: "validation-23f8a106423cd4a00703c377fe58e325",
+    qualityDelta: 0.06,
+    familyEvidence: { decisiveComparisons: 9, holdoutComparisons: 4 },
+  },
+  evidence: {
+    comparisonId: "comparison:supervised-replay:9a2a9ab3583fe47f1ea1",
+    judgeEndpointId: "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash-max",
+    judgeSource: "controller",
+    outcome: "candidate",
+    winnerCandidateRef: "deepseek-v4-flash",
+    replayRef: "replay-c0eb7e1b",
+    captureRef: "req-c0eb7e1b",
+    members: [
+      { candidateRef: "deepseek-v4-flash", role: "source", score: 0.82, disposition: "positive" },
+      {
+        candidateRef: "deepseek-v4-pro",
+        role: "counterfactual",
+        score: 0.79,
+        disposition: "negative",
+      },
+      {
+        candidateRef: "gpt-5.6-terra",
+        role: "counterfactual",
+        score: null,
+        disposition: "incomplete",
+      },
+    ],
+  },
+});
 
 /**
  * Run 98 R17: the Learning route exists with its five pages, reads the operator surface
@@ -47,17 +146,29 @@ describe("LearningRoute", () => {
     }
   });
 
-  test("publishes the classification columns on the decisions views (run 99 addenda 19-21 S33)", () => {
+  /**
+   * Run 101 addendum 48 `A48-R6`: the three surfaces are the operator-approved column tables. The columns are
+   * asserted here as source tokens and again against the live runtime by the two Learning Playwright specs.
+   */
+  test("run101 a48: the three surfaces publish the approved column headers", () => {
     const routeSource = readFileSync(new URL("./learning.tsx", import.meta.url), "utf8");
     for (const token of [
-      '"Role"',
-      '"Taxonomy"',
-      '"Taxonomy version"',
-      '"Tool classes"',
-      "row.roleId",
-      "row.taxonomyVersion",
-      "row.toolClassIds",
+      '"Role · task"',
+      '"Models · judge score"',
+      '"Judge"',
+      '"Evidence"',
+      '"Decision"',
+      '"Receipt"',
+      '"Replay models · score"',
+      '"Pack model"',
+      '"Claim · evidence"',
+      '"State"',
+      '"Action"',
     ]) {
+      expect(routeSource).toContain(token);
+    }
+    // Run 99 addenda 19-21 S33: the classification facts the decision views published stay on the surface.
+    for (const token of ["row.roleId", "row.taxonomyVersion", "row.toolClassIds"]) {
       expect(routeSource).toContain(token);
     }
   });
@@ -175,18 +286,27 @@ describe("LearningRoute", () => {
   });
 
   /**
-   * Run 99 R33 (addendum 19 S33/S35): the decision surface must show which task family the
-   * request belonged to and which family the advisory was scoped to, so a family-scoped refusal is
-   * readable. Absent data renders an explicit "not reported" rather than a fabricated value.
+   * Run 99 R33 (addendum 19 S33/S35) under the run-101 addendum 48 tables: a family-scoped refusal stays
+   * readable, so the `Role · task` cell states the classified task and the request family whenever the two
+   * differ - and an absent classification renders `not reported` rather than a fabricated value.
    */
-  test("the decisions and overview surfaces render the request and advisory task families", () => {
-    const routeSource = readFileSync(new URL("./learning.tsx", import.meta.url), "utf8");
-    expect(routeSource).toContain('label="Task family (request)"');
-    expect(routeSource).toContain('label="Advisory family"');
-    expect(routeSource).toContain('"Request family"');
-    // Absent families are reported honestly on both surfaces.
-    expect(routeSource).toContain('? show(row.requestTaskTypeId) : "not reported"');
-    expect(routeSource).toContain('? show(row.taskTypeId) : "not reported"');
+  test("the role · task cell states the classification and the request family when it differs", () => {
+    const differing = {
+      ...decisionRowFixture(),
+      requestTaskTypeId: "creative.copywriting",
+      toolClassIds: ["tools.http", "tools.filesystem"],
+    };
+    const markup = renderToStaticMarkup(<LearningDecisionRow row={differing} />);
+    expect(markup).toContain("coder.review");
+    expect(markup).toContain("coder · taxonomy 1.0.0-alpha.1");
+    expect(markup).toContain("tool classes tools.http, tools.filesystem");
+    expect(markup).toContain("request creative.copywriting");
+
+    const absent = renderToStaticMarkup(
+      <LearningDecisionRow row={{ decisionId: "decision-req-1" }} />,
+    );
+    expect(absent).toContain("not reported");
+    expect(absent).not.toContain("coder.review");
   });
 
   /**
@@ -241,7 +361,250 @@ describe("LearningRoute", () => {
     expect(routeSource).toContain("Each row is one decision with its observation count");
     // The overview table marks a row that stands for several observations…
     expect(routeSource).toContain("Number(row.observationCount) > 1");
-    // …and the Decisions page reports the count as a first-class metric.
-    expect(routeSource).toContain('label="Observations"');
+    // …and the Decisions table stands for the same collapsed row rather than rendering it twice.
+    expect(routeSource).toContain("<ObservationCountMarker row={row} />");
+  });
+
+  /**
+   * Run 101 addendum 48 `A48-R2`/`A48-R3`: the pack table lists the models that were replayed with their judge
+   * scores, marks exactly one winner, and names the model the pack routes with (`record.scope.endpointId`).
+   */
+  test("run101 a48: a pack row names its replay models, the winner and the pack model", () => {
+    const markup = renderToStaticMarkup(
+      <LearningPackRow activePackageId={null} onActivate={() => {}} row={packRowFixture()} />,
+    );
+    expect(markup).toContain("pack-3b704362a26e5b599dd502a01fd9894f");
+    expect(markup).toContain("writer · taxonomy 1.0.0-alpha.1");
+    expect(markup).toContain("deepseek-v4-flash");
+    expect(markup).toContain("0.82");
+    expect(markup).toContain("deepseek-v4-pro");
+    expect(markup).toContain("0.79");
+    expect(markup).toContain("gpt-5.6-terra");
+    expect(markup).toContain("excluded");
+    // Only the winner is marked, and it is marked with the design system's green ink.
+    expect(markup.match(/>won</g) ?? []).toHaveLength(1);
+    expect(markup).toContain("text-[var(--rm-success)]");
+    // The pack model is the pack's own routing target, and the recorded evidence is stated, not invented.
+    expect(markup).toContain("deepseek.personal.deepseek-api-key.global.deepseek-v4-flash");
+    expect(markup).toContain("9 decisive · holdout 4");
+    expect(markup).toContain("Δ +0.06 over baseline");
+    expect(markup).toContain("judge controller · deepseek.personal");
+    expect(markup).toContain("claim not recorded");
+  });
+
+  /**
+   * Run 101 addendum 48 follow-up (the `Pack model` correction): the pack model is the pack's own routing target,
+   * so `record.scope.endpointId` renders whether or not the comparison `evidence` object has landed yet. Gating the
+   * cell on a winner made a value the live readback already carries read as absent, which is the opposite failure
+   * from the one `A48-R7` guards against.
+   */
+  test("run101 a48 packmodel: a pack without comparison evidence still names its own routing target", () => {
+    const markup = renderToStaticMarkup(
+      <LearningPackRow
+        activePackageId={null}
+        onActivate={() => {}}
+        row={{
+          recordId: "pack-62aa9b",
+          kind: "pack",
+          state: "validated",
+          scopeId: "standalone-runtime-stage",
+          record: {
+            scope: {
+              endpointId: "openai.personal.openai-codex-subscription.global.gpt-5.6-sol-low",
+              roleId: "tester",
+              taxonomyVersion: "1.0.0-alpha.1",
+            },
+            qualityDelta: -0.04,
+          },
+        }}
+      />,
+    );
+    expect(markup).toContain("openai.personal.openai-codex-subscription.global.gpt-5.6-sol-low");
+    // The muted second line carries the scope the endpoint was recorded for, and the pack's own state stands.
+    expect(markup).toContain("routing target for tester · taxonomy 1.0.0-alpha.1");
+    expect(markup).toContain("validated");
+    expect(markup).toContain("Δ -0.04 over baseline");
+    // An endpoint the readback carries is never reported as missing…
+    expect(markup).not.toContain("pack carries no model");
+    expect(markup).not.toContain("no model recorded");
+    // …while the replay-models column still states that nothing was compared for this pack yet.
+    expect(markup).toContain("not reported");
+  });
+
+  /**
+   * Run 101 addendum 48 `A48-R3`: only the winner mark is driven by the replayed comparison's
+   * `winnerCandidateRef` - exactly one line is marked when the readback names a winner and none when it does not -
+   * and a readback that disagrees with the pack's own target is shown as it states it, not reconciled in the UI.
+   */
+  test("run101 a48 packmodel: the winner mark follows the replay readback, not the pack model", () => {
+    const marked = renderToStaticMarkup(
+      <LearningPackRow activePackageId={null} onActivate={() => {}} row={packRowFixture()} />,
+    );
+    expect(marked.match(/>won</g) ?? []).toHaveLength(1);
+    expect(marked).toContain("deepseek.personal.deepseek-api-key.global.deepseek-v4-flash");
+
+    const unmarked = renderToStaticMarkup(
+      <LearningPackRow
+        activePackageId={null}
+        onActivate={() => {}}
+        row={{
+          ...packRowFixture(),
+          evidence: {
+            ...packRowFixture().evidence,
+            outcome: "insufficient",
+            winnerCandidateRef: null,
+          },
+        }}
+      />,
+    );
+    expect(unmarked.match(/>won</g) ?? []).toHaveLength(0);
+    // A pack the comparison did not decide still names the model it routes with.
+    expect(unmarked).toContain("deepseek.personal.deepseek-api-key.global.deepseek-v4-flash");
+
+    const disagreeing = renderToStaticMarkup(
+      <LearningPackRow
+        activePackageId={null}
+        onActivate={() => {}}
+        row={{
+          ...packRowFixture(),
+          evidence: { ...packRowFixture().evidence, winnerCandidateRef: "gpt-5.6-terra" },
+        }}
+      />,
+    );
+    // Both readings stay visible as the readback states them: the pack's own target and its recorded winner.
+    expect(disagreeing).toContain("deepseek.personal.deepseek-api-key.global.deepseek-v4-flash");
+    expect(disagreeing).toContain("readback winner gpt-5.6-terra");
+  });
+
+  /**
+   * Run 101 addendum 48 `A48-R7`: a pack whose scope carries no endpoint says so - the surfaces never invent a
+   * model, and never claim a winner the replay readback did not record.
+   */
+  test("run101 a48 packmodel: a pack with no endpoint in its scope says so instead of inventing one", () => {
+    const markup = renderToStaticMarkup(
+      <LearningPackRow
+        activePackageId={null}
+        onActivate={() => {}}
+        row={{ recordId: "pack-narrowed", state: "validated", record: {} }}
+      />,
+    );
+    expect(markup).toContain("pack-narrowed");
+    expect(markup).toContain("no model recorded");
+    expect(markup).not.toContain("no winner");
+    expect(markup).toContain("validated");
+  });
+
+  /**
+   * Run 101 addendum 48 `A48-R4`/`A48-R5`: a decision row names the role · task, the models with their scores,
+   * the judge, the evidence it was adjudicated on, the verdict, and the receipt chain to the depth the store
+   * holds - a replay or capture ref the readback does not carry renders as absent.
+   */
+  test("run101 a48: a decision row names role · task, models, judge, evidence, verdict and receipt", () => {
+    const markup = renderToStaticMarkup(<LearningDecisionRow receipt row={decisionRowFixture()} />);
+    expect(markup).toContain("coder.review");
+    expect(markup).toContain("coder · taxonomy 1.0.0-alpha.1");
+    expect(markup).toContain("deepseek-v4-flash");
+    expect(markup).toContain("0.82");
+    expect(markup).toContain("deepseek-v4-pro");
+    expect(markup).toContain("0.79");
+    expect(markup).toContain("controller");
+    expect(markup).toContain("kimi-k3");
+    expect(markup).toContain("1 dec · 1 holdout");
+    expect(markup).toContain("Δ +0.06");
+    expect(markup).toContain("promoted");
+    expect(markup).toContain("outcome candidate");
+    expect(markup).toContain("validation validation-2403");
+    expect(markup).toContain("comparison 9a2a9ab3583fe4");
+    expect(markup).toContain("replay not reported · capture not reported");
+
+    const deeper = {
+      ...decisionRowFixture(),
+      evidence: {
+        ...decisionRowFixture().evidence,
+        replayRef: "replay-c0eb7e1b",
+        captureRef: "req-c0eb7e1b",
+      },
+    };
+    const deeperMarkup = renderToStaticMarkup(<LearningDecisionRow receipt row={deeper} />);
+    expect(deeperMarkup).toContain("replay replay-c0eb7e1b · capture req-c0eb7e1b");
+  });
+
+  /**
+   * Run 101 addendum 48 `A48-R7`: the runtime's verdict vocabulary is four words plus "not recorded", and a
+   * score exists only where the readback supplies one - the surfaces never derive either.
+   */
+  test("run101 a48: the recorded verdict vocabulary maps to the four operator words and nothing else", () => {
+    expect(learningVerdictWord("validate")).toBe("promoted");
+    expect(learningVerdictWord("reject")).toBe("rejected");
+    expect(learningVerdictWord("insufficient_evidence")).toBe("insufficient");
+    expect(learningVerdictWord("insufficient")).toBe("insufficient");
+    expect(learningVerdictWord("refused")).toBe("refused");
+    // Words the runtime never emits as a validation decision map to nothing rather than to a plausible verdict.
+    expect(learningVerdictWord("candidate")).toBeNull();
+    expect(learningVerdictWord("shadow_validating")).toBeNull();
+    expect(learningVerdictWord(null)).toBeNull();
+
+    expect(formatLearningScore(0.5)).toBe("0.50");
+    expect(formatLearningScore(0.824)).toBe("0.82");
+    expect(formatLearningScore(null)).toBeNull();
+    expect(formatLearningScore(undefined)).toBeNull();
+    expect(formatLearningScore("0.9")).toBeNull();
+  });
+
+  /**
+   * Run 101 addendum 48 `A48-R7`: with a deliberately narrowed readback the affected cells render the bounded
+   * absence text and the row still renders - no value appears that the readback did not supply.
+   */
+  test("run101 a48 a48-r7: a narrowed readback renders bounded absence, never a substitute", () => {
+    const narrowed = {
+      decisionId: "decision-req-narrowed",
+      requestTaskTypeId: "coder.review",
+      roleId: "coder",
+      taxonomyVersion: "1.0.0-alpha.1",
+      qualityDelta: 0.06,
+    };
+    const markup = renderToStaticMarkup(<LearningDecisionRow receipt row={narrowed} />);
+    // The row still renders what the readback did carry…
+    expect(markup).toContain("coder.review");
+    expect(markup).toContain("coder · taxonomy 1.0.0-alpha.1");
+    expect(markup).toContain("Δ +0.06");
+    // …and every field it did not carry is bounded absence: no score, judge, verdict, outcome or receipt id.
+    expect(markup).toContain("not reported");
+    expect(markup).not.toContain("0.82");
+    expect(markup).not.toContain("kimi-k3");
+    expect(markup).not.toContain("promoted");
+    expect(markup).not.toContain("outcome candidate");
+    expect(markup).toContain("validation not reported");
+    expect(markup).toContain("comparison not reported");
+
+    const narrowedPack = renderToStaticMarkup(
+      <LearningPackRow
+        activePackageId={null}
+        onActivate={() => {}}
+        row={{ recordId: "pack-narrowed", state: "validated", record: {} }}
+      />,
+    );
+    expect(narrowedPack).toContain("pack-narrowed");
+    expect(narrowedPack).toContain("no model recorded");
+    expect(narrowedPack).toContain("not reported");
+    expect(narrowedPack).not.toContain("0.82");
+  });
+
+  /**
+   * Run 101 addendum 48: the Decisions table keeps its filters (role, task, outcome and the observation origin
+   * that selects which readback the page asks for) and pages the bounded list it was handed.
+   */
+  test("run101 a48: the decisions table keeps its filters and pages the bounded list", () => {
+    const routeSource = readFileSync(new URL("./learning.tsx", import.meta.url), "utf8");
+    for (const token of [
+      'label="Role"',
+      'label="Task"',
+      'label="Outcome"',
+      "Observation origin",
+      "Show more decisions",
+      "the readback is truncated",
+    ]) {
+      expect(routeSource).toContain(token);
+    }
   });
 });

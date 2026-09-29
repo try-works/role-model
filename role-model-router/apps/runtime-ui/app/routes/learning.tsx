@@ -10,10 +10,12 @@ import {
 import { LearningLivePanelView } from "../components/learning-live-panel";
 import {
   Badge,
+  type BadgeTone,
   EmptyState,
   ErrorState,
   LoadingState,
   SectionCard,
+  SelectField,
 } from "../components/page-primitives";
 // Run 101 R10: the queue planes' bounded parameters render beside the learning policy.
 import { QueuesConfigurationCard } from "../components/queues-configuration-card";
@@ -168,6 +170,485 @@ function degraded(loading: boolean, error: string | null): ReactElement | null {
   if (error)
     return <ErrorState label={`Learning surface unavailable: ${error}. No value is fabricated.`} />;
   return null;
+}
+
+/**
+ * Run 101 addendum 48: the three Learning surfaces the operator approved as column tables
+ * (`Learning · Overview` recent decisions, `Learning · Decisions`, `Learning · Packs`).
+ *
+ * Every cell is read from the operator readback - the `evidence` object the run adds to `/learning/records`
+ * and `/learning/decisions` rows, plus the fields those rows already carry. A field the readback does not carry
+ * renders this surface's bounded `not reported` text (`A48-R7`): the tables never substitute a plausible value
+ * for a missing one, the verdict words are the four the runtime actually emits, and a candidate that was never
+ * scored is labelled `excluded` rather than given a score.
+ */
+
+/** Bounded absence text, the convention the Learning surfaces already use for an unreported field. */
+const NOT_REPORTED = "not reported";
+
+const tableClassName = "w-full table-fixed border-collapse text-left";
+const tableHeaderClassName = `border-b border-[var(--rm-border)] pb-3 pr-3 text-left align-bottom font-normal ${monoEyebrowClassName}`;
+const tableRowClassName = "border-b border-[var(--rm-border)] align-top";
+const tableCellValueClassName = "font-mono text-[12px] leading-[18px] text-[var(--rm-fg)]";
+const tableCellStrongClassName =
+  "font-mono text-[13px] font-medium leading-[18px] text-[var(--rm-fg)]";
+const tableCellMetaClassName = "font-mono text-[11px] leading-4 text-[var(--rm-muted)]";
+const tableCellNoteClassName = "font-sans text-[11px] leading-4 text-[var(--rm-secondary)]";
+/** The design system's green ink, used for the one winning candidate a pack carries. */
+const tableCellWinnerClassName = "font-mono text-[12px] leading-[18px] text-[var(--rm-success)]";
+const tableCellWinnerMetaClassName = "font-mono text-[11px] leading-4 text-[var(--rm-success)]";
+/** Fixed lanes (`flexShrink: 0`) so every candidate line's score lands in the same column, row to row. */
+const tableScoreLaneClassName = "w-[74px] shrink-0 text-right font-mono tabular-nums";
+const tableWinnerLaneClassName = "w-[26px] shrink-0 font-mono";
+
+const textOrNull = (value: unknown): string | null => {
+  if (value === null || value === undefined) return null;
+  const text = typeof value === "string" ? value.trim() : String(value);
+  return text.length > 0 ? text : null;
+};
+
+/** Filter choices are the values the readback actually returned - never a catalog the UI keeps of its own. */
+const distinctOptions = (values: readonly (string | null)[]): string[] =>
+  [...new Set(values.filter((value): value is string => Boolean(value)))].sort((left, right) =>
+    left.localeCompare(right, "en"),
+  );
+
+/**
+ * The recorded verdict vocabulary, mapped to the four operator words the approved artboards use. A word the
+ * runtime does not emit maps to nothing, so an unknown value reads as bounded absence instead of a verdict.
+ */
+const VERDICT_WORDS: Readonly<Record<string, string>> = {
+  validate: "promoted",
+  reject: "rejected",
+  insufficient_evidence: "insufficient",
+  insufficient: "insufficient",
+  refused: "refused",
+};
+
+export function learningVerdictWord(recorded: string | null | undefined): string | null {
+  const word = textOrNull(recorded);
+  return word ? (VERDICT_WORDS[word] ?? null) : null;
+}
+
+/** A judge score exactly as the readback records it; a candidate the readback did not score stays unscored. */
+export function formatLearningScore(value: unknown): string | null {
+  if (typeof value !== "number" || !Number.isFinite(value)) return null;
+  return value.toFixed(2);
+}
+
+/** `0.06` -> `+0.06`, `-0.04` -> `-0.04`; a delta the readback does not carry stays absent. */
+export function formatLearningDelta(value: unknown): string | null {
+  if (typeof value !== "number" || !Number.isFinite(value)) return null;
+  return `${value >= 0 ? "+" : "-"}${Math.abs(value).toFixed(2)}`;
+}
+
+/**
+ * Long durable refs are shown abbreviated the way the artboards do (`validation-2403`, `comparison c0eb7e1b`),
+ * with the full value kept in the cell's `title` so nothing is lost - only shortened for the column.
+ */
+export function shortLearningRef(value: unknown): string | null {
+  const text = textOrNull(value);
+  if (!text) return null;
+  const tail = text.includes(":") ? (text.split(":").pop() ?? text) : text;
+  return tail.length > 18 ? `${tail.slice(0, 14)}…${tail.slice(-4)}` : tail;
+}
+
+export interface LearningCandidateScoreView {
+  readonly candidateRef: string;
+  readonly score: string | null;
+  readonly won: boolean;
+}
+
+export interface LearningEvidenceView {
+  readonly members: readonly LearningCandidateScoreView[];
+  readonly winnerRef: string | null;
+  readonly judgeSource: string | null;
+  readonly judgeEndpointId: string | null;
+  readonly outcome: string | null;
+  readonly verdict: string | null;
+  readonly comparisonRef: string | null;
+  readonly validationRef: string | null;
+  readonly replayRef: string | null;
+  readonly captureRef: string | null;
+  readonly decisive: string | null;
+  readonly holdout: string | null;
+  readonly qualityDelta: string | null;
+}
+
+/**
+ * One reader for the frozen addendum-48 readback: the `evidence` object (`comparisonId`, `judgeEndpointId`,
+ * `judgeSource`, `outcome`, `members[]`, `winnerCandidateRef`, `replayRef`, `captureRef`) plus the fields the
+ * rows already publish (`familyEvidence`, `qualityDelta`, `validationReceiptId`, the pack's own `record`).
+ */
+export function learningEvidence(row: Record<string, unknown>): LearningEvidenceView {
+  const evidence = asRecord(row.evidence);
+  const record = asRecord(row.record);
+  const family = { ...asRecord(record.familyEvidence), ...asRecord(row.familyEvidence) };
+  const judgeConsistency = asRecord(family.judgeConsistency);
+  const winnerRef = textOrNull(evidence.winnerCandidateRef);
+  const members = (Array.isArray(evidence.members) ? evidence.members : []).map(
+    (member): LearningCandidateScoreView => {
+      const entry = asRecord(member);
+      const candidateRef = textOrNull(entry.candidateRef) ?? NOT_REPORTED;
+      return {
+        candidateRef,
+        score: formatLearningScore(entry.score),
+        won: winnerRef !== null && candidateRef === winnerRef,
+      };
+    },
+  );
+  const recordedVerdict =
+    textOrNull(row.verdict) ?? textOrNull(record.decision) ?? textOrNull(row.decision);
+  const outcome = textOrNull(evidence.outcome);
+  return {
+    members,
+    winnerRef,
+    judgeSource: textOrNull(evidence.judgeSource),
+    judgeEndpointId:
+      textOrNull(evidence.judgeEndpointId) ?? textOrNull(judgeConsistency.judgeEndpointId),
+    outcome,
+    verdict: learningVerdictWord(recordedVerdict) ?? learningVerdictWord(outcome),
+    comparisonRef: textOrNull(evidence.comparisonId) ?? textOrNull(row.comparisonId),
+    validationRef: textOrNull(row.validationReceiptId) ?? textOrNull(record.validationReceiptId),
+    replayRef: textOrNull(evidence.replayRef),
+    captureRef: textOrNull(evidence.captureRef),
+    decisive: textOrNull(family.decisiveComparisons),
+    holdout: textOrNull(family.holdoutComparisons),
+    qualityDelta: formatLearningDelta(row.qualityDelta ?? record.qualityDelta),
+  };
+}
+
+export interface LearningTaskCellView {
+  readonly task: string | null;
+  readonly scope: string | null;
+  readonly toolClasses: string | null;
+  readonly requestFamily: string | null;
+}
+
+/** `Role · task`: the classified task, the role and taxonomy it was classified against, and the request family. */
+export function learningTaskCell(row: Record<string, unknown>): LearningTaskCellView {
+  const classification = asRecord(row.classification);
+  const task =
+    textOrNull(classification.taskTypeId) ??
+    textOrNull(row.requestTaskTypeId) ??
+    textOrNull(row.taskTypeId);
+  const roleId = textOrNull(classification.roleId) ?? textOrNull(row.roleId);
+  const taxonomy = textOrNull(classification.taxonomyVersion) ?? textOrNull(row.taxonomyVersion);
+  const toolClasses =
+    Array.isArray(row.toolClassIds) && row.toolClassIds.length > 0
+      ? row.toolClassIds.map((entry) => textOrNull(entry) ?? NOT_REPORTED).join(", ")
+      : null;
+  const requestFamily = textOrNull(row.requestTaskTypeId);
+  return {
+    task,
+    scope:
+      roleId || taxonomy
+        ? `${roleId ?? NOT_REPORTED} · taxonomy ${taxonomy ?? NOT_REPORTED}`
+        : null,
+    toolClasses,
+    requestFamily: requestFamily && requestFamily !== task ? requestFamily : null,
+  };
+}
+
+function verdictTone(verdict: string): BadgeTone {
+  if (verdict === "promoted") return "success";
+  if (verdict === "rejected") return "error";
+  if (verdict === "insufficient") return "warning";
+  return "neutral";
+}
+
+/**
+ * The models column: one line per evaluated candidate with the score right-aligned in its own fixed lane. A
+ * candidate the readback did not score is muted and labelled `excluded`, and only a pack's winner is marked.
+ */
+function CandidateScoreLanes({
+  members,
+  markWinner = false,
+}: {
+  readonly members: readonly LearningCandidateScoreView[];
+  readonly markWinner?: boolean;
+}) {
+  if (members.length === 0) {
+    return <p className={tableCellMetaClassName}>{NOT_REPORTED}</p>;
+  }
+  return (
+    <div className="flex flex-col gap-0.5">
+      {members.map((member, index) => {
+        const ink = member.won
+          ? tableCellWinnerClassName
+          : member.score
+            ? tableCellValueClassName
+            : tableCellMetaClassName;
+        return (
+          <div className="flex items-baseline gap-2" key={`${member.candidateRef}-${index}`}>
+            <span className={`min-w-0 flex-1 truncate ${ink}`} title={member.candidateRef}>
+              {member.candidateRef}
+            </span>
+            <span className={`${tableScoreLaneClassName} ${ink}`}>
+              {member.score ?? "excluded"}
+            </span>
+            {markWinner ? (
+              <span
+                className={`${tableWinnerLaneClassName} ${member.won ? tableCellWinnerMetaClassName : tableCellMetaClassName}`}
+              >
+                {member.won ? "won" : ""}
+              </span>
+            ) : null}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/**
+ * Run 98 addendum 25 §2: a collapsed row states how many observations it stands for, so a table cannot read as
+ * duplicated rows.
+ */
+function ObservationCountMarker({ row }: { readonly row: Record<string, unknown> }) {
+  if (!(Number(row.observationCount) > 1)) return null;
+  return (
+    <span className="ml-2 text-xs text-[var(--rm-fg-muted)]">×{show(row.observationCount)}</span>
+  );
+}
+
+/** One decision row of the `Recent decisions` (five columns) and `Decision receipts` (plus `Receipt`) tables. */
+export function LearningDecisionRow({
+  row,
+  receipt = false,
+}: {
+  readonly row: Record<string, unknown>;
+  readonly receipt?: boolean;
+}) {
+  const evidence = learningEvidence(row);
+  const task = learningTaskCell(row);
+  return (
+    <tr className={tableRowClassName}>
+      <td className="py-3 pr-3">
+        <p className={`${tableCellStrongClassName} flex items-baseline gap-2`}>
+          {/* A fixed lane truncates rather than overflows: the full task id stays in the cell's title. */}
+          <span className="min-w-0 truncate" title={task.task ?? undefined}>
+            {task.task ?? NOT_REPORTED}
+          </span>
+          <ObservationCountMarker row={row} />
+        </p>
+        <p className={`mt-0.5 ${tableCellNoteClassName}`}>{task.scope ?? NOT_REPORTED}</p>
+        {task.toolClasses ? (
+          <p
+            className={`mt-0.5 truncate ${tableCellMetaClassName}`}
+            title={`tool classes ${task.toolClasses}`}
+          >
+            tool classes {task.toolClasses}
+          </p>
+        ) : null}
+        {task.requestFamily ? (
+          <p
+            className={`mt-0.5 truncate ${tableCellMetaClassName}`}
+            title={`request ${task.requestFamily}`}
+          >
+            request {task.requestFamily}
+          </p>
+        ) : null}
+      </td>
+      <td className="py-3 pr-3">
+        <CandidateScoreLanes members={evidence.members} />
+      </td>
+      <td className="py-3 pr-3">
+        <p
+          className={`${tableCellValueClassName} truncate`}
+          title={evidence.judgeSource ?? undefined}
+        >
+          {evidence.judgeSource ?? NOT_REPORTED}
+        </p>
+        <p
+          className={`mt-0.5 truncate ${tableCellMetaClassName}`}
+          title={evidence.judgeEndpointId ?? undefined}
+        >
+          {evidence.judgeEndpointId ?? NOT_REPORTED}
+        </p>
+      </td>
+      <td className="py-3 pr-3">
+        {evidence.decisive === null &&
+        evidence.holdout === null &&
+        evidence.qualityDelta === null ? (
+          <p className={tableCellMetaClassName}>{NOT_REPORTED}</p>
+        ) : (
+          <>
+            <p className={tableCellValueClassName}>
+              {`${evidence.decisive ?? NOT_REPORTED} dec · ${evidence.holdout ?? NOT_REPORTED} holdout`}
+            </p>
+            {evidence.qualityDelta ? (
+              <p className={`mt-0.5 ${tableCellMetaClassName}`}>{`Δ ${evidence.qualityDelta}`}</p>
+            ) : null}
+          </>
+        )}
+      </td>
+      <td className="py-3 pr-3">
+        {evidence.verdict ? (
+          <Badge tone={verdictTone(evidence.verdict)}>{evidence.verdict}</Badge>
+        ) : (
+          <p className={tableCellMetaClassName}>no verdict recorded</p>
+        )}
+        <p className={`mt-0.5 ${tableCellMetaClassName}`}>
+          {`outcome ${evidence.outcome ?? NOT_REPORTED}`}
+        </p>
+      </td>
+      {receipt ? (
+        <td className="py-3 pr-3">
+          <p className={tableCellMetaClassName} title={evidence.validationRef ?? undefined}>
+            {`validation ${shortLearningRef(evidence.validationRef) ?? NOT_REPORTED}`}
+          </p>
+          <p
+            className={`mt-0.5 ${tableCellMetaClassName}`}
+            title={evidence.comparisonRef ?? undefined}
+          >
+            {`comparison ${shortLearningRef(evidence.comparisonRef) ?? NOT_REPORTED}`}
+          </p>
+          <p className={`mt-0.5 ${tableCellMetaClassName}`}>
+            {`replay ${shortLearningRef(evidence.replayRef) ?? NOT_REPORTED} · capture ${shortLearningRef(evidence.captureRef) ?? NOT_REPORTED}`}
+          </p>
+        </td>
+      ) : null}
+    </tr>
+  );
+}
+
+/** One pack row: scope, the replayed models with their scores, the pack's model, evidence, state and action. */
+export function LearningPackRow({
+  row,
+  activePackageId,
+  busy = false,
+  onActivate,
+}: {
+  readonly row: Record<string, unknown>;
+  readonly activePackageId: string | null;
+  readonly busy?: boolean;
+  readonly onActivate: (packId: string) => void;
+}) {
+  const record = asRecord(row.record);
+  const scope = asRecord(record.scope);
+  const evidence = learningEvidence(row);
+  const packId = show(row.recordId);
+  const active = Boolean(activePackageId) && activePackageId === row.recordId;
+  const roleId = textOrNull(scope.roleId);
+  const taxonomy = textOrNull(scope.taxonomyVersion);
+  /**
+   * Run 101 addendum 48 follow-up (the `Pack model` correction): the pack model is the pack's own routing target
+   * (`record.scope.endpointId`), which the readback carries independently of the comparison evidence - gating this
+   * cell on a winner made a value the readback already carries read as absent. The winner itself stays a
+   * replay-readback mark in the models column, and a readback that disagrees with the pack's own target is shown
+   * as it states it rather than reconciled here (`A48-R3`).
+   */
+  const packModel = textOrNull(scope.endpointId);
+  const scopeLine =
+    roleId || taxonomy
+      ? `routing target for ${roleId ?? NOT_REPORTED} · taxonomy ${taxonomy ?? NOT_REPORTED}`
+      : "routing target of this pack";
+  const recordedWinner = evidence.winnerRef;
+  const winnerDisagrees =
+    packModel !== null && recordedWinner !== null && recordedWinner !== packModel;
+  return (
+    <tr className={tableRowClassName}>
+      <td className="py-3 pr-3">
+        {/* Long durable ids are abbreviated the way the artboards show them; the full value stays in `title`. */}
+        <p className={tableCellValueClassName} title={packId}>
+          {shortLearningRef(packId) ?? packId}
+        </p>
+        <p className={`mt-0.5 ${tableCellMetaClassName}`}>
+          {`${roleId ?? NOT_REPORTED} · taxonomy ${taxonomy ?? NOT_REPORTED}`}
+        </p>
+        <p className={`mt-0.5 ${tableCellNoteClassName}`}>
+          {`scope ${textOrNull(row.scopeId) ?? NOT_REPORTED}`}
+        </p>
+      </td>
+      <td className="py-3 pr-3">
+        <CandidateScoreLanes markWinner members={evidence.members} />
+        {evidence.decisive !== null || evidence.holdout !== null ? (
+          <p className={`mt-1 ${tableCellMetaClassName}`}>
+            {`${evidence.decisive ?? NOT_REPORTED} decisive · holdout ${evidence.holdout ?? NOT_REPORTED}`}
+          </p>
+        ) : null}
+      </td>
+      <td className="py-3 pr-3">
+        {packModel ? (
+          <>
+            {/* A routing target is a full endpoint id, so this lane wraps it rather than hiding the model name. */}
+            <p className={`${tableCellStrongClassName} break-all`} title={packModel}>
+              {packModel}
+            </p>
+            <p className={`mt-0.5 ${tableCellNoteClassName}`}>{scopeLine}</p>
+            {winnerDisagrees ? (
+              <p
+                className={`mt-0.5 truncate ${tableCellMetaClassName}`}
+                title={recordedWinner ?? undefined}
+              >
+                {`readback winner ${recordedWinner}`}
+              </p>
+            ) : null}
+          </>
+        ) : (
+          <>
+            <p className={tableCellMetaClassName}>no model recorded</p>
+            <p className={`mt-0.5 ${tableCellNoteClassName}`}>
+              the readback carries no routing target for this pack
+            </p>
+          </>
+        )}
+      </td>
+      <td className="py-3 pr-3">
+        {/* The pack's claim prose is recorded nowhere the readback can read, so the cell says so and renders the
+            evidence that *is* recorded rather than a plausible sentence (`A48-R7`). */}
+        <p className={tableCellMetaClassName}>claim not recorded</p>
+        {evidence.qualityDelta ? (
+          <p className={`mt-0.5 ${tableCellValueClassName}`}>
+            {`Δ ${evidence.qualityDelta} over baseline`}
+          </p>
+        ) : (
+          <p className={`mt-0.5 ${tableCellMetaClassName}`}>{NOT_REPORTED}</p>
+        )}
+        <p
+          className={`mt-0.5 truncate ${tableCellMetaClassName}`}
+          title={`judge ${evidence.judgeSource ?? NOT_REPORTED} · ${evidence.judgeEndpointId ?? NOT_REPORTED}`}
+        >
+          {`judge ${evidence.judgeSource ?? NOT_REPORTED} · ${evidence.judgeEndpointId ?? NOT_REPORTED}`}
+        </p>
+        <p
+          className={`mt-0.5 ${tableCellMetaClassName}`}
+          title={evidence.validationRef ?? undefined}
+        >
+          {`receipt ${shortLearningRef(evidence.validationRef) ?? NOT_REPORTED}`}
+        </p>
+      </td>
+      <td className="py-3 pr-3">
+        <Badge tone={active ? "success" : "neutral"}>{active ? "active" : show(row.state)}</Badge>
+      </td>
+      <td className="py-3 pr-3">
+        <button
+          className={secondaryButtonClassName}
+          disabled={busy || active || row.state !== "validated"}
+          onClick={() => onActivate(packId)}
+          type="button"
+        >
+          Activate
+        </button>
+      </td>
+    </tr>
+  );
+}
+
+/** The column header row shared by the three tables (real `th` cells, so the columns are associated). */
+function LearningTableHead({ columns }: { readonly columns: readonly string[] }) {
+  return (
+    <thead>
+      <tr>
+        {columns.map((column) => (
+          <th className={tableHeaderClassName} key={column} scope="col">
+            {column}
+          </th>
+        ))}
+      </tr>
+    </thead>
+  );
 }
 
 /**
@@ -329,75 +810,20 @@ export function LearningOverviewPage() {
             <EmptyState label="No decisions have been observed for this scope yet." />
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full text-left text-sm">
-                <thead>
-                  <tr>
-                    {[
-                      "Decision",
-                      "Route package",
-                      "Advisory",
-                      "Outcome",
-                      "Would change",
-                      "Request family",
-                      "Role",
-                      "Taxonomy",
-                      "Candidate",
-                    ].map((header) => (
-                      <th className={`pb-3 pr-3 font-normal ${monoEyebrowClassName}`} key={header}>
-                        {header}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
+              <table className={`${tableClassName} min-w-[880px]`}>
+                <colgroup>
+                  <col style={{ width: "210px" }} />
+                  <col style={{ width: "280px" }} />
+                  <col style={{ width: "124px" }} />
+                  <col style={{ width: "112px" }} />
+                  <col />
+                </colgroup>
+                <LearningTableHead
+                  columns={["Role · task", "Models · judge score", "Judge", "Evidence", "Decision"]}
+                />
                 <tbody>
                   {decisionRows.map((row, index) => (
-                    <tr
-                      className="border-t border-[var(--rm-border)]"
-                      key={`${show(row.decisionId)}-${index}`}
-                    >
-                      <td className="py-2 pr-3 font-mono">
-                        {show(row.decisionId)}
-                        {/* Run 98 addendum 25 §2: a collapsed row states how many observations it
-                            stands for, so the table cannot read as duplicated rows. */}
-                        {Number(row.observationCount) > 1 ? (
-                          <span className="ml-2 text-xs text-[var(--rm-fg-muted)]">
-                            ×{show(row.observationCount)}
-                          </span>
-                        ) : null}
-                      </td>
-                      <td className="py-2 pr-3">{show(row.routePackage)}</td>
-                      <td className="py-2 pr-3">
-                        <Badge tone={row.advisoryState === "fresh" ? "success" : "neutral"}>
-                          {show(row.advisoryState)}
-                        </Badge>
-                      </td>
-                      {/* Run 99 R25: whether the advisory was consulted, applied or refused. */}
-                      <td className="py-2 pr-3">
-                        <Badge tone={row.applied === true ? "success" : "neutral"}>
-                          {show(row.mode)}
-                        </Badge>
-                        {row.applied === true
-                          ? " applied"
-                          : row.fallbackReason
-                            ? ` ${show(row.fallbackReason)}`
-                            : ""}
-                      </td>
-                      <td className="py-2 pr-3">{show(row.wouldHaveChanged)}</td>
-                      {/* Run 99 R33: the request's task family, so a family-scoped refusal is
-                          readable from the overview without opening the decision. */}
-                      <td className="py-2 pr-3">
-                        {row.requestTaskTypeId ? show(row.requestTaskTypeId) : "not reported"}
-                      </td>
-                      {/* Run 99 close-out (addendas 19-21 S33): the family alone does not say which
-                          role or which taxonomy version the decision was classified against. */}
-                      <td className="py-2 pr-3">
-                        {row.roleId ? show(row.roleId) : "not reported"}
-                      </td>
-                      <td className="py-2 pr-3">
-                        {row.taxonomyVersion ? show(row.taxonomyVersion) : "not reported"}
-                      </td>
-                      <td className="py-2 pr-3">{show(row.candidateId)}</td>
-                    </tr>
+                    <LearningDecisionRow key={`${show(row.decisionId)}-${index}`} row={row} />
                   ))}
                 </tbody>
               </table>
@@ -783,48 +1209,37 @@ export function LearningPacksPage() {
         (rows.length === 0 ? (
           <EmptyState label="No pack records have been derived for this scope yet." />
         ) : (
-          <div className="mt-4 grid gap-3">
-            {rows.map((row) => {
-              const record = asRecord(row.record);
-              const active = rolloutValue.activePackageId === row.recordId;
-              return (
-                <article className={`${mutedPanelClassName} p-4`} key={String(row.recordId)}>
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className={compactTitleClassName}>{show(row.recordId)}</p>
-                    <div className="flex gap-2">
-                      <Badge tone={active ? "success" : "neutral"}>
-                        {active ? "active" : show(row.state)}
-                      </Badge>
-                      <Badge tone="neutral">{show(record.priority ?? "advisory_only")}</Badge>
-                    </div>
-                  </div>
-                  <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-                    <Metric
-                      label="Validation receipt"
-                      value={show(
-                        record.validationReceiptId ?? asRecord(row.identity).scorerSetVersion,
-                      )}
-                    />
-                    <Metric label="Rollback target" value={show(record.rollbackTargetPackId)} />
-                    {/* Run 98 addendum 40 audit: this is the pack's advisory-context budget
-                        (`ExperiencePackCandidateV1.maxTokens`, 1-8192, default 512), not a limit on the
-                        requests the router accepts. The old "Max tokens" label read as a request cap. */}
-                    <Metric label="Advisory token budget" value={show(record.maxTokens)} />
-                    <Metric label="Scope" value={show(row.scopeId)} />
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <button
-                      className={secondaryButtonClassName}
-                      disabled={active || row.state !== "validated"}
-                      onClick={() => void act(String(row.recordId))}
-                      type="button"
-                    >
-                      Activate pack
-                    </button>
-                  </div>
-                </article>
-              );
-            })}
+          <div className="mt-4 overflow-x-auto">
+            <table className={`${tableClassName} min-w-[1060px]`}>
+              <colgroup>
+                <col style={{ width: "150px" }} />
+                <col style={{ width: "210px" }} />
+                <col style={{ width: "280px" }} />
+                <col style={{ width: "220px" }} />
+                <col style={{ width: "72px" }} />
+                <col />
+              </colgroup>
+              <LearningTableHead
+                columns={[
+                  "Pack · scope",
+                  "Replay models · score",
+                  "Pack model",
+                  "Claim · evidence",
+                  "State",
+                  "Action",
+                ]}
+              />
+              <tbody>
+                {rows.map((row) => (
+                  <LearningPackRow
+                    activePackageId={textOrNull(rolloutValue.activePackageId) ?? null}
+                    key={String(row.recordId)}
+                    onActivate={(packId) => void act(packId)}
+                    row={row}
+                  />
+                ))}
+              </tbody>
+            </table>
           </div>
         ))}
       <div className="mt-4 flex flex-wrap gap-2">
@@ -857,10 +1272,13 @@ export function LearningPacksPage() {
   );
 }
 
-/** Decisions: filterable, paginated decision list with a receipt-chain detail view. */
+/** Decisions: the approved six-column table - the five Overview columns plus the receipt chain. */
 export function LearningDecisionsPage() {
   const { token, setToken } = useOperatorToken();
   const [stateFilter, setStateFilter] = useState("all");
+  const [roleFilter, setRoleFilter] = useState("all");
+  const [taskFilter, setTaskFilter] = useState("all");
+  const [outcomeFilter, setOutcomeFilter] = useState("all");
   /**
    * Run 113 (addendum 09 R11/S18): the ledger holds live routing decisions and shadow judge/replay calls. The
    * shadow rows carry no taxonomy and are `unavailable` by construction, and because they are the most recent
@@ -875,15 +1293,69 @@ export function LearningDecisionsPage() {
   const rows = Array.isArray(asRecord(decisions.value).decisions)
     ? (asRecord(decisions.value).decisions as readonly Record<string, unknown>[])
     : [];
-  const filtered =
-    stateFilter === "all" ? rows : rows.filter((row) => row.advisoryState === stateFilter);
+  const roleOf = (row: Record<string, unknown>): string | null =>
+    textOrNull(asRecord(row.classification).roleId) ?? textOrNull(row.roleId);
+  const taskOf = (row: Record<string, unknown>): string | null => learningTaskCell(row).task;
+  const filtered = rows.filter(
+    (row) =>
+      (stateFilter === "all" || row.advisoryState === stateFilter) &&
+      (roleFilter === "all" || roleOf(row) === roleFilter) &&
+      (taskFilter === "all" || taskOf(row) === taskFilter) &&
+      (outcomeFilter === "all" || learningEvidence(row).verdict === outcomeFilter),
+  );
+  /**
+   * The readback hands the page a bounded window; the table shows it in pages rather than in one wall of rows.
+   * Nothing is fetched that was not already read, and the note below says how much of the window is shown.
+   */
+  /**
+   * Paging resets to the first page whenever the filter identity changes. This is derived rather than reset from
+   * an effect: the effect form listed the filters as dependencies without reading them, which the repo's lint
+   * rejects, and an effect would also render one frame of the previous page's count after a filter change.
+   */
+  const filterKey = `${stateFilter}|${roleFilter}|${taskFilter}|${outcomeFilter}|${originFilter}`;
+  const [paging, setPaging] = useState({ key: filterKey, visible: 50 });
+  const visibleCount = paging.key === filterKey ? paging.visible : 50;
+  const visible = filtered.slice(0, visibleCount);
+  const showMore = () =>
+    setPaging((current) => ({
+      key: filterKey,
+      visible: (current.key === filterKey ? current.visible : 50) + 50,
+    }));
+  const roleOptions = distinctOptions(rows.map(roleOf));
+  const taskOptions = distinctOptions(rows.map(taskOf));
+  const outcomeOptions = distinctOptions(rows.map((row) => learningEvidence(row).verdict));
+  const truncated = asRecord(decisions.value).truncated === true;
   return (
     <SectionCard
       title="Decision receipts"
-      description="Every observed decision with its advisory state, the counterfactual preference and the receipt chain behind it."
+      description="Every adjudicated decision with its evidence in columns, and the receipt chain each one produced."
     >
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <OperatorTokenField onToken={setToken} token={token} />
+        <SelectField label="Role" onChange={setRoleFilter} value={roleFilter}>
+          <option value="all">all roles</option>
+          {roleOptions.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </SelectField>
+        <SelectField label="Task" onChange={setTaskFilter} value={taskFilter}>
+          <option value="all">all tasks</option>
+          {taskOptions.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </SelectField>
+        <SelectField label="Outcome" onChange={setOutcomeFilter} value={outcomeFilter}>
+          <option value="all">all outcomes</option>
+          {outcomeOptions.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </SelectField>
         <label className={fieldLabelClassName}>
           Advisory state
           <select
@@ -917,78 +1389,49 @@ export function LearningDecisionsPage() {
         (filtered.length === 0 ? (
           <EmptyState label="No decisions match this filter yet." />
         ) : (
-          <div className="mt-4 grid gap-2">
-            {filtered.slice(0, 50).map((row, index) => (
-              <details
-                className={`${mutedPanelClassName} p-3`}
-                key={`${show(row.decisionId)}-${index}`}
-              >
-                <summary className={compactTitleClassName}>
-                  {show(row.decisionId)} · {show(row.routePackage)} · {show(row.advisoryState)}
-                  {" · "}
-                  {show(row.mode)}
-                  {row.applied === true
-                    ? " · applied"
-                    : row.fallbackReason
-                      ? ` · ${show(row.fallbackReason)}`
-                      : row.wouldHaveChanged
-                        ? " · would have changed"
-                        : ""}
-                </summary>
-                <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                  <Metric label="Advisory id" value={show(row.advisoryId)} />
-                  <Metric label="Candidate" value={show(row.candidateId)} />
-                  <Metric label="Preferred package" value={show(row.preferredRoutePackage)} />
-                  <Metric label="Preferred eligible" value={show(row.preferredEligible)} />
-                  <Metric label="Confidence" value={show(row.confidence)} />
-                  <Metric label="Observed" value={show(row.observedAtMs)} />
-                  {/* Run 98 addendum 25 §2: the row is one decision, so say how many observations
-                      it stands for instead of leaving the reader to guess. */}
-                  <Metric label="Observations" value={show(row.observationCount)} />
-                  <Metric label="Selection" value={show(row.selection)} />
-                  <Metric label="Stage" value={show(row.stage)} />
-                  {/* Run 99 R33 (addendum 19 S33/S35): which task family the request belonged to,
-                      and which family the advisory was scoped to. A mismatch is why an advisory
-                      was refused, so it must be visible next to the fallback reason. */}
-                  <Metric
-                    label="Task family (request)"
-                    value={row.requestTaskTypeId ? show(row.requestTaskTypeId) : "not reported"}
-                  />
-                  <Metric
-                    label="Advisory family"
-                    value={row.taskTypeId ? show(row.taskTypeId) : "not reported"}
-                  />
-                  {/* Run 99 close-out (addendas 19-21 S33): the role and the taxonomy identity the
-                      request was classified against, published by the decisions readback. */}
-                  <Metric label="Role" value={row.roleId ? show(row.roleId) : "not reported"} />
-                  <Metric
-                    label="Taxonomy version"
-                    value={row.taxonomyVersion ? show(row.taxonomyVersion) : "not reported"}
-                  />
-                  <Metric
-                    label="Tool classes"
-                    value={
-                      Array.isArray(row.toolClassIds) && row.toolClassIds.length
-                        ? row.toolClassIds.join(", ")
-                        : "not reported"
-                    }
-                  />
-                  <Metric label="Fallback reason" value={show(row.fallbackReason)} />
-                  {/* Run 99 R27: the in-band requirement is a different lever from the floor. */}
-                  <Metric label="Score band" value={show(row.scoreBand)} />
-                  <Metric label="Score gap before" value={show(row.scoreGapBefore)} />
-                  <Metric label="Cohort percent" value={show(row.cohortPercent)} />
-                  <Metric label="Policy version" value={show(row.policyVersion)} />
-                  <Metric label="Origin" value={show(row.origin)} />
-                  <Metric label="Profiles" value={show(row.profileSnapshotIds)} />
-                </div>
-              </details>
-            ))}
-            {asRecord(decisions.value).truncated ? (
+          <div className="mt-4">
+            <div className="overflow-x-auto">
+              <table className={`${tableClassName} min-w-[900px]`}>
+                <colgroup>
+                  <col style={{ width: "164px" }} />
+                  <col style={{ width: "244px" }} />
+                  <col style={{ width: "112px" }} />
+                  <col style={{ width: "112px" }} />
+                  <col style={{ width: "144px" }} />
+                  <col />
+                </colgroup>
+                <LearningTableHead
+                  columns={[
+                    "Role · task",
+                    "Models · judge score",
+                    "Judge",
+                    "Evidence",
+                    "Decision",
+                    "Receipt",
+                  ]}
+                />
+                <tbody>
+                  {visible.map((row, index) => (
+                    <LearningDecisionRow
+                      key={`${show(row.decisionId)}-${index}`}
+                      receipt
+                      row={row}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+              {filtered.length > visibleCount ? (
+                <button className={secondaryButtonClassName} onClick={showMore} type="button">
+                  Show more decisions
+                </button>
+              ) : null}
               <p className={supportingTextClassName}>
-                Showing the newest 50 decisions; the readback is truncated.
+                {`Showing ${visible.length} of ${filtered.length} matching decisions`}
+                {truncated ? "; the readback is truncated." : "."}
               </p>
-            ) : null}
+            </div>
           </div>
         ))}
     </SectionCard>
