@@ -129,6 +129,64 @@ export function formatCompactEndpointDisplayName(input: {
   return `${input.base.trim().slice(0, availableBaseLength - 1)}…${suffix}`;
 }
 
+/**
+ * Run 101 addendum 49 `A49-R3`: the model an endpoint id routes with. An endpoint id's namespace is dotted
+ * (`openai.personal.openai-codex-subscription.global.gpt-5.5`) while the model id it names may contain dots of its
+ * own (`gpt-5.6-sol-low`), so the namespace is cut after the id's scope segment when it carries one and only
+ * otherwise at the last dot. An id that is not a dotted path - a bare model id such as `gpt-5.5` - is returned as
+ * recorded, because a single dot there belongs to the model, not to a namespace.
+ */
+export function readEndpointModelLeaf(endpointId: string): string {
+  const text = endpointId.trim();
+  if (!text) {
+    return "";
+  }
+  const segments = text.split(".");
+  if (segments.length < 3) {
+    return text;
+  }
+  const scopeMarker = ".global.";
+  const markerIndex = text.lastIndexOf(scopeMarker);
+  if (markerIndex >= 0 && markerIndex + scopeMarker.length < text.length) {
+    return text.slice(markerIndex + scopeMarker.length);
+  }
+  return segments.at(-1) ?? text;
+}
+
+/**
+ * The compact operator label for an endpoint id: its leaf model, never a truncated endpoint path. A leaf that
+ * still exceeds `maxLength` drops whole `-`-separated tokens from the front, so the label ends on a whole token
+ * (`…flash-max`) and the effort suffix survives rather than being cut in half; a leaf with no token boundary to
+ * elide at stays whole.
+ */
+export function formatEndpointModelLabel(endpointId: string, maxLength = 26): string {
+  const leaf = readEndpointModelLeaf(endpointId);
+  const limit =
+    typeof maxLength === "number" && Number.isFinite(maxLength) && maxLength > 1
+      ? Math.floor(maxLength)
+      : 26;
+  if (leaf.length <= limit) {
+    return leaf;
+  }
+  const tokens = leaf.split("-").filter((token) => token.length > 0);
+  if (tokens.length <= 1) {
+    return leaf;
+  }
+  const kept: string[] = [];
+  let length = 0;
+  for (let index = tokens.length - 1; index >= 0; index -= 1) {
+    const token = tokens[index] as string;
+    const nextLength = length === 0 ? token.length : length + 1 + token.length;
+    if (kept.length > 0 && nextLength + 1 > limit) {
+      break;
+    }
+    kept.unshift(token);
+    length = nextLength;
+  }
+  const tail = kept.join("-");
+  return tail === leaf ? leaf : `…${tail}`;
+}
+
 export function readReasoningEffort(value: unknown): string | null {
   if (!value || typeof value !== "object") {
     return null;

@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 
+import { formatEndpointModelLabel, readEndpointModelLeaf } from "./effort-identity";
 import type { RuntimeEndpoint, RuntimeModelRecord } from "./runtime-api";
 import { buildSidebarModels } from "./sidebar-footer";
 import {
@@ -197,5 +198,63 @@ describe("reasoning-effort endpoint identity", () => {
     expect(rows).toEqual([
       expect.objectContaining({ id: "deepseek-v4-flash (Low)", requestCount: 0 }),
     ]);
+  });
+});
+
+/**
+ * Run 101 addendum 49 `A49-R3` (operator-reported): the Learning tables printed the endpoint id
+ * (`openai.personal.openai-codex-subscription.global.gpt-5.5`) where the operator asked for the model
+ * (`gpt-5.5`). The endpoint namespace is dotted and the model id may itself contain dots, so the leaf is taken
+ * after the id's own scope segment rather than at the last dot.
+ */
+describe("endpoint model leaf", () => {
+  test("reads the model the endpoint routes with, keeping model ids that contain dots", () => {
+    expect(readEndpointModelLeaf("openai.personal.openai-codex-subscription.global.gpt-5.5")).toBe(
+      "gpt-5.5",
+    );
+    expect(
+      readEndpointModelLeaf("openai.personal.openai-codex-subscription.global.gpt-5.6-sol-low"),
+    ).toBe("gpt-5.6-sol-low");
+    expect(
+      readEndpointModelLeaf("deepseek.personal.deepseek-api-key.global.deepseek-v4-flash-max"),
+    ).toBe("deepseek-v4-flash-max");
+    expect(readEndpointModelLeaf("deepseek.litellm.global.deepseek-deepseek-v4-flash")).toBe(
+      "deepseek-deepseek-v4-flash",
+    );
+    expect(readEndpointModelLeaf("moonshot.personal.primary.global.kimi-k2.5")).toBe("kimi-k2.5");
+    // An id that is not a dotted endpoint path keeps its own name…
+    expect(readEndpointModelLeaf("cli.local.coder")).toBe("coder");
+    expect(readEndpointModelLeaf("gpt-5.5")).toBe("gpt-5.5");
+    // …and an empty id stays empty rather than becoming a manufactured label.
+    expect(readEndpointModelLeaf("")).toBe("");
+  });
+
+  test("labels an endpoint with its leaf model, never with a truncated endpoint path", () => {
+    expect(
+      formatEndpointModelLabel("openai.personal.openai-codex-subscription.global.gpt-5.6-sol-low"),
+    ).toBe("gpt-5.6-sol-low");
+    expect(
+      formatEndpointModelLabel("deepseek.personal.deepseek-api-key.global.deepseek-v4-flash-max"),
+    ).toBe("deepseek-v4-flash-max");
+    // A leaf short enough for its lane is never abbreviated.
+    expect(formatEndpointModelLabel("moonshot.personal.primary.global.kimi-k2.5")).toBe(
+      "kimi-k2.5",
+    );
+  });
+
+  test("elides a leaf too long for its lane at token boundaries, keeping the effort suffix", () => {
+    const compact = formatEndpointModelLabel(
+      "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash-max-preview",
+      14,
+    );
+    expect(compact.length).toBeLessThanOrEqual(14);
+    expect(compact.startsWith("…")).toBe(true);
+    // Whole `-`-tokens only: the text never starts mid-token and the effort token survives.
+    expect(compact.includes("…-")).toBe(false);
+    expect(compact.endsWith("max-preview")).toBe(true);
+    // A single token with nothing to elide at a boundary stays whole rather than being cut.
+    expect(formatEndpointModelLabel("verylongmodelnamewithouttoseparate", 8)).toBe(
+      "verylongmodelnamewithouttoseparate",
+    );
   });
 });
