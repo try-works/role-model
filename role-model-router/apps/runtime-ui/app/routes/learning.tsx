@@ -29,6 +29,7 @@ import {
   secondaryButtonClassName,
   supportingTextClassName,
 } from "../lib/design-system";
+import { formatEndpointModelLabel } from "../lib/effort-identity";
 import {
   type LearningPolicyField,
   type LearningPolicyView,
@@ -186,6 +187,12 @@ function degraded(loading: boolean, error: string | null): ReactElement | null {
 /** Bounded absence text, the convention the Learning surfaces already use for an unreported field. */
 const NOT_REPORTED = "not reported";
 
+/**
+ * Run 101 addendum 49 `A49-R5`: a joined validation receipt that carries no `familyEvidence` states that as the
+ * reason its counts are absent, so a receipt with no counts stops rendering identically to a value nobody recorded.
+ */
+const RECEIPT_CARRIES_NO_COUNTS = "the receipt carries no comparison counts";
+
 const tableClassName = "w-full table-fixed border-collapse text-left";
 const tableHeaderClassName = `border-b border-[var(--rm-border)] pb-3 pr-3 text-left align-bottom font-normal ${monoEyebrowClassName}`;
 const tableRowClassName = "border-b border-[var(--rm-border)] align-top";
@@ -255,6 +262,11 @@ export function shortLearningRef(value: unknown): string | null {
 
 export interface LearningCandidateScoreView {
   readonly candidateRef: string;
+  /**
+   * Run 101 addendum 49 `A49-R3`: the leaf model the cell shows. `candidateRef` keeps the endpoint id the
+   * readback recorded, which is what the cell's `title` carries, so nothing the readback said is lost.
+   */
+  readonly modelLabel: string;
   readonly score: string | null;
   readonly won: boolean;
 }
@@ -273,18 +285,28 @@ export interface LearningEvidenceView {
   readonly decisive: string | null;
   readonly holdout: string | null;
   readonly qualityDelta: string | null;
+  /** `A49-R2`: the pack's recorded claim prose, or `null` when the text store has no row for the candidate. */
+  readonly claim: string | null;
+  /** `A49-R5`: `reported` when the joined receipt carries counts, `receipt_carries_none` when it does not. */
+  readonly countsState: string | null;
 }
 
 /**
  * One reader for the frozen addendum-48 readback: the `evidence` object (`comparisonId`, `judgeEndpointId`,
  * `judgeSource`, `outcome`, `members[]`, `winnerCandidateRef`, `replayRef`, `captureRef`) plus the fields the
  * rows already publish (`familyEvidence`, `qualityDelta`, `validationReceiptId`, the pack's own `record`).
+ *
+ * Run 101 addendum 49 extends the same object with the validation-receipt join (`verdict`, `validationRef`,
+ * `qualityDelta`, `claim`, `counts`, `countsState`); each of those is read from the readback first and falls back
+ * to the fields the rows already carried, so a runtime that has not yet shipped the join renders exactly what the
+ * row does carry rather than a fabricated value.
  */
 export function learningEvidence(row: Record<string, unknown>): LearningEvidenceView {
   const evidence = asRecord(row.evidence);
   const record = asRecord(row.record);
   const family = { ...asRecord(record.familyEvidence), ...asRecord(row.familyEvidence) };
   const judgeConsistency = asRecord(family.judgeConsistency);
+  const counts = asRecord(evidence.counts);
   const winnerRef = textOrNull(evidence.winnerCandidateRef);
   const members = (Array.isArray(evidence.members) ? evidence.members : []).map(
     (member): LearningCandidateScoreView => {
@@ -292,13 +314,17 @@ export function learningEvidence(row: Record<string, unknown>): LearningEvidence
       const candidateRef = textOrNull(entry.candidateRef) ?? NOT_REPORTED;
       return {
         candidateRef,
+        modelLabel: formatEndpointModelLabel(candidateRef),
         score: formatLearningScore(entry.score),
         won: winnerRef !== null && candidateRef === winnerRef,
       };
     },
   );
   const recordedVerdict =
-    textOrNull(row.verdict) ?? textOrNull(record.decision) ?? textOrNull(row.decision);
+    textOrNull(evidence.verdict) ??
+    textOrNull(row.verdict) ??
+    textOrNull(record.decision) ??
+    textOrNull(row.decision);
   const outcome = textOrNull(evidence.outcome);
   return {
     members,
@@ -309,12 +335,19 @@ export function learningEvidence(row: Record<string, unknown>): LearningEvidence
     outcome,
     verdict: learningVerdictWord(recordedVerdict) ?? learningVerdictWord(outcome),
     comparisonRef: textOrNull(evidence.comparisonId) ?? textOrNull(row.comparisonId),
-    validationRef: textOrNull(row.validationReceiptId) ?? textOrNull(record.validationReceiptId),
+    validationRef:
+      textOrNull(evidence.validationRef) ??
+      textOrNull(row.validationReceiptId) ??
+      textOrNull(record.validationReceiptId),
     replayRef: textOrNull(evidence.replayRef),
     captureRef: textOrNull(evidence.captureRef),
-    decisive: textOrNull(family.decisiveComparisons),
-    holdout: textOrNull(family.holdoutComparisons),
-    qualityDelta: formatLearningDelta(row.qualityDelta ?? record.qualityDelta),
+    decisive: textOrNull(counts.decisive) ?? textOrNull(family.decisiveComparisons),
+    holdout: textOrNull(counts.holdout) ?? textOrNull(family.holdoutComparisons),
+    qualityDelta: formatLearningDelta(
+      evidence.qualityDelta ?? row.qualityDelta ?? record.qualityDelta,
+    ),
+    claim: textOrNull(evidence.claim),
+    countsState: textOrNull(evidence.countsState),
   };
 }
 
@@ -381,8 +414,10 @@ function CandidateScoreLanes({
             : tableCellMetaClassName;
         return (
           <div className="flex items-baseline gap-2" key={`${member.candidateRef}-${index}`}>
-            <span className={`min-w-0 flex-1 truncate ${ink}`} title={member.candidateRef}>
-              {member.candidateRef}
+            {/* `A49-R3`: the cell shows the model, wraps at token boundaries rather than cutting one in half,
+                and keeps the endpoint id the readback recorded in its `title`. */}
+            <span className={`min-w-0 flex-1 break-words ${ink}`} title={member.candidateRef}>
+              {member.modelLabel}
             </span>
             <span className={`${tableScoreLaneClassName} ${ink}`}>
               {member.score ?? "excluded"}
@@ -460,28 +495,31 @@ export function LearningDecisionRow({
         >
           {evidence.judgeSource ?? NOT_REPORTED}
         </p>
+        {/* `A49-R3`: the judge is named by its model, with the endpoint id it was recorded under in `title`. */}
         <p
-          className={`mt-0.5 truncate ${tableCellMetaClassName}`}
+          className={`mt-0.5 break-words ${tableCellMetaClassName}`}
           title={evidence.judgeEndpointId ?? undefined}
         >
-          {evidence.judgeEndpointId ?? NOT_REPORTED}
+          {evidence.judgeEndpointId
+            ? formatEndpointModelLabel(evidence.judgeEndpointId)
+            : NOT_REPORTED}
         </p>
       </td>
       <td className="py-3 pr-3">
-        {evidence.decisive === null &&
-        evidence.holdout === null &&
-        evidence.qualityDelta === null ? (
+        {evidence.decisive !== null || evidence.holdout !== null ? (
+          <p className={tableCellValueClassName}>
+            {`${evidence.decisive ?? NOT_REPORTED} dec · ${evidence.holdout ?? NOT_REPORTED} holdout`}
+          </p>
+        ) : evidence.countsState === "receipt_carries_none" ? (
+          /* `A49-R5`: the joined receipt carries no comparison counts, and the cell says that rather than
+             leaving the absence unexplained. */
+          <p className={tableCellMetaClassName}>{RECEIPT_CARRIES_NO_COUNTS}</p>
+        ) : evidence.qualityDelta === null ? (
           <p className={tableCellMetaClassName}>{NOT_REPORTED}</p>
-        ) : (
-          <>
-            <p className={tableCellValueClassName}>
-              {`${evidence.decisive ?? NOT_REPORTED} dec · ${evidence.holdout ?? NOT_REPORTED} holdout`}
-            </p>
-            {evidence.qualityDelta ? (
-              <p className={`mt-0.5 ${tableCellMetaClassName}`}>{`Δ ${evidence.qualityDelta}`}</p>
-            ) : null}
-          </>
-        )}
+        ) : null}
+        {evidence.qualityDelta ? (
+          <p className={`mt-0.5 ${tableCellMetaClassName}`}>{`Δ ${evidence.qualityDelta}`}</p>
+        ) : null}
       </td>
       <td className="py-3 pr-3">
         {evidence.verdict ? (
@@ -526,12 +564,30 @@ export function LearningPackRow({
   readonly onActivate: (packId: string) => void;
 }) {
   const record = asRecord(row.record);
-  const scope = asRecord(record.scope);
+  const recordScope = asRecord(record.scope);
+  /**
+   * Run 101 addendum 49 `A49-R4`: every pack names the role, task and taxonomy it routes for. The readback's own
+   * resolved `scope` is preferred, and the pack's durable record is what it falls back to - a pack whose scope
+   * the readback does not carry still states what it does record. A pack that is wide by design says `scope-wide`
+   * instead of leaving the cell to read like missing data.
+   */
+  const declaredScope = asRecord(row.scope);
   const evidence = learningEvidence(row);
   const packId = show(row.recordId);
   const active = Boolean(activePackageId) && activePackageId === row.recordId;
-  const roleId = textOrNull(scope.roleId);
-  const taxonomy = textOrNull(scope.taxonomyVersion);
+  const roleId = textOrNull(declaredScope.roleId) ?? textOrNull(recordScope.roleId);
+  const taskTypeId = textOrNull(declaredScope.taskTypeId) ?? textOrNull(recordScope.taskTypeId);
+  const taxonomy =
+    textOrNull(declaredScope.taxonomyVersion) ?? textOrNull(recordScope.taxonomyVersion);
+  const scopeWide = declaredScope.scopeWide === true || recordScope.scopeWide === true;
+  const scopeParts = [roleId, taskTypeId, taxonomy ? `taxonomy ${taxonomy}` : null].filter(
+    (part): part is string => part !== null,
+  );
+  const scopeLine = scopeWide
+    ? "scope-wide"
+    : scopeParts.length > 0
+      ? scopeParts.join(" · ")
+      : NOT_REPORTED;
   /**
    * Run 101 addendum 48 follow-up (the `Pack model` correction): the pack model is the pack's own routing target
    * (`record.scope.endpointId`), which the readback carries independently of the comparison evidence - gating this
@@ -539,12 +595,17 @@ export function LearningPackRow({
    * replay-readback mark in the models column, and a readback that disagrees with the pack's own target is shown
    * as it states it rather than reconciled here (`A48-R3`).
    */
-  const packModel = textOrNull(scope.endpointId);
-  const scopeLine =
-    roleId || taxonomy
-      ? `routing target for ${roleId ?? NOT_REPORTED} · taxonomy ${taxonomy ?? NOT_REPORTED}`
+  const packModel = textOrNull(recordScope.endpointId) ?? textOrNull(declaredScope.endpointId);
+  /** `A49-R3`: the pack's model cell shows the model, with the endpoint id it routes with in `title`. */
+  const packModelLabel = packModel === null ? null : formatEndpointModelLabel(packModel);
+  const targetLine = scopeWide
+    ? "routing target for a scope-wide pack"
+    : scopeParts.length > 0
+      ? `routing target for ${scopeParts.join(" · ")}`
       : "routing target of this pack";
   const recordedWinner = evidence.winnerRef;
+  const recordedWinnerLabel =
+    recordedWinner === null ? null : formatEndpointModelLabel(recordedWinner);
   const winnerDisagrees =
     packModel !== null && recordedWinner !== null && recordedWinner !== packModel;
   return (
@@ -554,9 +615,7 @@ export function LearningPackRow({
         <p className={tableCellValueClassName} title={packId}>
           {shortLearningRef(packId) ?? packId}
         </p>
-        <p className={`mt-0.5 ${tableCellMetaClassName}`}>
-          {`${roleId ?? NOT_REPORTED} · taxonomy ${taxonomy ?? NOT_REPORTED}`}
-        </p>
+        <p className={`mt-0.5 ${tableCellMetaClassName}`}>{scopeLine}</p>
         <p className={`mt-0.5 ${tableCellNoteClassName}`}>
           {`scope ${textOrNull(row.scopeId) ?? NOT_REPORTED}`}
         </p>
@@ -572,17 +631,18 @@ export function LearningPackRow({
       <td className="py-3 pr-3">
         {packModel ? (
           <>
-            {/* A routing target is a full endpoint id, so this lane wraps it rather than hiding the model name. */}
-            <p className={`${tableCellStrongClassName} break-all`} title={packModel}>
-              {packModel}
+            {/* A routing target is a full endpoint id, so this lane names the model and wraps at token
+                boundaries rather than hiding it; the endpoint id stays in `title` (`A49-R3`). */}
+            <p className={`${tableCellStrongClassName} break-words`} title={packModel}>
+              {packModelLabel}
             </p>
-            <p className={`mt-0.5 ${tableCellNoteClassName}`}>{scopeLine}</p>
+            <p className={`mt-0.5 ${tableCellNoteClassName}`}>{targetLine}</p>
             {winnerDisagrees ? (
               <p
-                className={`mt-0.5 truncate ${tableCellMetaClassName}`}
+                className={`mt-0.5 break-words ${tableCellMetaClassName}`}
                 title={recordedWinner ?? undefined}
               >
-                {`readback winner ${recordedWinner}`}
+                {`readback winner ${recordedWinnerLabel ?? NOT_REPORTED}`}
               </p>
             ) : null}
           </>
@@ -596,21 +656,34 @@ export function LearningPackRow({
         )}
       </td>
       <td className="py-3 pr-3">
-        {/* The pack's claim prose is recorded nowhere the readback can read, so the cell says so and renders the
-            evidence that *is* recorded rather than a plausible sentence (`A48-R7`). */}
-        <p className={tableCellMetaClassName}>claim not recorded</p>
+        {/* Run 101 addendum 49 `A49-R2`: the pack's claim prose *is* recorded - the knowledge worker's
+            experience-text store holds it and the readback carries it through the candidate's `experienceTextRef`
+            - so the cell renders the claim it was handed. `claim not recorded` is reserved for a pack whose
+            candidate genuinely has no text row rather than asserted unconditionally (`A48-R7`). */}
+        {evidence.claim ? (
+          <p className={tableCellNoteClassName}>{evidence.claim}</p>
+        ) : (
+          <p className={tableCellMetaClassName}>claim not recorded</p>
+        )}
         {evidence.qualityDelta ? (
           <p className={`mt-0.5 ${tableCellValueClassName}`}>
             {`Δ ${evidence.qualityDelta} over baseline`}
           </p>
+        ) : evidence.countsState === "receipt_carries_none" ? (
+          <p className={`mt-0.5 ${tableCellMetaClassName}`}>{RECEIPT_CARRIES_NO_COUNTS}</p>
         ) : (
           <p className={`mt-0.5 ${tableCellMetaClassName}`}>{NOT_REPORTED}</p>
         )}
+        {/* `A49-R3`: the judge is named by its model, with the endpoint id it was recorded under in `title`. */}
         <p
-          className={`mt-0.5 truncate ${tableCellMetaClassName}`}
+          className={`mt-0.5 break-words ${tableCellMetaClassName}`}
           title={`judge ${evidence.judgeSource ?? NOT_REPORTED} · ${evidence.judgeEndpointId ?? NOT_REPORTED}`}
         >
-          {`judge ${evidence.judgeSource ?? NOT_REPORTED} · ${evidence.judgeEndpointId ?? NOT_REPORTED}`}
+          {`judge ${evidence.judgeSource ?? NOT_REPORTED} · ${
+            evidence.judgeEndpointId
+              ? formatEndpointModelLabel(evidence.judgeEndpointId)
+              : NOT_REPORTED
+          }`}
         </p>
         <p
           className={`mt-0.5 ${tableCellMetaClassName}`}

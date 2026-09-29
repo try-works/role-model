@@ -1,5 +1,9 @@
 import { expect, test } from "@playwright/test";
 
+// Run 101 addendum 49 `A49-R3`: the models column shows the leaf model id, so the page-vs-readback check below
+// holds the page to the same rule instead of the raw endpoint path.
+import { readEndpointModelLeaf } from "../app/lib/effort-identity";
+
 /**
  * Run 98 addendum 44 `A44-S3`: the Learning Overview reports the numbers `AC-R12-01` lists, and the packaged
  * runtime's missing profile-inspection capability appears as a bounded `unavailable` with its reason.
@@ -87,7 +91,7 @@ test.describe("@recursive:98-shadow-to-active-routing-graduation @a44-s3", () =>
     };
     const members = decisions.decisions?.[0]?.evidence?.members ?? [];
     if (members.length > 0) {
-      await expect(body).toContainText(String(members[0]?.candidateRef));
+      await expect(body).toContainText(readEndpointModelLeaf(String(members[0]?.candidateRef)));
     } else {
       await expect(body).toContainText("not reported");
     }
