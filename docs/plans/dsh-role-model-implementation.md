@@ -912,9 +912,13 @@ Done:
 - Commit `c2eed72c`: 95 files — the package, the implementation plan, and the analysis.
 
 Remaining:
-- open the pull request against `dev` (`CONTRIBUTING.md` and
-  `docs/operations/02-ci-and-release-flow.md` govern the rest)
 - restart the host and confirm the panel renders in the running Web UI in light and dark
+
+**Pull request opened: [#290](https://github.com/try-works/role-model/pull/290)** against `dev`
+(2 commits, 99 files). The PR body carries the CONTRIBUTING-required **Real behavior proof**
+section: setup tested on, the exact commands run, the live terminal output, and an explicit
+"What I did not test" list — which names the same two gaps as above, plus the fact that the
+A/B routing experiment is retained but not asserted.
 
 Also delivered in this phase: `packages/dsh-role-model/README.md`, a "Installation for
 DeepSeek Harness" section in the root `README.md`, entries for both in the root README's
