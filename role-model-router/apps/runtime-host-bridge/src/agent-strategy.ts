@@ -217,3 +217,58 @@ export function resolveAliasRequestedRole(input: {
   }
   return { roleId: null, source: "none" };
 }
+
+function decodeAgentStrategyBlock(raw: unknown, kind: AgentStrategyKind): AgentStrategyEntry[] {
+  if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
+    return [];
+  }
+  return Object.entries(raw as Record<string, unknown>).map(([name, value]) =>
+    decodeAgentStrategyEntry(name, value, kind),
+  );
+}
+
+export interface AgentStrategySectionInput {
+  readonly agentStrategies?: unknown;
+  readonly workloads?: unknown;
+  readonly executionModes: readonly string[];
+  readonly runtimeMode: RoutingModeName;
+  readonly modelIdsByExecutionMode: Readonly<Record<string, readonly string[]>>;
+}
+
+export interface AgentStrategySection {
+  readonly entries: readonly AgentStrategyEntry[];
+  readonly aliases: readonly MaterializedAgentStrategyAlias[];
+  readonly violations: readonly string[];
+}
+
+/**
+ * Run 103 / SP5c - the config blocks as one section. A namespace violation (duplicate or cross-kind
+ * collision) suppresses materialisation entirely rather than letting one entry shadow another; a
+ * single malformed entry is reported and skipped while its valid siblings still materialise.
+ */
+export function decodeAgentStrategySection(
+  input: AgentStrategySectionInput,
+): AgentStrategySection {
+  const entries = [
+    ...decodeAgentStrategyBlock(input.agentStrategies, "role"),
+    ...decodeAgentStrategyBlock(input.workloads, "workload"),
+  ];
+  const entryViolations = entries.flatMap((entry) => entry.violations);
+  const namespaceViolations = validateAgentStrategyNames(
+    entries.map((entry) => ({ name: entry.name, kind: entry.kind })),
+  );
+  const violations = [...entryViolations, ...namespaceViolations];
+  if (namespaceViolations.length > 0) {
+    return { entries, aliases: [], violations };
+  }
+  return {
+    entries,
+    aliases: materializeAgentStrategyAliases({
+      entries,
+      executionModes: input.executionModes,
+      runtimeMode: input.runtimeMode,
+      modelIdsByExecutionMode: input.modelIdsByExecutionMode,
+    }),
+    violations,
+  };
+}
