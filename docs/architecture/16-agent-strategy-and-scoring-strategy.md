@@ -236,18 +236,26 @@ in difficulty mode; in controller mode it remains a derived value and that is do
 
 ## 7. Effect primitives and how to use them
 
-### 7.1 Prerequisite
+### 7.1 Prerequisite: satisfied by the landed Effect wiring
 
-The vendored tree is not consumable today: `vendor/effect/VENDORED.json` records the wiring as *"not a
-workspace package and not imported by any build; a lint-ignored source drop only"*. `docs/architecture/15`
-§5.1 owns the decision (workspace package re-export vs path-mapped bundling) and the SEA bundling proof. This
-document depends on that decision: routing modules import `effect` by bare specifier and never import
-`vendor/effect/**` by relative path.
+The vendored tree is already consumable. `role-model-router/packages/effect` is a workspace package named
+`effect` (4.0.0-rc.117) that re-exports the vendored sources in place and builds them to `dist/` with
+`build.mjs`; `role-model-router/packages/effect-mq` and `.../sql-sqlite-node` sit beside it, and
+`runtime-host-bridge/package.json` depends on all three. The bridge already imports the package in
+`src/queue-runtime/*` and `src/track-b-auto-replay-runtime.ts`, and already builds a `ManagedRuntime` in
+`src/queue-runtime/index.ts` - the same composition-root pattern section 7.4 prescribes.
+
+Routing modules therefore import `effect` by bare specifier like every other consumer and never reach into
+`vendor/**`. P0's bundling item is verification, not construction: confirm the packaged SEA still carries the
+Effect runtime after this change, which is the gate the queue rebuild already passed.
 
 Everything below is optional in the sense that the same module boundaries work in plain TypeScript - but where
 Effect is the obvious shape, it is used, and any deviation is recorded per `AGENTS.md`.
 
 ### 7.2 Primitive map
+
+Source paths below are the workspace wrapper `role-model-router/packages/effect/src/*`, which re-exports
+`vendor/effect` (the upstream `effect@4.0.0-rc.117` source drop).
 
 | Concern | Primitive | Vendored source |
 | --- | --- | --- |
@@ -563,7 +571,7 @@ Router
 
 | Phase | Work | Acceptance |
 | --- | --- | --- |
-| P0 | Vocabulary and precedence as schema + tagged enum with failing tests first; consumable vendored Effect tree and SEA bundling proof | tests fail for the right reason; an Effect import survives `runtime:package-sea` and the packaged exe serves its channel |
+| P0 | Vocabulary and precedence as schema + tagged enum with failing tests first; re-verify the packaged SEA still carries the Effect runtime (the wiring landed with the queue rebuild) | tests fail for the right reason; a focused `effect`-based test runs against the workspace package, and `runtime:package-sea` still produces an exe that serves its channel |
 | P1 | Config split (`routing.mode`, `routing.scoring_strategy`, `pin_weights`, `weights`, `routing.intelligent`), latency defaults, legacy read-compat and write normalization | save/reload round-trips; the migration table in section 3 is covered by tests |
 | P2 | Agent strategy and workload blocks, alias materialisation, request-intent precedence; Intelligent regression (including `latency` in the controller set) | one verification per shipped entry (section 10.2) |
 | P3 | Provenance: `strategy_source`, weights digest, latency-selection outcome in telemetry and the decision readback | a decision answers "who chose this strategy, and did the latency override act" |
@@ -626,8 +634,8 @@ decision's effective strategy, source, weights digest and winner match the saved
 
 ## 11. Risks, constraints and open items
 
-1. **SEA bundling.** Effect v4 inside the packaged exe is the largest unknown and is the P0 proof
-   (`docs/architecture/15` §7.1).
+1. **SEA bundling.** No longer an unknown: the queue rebuild already bundles Effect v4 into the packaged exe,
+   so this change re-verifies that gate rather than establishing it (`docs/architecture/15` §7.1).
 2. **Closed protocol schema.** Custom weights cannot live inside `policy_snapshot` without a protocol change;
    this document keeps them in the runtime diagnostics. If the protocol owner wants them in the decision
    artifact, that is a separate reviewed change.
@@ -644,14 +652,15 @@ decision's effective strategy, source, weights digest and winner match the saved
    `/v1/chat/completions` path is a defect.
 8. **Vendored-pin drift.** The API shapes cited here (`Schema.encodeKeys`, `Schema.makeFilter`,
    `Data.taggedEnum.$match`, `ManagedRuntime.make`, `ConfigProvider.fromEnv` / `constantCase`,
-   `Metric.withAttributes`) were verified against `effect@4.0.0-rc.117`; re-vendoring requires re-verifying
-   them before the routing modules are built on top.
+   `Metric.withAttributes`) were verified against `effect@4.0.0-rc.117` - the
+   `role-model-router/packages/effect` wrapper over `vendor/effect`. Re-vendoring, or changing that wrapper's
+   build, requires re-verifying them before the routing modules are built on top.
 
 ## 12. Audit notes (verified against the vendored Effect source)
 
-The sketches in section 7 were executed against `vendor/effect/packages/effect/src/index.ts`
-(`effect@4.0.0-rc.117`) with the repo's `tsx`, because the vendored tree is not a workspace dependency. What
-was run and what it proved:
+The sketches in section 7 were executed with the repo's `tsx`, importing the vendored source
+(`vendor/effect/packages/effect/src/index.ts`, `effect@4.0.0-rc.117`) directly; shipped modules import the
+`effect` workspace package instead. What was run and what it proved:
 
 | Sketch | Result |
 | --- | --- |
