@@ -19,7 +19,9 @@ import {
   buildPostureWriteBlock,
   buildWorkloadTemplateDraft,
   createPostureDraft,
+  findDuplicateEntryNames,
   formatCommaList,
+  listEntriesRemovedBySave,
   parseCommaList,
   postureBlockDocumentKey,
   postureDraftFromEntry,
@@ -48,6 +50,14 @@ import { type RouterConfig, fetchRouterConfig, updateRuntimeConfig } from "../li
 
 /** The editable shape of one entry; the two list fields stay raw text while the operator types. */
 interface PostureForm {
+  /**
+   * Post-lock repair (run 103): the row identity must not depend on the entry name. The previous
+   * key (`${name}-${index}`) changed on every keystroke, so React remounted the card after the first
+   * character and the field lost focus — an operator could only ever type one character per click.
+   */
+  readonly id: string;
+  /** The saved entry this row was loaded from; null for a row the operator just added. */
+  readonly originName: string | null;
   readonly kind: PostureEntryKind;
   readonly name: string;
   readonly roleId: string;
@@ -58,8 +68,17 @@ interface PostureForm {
   readonly capabilitiesText: string;
 }
 
-function formFromDraft(draft: PostureDraft): PostureForm {
+let postureRowSequence = 0;
+
+function createPostureRowId(): string {
+  postureRowSequence += 1;
+  return `posture-row-${postureRowSequence}`;
+}
+
+function formFromDraft(draft: PostureDraft, originName: string | null): PostureForm {
   return {
+    id: createPostureRowId(),
+    originName,
     kind: draft.kind,
     name: draft.name,
     roleId: draft.roleId,
@@ -84,7 +103,9 @@ function draftFromForm(form: PostureForm): PostureDraft {
   };
 }
 
-function readRoleOptions(config: RouterConfig | null): readonly { id: string; label: string }[] {
+function readRoleOptions(
+  config: RouterConfig | null,
+): readonly { id: string; label: string; description: string | null }[] {
   const roles = config?.policySources?.roles ?? [];
   const options = roles.flatMap((role) => {
     const record = role as Record<string, unknown>;
@@ -103,7 +124,8 @@ function readRoleOptions(config: RouterConfig | null): readonly { id: string; la
         : typeof record.name === "string"
           ? record.name
           : id;
-    return [{ id, label }];
+    const description = typeof record.description === "string" ? record.description.trim() : "";
+    return [{ id, label, description: description.length > 0 ? description : null }];
   });
   return [...new Map(options.map((option) => [option.id, option])).values()].sort((left, right) =>
     left.id.localeCompare(right.id, "en"),
@@ -213,7 +235,9 @@ export function PostureEntriesPage({ kind }: { readonly kind: PostureEntryKind }
     const next = await fetchRouterConfig();
     setRouterConfig(next);
     const entries = kind === "role" ? next.agentStrategies : next.workloads;
-    setForms((entries ?? []).map((entry) => formFromDraft(postureDraftFromEntry(entry))));
+    setForms(
+      (entries ?? []).map((entry) => formFromDraft(postureDraftFromEntry(entry), entry.name)),
+    );
     setLoadError(null);
   }, [kind]);
 
@@ -252,6 +276,38 @@ export function PostureEntriesPage({ kind }: { readonly kind: PostureEntryKind }
     }
     setFormErrors({});
     setSaveError(null);
+    /**
+     * Post-lock repair (run 103): the write replaces the whole block keyed by name, so a duplicate
+     * name would silently collapse two rows into one and a missing name would silently remove a
+     * saved entry (a rename removes the old name and its aliases). Both are refused or confirmed
+     * before anything is written.
+     */
+    const duplicateNames = findDuplicateEntryNames(forms.map((form) => form.name));
+    if (duplicateNames.length > 0) {
+      setSaveError(
+        `Duplicate entry name${duplicateNames.length === 1 ? "" : "s"}: ${duplicateNames.join(", ")}. Entry names must be unique — saving two rows with the same name would keep only one and its aliases would change.`,
+      );
+      setStatusMessage(null);
+      return;
+    }
+    const savedNames = (readbackEntries ?? []).map((entry) => entry.name);
+    const removedNames = listEntriesRemovedBySave(
+      savedNames,
+      forms.map((form) => form.name),
+    );
+    if (removedNames.length > 0) {
+      const confirmed =
+        typeof window === "undefined" ||
+        window.confirm(
+          `Saving removes the saved entr${removedNames.length === 1 ? "y" : "ies"} ${removedNames.join(", ")}: their <name>.<scope> aliases stop materialising. Continue?`,
+        );
+      if (!confirmed) {
+        setStatusMessage(
+          `Save cancelled: ${removedNames.join(", ")} would have been removed. Add the missing entr${removedNames.length === 1 ? "y" : "ies"} back or use Remove entry to delete one deliberately.`,
+        );
+        return;
+      }
+    }
     setSaving(true);
     try {
       const entries = validations.flatMap((validation) =>
@@ -348,7 +404,7 @@ export function PostureEntriesPage({ kind }: { readonly kind: PostureEntryKind }
                   onClick={() => {
                     const draft = buildWorkloadTemplateDraft(templateName, template);
                     if (draft) {
-                      setForms((current) => [...current, formFromDraft(draft)]);
+                      setForms((current) => [...current, formFromDraft(draft, null)]);
                       setStatusMessage(`Added the ${templateName} template to the editor.`);
                     }
                   }}
@@ -370,10 +426,14 @@ export function PostureEntriesPage({ kind }: { readonly kind: PostureEntryKind }
             <EmptyState label="No entries in the editor yet." />
           ) : (
             forms.map((form, index) => (
-              <div key={`${form.name}-${index}`} className={`${cardClassName} space-y-3 p-4`}>
+              <div key={form.id} className={`${cardClassName} space-y-3 p-4`}>
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className={monoEyebrowClassName}>
-                    {form.name.trim().length > 0 ? form.name : "new entry"}
+                    {form.originName !== null
+                      ? `Editing saved entry ${form.originName}`
+                      : form.name.trim().length > 0
+                        ? `New entry ${form.name.trim()}`
+                        : "New entry"}
                   </p>
                   <button
                     type="button"
@@ -400,6 +460,13 @@ export function PostureEntriesPage({ kind }: { readonly kind: PostureEntryKind }
                       <span className={errorNoticeClassName}>{formErrors[index]?.name}</span>
                     ) : null}
                   </label>
+                  {form.originName !== null &&
+                  form.name.trim().length > 0 &&
+                  form.name.trim() !== form.originName ? (
+                    <p className={`sm:col-span-2 xl:col-span-3 ${supportingTextClassName}`}>
+                      {`Renaming this entry removes \`${form.originName}\` and its ${form.originName}.<scope> aliases, and materialises \`${form.name.trim()}\` instead.`}
+                    </p>
+                  ) : null}
                   {kind === "role" ? (
                     <label className="grid gap-1">
                       <span className={fieldLabelClassName}>Role (required)</span>
@@ -424,6 +491,14 @@ export function PostureEntriesPage({ kind }: { readonly kind: PostureEntryKind }
                       {formErrors[index]?.roleId ? (
                         <span className={errorNoticeClassName}>{formErrors[index]?.roleId}</span>
                       ) : null}
+                      {roleOptions.find((option) => option.id === form.roleId)?.description ? (
+                        <span className={supportingTextClassName}>
+                          {roleOptions.find((option) => option.id === form.roleId)?.description}
+                        </span>
+                      ) : null}
+                      <span className={supportingTextClassName}>
+                        {`Every entry named \`${form.name.trim().length > 0 ? form.name.trim() : "<name>"}\` materialises \`${form.name.trim().length > 0 ? form.name.trim() : "<name>"}.<scope>\` aliases an agent can call.`}
+                      </span>
                     </label>
                   ) : (
                     <label className="grid gap-1">
@@ -510,7 +585,7 @@ export function PostureEntriesPage({ kind }: { readonly kind: PostureEntryKind }
               className={secondaryButtonClassName}
               disabled={saving}
               onClick={() =>
-                setForms((current) => [...current, formFromDraft(createPostureDraft(kind))])
+                setForms((current) => [...current, formFromDraft(createPostureDraft(kind), null)])
               }
             >
               {`Add ${kind === "role" ? "agent strategy" : "workload"}`}

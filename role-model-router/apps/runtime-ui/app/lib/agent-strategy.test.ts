@@ -5,6 +5,8 @@ import {
   buildPostureWriteBlock,
   buildWorkloadTemplateDraft,
   createPostureDraft,
+  findDuplicateEntryNames,
+  listEntriesRemovedBySave,
   summarizePostureDiagnostics,
   validatePostureDraft,
 } from "./agent-strategy";
@@ -205,5 +207,25 @@ describe("run 103 posture entry view-models", () => {
     });
     // Workload entries must never carry a role binding.
     expect(JSON.stringify(workloads)).not.toContain("role_id");
+  });
+
+  /**
+   * Post-lock repair (run 103): the block is keyed by name, so duplicates silently collapse and a
+   * missing name silently removes a saved entry. Both are detected before the write.
+   */
+  test("reports duplicate entry names instead of letting the block collapse them", () => {
+    expect(findDuplicateEntryNames(["coder", "reviewer"])).toEqual([]);
+    expect(findDuplicateEntryNames(["coder", "coder", "reviewer", " reviewer "])).toEqual([
+      "coder",
+      "reviewer",
+    ]);
+    expect(findDuplicateEntryNames(["", "  "])).toEqual([]);
+  });
+
+  test("lists the saved entries a save would remove", () => {
+    expect(listEntriesRemovedBySave(["coder", "reviewer"], ["coder", "reviewer"])).toEqual([]);
+    expect(listEntriesRemovedBySave(["coder", "reviewer"], ["coder", "qa"])).toEqual(["reviewer"]);
+    // A rename removes the old name; the new name is not a saved entry yet.
+    expect(listEntriesRemovedBySave(["coder"], ["coder-v2"])).toEqual(["coder"]);
   });
 });

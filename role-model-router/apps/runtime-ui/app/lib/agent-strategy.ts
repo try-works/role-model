@@ -392,6 +392,44 @@ export function buildPostureWriteBlock(
   );
 }
 
+/**
+ * Post-lock repair (run 103): the block is keyed by entry name, so two rows with the same name
+ * silently collapse into one when the block is rendered — the operator sees one entry disappear
+ * without an error. The page must refuse the save instead.
+ */
+export function findDuplicateEntryNames(names: readonly string[]): readonly string[] {
+  const seen = new Set<string>();
+  const duplicates = new Set<string>();
+  for (const rawName of names) {
+    const name = rawName.trim();
+    if (name.length === 0) {
+      continue;
+    }
+    if (seen.has(name)) {
+      duplicates.add(name);
+      continue;
+    }
+    seen.add(name);
+  }
+  return [...duplicates].sort((left, right) => left.localeCompare(right, "en"));
+}
+
+/**
+ * Post-lock repair (run 103): the editor writes the whole block, so a save that no longer names a
+ * saved entry removes it (a rename removes the old name). The page surfaces exactly which saved
+ * entries such a save would drop before it writes anything.
+ */
+export function listEntriesRemovedBySave(
+  savedNames: readonly string[],
+  draftNames: readonly string[],
+): readonly string[] {
+  const drafted = new Set(draftNames.map((name) => name.trim()).filter((name) => name.length > 0));
+  return savedNames
+    .map((name) => name.trim())
+    .filter((name) => name.length > 0 && !drafted.has(name))
+    .sort((left, right) => left.localeCompare(right, "en"));
+}
+
 export function postureBlockDocumentKey(kind: PostureEntryKind): string {
   return kind === "role" ? "agent_strategies" : "workloads";
 }
