@@ -1,0 +1,18 @@
+{
+    "scenario":  "s3-pinned-hard",
+    "alias":  "difficulty.remote-only",
+    "expectation":  "strategy latency / source operator / discarded difficulty=quality",
+    "endpointId":  null,
+    "effectiveMode":  null,
+    "strategy":  null,
+    "source":  null,
+    "weightsDigest":  null,
+    "weights":  null,
+    "discarded":  null,
+    "latencyOutcome":  null,
+    "postureAlias":  null,
+    "postureKind":  null,
+    "postureRoleSource":  null,
+    "postureRoleId":  null,
+    "postureCapabilities":  ""
+}

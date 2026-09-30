@@ -1,0 +1,28 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/103-agent-strategy-and-scoring-strategy/role-model-router/apps/runtime-host-bridge
+
+(node:51520) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | test/agent-strategy-live-aliases.test.ts > agent strategy and workload aliases in the live backend > materialises posture aliases, survives a config patch and rejects an unknown role
+Runtime strategy posture scope coder.remote-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope batch.remote-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope embedding.remote-only has no routable targets (ALIAS_POOL_EMPTY)
+
+stderr | test/agent-strategy-live-aliases.test.ts > agent strategy and workload aliases in the live backend > materialises posture aliases, survives a config patch and rejects an unknown role
+Runtime strategy posture scope coder.remote-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope batch.remote-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope embedding.remote-only has no routable targets (ALIAS_POOL_EMPTY)
+
+stderr | test/agent-strategy-live-aliases.test.ts > agent strategy and workload aliases in the live backend > materialises posture aliases, survives a config patch and rejects an unknown role
+Runtime strategy posture scope coder.remote-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope batch.remote-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope embedding.remote-only has no routable targets (ALIAS_POOL_EMPTY)
+
+ ✓ test/agent-strategy-live-aliases.test.ts (1 test) 5386ms
+   ✓ agent strategy and workload aliases in the live backend > materialises posture aliases, survives a config patch and rejects an unknown role  5383ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  15:29:32
+   Duration  14.43s (transform 5.35s, setup 0ms, collect 8.34s, tests 5.39s, environment 0ms, prepare 243ms)
+

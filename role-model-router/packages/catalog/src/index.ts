@@ -643,6 +643,7 @@ export {
   resolveCatalogPricingHints,
   resolveRoutingCostEstimate,
   resolveTokenEconomics,
+  type TokenCostTier,
   type TokenEconomics,
   type TokenEconomicsSource,
 } from "./token-economics.js";

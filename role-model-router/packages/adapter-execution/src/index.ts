@@ -14,7 +14,7 @@ import type { ProviderAccountRecord } from "@role-model-router/provider-account"
 import type { TraceEventRecord, TraceSpanRecord } from "@role-model-router/trace";
 import type { UsageEventRecord } from "@role-model-router/usage";
 
-import { estimateRequestCostUsd } from "@role-model-router/catalog";
+import { type TokenCostTier, estimateRequestCostUsd } from "@role-model-router/catalog";
 
 export type RuntimeExecutionMessageContent =
   | string
@@ -659,6 +659,8 @@ export interface UsageCostEstimateSignals {
   readonly outputPer1M: number | null;
   readonly estimatedRequestUsd: number | null;
   readonly cost_per_1k_tokens_est: number | null;
+  /** models.dev context tiers, so measured long-context usage bills at the tier rates. */
+  readonly costTiers?: readonly TokenCostTier[];
 }
 
 export interface UsageCostEstimate {
@@ -698,6 +700,9 @@ export function resolveUsageEventCostEstimate(input: {
         inputPer1M: catalog.inputPer1M,
         outputPer1M: catalog.outputPer1M,
         source: catalog.tokenEconomicsSource,
+        ...(catalog.costTiers && catalog.costTiers.length > 0
+          ? { costTiers: catalog.costTiers }
+          : {}),
       },
       contextTokens: inputTokens,
       maxOutputTokens: outputTokens,

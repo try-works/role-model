@@ -1,0 +1,72 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/103-agent-strategy-and-scoring-strategy/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/agent-strategy-workload-examples.test.ts (4 tests | 4 failed) 68ms
+   × shipped workload examples > ships exactly the documented batch and embedding entries 7ms
+     → Cannot convert undefined or null to object
+   × shipped workload examples > is documented in the operations guide 2ms
+     → ENOENT: no such file or directory, open 'D:\DEV\role-model\.worktrees\103-agent-strategy-and-scoring-strategy\docs\operations\05-agent-strategy-and-workload-postures.md'
+   × shipped workload examples > survives the config round trip and materialises aliases per scope 46ms
+     → Cannot read properties of undefined (reading 'batch')
+   × shipped workload examples > the embedding alias pins its capability and strategy for the request 8ms
+     → expected null not to be null
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/agent-strategy-workload-examples.test.ts > shipped workload examples > ships exactly the documented batch and embedding entries
+TypeError: Cannot convert undefined or null to object
+ ❯ test/agent-strategy-workload-examples.test.ts:41:19
+     39| describe("shipped workload examples", () => {
+     40|   test("ships exactly the documented batch and embedding entries", () …
+     41|     expect(Object.keys(SHIPPED_WORKLOAD_EXAMPLES).sort()).toEqual(["ba…
+       |                   ^
+     42|     expect(SHIPPED_WORKLOAD_EXAMPLES.batch).toEqual({ scoring_strategy…
+     43|     expect(SHIPPED_WORKLOAD_EXAMPLES.embedding).toEqual({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  test/agent-strategy-workload-examples.test.ts > shipped workload examples > is documented in the operations guide
+Error: ENOENT: no such file or directory, open 'D:\DEV\role-model\.worktrees\103-agent-strategy-and-scoring-strategy\docs\operations\05-agent-strategy-and-workload-postures.md'
+ ❯ test/agent-strategy-workload-examples.test.ts:50:19
+     48| 
+     49|   test("is documented in the operations guide", () => {
+     50|     const guide = readFileSync(
+       |                   ^
+     51|       path.join(__dirname, "..", "..", "..", "..", "docs", "operations…
+     52|       "utf8",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  test/agent-strategy-workload-examples.test.ts > shipped workload examples > survives the config round trip and materialises aliases per scope
+TypeError: Cannot read properties of undefined (reading 'batch')
+ ❯ test/agent-strategy-workload-examples.test.ts:69:47
+     67|     const section = decodeAgentStrategySection({
+     68|       workloads: {
+     69|         batch: { ...SHIPPED_WORKLOAD_EXAMPLES.batch },
+       |                                               ^
+     70|         embedding: { ...SHIPPED_WORKLOAD_EXAMPLES.embedding },
+     71|       },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  test/agent-strategy-workload-examples.test.ts > shipped workload examples > the embedding alias pins its capability and strategy for the request
+AssertionError: expected null not to be null
+ ❯ test/agent-strategy-workload-examples.test.ts:108:23
+    106|       aliasId: "embedding.remote-only",
+    107|     });
+    108|     expect(entry).not.toBeNull();
+       |                       ^
+    109|     const binding = resolvePostureRequestBinding({
+    110|       entry: entry!,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed (4)
+   Start at  14:35:15
+   Duration  6.81s (transform 3.06s, setup 0ms, collect 5.80s, tests 68ms, environment 0ms, prepare 372ms)
+
+undefined
+D:\DEV\role-model\.worktrees\103-agent-strategy-and-scoring-strategy\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/agent-strategy-workload-examples.test.ts

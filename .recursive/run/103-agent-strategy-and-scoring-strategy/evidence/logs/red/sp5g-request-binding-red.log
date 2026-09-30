@@ -1,0 +1,142 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/103-agent-strategy-and-scoring-strategy/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/agent-strategy-request-binding.test.ts (9 tests | 9 failed) 37ms
+   × posture request binding > a declared role wins over the alias preset and both are recorded 13ms
+     → (0 , resolvePostureRequestBinding) is not a function
+   × posture request binding > the alias preset supplies the role when the request declares none 2ms
+     → (0 , resolvePostureRequestBinding) is not a function
+   × posture request binding > a workload entry without a role records none 2ms
+     → (0 , resolvePostureRequestBinding) is not a function
+   × posture request binding > workload capabilities are unioned with the request's own requirements 1ms
+     → (0 , resolvePostureRequestBinding) is not a function
+   × posture request binding > compute preference maps to the request's local preference 3ms
+     → (0 , resolvePostureRequestBinding) is not a function
+   × alias scoring strategy overlay > an alias preset strategy replaces the configured scoring strategy 2ms
+     → (0 , overlayPostureOperator) is not a function
+   × alias scoring strategy overlay > an alias without a scoring strategy leaves the configured posture untouched 2ms
+     → (0 , overlayPostureOperator) is not a function
+   × alias scoring strategy overlay > an alias asking for custom without configured weights fails closed 1ms
+     → (0 , overlayPostureOperator) is not a function
+   × alias scoring strategy overlay > an alias asking for custom keeps the configured custom weights 7ms
+     → (0 , overlayPostureOperator) is not a function
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 9 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/agent-strategy-request-binding.test.ts > posture request binding > a declared role wins over the alias preset and both are recorded
+TypeError: (0 , resolvePostureRequestBinding) is not a function
+ ❯ test/agent-strategy-request-binding.test.ts:40:21
+     38| describe("posture request binding", () => {
+     39|   test("a declared role wins over the alias preset and both are record…
+     40|     const binding = resolvePostureRequestBinding({
+       |                     ^
+     41|       entry: coderEntry,
+     42|       aliasId: "coder.remote-only",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+ FAIL  test/agent-strategy-request-binding.test.ts > posture request binding > the alias preset supplies the role when the request declares none
+TypeError: (0 , resolvePostureRequestBinding) is not a function
+ ❯ test/agent-strategy-request-binding.test.ts:58:21
+     56| 
+     57|   test("the alias preset supplies the role when the request declares n…
+     58|     const binding = resolvePostureRequestBinding({
+       |                     ^
+     59|       entry: coderEntry,
+     60|       aliasId: "coder.remote-only",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+
+ FAIL  test/agent-strategy-request-binding.test.ts > posture request binding > a workload entry without a role records none
+TypeError: (0 , resolvePostureRequestBinding) is not a function
+ ❯ test/agent-strategy-request-binding.test.ts:72:21
+     70| 
+     71|   test("a workload entry without a role records none", () => {
+     72|     const binding = resolvePostureRequestBinding({
+       |                     ^
+     73|       entry: embeddingEntry,
+     74|       aliasId: "embedding.remote-only",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯
+
+ FAIL  test/agent-strategy-request-binding.test.ts > posture request binding > workload capabilities are unioned with the request's own requirements
+TypeError: (0 , resolvePostureRequestBinding) is not a function
+ ❯ test/agent-strategy-request-binding.test.ts:80:21
+     78| 
+     79|   test("workload capabilities are unioned with the request's own requi…
+     80|     const binding = resolvePostureRequestBinding({
+       |                     ^
+     81|       entry: embeddingEntry,
+     82|       aliasId: "embedding.remote-only",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/9]⎯
+
+ FAIL  test/agent-strategy-request-binding.test.ts > posture request binding > compute preference maps to the request's local preference
+TypeError: (0 , resolvePostureRequestBinding) is not a function
+ ❯ test/agent-strategy-request-binding.test.ts:94:7
+     92|   test("compute preference maps to the request's local preference", ()…
+     93|     expect(
+     94|       resolvePostureRequestBinding({ entry: coderEntry, aliasId: "code…
+       |       ^
+     95|     ).toBe(true);
+     96|     expect(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/9]⎯
+
+ FAIL  test/agent-strategy-request-binding.test.ts > alias scoring strategy overlay > an alias preset strategy replaces the configured scoring strategy
+TypeError: (0 , overlayPostureOperator) is not a function
+ ❯ test/agent-strategy-request-binding.test.ts:105:22
+    103| describe("alias scoring strategy overlay", () => {
+    104|   test("an alias preset strategy replaces the configured scoring strat…
+    105|     const overlaid = overlayPostureOperator({
+       |                      ^
+    106|       posture: decodeLegacyRoutingStrategy("intelligent"),
+    107|       aliasStrategy: "quality",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/9]⎯
+
+ FAIL  test/agent-strategy-request-binding.test.ts > alias scoring strategy overlay > an alias without a scoring strategy leaves the configured posture untouched
+TypeError: (0 , overlayPostureOperator) is not a function
+ ❯ test/agent-strategy-request-binding.test.ts:116:12
+    114|   test("an alias without a scoring strategy leaves the configured post…
+    115|     const posture = decodeLegacyRoutingStrategy("quality");
+    116|     expect(overlayPostureOperator({ posture, aliasStrategy: null })).t…
+       |            ^
+    117|   });
+    118| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/9]⎯
+
+ FAIL  test/agent-strategy-request-binding.test.ts > alias scoring strategy overlay > an alias asking for custom without configured weights fails closed
+TypeError: (0 , overlayPostureOperator) is not a function
+ ❯ test/agent-strategy-request-binding.test.ts:121:12
+    119|   test("an alias asking for custom without configured weights fails cl…
+    120|     const posture = decodeLegacyRoutingStrategy("quality");
+    121|     expect(overlayPostureOperator({ posture, aliasStrategy: "custom" }…
+       |            ^
+    122|       "quality",
+    123|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/9]⎯
+
+ FAIL  test/agent-strategy-request-binding.test.ts > alias scoring strategy overlay > an alias asking for custom keeps the configured custom weights
+TypeError: (0 , overlayPostureOperator) is not a function
+ ❯ test/agent-strategy-request-binding.test.ts:128:22
+    126|   test("an alias asking for custom keeps the configured custom weights…
+    127|     const custom = decodeLegacyRoutingStrategy("custom");
+    128|     const overlaid = overlayPostureOperator({ posture: custom, aliasSt…
+       |                      ^
+    129|     expect(overlaid?.operator).toEqual(custom.operator);
+    130|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/9]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  9 failed (9)
+   Start at  13:38:33
+   Duration  6.62s (transform 2.91s, setup 0ms, collect 5.48s, tests 37ms, environment 1ms, prepare 429ms)
+
+undefined
+D:\DEV\role-model\.worktrees\103-agent-strategy-and-scoring-strategy\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/agent-strategy-request-binding.test.ts

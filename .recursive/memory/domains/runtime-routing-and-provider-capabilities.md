@@ -136,8 +136,8 @@ This shard owns the detailed runtime truth for how role-model routes requests, e
 - Rich downstream discovery is derived on each read from the current registry, catalog, runtime alias config, and effective routable inventory. Endpoint/model onboarding, routing-strategy alias regeneration, execution-mode changes, endpoint readiness, and catalog updates should update those underlying inputs rather than writing separate alias metadata.
 - Every configured downstream alias should receive a rich discovery record. If the current endpoint pool is empty, the alias remains visible with empty `routable` sets and declared configured target metadata rather than disappearing from discovery.
 - Mixed-alias capability claims must distinguish guaranteed, available, conditional, declared, and currently routable support. Capability-constrained requests must filter incompatible targets before scoring.
-- Routing semantics are split across `baseline`, `difficulty`, `controller`, and `hybrid`, with request-level overrides producing durable routing diagnostics rather than mutating saved operator config.
-- Difficulty routing, controller routing, rewrite behavior, hybrid arbitration, observed-profile selection, effective metrics, throughput penalties, and alias resolution are all runtime-owned diagnostics that should remain inspectable in request receipts.
+- Routing semantics are two axes since run 103: `routing.mode` (`baseline`, `difficulty`, `hybrid`, `intelligent`; `controller` is only the compat spelling of `intelligent`) and `routing.scoring_strategy` (`balanced`, `quality`, `latency`, `cost`, `custom`), plus `routing.pin_weights` and the six-metric `routing.weights` profile required iff `custom`. Request-level overrides produce durable routing diagnostics rather than mutating saved operator config, and the legacy single `routing.strategy` string is read-compatible, degraded on read, rejected on write when it names nothing, and never written back.
+- Difficulty routing, controller routing, rewrite behavior, hybrid arbitration, observed-profile selection, effective metrics, throughput penalties, and alias resolution are all runtime-owned diagnostics that should remain inspectable in request receipts. Since run 103 every stored decision also carries `strategyResolution` (strategy, source, effective weights, `weightsDigest`, any discarded directive), `aliasPostureBinding` (declared vs preset role, capabilities, alias strategy) and `latencySelection` - including the compact observation stub, whose allowlist must be extended whenever a decision gains a receipt (see the run-103 section below).
 - The canonical observed-data decay contract is now `metric_decay_percent_per_day` for `latency` and `throughput` only. Legacy halflife keys may still parse for compatibility, but canonical config truth and rendered readback should no longer imply that quality, reliability, or cost have active time-decay knobs.
 - Observed-data time decay now applies only to latency and throughput, on a 10%-per-day retained-deviation loss curve. Fresh samples reset the age calculation. Benchmark or measured quality, measured reliability, and measured cost remain age-invariant during route scoring unless a future run explicitly introduces a new policy.
 - Effective-metric diagnostics must say whether time decay actually applied. Request-detail and routing receipts should distinguish pass-through metrics from time-decayed metrics through explicit freshness source, time-decay-applied, measured-at, and decay-rate facts rather than implying decay from generic freshness fields alone.
@@ -272,3 +272,29 @@ After run 69, the benchmark stack itself is validated by fresh `VALID` quick and
 - After `headersSent` or equivalent stream commitment, an upstream failure cannot be rewritten as JSON. End or destroy the committed stream according to protocol semantics, keep the server healthy, and test the actual HTTP server path so `ERR_HTTP_HEADERS_SENT` cannot regress.
 - Provider model translation is a separate boundary from runtime aliases. Preserve explicit regression coverage for catalog model IDs such as `moonshot/kimi-k3` mapping to the provider wire model `k3`, without injecting unsupported fixed sampling parameters.
 - Large static metadata may use a versioned compact wire representation, but all consumers must hydrate through one owning package boundary. Do not let direct JSON imports bypass default restoration or provenance reconstruction.
+
+## Run 103 routing posture split, posture aliases and decision receipts
+
+- The posture is two axes: `routing.mode` (`baseline | difficulty | hybrid | intelligent`; `controller` is the
+  compat spelling) and `routing.scoring_strategy` (`balanced | quality | latency | cost | custom`), with
+  `routing.pin_weights` and the six-metric `routing.weights` profile required iff `custom`.
+- Precedence: request intent > controller directive > difficulty bucket (`easy` -> `cost`, `hard` -> `quality`,
+  `medium` falls through) > saved scoring strategy > `balanced`. `pin_weights: true` blocks the difficulty
+  override and the controller's `strategy` directive and records what it discarded; a suppressed directive that
+  names the pinned strategy is a no-op, not a discard.
+- `agent_strategies.<name>` (role-bound) and `workloads.<name>` (optional `required_capabilities`) each
+  materialise one `<name>.<scope>` alias per execution scope. A declared role beats the alias preset; a declared
+  `model_ids` slice narrows the pool; an empty slice reports `ALIAS_POOL_EMPTY` and is never widened. Unknown
+  `role_id`, reserved names, duplicate names and namespace collisions are config write errors; an unknown
+  capability is a warning.
+- Canonical-only writes: no UI surface may persist a legacy synonym, and a config patch that names only a shared
+  flag (`pin_weights`, `weights`) must not switch vocabulary or reset the other axis.
+- The measured-latency override stays off by default, compares the effective latency `p50 + 0.25 * (p95 - p50)`
+  with `max_delta_ms` 10 000 and `min_samples` 5 (bounds 5..30), and may only substitute an endpoint the router
+  already considered eligible.
+- A receipt attached to a mapper's return value is not the same as a receipt in the observation ledger: the
+  compact observation stub's field allowlist decides what a stored decision can answer, so a new receipt must be
+  added to the stub projection in the same change and pinned by `packages/sqlite-memory/test/run98-a40-stub-fidelity.test.ts`.
+- Reference: `.recursive/DECISIONS.md` (run `103-agent-strategy-and-scoring-strategy`), `docs/operations/05-agent-strategy-and-workload-postures.md`,
+  `role-model-router/apps/runtime-host-bridge/src/scoring-strategy.ts`.
+- Source-Runs: added `103-agent-strategy-and-scoring-strategy`; Last-Validated: `2026-09-30`.

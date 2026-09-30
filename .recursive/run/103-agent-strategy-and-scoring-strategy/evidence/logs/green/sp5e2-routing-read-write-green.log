@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/103-agent-strategy-and-scoring-strategy/role-model-router/apps/runtime-host-bridge
+
+ ✓ test/agent-strategy-config-path.test.ts (20 tests) 65ms
+
+ Test Files  1 passed (1)
+      Tests  20 passed (20)
+   Start at  16:01:32
+   Duration  4.02s (transform 1.74s, setup 0ms, collect 3.35s, tests 65ms, environment 0ms, prepare 225ms)
+

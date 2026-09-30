@@ -1,0 +1,87 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/103-agent-strategy-and-scoring-strategy/role-model-router/apps/runtime-host-bridge
+
+ DEPRECATED  'basic' reporter is deprecated and will be removed in Vitest v3.
+Remove 'basic' from 'reporters' option. To match 'basic' reporter 100%, use configuration:
+{
+  "test": {
+    "reporters": [
+      [
+        "default",
+        {
+          "summary": false
+        }
+      ]
+    ]
+  }
+}
+ ❯ test/agent-strategy-materialize.test.ts (4 tests | 4 failed) 14ms
+   × agent strategy materialisation > materialises one alias per scope with the posture and the role binding 8ms
+     → (0 , materializeAgentStrategyAliases) is not a function
+   × agent strategy materialisation > a workload entry carries capability pins and no role 1ms
+     → (0 , materializeAgentStrategyAliases) is not a function
+   × agent strategy materialisation > an entry with violations is not materialised, and an empty pool is preserved 2ms
+     → (0 , materializeAgentStrategyAliases) is not a function
+   × agent strategy materialisation > a declared role wins over the alias preset and the source is recorded 1ms
+     → (0 , resolveAliasRequestedRole) is not a function
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/agent-strategy-materialize.test.ts > agent strategy materialisation > materialises one alias per scope with the posture and the role binding
+TypeError: (0 , materializeAgentStrategyAliases) is not a function
+ ❯ test/agent-strategy-materialize.test.ts:27:21
+     25|       "role",
+     26|     );
+     27|     const aliases = materializeAgentStrategyAliases({
+       |                     ^
+     28|       entries: [coder],
+     29|       executionModes: scopes,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  test/agent-strategy-materialize.test.ts > agent strategy materialisation > a workload entry carries capability pins and no role
+TypeError: (0 , materializeAgentStrategyAliases) is not a function
+ ❯ test/agent-strategy-materialize.test.ts:52:21
+     50|       "workload",
+     51|     );
+     52|     const aliases = materializeAgentStrategyAliases({
+       |                     ^
+     53|       entries: [embedding],
+     54|       executionModes: ["remote_only"],
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  test/agent-strategy-materialize.test.ts > agent strategy materialisation > an entry with violations is not materialised, and an empty pool is preserved
+TypeError: (0 , materializeAgentStrategyAliases) is not a function
+ ❯ test/agent-strategy-materialize.test.ts:70:21
+     68|     const invalid = decodeAgentStrategyEntry("batch", { role_id: "code…
+     69|     expect(invalid.violations.length).toBeGreaterThan(0);
+     70|     const aliases = materializeAgentStrategyAliases({
+       |                     ^
+     71|       entries: [invalid],
+     72|       executionModes: ["remote_only"],
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  test/agent-strategy-materialize.test.ts > agent strategy materialisation > a declared role wins over the alias preset and the source is recorded
+TypeError: (0 , resolveAliasRequestedRole) is not a function
+ ❯ test/agent-strategy-materialize.test.ts:88:12
+     86| 
+     87|   test("a declared role wins over the alias preset and the source is r…
+     88|     expect(resolveAliasRequestedRole({ declaredRoleId: "researcher", p…
+       |            ^
+     89|       roleId: "researcher",
+     90|       source: "declared",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed (4)
+   Start at  12:43:04
+   Duration  5.85s (transform 2.62s, setup 0ms, collect 4.96s, tests 14ms, environment 0ms, prepare 331ms)
+
+undefined
+D:\DEV\role-model\.worktrees\103-agent-strategy-and-scoring-strategy\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/agent-strategy-materialize.test.ts --reporter=basic

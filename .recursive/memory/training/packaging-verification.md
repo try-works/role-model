@@ -24,7 +24,7 @@ Reasoning items extracted from recursive-mode runs for `packaging-verification` 
 
 **Description:** Packaged runtime needs ROLE_MODEL_TRACK_B_DISTRIBUTION_ROOT for ExtensionHost
 
-**Content:** 1. Set ROLE_MODEL_TRACK_B_DISTRIBUTION_ROOT to private dist/run00-dev (or equivalent) before pnpm runtime:package-sea. 2. Without it ExtensionHost will not register the thirteen packages. 3. Keep core /api/role-model readiness independent of full extension registration.
+**Content:** 1. Set ROLE_MODEL_TRACK_B_DISTRIBUTION_ROOT to private dist/run00-dev (or equivalent) before pnpm runtime:package-sea. The pair has two halves since run 103: first rebuild the private distribution against this public worktree with `ROLE_MODEL_PUBLIC_WORKTREE=<public worktree>` in `role-model-internal/scripts/track-b/build-runtime-distribution.mjs`, then package the public SEA with `ROLE_MODEL_TRACK_B_DISTRIBUTION_ROOT=<private dist/run00-dev>`. Doing only the second half pairs a fresh SEA with a stale private distribution whose manifest `publicSourceTree` no longer matches. 2. Without it ExtensionHost will not register the thirteen packages. 3. Keep core /api/role-model readiness independent of full extension registration.
 
 ```yaml
 rb_id: "RB-9"

@@ -1,0 +1,98 @@
+
+ DEPRECATED  'basic' reporter is deprecated and will be removed in Vitest v3.
+Remove 'basic' from 'reporters' option. To match 'basic' reporter 100%, use configuration:
+{
+  "test": {
+    "reporters": [
+      [
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/103-agent-strategy-and-scoring-strategy/role-model-router/apps/runtime-host-bridge
+        "default",
+        {
+          "summary": false
+        }
+
+      ]
+    ]
+  }
+}
+ ❯ test/controller-latency-strategy.test.ts (4 tests | 2 failed) 44ms
+   × controller latency strategy > accepts a latency directive 24ms
+     → expected undefined to be 'latency' // Object.is equality
+   ✓ controller latency strategy > still accepts the three existing strategies 2ms
+   × controller latency strategy > the controller prompt lists latency among the allowed strategies 13ms
+     → expected 'ROLE_MODEL_ROUTING_CONTROLLER\nReturn…' to contain '"latency"'
+   ✓ controller latency strategy > an unknown strategy is still refused 1ms
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/controller-latency-strategy.test.ts > controller latency strategy > accepts a latency directive
+AssertionError: expected undefined to be 'latency' // Object.is equality
+
+- Expected: 
+"latency"
+
++ Received: 
+undefined
+
+ ❯ test/controller-latency-strategy.test.ts:19:32
+     17|       {},
+     18|     );
+     19|     expect(guidance?.strategy).toBe("latency");
+       |                                ^
+     20|     expect(guidance?.preferLocal).toBe(true);
+     21|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/controller-latency-strategy.test.ts > controller latency strategy > the controller prompt lists latency among the allowed strategies
+AssertionError: expected 'ROLE_MODEL_ROUTING_CONTROLLER\nReturn…' to contain '"latency"'
+
+- Expected
++ Received
+
+- "latency"
++ ROLE_MODEL_ROUTING_CONTROLLER
++ Return only compact JSON.
++ Allowed fields: requestedRoleId, taskType, requiredCapabilities, preferredCapabilities, strategy, preferLocal, preferredEndpointIds.
++ Always include strategy whenever you return any other directive.
++ Choose only from the runtime-known values below.
++ If no exact match exists for a field, omit that field.
++ Choose a valid role instead of inventing a new task label when the request is semantically close.
++ Do not create new roles, tasks, capabilities, endpoint ids, or strategy values.
++ Use quality for code edits, schema adherence, verification-heavy or multi-step reasoning work, and tool orchestration.
++ Use cost for classification, language detection, embeddings, or other cheap/simple labeling work.
++ Use balanced for general chat, summaries, and ambiguous requests.
++ {
++   "requestedRoleId": [],
++   "taskType": [],
++   "requiredCapabilities": [],
++   "preferredCapabilities": [],
++   "strategy": [
++     "balanced",
++     "cost",
++     "quality"
++   ],
++   "preferredEndpointIds": [],
++   "roles": []
++ }
+
+ ❯ test/controller-latency-strategy.test.ts:34:45
+     32| 
+     33|   test("the controller prompt lists latency among the allowed strategi…
+     34|     expect(buildControllerSystemPrompt({})).toContain('"latency"');
+       |                                             ^
+     35|     expect(buildCompactControllerSystemPrompt({})).toContain('"latency…
+     36|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 2 passed (4)
+   Start at  12:30:23
+   Duration  985ms (transform 131ms, setup 0ms, collect 135ms, tests 44ms, environment 0ms, prepare 327ms)
+
+undefined
+D:\DEV\role-model\.worktrees\103-agent-strategy-and-scoring-strategy\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/controller-latency-strategy.test.ts --reporter=basic

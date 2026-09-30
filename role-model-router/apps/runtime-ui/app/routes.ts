@@ -26,6 +26,9 @@ export default [
     route("remote/providers", "routes/providers.tsx"),
     route("control/providers", "routes/legacy-redirect.tsx", { id: "legacy-control-providers" }),
     route("router/strategy", "routes/control-routing-strategy.tsx"),
+    // Run 103 SP8: the two posture pages sit between Routing strategy and Controller.
+    route("router/agent-strategy", "routes/agent-strategy.tsx"),
+    route("router/workloads", "routes/workloads.tsx"),
     route("control/routing-strategy", "routes/legacy-redirect.tsx", {
       id: "legacy-control-routing-strategy",
     }),

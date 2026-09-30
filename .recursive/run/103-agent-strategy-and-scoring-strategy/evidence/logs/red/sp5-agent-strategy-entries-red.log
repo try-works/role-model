@@ -1,0 +1,45 @@
+
+ DEPRECATED  'basic' reporter is deprecated and will be removed in Vitest v3.
+Remove 'basic' from 'reporters' option. To match 'basic' reporter 100%, use configuration:
+{
+  "test": {
+    "reporters": [
+      [
+        "default",
+        {
+          "summary": false
+        }
+      ]
+    ]
+  }
+}
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/103-agent-strategy-and-scoring-strategy/role-model-router/apps/runtime-host-bridge
+
+
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/agent-strategy-entries.test.ts [ test/agent-strategy-entries.test.ts ]
+Error: Cannot find module '../src/agent-strategy.js' imported from 'D:/DEV/role-model/.worktrees/103-agent-strategy-and-scoring-strategy/role-model-router/apps/runtime-host-bridge/test/agent-strategy-entries.test.ts'
+ ❯ test/agent-strategy-entries.test.ts:3:1
+      1| import { describe, expect, test } from "vitest";
+      2| 
+      3| import {
+       | ^
+      4|   agentStrategyAliasId,
+      5|   decodeAgentStrategyEntry,
+
+Caused by: Error: Failed to load url ../src/agent-strategy.js (resolved id: ../src/agent-strategy.js) in D:/DEV/role-model/.worktrees/103-agent-strategy-and-scoring-strategy/role-model-router/apps/runtime-host-bridge/test/agent-strategy-entries.test.ts. Does the file exist?
+ ❯ loadAndTransform ../../../node_modules/.pnpm/vite@7.3.2_@types+node@22.1_d71bf8265f9610ce90201e170d5dc2b8/node_modules/vite/dist/node/chunks/config.js:22663:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  12:40:43
+   Duration  966ms (transform 94ms, setup 0ms, collect 0ms, tests 0ms, environment 1ms, prepare 374ms)
+
+undefined
+D:\DEV\role-model\.worktrees\103-agent-strategy-and-scoring-strategy\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/agent-strategy-entries.test.ts --reporter=basic

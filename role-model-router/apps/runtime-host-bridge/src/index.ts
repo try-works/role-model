@@ -26,7 +26,11 @@ import {
   resolveReasoningEffortLevels,
 } from "@role-model-router/catalog";
 import { assembleContextEnvelope } from "@role-model-router/context-envelope";
-import { canonicalTaxonomy, taxonomyManifest } from "@role-model-router/core";
+import {
+  canonicalTaxonomy,
+  supportsCapabilityRequirement,
+  taxonomyManifest,
+} from "@role-model-router/core";
 import type { EndpointRegistryResult } from "@role-model-router/endpoint-registry";
 import {
   type RegistrySources,
@@ -296,6 +300,20 @@ import {
   warnAliasModelIdDrift,
 } from "./routable-inventory.js";
 import {
+  type RoutingModeName,
+  type RoutingPosture,
+  type ScoringStrategyName,
+  type WeightProfile,
+  decodeLegacyRoutingStrategy,
+  normalizeRoutingModeName,
+  normalizeScoringStrategyName,
+  overlayPostureOperator,
+  resolveControllerStrategyApplication,
+  resolveRequestStrategy,
+  toCoreRoutingStrategyName,
+  withStrategyProvenance,
+} from "./scoring-strategy.js";
+import {
   type BootstrapStageResult,
   type SessionBootstrapState,
   createPendingBootstrapState,
@@ -311,6 +329,17 @@ import {
   loadLiteLLMModelPrices,
   readNormalizedCatalogFile,
 } from "@role-model-router/catalog";
+import {
+  type AgentStrategyEntry,
+  type AliasInventoryRow,
+  type PostureRequestBinding,
+  SHIPPED_WORKLOAD_EXAMPLES,
+  derivePostureAliasInventory,
+  findAgentStrategyAlias,
+  resolvePostureRequestBinding,
+  validateAgentStrategyBindings,
+  withAliasPostureBinding,
+} from "./agent-strategy.js";
 import { resolveValidationProviderMetadata } from "./provider-metadata-merge.js";
 import { resolveLlamaSwapCommand } from "./runtime-assets.js";
 import {
@@ -1100,6 +1129,8 @@ export interface BridgeExecutionPlan {
     | "routingMode"
     | "rolePolicy"
     | "capabilityEligibility"
+    | "strategyResolution"
+    | "aliasPostureBinding"
   >;
   /**
    * Run 98 addendum 58 slice 2: the taxonomy identity the request was routed under — the declaration when it
@@ -2231,6 +2262,7 @@ export function resolveObservedDifficultyBucketForPlan(plan: {
 
 function maybeApplyControllerRouting(input: {
   readonly effectiveRoutingMode: RuntimeRoutingMode;
+  readonly pinWeights?: boolean;
   readonly requestedModel: string;
   readonly modelAliases: readonly UnifiedRuntimeModelAliasConfig[];
   readonly routingRequest: Parameters<typeof routeRuntimeRequest>[0]["request"];
@@ -2252,6 +2284,8 @@ function maybeApplyControllerRouting(input: {
     | "difficultyRouting"
     | "controllerRouting"
     | "hybridArbitration"
+    | "strategyResolution"
+    | "aliasPostureBinding"
   >;
 } {
   if (!shouldApplyControllerRouting(input.effectiveRoutingMode)) {
@@ -2291,8 +2325,7 @@ function maybeApplyControllerRouting(input: {
     };
   }
 
-  const guidanceStrategy =
-    guidance.strategy && isBridgeRoutingStrategy(guidance.strategy) ? guidance.strategy : undefined;
+  const guidanceStrategy = normalizeScoringStrategyName(guidance.strategy) ?? undefined;
   const requestedRoleId = resolveControllerRequestedRoleId(
     guidance.requestedRoleId,
     input.roleDefinitions,
@@ -2329,7 +2362,12 @@ function maybeApplyControllerRouting(input: {
           input.routingRequest.requiredCapabilities,
           requiredCapabilitiesFromGuidance,
         );
-  const finalStrategy = guidanceStrategy ?? input.routingRequest.strategy;
+  const strategyApplication = resolveControllerStrategyApplication({
+    pinWeights: input.pinWeights === true,
+    requestStrategy: normalizeScoringStrategyName(input.routingRequest.strategy) ?? "balanced",
+    guidanceStrategy,
+  });
+  const finalStrategy = toCoreRoutingStrategyName(strategyApplication.strategy);
   const hybridArbitration = summarizeHybridArbitration({
     effectiveRoutingMode: input.effectiveRoutingMode,
     routingRequest: input.routingRequest,
@@ -2347,7 +2385,9 @@ function maybeApplyControllerRouting(input: {
       requiredCapabilities,
       preferredCapabilities:
         preferredCapabilitiesFromGuidance ?? input.routingRequest.preferredCapabilities,
-      ...(guidanceStrategy ? { strategy: guidanceStrategy } : {}),
+      ...(strategyApplication.strategy !== input.routingRequest.strategy
+        ? { strategy: toCoreRoutingStrategyName(strategyApplication.strategy) }
+        : {}),
       ...(typeof guidance.preferLocal === "boolean" ? { preferLocal: guidance.preferLocal } : {}),
     },
     ...(preferredEndpointIds.length
@@ -2362,6 +2402,9 @@ function maybeApplyControllerRouting(input: {
       ...input.routingDiagnostics,
       controllerRouting: {
         active: true,
+        ...(strategyApplication.discarded
+          ? { discardedStrategy: strategyApplication.discarded.strategy }
+          : {}),
         ...(input.controllerContext.fallbackApplied ? { fallbackApplied: true } : {}),
         ...(input.controllerContext.fallbackReason
           ? { fallbackReason: input.controllerContext.fallbackReason }
@@ -5620,6 +5663,37 @@ function normalizeConfiguredRoutingMode(
     default:
       return null;
   }
+}
+
+/**
+ * Run 103 / SP5e - the saved posture: the structured `routing` block when the file declares one,
+ * otherwise the legacy single string read through the section-3 migration (requirements R1, R10).
+ */
+function resolveConfiguredRoutingPosture(config: {
+  readonly routingPosture?: RoutingPosture;
+  readonly routingStrategy: string | null;
+}): RoutingPosture {
+  return config.routingPosture ?? decodeLegacyRoutingStrategy(config.routingStrategy ?? null);
+}
+
+function resolveConfiguredRoutingPostureSummary(config: {
+  readonly routingPosture?: RoutingPosture;
+  readonly routingStrategy: string | null;
+}): {
+  readonly mode: RoutingPosture["mode"];
+  readonly scoringStrategy: RoutingPosture["scoringStrategy"];
+  readonly pinWeights: boolean;
+  readonly weights: WeightProfile | null;
+  readonly degradations: readonly string[];
+} {
+  const posture = resolveConfiguredRoutingPosture(config);
+  return {
+    mode: posture.mode,
+    scoringStrategy: posture.scoringStrategy,
+    pinWeights: posture.pinWeights,
+    weights: posture.operator ? { ...posture.operator.weights } : null,
+    degradations: [...posture.degradations],
+  };
 }
 
 function readBridgeRequestId(request: IncomingMessage): string {
@@ -9718,6 +9792,20 @@ function toAliasRoutingMode(
   }
 }
 
+/** The stored alias vocabulary spells `baseline` as `basic` (design document section 3). */
+function toUnifiedAliasRoutingMode(mode: string): UnifiedRuntimeModelAliasConfig["mode"] {
+  switch (mode) {
+    case "difficulty":
+      return "difficulty";
+    case "hybrid":
+      return "hybrid";
+    case "intelligent":
+      return "intelligent";
+    default:
+      return "basic";
+  }
+}
+
 function summarizeAliasDefaultRoutingModeDiagnostics(input: {
   readonly requestedModel: string;
   readonly modelAliases: readonly UnifiedRuntimeModelAliasConfig[];
@@ -9776,6 +9864,56 @@ function resolveEffectiveRoutingMode(input: {
     return toAliasRoutingMode(alias.mode);
   }
   return input.defaultRoutingMode ?? "baseline";
+}
+
+/**
+ * Run 103 / SP5g - which posture entry, if any, the requested model names. A plain model id or a
+ * canonical routing alias has no entry and therefore no preset binding.
+ */
+function resolveRequestedPostureBinding(input: {
+  readonly requestedModel: string;
+  readonly entries: readonly AgentStrategyEntry[];
+  readonly declaredRoleId?: string | null;
+  readonly requiredCapabilities?: readonly string[];
+}): PostureRequestBinding | null {
+  const entry = findAgentStrategyAlias({
+    entries: input.entries,
+    executionModes: CANONICAL_ROUTING_ALIAS_EXECUTION_MODES,
+    aliasId: input.requestedModel,
+  });
+  return entry === null
+    ? null
+    : resolvePostureRequestBinding({
+        entry,
+        aliasId: input.requestedModel,
+        declaredRoleId: input.declaredRoleId ?? null,
+        requiredCapabilities: input.requiredCapabilities,
+      });
+}
+
+/**
+ * Run 103 R3 - the strategy the controller actually applied. `maybeApplyControllerRouting` records its
+ * accepted directive on the diagnostics, so the decision receipt can be computed from the same input
+ * the request path used instead of re-running the ladder without the controller step (the pin rule
+ * itself stays owned by `resolveStrategy`/`resolveControllerStrategyApplication`).
+ */
+function readAppliedControllerStrategy(
+  diagnostics: RuntimeRoutingDiagnostics | undefined,
+): ScoringStrategyName | null {
+  const controllerRouting = (
+    diagnostics as
+      | {
+          readonly controllerRouting?: {
+            readonly active?: boolean;
+            readonly acceptedDirectives?: { readonly strategy?: string };
+          };
+        }
+      | undefined
+  )?.controllerRouting;
+  if (!controllerRouting || controllerRouting.active !== true) {
+    return null;
+  }
+  return normalizeScoringStrategyName(controllerRouting.acceptedDirectives?.strategy ?? null);
 }
 
 function shouldApplyDifficultyRouting(effectiveRoutingMode: RuntimeRoutingMode): boolean {
@@ -10240,6 +10378,8 @@ export function mapChatCompletionsRequest(
   defaultRoutingMode?: RuntimeRoutingMode,
   inventory: RoutableInventory | null = null,
   taskDefinitions?: readonly RuntimeTaskDefinitionRecord[],
+  routingPosture?: RoutingPosture,
+  agentStrategyEntries?: readonly AgentStrategyEntry[],
 ): BridgeExecutionPlan {
   const contextTokens = estimateContextTokens(body.messages, body.tools?.length ?? 0);
   const reasoning = readChatCompletionsReasoningRequest(body);
@@ -10353,17 +10493,42 @@ export function mapChatCompletionsRequest(
   const capabilityRequirements = inferChatCompletionsCapabilityRequirements(
     body as unknown as Record<string, unknown>,
   );
+  /**
+   * Run 103 / SP5g - a posture alias hands the request its saved binding: the role preset (a
+   * declared role still wins), the workload's required capabilities and the alias's scoring
+   * strategy (requirements R5, R6).
+   */
+  const postureBinding = resolveRequestedPostureBinding({
+    requestedModel: body.model,
+    entries: agentStrategyEntries ?? [],
+    declaredRoleId: requestOptions?.requestedRoleId ?? null,
+    requiredCapabilities: capabilityRequirements.requiredCapabilities,
+  });
+  const effectiveCapabilityRequirements = postureBinding
+    ? {
+        ...capabilityRequirements,
+        requiredCapabilities: postureBinding.requiredCapabilities,
+      }
+    : capabilityRequirements;
+  const effectiveStrategyPosture = overlayPostureOperator({
+    posture: routingPosture,
+    aliasStrategy: postureBinding?.scoringStrategy ?? null,
+  });
+  const postureRequestOptions =
+    postureBinding?.roleSource === "preset" && postureBinding.roleId
+      ? { ...requestOptions, requestedRoleId: postureBinding.roleId }
+      : requestOptions;
   const capabilityFiltered = filterAllowEndpointsForCapabilityRequirements({
     registry,
     requestedModel: body.model,
     allowEndpoints,
-    requirements: capabilityRequirements,
+    requirements: effectiveCapabilityRequirements,
     routingDiagnostics: baseRoutingDiagnostics,
   });
   if (capabilityFiltered.allowEndpoints.length === 0) {
     throwNoEligibleCapabilityTarget({
       requestedModel: body.model,
-      requirements: capabilityRequirements,
+      requirements: effectiveCapabilityRequirements,
       routingDiagnostics: capabilityFiltered.routingDiagnostics,
     });
   }
@@ -10387,6 +10552,7 @@ export function mapChatCompletionsRequest(
 
   const controllerRouting = maybeApplyControllerRouting({
     effectiveRoutingMode,
+    pinWeights: routingPosture?.pinWeights === true,
     requestedModel: body.model,
     modelAliases,
     routingRequest: {
@@ -10403,13 +10569,19 @@ export function mapChatCompletionsRequest(
        * falling back to the capability name — so every routed request carries a real taxonomy task.
        */
       taskType: effectiveTaxonomyTaskTypeId,
-      requiredCapabilities: capabilityRequirements.requiredCapabilities,
+      requiredCapabilities: effectiveCapabilityRequirements.requiredCapabilities,
       preferredCapabilities: [],
-      requiredModalities: capabilityRequirements.requiredInputModalities,
+      requiredModalities: effectiveCapabilityRequirements.requiredInputModalities,
       contextTokens,
       needsTools: Boolean(tools?.length),
-      strategy: difficultyRouting.strategy,
-      preferLocal: false,
+      strategy: toCoreRoutingStrategyName(
+        resolveRequestStrategy({
+          posture: effectiveStrategyPosture,
+          effectiveRoutingMode,
+          difficulty: difficultyRouting.routingDiagnostics?.difficultyRouting?.difficulty,
+        }).strategy,
+      ),
+      preferLocal: postureBinding?.preferLocal ?? false,
       allowEndpoints: difficultyRouting.allowEndpoints,
     },
     routingDiagnostics: difficultyRouting.routingDiagnostics,
@@ -10425,8 +10597,12 @@ export function mapChatCompletionsRequest(
     routingDiagnostics: controllerRouting.routingDiagnostics,
     roleDefinitions,
     taskDefinitions,
-    requestOptions,
+    requestOptions: postureRequestOptions,
   });
+  /** Run 103 R3: the receipt is built from the strategy the controller actually applied. */
+  const appliedControllerStrategy = readAppliedControllerStrategy(
+    controllerRouting.routingDiagnostics,
+  );
   const promptCache =
     readChatCompletionsPromptCacheRequest(body) ??
     synthesizePromptCacheRequest(
@@ -10461,9 +10637,21 @@ export function mapChatCompletionsRequest(
       ...(typeof body.temperature === "number" ? { temperature: body.temperature } : {}),
     },
     ...(effectiveRoutingModel ? { routingModel: effectiveRoutingModel } : {}),
-    ...(rolePolicyExecution.routingDiagnostics
-      ? { routingDiagnostics: rolePolicyExecution.routingDiagnostics }
-      : {}),
+    routingDiagnostics: withAliasPostureBinding(
+      withStrategyProvenance(
+        rolePolicyExecution.routingDiagnostics,
+        resolveRequestStrategy({
+          posture: effectiveStrategyPosture,
+          effectiveRoutingMode,
+          difficulty: difficultyRouting.routingDiagnostics?.difficultyRouting?.difficulty,
+          controllerActive: appliedControllerStrategy !== null,
+          ...(appliedControllerStrategy !== null
+            ? { controllerStrategy: appliedControllerStrategy }
+            : {}),
+        }),
+      ),
+      postureBinding,
+    ),
     taxonomyIdentity,
   };
 }
@@ -10480,6 +10668,8 @@ export function mapResponsesRequest(
   defaultRoutingMode?: RuntimeRoutingMode,
   inventory: RoutableInventory | null = null,
   taskDefinitions?: readonly RuntimeTaskDefinitionRecord[],
+  routingPosture?: RoutingPosture,
+  agentStrategyEntries?: readonly AgentStrategyEntry[],
 ): BridgeExecutionPlan {
   const messages = toResponsesInputMessages(body.input);
   const contextTokens = estimateContextTokens(messages, body.tools?.length ?? 0);
@@ -10491,6 +10681,27 @@ export function mapResponsesRequest(
     typeof declaredTaskTypeId === "string" &&
     canonicalTaxonomy.tasks.some((task) => task.id === declaredTaskTypeId);
   const capabilityRequirements = inferResponsesCapabilityRequirements(responsesBodyRecord);
+  /** Run 103 / SP5g - the posture alias binding (see the chat path). */
+  const postureBinding = resolveRequestedPostureBinding({
+    requestedModel: body.model,
+    entries: agentStrategyEntries ?? [],
+    declaredRoleId: requestOptions?.requestedRoleId ?? null,
+    requiredCapabilities: capabilityRequirements.requiredCapabilities,
+  });
+  const effectiveCapabilityRequirements = postureBinding
+    ? {
+        ...capabilityRequirements,
+        requiredCapabilities: postureBinding.requiredCapabilities,
+      }
+    : capabilityRequirements;
+  const effectiveStrategyPosture = overlayPostureOperator({
+    posture: routingPosture,
+    aliasStrategy: postureBinding?.scoringStrategy ?? null,
+  });
+  const postureRequestOptions =
+    postureBinding?.roleSource === "preset" && postureBinding.roleId
+      ? { ...requestOptions, requestedRoleId: postureBinding.roleId }
+      : requestOptions;
   /** Run 98 addendum 58 slice 2: the responses path classifies a request that declares no intent (see the chat path). */
   const derivedTaxonomyClassification = declaredTaskIsTaxonomyTask
     ? undefined
@@ -10587,13 +10798,13 @@ export function mapResponsesRequest(
     registry,
     requestedModel: body.model,
     allowEndpoints: toolExecutionPlan.allowEndpoints,
-    requirements: capabilityRequirements,
+    requirements: effectiveCapabilityRequirements,
     routingDiagnostics: baseRoutingDiagnostics,
   });
   if (capabilityFiltered.allowEndpoints.length === 0) {
     throwNoEligibleCapabilityTarget({
       requestedModel: body.model,
-      requirements: capabilityRequirements,
+      requirements: effectiveCapabilityRequirements,
       routingDiagnostics: capabilityFiltered.routingDiagnostics,
     });
   }
@@ -10621,6 +10832,7 @@ export function mapResponsesRequest(
 
   const controllerRouting = maybeApplyControllerRouting({
     effectiveRoutingMode,
+    pinWeights: routingPosture?.pinWeights === true,
     requestedModel: body.model,
     modelAliases,
     routingRequest: {
@@ -10628,13 +10840,19 @@ export function mapResponsesRequest(
       ...(roleModelIntent ? { roleModelIntent } : {}),
       /** Run 98 addendum 57 §3.2 with addendum 58 slice 2: the effective taxonomy task family (see the chat path). */
       taskType: effectiveTaxonomyTaskTypeId,
-      requiredCapabilities: capabilityRequirements.requiredCapabilities,
+      requiredCapabilities: effectiveCapabilityRequirements.requiredCapabilities,
       preferredCapabilities: [],
-      requiredModalities: capabilityRequirements.requiredInputModalities,
+      requiredModalities: effectiveCapabilityRequirements.requiredInputModalities,
       contextTokens,
       needsTools: Boolean(tools?.length),
-      strategy: difficultyRouting.strategy,
-      preferLocal: false,
+      strategy: toCoreRoutingStrategyName(
+        resolveRequestStrategy({
+          posture: effectiveStrategyPosture,
+          effectiveRoutingMode,
+          difficulty: difficultyRouting.routingDiagnostics?.difficultyRouting?.difficulty,
+        }).strategy,
+      ),
+      preferLocal: postureBinding?.preferLocal ?? false,
       allowEndpoints: difficultyRouting.allowEndpoints,
     },
     routingDiagnostics: difficultyRouting.routingDiagnostics,
@@ -10650,8 +10868,12 @@ export function mapResponsesRequest(
     routingDiagnostics: controllerRouting.routingDiagnostics,
     roleDefinitions,
     taskDefinitions,
-    requestOptions,
+    requestOptions: postureRequestOptions,
   });
+  /** Run 103 R3: the receipt is built from the strategy the controller actually applied. */
+  const appliedControllerStrategy = readAppliedControllerStrategy(
+    controllerRouting.routingDiagnostics,
+  );
   const promptCache =
     readResponsesPromptCacheRequest(body) ??
     synthesizePromptCacheRequest(
@@ -10691,9 +10913,21 @@ export function mapResponsesRequest(
       ...(typeof body.temperature === "number" ? { temperature: body.temperature } : {}),
     },
     ...(effectiveRoutingModel ? { routingModel: effectiveRoutingModel } : {}),
-    ...(rolePolicyExecution.routingDiagnostics
-      ? { routingDiagnostics: rolePolicyExecution.routingDiagnostics }
-      : {}),
+    routingDiagnostics: withAliasPostureBinding(
+      withStrategyProvenance(
+        rolePolicyExecution.routingDiagnostics,
+        resolveRequestStrategy({
+          posture: effectiveStrategyPosture,
+          effectiveRoutingMode,
+          difficulty: difficultyRouting.routingDiagnostics?.difficultyRouting?.difficulty,
+          controllerActive: appliedControllerStrategy !== null,
+          ...(appliedControllerStrategy !== null
+            ? { controllerStrategy: appliedControllerStrategy }
+            : {}),
+        }),
+      ),
+      postureBinding,
+    ),
     taxonomyIdentity,
   };
 }
@@ -21076,12 +21310,46 @@ export async function createRuntimeBridgeBackend(
     config: UnifiedRuntimeConfig,
   ): UnifiedRuntimeConfig => {
     const preservedCustomAliases = (config.modelAliases ?? []).filter(
-      (alias) => !isPrimaryRoutingAliasId(alias.aliasId),
+      (alias) => !isPrimaryRoutingAliasId(alias.aliasId) && !alias.posture,
     );
     const canonicalAliases: UnifiedRuntimeModelAliasConfig[] = [];
+    const postureEntries: readonly AgentStrategyEntry[] = [
+      ...(config.agentStrategies ?? []),
+      ...(config.workloads ?? []),
+    ];
+    const modelIdsByExecutionMode = Object.fromEntries(
+      CANONICAL_ROUTING_ALIAS_EXECUTION_MODES.map((executionMode) => [
+        executionMode,
+        deriveRoutingAliasBootstrapModelIds(executionMode),
+      ]),
+    );
+    /**
+     * Run 103 post-lock repair (operator decision): the published alias pool must reflect the
+     * eligibility the router applies at request time, so the capability vocabulary the pool actually
+     * declares is indexed per model from the same registry the request path filters candidates with.
+     */
+    const supportedCapabilitiesByModelId = (() => {
+      const index: Record<string, Set<string>> = {};
+      for (const executionMode of CANONICAL_ROUTING_ALIAS_EXECUTION_MODES) {
+        for (const endpoint of filterRouterRegistryByExecutionMode(currentRegistry, executionMode)
+          .endpoints) {
+          const bucket = index[endpoint.identity.model_id] ?? new Set<string>();
+          index[endpoint.identity.model_id] = bucket;
+          for (const capability of endpoint.declared.capabilities) {
+            bucket.add(capability);
+          }
+        }
+      }
+      return Object.fromEntries(
+        Object.entries(index).map(([modelId, capabilities]) => [
+          modelId,
+          [...capabilities].sort(compareText),
+        ]),
+      ) satisfies Readonly<Record<string, readonly string[]>>;
+    })();
 
     for (const executionMode of CANONICAL_ROUTING_ALIAS_EXECUTION_MODES) {
-      const modelIds = deriveRoutingAliasBootstrapModelIds(executionMode);
+      const modelIds = modelIdsByExecutionMode[executionMode] ?? [];
       if (modelIds.length === 0) {
         continue;
       }
@@ -21097,11 +21365,70 @@ export async function createRuntimeBridgeBackend(
       }
     }
 
+    const canonicalRows: AliasInventoryRow[] = [...canonicalAliases, ...preservedCustomAliases].map(
+      (alias) => ({
+        aliasId: alias.aliasId,
+        mode: alias.mode ?? "basic",
+        modelIds: [...alias.modelIds],
+      }),
+    );
+    const derivation = derivePostureAliasInventory({
+      canonical: canonicalRows,
+      entries: postureEntries,
+      executionModes: CANONICAL_ROUTING_ALIAS_EXECUTION_MODES,
+      runtimeMode:
+        config.routingPosture?.mode ??
+        normalizeRoutingModeName(config.routingStrategy) ??
+        "baseline",
+      modelIdsByExecutionMode,
+      supportedCapabilitiesByModelId,
+    });
+    /** R5/R6: the runtime-side binding rules - an unknown `role_id` is a write error (SP5e). */
+    const bindingValidation = validateAgentStrategyBindings({
+      entries: postureEntries,
+      knownRoleIds: getAllowedRoleIds(),
+      knownCapabilities: [
+        ...new Set([
+          ...canonicalTaxonomy.capabilities.map((capability) => capability.id),
+          /** The registry's declared capabilities include the config-declared local and remote models. */
+          ...currentRegistry.endpoints.flatMap((endpoint) => [
+            ...(endpoint.declared?.capabilities ?? []),
+          ]),
+          ...currentNormalizedCatalog.models.flatMap((model) => [...model.capabilities]),
+        ]),
+      ],
+    });
+    currentPostureAliasDiagnostics = {
+      violations: [...derivation.violations, ...bindingValidation.violations],
+      skipped: derivation.skipped,
+      warnings: bindingValidation.warnings,
+    };
     if (canonicalAliases.length === 0) {
       return config;
     }
+    const canonicalIds = new Set(canonicalRows.map((row) => row.aliasId));
+    const postureAliases: UnifiedRuntimeModelAliasConfig[] = [];
+    for (const row of derivation.rows) {
+      if (canonicalIds.has(row.aliasId)) {
+        continue;
+      }
+      const entry = findAgentStrategyAlias({
+        entries: postureEntries,
+        executionModes: CANONICAL_ROUTING_ALIAS_EXECUTION_MODES,
+        aliasId: row.aliasId,
+      });
+      if (!entry) {
+        continue;
+      }
+      postureAliases.push({
+        aliasId: row.aliasId,
+        mode: toUnifiedAliasRoutingMode(row.mode),
+        posture: { kind: entry.kind, name: entry.name },
+        modelIds: [...row.modelIds],
+      });
+    }
 
-    const nextAliases = [...canonicalAliases, ...preservedCustomAliases];
+    const nextAliases = [...canonicalAliases, ...preservedCustomAliases, ...postureAliases];
     if (sameModelAliases(config.modelAliases ?? [], nextAliases)) {
       return config;
     }
@@ -21137,6 +21464,16 @@ export async function createRuntimeBridgeBackend(
   };
   let currentRoutableInventory: RoutableInventory = emptyRoutableInventory();
   let currentAliasDriftWarnings: readonly AliasDriftWarning[] = [];
+  /**
+   * Run 103 / SP5e - findings from the last posture-alias materialisation: a violation is a config
+   * write error, a skipped scope is an honest `ALIAS_POOL_EMPTY`, and an unknown capability is a
+   * surfaced warning (requirements R5, R6).
+   */
+  let currentPostureAliasDiagnostics: {
+    violations: readonly string[];
+    skipped: readonly { aliasId: string; reason: "ALIAS_POOL_EMPTY" }[];
+    warnings: readonly string[];
+  } = { violations: [], skipped: [], warnings: [] };
   const refreshRoutableInventoryState = (): void => {
     currentRoutableInventory = buildRoutableInventory(currentRegistry, getCurrentRegistrySources());
     const aliases = currentUnifiedRuntimeConfig?.modelAliases ?? [];
@@ -23009,6 +23346,24 @@ export async function createRuntimeBridgeBackend(
     rebuildCurrentState();
     if (nextConfig !== null) {
       await persistMaterializedCanonicalRoutingAliasesIfNeeded();
+    }
+    /**
+     * Run 103 / SP5e - the posture blocks are validated against runtime knowledge: an unknown
+     * `role_id` or a namespace collision is a write error, an unknown capability is surfaced, and
+     * an empty scope is reported as `ALIAS_POOL_EMPTY` instead of widening (requirements R5, R6).
+     */
+    if (currentPostureAliasDiagnostics.violations.length > 0) {
+      throw new Error(
+        `Runtime strategy posture config is invalid: ${currentPostureAliasDiagnostics.violations[0]}`,
+      );
+    }
+    for (const warning of currentPostureAliasDiagnostics.warnings) {
+      console.warn("Runtime strategy posture warning:", warning);
+    }
+    for (const skippedAlias of currentPostureAliasDiagnostics.skipped) {
+      console.warn(
+        `Runtime strategy posture scope ${skippedAlias.aliasId} has no routable targets (${skippedAlias.reason})`,
+      );
     }
     const nextModelAliases = currentUnifiedRuntimeConfig?.modelAliases ?? [];
     if (
@@ -25101,10 +25456,94 @@ export async function createRuntimeBridgeBackend(
       aliasInventory,
     };
   };
+  /**
+   * Run 103 / SP5e - the posture sections the Agent strategy and Workloads pages render: the saved
+   * binding plus one row per materialised `<name>.<scope>` alias with its live candidate pool
+   * (requirement R8).
+   */
+  const readPostureEntrySummaries = (
+    kind: "role" | "workload",
+    entries: readonly AgentStrategyEntry[],
+  ) =>
+    entries.map((entry) => {
+      const effectiveInventory = getRouterEffectiveRoutableInventory();
+      const effectiveRegistry = getRouterEffectiveRegistry();
+      return {
+        name: entry.name,
+        kind: entry.kind,
+        roleId: entry.roleId,
+        scoringStrategy: entry.scoringStrategy,
+        routingMode: entry.routingMode,
+        computePreference: entry.computePreference,
+        configuredModelIds: [...entry.modelIds],
+        requiredCapabilities: [...entry.requiredCapabilities],
+        violations: [...entry.violations],
+        aliases: (currentUnifiedRuntimeConfig?.modelAliases ?? [])
+          .filter(
+            (alias) =>
+              alias.posture?.kind === kind &&
+              alias.posture.name === entry.name &&
+              alias.aliasId.startsWith(`${entry.name}.`),
+          )
+          .map((alias) => {
+            const resolution = resolveAliasAllowEndpoints(
+              alias,
+              effectiveInventory,
+              effectiveRegistry,
+            );
+            /**
+             * Run 103 post-lock repair (operator decision): `required_capabilities` also narrows the
+             * endpoints the page reports, with the same rule the router applies at request time, so a
+             * capability-constrained alias cannot show candidates the first call would reject.
+             */
+            const allowEndpoints =
+              entry.requiredCapabilities.length === 0
+                ? resolution.allowEndpoints
+                : resolution.allowEndpoints.filter((endpointId) => {
+                    const endpoint = effectiveRegistry.endpoints.find(
+                      (candidate) => candidate.identity.endpoint_id === endpointId,
+                    );
+                    const supported = endpoint?.declared.capabilities ?? [];
+                    return entry.requiredCapabilities.every((capability) =>
+                      supportsCapabilityRequirement(supported, capability),
+                    );
+                  });
+            return {
+              aliasId: alias.aliasId,
+              mode: alias.mode ?? "basic",
+              candidateCount: allowEndpoints.length,
+              allowEndpointIds: [...allowEndpoints].sort(compareText),
+              poolEmpty: allowEndpoints.length === 0,
+            };
+          })
+          .sort((left, right) => compareText(left.aliasId, right.aliasId)),
+      };
+    });
+  const readConfiguredRoutingPosture = () =>
+    currentUnifiedRuntimeConfig
+      ? {
+          legacyStrategy: currentUnifiedRuntimeConfig.routingPosture
+            ? null
+            : (currentUnifiedRuntimeConfig.routingStrategy ?? null),
+          ...resolveConfiguredRoutingPostureSummary(currentUnifiedRuntimeConfig),
+        }
+      : null;
   const readRouterConfigData = () => ({
     persisted: {
       strategy: currentUnifiedRuntimeConfig?.routingStrategy ?? null,
       executionMode: currentUnifiedRuntimeConfig?.executionMode ?? "decision_only",
+    },
+    routing: readConfiguredRoutingPosture(),
+    agentStrategies: readPostureEntrySummaries(
+      "role",
+      currentUnifiedRuntimeConfig?.agentStrategies ?? [],
+    ),
+    workloads: readPostureEntrySummaries("workload", currentUnifiedRuntimeConfig?.workloads ?? []),
+    workloadExamples: SHIPPED_WORKLOAD_EXAMPLES,
+    postureDiagnostics: {
+      violations: [...currentPostureAliasDiagnostics.violations],
+      skipped: currentPostureAliasDiagnostics.skipped.map((entry) => ({ ...entry })),
+      warnings: [...currentPostureAliasDiagnostics.warnings],
     },
     controller: getCurrentControllerAssignment(),
     guidance: getRouterGuidance(),
@@ -25439,10 +25878,7 @@ export async function createRuntimeBridgeBackend(
       effortSource: record.effortSource ?? null,
       membershipRevision: asStringValue(decision?.membership_revision) ?? null,
       profileRevision: asStringValue(decision?.profile_revision) ?? null,
-      strategyLabel:
-        asStringValue(routingMode?.effectiveMode) ??
-        currentUnifiedRuntimeConfig?.routingStrategy ??
-        null,
+      strategyLabel: asStringValue(routingMode?.effectiveMode) ?? null,
       decidedAtMs: record.createdAtMs,
       sourceType: record.sourceType,
       providerId: record.providerId ?? null,
@@ -25553,10 +25989,7 @@ export async function createRuntimeBridgeBackend(
       fallbackEndpointIds: Array.isArray(decision?.fallback_endpoint_ids)
         ? decision.fallback_endpoint_ids
         : [],
-      strategyLabel:
-        asStringValue(routingMode?.effectiveMode) ??
-        currentUnifiedRuntimeConfig?.routingStrategy ??
-        null,
+      strategyLabel: asStringValue(routingMode?.effectiveMode) ?? null,
       decision,
       benchmarkEvidence: projectBenchmarkDecisionEvidence(decision, observation.endpointId),
       telemetryEvidence: projectTelemetryDecisionEvidence(decision, observation.endpointId, {
@@ -27876,6 +28309,18 @@ export async function createRuntimeBridgeBackend(
                 ...(plan.routingDiagnostics.hybridArbitration
                   ? { hybridArbitration: plan.routingDiagnostics.hybridArbitration }
                   : {}),
+                /**
+                 * Run 103 / Phase 5 live finding: this bundle is the one the observation ledger keeps, so
+                 * the run-103 receipts have to travel with it - otherwise a decision answers every
+                 * question except "who chose this strategy and did the latency override act"
+                 * (R3, design document section 6.5).
+                 */
+                ...(plan.routingDiagnostics.strategyResolution
+                  ? { strategyResolution: plan.routingDiagnostics.strategyResolution }
+                  : {}),
+                ...(plan.routingDiagnostics.aliasPostureBinding
+                  ? { aliasPostureBinding: plan.routingDiagnostics.aliasPostureBinding }
+                  : {}),
               },
             }
           : {}),
@@ -28712,6 +29157,13 @@ export async function createRuntimeBridgeBackend(
           normalizeConfiguredRoutingMode(currentUnifiedRuntimeConfig?.routingStrategy) ?? undefined,
           executionInventory.endpointIds.length > 0 ? executionInventory : null,
           currentRolePolicy.taskDefinitions,
+          currentUnifiedRuntimeConfig
+            ? resolveConfiguredRoutingPosture(currentUnifiedRuntimeConfig)
+            : undefined,
+          [
+            ...(currentUnifiedRuntimeConfig?.agentStrategies ?? []),
+            ...(currentUnifiedRuntimeConfig?.workloads ?? []),
+          ],
         );
         markPhase("dispatch-start");
         const {
@@ -28888,6 +29340,13 @@ export async function createRuntimeBridgeBackend(
           normalizeConfiguredRoutingMode(currentUnifiedRuntimeConfig?.routingStrategy) ?? undefined,
           executionInventory.endpointIds.length > 0 ? executionInventory : null,
           currentRolePolicy.taskDefinitions,
+          currentUnifiedRuntimeConfig
+            ? resolveConfiguredRoutingPosture(currentUnifiedRuntimeConfig)
+            : undefined,
+          [
+            ...(currentUnifiedRuntimeConfig?.agentStrategies ?? []),
+            ...(currentUnifiedRuntimeConfig?.workloads ?? []),
+          ],
         );
         markPhase("dispatch-start");
         const { execution, toolExecutionResult, routingDecisionId, effortReceipt } =
@@ -29132,7 +29591,12 @@ export async function createRuntimeBridgeBackend(
           ? (parse(previousText) as Record<string, unknown>)
           : null;
         const nextConfig = mergeUnifiedRuntimeConfigDocuments(previousDocument, body);
-        let finalConfig = nextConfig;
+        /**
+         * Run 103 R1: the runtime applies what the file will say. The merge normalizes a legacy
+         * `routing.strategy` onto the canonical pair, so the rendered text is re-parsed before it is
+         * applied - otherwise the in-memory posture would keep the synonym the file no longer has.
+         */
+        let finalConfig = parseUnifiedRuntimeConfigText(renderUnifiedRuntimeConfigText(nextConfig));
         let finalText = renderUnifiedRuntimeConfigText(finalConfig);
 
         await writeConfigTextAtomically(unifiedRuntimeConfigPath, finalText);
@@ -29150,9 +29614,12 @@ export async function createRuntimeBridgeBackend(
           } else {
             await writeConfigTextAtomically(unifiedRuntimeConfigPath, previousText);
           }
-          if (previousConfig) {
-            await applyUnifiedRuntimeConfigState(previousConfig, "rollback");
-          }
+          /**
+           * Run 103 review F4: the rollback runs unconditionally. A rejected write used to leave the
+           * runtime serving the rejected posture in memory whenever there was no previous config to
+           * restore (a fresh state root), which is a fail-open on the write path.
+           */
+          await applyUnifiedRuntimeConfigState(previousConfig ?? null, "rollback");
           throw error;
         }
 

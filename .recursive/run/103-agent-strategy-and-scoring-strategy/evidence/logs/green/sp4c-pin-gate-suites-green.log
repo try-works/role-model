@@ -1,0 +1,33 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/103-agent-strategy-and-scoring-strategy/role-model-router/apps/runtime-host-bridge
+
+ DEPRECATED  'basic' reporter is deprecated and will be removed in Vitest v3.
+Remove 'basic' from 'reporters' option. To match 'basic' reporter 100%, use configuration:
+{
+  "test": {
+    "reporters": [
+      [
+        "default",
+        {
+          "summary": false
+        }
+      ]
+    ]
+  }
+}
+ ✓ test/controller-routing-contract.test.ts (8 tests) 68ms
+ ✓ test/scoring-strategy-provenance.test.ts (4 tests) 14ms
+ ✓ test/scoring-strategy.test.ts (9 tests) 26ms
+ ✓ test/scoring-strategy-config.test.ts (8 tests) 17ms
+ ✓ test/scoring-strategy-resolution.test.ts (10 tests) 14ms
+ ✓ test/controller-latency-strategy.test.ts (4 tests) 11ms
+ ✓ test/scoring-strategy-diagnostics.test.ts (3 tests) 10ms
+ ✓ test/scoring-strategy-legacy.test.ts (7 tests) 13ms
+ ✓ test/scoring-strategy-pin-rule.test.ts (4 tests) 9ms
+
+
+ Test Files  9 passed (9)
+      Tests  57 passed (57)
+   Start at  12:39:41
+   Duration  22.20s (transform 2.50s, setup 0ms, collect 15.04s, tests 181ms, environment 4ms, prepare 2.85s)
+

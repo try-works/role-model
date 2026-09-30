@@ -1,0 +1,181 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/103-agent-strategy-and-scoring-strategy/role-model-router/apps/runtime-host-bridge
+
+ DEPRECATED  'basic' reporter is deprecated and will be removed in Vitest v3.
+Remove 'basic' from 'reporters' option. To match 'basic' reporter 100%, use configuration:
+{
+  "test": {
+    "reporters": [
+      [
+        "default",
+        {
+          "summary": false
+        }
+      ]
+    ]
+  }
+}
+ ❯ test/scoring-strategy-resolution.test.ts (10 tests | 10 failed) 25ms
+   × scoring strategy resolution > baseline posture uses the operator strategy 9ms
+     → (0 , resolveStrategy) is not a function
+   × scoring strategy resolution > an unset posture falls back to balanced with the default source 1ms
+     → (0 , resolveStrategy) is not a function
+   × scoring strategy resolution > a controller directive wins while unpinned 2ms
+     → (0 , resolveStrategy) is not a function
+   × scoring strategy resolution > a pinned posture discards the controller directive and records it 1ms
+     → (0 , resolveStrategy) is not a function
+   × scoring strategy resolution > an easy request resolves to cost while difficulty routing is active 1ms
+     → (0 , resolveStrategy) is not a function
+   × scoring strategy resolution > a hard request resolves to quality while difficulty routing is active 1ms
+     → (0 , resolveStrategy) is not a function
+   × scoring strategy resolution > a medium request keeps the operator strategy 1ms
+     → (0 , resolveStrategy) is not a function
+   × scoring strategy resolution > a pinned posture discards a decisive difficulty bucket and records it 1ms
+     → (0 , resolveStrategy) is not a function
+   × scoring strategy resolution > a custom operator posture resolves to its own weights 1ms
+     → (0 , resolveStrategy) is not a function
+   × scoring strategy resolution > the controller wins over difficulty when both are active and unpinned 1ms
+     → (0 , resolveStrategy) is not a function
+
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 10 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/scoring-strategy-resolution.test.ts > scoring strategy resolution > baseline posture uses the operator strategy
+TypeError: (0 , resolveStrategy) is not a function
+ ❯ resolve test/scoring-strategy-resolution.test.ts:25:5
+     23| 
+     24|   const resolve = (overrides: Partial<StrategyResolutionInput> = {}) =>
+     25|     resolveStrategy({
+       |     ^
+     26|       operator,
+     27|       pinWeights: false,
+ ❯ test/scoring-strategy-resolution.test.ts:34:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/10]⎯
+
+ FAIL  test/scoring-strategy-resolution.test.ts > scoring strategy resolution > an unset posture falls back to balanced with the default source
+TypeError: (0 , resolveStrategy) is not a function
+ ❯ resolve test/scoring-strategy-resolution.test.ts:25:5
+     23| 
+     24|   const resolve = (overrides: Partial<StrategyResolutionInput> = {}) =>
+     25|     resolveStrategy({
+       |     ^
+     26|       operator,
+     27|       pinWeights: false,
+ ❯ test/scoring-strategy-resolution.test.ts:41:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/10]⎯
+
+ FAIL  test/scoring-strategy-resolution.test.ts > scoring strategy resolution > a controller directive wins while unpinned
+TypeError: (0 , resolveStrategy) is not a function
+ ❯ resolve test/scoring-strategy-resolution.test.ts:25:5
+     23| 
+     24|   const resolve = (overrides: Partial<StrategyResolutionInput> = {}) =>
+     25|     resolveStrategy({
+       |     ^
+     26|       operator,
+     27|       pinWeights: false,
+ ❯ test/scoring-strategy-resolution.test.ts:48:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/10]⎯
+
+ FAIL  test/scoring-strategy-resolution.test.ts > scoring strategy resolution > a pinned posture discards the controller directive and records it
+TypeError: (0 , resolveStrategy) is not a function
+ ❯ resolve test/scoring-strategy-resolution.test.ts:25:5
+     23| 
+     24|   const resolve = (overrides: Partial<StrategyResolutionInput> = {}) =>
+     25|     resolveStrategy({
+       |     ^
+     26|       operator,
+     27|       pinWeights: false,
+ ❯ test/scoring-strategy-resolution.test.ts:55:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/10]⎯
+
+ FAIL  test/scoring-strategy-resolution.test.ts > scoring strategy resolution > an easy request resolves to cost while difficulty routing is active
+TypeError: (0 , resolveStrategy) is not a function
+ ❯ resolve test/scoring-strategy-resolution.test.ts:25:5
+     23| 
+     24|   const resolve = (overrides: Partial<StrategyResolutionInput> = {}) =>
+     25|     resolveStrategy({
+       |     ^
+     26|       operator,
+     27|       pinWeights: false,
+ ❯ test/scoring-strategy-resolution.test.ts:66:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/10]⎯
+
+ FAIL  test/scoring-strategy-resolution.test.ts > scoring strategy resolution > a hard request resolves to quality while difficulty routing is active
+TypeError: (0 , resolveStrategy) is not a function
+ ❯ resolve test/scoring-strategy-resolution.test.ts:25:5
+     23| 
+     24|   const resolve = (overrides: Partial<StrategyResolutionInput> = {}) =>
+     25|     resolveStrategy({
+       |     ^
+     26|       operator,
+     27|       pinWeights: false,
+ ❯ test/scoring-strategy-resolution.test.ts:73:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/10]⎯
+
+ FAIL  test/scoring-strategy-resolution.test.ts > scoring strategy resolution > a medium request keeps the operator strategy
+TypeError: (0 , resolveStrategy) is not a function
+ ❯ resolve test/scoring-strategy-resolution.test.ts:25:5
+     23| 
+     24|   const resolve = (overrides: Partial<StrategyResolutionInput> = {}) =>
+     25|     resolveStrategy({
+       |     ^
+     26|       operator,
+     27|       pinWeights: false,
+ ❯ test/scoring-strategy-resolution.test.ts:79:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/10]⎯
+
+ FAIL  test/scoring-strategy-resolution.test.ts > scoring strategy resolution > a pinned posture discards a decisive difficulty bucket and records it
+TypeError: (0 , resolveStrategy) is not a function
+ ❯ resolve test/scoring-strategy-resolution.test.ts:25:5
+     23| 
+     24|   const resolve = (overrides: Partial<StrategyResolutionInput> = {}) =>
+     25|     resolveStrategy({
+       |     ^
+     26|       operator,
+     27|       pinWeights: false,
+ ❯ test/scoring-strategy-resolution.test.ts:86:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/10]⎯
+
+ FAIL  test/scoring-strategy-resolution.test.ts > scoring strategy resolution > a custom operator posture resolves to its own weights
+TypeError: (0 , resolveStrategy) is not a function
+ ❯ resolve test/scoring-strategy-resolution.test.ts:25:5
+     23| 
+     24|   const resolve = (overrides: Partial<StrategyResolutionInput> = {}) =>
+     25|     resolveStrategy({
+       |     ^
+     26|       operator,
+     27|       pinWeights: false,
+ ❯ test/scoring-strategy-resolution.test.ts:97:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/10]⎯
+
+ FAIL  test/scoring-strategy-resolution.test.ts > scoring strategy resolution > the controller wins over difficulty when both are active and unpinned
+TypeError: (0 , resolveStrategy) is not a function
+ ❯ resolve test/scoring-strategy-resolution.test.ts:25:5
+     23| 
+     24|   const resolve = (overrides: Partial<StrategyResolutionInput> = {}) =>
+     25|     resolveStrategy({
+       |     ^
+     26|       operator,
+     27|       pinWeights: false,
+ ❯ test/scoring-strategy-resolution.test.ts:106:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/10]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  10 failed (10)
+   Start at  12:01:14
+   Duration  6.07s (transform 2.52s, setup 0ms, collect 4.72s, tests 25ms, environment 1ms, prepare 469ms)
+
+undefined
+D:\DEV\role-model\.worktrees\103-agent-strategy-and-scoring-strategy\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/scoring-strategy-resolution.test.ts --reporter=basic

@@ -1,0 +1,22 @@
+﻿**Policy**
+
+1. Enqueue with idempotency key + attempt count (0).
+2. On failure, re-enqueue with attempt+1; if attempt > N, move to dead-letter.
+3. Workers de-dupe by idempotency key: first execution wins, replays are no-ops.
+4. Processing timeboxed by lease (TTL); lease expiry triggers redelivery.
+
+**Invariants**
+
+- Each message processed at most once (at-least-once delivery, exactly-once effect).
+- Attempts strictly increase, bounded by N.
+- No message lost or processed twice after success.
+
+**Edge cases to test**
+
+- Duplicate delivery before/after success
+- Retry after partial commit (side effects)
+- Lease expiry mid-processing
+- Idempotency key collision
+- Attempt counter overflow/N boundary
+- Dead-letter overflow and replay
+- Crash between enqueue and commit

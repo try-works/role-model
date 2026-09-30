@@ -1,0 +1,11 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/103-agent-strategy-and-scoring-strategy/role-model-router/apps/runtime-ui
+
+ ✓ app/lib/latency-override.test.ts (4 tests) 11ms
+ ✓ app/routes/control-routing-strategy.test.tsx (4 tests) 47ms
+
+ Test Files  2 passed (2)
+      Tests  8 passed (8)
+   Start at  05:53:51
+   Duration  4.51s (transform 1.05s, setup 0ms, collect 2.90s, tests 58ms, environment 1ms, prepare 1.02s)
+

@@ -1,0 +1,7 @@
+{
+  "id": "governance_safety",
+  "label": "Governance And Safety",
+  "description": "Legal, health, recruiting, safety, risk, compliance, and governance-sensitive work.",
+  "primaryRoleIds": ["legal", "health", "recruiter"],
+  "secondaryRoleIds": ["security", "finance"]
+}

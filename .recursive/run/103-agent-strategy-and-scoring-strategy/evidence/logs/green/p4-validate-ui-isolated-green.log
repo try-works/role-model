@@ -1,0 +1,19 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/103-agent-strategy-and-scoring-strategy/role-model-router/apps/runtime-host-bridge
+
+(node:42092) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | test/validate-ui.test.ts > runRuntimeUiValidation > validates runtime config reads and the main control-plane mutations
+[run115] eligibility candidates=2 eligible=1 codes=CAPABILITY_MISSING=1 request=req-adapter-validation alias=- model=- effort=- pass=- allow=[] denied=[cli.local.coder]
+
+stdout | test/validate-ui.test.ts > runRuntimeUiValidation > validates runtime config reads and the main control-plane mutations
+[run115] eligibility candidates=2 eligible=1 codes=CAPABILITY_MISSING=1 request=req-adapter-validation alias=- model=- effort=- pass=- allow=[] denied=[cli.local.coder]
+
+ ✓ test/validate-ui.test.ts (2 tests) 31413ms
+   ✓ runRuntimeUiValidation > validates runtime config reads and the main control-plane mutations  31398ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  21:11:50
+   Duration  38.18s (transform 4.08s, setup 0ms, collect 6.22s, tests 31.41s, environment 0ms, prepare 194ms)
+

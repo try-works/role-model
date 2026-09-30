@@ -1,0 +1,71 @@
+
+ DEPRECATED  'basic' reporter is deprecated and will be removed in Vitest v3.
+Remove 'basic' from 'reporters' option. To match 'basic' reporter 100%, use configuration:
+{
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/103-agent-strategy-and-scoring-strategy/role-model-router/apps/runtime-host-bridge
+  "test": {
+    "reporters": [
+      [
+
+        "default",
+        {
+          "summary": false
+        }
+      ]
+    ]
+  }
+}
+ ❯ test/routing-latency-effective-metric.test.ts (3 tests | 2 failed) 40ms
+   × measured-latency selection uses the effective metric > a p95 spike does not flip the choice when the median is far better 30ms
+     → expected 'selected_faster_candidate' to be 'kept_router_choice' // Object.is equality
+   × measured-latency selection uses the effective metric > a genuine effective-latency improvement moves the choice 5ms
+     → expected 'endpoint-b improves p95 by 4300ms for…' to match /effective/i
+   ✓ measured-latency selection uses the effective metric > the 10 000 ms default threshold is respected 1ms
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/routing-latency-effective-metric.test.ts > measured-latency selection uses the effective metric > a p95 spike does not flip the choice when the median is far better
+AssertionError: expected 'selected_faster_candidate' to be 'kept_router_choice' // Object.is equality
+
+Expected: "kept_router_choice"
+Received: "selected_faster_candidate"
+
+ ❯ test/routing-latency-effective-metric.test.ts:31:31
+     29|   test("a p95 spike does not flip the choice when the median is far be…
+     30|     const selection = selectEndpointByMeasuredLatency({ ...base, maxDe…
+     31|     expect(selection.outcome).toBe("kept_router_choice");
+       |                               ^
+     32|     expect(selection.chosenEndpointId).toBe("endpoint-a");
+     33|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/routing-latency-effective-metric.test.ts > measured-latency selection uses the effective metric > a genuine effective-latency improvement moves the choice
+AssertionError: expected 'endpoint-b improves p95 by 4300ms for…' to match /effective/i
+
+- Expected: 
+/effective/i
+
++ Received: 
+"endpoint-b improves p95 by 4300ms for this bucket, beyond the configured 2000ms delta"
+
+ ❯ test/routing-latency-effective-metric.test.ts:46:30
+     44|     expect(selection.outcome).toBe("selected_faster_candidate");
+     45|     expect(selection.chosenEndpointId).toBe("endpoint-b");
+     46|     expect(selection.reason).toMatch(/effective/i);
+       |                              ^
+     47|   });
+     48| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 1 passed (3)
+   Start at  12:45:08
+   Duration  1.09s (transform 131ms, setup 0ms, collect 140ms, tests 40ms, environment 0ms, prepare 371ms)
+
+undefined
+D:\DEV\role-model\.worktrees\103-agent-strategy-and-scoring-strategy\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/routing-latency-effective-metric.test.ts --reporter=basic

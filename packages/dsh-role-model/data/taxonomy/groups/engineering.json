@@ -1,0 +1,7 @@
+{
+  "id": "engineering",
+  "label": "Engineering",
+  "description": "Software, systems, runtime, testing, security, and data implementation work.",
+  "primaryRoleIds": ["coder", "architect", "operator", "tester", "security", "data"],
+  "secondaryRoleIds": []
+}

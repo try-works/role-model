@@ -1,0 +1,9 @@
+# Standalone dependency resolution for this package.
+#
+# This package is a standalone DSH bundle rather than a member of the repository's
+# workspace graph: it is installed into a harness *profile*, and its one runtime
+# dependency comes from the public registry. Declaring the package set explicitly
+# keeps `node_modules` local to this directory, so a build never depends on a
+# sibling checkout being present.
+packages:
+  - "."

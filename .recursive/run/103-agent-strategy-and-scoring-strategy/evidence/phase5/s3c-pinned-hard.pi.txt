@@ -1,0 +1,18 @@
+﻿**Policy:** bounded exponential backoff + jitter, max N attempts, then dead-letter.
+
+**Invariants**
+1. Idempotency: dedupe on message ID + attempt-stable key; effects applied at most once.
+2. Monotonic attempt counter persisted before side effects.
+3. Retries only on retryable errors; permanent errors go straight to DLQ.
+4. At-least-once delivery ⇒ handler must be safe on replay.
+5. Bounded: attempts ≤ N, deadline respected, no unbounded memory.
+
+**Edge cases tests must cover**
+- Crash between effect and ack.
+- Duplicate delivery after success.
+- Timeout/partial write.
+- Clock skew and jitter bounds.
+- Poison message exhausting N.
+- DLQ replay.
+- Max backoff cap overflow.
+- Concurrent workers on same ID.

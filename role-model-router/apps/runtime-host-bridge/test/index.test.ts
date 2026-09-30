@@ -4964,6 +4964,20 @@ describe("runtime-host-bridge", () => {
         ],
         excludedTargets: [],
       },
+      /** Run 103 SP3c: every decision carries the scoring-strategy receipt. */
+      strategyResolution: {
+        strategy: "balanced",
+        source: "default",
+        weights: {
+          quality: 0.3,
+          latency: 0.2,
+          throughput: 0.1,
+          cost: 0.2,
+          reliability: 0.15,
+          preference: 0.05,
+        },
+        weightsDigest: "sha256:8c49b853bebd72f4596c926b2fc2181c67f8e2580c387d7ac8fb86457e7db9e9",
+      },
     });
   });
 
@@ -5296,6 +5310,20 @@ describe("runtime-host-bridge", () => {
             reasons: ["missing_capability.tools.function_calling"],
           },
         ],
+      },
+      /** Run 103 SP3c: every decision carries the scoring-strategy receipt. */
+      strategyResolution: {
+        strategy: "balanced",
+        source: "default",
+        weights: {
+          quality: 0.3,
+          latency: 0.2,
+          throughput: 0.1,
+          cost: 0.2,
+          reliability: 0.15,
+          preference: 0.05,
+        },
+        weightsDigest: "sha256:8c49b853bebd72f4596c926b2fc2181c67f8e2580c387d7ac8fb86457e7db9e9",
       },
     });
   });
@@ -6204,6 +6232,20 @@ describe("runtime-host-bridge", () => {
           },
         ],
       },
+      /** Run 103 SP3c: every decision carries the scoring-strategy receipt. */
+      strategyResolution: {
+        strategy: "balanced",
+        source: "default",
+        weights: {
+          quality: 0.3,
+          latency: 0.2,
+          throughput: 0.1,
+          cost: 0.2,
+          reliability: 0.15,
+          preference: 0.05,
+        },
+        weightsDigest: "sha256:8c49b853bebd72f4596c926b2fc2181c67f8e2580c387d7ac8fb86457e7db9e9",
+      },
     });
   });
 
@@ -6248,6 +6290,11 @@ describe("runtime-host-bridge", () => {
                 preferLocal?: boolean;
               };
             };
+            strategyResolution?: {
+              strategy: string;
+              source: string;
+              weightsDigest: string;
+            };
           };
         };
       }
@@ -6291,6 +6338,11 @@ describe("runtime-host-bridge", () => {
           strategy: "quality",
           preferLocal: true,
         },
+      },
+      /** Run 103 R3: the receipt names the strategy that actually ranked the request. */
+      strategyResolution: {
+        strategy: "quality",
+        source: "controller",
       },
     });
   });
@@ -6359,6 +6411,20 @@ describe("runtime-host-bridge", () => {
           "moonshot.personal.primary.global.kimi-k2.5",
         ],
         excludedTargets: [],
+      },
+      /** Run 103 SP3c: every decision carries the scoring-strategy receipt. */
+      strategyResolution: {
+        strategy: "balanced",
+        source: "default",
+        weights: {
+          quality: 0.3,
+          latency: 0.2,
+          throughput: 0.1,
+          cost: 0.2,
+          reliability: 0.15,
+          preference: 0.05,
+        },
+        weightsDigest: "sha256:8c49b853bebd72f4596c926b2fc2181c67f8e2580c387d7ac8fb86457e7db9e9",
       },
     });
   });

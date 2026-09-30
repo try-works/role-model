@@ -1,0 +1,87 @@
+
+ DEPRECATED  'basic' reporter is deprecated and will be removed in Vitest v3.
+Remove 'basic' from 'reporters' option. To match 'basic' reporter 100%, use configuration:
+{
+  "test": {
+    "reporters": [
+      [
+        "default",
+        {
+          "summary": false
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/103-agent-strategy-and-scoring-strategy/role-model-router/apps/runtime-host-bridge
+        }
+      ]
+    ]
+  }
+
+}
+ ❯ test/agent-strategy-section.test.ts (4 tests | 4 failed) 11ms
+   × agent strategy section > decodes a role strategy and a workload into per-scope aliases 6ms
+     → (0 , decodeAgentStrategySection) is not a function
+   × agent strategy section > a cross-kind name collision is reported and nothing materialises 1ms
+     → (0 , decodeAgentStrategySection) is not a function
+   × agent strategy section > a malformed entry is reported and skipped while the valid one materialises 1ms
+     → (0 , decodeAgentStrategySection) is not a function
+   × agent strategy section > empty or absent blocks produce no aliases and no violations 1ms
+     → (0 , decodeAgentStrategySection) is not a function
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/agent-strategy-section.test.ts > agent strategy section > decodes a role strategy and a workload into per-scope aliases
+TypeError: (0 , decodeAgentStrategySection) is not a function
+ ❯ test/agent-strategy-section.test.ts:18:21
+     16| 
+     17|   test("decodes a role strategy and a workload into per-scope aliases"…
+     18|     const section = decodeAgentStrategySection({
+       |                     ^
+     19|       ...base,
+     20|       agentStrategies: { coder: { role_id: "coder", scoring_strategy: …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  test/agent-strategy-section.test.ts > agent strategy section > a cross-kind name collision is reported and nothing materialises
+TypeError: (0 , decodeAgentStrategySection) is not a function
+ ❯ test/agent-strategy-section.test.ts:33:21
+     31| 
+     32|   test("a cross-kind name collision is reported and nothing materialis…
+     33|     const section = decodeAgentStrategySection({
+       |                     ^
+     34|       ...base,
+     35|       agentStrategies: { batch: { role_id: "coder" } },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  test/agent-strategy-section.test.ts > agent strategy section > a malformed entry is reported and skipped while the valid one materialises
+TypeError: (0 , decodeAgentStrategySection) is not a function
+ ❯ test/agent-strategy-section.test.ts:43:21
+     41| 
+     42|   test("a malformed entry is reported and skipped while the valid one …
+     43|     const section = decodeAgentStrategySection({
+       |                     ^
+     44|       ...base,
+     45|       agentStrategies: {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  test/agent-strategy-section.test.ts > agent strategy section > empty or absent blocks produce no aliases and no violations
+TypeError: (0 , decodeAgentStrategySection) is not a function
+ ❯ test/agent-strategy-section.test.ts:55:21
+     53| 
+     54|   test("empty or absent blocks produce no aliases and no violations", …
+     55|     const section = decodeAgentStrategySection({ ...base });
+       |                     ^
+     56|     expect(section.aliases).toEqual([]);
+     57|     expect(section.violations).toEqual([]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed (4)
+   Start at  12:49:23
+   Duration  5.51s (transform 2.35s, setup 0ms, collect 4.50s, tests 11ms, environment 1ms, prepare 398ms)
+
+undefined
+D:\DEV\role-model\.worktrees\103-agent-strategy-and-scoring-strategy\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/agent-strategy-section.test.ts --reporter=basic
