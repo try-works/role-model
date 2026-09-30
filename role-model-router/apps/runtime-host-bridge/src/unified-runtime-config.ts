@@ -8,6 +8,7 @@ import {
 import {
   type RoutingModeName,
   type RoutingPosture,
+  type ScoringStrategyName,
   type WeightProfile,
   WeightProfile as WeightProfileSchema,
   decodeLegacyRoutingStrategy,
@@ -1608,6 +1609,7 @@ function hasStructuredRoutingKeys(routing: Record<string, unknown>): boolean {
 function decodeStructuredRoutingBlock(
   rawRouting: unknown,
   path: string,
+  strict: boolean,
 ): StructuredRoutingBlock | null {
   if (typeof rawRouting !== "object" || rawRouting === null || Array.isArray(rawRouting)) {
     return null;
@@ -1617,61 +1619,118 @@ function decodeStructuredRoutingBlock(
     return null;
   }
 
+  /**
+   * R1: an unknown spelling is rejected on write and degraded on read with a recorded reason, so a
+   * hand-edited file still loads while an operator typo can never be persisted.
+   */
+  const degradations: string[] = [];
   const rawMode = readNonEmptyString(routing.mode);
-  const mode = rawMode === null ? "baseline" : normalizeRoutingModeName(rawMode);
-  if (mode === null) {
-    throw new Error(
-      `${path}.mode must be baseline, difficulty, hybrid, or intelligent (controller).`,
-    );
+  let mode: RoutingModeName = "baseline";
+  if (rawMode !== null) {
+    const normalizedMode = normalizeRoutingModeName(rawMode);
+    if (normalizedMode === null) {
+      if (strict) {
+        throw new Error(
+          `${path}.mode must be baseline, difficulty, hybrid, or intelligent (controller); saw "${rawMode}".`,
+        );
+      }
+      degradations.push(
+        `${path}.mode "${rawMode}" is not a known mode and was read as baseline`,
+      );
+    } else {
+      mode = normalizedMode;
+    }
   }
 
   const rawScoringStrategy = readNonEmptyString(
     routing.scoring_strategy ?? routing.scoringStrategy,
   );
-  const scoringStrategy =
-    rawScoringStrategy === null ? null : normalizeScoringStrategyName(rawScoringStrategy);
-  if (rawScoringStrategy !== null && scoringStrategy === null) {
-    throw new Error(
-      `${path}.scoring_strategy must be balanced, quality, latency, cost, or custom.`,
-    );
+  let scoringStrategy: ScoringStrategyName | null = null;
+  if (rawScoringStrategy !== null) {
+    scoringStrategy = normalizeScoringStrategyName(rawScoringStrategy);
+    if (scoringStrategy === null) {
+      if (strict) {
+        throw new Error(
+          `${path}.scoring_strategy must be balanced, quality, latency, cost, or custom; saw "${rawScoringStrategy}".`,
+        );
+      }
+      degradations.push(
+        `${path}.scoring_strategy "${rawScoringStrategy}" is not a known strategy and was ignored`,
+      );
+    }
   }
 
   const pinWeights = routing.pin_weights ?? routing.pinWeights;
+  let pin = pinWeights === true;
   if (pinWeights !== undefined && typeof pinWeights !== "boolean") {
-    throw new Error(`${path}.pin_weights must be a boolean.`);
+    if (strict) {
+      throw new Error(
+        `${path}.pin_weights must be a boolean; saw ${JSON.stringify(pinWeights)}.`,
+      );
+    }
+    pin = false;
+    degradations.push(`${path}.pin_weights is not a boolean and was read as false`);
   }
 
   let weights: WeightProfile | null = null;
   if (routing.weights !== undefined && routing.weights !== null) {
     if (scoringStrategy !== "custom") {
-      throw new Error(`${path}.weights is only valid when scoring_strategy is custom.`);
+      if (strict) {
+        throw new Error(
+          `${path}.weights is only valid when scoring_strategy is custom; saw scoring_strategy ${scoringStrategy ?? "unset"}.`,
+        );
+      }
+      degradations.push(`${path}.weights was ignored because scoring_strategy is not custom`);
+    } else {
+      const decoded = Schema.decodeUnknownResult(WeightProfileSchema)(routing.weights);
+      if (Result.isFailure(decoded)) {
+        if (strict) {
+          throw new Error(
+            `${path}.weights is invalid: weights must sum to 1.0 and every metric must be within 0..1 (${String(decoded.failure)})`,
+          );
+        }
+        degradations.push(
+          `${path}.weights is invalid (weights must sum to 1.0, every metric within 0..1) and was read as no custom profile`,
+        );
+      } else {
+        weights = decoded.success;
+      }
     }
-    const decoded = Schema.decodeUnknownResult(WeightProfileSchema)(routing.weights);
-    if (Result.isFailure(decoded)) {
-      throw new Error(
-        `${path}.weights is invalid: weights must sum to 1.0 and every metric must be within 0..1 (${String(decoded.failure)})`,
-      );
-    }
-    weights = decoded.success;
   }
 
   if (scoringStrategy === "custom" && weights === null) {
-    throw new Error(`${path}.weights is required when scoring_strategy is custom.`);
+    if (strict) {
+      throw new Error(`${path}.weights is required when scoring_strategy is custom.`);
+    }
+    degradations.push(
+      `${path}.weights is required when scoring_strategy is custom and was read as no custom profile`,
+    );
   }
 
   const posture = decodeRoutingPosture({
     mode,
     scoringStrategy,
-    pinWeights: pinWeights === true,
+    pinWeights: pin,
     weights,
   });
-  return { posture, aliasFamily: ROUTING_MODE_ALIAS_FAMILY[posture.mode] };
+  return {
+    posture: { ...posture, degradations: [...degradations, ...posture.degradations] },
+    aliasFamily: ROUTING_MODE_ALIAS_FAMILY[posture.mode],
+  };
 }
 
 function renderStructuredRoutingBlock(config: UnifiedRuntimeConfig): Record<string, unknown> | null {
-  const posture = config.routingPosture;
+  /**
+   * R1: a legacy `routing.strategy` is read through the migration table and the next write emits the
+   * canonical pair, so the file never keeps a synonym after a write.
+   */
+  const posture =
+    config.routingPosture ??
+    (config.routingStrategy === null
+      ? null
+      : decodeLegacyRoutingStrategy(config.routingStrategy));
   if (!posture) {
-    return config.routingStrategy !== null ? { strategy: config.routingStrategy } : null;
+    return null;
   }
   return {
     mode: posture.mode,
@@ -1910,7 +1969,7 @@ export function parseUnifiedRuntimeConfigText(text: string): UnifiedRuntimeConfi
     rawConfig.execution_mode ?? rawConfig.executionMode,
     "execution_mode",
   );
-  const structuredRouting = decodeStructuredRoutingBlock(rawConfig.routing, "routing");
+  const structuredRouting = decodeStructuredRoutingBlock(rawConfig.routing, "routing", false);
   const agentStrategies = readAgentStrategyBlock(rawConfig.agent_strategies, "role");
   const workloadStrategies = readAgentStrategyBlock(rawConfig.workloads, "workload");
 
@@ -1988,7 +2047,7 @@ export function normalizeUnifiedRuntimeConfigInput(input: unknown): UnifiedRunti
       : "model_aliases" in input
         ? input.model_aliases
         : undefined;
-  const structuredRouting = decodeStructuredRoutingBlock(input.routing, "routing");
+  const structuredRouting = decodeStructuredRoutingBlock(input.routing, "routing", true);
   const agentStrategies = readAgentStrategyBlock(
     "agentStrategies" in input ? input.agentStrategies : input.agent_strategies,
     "role",
@@ -2306,6 +2365,8 @@ export function mergeUnifiedRuntimeConfigDocuments(
   patch: Record<string, unknown>,
 ): UnifiedRuntimeConfig {
   const normalizedPatch = normalizeRuntimeConfigPatchDocument(patch);
+  /** R1: the patch is a write, so an unknown spelling or an invalid weight profile is rejected here. */
+  decodeStructuredRoutingBlock(normalizedPatch.routing, "routing", true);
   const mergedDocument = {
     ...(current ?? {}),
     ...normalizedPatch,

@@ -238,30 +238,97 @@ describe("unified runtime config routing and posture blocks", () => {
     expect(reparsed.routingPosture).toEqual(config.routingPosture);
   });
 
-  test("falls back to the legacy strategy string when no routing block is declared", () => {
+  test("reads a legacy strategy string and migrates it on the next write", () => {
     const config = parseUnifiedRuntimeConfigText("version: 1.0\nrouting:\n  strategy: latency-first\n");
     expect(config.routingPosture).toBeUndefined();
     expect(config.routingStrategy).toBe("latency-first");
-    expect(renderUnifiedRuntimeConfigText(config)).toContain("strategy: latency-first");
+    const rendered = renderUnifiedRuntimeConfigText(config);
+    expect(rendered).not.toContain("latency-first");
+    expect(rendered).toContain("scoring_strategy: latency");
+    const reparsed = parseUnifiedRuntimeConfigText(rendered);
+    expect(reparsed.routingPosture).toMatchObject({
+      mode: "baseline",
+      scoringStrategy: "latency",
+    });
   });
 
-  test("rejects custom weights that do not satisfy the schema", () => {
+  test("degrades an unknown mode on read but still fails closed to baseline", () => {
+    const config = parseUnifiedRuntimeConfigText(
+      ["version: 1.0", "routing:", "  mode: turbo", ""].join("\n"),
+    );
+    expect(config.routingPosture?.mode).toBe("baseline");
+    expect(config.routingPosture?.degradations.join(" ")).toMatch(/turbo/);
+  });
+
+  test("rejects an unknown mode on the write path", () => {
     expect(() =>
-      parseUnifiedRuntimeConfigText(
-        [
-          "version: 1.0",
-          "routing:",
-          "  mode: baseline",
-          "  scoring_strategy: custom",
-          "  weights:",
-          "    quality: 0.5",
-          "    latency: 0.5",
-          "    throughput: 0.5",
-          "    cost: 0.5",
-          "    reliability: 0.5",
-          "    preference: 0.5",
-          "",
-        ].join("\n"),
+      mergeUnifiedRuntimeConfigDocuments(
+        { version: "1.0" },
+        { routing: { mode: "turbo" } },
+      ),
+    ).toThrow(/routing\.mode must be baseline, difficulty, hybrid, or intelligent/);
+  });
+
+  test("rejects weights that are declared for a preset strategy", () => {
+    expect(() =>
+      mergeUnifiedRuntimeConfigDocuments(
+        { version: "1.0" },
+        {
+          routing: {
+            mode: "baseline",
+            scoring_strategy: "quality",
+            weights: customWeights,
+          },
+        },
+      ),
+    ).toThrow(/routing\.weights is only valid when scoring_strategy is custom/);
+  });
+
+  test("requires weights for a custom strategy on the write path", () => {
+    expect(() =>
+      mergeUnifiedRuntimeConfigDocuments(
+        { version: "1.0" },
+        { routing: { mode: "baseline", scoring_strategy: "custom" } },
+      ),
+    ).toThrow(/routing\.weights is required when scoring_strategy is custom/);
+  });
+
+  test("degrades invalid custom weights on read and rejects them on the write path", () => {
+    const invalidWeightsText = [
+      "version: 1.0",
+      "routing:",
+      "  mode: baseline",
+      "  scoring_strategy: custom",
+      "  weights:",
+      "    quality: 0.5",
+      "    latency: 0.5",
+      "    throughput: 0.5",
+      "    cost: 0.5",
+      "    reliability: 0.5",
+      "    preference: 0.5",
+      "",
+    ].join("\n");
+    const degraded = parseUnifiedRuntimeConfigText(invalidWeightsText);
+    expect(degraded.routingPosture?.scoringStrategy).toBeNull();
+    expect(degraded.routingPosture?.degradations.join(" ")).toMatch(/weights must sum to 1.0/);
+
+    expect(() =>
+      mergeUnifiedRuntimeConfigDocuments(
+        { version: "1.0" },
+        {
+          routing: {
+            mode: "baseline",
+            scoring_strategy: "custom",
+            weights: {
+              quality: 0.5,
+              latency: 0.5,
+              throughput: 0.5,
+              cost: 0.5,
+              reliability: 0.5,
+              preference: 0.5,
+            },
+          },
+        },
       ),
     ).toThrow(/weights must sum to 1.0/);
   });
