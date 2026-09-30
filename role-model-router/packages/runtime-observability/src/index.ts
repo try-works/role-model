@@ -11,6 +11,19 @@ export type RuntimeRoutingMode = "baseline" | "difficulty" | "controller" | "hyb
 
 export interface RuntimeRoutingDiagnostics {
   readonly retrievalReceiptId?: string;
+  /**
+   * Run 103 / SP3c: the scoring-strategy receipt - which strategy was applied, who chose it, the
+   * weights digest, and any override a pinned posture discarded.
+   */
+  readonly strategyResolution?: {
+    readonly strategy: string;
+    readonly source: string;
+    readonly weightsDigest: string;
+    readonly discarded?: {
+      readonly source: string;
+      readonly strategy: string;
+    };
+  };
   readonly aliasResolution?: {
     readonly requestedModel: string;
     readonly aliasId: string;

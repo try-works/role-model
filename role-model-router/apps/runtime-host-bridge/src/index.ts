@@ -300,6 +300,7 @@ import {
   decodeLegacyRoutingStrategy,
   resolveRequestStrategy,
   toCoreRoutingStrategyName,
+  withStrategyProvenance,
 } from "./scoring-strategy.js";
 import {
   type BootstrapStageResult,
@@ -10474,9 +10475,14 @@ export function mapChatCompletionsRequest(
       ...(typeof body.temperature === "number" ? { temperature: body.temperature } : {}),
     },
     ...(effectiveRoutingModel ? { routingModel: effectiveRoutingModel } : {}),
-    ...(rolePolicyExecution.routingDiagnostics
-      ? { routingDiagnostics: rolePolicyExecution.routingDiagnostics }
-      : {}),
+    routingDiagnostics: withStrategyProvenance(
+      rolePolicyExecution.routingDiagnostics,
+      resolveRequestStrategy({
+        posture: routingPosture,
+        effectiveRoutingMode,
+        difficulty: difficultyRouting.routingDiagnostics?.difficultyRouting?.difficulty,
+      }),
+    ),
     taxonomyIdentity,
   };
 }
@@ -10711,9 +10717,14 @@ export function mapResponsesRequest(
       ...(typeof body.temperature === "number" ? { temperature: body.temperature } : {}),
     },
     ...(effectiveRoutingModel ? { routingModel: effectiveRoutingModel } : {}),
-    ...(rolePolicyExecution.routingDiagnostics
-      ? { routingDiagnostics: rolePolicyExecution.routingDiagnostics }
-      : {}),
+    routingDiagnostics: withStrategyProvenance(
+      rolePolicyExecution.routingDiagnostics,
+      resolveRequestStrategy({
+        posture: routingPosture,
+        effectiveRoutingMode,
+        difficulty: difficultyRouting.routingDiagnostics?.difficultyRouting?.difficulty,
+      }),
+    ),
     taxonomyIdentity,
   };
 }
@@ -25461,7 +25472,6 @@ export async function createRuntimeBridgeBackend(
       profileRevision: asStringValue(decision?.profile_revision) ?? null,
       strategyLabel:
         asStringValue(routingMode?.effectiveMode) ??
-        currentUnifiedRuntimeConfig?.routingStrategy ??
         null,
       decidedAtMs: record.createdAtMs,
       sourceType: record.sourceType,
@@ -25575,7 +25585,6 @@ export async function createRuntimeBridgeBackend(
         : [],
       strategyLabel:
         asStringValue(routingMode?.effectiveMode) ??
-        currentUnifiedRuntimeConfig?.routingStrategy ??
         null,
       decision,
       benchmarkEvidence: projectBenchmarkDecisionEvidence(decision, observation.endpointId),
