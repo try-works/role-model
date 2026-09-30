@@ -9,7 +9,7 @@
  * bounds and sum invariant are executable.
  */
 import { STRATEGY_WEIGHTS } from "@role-model-router/core";
-import { Data, Schema } from "effect";
+import { Data, Result, Schema } from "effect";
 
 export const SCORING_STRATEGY_NAMES = ["balanced", "quality", "latency", "cost", "custom"] as const;
 export type ScoringStrategyName = (typeof SCORING_STRATEGY_NAMES)[number];
@@ -205,4 +205,91 @@ export function resolveStrategy(input: StrategyResolutionInput): StrategyResolut
   }
 
   return operator;
+}
+
+export const ROUTING_MODE_NAMES = ["baseline", "difficulty", "hybrid", "intelligent"] as const;
+export type RoutingModeName = (typeof ROUTING_MODE_NAMES)[number];
+
+/** `controller` is the compat spelling of `intelligent` (design document section 3). */
+export function normalizeRoutingModeName(value: string | null | undefined): RoutingModeName | null {
+  const normalized = value?.trim().toLowerCase() ?? "";
+  switch (normalized) {
+    case "baseline":
+    case "basic":
+      return "baseline";
+    case "controller":
+    case "intelligent":
+      return "intelligent";
+    case "difficulty":
+      return "difficulty";
+    case "hybrid":
+      return "hybrid";
+    default:
+      return null;
+  }
+}
+
+export interface RoutingPostureInput {
+  readonly mode?: string | null;
+  readonly scoringStrategy?: string | null;
+  readonly pinWeights?: boolean;
+  readonly weights?: unknown;
+}
+
+export interface RoutingPosture {
+  readonly mode: RoutingModeName;
+  readonly scoringStrategy: ScoringStrategyName | null;
+  readonly pinWeights: boolean;
+  readonly operator: OperatorStrategyPosture | null;
+  /** Read-side degradations; a malformed value never widens behaviour (fail closed). */
+  readonly degradations: readonly string[];
+}
+
+/**
+ * Run 103 / SP2b - decode the routing block into the posture the ladder consumes. Legacy
+ * spellings normalize on read, unknown values degrade to the default posture with a recorded
+ * reason, and a `custom` strategy without valid weights fails closed.
+ */
+export function decodeRoutingPosture(input: RoutingPostureInput): RoutingPosture {
+  const degradations: string[] = [];
+
+  const normalizedMode = normalizeRoutingModeName(input.mode);
+  if (input.mode && !normalizedMode) {
+    degradations.push(`unknown routing mode "${input.mode}" normalized to baseline`);
+  }
+
+  let scoringStrategy: ScoringStrategyName | null = null;
+  const rawStrategy = input.scoringStrategy?.trim() ?? "";
+  if (rawStrategy.length > 0) {
+    scoringStrategy = normalizeScoringStrategyName(rawStrategy);
+    if (!scoringStrategy) {
+      degradations.push(`unknown scoring strategy "${rawStrategy}" ignored; failing closed to the default posture`);
+    }
+  }
+
+  let operator: OperatorStrategyPosture | null = null;
+  if (scoringStrategy === "custom") {
+    const decoded = Schema.decodeUnknownResult(WeightProfile)(input.weights);
+    if (Result.isSuccess(decoded)) {
+      operator = { name: "custom", weights: decoded.success };
+    } else {
+      degradations.push(
+        'scoring_strategy "custom" requires a valid weights profile (six metrics in 0..1 summing to 1); failing closed to the default posture',
+      );
+      scoringStrategy = null;
+    }
+  } else if (scoringStrategy) {
+    operator = {
+      name: scoringStrategy,
+      weights: weightsForStrategyName(scoringStrategy, SCORING_PRESETS.balanced),
+    };
+  }
+
+  return {
+    mode: normalizedMode ?? "baseline",
+    scoringStrategy,
+    pinWeights: input.pinWeights === true,
+    operator,
+    degradations,
+  };
 }

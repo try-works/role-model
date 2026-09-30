@@ -1,0 +1,143 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/103-agent-strategy-and-scoring-strategy/role-model-router/apps/runtime-host-bridge
+
+ DEPRECATED  'basic' reporter is deprecated and will be removed in Vitest v3.
+Remove 'basic' from 'reporters' option. To match 'basic' reporter 100%, use configuration:
+{
+  "test": {
+    "reporters": [
+      [
+        "default",
+        {
+          "summary": false
+        }
+      ]
+    ]
+  }
+}
+ ❯ test/scoring-strategy-config.test.ts (8 tests | 8 failed) 18ms
+   × routing posture decode > decodes a preset posture with its preset weights 8ms
+     → (0 , decodeRoutingPosture) is not a function
+   × routing posture decode > normalizes a legacy spelling on read 1ms
+     → (0 , decodeRoutingPosture) is not a function
+   × routing posture decode > decodes a valid custom profile 1ms
+     → (0 , decodeRoutingPosture) is not a function
+   × routing posture decode > records a degradation when custom weights are missing 1ms
+     → (0 , decodeRoutingPosture) is not a function
+   × routing posture decode > records a degradation and fails closed when custom weights are invalid 1ms
+     → (0 , decodeRoutingPosture) is not a function
+   × routing posture decode > records a degradation for an unknown spelling 1ms
+     → (0 , decodeRoutingPosture) is not a function
+   × routing posture decode > normalizes the mode and keeps the pin flag 1ms
+     → (0 , decodeRoutingPosture) is not a function
+   × routing posture decode > an unset strategy decodes to a null operator without degradations 1ms
+     → (0 , decodeRoutingPosture) is not a function
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/scoring-strategy-config.test.ts > routing posture decode > decodes a preset posture with its preset weights
+TypeError: (0 , decodeRoutingPosture) is not a function
+ ❯ test/scoring-strategy-config.test.ts:22:21
+     20| 
+     21|   test("decodes a preset posture with its preset weights", () => {
+     22|     const posture = decodeRoutingPosture({ scoringStrategy: "quality" …
+       |                     ^
+     23|     expect(posture.scoringStrategy).toBe("quality");
+     24|     expect(posture.operator).toEqual({ name: "quality", weights: STRAT…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯
+
+ FAIL  test/scoring-strategy-config.test.ts > routing posture decode > normalizes a legacy spelling on read
+TypeError: (0 , decodeRoutingPosture) is not a function
+ ❯ test/scoring-strategy-config.test.ts:29:21
+     27| 
+     28|   test("normalizes a legacy spelling on read", () => {
+     29|     const posture = decodeRoutingPosture({ scoringStrategy: "latency-f…
+       |                     ^
+     30|     expect(posture.scoringStrategy).toBe("latency");
+     31|     expect(posture.operator?.weights).toEqual(STRATEGY_WEIGHTS.latency…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/8]⎯
+
+ FAIL  test/scoring-strategy-config.test.ts > routing posture decode > decodes a valid custom profile
+TypeError: (0 , decodeRoutingPosture) is not a function
+ ❯ test/scoring-strategy-config.test.ts:35:21
+     33| 
+     34|   test("decodes a valid custom profile", () => {
+     35|     const posture = decodeRoutingPosture({ scoringStrategy: "custom", …
+       |                     ^
+     36|     expect(posture.scoringStrategy).toBe("custom");
+     37|     expect(posture.operator).toEqual({ name: "custom", weights: custom…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/8]⎯
+
+ FAIL  test/scoring-strategy-config.test.ts > routing posture decode > records a degradation when custom weights are missing
+TypeError: (0 , decodeRoutingPosture) is not a function
+ ❯ test/scoring-strategy-config.test.ts:42:21
+     40| 
+     41|   test("records a degradation when custom weights are missing", () => {
+     42|     const posture = decodeRoutingPosture({ scoringStrategy: "custom" }…
+       |                     ^
+     43|     expect(posture.scoringStrategy).toBeNull();
+     44|     expect(posture.operator).toBeNull();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/8]⎯
+
+ FAIL  test/scoring-strategy-config.test.ts > routing posture decode > records a degradation and fails closed when custom weights are invalid
+TypeError: (0 , decodeRoutingPosture) is not a function
+ ❯ test/scoring-strategy-config.test.ts:49:21
+     47| 
+     48|   test("records a degradation and fails closed when custom weights are…
+     49|     const posture = decodeRoutingPosture({
+       |                     ^
+     50|       scoringStrategy: "custom",
+     51|       weights: { ...customWeights, cost: 0.9 },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/8]⎯
+
+ FAIL  test/scoring-strategy-config.test.ts > routing posture decode > records a degradation for an unknown spelling
+TypeError: (0 , decodeRoutingPosture) is not a function
+ ❯ test/scoring-strategy-config.test.ts:58:21
+     56| 
+     57|   test("records a degradation for an unknown spelling", () => {
+     58|     const posture = decodeRoutingPosture({ scoringStrategy: "turbo" });
+       |                     ^
+     59|     expect(posture.scoringStrategy).toBeNull();
+     60|     expect(posture.degradations.join(" ")).toMatch(/turbo/);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/8]⎯
+
+ FAIL  test/scoring-strategy-config.test.ts > routing posture decode > normalizes the mode and keeps the pin flag
+TypeError: (0 , decodeRoutingPosture) is not a function
+ ❯ test/scoring-strategy-config.test.ts:64:12
+     62| 
+     63|   test("normalizes the mode and keeps the pin flag", () => {
+     64|     expect(decodeRoutingPosture({ mode: "controller" }).mode).toBe("in…
+       |            ^
+     65|     expect(decodeRoutingPosture({ mode: "difficulty" }).mode).toBe("di…
+     66|     expect(decodeRoutingPosture({ pinWeights: true }).pinWeights).toBe…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/8]⎯
+
+ FAIL  test/scoring-strategy-config.test.ts > routing posture decode > an unset strategy decodes to a null operator without degradations
+TypeError: (0 , decodeRoutingPosture) is not a function
+ ❯ test/scoring-strategy-config.test.ts:71:21
+     69| 
+     70|   test("an unset strategy decodes to a null operator without degradati…
+     71|     const posture = decodeRoutingPosture({});
+       |                     ^
+     72|     expect(posture.scoringStrategy).toBeNull();
+     73|     expect(posture.operator).toBeNull();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/8]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  8 failed (8)
+   Start at  12:04:25
+   Duration  5.87s (transform 2.44s, setup 0ms, collect 4.61s, tests 18ms, environment 1ms, prepare 463ms)
+
+undefined
+D:\DEV\role-model\.worktrees\103-agent-strategy-and-scoring-strategy\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/scoring-strategy-config.test.ts --reporter=basic
