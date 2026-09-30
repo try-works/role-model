@@ -1577,6 +1577,14 @@ const ROUTING_DIAGNOSTIC_REQUIRED_KEYS = [
   "observedProfile",
   "effectiveMetrics",
   "throughputPenalty",
+  /**
+   * Run 103 R3 (live dev finding): with the capture deferred the compact stub *is* the decision
+   * record, and its projection is an allowlist - so the run-103 receipts (who chose the strategy,
+   * with which weights, and which posture alias bound the request) have to be named here or every
+   * stubbed decision answers with no strategy at all.
+   */
+  "strategyResolution",
+  "aliasPostureBinding",
 ] as const;
 const ROUTING_DIAGNOSTIC_OPTIONAL_KEYS = [
   "selection",
