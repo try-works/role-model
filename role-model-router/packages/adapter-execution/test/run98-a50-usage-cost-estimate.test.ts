@@ -91,4 +91,35 @@ describe("run98 a50 usage-event cost estimate", () => {
       }),
     ).toBeNull();
   });
+
+  test("measured tokens above a catalog context tier are priced at the tier rate", () => {
+    const tieredSignals = {
+      canonicalModelId: "openai/gpt-6.1-sol",
+      tokenEconomicsSource: "catalog" as const,
+      inputPer1M: 2,
+      outputPer1M: 10,
+      estimatedRequestUsd: 3.75,
+      cost_per_1k_tokens_est: (3.75 / 910_000) * 1000,
+      costTiers: [{ minContextTokens: 272_000, inputPer1M: 4, outputPer1M: 15 }],
+    };
+
+    const above = resolveUsageEventCostEstimate({
+      catalogCostEstimate: tieredSignals,
+      inputTokens: 900_000,
+      outputTokens: 10_000,
+      tokensAvailable: true,
+    });
+    // 900,000 @ $4 + 10,000 @ $15
+    expect(above?.source).toBe("usage_estimate");
+    expect(above?.costUsd).toBeCloseTo(3.75, 12);
+
+    const below = resolveUsageEventCostEstimate({
+      catalogCostEstimate: tieredSignals,
+      inputTokens: 200_000,
+      outputTokens: 10_000,
+      tokensAvailable: true,
+    });
+    // 200,000 @ $2 + 10,000 @ $10
+    expect(below?.costUsd).toBeCloseTo(0.5, 12);
+  });
 });

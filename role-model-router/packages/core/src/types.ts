@@ -46,6 +46,18 @@ export interface CatalogCostEstimateSignals {
   readonly outputPer1M: number | null;
   readonly estimatedRequestUsd: number | null;
   readonly cost_per_1k_tokens_est: number | null;
+  /**
+   * models.dev context tiers for the model, when the catalog publishes them. A request longer
+   * than a tier's threshold bills the whole request at that tier's rates, so downstream cost
+   * consumers (for example measured-usage estimates) must apply the same tiers as the router.
+   */
+  readonly costTiers?: readonly CatalogCostEstimateTier[];
+}
+
+export interface CatalogCostEstimateTier {
+  readonly minContextTokens: number;
+  readonly inputPer1M: number;
+  readonly outputPer1M: number;
 }
 
 export interface RuntimeEligibilitySignals {

@@ -144299,22 +144299,22 @@
       "contextWindow": 1050000,
       "maxOutputTokens": 128000,
       "pricing": {
-        "inputPer1M": 5,
-        "outputPer1M": 30,
+        "inputPer1M": 4,
+        "outputPer1M": 20,
         "currency": "USD",
         "costDimensionsPer1M": {
-          "input": 5,
-          "output": 30,
-          "cacheRead": 0.5,
-          "cacheWrite": 6.25
+          "input": 4,
+          "output": 20,
+          "cacheRead": 0.4,
+          "cacheWrite": 5
         },
         "costMetadata": {
           "tiers": [
             {
-              "input": 10,
-              "output": 45,
-              "cache_read": 1,
-              "cache_write": 12.5,
+              "input": 8,
+              "output": 30,
+              "cache_read": 0.8,
+              "cache_write": 10,
               "tier": {
                 "type": "context",
                 "size": 272000
@@ -144322,13 +144322,28 @@
             }
           ],
           "contextOver200k": {
-            "input": 10,
-            "output": 45,
-            "cache_read": 1,
-            "cache_write": 12.5
+            "input": 8,
+            "output": 30,
+            "cache_read": 0.8,
+            "cache_write": 10
           }
         },
-        "costUnit": "USD per 1M tokens"
+        "costUnit": "USD per 1M tokens",
+        "provenance": {
+          "vendor": "models.dev",
+          "commit": "fde326351fbf011d3c007163af3046b97efbf6b6",
+          "sourcePaths": [
+            "providers/openai/provider.toml",
+            "providers/openai/models/gpt-5.6.toml"
+          ],
+          "sourceHashes": [
+            "e73335d63f9c9b436422d347fb4a429c8316f7a4565235751e05981817125764",
+            "5618c5f6db56cd9a9170e0f7c0aeee5887cc0877cd1cc4f3772b4516699e6b6b"
+          ],
+          "capturedAt": "2026-09-29T21:19:24.297Z",
+          "unit": "USD per 1M tokens",
+          "currency": "USD"
+        }
       },
       "reasoningOptions": [
         {
@@ -144427,22 +144442,22 @@
       "contextWindow": 1050000,
       "maxOutputTokens": 128000,
       "pricing": {
-        "inputPer1M": 5,
-        "outputPer1M": 30,
+        "inputPer1M": 4,
+        "outputPer1M": 20,
         "currency": "USD",
         "costDimensionsPer1M": {
-          "input": 5,
-          "output": 30,
-          "cacheRead": 0.5,
-          "cacheWrite": 6.25
+          "input": 4,
+          "output": 20,
+          "cacheRead": 0.4,
+          "cacheWrite": 5
         },
         "costMetadata": {
           "tiers": [
             {
-              "input": 10,
-              "output": 45,
-              "cache_read": 1,
-              "cache_write": 12.5,
+              "input": 8,
+              "output": 30,
+              "cache_read": 0.8,
+              "cache_write": 10,
               "tier": {
                 "type": "context",
                 "size": 272000
@@ -144450,13 +144465,28 @@
             }
           ],
           "contextOver200k": {
-            "input": 10,
-            "output": 45,
-            "cache_read": 1,
-            "cache_write": 12.5
+            "input": 8,
+            "output": 30,
+            "cache_read": 0.8,
+            "cache_write": 10
           }
         },
-        "costUnit": "USD per 1M tokens"
+        "costUnit": "USD per 1M tokens",
+        "provenance": {
+          "vendor": "models.dev",
+          "commit": "fde326351fbf011d3c007163af3046b97efbf6b6",
+          "sourcePaths": [
+            "providers/openai/provider.toml",
+            "providers/openai/models/gpt-5.6-sol.toml"
+          ],
+          "sourceHashes": [
+            "e73335d63f9c9b436422d347fb4a429c8316f7a4565235751e05981817125764",
+            "186db3c15de72ebcf442828e5519bf930659a74aa31082bba03d2398d26303cf"
+          ],
+          "capturedAt": "2026-09-29T21:19:24.297Z",
+          "unit": "USD per 1M tokens",
+          "currency": "USD"
+        }
       },
       "reasoningOptions": [
         {
@@ -144521,6 +144551,457 @@
           }
         },
         "costUnit": "USD per 1M tokens"
+      },
+      "reasoningOptions": [
+        {
+          "type": "effort",
+          "values": [
+            "none",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ]
+        }
+      ]
+    },
+    {
+      "modelId": "openai/gpt-6-astra",
+      "providerId": "openai",
+      "displayName": "GPT-6 Astra",
+      "version": "2026-09-04",
+      "capabilities": [
+        "text.chat",
+        "tools.function_calling",
+        "reasoning",
+        "structured.output"
+      ],
+      "modalities": [
+        "image",
+        "pdf",
+        "text"
+      ],
+      "contextWindow": 1050000,
+      "maxOutputTokens": 128000,
+      "pricing": {
+        "inputPer1M": 10,
+        "outputPer1M": 50,
+        "currency": "USD",
+        "costDimensionsPer1M": {
+          "input": 10,
+          "output": 50,
+          "cacheRead": 1,
+          "cacheWrite": 12.5
+        },
+        "costMetadata": {
+          "tiers": [
+            {
+              "input": 20,
+              "output": 75,
+              "cache_read": 2,
+              "cache_write": 25,
+              "tier": {
+                "type": "context",
+                "size": 272000
+              }
+            }
+          ],
+          "contextOver200k": {
+            "input": 20,
+            "output": 75,
+            "cache_read": 2,
+            "cache_write": 25
+          }
+        },
+        "costUnit": "USD per 1M tokens",
+        "provenance": {
+          "vendor": "models.dev",
+          "commit": "fde326351fbf011d3c007163af3046b97efbf6b6",
+          "sourcePaths": [
+            "providers/openai/provider.toml",
+            "providers/openai/models/gpt-6-astra.toml"
+          ],
+          "sourceHashes": [
+            "e73335d63f9c9b436422d347fb4a429c8316f7a4565235751e05981817125764",
+            "97a7cd9f6a18cb6f074294b409e27b2e329b8de08da5aa73062b179c516b7771"
+          ],
+          "capturedAt": "2026-09-29T21:19:24.297Z",
+          "unit": "USD per 1M tokens",
+          "currency": "USD"
+        }
+      },
+      "reasoningOptions": [
+        {
+          "type": "effort",
+          "values": [
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ]
+        }
+      ]
+    },
+    {
+      "modelId": "openai/gpt-6-luna",
+      "providerId": "openai",
+      "displayName": "GPT-6 Luna",
+      "version": "2026-09-22",
+      "capabilities": [
+        "text.chat",
+        "tools.function_calling",
+        "reasoning",
+        "structured.output"
+      ],
+      "modalities": [
+        "image",
+        "pdf",
+        "text"
+      ],
+      "contextWindow": 1050000,
+      "maxOutputTokens": 128000,
+      "pricing": {
+        "inputPer1M": 0.1,
+        "outputPer1M": 0.5,
+        "currency": "USD",
+        "costDimensionsPer1M": {
+          "input": 0.1,
+          "output": 0.5,
+          "cacheRead": 0.01,
+          "cacheWrite": 0.125
+        },
+        "costMetadata": {
+          "tiers": [
+            {
+              "input": 0.2,
+              "output": 0.75,
+              "cache_read": 0.02,
+              "cache_write": 0.25,
+              "tier": {
+                "type": "context",
+                "size": 272000
+              }
+            }
+          ],
+          "contextOver200k": {
+            "input": 0.2,
+            "output": 0.75,
+            "cache_read": 0.02,
+            "cache_write": 0.25
+          }
+        },
+        "costUnit": "USD per 1M tokens",
+        "provenance": {
+          "vendor": "models.dev",
+          "commit": "fde326351fbf011d3c007163af3046b97efbf6b6",
+          "sourcePaths": [
+            "providers/openai/provider.toml",
+            "providers/openai/models/gpt-6-luna.toml"
+          ],
+          "sourceHashes": [
+            "e73335d63f9c9b436422d347fb4a429c8316f7a4565235751e05981817125764",
+            "f68e23f8b81683c8e0c61247198b81043610c5806304f2ab9296f5ba94173f18"
+          ],
+          "capturedAt": "2026-09-29T21:19:24.297Z",
+          "unit": "USD per 1M tokens",
+          "currency": "USD"
+        }
+      },
+      "reasoningOptions": [
+        {
+          "type": "effort",
+          "values": [
+            "none",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ]
+        }
+      ]
+    },
+    {
+      "modelId": "openai/gpt-6-sol",
+      "providerId": "openai",
+      "displayName": "GPT-6 Sol",
+      "version": "2026-09-22",
+      "capabilities": [
+        "text.chat",
+        "tools.function_calling",
+        "reasoning",
+        "structured.output"
+      ],
+      "modalities": [
+        "image",
+        "pdf",
+        "text"
+      ],
+      "contextWindow": 1050000,
+      "maxOutputTokens": 128000,
+      "pricing": {
+        "inputPer1M": 2,
+        "outputPer1M": 10,
+        "currency": "USD",
+        "costDimensionsPer1M": {
+          "input": 2,
+          "output": 10,
+          "cacheRead": 0.2,
+          "cacheWrite": 2.5
+        },
+        "costMetadata": {
+          "tiers": [
+            {
+              "input": 4,
+              "output": 15,
+              "cache_read": 0.4,
+              "cache_write": 5,
+              "tier": {
+                "type": "context",
+                "size": 272000
+              }
+            }
+          ],
+          "contextOver200k": {
+            "input": 4,
+            "output": 15,
+            "cache_read": 0.4,
+            "cache_write": 5
+          }
+        },
+        "costUnit": "USD per 1M tokens",
+        "provenance": {
+          "vendor": "models.dev",
+          "commit": "fde326351fbf011d3c007163af3046b97efbf6b6",
+          "sourcePaths": [
+            "providers/openai/provider.toml",
+            "providers/openai/models/gpt-6-sol.toml"
+          ],
+          "sourceHashes": [
+            "e73335d63f9c9b436422d347fb4a429c8316f7a4565235751e05981817125764",
+            "96d0c4142d270b2777d818f8753a3263975d13a2ca3cebd22de48c0d90872e13"
+          ],
+          "capturedAt": "2026-09-29T21:19:24.297Z",
+          "unit": "USD per 1M tokens",
+          "currency": "USD"
+        }
+      },
+      "reasoningOptions": [
+        {
+          "type": "effort",
+          "values": [
+            "none",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ]
+        }
+      ]
+    },
+    {
+      "modelId": "openai/gpt-6.1-sol",
+      "providerId": "openai",
+      "displayName": "GPT-6.1 Sol",
+      "version": "2026-09-29",
+      "capabilities": [
+        "text.chat",
+        "tools.function_calling",
+        "reasoning",
+        "structured.output"
+      ],
+      "modalities": [
+        "image",
+        "pdf",
+        "text"
+      ],
+      "contextWindow": 1050000,
+      "maxOutputTokens": 128000,
+      "pricing": {
+        "inputPer1M": 2,
+        "outputPer1M": 10,
+        "currency": "USD",
+        "costDimensionsPer1M": {
+          "input": 2,
+          "output": 10,
+          "cacheRead": 0.1,
+          "cacheWrite": 2.5
+        },
+        "costMetadata": {
+          "tiers": [
+            {
+              "input": 4,
+              "output": 15,
+              "cache_read": 0.2,
+              "cache_write": 5,
+              "tier": {
+                "type": "context",
+                "size": 272000
+              }
+            }
+          ],
+          "contextOver200k": {
+            "input": 4,
+            "output": 15,
+            "cache_read": 0.2,
+            "cache_write": 5
+          }
+        },
+        "costUnit": "USD per 1M tokens",
+        "provenance": {
+          "vendor": "models.dev",
+          "commit": "fde326351fbf011d3c007163af3046b97efbf6b6",
+          "sourcePaths": [
+            "providers/openai/provider.toml",
+            "providers/openai/models/gpt-6.1-sol.toml"
+          ],
+          "sourceHashes": [
+            "e73335d63f9c9b436422d347fb4a429c8316f7a4565235751e05981817125764",
+            "edabc43e90e2daf45d6fa8e18c090ea1a411a56f38f487d08b5f57c8e18b5106"
+          ],
+          "capturedAt": "2026-09-29T21:19:24.297Z",
+          "unit": "USD per 1M tokens",
+          "currency": "USD"
+        }
+      },
+      "reasoningOptions": [
+        {
+          "type": "effort",
+          "values": [
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ]
+        }
+      ]
+    },
+    {
+      "modelId": "openai/gpt-daybreak-blue-latest",
+      "providerId": "openai",
+      "displayName": "Daybreak Blue",
+      "version": "2026-08-07",
+      "capabilities": [
+        "text.chat",
+        "tools.function_calling",
+        "reasoning",
+        "structured.output"
+      ],
+      "modalities": [
+        "image",
+        "pdf",
+        "text"
+      ],
+      "contextWindow": 1050000,
+      "maxOutputTokens": 128000,
+      "pricing": {
+        "inputPer1M": 4,
+        "outputPer1M": 20,
+        "currency": "USD",
+        "costDimensionsPer1M": {
+          "input": 4,
+          "output": 20,
+          "cacheRead": 0.4,
+          "cacheWrite": 5
+        },
+        "costMetadata": {
+          "tiers": [
+            {
+              "input": 8,
+              "output": 30,
+              "cache_read": 0.8,
+              "cache_write": 10,
+              "tier": {
+                "type": "context",
+                "size": 272000
+              }
+            }
+          ],
+          "contextOver200k": {
+            "input": 8,
+            "output": 30,
+            "cache_read": 0.8,
+            "cache_write": 10
+          }
+        },
+        "costUnit": "USD per 1M tokens",
+        "provenance": {
+          "vendor": "models.dev",
+          "commit": "fde326351fbf011d3c007163af3046b97efbf6b6",
+          "sourcePaths": [
+            "providers/openai/provider.toml",
+            "providers/openai/models/gpt-daybreak-blue-latest.toml"
+          ],
+          "sourceHashes": [
+            "e73335d63f9c9b436422d347fb4a429c8316f7a4565235751e05981817125764",
+            "43c555dca3d6ba23b566e89f3b18ebac672ecb234be47ef1674b6b0effc79841"
+          ],
+          "capturedAt": "2026-09-29T21:19:24.297Z",
+          "unit": "USD per 1M tokens",
+          "currency": "USD"
+        }
+      },
+      "reasoningOptions": [
+        {
+          "type": "effort",
+          "values": [
+            "none",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ]
+        }
+      ]
+    },
+    {
+      "modelId": "openai/gpt-daybreak-red-latest",
+      "providerId": "openai",
+      "displayName": "Daybreak Red",
+      "version": "2026-08-07",
+      "capabilities": [
+        "text.chat",
+        "tools.function_calling",
+        "reasoning",
+        "structured.output"
+      ],
+      "modalities": [
+        "image",
+        "text"
+      ],
+      "contextWindow": 400000,
+      "maxOutputTokens": 128000,
+      "pricing": {
+        "inputPer1M": 12.5,
+        "outputPer1M": 75,
+        "currency": "USD",
+        "costDimensionsPer1M": {
+          "input": 12.5,
+          "output": 75,
+          "cacheRead": 1.25,
+          "cacheWrite": 15.625
+        },
+        "costUnit": "USD per 1M tokens",
+        "provenance": {
+          "vendor": "models.dev",
+          "commit": "fde326351fbf011d3c007163af3046b97efbf6b6",
+          "sourcePaths": [
+            "providers/openai/provider.toml",
+            "providers/openai/models/gpt-daybreak-red-latest.toml"
+          ],
+          "sourceHashes": [
+            "e73335d63f9c9b436422d347fb4a429c8316f7a4565235751e05981817125764",
+            "dcfdb26f3012a91cf8f78bd8da2eaca6282e889d5c790a578b869f4016f8c756"
+          ],
+          "capturedAt": "2026-09-29T21:19:24.297Z",
+          "unit": "USD per 1M tokens",
+          "currency": "USD"
+        }
       },
       "reasoningOptions": [
         {
