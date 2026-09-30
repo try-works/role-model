@@ -1,0 +1,29 @@
+﻿{
+  "requestId": "req-d760c022-3e77-40cb-9519-80ca7521bca6",
+  "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "routingMode": {
+    "source": "alias-default",
+    "aliasMode": "difficulty",
+    "effectiveMode": "difficulty"
+  },
+  "strategyResolution": {
+    "strategy": "quality",
+    "source": "difficulty",
+    "weights": {
+      "quality": 0.5,
+      "latency": 0.1,
+      "throughput": 0.05,
+      "cost": 0.1,
+      "reliability": 0.2,
+      "preference": 0.05
+    },
+    "weightsDigest": "sha256:a94fe0627cf2c99bf03f82d705132366213a47266f5b152bb73855071d0e1563"
+  },
+  "aliasPostureBinding": null,
+  "latencySelection": {
+    "outcome": "disabled",
+    "chosenEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "bucketUpperBoundTokens": null,
+    "reason": "measured-latency selection input is not authorized"
+  }
+}

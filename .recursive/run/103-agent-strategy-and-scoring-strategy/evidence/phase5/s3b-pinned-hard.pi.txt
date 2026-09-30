@@ -1,0 +1,5 @@
+﻿**Policy:** exponential backoff + full jitter, max N attempts, capped delay, per-message deadline. Idempotency key = message id, deduped via TTL store. Ack only after side effects durably commit (outbox).
+
+**Invariants:** (1) each message's effect applies at most once; (2) retries ≤ N and total delay ≤ deadline; (3) every redelivery carries the same idempotency key; (4) never ack before durable commit; (5) ordering is not assumed.
+
+**Tests:** duplicate delivery; crash between effect and ack; lost ack; thundering-herd retry storm; poison message → DLQ; clock skew; concurrent workers, same key; backoff cap respected; deadline expiry mid-retry.

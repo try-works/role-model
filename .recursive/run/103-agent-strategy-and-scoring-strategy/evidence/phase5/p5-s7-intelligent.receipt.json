@@ -1,0 +1,35 @@
+﻿{
+  "requestId": "req-5cff1c39-58dd-4982-bf63-6d998201dfde",
+  "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-high",
+  "routingMode": {
+    "source": "alias-default",
+    "aliasMode": "controller",
+    "effectiveMode": "controller"
+  },
+  "controllerRouting": {
+    "active": true,
+    "acceptedDirectives": {
+      "requiredCapabilities": [
+        "text.chat"
+      ],
+      "preferredCapabilities": [
+        "communication.user_facing"
+      ],
+      "strategy": "balanced"
+    }
+  },
+  "strategyResolution": {
+    "strategy": "balanced",
+    "source": "controller",
+    "weights": {
+      "quality": 0.3,
+      "latency": 0.2,
+      "throughput": 0.1,
+      "cost": 0.2,
+      "reliability": 0.15,
+      "preference": 0.05
+    },
+    "weightsDigest": "sha256:8c49b853bebd72f4596c926b2fc2181c67f8e2580c387d7ac8fb86457e7db9e9"
+  },
+  "aliasPostureBinding": null
+}

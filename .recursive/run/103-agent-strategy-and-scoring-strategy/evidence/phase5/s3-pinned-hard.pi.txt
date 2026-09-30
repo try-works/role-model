@@ -1,0 +1,6 @@
+﻿node.exe : 400 "runtime telemetry failure classification stub exceeds 16384 bytes"
+At D:\pi\node_modules\.bin\pi.ps1:24 char:5
++     & "node$exe"  "$basedir/../@earendil-works/pi-coding-agent/dist/c ...
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (400 "runtime te...ds 16384 bytes":String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError

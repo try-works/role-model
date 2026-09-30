@@ -1,0 +1,18 @@
+﻿{
+  "requestId": "req-f03ce5eb-2fef-426a-83b5-74266f0e2212",
+  "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-high",
+  "routingMode": {
+    "source": "alias-default",
+    "aliasMode": "difficulty",
+    "effectiveMode": "difficulty"
+  },
+  "strategyResolution": null,
+  "aliasPostureBinding": null,
+  "latencySelection": {
+    "outcome": "disabled",
+    "chosenEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-high",
+    "bucketUpperBoundTokens": null,
+    "reason": "measured-latency selection input is not authorized"
+  },
+  "routingFailure": null
+}

@@ -1,0 +1,25 @@
+﻿{
+  "requestId": "req-57b48a03-ca94-4c40-87a9-2590973ff5ad",
+  "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+  "routingMode": null,
+  "strategyResolution": {
+    "strategy": "balanced",
+    "source": "operator",
+    "weights": {
+      "quality": 0.3,
+      "latency": 0.2,
+      "throughput": 0.1,
+      "cost": 0.2,
+      "reliability": 0.15,
+      "preference": 0.05
+    },
+    "weightsDigest": "sha256:8c49b853bebd72f4596c926b2fc2181c67f8e2580c387d7ac8fb86457e7db9e9"
+  },
+  "aliasPostureBinding": null,
+  "latencySelection": {
+    "outcome": "disabled",
+    "chosenEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+    "bucketUpperBoundTokens": null,
+    "reason": "measured-latency selection input is not authorized"
+  }
+}

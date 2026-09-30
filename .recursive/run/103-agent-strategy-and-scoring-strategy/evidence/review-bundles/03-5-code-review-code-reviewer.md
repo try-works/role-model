@@ -3,8 +3,8 @@ Phase: `03.5 Code Review`
 Role: `code-reviewer`
 Bundle Path: `/.recursive/run/103-agent-strategy-and-scoring-strategy/evidence/review-bundles/03-5-code-review-code-reviewer.md`
 Artifact Path: `/.recursive/run/103-agent-strategy-and-scoring-strategy/03-implementation-summary.md`
-Artifact Content Hash: `c1c5d07b4327dbef8b23751b432999cf867cf5283e4586bccdb3e64da4efdadc`
-GeneratedAt: `2026-09-30T08:10:08Z`
+Artifact Content Hash: `13f72c24b293db01c8c81540f7b4c29aaa238790e43c1586be41c398616cc2f2`
+GeneratedAt: `2026-09-30T13:19:17Z`
 
 ## Bundle Scope
 - Canonical delegated review bundle for recursive-mode audit/review work.
@@ -41,6 +41,7 @@ GeneratedAt: `2026-09-30T08:10:08Z`
 - `role-model-router/apps/runtime-host-bridge/test/agent-strategy-request-binding.test.ts`
 - `role-model-router/apps/runtime-host-bridge/test/agent-strategy-section.test.ts`
 - `role-model-router/apps/runtime-host-bridge/test/agent-strategy-workload-examples.test.ts`
+- `role-model-router/apps/runtime-host-bridge/test/backend-unified-runtime-config.test.ts`
 - `role-model-router/apps/runtime-host-bridge/test/controller-latency-strategy.test.ts`
 - `role-model-router/apps/runtime-host-bridge/test/index.test.ts`
 - `role-model-router/apps/runtime-host-bridge/test/routing-latency-effective-metric.test.ts`
@@ -52,6 +53,7 @@ GeneratedAt: `2026-09-30T08:10:08Z`
 - `role-model-router/apps/runtime-host-bridge/test/scoring-strategy-provenance.test.ts`
 - `role-model-router/apps/runtime-host-bridge/test/scoring-strategy-resolution.test.ts`
 - `role-model-router/apps/runtime-host-bridge/test/scoring-strategy.test.ts`
+- `role-model-router/apps/runtime-host-bridge/test/unified-runtime-config.test.ts`
 - `role-model-router/apps/runtime-ui/.react-router/types/+routes.ts`
 - `role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/agent-strategy.ts`
 - `role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/workloads.ts`
@@ -80,6 +82,8 @@ GeneratedAt: `2026-09-30T08:10:08Z`
 - `role-model-router/apps/runtime-ui/app/routes/workloads.tsx`
 - `role-model-router/packages/core/src/router.ts`
 - `role-model-router/packages/runtime-observability/src/index.ts`
+- `role-model-router/packages/sqlite-memory/src/legacy-migration.ts`
+- `role-model-router/packages/sqlite-memory/test/run98-a40-stub-fidelity.test.ts`
 
 ## Upstream Artifacts To Re-read
 - `.recursive/run/103-agent-strategy-and-scoring-strategy/02-to-be-plan.md`
@@ -95,7 +99,10 @@ GeneratedAt: `2026-09-30T08:10:08Z`
 - `.recursive/run/103-agent-strategy-and-scoring-strategy/00-requirements.md`
 
 ## Targeted Code References
-- `ca5c2126ca566086cfbe8f83cfdf339aba0879ff`
+- `role-model-router/apps/runtime-host-bridge/src/scoring-strategy.ts`
+- `role-model-router/apps/runtime-host-bridge/src/agent-strategy.ts`
+- `role-model-router/apps/runtime-host-bridge/src/unified-runtime-config.ts`
+- `role-model-router/apps/runtime-host-bridge/src/index.ts`
 
 ## Evidence References
 - none

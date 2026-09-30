@@ -1,0 +1,40 @@
+﻿{
+  "requestId": "req-58dc3be9-b856-4467-9590-41435df2efc8",
+  "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash",
+  "routingMode": null,
+  "strategyResolution": {
+    "strategy": "cost",
+    "source": "operator",
+    "weights": {
+      "quality": 0.15,
+      "latency": 0.1,
+      "throughput": 0.05,
+      "cost": 0.5,
+      "reliability": 0.15,
+      "preference": 0.05
+    },
+    "weightsDigest": "sha256:36df259eabc8413a00118ebdf45148d19095d4f9061c641626b0ec4a2f3eef5a"
+  },
+  "aliasPostureBinding": {
+    "aliasId": "batch.remote-only",
+    "name": "batch",
+    "kind": "workload",
+    "declaredRoleId": null,
+    "presetRoleId": null,
+    "roleId": null,
+    "roleSource": "none",
+    "requiredCapabilities": [
+      "reasoning.effort_control",
+      "text.chat",
+      "tools.function_calling"
+    ],
+    "preferLocal": false,
+    "scoringStrategy": "cost"
+  },
+  "latencySelection": {
+    "outcome": "disabled",
+    "chosenEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash",
+    "bucketUpperBoundTokens": null,
+    "reason": "measured-latency selection input is not authorized"
+  }
+}

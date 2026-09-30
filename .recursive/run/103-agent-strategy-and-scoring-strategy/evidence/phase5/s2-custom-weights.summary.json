@@ -1,0 +1,18 @@
+﻿{
+    "scenario":  "s2-custom-weights",
+    "alias":  "baseline.remote-only",
+    "expectation":  "strategy custom / source operator / weights + digest",
+    "endpointId":  null,
+    "effectiveMode":  null,
+    "strategy":  null,
+    "source":  null,
+    "weightsDigest":  null,
+    "weights":  null,
+    "discarded":  null,
+    "latencyOutcome":  null,
+    "postureAlias":  null,
+    "postureKind":  null,
+    "postureRoleSource":  null,
+    "postureRoleId":  null,
+    "postureCapabilities":  ""
+}

@@ -1,0 +1,8 @@
+﻿node.exe : Warning: Model "batch.remote-only" not found for provider "role-model". Using custom model id.
+At D:\pi\node_modules\.bin\pi.ps1:24 char:5
++     & "node$exe"  "$basedir/../@earendil-works/pi-coding-agent/dist/c ...
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Warning: Model ...ustom model id.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+P5-S6-OK

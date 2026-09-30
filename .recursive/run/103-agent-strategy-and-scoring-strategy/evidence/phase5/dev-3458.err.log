@@ -1,0 +1,77 @@
+(node:42200) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `role-model-dev --trace-warnings ...` to show where the warning was created)
+[track-b-sidecar] (node:30064) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+[track-b-sidecar] (Use `node --trace-warnings ...` to show where the warning was created)
+Runtime strategy posture warning: workload "embedding" references unknown capability "embeddings.text"
+Runtime strategy posture scope coder.local-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope batch.local-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope embedding.local-only has no routable targets (ALIAS_POOL_EMPTY)
+[run101] replay queue stays legacy: queue policy: no queue policy found (looked for C:\Users\erikb\AppData\Local\role-model-runtime-dev\standalone-runtime-dev\queues\queue-policy.json)
+[run101] evaluation queue stays legacy: queue policy: no queue policy found (looked for C:\Users\erikb\AppData\Local\role-model-runtime-dev\standalone-runtime-dev\queues\queue-policy.json)
+[run101] learner.derive stays legacy: queue policy: no queue policy found (looked for C:\Users\erikb\AppData\Local\role-model-runtime-dev\standalone-runtime-dev\queues\queue-policy.json)
+[run101] learner.promote stays legacy: queue policy: no queue policy found (looked for C:\Users\erikb\AppData\Local\role-model-runtime-dev\standalone-runtime-dev\queues\queue-policy.json)
+[run101] replay job scope: learned runtime:d0b9cd2795369ff0c7afd08254b37e4d
+[run101] recovery page payload shape: value,businessOutput,durableLocator,evidenceRef,readCapability,workerPid
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run98] remote-health recovery: deepseek.personal.deepseek-api-key.global.deepseek-flash-max, deepseek.personal.deepseek-api-key.global.deepseek-v4-pro, deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-max, deepseek.personal.run103.global.deepseek-v4-flash, deepseek.personal.run103.global.deepseek-v4-pro
+Runtime strategy posture warning: workload "embedding" references unknown capability "embeddings.text"
+Runtime strategy posture scope coder.local-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope batch.local-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope embedding.local-only has no routable targets (ALIAS_POOL_EMPTY)
+[run98] remote-health recovery: deepseek.personal.deepseek-api-key.global.deepseek-flash, deepseek.personal.deepseek-api-key.global.deepseek-flash-high, deepseek.personal.deepseek-api-key.global.deepseek-flash-max, deepseek.personal.deepseek-api-key.global.deepseek-v4-pro, deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-max, deepseek.personal.run103.global.deepseek-v4-flash, deepseek.personal.run103.global.deepseek-v4-pro
+[run98] remote-health recovery: deepseek.personal.deepseek-api-key.global.deepseek-flash-max, deepseek.personal.deepseek-api-key.global.deepseek-v4-pro, deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-max, deepseek.personal.run103.global.deepseek-v4-flash, deepseek.personal.run103.global.deepseek-v4-pro
+Runtime strategy posture warning: workload "embedding" references unknown capability "embeddings.text"
+Runtime strategy posture scope coder.local-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope batch.local-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope embedding.local-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture warning: workload "embedding" references unknown capability "embeddings.text"
+Runtime strategy posture scope coder.local-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope batch.local-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope embedding.local-only has no routable targets (ALIAS_POOL_EMPTY)
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+Runtime strategy posture warning: workload "embedding" references unknown capability "embeddings.text"
+Runtime strategy posture scope coder.local-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope batch.local-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope embedding.local-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture warning: workload "embedding" references unknown capability "embeddings.text"
+Runtime strategy posture scope coder.local-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope batch.local-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope embedding.local-only has no routable targets (ALIAS_POOL_EMPTY)
+[run98] remote-health recovery: deepseek.personal.deepseek-api-key.global.deepseek-flash, deepseek.personal.deepseek-api-key.global.deepseek-flash-high, deepseek.personal.deepseek-api-key.global.deepseek-flash-max, deepseek.personal.deepseek-api-key.global.deepseek-v4-pro, deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-max, deepseek.personal.run103.global.deepseek-v4-flash, deepseek.personal.run103.global.deepseek-v4-pro
+Runtime strategy posture warning: workload "embedding" references unknown capability "embeddings.text"
+Runtime strategy posture scope coder.local-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope batch.local-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope embedding.local-only has no routable targets (ALIAS_POOL_EMPTY)
+[run98] contribution upload degraded:req-52ec1438-515c-40ee-9612-f5b8e2e5b1b5 TrackBPrivateOperationError private Track B operation timed out after 5000ms
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run98] remote-health recovery: deepseek.personal.deepseek-api-key.global.deepseek-flash-max, deepseek.personal.deepseek-api-key.global.deepseek-v4-pro, deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-max, deepseek.personal.run103.global.deepseek-v4-flash, deepseek.personal.run103.global.deepseek-v4-pro
+[run98] remote-health recovery: deepseek.personal.deepseek-api-key.global.deepseek-flash-max, deepseek.personal.deepseek-api-key.global.deepseek-v4-pro, deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-max, deepseek.personal.run103.global.deepseek-v4-flash, deepseek.personal.run103.global.deepseek-v4-pro
+[run98] remote-health recovery: deepseek.personal.deepseek-api-key.global.deepseek-flash, deepseek.personal.deepseek-api-key.global.deepseek-flash-high, deepseek.personal.deepseek-api-key.global.deepseek-flash-max, deepseek.personal.deepseek-api-key.global.deepseek-v4-pro, deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-max, deepseek.personal.run103.global.deepseek-v4-flash, deepseek.personal.run103.global.deepseek-v4-pro
+Runtime strategy posture warning: workload "embedding" references unknown capability "embeddings.text"
+Runtime strategy posture scope coder.local-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope batch.local-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope embedding.local-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture warning: workload "embedding" references unknown capability "embeddings.text"
+Runtime strategy posture scope coder.local-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope batch.local-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope embedding.local-only has no routable targets (ALIAS_POOL_EMPTY)
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run98] remote-health recovery: deepseek.personal.deepseek-api-key.global.deepseek-flash, deepseek.personal.deepseek-api-key.global.deepseek-flash-high, deepseek.personal.deepseek-api-key.global.deepseek-flash-max, deepseek.personal.deepseek-api-key.global.deepseek-v4-pro, deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-max, deepseek.personal.run103.global.deepseek-v4-flash, deepseek.personal.run103.global.deepseek-v4-pro
+[run98] contribution upload degraded:replay-req-f70405aa-355d-4cf9-8292-c7286219ea49-007a5c775f98ba52 TrackBPrivateOperationError private Track B operation timed out after 5000ms
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run98] contribution upload degraded:replay-req-f70405aa-355d-4cf9-8292-c7286219ea49-1ce9a9c5c36b6065 TrackBPrivateOperationError private Track B operation timed out after 5000ms
+[run98] remote-health recovery: deepseek.personal.deepseek-api-key.global.deepseek-flash, deepseek.personal.deepseek-api-key.global.deepseek-flash-high, deepseek.personal.deepseek-api-key.global.deepseek-flash-max, deepseek.personal.deepseek-api-key.global.deepseek-v4-pro, deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-max, deepseek.personal.run103.global.deepseek-v4-flash, deepseek.personal.run103.global.deepseek-v4-pro
+[run98] remote-health recovery gave up after 10 attempts; 1 endpoint(s) still degraded
+[run98] remote-health recovery: deepseek.personal.deepseek-api-key.global.deepseek-flash-high, deepseek.personal.deepseek-api-key.global.deepseek-flash-max, deepseek.personal.deepseek-api-key.global.deepseek-v4-pro, deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-max, deepseek.personal.run103.global.deepseek-v4-flash, deepseek.personal.run103.global.deepseek-v4-pro
+[run98] remote-health recovery gave up after 10 attempts; 2 endpoint(s) still degraded
+Runtime strategy posture warning: workload "embedding" references unknown capability "embeddings.text"
+Runtime strategy posture scope coder.local-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope batch.local-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope embedding.local-only has no routable targets (ALIAS_POOL_EMPTY)
+[run98] contribution upload degraded:req-3751e0db-41c1-4295-8a47-90e69b9cc684 TrackBPrivateOperationError private Track B operation timed out after 5000ms
+[run98] contribution upload degraded:replay-req-f70405aa-355d-4cf9-8292-c7286219ea49-dea4a8f63a4a88a7 TrackBPrivateOperationError private Track B operation timed out after 5000ms
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run98] contribution upload degraded:req-96cc96c2-7498-484a-ae17-3b1a78c25e41 TrackBPrivateOperationError private Track B operation timed out after 5000ms
+[run98] contribution upload degraded:req-0a00ce04-a8bc-4ac2-ac48-cf7cb03925eb TrackBPrivateOperationError private Track B operation timed out after 5000ms
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run98] contribution upload degraded:replay-req-198b2c3b-4b05-4e7c-a51a-e758c77797de-1aa294859511e3da TrackBPrivateOperationError private Track B operation timed out after 5000ms

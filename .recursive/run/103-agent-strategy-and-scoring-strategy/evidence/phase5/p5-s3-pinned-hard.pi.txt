@@ -1,0 +1,18 @@
+﻿**Design:** Each message carries a unique `id` and `attempt` counter. On failure, retry with exponential backoff and jitter, capping at N attempts. Worker tracks processed `id`s (dedupe store) and final states.
+
+**Invariants:**
+1. At-most-once side effects (idempotent handling)
+2. Retries bounded (≤N)
+3. At-least-once delivery to DLQ after exhaustion
+4. Deterministic outcome per id
+
+**Edge cases to test:**
+- Crash between processing and dedupe write
+- Duplicate delivery mid-retry
+- Clock skew/jitter collisions
+- DLQ full or write fails
+- Attempt counter reset on lease expiry
+- Concurrent workers racing same id
+- Partial success before failure
+
+(118 words)
