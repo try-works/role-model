@@ -499,6 +499,7 @@ describe("editing configuration from the panel", () => {
   interface PanelInternals {
     SETTINGS_NS: string;
     CONFIG_FIELDS: readonly string[];
+    settingsRemote: (ctx: unknown) => unknown;
     readConfig: (ctx: unknown) => Promise<Record<string, unknown> | undefined>;
     buildPatch: (
       current: Record<string, unknown>,
@@ -590,12 +591,13 @@ describe("editing configuration from the panel", () => {
     return { component, inject: plugin.inject ?? [], internals: plugin.__internals, ctx };
   }
 
-  test("injects the settings Remote it writes through", () => {
+  test("mounts on the settings slot alone, so an absent Remote cannot blank the page", () => {
     const { inject } = applyWith(fakeSettings().settings);
     expect(inject).toContain("slots");
-    // Without these the client context carries no `remote.settings` to call.
-    expect(inject).toContain("remote");
-    expect(inject).toContain("remote.settings");
+    // A Remote namespace is a Cordis child service, and an injection edge that cannot
+    // resolve stops the plugin mounting — which blanks the whole settings page. The
+    // Remote is read through `ctx.remote` behind a guard instead.
+    expect(inject).not.toContain("remote.settings");
   });
 
   test("renders an editable control for every configurable setting", () => {
@@ -667,5 +669,18 @@ describe("editing configuration from the panel", () => {
     const failure = await internals.writeConfig(ctx, {});
     expect(failure).toBeUndefined();
     expect(writes).toEqual([]);
+  });
+
+  test("a context without the settings Remote degrades instead of throwing", async () => {
+    // This is the case that matters: the page must still render when the Remote is
+    // absent, so every access is guarded rather than assumed.
+    const { internals } = applyWith(undefined);
+    const bare = {};
+    expect(internals.settingsRemote(bare)).toBeUndefined();
+    await expect(internals.readConfig(bare)).resolves.toBeUndefined();
+    // The write reports why it could not save, rather than appearing to succeed.
+    await expect(internals.writeConfig(bare, { endpoint: "http://x" })).resolves.toContain(
+      "unavailable",
+    );
   });
 });

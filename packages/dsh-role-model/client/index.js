@@ -307,6 +307,23 @@ window.__ModuleLoader__.load({
     const NUMERIC_FIELDS = new Set(["requestTimeoutMs"]);
 
     /**
+     * Read the settings Remote, when the context exposes one.
+     *
+     * Reached through `ctx.remote` rather than a hard `remote.settings` injection: an
+     * injection edge that cannot resolve means the plugin never mounts, which blanks
+     * the whole settings page — far worse than a form that cannot save. The write path
+     * is guarded the same way, and says so in the UI when the surface is missing.
+     * @param ctx - the client plugin context.
+     * @returns the namespace's surface, or undefined when it is not available.
+     */
+    function settingsRemote(ctx) {
+      const namespace = ctx?.remote?.settings;
+      return namespace !== undefined && typeof namespace.update === "function"
+        ? namespace
+        : undefined;
+    }
+
+    /**
      * Read one namespace's current values through the settings Remote.
      *
      * Never throws: a settings surface that is unavailable must leave the form
@@ -315,8 +332,10 @@ window.__ModuleLoader__.load({
      * @returns the current values, or undefined when they cannot be read.
      */
     async function readConfig(ctx) {
+      const namespace = settingsRemote(ctx);
+      if (namespace === undefined || typeof namespace.describe !== "function") return undefined;
       try {
-        const response = await ctx.remote.settings.describe();
+        const response = await namespace.describe();
         if (response === undefined || response.ok !== true) return undefined;
         const namespaces = response.value?.namespaces;
         if (!Array.isArray(namespaces)) return undefined;
@@ -383,8 +402,12 @@ window.__ModuleLoader__.load({
      */
     async function writeConfig(ctx, patch) {
       if (Object.keys(patch).length === 0) return undefined;
+      const namespace = settingsRemote(ctx);
+      if (namespace === undefined) {
+        return "the settings service is unavailable, so this change cannot be saved yet";
+      }
       try {
-        const response = await ctx.remote.settings.update(SETTINGS_NS, patch, undefined);
+        const response = await namespace.update(SETTINGS_NS, patch, undefined);
         if (response !== undefined && response.ok === true) return undefined;
         return response?.error?.message ?? "the settings service refused the write";
       } catch (error) {
@@ -720,11 +743,14 @@ window.__ModuleLoader__.load({
     }
 
     return {
-      // The harness orders activation with these edges; the settings section slot is
-      // provided by the settings shell, so wait for it. `remote.settings` is the
-      // generated Remote namespace this page writes configuration through — without
-      // it the client context carries no way to persist anything.
-      inject: ["slots", "remote", "remote.settings"],
+      // The settings section slot is provided by the settings shell, so wait for it.
+      //
+      // `remote.settings` is deliberately NOT injected. A namespace is a Cordis child
+      // service (`remote.<namespace>`), and an injection edge that cannot resolve keeps
+      // the plugin from mounting at all — which blanks the entire settings page. The
+      // Remote is instead read through `ctx.remote` behind a guard, so an unavailable
+      // settings surface costs the save button, not the page.
+      inject: ["slots"],
 
       apply(ctx) {
         panelContext = ctx;
@@ -749,6 +775,7 @@ window.__ModuleLoader__.load({
       __internals: {
         SETTINGS_NS,
         CONFIG_FIELDS,
+        settingsRemote,
         readConfig,
         buildPatch,
         writeConfig,
