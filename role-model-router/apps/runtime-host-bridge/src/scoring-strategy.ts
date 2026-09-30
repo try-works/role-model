@@ -337,6 +337,37 @@ export interface RequestStrategyInput {
 }
 
 /**
+ * Run 103 / SP5g - a posture alias may carry its own scoring strategy. A preset replaces the
+ * configured operator strategy; `custom` keeps the configured custom weights, and an alias that
+ * asks for `custom` while the operator saved no weights fails closed to the configured posture
+ * (design document sections 5 and 6.2).
+ */
+export function overlayPostureOperator(input: {
+  readonly posture?: RoutingPosture;
+  readonly aliasStrategy: ScoringStrategyName | null;
+}): RoutingPosture | undefined {
+  const aliasStrategy = input.aliasStrategy;
+  if (!aliasStrategy) {
+    return input.posture;
+  }
+  if (aliasStrategy === "custom") {
+    if (input.posture?.operator?.name === "custom") {
+      return { ...input.posture, scoringStrategy: "custom" };
+    }
+    return input.posture;
+  }
+  const base = input.posture ?? decodeRoutingPosture({});
+  return {
+    ...base,
+    scoringStrategy: aliasStrategy,
+    operator: {
+      name: aliasStrategy,
+      weights: weightsForStrategyName(aliasStrategy, SCORING_PRESETS.balanced),
+    },
+  };
+}
+
+/**
  * Run 103 / SP2c - the request-level entry point: a posture plus the difficulty result produce
  * the effective strategy that is written into the routing request.
  */

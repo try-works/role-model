@@ -1,6 +1,7 @@
 import { parse, stringify } from "yaml";
 
 import {
+  AGENT_STRATEGY_NAME_PATTERN,
   type AgentStrategyEntry,
   decodeAgentStrategyEntry,
 } from "./agent-strategy.js";
@@ -86,6 +87,12 @@ export interface UnifiedRuntimeConfigProvider {
 export interface UnifiedRuntimeModelAliasConfig {
   readonly aliasId: string;
   readonly mode?: UnifiedRuntimeAliasRoutingMode | null;
+  /**
+   * Run 103 / SP5e - set on the rows the runtime derives from an `agent_strategies` or `workloads`
+   * entry. The marker keeps the derived rows identifiable so they are regenerated from the blocks
+   * instead of accumulating as user aliases.
+   */
+  readonly posture?: { readonly kind: "role" | "workload"; readonly name: string } | null;
   readonly modelIds: readonly string[];
   /** Optional exact endpoint-instance allowlist; omitted means all expanded siblings. */
   readonly endpointIds?: readonly string[];
@@ -341,6 +348,7 @@ interface RawUnifiedRuntimeConfig {
       string,
       {
         readonly mode?: string;
+        readonly posture?: string;
         readonly model_ids?: readonly string[];
         readonly endpoint_ids?: readonly string[];
         readonly preferred_endpoint_ids?: readonly string[];
@@ -903,15 +911,51 @@ function normalizeModelAliasInput(
       `${prefix}.${aliasId}.preferred_endpoint_ids must be a subset of endpoint_ids.`,
     );
   }
+  const posture = readPostureMarker(value, `${prefix}.${aliasId}.posture`);
   return {
     aliasId,
     mode: readAliasRoutingMode(
       "mode" in value ? value.mode : undefined,
       `${prefix}.${aliasId}.mode`,
     ),
+    ...(posture !== undefined ? { posture } : {}),
     modelIds,
     ...(endpointIds !== undefined ? { endpointIds } : {}),
     ...(preferredEndpointIds !== undefined ? { preferredEndpointIds } : {}),
+  };
+}
+
+/**
+ * Run 103 / SP5e - the `posture` marker on a derived alias row. It is machine-written, so a
+ * malformed value is an error rather than a silent fallback to a user alias.
+ */
+function readPostureMarker(
+  value: Record<string, unknown>,
+  path: string,
+): { readonly kind: "role" | "workload"; readonly name: string } | undefined {
+  const raw = value.posture;
+  if (raw === undefined || raw === null) {
+    return undefined;
+  }
+  if (typeof raw !== "string") {
+    throw new Error(`${path} must be "agent_strategy:<name>" or "workload:<name>".`);
+  }
+  const [family, name, ...rest] = raw.split(":");
+  const kind = family === "agent_strategy" ? "role" : family === "workload" ? "workload" : null;
+  if (!kind || rest.length > 0 || !name || !AGENT_STRATEGY_NAME_PATTERN.test(name)) {
+    throw new Error(`${path} must be "agent_strategy:<name>" or "workload:<name>".`);
+  }
+  return { kind, name };
+}
+
+function renderPostureMarker(
+  posture: UnifiedRuntimeModelAliasConfig["posture"],
+): Record<string, string> {
+  if (!posture) {
+    return {};
+  }
+  return {
+    posture: `${posture.kind === "role" ? "agent_strategy" : "workload"}:${posture.name}`,
   };
 }
 
@@ -1778,6 +1822,9 @@ function mergeCanonicalAliasEntries(
     merged.set(alias.aliasId, {
       aliasId: alias.aliasId,
       mode: existing.mode ?? alias.mode ?? null,
+      ...((existing.posture ?? alias.posture) !== undefined
+        ? { posture: existing.posture ?? alias.posture ?? null }
+        : {}),
       modelIds: [...new Set([...existing.modelIds, ...alias.modelIds])],
       ...(mergedEndpointIds !== undefined ? { endpointIds: mergedEndpointIds } : {}),
       ...(mergedPreferredEndpointIds.length > 0
@@ -1800,6 +1847,8 @@ function sameCanonicalAliasList(
         nextAlias !== undefined &&
         alias.aliasId === nextAlias.aliasId &&
         (alias.mode ?? null) === (nextAlias.mode ?? null) &&
+        (alias.posture?.kind ?? null) === (nextAlias.posture?.kind ?? null) &&
+        (alias.posture?.name ?? null) === (nextAlias.posture?.name ?? null) &&
         alias.modelIds.length === nextAlias.modelIds.length &&
         alias.modelIds.every((modelId, modelIndex) => modelId === nextAlias.modelIds[modelIndex]) &&
         (alias.endpointIds ?? []).length === (nextAlias.endpointIds ?? []).length &&
@@ -2131,6 +2180,7 @@ export function renderUnifiedRuntimeConfigText(config: UnifiedRuntimeConfig): st
       config.modelAliases.map((alias) => [
         alias.aliasId,
         {
+          ...renderPostureMarker(alias.posture),
           ...(alias.mode !== null ? { mode: alias.mode } : {}),
           model_ids: [...alias.modelIds],
           ...(alias.endpointIds !== undefined ? { endpoint_ids: [...alias.endpointIds] } : {}),

@@ -4964,6 +4964,13 @@ describe("runtime-host-bridge", () => {
         ],
         excludedTargets: [],
       },
+      /** Run 103 SP3c: every decision carries the scoring-strategy receipt. */
+      strategyResolution: {
+        strategy: "balanced",
+        source: "default",
+        weightsDigest:
+          "sha256:8c49b853bebd72f4596c926b2fc2181c67f8e2580c387d7ac8fb86457e7db9e9",
+      },
     });
   });
 
@@ -5296,6 +5303,13 @@ describe("runtime-host-bridge", () => {
             reasons: ["missing_capability.tools.function_calling"],
           },
         ],
+      },
+      /** Run 103 SP3c: every decision carries the scoring-strategy receipt. */
+      strategyResolution: {
+        strategy: "balanced",
+        source: "default",
+        weightsDigest:
+          "sha256:8c49b853bebd72f4596c926b2fc2181c67f8e2580c387d7ac8fb86457e7db9e9",
       },
     });
   });
@@ -6204,6 +6218,13 @@ describe("runtime-host-bridge", () => {
           },
         ],
       },
+      /** Run 103 SP3c: every decision carries the scoring-strategy receipt. */
+      strategyResolution: {
+        strategy: "balanced",
+        source: "default",
+        weightsDigest:
+          "sha256:8c49b853bebd72f4596c926b2fc2181c67f8e2580c387d7ac8fb86457e7db9e9",
+      },
     });
   });
 
@@ -6359,6 +6380,13 @@ describe("runtime-host-bridge", () => {
           "moonshot.personal.primary.global.kimi-k2.5",
         ],
         excludedTargets: [],
+      },
+      /** Run 103 SP3c: every decision carries the scoring-strategy receipt. */
+      strategyResolution: {
+        strategy: "balanced",
+        source: "default",
+        weightsDigest:
+          "sha256:8c49b853bebd72f4596c926b2fc2181c67f8e2580c387d7ac8fb86457e7db9e9",
       },
     });
   });

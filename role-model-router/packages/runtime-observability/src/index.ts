@@ -37,6 +37,23 @@ export interface RuntimeRoutingDiagnostics {
       readonly message: string;
     }[];
   };
+  /**
+   * Run 103 / SP5g: the binding a posture alias handed the request - the declared role next to the
+   * alias preset it may have overridden, the required capabilities it added and the scoring
+   * strategy it carried.
+   */
+  readonly aliasPostureBinding?: {
+    readonly aliasId: string;
+    readonly name: string;
+    readonly kind: "role" | "workload";
+    readonly declaredRoleId: string | null;
+    readonly presetRoleId: string | null;
+    readonly roleId: string | null;
+    readonly roleSource: "declared" | "preset" | "none";
+    readonly requiredCapabilities: readonly string[];
+    readonly preferLocal: boolean;
+    readonly scoringStrategy: string | null;
+  };
   readonly capabilityEligibility?: {
     readonly requiredInputModalities: readonly string[];
     readonly requiredOutputModalities: readonly string[];

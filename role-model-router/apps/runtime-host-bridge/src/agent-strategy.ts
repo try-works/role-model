@@ -209,6 +209,66 @@ export function findAgentStrategyAlias(input: {
   return null;
 }
 
+export interface PostureRequestBinding {
+  readonly aliasId: string;
+  readonly name: string;
+  readonly kind: AgentStrategyKind;
+  readonly declaredRoleId: string | null;
+  readonly presetRoleId: string | null;
+  readonly roleId: string | null;
+  readonly roleSource: "declared" | "preset" | "none";
+  readonly requiredCapabilities: readonly string[];
+  readonly preferLocal: boolean;
+  readonly scoringStrategy: ScoringStrategyName | null;
+}
+
+/**
+ * Run 103 / SP5g - the binding a request inherits from the posture alias it named: the declared
+ * role stays authoritative, the alias preset fills in when nothing was declared, workload
+ * capabilities are added to (never instead of) the request's own requirements, and the compute
+ * preference becomes a local bias.
+ */
+export function resolvePostureRequestBinding(input: {
+  readonly entry: AgentStrategyEntry;
+  readonly aliasId: string;
+  readonly declaredRoleId?: string | null;
+  readonly requiredCapabilities?: readonly string[];
+}): PostureRequestBinding {
+  const role = resolveAliasRequestedRole({
+    declaredRoleId: input.declaredRoleId ?? null,
+    presetRoleId: input.entry.roleId,
+  });
+  return {
+    aliasId: input.aliasId,
+    name: input.entry.name,
+    kind: input.entry.kind,
+    declaredRoleId: input.declaredRoleId?.trim() ? input.declaredRoleId.trim() : null,
+    presetRoleId: input.entry.roleId,
+    roleId: role.roleId,
+    roleSource: role.source,
+    requiredCapabilities: [
+      ...new Set([
+        ...(input.requiredCapabilities ?? []),
+        ...input.entry.requiredCapabilities,
+      ]),
+    ],
+    preferLocal:
+      input.entry.computePreference === "local" || input.entry.computePreference === "hybrid",
+    scoringStrategy: input.entry.scoringStrategy,
+  };
+}
+
+/**
+ * Run 103 / SP5g - the decision receipt for an alias preset: the declared and preset role are both
+ * recorded so an operator can see which one the decision used (requirement R5).
+ */
+export function withAliasPostureBinding<TDiagnostics extends object>(
+  diagnostics: TDiagnostics,
+  binding: PostureRequestBinding | null,
+): TDiagnostics & { readonly aliasPostureBinding?: PostureRequestBinding } {
+  return binding === null ? diagnostics : { ...diagnostics, aliasPostureBinding: binding };
+}
+
 /** The alias namespace is shared: duplicates within a kind and collisions across kinds are errors. */
 export function validateAgentStrategyNames(
   entries: readonly { readonly name: string; readonly kind: AgentStrategyKind }[],
