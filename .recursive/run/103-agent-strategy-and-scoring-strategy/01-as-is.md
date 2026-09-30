@@ -108,9 +108,9 @@ disposition for this run.
 
 ## Prior Recursive Evidence Reviewed
 
-- `01-protocol-routing-obs` - canonical four-strategy vocabulary and weight tables bind R2/R10.
-- `22-router-runtime-routing-strategy-lock` .. `30-router-runtime-strategy-convergence-e2e` - mode vocabulary, alias pool, difficulty/controller/hybrid behaviour and the explainability expectation bind R3-R6.
-- `101-effect-mq-queue-rebuild` - landed the Effect wrapper, its build and the composition-root pattern bind R9/R12.
+- `.recursive/run/01-protocol-routing-obs/` - canonical four-strategy vocabulary and weight tables bind R2/R10.
+- `.recursive/run/22-router-runtime-routing-strategy-lock/` and `.recursive/run/26-router-runtime-difficulty-guided-routing/`, `.recursive/run/28-router-runtime-controller-guided-routing/`, `.recursive/run/30-router-runtime-strategy-convergence-e2e/` - mode vocabulary, alias pool and difficulty/controller/hybrid behaviour bind R3-R6.
+- `.worktrees/101-effect-mq-queue-rebuild/` and `.recursive/memory/domains/runtime-routing-and-provider-capabilities.md` - landed Effect wrapper, its build and the composition-root pattern bind R9/R12.
 
 ## Audit Context
 
@@ -138,7 +138,7 @@ Audit Inputs Provided:
 ## Subagent Contribution Verification
 
 Reviewed Action Records:
-- `subagents/20260930T031524Z-analyst-t1-action.md` (role `analyst`, tasks `T1.1`-`T1.3`).
+- `/.recursive/run/103-agent-strategy-and-scoring-strategy/subagents/20260930T031524Z-analyst-t1-action.md` (role `analyst`, tasks `T1.1`-`T1.3`).
 
 Main-Agent Verification Performed:
 - Anchor sweep over all 28 anchors in `evidence/other/analyst_t1.md`: all resolve to files in this worktree with at least the cited length.
@@ -147,7 +147,7 @@ Main-Agent Verification Performed:
 
 Acceptance Decision: accepted with the additive corrections above; no claim failed verification.
 Refresh Handling: not required - the reviewed artifact was not materially changed after review.
-Repair Performed After Verification: the stale documentation anchors are noted for repair in Phase 2 and in the design-document pull request; no product code was touched.
+Repair Performed After Verification: none
 
 ## Worktree Diff Audit
 
@@ -172,18 +172,21 @@ the lint showed that `subagents/` is reserved for action records.
 
 ## Requirement Completion Status
 
-- R1 | Status: analysed | Evidence: `## Current Behavior by Requirement`
-- R2 | Status: analysed | Evidence: `## Current Behavior by Requirement`
-- R3 | Status: analysed | Evidence: `## Current Behavior by Requirement`
-- R4 | Status: analysed | Evidence: `## Current Behavior by Requirement`
-- R5 | Status: analysed | Evidence: `## Current behavior by surface`
-- R6 | Status: analysed | Evidence: `## Current behavior by surface`
-- R7 | Status: analysed | Evidence: `## Current Behavior by Requirement`
-- R8 | Status: analysed | Evidence: `## Current behavior by surface`
-- R9 | Status: analysed | Evidence: `## Current behavior by surface`
-- R10 | Status: analysed | Evidence: `## Current Behavior by Requirement`
-- R11 | Status: analysed | Evidence: `## Current Behavior by Requirement`
-- R12 | Status: analysed | Evidence: `## Current Behavior by Requirement`
+Status vocabulary note: this phase performs analysis only, so each requirement is recorded as out-of-scope for
+Phase 1 with an explicit phase-scoped decision; none of them is excluded from the run.
+
+- R1 | Status: out-of-scope | Rationale: Phase 1 records AS-IS evidence only and implements nothing | Scope Decision: implementation planned for Phase 3, not excluded from the run
+- R2 | Status: out-of-scope | Rationale: Phase 1 records AS-IS evidence only and implements nothing | Scope Decision: implementation planned for Phase 3, not excluded from the run
+- R3 | Status: out-of-scope | Rationale: Phase 1 records AS-IS evidence only and implements nothing | Scope Decision: implementation planned for Phase 3, not excluded from the run
+- R4 | Status: out-of-scope | Rationale: Phase 1 records AS-IS evidence only and implements nothing | Scope Decision: implementation planned for Phase 3, not excluded from the run
+- R5 | Status: out-of-scope | Rationale: Phase 1 records AS-IS evidence only and implements nothing | Scope Decision: implementation planned for Phase 3, not excluded from the run
+- R6 | Status: out-of-scope | Rationale: Phase 1 records AS-IS evidence only and implements nothing | Scope Decision: implementation planned for Phase 3, not excluded from the run
+- R7 | Status: out-of-scope | Rationale: Phase 1 records AS-IS evidence only and implements nothing | Scope Decision: implementation planned for Phase 3, not excluded from the run
+- R8 | Status: out-of-scope | Rationale: Phase 1 records AS-IS evidence only and implements nothing | Scope Decision: implementation planned for Phase 3, not excluded from the run
+- R9 | Status: out-of-scope | Rationale: Phase 1 records AS-IS evidence only and implements nothing | Scope Decision: implementation planned for Phase 3, not excluded from the run
+- R10 | Status: out-of-scope | Rationale: Phase 1 records AS-IS evidence only and implements nothing | Scope Decision: implementation planned for Phase 3, not excluded from the run
+- R11 | Status: out-of-scope | Rationale: Phase 1 performs no TDD cycle | Scope Decision: strict TDD runs in Phase 3 and Phase 4, not excluded from the run
+- R12 | Status: out-of-scope | Rationale: Phase 1 performs no packaged rebuild or live QA | Scope Decision: the packaged rebuild and live pi-CLI QA run in Phase 5, not excluded from the run
 
 ## Audit Verdict
 

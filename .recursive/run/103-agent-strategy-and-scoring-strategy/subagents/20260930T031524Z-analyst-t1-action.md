@@ -48,7 +48,7 @@
 
 ## Claimed File Impact
 ### Created
-- `/.recursive/run/103-agent-strategy-and-scoring-strategy/evidence/other/analyst_t1.md`
+- none
 ### Modified
 - none
 ### Reviewed
@@ -62,9 +62,10 @@
 - `/.recursive/run/103-agent-strategy-and-scoring-strategy/00-worktree.md`
 - `/.recursive/run/103-agent-strategy-and-scoring-strategy/inputs/16-agent-strategy-and-scoring-strategy.md`
 ### Updated
-- none
+- `/.recursive/run/103-agent-strategy-and-scoring-strategy/evidence/other/analyst_t1.md`
 ### Evidence Used
-- none
+- `/.recursive/run/103-agent-strategy-and-scoring-strategy/00-requirements.md`
+- `/.recursive/run/103-agent-strategy-and-scoring-strategy/inputs/16-agent-strategy-and-scoring-strategy.md`
 
 ## Claimed Findings
 - The saved strategy never reaches the scorer: RoutingRequest.strategy is difficulty-derived and hard-coded to balanced outside difficulty/hybrid
