@@ -1,0 +1,13 @@
+{
+  "artifact": "01.5-root-cause.md",
+  "artifact_hash": "5d3138998f853006bb9515c8fdcb240662d46193dddc6c633850a58c337b5666",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\103-agent-strategy-and-scoring-strategy\\.recursive\\run\\103-agent-strategy-and-scoring-strategy\\01.5-root-cause.md",
+  "locked_at": "2026-09-30T03:35:47Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "7e1cb6e0b39731d430dc4ff207bf873c53a89e186877c4f251f5d897dd9f4d8f",
+    "00-worktree.md": "408d89bf4d36b967873bdbca4d02138c08285be8030743ace88f5255b5db4bda",
+    "01-as-is.md": "2fe7df8e065a5e1ca1eba29d3423ee8dddb5e03fa18e10aac73e0a15acfd4b12"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "c65515ad8336c7d24e6bf042cd73f49c51c41d383aa8aa60207432970315fb13"
+}
