@@ -16,7 +16,7 @@ type ControllerTaskDefinition = {
   readonly allowed_roles: readonly string[];
 };
 
-type SupportedControllerStrategy = "balanced" | "cost" | "quality";
+type SupportedControllerStrategy = "balanced" | "cost" | "quality" | "latency";
 
 type ControllerStrategyCompatibilityMapping = {
   readonly strategy?: SupportedControllerStrategy;
@@ -49,7 +49,7 @@ export type ControllerRoutingChoiceSetInput = {
   readonly candidateEndpointIds?: readonly string[];
 };
 
-const supportedStrategies = ["balanced", "cost", "quality"] as const;
+const supportedStrategies = ["balanced", "cost", "quality", "latency"] as const;
 const QUALITY_STRATEGY_TASK_TYPES = new Set([
   "code.edit",
   "json.schema_adherence",
@@ -304,6 +304,7 @@ export function buildControllerSystemPrompt(input: ControllerRoutingChoiceSetInp
     "Do not create new roles, tasks, capabilities, endpoint ids, or strategy values.",
     "Use quality for code edits, schema adherence, verification-heavy or multi-step reasoning work, and tool orchestration.",
     "Use cost for classification, language detection, embeddings, or other cheap/simple labeling work.",
+    "Use latency for interactive or latency-sensitive flows where response speed matters most.",
     "Use balanced for general chat, summaries, and ambiguous requests.",
     JSON.stringify(allowedValues, null, 2),
   ].join("\n");
@@ -320,7 +321,7 @@ export function buildCompactControllerSystemPrompt(input: ControllerRoutingChoic
     "Choose only from the runtime-known values below.",
     "If no exact match exists for a field, omit that field.",
     "Do not create new roles, tasks, capabilities, endpoint ids, or strategy values.",
-    "Strategy rubric: quality for code/schema/reasoning/tool-heavy work; cost for classification/language/embedding work; balanced for general chat or ambiguous requests.",
+    "Strategy rubric: quality for code/schema/reasoning/tool-heavy work; cost for classification/language/embedding work; latency for interactive, latency-sensitive flows; balanced for general chat or ambiguous requests.",
     JSON.stringify(
       {
         requestedRoleId: allowedValues.requestedRoleId,
