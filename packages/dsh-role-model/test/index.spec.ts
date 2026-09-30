@@ -143,6 +143,39 @@ describe("plugin identity", () => {
     expect(Config).toBeDefined();
   });
 
+  /**
+   * The loader reads a plugin's schema with `Reflect.get(plugin, "Config")` after
+   * `unwrapExports`, which yields a module's `default` export when it has one. A
+   * default export that is the bare `apply` function therefore carries no `Config`,
+   * and the entry is reported `absent`: no settings form, no settings namespace, no
+   * provider row on the Models page, and no way to edit the endpoint.
+   *
+   * The default export must therefore BE the plugin object, with `Config` reachable
+   * from it.
+   */
+  test("the default export carries the Config the loader reads", async () => {
+    const entry = (await import("../src/index.js")).default as unknown as {
+      Config?: unknown;
+      name?: unknown;
+      apply?: unknown;
+    };
+    expect(entry.Config).toBeDefined();
+    expect(entry.Config).toBe(Config);
+    expect(entry.name).toBe(name);
+    expect(typeof entry.apply).toBe("function");
+  });
+
+  test("the default export is the only shape the loader needs", async () => {
+    // A namespace with no default export works too (the loader then reads the
+    // namespace), but a default that hides `Config` does not — so if a default
+    // export exists it must be the plugin object.
+    const module = (await import("../src/index.js")) as Record<string, unknown>;
+    if ("default" in module) {
+      const entry = module.default as { Config?: unknown };
+      expect(entry.Config).toBeDefined();
+    }
+  });
+
   test("the Config schema accepts the shipped default row", () => {
     const parsed = Config({
       endpoint: "http://127.0.0.1:3456",

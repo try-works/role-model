@@ -353,5 +353,24 @@ export function createRoleModelPlugin(
   };
 }
 
-/** Default `apply` bound to the global fetch. */
-export default createRoleModelPlugin();
+/**
+ * The plugin object the loader mounts.
+ *
+ * The loader reads a plugin's schema with `Reflect.get(plugin, "Config")` after
+ * unwrapping the module's exports, and that unwrapping yields the `default` export
+ * when one exists — so `Config` must be reachable **from the default export itself**.
+ * Exporting a bare `apply` as the default would hide the schema: the entry is then
+ * reported `absent`, which costs the settings form, the settings namespace, the
+ * provider row on the Models page and any way to edit the endpoint from the UI.
+ *
+ * This is a plain object rather than `Object.assign(apply, …)`: a function's own
+ * `name` property is read-only, so assigning it throws.
+ */
+const roleModelPlugin = {
+  name,
+  inject,
+  Config,
+  apply: createRoleModelPlugin(),
+};
+
+export default roleModelPlugin;
