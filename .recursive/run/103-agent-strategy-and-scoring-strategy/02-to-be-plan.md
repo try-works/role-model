@@ -172,13 +172,17 @@ strategy chain; no parallel write delegation is planned (the router policy has t
 
 ## Audit Context
 
-Audit Execution Mode: subagent
+Audit Execution Mode: self-audit
 Subagent Availability: available
-Subagent Capability Probe: the `planner` role is dispatched for this phase (traceability audit); the router policy
-declares it `external-cli` with a null CLI/model, so the effective route is a local subagent plus controller
-verification.
-Delegation Decision Basis: requirement-to-plan traceability is the failure mode this phase guards against, and the
-planner role is the canonical independent check for it.
+Subagent Capability Probe: the `planner` role was dispatched twice for this phase (initial spawn, then a follow-up
+after the brief was written to `E:\tmp\collab\briefs\planner_t2.md`) and produced no artifact within two bounded
+waits, so it was interrupted; the analyst role completed and was verified in Phase 1.
+Delegation Decision Basis: requirement-to-plan traceability is the failure mode this phase guards against, so the
+planner role was the intended independent check.
+Delegation Override Reason: the `planner_t2` dispatch produced no artifact (`evidence/other/planner_t2.md` was
+never written) within two waits totalling 25 minutes; the failed attempt is recorded in
+`evidence/other/planner_t2-dispatch-failure.md`, and the controller therefore performed the traceability audit
+itself with the mechanical check recorded under `## Subagent Contribution Verification`.
 Audit Inputs Provided:
 - the locked upstream artifacts listed in `Inputs`, this draft, the design document, the diff basis
 - targeted surfaces: the Requirement Mapping, Implementation Sub-phases and Requirement Completion Status sections
@@ -197,9 +201,9 @@ Audit Inputs Provided:
 ## Subagent Contribution Verification
 
 Reviewed Action Records:
-- none yet (planner dispatch pending; the record path is added before locking this phase)
+- none for this phase (the planner dispatch produced no artifact; the Phase 1 analyst record belongs to `01 AS-IS`)
 
-Main-Agent Verification Performed: Reviewed artifact: `/.recursive/run/103-agent-strategy-and-scoring-strategy/02-to-be-plan.md`; upstream recursive artifacts re-read: `/.recursive/run/103-agent-strategy-and-scoring-strategy/01-as-is.md`, `/.recursive/run/103-agent-strategy-and-scoring-strategy/01.5-root-cause.md`; planned surfaces checked against existing files and existing parent directories; diff-owned scope reconciled with `git diff --name-only ca5c2126ca566086cfbe8f83cfdf339aba0879ff` (run artifacts only).
+Main-Agent Verification Performed: Reviewed artifact: `/.recursive/run/103-agent-strategy-and-scoring-strategy/02-to-be-plan.md`; upstream recursive artifacts re-read: `/.recursive/run/103-agent-strategy-and-scoring-strategy/01-as-is.md`, `/.recursive/run/103-agent-strategy-and-scoring-strategy/01.5-root-cause.md`; traceability audit performed by the controller after the failed planner dispatch and recorded in `evidence/other/planner_t2-dispatch-failure.md`: `Requirement Mapping`, `Requirement Completion Status` and `Traceability` were each parsed mechanically and each covers `R1`-`R12` with no missing requirement; planned surfaces checked against existing files and existing parent directories; diff-owned scope reconciled with `git diff --name-only ca5c2126ca566086cfbe8f83cfdf339aba0879ff` (run artifacts only).
 
 ## Worktree Diff Audit
 
