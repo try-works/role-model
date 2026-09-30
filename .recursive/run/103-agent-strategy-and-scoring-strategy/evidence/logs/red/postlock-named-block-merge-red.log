@@ -1,0 +1,164 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/103-agent-strategy-and-scoring-strategy/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/runtime-config-named-block-merge.test.ts (8 tests | 6 failed) 220ms
+   × named block merge > adding one agent strategy keeps the saved entries 116ms
+     → expected [ 'architect' ] to deeply equal [ 'architect', 'coder', 'reviewer' ]
+   × named block merge > adding one workload keeps the saved workloads 26ms
+     → expected [ 'classification' ] to deeply equal [ 'batch', 'classification', …(1) ]
+   × named block merge > adding one model alias keeps the saved aliases 12ms
+     → expected [ 'run103.new' ] to deeply equal [ 'run103.new', 'run94.error' ]
+   × named block merge > updating one entry leaves the fields the patch does not name 20ms
+     → expected { name: 'coder', kind: 'role', …(7) } to match object { roleId: 'coder', …(1) }
+(7 matching properties omitted from actual)
+   × named block merge > an explicit null removes exactly one entry 13ms
+     → expected [ 'reviewer' ] to deeply equal [ 'coder' ]
+   × named block merge > an explicit null clears one field and keeps the rest of the entry 14ms
+     → expected { name: 'coder', kind: 'role', …(7) } to match object { roleId: 'coder', …(1) }
+(7 matching properties omitted from actual)
+   ✓ named block merge > omitting a block leaves it exactly as it was 7ms
+   ✓ named block merge > a full-block write still behaves like the previous whole-block replacement 5ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/runtime-config-named-block-merge.test.ts > named block merge > adding one agent strategy keeps the saved entries
+AssertionError: expected [ 'architect' ] to deeply equal [ 'architect', 'coder', 'reviewer' ]
+
+- Expected
++ Received
+
+  [
+    "architect",
+-   "coder",
+-   "reviewer",
+  ]
+
+ ❯ test/runtime-config-named-block-merge.test.ts:43:32
+     41|       agent_strategies: { architect: { role_id: "architect" } },
+     42|     });
+     43|     expect(entryNames(merged)).toEqual(["architect", "coder", "reviewe…
+       |                                ^
+     44|     expect(merged.agentStrategies?.find((entry) => entry.name === "cod…
+     45|       roleId: "coder",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  test/runtime-config-named-block-merge.test.ts > named block merge > adding one workload keeps the saved workloads
+AssertionError: expected [ 'classification' ] to deeply equal [ 'batch', 'classification', …(1) ]
+
+- Expected
++ Received
+
+  [
+-   "batch",
+    "classification",
+-   "embedding",
+  ]
+
+ ❯ test/runtime-config-named-block-merge.test.ts:54:72
+     52|       workloads: { classification: { scoring_strategy: "balanced" } },
+     53|     });
+     54|     expect((merged.workloads ?? []).map((entry) => entry.name).sort())…
+       |                                                                        ^
+     55|       "batch",
+     56|       "classification",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  test/runtime-config-named-block-merge.test.ts > named block merge > adding one model alias keeps the saved aliases
+AssertionError: expected [ 'run103.new' ] to deeply equal [ 'run103.new', 'run94.error' ]
+
+- Expected
++ Received
+
+  [
+    "run103.new",
+-   "run94.error",
+  ]
+
+ ❯ test/runtime-config-named-block-merge.test.ts:72:7
+     70|     expect(
+     71|       (merged.modelAliases ?? []).map((alias) => alias.aliasId).sort(),
+     72|     ).toEqual(["run103.new", "run94.error"]);
+       |       ^
+     73|     expect(
+     74|       merged.modelAliases?.find((alias) => alias.aliasId === "run94.er…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  test/runtime-config-named-block-merge.test.ts > named block merge > updating one entry leaves the fields the patch does not name
+AssertionError: expected { name: 'coder', kind: 'role', …(7) } to match object { roleId: 'coder', …(1) }
+(7 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "roleId": "coder",
++   "roleId": null,
+    "scoringStrategy": "latency",
+  }
+
+ ❯ test/runtime-config-named-block-merge.test.ts:83:19
+
+     81|     });
+     82|     const coder = merged.agentStrategies?.find((entry) => entry.name =…
+     83|     expect(coder).toMatchObject({ roleId: "coder", scoringStrategy: "l…
+       |                   ^
+     84|   });
+     85| 
+ Test Files  1 failed (1)
+      Tests  6 failed | 2 passed (8)
+   Start at  03:28:20
+   Duration  4.99s (transform 1.99s, setup 0ms, collect 3.95s, tests 220ms, environment 0ms, prepare 308ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  test/runtime-config-named-block-merge.test.ts > named block merge > an explicit null removes exactly one entry
+AssertionError: expected [ 'reviewer' ] to deeply equal [ 'coder' ]
+
+- Expected
++ Received
+
+  [
+-   "coder",
++   "reviewer",
+  ]
+
+ ❯ test/runtime-config-named-block-merge.test.ts:90:32
+     88|       agent_strategies: { reviewer: null },
+     89|     });
+     90|     expect(entryNames(merged)).toEqual(["coder"]);
+       |                                ^
+     91|   });
+     92| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  test/runtime-config-named-block-merge.test.ts > named block merge > an explicit null clears one field and keeps the rest of the entry
+AssertionError: expected { name: 'coder', kind: 'role', …(7) } to match object { roleId: 'coder', …(1) }
+(7 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "roleId": "coder",
++   "roleId": null,
+    "scoringStrategy": null,
+  }
+
+ ❯ test/runtime-config-named-block-merge.test.ts:98:19
+     96|     });
+     97|     const coder = merged.agentStrategies?.find((entry) => entry.name =…
+     98|     expect(coder).toMatchObject({ roleId: "coder", scoringStrategy: nu…
+       |                   ^
+     99|   });
+    100| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+undefined
+D:\DEV\role-model\.worktrees\103-agent-strategy-and-scoring-strategy\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/runtime-config-named-block-merge.test.ts

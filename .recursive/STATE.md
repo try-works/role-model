@@ -2,6 +2,18 @@
 
 ## Current State
 
+Run `103-agent-strategy-and-scoring-strategy` is the current increment: the routing posture is split into the
+planner axis (`routing.mode`) and the scoring axis (`routing.scoring_strategy`), the five scoring strategies
+actually rank candidates, `pin_weights` blocks the automatic overrides, agent-strategy and workload postures
+materialise `<name>.<scope>` aliases, and every decision records the strategy source, the effective weights, the
+alias posture binding and the measured-latency outcome. The operator UI gained the `Routing strategy`,
+`Agent strategy` and `Workloads` surfaces. Phases 0-8 are locked; the live matrix ran on the rebuilt development
+runtime on `:3458` with live `pi` CLI requests. Two commitments transfer to the next release operation: the
+paired private latency-policy registry update (min samples 5..30, max delta 10 000) and the recorded
+`agent-strategy.ts` decoder deviation. Promotion remains a separate release operation.
+
+## Current State
+
 Run `94-stage-manifest-commit-identity` repairs a release-blocking provenance
 defect found by the acceptance workflow: shallow CI had packaged the synthetic
 manifest commit `runtime-derived`. The repair makes `GITHUB_SHA` authoritative

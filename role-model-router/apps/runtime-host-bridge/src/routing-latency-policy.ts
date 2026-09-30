@@ -39,7 +39,7 @@ export interface ResolvedRoutingLatencySelectionPolicy {
 const STAGES: readonly RoutingLatencySelectionStage[] = ["S0", "S1", "S2", "S3", "S4"];
 const BOUNDS = {
   windowHours: { min: 1, max: 168 },
-  minSamples: { min: 3, max: 1_000 },
+  minSamples: { min: 5, max: 30 },
   maxDeltaMs: { min: 0, max: 60_000 },
   maxCandidates: { min: 1, max: 32 },
   maxBucketCount: 8,
@@ -52,7 +52,7 @@ const DEFAULT_POLICY: RoutingLatencySelectionPolicy = Object.freeze({
   minStage: "S2",
   windowHours: 24,
   minSamples: 5,
-  maxDeltaMs: 2_000,
+  maxDeltaMs: 10_000,
   tokenBucketUpperBounds: Object.freeze([50_000, 150_000]),
   maxCandidates: 4,
 });

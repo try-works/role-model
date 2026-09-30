@@ -1,0 +1,12 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/103-agent-strategy-and-scoring-strategy/role-model-router/packages/sqlite-memory
+
+(node:46620) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run98-a40-stub-fidelity.test.ts (1 test) 167ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  20:34:49
+   Duration  1.46s (transform 386ms, setup 0ms, collect 438ms, tests 167ms, environment 0ms, prepare 321ms)
+

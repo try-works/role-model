@@ -126,6 +126,37 @@ function buildObservation(requestId: string) {
     // carrying it because the routing-diagnostics projection is an allowlist.
     routingDiagnostics: {
       decisionTrace: { strategy: "baseline", candidates: 7 },
+      /**
+       * Run 103 R3/SP5: the strategy receipt and the posture binding are decision evidence too. With
+       * the capture deferred the stub is the only decision record, so both must survive the
+       * projection (the live dev runtime found every stubbed decision answering with no strategy).
+       */
+      strategyResolution: {
+        strategy: "quality",
+        source: "difficulty",
+        weights: {
+          quality: 0.5,
+          latency: 0.1,
+          throughput: 0.05,
+          cost: 0.1,
+          reliability: 0.2,
+          preference: 0.05,
+        },
+        weightsDigest: "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        discarded: { source: "controller", strategy: "cost" },
+      },
+      aliasPostureBinding: {
+        aliasId: "coder.remote-only",
+        name: "coder",
+        kind: "role",
+        declaredRoleId: null,
+        presetRoleId: "coder",
+        roleId: "coder",
+        roleSource: "preset",
+        requiredCapabilities: ["text.chat"],
+        preferLocal: false,
+        scoringStrategy: "quality",
+      },
       latencySelection: {
         outcome: "kept_router_choice",
         chosenEndpointId: "deepseek.personal.deepseek-api-key.global.deepseek-flash-high",
@@ -202,6 +233,18 @@ test("stub fidelity: a stubbed observation yields the same telemetry capabilitie
     outcome: "kept_router_choice",
     chosenEndpointId: "deepseek.personal.deepseek-api-key.global.deepseek-flash-high",
     bucketUpperBoundTokens: 150_000,
+  });
+  // Run 103: the strategy receipt and the posture binding survive the same projection.
+  expect(routingDiagnostics?.strategyResolution).toMatchObject({
+    strategy: "quality",
+    source: "difficulty",
+    weightsDigest: "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    discarded: { source: "controller", strategy: "cost" },
+  });
+  expect(routingDiagnostics?.aliasPostureBinding).toMatchObject({
+    aliasId: "coder.remote-only",
+    name: "coder",
+    roleSource: "preset",
   });
 
   // The operational profile is what the model pool's quality and speed axes read.

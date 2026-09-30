@@ -1,0 +1,11 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/103-agent-strategy-and-scoring-strategy/role-model-router/apps/runtime-ui
+
+ ✓ app/lib/agent-strategy.test.ts (15 tests) 80ms
+ ✓ app/routes/agent-strategy.test.tsx (5 tests) 49ms
+
+ Test Files  2 passed (2)
+      Tests  20 passed (20)
+   Start at  05:12:02
+   Duration  5.52s (transform 1.19s, setup 0ms, collect 3.77s, tests 129ms, environment 1ms, prepare 1.66s)
+

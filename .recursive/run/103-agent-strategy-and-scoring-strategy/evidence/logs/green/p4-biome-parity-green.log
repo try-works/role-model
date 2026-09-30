@@ -1,0 +1,11 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/103-agent-strategy-and-scoring-strategy/packages/schema-tools
+
+ ✓ test/recursive-biome-repo-wide.test.ts (1 test) 3086ms
+   ✓ run31 repo-wide Biome parity > requires repo-wide biome check to pass under repository config  3084ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  21:40:00
+   Duration  3.61s (transform 49ms, setup 0ms, collect 49ms, tests 3.09s, environment 0ms, prepare 192ms)
+

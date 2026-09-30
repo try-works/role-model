@@ -1,0 +1,267 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/103-agent-strategy-and-scoring-strategy/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/agent-strategy-config-path.test.ts (15 tests | 14 failed) 180ms
+   × agent strategy entry validation > rejects an unknown key instead of ignoring it 19ms
+     → expected '' to match /unknown key "temperature"/
+   × agent strategy entry validation > rejects an unknown capability key on an agent strategy but allows it on a workload entry 4ms
+     → expected '' to match /unknown key "required_capabilities"/
+   × agent strategy binding validation > an unknown role_id is a violation 2ms
+     → (0 , validateAgentStrategyBindings) is not a function
+   × agent strategy binding validation > an unknown capability is a warning, not a violation 1ms
+     → (0 , validateAgentStrategyBindings) is not a function
+   × agent strategy binding validation > a known role and capability produce no findings 2ms
+     → (0 , validateAgentStrategyBindings) is not a function
+   × agent strategy alias lookup > finds an entry by its materialised alias id 1ms
+     → (0 , findAgentStrategyAlias) is not a function
+   × posture alias derivation > appends posture rows to the canonical inventory and reports empty scopes 2ms
+     → (0 , derivePostureAliasInventory) is not a function
+   × posture alias derivation > reports a posture alias that would shadow an existing alias 1ms
+     → (0 , derivePostureAliasInventory) is not a function
+   × posture alias derivation > a malformed entry never materialises 1ms
+     → (0 , derivePostureAliasInventory) is not a function
+   × unified runtime config routing and posture blocks > decodes the structured routing block into a posture 56ms
+     → expected undefined to be 'intelligent' // Object.is equality
+   × unified runtime config routing and posture blocks > decodes the posture blocks 20ms
+     → expected undefined to deeply equal [ 'coder', 'researcher' ]
+   × unified runtime config routing and posture blocks > renders both blocks back and keeps the legacy key out of the file 36ms
+     → expected 'version: "1.0"\nexecution_mode: remot…' to contain 'agent_strategies:'
+   ✓ unified runtime config routing and posture blocks > falls back to the legacy strategy string when no routing block is declared 6ms
+   × unified runtime config routing and posture blocks > rejects custom weights that do not satisfy the schema 12ms
+     → expected [Function] to throw an error
+   × unified runtime config routing and posture blocks > carries the posture blocks through a config patch in either spelling 11ms
+     → expected undefined to be 'coder' // Object.is equality
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 14 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/agent-strategy-config-path.test.ts > agent strategy entry validation > rejects an unknown key instead of ignoring it
+AssertionError: expected '' to match /unknown key "temperature"/
+
+- Expected: 
+/unknown key "temperature"/
+
++ Received: 
+""
+
+ ❯ test/agent-strategy-config-path.test.ts:70:42
+     68|       agentStrategies: { coder: { role_id: "coder", temperature: 1 } },
+     69|     });
+     70|     expect(section.violations.join(" ")).toMatch(/unknown key "tempera…
+       |                                          ^
+     71|     expect(section.aliases).toEqual([]);
+     72|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/14]⎯
+
+ FAIL  test/agent-strategy-config-path.test.ts > agent strategy entry validation > rejects an unknown capability key on an agent strategy but allows it on a workload entry
+AssertionError: expected '' to match /unknown key "required_capabilities"/
+
+- Expected: 
+/unknown key "required_capabilities"/
+
++ Received: 
+""
+
+ ❯ test/agent-strategy-config-path.test.ts:79:42
+     77|       agentStrategies: { coder: { role_id: "coder", required_capabilit…
+     78|     });
+     79|     expect(section.violations.join(" ")).toMatch(/unknown key "require…
+       |                                          ^
+     80|   });
+     81| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/14]⎯
+
+ FAIL  test/agent-strategy-config-path.test.ts > agent strategy binding validation > an unknown role_id is a violation
+TypeError: (0 , validateAgentStrategyBindings) is not a function
+ ❯ test/agent-strategy-config-path.test.ts:93:24
+     91| 
+     92|   test("an unknown role_id is a violation", () => {
+     93|     const validation = validateAgentStrategyBindings({
+       |                        ^
+     94|       entries: section.entries,
+     95|       knownRoleIds: ["researcher"],
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/14]⎯
+
+ FAIL  test/agent-strategy-config-path.test.ts > agent strategy binding validation > an unknown capability is a warning, not a violation
+TypeError: (0 , validateAgentStrategyBindings) is not a function
+ ❯ test/agent-strategy-config-path.test.ts:101:24
+     99| 
+    100|   test("an unknown capability is a warning, not a violation", () => {
+    101|     const validation = validateAgentStrategyBindings({
+       |                        ^
+    102|       entries: section.entries,
+    103|       knownRoleIds: ["coder"],
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/14]⎯
+
+ FAIL  test/agent-strategy-config-path.test.ts > agent strategy binding validation > a known role and capability produce no findings
+TypeError: (0 , validateAgentStrategyBindings) is not a function
+ ❯ test/agent-strategy-config-path.test.ts:111:24
+    109| 
+    110|   test("a known role and capability produce no findings", () => {
+    111|     const validation = validateAgentStrategyBindings({
+       |                        ^
+    112|       entries: section.entries,
+    113|       knownRoleIds: ["coder"],
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/14]⎯
+
+ FAIL  test/agent-strategy-config-path.test.ts > agent strategy alias lookup > finds an entry by its materialised alias id
+TypeError: (0 , findAgentStrategyAlias) is not a function
+ ❯ test/agent-strategy-config-path.test.ts:127:7
+    125|   test("finds an entry by its materialised alias id", () => {
+    126|     expect(
+    127|       findAgentStrategyAlias({
+       |       ^
+    128|         entries: section.entries,
+    129|         executionModes: ["remote_only"],
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/14]⎯
+
+ FAIL  test/agent-strategy-config-path.test.ts > posture alias derivation > appends posture rows to the canonical inventory and reports empty scopes
+TypeError: (0 , derivePostureAliasInventory) is not a function
+ ❯ test/agent-strategy-config-path.test.ts:151:24
+    149| 
+    150|   test("appends posture rows to the canonical inventory and reports em…
+    151|     const derivation = derivePostureAliasInventory({
+       |                        ^
+    152|       canonical: [{ aliasId: "baseline.remote-only", mode: "basic", mo…
+    153|       entries: section.entries,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/14]⎯
+
+ FAIL  test/agent-strategy-config-path.test.ts > posture alias derivation > reports a posture alias that would shadow an existing alias
+TypeError: (0 , derivePostureAliasInventory) is not a function
+ ❯ test/agent-strategy-config-path.test.ts:171:24
+    169| 
+    170|   test("reports a posture alias that would shadow an existing alias", …
+    171|     const derivation = derivePostureAliasInventory({
+       |                        ^
+    172|       canonical: [{ aliasId: "coder.remote-only", mode: "basic", model…
+    173|       entries: section.entries,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/14]⎯
+
+ FAIL  test/agent-strategy-config-path.test.ts > posture alias derivation > a malformed entry never materialises
+TypeError: (0 , derivePostureAliasInventory) is not a function
+ ❯ test/agent-strategy-config-path.test.ts:187:24
+    185|       agentStrategies: { coder: { role_id: "coder", nope: true } },
+    186|     });
+    187|     const derivation = derivePostureAliasInventory({
+       |                        ^
+    188|       canonical: [],
+    189|       entries: malformed.entries,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/14]⎯
+
+ FAIL  test/agent-strategy-config-path.test.ts > unified runtime config routing and posture blocks > decodes the structured routing block into a posture
+AssertionError: expected undefined to be 'intelligent' // Object.is equality
+
+- Expected: 
+"intelligent"
+
++ Received: 
+undefined
+
+ ❯ test/agent-strategy-config-path.test.ts:202:41
+    200|   test("decodes the structured routing block into a posture", () => {
+    201|     const config = parseUnifiedRuntimeConfigText(run103ConfigText);
+    202|     expect(config.routingPosture?.mode).toBe("intelligent");
+       |                                         ^
+    203|     expect(config.routingPosture?.scoringStrategy).toBe("custom");
+    204|     expect(config.routingPosture?.pinWeights).toBe(false);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/14]⎯
+
+ FAIL  test/agent-strategy-config-path.test.ts > unified runtime config routing and posture blocks > decodes the posture blocks
+AssertionError: expected undefined to deeply equal [ 'coder', 'researcher' ]
+
+- Expected: 
+[
+  "coder",
+  "researcher",
+]
+
++ Received: 
+undefined
+
+ ❯ test/agent-strategy-config-path.test.ts:211:64
+    209|   test("decodes the posture blocks", () => {
+    210|     const config = parseUnifiedRuntimeConfigText(run103ConfigText);
+    211|     expect(config.agentStrategies?.map((entry) => entry.name)).toEqual…
+       |                                                                ^
+    212|     expect(config.agentStrategies?.[0]).toMatchObject({
+    213|       kind: "role",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/14]⎯
+
+ FAIL  test/agent-strategy-config-path.test.ts > unified runtime config routing and posture blocks > renders both blocks back and keeps the legacy key out of the file
+AssertionError: expected 'version: "1.0"\nexecution_mode: remot…' to contain 'agent_strategies:'
+
+- Expected
++ Received
+
+- agent_strategies:
++ version: "1.0"
++ execution_mode: remote_only
++
+
+ ❯ test/agent-strategy-config-path.test.ts:225:22
+    223|     const config = parseUnifiedRuntimeConfigText(run103ConfigText);
+    224|     const rendered = renderUnifiedRuntimeConfigText(config);
+    225|     expect(rendered).toContain("agent_strategies:");
+       |                      ^
+    226|     expect(rendered).toContain("role_id: coder");
+    227|     expect(rendered).toContain("required_capabilities:");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/14]⎯
+
+ FAIL  test/agent-strategy-config-path.test.ts > unified runtime config routing and posture blocks > rejects custom weights that do not satisfy the schema
+AssertionError: expected [Function] to throw an error
+
+- Expected: 
+null
+
++ Received: 
+undefined
+
+ ❯ test/agent-strategy-config-path.test.ts:262:7
+    260|         ].join("\n"),
+    261|       ),
+    262|     ).toThrow(/weights must sum to 1.0/);
+       |       ^
+    263|   });
+    264| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/14]⎯
+
+ FAIL  test/agent-strategy-config-path.test.ts > unified runtime config routing and posture blocks > carries the posture blocks through a config patch in either spelling
+AssertionError: expected undefined to be 'coder' // Object.is equality
+
+- Expected: 
+"coder"
+
++ Received: 
+undefined
+
+ ❯ test/agent-strategy-config-path.test.ts:270:48
+    268|       agent_strategies: { coder: { role_id: "coder" } },
+    269|     });
+    270|     expect(snake.agentStrategies?.[0]?.roleId).toBe("coder");
+       |                                                ^
+    271| 
+    272|     const camel = mergeUnifiedRuntimeConfigDocuments(current, {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/14]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  14 failed | 1 passed (15)
+   Start at  13:12:37
+   Duration  14.43s (transform 4.54s, setup 0ms, collect 12.57s, tests 180ms, environment 1ms, prepare 632ms)
+
+undefined
+D:\DEV\role-model\.worktrees\103-agent-strategy-and-scoring-strategy\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/agent-strategy-config-path.test.ts

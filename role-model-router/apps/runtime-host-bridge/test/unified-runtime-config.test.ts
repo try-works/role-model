@@ -325,7 +325,12 @@ litellm_proxy:
     expect(parseUnifiedRuntimeConfigText(renderUnifiedRuntimeConfigText(normalized))).toMatchObject(
       {
         version: "1.0",
-        routingStrategy: "latency-first",
+        /** Run 103 R1: the legacy spelling is normalized onto the canonical pair on write. */
+        routingStrategy: "baseline",
+        routingPosture: {
+          mode: "baseline",
+          scoringStrategy: "latency",
+        },
         executionMode: "hybrid",
         llamaSwap: {
           enabled: true,

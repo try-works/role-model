@@ -246,6 +246,32 @@ const controlRoutingStrategyRoute = createRoute({
     "Editable routing posture for the persisted scoring strategy and execution mode, with controller context and direct verification links.",
 });
 
+/** Run 103 SP8: role-bound postures (singular, like `Routing strategy`). */
+const agentStrategyRoute = createRoute({
+  id: "router-agent-strategy",
+  to: "/app/router/agent-strategy",
+  label: "Agent strategy",
+  section: "Router",
+  icon: GitBranch,
+  template: "registry-detail",
+  title: "Agent strategy",
+  description:
+    "Role-bound postures: one entry per agent strategy with its binding, its posture, its per-scope aliases, candidate counts and the endpoint that currently leads each pool.",
+});
+
+/** Run 103 SP8: workload postures (plural, like `Workloads`). */
+const workloadsRoute = createRoute({
+  id: "router-workloads",
+  to: "/app/router/workloads",
+  label: "Workloads",
+  section: "Router",
+  icon: GitBranch,
+  template: "registry-detail",
+  title: "Workloads",
+  description:
+    "Workload postures: one entry per workload shape with its optional capabilities, its per-scope aliases, candidate counts and the shipped templates.",
+});
+
 const controlRuntimeConfigRoute = createRoute({
   id: "system-runtime-config",
   to: "/app/system/runtime-config",
@@ -639,6 +665,8 @@ const runtimeRouteDefinitions = [
   localMatrixRoute,
   controlProvidersRoute,
   controlRoutingStrategyRoute,
+  agentStrategyRoute,
+  workloadsRoute,
   controlRuntimeConfigRoute,
   controlControllerRoute,
   connectRegistryRoute,
@@ -719,6 +747,8 @@ export const runtimeNavigationSections: readonly RuntimeNavigationSection[] = [
     items: [
       routerOverviewRoute,
       controlRoutingStrategyRoute,
+      agentStrategyRoute,
+      workloadsRoute,
       controlControllerRoute,
       routerCandidatesRoute,
       routerDecisionsRoute,

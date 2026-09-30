@@ -1,0 +1,720 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/103-agent-strategy-and-scoring-strategy/role-model-router/apps/runtime-ui
+
+ ❯ app/routes/router-decision-detail.test.tsx (3 tests | 2 failed) 171ms
+   ✓ run 103 decision surfaces > renders the decision detail shell 58ms
+   × run 103 decision surfaces > shows the effective strategy, its source, the weights digest and the latency receipt 66ms
+     → expected 'import { useEffect, useState } from "…' to contain 'readStrategyReceipt'
+   × run 103 decision surfaces > removes the raw config-string fallback from both decision surfaces 42ms
+     → expected 'import { useEffect, useState } from "…' not to contain 'formatRoutingModeLabel(detail.strateg…'
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/lib/agent-strategy.test.ts [ app/lib/agent-strategy.test.ts ]
+Error: Cannot find module './agent-strategy' imported from 'D:/DEV/role-model/.worktrees/103-agent-strategy-and-scoring-strategy/role-model-router/apps/runtime-ui/app/lib/agent-strategy.test.ts'
+ ❯ app/lib/agent-strategy.test.ts:3:1
+      1| import { describe, expect, test } from "vitest";
+      2| 
+      3| import {
+       | ^
+      4|   buildPostureEntryRows,
+      5|   buildPostureWriteBlock,
+
+Caused by: Error: Failed to load url ./agent-strategy (resolved id: ./agent-strategy) in D:/DEV/role-model/.worktrees/103-agent-strategy-and-scoring-strategy/role-model-router/apps/runtime-ui/app/lib/agent-strategy.test.ts. Does the file exist?
+ ❯ loadAndTransform ../../../node_modules/.pnpm/vite@7.3.2_@types+node@22.1_d71bf8265f9610ce90201e170d5dc2b8/node_modules/vite/dist/node/chunks/config.js:22663:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  app/lib/decision-receipt.test.ts [ app/lib/decision-receipt.test.ts ]
+Error: Cannot find module './decision-receipt' imported from 'D:/DEV/role-model/.worktrees/103-agent-strategy-and-scoring-strategy/role-model-router/apps/runtime-ui/app/lib/decision-receipt.test.ts'
+ ❯ app/lib/decision-receipt.test.ts:3:1
+      1| import { describe, expect, test } from "vitest";
+      2| 
+      3| import {
+       | ^
+      4|   formatDecisionStrategyLabel,
+      5|   readAliasPostureReceipt,
+
+Caused by: Error: Failed to load url ./decision-receipt (resolved id: ./decision-receipt) in D:/DEV/role-model/.worktrees/103-agent-strategy-and-scoring-strategy/role-model-router/apps/runtime-ui/app/lib/decision-receipt.test.ts. Does the file exist?
+ ❯ loadAndTransform ../../../node_modules/.pnpm/vite@7.3.2_@types+node@22.1_d71bf8265f9610ce90201e170d5dc2b8/node_modules/vite/dist/node/chunks/config.js:22663:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  app/lib/latency-override.test.ts [ app/lib/latency-override.test.ts ]
+Error: Cannot find module './latency-override' imported from 'D:/DEV/role-model/.worktrees/103-agent-strategy-and-scoring-strategy/role-model-router/apps/runtime-ui/app/lib/latency-override.test.ts'
+ ❯ app/lib/latency-override.test.ts:3:1
+      1| import { describe, expect, test } from "vitest";
+      2| 
+      3| import {
+       | ^
+      4|   LATENCY_COMPARISON_METRIC_COPY,
+      5|   buildLatencyOverrideDraft,
+
+Caused by: Error: Failed to load url ./latency-override (resolved id: ./latency-override) in D:/DEV/role-model/.worktrees/103-agent-strategy-and-scoring-strategy/role-model-router/apps/runtime-ui/app/lib/latency-override.test.ts. Does the file exist?
+ ❯ loadAndTransform ../../../node_modules/.pnpm/vite@7.3.2_@types+node@22.1_d71bf8265f9610ce90201e170d5dc2b8/node_modules/vite/dist/node/chunks/config.js:22663:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  app/routes/agent-strategy.test.tsx [ app/routes/agent-strategy.test.tsx ]
+Error: Cannot find module './agent-strategy' imported from 'D:/DEV/role-model/.worktrees/103-agent-strategy-and-scoring-strategy/role-model-router/apps/runtime-ui/app/routes/agent-strategy.test.tsx'
+ ❯ app/routes/agent-strategy.test.tsx:8:1
+      6| 
+      7| import { ShellHeaderProvider } from "../lib/shell-header-context";
+      8| import AgentStrategyRoute from "./agent-strategy";
+       | ^
+      9| import WorkloadsRoute from "./workloads";
+     10| 
+
+Caused by: Error: Failed to load url ./agent-strategy (resolved id: ./agent-strategy) in D:/DEV/role-model/.worktrees/103-agent-strategy-and-scoring-strategy/role-model-router/apps/runtime-ui/app/lib/agent-strategy.test.ts. Does the file exist?
+ ❯ loadAndTransform ../../../node_modules/.pnpm/vite@7.3.2_@types+node@22.1_d71bf8265f9610ce90201e170d5dc2b8/node_modules/vite/dist/node/chunks/config.js:22663:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/routes/router-decision-detail.test.tsx > run 103 decision surfaces > shows the effective strategy, its source, the weights digest and the latency receipt
+AssertionError: expected 'import { useEffect, useState } from "…' to contain 'readStrategyReceipt'
+
+- Expected
++ Received
+
+- readStrategyReceipt
++ import { useEffect, useState } from "react";
++ import { Link, useParams } from "react-router";
++
++ import {
++   Badge,
++   CodeBlock,
++   EmptyState,
++   ErrorState,
++   LoadingState,
++   SectionCard,
++ } from "../components/page-primitives";
++ import { projectBenchmarkDecisionView } from "../lib/benchmark-decision-evidence";
++ import {
++   bodyStrongTextClassName,
++   cardClassName,
++   fieldLabelClassName,
++   foregroundEmphasisClassName,
++   mutedPanelClassName,
++   secondaryButtonClassName,
++   supportingTextClassName,
++ } from "../lib/design-system";
++ import { formatEndpointDisplayPath, formatModelIdentity } from "../lib/effort-identity";
++ import { formatRoutingModeLabel } from "../lib/routing-mode";
++ import { type RouterDecisionDetail, fetchRouterDecisionDetail } from "../lib/runtime-api";
++
++ export default function RouterDecisionDetailRoute() {
++   const { requestId = "" } = useParams();
++   const [detail, setDetail] = useState<RouterDecisionDetail | null>(null);
++   const [error, setError] = useState<string | null>(null);
++
++   useEffect(() => {
++     if (!requestId) {
++       return;
++     }
++
++     let cancelled = false;
++     setDetail(null);
++     setError(null);
++
++     void fetchRouterDecisionDetail(requestId)
++       .then((value) => {
++         if (cancelled) {
++           return;
++         }
++         setDetail(value);
++         setError(null);
++       })
++       .catch((value: unknown) => {
++         if (cancelled) {
++           return;
++         }
++         setError(value instanceof Error ? value.message : "Could not load router decision detail.");
++       });
++
++     return () => {
++       cancelled = true;
++     };
++   }, [requestId]);
++
++   if (error) {
++     return <ErrorState label={error} />;
++   }
++   if (!detail) {
++     return <LoadingState label="Loading routing decision detail…" />;
++   }
++
++   const benchmarkDecision = projectBenchmarkDecisionView(detail);
++   const telemetryEvidence = detail.telemetryEvidence ?? null;
++   const observePath = detail?.observeRequestPath ?? `/app/observe/requests/${requestId}`;
++
++   return (
++     <div className="space-y-6">
++       <SectionCard
++         title="Routing decision detail"
++         description="Keep the chosen endpoint, strategy, fallback order, and linked request context in one compact decision-inspector surface."
++       >
++         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,372px)]">
++           <div className="space-y-4">
++             <div className="grid gap-4 xl:grid-cols-2">
++               <div className={`${mutedPanelClassName} space-y-2 p-4`}>
++                 <p className={fieldLabelClassName}>Request</p>
++                 <p className={`${bodyStrongTextClassName} break-all text-[var(--rm-fg)]`}>
++                   {detail.requestId}
++                 </p>
++                 <p className={supportingTextClassName}>
++                   Request id that anchors the Router decision record.
++                 </p>
++               </div>
++               <div className={`${mutedPanelClassName} space-y-2 p-4`}>
++                 <p className={fieldLabelClassName}>Decision</p>
++                 <p className={`${bodyStrongTextClassName} break-all text-[var(--rm-fg)]`}>
++                   {detail.routingDecisionId ?? "n/a"}
++                 </p>
++                 <p className={supportingTextClassName}>
++                   Persisted routing decision id when the runtime stored one.
++                 </p>
++               </div>
++             </div>
++
++             <div className={`${mutedPanelClassName} p-4`}>
++               <p className={foregroundEmphasisClassName}>Chosen endpoint</p>
++               <p className={`mt-4 break-all ${bodyStrongTextClassName} text-[var(--rm-fg)]`}>
++                 {formatEndpointDisplayPath({
++                   endpointId: detail.selectedEndpointId,
++                   reasoningEffort: detail.reasoningEffort,
++                 })}
++               </p>
++               <p className={`mt-2 ${supportingTextClassName}`}>
++                 {formatModelIdentity({
++                   id: detail.selectedModelId ?? "unknown model",
++                   displayName: detail.displayName,
++                   upstreamModelId: detail.upstreamModelId,
++                   reasoningEffort: detail.reasoningEffort,
++                 })}
++               </p>
++               <div className="mt-4 flex flex-wrap gap-2">
++                 <Badge tone="accent">
++                   {detail.strategyLabel ? formatRoutingModeLabel(detail.strategyLabel) : "n/a"}
++                 </Badge>
++                 <Badge tone="neutral">
++                   {detail.fallbackEndpointIds.length} fallback
++                   {detail.fallbackEndpointIds.length === 1 ? "" : "s"}
++                 </Badge>
++               </div>
++             </div>
++           </div>
++
++           <div className="space-y-3">
++             <div className={`${mutedPanelClassName} p-4 text-[var(--rm-secondary)]`}>
++               <p className={foregroundEmphasisClassName}>Linked request</p>
++               <p className={`mt-3 ${supportingTextClassName}`}>
++                 Router promotes the linked request here, while Observe still owns the deeper trace
++                 workflow.
++               </p>
++               <div className="mt-4">
++                 <Link className={secondaryButtonClassName} to={observePath}>
++                   Observe request detail
++                 </Link>
++               </div>
++             </div>
++
++             <div className={`${mutedPanelClassName} p-4 text-[var(--rm-secondary)]`}>
++               <p className={foregroundEmphasisClassName}>Benchmark provenance</p>
++               {benchmarkDecision ? (
++                 <>
++                   <div className="mt-4 grid gap-3 sm:grid-cols-2">
++                     <div>
++                       <p className={fieldLabelClassName}>Decision quality</p>
++                       <p className={`mt-2 ${bodyStrongTextClassName} text-[var(--rm-fg)]`}>
++                         {benchmarkDecision.scorePercent}%
++                       </p>
++                     </div>
++                     <div>
++                       <p className={fieldLabelClassName}>Benchmark overall</p>
++                       <p className={`mt-2 ${bodyStrongTextClassName} text-[var(--rm-fg)]`}>
++                         {benchmarkDecision.overallPercent}%
++                       </p>
++                     </div>
++                   </div>
++                   <div className="mt-4 border-t border-[var(--rm-border)] pt-4">
++                     <p className={fieldLabelClassName}>Decision-time run</p>
++                     <p className={`mt-2 ${supportingTextClassName}`}>
++                       {benchmarkDecision.runId ?? "profile-derived evidence"}
++                       {benchmarkDecision.runMode ? ` · ${benchmarkDecision.runMode}` : ""}
++                       {` · ${benchmarkDecision.evidenceSource}`}
++                       {benchmarkDecision.reason ? ` · ${benchmarkDecision.reason}` : ""}
++                     </p>
++                     <p className={`mt-2 ${supportingTextClassName}`}>
++                       {benchmarkDecision.measuredAtMs !== null
++                         ? new Date(benchmarkDecision.measuredAtMs).toLocaleString()
++                         : "No run timestamp recorded"}
++                     </p>
++                   </div>
++                   <div className="mt-4">
++                     <Link className={secondaryButtonClassName} to="/app/models/benchmark">
++                       Models → Benchmark
++                     </Link>
++                   </div>
++                 </>
++               ) : (
++                 <p className={`mt-3 ${supportingTextClassName}`}>
++                   No benchmark evidence was recorded in this routing decision.
++                 </p>
++               )}
++             </div>
++           </div>
++         </div>
++       </SectionCard>
++
++       <SectionCard
++         title="Live telemetry evidence at decision"
++         description="This immutable decision-time projection is separate from benchmark evidence and from the endpoint's current operational profile."
++       >
++         {telemetryEvidence ? (
++           <div className="grid gap-4 xl:grid-cols-2">
++             <div className={`${mutedPanelClassName} p-4`}>
++               <p className={foregroundEmphasisClassName}>Operational profile snapshot</p>
++               <dl className="mt-4 grid gap-3 sm:grid-cols-2">
++                 {[
++                   ["Samples", telemetryEvidence.operationalProfile?.sampleCount],
++                   ["Live p50", telemetryEvidence.operationalProfile?.latencyP50Ms],
++                   ["Live p95", telemetryEvidence.operationalProfile?.latencyP95Ms],
++                   ["Failure rate", telemetryEvidence.operationalProfile?.failureRate],
++                 ].map(([label, value]) => (
++                   <div key={label as string}>
++                     <dt className={fieldLabelClassName}>{label}</dt>
++                     <dd className={`mt-1 ${bodyStrongTextClassName}`}>
++                       {value === null || value === undefined ? "Not available" : String(value)}
++                     </dd>
++                   </div>
++                 ))}
++               </dl>
++             </div>
++             <div className={`${mutedPanelClassName} p-4`}>
++               <p className={foregroundEmphasisClassName}>Task telemetry advisory</p>
++               <dl className="mt-4 grid gap-3 sm:grid-cols-2">
++                 {[
++                   ["Available", telemetryEvidence.taskTelemetry.available],
++                   ["Eligible", telemetryEvidence.taskTelemetry.eligible],
++                   ["Applied", telemetryEvidence.taskTelemetry.applied],
++                   ["Samples", telemetryEvidence.taskTelemetry.sampleCount],
++                   ["Success rate", telemetryEvidence.taskTelemetry.successRate],
++                   ["Withheld reason", telemetryEvidence.taskTelemetry.withheldReason],
++                 ].map(([label, value]) => (
++                   <div key={label as string}>
++                     <dt className={fieldLabelClassName}>{label}</dt>
++                     <dd className={`mt-1 ${bodyStrongTextClassName}`}>
++                       {value === null || value === undefined ? "Not available" : String(value)}
++                     </dd>
++                   </div>
++                 ))}
++               </dl>
++             </div>
++           </div>
++         ) : (
++           <EmptyState label="No live telemetry evidence was persisted for this decision." />
++         )}
++       </SectionCard>
++
++       <SectionCard
++         title="Fallback endpoints"
++         description="Fallback order remains visible here so Router can explain the chosen endpoint in context."
++       >
++         {detail.fallbackEndpointIds.length === 0 ? (
++           <EmptyState label="No fallback endpoints were recorded for this decision." />
++         ) : (
++           <div className="space-y-2">
++             {detail.fallbackEndpointIds.map((endpointId, index) => (
++               <div
++                 key={endpointId}
++                 className={`${cardClassName} flex items-center justify-between gap-3 px-4 py-3`}
++               >
++                 <p className={bodyStrongTextClassName}>{endpointId}</p>
++                 <p className={supportingTextClassName}>
++                   {`fallback ${String(index + 1).padStart(2, "0")}`}
++                 </p>
++               </div>
++             ))}
++           </div>
++         )}
++       </SectionCard>
++
++       <div className="grid gap-4 xl:grid-cols-2">
++         <SectionCard
++           title="Decision bundle"
++           description="Expose the raw persisted decision so scored candidates, exclusions, and tie-breaks remain auditable."
++         >
++           <CodeBlock>{JSON.stringify(detail.decision ?? {}, null, 2)}</CodeBlock>
++         </SectionCard>
++         <SectionCard
++           title="Routing diagnostics"
++           description="Keep the routing diagnostics adjacent to the decision so routing-mode, rewrite, difficulty, and controller details stay together."
++         >
++           <CodeBlock>{JSON.stringify(detail.routingDiagnostics ?? {}, null, 2)}</CodeBlock>
++         </SectionCard>
++       </div>
++
++       <div className="grid gap-4 xl:grid-cols-2">
++         <SectionCard
++           title="Linked request"
++           description="Router promotes the request detail payload here, but Observe still owns the deeper trace workflow."
++         >
++           <div className="mb-4">
++             <Link className={secondaryButtonClassName} to={observePath}>
++               Observe request detail
++             </Link>
++           </div>
++           <CodeBlock>{JSON.stringify(detail.request, null, 2)}</CodeBlock>
++         </SectionCard>
++         <SectionCard
++           title="Current operational profile"
++           description="Current live-request posture is shown separately and may have changed since the immutable decision-time evidence above."
++         >
++           <CodeBlock>{JSON.stringify(detail.endpointProfile ?? {}, null, 2)}</CodeBlock>
++         </SectionCard>
++       </div>
++     </div>
++   );
++ }
++
+
+ ❯ app/routes/router-decision-detail.test.tsx:29:26
+     27| 
+     28|   test("shows the effective strategy, its source, the weights digest a…
+     29|     expect(detailSource).toContain("readStrategyReceipt");
+       |                          ^
+     30|     expect(detailSource).toContain("readLatencyReceipt");
+     31|     expect(detailSource).toContain("readAliasPostureReceipt");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  app/routes/router-decision-detail.test.tsx > run 103 decision surfaces > removes the raw config-string fallback from both decision surfaces
+AssertionError: expected 'import { useEffect, useState } from "…' not to contain 'formatRoutingModeLabel(detail.strateg…'
+
+- Expected
++ Received
+
+- formatRoutingModeLabel(detail.strategyLabel)
++ import { useEffect, useState } from "react";
++ import { Link, useParams } from "react-router";
++
++ import {
++   Badge,
++   CodeBlock,
++   EmptyState,
++   ErrorState,
++   LoadingState,
++   SectionCard,
++ } from "../components/page-primitives";
++ import { projectBenchmarkDecisionView } from "../lib/benchmark-decision-evidence";
++ import {
++   bodyStrongTextClassName,
++   cardClassName,
++   fieldLabelClassName,
++   foregroundEmphasisClassName,
++   mutedPanelClassName,
++   secondaryButtonClassName,
++   supportingTextClassName,
++ } from "../lib/design-system";
++ import { formatEndpointDisplayPath, formatModelIdentity } from "../lib/effort-identity";
++ import { formatRoutingModeLabel } from "../lib/routing-mode";
++ import { type RouterDecisionDetail, fetchRouterDecisionDetail } from "../lib/runtime-api";
++
++ export default function RouterDecisionDetailRoute() {
++   const { requestId = "" } = useParams();
++   const [detail, setDetail] = useState<RouterDecisionDetail | null>(null);
++   const [error, setError] = useState<string | null>(null);
++
++   useEffect(() => {
++     if (!requestId) {
++       return;
++     }
++
++     let cancelled = false;
++     setDetail(null);
++     setError(null);
++
++     void fetchRouterDecisionDetail(requestId)
++       .then((value) => {
++         if (cancelled) {
++           return;
++         }
++         setDetail(value);
++         setError(null);
++       })
++       .catch((value: unknown) => {
++         if (cancelled) {
++           return;
++         }
++         setError(value instanceof Error ? value.message : "Could not load router decision detail.");
++       });
++
++     return () => {
++       cancelled = true;
++     };
++   }, [requestId]);
++
++   if (error) {
++     return <ErrorState label={error} />;
++   }
++   if (!detail) {
++     return <LoadingState label="Loading routing decision detail…" />;
++   }
++
++   const benchmarkDecision = projectBenchmarkDecisionView(detail);
++   const telemetryEvidence = detail.telemetryEvidence ?? null;
++   const observePath = detail?.observeRequestPath ?? `/app/observe/requests/${requestId}`;
++
++   return (
++     <div className="space-y-6">
++       <SectionCard
++         title="Routing decision detail"
++         description="Keep the chosen endpoint, strategy, fallback order, and linked request context in one compact decision-inspector surface."
++       >
++         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,372px)]">
++           <div className="space-y-4">
++             <div className="grid gap-4 xl:grid-cols-2">
++               <div className={`${mutedPanelClassName} space-y-2 p-4`}>
++                 <p className={fieldLabelClassName}>Request</p>
++                 <p className={`${bodyStrongTextClassName} break-all text-[var(--rm-fg)]`}>
++                   {detail.requestId}
++                 </p>
++                 <p className={supportingTextClassName}>
++                   Request id that anchors the Router decision record.
++                 </p>
++               </div>
++               <div className={`${mutedPanelClassName} space-y-2 p-4`}>
++                 <p className={fieldLabelClassName}>Decision</p>
++                 <p className={`${bodyStrongTextClassName} break-all text-[var(--rm-fg)]`}>
++                   {detail.routingDecisionId ?? "n/a"}
++                 </p>
++                 <p className={supportingTextClassName}>
++                   Persisted routing decision id when the runtime stored one.
++                 </p>
++               </div>
++             </div>
++
++             <div className={`${mutedPanelClassName} p-4`}>
++               <p className={foregroundEmphasisClassName}>Chosen endpoint</p>
++               <p className={`mt-4 break-all ${bodyStrongTextClassName} text-[var(--rm-fg)]`}>
++                 {formatEndpointDisplayPath({
++                   endpointId: detail.selectedEndpointId,
++                   reasoningEffort: detail.reasoningEffort,
++                 })}
++               </p>
++               <p className={`mt-2 ${supportingTextClassName}`}>
++                 {formatModelIdentity({
++                   id: detail.selectedModelId ?? "unknown model",
++                   displayName: detail.displayName,
++                   upstreamModelId: detail.upstreamModelId,
++                   reasoningEffort: detail.reasoningEffort,
++                 })}
++               </p>
++               <div className="mt-4 flex flex-wrap gap-2">
++                 <Badge tone="accent">
++                   {detail.strategyLabel ? formatRoutingModeLabel(detail.strategyLabel) : "n/a"}
++                 </Badge>
++                 <Badge tone="neutral">
++                   {detail.fallbackEndpointIds.length} fallback
++                   {detail.fallbackEndpointIds.length === 1 ? "" : "s"}
++                 </Badge>
++               </div>
++             </div>
++           </div>
++
++           <div className="space-y-3">
++             <div className={`${mutedPanelClassName} p-4 text-[var(--rm-secondary)]`}>
++               <p className={foregroundEmphasisClassName}>Linked request</p>
++               <p className={`mt-3 ${supportingTextClassName}`}>
++                 Router promotes the linked request here, while Observe still owns the deeper trace
++                 workflow.
++               </p>
++               <div className="mt-4">
++                 <Link className={secondaryButtonClassName} to={observePath}>
++                   Observe request detail
++                 </Link>
++               </div>
++             </div>
++
++             <div className={`${mutedPanelClassName} p-4 text-[var(--rm-secondary)]`}>
++               <p className={foregroundEmphasisClassName}>Benchmark provenance</p>
++               {benchmarkDecision ? (
++                 <>
++                   <div className="mt-4 grid gap-3 sm:grid-cols-2">
++                     <div>
++                       <p className={fieldLabelClassName}>Decision quality</p>
++                       <p className={`mt-2 ${bodyStrongTextClassName} text-[var(--rm-fg)]`}>
++                         {benchmarkDecision.scorePercent}%
++                       </p>
++                     </div>
++                     <div>
++                       <p className={fieldLabelClassName}>Benchmark overall</p>
++                       <p className={`mt-2 ${bodyStrongTextClassName} text-[var(--rm-fg)]`}>
++                         {benchmarkDecision.overallPercent}%
++                       </p>
++                     </div>
++                   </div>
++                   <div className="mt-4 border-t border-[var(--rm-border)] pt-4">
++                     <p className={fieldLabelClassName}>Decision-time run</p>
++                     <p className={`mt-2 ${supportingTextClassName}`}>
++                       {benchmarkDecision.runId ?? "profile-derived evidence"}
++                       {benchmarkDecision.runMode ? ` · ${benchmarkDecision.runMode}` : ""}
++                       {` · ${benchmarkDecision.evidenceSource}`}
++                       {benchmarkDecision.reason ? ` · ${benchmarkDecision.reason}` : ""}
++                     </p>
++                     <p className={`mt-2 ${supportingTextClassName}`}>
++                       {benchmarkDecision.measuredAtMs !== null
++                         ? new Date(benchmarkDecision.measuredAtMs).toLocaleString()
++                         : "No run timestamp recorded"}
++                     </p>
++                   </div>
++                   <div className="mt-4">
++                     <Link className={secondaryButtonClassName} to="/app/models/benchmark">
++                       Models → Benchmark
++                     </Link>
++                   </div>
++                 </>
++               ) : (
++                 <p className={`mt-3 ${supportingTextClassName}`}>
++                   No benchmark evidence was recorded in this routing decision.
++                 </p>
++               )}
++             </div>
++           </div>
++         </div>
++       </SectionCard>
++
++       <SectionCard
++         title="Live telemetry evidence at decision"
++         description="This immutable decision-time projection is separate from benchmark evidence and from the endpoint's current operational profile."
++       >
++         {telemetryEvidence ? (
++           <div className="grid gap-4 xl:grid-cols-2">
++             <div className={`${mutedPanelClassName} p-4`}>
++               <p className={foregroundEmphasisClassName}>Operational profile snapshot</p>
++               <dl className="mt-4 grid gap-3 sm:grid-cols-2">
++                 {[
++                   ["Samples", telemetryEvidence.operationalProfile?.sampleCount],
++                   ["Live p50", telemetryEvidence.operationalProfile?.latencyP50Ms],
++                   ["Live p95", telemetryEvidence.operationalProfile?.latencyP95Ms],
++                   ["Failure rate", telemetryEvidence.operationalProfile?.failureRate],
++                 ].map(([label, value]) => (
++                   <div key={label as string}>
++                     <dt className={fieldLabelClassName}>{label}</dt>
++                     <dd className={`mt-1 ${bodyStrongTextClassName}`}>
++                       {value === null || value === undefined ? "Not available" : String(value)}
++                     </dd>
++                   </div>
++                 ))}
++               </dl>
++             </div>
++             <div className={`${mutedPanelClassName} p-4`}>
++               <p className={foregroundEmphasisClassName}>Task telemetry advisory</p>
++               <dl className="mt-4 grid gap-3 sm:grid-cols-2">
++                 {[
++                   ["Available", telemetryEvidence.taskTelemetry.available],
++                   ["Eligible", telemetryEvidence.taskTelemetry.eligible],
++                   ["Applied", telemetryEvidence.taskTelemetry.applied],
++                   ["Samples", telemetryEvidence.taskTelemetry.sampleCount],
++                   ["Success rate", telemetryEvidence.taskTelemetry.successRate],
++                   ["Withheld reason", telemetryEvidence.taskTelemetry.withheldReason],
++                 ].map(([label, value]) => (
++                   <div key={label as string}>
++                     <dt className={fieldLabelClassName}>{label}</dt>
++                     <dd className={`mt-1 ${bodyStrongTextClassName}`}>
++                       {value === null || value === undefined ? "Not available" : String(value)}
++                     </dd>
++                   </div>
++                 ))}
++               </dl>
++             </div>
++           </div>
++         ) : (
++           <EmptyState label="No live telemetry evidence was persisted for this decision." />
++         )}
++       </SectionCard>
++
++       <SectionCard
++         title="Fallback endpoints"
++         description="Fallback order remains visible here so Router can explain the chosen endpoint in context."
++       >
++         {detail.fallbackEndpointIds.length === 0 ? (
++           <EmptyState label="No fallback endpoints were recorded for this decision." />
++         ) : (
++           <div className="space-y-2">
++             {detail.fallbackEndpointIds.map((endpointId, index) => (
++               <div
++                 key={endpointId}
++                 className={`${cardClassName} flex items-center justify-between gap-3 px-4 py-3`}
++               >
++                 <p className={bodyStrongTextClassName}>{endpointId}</p>
++                 <p className={supportingTextClassName}>
++                   {`fallback ${String(index + 1).padStart(2, "0")}`}
++                 </p>
++               </div>
++             ))}
++           </div>
++         )}
++       </SectionCard>
++
++       <div className="grid gap-4 xl:grid-cols-2">
++         <SectionCard
++           title="Decision bundle"
++           description="Expose the raw persisted decision so scored candidates, exclusions, and tie-breaks remain auditable."
++         >
++           <CodeBlock>{JSON.stringify(detail.decision ?? {}, null, 2)}</CodeBlock>
++         </SectionCard>
++         <SectionCard
++           title="Routing diagnostics"
++           description="Keep the routing diagnostics adjacent to the decision so routing-mode, rewrite, difficulty, and controller details stay together."
++         >
++           <CodeBlock>{JSON.stringify(detail.routingDiagnostics ?? {}, null, 2)}</CodeBlock>
++         </SectionCard>
++       </div>
++
++       <div className="grid gap-4 xl:grid-cols-2">
++         <SectionCard
++           title="Linked request"
++           description="Router promotes the request detail payload here, but Observe still owns the deeper trace workflow."
++         >
++           <div className="mb-4">
++             <Link className={secondaryButtonClassName} to={observePath}>
++               Observe request detail
++             </Link>
++           </div>
++           <CodeBlock>{JSON.stringify(detail.request, null, 2)}</CodeBlock>
++         </SectionCard>
++         <SectionCard
++           title="Current operational profile"
++           description="Current live-request posture is shown separately and may have changed since the immutable decision-time evidence above."
++         >
++           <CodeBlock>{JSON.stringify(detail.endpointProfile ?? {}, null, 2)}</CodeBlock>
++         </SectionCard>
++       </div>
++     </div>
++   );
++ }
++
+
+ ❯ app/routes/router-decision-detail.test.tsx:40:30
+     38| 
+     39|   test("removes the raw config-string fallback from both decision surf…
+     40|     expect(detailSource).not.toContain("formatRoutingModeLabel(detail.…
+       |                              ^
+     41|     expect(detailSource).not.toContain("formatRoutingModeLabel");
+     42|     expect(listSource).toContain("formatDecisionStrategyLabel");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+
+ Test Files  5 failed (5)
+      Tests  2 failed | 1 passed (3)
+   Start at  15:08:54
+   Duration  8.83s (transform 3.19s, setup 0ms, collect 5.29s, tests 171ms, environment 6ms, prepare 6.33s)
+
+undefined
+D:\DEV\role-model\.worktrees\103-agent-strategy-and-scoring-strategy\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run app/lib/agent-strategy.test.ts app/lib/latency-override.test.ts app/lib/decision-receipt.test.ts app/routes/agent-strategy.test.tsx app/routes/router-decision-detail.test.tsx

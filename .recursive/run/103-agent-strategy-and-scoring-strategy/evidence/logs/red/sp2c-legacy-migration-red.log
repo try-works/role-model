@@ -1,0 +1,129 @@
+
+ DEPRECATED  'basic' reporter is deprecated and will be removed in Vitest v3.
+Remove 'basic' from 'reporters' option. To match 'basic' reporter 100%, use configuration:
+{
+  "test": {
+    "reporters": [
+      [
+        "default",
+        {
+          "summary": false
+        }
+      ]
+    ]
+  }
+}
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/103-agent-strategy-and-scoring-strategy/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/scoring-strategy-legacy.test.ts (7 tests | 7 failed) 17ms
+   × legacy routing strategy migration > baseline spellings keep the baseline mode and the balanced preset 6ms
+     → (0 , decodeLegacyRoutingStrategy) is not a function
+   × legacy routing strategy migration > scoring spellings become the baseline mode plus that strategy 2ms
+     → (0 , decodeLegacyRoutingStrategy) is not a function
+   × legacy routing strategy migration > mode spellings keep their mode and leave the scoring strategy unset 1ms
+     → (0 , decodeLegacyRoutingStrategy) is not a function
+   × legacy routing strategy migration > unset and the legacy craft-ask alias decode to the default posture without degradations 2ms
+     → (0 , decodeLegacyRoutingStrategy) is not a function
+   × request strategy resolution > baseline mode uses the operator strategy 1ms
+     → (0 , decodeLegacyRoutingStrategy) is not a function
+   × request strategy resolution > difficulty mode lets a decisive bucket override an unpinned operator strategy 1ms
+     → (0 , decodeLegacyRoutingStrategy) is not a function
+   × request strategy resolution > a pinned posture keeps the operator strategy under a decisive bucket 1ms
+     → (0 , decodeLegacyRoutingStrategy) is not a function
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/scoring-strategy-legacy.test.ts > legacy routing strategy migration > baseline spellings keep the baseline mode and the balanced preset
+TypeError: (0 , decodeLegacyRoutingStrategy) is not a function
+ ❯ test/scoring-strategy-legacy.test.ts:15:23
+     13|   test("baseline spellings keep the baseline mode and the balanced pre…
+     14|     for (const spelling of ["baseline", "basic", "balanced"]) {
+     15|       const posture = decodeLegacyRoutingStrategy(spelling);
+       |                       ^
+     16|       expect(posture.mode, spelling).toBe("baseline");
+     17|       expect(posture.operator?.name, spelling).toBe("balanced");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/7]⎯
+
+ FAIL  test/scoring-strategy-legacy.test.ts > legacy routing strategy migration > scoring spellings become the baseline mode plus that strategy
+TypeError: (0 , decodeLegacyRoutingStrategy) is not a function
+ ❯ test/scoring-strategy-legacy.test.ts:22:12
+     20| 
+     21|   test("scoring spellings become the baseline mode plus that strategy"…
+     22|     expect(decodeLegacyRoutingStrategy("quality").operator?.weights).t…
+       |            ^
+     23|     expect(decodeLegacyRoutingStrategy("high-quality").operator?.name)…
+     24|     expect(decodeLegacyRoutingStrategy("latency-first").operator?.name…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/7]⎯
+
+ FAIL  test/scoring-strategy-legacy.test.ts > legacy routing strategy migration > mode spellings keep their mode and leave the scoring strategy unset
+TypeError: (0 , decodeLegacyRoutingStrategy) is not a function
+ ❯ test/scoring-strategy-legacy.test.ts:30:12
+     28| 
+     29|   test("mode spellings keep their mode and leave the scoring strategy …
+     30|     expect(decodeLegacyRoutingStrategy("difficulty").mode).toBe("diffi…
+       |            ^
+     31|     expect(decodeLegacyRoutingStrategy("hybrid").mode).toBe("hybrid");
+     32|     expect(decodeLegacyRoutingStrategy("controller").mode).toBe("intel…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/7]⎯
+
+ FAIL  test/scoring-strategy-legacy.test.ts > legacy routing strategy migration > unset and the legacy craft-ask alias decode to the default posture without degradations
+TypeError: (0 , decodeLegacyRoutingStrategy) is not a function
+ ❯ test/scoring-strategy-legacy.test.ts:39:23
+     37|   test("unset and the legacy craft-ask alias decode to the default pos…
+     38|     for (const spelling of [null, undefined, "", "craft-ask"]) {
+     39|       const posture = decodeLegacyRoutingStrategy(spelling);
+       |                       ^
+     40|       expect(posture.mode).toBe("baseline");
+     41|       expect(posture.operator).toBeNull();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/7]⎯
+
+ FAIL  test/scoring-strategy-legacy.test.ts > request strategy resolution > baseline mode uses the operator strategy
+TypeError: (0 , decodeLegacyRoutingStrategy) is not a function
+ ❯ test/scoring-strategy-legacy.test.ts:49:21
+     47| describe("request strategy resolution", () => {
+     48|   test("baseline mode uses the operator strategy", () => {
+     49|     const posture = decodeLegacyRoutingStrategy("quality");
+       |                     ^
+     50|     const resolution = resolveRequestStrategy({ posture, effectiveRout…
+     51|     expect(resolution.strategy).toBe("quality");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/7]⎯
+
+ FAIL  test/scoring-strategy-legacy.test.ts > request strategy resolution > difficulty mode lets a decisive bucket override an unpinned operator strategy
+TypeError: (0 , decodeLegacyRoutingStrategy) is not a function
+ ❯ test/scoring-strategy-legacy.test.ts:56:21
+     54| 
+     55|   test("difficulty mode lets a decisive bucket override an unpinned op…
+     56|     const posture = decodeLegacyRoutingStrategy("latency");
+       |                     ^
+     57|     const resolution = resolveRequestStrategy({
+     58|       posture,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/7]⎯
+
+ FAIL  test/scoring-strategy-legacy.test.ts > request strategy resolution > a pinned posture keeps the operator strategy under a decisive bucket
+TypeError: (0 , decodeLegacyRoutingStrategy) is not a function
+ ❯ test/scoring-strategy-legacy.test.ts:67:26
+     65| 
+     66|   test("a pinned posture keeps the operator strategy under a decisive …
+     67|     const posture = { ...decodeLegacyRoutingStrategy("latency"), pinWe…
+       |                          ^
+     68|     const resolution = resolveRequestStrategy({
+     69|       posture,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/7]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  7 failed (7)
+   Start at  12:07:04
+   Duration  6.00s (transform 2.64s, setup 0ms, collect 5.02s, tests 17ms, environment 1ms, prepare 372ms)
+
+undefined
+D:\DEV\role-model\.worktrees\103-agent-strategy-and-scoring-strategy\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/scoring-strategy-legacy.test.ts --reporter=basic

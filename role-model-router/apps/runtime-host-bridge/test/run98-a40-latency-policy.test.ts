@@ -17,7 +17,7 @@ test("a40 L5: the selection input is disabled by default and carries documented 
     minStage: "S2",
     windowHours: 24,
     minSamples: 5,
-    maxDeltaMs: 2_000,
+    maxDeltaMs: 10_000,
     tokenBucketUpperBounds: [50_000, 150_000],
     maxCandidates: 4,
   });

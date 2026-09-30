@@ -1,0 +1,40 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/103-agent-strategy-and-scoring-strategy/role-model-router/apps/runtime-host-bridge
+
+(node:42952) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | test/agent-strategy-live-aliases.test.ts > agent strategy and workload aliases in the live backend > materialises posture aliases, survives a config patch and rejects an unknown role
+Runtime strategy posture scope coder.remote-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope batch.remote-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope embedding.remote-only has no routable targets (ALIAS_POOL_EMPTY)
+
+stderr | test/agent-strategy-live-aliases.test.ts > agent strategy and workload aliases in the live backend > materialises posture aliases, survives a config patch and rejects an unknown role
+Runtime strategy posture scope coder.remote-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope batch.remote-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope embedding.remote-only has no routable targets (ALIAS_POOL_EMPTY)
+
+stderr | test/agent-strategy-live-aliases.test.ts > agent strategy and workload aliases in the live backend > materialises posture aliases, survives a config patch and rejects an unknown role
+Runtime strategy posture scope coder.remote-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope batch.remote-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope embedding.remote-only has no routable targets (ALIAS_POOL_EMPTY)
+
+stderr | test/agent-strategy-live-aliases.test.ts > agent strategy and workload aliases in the live backend > a capability pin nothing satisfies is reported empty instead of advertising the scope
+Runtime strategy posture scope batch.remote-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope retrieval.decision-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope retrieval.hybrid has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope retrieval.local-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope retrieval.remote-only has no routable targets (ALIAS_POOL_EMPTY)
+
+stderr | test/agent-strategy-live-aliases.test.ts > agent strategy and workload aliases in the live backend > a capability pin narrows the published scope to the endpoints that satisfy it
+Runtime strategy posture scope retrieval.remote-only has no routable targets (ALIAS_POOL_EMPTY)
+
+ ✓ test/agent-strategy-live-aliases.test.ts (3 tests) 12555ms
+   ✓ agent strategy and workload aliases in the live backend > materialises posture aliases, survives a config patch and rejects an unknown role  7865ms
+   ✓ agent strategy and workload aliases in the live backend > a capability pin nothing satisfies is reported empty instead of advertising the scope  2446ms
+   ✓ agent strategy and workload aliases in the live backend > a capability pin narrows the published scope to the endpoints that satisfy it  2240ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  05:40:28
+   Duration  21.32s (transform 5.00s, setup 0ms, collect 7.98s, tests 12.56s, environment 0ms, prepare 270ms)
+

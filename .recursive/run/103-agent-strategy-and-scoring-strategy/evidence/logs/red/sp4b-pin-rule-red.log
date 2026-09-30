@@ -1,0 +1,87 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/103-agent-strategy-and-scoring-strategy/role-model-router/apps/runtime-host-bridge
+
+ DEPRECATED  'basic' reporter is deprecated and will be removed in Vitest v3.
+Remove 'basic' from 'reporters' option. To match 'basic' reporter 100%, use configuration:
+{
+  "test": {
+    "reporters": [
+      [
+        "default",
+        {
+          "summary": false
+        }
+      ]
+    ]
+  }
+}
+ ❯ test/scoring-strategy-pin-rule.test.ts (4 tests | 4 failed) 10ms
+   × controller strategy pin rule > an unpinned posture applies the controller strategy 5ms
+     → (0 , resolveControllerStrategyApplication) is not a function
+   × controller strategy pin rule > a pinned posture keeps the request strategy and records the discard 1ms
+     → (0 , resolveControllerStrategyApplication) is not a function
+   × controller strategy pin rule > guidance without a strategy leaves the request strategy untouched 1ms
+     → (0 , resolveControllerStrategyApplication) is not a function
+   × controller strategy pin rule > a pinned posture whose guidance matches the request strategy records nothing 1ms
+     → (0 , resolveControllerStrategyApplication) is not a function
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/scoring-strategy-pin-rule.test.ts > controller strategy pin rule > an unpinned posture applies the controller strategy
+TypeError: (0 , resolveControllerStrategyApplication) is not a function
+ ❯ test/scoring-strategy-pin-rule.test.ts:11:21
+      9| describe("controller strategy pin rule", () => {
+     10|   test("an unpinned posture applies the controller strategy", () => {
+     11|     const applied = resolveControllerStrategyApplication({
+       |                     ^
+     12|       pinWeights: false,
+     13|       requestStrategy: "latency",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  test/scoring-strategy-pin-rule.test.ts > controller strategy pin rule > a pinned posture keeps the request strategy and records the discard
+TypeError: (0 , resolveControllerStrategyApplication) is not a function
+ ❯ test/scoring-strategy-pin-rule.test.ts:21:21
+     19| 
+     20|   test("a pinned posture keeps the request strategy and records the di…
+     21|     const applied = resolveControllerStrategyApplication({
+       |                     ^
+     22|       pinWeights: true,
+     23|       requestStrategy: "latency",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  test/scoring-strategy-pin-rule.test.ts > controller strategy pin rule > guidance without a strategy leaves the request strategy untouched
+TypeError: (0 , resolveControllerStrategyApplication) is not a function
+ ❯ test/scoring-strategy-pin-rule.test.ts:31:21
+     29| 
+     30|   test("guidance without a strategy leaves the request strategy untouc…
+     31|     const applied = resolveControllerStrategyApplication({
+       |                     ^
+     32|       pinWeights: false,
+     33|       requestStrategy: "cost",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  test/scoring-strategy-pin-rule.test.ts > controller strategy pin rule > a pinned posture whose guidance matches the request strategy records nothing
+TypeError: (0 , resolveControllerStrategyApplication) is not a function
+ ❯ test/scoring-strategy-pin-rule.test.ts:41:21
+     39| 
+     40|   test("a pinned posture whose guidance matches the request strategy r…
+     41|     const applied = resolveControllerStrategyApplication({
+       |                     ^
+     42|       pinWeights: true,
+     43|       requestStrategy: "quality",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed (4)
+   Start at  12:31:58
+   Duration  5.63s (transform 2.44s, setup 0ms, collect 4.70s, tests 10ms, environment 0ms, prepare 375ms)
+
+undefined
+D:\DEV\role-model\.worktrees\103-agent-strategy-and-scoring-strategy\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/scoring-strategy-pin-rule.test.ts --reporter=basic

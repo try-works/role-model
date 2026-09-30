@@ -180,7 +180,12 @@ const DEFAULT_METRIC_DECAY_PERCENT_PER_DAY = {
   latency: 10,
   throughput: 10,
 } as const;
-const STRATEGY_WEIGHTS: Record<
+/**
+ * Run 103 / SP1: the canonical scoring-strategy presets are exported so the runtime's
+ * scoring-strategy vocabulary (`.recursive/run/103-agent-strategy-and-scoring-strategy/`)
+ * resolves against this single source instead of copying the tables.
+ */
+export const STRATEGY_WEIGHTS: Record<
   RoutingPolicyStrategy,
   Record<"quality" | "latency" | "throughput" | "cost" | "reliability" | "preference", number>
 > = {
@@ -535,7 +540,13 @@ function getSupportedCapabilitiesForCandidate(
   return unique([...candidate.declared.capabilities, ...roleBinding.effective_capabilities]);
 }
 
-function supportsCapabilityRequirement(
+/**
+ * Run 103 post-lock repair (operator decision): the runtime's published alias pools must reflect the
+ * eligibility this function applies at request time, so it is exported as the single source of the
+ * capability-satisfaction rule (`code.edit` satisfies `code.read`/`code.write`, a `<req>.` family
+ * satisfies the family root, `reasoning` satisfies `reasoning.*`, and the structured-output pair).
+ */
+export function supportsCapabilityRequirement(
   supportedCapabilities: readonly string[],
   requirement: string,
 ): boolean {

@@ -11,6 +11,21 @@ export type RuntimeRoutingMode = "baseline" | "difficulty" | "controller" | "hyb
 
 export interface RuntimeRoutingDiagnostics {
   readonly retrievalReceiptId?: string;
+  /**
+   * Run 103 / SP3c: the scoring-strategy receipt - which strategy was applied, who chose it, the
+   * weights digest, and any override a pinned posture discarded.
+   */
+  readonly strategyResolution?: {
+    readonly strategy: string;
+    readonly source: string;
+    /** Run 103 R2: the effective weights, so a decision stays auditable after the profile changes. */
+    readonly weights?: Readonly<Record<string, number>>;
+    readonly weightsDigest: string;
+    readonly discarded?: {
+      readonly source: string;
+      readonly strategy: string;
+    };
+  };
   readonly aliasResolution?: {
     readonly requestedModel: string;
     readonly aliasId: string;
@@ -23,6 +38,23 @@ export interface RuntimeRoutingDiagnostics {
       readonly suggestedModelIds: readonly string[];
       readonly message: string;
     }[];
+  };
+  /**
+   * Run 103 / SP5g: the binding a posture alias handed the request - the declared role next to the
+   * alias preset it may have overridden, the required capabilities it added and the scoring
+   * strategy it carried.
+   */
+  readonly aliasPostureBinding?: {
+    readonly aliasId: string;
+    readonly name: string;
+    readonly kind: "role" | "workload";
+    readonly declaredRoleId: string | null;
+    readonly presetRoleId: string | null;
+    readonly roleId: string | null;
+    readonly roleSource: "declared" | "preset" | "none";
+    readonly requiredCapabilities: readonly string[];
+    readonly preferLocal: boolean;
+    readonly scoringStrategy: string | null;
   };
   readonly capabilityEligibility?: {
     readonly requiredInputModalities: readonly string[];

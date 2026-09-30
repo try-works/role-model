@@ -1,0 +1,5 @@
+﻿Routed via Role-Model (`controller.remote-only`, runtime at `127.0.0.1:3458`):
+
+> Jitter randomizes retry delays so that many clients failing at once don't reconnect in synchronized waves, which would otherwise cause repeated thundering-herd overload and prevent the system from recovering.
+
+Command used: `pi --no-session --provider role-model --model controller.remote-only -p "<prompt>"` (provider-relative alias, per the role-model skill).

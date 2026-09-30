@@ -1,0 +1,8 @@
+{
+  "requestId": "req-bad63ccd-4dcb-41db-8bd0-2e5256931ed5",
+  "routingDecisionId": "decision-req-bad63ccd-4dcb-41db-8bd0-2e5256931ed5",
+  "selectedEndpointId": "routing.failed.pre-execution",
+  "selectedModelId": "embedding.remote-only",
+  "strategyLabel": null,
+  "routingDiagnostics": null
+}

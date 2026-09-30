@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/103-agent-strategy-and-scoring-strategy/role-model-router/apps/runtime-host-bridge
+
+ ✓ test/runtime-config-named-block-merge.test.ts (8 tests) 70ms
+
+ Test Files  1 passed (1)
+      Tests  8 passed (8)
+   Start at  03:29:24
+   Duration  4.97s (transform 2.10s, setup 0ms, collect 4.03s, tests 70ms, environment 0ms, prepare 301ms)
+

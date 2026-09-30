@@ -147,3 +147,17 @@ Run `92-configured-model-pool-benchmark-convergence` closed out the endpoint-var
 6. Final-controller eject requires destructive confirmation; on confirm it clears the controller assignment and produces a durable empty-pool state with a recovery link. It is idempotent (backend returns `absent` on repeat).
 7. Routing decision detail shows `membershipRevision` and `profileRevision` (both membership-keyed, diagnostic-only).
 8. Benchmark clear is transactional (`BEGIN IMMEDIATE`) and writes a `clear-receipt.json` with membership revision and counts.
+
+## Run 103 routing posture, posture aliases and operator surfaces
+
+- The routing posture is two axes (`routing.mode` + `routing.scoring_strategy` + `pin_weights` + `weights`); the
+  precedence ladder is request intent > controller directive > difficulty bucket > saved strategy > `balanced`.
+- Agent-strategy (role-bound) and workload postures materialise `<name>.<scope>` aliases; declared intent beats
+  the alias preset and the decision records both; alias pools never widen.
+- Every decision carries `strategyResolution`, `aliasPostureBinding` and the measured-latency outcome, in the
+  observation ledger as well as the HTTP response.
+- Operator surfaces: `Routing strategy` (mode, scoring strategy, weights editor, pin, execution scope, resolved
+  posture, latency card), `Agent strategy` and `Workloads`; writes are canonical-only.
+- Companion documents: `.recursive/DECISIONS.md` (run `103-agent-strategy-and-scoring-strategy`),
+  `docs/operations/05-agent-strategy-and-workload-postures.md`.
+- Source-Runs: added `103-agent-strategy-and-scoring-strategy`; Last-Validated: `2026-09-30`.

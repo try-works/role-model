@@ -1,0 +1,462 @@
+import { describe, expect, test } from "vitest";
+
+import {
+  buildPostureEntryRows,
+  buildPostureNamedBlockPatch,
+  buildPostureWriteBlock,
+  buildWorkloadTemplateDraft,
+  createPostureDraft,
+  filterPostureDiagnosticsForKind,
+  findDuplicateEntryNames,
+  summarizePostureDiagnostics,
+  validatePostureDraft,
+} from "./agent-strategy";
+
+const roleEntries = [
+  {
+    name: "coder",
+    kind: "role" as const,
+    roleId: "coder",
+    scoringStrategy: "quality" as const,
+    routingMode: "difficulty" as const,
+    computePreference: "local" as const,
+    configuredModelIds: ["qwen3-coder"],
+    requiredCapabilities: [],
+    violations: [],
+    aliases: [
+      {
+        aliasId: "coder.remote-only",
+        mode: "difficulty",
+        candidateCount: 2,
+        allowEndpointIds: ["endpoint-b", "endpoint-a"],
+        poolEmpty: false,
+      },
+      {
+        aliasId: "coder.local-only",
+        mode: "difficulty",
+        candidateCount: 0,
+        allowEndpointIds: [],
+        poolEmpty: true,
+      },
+    ],
+  },
+];
+
+describe("run 103 posture entry view-models", () => {
+  test("builds one row per entry with its binding, posture and per-scope alias rows", () => {
+    const rows = buildPostureEntryRows(roleEntries, { violations: [], skipped: [], warnings: [] });
+    expect(rows).toHaveLength(1);
+    const row = rows[0];
+    expect(row.name).toBe("coder");
+    expect(row.kindLabel).toBe("Agent strategy");
+    expect(row.bindingLabel).toBe("role_id coder");
+    expect(row.postureSummary).toContain("Difficulty");
+    expect(row.postureSummary).toContain("Quality");
+    expect(row.postureSummary).toContain("compute local");
+    expect(row.aliases).toHaveLength(2);
+    const remote = row.aliases.find((alias) => alias.aliasId === "coder.remote-only");
+    expect(remote?.scopeLabel).toBe("remote-only");
+    expect(remote?.candidateLabel).toBe("2 candidates");
+    // The readback does not publish a decision winner per alias, so the row names the top-ranked
+    // eligible endpoint a "current leader" instead of inventing a winner.
+    expect(remote?.leaderEndpointId).toBe("endpoint-a");
+    expect(remote?.leaderLabel).toBe("current leader");
+    expect(remote?.poolEmpty).toBe(false);
+    const local = row.aliases.find((alias) => alias.aliasId === "coder.local-only");
+    expect(local?.poolEmpty).toBe(true);
+    expect(local?.leaderEndpointId).toBeNull();
+    /** Operator decision: the empty scope is a note on the entry, not a second marker on an alias row. */
+    expect(row.resolvableAliases.map((alias) => alias.aliasId)).toEqual(["coder.remote-only"]);
+    expect(row.unresolvableScopeNotice).toBe(
+      "1 scope cannot resolve: local-only — no eligible candidate for this scope.",
+    );
+    expect(row.poolEmptyAliasIds).toEqual(["coder.local-only"]);
+  });
+
+  test("surfaces posture diagnostics instead of swallowing them", () => {
+    const summary = summarizePostureDiagnostics({
+      violations: ['role "ghost" references unknown role_id "ghost"'],
+      skipped: [{ aliasId: "batch.local-only", reason: "ALIAS_POOL_EMPTY" }],
+      warnings: ['workload "embedding" requires unknown capability "embeddings.text"'],
+    });
+    expect(summary.violations).toHaveLength(1);
+    expect(summary.poolEmptyReports).toEqual([
+      { aliasId: "batch.local-only", reason: "ALIAS_POOL_EMPTY" },
+    ]);
+    expect(summary.unknownCapabilityWarnings).toHaveLength(1);
+    const rows = buildPostureEntryRows(roleEntries, {
+      violations: ['role "ghost" references unknown role_id "ghost"'],
+      skipped: [{ aliasId: "batch.local-only", reason: "ALIAS_POOL_EMPTY" }],
+      warnings: ['workload "embedding" requires unknown capability "embeddings.text"'],
+    });
+    /**
+     * Post-lock repair (run 103, operator decision): a diagnostic is attributed to the entry it names,
+     * not to every entry that shares its kind. `coder` must not inherit a message about `ghost`.
+     */
+    expect(rows[0].messages).toEqual([]);
+  });
+
+  /**
+   * Post-lock repair (run 103, operator decision): the diagnostics card used to render the whole
+   * document, so the Agent strategy page listed `batch.local-only` and `embedding` capability warnings
+   * that belong to the Workloads page (and the reason marker was printed twice as
+   * `ALIAS_POOL_EMPTY (ALIAS_POOL_EMPTY)`).
+   */
+  test("scopes diagnostics to the entries on the page", () => {
+    const diagnostics = {
+      violations: [
+        'role "coder" has unknown role_id "ghost"',
+        'workload "embedding" has unknown key "role_id"',
+      ],
+      skipped: [
+        { aliasId: "coder.local-only", reason: "ALIAS_POOL_EMPTY" },
+        { aliasId: "batch.local-only", reason: "ALIAS_POOL_EMPTY" },
+      ],
+      warnings: [
+        'workload "embedding" references unknown capability "embeddings.text"',
+        'role "coder" references unknown capability "code.write"',
+      ],
+    };
+
+    const rolePage = filterPostureDiagnosticsForKind("role", [{ name: "coder" }], diagnostics);
+    expect(rolePage.violations).toEqual(['role "coder" has unknown role_id "ghost"']);
+    expect(rolePage.skipped).toEqual([{ aliasId: "coder.local-only", reason: "ALIAS_POOL_EMPTY" }]);
+    expect(rolePage.warnings).toEqual(['role "coder" references unknown capability "code.write"']);
+
+    const workloadPage = filterPostureDiagnosticsForKind(
+      "workload",
+      [{ name: "batch" }, { name: "embedding" }],
+      diagnostics,
+    );
+    expect(workloadPage.violations).toEqual(['workload "embedding" has unknown key "role_id"']);
+    expect(workloadPage.skipped).toEqual([
+      { aliasId: "batch.local-only", reason: "ALIAS_POOL_EMPTY" },
+    ]);
+    expect(workloadPage.warnings).toEqual([
+      'workload "embedding" references unknown capability "embeddings.text"',
+    ]);
+  });
+
+  const workloadEntries = [
+    {
+      name: "batch",
+      kind: "workload" as const,
+      roleId: null,
+      scoringStrategy: "cost" as const,
+      routingMode: null,
+      computePreference: null,
+      configuredModelIds: [],
+      requiredCapabilities: [],
+      violations: [],
+      aliases: [
+        {
+          aliasId: "batch.remote-only",
+          mode: "cost",
+          candidateCount: 3,
+          allowEndpointIds: ["endpoint-c", "endpoint-a", "endpoint-b"],
+          poolEmpty: false,
+        },
+        {
+          aliasId: "batch.local-only",
+          mode: "cost",
+          candidateCount: 0,
+          allowEndpointIds: [],
+          poolEmpty: true,
+        },
+      ],
+    },
+    {
+      name: "embedding",
+      kind: "workload" as const,
+      roleId: null,
+      scoringStrategy: "cost" as const,
+      routingMode: null,
+      computePreference: null,
+      configuredModelIds: [],
+      requiredCapabilities: ["knowledge.retrieval"],
+      violations: [],
+      aliases: [],
+    },
+  ];
+
+  /**
+   * Post-lock repair (run 103, operator decision): an entry lists only the scopes that can resolve; the
+   * scopes that cannot become one plain-English note on the entry instead of a second `POOL EMPTY`
+   * marker, and the duplicated `ALIAS_POOL_EMPTY (ALIAS_POOL_EMPTY)` text is gone.
+   */
+  test("attributes the scopes that cannot resolve to their entry, in plain English", () => {
+    const diagnostics = {
+      violations: [],
+      skipped: [{ aliasId: "embedding.local-only", reason: "ALIAS_POOL_EMPTY" }],
+      warnings: ['workload "embedding" references unknown capability "knowledge.retrieval"'],
+    };
+    const rows = buildPostureEntryRows(workloadEntries, diagnostics);
+    const batch = rows.find((row) => row.name === "batch");
+    const embedding = rows.find((row) => row.name === "embedding");
+
+    expect(batch?.resolvableAliases.map((alias) => alias.aliasId)).toEqual(["batch.remote-only"]);
+    expect(batch?.unresolvableScopes).toEqual([
+      { aliasId: "batch.local-only", scopeLabel: "local-only" },
+    ]);
+    expect(batch?.unresolvableScopeNotice).toBe(
+      "1 scope cannot resolve: local-only — no eligible candidate for this scope.",
+    );
+    expect(batch?.messages).toEqual([]);
+
+    /** A scope the readback only reports as skipped is still attributed to its entry. */
+    expect(embedding?.resolvableAliases).toEqual([]);
+    expect(embedding?.unresolvableScopes).toEqual([
+      { aliasId: "embedding.local-only", scopeLabel: "local-only" },
+    ]);
+    expect(embedding?.messages).toEqual([
+      'workload "embedding" references unknown capability "knowledge.retrieval"',
+    ]);
+
+    /** No duplicated marker, and no second empty-scope list, anywhere in the view model. */
+    expect(JSON.stringify(rows)).not.toContain("ALIAS_POOL_EMPTY");
+    expect(JSON.stringify(rows)).not.toContain("POOL EMPTY");
+  });
+
+  test("reads the unresolvable-scope note in the plural when more than one scope is empty", () => {
+    const rows = buildPostureEntryRows(workloadEntries, {
+      violations: [],
+      skipped: [
+        { aliasId: "embedding.remote-only", reason: "ALIAS_POOL_EMPTY" },
+        { aliasId: "embedding.hybrid", reason: "ALIAS_POOL_EMPTY" },
+      ],
+      warnings: [],
+    });
+    const embedding = rows.find((row) => row.name === "embedding");
+    expect(embedding?.unresolvableScopeNotice).toBe(
+      "2 scopes cannot resolve: hybrid, remote-only — no eligible candidate for those scopes.",
+    );
+  });
+
+  test("accepts a role entry only with a role binding, and never writes a legacy synonym", () => {
+    const draft = createPostureDraft("role");
+    expect(draft.kind).toBe("role");
+    expect(draft.roleId).toBe("");
+    expect(validatePostureDraft(draft).ok).toBe(false);
+    const invalid = validatePostureDraft({ ...draft, name: "coder" });
+    expect(invalid.ok).toBe(false);
+    if (invalid.ok) return;
+    expect(invalid.errors.roleId).toMatch(/role_id/);
+
+    const ok = validatePostureDraft({
+      ...draft,
+      name: "coder",
+      roleId: "coder",
+      scoringStrategy: "high-quality",
+      routingMode: "controller",
+      computePreference: "hybrid",
+      modelIds: ["qwen3-coder"],
+    });
+    expect(ok.ok).toBe(true);
+    if (!ok.ok) return;
+    expect(ok.entry.scoringStrategy).toBe("quality");
+    expect(ok.entry.routingMode).toBe("intelligent");
+
+    const reserved = validatePostureDraft({ ...draft, name: "baseline", roleId: "coder" });
+    expect(reserved.ok).toBe(false);
+    const unknownMode = validatePostureDraft({
+      ...draft,
+      name: "coder",
+      roleId: "coder",
+      routingMode: "turbo",
+    });
+    expect(unknownMode.ok).toBe(false);
+  });
+
+  test("refuses role_id on a workload and accepts required capabilities", () => {
+    const workload = validatePostureDraft({
+      ...createPostureDraft("workload"),
+      name: "embedding",
+      scoringStrategy: "cost",
+      requiredCapabilities: ["embeddings.text"],
+    });
+    expect(workload.ok).toBe(true);
+    if (!workload.ok) return;
+    expect(workload.entry.requiredCapabilities).toEqual(["embeddings.text"]);
+    const withRole = validatePostureDraft({
+      ...createPostureDraft("workload"),
+      name: "embedding",
+      roleId: "coder",
+    });
+    expect(withRole.ok).toBe(false);
+    if (withRole.ok) return;
+    expect(withRole.errors.roleId).toMatch(/must not/);
+  });
+
+  test("offers the shipped workload examples as one-click templates", () => {
+    const batch = buildWorkloadTemplateDraft("batch", { scoring_strategy: "cost" });
+    expect(batch).not.toBeNull();
+    if (!batch) return;
+    expect(batch.name).toBe("batch");
+    expect(batch.scoringStrategy).toBe("cost");
+    expect(batch.requiredCapabilities).toEqual([]);
+    const embedding = buildWorkloadTemplateDraft("embedding", {
+      scoring_strategy: "cost",
+      required_capabilities: ["embeddings.text"],
+    });
+    expect(embedding).not.toBeNull();
+    if (!embedding) return;
+    expect(embedding.name).toBe("embedding");
+    expect(embedding.requiredCapabilities).toEqual(["embeddings.text"]);
+    expect(buildWorkloadTemplateDraft("unknown", { scoring_strategy: "cost" })).toBeNull();
+  });
+
+  test("writes whole canonical blocks from the page drafts", () => {
+    const block = buildPostureWriteBlock("role", [
+      {
+        name: "coder",
+        roleId: "coder",
+        scoringStrategy: "quality",
+        routingMode: "intelligent",
+        computePreference: "local",
+        modelIds: ["qwen3-coder"],
+        requiredCapabilities: [],
+      },
+      {
+        name: "researcher",
+        roleId: "researcher",
+        scoringStrategy: null,
+        routingMode: null,
+        computePreference: null,
+        modelIds: [],
+        requiredCapabilities: [],
+      },
+    ]);
+    expect(block).toEqual({
+      coder: {
+        role_id: "coder",
+        scoring_strategy: "quality",
+        routing_mode: "intelligent",
+        compute_preference: "local",
+        model_ids: ["qwen3-coder"],
+      },
+      researcher: { role_id: "researcher" },
+    });
+    const workloads = buildPostureWriteBlock("workload", [
+      {
+        name: "embedding",
+        roleId: null,
+        scoringStrategy: "cost",
+        routingMode: null,
+        computePreference: null,
+        modelIds: [],
+        requiredCapabilities: ["embeddings.text"],
+      },
+    ]);
+    expect(workloads).toEqual({
+      embedding: { scoring_strategy: "cost", required_capabilities: ["embeddings.text"] },
+    });
+    // Workload entries must never carry a role binding.
+    expect(JSON.stringify(workloads)).not.toContain("role_id");
+  });
+
+  /**
+   * Post-lock repair (run 103): the block is keyed by name, so duplicates silently collapse and a
+   * missing name silently removes a saved entry. Both are detected before the write.
+   */
+  test("reports duplicate entry names instead of letting the block collapse them", () => {
+    expect(findDuplicateEntryNames(["coder", "reviewer"])).toEqual([]);
+    expect(findDuplicateEntryNames(["coder", "coder", "reviewer", " reviewer "])).toEqual([
+      "coder",
+      "reviewer",
+    ]);
+    expect(findDuplicateEntryNames(["", "  "])).toEqual([]);
+  });
+
+  /**
+   * Post-lock repair (run 103, operator decision): the page sends a per-entry patch, so adding a row
+   * cannot touch the entries it does not name, and only the operator's explicit Remove produces a
+   * `null` deletion — a rename adds the new entry and leaves the saved one untouched.
+   */
+  const savedCoder = {
+    name: "coder",
+    kind: "role" as const,
+    roleId: "coder",
+    scoringStrategy: "quality",
+    routingMode: "difficulty",
+    computePreference: null,
+    configuredModelIds: ["qwen3-coder"],
+    requiredCapabilities: [],
+    violations: [],
+    aliases: [],
+  };
+  const savedReviewer = { ...savedCoder, name: "reviewer", roleId: "researcher" };
+  const writeEntry = (name: string, roleId: string) => ({
+    name,
+    roleId,
+    scoringStrategy: null,
+    routingMode: null,
+    computePreference: null,
+    modelIds: [],
+    requiredCapabilities: [],
+  });
+
+  test("builds upserts only, without touching the entries the editor did not change", () => {
+    const patch = buildPostureNamedBlockPatch("role", {
+      saved: [savedCoder, savedReviewer],
+      rows: [
+        { originName: "coder", entry: writeEntry("coder", "coder") },
+        { originName: "reviewer", entry: writeEntry("reviewer", "researcher") },
+        { originName: null, entry: writeEntry("architect", "architect") },
+      ],
+      removedNames: [],
+    });
+    expect(patch.deletedNames).toEqual([]);
+    expect(Object.keys(patch.block).sort()).toEqual(["architect", "coder", "reviewer"]);
+    expect(patch.block.reviewer).toMatchObject({ role_id: "researcher" });
+  });
+
+  test("an explicit removal sends one null and leaves the other entries alone", () => {
+    const patch = buildPostureNamedBlockPatch("role", {
+      saved: [savedCoder, savedReviewer],
+      rows: [{ originName: "coder", entry: writeEntry("coder", "coder") }],
+      removedNames: ["reviewer"],
+    });
+    expect(patch.deletedNames).toEqual(["reviewer"]);
+    expect(patch.block.reviewer).toBeNull();
+    expect(Object.keys(patch.block)).toEqual(["coder", "reviewer"]);
+  });
+
+  test("renaming a saved row upserts the new name and leaves the old entry in place", () => {
+    const patch = buildPostureNamedBlockPatch("role", {
+      saved: [savedCoder, savedReviewer],
+      rows: [
+        { originName: "coder", entry: writeEntry("coder-v2", "coder") },
+        { originName: "reviewer", entry: writeEntry("reviewer", "researcher") },
+      ],
+      removedNames: [],
+    });
+    expect(patch.deletedNames).toEqual([]);
+    expect(patch.block).not.toHaveProperty("coder");
+    expect(Object.keys(patch.block).sort()).toEqual(["coder-v2", "reviewer"]);
+  });
+
+  test("renaming sends the null only when the operator also removed the saved entry", () => {
+    const patch = buildPostureNamedBlockPatch("role", {
+      saved: [savedCoder, savedReviewer],
+      rows: [{ originName: "coder", entry: writeEntry("coder-v2", "coder") }],
+      removedNames: ["coder"],
+    });
+    expect(patch.deletedNames).toEqual(["coder"]);
+    expect(patch.block.coder).toBeNull();
+    expect(Object.keys(patch.block).sort()).toEqual(["coder", "coder-v2"]);
+  });
+
+  test("clearing a saved field sends an explicit null instead of silently keeping it", () => {
+    const patch = buildPostureNamedBlockPatch("role", {
+      saved: [savedCoder],
+      rows: [{ originName: "coder", entry: writeEntry("coder", "coder") }],
+      removedNames: [],
+    });
+    expect(patch.block.coder).toMatchObject({
+      role_id: "coder",
+      scoring_strategy: null,
+      routing_mode: null,
+      model_ids: null,
+    });
+  });
+});

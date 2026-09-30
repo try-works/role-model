@@ -1,0 +1,17 @@
+{
+  "artifact": "04-test-summary.md",
+  "artifact_hash": "64e5e9be934984c6e23dd8df979a5c47cec8e48271ac4ab63e097a6384f19d91",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\103-agent-strategy-and-scoring-strategy\\.recursive\\run\\103-agent-strategy-and-scoring-strategy\\04-test-summary.md",
+  "locked_at": "2026-09-30T20:23:27Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "7e1cb6e0b39731d430dc4ff207bf873c53a89e186877c4f251f5d897dd9f4d8f",
+    "00-worktree.md": "408d89bf4d36b967873bdbca4d02138c08285be8030743ace88f5255b5db4bda",
+    "01-as-is.md": "2fe7df8e065a5e1ca1eba29d3423ee8dddb5e03fa18e10aac73e0a15acfd4b12",
+    "01.5-root-cause.md": "5d3138998f853006bb9515c8fdcb240662d46193dddc6c633850a58c337b5666",
+    "02-to-be-plan.md": "1a50ff60238d9d3ccf21142898f8f038d1626e15529533d6fb0404679d652d46",
+    "03-implementation-summary.md": "488d4e0cd6263e38fd3d08b08b6a57bf9f7d4057b624aa2c83dc46315039e3fa",
+    "03.5-code-review.md": "58e8fb29e923b081f4b2acccb50dc2d01b7cfa71db21560d7d756afd468b8d0f"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "c83d7d1e6d598ff8e871a8883d2c83b5f591f752e0b5aae4671f537cc75851dc"
+}

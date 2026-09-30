@@ -1,5 +1,23 @@
 import { parse, stringify } from "yaml";
 
+import { Result, Schema } from "effect";
+import {
+  AGENT_STRATEGY_NAME_PATTERN,
+  type AgentStrategyEntry,
+  decodeAgentStrategyEntry,
+} from "./agent-strategy.js";
+import {
+  type RoutingModeName,
+  type RoutingPosture,
+  type ScoringStrategyName,
+  type WeightProfile,
+  WeightProfile as WeightProfileSchema,
+  decodeLegacyRoutingStrategy,
+  decodeRoutingPosture,
+  normalizeRoutingModeName,
+  normalizeScoringStrategyName,
+} from "./scoring-strategy.js";
+
 export type UnifiedRuntimeExecutionMode = "decision_only" | "hybrid" | "local_only" | "remote_only";
 
 export type UnifiedRuntimeDifficultyBucket = "easy" | "medium" | "hard";
@@ -70,6 +88,12 @@ export interface UnifiedRuntimeConfigProvider {
 export interface UnifiedRuntimeModelAliasConfig {
   readonly aliasId: string;
   readonly mode?: UnifiedRuntimeAliasRoutingMode | null;
+  /**
+   * Run 103 / SP5e - set on the rows the runtime derives from an `agent_strategies` or `workloads`
+   * entry. The marker keeps the derived rows identifiable so they are regenerated from the blocks
+   * instead of accumulating as user aliases.
+   */
+  readonly posture?: { readonly kind: "role" | "workload"; readonly name: string } | null;
   readonly modelIds: readonly string[];
   /** Optional exact endpoint-instance allowlist; omitted means all expanded siblings. */
   readonly endpointIds?: readonly string[];
@@ -184,6 +208,14 @@ export function resolveUnifiedRuntimeObservedDataConfig(
 export interface UnifiedRuntimeConfig {
   readonly version: string;
   readonly routingStrategy: string | null;
+  /**
+   * Run 103 / SP5e - present only when the file declares the structured routing block
+   * (`mode`, `scoring_strategy`, `pin_weights`, `weights`). A legacy-only file keeps
+   * `routingStrategy` as its source of truth and never grows the structured block on read.
+   */
+  readonly routingPosture?: RoutingPosture;
+  readonly agentStrategies?: readonly AgentStrategyEntry[];
+  readonly workloads?: readonly AgentStrategyEntry[];
   readonly executionMode: UnifiedRuntimeExecutionMode;
   readonly observedData?: UnifiedRuntimeObservedDataConfig;
   readonly difficultyClassifier?: UnifiedRuntimeDifficultyClassifierConfig;
@@ -286,7 +318,16 @@ interface RawUnifiedRuntimeConfig {
   readonly executionMode?: string;
   readonly routing?: {
     readonly strategy?: string;
+    readonly mode?: string;
+    readonly scoring_strategy?: string;
+    readonly scoringStrategy?: string;
+    readonly pin_weights?: boolean;
+    readonly pinWeights?: boolean;
+    readonly weights?: unknown;
   };
+  readonly agent_strategies?: unknown;
+  readonly agentStrategies?: unknown;
+  readonly workloads?: unknown;
   readonly controller?: {
     readonly enabled?: boolean;
     readonly source_type?: string;
@@ -308,6 +349,7 @@ interface RawUnifiedRuntimeConfig {
       string,
       {
         readonly mode?: string;
+        readonly posture?: string;
         readonly model_ids?: readonly string[];
         readonly endpoint_ids?: readonly string[];
         readonly preferred_endpoint_ids?: readonly string[];
@@ -870,15 +912,51 @@ function normalizeModelAliasInput(
       `${prefix}.${aliasId}.preferred_endpoint_ids must be a subset of endpoint_ids.`,
     );
   }
+  const posture = readPostureMarker(value, `${prefix}.${aliasId}.posture`);
   return {
     aliasId,
     mode: readAliasRoutingMode(
       "mode" in value ? value.mode : undefined,
       `${prefix}.${aliasId}.mode`,
     ),
+    ...(posture !== undefined ? { posture } : {}),
     modelIds,
     ...(endpointIds !== undefined ? { endpointIds } : {}),
     ...(preferredEndpointIds !== undefined ? { preferredEndpointIds } : {}),
+  };
+}
+
+/**
+ * Run 103 / SP5e - the `posture` marker on a derived alias row. It is machine-written, so a
+ * malformed value is an error rather than a silent fallback to a user alias.
+ */
+function readPostureMarker(
+  value: Record<string, unknown>,
+  path: string,
+): { readonly kind: "role" | "workload"; readonly name: string } | undefined {
+  const raw = value.posture;
+  if (raw === undefined || raw === null) {
+    return undefined;
+  }
+  if (typeof raw !== "string") {
+    throw new Error(`${path} must be "agent_strategy:<name>" or "workload:<name>".`);
+  }
+  const [family, name, ...rest] = raw.split(":");
+  const kind = family === "agent_strategy" ? "role" : family === "workload" ? "workload" : null;
+  if (!kind || rest.length > 0 || !name || !AGENT_STRATEGY_NAME_PATTERN.test(name)) {
+    throw new Error(`${path} must be "agent_strategy:<name>" or "workload:<name>".`);
+  }
+  return { kind, name };
+}
+
+function renderPostureMarker(
+  posture: UnifiedRuntimeModelAliasConfig["posture"],
+): Record<string, string> {
+  if (!posture) {
+    return {};
+  }
+  return {
+    posture: `${posture.kind === "role" ? "agent_strategy" : "workload"}:${posture.name}`,
   };
 }
 
@@ -1499,6 +1577,248 @@ function normalizeRoutingStrategyInputValue(value: unknown): string | null {
   return strategy.trim().toLowerCase() === "craft-ask" ? null : strategy;
 }
 
+/** The alias family each structured routing mode owns (design document section 6.2). */
+export const ROUTING_MODE_ALIAS_FAMILY: Readonly<Record<RoutingModeName, string>> = {
+  baseline: "baseline",
+  difficulty: "difficulty",
+  hybrid: "hybrid",
+  intelligent: "controller",
+};
+
+interface StructuredRoutingBlock {
+  readonly posture: RoutingPosture;
+  readonly aliasFamily: string;
+}
+
+function hasStructuredRoutingKeys(routing: Record<string, unknown>): boolean {
+  return (
+    routing.mode !== undefined ||
+    routing.scoring_strategy !== undefined ||
+    routing.scoringStrategy !== undefined ||
+    routing.pin_weights !== undefined ||
+    routing.pinWeights !== undefined ||
+    routing.weights !== undefined
+  );
+}
+
+/**
+ * Only the two-axis keys select a vocabulary. `pin_weights` and `weights` are shared by both
+ * spellings, so naming one of them must not drop an inherited legacy string (Phase 3.5 review N2).
+ */
+function selectsStructuredVocabular(routing: Record<string, unknown>): boolean {
+  return (
+    routing.mode !== undefined ||
+    routing.scoring_strategy !== undefined ||
+    routing.scoringStrategy !== undefined
+  );
+}
+
+/**
+ * Run 103 / SP5e - the structured routing block of design document section 4. Unknown enum values
+ * and a `custom` strategy without a valid weight profile are write errors, so the file can never
+ * hold a posture that the ladder would silently degrade.
+ */
+function decodeStructuredRoutingBlock(
+  rawRouting: unknown,
+  path: string,
+  strict: boolean,
+): StructuredRoutingBlock | null {
+  if (typeof rawRouting !== "object" || rawRouting === null || Array.isArray(rawRouting)) {
+    return null;
+  }
+  const routing = rawRouting as Record<string, unknown>;
+  if (!hasStructuredRoutingKeys(routing)) {
+    return null;
+  }
+
+  /**
+   * Phase 3.5 review N2: a block that names the legacy `strategy` and no mode/scoring key is a legacy
+   * posture with shared flags layered on top - `pin_weights` and `weights` alone must not switch the
+   * vocabulary and silently reset the operator's posture to `baseline`.
+   */
+  const rawLegacyStrategy = readNonEmptyString(routing.strategy);
+  if (rawLegacyStrategy !== null && !selectsStructuredVocabular(routing)) {
+    const pinValue = routing.pin_weights ?? routing.pinWeights;
+    let pin = false;
+    if (pinValue !== undefined && typeof pinValue !== "boolean") {
+      if (strict) {
+        throw new Error(`${path}.pin_weights must be a boolean; saw ${JSON.stringify(pinValue)}.`);
+      }
+      pin = false;
+    } else if (pinValue !== undefined) {
+      pin = pinValue === true;
+    }
+    const legacy = decodeRoutingPosture({
+      mode: decodeLegacyRoutingStrategy(rawLegacyStrategy).mode,
+      scoringStrategy: decodeLegacyRoutingStrategy(rawLegacyStrategy).scoringStrategy,
+      pinWeights: pin,
+      weights: routing.weights ?? null,
+    });
+    return {
+      posture: legacy,
+      aliasFamily: ROUTING_MODE_ALIAS_FAMILY[legacy.mode],
+    };
+  }
+
+  /**
+   * R1: an unknown spelling is rejected on write and degraded on read with a recorded reason, so a
+   * hand-edited file still loads while an operator typo can never be persisted.
+   */
+  const degradations: string[] = [];
+  const rawMode = readNonEmptyString(routing.mode);
+  let mode: RoutingModeName = "baseline";
+  if (rawMode !== null) {
+    const normalizedMode = normalizeRoutingModeName(rawMode);
+    if (normalizedMode === null) {
+      if (strict) {
+        throw new Error(
+          `${path}.mode must be baseline, difficulty, hybrid, or intelligent (controller); saw "${rawMode}".`,
+        );
+      }
+      degradations.push(`${path}.mode "${rawMode}" is not a known mode and was read as baseline`);
+    } else {
+      mode = normalizedMode;
+    }
+  }
+
+  const rawScoringStrategy = readNonEmptyString(
+    routing.scoring_strategy ?? routing.scoringStrategy,
+  );
+  let scoringStrategy: ScoringStrategyName | null = null;
+  if (rawScoringStrategy !== null) {
+    scoringStrategy = normalizeScoringStrategyName(rawScoringStrategy);
+    if (scoringStrategy === null) {
+      if (strict) {
+        throw new Error(
+          `${path}.scoring_strategy must be balanced, quality, latency, cost, or custom; saw "${rawScoringStrategy}".`,
+        );
+      }
+      degradations.push(
+        `${path}.scoring_strategy "${rawScoringStrategy}" is not a known strategy and was ignored`,
+      );
+    }
+  }
+
+  const pinWeights = routing.pin_weights ?? routing.pinWeights;
+  let pin = pinWeights === true;
+  if (pinWeights !== undefined && typeof pinWeights !== "boolean") {
+    if (strict) {
+      throw new Error(`${path}.pin_weights must be a boolean; saw ${JSON.stringify(pinWeights)}.`);
+    }
+    pin = false;
+    degradations.push(`${path}.pin_weights is not a boolean and was read as false`);
+  }
+
+  let weights: WeightProfile | null = null;
+  if (routing.weights !== undefined && routing.weights !== null) {
+    if (scoringStrategy !== "custom") {
+      if (strict) {
+        throw new Error(
+          `${path}.weights is only valid when scoring_strategy is custom; saw scoring_strategy ${scoringStrategy ?? "unset"}.`,
+        );
+      }
+      degradations.push(`${path}.weights was ignored because scoring_strategy is not custom`);
+    } else {
+      const decoded = Schema.decodeUnknownResult(WeightProfileSchema)(routing.weights);
+      if (Result.isFailure(decoded)) {
+        if (strict) {
+          throw new Error(
+            `${path}.weights is invalid: weights must sum to 1.0 and every metric must be within 0..1 (${String(decoded.failure)})`,
+          );
+        }
+        degradations.push(
+          `${path}.weights is invalid (weights must sum to 1.0, every metric within 0..1) and was read as no custom profile`,
+        );
+      } else {
+        weights = decoded.success;
+      }
+    }
+  }
+
+  if (scoringStrategy === "custom" && weights === null) {
+    if (strict) {
+      throw new Error(`${path}.weights is required when scoring_strategy is custom.`);
+    }
+    degradations.push(
+      `${path}.weights is required when scoring_strategy is custom and was read as no custom profile`,
+    );
+  }
+
+  const posture = decodeRoutingPosture({
+    mode,
+    scoringStrategy,
+    pinWeights: pin,
+    weights,
+  });
+  return {
+    posture: { ...posture, degradations: [...degradations, ...posture.degradations] },
+    aliasFamily: ROUTING_MODE_ALIAS_FAMILY[posture.mode],
+  };
+}
+
+function renderStructuredRoutingBlock(
+  config: UnifiedRuntimeConfig,
+): Record<string, unknown> | null {
+  /**
+   * R1: a legacy `routing.strategy` is read through the migration table and the next write emits the
+   * canonical pair, so the file never keeps a synonym after a write.
+   */
+  const posture =
+    config.routingPosture ??
+    (config.routingStrategy === null ? null : decodeLegacyRoutingStrategy(config.routingStrategy));
+  if (!posture) {
+    return null;
+  }
+  return {
+    mode: posture.mode,
+    ...(posture.scoringStrategy !== null ? { scoring_strategy: posture.scoringStrategy } : {}),
+    ...(posture.pinWeights ? { pin_weights: true } : {}),
+    ...(posture.scoringStrategy === "custom" && posture.operator
+      ? { weights: { ...posture.operator.weights } }
+      : {}),
+  };
+}
+
+function readAgentStrategyBlock(
+  raw: unknown,
+  kind: "role" | "workload",
+): readonly AgentStrategyEntry[] | undefined {
+  if (raw === undefined || raw === null) {
+    return undefined;
+  }
+  if (typeof raw !== "object" || Array.isArray(raw)) {
+    throw new Error(`${kind === "role" ? "agent_strategies" : "workloads"} must be a mapping.`);
+  }
+  return Object.entries(raw as Record<string, unknown>).map(([name, value]) =>
+    decodeAgentStrategyEntry(name, value, kind),
+  );
+}
+
+function renderAgentStrategyBlock(
+  entries: readonly AgentStrategyEntry[],
+): Record<string, unknown> | null {
+  if (entries.length === 0) {
+    return null;
+  }
+  return Object.fromEntries(
+    entries.map((entry) => [
+      entry.name,
+      {
+        ...(entry.roleId !== null ? { role_id: entry.roleId } : {}),
+        ...(entry.scoringStrategy !== null ? { scoring_strategy: entry.scoringStrategy } : {}),
+        ...(entry.routingMode !== null ? { routing_mode: entry.routingMode } : {}),
+        ...(entry.computePreference !== null
+          ? { compute_preference: entry.computePreference }
+          : {}),
+        ...(entry.modelIds.length > 0 ? { model_ids: [...entry.modelIds] } : {}),
+        ...(entry.requiredCapabilities.length > 0
+          ? { required_capabilities: [...entry.requiredCapabilities] }
+          : {}),
+      },
+    ]),
+  );
+}
+
 export function deriveUnifiedRuntimeRoutingAliasMode(
   strategy: string | null,
   fallback: UnifiedRuntimeAliasRoutingMode | null | undefined,
@@ -1598,6 +1918,9 @@ function mergeCanonicalAliasEntries(
     merged.set(alias.aliasId, {
       aliasId: alias.aliasId,
       mode: existing.mode ?? alias.mode ?? null,
+      ...((existing.posture ?? alias.posture) !== undefined
+        ? { posture: existing.posture ?? alias.posture ?? null }
+        : {}),
       modelIds: [...new Set([...existing.modelIds, ...alias.modelIds])],
       ...(mergedEndpointIds !== undefined ? { endpointIds: mergedEndpointIds } : {}),
       ...(mergedPreferredEndpointIds.length > 0
@@ -1620,6 +1943,8 @@ function sameCanonicalAliasList(
         nextAlias !== undefined &&
         alias.aliasId === nextAlias.aliasId &&
         (alias.mode ?? null) === (nextAlias.mode ?? null) &&
+        (alias.posture?.kind ?? null) === (nextAlias.posture?.kind ?? null) &&
+        (alias.posture?.name ?? null) === (nextAlias.posture?.name ?? null) &&
         alias.modelIds.length === nextAlias.modelIds.length &&
         alias.modelIds.every((modelId, modelIndex) => modelId === nextAlias.modelIds[modelIndex]) &&
         (alias.endpointIds ?? []).length === (nextAlias.endpointIds ?? []).length &&
@@ -1681,13 +2006,21 @@ export function parseUnifiedRuntimeConfigText(text: string): UnifiedRuntimeConfi
     rawConfig.execution_mode ?? rawConfig.executionMode,
     "execution_mode",
   );
+  const structuredRouting = decodeStructuredRoutingBlock(rawConfig.routing, "routing", false);
+  const agentStrategies = readAgentStrategyBlock(rawConfig.agent_strategies, "role");
+  const workloadStrategies = readAgentStrategyBlock(rawConfig.workloads, "workload");
 
   return canonicalizeUnifiedRuntimeRoutingAliases({
     version:
       typeof rawConfig.version === "string" && rawConfig.version.trim().length > 0
         ? rawConfig.version
         : "1.0",
-    routingStrategy: normalizeRoutingStrategyInputValue(rawConfig.routing?.strategy),
+    routingStrategy:
+      structuredRouting?.aliasFamily ??
+      normalizeRoutingStrategyInputValue(rawConfig.routing?.strategy),
+    ...(structuredRouting ? { routingPosture: structuredRouting.posture } : {}),
+    ...(agentStrategies !== undefined ? { agentStrategies } : {}),
+    ...(workloadStrategies !== undefined ? { workloads: workloadStrategies } : {}),
     executionMode:
       explicitExecutionMode ??
       deriveUnifiedRuntimeExecutionMode({
@@ -1751,6 +2084,12 @@ export function normalizeUnifiedRuntimeConfigInput(input: unknown): UnifiedRunti
       : "model_aliases" in input
         ? input.model_aliases
         : undefined;
+  const structuredRouting = decodeStructuredRoutingBlock(input.routing, "routing", true);
+  const agentStrategies = readAgentStrategyBlock(
+    "agentStrategies" in input ? input.agentStrategies : input.agent_strategies,
+    "role",
+  );
+  const workloadStrategies = readAgentStrategyBlock(input.workloads, "workload");
 
   const explicitExecutionMode = readExecutionMode(
     "executionMode" in input
@@ -1763,9 +2102,14 @@ export function normalizeUnifiedRuntimeConfigInput(input: unknown): UnifiedRunti
 
   return canonicalizeUnifiedRuntimeRoutingAliases({
     version: readNonEmptyString(input.version) ?? "1.0",
-    routingStrategy: normalizeRoutingStrategyInputValue(
-      "routingStrategy" in input ? input.routingStrategy : routingStrategyInput,
-    ),
+    routingStrategy:
+      structuredRouting?.aliasFamily ??
+      normalizeRoutingStrategyInputValue(
+        "routingStrategy" in input ? input.routingStrategy : routingStrategyInput,
+      ),
+    ...(structuredRouting ? { routingPosture: structuredRouting.posture } : {}),
+    ...(agentStrategies !== undefined ? { agentStrategies } : {}),
+    ...(workloadStrategies !== undefined ? { workloads: workloadStrategies } : {}),
     executionMode:
       explicitExecutionMode ??
       deriveUnifiedRuntimeExecutionMode({
@@ -1836,10 +2180,19 @@ export function renderUnifiedRuntimeConfigText(config: UnifiedRuntimeConfig): st
     execution_mode: config.executionMode,
   };
 
-  if (config.routingStrategy !== null) {
-    document.routing = {
-      strategy: config.routingStrategy,
-    };
+  const renderedRouting = renderStructuredRoutingBlock(config);
+  if (renderedRouting !== null) {
+    document.routing = renderedRouting;
+  }
+
+  const renderedAgentStrategies = renderAgentStrategyBlock(config.agentStrategies ?? []);
+  if (renderedAgentStrategies !== null) {
+    document.agent_strategies = renderedAgentStrategies;
+  }
+
+  const renderedWorkloads = renderAgentStrategyBlock(config.workloads ?? []);
+  if (renderedWorkloads !== null) {
+    document.workloads = renderedWorkloads;
   }
 
   if (config.observedData) {
@@ -1923,6 +2276,7 @@ export function renderUnifiedRuntimeConfigText(config: UnifiedRuntimeConfig): st
       config.modelAliases.map((alias) => [
         alias.aliasId,
         {
+          ...renderPostureMarker(alias.posture),
           ...(alias.mode !== null ? { mode: alias.mode } : {}),
           model_ids: [...alias.modelIds],
           ...(alias.endpointIds !== undefined ? { endpoint_ids: [...alias.endpointIds] } : {}),
@@ -2001,6 +2355,82 @@ export function renderUnifiedRuntimeConfigText(config: UnifiedRuntimeConfig): st
   return `${stringify(document).trimEnd()}\n`;
 }
 
+/**
+ * R1: the legacy single string is read-compatible, but a write that carries a string naming no
+ * known mode or scoring strategy is a write error - the operator should move to the two-axis block.
+ */
+function assertWritableLegacyRoutingStrategy(rawRouting: unknown): void {
+  if (typeof rawRouting !== "object" || rawRouting === null || Array.isArray(rawRouting)) {
+    return;
+  }
+  const raw = (rawRouting as Record<string, unknown>).strategy;
+  if (typeof raw !== "string" || raw.trim().length === 0) {
+    return;
+  }
+  const normalized = raw.trim().toLowerCase();
+  if (
+    normalized === "craft-ask" ||
+    normalizeRoutingModeName(normalized) !== null ||
+    normalizeScoringStrategyName(normalized) !== null
+  ) {
+    return;
+  }
+  throw new Error(
+    `routing.strategy "${raw}" is not a known mode or scoring strategy; write routing.mode with routing.scoring_strategy instead.`,
+  );
+}
+
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+/**
+ * Run 103 post-lock repair (operator decision): the name-keyed blocks (`agent_strategies`,
+ * `workloads`, `model_aliases`) merge per entry, and inside an entry per field. A patch therefore
+ * upserts only what it names; omitting an entry never removes it. Deletion is explicit: `null` as
+ * the entry value removes that entry, `null` as a field value clears that field. Only the operator's
+ * Remove action in the UI produces that patch.
+ */
+export function mergeNamedEntryBlock(
+  current: unknown,
+  patch: Record<string, unknown>,
+): Record<string, unknown> {
+  const merged: Record<string, unknown> = isPlainRecord(current) ? { ...current } : {};
+  for (const [name, patchEntry] of Object.entries(patch)) {
+    if (patchEntry === null) {
+      delete merged[name];
+      continue;
+    }
+    if (!isPlainRecord(patchEntry)) {
+      // A non-record value is left to the decoder, which rejects it with the failing path.
+      merged[name] = patchEntry;
+      continue;
+    }
+    const currentEntry = isPlainRecord(merged[name])
+      ? (merged[name] as Record<string, unknown>)
+      : {};
+    /**
+     * A derived posture row (marked by the runtime) is never edited field by field: a patch that
+     * names it without the marker replaces the row, so the alias namespace check reports the
+     * collision instead of silently absorbing the operator's alias into the derived row.
+     */
+    const replacesDerivedRow = "posture" in currentEntry && !("posture" in patchEntry);
+    const nextEntry: Record<string, unknown> = replacesDerivedRow ? {} : { ...currentEntry };
+    for (const [field, fieldValue] of Object.entries(patchEntry)) {
+      if (fieldValue === null) {
+        delete nextEntry[field];
+        continue;
+      }
+      nextEntry[field] = fieldValue;
+    }
+    merged[name] = nextEntry;
+  }
+  return merged;
+}
+
+/** The config blocks whose keys are entry names (see `mergeNamedEntryBlock`). */
+export const NAMED_ENTRY_BLOCK_KEYS = ["agent_strategies", "workloads", "model_aliases"] as const;
+
 function normalizeRuntimeConfigPatchDocument(
   patch: Record<string, unknown>,
 ): Record<string, unknown> {
@@ -2033,6 +2463,13 @@ function normalizeRuntimeConfigPatchDocument(
     normalized.model_aliases = normalized.modelAliases;
     delete normalized.modelAliases;
   }
+  if (
+    Object.prototype.hasOwnProperty.call(normalized, "agentStrategies") &&
+    !Object.prototype.hasOwnProperty.call(normalized, "agent_strategies")
+  ) {
+    normalized.agent_strategies = normalized.agentStrategies;
+    delete normalized.agentStrategies;
+  }
   return normalized;
 }
 
@@ -2041,9 +2478,64 @@ export function mergeUnifiedRuntimeConfigDocuments(
   patch: Record<string, unknown>,
 ): UnifiedRuntimeConfig {
   const normalizedPatch = normalizeRuntimeConfigPatchDocument(patch);
+  /**
+   * R1: the patch is a write, so an unknown spelling, a legacy string that names nothing, or an
+   * invalid weight profile is rejected here instead of being migrated away silently.
+   */
+  decodeStructuredRoutingBlock(normalizedPatch.routing, "routing", true);
+  assertWritableLegacyRoutingStrategy(normalizedPatch.routing);
   const mergedDocument = {
     ...(current ?? {}),
     ...normalizedPatch,
   };
+  /**
+   * Run 103 post-lock repair (operator decision): the name-keyed blocks merge per entry unless the
+   * caller explicitly asks for a whole-block write with `replace_blocks: true` (the raw document
+   * editor does, because it hands over the complete document). The control key is never persisted.
+   */
+  const replaceBlocks =
+    normalizedPatch.replace_blocks === true || normalizedPatch.replaceBlocks === true;
+  delete mergedDocument.replace_blocks;
+  delete mergedDocument.replaceBlocks;
+  if (!replaceBlocks) {
+    for (const blockKey of NAMED_ENTRY_BLOCK_KEYS) {
+      const patchBlock = normalizedPatch[blockKey];
+      if (isPlainRecord(patchBlock)) {
+        mergedDocument[blockKey] = mergeNamedEntryBlock(current?.[blockKey], patchBlock);
+      }
+    }
+  }
+  /**
+   * Run 103 review F5: the two-axis posture is several keys in one object, so a patch that names one
+   * of them must not silently reset the others. The `routing` block is merged key by key; the posture
+   * blocks keep whole-block replacement because their pages write the whole block.
+   */
+  if (
+    typeof normalizedPatch.routing === "object" &&
+    normalizedPatch.routing !== null &&
+    !Array.isArray(normalizedPatch.routing) &&
+    typeof current?.routing === "object" &&
+    current.routing !== null &&
+    !Array.isArray(current.routing)
+  ) {
+    const mergedRouting: Record<string, unknown> = {
+      ...(current.routing as Record<string, unknown>),
+      ...(normalizedPatch.routing as Record<string, unknown>),
+    };
+    /**
+     * A patch names the posture in one vocabulary or the other, and the patch wins: a legacy string
+     * clears the inherited structured keys, and a structured key clears the inherited legacy string.
+     * Without this, the two spellings would sit in one block and the structured one would silently
+     * win over the operator's write.
+     */
+    if (Object.prototype.hasOwnProperty.call(normalizedPatch.routing, "strategy")) {
+      for (const key of ["mode", "scoring_strategy", "scoringStrategy"]) {
+        delete mergedRouting[key];
+      }
+    } else if (selectsStructuredVocabular(normalizedPatch.routing as Record<string, unknown>)) {
+      delete mergedRouting.strategy;
+    }
+    mergedDocument.routing = mergedRouting;
+  }
   return parseUnifiedRuntimeConfigText(stringify(mergedDocument));
 }
