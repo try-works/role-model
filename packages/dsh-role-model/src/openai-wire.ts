@@ -30,6 +30,16 @@ export interface WireBlock {
 export interface WireMessage {
   readonly role?: string | undefined;
   readonly content?: string | readonly WireBlock[] | undefined;
+  /**
+   * Provider-issued id of the tool call this message answers.
+   *
+   * This is where the Harness carries it: `ToolResultMessage.toolCallId`
+   * (`packages/llm/llm/src/message.ts`). It is **not** nested in a `toolResult`
+   * object — reading it from there produced an empty `tool_call_id`, which upstream
+   * rejects with "An Assistant message with 'tool_calls' must be followed by tool
+   * messages responding to each 'tool_call_id'".
+   */
+  readonly toolCallId?: string | undefined;
   readonly toolResult?:
     | {
         readonly callId?: string | undefined;
@@ -135,10 +145,20 @@ export function toOpenAiMessages(
       const result = isRecord(message)
         ? (message.toolResult as WireMessage["toolResult"])
         : undefined;
+      // The Harness carries the answered id at the top level; the nested `toolResult`
+      // shape is accepted as a fallback for callers that build the wire form directly.
+      const answered =
+        typeof message.toolCallId === "string" && message.toolCallId.length > 0
+          ? message.toolCallId
+          : typeof result?.callId === "string"
+            ? result.callId
+            : "";
       out.push({
         role: "tool",
-        tool_call_id: typeof result?.callId === "string" ? result.callId : "",
-        content: textOfContent(result?.content),
+        tool_call_id: answered,
+        content: textOfContent(
+          result?.content ?? (isRecord(message) ? message.content : undefined),
+        ),
       });
       continue;
     }
