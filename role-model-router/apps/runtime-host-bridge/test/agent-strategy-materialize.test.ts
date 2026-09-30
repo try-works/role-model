@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import {
   decodeAgentStrategyEntry,
+  derivePostureAliasInventory,
   materializeAgentStrategyAliases,
   resolveAliasRequestedRole,
 } from "../src/agent-strategy.js";
@@ -99,5 +100,87 @@ describe("agent strategy materialisation", () => {
       roleId: null,
       source: "none",
     });
+  });
+
+  /**
+   * Post-lock repair (run 103, operator decision): the published pool must reflect the eligibility the
+   * router applies at request time. A capability pin used to travel on the alias while the pool still
+   * advertised every model in the scope, so `embedding.remote-only` looked healthy and then failed with
+   * `no_eligible_target` on the first call.
+   */
+  test("a capability pin narrows the pool to the models that satisfy it", () => {
+    const retrieval = decodeAgentStrategyEntry(
+      "embedding",
+      { required_capabilities: ["knowledge.retrieval"], scoring_strategy: "cost" },
+      "workload",
+    );
+    const aliases = materializeAgentStrategyAliases({
+      entries: [retrieval],
+      executionModes: ["remote_only"],
+      runtimeMode: "baseline",
+      modelIdsByExecutionMode: { remote_only: ["remote-b", "remote-c"] },
+      supportedCapabilitiesByModelId: {
+        "remote-b": ["text.chat"],
+        "remote-c": ["text.chat", "knowledge.retrieval"],
+      },
+    });
+    expect(aliases[0]?.modelIds).toEqual(["remote-c"]);
+  });
+
+  test("a capability pin nothing satisfies leaves an empty pool instead of advertising candidates", () => {
+    const retrieval = decodeAgentStrategyEntry(
+      "embedding",
+      { required_capabilities: ["knowledge.retrieval"] },
+      "workload",
+    );
+    const aliases = materializeAgentStrategyAliases({
+      entries: [retrieval],
+      executionModes: ["remote_only"],
+      runtimeMode: "baseline",
+      modelIdsByExecutionMode: { remote_only: ["remote-b"] },
+      supportedCapabilitiesByModelId: { "remote-b": ["text.chat", "tools.function_calling"] },
+    });
+    expect(aliases[0]?.modelIds).toEqual([]);
+  });
+
+  test("capability narrowing honours the taxonomy implications and capability families", () => {
+    const editorWorkload = decodeAgentStrategyEntry(
+      "editor",
+      { required_capabilities: ["code.write", "reasoning.multi_step"] },
+      "workload",
+    );
+    expect(editorWorkload.violations).toEqual([]);
+    const aliases = materializeAgentStrategyAliases({
+      entries: [editorWorkload],
+      executionModes: ["remote_only"],
+      runtimeMode: "baseline",
+      modelIdsByExecutionMode: { remote_only: ["capable-model", "plain-model"] },
+      supportedCapabilitiesByModelId: {
+        "capable-model": ["code.edit", "reasoning"],
+        "plain-model": ["text.chat"],
+      },
+    });
+    expect(aliases[0]?.modelIds).toEqual(["capable-model"]);
+  });
+
+  test("the derivation reports ALIAS_POOL_EMPTY when only the capability filter empties the pool", () => {
+    const derivation = derivePostureAliasInventory({
+      canonical: [],
+      entries: [
+        decodeAgentStrategyEntry(
+          "embedding",
+          { required_capabilities: ["knowledge.retrieval"] },
+          "workload",
+        ),
+      ],
+      executionModes: ["remote_only"],
+      runtimeMode: "baseline",
+      modelIdsByExecutionMode: { remote_only: ["remote-b"] },
+      supportedCapabilitiesByModelId: { "remote-b": ["text.chat"] },
+    });
+    expect(derivation.rows).toEqual([]);
+    expect(derivation.skipped).toEqual([
+      { aliasId: "embedding.remote-only", reason: "ALIAS_POOL_EMPTY" },
+    ]);
   });
 });

@@ -40,13 +40,18 @@ describe("run 103 agent strategy and workload pages", () => {
     );
   });
 
-  test("lists every entry with its binding, posture, per-scope aliases and candidate counts", () => {
+  test("lists every entry with its binding, posture, resolvable scopes and candidate counts", () => {
     expect(posturePageSource).toContain("buildPostureEntryRows");
     expect(posturePageSource).toContain("summarizePostureDiagnostics");
     expect(posturePageSource).toContain("candidateLabel");
-    expect(posturePageSource).toContain("POOL EMPTY");
     expect(posturePageSource).toContain("current leader");
-    expect(posturePageSource).toContain("poolEmptyAliasIds");
+    // Operator decision: only the scopes that can resolve are listed as alias rows; the empty scopes
+    // become one plain-English note on the entry, and the duplicated reason marker disappears.
+    expect(posturePageSource).toContain("resolvableAliases");
+    expect(posturePageSource).toContain("unresolvableScopeNotice");
+    expect(posturePageSource).toContain("No scope can resolve for this entry yet");
+    expect(posturePageSource).not.toContain("POOL EMPTY");
+    expect(posturePageSource).not.toContain("ALIAS_POOL_EMPTY");
   });
 
   test("edits the entries through per-entry patches and never persists a legacy synonym", () => {
@@ -72,9 +77,12 @@ describe("run 103 agent strategy and workload pages", () => {
     expect(posturePageSource).not.toContain("role_id: draft.roleId");
   });
 
-  test("surfaces the readback diagnostics and role options on the page", () => {
-    expect(posturePageSource).toContain("Unknown capability");
-    expect(posturePageSource).toContain("ALIAS_POOL_EMPTY");
+  test("surfaces the page-scoped readback diagnostics and role options on the page", () => {
+    // Operator decision: the card renders only the diagnostics of the entries on this page; the
+    // `Unknown capability warning:` prefix and the reason marker are gone from the page copy.
+    expect(posturePageSource).toContain("filterPostureDiagnosticsForKind");
+    expect(posturePageSource).not.toContain("Unknown capability warning");
+    expect(posturePageSource).toContain("for this page");
     expect(posturePageSource).toContain("policySources");
     expect(posturePageSource).toContain("Role (required)");
   });

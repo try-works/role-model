@@ -1,0 +1,72 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/103-agent-strategy-and-scoring-strategy/role-model-router/apps/runtime-host-bridge
+
+(node:25676) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | test/backend-unified-runtime-config.test.ts > runtime-host-bridge unified runtime backend > rewrites legacy craft-ask matrix rows from persisted config even when startup does not need to re-materialize aliases
+[run98] remote-health recovery: deepseek.personal.run94-normal.global.deepseek-v4-pro
+
+ ✓ test/backend-unified-runtime-config.test.ts (30 tests) 95682ms
+   ✓ runtime-host-bridge unified runtime backend > rehydrates a persisted alias with a temporarily unroutable known endpoint without weakening live config validation  5951ms
+   ✓ runtime-host-bridge unified runtime backend > preserves the exact LiteLLM provider account on config-owned endpoint readback  1842ms
+   ✓ runtime-host-bridge unified runtime backend > ejects config-owned membership durably across config reapply and restart  5938ms
+   ✓ runtime-host-bridge unified runtime backend > reassigns the controller when config-owned eject removes the active controller model  3645ms
+   ✓ runtime-host-bridge unified runtime backend > clears the controller when config-owned eject removes the last controller-backed model  4614ms
+   ✓ runtime-host-bridge unified runtime backend > router candidates expose every configured endpoint and mark current execution-mode eligibility  3831ms
+   ✓ runtime-host-bridge unified runtime backend > rejects benchmark runs that target endpoints excluded by execution mode  3450ms
+   ✓ runtime-host-bridge unified runtime backend > surfaces the derived execution mode in the runtime summary when a unified config file is provided  1735ms
+   ✓ runtime-host-bridge unified runtime backend > reads and updates unified runtime config through the backend  2034ms
+   ✓ runtime-host-bridge unified runtime backend > merges partial runtime config updates without dropping existing routing strategy  1985ms
+   ✓ runtime-host-bridge unified runtime backend > canonicalizes the primary routing alias to the live routing matrix on startup  2135ms
+   ✓ runtime-host-bridge unified runtime backend > creates and updates unified runtime config when the configured path does not exist yet  2098ms
+   ✓ runtime-host-bridge unified runtime backend > persists explicit hybrid execution mode from routing strategy updates  2030ms
+   ✓ runtime-host-bridge unified runtime backend > bootstraps the primary routing alias when routing posture is saved without preconfigured aliases  2386ms
+   ✓ runtime-host-bridge unified runtime backend > bootstraps a settings-specific primary routing alias for remote-only posture without preconfigured aliases  2174ms
+   ✓ runtime-host-bridge unified runtime backend > maintains the routing alias matrix across strategy families and execution modes  7333ms
+   ✓ runtime-host-bridge unified runtime backend > persists the full canonical routing alias matrix instead of a single primary alias  2596ms
+   ✓ runtime-host-bridge unified runtime backend > normalizes legacy craft-ask routing strategy updates to the default alias family  2601ms
+   ✓ runtime-host-bridge unified runtime backend > rewrites persisted craft-ask alias ids out of startup config materialization  2485ms
+   ✓ runtime-host-bridge unified runtime backend > rewrites legacy craft-ask matrix rows from persisted config even when the canonical matrix already exists  2260ms
+   ✓ runtime-host-bridge unified runtime backend > rewrites legacy craft-ask matrix rows from persisted config even when startup does not need to re-materialize aliases  2109ms
+   ✓ runtime-host-bridge unified runtime backend > renames the primary routing alias when routing strategy and execution mode change  1815ms
+   ✓ runtime-host-bridge unified runtime backend > does not mark all candidates ignored when routing guidance has no preferred endpoints  2121ms
+   ✓ runtime-host-bridge unified runtime backend > preserves synthesized activated endpoint models across runtime config updates  3800ms
+   ✓ runtime-host-bridge unified runtime backend > returns no controller assignment when the unified config has no endpoints yet  2156ms
+   ✓ runtime-host-bridge unified runtime backend > surfaces normalized provider docs and npm metadata through listProviders  2774ms
+   ✓ runtime-host-bridge unified runtime backend > uses YAML membership authority while preserving manual metadata on reserved-id collision  5761ms
+   ✓ runtime-host-bridge unified runtime backend > migrates a legacy standalone runtime config into the canonical state path on startup  2010ms
+   ✓ runtime-host-bridge unified runtime backend > repairs stale standalone canonical remote aliases after restart bootstrap rehydrates env-backed persisted endpoints  5433ms
+   ✓ runtime-host-bridge unified runtime backend > surfaces LiteLLM-backed Moonshot models and endpoints from unified runtime config  4575ms
+(node:26540) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | test/agent-strategy-live-aliases.test.ts > agent strategy and workload aliases in the live backend > materialises posture aliases, survives a config patch and rejects an unknown role
+Runtime strategy posture scope coder.remote-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope batch.remote-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope embedding.remote-only has no routable targets (ALIAS_POOL_EMPTY)
+
+stderr | test/agent-strategy-live-aliases.test.ts > agent strategy and workload aliases in the live backend > materialises posture aliases, survives a config patch and rejects an unknown role
+Runtime strategy posture scope coder.remote-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope batch.remote-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope embedding.remote-only has no routable targets (ALIAS_POOL_EMPTY)
+
+stderr | test/agent-strategy-live-aliases.test.ts > agent strategy and workload aliases in the live backend > materialises posture aliases, survives a config patch and rejects an unknown role
+Runtime strategy posture scope coder.remote-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope batch.remote-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope embedding.remote-only has no routable targets (ALIAS_POOL_EMPTY)
+
+ ✓ test/agent-strategy-live-aliases.test.ts (1 test) 8274ms
+   ✓ agent strategy and workload aliases in the live backend > materialises posture aliases, survives a config patch and rejects an unknown role  8270ms
+ ✓ test/unified-runtime-config.test.ts (30 tests) 171ms
+ ✓ test/agent-strategy-config-path.test.ts (25 tests) 179ms
+ ✓ test/agent-strategy-workload-examples.test.ts (4 tests) 75ms
+ ✓ test/agent-strategy-materialize.test.ts (8 tests) 33ms
+ ✓ test/agent-strategy-request-binding.test.ts (9 tests) 22ms
+ ✓ test/agent-strategy-section.test.ts (4 tests) 16ms
+ ✓ test/agent-strategy-entries.test.ts (7 tests) 16ms
+ ✓ test/agent-strategy-inventory.test.ts (3 tests) 15ms
+
+ Test Files  10 passed (10)
+      Tests  121 passed (121)
+   Start at  05:00:05
+   Duration  154.63s (transform 10.25s, setup 0ms, collect 38.88s, tests 104.48s, environment 8ms, prepare 4.37s)
+

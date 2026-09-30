@@ -39,7 +39,7 @@ workloads:
     scoring_strategy: cost
   embedding:
     scoring_strategy: cost
-    required_capabilities: [embeddings.text]
+    required_capabilities: [knowledge.retrieval]
 ```
 
 ## Writing configuration
@@ -62,7 +62,7 @@ offered as one-click templates on the Workloads page:
 | Name | Posture | Binding |
 | --- | --- | --- |
 | `batch` | `cost` | none (posture only) |
-| `embedding` | `cost` | requires `embeddings.text` |
+| `embedding` | `cost` | requires `knowledge.retrieval` |
 
 ## Rules the runtime enforces
 
@@ -72,7 +72,7 @@ offered as one-click templates on the Workloads page:
 | Name reuse | A duplicate or a name used by both an agent strategy and a workload is a config write error |
 | Alias namespace | A posture alias that would shadow an existing routing alias is a config write error |
 | `role_id` | Must exist in the runtime role policy; an unknown role is a config write error |
-| `required_capabilities` | An unknown capability is a warning, because capability taxonomies extend |
+| `required_capabilities` | The alias pool narrows to the models that satisfy every listed capability, using the same rule the router applies per request; a capability nothing in the pool satisfies reports `ALIAS_POOL_EMPTY`. An unknown capability is a warning, because capability taxonomies extend |
 | Request intent | A role the request itself declares wins over the alias preset; the decision records both |
 | Empty scope | Reported as `ALIAS_POOL_EMPTY`; the pool is never widened |
 

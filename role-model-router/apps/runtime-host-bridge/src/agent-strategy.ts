@@ -2,6 +2,8 @@
  * Run 103 / SP5 - agent strategies (role-bound) and workloads: validated postures that materialise
  * one client-facing alias per execution scope (design document sections 4 and 6.2; requirements R5, R6).
  */
+import { supportsCapabilityRequirement } from "@role-model-router/core";
+
 import {
   type RoutingModeName,
   type ScoringStrategyName,
@@ -319,6 +321,15 @@ export function materializeAgentStrategyAliases(input: {
   readonly executionModes: readonly string[];
   readonly runtimeMode: RoutingModeName;
   readonly modelIdsByExecutionMode: Readonly<Record<string, readonly string[]>>;
+  /**
+   * Run 103 post-lock repair (operator decision): the capability vocabulary the pool actually
+   * supports, keyed by model id. When an entry pins `required_capabilities`, the published pool
+   * narrows to the models that satisfy them with the same rule the router applies at request time
+   * (`supportsCapabilityRequirement`), so a pin nothing can serve reports `ALIAS_POOL_EMPTY` instead
+   * of advertising candidates the first call would reject. Omitted means "no capability index
+   * available": the pool is not narrowed by capabilities (pre-repair behaviour).
+   */
+  readonly supportedCapabilitiesByModelId?: Readonly<Record<string, readonly string[]>>;
 }): readonly MaterializedAgentStrategyAlias[] {
   const aliases: MaterializedAgentStrategyAlias[] = [];
   for (const entry of input.entries) {
@@ -332,10 +343,22 @@ export function materializeAgentStrategyAliases(input: {
        * documentation. An empty intersection copies the empty slice verbatim, so the caller reports
        * `ALIAS_POOL_EMPTY` rather than widening.
        */
-      const modelIds =
+      const modelIdsNarrowedBySlice =
         entry.modelIds.length === 0
           ? [...scopeModelIds]
           : scopeModelIds.filter((modelId) => entry.modelIds.includes(modelId));
+      const modelIds =
+        entry.requiredCapabilities.length === 0 ||
+        input.supportedCapabilitiesByModelId === undefined
+          ? modelIdsNarrowedBySlice
+          : modelIdsNarrowedBySlice.filter((modelId) =>
+              entry.requiredCapabilities.every((capability) =>
+                supportsCapabilityRequirement(
+                  input.supportedCapabilitiesByModelId?.[modelId] ?? [],
+                  capability,
+                ),
+              ),
+            );
       aliases.push({
         aliasId: agentStrategyAliasId(entry.name, executionMode),
         name: entry.name,
@@ -492,12 +515,16 @@ export function derivePostureAliasInventory(input: {
   readonly executionModes: readonly string[];
   readonly runtimeMode: RoutingModeName;
   readonly modelIdsByExecutionMode: Readonly<Record<string, readonly string[]>>;
+  readonly supportedCapabilitiesByModelId?: Readonly<Record<string, readonly string[]>>;
 }): PostureAliasDerivation {
   const materialized = materializeAgentStrategyAliases({
     entries: input.entries,
     executionModes: input.executionModes,
     runtimeMode: input.runtimeMode,
     modelIdsByExecutionMode: input.modelIdsByExecutionMode,
+    ...(input.supportedCapabilitiesByModelId !== undefined
+      ? { supportedCapabilitiesByModelId: input.supportedCapabilitiesByModelId }
+      : {}),
   });
   const routable = materialized.filter((alias) => alias.modelIds.length > 0);
   const skipped = materialized
@@ -517,8 +544,13 @@ export function derivePostureAliasInventory(input: {
 
 /**
  * Run 103 / SP6 - the shipped workload examples of design document section 4: `batch` is posture
- * only, `embedding` pins `embeddings.text`. They are the single source the operations guide and the
- * Workloads page quote (requirement R6).
+ * only, `embedding` pins a retrieval capability. They are the single source the operations guide and
+ * the Workloads page quote (requirement R6).
+ *
+ * Post-lock addendum-02 (operator decision, 2026-10-01): `embedding` pins the taxonomy capability
+ * `knowledge.retrieval` instead of the provider spelling `embeddings.text`. The canonical taxonomy
+ * carries no embeddings family, so the shipped example warned as an unknown capability by
+ * construction; see `addenda/00-requirements.post-lock-shipped-embedding-capability.addendum-01.md`.
  */
 export const SHIPPED_WORKLOAD_EXAMPLES: Readonly<
   Record<string, Readonly<Record<string, unknown>>>
@@ -528,6 +560,6 @@ export const SHIPPED_WORKLOAD_EXAMPLES: Readonly<
   },
   embedding: {
     scoring_strategy: "cost",
-    required_capabilities: ["embeddings.text"],
+    required_capabilities: ["knowledge.retrieval"],
   },
 };

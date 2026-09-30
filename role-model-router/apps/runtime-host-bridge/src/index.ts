@@ -26,7 +26,11 @@ import {
   resolveReasoningEffortLevels,
 } from "@role-model-router/catalog";
 import { assembleContextEnvelope } from "@role-model-router/context-envelope";
-import { canonicalTaxonomy, taxonomyManifest } from "@role-model-router/core";
+import {
+  canonicalTaxonomy,
+  supportsCapabilityRequirement,
+  taxonomyManifest,
+} from "@role-model-router/core";
 import type { EndpointRegistryResult } from "@role-model-router/endpoint-registry";
 import {
   type RegistrySources,
@@ -21319,6 +21323,30 @@ export async function createRuntimeBridgeBackend(
         deriveRoutingAliasBootstrapModelIds(executionMode),
       ]),
     );
+    /**
+     * Run 103 post-lock repair (operator decision): the published alias pool must reflect the
+     * eligibility the router applies at request time, so the capability vocabulary the pool actually
+     * declares is indexed per model from the same registry the request path filters candidates with.
+     */
+    const supportedCapabilitiesByModelId = (() => {
+      const index: Record<string, Set<string>> = {};
+      for (const executionMode of CANONICAL_ROUTING_ALIAS_EXECUTION_MODES) {
+        for (const endpoint of filterRouterRegistryByExecutionMode(currentRegistry, executionMode)
+          .endpoints) {
+          const bucket = index[endpoint.identity.model_id] ?? new Set<string>();
+          index[endpoint.identity.model_id] = bucket;
+          for (const capability of endpoint.declared.capabilities) {
+            bucket.add(capability);
+          }
+        }
+      }
+      return Object.fromEntries(
+        Object.entries(index).map(([modelId, capabilities]) => [
+          modelId,
+          [...capabilities].sort(compareText),
+        ]),
+      ) satisfies Readonly<Record<string, readonly string[]>>;
+    })();
 
     for (const executionMode of CANONICAL_ROUTING_ALIAS_EXECUTION_MODES) {
       const modelIds = modelIdsByExecutionMode[executionMode] ?? [];
@@ -21353,6 +21381,7 @@ export async function createRuntimeBridgeBackend(
         normalizeRoutingModeName(config.routingStrategy) ??
         "baseline",
       modelIdsByExecutionMode,
+      supportedCapabilitiesByModelId,
     });
     /** R5/R6: the runtime-side binding rules - an unknown `role_id` is a write error (SP5e). */
     const bindingValidation = validateAgentStrategyBindings({
@@ -25462,12 +25491,29 @@ export async function createRuntimeBridgeBackend(
               effectiveInventory,
               effectiveRegistry,
             );
+            /**
+             * Run 103 post-lock repair (operator decision): `required_capabilities` also narrows the
+             * endpoints the page reports, with the same rule the router applies at request time, so a
+             * capability-constrained alias cannot show candidates the first call would reject.
+             */
+            const allowEndpoints =
+              entry.requiredCapabilities.length === 0
+                ? resolution.allowEndpoints
+                : resolution.allowEndpoints.filter((endpointId) => {
+                    const endpoint = effectiveRegistry.endpoints.find(
+                      (candidate) => candidate.identity.endpoint_id === endpointId,
+                    );
+                    const supported = endpoint?.declared.capabilities ?? [];
+                    return entry.requiredCapabilities.every((capability) =>
+                      supportsCapabilityRequirement(supported, capability),
+                    );
+                  });
             return {
               aliasId: alias.aliasId,
               mode: alias.mode ?? "basic",
-              candidateCount: resolution.allowEndpoints.length,
-              allowEndpointIds: [...resolution.allowEndpoints].sort(compareText),
-              poolEmpty: resolution.poolEmpty,
+              candidateCount: allowEndpoints.length,
+              allowEndpointIds: [...allowEndpoints].sort(compareText),
+              poolEmpty: allowEndpoints.length === 0,
             };
           })
           .sort((left, right) => compareText(left.aliasId, right.aliasId)),

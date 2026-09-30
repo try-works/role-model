@@ -73,10 +73,15 @@ export interface PostureAliasRowView {
   readonly candidateCount: number;
   readonly candidateLabel: string;
   readonly poolEmpty: boolean;
-  readonly poolEmptyLabel: string | null;
   readonly leaderEndpointId: string | null;
   readonly leaderLabel: string | null;
   readonly eligibleEndpointIds: readonly string[];
+}
+
+/** One execution scope the runtime reported as `ALIAS_POOL_EMPTY` for this entry. */
+export interface PostureUnresolvableScopeView {
+  readonly aliasId: string;
+  readonly scopeLabel: string;
 }
 
 export interface PostureEntryRowView {
@@ -95,8 +100,15 @@ export interface PostureEntryRowView {
   readonly requiredCapabilities: readonly string[];
   readonly capabilityLabel: string;
   readonly violations: readonly string[];
-  readonly warnings: readonly string[];
+  /** The violations and warnings this entry owns, rendered inside its card. */
+  readonly messages: readonly string[];
+  /** Every alias row the readback published, including the empty ones. */
   readonly aliases: readonly PostureAliasRowView[];
+  /** The alias rows the page lists: the scopes that can actually resolve (operator decision). */
+  readonly resolvableAliases: readonly PostureAliasRowView[];
+  readonly unresolvableScopes: readonly PostureUnresolvableScopeView[];
+  /** One plain-English line for the scopes that cannot resolve; null when every scope resolves. */
+  readonly unresolvableScopeNotice: string | null;
   readonly poolEmptyAliasIds: readonly string[];
 }
 
@@ -117,10 +129,62 @@ function scopeOfAlias(aliasId: string): string {
   return separator === -1 ? aliasId : aliasId.slice(separator + 1);
 }
 
-/** Diagnostics the readback addresses to a kind (`role "…"` / `workload "…"`) or to one entry. */
+/**
+ * Run 103 post-lock repair (operator decision): a diagnostic belongs to the entry it *names*. The
+ * runtime's messages begin with their subject (`role "coder" has unknown role_id "ghost"`,
+ * `posture alias "coder.remote-only" collides …`), so the first quoted token decides which entry owns
+ * the message; a message that quotes no entry at all falls back to the kind prefix. The previous
+ * `startsWith(<kind>)` rule attributed every role message to every role entry, which is how the
+ * Workloads page ended up showing the `batch`/`embedding` scopes on the Agent strategy page.
+ */
 function diagnosticsFor(kind: PostureEntryKind, name: string, text: string): boolean {
-  const trimmed = text.trimStart();
-  return trimmed.startsWith(`${kind} `) || text.includes(`"${name}"`);
+  const firstQuoted = /"([^"]*)"/.exec(text)?.[1] ?? null;
+  if (firstQuoted !== null) {
+    return firstQuoted === name || firstQuoted.startsWith(`${name}.`);
+  }
+  return text.trimStart().startsWith(`${kind} `);
+}
+
+/**
+ * Run 103 post-lock repair (operator decision): the diagnostics card renders one page, so it must only
+ * see the diagnostics of the entries that page owns. A skipped scope belongs to the entry whose name
+ * prefixes its alias id; a violation or warning belongs to the entry it names.
+ */
+export function filterPostureDiagnosticsForKind(
+  kind: PostureEntryKind,
+  entries: readonly { readonly name: string }[],
+  diagnostics: PostureDiagnosticsReadback,
+): PostureDiagnosticsReadback {
+  const names = entries.map((entry) => entry.name).filter((name) => name.length > 0);
+  return {
+    violations: diagnostics.violations.filter((text) =>
+      names.some((name) => diagnosticsFor(kind, name, text)),
+    ),
+    skipped: diagnostics.skipped.filter((report) =>
+      names.some((name) => report.aliasId.startsWith(`${name}.`)),
+    ),
+    warnings: diagnostics.warnings.filter((text) =>
+      names.some((name) => diagnosticsFor(kind, name, text)),
+    ),
+  };
+}
+
+/**
+ * Operator decision: the scope that cannot resolve is a note, not a published alias row, and the note
+ * is plain English - never the runtime's `ALIAS_POOL_EMPTY` marker printed twice.
+ */
+export function buildUnresolvableScopeNotice(
+  scopes: readonly PostureUnresolvableScopeView[],
+): string | null {
+  if (scopes.length === 0) {
+    return null;
+  }
+  const labels = [...new Set(scopes.map((scope) => scope.scopeLabel))].sort((left, right) =>
+    left.localeCompare(right, "en"),
+  );
+  const countable = scopes.length === 1 ? "scope" : "scopes";
+  const pronoun = scopes.length === 1 ? "this scope" : "those scopes";
+  return `${scopes.length} ${countable} cannot resolve: ${labels.join(", ")} — no eligible candidate for ${pronoun}.`;
 }
 
 export function summarizePostureDiagnostics(diagnostics: PostureDiagnosticsReadback): {
@@ -172,18 +236,41 @@ export function buildPostureEntryRows(
         candidateCount: alias.candidateCount,
         candidateLabel: `${alias.candidateCount} candidate${alias.candidateCount === 1 ? "" : "s"}`,
         poolEmpty: alias.poolEmpty,
-        poolEmptyLabel: alias.poolEmpty ? "POOL EMPTY" : null,
         leaderEndpointId,
         leaderLabel: leaderEndpointId === null ? null : "current leader",
         eligibleEndpointIds: eligible,
       } satisfies PostureAliasRowView;
     });
 
-    const poolEmptyAliasIds = [
-      ...aliases.filter((alias) => alias.poolEmpty).map((alias) => alias.aliasId),
-      ...diagnostics.skipped
-        .filter((report) => report.aliasId.startsWith(`${entry.name}.`))
-        .map((report) => report.aliasId),
+    /**
+     * Operator decision: the scopes that cannot resolve are collected from both sources the runtime
+     * publishes - an alias row the readback flagged empty, and a scope it only reported as skipped -
+     * and rendered once, on the entry, in plain English.
+     */
+    const unresolvableScopes = [
+      ...new Map(
+        [
+          ...aliases
+            .filter((alias) => alias.poolEmpty)
+            .map((alias) => ({ aliasId: alias.aliasId, scopeLabel: alias.scopeLabel })),
+          ...diagnostics.skipped
+            .filter((report) => report.aliasId.startsWith(`${entry.name}.`))
+            .map((report) => ({
+              aliasId: report.aliasId,
+              scopeLabel: scopeOfAlias(report.aliasId),
+            })),
+        ]
+          .sort((left, right) => left.aliasId.localeCompare(right.aliasId, "en"))
+          .map((scope) => [scope.aliasId, scope] as const),
+      ).values(),
+    ];
+    const poolEmptyAliasIds = unresolvableScopes.map((scope) => scope.aliasId);
+    const messages = [
+      ...new Set([
+        ...entry.violations,
+        ...diagnostics.violations.filter((text) => diagnosticsFor(entry.kind, entry.name, text)),
+        ...diagnostics.warnings.filter((text) => diagnosticsFor(entry.kind, entry.name, text)),
+      ]),
     ];
 
     return {
@@ -207,13 +294,12 @@ export function buildPostureEntryRows(
           ? "no capability requirement"
           : entry.requiredCapabilities.join(", "),
       violations: entry.violations,
-      warnings: [
-        ...entry.violations,
-        ...diagnostics.violations.filter((text) => diagnosticsFor(entry.kind, entry.name, text)),
-        ...diagnostics.warnings.filter((text) => diagnosticsFor(entry.kind, entry.name, text)),
-      ],
+      messages,
       aliases,
-      poolEmptyAliasIds: [...new Set(poolEmptyAliasIds)],
+      resolvableAliases: aliases.filter((alias) => !alias.poolEmpty),
+      unresolvableScopes,
+      unresolvableScopeNotice: buildUnresolvableScopeNotice(unresolvableScopes),
+      poolEmptyAliasIds,
     } satisfies PostureEntryRowView;
   });
 }

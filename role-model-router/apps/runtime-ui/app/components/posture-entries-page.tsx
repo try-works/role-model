@@ -20,6 +20,7 @@ import {
   buildPostureNamedBlockPatch,
   buildWorkloadTemplateDraft,
   createPostureDraft,
+  filterPostureDiagnosticsForKind,
   findDuplicateEntryNames,
   formatCommaList,
   parseCommaList,
@@ -143,16 +144,12 @@ function AliasRow({ alias }: { alias: PostureAliasRowView }) {
           {`scope ${alias.scopeLabel} · mode ${alias.modeLabel}`}
         </p>
       </div>
-      <Badge tone={alias.poolEmpty ? "error" : "neutral"}>{alias.candidateLabel}</Badge>
-      {alias.poolEmpty ? (
-        <Badge tone="error">{alias.poolEmptyLabel ?? "POOL EMPTY"}</Badge>
-      ) : (
-        <span className={supportingTextClassName}>
-          {alias.leaderEndpointId
-            ? `${alias.leaderLabel ?? "current leader"}: ${alias.leaderEndpointId}`
-            : "no eligible endpoint"}
-        </span>
-      )}
+      <Badge tone="neutral">{alias.candidateLabel}</Badge>
+      <span className={supportingTextClassName}>
+        {alias.leaderEndpointId
+          ? `${alias.leaderLabel ?? "current leader"}: ${alias.leaderEndpointId}`
+          : "no eligible endpoint"}
+      </span>
     </div>
   );
 }
@@ -170,25 +167,30 @@ function EntryRow({ row }: { row: PostureEntryRowView }) {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Badge tone="neutral">{row.kindLabel}</Badge>
-          {row.poolEmptyAliasIds.length > 0 ? (
-            <Badge tone="error">{`${row.poolEmptyAliasIds.length} pool empty`}</Badge>
+          {row.unresolvableScopes.length > 0 ? (
+            <Badge tone="error">
+              {`${row.unresolvableScopes.length} scope${row.unresolvableScopes.length === 1 ? "" : "s"} cannot resolve`}
+            </Badge>
           ) : null}
         </div>
       </div>
-      {row.aliases.length === 0 ? (
-        <EmptyState label="No alias is materialised for this entry yet; save it to materialise one per execution scope." />
+      {row.resolvableAliases.length === 0 ? (
+        <EmptyState label="No scope can resolve for this entry yet; save it again after the pool or the capability requirement changes." />
       ) : (
         <div className="space-y-2">
-          {row.aliases.map((alias) => (
+          {row.resolvableAliases.map((alias) => (
             <AliasRow key={alias.aliasId} alias={alias} />
           ))}
         </div>
       )}
-      {row.warnings.length > 0 ? (
+      {row.unresolvableScopeNotice ? (
+        <p className={supportingTextClassName}>{row.unresolvableScopeNotice}</p>
+      ) : null}
+      {row.messages.length > 0 ? (
         <ul className="space-y-1">
-          {row.warnings.map((warning) => (
-            <li key={warning} className={supportingTextClassName}>
-              {warning}
+          {row.messages.map((message) => (
+            <li key={message} className={supportingTextClassName}>
+              {message}
             </li>
           ))}
         </ul>
@@ -228,7 +230,18 @@ export function PostureEntriesPage({ kind }: { readonly kind: PostureEntryKind }
     skipped: [],
     warnings: [],
   };
-  const diagnosticsSummary = useMemo(() => summarizePostureDiagnostics(diagnostics), [diagnostics]);
+  /**
+   * Operator decision: the diagnostics card renders one page, so it only sees the diagnostics of the
+   * entries that page owns - the Agent strategy page never lists a workload's scopes or warnings.
+   */
+  const pageDiagnostics = useMemo(
+    () => filterPostureDiagnosticsForKind(kind, readbackEntries ?? [], diagnostics),
+    [kind, readbackEntries, diagnostics],
+  );
+  const diagnosticsSummary = useMemo(
+    () => summarizePostureDiagnostics(pageDiagnostics),
+    [pageDiagnostics],
+  );
   const roleOptions = useMemo(() => readRoleOptions(routerConfig), [routerConfig]);
   const rows = useMemo(
     () => buildPostureEntryRows(readbackEntries ?? [], diagnostics),
@@ -383,12 +396,10 @@ export function PostureEntriesPage({ kind }: { readonly kind: PostureEntryKind }
 
       <SectionCard
         title="Posture diagnostics"
-        description="Violations, ALIAS_POOL_EMPTY reports and capability warnings the runtime raised for the saved blocks."
+        description={`Violations and capability warnings the runtime raised for the saved ${title} entries on this page. A scope that cannot resolve is reported on its own entry.`}
       >
-        {diagnosticsSummary.violations.length === 0 &&
-        diagnosticsSummary.poolEmptyReports.length === 0 &&
-        diagnosticsSummary.warnings.length === 0 ? (
-          <EmptyState label="The readback reports no posture violations, skipped scopes, or warnings." />
+        {diagnosticsSummary.violations.length === 0 && diagnosticsSummary.warnings.length === 0 ? (
+          <EmptyState label="The readback reports no posture violations or capability warnings for this page." />
         ) : (
           <div className="space-y-3">
             {diagnosticsSummary.violations.map((violation) => (
@@ -396,14 +407,9 @@ export function PostureEntriesPage({ kind }: { readonly kind: PostureEntryKind }
                 {violation}
               </p>
             ))}
-            {diagnosticsSummary.poolEmptyReports.map((report) => (
-              <p key={report.aliasId} className={supportingTextClassName}>
-                {`${report.aliasId} · ${report.reason} (ALIAS_POOL_EMPTY)`}
-              </p>
-            ))}
-            {diagnosticsSummary.unknownCapabilityWarnings.map((warning) => (
+            {diagnosticsSummary.warnings.map((warning) => (
               <p key={warning} className={supportingTextClassName}>
-                {`Unknown capability warning: ${warning}`}
+                {warning}
               </p>
             ))}
           </div>

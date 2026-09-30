@@ -6,6 +6,7 @@ import {
   buildPostureWriteBlock,
   buildWorkloadTemplateDraft,
   createPostureDraft,
+  filterPostureDiagnosticsForKind,
   findDuplicateEntryNames,
   summarizePostureDiagnostics,
   validatePostureDraft,
@@ -64,7 +65,11 @@ describe("run 103 posture entry view-models", () => {
     const local = row.aliases.find((alias) => alias.aliasId === "coder.local-only");
     expect(local?.poolEmpty).toBe(true);
     expect(local?.leaderEndpointId).toBeNull();
-    expect(local?.poolEmptyLabel).toBe("POOL EMPTY");
+    /** Operator decision: the empty scope is a note on the entry, not a second marker on an alias row. */
+    expect(row.resolvableAliases.map((alias) => alias.aliasId)).toEqual(["coder.remote-only"]);
+    expect(row.unresolvableScopeNotice).toBe(
+      "1 scope cannot resolve: local-only — no eligible candidate for this scope.",
+    );
     expect(row.poolEmptyAliasIds).toEqual(["coder.local-only"]);
   });
 
@@ -84,7 +89,147 @@ describe("run 103 posture entry view-models", () => {
       skipped: [{ aliasId: "batch.local-only", reason: "ALIAS_POOL_EMPTY" }],
       warnings: ['workload "embedding" requires unknown capability "embeddings.text"'],
     });
-    expect(rows[0].warnings).toContain('role "ghost" references unknown role_id "ghost"');
+    /**
+     * Post-lock repair (run 103, operator decision): a diagnostic is attributed to the entry it names,
+     * not to every entry that shares its kind. `coder` must not inherit a message about `ghost`.
+     */
+    expect(rows[0].messages).toEqual([]);
+  });
+
+  /**
+   * Post-lock repair (run 103, operator decision): the diagnostics card used to render the whole
+   * document, so the Agent strategy page listed `batch.local-only` and `embedding` capability warnings
+   * that belong to the Workloads page (and the reason marker was printed twice as
+   * `ALIAS_POOL_EMPTY (ALIAS_POOL_EMPTY)`).
+   */
+  test("scopes diagnostics to the entries on the page", () => {
+    const diagnostics = {
+      violations: [
+        'role "coder" has unknown role_id "ghost"',
+        'workload "embedding" has unknown key "role_id"',
+      ],
+      skipped: [
+        { aliasId: "coder.local-only", reason: "ALIAS_POOL_EMPTY" },
+        { aliasId: "batch.local-only", reason: "ALIAS_POOL_EMPTY" },
+      ],
+      warnings: [
+        'workload "embedding" references unknown capability "embeddings.text"',
+        'role "coder" references unknown capability "code.write"',
+      ],
+    };
+
+    const rolePage = filterPostureDiagnosticsForKind("role", [{ name: "coder" }], diagnostics);
+    expect(rolePage.violations).toEqual(['role "coder" has unknown role_id "ghost"']);
+    expect(rolePage.skipped).toEqual([{ aliasId: "coder.local-only", reason: "ALIAS_POOL_EMPTY" }]);
+    expect(rolePage.warnings).toEqual(['role "coder" references unknown capability "code.write"']);
+
+    const workloadPage = filterPostureDiagnosticsForKind(
+      "workload",
+      [{ name: "batch" }, { name: "embedding" }],
+      diagnostics,
+    );
+    expect(workloadPage.violations).toEqual(['workload "embedding" has unknown key "role_id"']);
+    expect(workloadPage.skipped).toEqual([
+      { aliasId: "batch.local-only", reason: "ALIAS_POOL_EMPTY" },
+    ]);
+    expect(workloadPage.warnings).toEqual([
+      'workload "embedding" references unknown capability "embeddings.text"',
+    ]);
+  });
+
+  const workloadEntries = [
+    {
+      name: "batch",
+      kind: "workload" as const,
+      roleId: null,
+      scoringStrategy: "cost" as const,
+      routingMode: null,
+      computePreference: null,
+      configuredModelIds: [],
+      requiredCapabilities: [],
+      violations: [],
+      aliases: [
+        {
+          aliasId: "batch.remote-only",
+          mode: "cost",
+          candidateCount: 3,
+          allowEndpointIds: ["endpoint-c", "endpoint-a", "endpoint-b"],
+          poolEmpty: false,
+        },
+        {
+          aliasId: "batch.local-only",
+          mode: "cost",
+          candidateCount: 0,
+          allowEndpointIds: [],
+          poolEmpty: true,
+        },
+      ],
+    },
+    {
+      name: "embedding",
+      kind: "workload" as const,
+      roleId: null,
+      scoringStrategy: "cost" as const,
+      routingMode: null,
+      computePreference: null,
+      configuredModelIds: [],
+      requiredCapabilities: ["knowledge.retrieval"],
+      violations: [],
+      aliases: [],
+    },
+  ];
+
+  /**
+   * Post-lock repair (run 103, operator decision): an entry lists only the scopes that can resolve; the
+   * scopes that cannot become one plain-English note on the entry instead of a second `POOL EMPTY`
+   * marker, and the duplicated `ALIAS_POOL_EMPTY (ALIAS_POOL_EMPTY)` text is gone.
+   */
+  test("attributes the scopes that cannot resolve to their entry, in plain English", () => {
+    const diagnostics = {
+      violations: [],
+      skipped: [{ aliasId: "embedding.local-only", reason: "ALIAS_POOL_EMPTY" }],
+      warnings: ['workload "embedding" references unknown capability "knowledge.retrieval"'],
+    };
+    const rows = buildPostureEntryRows(workloadEntries, diagnostics);
+    const batch = rows.find((row) => row.name === "batch");
+    const embedding = rows.find((row) => row.name === "embedding");
+
+    expect(batch?.resolvableAliases.map((alias) => alias.aliasId)).toEqual(["batch.remote-only"]);
+    expect(batch?.unresolvableScopes).toEqual([
+      { aliasId: "batch.local-only", scopeLabel: "local-only" },
+    ]);
+    expect(batch?.unresolvableScopeNotice).toBe(
+      "1 scope cannot resolve: local-only — no eligible candidate for this scope.",
+    );
+    expect(batch?.messages).toEqual([]);
+
+    /** A scope the readback only reports as skipped is still attributed to its entry. */
+    expect(embedding?.resolvableAliases).toEqual([]);
+    expect(embedding?.unresolvableScopes).toEqual([
+      { aliasId: "embedding.local-only", scopeLabel: "local-only" },
+    ]);
+    expect(embedding?.messages).toEqual([
+      'workload "embedding" references unknown capability "knowledge.retrieval"',
+    ]);
+
+    /** No duplicated marker, and no second empty-scope list, anywhere in the view model. */
+    expect(JSON.stringify(rows)).not.toContain("ALIAS_POOL_EMPTY");
+    expect(JSON.stringify(rows)).not.toContain("POOL EMPTY");
+  });
+
+  test("reads the unresolvable-scope note in the plural when more than one scope is empty", () => {
+    const rows = buildPostureEntryRows(workloadEntries, {
+      violations: [],
+      skipped: [
+        { aliasId: "embedding.remote-only", reason: "ALIAS_POOL_EMPTY" },
+        { aliasId: "embedding.hybrid", reason: "ALIAS_POOL_EMPTY" },
+      ],
+      warnings: [],
+    });
+    const embedding = rows.find((row) => row.name === "embedding");
+    expect(embedding?.unresolvableScopeNotice).toBe(
+      "2 scopes cannot resolve: hybrid, remote-only — no eligible candidate for those scopes.",
+    );
   });
 
   test("accepts a role entry only with a role binding, and never writes a legacy synonym", () => {

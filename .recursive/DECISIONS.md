@@ -722,3 +722,28 @@ Date: `2026-10-01`
   (locked) records the root cause, the RED/GREEN suites, the packaged-runtime HTTP and UI verification, and the
   reconciliation of the locked phase records. The config layout, the alias materialisation and the decision
   receipts are unchanged; no migration is required.
+
+### Post-lock repair 2: the published alias pool mirrors request-time eligibility
+
+Date: `2026-10-01`
+
+- Operator report: the Posture diagnostics card printed the `ALIAS_POOL_EMPTY` marker twice, listed workload
+  scopes on the Agent strategy page, and the shipped `embedding` workload looked resolvable while a call
+  through `embedding.remote-only` answered `400 capability_eligibility_error / no_eligible_target` naming every
+  candidate as `missing_capability.embeddings.text` (reproduced live on the packaged development runtime).
+- Operator decisions: (1) repair the diagnostics scoping, duplication and placement inside run 103 as a
+  post-lock addendum; (2) make the *published* pool reflect the eligibility the router applies at request time;
+  (3) repoint the shipped `embedding` example at a capability the canonical taxonomy already carries instead of
+  extending the taxonomy.
+- Consequences: `required_capabilities` now narrows the materialised alias pool, and the page readback applies
+  the same rule to candidate counts and eligible endpoints; `supportsCapabilityRequirement` is exported from
+  `packages/core` as the single source of that rule. A pin nothing in the scope satisfies reports
+  `ALIAS_POOL_EMPTY` per scope instead of advertising candidates the first call would reject. The shipped
+  example pins `knowledge.retrieval`, which is honestly unresolvable in this deployment until an
+  embedding-capable model is admitted. The Agent strategy and Workloads pages list only the scopes that can
+  resolve and report the rest, in plain English, on the entry that owns them.
+- Requirement effect: R6's literal `embeddings.text` example and R5's pool-honesty sentence are amended by
+  `addenda/00-requirements.post-lock-shipped-embedding-capability.addendum-01.md`.
+- Deferred to its own run (operator decision): per-alias usage tracking — requests, success rate, p50/p95 and
+  last-used per alias — which needs a requested-alias dimension and filter in the telemetry plane.
+- Evidence: `addenda/03-implementation-summary.post-lock-capability-pool.addendum-02.md`.

@@ -540,7 +540,13 @@ function getSupportedCapabilitiesForCandidate(
   return unique([...candidate.declared.capabilities, ...roleBinding.effective_capabilities]);
 }
 
-function supportsCapabilityRequirement(
+/**
+ * Run 103 post-lock repair (operator decision): the runtime's published alias pools must reflect the
+ * eligibility this function applies at request time, so it is exported as the single source of the
+ * capability-satisfaction rule (`code.edit` satisfies `code.read`/`code.write`, a `<req>.` family
+ * satisfies the family root, `reasoning` satisfies `reasoning.*`, and the structured-output pair).
+ */
+export function supportsCapabilityRequirement(
   supportedCapabilities: readonly string[],
   requirement: string,
 ): boolean {

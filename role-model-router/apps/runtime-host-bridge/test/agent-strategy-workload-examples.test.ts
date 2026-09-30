@@ -15,10 +15,11 @@ import {
 } from "../src/unified-runtime-config.js";
 
 /**
- * Run 103 / SP6 - the shipped workload examples (`batch` posture-only and `embedding` with
- * `embeddings.text`) as one documented, validated pair: they must survive the config round trip,
- * materialise aliases for every non-empty scope, and carry their capability pin into the request
- * (design document section 6.2, requirement R6).
+ * Run 103 / SP6 - the shipped workload examples (`batch` posture-only and `embedding` with the
+ * taxonomy capability `knowledge.retrieval`) as one documented, validated pair: they must survive
+ * the config round trip, materialise aliases for every non-empty scope, and carry their capability
+ * pin into the request (design document section 6.2, requirement R6). Post-lock addendum-02 moved the
+ * pin off the provider spelling `embeddings.text`, which the canonical taxonomy does not carry.
  */
 const shippedExamplesConfig = [
   "version: 1.0",
@@ -32,7 +33,7 @@ const shippedExamplesConfig = [
   "  embedding:",
   "    scoring_strategy: cost",
   "    required_capabilities:",
-  "      - embeddings.text",
+  "      - knowledge.retrieval",
   "",
 ].join("\n");
 
@@ -42,7 +43,7 @@ describe("shipped workload examples", () => {
     expect(SHIPPED_WORKLOAD_EXAMPLES.batch).toEqual({ scoring_strategy: "cost" });
     expect(SHIPPED_WORKLOAD_EXAMPLES.embedding).toEqual({
       scoring_strategy: "cost",
-      required_capabilities: ["embeddings.text"],
+      required_capabilities: ["knowledge.retrieval"],
     });
   });
 
@@ -64,14 +65,14 @@ describe("shipped workload examples", () => {
     expect(guide).toContain("workloads:");
     expect(guide).toContain("batch");
     expect(guide).toContain("embedding");
-    expect(guide).toContain("embeddings.text");
+    expect(guide).toContain("knowledge.retrieval");
   });
 
   test("survives the config round trip and materialises aliases per scope", () => {
     const config = parseUnifiedRuntimeConfigText(shippedExamplesConfig);
     expect(config.workloads?.map((entry) => entry.name)).toEqual(["batch", "embedding"]);
     expect(config.workloads?.every((entry) => entry.violations.length === 0)).toBe(true);
-    expect(renderUnifiedRuntimeConfigText(config)).toContain("embeddings.text");
+    expect(renderUnifiedRuntimeConfigText(config)).toContain("knowledge.retrieval");
 
     const section = decodeAgentStrategySection({
       workloads: {
@@ -129,6 +130,6 @@ describe("shipped workload examples", () => {
       roleSource: "none",
       scoringStrategy: "cost",
     });
-    expect(binding.requiredCapabilities).toEqual(["text.chat", "embeddings.text"]);
+    expect(binding.requiredCapabilities).toEqual(["text.chat", "knowledge.retrieval"]);
   });
 });

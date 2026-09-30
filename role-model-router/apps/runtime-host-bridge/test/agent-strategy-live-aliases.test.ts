@@ -37,7 +37,12 @@ interface RouterConfigShape {
   readonly workloads: readonly {
     readonly name: string;
     readonly requiredCapabilities: readonly string[];
-    readonly aliases: readonly { readonly aliasId: string }[];
+    readonly aliases: readonly {
+      readonly aliasId: string;
+      readonly candidateCount: number;
+      readonly allowEndpointIds: readonly string[];
+      readonly poolEmpty: boolean;
+    }[];
   }[];
   readonly workloadExamples: Readonly<Record<string, unknown>>;
   readonly postureDiagnostics: {
@@ -144,6 +149,84 @@ describe("agent strategy and workload aliases in the live backend", () => {
 
         const afterFailures = (await backend.readRouterConfig()) as RouterConfigShape;
         expect(afterFailures.agentStrategies[0]?.roleId).toBe("coder");
+      } finally {
+        await backend.shutdown();
+      }
+    } finally {
+      await rm(tempRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+    }
+  }, 120_000);
+
+  /**
+   * Run 103 post-lock repair (operator decision): the pool an operator reads on the page must be the pool
+   * the router will accept at request time. Before the repair a capability pin travelled on the alias while
+   * the readback advertised the whole execution scope, so a workload nothing could serve looked healthy and
+   * failed on the first call with `no_eligible_target`.
+   */
+  test("a capability pin nothing satisfies is reported empty instead of advertising the scope", async () => {
+    const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-run103-capability-pool-"));
+    const runtimeStateRoot = path.join(tempRoot, "state");
+    const unifiedRuntimeConfigPath = path.join(tempRoot, "runtime-config.yaml");
+    try {
+      await writeFile(
+        unifiedRuntimeConfigPath,
+        [
+          'version: "1.0"',
+          "execution_mode: local_only",
+          "llama_swap:",
+          "  models:",
+          "    local-coder:",
+          "      path: ./models/local-coder.gguf",
+          "      capabilities:",
+          "        - text.chat",
+          "workloads:",
+          "  batch:",
+          "    scoring_strategy: cost",
+          "  retrieval:",
+          "    scoring_strategy: cost",
+          "    required_capabilities:",
+          "      - knowledge.retrieval",
+          "",
+        ].join("\n"),
+        "utf8",
+      );
+
+      const backend = await createRuntimeBridgeBackend({
+        repoRoot,
+        fixtureRoot: testFixtureRoot,
+        runtimeStateRoot,
+        scopeId: "run103-capability-pool",
+        unifiedRuntimeConfigPath,
+      });
+
+      try {
+        const config = (await backend.readRouterConfig()) as RouterConfigShape;
+        const batch = config.workloads.find((entry) => entry.name === "batch");
+        const retrieval = config.workloads.find((entry) => entry.name === "retrieval");
+        /** Control: an unpinned entry still advertises the scope, so the assertion below is not vacuous. */
+        expect(batch?.aliases.length).toBeGreaterThan(0);
+        expect(batch?.aliases.every((alias) => alias.candidateCount > 0)).toBe(true);
+        expect(batch?.aliases.every((alias) => alias.poolEmpty === false)).toBe(true);
+        /** The pinned entry advertises nothing it cannot serve, and is still reported as a saved entry. */
+        expect(retrieval?.requiredCapabilities).toEqual(["knowledge.retrieval"]);
+        expect(retrieval?.violations).toEqual([]);
+        expect(retrieval?.aliases).toEqual([]);
+        expect(
+          config.postureDiagnostics.skipped.filter((report) =>
+            report.aliasId.startsWith("retrieval."),
+          ),
+        ).toEqual([
+          { aliasId: "retrieval.decision-only", reason: "ALIAS_POOL_EMPTY" },
+          { aliasId: "retrieval.hybrid", reason: "ALIAS_POOL_EMPTY" },
+          { aliasId: "retrieval.local-only", reason: "ALIAS_POOL_EMPTY" },
+          { aliasId: "retrieval.remote-only", reason: "ALIAS_POOL_EMPTY" },
+        ]);
+        expect(config.postureDiagnostics.warnings).toEqual([]);
+
+        const summary = (await backend.readRouterSummary()) as RouterSummaryShape;
+        const aliasIds = summary.aliasInventory.map((row) => row.aliasId);
+        expect(aliasIds).toContain("batch.local-only");
+        expect(aliasIds.some((aliasId) => aliasId.startsWith("retrieval."))).toBe(false);
       } finally {
         await backend.shutdown();
       }
