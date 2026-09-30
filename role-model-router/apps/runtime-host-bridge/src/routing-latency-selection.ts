@@ -17,8 +17,15 @@ import type { RuntimeEndpointLatencyBucket } from "@role-model-router/sqlite-mem
 
 export interface LatencySelectionCandidate {
   readonly endpointId: string;
+  readonly p50LatencyMs: number;
   readonly p95LatencyMs: number;
+  /** `p50 + 0.25 * (p95 - p50)`: the median carries the decision, the tail contributes a quarter. */
+  readonly effectiveLatencyMs: number;
   readonly sampleCount: number;
+}
+
+export function effectiveLatencyMs(p50LatencyMs: number, p95LatencyMs: number): number {
+  return p50LatencyMs + 0.25 * Math.max(0, p95LatencyMs - p50LatencyMs);
 }
 
 export interface LatencySelectionOutcome {
@@ -81,13 +88,15 @@ export function selectEndpointByMeasuredLatency(input: {
     )
     .map((bucket) => ({
       endpointId: bucket.endpointId,
+      p50LatencyMs: bucket.p50LatencyMs,
       p95LatencyMs: bucket.p95LatencyMs,
+      effectiveLatencyMs: effectiveLatencyMs(bucket.p50LatencyMs, bucket.p95LatencyMs),
       sampleCount: bucket.sampleCount,
     }))
     .sort((left, right) =>
-      left.p95LatencyMs === right.p95LatencyMs
+      left.effectiveLatencyMs === right.effectiveLatencyMs
         ? left.endpointId.localeCompare(right.endpointId)
-        : left.p95LatencyMs - right.p95LatencyMs,
+        : left.effectiveLatencyMs - right.effectiveLatencyMs,
     );
   // The cap bounds the work, not the baseline: the router's own candidate is always carried so the
   // comparison stays valid even when it is the slowest eligible endpoint.
@@ -106,9 +115,9 @@ export function selectEndpointByMeasuredLatency(input: {
     .slice(0, limit)
     // The baseline is carried for comparison, not promoted: the reported order stays best-first.
     .sort((left, right) =>
-      left.p95LatencyMs === right.p95LatencyMs
+      left.effectiveLatencyMs === right.effectiveLatencyMs
         ? left.endpointId.localeCompare(right.endpointId)
-        : left.p95LatencyMs - right.p95LatencyMs,
+        : left.effectiveLatencyMs - right.effectiveLatencyMs,
     );
   if (candidates.length === 0) {
     return keep("no_candidates", "no eligible endpoint has measured latency for this bucket");
@@ -136,16 +145,16 @@ export function selectEndpointByMeasuredLatency(input: {
   if (best.endpointId === routerCandidate.endpointId) {
     return keep(
       "kept_router_choice",
-      "the router's chosen endpoint already has the best measured p95 for this bucket",
+      "the router's chosen endpoint already has the best measured effective latency for this bucket",
       bucketUpperBoundTokens,
       candidates,
     );
   }
-  const improvementMs = routerCandidate.p95LatencyMs - best.p95LatencyMs;
+  const improvementMs = routerCandidate.effectiveLatencyMs - best.effectiveLatencyMs;
   if (improvementMs <= input.maxDeltaMs) {
     return keep(
       "kept_router_choice",
-      `the best candidate improves p95 by ${improvementMs}ms, inside the configured ${input.maxDeltaMs}ms delta`,
+      `the best candidate improves effective latency by ${improvementMs}ms, inside the configured ${input.maxDeltaMs}ms delta`,
       bucketUpperBoundTokens,
       candidates,
     );
@@ -155,6 +164,6 @@ export function selectEndpointByMeasuredLatency(input: {
     chosenEndpointId: best.endpointId,
     bucketUpperBoundTokens,
     candidates,
-    reason: `${best.endpointId} improves p95 by ${improvementMs}ms for this bucket, beyond the configured ${input.maxDeltaMs}ms delta`,
+    reason: `${best.endpointId} improves effective latency (p50 + 0.25 * tail) by ${improvementMs}ms for this bucket, beyond the configured ${input.maxDeltaMs}ms delta`,
   };
 }
