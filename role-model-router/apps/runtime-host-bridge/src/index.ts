@@ -299,6 +299,8 @@ import {
   type RoutingPosture,
   decodeLegacyRoutingStrategy,
   resolveRequestStrategy,
+  resolveControllerStrategyApplication,
+  normalizeScoringStrategyName,
   toCoreRoutingStrategyName,
   withStrategyProvenance,
 } from "./scoring-strategy.js";
@@ -2238,6 +2240,7 @@ export function resolveObservedDifficultyBucketForPlan(plan: {
 
 function maybeApplyControllerRouting(input: {
   readonly effectiveRoutingMode: RuntimeRoutingMode;
+  readonly pinWeights?: boolean;
   readonly requestedModel: string;
   readonly modelAliases: readonly UnifiedRuntimeModelAliasConfig[];
   readonly routingRequest: Parameters<typeof routeRuntimeRequest>[0]["request"];
@@ -2298,8 +2301,7 @@ function maybeApplyControllerRouting(input: {
     };
   }
 
-  const guidanceStrategy =
-    guidance.strategy && isBridgeRoutingStrategy(guidance.strategy) ? guidance.strategy : undefined;
+  const guidanceStrategy = normalizeScoringStrategyName(guidance.strategy) ?? undefined;
   const requestedRoleId = resolveControllerRequestedRoleId(
     guidance.requestedRoleId,
     input.roleDefinitions,
@@ -2336,7 +2338,12 @@ function maybeApplyControllerRouting(input: {
           input.routingRequest.requiredCapabilities,
           requiredCapabilitiesFromGuidance,
         );
-  const finalStrategy = guidanceStrategy ?? input.routingRequest.strategy;
+  const strategyApplication = resolveControllerStrategyApplication({
+    pinWeights: input.pinWeights === true,
+    requestStrategy: normalizeScoringStrategyName(input.routingRequest.strategy) ?? "balanced",
+    guidanceStrategy,
+  });
+  const finalStrategy = toCoreRoutingStrategyName(strategyApplication.strategy);
   const hybridArbitration = summarizeHybridArbitration({
     effectiveRoutingMode: input.effectiveRoutingMode,
     routingRequest: input.routingRequest,
@@ -2354,7 +2361,9 @@ function maybeApplyControllerRouting(input: {
       requiredCapabilities,
       preferredCapabilities:
         preferredCapabilitiesFromGuidance ?? input.routingRequest.preferredCapabilities,
-      ...(guidanceStrategy ? { strategy: guidanceStrategy } : {}),
+      ...(strategyApplication.strategy !== input.routingRequest.strategy
+        ? { strategy: toCoreRoutingStrategyName(strategyApplication.strategy) }
+        : {}),
       ...(typeof guidance.preferLocal === "boolean" ? { preferLocal: guidance.preferLocal } : {}),
     },
     ...(preferredEndpointIds.length
@@ -2369,6 +2378,9 @@ function maybeApplyControllerRouting(input: {
       ...input.routingDiagnostics,
       controllerRouting: {
         active: true,
+        ...(strategyApplication.discarded
+          ? { discardedStrategy: strategyApplication.discarded.strategy }
+          : {}),
         ...(input.controllerContext.fallbackApplied ? { fallbackApplied: true } : {}),
         ...(input.controllerContext.fallbackReason
           ? { fallbackReason: input.controllerContext.fallbackReason }
@@ -10395,6 +10407,7 @@ export function mapChatCompletionsRequest(
 
   const controllerRouting = maybeApplyControllerRouting({
     effectiveRoutingMode,
+    pinWeights: routingPosture?.pinWeights === true,
     requestedModel: body.model,
     modelAliases,
     routingRequest: {
@@ -10641,6 +10654,7 @@ export function mapResponsesRequest(
 
   const controllerRouting = maybeApplyControllerRouting({
     effectiveRoutingMode,
+    pinWeights: routingPosture?.pinWeights === true,
     requestedModel: body.model,
     modelAliases,
     routingRequest: {
