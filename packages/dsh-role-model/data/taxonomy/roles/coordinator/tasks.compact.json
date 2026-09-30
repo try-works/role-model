@@ -1,0 +1,162 @@
+[
+  {
+    "id": "coordinator.meeting.agenda",
+    "label": "Meeting Agenda",
+    "description": "Create meeting agendas, prep notes, goals, and decision points.",
+    "primaryRole": "coordinator",
+    "compatibleRoles": ["coordinator", "planner", "product"],
+    "requiredCapabilities": ["coordination.workflow"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": ["calendar.read"],
+    "classifier": {
+      "useWhen": "User asks to prepare for a meeting.",
+      "doNotUseWhen": "User asks for deep technical implementation."
+    },
+    "variants": ["agenda"]
+  },
+  {
+    "id": "coordinator.meeting.notes",
+    "label": "Meeting Notes",
+    "description": "Summarize meeting notes into decisions, action items, owners, and follow-ups.",
+    "primaryRole": "coordinator",
+    "compatibleRoles": ["coordinator", "writer", "planner"],
+    "requiredCapabilities": ["coordination.workflow", "text.chat"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": ["calendar.read"],
+    "classifier": {
+      "useWhen": "User provides transcript or notes and asks for structured meeting output.",
+      "doNotUseWhen": "User asks for legal transcript certification."
+    },
+    "variants": ["notes"]
+  },
+  {
+    "id": "coordinator.schedule.plan",
+    "label": "Scheduling Plan",
+    "description": "Plan schedule options, sequencing, reminders, or coordination logistics.",
+    "primaryRole": "coordinator",
+    "compatibleRoles": ["coordinator", "planner", "support"],
+    "requiredCapabilities": ["calendar.planning"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": ["calendar.read"],
+    "classifier": {
+      "useWhen": "User asks to organize timing, schedules, or calendar-style plans.",
+      "doNotUseWhen": "User asks for product roadmap strategy."
+    },
+    "variants": ["plan"]
+  },
+  {
+    "id": "coordinator.follow_up",
+    "label": "Follow-Up Drafting",
+    "description": "Draft follow-up messages, reminders, and action-item communications.",
+    "primaryRole": "coordinator",
+    "compatibleRoles": ["coordinator", "writer", "seller", "support"],
+    "requiredCapabilities": ["communication.follow_up"],
+    "preferredCapabilities": ["communication.user_facing"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for follow-up after meetings, support, sales, or project work.",
+      "doNotUseWhen": "User asks to make technical changes."
+    },
+    "variants": []
+  },
+  {
+    "id": "coordinator.task.plan",
+    "label": "Task Planning",
+    "description": "Organize tasks, owners, deadlines, and dependencies.",
+    "primaryRole": "coordinator",
+    "compatibleRoles": ["coordinator", "planner"],
+    "requiredCapabilities": ["coordination.workflow"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks to organize work into tasks.",
+      "doNotUseWhen": "User asks for deep architecture."
+    },
+    "variants": ["plan"]
+  },
+  {
+    "id": "coordinator.inbox.triage",
+    "label": "Inbox Triage",
+    "description": "Triage messages, requests, priorities, and responses.",
+    "primaryRole": "coordinator",
+    "compatibleRoles": ["coordinator", "support"],
+    "requiredCapabilities": ["coordination.workflow", "text.chat"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks to sort or prioritize inbox-like items.",
+      "doNotUseWhen": "User asks for legal review."
+    },
+    "variants": ["triage"]
+  },
+  {
+    "id": "coordinator.decision.log",
+    "label": "Decision Log",
+    "description": "Create or update decision logs, owners, and rationale.",
+    "primaryRole": "coordinator",
+    "compatibleRoles": ["coordinator", "knowledge", "planner"],
+    "requiredCapabilities": ["coordination.workflow", "knowledge.organization"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks to record decisions.",
+      "doNotUseWhen": "User asks for creative naming."
+    },
+    "variants": ["log"]
+  },
+  {
+    "id": "coordinator.project.status",
+    "label": "Project Status",
+    "description": "Draft project status updates, risks, and next steps.",
+    "primaryRole": "coordinator",
+    "compatibleRoles": ["coordinator", "planner", "writer"],
+    "requiredCapabilities": ["coordination.workflow", "communication.user_facing"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for status update.",
+      "doNotUseWhen": "User asks for formal financial forecast."
+    },
+    "variants": ["status"]
+  },
+  {
+    "id": "coordinator.reminder.plan",
+    "label": "Reminder Planning",
+    "description": "Plan reminders, follow-ups, and timing.",
+    "primaryRole": "coordinator",
+    "compatibleRoles": ["coordinator", "knowledge"],
+    "requiredCapabilities": ["calendar.planning", "communication.follow_up"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks to remember or schedule follow-ups.",
+      "doNotUseWhen": "User asks for durable memory update only."
+    },
+    "variants": ["plan"]
+  },
+  {
+    "id": "coordinator.handoff.prepare",
+    "label": "Handoff Preparation",
+    "description": "Prepare handoff notes, context, decisions, and open items.",
+    "primaryRole": "coordinator",
+    "compatibleRoles": ["coordinator", "support", "operator"],
+    "requiredCapabilities": ["coordination.workflow", "communication.user_facing"],
+    "preferredCapabilities": ["long_context"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks to hand work to another person or team.",
+      "doNotUseWhen": "User asks for public release notes."
+    },
+    "variants": ["prepare"]
+  }
+]

@@ -1,0 +1,7 @@
+{
+  "id": "product_design",
+  "label": "Product And Design",
+  "description": "Product planning, requirements, user workflows, interface design, and structured analysis.",
+  "primaryRoleIds": ["product", "designer", "planner", "analyst"],
+  "secondaryRoleIds": []
+}

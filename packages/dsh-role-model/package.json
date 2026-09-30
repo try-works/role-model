@@ -1,0 +1,62 @@
+{
+  "name": "@try-works/dsh-role-model",
+  "version": "0.1.0",
+  "description": "DeepSeek Harness bundle connecting this harness to an externally running role-model runtime: its aliases, models and endpoints become selectable routes, and every request carries role_model intent metadata so the runtime can route on it.",
+  "license": "BUSL-1.1",
+  "type": "module",
+  "main": "./lib/index.js",
+  "types": "./src/index.ts",
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "role-model",
+    "routing",
+    "llm-gateway",
+    "intent-metadata"
+  ],
+  "homepage": "https://github.com/try-works/role-model#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/try-works/role-model.git",
+    "directory": "packages/dsh-role-model"
+  },
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./client/index.js",
+    "./src/*": "./src/*",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "client",
+    "cordis.patch.yml",
+    "data",
+    "icon.svg",
+    "lib",
+    "locale",
+    "skills",
+    "src"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [],
+      "external": []
+    }
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "check:live-discovery": "tsx scripts/check-live-discovery.mts",
+    "check:host-failure-codes": "tsx scripts/prove-host-failure-codes.mts",
+    "check:classifier-parity": "tsx scripts/check-classifier-parity.mts",
+    "check:intent-parity": "tsx scripts/check-intent-parity.mts",
+    "check:live-stream": "tsx scripts/check-live-stream.mts",
+    "check:live-adapter": "tsx scripts/check-live-adapter.mts"
+  }
+}

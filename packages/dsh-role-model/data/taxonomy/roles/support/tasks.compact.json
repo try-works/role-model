@@ -1,0 +1,162 @@
+[
+  {
+    "id": "support.triage",
+    "label": "Support Triage",
+    "description": "Understand a user issue and route it to next steps.",
+    "primaryRole": "support",
+    "compatibleRoles": ["support", "operator", "writer"],
+    "requiredCapabilities": ["text.chat"],
+    "preferredCapabilities": ["reasoning.multi_step"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User reports a problem and needs diagnosis or escalation.",
+      "doNotUseWhen": "User asks for code generation."
+    },
+    "variants": []
+  },
+  {
+    "id": "support.explain",
+    "label": "User Explanation",
+    "description": "Explain a system behavior or remediation in user-facing terms.",
+    "primaryRole": "support",
+    "compatibleRoles": ["support", "writer", "operator"],
+    "requiredCapabilities": ["text.chat"],
+    "preferredCapabilities": ["communication.user_facing"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User needs a clear support response or troubleshooting guide.",
+      "doNotUseWhen": "User asks for internal architecture design."
+    },
+    "variants": []
+  },
+  {
+    "id": "support.escalate",
+    "label": "Support Escalation",
+    "description": "Prepare escalation context, severity, repro notes, and routing for another team.",
+    "primaryRole": "support",
+    "compatibleRoles": ["support", "operator", "product"],
+    "requiredCapabilities": ["text.chat"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User issue needs handoff to engineering, operations, security, billing, or product.",
+      "doNotUseWhen": "User asks for direct implementation."
+    },
+    "variants": []
+  },
+  {
+    "id": "support.ticket.reply",
+    "label": "Support Ticket Reply",
+    "description": "Draft a response to a user support issue.",
+    "primaryRole": "support",
+    "compatibleRoles": ["support", "writer"],
+    "requiredCapabilities": ["text.chat", "communication.user_facing"],
+    "preferredCapabilities": ["reasoning.multi_step"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks to respond to a customer or support ticket.",
+      "doNotUseWhen": "User asks for internal-only root cause analysis."
+    },
+    "variants": ["reply"]
+  },
+  {
+    "id": "support.runbook.write",
+    "label": "Support Runbook",
+    "description": "Write troubleshooting runbooks and remediation steps.",
+    "primaryRole": "support",
+    "compatibleRoles": ["support", "operator", "knowledge"],
+    "requiredCapabilities": ["communication.user_facing", "knowledge.organization"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks to create support procedures.",
+      "doNotUseWhen": "User asks for legal policy."
+    },
+    "variants": ["write"]
+  },
+  {
+    "id": "support.issue.reproduce",
+    "label": "Support Reproduction",
+    "description": "Convert a user issue into reproducible steps and expected behavior.",
+    "primaryRole": "support",
+    "compatibleRoles": ["support", "tester", "operator"],
+    "requiredCapabilities": ["text.chat", "coordination.workflow"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User reports an issue needing repro.",
+      "doNotUseWhen": "User asks for direct product strategy."
+    },
+    "variants": ["reproduce"]
+  },
+  {
+    "id": "support.knowledge_base.suggest",
+    "label": "Support KB Suggestion",
+    "description": "Suggest or draft reusable knowledge-base entries from support issues.",
+    "primaryRole": "support",
+    "compatibleRoles": ["support", "knowledge", "writer"],
+    "requiredCapabilities": ["communication.user_facing", "knowledge.organization"],
+    "preferredCapabilities": ["text.chat"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks to turn support learnings into KB content.",
+      "doNotUseWhen": "User asks for one-off sales copy."
+    },
+    "variants": ["suggest"]
+  },
+  {
+    "id": "support.status.update",
+    "label": "Support Status Update",
+    "description": "Draft clear incident or issue status updates for users.",
+    "primaryRole": "support",
+    "compatibleRoles": ["support", "operator", "writer"],
+    "requiredCapabilities": ["communication.user_facing"],
+    "preferredCapabilities": ["text.chat"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks to communicate issue status.",
+      "doNotUseWhen": "User asks for internal-only logs."
+    },
+    "variants": ["update"]
+  },
+  {
+    "id": "support.customer.apology",
+    "label": "Customer Apology",
+    "description": "Draft empathetic apologies, explanations, and next steps.",
+    "primaryRole": "support",
+    "compatibleRoles": ["support", "writer"],
+    "requiredCapabilities": ["communication.user_facing"],
+    "preferredCapabilities": ["text.chat"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for apology or customer-facing remediation language.",
+      "doNotUseWhen": "User asks for technical incident analysis only."
+    },
+    "variants": ["apology"]
+  },
+  {
+    "id": "support.faq.write",
+    "label": "FAQ Writing",
+    "description": "Write FAQs, troubleshooting answers, and support snippets.",
+    "primaryRole": "support",
+    "compatibleRoles": ["support", "writer", "knowledge"],
+    "requiredCapabilities": ["communication.user_facing", "text.chat"],
+    "preferredCapabilities": ["knowledge.organization"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for reusable support Q&A.",
+      "doNotUseWhen": "User asks for legal disclosure."
+    },
+    "variants": ["write"]
+  }
+]
