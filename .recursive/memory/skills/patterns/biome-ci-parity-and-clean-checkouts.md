@@ -53,3 +53,13 @@ Use this guidance when GitHub Actions fails in `pnpm run ci:check` because `biom
 - After formatting on Windows, `git status` may show CRLF-only worktree churn beyond the real content diff
 - Use `git diff --name-only` and the actual diff hunks, not status noise alone, to decide what belongs in the formatter fix commit
 - After the CI fix is pushed, restore any remaining CRLF-only local noise so local `main` matches `origin/main`
+
+## Gate discipline (run 103)
+
+- `pnpm run lint` (`biome check .`) is CI's first step: run it against the **final commit** before calling any
+  phase green, and re-run it after every edit that touches a tracked file.
+- A green log proves nothing if it predates the last commit touching the file: re-run the gate after the repair.
+- Verify a filtered test command actually collects the intended package: `--filter @role-model-router/schema-tools`
+  matches no project, prints "No projects matched the filters" and exits 0; the real package is
+  `@role-model/schema-tools`.
+- Source-Runs: added `103-agent-strategy-and-scoring-strategy`; Last-Validated: `2026-09-30`.

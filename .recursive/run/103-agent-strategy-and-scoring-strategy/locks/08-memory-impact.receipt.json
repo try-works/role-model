@@ -1,0 +1,21 @@
+{
+  "artifact": "08-memory-impact.md",
+  "artifact_hash": "8b69893558f2070fda2a66f06e3173c0dc48ddb5d5fc0f3676d0dee190120ad9",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\103-agent-strategy-and-scoring-strategy\\.recursive\\run\\103-agent-strategy-and-scoring-strategy\\08-memory-impact.md",
+  "locked_at": "2026-09-30T14:15:15Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "7e1cb6e0b39731d430dc4ff207bf873c53a89e186877c4f251f5d897dd9f4d8f",
+    "00-worktree.md": "408d89bf4d36b967873bdbca4d02138c08285be8030743ace88f5255b5db4bda",
+    "01-as-is.md": "2fe7df8e065a5e1ca1eba29d3423ee8dddb5e03fa18e10aac73e0a15acfd4b12",
+    "01.5-root-cause.md": "5d3138998f853006bb9515c8fdcb240662d46193dddc6c633850a58c337b5666",
+    "02-to-be-plan.md": "1a50ff60238d9d3ccf21142898f8f038d1626e15529533d6fb0404679d652d46",
+    "03-implementation-summary.md": "128510300a70670fe21dd8fd36e918875dc151d979d71bf73b5d009cecd1f096",
+    "03.5-code-review.md": "821e930fe7b9cb4f7b7125856fcb19d9bce9de6d754a876f2508856587702e5a",
+    "04-test-summary.md": "d38656f84ccc3c06218c38a16f62f2dea41d799959d33b3c49da9e36b009f7f5",
+    "05-manual-qa.md": "f701d33d2350c198a4b2ba5c8def4cdcabf5d378468fabf3fcb2272d76c471a9",
+    "06-decisions-update.md": "464e63248441e0ea86bd90a4b58fe3eb928e4c95627d618d2a0d7957803d064b",
+    "07-state-update.md": "d040036852fc6e032b94e9fa491ea44d4c326e3701003f9a88eed20e024868f6"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "47a9a28aee0b1ef9d863006a4a39960069ac8575ad56aa838251788b8029e876"
+}
