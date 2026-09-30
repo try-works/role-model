@@ -85,7 +85,9 @@ describe("agent strategy materialisation", () => {
   });
 
   test("a declared role wins over the alias preset and the source is recorded", () => {
-    expect(resolveAliasRequestedRole({ declaredRoleId: "researcher", presetRoleId: "coder" })).toEqual({
+    expect(
+      resolveAliasRequestedRole({ declaredRoleId: "researcher", presetRoleId: "coder" }),
+    ).toEqual({
       roleId: "researcher",
       source: "declared",
     });

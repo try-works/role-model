@@ -247,7 +247,10 @@ export interface RuntimeConfig {
     readonly mode: string;
     readonly scoringStrategy: string | null;
     readonly pinWeights: boolean;
-    readonly operator?: { readonly name: string; readonly weights: Readonly<Record<string, number>> } | null;
+    readonly operator?: {
+      readonly name: string;
+      readonly weights: Readonly<Record<string, number>>;
+    } | null;
     readonly degradations?: readonly string[];
   } | null;
   readonly executionMode?: "decision_only" | "hybrid" | "local_only" | "remote_only";

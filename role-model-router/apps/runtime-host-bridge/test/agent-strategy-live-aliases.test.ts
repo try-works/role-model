@@ -16,7 +16,10 @@ const repoRoot = path.resolve(import.meta.dirname, "..", "..", "..", "..");
 const testFixtureRoot = path.join(import.meta.dirname, "fixtures");
 
 interface RouterSummaryShape {
-  readonly aliasInventory: readonly { readonly aliasId: string; readonly candidateCount?: number }[];
+  readonly aliasInventory: readonly {
+    readonly aliasId: string;
+    readonly candidateCount?: number;
+  }[];
 }
 
 interface RouterConfigShape {
@@ -109,9 +112,9 @@ describe("agent strategy and workload aliases in the live backend", () => {
         const coderAliases = config.agentStrategies[0]?.aliases.map((alias) => alias.aliasId) ?? [];
         expect(coderAliases.length).toBeGreaterThan(0);
         expect(coderAliases.every((aliasId) => aliasId.startsWith("coder."))).toBe(true);
-        expect(
-          config.agentStrategies[0]?.aliases.every((alias) => alias.candidateCount > 0),
-        ).toBe(true);
+        expect(config.agentStrategies[0]?.aliases.every((alias) => alias.candidateCount > 0)).toBe(
+          true,
+        );
 
         const summary = (await backend.readRouterSummary()) as RouterSummaryShape;
         const aliasIds = summary.aliasInventory.map((row) => row.aliasId);

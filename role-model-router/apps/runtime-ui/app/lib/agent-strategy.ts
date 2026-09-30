@@ -154,7 +154,9 @@ export function buildPostureEntryRows(
     const computePreference = readComputePreference(entry.computePreference);
     const postureParts = [
       routingMode ? `${formatRoutingModeLabel(routingMode)} mode` : "inherits the routing mode",
-      scoringStrategy ? formatScoringStrategyLabel(scoringStrategy) : "inherits the scoring strategy",
+      scoringStrategy
+        ? formatScoringStrategyLabel(scoringStrategy)
+        : "inherits the scoring strategy",
       computePreference ? `compute ${computePreference}` : null,
     ].filter((part): part is string => part !== null);
 
@@ -305,9 +307,7 @@ export function validatePostureDraft(draft: PostureDraft): PostureValidationResu
 
   const rawComputePreference = draft.computePreference.trim().toLowerCase();
   const computePreference =
-    rawComputePreference.length === 0
-      ? null
-      : readComputePreference(rawComputePreference);
+    rawComputePreference.length === 0 ? null : readComputePreference(rawComputePreference);
   if (rawComputePreference.length > 0 && computePreference === null) {
     errors.computePreference = `must be one of ${COMPUTE_PREFERENCE_NAMES.join(", ")}`;
   }

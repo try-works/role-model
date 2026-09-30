@@ -37,10 +37,12 @@ describe("agent strategy entries", () => {
 
   test("rejects an invalid or reserved name", () => {
     expect(decodeAgentStrategyEntry("Coder", {}, "role").violations.join(" ")).toMatch(/name/i);
-    expect(decodeAgentStrategyEntry("my_strategy", {}, "role").violations.join(" ")).toMatch(/name/i);
-    expect(decodeAgentStrategyEntry("baseline", { role_id: "coder" }, "role").violations.join(" ")).toMatch(
-      /reserved/i,
+    expect(decodeAgentStrategyEntry("my_strategy", {}, "role").violations.join(" ")).toMatch(
+      /name/i,
     );
+    expect(
+      decodeAgentStrategyEntry("baseline", { role_id: "coder" }, "role").violations.join(" "),
+    ).toMatch(/reserved/i);
   });
 
   test("a role entry needs a role and a workload entry must not carry one", () => {

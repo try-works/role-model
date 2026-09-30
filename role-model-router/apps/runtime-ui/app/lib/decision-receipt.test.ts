@@ -14,7 +14,14 @@ describe("run 103 decision receipts", () => {
         strategy: "quality",
         source: "difficulty",
         weightsDigest: "sha256:abc",
-        weights: { quality: 0.6, latency: 0.1, throughput: 0.05, cost: 0.1, reliability: 0.1, preference: 0.05 },
+        weights: {
+          quality: 0.6,
+          latency: 0.1,
+          throughput: 0.05,
+          cost: 0.1,
+          reliability: 0.1,
+          preference: 0.05,
+        },
         discarded: { source: "controller", strategy: "cost" },
       },
     });
@@ -24,7 +31,8 @@ describe("run 103 decision receipts", () => {
       source: "difficulty",
       sourceLabel: "difficulty classification",
       weightsDigest: "sha256:abc",
-      weightsLabel: "quality 0.6 · latency 0.1 · throughput 0.05 · cost 0.1 · reliability 0.1 · preference 0.05",
+      weightsLabel:
+        "quality 0.6 · latency 0.1 · throughput 0.05 · cost 0.1 · reliability 0.1 · preference 0.05",
       discarded: { source: "controller", strategy: "cost" },
       discardedLabel: "controller wanted Cost",
     });
@@ -39,8 +47,20 @@ describe("run 103 decision receipts", () => {
         chosenEndpointId: "endpoint-b",
         bucketUpperBoundTokens: 50000,
         candidates: [
-          { endpointId: "endpoint-a", p50LatencyMs: 900, p95LatencyMs: 2000, effectiveLatencyMs: 1175, sampleCount: 12 },
-          { endpointId: "endpoint-b", p50LatencyMs: 500, p95LatencyMs: 900, effectiveLatencyMs: 600, sampleCount: 9 },
+          {
+            endpointId: "endpoint-a",
+            p50LatencyMs: 900,
+            p95LatencyMs: 2000,
+            effectiveLatencyMs: 1175,
+            sampleCount: 12,
+          },
+          {
+            endpointId: "endpoint-b",
+            p50LatencyMs: 500,
+            p95LatencyMs: 900,
+            effectiveLatencyMs: 600,
+            sampleCount: 9,
+          },
         ],
         reason: "endpoint-b is 575 ms faster in the 50000-token bucket",
       },
@@ -52,7 +72,14 @@ describe("run 103 decision receipts", () => {
     expect(receipt?.bucketLabel).toBe("≤ 50000 tokens");
     expect(receipt?.reason).toContain("575 ms faster");
     expect(
-      readLatencyReceipt({ latencySelection: { outcome: "disabled", chosenEndpointId: "a", candidates: [], reason: "not authorized" } })?.acted,
+      readLatencyReceipt({
+        latencySelection: {
+          outcome: "disabled",
+          chosenEndpointId: "a",
+          candidates: [],
+          reason: "not authorized",
+        },
+      })?.acted,
     ).toBe(false);
     expect(readLatencyReceipt({})).toBeNull();
   });

@@ -73,9 +73,9 @@ const DEFAULT_BOUNDS = {
 
 const DEFAULT_BUCKET_BOUNDS = "50000,150000";
 
-function asRecord(fields: readonly LatencyPolicyFieldReadback[]): Readonly<
-  Record<string, LatencyPolicyFieldReadback>
-> {
+function asRecord(
+  fields: readonly LatencyPolicyFieldReadback[],
+): Readonly<Record<string, LatencyPolicyFieldReadback>> {
   return Object.fromEntries(fields.map((field) => [field.name, field]));
 }
 
@@ -140,9 +140,14 @@ export function buildLatencyOverrideDraft(
     minSamples: samplesField
       ? readInteger(samplesField.value, readInteger(samplesField.default, DEFAULT_MIN_SAMPLES))
       : DEFAULT_MIN_SAMPLES,
-    maxDeltaMs: deltaField ? readInteger(deltaField.value, readInteger(deltaField.default, 10_000)) : 10_000,
+    maxDeltaMs: deltaField
+      ? readInteger(deltaField.value, readInteger(deltaField.default, 10_000))
+      : 10_000,
     bucketBounds: boundsField
-      ? readBucketBoundsString(boundsField.value, readBucketBoundsString(boundsField.default, DEFAULT_BUCKET_BOUNDS))
+      ? readBucketBoundsString(
+          boundsField.value,
+          readBucketBoundsString(boundsField.default, DEFAULT_BUCKET_BOUNDS),
+        )
       : DEFAULT_BUCKET_BOUNDS,
     maxCandidates: candidatesField
       ? readInteger(candidatesField.value, readInteger(candidatesField.default, 4))
@@ -233,10 +238,7 @@ export function validateLatencyOverrideDraft(
   bounds: LatencyOverrideBounds,
 ): LatencyOverrideValidation {
   const errors: Record<string, string> = {};
-  if (
-    draft.minSamples < bounds.minSamples.min ||
-    draft.minSamples > bounds.minSamples.max
-  ) {
+  if (draft.minSamples < bounds.minSamples.min || draft.minSamples > bounds.minSamples.max) {
     errors.minSamples = `must be between ${bounds.minSamples.min} and ${bounds.minSamples.max}`;
   }
   if (draft.maxDeltaMs < bounds.maxDeltaMs.min || draft.maxDeltaMs > bounds.maxDeltaMs.max) {

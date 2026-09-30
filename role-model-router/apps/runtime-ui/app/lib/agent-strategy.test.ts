@@ -82,9 +82,7 @@ describe("run 103 posture entry view-models", () => {
       skipped: [{ aliasId: "batch.local-only", reason: "ALIAS_POOL_EMPTY" }],
       warnings: ['workload "embedding" requires unknown capability "embeddings.text"'],
     });
-    expect(rows[0].warnings).toContain(
-      'role "ghost" references unknown role_id "ghost"',
-    );
+    expect(rows[0].warnings).toContain('role "ghost" references unknown role_id "ghost"');
   });
 
   test("accepts a role entry only with a role binding, and never writes a legacy synonym", () => {
@@ -113,7 +111,12 @@ describe("run 103 posture entry view-models", () => {
 
     const reserved = validatePostureDraft({ ...draft, name: "baseline", roleId: "coder" });
     expect(reserved.ok).toBe(false);
-    const unknownMode = validatePostureDraft({ ...draft, name: "coder", roleId: "coder", routingMode: "turbo" });
+    const unknownMode = validatePostureDraft({
+      ...draft,
+      name: "coder",
+      roleId: "coder",
+      routingMode: "turbo",
+    });
     expect(unknownMode.ok).toBe(false);
   });
 

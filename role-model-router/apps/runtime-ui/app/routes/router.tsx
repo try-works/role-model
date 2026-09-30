@@ -15,11 +15,8 @@ import {
   supportingTextClassName,
 } from "../lib/design-system";
 import { formatEndpointDisplayPath, formatModelIdentity } from "../lib/effort-identity";
-import {
-  type RoutingPostureReadback,
-  resolveRoutingPostureSummary,
-} from "../lib/routing-mode";
 import { selectOverviewRouterCandidates } from "../lib/router-candidate-labels";
+import { type RoutingPostureReadback, resolveRoutingPostureSummary } from "../lib/routing-mode";
 import {
   type RouterCandidate,
   type RouterSummary,

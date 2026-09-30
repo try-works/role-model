@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 /**
  * Run 103 / SP1 - the single owner of the scoring-strategy vocabulary, the legacy spellings and
  * the preset weights (requirements R1, R2, R9, R10 of
@@ -9,7 +10,6 @@
  * bounds and sum invariant are executable.
  */
 import { STRATEGY_WEIGHTS } from "@role-model-router/core";
-import { createHash } from "node:crypto";
 import { Data, Result, Schema } from "effect";
 
 export const SCORING_STRATEGY_NAMES = ["balanced", "quality", "latency", "cost", "custom"] as const;
@@ -76,9 +76,13 @@ export const SCORING_PRESETS = {
 } as const satisfies Readonly<Record<Exclude<ScoringStrategyName, "custom">, WeightProfile>>;
 
 export type ScoringPlan = Data.TaggedEnum<{
+  // biome-ignore lint/complexity/noBannedTypes: Effect's Data.TaggedEnum variant payload is an empty object
   Balanced: {};
+  // biome-ignore lint/complexity/noBannedTypes: Effect's Data.TaggedEnum variant payload is an empty object
   Quality: {};
+  // biome-ignore lint/complexity/noBannedTypes: Effect's Data.TaggedEnum variant payload is an empty object
   Latency: {};
+  // biome-ignore lint/complexity/noBannedTypes: Effect's Data.TaggedEnum variant payload is an empty object
   Cost: {};
   Custom: { weights: WeightProfile };
 }>;
@@ -175,7 +179,12 @@ export function resolveStrategy(input: StrategyResolutionInput): StrategyResolut
     : null;
 
   if (input.pinWeights) {
-    if (controllerStrategy) {
+    /**
+     * Phase 3.5 review N3: a directive that names the strategy the pin already keeps is a no-op, not a
+     * suppression - the applier (`resolveControllerStrategyApplication`) records nothing for it, so the
+     * receipt must not claim it was discarded.
+     */
+    if (controllerStrategy && controllerStrategy !== operator.strategy) {
       return {
         ...operator,
         discarded: { source: "controller", strategy: controllerStrategy },
@@ -265,7 +274,9 @@ export function decodeRoutingPosture(input: RoutingPostureInput): RoutingPosture
   if (rawStrategy.length > 0) {
     scoringStrategy = normalizeScoringStrategyName(rawStrategy);
     if (!scoringStrategy) {
-      degradations.push(`unknown scoring strategy "${rawStrategy}" ignored; failing closed to the default posture`);
+      degradations.push(
+        `unknown scoring strategy "${rawStrategy}" ignored; failing closed to the default posture`,
+      );
     }
   }
 
@@ -419,9 +430,7 @@ export interface StrategyProvenance {
  * Run 103 / SP3 - the receipt the decision carries: which strategy won, who chose it, which weights
  * were used, and what a pinned posture discarded.
  */
-export function summarizeStrategyProvenance(
-  resolution: StrategyResolution,
-): StrategyProvenance {
+export function summarizeStrategyProvenance(resolution: StrategyResolution): StrategyProvenance {
   return {
     strategy: resolution.strategy,
     source: resolution.source,

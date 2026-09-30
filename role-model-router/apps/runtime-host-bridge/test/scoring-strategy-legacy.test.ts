@@ -19,7 +19,9 @@ describe("legacy routing strategy migration", () => {
   });
 
   test("scoring spellings become the baseline mode plus that strategy", () => {
-    expect(decodeLegacyRoutingStrategy("quality").operator?.weights).toEqual(STRATEGY_WEIGHTS.quality);
+    expect(decodeLegacyRoutingStrategy("quality").operator?.weights).toEqual(
+      STRATEGY_WEIGHTS.quality,
+    );
     expect(decodeLegacyRoutingStrategy("high-quality").operator?.name).toBe("quality");
     expect(decodeLegacyRoutingStrategy("latency-first").operator?.name).toBe("latency");
     expect(decodeLegacyRoutingStrategy("low-cost").operator?.name).toBe("cost");

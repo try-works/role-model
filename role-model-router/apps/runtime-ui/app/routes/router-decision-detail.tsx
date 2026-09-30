@@ -265,7 +265,9 @@ export default function RouterDecisionDetailRoute() {
                 </div>
                 <div>
                   <dt className={fieldLabelClassName}>Prompt-size bucket</dt>
-                  <dd className={`mt-1 ${bodyStrongTextClassName}`}>{latencyReceipt.bucketLabel}</dd>
+                  <dd className={`mt-1 ${bodyStrongTextClassName}`}>
+                    {latencyReceipt.bucketLabel}
+                  </dd>
                 </div>
                 <div>
                   <dt className={fieldLabelClassName}>Candidates compared</dt>

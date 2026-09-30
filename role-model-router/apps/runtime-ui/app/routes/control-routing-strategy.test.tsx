@@ -4,14 +4,11 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { RouterProvider, createMemoryRouter } from "react-router";
 import { describe, expect, test } from "vitest";
 
-import { ShellHeaderProvider } from "../lib/shell-header-context";
 import { PIN_WEIGHTS_HELP_TEXT } from "../lib/routing-mode";
+import { ShellHeaderProvider } from "../lib/shell-header-context";
 import ControlRoutingStrategyRoute from "./control-routing-strategy";
 
-const pageSource = readFileSync(
-  new URL("./control-routing-strategy.tsx", import.meta.url),
-  "utf8",
-);
+const pageSource = readFileSync(new URL("./control-routing-strategy.tsx", import.meta.url), "utf8");
 
 function renderRoute(pathname: string, element: React.ReactElement): string {
   const wrapped = createElement(ShellHeaderProvider, null, element);
@@ -23,9 +20,9 @@ function renderRoute(pathname: string, element: React.ReactElement): string {
 
 describe("run 103 routing strategy page", () => {
   test("renders the loading state before the runtime readback arrives", () => {
-    expect(renderRoute("/app/router/strategy", createElement(ControlRoutingStrategyRoute))).toContain(
-      "Loading routing strategy",
-    );
+    expect(
+      renderRoute("/app/router/strategy", createElement(ControlRoutingStrategyRoute)),
+    ).toContain("Loading routing strategy");
   });
 
   test("reads the posture from the router config readback and writes a canonical patch", () => {

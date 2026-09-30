@@ -227,7 +227,9 @@ export function readAliasPostureReceipt(
     presetRoleId,
     requiredCapabilities,
     capabilityLabel:
-      requiredCapabilities.length === 0 ? "no added capability requirement" : requiredCapabilities.join(", "),
+      requiredCapabilities.length === 0
+        ? "no added capability requirement"
+        : requiredCapabilities.join(", "),
     scoringStrategy,
     scoringStrategyLabel: scoringStrategy
       ? formatScoringStrategyLabel(scoringStrategy)

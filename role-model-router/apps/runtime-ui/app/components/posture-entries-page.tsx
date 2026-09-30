@@ -141,9 +141,7 @@ function EntryRow({ row }: { row: PostureEntryRowView }) {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <p className={`${bodyStrongTextClassName} break-all text-[var(--rm-fg)]`}>{row.name}</p>
-          <p className={supportingTextClassName}>
-            {`${row.bindingLabel} · ${row.postureSummary}`}
-          </p>
+          <p className={supportingTextClassName}>{`${row.bindingLabel} · ${row.postureSummary}`}</p>
           <p className={supportingTextClassName}>
             {`models ${row.modelIds.length > 0 ? row.modelIds.join(", ") : "inherit"} · ${row.capabilityLabel}`}
           </p>
@@ -151,9 +149,7 @@ function EntryRow({ row }: { row: PostureEntryRowView }) {
         <div className="flex flex-wrap items-center gap-2">
           <Badge tone="neutral">{row.kindLabel}</Badge>
           {row.poolEmptyAliasIds.length > 0 ? (
-            <Badge tone="error">
-              {`${row.poolEmptyAliasIds.length} pool empty`}
-            </Badge>
+            <Badge tone="error">{`${row.poolEmptyAliasIds.length} pool empty`}</Badge>
           ) : null}
         </div>
       </div>
@@ -200,8 +196,11 @@ export function PostureEntriesPage({ kind }: { readonly kind: PostureEntryKind }
     () => (kind === "role" ? routerConfig?.agentStrategies : routerConfig?.workloads) ?? null,
     [kind, routerConfig],
   );
-  const diagnostics =
-    routerConfig?.postureDiagnostics ?? { violations: [], skipped: [], warnings: [] };
+  const diagnostics = routerConfig?.postureDiagnostics ?? {
+    violations: [],
+    skipped: [],
+    warnings: [],
+  };
   const diagnosticsSummary = useMemo(() => summarizePostureDiagnostics(diagnostics), [diagnostics]);
   const roleOptions = useMemo(() => readRoleOptions(routerConfig), [routerConfig]);
   const rows = useMemo(
@@ -417,7 +416,9 @@ export function PostureEntriesPage({ kind }: { readonly kind: PostureEntryKind }
                         ))}
                         {form.roleId.length > 0 &&
                         !roleOptions.some((option) => option.id === form.roleId) ? (
-                          <option value={form.roleId}>{`${form.roleId} (not in the readback)`}</option>
+                          <option
+                            value={form.roleId}
+                          >{`${form.roleId} (not in the readback)`}</option>
                         ) : null}
                       </select>
                       {formErrors[index]?.roleId ? (

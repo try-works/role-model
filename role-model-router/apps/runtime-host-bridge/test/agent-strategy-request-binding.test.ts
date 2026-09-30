@@ -1,10 +1,7 @@
 import { describe, expect, test } from "vitest";
 
-import {
-  resolvePostureRequestBinding,
-  type AgentStrategyEntry,
-} from "../src/agent-strategy.js";
-import { overlayPostureOperator, decodeLegacyRoutingStrategy } from "../src/scoring-strategy.js";
+import { type AgentStrategyEntry, resolvePostureRequestBinding } from "../src/agent-strategy.js";
+import { decodeLegacyRoutingStrategy, overlayPostureOperator } from "../src/scoring-strategy.js";
 
 /**
  * Run 103 / SP5g - the request path: a request that names a posture alias inherits the saved
@@ -82,11 +79,7 @@ describe("posture request binding", () => {
       aliasId: "embedding.remote-only",
       requiredCapabilities: ["text.chat", "vision.image"],
     });
-    expect(binding.requiredCapabilities).toEqual([
-      "text.chat",
-      "vision.image",
-      "embeddings.text",
-    ]);
+    expect(binding.requiredCapabilities).toEqual(["text.chat", "vision.image", "embeddings.text"]);
   });
 
   test("compute preference maps to the request's local preference", () => {

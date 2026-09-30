@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import { STRATEGY_WEIGHTS } from "@role-model-router/core";
 
-import { resolveStrategy, type StrategyResolutionInput } from "../src/scoring-strategy.js";
+import { type StrategyResolutionInput, resolveStrategy } from "../src/scoring-strategy.js";
 
 /**
  * Run 103 / SP2 - the resolution ladder (design document section 5, requirements R2 and R4):
@@ -60,6 +60,21 @@ describe("scoring strategy resolution", () => {
     expect(resolution.strategy).toBe("latency");
     expect(resolution.source).toBe("operator");
     expect(resolution.discarded).toEqual({ source: "controller", strategy: "quality" });
+  });
+
+  /**
+   * Run 103 follow-up review N3: a directive that names the strategy the pin already keeps is a no-op,
+   * not a suppression - the applier records nothing for it, so the receipt must not either.
+   */
+  test("a pinned posture whose controller directive matches the operator strategy records nothing", () => {
+    const resolution = resolve({
+      pinWeights: true,
+      controllerActive: true,
+      controllerStrategy: "latency",
+    });
+    expect(resolution.strategy).toBe("latency");
+    expect(resolution.source).toBe("operator");
+    expect(resolution.discarded).toBeUndefined();
   });
 
   test("an easy request resolves to cost while difficulty routing is active", () => {

@@ -48,7 +48,16 @@ describe("shipped workload examples", () => {
 
   test("is documented in the operations guide", () => {
     const guide = readFileSync(
-      path.join(__dirname, "..", "..", "..", "..", "docs", "operations", "05-agent-strategy-and-workload-postures.md"),
+      path.join(
+        __dirname,
+        "..",
+        "..",
+        "..",
+        "..",
+        "docs",
+        "operations",
+        "05-agent-strategy-and-workload-postures.md",
+      ),
       "utf8",
     );
     expect(guide).toContain("agent_strategies:");
@@ -106,8 +115,11 @@ describe("shipped workload examples", () => {
       aliasId: "embedding.remote-only",
     });
     expect(entry).not.toBeNull();
+    if (!entry) {
+      throw new Error("the shipped embedding alias should resolve back to its entry");
+    }
     const binding = resolvePostureRequestBinding({
-      entry: entry!,
+      entry,
       aliasId: "embedding.remote-only",
       requiredCapabilities: ["text.chat"],
     });

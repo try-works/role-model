@@ -4,8 +4,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { RouterProvider, createMemoryRouter } from "react-router";
 import { describe, expect, test } from "vitest";
 
-import { ShellHeaderProvider } from "../lib/shell-header-context";
 import { POSTURE_KIND_LABELS } from "../lib/agent-strategy";
+import { ShellHeaderProvider } from "../lib/shell-header-context";
 import AgentStrategyRoute from "./agent-strategy";
 import WorkloadsRoute from "./workloads";
 

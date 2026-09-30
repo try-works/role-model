@@ -8,13 +8,78 @@ import {
 } from "./latency-override";
 
 const FIELDS = [
-  { name: "latencySelectionEnabled", type: "boolean", default: false, value: false, uiEditable: true, unit: "flag", description: "" },
-  { name: "latencySelectionMinStage", type: "enum", values: ["S0", "S1", "S2", "S3", "S4"], default: "S2", value: "S2", uiEditable: true, unit: "stage", description: "" },
-  { name: "latencySelectionWindowHours", type: "integer", default: 24, value: 24, min: 1, max: 168, uiEditable: true, unit: "hours", description: "" },
-  { name: "latencySelectionMinSamples", type: "integer", default: 5, value: 5, min: 5, max: 30, uiEditable: true, unit: "samples", description: "" },
-  { name: "latencySelectionMaxDeltaMs", type: "integer", default: 10000, value: 2000, min: 0, max: 60000, uiEditable: true, unit: "ms", description: "" },
-  { name: "latencySelectionBucketBounds", type: "string", default: "50000,150000", value: "50000,150000", uiEditable: true, unit: "tokens", description: "" },
-  { name: "latencySelectionMaxCandidates", type: "integer", default: 4, value: 4, min: 1, max: 32, uiEditable: true, unit: "candidates", description: "" },
+  {
+    name: "latencySelectionEnabled",
+    type: "boolean",
+    default: false,
+    value: false,
+    uiEditable: true,
+    unit: "flag",
+    description: "",
+  },
+  {
+    name: "latencySelectionMinStage",
+    type: "enum",
+    values: ["S0", "S1", "S2", "S3", "S4"],
+    default: "S2",
+    value: "S2",
+    uiEditable: true,
+    unit: "stage",
+    description: "",
+  },
+  {
+    name: "latencySelectionWindowHours",
+    type: "integer",
+    default: 24,
+    value: 24,
+    min: 1,
+    max: 168,
+    uiEditable: true,
+    unit: "hours",
+    description: "",
+  },
+  {
+    name: "latencySelectionMinSamples",
+    type: "integer",
+    default: 5,
+    value: 5,
+    min: 5,
+    max: 30,
+    uiEditable: true,
+    unit: "samples",
+    description: "",
+  },
+  {
+    name: "latencySelectionMaxDeltaMs",
+    type: "integer",
+    default: 10000,
+    value: 2000,
+    min: 0,
+    max: 60000,
+    uiEditable: true,
+    unit: "ms",
+    description: "",
+  },
+  {
+    name: "latencySelectionBucketBounds",
+    type: "string",
+    default: "50000,150000",
+    value: "50000,150000",
+    uiEditable: true,
+    unit: "tokens",
+    description: "",
+  },
+  {
+    name: "latencySelectionMaxCandidates",
+    type: "integer",
+    default: 4,
+    value: 4,
+    min: 1,
+    max: 32,
+    uiEditable: true,
+    unit: "candidates",
+    description: "",
+  },
 ] as const;
 
 describe("run 103 measured-latency override card", () => {
@@ -42,7 +107,9 @@ describe("run 103 measured-latency override card", () => {
   });
 
   test("names the fields a runtime build does not publish instead of inventing defaults", () => {
-    const view = buildLatencyOverrideDraft(FIELDS.filter((field) => field.name !== "latencySelectionEnabled"));
+    const view = buildLatencyOverrideDraft(
+      FIELDS.filter((field) => field.name !== "latencySelectionEnabled"),
+    );
     expect(view.missingFields).toEqual(["latencySelectionEnabled"]);
     expect(view.draft.enabled).toBeNull();
   });
@@ -71,8 +138,20 @@ describe("run 103 measured-latency override card", () => {
   test("counts the latency evidence behind the current setting from the telemetry window", () => {
     const nowMs = 1_000_000_000;
     const rows = [
-      { endpointId: "a", modelId: "m1", createdAtMs: nowMs - 60_000, latencyMs: 120, requestLatencyMs: 140 },
-      { endpointId: "a", modelId: "m1", createdAtMs: nowMs - 120_000, latencyMs: 100, requestLatencyMs: null },
+      {
+        endpointId: "a",
+        modelId: "m1",
+        createdAtMs: nowMs - 60_000,
+        latencyMs: 120,
+        requestLatencyMs: 140,
+      },
+      {
+        endpointId: "a",
+        modelId: "m1",
+        createdAtMs: nowMs - 120_000,
+        latencyMs: 100,
+        requestLatencyMs: null,
+      },
       { endpointId: "b", modelId: "m2", createdAtMs: nowMs - 3 * 60 * 60 * 1000, latencyMs: 90 },
       { endpointId: "c", modelId: "m3", createdAtMs: nowMs - 60_000, latencyMs: null },
     ];

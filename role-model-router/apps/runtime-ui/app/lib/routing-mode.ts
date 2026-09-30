@@ -318,8 +318,7 @@ export function formatCanonicalRoutingAlias(
 ): string {
   const normalized = normalizeRoutingModeValue(mode);
   const family = normalized
-    ? (ROUTING_MODE_OPTIONS.find((option) => option.value === normalized)?.aliasFamily ??
-      "default")
+    ? (ROUTING_MODE_OPTIONS.find((option) => option.value === normalized)?.aliasFamily ?? "default")
     : "default";
   return `${family}.${formatExecutionScopeSegment(executionScope)}`;
 }
@@ -433,11 +432,8 @@ export function resolveRoutingPostureSummary(input: {
     routing?.legacyStrategy ?? (routing === null ? (input.persisted?.strategy ?? null) : null);
   const legacySpelling = legacyStrategy?.trim().toLowerCase() ?? "";
   const legacyIsNoPosture = legacySpelling.length === 0 || legacySpelling === "craft-ask";
-  const legacyMode = legacyIsNoPosture
-    ? null
-    : (normalizeRoutingModeValue(legacySpelling) ?? null);
-  const mode =
-    normalizeRoutingModeValue(routing?.mode) ?? legacyMode ?? "baseline";
+  const legacyMode = legacyIsNoPosture ? null : (normalizeRoutingModeValue(legacySpelling) ?? null);
+  const mode = normalizeRoutingModeValue(routing?.mode) ?? legacyMode ?? "baseline";
   const scoringStrategy =
     normalizeScoringStrategyValue(routing?.scoringStrategy) ??
     (legacyMode === null && !legacyIsNoPosture
@@ -460,9 +456,7 @@ export function resolveRoutingPostureSummary(input: {
     modeLabel: formatRoutingModeLabel(mode),
     scoringStrategy,
     scoringStrategyLabel:
-      scoringStrategy === null
-        ? "default (balanced)"
-        : formatScoringStrategyLabel(scoringStrategy),
+      scoringStrategy === null ? "default (balanced)" : formatScoringStrategyLabel(scoringStrategy),
     pinWeights: routing?.pinWeights === true,
     weights,
     source,
@@ -528,7 +522,8 @@ export function canonicalizeRoutingDocument<TDocument extends Record<string, unk
       migrated.push(`${key}: ${raw} -> (removed; it means "no posture")`);
       continue;
     }
-    const canonical = normalizeRoutingModeValue(normalized) ?? normalizeScoringStrategyValue(normalized);
+    const canonical =
+      normalizeRoutingModeValue(normalized) ?? normalizeScoringStrategyValue(normalized);
     if (canonical !== null && canonical !== normalized) {
       next[key] = canonical;
       migrated.push(`${key}: ${raw} -> ${canonical}`);

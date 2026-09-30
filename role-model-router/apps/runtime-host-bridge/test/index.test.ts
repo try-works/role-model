@@ -4976,8 +4976,7 @@ describe("runtime-host-bridge", () => {
           reliability: 0.15,
           preference: 0.05,
         },
-        weightsDigest:
-          "sha256:8c49b853bebd72f4596c926b2fc2181c67f8e2580c387d7ac8fb86457e7db9e9",
+        weightsDigest: "sha256:8c49b853bebd72f4596c926b2fc2181c67f8e2580c387d7ac8fb86457e7db9e9",
       },
     });
   });
@@ -5324,8 +5323,7 @@ describe("runtime-host-bridge", () => {
           reliability: 0.15,
           preference: 0.05,
         },
-        weightsDigest:
-          "sha256:8c49b853bebd72f4596c926b2fc2181c67f8e2580c387d7ac8fb86457e7db9e9",
+        weightsDigest: "sha256:8c49b853bebd72f4596c926b2fc2181c67f8e2580c387d7ac8fb86457e7db9e9",
       },
     });
   });
@@ -6246,8 +6244,7 @@ describe("runtime-host-bridge", () => {
           reliability: 0.15,
           preference: 0.05,
         },
-        weightsDigest:
-          "sha256:8c49b853bebd72f4596c926b2fc2181c67f8e2580c387d7ac8fb86457e7db9e9",
+        weightsDigest: "sha256:8c49b853bebd72f4596c926b2fc2181c67f8e2580c387d7ac8fb86457e7db9e9",
       },
     });
   });
@@ -6427,8 +6424,7 @@ describe("runtime-host-bridge", () => {
           reliability: 0.15,
           preference: 0.05,
         },
-        weightsDigest:
-          "sha256:8c49b853bebd72f4596c926b2fc2181c67f8e2580c387d7ac8fb86457e7db9e9",
+        weightsDigest: "sha256:8c49b853bebd72f4596c926b2fc2181c67f8e2580c387d7ac8fb86457e7db9e9",
       },
     });
   });

@@ -1,5 +1,6 @@
 import { parse, stringify } from "yaml";
 
+import { Result, Schema } from "effect";
 import {
   AGENT_STRATEGY_NAME_PATTERN,
   type AgentStrategyEntry,
@@ -16,7 +17,6 @@ import {
   normalizeRoutingModeName,
   normalizeScoringStrategyName,
 } from "./scoring-strategy.js";
-import { Result, Schema } from "effect";
 
 export type UnifiedRuntimeExecutionMode = "decision_only" | "hybrid" | "local_only" | "remote_only";
 
@@ -1602,6 +1602,18 @@ function hasStructuredRoutingKeys(routing: Record<string, unknown>): boolean {
 }
 
 /**
+ * Only the two-axis keys select a vocabulary. `pin_weights` and `weights` are shared by both
+ * spellings, so naming one of them must not drop an inherited legacy string (Phase 3.5 review N2).
+ */
+function selectsStructuredVocabular(routing: Record<string, unknown>): boolean {
+  return (
+    routing.mode !== undefined ||
+    routing.scoring_strategy !== undefined ||
+    routing.scoringStrategy !== undefined
+  );
+}
+
+/**
  * Run 103 / SP5e - the structured routing block of design document section 4. Unknown enum values
  * and a `custom` strategy without a valid weight profile are write errors, so the file can never
  * hold a posture that the ladder would silently degrade.
@@ -1620,6 +1632,37 @@ function decodeStructuredRoutingBlock(
   }
 
   /**
+   * Phase 3.5 review N2: a block that names the legacy `strategy` and no mode/scoring key is a legacy
+   * posture with shared flags layered on top - `pin_weights` and `weights` alone must not switch the
+   * vocabulary and silently reset the operator's posture to `baseline`.
+   */
+  const rawLegacyStrategy = readNonEmptyString(routing.strategy);
+  if (rawLegacyStrategy !== null && !selectsStructuredVocabular(routing)) {
+    const pinValue = routing.pin_weights ?? routing.pinWeights;
+    let pin = false;
+    if (pinValue !== undefined && typeof pinValue !== "boolean") {
+      if (strict) {
+        throw new Error(
+          `${path}.pin_weights must be a boolean; saw ${JSON.stringify(pinValue)}.`,
+        );
+      }
+      pin = false;
+    } else if (pinValue !== undefined) {
+      pin = pinValue === true;
+    }
+    const legacy = decodeRoutingPosture({
+      mode: decodeLegacyRoutingStrategy(rawLegacyStrategy).mode,
+      scoringStrategy: decodeLegacyRoutingStrategy(rawLegacyStrategy).scoringStrategy,
+      pinWeights: pin,
+      weights: routing.weights ?? null,
+    });
+    return {
+      posture: legacy,
+      aliasFamily: ROUTING_MODE_ALIAS_FAMILY[legacy.mode],
+    };
+  }
+
+  /**
    * R1: an unknown spelling is rejected on write and degraded on read with a recorded reason, so a
    * hand-edited file still loads while an operator typo can never be persisted.
    */
@@ -1634,9 +1677,7 @@ function decodeStructuredRoutingBlock(
           `${path}.mode must be baseline, difficulty, hybrid, or intelligent (controller); saw "${rawMode}".`,
         );
       }
-      degradations.push(
-        `${path}.mode "${rawMode}" is not a known mode and was read as baseline`,
-      );
+      degradations.push(`${path}.mode "${rawMode}" is not a known mode and was read as baseline`);
     } else {
       mode = normalizedMode;
     }
@@ -1664,9 +1705,7 @@ function decodeStructuredRoutingBlock(
   let pin = pinWeights === true;
   if (pinWeights !== undefined && typeof pinWeights !== "boolean") {
     if (strict) {
-      throw new Error(
-        `${path}.pin_weights must be a boolean; saw ${JSON.stringify(pinWeights)}.`,
-      );
+      throw new Error(`${path}.pin_weights must be a boolean; saw ${JSON.stringify(pinWeights)}.`);
     }
     pin = false;
     degradations.push(`${path}.pin_weights is not a boolean and was read as false`);
@@ -1719,16 +1758,16 @@ function decodeStructuredRoutingBlock(
   };
 }
 
-function renderStructuredRoutingBlock(config: UnifiedRuntimeConfig): Record<string, unknown> | null {
+function renderStructuredRoutingBlock(
+  config: UnifiedRuntimeConfig,
+): Record<string, unknown> | null {
   /**
    * R1: a legacy `routing.strategy` is read through the migration table and the next write emits the
    * canonical pair, so the file never keeps a synonym after a write.
    */
   const posture =
     config.routingPosture ??
-    (config.routingStrategy === null
-      ? null
-      : decodeLegacyRoutingStrategy(config.routingStrategy));
+    (config.routingStrategy === null ? null : decodeLegacyRoutingStrategy(config.routingStrategy));
   if (!posture) {
     return null;
   }
@@ -2424,10 +2463,10 @@ export function mergeUnifiedRuntimeConfigDocuments(
      * win over the operator's write.
      */
     if (Object.prototype.hasOwnProperty.call(normalizedPatch.routing, "strategy")) {
-      for (const key of ["mode", "scoring_strategy", "scoringStrategy", "pin_weights", "pinWeights", "weights"]) {
+      for (const key of ["mode", "scoring_strategy", "scoringStrategy"]) {
         delete mergedRouting[key];
       }
-    } else if (hasStructuredRoutingKeys(normalizedPatch.routing as Record<string, unknown>)) {
+    } else if (selectsStructuredVocabular(normalizedPatch.routing as Record<string, unknown>)) {
       delete mergedRouting.strategy;
     }
     mergedDocument.routing = mergedRouting;

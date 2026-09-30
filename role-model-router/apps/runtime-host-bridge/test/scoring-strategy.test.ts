@@ -28,7 +28,13 @@ describe("scoring strategy vocabulary", () => {
   } as const;
 
   test("exposes exactly the canonical names", () => {
-    expect([...SCORING_STRATEGY_NAMES]).toEqual(["balanced", "quality", "latency", "cost", "custom"]);
+    expect([...SCORING_STRATEGY_NAMES]).toEqual([
+      "balanced",
+      "quality",
+      "latency",
+      "cost",
+      "custom",
+    ]);
     expect([...WEIGHT_METRICS]).toEqual([
       "quality",
       "latency",
@@ -91,9 +97,12 @@ describe("scoring strategy vocabulary", () => {
         name === "custom"
           ? resolveScoringWeights({ _tag: "Custom", weights: validWeights })
           : resolveScoringWeights(
-              { balanced: { _tag: "Balanced" }, quality: { _tag: "Quality" }, latency: { _tag: "Latency" }, cost: { _tag: "Cost" } }[
-                name as "balanced" | "quality" | "latency" | "cost"
-              ],
+              {
+                balanced: { _tag: "Balanced" },
+                quality: { _tag: "Quality" },
+                latency: { _tag: "Latency" },
+                cost: { _tag: "Cost" },
+              }[name as "balanced" | "quality" | "latency" | "cost"],
             );
       for (const metric of WEIGHT_METRICS) {
         expect(typeof weights[metric], `${name}.${metric}`).toBe("number");

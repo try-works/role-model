@@ -240,7 +240,9 @@ describe("unified runtime config routing and posture blocks", () => {
   });
 
   test("reads a legacy strategy string and migrates it on the next write", () => {
-    const config = parseUnifiedRuntimeConfigText("version: 1.0\nrouting:\n  strategy: latency-first\n");
+    const config = parseUnifiedRuntimeConfigText(
+      "version: 1.0\nrouting:\n  strategy: latency-first\n",
+    );
     expect(config.routingPosture).toBeUndefined();
     expect(config.routingStrategy).toBe("latency-first");
     const rendered = renderUnifiedRuntimeConfigText(config);
@@ -263,19 +265,13 @@ describe("unified runtime config routing and posture blocks", () => {
 
   test("rejects an unknown mode on the write path", () => {
     expect(() =>
-      mergeUnifiedRuntimeConfigDocuments(
-        { version: "1.0" },
-        { routing: { mode: "turbo" } },
-      ),
+      mergeUnifiedRuntimeConfigDocuments({ version: "1.0" }, { routing: { mode: "turbo" } }),
     ).toThrow(/routing\.mode must be baseline, difficulty, hybrid, or intelligent/);
   });
 
   test("rejects a legacy routing string that names nothing on the write path", () => {
     expect(() =>
-      mergeUnifiedRuntimeConfigDocuments(
-        { version: "1.0" },
-        { routing: { strategy: "turbo" } },
-      ),
+      mergeUnifiedRuntimeConfigDocuments({ version: "1.0" }, { routing: { strategy: "turbo" } }),
     ).toThrow(/routing\.strategy "turbo" is not a known mode or scoring strategy/);
     expect(() =>
       mergeUnifiedRuntimeConfigDocuments(
@@ -378,6 +374,19 @@ describe("unified runtime config routing and posture blocks", () => {
       scoringStrategy: "quality",
       pinWeights: true,
     });
+  });
+
+  /**
+   * Run 103 follow-up review N2: `pin_weights` and `weights` are shared by both vocabularies, so a
+   * patch that names only one of them must not switch vocabulary and drop the inherited legacy string.
+   */
+  test("a shared-flag-only patch keeps the inherited legacy posture", () => {
+    const merged = mergeUnifiedRuntimeConfigDocuments(
+      { version: "1.0", routing: { strategy: "hybrid" } },
+      { routing: { pin_weights: true } },
+    );
+    expect(merged.routingPosture).toMatchObject({ mode: "hybrid", pinWeights: true });
+    expect(merged.routingStrategy).toBe("hybrid");
   });
 });
 

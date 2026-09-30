@@ -10,9 +10,21 @@ import { selectEndpointByMeasuredLatency } from "../src/routing-latency-selectio
 describe("measured-latency selection uses the effective metric", () => {
   const buckets = [
     // A (the router's choice) has a median of 100 ms but an extreme tail.
-    { endpointId: "endpoint-a", bucketUpperBoundTokens: 50_000, sampleCount: 40, p50LatencyMs: 100, p95LatencyMs: 20_000 },
+    {
+      endpointId: "endpoint-a",
+      bucketUpperBoundTokens: 50_000,
+      sampleCount: 40,
+      p50LatencyMs: 100,
+      p95LatencyMs: 20_000,
+    },
     // B has a much better tail but a far worse median.
-    { endpointId: "endpoint-b", bucketUpperBoundTokens: 50_000, sampleCount: 40, p50LatencyMs: 5_000, p95LatencyMs: 6_000 },
+    {
+      endpointId: "endpoint-b",
+      bucketUpperBoundTokens: 50_000,
+      sampleCount: 40,
+      p50LatencyMs: 5_000,
+      p95LatencyMs: 6_000,
+    },
   ] as const;
 
   const base = {
@@ -36,8 +48,20 @@ describe("measured-latency selection uses the effective metric", () => {
     const selection = selectEndpointByMeasuredLatency({
       ...base,
       buckets: [
-        { endpointId: "endpoint-a", bucketUpperBoundTokens: 50_000, sampleCount: 40, p50LatencyMs: 5_000, p95LatencyMs: 5_500 },
-        { endpointId: "endpoint-b", bucketUpperBoundTokens: 50_000, sampleCount: 40, p50LatencyMs: 1_000, p95LatencyMs: 1_200 },
+        {
+          endpointId: "endpoint-a",
+          bucketUpperBoundTokens: 50_000,
+          sampleCount: 40,
+          p50LatencyMs: 5_000,
+          p95LatencyMs: 5_500,
+        },
+        {
+          endpointId: "endpoint-b",
+          bucketUpperBoundTokens: 50_000,
+          sampleCount: 40,
+          p50LatencyMs: 1_000,
+          p95LatencyMs: 1_200,
+        },
       ],
       maxDeltaMs: 2_000,
     });
@@ -50,8 +74,20 @@ describe("measured-latency selection uses the effective metric", () => {
     const selection = selectEndpointByMeasuredLatency({
       ...base,
       buckets: [
-        { endpointId: "endpoint-a", bucketUpperBoundTokens: 50_000, sampleCount: 40, p50LatencyMs: 12_000, p95LatencyMs: 12_500 },
-        { endpointId: "endpoint-b", bucketUpperBoundTokens: 50_000, sampleCount: 40, p50LatencyMs: 1_000, p95LatencyMs: 1_200 },
+        {
+          endpointId: "endpoint-a",
+          bucketUpperBoundTokens: 50_000,
+          sampleCount: 40,
+          p50LatencyMs: 12_000,
+          p95LatencyMs: 12_500,
+        },
+        {
+          endpointId: "endpoint-b",
+          bucketUpperBoundTokens: 50_000,
+          sampleCount: 40,
+          p50LatencyMs: 1_000,
+          p95LatencyMs: 1_200,
+        },
       ],
       maxDeltaMs: 10_000,
     });

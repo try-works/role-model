@@ -55,7 +55,15 @@ export interface AgentStrategyEntry {
 
 function readStringList(value: unknown): readonly string[] {
   return Array.isArray(value)
-    ? [...new Set(value.filter((entry): entry is string => typeof entry === "string" && entry.trim().length > 0).map((entry) => entry.trim()))]
+    ? [
+        ...new Set(
+          value
+            .filter(
+              (entry): entry is string => typeof entry === "string" && entry.trim().length > 0,
+            )
+            .map((entry) => entry.trim()),
+        ),
+      ]
     : [];
 }
 
@@ -168,9 +176,7 @@ export function validateAgentStrategyBindings(input: {
   const warnings: string[] = [];
   for (const entry of input.entries) {
     if (entry.roleId && input.knownRoleIds && !input.knownRoleIds.includes(entry.roleId)) {
-      violations.push(
-        `${entry.kind} "${entry.name}" has unknown role_id "${entry.roleId}"`,
-      );
+      violations.push(`${entry.kind} "${entry.name}" has unknown role_id "${entry.roleId}"`);
     }
     if (input.knownCapabilities) {
       for (const capability of entry.requiredCapabilities) {
@@ -247,10 +253,7 @@ export function resolvePostureRequestBinding(input: {
     roleId: role.roleId,
     roleSource: role.source,
     requiredCapabilities: [
-      ...new Set([
-        ...(input.requiredCapabilities ?? []),
-        ...input.entry.requiredCapabilities,
-      ]),
+      ...new Set([...(input.requiredCapabilities ?? []), ...input.entry.requiredCapabilities]),
     ],
     preferLocal:
       input.entry.computePreference === "local" || input.entry.computePreference === "hybrid",
@@ -399,9 +402,7 @@ export interface AgentStrategySection {
  * collision) suppresses materialisation entirely rather than letting one entry shadow another; a
  * single malformed entry is reported and skipped while its valid siblings still materialise.
  */
-export function decodeAgentStrategySection(
-  input: AgentStrategySectionInput,
-): AgentStrategySection {
+export function decodeAgentStrategySection(input: AgentStrategySectionInput): AgentStrategySection {
   const entries = [
     ...decodeAgentStrategyBlock(input.agentStrategies, "role"),
     ...decodeAgentStrategyBlock(input.workloads, "workload"),
@@ -519,13 +520,14 @@ export function derivePostureAliasInventory(input: {
  * only, `embedding` pins `embeddings.text`. They are the single source the operations guide and the
  * Workloads page quote (requirement R6).
  */
-export const SHIPPED_WORKLOAD_EXAMPLES: Readonly<Record<string, Readonly<Record<string, unknown>>>> =
-  {
-    batch: {
-      scoring_strategy: "cost",
-    },
-    embedding: {
-      scoring_strategy: "cost",
-      required_capabilities: ["embeddings.text"],
-    },
-  };
+export const SHIPPED_WORKLOAD_EXAMPLES: Readonly<
+  Record<string, Readonly<Record<string, unknown>>>
+> = {
+  batch: {
+    scoring_strategy: "cost",
+  },
+  embedding: {
+    scoring_strategy: "cost",
+    required_capabilities: ["embeddings.text"],
+  },
+};

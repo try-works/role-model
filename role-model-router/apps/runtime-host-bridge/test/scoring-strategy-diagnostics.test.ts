@@ -18,7 +18,10 @@ describe("strategy diagnostics receipt", () => {
 
   test("adds the receipt and preserves the existing diagnostics fields", () => {
     const diagnostics = withStrategyProvenance(
-      { aliasResolution: { aliasId: "quality.remote-only" }, routingMode: { source: "alias-default" } },
+      {
+        aliasResolution: { aliasId: "quality.remote-only" },
+        routingMode: { source: "alias-default" },
+      },
       resolution,
     );
     expect(diagnostics.aliasResolution).toEqual({ aliasId: "quality.remote-only" });

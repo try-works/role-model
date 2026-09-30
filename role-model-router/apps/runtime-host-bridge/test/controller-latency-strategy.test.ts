@@ -22,10 +22,7 @@ describe("controller latency strategy", () => {
 
   test("still accepts the three existing strategies", () => {
     for (const strategy of ["balanced", "cost", "quality"] as const) {
-      const guidance = parseAndSanitizeControllerRoutingGuidance(
-        JSON.stringify({ strategy }),
-        {},
-      );
+      const guidance = parseAndSanitizeControllerRoutingGuidance(JSON.stringify({ strategy }), {});
       expect(guidance?.strategy, strategy).toBe(strategy);
     }
   });

@@ -7,15 +7,16 @@ import { describe, expect, test } from "vitest";
 import { ShellHeaderProvider } from "../lib/shell-header-context";
 import RouterDecisionDetailRoute from "./router-decision-detail";
 
-const detailSource = readFileSync(
-  new URL("./router-decision-detail.tsx", import.meta.url),
-  "utf8",
-);
+const detailSource = readFileSync(new URL("./router-decision-detail.tsx", import.meta.url), "utf8");
 const listSource = readFileSync(new URL("./router-decisions.tsx", import.meta.url), "utf8");
 
 describe("run 103 decision surfaces", () => {
   test("renders the decision detail shell", () => {
-    const wrapped = createElement(ShellHeaderProvider, null, createElement(RouterDecisionDetailRoute));
+    const wrapped = createElement(
+      ShellHeaderProvider,
+      null,
+      createElement(RouterDecisionDetailRoute),
+    );
     const router = createMemoryRouter(
       [{ path: "/app/router/decisions/:requestId", element: wrapped }],
       { initialEntries: ["/app/router/decisions/req-1"] },

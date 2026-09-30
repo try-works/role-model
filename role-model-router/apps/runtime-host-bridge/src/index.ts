@@ -301,11 +301,11 @@ import {
   type ScoringStrategyName,
   type WeightProfile,
   decodeLegacyRoutingStrategy,
-  overlayPostureOperator,
-  resolveRequestStrategy,
   normalizeRoutingModeName,
-  resolveControllerStrategyApplication,
   normalizeScoringStrategyName,
+  overlayPostureOperator,
+  resolveControllerStrategyApplication,
+  resolveRequestStrategy,
   toCoreRoutingStrategyName,
   withStrategyProvenance,
 } from "./scoring-strategy.js";
@@ -325,6 +325,17 @@ import {
   loadLiteLLMModelPrices,
   readNormalizedCatalogFile,
 } from "@role-model-router/catalog";
+import {
+  type AgentStrategyEntry,
+  type AliasInventoryRow,
+  type PostureRequestBinding,
+  SHIPPED_WORKLOAD_EXAMPLES,
+  derivePostureAliasInventory,
+  findAgentStrategyAlias,
+  resolvePostureRequestBinding,
+  validateAgentStrategyBindings,
+  withAliasPostureBinding,
+} from "./agent-strategy.js";
 import { resolveValidationProviderMetadata } from "./provider-metadata-merge.js";
 import { resolveLlamaSwapCommand } from "./runtime-assets.js";
 import {
@@ -349,17 +360,6 @@ import {
   resolveUnifiedRuntimeObservedDataConfig,
   rewriteUnifiedRuntimeConfigController,
 } from "./unified-runtime-config.js";
-import {
-  type AliasInventoryRow,
-  type AgentStrategyEntry,
-  derivePostureAliasInventory,
-  findAgentStrategyAlias,
-  type PostureRequestBinding,
-  resolvePostureRequestBinding,
-  SHIPPED_WORKLOAD_EXAMPLES,
-  validateAgentStrategyBindings,
-  withAliasPostureBinding,
-} from "./agent-strategy.js";
 
 const REASONING_EFFORT_SERIALIZER_VERSION_BY_ADAPTER = new Map<string, string>([
   ["ai-sdk-openai-compatible", "run91.openai-compatible.reasoning-effort.v1"],
@@ -1125,6 +1125,8 @@ export interface BridgeExecutionPlan {
     | "routingMode"
     | "rolePolicy"
     | "capabilityEligibility"
+    | "strategyResolution"
+    | "aliasPostureBinding"
   >;
   /**
    * Run 98 addendum 58 slice 2: the taxonomy identity the request was routed under — the declaration when it
@@ -2278,6 +2280,8 @@ function maybeApplyControllerRouting(input: {
     | "difficultyRouting"
     | "controllerRouting"
     | "hybridArbitration"
+    | "strategyResolution"
+    | "aliasPostureBinding"
   >;
 } {
   if (!shouldApplyControllerRouting(input.effectiveRoutingMode)) {
@@ -9785,9 +9789,7 @@ function toAliasRoutingMode(
 }
 
 /** The stored alias vocabulary spells `baseline` as `basic` (design document section 3). */
-function toUnifiedAliasRoutingMode(
-  mode: string,
-): UnifiedRuntimeModelAliasConfig["mode"] {
+function toUnifiedAliasRoutingMode(mode: string): UnifiedRuntimeModelAliasConfig["mode"] {
   switch (mode) {
     case "difficulty":
       return "difficulty";
@@ -21347,7 +21349,9 @@ export async function createRuntimeBridgeBackend(
       entries: postureEntries,
       executionModes: CANONICAL_ROUTING_ALIAS_EXECUTION_MODES,
       runtimeMode:
-        config.routingPosture?.mode ?? normalizeRoutingModeName(config.routingStrategy) ?? "baseline",
+        config.routingPosture?.mode ??
+        normalizeRoutingModeName(config.routingStrategy) ??
+        "baseline",
       modelIdsByExecutionMode,
     });
     /** R5/R6: the runtime-side binding rules - an unknown `role_id` is a write error (SP5e). */
@@ -25488,10 +25492,7 @@ export async function createRuntimeBridgeBackend(
       "role",
       currentUnifiedRuntimeConfig?.agentStrategies ?? [],
     ),
-    workloads: readPostureEntrySummaries(
-      "workload",
-      currentUnifiedRuntimeConfig?.workloads ?? [],
-    ),
+    workloads: readPostureEntrySummaries("workload", currentUnifiedRuntimeConfig?.workloads ?? []),
     workloadExamples: SHIPPED_WORKLOAD_EXAMPLES,
     postureDiagnostics: {
       violations: [...currentPostureAliasDiagnostics.violations],
@@ -25831,9 +25832,7 @@ export async function createRuntimeBridgeBackend(
       effortSource: record.effortSource ?? null,
       membershipRevision: asStringValue(decision?.membership_revision) ?? null,
       profileRevision: asStringValue(decision?.profile_revision) ?? null,
-      strategyLabel:
-        asStringValue(routingMode?.effectiveMode) ??
-        null,
+      strategyLabel: asStringValue(routingMode?.effectiveMode) ?? null,
       decidedAtMs: record.createdAtMs,
       sourceType: record.sourceType,
       providerId: record.providerId ?? null,
@@ -25944,9 +25943,7 @@ export async function createRuntimeBridgeBackend(
       fallbackEndpointIds: Array.isArray(decision?.fallback_endpoint_ids)
         ? decision.fallback_endpoint_ids
         : [],
-      strategyLabel:
-        asStringValue(routingMode?.effectiveMode) ??
-        null,
+      strategyLabel: asStringValue(routingMode?.effectiveMode) ?? null,
       decision,
       benchmarkEvidence: projectBenchmarkDecisionEvidence(decision, observation.endpointId),
       telemetryEvidence: projectTelemetryDecisionEvidence(decision, observation.endpointId, {
@@ -28266,6 +28263,18 @@ export async function createRuntimeBridgeBackend(
                 ...(plan.routingDiagnostics.hybridArbitration
                   ? { hybridArbitration: plan.routingDiagnostics.hybridArbitration }
                   : {}),
+                /**
+                 * Run 103 / Phase 5 live finding: this bundle is the one the observation ledger keeps, so
+                 * the run-103 receipts have to travel with it - otherwise a decision answers every
+                 * question except "who chose this strategy and did the latency override act"
+                 * (R3, design document section 6.5).
+                 */
+                ...(plan.routingDiagnostics.strategyResolution
+                  ? { strategyResolution: plan.routingDiagnostics.strategyResolution }
+                  : {}),
+                ...(plan.routingDiagnostics.aliasPostureBinding
+                  ? { aliasPostureBinding: plan.routingDiagnostics.aliasPostureBinding }
+                  : {}),
               },
             }
           : {}),
@@ -29102,7 +29111,9 @@ export async function createRuntimeBridgeBackend(
           normalizeConfiguredRoutingMode(currentUnifiedRuntimeConfig?.routingStrategy) ?? undefined,
           executionInventory.endpointIds.length > 0 ? executionInventory : null,
           currentRolePolicy.taskDefinitions,
-          currentUnifiedRuntimeConfig ? resolveConfiguredRoutingPosture(currentUnifiedRuntimeConfig) : undefined,
+          currentUnifiedRuntimeConfig
+            ? resolveConfiguredRoutingPosture(currentUnifiedRuntimeConfig)
+            : undefined,
           [
             ...(currentUnifiedRuntimeConfig?.agentStrategies ?? []),
             ...(currentUnifiedRuntimeConfig?.workloads ?? []),
@@ -29283,7 +29294,9 @@ export async function createRuntimeBridgeBackend(
           normalizeConfiguredRoutingMode(currentUnifiedRuntimeConfig?.routingStrategy) ?? undefined,
           executionInventory.endpointIds.length > 0 ? executionInventory : null,
           currentRolePolicy.taskDefinitions,
-          currentUnifiedRuntimeConfig ? resolveConfiguredRoutingPosture(currentUnifiedRuntimeConfig) : undefined,
+          currentUnifiedRuntimeConfig
+            ? resolveConfiguredRoutingPosture(currentUnifiedRuntimeConfig)
+            : undefined,
           [
             ...(currentUnifiedRuntimeConfig?.agentStrategies ?? []),
             ...(currentUnifiedRuntimeConfig?.workloads ?? []),
@@ -29537,9 +29550,7 @@ export async function createRuntimeBridgeBackend(
          * `routing.strategy` onto the canonical pair, so the rendered text is re-parsed before it is
          * applied - otherwise the in-memory posture would keep the synonym the file no longer has.
          */
-        let finalConfig = parseUnifiedRuntimeConfigText(
-          renderUnifiedRuntimeConfigText(nextConfig),
-        );
+        let finalConfig = parseUnifiedRuntimeConfigText(renderUnifiedRuntimeConfigText(nextConfig));
         let finalText = renderUnifiedRuntimeConfigText(finalConfig);
 
         await writeConfigTextAtomically(unifiedRuntimeConfigPath, finalText);
@@ -29557,12 +29568,12 @@ export async function createRuntimeBridgeBackend(
           } else {
             await writeConfigTextAtomically(unifiedRuntimeConfigPath, previousText);
           }
-      /**
-       * Run 103 review F4: the rollback runs unconditionally. A rejected write used to leave the
-       * runtime serving the rejected posture in memory whenever there was no previous config to
-       * restore (a fresh state root), which is a fail-open on the write path.
-       */
-      await applyUnifiedRuntimeConfigState(previousConfig ?? null, "rollback");
+          /**
+           * Run 103 review F4: the rollback runs unconditionally. A rejected write used to leave the
+           * runtime serving the rejected posture in memory whenever there was no previous config to
+           * restore (a fresh state root), which is a fail-open on the write path.
+           */
+          await applyUnifiedRuntimeConfigState(previousConfig ?? null, "rollback");
           throw error;
         }
 

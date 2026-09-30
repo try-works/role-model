@@ -38,15 +38,15 @@ import {
 } from "../lib/learning-api";
 import {
   EXECUTION_SCOPE_OPTIONS,
+  type ExecutionScopeName,
   PIN_WEIGHTS_HELP_TEXT,
   ROUTING_MODE_OPTIONS,
+  type RoutingModeName,
   SCORING_PRESETS,
   SCORING_STRATEGY_OPTIONS,
+  type ScoringStrategyName,
   WEIGHT_METRICS,
   WEIGHT_SUM_TOLERANCE,
-  type ExecutionScopeName,
-  type RoutingModeName,
-  type ScoringStrategyName,
   type WeightProfile,
   buildRoutingPatchDocument,
   formatExecutionScopeSegment,
@@ -127,7 +127,9 @@ export default function ControlRoutingStrategyRoute() {
             : SCORING_PRESETS.balanced),
       ),
     );
-    setExecutionScope(normalizeExecutionScopeValue(next.persisted.executionMode) ?? "decision_only");
+    setExecutionScope(
+      normalizeExecutionScopeValue(next.persisted.executionMode) ?? "decision_only",
+    );
     if (policy) {
       setLatencyDraft(policy.draft);
     }
@@ -335,7 +337,9 @@ export default function ControlRoutingStrategyRoute() {
                         role="option"
                         aria-selected={selected}
                         className={`flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-left transition-colors ${
-                          selected ? "bg-[var(--rm-panel-muted)]" : "hover:bg-[var(--rm-panel-muted)]"
+                          selected
+                            ? "bg-[var(--rm-panel-muted)]"
+                            : "hover:bg-[var(--rm-panel-muted)]"
                         }`}
                         onClick={() => setMode(option.value)}
                       >
@@ -456,7 +460,9 @@ export default function ControlRoutingStrategyRoute() {
                       type="button"
                       className={secondaryButtonClassName}
                       disabled={!weightsAreCustom || saving}
-                      onClick={() => setWeightDrafts(weightDraftsFromProfile(SCORING_PRESETS[preset]))}
+                      onClick={() =>
+                        setWeightDrafts(weightDraftsFromProfile(SCORING_PRESETS[preset]))
+                      }
                     >
                       {SCORING_STRATEGY_OPTIONS.find((option) => option.value === preset)?.label ??
                         preset}
@@ -743,7 +749,7 @@ export default function ControlRoutingStrategyRoute() {
                   },
                 ]}
               />
-              {evidence && evidence.samplesBelowFloor ? (
+              {evidence?.samplesBelowFloor ? (
                 <p className={supportingTextClassName}>
                   {`${evidence.sampleCount} sample${evidence.sampleCount === 1 ? "" : "s"} in the window is below the floor of ${evidence.minSamples}, so the override cannot act yet.`}
                 </p>
