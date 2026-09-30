@@ -93,3 +93,116 @@ export function resolveScoringWeights(plan: ScoringPlan): WeightProfile {
     Custom: ({ weights }) => weights,
   });
 }
+
+/** Which step of the ladder produced the effective strategy (design document section 6.5). */
+export type StrategySource = "controller" | "difficulty" | "operator" | "default";
+
+export type DifficultyBucket = "easy" | "medium" | "hard";
+
+export interface OperatorStrategyPosture {
+  readonly name: ScoringStrategyName;
+  readonly weights: WeightProfile;
+}
+
+export interface StrategyResolutionInput {
+  readonly operator: OperatorStrategyPosture | null;
+  readonly pinWeights: boolean;
+  readonly difficultyRoutingActive: boolean;
+  readonly difficulty?: DifficultyBucket;
+  readonly controllerActive: boolean;
+  readonly controllerStrategy?: ScoringStrategyName;
+}
+
+export interface StrategyResolution {
+  readonly strategy: ScoringStrategyName;
+  readonly weights: WeightProfile;
+  readonly source: StrategySource;
+  /** Recorded when `pinWeights` suppressed an automatic override (R2/R4). */
+  readonly discarded?: {
+    readonly source: "controller" | "difficulty";
+    readonly strategy: ScoringStrategyName;
+  };
+}
+
+export function weightsForStrategyName(
+  name: ScoringStrategyName,
+  fallback: WeightProfile,
+): WeightProfile {
+  switch (name) {
+    case "balanced":
+      return SCORING_PRESETS.balanced;
+    case "quality":
+      return SCORING_PRESETS.quality;
+    case "latency":
+      return SCORING_PRESETS.latency;
+    case "cost":
+      return SCORING_PRESETS.cost;
+    default:
+      return fallback;
+  }
+}
+
+/** `easy` -> cost, `hard` -> quality, `medium` falls through to the operator strategy. */
+export function difficultyBucketStrategy(
+  difficulty: DifficultyBucket | undefined,
+): ScoringStrategyName | null {
+  switch (difficulty) {
+    case "easy":
+      return "cost";
+    case "hard":
+      return "quality";
+    default:
+      return null;
+  }
+}
+
+/**
+ * Run 103 / SP2 - the resolution ladder of design document section 5:
+ * controller directive > difficulty decisive bucket > operator strategy > balanced,
+ * with `pin_weights` blocking both automatic overrides and recording what it discarded.
+ */
+export function resolveStrategy(input: StrategyResolutionInput): StrategyResolution {
+  const operator: StrategyResolution = input.operator
+    ? { strategy: input.operator.name, weights: input.operator.weights, source: "operator" }
+    : { strategy: "balanced", weights: SCORING_PRESETS.balanced, source: "default" };
+
+  const controllerStrategy =
+    input.controllerActive && input.controllerStrategy ? input.controllerStrategy : null;
+  const bucketStrategy = input.difficultyRoutingActive
+    ? difficultyBucketStrategy(input.difficulty)
+    : null;
+
+  if (input.pinWeights) {
+    if (controllerStrategy) {
+      return {
+        ...operator,
+        discarded: { source: "controller", strategy: controllerStrategy },
+      };
+    }
+    if (bucketStrategy && bucketStrategy !== operator.strategy) {
+      return {
+        ...operator,
+        discarded: { source: "difficulty", strategy: bucketStrategy },
+      };
+    }
+    return operator;
+  }
+
+  if (controllerStrategy) {
+    return {
+      strategy: controllerStrategy,
+      weights: weightsForStrategyName(controllerStrategy, operator.weights),
+      source: "controller",
+    };
+  }
+
+  if (bucketStrategy) {
+    return {
+      strategy: bucketStrategy,
+      weights: weightsForStrategyName(bucketStrategy, operator.weights),
+      source: "difficulty",
+    };
+  }
+
+  return operator;
+}
