@@ -234,4 +234,77 @@ describe("agent strategy and workload aliases in the live backend", () => {
       await rm(tempRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
     }
   }, 120_000);
+
+  /**
+   * Run 103 post-lock repair (operator decision): narrowing is a filter, not an all-or-nothing gate -
+   * when exactly one model in the scope satisfies the pin, the readback must publish that model's scope
+   * with only its endpoints, not the whole execution scope.
+   */
+  test("a capability pin narrows the published scope to the endpoints that satisfy it", async () => {
+    const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-run103-capability-narrow-"));
+    const runtimeStateRoot = path.join(tempRoot, "state");
+    const unifiedRuntimeConfigPath = path.join(tempRoot, "runtime-config.yaml");
+    try {
+      await writeFile(
+        unifiedRuntimeConfigPath,
+        [
+          'version: "1.0"',
+          "execution_mode: local_only",
+          "llama_swap:",
+          "  models:",
+          "    local-chat:",
+          "      path: ./models/local-chat.gguf",
+          "      capabilities:",
+          "        - text.chat",
+          "    local-retriever:",
+          "      path: ./models/local-retriever.gguf",
+          "      capabilities:",
+          "        - text.chat",
+          "        - knowledge.retrieval",
+          "workloads:",
+          "  retrieval:",
+          "    scoring_strategy: cost",
+          "    required_capabilities:",
+          "      - knowledge.retrieval",
+          "",
+        ].join("\n"),
+        "utf8",
+      );
+
+      const backend = await createRuntimeBridgeBackend({
+        repoRoot,
+        fixtureRoot: testFixtureRoot,
+        runtimeStateRoot,
+        scopeId: "run103-capability-narrow",
+        unifiedRuntimeConfigPath,
+      });
+
+      try {
+        const config = (await backend.readRouterConfig()) as RouterConfigShape;
+        const retrieval = config.workloads.find((entry) => entry.name === "retrieval");
+        expect(retrieval?.requiredCapabilities).toEqual(["knowledge.retrieval"]);
+        expect(retrieval?.aliases.map((alias) => alias.aliasId)).toEqual([
+          "retrieval.decision-only",
+          "retrieval.hybrid",
+          "retrieval.local-only",
+        ]);
+        for (const alias of retrieval?.aliases ?? []) {
+          expect(alias.candidateCount).toBe(1);
+          expect(alias.poolEmpty).toBe(false);
+          expect(
+            alias.allowEndpointIds.every((endpointId) => endpointId.includes("retriever")),
+          ).toBe(true);
+        }
+        expect(
+          config.postureDiagnostics.skipped.filter((report) =>
+            report.aliasId.startsWith("retrieval."),
+          ),
+        ).toEqual([{ aliasId: "retrieval.remote-only", reason: "ALIAS_POOL_EMPTY" }]);
+      } finally {
+        await backend.shutdown();
+      }
+    } finally {
+      await rm(tempRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+    }
+  }, 120_000);
 });

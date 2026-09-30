@@ -1,6 +1,8 @@
 Run: `/.recursive/run/103-agent-strategy-and-scoring-strategy/`
 Phase: `00 Requirements` (post-lock addendum 01)
-Status: `DRAFT`
+Status: `LOCKED`
+LockedAt: `2026-09-30T21:41:58Z`
+LockHash: `4b1c8501f79c2f1af53dadb5410fe373f5ba9930ed3981dbaefa0847968d8126`
 Workflow version: `recursive-mode-audit-v2`
 Inputs:
 - `/.recursive/run/103-agent-strategy-and-scoring-strategy/00-requirements.md` (LOCKED)
