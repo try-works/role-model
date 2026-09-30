@@ -252,6 +252,15 @@ export function normalizeScoringStrategyValue(
   return LEGACY_SCORING_STRATEGY_SPELLINGS[normalized] ?? null;
 }
 
+/**
+ * Post-lock repair 4 (operator report): the six-weight editor belongs to the `custom` scoring strategy.
+ * The page used to render it whatever the strategy was, captioned "Enabled when the scoring strategy is
+ * Custom", which read as if hand-tuned weights were always in force.
+ */
+export function showsCustomWeightEditor(scoringStrategy: string | null | undefined): boolean {
+  return normalizeScoringStrategyValue(scoringStrategy) === "custom";
+}
+
 /** True when the persisted string is a synonym that a save has to migrate. */
 export function isLegacyRoutingModeSpelling(value: string | null | undefined): boolean {
   const normalized = value?.trim().toLowerCase() ?? "";
@@ -539,16 +548,22 @@ export function canonicalizeRoutingDocument<TDocument extends Record<string, unk
  * rejects them for a preset strategy.
  */
 export function buildRoutingPatchDocument(input: {
+  /**
+   * Post-lock repair 4 (operator report): the mode is the operator's selection. Deriving it from
+   * `routing` (the saved readback) made "Save and apply strategy" write back the mode that was already
+   * saved, so a mode change never landed.
+   */
+  readonly mode: string;
   readonly routing: RoutingPostureReadback | null;
   readonly scoringStrategy: string | null;
   readonly weights: WeightProfile | null;
   readonly pinWeights: boolean;
   readonly executionScope: string;
 }): RoutingPatchBuildResult {
-  const mode =
-    normalizeRoutingModeValue(input.routing?.mode ?? null) ??
-    normalizeRoutingModeValue(input.routing?.legacyStrategy ?? null) ??
-    "baseline";
+  const mode = normalizeRoutingModeValue(input.mode);
+  if (mode === null) {
+    return { ok: false, error: `unknown routing mode "${input.mode}"` };
+  }
   const executionScope = normalizeExecutionScopeValue(input.executionScope);
   if (executionScope === null) {
     return { ok: false, error: `unknown execution scope "${input.executionScope}"` };

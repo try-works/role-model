@@ -19,6 +19,7 @@ import {
   normalizeScoringStrategyValue,
   readWeightProfile,
   resolveRoutingPostureSummary,
+  showsCustomWeightEditor,
   validateWeightProfile,
   weightsSum,
 } from "./routing-mode";
@@ -233,6 +234,7 @@ describe("run 103 routing vocabulary", () => {
 
   test("builds a canonical patch document and never persists a legacy synonym", () => {
     const built = buildRoutingPatchDocument({
+      mode: "controller",
       routing: {
         legacyStrategy: "latency-first",
         mode: "controller",
@@ -258,6 +260,7 @@ describe("run 103 routing vocabulary", () => {
     });
 
     const custom = buildRoutingPatchDocument({
+      mode: "baseline",
       routing: null,
       scoringStrategy: "custom",
       weights: { ...SCORING_PRESETS.quality },
@@ -277,6 +280,7 @@ describe("run 103 routing vocabulary", () => {
     });
 
     const presetWithWeights = buildRoutingPatchDocument({
+      mode: "baseline",
       routing: null,
       scoringStrategy: "quality",
       weights: { ...SCORING_PRESETS.quality },
@@ -294,6 +298,7 @@ describe("run 103 routing vocabulary", () => {
     });
 
     const invalid = buildRoutingPatchDocument({
+      mode: "baseline",
       routing: null,
       scoringStrategy: "custom",
       weights: { ...SCORING_PRESETS.quality, cost: 0.9 },
@@ -303,5 +308,81 @@ describe("run 103 routing vocabulary", () => {
     expect(invalid.ok).toBe(false);
     if (invalid.ok) return;
     expect(invalid.error).toMatch(/sum/i);
+  });
+
+  /**
+   * Post-lock repair 4 (operator report): "Save and apply strategy ... just stays baseline". The builder
+   * derived the mode from the saved readback instead of the operator's selection, so a mode change was
+   * written back as the mode that was already saved.
+   */
+  test("writes the mode the operator selected, not the mode that was already saved", () => {
+    const built = buildRoutingPatchDocument({
+      mode: "intelligent",
+      routing: {
+        legacyStrategy: null,
+        mode: "baseline",
+        scoringStrategy: "balanced",
+        pinWeights: false,
+        weights: null,
+        degradations: [],
+      },
+      scoringStrategy: "balanced",
+      weights: null,
+      pinWeights: false,
+      executionScope: "remote_only",
+    });
+    expect(built.ok).toBe(true);
+    if (!built.ok) return;
+    expect(built.document).toEqual({
+      routing: {
+        mode: "intelligent",
+        scoring_strategy: "balanced",
+        pin_weights: false,
+      },
+      execution_mode: "remote_only",
+    });
+
+    for (const selected of ["difficulty", "hybrid", "intelligent"] as const) {
+      const next = buildRoutingPatchDocument({
+        mode: selected,
+        routing: null,
+        scoringStrategy: "cost",
+        weights: null,
+        pinWeights: false,
+        executionScope: "remote_only",
+      });
+      expect(next.ok).toBe(true);
+      if (!next.ok) return;
+      expect(next.document.routing).toMatchObject({ mode: selected });
+    }
+  });
+
+  test("rejects a mode outside the vocabulary instead of writing it", () => {
+    const built = buildRoutingPatchDocument({
+      mode: "turbo",
+      routing: null,
+      scoringStrategy: "balanced",
+      weights: null,
+      pinWeights: false,
+      executionScope: "remote_only",
+    });
+    expect(built.ok).toBe(false);
+    if (built.ok) return;
+    expect(built.error).toMatch(/mode/i);
+  });
+
+  /**
+   * Post-lock repair 4 (operator report): the weights were rendered whatever the scoring strategy was,
+   * captioned "Enabled when the scoring strategy is Custom", so the page looked like it always ran on
+   * hand-tuned weights. The editor belongs to the custom strategy and to nothing else.
+   */
+  test("exposes the custom weight editor only for the custom scoring strategy", () => {
+    expect(showsCustomWeightEditor("custom")).toBe(true);
+    expect(showsCustomWeightEditor(" custom ")).toBe(true);
+    expect(showsCustomWeightEditor("balanced")).toBe(false);
+    expect(showsCustomWeightEditor("quality")).toBe(false);
+    expect(showsCustomWeightEditor("latency-first")).toBe(false);
+    expect(showsCustomWeightEditor(null)).toBe(false);
+    expect(showsCustomWeightEditor("")).toBe(false);
   });
 });

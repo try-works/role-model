@@ -766,3 +766,21 @@ Date: `2026-10-01`
 - Unchanged commitment: the effective threshold still comes from the learning policy file; the private
   registry's `latencySelectionMaxDeltaMs` default (2000 against the public 10 000) remains the `R7` release
   dependency. Hiding the field here does not resolve it.
+
+### Post-lock repair 4: the Routing strategy page writes the selected mode and scopes the weight editor to custom
+
+Date: `2026-10-01`
+
+- Operator report: "the weights should only be exposed when the user chooses custom strategy ... also save and
+  apply strategy seems to not work at all, it just stays baseline".
+- Root cause: `buildRoutingPatchDocument` derived the mode from the saved readback instead of the operator's
+  selection, so every save wrote the mode that was already stored; and the six-weight editor rendered
+  unconditionally with a caption saying it applied only to Custom.
+- Repair: the builder takes `mode` explicitly (normalized, unknown spellings refused), the page passes its
+  selection, and `showsCustomWeightEditor` is the single predicate for the weight editor, which now renders
+  only for the custom scoring strategy. `custom` itself was and stays selectable in the scoring-strategy
+  listbox.
+- Verified live: Intelligent + Custom persisted as `mode=intelligent, scoring_strategy=custom` and the
+  Active posture rail followed; the weight editor appears only for Custom. The operator's posture was
+  restored afterwards (`baseline` + `quality`, `remote_only`). Evidence:
+  `addenda/03-implementation-summary.post-lock-routing-save.addendum-04.md`.

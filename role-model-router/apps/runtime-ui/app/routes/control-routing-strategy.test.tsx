@@ -82,4 +82,16 @@ describe("run 103 routing strategy page", () => {
       expect(pageSource).not.toContain(removed);
     }
   });
+
+  /**
+   * Post-lock repair 4 (operator report): "Save and apply strategy ... just stays baseline" and the
+   * custom weights were displayed whatever the scoring strategy was.
+   */
+  test("writes the selected routing mode and shows the weight editor only for custom", () => {
+    // The mode the operator picked travels into the patch document; the saved readback is context only.
+    expect(pageSource).toContain("buildRoutingPatchDocument({");
+    expect(pageSource).toMatch(/buildRoutingPatchDocument\(\{\s*\n\s*mode,/);
+    expect(pageSource).toContain("showsCustomWeightEditor");
+    expect(pageSource).toMatch(/showsCustomWeightEditor\(scoringStrategy\)/);
+  });
 });

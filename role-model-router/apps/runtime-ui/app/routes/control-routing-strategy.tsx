@@ -52,6 +52,7 @@ import {
   normalizeRoutingModeValue,
   normalizeScoringStrategyValue,
   resolveRoutingPostureSummary,
+  showsCustomWeightEditor,
   validateWeightProfile,
 } from "../lib/routing-mode";
 import { type RouterConfig, fetchRouterConfig, updateRuntimeConfig } from "../lib/runtime-api";
@@ -161,7 +162,7 @@ export default function ControlRoutingStrategyRoute() {
     () => (parsedWeights ? validateWeightProfile(parsedWeights) : null),
     [parsedWeights],
   );
-  const weightsAreCustom = scoringStrategy === "custom";
+  const weightsAreCustom = showsCustomWeightEditor(scoringStrategy);
   const selectedModeOption =
     ROUTING_MODE_OPTIONS.find((option) => option.value === mode) ?? ROUTING_MODE_OPTIONS[0];
   const selectedScoringOption =
@@ -199,6 +200,7 @@ export default function ControlRoutingStrategyRoute() {
 
   const saveRoutingStrategy = async () => {
     const built = buildRoutingPatchDocument({
+      mode,
       routing: routerConfig.routing ?? null,
       scoringStrategy,
       weights: weightsAreCustom ? parsedWeights : null,
@@ -370,52 +372,52 @@ export default function ControlRoutingStrategyRoute() {
               </div>
             </div>
 
-            <div className="space-y-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className={monoEyebrowClassName}>Custom weights</p>
-                <p className={supportingTextClassName}>
-                  {weightsAreCustom
-                    ? `Sum ${weightValidation ? formatWeightValue(weightValidation.sum) : "—"} (1.0 ± ${WEIGHT_SUM_TOLERANCE})`
-                    : "Enabled when the scoring strategy is Custom"}
-                </p>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-3">
-                {WEIGHT_METRICS.map((metric) => (
-                  <label key={metric} className="grid gap-1">
-                    <span className={fieldLabelClassName}>{formatWeightMetricLabel(metric)}</span>
-                    <input
-                      className={fieldClassName}
-                      type="number"
-                      min={0}
-                      max={1}
-                      step={0.01}
-                      disabled={!weightsAreCustom || saving}
-                      value={weightDrafts[metric]}
-                      onChange={(event) =>
-                        setWeightDrafts((current) => ({
-                          ...current,
-                          [metric]: event.target.value,
-                        }))
-                      }
-                    />
-                  </label>
-                ))}
-              </div>
-              {weightsAreCustom && weightValidation && !weightValidation.ok ? (
-                <p className={errorNoticeClassName}>
-                  {weightValidation.sumError ??
-                    "Every metric must be between 0 and 1 and the six must sum to 1.0 ± 0.001."}
-                </p>
-              ) : null}
-              <div className="flex flex-wrap items-center gap-2">
-                <span className={supportingTextClassName}>Reset to preset</span>
-                {(Object.keys(SCORING_PRESETS) as ReadonlyArray<keyof typeof SCORING_PRESETS>).map(
-                  (preset) => (
+            {weightsAreCustom ? (
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className={monoEyebrowClassName}>Custom weights</p>
+                  <p className={supportingTextClassName}>
+                    {`Sum ${weightValidation ? formatWeightValue(weightValidation.sum) : "—"} (1.0 ± ${WEIGHT_SUM_TOLERANCE})`}
+                  </p>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {WEIGHT_METRICS.map((metric) => (
+                    <label key={metric} className="grid gap-1">
+                      <span className={fieldLabelClassName}>{formatWeightMetricLabel(metric)}</span>
+                      <input
+                        className={fieldClassName}
+                        type="number"
+                        min={0}
+                        max={1}
+                        step={0.01}
+                        disabled={saving}
+                        value={weightDrafts[metric]}
+                        onChange={(event) =>
+                          setWeightDrafts((current) => ({
+                            ...current,
+                            [metric]: event.target.value,
+                          }))
+                        }
+                      />
+                    </label>
+                  ))}
+                </div>
+                {weightValidation && !weightValidation.ok ? (
+                  <p className={errorNoticeClassName}>
+                    {weightValidation.sumError ??
+                      "Every metric must be between 0 and 1 and the six must sum to 1.0 ± 0.001."}
+                  </p>
+                ) : null}
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className={supportingTextClassName}>Reset to preset</span>
+                  {(
+                    Object.keys(SCORING_PRESETS) as ReadonlyArray<keyof typeof SCORING_PRESETS>
+                  ).map((preset) => (
                     <button
                       key={preset}
                       type="button"
                       className={secondaryButtonClassName}
-                      disabled={!weightsAreCustom || saving}
+                      disabled={saving}
                       onClick={() =>
                         setWeightDrafts(weightDraftsFromProfile(SCORING_PRESETS[preset]))
                       }
@@ -423,10 +425,10 @@ export default function ControlRoutingStrategyRoute() {
                       {SCORING_STRATEGY_OPTIONS.find((option) => option.value === preset)?.label ??
                         preset}
                     </button>
-                  ),
-                )}
+                  ))}
+                </div>
               </div>
-            </div>
+            ) : null}
 
             <div className="space-y-2">
               <SelectField
