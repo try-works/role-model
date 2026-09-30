@@ -499,3 +499,19 @@ export function derivePostureAliasInventory(input: {
     violations: [...entryViolations, ...merge.violations],
   };
 }
+
+/**
+ * Run 103 / SP6 - the shipped workload examples of design document section 4: `batch` is posture
+ * only, `embedding` pins `embeddings.text`. They are the single source the operations guide and the
+ * Workloads page quote (requirement R6).
+ */
+export const SHIPPED_WORKLOAD_EXAMPLES: Readonly<Record<string, Readonly<Record<string, unknown>>>> =
+  {
+    batch: {
+      scoring_strategy: "cost",
+    },
+    embedding: {
+      scoring_strategy: "cost",
+      required_capabilities: ["embeddings.text"],
+    },
+  };

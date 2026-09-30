@@ -355,6 +355,7 @@ import {
   findAgentStrategyAlias,
   type PostureRequestBinding,
   resolvePostureRequestBinding,
+  SHIPPED_WORKLOAD_EXAMPLES,
   validateAgentStrategyBindings,
   withAliasPostureBinding,
 } from "./agent-strategy.js";
@@ -25443,6 +25444,7 @@ export async function createRuntimeBridgeBackend(
       "workload",
       currentUnifiedRuntimeConfig?.workloads ?? [],
     ),
+    workloadExamples: SHIPPED_WORKLOAD_EXAMPLES,
     postureDiagnostics: {
       violations: [...currentPostureAliasDiagnostics.violations],
       skipped: currentPostureAliasDiagnostics.skipped.map((entry) => ({ ...entry })),
