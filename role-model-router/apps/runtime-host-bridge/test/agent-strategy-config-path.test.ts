@@ -269,6 +269,21 @@ describe("unified runtime config routing and posture blocks", () => {
     ).toThrow(/routing\.mode must be baseline, difficulty, hybrid, or intelligent/);
   });
 
+  test("rejects a legacy routing string that names nothing on the write path", () => {
+    expect(() =>
+      mergeUnifiedRuntimeConfigDocuments(
+        { version: "1.0" },
+        { routing: { strategy: "turbo" } },
+      ),
+    ).toThrow(/routing\.strategy "turbo" is not a known mode or scoring strategy/);
+    expect(() =>
+      mergeUnifiedRuntimeConfigDocuments(
+        { version: "1.0" },
+        { routing: { strategy: "latency-first" } },
+      ),
+    ).not.toThrow();
+  });
+
   test("rejects weights that are declared for a preset strategy", () => {
     expect(() =>
       mergeUnifiedRuntimeConfigDocuments(

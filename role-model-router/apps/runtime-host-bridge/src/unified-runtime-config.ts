@@ -2318,6 +2318,31 @@ export function renderUnifiedRuntimeConfigText(config: UnifiedRuntimeConfig): st
   return `${stringify(document).trimEnd()}\n`;
 }
 
+/**
+ * R1: the legacy single string is read-compatible, but a write that carries a string naming no
+ * known mode or scoring strategy is a write error - the operator should move to the two-axis block.
+ */
+function assertWritableLegacyRoutingStrategy(rawRouting: unknown): void {
+  if (typeof rawRouting !== "object" || rawRouting === null || Array.isArray(rawRouting)) {
+    return;
+  }
+  const raw = (rawRouting as Record<string, unknown>).strategy;
+  if (typeof raw !== "string" || raw.trim().length === 0) {
+    return;
+  }
+  const normalized = raw.trim().toLowerCase();
+  if (
+    normalized === "craft-ask" ||
+    normalizeRoutingModeName(normalized) !== null ||
+    normalizeScoringStrategyName(normalized) !== null
+  ) {
+    return;
+  }
+  throw new Error(
+    `routing.strategy "${raw}" is not a known mode or scoring strategy; write routing.mode with routing.scoring_strategy instead.`,
+  );
+}
+
 function normalizeRuntimeConfigPatchDocument(
   patch: Record<string, unknown>,
 ): Record<string, unknown> {
@@ -2365,8 +2390,12 @@ export function mergeUnifiedRuntimeConfigDocuments(
   patch: Record<string, unknown>,
 ): UnifiedRuntimeConfig {
   const normalizedPatch = normalizeRuntimeConfigPatchDocument(patch);
-  /** R1: the patch is a write, so an unknown spelling or an invalid weight profile is rejected here. */
+  /**
+   * R1: the patch is a write, so an unknown spelling, a legacy string that names nothing, or an
+   * invalid weight profile is rejected here instead of being migrated away silently.
+   */
   decodeStructuredRoutingBlock(normalizedPatch.routing, "routing", true);
+  assertWritableLegacyRoutingStrategy(normalizedPatch.routing);
   const mergedDocument = {
     ...(current ?? {}),
     ...normalizedPatch,
