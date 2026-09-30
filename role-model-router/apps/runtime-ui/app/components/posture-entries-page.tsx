@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   Badge,
@@ -15,13 +15,14 @@ import {
   type PostureDraft,
   type PostureEntryKind,
   type PostureEntryRowView,
+  type PosturePatchRow,
   buildPostureEntryRows,
+  buildPostureNamedBlockPatch,
   buildPostureWriteBlock,
   buildWorkloadTemplateDraft,
   createPostureDraft,
   findDuplicateEntryNames,
   formatCommaList,
-  listEntriesRemovedBySave,
   parseCommaList,
   postureBlockDocumentKey,
   postureDraftFromEntry,
@@ -213,6 +214,11 @@ export function PostureEntriesPage({ kind }: { readonly kind: PostureEntryKind }
   const [saveError, setSaveError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  /** The row the operator just added, so its Name field takes focus instead of the saved rows'. */
+  const [focusRowId, setFocusRowId] = useState<string | null>(null);
+  /** Saved entries the operator removed in this session; the patch deletes exactly these names. */
+  const [removedSavedNames, setRemovedSavedNames] = useState<readonly string[]>([]);
+  const nameInputRefs = useRef(new Map<string, HTMLInputElement>());
 
   const readbackEntries = useMemo(
     () => (kind === "role" ? routerConfig?.agentStrategies : routerConfig?.workloads) ?? null,
@@ -246,6 +252,19 @@ export function PostureEntriesPage({ kind }: { readonly kind: PostureEntryKind }
       setLoadError(value instanceof Error ? value.message : `Could not load ${title}.`);
     });
   }, [loadState, title]);
+
+  /**
+   * Post-lock repair (run 103): focus the row the operator just added so typing goes into the new
+   * entry and never into a saved row (an accessibility-safe replacement for `autoFocus`).
+   */
+  useEffect(() => {
+    if (focusRowId === null) {
+      return;
+    }
+    const input = nameInputRefs.current.get(focusRowId);
+    input?.focus();
+    input?.scrollIntoView({ block: "nearest" });
+  }, [focusRowId]);
 
   if (loadError) {
     return <ErrorState label={loadError} />;
@@ -291,34 +310,42 @@ export function PostureEntriesPage({ kind }: { readonly kind: PostureEntryKind }
       return;
     }
     const savedNames = (readbackEntries ?? []).map((entry) => entry.name);
-    const removedNames = listEntriesRemovedBySave(
-      savedNames,
-      forms.map((form) => form.name),
-    );
-    if (removedNames.length > 0) {
-      const confirmed =
-        typeof window === "undefined" ||
-        window.confirm(
-          `Saving removes the saved entr${removedNames.length === 1 ? "y" : "ies"} ${removedNames.join(", ")}: their <name>.<scope> aliases stop materialising. Continue?`,
-        );
-      if (!confirmed) {
-        setStatusMessage(
-          `Save cancelled: ${removedNames.join(", ")} would have been removed. Add the missing entr${removedNames.length === 1 ? "y" : "ies"} back or use Remove entry to delete one deliberately.`,
-        );
-        return;
-      }
-    }
     setSaving(true);
     try {
-      const entries = validations.flatMap((validation) =>
-        validation.ok ? [validation.entry] : [],
-      );
-      const block = buildPostureWriteBlock(kind, entries);
+      /**
+       * Post-lock repair (run 103, operator decision): the page sends a per-entry patch, so adding or
+       * editing a row upserts only that entry and the entries the editor does not name are never
+       * touched. A `null` travels only for an entry the operator removed or renamed.
+       */
+      const rows: PosturePatchRow[] = [];
+      forms.forEach((form, index) => {
+        const validation = validations[index];
+        if (validation?.ok) {
+          rows.push({ originName: form.originName, entry: validation.entry });
+        }
+      });
+      const patch = buildPostureNamedBlockPatch(kind, {
+        saved: readbackEntries ?? [],
+        rows,
+        removedNames: removedSavedNames,
+      });
+      const addedNames = rows
+        .map((row) => row.entry.name)
+        .filter((name) => !savedNames.includes(name));
       /** The runtime document key the whole block is written under: `agent_strategies` or `workloads`. */
       const documentKey = postureBlockDocumentKey(kind);
-      await updateRuntimeConfig({ [documentKey]: block });
+      await updateRuntimeConfig({ [documentKey]: patch.block });
       await loadState();
-      setStatusMessage(`${title} saved; the aliases materialise from this block.`);
+      setRemovedSavedNames([]);
+      const countLabel = `${rows.length} ${kind === "role" ? "agent strateg" : "workload"}${rows.length === 1 ? "y" : "ies"}`;
+      let message = `${title} saved (${countLabel}); the aliases materialise from this block.`;
+      if (addedNames.length > 0) {
+        message += ` Added: ${addedNames.join(", ")}.`;
+      }
+      if (patch.deletedNames.length > 0) {
+        message += ` Removed: ${patch.deletedNames.join(", ")} — their <name>.<scope> aliases stop materialising.`;
+      }
+      setStatusMessage(message);
     } catch (value) {
       setSaveError(value instanceof Error ? value.message : `Could not save ${title}.`);
     } finally {
@@ -404,7 +431,9 @@ export function PostureEntriesPage({ kind }: { readonly kind: PostureEntryKind }
                   onClick={() => {
                     const draft = buildWorkloadTemplateDraft(templateName, template);
                     if (draft) {
-                      setForms((current) => [...current, formFromDraft(draft, null)]);
+                      const row = formFromDraft(draft, null);
+                      setForms((current) => [...current, row]);
+                      setFocusRowId(row.id);
                       setStatusMessage(`Added the ${templateName} template to the editor.`);
                     }
                   }}
@@ -419,9 +448,40 @@ export function PostureEntriesPage({ kind }: { readonly kind: PostureEntryKind }
 
       <SectionCard
         title="Entries"
-        description={`Edit the ${title} block. Saving writes the whole block, so removing an entry here removes its aliases.`}
+        description={`Edit the ${title} block. Saving upserts only the rows below; an entry is deleted only when you remove it here.`}
       >
         <div className="space-y-4">
+          <p className={supportingTextClassName}>
+            {`${(readbackEntries ?? []).length} saved · ${forms.filter((form) => form.originName === null).length} new row${forms.filter((form) => form.originName === null).length === 1 ? "" : "s"}${removedSavedNames.length > 0 ? ` · ${removedSavedNames.length} pending removal${removedSavedNames.length === 1 ? "" : "s"}` : ""}. Add as many entries as you need: saving upserts the rows here and never touches an entry you did not edit.`}
+          </p>
+          {removedSavedNames.length > 0 ? (
+            <div
+              className={`${mutedPanelClassName} flex flex-wrap items-center justify-between gap-2 p-3`}
+            >
+              <p className={supportingTextClassName}>
+                {`Removed in this editor: ${removedSavedNames.join(", ")} — saving stops their <name>.<scope> aliases.`}
+              </p>
+              <button
+                type="button"
+                className={secondaryButtonClassName}
+                disabled={saving}
+                onClick={() => {
+                  const restored = (readbackEntries ?? []).filter((entry) =>
+                    removedSavedNames.includes(entry.name),
+                  );
+                  setForms((current) => [
+                    ...current,
+                    ...restored.map((entry) =>
+                      formFromDraft(postureDraftFromEntry(entry), entry.name),
+                    ),
+                  ]);
+                  setRemovedSavedNames([]);
+                }}
+              >
+                Undo removal
+              </button>
+            </div>
+          ) : null}
           {forms.length === 0 ? (
             <EmptyState label="No entries in the editor yet." />
           ) : (
@@ -440,6 +500,26 @@ export function PostureEntriesPage({ kind }: { readonly kind: PostureEntryKind }
                     className={secondaryButtonClassName}
                     disabled={saving}
                     onClick={() => {
+                      /**
+                       * Post-lock repair (run 103, operator decision): this button is the only way an
+                       * entry is ever deleted. The removal is recorded and sent as an explicit `null`
+                       * when the operator saves; unsaved rows simply disappear.
+                       */
+                      if (
+                        form.originName !== null &&
+                        typeof window !== "undefined" &&
+                        !window.confirm(
+                          `Remove the saved entry "${form.originName}"? Saving afterwards stops its ${form.originName}.<scope> aliases.`,
+                        )
+                      ) {
+                        return;
+                      }
+                      if (form.originName !== null) {
+                        const removedName = form.originName;
+                        setRemovedSavedNames((current) =>
+                          current.includes(removedName) ? current : [...current, removedName],
+                        );
+                      }
                       setForms((current) => current.filter((_, position) => position !== index));
                       setFormErrors({});
                     }}
@@ -453,6 +533,13 @@ export function PostureEntriesPage({ kind }: { readonly kind: PostureEntryKind }
                     <input
                       className={fieldClassName}
                       value={form.name}
+                      ref={(element) => {
+                        if (element) {
+                          nameInputRefs.current.set(form.id, element);
+                        } else {
+                          nameInputRefs.current.delete(form.id);
+                        }
+                      }}
                       placeholder={kind === "role" ? "coder" : "embedding"}
                       onChange={(event) => updateForm(index, { name: event.target.value })}
                     />
@@ -584,9 +671,11 @@ export function PostureEntriesPage({ kind }: { readonly kind: PostureEntryKind }
               type="button"
               className={secondaryButtonClassName}
               disabled={saving}
-              onClick={() =>
-                setForms((current) => [...current, formFromDraft(createPostureDraft(kind), null)])
-              }
+              onClick={() => {
+                const row = formFromDraft(createPostureDraft(kind), null);
+                setForms((current) => [...current, row]);
+                setFocusRowId(row.id);
+              }}
             >
               {`Add ${kind === "role" ? "agent strategy" : "workload"}`}
             </button>

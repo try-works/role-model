@@ -2380,6 +2380,57 @@ function assertWritableLegacyRoutingStrategy(rawRouting: unknown): void {
   );
 }
 
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+/**
+ * Run 103 post-lock repair (operator decision): the name-keyed blocks (`agent_strategies`,
+ * `workloads`, `model_aliases`) merge per entry, and inside an entry per field. A patch therefore
+ * upserts only what it names; omitting an entry never removes it. Deletion is explicit: `null` as
+ * the entry value removes that entry, `null` as a field value clears that field. Only the operator's
+ * Remove action in the UI produces that patch.
+ */
+export function mergeNamedEntryBlock(
+  current: unknown,
+  patch: Record<string, unknown>,
+): Record<string, unknown> {
+  const merged: Record<string, unknown> = isPlainRecord(current) ? { ...current } : {};
+  for (const [name, patchEntry] of Object.entries(patch)) {
+    if (patchEntry === null) {
+      delete merged[name];
+      continue;
+    }
+    if (!isPlainRecord(patchEntry)) {
+      // A non-record value is left to the decoder, which rejects it with the failing path.
+      merged[name] = patchEntry;
+      continue;
+    }
+    const currentEntry = isPlainRecord(merged[name])
+      ? (merged[name] as Record<string, unknown>)
+      : {};
+    /**
+     * A derived posture row (marked by the runtime) is never edited field by field: a patch that
+     * names it without the marker replaces the row, so the alias namespace check reports the
+     * collision instead of silently absorbing the operator's alias into the derived row.
+     */
+    const replacesDerivedRow = "posture" in currentEntry && !("posture" in patchEntry);
+    const nextEntry: Record<string, unknown> = replacesDerivedRow ? {} : { ...currentEntry };
+    for (const [field, fieldValue] of Object.entries(patchEntry)) {
+      if (fieldValue === null) {
+        delete nextEntry[field];
+        continue;
+      }
+      nextEntry[field] = fieldValue;
+    }
+    merged[name] = nextEntry;
+  }
+  return merged;
+}
+
+/** The config blocks whose keys are entry names (see `mergeNamedEntryBlock`). */
+export const NAMED_ENTRY_BLOCK_KEYS = ["agent_strategies", "workloads", "model_aliases"] as const;
+
 function normalizeRuntimeConfigPatchDocument(
   patch: Record<string, unknown>,
 ): Record<string, unknown> {
@@ -2437,6 +2488,23 @@ export function mergeUnifiedRuntimeConfigDocuments(
     ...(current ?? {}),
     ...normalizedPatch,
   };
+  /**
+   * Run 103 post-lock repair (operator decision): the name-keyed blocks merge per entry unless the
+   * caller explicitly asks for a whole-block write with `replace_blocks: true` (the raw document
+   * editor does, because it hands over the complete document). The control key is never persisted.
+   */
+  const replaceBlocks =
+    normalizedPatch.replace_blocks === true || normalizedPatch.replaceBlocks === true;
+  delete mergedDocument.replace_blocks;
+  delete mergedDocument.replaceBlocks;
+  if (!replaceBlocks) {
+    for (const blockKey of NAMED_ENTRY_BLOCK_KEYS) {
+      const patchBlock = normalizedPatch[blockKey];
+      if (isPlainRecord(patchBlock)) {
+        mergedDocument[blockKey] = mergeNamedEntryBlock(current?.[blockKey], patchBlock);
+      }
+    }
+  }
   /**
    * Run 103 review F5: the two-axis posture is several keys in one object, so a patch that names one
    * of them must not silently reset the others. The `routing` block is merged key by key; the posture

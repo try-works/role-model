@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import {
   buildPostureEntryRows,
+  buildPostureNamedBlockPatch,
   buildPostureWriteBlock,
   buildWorkloadTemplateDraft,
   createPostureDraft,
@@ -227,5 +228,87 @@ describe("run 103 posture entry view-models", () => {
     expect(listEntriesRemovedBySave(["coder", "reviewer"], ["coder", "qa"])).toEqual(["reviewer"]);
     // A rename removes the old name; the new name is not a saved entry yet.
     expect(listEntriesRemovedBySave(["coder"], ["coder-v2"])).toEqual(["coder"]);
+  });
+
+  /**
+   * Post-lock repair (run 103, operator decision): the page sends a per-entry patch, so adding a row
+   * cannot touch the entries it does not name, and only an explicit Remove (or an explicit rename)
+   * produces a `null` deletion.
+   */
+  const savedCoder = {
+    name: "coder",
+    kind: "role" as const,
+    roleId: "coder",
+    scoringStrategy: "quality",
+    routingMode: "difficulty",
+    computePreference: null,
+    configuredModelIds: ["qwen3-coder"],
+    requiredCapabilities: [],
+    violations: [],
+    aliases: [],
+  };
+  const savedReviewer = { ...savedCoder, name: "reviewer", roleId: "researcher" };
+  const writeEntry = (name: string, roleId: string) => ({
+    name,
+    roleId,
+    scoringStrategy: null,
+    routingMode: null,
+    computePreference: null,
+    modelIds: [],
+    requiredCapabilities: [],
+  });
+
+  test("builds upserts only, without touching the entries the editor did not change", () => {
+    const patch = buildPostureNamedBlockPatch("role", {
+      saved: [savedCoder, savedReviewer],
+      rows: [
+        { originName: "coder", entry: writeEntry("coder", "coder") },
+        { originName: "reviewer", entry: writeEntry("reviewer", "researcher") },
+        { originName: null, entry: writeEntry("architect", "architect") },
+      ],
+      removedNames: [],
+    });
+    expect(patch.deletedNames).toEqual([]);
+    expect(Object.keys(patch.block).sort()).toEqual(["architect", "coder", "reviewer"]);
+    expect(patch.block.reviewer).toMatchObject({ role_id: "researcher" });
+  });
+
+  test("an explicit removal sends one null and leaves the other entries alone", () => {
+    const patch = buildPostureNamedBlockPatch("role", {
+      saved: [savedCoder, savedReviewer],
+      rows: [{ originName: "coder", entry: writeEntry("coder", "coder") }],
+      removedNames: ["reviewer"],
+    });
+    expect(patch.deletedNames).toEqual(["reviewer"]);
+    expect(patch.block.reviewer).toBeNull();
+    expect(Object.keys(patch.block)).toEqual(["coder", "reviewer"]);
+  });
+
+  test("renaming a saved row upserts the new name and deletes exactly the old one", () => {
+    const patch = buildPostureNamedBlockPatch("role", {
+      saved: [savedCoder, savedReviewer],
+      rows: [
+        { originName: "coder", entry: writeEntry("coder-v2", "coder") },
+        { originName: "reviewer", entry: writeEntry("reviewer", "researcher") },
+      ],
+      removedNames: [],
+    });
+    expect(patch.deletedNames).toEqual(["coder"]);
+    expect(patch.block.coder).toBeNull();
+    expect(Object.keys(patch.block).sort()).toEqual(["coder", "coder-v2", "reviewer"]);
+  });
+
+  test("clearing a saved field sends an explicit null instead of silently keeping it", () => {
+    const patch = buildPostureNamedBlockPatch("role", {
+      saved: [savedCoder],
+      rows: [{ originName: "coder", entry: writeEntry("coder", "coder") }],
+      removedNames: [],
+    });
+    expect(patch.block.coder).toMatchObject({
+      role_id: "coder",
+      scoring_strategy: null,
+      routing_mode: null,
+      model_ids: null,
+    });
   });
 });

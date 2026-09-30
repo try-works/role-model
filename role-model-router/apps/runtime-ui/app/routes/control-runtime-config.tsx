@@ -96,7 +96,15 @@ export default function ControlRuntimeConfigRoute() {
       const canonicalized = canonicalizeRoutingDocument(
         JSON.parse(editorText) as Record<string, unknown>,
       );
-      const payload = canonicalized.document as unknown as RuntimeConfig;
+      /**
+       * Run 103 post-lock repair: this editor hands over the complete document, so it asks for a
+       * whole-block write of the name-keyed blocks. The posture pages (and every other client) use
+       * the default per-entry merge, where omitting an entry never deletes it.
+       */
+      const payload = {
+        ...(canonicalized.document as unknown as RuntimeConfig),
+        replace_blocks: true,
+      } as unknown as RuntimeConfig;
       const nextRecord = await updateRuntimeConfig(payload);
       setConfigRecord(nextRecord);
       setEditorText(toEditorText(nextRecord.config));

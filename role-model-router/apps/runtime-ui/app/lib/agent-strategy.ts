@@ -434,6 +434,90 @@ export function postureBlockDocumentKey(kind: PostureEntryKind): string {
   return kind === "role" ? "agent_strategies" : "workloads";
 }
 
+export interface PosturePatchRow {
+  /** The saved entry this row was loaded from; null for a row the operator just added. */
+  readonly originName: string | null;
+  readonly entry: PostureWriteEntry;
+}
+
+export interface PostureNamedBlockPatch {
+  /** The per-entry patch: `{name: entry}` upserts, `{name: null}` deletes. */
+  readonly block: Record<string, Record<string, unknown> | null>;
+  readonly upsertedNames: readonly string[];
+  readonly deletedNames: readonly string[];
+}
+
+/**
+ * Run 103 post-lock repair (operator decision): the page never rewrites the block. It sends one
+ * upsert per edited row and an explicit `null` for every deletion the operator asked for (the
+ * Remove action) or implied by renaming a row, so a save can only touch the entries it names.
+ * Fields the saved entry had and the row no longer sets are cleared with an explicit `null`.
+ */
+export function buildPostureNamedBlockPatch(
+  kind: PostureEntryKind,
+  input: {
+    readonly saved: readonly PostureEntryReadback[];
+    readonly rows: readonly PosturePatchRow[];
+    readonly removedNames: readonly string[];
+  },
+): PostureNamedBlockPatch {
+  const upsertedNames = input.rows.map((row) => row.entry.name);
+  const renamedAwayNames = input.rows
+    .filter((row) => row.originName !== null && row.originName !== row.entry.name)
+    .map((row) => row.originName as string);
+  const deletedNames = [...new Set([...input.removedNames, ...renamedAwayNames])]
+    .filter((name) => name.length > 0 && !upsertedNames.includes(name))
+    .sort((left, right) => left.localeCompare(right, "en"));
+
+  const block: Record<string, Record<string, unknown> | null> = {};
+  for (const row of input.rows) {
+    const previous =
+      row.originName === null
+        ? null
+        : (input.saved.find((entry) => entry.name === row.originName) ?? null);
+    block[row.entry.name] = renderPosturePatchEntry(kind, row.entry, previous);
+  }
+  for (const name of deletedNames) {
+    block[name] = null;
+  }
+  return { block, upsertedNames, deletedNames };
+}
+
+function renderPosturePatchEntry(
+  kind: PostureEntryKind,
+  entry: PostureWriteEntry,
+  previous: PostureEntryReadback | null,
+): Record<string, unknown> {
+  const rendered = { ...buildPostureWriteBlock(kind, [entry])[entry.name] };
+  if (previous === null) {
+    return rendered;
+  }
+  /** A saved value the row no longer sets must be cleared explicitly, or the merge keeps it. */
+  if (kind === "role" && previous.roleId !== null && !entry.roleId) {
+    rendered.role_id = null;
+  }
+  if (previous.scoringStrategy !== null && !entry.scoringStrategy) {
+    rendered.scoring_strategy = null;
+  }
+  if (previous.routingMode !== null && !entry.routingMode) {
+    rendered.routing_mode = null;
+  }
+  if (previous.computePreference !== null && !entry.computePreference) {
+    rendered.compute_preference = null;
+  }
+  if (previous.configuredModelIds.length > 0 && entry.modelIds.length === 0) {
+    rendered.model_ids = null;
+  }
+  if (
+    kind === "workload" &&
+    previous.requiredCapabilities.length > 0 &&
+    entry.requiredCapabilities.length === 0
+  ) {
+    rendered.required_capabilities = null;
+  }
+  return rendered;
+}
+
 export function parseCommaList(value: string): readonly string[] {
   return [
     ...new Set(
