@@ -93,6 +93,39 @@ function evaluateClientEntry(): {
   return { registered, registrations, injectedInto, effects, component };
 }
 
+/** Whether a value is a class component (the error boundary) rather than a function. */
+function isClassComponent(value: unknown): boolean {
+  return (
+    typeof value === "function" && /^\s*class[\s{]/.test(Function.prototype.toString.call(value))
+  );
+}
+
+/**
+ * Render one component element to what it returns.
+ *
+ * Both shapes occur: the page and its cards are functions, and the error boundary is a
+ * class. react-dom reaches the same result, so the helpers must as well.
+ * @param element - a component element (its `type` is a function or class).
+ * @returns the rendered output.
+ */
+function invokeComponent(element: HostElement): unknown {
+  const type = element.type as (props: unknown) => unknown;
+  if (isClassComponent(type)) {
+    const instance = new (
+      type as unknown as new (
+        props: unknown,
+      ) => {
+        props: unknown;
+        render(): unknown;
+      }
+    )(element.props ?? {});
+    return instance.render();
+  }
+  const props = { ...(element.props ?? {}) } as Record<string, unknown>;
+  if (element.children !== undefined) props.children = element.children;
+  return type(props);
+}
+
 /**
  * Render a component once, so its static markup can be inspected.
  *
@@ -106,7 +139,11 @@ function renderComponent(
 ): unknown {
   if (typeof component !== "function") return null;
   try {
-    return (component as (props: unknown) => unknown)({});
+    return invokeComponent({
+      type: component,
+      props: {},
+      children: undefined,
+    } as unknown as HostElement);
   } catch {
     return null;
   }
@@ -166,6 +203,19 @@ function testReact(): {
       };
     },
     Fragment: Symbol.for("react.fragment"),
+    // The error boundary is a class component, so the stub needs a base class that
+    // records constructor props and carries the state the boundary sets.
+    Component: class {
+      props: unknown;
+      state: unknown;
+      constructor(props: unknown) {
+        this.props = props;
+        this.state = {};
+      }
+      setState(next: unknown) {
+        this.state = { ...(this.state as object), ...(next as object) };
+      }
+    },
     useState: (initial: unknown) => [initial ?? {}, () => undefined],
     useEffect: () => undefined,
     useMemo: (factory: () => unknown) => factory(),
@@ -199,11 +249,7 @@ function expand(value: unknown): unknown[] {
   if (Array.isArray(value)) return value.flatMap(expand);
   if (!isElement(value)) return [value];
   const element = value as HostElement;
-  if (typeof element.type === "function") {
-    const props = { ...(element.props ?? {}) } as Record<string, unknown>;
-    if (element.children !== undefined) props.children = element.children;
-    return expand((element.type as (props: unknown) => unknown)(props));
-  }
+  if (typeof element.type === "function") return expand(invokeComponent(element));
   return [{ ...element, children: (element.children ?? []).flatMap(expand) }];
 }
 
@@ -682,5 +728,28 @@ describe("editing configuration from the panel", () => {
     await expect(internals.writeConfig(bare, { endpoint: "http://x" })).resolves.toContain(
       "unavailable",
     );
+  });
+
+  /**
+   * A component that throws during render leaves the settings pane blank, and nothing
+   * in the browser says the plugin is responsible. Tests over the markup and the write
+   * path cannot catch that — a blank `role-model` pane was reported while every one of
+   * them passed — so the failure is rendered as text instead.
+   */
+  test("keeps a render failure visible instead of blanking the pane", () => {
+    const source = readFileSync(clientEntry, "utf8");
+    // The message must name the plugin, so a user can tell whose fault it is.
+    expect(source).toContain("role-model could not render");
+    // The real panel is invoked inside the guarded shell, so a throw during its own
+    // render is caught rather than escaping into react-dom's tree walk.
+    expect(source).toContain("RoleModelPanel()");
+    expect(source).toContain("PanelShell");
+  });
+
+  test("the shell renders its children while nothing has thrown", () => {
+    const { component } = applyWith(undefined);
+    const rendered = JSON.stringify((component as (props: unknown) => unknown)({}), jsonReplacer);
+    expect(rendered).toContain("rlm-page");
+    expect(rendered).not.toContain("could not render");
   });
 });

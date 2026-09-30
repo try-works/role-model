@@ -742,6 +742,40 @@ window.__ModuleLoader__.load({
       );
     }
 
+    /**
+     * Render the panel, turning a render failure into visible text.
+     *
+     * A component that throws during render leaves the settings content area empty, and
+     * nothing in the browser says the plugin is responsible. Tests over the markup and
+     * the write path cannot catch that, so the failure is surfaced here: a blank pane is
+     * indistinguishable from a plugin that never mounted, and that ambiguity cost real
+     * debugging time on this page.
+     *
+     * A plain function with a try/catch rather than a React error boundary: a class
+     * boundary would not catch an error thrown by the function component that *is* the
+     * page, and it would drag class-component plumbing into a file that is served as-is.
+     */
+    function PanelShell(props) {
+      if (props?.failure === undefined) return props?.children ?? null;
+      const error = props.failure;
+      const detail =
+        error && (error.stack || error.message)
+          ? String(error.stack || error.message)
+          : String(error);
+      return h(
+        "div",
+        { className: "rlm-page" },
+        h("h2", { className: "rlm-title" }, "role-model could not render"),
+        h(
+          "p",
+          { className: "rlm-note" },
+          "The plugin mounted, but a component threw while rendering. The detail below is the " +
+            "browser's own error report; include it in a bug report.",
+        ),
+        h("pre", { className: "rlm-codeblock" }, detail),
+      );
+    }
+
     return {
       // The settings section slot is provided by the settings shell, so wait for it.
       //
@@ -754,6 +788,19 @@ window.__ModuleLoader__.load({
 
       apply(ctx) {
         panelContext = ctx;
+        // The shell keeps a render failure visible; without it a throw blanks the
+        // settings pane and looks identical to a plugin that never mounted.
+        //
+        // `RoleModelPanel` is invoked here rather than handed to react-dom as an
+        // element, because an error thrown while react-dom walks a child element escapes
+        // a parent's try/catch. Calling it first puts the throw inside the shell.
+        const panel = function RoleModelPanelSafe(props) {
+          try {
+            return h(PanelShell, props ?? {}, RoleModelPanel());
+          } catch (error) {
+            return h(PanelShell, { ...(props ?? {}), failure: error });
+          }
+        };
         ctx.effect(() =>
           ctx.slots.inject("settings.section", () =>
             ctx.slots.register(
@@ -765,7 +812,7 @@ window.__ModuleLoader__.load({
                 order: 60,
                 label: "role-model",
               },
-              RoleModelPanel,
+              panel,
             ),
           ),
         );
