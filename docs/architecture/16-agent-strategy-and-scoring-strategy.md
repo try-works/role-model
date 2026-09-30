@@ -251,14 +251,19 @@ Effect is the obvious shape, it is used, and any deviation is recorded per `AGEN
 
 | Concern | Primitive | Vendored source |
 | --- | --- | --- |
-| Config and vocabulary decoding, bounds, weight invariants | `Schema` | `packages/effect/src/Schema.ts` |
-| Strategy vocabulary as a total, exhaustive value | `Data.TaggedEnum` + `Match` | `Data.ts`, `Match.ts` |
+| Config and vocabulary decoding, bounds, weight invariants, file-key mapping | `Schema`, `SchemaGetter`, `Schema.encodeKeys` | `Schema.ts`, `SchemaGetter.ts` |
+| Strategy vocabulary as a total, exhaustive value | `Data.TaggedEnum` (`$match`, `$is`) | `Data.ts` |
+| Typed, tag-discriminated configuration failures | `Data.TaggedError` | `Data.ts` |
 | Strategy resolution as a replaceable service | `Context.Service` + `Layer` | `Context.ts`, `Layer.ts` |
-| Live config state and the config mutation lock | `SynchronizedRef` + `Semaphore` | `SynchronizedRef.ts`, `Semaphore.ts` |
-| Derived-artifact caching (compiled matrix, resolved weights) | `Cache` | `Cache.ts` |
-| Env narrowing for the latency policy | `Config` + `ConfigProvider` | `Config.ts`, `ConfigProvider.ts` |
+| Live config state and atomic publication | `SynchronizedRef` | `SynchronizedRef.ts` |
+| The multi-step config mutation critical section (read, write, apply, rollback) | `Semaphore` | `Semaphore.ts` |
+| Revision-keyed derived artifacts (compiled alias matrix, decoded config) | `Ref` / `SynchronizedRef` | `Ref.ts`, `SynchronizedRef.ts` |
+| Per-key memoization with capacity and TTL | `Cache` | `Cache.ts` |
+| Env narrowing for the latency policy | `Config` + `ConfigProvider` (`fromEnv`, `layer`, `constantCase`) | `Config.ts`, `ConfigProvider.ts` |
+| One long-lived effect runtime for the config path | `ManagedRuntime` | `ManagedRuntime.ts` |
 | Decision provenance counters | `Metric` | `Metric.ts` |
 | Structured decision logging | `Effect.logInfo` / `Effect.annotateLogs` | `Effect.ts` |
+| Config-revision notification to UI and alias subscribers (optional) | `SubscriptionRef` | `SubscriptionRef.ts` |
 
 ### 7.3 How to use each
 
@@ -266,9 +271,10 @@ Effect is the obvious shape, it is used, and any deviation is recorded per `AGEN
 consumes typed values and never re-parses strings.
 
 ```ts
-import { Schema } from "effect"
+import { Schema, SchemaGetter } from "effect"
 
-const Unit = Schema.Number.pipe(Schema.check(Schema.isBetween({ minimum: 0, maximum: 1 })))
+// Finite, not Number: NaN and Infinity must never reach the scorer.
+const Unit = Schema.Finite.pipe(Schema.check(Schema.isBetween({ minimum: 0, maximum: 1 })))
 
 export const WeightProfile = Schema.Struct({
   quality: Unit,
@@ -288,30 +294,63 @@ export const WeightProfile = Schema.Struct({
   )
 )
 
-export const RoutingBlock = Schema.Struct({
+// The file speaks snake_case; `Schema.encodeKeys` decodes from the renamed keys and encodes
+// back to them, so one schema serves both directions.
+const RoutingFields = Schema.Struct({
   mode: Schema.Literals(["baseline", "difficulty", "hybrid", "intelligent", "controller"]),
   scoringStrategy: Schema.Literals(["balanced", "quality", "latency", "cost", "custom"]),
   pinWeights: Schema.Boolean,
   weights: Schema.optionalKey(WeightProfile)
 })
 
+// `weights` is required for `custom` and rejected for every preset; a struct-level check
+// states that in one place instead of relying on the optional key alone.
+const weightsAreConsistent = Schema.makeFilter((block: typeof RoutingFields.Type) => {
+  if (block.scoringStrategy === "custom") {
+    return block.weights ? undefined : "weights are required when scoring_strategy is custom"
+  }
+  return block.weights ? "weights are only allowed when scoring_strategy is custom" : undefined
+})
+
+export const RoutingBlockFile = RoutingFields.pipe(
+  Schema.encodeKeys({ scoringStrategy: "scoring_strategy", pinWeights: "pin_weights" }),
+  Schema.check(weightsAreConsistent)
+)
+
+// Legacy spellings are the encoded side; the canonical name is the decoded side. Encoding
+// therefore always writes a canonical value, which is why a rewritten file loses synonyms.
+const LegacyScoringName = Schema.Literals([
+  "balanced", "quality", "latency", "cost",
+  "low-latency", "high-quality", "low-cost", "latency-first", "basic"
+])
+const ScoringName = LegacyScoringName.pipe(
+  Schema.decodeTo(Schema.Literals(["balanced", "quality", "latency", "cost"]), {
+    decode: SchemaGetter.transform((legacy) => LEGACY_SCORING_MAP[legacy]),
+    encode: SchemaGetter.transform((canonical) => canonical)
+  })
+)
+
 // boundary decodes
-const decode = Schema.decodeUnknownEffect(RoutingBlock)
-const decodeResult = Schema.decodeUnknownResult(RoutingBlock)   // for the operator write path
-const encode = Schema.encodeEffect(RoutingBlock)                // for rendering the config file
+const decode = Schema.decodeUnknownEffect(RoutingBlockFile)
+const decodeResult = Schema.decodeUnknownResult(RoutingBlockFile)  // operator write path
+const encode = Schema.encodeEffect(RoutingBlockFile)               // config rendering
 ```
+
+The mode axis uses the same shape: `controller` and `intelligent` decode to the canonical mode
+`intelligent`, `craft-ask` decodes to the `default` family, and encoding writes canonical names only.
 
 Use `decodeUnknownResult` on the operator API so a bad write returns the exact failing path
 (`weights.quality`, `weights`, `mode`) instead of a thrown string, and `decodeUnknownEffect` on the startup
-read so a bad file becomes a typed failure with a degradation receipt.
+read so a bad file becomes a typed failure with a degradation receipt. Model that failure as a
+`Data.TaggedError` so the API layer maps `_tag` values to status codes instead of matching message strings.
 
-**Data.TaggedEnum + Match - one total vocabulary.** Today three parallel switches
+**Data.TaggedEnum - one total vocabulary.** Today three parallel switches
 (`normalizeRoutingStrategyForAlias`, `normalizeConfiguredRoutingMode`, `toPolicyStrategy`) can drift apart.
-Model the plan as a tagged enum and resolve it with an exhaustive match, so a new variant is a compile error
-everywhere it is not handled.
+Model the plan as a tagged enum and resolve it with the enum's own exhaustive matcher, so a new variant is a
+compile error everywhere it is not handled.
 
 ```ts
-import { Data, Match } from "effect"
+import { Data } from "effect"
 
 type ScoringPlan = Data.TaggedEnum<{
   Balanced: {}
@@ -322,15 +361,15 @@ type ScoringPlan = Data.TaggedEnum<{
 }>
 const ScoringPlan = Data.taggedEnum<ScoringPlan>()
 
-const weightsFor = (plan: ScoringPlan) =>
-  Match.value(plan).pipe(
-    Match.when({ _tag: "Balanced" }, () => BALANCED_WEIGHTS),
-    Match.when({ _tag: "Quality" }, () => QUALITY_WEIGHTS),
-    Match.when({ _tag: "Latency" }, () => LATENCY_WEIGHTS),
-    Match.when({ _tag: "Cost" }, () => COST_WEIGHTS),
-    Match.when({ _tag: "Custom" }, ({ weights }) => weights),
-    Match.exhaustive
-  )
+// `$match` is exhaustive by type: adding a variant fails to compile until every call site
+// handles it. `ScoringPlan.$is("Custom")(plan)` is the guard form.
+const weightsFor = ScoringPlan.$match({
+  Balanced: () => BALANCED_WEIGHTS,
+  Quality: () => QUALITY_WEIGHTS,
+  Latency: () => LATENCY_WEIGHTS,
+  Cost: () => COST_WEIGHTS,
+  Custom: ({ weights }) => weights
+})
 ```
 
 The canonical presets stay the single source of truth: the values in `packages/core/src/router.ts`
@@ -346,54 +385,75 @@ with an optional `weights` object is a separate, reviewed change and is listed a
 bridge stops threading `defaultRoutingMode` through six call sites.
 
 ```ts
-import { Context, Effect, Layer } from "effect"
+import { Context, Effect, Layer, SynchronizedRef } from "effect"
 
 export const ScoringStrategyResolver = Context.Service<{
   readonly resolve: (input: {
     readonly plan: ScoringPlan
     readonly difficulty?: "easy" | "medium" | "hard"
     readonly controllerStrategy?: ScoringPlan
-  }) => StrategyResolution
+  }) => Effect.Effect<StrategyResolution>
 }>("role-model/ScoringStrategyResolver")
+
+// The pure core carries the section 5 precedence and is tested without a runtime.
+export const resolveWith = (state: RoutingState, input: StrategyInput): StrategyResolution => ...
 
 export const ScoringStrategyResolverLive = (state: SynchronizedRef.SynchronizedRef<RoutingState>) =>
   Layer.succeed(ScoringStrategyResolver, {
-    resolve: (input) => resolveWith(SynchronizedRef.getUnsafe(state), input)
+    resolve: (input) =>
+      SynchronizedRef.get(state).pipe(Effect.map((current) => resolveWith(current, input)))
   })
 ```
 
-The pure `resolveWith` carries the section 5 precedence and is unit-testable without a runtime; the layer is
-the only place that knows about live config. Tests provide a `Layer.succeed` with a fixed state.
+The service is effectful only because reading live state is; the decision logic stays pure and separately
+testable. Tests provide a `Layer.succeed` with a fixed state, and the request path calls the same pure
+`resolveWith` against the current snapshot without running an effect per request (section 7.4).
 
-**SynchronizedRef + Semaphore - live config and the mutation lock.** Replace the module-level
-`let currentUnifiedRuntimeConfig` and `withUnifiedConfigMutationLock` with a single owner:
+**SynchronizedRef + Semaphore - two different jobs.** Replace the module-level
+`let currentUnifiedRuntimeConfig` and `withUnifiedConfigMutationLock` with an atomic state cell plus an
+explicit critical section:
 
 ```ts
-const state = yield* SynchronizedRef.make(initialRoutingState)
-const lock = yield* Semaphore.make(1)
+const state = yield* SynchronizedRef.make(initialRoutingState)   // atomic publication
+const lock = yield* Semaphore.make(1)                            // mutation critical section
 
-const applyUpdate = (next: RoutingState) => lock.withPermits(1)(work(next))
-// reads are lock-free:
+// lock-free read of one immutable snapshot
 const current = yield* SynchronizedRef.get(state)
+
+// the whole read-modify-write of the config file is one critical section
+const applyUpdate = (next: RoutingState) => lock.withPermits(1)(persistAndPublish(next, state))
 ```
 
-Writers take the permit, decode and validate with `Schema`, then `SynchronizedRef.set` once. Readers see
-either the old or the new state, never a half-applied alias matrix.
+`SynchronizedRef` serialises update and modify operations, including effectful ones, while reads and simple
+writes behave like a plain `Ref` - so readers see either the old or the new snapshot, never a half-applied
+alias matrix. It is not a substitute for the semaphore, because the sequence that must not interleave spans
+file I/O and a rollback path (`readFile`, `writeConfigTextAtomically`, `applyUnifiedRuntimeConfigState`,
+rollback). Writers take the permit, decode and validate with `Schema`, then publish once.
 
-**Cache - derived artifacts, not the durable cache.** Use `Cache` for pure derived values keyed by config
-revision (compiled alias matrix, resolved weights per plan, decoded config snapshot):
+**Ref / Cache - the right cache for each job.** A config-derived artifact must change exactly when the config
+revision changes and must not expire on a timer, so it belongs in a `Ref`/`SynchronizedRef`, published in the
+same critical section as the config write:
 
 ```ts
-const matrixCache = yield* Cache.make({
-  capacity: 16,
+const compiledMatrix = yield* SynchronizedRef.make(compileAliasMatrix(initialRevision))
+// on a config write, in the same critical section:
+yield* SynchronizedRef.set(compiledMatrix, compileAliasMatrix(nextRevision))
+```
+
+`Cache` is for per-key memoization where capacity and TTL are genuinely wanted - an expensive per-endpoint
+derivation keyed by `endpointId + revision`, or a read-through in front of the SQLite difficulty cache:
+
+```ts
+const endpointProfiles = yield* Cache.make({
+  capacity: 512,
   timeToLive: Duration.minutes(15),
-  lookup: (revision: string) => Effect.sync(() => compileAliasMatrix(revision))
+  lookup: (key: string) => Effect.sync(() => deriveEndpointProfile(key))
 })
 ```
 
-The difficulty-classification cache stays in SQLite (`readDifficultyClassificationCache` /
-`upsertDifficultyClassificationCache`) because it must survive restarts and be shared between hosts; an
-in-process `Cache` may sit in front of its read path but never replaces it.
+The difficulty-classification rows stay in SQLite (`readDifficultyClassificationCache` /
+`upsertDifficultyClassificationCache`) because they must survive restarts and be shared between hosts; an
+in-process `Cache` may sit in front of that read but never replaces it.
 
 **Config + ConfigProvider - the latency policy's environment narrowing.** `routing-latency-policy.ts`
 currently reads the environment inline. Replace that with a structured config so precedence (defaults <
@@ -401,13 +461,25 @@ versioned policy < environment override, where the environment may only narrow) 
 hand-coded:
 
 ```ts
+import { Config, ConfigProvider } from "effect"
+
+// The environment may only narrow the versioned policy, so every override is optional and
+// is applied on top of the file's values.
 const EnvOverrides = Config.unwrap({
-  enabled: Config.option(Config.Boolean("ROLE_MODEL_LATENCY_SELECTION_ENABLED")),
-  maxDeltaMs: Config.option(Config.Number("ROLE_MODEL_LATENCY_SELECTION_MAX_DELTA_MS"))
+  latencySelectionEnabled: Config.option(Config.Boolean("latencySelectionEnabled")),
+  latencySelectionMaxDeltaMs: Config.option(Config.Finite("latencySelectionMaxDeltaMs"))
 })
+
+// Composition: read the process environment through a provider that maps config paths to
+// CONSTANT_CASE, so the knob above resolves ROLE_MODEL_LATENCY_SELECTION_MAX_DELTA_MS.
+const EnvProvider = ConfigProvider.layer(
+  ConfigProvider.fromEnv().pipe(ConfigProvider.constantCase)
+)
 ```
 
-Provide it through `ConfigProvider.layer(...)` in the runtime composition; tests provide a literal provider.
+Use `Config.schema(codec, path)` when a value needs the same validation the file gets, and provide the
+provider through `ConfigProvider.layer(...)` in the runtime composition; tests provide a literal provider
+instead so no test reads the real environment.
 
 **Metric + logs - provenance.** One counter, tagged per decision, so the aggregation question "which source
 produced this strategy" is answerable without scanning receipts:
@@ -424,16 +496,36 @@ const record = (strategy: string, source: string) =>
 Log the same pair with `Effect.logInfo` plus `Effect.annotateLogs` on the decision path so a single request
 can be traced without querying the store.
 
-### 7.4 What this does not rebuild
+### 7.4 Where the runtime boundary sits
+
+Effect owns the config path, not the request path. The bridge is a plain Node HTTP server with a hot routing
+path, so running an effect or building a layer per request would add cost and a new failure mode to every
+routed call. The prescribed shape:
+
+- build one `ManagedRuntime.make(...)` in the composition root, providing the config layer, the resolver
+  service, the caches and the config provider;
+- config load, validation, mutation and revision publication run on that runtime;
+- the config path mirrors each published snapshot into the bridge's existing config binding, so the request
+  path reads a plain immutable `RoutingState` and calls `resolveWith(snapshot, input)`; no effect runs per
+  request, and neither `runPromise` nor `getUnsafe` appears on the request path;
+- when the config changes, a new snapshot is published; in-flight requests finish on the snapshot they started
+  with.
+
+This keeps the Effect benefits - typed validation, ordered resource handling, replaceable layers - exactly
+where they matter, and keeps the routing hot path a pure function of immutable state.
+
+### 7.5 What this does not rebuild
 
 - No `effect-mq` and no `PersistedQueue`: this work has no queue, worker or retry lane. That surface belongs
   to `docs/architecture/15`.
+- No `Scope`/resource work: this change owns no process, socket or file handle; the vendor process supervisors
+  keep their current lifecycle.
 - No rewrite of the router core: `packages/core/src/router.ts` keeps its pure `routeRequest` signature and
   receives the resolved weights as an input.
 - No rewrite of the HTTP server: the bridge keeps its current handler shape; the resolver is constructed in
   the composition root and provided to the mapping functions.
 
-### 7.5 Fallback
+### 7.6 Fallback
 
 If the SEA bundling proof fails, the module boundaries stay identical and the resolver is implemented in plain
 TypeScript, with the reason recorded in the run addendum per `AGENTS.md`. Schema-equivalent validation still
@@ -544,6 +636,13 @@ decision's effective strategy, source, weights digest and winner match the saved
    that rather than changing the column.
 6. **Alias namespace pressure.** Every agent strategy and workload adds one alias per scope; the alias list
    must stay paginated and searchable in the UI.
+7. **Request-path purity.** The Effect adoption must not put `Effect.runPromise` or a fresh layer inside a
+   request handler; the runtime boundary in 7.4 is the constraint, and a `runPromise` in the
+   `/v1/chat/completions` path is a defect.
+8. **Vendored-pin drift.** The API shapes cited here (`Schema.encodeKeys`, `Schema.makeFilter`,
+   `Data.taggedEnum.$match`, `ManagedRuntime.make`, `ConfigProvider.fromEnv` / `constantCase`,
+   `Metric.withAttributes`) were verified against `effect@4.0.0-rc.117`; re-vendoring requires re-verifying
+   them before the routing modules are built on top.
 
 ## 12. References
 
