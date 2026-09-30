@@ -8,6 +8,7 @@ Inputs:
 - `/.recursive/run/103-agent-strategy-and-scoring-strategy/inputs/16-agent-strategy-and-scoring-strategy.md` (source design document, PR #288)
 - `/.recursive/run/103-agent-strategy-and-scoring-strategy/evidence/other/analyst_t1.md` (delegated analyst pass)
 - `/.recursive/run/103-agent-strategy-and-scoring-strategy/subagents/20260930T031524Z-analyst-t1-action.md` (action record)
+- `/.recursive/run/103-agent-strategy-and-scoring-strategy/addenda/01-as-is.upstream-gap.00-requirements.addendum-01.md` (locked phase-scope addendum)
 Outputs:
 - `/.recursive/run/103-agent-strategy-and-scoring-strategy/01-as-is.md`
 Scope note: This artifact records what the runtime does today for every requirement, proving which obligations are satisfied and which are missing, so Phase 2 can plan concrete sub-phases.
@@ -30,14 +31,14 @@ Every requirement of `00-requirements.md` is indexed here with its source quote,
 disposition for this run.
 
 - R1 | Source Quote: Posture split and configuration contract | Summary: split routing mode from scoring strategy with schema-level invariants, a custom weight profile and write-time normalization | Disposition: in-scope
-- R2 | Source Quote: The saved scoring strategy reaches the scorer | Summary: the saved strategy must rank candidates under the five-step precedence ladder, with pinning blocking difficulty and controller overrides | Disposition: in-scope
+- R2 | Source Quote: Resolution and precedence | Summary: the saved strategy must rank candidates under the five-step precedence ladder, with pinning blocking difficulty and controller overrides | Disposition: in-scope
 - R3 | Source Quote: Decision provenance and honest readback | Summary: decisions record effective strategy, source and weights digest, and no surface presents the raw config string as the strategy | Disposition: in-scope
 - R4 | Source Quote: Intelligent mode keeps its contract and gains | Summary: the controller contract is unchanged, gains latency as a supported strategy, and never overrides pinned weights | Disposition: in-scope
-- R5 | Source Quote: Agent strategy and Workloads postures | Summary: role-bound postures materialise name.scope aliases with honest pools, collision checks and intent precedence | Disposition: in-scope
+- R5 | Source Quote: Agent strategy postures (role-bound) | Summary: role-bound postures materialise name.scope aliases with honest pools, collision checks and intent precedence | Disposition: in-scope
 - R6 | Source Quote: Workload postures | Summary: workload postures materialise the same way with optional capability pins and batch/embedding examples | Disposition: in-scope
-- R7 | Source Quote: Measured-latency override settings and semantics | Summary: the override stays off by default with the effective-latency metric, a 10 000 ms threshold and a 5..30 sample floor | Disposition: in-scope
+- R7 | Source Quote: Measured-latency override | Summary: the override stays off by default with the effective-latency metric, a 10 000 ms threshold and a 5..30 sample floor | Disposition: in-scope
 - R8 | Source Quote: Operator surfaces | Summary: routing page controls plus separate Agent strategy and Workloads pages and decision provenance | Disposition: in-scope
-- R9 | Source Quote: Effect-first implementation discipline | Summary: routing modules use the landed Effect wrapper and prescribed primitives, with no Effect on the request path | Disposition: in-scope
+- R9 | Source Quote: Effect-first implementation | Summary: routing modules use the landed Effect wrapper and prescribed primitives, with no Effect on the request path | Disposition: in-scope
 - R10 | Source Quote: Extensibility and future-proofing | Summary: one vocabulary owner, exhaustive matching, config version migration and a reserved per-alias field | Disposition: in-scope
 - R11 | Source Quote: Strict TDD discipline | Summary: strict TDD with RED and GREEN evidence for the P0 test list and for every requirement | Disposition: quality-gate
 - R12 | Source Quote: Live verification of the rebuilt runtime with the pi CLI | Summary: packaged rebuild plus live pi-CLI verification on the development channel with honest evidence | Disposition: quality-gate
@@ -128,26 +129,35 @@ Audit Inputs Provided:
 
 - `00-requirements.md` and `00-worktree.md` were re-read before authoring this artifact.
 - The design document was read in full by the analyst and sampled by the controller for the sections cited above.
-- No addenda exist for this run yet.
+- `.recursive/run/103-agent-strategy-and-scoring-strategy/addenda/01-as-is.upstream-gap.00-requirements.addendum-01.md` (locked) was re-read; it supplies the approved phase-scope decision cited by `## Requirement Completion Status`.
 
 ## Earlier Phase Reconciliation
 
 - Phase 0 tasks `T1.1`, `T1.2a-e` and `T1.3` are delivered exactly by this artifact.
 - The Phase 0 worktree note about the dependency-closure build still holds; Phase 1 required no rebuild.
+- Reconciliation: the locked requirements artifact had no analysis-only disposition for audited phases, so this
+  phase records that gap in `.recursive/run/103-agent-strategy-and-scoring-strategy/addenda/01-as-is.upstream-gap.00-requirements.addendum-01.md` and cites it as the approved scope decision instead of editing the locked artifact.
 
 ## Subagent Contribution Verification
 
 Reviewed Action Records:
 - `/.recursive/run/103-agent-strategy-and-scoring-strategy/subagents/20260930T031524Z-analyst-t1-action.md` (role `analyst`, tasks `T1.1`-`T1.3`).
 
-Main-Agent Verification Performed:
-- Anchor sweep over all 28 anchors in `evidence/other/analyst_t1.md`: all resolve to files in this worktree with at least the cited length.
-- Symbol spot-check by the controller (listed under `## Evidence`).
+Main-Agent Verification Performed: anchor sweep over all 28 anchors in `/.recursive/run/103-agent-strategy-and-scoring-strategy/evidence/other/analyst_t1.md` (all resolve with at least the cited length); symbol spot-check of the key call sites, weight tables and latency defaults, recorded under `## Evidence`.
 - Drift check: the design document's own anchors are stale; the live anchors are recorded here and the drift is carried into Phase 2.
 
-Acceptance Decision: accepted with the additive corrections above; no claim failed verification.
+Acceptance Decision: accepted
+
+The additive corrections above (live anchors and the drift note) do not change the reviewed claims.
 Refresh Handling: not required - the reviewed artifact was not materially changed after review.
 Repair Performed After Verification: none
+
+## Verification Handoff
+
+- Inspect first: `/.recursive/run/103-agent-strategy-and-scoring-strategy/evidence/other/analyst_t1.md`
+- Reviewed artifact: `/.recursive/run/103-agent-strategy-and-scoring-strategy/01-as-is.md`
+- Bundle: `/.recursive/run/103-agent-strategy-and-scoring-strategy/evidence/review-bundles/01-as-is-analyst-dispatch.md`
+- Diff basis command: `git diff --name-only ca5c2126ca566086cfbe8f83cfdf339aba0879ff`
 
 ## Worktree Diff Audit
 
@@ -175,18 +185,18 @@ the lint showed that `subagents/` is reserved for action records.
 Status vocabulary note: this phase performs analysis only, so each requirement is recorded as out-of-scope for
 Phase 1 with an explicit phase-scoped decision; none of them is excluded from the run.
 
-- R1 | Status: out-of-scope | Rationale: Phase 1 records AS-IS evidence only and implements nothing | Scope Decision: implementation planned for Phase 3, not excluded from the run
-- R2 | Status: out-of-scope | Rationale: Phase 1 records AS-IS evidence only and implements nothing | Scope Decision: implementation planned for Phase 3, not excluded from the run
-- R3 | Status: out-of-scope | Rationale: Phase 1 records AS-IS evidence only and implements nothing | Scope Decision: implementation planned for Phase 3, not excluded from the run
-- R4 | Status: out-of-scope | Rationale: Phase 1 records AS-IS evidence only and implements nothing | Scope Decision: implementation planned for Phase 3, not excluded from the run
-- R5 | Status: out-of-scope | Rationale: Phase 1 records AS-IS evidence only and implements nothing | Scope Decision: implementation planned for Phase 3, not excluded from the run
-- R6 | Status: out-of-scope | Rationale: Phase 1 records AS-IS evidence only and implements nothing | Scope Decision: implementation planned for Phase 3, not excluded from the run
-- R7 | Status: out-of-scope | Rationale: Phase 1 records AS-IS evidence only and implements nothing | Scope Decision: implementation planned for Phase 3, not excluded from the run
-- R8 | Status: out-of-scope | Rationale: Phase 1 records AS-IS evidence only and implements nothing | Scope Decision: implementation planned for Phase 3, not excluded from the run
-- R9 | Status: out-of-scope | Rationale: Phase 1 records AS-IS evidence only and implements nothing | Scope Decision: implementation planned for Phase 3, not excluded from the run
-- R10 | Status: out-of-scope | Rationale: Phase 1 records AS-IS evidence only and implements nothing | Scope Decision: implementation planned for Phase 3, not excluded from the run
-- R11 | Status: out-of-scope | Rationale: Phase 1 performs no TDD cycle | Scope Decision: strict TDD runs in Phase 3 and Phase 4, not excluded from the run
-- R12 | Status: out-of-scope | Rationale: Phase 1 performs no packaged rebuild or live QA | Scope Decision: the packaged rebuild and live pi-CLI QA run in Phase 5, not excluded from the run
+- R1 | Status: out-of-scope | Rationale: Phase 1 records AS-IS evidence only and implements nothing | Scope Decision: /.recursive/run/103-agent-strategy-and-scoring-strategy/addenda/01-as-is.upstream-gap.00-requirements.addendum-01.md
+- R2 | Status: out-of-scope | Rationale: Phase 1 records AS-IS evidence only and implements nothing | Scope Decision: /.recursive/run/103-agent-strategy-and-scoring-strategy/addenda/01-as-is.upstream-gap.00-requirements.addendum-01.md
+- R3 | Status: out-of-scope | Rationale: Phase 1 records AS-IS evidence only and implements nothing | Scope Decision: /.recursive/run/103-agent-strategy-and-scoring-strategy/addenda/01-as-is.upstream-gap.00-requirements.addendum-01.md
+- R4 | Status: out-of-scope | Rationale: Phase 1 records AS-IS evidence only and implements nothing | Scope Decision: /.recursive/run/103-agent-strategy-and-scoring-strategy/addenda/01-as-is.upstream-gap.00-requirements.addendum-01.md
+- R5 | Status: out-of-scope | Rationale: Phase 1 records AS-IS evidence only and implements nothing | Scope Decision: /.recursive/run/103-agent-strategy-and-scoring-strategy/addenda/01-as-is.upstream-gap.00-requirements.addendum-01.md
+- R6 | Status: out-of-scope | Rationale: Phase 1 records AS-IS evidence only and implements nothing | Scope Decision: /.recursive/run/103-agent-strategy-and-scoring-strategy/addenda/01-as-is.upstream-gap.00-requirements.addendum-01.md
+- R7 | Status: out-of-scope | Rationale: Phase 1 records AS-IS evidence only and implements nothing | Scope Decision: /.recursive/run/103-agent-strategy-and-scoring-strategy/addenda/01-as-is.upstream-gap.00-requirements.addendum-01.md
+- R8 | Status: out-of-scope | Rationale: Phase 1 records AS-IS evidence only and implements nothing | Scope Decision: /.recursive/run/103-agent-strategy-and-scoring-strategy/addenda/01-as-is.upstream-gap.00-requirements.addendum-01.md
+- R9 | Status: out-of-scope | Rationale: Phase 1 records AS-IS evidence only and implements nothing | Scope Decision: /.recursive/run/103-agent-strategy-and-scoring-strategy/addenda/01-as-is.upstream-gap.00-requirements.addendum-01.md
+- R10 | Status: out-of-scope | Rationale: Phase 1 records AS-IS evidence only and implements nothing | Scope Decision: /.recursive/run/103-agent-strategy-and-scoring-strategy/addenda/01-as-is.upstream-gap.00-requirements.addendum-01.md
+- R11 | Status: out-of-scope | Rationale: Phase 1 performs no TDD cycle | Scope Decision: /.recursive/run/103-agent-strategy-and-scoring-strategy/addenda/01-as-is.upstream-gap.00-requirements.addendum-01.md
+- R12 | Status: out-of-scope | Rationale: Phase 1 performs no packaged rebuild or live QA | Scope Decision: /.recursive/run/103-agent-strategy-and-scoring-strategy/addenda/01-as-is.upstream-gap.00-requirements.addendum-01.md
 
 ## Audit Verdict
 

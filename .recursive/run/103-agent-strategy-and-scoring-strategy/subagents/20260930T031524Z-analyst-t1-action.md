@@ -73,7 +73,9 @@
 
 ## Verification Handoff
 - Inspect first:
-- none
+- `/.recursive/run/103-agent-strategy-and-scoring-strategy/evidence/other/analyst_t1.md`
+- `/.recursive/run/103-agent-strategy-and-scoring-strategy/01-as-is.md`
+- `/.recursive/run/103-agent-strategy-and-scoring-strategy/evidence/review-bundles/01-as-is-analyst-dispatch.md`
 - Notes:
 - Controller anchor sweep: 28/28 anchors resolve with sufficient length
 - Controller symbol spot-check confirmed toDifficultyStrategy:1966, maybeApplyDifficultyRouting:2065, maybeApplyControllerRouting:2232, STRATEGY_WEIGHTS:183, toPolicyStrategy:374
