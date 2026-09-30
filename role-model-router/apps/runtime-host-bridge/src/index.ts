@@ -21308,19 +21308,25 @@ export async function createRuntimeBridgeBackend(
         config.routingPosture?.mode ?? normalizeRoutingModeName(config.routingStrategy) ?? "baseline",
       modelIdsByExecutionMode,
     });
-    currentPostureAliasDiagnostics = {
-      violations: derivation.violations,
-      skipped: derivation.skipped,
-      warnings: validateAgentStrategyBindings({
-        entries: postureEntries,
-        knownRoleIds: getAllowedRoleIds(),
-        knownCapabilities: [
-          ...new Set([
-            ...canonicalTaxonomy.capabilities.map((capability) => capability.id),
-            ...currentNormalizedCatalog.models.flatMap((model) => [...model.capabilities]),
+    /** R5/R6: the runtime-side binding rules - an unknown `role_id` is a write error (SP5e). */
+    const bindingValidation = validateAgentStrategyBindings({
+      entries: postureEntries,
+      knownRoleIds: getAllowedRoleIds(),
+      knownCapabilities: [
+        ...new Set([
+          ...canonicalTaxonomy.capabilities.map((capability) => capability.id),
+          /** The registry's declared capabilities include the config-declared local and remote models. */
+          ...currentRegistry.endpoints.flatMap((endpoint) => [
+            ...(endpoint.declared?.capabilities ?? []),
           ]),
-        ],
-      }).warnings,
+          ...currentNormalizedCatalog.models.flatMap((model) => [...model.capabilities]),
+        ]),
+      ],
+    });
+    currentPostureAliasDiagnostics = {
+      violations: [...derivation.violations, ...bindingValidation.violations],
+      skipped: derivation.skipped,
+      warnings: bindingValidation.warnings,
     };
     if (canonicalAliases.length === 0) {
       return config;
