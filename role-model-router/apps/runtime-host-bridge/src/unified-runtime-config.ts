@@ -1642,9 +1642,7 @@ function decodeStructuredRoutingBlock(
     let pin = false;
     if (pinValue !== undefined && typeof pinValue !== "boolean") {
       if (strict) {
-        throw new Error(
-          `${path}.pin_weights must be a boolean; saw ${JSON.stringify(pinValue)}.`,
-        );
+        throw new Error(`${path}.pin_weights must be a boolean; saw ${JSON.stringify(pinValue)}.`);
       }
       pin = false;
     } else if (pinValue !== undefined) {
