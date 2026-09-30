@@ -431,3 +431,141 @@ describe("apply activation", () => {
     for (const line of logs) expect(line).not.toMatch(/Role[ -]Model/u);
   });
 });
+
+describe("config persistence", () => {
+  /**
+   * The host's `configEditor.edit(entry, change)` takes a live `Entry` and matches it
+   * **by identity**: `if (!this.entries().includes(entry)) throw new Error(...)`
+   * (`packages/boot/config-editor/src/index.ts`). Passing a look-alike such as
+   * `{ id: 'dsh-role-model' }` therefore throws, and because the write is
+   * fire-and-forget the failure appears only as a warning — the user's choice is
+   * silently never persisted. These specs pin that the entry handed to `edit` is one
+   * the editor actually owns.
+   */
+  interface FakeEntry {
+    id: string;
+    options: { id: string; name: string; config?: Record<string, unknown> };
+  }
+
+  /** A config editor double whose `edit` enforces the real identity rule. */
+  function fakeEditor(entries: FakeEntry[]) {
+    const edits: { alias: unknown }[] = [];
+    const service = {
+      entries: () => entries,
+      edit(
+        entry: FakeEntry,
+        change: (current: Record<string, unknown>) => Record<string, unknown>,
+      ) {
+        if (!entries.includes(entry)) {
+          return Promise.reject(new Error("Configuration entry is no longer available"));
+        }
+        edits.push({ alias: change({}).selectedAlias });
+        return Promise.resolve();
+      },
+    };
+    return { service, edits };
+  }
+
+  /**
+   * Activate with a config editor and capture the registered command handler.
+   *
+   * The alias command needs a reachable runtime — it discovers before dispatching — so
+   * this serves the discovery contract rather than failing the probe.
+   * @param entries - the entries the editor owns.
+   */
+  async function activate(entries: FakeEntry[]) {
+    const { service, edits } = fakeEditor(entries);
+    const discovery = createDiscovery();
+    const logs: string[] = [];
+    const handlers = new Map<string, (invocation: { rawInput: string }) => Promise<unknown>>();
+    const respond = (body: unknown): Promise<Response> =>
+      Promise.resolve(
+        new Response(JSON.stringify(body), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        }),
+      );
+    const fetchImpl = (url: string | URL | Request): Promise<Response> => {
+      const href = typeof url === "string" ? url : url instanceof URL ? url.href : url.url;
+      if (href.includes("/healthz")) return respond({ status: "ok" });
+      if (href.includes("/api/version")) return respond({ version: "test" });
+      if (href.includes("/api/role-model/downstream/openai")) return respond(discovery);
+      if (href.includes("/v1/models")) return respond({ object: "list", data: [] });
+      return Promise.reject(new Error(`unexpected request: ${href}`));
+    };
+    const ctx = {
+      logger: {
+        info: (message: unknown) => logs.push(String(message)),
+        warn: (message: unknown) => logs.push(String(message)),
+        error: (message: unknown) => logs.push(String(message)),
+      },
+      get: (name: string) => {
+        if (name === "llm") {
+          return {
+            registerAdapter: () => () => undefined,
+            registerConfigurableProviders: () => () => undefined,
+          };
+        }
+        if (name === "configEditor") return service;
+        if (name === "commands") {
+          return {
+            register: (definition: {
+              name: string;
+              handler: (invocation: { rawInput: string }) => Promise<unknown>;
+            }) => {
+              handlers.set(definition.name, definition.handler);
+              return () => undefined;
+            },
+          };
+        }
+        return undefined;
+      },
+      effect: (callback: () => unknown) => {
+        callback();
+        return () => undefined;
+      },
+    };
+    await createRoleModelPlugin({
+      hostLlm: fakeHostLlm,
+      fetch: fetchImpl as never,
+    })(ctx as never, {
+      endpoint: "http://127.0.0.1:3457",
+      allowRemote: false,
+      requestTimeoutMs: 2000,
+      providerRoute: "role-model",
+    });
+    return { edits, logs, handlers };
+  }
+
+  test("persists the alias through an entry the editor owns", async () => {
+    const entry: FakeEntry = {
+      id: "dsh-role-model",
+      options: { id: "dsh-role-model", name: "@try-works/dsh-role-model" },
+    };
+    const { edits, logs, handlers } = await activate([entry]);
+    const handler = handlers.get("role-model");
+    expect(handler, "the command was not registered").toBeDefined();
+    await handler?.({ rawInput: "alias use baseline.remote-only" });
+    expect(logs.filter((line) => line.includes("could not persist"))).toEqual([]);
+    expect(edits).toEqual([{ alias: "baseline.remote-only" }]);
+  });
+
+  test("finds the entry by package name when the id differs", async () => {
+    // A profile may patch the row under a different id than this package assumes.
+    const entry: FakeEntry = {
+      id: "include:role-model-row",
+      options: { id: "role-model-row", name: "@try-works/dsh-role-model" },
+    };
+    const { edits, logs, handlers } = await activate([entry]);
+    await handlers.get("role-model")?.({ rawInput: "alias use baseline.remote-only" });
+    expect(logs.filter((line) => line.includes("could not persist"))).toEqual([]);
+    expect(edits).toEqual([{ alias: "baseline.remote-only" }]);
+  });
+
+  test("says so instead of pretending when no entry exists", async () => {
+    const { logs, handlers } = await activate([]);
+    await handlers.get("role-model")?.({ rawInput: "alias use baseline.remote-only" });
+    // It must not claim success, and it must explain how to persist the choice.
+    expect(logs.join("\n")).toContain("selectedAlias");
+  });
+});
