@@ -1,4 +1,3 @@
-import { MetricStrip } from "@role-model/ui";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { CheckboxControl } from "../components/checkbox-control";
@@ -23,12 +22,9 @@ import {
 } from "../lib/design-system";
 import {
   LATENCY_COMPARISON_METRIC_COPY,
-  type LatencyEvidenceRow,
-  type LatencyOverrideDraft,
-  type LatencyOverrideView,
-  buildLatencyOverrideDraft,
-  summarizeLatencyOverrideEvidence,
-  validateLatencyOverrideDraft,
+  LATENCY_SELECTION_ENABLED_FIELD,
+  type LatencyOverrideToggleView,
+  buildLatencyOverrideToggle,
 } from "../lib/latency-override";
 import {
   type LearningPolicyView,
@@ -58,12 +54,7 @@ import {
   resolveRoutingPostureSummary,
   validateWeightProfile,
 } from "../lib/routing-mode";
-import {
-  type RouterConfig,
-  fetchRouterConfig,
-  fetchTelemetryRequests,
-  updateRuntimeConfig,
-} from "../lib/runtime-api";
+import { type RouterConfig, fetchRouterConfig, updateRuntimeConfig } from "../lib/runtime-api";
 
 type WeightDrafts = Readonly<Record<(typeof WEIGHT_METRICS)[number], string>>;
 
@@ -89,17 +80,16 @@ function parseWeightDrafts(drafts: WeightDrafts): WeightProfile | null {
 /** Run 103 / SP8 - the Routing strategy page of design document section 8. */
 export default function ControlRoutingStrategyRoute() {
   const [routerConfig, setRouterConfig] = useState<RouterConfig | null>(null);
-  const [latencyView, setLatencyView] = useState<LatencyOverrideView | null>(null);
+  const [latencyToggle, setLatencyToggle] = useState<LatencyOverrideToggleView | null>(null);
   const [policyVersion, setPolicyVersion] = useState<number | null>(null);
-  const [evidenceRows, setEvidenceRows] = useState<readonly LatencyEvidenceRow[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [latencySaving, setLatencySaving] = useState(false);
   const [latencyStatus, setLatencyStatus] = useState<string | null>(null);
-  const [latencyErrors, setLatencyErrors] = useState<Readonly<Record<string, string>>>({});
-  const [operator, setOperator] = useState("");
+  /** Revealed only after a write the runtime refused for authorization reasons. */
+  const [latencyTokenNeeded, setLatencyTokenNeeded] = useState(false);
   const { token, setToken } = useOperatorToken();
 
   const [mode, setMode] = useState<RoutingModeName>("baseline");
@@ -109,9 +99,9 @@ export default function ControlRoutingStrategyRoute() {
     weightDraftsFromProfile(SCORING_PRESETS.balanced),
   );
   const [executionScope, setExecutionScope] = useState<ExecutionScopeName>("decision_only");
-  const [latencyDraft, setLatencyDraft] = useState<LatencyOverrideDraft | null>(null);
+  const [latencyEnabledDraft, setLatencyEnabledDraft] = useState<boolean | null>(null);
 
-  const syncDrafts = useCallback((next: RouterConfig, policy: LatencyOverrideView | null) => {
+  const syncDrafts = useCallback((next: RouterConfig, policy: LatencyOverrideToggleView | null) => {
     const summary = resolveRoutingPostureSummary({
       routing: next.routing ?? null,
       persisted: next.persisted,
@@ -131,7 +121,7 @@ export default function ControlRoutingStrategyRoute() {
       normalizeExecutionScopeValue(next.persisted.executionMode) ?? "decision_only",
     );
     if (policy) {
-      setLatencyDraft(policy.draft);
+      setLatencyEnabledDraft(policy.enabled);
     }
   }, []);
 
@@ -140,11 +130,11 @@ export default function ControlRoutingStrategyRoute() {
       fetchRouterConfig(),
       fetchLearningPolicy().catch(() => null),
     ]);
-    const nextLatencyView = nextPolicy ? buildLatencyOverrideDraft(nextPolicy.fields) : null;
+    const nextLatencyToggle = nextPolicy ? buildLatencyOverrideToggle(nextPolicy.fields) : null;
     setRouterConfig(nextRouterConfig);
-    setLatencyView(nextLatencyView);
+    setLatencyToggle(nextLatencyToggle);
     setPolicyVersion(nextPolicy?.policyVersion ?? null);
-    syncDrafts(nextRouterConfig, nextLatencyView);
+    syncDrafts(nextRouterConfig, nextLatencyToggle);
     setLoadError(null);
   }, [syncDrafts]);
 
@@ -155,25 +145,6 @@ export default function ControlRoutingStrategyRoute() {
       );
     });
   }, [loadState]);
-
-  const latencyWindowHours = latencyDraft?.windowHours ?? 24;
-  useEffect(() => {
-    let cancelled = false;
-    void fetchTelemetryRequests({ windowMs: latencyWindowHours * 60 * 60 * 1_000, limit: 500 })
-      .then((rows) => {
-        if (!cancelled) {
-          setEvidenceRows(rows);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setEvidenceRows([]);
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [latencyWindowHours]);
 
   const savedPosture = useMemo(
     () =>
@@ -211,17 +182,6 @@ export default function ControlRoutingStrategyRoute() {
     (parsedWeights === null ||
       savedWeightDrafts === null ||
       WEIGHT_METRICS.some((metric) => weightDrafts[metric] !== savedWeightDrafts[metric]));
-  const evidence = useMemo(
-    () =>
-      latencyDraft
-        ? summarizeLatencyOverrideEvidence(evidenceRows, {
-            windowHours: latencyDraft.windowHours,
-            nowMs: Date.now(),
-            minSamples: latencyDraft.minSamples,
-          })
-        : null,
-    [evidenceRows, latencyDraft],
-  );
   const hasUnsavedChanges =
     savedPosture === null ||
     savedPosture.mode !== mode ||
@@ -266,47 +226,43 @@ export default function ControlRoutingStrategyRoute() {
     }
   };
 
-  const saveLatencyOverride = async () => {
-    if (!latencyView || !latencyDraft) {
-      return;
-    }
-    const validation = validateLatencyOverrideDraft(latencyDraft, latencyView.bounds);
-    if (!validation.ok) {
-      setLatencyErrors(validation.errors);
-      setLatencyStatus(null);
-      return;
-    }
-    setLatencyErrors({});
-    if (Object.keys(validation.changes).length === 0) {
-      setLatencyStatus("The measured-latency override already matches the saved policy.");
-      return;
-    }
+  /**
+   * Post-lock addendum-03 (operator directive): the checkbox owns its own write. It flips exactly one
+   * learning-policy field, and the write is optimistic - a refused or stale write restores the saved
+   * value instead of leaving the page claiming a state the runtime does not hold.
+   */
+  const toggleLatencyOverride = async (next: boolean) => {
+    const previous = latencyEnabledDraft;
     if (policyVersion === null) {
       setLatencyStatus("The learning policy readback did not publish a policy version.");
       return;
     }
-    if (operator.trim().length === 0) {
-      setLatencyErrors({ operator: "An operator name is required to write the learning policy." });
-      return;
-    }
+    setLatencyEnabledDraft(next);
     setLatencySaving(true);
     setLatencyStatus(null);
     try {
       await saveLearningPolicy(
         {
-          changes: validation.changes,
+          changes: { [LATENCY_SELECTION_ENABLED_FIELD]: next },
           expectedPolicyVersion: policyVersion,
-          operator: operator.trim(),
-          reason: "run 103 routing strategy page",
+          operator: "operator:ui",
+          reason: "routing strategy measured-latency override checkbox",
         },
         fetch,
         token,
       );
       await loadState();
-      setLatencyStatus("Measured-latency override saved.");
-    } catch (value) {
+      setLatencyTokenNeeded(false);
       setLatencyStatus(
-        value instanceof Error ? value.message : "Could not save the measured-latency override.",
+        next ? "Measured-latency override enabled." : "Measured-latency override disabled.",
+      );
+    } catch (value) {
+      setLatencyEnabledDraft(previous);
+      setLatencyTokenNeeded(true);
+      setLatencyStatus(
+        value instanceof Error
+          ? value.message
+          : "Could not write the measured-latency override to the learning policy.",
       );
     } finally {
       setLatencySaving(false);
@@ -531,7 +487,7 @@ export default function ControlRoutingStrategyRoute() {
                 type="button"
                 disabled={saving}
                 onClick={() => {
-                  syncDrafts(routerConfig, latencyView);
+                  syncDrafts(routerConfig, latencyToggle);
                   setStatusMessage(null);
                   setSaveError(null);
                 }}
@@ -580,34 +536,25 @@ export default function ControlRoutingStrategyRoute() {
           </aside>
         </div>
       </SectionCard>
-
       <SectionCard
         title="Measured-latency override"
-        description={`Off by default. When authorized it may substitute an endpoint the router already considered eligible, comparing ${LATENCY_COMPARISON_METRIC_COPY}.`}
+        description="Off by default. One switch; the bounds, window and sample floor stay on the learning policy."
       >
-        {!latencyView || !latencyDraft ? (
+        {latencyToggle === null || latencyEnabledDraft === null || !latencyToggle.published ? (
           <p className={supportingTextClassName}>
-            The learning-policy readback did not publish the measured-latency fields for this
-            runtime build.
+            {latencyToggle === null
+              ? "The learning-policy readback is unavailable, so this switch cannot read or write the override."
+              : `This runtime build does not publish ${LATENCY_SELECTION_ENABLED_FIELD}, so the override cannot be switched from here.`}
           </p>
         ) : (
-          <div className="space-y-4">
-            {latencyView.missingFields.length > 0 ? (
-              <p className={errorNoticeClassName}>
-                This runtime build does not publish: {latencyView.missingFields.join(", ")}.
-              </p>
-            ) : null}
+          <div className="space-y-3">
             <div className="flex items-start gap-3">
               <CheckboxControl
                 id="latency-selection-enabled"
                 aria-label="Measured-latency override"
-                checked={latencyDraft.enabled === true}
-                disabled={latencyDraft.enabled === null || latencySaving}
-                onChange={() =>
-                  setLatencyDraft((current) =>
-                    current ? { ...current, enabled: !(current.enabled === true) } : current,
-                  )
-                }
+                checked={latencyEnabledDraft}
+                disabled={latencySaving}
+                onChange={() => void toggleLatencyOverride(!latencyEnabledDraft)}
               />
               <div className="space-y-1">
                 <label
@@ -617,204 +564,27 @@ export default function ControlRoutingStrategyRoute() {
                   Enabled
                 </label>
                 <p className={supportingTextClassName}>
-                  It acts only when the activation stage is at or above the minimum stage below.
+                  {`When enabled the router may substitute an endpoint it already considered eligible when the measured comparison ${LATENCY_COMPARISON_METRIC_COPY} shows a large enough advantage. The minimum stage, window, sample floor and bounds are edited on Learning → Configuration.`}
                 </p>
               </div>
             </div>
-
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              <SelectField
-                label="Minimum stage"
-                value={latencyDraft.minStage}
-                onChange={(value) =>
-                  setLatencyDraft((current) =>
-                    current
-                      ? { ...current, minStage: value as LatencyOverrideDraft["minStage"] }
-                      : current,
-                  )
-                }
-              >
-                {latencyView.stages.map((stage) => (
-                  <option key={stage} value={stage}>
-                    {stage}
-                  </option>
-                ))}
-              </SelectField>
-              <label className="grid gap-1">
-                <span className={fieldLabelClassName}>Window (hours)</span>
+            {latencyTokenNeeded ? (
+              <label className={fieldLabelClassName}>
+                Operator token
                 <input
-                  className={fieldClassName}
-                  type="number"
-                  min={latencyView.bounds.windowHours.min}
-                  max={latencyView.bounds.windowHours.max}
-                  value={latencyDraft.windowHours}
-                  disabled={latencySaving}
-                  onChange={(event) =>
-                    setLatencyDraft((current) =>
-                      current ? { ...current, windowHours: Number(event.target.value) } : current,
-                    )
-                  }
-                />
-              </label>
-              <label className="grid gap-1">
-                <span className={fieldLabelClassName}>Sample floor</span>
-                <input
-                  className={fieldClassName}
-                  type="number"
-                  min={latencyView.bounds.minSamples.min}
-                  max={latencyView.bounds.minSamples.max}
-                  value={latencyDraft.minSamples}
-                  disabled={latencySaving}
-                  onChange={(event) =>
-                    setLatencyDraft((current) =>
-                      current ? { ...current, minSamples: Number(event.target.value) } : current,
-                    )
-                  }
-                />
-                <span className={supportingTextClassName}>
-                  Bounds {latencyView.bounds.minSamples.min}..{latencyView.bounds.minSamples.max}
-                </span>
-              </label>
-              <label className="grid gap-1">
-                <span className={fieldLabelClassName}>Threshold (ms)</span>
-                <input
-                  className={fieldClassName}
-                  type="number"
-                  min={latencyView.bounds.maxDeltaMs.min}
-                  max={latencyView.bounds.maxDeltaMs.max}
-                  value={latencyDraft.maxDeltaMs}
-                  disabled={latencySaving}
-                  onChange={(event) =>
-                    setLatencyDraft((current) =>
-                      current ? { ...current, maxDeltaMs: Number(event.target.value) } : current,
-                    )
-                  }
-                />
-                <span className={supportingTextClassName}>
-                  Default {latencyView.defaults.maxDeltaMs} ms
-                </span>
-              </label>
-              <label className="grid gap-1">
-                <span className={fieldLabelClassName}>Bucket bounds (tokens)</span>
-                <input
-                  className={fieldClassName}
-                  value={latencyDraft.bucketBounds}
-                  disabled={latencySaving}
-                  onChange={(event) =>
-                    setLatencyDraft((current) =>
-                      current ? { ...current, bucketBounds: event.target.value } : current,
-                    )
-                  }
-                />
-              </label>
-              <label className="grid gap-1">
-                <span className={fieldLabelClassName}>Max candidates</span>
-                <input
-                  className={fieldClassName}
-                  type="number"
-                  min={latencyView.bounds.maxCandidates.min}
-                  max={latencyView.bounds.maxCandidates.max}
-                  value={latencyDraft.maxCandidates}
-                  disabled={latencySaving}
-                  onChange={(event) =>
-                    setLatencyDraft((current) =>
-                      current ? { ...current, maxCandidates: Number(event.target.value) } : current,
-                    )
-                  }
-                />
-              </label>
-            </div>
-
-            <div className="space-y-2">
-              <p className={monoEyebrowClassName}>Evidence behind this setting</p>
-              <MetricStrip
-                aria-label="Measured-latency evidence"
-                variant="inventory"
-                className="max-w-none"
-                items={[
-                  {
-                    id: "samples",
-                    label: `Latency samples / ${latencyDraft.windowHours} h`,
-                    value: String(evidence?.sampleCount ?? 0),
-                  },
-                  {
-                    id: "endpoints",
-                    label: "Endpoints with evidence",
-                    value: String(evidence?.endpointIds.length ?? 0),
-                  },
-                  {
-                    id: "floor",
-                    label: "Sample floor",
-                    value: String(latencyDraft.minSamples),
-                  },
-                ]}
-              />
-              {evidence?.samplesBelowFloor ? (
-                <p className={supportingTextClassName}>
-                  {`${evidence.sampleCount} sample${evidence.sampleCount === 1 ? "" : "s"} in the window is below the floor of ${evidence.minSamples}, so the override cannot act yet.`}
-                </p>
-              ) : null}
-              {evidence ? (
-                <p className={supportingTextClassName}>
-                  {`${evidence.rowsWithoutSamples} request${evidence.rowsWithoutSamples === 1 ? "" : "s"} in the window carried no usable latency sample.`}
-                </p>
-              ) : null}
-            </div>
-
-            <div className="flex flex-wrap gap-3">
-              <button
-                className={primaryButtonClassName}
-                type="button"
-                disabled={latencySaving}
-                onClick={() => void saveLatencyOverride()}
-              >
-                {latencySaving ? "Saving…" : "Save measured-latency override"}
-              </button>
-              <button
-                className={secondaryButtonClassName}
-                type="button"
-                disabled={latencySaving}
-                onClick={() => {
-                  setLatencyDraft(latencyView.defaults);
-                  setLatencyErrors({});
-                  setLatencyStatus("Reset to the shipped defaults; save to persist them.");
-                }}
-              >
-                Reset to default
-              </button>
-            </div>
-            {Object.entries(latencyErrors).map(([field, message]) => (
-              <p key={field} className={errorNoticeClassName}>
-                {field}: {message}
-              </p>
-            ))}
-            {latencyStatus ? <p className={supportingTextClassName}>{latencyStatus}</p> : null}
-
-            <div className={`${mutedPanelClassName} space-y-2 p-4`}>
-              <p className={monoEyebrowClassName}>Operator receipt</p>
-              <label className="grid gap-1">
-                <span className={fieldLabelClassName}>Operator</span>
-                <input
-                  className={fieldClassName}
-                  value={operator}
-                  placeholder="operator name recorded on the policy receipt"
-                  onChange={(event) => setOperator(event.target.value)}
-                />
-              </label>
-              <label className="grid gap-1">
-                <span className={fieldLabelClassName}>Operator token</span>
-                <input
-                  className={fieldClassName}
+                  className={`${fieldClassName} mt-1 font-mono`}
+                  onChange={(event) => setToken(event.target.value)}
+                  placeholder="only needed when this runtime requires one"
                   type="password"
                   value={token}
-                  onChange={(event) => setToken(event.target.value)}
                 />
+                <span className={`mt-1 block ${supportingTextClassName}`}>
+                  The learning policy is written through the authenticated operator API; the machine
+                  that owns the runtime needs no token.
+                </span>
               </label>
-              <p className={supportingTextClassName}>
-                The learning policy is written through the same authenticated operator API the
-                Learning pages use.
-              </p>
-            </div>
+            ) : null}
+            {latencyStatus ? <p className={supportingTextClassName}>{latencyStatus}</p> : null}
           </div>
         )}
       </SectionCard>

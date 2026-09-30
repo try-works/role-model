@@ -53,18 +53,33 @@ describe("run 103 routing strategy page", () => {
     expect(pageSource).toContain("Resolved posture");
     expect(pageSource).toContain("Measured-latency override");
     expect(pageSource).toContain("LATENCY_COMPARISON_METRIC_COPY");
-    expect(pageSource).toContain("Reset to default");
-    expect(pageSource).toContain("Evidence behind this setting");
     expect(pageSource).toContain("Active posture");
     // The controller still greps for the save affordance the page has always carried.
     expect(pageSource).toContain("Save and apply strategy");
   });
 
-  test("keeps the latency override on the learning policy API and shows its bounds", () => {
+  test("renders the measured-latency override as one checkbox on the learning policy API", () => {
     expect(pageSource).toContain("fetchLearningPolicy");
     expect(pageSource).toContain("saveLearningPolicy");
-    expect(pageSource).toContain("validateLatencyOverrideDraft");
-    expect(pageSource).toContain("summarizeLatencyOverrideEvidence");
-    expect(pageSource).toContain("fetchTelemetryRequests");
+    expect(pageSource).toContain("buildLatencyOverrideToggle");
+    expect(pageSource).toContain("LATENCY_SELECTION_ENABLED_FIELD");
+    expect(pageSource).toContain("CheckboxControl");
+    // The policy knobs, the evidence strip and the write receipt belong to Learning -> Configuration.
+    for (const removed of [
+      "Minimum stage",
+      "Window (hours)",
+      "Sample floor",
+      "Threshold (ms)",
+      "Bucket bounds (tokens)",
+      "Max candidates",
+      "Evidence behind this setting",
+      "Reset to default",
+      "Operator receipt",
+      "validateLatencyOverrideDraft",
+      "summarizeLatencyOverrideEvidence",
+      "fetchTelemetryRequests",
+    ]) {
+      expect(pageSource).not.toContain(removed);
+    }
   });
 });

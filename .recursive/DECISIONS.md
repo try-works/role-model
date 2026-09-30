@@ -747,3 +747,22 @@ Date: `2026-10-01`
 - Deferred to its own run (operator decision): per-alias usage tracking — requests, success rate, p50/p95 and
   last-used per alias — which needs a requested-alias dimension and filter in the telemetry plane.
 - Evidence: `addenda/03-implementation-summary.post-lock-capability-pool.addendum-02.md`.
+
+### Post-lock repair 3: the measured-latency override is one checkbox
+
+Date: `2026-10-01`
+
+- Operator directive: the Measured-latency override card on the Routing strategy page showed an entire
+  component (stage, window, sample floor, threshold, bucket bounds, max candidates, an evidence strip, a
+  save/reset pair and an always-visible operator receipt) where the operator asked for a checkbox.
+- The page now renders one checkbox that reads and writes the learning-policy flag
+  `latencySelectionEnabled`, with the policy version as the concurrency guard; a refused or stale write
+  restores the saved value. The other fields stay where they already have a schema-driven editor:
+  Learning -> Configuration. The operator token field appears only if the runtime refuses the write, so on
+  the machine that owns the runtime the switch is the whole interaction.
+- Verified live on the rebuilt dev runtime: toggle on -> policy version 2 with the flag true (reload keeps
+  it checked), toggle off -> version 3 with the flag false, i.e. the operator state is back at the shipped
+  default. Evidence: `addenda/03-implementation-summary.post-lock-latency-checkbox.addendum-03.md`.
+- Unchanged commitment: the effective threshold still comes from the learning policy file; the private
+  registry's `latencySelectionMaxDeltaMs` default (2000 against the public 10 000) remains the `R7` release
+  dependency. Hiding the field here does not resolve it.

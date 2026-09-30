@@ -1010,7 +1010,10 @@ describe("runtime design system", () => {
     expect(controlRoutingStrategySource).toContain("monoEyebrowClassName");
     expect(controlRoutingStrategySource).toContain("Save and apply strategy");
     expect(controlRoutingStrategySource).toContain("await loadState();");
-    expect(controlRoutingStrategySource).toContain('variant="inventory"');
+    // Post-lock addendum-03: the measured-latency override is one checkbox, so the inventory-style
+    // evidence strip it used to carry is gone from this page.
+    expect(controlRoutingStrategySource).toContain("CheckboxControl");
+    expect(controlRoutingStrategySource).not.toContain('variant="inventory"');
     expect(controlRoutingStrategySource).not.toContain("border-l-2 border-[var(--rm-accent)]");
     expect(controlRoutingStrategySource).not.toContain("usePageActions");
     expect(controlRoutingStrategySource).not.toContain("Advanced config");
