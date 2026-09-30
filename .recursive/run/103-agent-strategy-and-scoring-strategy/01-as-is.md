@@ -1,6 +1,8 @@
 Run: `/.recursive/run/103-agent-strategy-and-scoring-strategy/`
 Phase: `01 AS-IS`
-Status: `DRAFT`
+Status: `LOCKED`
+LockedAt: `2026-09-30T03:32:40Z`
+LockHash: `2fe7df8e065a5e1ca1eba29d3423ee8dddb5e03fa18e10aac73e0a15acfd4b12`
 Workflow version: `recursive-mode-audit-v2`
 Inputs:
 - `/.recursive/run/103-agent-strategy-and-scoring-strategy/00-requirements.md` (locked)
@@ -143,7 +145,7 @@ Audit Inputs Provided:
 Reviewed Action Records:
 - `/.recursive/run/103-agent-strategy-and-scoring-strategy/subagents/20260930T031524Z-analyst-t1-action.md` (role `analyst`, tasks `T1.1`-`T1.3`).
 
-Main-Agent Verification Performed: anchor sweep over all 28 anchors in `/.recursive/run/103-agent-strategy-and-scoring-strategy/evidence/other/analyst_t1.md` (all resolve with at least the cited length); symbol spot-check of the key call sites, weight tables and latency defaults, recorded under `## Evidence`.
+Main-Agent Verification Performed: anchor sweep over all 28 anchors in `/.recursive/run/103-agent-strategy-and-scoring-strategy/evidence/other/analyst_t1.md` (all resolve with at least the cited length); symbol spot-check of the key call sites, weight tables and latency defaults, recorded under `## Evidence`. File-impact reconciliation against the actual diff scope: the action record claims `role-model-router/apps/runtime-host-bridge/src/index.ts` and the other targeted sources as **reviewed** (read-only); none of them appears in the phase diff (`git diff --name-only ca5c2126ca566086cfbe8f83cfdf339aba0879ff`) because Phase 1 changed no product file, and the only changed paths are the run artifacts under `.recursive/run/103-agent-strategy-and-scoring-strategy/`.
 - Drift check: the design document's own anchors are stale; the live anchors are recorded here and the drift is carried into Phase 2.
 
 Acceptance Decision: accepted
