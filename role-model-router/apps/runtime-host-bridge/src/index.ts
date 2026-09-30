@@ -298,6 +298,7 @@ import {
 import {
   type RoutingModeName,
   type RoutingPosture,
+  type ScoringStrategyName,
   type WeightProfile,
   decodeLegacyRoutingStrategy,
   overlayPostureOperator,
@@ -9884,6 +9885,31 @@ function resolveRequestedPostureBinding(input: {
       });
 }
 
+/**
+ * Run 103 R3 - the strategy the controller actually applied. `maybeApplyControllerRouting` records its
+ * accepted directive on the diagnostics, so the decision receipt can be computed from the same input
+ * the request path used instead of re-running the ladder without the controller step (the pin rule
+ * itself stays owned by `resolveStrategy`/`resolveControllerStrategyApplication`).
+ */
+function readAppliedControllerStrategy(
+  diagnostics: RuntimeRoutingDiagnostics | undefined,
+): ScoringStrategyName | null {
+  const controllerRouting = (
+    diagnostics as
+      | {
+          readonly controllerRouting?: {
+            readonly active?: boolean;
+            readonly acceptedDirectives?: { readonly strategy?: string };
+          };
+        }
+      | undefined
+  )?.controllerRouting;
+  if (!controllerRouting || controllerRouting.active !== true) {
+    return null;
+  }
+  return normalizeScoringStrategyName(controllerRouting.acceptedDirectives?.strategy ?? null);
+}
+
 function shouldApplyDifficultyRouting(effectiveRoutingMode: RuntimeRoutingMode): boolean {
   return effectiveRoutingMode === "difficulty" || effectiveRoutingMode === "hybrid";
 }
@@ -10567,6 +10593,10 @@ export function mapChatCompletionsRequest(
     taskDefinitions,
     requestOptions: postureRequestOptions,
   });
+  /** Run 103 R3: the receipt is built from the strategy the controller actually applied. */
+  const appliedControllerStrategy = readAppliedControllerStrategy(
+    controllerRouting.routingDiagnostics,
+  );
   const promptCache =
     readChatCompletionsPromptCacheRequest(body) ??
     synthesizePromptCacheRequest(
@@ -10608,6 +10638,10 @@ export function mapChatCompletionsRequest(
           posture: effectiveStrategyPosture,
           effectiveRoutingMode,
           difficulty: difficultyRouting.routingDiagnostics?.difficultyRouting?.difficulty,
+          controllerActive: appliedControllerStrategy !== null,
+          ...(appliedControllerStrategy !== null
+            ? { controllerStrategy: appliedControllerStrategy }
+            : {}),
         }),
       ),
       postureBinding,
@@ -10830,6 +10864,10 @@ export function mapResponsesRequest(
     taskDefinitions,
     requestOptions: postureRequestOptions,
   });
+  /** Run 103 R3: the receipt is built from the strategy the controller actually applied. */
+  const appliedControllerStrategy = readAppliedControllerStrategy(
+    controllerRouting.routingDiagnostics,
+  );
   const promptCache =
     readResponsesPromptCacheRequest(body) ??
     synthesizePromptCacheRequest(
@@ -10876,6 +10914,10 @@ export function mapResponsesRequest(
           posture: effectiveStrategyPosture,
           effectiveRoutingMode,
           difficulty: difficultyRouting.routingDiagnostics?.difficultyRouting?.difficulty,
+          controllerActive: appliedControllerStrategy !== null,
+          ...(appliedControllerStrategy !== null
+            ? { controllerStrategy: appliedControllerStrategy }
+            : {}),
         }),
       ),
       postureBinding,
@@ -29490,7 +29532,14 @@ export async function createRuntimeBridgeBackend(
           ? (parse(previousText) as Record<string, unknown>)
           : null;
         const nextConfig = mergeUnifiedRuntimeConfigDocuments(previousDocument, body);
-        let finalConfig = nextConfig;
+        /**
+         * Run 103 R1: the runtime applies what the file will say. The merge normalizes a legacy
+         * `routing.strategy` onto the canonical pair, so the rendered text is re-parsed before it is
+         * applied - otherwise the in-memory posture would keep the synonym the file no longer has.
+         */
+        let finalConfig = parseUnifiedRuntimeConfigText(
+          renderUnifiedRuntimeConfigText(nextConfig),
+        );
         let finalText = renderUnifiedRuntimeConfigText(finalConfig);
 
         await writeConfigTextAtomically(unifiedRuntimeConfigPath, finalText);
@@ -29508,9 +29557,12 @@ export async function createRuntimeBridgeBackend(
           } else {
             await writeConfigTextAtomically(unifiedRuntimeConfigPath, previousText);
           }
-          if (previousConfig) {
-            await applyUnifiedRuntimeConfigState(previousConfig, "rollback");
-          }
+      /**
+       * Run 103 review F4: the rollback runs unconditionally. A rejected write used to leave the
+       * runtime serving the rejected posture in memory whenever there was no previous config to
+       * restore (a fresh state root), which is a fail-open on the write path.
+       */
+      await applyUnifiedRuntimeConfigState(previousConfig ?? null, "rollback");
           throw error;
         }
 

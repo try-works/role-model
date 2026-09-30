@@ -4,6 +4,7 @@ import {
   decodeAgentStrategySection,
   derivePostureAliasInventory,
   findAgentStrategyAlias,
+  mergeAliasInventory,
   validateAgentStrategyBindings,
 } from "../src/agent-strategy.js";
 import {
@@ -361,5 +362,84 @@ describe("unified runtime config routing and posture blocks", () => {
     });
     expect(camel.agentStrategies?.[0]?.roleId).toBe("coder");
     expect(camel.workloads?.[0]?.scoringStrategy).toBe("cost");
+  });
+
+  /** Run 103 review F5: a partial `routing` patch must not reset the keys it does not name. */
+  test("merges a partial routing patch into the existing block", () => {
+    const current = {
+      version: "1.0",
+      routing: { mode: "hybrid", scoring_strategy: "latency", pin_weights: true },
+    };
+    const merged = mergeUnifiedRuntimeConfigDocuments(current, {
+      routing: { scoring_strategy: "quality" },
+    });
+    expect(merged.routingPosture).toMatchObject({
+      mode: "hybrid",
+      scoringStrategy: "quality",
+      pinWeights: true,
+    });
+  });
+});
+
+/** Run 103 review F6: a declared `model_ids` slice narrows the alias pool instead of being inert. */
+describe("agent strategy model slice", () => {
+  test("intersects the declared slice with the execution scope", () => {
+    const section = decodeAgentStrategySection({
+      agentStrategies: { coder: { role_id: "coder", model_ids: ["remote-b"] } },
+      executionModes: ["remote_only"],
+      runtimeMode: "baseline",
+      modelIdsByExecutionMode: { remote_only: ["remote-a", "remote-b"] },
+    });
+    expect(section.violations).toEqual([]);
+    expect(section.aliases[0]?.modelIds).toEqual(["remote-b"]);
+  });
+
+  test("an empty intersection stays empty and is reported honestly", () => {
+    const section = decodeAgentStrategySection({
+      agentStrategies: { coder: { role_id: "coder", model_ids: ["no-such-model"] } },
+      executionModes: ["remote_only"],
+      runtimeMode: "baseline",
+      modelIdsByExecutionMode: { remote_only: ["remote-a"] },
+    });
+    const derivation = derivePostureAliasInventory({
+      canonical: [],
+      entries: section.entries,
+      executionModes: ["remote_only"],
+      runtimeMode: "baseline",
+      modelIdsByExecutionMode: { remote_only: ["remote-a"] },
+    });
+    expect(derivation.rows).toEqual([]);
+    expect(derivation.skipped).toEqual([
+      { aliasId: "coder.remote-only", reason: "ALIAS_POOL_EMPTY" },
+    ]);
+  });
+
+  test("a posture name declared twice names the real cause of the rejection", () => {
+    const duplicate = mergeAliasInventory({
+      canonical: [],
+      postureAliases: [
+        {
+          aliasId: "coder.remote-only",
+          name: "coder",
+          kind: "role",
+          mode: "baseline",
+          roleId: "coder",
+          scoringStrategy: null,
+          requiredCapabilities: [],
+          modelIds: ["remote-a"],
+        },
+        {
+          aliasId: "coder.remote-only",
+          name: "coder",
+          kind: "workload",
+          mode: "baseline",
+          roleId: null,
+          scoringStrategy: null,
+          requiredCapabilities: [],
+          modelIds: ["remote-a"],
+        },
+      ],
+    });
+    expect(duplicate.violations.join(" ")).toMatch(/declared twice/);
   });
 });

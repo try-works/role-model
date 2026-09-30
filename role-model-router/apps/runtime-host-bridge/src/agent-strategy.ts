@@ -323,6 +323,16 @@ export function materializeAgentStrategyAliases(input: {
       continue;
     }
     for (const executionMode of input.executionModes) {
+      const scopeModelIds = input.modelIdsByExecutionMode[executionMode] ?? [];
+      /**
+       * Run 103 review F6: a declared `model_ids` slice narrows the alias pool instead of reading as
+       * documentation. An empty intersection copies the empty slice verbatim, so the caller reports
+       * `ALIAS_POOL_EMPTY` rather than widening.
+       */
+      const modelIds =
+        entry.modelIds.length === 0
+          ? [...scopeModelIds]
+          : scopeModelIds.filter((modelId) => entry.modelIds.includes(modelId));
       aliases.push({
         aliasId: agentStrategyAliasId(entry.name, executionMode),
         name: entry.name,
@@ -331,7 +341,7 @@ export function materializeAgentStrategyAliases(input: {
         roleId: entry.roleId,
         scoringStrategy: entry.scoringStrategy,
         requiredCapabilities: entry.requiredCapabilities,
-        modelIds: [...(input.modelIdsByExecutionMode[executionMode] ?? [])],
+        modelIds,
       });
     }
   }
@@ -438,11 +448,15 @@ export function mergeAliasInventory(input: {
 }): AliasInventoryMerge {
   const rows: AliasInventoryRow[] = [...input.canonical];
   const seen = new Set(rows.map((row) => row.aliasId));
+  const canonicalIds = new Set(input.canonical.map((row) => row.aliasId));
   const violations: string[] = [];
   for (const alias of input.postureAliases) {
     if (seen.has(alias.aliasId)) {
+      /** Run 103 review F7: name the actual cause of the rejection. */
       violations.push(
-        `posture alias "${alias.aliasId}" collides with an existing routing alias and was skipped`,
+        canonicalIds.has(alias.aliasId)
+          ? `posture alias "${alias.aliasId}" collides with an existing routing alias and is rejected`
+          : `posture alias "${alias.aliasId}" is declared twice (the name is used by both an agent strategy and a workload, or repeated) and both declarations are rejected`,
       );
       continue;
     }

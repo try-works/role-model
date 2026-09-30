@@ -14,6 +14,7 @@ describe("run 103 decision receipts", () => {
         strategy: "quality",
         source: "difficulty",
         weightsDigest: "sha256:abc",
+        weights: { quality: 0.6, latency: 0.1, throughput: 0.05, cost: 0.1, reliability: 0.1, preference: 0.05 },
         discarded: { source: "controller", strategy: "cost" },
       },
     });
@@ -23,6 +24,7 @@ describe("run 103 decision receipts", () => {
       source: "difficulty",
       sourceLabel: "difficulty classification",
       weightsDigest: "sha256:abc",
+      weightsLabel: "quality 0.6 · latency 0.1 · throughput 0.05 · cost 0.1 · reliability 0.1 · preference 0.05",
       discarded: { source: "controller", strategy: "cost" },
       discardedLabel: "controller wanted Cost",
     });

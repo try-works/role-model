@@ -230,6 +230,14 @@ export default function RouterDecisionDetailRoute() {
                     </dd>
                   </div>
                 ) : null}
+                {strategyReceipt.weightsLabel ? (
+                  <div>
+                    <dt className={fieldLabelClassName}>Effective weights</dt>
+                    <dd className={`mt-1 ${supportingTextClassName}`}>
+                      {strategyReceipt.weightsLabel}
+                    </dd>
+                  </div>
+                ) : null}
               </dl>
             ) : (
               <p className={`mt-2 ${supportingTextClassName}`}>

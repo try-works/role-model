@@ -919,7 +919,12 @@ version: "1.0"
         applied: true,
         path: unifiedRuntimeConfigPath,
         config: expect.objectContaining({
-          routingStrategy: "latency-first",
+          /** Run 103 R1: a write normalizes the legacy synonym onto the canonical pair. */
+          routingStrategy: "baseline",
+          routingPosture: expect.objectContaining({
+            mode: "baseline",
+            scoringStrategy: "latency",
+          }),
           executionMode: "decision_only",
           llamaSwap: expect.objectContaining({
             models: [],
@@ -941,7 +946,10 @@ version: "1.0"
       }),
     );
 
-    await expect(readFile(unifiedRuntimeConfigPath, "utf8")).resolves.toContain("latency-first");
+    const persistedLegacyFree = await readFile(unifiedRuntimeConfigPath, "utf8");
+    expect(persistedLegacyFree).not.toContain("latency-first");
+    expect(persistedLegacyFree).toContain("mode: baseline");
+    expect(persistedLegacyFree).toContain("scoring_strategy: latency");
 
     await backend.shutdown();
   });
@@ -994,9 +1002,8 @@ observed_data:
       }),
     );
 
-    await expect(readFile(unifiedRuntimeConfigPath, "utf8")).resolves.toContain(
-      "strategy: difficulty",
-    );
+    /** Run 103 R1: the partial update keeps the posture and the file carries the canonical mode. */
+    await expect(readFile(unifiedRuntimeConfigPath, "utf8")).resolves.toContain("mode: difficulty");
     await expect(backend.readRouterSummary()).resolves.toEqual(
       expect.objectContaining({
         aliasInventory: expect.arrayContaining([
@@ -1163,7 +1170,8 @@ observed_data:
       }),
     );
 
-    await expect(readFile(unifiedRuntimeConfigPath, "utf8")).resolves.toContain("strategy: hybrid");
+    /** Run 103 R1: the canonical mode replaces the legacy strategy key in the file. */
+    await expect(readFile(unifiedRuntimeConfigPath, "utf8")).resolves.toContain("mode: hybrid");
 
     await backend.shutdown();
   });
@@ -1466,14 +1474,48 @@ observed_data:
     });
     await waitForSessionBootstrap(backend);
 
+    /**
+     * Run 103 R1: a write normalizes every legacy spelling onto the canonical mode, so the summary
+     * reports the alias family the file now declares while the alias matrix itself is unchanged.
+     */
     const strategyCases = [
-      { routingStrategy: null, aliasPrefix: "default", aliasMode: "basic" },
-      { routingStrategy: "baseline", aliasPrefix: "baseline", aliasMode: "basic" },
-      { routingStrategy: "latency-first", aliasPrefix: "baseline", aliasMode: "basic" },
-      { routingStrategy: "controller", aliasPrefix: "controller", aliasMode: "intelligent" },
-      { routingStrategy: "intelligent", aliasPrefix: "controller", aliasMode: "intelligent" },
-      { routingStrategy: "difficulty", aliasPrefix: "difficulty", aliasMode: "difficulty" },
-      { routingStrategy: "hybrid", aliasPrefix: "hybrid", aliasMode: "hybrid" },
+      { routingStrategy: null, summaryStrategy: null, aliasPrefix: "default", aliasMode: "basic" },
+      {
+        routingStrategy: "baseline",
+        summaryStrategy: "baseline",
+        aliasPrefix: "baseline",
+        aliasMode: "basic",
+      },
+      {
+        routingStrategy: "latency-first",
+        summaryStrategy: "baseline",
+        aliasPrefix: "baseline",
+        aliasMode: "basic",
+      },
+      {
+        routingStrategy: "controller",
+        summaryStrategy: "controller",
+        aliasPrefix: "controller",
+        aliasMode: "intelligent",
+      },
+      {
+        routingStrategy: "intelligent",
+        summaryStrategy: "controller",
+        aliasPrefix: "controller",
+        aliasMode: "intelligent",
+      },
+      {
+        routingStrategy: "difficulty",
+        summaryStrategy: "difficulty",
+        aliasPrefix: "difficulty",
+        aliasMode: "difficulty",
+      },
+      {
+        routingStrategy: "hybrid",
+        summaryStrategy: "hybrid",
+        aliasPrefix: "hybrid",
+        aliasMode: "hybrid",
+      },
     ] as const;
     const executionModeCases = [
       {
@@ -1517,7 +1559,7 @@ observed_data:
         );
         await expect(backend.readRouterSummary()).resolves.toEqual(
           expect.objectContaining({
-            strategy: strategyCase.routingStrategy,
+            strategy: strategyCase.summaryStrategy,
             executionMode: executionModeCase.executionMode,
             aliasInventory: expect.arrayContaining([
               expect.objectContaining({

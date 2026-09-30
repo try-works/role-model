@@ -2400,5 +2400,37 @@ export function mergeUnifiedRuntimeConfigDocuments(
     ...(current ?? {}),
     ...normalizedPatch,
   };
+  /**
+   * Run 103 review F5: the two-axis posture is several keys in one object, so a patch that names one
+   * of them must not silently reset the others. The `routing` block is merged key by key; the posture
+   * blocks keep whole-block replacement because their pages write the whole block.
+   */
+  if (
+    typeof normalizedPatch.routing === "object" &&
+    normalizedPatch.routing !== null &&
+    !Array.isArray(normalizedPatch.routing) &&
+    typeof current?.routing === "object" &&
+    current.routing !== null &&
+    !Array.isArray(current.routing)
+  ) {
+    const mergedRouting: Record<string, unknown> = {
+      ...(current.routing as Record<string, unknown>),
+      ...(normalizedPatch.routing as Record<string, unknown>),
+    };
+    /**
+     * A patch names the posture in one vocabulary or the other, and the patch wins: a legacy string
+     * clears the inherited structured keys, and a structured key clears the inherited legacy string.
+     * Without this, the two spellings would sit in one block and the structured one would silently
+     * win over the operator's write.
+     */
+    if (Object.prototype.hasOwnProperty.call(normalizedPatch.routing, "strategy")) {
+      for (const key of ["mode", "scoring_strategy", "scoringStrategy", "pin_weights", "pinWeights", "weights"]) {
+        delete mergedRouting[key];
+      }
+    } else if (hasStructuredRoutingKeys(normalizedPatch.routing as Record<string, unknown>)) {
+      delete mergedRouting.strategy;
+    }
+    mergedDocument.routing = mergedRouting;
+  }
   return parseUnifiedRuntimeConfigText(stringify(mergedDocument));
 }

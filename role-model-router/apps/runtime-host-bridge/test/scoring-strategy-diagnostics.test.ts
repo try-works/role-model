@@ -26,6 +26,7 @@ describe("strategy diagnostics receipt", () => {
     expect(diagnostics.strategyResolution).toEqual({
       strategy: "quality",
       source: "operator",
+      weights: resolution.weights,
       weightsDigest: weightsDigest(resolution.weights),
     });
   });

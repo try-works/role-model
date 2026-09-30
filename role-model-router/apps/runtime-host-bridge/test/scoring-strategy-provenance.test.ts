@@ -52,4 +52,31 @@ describe("strategy provenance", () => {
     expect(provenance.source).toBe("operator");
     expect(provenance.discarded).toEqual({ source: "difficulty", strategy: "quality" });
   });
+
+  /**
+   * Run 103 R2/R3: the receipt travels the effective weights themselves, not only their digest, so a
+   * decision taken under a custom profile stays auditable after the saved profile changes.
+   */
+  test("carries the effective weights beside the digest", () => {
+    const posture = { scoringStrategy: "custom", operator: { name: "custom", weights } };
+    const resolution = resolveRequestStrategy({
+      posture: { ...decodeLegacyRoutingStrategy(null), ...posture },
+      effectiveRoutingMode: "baseline",
+    });
+    const provenance = summarizeStrategyProvenance(resolution);
+    expect(provenance.weights).toEqual(weights);
+    expect(provenance.weightsDigest).toBe(weightsDigest(weights));
+  });
+
+  test("the receipt can name the controller as the source", () => {
+    const resolution = resolveRequestStrategy({
+      posture: decodeLegacyRoutingStrategy("latency"),
+      effectiveRoutingMode: "intelligent",
+      controllerActive: true,
+      controllerStrategy: "quality",
+    });
+    const provenance = summarizeStrategyProvenance(resolution);
+    expect(provenance).toMatchObject({ strategy: "quality", source: "controller" });
+    expect(provenance.weights).toEqual(resolution.weights);
+  });
 });

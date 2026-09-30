@@ -18,6 +18,8 @@ export interface RuntimeRoutingDiagnostics {
   readonly strategyResolution?: {
     readonly strategy: string;
     readonly source: string;
+    /** Run 103 R2: the effective weights, so a decision stays auditable after the profile changes. */
+    readonly weights?: Readonly<Record<string, number>>;
     readonly weightsDigest: string;
     readonly discarded?: {
       readonly source: string;

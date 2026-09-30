@@ -403,6 +403,11 @@ export function weightsDigest(weights: WeightProfile): string {
 export interface StrategyProvenance {
   readonly strategy: ScoringStrategyName;
   readonly source: StrategySource;
+  /**
+   * Run 103 R2 - the effective weights travel beside their digest: the protocol snapshot stays closed
+   * while a recorded decision remains auditable after the saved profile changes.
+   */
+  readonly weights: WeightProfile;
   readonly weightsDigest: string;
   readonly discarded?: {
     readonly source: "controller" | "difficulty";
@@ -420,6 +425,7 @@ export function summarizeStrategyProvenance(
   return {
     strategy: resolution.strategy,
     source: resolution.source,
+    weights: { ...resolution.weights },
     weightsDigest: weightsDigest(resolution.weights),
     ...(resolution.discarded ? { discarded: resolution.discarded } : {}),
   };

@@ -7,7 +7,7 @@
  * (R3: "the `strategyLabel` fallback to the raw config string must be removed").
  */
 
-import { formatScoringStrategyLabel } from "./routing-mode";
+import { WEIGHT_METRICS, formatScoringStrategyLabel } from "./routing-mode";
 
 export const STRATEGY_SOURCE_LABELS: Readonly<Record<string, string>> = {
   controller: "controller directive",
@@ -27,6 +27,8 @@ export interface StrategyReceiptView {
   readonly source: string;
   readonly sourceLabel: string;
   readonly weightsDigest: string | null;
+  /** Run 103 R2: the effective weights the decision used, when the runtime published them. */
+  readonly weightsLabel: string | null;
   readonly discarded: DiscardedDirectiveView | null;
   readonly discardedLabel: string | null;
 }
@@ -126,12 +128,19 @@ export function readStrategyReceipt(
     discardedStrategy && discardedSource
       ? { source: discardedSource, strategy: discardedStrategy }
       : null;
+  const weightsRecord = asRecord(resolution.weights);
+  const weightsLabel = weightsRecord
+    ? WEIGHT_METRICS.filter((metric) => typeof weightsRecord[metric] === "number")
+        .map((metric) => `${metric} ${weightsRecord[metric]}`)
+        .join(" · ")
+    : "";
   return {
     strategy,
     strategyLabel,
     source,
     sourceLabel: STRATEGY_SOURCE_LABELS[source] ?? source,
     weightsDigest: asString(resolution.weightsDigest),
+    weightsLabel: weightsLabel.length > 0 ? weightsLabel : null,
     discarded,
     discardedLabel: discarded
       ? `${discarded.source} wanted ${formatScoringStrategyLabel(discarded.strategy)}`
