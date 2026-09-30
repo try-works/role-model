@@ -1,4 +1,4 @@
-﻿{
+{
     "scenario":  "s3-pinned-hard",
     "alias":  "difficulty.remote-only",
     "expectation":  "strategy latency / source operator / discarded difficulty=quality",

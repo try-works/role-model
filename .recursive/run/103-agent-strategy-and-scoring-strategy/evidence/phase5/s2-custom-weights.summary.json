@@ -1,4 +1,4 @@
-﻿{
+{
     "scenario":  "s2-custom-weights",
     "alias":  "baseline.remote-only",
     "expectation":  "strategy custom / source operator / weights + digest",
