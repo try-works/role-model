@@ -470,16 +470,19 @@ const EnvOverrides = Config.unwrap({
   latencySelectionMaxDeltaMs: Config.option(Config.Finite("latencySelectionMaxDeltaMs"))
 })
 
-// Composition: read the process environment through a provider that maps config paths to
-// CONSTANT_CASE, so the knob above resolves ROLE_MODEL_LATENCY_SELECTION_MAX_DELTA_MS.
+// Composition: read the process environment through a provider that prefixes the config
+// path with `role_model` and then maps it to CONSTANT_CASE, so the knob above resolves
+// ROLE_MODEL_LATENCY_SELECTION_MAX_DELTA_MS. Verified against the vendored provider:
+// constantCase alone resolves only the unprefixed name, so nested() is required.
 const EnvProvider = ConfigProvider.layer(
-  ConfigProvider.fromEnv().pipe(ConfigProvider.constantCase)
+  ConfigProvider.fromEnv().pipe(ConfigProvider.nested("role_model"), ConfigProvider.constantCase)
 )
 ```
 
 Use `Config.schema(codec, path)` when a value needs the same validation the file gets, and provide the
 provider through `ConfigProvider.layer(...)` in the runtime composition; tests provide a literal provider
-instead so no test reads the real environment.
+instead so no test reads the real environment. Each override decodes to an `Option` because it is optional;
+unwrap with `Option.getOrUndefined` before merging it over the file's values.
 
 **Metric + logs - provenance.** One counter, tagged per decision, so the aggregation question "which source
 produced this strategy" is answerable without scanning receipts:
@@ -644,7 +647,32 @@ decision's effective strategy, source, weights digest and winner match the saved
    `Metric.withAttributes`) were verified against `effect@4.0.0-rc.117`; re-vendoring requires re-verifying
    them before the routing modules are built on top.
 
-## 12. References
+## 12. Audit notes (verified against the vendored Effect source)
+
+The sketches in section 7 were executed against `vendor/effect/packages/effect/src/index.ts`
+(`effect@4.0.0-rc.117`) with the repo's `tsx`, because the vendored tree is not a workspace dependency. What
+was run and what it proved:
+
+| Sketch | Result |
+| --- | --- |
+| `Schema.Finite` + `isBetween` + `makeFilter` weight profile | A valid profile decodes; a sum outside tolerance and a `NaN` weight are both rejected |
+| `Schema.encodeKeys` plus the weights-iff-`custom` filter | A valid custom block decodes to camelCase; a custom block without weights and a preset with weights are both rejected. Both orders (`encodeKeys` then `check`, and the reverse) were run and behave identically, so the check always sees the decoded value |
+| `Schema.decodeTo` + `SchemaGetter.transform` legacy normalisation | `latency-first` decodes to `latency`, and encoding `latency` writes `latency` |
+| `Data.taggedEnum.$match` | Exhaustive matcher handles `Custom` and the preset variants |
+| `Context.Service` + `Layer.succeed` + `SynchronizedRef.get` resolver | The layer provides the service and resolves against live state |
+| `Semaphore.make(1)` + `withPermits` around a `SynchronizedRef` transition | Three concurrent updates serialise correctly |
+| `Cache.make({ capacity, timeToLive, lookup })` + `get` / `invalidate` | The lookup runs once per key and again after invalidation |
+| `Metric.counter` + `withAttributes` + `update` | Records without a defect |
+| `Data.TaggedError` | Carries its `_tag` and fields |
+| `ManagedRuntime.make` + `runPromise` + `dispose` | Runs an effect and disposes |
+| `Config.unwrap` + `ConfigProvider.fromEnvRecord` | `nested("role_model")` then `constantCase` resolves `ROLE_MODEL_LATENCY_SELECTION_MAX_DELTA_MS`; `constantCase` alone resolves only the unprefixed name |
+
+This audit produced one correction beyond the source-reading pass: the `ConfigProvider` composition was
+missing `ConfigProvider.nested("role_model")`, so the documented `ROLE_MODEL_...` variable would not have
+resolved. The scratch scripts ran from the gitignored `.tmp/` tree and are not part of this change; the doc
+carries the results.
+
+## 13. References
 
 - Config and alias derivation: `role-model-router/apps/runtime-host-bridge/src/unified-runtime-config.ts`
 - Bridge routing path: `role-model-router/apps/runtime-host-bridge/src/index.ts`
