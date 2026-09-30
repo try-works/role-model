@@ -22,6 +22,7 @@
 
 import { existsSync, readdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
 
 /** Packages that must resolve to the Harness's own copies at runtime. */
@@ -36,17 +37,40 @@ const HOST_EXTERNAL = [
 ];
 
 /**
- * Locate the vendored schemastery build to inline.
+ * Locate the schemastery ESM entry to inline.
+ *
+ * The plugin declares `@deepseek-ai/schemastery` as a real dependency, so it
+ * resolves from this package's own `node_modules` in every environment, including
+ * CI. The harness checkout is only a fallback, for a contributor who has the
+ * harness cloned but has not run `pnpm install` here yet.
+ *
  * @returns the absolute path to the ESM entry.
  */
 function schemasteryEntry() {
+  // Normal resolution first: this is the portable path.
+  try {
+    const resolved = import.meta.resolve("@deepseek-ai/schemastery");
+    if (resolved.startsWith("file:")) return fileURLToPath(resolved);
+  } catch {
+    // Not installed here; fall through to the checkout candidates.
+  }
+
   const candidates = [];
   const harnessRoot = process.env.DSH_HARNESS_ROOT;
   if (harnessRoot !== undefined && harnessRoot.trim().length > 0) {
     candidates.push(join(harnessRoot.trim(), "vendor", "schemastery", "lib", "index.mjs"));
   }
-  candidates.push("D:\\deepseek-harness\\vendor\\schemastery\\lib\\index.mjs");
-  const pnpmRoot = join(import.meta.dirname, "..", "..", "..", "node_modules", ".pnpm");
+  const local = join(
+    import.meta.dirname,
+    "..",
+    "node_modules",
+    "@deepseek-ai",
+    "schemastery",
+    "lib",
+    "index.mjs",
+  );
+  candidates.push(local);
+  const pnpmRoot = join(import.meta.dirname, "..", "node_modules", ".pnpm");
   if (existsSync(pnpmRoot)) {
     for (const entry of readdirSync(pnpmRoot)) {
       if (!entry.startsWith("@deepseek-ai+schemastery@")) continue;
@@ -58,7 +82,8 @@ function schemasteryEntry() {
   const found = candidates.find((candidate) => existsSync(candidate));
   if (found === undefined) {
     throw new Error(
-      "could not locate @deepseek-ai/schemastery; set DSH_HARNESS_ROOT to the DSH checkout",
+      "could not locate @deepseek-ai/schemastery. Run `pnpm install` in packages/dsh-role-model; " +
+        "the dependency is declared in package.json and needs no harness checkout.",
     );
   }
   return found;
