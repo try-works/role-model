@@ -180,7 +180,12 @@ const DEFAULT_METRIC_DECAY_PERCENT_PER_DAY = {
   latency: 10,
   throughput: 10,
 } as const;
-const STRATEGY_WEIGHTS: Record<
+/**
+ * Run 103 / SP1: the canonical scoring-strategy presets are exported so the runtime's
+ * scoring-strategy vocabulary (`.recursive/run/103-agent-strategy-and-scoring-strategy/`)
+ * resolves against this single source instead of copying the tables.
+ */
+export const STRATEGY_WEIGHTS: Record<
   RoutingPolicyStrategy,
   Record<"quality" | "latency" | "throughput" | "cost" | "reliability" | "preference", number>
 > = {
