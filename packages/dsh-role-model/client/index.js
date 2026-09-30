@@ -122,6 +122,91 @@ window.__ModuleLoader__.load({
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+.rlm-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 0;
+}
+.rlm-field-label {
+  font-family: var(--ds-font-family-code);
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--dsw-alias-label-secondary);
+}
+.rlm-field input[type="text"],
+.rlm-field input[type="number"] {
+  box-sizing: border-box;
+  width: 100%;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: var(--dsw-radius-sm);
+  background: var(--dsw-alias-bg-layer-1);
+  color: var(--dsw-alias-label-primary);
+  font-family: var(--ds-font-family-code);
+  font-size: 12px;
+}
+.rlm-field input:focus-visible {
+  outline: 2px solid var(--dsw-alias-brand-primary);
+  outline-offset: 1px;
+}
+.rlm-field input[type="checkbox"] {
+  align-self: flex-start;
+  width: 16px;
+  height: 16px;
+  margin: 2px 0 0;
+}
+.rlm-field-help {
+  margin: 0;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--dsw-alias-label-tertiary);
+}
+.rlm-actions {
+  display: flex;
+  gap: 8px;
+  padding-top: 10px;
+}
+.rlm-button {
+  height: 30px;
+  padding: 0 14px;
+  border: none;
+  border-radius: var(--dsw-radius-sm);
+  background: var(--dsw-alias-button-primary-fill);
+  color: var(--dsw-alias-label-primary-inverted);
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.rlm-button:hover:not(:disabled) {
+  background: var(--dsw-alias-button-primary-hover);
+}
+.rlm-button-quiet {
+  background: transparent;
+  border: 1px solid var(--dsw-alias-border-l2);
+  color: var(--dsw-alias-label-primary);
+}
+.rlm-button-quiet:hover:not(:disabled) {
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+.rlm-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.rlm-button:focus-visible {
+  outline: 2px solid var(--dsw-alias-brand-primary);
+  outline-offset: 1px;
+}
+.rlm-status {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--dsw-alias-state-success-primary);
+}
+.rlm-status-error {
+  color: var(--dsw-alias-state-error-primary);
+}
 `;
 
     /** One row inside a card: a muted label and a primary value. */
@@ -138,15 +223,16 @@ window.__ModuleLoader__.load({
     /**
      * One card: a small heading and its rows.
      *
-     * `children` is spread rather than passed through as one argument. React gives a
-     * component its children as an array, and react-dom refuses to render an array
-     * that is itself a child (it cannot key it), so handing the array straight back
-     * would make the card show its heading and drop every row. Spreading removes that
-     * failure mode whatever shape the caller passes.
+     * Children are read from the extra `createElement` arguments and, when a caller
+     * follows htm's convention, from `props.children` as well — React itself supplies
+     * a component's children through props, so accepting both keeps the two call
+     * styles straight. They are spread so no child is an array: react-dom refuses to
+     * render an array that is itself a child, because it cannot key it.
      */
-    function Card(props) {
-      const { title, children } = props ?? {};
-      const rows = children === undefined || children === null ? [] : children;
+    function Card(props, ...rest) {
+      const { title } = props ?? {};
+      const supplied = rest.length > 0 ? rest : props?.children;
+      const rows = supplied === undefined || supplied === null ? [] : supplied;
       return h(
         "div",
         { className: "rlm-card" },
@@ -176,6 +262,310 @@ window.__ModuleLoader__.load({
       "  }'",
     ].join("\n");
 
+    /**
+     * The plugin's settings namespace.
+     *
+     * `SettingsForms.describe()` keys a namespace by its entry id
+     * (`entry.options.id`), and this bundle's patch row declares `dsh-role-model`, so
+     * that id is also the write target here.
+     */
+    const SETTINGS_NS = "dsh-role-model";
+
+    /**
+     * The settings a user may edit, in display order.
+     *
+     * These are exactly the fields the host schema marks `.volatile()`; a field
+     * without that marker cannot be written and would be rejected by
+     * `SettingsForms.write()` with "not volatile".
+     */
+    const CONFIG_FIELDS = [
+      "endpoint",
+      "selectedAlias",
+      "providerRoute",
+      "requestTimeoutMs",
+      "allowRemote",
+      "hostLlmModule",
+    ];
+
+    /** One-line explanations, so the form does not need the README. */
+    const FIELD_HELP = {
+      endpoint: "Runtime URL, without a trailing slash and without /v1.",
+      selectedAlias:
+        "Preferred routing strategy, e.g. baseline.remote-only. Empty means no preference.",
+      providerRoute: "The route this plugin owns. Leave it as role-model.",
+      requestTimeoutMs: "Timeout for runtime metadata calls, in milliseconds.",
+      allowRemote:
+        "Permit a non-loopback endpoint. Off by default; a remote endpoint is refused before any request.",
+      hostLlmModule:
+        "Path to the harness's dsh-llm entry. Empty auto-resolves; set it when the host runs from a profile.",
+    };
+
+    /** Fields whose value is a boolean checkbox rather than a text input. */
+    const BOOLEAN_FIELDS = new Set(["allowRemote"]);
+
+    /** Fields holding a number. */
+    const NUMERIC_FIELDS = new Set(["requestTimeoutMs"]);
+
+    /**
+     * Read the settings Remote, when the context exposes one.
+     *
+     * Reached through `ctx.remote` rather than a hard `remote.settings` injection: an
+     * injection edge that cannot resolve means the plugin never mounts, which blanks
+     * the whole settings page — far worse than a form that cannot save. The write path
+     * is guarded the same way, and says so in the UI when the surface is missing.
+     * @param ctx - the client plugin context.
+     * @returns the namespace's surface, or undefined when it is not available.
+     */
+    function settingsRemote(ctx) {
+      const namespace = ctx?.remote?.settings;
+      return namespace !== undefined && typeof namespace.update === "function"
+        ? namespace
+        : undefined;
+    }
+
+    /**
+     * Read one namespace's current values through the settings Remote.
+     *
+     * Never throws: a settings surface that is unavailable must leave the form
+     * usable, so the caller renders placeholders instead of an error page.
+     * @param ctx - the client plugin context.
+     * @returns the current values, or undefined when they cannot be read.
+     */
+    async function readConfig(ctx) {
+      const namespace = settingsRemote(ctx);
+      if (namespace === undefined || typeof namespace.describe !== "function") return undefined;
+      try {
+        const response = await namespace.describe();
+        if (response === undefined || response.ok !== true) return undefined;
+        const namespaces = response.value?.namespaces;
+        if (!Array.isArray(namespaces)) return undefined;
+        const mine = namespaces.find((entry) => entry?.ns === SETTINGS_NS);
+        const value = mine?.value;
+        return value !== null && typeof value === "object" ? value : undefined;
+      } catch {
+        return undefined;
+      }
+    }
+
+    /**
+     * Narrow a draft value to the type its field holds.
+     * @param field - the configuration field.
+     * @param raw - the raw input or checkbox value.
+     * @returns the typed value, or undefined when the input is blank.
+     */
+    function narrowField(field, raw) {
+      const text = typeof raw === "string" ? raw : String(raw ?? "");
+      if (BOOLEAN_FIELDS.has(field)) return raw === true || raw === "true";
+      if (text.trim().length === 0)
+        return field === "selectedAlias" || field === "hostLlmModule" ? "" : undefined;
+      if (NUMERIC_FIELDS.has(field)) {
+        const parsed = Number(text);
+        return Number.isFinite(parsed) ? parsed : undefined;
+      }
+      return text.trim();
+    }
+
+    /**
+     * Build the patch for the fields the user actually changed.
+     *
+     * An unchanged field is deliberately omitted: `SettingsForms.update()` merges the
+     * patch into the user section, so restating a value the profile never overrode
+     * would pin an inherited value into this profile's document.
+     * @param current - the values last read from settings.
+     * @param draft - the values now in the form.
+     * @returns the patch to write, possibly empty.
+     */
+    function buildPatch(current, draft) {
+      const patch = {};
+      for (const field of CONFIG_FIELDS) {
+        if (!Object.hasOwn(draft, field)) continue;
+        const next = narrowField(field, draft[field]);
+        const before = current?.[field];
+        if (next === undefined) continue;
+        if (next === before) continue;
+        if (
+          typeof next === "string" &&
+          next.length === 0 &&
+          (before === undefined || before === null || before === "")
+        )
+          continue;
+        patch[field] = next;
+      }
+      return patch;
+    }
+
+    /**
+     * Write a patch to this plugin's settings namespace.
+     * @param ctx - the client plugin context.
+     * @param patch - the fields to merge.
+     * @returns undefined on success, or the message to show the user.
+     */
+    async function writeConfig(ctx, patch) {
+      if (Object.keys(patch).length === 0) return undefined;
+      const namespace = settingsRemote(ctx);
+      if (namespace === undefined) {
+        return "the settings service is unavailable, so this change cannot be saved yet";
+      }
+      try {
+        const response = await namespace.update(SETTINGS_NS, patch, undefined);
+        if (response !== undefined && response.ok === true) return undefined;
+        return response?.error?.message ?? "the settings service refused the write";
+      } catch (error) {
+        return error instanceof Error ? error.message : String(error);
+      }
+    }
+
+    /** One labelled form control. */
+    function Field(props) {
+      const { field, value, help, onChange, disabled } = props;
+      const id = `rlm-field-${field}`;
+      const control = BOOLEAN_FIELDS.has(field)
+        ? h("input", {
+            id,
+            name: field,
+            type: "checkbox",
+            checked: value === true,
+            disabled: disabled === true,
+            onChange: (event) => onChange(field, event.target.checked),
+          })
+        : h("input", {
+            id,
+            name: field,
+            type: NUMERIC_FIELDS.has(field) ? "number" : "text",
+            value: value ?? "",
+            disabled: disabled === true,
+            spellCheck: false,
+            autoComplete: "off",
+            onChange: (event) => onChange(field, event.target.value),
+          });
+      return h(
+        "div",
+        { className: "rlm-field" },
+        h("label", { className: "rlm-field-label", htmlFor: id }, field),
+        control,
+        h("p", { className: "rlm-field-help" }, help),
+      );
+    }
+
+    /** The editable configuration, shown at the top of the page. */
+    function ConfigurationCard() {
+      const [current, setCurrent] = React.useState(null);
+      const [draft, setDraft] = React.useState({});
+      const [message, setMessage] = React.useState(null);
+      const [saving, setSaving] = React.useState(false);
+      const context = panelContext;
+      // Defensive: an unread settings namespace leaves this undefined, and the form
+      // must still render (with placeholders) rather than blank the slot entry.
+      const values = draft ?? {};
+
+      React.useEffect(() => {
+        let cancelled = false;
+        void readConfig(context).then((loaded) => {
+          if (cancelled || loaded === undefined) return;
+          // Seed both the baseline and the draft from the same read, so an untouched
+          // field is never written back.
+          setCurrent(loaded);
+          setDraft({ ...loaded });
+        });
+        return () => {
+          cancelled = true;
+        };
+      }, []);
+
+      const onChange = (field, value) => {
+        setMessage(null);
+        setDraft((previous) => ({ ...previous, [field]: value }));
+      };
+
+      const onApply = () => {
+        setSaving(true);
+        setMessage(null);
+        const patch = buildPatch(current ?? {}, draft);
+        void writeConfig(context, patch).then((failure) => {
+          setSaving(false);
+          if (failure === undefined) {
+            setCurrent({ ...(current ?? {}), ...patch });
+            setMessage({
+              kind: "ok",
+              text: Object.keys(patch).length === 0 ? "No changes." : "Saved.",
+            });
+            return;
+          }
+          setMessage({ kind: "error", text: failure });
+        });
+      };
+
+      const onReset = () => {
+        setMessage(null);
+        setDraft({ ...(current ?? {}) });
+      };
+
+      return h(
+        Card,
+        { title: "Configuration" },
+        h(
+          "p",
+          { className: "rlm-note" },
+          "These values live in this plugin's profile patch row. The Models settings page cannot edit " +
+            "them: its provider editor only knows the llm-deepseek and llm-pi-ai adapter families, so " +
+            "it shows a reference and disables Apply.",
+        ),
+        ...CONFIG_FIELDS.map((field) =>
+          h(Field, {
+            key: field,
+            field,
+            value: values[field],
+            help: FIELD_HELP[field],
+            onChange,
+          }),
+        ),
+        h(
+          "div",
+          { className: "rlm-actions" },
+          h(
+            "button",
+            {
+              type: "button",
+              className: "rlm-button",
+              "data-role": "apply",
+              disabled: saving === true,
+              onClick: onApply,
+            },
+            saving === true ? "Applying…" : "Apply",
+          ),
+          h(
+            "button",
+            {
+              type: "button",
+              className: "rlm-button rlm-button-quiet",
+              "data-role": "reset",
+              disabled: saving === true,
+              onClick: onReset,
+            },
+            "Revert",
+          ),
+        ),
+        message === null
+          ? null
+          : h(
+              "p",
+              {
+                className: message.kind === "ok" ? "rlm-status" : "rlm-status rlm-status-error",
+                "data-role": "status",
+              },
+              message.text,
+            ),
+      );
+    }
+
+    /**
+     * The client context the panel writes through.
+     *
+     * Captured by {@link apply} rather than threaded through slot props, because the
+     * slot owner passes its own props and this page needs the plugin context.
+     */
+    let panelContext;
+
     /** The settings page. */
     function RoleModelPanel() {
       const styleElement = React.useMemo(
@@ -202,6 +592,8 @@ window.__ModuleLoader__.load({
         h(
           "div",
           { className: "rlm-cards" },
+
+          h(ConfigurationCard, null),
 
           h(
             Card,
@@ -350,12 +742,65 @@ window.__ModuleLoader__.load({
       );
     }
 
+    /**
+     * Render the panel, turning a render failure into visible text.
+     *
+     * A component that throws during render leaves the settings content area empty, and
+     * nothing in the browser says the plugin is responsible. Tests over the markup and
+     * the write path cannot catch that, so the failure is surfaced here: a blank pane is
+     * indistinguishable from a plugin that never mounted, and that ambiguity cost real
+     * debugging time on this page.
+     *
+     * A plain function with a try/catch rather than a React error boundary: a class
+     * boundary would not catch an error thrown by the function component that *is* the
+     * page, and it would drag class-component plumbing into a file that is served as-is.
+     */
+    function PanelShell(props) {
+      if (props?.failure === undefined) return props?.children ?? null;
+      const error = props.failure;
+      const detail =
+        error && (error.stack || error.message)
+          ? String(error.stack || error.message)
+          : String(error);
+      return h(
+        "div",
+        { className: "rlm-page" },
+        h("h2", { className: "rlm-title" }, "role-model could not render"),
+        h(
+          "p",
+          { className: "rlm-note" },
+          "The plugin mounted, but a component threw while rendering. The detail below is the " +
+            "browser's own error report; include it in a bug report.",
+        ),
+        h("pre", { className: "rlm-codeblock" }, detail),
+      );
+    }
+
     return {
-      // The harness orders activation with these edges; the settings section slot is
-      // provided by the settings shell, so wait for it.
+      // The settings section slot is provided by the settings shell, so wait for it.
+      //
+      // `remote.settings` is deliberately NOT injected. A namespace is a Cordis child
+      // service (`remote.<namespace>`), and an injection edge that cannot resolve keeps
+      // the plugin from mounting at all — which blanks the entire settings page. The
+      // Remote is instead read through `ctx.remote` behind a guard, so an unavailable
+      // settings surface costs the save button, not the page.
       inject: ["slots"],
 
       apply(ctx) {
+        panelContext = ctx;
+        // The shell keeps a render failure visible; without it a throw blanks the
+        // settings pane and looks identical to a plugin that never mounted.
+        //
+        // `RoleModelPanel` is invoked here rather than handed to react-dom as an
+        // element, because an error thrown while react-dom walks a child element escapes
+        // a parent's try/catch. Calling it first puts the throw inside the shell.
+        const panel = function RoleModelPanelSafe(props) {
+          try {
+            return h(PanelShell, props ?? {}, RoleModelPanel());
+          } catch (error) {
+            return h(PanelShell, { ...(props ?? {}), failure: error });
+          }
+        };
         ctx.effect(() =>
           ctx.slots.inject("settings.section", () =>
             ctx.slots.register(
@@ -367,10 +812,20 @@ window.__ModuleLoader__.load({
                 order: 60,
                 label: "role-model",
               },
-              RoleModelPanel,
+              panel,
             ),
           ),
         );
+      },
+
+      /** Pure wiring, exposed so the write path can be tested without react-dom. */
+      __internals: {
+        SETTINGS_NS,
+        CONFIG_FIELDS,
+        settingsRemote,
+        readConfig,
+        buildPatch,
+        writeConfig,
       },
     };
   },

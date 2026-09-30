@@ -93,21 +93,57 @@ function evaluateClientEntry(): {
   return { registered, registrations, injectedInto, effects, component };
 }
 
-/** Render a component once, so its static markup can be inspected. */
+/** Whether a value is a class component (the error boundary) rather than a function. */
+function isClassComponent(value: unknown): boolean {
+  return (
+    typeof value === "function" && /^\s*class[\s{]/.test(Function.prototype.toString.call(value))
+  );
+}
+
+/**
+ * Render one component element to what it returns.
+ *
+ * Both shapes occur: the page and its cards are functions, and the error boundary is a
+ * class. react-dom reaches the same result, so the helpers must as well.
+ * @param element - a component element (its `type` is a function or class).
+ * @returns the rendered output.
+ */
+function invokeComponent(element: HostElement): unknown {
+  const type = element.type as (props: unknown) => unknown;
+  if (isClassComponent(type)) {
+    const instance = new (
+      type as unknown as new (
+        props: unknown,
+      ) => {
+        props: unknown;
+        render(): unknown;
+      }
+    )(element.props ?? {});
+    return instance.render();
+  }
+  const props = { ...(element.props ?? {}) } as Record<string, unknown>;
+  if (element.children !== undefined) props.children = element.children;
+  return type(props);
+}
+
+/**
+ * Render a component once, so its static markup can be inspected.
+ *
+ * The hooks are the shallowest thing that lets a component render: state starts at
+ * its initial value and re-renders are not simulated. That is enough to inspect the
+ * control names a form renders, which is what these assertions need.
+ */
 function renderComponent(
   component: unknown,
   React: { createElement: (...args: unknown[]) => unknown },
 ): unknown {
   if (typeof component !== "function") return null;
-  const states: unknown[] = [];
-  const hooks = {
-    useState: (initial: unknown) => [initial, (next: unknown) => states.push(next)],
-    useEffect: () => undefined,
-    useMemo: (factory: () => unknown) => factory(),
-  };
-  void hooks;
   try {
-    return (component as (props: unknown) => unknown)({});
+    return invokeComponent({
+      type: component,
+      props: {},
+      children: undefined,
+    } as unknown as HostElement);
   } catch {
     return null;
   }
@@ -167,7 +203,20 @@ function testReact(): {
       };
     },
     Fragment: Symbol.for("react.fragment"),
-    useState: (initial: unknown) => [initial, () => undefined],
+    // The error boundary is a class component, so the stub needs a base class that
+    // records constructor props and carries the state the boundary sets.
+    Component: class {
+      props: unknown;
+      state: unknown;
+      constructor(props: unknown) {
+        this.props = props;
+        this.state = {};
+      }
+      setState(next: unknown) {
+        this.state = { ...(this.state as object), ...(next as object) };
+      }
+    },
+    useState: (initial: unknown) => [initial ?? {}, () => undefined],
     useEffect: () => undefined,
     useMemo: (factory: () => unknown) => factory(),
   };
@@ -200,11 +249,7 @@ function expand(value: unknown): unknown[] {
   if (Array.isArray(value)) return value.flatMap(expand);
   if (!isElement(value)) return [value];
   const element = value as HostElement;
-  if (typeof element.type === "function") {
-    const props = { ...(element.props ?? {}) } as Record<string, unknown>;
-    if (element.children !== undefined) props.children = element.children;
-    return expand((element.type as (props: unknown) => unknown)(props));
-  }
+  if (typeof element.type === "function") return expand(invokeComponent(element));
   return [{ ...element, children: (element.children ?? []).flatMap(expand) }];
 }
 
@@ -313,6 +358,9 @@ describe("the settings panel registration", () => {
     "--dsw-alias-bg-base",
     "--dsw-alias-brand-primary",
     "--dsw-alias-interactive-bg-hover",
+    "--dsw-alias-button-primary-fill",
+    "--dsw-alias-button-primary-hover",
+    "--dsw-alias-label-primary-inverted",
     "--dsw-alias-settings-card-fill",
     "--dsw-alias-settings-card-stroke",
     "--dsw-alias-state-error-primary",
@@ -448,9 +496,12 @@ describe("the panel's element structure", () => {
         const isRow = className.includes("rlm-row") && childrenOf(child).length === 2;
         const isNote = child.type === "p";
         const isCode = child.type === "pre";
-        expect(isRow || isNote || isCode, `unexpected card child: ${String(child.type)}`).toBe(
-          true,
-        );
+        // The configuration card holds form fields and the action row.
+        const isField = className.includes("rlm-field") || className.includes("rlm-actions");
+        expect(
+          isRow || isNote || isCode || isField,
+          `unexpected card child: ${String(child.type)} .${className}`,
+        ).toBe(true);
       }
     }
   });
@@ -470,5 +521,235 @@ describe("the panel's element structure", () => {
     expect(text).toContain("http://127.0.0.1:3457/v1");
     expect(text).toContain("baseline.remote-only");
     expect(text).toContain("role-model-local");
+  });
+});
+
+describe("editing configuration from the panel", () => {
+  /**
+   * The Models settings page cannot edit this route: its provider editor is hardcoded
+   * to the `llm-deepseek` and `llm-pi-ai` adapter families
+   * (`ProviderEditor.tsx: layoutOf`), and any other namespace renders "edit
+   * cordis.patch.yml" with Apply disabled. So this plugin's own settings page carries
+   * the form, writing through the host's `settings` Remote namespace — the same
+   * surface the shipped settings pages use (`ctx.remote.settings.update(ns, patch, rev)`).
+   */
+
+  /** The `Answer` contract every Remote call returns. */
+  interface Answer {
+    ok: boolean;
+    value?: unknown;
+    error?: { message: string };
+  }
+
+  /** The client-side write helpers the panel is built on. */
+  interface PanelInternals {
+    SETTINGS_NS: string;
+    CONFIG_FIELDS: readonly string[];
+    settingsRemote: (ctx: unknown) => unknown;
+    readConfig: (ctx: unknown) => Promise<Record<string, unknown> | undefined>;
+    buildPatch: (
+      current: Record<string, unknown>,
+      draft: Record<string, unknown>,
+    ) => Record<string, unknown>;
+    writeConfig: (ctx: unknown, patch: Record<string, unknown>) => Promise<string | undefined>;
+  }
+
+  /** A `ctx.remote.settings` double recording writes. */
+  function fakeSettings(options: { updateError?: string; describeError?: string } = {}) {
+    const writes: { ns: string; patch: Record<string, unknown>; revision?: number }[] = [];
+    const current = {
+      endpoint: "http://127.0.0.1:3456",
+      allowRemote: false,
+      requestTimeoutMs: 2500,
+      providerRoute: "role-model",
+      selectedAlias: "baseline.remote-only",
+      hostLlmModule: "",
+    };
+    const settings = {
+      describe: (): Promise<Answer> =>
+        Promise.resolve(
+          options.describeError === undefined
+            ? {
+                ok: true,
+                value: {
+                  writable: true,
+                  namespaces: [{ ns: "dsh-role-model", revision: 7, value: current }],
+                },
+              }
+            : { ok: false, error: { message: options.describeError } },
+        ),
+      update: (ns: string, patch: Record<string, unknown>, revision?: number): Promise<Answer> => {
+        writes.push({ ns, patch, ...(revision === undefined ? {} : { revision }) });
+        return Promise.resolve(
+          options.updateError === undefined
+            ? { ok: true, value: {} }
+            : { ok: false, error: { message: options.updateError } },
+        );
+      },
+    };
+    return { settings, writes, current };
+  }
+
+  /**
+   * Apply the client half with a settings Remote attached.
+   * @param settings - the Remote double.
+   */
+  function applyWith(settings: unknown) {
+    let registered: RegisteredModule | undefined;
+    const stub = {
+      __ModuleLoader__: {
+        load(module: RegisteredModule) {
+          registered = module;
+        },
+      },
+    };
+    new Function("window", `${readFileSync(clientEntry, "utf8")}\n`)(stub);
+    if (registered === undefined) throw new Error("the client entry registered no module");
+    const components: ((props: unknown) => unknown)[] = [];
+    const ctx = {
+      effect: (callback: () => unknown) => {
+        callback();
+        return () => undefined;
+      },
+      remote: { settings },
+      slots: {
+        inject: (_key: string, callback: () => void) => callback(),
+        register: (_options: unknown, panel: unknown) => {
+          components.push(panel as (props: unknown) => unknown);
+          return () => undefined;
+        },
+      },
+    };
+    const plugin = registered.factory((name: string) => {
+      if (name === "react") return testReact();
+      throw new Error(`unexpected module request: ${name}`);
+    }) as RegisteredModule["factory"] extends never
+      ? never
+      : {
+          inject?: string[];
+          apply(ctx: unknown): void;
+          __internals?: PanelInternals;
+        };
+    plugin.apply(ctx);
+    const component = components[0];
+    if (component === undefined) throw new Error("the panel registered no component");
+    if (plugin.__internals === undefined) throw new Error("the client exposes no internals");
+    return { component, inject: plugin.inject ?? [], internals: plugin.__internals, ctx };
+  }
+
+  test("mounts on the settings slot alone, so an absent Remote cannot blank the page", () => {
+    const { inject } = applyWith(fakeSettings().settings);
+    expect(inject).toContain("slots");
+    // A Remote namespace is a Cordis child service, and an injection edge that cannot
+    // resolve stops the plugin mounting — which blanks the whole settings page. The
+    // Remote is read through `ctx.remote` behind a guard instead.
+    expect(inject).not.toContain("remote.settings");
+  });
+
+  test("renders an editable control for every configurable setting", () => {
+    const { internals } = applyWith(fakeSettings().settings);
+    // Walk the expanded tree: the controls live inside `Field`, so a JSON dump of the
+    // unexpanded element would not contain them.
+    const names = new Set<string>();
+    const walk = (value: unknown): void => {
+      if (Array.isArray(value)) {
+        for (const child of value) walk(child);
+        return;
+      }
+      if (!isElement(value)) return;
+      const name = value.props.name;
+      if (typeof name === "string") names.add(name);
+      for (const child of childrenOf(value)) walk(child);
+    };
+    for (const child of panelChildren()) walk(child);
+    for (const field of internals.CONFIG_FIELDS) {
+      expect([...names], `no control for ${field}`).toContain(field);
+    }
+  });
+
+  test("reads the current values from its settings namespace", async () => {
+    const { settings } = fakeSettings();
+    const { internals, ctx } = applyWith(settings);
+    const current = await internals.readConfig(ctx);
+    expect(current?.endpoint).toBe("http://127.0.0.1:3456");
+    expect(current?.selectedAlias).toBe("baseline.remote-only");
+  });
+
+  test("returns undefined rather than throwing when settings are unavailable", async () => {
+    const { settings } = fakeSettings({ describeError: "settings are unavailable" });
+    const { internals, ctx } = applyWith(settings);
+    await expect(internals.readConfig(ctx)).resolves.toBeUndefined();
+  });
+
+  test("writes only the fields the user changed", () => {
+    const { internals } = applyWith(fakeSettings().settings);
+    const current = { endpoint: "http://127.0.0.1:3456", selectedAlias: "baseline.remote-only" };
+    const patch = internals.buildPatch(current, {
+      endpoint: "http://127.0.0.1:3459",
+      selectedAlias: "baseline.remote-only",
+    });
+    // An unchanged field must not be restated, or an inherited value would be pinned.
+    expect(patch).toEqual({ endpoint: "http://127.0.0.1:3459" });
+  });
+
+  test("writes the edited values to its own namespace", async () => {
+    const { settings, writes } = fakeSettings();
+    const { internals, ctx } = applyWith(settings);
+    const failure = await internals.writeConfig(ctx, { endpoint: "http://127.0.0.1:3459" });
+    expect(failure).toBeUndefined();
+    expect(writes.length).toBe(1);
+    expect(writes[0]?.ns).toBe("dsh-role-model");
+    expect(writes[0]?.patch).toEqual({ endpoint: "http://127.0.0.1:3459" });
+  });
+
+  test("surfaces a refused write instead of reporting success", async () => {
+    const { settings } = fakeSettings({ updateError: "read only" });
+    const { internals, ctx } = applyWith(settings);
+    // The message is returned so the panel can show it; silence would claim success.
+    await expect(internals.writeConfig(ctx, { endpoint: "http://x" })).resolves.toBe("read only");
+  });
+
+  test("an empty patch is not written at all", async () => {
+    const { settings, writes } = fakeSettings();
+    const { internals, ctx } = applyWith(settings);
+    const failure = await internals.writeConfig(ctx, {});
+    expect(failure).toBeUndefined();
+    expect(writes).toEqual([]);
+  });
+
+  test("a context without the settings Remote degrades instead of throwing", async () => {
+    // This is the case that matters: the page must still render when the Remote is
+    // absent, so every access is guarded rather than assumed.
+    const { internals } = applyWith(undefined);
+    const bare = {};
+    expect(internals.settingsRemote(bare)).toBeUndefined();
+    await expect(internals.readConfig(bare)).resolves.toBeUndefined();
+    // The write reports why it could not save, rather than appearing to succeed.
+    await expect(internals.writeConfig(bare, { endpoint: "http://x" })).resolves.toContain(
+      "unavailable",
+    );
+  });
+
+  /**
+   * A component that throws during render leaves the settings pane blank, and nothing
+   * in the browser says the plugin is responsible. Tests over the markup and the write
+   * path cannot catch that — a blank `role-model` pane was reported while every one of
+   * them passed — so the failure is rendered as text instead.
+   */
+  test("keeps a render failure visible instead of blanking the pane", () => {
+    const source = readFileSync(clientEntry, "utf8");
+    // The message must name the plugin, so a user can tell whose fault it is.
+    expect(source).toContain("role-model could not render");
+    // The real panel is invoked inside the guarded shell, so a throw during its own
+    // render is caught rather than escaping into react-dom's tree walk.
+    expect(source).toContain("RoleModelPanel()");
+    expect(source).toContain("PanelShell");
+  });
+
+  test("the shell renders its children while nothing has thrown", () => {
+    const { component } = applyWith(undefined);
+    const rendered = JSON.stringify((component as (props: unknown) => unknown)({}), jsonReplacer);
+    expect(rendered).toContain("rlm-page");
+    expect(rendered).not.toContain("could not render");
   });
 });

@@ -43,6 +43,12 @@ export const name = "@try-works/dsh-role-model";
 export const inject = ["llm"];
 
 /**
+ * Loader entry id this bundle's patch row declares, and therefore the settings
+ * namespace the Harness derives for it (`entry.options.id` is the namespace).
+ */
+export const CONFIG_ENTRY_ID = "dsh-role-model";
+
+/**
  * Configuration schema.
  *
  * Exported so the loader validates a patch row before activation and can show the
@@ -134,10 +140,25 @@ interface SkillsService {
   register(registration: SkillRegistration): () => void;
 }
 
-/** The subset of the config editor the plugin writes alias state through. */
+/**
+ * The subset of the config editor the plugin writes configuration through.
+ *
+ * `edit` takes a live `Entry` and matches it **by identity** — the host's editor
+ * does `if (!this.entries().includes(entry)) throw new Error('Configuration entry is
+ * no longer available')` — so the entry must come from {@link ConfigEditorService.entries}
+ * rather than being reconstructed from an id. Passing a look-alike throws, and because
+ * the write is fire-and-forget that failure would surface only as a warning, silently
+ * discarding the user's choice.
+ */
+interface ConfigEditorEntry {
+  readonly id: string;
+  readonly options: { readonly id: string; readonly name: string };
+}
+
 interface ConfigEditorService {
+  entries(): readonly ConfigEditorEntry[];
   edit(
-    entry: { id: string },
+    entry: ConfigEditorEntry,
     change: (current: Record<string, unknown>) => Record<string, unknown>,
   ): Promise<void>;
 }
@@ -247,16 +268,27 @@ export function createRoleModelPlugin(
         ? value.trim()
         : resolved.selectedAlias;
     };
+    // Resolve the plugin's own Loader entry the way the editor demands: by identity,
+    // from the entries it actually owns. The id a profile happens to use is not
+    // guaranteed (a row may be renamed), so the package name is a fallback.
+    const findConfigEntry = (editor: ConfigEditorService): ConfigEditorEntry | undefined => {
+      const rows = editor.entries();
+      return (
+        rows.find((row) => row.options.id === CONFIG_ENTRY_ID || row.id === CONFIG_ENTRY_ID) ??
+        rows.find((row) => row.options.name === name)
+      );
+    };
     const writeSelectedAlias = (alias: string): void => {
       const editor = configEditor;
-      if (editor === undefined || typeof editor.edit !== "function") {
+      const entry = editor === undefined ? undefined : findConfigEntry(editor);
+      if (editor === undefined || typeof editor.edit !== "function" || entry === undefined) {
         ctx.logger.warn(
           `dsh-role-model: recorded alias "${alias}" for this session only; set \`selectedAlias\` in the plugin config to persist it.`,
         );
         return;
       }
       void editor
-        .edit({ id: "dsh-role-model" }, (current: Record<string, unknown>) => ({
+        .edit(entry, (current: Record<string, unknown>) => ({
           ...current,
           selectedAlias: alias,
         }))
