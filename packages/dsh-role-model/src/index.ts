@@ -22,6 +22,7 @@ import {
   DEFAULT_ENDPOINT,
   DEFAULT_PROVIDER_ROUTE,
   DEFAULT_REQUEST_TIMEOUT_MS,
+  DEFAULT_RUNTIME_PORT,
   type RoleModelConfig,
   createRoleModelConfig,
 } from "./config.js";
@@ -63,6 +64,15 @@ export const CONFIG_ENTRY_ID = "dsh-role-model";
  * configuration surface is inert and the endpoint cannot be edited from the UI.
  */
 export const Config = z.object({
+  /**
+   * Runtime channel port: 3456 production, 3457 stage, 3458 development.
+   *
+   * 0 means "no channel chosen", which lets a stored `endpoint` stand on its own — the
+   * schema defaults `endpoint`, so without a distinct unset state a deliberate choice of
+   * the default channel would be indistinguishable from a default. The settings page
+   * offers the sentinel as "default (production)".
+   */
+  port: z.number().min(0).max(65_535).default(0).volatile(),
   /** Runtime endpoint, without a trailing slash and without `/v1`. */
   endpoint: z.string().default(DEFAULT_ENDPOINT).volatile(),
   /** Whether non-loopback endpoints are permitted. */
@@ -79,7 +89,8 @@ export const Config = z.object({
 
 /** Raw configuration as it arrives from the bundle's patch row. */
 export type RoleModelPluginConfig = {
-  endpoint?: string | undefined;
+  port?: ConfigField;
+  endpoint?: ConfigField;
   allowRemote?: ConfigField;
   requestTimeoutMs?: ConfigField;
   providerRoute?: ConfigField;

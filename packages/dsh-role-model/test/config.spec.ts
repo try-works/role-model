@@ -12,8 +12,11 @@ import { describe, expect, test } from "vitest";
 import {
   DEFAULT_ENDPOINT,
   DEFAULT_REQUEST_TIMEOUT_MS,
+  DEFAULT_RUNTIME_PORT,
+  RUNTIME_CHANNELS,
   assessEndpointTrust,
   createRoleModelConfig,
+  endpointForPort,
   isTruthyFlag,
   normalizeEndpoint,
   resolveAllowRemote,
@@ -167,5 +170,76 @@ describe("assessEndpointTrust", () => {
     // refuse before it constructs any fetch.
     const trust = assessEndpointTrust("https://role-model.example.test", { allowRemote: false });
     expect(trust).not.toBeInstanceOf(Promise);
+  });
+});
+
+describe("runtime channels", () => {
+  /**
+   * The three runtime channels are fixed by this repository's convention: production
+   * on 3456, stage on 3457, development on 3458, production being the default. The
+   * settings page offers them as a choice rather than asking a user to retype a URL,
+   * because picking the wrong channel is otherwise silent — the route registers either
+   * way and the only symptom is a runtime that answers differently.
+   */
+  test("names the three channels with production as the default", () => {
+    expect(RUNTIME_CHANNELS.map((channel) => channel.port)).toEqual([3456, 3457, 3458]);
+    expect(RUNTIME_CHANNELS[0]?.name).toBe("production");
+    expect(DEFAULT_RUNTIME_PORT).toBe(3456);
+    // The default endpoint must agree with the default port.
+    expect(DEFAULT_ENDPOINT).toBe(`http://127.0.0.1:${String(DEFAULT_RUNTIME_PORT)}`);
+  });
+
+  test("describes the runtime each channel runs", () => {
+    expect(RUNTIME_CHANNELS.map((channel) => channel.runtime)).toEqual([
+      "role-model",
+      "role-model-stage",
+      "role-model-dev",
+    ]);
+  });
+
+  test("derives a loopback endpoint from a port", () => {
+    expect(endpointForPort(3456)).toBe("http://127.0.0.1:3456");
+    expect(endpointForPort(3458)).toBe("http://127.0.0.1:3458");
+  });
+
+  test("a chosen port resolves to that channel's endpoint", () => {
+    expect(createRoleModelConfig({ port: 3457 }).endpoint).toBe("http://127.0.0.1:3457");
+    expect(createRoleModelConfig({ port: 3458 }).endpoint).toBe("http://127.0.0.1:3458");
+    // Absent means production, not "unset".
+    expect(createRoleModelConfig({}).endpoint).toBe("http://127.0.0.1:3456");
+  });
+
+  test("a chosen channel outranks a stored endpoint", () => {
+    // A profile written before this field existed still carries production in
+    // `endpoint`. Honouring that while a channel is chosen would make the selector
+    // appear to do nothing, which is the silent misroute this field exists to prevent.
+    expect(createRoleModelConfig({ port: 3458, endpoint: "http://127.0.0.1:3456" }).endpoint).toBe(
+      "http://127.0.0.1:3458",
+    );
+    expect(createRoleModelConfig({ port: 3457, endpoint: "http://127.0.0.1:3456" }).endpoint).toBe(
+      "http://127.0.0.1:3457",
+    );
+  });
+
+  test("with no channel chosen, a stored endpoint stands on its own", () => {
+    // The port sentinel is what makes this possible: it keeps a remote host or a
+    // non-standard port working without the channel selector interfering.
+    expect(createRoleModelConfig({ endpoint: "https://role-model.example.test" }).endpoint).toBe(
+      "https://role-model.example.test",
+    );
+    expect(createRoleModelConfig({ endpoint: "http://127.0.0.1:9999" }).endpoint).toBe(
+      "http://127.0.0.1:9999",
+    );
+  });
+
+  test("an unset channel leaves the default endpoint alone", () => {
+    expect(createRoleModelConfig({ port: 0 }).endpoint).toBe(DEFAULT_ENDPOINT);
+    expect(createRoleModelConfig({}).endpoint).toBe(DEFAULT_ENDPOINT);
+  });
+
+  test("a port that cannot be real is treated as no channel chosen", () => {
+    for (const port of [-1, 70_000, 1.5, "3457"]) {
+      expect(createRoleModelConfig({ port }).endpoint, String(port)).toBe(DEFAULT_ENDPOINT);
+    }
   });
 });

@@ -279,6 +279,7 @@ window.__ModuleLoader__.load({
      * `SettingsForms.write()` with "not volatile".
      */
     const CONFIG_FIELDS = [
+      "port",
       "endpoint",
       "selectedAlias",
       "providerRoute",
@@ -287,9 +288,44 @@ window.__ModuleLoader__.load({
       "hostLlmModule",
     ];
 
+    /**
+     * The runtime channels the page offers: production first, because it is the default.
+     *
+     * Mirrors `RUNTIME_CHANNELS` in `src/config.ts`, which this plain-JavaScript half
+     * cannot import.
+     */
+    const RUNTIME_CHANNELS = [
+      { port: 3456, name: "production", runtime: "role-model" },
+      { port: 3457, name: "stage", runtime: "role-model-stage" },
+      { port: 3458, name: "development", runtime: "role-model-dev" },
+    ];
+
+    /**
+     * Sentinel for "no channel chosen", matching the schema's default.
+     *
+     * It exists because `endpoint` carries its own default: without a distinct unset
+     * state there is no way to tell a deliberate choice of production from leaving the
+     * field alone, and no way for a stored remote endpoint to survive.
+     */
+    const CHANNEL_DEFAULT = 0;
+
+    /** The select's options, the unset state first. */
+    const CHANNEL_OPTIONS = [
+      { port: CHANNEL_DEFAULT, label: "default — production (:3456)" },
+      ...RUNTIME_CHANNELS.filter((channel) => channel.port !== 3456).map((channel) => ({
+        port: channel.port,
+        label: `${channel.name} — ${channel.runtime} (:${channel.port})`,
+      })),
+    ];
+
+    /** Fields presented as a closed choice rather than free text. */
+    const SELECT_FIELDS = new Set(["port"]);
+
     /** One-line explanations, so the form does not need the README. */
     const FIELD_HELP = {
-      endpoint: "Runtime URL, without a trailing slash and without /v1.",
+      port: "Which runtime to route through: production 3456 (default), stage 3457, development 3458.",
+      endpoint:
+        "Full runtime URL. Set this to override the channel above, for example a remote host.",
       selectedAlias:
         "Preferred routing strategy, e.g. baseline.remote-only. Empty means no preference.",
       providerRoute: "The route this plugin owns. Leave it as role-model.",
@@ -303,8 +339,13 @@ window.__ModuleLoader__.load({
     /** Fields whose value is a boolean checkbox rather than a text input. */
     const BOOLEAN_FIELDS = new Set(["allowRemote"]);
 
-    /** Fields holding a number. */
-    const NUMERIC_FIELDS = new Set(["requestTimeoutMs"]);
+    /**
+     * Fields holding a number.
+     *
+     * `port` is here as well as in {@link SELECT_FIELDS}: a `<select>` yields a string,
+     * and the host schema declares the port as a number, so a string would be refused.
+     */
+    const NUMERIC_FIELDS = new Set(["port", "requestTimeoutMs"]);
 
     /**
      * Read the settings Remote, when the context exposes one.
@@ -415,29 +456,49 @@ window.__ModuleLoader__.load({
       }
     }
 
-    /** One labelled form control. */
+    /**
+     * One labelled form control.
+     *
+     * A closed-choice field renders a `<select>`: the channel is one of three ports, and
+     * a free-text field would let a typo select a runtime that is not running — silently,
+     * because the route registers against whatever it is given.
+     */
     function Field(props) {
       const { field, value, help, onChange, disabled } = props;
       const id = `rlm-field-${field}`;
-      const control = BOOLEAN_FIELDS.has(field)
-        ? h("input", {
-            id,
-            name: field,
-            type: "checkbox",
-            checked: value === true,
-            disabled: disabled === true,
-            onChange: (event) => onChange(field, event.target.checked),
-          })
-        : h("input", {
-            id,
-            name: field,
-            type: NUMERIC_FIELDS.has(field) ? "number" : "text",
-            value: value ?? "",
-            disabled: disabled === true,
-            spellCheck: false,
-            autoComplete: "off",
-            onChange: (event) => onChange(field, event.target.value),
-          });
+      const control = SELECT_FIELDS.has(field)
+        ? h(
+            "select",
+            {
+              id,
+              name: field,
+              value: value === undefined || value === null ? "" : String(value),
+              disabled: disabled === true,
+              onChange: (event) => onChange(field, event.target.value),
+            },
+            ...CHANNEL_OPTIONS.map((option) =>
+              h("option", { key: option.port, value: option.port }, option.label),
+            ),
+          )
+        : BOOLEAN_FIELDS.has(field)
+          ? h("input", {
+              id,
+              name: field,
+              type: "checkbox",
+              checked: value === true,
+              disabled: disabled === true,
+              onChange: (event) => onChange(field, event.target.checked),
+            })
+          : h("input", {
+              id,
+              name: field,
+              type: NUMERIC_FIELDS.has(field) ? "number" : "text",
+              value: value ?? "",
+              disabled: disabled === true,
+              spellCheck: false,
+              autoComplete: "off",
+              onChange: (event) => onChange(field, event.target.value),
+            });
       return h(
         "div",
         { className: "rlm-field" },
@@ -822,6 +883,8 @@ window.__ModuleLoader__.load({
       __internals: {
         SETTINGS_NS,
         CONFIG_FIELDS,
+        SELECT_FIELDS,
+        RUNTIME_CHANNELS,
         settingsRemote,
         readConfig,
         buildPatch,

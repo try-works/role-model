@@ -545,6 +545,8 @@ describe("editing configuration from the panel", () => {
   interface PanelInternals {
     SETTINGS_NS: string;
     CONFIG_FIELDS: readonly string[];
+    SELECT_FIELDS: ReadonlySet<string>;
+    RUNTIME_CHANNELS: readonly { port: number; name: string; runtime: string }[];
     settingsRemote: (ctx: unknown) => unknown;
     readConfig: (ctx: unknown) => Promise<Record<string, unknown> | undefined>;
     buildPatch: (
@@ -665,6 +667,42 @@ describe("editing configuration from the panel", () => {
     for (const field of internals.CONFIG_FIELDS) {
       expect([...names], `no control for ${field}`).toContain(field);
     }
+  });
+
+  test("offers the runtime channels as a choice, production first", () => {
+    const { internals } = applyWith(fakeSettings().settings);
+    expect(internals.RUNTIME_CHANNELS.map((channel) => channel.port)).toEqual([3456, 3457, 3458]);
+    // Locate the real select element rather than asserting on source text.
+    let select: ExpandedElement | undefined;
+    const walk = (value: unknown): void => {
+      if (Array.isArray(value)) {
+        for (const child of value) walk(child);
+        return;
+      }
+      if (!isElement(value)) return;
+      if (value.type === "select" && value.props.name === "port") {
+        select = { ...value, children: childrenOf(value) };
+      }
+      for (const child of childrenOf(value)) walk(child);
+    };
+    for (const child of panelChildren()) walk(child);
+    expect(select, "no port select").toBeDefined();
+    const options = childrenOf(select as ExpandedElement).filter(isElement);
+    // The unset state comes first and names the default it resolves to; production is
+    // not listed twice, because choosing it is the same as leaving the field alone.
+    expect(options[0]?.props.value).toBe(0);
+    expect(childrenOf(options[0] as ExpandedElement).join("")).toContain("default");
+    expect(options[0] && childrenOf(options[0]).join("")).toContain("3456");
+    expect(options.map((option) => option.props.value)).toEqual([0, 3457, 3458]);
+    const labels = options.map((option) => childrenOf(option).join(""));
+    expect(labels[1]).toContain("stage");
+    expect(labels[2]).toContain("development");
+  });
+
+  test("the port is a closed choice, not free text", () => {
+    const { internals } = applyWith(fakeSettings().settings);
+    // A plain number input would let a typo select a runtime that is not running.
+    expect(internals.SELECT_FIELDS.has("port")).toBe(true);
   });
 
   test("reads the current values from its settings namespace", async () => {
