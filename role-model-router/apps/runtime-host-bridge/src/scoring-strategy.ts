@@ -28,6 +28,7 @@ export type WeightProfile = Readonly<Record<WeightMetric, number>>;
 
 /** Accepted on read, normalized on write (design document section 3). */
 export const LEGACY_SCORING_STRATEGY_SPELLINGS: Readonly<Record<string, ScoringStrategyName>> = {
+  baseline: "balanced",
   basic: "balanced",
   balanced: "balanced",
   latency: "latency",
@@ -292,4 +293,59 @@ export function decodeRoutingPosture(input: RoutingPostureInput): RoutingPosture
     operator,
     degradations,
   };
+}
+
+const LEGACY_MODE_SPELLINGS: Readonly<Record<string, RoutingModeName>> = {
+  difficulty: "difficulty",
+  hybrid: "hybrid",
+  controller: "intelligent",
+  intelligent: "intelligent",
+};
+
+const LEGACY_NO_POSTURE_SPELLINGS = new Set(["", "craft-ask"]);
+
+/**
+ * Run 103 / SP2c - migrate the legacy single `routing.strategy` string onto the two axes
+ * (design document section 3). Mode spellings set the mode and leave the scoring strategy
+ * unset; scoring spellings set `baseline` plus that strategy; `craft-ask` maps to the default
+ * posture; an unknown spelling degrades with a recorded reason.
+ */
+export function decodeLegacyRoutingStrategy(raw: string | null | undefined): RoutingPosture {
+  const normalized = raw?.trim().toLowerCase() ?? "";
+  if (LEGACY_NO_POSTURE_SPELLINGS.has(normalized)) {
+    return decodeRoutingPosture({});
+  }
+  const mode = LEGACY_MODE_SPELLINGS[normalized];
+  if (mode) {
+    return decodeRoutingPosture({ mode });
+  }
+  if (normalizeScoringStrategyName(normalized)) {
+    return decodeRoutingPosture({ mode: "baseline", scoringStrategy: normalized });
+  }
+  return decodeRoutingPosture({ mode: "baseline", scoringStrategy: normalized });
+}
+
+export interface RequestStrategyInput {
+  readonly posture?: RoutingPosture;
+  readonly effectiveRoutingMode: RoutingModeName;
+  readonly difficulty?: DifficultyBucket;
+  /** Set when the controller produced a validated strategy directive (SP4 applies the pin rule). */
+  readonly controllerStrategy?: ScoringStrategyName;
+  readonly controllerActive?: boolean;
+}
+
+/**
+ * Run 103 / SP2c - the request-level entry point: a posture plus the difficulty result produce
+ * the effective strategy that is written into the routing request.
+ */
+export function resolveRequestStrategy(input: RequestStrategyInput): StrategyResolution {
+  return resolveStrategy({
+    operator: input.posture?.operator ?? null,
+    pinWeights: input.posture?.pinWeights ?? false,
+    difficultyRoutingActive:
+      input.effectiveRoutingMode === "difficulty" || input.effectiveRoutingMode === "hybrid",
+    difficulty: input.difficulty,
+    controllerActive: input.controllerActive === true,
+    controllerStrategy: input.controllerStrategy,
+  });
 }
