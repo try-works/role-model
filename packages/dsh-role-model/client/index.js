@@ -109,31 +109,72 @@ window.__ModuleLoader__.load({
   line-height: 20px;
   color: var(--dsw-alias-label-secondary);
 }
+.rlm-codeblock {
+  margin: 4px 0 0;
+  padding: 10px 12px;
+  border: 0.5px solid var(--dsw-alias-border-l2);
+  border-radius: var(--dsw-radius-md);
+  background: var(--dsw-alias-bg-layer-1);
+  color: var(--dsw-alias-label-primary);
+  font-family: var(--ds-font-family-code);
+  font-size: 12px;
+  line-height: 18px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
 `;
 
     /** One row inside a card: a muted label and a primary value. */
     function Row(props) {
+      const { label, mono, children } = props ?? {};
       return h(
         "div",
         { className: "rlm-row" },
-        h("span", { className: "rlm-label" }, props.label),
-        h(
-          "span",
-          { className: props.mono === true ? "rlm-value rlm-code" : "rlm-value" },
-          props.children,
-        ),
+        h("span", { className: "rlm-label" }, label),
+        h("span", { className: mono === true ? "rlm-value rlm-code" : "rlm-value" }, children),
       );
     }
 
-    /** One card: a small heading and its rows. */
+    /**
+     * One card: a small heading and its rows.
+     *
+     * `children` is spread rather than passed through as one argument. React gives a
+     * component its children as an array, and react-dom refuses to render an array
+     * that is itself a child (it cannot key it), so handing the array straight back
+     * would make the card show its heading and drop every row. Spreading removes that
+     * failure mode whatever shape the caller passes.
+     */
     function Card(props) {
+      const { title, children } = props ?? {};
+      const rows = children === undefined || children === null ? [] : children;
       return h(
         "div",
         { className: "rlm-card" },
-        h("h3", { className: "rlm-card-title" }, props.title),
-        props.children,
+        h("h3", { className: "rlm-card-title" }, title),
+        ...(Array.isArray(rows) ? rows : [rows]),
       );
     }
+
+    /** A monospaced block for a value or command to copy verbatim. */
+    function CodeBlock(props) {
+      return h("pre", { className: "rlm-codeblock" }, props?.children);
+    }
+
+    /**
+     * The values a client needs, as a worked example.
+     *
+     * Held as one string so the example is copyable as a unit, and so the three
+     * values are visibly consistent with each other.
+     */
+    const REQUEST_EXAMPLE = [
+      "curl http://127.0.0.1:3457/v1/chat/completions \\",
+      '  -H "Authorization: Bearer role-model-local" \\',
+      '  -H "Content-Type: application/json" \\',
+      "  -d '{",
+      '    "model": "baseline.remote-only",',
+      '    "messages": [{"role": "user", "content": "hello"}]',
+      "  }'",
+    ].join("\n");
 
     /** The settings page. */
     function RoleModelPanel() {
@@ -152,10 +193,10 @@ window.__ModuleLoader__.load({
           "p",
           { className: "rlm-intro" },
           "This route forwards model requests to an externally running role-model runtime. The runtime " +
-            "owns routing: it chooses the endpoint or alias for each request. Every ordinary request " +
-            "carries role_model intent metadata — the role and task this plugin classified, plus " +
-            "capabilities, modalities and tool classes — so the runtime can route on what the work needs " +
-            "rather than on the prompt text alone.",
+            "owns routing: the model id you request is the routing strategy, and the runtime picks the " +
+            "endpoint behind it. Every ordinary request carries role_model intent metadata — the role and " +
+            "task this plugin classified, plus capabilities, modalities and tool classes — so the runtime " +
+            "can route on what the work needs rather than on the prompt text alone.",
         ),
 
         h(
@@ -189,6 +230,71 @@ window.__ModuleLoader__.load({
               { label: "model selector" },
               "The runtime's aliases, models and endpoints all appear under this route, recommended " +
                 "alias first.",
+            ),
+          ),
+
+          h(
+            Card,
+            { title: "Connect a client" },
+            h(Row, { label: "base URL", mono: true }, "http://127.0.0.1:3457/v1"),
+            h(Row, { label: "model", mono: true }, "baseline.remote-only"),
+            h(Row, { label: "API key", mono: true }, "role-model-local"),
+            h(
+              "p",
+              { className: "rlm-note" },
+              "Use the /v1 base URL, not the bare host: an OpenAI-compatible client appends " +
+                "/chat/completions to what you give it, so a base URL without /v1 fails with a 404. Any " +
+                "non-empty API key is accepted; role-model-local is the runtime's published local " +
+                "placeholder.",
+            ),
+            h(
+              "p",
+              { className: "rlm-note" },
+              "In this harness, enter these under Settings → Models: add a provider with the base URL " +
+                "above, then choose the model id you want. Every routing strategy, endpoint and concrete " +
+                "model the runtime advertises appears in this route's group in the model selector.",
+            ),
+            h(
+              "p",
+              { className: "rlm-note" },
+              "Ports differ by channel: 3456 is production (role-model), 3457 is stage " +
+                "(role-model-stage), and 3458 is development (role-model-dev). Point the base URL at the " +
+                "channel you mean.",
+            ),
+            h(CodeBlock, null, REQUEST_EXAMPLE),
+          ),
+
+          h(
+            Card,
+            { title: "Pick a routing strategy" },
+            h(
+              "p",
+              { className: "rlm-note" },
+              "A model id is <strategy>.<scope>. The strategy decides how the runtime chooses, and the " +
+                "scope decides how much of the decision it makes itself: decision-only returns the " +
+                "decision for you to execute, remote-only runs the chosen remote model, and hybrid picks " +
+                "between local and remote. baseline.remote-only is the recommended starting point.",
+            ),
+            h(
+              Row,
+              { label: "baseline", mono: true },
+              "a fixed baseline model, the simplest behaviour",
+            ),
+            h(Row, { label: "difficulty", mono: true }, "route on how hard the request looks"),
+            h(Row, { label: "hybrid", mono: true }, "choose between local and remote execution"),
+            h(
+              Row,
+              { label: "controller", mono: true },
+              "a learned policy over the classifier signals",
+            ),
+            h(Row, { label: "default", mono: true }, "the runtime's own default strategy"),
+            h(
+              "p",
+              { className: "rlm-note" },
+              "Each strategy pairs with those three scopes, giving ids such as baseline.decision-only, " +
+                "difficulty.remote-only and hybrid.hybrid. The runtime is the authority on the current " +
+                "set: /role-model alias list prints every alias it advertises right now, and " +
+                "/role-model alias recommended gives its own pick.",
             ),
           ),
 

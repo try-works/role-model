@@ -34,11 +34,13 @@ function evaluateClientEntry(): {
   registrations: { name: string; id?: string; order?: number; rendered: string }[];
   injectedInto: string[];
   effects: number;
+  component: unknown;
 } {
   const registrations: { name: string; id?: string; order?: number; rendered: string }[] = [];
   const injectedInto: string[] = [];
   let effects = 0;
   let registered: RegisteredModule | undefined;
+  let component: unknown;
 
   const stub = {
     __ModuleLoader__: {
@@ -55,18 +57,7 @@ function evaluateClientEntry(): {
 
   if (registered === undefined) throw new Error("the client entry registered no module");
 
-  const React = {
-    createElement: (type: unknown, props: unknown, ...children: unknown[]) => ({
-      type,
-      props,
-      children,
-      $$typeof: Symbol.for("react.element"),
-    }),
-    Fragment: Symbol.for("react.fragment"),
-    useState: (initial: unknown) => [initial, () => undefined],
-    useEffect: () => undefined,
-    useMemo: (factory: () => unknown) => factory(),
-  };
+  const React = testReact();
 
   const ctx = {
     effect: (callback: () => unknown) => {
@@ -79,12 +70,13 @@ function evaluateClientEntry(): {
         injectedInto.push(key);
         callback();
       },
-      register(options: { name: string; id?: string; order?: number }, component: unknown) {
+      register(options: { name: string; id?: string; order?: number }, panel: unknown) {
+        component = panel;
         registrations.push({
           name: options.name,
           ...(options.id === undefined ? {} : { id: options.id }),
           ...(options.order === undefined ? {} : { order: options.order }),
-          rendered: JSON.stringify(renderComponent(component, React), jsonReplacer),
+          rendered: JSON.stringify(renderComponent(panel, React), jsonReplacer),
         });
         return () => undefined;
       },
@@ -98,7 +90,7 @@ function evaluateClientEntry(): {
   });
   plugin.apply(ctx);
 
-  return { registered, registrations, injectedInto, effects };
+  return { registered, registrations, injectedInto, effects, component };
 }
 
 /** Render a component once, so its static markup can be inspected. */
@@ -127,6 +119,114 @@ function jsonReplacer(_key: string, value: unknown): unknown {
   if (typeof value === "function")
     return `[function ${(value as { name?: string }).name ?? "anonymous"}]`;
   return value;
+}
+
+/** A host element after every function component has been expanded. */
+interface HostElement {
+  type: unknown;
+  props: Record<string, unknown>;
+  /** Absent when the element was created without children, as React does. */
+  children?: unknown[];
+}
+
+/** A host element whose children are known to be an array. */
+interface ExpandedElement extends HostElement {
+  children: unknown[];
+}
+
+/** The children of an element, as an array. */
+function childrenOf(element: HostElement): unknown[] {
+  return element.children ?? [];
+}
+
+/** The stubbed React surface, shared so elements compare structurally. */
+const REACT_ELEMENT = Symbol.for("react.element");
+
+/**
+ * Build the stubbed React used to evaluate the client entry.
+ *
+ * `children` is flattened one level and omitted when empty, mirroring React's own
+ * handling of the `...children` arguments. A stub that skipped this would disagree
+ * with react-dom about the shape of a component's children, and would then accept
+ * structures that fail in the browser.
+ * @returns the module the factory receives for `require("react")`.
+ */
+function testReact(): {
+  createElement: (type: unknown, props: unknown, ...children: unknown[]) => unknown;
+  useMemo: (factory: () => unknown) => unknown;
+  [key: string]: unknown;
+} {
+  return {
+    createElement: (type: unknown, props: unknown, ...children: unknown[]) => {
+      const flat = children.flat();
+      return {
+        type,
+        props,
+        children: flat.length === 0 ? undefined : flat,
+        $$typeof: REACT_ELEMENT,
+      };
+    },
+    Fragment: Symbol.for("react.fragment"),
+    useState: (initial: unknown) => [initial, () => undefined],
+    useEffect: () => undefined,
+    useMemo: (factory: () => unknown) => factory(),
+  };
+}
+
+/** Whether a value is a host element produced by the stubbed createElement. */
+function isElement(value: unknown): value is HostElement {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    (value as { $$typeof?: unknown }).$$typeof === REACT_ELEMENT &&
+    "type" in value
+  );
+}
+
+/**
+ * Expand function components down to host elements.
+ *
+ * The panel composes `Card`/`Row`/`CodeBlock`, and react-dom never sees those — it
+ * sees what they return — so a structural check has to expand them too.
+ *
+ * A component receives its children as `props.children`, not as extra arguments, so
+ * the props handed back are the element's own props plus its children. Omitting that
+ * would let a component see `undefined` children and appear to render nothing, which
+ * is the class of bug these assertions exist to catch.
+ * @param value - element, component element, string, or nested array.
+ * @returns host elements and strings, with arrays flattened.
+ */
+function expand(value: unknown): unknown[] {
+  if (Array.isArray(value)) return value.flatMap(expand);
+  if (!isElement(value)) return [value];
+  const element = value as HostElement;
+  if (typeof element.type === "function") {
+    const props = { ...(element.props ?? {}) } as Record<string, unknown>;
+    if (element.children !== undefined) props.children = element.children;
+    return expand((element.type as (props: unknown) => unknown)(props));
+  }
+  return [{ ...element, children: (element.children ?? []).flatMap(expand) }];
+}
+
+/** The expanded children of the page root. */
+function panelChildren(): ExpandedElement[] {
+  const { component } = evaluateClientEntry();
+  if (component === undefined) throw new Error("the panel registered no component");
+  const rendered = (component as (props: unknown) => unknown)({});
+  // `expand` returns the expanded root itself for a single element, so descend into
+  // it rather than filtering the returned list.
+  const root = expand(rendered).filter(isElement)[0];
+  if (root === undefined) throw new Error("the panel rendered no root element");
+  return childrenOf(root).filter(isElement) as ExpandedElement[];
+}
+
+/** The `rlm-cards` wrapper's expanded card elements. */
+function panelCards(): ExpandedElement[] {
+  const wrapper = panelChildren().find((child) =>
+    String(child.props.className ?? "").includes("rlm-cards"),
+  );
+  if (wrapper === undefined) throw new Error("the page has no cards wrapper");
+  return childrenOf(wrapper).filter(isElement) as ExpandedElement[];
 }
 
 describe("the client module registration", () => {
@@ -260,5 +360,115 @@ describe("the settings panel registration", () => {
     const source = readFileSync(clientEntry, "utf8");
     expect(source).not.toContain("document.body");
     expect(source).not.toContain("document.createElement");
+  });
+});
+
+describe("the panel is a configuration guide", () => {
+  /**
+   * The panel's job is to tell a user how to point a client at the runtime, so the
+   * exact values matter: a wrong base URL, or a model id that is not a routing
+   * strategy, produces requests that cannot work. These assertions are on rendered
+   * text, so they fail when the guidance is removed or drifts.
+   */
+
+  test("gives the base URL to configure, including the /v1 suffix", () => {
+    const { registrations } = evaluateClientEntry();
+    const rendered = registrations[0]?.rendered ?? "";
+    expect(rendered).toContain("http://127.0.0.1:3457/v1");
+    // The suffix is the detail people get wrong, so it is called out in prose too.
+    expect(rendered).toContain("/v1");
+  });
+
+  test("states that the model id is the routing strategy", () => {
+    const { registrations } = evaluateClientEntry();
+    const rendered = registrations[0]?.rendered ?? "";
+    expect(rendered.toLowerCase()).toContain("routing strateg");
+    expect(rendered).toContain("baseline.remote-only");
+  });
+
+  test("names every model-id family so a user can choose one", () => {
+    const { registrations } = evaluateClientEntry();
+    const rendered = registrations[0]?.rendered ?? "";
+    // `<strategy>.<scope>`; the strategies the runtime advertises.
+    for (const strategy of ["baseline", "difficulty", "hybrid", "controller", "default"]) {
+      expect(rendered, `missing strategy ${strategy}`).toContain(strategy);
+    }
+  });
+
+  test("tells the user where to enter these values", () => {
+    const { registrations } = evaluateClientEntry();
+    const rendered = (registrations[0]?.rendered ?? "").toLowerCase();
+    expect(rendered).toContain("settings");
+    expect(rendered).toContain("models");
+  });
+
+  test("gives the bearer placeholder and a worked request example", () => {
+    const { registrations } = evaluateClientEntry();
+    const rendered = registrations[0]?.rendered ?? "";
+    expect(rendered).toContain("role-model-local");
+    // A worked request shows the three values fitting together.
+    expect(rendered).toContain("chat/completions");
+  });
+
+  test("explains the guidance from the bundle alone, with no network access", () => {
+    // A panel that fetched the runtime would show nothing exactly when the runtime
+    // is unreachable, which is when the user is looking at it.
+    const source = readFileSync(clientEntry, "utf8");
+    expect(source).not.toContain("fetch(");
+    expect(source).not.toContain("XMLHttpRequest");
+  });
+});
+
+describe("the panel's element structure", () => {
+  test("every card actually contains its rows", () => {
+    // Regression guard, and the reason it is written this way: an earlier version of
+    // this spec passed a component its own props without `children`, so `Card` saw
+    // `undefined` children, rendered headings only, and the spec still passed. The
+    // helper now hands components their children as React does, so a card that lost
+    // its rows fails here.
+    const cards = panelCards();
+    expect(cards.length).toBeGreaterThanOrEqual(3);
+    for (const card of cards) {
+      const heading = childrenOf(card)[0];
+      const title = isElement(heading) ? childrenOf(heading).join("") : "";
+      const body = childrenOf(card).slice(1);
+      expect(body.length, `card "${title}" has no body`).toBeGreaterThan(0);
+      // No child may be an array: react-dom cannot key an array that is itself a child.
+      for (const child of body) {
+        expect(Array.isArray(child), `card "${title}" nests an array child`).toBe(false);
+      }
+    }
+  });
+
+  test("each card's body is a label/value row or a paragraph", () => {
+    for (const card of panelCards()) {
+      for (const child of childrenOf(card).slice(1)) {
+        if (!isElement(child)) continue;
+        const className = String(child.props.className ?? "");
+        const isRow = className.includes("rlm-row") && childrenOf(child).length === 2;
+        const isNote = child.type === "p";
+        const isCode = child.type === "pre";
+        expect(isRow || isNote || isCode, `unexpected card child: ${String(child.type)}`).toBe(
+          true,
+        );
+      }
+    }
+  });
+
+  test("the connect card states the values a client must be configured with", () => {
+    const card = panelCards().find((candidate) => {
+      const heading = childrenOf(candidate)[0];
+      return isElement(heading) && childrenOf(heading).join("") === "Connect a client";
+    });
+    expect(card, "no Connect a client card").toBeDefined();
+    const values = childrenOf(card as ExpandedElement)
+      .filter(isElement)
+      .flatMap((child) =>
+        childrenOf(child).map((c) => (isElement(c) ? childrenOf(c).join("") : String(c))),
+      );
+    const text = values.join(" | ");
+    expect(text).toContain("http://127.0.0.1:3457/v1");
+    expect(text).toContain("baseline.remote-only");
+    expect(text).toContain("role-model-local");
   });
 });
