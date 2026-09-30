@@ -28,6 +28,7 @@ disposition that the later phases build on.
 - [x] `SP6` shipped `batch`/`embedding` workload examples and the operations guide (R6)
 - [x] `SP7` effective-latency override metric and the 10 000 ms / 5..30 defaults (R7)
 - [x] `SP8` routing strategy page, Agent strategy page, Workloads page and the decision receipts (R8)
+- [x] `SP35` repair the delegated Phase 3.5 review findings (F1-F7) and record F3/F8 for Phase 6
 - [x] Complete the audited-phase sections and gates for locking
 
 ## Changes Applied
@@ -52,13 +53,16 @@ disposition that the later phases build on.
 | `SP6` | R6 | `agent-strategy.ts` (`SHIPPED_WORKLOAD_EXAMPLES`), `docs/operations/05-agent-strategy-and-workload-postures.md` | `7abcdc65` | `red/sp6-workload-examples-red.log`, `green/sp6-workload-examples-green.log` |
 | `SP7` | R7 | `src/routing-latency-selection.ts`, `src/routing-latency-policy.ts` | `ef6e288e` | `red/sp7-effective-metric-red.log`, `green/sp7-effective-metric-green.log` |
 | `SP8` | R8, R3, R6 | `apps/runtime-ui/**` (routing page rewrite, Agent strategy page, Workloads page, decision receipts, vocabulary) | `18e5bd6c` | `red/sp8-routing-page-red.log`, `red/sp8-agent-strategy-pages-red.log`, `green/sp8-routing-page-green.log`, `green/sp8-agent-strategy-pages-green.log`, `green/sp8-ui-suites-green.log`, `green/sp8-controller-ui-suites-green.log`, `green/sp8-controller-ui-build-green.log` |
+| `SP35`-F1 | R3 | `src/index.ts` (`readAppliedControllerStrategy`, both mappers' receipts) | `7ad627e3` | `red/sp35-repairs-red.log`, `green/sp35-repairs-suites-green.log` |
+| `SP35`-F2 | R2, R3 | `src/scoring-strategy.ts` (`StrategyProvenance.weights`), `packages/runtime-observability/src/index.ts`, `app/lib/decision-receipt.ts`, `app/routes/router-decision-detail.tsx` | `7ad627e3` | `green/sp35-repairs-ui-suites-green.log`, `green/sp35-repairs-ui-build-green.log` |
+| `SP35`-F4/F5/F6/F7 | R1, R5, R6 | `src/index.ts` (rollback), `src/unified-runtime-config.ts` (key-wise routing merge, patch vocabulary wins), `src/agent-strategy.ts` (model slice, collision wording) | `7ad627e3` | `green/sp35-repairs-config-roundtrip-green.log`, `green/sp35-repairs-bridge-suites-green.log` |
 | Ledger | - | this artifact and its evidence index | `932011fc`, `064e242c`, `1aca8a82` | the run folder itself |
 
 ## TDD Compliance Log
 
 TDD Mode: strict
 
-RED Evidence: `.recursive/run/103-agent-strategy-and-scoring-strategy/evidence/logs/red/sp1-scoring-strategy-vocabulary-red.log`, `.../red/sp2-scoring-strategy-resolution-red.log`, `.../red/sp2b-routing-posture-decode-red.log`, `.../red/sp2c-legacy-migration-red.log`, `.../red/sp3-strategy-provenance-red.log`, `.../red/sp3b-diagnostics-receipt-red.log`, `.../red/sp4-controller-latency-red.log`, `.../red/sp4b-pin-rule-red.log`, `.../red/sp5-agent-strategy-entries-red.log`, `.../red/sp5b-materialize-red.log`, `.../red/sp5c-section-red.log`, `.../red/sp5d-inventory-red.log`, `.../red/sp5e-config-path-red.log`, `.../red/sp5g-request-binding-red.log`, `.../red/sp6-workload-examples-red.log`, `.../red/sp7-effective-metric-red.log`, `.../red/sp8-routing-page-red.log`, `.../red/sp8-agent-strategy-pages-red.log`
+RED Evidence: `.recursive/run/103-agent-strategy-and-scoring-strategy/evidence/logs/red/sp35-repairs-red.log`, `.recursive/run/103-agent-strategy-and-scoring-strategy/evidence/logs/red/sp1-scoring-strategy-vocabulary-red.log`, `.../red/sp2-scoring-strategy-resolution-red.log`, `.../red/sp2b-routing-posture-decode-red.log`, `.../red/sp2c-legacy-migration-red.log`, `.../red/sp3-strategy-provenance-red.log`, `.../red/sp3b-diagnostics-receipt-red.log`, `.../red/sp4-controller-latency-red.log`, `.../red/sp4b-pin-rule-red.log`, `.../red/sp5-agent-strategy-entries-red.log`, `.../red/sp5b-materialize-red.log`, `.../red/sp5c-section-red.log`, `.../red/sp5d-inventory-red.log`, `.../red/sp5e-config-path-red.log`, `.../red/sp5g-request-binding-red.log`, `.../red/sp6-workload-examples-red.log`, `.../red/sp7-effective-metric-red.log`, `.../red/sp8-routing-page-red.log`, `.../red/sp8-agent-strategy-pages-red.log`
 
 GREEN Evidence: `.recursive/run/103-agent-strategy-and-scoring-strategy/evidence/logs/green/` with the matching
 `*.green.log` files plus the per-slice regression logs (`sp1-core-tests-green.log`, `sp1-bridge-build-green.log`,
@@ -90,6 +94,7 @@ TDD Compliance: PASS
 | SP7 effective metric | `red/sp7-effective-metric-red.log` | `green/sp7-effective-metric-green.log` |
 | SP8 routing page | `red/sp8-routing-page-red.log` | `green/sp8-routing-page-green.log` |
 | SP8 posture pages | `red/sp8-agent-strategy-pages-red.log` | `green/sp8-agent-strategy-pages-green.log` |
+| SP35 review repairs (F1-F7) | `red/sp35-repairs-red.log` | `green/sp35-repairs-bridge-suites-green.log`, `green/sp35-repairs-suites-green.log`, `green/sp35-repairs-config-roundtrip-green.log`, `green/sp35-repairs-ui-suites-green.log`, `green/sp35-repairs-ui-build-green.log` |
 
 Refactor notes, recorded rather than hidden:
 
@@ -142,8 +147,9 @@ separate commits `088220d6` (bridge + live test) and `18e5bd6c` (SP8 UI).
 
 ## Gaps Found
 
-None. The audit of the locked plan against the landed diff found four defects, all repaired inside this phase
-and recorded under `## Repair Work Performed`; every requirement `R1`..`R12` is implemented with RED/GREEN or
+None. The controller audit found four defects and the delegated Phase 3.5 review (`FAIL`, one blocker and two
+majors) found three more; all are repaired inside this phase and recorded under
+`## Repair Work Performed`; every requirement `R1`..`R12` is implemented with RED/GREEN or
 build/integration evidence, and the remaining verification work is the Phase 3.5 review, the Phase 4 suites and
 the Phase 5 live pi-CLI matrix, which the later phases own.
 
@@ -162,7 +168,21 @@ the Phase 5 live pi-CLI matrix, which the later phases own.
   `embeddings.text` produced a spurious warning. Both are repaired and pinned by
   `test/agent-strategy-live-aliases.test.ts`.
 - `SP8`'s delegated work surfaced one further requirement gap: the free-form System → Config editor could still
-  persist a legacy synonym. `canonicalizeRoutingDocument` now rewrites the routing keys on that path, so no UI
+  persist a legacy synonym.
+- `SP35`-F1 (R3, blocker): the receipt re-ran the ladder without the controller step, so `strategy_source`
+  could never be `controller` and the recorded strategy could contradict the one that ranked the request.
+  `readAppliedControllerStrategy` now feeds the accepted directive into both mappers' receipts; the pin rule
+  itself still has one owner (`resolveStrategy`).
+- `SP35`-F2 (R2): the receipt carried only the weights digest; the effective weights now travel beside it in
+  the diagnostics, the observability contract and the decision detail.
+- `SP35`-F4 (R5/R6): a rejected write with no previous config left the rejected posture live in memory; the
+  rollback now runs unconditionally.
+- `SP35`-F5 (R1): a partial `routing` patch reset the keys it did not repeat; the block now merges key by key
+  and the patch's own vocabulary (structured or legacy) wins over the inherited one.
+- `SP35`-F6 (R5/R6): a declared `model_ids` slice was inert; it now narrows the alias pool and an empty
+  intersection is reported as `ALIAS_POOL_EMPTY`.
+- `SP35`-F7 (nit): the collision diagnostic named the wrong cause; it now distinguishes a routing-alias
+  collision from a name declared twice. `canonicalizeRoutingDocument` now rewrites the routing keys on that path, so no UI
   route can write a synonym.
 
 ## Implementation Evidence
@@ -228,6 +248,12 @@ the Phase 5 live pi-CLI matrix, which the later phases own.
 - Auditor: the same controller session that implemented the non-UI work (self-audit); the independent review is
   Phase 3.5's delegated code review, and this document records that limitation rather than claiming
   independence.
+- Phase 3.5 review: the delegated `code-reviewer` (`sp35_code_review`, brief
+  `E:\tmp\collab\briefs\sp35_code_review.md`) returned `FAIL` with one blocker (F1), two majors (F2, F3) and
+  five minor/nits (F4-F8); every finding was reproduced by the controller against the source, F1, F2 and
+  F4-F7 were repaired in this phase (`7ad627e3`) and re-verified by the full bridge suite, F3 is recorded as
+  the release dependency R7 asks for, and F8's Effect deviation is recorded in Phase 6. The findings file is
+  `evidence/other/sp35-code-review-findings.md`.
 - Method: reproduce every claim from authoritative state - `git diff`, the persisted config, the live backend
   test, the executed suites and builds, and the recorded logs - never from memory.
 
@@ -311,7 +337,9 @@ the Phase 5 live pi-CLI matrix, which the later phases own.
     `role-model-router/apps/runtime-host-bridge/test/scoring-strategy-pin-rule.test.ts`,
     `role-model-router/apps/runtime-host-bridge/test/scoring-strategy-provenance.test.ts`,
     `role-model-router/apps/runtime-host-bridge/test/scoring-strategy-resolution.test.ts`,
-    `role-model-router/apps/runtime-host-bridge/test/scoring-strategy.test.ts`
+    `role-model-router/apps/runtime-host-bridge/test/scoring-strategy.test.ts`,
+    `role-model-router/apps/runtime-host-bridge/test/backend-unified-runtime-config.test.ts`,
+    `role-model-router/apps/runtime-host-bridge/test/unified-runtime-config.test.ts`
   - Runtime UI: `role-model-router/apps/runtime-ui/.react-router/types/+routes.ts`,
     `role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/agent-strategy.ts`,
     `role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/workloads.ts`,
@@ -358,7 +386,7 @@ the Phase 5 live pi-CLI matrix, which the later phases own.
 - `R8` | Status: implemented | Changed Files: `role-model-router/apps/runtime-ui/app/lib/routing-mode.ts`, `role-model-router/apps/runtime-ui/app/lib/routing-mode.test.ts`, `role-model-router/apps/runtime-ui/app/lib/runtime-api.ts`, `role-model-router/apps/runtime-ui/app/lib/design-system.ts`, `role-model-router/apps/runtime-ui/app/lib/design-system.test.ts`, `role-model-router/apps/runtime-ui/app/routes.ts`, `role-model-router/apps/runtime-ui/app/routes/control-routing-strategy.tsx`, `role-model-router/apps/runtime-ui/app/routes/control-routing-strategy.test.tsx`, `role-model-router/apps/runtime-ui/app/routes/control-runtime-config.tsx`, `role-model-router/apps/runtime-ui/.react-router/types/+routes.ts`, `role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/agent-strategy.ts`, `role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/workloads.ts` | Implementation Evidence: `/.recursive/run/103-agent-strategy-and-scoring-strategy/evidence/logs/green/sp8-controller-ui-suites-green.log`, `/.recursive/run/103-agent-strategy-and-scoring-strategy/evidence/logs/green/sp8-controller-ui-build-green.log`, `/.recursive/run/103-agent-strategy-and-scoring-strategy/evidence/logs/green/sp8-ui-suites-green.log` | Audit Note: the generated `.react-router/types` files are build output for the two new routes and are committed by this repository's convention
 - `R9` | Status: implemented | Changed Files: `role-model-router/apps/runtime-host-bridge/src/scoring-strategy.ts`, `role-model-router/apps/runtime-host-bridge/src/agent-strategy.ts`, `role-model-router/packages/core/src/router.ts` | Implementation Evidence: `/.recursive/run/103-agent-strategy-and-scoring-strategy/evidence/logs/green/sp1-bridge-build-green.log`, `/.recursive/run/103-agent-strategy-and-scoring-strategy/evidence/logs/green/sp5e-build-green.log` | Audit Note: the modules import `effect` by bare specifier only; `Schema`, `Data.TaggedEnum`, `Result` and the exhaustive `$match` are the primitives actually used
 - `R10` | Status: implemented | Changed Files: `role-model-router/apps/runtime-host-bridge/src/scoring-strategy.ts`, `role-model-router/apps/runtime-host-bridge/src/unified-runtime-config.ts`, `role-model-router/apps/runtime-host-bridge/src/index.ts`, `role-model-router/apps/runtime-ui/app/lib/routing-mode.ts`, `docs/operations/05-agent-strategy-and-workload-postures.md` | Implementation Evidence: `/.recursive/run/103-agent-strategy-and-scoring-strategy/evidence/logs/green/sp5e-config-path-green.log`, `/.recursive/run/103-agent-strategy-and-scoring-strategy/evidence/logs/green/sp8-ui-suites-green.log` | Audit Note: the three legacy switches now delegate to the vocabulary module; the per-alias `scoring_strategy` reservation (OOS3) stays additive
-- `R11` | Status: implemented | Changed Files: `role-model-router/apps/runtime-host-bridge/test/agent-strategy-config-path.test.ts`, `role-model-router/apps/runtime-host-bridge/test/agent-strategy-entries.test.ts`, `role-model-router/apps/runtime-host-bridge/test/agent-strategy-inventory.test.ts`, `role-model-router/apps/runtime-host-bridge/test/agent-strategy-live-aliases.test.ts`, `role-model-router/apps/runtime-host-bridge/test/agent-strategy-materialize.test.ts`, `role-model-router/apps/runtime-host-bridge/test/agent-strategy-request-binding.test.ts`, `role-model-router/apps/runtime-host-bridge/test/agent-strategy-section.test.ts`, `role-model-router/apps/runtime-host-bridge/test/agent-strategy-workload-examples.test.ts`, `role-model-router/apps/runtime-host-bridge/test/controller-latency-strategy.test.ts`, `role-model-router/apps/runtime-host-bridge/test/index.test.ts`, `role-model-router/apps/runtime-host-bridge/test/routing-latency-effective-metric.test.ts`, `role-model-router/apps/runtime-host-bridge/test/run98-a40-latency-policy.test.ts`, `role-model-router/apps/runtime-host-bridge/test/scoring-strategy-config.test.ts`, `role-model-router/apps/runtime-host-bridge/test/scoring-strategy-diagnostics.test.ts`, `role-model-router/apps/runtime-host-bridge/test/scoring-strategy-legacy.test.ts`, `role-model-router/apps/runtime-host-bridge/test/scoring-strategy-pin-rule.test.ts`, `role-model-router/apps/runtime-host-bridge/test/scoring-strategy-provenance.test.ts`, `role-model-router/apps/runtime-host-bridge/test/scoring-strategy-resolution.test.ts`, `role-model-router/apps/runtime-host-bridge/test/scoring-strategy.test.ts` | Implementation Evidence: `/.recursive/run/103-agent-strategy-and-scoring-strategy/03-implementation-summary.md` | Audit Note: the RED/GREEN logs live under the run folder, which the lint excludes from the product-diff accounting by design; the test files claimed here are the run's TDD surface and the complete log inventory is recorded in `## Worktree Diff Audit` and `## TDD Compliance Log`
+- `R11` | Status: implemented | Changed Files: `role-model-router/apps/runtime-host-bridge/test/agent-strategy-config-path.test.ts`, `role-model-router/apps/runtime-host-bridge/test/agent-strategy-entries.test.ts`, `role-model-router/apps/runtime-host-bridge/test/agent-strategy-inventory.test.ts`, `role-model-router/apps/runtime-host-bridge/test/agent-strategy-live-aliases.test.ts`, `role-model-router/apps/runtime-host-bridge/test/agent-strategy-materialize.test.ts`, `role-model-router/apps/runtime-host-bridge/test/agent-strategy-request-binding.test.ts`, `role-model-router/apps/runtime-host-bridge/test/agent-strategy-section.test.ts`, `role-model-router/apps/runtime-host-bridge/test/agent-strategy-workload-examples.test.ts`, `role-model-router/apps/runtime-host-bridge/test/controller-latency-strategy.test.ts`, `role-model-router/apps/runtime-host-bridge/test/index.test.ts`, `role-model-router/apps/runtime-host-bridge/test/routing-latency-effective-metric.test.ts`, `role-model-router/apps/runtime-host-bridge/test/run98-a40-latency-policy.test.ts`, `role-model-router/apps/runtime-host-bridge/test/scoring-strategy-config.test.ts`, `role-model-router/apps/runtime-host-bridge/test/scoring-strategy-diagnostics.test.ts`, `role-model-router/apps/runtime-host-bridge/test/scoring-strategy-legacy.test.ts`, `role-model-router/apps/runtime-host-bridge/test/scoring-strategy-pin-rule.test.ts`, `role-model-router/apps/runtime-host-bridge/test/scoring-strategy-provenance.test.ts`, `role-model-router/apps/runtime-host-bridge/test/scoring-strategy-resolution.test.ts`, `role-model-router/apps/runtime-host-bridge/test/scoring-strategy.test.ts`, `role-model-router/apps/runtime-host-bridge/test/backend-unified-runtime-config.test.ts`, `role-model-router/apps/runtime-host-bridge/test/unified-runtime-config.test.ts` | Implementation Evidence: `/.recursive/run/103-agent-strategy-and-scoring-strategy/03-implementation-summary.md` | Audit Note: the RED/GREEN logs live under the run folder, which the lint excludes from the product-diff accounting by design; the test files claimed here are the run's TDD surface and the complete log inventory is recorded in `## Worktree Diff Audit` and `## TDD Compliance Log`
 - `R12` | Status: implemented | Changed Files: `role-model-router/apps/runtime-host-bridge/test/agent-strategy-live-aliases.test.ts`, `role-model-router/apps/runtime-host-bridge/src/index.ts` | Implementation Evidence: `/.recursive/run/103-agent-strategy-and-scoring-strategy/evidence/logs/green/sp5f-live-aliases-green.log` | Audit Note: the packaged-runtime rebuild and the live pi-CLI matrix are Phase 5's acceptance evidence (`05-manual-qa.md`); this phase implements and integration-tests the surface that matrix drives
 
 ## Audit Verdict
