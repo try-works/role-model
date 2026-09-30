@@ -29,7 +29,7 @@ import {
   secondaryButtonClassName,
   supportingTextClassName,
 } from "../lib/design-system";
-import { formatEndpointModelLabel } from "../lib/effort-identity";
+import { formatEndpointModelLabel, readEndpointModelLeaf } from "../lib/effort-identity";
 import {
   type LearningPolicyField,
   type LearningPolicyView,
@@ -47,6 +47,7 @@ import {
   validatePolicyDraft,
 } from "../lib/learning-api";
 import { fetchLearningActivity, fetchLearningHistory } from "../lib/learning-api";
+import { formatLearningClaim } from "../lib/learning-claim";
 import { summarizePolicyResolution } from "../lib/learning-policy-resolution";
 import {
   appliedShareOf,
@@ -310,6 +311,8 @@ export interface LearningEvidenceView {
   readonly qualityDelta: string | null;
   /** `A49-R2`: the pack's recorded claim prose, or `null` when the text store has no row for the candidate. */
   readonly claim: string | null;
+  /** The claim exactly as recorded, for the cell's `title` - the rendered form is shortened for legibility. */
+  readonly claimTitle: string | null;
   /** `A49-R5`: `reported` when the joined receipt carries counts, `receipt_carries_none` when it does not. */
   readonly countsState: string | null;
 }
@@ -369,7 +372,8 @@ export function learningEvidence(row: Record<string, unknown>): LearningEvidence
     qualityDelta: formatLearningDelta(
       evidence.qualityDelta ?? row.qualityDelta ?? record.qualityDelta,
     ),
-    claim: textOrNull(evidence.claim),
+    claim: formatLearningClaim(evidence.claim),
+    claimTitle: textOrNull(evidence.claim),
     countsState: textOrNull(evidence.countsState),
   };
 }
@@ -684,7 +688,9 @@ export function LearningPackRow({
             - so the cell renders the claim it was handed. `claim not recorded` is reserved for a pack whose
             candidate genuinely has no text row rather than asserted unconditionally (`A48-R7`). */}
         {evidence.claim ? (
-          <p className={tableCellNoteClassName}>{evidence.claim}</p>
+          <p className={tableCellNoteClassName} title={evidence.claimTitle ?? undefined}>
+            {evidence.claim}
+          </p>
         ) : (
           <p className={tableCellMetaClassName}>claim not recorded</p>
         )}
