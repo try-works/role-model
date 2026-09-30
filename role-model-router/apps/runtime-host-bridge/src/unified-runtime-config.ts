@@ -1,5 +1,21 @@
 import { parse, stringify } from "yaml";
 
+import {
+  type AgentStrategyEntry,
+  decodeAgentStrategyEntry,
+} from "./agent-strategy.js";
+import {
+  type RoutingModeName,
+  type RoutingPosture,
+  type WeightProfile,
+  WeightProfile as WeightProfileSchema,
+  decodeLegacyRoutingStrategy,
+  decodeRoutingPosture,
+  normalizeRoutingModeName,
+  normalizeScoringStrategyName,
+} from "./scoring-strategy.js";
+import { Result, Schema } from "effect";
+
 export type UnifiedRuntimeExecutionMode = "decision_only" | "hybrid" | "local_only" | "remote_only";
 
 export type UnifiedRuntimeDifficultyBucket = "easy" | "medium" | "hard";
@@ -184,6 +200,14 @@ export function resolveUnifiedRuntimeObservedDataConfig(
 export interface UnifiedRuntimeConfig {
   readonly version: string;
   readonly routingStrategy: string | null;
+  /**
+   * Run 103 / SP5e - present only when the file declares the structured routing block
+   * (`mode`, `scoring_strategy`, `pin_weights`, `weights`). A legacy-only file keeps
+   * `routingStrategy` as its source of truth and never grows the structured block on read.
+   */
+  readonly routingPosture?: RoutingPosture;
+  readonly agentStrategies?: readonly AgentStrategyEntry[];
+  readonly workloads?: readonly AgentStrategyEntry[];
   readonly executionMode: UnifiedRuntimeExecutionMode;
   readonly observedData?: UnifiedRuntimeObservedDataConfig;
   readonly difficultyClassifier?: UnifiedRuntimeDifficultyClassifierConfig;
@@ -286,7 +310,16 @@ interface RawUnifiedRuntimeConfig {
   readonly executionMode?: string;
   readonly routing?: {
     readonly strategy?: string;
+    readonly mode?: string;
+    readonly scoring_strategy?: string;
+    readonly scoringStrategy?: string;
+    readonly pin_weights?: boolean;
+    readonly pinWeights?: boolean;
+    readonly weights?: unknown;
   };
+  readonly agent_strategies?: unknown;
+  readonly agentStrategies?: unknown;
+  readonly workloads?: unknown;
   readonly controller?: {
     readonly enabled?: boolean;
     readonly source_type?: string;
@@ -1499,6 +1532,153 @@ function normalizeRoutingStrategyInputValue(value: unknown): string | null {
   return strategy.trim().toLowerCase() === "craft-ask" ? null : strategy;
 }
 
+/** The alias family each structured routing mode owns (design document section 6.2). */
+export const ROUTING_MODE_ALIAS_FAMILY: Readonly<Record<RoutingModeName, string>> = {
+  baseline: "baseline",
+  difficulty: "difficulty",
+  hybrid: "hybrid",
+  intelligent: "controller",
+};
+
+interface StructuredRoutingBlock {
+  readonly posture: RoutingPosture;
+  readonly aliasFamily: string;
+}
+
+function hasStructuredRoutingKeys(routing: Record<string, unknown>): boolean {
+  return (
+    routing.mode !== undefined ||
+    routing.scoring_strategy !== undefined ||
+    routing.scoringStrategy !== undefined ||
+    routing.pin_weights !== undefined ||
+    routing.pinWeights !== undefined ||
+    routing.weights !== undefined
+  );
+}
+
+/**
+ * Run 103 / SP5e - the structured routing block of design document section 4. Unknown enum values
+ * and a `custom` strategy without a valid weight profile are write errors, so the file can never
+ * hold a posture that the ladder would silently degrade.
+ */
+function decodeStructuredRoutingBlock(
+  rawRouting: unknown,
+  path: string,
+): StructuredRoutingBlock | null {
+  if (typeof rawRouting !== "object" || rawRouting === null || Array.isArray(rawRouting)) {
+    return null;
+  }
+  const routing = rawRouting as Record<string, unknown>;
+  if (!hasStructuredRoutingKeys(routing)) {
+    return null;
+  }
+
+  const rawMode = readNonEmptyString(routing.mode);
+  const mode = rawMode === null ? "baseline" : normalizeRoutingModeName(rawMode);
+  if (mode === null) {
+    throw new Error(
+      `${path}.mode must be baseline, difficulty, hybrid, or intelligent (controller).`,
+    );
+  }
+
+  const rawScoringStrategy = readNonEmptyString(
+    routing.scoring_strategy ?? routing.scoringStrategy,
+  );
+  const scoringStrategy =
+    rawScoringStrategy === null ? null : normalizeScoringStrategyName(rawScoringStrategy);
+  if (rawScoringStrategy !== null && scoringStrategy === null) {
+    throw new Error(
+      `${path}.scoring_strategy must be balanced, quality, latency, cost, or custom.`,
+    );
+  }
+
+  const pinWeights = routing.pin_weights ?? routing.pinWeights;
+  if (pinWeights !== undefined && typeof pinWeights !== "boolean") {
+    throw new Error(`${path}.pin_weights must be a boolean.`);
+  }
+
+  let weights: WeightProfile | null = null;
+  if (routing.weights !== undefined && routing.weights !== null) {
+    if (scoringStrategy !== "custom") {
+      throw new Error(`${path}.weights is only valid when scoring_strategy is custom.`);
+    }
+    const decoded = Schema.decodeUnknownResult(WeightProfileSchema)(routing.weights);
+    if (Result.isFailure(decoded)) {
+      throw new Error(
+        `${path}.weights is invalid: weights must sum to 1.0 and every metric must be within 0..1 (${String(decoded.failure)})`,
+      );
+    }
+    weights = decoded.success;
+  }
+
+  if (scoringStrategy === "custom" && weights === null) {
+    throw new Error(`${path}.weights is required when scoring_strategy is custom.`);
+  }
+
+  const posture = decodeRoutingPosture({
+    mode,
+    scoringStrategy,
+    pinWeights: pinWeights === true,
+    weights,
+  });
+  return { posture, aliasFamily: ROUTING_MODE_ALIAS_FAMILY[posture.mode] };
+}
+
+function renderStructuredRoutingBlock(config: UnifiedRuntimeConfig): Record<string, unknown> | null {
+  const posture = config.routingPosture;
+  if (!posture) {
+    return config.routingStrategy !== null ? { strategy: config.routingStrategy } : null;
+  }
+  return {
+    mode: posture.mode,
+    ...(posture.scoringStrategy !== null ? { scoring_strategy: posture.scoringStrategy } : {}),
+    ...(posture.pinWeights ? { pin_weights: true } : {}),
+    ...(posture.scoringStrategy === "custom" && posture.operator
+      ? { weights: { ...posture.operator.weights } }
+      : {}),
+  };
+}
+
+function readAgentStrategyBlock(
+  raw: unknown,
+  kind: "role" | "workload",
+): readonly AgentStrategyEntry[] | undefined {
+  if (raw === undefined || raw === null) {
+    return undefined;
+  }
+  if (typeof raw !== "object" || Array.isArray(raw)) {
+    throw new Error(`${kind === "role" ? "agent_strategies" : "workloads"} must be a mapping.`);
+  }
+  return Object.entries(raw as Record<string, unknown>).map(([name, value]) =>
+    decodeAgentStrategyEntry(name, value, kind),
+  );
+}
+
+function renderAgentStrategyBlock(
+  entries: readonly AgentStrategyEntry[],
+): Record<string, unknown> | null {
+  if (entries.length === 0) {
+    return null;
+  }
+  return Object.fromEntries(
+    entries.map((entry) => [
+      entry.name,
+      {
+        ...(entry.roleId !== null ? { role_id: entry.roleId } : {}),
+        ...(entry.scoringStrategy !== null ? { scoring_strategy: entry.scoringStrategy } : {}),
+        ...(entry.routingMode !== null ? { routing_mode: entry.routingMode } : {}),
+        ...(entry.computePreference !== null
+          ? { compute_preference: entry.computePreference }
+          : {}),
+        ...(entry.modelIds.length > 0 ? { model_ids: [...entry.modelIds] } : {}),
+        ...(entry.requiredCapabilities.length > 0
+          ? { required_capabilities: [...entry.requiredCapabilities] }
+          : {}),
+      },
+    ]),
+  );
+}
+
 export function deriveUnifiedRuntimeRoutingAliasMode(
   strategy: string | null,
   fallback: UnifiedRuntimeAliasRoutingMode | null | undefined,
@@ -1681,13 +1861,21 @@ export function parseUnifiedRuntimeConfigText(text: string): UnifiedRuntimeConfi
     rawConfig.execution_mode ?? rawConfig.executionMode,
     "execution_mode",
   );
+  const structuredRouting = decodeStructuredRoutingBlock(rawConfig.routing, "routing");
+  const agentStrategies = readAgentStrategyBlock(rawConfig.agent_strategies, "role");
+  const workloadStrategies = readAgentStrategyBlock(rawConfig.workloads, "workload");
 
   return canonicalizeUnifiedRuntimeRoutingAliases({
     version:
       typeof rawConfig.version === "string" && rawConfig.version.trim().length > 0
         ? rawConfig.version
         : "1.0",
-    routingStrategy: normalizeRoutingStrategyInputValue(rawConfig.routing?.strategy),
+    routingStrategy:
+      structuredRouting?.aliasFamily ??
+      normalizeRoutingStrategyInputValue(rawConfig.routing?.strategy),
+    ...(structuredRouting ? { routingPosture: structuredRouting.posture } : {}),
+    ...(agentStrategies !== undefined ? { agentStrategies } : {}),
+    ...(workloadStrategies !== undefined ? { workloads: workloadStrategies } : {}),
     executionMode:
       explicitExecutionMode ??
       deriveUnifiedRuntimeExecutionMode({
@@ -1751,6 +1939,12 @@ export function normalizeUnifiedRuntimeConfigInput(input: unknown): UnifiedRunti
       : "model_aliases" in input
         ? input.model_aliases
         : undefined;
+  const structuredRouting = decodeStructuredRoutingBlock(input.routing, "routing");
+  const agentStrategies = readAgentStrategyBlock(
+    "agentStrategies" in input ? input.agentStrategies : input.agent_strategies,
+    "role",
+  );
+  const workloadStrategies = readAgentStrategyBlock(input.workloads, "workload");
 
   const explicitExecutionMode = readExecutionMode(
     "executionMode" in input
@@ -1763,9 +1957,14 @@ export function normalizeUnifiedRuntimeConfigInput(input: unknown): UnifiedRunti
 
   return canonicalizeUnifiedRuntimeRoutingAliases({
     version: readNonEmptyString(input.version) ?? "1.0",
-    routingStrategy: normalizeRoutingStrategyInputValue(
-      "routingStrategy" in input ? input.routingStrategy : routingStrategyInput,
-    ),
+    routingStrategy:
+      structuredRouting?.aliasFamily ??
+      normalizeRoutingStrategyInputValue(
+        "routingStrategy" in input ? input.routingStrategy : routingStrategyInput,
+      ),
+    ...(structuredRouting ? { routingPosture: structuredRouting.posture } : {}),
+    ...(agentStrategies !== undefined ? { agentStrategies } : {}),
+    ...(workloadStrategies !== undefined ? { workloads: workloadStrategies } : {}),
     executionMode:
       explicitExecutionMode ??
       deriveUnifiedRuntimeExecutionMode({
@@ -1836,10 +2035,19 @@ export function renderUnifiedRuntimeConfigText(config: UnifiedRuntimeConfig): st
     execution_mode: config.executionMode,
   };
 
-  if (config.routingStrategy !== null) {
-    document.routing = {
-      strategy: config.routingStrategy,
-    };
+  const renderedRouting = renderStructuredRoutingBlock(config);
+  if (renderedRouting !== null) {
+    document.routing = renderedRouting;
+  }
+
+  const renderedAgentStrategies = renderAgentStrategyBlock(config.agentStrategies ?? []);
+  if (renderedAgentStrategies !== null) {
+    document.agent_strategies = renderedAgentStrategies;
+  }
+
+  const renderedWorkloads = renderAgentStrategyBlock(config.workloads ?? []);
+  if (renderedWorkloads !== null) {
+    document.workloads = renderedWorkloads;
   }
 
   if (config.observedData) {
@@ -2032,6 +2240,13 @@ function normalizeRuntimeConfigPatchDocument(
   ) {
     normalized.model_aliases = normalized.modelAliases;
     delete normalized.modelAliases;
+  }
+  if (
+    Object.prototype.hasOwnProperty.call(normalized, "agentStrategies") &&
+    !Object.prototype.hasOwnProperty.call(normalized, "agent_strategies")
+  ) {
+    normalized.agent_strategies = normalized.agentStrategies;
+    delete normalized.agentStrategies;
   }
   return normalized;
 }

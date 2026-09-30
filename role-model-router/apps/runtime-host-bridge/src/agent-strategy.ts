@@ -24,6 +24,23 @@ export type AgentStrategyKind = "role" | "workload";
 export const COMPUTE_PREFERENCES = ["auto", "local", "remote", "hybrid"] as const;
 export type ComputePreferenceName = (typeof COMPUTE_PREFERENCES)[number];
 
+const SHARED_ENTRY_KEYS = [
+  "scoring_strategy",
+  "scoringStrategy",
+  "routing_mode",
+  "routingMode",
+  "compute_preference",
+  "computePreference",
+  "model_ids",
+  "modelIds",
+] as const;
+
+/** Unknown keys are rejected rather than ignored, so a typo cannot silently drop a binding. */
+export const ALLOWED_ENTRY_KEYS: Readonly<Record<AgentStrategyKind, readonly string[]>> = {
+  role: [...SHARED_ENTRY_KEYS, "role_id", "roleId"],
+  workload: [...SHARED_ENTRY_KEYS, "required_capabilities", "requiredCapabilities"],
+};
+
 export interface AgentStrategyEntry {
   readonly name: string;
   readonly kind: AgentStrategyKind;
@@ -74,6 +91,12 @@ export function decodeAgentStrategyEntry(
     typeof raw === "object" && raw !== null && !Array.isArray(raw)
       ? (raw as Record<string, unknown>)
       : {};
+  const allowedKeys = ALLOWED_ENTRY_KEYS[kind];
+  for (const key of Object.keys(record).sort()) {
+    if (!allowedKeys.includes(key)) {
+      violations.push(`${kind} "${name}" has unknown key "${key}"`);
+    }
+  }
 
   if (!AGENT_STRATEGY_NAME_PATTERN.test(name)) {
     violations.push(
@@ -124,6 +147,66 @@ export function decodeAgentStrategyEntry(
     ),
     violations,
   };
+}
+
+export interface AgentStrategyBindingValidation {
+  readonly violations: readonly string[];
+  readonly warnings: readonly string[];
+}
+
+/**
+ * Run 103 / SP5e - the runtime-side half of the entry contract: `role_id` must exist in the runtime
+ * role policy (a write error), while an unknown capability is only a warning because capability
+ * taxonomies extend independently of the runtime (requirements R5, R6).
+ */
+export function validateAgentStrategyBindings(input: {
+  readonly entries: readonly AgentStrategyEntry[];
+  readonly knownRoleIds?: readonly string[];
+  readonly knownCapabilities?: readonly string[];
+}): AgentStrategyBindingValidation {
+  const violations: string[] = [];
+  const warnings: string[] = [];
+  for (const entry of input.entries) {
+    if (entry.roleId && input.knownRoleIds && !input.knownRoleIds.includes(entry.roleId)) {
+      violations.push(
+        `${entry.kind} "${entry.name}" has unknown role_id "${entry.roleId}"`,
+      );
+    }
+    if (input.knownCapabilities) {
+      for (const capability of entry.requiredCapabilities) {
+        if (!input.knownCapabilities.includes(capability)) {
+          warnings.push(
+            `${entry.kind} "${entry.name}" references unknown capability "${capability}"`,
+          );
+        }
+      }
+    }
+  }
+  return { violations, warnings };
+}
+
+/**
+ * Run 103 / SP5e - the request-time lookup: the alias id (`<name>.<scope>`) resolves back to the
+ * entry that declares its binding, so a request that names a posture alias inherits the role,
+ * capabilities and scoring strategy the operator saved with it.
+ */
+export function findAgentStrategyAlias(input: {
+  readonly entries: readonly AgentStrategyEntry[];
+  readonly executionModes: readonly string[];
+  readonly aliasId: string;
+}): AgentStrategyEntry | null {
+  const normalized = input.aliasId.trim().toLowerCase();
+  for (const entry of input.entries) {
+    if (entry.violations.length > 0) {
+      continue;
+    }
+    for (const executionMode of input.executionModes) {
+      if (agentStrategyAliasId(entry.name, executionMode) === normalized) {
+        return entry;
+      }
+    }
+  }
+  return null;
 }
 
 /** The alias namespace is shared: duplicates within a kind and collisions across kinds are errors. */
@@ -307,4 +390,52 @@ export function mergeAliasInventory(input: {
     rows.push({ aliasId: alias.aliasId, mode: alias.mode, modelIds: [...alias.modelIds] });
   }
   return { rows, violations };
+}
+
+export interface PostureAliasDerivation {
+  readonly rows: readonly AliasInventoryRow[];
+  /**
+   * Scopes that exist for the canonical matrix but carry no model slice for this posture. They are
+   * reported, never materialised as a widened pool (requirement R5/R6 "pools stay honest").
+   */
+  readonly skipped: readonly {
+    readonly aliasId: string;
+    readonly reason: "ALIAS_POOL_EMPTY";
+  }[];
+  readonly violations: readonly string[];
+}
+
+/**
+ * Run 103 / SP5e - the runtime's alias inventory: the canonical matrix plus one row per posture
+ * entry per non-empty execution scope. The canonical rows stay authoritative, an empty scope is
+ * reported as `ALIAS_POOL_EMPTY`, and a collision is a write error the caller surfaces (design
+ * document section 6.2).
+ */
+export function derivePostureAliasInventory(input: {
+  readonly canonical: readonly AliasInventoryRow[];
+  readonly entries: readonly AgentStrategyEntry[];
+  readonly executionModes: readonly string[];
+  readonly runtimeMode: RoutingModeName;
+  readonly modelIdsByExecutionMode: Readonly<Record<string, readonly string[]>>;
+}): PostureAliasDerivation {
+  const materialized = materializeAgentStrategyAliases({
+    entries: input.entries,
+    executionModes: input.executionModes,
+    runtimeMode: input.runtimeMode,
+    modelIdsByExecutionMode: input.modelIdsByExecutionMode,
+  });
+  const routable = materialized.filter((alias) => alias.modelIds.length > 0);
+  const skipped = materialized
+    .filter((alias) => alias.modelIds.length === 0)
+    .map((alias) => ({ aliasId: alias.aliasId, reason: "ALIAS_POOL_EMPTY" as const }));
+  const merge = mergeAliasInventory({
+    canonical: input.canonical,
+    postureAliases: routable,
+  });
+  const entryViolations = input.entries.flatMap((entry) => entry.violations);
+  return {
+    rows: merge.rows,
+    skipped,
+    violations: [...entryViolations, ...merge.violations],
+  };
 }
