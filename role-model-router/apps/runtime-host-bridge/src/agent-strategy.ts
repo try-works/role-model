@@ -151,3 +151,69 @@ export function validateAgentStrategyNames(
 export function agentStrategyAliasId(name: string, executionMode: string): string {
   return `${name}.${executionMode.trim().toLowerCase().replaceAll("_", "-")}`;
 }
+
+export interface MaterializedAgentStrategyAlias {
+  readonly aliasId: string;
+  readonly name: string;
+  readonly kind: AgentStrategyKind;
+  readonly mode: RoutingModeName;
+  readonly roleId: string | null;
+  readonly scoringStrategy: ScoringStrategyName | null;
+  readonly requiredCapabilities: readonly string[];
+  readonly modelIds: readonly string[];
+}
+
+/**
+ * Run 103 / SP5b - one alias per execution scope per validated entry. The pool is copied verbatim
+ * from the caller's slice, so an empty slice stays empty and is reported honestly instead of
+ * widening to the whole inventory.
+ */
+export function materializeAgentStrategyAliases(input: {
+  readonly entries: readonly AgentStrategyEntry[];
+  readonly executionModes: readonly string[];
+  readonly runtimeMode: RoutingModeName;
+  readonly modelIdsByExecutionMode: Readonly<Record<string, readonly string[]>>;
+}): readonly MaterializedAgentStrategyAlias[] {
+  const aliases: MaterializedAgentStrategyAlias[] = [];
+  for (const entry of input.entries) {
+    if (entry.violations.length > 0) {
+      continue;
+    }
+    for (const executionMode of input.executionModes) {
+      aliases.push({
+        aliasId: agentStrategyAliasId(entry.name, executionMode),
+        name: entry.name,
+        kind: entry.kind,
+        mode: entry.routingMode ?? input.runtimeMode,
+        roleId: entry.roleId,
+        scoringStrategy: entry.scoringStrategy,
+        requiredCapabilities: entry.requiredCapabilities,
+        modelIds: [...(input.modelIdsByExecutionMode[executionMode] ?? [])],
+      });
+    }
+  }
+  return aliases;
+}
+
+export interface AliasRequestedRoleResolution {
+  readonly roleId: string | null;
+  readonly source: "declared" | "preset" | "none";
+}
+
+/**
+ * Run 103 / SP5b - the alias preset is a default, not a cage: a role the request itself declared
+ * always wins, and the decision records which of the two supplied the role.
+ */
+export function resolveAliasRequestedRole(input: {
+  readonly declaredRoleId?: string | null;
+  readonly presetRoleId: string | null;
+}): AliasRequestedRoleResolution {
+  const declared = input.declaredRoleId?.trim();
+  if (declared && declared.length > 0) {
+    return { roleId: declared, source: "declared" };
+  }
+  if (input.presetRoleId) {
+    return { roleId: input.presetRoleId, source: "preset" };
+  }
+  return { roleId: null, source: "none" };
+}
