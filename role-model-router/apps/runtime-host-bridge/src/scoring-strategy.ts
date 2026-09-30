@@ -9,6 +9,7 @@
  * bounds and sum invariant are executable.
  */
 import { STRATEGY_WEIGHTS } from "@role-model-router/core";
+import { createHash } from "node:crypto";
 import { Data, Result, Schema } from "effect";
 
 export const SCORING_STRATEGY_NAMES = ["balanced", "quality", "latency", "cost", "custom"] as const;
@@ -360,4 +361,35 @@ export function toCoreRoutingStrategyName(
   name: ScoringStrategyName,
 ): Exclude<ScoringStrategyName, "custom"> {
   return name === "custom" ? "balanced" : name;
+}
+
+/** Stable digest over the six metrics, independent of key order (design document section 6.5). */
+export function weightsDigest(weights: WeightProfile): string {
+  const canonical = WEIGHT_METRICS.map((metric) => `${metric}=${weights[metric]}`).join(";");
+  return `sha256:${createHash("sha256").update(canonical).digest("hex")}`;
+}
+
+export interface StrategyProvenance {
+  readonly strategy: ScoringStrategyName;
+  readonly source: StrategySource;
+  readonly weightsDigest: string;
+  readonly discarded?: {
+    readonly source: "controller" | "difficulty";
+    readonly strategy: ScoringStrategyName;
+  };
+}
+
+/**
+ * Run 103 / SP3 - the receipt the decision carries: which strategy won, who chose it, which weights
+ * were used, and what a pinned posture discarded.
+ */
+export function summarizeStrategyProvenance(
+  resolution: StrategyResolution,
+): StrategyProvenance {
+  return {
+    strategy: resolution.strategy,
+    source: resolution.source,
+    weightsDigest: weightsDigest(resolution.weights),
+    ...(resolution.discarded ? { discarded: resolution.discarded } : {}),
+  };
 }

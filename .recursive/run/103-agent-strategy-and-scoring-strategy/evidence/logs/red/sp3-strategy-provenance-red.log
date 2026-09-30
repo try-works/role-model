@@ -1,0 +1,87 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/103-agent-strategy-and-scoring-strategy/role-model-router/apps/runtime-host-bridge
+
+ DEPRECATED  'basic' reporter is deprecated and will be removed in Vitest v3.
+Remove 'basic' from 'reporters' option. To match 'basic' reporter 100%, use configuration:
+{
+  "test": {
+    "reporters": [
+      [
+        "default",
+        {
+          "summary": false
+        }
+      ]
+    ]
+  }
+}
+ ❯ test/scoring-strategy-provenance.test.ts (4 tests | 4 failed) 14ms
+   × strategy provenance > the digest is stable for equal weights regardless of key order 6ms
+     → (0 , weightsDigest) is not a function
+   × strategy provenance > the digest changes when any weight changes 1ms
+     → (0 , weightsDigest) is not a function
+   × strategy provenance > summarizes an operator resolution with its source and digest 2ms
+     → (0 , summarizeStrategyProvenance) is not a function
+   × strategy provenance > carries the discarded override when a pinned posture suppressed difficulty 2ms
+     → (0 , summarizeStrategyProvenance) is not a function
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/scoring-strategy-provenance.test.ts > strategy provenance > the digest is stable for equal weights regardless of key order
+TypeError: (0 , weightsDigest) is not a function
+ ❯ test/scoring-strategy-provenance.test.ts:25:12
+     23| 
+     24|   test("the digest is stable for equal weights regardless of key order…
+     25|     expect(weightsDigest(weights)).toBe(weightsDigest({ ...weights }));
+       |            ^
+     26|     expect(weightsDigest(weights)).toMatch(/^sha256:[0-9a-f]{64}$/);
+     27|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  test/scoring-strategy-provenance.test.ts > strategy provenance > the digest changes when any weight changes
+TypeError: (0 , weightsDigest) is not a function
+ ❯ test/scoring-strategy-provenance.test.ts:30:12
+     28| 
+     29|   test("the digest changes when any weight changes", () => {
+     30|     expect(weightsDigest(weights)).not.toBe(weightsDigest({ ...weights…
+       |            ^
+     31|     expect(weightsDigest(weights)).not.toBe(weightsDigest({ ...weights…
+     32|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  test/scoring-strategy-provenance.test.ts > strategy provenance > summarizes an operator resolution with its source and digest
+TypeError: (0 , summarizeStrategyProvenance) is not a function
+ ❯ test/scoring-strategy-provenance.test.ts:37:24
+     35|     const posture = decodeLegacyRoutingStrategy("quality");
+     36|     const resolution = resolveRequestStrategy({ posture, effectiveRout…
+     37|     const provenance = summarizeStrategyProvenance(resolution);
+       |                        ^
+     38|     expect(provenance.strategy).toBe("quality");
+     39|     expect(provenance.source).toBe("operator");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  test/scoring-strategy-provenance.test.ts > strategy provenance > carries the discarded override when a pinned posture suppressed difficulty
+TypeError: (0 , summarizeStrategyProvenance) is not a function
+ ❯ test/scoring-strategy-provenance.test.ts:51:24
+     49|       difficulty: "hard",
+     50|     });
+     51|     const provenance = summarizeStrategyProvenance(resolution);
+       |                        ^
+     52|     expect(provenance.source).toBe("operator");
+     53|     expect(provenance.discarded).toEqual({ source: "difficulty", strat…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed (4)
+   Start at  12:17:34
+   Duration  5.24s (transform 2.29s, setup 0ms, collect 4.39s, tests 14ms, environment 0ms, prepare 329ms)
+
+undefined
+D:\DEV\role-model\.worktrees\103-agent-strategy-and-scoring-strategy\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/scoring-strategy-provenance.test.ts --reporter=basic
