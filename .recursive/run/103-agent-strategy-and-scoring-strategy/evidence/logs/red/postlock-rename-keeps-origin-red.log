@@ -1,0 +1,50 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/103-agent-strategy-and-scoring-strategy/role-model-router/apps/runtime-ui
+
+ ❯ app/lib/agent-strategy.test.ts (12 tests | 1 failed) 74ms
+   ✓ run 103 posture entry view-models > builds one row per entry with its binding, posture and per-scope alias rows 35ms
+   ✓ run 103 posture entry view-models > surfaces posture diagnostics instead of swallowing them 3ms
+   ✓ run 103 posture entry view-models > accepts a role entry only with a role binding, and never writes a legacy synonym 2ms
+   ✓ run 103 posture entry view-models > refuses role_id on a workload and accepts required capabilities 1ms
+   ✓ run 103 posture entry view-models > offers the shipped workload examples as one-click templates 1ms
+   ✓ run 103 posture entry view-models > writes whole canonical blocks from the page drafts 1ms
+   ✓ run 103 posture entry view-models > reports duplicate entry names instead of letting the block collapse them 1ms
+   ✓ run 103 posture entry view-models > builds upserts only, without touching the entries the editor did not change 2ms
+   ✓ run 103 posture entry view-models > an explicit removal sends one null and leaves the other entries alone 4ms
+   × run 103 posture entry view-models > renaming a saved row upserts the new name and leaves the old entry in place 19ms
+     → expected [ 'coder' ] to deeply equal []
+   ✓ run 103 posture entry view-models > renaming sends the null only when the operator also removed the saved entry 1ms
+   ✓ run 103 posture entry view-models > clearing a saved field sends an explicit null instead of silently keeping it 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/lib/agent-strategy.test.ts > run 103 posture entry view-models > renaming a saved row upserts the new name and leaves the old entry in place
+AssertionError: expected [ 'coder' ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "coder",
++ ]
+
+ ❯ app/lib/agent-strategy.test.ts:288:32
+    286|       removedNames: [],
+    287|     });
+    288|     expect(patch.deletedNames).toEqual([]);
+       |                                ^
+    289|     expect(patch.block).not.toHaveProperty("coder");
+    290|     expect(Object.keys(patch.block).sort()).toEqual(["coder-v2", "revi…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 11 passed (12)
+   Start at  03:58:32
+   Duration  2.37s (transform 312ms, setup 0ms, collect 360ms, tests 74ms, environment 1ms, prepare 895ms)
+
+undefined
+D:\DEV\role-model\.worktrees\103-agent-strategy-and-scoring-strategy\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run app/lib/agent-strategy.test.ts

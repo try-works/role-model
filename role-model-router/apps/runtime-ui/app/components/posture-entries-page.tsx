@@ -18,7 +18,6 @@ import {
   type PosturePatchRow,
   buildPostureEntryRows,
   buildPostureNamedBlockPatch,
-  buildPostureWriteBlock,
   buildWorkloadTemplateDraft,
   createPostureDraft,
   findDuplicateEntryNames,
@@ -315,7 +314,8 @@ export function PostureEntriesPage({ kind }: { readonly kind: PostureEntryKind }
       /**
        * Post-lock repair (run 103, operator decision): the page sends a per-entry patch, so adding or
        * editing a row upserts only that entry and the entries the editor does not name are never
-       * touched. A `null` travels only for an entry the operator removed or renamed.
+       * touched. A `null` travels only for an entry the operator removed with the Remove action; a
+       * rename upserts the new name and leaves the saved entry behind it in place.
        */
       const rows: PosturePatchRow[] = [];
       forms.forEach((form, index) => {
@@ -344,6 +344,9 @@ export function PostureEntriesPage({ kind }: { readonly kind: PostureEntryKind }
       }
       if (patch.deletedNames.length > 0) {
         message += ` Removed: ${patch.deletedNames.join(", ")} — their <name>.<scope> aliases stop materialising.`;
+      }
+      if (patch.keptOriginNames.length > 0) {
+        message += ` Kept: ${patch.keptOriginNames.join(", ")} — a rename adds the new entry, so the saved one stays until you press Remove entry on it.`;
       }
       setStatusMessage(message);
     } catch (value) {
@@ -551,7 +554,7 @@ export function PostureEntriesPage({ kind }: { readonly kind: PostureEntryKind }
                   form.name.trim().length > 0 &&
                   form.name.trim() !== form.originName ? (
                     <p className={`sm:col-span-2 xl:col-span-3 ${supportingTextClassName}`}>
-                      {`Renaming this entry removes \`${form.originName}\` and its ${form.originName}.<scope> aliases, and materialises \`${form.name.trim()}\` instead.`}
+                      {`Saving adds \`${form.name.trim()}\` and materialises \`${form.name.trim()}.<scope>\`. The saved entry \`${form.originName}\` stays in place — press Remove entry on it to stop its aliases.`}
                     </p>
                   ) : null}
                   {kind === "role" ? (

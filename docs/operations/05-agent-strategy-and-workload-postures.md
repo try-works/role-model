@@ -42,6 +42,17 @@ workloads:
     required_capabilities: [embeddings.text]
 ```
 
+## Writing configuration
+
+Configuration writes are patches, not whole-document replaces. `PUT /api/role-model/runtime/config` merges
+the `agent_strategies`, `workloads` and `model_aliases` blocks per entry and, inside an entry, per field, so a
+client that owns one entry can save it without echoing — or deleting — the entries it does not name. An entry
+is removed only by an explicit `null` entry value (`{"agent_strategies": {"coder": null}}`) and a field only by
+an explicit `null` field value; the Agent strategy and Workloads pages emit those deletions only for the
+entries the operator removed with **Remove entry**. The free-form editor on the Runtime config page sends
+`replace_blocks: true`, because it hands over the complete document; every other client gets the per-entry
+merge.
+
 ## Shipped examples
 
 The two workloads below are validated by the runtime test suite

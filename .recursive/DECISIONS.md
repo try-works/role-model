@@ -699,3 +699,26 @@ Date: `2026-09-30`
 
 - This decision authorizes no automatic stage or main promotion; release operations must build a fresh
   candidate from the merged commit, rebuild the paired private distribution, and repeat the live matrix.
+
+### Post-lock repair: config patches merge per entry and deletion stays an explicit operator action
+
+Date: `2026-10-01`
+
+- The operator reported that adding an agent strategy made the previously saved entries disappear. The cause
+  was structural, not cosmetic: the runtime's config write path merged a patch into the saved document with a
+  shallow `{ ...current, ...patch }`, so any patch that mentioned `agent_strategies`, `workloads` or
+  `model_aliases` replaced the whole block, and the Agent strategy editor's row key embedded the entry name, so
+  React remounted the card after every keystroke, truncated the name to one character and saved a block with
+  one entry. The runtime logged exactly that sequence (`coder`, `op`, `a`).
+- Operator decision: the name-keyed blocks merge per entry and, inside an entry, per field. A patch upserts
+  only the entries it names, `null` as an entry value deletes exactly that entry, and `null` as a field value
+  clears exactly that field. `model_aliases` is included, so materialised posture rows and other clients can
+  never drop an alias they did not name. `replace_blocks: true` is the explicit opt-in for a caller that hands
+  over the complete document (only the free-form JSON editor).
+- Operator decision: deletion happens only when the operator presses **Remove entry** on an entry displayed in
+  the UI. A rename upserts the new name and leaves the saved entry in place (the page says so before and after
+  the save); duplicate names are refused before any write.
+- Evidence and scope: `addenda/03-implementation-summary.post-lock-agent-strategy-editor.addendum-01.md`
+  (locked) records the root cause, the RED/GREEN suites, the packaged-runtime HTTP and UI verification, and the
+  reconciliation of the locked phase records. The config layout, the alias materialisation and the decision
+  receipts are unchanged; no migration is required.

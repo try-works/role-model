@@ -414,22 +414,6 @@ export function findDuplicateEntryNames(names: readonly string[]): readonly stri
   return [...duplicates].sort((left, right) => left.localeCompare(right, "en"));
 }
 
-/**
- * Post-lock repair (run 103): the editor writes the whole block, so a save that no longer names a
- * saved entry removes it (a rename removes the old name). The page surfaces exactly which saved
- * entries such a save would drop before it writes anything.
- */
-export function listEntriesRemovedBySave(
-  savedNames: readonly string[],
-  draftNames: readonly string[],
-): readonly string[] {
-  const drafted = new Set(draftNames.map((name) => name.trim()).filter((name) => name.length > 0));
-  return savedNames
-    .map((name) => name.trim())
-    .filter((name) => name.length > 0 && !drafted.has(name))
-    .sort((left, right) => left.localeCompare(right, "en"));
-}
-
 export function postureBlockDocumentKey(kind: PostureEntryKind): string {
   return kind === "role" ? "agent_strategies" : "workloads";
 }
@@ -445,13 +429,16 @@ export interface PostureNamedBlockPatch {
   readonly block: Record<string, Record<string, unknown> | null>;
   readonly upsertedNames: readonly string[];
   readonly deletedNames: readonly string[];
+  /** Saved entries whose row was renamed; the old entry stays until the operator removes it. */
+  readonly keptOriginNames: readonly string[];
 }
 
 /**
  * Run 103 post-lock repair (operator decision): the page never rewrites the block. It sends one
- * upsert per edited row and an explicit `null` for every deletion the operator asked for (the
- * Remove action) or implied by renaming a row, so a save can only touch the entries it names.
- * Fields the saved entry had and the row no longer sets are cleared with an explicit `null`.
+ * upsert per edited row and an explicit `null` only for the entries the operator removed with the
+ * Remove action, so a save can only touch the entries it names and a rename never deletes the
+ * saved entry behind it. Fields the saved entry had and the row no longer sets are cleared with an
+ * explicit `null`.
  */
 export function buildPostureNamedBlockPatch(
   kind: PostureEntryKind,
@@ -462,10 +449,11 @@ export function buildPostureNamedBlockPatch(
   },
 ): PostureNamedBlockPatch {
   const upsertedNames = input.rows.map((row) => row.entry.name);
-  const renamedAwayNames = input.rows
+  const keptOriginNames = input.rows
     .filter((row) => row.originName !== null && row.originName !== row.entry.name)
-    .map((row) => row.originName as string);
-  const deletedNames = [...new Set([...input.removedNames, ...renamedAwayNames])]
+    .map((row) => row.originName as string)
+    .filter((name) => input.saved.some((entry) => entry.name === name));
+  const deletedNames = [...new Set(input.removedNames)]
     .filter((name) => name.length > 0 && !upsertedNames.includes(name))
     .sort((left, right) => left.localeCompare(right, "en"));
 
@@ -480,7 +468,7 @@ export function buildPostureNamedBlockPatch(
   for (const name of deletedNames) {
     block[name] = null;
   }
-  return { block, upsertedNames, deletedNames };
+  return { block, upsertedNames, deletedNames, keptOriginNames };
 }
 
 function renderPosturePatchEntry(

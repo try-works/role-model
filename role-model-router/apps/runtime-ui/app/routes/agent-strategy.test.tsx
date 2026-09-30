@@ -49,13 +49,17 @@ describe("run 103 agent strategy and workload pages", () => {
     expect(posturePageSource).toContain("poolEmptyAliasIds");
   });
 
-  test("edits the entries through whole canonical blocks and never persists a legacy synonym", () => {
-    expect(posturePageSource).toContain("buildPostureWriteBlock");
+  test("edits the entries through per-entry patches and never persists a legacy synonym", () => {
+    expect(posturePageSource).toContain("buildPostureNamedBlockPatch");
     expect(posturePageSource).toContain("validatePostureDraft");
     expect(posturePageSource).toContain("updateRuntimeConfig");
     expect(posturePageSource).toContain("fetchRouterConfig");
     expect(posturePageSource).toContain("agent_strategies");
     expect(posturePageSource).toContain("workloads");
+    // Operator decision: the page never rewrites the whole block, and only the Remove action can
+    // delete an entry — a renamed row leaves the saved entry in place.
+    expect(posturePageSource).not.toContain("buildPostureWriteBlock");
+    expect(posturePageSource).toContain("Remove entry");
   });
 
   test("offers the shipped workload templates and keeps role_id off workloads", () => {

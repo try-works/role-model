@@ -7,7 +7,6 @@ import {
   buildWorkloadTemplateDraft,
   createPostureDraft,
   findDuplicateEntryNames,
-  listEntriesRemovedBySave,
   summarizePostureDiagnostics,
   validatePostureDraft,
 } from "./agent-strategy";
@@ -223,17 +222,10 @@ describe("run 103 posture entry view-models", () => {
     expect(findDuplicateEntryNames(["", "  "])).toEqual([]);
   });
 
-  test("lists the saved entries a save would remove", () => {
-    expect(listEntriesRemovedBySave(["coder", "reviewer"], ["coder", "reviewer"])).toEqual([]);
-    expect(listEntriesRemovedBySave(["coder", "reviewer"], ["coder", "qa"])).toEqual(["reviewer"]);
-    // A rename removes the old name; the new name is not a saved entry yet.
-    expect(listEntriesRemovedBySave(["coder"], ["coder-v2"])).toEqual(["coder"]);
-  });
-
   /**
    * Post-lock repair (run 103, operator decision): the page sends a per-entry patch, so adding a row
-   * cannot touch the entries it does not name, and only an explicit Remove (or an explicit rename)
-   * produces a `null` deletion.
+   * cannot touch the entries it does not name, and only the operator's explicit Remove produces a
+   * `null` deletion — a rename adds the new entry and leaves the saved one untouched.
    */
   const savedCoder = {
     name: "coder",
@@ -284,7 +276,7 @@ describe("run 103 posture entry view-models", () => {
     expect(Object.keys(patch.block)).toEqual(["coder", "reviewer"]);
   });
 
-  test("renaming a saved row upserts the new name and deletes exactly the old one", () => {
+  test("renaming a saved row upserts the new name and leaves the old entry in place", () => {
     const patch = buildPostureNamedBlockPatch("role", {
       saved: [savedCoder, savedReviewer],
       rows: [
@@ -293,9 +285,20 @@ describe("run 103 posture entry view-models", () => {
       ],
       removedNames: [],
     });
+    expect(patch.deletedNames).toEqual([]);
+    expect(patch.block).not.toHaveProperty("coder");
+    expect(Object.keys(patch.block).sort()).toEqual(["coder-v2", "reviewer"]);
+  });
+
+  test("renaming sends the null only when the operator also removed the saved entry", () => {
+    const patch = buildPostureNamedBlockPatch("role", {
+      saved: [savedCoder, savedReviewer],
+      rows: [{ originName: "coder", entry: writeEntry("coder-v2", "coder") }],
+      removedNames: ["coder"],
+    });
     expect(patch.deletedNames).toEqual(["coder"]);
     expect(patch.block.coder).toBeNull();
-    expect(Object.keys(patch.block).sort()).toEqual(["coder", "coder-v2", "reviewer"]);
+    expect(Object.keys(patch.block).sort()).toEqual(["coder", "coder-v2"]);
   });
 
   test("clearing a saved field sends an explicit null instead of silently keeping it", () => {
