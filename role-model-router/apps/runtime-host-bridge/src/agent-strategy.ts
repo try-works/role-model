@@ -272,3 +272,39 @@ export function decodeAgentStrategySection(
     violations,
   };
 }
+
+export interface AliasInventoryRow {
+  readonly aliasId: string;
+  readonly mode: string;
+  readonly modelIds: readonly string[];
+}
+
+export interface AliasInventoryMerge {
+  readonly rows: readonly AliasInventoryRow[];
+  readonly violations: readonly string[];
+}
+
+/**
+ * Run 103 / SP5d - the canonical matrix stays authoritative: posture aliases are appended, and a
+ * posture alias that would shadow an existing row is reported and skipped. Empty pools are carried
+ * verbatim so the caller reports `ALIAS_POOL_EMPTY` instead of widening.
+ */
+export function mergeAliasInventory(input: {
+  readonly canonical: readonly AliasInventoryRow[];
+  readonly postureAliases: readonly MaterializedAgentStrategyAlias[];
+}): AliasInventoryMerge {
+  const rows: AliasInventoryRow[] = [...input.canonical];
+  const seen = new Set(rows.map((row) => row.aliasId));
+  const violations: string[] = [];
+  for (const alias of input.postureAliases) {
+    if (seen.has(alias.aliasId)) {
+      violations.push(
+        `posture alias "${alias.aliasId}" collides with an existing routing alias and was skipped`,
+      );
+      continue;
+    }
+    seen.add(alias.aliasId);
+    rows.push({ aliasId: alias.aliasId, mode: alias.mode, modelIds: [...alias.modelIds] });
+  }
+  return { rows, violations };
+}

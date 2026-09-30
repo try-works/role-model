@@ -1,0 +1,73 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/103-agent-strategy-and-scoring-strategy/role-model-router/apps/runtime-host-bridge
+ DEPRECATED  'basic' reporter is deprecated and will be removed in Vitest v3.
+
+Remove 'basic' from 'reporters' option. To match 'basic' reporter 100%, use configuration:
+{
+  "test": {
+    "reporters": [
+      [
+        "default",
+        {
+          "summary": false
+        }
+      ]
+    ]
+  }
+}
+ ❯ test/agent-strategy-inventory.test.ts (3 tests | 3 failed) 15ms
+   × alias inventory merge > appends posture aliases after the canonical matrix 8ms
+     → (0 , mergeAliasInventory) is not a function
+   × alias inventory merge > a canonical collision is reported and the posture alias is skipped 2ms
+     → (0 , mergeAliasInventory) is not a function
+   × alias inventory merge > an empty posture pool is preserved so the caller can report ALIAS_POOL_EMPTY 1ms
+     → (0 , mergeAliasInventory) is not a function
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/agent-strategy-inventory.test.ts > alias inventory merge > appends posture aliases after the canonical matrix
+TypeError: (0 , mergeAliasInventory) is not a function
+ ❯ test/agent-strategy-inventory.test.ts:27:20
+     25| 
+     26|   test("appends posture aliases after the canonical matrix", () => {
+     27|     const merged = mergeAliasInventory({ canonical, postureAliases: [c…
+       |                    ^
+     28|     expect(merged.violations).toEqual([]);
+     29|     expect(merged.rows.map((row) => row.aliasId)).toEqual([
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  test/agent-strategy-inventory.test.ts > alias inventory merge > a canonical collision is reported and the posture alias is skipped
+TypeError: (0 , mergeAliasInventory) is not a function
+ ❯ test/agent-strategy-inventory.test.ts:38:20
+     36| 
+     37|   test("a canonical collision is reported and the posture alias is ski…
+     38|     const merged = mergeAliasInventory({
+       |                    ^
+     39|       canonical,
+     40|       postureAliases: [{ ...coderAlias, aliasId: "baseline.remote-only…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  test/agent-strategy-inventory.test.ts > alias inventory merge > an empty posture pool is preserved so the caller can report ALIAS_POOL_EMPTY
+TypeError: (0 , mergeAliasInventory) is not a function
+ ❯ test/agent-strategy-inventory.test.ts:50:20
+     48| 
+     49|   test("an empty posture pool is preserved so the caller can report AL…
+     50|     const merged = mergeAliasInventory({
+       |                    ^
+     51|       canonical,
+     52|       postureAliases: [{ ...coderAlias, modelIds: [] }],
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed (3)
+   Start at  12:53:31
+   Duration  5.97s (transform 2.60s, setup 0ms, collect 5.06s, tests 15ms, environment 1ms, prepare 361ms)
+
+undefined
+D:\DEV\role-model\.worktrees\103-agent-strategy-and-scoring-strategy\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/agent-strategy-inventory.test.ts --reporter=basic
