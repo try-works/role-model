@@ -36,7 +36,7 @@ describe("strategy diagnostics receipt", () => {
   });
 
   test("propagates a discarded override", () => {
-    const pinned = { ...posture, pinWeights: true };
+    const pinned = { ...decodeLegacyRoutingStrategy("latency"), pinWeights: true };
     const pinnedResolution = resolveRequestStrategy({
       posture: pinned,
       effectiveRoutingMode: "difficulty",
@@ -48,6 +48,6 @@ describe("strategy diagnostics receipt", () => {
       strategy: "quality",
     });
     expect(diagnostics.strategyResolution.source).toBe("operator");
-    expect(summarizeStrategyProvenance(pinnedResolution).strategy).toBe("quality");
+    expect(summarizeStrategyProvenance(pinnedResolution).strategy).toBe("latency");
   });
 });

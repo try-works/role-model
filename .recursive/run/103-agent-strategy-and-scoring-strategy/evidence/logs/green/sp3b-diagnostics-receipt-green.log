@@ -12,48 +12,19 @@ Remove 'basic' from 'reporters' option. To match 'basic' reporter 100%, use conf
       ]
     ]
   }
+}
  RUN  v3.2.4 D:/DEV/role-model/.worktrees/103-agent-strategy-and-scoring-strategy/role-model-router/apps/runtime-host-bridge
 
-}
- ❯ test/scoring-strategy-diagnostics.test.ts (3 tests | 1 failed) 43ms
-   ✓ strategy diagnostics receipt > adds the receipt and preserves the existing diagnostics fields 10ms
-   ✓ strategy diagnostics receipt > works when no diagnostics were produced yet 1ms
-   × strategy diagnostics receipt > propagates a discarded override 25ms
-     → expected undefined to deeply equal { source: 'difficulty', …(1) }
- ✓ test/scoring-strategy-resolution.test.ts (10 tests) 13ms
+ ✓ test/scoring-strategy-diagnostics.test.ts (3 tests) 12ms
+ ✓ test/scoring-strategy.test.ts (9 tests) 20ms
+ ✓ test/scoring-strategy-config.test.ts (8 tests) 20ms
+ ✓ test/scoring-strategy-resolution.test.ts (10 tests) 17ms
+ ✓ test/scoring-strategy-legacy.test.ts (7 tests) 21ms
  ✓ test/scoring-strategy-provenance.test.ts (4 tests) 12ms
 
 
-⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  6 passed (6)
+      Tests  41 passed (41)
+   Start at  12:21:52
+   Duration  17.64s (transform 2.52s, setup 0ms, collect 13.06s, tests 104ms, environment 3ms, prepare 1.83s)
 
- FAIL  test/scoring-strategy-diagnostics.test.ts > strategy diagnostics receipt > propagates a discarded override
-AssertionError: expected undefined to deeply equal { source: 'difficulty', …(1) }
-
-- Expected: 
-{
-  "source": "difficulty",
-  "strategy": "quality",
-}
-
-+ Received: 
-undefined
-
- ❯ test/scoring-strategy-diagnostics.test.ts:46:54
-     44|     });
-     45|     const diagnostics = withStrategyProvenance({}, pinnedResolution);
-     46|     expect(diagnostics.strategyResolution.discarded).toEqual({
-       |                                                      ^
-     47|       source: "difficulty",
-     48|       strategy: "quality",
-
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
-
-
- Test Files  1 failed | 2 passed (3)
-      Tests  1 failed | 16 passed (17)
-   Start at  12:20:31
-   Duration  11.32s (transform 2.99s, setup 0ms, collect 8.78s, tests 68ms, environment 1ms, prepare 952ms)
-
-undefined
-D:\DEV\role-model\.worktrees\103-agent-strategy-and-scoring-strategy\role-model-router\apps\runtime-host-bridge:
- ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/scoring-strategy-diagnostics.test.ts test/scoring-strategy-provenance.test.ts test/scoring-strategy-resolution.test.ts --reporter=basic
