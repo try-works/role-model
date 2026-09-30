@@ -407,3 +407,41 @@ export function withStrategyProvenance<TDiagnostics extends object>(
     strategyResolution: summarizeStrategyProvenance(resolution),
   };
 }
+
+export interface ControllerStrategyApplicationInput {
+  readonly pinWeights: boolean;
+  /** The strategy the request already carries (from the ladder). */
+  readonly requestStrategy: ScoringStrategyName;
+  /** The controller's validated directive, when it emitted one. */
+  readonly guidanceStrategy?: ScoringStrategyName;
+}
+
+export interface ControllerStrategyApplication {
+  readonly strategy: ScoringStrategyName;
+  readonly discarded?: {
+    readonly source: "controller";
+    readonly strategy: ScoringStrategyName;
+  };
+}
+
+/**
+ * Run 103 / SP4b - the controller may replace the request strategy only while the posture is
+ * unpinned; a pinned posture keeps its weights and the suppressed directive is recorded.
+ */
+export function resolveControllerStrategyApplication(
+  input: ControllerStrategyApplicationInput,
+): ControllerStrategyApplication {
+  if (!input.guidanceStrategy) {
+    return { strategy: input.requestStrategy };
+  }
+  if (!input.pinWeights) {
+    return { strategy: input.guidanceStrategy };
+  }
+  if (input.guidanceStrategy === input.requestStrategy) {
+    return { strategy: input.requestStrategy };
+  }
+  return {
+    strategy: input.requestStrategy,
+    discarded: { source: "controller", strategy: input.guidanceStrategy },
+  };
+}
