@@ -1,0 +1,20 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "test/**/*.ts", "test/**/*.tsx", "vitest.config.ts"],
+  "exclude": [
+    "node_modules",
+    "lib",
+    "data",
+    // Diagnostic scripts are run directly with tsx. `check-classifier-parity`
+    // deliberately imports the Pi package's sources from a sibling directory,
+    // which cannot be part of this project's rootDir.
+    "scripts/check-classifier-parity.mts"
+  ]
+}

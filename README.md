@@ -145,6 +145,50 @@ pi --no-session --provider role-model --model baseline.remote-only -p "<prompt>"
 
 `baseline.remote-only` is the canonical provider-relative form. `role-model/<alias>` is compatibility-only for Pi surfaces that explicitly require a qualified id. Raw HTTP `curl` calls to the runtime are debug-only fallback tools, not the primary supported Pi workflow.
 
+## Installation for DeepSeek Harness
+
+The `@try-works/dsh-role-model` bundle connects the DeepSeek Harness to an externally running
+role-model runtime, with the same capability as the Pi package: every ordinary conversation
+request carries `role_model.intent` metadata, so the runtime routes on the role, task,
+capabilities, modalities and tool classes the request needs.
+
+Build the package, then install the bundle into a harness profile with the plugin manager,
+passing the absolute package directory:
+
+```bash
+corepack pnpm --filter @try-works/dsh-role-model run build
+```
+
+```text
+plugin_manager { action: "install_bundle", target: "<repo>/packages/dsh-role-model" }
+```
+
+The runtime's aliases, models and endpoints then appear in the harness's main model selector
+under the `role-model` group, with the recommended alias first. Inside the harness, run:
+
+```text
+/role-model status
+/role-model doctor
+/role-model alias list
+/role-model alias recommended
+/role-model alias use <alias>
+/role-model requests
+/role-model explain latest
+```
+
+By default the bundle connects to `http://127.0.0.1:3456`; set `endpoint` in its profile patch
+row to use another channel, for example the stage runtime on `3457`. Remote endpoints require
+explicit `allowRemote`, and a runtime reporting `authentication.required` fails closed. The
+plugin never starts, stops, installs or updates the runtime, and never reads provider secrets.
+
+A profile-launched harness also needs `hostLlmModule` pointing at the harness's
+`@deepseek-ai/dsh-llm` entry: the plugin must use the harness's own `LlmAdapter` and
+`LlmError` classes, because a second class identity would collapse every failure code to the
+unroutable `UNKNOWN`. See
+[`packages/dsh-role-model/README.md`](packages/dsh-role-model/README.md) for the full
+configuration reference, the reason the route needs its own adapter, and the development and
+verification commands.
+
 ## Develop from source
 
 ### Prerequisites
@@ -239,6 +283,9 @@ Then double-click `role-model-launcher.exe` in `dist/release/win32-x64/`. It wil
 | [`docs/protocol/roles.md`](docs/protocol/roles.md) | role metadata reference |
 | [`docs/protocol/tasks.md`](docs/protocol/tasks.md) | task metadata reference |
 | [`docs/operations/02-ci-and-release-flow.md`](docs/operations/02-ci-and-release-flow.md) | CI, release automation, and workflow ownership |
+| [`packages/pi-role-model/README.md`](packages/pi-role-model/README.md) | the Pi integration |
+| [`packages/dsh-role-model/README.md`](packages/dsh-role-model/README.md) | the DeepSeek Harness integration |
+| [`docs/plans/dsh-role-model-implementation.md`](docs/plans/dsh-role-model-implementation.md) | the DeepSeek Harness plugin plan and its verification record |
 | [`CHANGELOG.md`](CHANGELOG.md) | release history |
 
 ## Acknowledgements

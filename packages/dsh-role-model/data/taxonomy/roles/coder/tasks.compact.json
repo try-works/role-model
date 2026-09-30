@@ -1,0 +1,162 @@
+[
+  {
+    "id": "coder.edit",
+    "label": "Code Edit",
+    "description": "Modify source code, configuration, tests, or build files.",
+    "primaryRole": "coder",
+    "compatibleRoles": ["coder", "architect"],
+    "requiredCapabilities": ["code.read", "code.write"],
+    "preferredCapabilities": ["reasoning.multi_step"],
+    "requiredModalities": ["text"],
+    "toolClasses": ["filesystem.read", "filesystem.write", "shell.execute"],
+    "classifier": {
+      "useWhen": "User asks to implement, fix, refactor, or change files.",
+      "doNotUseWhen": "User only asks for critique, explanation, or review."
+    },
+    "variants": []
+  },
+  {
+    "id": "coder.review",
+    "label": "Code Review",
+    "description": "Review source changes for correctness, regressions, maintainability, and missing tests.",
+    "primaryRole": "coder",
+    "compatibleRoles": ["coder", "security", "architect"],
+    "requiredCapabilities": ["code.read"],
+    "preferredCapabilities": ["reasoning.multi_step"],
+    "requiredModalities": ["text"],
+    "toolClasses": ["filesystem.read"],
+    "classifier": {
+      "useWhen": "User asks to inspect existing code or a diff and identify issues.",
+      "doNotUseWhen": "User asks to implement changes directly."
+    },
+    "variants": []
+  },
+  {
+    "id": "coder.debug.root_cause",
+    "label": "Root Cause Debugging",
+    "description": "Investigate a failure to identify the underlying cause before proposing or applying fixes.",
+    "primaryRole": "coder",
+    "compatibleRoles": ["coder", "operator", "architect"],
+    "requiredCapabilities": ["code.read", "reasoning.multi_step"],
+    "preferredCapabilities": ["tools.function_calling"],
+    "requiredModalities": ["text"],
+    "toolClasses": ["filesystem.read", "filesystem.write", "shell.execute"],
+    "classifier": {
+      "useWhen": "User reports failing tests, crashes, locks, regressions, or unexpected behavior.",
+      "doNotUseWhen": "User already knows the fix and asks to apply it."
+    },
+    "variants": ["root_cause"]
+  },
+  {
+    "id": "coder.test.write",
+    "label": "Test Writing",
+    "description": "Create or update tests for code behavior.",
+    "primaryRole": "coder",
+    "compatibleRoles": ["coder"],
+    "requiredCapabilities": ["code.read", "code.write"],
+    "preferredCapabilities": ["tools.function_calling"],
+    "requiredModalities": ["text"],
+    "toolClasses": ["filesystem.read", "filesystem.write", "shell.execute"],
+    "classifier": {
+      "useWhen": "User asks for tests, coverage, regression proof, or TDD.",
+      "doNotUseWhen": "User asks only to inspect code without changes."
+    },
+    "variants": ["write"]
+  },
+  {
+    "id": "coder.refactor",
+    "label": "Code Refactor",
+    "description": "Improve structure without intended behavior changes.",
+    "primaryRole": "coder",
+    "compatibleRoles": ["coder", "architect"],
+    "requiredCapabilities": ["code.read", "code.write"],
+    "preferredCapabilities": ["reasoning.multi_step"],
+    "requiredModalities": ["text"],
+    "toolClasses": ["filesystem.read", "filesystem.write", "shell.execute"],
+    "classifier": {
+      "useWhen": "User asks to simplify, reorganize, deduplicate, or improve maintainability.",
+      "doNotUseWhen": "User asks for new product behavior."
+    },
+    "variants": []
+  },
+  {
+    "id": "coder.explain",
+    "label": "Code Explanation",
+    "description": "Explain code behavior, architecture, or implementation details.",
+    "primaryRole": "coder",
+    "compatibleRoles": ["coder", "writer"],
+    "requiredCapabilities": ["code.read", "text.chat"],
+    "preferredCapabilities": ["reasoning.multi_step"],
+    "requiredModalities": ["text"],
+    "toolClasses": ["filesystem.read"],
+    "classifier": {
+      "useWhen": "User asks how code works or why it behaves a certain way.",
+      "doNotUseWhen": "User asks to modify files."
+    },
+    "variants": []
+  },
+  {
+    "id": "coder.migrate",
+    "label": "Code Migration",
+    "description": "Move code across APIs, frameworks, versions, or platforms.",
+    "primaryRole": "coder",
+    "compatibleRoles": ["coder", "architect", "operator"],
+    "requiredCapabilities": ["code.read", "code.write"],
+    "preferredCapabilities": ["long_context"],
+    "requiredModalities": ["text"],
+    "toolClasses": ["filesystem.read", "filesystem.write", "shell.execute"],
+    "classifier": {
+      "useWhen": "User asks to upgrade, port, or migrate implementation.",
+      "doNotUseWhen": "User only asks for conceptual comparison."
+    },
+    "variants": []
+  },
+  {
+    "id": "coder.generate",
+    "label": "Code Generation",
+    "description": "Create new code from a specification.",
+    "primaryRole": "coder",
+    "compatibleRoles": ["coder", "architect"],
+    "requiredCapabilities": ["code.write"],
+    "preferredCapabilities": ["reasoning.multi_step"],
+    "requiredModalities": ["text"],
+    "toolClasses": ["filesystem.read", "filesystem.write", "shell.execute"],
+    "classifier": {
+      "useWhen": "User asks to scaffold, generate, or create a new implementation.",
+      "doNotUseWhen": "User asks to review existing code only."
+    },
+    "variants": []
+  },
+  {
+    "id": "coder.dependency.update",
+    "label": "Dependency Update",
+    "description": "Update package dependencies, lockfiles, or version constraints.",
+    "primaryRole": "coder",
+    "compatibleRoles": ["coder", "security", "operator"],
+    "requiredCapabilities": ["code.read", "code.write"],
+    "preferredCapabilities": ["tools.command_execution"],
+    "requiredModalities": ["text"],
+    "toolClasses": ["filesystem.read", "filesystem.write", "shell.execute"],
+    "classifier": {
+      "useWhen": "User asks to update packages or dependency versions.",
+      "doNotUseWhen": "User asks for supply-chain risk review only."
+    },
+    "variants": ["update"]
+  },
+  {
+    "id": "coder.config",
+    "label": "Code Configuration",
+    "description": "Modify project, build, lint, test, or runtime configuration files.",
+    "primaryRole": "coder",
+    "compatibleRoles": ["coder", "operator"],
+    "requiredCapabilities": ["code.read", "code.write"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": ["filesystem.read", "filesystem.write", "shell.execute"],
+    "classifier": {
+      "useWhen": "User asks to configure code tooling or project settings.",
+      "doNotUseWhen": "User asks for production runtime operations only."
+    },
+    "variants": []
+  }
+]

@@ -1,0 +1,10 @@
+{
+  "classificationContractVersion": "role-model.classification.v1",
+  "rules": [
+    "Load groups first.",
+    "Load role summaries for likely groups.",
+    "Load task chunks only for likely roles.",
+    "Emit stable Pi metadata as advisory.",
+    "Treat runtime diagnostics as authoritative."
+  ]
+}

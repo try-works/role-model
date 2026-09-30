@@ -1,0 +1,162 @@
+[
+  {
+    "id": "educator.tutor",
+    "label": "Tutoring",
+    "description": "Teach a concept interactively with explanations, examples, and checks for understanding.",
+    "primaryRole": "educator",
+    "compatibleRoles": ["educator", "writer", "mathematician", "scientist"],
+    "requiredCapabilities": ["education.tutoring", "text.chat"],
+    "preferredCapabilities": ["reasoning.multi_step"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks to learn, study, or be taught a subject.",
+      "doNotUseWhen": "User asks for a final answer only without explanation."
+    },
+    "variants": []
+  },
+  {
+    "id": "educator.lesson.plan",
+    "label": "Lesson Planning",
+    "description": "Create a lesson, curriculum segment, study path, or learning sequence.",
+    "primaryRole": "educator",
+    "compatibleRoles": ["educator", "planner", "writer"],
+    "requiredCapabilities": ["education.tutoring"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for a lesson plan, course outline, study schedule, or learning progression.",
+      "doNotUseWhen": "User asks for a short factual answer."
+    },
+    "variants": ["plan"]
+  },
+  {
+    "id": "educator.quiz.generate",
+    "label": "Quiz Generation",
+    "description": "Generate questions, answer keys, rubrics, or practice exercises.",
+    "primaryRole": "educator",
+    "compatibleRoles": ["educator", "tester", "writer"],
+    "requiredCapabilities": ["education.assessment"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for a quiz, flashcards, drills, or assessment material.",
+      "doNotUseWhen": "User asks to evaluate a real candidate or employee."
+    },
+    "variants": ["generate"]
+  },
+  {
+    "id": "educator.feedback",
+    "label": "Learning Feedback",
+    "description": "Provide constructive feedback on a learner's work.",
+    "primaryRole": "educator",
+    "compatibleRoles": ["educator", "writer", "mathematician"],
+    "requiredCapabilities": ["education.assessment", "text.chat"],
+    "preferredCapabilities": ["communication.user_facing"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User provides an answer, essay, solution, or draft and asks for learning-oriented feedback.",
+      "doNotUseWhen": "User asks for employment or hiring evaluation."
+    },
+    "variants": []
+  },
+  {
+    "id": "educator.curriculum.design",
+    "label": "Curriculum Design",
+    "description": "Design curriculum structure, modules, outcomes, and sequencing.",
+    "primaryRole": "educator",
+    "compatibleRoles": ["educator", "planner"],
+    "requiredCapabilities": ["education.tutoring", "reasoning.multi_step"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks to design a course or curriculum.",
+      "doNotUseWhen": "User asks for one answer only."
+    },
+    "variants": ["design"]
+  },
+  {
+    "id": "educator.study.plan",
+    "label": "Study Plan",
+    "description": "Create study plans, schedules, practice progression, and review cadence.",
+    "primaryRole": "educator",
+    "compatibleRoles": ["educator", "planner", "coordinator"],
+    "requiredCapabilities": ["education.tutoring", "calendar.planning"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks how to study a subject.",
+      "doNotUseWhen": "User asks for business roadmap."
+    },
+    "variants": ["plan"]
+  },
+  {
+    "id": "educator.example.generate",
+    "label": "Learning Examples",
+    "description": "Generate examples, analogies, worked examples, or practice cases.",
+    "primaryRole": "educator",
+    "compatibleRoles": ["educator", "writer"],
+    "requiredCapabilities": ["education.tutoring", "text.chat"],
+    "preferredCapabilities": ["communication.user_facing"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for examples to understand a topic.",
+      "doNotUseWhen": "User asks for verified sources only."
+    },
+    "variants": ["generate"]
+  },
+  {
+    "id": "educator.rubric.create",
+    "label": "Rubric Creation",
+    "description": "Create grading rubrics, criteria, and scoring guidance.",
+    "primaryRole": "educator",
+    "compatibleRoles": ["educator", "tester", "recruiter"],
+    "requiredCapabilities": ["education.assessment"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for a rubric.",
+      "doNotUseWhen": "User asks to evaluate a job candidate."
+    },
+    "variants": ["create"]
+  },
+  {
+    "id": "educator.concept.explain",
+    "label": "Concept Explanation",
+    "description": "Explain concepts at an appropriate learner level.",
+    "primaryRole": "educator",
+    "compatibleRoles": ["educator", "writer"],
+    "requiredCapabilities": ["education.tutoring", "text.chat"],
+    "preferredCapabilities": ["communication.user_facing"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks to understand a concept.",
+      "doNotUseWhen": "User asks for professional medical advice."
+    },
+    "variants": ["explain"]
+  },
+  {
+    "id": "educator.practice.review",
+    "label": "Practice Review",
+    "description": "Review practice answers and suggest improvement steps.",
+    "primaryRole": "educator",
+    "compatibleRoles": ["educator", "mathematician", "writer"],
+    "requiredCapabilities": ["education.assessment", "communication.user_facing"],
+    "preferredCapabilities": ["reasoning.multi_step"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User submits practice work for feedback.",
+      "doNotUseWhen": "User asks for hiring decision."
+    },
+    "variants": ["review"]
+  }
+]
