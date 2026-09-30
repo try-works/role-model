@@ -1,0 +1,186 @@
+{
+  "requestId": "req-a7762ef2-0a2f-4565-b49d-1daa1d3f672e",
+  "routingDecisionId": "decision-req-a7762ef2-0a2f-4565-b49d-1daa1d3f672e",
+  "selectedEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-high",
+  "selectedModelId": "deepseek/deepseek-flash",
+  "strategyLabel": null,
+  "routingDiagnostics": {
+    "rolePolicy": {
+      "requestedRoleId": "tester",
+      "appliedRoleId": "tester",
+      "defaultSystemInstructionsApplied": true,
+      "toolPolicyMode": "allowed"
+    },
+    "observedProfile": {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-high",
+      "source": "runtime-state",
+      "readMode": "per-request",
+      "measuredAtMs": 1790806594128
+    },
+    "effectiveMetrics": {
+      "quality": {
+        "value": 0.5,
+        "source": "default"
+      },
+      "latency": {
+        "value": 9.812211465065612E-06,
+        "source": "measured",
+        "measuredAtMs": 1790806594128,
+        "freshnessWeight": 0.9999803755770699,
+        "freshnessSource": "time-decay",
+        "timeDecayApplied": true
+      },
+      "throughput": {
+        "value": 0.9999901877885349,
+        "source": "measured",
+        "measuredAtMs": 1790806594128,
+        "freshnessWeight": 0.9999803755770699,
+        "freshnessSource": "time-decay",
+        "timeDecayApplied": true
+      },
+      "reliability": {
+        "value": 1,
+        "source": "measured",
+        "measuredAtMs": 1790806594128,
+        "freshnessWeight": 1,
+        "freshnessSource": "passthrough",
+        "timeDecayApplied": false
+      },
+      "cost": {
+        "value": 0.9403574888587484,
+        "source": "catalog",
+        "measuredAtMs": 1790806594128,
+        "freshnessWeight": 1,
+        "freshnessSource": "passthrough",
+        "timeDecayApplied": false
+      }
+    },
+    "throughputPenalty": {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-high",
+      "active": false
+    },
+    "strategyResolution": {
+      "strategy": "quality",
+      "source": "operator",
+      "weights": {
+        "quality": 0.5,
+        "latency": 0.1,
+        "throughput": 0.05,
+        "cost": 0.1,
+        "reliability": 0.2,
+        "preference": 0.05
+      },
+      "weightsDigest": "sha256:a94fe0627cf2c99bf03f82d705132366213a47266f5b152bb73855071d0e1563"
+    },
+    "aliasPostureBinding": {
+      "aliasId": "tester.remote-only",
+      "name": "tester",
+      "kind": "role",
+      "declaredRoleId": null,
+      "presetRoleId": "tester",
+      "roleId": "tester",
+      "roleSource": "preset",
+      "requiredCapabilities": [
+        "reasoning.effort_control",
+        "text.chat",
+        "tools.function_calling"
+      ],
+      "preferLocal": false,
+      "scoringStrategy": "quality"
+    },
+    "selection": {
+      "mode": "best-total-score",
+      "scoreTieEpsilon": 0.01,
+      "scoreDelta": 0.020275517863198034,
+      "winnerEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-high",
+      "winnerTotalScore": 0.7880724789928962,
+      "runnerUpEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-max",
+      "runnerUpTotalScore": 0.7677969611296982,
+      "tieBreakOrder": [
+        "quality",
+        "latency_ms",
+        "reliability",
+        "endpoint_id"
+      ]
+    },
+    "latencySelection": {
+      "outcome": "kept_router_choice",
+      "chosenEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-high",
+      "bucketUpperBoundTokens": 50000,
+      "candidates": [
+        {
+          "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+          "p50LatencyMs": 530,
+          "p95LatencyMs": 2099,
+          "effectiveLatencyMs": 922.25,
+          "sampleCount": 8
+        },
+        {
+          "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-high",
+          "p50LatencyMs": 877,
+          "p95LatencyMs": 1657,
+          "effectiveLatencyMs": 1072,
+          "sampleCount": 34
+        },
+        {
+          "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+          "p50LatencyMs": 1066,
+          "p95LatencyMs": 2797,
+          "effectiveLatencyMs": 1498.75,
+          "sampleCount": 8
+        },
+        {
+          "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash",
+          "p50LatencyMs": 1036,
+          "p95LatencyMs": 3859,
+          "effectiveLatencyMs": 1741.75,
+          "sampleCount": 68
+        }
+      ],
+      "reason": "the best candidate improves effective latency by 149.75ms, inside the configured 2000ms delta"
+    },
+    "aliasResolution": {
+      "requestedModel": "tester.remote-only",
+      "aliasId": "tester.remote-only",
+      "resolvedModelIds": [
+        "chatgpt/gpt-5.6-sol",
+        "deepseek/deepseek-flash",
+        "deepseek/deepseek-v4-flash",
+        "deepseek/deepseek-v4-pro"
+      ],
+      "allowEndpoints": [
+        "deepseek.personal.deepseek-api-key.global.deepseek-flash",
+        "deepseek.personal.deepseek-api-key.global.deepseek-flash-high",
+        "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+        "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-max",
+        "deepseek.personal.run103.global.deepseek-v4-flash",
+        "deepseek.personal.run103.global.deepseek-v4-pro",
+        "openai.personal.openai-codex-subscription.global.gpt-5.6-sol"
+      ]
+    },
+    "rewrite": {
+      "requestedModel": "tester.remote-only",
+      "downstreamModelId": "deepseek/deepseek-flash",
+      "applied": true,
+      "reason": "requested-model-rewritten-for-selected-endpoint"
+    },
+    "cacheContinuity": {
+      "enabled": true,
+      "scopeSource": "prompt_cache_key",
+      "activeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-high",
+      "previousActiveEndpointId": null,
+      "selectedEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-high",
+      "selectedDomainState": "created",
+      "advisorySelectionApplied": false
+    },
+    "catalogEconomics": {
+      "canonicalModelId": "deepseek/deepseek-flash",
+      "tokenEconomicsSource": "catalog",
+      "inputPer1M": 0.15,
+      "outputPer1M": 0.6,
+      "estimatedRequestUsd": 0.07695374999999999,
+      "cost_per_1k_tokens_est": 0.0005964251114125168
+    }
+  }
+}
