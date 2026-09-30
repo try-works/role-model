@@ -186,8 +186,74 @@ describe("the settings panel registration", () => {
     const source = readFileSync(clientEntry, "utf8");
     const literalColours = source.match(/#[0-9a-f]{3,8}\b/giu) ?? [];
     expect(literalColours).toEqual([]);
-    // The only styling dependency is the host's alias token family.
+    // The only styling dependency is the host's own variable families.
     expect(source).toContain("--dsw-alias-");
+  });
+
+  /**
+   * Every theme variable the host actually declares.
+   *
+   * Taken from the harness's own token sources — `ui-theme/src/styles/base.css`
+   * and `design-platform.css` — plus the subset the client `Theme` inspect
+   * provider publishes. A name outside this list is an invalid declaration: the
+   * browser drops the value and it silently falls back to inherited text, which is
+   * exactly the defect this guard exists to prevent.
+   */
+  const KNOWN_TOKENS = new Set([
+    "--dsw-alias-label-primary",
+    "--dsw-alias-label-secondary",
+    "--dsw-alias-label-tertiary",
+    "--dsw-alias-border-l1",
+    "--dsw-alias-border-l2",
+    "--dsw-alias-border-l3",
+    "--dsw-alias-border-l4",
+    "--dsw-alias-bg-layer-1",
+    "--dsw-alias-bg-layer-2",
+    "--dsw-alias-bg-overlay",
+    "--dsw-alias-bg-base",
+    "--dsw-alias-brand-primary",
+    "--dsw-alias-interactive-bg-hover",
+    "--dsw-alias-settings-card-fill",
+    "--dsw-alias-settings-card-stroke",
+    "--dsw-alias-state-error-primary",
+    "--dsw-alias-state-success-primary",
+    "--dsw-alias-state-warn-primary",
+    "--dsw-alias-state-idle-primary",
+    "--dsw-radius-xs",
+    "--dsw-radius-sm",
+    "--dsw-radius-md",
+    "--dsw-radius-lg",
+    "--dsw-radius-xl",
+    "--ds-font-family-code",
+  ]);
+
+  test("every theme variable it references is one the host declares", () => {
+    const source = readFileSync(clientEntry, "utf8");
+    const referenced = source.match(/--(?:dsw|ds)-[a-z0-9-]*[a-z0-9]/gu) ?? [];
+    expect(referenced.length).toBeGreaterThan(0);
+    const unknown = [...new Set(referenced)].filter((token) => !KNOWN_TOKENS.has(token));
+    expect(unknown).toEqual([]);
+  });
+
+  test("composes the page as a section of cards, not a wall of prose", () => {
+    const source = readFileSync(clientEntry, "utf8");
+    // The shipped settings page's structure: a section column, and cards that hold
+    // label/value rows.
+    expect(source).toContain("rlm-page");
+    expect(source).toContain("rlm-cards");
+    expect(source).toContain("rlm-card");
+    expect(source).toContain("rlm-row");
+    // Cards sit on the same elevated surface the shipped pages use.
+    expect(source).toContain("--dsw-alias-settings-card-fill");
+    expect(source).toContain("--dsw-alias-settings-card-stroke");
+  });
+
+  test("renders a page heading and injects its own scoped styles", () => {
+    const { registrations } = evaluateClientEntry();
+    const rendered = registrations[0]?.rendered ?? "";
+    expect(rendered).toContain("rlm-title");
+    // Styles travel with the component so unmounting removes them.
+    expect(rendered).toContain("rlm-styles");
   });
 
   test("does not write to the document outside its component", () => {

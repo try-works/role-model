@@ -9,8 +9,15 @@
  * The only module it requests is `react`, which the module table provides. It does
  * not import any harness client package: those change without notice, a plain-JS
  * plugin has no type check against them, and a throwing component blanks the slot
- * entry. Controls are therefore written here and styled with the host's theme
- * tokens so they follow light and dark automatically.
+ * entry. Controls and styles are therefore written here.
+ *
+ * The page mirrors a shipped settings section (the Models page): the same section
+ * column, card chrome and type scale, using only theme tokens that actually exist —
+ * the label primary/secondary/tertiary aliases, the settings card fill and stroke
+ * aliases, the radius scale and the code font family. A token that does not exist is
+ * an invalid declaration: the browser drops the value and it falls back to inherited
+ * text, which is what made an earlier version of this page render as
+ * undifferentiated prose.
  */
 
 window.__ModuleLoader__.load({
@@ -20,171 +27,225 @@ window.__ModuleLoader__.load({
     const React = require("react");
     const h = React.createElement;
 
-    /** The command surface, so the panel documents what the user can run. */
-    const COMMANDS = [
-      ["/role-model status", "route health, discovery state, model count, selected alias"],
-      ["/role-model doctor", "every discovery check, including degraded model metadata"],
-      ["/role-model alias list", "every alias the runtime advertises"],
-      ["/role-model alias use <alias>", "record the alias to prefer"],
-      ["/role-model requests", "recent runtime requests"],
-      ["/role-model explain <id>", "one request and the routing decision it produced"],
-    ];
+    /**
+     * Page styles.
+     *
+     * Held as one string and injected as a React element, so unmounting removes
+     * them — the pattern the plugin guidance prescribes for component-local styles.
+     * Every class is prefixed to avoid colliding with host styles.
+     */
+    const CSS = `
+.rlm-page {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 720px;
+  color: var(--dsw-alias-label-primary);
+}
+.rlm-title {
+  margin: 0;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+  color: var(--dsw-alias-label-primary);
+}
+.rlm-intro {
+  margin: 0;
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--dsw-alias-label-tertiary);
+}
+.rlm-cards {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.rlm-card {
+  border: 0.5px solid var(--dsw-alias-settings-card-stroke);
+  background: var(--dsw-alias-settings-card-fill);
+  border-radius: var(--dsw-radius-xl);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.rlm-card-title {
+  margin: 0 0 6px;
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 600;
+  color: var(--dsw-alias-label-primary);
+}
+.rlm-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 5px 0;
+}
+.rlm-label {
+  flex: 0 0 148px;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--dsw-alias-label-secondary);
+}
+.rlm-value {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--dsw-alias-label-primary);
+  overflow-wrap: anywhere;
+}
+.rlm-code {
+  font-family: var(--ds-font-family-code);
+  font-size: 12px;
+}
+.rlm-note {
+  margin: 0;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--dsw-alias-label-secondary);
+}
+`;
 
-    /** What this route does, stated once so the panel is self-explanatory. */
-    const OVERVIEW = [
-      "This route forwards model requests to an externally running role-model runtime.",
-      "The runtime owns routing: it chooses the endpoint or alias for each request.",
-      "Every ordinary request carries role_model intent metadata — the role and task this " +
-        "plugin classified, plus capabilities, modalities and tool classes — so the runtime " +
-        "can route on what the work needs rather than on the prompt text alone.",
-      "Aliases, models and endpoints all appear in the model selector under this route.",
-    ].join(" ");
-
-    /** A section with a themed heading. */
-    function Section(props) {
-      return h(
-        "section",
-        { style: { marginBlockEnd: "24px" } },
-        h(
-          "h3",
-          {
-            style: {
-              margin: "0 0 8px",
-              fontSize: "13px",
-              fontWeight: 600,
-              color: "var(--dsw-alias-text-primary)",
-            },
-          },
-          props.title,
-        ),
-        props.children,
-      );
-    }
-
-    /** A label/value row, matching the host's settings rows. */
+    /** One row inside a card: a muted label and a primary value. */
     function Row(props) {
       return h(
         "div",
-        {
-          style: {
-            display: "flex",
-            gap: "12px",
-            padding: "6px 0",
-            fontSize: "13px",
-            borderBlockEnd: "1px solid var(--dsw-alias-border-subtle)",
-          },
-        },
+        { className: "rlm-row" },
+        h("span", { className: "rlm-label" }, props.label),
         h(
           "span",
-          { style: { flex: "0 0 168px", color: "var(--dsw-alias-text-secondary)" } },
-          props.label,
-        ),
-        h(
-          "span",
-          {
-            style: {
-              flex: "1 1 auto",
-              color: "var(--dsw-alias-text-primary)",
-              // Aliases and model ids are identifiers: keep them monospaced and copyable.
-              fontFamily: props.mono === true ? "var(--dsw-font-family-mono)" : "inherit",
-              wordBreak: "break-word",
-            },
-          },
+          { className: props.mono === true ? "rlm-value rlm-code" : "rlm-value" },
           props.children,
         ),
       );
     }
 
-    /** The settings page. */
-    function RoleModelPanel() {
+    /** One card: a small heading and its rows. */
+    function Card(props) {
       return h(
         "div",
-        { style: { padding: "4px 0", color: "var(--dsw-alias-text-primary)" } },
+        { className: "rlm-card" },
+        h("h3", { className: "rlm-card-title" }, props.title),
+        props.children,
+      );
+    }
+
+    /** The settings page. */
+    function RoleModelPanel() {
+      const styleElement = React.useMemo(
+        () => h("style", { key: "rlm-styles", dangerouslySetInnerHTML: { __html: CSS } }),
+        [],
+      );
+
+      return h(
+        "div",
+        { className: "rlm-page" },
+        styleElement,
+
+        h("h2", { className: "rlm-title" }, "role-model"),
         h(
           "p",
-          {
-            style: {
-              margin: "0 0 20px",
-              fontSize: "13px",
-              color: "var(--dsw-alias-text-secondary)",
-              maxWidth: "72ch",
-            },
-          },
-          OVERVIEW,
+          { className: "rlm-intro" },
+          "This route forwards model requests to an externally running role-model runtime. The runtime " +
+            "owns routing: it chooses the endpoint or alias for each request. Every ordinary request " +
+            "carries role_model intent metadata — the role and task this plugin classified, plus " +
+            "capabilities, modalities and tool classes — so the runtime can route on what the work needs " +
+            "rather than on the prompt text alone.",
         ),
 
         h(
-          Section,
-          { title: "Route" },
-          h(Row, { label: "provider route", mono: true }, "role-model"),
-          h(
-            Row,
-            { label: "endpoint" },
-            "Configured in this plugin's settings. The runtime is external: this plugin never starts, stops or updates it.",
-          ),
-          h(
-            Row,
-            { label: "intent metadata" },
-            "role_model.intent on every ordinary conversation request. Compaction and session-title calls are never annotated.",
-          ),
-          h(
-            Row,
-            { label: "credentials" },
-            "The bearer token is the runtime's published local placeholder. This plugin reads no credential and stores none.",
-          ),
-        ),
+          "div",
+          { className: "rlm-cards" },
 
-        h(
-          Section,
-          { title: "Commands" },
           h(
-            "div",
-            { style: { display: "grid", gap: "6px" } },
-            ...COMMANDS.map(([command, summary]) =>
-              h(
-                "div",
-                { key: command, style: { display: "flex", gap: "12px", fontSize: "13px" } },
-                h(
-                  "code",
-                  {
-                    style: {
-                      flex: "0 0 232px",
-                      fontFamily: "var(--dsw-font-family-mono)",
-                      color: "var(--dsw-alias-text-primary)",
-                    },
-                  },
-                  command,
-                ),
-                h("span", { style: { color: "var(--dsw-alias-text-secondary)" } }, summary),
-              ),
+            Card,
+            { title: "Route" },
+            h(Row, { label: "provider route", mono: true }, "role-model"),
+            h(
+              Row,
+              { label: "endpoint" },
+              "Configured in this plugin's settings. The runtime is external: this plugin never starts, " +
+                "stops or updates it.",
+            ),
+            h(
+              Row,
+              { label: "intent metadata" },
+              "role_model.intent on every ordinary conversation request. Compaction and session-title " +
+                "calls are never annotated.",
+            ),
+            h(
+              Row,
+              { label: "credentials" },
+              "The bearer token is the runtime's published local placeholder. This plugin reads no " +
+                "credential and stores none.",
+            ),
+            h(
+              Row,
+              { label: "model selector" },
+              "The runtime's aliases, models and endpoints all appear under this route, recommended " +
+                "alias first.",
             ),
           ),
-        ),
 
-        h(
-          Section,
-          { title: "Where to look" },
           h(
-            "p",
-            {
-              style: {
-                margin: 0,
-                fontSize: "13px",
-                color: "var(--dsw-alias-text-secondary)",
-                maxWidth: "72ch",
-              },
-            },
-            "Run /role-model status for the live discovery state, model count and selected alias, and " +
-              "/role-model doctor when something is wrong: it walks endpoint reachability, the discovery " +
-              "contract, auth, endpoint trust, provider registration and any model whose metadata had to be " +
-              "sized conservatively. Routing decisions, benchmarks and telemetry belong to the runtime.",
+            Card,
+            { title: "Commands" },
+            h(
+              Row,
+              { label: "/role-model status", mono: true },
+              "route health, discovery state, model count, selected alias",
+            ),
+            h(
+              Row,
+              { label: "/role-model doctor", mono: true },
+              "every discovery check, including degraded model metadata",
+            ),
+            h(
+              Row,
+              { label: "/role-model alias list", mono: true },
+              "every alias the runtime advertises",
+            ),
+            h(
+              Row,
+              { label: "/role-model alias use", mono: true },
+              "record the alias to prefer, for example /role-model alias use baseline.remote-only",
+            ),
+            h(Row, { label: "/role-model requests", mono: true }, "recent runtime requests"),
+            h(
+              Row,
+              { label: "/role-model explain", mono: true },
+              "one request and the routing decision it produced",
+            ),
+          ),
+
+          h(
+            Card,
+            { title: "Where to look" },
+            h(
+              "p",
+              { className: "rlm-note" },
+              "Run /role-model status for the live discovery state, model count and selected alias, and " +
+                "/role-model doctor when something is wrong: it walks endpoint reachability, the discovery " +
+                "contract, auth, endpoint trust, provider registration and any model whose metadata had to " +
+                "be sized conservatively.",
+            ),
+            h(
+              "p",
+              { className: "rlm-note" },
+              "Routing decisions, benchmarks and telemetry belong to the runtime, not to this plugin.",
+            ),
           ),
         ),
       );
     }
 
     return {
-      // The harness orders activation with these edges; the settings slot is
+      // The harness orders activation with these edges; the settings section slot is
       // provided by the settings shell, so wait for it.
       inject: ["slots"],
 
@@ -195,7 +256,8 @@ window.__ModuleLoader__.load({
               {
                 name: "settings.section",
                 id: "role-model",
-                // After the shipped sections, before anything opt-in.
+                // After the shipped sections (general 0, models 10, plugins 15,
+                // agent-presets 20), before anything opt-in.
                 order: 60,
                 label: "role-model",
               },
