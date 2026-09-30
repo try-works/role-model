@@ -296,6 +296,12 @@ import {
   warnAliasModelIdDrift,
 } from "./routable-inventory.js";
 import {
+  type RoutingPosture,
+  decodeLegacyRoutingStrategy,
+  resolveRequestStrategy,
+  toCoreRoutingStrategyName,
+} from "./scoring-strategy.js";
+import {
   type BootstrapStageResult,
   type SessionBootstrapState,
   createPendingBootstrapState,
@@ -10240,6 +10246,7 @@ export function mapChatCompletionsRequest(
   defaultRoutingMode?: RuntimeRoutingMode,
   inventory: RoutableInventory | null = null,
   taskDefinitions?: readonly RuntimeTaskDefinitionRecord[],
+  routingPosture?: RoutingPosture,
 ): BridgeExecutionPlan {
   const contextTokens = estimateContextTokens(body.messages, body.tools?.length ?? 0);
   const reasoning = readChatCompletionsReasoningRequest(body);
@@ -10408,7 +10415,13 @@ export function mapChatCompletionsRequest(
       requiredModalities: capabilityRequirements.requiredInputModalities,
       contextTokens,
       needsTools: Boolean(tools?.length),
-      strategy: difficultyRouting.strategy,
+      strategy: toCoreRoutingStrategyName(
+        resolveRequestStrategy({
+          posture: routingPosture,
+          effectiveRoutingMode,
+          difficulty: difficultyRouting.routingDiagnostics?.difficultyRouting?.difficulty,
+        }).strategy,
+      ),
       preferLocal: false,
       allowEndpoints: difficultyRouting.allowEndpoints,
     },
@@ -10480,6 +10493,7 @@ export function mapResponsesRequest(
   defaultRoutingMode?: RuntimeRoutingMode,
   inventory: RoutableInventory | null = null,
   taskDefinitions?: readonly RuntimeTaskDefinitionRecord[],
+  routingPosture?: RoutingPosture,
 ): BridgeExecutionPlan {
   const messages = toResponsesInputMessages(body.input);
   const contextTokens = estimateContextTokens(messages, body.tools?.length ?? 0);
@@ -10633,7 +10647,13 @@ export function mapResponsesRequest(
       requiredModalities: capabilityRequirements.requiredInputModalities,
       contextTokens,
       needsTools: Boolean(tools?.length),
-      strategy: difficultyRouting.strategy,
+      strategy: toCoreRoutingStrategyName(
+        resolveRequestStrategy({
+          posture: routingPosture,
+          effectiveRoutingMode,
+          difficulty: difficultyRouting.routingDiagnostics?.difficultyRouting?.difficulty,
+        }).strategy,
+      ),
       preferLocal: false,
       allowEndpoints: difficultyRouting.allowEndpoints,
     },
@@ -28712,6 +28732,7 @@ export async function createRuntimeBridgeBackend(
           normalizeConfiguredRoutingMode(currentUnifiedRuntimeConfig?.routingStrategy) ?? undefined,
           executionInventory.endpointIds.length > 0 ? executionInventory : null,
           currentRolePolicy.taskDefinitions,
+          decodeLegacyRoutingStrategy(currentUnifiedRuntimeConfig?.routingStrategy ?? null),
         );
         markPhase("dispatch-start");
         const {
@@ -28888,6 +28909,7 @@ export async function createRuntimeBridgeBackend(
           normalizeConfiguredRoutingMode(currentUnifiedRuntimeConfig?.routingStrategy) ?? undefined,
           executionInventory.endpointIds.length > 0 ? executionInventory : null,
           currentRolePolicy.taskDefinitions,
+          decodeLegacyRoutingStrategy(currentUnifiedRuntimeConfig?.routingStrategy ?? null),
         );
         markPhase("dispatch-start");
         const { execution, toolExecutionResult, routingDecisionId, effortReceipt } =

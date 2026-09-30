@@ -327,7 +327,8 @@ export function decodeLegacyRoutingStrategy(raw: string | null | undefined): Rou
 
 export interface RequestStrategyInput {
   readonly posture?: RoutingPosture;
-  readonly effectiveRoutingMode: RoutingModeName;
+  /** Accepts the bridge's operator vocabulary too (`controller` normalizes to `intelligent`). */
+  readonly effectiveRoutingMode: RoutingModeName | "controller";
   readonly difficulty?: DifficultyBucket;
   /** Set when the controller produced a validated strategy directive (SP4 applies the pin rule). */
   readonly controllerStrategy?: ScoringStrategyName;
@@ -339,13 +340,24 @@ export interface RequestStrategyInput {
  * the effective strategy that is written into the routing request.
  */
 export function resolveRequestStrategy(input: RequestStrategyInput): StrategyResolution {
+  const effectiveRoutingMode = normalizeRoutingModeName(input.effectiveRoutingMode) ?? "baseline";
   return resolveStrategy({
     operator: input.posture?.operator ?? null,
     pinWeights: input.posture?.pinWeights ?? false,
     difficultyRoutingActive:
-      input.effectiveRoutingMode === "difficulty" || input.effectiveRoutingMode === "hybrid",
+      effectiveRoutingMode === "difficulty" || effectiveRoutingMode === "hybrid",
     difficulty: input.difficulty,
     controllerActive: input.controllerActive === true,
     controllerStrategy: input.controllerStrategy,
   });
+}
+
+/**
+ * The core `RoutingStrategy` union has no `custom` member: the protocol snapshot keeps a canonical
+ * preset name, while the effective weights travel in runtime diagnostics (design document section 7.3).
+ */
+export function toCoreRoutingStrategyName(
+  name: ScoringStrategyName,
+): Exclude<ScoringStrategyName, "custom"> {
+  return name === "custom" ? "balanced" : name;
 }
