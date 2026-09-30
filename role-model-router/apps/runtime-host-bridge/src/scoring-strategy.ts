@@ -393,3 +393,17 @@ export function summarizeStrategyProvenance(
     ...(resolution.discarded ? { discarded: resolution.discarded } : {}),
   };
 }
+
+/**
+ * Run 103 / SP3b - attach the strategy receipt to whatever diagnostics a mapper already built,
+ * without dropping the fields it produced.
+ */
+export function withStrategyProvenance<TDiagnostics extends object>(
+  diagnostics: TDiagnostics | undefined,
+  resolution: StrategyResolution,
+): TDiagnostics & { readonly strategyResolution: StrategyProvenance } {
+  return {
+    ...(diagnostics ?? ({} as TDiagnostics)),
+    strategyResolution: summarizeStrategyProvenance(resolution),
+  };
+}

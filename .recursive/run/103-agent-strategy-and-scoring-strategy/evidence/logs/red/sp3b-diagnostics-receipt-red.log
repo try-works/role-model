@@ -1,0 +1,73 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/103-agent-strategy-and-scoring-strategy/role-model-router/apps/runtime-host-bridge
+
+ DEPRECATED  'basic' reporter is deprecated and will be removed in Vitest v3.
+Remove 'basic' from 'reporters' option. To match 'basic' reporter 100%, use configuration:
+{
+  "test": {
+    "reporters": [
+      [
+        "default",
+        {
+          "summary": false
+        }
+      ]
+    ]
+  }
+}
+ ❯ test/scoring-strategy-diagnostics.test.ts (3 tests | 3 failed) 10ms
+   × strategy diagnostics receipt > adds the receipt and preserves the existing diagnostics fields 5ms
+     → (0 , withStrategyProvenance) is not a function
+   × strategy diagnostics receipt > works when no diagnostics were produced yet 1ms
+     → (0 , withStrategyProvenance) is not a function
+   × strategy diagnostics receipt > propagates a discarded override 1ms
+     → (0 , withStrategyProvenance) is not a function
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/scoring-strategy-diagnostics.test.ts > strategy diagnostics receipt > adds the receipt and preserves the existing diagnostics fields
+TypeError: (0 , withStrategyProvenance) is not a function
+ ❯ test/scoring-strategy-diagnostics.test.ts:20:25
+     18| 
+     19|   test("adds the receipt and preserves the existing diagnostics fields…
+     20|     const diagnostics = withStrategyProvenance(
+       |                         ^
+     21|       { aliasResolution: { aliasId: "quality.remote-only" }, routingMo…
+     22|       resolution,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  test/scoring-strategy-diagnostics.test.ts > strategy diagnostics receipt > works when no diagnostics were produced yet
+TypeError: (0 , withStrategyProvenance) is not a function
+ ❯ test/scoring-strategy-diagnostics.test.ts:34:25
+     32| 
+     33|   test("works when no diagnostics were produced yet", () => {
+     34|     const diagnostics = withStrategyProvenance(undefined, resolution);
+       |                         ^
+     35|     expect(diagnostics.strategyResolution.source).toBe("operator");
+     36|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  test/scoring-strategy-diagnostics.test.ts > strategy diagnostics receipt > propagates a discarded override
+TypeError: (0 , withStrategyProvenance) is not a function
+ ❯ test/scoring-strategy-diagnostics.test.ts:45:25
+     43|       difficulty: "hard",
+     44|     });
+     45|     const diagnostics = withStrategyProvenance({}, pinnedResolution);
+       |                         ^
+     46|     expect(diagnostics.strategyResolution.discarded).toEqual({
+     47|       source: "difficulty",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed (3)
+   Start at  12:20:01
+   Duration  5.96s (transform 2.66s, setup 0ms, collect 5.05s, tests 10ms, environment 0ms, prepare 348ms)
+
+undefined
+D:\DEV\role-model\.worktrees\103-agent-strategy-and-scoring-strategy\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/scoring-strategy-diagnostics.test.ts --reporter=basic
