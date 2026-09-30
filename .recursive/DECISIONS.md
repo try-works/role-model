@@ -14,6 +14,8 @@
 - `86-runtime-ui-rm3-design-system-frontend` - RM v3 design system + `@role-model/ui` kit migration for router runtime-ui; Paper `4-0`/`5-0`/`6-0`/`7-0` IA; FD#15 config→strategy; SP8 floor green; hybrid Phase 5 QA on rebuilt `:3470` with human Paper sign-off; operator polish P1–P8 (Phases 0-8). Folder: `.recursive/run/86-runtime-ui-rm3-design-system-frontend/`. Soft-closes run `60-runtime-ui-paper-linear-review-alignment` as live styling authority for migrated surfaces (Linear/Paper-Linear historical).
 - `92-configured-model-pool-benchmark-convergence` - Endpoint-variant-exact membership revision token stamped at persist/read/portfolio/decision time; honest null candidate-space (no synthetic 0/0%); membership-revision + stale benchmark quarantine; destructive-confirm final-controller eject; decision revision; transactional benchmark clear (Phases 0-8, strict TDD, agent-operated QA on rebuilt `:3501`). Folder: `.recursive/run/92-configured-model-pool-benchmark-convergence/`. Soft-closes run 76's membership-authority contract with a revision-token convergence wave.
 
+- `103-agent-strategy-and-scoring-strategy` - Routing posture split (`routing.mode` + `routing.scoring_strategy` + `pin_weights` + `weights`), real scoring strategies, agent-strategy and workload postures with `<name>.<scope>` aliases, strategy/latency/alias receipts on every decision, measured-latency effective metric, three runtime-ui surfaces; strict TDD, two delegated review rounds, agent-operated rebuilt-runtime pi-CLI QA on `:3458` (Phases 0-8). Folder: `.recursive/run/103-agent-strategy-and-scoring-strategy/`.
+
 ## Run: `92-configured-model-pool-benchmark-convergence`
 
 Date: `2026-08-21`
@@ -634,3 +636,66 @@ Date: `2026-08-23`
 - This repair does not itself publish a candidate or authorize main. CI must
   build a new artifact with exact commit identity, then Stage UAT and
   acceptance must pass.
+
+## Run: `103-agent-strategy-and-scoring-strategy`
+
+Date: `2026-09-30`
+
+### Decision
+
+- The routing posture is two axes: `routing.mode` (`baseline | difficulty | hybrid | intelligent`, `controller`
+  accepted as a compat spelling) and `routing.scoring_strategy` (`balanced | quality | latency | cost | custom`),
+  plus `routing.pin_weights` and the six-metric `routing.weights` profile (required iff `custom`). The legacy
+  single `routing.strategy` string is read-compatible, degraded with a recorded reason on read, rejected when it
+  names nothing on write, and never written back.
+- Resolution precedence is request intent > controller directive > difficulty bucket (`easy`→`cost`,
+  `hard`→`quality`, `medium` falls through) > saved scoring strategy > `balanced`. `pin_weights: true` blocks the
+  difficulty override and the controller's `strategy` directive (recording what it discarded); the controller's
+  other directives and every eligibility gate still apply. A suppressed directive that names the pinned strategy
+  is recorded as a no-op, not as a discard.
+- Agent strategy postures (`agent_strategies.<name>`, role-bound) and workload postures (`workloads.<name>`,
+  optional `required_capabilities`) each materialise one `<name>.<scope>` alias per execution scope. A declared
+  role beats the alias preset; a declared `model_ids` slice narrows the alias pool; an empty slice reports
+  `ALIAS_POOL_EMPTY` and is never widened. An unknown `role_id`, a reserved name, a duplicate name and a
+  collision with the routing-alias namespace are config write errors; an unknown capability is a warning.
+- Every decision records `strategyResolution` (`strategy`, `source`, effective `weights`, `weightsDigest`, any
+  discarded directive), `aliasPostureBinding` (declared vs preset role, capabilities, alias strategy) and the
+  measured-latency outcome. These receipts are part of the decision wherever it is stored, including the compact
+  observation stub the Track-B capture falls back to.
+- The measured-latency override stays off by default; its comparison metric is the effective latency
+  `p50 + 0.25 * (p95 - p50)`, with `max_delta_ms` 10 000 and `min_samples` 5 (bounds 5..30), and it may only
+  substitute an endpoint the router already considered eligible.
+- Operator surfaces: `Routing strategy` (mode, scoring strategy, weights editor with a live sum check,
+  pin checkbox, execution scope, resolved-posture line, latency card), plus separate `Agent strategy` and
+  `Workloads` pages. No UI path can persist a legacy synonym.
+
+### Why
+
+- The strategies existed as names only: the saved scoring strategy never reached the scorer, every strategy
+  collapsed onto one router policy, and no surface could answer who chose the strategy or with which weights.
+  Downstream agents had no way to name a posture or a role.
+
+### Evidence
+
+- `.recursive/run/103-agent-strategy-and-scoring-strategy/evidence/logs/{red,green}/`
+- `.recursive/run/103-agent-strategy-and-scoring-strategy/evidence/phase5/` (live pi-CLI receipts on the rebuilt
+  development runtime, executable sha256 `ee6b5cbb24483d43f789ea79ffb3a153e69f1ba6ba9b40a72ca90fe04b0e3485`)
+
+### Carried commitments
+
+- `R7` paired private registry: `role-model-internal/shared/route-learning/activation-policy.mjs` still declares
+  `latencySelectionMinSamples` min 3 / max 1000 and `latencySelectionMaxDeltaMs` default 2000, while the public
+  read side declares 5..30 and 10 000. The private change is a release dependency of the first stage promotion
+  that ships this run; until it lands the operator write path can persist a value the reader clamps.
+- `R9` deviation: `apps/runtime-host-bridge/src/agent-strategy.ts` decodes posture entries with hand-written
+  violations instead of a `Schema`, because the entry contract needs per-key operator-facing messages
+  (`unknown key "temperature"`, `unknown role_id`) that the Schema parse report does not carry. The vocabulary
+  itself stays single-sourced in `scoring-strategy.ts`.
+- Coverage follow-ups for a later run: a same-candidate-set ranking-invariance test for R2, an import-policy
+  test for R9, an extension drill and a version-keyed migration test for R10, and a live `embedding` workload
+  request (the live matrix exercised `batch`).
+
+### Promotion boundary
+
+- This decision authorizes no automatic stage or main promotion; release operations must build a fresh
+  candidate from the merged commit, rebuild the paired private distribution, and repeat the live matrix.
