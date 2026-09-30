@@ -12,6 +12,20 @@ import type { CreateRoleModelAdapterOptions } from "../src/adapter.js";
 import { Config, createRoleModelPlugin, name } from "../src/index.js";
 import { createDiscovery } from "./fixtures.js";
 
+/**
+ * Read a parsed config field to its plain value.
+ *
+ * User-editable fields are `.volatile()`, so a parsed field is a live reference
+ * (`{ get() }`) rather than a plain value, exactly as `config.timeoutMs.get()` reads
+ * one in the Harness.
+ * @param value - a parsed field.
+ * @returns the current plain value.
+ */
+function plain(value: unknown): unknown {
+  const inner = value as { get?: () => unknown };
+  return typeof inner?.get === "function" ? inner.get() : value;
+}
+
 /** A structurally valid host `LlmAdapter` class for activation to use. */
 class FakeLlmAdapter {
   providerInfo(provider: string) {
@@ -138,7 +152,7 @@ describe("plugin identity", () => {
       selectedAlias: null,
       hostLlmModule: null,
     });
-    expect(parsed.providerRoute).toBe("role-model");
+    expect(plain(parsed.providerRoute)).toBe("role-model");
   });
 });
 

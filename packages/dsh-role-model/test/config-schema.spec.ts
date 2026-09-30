@@ -10,21 +10,39 @@ import { describe, expect, test } from "vitest";
 import { createRoleModelConfig } from "../src/config.js";
 import { Config } from "../src/index.js";
 
+/**
+ * Read a parsed config field to its plain value.
+ *
+ * Every user-editable field is `.volatile()`, so a parsed field is a live reference
+ * (`{ get() }`) rather than a plain value. This mirrors what the Harness does when it
+ * reads `config.timeoutMs.get()` or unwraps a snapshot through `plainConfig`.
+ * @param value - a parsed field.
+ * @returns the current plain value.
+ */
+function plain<T>(value: T): unknown {
+  const inner = value as unknown as { get?: () => unknown };
+  return typeof inner?.get === "function" ? inner.get() : value;
+}
+
 describe("Config validation", () => {
   test("fills defaults for an empty row", () => {
     const config = Config({});
-    expect(config.endpoint).toBe("http://127.0.0.1:3456");
-    expect(config.allowRemote).toBe(false);
-    expect(config.requestTimeoutMs).toBe(2500);
-    expect(config.providerRoute).toBe("role-model");
+    expect(plain(config.endpoint)).toBe("http://127.0.0.1:3456");
+    expect(plain(config.allowRemote)).toBe(false);
+    expect(plain(config.requestTimeoutMs)).toBe(2500);
+    expect(plain(config.providerRoute)).toBe("role-model");
   });
 
-  test("omits null-defaulted fields rather than materialising them", () => {
-    // schemastery treats a declared default as documentable but omissible, so
-    // these arrive absent and the plugin resolves them to null itself.
+  test("resolves an unset preference to null rather than dropping it", () => {
+    // `selectedAlias`/`hostLlmModule` are nullable preferences, and a nullable field
+    // cannot express "unset" through a null default: schemastery leaves the field
+    // absent and a `const(null)` member only accepts an explicit null. They default
+    // to an empty string instead, and the resolver reads that as null.
     const config = Config({});
-    expect(config.selectedAlias).toBeUndefined();
-    expect(config.hostLlmModule).toBeUndefined();
+    expect(plain(config.selectedAlias)).toBe("");
+    expect(plain(config.hostLlmModule)).toBe("");
+    expect(createRoleModelConfig(config).selectedAlias).toBeNull();
+    expect(createRoleModelConfig(config).hostLlmModule).toBeNull();
   });
 
   test("accepts and preserves an explicit configuration", () => {
@@ -36,12 +54,12 @@ describe("Config validation", () => {
       selectedAlias: "baseline.remote-only",
       hostLlmModule: "/host/dsh-llm.js",
     });
-    expect(config.endpoint).toBe("http://127.0.0.1:3457");
-    expect(config.allowRemote).toBe(true);
-    expect(config.requestTimeoutMs).toBe(5000);
-    expect(config.providerRoute).toBe("role-model-local");
-    expect(config.selectedAlias).toBe("baseline.remote-only");
-    expect(config.hostLlmModule).toBe("/host/dsh-llm.js");
+    expect(plain(config.endpoint)).toBe("http://127.0.0.1:3457");
+    expect(plain(config.allowRemote)).toBe(true);
+    expect(plain(config.requestTimeoutMs)).toBe(5000);
+    expect(plain(config.providerRoute)).toBe("role-model-local");
+    expect(plain(config.selectedAlias)).toBe("baseline.remote-only");
+    expect(plain(config.hostLlmModule)).toBe("/host/dsh-llm.js");
   });
 
   test("exposes a schema the loader can project", () => {
@@ -64,5 +82,65 @@ describe("Config validation", () => {
     // and `apply` always resolves through it so no un-normalized endpoint is used.
     const normalized = createRoleModelConfig(Config({ endpoint: "http://127.0.0.1:3457/v1/" }));
     expect(normalized.endpoint).toBe("http://127.0.0.1:3457");
+  });
+});
+
+describe("the settings surface", () => {
+  /**
+   * A field the Harness settings system can render and edit must be marked
+   * `volatile()`. `volatileForm` walks the Config schema and returns `undefined`
+   * unless it finds one, and a schema with no form produces **no settings
+   * namespace** — which in turn removes the provider from the Models page, because
+   * that page only lists configurable providers whose namespace exists.
+   *
+   * Without the marker the whole configuration surface is inert: no page, no way to
+   * edit the endpoint, and no row in the provider directory.
+   */
+  test("declares live-editable fields so settings can render a form", () => {
+    const dict = (Config as unknown as { dict?: Record<string, { meta?: { volatile?: boolean } }> })
+      .dict;
+    expect(dict).toBeDefined();
+    const volatile = Object.entries(dict ?? {})
+      .filter(([, field]) => field.meta?.volatile === true)
+      .map(([key]) => key);
+    expect(volatile.length).toBeGreaterThan(0);
+  });
+
+  test("marks the settings a user must be able to change", () => {
+    const dict = (Config as unknown as { dict?: Record<string, { meta?: { volatile?: boolean } }> })
+      .dict;
+    for (const key of ["endpoint", "selectedAlias", "allowRemote", "requestTimeoutMs"]) {
+      expect(dict?.[key]?.meta?.volatile, `${key} must be editable`).toBe(true);
+    }
+  });
+
+  /**
+   * A parsed volatile field is a live reference, not a plain value: schemastery
+   * returns an object whose `get()` reads the current value. The Harness reads such
+   * fields as `config.timeoutMs.get()` for exactly this reason, and unwraps whole
+   * configs through `plainConfig`, which is not importable from here — this package
+   * resolves its own dependencies and does not depend on `dsh-settings`.
+   */
+  test("a volatile field parses to a live reference, not a plain value", () => {
+    const parsed = Config({ endpoint: "http://127.0.0.1:3457" }) as unknown as {
+      endpoint: { get?: () => unknown };
+    };
+    expect(typeof parsed.endpoint.get).toBe("function");
+    expect(parsed.endpoint.get?.()).toBe("http://127.0.0.1:3457");
+  });
+
+  test("activation reads volatile fields through their live reference", () => {
+    // The resolver must not treat the reference object as the endpoint string.
+    const normalized = createRoleModelConfig(Config({ endpoint: "http://127.0.0.1:3457/v1/" }));
+    expect(normalized.endpoint).toBe("http://127.0.0.1:3457");
+    expect(typeof normalized.endpoint).toBe("string");
+  });
+
+  test("activation reads volatile defaults through their live reference", () => {
+    const normalized = createRoleModelConfig(Config({}));
+    expect(normalized.endpoint).toBe("http://127.0.0.1:3456");
+    expect(normalized.allowRemote).toBe(false);
+    expect(normalized.requestTimeoutMs).toBe(2500);
+    expect(normalized.providerRoute).toBe("role-model");
   });
 });

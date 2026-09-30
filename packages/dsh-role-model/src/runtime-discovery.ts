@@ -234,7 +234,15 @@ export async function discoverRoleModelRuntime(
   }
 
   const fetchImpl = input.fetch ?? fetch;
-  const timeoutMs = input.timeoutMs ?? config.requestTimeoutMs;
+  // `input.timeoutMs` is an unvalidated config field, so narrow before use rather
+  // than trusting it; the resolver already validated `config.requestTimeoutMs`.
+  const requestedTimeout: unknown = input.timeoutMs;
+  const timeoutMs =
+    typeof requestedTimeout === "number" &&
+    Number.isFinite(requestedTimeout) &&
+    requestedTimeout > 0
+      ? requestedTimeout
+      : config.requestTimeoutMs;
   const healthUrl = `${config.endpoint}/healthz`;
   const versionUrl = `${config.endpoint}/api/version`;
   const discoveryUrl = `${config.endpoint}/api/role-model/downstream/openai`;

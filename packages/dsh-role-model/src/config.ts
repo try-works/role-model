@@ -74,15 +74,27 @@ export interface RoleModelConfig {
   readonly hostLlmModule: string | null;
 }
 
+/**
+ * A configuration field as it arrives at resolution.
+ *
+ * The schema marks user-editable fields `.volatile()`, and schemastery types such a
+ * field as a live reference rather than a plain value. Widening to `unknown` here is
+ * deliberate: it stops that implementation detail leaking into every consumer, and the
+ * values are validated at runtime instead. {@link readField} unwraps a reference and
+ * each caller narrows with `typeof`, so a wrong type falls back to a default rather
+ * than propagating.
+ */
+export type ConfigField = unknown;
+
 /** Inputs to {@link createRoleModelConfig}. */
 export interface RoleModelConfigInput {
-  readonly endpoint?: string | undefined;
-  readonly allowRemote?: boolean | undefined;
-  readonly timeoutMs?: number | undefined;
-  readonly requestTimeoutMs?: number | undefined;
-  readonly providerRoute?: string | undefined;
-  readonly selectedAlias?: string | undefined | null;
-  readonly hostLlmModule?: string | undefined | null;
+  readonly endpoint?: ConfigField;
+  readonly allowRemote?: ConfigField;
+  readonly timeoutMs?: ConfigField;
+  readonly requestTimeoutMs?: ConfigField;
+  readonly providerRoute?: ConfigField;
+  readonly selectedAlias?: ConfigField;
+  readonly hostLlmModule?: ConfigField;
   readonly isProjectTrusted?: (() => boolean) | undefined;
   /** Environment consulted for the `ROLE_MODEL_*` fallbacks. */
   readonly env?: Readonly<Record<string, string | undefined>> | undefined;
@@ -195,24 +207,72 @@ export function assessEndpointTrust(
 }
 
 /**
+ * Whether a value is a schemastery live reference.
+ *
+ * A field marked `.volatile()` parses to a reference whose `get()` reads the current
+ * value, rather than to a plain value. The Harness reads such fields as
+ * `config.timeoutMs.get()`, and its `plainConfig` unwraps them the same way — that
+ * helper lives in `dsh-settings`, which this standalone package does not depend on.
+ * @param value - a candidate value.
+ * @returns whether the value carries a `get` reader.
+ */
+function isVolatileRef(value: unknown): value is { get: () => unknown } {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    typeof (value as { get?: unknown }).get === "function"
+  );
+}
+
+/**
+ * Read a configuration field, unwrapping a live reference.
+ * @param value - a plain value, a live reference, or absent.
+ * @returns the current plain value, or undefined when absent or null.
+ */
+function readField(value: ConfigField): unknown {
+  if (value === undefined || value === null) return undefined;
+  const inner = value as { get?: unknown };
+  if (typeof inner.get === "function") {
+    const resolved = (inner.get as () => unknown)();
+    return resolved === null ? undefined : resolved;
+  }
+  return value;
+}
+
+/**
  * Resolve plugin configuration from explicit input, the environment, and defaults.
+ *
+ * Config values may arrive as live references, because the schema marks its
+ * user-editable fields `.volatile()`; every field is read through {@link readField}.
  * @param input - raw configuration.
  * @returns the resolved configuration.
  */
 export function createRoleModelConfig(input: RoleModelConfigInput = {}): RoleModelConfig {
   const env = input.env ?? {};
-  const configuredEndpoint = input.endpoint ?? env[ENDPOINT_ENV] ?? DEFAULT_ENDPOINT;
-  const alias = input.selectedAlias;
-  const hostModule = input.hostLlmModule;
-  const timeoutMs = input.timeoutMs ?? input.requestTimeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS;
+  const configuredEndpoint: unknown =
+    readField(input.endpoint) ?? env[ENDPOINT_ENV] ?? DEFAULT_ENDPOINT;
+  const alias: unknown = readField(input.selectedAlias);
+  const hostModule: unknown = readField(input.hostLlmModule);
+  const providerRoute: unknown = readField(input.providerRoute);
+  const timeoutInput: unknown = readField(input.timeoutMs) ?? readField(input.requestTimeoutMs);
+  const allowRemote: unknown = readField(input.allowRemote);
+  const timeoutMs: unknown = timeoutInput ?? DEFAULT_REQUEST_TIMEOUT_MS;
   return {
-    endpoint: normalizeEndpoint(configuredEndpoint),
-    allowRemote: resolveAllowRemote(input.allowRemote, env),
+    endpoint: normalizeEndpoint(
+      typeof configuredEndpoint === "string" ? configuredEndpoint : DEFAULT_ENDPOINT,
+    ),
+    allowRemote: resolveAllowRemote(
+      typeof allowRemote === "boolean" ? allowRemote : undefined,
+      env,
+    ),
     requestTimeoutMs:
       typeof timeoutMs === "number" && Number.isFinite(timeoutMs) && timeoutMs > 0
         ? timeoutMs
         : DEFAULT_REQUEST_TIMEOUT_MS,
-    providerRoute: input.providerRoute?.trim() || DEFAULT_PROVIDER_ROUTE,
+    providerRoute:
+      typeof providerRoute === "string" && providerRoute.trim().length > 0
+        ? providerRoute.trim()
+        : DEFAULT_PROVIDER_ROUTE,
     selectedAlias: typeof alias === "string" && alias.trim().length > 0 ? alias.trim() : null,
     hostLlmModule:
       typeof hostModule === "string" && hostModule.trim().length > 0 ? hostModule.trim() : null,

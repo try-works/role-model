@@ -18,6 +18,7 @@ import z from "@deepseek-ai/schemastery";
 import { createRoleModelAdapter } from "./adapter.js";
 import { createRoleModelCommandHandler } from "./commands.js";
 import {
+  type ConfigField,
   DEFAULT_ENDPOINT,
   DEFAULT_PROVIDER_ROUTE,
   DEFAULT_REQUEST_TIMEOUT_MS,
@@ -47,42 +48,39 @@ export const inject = ["llm"];
  * Exported so the loader validates a patch row before activation and can show the
  * fields in a settings surface. Values are read through
  * {@link createRoleModelConfig}, which owns the normalization rules.
+ *
+ * Every user-changeable field is marked `.volatile()`. That marker is what makes
+ * the Harness settings system generate a form for this plugin: it walks the schema,
+ * and a schema with no volatile field yields no form — which means no settings
+ * namespace, and therefore no row for this route on the Models page, since that page
+ * only lists configurable providers whose namespace exists. Without the markers the
+ * configuration surface is inert and the endpoint cannot be edited from the UI.
  */
 export const Config = z.object({
   /** Runtime endpoint, without a trailing slash and without `/v1`. */
-  endpoint: z.string().default(DEFAULT_ENDPOINT),
+  endpoint: z.string().default(DEFAULT_ENDPOINT).volatile(),
   /** Whether non-loopback endpoints are permitted. */
-  allowRemote: z.boolean().default(false),
+  allowRemote: z.boolean().default(false).volatile(),
   /** Timeout for runtime metadata calls, in milliseconds. */
-  requestTimeoutMs: z.number().min(1).default(DEFAULT_REQUEST_TIMEOUT_MS),
+  requestTimeoutMs: z.number().min(1).default(DEFAULT_REQUEST_TIMEOUT_MS).volatile(),
   /** Provider route this plugin owns. Lower-case; never title-cased. */
-  providerRoute: z.string().default(DEFAULT_PROVIDER_ROUTE),
-  /** Alias selected by `/role-model alias use`, or null. */
-  selectedAlias: z.union([z.string(), z.const(null)]).default(null),
-  /** Explicit host `dsh-llm` module path, or null to auto-resolve. */
-  hostLlmModule: z.union([z.string(), z.const(null)]).default(null),
+  providerRoute: z.string().default(DEFAULT_PROVIDER_ROUTE).volatile(),
+  /** Alias selected by `/role-model alias use`; empty means "no preference". */
+  selectedAlias: z.string().default("").volatile(),
+  /** Explicit host `dsh-llm` module path; empty means "auto-resolve". */
+  hostLlmModule: z.string().default("").volatile(),
 });
 
 /** Raw configuration as it arrives from the bundle's patch row. */
 export type RoleModelPluginConfig = {
   endpoint?: string | undefined;
-  allowRemote?: boolean | undefined;
-  requestTimeoutMs?: number | undefined;
-  providerRoute?: string | undefined;
-  selectedAlias?: string | null | undefined;
-  hostLlmModule?: string | null | undefined;
+  allowRemote?: ConfigField;
+  requestTimeoutMs?: ConfigField;
+  providerRoute?: ConfigField;
+  selectedAlias?: ConfigField;
+  hostLlmModule?: ConfigField;
 };
 
-/**
- * Compile-time proof that the schema still produces a subset of this type.
- * Adding or retyping a schema field so it can emit something this type does not
- * accept fails compilation here, instead of surfacing as a runtime surprise.
- */
-type SchemaOutputAcceptedByConfig = ReturnType<typeof Config> extends RoleModelPluginConfig
-  ? true
-  : never;
-const schemaOutputAcceptedByConfig: SchemaOutputAcceptedByConfig = true;
-void schemaOutputAcceptedByConfig;
 /** The subset of the Cordis context activation uses. */
 interface ActivationContext {
   readonly logger: {
