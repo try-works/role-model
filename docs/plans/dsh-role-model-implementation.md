@@ -914,11 +914,33 @@ Done:
 Remaining:
 - restart the host and confirm the panel renders in the running Web UI in light and dark
 
-**Pull request opened: [#290](https://github.com/try-works/role-model/pull/290)** against `dev`
-(2 commits, 99 files). The PR body carries the CONTRIBUTING-required **Real behavior proof**
-section: setup tested on, the exact commands run, the live terminal output, and an explicit
-"What I did not test" list — which names the same two gaps as above, plus the fact that the
-A/B routing experiment is retained but not asserted.
+**Pull request opened: [#290](https://github.com/try-works/role-model/pull/290)** against `dev`.
+The PR body carries the CONTRIBUTING-required **Real behavior proof** section: setup tested on,
+the exact commands run, the live terminal output, and an explicit "What I did not test" list —
+which names the same two gaps as above, plus the fact that the A/B routing experiment is
+retained but not asserted. The CLA was signed through the repository's own workflow.
+
+**All 13 required checks pass**, after two real CI failures that were mine to fix:
+
+1. `build-test` and `track-b-runtime` failed with
+   `could not locate @deepseek-ai/schemastery; set DSH_HARNESS_ROOT to the DSH checkout`.
+   Both the build and the vitest alias resolved schemastery from a harness checkout — a
+   hardcoded path plus `DSH_HARNESS_ROOT`. That worked only on this machine, and it
+   contradicted the package's own claim to be self-contained. The package now **declares
+   `@deepseek-ai/schemastery` as a real dependency** (it is published and self-contained), and
+   the checkout is only a fallback for a contributor who has the harness cloned but has not run
+   `pnpm install` here. The hand-written `src/schemastery.d.ts` shim was deleted, since the real
+   declarations now resolve. `packages/dsh-role-model/pnpm-workspace.yaml` scopes the package
+   set to `"."` so this package stays standalone rather than joining the repository workspace
+   graph.
+2. That change then broke **every** job at the install step:
+   `ERR_PNPM_OUTDATED_LOCKFILE … pnpm-lock.yaml is not up to date with
+   <ROOT>/packages/dsh-role-model/package.json`. CI installs with `--frozen-lockfile` from the
+   **root** lockfile, which listing a new dependency invalidates. Regenerated with
+   `pnpm install --lockfile-only` and verified locally that `--frozen-lockfile` succeeds.
+
+Both fixes are verified with `DSH_HARNESS_ROOT` **unset**, which is the CI condition: the build
+succeeds, 352 tests pass, `tsc --noEmit` is clean, and biome is clean.
 
 Also delivered in this phase: `packages/dsh-role-model/README.md`, a "Installation for
 DeepSeek Harness" section in the root `README.md`, entries for both in the root README's
@@ -929,7 +951,7 @@ DeepSeek Harness" section in the root `README.md`, entries for both in the root 
 
 `packages/pi-role-model` is Biome-clean, so this repo does enforce the linter on plugin
 packages. The new package is clean too: `biome check packages/dsh-role-model` reports
-**89 files, 0 errors**.
+**88 files, 0 errors**.
 
 Getting there took more than formatting, and the details are worth recording:
 
