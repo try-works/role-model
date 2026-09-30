@@ -29,39 +29,39 @@
  * @module @try-works/dsh-role-model/host-llm
  */
 
-import { existsSync, statSync } from 'node:fs'
-import { dirname, isAbsolute, join, parse, resolve, sep } from 'node:path'
+import { existsSync, statSync } from "node:fs";
+import { dirname, isAbsolute, join, parse, resolve, sep } from "node:path";
 
 /** Where a candidate host-locates `dsh-llm` module came from. */
 export type HostLlmCandidateKind =
-  | 'module-override'
-  | 'harness-root'
-  | 'cwd'
-  | 'process-entry'
-  | 'package-import'
+  | "module-override"
+  | "harness-root"
+  | "cwd"
+  | "process-entry"
+  | "package-import";
 
 /** One ordered attempt at locating the host's `dsh-llm` module. */
 export type HostLlmCandidate =
   | {
-    readonly kind: 'module-override' | 'harness-root' | 'cwd' | 'process-entry'
-    /** Absolute path to the host module file. */
-    readonly path: string
-    /** Why this candidate was produced, for diagnostics. */
-    readonly because: string
-  }
+      readonly kind: "module-override" | "harness-root" | "cwd" | "process-entry";
+      /** Absolute path to the host module file. */
+      readonly path: string;
+      /** Why this candidate was produced, for diagnostics. */
+      readonly because: string;
+    }
   | {
-    readonly kind: 'package-import'
-    /** Bare specifier resolved by the plugin's own module graph. */
-    readonly path: string
-    readonly because: string
-  }
+      readonly kind: "package-import";
+      /** Bare specifier resolved by the plugin's own module graph. */
+      readonly path: string;
+      readonly because: string;
+    };
 
 /** Inputs to {@link createHostLlmResolver}; every field is injectable for tests. */
 export interface HostLlmResolverOptions {
   /** Absolute path or bare specifier for the host module (highest priority). */
-  readonly moduleOverride?: string | undefined
+  readonly moduleOverride?: string | undefined;
   /** Environment used for `DSH_HARNESS_ROOT`; defaults to `process.env`. */
-  readonly env?: Readonly<Record<string, string | undefined>> | undefined
+  readonly env?: Readonly<Record<string, string | undefined>> | undefined;
   /**
    * Directory the ancestor walk starts from. Defaults to `process.cwd()`.
    *
@@ -71,21 +71,21 @@ export interface HostLlmResolverOptions {
    * the harness. The host process's working directory is the checkout root or a
    * descendant of it, which is the anchor that actually works.
    */
-  readonly cwd?: string | undefined
+  readonly cwd?: string | undefined;
   /** The plugin's own package root, used only for diagnostics. */
-  readonly packageRoot?: string | undefined
+  readonly packageRoot?: string | undefined;
   /** Specifier used for the last-resort self import. */
-  readonly fallbackSpecifier?: string | undefined
+  readonly fallbackSpecifier?: string | undefined;
 }
 
 /** A resolver: the ordered candidates plus the first one that exists. */
 export interface HostLlmResolver {
-  candidates(): readonly HostLlmCandidate[]
-  resolve(): HostLlmCandidate | undefined
+  candidates(): readonly HostLlmCandidate[];
+  resolve(): HostLlmCandidate | undefined;
 }
 
 /** Environment variable naming a DSH source checkout root. */
-export const HARNESS_ROOT_ENV = 'DSH_HARNESS_ROOT'
+export const HARNESS_ROOT_ENV = "DSH_HARNESS_ROOT";
 
 /**
  * Path of the marker file inside a harness checkout that identifies the
@@ -93,20 +93,20 @@ export const HARNESS_ROOT_ENV = 'DSH_HARNESS_ROOT'
  * @returns the marker path, relative to a harness root.
  */
 export function harnessRootMarker(): string {
-  return join('packages', 'llm', 'llm', 'lib', 'index.js')
+  return join("packages", "llm", "llm", "lib", "index.js");
 }
 
 /** True for a non-blank string with non-whitespace content. */
 function isNonBlankString(value: unknown): value is string {
-  return typeof value === 'string' && value.trim().length > 0
+  return typeof value === "string" && value.trim().length > 0;
 }
 
 /** True when the path exists and is a regular file. */
 function isFile(path: string): boolean {
   try {
-    return existsSync(path) && statSync(path).isFile()
+    return existsSync(path) && statSync(path).isFile();
   } catch {
-    return false
+    return false;
   }
 }
 
@@ -116,14 +116,14 @@ function isFile(path: string): boolean {
  * @returns the candidate, or `undefined` when the marker is absent.
  */
 export function candidateFromHarnessRoot(root: unknown): HostLlmCandidate | undefined {
-  if (!isNonBlankString(root)) return undefined
-  const marker = join(resolve(root.trim()), harnessRootMarker())
-  if (!isFile(marker)) return undefined
+  if (!isNonBlankString(root)) return undefined;
+  const marker = join(resolve(root.trim()), harnessRootMarker());
+  if (!isFile(marker)) return undefined;
   return {
-    kind: 'harness-root',
+    kind: "harness-root",
     path: marker,
     because: `${HARNESS_ROOT_ENV}=${root.trim()}`,
-  }
+  };
 }
 
 /**
@@ -132,17 +132,17 @@ export function candidateFromHarnessRoot(root: unknown): HostLlmCandidate | unde
  * @returns the absolute marker path, or `undefined` when no ancestor has it.
  */
 export function resolveHostLlmPathFromDirectory(start: unknown): string | undefined {
-  if (!isNonBlankString(start)) return undefined
-  const markerRelative = harnessRootMarker()
-  let current = resolve(start.trim())
-  const { root: volumeRoot } = parse(current)
+  if (!isNonBlankString(start)) return undefined;
+  const markerRelative = harnessRootMarker();
+  let current = resolve(start.trim());
+  const { root: volumeRoot } = parse(current);
   while (true) {
-    const marker = join(current, markerRelative)
-    if (isFile(marker)) return marker
-    if (current === volumeRoot) return undefined
-    const parent = dirname(current)
-    if (parent === current) return undefined
-    current = parent
+    const marker = join(current, markerRelative);
+    if (isFile(marker)) return marker;
+    if (current === volumeRoot) return undefined;
+    const parent = dirname(current);
+    if (parent === current) return undefined;
+    current = parent;
   }
 }
 
@@ -152,9 +152,9 @@ export function resolveHostLlmPathFromDirectory(start: unknown): string | undefi
  * @returns the absolute marker path, or `undefined` when no ancestor has it.
  */
 export function resolveHostLlmPathFromEntry(entry: unknown): string | undefined {
-  if (!isNonBlankString(entry)) return undefined
+  if (!isNonBlankString(entry)) return undefined;
   // An entry path names a file; start the walk at its directory.
-  return resolveHostLlmPathFromDirectory(dirname(resolve(entry.trim())))
+  return resolveHostLlmPathFromDirectory(dirname(resolve(entry.trim())));
 }
 
 /**
@@ -163,13 +163,13 @@ export function resolveHostLlmPathFromEntry(entry: unknown): string | undefined 
  * @returns the candidate, or `undefined` when no ancestor is a harness root.
  */
 export function candidateFromCwd(cwd: unknown): HostLlmCandidate | undefined {
-  const marker = resolveHostLlmPathFromDirectory(cwd)
-  if (marker === undefined) return undefined
+  const marker = resolveHostLlmPathFromDirectory(cwd);
+  if (marker === undefined) return undefined;
   return {
-    kind: 'cwd',
+    kind: "cwd",
     path: marker,
     because: `ancestor of working directory ${String(cwd)}`,
-  }
+  };
 }
 
 /**
@@ -178,13 +178,13 @@ export function candidateFromCwd(cwd: unknown): HostLlmCandidate | undefined {
  * @returns the candidate, or `undefined` when no ancestor is a harness root.
  */
 export function candidateFromProcessEntry(entry: unknown): HostLlmCandidate | undefined {
-  const marker = resolveHostLlmPathFromEntry(entry)
-  if (marker === undefined) return undefined
+  const marker = resolveHostLlmPathFromEntry(entry);
+  if (marker === undefined) return undefined;
   return {
-    kind: 'process-entry',
+    kind: "process-entry",
     path: marker,
     because: `ancestor of process entry ${String(entry)}`,
-  }
+  };
 }
 
 /**
@@ -199,37 +199,37 @@ export function candidateFromProcessEntry(entry: unknown): HostLlmCandidate | un
  * @returns the resolver.
  */
 export function createHostLlmResolver(options: HostLlmResolverOptions = {}): HostLlmResolver {
-  const env = options.env ?? process.env
-  const cwd = options.cwd === undefined ? process.cwd() : options.cwd
-  const fallbackSpecifier = options.fallbackSpecifier ?? '@deepseek-ai/dsh-llm'
+  const env = options.env ?? process.env;
+  const cwd = options.cwd === undefined ? process.cwd() : options.cwd;
+  const fallbackSpecifier = options.fallbackSpecifier ?? "@deepseek-ai/dsh-llm";
 
   const candidates = (): readonly HostLlmCandidate[] => {
-    const ordered: HostLlmCandidate[] = []
+    const ordered: HostLlmCandidate[] = [];
 
-    const override = options.moduleOverride
+    const override = options.moduleOverride;
     if (isNonBlankString(override)) {
-      const trimmed = override.trim()
+      const trimmed = override.trim();
       ordered.push({
-        kind: 'module-override',
+        kind: "module-override",
         path: trimmed,
-        because: 'configured hostLlmModule',
-      })
+        because: "configured hostLlmModule",
+      });
     }
 
-    const fromRoot = candidateFromHarnessRoot(env[HARNESS_ROOT_ENV])
-    if (fromRoot !== undefined) ordered.push(fromRoot)
+    const fromRoot = candidateFromHarnessRoot(env[HARNESS_ROOT_ENV]);
+    if (fromRoot !== undefined) ordered.push(fromRoot);
 
-    const fromCwd = candidateFromCwd(cwd)
-    if (fromCwd !== undefined) ordered.push(fromCwd)
+    const fromCwd = candidateFromCwd(cwd);
+    if (fromCwd !== undefined) ordered.push(fromCwd);
 
     ordered.push({
-      kind: 'package-import',
+      kind: "package-import",
       path: fallbackSpecifier,
-      because: 'last resort: the plugin\'s own module graph',
-    })
+      because: "last resort: the plugin's own module graph",
+    });
 
-    return ordered
-  }
+    return ordered;
+  };
 
   return {
     candidates,
@@ -238,29 +238,29 @@ export function createHostLlmResolver(options: HostLlmResolverOptions = {}): Hos
       // is reported by candidates() as the last resort but is not a resolution
       // until the loader has actually tried to import it.
       for (const candidate of candidates()) {
-        if (candidate.kind === 'package-import') continue
-        if (isFile(candidate.path)) return candidate
+        if (candidate.kind === "package-import") continue;
+        if (isFile(candidate.path)) return candidate;
       }
-      return undefined
+      return undefined;
     },
-  }
+  };
 }
 
 /** Serializable provider facts carried beside a failure. */
 export interface LlmFailureFacts {
-  readonly message: string
-  readonly code: string
-  readonly status?: number
-  readonly providerRetryAfterMs?: number
-  readonly requestId?: string
+  readonly message: string;
+  readonly code: string;
+  readonly status?: number;
+  readonly providerRetryAfterMs?: number;
+  readonly requestId?: string;
 }
 
 /** Options for {@link createLlmFailureError}. */
 export interface LlmFailureErrorOptions {
-  readonly status?: number
-  readonly providerRetryAfterMs?: number
-  readonly requestId?: string
-  readonly cause?: unknown
+  readonly status?: number;
+  readonly providerRetryAfterMs?: number;
+  readonly requestId?: string;
+  readonly cause?: unknown;
 }
 
 /**
@@ -272,8 +272,8 @@ export interface LlmFailureErrorOptions {
  * is exactly the cross-package contract `normalizeLlmFailure` documents.
  */
 export interface LlmFailureError extends Error {
-  readonly code: string
-  readonly failure: LlmFailureFacts
+  readonly code: string;
+  readonly failure: LlmFailureFacts;
 }
 
 /**
@@ -288,82 +288,92 @@ export function createLlmFailureError(
   code: string,
   options: LlmFailureErrorOptions = {},
 ): LlmFailureError {
-  if (typeof message !== 'string' || message.length === 0) {
-    throw new TypeError('LlmError message must be a non-empty string')
+  if (typeof message !== "string" || message.length === 0) {
+    throw new TypeError("LlmError message must be a non-empty string");
   }
-  if (typeof code !== 'string' || code.length === 0) {
-    throw new TypeError('LlmError code must be a non-empty string')
+  if (typeof code !== "string" || code.length === 0) {
+    throw new TypeError("LlmError code must be a non-empty string");
   }
-  if (options.status !== undefined
-    && (!Number.isInteger(options.status) || options.status < 100 || options.status > 599)) {
-    throw new TypeError('LlmError status must be an integer from 100 through 599')
+  if (
+    options.status !== undefined &&
+    (!Number.isInteger(options.status) || options.status < 100 || options.status > 599)
+  ) {
+    throw new TypeError("LlmError status must be an integer from 100 through 599");
   }
-  if (options.providerRetryAfterMs !== undefined
-    && (!Number.isFinite(options.providerRetryAfterMs) || options.providerRetryAfterMs <= 0)) {
-    throw new TypeError('LlmError providerRetryAfterMs must be a positive finite number')
+  if (
+    options.providerRetryAfterMs !== undefined &&
+    (!Number.isFinite(options.providerRetryAfterMs) || options.providerRetryAfterMs <= 0)
+  ) {
+    throw new TypeError("LlmError providerRetryAfterMs must be a positive finite number");
   }
-  if (options.requestId !== undefined
-    && (typeof options.requestId !== 'string' || options.requestId.length === 0)) {
-    throw new TypeError('LlmError requestId must be a non-empty string')
+  if (
+    options.requestId !== undefined &&
+    (typeof options.requestId !== "string" || options.requestId.length === 0)
+  ) {
+    throw new TypeError("LlmError requestId must be a non-empty string");
   }
 
-  const error = new Error(message, options.cause === undefined ? undefined : { cause: options.cause }) as
-    Error & { code: string; failure: LlmFailureFacts }
+  const error = new Error(
+    message,
+    options.cause === undefined ? undefined : { cause: options.cause },
+  ) as Error & { code: string; failure: LlmFailureFacts };
   // `normalizeLlmFailure` reads `code` through a property descriptor, so it must
   // be an own data property rather than an accessor on a prototype. It stays
   // configurable because the host's cross-package guard reads the *current*
   // value: if something rewrites `code` without rewriting `failure`, the two
   // disagree and the carried facts are correctly distrusted.
-  Object.defineProperty(error, 'code', {
+  Object.defineProperty(error, "code", {
     value: code,
     enumerable: true,
     writable: false,
     configurable: true,
-  })
+  });
   const failure: LlmFailureFacts = Object.freeze({
     message,
     code,
-    ...options.status === undefined ? {} : { status: options.status },
-    ...options.providerRetryAfterMs === undefined ? {} : { providerRetryAfterMs: options.providerRetryAfterMs },
-    ...options.requestId === undefined ? {} : { requestId: options.requestId },
-  })
-  Object.defineProperty(error, 'failure', {
+    ...(options.status === undefined ? {} : { status: options.status }),
+    ...(options.providerRetryAfterMs === undefined
+      ? {}
+      : { providerRetryAfterMs: options.providerRetryAfterMs }),
+    ...(options.requestId === undefined ? {} : { requestId: options.requestId }),
+  });
+  Object.defineProperty(error, "failure", {
     value: failure,
     enumerable: true,
     writable: false,
     configurable: false,
-  })
-  error.name = 'LlmError'
-  return error as LlmFailureError
+  });
+  error.name = "LlmError";
+  return error as LlmFailureError;
 }
 
 /** Exported for diagnostics: the platform path separator, re-exported deliberately. */
-export const PATH_SEPARATOR = sep
+export const PATH_SEPARATOR = sep;
 
 /** The shape of one provider-route descriptor. */
 export interface HostProviderInfo {
-  readonly id: string
-  readonly name: string
+  readonly id: string;
+  readonly name: string;
 }
 
 /** The minimal contract the host requires of an adapter it will register. */
 export interface HostLlmAdapterShape {
-  providerInfo(provider: string): HostProviderInfo
-  providerRetryPolicy?(provider: string): unknown
-  listModels(provider: string): Promise<readonly { provider: string; id: string; name: string }[]>
-  resolveModel(provider: string, model: string, signal?: AbortSignal): Promise<unknown>
-  stream(options: unknown): AsyncIterable<unknown>
+  providerInfo(provider: string): HostProviderInfo;
+  providerRetryPolicy?(provider: string): unknown;
+  listModels(provider: string): Promise<readonly { provider: string; id: string; name: string }[]>;
+  resolveModel(provider: string, model: string, signal?: AbortSignal): Promise<unknown>;
+  stream(options: unknown): AsyncIterable<unknown>;
 }
 
 /** The constructor the host's registry accepts. */
-export type HostLlmAdapterConstructor = new () => HostLlmAdapterShape
+export type HostLlmAdapterConstructor = new () => HostLlmAdapterShape;
 
 /** Options accepted by the host's `LlmError` constructor. */
 export interface HostLlmErrorOptions {
-  readonly status?: number
-  readonly providerRetryAfterMs?: number
-  readonly requestId?: string
-  readonly cause?: unknown
+  readonly status?: number;
+  readonly providerRetryAfterMs?: number;
+  readonly requestId?: string;
+  readonly cause?: unknown;
 }
 
 /** The constructor shape of the host's `LlmError`. */
@@ -371,20 +381,20 @@ export type HostLlmErrorConstructor = new (
   message: string,
   code: string,
   options?: HostLlmErrorOptions,
-) => Error & { readonly code: string; readonly failure?: unknown }
+) => Error & { readonly code: string; readonly failure?: unknown };
 
 /** The host classes this plugin must use rather than its own copies. */
 export interface HostLlmClasses {
-  readonly LlmAdapter: HostLlmAdapterConstructor
-  readonly LlmError: HostLlmErrorConstructor
+  readonly LlmAdapter: HostLlmAdapterConstructor;
+  readonly LlmError: HostLlmErrorConstructor;
   /** Where the classes came from, for diagnostics. */
-  readonly source: HostLlmCandidate
+  readonly source: HostLlmCandidate;
 }
 
 /** Convert an absolute path to a file URL for dynamic import. */
 function pathToFileUrl(path: string): URL {
-  const normalized = path.replace(/\\/gu, '/')
-  return new URL(normalized.startsWith('/') ? `file://${normalized}` : `file:///${normalized}`)
+  const normalized = path.replace(/\\/gu, "/");
+  return new URL(normalized.startsWith("/") ? `file://${normalized}` : `file:///${normalized}`);
 }
 
 /**
@@ -403,27 +413,28 @@ function pathToFileUrl(path: string): URL {
 export async function loadHostLlmClasses(
   options: HostLlmResolverOptions = {},
 ): Promise<HostLlmClasses | undefined> {
-  const resolver = createHostLlmResolver(options)
+  const resolver = createHostLlmResolver(options);
   for (const candidate of resolver.candidates()) {
     try {
-      const imported: unknown = candidate.kind === 'package-import'
-        ? await import(/* @vite-ignore */ candidate.path)
-        : await import(/* @vite-ignore */ pathToFileUrl(candidate.path).href)
-      if (typeof imported !== 'object' || imported === null) continue
-      const module = imported as Record<string, unknown>
-      const LlmAdapter = module.LlmAdapter
-      const LlmError = module.LlmError
-      if (typeof LlmAdapter === 'function' && typeof LlmError === 'function') {
+      const imported: unknown =
+        candidate.kind === "package-import"
+          ? await import(/* @vite-ignore */ candidate.path)
+          : await import(/* @vite-ignore */ pathToFileUrl(candidate.path).href);
+      if (typeof imported !== "object" || imported === null) continue;
+      const module = imported as Record<string, unknown>;
+      const LlmAdapter = module.LlmAdapter;
+      const LlmError = module.LlmError;
+      if (typeof LlmAdapter === "function" && typeof LlmError === "function") {
         return {
           LlmAdapter: LlmAdapter as HostLlmAdapterConstructor,
           LlmError: LlmError as HostLlmErrorConstructor,
           source: candidate,
-        }
+        };
       }
     } catch {
       // A wrong path or an unloadable module is exactly what the ordered
       // candidate list exists to absorb; try the next one.
     }
   }
-  return undefined
+  return undefined;
 }

@@ -37,7 +37,8 @@
       "**/target/**",
       "**/runtime-output/**",
       "**/test-results/**",
-      "**/*.generated.ts"
+      "**/*.generated.ts",
+      "packages/dsh-role-model/lib/**"
     ]
   },
   "overrides": [

@@ -12,10 +12,10 @@
  * @module @try-works/dsh-role-model/taxonomy/staged-compact-taxonomy
  */
 
-import { existsSync, readFileSync } from 'node:fs'
-import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
-import type { CompactTaxonomy } from './compact-data.js'
+import { existsSync, readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import type { CompactTaxonomy } from "./compact-data.js";
 
 /** Raw on-disk role-task index: tuples or objects, both accepted. */
 export type RawRoleTaskIndex = Record<
@@ -24,28 +24,28 @@ export type RawRoleTaskIndex = Record<
     | readonly [id: string, label: string]
     | { readonly id: string; readonly label: string }
   )[]
->
+>;
 
 /** Reads and decodes one file from the taxonomy data root. */
-export type CompactTaxonomyFileReader = <T>(fileName: string) => T
+export type CompactTaxonomyFileReader = <T>(fileName: string) => T;
 
 /** A staged reader: each method loads only what it names. */
 export interface StagedCompactTaxonomyReader {
-  loadManifest(): CompactTaxonomy['manifest']
-  loadGroups(): CompactTaxonomy['groups']
-  loadRoleSummaries(): CompactTaxonomy['roleSummaries']
-  loadRoleTaskIndex(): CompactTaxonomy['roleTaskIndex']
-  loadRoleTaskChunk(roleId: string): CompactTaxonomy['roleTaskChunks'][string]
-  loadRoleTaskChunks(roleIds: readonly string[]): CompactTaxonomy['roleTaskChunks']
-  loadFullTaxonomy(): CompactTaxonomy
+  loadManifest(): CompactTaxonomy["manifest"];
+  loadGroups(): CompactTaxonomy["groups"];
+  loadRoleSummaries(): CompactTaxonomy["roleSummaries"];
+  loadRoleTaskIndex(): CompactTaxonomy["roleTaskIndex"];
+  loadRoleTaskChunk(roleId: string): CompactTaxonomy["roleTaskChunks"][string];
+  loadRoleTaskChunks(roleIds: readonly string[]): CompactTaxonomy["roleTaskChunks"];
+  loadFullTaxonomy(): CompactTaxonomy;
 }
 
 /** Options for {@link createStagedCompactTaxonomyReader}. */
 export interface CreateStagedCompactTaxonomyReaderOptions {
   /** Override the data root directory. */
-  readonly dataRoot?: string | undefined
+  readonly dataRoot?: string | undefined;
   /** Override the file reader entirely (used to observe laziness). */
-  readonly readJson?: CompactTaxonomyFileReader | undefined
+  readonly readJson?: CompactTaxonomyFileReader | undefined;
 }
 
 /**
@@ -66,26 +66,31 @@ export interface CreateStagedCompactTaxonomyReaderOptions {
 export function resolveTaxonomyDataRoot(fromDirectory: string): string {
   const candidates = [
     // The built bundle: `lib/index.js` -> `<pkg>/data/taxonomy`.
-    join(fromDirectory, '../data/taxonomy'),
+    join(fromDirectory, "../data/taxonomy"),
     // The sources: `src/taxonomy/*.ts` -> `<pkg>/data/taxonomy`.
-    join(fromDirectory, '../../data/taxonomy'),
+    join(fromDirectory, "../../data/taxonomy"),
     // The sources when the bundler has inlined them into `lib/index.js`, where
     // `import.meta.url` still points at the original file's location.
-    join(fromDirectory, '../../../data/taxonomy'),
-  ]
-  return candidates.find(candidate => existsSync(join(candidate, 'compact-manifest.json'))) ?? candidates[0]!
+    join(fromDirectory, "../../../data/taxonomy"),
+  ];
+  // Fall back to the bundle-relative candidate so a missing-data failure names the
+  // path that was expected rather than throwing here; the list is never empty.
+  return (
+    candidates.find((candidate) => existsSync(join(candidate, "compact-manifest.json"))) ??
+    candidates[0]
+  );
 }
 
 /** The data root for the module doing the loading. */
 function defaultDataRoot(): string {
-  return resolveTaxonomyDataRoot(dirname(fileURLToPath(import.meta.url)))
+  return resolveTaxonomyDataRoot(dirname(fileURLToPath(import.meta.url)));
 }
 
 /** True for a tuple form of one index entry. */
 function isRoleTaskTuple(
   task: RawRoleTaskIndex[string][number],
 ): task is readonly [id: string, label: string] {
-  return Array.isArray(task)
+  return Array.isArray(task);
 }
 
 /**
@@ -93,15 +98,17 @@ function isRoleTaskTuple(
  * @param index - raw index, tuples or objects.
  * @returns the normalized index.
  */
-export function normalizeRoleTaskIndex(index: RawRoleTaskIndex): CompactTaxonomy['roleTaskIndex'] {
+export function normalizeRoleTaskIndex(index: RawRoleTaskIndex): CompactTaxonomy["roleTaskIndex"] {
   return Object.fromEntries(
     Object.entries(index).map(([roleId, tasks]) => [
       roleId,
-      tasks.map(task =>
-        isRoleTaskTuple(task) ? { id: task[0], label: task[1] } : { id: task.id, label: task.label },
+      tasks.map((task) =>
+        isRoleTaskTuple(task)
+          ? { id: task[0], label: task[1] }
+          : { id: task.id, label: task.label },
       ),
     ]),
-  )
+  );
 }
 
 /**
@@ -112,46 +119,48 @@ export function normalizeRoleTaskIndex(index: RawRoleTaskIndex): CompactTaxonomy
 export function createStagedCompactTaxonomyReader(
   options: CreateStagedCompactTaxonomyReaderOptions = {},
 ): StagedCompactTaxonomyReader {
-  const dataRoot = options.dataRoot ?? defaultDataRoot()
-  const defaultReader: CompactTaxonomyFileReader = <T,>(fileName: string): T =>
-    JSON.parse(readFileSync(join(dataRoot, fileName), 'utf8')) as T
-  const readJson = options.readJson ?? defaultReader
-  let manifest: CompactTaxonomy['manifest'] | undefined
+  const dataRoot = options.dataRoot ?? defaultDataRoot();
+  const defaultReader: CompactTaxonomyFileReader = <T>(fileName: string): T =>
+    JSON.parse(readFileSync(join(dataRoot, fileName), "utf8")) as T;
+  const readJson = options.readJson ?? defaultReader;
+  let manifest: CompactTaxonomy["manifest"] | undefined;
 
-  const loadManifest = (): CompactTaxonomy['manifest'] => {
-    manifest ??= readJson<CompactTaxonomy['manifest']>('compact-manifest.json')
-    return manifest
-  }
+  const loadManifest = (): CompactTaxonomy["manifest"] => {
+    manifest ??= readJson<CompactTaxonomy["manifest"]>("compact-manifest.json");
+    return manifest;
+  };
 
   const chunkFileName = (roleId: string): string =>
-    loadManifest().roleTaskChunkFiles?.[roleId] ?? `roles/${roleId}/tasks.compact.json`
+    loadManifest().roleTaskChunkFiles?.[roleId] ?? `roles/${roleId}/tasks.compact.json`;
 
   const reader: StagedCompactTaxonomyReader = {
     loadManifest,
-    loadGroups: () => readJson<CompactTaxonomy['groups']>('compact-groups.json'),
-    loadRoleSummaries: () => readJson<CompactTaxonomy['roleSummaries']>('compact-role-summaries.json'),
-    loadRoleTaskIndex: () => normalizeRoleTaskIndex(readJson<RawRoleTaskIndex>('compact-role-task-index.json')),
+    loadGroups: () => readJson<CompactTaxonomy["groups"]>("compact-groups.json"),
+    loadRoleSummaries: () =>
+      readJson<CompactTaxonomy["roleSummaries"]>("compact-role-summaries.json"),
+    loadRoleTaskIndex: () =>
+      normalizeRoleTaskIndex(readJson<RawRoleTaskIndex>("compact-role-task-index.json")),
     loadRoleTaskChunk: (roleId: string) =>
-      readJson<CompactTaxonomy['roleTaskChunks'][string]>(chunkFileName(roleId)),
+      readJson<CompactTaxonomy["roleTaskChunks"][string]>(chunkFileName(roleId)),
     loadRoleTaskChunks: (roleIds: readonly string[]) =>
       Object.fromEntries(
-        [...new Set(roleIds)].map(roleId => [
+        [...new Set(roleIds)].map((roleId) => [
           roleId,
-          readJson<CompactTaxonomy['roleTaskChunks'][string]>(chunkFileName(roleId)),
+          readJson<CompactTaxonomy["roleTaskChunks"][string]>(chunkFileName(roleId)),
         ]),
       ),
     loadFullTaxonomy(): CompactTaxonomy {
-      const roleSummaries = reader.loadRoleSummaries()
+      const roleSummaries = reader.loadRoleSummaries();
       return {
         manifest: loadManifest(),
         groups: reader.loadGroups(),
         roleSummaries,
         roleTaskIndex: reader.loadRoleTaskIndex(),
-        roleTaskChunks: reader.loadRoleTaskChunks(roleSummaries.map(role => role.id)),
-      }
+        roleTaskChunks: reader.loadRoleTaskChunks(roleSummaries.map((role) => role.id)),
+      };
     },
-  }
-  return reader
+  };
+  return reader;
 }
 
 /**
@@ -162,5 +171,5 @@ export function createStagedCompactTaxonomyReader(
 export function loadCompactTaxonomy(
   options: CreateStagedCompactTaxonomyReaderOptions = {},
 ): CompactTaxonomy {
-  return createStagedCompactTaxonomyReader(options).loadFullTaxonomy()
+  return createStagedCompactTaxonomyReader(options).loadFullTaxonomy();
 }

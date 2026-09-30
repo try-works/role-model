@@ -28,16 +28,7 @@
     "./cordis.patch.yml": "./cordis.patch.yml",
     "./package.json": "./package.json"
   },
-  "files": [
-    "client",
-    "cordis.patch.yml",
-    "data",
-    "icon.svg",
-    "lib",
-    "locale",
-    "skills",
-    "src"
-  ],
+  "files": ["client", "cordis.patch.yml", "data", "icon.svg", "lib", "locale", "skills", "src"],
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"

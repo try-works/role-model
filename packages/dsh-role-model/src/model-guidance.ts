@@ -8,10 +8,13 @@
  * @module @try-works/dsh-role-model/model-guidance
  */
 
-import type { DownstreamOpenAIDiscovery, DownstreamOpenAIModelRecord } from './types.js'
+import type { DownstreamOpenAIDiscovery, DownstreamOpenAIModelRecord } from "./types.js";
 
 /** Why a model id does not resolve to a role-model route. */
-export type RoleModelModelIdClassification = 'known' | 'foreign-provider-model' | 'unknown-model-id'
+export type RoleModelModelIdClassification =
+  | "known"
+  | "foreign-provider-model"
+  | "unknown-model-id";
 
 /** Provider prefixes that identify another provider's model id. */
 const FOREIGN_ID_PATTERNS: readonly RegExp[] = [
@@ -26,7 +29,7 @@ const FOREIGN_ID_PATTERNS: readonly RegExp[] = [
   /^llama-/iu,
   /^mistral-/iu,
   /^grok-/iu,
-]
+];
 
 /**
  * Strip a `role-model/` qualification from a model id.
@@ -34,7 +37,7 @@ const FOREIGN_ID_PATTERNS: readonly RegExp[] = [
  * @returns the bare id.
  */
 export function normalizeRoleModelModelId(modelId: string): string {
-  return modelId.startsWith('role-model/') ? modelId.slice('role-model/'.length) : modelId
+  return modelId.startsWith("role-model/") ? modelId.slice("role-model/".length) : modelId;
 }
 
 /**
@@ -47,8 +50,8 @@ export function findRoleModelModel(
   discovery: DownstreamOpenAIDiscovery,
   modelId: string,
 ): DownstreamOpenAIModelRecord | undefined {
-  const normalized = normalizeRoleModelModelId(modelId)
-  return discovery.models.find(model => model.id === normalized || model.id === modelId)
+  const normalized = normalizeRoleModelModelId(modelId);
+  return discovery.models.find((model) => model.id === normalized || model.id === modelId);
 }
 
 /**
@@ -57,7 +60,7 @@ export function findRoleModelModel(
  * @returns the recommended id, or null when the catalog is empty.
  */
 export function recommendedRoleModelModelId(discovery: DownstreamOpenAIDiscovery): string | null {
-  return discovery.setup?.recommendedModel ?? discovery.models[0]?.id ?? null
+  return discovery.setup?.recommendedModel ?? discovery.models[0]?.id ?? null;
 }
 
 /**
@@ -70,15 +73,15 @@ export function classifyRoleModelModelId(
   modelId: string,
   discovery: DownstreamOpenAIDiscovery,
 ): RoleModelModelIdClassification {
-  if (findRoleModelModel(discovery, modelId) !== undefined) return 'known'
-  return FOREIGN_ID_PATTERNS.some(pattern => pattern.test(modelId))
-    ? 'foreign-provider-model'
-    : 'unknown-model-id'
+  if (findRoleModelModel(discovery, modelId) !== undefined) return "known";
+  return FOREIGN_ID_PATTERNS.some((pattern) => pattern.test(modelId))
+    ? "foreign-provider-model"
+    : "unknown-model-id";
 }
 
 /** Every alias id the runtime advertises, in discovery order. */
 function aliasIds(discovery: DownstreamOpenAIDiscovery): string[] {
-  return discovery.models.filter(model => model.type === 'alias').map(model => model.id)
+  return discovery.models.filter((model) => model.type === "alias").map((model) => model.id);
 }
 
 /**
@@ -93,24 +96,24 @@ export function formatInvalidRoleModelModelId(
   modelId: string,
   runtimeReached: boolean,
 ): string {
-  const classification = classifyRoleModelModelId(modelId, discovery)
-  const recommended = recommendedRoleModelModelId(discovery)
-  const aliases = aliasIds(discovery)
+  const classification = classifyRoleModelModelId(modelId, discovery);
+  const recommended = recommendedRoleModelModelId(discovery);
+  const aliases = aliasIds(discovery);
   const lines = [
     `invalid role-model model id: ${modelId}`,
     `classification: ${classification}`,
-    'provider: role-model',
-    `runtime reached: ${runtimeReached ? 'yes' : 'no'}`,
-  ]
-  if (classification === 'foreign-provider-model') {
-    lines.push('reason: this id belongs to another provider, not to the role-model runtime.')
+    "provider: role-model",
+    `runtime reached: ${runtimeReached ? "yes" : "no"}`,
+  ];
+  if (classification === "foreign-provider-model") {
+    lines.push("reason: this id belongs to another provider, not to the role-model runtime.");
   } else {
-    lines.push('reason: the role-model runtime does not advertise this id.')
+    lines.push("reason: the role-model runtime does not advertise this id.");
   }
-  if (recommended !== null) lines.push(`recommended alias: ${recommended}`)
-  if (aliases.length > 0) lines.push(`available aliases: ${aliases.join(', ')}`)
-  lines.push('Run /role-model alias list to see every alias.')
-  lines.push('Run /role-model alias recommended to see the runtime recommendation.')
-  lines.push('Then select the alias in the model selector.')
-  return lines.join('\n')
+  if (recommended !== null) lines.push(`recommended alias: ${recommended}`);
+  if (aliases.length > 0) lines.push(`available aliases: ${aliases.join(", ")}`);
+  lines.push("Run /role-model alias list to see every alias.");
+  lines.push("Run /role-model alias recommended to see the runtime recommendation.");
+  lines.push("Then select the alias in the model selector.");
+  return lines.join("\n");
 }

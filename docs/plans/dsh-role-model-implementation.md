@@ -900,6 +900,69 @@ Test count: **352 passing** across 19 spec files; `tsc --noEmit` clean; the bund
 
 ---
 
+### Phase 10 — documentation and delivery: **IN PROGRESS**
+
+Done:
+- `lib/` (build output) is git-ignored rather than committed, matching this repo, which
+  tracks sources only (`packages/pi-role-model` ships no build output). `node scripts/build.mjs`
+  regenerates it and the manifest's `files` list ships it at publish time.
+- Branch `feat/dsh-role-model` off the **current local `dev`** (`8e09a870`), per the user's
+  decision. Note: local `dev` is 87 commits ahead of `origin/dev` (`ca5c2126`), so basing on
+  `origin/dev` would have built the PR on a tree that does not match this checkout.
+- Commit `c2eed72c`: 95 files — the package, the implementation plan, and the analysis.
+
+Remaining:
+- open the pull request against `dev` (`CONTRIBUTING.md` and
+  `docs/operations/02-ci-and-release-flow.md` govern the rest)
+- restart the host and confirm the panel renders in the running Web UI in light and dark
+
+Also delivered in this phase: `packages/dsh-role-model/README.md`, a "Installation for
+DeepSeek Harness" section in the root `README.md`, entries for both in the root README's
+"Read this" table, the package added to the root `test` script
+(`pnpm --filter @try-works/dsh-role-model test`), and repository linter compliance.
+
+#### Repository linter compliance
+
+`packages/pi-role-model` is Biome-clean, so this repo does enforce the linter on plugin
+packages. The new package is clean too: `biome check packages/dsh-role-model` reports
+**89 files, 0 errors**.
+
+Getting there took more than formatting, and the details are worth recording:
+
+- The package was written in the opposite string style (single quotes, no semicolons) to this
+  repo's Biome config. `biome format --write` cleared 91 of the initial diagnostics in one pass.
+- `packages/dsh-role-model/lib/**` was added to `biome.json`'s ignore list. `lib/` is build
+  output (and git-ignored), so linting it produced diagnostics about generated code that no one
+  can act on.
+- Two non-null assertions in `src/taxonomy/classify-with-progressive-disclosure.ts` became a
+  single read plus an explicit invariant throw — same behaviour, no assertion.
+- **One genuine linter-versus-compiler conflict is documented in `src/adapter.ts`**: the abort
+  check inside the two `catch` blocks. The pre-flight guard narrows `signal.aborted` to `false`,
+  so `signal?.aborted === true` is statically dead and TypeScript rejects the comparison
+  (`TS2367`), while `signal !== undefined && signal.aborted` trips `useOptionalChain`. A
+  `biome-ignore` comment did not bind, so the flag is read through a widened boolean
+  (`const aborted: boolean = signal?.aborted ?? false`) — the one form both tools accept, with
+  no suppression on either side.
+- Two spec assertions that matched literal single-quoted source text became regexes, so
+  reformatting the source no longer breaks the naming guard.
+
+Re-verified after the change: **352 tests, `tsc --noEmit` clean, biome clean**, both parity
+checks still byte-identical (256 classifier pairs, 130 injector combinations), the host
+failure-code proof still passing, and a live end-to-end run through the built bundle:
+
+```
+INFO  host LLM classes from harness-root at D:\deepseek-harness\packages\llm\llm\lib\index.js
+INFO  route "role-model" registered with 23 models at http://127.0.0.1:3457/v1 (state ready)
+registered: {"adapters":[["role-model"]],"commands":["role-model"],"skills":["role-model"]}
+is host LlmAdapter: LlmAdapter
+models: 23 | provider: role-model
+resolved: role-model/baseline.remote-only ctx: 1000000
+finish: {"kind":"stop"}
+streamed: "ok"
+```
+
+---
+
 ## 11. Definition of done
 
 1. `packages/dsh-role-model` installs into the `web` profile as a bundle
