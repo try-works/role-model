@@ -1,8 +1,8 @@
 Run: `/.recursive/run/103-agent-strategy-and-scoring-strategy/`
 Phase: `00 Requirements`
 Status: `LOCKED`
-LockedAt: `2026-09-30T02:53:08Z`
-LockHash: `1586adb8565e3feff71fd42ed1be341256c467b620c4bc2722f47b6ad6c3dc1e`
+LockedAt: `2026-09-30T02:55:51Z`
+LockHash: `7e1cb6e0b39731d430dc4ff207bf873c53a89e186877c4f251f5d897dd9f4d8f`
 Workflow version: `recursive-mode-audit-v2`
 Inputs:
 - Source requirement: `https://github.com/try-works/role-model/pull/288` (`docs/architecture/16-agent-strategy-and-scoring-strategy.md`, branch `codex/16-agent-strategy-scoring-strategy`, head `d6b9b22c`)
@@ -22,6 +22,8 @@ Scope note: This document defines the stable requirement set for making the rout
 - [x] Record verification method per requirement (tests, evidence, live QA)
 - [x] Document out-of-scope items (OOS1..OOS6)
 - [x] List constraints and assumptions
+- [x] Break the requirements into phases, tasks and subtasks with stable identifiers
+- [x] Define the delegation plan (which tasks go to subagents) and the controller verification protocol
 - [x] Complete Coverage Gate checklist
 - [x] Complete Approval Gate checklist
 
@@ -322,12 +324,148 @@ Verification: the Phase 5 artifact plus its evidence tree.
   operator-facing mode of the `controller` family rather than a new family.
 - The change alters the ranking recipe only; eligibility rules are untouched.
 
+## Delivery phases, tasks and subtasks
+
+The breakdown maps the design document's delivery phases (its section 9) onto the recursive-mode phases of this
+run. Every task carries the same four fields - Scope, Inputs, Outputs, Verification - so a task can be handed to
+a subagent without re-deriving context. Task ids are stable and are used by the Phase 2 plan, the Phase 3
+sub-phases, the evidence tree and the delegation records.
+
+### Phase 1 - AS-IS (`analyst`-delegable)
+
+| Task | Scope | Inputs | Outputs | Verification |
+| --- | --- | --- | --- | --- |
+| `T1.1` Source requirement inventory | Index every obligation of the design document by section with a source quote, a normalized summary and a disposition | `docs/architecture/16-...md` (PR #288), this artifact | `01-as-is.md` `## Source Requirement Inventory` | Every design-doc section appears exactly once; each entry names a requirement id |
+| `T1.2a` Config, alias and mode path | Record what `routing.strategy`, alias modes and the canonical matrix do today, with file:line anchors | `unified-runtime-config.ts`, `index.ts` | `01-as-is.md` subsection | Each claim cites a file and line; a reader can reproduce it with the recorded diff basis |
+| `T1.2b` Scoring path | Record how `RoutingRequest.strategy` is set today and prove the saved strategy never reaches it | `index.ts` (`maybeApplyDifficultyRouting`, `maybeApplyControllerRouting`), `packages/core/src/router.ts` | `01-as-is.md` subsection | The claim is demonstrated by reading the code path end to end, not inferred |
+| `T1.2c` Measured-latency override | Record current defaults, metric, floor, bounds, activation gate and readback | `routing-latency-selection.ts`, `routing-latency-policy.ts`, `sqlite-memory` bucket reader | `01-as-is.md` subsection | Defaults and bounds quoted from source; `p50`/`p95` availability confirmed in the bucket type |
+| `T1.2d` UI surfaces | Record what each relevant page reads and where the raw config string leaks into labels or alias ids | `runtime-ui` routes/lib | `01-as-is.md` subsection | Each leak cites the component and line |
+| `T1.2e` Effect wiring and packaging | Record the landed Effect workspace wrapper, existing imports, and the SEA gate | `role-model-router/packages/effect`, `queue-runtime/*`, `00-worktree.md` | `01-as-is.md` subsection | The bare-build failure and the dependency-closure build are both recorded |
+| `T1.3` Prior evidence and memory | Re-read runs 01, 22-30 and 101 plus the routing memory docs and record what they bind | `.recursive/run/{01,22..30,101}-*`, `.recursive/memory/domains/runtime-routing-and-provider-capabilities.md` | `01-as-is.md` `## Prior Recursive Evidence Reviewed` | Each cited prior artifact contributes at least one named constraint or decision |
+
+### Phase 2 - TO-BE plan (`planner`-delegable audit)
+
+| Task | Scope | Inputs | Outputs | Verification |
+| --- | --- | --- | --- | --- |
+| `T2.1` Requirement mapping | Map every `R1`-`R12` to implementation sub-phases, with `## Plan Drift Check` and plan-stage `## Requirement Completion Status` | `01-as-is.md`, this artifact | `02-to-be-plan.md` | No requirement unmapped; no sub-phase without a requirement id |
+| `T2.2` Sub-phase definition `SP1`-`SP8` | Define each sub-phase with file ownership, disjointness, ordering, tests, evidence paths and rollback | `02-to-be-plan.md` | `02-to-be-plan.md` | Write scopes are provably disjoint; each sub-phase lists its RED tests before implementation |
+| `T2.3` Verification and QA plan | Fix the exact Tier A/Tier B commands, the live pi-CLI matrix and the evidence layout | this artifact (`R11`, `R12`) | `02-to-be-plan.md` | Every acceptance criterion in `R1`-`R12` has a named command or observed artefact |
+| `T2.4` Delegation and risk register | Confirm the delegation plan, the router policy state and the risk mitigations | `.recursive/config/recursive-router*.json`, this artifact | `02-to-be-plan.md` | Each delegated task names its role, bundle path and controller verification step |
+
+### Phase 3 - Implementation sub-phases (controller-owned; `code-reviewer` audits)
+
+| Sub-phase | Requirement coverage | Scope | RED evidence | GREEN evidence |
+| --- | --- | --- | --- | --- |
+| `SP1` Vocabulary and config schema | `R1`, `R9`, `R10` | One module owns the strategy vocabulary, the weight-table reference and the config schema (including the snake_case mapping and the weight invariants) | `evidence/logs/red/sp1-*.log` | `evidence/logs/green/sp1-*.log` |
+| `SP2` Resolver and precedence | `R2`, `R9` | Pure resolver with the documented order, pin semantics, `custom` weights, plus the core request plumbing | `evidence/logs/red/sp2-*.log` | `evidence/logs/green/sp2-*.log` |
+| `SP3` Provenance and readback | `R3` | Effective strategy, `strategy_source`, weights digest, discarded-override receipts, telemetry projection | `evidence/logs/red/sp3-*.log` | `evidence/logs/green/sp3-*.log` |
+| `SP4` Intelligent mode | `R4` | `latency` in the controller strategy set, pin interaction, prompt coverage | `evidence/logs/red/sp4-*.log` | `evidence/logs/green/sp4-*.log` |
+| `SP5` Agent strategies | `R5`, `R10` | Config block, role binding, alias materialisation, collisions, intent precedence | `evidence/logs/red/sp5-*.log` | `evidence/logs/green/sp5-*.log` |
+| `SP6` Workloads | `R6` | Config block, capability pins, alias materialisation, `batch`/`embedding` examples | `evidence/logs/red/sp6-*.log` | `evidence/logs/green/sp6-*.log` |
+| `SP7` Measured-latency override | `R7` | Effective-latency metric, 10 000 ms default, 5..30 floor bounds, paired-registry consistency | `evidence/logs/red/sp7-*.log` | `evidence/logs/green/sp7-*.log` |
+| `SP8` UI surfaces | `R8` | Routing strategy page, Agent strategy page, Workloads page, decision detail | `evidence/logs/red/sp8-*.log` | `evidence/logs/green/sp8-*.log` |
+
+`T3.1` - TDD compliance log: one entry per cycle (test file, command, RED path, GREEN path, refactor note).
+`T3.2` - Controller implementation: all production writes, because the router policy has the `implementer` route
+disabled (see Delegation plan).
+`T3.3` - Per-sub-phase self-audit against the requirement ids before the next sub-phase starts.
+
+### Phase 3.5 - Code review (`code-reviewer`-delegable)
+
+`T3.5.1` Generate the canonical review bundle (`recursive-review-bundle`) covering the diff basis, changed files,
+plan and requirement ids. `T3.5.2` Delegate the review with the bundle path. `T3.5.3` Controller verifies each
+finding against the actual worktree before accepting, repairs in Phase 3 and re-reviews when scope changes.
+
+### Phase 4 - Tests and validation (`tester`-delegable audit)
+
+`T4.1` Pre-test implementation audit (requirements vs actual changed files). `T4.2` Run the affected suites and
+builds and capture logs. `T4.3` Delegate a test-adequacy audit (commands, coverage of `R1`-`R10`, evidence
+integrity). `T4.4` Controller re-runs the accepted commands and records the results.
+
+### Phase 5 - Manual QA: rebuilt runtime + live pi CLI (`tester`-delegable execution, controller acceptance)
+
+`T5.1` Rebuild the packaged runtime (`corepack pnpm run runtime:package-sea`) and prove the SEA still carries the
+Effect runtime. `T5.2` Start the rebuilt runtime on the development channel (`:3458`) with its dev state root.
+`T5.3` Install the pi package for the channel (`pi install ./packages/pi-role-model`). `T5.4` Execute the live
+matrix with `pi --no-session --provider role-model --model <alias> -p "<prompt>"` covering the preset, custom,
+pinned-hard, unpinned-hard, Intelligent-mode, agent-strategy and workload postures. `T5.5` For every request
+inspect the decision and telemetry for effective strategy, `strategy_source`, weights digest and any
+latency-override receipt. `T5.6` Capture transcripts, readbacks and (where UI behaviour is claimed) screenshots
+under `evidence/`. `T5.7` Record failures and repairs honestly; no fabricated sign-off.
+
+### Phases 6-8 - Closeout
+
+`T6.1` Decisions update. `T7.1` State update. `T8.1` Memory impact. `T8.2` (`memory-auditor`-delegable) verify
+touched paths, status transitions and router notes against the final validated state.
+
+## Delegation plan
+
+Policy basis read from `/.recursive/config/recursive-router.json` in this worktree: `orchestrator` is
+`local-only`; `analyst`, `planner`, `code-reviewer`, `tester` and `memory-auditor` are declared `external-cli`
+with a null CLI/model (unconfigured) and fall back to `self-audit`/`local-controller`;
+`implementer` is **disabled**. `recursive-router-discovered.json` is absent in this worktree, so no routed
+external dispatch may be resolved from stale assumptions. Effective mode for this run: in-session subagents for
+read-only analysis, review and test auditing, with the controller owning every write.
+
+| Task | Delegated? | Role | Why | Required artefacts | Controller verification |
+| --- | --- | --- | --- | --- | --- |
+| `T1.1`, `T1.2a-e`, `T1.3` | Yes (draft + independent audit) | `analyst` | Independent AS-IS pass over the same diff basis catches drift the author misses | `subagents/analyst-t1.md` + `evidence/review-bundles/01-as-is.md` | Re-read every cited file; confirm each claim reproduces against the diff basis |
+| `T2.1`-`T2.4` | Yes (traceability audit) | `planner` | Requirement-to-plan coverage is the failure mode this run is guarding against | `subagents/planner-t2.md` | Every `R#` mapped; spot-check each mapping against the plan text |
+| `T3.2` implementation writes | No | - | `implementer` route is disabled by policy; writes stay with the controller | - | Controller authors and self-audits each sub-phase |
+| `SP1`-`SP8` bounded checks | Yes (per sub-phase, read-only) | `code-reviewer` | Cheap, bounded verification of one sub-phase diff while the controller continues | `subagents/code-reviewer-spN.md` | Controller re-runs the named commands and re-reads the diff before accepting |
+| `T3.5.1`-`T3.5.3` Phase 3.5 review | Yes | `code-reviewer` | High-risk change; a full bundle review is the canonical path | `evidence/review-bundles/03-5-code-review.md` + `subagents/code-reviewer-t3.5.md` | Findings verified against actual files; repairs recorded; re-review after material change |
+| `T4.3` test-adequacy audit | Yes | `tester` | Tests are the evidence base for `R11` | `subagents/tester-t4.md` | Controller re-runs the accepted commands and compares logs |
+| `T5.4` live pi-CLI matrix | Yes (execution under supervision) | `tester` | The matrix is long-running and mechanical; a subagent can run it while the controller monitors | `subagents/tester-t5.md` + `evidence/logs/t5-*.log` + transcripts | Controller inspects each transcript and readback; no acceptance on the subagent's summary alone |
+| `T8.2` memory audit | Yes | `memory-auditor` | Memory/status drift is systematically missed by authors | `subagents/memory-auditor-t8.md` | Controller compares touched paths and statuses with the final diff |
+
+Rules this plan must keep: one active phase at a time; subagents never authorize parallel phases; write-capable
+delegation is prohibited in this run (implementer disabled); every delegated dispatch cites a bundle or an
+explicit context list, never "review this"; and any failure, `success: false`, or nonzero routed exit code
+triggers an audit-repair-retry loop with the failed attempt preserved as evidence.
+
+## Controller verification of delegated work
+
+No delegated result is accepted on its own word. For every delegated task the controller:
+
+1. confirms the task was dispatched with a complete bundle (phase, artifact path, upstream artifacts, diff basis,
+   changed files, targeted files, audit questions, output shape);
+2. verifies the claim against the actual worktree: re-reads the named files, re-runs the named commands, and
+   diffs the claimed scope against `git diff --name-only ca5c2126ca566086cfbe8f83cfdf339aba0879ff`;
+3. rejects any output that lacks a verdict, cites no changed files, ignores addenda, or cannot be turned into a
+   durable action record;
+4. repairs in-scope gaps itself, refreshes the bundle when repairs change reviewed scope, and re-dispatches the
+   same role before accepting;
+5. records `Reviewed Action Records`, `Main-Agent Verification Performed`, `Acceptance Decision`,
+   `Refresh Handling` and `Repair Performed After Verification` in the phase artifact.
+
+Action records live under `/.recursive/run/103-agent-strategy-and-scoring-strategy/subagents/`; routed transcripts
+(when an external route is configured later) live under `evidence/router/`.
+
+## Requirement-to-task traceability
+
+| Requirement | Phase 1 task | Sub-phase / phase | Delegated verification |
+| --- | --- | --- | --- |
+| `R1` | `T1.2a` | `SP1` | `code-reviewer-sp1` |
+| `R2` | `T1.2b` | `SP2` | `code-reviewer-sp2` |
+| `R3` | `T1.2b`, `T1.2d` | `SP3` | `code-reviewer-sp3` |
+| `R4` | `T1.2b` | `SP4` | `code-reviewer-sp4` |
+| `R5` | `T1.2a` | `SP5` | `code-reviewer-sp5` |
+| `R6` | `T1.2a` | `SP6` | `code-reviewer-sp6` |
+| `R7` | `T1.2c` | `SP7` | `code-reviewer-sp7` |
+| `R8` | `T1.2d` | `SP8` | `code-reviewer-sp8` |
+| `R9` | `T1.2e` | `SP1`, `SP2` | Phase 3.5 review |
+| `R10` | `T1.1`, `T1.2a` | `SP1`, `SP5` | Phase 3.5 review |
+| `R11` | - | Phase 3 TDD log, Phase 4 | `tester-t4` |
+| `R12` | `T1.2e` | Phase 5 | `tester-t5` + controller acceptance |
+
 ## Coverage Gate
 
 - [x] Every design-document section maps to at least one requirement
 - [x] Every requirement has observable acceptance criteria and a stated verification method
 - [x] TDD discipline and Phase 5 live pi-CLI verification are explicit requirements (R11, R12)
 - [x] Extensibility and migration are explicit requirements (R10)
+- [x] Every requirement is broken into phases, tasks and sub-phases with stable ids and handoff fields
+- [x] The delegation plan names which tasks go to subagents and the controller verification protocol
 - [x] Out-of-scope items, constraints and assumptions are recorded
 
 Coverage: PASS

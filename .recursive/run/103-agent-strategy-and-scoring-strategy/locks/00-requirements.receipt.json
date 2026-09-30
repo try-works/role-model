@@ -1,9 +1,9 @@
 {
   "artifact": "00-requirements.md",
-  "artifact_hash": "1586adb8565e3feff71fd42ed1be341256c467b620c4bc2722f47b6ad6c3dc1e",
+  "artifact_hash": "7e1cb6e0b39731d430dc4ff207bf873c53a89e186877c4f251f5d897dd9f4d8f",
   "artifact_path": "D:\\DEV\\role-model\\.worktrees\\103-agent-strategy-and-scoring-strategy\\.recursive\\run\\103-agent-strategy-and-scoring-strategy\\00-requirements.md",
-  "locked_at": "2026-09-30T02:53:08Z",
+  "locked_at": "2026-09-30T02:55:51Z",
   "prerequisite_hashes": {},
   "previous_receipt_hash": null,
-  "receipt_hash": "ac8c6ed04351fc6b2caa9afba87b59ed3e300e4c848dcfae098640b1866d1bd7"
+  "receipt_hash": "f81d726768470b01f0442c342494eb6fcae4c45d73fb4ae6f50fad4475cdb4a5"
 }
