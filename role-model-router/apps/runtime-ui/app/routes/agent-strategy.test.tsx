@@ -1,0 +1,77 @@
+import { readFileSync } from "node:fs";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { RouterProvider, createMemoryRouter } from "react-router";
+import { describe, expect, test } from "vitest";
+
+import { ShellHeaderProvider } from "../lib/shell-header-context";
+import { POSTURE_KIND_LABELS } from "../lib/agent-strategy";
+import AgentStrategyRoute from "./agent-strategy";
+import WorkloadsRoute from "./workloads";
+
+const agentStrategySource = readFileSync(new URL("./agent-strategy.tsx", import.meta.url), "utf8");
+const workloadsSource = readFileSync(new URL("./workloads.tsx", import.meta.url), "utf8");
+const posturePageSource = readFileSync(
+  new URL("../components/posture-entries-page.tsx", import.meta.url),
+  "utf8",
+);
+
+function renderRoute(pathname: string, element: React.ReactElement): string {
+  const wrapped = createElement(ShellHeaderProvider, null, element);
+  const router = createMemoryRouter([{ path: pathname, element: wrapped }], {
+    initialEntries: [pathname],
+  });
+  return renderToStaticMarkup(createElement(RouterProvider, { router }));
+}
+
+describe("run 103 agent strategy and workload pages", () => {
+  test("are two separate pages with singular/plural labels", () => {
+    expect(agentStrategySource).toContain('kind="role"');
+    expect(workloadsSource).toContain('kind="workload"');
+    expect(posturePageSource).toContain("POSTURE_KIND_LABELS");
+    // The labels live in one place; the singular/plural pair the brief checks is asserted there.
+    expect(POSTURE_KIND_LABELS.role).toBe("Agent strategy");
+    expect(POSTURE_KIND_LABELS.workload).toBe("Workloads");
+    expect(renderRoute("/app/router/agent-strategy", createElement(AgentStrategyRoute))).toContain(
+      "Loading Agent strategy",
+    );
+    expect(renderRoute("/app/router/workloads", createElement(WorkloadsRoute))).toContain(
+      "Loading Workloads",
+    );
+  });
+
+  test("lists every entry with its binding, posture, per-scope aliases and candidate counts", () => {
+    expect(posturePageSource).toContain("buildPostureEntryRows");
+    expect(posturePageSource).toContain("summarizePostureDiagnostics");
+    expect(posturePageSource).toContain("candidateLabel");
+    expect(posturePageSource).toContain("POOL EMPTY");
+    expect(posturePageSource).toContain("current leader");
+    expect(posturePageSource).toContain("poolEmptyAliasIds");
+  });
+
+  test("edits the entries through whole canonical blocks and never persists a legacy synonym", () => {
+    expect(posturePageSource).toContain("buildPostureWriteBlock");
+    expect(posturePageSource).toContain("validatePostureDraft");
+    expect(posturePageSource).toContain("updateRuntimeConfig");
+    expect(posturePageSource).toContain("fetchRouterConfig");
+    expect(posturePageSource).toContain("agent_strategies");
+    expect(posturePageSource).toContain("workloads");
+  });
+
+  test("offers the shipped workload templates and keeps role_id off workloads", () => {
+    expect(posturePageSource).toContain("Workload templates");
+    expect(posturePageSource).toContain("Use batch template");
+    expect(posturePageSource).toContain("Use embedding template");
+    expect(posturePageSource).toContain("required_capabilities");
+    expect(posturePageSource).toContain('kind === "role"');
+    // A workload entry must never render or write a role binding.
+    expect(posturePageSource).not.toContain("role_id: draft.roleId");
+  });
+
+  test("surfaces the readback diagnostics and role options on the page", () => {
+    expect(posturePageSource).toContain("Unknown capability");
+    expect(posturePageSource).toContain("ALIAS_POOL_EMPTY");
+    expect(posturePageSource).toContain("policySources");
+    expect(posturePageSource).toContain("Role (required)");
+  });
+});

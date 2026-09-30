@@ -371,6 +371,9 @@ describe("runtime design system", () => {
         routes: [
           "/app/router",
           "/app/router/strategy",
+          // Run 103 SP8: the two posture pages sit between Routing strategy and Controller.
+          "/app/router/agent-strategy",
+          "/app/router/workloads",
           "/app/router/controller",
           "/app/router/candidates",
           "/app/router/decisions",
@@ -905,7 +908,9 @@ describe("runtime design system", () => {
     expect(routerRouteSource).not.toContain("/app/router/strategy");
     expect(routerRouteSource).not.toContain("configuredAliasRows.slice(0, 3)");
     expect(routerRouteSource).toContain("selectOverviewRouterCandidates(candidates)");
-    expect(routingModeSource).toContain("Strategy A - Baseline");
+    // Run 103 SP8: the routing posture vocabulary is the two-axis one, not the strategy letters.
+    expect(routingModeSource).toContain("ROUTING_MODE_NAMES");
+    expect(routingModeSource).toContain("SCORING_STRATEGY_NAMES");
     expect(controlRoutingStrategySource).toContain("updateRuntimeConfig");
     expect(
       runtimeNavigationSections
@@ -1471,12 +1476,17 @@ describe("runtime design system", () => {
     ).toContain("Loading routing strategy");
     expect(controlRoutingStrategySource).toContain("updateRuntimeConfig");
     expect(controlRoutingStrategySource).toContain("Save and apply strategy");
-    expect(controlRoutingStrategySource).toContain("formatDraftRoutingAlias");
+    expect(controlRoutingStrategySource).toContain("buildRoutingPatchDocument");
+    expect(controlRoutingStrategySource).toContain("resolveRoutingPostureSummary");
     expect(controlRoutingStrategySource).toContain("Active posture");
-    expect(routingModeSource).toContain("Strategy A - Baseline");
-    expect(routingModeSource).toContain("Strategy B - Intelligent");
-    expect(routingModeSource).toContain("Strategy C - Difficulty");
-    expect(controlRoutingStrategySource).not.toContain("Balanced");
+    expect(routingModeSource).toContain("Intelligent");
+    expect(routingModeSource).toContain("PIN_WEIGHTS_HELP_TEXT");
+    // Run 103 SP8: the canonical scoring vocabulary, including the Balanced preset, now lives on
+    // the page and comes from the vocabulary module rather than a route-local legacy mirror.
+    expect(controlRoutingStrategySource).toContain("SCORING_STRATEGY_OPTIONS");
+    expect(controlRoutingStrategySource).toContain("SCORING_PRESETS");
+    expect(controlRoutingStrategySource).toContain("WEIGHT_METRICS");
+    expect(controlRoutingStrategySource).not.toContain("formatDraftRoutingAlias");
     expect(getRuntimeRouteDefinition("/app/system/runtime-config")?.title).toBe("Runtime config");
     expect(
       renderRoute("/app/system/runtime-config", createElement(ControlRuntimeConfigRoute)),

@@ -11,6 +11,11 @@ import {
 } from "../components/page-primitives";
 import { projectBenchmarkDecisionView } from "../lib/benchmark-decision-evidence";
 import {
+  readAliasPostureReceipt,
+  readLatencyReceipt,
+  readStrategyReceipt,
+} from "../lib/decision-receipt";
+import {
   bodyStrongTextClassName,
   cardClassName,
   fieldLabelClassName,
@@ -20,7 +25,6 @@ import {
   supportingTextClassName,
 } from "../lib/design-system";
 import { formatEndpointDisplayPath, formatModelIdentity } from "../lib/effort-identity";
-import { formatRoutingModeLabel } from "../lib/routing-mode";
 import { type RouterDecisionDetail, fetchRouterDecisionDetail } from "../lib/runtime-api";
 
 export default function RouterDecisionDetailRoute() {
@@ -67,6 +71,10 @@ export default function RouterDecisionDetailRoute() {
   const benchmarkDecision = projectBenchmarkDecisionView(detail);
   const telemetryEvidence = detail.telemetryEvidence ?? null;
   const observePath = detail?.observeRequestPath ?? `/app/observe/requests/${requestId}`;
+  // Run 103 R3/R7: the effective strategy, who chose it, and the latency-override outcome.
+  const strategyReceipt = readStrategyReceipt(detail.routingDiagnostics);
+  const latencyReceipt = readLatencyReceipt(detail.routingDiagnostics);
+  const aliasPostureReceipt = readAliasPostureReceipt(detail.routingDiagnostics);
 
   return (
     <div className="space-y-6">
@@ -115,7 +123,7 @@ export default function RouterDecisionDetailRoute() {
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 <Badge tone="accent">
-                  {detail.strategyLabel ? formatRoutingModeLabel(detail.strategyLabel) : "n/a"}
+                  {strategyReceipt ? strategyReceipt.strategyLabel : "no strategy receipt"}
                 </Badge>
                 <Badge tone="neutral">
                   {detail.fallbackEndpointIds.length} fallback
@@ -183,6 +191,128 @@ export default function RouterDecisionDetailRoute() {
                 </p>
               )}
             </div>
+          </div>
+        </div>
+      </SectionCard>
+
+      <SectionCard
+        title="Strategy receipt"
+        description="Run 103 R3: which scoring strategy ranked this decision, who chose it, and which weights the scorer used."
+      >
+        <div className="grid gap-4 xl:grid-cols-3">
+          <div className={`${mutedPanelClassName} space-y-3 p-4`}>
+            <p className={foregroundEmphasisClassName}>Effective strategy</p>
+            {strategyReceipt ? (
+              <dl className="grid gap-3">
+                <div>
+                  <dt className={fieldLabelClassName}>Strategy</dt>
+                  <dd className={`mt-1 ${bodyStrongTextClassName}`}>
+                    {strategyReceipt.strategyLabel}
+                  </dd>
+                </div>
+                <div>
+                  <dt className={fieldLabelClassName}>Source</dt>
+                  <dd className={`mt-1 ${bodyStrongTextClassName}`}>
+                    {strategyReceipt.sourceLabel}
+                  </dd>
+                </div>
+                <div>
+                  <dt className={fieldLabelClassName}>Weights digest</dt>
+                  <dd className={`mt-1 break-all ${bodyStrongTextClassName}`}>
+                    {strategyReceipt.weightsDigest ?? "preset weights (no digest)"}
+                  </dd>
+                </div>
+                {strategyReceipt.discardedLabel ? (
+                  <div>
+                    <dt className={fieldLabelClassName}>Discarded directive</dt>
+                    <dd className={`mt-1 ${supportingTextClassName}`}>
+                      {strategyReceipt.discardedLabel}
+                    </dd>
+                  </div>
+                ) : null}
+              </dl>
+            ) : (
+              <p className={`mt-2 ${supportingTextClassName}`}>
+                This decision predates the run-103 strategy receipt, so the applied strategy was not
+                recorded.
+              </p>
+            )}
+          </div>
+
+          <div className={`${mutedPanelClassName} space-y-3 p-4`}>
+            <p className={foregroundEmphasisClassName}>Latency-override receipt</p>
+            {latencyReceipt ? (
+              <dl className="grid gap-3">
+                <div>
+                  <dt className={fieldLabelClassName}>Outcome</dt>
+                  <dd className={`mt-1 ${bodyStrongTextClassName}`}>
+                    {latencyReceipt.outcomeLabel}
+                  </dd>
+                </div>
+                <div>
+                  <dt className={fieldLabelClassName}>Chosen endpoint</dt>
+                  <dd className={`mt-1 break-all ${bodyStrongTextClassName}`}>
+                    {latencyReceipt.chosenEndpointId ?? "n/a"}
+                  </dd>
+                </div>
+                <div>
+                  <dt className={fieldLabelClassName}>Prompt-size bucket</dt>
+                  <dd className={`mt-1 ${bodyStrongTextClassName}`}>{latencyReceipt.bucketLabel}</dd>
+                </div>
+                <div>
+                  <dt className={fieldLabelClassName}>Candidates compared</dt>
+                  <dd className={`mt-1 ${bodyStrongTextClassName}`}>
+                    {String(latencyReceipt.candidateCount)}
+                  </dd>
+                </div>
+                <div>
+                  <dt className={fieldLabelClassName}>Reason</dt>
+                  <dd className={`mt-1 ${supportingTextClassName}`}>
+                    {latencyReceipt.reason ?? "no reason recorded"}
+                  </dd>
+                </div>
+              </dl>
+            ) : (
+              <p className={`mt-2 ${supportingTextClassName}`}>
+                No measured-latency outcome was recorded for this decision.
+              </p>
+            )}
+          </div>
+
+          <div className={`${mutedPanelClassName} space-y-3 p-4`}>
+            <p className={foregroundEmphasisClassName}>Alias posture binding</p>
+            {aliasPostureReceipt ? (
+              <dl className="grid gap-3">
+                <div>
+                  <dt className={fieldLabelClassName}>Alias</dt>
+                  <dd className={`mt-1 break-all ${bodyStrongTextClassName}`}>
+                    {aliasPostureReceipt.aliasId}
+                  </dd>
+                </div>
+                <div>
+                  <dt className={fieldLabelClassName}>Role</dt>
+                  <dd className={`mt-1 ${bodyStrongTextClassName}`}>
+                    {aliasPostureReceipt.roleLabel}
+                  </dd>
+                </div>
+                <div>
+                  <dt className={fieldLabelClassName}>Capabilities</dt>
+                  <dd className={`mt-1 ${supportingTextClassName}`}>
+                    {aliasPostureReceipt.capabilityLabel}
+                  </dd>
+                </div>
+                <div>
+                  <dt className={fieldLabelClassName}>Posture carried by the alias</dt>
+                  <dd className={`mt-1 ${bodyStrongTextClassName}`}>
+                    {`${aliasPostureReceipt.scoringStrategyLabel}${aliasPostureReceipt.preferLocal ? " · prefers local" : ""}`}
+                  </dd>
+                </div>
+              </dl>
+            ) : (
+              <p className={`mt-2 ${supportingTextClassName}`}>
+                This decision did not inherit an agent-strategy or workload alias binding.
+              </p>
+            )}
           </div>
         </div>
       </SectionCard>

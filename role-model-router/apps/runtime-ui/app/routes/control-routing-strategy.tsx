@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
-
 import { MetricStrip } from "@role-model/ui";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { CheckboxControl } from "../components/checkbox-control";
 import {
   Badge,
   ErrorState,
@@ -11,264 +11,303 @@ import {
 } from "../components/page-primitives";
 import {
   bodyStrongTextClassName,
+  cardClassName,
+  errorNoticeClassName,
   fieldClassName,
   fieldLabelClassName,
   monoEyebrowClassName,
+  mutedPanelClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
   supportingTextClassName,
 } from "../lib/design-system";
 import {
+  LATENCY_COMPARISON_METRIC_COPY,
+  type LatencyEvidenceRow,
+  type LatencyOverrideDraft,
+  type LatencyOverrideView,
+  buildLatencyOverrideDraft,
+  summarizeLatencyOverrideEvidence,
+  validateLatencyOverrideDraft,
+} from "../lib/latency-override";
+import {
+  type LearningPolicyView,
+  fetchLearningPolicy,
+  saveLearningPolicy,
+  useOperatorToken,
+} from "../lib/learning-api";
+import {
+  EXECUTION_SCOPE_OPTIONS,
+  PIN_WEIGHTS_HELP_TEXT,
   ROUTING_MODE_OPTIONS,
-  type RuntimeRoutingMode,
-  formatDraftRoutingAlias,
+  SCORING_PRESETS,
+  SCORING_STRATEGY_OPTIONS,
+  WEIGHT_METRICS,
+  WEIGHT_SUM_TOLERANCE,
+  type ExecutionScopeName,
+  type RoutingModeName,
+  type ScoringStrategyName,
+  type WeightProfile,
+  buildRoutingPatchDocument,
+  formatExecutionScopeSegment,
+  formatWeightMetricLabel,
+  formatWeightValue,
+  normalizeExecutionScopeValue,
   normalizeRoutingModeValue,
+  normalizeScoringStrategyValue,
+  resolveRoutingPostureSummary,
+  validateWeightProfile,
 } from "../lib/routing-mode";
 import {
-  type RuntimeConfig,
-  type RuntimeConfigRecord,
-  fetchRuntimeConfig,
+  type RouterConfig,
+  fetchRouterConfig,
+  fetchTelemetryRequests,
   updateRuntimeConfig,
 } from "../lib/runtime-api";
 
-type RoutingStrategyChoice = RuntimeRoutingMode | "unset" | "custom";
-type RuntimeExecutionMode = NonNullable<RuntimeConfig["executionMode"]>;
+type WeightDrafts = Readonly<Record<(typeof WEIGHT_METRICS)[number], string>>;
 
-const formFieldLabelClassName = fieldLabelClassName;
-
-const EXECUTION_MODE_OPTIONS: ReadonlyArray<{
-  readonly value: RuntimeExecutionMode;
-  readonly label: string;
-  readonly detail: string;
-}> = [
-  {
-    value: "hybrid",
-    label: "Hybrid",
-    detail: "Keep both local llama-swap and remote LiteLLM execution available to the runtime.",
-  },
-  {
-    value: "local_only",
-    label: "Local only",
-    detail: "Route only through local llama-swap-managed models.",
-  },
-  {
-    value: "remote_only",
-    label: "Remote only",
-    detail: "Route only through remote provider-backed endpoints.",
-  },
-  {
-    value: "decision_only",
-    label: "Decision only",
-    detail: "Keep routing and diagnostics active without enabling local or remote execution.",
-  },
-] as const;
-
-const STRATEGY_CHOICES: ReadonlyArray<{
-  readonly value: RoutingStrategyChoice;
-  readonly label: string;
-  readonly detail: string;
-  readonly modeId: string;
-  readonly guidance: string;
-  readonly bestFor: string;
-  readonly needsController: boolean;
-}> = [
-  {
-    value: "unset",
-    label: "Use runtime default",
-    detail: "Leave the persisted routing mode unset.",
-    modeId: "—",
-    guidance: "runtime default",
-    bestFor: "host-owned default alias",
-    needsController: false,
-  },
-  ...ROUTING_MODE_OPTIONS.map((option) => ({
-    value: option.value as RoutingStrategyChoice,
-    label: option.label,
-    detail: option.detail,
-    modeId: option.value,
-    guidance: option.guidance,
-    bestFor: option.bestFor,
-    needsController: option.needsController,
-  })),
-  {
-    value: "custom",
-    label: "Custom strategy",
-    detail:
-      "Preserve a repo-specific routing mode string exactly as typed for advanced or transitional configurations.",
-    modeId: "custom",
-    guidance: "exact string",
-    bestFor: "advanced / transitional configs",
-    needsController: false,
-  },
-];
-
-function createEmptyProcessConfig() {
-  return {
-    command: null,
-    args: [],
-    env: {},
-    cwd: null,
-    startupTimeoutMs: null,
-  } as const;
+function weightDraftsFromProfile(profile: WeightProfile): WeightDrafts {
+  return Object.fromEntries(
+    WEIGHT_METRICS.map((metric) => [metric, String(profile[metric])]),
+  ) as WeightDrafts;
 }
 
-function createDefaultRuntimeConfig(): RuntimeConfig {
-  return {
-    version: "1.0",
-    routingStrategy: null,
-    executionMode: "decision_only",
-    llamaSwap: {
-      enabled: false,
-      models: [],
-      process: createEmptyProcessConfig(),
-    },
-    liteLLM: {
-      enabled: false,
-      providers: [],
-      process: createEmptyProcessConfig(),
-    },
-  };
-}
-
-function toRoutingStrategyDraft(strategy: string | null | undefined): {
-  readonly choice: RoutingStrategyChoice;
-  readonly customValue: string;
-} {
-  const normalized = strategy?.trim() ?? "";
-  if (!normalized) {
-    return { choice: "unset", customValue: "" };
+function parseWeightDrafts(drafts: WeightDrafts): WeightProfile | null {
+  const parsed: Partial<Record<(typeof WEIGHT_METRICS)[number], number>> = {};
+  for (const metric of WEIGHT_METRICS) {
+    const raw = drafts[metric].trim();
+    const value = raw.length === 0 ? Number.NaN : Number(raw);
+    if (!Number.isFinite(value)) {
+      return null;
+    }
+    parsed[metric] = value;
   }
-  const normalizedRoutingMode = normalizeRoutingModeValue(normalized);
-  if (normalizedRoutingMode) {
-    return {
-      choice: normalizedRoutingMode,
-      customValue: "",
-    };
-  }
-  return {
-    choice: "custom",
-    customValue: normalized,
-  };
+  return parsed as WeightProfile;
 }
 
-function resolveRoutingStrategyChoice(
-  choice: RoutingStrategyChoice,
-  customValue: string,
-): string | null {
-  if (choice === "unset") {
-    return null;
-  }
-  if (choice === "custom") {
-    return customValue.trim() || null;
-  }
-  return choice;
-}
-
-function applyExecutionMode(
-  config: RuntimeConfig,
-  executionMode: RuntimeExecutionMode,
-): RuntimeConfig {
-  return {
-    ...config,
-    executionMode,
-    llamaSwap: {
-      ...config.llamaSwap,
-      enabled: executionMode === "hybrid" || executionMode === "local_only",
-    },
-    liteLLM: {
-      ...config.liteLLM,
-      enabled: executionMode === "hybrid" || executionMode === "remote_only",
-    },
-  };
-}
-
+/** Run 103 / SP8 - the Routing strategy page of design document section 8. */
 export default function ControlRoutingStrategyRoute() {
-  const [configRecord, setConfigRecord] = useState<RuntimeConfigRecord | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
+  const [routerConfig, setRouterConfig] = useState<RouterConfig | null>(null);
+  const [latencyView, setLatencyView] = useState<LatencyOverrideView | null>(null);
+  const [policyVersion, setPolicyVersion] = useState<number | null>(null);
+  const [evidenceRows, setEvidenceRows] = useState<readonly LatencyEvidenceRow[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
-  const [selectedRoutingStrategy, setSelectedRoutingStrategy] =
-    useState<RoutingStrategyChoice>("unset");
-  const [customRoutingStrategy, setCustomRoutingStrategy] = useState("");
-  const [selectedExecutionMode, setSelectedExecutionMode] =
-    useState<RuntimeExecutionMode>("hybrid");
+  const [saving, setSaving] = useState(false);
+  const [latencySaving, setLatencySaving] = useState(false);
+  const [latencyStatus, setLatencyStatus] = useState<string | null>(null);
+  const [latencyErrors, setLatencyErrors] = useState<Readonly<Record<string, string>>>({});
+  const [operator, setOperator] = useState("");
+  const { token, setToken } = useOperatorToken();
 
-  const syncDrafts = useCallback((nextRecord: RuntimeConfigRecord) => {
-    const nextConfig = nextRecord.config ?? createDefaultRuntimeConfig();
-    const routingDraft = toRoutingStrategyDraft(nextConfig.routingStrategy);
-    setSelectedRoutingStrategy(routingDraft.choice);
-    setCustomRoutingStrategy(routingDraft.customValue);
-    setSelectedExecutionMode(nextConfig.executionMode ?? "hybrid");
+  const [mode, setMode] = useState<RoutingModeName>("baseline");
+  const [scoringStrategy, setScoringStrategy] = useState<ScoringStrategyName>("balanced");
+  const [pinWeights, setPinWeights] = useState(false);
+  const [weightDrafts, setWeightDrafts] = useState<WeightDrafts>(() =>
+    weightDraftsFromProfile(SCORING_PRESETS.balanced),
+  );
+  const [executionScope, setExecutionScope] = useState<ExecutionScopeName>("decision_only");
+  const [latencyDraft, setLatencyDraft] = useState<LatencyOverrideDraft | null>(null);
+
+  const syncDrafts = useCallback((next: RouterConfig, policy: LatencyOverrideView | null) => {
+    const summary = resolveRoutingPostureSummary({
+      routing: next.routing ?? null,
+      persisted: next.persisted,
+    });
+    setMode(summary.mode);
+    setScoringStrategy(summary.scoringStrategy ?? "balanced");
+    setPinWeights(summary.pinWeights);
+    setWeightDrafts(
+      weightDraftsFromProfile(
+        summary.weights ??
+          (summary.scoringStrategy && summary.scoringStrategy !== "custom"
+            ? SCORING_PRESETS[summary.scoringStrategy]
+            : SCORING_PRESETS.balanced),
+      ),
+    );
+    setExecutionScope(normalizeExecutionScopeValue(next.persisted.executionMode) ?? "decision_only");
+    if (policy) {
+      setLatencyDraft(policy.draft);
+    }
   }, []);
 
   const loadState = useCallback(async () => {
-    try {
-      const nextConfigRecord = await fetchRuntimeConfig();
-      setConfigRecord(nextConfigRecord);
-      syncDrafts(nextConfigRecord);
-      setError(null);
-    } catch (value) {
-      setError(value instanceof Error ? value.message : "Could not load routing strategy posture.");
-      throw value;
-    }
+    const [nextRouterConfig, nextPolicy] = await Promise.all([
+      fetchRouterConfig(),
+      fetchLearningPolicy().catch(() => null),
+    ]);
+    const nextLatencyView = nextPolicy ? buildLatencyOverrideDraft(nextPolicy.fields) : null;
+    setRouterConfig(nextRouterConfig);
+    setLatencyView(nextLatencyView);
+    setPolicyVersion(nextPolicy?.policyVersion ?? null);
+    syncDrafts(nextRouterConfig, nextLatencyView);
+    setLoadError(null);
   }, [syncDrafts]);
 
   useEffect(() => {
-    void loadState();
+    void loadState().catch((value: unknown) => {
+      setLoadError(
+        value instanceof Error ? value.message : "Could not load the routing strategy posture.",
+      );
+    });
   }, [loadState]);
 
-  if (error) {
-    return <ErrorState label={error} />;
+  const latencyWindowHours = latencyDraft?.windowHours ?? 24;
+  useEffect(() => {
+    let cancelled = false;
+    void fetchTelemetryRequests({ windowMs: latencyWindowHours * 60 * 60 * 1_000, limit: 500 })
+      .then((rows) => {
+        if (!cancelled) {
+          setEvidenceRows(rows);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setEvidenceRows([]);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [latencyWindowHours]);
+
+  const savedPosture = useMemo(
+    () =>
+      routerConfig
+        ? resolveRoutingPostureSummary({
+            routing: routerConfig.routing ?? null,
+            persisted: routerConfig.persisted,
+          })
+        : null,
+    [routerConfig],
+  );
+  const parsedWeights = useMemo(() => parseWeightDrafts(weightDrafts), [weightDrafts]);
+  const weightValidation = useMemo(
+    () => (parsedWeights ? validateWeightProfile(parsedWeights) : null),
+    [parsedWeights],
+  );
+  const weightsAreCustom = scoringStrategy === "custom";
+  const selectedModeOption =
+    ROUTING_MODE_OPTIONS.find((option) => option.value === mode) ?? ROUTING_MODE_OPTIONS[0];
+  const selectedScoringOption =
+    SCORING_STRATEGY_OPTIONS.find((option) => option.value === scoringStrategy) ??
+    SCORING_STRATEGY_OPTIONS[0];
+  const selectedScopeOption =
+    EXECUTION_SCOPE_OPTIONS.find((option) => option.value === executionScope) ??
+    EXECUTION_SCOPE_OPTIONS[0];
+  const draftAlias = `${selectedModeOption.aliasFamily}.${formatExecutionScopeSegment(executionScope)}`;
+  const savedScopeSegment = formatExecutionScopeSegment(
+    routerConfig?.persisted.executionMode ?? executionScope,
+  );
+  const savedWeightDrafts = savedPosture?.weights
+    ? weightDraftsFromProfile(savedPosture.weights)
+    : null;
+  const weightsDirty =
+    weightsAreCustom &&
+    (parsedWeights === null ||
+      savedWeightDrafts === null ||
+      WEIGHT_METRICS.some((metric) => weightDrafts[metric] !== savedWeightDrafts[metric]));
+  const evidence = useMemo(
+    () =>
+      latencyDraft
+        ? summarizeLatencyOverrideEvidence(evidenceRows, {
+            windowHours: latencyDraft.windowHours,
+            nowMs: Date.now(),
+            minSamples: latencyDraft.minSamples,
+          })
+        : null,
+    [evidenceRows, latencyDraft],
+  );
+  const hasUnsavedChanges =
+    savedPosture === null ||
+    savedPosture.mode !== mode ||
+    (savedPosture.scoringStrategy ?? "balanced") !== scoringStrategy ||
+    savedPosture.pinWeights !== pinWeights ||
+    weightsDirty ||
+    routerConfig?.persisted.executionMode !== executionScope;
+
+  if (loadError) {
+    return <ErrorState label={loadError} />;
   }
-  if (!configRecord) {
+  if (!routerConfig || !savedPosture) {
     return <LoadingState label="Loading routing strategy posture…" />;
   }
 
-  const config = configRecord.config ?? createDefaultRuntimeConfig();
-  const persistedRoutingStrategy = config.routingStrategy ?? null;
-  const persistedExecutionMode = config.executionMode ?? "decision_only";
-  const selectedRoutingStrategyValue = resolveRoutingStrategyChoice(
-    selectedRoutingStrategy,
-    customRoutingStrategy,
-  );
-  const hasUnsavedChanges =
-    selectedRoutingStrategyValue !== persistedRoutingStrategy ||
-    selectedExecutionMode !== persistedExecutionMode;
-  const selectedStrategyDetails =
-    STRATEGY_CHOICES.find((option) => option.value === selectedRoutingStrategy) ??
-    STRATEGY_CHOICES[0];
-  const selectedExecutionModeDetails =
-    EXECUTION_MODE_OPTIONS.find((option) => option.value === selectedExecutionMode) ??
-    EXECUTION_MODE_OPTIONS[0];
-  const draftAlias = formatDraftRoutingAlias(selectedRoutingStrategyValue, selectedExecutionMode);
-
-  const save = async () => {
-    const nextStrategy = resolveRoutingStrategyChoice(
-      selectedRoutingStrategy,
-      customRoutingStrategy,
-    );
-    if (selectedRoutingStrategy === "custom" && !nextStrategy) {
-      setError("Custom strategy cannot be empty.");
+  const saveRoutingStrategy = async () => {
+    const built = buildRoutingPatchDocument({
+      routing: routerConfig.routing ?? null,
+      scoringStrategy,
+      weights: weightsAreCustom ? parsedWeights : null,
+      pinWeights,
+      executionScope,
+    });
+    if (!built.ok) {
+      setSaveError(built.error);
+      setStatusMessage(null);
       return;
     }
     setSaving(true);
+    setSaveError(null);
     setStatusMessage(null);
-    setError(null);
     try {
-      const nextConfig = applyExecutionMode(
-        {
-          ...config,
-          routingStrategy: nextStrategy,
-        },
-        selectedExecutionMode,
-      );
-      await updateRuntimeConfig(nextConfig);
+      await updateRuntimeConfig({ ...built.document });
       await loadState();
-      setStatusMessage("Routing strategy saved and applied.");
+      setStatusMessage("Routing posture saved; the next decision uses this posture.");
     } catch (value) {
-      setError(value instanceof Error ? value.message : "Could not update routing strategy.");
+      setSaveError(
+        value instanceof Error ? value.message : "Could not save the routing strategy posture.",
+      );
     } finally {
       setSaving(false);
+    }
+  };
+
+  const saveLatencyOverride = async () => {
+    if (!latencyView || !latencyDraft) {
+      return;
+    }
+    const validation = validateLatencyOverrideDraft(latencyDraft, latencyView.bounds);
+    if (!validation.ok) {
+      setLatencyErrors(validation.errors);
+      setLatencyStatus(null);
+      return;
+    }
+    setLatencyErrors({});
+    if (Object.keys(validation.changes).length === 0) {
+      setLatencyStatus("The measured-latency override already matches the saved policy.");
+      return;
+    }
+    if (policyVersion === null) {
+      setLatencyStatus("The learning policy readback did not publish a policy version.");
+      return;
+    }
+    if (operator.trim().length === 0) {
+      setLatencyErrors({ operator: "An operator name is required to write the learning policy." });
+      return;
+    }
+    setLatencySaving(true);
+    setLatencyStatus(null);
+    try {
+      await saveLearningPolicy(
+        {
+          changes: validation.changes,
+          expectedPolicyVersion: policyVersion,
+          operator: operator.trim(),
+          reason: "run 103 routing strategy page",
+        },
+        fetch,
+        token,
+      );
+      await loadState();
+      setLatencyStatus("Measured-latency override saved.");
+    } catch (value) {
+      setLatencyStatus(
+        value instanceof Error ? value.message : "Could not save the measured-latency override.",
+      );
+    } finally {
+      setLatencySaving(false);
     }
   };
 
@@ -276,19 +315,19 @@ export default function ControlRoutingStrategyRoute() {
     <div className="space-y-6">
       <SectionCard
         title="Routing strategy"
-        description="Choose how the runtime picks models for each request."
+        description="Mode, scoring strategy, custom weights, the pin flag and the execution scope the next decision will use."
       >
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_280px]">
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,8fr)_minmax(0,4fr)]">
           <div className="min-w-0 space-y-5">
             <div className="-mx-5 border-b border-[var(--rm-border)]">
               <div className="flex min-h-0">
                 <div
                   className="w-[240px] shrink-0 space-y-0.5 border-r border-[var(--rm-border)] p-2"
                   role="listbox"
-                  aria-label="Routing strategy"
+                  aria-label="Routing mode"
                 >
-                  {STRATEGY_CHOICES.map((option) => {
-                    const selected = selectedRoutingStrategy === option.value;
+                  {ROUTING_MODE_OPTIONS.map((option) => {
+                    const selected = mode === option.value;
                     return (
                       <button
                         key={option.value}
@@ -296,11 +335,9 @@ export default function ControlRoutingStrategyRoute() {
                         role="option"
                         aria-selected={selected}
                         className={`flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-left transition-colors ${
-                          selected
-                            ? "bg-[var(--rm-panel-muted)]"
-                            : "hover:bg-[var(--rm-panel-muted)]"
+                          selected ? "bg-[var(--rm-panel-muted)]" : "hover:bg-[var(--rm-panel-muted)]"
                         }`}
-                        onClick={() => setSelectedRoutingStrategy(option.value)}
+                        onClick={() => setMode(option.value)}
                       >
                         <span
                           aria-hidden
@@ -317,70 +354,161 @@ export default function ControlRoutingStrategyRoute() {
                 </div>
 
                 <div className="min-w-0 flex-1 space-y-3.5 p-5">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-[18px] font-semibold leading-6 text-[var(--rm-fg)]">
-                      {selectedStrategyDetails.label}
-                    </h3>
-                    <Badge tone="accent">selected</Badge>
-                    {hasUnsavedChanges ? <Badge tone="warning">unsaved</Badge> : null}
+                  <div className="space-y-2">
+                    <SelectField
+                      label="Scoring strategy"
+                      value={scoringStrategy}
+                      onChange={(value) => {
+                        const normalized = normalizeScoringStrategyValue(value) ?? "balanced";
+                        setScoringStrategy(normalized);
+                        if (normalized !== "custom") {
+                          setWeightDrafts(weightDraftsFromProfile(SCORING_PRESETS[normalized]));
+                        }
+                      }}
+                    >
+                      {SCORING_STRATEGY_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </SelectField>
+                    <p className={supportingTextClassName}>{selectedScoringOption.detail}</p>
                   </div>
-                  <p className={supportingTextClassName}>{selectedStrategyDetails.detail}</p>
-
-                  {selectedRoutingStrategy === "custom" ? (
-                    <label className="grid gap-2">
-                      <span className={formFieldLabelClassName}>Custom strategy</span>
-                      <input
-                        className={fieldClassName}
-                        value={customRoutingStrategy}
-                        onChange={(event) => setCustomRoutingStrategy(event.target.value)}
-                        placeholder="org.routing.v2"
-                      />
-                      <span className={supportingTextClassName}>
-                        Persisted exactly as typed — not remapped to a named mode.
-                      </span>
-                    </label>
-                  ) : (
-                    <MetricStrip
-                      aria-label="Strategy details"
-                      variant="inventory"
-                      className="max-w-none"
-                      items={[
-                        { id: "mode-id", label: "Mode id", value: selectedStrategyDetails.modeId },
-                        {
-                          id: "guidance",
-                          label: "Guidance",
-                          value: selectedStrategyDetails.guidance,
-                        },
-                        {
-                          id: "best-for",
-                          label: "Best for",
-                          value: selectedStrategyDetails.bestFor,
-                        },
-                        {
-                          id: "needs-controller",
-                          label: "Needs controller",
-                          value: selectedStrategyDetails.needsController ? "yes" : "no",
-                        },
-                      ]}
-                    />
-                  )}
+                  <div className="space-y-1">
+                    <p className={`${bodyStrongTextClassName} text-[var(--rm-fg)]`}>
+                      {selectedModeOption.label}
+                    </p>
+                    <p className={supportingTextClassName}>{selectedModeOption.detail}</p>
+                    <p className={supportingTextClassName}>
+                      {selectedModeOption.needsController
+                        ? "Needs the routing controller."
+                        : "Runs without the routing controller."}{" "}
+                      Aliases: {selectedModeOption.aliasFamily}.*
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
 
             <div className="space-y-2">
+              <div className="flex items-start gap-3">
+                <CheckboxControl
+                  id="routing-pin-weights"
+                  aria-label="Pin scoring strategy"
+                  checked={pinWeights}
+                  onChange={() => setPinWeights((current) => !current)}
+                />
+                <div className="space-y-1">
+                  <label
+                    className={`${bodyStrongTextClassName} text-[var(--rm-fg)]`}
+                    htmlFor="routing-pin-weights"
+                  >
+                    Pin scoring strategy
+                  </label>
+                  <p className={supportingTextClassName}>{PIN_WEIGHTS_HELP_TEXT}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className={monoEyebrowClassName}>Custom weights</p>
+                <p className={supportingTextClassName}>
+                  {weightsAreCustom
+                    ? `Sum ${weightValidation ? formatWeightValue(weightValidation.sum) : "—"} (1.0 ± ${WEIGHT_SUM_TOLERANCE})`
+                    : "Enabled when the scoring strategy is Custom"}
+                </p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {WEIGHT_METRICS.map((metric) => (
+                  <label key={metric} className="grid gap-1">
+                    <span className={fieldLabelClassName}>{formatWeightMetricLabel(metric)}</span>
+                    <input
+                      className={fieldClassName}
+                      type="number"
+                      min={0}
+                      max={1}
+                      step={0.01}
+                      disabled={!weightsAreCustom || saving}
+                      value={weightDrafts[metric]}
+                      onChange={(event) =>
+                        setWeightDrafts((current) => ({
+                          ...current,
+                          [metric]: event.target.value,
+                        }))
+                      }
+                    />
+                  </label>
+                ))}
+              </div>
+              {weightsAreCustom && weightValidation && !weightValidation.ok ? (
+                <p className={errorNoticeClassName}>
+                  {weightValidation.sumError ??
+                    "Every metric must be between 0 and 1 and the six must sum to 1.0 ± 0.001."}
+                </p>
+              ) : null}
+              <div className="flex flex-wrap items-center gap-2">
+                <span className={supportingTextClassName}>Reset to preset</span>
+                {(Object.keys(SCORING_PRESETS) as ReadonlyArray<keyof typeof SCORING_PRESETS>).map(
+                  (preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      className={secondaryButtonClassName}
+                      disabled={!weightsAreCustom || saving}
+                      onClick={() => setWeightDrafts(weightDraftsFromProfile(SCORING_PRESETS[preset]))}
+                    >
+                      {SCORING_STRATEGY_OPTIONS.find((option) => option.value === preset)?.label ??
+                        preset}
+                    </button>
+                  ),
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
               <SelectField
-                label="Execution mode"
-                value={selectedExecutionMode}
-                onChange={(value) => setSelectedExecutionMode(value as RuntimeExecutionMode)}
+                label="Execution scope"
+                value={executionScope}
+                onChange={(value) =>
+                  setExecutionScope(normalizeExecutionScopeValue(value) ?? "decision_only")
+                }
               >
-                {EXECUTION_MODE_OPTIONS.map((option) => (
+                {EXECUTION_SCOPE_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
                 ))}
               </SelectField>
-              <p className={supportingTextClassName}>{selectedExecutionModeDetails.detail}</p>
+              <p className={supportingTextClassName}>{selectedScopeOption.detail}</p>
+            </div>
+
+            <div className={`${mutedPanelClassName} space-y-2 p-4`}>
+              <div className="flex flex-wrap items-center gap-2">
+                <p className={monoEyebrowClassName}>Resolved posture</p>
+                {hasUnsavedChanges ? <Badge tone="warning">unsaved</Badge> : null}
+                {savedPosture.source === "legacy-string" ? (
+                  <Badge tone="warning">legacy spelling migrated on save</Badge>
+                ) : null}
+              </div>
+              <p className={`${bodyStrongTextClassName} text-[var(--rm-fg)]`}>
+                {`${savedPosture.modeLabel} · ${savedPosture.scoringStrategyLabel} · scope ${savedScopeSegment}`}
+              </p>
+              <p className={supportingTextClassName}>{savedPosture.sourceLabel}</p>
+              <p className={supportingTextClassName}>
+                {savedPosture.legacyStrategy
+                  ? `Saved string: ${savedPosture.legacyStrategy} — saving writes ${savedPosture.mode} / ${savedPosture.scoringStrategy ?? "balanced"}.`
+                  : `Saved posture: ${savedPosture.mode} / ${savedPosture.scoringStrategy ?? "balanced"}.`}
+              </p>
+              {savedPosture.degradations.length > 0 ? (
+                <ul className="space-y-1">
+                  {savedPosture.degradations.map((degradation) => (
+                    <li key={degradation} className={supportingTextClassName}>
+                      {degradation}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
             </div>
 
             <div className="flex flex-wrap gap-3">
@@ -388,7 +516,7 @@ export default function ControlRoutingStrategyRoute() {
                 className={primaryButtonClassName}
                 type="button"
                 disabled={saving}
-                onClick={() => void save()}
+                onClick={() => void saveRoutingStrategy()}
               >
                 {saving ? "Applying…" : "Save and apply strategy"}
               </button>
@@ -397,41 +525,292 @@ export default function ControlRoutingStrategyRoute() {
                 type="button"
                 disabled={saving}
                 onClick={() => {
-                  syncDrafts(configRecord);
+                  syncDrafts(routerConfig, latencyView);
                   setStatusMessage(null);
-                  setError(null);
+                  setSaveError(null);
                 }}
               >
                 Reset form
               </button>
             </div>
+            {saveError ? <p className={errorNoticeClassName}>{saveError}</p> : null}
             {statusMessage ? <p className={supportingTextClassName}>{statusMessage}</p> : null}
           </div>
 
-          <aside className="space-y-3 rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-5">
+          <aside className={`${cardClassName} space-y-3 p-5`}>
             <p className={monoEyebrowClassName}>Active posture</p>
             <div className="space-y-3">
-              <div className="space-y-2">
-                <p className="font-sans text-xs leading-4 text-[var(--rm-secondary)]">Strategy</p>
-                <p className="text-sm font-semibold leading-[18px] text-[var(--rm-fg)]">
-                  {selectedStrategyDetails.label}
+              <div className="space-y-1">
+                <p className={fieldLabelClassName}>Mode</p>
+                <p className={`${bodyStrongTextClassName} text-[var(--rm-fg)]`}>
+                  {selectedModeOption.label}
                 </p>
               </div>
-              <div className="space-y-2">
-                <p className="font-sans text-xs leading-4 text-[var(--rm-secondary)]">Execution</p>
-                <p className="text-sm font-semibold leading-[18px] text-[var(--rm-fg)]">
-                  {selectedExecutionModeDetails.label}
+              <div className="space-y-1">
+                <p className={fieldLabelClassName}>Scoring strategy</p>
+                <p className={`${bodyStrongTextClassName} text-[var(--rm-fg)]`}>
+                  {selectedScoringOption.label}
                 </p>
               </div>
-              <div className="space-y-2">
-                <p className="font-sans text-xs leading-4 text-[var(--rm-secondary)]">Alias</p>
-                <p className="font-mono text-sm font-semibold leading-[18px] text-[var(--rm-fg)]">
+              <div className="space-y-1">
+                <p className={fieldLabelClassName}>Execution scope</p>
+                <p className={`${bodyStrongTextClassName} text-[var(--rm-fg)]`}>
+                  {selectedScopeOption.label}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <p className={fieldLabelClassName}>Alias</p>
+                <p className={`${bodyStrongTextClassName} break-all text-[var(--rm-fg)]`}>
                   {draftAlias}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <p className={fieldLabelClassName}>Saved alias</p>
+                <p className={`${bodyStrongTextClassName} break-all text-[var(--rm-fg)]`}>
+                  {savedPosture.routingAliasId}
                 </p>
               </div>
             </div>
           </aside>
         </div>
+      </SectionCard>
+
+      <SectionCard
+        title="Measured-latency override"
+        description={`Off by default. When authorized it may substitute an endpoint the router already considered eligible, comparing ${LATENCY_COMPARISON_METRIC_COPY}.`}
+      >
+        {!latencyView || !latencyDraft ? (
+          <p className={supportingTextClassName}>
+            The learning-policy readback did not publish the measured-latency fields for this
+            runtime build.
+          </p>
+        ) : (
+          <div className="space-y-4">
+            {latencyView.missingFields.length > 0 ? (
+              <p className={errorNoticeClassName}>
+                This runtime build does not publish: {latencyView.missingFields.join(", ")}.
+              </p>
+            ) : null}
+            <div className="flex items-start gap-3">
+              <CheckboxControl
+                id="latency-selection-enabled"
+                aria-label="Measured-latency override"
+                checked={latencyDraft.enabled === true}
+                disabled={latencyDraft.enabled === null || latencySaving}
+                onChange={() =>
+                  setLatencyDraft((current) =>
+                    current ? { ...current, enabled: !(current.enabled === true) } : current,
+                  )
+                }
+              />
+              <div className="space-y-1">
+                <label
+                  className={`${bodyStrongTextClassName} text-[var(--rm-fg)]`}
+                  htmlFor="latency-selection-enabled"
+                >
+                  Enabled
+                </label>
+                <p className={supportingTextClassName}>
+                  It acts only when the activation stage is at or above the minimum stage below.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              <SelectField
+                label="Minimum stage"
+                value={latencyDraft.minStage}
+                onChange={(value) =>
+                  setLatencyDraft((current) =>
+                    current
+                      ? { ...current, minStage: value as LatencyOverrideDraft["minStage"] }
+                      : current,
+                  )
+                }
+              >
+                {latencyView.stages.map((stage) => (
+                  <option key={stage} value={stage}>
+                    {stage}
+                  </option>
+                ))}
+              </SelectField>
+              <label className="grid gap-1">
+                <span className={fieldLabelClassName}>Window (hours)</span>
+                <input
+                  className={fieldClassName}
+                  type="number"
+                  min={latencyView.bounds.windowHours.min}
+                  max={latencyView.bounds.windowHours.max}
+                  value={latencyDraft.windowHours}
+                  disabled={latencySaving}
+                  onChange={(event) =>
+                    setLatencyDraft((current) =>
+                      current ? { ...current, windowHours: Number(event.target.value) } : current,
+                    )
+                  }
+                />
+              </label>
+              <label className="grid gap-1">
+                <span className={fieldLabelClassName}>Sample floor</span>
+                <input
+                  className={fieldClassName}
+                  type="number"
+                  min={latencyView.bounds.minSamples.min}
+                  max={latencyView.bounds.minSamples.max}
+                  value={latencyDraft.minSamples}
+                  disabled={latencySaving}
+                  onChange={(event) =>
+                    setLatencyDraft((current) =>
+                      current ? { ...current, minSamples: Number(event.target.value) } : current,
+                    )
+                  }
+                />
+                <span className={supportingTextClassName}>
+                  Bounds {latencyView.bounds.minSamples.min}..{latencyView.bounds.minSamples.max}
+                </span>
+              </label>
+              <label className="grid gap-1">
+                <span className={fieldLabelClassName}>Threshold (ms)</span>
+                <input
+                  className={fieldClassName}
+                  type="number"
+                  min={latencyView.bounds.maxDeltaMs.min}
+                  max={latencyView.bounds.maxDeltaMs.max}
+                  value={latencyDraft.maxDeltaMs}
+                  disabled={latencySaving}
+                  onChange={(event) =>
+                    setLatencyDraft((current) =>
+                      current ? { ...current, maxDeltaMs: Number(event.target.value) } : current,
+                    )
+                  }
+                />
+                <span className={supportingTextClassName}>
+                  Default {latencyView.defaults.maxDeltaMs} ms
+                </span>
+              </label>
+              <label className="grid gap-1">
+                <span className={fieldLabelClassName}>Bucket bounds (tokens)</span>
+                <input
+                  className={fieldClassName}
+                  value={latencyDraft.bucketBounds}
+                  disabled={latencySaving}
+                  onChange={(event) =>
+                    setLatencyDraft((current) =>
+                      current ? { ...current, bucketBounds: event.target.value } : current,
+                    )
+                  }
+                />
+              </label>
+              <label className="grid gap-1">
+                <span className={fieldLabelClassName}>Max candidates</span>
+                <input
+                  className={fieldClassName}
+                  type="number"
+                  min={latencyView.bounds.maxCandidates.min}
+                  max={latencyView.bounds.maxCandidates.max}
+                  value={latencyDraft.maxCandidates}
+                  disabled={latencySaving}
+                  onChange={(event) =>
+                    setLatencyDraft((current) =>
+                      current ? { ...current, maxCandidates: Number(event.target.value) } : current,
+                    )
+                  }
+                />
+              </label>
+            </div>
+
+            <div className="space-y-2">
+              <p className={monoEyebrowClassName}>Evidence behind this setting</p>
+              <MetricStrip
+                aria-label="Measured-latency evidence"
+                variant="inventory"
+                className="max-w-none"
+                items={[
+                  {
+                    id: "samples",
+                    label: `Latency samples / ${latencyDraft.windowHours} h`,
+                    value: String(evidence?.sampleCount ?? 0),
+                  },
+                  {
+                    id: "endpoints",
+                    label: "Endpoints with evidence",
+                    value: String(evidence?.endpointIds.length ?? 0),
+                  },
+                  {
+                    id: "floor",
+                    label: "Sample floor",
+                    value: String(latencyDraft.minSamples),
+                  },
+                ]}
+              />
+              {evidence && evidence.samplesBelowFloor ? (
+                <p className={supportingTextClassName}>
+                  {`${evidence.sampleCount} sample${evidence.sampleCount === 1 ? "" : "s"} in the window is below the floor of ${evidence.minSamples}, so the override cannot act yet.`}
+                </p>
+              ) : null}
+              {evidence ? (
+                <p className={supportingTextClassName}>
+                  {`${evidence.rowsWithoutSamples} request${evidence.rowsWithoutSamples === 1 ? "" : "s"} in the window carried no usable latency sample.`}
+                </p>
+              ) : null}
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <button
+                className={primaryButtonClassName}
+                type="button"
+                disabled={latencySaving}
+                onClick={() => void saveLatencyOverride()}
+              >
+                {latencySaving ? "Saving…" : "Save measured-latency override"}
+              </button>
+              <button
+                className={secondaryButtonClassName}
+                type="button"
+                disabled={latencySaving}
+                onClick={() => {
+                  setLatencyDraft(latencyView.defaults);
+                  setLatencyErrors({});
+                  setLatencyStatus("Reset to the shipped defaults; save to persist them.");
+                }}
+              >
+                Reset to default
+              </button>
+            </div>
+            {Object.entries(latencyErrors).map(([field, message]) => (
+              <p key={field} className={errorNoticeClassName}>
+                {field}: {message}
+              </p>
+            ))}
+            {latencyStatus ? <p className={supportingTextClassName}>{latencyStatus}</p> : null}
+
+            <div className={`${mutedPanelClassName} space-y-2 p-4`}>
+              <p className={monoEyebrowClassName}>Operator receipt</p>
+              <label className="grid gap-1">
+                <span className={fieldLabelClassName}>Operator</span>
+                <input
+                  className={fieldClassName}
+                  value={operator}
+                  placeholder="operator name recorded on the policy receipt"
+                  onChange={(event) => setOperator(event.target.value)}
+                />
+              </label>
+              <label className="grid gap-1">
+                <span className={fieldLabelClassName}>Operator token</span>
+                <input
+                  className={fieldClassName}
+                  type="password"
+                  value={token}
+                  onChange={(event) => setToken(event.target.value)}
+                />
+              </label>
+              <p className={supportingTextClassName}>
+                The learning policy is written through the same authenticated operator API the
+                Learning pages use.
+              </p>
+            </div>
+          </div>
+        )}
       </SectionCard>
     </div>
   );

@@ -239,6 +239,17 @@ export interface RuntimeModelAlias {
 export interface RuntimeConfig {
   readonly version: string;
   readonly routingStrategy?: string | null;
+  /**
+   * Run 103: the parsed structured posture the runtime config readback carries when the file
+   * declares a `routing` block. Absent while the file is still on the legacy single string.
+   */
+  readonly routingPosture?: {
+    readonly mode: string;
+    readonly scoringStrategy: string | null;
+    readonly pinWeights: boolean;
+    readonly operator?: { readonly name: string; readonly weights: Readonly<Record<string, number>> } | null;
+    readonly degradations?: readonly string[];
+  } | null;
   readonly executionMode?: "decision_only" | "hybrid" | "local_only" | "remote_only";
   readonly modelAliases?: readonly RuntimeModelAlias[];
   readonly model_aliases?: readonly RuntimeModelAlias[];
@@ -599,6 +610,11 @@ export interface RuntimeTelemetryRequestRecord {
   readonly outputTokens?: number;
   readonly totalTokens?: number;
   readonly latencyMs?: number | null;
+  /**
+   * Run 98 addendum 40 (L1): the request duration the caller experienced. The measured-latency
+   * override reads request durations, so the routing page counts evidence from this field first.
+   */
+  readonly requestLatencyMs?: number | null;
   readonly errorClass?: string | null;
   readonly statusCode?: number | null;
   readonly finishReason?: string | null;
@@ -1147,11 +1163,58 @@ export interface RouterSummary {
   };
 }
 
+export interface RouterRoutingPostureReadback {
+  /** Non-null only while the file still carries the pre-run-103 single-string spelling. */
+  readonly legacyStrategy: string | null;
+  readonly mode: string;
+  readonly scoringStrategy: string | null;
+  readonly pinWeights: boolean;
+  readonly weights: Readonly<Record<string, number>> | null;
+  readonly degradations: readonly string[];
+}
+
+export interface RouterPostureAliasReadback {
+  readonly aliasId: string;
+  readonly mode: string | null;
+  readonly candidateCount: number;
+  readonly allowEndpointIds: readonly string[];
+  readonly poolEmpty: boolean;
+}
+
+export interface RouterPostureEntryReadback {
+  readonly name: string;
+  readonly kind: "role" | "workload";
+  readonly roleId: string | null;
+  readonly scoringStrategy: string | null;
+  readonly routingMode: string | null;
+  readonly computePreference: string | null;
+  readonly configuredModelIds: readonly string[];
+  readonly requiredCapabilities: readonly string[];
+  readonly violations: readonly string[];
+  readonly aliases: readonly RouterPostureAliasReadback[];
+}
+
+export interface RouterPostureDiagnosticsReadback {
+  readonly violations: readonly string[];
+  readonly skipped: readonly { readonly aliasId: string; readonly reason: string }[];
+  readonly warnings: readonly string[];
+}
+
 export interface RouterConfig {
   readonly persisted: {
     readonly strategy: string | null;
     readonly executionMode: "decision_only" | "hybrid" | "local_only" | "remote_only";
   };
+  /**
+   * Run 103 / SP5e: the saved posture. `legacyStrategy` is set only while the file still carries the
+   * single pre-run-103 string, so the page can say the posture it shows is the migrated one.
+   */
+  readonly routing?: RouterRoutingPostureReadback | null;
+  readonly agentStrategies?: readonly RouterPostureEntryReadback[];
+  readonly workloads?: readonly RouterPostureEntryReadback[];
+  /** Run 103 / SP6: the shipped one-click workload templates the runtime validates. */
+  readonly workloadExamples?: Readonly<Record<string, Readonly<Record<string, unknown>>>>;
+  readonly postureDiagnostics?: RouterPostureDiagnosticsReadback;
   readonly controller: RuntimeControllerAssignment | null;
   readonly guidance: {
     readonly endpointId?: string | null;
@@ -2958,7 +3021,11 @@ export async function fetchRuntimeConfig(
 }
 
 export async function updateRuntimeConfig(
-  payload: RuntimeConfig,
+  /**
+   * Run 103: the endpoint merges a document patch into the saved file, so a page that owns one
+   * section sends just that section (snake_case) instead of echoing the whole config back.
+   */
+  payload: RuntimeConfig | Readonly<Record<string, unknown>>,
   fetcher: RuntimeFetcher = fetch,
 ): Promise<RuntimeConfigRecord> {
   return putJson<RuntimeConfigRecord>("/api/role-model/runtime/config", payload, fetcher);

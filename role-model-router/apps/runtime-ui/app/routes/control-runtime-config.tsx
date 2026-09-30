@@ -13,6 +13,7 @@ import {
   supportingTextClassName,
 } from "../lib/design-system";
 import { applyLlamaSwapScaffold } from "../lib/llama-swap-setup";
+import { canonicalizeRoutingDocument } from "../lib/routing-mode";
 import {
   type RuntimeConfig,
   type RuntimeConfigRecord,
@@ -90,12 +91,21 @@ export default function ControlRuntimeConfigRoute() {
     setSaving(true);
     setStatusMessage(null);
     try {
-      const payload = JSON.parse(editorText) as RuntimeConfig;
+      // Run 103 R8: this editor is the only free-form write path, so a legacy routing spelling typed
+      // here is rewritten to the canonical vocabulary before the runtime sees it.
+      const canonicalized = canonicalizeRoutingDocument(
+        JSON.parse(editorText) as Record<string, unknown>,
+      );
+      const payload = canonicalized.document as unknown as RuntimeConfig;
       const nextRecord = await updateRuntimeConfig(payload);
       setConfigRecord(nextRecord);
       setEditorText(toEditorText(nextRecord.config));
       setError(null);
-      setStatusMessage("Runtime config applied.");
+      setStatusMessage(
+        canonicalized.migrated.length > 0
+          ? `Runtime config applied; canonical routing vocabulary written (${canonicalized.migrated.join(", ")}).`
+          : "Runtime config applied.",
+      );
     } catch (value) {
       setError(value instanceof Error ? value.message : "Could not apply runtime config.");
     } finally {

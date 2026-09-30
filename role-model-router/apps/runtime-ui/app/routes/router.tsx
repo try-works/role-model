@@ -15,6 +15,10 @@ import {
   supportingTextClassName,
 } from "../lib/design-system";
 import { formatEndpointDisplayPath, formatModelIdentity } from "../lib/effort-identity";
+import {
+  type RoutingPostureReadback,
+  resolveRoutingPostureSummary,
+} from "../lib/routing-mode";
 import { selectOverviewRouterCandidates } from "../lib/router-candidate-labels";
 import {
   type RouterCandidate,
@@ -27,6 +31,28 @@ import {
   fetchRuntimeEndpoints,
 } from "../lib/runtime-api";
 import { buildAliasReadinessRows } from "../lib/view-models";
+
+/**
+ * Run 103 / SP8: the parsed `routing` block the runtime config readback carries. When the file is
+ * still on the legacy single string the posture summary migrates it on read, so the overview can
+ * stop deriving the alias from the raw config string.
+ */
+function readRuntimeRoutingPosture(
+  config: RuntimeConfigRecord["config"],
+): RoutingPostureReadback | null {
+  const posture = config?.routingPosture;
+  if (!posture) {
+    return null;
+  }
+  return {
+    legacyStrategy: null,
+    mode: posture.mode,
+    scoringStrategy: posture.scoringStrategy,
+    pinWeights: posture.pinWeights === true,
+    weights: posture.operator?.weights ?? null,
+    degradations: posture.degradations ?? [],
+  };
+}
 
 export default function RouterOverviewRoute() {
   const [summary, setSummary] = useState<RouterSummary | null>(null);
@@ -118,9 +144,13 @@ export default function RouterOverviewRoute() {
   const configuredStrategy = config?.routingStrategy ?? null;
   const configuredExecutionMode = config?.executionMode ?? summary.executionMode;
   const controllerModelId = summary.controller?.modelId ?? null;
+  const configuredPosture = resolveRoutingPostureSummary({
+    routing: readRuntimeRoutingPosture(config ?? null),
+    persisted: { strategy: configuredStrategy, executionMode: configuredExecutionMode },
+  });
   const configuredAliasId =
     configuredExecutionMode && configuredExecutionMode.length > 0
-      ? `${configuredStrategy ?? "default"}.${configuredExecutionMode.replaceAll("_", "-")}`
+      ? configuredPosture.routingAliasId
       : null;
   const activeAliasRow =
     (configuredAliasId
