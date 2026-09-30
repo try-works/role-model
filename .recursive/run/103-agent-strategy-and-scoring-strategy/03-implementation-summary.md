@@ -21,6 +21,7 @@ and the actual change surface, up to the point this artifact was last updated.
 - [x] `SP3a` provenance receipt, `SP3b` diagnostics helper, `SP3c` attachment + label cleanup
 - [x] `SP4a` controller accepts `latency`, `SP4b` pin rule, `SP4c` pin gate wired
 - [x] `SP5a` entry validation, `SP5b` materialisation + intent precedence, `SP5c` section decode
+- [x] `SP5d` alias-inventory merge (canonical matrix stays authoritative; collisions reported and skipped)
 - [x] `SP7` effective-latency override metric and defaults
 - [ ] `SP5d` wire the section decoder into the runtime config/alias inventory
 - [ ] `SP6` workload examples verified end-to-end through the config path
@@ -49,6 +50,7 @@ Strict TDD: every row below has a RED log recorded before its implementation and
 | `SP5b` | R5, R6 | `agent-strategy.ts` (materialisation + `resolveAliasRequestedRole`), `test/agent-strategy-materialize.test.ts` | `f453efff` | `red/sp5b-materialize-red.log`, `green/sp5b-materialize-green.log` |
 | `SP5c` | R5, R6 | `agent-strategy.ts` (`decodeAgentStrategySection`), `test/agent-strategy-section.test.ts` | `1ed564bc` | `red/sp5c-section-red.log`, `green/sp5c-section-green.log` |
 | `SP7` | R7 | `routing-latency-selection.ts` (effective metric), `routing-latency-policy.ts` (10 000 ms, 5..30), `test/routing-latency-effective-metric.test.ts`, `test/run98-a40-latency-policy.test.ts` (new defaults) | `ef6e288e` | `red/sp7-effective-metric-red.log`, `green/sp7-effective-metric-green.log` |
+| `SP5d` | R5, R6, R10 | `agent-strategy.ts` (`mergeAliasInventory`), `test/agent-strategy-inventory.test.ts` | `f52cb7f2` | `red/sp5d-inventory-red.log`, `green/sp5d-inventory-green.log` |
 
 ## TDD Compliance Log
 
@@ -75,6 +77,7 @@ was touched. The plan's `SP2` split into `SP2b`/`SP2c`/`SP2d` for tractable RED/
 
 ## Remaining Work
 
-`SP5d` (config wiring), `SP6` (workload examples through the config path), `SP8` (UI surfaces and the
-decision-detail receipt), then the Phase 3 audit sections, Phase 3.5 review, Phase 4 tests, Phase 5 live pi-CLI QA
-and the Phase 6-8 closeout.
+`SP5e` (invoke the section decoder and the inventory merge from the unified-config path so posture aliases become
+live), `SP6` (workload examples through the config path), `SP8` (UI surfaces and the decision-detail receipt),
+then the Phase 3 audit sections, Phase 3.5 review, Phase 4 tests, Phase 5 live pi-CLI QA and the Phase 6-8
+closeout.
