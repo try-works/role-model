@@ -532,6 +532,7 @@ import {
   selectDurableComparisonGroupId,
   serveLearnerSweepRetrieval,
 } from "./track-b-learning-pass.js";
+import { createFinalizedGroupListingCache } from "./finalized-group-listing-cache.js";
 import {
   TRACK_B_CANONICAL_EXTENSION_IDS,
   type TrackBExtensionClosure,
@@ -5345,6 +5346,14 @@ export async function main(): Promise<void> {
        * on every tick; a restart re-scans from the newest end (the reads are idempotent).
        */
       const finalizationSignalsSettled = new Set<string>();
+      /**
+       * Run 104 R10: the sweep's `evaluation:list-groups` listing is its whole cost - 293,159 bytes per call,
+       * 61 calls in 30 minutes while the operator readbacks hung. Reuse the listing across ticks inside a
+       * bounded window; a group finalized inside the window is picked up by the next listing, and each
+       * settled group's own report is idempotent.
+       */
+      const finalizedGroupListingCache = createFinalizedGroupListingCache<Record<string, unknown>>();
+      const finalizedGroupListingKey = `${options.runtimeStateRoot}|${options.scopeId}`;
       /** S27 diagnostics: report the resolved job scope and an empty recovery page once per process. */
       let replayJobScopeReported = false;
       let emptyRecoveryPageReported = false;
@@ -6480,26 +6489,30 @@ export async function main(): Promise<void> {
            * newest end first.
            */
           const groups = (
-            await collectPagedComparisonGroups({
-              readPage: async (cursor) => {
-                const decoded = decodeExternalizedOperatorReadback({
-                  stateRoot: options.runtimeStateRoot,
-                  scopeId: options.scopeId,
-                  value: unwrapCapabilityPayload(
-                    await runtime.invoke(
-                      "evaluation-core",
-                      envelopeFor("evaluation-core", "evaluation:list-groups", {
-                        page: true,
-                        status: "finalized",
-                        limit: LEARNING_GROUP_PAGE_LIMIT,
-                        ...(cursor ? { cursor } : {}),
-                      }),
-                    ),
-                  ),
-                });
-                return decoded;
-              },
-            }).catch(() => [])
+            await finalizedGroupListingCache
+              .read(finalizedGroupListingKey, async () => {
+                return collectPagedComparisonGroups({
+                  readPage: async (cursor) => {
+                    const decoded = decodeExternalizedOperatorReadback({
+                      stateRoot: options.runtimeStateRoot,
+                      scopeId: options.scopeId,
+                      value: unwrapCapabilityPayload(
+                        await runtime.invoke(
+                          "evaluation-core",
+                          envelopeFor("evaluation-core", "evaluation:list-groups", {
+                            page: true,
+                            status: "finalized",
+                            limit: LEARNING_GROUP_PAGE_LIMIT,
+                            ...(cursor ? { cursor } : {}),
+                          }),
+                        ),
+                      ),
+                    });
+                    return decoded;
+                  },
+                }).catch(() => []);
+              })
+              .catch(() => [])
           ).filter((group): group is Record<string, unknown> => {
             return Boolean(group) && typeof group === "object" && !Array.isArray(group);
           });
