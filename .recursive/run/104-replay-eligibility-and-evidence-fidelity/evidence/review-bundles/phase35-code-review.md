@@ -3,8 +3,8 @@ Phase: `03.5 Code review`
 Role: `code-reviewer`
 Bundle Path: `/.recursive/run/104-replay-eligibility-and-evidence-fidelity/evidence/review-bundles/phase35-code-review.md`
 Artifact Path: `/.recursive/run/104-replay-eligibility-and-evidence-fidelity/03-implementation-summary.md`
-Artifact Content Hash: `88043be5caed8bd7bca1c318b7eba3095d684be519989166ff4ee7f850a8ac48`
-GeneratedAt: `2026-10-01T12:46:21Z`
+Artifact Content Hash: `0be7e69e572b315f776860b027a8dd142ab816f7c2830859a8af787179e46209`
+GeneratedAt: `2026-10-01T13:57:05Z`
 
 ## Bundle Scope
 - Canonical delegated review bundle for recursive-mode audit/review work.
@@ -36,6 +36,7 @@ GeneratedAt: `2026-10-01T12:46:21Z`
 - `role-model-router/apps/runtime-host-bridge/src/traffic-class.ts`
 - `role-model-router/apps/runtime-host-bridge/test/index.test.ts`
 - `role-model-router/apps/runtime-host-bridge/test/run104-advisory-classification-variant.test.ts`
+- `role-model-router/apps/runtime-host-bridge/test/run104-branch-append-recovery.test.ts`
 - `role-model-router/apps/runtime-host-bridge/test/run104-sp1-dispatch-subset.test.ts`
 - `role-model-router/apps/runtime-host-bridge/test/run104-sp1-replay-eligibility.test.ts`
 - `role-model-router/apps/runtime-host-bridge/test/run104-sp2-refusal-semantics.test.ts`
@@ -94,12 +95,13 @@ GeneratedAt: `2026-10-01T12:46:21Z`
 
 ## Evidence References
 - `.recursive/run/104-replay-eligibility-and-evidence-fidelity/evidence/other/effect-primitive-audit.md`
+- `.recursive/run/104-replay-eligibility-and-evidence-fidelity/03-implementation-summary.md`
 
 ## Audit Questions
-- `Is the implementation correct, complete against R1-R15, and free of the class of defects the plan set out to fix? Focus on: the R9 effort-matching repoint, the R8 completion-contract change, the SP2 terminal/deferrable split, the SP9 live-class default, and whether any acceptance criterion is claimed without a re-runnable command.`
+- `Is the implementation correct, complete against R1-R15, and free of the class of defects the plan set out to fix? Focus on: the R8 completion-contract change (evaluation-core), the branch-append recovery fix in cli.ts, the SP2 terminal/deferrable split, the R9 effort-matching repoint and exclusion, the SP9 live-class default, and whether any acceptance criterion is claimed without a re-runnable command.`
 
 ## Required Output
-- `Findings with severity, file:line, reproduction, and a verdict: PASS / FAIL-repairable / FAIL`
+- `Findings with severity, file:line, reproduction, and a verdict: PASS / FAIL-repairable / FAIL. Findings file under the run folder's evidence/other/.`
 
 ## Notes
 - Review output is invalid if it does not cite the upstream artifacts, diff basis, changed files, and final verdict.
