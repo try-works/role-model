@@ -238,6 +238,46 @@ its focused tests were re-run by the controller before the commit was accepted. 
 - task variant survives `normalizeTrackBRouteAdvisoryClassification`; the shell footer samples the newest live
   row on both the poll and the telemetry SSE push, and the sidebar renders an honest absence label.
 
+### `R8` remainder — finalization boundary, stranded retirement, durable floor — COMMITTED (private `b3ac491a`)
+
+- Files: private `extensions/evaluation-core/index.mjs`, `shared/learning/summary.mjs`,
+  `tests/track-b/run104-r8-finalization-boundary.test.mjs`
+- **Root cause (proved from the live stage store):** `#durableCompletionEvidence` required **every** trial of a
+  job to be covered by a finalized group, but `finalizeComparisonGroup` can only compare the declared
+  source/counterfactual pair inside the holdout and excludes the train partition — so a four-trial job with two
+  comparable trials was structurally un-completable. The sweep's `grouped` early-out meant it was never
+  re-attempted, and the job was reclaimed by name: exactly the two live strands
+  (`evaluation-replay-4d1a595fcda67e17ae46`, `…a505c784556fc6f0c84d`), whose trials were all `scored` but only
+  2 of 4 covered.
+- Behaviour: the comparison's own eligibility rule is now the completion contract (every **comparable** trial
+  must be covered; ineligible trials stay recorded evidence); legacy jobs that declare no pair keep the previous
+  whole-job requirement; `readLearnerEvidence` resolves the producer floor under the same three spellings the
+  readback uses.
+
+### `R8` remainder — the resumed branch-append receipt gate — COMMITTED (`efab6bc3`)
+
+- Files: `role-model-router/apps/runtime-host-bridge/src/cli.ts`, `test/run104-branch-append-recovery.test.ts`
+- **Root cause:** `buildReplayAppendExecution` read the write-side field `outputText`, but the private
+  boundary's capture projection publishes `responseText` (and its compact pointer never carries the former). A
+  recovered append therefore always rebuilt an `undefined` execution and refused with
+  `durable replay branch append has no host dispatch receipt` **even when the durable capture was present and
+  readable** — the run-98 test passed only because its fixture carried `outputText`. The live row proves it: the
+  capture the receipt names was in the retention ring at the moment of the refusal.
+- Behaviour: `resolveResumedReplayAppendDispatch` owns the decision, re-attaches from the durable capture and
+  caches the recovered dispatch; the refusal text (and therefore the deferrable classification) is unchanged,
+  and an append with no durable capture still fails.
+- Disclosed residual: when the capture has genuinely aged out of the ring, the leg still defers under the same
+  name. Making that terminal needs a classifier change in `track-b-auto-replay.ts`; the agent proposed splitting
+  the refusal text rather than retiring recoverable work, and the controller accepted the deferral.
+
+### `R9` exclusion half — an effort-mismatched arm is named in the comparison's validity — COMMITTED (private `885eda30`)
+
+- Files: private `extensions/evaluation-core/index.mjs`, `tests/track-b/run104-r9-effort-exclusion.test.mjs`
+- Behaviour: the comparison's comparability key carries the optional `effortComparability` dimension and
+  `finalizeComparisonGroup` appends the named validity issue `arm_effort_mismatch` when any arm is mismatched —
+  which `track-b-learning-pass.ts:1089-1105` already turns into the counted reason
+  `incomparable:arm_effort_mismatch`. Absence of the dimension keeps the previous behaviour.
+
 ## TDD Compliance Log
 
 TDD Mode: strict
@@ -342,8 +382,8 @@ Repair Performed After Verification: three repairs — (1) the superseded `SP1` 
 - R5 | Status: implemented | Changed Files: `role-model-router/packages/catalog/src/index.ts`, `role-model-router/packages/catalog/test/run104-alias-lineage.test.ts` | Implementation Evidence: `role-model-router/packages/catalog/test/run104-alias-lineage.test.ts` | Audit Note: the locked R5 traceability row points at a draft with no `pdf` content; the policy is asserted in the lineage test and Phase 4 must re-verify
 - R6 | Status: implemented | Changed Files: `role-model-router/apps/runtime-host-bridge/src/index.ts`, `role-model-router/apps/runtime-host-bridge/src/track-b-runtime.ts`, `role-model-router/apps/runtime-host-bridge/test/run104-sp4-taxonomy-fallback.test.ts`, `role-model-router/apps/runtime-host-bridge/test/run104-advisory-classification-variant.test.ts`, `role-model-router/apps/runtime-ui/app/routes/learning.tsx`, `role-model-router/apps/runtime-ui/app/routes/learning-task-family.test.tsx` | Implementation Evidence: `role-model-router/apps/runtime-host-bridge/test/run104-sp4-taxonomy-fallback.test.ts` (9 tests re-run green) | Audit Note: `text.chat` is not a shipped task id; the test pins that and uses `data.quality.audit`
 - R7 | Status: implemented | Changed Files: `role-model-router/apps/runtime-ui/app/routes/learning.tsx`, `role-model-router/apps/runtime-ui/app/routes/learning-floor-progress.test.tsx` | Implementation Evidence: `role-model-router/apps/runtime-ui/app/routes/learning-floor-progress.test.tsx` (7 tests re-run green) | Audit Note: a receipt whose producer computed a floor never reads back null
-- R8 | Status: blocked | Rationale: the replay-to-evaluation handoff is wired and tested, but the finalization boundary, the stranded-job retirement and the durable floor projection are not implemented | Blocking Evidence: `/.recursive/run/104-replay-eligibility-and-evidence-fidelity/evidence/logs/green/sp10-green.txt` | Audit Note: dispatched as `sp104_r8_finalization_retry`; the Phase 5 window cannot pass while the disposition plane has no terminal rows
-- R9 | Status: blocked | Rationale: matched-effort arms and the published comparability dimension are implemented, but the private consumer that excludes a mismatched arm from promotion evidence is not | Blocking Evidence: `/.recursive/run/104-replay-eligibility-and-evidence-fidelity/evidence/logs/green/sp6-arm-comparability-green.txt` | Audit Note: the public producer is complete; the private consumer is the outstanding half
+- R8 | Status: implemented | Changed Files: `role-model-router/apps/runtime-host-bridge/src/cli.ts`, `role-model-router/apps/runtime-host-bridge/test/run104-branch-append-recovery.test.ts` | Implementation Evidence: `role-model-router/apps/runtime-host-bridge/test/run104-branch-append-recovery.test.ts` and `/.recursive/run/104-replay-eligibility-and-evidence-fidelity/evidence/logs/green/r8-finalization-boundary-green.txt` | Audit Note: the handoff (private 21dd180f), the completion contract (private b3ac491a) and the append-recovery defect (efab6bc3) are closed; the live drain is a Phase 5 check
+- R9 | Status: blocked | Rationale: matched-effort arms, the published comparability dimension and the private exclusion (arm_effort_mismatch) are implemented, but the public producer link that puts the dimension onto a live comparison's comparability key is not wired, so the exclusion cannot fire against the live runtime yet | Blocking Evidence: `/.recursive/run/104-replay-eligibility-and-evidence-fidelity/evidence/logs/green/sp6-arm-comparability-green.txt` | Audit Note: the resume entry already carries the dimension durably; the missing link is the `cli.ts` to `track-b-runtime.ts` comparability plumbing
 - R10 | Status: implemented | Changed Files: `role-model-router/apps/runtime-host-bridge/src/track-b-operations.ts`, `role-model-router/apps/runtime-host-bridge/src/finalized-group-listing-cache.ts`, `role-model-router/apps/runtime-host-bridge/src/cli.ts`, `role-model-router/apps/runtime-host-bridge/test/run104-sp7-contribution-budget.test.ts`, `role-model-router/apps/runtime-host-bridge/test/run104-sp7-finalized-listing-cache.test.ts` | Implementation Evidence: `role-model-router/apps/runtime-host-bridge/test/run104-sp7-finalized-listing-cache.test.ts` (6 tests re-run green) | Audit Note: the before/after live measurement belongs to Phase 5
 - R11 | Status: implemented | Changed Files: `role-model-router/apps/runtime-host-bridge/src/track-b-runtime.ts` | Implementation Evidence: `/.recursive/run/104-replay-eligibility-and-evidence-fidelity/evidence/logs/green/sp8-focused-and-r33-green.txt` | Audit Note: the measured scope is two fields, not twenty-four (addendum 01)
 - R12 | Status: implemented | Changed Files: `role-model-router/apps/runtime-host-bridge/test/run104-sp1-replay-eligibility.test.ts`, `role-model-router/apps/runtime-host-bridge/test/run104-sp6-arm-comparability.test.ts`, `role-model-router/apps/runtime-host-bridge/test/run104-traffic-class.test.ts`, `role-model-router/apps/runtime-host-bridge/test/run104-traffic-class-filter.test.ts` | Implementation Evidence: `role-model-router/apps/runtime-host-bridge/test/run104-sp6-arm-comparability.test.ts` and the `## TDD Compliance Log` above | Audit Note: every behaviour change has a RED before its GREEN
@@ -373,7 +413,7 @@ Repair Performed After Verification: three repairs — (1) the superseded `SP1` 
 - Actual changed files reviewed: the product diff below, plus the run-folder additions
 - Changed files reviewed (public, product only):
 - `role-model-router/apps/runtime-host-bridge/src/cli.ts`, `role-model-router/apps/runtime-host-bridge/src/finalized-group-listing-cache.ts`, `role-model-router/apps/runtime-host-bridge/src/index.ts`, `role-model-router/apps/runtime-host-bridge/src/supervised-replay-evaluation-resume.ts`, `role-model-router/apps/runtime-host-bridge/src/track-b-auto-replay.ts`, `role-model-router/apps/runtime-host-bridge/src/track-b-operations.ts`, `role-model-router/apps/runtime-host-bridge/src/track-b-replay-policy.ts`, `role-model-router/apps/runtime-host-bridge/src/track-b-runtime.ts`, `role-model-router/apps/runtime-host-bridge/src/traffic-class.ts`
-- `role-model-router/apps/runtime-host-bridge/test/index.test.ts`, `role-model-router/apps/runtime-host-bridge/test/run104-advisory-classification-variant.test.ts`, `role-model-router/apps/runtime-host-bridge/test/run104-sp1-dispatch-subset.test.ts`, `role-model-router/apps/runtime-host-bridge/test/run104-sp1-replay-eligibility.test.ts`, `role-model-router/apps/runtime-host-bridge/test/run104-sp2-refusal-semantics.test.ts`, `role-model-router/apps/runtime-host-bridge/test/run104-sp4-taxonomy-fallback.test.ts`, `role-model-router/apps/runtime-host-bridge/test/run104-sp6-arm-comparability.test.ts`, `role-model-router/apps/runtime-host-bridge/test/run104-sp7-contribution-budget.test.ts`, `role-model-router/apps/runtime-host-bridge/test/run104-sp7-finalized-listing-cache.test.ts`, `role-model-router/apps/runtime-host-bridge/test/run104-traffic-class-filter.test.ts`, `role-model-router/apps/runtime-host-bridge/test/run104-traffic-class.test.ts`
+- `role-model-router/apps/runtime-host-bridge/test/index.test.ts`, `role-model-router/apps/runtime-host-bridge/test/run104-advisory-classification-variant.test.ts`, `role-model-router/apps/runtime-host-bridge/test/run104-branch-append-recovery.test.ts`, `role-model-router/apps/runtime-host-bridge/test/run104-sp1-dispatch-subset.test.ts`, `role-model-router/apps/runtime-host-bridge/test/run104-sp1-replay-eligibility.test.ts`, `role-model-router/apps/runtime-host-bridge/test/run104-sp2-refusal-semantics.test.ts`, `role-model-router/apps/runtime-host-bridge/test/run104-sp4-taxonomy-fallback.test.ts`, `role-model-router/apps/runtime-host-bridge/test/run104-sp6-arm-comparability.test.ts`, `role-model-router/apps/runtime-host-bridge/test/run104-sp7-contribution-budget.test.ts`, `role-model-router/apps/runtime-host-bridge/test/run104-sp7-finalized-listing-cache.test.ts`, `role-model-router/apps/runtime-host-bridge/test/run104-traffic-class-filter.test.ts`, `role-model-router/apps/runtime-host-bridge/test/run104-traffic-class.test.ts`
 - `role-model-router/apps/runtime-ui/app/components/app-shell.test.ts`, `role-model-router/apps/runtime-ui/app/components/app-shell.tsx`, `role-model-router/apps/runtime-ui/app/lib/runtime-api.ts`, `role-model-router/apps/runtime-ui/app/lib/sidebar-footer.test.ts`, `role-model-router/apps/runtime-ui/app/lib/sidebar-footer.ts`, `role-model-router/apps/runtime-ui/app/lib/view-models.test.ts`, `role-model-router/apps/runtime-ui/app/lib/view-models.ts`, `role-model-router/apps/runtime-ui/app/routes/learning-floor-progress.test.tsx`, `role-model-router/apps/runtime-ui/app/routes/learning-task-family.test.tsx`, `role-model-router/apps/runtime-ui/app/routes/learning.tsx`
 - `role-model-router/packages/catalog/data/normalized-catalog.json`, `role-model-router/packages/catalog/src/index.ts`, `role-model-router/packages/catalog/src/refresh.ts`, `role-model-router/packages/catalog/test/run104-alias-lineage.test.ts`, `role-model-router/packages/profile-aggregator/src/index.ts`, `role-model-router/packages/profile-aggregator/test/run104-traffic-class-source.test.ts`, `role-model-router/packages/runtime-observability/src/index.ts`, `role-model-router/packages/runtime-observability/test/index.test.ts`, `role-model-router/packages/runtime-observability/test/run104-traffic-class.test.ts`, `role-model-router/packages/sqlite-memory/src/index.ts`, `role-model-router/packages/sqlite-memory/test/index.test.ts`, `role-model-router/packages/sqlite-memory/test/run104-live-only-summary.test.ts`, `role-model-router/packages/sqlite-memory/test/run104-traffic-class-aggregate.test.ts`, `role-model-router/packages/ui/src/sidebar.test.ts`, `role-model-router/packages/ui/src/sidebar.tsx`
 - `testdata/catalog/models-dev-local-overrides.json`, `testdata/catalog/models-dev-local-supplement.json`, `testdata/catalog/models-dev-snapshot.json`
@@ -381,20 +421,20 @@ Repair Performed After Verification: three repairs — (1) the superseded `SP1` 
 
 ## Gaps Found
 
-1. `R8` remainder — finalization boundary + stranded-job retirement + the durable floor projection in
-   `shared/learning/summary.mjs`. Dispatched as `sp104_r8_finalization_retry`; blocks the `R8` acceptance
-   criteria and therefore the Phase 3.5 acceptance of `R8`.
-2. `R9` private consumer — an arm classified `mismatched` is published, but the private promotion evidence does
-   not yet exclude it. Blocks the "or" branch of `R9`'s acceptance.
-3. The private `cli.ts` branch-append receipt gate (`durable replay branch append has no host dispatch receipt`,
-   thrown at `cli.ts:8322`, classified at `track-b-auto-replay.ts:774`) still strands a resumed append. `SP10`
-   analysed it and proposed a unified diff; the fix is not applied. This is a second `R8` blocker for the
-   "disposition plane drains" criterion.
-4. `R5`'s locked traceability row points at a draft with no `pdf` content; the policy is asserted in
+1. `R9` producer link — the arm effort comparability is durable on the replay resume entry and the private
+   consumer excludes a mismatched arm by name, but no live comparison yet carries the dimension onto its
+   comparability key, because the plumbing from `cli.ts`'s post-observation input into
+   `track-b-runtime.ts`'s comparability object is not wired. Bounded, additive, and the only open functional
+   item; the workaround for Phase 5 is to read the resume entry directly when explaining a live comparison.
+2. `R8` residual — when a resumed append's capture has genuinely aged out of the retention ring, the leg still
+   defers under `replay_branch_append_unavailable` rather than retiring terminally. The agent proposed splitting
+   the refusal text so only the truly-missing-capture case becomes terminal; the controller accepted the
+   deferral for this run rather than retire recoverable work. The deferral budget does bound it.
+3. `R5`'s locked traceability row points at a draft with no `pdf` content; the policy is asserted in
    `test/run104-alias-lineage.test.ts` instead. Phase 4 must re-verify and the Phase 6/7 updates should correct
    the row.
-5. AS-IS line numbers drifted during the run (for example `runtime-operations-server.mjs` `withReceiptReadings`
-   `:1993` → `:2111`). Substance verified; the numbers in the locked artifact are stale.
+4. AS-IS line numbers drifted during the run (for example `runtime-operations-server.mjs`
+   `withReceiptReadings` `:1993` → `:2111`). Substance verified; the numbers in the locked artifact are stale.
 
 ## Repair Work Performed
 
