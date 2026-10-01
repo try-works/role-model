@@ -323,15 +323,18 @@ one in the Track B spine.
   inventing an endpoint) and the repointed set is re-checked for eligibility; `classifyReplayArmEffort` publishes
   `matched | mismatched | source_effort_unspecified | arm_effort_unspecified` on the durable replay payload, and a
   comparison containing a mismatched arm publishes the validity issue `arm_effort_mismatch` (which the learning
-  pass counts as `incomparable:arm_effort_mismatch`). **The public producer link that would put the dimension on a
-  live comparison is not wired**, so the exclusion cannot fire against a live runtime yet.
+  pass counts as `incomparable:arm_effort_mismatch`). **The public producer link is now wired (post-closeout `8aa114ed`)**: the comparison identity carries
+  `effortComparability` (threaded through `classifyReplayArmEffort` in the comparability builder), so the exclusion
+  can fire against a live comparison.
 - **Effect discipline that this repo expects.** A mapper whose comment claims exhaustiveness must terminate with
   `Match.exhaustive`, not `Match.orElse`: the phase-4 audit found `traffic-class.ts` claiming the former while
   using the latter, and a new variant would have fallen silently into `unknown`. The private handoff uses
   `ManagedRuntime`/`Effect.gen`. No dependency changed.
-- **A fresh state root cannot drain replays** until it carries a route package: the advisory spine logs
-  `live advisory observation skipped: route advisory observation requires decision and route package`, so
-  replays created from live captures sit `deferred`/`replay_failed`. Seeding a fresh channel also needs the
+- **A fresh state root drains replays once its credentials + candidate pool are correct** (post-closeout):
+  restoring the operator's OAuth credential (`<stateRoot>/<scope>/credentials/oauth/openai/*.json`) and restarting
+  the runtime (so the replay candidate pool re-reads the registry) makes the advisory observation *record*
+  (`decisionId`+`routePackage`) instead of skipping, and replays refuse by name (terminal) rather than sitting
+  `deferred`/`replay_failed`. Seeding a fresh channel also needs the
   operator's *provider accounts* (including the `local-file` OAuth credential under
   `<stateRoot>/<scope>/credentials/`) and activation bodies that carry the **source** endpoint kind
   (`remote-openai-compatible`); posting the readback's normalised `remote_api` re-normalises to `local_engine` and
