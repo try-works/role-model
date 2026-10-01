@@ -1,8 +1,8 @@
 Run: `/.recursive/run/104-replay-eligibility-and-evidence-fidelity/`
 Phase: `00 Worktree`
 Status: `LOCKED`
-LockedAt: `2026-10-01T06:27:43Z`
-LockHash: `aef6ba9983df3d90706888499431829b8a682b2854af11760f434baf2bfed5b0`
+LockedAt: `2026-10-01T07:00:33Z`
+LockHash: `dcc331931a759b9405cf59a51a633535ffdf16dcd65d5af3819c1327b78c5302`
 Inputs:
 - `/.recursive/run/104-replay-eligibility-and-evidence-fidelity/00-requirements.md`
 - Current git repository state (public and private `origin/dev` at fetch time, 2026-10-01)

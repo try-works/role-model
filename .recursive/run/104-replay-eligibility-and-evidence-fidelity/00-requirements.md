@@ -1,8 +1,8 @@
 Run: `/.recursive/run/104-replay-eligibility-and-evidence-fidelity/`
 Phase: `00 Requirements`
 Status: `LOCKED`
-LockedAt: `2026-10-01T06:25:48Z`
-LockHash: `afa8803314d1cf63709a37dffee89720b7ff4244554a3a9220fe65866a84863d`
+LockedAt: `2026-10-01T06:59:53Z`
+LockHash: `3b6c8dc91bacdf8edf3f6a0f5140681de38d3e4852e11ea8d72f30a5ca641f03`
 Workflow version: `recursive-mode-audit-v2`
 Inputs:
 - Baseline (2026-10-01, fetched): public `origin/dev`
@@ -24,6 +24,15 @@ Inputs:
   applied corrections are recorded in the sections below (Effect timeout semantics, dependency boundary, R7/R9
   re-scope, R11's 24-field ratchet, corrected monitor numbers, traceability ids, bundle/action-record/wave
   contracts, and the verifiability hardening).
+- Second-pass audit (2026-10-01, post-lock reopen): three time-boxed auditors were dispatched; all three exceeded
+  the box without producing findings and were interrupted, so the controller completed the pass itself. Applied
+  corrections: (a) the string vocabularies use `Match.value`/`Match.when`/`Match.exhaustive` for exhaustiveness
+  instead of `Data.taggedEnum`/`$match`, which only applies to payload-carrying tagged unions; (b) the timeout
+  primitive is `Effect.timeoutOrElse` (or `Effect.timeout` + `Effect.catchTag("TimeoutError", ...)`), with
+  `timeoutOption` reserved for legitimate absence; (c) the run-101 queue planes are `PersistedQueue`-based and the
+  router contains no `effect-mq` import, so R15, the primitive map, the SP5 commitment and the composition rule now
+  say so and treat any `effect-mq` use as reason-required; (d) the per-sub-phase `code-reviewer` bundle source is
+  defined; (e) the primitive-map manifest's granularity and changed-file derivation are pinned.
 - Live evidence from the run-103 follow-up session:
   - `E:\tmp\run103-evidence\stage-monitor-30m.log` (44 samples: 106 requests, 10 failures; `no_eligible_target`
     dominates the failure lines, on image-bearing `replay-req-*` aimed at text-only `deepseek-v4-pro`, and the
@@ -425,8 +434,9 @@ replay/benchmark traffic; T1.2g re-measures this on a frozen window before imple
 ### `R15` Effect-first implementation with a run-specific primitive map
 
 Description: Every new or modified piece of effectful code in this run is implemented on the vendored Effect v4
-workspace package (`role-model-router/packages/effect`, `effect@4.0.0-rc.117`) and `effect-mq`, following the
-repository's Effect-first rule (`/AGENTS.md` section "Effect-first implementation rule" and
+workspace package (`role-model-router/packages/effect`, `effect@4.0.0-rc.117`), and `effect-mq` where a genuine
+worker/job-framework need exists, following the repository's Effect-first rule (`/AGENTS.md` section
+"Effect-first implementation rule" and
 `/.recursive/RECURSIVE.md` section "Effect-first implementation rule (map)"). This requirement names the primitives
 this run uses and what each one owns, so the plan, the implementation and the review can check compliance
 mechanically.
@@ -443,24 +453,32 @@ Acceptance criteria:
   refusal vocabulary are `Schema.Literals` / `Schema.Struct` decoded at the boundary with
   `Schema.decodeUnknownEffect` (or `Schema.decodeUnknownSync` at a synchronous boundary), not string unions
   duplicated per consumer.
-- Exhaustive branching over classes and refusals uses `Data.taggedEnum` + `$match`, so adding a variant fails at
-  compile time instead of falling through a default.
+- Exhaustive branching over the string vocabularies (traffic class, refusal code) uses `Match.value` /
+  `Match.when` / `Match.exhaustive`, so adding a variant fails at compile time instead of falling through a
+  default. `Data.taggedEnum` + `$match` is used only where a value carries a payload and is modelled as a tagged
+  union (for example the refusal error objects); it is not applied to the persisted string vocabulary.
 - New error channels are `Data.TaggedError` variants (refusal, timeout, validation), so failures stay typed and
   countable.
 - Scheduling, retries and backoff use `Schedule` / `Effect.retry` with the landed idiom
   (`Effect.retry({ times, schedule: Schedule.min([Schedule.exponential(base), Schedule.spaced(cap)]) })`, as in
-  `queue-runtime`). Time budgets use `Effect.timeout` with an explicit `Duration`; its rc.117 failure type is
-  `Cause.TimeoutError`, which is mapped to a named `Data.TaggedError` so the timeout is countable.
-  `Effect.timeoutOption` is used only where a missing result is legitimately not a failure, and that choice is
-  recorded.
-- Concurrency and shared state use `Ref` / `SynchronizedRef` / `Semaphore`; queues, workers and learners extend the
-  existing `effect-mq` planes (`Job`, `Worker`, `JobStore`, `JobSchedules`, `Flow`, `Metrics`) or `PersistedQueue`
-  where durable semantics fit - no new hand-rolled queue, worker or retry loop.
+  `queue-runtime`). Time budgets use `Effect.timeoutOrElse({ duration, orElse })` (or `Effect.timeout` followed by
+  `Effect.catchTag("TimeoutError", ...)`) with an explicit `Duration`; the rc.117 timeout is a typed
+  `TimeoutError` with `_tag = "TimeoutError"`, and the handler raises the run's named `Data.TaggedError` so the
+  timeout is countable. `Effect.timeoutOption` is used only where a missing result is legitimately not a failure,
+  and that choice is recorded.
+- Concurrency and shared state use `Ref` / `SynchronizedRef` / `Semaphore`. The landed queue planes are
+  `PersistedQueue`-based (`queue-runtime/{queues,evaluation,learner,store}.ts` import
+  `PersistedQueue` from `effect/unstable/persistence`; the router has no `effect-mq` import today), so this run
+  extends those planes. `effect-mq` (`Job`, `Worker`, `JobStore`, `JobSchedules`, `Flow`, `Metrics`) remains
+  available per the repository map for a genuine worker/job-framework need and any use records the reason. No new
+  hand-rolled queue, worker or retry loop.
 - Observability uses `Metric` (counters/gauges for excluded classes, refusals and degradations) and
   `Effect.logInfo` / `Effect.annotateLogs` for provenance.
-- Composition keeps one long-lived runtime per plane (`ManagedRuntime`); the per-request path stays pure - no
-  `Effect.runPromise`, layer construction, or `getUnsafe` per request - and traffic-class resolution and the replay
-  eligibility filter are pure functions over immutable snapshots.
+- Composition keeps one long-lived runtime per plane (`ManagedRuntime`); `ManagedRuntime.runPromise` is allowed at
+  the boundary that enqueues work onto a long-lived plane (as `queue-runtime/index.ts` already does), but not on
+  the per-request routing/telemetry path - no `Effect.runPromise`, layer construction, or `getUnsafe` per request
+  there - and traffic-class resolution and the replay eligibility filter are pure functions over immutable
+  snapshots.
 - The dependency-closure build is run before the bridge test lanes, and the rebuilt SEA is proven to still carry
   the Effect runtime (see `R13`).
 - Effect is introduced only where the dependency already exists (`runtime-host-bridge`, the `queue-runtime` planes
@@ -477,24 +495,27 @@ Primitive map (verified against the vendored source, `effect@4.0.0-rc.117`):
 | Concern in this run | Primitive | Vendored source | How it is used |
 | --- | --- | --- | --- |
 | Traffic-class and refusal vocabularies; query-filter contract | `Schema.Literals`, `Schema.Struct`, `Schema.decodeUnknownEffect` / `Schema.decodeUnknownSync` | `packages/effect/src/Schema.ts` | One closed vocabulary decoded at ingest and at the operator API boundary; no duplicated string unions |
-| Exhaustive class/refusal branching | `Data.taggedEnum` + `$match` | `packages/effect/src/Data.ts` | Every switch over a class or refusal is total; a new variant is a compile error |
+| Exhaustive branching over the string vocabularies | `Match.value`, `Match.when`, `Match.exhaustive` | `packages/effect/src/Match.ts` | Total matching over the decoded class/refusal strings; a new variant is a compile error instead of a silent default |
+| Payload-carrying tagged unions (refusal errors, tick outcomes) | `Data.taggedEnum` + `$match` | `packages/effect/src/Data.ts` | Exhaustive matching where the value is a tagged object, not a persisted string |
 | Typed refusal/timeout/validation failures | `Data.TaggedError`, `Cause.TimeoutError` | `packages/effect/src/Data.ts`, `src/Cause.ts` | Named error tags for `candidate_input_unsupported`; `Effect.timeout`'s `Cause.TimeoutError` is mapped to a named tagged error, never swallowed |
 | Replay tick state and the single-tick critical section | `SynchronizedRef`, `Semaphore` | `SynchronizedRef.ts`, `Semaphore.ts` | Eligibility results and refusal counters published atomically; one auto-replay tick at a time |
-| Replay/evaluation/learner queues and workers | `effect-mq` (`Job`, `Worker`, `JobStore`, `JobSchedules`, `Flow`, `Metrics`), `PersistedQueue` (`effect/unstable/persistence`) | `vendor/effect-mq/packages/effect-mq/src`, `packages/effect/src/unstable/persistence/PersistedQueue.ts` | Extend the run-101 queue planes for replay dispatch, evaluation and learner finalization |
-| Contribution-upload budget, retry and backoff | `Effect.timeout`, `Duration`, `Effect.retry`, `Schedule.exponential` / `Schedule.spaced` / `Schedule.min` | `Effect.ts`, `Duration.ts`, `Schedule.ts` | Bounded uploads with a tagged timeout class and the same bounded retry schedule shape the queue planes already use |
+| Replay/evaluation/learner queues and workers | `PersistedQueue` (`effect/unstable/persistence`); `effect-mq` (`Job`, `Worker`, `JobStore`, `JobSchedules`, `Flow`, `Metrics`) only if a worker-framework need arises | `packages/effect/src/unstable/persistence/PersistedQueue.ts`, `vendor/effect-mq/packages/effect-mq/src` | Extend the landed run-101 `PersistedQueue` planes for replay dispatch, evaluation and learner finalization; any effect-mq use records its reason |
+| Contribution-upload budget, retry and backoff | `Effect.timeoutOrElse` (or `Effect.timeout` + `Effect.catchTag("TimeoutError", ...)`), `Duration`, `Effect.retry`, `Schedule.exponential` / `Schedule.spaced` / `Schedule.min` | `Effect.ts`, `Duration.ts`, `Schedule.ts` | Bounded uploads whose timeout becomes a named tagged error, with the same bounded retry schedule shape the queue planes already use |
 | Live config and immutable request snapshot | `Ref`, `SynchronizedRef`, `Context.Service`, `Layer` | `Ref.ts`, `SynchronizedRef.ts`, `Context.ts`, `Layer.ts` | Services resolved once at the composition root; the request path reads a snapshot |
 | Provenance metrics and structured logs | `Metric` (`counter`, `gauge`, `histogram`), `Effect.logInfo`, `Effect.annotateLogs` | `Metric.ts`, `Effect.ts` | Counters for excluded traffic classes, refusals and degradations; histograms for latency; decision/receipt ids in logs |
 | Environment and policy narrowing | `Config`, `ConfigProvider` (`nested("role_model")`, `constantCase`) | `Config.ts`, `ConfigProvider.ts` | Thresholds and gates (aggregate default class, sidecar budget) resolved from the environment |
-| Long-lived runtime | `ManagedRuntime` | `ManagedRuntime.ts` | One runtime per plane in the composition root |
+| Long-lived runtime | `ManagedRuntime` (`runPromise` only at enqueue boundaries) | `ManagedRuntime.ts` | One runtime per plane in the composition root; never constructed or run per request |
 | Bounded sweeps (only if a sweep is introduced) | `Stream` (`runCollect`, `runForEach`) | `Stream.ts` | Cursor-based bounded processing instead of unbounded arrays |
 
 Verification: an import/lint check proving no relative `vendor/**` imports and no new dependency; the recorded
 pin-verification output; a mechanical conformance check - the plan carries a checked-in primitive-map manifest
-(file path to primitive) for every changed file that imports `effect`, and a controller-run script fails when a
-changed file imports `effect` but is absent from the manifest, when a relative `vendor/**` import appears, or when
-`package.json`/lockfiles change; executed sketches (like the run-103 design-doc section 12 audit) for any primitive
-used for the first time in this repo, with the results recorded; and the Phase 4 test audit confirming that Effect
-code is exercised through `Effect.runPromise` / `ManagedRuntime`.
+with one row per changed file that imports `effect` or `effect-mq` (file path to primitive to concern), the
+changed-file list is derived from the diff basis rather than from the manifest itself, and a controller-run script
+fails when a changed file imports `effect`/`effect-mq` but is absent from the manifest, when a relative
+`vendor/**` import appears, or when `package.json`/lockfiles change; executed sketches (like the run-103
+design-doc section 12 audit) for any primitive used for the first time in this repo, with the results recorded;
+and the Phase 4 test audit confirming that Effect code is exercised through `Effect.runPromise` /
+`ManagedRuntime`.
 
 ## Out of Scope
 
@@ -620,7 +641,7 @@ Primitive commitments per sub-phase (indicative; Phase 2 finalises them against 
 | `SP1`, `SP2` | Pure eligibility/refusal functions over immutable snapshots; `Data.TaggedError` for the refusal class; `Semaphore` around the auto-replay tick that consumes them |
 | `SP3` | Data and catalog-export work with no effectful shape; the deviation reason is recorded per `R15` if any new async path appears |
 | `SP4` | Pure classification fallback; the capture/readback call sites keep the existing bridge contract |
-| `SP5` | Extends the run-101 `effect-mq` learner plane (`Job`, `Worker`, `JobStore`, `Schedule`); `Metric` for receipt counts |
+| `SP5` | Extends the run-101 `PersistedQueue` learner plane (`queue-runtime/learner.ts`, `effect/unstable/persistence`); `Effect.retry` + `Schedule` for the queue's retry policy; `Metric` for receipt counts |
 | `SP6` | Pure comparability key and arm selection; receipt fields stay schema-validated |
 | `SP7` | `Effect.timeout` with an explicit `Duration` for the sidecar budget, mapping its `Cause.TimeoutError` to a named `Data.TaggedError`; the queue planes' `Effect.retry` + `Schedule.exponential`/`spaced` idiom for uploads; `Metric` for degradations |
 | `SP8` | Private conformance wiring; no new runtime shape |
@@ -719,7 +740,9 @@ Every delegated dispatch, in-session or routed, carries all eleven `recursive-su
 Bundle sources by task type: `T1` = this artifact + the run-103 follow-up evidence; `T2` = `01-as-is.md` + this
 artifact; `SP1`-`SP9` = the accepted plan matrix for that wave + the sub-phase's requirement ids; `T3.5` = the
 review bundle generated by `recursive-review-bundle`; `T4` = the implementation summary + the TDD log; `T5` = the
-test summary + the Phase 5 runtime digest; `T8` = the state update + the final diff basis.
+test summary + the Phase 5 runtime digest; `T8` = the state update + the final diff basis. The per-sub-phase
+`code-reviewer` bundle is the implementer's action record plus the sub-phase's RED/GREEN logs, the sub-phase diff
+against the frozen ownership matrix, and the `R15` manifest rows for the changed files.
 
 ### Action records and routed evidence
 
