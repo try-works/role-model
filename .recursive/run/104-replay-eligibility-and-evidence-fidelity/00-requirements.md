@@ -1,8 +1,8 @@
 Run: `/.recursive/run/104-replay-eligibility-and-evidence-fidelity/`
 Phase: `00 Requirements`
 Status: `LOCKED`
-LockedAt: `2026-10-01T06:59:53Z`
-LockHash: `3b6c8dc91bacdf8edf3f6a0f5140681de38d3e4852e11ea8d72f30a5ca641f03`
+LockedAt: `2026-10-01T07:05:13Z`
+LockHash: `ff9fe4a64597bfdf810c637bd1fb38fdfface1d8a33f330c0d5d50c34d295e4e`
 Workflow version: `recursive-mode-audit-v2`
 Inputs:
 - Baseline (2026-10-01, fetched): public `origin/dev`
@@ -32,7 +32,11 @@ Inputs:
   `timeoutOption` reserved for legitimate absence; (c) the run-101 queue planes are `PersistedQueue`-based and the
   router contains no `effect-mq` import, so R15, the primitive map, the SP5 commitment and the composition rule now
   say so and treat any `effect-mq` use as reason-required; (d) the per-sub-phase `code-reviewer` bundle source is
-  defined; (e) the primitive-map manifest's granularity and changed-file derivation are pinned.
+  defined; (e) the primitive-map manifest's granularity and changed-file derivation are pinned; (f) the
+  delegation plan now defines the time-boxed failure path (interrupt, preserve, controller executes the task
+  itself), because all three second-pass auditors exceeded their box without delivering; (g) the Codex
+  delegation mechanics section and the durable protocol at `evidence/other/codex-subagent-protocol.md` were
+  added, because five of seven children spawned during preparation stalled with no artefact.
 - Live evidence from the run-103 follow-up session:
   - `E:\tmp\run103-evidence\stage-monitor-30m.log` (44 samples: 106 requests, 10 failures; `no_eligible_target`
     dominates the failure lines, on image-bearing `replay-req-*` aimed at text-only `deepseek-v4-pro`, and the
@@ -792,6 +796,39 @@ the defect is inside that subagent's bounded ownership; repairs in its own phase
 (a read-only auditor cannot repair product code); records the acceptance decision, the failed attempt and the
 fallback reason under `## Subagent Contribution Verification` in the phase artifact; and only then may the
 phase's `Audit: PASS`, `Coverage: PASS` and `Approval: PASS` be recorded.
+
+### Codex delegation mechanics (this environment)
+
+The durable protocol is `E:\tmp\collab\CODEX_SUBAGENT_DELEGATION.md`, copied into this run as
+`evidence/other/codex-subagent-protocol.md`. It is part of this requirement because in-session delegation in
+Codex has a measured failure mode: of seven children spawned while preparing this run, two delivered and five
+stalled past their time box with no artefact (`list_agents` reported `running` the whole time). The rules that
+follow are mandatory for every dispatch in this run.
+
+1. **Brief first.** Write `E:\tmp\collab\briefs\<task-name>.md`, register it in `E:\tmp\collab\INBOX.md`, then
+   spawn with that exact `task_name`. The spawn payload is dropped by a known defect; the child recovers the
+   brief from disk by its task name and must echo the brief's `RECEIPT TOKEN`.
+2. **One deliverable path per child.** A read-only child writes exactly one findings file outside the repo; a
+   write-capable implementer gets an explicit ownership list and no other write scope.
+3. **Checkpoint the deliverable.** Every brief instructs the child to create its file within the first two
+   minutes with the section skeleton and to append findings as it works, never holding the document until the
+   end. This is the specific fix for the observed zero-artefact stalls.
+4. **Hard time box.** Default 10 minutes, 15 for a source walk. At the box the child writes what it has, marks
+   it PARTIAL and returns. Bounded question lists only (8-12 numbered checks); larger scopes are split into
+   sequential children.
+5. **Concurrency caps.** At most three children at once, and at most two when any child has a source-walk or
+   whole-document brief.
+6. **Liveness is judged from the session log, not the status field.** Match the child's
+   `C:\Users\erikb\.codex\sessions\<yyyy>\<mm>\<dd>\rollout-*.jsonl` by task name and read the last event's
+   `timestamp` (file `LastWriteTime` is unreliable and the app's thread list does not show children). If the box
+   has passed, or no event has arrived for roughly two boxes with no deliverable, the controller interrupts the
+   child.
+7. **No child spawns children** unless the brief explicitly authorises it.
+8. **Every delegation is optional.** No phase may depend on a child returning. On interrupt the controller
+   records the attempt under `evidence/retries/<role>-<task>-attempt-NN.md` with the session-log path, last
+   event timestamp and size, records `Subagent Availability: degraded` with the override reason, and executes
+   the task itself under the same checklist. A retry uses a new task name because a follow-up reuses the old
+   name and the child would re-read its previous brief.
 
 Rules this plan keeps: one active phase at a time; parallel work only inside the active phase and only within a
 wave whose frozen ownership matrix is disjoint; a sub-phase sharing a file with another sub-phase is serialized;
