@@ -804,37 +804,54 @@ window.__ModuleLoader__.load({
     }
 
     /**
-     * Render the panel, turning a render failure into visible text.
+     * Report a render failure as text instead of a blank pane.
      *
-     * A component that throws during render leaves the settings content area empty, and
-     * nothing in the browser says the plugin is responsible. Tests over the markup and
-     * the write path cannot catch that, so the failure is surfaced here: a blank pane is
-     * indistinguishable from a plugin that never mounted, and that ambiguity cost real
-     * debugging time on this page.
+     * This must be a real React **error boundary** — a class with
+     * `getDerivedStateFromError` — and its child must be handed to react-dom as an
+     * element. Two earlier attempts got this wrong and blanked the page:
      *
-     * A plain function with a try/catch rather than a React error boundary: a class
-     * boundary would not catch an error thrown by the function component that *is* the
-     * page, and it would drag class-component plumbing into a file that is served as-is.
+     * 1. A parent function component with a try/catch **cannot** catch a child's render
+     *    error, because the child is rendered later, during react-dom's own traversal.
+     * 2. Invoking the child to force the throw into the try/catch breaks hooks: there is
+     *    no current component during that call, so the first `useMemo`/`useState` in the
+     *    child throws "Invalid hook call". Every hook the page uses lives inside the
+     *    child, so the whole page failed to render.
+     *
+     * A class boundary sees errors in either its own render or its descendants', which
+     * is exactly the guarantee needed here.
+     *
+     * Written with `createElement` rather than JSX because this file is served as-is.
      */
-    function PanelShell(props) {
-      if (props?.failure === undefined) return props?.children ?? null;
-      const error = props.failure;
-      const detail =
-        error && (error.stack || error.message)
-          ? String(error.stack || error.message)
-          : String(error);
-      return h(
-        "div",
-        { className: "rlm-page" },
-        h("h2", { className: "rlm-title" }, "role-model could not render"),
-        h(
-          "p",
-          { className: "rlm-note" },
-          "The plugin mounted, but a component threw while rendering. The detail below is the " +
-            "browser's own error report; include it in a bug report.",
-        ),
-        h("pre", { className: "rlm-codeblock" }, detail),
-      );
+    class PanelBoundary extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = { error: undefined };
+      }
+
+      static getDerivedStateFromError(error) {
+        return { error };
+      }
+
+      render() {
+        const error = this.state?.error;
+        if (error === undefined) return this.props?.children ?? null;
+        const detail =
+          error && (error.stack || error.message)
+            ? String(error.stack || error.message)
+            : String(error);
+        return h(
+          "div",
+          { className: "rlm-page" },
+          h("h2", { className: "rlm-title" }, "role-model could not render"),
+          h(
+            "p",
+            { className: "rlm-note" },
+            "The plugin mounted, but a component threw while rendering. The detail below is the " +
+              "browser's own error report; include it in a bug report.",
+          ),
+          h("pre", { className: "rlm-codeblock" }, detail),
+        );
+      }
     }
 
     return {
@@ -849,18 +866,14 @@ window.__ModuleLoader__.load({
 
       apply(ctx) {
         panelContext = ctx;
-        // The shell keeps a render failure visible; without it a throw blanks the
-        // settings pane and looks identical to a plugin that never mounted.
+        // The panel is wrapped in a real error boundary and handed over as an element,
+        // so a render failure shows the browser's error instead of an empty pane.
         //
-        // `RoleModelPanel` is invoked here rather than handed to react-dom as an
-        // element, because an error thrown while react-dom walks a child element escapes
-        // a parent's try/catch. Calling it first puts the throw inside the shell.
-        const panel = function RoleModelPanelSafe(props) {
-          try {
-            return h(PanelShell, props ?? {}, RoleModelPanel());
-          } catch (error) {
-            return h(PanelShell, { ...(props ?? {}), failure: error });
-          }
+        // It must NOT be invoked here: hooks require an active component, and calling the
+        // page outside React's render phase makes its first `useMemo` throw "Invalid hook
+        // call", which blanked this page twice. Hand it over as an element instead.
+        const panel = function RoleModelPanelWithBoundary(props) {
+          return h(PanelBoundary, props ?? {}, h(RoleModelPanel, null));
         };
         ctx.effect(() =>
           ctx.slots.inject("settings.section", () =>

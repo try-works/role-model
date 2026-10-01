@@ -76,7 +76,11 @@ function evaluateClientEntry(): {
           name: options.name,
           ...(options.id === undefined ? {} : { id: options.id }),
           ...(options.order === undefined ? {} : { order: options.order }),
-          rendered: JSON.stringify(renderComponent(panel, React), jsonReplacer),
+          // Fully expanded, so assertions see the real content rather than an opaque
+          // component element. The page is registered behind an error boundary, and a
+          // shallow render would stop at that boundary. The element is built through the
+          // stub so it carries the same `$$typeof` react-dom sets.
+          rendered: JSON.stringify(deepRender(React.createElement(panel, null)), jsonReplacer),
         });
         return () => undefined;
       },
@@ -110,6 +114,11 @@ function isClassComponent(value: unknown): boolean {
  */
 function invokeComponent(element: HostElement): unknown {
   const type = element.type as (props: unknown) => unknown;
+  // Children reach a component through its props, never as separate arguments — that is
+  // how react-dom does it, and a boundary that reads `this.props.children` sees nothing
+  // otherwise. The same mistake in the client's own shell blanked the real page.
+  const props = { ...(element.props ?? {}) } as Record<string, unknown>;
+  if (element.children !== undefined) props.children = element.children;
   if (isClassComponent(type)) {
     const instance = new (
       type as unknown as new (
@@ -118,12 +127,27 @@ function invokeComponent(element: HostElement): unknown {
         props: unknown;
         render(): unknown;
       }
-    )(element.props ?? {});
+    )(props);
     return instance.render();
   }
-  const props = { ...(element.props ?? {}) } as Record<string, unknown>;
-  if (element.children !== undefined) props.children = element.children;
   return type(props);
+}
+
+/**
+ * Render one component to the deepest host tree.
+ *
+ * Equivalent to `expand(invokeComponent(element))`, as a single recursion: the
+ * `rendered` fixture wants a finished tree, not one that still contains component
+ * elements the assertions would have to reach through.
+ * @param value - element, component element, string, or nested array.
+ * @returns host elements and strings, with every component expanded.
+ */
+function deepRender(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(deepRender);
+  if (!isElement(value)) return value;
+  const element = value as HostElement;
+  if (typeof element.type === "function") return deepRender(invokeComponent(element));
+  return { ...element, children: childrenOf(element).map(deepRender) };
 }
 
 /**
@@ -778,16 +802,28 @@ describe("editing configuration from the panel", () => {
     const source = readFileSync(clientEntry, "utf8");
     // The message must name the plugin, so a user can tell whose fault it is.
     expect(source).toContain("role-model could not render");
-    // The real panel is invoked inside the guarded shell, so a throw during its own
-    // render is caught rather than escaping into react-dom's tree walk.
-    expect(source).toContain("RoleModelPanel()");
-    expect(source).toContain("PanelShell");
+    // A real error boundary, because a parent function component's try/catch cannot see
+    // a child's render error: the child renders later, inside react-dom's traversal.
+    expect(source).toContain("getDerivedStateFromError");
+    expect(source).toContain("class PanelBoundary");
+    // The page is handed over as an element, never invoked. Invoking it outside React's
+    // render phase makes its own hooks throw "Invalid hook call", which blanked this page
+    // twice. Asserted on the call form, since a comment mentions the mistake by name.
+    expect(source).toContain("h(RoleModelPanel, null)");
+    expect(source).not.toMatch(/=\s*RoleModelPanel\(\)/u);
+    expect(source).not.toMatch(/\breturn\s+RoleModelPanel\(\)/u);
   });
 
-  test("the shell renders its children while nothing has thrown", () => {
+  test("the boundary passes the page through while nothing has thrown", () => {
     const { component } = applyWith(undefined);
-    const rendered = JSON.stringify((component as (props: unknown) => unknown)({}), jsonReplacer);
+    // Deep-render the registered component: the boundary must yield the real page, not
+    // its own fallback and not a blank node.
+    const rendered = JSON.stringify(
+      deepRender({ type: component, props: {}, children: undefined, $$typeof: REACT_ELEMENT }),
+      jsonReplacer,
+    );
     expect(rendered).toContain("rlm-page");
+    expect(rendered).toContain("role-model");
     expect(rendered).not.toContain("could not render");
   });
 });
