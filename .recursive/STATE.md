@@ -12,10 +12,11 @@ own field and refuses a saturated excerpt, and arm effort comparability is publi
 in the comparison's validity. Phases 0-6 are locked; Phase 5 ran the rebuilt runtime on its own channel `:3459`
 with its own state root — the matrix passed (text control, image through `difficulty.remote-only` selecting the
 DeepSeek flash endpoint, PDF control, `hybrid.remote-only`) and the monitored window ran 61.5 minutes with 123
-samples. Two commitments transfer: the producer plumbing that would let `R9`'s exclusion fire on a live
-comparison, and `R8`'s live disposition drain, which needs a channel that already carries a route package. Both
-are carried by
-`/.recursive/run/104-replay-eligibility-and-evidence-fidelity/addenda/04-test-summary.upstream-gap.02-to-be-plan.addendum-01.md`.
+samples. One commitment transfers: `R8`'s live disposition drain, which needs a channel that already carries a
+route package. `R9`'s producer plumbing is now wired (post-closeout `8aa114ed`): the comparison identity carries
+`effortComparability`, so `arm_effort_mismatch` can fire on a live comparison. Both are carried by the post-closeout
+addenda (`post-closeout.r9-r8-pickup.addendum-01.md`, `post-closeout.r9-producer-threading.addendum-02.md`,
+`post-closeout.r8-live-drain.addendum-03.md`).
 Promotion remains a separate release operation.
 
 Run `103-agent-strategy-and-scoring-strategy` is the current increment: the routing posture is split into the
