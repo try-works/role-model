@@ -178,6 +178,7 @@ import {
   runTrackBLearningPass,
 } from "./track-b-learning-pass.js";
 import {
+  classifyReplayArmEffort,
   DEFAULT_REPLAY_CANDIDATE_CAP,
   isBenchmarkReplaySourceRef,
 } from "./track-b-replay-policy.js";
@@ -8806,6 +8807,22 @@ export async function runTrackBShadowPipeline(
       firstCounterfactual.endpointId,
       "counterfactual candidate",
     ),
+    // Run 104 R9 (post-closeout): the arm-effort dimension travels with the comparison identity, so
+    // Evaluation Core's arm_effort_mismatch exclusion can fire on a live comparison.
+    effortComparability: classifyReplayArmEffort({
+      arms: counterfactualRollouts.map((arm) => ({
+        endpointId: typeof arm.endpointId === "string" ? arm.endpointId : "",
+        modelId: typeof arm.modelId === "string" ? arm.modelId : "",
+        reasoningEffort:
+          typeof arm.reasoningEffort === "string" ? arm.reasoningEffort : null,
+      })),
+      sourceModelId:
+        typeof sourceRollout.modelId === "string" ? sourceRollout.modelId : "",
+      sourceReasoningEffort:
+        typeof sourceRollout.reasoningEffort === "string"
+          ? sourceRollout.reasoningEffort
+          : null,
+    }),
   };
   if (
     sourceRollout.evidenceRef !== comparability.sourceEvidenceRef ||
