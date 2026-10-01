@@ -1,8 +1,8 @@
 Run: `/.recursive/run/104-replay-eligibility-and-evidence-fidelity/`
 Phase: `00 Requirements`
 Status: `LOCKED`
-LockedAt: `2026-10-01T07:05:13Z`
-LockHash: `ff9fe4a64597bfdf810c637bd1fb38fdfface1d8a33f330c0d5d50c34d295e4e`
+LockedAt: `2026-10-01T08:27:38Z`
+LockHash: `965abd12782ee8c6a12aa336b4a9f6f85263802242b221a0921168812fed8481`
 Workflow version: `recursive-mode-audit-v2`
 Inputs:
 - Baseline (2026-10-01, fetched): public `origin/dev`
@@ -306,7 +306,7 @@ logs stored as evidence.
 ### `R11` Private conformance unblocker
 
 Description: The private `ci/circleci: track-b-conformance` lane must be green on `dev`, because it gates every
-future private promotion. `run99 R33` currently fails on 24 published activation-policy fields with no runtime
+future private promotion. the run-99 conformance check currently fails on 24 published activation-policy fields with no runtime
 consumer: judgeOrderAggregation, judgeMeasureAgreement, judgeArmExclusion, maxCounterfactualArms,
 perArmOutputEvidence, perArmOutputExclusionBound, replayBudgetEnforcement, cohortLadder, scoreBand,
 advisorySourceMaxAgeMs, evidenceMaxAgeDays, revalidationIntervalDays, promotionIntervalLevel, promotionResamples,
@@ -322,9 +322,9 @@ Acceptance criteria:
 - Fields that are removed are removed from the published JSON and every reader that still names them; fields that
   are wired have a test proving the consumer reads the value.
 - The private suite passes in a fresh worktree (or every remaining failure is enumerated with a recorded
-  reproduction and an approved exception, which the R33 ratchet does not permit).
+  reproduction and an approved exception, which the run-99 ratchet does not permit).
 
-Verification: a fresh private worktree run of `node --test tests/track-b/run99-r33-policy-consumers.test.mjs`
+Verification: a fresh private worktree run of `node --test tests/track-b/run99-\*-policy-consumers.test.mjs`
 going from the recorded 24-field failure to green, plus the CI result on the paired pull request.
 
 ### `R12` Strict TDD for every behaviour change
@@ -585,7 +585,7 @@ context. Task ids are stable and are used by the Phase 2 plan, the Phase 3 sub-p
 | `T1.2f` Sidecar budget path | Record the private-op budget, tick budget and where uploads degrade | private sidecar/extension sources, `stage-3457.err.log` | `01-as-is.md` subsection | The 5 s budget and the tick budget are quoted from source |
 | `T1.2g` Traffic-class path | Record where requests are typed today (the `request_class` columns, the hardcoded `live_request` stamps, the `source_type` backfill) and every aggregate/query that sums across classes (summary SQL, cache hit rate, counts, latency, cost, rankings, observed-data queries) | `runtime-host-bridge/src/index.ts` (`requestClass`, summary and analytics builders), `packages/sqlite-memory/src/index.ts` (`request_class`, `telemetryWindowWhere`, observed-data queries), `runtime-ui` view-models and Observe/Overview routes | `01-as-is.md` subsection | Each aggregate that mixes classes is listed with a file and line; the live mis-typing is demonstrated with the `:3457` readback |
 | `T1.2h` Effect wiring and primitives | Record the landed Effect workspace wrapper (`packages/effect`, `packages/effect-mq`, `effect@4.0.0-rc.117`), what already runs on Effect (queue-runtime planes, auto-replay runtime, config), the SEA packaging gate and the dependency-closure build | `packages/effect`, `packages/effect-mq`, `queue-runtime/*`, `track-b-auto-replay-runtime.ts`, `00-worktree.md`, `AGENTS.md`, `.recursive/RECURSIVE.md` | `01-as-is.md` subsection | Every claim cites a file; the wrapper build and SEA gate are both recorded |
-| `T1.2i` Private conformance path | Record the 24 unconsumed activation-policy fields, the `KNOWN_UNWIRED = new Set([])` ratchet semantics, and which fields are safely removable versus which need a consumer | private `tests/track-b/run99-r33-policy-consumers.test.mjs`, `shared/route-learning/activation-policy.mjs`, `shared/route-learning-activation-policy.json` | `01-as-is.md` subsection | The failing run is reproduced and the 24 fields are listed with a wire-or-remove disposition each |
+| `T1.2i` Private conformance path | Record the 24 unconsumed activation-policy fields, the `KNOWN_UNWIRED = new Set([])` ratchet semantics, and which fields are safely removable versus which need a consumer | private `tests/track-b/run99-\*-policy-consumers.test.mjs`, `shared/route-learning/activation-policy.mjs`, `shared/route-learning-activation-policy.json` | `01-as-is.md` subsection | The failing run is reproduced and the 24 fields are listed with a wire-or-remove disposition each |
 | `T1.3` Prior evidence and memory | Re-read runs 97/98/100/101/103 plus replay/learning memory docs and record what binds | prior run folders, memory shards | `01-as-is.md` `## Prior Recursive Evidence Reviewed` | Each cited artifact contributes a named constraint or decision |
 
 ### Phase 2 - TO-BE plan (`planner`-delegable audit)

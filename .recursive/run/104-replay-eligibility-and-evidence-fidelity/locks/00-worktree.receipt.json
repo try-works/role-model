@@ -1,11 +1,11 @@
 {
   "artifact": "00-worktree.md",
-  "artifact_hash": "16f08ed3459d4a4ad466907d97aa8294c785aef3d05662a93b79256e6bbd2bd7",
+  "artifact_hash": "79cc4702ff4c7c7601af02936e97ed128f15201e644a112de7eda60125f4c44f",
   "artifact_path": "D:\\DEV\\role-model\\.worktrees\\104-replay-eligibility-and-evidence-fidelity\\.recursive\\run\\104-replay-eligibility-and-evidence-fidelity\\00-worktree.md",
-  "locked_at": "2026-10-01T07:05:15Z",
+  "locked_at": "2026-10-01T08:27:40Z",
   "prerequisite_hashes": {
-    "00-requirements.md": "ff9fe4a64597bfdf810c637bd1fb38fdfface1d8a33f330c0d5d50c34d295e4e"
+    "00-requirements.md": "965abd12782ee8c6a12aa336b4a9f6f85263802242b221a0921168812fed8481"
   },
   "previous_receipt_hash": null,
-  "receipt_hash": "46ce9a8d9e1e4c3a5ba669e1469a53085897e287f4dff939a020ef25a0e2b91b"
+  "receipt_hash": "5c84f63ad3588a3ad38b08eabd54938044239f345d417e2ed49b222eea162284"
 }
