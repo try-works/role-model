@@ -8149,11 +8149,26 @@ export function createRoleModelNormalizedIntentObservation(
  * class this runtime does not have. Returns `null` when nothing at all is known, so a record shows
  * absence rather than an invented classification.
  */
-function buildRequestClassification(input: {
+export interface BridgeRequestClassification extends TrackBRouteAdvisoryClassification {
+  /**
+   * Run 104 `R6`: the task variant the runtime resolved for this request, carried with the
+   * classification when the intent declared one.
+   */
+  readonly taskVariant?: string | null;
+}
+
+export function buildRequestClassification(input: {
+  /** The task the request declared (`routingRequest.taskType`), authoritative when present. */
   readonly taskTypeId?: string | null;
+  /** Run 104 `R6`: the taxonomy identity the runtime resolved (`taxonomyIdentity.taskTypeId`). */
+  readonly identityTaskTypeId?: string | null;
+  /** Run 104 `R6`: the intent's own task id, used when neither source above resolved one. */
+  readonly intentTaskTypeId?: string | null;
+  /** Run 104 `R6`: the task variant the runtime resolved, when it resolved one. */
+  readonly taskVariant?: string | null;
   readonly roleId?: string | null;
   readonly toolClasses?: readonly string[] | null;
-}): TrackBRouteAdvisoryClassification | null {
+}): BridgeRequestClassification | null {
   const knownToolClasses = new Set(canonicalTaxonomy.toolClasses.map((toolClass) => toolClass.id));
   const knownRoleIds = new Set(canonicalTaxonomy.roles.map((role) => role.id));
   const toolClassIds = [
@@ -8164,10 +8179,29 @@ function buildRequestClassification(input: {
       ),
     ),
   ];
-  const declaredTaskTypeId = boundedRequestClassificationId(input.taskTypeId);
+  /**
+   * Run 104 `R6` (`T1.2d`): the task family uses the same three-step fallback chain the role next to
+   * it already uses - the declaration is authoritative, then the taxonomy identity the runtime
+   * resolved (which defaults to `text.chat`), then the intent's own task id. The chosen value is
+   * validated against the shipped taxonomy exactly as before, so an unknown identifier is still
+   * dropped rather than guessed: a declaration that names something unknown stops the chain (the
+   * role chain behaves the same way), and a fallback that names something unknown is skipped so the
+   * chain can reach the intent task id instead of stopping on the identity's non-taxonomy default.
+   */
   const knownTaskTypes = new Set(canonicalTaxonomy.tasks.map((task) => task.id));
-  const taskTypeId =
-    declaredTaskTypeId && knownTaskTypes.has(declaredTaskTypeId) ? declaredTaskTypeId : null;
+  const declaredTaskTypeId = boundedRequestClassificationId(input.taskTypeId);
+  const identityTaskTypeId = boundedRequestClassificationId(input.identityTaskTypeId);
+  const intentTaskTypeId = boundedRequestClassificationId(input.intentTaskTypeId);
+  const taskTypeId = declaredTaskTypeId
+    ? knownTaskTypes.has(declaredTaskTypeId)
+      ? declaredTaskTypeId
+      : null
+    : identityTaskTypeId && knownTaskTypes.has(identityTaskTypeId)
+      ? identityTaskTypeId
+      : intentTaskTypeId && knownTaskTypes.has(intentTaskTypeId)
+        ? intentTaskTypeId
+        : null;
+  const taskVariant = boundedRequestClassificationId(input.taskVariant);
   const declaredRoleId = boundedRequestClassificationId(input.roleId);
   const roleId = declaredRoleId && knownRoleIds.has(declaredRoleId) ? declaredRoleId : null;
   const taxonomyVersion = boundedRequestClassificationId(taxonomyManifest.taxonomyVersion);
@@ -8176,6 +8210,7 @@ function buildRequestClassification(input: {
   if (!taskTypeId && !roleId && !taxonomyVersion && toolClassIds.length === 0) return null;
   return {
     taskTypeId,
+    ...(taskVariant ? { taskVariant } : {}),
     roleId,
     toolClassIds,
     taxonomyVersion,
@@ -8186,6 +8221,28 @@ function buildRequestClassification(input: {
 
 const boundedRequestClassificationId = (value: unknown): string | null =>
   typeof value === "string" && value.trim() ? value.trim().slice(0, 128) : null;
+
+/**
+ * Run 104 `R6`: one place resolves the classification sources from a plan, so the routed capture,
+ * the failed-route capture, the observation bundle and the supervised-replay capture cannot drift
+ * apart. The three task sources are the same chain `buildRequestClassification` validates.
+ */
+function buildRequestClassificationForPlan(
+  plan: BridgeExecutionPlan,
+): BridgeRequestClassification | null {
+  return buildRequestClassification({
+    taskTypeId: plan.routingRequest.taskType ?? null,
+    identityTaskTypeId: plan.taxonomyIdentity?.taskTypeId ?? null,
+    intentTaskTypeId: plan.routingRequest.roleModelIntent?.task?.id ?? null,
+    taskVariant: plan.routingRequest.roleModelIntent?.taskVariant ?? null,
+    roleId:
+      plan.routingRequest.requestedRoleId ??
+      plan.taxonomyIdentity?.roleId ??
+      plan.routingRequest.roleModelIntent?.role?.id ??
+      null,
+    toolClasses: plan.routingRequest.roleModelIntent?.toolClasses ?? null,
+  });
+}
 
 function resolveRoleModelIntentTaskType(input: {
   readonly roleModelIntent?: BridgeExecutionPlan["routingRequest"]["roleModelIntent"];
@@ -24628,6 +24685,11 @@ export async function createRuntimeBridgeBackend(
         requestP95Index >= 0 ? (requestLatencies[requestP95Index] ?? null) : null,
       requestLatencySampleCount: requestLatencies.length,
       lastSeenAtMs: records[0]?.createdAtMs ?? null,
+      // Run 104 / R14: this projection summarises a caller-filtered record set, so no row was dropped by
+      // the live-only default behind the caller's back; the unfiltered readback reports the excluded
+      // classes from the storage aggregate instead.
+      excludedRequestCount: 0,
+      excludedByClass: [],
     };
   };
   const getTelemetryEndpointMeta = (endpointId: string): BridgeTelemetryEndpointMeta => {
@@ -26566,15 +26628,9 @@ export async function createRuntimeBridgeBackend(
             // Run 99 close-out (addenda 19-21 S33/D1/D2): record the classification the request was
             // routed with, so the evidence is keyed by family *and* by the taxonomy identity it was
             // classified against rather than by a bare family string.
-            classification: buildRequestClassification({
-              taskTypeId: plan.routingRequest.taskType ?? null,
-              roleId:
-                plan.routingRequest.requestedRoleId ??
-                plan.taxonomyIdentity?.roleId ??
-                plan.routingRequest.roleModelIntent?.role?.id ??
-                null,
-              toolClasses: plan.routingRequest.roleModelIntent?.toolClasses ?? null,
-            }),
+            // Run 104 R6: the helper resolves the task through the declaration -> resolved identity ->
+            // intent chain, so a request that declared no task no longer records `taskTypeId: null`.
+            classification: buildRequestClassificationForPlan(plan),
             // Run 99 close-out (D6): a live routed answer is the policy's own deterministic choice.
             outcome: outcome
               ? {
@@ -27557,15 +27613,8 @@ export async function createRuntimeBridgeBackend(
           effortSource: selectedEffortSource,
           // Run 99 close-out (addendas 19-21 S33): a failed request is still evidence, so its
           // capture records the same classification the routed path would have.
-          classification: buildRequestClassification({
-            taskTypeId: plan.routingRequest.taskType ?? null,
-            roleId:
-              plan.routingRequest.requestedRoleId ??
-              plan.taxonomyIdentity?.roleId ??
-              plan.routingRequest.roleModelIntent?.role?.id ??
-              null,
-            toolClasses: plan.routingRequest.roleModelIntent?.toolClasses ?? null,
-          }),
+          // Run 104 R6: the same fallback chain as the routed capture, resolved in one place.
+          classification: buildRequestClassificationForPlan(plan),
           comparability: { scorerSetVersion: RUN96_ROUTING_SHADOW_SCORER_SET_VERSION },
           messages: captureInput,
           failure: {
@@ -28328,6 +28377,8 @@ export async function createRuntimeBridgeBackend(
             correlationId,
           })
         : undefined;
+      // Run 104 R6: the observation bundle carries the same classification the routed capture records.
+      const routeClassification = buildRequestClassificationForPlan(plan);
       const bundle = Object.freeze({
         ...baseBundle,
         providerEvidence: buildProviderEvidenceFromObservation(
@@ -28386,11 +28437,16 @@ export async function createRuntimeBridgeBackend(
           : {}),
         // Run 99 R33 (addendum 19 S33): the capture records the task family the request was
         // routed for, so replay, evaluation, learning and the advisory can all be scoped to it.
-        ...(plan.routingRequest.taskType ? { taskTypeId: plan.routingRequest.taskType } : {}),
+        // Run 104 R6: the flat family is the one the classification resolved, so the bare key and the
+        // classification object below can never disagree.
+        ...(routeClassification?.taskTypeId
+          ? { taskTypeId: routeClassification.taskTypeId }
+          : {}),
         ...(taxonomyManifest.taxonomyVersion
           ? { taxonomyVersion: taxonomyManifest.taxonomyVersion }
           : {}),
         ...(run88Correlation ? { run88Correlation } : {}),
+        classification: routeClassification,
       });
       let artifactRef:
         | { readonly scopeId: string; readonly artifactId: string; readonly contentHash: string }
@@ -28419,28 +28475,24 @@ export async function createRuntimeBridgeBackend(
             : Array.isArray(requestBody.input)
               ? requestBody.input
               : [];
+          // Run 104 R6: one classification per capture, shared by the bare family key and the object.
+          const routeCaptureClassification = buildRequestClassificationForPlan(plan);
           const routeCapturePayload = {
             requestId,
             routingDecisionId,
             endpointId: execution.target.endpointId,
             // Run 99 R33 (S34 live finding): the capture records the task family, so the recovered
             // capture read by the supervised replay can carry it into the comparison.
-            ...(plan.routingRequest.taskType ? { taskTypeId: plan.routingRequest.taskType } : {}),
+            ...(routeCaptureClassification?.taskTypeId
+              ? { taskTypeId: routeCaptureClassification.taskTypeId }
+              : {}),
             ...(taxonomyManifest.taxonomyVersion
               ? { taxonomyVersion: taxonomyManifest.taxonomyVersion }
               : {}),
             // Run 99 close-out (addendas 19-21 S33/D1/D2): the capture records the whole
             // classification — family, role, tool classes and the taxonomy identity — not only the
             // family string, so the evidence is keyed by the taxonomy it was classified against.
-            classification: buildRequestClassification({
-              taskTypeId: plan.routingRequest.taskType ?? null,
-              roleId:
-                plan.routingRequest.requestedRoleId ??
-                plan.taxonomyIdentity?.roleId ??
-                plan.routingRequest.roleModelIntent?.role?.id ??
-                null,
-              toolClasses: plan.routingRequest.roleModelIntent?.toolClasses ?? null,
-            }),
+            classification: routeCaptureClassification,
             // Run 99 close-out (addendum 21 §4 S33): the comparability key's scorer-set identity is
             // a property of this runtime, so it is known before the request is even dispatched. The
             // two digests and the judge order policy are resolved when the evaluation case is built

@@ -380,6 +380,8 @@ export function learningEvidence(row: Record<string, unknown>): LearningEvidence
 
 export interface LearningTaskCellView {
   readonly task: string | null;
+  /** Run 104 `R6`: the task variant the runtime resolved, when the readback published one. */
+  readonly variant: string | null;
   readonly scope: string | null;
   readonly toolClasses: string | null;
   readonly requestFamily: string | null;
@@ -399,8 +401,10 @@ export function learningTaskCell(row: Record<string, unknown>): LearningTaskCell
       ? row.toolClassIds.map((entry) => textOrNull(entry) ?? NOT_REPORTED).join(", ")
       : null;
   const requestFamily = textOrNull(row.requestTaskTypeId);
+  const variant = textOrNull(classification.taskVariant) ?? textOrNull(row.taskVariant);
   return {
     task,
+    variant,
     scope:
       roleId || taxonomy
         ? `${roleId ?? NOT_REPORTED} · taxonomy ${taxonomy ?? NOT_REPORTED}`
@@ -495,6 +499,14 @@ export function LearningDecisionRow({
           <ObservationCountMarker row={row} />
         </p>
         <p className={`mt-0.5 ${tableCellNoteClassName}`}>{task.scope ?? NOT_REPORTED}</p>
+        {task.variant ? (
+          <p
+            className={`mt-0.5 truncate ${tableCellMetaClassName}`}
+            title={`variant ${task.variant}`}
+          >
+            variant {task.variant}
+          </p>
+        ) : null}
         {task.toolClasses ? (
           <p
             className={`mt-0.5 truncate ${tableCellMetaClassName}`}
