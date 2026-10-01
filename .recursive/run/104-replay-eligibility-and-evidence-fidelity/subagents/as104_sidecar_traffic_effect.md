@@ -25,7 +25,7 @@ Traced the 5 s contribution cap, the private per-invoke budget and the bounded f
 
 ### Created
 
-- `.recursive/run/104-replay-eligibility-and-evidence-fidelity/evidence/other/as-is/sidecar-traffic-effect.md`
+- none
 
 ### Modified
 
@@ -46,9 +46,19 @@ Traced the 5 s contribution cap, the private per-invoke budget and the bounded f
 
 ## Claimed Artifact Impact
 
-- Read: `.recursive/run/104-replay-eligibility-and-evidence-fidelity/evidence/other/as-is/sidecar-traffic-effect.md`
-- Updated: none outside the created deliverable
-- Evidence Used: `.recursive/run/104-replay-eligibility-and-evidence-fidelity/evidence/other/as-is/sidecar-traffic-effect.md`
+### Read
+
+- `.recursive/run/104-replay-eligibility-and-evidence-fidelity/00-requirements.md`
+- `.recursive/run/104-replay-eligibility-and-evidence-fidelity/evidence/other/as-is/sidecar-traffic-effect.md`
+
+### Updated
+
+- `.recursive/run/104-replay-eligibility-and-evidence-fidelity/evidence/other/as-is/sidecar-traffic-effect.md`
+
+### Evidence Used
+
+- `.recursive/run/104-replay-eligibility-and-evidence-fidelity/evidence/other/as-is/sidecar-traffic-effect.md`
+- `.recursive/run/104-replay-eligibility-and-evidence-fidelity/00-requirements.md`
 
 ## Claimed Findings
 

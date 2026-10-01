@@ -25,7 +25,7 @@ Read the classification builder and its call sites, the private learner and eval
 
 ### Created
 
-- `.recursive/run/104-replay-eligibility-and-evidence-fidelity/evidence/other/as-is/learner-conformance.md`
+- none
 
 ### Modified
 
@@ -42,9 +42,19 @@ Read the classification builder and its call sites, the private learner and eval
 
 ## Claimed Artifact Impact
 
-- Read: `.recursive/run/104-replay-eligibility-and-evidence-fidelity/evidence/other/as-is/learner-conformance.md`
-- Updated: none outside the created deliverable
-- Evidence Used: `.recursive/run/104-replay-eligibility-and-evidence-fidelity/evidence/other/as-is/learner-conformance.md`
+### Read
+
+- `.recursive/run/104-replay-eligibility-and-evidence-fidelity/00-requirements.md`
+- `.recursive/run/104-replay-eligibility-and-evidence-fidelity/evidence/other/as-is/learner-conformance.md`
+
+### Updated
+
+- `.recursive/run/104-replay-eligibility-and-evidence-fidelity/evidence/other/as-is/learner-conformance.md`
+
+### Evidence Used
+
+- `.recursive/run/104-replay-eligibility-and-evidence-fidelity/evidence/other/as-is/learner-conformance.md`
+- `.recursive/run/104-replay-eligibility-and-evidence-fidelity/00-requirements.md`
 
 ## Claimed Findings
 

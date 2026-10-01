@@ -25,7 +25,7 @@ Probed the live stage readbacks (both operator endpoints hung while telemetry an
 
 ### Created
 
-- `.recursive/run/104-replay-eligibility-and-evidence-fidelity/evidence/other/as-is/queue-stall.md`
+- none
 
 ### Modified
 
@@ -45,9 +45,19 @@ Probed the live stage readbacks (both operator endpoints hung while telemetry an
 
 ## Claimed Artifact Impact
 
-- Read: `.recursive/run/104-replay-eligibility-and-evidence-fidelity/evidence/other/as-is/queue-stall.md`
-- Updated: none outside the created deliverable
-- Evidence Used: `.recursive/run/104-replay-eligibility-and-evidence-fidelity/evidence/other/as-is/queue-stall.md`
+### Read
+
+- `.recursive/run/104-replay-eligibility-and-evidence-fidelity/00-requirements.md`
+- `.recursive/run/104-replay-eligibility-and-evidence-fidelity/evidence/other/as-is/queue-stall.md`
+
+### Updated
+
+- `.recursive/run/104-replay-eligibility-and-evidence-fidelity/evidence/other/as-is/queue-stall.md`
+
+### Evidence Used
+
+- `.recursive/run/104-replay-eligibility-and-evidence-fidelity/evidence/other/as-is/queue-stall.md`
+- `.recursive/run/104-replay-eligibility-and-evidence-fidelity/00-requirements.md`
 
 ## Claimed Findings
 

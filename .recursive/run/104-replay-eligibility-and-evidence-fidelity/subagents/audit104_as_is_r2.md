@@ -25,7 +25,7 @@ Re-derived all seven repaired claims from the worktrees and the frozen stage sto
 
 ### Created
 
-- `.recursive/run/104-replay-eligibility-and-evidence-fidelity/evidence/other/as-is/audit-as-is-r2.md`
+- none
 
 ### Modified
 
@@ -43,9 +43,19 @@ Re-derived all seven repaired claims from the worktrees and the frozen stage sto
 
 ## Claimed Artifact Impact
 
-- Read: `.recursive/run/104-replay-eligibility-and-evidence-fidelity/01-as-is.md`
-- Updated: none outside the created deliverable
-- Evidence Used: `.recursive/run/104-replay-eligibility-and-evidence-fidelity/01-as-is.md`
+### Read
+
+- `.recursive/run/104-replay-eligibility-and-evidence-fidelity/00-requirements.md`
+- `.recursive/run/104-replay-eligibility-and-evidence-fidelity/01-as-is.md`
+
+### Updated
+
+- `.recursive/run/104-replay-eligibility-and-evidence-fidelity/evidence/other/as-is/audit-as-is-r2.md`
+
+### Evidence Used
+
+- `.recursive/run/104-replay-eligibility-and-evidence-fidelity/01-as-is.md`
+- `.recursive/run/104-replay-eligibility-and-evidence-fidelity/00-requirements.md`
 
 ## Claimed Findings
 

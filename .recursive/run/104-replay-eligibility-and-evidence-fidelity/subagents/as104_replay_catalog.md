@@ -25,7 +25,7 @@ Read the replay policy, both call sites, the router rule, and the catalog export
 
 ### Created
 
-- `.recursive/run/104-replay-eligibility-and-evidence-fidelity/evidence/other/as-is/replay-catalog.md`
+- none
 
 ### Modified
 
@@ -46,9 +46,19 @@ Read the replay policy, both call sites, the router rule, and the catalog export
 
 ## Claimed Artifact Impact
 
-- Read: `.recursive/run/104-replay-eligibility-and-evidence-fidelity/evidence/other/as-is/replay-catalog.md`
-- Updated: none outside the created deliverable
-- Evidence Used: `.recursive/run/104-replay-eligibility-and-evidence-fidelity/evidence/other/as-is/replay-catalog.md`
+### Read
+
+- `.recursive/run/104-replay-eligibility-and-evidence-fidelity/00-requirements.md`
+- `.recursive/run/104-replay-eligibility-and-evidence-fidelity/evidence/other/as-is/replay-catalog.md`
+
+### Updated
+
+- `.recursive/run/104-replay-eligibility-and-evidence-fidelity/evidence/other/as-is/replay-catalog.md`
+
+### Evidence Used
+
+- `.recursive/run/104-replay-eligibility-and-evidence-fidelity/evidence/other/as-is/replay-catalog.md`
+- `.recursive/run/104-replay-eligibility-and-evidence-fidelity/00-requirements.md`
 
 ## Claimed Findings
 
