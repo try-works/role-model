@@ -223,16 +223,19 @@ window.__ModuleLoader__.load({
     /**
      * One card: a small heading and its rows.
      *
-     * Children are read from the extra `createElement` arguments and, when a caller
-     * follows htm's convention, from `props.children` as well — React itself supplies
-     * a component's children through props, so accepting both keeps the two call
-     * styles straight. They are spread so no child is an array: react-dom refuses to
-     * render an array that is itself a child, because it cannot key it.
+     * Children come from `props.children`, which is how React delivers them — and only
+     * that. React calls a function component as `Component(props, legacyContext)`, and
+     * the legacy context is an **empty object**, so treating extra call arguments as
+     * children made every card render `{}` as a child. react-dom rejects that with error
+     * #31, "Objects are not valid as a React child (found: object with keys {})", which
+     * blanked the whole settings page.
+     *
+     * They are spread rather than passed as one array because react-dom refuses to render
+     * an array that is itself a child: it cannot key it.
      */
-    function Card(props, ...rest) {
-      const { title } = props ?? {};
-      const supplied = rest.length > 0 ? rest : props?.children;
-      const rows = supplied === undefined || supplied === null ? [] : supplied;
+    function Card(props) {
+      const { title, children } = props ?? {};
+      const rows = children === undefined || children === null ? [] : children;
       return h(
         "div",
         { className: "rlm-card" },

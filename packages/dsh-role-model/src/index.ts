@@ -15,7 +15,7 @@
  */
 
 import z from "@deepseek-ai/schemastery";
-import { createRoleModelAdapter } from "./adapter.js";
+import { type ImageAttachmentStore, createRoleModelAdapter } from "./adapter.js";
 import { createRoleModelCommandHandler } from "./commands.js";
 import {
   type ConfigField,
@@ -235,6 +235,11 @@ export function createRoleModelPlugin(
       `dsh-role-model: host LLM classes from ${hostClasses.source.kind} at ${hostClasses.source.path}`,
     );
 
+    // Prompt images are stored durably by the Harness and handed to an adapter as a
+    // reference, so the adapter needs this service to inline them. Without it every
+    // image would reach the model as placeholder text.
+    const attachments = ctx.get("attachments") as ImageAttachmentStore | undefined;
+
     const adapter = createRoleModelAdapter({
       endpoint: resolved.endpoint,
       allowRemote: resolved.allowRemote,
@@ -242,6 +247,7 @@ export function createRoleModelPlugin(
       providerRoute: resolved.providerRoute,
       LlmAdapterBase: hostClasses.LlmAdapter,
       LlmErrorClass: hostClasses.LlmError,
+      ...(attachments === undefined ? {} : { attachments }),
       ...(options.fetch === undefined ? {} : { fetch: options.fetch }),
     });
 

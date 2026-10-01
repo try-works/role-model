@@ -41,10 +41,15 @@ class FakeLlmError extends FakeHarnessError {
 const FakeLlmAdapter = class {};
 
 /** Build an adapter over a recording fetch. */
-function buildAdapter(routes: {
-  discovery?: unknown;
-  chat?: { status?: number; body?: string; frames?: readonly string[] } | "network-error";
-}): {
+function buildAdapter(
+  routes: {
+    discovery?: unknown;
+    chat?: { status?: number; body?: string; frames?: readonly string[] } | "network-error";
+  },
+  attachments?: {
+    readImage(ref: { attachmentId: string; mediaType: string }): Promise<{ data: Uint8Array }>;
+  },
+): {
   adapter: ReturnType<typeof createRoleModelAdapter>;
   calls: { url: string; init: RequestInit | undefined; body?: string }[];
 } {
@@ -95,6 +100,7 @@ function buildAdapter(routes: {
     fetch: fetchImpl,
     LlmAdapterBase: FakeLlmAdapter as unknown as never,
     LlmErrorClass: FakeLlmError as unknown as never,
+    ...(attachments === undefined ? {} : { attachments: attachments as never }),
   });
   return { adapter, calls };
 }
@@ -440,5 +446,168 @@ describe("stream", () => {
     expect(body.tools).toBeDefined();
     expect(body.temperature).toBe(0.1);
     expect(body.max_tokens).toBe(64);
+  });
+});
+
+describe("image input", () => {
+  /**
+   * A prompt image must reach the runtime as an image. The harness carries it as an
+   * `image` block whose bytes live behind the durable `attachments` service, so the
+   * adapter has to read them and inline a data URL.
+   *
+   * Before this, the adapter had no way to resolve an attachment and silently replaced
+   * every image with placeholder text — the model never saw it, which is exactly the
+   * "image input does not work through the plugin" report.
+   */
+  const imageRef = {
+    attachmentId: "sha256:abc",
+    mediaType: "image/png",
+    bytes: 3,
+    width: 1,
+    height: 1,
+  };
+
+  /** Read the chat-completions body the adapter sent. */
+  function sentBody(calls: { url: string; body?: string }[]): Record<string, unknown> {
+    const chat = calls.find((call) => call.url.includes("/chat/completions"));
+    return JSON.parse(chat?.body ?? "{}") as Record<string, unknown>;
+  }
+
+  test("inlines a prompt image as a data URL", async () => {
+    const read: string[] = [];
+    const { adapter, calls } = buildAdapter(
+      {},
+      {
+        readImage: (ref) => {
+          read.push(ref.attachmentId);
+          return Promise.resolve({ data: new Uint8Array([1, 2, 3]) });
+        },
+      },
+    );
+    await collect(
+      adapter.stream({
+        provider: ROUTE,
+        model: "baseline.remote-only",
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "text", text: "what is this" },
+              { type: "image", attachment: imageRef },
+            ],
+          },
+        ],
+      } as never),
+    );
+
+    const body = sentBody(calls);
+    const messages = body.messages as { role: string; content: unknown }[];
+    const parts = messages[0]?.content;
+    // Multipart content, because a text-only string cannot carry an image.
+    expect(Array.isArray(parts)).toBe(true);
+    // Base64 of 0x01 0x02 0x03.
+    expect(parts).toContainEqual({
+      type: "image_url",
+      image_url: { url: "data:image/png;base64,AQID" },
+    });
+    expect(read).toEqual(["sha256:abc"]);
+  });
+
+  test("keeps the accompanying text alongside the image", async () => {
+    const { adapter, calls } = buildAdapter(
+      {},
+      {
+        readImage: () => Promise.resolve({ data: new Uint8Array([1]) }),
+      },
+    );
+    await collect(
+      adapter.stream({
+        provider: ROUTE,
+        model: "baseline.remote-only",
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "text", text: "caption this" },
+              { type: "image", attachment: imageRef },
+            ],
+          },
+        ],
+      } as never),
+    );
+    const parts = (sentBody(calls).messages as { content: unknown }[])[0]?.content;
+    expect(parts).toContainEqual({ type: "text", text: "caption this" });
+  });
+
+  test("does not read an image the harness already offloaded", async () => {
+    // An offloaded block means the harness decided the model cannot take it; turning it
+    // into an image anyway would contradict that decision and waste the read.
+    const read: string[] = [];
+    const { adapter, calls } = buildAdapter(
+      {},
+      {
+        readImage: (ref) => {
+          read.push(ref.attachmentId);
+          return Promise.resolve({ data: new Uint8Array([1]) });
+        },
+      },
+    );
+    await collect(
+      adapter.stream({
+        provider: ROUTE,
+        model: "baseline.remote-only",
+        messages: [
+          {
+            role: "user",
+            content: [{ type: "image", attachment: imageRef, offloaded: true }],
+          },
+        ],
+      } as never),
+    );
+    expect(read).toEqual([]);
+    const content = (sentBody(calls).messages as { content: unknown }[])[0]?.content;
+    expect(JSON.stringify(content)).not.toContain("image_url");
+  });
+
+  test("degrades to placeholder text when there is no attachment service", async () => {
+    // Never throw for this: a route that answers text-only is still usable, and the
+    // placeholder tells the model an image existed.
+    const { adapter, calls } = buildAdapter({});
+    await collect(
+      adapter.stream({
+        provider: ROUTE,
+        model: "baseline.remote-only",
+        messages: [{ role: "user", content: [{ type: "image", attachment: imageRef }] }],
+      } as never),
+    );
+    const content = (sentBody(calls).messages as { content: unknown }[])[0]?.content;
+    expect(JSON.stringify(content)).not.toContain("image_url");
+    expect(JSON.stringify(content).length).toBeGreaterThan(0);
+  });
+
+  test("a failed image read does not fail the whole request", async () => {
+    const { adapter, calls } = buildAdapter(
+      {},
+      {
+        readImage: () => Promise.reject(new Error("attachment store offline")),
+      },
+    );
+    await collect(
+      adapter.stream({
+        provider: ROUTE,
+        model: "baseline.remote-only",
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "text", text: "still works" },
+              { type: "image", attachment: imageRef },
+            ],
+          },
+        ],
+      } as never),
+    );
+    const content = (sentBody(calls).messages as { content: unknown }[])[0]?.content;
+    expect(JSON.stringify(content)).toContain("still works");
   });
 });

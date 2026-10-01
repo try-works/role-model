@@ -130,7 +130,12 @@ function invokeComponent(element: HostElement): unknown {
     )(props);
     return instance.render();
   }
-  return type(props);
+  // The second argument mirrors React itself: the dev renderer calls a function
+  // component as `Component(props, legacyContext)`, and the legacy context is an empty
+  // object. A component that treats extra arguments as children therefore renders `{}`
+  // as a child, which react-dom rejects with error #31 ("Objects are not valid as a
+  // React child"). Passing it here is what lets this harness catch that at all.
+  return (type as (props: unknown, legacyContext: unknown) => unknown)(props, {});
 }
 
 /**
@@ -670,6 +675,35 @@ describe("editing configuration from the panel", () => {
     // resolve stops the plugin mounting — which blanks the whole settings page. The
     // Remote is read through `ctx.remote` behind a guard instead.
     expect(inject).not.toContain("remote.settings");
+  });
+
+  /**
+   * React calls a function component as `Component(props, legacyContext)`, and the legacy
+   * context is an empty object. A component that treats extra call arguments as children
+   * therefore renders `{}` as a child, and react-dom rejects that with error #31:
+   *
+   *   Objects are not valid as a React child (found: object with keys {})
+   *
+   * That is what blanked the settings page: `Card(props, ...rest)` preferred `rest` over
+   * `props.children`, so every card rendered its heading plus one empty object. The harness
+   * now calls components with that second argument, so this spec and the card-body specs
+   * together keep it from coming back.
+   */
+  test("a component reads children from props, not from extra call arguments", () => {
+    // Every card must carry a body when the component is called the way React calls it.
+    const cards = panelCards();
+    expect(cards.length).toBeGreaterThanOrEqual(3);
+    for (const card of cards) {
+      const body = childrenOf(card).slice(1);
+      expect(body.length, "a card rendered no body").toBeGreaterThan(0);
+      for (const child of body) {
+        // A plain object child is precisely React #31.
+        expect(
+          typeof child === "object" && child !== null && !Array.isArray(child) && !isElement(child),
+          "a card rendered a plain object as a child",
+        ).toBe(false);
+      }
+    }
   });
 
   test("renders an editable control for every configurable setting", () => {
