@@ -136,12 +136,15 @@ import {
   resolveReplayLedgerLimits,
 } from "./track-b-replay-ledger.js";
 import {
+  type ReplayCandidateRejection,
   buildReplayPolicySet,
   decideReplayAdmission,
   hasRecordedToolResults,
   hasToolCalls,
   isBenchmarkReplaySourceRef,
   isSyntheticProbeSourceClass,
+  readReplayRequestRequirements,
+  recheckReplayCandidatesForDispatch,
   replayBudgetEnforcedForChannel,
   resolveReplayPolicySet,
   resolveReplayToolPolicy,
@@ -7769,6 +7772,18 @@ export async function main(): Promise<void> {
               }),
             )
           ).endpointId;
+          /**
+           * Run 104 R1: the arm must be able to serve the capture's request, so the planner reads the
+           * capture's own recorded decision (inferred and marked when the capture predates the field)
+           * and the configured endpoints' declarations, and applies the router's own rule.
+           */
+          const replayRequestRequirements = readReplayRequestRequirements(sourceCapture);
+          const replayEndpointProfiles = created.effectiveRegistry.endpoints.map((endpoint) => ({
+            endpointId: endpoint.identity.endpoint_id,
+            capabilities: endpoint.declared.capabilities,
+            modalities: endpoint.declared.modalities,
+          }));
+          const replayCandidateRejections: ReplayCandidateRejection[] = [];
           const distinctReplayCandidates = selectReplayCandidates({
             configuredEndpointIds: candidateEndpointIds,
             sourceEndpointId: capturedSourceEndpointId,
@@ -7779,6 +7794,9 @@ export async function main(): Promise<void> {
             // judge is a designated client and is never offered as a scored candidate, so a battle
             // cannot contain the endpoint that judges it.
             ...(evalJudgeEndpointId ? { excludedEndpointIds: [evalJudgeEndpointId] } : {}),
+            requirements: replayRequestRequirements,
+            endpointProfiles: replayEndpointProfiles,
+            onRejected: (rejection) => replayCandidateRejections.push(rejection),
           });
           const replayPolicySet = buildReplayPolicySet();
           const replayLedger = createReplayLedger({
@@ -7834,13 +7852,40 @@ export async function main(): Promise<void> {
             judgeResolved: Boolean(evalJudgeEndpointId),
           });
           if (!admission.admitted) {
-            throw new Error(`${admission.code}: ${admission.detail}`);
+            /**
+             * Run 104 R1: arms the router's rule rejected are named in the failure, so a planner that
+             * ran out of candidates says which endpoints could not serve the request and why.
+             */
+            const rejectedDetail =
+              replayCandidateRejections.length === 0
+                ? ""
+                : ` (rejected arms: ${replayCandidateRejections
+                    .map((rejection) => `${rejection.endpointId} (${rejection.code})`)
+                    .join(", ")})`;
+            throw new Error(`${admission.code}: ${admission.detail}${rejectedDetail}`);
           }
           const { toolPolicy: resolvedReplayToolPolicy, reason: replayToolPolicyReason } =
             resolveReplayToolPolicy({
               hasRecordedToolResults: hasRecordedToolResults(sourceCapture),
               hasToolCalls: hasToolCalls(sourceCapture),
             });
+          /**
+           * Run 104 R1 pre-dispatch guard: the plan was built from this request's candidate list, so the
+           * arms are re-checked against the same rule at the dispatch boundary. An arm that cannot serve
+           * the request fails cheaply here, named, instead of being dispatched into a provider 400.
+           */
+          const staleReplayArms = recheckReplayCandidatesForDispatch({
+            endpointIds: candidateEndpointIds,
+            requirements: replayRequestRequirements,
+            endpointProfiles: replayEndpointProfiles,
+          });
+          if (staleReplayArms.length > 0) {
+            throw new Error(
+              `replay arm cannot serve the capture's request requirements: ${staleReplayArms
+                .map((rejection) => `${rejection.endpointId} (${rejection.code})`)
+                .join(", ")}`,
+            );
+          }
           const endpoints = created.effectiveRegistry.endpoints;
           const candidatePackages = candidateEndpointIds.map((endpointId) => {
             const endpoint = endpoints.find((item) => item.identity.endpoint_id === endpointId);

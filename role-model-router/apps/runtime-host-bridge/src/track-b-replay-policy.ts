@@ -1,5 +1,7 @@
 import { createHash } from "node:crypto";
 
+import { supportsCapabilityRequirement } from "@role-model-router/core";
+
 /**
  * Run 97 replay policy surface.
  *
@@ -293,6 +295,211 @@ export function replayBudgetEnforcedForChannel(
   return (channel ?? "").trim().toLowerCase() === "production";
 }
 
+/**
+ * Run 104 R1: the request requirements a replay arm must be able to serve.
+ *
+ * A replay arm may only be planned against an endpoint that could serve the capture's request, so the
+ * filter has to know what the request needed. The capture's own recorded decision is the authority;
+ * captures written before that field existed are read from their message/attachment content and the
+ * value is marked `inferred` so the operator can tell a recorded fact from a derivation.
+ */
+export interface ReplayRequestRequirements {
+  readonly requiredCapabilities: readonly string[];
+  readonly requiredModalities: readonly string[];
+  readonly source: "recorded" | "inferred";
+}
+
+/** The declaration pair the router's eligibility rule reads, keyed by endpoint. */
+export interface ReplayCandidateEligibilityProfile {
+  readonly endpointId: string;
+  readonly capabilities: readonly string[];
+  readonly modalities: readonly string[];
+}
+
+/**
+ * Run 104 R1: the router's two candidate-input exclusion codes, named with the endpoint that carries them.
+ * The vocabulary is the router's own (`toCandidateExclusion`, `packages/core/src/router.ts`), not a
+ * replay-local restatement, so an operator sees the same names on both paths.
+ */
+export type ReplayEligibilityRejectionCode = "MODALITY_UNSUPPORTED" | "CAPABILITY_MISSING";
+
+export interface ReplayCandidateRejection {
+  readonly endpointId: string;
+  readonly code: ReplayEligibilityRejectionCode;
+  readonly detail: string;
+}
+
+const REQUIREMENT_CONTAINER_KEYS = [
+  "requestRequirements",
+  "routingRequirements",
+  "routingDecision",
+  "decision",
+  "requirements",
+] as const;
+
+const CAPABILITY_KEYS = ["requiredCapabilities", "required_capabilities"] as const;
+const MODALITY_KEYS = ["requiredModalities", "required_modalities"] as const;
+
+function readStringList(record: Record<string, unknown>, keys: readonly string[]): string[] | null {
+  for (const key of keys) {
+    const value = record[key];
+    if (value === undefined) continue;
+    if (!Array.isArray(value)) continue;
+    return [
+      ...new Set(
+        value
+          .filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+          .map((item) => item.trim()),
+      ),
+    ];
+  }
+  return null;
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+const CONTENT_MODALITY_TYPES: Readonly<Record<string, string>> = {
+  image_url: "image",
+  input_image: "image",
+  image: "image",
+  input_audio: "audio",
+  audio: "audio",
+  audio_url: "audio",
+  video_url: "video",
+  video: "video",
+  file: "file",
+  document: "file",
+};
+
+function modalityForMimeType(mimeType: string): string | null {
+  const normalized = mimeType.trim().toLowerCase();
+  if (normalized.startsWith("image/")) return "image";
+  if (normalized.startsWith("audio/")) return "audio";
+  if (normalized.startsWith("video/")) return "video";
+  if (normalized === "application/pdf" || normalized === "application/x-pdf") return "pdf";
+  return null;
+}
+
+/**
+ * Run 104 R1 inference leg: read the non-text modalities a capture's own bytes demand. Conservative by
+ * design - only a declared content type or attachment mime names a modality, so an ordinary transcript
+ * infers `["text"]` and keeps today's behaviour byte-identical.
+ */
+function inferReplayRequiredModalities(capture: Record<string, unknown>): string[] {
+  const found = new Set<string>();
+  const messages = Array.isArray(capture.messages) ? capture.messages : [];
+  for (const message of messages) {
+    const record = asRecord(message);
+    if (!record) continue;
+    const content = Array.isArray(record.content) ? record.content : [];
+    for (const part of content) {
+      const partRecord = asRecord(part);
+      if (!partRecord) continue;
+      const type = typeof partRecord.type === "string" ? partRecord.type.trim().toLowerCase() : "";
+      const mapped = CONTENT_MODALITY_TYPES[type];
+      if (mapped === "file") {
+        const mime =
+          (typeof partRecord.mimeType === "string" && partRecord.mimeType) ||
+          (typeof partRecord.mime_type === "string" && partRecord.mime_type) ||
+          (asRecord(partRecord.file)?.mime_type as string | undefined) ||
+          "";
+        const fromMime = typeof mime === "string" && mime ? modalityForMimeType(mime) : null;
+        if (fromMime) found.add(fromMime);
+        continue;
+      }
+      if (mapped) found.add(mapped);
+    }
+  }
+  const attachments = Array.isArray(capture.attachments) ? capture.attachments : [];
+  for (const attachment of attachments) {
+    const record = asRecord(attachment);
+    if (!record) continue;
+    const mime = [
+      record.mimeType,
+      record.mime_type,
+      record.contentType,
+      record.content_type,
+      record.type,
+    ].find((value): value is string => typeof value === "string" && value.trim().length > 0);
+    if (!mime) continue;
+    const mapped = modalityForMimeType(mime);
+    if (mapped) found.add(mapped);
+  }
+  return ["text", ...[...found].sort()];
+}
+
+/**
+ * Run 104 R1: read the capture's request requirements. The recorded decision wins; only when no
+ * container states modalities or capabilities does the reader fall back to content inference, and the
+ * result then says so.
+ */
+export function readReplayRequestRequirements(
+  capture: Record<string, unknown>,
+): ReplayRequestRequirements {
+  const containers: Record<string, unknown>[] = [capture];
+  for (const key of REQUIREMENT_CONTAINER_KEYS) {
+    const nested = asRecord(capture[key]);
+    if (nested) containers.push(nested);
+  }
+  let requiredCapabilities: string[] | null = null;
+  let requiredModalities: string[] | null = null;
+  for (const container of containers) {
+    requiredCapabilities ??= readStringList(container, CAPABILITY_KEYS);
+    requiredModalities ??= readStringList(container, MODALITY_KEYS);
+  }
+  if (requiredCapabilities !== null || requiredModalities !== null) {
+    return {
+      requiredCapabilities: requiredCapabilities ?? [],
+      requiredModalities: requiredModalities ?? ["text"],
+      source: "recorded",
+    };
+  }
+  return {
+    requiredCapabilities: [],
+    requiredModalities: inferReplayRequiredModalities(capture),
+    source: "inferred",
+  };
+}
+
+/**
+ * Run 104 R1: the router's own candidate-input rule, applied to one endpoint declaration.
+ *
+ * The capability half calls the exported `supportsCapabilityRequirement` (no second table); the modality
+ * half is the router's `MODALITY_UNSUPPORTED` comparison (every required modality must be declared).
+ */
+export function evaluateReplayCandidateEligibility(input: {
+  readonly endpointId: string;
+  readonly capabilities: readonly string[];
+  readonly modalities: readonly string[];
+  readonly requirements: ReplayRequestRequirements;
+}): ReplayCandidateRejection | null {
+  const missingModality = input.requirements.requiredModalities.find(
+    (modality) => !input.modalities.includes(modality),
+  );
+  if (missingModality !== undefined) {
+    return {
+      endpointId: input.endpointId,
+      code: "MODALITY_UNSUPPORTED",
+      detail: `Endpoint does not support required modality ${missingModality}.`,
+    };
+  }
+  const missingCapability = input.requirements.requiredCapabilities.find(
+    (capability) => !supportsCapabilityRequirement(input.capabilities, capability),
+  );
+  if (missingCapability !== undefined) {
+    return {
+      endpointId: input.endpointId,
+      code: "CAPABILITY_MISSING",
+      detail: `Endpoint is missing required capability ${missingCapability}.`,
+    };
+  }
+  return null;
+}
+
 export function selectReplayCandidates(input: {
   readonly configuredEndpointIds: readonly string[];
   readonly healthyEndpointIds?: readonly string[];
@@ -312,6 +519,14 @@ export function selectReplayCandidates(input: {
    */
   readonly rotationKey?: string | null;
   readonly cap?: number;
+  /**
+   * Run 104 R1: the capture's request requirements and the configured endpoints' declarations. An
+   * endpoint with no profile is left to the pre-existing filters (unchanged behaviour for callers that
+   * carry no declarations yet).
+   */
+  readonly requirements?: ReplayRequestRequirements;
+  readonly endpointProfiles?: readonly ReplayCandidateEligibilityProfile[];
+  readonly onRejected?: (rejection: ReplayCandidateRejection) => void;
 }): readonly string[] {
   const cap = input.cap ?? DEFAULT_REPLAY_CANDIDATE_CAP;
   if (!Number.isSafeInteger(cap) || cap < 1) return [];
@@ -324,6 +539,11 @@ export function selectReplayCandidates(input: {
       .map((value) => value.trim())
       .filter((value) => value.length > 0),
   );
+  const profiles = new Map(
+    (input.endpointProfiles ?? [])
+      .filter((profile) => profile.endpointId.trim().length > 0)
+      .map((profile) => [profile.endpointId.trim(), profile] as const),
+  );
   const selected: string[] = [];
   const seen = new Set<string>();
   const eligible: string[] = [];
@@ -335,6 +555,24 @@ export function selectReplayCandidates(input: {
       if (normalized === input.sourceEndpointId) continue;
     }
     if (healthy && !healthy.has(normalized)) continue;
+    /**
+     * Run 104 R1: the router's own capability/modality rule decides whether this arm could serve the
+     * capture's request. Rejected arms are handed to the caller so they are recorded rather than
+     * silently dropped.
+     */
+    const profile = profiles.get(normalized);
+    if (profile && input.requirements) {
+      const rejection = evaluateReplayCandidateEligibility({
+        endpointId: normalized,
+        capabilities: profile.capabilities,
+        modalities: profile.modalities,
+        requirements: input.requirements,
+      });
+      if (rejection) {
+        input.onRejected?.(rejection);
+        continue;
+      }
+    }
     seen.add(normalized);
     eligible.push(normalized);
   }
@@ -353,6 +591,38 @@ export function selectReplayCandidates(input: {
     if (selected.length === cap) break;
   }
   return selected;
+}
+
+/**
+ * Run 104 R1 pre-dispatch guard: re-check the planned arms against the same rules immediately before
+ * dispatch, so a configuration change between planning and dispatch cannot turn into a provider-bound
+ * 400. The caller fails cheaply with the reasons recorded here.
+ */
+export function recheckReplayCandidatesForDispatch(input: {
+  readonly endpointIds: readonly string[];
+  readonly requirements?: ReplayRequestRequirements;
+  readonly endpointProfiles?: readonly ReplayCandidateEligibilityProfile[];
+}): readonly ReplayCandidateRejection[] {
+  if (!input.requirements) return [];
+  const profiles = new Map(
+    (input.endpointProfiles ?? [])
+      .filter((profile) => profile.endpointId.trim().length > 0)
+      .map((profile) => [profile.endpointId.trim(), profile] as const),
+  );
+  const rejections: ReplayCandidateRejection[] = [];
+  for (const endpointId of input.endpointIds) {
+    const normalized = endpointId.trim();
+    const profile = profiles.get(normalized);
+    if (!profile) continue;
+    const rejection = evaluateReplayCandidateEligibility({
+      endpointId: normalized,
+      capabilities: profile.capabilities,
+      modalities: profile.modalities,
+      requirements: input.requirements,
+    });
+    if (rejection) rejections.push(rejection);
+  }
+  return rejections;
 }
 
 export type ReplayToolPolicy = "recorded_results_only" | "sandboxed_allowlist";
