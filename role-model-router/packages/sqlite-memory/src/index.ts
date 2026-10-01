@@ -47,6 +47,7 @@ const INITIAL_MIGRATION_ID = "run06-v1-initial-schema";
 const OPERATIONAL_PROFILE_REPROJECTION_MIGRATION_ID = "run91-operational-profile-reprojection-v1";
 const OBSERVATION_METADATA_BACKFILL_MIGRATION_ID = "run62-observation-metadata-backfill-v1";
 const TELEMETRY_METADATA_BACKFILL_MIGRATION_ID = "run62-telemetry-metadata-backfill-v1";
+const REQUEST_CLASS_SOURCE_BACKFILL_MIGRATION_ID = "run104-request-class-source-backfill-v1";
 const RECENT_OBSERVATIONS_INDEX_MIGRATION_ID = "run77-recent-observations-index-v1";
 const OBSERVED_PROFILE_INDEXES_MIGRATION_ID = "run77-observed-profile-indexes-v1";
 const EFFORT_INSTANCE_IDENTITY_MIGRATION_ID = "run91-effort-instance-identity-v1";
@@ -62,6 +63,7 @@ const RUNTIME_TELEMETRY_INSERT_COLUMNS = [
   "created_at_ms",
   "client_request_id",
   "request_class",
+  "request_class_source",
   "source_type",
   "model_id",
   "provider_kind",
@@ -1002,6 +1004,12 @@ export interface RuntimeTelemetryRecord {
   readonly createdAtMs: number;
   readonly clientRequestId: string | null;
   readonly requestClass: RuntimeTelemetryTrafficClass | null;
+  /**
+   * Run 104 / R14: `declared` when the writer stored the class its caller supplied, `inferred` when the
+   * class was derived from an observation sample or backfilled by a migration, and null when no class was
+   * ever established (`request_class IS NULL`, or the writer's `unknown` placeholder).
+   */
+  readonly requestClassSource: RuntimeTelemetryRequestClassSource | null;
   readonly sourceType: "local" | "remote" | null;
   readonly modelId: string | null;
   readonly providerKind: string | null;
@@ -1132,6 +1140,19 @@ export interface RuntimeTelemetrySummary {
   readonly p95RequestLatencyMs: number | null;
   readonly requestLatencySampleCount: number;
   readonly lastSeenAtMs: number | null;
+  /**
+   * Run 104 / R14: the aggregate above counts live traffic only. These describe the rows in the same
+   * window that the class predicate left out, so a surface can state the exclusion instead of silently
+   * shrinking the denominator.
+   */
+  readonly excludedRequestCount: number;
+  readonly excludedByClass: readonly RuntimeTelemetryExcludedClassCount[];
+}
+
+export interface RuntimeTelemetryExcludedClassCount {
+  /** A stored class, or `unclassified` for rows that never established one (`request_class IS NULL`). */
+  readonly requestClass: string;
+  readonly requestCount: number;
 }
 
 export interface RuntimeTelemetryComparisonRow {
@@ -1193,6 +1214,27 @@ export const RUNTIME_TELEMETRY_TRAFFIC_CLASSES = [
 ] as const;
 
 export type RuntimeTelemetryTrafficClass = (typeof RUNTIME_TELEMETRY_TRAFFIC_CLASSES)[number] | "live_request";
+
+/**
+ * Run 104 / R14: how a stored `request_class` came to be. A declaration is recorded by the writer from
+ * its caller; anything a migration or heuristic derived is `inferred` so a reader can never mistake a
+ * backfilled class for a declared one.
+ */
+export type RuntimeTelemetryRequestClassSource = "declared" | "inferred";
+
+/**
+ * Run 104 / R14: operator-facing aggregates are live-only unless a caller asks otherwise. `live` also
+ * matches the legacy `live_request` spelling, and `unknown` also matches rows that never established a
+ * class at all (`request_class IS NULL`) - the writer's placeholder for "no class was declared", which
+ * is how every live row written before the producer markers landed is stored. The default predicate is
+ * therefore `request_class IN ('live', 'live_request', 'unknown') OR request_class IS NULL`, so no
+ * legacy live traffic disappears from the operator's headline numbers, while the four known non-live
+ * classes can never contribute and are reported through `RuntimeTelemetrySummary.excludedByClass`.
+ */
+export const DEFAULT_LIVE_TRAFFIC_CLASSES: readonly RuntimeTelemetryTrafficClass[] = [
+  "live",
+  "unknown",
+];
 
 /**
  * Run 104 / R14 (addendum-03): derive the persisted request class from an observation sample's source type.
@@ -1590,6 +1632,7 @@ function initializeSchema(database: DatabaseSync): void {
     "effort_source TEXT",
     "client_request_id TEXT",
     "request_class TEXT",
+    "request_class_source TEXT",
     "source_type TEXT",
     "provider_family TEXT",
     "vendor_id TEXT",
@@ -1805,6 +1848,21 @@ function initializeSchema(database: DatabaseSync): void {
           OR taxonomy_capability_ids_json IS NULL
           OR taxonomy_modality_ids_json IS NULL
           OR taxonomy_tool_class_ids_json IS NULL`,
+      ),
+  );
+  // Run 104 / R14: rows that already carried a class before source tracking existed were never recorded
+  // as declared, so the one-shot backfill marks them `inferred` rather than letting them read as if the
+  // producer had declared the class. Rows with no class at all stay null (unclassified).
+  runOnceMigration(
+    database,
+    REQUEST_CLASS_SOURCE_BACKFILL_MIGRATION_ID,
+    true,
+    () =>
+      database.exec(
+        `UPDATE runtime_telemetry_records SET request_class_source = 'inferred'
+         WHERE request_class_source IS NULL
+           AND request_class IS NOT NULL
+           AND request_class <> 'unknown'`,
       ),
   );
 }
@@ -2761,6 +2819,7 @@ function mapRuntimeTelemetryRecord(row: {
   created_at_ms: number;
   client_request_id: string | null;
   request_class: string | null;
+  request_class_source: string | null;
   source_type: string | null;
   model_id: string | null;
   provider_kind: string | null;
@@ -2910,6 +2969,10 @@ function mapRuntimeTelemetryRecord(row: {
       row.request_class === "live_request" ||
       row.request_class === "unknown"
         ? row.request_class
+        : null,
+    requestClassSource:
+      row.request_class_source === "declared" || row.request_class_source === "inferred"
+        ? row.request_class_source
         : null,
     sourceType:
       row.source_type === "local" || row.source_type === "remote" ? row.source_type : null,
@@ -3165,6 +3228,12 @@ function toRuntimeTelemetryRecord(
     clientRequestId: observation.clientRequestId ?? null,
     requestClass:
       requestClassFromObservationSample(observation.observedPerformance.sample.source_type) ?? "unknown",
+    // The class above is derived from the observation sample, never passed in by the caller.
+    requestClassSource: requestClassFromObservationSample(
+      observation.observedPerformance.sample.source_type,
+    )
+      ? "inferred"
+      : null,
     sourceType: telemetrySnapshot?.sourceType ?? null,
     modelId: observation.usageEvent.model_id ?? null,
     providerKind: observation.usageEvent.provider_kind ?? null,
@@ -3316,6 +3385,8 @@ function runtimeTelemetryInsertValues(
     record.createdAtMs,
     record.clientRequestId,
     record.requestClass,
+    record.requestClassSource ??
+      (record.requestClass === null || record.requestClass === "unknown" ? null : "declared"),
     record.sourceType,
     record.modelId,
     record.providerKind,
@@ -3437,6 +3508,8 @@ function toFailureRuntimeTelemetryRecord(
     createdAtMs,
     clientRequestId: input.clientRequestId ?? null,
     requestClass: input.requestClass ?? "unknown",
+    // The caller supplied the class explicitly; the `unknown` placeholder is not a declaration.
+    requestClassSource: input.requestClass ? "declared" : null,
     sourceType: input.sourceType ?? null,
     modelId: input.modelId ?? null,
     providerKind: input.providerKind ?? null,
@@ -3591,6 +3664,7 @@ function listRuntimeTelemetryRecordsInternal(
     created_at_ms: number;
     client_request_id: string | null;
     request_class: string | null;
+    request_class_source: string | null;
     source_type: string | null;
     model_id: string | null;
     provider_kind: string | null;
@@ -6003,6 +6077,7 @@ function telemetryWindow(input: RuntimeTelemetryAggregateQueryInput): {
 function telemetryWindowWhere(
   input: RuntimeTelemetryAggregateQueryInput,
   sourceType?: "local" | "remote",
+  trafficClasses: readonly RuntimeTelemetryTrafficClass[] | undefined = input.trafficClasses,
 ): { readonly where: string; readonly parameters: readonly (number | string)[] } {
   const window = telemetryWindow(input);
   const clauses = ["created_at_ms < ?"];
@@ -6015,8 +6090,8 @@ function telemetryWindowWhere(
     clauses.push("source_type = ?");
     parameters.push(sourceType);
   }
-  if (input.trafficClasses && input.trafficClasses.length > 0) {
-    const filter = telemetryTrafficClassFilter(input.trafficClasses);
+  if (trafficClasses && trafficClasses.length > 0) {
+    const filter = telemetryTrafficClassFilter(trafficClasses);
     const placeholders = filter.values.map(() => "?").join(", ");
     clauses.push(
       filter.includeNull
@@ -6028,12 +6103,66 @@ function telemetryWindowWhere(
   return { where: clauses.join(" AND "), parameters };
 }
 
+/**
+ * Run 104 / R14: the same window and source scope without the class predicate, used to count what the
+ * live-only default left out.
+ */
+function telemetryWindowRangeWhere(
+  input: RuntimeTelemetryAggregateQueryInput,
+  sourceType?: "local" | "remote",
+): { readonly where: string; readonly parameters: readonly (number | string)[] } {
+  return telemetryWindowWhere(input, sourceType, []);
+}
+
+function readExcludedTelemetryClassCounts(
+  database: DatabaseSync,
+  input: RuntimeTelemetryAggregateQueryInput,
+  sourceType: "local" | "remote" | undefined,
+  trafficClasses: readonly RuntimeTelemetryTrafficClass[],
+): { readonly total: number; readonly counts: readonly RuntimeTelemetryExcludedClassCount[] } {
+  if (trafficClasses.length === 0) {
+    return { total: 0, counts: [] };
+  }
+  const filter = telemetryTrafficClassFilter(trafficClasses);
+  const included = new Set(filter.values);
+  const { where, parameters } = telemetryWindowRangeWhere(input, sourceType);
+  const rows = database
+    .prepare(
+      `SELECT COALESCE(request_class, 'unclassified') AS request_class, COUNT(*) AS request_count
+       FROM runtime_telemetry_records
+       WHERE ${where}
+       GROUP BY request_class`,
+    )
+    .all(...parameters) as Array<{ request_class: string; request_count: number }>;
+  const counts = rows
+    .filter(
+      (row) =>
+        !included.has(row.request_class) &&
+        !(row.request_class === "unclassified" && filter.includeNull),
+    )
+    .map((row) => ({
+      requestClass: row.request_class,
+      requestCount: Number(row.request_count),
+    }))
+    .sort(
+      (left, right) =>
+        right.requestCount - left.requestCount || left.requestClass.localeCompare(right.requestClass, "en"),
+    );
+  return {
+    total: counts.reduce((sum, row) => sum + row.requestCount, 0),
+    counts,
+  };
+}
+
 function readRuntimeTelemetryAggregateFromDatabase(
   database: DatabaseSync,
   input: RuntimeTelemetryAggregateQueryInput,
   sourceType?: "local" | "remote",
 ): RuntimeTelemetrySummary {
-  const { where, parameters } = telemetryWindowWhere(input, sourceType);
+  // Run 104 / R14: operator-facing aggregates are live-only by default. The predicate is applied here,
+  // at the storage boundary, so no surface can read a mixed denominator by accident.
+  const effectiveTrafficClasses = input.trafficClasses ?? DEFAULT_LIVE_TRAFFIC_CLASSES;
+  const { where, parameters } = telemetryWindowWhere(input, sourceType, effectiveTrafficClasses);
   const aggregate = database
     .prepare(
       `SELECT
@@ -6074,6 +6203,12 @@ function readRuntimeTelemetryAggregateFromDatabase(
     )
     .all(...parameters) as Array<{ request_latency_ms: number }>;
   const requestLatencyValues = requestLatencyRows.map((row) => row.request_latency_ms);
+  const excluded = readExcludedTelemetryClassCounts(
+    database,
+    input,
+    sourceType,
+    effectiveTrafficClasses,
+  );
   const latencyCount = Number(aggregate.latency_count ?? 0);
   const totalLatency = Number(aggregate.total_latency_ms ?? 0);
   const requestLatencyCount = Number(aggregate.request_latency_count ?? 0);
@@ -6099,6 +6234,8 @@ function readRuntimeTelemetryAggregateFromDatabase(
       aggregate.last_seen_at_ms === null || aggregate.last_seen_at_ms === undefined
         ? null
         : Number(aggregate.last_seen_at_ms),
+    excludedRequestCount: excluded.total,
+    excludedByClass: excluded.counts,
   };
 }
 
@@ -6136,7 +6273,7 @@ export function readRuntimeTelemetryRecord(
 }
 
 export function readRuntimeTelemetrySummary(
-  input: RuntimeTelemetryQueryInput,
+  input: RuntimeTelemetryAggregateQueryInput,
 ): RuntimeTelemetrySummary {
   const database = openSqliteDatabase(input.databasePath);
   // Aggregates are compact SQLite queries, never a rich-record page. The

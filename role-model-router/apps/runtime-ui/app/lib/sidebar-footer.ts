@@ -6,6 +6,7 @@ import {
   readReasoningEffort,
   readUpstreamModelId,
 } from "./effort-identity";
+import { isLiveRequestClass } from "./view-models";
 import type {
   RouterSummary,
   RuntimeConfig,
@@ -158,6 +159,23 @@ export function buildSidebarModels(input: {
         right.requestCount - left.requestCount || left.id.localeCompare(right.id, "en"),
     )
     .slice(0, limit);
+}
+
+/**
+ * Run 104 / R14: the sidebar footer's latest-request rule reads the newest *live* request. A replay,
+ * evaluation, benchmark or probe row is never the sample, and when the window holds no live row the
+ * caller renders "no live samples" instead of falling back to another class.
+ */
+export function latestLiveRequest(
+  requests: readonly RuntimeTelemetryRequestRecord[],
+): RuntimeTelemetryRequestRecord | null {
+  const live = requests.filter((request) => isLiveRequestClass(request.requestClass));
+  if (live.length === 0) {
+    return null;
+  }
+  return live.reduce((newest, request) =>
+    (request.createdAtMs ?? 0) > (newest.createdAtMs ?? 0) ? request : newest,
+  );
 }
 
 /** Most recent request’s cache hit rate, 0–100 (RM3 sidebar footer rule). */

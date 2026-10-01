@@ -115,6 +115,7 @@ describe("initializeSqliteMemory", () => {
     expect(journalMode.journal_mode.toLowerCase()).toBe("wal");
     expect(migrations).toEqual([
       { migration_id: "run06-v1-initial-schema" },
+      { migration_id: "run104-request-class-source-backfill-v1" },
       { migration_id: "run62-observation-metadata-backfill-v1" },
       { migration_id: "run62-telemetry-metadata-backfill-v1" },
       { migration_id: "run77-observed-profile-indexes-v1" },

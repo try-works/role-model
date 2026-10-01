@@ -73,8 +73,21 @@ test("run104: the telemetry summary can be restricted to live traffic", async ()
     { id: "run104-bench", requestClass: "benchmark", cached: 0, latencyMs: 5_000, totalTokens: 30, createdAtMs: now - 3_000 },
   ]);
 
-  const all = readRuntimeTelemetrySummary({ databasePath: initialized.databasePath, windowMs: 60_000 });
+  // Run 104 / R14: the unfiltered summary is live-only now; the mixed denominator is reachable only
+  // when a caller asks for every class explicitly.
+  const all = readRuntimeTelemetrySummary({
+    databasePath: initialized.databasePath,
+    windowMs: 60_000,
+    trafficClasses: [],
+  });
   expect(all.requestCount).toBe(3);
+
+  const defaultSummary = readRuntimeTelemetrySummary({
+    databasePath: initialized.databasePath,
+    windowMs: 60_000,
+  });
+  expect(defaultSummary.requestCount).toBe(1);
+  expect(defaultSummary.excludedRequestCount).toBe(2);
 
   const liveOnly = readRuntimeTelemetrySummary({
     databasePath: initialized.databasePath,

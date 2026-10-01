@@ -550,6 +550,15 @@ export interface RuntimeTelemetrySourceSummary {
   readonly p95RequestLatencyMs?: number | null;
   readonly requestLatencySampleCount?: number;
   readonly lastSeenAtMs: number | null;
+  /**
+   * Run 104 / R14: how many rows in the same window the live-only predicate left out, and of which
+   * class. Absent on responses from a runtime older than the live-only summary.
+   */
+  readonly excludedRequestCount?: number;
+  readonly excludedByClass?: readonly {
+    readonly requestClass: string;
+    readonly requestCount: number;
+  }[];
 }
 
 export interface RuntimeTelemetrySummary extends RuntimeTelemetrySourceSummary {
@@ -592,7 +601,18 @@ export interface RuntimeTelemetryRequestRecord {
   readonly upstreamModelId?: string | null;
   readonly reasoningEffort?: string | null;
   readonly effortSource?: string | null;
-  readonly requestClass?: "benchmark" | "live_request" | "unknown";
+  /**
+   * Run 104 / R14: the closed traffic-class vocabulary. `live_request` is the legacy spelling that folds
+   * into `live`; a runtime older than the vocabulary change may still omit the field entirely.
+   */
+  readonly requestClass?:
+    | "live"
+    | "replay"
+    | "evaluation"
+    | "benchmark"
+    | "probe"
+    | "live_request"
+    | "unknown";
   readonly conversationId?: string;
   readonly createdAtMs: number;
   readonly modelId?: string | null;
