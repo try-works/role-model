@@ -1,0 +1,57 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/packages/sqlite-memory
+
+(node:66252) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/run104-traffic-class-aggregate.test.ts (2 tests | 2 failed) 427ms
+   × run104: the telemetry summary can be restricted to live traffic 242ms
+     → expected 3 to be 1 // Object.is equality
+   × run104: legacy live_request rows count as live traffic 180ms
+     → expected 2 to be 1 // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run104-traffic-class-aggregate.test.ts > run104: the telemetry summary can be restricted to live traffic
+AssertionError: expected 3 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 3
+
+ ❯ test/run104-traffic-class-aggregate.test.ts:84:33
+
+     82|     trafficClasses: ["live"],
+     83|   });
+     84|   expect(liveOnly.requestCount).toBe(1);
+       |                                 ^
+     85|   expect(liveOnly.cachedRequestCount).toBe(1);
+     86|   expect(liveOnly.totalTokens).toBe(10);
+
+ Test Files  1 failed (1)
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+      Tests  2 failed (2)
+   Start at  17:03:58
+
+   Duration  4.02s (transform 720ms, setup 0ms, collect 852ms, tests 427ms, environment 1ms, prepare 524ms)
+
+ FAIL  test/run104-traffic-class-aggregate.test.ts > run104: legacy live_request rows count as live traffic
+AssertionError: expected 2 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 2
+
+ ❯ test/run104-traffic-class-aggregate.test.ts:115:33
+    113|     trafficClasses: ["live"],
+    114|   });
+    115|   expect(liveOnly.requestCount).toBe(1);
+       |                                 ^
+    116|   expect(liveOnly.cachedRequestCount).toBe(1);
+    117| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
