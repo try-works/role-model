@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-host-bridge
+
+ ✓ test/run104-traffic-class.test.ts (2 tests) 8ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  17:18:25
+   Duration  4.01s (transform 1.97s, setup 0ms, collect 3.14s, tests 8ms, environment 0ms, prepare 315ms)
+
