@@ -175,9 +175,9 @@ test("run104 SP1 auto-replay tick dispatches nothing for an ineligible arm and r
     // `no_distinct_candidate_configured` code that had no blocking modality or capability attached.
     expect(result.dispositions[0]?.code).toBe("candidate_input_unsupported");
     expect(result.dispositions[0]?.outcome).toBe("refused");
-    expect(
-      result.dispositions[0]?.rejectedArms?.map((row) => [row.endpointId, row.code]),
-    ).toEqual([["endpoint-b", "MODALITY_UNSUPPORTED"]]);
+    expect(result.dispositions[0]?.rejectedArms?.map((row) => [row.endpointId, row.code])).toEqual([
+      ["endpoint-b", "MODALITY_UNSUPPORTED"],
+    ]);
   } finally {
     cleanup();
   }

@@ -73,9 +73,9 @@ test("run104 SP2 refuses an unsupported capture terminally, by name, once", asyn
     expect(disposition?.outcome).toBe("refused");
     expect(disposition?.detail).toContain("image");
     expect(disposition?.detail).toContain("endpoint-b");
-    expect(
-      disposition?.rejectedArms?.map((row) => [row.endpointId, row.code]),
-    ).toEqual([["endpoint-b", "MODALITY_UNSUPPORTED"]]);
+    expect(disposition?.rejectedArms?.map((row) => [row.endpointId, row.code])).toEqual([
+      ["endpoint-b", "MODALITY_UNSUPPORTED"],
+    ]);
   } finally {
     cleanup();
   }
@@ -143,7 +143,10 @@ test("run104 SP2 leaves a text-only capture's plan and outcome unchanged", async
         planned.push([...input.candidates]);
         return {
           terminal: true,
-          branches: input.candidates.map((endpointId) => ({ endpointId, outcome: "complete" as const })),
+          branches: input.candidates.map((endpointId) => ({
+            endpointId,
+            outcome: "complete" as const,
+          })),
         };
       },
     });

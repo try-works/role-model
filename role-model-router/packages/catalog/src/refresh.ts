@@ -602,9 +602,9 @@ if (process.argv[1] === __filename) {
     console.log(`${merged.modelCount} models`);
     console.log(`supplement applied: ${merged.supplementApplied}`);
   } else {
-  const result = await runCatalogRefreshCli();
-  console.log(result.snapshotPath);
-  console.log(`${result.providerCount} providers`);
-  console.log(`${result.modelCount} models`);
+    const result = await runCatalogRefreshCli();
+    console.log(result.snapshotPath);
+    console.log(`${result.providerCount} providers`);
+    console.log(`${result.modelCount} models`);
   }
 }

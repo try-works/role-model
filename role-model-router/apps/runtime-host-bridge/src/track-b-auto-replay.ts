@@ -1022,9 +1022,7 @@ export async function runAutoReplayTick(input: {
       ...(input.endpointProfiles ? { endpointProfiles: input.endpointProfiles } : {}),
       onRejected: (rejection) => rejectedArms.push(rejection),
     });
-    const emitCapture = (
-      row: Omit<AutoReplayDisposition, "captureRef" | "rejectedArms">,
-    ): void => {
+    const emitCapture = (row: Omit<AutoReplayDisposition, "captureRef" | "rejectedArms">): void => {
       emit({
         captureRef: capture.captureRef,
         ...row,

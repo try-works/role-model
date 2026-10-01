@@ -188,19 +188,22 @@ test("run104: request_class_source records a declaration and marks backfilled ro
     databasePath,
     requestId: "run104-declared-live",
     modelId: "run104-model",
-    statusCode: 504, errorClass: "execution_failed",
+    statusCode: 504,
+    errorClass: "execution_failed",
     latencyMs: 12,
     requestClass: "live",
   });
-  expect(readRuntimeTelemetryRecord({ databasePath, requestId: "run104-declared-live" })?.requestClassSource).toBe(
-    "declared",
-  );
+  expect(
+    readRuntimeTelemetryRecord({ databasePath, requestId: "run104-declared-live" })
+      ?.requestClassSource,
+  ).toBe("declared");
 
   persistRuntimeTelemetryFailure({
     databasePath,
     requestId: "run104-undeclared",
     modelId: "run104-model",
-    statusCode: 504, errorClass: "execution_failed",
+    statusCode: 504,
+    errorClass: "execution_failed",
     latencyMs: 12,
   });
   const undeclared = readRuntimeTelemetryRecord({ databasePath, requestId: "run104-undeclared" });

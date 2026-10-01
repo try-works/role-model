@@ -1213,7 +1213,9 @@ export const RUNTIME_TELEMETRY_TRAFFIC_CLASSES = [
   "unknown",
 ] as const;
 
-export type RuntimeTelemetryTrafficClass = (typeof RUNTIME_TELEMETRY_TRAFFIC_CLASSES)[number] | "live_request";
+export type RuntimeTelemetryTrafficClass =
+  | (typeof RUNTIME_TELEMETRY_TRAFFIC_CLASSES)[number]
+  | "live_request";
 
 /**
  * Run 104 / R14: how a stored `request_class` came to be. A declaration is recorded by the writer from
@@ -1241,7 +1243,9 @@ export const DEFAULT_LIVE_TRAFFIC_CLASSES: readonly RuntimeTelemetryTrafficClass
  * The legacy `live_request` value folds into `live` so a row written from either vocabulary agrees with the
  * telemetry row for the same request.
  */
-export function requestClassFromObservationSample(sourceType?: string | null): RuntimeTelemetryTrafficClass | null {
+export function requestClassFromObservationSample(
+  sourceType?: string | null,
+): RuntimeTelemetryTrafficClass | null {
   switch (sourceType) {
     case "live":
     case "live_request":
@@ -1853,17 +1857,13 @@ function initializeSchema(database: DatabaseSync): void {
   // Run 104 / R14: rows that already carried a class before source tracking existed were never recorded
   // as declared, so the one-shot backfill marks them `inferred` rather than letting them read as if the
   // producer had declared the class. Rows with no class at all stay null (unclassified).
-  runOnceMigration(
-    database,
-    REQUEST_CLASS_SOURCE_BACKFILL_MIGRATION_ID,
-    true,
-    () =>
-      database.exec(
-        `UPDATE runtime_telemetry_records SET request_class_source = 'inferred'
+  runOnceMigration(database, REQUEST_CLASS_SOURCE_BACKFILL_MIGRATION_ID, true, () =>
+    database.exec(
+      `UPDATE runtime_telemetry_records SET request_class_source = 'inferred'
          WHERE request_class_source IS NULL
            AND request_class IS NOT NULL
            AND request_class <> 'unknown'`,
-      ),
+    ),
   );
 }
 
@@ -3227,7 +3227,8 @@ function toRuntimeTelemetryRecord(
     createdAtMs: observation.usageEvent.timestamp_ms,
     clientRequestId: observation.clientRequestId ?? null,
     requestClass:
-      requestClassFromObservationSample(observation.observedPerformance.sample.source_type) ?? "unknown",
+      requestClassFromObservationSample(observation.observedPerformance.sample.source_type) ??
+      "unknown",
     // The class above is derived from the observation sample, never passed in by the caller.
     requestClassSource: requestClassFromObservationSample(
       observation.observedPerformance.sample.source_type,
@@ -6146,7 +6147,8 @@ function readExcludedTelemetryClassCounts(
     }))
     .sort(
       (left, right) =>
-        right.requestCount - left.requestCount || left.requestClass.localeCompare(right.requestClass, "en"),
+        right.requestCount - left.requestCount ||
+        left.requestClass.localeCompare(right.requestClass, "en"),
     );
   return {
     total: counts.reduce((sum, row) => sum + row.requestCount, 0),

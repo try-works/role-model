@@ -146,7 +146,9 @@ describe("run104 R3/R4 catalog lineage and override modalities", () => {
     };
     const normalized = normalizeCatalogSnapshot(withoutDrift);
     expect(
-      modalitySet(normalized.models.find((row) => row.modelId === "vendor/alias-equal")?.modalities),
+      modalitySet(
+        normalized.models.find((row) => row.modelId === "vendor/alias-equal")?.modalities,
+      ),
     ).toEqual(["text"]);
     expect(
       modalitySet(

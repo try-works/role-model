@@ -561,7 +561,9 @@ export function classifyReplayCandidateShortfall(input: {
   );
   if (profiles.size === 0) return null;
   const excluded = new Set(
-    (input.excludedEndpointIds ?? []).map((value) => value.trim()).filter((value) => value.length > 0),
+    (input.excludedEndpointIds ?? [])
+      .map((value) => value.trim())
+      .filter((value) => value.length > 0),
   );
   const healthy =
     input.healthyEndpointIds === undefined
@@ -605,7 +607,8 @@ export function classifyReplayCandidateShortfall(input: {
   }
   if (rejected.length === 0 && unavailable.length === 0) return null;
   const blockedModality = rejected.find((row) => row.blockedModality)?.blockedModality ?? null;
-  const blockedCapability = rejected.find((row) => row.blockedCapability)?.blockedCapability ?? null;
+  const blockedCapability =
+    rejected.find((row) => row.blockedCapability)?.blockedCapability ?? null;
   const rejectedEndpointIds = rejected.map((row) => row.endpointId);
   if (unavailable.length > 0 || undeclared > 0) {
     const reasons: string[] = [];
@@ -622,10 +625,11 @@ export function classifyReplayCandidateShortfall(input: {
       blockedCapability,
       rejectedEndpointIds,
       unavailableEndpointIds: unavailable,
-      detail: `no eligible replay arm can serve the capture's input yet; ${reasons.join("; ")}`.slice(
-        0,
-        512,
-      ),
+      detail:
+        `no eligible replay arm can serve the capture's input yet; ${reasons.join("; ")}`.slice(
+          0,
+          512,
+        ),
     };
   }
   const blocked =

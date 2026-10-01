@@ -34,7 +34,9 @@ test("run104: a persisted live sample counts as live traffic", () => {
 });
 
 test("run104: the legacy live_request value still counts as live traffic", () => {
-  const profile = aggregateOperationalPerformanceSamples([sample("live_request")], { nowMs: 2_000 });
+  const profile = aggregateOperationalPerformanceSamples([sample("live_request")], {
+    nowMs: 2_000,
+  });
   expect(profile).toMatchObject({
     sample_size: 1,
     sources: { live_request_samples: 1, benchmark_samples: 0 },

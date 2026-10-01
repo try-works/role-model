@@ -68,9 +68,30 @@ test("run104: the telemetry summary can be restricted to live traffic", async ()
   });
   const now = Date.now();
   seedTelemetry(initialized.databasePath, [
-    { id: "run104-live", requestClass: "live", cached: 1, latencyMs: 100, totalTokens: 10, createdAtMs: now - 1_000 },
-    { id: "run104-replay", requestClass: "replay", cached: 0, latencyMs: 9_000, totalTokens: 20, createdAtMs: now - 2_000 },
-    { id: "run104-bench", requestClass: "benchmark", cached: 0, latencyMs: 5_000, totalTokens: 30, createdAtMs: now - 3_000 },
+    {
+      id: "run104-live",
+      requestClass: "live",
+      cached: 1,
+      latencyMs: 100,
+      totalTokens: 10,
+      createdAtMs: now - 1_000,
+    },
+    {
+      id: "run104-replay",
+      requestClass: "replay",
+      cached: 0,
+      latencyMs: 9_000,
+      totalTokens: 20,
+      createdAtMs: now - 2_000,
+    },
+    {
+      id: "run104-bench",
+      requestClass: "benchmark",
+      cached: 0,
+      latencyMs: 5_000,
+      totalTokens: 30,
+      createdAtMs: now - 3_000,
+    },
   ]);
 
   // Run 104 / R14: the unfiltered summary is live-only now; the mixed denominator is reachable only
@@ -117,7 +138,14 @@ test("run104: legacy live_request rows count as live traffic", async () => {
       totalTokens: 11,
       createdAtMs: now - 1_000,
     },
-    { id: "run104-legacy-bench", requestClass: "benchmark", cached: 0, latencyMs: 4_000, totalTokens: 40, createdAtMs: now - 2_000 },
+    {
+      id: "run104-legacy-bench",
+      requestClass: "benchmark",
+      cached: 0,
+      latencyMs: 4_000,
+      totalTokens: 40,
+      createdAtMs: now - 2_000,
+    },
   ]);
 
   const liveOnly = readRuntimeTelemetrySummary({

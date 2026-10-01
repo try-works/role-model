@@ -6,7 +6,6 @@ import {
   readReasoningEffort,
   readUpstreamModelId,
 } from "./effort-identity";
-import { isLiveRequestClass } from "./view-models";
 import type {
   RouterSummary,
   RuntimeConfig,
@@ -16,6 +15,7 @@ import type {
   RuntimeTelemetryComparisonRow,
   RuntimeTelemetryRequestRecord,
 } from "./runtime-api";
+import { isLiveRequestClass } from "./view-models";
 
 const SIDEBAR_MODEL_LIMIT = 8;
 

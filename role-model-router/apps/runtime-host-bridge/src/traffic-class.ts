@@ -7,7 +7,13 @@ import type { ExecutionTrafficClass } from "./execution-circuit-breaker.js";
  * `ExecutionTrafficClass` enum (`live | benchmark | health | synthetic | replay`) with the classes the operator
  * aggregates are filtered by, so the telemetry row and the observation/sample row for one request agree.
  */
-export type PersistedTrafficClass = "live" | "replay" | "evaluation" | "benchmark" | "probe" | "unknown";
+export type PersistedTrafficClass =
+  | "live"
+  | "replay"
+  | "evaluation"
+  | "benchmark"
+  | "probe"
+  | "unknown";
 
 /** Readback compatibility: rows written before run 104 carry the legacy `live_request` value. */
 export type StoredTrafficClass = PersistedTrafficClass | "live_request";

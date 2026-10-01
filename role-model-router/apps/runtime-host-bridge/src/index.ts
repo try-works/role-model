@@ -165,7 +165,6 @@ import {
   toExecutionCircuitReceipt,
 } from "./execution-circuit-breaker.js";
 import { resolveEndpointHealthState } from "./health-policy.js";
-import { toPersistedTrafficClass, type StoredTrafficClass } from "./traffic-class.js";
 import { reconcileLegacyExecutionAdmissionRows } from "./legacy-execution-admission-reconciliation.js";
 import { resolveModelCapabilityProfile } from "./model-capability-resolver.js";
 import { selectEndpointByMeasuredLatency } from "./routing-latency-selection.js";
@@ -178,6 +177,7 @@ import {
   createTrackBRouteCaptureQueue,
   resolveDeferredCaptureMaxBytes,
 } from "./track-b-capture-queue.js";
+import { type StoredTrafficClass, toPersistedTrafficClass } from "./traffic-class.js";
 export type {
   RuntimeContributionOutcome,
   RuntimeContributionObservation,
@@ -27671,7 +27671,9 @@ export async function createRuntimeBridgeBackend(
          */
         streamTextDeltaCount: deliveredSubstantiveChunkCount,
         clientRequestId: executionOptions?.requestOptions?.clientRequestId ?? null,
-        requestClass: toPersistedTrafficClass(executionOptions?.requestOptions?.executionTrafficClass),
+        requestClass: toPersistedTrafficClass(
+          executionOptions?.requestOptions?.executionTrafficClass,
+        ),
         sourceType,
         providerKind: selectedCandidate?.identity.provider_kind ?? null,
         providerFamily: error.providerFamily,
@@ -28225,7 +28227,8 @@ export async function createRuntimeBridgeBackend(
       const declaredTrafficClass = toPersistedTrafficClass(
         executionOptions?.requestOptions?.executionTrafficClass,
       );
-      const observedTrafficClass = declaredTrafficClass === "unknown" ? "live" : declaredTrafficClass;
+      const observedTrafficClass =
+        declaredTrafficClass === "unknown" ? "live" : declaredTrafficClass;
       const baseBundle = createRuntimeObservationBundle({
         decision: {
           ...routed.decision,
@@ -28439,9 +28442,7 @@ export async function createRuntimeBridgeBackend(
         // routed for, so replay, evaluation, learning and the advisory can all be scoped to it.
         // Run 104 R6: the flat family is the one the classification resolved, so the bare key and the
         // classification object below can never disagree.
-        ...(routeClassification?.taskTypeId
-          ? { taskTypeId: routeClassification.taskTypeId }
-          : {}),
+        ...(routeClassification?.taskTypeId ? { taskTypeId: routeClassification.taskTypeId } : {}),
         ...(taxonomyManifest.taxonomyVersion
           ? { taxonomyVersion: taxonomyManifest.taxonomyVersion }
           : {}),

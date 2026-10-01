@@ -21,13 +21,7 @@ export interface ObservedPerformanceSample {
    * Run 104 / R14 (addendum-03): the persisted vocabulary adds `live` (plus replay/evaluation/probe);
    * `live_request` remains for pre-migration samples.
    */
-  source_type:
-    | "live"
-    | "live_request"
-    | "replay"
-    | "evaluation"
-    | "benchmark"
-    | "probe";
+  source_type: "live" | "live_request" | "replay" | "evaluation" | "benchmark" | "probe";
   difficulty_bucket?: "easy" | "medium" | "hard";
   timestamp_ms: number;
   latency_ms: number;
@@ -190,8 +184,8 @@ export function aggregateObservedPerformanceSamples(
   const errorClassRates = Object.fromEntries(
     [...errorClassCounts.entries()].map(([errorClass, count]) => [errorClass, count / sampleSize]),
   );
-  const liveRequestSamples = samples.filter(
-    (sample) => isLiveSourceType(sample.source_type),
+  const liveRequestSamples = samples.filter((sample) =>
+    isLiveSourceType(sample.source_type),
   ).length;
   const benchmarkSamples = samples.filter((sample) => sample.source_type === "benchmark").length;
   const meanJudgeScore =
