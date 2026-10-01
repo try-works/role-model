@@ -1,0 +1,15 @@
+(node:52268) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ R9: matched arms stay promotion evidence and the dimension is durable (301.9901ms)
+✔ R9: a mismatched arm is excluded from promotion evidence by name, in the durable record (217.9224ms)
+✔ R9: an entry with no recorded effort comparability behaves exactly as before (225.467ms)
+✔ R9: an unspecified effort on either side is published and stays eligible (208.453ms)
+✔ R9: the declared dimension must be the durable job's own - a drift is refused (203.8401ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1367.1554
