@@ -165,6 +165,7 @@ import {
   toExecutionCircuitReceipt,
 } from "./execution-circuit-breaker.js";
 import { resolveEndpointHealthState } from "./health-policy.js";
+import { toPersistedTrafficClass, type StoredTrafficClass } from "./traffic-class.js";
 import { reconcileLegacyExecutionAdmissionRows } from "./legacy-execution-admission-reconciliation.js";
 import { resolveModelCapabilityProfile } from "./model-capability-resolver.js";
 import { selectEndpointByMeasuredLatency } from "./routing-latency-selection.js";
@@ -2940,7 +2941,7 @@ export type BridgeTelemetryRequestRecord = ReturnType<
   typeof listRuntimeTelemetryRecords
 >[number] & {
   readonly clientRequestId?: string | null;
-  readonly requestClass?: "benchmark" | "live_request" | "unknown";
+  readonly requestClass?: StoredTrafficClass;
   /** Canonical upstream model identity retained alongside the endpoint instance. */
   readonly upstreamModelId?: string | null;
   /** Provider-fixed effort for the selected endpoint, when present. */
@@ -20100,6 +20101,7 @@ export async function createRuntimeBridgeBackend(
     readonly toolingUsed: boolean;
     readonly executionStartedAtMs: number;
     readonly error: unknown;
+    readonly requestClass?: ExecutionTrafficClass;
   }): Promise<void> => {
     const statusCode = input.error instanceof BridgeHttpError ? input.error.statusCode : 400;
     const latencyMs = Math.max(0, Date.now() - input.executionStartedAtMs);
@@ -20137,7 +20139,7 @@ export async function createRuntimeBridgeBackend(
       databasePath: initialization.databasePath,
       requestId: input.requestId,
       clientRequestId: input.clientRequestId ?? null,
-      requestClass: "live_request",
+      requestClass: toPersistedTrafficClass(input.requestClass),
       sourceType: currentUnifiedRuntimeConfig?.executionMode === "remote_only" ? "remote" : "local",
       endpointId: input.endpointId,
       reasoningEffort: failureEffort.reasoningEffort,
@@ -27571,7 +27573,7 @@ export async function createRuntimeBridgeBackend(
          */
         streamTextDeltaCount: deliveredSubstantiveChunkCount,
         clientRequestId: executionOptions?.requestOptions?.clientRequestId ?? null,
-        requestClass: "live_request",
+        requestClass: toPersistedTrafficClass(executionOptions?.requestOptions?.executionTrafficClass),
         sourceType,
         providerKind: selectedCandidate?.identity.provider_kind ?? null,
         providerFamily: error.providerFamily,
@@ -29092,6 +29094,7 @@ export async function createRuntimeBridgeBackend(
           toolingUsed: Boolean(body.tools?.length),
           executionStartedAtMs,
           error,
+          requestClass: requestOptions?.executionTrafficClass,
         });
       try {
         executionStartedAtMs = Date.now();
@@ -29448,6 +29451,7 @@ export async function createRuntimeBridgeBackend(
             toolingUsed: Boolean(body.tools?.length),
             executionStartedAtMs,
             error,
+            requestClass: requestOptions?.executionTrafficClass,
           });
         }
         throw error;
