@@ -1,0 +1,59 @@
+(node:38588) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ @recursive:104-replay-eligibility-and-evidence-fidelity @sp10 R8: a legacy evaluation plane leaves the handoff inert (58.9629ms)
+✖ @recursive:104-replay-eligibility-and-evidence-fidelity @sp10 R8: one completed replay job enqueues exactly one evaluation job (272.8407ms)
+✖ @recursive:104-replay-eligibility-and-evidence-fidelity @sp10 R8: the supervised owner hands an awaiting_evaluation job off once (25.0439ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 1
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2499.342
+
+✖ failing tests:
+
+test at tests\track-b\run104-sp10-replay-evaluation-handoff.test.mjs:94:1
+✖ @recursive:104-replay-eligibility-and-evidence-fidelity @sp10 R8: one completed replay job enqueues exactly one evaluation job (272.8407ms)
+  AssertionError [ERR_ASSERTION]: one row per replay job, saw [{"id":"319d983c-d2a2-4022-90e6-58595973f850","element":"{\"origin\":\"replay\",\"groupId\":null,\"replayJobId\":\"replay-job-104-sp10-b\"}","state":"pending"},{"id":"c2f0d49c-bc6e-4fdd-bd0d-08ec6890df5d","element":"{\"origin\":\"replay\",\"groupId\":null,\"replayJobId\":\"replay-job-104-sp10\"}","state":"pending"},{"id":"dac2a33e-adc4-477b-b49f-e1fb5899d287","element":"{\"origin\":\"replay\",\"groupId\":null,\"replayJobId\":\"replay-job-104-sp10\"}","state":"pending"}]
+  
+  3 !== 2
+  
+      at file:///D:/DEV/role-model-internal/.worktrees/104-replay-eligibility-and-evidence-fidelity/tests/track-b/run104-sp10-replay-evaluation-handoff.test.mjs:108:14
+      at async withStateRoot (file:///D:/DEV/role-model-internal/.worktrees/104-replay-eligibility-and-evidence-fidelity/tests/track-b/run104-sp10-replay-evaluation-handoff.test.mjs:47:12)
+      at async TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/104-replay-eligibility-and-evidence-fidelity/tests/track-b/run104-sp10-replay-evaluation-handoff.test.mjs:95:3)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 3,
+    expected: 2,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\track-b\run104-sp10-replay-evaluation-handoff.test.mjs:122:1
+✖ @recursive:104-replay-eligibility-and-evidence-fidelity @sp10 R8: the supervised owner hands an awaiting_evaluation job off once (25.0439ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    {
+  +   completed: 0,
+  -   completed: 1,
+      failed: 0,
+      retrying: 0
+    }
+  
+      at file:///D:/DEV/role-model-internal/.worktrees/104-replay-eligibility-and-evidence-fidelity/tests/track-b/run104-sp10-replay-evaluation-handoff.test.mjs:172:14
+      at async withStateRoot (file:///D:/DEV/role-model-internal/.worktrees/104-replay-eligibility-and-evidence-fidelity/tests/track-b/run104-sp10-replay-evaluation-handoff.test.mjs:47:12)
+      at async TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/104-replay-eligibility-and-evidence-fidelity/tests/track-b/run104-sp10-replay-evaluation-handoff.test.mjs:123:3)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { completed: 0, retrying: 0, failed: 0 },
+    expected: { completed: 1, retrying: 0, failed: 0 },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

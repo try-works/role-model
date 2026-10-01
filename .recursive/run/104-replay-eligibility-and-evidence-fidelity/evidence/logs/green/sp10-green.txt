@@ -1,0 +1,13 @@
+(node:47432) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ @recursive:104-replay-eligibility-and-evidence-fidelity @sp10 R8: a legacy evaluation plane leaves the handoff inert (42.5151ms)
+✔ @recursive:104-replay-eligibility-and-evidence-fidelity @sp10 R8: one completed replay job enqueues exactly one evaluation job (154.3524ms)
+✔ @recursive:104-replay-eligibility-and-evidence-fidelity @sp10 R8: the supervised owner hands an awaiting_evaluation job off once (136.2771ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2382.3333

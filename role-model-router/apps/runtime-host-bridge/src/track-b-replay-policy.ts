@@ -116,6 +116,17 @@ export const REPLAY_REFUSAL_CODES = [
    * exhaustion, because whether the partial batch is recoverable is not established.
    */
   "replay_partial_trial_scores",
+  /**
+   * Run 104 R2: the capture's request cannot be served by any arm the configured pool can offer.
+   * R1's eligibility rule rejects such arms individually (`MODALITY_UNSUPPORTED` / `CAPABILITY_MISSING`)
+   * before dispatch; when every arm is rejected the capture used to arrive as the generic
+   * `no_distinct_candidate_configured`, which is deferrable by definition, so it was re-planned on
+   * every tick and the disposition plane could not count the class. The named class travels with the
+   * blocking modality or capability and the endpoint ids that were rejected. Terminal when every
+   * declared arm says it cannot serve the input (the pool can never change that); deferrable when a
+   * capable arm merely is unavailable (unhealthy or excluded), because the pool can change.
+   */
+  "candidate_input_unsupported",
 ] as const;
 
 export type ReplayRefusalCode = (typeof REPLAY_REFUSAL_CODES)[number];
@@ -327,6 +338,28 @@ export interface ReplayCandidateRejection {
   readonly endpointId: string;
   readonly code: ReplayEligibilityRejectionCode;
   readonly detail: string;
+  /**
+   * Run 104 R2: the blocking input this endpoint failed on. Carried by the rejection itself (the single
+   * place that owns the eligibility rule) so a refusal can name the modality or capability without
+   * re-deriving the rule at the call site.
+   */
+  readonly blockedModality?: string;
+  readonly blockedCapability?: string;
+}
+
+/**
+ * Run 104 R2: the named refusal for a capture no counterfactual arm can serve.
+ * `outcome` is the disposition the caller must record: `refused` once when the declared pool can never
+ * serve the input, `deferred` while a capable or still-undeclared arm may return.
+ */
+export interface ReplayCandidateShortfall {
+  readonly code: "candidate_input_unsupported";
+  readonly outcome: "refused" | "deferred";
+  readonly blockedModality: string | null;
+  readonly blockedCapability: string | null;
+  readonly rejectedEndpointIds: readonly string[];
+  readonly unavailableEndpointIds: readonly string[];
+  readonly detail: string;
 }
 
 const REQUIREMENT_CONTAINER_KEYS = [
@@ -485,6 +518,7 @@ export function evaluateReplayCandidateEligibility(input: {
       endpointId: input.endpointId,
       code: "MODALITY_UNSUPPORTED",
       detail: `Endpoint does not support required modality ${missingModality}.`,
+      blockedModality: missingModality,
     };
   }
   const missingCapability = input.requirements.requiredCapabilities.find(
@@ -495,9 +529,122 @@ export function evaluateReplayCandidateEligibility(input: {
       endpointId: input.endpointId,
       code: "CAPABILITY_MISSING",
       detail: `Endpoint is missing required capability ${missingCapability}.`,
+      blockedCapability: missingCapability,
     };
   }
   return null;
+}
+
+/**
+ * Run 104 R2: name the shortfall when no counterfactual arm can serve the capture's input.
+ *
+ * Terminal (`refused`) only when the *declared* pool is exhausted: every endpoint that could have been
+ * an arm carries a profile and every one of them fails the router's own eligibility rule. Deferrable
+ * (`deferred`) when a capable endpoint exists but is unavailable (unhealthy or excluded), or when a
+ * configured endpoint still declares nothing - in both cases the pool can change, and the old
+ * deferral behaviour is kept. `null` when an arm can serve the capture, or when no endpoint declares
+ * anything at all (the pre-existing filters own that case and behaviour is unchanged).
+ */
+export function classifyReplayCandidateShortfall(input: {
+  readonly configuredEndpointIds: readonly string[];
+  readonly requirements?: ReplayRequestRequirements;
+  readonly endpointProfiles?: readonly ReplayCandidateEligibilityProfile[];
+  readonly sourceEndpointId?: string | null;
+  readonly excludedEndpointIds?: readonly string[];
+  readonly healthyEndpointIds?: readonly string[];
+}): ReplayCandidateShortfall | null {
+  if (!input.requirements) return null;
+  const profiles = new Map(
+    (input.endpointProfiles ?? [])
+      .filter((profile) => profile.endpointId.trim().length > 0)
+      .map((profile) => [profile.endpointId.trim(), profile] as const),
+  );
+  if (profiles.size === 0) return null;
+  const excluded = new Set(
+    (input.excludedEndpointIds ?? []).map((value) => value.trim()).filter((value) => value.length > 0),
+  );
+  const healthy =
+    input.healthyEndpointIds === undefined
+      ? null
+      : new Set(
+          input.healthyEndpointIds.map((value) => value.trim()).filter((value) => value.length > 0),
+        );
+  const rejected: ReplayCandidateRejection[] = [];
+  const unavailable: string[] = [];
+  let undeclared = 0;
+  const seen = new Set<string>();
+  for (const endpointId of input.configuredEndpointIds) {
+    const normalized = endpointId.trim();
+    if (!normalized || seen.has(normalized)) continue;
+    seen.add(normalized);
+    // The source can never be its own counterfactual arm, so it is not part of the pool this answers for.
+    if (input.sourceEndpointId !== undefined && input.sourceEndpointId !== null) {
+      if (normalized === input.sourceEndpointId) continue;
+    }
+    const profile = profiles.get(normalized);
+    if (!profile) {
+      undeclared += 1;
+      continue;
+    }
+    const rejection = evaluateReplayCandidateEligibility({
+      endpointId: normalized,
+      capabilities: profile.capabilities,
+      modalities: profile.modalities,
+      requirements: input.requirements,
+    });
+    if (rejection) {
+      rejected.push(rejection);
+      continue;
+    }
+    if (excluded.has(normalized) || (healthy !== null && !healthy.has(normalized))) {
+      unavailable.push(normalized);
+      continue;
+    }
+    // A counterfactual arm can serve the capture; there is no shortfall to name.
+    return null;
+  }
+  if (rejected.length === 0 && unavailable.length === 0) return null;
+  const blockedModality = rejected.find((row) => row.blockedModality)?.blockedModality ?? null;
+  const blockedCapability = rejected.find((row) => row.blockedCapability)?.blockedCapability ?? null;
+  const rejectedEndpointIds = rejected.map((row) => row.endpointId);
+  if (unavailable.length > 0 || undeclared > 0) {
+    const reasons: string[] = [];
+    if (unavailable.length > 0) {
+      reasons.push(`capable but unavailable: ${unavailable.join(", ")}`);
+    }
+    if (undeclared > 0) {
+      reasons.push(`${undeclared} configured endpoint(s) declare no modalities or capabilities`);
+    }
+    return {
+      code: "candidate_input_unsupported",
+      outcome: "deferred",
+      blockedModality,
+      blockedCapability,
+      rejectedEndpointIds,
+      unavailableEndpointIds: unavailable,
+      detail: `no eligible replay arm can serve the capture's input yet; ${reasons.join("; ")}`.slice(
+        0,
+        512,
+      ),
+    };
+  }
+  const blocked =
+    blockedModality !== null
+      ? `required modality ${blockedModality}`
+      : blockedCapability !== null
+        ? `required capability ${blockedCapability}`
+        : "the capture's required input";
+  return {
+    code: "candidate_input_unsupported",
+    outcome: "refused",
+    blockedModality,
+    blockedCapability,
+    rejectedEndpointIds,
+    unavailableEndpointIds: [],
+    detail: `candidate input unsupported: ${blocked}; rejected endpoints: ${
+      rejectedEndpointIds.join(", ") || "none declared"
+    }`.slice(0, 512),
+  };
 }
 
 export function selectReplayCandidates(input: {

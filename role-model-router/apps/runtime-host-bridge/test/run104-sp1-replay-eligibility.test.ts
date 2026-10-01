@@ -170,7 +170,11 @@ test("run104 SP1 auto-replay tick dispatches nothing for an ineligible arm and r
     expect(dispatched).toBe(0);
     expect(result.replayed).toBe(0);
     expect(result.dispositions).toHaveLength(1);
-    expect(result.dispositions[0]?.code).toBe("no_distinct_candidate_configured");
+    // Run 104 SP2 supersedes this assertion: when every declared arm fails the router's own eligibility rule
+    // the capture is refused terminally by name (R2), instead of being deferred under the generic
+    // `no_distinct_candidate_configured` code that had no blocking modality or capability attached.
+    expect(result.dispositions[0]?.code).toBe("candidate_input_unsupported");
+    expect(result.dispositions[0]?.outcome).toBe("refused");
     expect(
       result.dispositions[0]?.rejectedArms?.map((row) => [row.endpointId, row.code]),
     ).toEqual([["endpoint-b", "MODALITY_UNSUPPORTED"]]);

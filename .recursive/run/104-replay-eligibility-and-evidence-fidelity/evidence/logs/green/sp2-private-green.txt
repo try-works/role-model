@@ -1,0 +1,17 @@
+(node:42204) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ AC-R101-30: the disposition ledger reads back as the replay.disposition plane (1405.6324ms)
+✔ AC-R101-30: a state root without a disposition ledger stays unchanged (2.1021ms)
+(node:67420) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ AC-R104-SP2: a refused named-class row stays terminal and is countable by name (1257.1867ms)
+✔ AC-R104-SP2: a terminal row is not rewritten and a deferred row retires named (1.6343ms)
+✔ AC-R104-SP2: a deferrable named-class row counts as delayed, not failed (34.9853ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3485.8414

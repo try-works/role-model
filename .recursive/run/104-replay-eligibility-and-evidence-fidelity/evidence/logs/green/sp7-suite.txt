@@ -1,0 +1,113 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-host-bridge
+
+(node:32200) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | test/track-b-operations-api.test.ts > Track B operations APIs > production request completion reports only aggregate metrics to the private operations boundary
+[run115] eligibility candidates=2 eligible=1 codes=CAPABILITY_MISSING=1,POLICY_DENY_ENDPOINT=1 request=req-track-b-upload-001 alias=- model=- effort=- pass=live allow=[test.capture.chat-v1] denied=[cli.local.coder]
+
+stdout | test/track-b-operations-api.test.ts > Track B operations APIs > reports a bounded private capture failure instead of masking it as a graph writer error
+[run115] eligibility candidates=2 eligible=1 codes=CAPABILITY_MISSING=1,POLICY_DENY_ENDPOINT=1 request=req-track-b-capture-failure-001 alias=- model=- effort=- pass=live allow=[test.capture.chat-v1] denied=[cli.local.coder]
+
+stderr | test/track-b-operations-api.test.ts > Track B operations APIs > legacy failure recovery retries extension closure after graph commit and propagates sidecar auth failures
+Track B pre-execution post-observation processing failed Error: extension closure interrupted
+    at Object.trackBPostObservation (D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\apps\runtime-host-bridge\test\track-b-operations-api.test.ts:1503:44)
+    at recordPreExecutionFailure (D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\apps\runtime-host-bridge\src\index.ts:20223:23)
+    at recordChatCompletionFailure (D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\apps\runtime-host-bridge\src\index.ts:29192:9)
+    at Object.executeChatCompletions (D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\apps\runtime-host-bridge\src\index.ts:29376:17)
+    at D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\apps\runtime-host-bridge\test\track-b-operations-api.test.ts:1508:7
+    at file:///D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/node_modules/.pnpm/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20
+
+stdout | test/track-b-operations-api.test.ts > Track B operations APIs > production Responses requests report aggregate metrics through the same private operations boundary
+[run115] eligibility candidates=2 eligible=1 codes=CAPABILITY_MISSING=1,POLICY_DENY_ENDPOINT=1 request=req-track-b-responses-upload-001 alias=- model=- effort=- pass=live allow=[test.capture.chat-v1] denied=[cli.local.coder]
+
+stderr | test/track-b-operations-api.test.ts > Track B operations APIs > production backend reads and atomically updates real bridge storage state
+Track B deferred route capture drain failed Error: unable to open database file
+    at withDatabase (D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\apps\runtime-host-bridge\src\track-b-capture-queue.ts:165:22)
+    at D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\apps\runtime-host-bridge\src\track-b-capture-queue.ts:301:11 {
+  code: 'ERR_SQLITE_ERROR',
+  errcode: 14,
+  errstr: 'unable to open database file'
+}
+
+stderr | test/track-b-operations-api.test.ts > Track B operations APIs > RUN88-R-PUB-R8-AC04 stage recommendation downloads fail closed without candidate identity
+Track B deferred route capture drain failed Error: unable to open database file
+    at withDatabase (D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\apps\runtime-host-bridge\src\track-b-capture-queue.ts:165:22)
+    at D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\apps\runtime-host-bridge\src\track-b-capture-queue.ts:301:11 {
+  code: 'ERR_SQLITE_ERROR',
+  errcode: 14,
+  errstr: 'unable to open database file'
+}
+
+stderr | test/track-b-operations-api.test.ts > Track B operations APIs > run95 allows a bounded local route capture to complete beyond the legacy five-second budget
+Track B deferred route capture drain failed Error: unable to open database file
+    at withDatabase (D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\apps\runtime-host-bridge\src\track-b-capture-queue.ts:165:22)
+    at D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\apps\runtime-host-bridge\src\track-b-capture-queue.ts:301:11 {
+  code: 'ERR_SQLITE_ERROR',
+  errcode: 14,
+  errstr: 'unable to open database file'
+}
+
+stderr | test/track-b-operations-api.test.ts > Track B operations APIs > run79 HTTP exposes extensions mutate and recommendations dismiss routes
+Track B deferred route capture drain failed Error: unable to open database file
+    at withDatabase (D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\apps\runtime-host-bridge\src\track-b-capture-queue.ts:165:22)
+    at D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\apps\runtime-host-bridge\src\track-b-capture-queue.ts:301:11
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:569:9)
+    at processTimers (node:internal/timers:543:7) {
+  code: 'ERR_SQLITE_ERROR',
+  errcode: 14,
+  errstr: 'unable to open database file'
+}
+
+ ✓ test/track-b-operations-api.test.ts (36 tests) 52099ms
+   ✓ Track B operations APIs > fails closed instead of issuing unauthenticated calls to an owned operations endpoint  3224ms
+   ✓ Track B operations APIs > serves extension lifecycle and storage retention through bounded callbacks  3355ms
+   ✓ Track B operations APIs > fails closed when an operations capability is not wired  2901ms
+   ✓ Track B operations APIs > production backend never infers extension health from the catalog  2360ms
+   ✓ Track B operations APIs > local Track B bridge seed marks catalog extensions ready without ExtensionHost override  2108ms
+   ✓ Track B operations APIs > production backend reports readiness only from the supervised ExtensionHost  2217ms
+   ✓ Track B operations APIs > production backend clean start uses the canonical Advanced aggregate defaults  2405ms
+   ✓ Track B operations APIs > production request completion reports only aggregate metrics to the private operations boundary  5430ms
+   ✓ Track B operations APIs > reports a bounded private capture failure instead of masking it as a graph writer error  3782ms
+   ✓ Track B operations APIs > legacy failure recovery retries extension closure after graph commit and propagates sidecar auth failures  2536ms
+   ✓ Track B operations APIs > production Responses requests report aggregate metrics through the same private operations boundary  3342ms
+   ✓ Track B operations APIs > production backend reads and atomically updates real bridge storage state  2769ms
+   ✓ Track B operations APIs > RUN88-I-PUB-R8-AC04 stage recommendation downloads propagate candidate correlation  2644ms
+   ✓ Track B operations APIs > RUN88-R-PUB-R8-AC04 stage recommendation downloads fail closed without candidate identity  2283ms
+   ✓ Track B operations APIs > run95 allows a bounded local route capture to complete beyond the legacy five-second budget  5538ms
+   ✓ Track B operations APIs > run79 mutateExtension enables disables and sets mode with audit receipts  474ms
+   ✓ Track B operations APIs > run79 HTTP exposes extensions mutate and recommendations dismiss routes  3512ms
+(node:23420) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | test/run96-f153-post-observation-outbox.test.ts > F153 GREEN: a truthful ordered two-event trajectory reaches the real shadow drain path
+[run97] shadow pipeline start request:f153-outbox
+
+stderr | test/run96-f153-post-observation-outbox.test.ts > run99 R33 the learner receives the primary metric and the per-dimension scores
+[run97] shadow pipeline start request:f153-outbox
+
+ ✓ test/run96-f153-post-observation-outbox.test.ts (7 tests) 3512ms
+   ✓ addendum 39 S1: enqueue does not wait behind an in-flight drain  315ms
+   ✓ F153 GREEN: a truthful ordered two-event trajectory reaches the real shadow drain path  2569ms
+(node:44100) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | test/run96-f160-contribution-outcome.test.ts > run 96 F160 contribution outcome > a transport failure on the contribution upload does not discard the completed post-observation
+[run98] contribution upload degraded:contribution-reset ECONNRESET fetch failed
+
+stdout | test/run96-f160-contribution-outcome.test.ts > run 96 F160 contribution outcome > integration: the real bridge records a successful direct-path contribution once
+[run115] eligibility candidates=2 eligible=1 codes=CAPABILITY_MISSING=1,POLICY_DENY_ENDPOINT=1 request=req-run96-f160-direct alias=- model=- effort=- pass=live allow=[test.capture.chat-v1] denied=[cli.local.coder]
+
+ ✓ test/run96-f160-contribution-outcome.test.ts (12 tests) 7009ms
+   ✓ run 96 F160 contribution outcome > integration: owned sidecar forwards the authorization epoch to the private runtime  437ms
+   ✓ run 96 F160 contribution outcome > integration: the real bridge records a pre-execution no-eligible-target outcome once  3137ms
+   ✓ run 96 F160 contribution outcome > integration: the real bridge records a successful direct-path contribution once  3242ms
+(node:43620) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run96-f188b-routing-nondependency.test.ts (4 tests) 150ms
+ ✓ test/run99-r33-operations-timeout.test.ts (4 tests) 20ms
+
+ Test Files  5 passed (5)
+      Tests  63 passed (63)
+   Start at  19:10:00
+   Duration  114.82s (transform 18.47s, setup 0ms, collect 44.54s, tests 62.79s, environment 3ms, prepare 2.79s)
+

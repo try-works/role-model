@@ -8,6 +8,7 @@ import {
   type ReplayRefusalCode,
   type ReplayRequestRequirements,
   type ReplayToolPolicy,
+  classifyReplayCandidateShortfall,
   decideReplayAdmission,
   isBenchmarkReplaySourceRef,
   isSyntheticProbeSourceClass,
@@ -1030,6 +1031,32 @@ export async function runAutoReplayTick(input: {
         ...(rejectedArms.length > 0 ? { rejectedArms: [...rejectedArms] } : {}),
       });
     };
+    /**
+     * Run 104 R2: name the class when the eligibility rule left the plan empty, so the refusal carries
+     * the blocking modality/capability and the rejected endpoint ids instead of arriving as the generic,
+     * deferrable `no_distinct_candidate_configured`. Reuses the policy module's own classifier (and,
+     * through it, the R1 rejection list) rather than restating the eligibility rule here.
+     */
+    const plannedArmShortfall = () =>
+      classifyReplayCandidateShortfall({
+        configuredEndpointIds: input.configuredEndpointIds,
+        ...(requestRequirements ? { requirements: requestRequirements } : {}),
+        ...(input.endpointProfiles ? { endpointProfiles: input.endpointProfiles } : {}),
+        ...(capture.sourceEndpointId ? { sourceEndpointId: capture.sourceEndpointId } : {}),
+        ...(effectiveJudgeEndpointId ? { excludedEndpointIds: [effectiveJudgeEndpointId] } : {}),
+        ...(input.healthyEndpointIds ? { healthyEndpointIds: input.healthyEndpointIds } : {}),
+      });
+    const candidateShortfall = rejectedArms.length > 0 ? plannedArmShortfall() : null;
+    if (candidateShortfall) {
+      if (candidateShortfall.outcome === "deferred") deferred += 1;
+      else refused += 1;
+      emitCapture({
+        outcome: candidateShortfall.outcome,
+        code: candidateShortfall.code,
+        detail: candidateShortfall.detail,
+      });
+      continue;
+    }
     const status = input.ledger.status();
     const admission = decideReplayAdmission({
       channelReplayEnabled: input.channelReplayEnabled ?? true,
@@ -1093,14 +1120,30 @@ export async function runAutoReplayTick(input: {
       const staleEndpointIds = new Set(staleArms.map((row) => row.endpointId));
       dispatchCandidates = candidates.filter((endpointId) => !staleEndpointIds.has(endpointId));
       if (dispatchCandidates.length === 0) {
-        deferred += 1;
-        emitCapture({
-          outcome: "deferred",
-          code: "no_distinct_candidate_configured",
-          detail: `no planned replay arm can serve the capture's requirements: ${staleArms
-            .map((row) => `${row.endpointId} (${row.code})`)
-            .join(", ")}`,
-        });
+        /**
+         * Run 104 R2: the same named class answers here - terminal when every declared arm fails the
+         * rule, deferrable when a capable arm is merely unavailable. The generic deferrable code stays
+         * only for a shortfall the classifier cannot name (no declared pool to blame).
+         */
+        const staleShortfall = plannedArmShortfall();
+        if (staleShortfall) {
+          if (staleShortfall.outcome === "deferred") deferred += 1;
+          else refused += 1;
+          emitCapture({
+            outcome: staleShortfall.outcome,
+            code: staleShortfall.code,
+            detail: staleShortfall.detail,
+          });
+        } else {
+          deferred += 1;
+          emitCapture({
+            outcome: "deferred",
+            code: "no_distinct_candidate_configured",
+            detail: `no planned replay arm can serve the capture's requirements: ${staleArms
+              .map((row) => `${row.endpointId} (${row.code})`)
+              .join(", ")}`,
+          });
+        }
         continue;
       }
     }
