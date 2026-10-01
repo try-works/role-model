@@ -3,7 +3,7 @@
 ## Metadata
 - Subagent ID: `sp104_sp9b_filter`
 - Run ID: `104-replay-eligibility-and-evidence-fidelity`
-- Phase: `03 Implementation (wave W1/W2)`
+- Phase: 03 Implementation
 - Purpose: `SP9b - bridge telemetry-analytics traffic-class filter and requestClass dimension`
 - Execution Mode: `in-session subagent (Codex delegation protocol; public worktree write scope)`
 - Timestamp: `2026-10-01T10:57:01Z`
@@ -12,16 +12,11 @@
 ## Inputs Provided
 - Current Artifact: `/.recursive/run/104-replay-eligibility-and-evidence-fidelity/02-to-be-plan.md`
 - Artifact Content Hash: `83249a8e42a3a2fba52bec5c2b1c8c6f33e142f382c9a6a436249b83e62177f4`
-- Upstream Artifacts:
-- `/.recursive/run/104-replay-eligibility-and-evidence-fidelity/01-as-is.md`
-- Addenda:
-- none
-- Review Bundle: `none`
+- Upstream Artifacts: `/.recursive/run/104-replay-eligibility-and-evidence-fidelity/01-as-is.md`
+- Addenda: none
 - Diff Basis: `git diff --name-only 84d5996cb156217d37801943831762bc734ae21f`
-- Code Refs:
-- none
-- Memory Refs:
-- none
+- Code Refs: none
+- Memory Refs: none
 - Audit / Task Questions:
 - brief E:\tmp\collab\briefs\sp104_sp9b_filter.md
 

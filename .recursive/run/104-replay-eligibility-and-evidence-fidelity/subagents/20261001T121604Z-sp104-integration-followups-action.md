@@ -3,7 +3,7 @@
 ## Metadata
 - Subagent ID: `sp104-integration-followups`
 - Run ID: `104-replay-eligibility-and-evidence-fidelity`
-- Phase: `03 Implementation (phase 3 waves A/B; controller acceptance)`
+- Phase: 03 Implementation
 - Purpose: `Follow-ups - taskVariant through the advisory normalizer and the sidebar latest-live sampling`
 - Execution Mode: `in-session subagent (Codex delegation protocol; public write scope)`
 - Timestamp: `2026-10-01T12:16:04Z`
@@ -12,16 +12,11 @@
 ## Inputs Provided
 - Current Artifact: `/.recursive/run/104-replay-eligibility-and-evidence-fidelity/02-to-be-plan.md`
 - Artifact Content Hash: `83249a8e42a3a2fba52bec5c2b1c8c6f33e142f382c9a6a436249b83e62177f4`
-- Upstream Artifacts:
-- none
-- Addenda:
-- none
-- Review Bundle: `none`
+- Upstream Artifacts: `/.recursive/run/104-replay-eligibility-and-evidence-fidelity/00-requirements.md`
+- Addenda: none
 - Diff Basis: `git diff --name-only 5df90b6d12772f70bbdaff543b183fc5d312537b`
-- Code Refs:
-- none
-- Memory Refs:
-- none
+- Code Refs: none
+- Memory Refs: none
 - Audit / Task Questions:
 - brief E:\tmp\collab\briefs\sp104_integration_followups.md
 

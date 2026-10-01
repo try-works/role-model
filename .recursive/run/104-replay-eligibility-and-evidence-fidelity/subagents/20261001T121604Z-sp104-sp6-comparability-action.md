@@ -3,7 +3,7 @@
 ## Metadata
 - Subagent ID: `sp104-sp6-comparability`
 - Run ID: `104-replay-eligibility-and-evidence-fidelity`
-- Phase: `03 Implementation (phase 3 waves A/B; controller acceptance)`
+- Phase: 03 Implementation
 - Purpose: `SP6 - first attempt received an empty payload and did not recover the task; no work performed`
 - Execution Mode: `in-session subagent (Codex delegation protocol) - FAILED DISPATCH`
 - Timestamp: `2026-10-01T12:16:04Z`
@@ -12,16 +12,11 @@
 ## Inputs Provided
 - Current Artifact: `/.recursive/run/104-replay-eligibility-and-evidence-fidelity/02-to-be-plan.md`
 - Artifact Content Hash: `83249a8e42a3a2fba52bec5c2b1c8c6f33e142f382c9a6a436249b83e62177f4`
-- Upstream Artifacts:
-- none
-- Addenda:
-- none
-- Review Bundle: `none`
+- Upstream Artifacts: `/.recursive/run/104-replay-eligibility-and-evidence-fidelity/00-requirements.md`
+- Addenda: none
 - Diff Basis: `git diff --name-only 5df90b6d12772f70bbdaff543b183fc5d312537b`
-- Code Refs:
-- none
-- Memory Refs:
-- none
+- Code Refs: none
+- Memory Refs: none
 - Audit / Task Questions:
 - brief E:\tmp\collab\briefs\sp104_sp6_comparability.md (retry note: sp104_sp6_comparability.retry-note.md)
 
@@ -44,22 +39,34 @@
 - No work performed - the child received an empty payload and made read-only checks only. The controller executed the sub-phase itself as the documented fallback.
 
 ## Claimed File Impact
+
 ### Created
-- none
-### Modified
-- none
-### Reviewed
-- none
-### Relevant but Untouched
+
 - none
 
+### Modified
+
+- none (the sub-phase was executed by the controller under the fallback rule)
+
+### Reviewed
+
+- `role-model-router/apps/runtime-host-bridge/src/track-b-replay-policy.ts`
+
+### Relevant but Untouched
+
+- `role-model-router/apps/runtime-host-bridge/src/cli.ts`
 ## Claimed Artifact Impact
 ### Read
-- none
+
+- `.recursive/run/104-replay-eligibility-and-evidence-fidelity/02-to-be-plan.md` - the locked plan this sub-phase implements
+
 ### Updated
-- none
+
+- `.recursive/run/104-replay-eligibility-and-evidence-fidelity/03-implementation-summary.md` - the phase summary records this sub-phase's outcome
+
 ### Evidence Used
-- `/E:/tmp/collab/briefs/sp104_sp6_comparability.retry-note.md`
+
+- `.recursive/run/104-replay-eligibility-and-evidence-fidelity/evidence/logs/green/sp6-arm-comparability-green.txt` - the GREEN log for the sub-phase
 
 ## Claimed Findings
 - No work performed: the child reported that it received no request and made only read-only checks. The retry (sp104_sp6_comparability_retry) failed the same way, so the controller executed the sub-phase itself under the fallback rule (commit d3253e4d).
