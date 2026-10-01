@@ -1001,7 +1001,7 @@ export interface RuntimeTelemetryRecord {
   readonly conversationId: string;
   readonly createdAtMs: number;
   readonly clientRequestId: string | null;
-  readonly requestClass: "benchmark" | "live_request" | "unknown" | null;
+  readonly requestClass: RuntimeTelemetryTrafficClass | null;
   readonly sourceType: "local" | "remote" | null;
   readonly modelId: string | null;
   readonly providerKind: string | null;
@@ -1176,6 +1176,44 @@ export interface RuntimeTelemetryAggregateQueryInput {
   readonly endAtMs?: number;
   readonly startAtMs?: number;
   readonly asOfMs?: number;
+  /**
+   * Run 104 / R14: restrict the aggregate to the given traffic classes. `live` also matches the legacy
+   * `live_request` value, and `unknown` also matches rows with no stored class.
+   */
+  readonly trafficClasses?: readonly RuntimeTelemetryTrafficClass[];
+}
+
+export const RUNTIME_TELEMETRY_TRAFFIC_CLASSES = [
+  "live",
+  "replay",
+  "evaluation",
+  "benchmark",
+  "probe",
+  "unknown",
+] as const;
+
+export type RuntimeTelemetryTrafficClass = (typeof RUNTIME_TELEMETRY_TRAFFIC_CLASSES)[number] | "live_request";
+
+function telemetryTrafficClassFilter(classes: readonly RuntimeTelemetryTrafficClass[]): {
+  readonly values: readonly string[];
+  readonly includeNull: boolean;
+} {
+  const values = new Set<string>();
+  let includeNull = false;
+  for (const trafficClass of classes) {
+    if (trafficClass === "live" || trafficClass === "live_request") {
+      values.add("live");
+      values.add("live_request");
+      continue;
+    }
+    if (trafficClass === "unknown") {
+      values.add("unknown");
+      includeNull = true;
+      continue;
+    }
+    values.add(trafficClass);
+  }
+  return { values: [...values], includeNull };
 }
 
 export interface RuntimeTelemetryListQueryInput extends RuntimeTelemetryAggregateQueryInput {
@@ -2841,7 +2879,11 @@ function mapRuntimeTelemetryRecord(row: {
     createdAtMs: row.created_at_ms,
     clientRequestId: row.client_request_id,
     requestClass:
+      row.request_class === "live" ||
+      row.request_class === "replay" ||
+      row.request_class === "evaluation" ||
       row.request_class === "benchmark" ||
+      row.request_class === "probe" ||
       row.request_class === "live_request" ||
       row.request_class === "unknown"
         ? row.request_class
@@ -4888,7 +4930,7 @@ export interface PersistRuntimeTelemetryFailureInput {
   readonly errorClass: string;
   readonly latencyMs?: number;
   readonly clientRequestId?: string | null;
-  readonly requestClass?: "benchmark" | "live_request" | "unknown";
+  readonly requestClass?: RuntimeTelemetryTrafficClass;
   readonly sourceType?: "local" | "remote" | null;
   readonly providerKind?: string | null;
   readonly providerFamily?: string | null;
@@ -5956,6 +5998,16 @@ function telemetryWindowWhere(
   if (sourceType) {
     clauses.push("source_type = ?");
     parameters.push(sourceType);
+  }
+  if (input.trafficClasses && input.trafficClasses.length > 0) {
+    const filter = telemetryTrafficClassFilter(input.trafficClasses);
+    const placeholders = filter.values.map(() => "?").join(", ");
+    clauses.push(
+      filter.includeNull
+        ? `(request_class IN (${placeholders}) OR request_class IS NULL)`
+        : `request_class IN (${placeholders})`,
+    );
+    parameters.push(...filter.values);
   }
   return { where: clauses.join(" AND "), parameters };
 }
