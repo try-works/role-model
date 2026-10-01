@@ -311,11 +311,17 @@ GREEN Evidence: `/.recursive/run/104-replay-eligibility-and-evidence-fidelity/ev
   `Effect.retry` retries typed failures only (the SP7 timeout is a `Data.TaggedError`-shaped typed failure and
   the retry is deliberately hand-rolled on the bridge's **existing** shared schedule, disclosed in the SP7
   action record); no `Metric.histogram` and no `Config.string` were introduced.
-- Files importing `effect` in this run's diff: `scripts/track-b/runtime-operations-server.mjs`
-  (`ManagedRuntime`, `Effect.gen`, one store runtime per plane, mirroring `queue-runtime/index.ts:277`).
-  Every other changed file imports no Effect primitive; two sub-phases stated explicitly that an Effect
-  rewrite of a promise-based boundary would be disproportionate, and the R15 manifest check must record that
-  as `none` rather than as a violation.
+- Files importing `effect` in this run's diff:
+  - `scripts/track-b/runtime-operations-server.mjs` (private) → `ManagedRuntime`, `Effect.gen`: one store
+    runtime per plane, mirroring `queue-runtime/index.ts:277`.
+  - `role-model-router/apps/runtime-host-bridge/src/traffic-class.ts` → `Match.exhaustive`: the traffic-class
+    mapper is total at compile time, so a new `ExecutionTrafficClass` variant is a type error rather than a
+    silent fall-through. **Repaired in phase 4**: it previously used `Match.orElse(() => "unknown")` while its
+    comment claimed `Match.exhaustive`; the Phase 4 tester caught the contradiction and the controller fixed it
+    (`d938049d`-era diff, re-verified by the bridge build and the two traffic-class suites).
+- Every other changed file imports no Effect primitive; two sub-phases stated explicitly that an Effect
+  rewrite of a promise-based boundary would be disproportionate, and the R15 manifest check records that as
+  `none` rather than as a violation.
 
 ## Delegation and Risk Register
 

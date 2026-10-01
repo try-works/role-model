@@ -40,7 +40,10 @@ export function toPersistedTrafficClass(
     Match.when("benchmark", () => "benchmark" as const),
     Match.when("health", () => "probe" as const),
     Match.when("synthetic", () => "probe" as const),
-    Match.orElse(() => "unknown" as const),
+    // Run 104 phase-4 R15: `Match.exhaustive`, not a default fallback. Every `ExecutionTrafficClass` variant
+    // is mapped above, so the terminal combinator proves totality at compile time: a new variant becomes a
+    // type error here instead of silently landing in `unknown` (the comment above already claimed this).
+    Match.exhaustive,
   );
 }
 
