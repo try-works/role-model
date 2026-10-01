@@ -7859,6 +7859,12 @@ export type TrackBRouteAdvisorySelection = "baseline_retained" | "advisory_appli
 export interface TrackBRouteAdvisoryClassification {
   readonly taskTypeId?: string | null;
   readonly roleId?: string | null;
+  /**
+   * Run 104 `R6`: the task variant `buildRequestClassification` recorded with this classification.
+   * It travels with the family because the route capture reads the classification back off the
+   * observation ledger entry.
+   */
+  readonly taskVariant?: string | null;
   readonly toolClassIds?: readonly string[] | null;
   readonly taxonomyVersion?: string | null;
   readonly contentRevision?: string | null;
@@ -7893,6 +7899,7 @@ function normalizeTrackBRouteAdvisoryClassification(
 ): TrackBRouteAdvisoryClassification | null {
   if (!value || typeof value !== "object") return null;
   const taskTypeId = boundedClassificationId(value.taskTypeId);
+  const taskVariant = boundedClassificationId(value.taskVariant);
   const roleId = boundedClassificationId(value.roleId);
   const toolClassIds = Array.isArray(value.toolClassIds)
     ? [
@@ -7918,6 +7925,9 @@ function normalizeTrackBRouteAdvisoryClassification(
   }
   return {
     taskTypeId,
+    // Run 104 `R6`: the variant is projected exactly as `buildRequestClassification` emitted it,
+    // bounded and omitted when absent, so a classification without one stays byte-identical.
+    ...(taskVariant ? { taskVariant } : {}),
     roleId,
     toolClassIds,
     taxonomyVersion,
