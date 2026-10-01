@@ -143,8 +143,8 @@ import {
   hasToolCalls,
   isBenchmarkReplaySourceRef,
   isSyntheticProbeSourceClass,
+  planReplayDispatchArms,
   readReplayRequestRequirements,
-  recheckReplayCandidatesForDispatch,
   replayBudgetEnforcedForChannel,
   resolveReplayPolicySet,
   resolveReplayToolPolicy,
@@ -7870,24 +7870,26 @@ export async function main(): Promise<void> {
               hasToolCalls: hasToolCalls(sourceCapture),
             });
           /**
-           * Run 104 R1 pre-dispatch guard: the plan was built from this request's candidate list, so the
-           * arms are re-checked against the same rule at the dispatch boundary. An arm that cannot serve
-           * the request fails cheaply here, named, instead of being dispatched into a provider 400.
+           * Run 104 R1: the dispatch set is the requested arms minus the arms the router's own rule rejected,
+           * re-checked at the dispatch boundary so a configuration change between planning and dispatch cannot
+           * turn into a provider-bound 400. Rejections are recorded; the replay only fails when nothing
+           * survives, instead of aborting whenever any requested arm is ineligible.
            */
-          const staleReplayArms = recheckReplayCandidatesForDispatch({
-            endpointIds: candidateEndpointIds,
+          const replayDispatchPlan = planReplayDispatchArms({
+            requestedEndpointIds: candidateEndpointIds,
+            selectionRejections: replayCandidateRejections,
             requirements: replayRequestRequirements,
             endpointProfiles: replayEndpointProfiles,
           });
-          if (staleReplayArms.length > 0) {
+          if (replayDispatchPlan.plannedEndpointIds.length === 0) {
             throw new Error(
-              `replay arm cannot serve the capture's request requirements: ${staleReplayArms
+              `replay arm cannot serve the capture's request requirements: ${replayDispatchPlan.rejections
                 .map((rejection) => `${rejection.endpointId} (${rejection.code})`)
                 .join(", ")}`,
             );
           }
           const endpoints = created.effectiveRegistry.endpoints;
-          const candidatePackages = candidateEndpointIds.map((endpointId) => {
+          const candidatePackages = replayDispatchPlan.plannedEndpointIds.map((endpointId) => {
             const endpoint = endpoints.find((item) => item.identity.endpoint_id === endpointId);
             if (!endpoint)
               throw new Error(
@@ -8022,7 +8024,7 @@ export async function main(): Promise<void> {
                       : capturedSourceEndpointId
                         ? [capturedSourceEndpointId]
                         : []),
-                    ...candidateEndpointIds,
+                    ...replayDispatchPlan.plannedEndpointIds,
                   ]),
                 ].sort();
           const attestation = createReplaySourceAttestation({

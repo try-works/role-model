@@ -776,6 +776,68 @@ export function recheckReplayCandidatesForDispatch(input: {
   return rejections;
 }
 
+/**
+ * Run 104 R1 (on-demand planner): turn the caller's requested arms plus the selection pass's rejections into
+ * the set the plan may actually dispatch.
+ *
+ * The durable tick already drops the rejected arms, keeps the rest and only defers when nothing survives; the
+ * on-demand planner did not - it still built `candidatePackages` from the unfiltered requested list and threw
+ * when *any* requested arm was ineligible, so an image capture against `[text-only, image]` either dispatched
+ * the text-only arm or aborted the whole replay. This helper is the single source of that decision so both
+ * callers share it.
+ *
+ * Semantics:
+ * - the plan is the caller's requested order, trimmed and deduped, minus the selection rejections and minus the
+ *   arms the pre-dispatch re-check rejects;
+ * - an endpoint with no declared profile is never dropped (its eligibility is unknown, not false);
+ * - rejections are deduped by endpoint id, selection first, so the pre-dispatch detail cannot overwrite what
+ *   the selection pass already recorded.
+ */
+export function planReplayDispatchArms(input: {
+  readonly requestedEndpointIds: readonly string[];
+  /** Rejections collected by `selectReplayCandidates`' `onRejected` callback. */
+  readonly selectionRejections: readonly ReplayCandidateRejection[];
+  readonly requirements?: ReplayRequestRequirements;
+  readonly endpointProfiles?: readonly ReplayCandidateEligibilityProfile[];
+}): {
+  readonly plannedEndpointIds: readonly string[];
+  readonly rejections: readonly ReplayCandidateRejection[];
+} {
+  const requested: string[] = [];
+  const seen = new Set<string>();
+  for (const endpointId of input.requestedEndpointIds) {
+    const normalized = endpointId.trim();
+    if (!normalized || seen.has(normalized)) continue;
+    seen.add(normalized);
+    requested.push(normalized);
+  }
+
+  const rejections: ReplayCandidateRejection[] = [];
+  const rejectedIds = new Set<string>();
+  for (const rejection of input.selectionRejections) {
+    const normalized = rejection.endpointId.trim();
+    if (!normalized || rejectedIds.has(normalized)) continue;
+    rejectedIds.add(normalized);
+    rejections.push(rejection);
+  }
+  const stale = recheckReplayCandidatesForDispatch({
+    endpointIds: requested.filter((endpointId) => !rejectedIds.has(endpointId)),
+    ...(input.requirements ? { requirements: input.requirements } : {}),
+    ...(input.endpointProfiles ? { endpointProfiles: input.endpointProfiles } : {}),
+  });
+  for (const rejection of stale) {
+    const normalized = rejection.endpointId.trim();
+    if (!normalized || rejectedIds.has(normalized)) continue;
+    rejectedIds.add(normalized);
+    rejections.push(rejection);
+  }
+
+  return {
+    plannedEndpointIds: requested.filter((endpointId) => !rejectedIds.has(endpointId)),
+    rejections,
+  };
+}
+
 export type ReplayToolPolicy = "recorded_results_only" | "sandboxed_allowlist";
 
 /**

@@ -1,0 +1,100 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/run104-sp1-dispatch-subset.test.ts (6 tests | 6 failed) 24ms
+   × R1: an image capture plans only the eligible arm and records the rejected one 13ms
+     → (0 , planReplayDispatchArms) is not a function
+   × R1: an all-ineligible pool yields an empty plan with every rejection recorded 1ms
+     → (0 , planReplayDispatchArms) is not a function
+   × R1: a capability requirement rejects the incapable arm and keeps the capable one 1ms
+     → (0 , planReplayDispatchArms) is not a function
+   × R1: an arm with no declared profile stays planned, and the plan never invents or reorders arms 1ms
+     → (0 , planReplayDispatchArms) is not a function
+   × R1: a declared pool that the pre-dispatch re-check empties is recorded, not dispatched into 5ms
+     → (0 , planReplayDispatchArms) is not a function
+   × R1: no recorded requirements leaves the requested arms untouched 1ms
+     → (0 , planReplayDispatchArms) is not a function
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run104-sp1-dispatch-subset.test.ts > R1: an image capture plans only the eligible arm and records the rejected one
+TypeError: (0 , planReplayDispatchArms) is not a function
+ ❯ test/run104-sp1-dispatch-subset.test.ts:41:16
+     39| 
+     40| test("R1: an image capture plans only the eligible arm and records the…
+     41|   const plan = planReplayDispatchArms({
+       |                ^
+     42|     requestedEndpointIds: ["text-arm", "image-arm"],
+     43|     selectionRejections: [selectionRejection("text-arm")],
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  test/run104-sp1-dispatch-subset.test.ts > R1: an all-ineligible pool yields an empty plan with every rejection recorded
+TypeError: (0 , planReplayDispatchArms) is not a function
+ ❯ test/run104-sp1-dispatch-subset.test.ts:56:16
+     54| 
+     55| test("R1: an all-ineligible pool yields an empty plan with every rejec…
+     56|   const plan = planReplayDispatchArms({
+       |                ^
+     57|     requestedEndpointIds: ["text-arm-a", "text-arm-b"],
+     58|     selectionRejections: [selectionRejection("text-arm-a"), selectionR…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  test/run104-sp1-dispatch-subset.test.ts > R1: a capability requirement rejects the incapable arm and keeps the capable one
+TypeError: (0 , planReplayDispatchArms) is not a function
+ ❯ test/run104-sp1-dispatch-subset.test.ts:71:16
+     69| 
+     70| test("R1: a capability requirement rejects the incapable arm and keeps…
+     71|   const plan = planReplayDispatchArms({
+       |                ^
+     72|     requestedEndpointIds: ["plain-arm", "tool-arm"],
+     73|     selectionRejections: [],
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  test/run104-sp1-dispatch-subset.test.ts > R1: an arm with no declared profile stays planned, and the plan never invents or reorders arms
+TypeError: (0 , planReplayDispatchArms) is not a function
+ ❯ test/run104-sp1-dispatch-subset.test.ts:88:16
+     86| 
+     87| test("R1: an arm with no declared profile stays planned, and the plan …
+     88|   const plan = planReplayDispatchArms({
+       |                ^
+     89|     requestedEndpointIds: ["undeclared-arm", "image-arm", "undeclared-…
+     90|     selectionRejections: [],
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  test/run104-sp1-dispatch-subset.test.ts > R1: a declared pool that the pre-dispatch re-check empties is recorded, not dispatched into
+TypeError: (0 , planReplayDispatchArms) is not a function
+ ❯ test/run104-sp1-dispatch-subset.test.ts:109:16
+    107|   expect(stale).toHaveLength(1);
+    108| 
+    109|   const plan = planReplayDispatchArms({
+       |                ^
+    110|     requestedEndpointIds: ["image-arm"],
+    111|     selectionRejections: [],
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  test/run104-sp1-dispatch-subset.test.ts > R1: no recorded requirements leaves the requested arms untouched
+TypeError: (0 , planReplayDispatchArms) is not a function
+ ❯ test/run104-sp1-dispatch-subset.test.ts:123:16
+    121| 
+    122| test("R1: no recorded requirements leaves the requested arms untouched…
+    123|   const plan = planReplayDispatchArms({
+       |                ^
+    124|     requestedEndpointIds: ["text-arm", "image-arm"],
+    125|     selectionRejections: [],
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  6 failed (6)
+   Start at  19:43:52
+   Duration  2.07s (transform 437ms, setup 0ms, collect 1.26s, tests 24ms, environment 0ms, prepare 297ms)
+
+undefined
+D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/run104-sp1-dispatch-subset.test.ts
