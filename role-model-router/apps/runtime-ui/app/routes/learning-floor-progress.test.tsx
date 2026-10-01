@@ -123,18 +123,24 @@ describe("run104 sp5 r7: the floor is read from the published activation policy"
       ),
     ).toBe("2 / 3 decisive · 1.8 effective");
     expect(
-      formatLearningFloorProgress({ decisive: 2, effectiveDecisive: null }, {
-        decisive: null,
-        holdout: null,
-        distinctCaptures: null,
-      }),
+      formatLearningFloorProgress(
+        { decisive: 2, effectiveDecisive: null },
+        {
+          decisive: null,
+          holdout: null,
+          distinctCaptures: null,
+        },
+      ),
     ).toBeNull();
     expect(
-      formatLearningFloorProgress({ decisive: null, effectiveDecisive: null }, {
-        decisive: 3,
-        holdout: 1,
-        distinctCaptures: 3,
-      }),
+      formatLearningFloorProgress(
+        { decisive: null, effectiveDecisive: null },
+        {
+          decisive: 3,
+          holdout: 1,
+          distinctCaptures: 3,
+        },
+      ),
     ).toBeNull();
   });
 });

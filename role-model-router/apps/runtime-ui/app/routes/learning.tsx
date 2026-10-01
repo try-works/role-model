@@ -446,7 +446,8 @@ export function learningEvidence(row: Record<string, unknown>): LearningEvidence
     claimTitle: textOrNull(evidence.claim),
     countsState,
     floorProgress,
-    floorNote: floorProgress !== null ? null : countsState === "reported" ? FLOOR_NOT_REPORTED : null,
+    floorNote:
+      floorProgress !== null ? null : countsState === "reported" ? FLOOR_NOT_REPORTED : null,
   };
 }
 

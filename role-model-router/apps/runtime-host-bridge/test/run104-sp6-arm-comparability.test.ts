@@ -120,8 +120,5 @@ test("R9: a repoint never crosses models and never invents an endpoint", () => {
     sourceReasoningEffort: "medium",
   });
 
-  expect(arms).toEqual([
-    arm("luna-medium", "luna", "medium"),
-    arm("gemma-default", "gemma", null),
-  ]);
+  expect(arms).toEqual([arm("luna-medium", "luna", "medium"), arm("gemma-default", "gemma", null)]);
 });

@@ -923,7 +923,8 @@ export function preferEffortMatchedReplayArms(input: {
     if (normalizeEffort(arm.reasoningEffort) === sourceEffort) return arm;
     const variant = input.configuredEndpoints.find(
       (endpoint) =>
-        endpoint.modelId === arm.modelId && normalizeEffort(endpoint.reasoningEffort) === sourceEffort,
+        endpoint.modelId === arm.modelId &&
+        normalizeEffort(endpoint.reasoningEffort) === sourceEffort,
     );
     return variant ?? arm;
   });

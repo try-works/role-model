@@ -1,8 +1,8 @@
 import { expect, test } from "vitest";
 
 import {
-  createFinalizedGroupListingCache,
   FINALIZED_GROUP_LISTING_TTL_MS,
+  createFinalizedGroupListingCache,
 } from "../src/finalized-group-listing-cache.js";
 
 /**

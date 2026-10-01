@@ -138,12 +138,12 @@ import {
 import {
   type ReplayCandidateRejection,
   buildReplayPolicySet,
+  classifyReplayArmEffort,
   decideReplayAdmission,
   hasRecordedToolResults,
   hasToolCalls,
   isBenchmarkReplaySourceRef,
   isSyntheticProbeSourceClass,
-  classifyReplayArmEffort,
   planReplayDispatchArms,
   preferEffortMatchedReplayArms,
   readReplayRequestRequirements,
@@ -504,6 +504,7 @@ function resolveChannelScopedReplayLedgerLimits(input: {
     ),
   };
 }
+import { createFinalizedGroupListingCache } from "./finalized-group-listing-cache.js";
 import {
   buildExperiencePackCandidate,
   buildRouteLearningValidationReceipt,
@@ -532,7 +533,6 @@ import {
   selectDurableComparisonGroupId,
   serveLearnerSweepRetrieval,
 } from "./track-b-learning-pass.js";
-import { createFinalizedGroupListingCache } from "./finalized-group-listing-cache.js";
 import {
   TRACK_B_CANONICAL_EXTENSION_IDS,
   type TrackBExtensionClosure,
@@ -5352,7 +5352,8 @@ export async function main(): Promise<void> {
        * bounded window; a group finalized inside the window is picked up by the next listing, and each
        * settled group's own report is idempotent.
        */
-      const finalizedGroupListingCache = createFinalizedGroupListingCache<Record<string, unknown>>();
+      const finalizedGroupListingCache =
+        createFinalizedGroupListingCache<Record<string, unknown>>();
       const finalizedGroupListingKey = `${options.runtimeStateRoot}|${options.scopeId}`;
       /** S27 diagnostics: report the resolved job scope and an empty recovery page once per process. */
       let replayJobScopeReported = false;
