@@ -30,6 +30,19 @@ published JSON, the run-100 bounds test and the docs; identified the capture-pat
 construction at `:5827`; found the policy-read precedent at `:7211-7248`. Could not run the focused test at
 dispatch time: the private worktree had no `node_modules`, so it reported PARTIAL rather than installing.
 
+Controller completion after the child returned: installed the private workspace dependencies and built the
+`effect`, `effect-mq` and `@effect/sql-sqlite-node` wrappers (the child's blocker); re-ran the focused test
+(RED for the intended reason: the contract did not exist); implemented the seam in
+`scripts/track-b/runtime-operations-server.mjs` - `PER_ARM_OUTPUT_MAX_SERIALISED_BYTES` (4096), the bounded
+tool-call serialiser, `resolvePerArmComparableOutput` (in-process buffer under `durable_preferred`, durable text,
+then the bounded serialisation; otherwise exclude by name), `applyPerArmOutputExclusionBound` (refuse above the
+bound with `per_arm_output_exclusion_bound_exceeded`), and `readPerArmOutputPolicy` (channel/scope precedence
+with the documented defaults on a degraded read) - and wired it into `persistRouteCapture`: the branch response
+artifact now carries the resolved comparable output (or the named exclusion) and the blanket
+tool-bearing-branch refusal is replaced by the policy-driven decision. Result files:
+`scripts/track-b/runtime-operations-server.mjs`,
+`tests/track-b/run104-sp8-per-arm-output-consumer.test.mjs`.
+
 ## Claimed File Impact
 
 ### Created
