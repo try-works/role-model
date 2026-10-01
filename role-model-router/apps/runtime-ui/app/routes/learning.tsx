@@ -193,6 +193,8 @@ const NOT_REPORTED = "not reported";
  * reason its counts are absent, so a receipt with no counts stops rendering identically to a value nobody recorded.
  */
 const RECEIPT_CARRIES_NO_COUNTS = "the receipt carries no comparison counts";
+/** `R7`: said out loud rather than rendering a zero the runtime never published. */
+const FLOOR_NOT_REPORTED = "floor not reported";
 
 const tableClassName = "w-full table-fixed border-collapse text-left";
 const tableHeaderClassName = `border-b border-[var(--rm-border)] pb-3 pr-3 text-left align-bottom font-normal ${monoEyebrowClassName}`;
@@ -315,6 +317,55 @@ export interface LearningEvidenceView {
   readonly claimTitle: string | null;
   /** `A49-R5`: `reported` when the joined receipt carries counts, `receipt_carries_none` when it does not. */
   readonly countsState: string | null;
+  /** Run 104 `R7`: `"2 / 3 decisive · 1.8 effective"`, or `null` when either side is unpublished. */
+  readonly floorProgress: string | null;
+  /** Run 104 `R7`: the honest placeholder shown when a receipt carries counts but no floor. */
+  readonly floorNote: string | null;
+}
+
+export interface LearningFloorView {
+  readonly decisive: number | null;
+  readonly holdout: number | null;
+  readonly distinctCaptures: number | null;
+}
+
+const finiteNumberOrNull = (value: unknown): number | null => {
+  if (value === null || value === undefined || value === "") return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+/**
+ * Run 104 `R7`: the operator floor the learner's counts are measured against, read from the published
+ * activation policy readback (`effective.minDecisiveComparisons` and its siblings - the same policy the
+ * learning pass resolved the pass-time floor from). A policy that does not publish a value leaves that
+ * side `null`, so the caller states the absence instead of rendering a zero.
+ */
+export function learningEvidenceFloor(policy: Record<string, unknown>): LearningFloorView {
+  const effective = asRecord(asRecord(policy).effective);
+  return {
+    decisive: finiteNumberOrNull(effective.minDecisiveComparisons),
+    holdout: finiteNumberOrNull(effective.minHoldoutComparisons),
+    distinctCaptures: finiteNumberOrNull(effective.minDistinctCaptures),
+  };
+}
+
+/**
+ * `"2 / 3 decisive · 1.8 effective"` - the decisive count against the floor, with the decayed count the
+ * floor was actually measured on when the producer published a different one. `null` when either side is
+ * unpublished: progress requires both numbers, and neither is invented.
+ */
+export function formatLearningFloorProgress(
+  counts: Record<string, unknown>,
+  floor: LearningFloorView,
+): string | null {
+  const decisive = finiteNumberOrNull(counts.decisive);
+  if (decisive === null || floor.decisive === null) return null;
+  const nominal = `${decisive} / ${floor.decisive} decisive`;
+  const effective = finiteNumberOrNull(counts.effectiveDecisive);
+  return effective !== null && effective !== decisive
+    ? `${nominal} · ${effective} effective`
+    : nominal;
 }
 
 /**
@@ -333,6 +384,25 @@ export function learningEvidence(row: Record<string, unknown>): LearningEvidence
   const family = { ...asRecord(record.familyEvidence), ...asRecord(row.familyEvidence) };
   const judgeConsistency = asRecord(family.judgeConsistency);
   const counts = asRecord(evidence.counts);
+  const effectiveCounts = asRecord(evidence.effectiveCounts);
+  const publishedFloor = asRecord(evidence.floor);
+  const countsState = textOrNull(evidence.countsState);
+  /**
+   * Run 104 `R7`: the floor travels with the receipt join (`evidence.floor`, from the producer or the
+   * effective activation policy). A row whose receipt carries counts but no floor says exactly that; the
+   * cell never renders a zero for a value the readback did not publish.
+   */
+  const floorProgress = formatLearningFloorProgress(
+    {
+      decisive: counts.decisive ?? family.decisiveComparisons,
+      effectiveDecisive: effectiveCounts.decisive ?? family.effectiveDecisiveComparisons,
+    },
+    {
+      decisive: finiteNumberOrNull(publishedFloor.minDecisiveComparisons),
+      holdout: finiteNumberOrNull(publishedFloor.minHoldoutComparisons),
+      distinctCaptures: finiteNumberOrNull(publishedFloor.minDistinctCaptures),
+    },
+  );
   const winnerRef = textOrNull(evidence.winnerCandidateRef);
   const members = (Array.isArray(evidence.members) ? evidence.members : []).map(
     (member): LearningCandidateScoreView => {
@@ -374,7 +444,9 @@ export function learningEvidence(row: Record<string, unknown>): LearningEvidence
     ),
     claim: formatLearningClaim(evidence.claim),
     claimTitle: textOrNull(evidence.claim),
-    countsState: textOrNull(evidence.countsState),
+    countsState,
+    floorProgress,
+    floorNote: floorProgress !== null ? null : countsState === "reported" ? FLOOR_NOT_REPORTED : null,
   };
 }
 
@@ -566,6 +638,12 @@ export function LearningDecisionRow({
         ) : (
           <p className={tableCellMetaClassName}>no verdict recorded</p>
         )}
+        {/* Run 104 `R7`: progress against the floor the receipt was measured on, in numbers. */}
+        {evidence.floorProgress ? (
+          <p className={`mt-0.5 ${tableCellValueClassName}`}>{evidence.floorProgress}</p>
+        ) : evidence.floorNote ? (
+          <p className={`mt-0.5 ${tableCellMetaClassName}`}>{evidence.floorNote}</p>
+        ) : null}
         <p className={`mt-0.5 ${tableCellMetaClassName}`}>
           {`outcome ${evidence.outcome ?? NOT_REPORTED}`}
         </p>
@@ -1582,6 +1660,17 @@ export function LearningEvidencePage() {
     () => fetchLearningSummary(fetch, token || undefined),
     [token],
   );
+  /**
+   * Run 104 `R7`: the floor the learner's counts are measured against is published by the activation
+   * policy readback (`effective.minDecisiveComparisons` and its siblings). The durable record's own
+   * `learnerEvidence.floor` is only written when the producer persisted one, so the page composes the
+   * progress from the policy the pass resolved rather than rendering a bare `insufficient`.
+   */
+  const learningPolicy = useOperatorSurface<LearningPolicyView>(
+    () => fetchLearningPolicy(fetch, token || undefined),
+    [token],
+  );
+  const policyFloor = learningEvidenceFloor(asRecord(learningPolicy.value));
   const learnerEvidence = asRecord(asRecord(learnerSummary.value).learnerEvidence);
   const exclusionReasons = Object.entries(asRecord(learnerEvidence.excludedByReason))
     .map(([reason, count]) => ({ reason, count: Number(count) }))
@@ -1717,6 +1806,18 @@ export function LearningEvidencePage() {
                 <Metric
                   label="Newest decisive comparisons"
                   value={show(newestEvidence.decisiveComparisons)}
+                />
+                <Metric
+                  label="Decisive / floor"
+                  value={
+                    formatLearningFloorProgress(
+                      {
+                        decisive: newestEvidence.decisiveComparisons,
+                        effectiveDecisive: newestEvidence.effectiveDecisiveComparisons,
+                      },
+                      policyFloor,
+                    ) ?? FLOOR_NOT_REPORTED
+                  }
                 />
                 <Metric
                   label="Floor met"

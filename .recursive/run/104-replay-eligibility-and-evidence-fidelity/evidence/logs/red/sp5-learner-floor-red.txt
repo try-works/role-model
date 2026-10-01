@@ -1,0 +1,80 @@
+(node:47120) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✖ run104 sp5 r7: a producer-published floor is projected verbatim beside the effective counts (34.1345ms)
+✖ run104 sp5 r7: a receipt without a floor is measured against the effective policy floor (7.228ms)
+✖ run104 sp5 r7: a receipt that carries no counts says so rather than rendering a zero (5.5847ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 0
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1009.6449
+
+✖ failing tests:
+
+test at tests\track-b\run104-sp5-learner-floor-readback.test.mjs:178:1
+✖ run104 sp5 r7: a producer-published floor is projected verbatim beside the effective counts (34.1345ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + undefined
+  - {
+  -   decisive: 1.8,
+  -   development: 0.9,
+  -   holdout: 1.8
+  - }
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/104-replay-eligibility-and-evidence-fidelity/tests/track-b/run104-sp5-learner-floor-readback.test.mjs:188:10)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: { decisive: 1.8, holdout: 1.8, development: 0.9 },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests\track-b\run104-sp5-learner-floor-readback.test.mjs:198:1
+✖ run104 sp5 r7: a receipt without a floor is measured against the effective policy floor (7.228ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + undefined
+  - {
+  -   minDecisiveComparisons: 3,
+  -   minDistinctCaptures: 3,
+  -   minHoldoutComparisons: 1
+  - }
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/104-replay-eligibility-and-evidence-fidelity/tests/track-b/run104-sp5-learner-floor-readback.test.mjs:209:10)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: { minDecisiveComparisons: 3, minHoldoutComparisons: 1, minDistinctCaptures: 3 },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests\track-b\run104-sp5-learner-floor-readback.test.mjs:217:1
+✖ run104 sp5 r7: a receipt that carries no counts says so rather than rendering a zero (5.5847ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + undefined
+  - null
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/104-replay-eligibility-and-evidence-fidelity/tests/track-b/run104-sp5-learner-floor-readback.test.mjs:227:10)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: null,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
