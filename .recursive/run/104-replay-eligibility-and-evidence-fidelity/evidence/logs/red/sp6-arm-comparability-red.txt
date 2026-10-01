@@ -1,0 +1,128 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/run104-sp6-arm-comparability.test.ts (8 tests | 8 failed) 21ms
+   × R9: an arm at the source's effort is classified matched 13ms
+     → (0 , classifyReplayArmEffort) is not a function
+   × R9: an arm at a different effort is recorded as a first-class mismatch, not dropped 1ms
+     → (0 , classifyReplayArmEffort) is not a function
+   × R9: a declared effort that differs from the source is a mismatch 1ms
+     → (0 , classifyReplayArmEffort) is not a function
+   × R9: an unspecified source effort is reported as such rather than as a mismatch 1ms
+     → (0 , classifyReplayArmEffort) is not a function
+   × R9: effort comparison is case- and whitespace-insensitive 1ms
+     → (0 , classifyReplayArmEffort) is not a function
+   × R9: an arm is repointed to the same model's variant at the source effort 1ms
+     → (0 , preferEffortMatchedReplayArms) is not a function
+   × R9: without a matching variant the arm is kept as requested and flagged 1ms
+     → (0 , preferEffortMatchedReplayArms) is not a function
+   × R9: a repoint never crosses models and never invents an endpoint 1ms
+     → (0 , preferEffortMatchedReplayArms) is not a function
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run104-sp6-arm-comparability.test.ts > R9: an arm at the source's effort is classified matched
+TypeError: (0 , classifyReplayArmEffort) is not a function
+ ❯ test/run104-sp6-arm-comparability.test.ts:25:19
+     23| 
+     24| test("R9: an arm at the source's effort is classified matched", () => {
+     25|   const records = classifyReplayArmEffort({
+       |                   ^
+     26|     arms: [arm("luna-medium", "luna", "medium")],
+     27|     sourceModelId: "sol",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯
+
+ FAIL  test/run104-sp6-arm-comparability.test.ts > R9: an arm at a different effort is recorded as a first-class mismatch, not dropped
+TypeError: (0 , classifyReplayArmEffort) is not a function
+ ❯ test/run104-sp6-arm-comparability.test.ts:44:19
+     42| 
+     43| test("R9: an arm at a different effort is recorded as a first-class mi…
+     44|   const records = classifyReplayArmEffort({
+       |                   ^
+     45|     arms: [arm("luna-default", "luna", null)],
+     46|     sourceModelId: "sol",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/8]⎯
+
+ FAIL  test/run104-sp6-arm-comparability.test.ts > R9: a declared effort that differs from the source is a mismatch
+TypeError: (0 , classifyReplayArmEffort) is not a function
+ ❯ test/run104-sp6-arm-comparability.test.ts:56:19
+     54| 
+     55| test("R9: a declared effort that differs from the source is a mismatch…
+     56|   const records = classifyReplayArmEffort({
+       |                   ^
+     57|     arms: [arm("luna-high", "luna", "high")],
+     58|     sourceModelId: "sol",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/8]⎯
+
+ FAIL  test/run104-sp6-arm-comparability.test.ts > R9: an unspecified source effort is reported as such rather than as a mismatch
+TypeError: (0 , classifyReplayArmEffort) is not a function
+ ❯ test/run104-sp6-arm-comparability.test.ts:66:19
+     64| 
+     65| test("R9: an unspecified source effort is reported as such rather than…
+     66|   const records = classifyReplayArmEffort({
+       |                   ^
+     67|     arms: [arm("luna-high", "luna", "high")],
+     68|     sourceModelId: "sol",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/8]⎯
+
+ FAIL  test/run104-sp6-arm-comparability.test.ts > R9: effort comparison is case- and whitespace-insensitive
+TypeError: (0 , classifyReplayArmEffort) is not a function
+ ❯ test/run104-sp6-arm-comparability.test.ts:76:19
+     74| 
+     75| test("R9: effort comparison is case- and whitespace-insensitive", () =…
+     76|   const records = classifyReplayArmEffort({
+       |                   ^
+     77|     arms: [arm("luna-medium", "luna", " Medium ")],
+     78|     sourceModelId: "sol",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/8]⎯
+
+ FAIL  test/run104-sp6-arm-comparability.test.ts > R9: an arm is repointed to the same model's variant at the source effort
+TypeError: (0 , preferEffortMatchedReplayArms) is not a function
+ ❯ test/run104-sp6-arm-comparability.test.ts:86:16
+     84| 
+     85| test("R9: an arm is repointed to the same model's variant at the sourc…
+     86|   const arms = preferEffortMatchedReplayArms({
+       |                ^
+     87|     arms: [arm("luna-default", "luna", null)],
+     88|     configuredEndpoints: [
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/8]⎯
+
+ FAIL  test/run104-sp6-arm-comparability.test.ts > R9: without a matching variant the arm is kept as requested and flagged
+TypeError: (0 , preferEffortMatchedReplayArms) is not a function
+ ❯ test/run104-sp6-arm-comparability.test.ts:101:16
+     99| 
+    100| test("R9: without a matching variant the arm is kept as requested and …
+    101|   const arms = preferEffortMatchedReplayArms({
+       |                ^
+    102|     arms: [arm("luna-default", "luna", null)],
+    103|     configuredEndpoints: [arm("luna-default", "luna", null)],
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/8]⎯
+
+ FAIL  test/run104-sp6-arm-comparability.test.ts > R9: a repoint never crosses models and never invents an endpoint
+TypeError: (0 , preferEffortMatchedReplayArms) is not a function
+ ❯ test/run104-sp6-arm-comparability.test.ts:112:16
+    110| 
+    111| test("R9: a repoint never crosses models and never invents an endpoint…
+    112|   const arms = preferEffortMatchedReplayArms({
+       |                ^
+    113|     arms: [arm("luna-default", "luna", null), arm("gemma-default", "ge…
+    114|     configuredEndpoints: [
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/8]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  8 failed (8)
+   Start at  19:48:30
+   Duration  2.23s (transform 489ms, setup 0ms, collect 1.38s, tests 21ms, environment 0ms, prepare 327ms)
+
+undefined
+D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/run104-sp6-arm-comparability.test.ts

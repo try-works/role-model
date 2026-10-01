@@ -143,7 +143,9 @@ import {
   hasToolCalls,
   isBenchmarkReplaySourceRef,
   isSyntheticProbeSourceClass,
+  classifyReplayArmEffort,
   planReplayDispatchArms,
+  preferEffortMatchedReplayArms,
   readReplayRequestRequirements,
   replayBudgetEnforcedForChannel,
   resolveReplayPolicySet,
@@ -7889,7 +7891,50 @@ export async function main(): Promise<void> {
             );
           }
           const endpoints = created.effectiveRegistry.endpoints;
-          const candidatePackages = replayDispatchPlan.plannedEndpointIds.map((endpointId) => {
+          /**
+           * Run 104 R9: an arm whose own model is configured at the source capture's reasoning effort under a
+           * different endpoint id is repointed to that variant, so the comparison does not confound capability
+           * with effort. The repointed set is re-checked against the same eligibility rule before dispatch, and
+           * the comparability of every surviving arm travels with the replay payload.
+           */
+          const configuredReplayArms = endpoints.map((endpoint) => ({
+            endpointId: endpoint.identity.endpoint_id,
+            modelId: endpoint.identity.model_id,
+            reasoningEffort: endpoint.identity.reasoning_effort ?? null,
+          }));
+          const replaySourceModelId =
+            typeof sourceCapture.modelId === "string" ? sourceCapture.modelId : "";
+          const replaySourceReasoningEffort =
+            typeof sourceCapture.reasoningEffort === "string"
+              ? sourceCapture.reasoningEffort
+              : null;
+          const effortMatchedReplayArms = preferEffortMatchedReplayArms({
+            arms: replayDispatchPlan.plannedEndpointIds.map(
+              (endpointId) =>
+                configuredReplayArms.find((item) => item.endpointId === endpointId) ?? {
+                  endpointId,
+                  modelId: "",
+                  reasoningEffort: null,
+                },
+            ),
+            configuredEndpoints: configuredReplayArms,
+            sourceModelId: replaySourceModelId,
+            sourceReasoningEffort: replaySourceReasoningEffort,
+          });
+          const replayArmPlan = planReplayDispatchArms({
+            requestedEndpointIds: effortMatchedReplayArms.map((arm) => arm.endpointId),
+            selectionRejections: replayDispatchPlan.rejections,
+            requirements: replayRequestRequirements,
+            endpointProfiles: replayEndpointProfiles,
+          });
+          if (replayArmPlan.plannedEndpointIds.length === 0) {
+            throw new Error(
+              `replay arm cannot serve the capture's request requirements: ${replayArmPlan.rejections
+                .map((rejection) => `${rejection.endpointId} (${rejection.code})`)
+                .join(", ")}`,
+            );
+          }
+          const candidatePackages = replayArmPlan.plannedEndpointIds.map((endpointId) => {
             const endpoint = endpoints.find((item) => item.identity.endpoint_id === endpointId);
             if (!endpoint)
               throw new Error(
@@ -7946,6 +7991,19 @@ export async function main(): Promise<void> {
               "supervised replay requires an eligible counterfactual distinct from the source endpoint",
             );
           }
+          /**
+           * Run 104 R9: the comparability dimension the receipt has to be able to answer - was this comparison
+           * effort-matched, or is capability confounded with a reasoning-effort variant?
+           */
+          const replayArmEffortComparability = classifyReplayArmEffort({
+            arms: counterfactualPackages.map((candidate) => ({
+              endpointId: candidate.endpointId,
+              modelId: candidate.modelId,
+              reasoningEffort: candidate.reasoningEffort ?? null,
+            })),
+            sourceModelId,
+            sourceReasoningEffort: replaySourceReasoningEffort,
+          });
           const channel = packagedProfile?.channel ?? "development";
           // Bind the replay source to the capture's own runtime scope: the durable
           // capture records the private runtime scope, which is not necessarily the
@@ -7988,6 +8046,11 @@ export async function main(): Promise<void> {
                   modelId: candidate.modelId,
                   reasoningEffort: candidate.reasoningEffort ?? null,
                 })),
+                /**
+                 * Run 104 R9: per-arm effort comparability against the source capture, so the validation
+                 * receipt can record a confound instead of presenting it as a capability result.
+                 */
+                effortComparability: replayArmEffortComparability,
                 evaluationCriteria: evaluationCriteria as unknown as Readonly<
                   Record<string, unknown>
                 >,

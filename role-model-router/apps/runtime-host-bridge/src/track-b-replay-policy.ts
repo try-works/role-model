@@ -838,6 +838,97 @@ export function planReplayDispatchArms(input: {
   };
 }
 
+/**
+ * Run 104 R9: how a replay arm's reasoning effort relates to the source capture's.
+ *
+ * `mismatched` means both sides declared an effort and they differ - the comparison confounds capability with
+ * effort, so it must be recorded as a comparability dimension (and excluded from promotion evidence) rather
+ * than silently treated as a capability result. The two `*_unspecified` values are not mismatches: one side
+ * simply ran with the model's default, which is a fact worth publishing but not a confound to exclude on.
+ */
+export type ReplayArmEffortComparability =
+  | "matched"
+  | "mismatched"
+  | "source_effort_unspecified"
+  | "arm_effort_unspecified";
+
+export interface ReplayArmEffortRecord {
+  readonly endpointId: string;
+  readonly modelId: string;
+  readonly sourceModelId: string;
+  readonly reasoningEffort: string | null;
+  readonly sourceReasoningEffort: string | null;
+  readonly comparability: ReplayArmEffortComparability;
+}
+
+export interface ReplayArmDescriptor {
+  readonly endpointId: string;
+  readonly modelId: string;
+  readonly reasoningEffort: string | null;
+}
+
+function normalizeEffort(value: string | null | undefined): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim().toLowerCase();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+/**
+ * Run 104 R9: the comparability record for every counterfactual arm in one comparison. Pure: the caller
+ * attaches the records to the replay payload so the receipt can answer "were these arms effort-matched?".
+ */
+export function classifyReplayArmEffort(input: {
+  readonly arms: readonly ReplayArmDescriptor[];
+  readonly sourceModelId: string;
+  readonly sourceReasoningEffort: string | null;
+}): readonly ReplayArmEffortRecord[] {
+  const sourceEffort = normalizeEffort(input.sourceReasoningEffort);
+  return input.arms.map((arm) => {
+    const armEffort = normalizeEffort(arm.reasoningEffort);
+    const comparability: ReplayArmEffortComparability =
+      sourceEffort === null
+        ? "source_effort_unspecified"
+        : armEffort === null
+          ? "arm_effort_unspecified"
+          : armEffort === sourceEffort
+            ? "matched"
+            : "mismatched";
+    return {
+      endpointId: arm.endpointId,
+      modelId: arm.modelId,
+      sourceModelId: input.sourceModelId,
+      reasoningEffort: arm.reasoningEffort ?? null,
+      sourceReasoningEffort: input.sourceReasoningEffort ?? null,
+      comparability,
+    };
+  });
+}
+
+/**
+ * Run 104 R9 matched-effort path: when the source ran at a declared effort and the arm's own model is
+ * configured at that same effort under a different endpoint id, the arm is repointed to that variant. The
+ * repoint never crosses models and never invents an endpoint - it only chooses among endpoints the registry
+ * already holds for the arm's own model. An arm without a matching variant is kept exactly as requested; the
+ * caller records the resulting comparability with `classifyReplayArmEffort`.
+ */
+export function preferEffortMatchedReplayArms(input: {
+  readonly arms: readonly ReplayArmDescriptor[];
+  readonly configuredEndpoints: readonly ReplayArmDescriptor[];
+  readonly sourceModelId: string;
+  readonly sourceReasoningEffort: string | null;
+}): readonly ReplayArmDescriptor[] {
+  const sourceEffort = normalizeEffort(input.sourceReasoningEffort);
+  if (sourceEffort === null) return input.arms;
+  return input.arms.map((arm) => {
+    if (normalizeEffort(arm.reasoningEffort) === sourceEffort) return arm;
+    const variant = input.configuredEndpoints.find(
+      (endpoint) =>
+        endpoint.modelId === arm.modelId && normalizeEffort(endpoint.reasoningEffort) === sourceEffort,
+    );
+    return variant ?? arm;
+  });
+}
+
 export type ReplayToolPolicy = "recorded_results_only" | "sandboxed_allowlist";
 
 /**

@@ -101,6 +101,23 @@ export interface SupervisedReplayEvaluationResumeEntry {
   readonly sourceEndpointId: string;
   readonly sourceModelId: string;
   readonly counterfactualPackages: readonly SupervisedReplayEvaluationCounterfactual[];
+  /**
+   * Run 104 R9: how each arm's reasoning effort relates to the source capture's (`matched`, `mismatched`, or
+   * unspecified on either side). Optional because entries recorded before this field existed carry none; a
+   * reader must treat its absence as "not recorded", never as "matched".
+   */
+  readonly effortComparability?: readonly {
+    readonly endpointId: string;
+    readonly modelId: string;
+    readonly sourceModelId: string;
+    readonly reasoningEffort: string | null;
+    readonly sourceReasoningEffort: string | null;
+    readonly comparability:
+      | "matched"
+      | "mismatched"
+      | "source_effort_unspecified"
+      | "arm_effort_unspecified";
+  }[];
   readonly evaluationCriteria: Readonly<Record<string, unknown>>;
   readonly evaluationCriteriaDigest: string;
   /**
