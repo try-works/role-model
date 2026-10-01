@@ -92,6 +92,12 @@ export interface ProviderOverride {
 
 export interface ModelOverride {
   readonly capabilities?: readonly string[];
+  /**
+   * Run 104 R3/R4: the local truth for a model's modalities, used when the pinned upstream row is stale
+   * (for example a renamed or re-based alias). An override replaces the resolved set rather than adding to
+   * it, because a modality correction must be able to remove a modality the pinned row claims.
+   */
+  readonly modalities?: readonly string[];
   readonly localNotes?: readonly string[];
 }
 
@@ -224,6 +230,26 @@ function ensure(condition: unknown, message: string): asserts condition {
 
 function unique(values: readonly string[] | undefined): string[] {
   return [...new Set(values ?? [])];
+}
+
+/** Run 104 R3 drift guard: set equality for two modality declarations, order-insensitive. */
+function sameStringSet(left: readonly string[], right: readonly string[]): boolean {
+  const leftSet = new Set(left);
+  const rightSet = new Set(right);
+  if (leftSet.size !== rightSet.size) return false;
+  for (const value of leftSet) {
+    if (!rightSet.has(value)) return false;
+  }
+  return true;
+}
+
+/**
+ * An empty modality list is the merge's materialized form of "nothing declared" (see
+ * `mergeSupplementModel` in `refresh.ts`), so it inherits like an absent field instead of shadowing the
+ * base with a vacuous set.
+ */
+function declaredModalities(model: CatalogSnapshotModel): readonly string[] | undefined {
+  return model.modalities && model.modalities.length > 0 ? model.modalities : undefined;
 }
 
 function deriveReasoningEffortLevels(options: readonly ReasoningOption[] | undefined): string[] {
@@ -464,6 +490,17 @@ function resolveModelDefinition(
   ensure(baseModel, `Catalog model ${model.modelId} extends missing base model ${model.extends}`);
 
   const resolvedBase = resolveModelDefinition(modelsById, baseModel, [...seen, model.modelId]);
+  /**
+   * Run 104 R3 drift guard: an alias inherits its base's modalities, so a declaration that disagrees with
+   * the base is a lineage defect rather than an override. It fails the export by name instead of silently
+   * shipping two ids that claim different capabilities for the same served model.
+   */
+  const baseModalities = unique(resolvedBase.model.modalities ?? []);
+  const resolvedModalities = unique(declaredModalities(model) ?? resolvedBase.model.modalities);
+  ensure(
+    sameStringSet(resolvedModalities, baseModalities),
+    `Catalog model ${model.modelId} declares modalities [${resolvedModalities.join(", ")}] that disagree with its base model ${model.extends} [${baseModalities.join(", ")}]; model the lineage or correct the declaration`,
+  );
 
   return {
     model: {
@@ -473,7 +510,7 @@ function resolveModelDefinition(
         ...(resolvedBase.model.capabilities ?? []),
         ...(model.capabilities ?? []),
       ]),
-      modalities: unique(model.modalities ?? resolvedBase.model.modalities),
+      modalities: resolvedModalities,
       experimentalModes: model.experimentalModes ?? resolvedBase.model.experimentalModes,
       reasoningOptions: model.reasoningOptions ?? resolvedBase.model.reasoningOptions,
       requestShapeHints: model.requestShapeHints ?? resolvedBase.model.requestShapeHints,
@@ -556,7 +593,14 @@ export function normalizeCatalogSnapshot(
           ...(resolved.model.capabilities ?? []),
           ...(modelOverride?.capabilities ?? []),
         ]),
-        modalities: unique(resolved.model.modalities),
+        /**
+         * Run 104 R3/R4: a local override can set the modalities outright. Capabilities stay additive (they
+         * are an open vocabulary of additive grants); modalities replace, because the set is a closed
+         * vocabulary and a correction must be able to drop a stale member.
+         */
+        modalities: modelOverride?.modalities
+          ? unique(modelOverride.modalities)
+          : unique(resolved.model.modalities),
         contextWindow: resolved.model.contextWindow ?? 0,
         maxOutputTokens: resolved.model.maxOutputTokens ?? 0,
         pricing: normalizePricing(resolved.model.pricing) ?? null,

@@ -39,13 +39,21 @@
     "deepseek/deepseek-v4-flash": {
       "capabilities": ["code.edit"],
       "localNotes": [
-        "Pre-rename DeepSeek flash identity. The provider now advertises `deepseek-flash`, and the OpenAI-compatible adapter maps this canonical id to that provider model id so existing endpoint configuration keeps working."
+        "Pre-rename DeepSeek flash identity. The provider now advertises `deepseek-flash`, and the OpenAI-compatible adapter maps this canonical id to that provider model id so existing endpoint configuration keeps working.",
+        "Deprecated alias of `deepseek/deepseek-v4.1-flash`: models.dev commit 67dcd8c9a5ed55745b0beeb610287f12ee2ddc00 `providers/deepseek/models/deepseek-v4-flash.toml` (sha256 b1910724c0240130f4676a90719ee321aa16d73ee354dbefb2ade27ce2e0c917) declares `base_model = \"deepseek/deepseek-v4.1-flash\"` and `status = \"deprecated\"`."
+      ]
+    },
+    "deepseek/deepseek-v4.1-flash": {
+      "capabilities": ["code.edit"],
+      "localNotes": [
+        "Base lineage for the DeepSeek flash slot. models.dev commit 67dcd8c9a5ed55745b0beeb610287f12ee2ddc00 `providers/deepseek/models/deepseek-flash.toml` (sha256 d5e811b4af967dd239b008c62b55c7924de2bdb36cd53c75324c98a42796db8d) names DeepSeek-V4.1-Flash as the served model and points `base_model` at this id; models.dev/api.json could not be fetched on 2026-10-01, so the pinned snapshot provenance is unchanged and this entry is supplement-authored."
       ]
     },
     "deepseek/deepseek-flash": {
       "capabilities": ["code.edit"],
       "localNotes": [
-        "Current DeepSeek first-party flash model id as advertised by https://api.deepseek.com/v1/models."
+        "Current DeepSeek first-party flash model id as advertised by https://api.deepseek.com/v1/models.",
+        "Serves DeepSeek-V4.1-Flash and stays image-capable; upstream models.dev commit 67dcd8c9a5ed55745b0beeb610287f12ee2ddc00 `providers/deepseek/models/deepseek-flash.toml` (sha256 d5e811b4af967dd239b008c62b55c7924de2bdb36cd53c75324c98a42796db8d) is the source of truth for the served id."
       ]
     },
     "deepseek/deepseek-v4-pro": {

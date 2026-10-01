@@ -202,12 +202,12 @@
       ]
     },
     {
-      "modelId": "deepseek/deepseek-v4-flash",
+      "modelId": "deepseek/deepseek-v4.1-flash",
       "providerId": "deepseek",
-      "displayName": "DeepSeek V4 Flash",
-      "version": "2026-04-24",
+      "displayName": "DeepSeek V4.1 Flash",
+      "version": "2026-09-10",
       "capabilities": ["text.chat", "tools.function_calling", "reasoning", "structured.output"],
-      "modalities": ["text"],
+      "modalities": ["text", "image"],
       "contextWindow": 1000000,
       "maxOutputTokens": 384000,
       "reasoningOptions": [
@@ -241,6 +241,21 @@
           "currency": "USD"
         }
       }
+    },
+    {
+      "modelId": "deepseek/deepseek-v4-flash",
+      "providerId": "deepseek",
+      "displayName": "DeepSeek V4 Flash",
+      "extends": "deepseek/deepseek-v4.1-flash",
+      "version": "2026-04-24",
+      "capabilities": ["text.chat", "tools.function_calling", "reasoning", "structured.output"],
+      "modalities": ["text", "image"],
+      "contextWindow": 1000000,
+      "maxOutputTokens": 384000,
+      "reasoningOptions": [
+        { "type": "toggle" },
+        { "type": "effort", "values": ["low", "high", "max"] }
+      ]
     },
     {
       "modelId": "deepseek/deepseek-v4-pro",
