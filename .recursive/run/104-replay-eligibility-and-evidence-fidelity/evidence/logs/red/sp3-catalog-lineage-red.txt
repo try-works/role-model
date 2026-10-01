@@ -1,0 +1,71 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/packages/catalog
+
+ ❯ test/run104-alias-lineage.test.ts (3 tests | 3 failed) 143ms
+   × run104 R3/R4 catalog lineage and override modalities > R4 a model override can set modalities 31ms
+     → expected [ 'text' ] to deeply equal [ 'text', 'image' ]
+   × run104 R3/R4 catalog lineage and override modalities > R3 an alias whose declared modalities disagree with its base fails the export 40ms
+     → expected [Function] to throw an error
+   × run104 R3/R4 catalog lineage and override modalities > R3 the shipped catalog models the v4.1 base and the deprecated flash alias 69ms
+     → (0 , mergeCatalogSnapshotWithSupplement) is not a function
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run104-alias-lineage.test.ts > run104 R3/R4 catalog lineage and override modalities > R4 a model override can set modalities
+AssertionError: expected [ 'text' ] to deeply equal [ 'text', 'image' ]
+
+- Expected
++ Received
+
+  [
+    "text",
+-   "image",
+  ]
+
+ ❯ test/run104-alias-lineage.test.ts:82:31
+     80|     const model = normalized.models.find((row) => row.modelId === "ven…
+     81| 
+     82|     expect(model?.modalities).toEqual(["text", "image"]);
+       |                               ^
+     83|     expect(model?.localOverrideApplied).toBe(true);
+     84|     expect(model?.localNotes).toEqual(["Upstream advertises image inpu…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  test/run104-alias-lineage.test.ts > run104 R3/R4 catalog lineage and override modalities > R3 an alias whose declared modalities disagree with its base fails the export
+AssertionError: expected [Function] to throw an error
+
+- Expected: 
+null
+
++ Received: 
+undefined
+
+ ❯ test/run104-alias-lineage.test.ts:137:54
+    135|     };
+    136| 
+    137|     expect(() => normalizeCatalogSnapshot(snapshot)).toThrow(/vendor\/…
+       |                                                      ^
+    138| 
+    139|     const withoutDrift: CatalogSnapshot = {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  test/run104-alias-lineage.test.ts > run104 R3/R4 catalog lineage and override modalities > R3 the shipped catalog models the v4.1 base and the deprecated flash alias
+TypeError: (0 , mergeCatalogSnapshotWithSupplement) is not a function
+ ❯ test/run104-alias-lineage.test.ts:156:20
+    154|   test("R3 the shipped catalog models the v4.1 base and the deprecated…
+    155|     const { snapshot, supplement } = await readShippedSnapshotAndSuppl…
+    156|     const merged = mergeCatalogSnapshotWithSupplement(snapshot, supple…
+       |                    ^
+    157|     const normalized = normalizeCatalogSnapshot(merged);
+    158|     const byId = new Map(normalized.models.map((model) => [model.model…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed (3)
+   Start at  18:39:27
+   Duration  2.07s (transform 373ms, setup 0ms, collect 291ms, tests 143ms, environment 1ms, prepare 690ms)
+

@@ -2566,6 +2566,7 @@ export type BridgeTelemetryAnalyticsMetric =
   | "p95LatencyMs";
 
 export type BridgeTelemetryAnalyticsDimension =
+  | "requestClass"
   | "sourceType"
   | "endpointId"
   | "modelId"
@@ -2590,6 +2591,8 @@ export type BridgeTelemetryAnalyticsDimension =
   | "taxonomyToolClassId";
 
 export interface BridgeTelemetryAnalyticsFilters {
+  /** Run 104 / R14: restrict to traffic classes; `live` also matches legacy `live_request` rows. */
+  readonly trafficClasses?: readonly StoredTrafficClass[];
   readonly sourceTypes?: readonly ("local" | "remote")[];
   readonly endpointIds?: readonly string[];
   readonly modelIds?: readonly string[];
@@ -11331,6 +11334,9 @@ function readTelemetryQuery(url: URL): BridgeTelemetryQuery {
   const sourceTypes = readOptionalTelemetryStringList(url.searchParams, "sourceTypes") as
     | readonly ("local" | "remote")[]
     | undefined;
+  const trafficClasses = readOptionalTelemetryStringList(url.searchParams, "trafficClasses") as
+    | readonly StoredTrafficClass[]
+    | undefined;
   const endpointIds = readOptionalTelemetryStringList(url.searchParams, "endpointIds");
   const modelIds = readOptionalTelemetryStringList(url.searchParams, "modelIds");
   const providerIds = readOptionalTelemetryStringList(url.searchParams, "providerIds");
@@ -11357,6 +11363,7 @@ function readTelemetryQuery(url: URL): BridgeTelemetryQuery {
     | undefined;
   const requestOperations = readOptionalTelemetryStringList(url.searchParams, "requestOperations");
   const filters = {
+    ...(trafficClasses ? { trafficClasses } : {}),
     ...(sourceTypes ? { sourceTypes } : {}),
     ...(endpointIds ? { endpointIds } : {}),
     ...(modelIds ? { modelIds } : {}),
@@ -23570,6 +23577,7 @@ export async function createRuntimeBridgeBackend(
     "p95LatencyMs",
   ];
   const SUPPORTED_TELEMETRY_ANALYTICS_DIMENSIONS: readonly BridgeTelemetryAnalyticsDimension[] = [
+    "requestClass",
     "sourceType",
     "endpointId",
     "modelId",
@@ -23732,6 +23740,10 @@ export async function createRuntimeBridgeBackend(
     dimension: BridgeTelemetryAnalyticsDimension,
   ): readonly string[] => {
     switch (dimension) {
+      case "requestClass": {
+        const requestClass = record.requestClass ?? "unknown";
+        return [requestClass === "live_request" ? "live" : requestClass];
+      }
       case "sourceType":
         return [record.sourceType];
       case "endpointId":
@@ -24188,6 +24200,31 @@ export async function createRuntimeBridgeBackend(
       ...(filtersBody
         ? {
             filters: {
+              ...(readEnumStringList(filtersBody.trafficClasses, "filters.trafficClasses", [
+                "live",
+                "live_request",
+                "replay",
+                "evaluation",
+                "benchmark",
+                "probe",
+                "unknown",
+              ] as const)
+                ? {
+                    trafficClasses: readEnumStringList(
+                      filtersBody.trafficClasses,
+                      "filters.trafficClasses",
+                      [
+                        "live",
+                        "live_request",
+                        "replay",
+                        "evaluation",
+                        "benchmark",
+                        "probe",
+                        "unknown",
+                      ] as const,
+                    ),
+                  }
+                : {}),
               ...(readEnumStringList(filtersBody.sourceTypes, "filters.sourceTypes", [
                 "local",
                 "remote",
@@ -24397,6 +24434,16 @@ export async function createRuntimeBridgeBackend(
       return records;
     }
     return records.filter((record) => {
+      if (
+        filters.trafficClasses &&
+        !filters.trafficClasses.some(
+          (trafficClass) =>
+            (record.requestClass ?? "unknown") === trafficClass ||
+            (trafficClass === "live" && record.requestClass === "live_request"),
+        )
+      ) {
+        return false;
+      }
       if (filters.sourceTypes && !filters.sourceTypes.includes(record.sourceType)) {
         return false;
       }
@@ -24888,6 +24935,7 @@ export async function createRuntimeBridgeBackend(
       [
         query.breakdown ?? undefined,
         query.ranking?.dimension,
+        ...(query.filters?.trafficClasses ? (["requestClass"] as const) : []),
         ...(query.filters?.sourceTypes ? (["sourceType"] as const) : []),
         ...(query.filters?.endpointIds ? (["endpointId"] as const) : []),
         ...(query.filters?.modelIds ? (["modelId"] as const) : []),
@@ -24925,6 +24973,7 @@ export async function createRuntimeBridgeBackend(
       [
         query.breakdown ?? undefined,
         query.ranking?.dimension,
+        ...(query.filters?.trafficClasses ? (["requestClass"] as const) : []),
         ...(query.filters?.sourceTypes ? (["sourceType"] as const) : []),
         ...(query.filters?.endpointIds ? (["endpointId"] as const) : []),
         ...(query.filters?.modelIds ? (["modelId"] as const) : []),

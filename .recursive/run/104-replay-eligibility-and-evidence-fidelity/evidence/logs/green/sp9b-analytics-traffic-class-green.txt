@@ -1,0 +1,14 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-host-bridge
+
+(node:48388) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run104-traffic-class-filter.test.ts (1 test) 3158ms
+   ✓ run104: the telemetry request query filters by traffic class  3145ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  18:19:31
+   Duration  26.88s (transform 14.51s, setup 0ms, collect 22.43s, tests 3.16s, environment 1ms, prepare 417ms)
+
+

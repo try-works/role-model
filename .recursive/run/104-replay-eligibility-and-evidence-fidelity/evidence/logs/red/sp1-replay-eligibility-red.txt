@@ -1,0 +1,149 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/run104-sp1-replay-eligibility.test.ts (7 tests | 7 failed) 117ms
+   × run104 SP1 reads the capture's recorded decision and marks it recorded 17ms
+     → readReplayRequestRequirements is not a function
+   × run104 SP1 infers the requirement from message content and records the inference 1ms
+     → readReplayRequestRequirements is not a function
+   × run104 SP1 plans no arm against a text-only pool and records every rejected arm 23ms
+     → expected [ 'text-a', 'text-b' ] to deeply equal []
+   × run104 SP1 plans the image arm and records the text-only arm's reason 4ms
+     → expected [ 'text-arm', 'image-arm' ] to deeply equal [ 'image-arm' ]
+   × run104 SP1 satisfies capability requirements through the router's exported rule only 3ms
+     → expected [ 'editor', 'plain' ] to deeply equal [ 'editor' ]
+   × run104 SP1 pre-dispatch re-check fails a stale arm cheaply with the reason 1ms
+     → recheckReplayCandidatesForDispatch is not a function
+   × run104 SP1 auto-replay tick dispatches nothing for an ineligible arm and records it 65ms
+     → expected 1 to be +0 // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run104-sp1-replay-eligibility.test.ts > run104 SP1 reads the capture's recorded decision and marks it recorded
+TypeError: readReplayRequestRequirements is not a function
+ ❯ test/run104-sp1-replay-eligibility.test.ts:50:5
+     48|   const { readReplayRequestRequirements } = await policy();
+     49|   expect(
+     50|     readReplayRequestRequirements({
+       |     ^
+     51|       routingDecision: {
+     52|         required_capabilities: ["code.read"],
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/7]⎯
+
+ FAIL  test/run104-sp1-replay-eligibility.test.ts > run104 SP1 infers the requirement from message content and records the inference
+TypeError: readReplayRequestRequirements is not a function
+ ❯ test/run104-sp1-replay-eligibility.test.ts:65:20
+     63| test("run104 SP1 infers the requirement from message content and recor…
+     64|   const { readReplayRequestRequirements } = await policy();
+     65|   const inferred = readReplayRequestRequirements(IMAGE_CAPTURE);
+       |                    ^
+     66|   expect(inferred.source).toBe("inferred");
+     67|   expect(inferred.requiredModalities).toContain("image");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/7]⎯
+
+ FAIL  test/run104-sp1-replay-eligibility.test.ts > run104 SP1 plans no arm against a text-only pool and records every rejected arm
+AssertionError: expected [ 'text-a', 'text-b' ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "text-a",
++   "text-b",
++ ]
+
+ ❯ test/run104-sp1-replay-eligibility.test.ts:84:20
+     82|     onRejected: (row) => rejected.push(row),
+     83|   });
+     84|   expect(selected).toEqual([]);
+       |                    ^
+     85|   expect(rejected.map((row) => [row.endpointId, row.code])).toEqual([
+     86|     ["text-a", "MODALITY_UNSUPPORTED"],
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/7]⎯
+
+ FAIL  test/run104-sp1-replay-eligibility.test.ts > run104 SP1 plans the image arm and records the text-only arm's reason
+AssertionError: expected [ 'text-arm', 'image-arm' ] to deeply equal [ 'image-arm' ]
+
+- Expected
++ Received
+
+  [
++   "text-arm",
+    "image-arm",
+  ]
+
+ ❯ test/run104-sp1-replay-eligibility.test.ts:103:20
+    101|     onRejected: (row) => rejected.push(row),
+    102|   });
+    103|   expect(selected).toEqual(["image-arm"]);
+       |                    ^
+    104|   expect(rejected.map((row) => [row.endpointId, row.code])).toEqual([
+    105|     ["text-arm", "MODALITY_UNSUPPORTED"],
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/7]⎯
+
+ FAIL  test/run104-sp1-replay-eligibility.test.ts > run104 SP1 satisfies capability requirements through the router's exported rule only
+AssertionError: expected [ 'editor', 'plain' ] to deeply equal [ 'editor' ]
+
+- Expected
++ Received
+
+  [
+    "editor",
++   "plain",
+  ]
+
+ ❯ test/run104-sp1-replay-eligibility.test.ts:125:20
+    123|     onRejected: (row) => rejected.push(row),
+    124|   });
+    125|   expect(selected).toEqual(["editor"]);
+       |                    ^
+    126|   expect(rejected.map((row) => [row.endpointId, row.code])).toEqual([
+    127|     ["plain", "CAPABILITY_MISSING"],
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/7]⎯
+
+ FAIL  test/run104-sp1-replay-eligibility.test.ts > run104 SP1 pre-dispatch re-check fails a stale arm cheaply with the reason
+TypeError: recheckReplayCandidatesForDispatch is not a function
+ ❯ test/run104-sp1-replay-eligibility.test.ts:137:5
+    135|   ];
+    136|   expect(
+    137|     recheckReplayCandidatesForDispatch({
+       |     ^
+    138|       endpointIds: ["image-arm"],
+    139|       requirements: IMAGE_REQUIREMENTS,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/7]⎯
+
+ FAIL  test/run104-sp1-replay-eligibility.test.ts > run104 SP1 auto-replay tick dispatches nothing for an ineligible arm and records it
+AssertionError: expected 1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ test/run104-sp1-replay-eligibility.test.ts:170:24
+    168|       },
+    169|     });
+    170|     expect(dispatched).toBe(0);
+       |                        ^
+    171|     expect(result.replayed).toBe(0);
+    172|     expect(result.dispositions).toHaveLength(1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/7]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  7 failed (7)
+   Start at  18:20:26
+   Duration  2.12s (transform 677ms, setup 0ms, collect 732ms, tests 117ms, environment 1ms, prepare 478ms)
+
+undefined
+D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/run104-sp1-replay-eligibility.test.ts

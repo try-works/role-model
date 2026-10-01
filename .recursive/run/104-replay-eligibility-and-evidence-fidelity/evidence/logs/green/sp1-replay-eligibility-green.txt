@@ -1,0 +1,71 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-host-bridge
+
+ ✓ test/run104-sp1-replay-eligibility.test.ts (7 tests) 35ms
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  18:21:39
+   Duration  2.96s (transform 675ms, setup 0ms, collect 1.89s, tests 35ms, environment 1ms, prepare 399ms)
+
+
+=== tsc --noEmit (bridge) ===
+
+=== replay regression suites ===
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-host-bridge
+
+ ✓ test/run97-replay-auto-loop.test.ts (15 tests) 693ms
+ ✓ test/run97-replay-admission.test.ts (11 tests) 1223ms
+   ✓ run97 admission admits every capture when no policy input blocks it  1183ms
+ ✓ test/run97-replay-auto-producer.test.ts (7 tests) 279ms
+ ✓ test/run104-sp1-replay-eligibility.test.ts (7 tests) 41ms
+ ✓ test/run108-judge-unresolved-tick.test.ts (4 tests) 155ms
+(node:51620) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run100a-benchmark-replay-exclusion.test.ts (4 tests) 159ms
+ ✓ test/run101-r4-replay-queue-wiring.test.ts (4 tests) 70ms
+ ✓ test/run100h-replay-bound-defaults.test.ts (2 tests) 8ms
+
+ Test Files  8 passed (8)
+      Tests  54 passed (54)
+   Start at  18:23:06
+   Duration  28.55s (transform 5.99s, setup 0ms, collect 17.40s, tests 2.63s, environment 4ms, prepare 3.39s)
+
+
+=== cli/replay regression suites ===
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-host-bridge
+
+(node:63828) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run96-replay-router-adapter.test.ts (24 tests) 239ms
+(node:30636) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | test/run96-cli-supervised-replay-evaluation.test.ts > Run96 CLI production completion reaches trusted Evaluation Core and declines unsupported learning
+[run97] shadow pipeline start supervised-replay:67800cb80ac008bcc4a2d0086fdf173df6d42f8c8857073565835005cf808e1c
+
+stderr | test/run96-cli-supervised-replay-evaluation.test.ts > Run96 CLI production completion reaches trusted Evaluation Core and declines unsupported learning
+[run97] learning degraded signals:supervised-replay:67800cb80ac008bcc4a2d0086fdf173df6d42f8c8857073565835005cf808e1c omit_signals 
+
+stderr | test/run96-cli-supervised-replay-evaluation.test.ts > Run96 CLI production completion reaches trusted Evaluation Core and declines unsupported learning
+[run97] shadow pipeline start supervised-replay:e7fc4e42e8bff5188fa940945f5e44225a82affc80e0ab81fa2e54c51293f667
+
+stderr | test/run96-cli-supervised-replay-evaluation.test.ts > Run96 CLI production completion reaches trusted Evaluation Core and declines unsupported learning
+[run97] learning degraded signals:supervised-replay:e7fc4e42e8bff5188fa940945f5e44225a82affc80e0ab81fa2e54c51293f667 omit_signals 
+
+ ✓ test/run96-cli-supervised-replay-evaluation.test.ts (11 tests) 242ms
+ ✓ test/run99-r33-replay-lease-retry.test.ts (8 tests) 26ms
+(node:53152) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run98-a48-replay-append-recovery.test.ts (1 test) 44ms
+ ✓ test/run97-rc16-auto-replay-deadline.test.ts (4 tests) 14ms
+(node:21632) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run96-replay-candidate-reservation.test.ts (3 tests) 29ms
+
+ Test Files  6 passed (6)
+      Tests  51 passed (51)
+   Start at  18:23:50
+   Duration  43.07s (transform 15.24s, setup 0ms, collect 35.12s, tests 595ms, environment 4ms, prepare 2.85s)
+
