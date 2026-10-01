@@ -51,7 +51,7 @@
 
 ### Reviewed
 
-- `role-model-router/apps/runtime-host-bridge/src/contribution-outcome.ts`
+- `role-model-router/apps/runtime-host-bridge/test/run104-sp2-refusal-semantics.test.ts`
 
 ### Relevant but Untouched
 

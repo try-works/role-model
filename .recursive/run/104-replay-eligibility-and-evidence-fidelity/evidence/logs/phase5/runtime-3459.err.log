@@ -1,0 +1,18 @@
+(node:20308) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `role-model-dev --trace-warnings ...` to show where the warning was created)
+[track-b-sidecar] (node:57820) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+[track-b-sidecar] (Use `node --trace-warnings ...` to show where the warning was created)
+Runtime strategy posture scope tester.local-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope apa.local-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope batch.local-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope embedding.decision-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope embedding.hybrid has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope embedding.local-only has no routable targets (ALIAS_POOL_EMPTY)
+Runtime strategy posture scope embedding.remote-only has no routable targets (ALIAS_POOL_EMPTY)
+[run99] durable route advisory published: state=unavailable reason=no active pack package=none confidence=0 cohort=0 stage=S4
+[run101] replay job scope: derived runtime:7b23fd25f16a4555c6873a703be07139
+[run101] recovery page payload shape: value,businessOutput,durableLocator,evidenceRef,readCapability,workerPid
+[run101] recovery page came back empty: scope=runtime:7b23fd25f16a4555c6873a703be07139 channel=development cursor=start
+[run98] remote-health recovery: deepseek.personal.deepseek-api-key.global.deepseek-flash, deepseek.personal.deepseek-api-key.global.deepseek-flash-high, deepseek.personal.deepseek-api-key.global.deepseek-flash-max, deepseek.personal.deepseek-api-key.global.deepseek-v4-pro
+[run99] live advisory observation skipped: route advisory observation requires decision and route package
+[run99] live advisory observation skipped: route advisory observation requires decision and route package

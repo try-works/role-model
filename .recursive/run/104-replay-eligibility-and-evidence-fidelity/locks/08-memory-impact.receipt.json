@@ -1,0 +1,20 @@
+{
+  "artifact": "08-memory-impact.md",
+  "artifact_hash": "142e3b5532fe698556f875671c1fbce5986fd5a35f6d36017158f6e517d8d05f",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\104-replay-eligibility-and-evidence-fidelity\\.recursive\\run\\104-replay-eligibility-and-evidence-fidelity\\08-memory-impact.md",
+  "locked_at": "2026-10-01T17:32:35Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "965abd12782ee8c6a12aa336b4a9f6f85263802242b221a0921168812fed8481",
+    "00-worktree.md": "79cc4702ff4c7c7601af02936e97ed128f15201e644a112de7eda60125f4c44f",
+    "01-as-is.md": "44438f2d4e8ac7b39b0eb5cd1dc9000a5340b5406cbb0ce502dada99c808d512",
+    "02-to-be-plan.md": "6b516655e1f57a01b3dceedd5c933cc91ec80facc4e323f6257c3b14c7c7295d",
+    "03-implementation-summary.md": "bebf213451927520ade46fa2a872aeae9a9be0cede7b6e9c3e9438dcd8591d29",
+    "03.5-code-review.md": "9ae4bfafc22fd488e4351af02d4d807b3b249c6a0873c5d79c24a629ad99712d",
+    "04-test-summary.md": "6a823b260e0eff65f6d14362999e690d86924a83194854fc732194186aec9896",
+    "05-manual-qa.md": "c58087a49405d8670839f7fafebaca570e67b0e895e4d75d9b38b044d9bb4c67",
+    "06-decisions-update.md": "1ba1d1a105be676ccb2a8b34f23f01c7593052d6c83bd5688a72c15b5229bb27",
+    "07-state-update.md": "0f11978540f6eea50e6bc8ada3c80960441bef9d734992d1301923abfcb52940"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "359cbff36167c26f0d5dd4ede3c47e8361df648edcff5ea33260816408da156b"
+}

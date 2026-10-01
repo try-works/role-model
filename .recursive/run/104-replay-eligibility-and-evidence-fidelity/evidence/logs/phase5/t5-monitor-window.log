@@ -1,0 +1,125 @@
+[start] 2026-10-02T00:39:24.3921006+08:00 pid=20308 minutes=30 interval=30
+[baseline] requestCount=16 failureCount=4 excluded=16 p50Req=22734 p95Req=78174
+[  30s] health=healthy ready=True queuesMs=16 req+0 fail+0 cache=75% excluded=16 p50Req=22734 p95Req=78174 errLines+0
+[  60s] health=healthy ready=True queuesMs=20 req+0 fail+0 cache=75% excluded=16 p50Req=22734 p95Req=78174 errLines+0
+[  90s] health=healthy ready=True queuesMs=15 req+0 fail+0 cache=75% excluded=16 p50Req=22734 p95Req=78174 errLines+0
+[ 120s] health=healthy ready=True queuesMs=14 req+0 fail+0 cache=75% excluded=16 p50Req=22734 p95Req=78174 errLines+0
+[ 150s] health=healthy ready=True queuesMs=15 req+0 fail+0 cache=75% excluded=16 p50Req=22734 p95Req=78174 errLines+0
+[ 180s] health=healthy ready=True queuesMs=16 req+0 fail+0 cache=75% excluded=16 p50Req=22734 p95Req=78174 errLines+0
+[ 210s] health=healthy ready=True queuesMs=843 req+0 fail+0 cache=75% excluded=16 p50Req=22734 p95Req=78174 errLines+0
+[ 240s] health=healthy ready=True queuesMs=13 req+0 fail+0 cache=75% excluded=16 p50Req=22734 p95Req=78174 errLines+0
+[ 270s] health=healthy ready=True queuesMs=18 req+0 fail+0 cache=75% excluded=16 p50Req=22734 p95Req=78174 errLines+0
+[ 300s] health=healthy ready=True queuesMs=14 req+0 fail+0 cache=75% excluded=16 p50Req=22734 p95Req=78174 errLines+0
+[ 330s] health=healthy ready=True queuesMs=14 req+1 fail+1 cache=70.6% excluded=16 p50Req=26276 p95Req=82946 errLines+0
+[ 360s] health=healthy ready=True queuesMs=785 req+2 fail+0 cache=73.7% excluded=16 p50Req=24577 p95Req=82946 errLines+0
+[ 390s] health=healthy ready=True queuesMs=12 req+0 fail+0 cache=73.7% excluded=16 p50Req=24577 p95Req=82946 errLines+0
+[ 420s] health=healthy ready=True queuesMs=241 req+0 fail+0 cache=73.7% excluded=16 p50Req=24577 p95Req=82946 errLines+0
+[ 450s] health=healthy ready=True queuesMs=14 req+0 fail+0 cache=73.7% excluded=16 p50Req=24577 p95Req=82946 errLines+0
+[ 480s] health=healthy ready=True queuesMs=17 req+0 fail+0 cache=73.7% excluded=16 p50Req=24577 p95Req=82946 errLines+0
+[ 510s] health=healthy ready=True queuesMs=9 req+0 fail+0 cache=73.7% excluded=16 p50Req=24577 p95Req=82946 errLines+0
+[ 540s] health=healthy ready=True queuesMs=17 req+0 fail+0 cache=73.7% excluded=16 p50Req=24577 p95Req=82946 errLines+0
+[ 570s] health=healthy ready=True queuesMs=10 req+0 fail+0 cache=73.7% excluded=16 p50Req=24577 p95Req=82946 errLines+0
+[ 600s] health=healthy ready=True queuesMs=9 req+0 fail+0 cache=73.7% excluded=16 p50Req=24577 p95Req=82946 errLines+0
+[ 630s] health=healthy ready=True queuesMs=12 req+0 fail+0 cache=73.7% excluded=16 p50Req=24577 p95Req=82946 errLines+0
+[ 660s] health=healthy ready=True queuesMs=11 req+0 fail+0 cache=73.7% excluded=16 p50Req=24577 p95Req=82946 errLines+0
+[ 690s] health=healthy ready=True queuesMs=14 req+0 fail+0 cache=73.7% excluded=16 p50Req=24577 p95Req=82946 errLines+0
+[ 720s] health=healthy ready=True queuesMs=12 req+0 fail+0 cache=73.7% excluded=16 p50Req=24577 p95Req=82946 errLines+0
+[ 750s] health=healthy ready=True queuesMs=15 req+1 fail+0 cache=75% excluded=16 p50Req=27108 p95Req=78174 errLines+0
+[ 780s] health=healthy ready=True queuesMs=13 req+1 fail+0 cache=76.2% excluded=16 p50Req=26034 p95Req=78174 errLines+0
+[ 810s] health=healthy ready=True queuesMs=480 req+0 fail+0 cache=76.2% excluded=17 p50Req=26034 p95Req=78174 errLines+0
+[ 840s] health=healthy ready=True queuesMs=13 req+0 fail+0 cache=76.2% excluded=18 p50Req=26034 p95Req=78174 errLines+0
+[ 870s] health=healthy ready=True queuesMs=10 req+0 fail+0 cache=76.2% excluded=18 p50Req=26034 p95Req=78174 errLines+0
+[ 900s] health=healthy ready=True queuesMs=10 req+0 fail+0 cache=76.2% excluded=18 p50Req=26034 p95Req=78174 errLines+0
+[ 930s] health=healthy ready=True queuesMs=10 req+0 fail+0 cache=76.2% excluded=18 p50Req=26034 p95Req=78174 errLines+0
+[ 960s] health=healthy ready=True queuesMs=12 req+0 fail+0 cache=76.2% excluded=18 p50Req=26034 p95Req=78174 errLines+0
+[ 990s] health=healthy ready=True queuesMs=13 req+0 fail+0 cache=76.2% excluded=18 p50Req=26034 p95Req=78174 errLines+0
+[1020s] health=healthy ready=True queuesMs=12 req+0 fail+0 cache=76.2% excluded=18 p50Req=26034 p95Req=78174 errLines+0
+[1050s] health=healthy ready=True queuesMs=10 req+0 fail+0 cache=76.2% excluded=18 p50Req=26034 p95Req=78174 errLines+0
+[1080s] health=healthy ready=True queuesMs=15 req+1 fail+0 cache=77.3% excluded=19 p50Req=24944 p95Req=78174 errLines+0
+[1110s] health=healthy ready=True queuesMs=13 req+0 fail+0 cache=77.3% excluded=20 p50Req=24944 p95Req=78174 errLines+0
+[1140s] health=healthy ready=True queuesMs=12 req+0 fail+0 cache=77.3% excluded=20 p50Req=24944 p95Req=78174 errLines+0
+[1170s] health=healthy ready=True queuesMs=15 req+0 fail+0 cache=77.3% excluded=20 p50Req=24944 p95Req=78174 errLines+0
+[1200s] health=healthy ready=True queuesMs=15 req+2 fail+0 cache=75% excluded=20 p50Req=23541 p95Req=78174 errLines+0
+[1230s] health=healthy ready=True queuesMs=14 req+0 fail+0 cache=75% excluded=20 p50Req=23541 p95Req=78174 errLines+0
+[1260s] health=healthy ready=True queuesMs=15 req+0 fail+0 cache=75% excluded=20 p50Req=23541 p95Req=78174 errLines+0
+[1290s] health=healthy ready=True queuesMs=15 req+0 fail+0 cache=75% excluded=20 p50Req=23541 p95Req=78174 errLines+0
+[1320s] health=healthy ready=True queuesMs=13 req+0 fail+0 cache=75% excluded=20 p50Req=23541 p95Req=78174 errLines+0
+[1350s] health=healthy ready=True queuesMs=16 req+2 fail+1 cache=73.1% excluded=20 p50Req=24611 p95Req=78174 errLines+0
+[1380s] health=healthy ready=True queuesMs=12 req+1 fail+0 cache=74.1% excluded=21 p50Req=24136 p95Req=78174 errLines+0
+[1410s] health=healthy ready=True queuesMs=13 req+0 fail+0 cache=74.1% excluded=22 p50Req=24136 p95Req=78174 errLines+0
+[1440s] health=healthy ready=True queuesMs=10 req+0 fail+0 cache=74.1% excluded=22 p50Req=24136 p95Req=78174 errLines+0
+[1470s] health=healthy ready=True queuesMs=10 req+0 fail+0 cache=74.1% excluded=22 p50Req=24136 p95Req=78174 errLines+0
+[1500s] health=healthy ready=True queuesMs=10 req+0 fail+0 cache=74.1% excluded=22 p50Req=24136 p95Req=78174 errLines+0
+[1530s] health=healthy ready=True queuesMs=10 req+0 fail+0 cache=74.1% excluded=22 p50Req=24136 p95Req=78174 errLines+0
+[1560s] health=healthy ready=True queuesMs=10 req+0 fail+0 cache=74.1% excluded=22 p50Req=24136 p95Req=78174 errLines+0
+[1590s] health=healthy ready=True queuesMs=9 req+0 fail+0 cache=74.1% excluded=22 p50Req=24136 p95Req=78174 errLines+0
+[1620s] health=healthy ready=True queuesMs=9 req+0 fail+0 cache=74.1% excluded=22 p50Req=24136 p95Req=78174 errLines+0
+[1650s] health=healthy ready=True queuesMs=11 req+0 fail+0 cache=74.1% excluded=22 p50Req=24136 p95Req=78174 errLines+0
+[1680s] health=healthy ready=True queuesMs=11 req+0 fail+0 cache=74.1% excluded=22 p50Req=24136 p95Req=78174 errLines+0
+[1710s] health=healthy ready=True queuesMs=10 req+0 fail+0 cache=74.1% excluded=22 p50Req=24136 p95Req=78174 errLines+0
+[1740s] health=healthy ready=True queuesMs=12 req+0 fail+0 cache=74.1% excluded=22 p50Req=24136 p95Req=78174 errLines+0
+[1770s] health=healthy ready=True queuesMs=12 req+0 fail+0 cache=74.1% excluded=22 p50Req=24136 p95Req=78174 errLines+0
+[1800s] health=healthy ready=True queuesMs=14 req+0 fail+0 cache=74.1% excluded=22 p50Req=24136 p95Req=78174 errLines+0
+[1830s] health=healthy ready=True queuesMs=13 req+1 fail+0 cache=75% excluded=22 p50Req=23399 p95Req=78174 errLines+0
+[1860s] health=healthy ready=True queuesMs=13 req+0 fail+0 cache=75% excluded=22 p50Req=23399 p95Req=78174 errLines+0
+[1890s] health=healthy ready=True queuesMs=13 req+0 fail+0 cache=75% excluded=22 p50Req=23399 p95Req=78174 errLines+0
+[1920s] health=healthy ready=True queuesMs=124 req+0 fail+0 cache=75% excluded=24 p50Req=23399 p95Req=78174 errLines+0
+[1950s] health=healthy ready=True queuesMs=93 req+1 fail+0 cache=75.9% excluded=25 p50Req=23459 p95Req=78174 errLines+0
+[1980s] health=healthy ready=True queuesMs=15 req+0 fail+0 cache=75.9% excluded=26 p50Req=23459 p95Req=78174 errLines+0
+[2010s] health=healthy ready=True queuesMs=15 req+0 fail+0 cache=75.9% excluded=27 p50Req=23459 p95Req=78174 errLines+0
+[2040s] health=healthy ready=True queuesMs=10 req+0 fail+0 cache=75.9% excluded=27 p50Req=23459 p95Req=78174 errLines+0
+[2070s] health=healthy ready=True queuesMs=9 req+0 fail+0 cache=75.9% excluded=27 p50Req=23459 p95Req=78174 errLines+0
+[2100s] health=healthy ready=True queuesMs=8 req+0 fail+0 cache=75.9% excluded=27 p50Req=23459 p95Req=78174 errLines+0
+[2130s] health=healthy ready=True queuesMs=8 req+0 fail+0 cache=75.9% excluded=27 p50Req=23459 p95Req=78174 errLines+0
+[2160s] health=healthy ready=True queuesMs=10 req+0 fail+0 cache=75.9% excluded=27 p50Req=23459 p95Req=78174 errLines+0
+[2190s] health=healthy ready=True queuesMs=9 req+0 fail+0 cache=75.9% excluded=27 p50Req=23459 p95Req=78174 errLines+0
+[2220s] health=healthy ready=True queuesMs=10 req+0 fail+0 cache=75.9% excluded=27 p50Req=23459 p95Req=78174 errLines+0
+[2250s] health=healthy ready=True queuesMs=9 req+0 fail+0 cache=75.9% excluded=27 p50Req=23459 p95Req=78174 errLines+0
+[2280s] health=healthy ready=True queuesMs=8 req+0 fail+0 cache=75.9% excluded=27 p50Req=23459 p95Req=78174 errLines+0
+[2310s] health=healthy ready=True queuesMs=12 req+0 fail+0 cache=75.9% excluded=27 p50Req=23459 p95Req=78174 errLines+0
+[2340s] health=healthy ready=True queuesMs=10 req+0 fail+0 cache=75.9% excluded=27 p50Req=23459 p95Req=78174 errLines+0
+[2370s] health=healthy ready=True queuesMs=10 req+0 fail+0 cache=75.9% excluded=27 p50Req=23459 p95Req=78174 errLines+0
+[2400s] health=healthy ready=True queuesMs=17 req+0 fail+0 cache=75.9% excluded=27 p50Req=23459 p95Req=78174 errLines+0
+[2430s] health=healthy ready=True queuesMs=11 req+0 fail+0 cache=75.9% excluded=28 p50Req=23459 p95Req=78174 errLines+0
+[2460s] health=healthy ready=True queuesMs=14 req+0 fail+0 cache=75.9% excluded=28 p50Req=23459 p95Req=78174 errLines+0
+[2490s] health=healthy ready=True queuesMs=14 req+1 fail+1 cache=73.3% excluded=28 p50Req=25094 p95Req=78174 errLines+0
+[2520s] health=healthy ready=True queuesMs=13 req+1 fail+0 cache=74.2% excluded=28 p50Req=24361 p95Req=78174 errLines+0
+[2550s] health=healthy ready=True queuesMs=13 req+1 fail+0 cache=75% excluded=29 p50Req=24147 p95Req=78174 errLines+0
+[2580s] health=healthy ready=True queuesMs=14 req+0 fail+0 cache=75% excluded=30 p50Req=24147 p95Req=78174 errLines+0
+[2610s] health=healthy ready=True queuesMs=16 req+0 fail+0 cache=75% excluded=30 p50Req=24147 p95Req=78174 errLines+0
+[2640s] health=healthy ready=True queuesMs=12 req+0 fail+0 cache=75% excluded=30 p50Req=24147 p95Req=78174 errLines+0
+[2670s] health=healthy ready=True queuesMs=14 req+0 fail+0 cache=75% excluded=30 p50Req=24147 p95Req=78174 errLines+0
+[2700s] health=healthy ready=True queuesMs=14 req+1 fail+1 cache=72.7% excluded=30 p50Req=25611 p95Req=78174 errLines+0
+[2730s] health=healthy ready=True queuesMs=12 req+2 fail+0 cache=74.3% excluded=30 p50Req=24913 p95Req=78174 errLines+0
+[2760s] health=healthy ready=True queuesMs=11 req+0 fail+0 cache=74.3% excluded=30 p50Req=24913 p95Req=78174 errLines+0
+[2790s] health=healthy ready=True queuesMs=14 req+0 fail+0 cache=74.3% excluded=30 p50Req=24913 p95Req=78174 errLines+0
+[2820s] health=healthy ready=True queuesMs=11 req+0 fail+0 cache=74.3% excluded=30 p50Req=24913 p95Req=78174 errLines+0
+[2850s] health=healthy ready=True queuesMs=13 req+0 fail+0 cache=74.3% excluded=30 p50Req=24913 p95Req=78174 errLines+0
+[2880s] health=healthy ready=True queuesMs=13 req+0 fail+0 cache=74.3% excluded=30 p50Req=24913 p95Req=78174 errLines+0
+[2910s] health=healthy ready=True queuesMs=10 req+0 fail+0 cache=74.3% excluded=30 p50Req=24913 p95Req=78174 errLines+0
+[2940s] health=healthy ready=True queuesMs=10 req+0 fail+0 cache=74.3% excluded=30 p50Req=24913 p95Req=78174 errLines+0
+[2970s] health=healthy ready=True queuesMs=9 req+0 fail+0 cache=74.3% excluded=30 p50Req=24913 p95Req=78174 errLines+0
+[3000s] health=healthy ready=True queuesMs=9 req+0 fail+0 cache=74.3% excluded=30 p50Req=24913 p95Req=78174 errLines+0
+[3030s] health=healthy ready=True queuesMs=9 req+0 fail+0 cache=74.3% excluded=30 p50Req=24913 p95Req=78174 errLines+0
+[3060s] health=healthy ready=True queuesMs=10 req+0 fail+0 cache=74.3% excluded=30 p50Req=24913 p95Req=78174 errLines+0
+[3090s] health=healthy ready=True queuesMs=11 req+0 fail+0 cache=74.3% excluded=30 p50Req=24913 p95Req=78174 errLines+0
+[3120s] health=healthy ready=True queuesMs=218 req+1 fail+0 cache=75% excluded=31 p50Req=24915 p95Req=78174 errLines+0
+[3150s] health=healthy ready=True queuesMs=13 req+0 fail+0 cache=75% excluded=32 p50Req=24915 p95Req=78174 errLines+0
+[3180s] health=healthy ready=True queuesMs=14 req+0 fail+0 cache=75% excluded=33 p50Req=24915 p95Req=78174 errLines+0
+[3210s] health=healthy ready=True queuesMs=13 req+0 fail+0 cache=75% excluded=34 p50Req=24915 p95Req=78174 errLines+0
+[3240s] health=healthy ready=True queuesMs=14 req+0 fail+0 cache=75% excluded=34 p50Req=24915 p95Req=78174 errLines+0
+[3270s] health=healthy ready=True queuesMs=16 req+0 fail+0 cache=75% excluded=34 p50Req=24915 p95Req=78174 errLines+0
+[3300s] health=healthy ready=True queuesMs=15 req+0 fail+0 cache=75% excluded=34 p50Req=24915 p95Req=78174 errLines+0
+[3330s] health=healthy ready=True queuesMs=11 req+0 fail+0 cache=75% excluded=34 p50Req=24915 p95Req=78174 errLines+0
+[3360s] health=healthy ready=True queuesMs=10 req+0 fail+0 cache=75% excluded=34 p50Req=24915 p95Req=78174 errLines+0
+[3390s] health=healthy ready=True queuesMs=10 req+0 fail+0 cache=75% excluded=34 p50Req=24915 p95Req=78174 errLines+0
+[3420s] health=healthy ready=True queuesMs=12 req+0 fail+0 cache=75% excluded=34 p50Req=24915 p95Req=78174 errLines+0
+[3450s] health=healthy ready=True queuesMs=14 req+0 fail+0 cache=75% excluded=34 p50Req=24915 p95Req=78174 errLines+0
+[3480s] health=healthy ready=True queuesMs=12 req+0 fail+0 cache=75% excluded=34 p50Req=24915 p95Req=78174 errLines+0
+[3510s] health=healthy ready=True queuesMs=12 req+0 fail+0 cache=75% excluded=34 p50Req=24915 p95Req=78174 errLines+0
+[3540s] health=healthy ready=True queuesMs=12 req+0 fail+0 cache=75% excluded=34 p50Req=24915 p95Req=78174 errLines+0
+[3570s] health=healthy ready=True queuesMs=11 req+0 fail+0 cache=75% excluded=34 p50Req=24915 p95Req=78174 errLines+0
+[3600s] health=healthy ready=True queuesMs=11 req+0 fail+0 cache=75% excluded=34 p50Req=24915 p95Req=78174 errLines+0
+[3630s] health=healthy ready=True queuesMs=14 req+0 fail+0 cache=75% excluded=34 p50Req=24915 p95Req=78174 errLines+0
+[3660s] health=healthy ready=True queuesMs=9 req+0 fail+0 cache=75% excluded=34 p50Req=24915 p95Req=78174 errLines+0
+[3690s] health=healthy ready=True queuesMs=14 req+0 fail+0 cache=75% excluded=34 p50Req=24915 p95Req=78174 errLines+0

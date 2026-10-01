@@ -1,0 +1,1 @@
+﻿It's a dark-themed dashboard panel showing a replay request's selected model, endpoint, status, latency, token, and cost details.

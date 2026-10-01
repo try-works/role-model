@@ -2,9 +2,9 @@ Run: `/.recursive/run/104-replay-eligibility-and-evidence-fidelity/`
 Phase: `03.5 Code review`
 Role: `code-reviewer`
 Bundle Path: `/.recursive/run/104-replay-eligibility-and-evidence-fidelity/evidence/review-bundles/phase35-code-review.md`
-Artifact Path: `/.recursive/run/104-replay-eligibility-and-evidence-fidelity/03-implementation-summary.md`
-Artifact Content Hash: `0be7e69e572b315f776860b027a8dd142ab816f7c2830859a8af787179e46209`
-GeneratedAt: `2026-10-01T13:57:05Z`
+Artifact Path: `/.recursive/run/104-replay-eligibility-and-evidence-fidelity/03.5-code-review.md`
+Artifact Content Hash: `09ab9f9021373f8ed35219da4242e78ee98ea6b7bd3c592bba367cd1d3760d42`
+GeneratedAt: `2026-10-01T17:28:28Z`
 
 ## Bundle Scope
 - Canonical delegated review bundle for recursive-mode audit/review work.
@@ -25,6 +25,10 @@ GeneratedAt: `2026-10-01T13:57:05Z`
 - Normalized diff command: `git diff --name-only 84d5996cb156217d37801943831762bc734ae21f`
 
 ## Changed Files Reviewed
+- `.recursive/DECISIONS.md`
+- `.recursive/STATE.md`
+- `.recursive/memory/domains/direct-track-b.md`
+- `.recursive/memory/domains/runtime-routing-and-provider-capabilities.md`
 - `role-model-router/apps/runtime-host-bridge/src/cli.ts`
 - `role-model-router/apps/runtime-host-bridge/src/finalized-group-listing-cache.ts`
 - `role-model-router/apps/runtime-host-bridge/src/index.ts`
@@ -76,9 +80,8 @@ GeneratedAt: `2026-10-01T13:57:05Z`
 - `testdata/catalog/models-dev-snapshot.json`
 
 ## Upstream Artifacts To Re-read
+- `.recursive/run/104-replay-eligibility-and-evidence-fidelity/03-implementation-summary.md`
 - `.recursive/run/104-replay-eligibility-and-evidence-fidelity/02-to-be-plan.md`
-- `.recursive/run/104-replay-eligibility-and-evidence-fidelity/01-as-is.md`
-- `.recursive/run/104-replay-eligibility-and-evidence-fidelity/00-requirements.md`
 
 ## Relevant Addenda
 - none
@@ -86,22 +89,22 @@ GeneratedAt: `2026-10-01T13:57:05Z`
 ## Prior Recursive Evidence
 - `.recursive/memory/skills/SKILLS.md`
 - `.recursive/memory/skills/usage/review-bundle-citation-requirements.md`
+- `.recursive/run/104-replay-eligibility-and-evidence-fidelity/evidence/other/prior-evidence/prior-runs.md`
 
 ## Control-Plane Docs
 - none
 
 ## Targeted Code References
-- none
+- `role-model-router/apps/runtime-host-bridge/src/cli.ts`
 
 ## Evidence References
-- `.recursive/run/104-replay-eligibility-and-evidence-fidelity/evidence/other/effect-primitive-audit.md`
-- `.recursive/run/104-replay-eligibility-and-evidence-fidelity/03-implementation-summary.md`
+- `.recursive/run/104-replay-eligibility-and-evidence-fidelity/evidence/other/sp35-code-review-findings.md`
 
 ## Audit Questions
-- `Is the implementation correct, complete against R1-R15, and free of the class of defects the plan set out to fix? Focus on: the R8 completion-contract change (evaluation-core), the branch-append recovery fix in cli.ts, the SP2 terminal/deferrable split, the R9 effort-matching repoint and exclusion, the SP9 live-class default, and whether any acceptance criterion is claimed without a re-runnable command.`
+- `Verify the controller's disposition of each Phase 3.5 finding.`
 
 ## Required Output
-- `Findings with severity, file:line, reproduction, and a verdict: PASS / FAIL-repairable / FAIL. Findings file under the run folder's evidence/other/.`
+- `Verdict plus findings`
 
 ## Notes
 - Review output is invalid if it does not cite the upstream artifacts, diff basis, changed files, and final verdict.

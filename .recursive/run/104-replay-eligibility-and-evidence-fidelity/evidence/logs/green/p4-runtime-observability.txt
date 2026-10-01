@@ -1,0 +1,76 @@
+
+> @role-model-router/runtime-observability@0.0.0 test D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\packages\runtime-observability
+> vitest run
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/packages/runtime-observability
+
+ ✓ test/run98-a50-cost-per-1k-rate.test.ts (4 tests) 31ms
+ ✓ test/run104-traffic-class.test.ts (1 test) 12ms
+(node:38136) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:38524) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:57020) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:39256) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:22696) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:34340) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:25288) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | test/run98-a40-latency-breakdown.test.ts > a40 L1: the observation bundle carries the provider breakdown only when it was measured
+[run115] eligibility candidates=3 eligible=1 codes=BUDGET_EXCEEDED=1,CAPABILITY_MISSING=1 request=req-adapter-validation alias=- model=- effort=- pass=- allow=[] denied=[anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+ ✓ test/run98-a40-latency-breakdown.test.ts (1 test) 1146ms
+   ✓ a40 L1: the observation bundle carries the provider breakdown only when it was measured  1139ms
+stdout | test/run94-bundle-compactness.test.ts > run94 F7: bundle output never carries cumulative history or recentSamples
+[run115] eligibility candidates=3 eligible=1 codes=BUDGET_EXCEEDED=1,CAPABILITY_MISSING=1 request=req-adapter-validation alias=- model=- effort=- pass=- allow=[] denied=[anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+stdout | test/run91-effort-otel.test.ts > Run 91 runtime effort receipts > persists exact effort fields on the observation and maps them to OTel
+[run115] eligibility candidates=3 eligible=1 codes=BUDGET_EXCEEDED=1,CAPABILITY_MISSING=1 request=req-adapter-validation alias=- model=- effort=- pass=- allow=[] denied=[anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+stdout | test/provider-attempt-ids.test.ts > provider-attempt IDs survive runtime-observation bundle assembly
+[run115] eligibility candidates=3 eligible=1 codes=BUDGET_EXCEEDED=1,CAPABILITY_MISSING=1 request=req-adapter-validation alias=- model=- effort=- pass=- allow=[] denied=[anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-observability > creates a redacted runtime observation bundle with diagnostics and profile updates
+[run115] eligibility candidates=3 eligible=1 codes=BUDGET_EXCEEDED=1,CAPABILITY_MISSING=1 request=req-adapter-validation alias=- model=- effort=- pass=- allow=[] denied=[anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+stdout | test/otel.test.ts > runtime-observability otel mapping > derives a deterministic OpenTelemetry export from canonical role-model artifacts
+[run115] eligibility candidates=3 eligible=1 codes=BUDGET_EXCEEDED=1,CAPABILITY_MISSING=1 request=req-adapter-validation alias=- model=- effort=- pass=- allow=[] denied=[anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+stdout | test/provider-attempt-ids-ac-r33-09.test.ts > AC-R33-09 preserves every opaque provider-attempt ID in the runtime-observation bundle
+[run115] eligibility candidates=3 eligible=1 codes=BUDGET_EXCEEDED=1,CAPABILITY_MISSING=1 request=req-adapter-validation alias=- model=- effort=- pass=- allow=[] denied=[anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+ ✓ test/run94-bundle-compactness.test.ts (1 test) 1261ms
+   ✓ run94 F7: bundle output never carries cumulative history or recentSamples  1251ms
+ ✓ test/provider-attempt-ids.test.ts (1 test) 1303ms
+   ✓ provider-attempt IDs survive runtime-observation bundle assembly  1293ms
+ ✓ test/provider-attempt-ids-ac-r33-09.test.ts (1 test) 1318ms
+   ✓ AC-R33-09 preserves every opaque provider-attempt ID in the runtime-observation bundle  1314ms
+ ✓ test/run91-effort-otel.test.ts (2 tests) 1415ms
+   ✓ Run 91 runtime effort receipts > persists exact effort fields on the observation and maps them to OTel  1387ms
+ ✓ test/otel.test.ts (1 test) 1492ms
+   ✓ runtime-observability otel mapping > derives a deterministic OpenTelemetry export from canonical role-model artifacts  1485ms
+stdout | test/index.test.ts > runtime-observability > tags live-request samples with the classified difficulty bucket when difficulty routing is present
+[run115] eligibility candidates=3 eligible=1 codes=BUDGET_EXCEEDED=1,CAPABILITY_MISSING=1 request=req-adapter-validation alias=- model=- effort=- pass=- allow=[] denied=[anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-observability > captures execution semantics receipts and per-tool side-effect state
+[run115] eligibility candidates=3 eligible=1 codes=BUDGET_EXCEEDED=1,CAPABILITY_MISSING=1 request=req-adapter-validation alias=- model=- effort=- pass=- allow=[] denied=[anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-observability > derives routing cache affinity from continuity diagnostics instead of generic routing-model state
+[run115] eligibility candidates=3 eligible=1 codes=BUDGET_EXCEEDED=1,CAPABILITY_MISSING=1 request=req-adapter-validation alias=- model=- effort=- pass=- allow=[] denied=[anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+ ✓ test/index.test.ts (6 tests) 3409ms
+   ✓ runtime-observability > creates a redacted runtime observation bundle with diagnostics and profile updates  1457ms
+   ✓ runtime-observability > tags live-request samples with the classified difficulty bucket when difficulty routing is present  868ms
+   ✓ runtime-observability > captures execution semantics receipts and per-tool side-effect state  492ms
+   ✓ runtime-observability > derives routing cache affinity from continuity diagnostics instead of generic routing-model state  567ms
+
+ Test Files  9 passed (9)
+      Tests  18 passed (18)
+   Start at  22:20:27
+   Duration  8.08s (transform 2.58s, setup 0ms, collect 26.13s, tests 11.39s, environment 5ms, prepare 4.53s)
+

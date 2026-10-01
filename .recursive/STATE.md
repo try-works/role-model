@@ -2,6 +2,22 @@
 
 ## Current State
 
+Run `104-replay-eligibility-and-evidence-fidelity` is the current increment: the replay lane refuses by name
+(`candidate_input_unsupported`, terminal when the declared pool can never serve the capture and deferrable when a
+capable arm is merely unavailable), traffic classes are typed end to end so the operator's aggregates are
+live-only with visible excluded counts, the live stall's cause is decided and fixed (the packaged launcher never
+supplied `handoffEvaluation`, and the completion contract demanded every trial be covered although
+train-partition trials are structurally ineligible), the branch-append recovery re-attaches from the boundary's
+own field and refuses a saturated excerpt, and arm effort comparability is published with a mismatched arm named
+in the comparison's validity. Phases 0-6 are locked; Phase 5 ran the rebuilt runtime on its own channel `:3459`
+with its own state root — the matrix passed (text control, image through `difficulty.remote-only` selecting the
+DeepSeek flash endpoint, PDF control, `hybrid.remote-only`) and the monitored window ran 61.5 minutes with 123
+samples. Two commitments transfer: the producer plumbing that would let `R9`'s exclusion fire on a live
+comparison, and `R8`'s live disposition drain, which needs a channel that already carries a route package. Both
+are carried by
+`/.recursive/run/104-replay-eligibility-and-evidence-fidelity/addenda/04-test-summary.upstream-gap.02-to-be-plan.addendum-01.md`.
+Promotion remains a separate release operation.
+
 Run `103-agent-strategy-and-scoring-strategy` is the current increment: the routing posture is split into the
 planner axis (`routing.mode`) and the scoring axis (`routing.scoring_strategy`), the five scoring strategies
 actually rank candidates, `pin_weights` blocks the automatic overrides, agent-strategy and workload postures
