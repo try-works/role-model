@@ -1044,17 +1044,6 @@ export async function runAutoReplayTick(input: {
         ...(effectiveJudgeEndpointId ? { excludedEndpointIds: [effectiveJudgeEndpointId] } : {}),
         ...(input.healthyEndpointIds ? { healthyEndpointIds: input.healthyEndpointIds } : {}),
       });
-    const candidateShortfall = rejectedArms.length > 0 ? plannedArmShortfall() : null;
-    if (candidateShortfall) {
-      if (candidateShortfall.outcome === "deferred") deferred += 1;
-      else refused += 1;
-      emitCapture({
-        outcome: candidateShortfall.outcome,
-        code: candidateShortfall.code,
-        detail: candidateShortfall.detail,
-      });
-      continue;
-    }
     const status = input.ledger.status();
     const admission = decideReplayAdmission({
       channelReplayEnabled: input.channelReplayEnabled ?? true,
@@ -1090,6 +1079,27 @@ export async function runAutoReplayTick(input: {
       ...(judgeExpected ? { judgeResolved: judgeEndpointId !== null } : {}),
     });
     if (!admission.admitted) {
+      /**
+       * Run 104 phase-3.5 F2: the named-input refusal answers only for the outcome it replaces. It used to
+       * run *before* admission, so a benchmark capture (or an already-processed one) that also happened to
+       * have one ineligible arm was recorded as `candidate_input_unsupported` instead of its own class -
+       * polluting the per-class census this run added. Admission's named refusals keep precedence; the
+       * shortfall names the pool-exhaustion case only.
+       */
+      const candidateShortfall =
+        admission.code === "no_distinct_candidate_configured" && rejectedArms.length > 0
+          ? plannedArmShortfall()
+          : null;
+      if (candidateShortfall) {
+        if (candidateShortfall.outcome === "deferred") deferred += 1;
+        else refused += 1;
+        emitCapture({
+          outcome: candidateShortfall.outcome,
+          code: candidateShortfall.code,
+          detail: candidateShortfall.detail,
+        });
+        continue;
+      }
       const outcome = RETRYABLE_REPLAY_REFUSAL_CODES.has(admission.code) ? "deferred" : "refused";
       if (outcome === "deferred") deferred += 1;
       else refused += 1;

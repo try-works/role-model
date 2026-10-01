@@ -778,7 +778,15 @@ export function replayRequestIdFromProviderResultRef(
  * `replayRequestId`, when given, pins the durable identity: the capture must be the one the dispatch
  * receipt named, so a degraded or mismatched readback can never attach a branch to another capture's
  * evidence.
+ *
+ * Run 104 phase-3.5 F1: the boundary also *bounds* the text it projects ("Only the first 2 KiB of
+ * assistant text is returned", `runtime-operations-server.mjs`), and the projection reports no flag when
+ * it saturates that cap. A saturated projection is an excerpt, not the provider's output, so the
+ * recovered execution carries `outputTruncated` and the caller refuses instead of writing a truncated
+ * artifact to the durable branch under `statusCode: 200`.
  */
+const CAPTURE_PROJECTION_OUTPUT_CAP = 2_048;
+
 export function buildReplayAppendExecution(input: {
   readonly capture: unknown;
   readonly routerDecisionId?: unknown;
@@ -788,6 +796,10 @@ export function buildReplayAppendExecution(input: {
       readonly routingDecisionId: string;
       readonly model: string;
       readonly outputText: string;
+      /** Where the recovered text came from: the boundary projection or this process's own write path. */
+      readonly outputSource: "capture_projection" | "in_process";
+      /** True when the source bounded the text, i.e. the value is an excerpt rather than the whole reply. */
+      readonly outputTruncated: boolean;
       readonly vendorId?: string;
       readonly adapterFamily?: string;
     }
@@ -805,12 +817,13 @@ export function buildReplayAppendExecution(input: {
   ) {
     return undefined;
   }
-  const outputText =
-    typeof capture.outputText === "string"
-      ? capture.outputText
-      : typeof capture.responseText === "string"
-        ? capture.responseText
-        : "";
+  const writeSideOutput = typeof capture.outputText === "string" ? capture.outputText : null;
+  const projectedOutput = typeof capture.responseText === "string" ? capture.responseText : null;
+  const outputText = writeSideOutput ?? projectedOutput ?? "";
+  const outputSource: "capture_projection" | "in_process" =
+    writeSideOutput !== null ? "in_process" : "capture_projection";
+  const outputTruncated =
+    outputSource === "capture_projection" && outputText.length >= CAPTURE_PROJECTION_OUTPUT_CAP;
   if (!outputText.trim()) return undefined;
   const routingDecisionId =
     typeof input.routerDecisionId === "string" && input.routerDecisionId.trim()
@@ -837,6 +850,8 @@ export function buildReplayAppendExecution(input: {
     routingDecisionId,
     model,
     outputText,
+    outputSource,
+    outputTruncated,
     ...(vendorId ? { vendorId } : {}),
     ...(adapterFamily ? { adapterFamily } : {}),
   };
@@ -875,7 +890,13 @@ export function resolveResumedReplayAppendDispatch(input: {
         replayRequestId,
       })
     : undefined;
-  if (!execution || !replayRequestId) {
+  /**
+   * Run 104 phase-3.5 F1: a saturated projection is an excerpt. Attaching it would write a truncated
+   * artifact to the durable branch and record the provider execution as a completed 200, so the recovery
+   * refuses instead — the same deferrable refusal that already covers a missing capture. An excerpt may
+   * recover on a later attempt once the boundary's input is smaller.
+   */
+  if (!execution || !replayRequestId || execution.outputTruncated) {
     throw new Error("durable replay branch append has no host dispatch receipt");
   }
   return { execution, replayRequestId };

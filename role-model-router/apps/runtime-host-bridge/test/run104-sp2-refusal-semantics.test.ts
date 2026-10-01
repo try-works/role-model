@@ -88,6 +88,41 @@ test("run104 SP2 keeps a capable-but-unavailable pool deferrable, named", async 
     const result = await runAutoReplayTick({
       captures: [
         {
+          captureRef: "bench-run104-sp2-precedence",
+          sourceEndpointId: "endpoint-a",
+          hasRecordedToolResults: false,
+          requirements: IMAGE_REQUIREMENTS,
+        },
+      ],
+      configuredEndpointIds: ["endpoint-a", "endpoint-b"],
+      endpointProfiles: [
+        { endpointId: "endpoint-a", capabilities: [], modalities: ["text"] },
+        { endpointId: "endpoint-b", capabilities: [], modalities: ["text"] },
+      ],
+      ledger,
+      policySet: buildReplayPolicySet(),
+      executor: async () => {
+        dispatched += 1;
+        return { terminal: true, branches: [] };
+      },
+    });
+    expect(dispatched).toBe(0);
+    // Run 104 phase-3.5 F2: admission's own named refusal keeps precedence. The named-input class answers
+    // only for the pool-exhaustion outcome it replaces, so a benchmark capture is not re-labelled just
+    // because one of its arms happens to be ineligible.
+    expect(result.dispositions[0]?.code).toBe("benchmark_source_not_replayable");
+  } finally {
+    cleanup();
+  }
+});
+
+test("run104 SP2 keeps a capable-but-unavailable pool deferrable, named (original)", async () => {
+  const { ledger, cleanup } = tempLedger();
+  try {
+    let dispatched = 0;
+    const result = await runAutoReplayTick({
+      captures: [
+        {
           captureRef: "req-image-capable-unavailable",
           sourceEndpointId: "text-source",
           hasRecordedToolResults: false,

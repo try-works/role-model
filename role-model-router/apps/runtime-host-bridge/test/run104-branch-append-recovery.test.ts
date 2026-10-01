@@ -31,6 +31,15 @@ const RECOVERED_REPLAY_REQUEST_ID =
   "replay-req-a29409df-11de-4660-9439-b8ee671f8f3b-84165abdc60fa3af";
 
 /**
+ * Run 104 phase-3.5 F1: the boundary bounds the assistant text it projects. `readRouteCapture` documents
+ * "Only the first 2 KiB of assistant text is returned" and slices at 2 048 (`runtime-operations-server.mjs`),
+ * so a projection that arrives at exactly that length may be an excerpt rather than the provider's output.
+ * The recovery must not attach an excerpt to the durable branch and record the provider execution as a
+ * completed 200: that is the same evidence-fidelity defect class this run exists to remove.
+ */
+const CAPTURE_PROJECTION_OUTPUT_CAP = 2_048;
+
+/**
  * Verbatim shape of `POST /capture/read` (`runtime-operations-server.mjs` `readRouteCapture`) — the
  * projection the recovery leg actually receives, not the write-side request it was authored against.
  */
@@ -114,6 +123,41 @@ test("a resumed append-recovery re-attaches to the durable capture instead of re
 });
 
 test("an append with no durable capture at all still refuses", () => {
+  // Run 104 phase-3.5 F1: a projection that saturated the boundary's excerpt cap is not the provider's
+  // output, so the recovery refuses rather than attaching a truncated artifact to the durable branch.
+  expect(() =>
+    resolveResumedReplayAppendDispatch({
+      branchRequest: resumedAppendRecoveryRequest(),
+      capture: {
+        ...boundaryCaptureProjection(),
+        responseText: "y".repeat(CAPTURE_PROJECTION_OUTPUT_CAP),
+      },
+    }),
+  ).toThrowError("durable replay branch append has no host dispatch receipt");
+
+  // Below the cap the projection is the whole recorded reply and the recovery still re-attaches.
+  const belowCap = resolveResumedReplayAppendDispatch({
+    branchRequest: resumedAppendRecoveryRequest(),
+    capture: {
+      ...boundaryCaptureProjection(),
+      responseText: "y".repeat(CAPTURE_PROJECTION_OUTPUT_CAP - 1),
+    },
+  });
+  expect(belowCap.execution.outputText).toHaveLength(CAPTURE_PROJECTION_OUTPUT_CAP - 1);
+  expect(belowCap.execution.outputTruncated).toBe(false);
+
+  // The in-process write-side path (a full `outputText`) is never treated as an excerpt.
+  const inProcess = buildReplayAppendExecution({
+    capture: {
+      ...boundaryCaptureProjection(),
+      outputText: "z".repeat(CAPTURE_PROJECTION_OUTPUT_CAP + 500),
+    },
+    routerDecisionId: `decision-${RECOVERED_REPLAY_REQUEST_ID}`,
+    replayRequestId: RECOVERED_REPLAY_REQUEST_ID,
+  });
+  expect(inProcess?.outputTruncated).toBe(false);
+  expect(inProcess?.outputSource).toBe("in_process");
+
   // The gate's protective purpose: a dispatch whose capture the boundary cannot answer for is not
   // re-attached. The refusal text is what `track-b-auto-replay.ts` classifies on, so it is pinned.
   expect(() =>
