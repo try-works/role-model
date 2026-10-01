@@ -1,0 +1,11 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-ui
+
+ ✓ app/routes/learning-task-family.test.tsx (3 tests) 96ms
+ ✓ app/routes/learning.test.tsx (25 tests) 317ms
+
+ Test Files  2 passed (2)
+      Tests  28 passed (28)
+   Start at  19:08:15
+   Duration  16.42s (transform 5.70s, setup 0ms, collect 20.58s, tests 413ms, environment 2ms, prepare 4.66s)
+

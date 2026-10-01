@@ -1,0 +1,105 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-host-bridge
+
+(node:1676) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/run104-sp4-taxonomy-fallback.test.ts (7 tests | 4 failed) 187ms
+   × run104 R6 buildRequestClassification task-family fallback > falls back to the resolved taxonomy identity when the request declared no task 75ms
+     → expected null to be 'text.chat' // Object.is equality
+   ✓ run104 R6 buildRequestClassification task-family fallback > a declared task still wins over the resolved identity 2ms
+   × run104 R6 buildRequestClassification task-family fallback > falls back to the intent task id when neither the declaration nor the identity resolved one 77ms
+     → expected null to be 'data.quality.audit' // Object.is equality
+   ✓ run104 R6 buildRequestClassification task-family fallback > an unknown declared id is still dropped, not guessed 1ms
+   ✓ run104 R6 buildRequestClassification task-family fallback > an unknown fallback id is dropped as well 4ms
+   × run104 R6 buildRequestClassification task-family fallback > carries the task variant the runtime resolved, and omits it when none was resolved 6ms
+     → expected undefined to be 'audit' // Object.is equality
+   × run104 R6 buildRequestClassification task-family fallback > every capture site's input produces the same classification for one fixture 6ms
+     → expected null to be 'text.chat' // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run104-sp4-taxonomy-fallback.test.ts > run104 R6 buildRequestClassification task-family fallback > falls back to the resolved taxonomy identity when the request declared no task
+AssertionError: expected null to be 'text.chat' // Object.is equality
+
+- Expected: 
+"text.chat"
+
++ Received: 
+null
+
+ ❯ test/run104-sp4-taxonomy-fallback.test.ts:28:40
+     26|     });
+     27|     // The identity the runtime actually routed under, not `null`.
+     28|     expect(classification?.taskTypeId).toBe("text.chat");
+       |                                        ^
+     29|   });
+     30| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  test/run104-sp4-taxonomy-fallback.test.ts > run104 R6 buildRequestClassification task-family fallback > falls back to the intent task id when neither the declaration nor the identity resolved one
+AssertionError: expected null to be 'data.quality.audit' // Object.is equality
+
+- Expected: 
+"data.quality.audit"
+
++ Received: 
+null
+
+ ❯ test/run104-sp4-taxonomy-fallback.test.ts:46:40
+     44|       intentTaskTypeId: "data.quality.audit",
+     45|     });
+     46|     expect(classification?.taskTypeId).toBe("data.quality.audit");
+       |                                        ^
+     47|   });
+     48| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  test/run104-sp4-taxonomy-fallback.test.ts > run104 R6 buildRequestClassification task-family fallback > carries the task variant the runtime resolved, and omits it when none was resolved
+AssertionError: expected undefined to be 'audit' // Object.is equality
+
+- Expected: 
+"audit"
+
++ Received: 
+undefined
+
+ ❯ test/run104-sp4-taxonomy-fallback.test.ts:70:38
+     68|       taskVariant: "audit",
+     69|     });
+     70|     expect(withVariant?.taskVariant).toBe("audit");
+       |                                      ^
+     71| 
+     72|     const withoutVariant = buildRequestClassification({ taskTypeId: "d…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  test/run104-sp4-taxonomy-fallback.test.ts > run104 R6 buildRequestClassification task-family fallback > every capture site's input produces the same classification for one fixture
+AssertionError: expected null to be 'text.chat' // Object.is equality
+
+- Expected: 
+"text.chat"
+
++ Received: 
+null
+
+ ❯ test/run104-sp4-taxonomy-fallback.test.ts:95:39
+     93|     expect(observationBundle).toEqual(routedCapture);
+     94|     expect(replayCapture).toEqual(routedCapture);
+     95|     expect(routedCapture?.taskTypeId).toBe("text.chat");
+       |                                       ^
+     96|     // Tool classes stay filtered against the shipped taxonomy, exactl…
+     97|     expect(routedCapture?.toolClassIds).toEqual(["filesystem.read"]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 3 passed (7)
+   Start at  19:01:19
+   Duration  50.34s (transform 30.54s, setup 0ms, collect 47.84s, tests 187ms, environment 1ms, prepare 572ms)
+
+undefined
+D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/run104-sp4-taxonomy-fallback.test.ts
