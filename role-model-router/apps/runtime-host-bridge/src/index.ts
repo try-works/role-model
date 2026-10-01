@@ -28120,6 +28120,14 @@ export async function createRuntimeBridgeBackend(
         decisionPortfolio.entries.find(
           (entry) => entry.endpointId === routed.decision.chosen_endpoint_id,
         )?.profileRevision ?? null;
+      /**
+       * Run 104 / R14 (addendum-03): the declared execution class travels into the observation sample, so the
+       * telemetry row and the observation/sample row for the same request agree. An unresolved class is `live`.
+       */
+      const declaredTrafficClass = toPersistedTrafficClass(
+        executionOptions?.requestOptions?.executionTrafficClass,
+      );
+      const observedTrafficClass = declaredTrafficClass === "unknown" ? "live" : declaredTrafficClass;
       const baseBundle = createRuntimeObservationBundle({
         decision: {
           ...routed.decision,
@@ -28127,6 +28135,7 @@ export async function createRuntimeBridgeBackend(
           profile_revision: decisionProfileRevision,
         },
         clientRequestId: executionOptions?.requestOptions?.clientRequestId,
+        trafficClass: observedTrafficClass,
         reasoningEffort: effectiveEffort.reasoningEffort,
         effortSource: effectiveEffort.effortSource,
         // Run 98 addendum 40 (L1): record the provider breakdown beside the historical header time,

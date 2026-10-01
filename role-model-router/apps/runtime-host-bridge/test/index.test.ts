@@ -11468,7 +11468,8 @@ describe("runtime-host-bridge", () => {
       expect.arrayContaining([
         expect.objectContaining({
           requestId,
-          requestClass: "live_request",
+          // Run 104 / R14: the persisted class is `live`; legacy `live_request` rows stay readable.
+          requestClass: "live",
         }),
       ]),
     );

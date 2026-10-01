@@ -1084,7 +1084,8 @@ describe("initializeSqliteMemory", () => {
     ).toEqual([
       expect.objectContaining({
         request_id: validation.decision.request_id,
-        source_type: "live_request",
+        // Run 104 / R14: an unclassified bundle write persists `live` (legacy rows remain readable).
+        source_type: "live",
       }),
     ]);
     expect(
@@ -1719,7 +1720,7 @@ describe("initializeSqliteMemory", () => {
     ).toEqual([
       expect.objectContaining({
         request_id: validation.decision.request_id,
-        source_type: "live_request",
+        source_type: "live",
         difficulty_bucket: "hard",
       }),
     ]);
@@ -4238,7 +4239,7 @@ describe("persistObservedBenchmarkSample benchmark_mode", () => {
             validation.decision.request_id,
             {
               clientRequestId: null,
-              requestClass: "live_request",
+              requestClass: "live",
               taxonomyRoleId: null,
               taxonomyTaskType: null,
             },

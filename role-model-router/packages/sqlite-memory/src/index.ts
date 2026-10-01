@@ -1194,6 +1194,29 @@ export const RUNTIME_TELEMETRY_TRAFFIC_CLASSES = [
 
 export type RuntimeTelemetryTrafficClass = (typeof RUNTIME_TELEMETRY_TRAFFIC_CLASSES)[number] | "live_request";
 
+/**
+ * Run 104 / R14 (addendum-03): derive the persisted request class from an observation sample's source type.
+ * The legacy `live_request` value folds into `live` so a row written from either vocabulary agrees with the
+ * telemetry row for the same request.
+ */
+export function requestClassFromObservationSample(sourceType?: string | null): RuntimeTelemetryTrafficClass | null {
+  switch (sourceType) {
+    case "live":
+    case "live_request":
+      return "live";
+    case "replay":
+      return "replay";
+    case "evaluation":
+      return "evaluation";
+    case "benchmark":
+      return "benchmark";
+    case "probe":
+      return "probe";
+    default:
+      return null;
+  }
+}
+
 function telemetryTrafficClassFilter(classes: readonly RuntimeTelemetryTrafficClass[]): {
   readonly values: readonly string[];
   readonly includeNull: boolean;
@@ -3141,10 +3164,7 @@ function toRuntimeTelemetryRecord(
     createdAtMs: observation.usageEvent.timestamp_ms,
     clientRequestId: observation.clientRequestId ?? null,
     requestClass:
-      observation.observedPerformance.sample.source_type === "benchmark" ||
-      observation.observedPerformance.sample.source_type === "live_request"
-        ? observation.observedPerformance.sample.source_type
-        : "unknown",
+      requestClassFromObservationSample(observation.observedPerformance.sample.source_type) ?? "unknown",
     sourceType: telemetrySnapshot?.sourceType ?? null,
     modelId: observation.usageEvent.model_id ?? null,
     providerKind: observation.usageEvent.provider_kind ?? null,
@@ -4765,11 +4785,7 @@ export function persistRuntimeObservationBundle(input: PersistRuntimeObservation
               ? observation.taxonomyDimensions.taxonomy_task_type
               : null,
             observation.clientRequestId ?? null,
-            observation.observedPerformance?.sample?.source_type === "benchmark"
-              ? "benchmark"
-              : observation.observedPerformance?.sample?.source_type === "live_request"
-                ? "live_request"
-                : null,
+            requestClassFromObservationSample(observation.observedPerformance?.sample?.source_type),
             resolveRuntimeObservationStoragePayload({
               databasePath: input.databasePath,
               observation: observation as unknown as Readonly<Record<string, unknown>>,
@@ -5445,7 +5461,7 @@ export function readLiveTaskTelemetryScoresByEndpointIds(input: {
         MAX(created_at_ms) AS last_observed_at_ms
       FROM runtime_telemetry_records
       WHERE endpoint_id IN (${placeholders})
-        AND request_class = 'live_request'
+        AND request_class IN ('live', 'live_request')
         AND taxonomy_task_type IS NOT NULL
         AND taxonomy_task_type <> ''
         AND created_at_ms >= ?
@@ -5542,7 +5558,7 @@ export function readEndpointLatencyBuckets(input: {
       `SELECT endpoint_id, latency_ms, input_tokens
        FROM runtime_telemetry_records
        WHERE endpoint_id IN (${placeholders})
-         AND request_class = 'live_request'
+         AND request_class IN ('live', 'live_request')
          AND error_class IS NULL
          AND status_code IS NOT NULL
          AND status_code >= 200 AND status_code < 400
