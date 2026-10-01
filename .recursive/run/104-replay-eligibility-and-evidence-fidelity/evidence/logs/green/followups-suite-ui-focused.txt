@@ -1,0 +1,13 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-ui
+
+ ✓ app/lib/sidebar-footer.test.ts (6 tests) 19ms
+ ✓ app/lib/view-models.test.ts (53 tests) 191ms
+ ✓ app/components/app-shell.test.ts (3 tests) 9ms
+ ✓ app/lib/design-system.test.ts (97 tests) 284ms
+
+ Test Files  4 passed (4)
+      Tests  159 passed (159)
+   Start at  19:44:15
+   Duration  8.15s (transform 3.92s, setup 0ms, collect 12.91s, tests 503ms, environment 2ms, prepare 3.63s)
+
