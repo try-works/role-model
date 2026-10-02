@@ -1,7 +1,7 @@
 # Stage 3: controlled route-package activation with matching scope
 
 Status: design spec - a later-run architecture change, not part of run-104 closeout. Supersedes the
-shadow-only v1.1 baseline described in the proposal.
+shadow-only v1.1 baseline described in the proposal. All four blocking decisions are now resolved (see below).
 
 ## Goal
 
@@ -10,6 +10,14 @@ Make a promoted route package actually influence routing, safely. Today the lear
 router refuses it for task-scoped requests, and activation is keyed by the bare runtime scope. Stage 3 of the
 proposal's rollout ladder is 'controlled activation' - only promoted safe_for_prompt packs with MATCHING SCOPE,
 a confidence threshold, explicit policy, usage receipt, and rollback. This spec implements that stage.
+
+## What a pack is for (the operator's definition)
+
+A pack's job is to route a (role, task) to the endpoint that counterfactual evals have proven best for it.
+The pack carries that ranking - a ladder of endpoints for the task, best first - and we continuously replay
+and evaluate whether we are choosing the best model, update the pack's ladder accordingly, and use the ladder
+for routing. A new model endpoint is slotted into the ladder by running counterfactuals against the current
+members; a removed or unavailable endpoint falls through to the next-best rung.
 
 ## Background
 
@@ -23,7 +31,8 @@ The proposal (guidance/13_profile_learner.md 'Post-v1 route-package attribution'
 v1.1 (TB10) is deliberately stage 2: TB10-REQ-02 requires 'no candidate experience or route package activates
 in production in v1.1', and the route-learning contract pins packCandidate.priority to `advisory_only` - a pack
 can only advise, never route directly. Stage 3 keeps `advisory_only`; it widens the advisory's reach from one
-scope-wide pack to a pack that MATCHES the request's scope.
+scope-wide pack to a pack that MATCHES the request's scope, and from a single preferred endpoint to a ranked
+ladder of endpoints for that scope.
 
 ## Current state (the defect)
 
@@ -31,67 +40,76 @@ The rollouts table (knowledge_route_rollouts) holds ONE activePackageId per scop
 runtime scope (`standalone-runtime-stage`), not the route-package scope. route-advisory-source.ts reads that one
 pack and feeds it to the router for every request. Consequence (measured live): a scope-wide active pack is
 refused with `advisory_task_unscoped` for any request that declares a task family (core/src/router.ts:126), and
-its learned preference (an endpoint) is refused with `advisory_candidate_not_eligible` when that endpoint is not
-in the eligible set. The 14 validated role/task-scoped packs already in the store are never selected because the
-sweep only activates the pack it promotes in that tick, and the single scope-wide slot is occupied.
+its single learned endpoint is refused with `advisory_candidate_not_eligible` when that endpoint is not in the
+eligible set. The 14 validated role/task-scoped packs already in the store are never selected because the sweep
+only activates the pack it promotes in that tick, and the single scope-wide slot is occupied. Each pack also
+carries a single endpointId rather than a ranked ladder, so there is no fallback when that endpoint is
+ineligible.
 
 ## Target design
 
-Activation and advisory lookup are keyed by the route-package SCOPE tuple, not the runtime scope. The scope
-tuple (route-learning-contracts.schema.json, `$defs.scope`) is:
+Activation and advisory lookup are keyed by (roleId, taskTypeId), and the pack carries a ranked endpoint
+ladder for that scope.
 
-    { repoArchetype, roleId, taskTypeId, language, clientId, toolClassIds, modelFamily, endpointId, promptAdapterId }
+1. One active pack per (roleId, taskTypeId) scope key. Multiple packs are active simultaneously, each for its
+   own role/task. (No role-only or scope-wide fallback - matching is exact.)
+2. The pack's routing payload is a ranked ladder of endpoints - best first - derived from pairwise
+   counterfactual comparisons in that scope, not a single preferred endpoint.
+3. The advisory source selects the pack whose (roleId, taskTypeId) matches the request's classification, and
+   the router walks the ladder: the highest-ranked ELIGIBLE endpoint wins; an ineligible or unavailable rung
+   falls through to the next.
+4. A request with no declared task family is served by the current scope-wide pack (pre-stage-3 behavior).
+5. Packs remain `advisory_only` - the ladder influences the advisory, never selects the route directly; the
+   router's score band, cohort and confidence gates still apply.
 
-Concretely:
+## The endpoint ladder
 
-1. A rollout holds one active pack per scope tuple (or per (role, taskTypeId) prefix, see the ordering
-   decision below), not one per runtime. Multiple packs are active simultaneously, each for its own scope.
-2. The advisory source selects the active pack whose scope matches the request's classification; a request with
-   no declared family keeps the scope-wide pack (the current pre-stage-3 behavior).
-3. The router gate is unchanged in spirit: a pack whose scope does not match the request is still refused
-   (mismatch), but a MATCHING pack now passes the applicability check instead of being refused as unscoped.
-4. Packs remain `advisory_only` - they influence the advisory, never select the route directly.
+The ladder is an aggregation of the evaluation core's pairwise comparison groups for a (role, task): each
+comparison names a source and a counterfactual candidate with a winner, so a total order falls out. Slotting a
+new endpoint into the ladder means running counterfactuals against the current members and inserting it at the
+rank its pairwise results justify. Removing an endpoint (catalog removal, policy, outage) drops that rung and
+the next-best becomes the top automatically - this is the fallback that answers the drift question.
 
 ## Change list (code sites)
 
-- knowledge-store `activatePack` (extensions/knowledge-store/index.mjs): accept a scope key derived from the
-  pack's scope tuple instead of the bare runtime scopeId; write one rollout row per scope key.
-- route-advisory-source.ts: read the rollout for the request's scope key (role/task), then fall back to the
-  scope-wide pack; carry taskTypeId/taxonomyVersion/roleId from the matching pack.
-- cli.ts learner sweep activation: pass the promoted pack's scope tuple as the activation key, and stop
-  collapsing all packs into one runtime-scope slot.
-- A small curation overlay (lifecycle, hosted-web-search, effort override) survives the catalog/scope layer, as
-  scoped in docs/openai-codex-subscription-catalog-derivation.md and #300.
+- knowledge-store `activatePack` (extensions/knowledge-store/index.mjs): key the rollout by (roleId,
+  taskTypeId) instead of the bare runtime scopeId; write one rollout row per scope key.
+- route-advisory-source.ts: read the rollout for the request's (roleId, taskTypeId), return the pack's ranked
+  ladder (not a single preferredRoutePackage), and carry taskTypeId/taxonomyVersion/roleId.
+- core/src/router.ts: replace the single preferred-endpoint eligibility check with a ladder walk (best eligible
+  rung wins; fall through on ineligible/unavailable).
+- cli.ts learner sweep activation: pass the promoted pack's (roleId, taskTypeId) as the activation key, and
+  stop collapsing all packs into one runtime-scope slot.
+- knowledge-worker: derive and persist the ranked ladder (aggregate pairwise comparisons per scope) alongside
+  the pack, replacing the single scope.endpointId.
 
-## Blocking decisions (need an answer before implementation)
+## Resolved decisions
 
-1. Scope-key granularity. Key activation by the full scope tuple, or by the (roleId, taskTypeId) prefix while
-   treating endpointId/modelFamily as preference dimensions? Recommended: (roleId, taskTypeId) prefix for the
-   rollout key; endpointId stays inside the pack as the learned preference.
-2. Matching semantics. Is a request matched by exact (role, task) only, or does a role-only pack serve every task
-   under that role? Recommended: exact task match first, then role-only, then scope-wide - the same specificity
-   ladder the profile learner already shrinks over.
-3. Default lifecycle / hosted-web-search for auto-discovered packs. Recommended: lifecycle `supported`, hosted
-   web search `true` (matching the current matrix), overridable in the curation overlay.
-4. Admission on scope drift. If a request's taxonomy revision changes or a catalog refresh removes an endpoint,
-   does an already-active pack stay valid? Recommended: already-active packs stay active; new activations
-   re-validate.
+1. Scope key = (roleId, taskTypeId). The endpoint is the learned preference carried inside the ladder, not a
+   key dimension.
+2. Matching is exact (role, task) only - no role-only or scope-wide fallback for a task-scoped request.
+3. (Dropped.) 'Default lifecycle / hosted-web-search' was a conflation with the OpenAI model catalog matrix;
+   route packs have no such fields.
+4. Removal/admission is answered by the ladder: a removed endpoint falls through to the next-best rung, and a
+   new endpoint is slotted in by counterfactuals against the current members.
 
 ## Acceptance criteria
 
-- A request with a declared task family is served by an active pack whose scope matches that family, and the
-  advisory is no longer refused with `advisory_task_unscoped` for matching scopes.
-- `applied` (or at least `wouldHaveChanged` that survives the gate) moves off zero for a matching-scope request.
-- Two different task families can each have an active pack simultaneously; a non-matching pack is refused with
+- A request with a declared task family is served by the active pack whose (roleId, taskTypeId) matches, and
+  the advisory is no longer refused with `advisory_task_unscoped` for matching scopes.
+- For a matching scope, the router selects the highest-ranked ELIGIBLE endpoint; if that endpoint is removed or
+  ineligible, the next rung is chosen instead (fallback works).
+- Two different task families each have an active pack simultaneously; a non-matching pack is refused with
   `advisory_task_mismatch`, not selected.
+- A new endpoint slots into an existing ladder at the rank its counterfactuals justify.
 - Rollback of one scope's pack does not disturb another scope's active pack.
-- No pack ever routes directly (`advisory_only` is preserved); the router's score band, cohort and confidence
-  gates still apply.
+- No pack ever routes directly (`advisory_only` is preserved).
 
 ## Risks
 
 - Widening from one pack to N scope-keyed packs changes the advisory surface; a bug in the matching function
-  could serve the wrong pack. Mitigate with a pure, unit-tested scope-match function and a fallback to the
-  scope-wide pack.
-- The learner's candidate scope must be complete (role/task present) for a pack to match - which is exactly the
-  R22-B plumbing this runtime was missing. Packs with no family stay scope-wide only.
+   could serve the wrong pack. Mitigate with a pure, unit-tested scope-match function.
+- The ladder walk must respect eligibility at each rung, or the fallback could promote an endpoint the request
+   cannot route to. Mitigate with an eligibility filter before ranking.
+- The learner's candidate scope must be complete (role/task present) for a pack to match - the R22-B plumbing
+   this runtime was missing. Packs with no family stay scope-wide only.
