@@ -1,7 +1,7 @@
 # Stage 3: controlled route-package activation with matching scope
 
-Status: design spec - a later-run architecture change. Supersedes the shadow-only v1.1 baseline. One item
-remains an OPEN DECISION (see the end): the fate of scope-wide packs for requests with no task family.
+Status: design spec - a later-run architecture change. Supersedes the shadow-only v1.1 baseline. All decisions
+resolved.
 
 ## What a pack is for
 
@@ -135,13 +135,14 @@ admission floor (K comparisons + 0.7 confidence). This removes the 'sweep only a
 that tick' defect: there is no mutable active-pack pointer to go stale, because the ladder is always the
 current projection of the evidence.
 
-## Rollback
+## Rollback (per-task toggle)
 
-An operator rolls back a task's ladder when they believe it is wrong and do not want that task routed by it.
-Rollback flips the (role, task) pack's state to 'rolled_back'; the advisory source then returns no advisory
-for that task, so routing falls back to the baseline strategy. The rollback is a recorded, reversible user
-action (a receipt with the operator's reason); rolling forward re-enables the ladder after it is re-derived or
-re-validated.
+A pack carries a rollback flag per (role, task), default OFF. When the user turns it ON for a task (they do not
+like the ladder rank and do not want the task routed by it), the advisory source returns no advisory for that
+task and routing falls back to the baseline strategy. It is a plain boolean the user toggles in the UI, and the
+backend supports it by checking the flag before serving the ladder: ON means the ladder does not influence
+routing; OFF means it does. The flag is recorded with the operator's reason and is reversible (toggle back to
+OFF re-enables the ladder once it is re-derived or re-validated).
 
 ## Configuration
 
@@ -177,17 +178,12 @@ Data.TaggedEnum; queue-runtime: Layer + ManagedRuntime + Fiber + Duration).
 - Rollback of one task's ladder does not disturb another, and a rolled-back task routes by baseline.
 - No pack routes directly (advisory_only preserved).
 
-## OPEN DECISION: scope-wide packs (requests with no task family)
+## Scope-wide packs do not exist
 
-A scope-wide pack is a pack whose scope carries only an endpointId (no roleId, no taskTypeId). It is produced
-when the learner derives a candidate from observations that carry no role/task classification - generic text.chat
-requests, or the controller/shadow-judge observations. Because it has no (role, task), it cannot be keyed in the
-new model, and it is exactly what caused the current advisory_task_unscoped refusals.
-
-Decision needed: for a request with NO (role, task) classification, either (A) provide no advisory and route
-by the baseline strategy only, or (B) keep a single 'default' ladder for unclassified requests. Recommendation:
-(A) - unclassified requests get no advisory, because the model is 'tasks come from live requests', and a
-scope-wide pack is the thing we are removing.
+Scope-wide packs (endpoint-only scope, no roleId/taskTypeId) do not exist in stage 3. A request without a
+(role, task) taxonomy classification is NEVER admitted to the replay/eval queue - the queue admission requires
+a classification, so there is no capture to replay and no ladder to derive. Such a request gets no advisory and
+routes by the baseline strategy only. This removes the scope-wide pack entirely rather than special-casing it.
 
 ## Risks
 
