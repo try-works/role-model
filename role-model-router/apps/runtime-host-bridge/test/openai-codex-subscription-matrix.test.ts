@@ -20,6 +20,10 @@ const repoRoot = path.resolve(import.meta.dirname, "..", "..", "..", "..");
 const testFixtureRoot = path.join(import.meta.dirname, "fixtures-restart-rehydration");
 
 const EXPECTED_OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS = [
+  "chatgpt/gpt-6.1-sol",
+  "chatgpt/gpt-6-sol",
+  "chatgpt/gpt-6-luna",
+  "chatgpt/gpt-6-astra",
   "chatgpt/gpt-5.6-sol",
   "chatgpt/gpt-5.6-terra",
   "chatgpt/gpt-5.6-luna",
@@ -58,7 +62,7 @@ function successfulCodexAdmissionReadinessProbe(requestId: string): {
 }
 
 describe("OpenAI Codex Subscription model matrix", () => {
-  test("defines only the native-catalog-supported OpenAI GPT-5.3+ subscription rows", () => {
+  test("defines only the native-catalog-supported OpenAI GPT-5.3+ and GPT-6 subscription rows", () => {
     expect(OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS).toEqual(
       EXPECTED_OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS,
     );
@@ -68,6 +72,10 @@ describe("OpenAI Codex Subscription model matrix", () => {
         lifecycle,
       })),
     ).toEqual([
+      { modelId: "chatgpt/gpt-6.1-sol", lifecycle: "supported" },
+      { modelId: "chatgpt/gpt-6-sol", lifecycle: "supported" },
+      { modelId: "chatgpt/gpt-6-luna", lifecycle: "supported" },
+      { modelId: "chatgpt/gpt-6-astra", lifecycle: "supported" },
       { modelId: "chatgpt/gpt-5.6-sol", lifecycle: "supported" },
       { modelId: "chatgpt/gpt-5.6-terra", lifecycle: "supported" },
       { modelId: "chatgpt/gpt-5.6-luna", lifecycle: "supported" },
@@ -89,6 +97,11 @@ describe("OpenAI Codex Subscription model matrix", () => {
         "chatgpt/gpt-5.2",
         "chatgpt/gpt-5.2-codex",
         "chatgpt/gpt-5.3-instant",
+        // Run 104 R23: the models.dev daybreak rows are provider ids for GPT-5.6 Sol and GPT-5.6
+        // Cyber, not models in their own right. They stay catalog aliases and must never become
+        // selectable subscription entries.
+        "chatgpt/gpt-daybreak-blue-latest",
+        "chatgpt/gpt-daybreak-red-latest",
       ]),
     );
     expect(
