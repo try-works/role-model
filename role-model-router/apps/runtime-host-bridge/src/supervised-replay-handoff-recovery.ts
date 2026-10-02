@@ -753,8 +753,14 @@ export function unresolvedArmsArePermanent(unreadable: readonly UnresolvedArmEvi
        * Addendum 38: only a capture the job *names*, on a dispatch that `complete`d, and that the store cannot
        * serve is an eviction. `capture_not_written_dispatch_failed`, `capture_unreadable` and
        * `capture_has_no_output` are all retryable and must never terminalize a replay as evicted evidence.
+       *
+       * Run 104 R9 (addendum 18): `capture_missing` is *not* proof of eviction - the auto-replay
+       * re-dispatch writes a fresh attempt-scoped capture under a new nonce, so an arm the first
+       * attempt failed to capture is written by the next attempt. Treating it as permanent terminalized
+       * the handoff as `evidence_outside_retention_window` before the re-dispatch landed (measured live on
+       * `:3457`). Only `capture_not_named` (the job records no name at all) stays permanent.
        */
-      (arm) => arm.reason === "capture_missing" || arm.reason === "capture_not_named",
+      (arm) => arm.reason === "capture_not_named",
     )
   );
 }
