@@ -717,15 +717,12 @@ async function runBoundedExecutor(
     return await Promise.race([
       input.executor({ ...request, signal: controller.signal }),
       new Promise<never>((_resolve, reject) => {
-        timer = setTimeout(
-          () => {
-            controller.abort();
-            reject(
-              new Error(`replay execution exceeded ${timeoutMs}ms (bounded per-capture budget)`),
-            );
-          },
-          timeoutMs,
-        );
+        timer = setTimeout(() => {
+          controller.abort();
+          reject(
+            new Error(`replay execution exceeded ${timeoutMs}ms (bounded per-capture budget)`),
+          );
+        }, timeoutMs);
         (timer as { unref?: () => void } | undefined)?.unref?.();
       }),
     ]);

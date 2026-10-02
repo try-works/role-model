@@ -178,8 +178,8 @@ import {
   runTrackBLearningPass,
 } from "./track-b-learning-pass.js";
 import {
-  classifyReplayArmEffort,
   DEFAULT_REPLAY_CANDIDATE_CAP,
+  classifyReplayArmEffort,
   isBenchmarkReplaySourceRef,
 } from "./track-b-replay-policy.js";
 import {
@@ -8813,15 +8813,11 @@ export async function runTrackBShadowPipeline(
       arms: counterfactualRollouts.map((arm) => ({
         endpointId: typeof arm.endpointId === "string" ? arm.endpointId : "",
         modelId: typeof arm.modelId === "string" ? arm.modelId : "",
-        reasoningEffort:
-          typeof arm.reasoningEffort === "string" ? arm.reasoningEffort : null,
+        reasoningEffort: typeof arm.reasoningEffort === "string" ? arm.reasoningEffort : null,
       })),
-      sourceModelId:
-        typeof sourceRollout.modelId === "string" ? sourceRollout.modelId : "",
+      sourceModelId: typeof sourceRollout.modelId === "string" ? sourceRollout.modelId : "",
       sourceReasoningEffort:
-        typeof sourceRollout.reasoningEffort === "string"
-          ? sourceRollout.reasoningEffort
-          : null,
+        typeof sourceRollout.reasoningEffort === "string" ? sourceRollout.reasoningEffort : null,
     }),
   };
   if (

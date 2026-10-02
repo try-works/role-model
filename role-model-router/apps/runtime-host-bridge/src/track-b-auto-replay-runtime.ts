@@ -844,7 +844,12 @@ export function startAutoReplayLoop(input: {
         : captures;
       // Temporary diagnostic (addendum 14 follow-on): name what the replay-pending source returned.
       console.error(
-        `[run104-pending] captures=${captures.length} scoped=${scopedCaptures.length} first=${captures.slice(0, 3).map((c) => String(c.captureRef)).join(",")} only=${onlyCaptureRefs ? String(onlyCaptureRefs[0]) : "none"} pendingCount=${String((pending as Record<string, unknown>)?.pendingCount ?? "n/a")} captureCount=${String((pending as Record<string, unknown>)?.captureCount ?? "n/a")}`,
+        `[run104-pending] captures=${captures.length} scoped=${scopedCaptures.length} first=${captures
+          .slice(0, 3)
+          .map((c) => String(c.captureRef))
+          .join(
+            ",",
+          )} only=${onlyCaptureRefs ? String(onlyCaptureRefs[0]) : "none"} pendingCount=${String((pending as Record<string, unknown>)?.pendingCount ?? "n/a")} captureCount=${String((pending as Record<string, unknown>)?.captureCount ?? "n/a")}`,
       );
       const configuredEndpointIds =
         typeof input.configuredEndpointIds === "function"

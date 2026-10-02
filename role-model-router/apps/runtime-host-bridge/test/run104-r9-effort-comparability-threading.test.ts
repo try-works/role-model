@@ -40,9 +40,30 @@ test("R9 threading: builder-shaped arms produce the consumer's effortComparabili
   });
 
   expect(records).toEqual([
-    { endpointId: "sol-medium", modelId: "sol", sourceModelId: "luna", reasoningEffort: "medium", sourceReasoningEffort: "medium", comparability: "matched" },
-    { endpointId: "sol-high", modelId: "sol", sourceModelId: "luna", reasoningEffort: "high", sourceReasoningEffort: "medium", comparability: "mismatched" },
-    { endpointId: "sol-default", modelId: "sol", sourceModelId: "luna", reasoningEffort: null, sourceReasoningEffort: "medium", comparability: "arm_effort_unspecified" },
+    {
+      endpointId: "sol-medium",
+      modelId: "sol",
+      sourceModelId: "luna",
+      reasoningEffort: "medium",
+      sourceReasoningEffort: "medium",
+      comparability: "matched",
+    },
+    {
+      endpointId: "sol-high",
+      modelId: "sol",
+      sourceModelId: "luna",
+      reasoningEffort: "high",
+      sourceReasoningEffort: "medium",
+      comparability: "mismatched",
+    },
+    {
+      endpointId: "sol-default",
+      modelId: "sol",
+      sourceModelId: "luna",
+      reasoningEffort: null,
+      sourceReasoningEffort: "medium",
+      comparability: "arm_effort_unspecified",
+    },
   ]);
 });
 

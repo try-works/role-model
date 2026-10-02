@@ -7391,8 +7391,7 @@ export async function main(): Promise<void> {
             });
             const replayArmEffortComparability = classifyReplayArmEffort({
               arms,
-              sourceModelId:
-                typeof sourceCapture.modelId === "string" ? sourceCapture.modelId : "",
+              sourceModelId: typeof sourceCapture.modelId === "string" ? sourceCapture.modelId : "",
               sourceReasoningEffort:
                 typeof sourceCapture.reasoningEffort === "string"
                   ? sourceCapture.reasoningEffort
@@ -7416,7 +7415,7 @@ export async function main(): Promise<void> {
                   sourceEndpointId:
                     typeof sourceCapture.endpointId === "string"
                       ? sourceCapture.endpointId
-                      : capture.sourceEndpointId ?? "",
+                      : (capture.sourceEndpointId ?? ""),
                   sourceModelId:
                     typeof sourceCapture.modelId === "string" ? sourceCapture.modelId : "",
                   counterfactualPackages: arms.map((arm) => ({
@@ -7425,8 +7424,9 @@ export async function main(): Promise<void> {
                     reasoningEffort: arm.reasoningEffort,
                   })),
                   effortComparability: replayArmEffortComparability,
-                  evaluationCriteria:
-                    derivedCriteria.criteria as unknown as Readonly<Record<string, unknown>>,
+                  evaluationCriteria: derivedCriteria.criteria as unknown as Readonly<
+                    Record<string, unknown>
+                  >,
                   evaluationCriteriaDigest: createHash("sha256")
                     .update(JSON.stringify(derivedCriteria.criteria))
                     .digest("hex"),
@@ -10284,7 +10284,10 @@ export async function main(): Promise<void> {
         () =>
           created.effectiveRegistry.endpoints.map((endpoint) => ({
             endpointId: endpoint.identity.endpoint_id,
-            modelId: typeof (endpoint as { modelId?: unknown }).modelId === "string" ? String((endpoint as { modelId?: unknown }).modelId) : "",
+            modelId:
+              typeof (endpoint as { modelId?: unknown }).modelId === "string"
+                ? String((endpoint as { modelId?: unknown }).modelId)
+                : "",
             reasoningEffort:
               typeof (endpoint as { reasoningEffort?: unknown }).reasoningEffort === "string"
                 ? String((endpoint as { reasoningEffort?: unknown }).reasoningEffort)
