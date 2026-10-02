@@ -96,6 +96,36 @@ llama_swap:
     expect(renderUnifiedRuntimeConfigText(normalized)).toContain("execution_mode: hybrid");
   });
 
+  test("re-normalizing an already-normalized config keeps agent_strategies and workloads", () => {
+    const once = normalizeUnifiedRuntimeConfigInput({
+      version: "1.0",
+      execution_mode: "remote_only",
+      routing: { mode: "hybrid" },
+      agent_strategies: {
+        tester: {
+          role_id: "tester",
+          scoring_strategy: "quality",
+          routing_mode: "baseline",
+        },
+      },
+      workloads: {
+        batch: { scoring_strategy: "cost" },
+      },
+      model_aliases: {
+        "hybrid.remote-only": { mode: "hybrid", model_ids: ["chatgpt/gpt-5.6-luna"] },
+      },
+    });
+
+    // The downstream-openai discovery route re-normalizes the runtime's already-normalized
+    // config. That must be a no-op, not throw "agent_strategies must be a mapping." — the
+    // normalized block is an `AgentStrategyEntry[]`, not a name-keyed mapping.
+    const twice = normalizeUnifiedRuntimeConfigInput(once);
+
+    expect(twice.agentStrategies).toEqual(once.agentStrategies);
+    expect(twice.workloads).toEqual(once.workloads);
+    expect(twice.modelAliases).toEqual(once.modelAliases);
+  });
+
   test("derives remote-only mode when only the LiteLLM section is populated", () => {
     const result = parseUnifiedRuntimeConfigText(`
 version: "1.0"

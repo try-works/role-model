@@ -76,7 +76,11 @@ function evaluateClientEntry(): {
           name: options.name,
           ...(options.id === undefined ? {} : { id: options.id }),
           ...(options.order === undefined ? {} : { order: options.order }),
-          rendered: JSON.stringify(renderComponent(panel, React), jsonReplacer),
+          // Fully expanded, so assertions see the real content rather than an opaque
+          // component element. The page is registered behind an error boundary, and a
+          // shallow render would stop at that boundary. The element is built through the
+          // stub so it carries the same `$$typeof` react-dom sets.
+          rendered: JSON.stringify(deepRender(React.createElement(panel, null)), jsonReplacer),
         });
         return () => undefined;
       },
@@ -110,6 +114,11 @@ function isClassComponent(value: unknown): boolean {
  */
 function invokeComponent(element: HostElement): unknown {
   const type = element.type as (props: unknown) => unknown;
+  // Children reach a component through its props, never as separate arguments — that is
+  // how react-dom does it, and a boundary that reads `this.props.children` sees nothing
+  // otherwise. The same mistake in the client's own shell blanked the real page.
+  const props = { ...(element.props ?? {}) } as Record<string, unknown>;
+  if (element.children !== undefined) props.children = element.children;
   if (isClassComponent(type)) {
     const instance = new (
       type as unknown as new (
@@ -118,12 +127,32 @@ function invokeComponent(element: HostElement): unknown {
         props: unknown;
         render(): unknown;
       }
-    )(element.props ?? {});
+    )(props);
     return instance.render();
   }
-  const props = { ...(element.props ?? {}) } as Record<string, unknown>;
-  if (element.children !== undefined) props.children = element.children;
-  return type(props);
+  // The second argument mirrors React itself: the dev renderer calls a function
+  // component as `Component(props, legacyContext)`, and the legacy context is an empty
+  // object. A component that treats extra arguments as children therefore renders `{}`
+  // as a child, which react-dom rejects with error #31 ("Objects are not valid as a
+  // React child"). Passing it here is what lets this harness catch that at all.
+  return (type as (props: unknown, legacyContext: unknown) => unknown)(props, {});
+}
+
+/**
+ * Render one component to the deepest host tree.
+ *
+ * Equivalent to `expand(invokeComponent(element))`, as a single recursion: the
+ * `rendered` fixture wants a finished tree, not one that still contains component
+ * elements the assertions would have to reach through.
+ * @param value - element, component element, string, or nested array.
+ * @returns host elements and strings, with every component expanded.
+ */
+function deepRender(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(deepRender);
+  if (!isElement(value)) return value;
+  const element = value as HostElement;
+  if (typeof element.type === "function") return deepRender(invokeComponent(element));
+  return { ...element, children: childrenOf(element).map(deepRender) };
 }
 
 /**
@@ -545,6 +574,8 @@ describe("editing configuration from the panel", () => {
   interface PanelInternals {
     SETTINGS_NS: string;
     CONFIG_FIELDS: readonly string[];
+    SELECT_FIELDS: ReadonlySet<string>;
+    RUNTIME_CHANNELS: readonly { port: number; name: string; runtime: string }[];
     settingsRemote: (ctx: unknown) => unknown;
     readConfig: (ctx: unknown) => Promise<Record<string, unknown> | undefined>;
     buildPatch: (
@@ -646,6 +677,35 @@ describe("editing configuration from the panel", () => {
     expect(inject).not.toContain("remote.settings");
   });
 
+  /**
+   * React calls a function component as `Component(props, legacyContext)`, and the legacy
+   * context is an empty object. A component that treats extra call arguments as children
+   * therefore renders `{}` as a child, and react-dom rejects that with error #31:
+   *
+   *   Objects are not valid as a React child (found: object with keys {})
+   *
+   * That is what blanked the settings page: `Card(props, ...rest)` preferred `rest` over
+   * `props.children`, so every card rendered its heading plus one empty object. The harness
+   * now calls components with that second argument, so this spec and the card-body specs
+   * together keep it from coming back.
+   */
+  test("a component reads children from props, not from extra call arguments", () => {
+    // Every card must carry a body when the component is called the way React calls it.
+    const cards = panelCards();
+    expect(cards.length).toBeGreaterThanOrEqual(3);
+    for (const card of cards) {
+      const body = childrenOf(card).slice(1);
+      expect(body.length, "a card rendered no body").toBeGreaterThan(0);
+      for (const child of body) {
+        // A plain object child is precisely React #31.
+        expect(
+          typeof child === "object" && child !== null && !Array.isArray(child) && !isElement(child),
+          "a card rendered a plain object as a child",
+        ).toBe(false);
+      }
+    }
+  });
+
   test("renders an editable control for every configurable setting", () => {
     const { internals } = applyWith(fakeSettings().settings);
     // Walk the expanded tree: the controls live inside `Field`, so a JSON dump of the
@@ -665,6 +725,42 @@ describe("editing configuration from the panel", () => {
     for (const field of internals.CONFIG_FIELDS) {
       expect([...names], `no control for ${field}`).toContain(field);
     }
+  });
+
+  test("offers the runtime channels as a choice, production first", () => {
+    const { internals } = applyWith(fakeSettings().settings);
+    expect(internals.RUNTIME_CHANNELS.map((channel) => channel.port)).toEqual([3456, 3457, 3458]);
+    // Locate the real select element rather than asserting on source text.
+    let select: ExpandedElement | undefined;
+    const walk = (value: unknown): void => {
+      if (Array.isArray(value)) {
+        for (const child of value) walk(child);
+        return;
+      }
+      if (!isElement(value)) return;
+      if (value.type === "select" && value.props.name === "port") {
+        select = { ...value, children: childrenOf(value) };
+      }
+      for (const child of childrenOf(value)) walk(child);
+    };
+    for (const child of panelChildren()) walk(child);
+    expect(select, "no port select").toBeDefined();
+    const options = childrenOf(select as ExpandedElement).filter(isElement);
+    // The unset state comes first and names the default it resolves to; production is
+    // not listed twice, because choosing it is the same as leaving the field alone.
+    expect(options[0]?.props.value).toBe(0);
+    expect(childrenOf(options[0] as ExpandedElement).join("")).toContain("default");
+    expect(options[0] && childrenOf(options[0]).join("")).toContain("3456");
+    expect(options.map((option) => option.props.value)).toEqual([0, 3457, 3458]);
+    const labels = options.map((option) => childrenOf(option).join(""));
+    expect(labels[1]).toContain("stage");
+    expect(labels[2]).toContain("development");
+  });
+
+  test("the port is a closed choice, not free text", () => {
+    const { internals } = applyWith(fakeSettings().settings);
+    // A plain number input would let a typo select a runtime that is not running.
+    expect(internals.SELECT_FIELDS.has("port")).toBe(true);
   });
 
   test("reads the current values from its settings namespace", async () => {
@@ -740,16 +836,28 @@ describe("editing configuration from the panel", () => {
     const source = readFileSync(clientEntry, "utf8");
     // The message must name the plugin, so a user can tell whose fault it is.
     expect(source).toContain("role-model could not render");
-    // The real panel is invoked inside the guarded shell, so a throw during its own
-    // render is caught rather than escaping into react-dom's tree walk.
-    expect(source).toContain("RoleModelPanel()");
-    expect(source).toContain("PanelShell");
+    // A real error boundary, because a parent function component's try/catch cannot see
+    // a child's render error: the child renders later, inside react-dom's traversal.
+    expect(source).toContain("getDerivedStateFromError");
+    expect(source).toContain("class PanelBoundary");
+    // The page is handed over as an element, never invoked. Invoking it outside React's
+    // render phase makes its own hooks throw "Invalid hook call", which blanked this page
+    // twice. Asserted on the call form, since a comment mentions the mistake by name.
+    expect(source).toContain("h(RoleModelPanel, null)");
+    expect(source).not.toMatch(/=\s*RoleModelPanel\(\)/u);
+    expect(source).not.toMatch(/\breturn\s+RoleModelPanel\(\)/u);
   });
 
-  test("the shell renders its children while nothing has thrown", () => {
+  test("the boundary passes the page through while nothing has thrown", () => {
     const { component } = applyWith(undefined);
-    const rendered = JSON.stringify((component as (props: unknown) => unknown)({}), jsonReplacer);
+    // Deep-render the registered component: the boundary must yield the real page, not
+    // its own fallback and not a blank node.
+    const rendered = JSON.stringify(
+      deepRender({ type: component, props: {}, children: undefined, $$typeof: REACT_ELEMENT }),
+      jsonReplacer,
+    );
     expect(rendered).toContain("rlm-page");
+    expect(rendered).toContain("role-model");
     expect(rendered).not.toContain("could not render");
   });
 });

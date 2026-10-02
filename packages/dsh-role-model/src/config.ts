@@ -12,6 +12,74 @@
 /** Production role-model runtime endpoint. */
 export const DEFAULT_ENDPOINT = "http://127.0.0.1:3456";
 
+/**
+ * One runtime channel: a fixed port, the runtime that serves it, and what it is for.
+ *
+ * These are this repository's conventions, not a guess: production is `role-model` on
+ * 3456, stage is `role-model-stage` on 3457, and development is `role-model-dev` on
+ * 3458. The settings page offers them by name so a user picks a channel instead of
+ * retyping a URL — choosing the wrong channel is otherwise silent, because the route
+ * registers against any of them and the only symptom is a runtime that answers
+ * differently.
+ */
+export interface RuntimeChannel {
+  /** Loopback port for this channel. */
+  readonly port: number;
+  /** Channel name, shown in the settings surface. */
+  readonly name: string;
+  /** Runtime process serving this port. */
+  readonly runtime: string;
+  /** One line describing the channel. */
+  readonly description: string;
+}
+
+/** The channels, production first because it is the default. */
+export const RUNTIME_CHANNELS: readonly RuntimeChannel[] = [
+  {
+    port: 3456,
+    name: "production",
+    runtime: "role-model",
+    description: "The production runtime. The default.",
+  },
+  {
+    port: 3457,
+    name: "stage",
+    runtime: "role-model-stage",
+    description: "The stage runtime, for pre-release checks.",
+  },
+  {
+    port: 3458,
+    name: "development",
+    runtime: "role-model-dev",
+    description: "The development runtime, for local work in progress.",
+  },
+];
+
+/** Port the plugin uses when configuration names no channel. */
+export const DEFAULT_RUNTIME_PORT = RUNTIME_CHANNELS[0]?.port ?? 3456;
+
+/**
+ * Build the loopback endpoint for a port.
+ * @param port - a loopback port.
+ * @returns the endpoint, without a trailing slash or `/v1`.
+ */
+export function endpointForPort(port: number): string {
+  return `http://127.0.0.1:${String(port)}`;
+}
+
+/**
+ * Whether a value can be a TCP port.
+ *
+ * 0 is accepted here and means "no channel chosen", which is why the schema default is
+ * 0 rather than production: a sentinel is the only way to tell an unset field from a
+ * deliberate choice of the default channel.
+ * @param value - a candidate.
+ * @returns whether it is a whole number inside the port range.
+ */
+function isPort(value: unknown): value is number {
+  return typeof value === "number" && Number.isInteger(value) && value >= 0 && value <= 65_535;
+}
+
 /** Default per-request timeout for runtime metadata calls. */
 export const DEFAULT_REQUEST_TIMEOUT_MS = 2500;
 
@@ -89,6 +157,17 @@ export type ConfigField = unknown;
 /** Inputs to {@link createRoleModelConfig}. */
 export interface RoleModelConfigInput {
   readonly endpoint?: ConfigField;
+  /** Chosen runtime channel port; used unless an explicit endpoint overrides it. */
+  readonly port?: ConfigField;
+  /**
+   * Whether `endpoint` was chosen rather than left at its schema default.
+   *
+   * The schema declares a default endpoint, so a parsed config always presents one and
+   * a chosen port would otherwise be silently ignored — the user picks stage and keeps
+   * getting production. Callers that read a raw form value pass `true` when the field
+   * differs from the endpoint the chosen channel implies.
+   */
+  readonly endpointExplicit?: ConfigField;
   readonly allowRemote?: ConfigField;
   readonly timeoutMs?: ConfigField;
   readonly requestTimeoutMs?: ConfigField;
@@ -249,8 +328,24 @@ function readField(value: ConfigField): unknown {
  */
 export function createRoleModelConfig(input: RoleModelConfigInput = {}): RoleModelConfig {
   const env = input.env ?? {};
+  const configuredPort: unknown = readField(input.port);
+  // 0 is the "no channel chosen" sentinel. It has to exist: `endpoint` carries a schema
+  // default, so without a distinct unset state a deliberate choice of the default channel
+  // is indistinguishable from a default.
+  const portChoice = isPort(configuredPort) && configuredPort > 0 ? configuredPort : undefined;
+  const requested: unknown = readField(input.endpoint);
+  const requestedEndpoint =
+    typeof requested === "string" && requested.trim().length > 0
+      ? normalizeEndpoint(requested)
+      : undefined;
+  // The chosen channel outranks a stored endpoint, because a profile written before this
+  // field existed still carries production in `endpoint`, and honouring that would make
+  // the channel selector appear to do nothing. With no channel chosen, the stored
+  // endpoint stands, so a remote host or a non-standard port still works unchanged.
   const configuredEndpoint: unknown =
-    readField(input.endpoint) ?? env[ENDPOINT_ENV] ?? DEFAULT_ENDPOINT;
+    portChoice !== undefined
+      ? endpointForPort(portChoice)
+      : (requestedEndpoint ?? env[ENDPOINT_ENV] ?? DEFAULT_ENDPOINT);
   const alias: unknown = readField(input.selectedAlias);
   const hostModule: unknown = readField(input.hostLlmModule);
   const providerRoute: unknown = readField(input.providerRoute);

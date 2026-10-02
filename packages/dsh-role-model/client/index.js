@@ -223,16 +223,19 @@ window.__ModuleLoader__.load({
     /**
      * One card: a small heading and its rows.
      *
-     * Children are read from the extra `createElement` arguments and, when a caller
-     * follows htm's convention, from `props.children` as well — React itself supplies
-     * a component's children through props, so accepting both keeps the two call
-     * styles straight. They are spread so no child is an array: react-dom refuses to
-     * render an array that is itself a child, because it cannot key it.
+     * Children come from `props.children`, which is how React delivers them — and only
+     * that. React calls a function component as `Component(props, legacyContext)`, and
+     * the legacy context is an **empty object**, so treating extra call arguments as
+     * children made every card render `{}` as a child. react-dom rejects that with error
+     * #31, "Objects are not valid as a React child (found: object with keys {})", which
+     * blanked the whole settings page.
+     *
+     * They are spread rather than passed as one array because react-dom refuses to render
+     * an array that is itself a child: it cannot key it.
      */
-    function Card(props, ...rest) {
-      const { title } = props ?? {};
-      const supplied = rest.length > 0 ? rest : props?.children;
-      const rows = supplied === undefined || supplied === null ? [] : supplied;
+    function Card(props) {
+      const { title, children } = props ?? {};
+      const rows = children === undefined || children === null ? [] : children;
       return h(
         "div",
         { className: "rlm-card" },
@@ -279,6 +282,7 @@ window.__ModuleLoader__.load({
      * `SettingsForms.write()` with "not volatile".
      */
     const CONFIG_FIELDS = [
+      "port",
       "endpoint",
       "selectedAlias",
       "providerRoute",
@@ -287,9 +291,44 @@ window.__ModuleLoader__.load({
       "hostLlmModule",
     ];
 
+    /**
+     * The runtime channels the page offers: production first, because it is the default.
+     *
+     * Mirrors `RUNTIME_CHANNELS` in `src/config.ts`, which this plain-JavaScript half
+     * cannot import.
+     */
+    const RUNTIME_CHANNELS = [
+      { port: 3456, name: "production", runtime: "role-model" },
+      { port: 3457, name: "stage", runtime: "role-model-stage" },
+      { port: 3458, name: "development", runtime: "role-model-dev" },
+    ];
+
+    /**
+     * Sentinel for "no channel chosen", matching the schema's default.
+     *
+     * It exists because `endpoint` carries its own default: without a distinct unset
+     * state there is no way to tell a deliberate choice of production from leaving the
+     * field alone, and no way for a stored remote endpoint to survive.
+     */
+    const CHANNEL_DEFAULT = 0;
+
+    /** The select's options, the unset state first. */
+    const CHANNEL_OPTIONS = [
+      { port: CHANNEL_DEFAULT, label: "default — production (:3456)" },
+      ...RUNTIME_CHANNELS.filter((channel) => channel.port !== 3456).map((channel) => ({
+        port: channel.port,
+        label: `${channel.name} — ${channel.runtime} (:${channel.port})`,
+      })),
+    ];
+
+    /** Fields presented as a closed choice rather than free text. */
+    const SELECT_FIELDS = new Set(["port"]);
+
     /** One-line explanations, so the form does not need the README. */
     const FIELD_HELP = {
-      endpoint: "Runtime URL, without a trailing slash and without /v1.",
+      port: "Which runtime to route through: production 3456 (default), stage 3457, development 3458.",
+      endpoint:
+        "Full runtime URL. Set this to override the channel above, for example a remote host.",
       selectedAlias:
         "Preferred routing strategy, e.g. baseline.remote-only. Empty means no preference.",
       providerRoute: "The route this plugin owns. Leave it as role-model.",
@@ -303,8 +342,13 @@ window.__ModuleLoader__.load({
     /** Fields whose value is a boolean checkbox rather than a text input. */
     const BOOLEAN_FIELDS = new Set(["allowRemote"]);
 
-    /** Fields holding a number. */
-    const NUMERIC_FIELDS = new Set(["requestTimeoutMs"]);
+    /**
+     * Fields holding a number.
+     *
+     * `port` is here as well as in {@link SELECT_FIELDS}: a `<select>` yields a string,
+     * and the host schema declares the port as a number, so a string would be refused.
+     */
+    const NUMERIC_FIELDS = new Set(["port", "requestTimeoutMs"]);
 
     /**
      * Read the settings Remote, when the context exposes one.
@@ -415,29 +459,49 @@ window.__ModuleLoader__.load({
       }
     }
 
-    /** One labelled form control. */
+    /**
+     * One labelled form control.
+     *
+     * A closed-choice field renders a `<select>`: the channel is one of three ports, and
+     * a free-text field would let a typo select a runtime that is not running — silently,
+     * because the route registers against whatever it is given.
+     */
     function Field(props) {
       const { field, value, help, onChange, disabled } = props;
       const id = `rlm-field-${field}`;
-      const control = BOOLEAN_FIELDS.has(field)
-        ? h("input", {
-            id,
-            name: field,
-            type: "checkbox",
-            checked: value === true,
-            disabled: disabled === true,
-            onChange: (event) => onChange(field, event.target.checked),
-          })
-        : h("input", {
-            id,
-            name: field,
-            type: NUMERIC_FIELDS.has(field) ? "number" : "text",
-            value: value ?? "",
-            disabled: disabled === true,
-            spellCheck: false,
-            autoComplete: "off",
-            onChange: (event) => onChange(field, event.target.value),
-          });
+      const control = SELECT_FIELDS.has(field)
+        ? h(
+            "select",
+            {
+              id,
+              name: field,
+              value: value === undefined || value === null ? "" : String(value),
+              disabled: disabled === true,
+              onChange: (event) => onChange(field, event.target.value),
+            },
+            ...CHANNEL_OPTIONS.map((option) =>
+              h("option", { key: option.port, value: option.port }, option.label),
+            ),
+          )
+        : BOOLEAN_FIELDS.has(field)
+          ? h("input", {
+              id,
+              name: field,
+              type: "checkbox",
+              checked: value === true,
+              disabled: disabled === true,
+              onChange: (event) => onChange(field, event.target.checked),
+            })
+          : h("input", {
+              id,
+              name: field,
+              type: NUMERIC_FIELDS.has(field) ? "number" : "text",
+              value: value ?? "",
+              disabled: disabled === true,
+              spellCheck: false,
+              autoComplete: "off",
+              onChange: (event) => onChange(field, event.target.value),
+            });
       return h(
         "div",
         { className: "rlm-field" },
@@ -743,37 +807,54 @@ window.__ModuleLoader__.load({
     }
 
     /**
-     * Render the panel, turning a render failure into visible text.
+     * Report a render failure as text instead of a blank pane.
      *
-     * A component that throws during render leaves the settings content area empty, and
-     * nothing in the browser says the plugin is responsible. Tests over the markup and
-     * the write path cannot catch that, so the failure is surfaced here: a blank pane is
-     * indistinguishable from a plugin that never mounted, and that ambiguity cost real
-     * debugging time on this page.
+     * This must be a real React **error boundary** — a class with
+     * `getDerivedStateFromError` — and its child must be handed to react-dom as an
+     * element. Two earlier attempts got this wrong and blanked the page:
      *
-     * A plain function with a try/catch rather than a React error boundary: a class
-     * boundary would not catch an error thrown by the function component that *is* the
-     * page, and it would drag class-component plumbing into a file that is served as-is.
+     * 1. A parent function component with a try/catch **cannot** catch a child's render
+     *    error, because the child is rendered later, during react-dom's own traversal.
+     * 2. Invoking the child to force the throw into the try/catch breaks hooks: there is
+     *    no current component during that call, so the first `useMemo`/`useState` in the
+     *    child throws "Invalid hook call". Every hook the page uses lives inside the
+     *    child, so the whole page failed to render.
+     *
+     * A class boundary sees errors in either its own render or its descendants', which
+     * is exactly the guarantee needed here.
+     *
+     * Written with `createElement` rather than JSX because this file is served as-is.
      */
-    function PanelShell(props) {
-      if (props?.failure === undefined) return props?.children ?? null;
-      const error = props.failure;
-      const detail =
-        error && (error.stack || error.message)
-          ? String(error.stack || error.message)
-          : String(error);
-      return h(
-        "div",
-        { className: "rlm-page" },
-        h("h2", { className: "rlm-title" }, "role-model could not render"),
-        h(
-          "p",
-          { className: "rlm-note" },
-          "The plugin mounted, but a component threw while rendering. The detail below is the " +
-            "browser's own error report; include it in a bug report.",
-        ),
-        h("pre", { className: "rlm-codeblock" }, detail),
-      );
+    class PanelBoundary extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = { error: undefined };
+      }
+
+      static getDerivedStateFromError(error) {
+        return { error };
+      }
+
+      render() {
+        const error = this.state?.error;
+        if (error === undefined) return this.props?.children ?? null;
+        const detail =
+          error && (error.stack || error.message)
+            ? String(error.stack || error.message)
+            : String(error);
+        return h(
+          "div",
+          { className: "rlm-page" },
+          h("h2", { className: "rlm-title" }, "role-model could not render"),
+          h(
+            "p",
+            { className: "rlm-note" },
+            "The plugin mounted, but a component threw while rendering. The detail below is the " +
+              "browser's own error report; include it in a bug report.",
+          ),
+          h("pre", { className: "rlm-codeblock" }, detail),
+        );
+      }
     }
 
     return {
@@ -788,18 +869,14 @@ window.__ModuleLoader__.load({
 
       apply(ctx) {
         panelContext = ctx;
-        // The shell keeps a render failure visible; without it a throw blanks the
-        // settings pane and looks identical to a plugin that never mounted.
+        // The panel is wrapped in a real error boundary and handed over as an element,
+        // so a render failure shows the browser's error instead of an empty pane.
         //
-        // `RoleModelPanel` is invoked here rather than handed to react-dom as an
-        // element, because an error thrown while react-dom walks a child element escapes
-        // a parent's try/catch. Calling it first puts the throw inside the shell.
-        const panel = function RoleModelPanelSafe(props) {
-          try {
-            return h(PanelShell, props ?? {}, RoleModelPanel());
-          } catch (error) {
-            return h(PanelShell, { ...(props ?? {}), failure: error });
-          }
+        // It must NOT be invoked here: hooks require an active component, and calling the
+        // page outside React's render phase makes its first `useMemo` throw "Invalid hook
+        // call", which blanked this page twice. Hand it over as an element instead.
+        const panel = function RoleModelPanelWithBoundary(props) {
+          return h(PanelBoundary, props ?? {}, h(RoleModelPanel, null));
         };
         ctx.effect(() =>
           ctx.slots.inject("settings.section", () =>
@@ -822,6 +899,8 @@ window.__ModuleLoader__.load({
       __internals: {
         SETTINGS_NS,
         CONFIG_FIELDS,
+        SELECT_FIELDS,
+        RUNTIME_CHANNELS,
         settingsRemote,
         readConfig,
         buildPatch,

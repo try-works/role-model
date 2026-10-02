@@ -15,13 +15,14 @@
  */
 
 import z from "@deepseek-ai/schemastery";
-import { createRoleModelAdapter } from "./adapter.js";
+import { type ImageAttachmentStore, createRoleModelAdapter } from "./adapter.js";
 import { createRoleModelCommandHandler } from "./commands.js";
 import {
   type ConfigField,
   DEFAULT_ENDPOINT,
   DEFAULT_PROVIDER_ROUTE,
   DEFAULT_REQUEST_TIMEOUT_MS,
+  DEFAULT_RUNTIME_PORT,
   type RoleModelConfig,
   createRoleModelConfig,
 } from "./config.js";
@@ -63,6 +64,15 @@ export const CONFIG_ENTRY_ID = "dsh-role-model";
  * configuration surface is inert and the endpoint cannot be edited from the UI.
  */
 export const Config = z.object({
+  /**
+   * Runtime channel port: 3456 production, 3457 stage, 3458 development.
+   *
+   * 0 means "no channel chosen", which lets a stored `endpoint` stand on its own — the
+   * schema defaults `endpoint`, so without a distinct unset state a deliberate choice of
+   * the default channel would be indistinguishable from a default. The settings page
+   * offers the sentinel as "default (production)".
+   */
+  port: z.number().min(0).max(65_535).default(0).volatile(),
   /** Runtime endpoint, without a trailing slash and without `/v1`. */
   endpoint: z.string().default(DEFAULT_ENDPOINT).volatile(),
   /** Whether non-loopback endpoints are permitted. */
@@ -79,7 +89,8 @@ export const Config = z.object({
 
 /** Raw configuration as it arrives from the bundle's patch row. */
 export type RoleModelPluginConfig = {
-  endpoint?: string | undefined;
+  port?: ConfigField;
+  endpoint?: ConfigField;
   allowRemote?: ConfigField;
   requestTimeoutMs?: ConfigField;
   providerRoute?: ConfigField;
@@ -224,6 +235,11 @@ export function createRoleModelPlugin(
       `dsh-role-model: host LLM classes from ${hostClasses.source.kind} at ${hostClasses.source.path}`,
     );
 
+    // Prompt images are stored durably by the Harness and handed to an adapter as a
+    // reference, so the adapter needs this service to inline them. Without it every
+    // image would reach the model as placeholder text.
+    const attachments = ctx.get("attachments") as ImageAttachmentStore | undefined;
+
     const adapter = createRoleModelAdapter({
       endpoint: resolved.endpoint,
       allowRemote: resolved.allowRemote,
@@ -231,6 +247,7 @@ export function createRoleModelPlugin(
       providerRoute: resolved.providerRoute,
       LlmAdapterBase: hostClasses.LlmAdapter,
       LlmErrorClass: hostClasses.LlmError,
+      ...(attachments === undefined ? {} : { attachments }),
       ...(options.fetch === undefined ? {} : { fetch: options.fetch }),
     });
 

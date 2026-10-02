@@ -77,6 +77,92 @@ export interface AdapterGenerateOptions {
   readonly signal?: AbortSignal | undefined;
 }
 
+/** One durable image reference, structurally. */
+export interface ImageRefLike {
+  readonly attachmentId?: unknown;
+  readonly mediaType?: unknown;
+  readonly name?: unknown;
+}
+
+/** Bytes of one durable image, as the Harness attachment service returns them. */
+export interface StoredImageLike {
+  readonly data: Uint8Array;
+}
+
+/**
+ * The subset of the Harness attachment service this adapter reads images through.
+ *
+ * The adapter cannot invent image bytes: the Harness stores them durably and hands out
+ * a reference, so a prompt image only reaches the runtime if the adapter reads it back.
+ */
+export interface ImageAttachmentStore {
+  readImage(ref: never, signal?: AbortSignal): Promise<StoredImageLike>;
+}
+
+/**
+ * Read every prompt image into a data URL, keyed by attachment id.
+ *
+ * The Harness stores image bytes durably and refers to them by reference, so an adapter
+ * that does not read them back can only send placeholder text — the model never sees the
+ * picture. Offloaded blocks are skipped on purpose: `offloaded === true` means the
+ * Harness already decided this model cannot take the image, and re-inlining it would
+ * contradict that decision.
+ *
+ * Every failure is swallowed deliberately. An unreadable attachment costs the image, not
+ * the turn, so the caller falls back to placeholder text.
+ *
+ * @param messages - the request's messages.
+ * @param attachments - the durable attachment service, when mounted.
+ * @param signal - cancellation for the reads.
+ * @returns data URLs by attachment id; empty when nothing could be read.
+ */
+async function resolveRequestImages(
+  messages: readonly unknown[] | undefined,
+  attachments: ImageAttachmentStore | undefined,
+  signal: AbortSignal | undefined,
+): Promise<Map<string, string>> {
+  const resolved = new Map<string, string>();
+  if (attachments === undefined || typeof attachments.readImage !== "function") return resolved;
+
+  const refs = new Map<string, ImageRefLike>();
+  for (const message of messages ?? []) {
+    if (message === null || typeof message !== "object") continue;
+    const content = (message as { content?: unknown }).content;
+    if (!Array.isArray(content)) continue;
+    for (const block of content) {
+      if (block === null || typeof block !== "object") continue;
+      const candidate = block as { type?: unknown; offloaded?: unknown; attachment?: unknown };
+      if (candidate.type !== "image" || candidate.offloaded === true) continue;
+      const attachment = candidate.attachment as ImageRefLike | undefined;
+      const id = attachment?.attachmentId;
+      if (typeof id === "string" && id.length > 0) refs.set(id, attachment as ImageRefLike);
+    }
+  }
+
+  const entries = [...refs.entries()];
+  const settled = await Promise.all(
+    entries.map(async ([id, attachment]) => {
+      try {
+        const stored = await attachments.readImage(attachment as never, signal);
+        const mediaType =
+          typeof attachment.mediaType === "string" && attachment.mediaType.length > 0
+            ? attachment.mediaType
+            : "image/png";
+        return [
+          id,
+          `data:${mediaType};base64,${Buffer.from(stored.data).toString("base64")}`,
+        ] as const;
+      } catch {
+        return undefined;
+      }
+    }),
+  );
+  for (const entry of settled) {
+    if (entry !== undefined) resolved.set(entry[0], entry[1]);
+  }
+  return resolved;
+}
+
 /** Options for {@link createRoleModelAdapter}. */
 export interface CreateRoleModelAdapterOptions extends RoleModelConfigInput {
   /** Provider route this adapter owns. */
@@ -89,6 +175,8 @@ export interface CreateRoleModelAdapterOptions extends RoleModelConfigInput {
   readonly LlmAdapterBase: HostLlmAdapterConstructor;
   /** The HOST's `LlmError` constructor, so failure codes survive normalization. */
   readonly LlmErrorClass: HostLlmErrorConstructor;
+  /** Durable attachment service, used to inline prompt images. */
+  readonly attachments?: ImageAttachmentStore | undefined;
   /** Resolve an image attachment to a data URL, when the harness can. */
   readonly resolveImage?: WireImageResolver | undefined;
   /** Override the discovery call, for tests. */
@@ -327,6 +415,17 @@ export function createRoleModelAdapter(options: CreateRoleModelAdapterOptions): 
           intentOptions(new Set(value.entries.map((candidate) => candidate.id))),
         );
 
+        // Inline prompt images before serializing: their bytes live behind the durable
+        // attachment service, and `buildChatBody` needs them synchronously. Reading is
+        // best-effort — a route that answers text-only is still usable, and an image the
+        // model could not receive degrades to placeholder text rather than failing the
+        // whole request.
+        const resolvedImages = await resolveRequestImages(
+          request.messages,
+          options.attachments,
+          signal,
+        );
+
         const body = buildChatBody({
           model: modelId,
           messages: (request.messages ?? []) as never,
@@ -339,6 +438,17 @@ export function createRoleModelAdapter(options: CreateRoleModelAdapterOptions): 
             ? {}
             : { reasoningEffort: request.reasoningEffort }),
           ...(options.resolveImage === undefined ? {} : { resolveImage: options.resolveImage }),
+          ...(resolvedImages.size === 0
+            ? {}
+            : {
+                resolveImage: (attachment: unknown) => {
+                  const key =
+                    typeof (attachment as ImageRefLike | undefined)?.attachmentId === "string"
+                      ? ((attachment as ImageRefLike).attachmentId as string)
+                      : "";
+                  return key.length === 0 ? undefined : resolvedImages.get(key);
+                },
+              }),
         });
         const roleModel = (withIntent.request as { role_model?: unknown }).role_model;
         const payload = roleModel === undefined ? body : { ...body, role_model: roleModel };

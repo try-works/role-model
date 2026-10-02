@@ -109,6 +109,62 @@ describe("toOpenAiMessages", () => {
     expect(messages).toEqual([{ role: "tool", tool_call_id: "call_1", content: "file body" }]);
   });
 
+  /**
+   * The Harness carries the answered call id at the message's **top level**
+   * (`ToolResultMessage.toolCallId`, `packages/llm/llm/src/message.ts:177`) and the
+   * tool-call id inside the `tool-call` block (`ToolCallBlock.id`). It does not wrap
+   * the result in a `toolResult` object.
+   *
+   * Reading a field that does not exist produced `tool_call_id: ""`, which upstream
+   * rejects outright: "An Assistant message with 'tool_calls' must be followed by tool
+   * messages responding to each 'tool_call_id'." That failure broke a real session.
+   */
+  test("reads the answered call id from the harness's own message shape", () => {
+    const messages = toOpenAiMessages([
+      {
+        role: "assistant",
+        content: [{ type: "tool-call", id: "call_abc", name: "read_file", arguments: '{"p":"a"}' }],
+      },
+      {
+        role: "tool",
+        content: [{ type: "text", text: "file body" }],
+        toolCallId: "call_abc",
+      },
+    ] as never);
+    expect(messages).toEqual([
+      {
+        role: "assistant",
+        content: "",
+        tool_calls: [
+          {
+            id: "call_abc",
+            type: "function",
+            function: { name: "read_file", arguments: '{"p":"a"}' },
+          },
+        ],
+      },
+      { role: "tool", tool_call_id: "call_abc", content: "file body" },
+    ]);
+  });
+
+  test("pairs every tool call with its result when several are answered", () => {
+    const messages = toOpenAiMessages([
+      {
+        role: "assistant",
+        content: [
+          { type: "tool-call", id: "c1", name: "a", arguments: "{}" },
+          { type: "tool-call", id: "c2", name: "b", arguments: "{}" },
+        ],
+      },
+      { role: "tool", content: [{ type: "text", text: "one" }], toolCallId: "c1" },
+      { role: "tool", content: [{ type: "text", text: "two" }], toolCallId: "c2" },
+    ] as never);
+    const ids = messages.filter((m) => m.role === "tool").map((m) => m.tool_call_id);
+    expect(ids).toEqual(["c1", "c2"]);
+    // No empty id may reach the wire: that is what upstream rejects.
+    expect(ids.every((id) => typeof id === "string" && id.length > 0)).toBe(true);
+  });
+
   test("drops reasoning blocks, which providers do not accept as input", () => {
     const messages = toOpenAiMessages([
       {

@@ -109,9 +109,23 @@ describe("the settings surface", () => {
   test("marks the settings a user must be able to change", () => {
     const dict = (Config as unknown as { dict?: Record<string, { meta?: { volatile?: boolean } }> })
       .dict;
-    for (const key of ["endpoint", "selectedAlias", "allowRemote", "requestTimeoutMs"]) {
+    for (const key of ["port", "endpoint", "selectedAlias", "allowRemote", "requestTimeoutMs"]) {
       expect(dict?.[key]?.meta?.volatile, `${key} must be editable`).toBe(true);
     }
+  });
+
+  test("defaults to no channel chosen, which resolves to production", () => {
+    // The sentinel is 0, not 3456: `endpoint` carries its own default, so a distinct
+    // "unset" state is what lets a deliberate choice of production be told apart from a
+    // default, and what lets a stored remote endpoint survive.
+    const config = Config({});
+    expect(plain(config.port)).toBe(0);
+    expect(createRoleModelConfig(config).endpoint).toBe("http://127.0.0.1:3456");
+  });
+
+  test("resolves a chosen channel from the schema value", () => {
+    const config = Config({ port: 3458 });
+    expect(createRoleModelConfig(config).endpoint).toBe("http://127.0.0.1:3458");
   });
 
   /**
