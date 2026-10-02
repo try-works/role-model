@@ -184,10 +184,13 @@ Notes and open questions:
 ### Pairwise replay record
 
 Each pairwise replay is an immutable, append-only record. The evaluation core's finalized comparison group IS
-that record: it already carries sourceCandidateRef, counterfactualCandidateRef, winnerRole/outcome, confidence,
-and a created-at timestamp (created_at_ms). The ladder is a DERIVED projection over these records, never a
-mutable store that overwrites them. Re-running a comparison produces a NEW record; it does not edit the old one,
-so the ladder's history is auditable by date.
+that record: it already carries sourceCandidateRef, counterfactualCandidateRef, winnerRole/outcome and
+confidence. It does NOT currently carry a created-at timestamp: the comparison-groups table is
+(group_id, status, group_json, result_json) with no time column, and neither group_json nor result_json stores
+one; the only timestamps are evaluation_holdouts.created_at and the reference attestation's issuedAtMs. The
+ladder history is therefore auditable by date only if a created_at is ADDED to the comparison group (or to the
+derived ladder record) - a net-new field, not something the group already has. Re-running a comparison produces
+a NEW record; it does not edit the old one.
 
 ## Storage
 
@@ -211,7 +214,9 @@ The ladder changes this in two ways:
 
 ## Replay/eval dispatch prioritization
 
-Replay dispatch stops picking a task at random and instead fills ladder gaps:
+Replay dispatch stops being live-request-driven (opportunistic) and instead fills ladder gaps. Today a replay
+is enqueued for any incoming request that has a distinct counterfactual endpoint
+(runTrackBReplayIntentPipeline; otherwise R14_NO_DISTINCT_COUNTERFACTUAL); stage 3 targets ladder gaps instead:
 
 - Enumerate every (role, task) scope whose ladder is incomplete (fewer endpoints ranked than the available
   eligible set for that scope) AND that has at least one replayable request/capture. A taxonomy (role, task)
