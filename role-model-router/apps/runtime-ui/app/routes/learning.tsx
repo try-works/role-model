@@ -487,6 +487,70 @@ export function learningTaskCell(row: Record<string, unknown>): LearningTaskCell
   };
 }
 
+/**
+ * Run 104 R22 (`R22-A3`): what the evidence join actually did, in words.
+ *
+ * Every column of the Decisions table is read from the row's `evidence` object, and a field the object
+ * does not carry renders the bounded `not reported` placeholder. That placeholder is honest per field,
+ * but it cannot say *why* the object is missing: measured live, the readback answered a page of 100
+ * rows with no evidence at all because the candidate walk had returned an empty index, and the table
+ * read as "the runtime recorded nothing" rather than "this read did not finish". The readback already
+ * publishes `evidenceJoin`; this turns it into the sentence the table was missing.
+ *
+ * `null` means the read reported nothing to explain - a runtime that predates the join report, or a
+ * page whose evidence all resolved - so the caller renders no note rather than an empty one.
+ */
+export function learningEvidenceJoinNote(readback: Record<string, unknown>): string | null {
+  const join = asRecord(asRecord(readback).evidenceJoin);
+  if (Object.keys(join).length === 0) return null;
+  const candidates = asRecord(join.candidateJoin);
+  const requestedGroups = finiteNumberOrNull(join.requestedGroups);
+  const resolvedGroups = finiteNumberOrNull(join.resolvedGroups);
+  const shortfall =
+    requestedGroups !== null && resolvedGroups !== null && resolvedGroups < requestedGroups;
+  if (join.unavailable === true) {
+    return "Evidence could not be read: the comparison store did not answer, so these rows show no verdict, judge or receipt. This is a read failure, not an absent decision.";
+  }
+  if (candidates.unavailable === true || candidates.failed === true) {
+    return "Evidence could not be joined: the candidate listing did not answer, so the comparison behind each row could not be found. This is a read failure, not an absent decision.";
+  }
+  if (join.truncated === true || shortfall) {
+    const counts =
+      requestedGroups !== null && resolvedGroups !== null
+        ? ` (${resolvedGroups} of ${requestedGroups} comparison groups resolved)`
+        : "";
+    return `Evidence is incomplete${counts}: the read hit its bound before it finished, so some rows show no verdict, judge or receipt even though the runtime recorded them.`;
+  }
+  if (candidates.exhausted === true && finiteNumberOrNull(candidates.resolvedCandidates) === 0) {
+    return "Evidence could not be joined: no candidate record matched these rows, so no comparison could be found for them.";
+  }
+  return null;
+}
+
+/**
+ * Run 104 R22 (`R22-B3`): a page of packs that cannot name a role or task says why.
+ *
+ * `scope-wide` is the correct label for a pack whose own scope is endpoint-id-only and whose comparison
+ * and validation receipt are both silent - the learner genuinely has no family to name. Measured live
+ * though, every such pack came from the *replay* comparison path, which dropped the capture's declared
+ * classification before the candidate was derived, so the label described a plumbing gap rather than a
+ * decision the learner made. The table cannot tell those apart per pack, but it can say how many of the
+ * rows it is showing are affected, so an operator sees a pattern instead of a mystery.
+ *
+ * `null` when every shown pack names a scope - there is nothing to explain.
+ */
+export function learningPackScopeNote(rows: readonly Record<string, unknown>[]): string | null {
+  if (rows.length === 0) return null;
+  const wide = rows.filter((row) => {
+    const declared = asRecord(row.scope);
+    const record = asRecord(row.record);
+    const recordScope = asRecord(record.scope);
+    return declared.scopeWide === true || recordScope.scopeWide === true;
+  }).length;
+  if (wide === 0) return null;
+  return `${wide} of ${rows.length} shown packs are scope-wide: they name only a routing target, so no role or task could be resolved for them from the pack, its validation receipt or its comparison. A pack promoted before the capture's declared role reached the learner is scope-wide this way.`;
+}
+
 function verdictTone(verdict: string): BadgeTone {
   if (verdict === "promoted") return "success";
   if (verdict === "rejected") return "error";
@@ -1312,6 +1376,8 @@ export function LearningPacksPage() {
   const rows = Array.isArray(asRecord(records.value).records)
     ? (asRecord(records.value).records as readonly Record<string, unknown>[])
     : [];
+  /** Run 104 R22 (`R22-B3`): how many shown packs cannot name a role or task, and why. */
+  const packScopeNote = learningPackScopeNote(rows);
   const rolloutValue = asRecord(rollout.value);
   const act = async (packId: string) => {
     if (
@@ -1412,6 +1478,7 @@ export function LearningPacksPage() {
           <ErrorState label={error} />
         </div>
       ) : null}
+      {packScopeNote ? <p className={`mt-3 ${supportingTextClassName}`}>{packScopeNote}</p> : null}
       {degraded(records.loading, records.error) ??
         (rows.length === 0 ? (
           <EmptyState label="No pack records have been derived for this scope yet." />
@@ -1532,6 +1599,12 @@ export function LearningDecisionsPage() {
   const taskOptions = distinctOptions(rows.map(taskOf));
   const outcomeOptions = distinctOptions(rows.map((row) => learningEvidence(row).verdict));
   const truncated = asRecord(decisions.value).truncated === true;
+  /**
+   * Run 104 R22 (`R22-A3`): a degraded evidence join is named above the table. Without it a read that
+   * never finished is indistinguishable from a runtime that recorded nothing, which is exactly how the
+   * operator read the table this addendum came from.
+   */
+  const evidenceJoinNote = learningEvidenceJoinNote(asRecord(decisions.value));
   return (
     <SectionCard
       title="Decision receipts"
@@ -1592,6 +1665,9 @@ export function LearningDecisionsPage() {
           </select>
         </label>
       </div>
+      {evidenceJoinNote ? (
+        <p className={`mt-3 ${supportingTextClassName}`}>{evidenceJoinNote}</p>
+      ) : null}
       {degraded(decisions.loading, decisions.error) ??
         (filtered.length === 0 ? (
           <EmptyState label="No decisions match this filter yet." />

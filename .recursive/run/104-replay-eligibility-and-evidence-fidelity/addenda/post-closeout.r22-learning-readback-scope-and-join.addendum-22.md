@@ -66,6 +66,61 @@ So `input.roleId` is always `undefined` on that path, the candidate's scope is r
 pack can never be role-scoped. The evidence to fix it exists: **83/131** comparison groups carry
 `comparability.roleId` and **81/124** validation receipts carry `familyEvidence.taskTypeId`.
 
+
+## Verification (browser, live runtime on :3457)
+
+The :3457 stage runtime had crashed, so the verification relaunched it with the R22 patched
+distribution and the rebuilt UI. Playwright (playwright-core, msedge) drove the two pages:
+
+- **Packs**: the R22-B3 note renders verbatim - `shown packs are scope-wide: they name only a routing
+  target, so no role or task could be resolved for them from the pack, its validation receipt or its
+  comparison` - and the table lists real roles (`researcher`, `designer`, `writer`, `support`,
+  `operator`).
+- **Decisions**: the evidence columns now render verdict words (`promoted`, `source`,
+  `comparison`, `validation`) and judge/model names (`deepseek`, `gpt`, `flash`, `luna`) beside
+  the remaining bounded `not reported` cells - the join populates evidence instead of returning an
+  all-null page.
+
+API evidence: `/api/role-model/operator/learning/decisions?limit=100&origin=live` answers
+`100/100` rows with `evidence`, and `evidenceJoin` now carries `candidateJoin
+{requestedCandidates, resolvedCandidates, pages, exhausted, failed, unavailable}`.
+
+Test evidence: `tests/track-b/run101-a48-learning-evidence-readback.test.mjs` A48-R8 and A48-R9 now
+pass (the evidence cap and the >256-group page); the A48-R1 externalized-page test remains a
+pre-existing, independent failure (it exercises `adapters.evaluation.groups` directly, not the
+learning join). Public UI: `learning-evidence-join-note.test.tsx` 11 tests pass;
+`learning-task-family`, `learning-floor-progress`, `learning` 35 tests pass.
+
+The 28 remaining scope-wide packs are legacy - promoted before the R22-B role plumbing; packs derived
+from replay comparisons after this change carry their role and task.
+
+Screenshots: `E:\tmp\run104-phase5\r22-decisions.png`, `E:\tmp\run104-phase5\r22-packs.png`.
+
+
+### Coverage after the fix (measured on the live :3457 readback)
+
+`/learning/decisions?limit=60&origin=live`:
+
+| what | count |
+| --- | --- |
+| rows | 60 |
+| rows with an evidence object | **60 / 60** |
+| rows naming a role (`roleId`) | 52 / 60 |
+| rows naming a task | 60 / 60 |
+| rows with `validationRef` + `comparisonId` | 60 / 60 |
+| rows with `replayRef` / `captureRef` / `counts` | 0 / 60 |
+
+The eight role-less rows are all `text.chat` - a generic chat family whose taxonomy entry carries no
+role - so `not reported` is the honest answer there, not a join failure. `replayRef`, `captureRef`
+and `counts` are likewise genuinely absent from these comparison groups: the receipt says so in words
+(`the receipt carries no comparison counts`) rather than rendering an invented zero. That is the
+distinction R22-A exists to preserve - a bounded read and an absent fact no longer look identical.
+
+The Decisions page also shows the same comparison backing many rows
+(`comparison:supervised-replay:…69171b37813292265ca1` across `operator.debug.ui` and
+`operator.config`). That is the live shape: the newest live requests all consult one advisory
+candidate, so they share its comparison. It is not a join artifact.
+
 ## Scope of this addendum
 R22-A and R22-B only. The activation model (one active route package per scope, ramped by cohort — observed
 as a single `knowledge_route_rollouts` row with one `activePackageId`) is deliberately **not** changed here:
