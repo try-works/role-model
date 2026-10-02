@@ -810,9 +810,12 @@ export function startAutoReplayLoop(input: {
   const tick = async (options?: { readonly onlyCaptureRefs?: readonly string[] }): Promise<
     AutoReplayTickResult & { readonly skipped?: boolean }
   > => {
-    if (running || paused) {
+    if (paused || (running && !options?.onlyCaptureRefs)) {
       // `L7`: this is the interval path while a long work tick is in flight. Run the liveness sweeps
       // here instead of skipping them, so an overdue job is still expired on schedule.
+      // Run 104 post-closeout (addendum 15): the queue worker's restricted tick (`onlyCaptureRefs`)
+      // is the execution authority and must NOT be skipped while the regular tick is still offering;
+      // skipping it made every dispatched capture a no-op (queued===0) and no disposition was written.
       const sweep = await runLivenessSweeps(
         input.ledger.status().window as unknown as Record<string, unknown>,
       );
