@@ -6710,6 +6710,7 @@ export async function main(): Promise<void> {
              */
             value: {
               state: ["awaiting_evaluation", "evaluating"],
+              summary: true,
               limit: MAX_HANDOFF_RECOVERY_LIST_PAGE,
             },
           })) as { readonly jobs?: unknown } | readonly unknown[] | null;
