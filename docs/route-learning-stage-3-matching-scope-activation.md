@@ -226,4 +226,35 @@ Replay dispatch stops picking a task at random and instead fills ladder gaps:
 The completeness + next-eligible timestamp live in the index row, so the dispatcher can select the
 next task to fill without scanning every comparison.
 
+## Effect requirement
+
+All stage-3 ladder code - the aggregation, the ladder store/index, and the dispatch scheduler - is
+implemented in Effect, using the vendored Effect v4 tree (effect@4.0.0-rc.117 at vendor/effect, re-exported
+through role-model-router/packages/effect). The mapping below follows the patterns the repo already uses:
+scoring-strategy.ts builds Schema contracts and Data.TaggedEnum unions; queue-runtime composes Layer services
+with ManagedRuntime and Fiber, and sizes intervals with Duration.
+
+- Data contracts -> Schema. The rung, the ladder, the index row and the pairwise replay record are Schema
+  models, not hand-rolled interfaces: the rung status is Schema.Literal('available', 'unavailable'); the
+  index's completeness invariant (0 <= ranked <= total available) is Schema.check; the staleness window is a
+  Duration field (Duration.days(30) at the default).
+- Tagged errors -> Data.TaggedError. InsufficientEvidence (below K comparisons or the 0.7 confidence floor),
+  NoReplayableRequest (a (role, task) with no recorded capture), EndpointUnavailable (a rung flipped to
+  unavailable), and ScopeMismatch are tagged errors, so callers match exhaustively instead of string-
+  comparing messages.
+- Aggregation -> a pure Effect over Chunk/Order. The weighted-net-wins fold (aggregation step 2) is an Effect
+  that reduces the comparison records into a HashMap keyed by endpointId with the rank score, then sorts by a
+  composed Order (score desc, then the documented tie-breaks). No mutable global state; the function is
+  testable by supplying the comparison records as input.
+- Persistence -> Layer + Context.Tag. The ladder store and the derived index are a service behind a
+  Context.Tag, built by a Layer (mirroring queue-runtime's storeLayerForQueuePolicy). The write path updates
+  completeness and nextEligibleAtMs when a rung fills, and flips a removed endpoint's rung to 'unavailable'.
+- Dispatch scheduler -> Effect + Schedule + Duration + Clock + Queue. The task-by-task fill loop is a
+  recurring Effect (Schedule) that reads Clock.currentTimeMillis to compare nextEligibleAtMs, enqueues only
+  incomplete scopes that also have a replayable request (filtering NoReplayableRequest before enqueue), and
+  treats a complete ladder as idle until its Duration.days(30) window elapses.
+- Optional/partial results -> Option / Result. The ladder lookup for a (role, task) is an Option (missing vs
+  present), and the per-comparison verdict is a Data.TaggedEnum (win | loss | tie) that the fold consumes.
+
+
 
