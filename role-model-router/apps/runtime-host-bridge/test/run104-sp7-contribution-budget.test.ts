@@ -59,7 +59,7 @@ const aggregatePayload = {
 describe("run104 SP7 contribution aggregate budget", () => {
   test("pins the contribution aggregate budget to a documented, operator-visible constant", () => {
     // (c) the budget is asserted against the constant so a future edit cannot silently regress it.
-    expect(DEFAULT_CONTRIBUTION_AGGREGATE_TIMEOUT_MS).toBe(5_000);
+    expect(DEFAULT_CONTRIBUTION_AGGREGATE_TIMEOUT_MS).toBe(30_000);
     // The operations default is 600 s; the aggregate cap must stay the smaller of the two.
     expect(resolveContributionAggregateTimeoutMs(600_000)).toBe(
       DEFAULT_CONTRIBUTION_AGGREGATE_TIMEOUT_MS,

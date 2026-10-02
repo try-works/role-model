@@ -898,7 +898,11 @@ export class RouteCaptureBoundaryCoolingDownError extends Error {
     this.name = "RouteCaptureBoundaryCoolingDownError";
   }
 }
-export const DEFAULT_CONTRIBUTION_AGGREGATE_TIMEOUT_MS = 5_000;
+// Run 104 post-closeout (addendum 11): the mature stage root's aggregate commit exceeds the 5 s cap
+// under cross-process write load (measured "contribution aggregate timed out after 5000ms"), which starved
+// the auto-replay producer so freshly captured requests were never replayed. Raised to 30 s (still bounded
+// well below the 600 s operations bound).
+export const DEFAULT_CONTRIBUTION_AGGREGATE_TIMEOUT_MS = 30_000;
 
 /**
  * Run 104 SP7 (`R10`): the aggregate cap is a hard ceiling on one caller-side attempt, so a
