@@ -218,12 +218,17 @@ Replay dispatch stops being live-request-driven (opportunistic) and instead fill
 is enqueued for any incoming request that has a distinct counterfactual endpoint
 (runTrackBReplayIntentPipeline; otherwise R14_NO_DISTINCT_COUNTERFACTUAL); stage 3 targets ladder gaps instead:
 
-- Enumerate every (role, task) scope whose ladder is incomplete (fewer endpoints ranked than the available
-  eligible set for that scope) AND that has at least one replayable request/capture. A taxonomy (role, task)
-  with no recorded request has nothing to replay, so it is excluded from the work queue even if its ladder is
-  empty. That constrained set is the work queue.
-- Dispatch counterfactuals to fill each scope's ladder one task at a time, until every available endpoint for
-  that task is ranked.
+Tasks are discovered from live requests: the set of (role, task) scopes is whatever incoming traffic
+classifies - there is no pre-defined task list to walk. A taxonomy (role, task) with no recorded request has
+nothing to replay and never enters the work queue.
+
+The dispatcher fills one task's ladder to completion before moving to the next (depth-first):
+
+- Select the current task: the (role, task) with an incomplete ladder (fewer endpoints ranked than the
+  available eligible set) and at least one replayable capture. If several qualify, pick one deterministically
+  (most-requested first, then most-unfilled) and hold it as the focus.
+- Dispatch counterfactuals for that task until every available endpoint is ranked (the ladder is complete);
+  only then does the dispatcher advance to the next incomplete task.
 - A task whose ladder is complete (all available endpoints ranked) is marked complete and NOT replayed until
   its staleness window elapses (default 30 days). After 30 days it becomes eligible for a refresh replay with
   the same models, and its ladder is recomputed from the fresh comparisons.
@@ -254,10 +259,11 @@ with ManagedRuntime and Fiber, and sizes intervals with Duration.
 - Persistence -> Layer + Context.Tag. The ladder store and the derived index are a service behind a
   Context.Tag, built by a Layer (mirroring queue-runtime's storeLayerForQueuePolicy). The write path updates
   completeness and nextEligibleAtMs when a rung fills, and flips a removed endpoint's rung to 'unavailable'.
-- Dispatch scheduler -> Effect + Schedule + Duration + Clock + Queue. The task-by-task fill loop is a
-  recurring Effect (Schedule) that reads Clock.currentTimeMillis to compare nextEligibleAtMs, enqueues only
-  incomplete scopes that also have a replayable request (filtering NoReplayableRequest before enqueue), and
-  treats a complete ladder as idle until its Duration.days(30) window elapses.
+- Dispatch scheduler -> Effect + Schedule + Duration + Clock + Queue. The fill loop is a recurring Effect
+  (Schedule) that holds the current focus task in a Ref/Queue, dispatches that task's counterfactuals until its
+  ladder is complete, then advances to the next incomplete task (discovered from live requests, filtered for
+  NoReplayableRequest before enqueue). It reads Clock.currentTimeMillis against nextEligibleAtMs and treats a
+  complete ladder as idle until its Duration.days(30) window elapses.
 - Optional/partial results -> Option / Result. The ladder lookup for a (role, task) is an Option (missing vs
   present), and the per-comparison verdict is a Data.TaggedEnum (win | loss | tie) that the fold consumes.
 
