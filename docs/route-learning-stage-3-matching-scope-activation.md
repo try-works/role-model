@@ -113,3 +113,65 @@ the next-best becomes the top automatically - this is the fallback that answers 
    cannot route to. Mitigate with an eligibility filter before ranking.
 - The learner's candidate scope must be complete (role/task present) for a pack to match - the R22-B plumbing
    this runtime was missing. Packs with no family stay scope-wide only.
+
+## Ladder aggregation: pairwise comparisons -> a total order
+
+The ladder is derived from the finalized evaluation comparison groups in a (role, task) scope. Each group
+compares a source candidate against a counterfactual candidate and records a winner (or tie), per-scorer
+outcomes, a scorer-disagreement flag, and a judge confidence. The aggregation turns that sparse, sometimes
+disagreeing pairwise evidence into a single ranked order.
+
+Inputs (per finalized comparison group in scope): source/counterfactual candidateRefs (the two endpoints),
+outcome (candidate | source | tie) and winnerRole, scorerDisagreement (bool) and scorerOutcomes (per-scorer
+winner), and the member confidence (the judge's confidence for each side).
+
+Step 1 - normalize each comparison into a weighted pairwise verdict.
+
+    winner beats loser by weight w, where:
+      w = confidence * agreement
+      confidence = the winning side's judge confidence (clamped to [0,1])
+      agreement = scorerDisagreement ? (scorers-for-winner / total-scorers, clamped to [0.5,1]) : 1
+    a tie contributes 0 to both sides.
+
+A confident, unanimous win is strong evidence; a split or low-confidence win is weak. Clamping agreement at
+0.5 means a 1-of-2 split still weakly favors the winner rather than erasing it.
+
+Step 2 - accumulate a rank score per endpoint.
+
+    rankScore(E) = sum over comparisons touching E of (+w if E won, -w if E lost, 0 if tie)
+
+This is a weighted net pairwise (Copeland-style) score: a sparse champion-vs-challenger graph is fine, because
+each comparison only updates the two endpoints it touches.
+
+Step 3 - order by rankScore descending, with a deterministic tie-break.
+
+For equal rankScore, break ties in order by: (1) direct head-to-head result - if the two endpoints were
+compared, the winner ranks higher; (2) fewer losses, then more wins - a more decisive record; (3) higher
+confidence-weighted comparison count - more evidence; (4) endpoint id - lexicographic, final and stable.
+
+Step 4 - slot-in and removal.
+
+Slot-in: a new endpoint runs counterfactuals against the current ladder members (one comparison per sampled
+member, or a bounded sample). Its rankScore is computed from those pairwise results and it is inserted at that
+position; the rest of the ladder keeps its relative order.
+
+Removal: dropping an endpoint (catalog removal, policy, outage) removes that rung; the remaining order is
+unchanged and the next-best becomes the new top.
+
+Step 5 - confidence and sample floors before an endpoint is routable.
+
+An endpoint is only admitted to the ACTIVE ladder (as opposed to a shadow candidate) when: it has at least K
+finalized, effort-comparable comparisons in scope (K is a product default, e.g. 5), and its aggregate
+confidence (mean winning-side confidence) meets the promotion floor (0.7, matching the profile learner's
+canPromoteProfile gate). Below the floor the endpoint stays a shadow candidate and the previous ladder remains
+authoritative.
+
+Notes and open questions:
+
+- The graph is champion-vs-challenger, not a full round-robin, so the ladder is a best-effort total order that
+  refines as more counterfactuals run; it never claims transitivity it has not measured.
+- Effort comparability is a precondition: only comparisons whose arms carry effortComparability (the run-104
+  goal) are combined, so a low-effort arm is not unfairly ranked below a high-effort one.
+- Scorer disagreement is down-weighted, not resolved by fiat; a recalibrated scorer set re-weights (or re-runs)
+  the affected comparisons rather than silently keeping stale weights.
+
