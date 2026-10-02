@@ -718,6 +718,33 @@ export const OPENAI_CODEX_SUBSCRIPTION_MODEL_MATRIX = [
 export const OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS = OPENAI_CODEX_SUBSCRIPTION_MODEL_MATRIX.map(
   (entry) => entry.modelId,
 );
+
+/**
+ * The OpenAI catalog rows at or above the subscription version floor that this surface deliberately
+ * does not offer, each with the reason. Everything else the catalog carries at or above the floor must
+ * appear in the matrix above - `openai-codex-subscription-catalog-conformance.test.ts` fails otherwise,
+ * in both directions:
+ *
+ * - a catalog row at or above the floor that is neither offered nor excluded here, which is how
+ *   `feat(catalog): add the new OpenAI models and bill context tiers` (#286) added six OpenAI rows
+ *   (`gpt-6-astra`, `gpt-6-luna`, `gpt-6-sol`, `gpt-6.1-sol`, and the daybreak pair) that no runtime ever
+ *   offered - they were priced and described in the catalog while the matrix, which is the runtime's own
+ *   declaration of the surface, silently stayed at twelve;
+ * - a matrix entry with no catalog row, which `createRuntimeModelRecords` below drops without a word
+ *   (`if (!source) return []`), so a typo or a removed catalog row removes a model from the surface with
+ *   no failure anywhere.
+ *
+ * The floor and its version parse live with the test, because the rule it encodes is a conformance
+ * statement about the catalog rather than something the runtime evaluates.
+ */
+export const OPENAI_CODEX_SUBSCRIPTION_MODEL_EXCLUSIONS = {
+  "gpt-5.6":
+    "the bare 5.6 row is not a Codex subscription target; the offered 5.6 rows are its named variants",
+  "gpt-daybreak-blue-latest":
+    "the provider id behind GPT-5.6 Sol, not a model in its own right - listing it would offer a second name for one model",
+  "gpt-daybreak-red-latest":
+    "the provider id behind GPT-5.6 Cyber, not a model in its own right - listing it would offer a second name for one model",
+} as const satisfies Readonly<Record<string, string>>;
 const OPENAI_CODEX_SUBSCRIPTION_MODEL_ID_SET = new Set<string>(OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS);
 const OPENAI_CODEX_SUBSCRIPTION_ENDPOINT_ID_MARKERS = [
   `.${OPENAI_CODEX_SUBSCRIPTION_VARIANT_ID}.`,
