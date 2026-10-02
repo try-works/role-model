@@ -578,7 +578,17 @@ const CONTROLLER_MAX_OUTPUT_TOKENS = 1024;
 export type OpenAICodexSubscriptionModelLifecycle = "supported" | "preview" | "deprecated";
 
 export interface OpenAICodexSubscriptionModelProfile {
-  readonly modelId: `chatgpt/gpt-5.${string}`;
+  /**
+   * The subscription surface spans more than the GPT-5 line, so the id is constrained by its
+   * `chatgpt/` prefix rather than pinned to `gpt-5.`.
+   *
+   * Pinning it to `gpt-5.` is why the newer rows could not be offered at all: the catalog has priced
+   * and described `gpt-6-astra`, `gpt-6-luna`, `gpt-6-sol` and `gpt-6.1-sol` since
+   * `feat(catalog): add the new OpenAI models and bill context tiers` (#286), but a `gpt-6.x` id could
+   * not be declared in this matrix, so the runtime never exposed them while the catalog already knew
+   * their capabilities, context window, reasoning efforts and cost tiers.
+   */
+  readonly modelId: `chatgpt/gpt-${string}`;
   readonly lifecycle: OpenAICodexSubscriptionModelLifecycle;
   readonly supportsFunctionCalling: boolean;
   readonly supportsHostedWebSearch: boolean;
@@ -587,6 +597,47 @@ export interface OpenAICodexSubscriptionModelProfile {
 }
 
 export const OPENAI_CODEX_SUBSCRIPTION_MODEL_MATRIX = [
+  /**
+   * The GPT-6 rows the catalog has carried since `feat(catalog): add the new OpenAI models and bill
+   * context tiers` (#286). They were priced, described and tiered in
+   * `packages/catalog/data/normalized-catalog.json` from that PR on, but never offered, because this
+   * matrix is the runtime's own declaration of the subscription surface and #286 did not touch it -
+   * the models were consequently absent from every `models.dev`-derived readback while the catalog
+   * already answered for them. `reasoningEffortLevels` is the set the catalog publishes for each row,
+   * which is what the resolver uses when it differs from models.dev's own default.
+   *
+   * The models.dev `gpt-daybreak-blue-latest` / `gpt-daybreak-red-latest` rows are deliberately not
+   * listed: they are the provider ids behind GPT-5.6 Sol and GPT-5.6 Cyber rather than models in
+   * their own right, so they stay catalog aliases and never become selectable subscription entries.
+   */
+  {
+    modelId: "chatgpt/gpt-6.1-sol",
+    lifecycle: "supported",
+    supportsFunctionCalling: true,
+    supportsHostedWebSearch: true,
+    reasoningEffortLevels: ["low", "medium", "high", "xhigh", "max"],
+  },
+  {
+    modelId: "chatgpt/gpt-6-sol",
+    lifecycle: "supported",
+    supportsFunctionCalling: true,
+    supportsHostedWebSearch: true,
+    reasoningEffortLevels: ["none", "low", "medium", "high", "xhigh", "max"],
+  },
+  {
+    modelId: "chatgpt/gpt-6-luna",
+    lifecycle: "supported",
+    supportsFunctionCalling: true,
+    supportsHostedWebSearch: true,
+    reasoningEffortLevels: ["none", "low", "medium", "high", "xhigh", "max"],
+  },
+  {
+    modelId: "chatgpt/gpt-6-astra",
+    lifecycle: "supported",
+    supportsFunctionCalling: true,
+    supportsHostedWebSearch: true,
+    reasoningEffortLevels: ["low", "medium", "high", "xhigh", "max"],
+  },
   {
     modelId: "chatgpt/gpt-5.6-sol",
     lifecycle: "supported",
