@@ -68,9 +68,22 @@ export type OperationalPerformanceProfile = ObservedPerformanceProfile & {
 export const FRESHNESS_HALFLIFE_MS = 7 * 24 * 60 * 60 * 1000;
 export const CONFIDENCE_SAMPLE_TARGET = 50;
 
-/** Run 104 / R14: `live` and the legacy `live_request` are the same traffic class for aggregation purposes. */
+/**
+ * Run 104 / R14: `live` and the legacy `live_request` are the same traffic class for aggregation purposes.
+ *
+ * Run 104 post-closeout (addendum 14): a `replay` / `evaluation` / `probe` execution is still a real provider
+ * call, so its sample is a valid operational observation and must be admitted to the profile. Excluding it made
+ * the replay observation bundle throw `A live runtime observation must produce an operational profile.`
+ * (`benchmark` stays out: benchmark samples are durable input evidence, never a live projection).
+ */
 export function isLiveSourceType(sourceType: ObservedPerformanceSample["source_type"]): boolean {
-  return sourceType === "live" || sourceType === "live_request";
+  return (
+    sourceType === "live" ||
+    sourceType === "live_request" ||
+    sourceType === "replay" ||
+    sourceType === "evaluation" ||
+    sourceType === "probe"
+  );
 }
 
 function clamp(value: number, min: number, max: number): number {

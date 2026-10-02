@@ -42,3 +42,16 @@ test("run104: the legacy live_request value still counts as live traffic", () =>
     sources: { live_request_samples: 1, benchmark_samples: 0 },
   });
 });
+
+test("run104 post-closeout: a replay sample is a valid operational observation", () => {
+  const profile = aggregateOperationalPerformanceSamples([sample("replay")], { nowMs: 2_000 });
+  expect(profile).toMatchObject({
+    sample_size: 1,
+    sources: { live_request_samples: 1, benchmark_samples: 0 },
+  });
+});
+
+test("run104 post-closeout: a benchmark sample alone still yields no live projection", () => {
+  const profile = aggregateOperationalPerformanceSamples([sample("benchmark")], { nowMs: 2_000 });
+  expect(profile).toBeNull();
+});
