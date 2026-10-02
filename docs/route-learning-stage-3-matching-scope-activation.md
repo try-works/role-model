@@ -175,3 +175,39 @@ Notes and open questions:
 - Scorer disagreement is down-weighted, not resolved by fiat; a recalibrated scorer set re-weights (or re-runs)
   the affected comparisons rather than silently keeping stale weights.
 
+## Storage
+
+Today a pack is JSON stored in SQLite rows (not a dedicated table, not single files):
+
+- knowledge-worker.sqlite -> knowledge_worker_candidates.candidate_json -> packCandidates[] (the
+  candidate-embedded form produced at promotion);
+- knowledge-store.sqlite -> knowledge_learning_records (kind='pack') -> record_json (the durable pack, with
+  scope {endpointId, roleId, taskTypeId, taxonomyVersion});
+- knowledge_route_rollouts.activePackageId (a pointer to the active pack, one per scope_id).
+
+The ladder changes this in two ways:
+
+1. The durable pack record gains a `ladder` field - the ranked endpoint array for its (role, task), replacing
+   the single scope.endpointId. It stays JSON inside the existing rows (no new files), but the ladder becomes
+   first-class data rather than an implied single preference.
+2. A new index maps (roleId, taskTypeId) -> active ladder so the router and the dispatcher answer 'what is the
+   ranked ladder for this task' in one read. One row per (role, task): ladder, completeness (ranked / total
+   available endpoints), and nextEligibleAtMs. The index is a DERIVED projection, not a second source of truth
+   - the ladder records are authoritative, the index is rebuilt from them.
+
+## Replay/eval dispatch prioritization
+
+Replay dispatch stops picking a task at random and instead fills ladder gaps:
+
+- Enumerate every (role, task) scope whose ladder is incomplete (fewer endpoints ranked than the available
+  eligible set for that scope). That incomplete set is the work queue.
+- Dispatch counterfactuals to fill each scope's ladder one task at a time, until every available endpoint for
+  that task is ranked.
+- A task whose ladder is complete (all available endpoints ranked) is marked complete and NOT replayed until
+  its staleness window elapses (default 30 days). After 30 days it becomes eligible for a refresh replay with
+  the same models, and its ladder is recomputed from the fresh comparisons.
+
+The completeness + next-eligible timestamp live in the index row, so the dispatcher can select the
+next task to fill without scanning every comparison.
+
+
