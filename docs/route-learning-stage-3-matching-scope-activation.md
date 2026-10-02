@@ -67,8 +67,13 @@ ladder for that scope.
 The ladder is an aggregation of the evaluation core's pairwise comparison groups for a (role, task): each
 comparison names a source and a counterfactual candidate with a winner, so a total order falls out. Slotting a
 new endpoint into the ladder means running counterfactuals against the current members and inserting it at the
-rank its pairwise results justify. Removing an endpoint (catalog removal, policy, outage) drops that rung and
-the next-best becomes the top automatically - this is the fallback that answers the drift question.
+rank its pairwise results justify.
+
+Each rung carries a STATUS: 'available' (routable, healthy) or 'unavailable' (removed from the catalog, blocked
+by policy, or unhealthy - kept in the ladder for history, but not routable). Removing an endpoint does NOT
+delete its rung; it flips the rung's status to 'unavailable', so the router skips it and falls through to the
+next available rung. This preserves the historical rank while keeping routing honest, and it is the fallback
+that answers the drift question.
 
 ## Change list (code sites)
 
@@ -155,8 +160,9 @@ Slot-in: a new endpoint runs counterfactuals against the current ladder members 
 member, or a bounded sample). Its rankScore is computed from those pairwise results and it is inserted at that
 position; the rest of the ladder keeps its relative order.
 
-Removal: dropping an endpoint (catalog removal, policy, outage) removes that rung; the remaining order is
-unchanged and the next-best becomes the new top.
+Removal: an endpoint that leaves the eligible set (catalog removal, policy, outage) is marked 'unavailable',
+not deleted - its rung stays in the ladder with status 'unavailable', and routing falls through to the next
+available rung. The rank history is preserved.
 
 Step 5 - confidence and sample floors before an endpoint is routable.
 
@@ -175,6 +181,14 @@ Notes and open questions:
 - Scorer disagreement is down-weighted, not resolved by fiat; a recalibrated scorer set re-weights (or re-runs)
   the affected comparisons rather than silently keeping stale weights.
 
+### Pairwise replay record
+
+Each pairwise replay is an immutable, append-only record. The evaluation core's finalized comparison group IS
+that record: it already carries sourceCandidateRef, counterfactualCandidateRef, winnerRole/outcome, confidence,
+and a created-at timestamp (created_at_ms). The ladder is a DERIVED projection over these records, never a
+mutable store that overwrites them. Re-running a comparison produces a NEW record; it does not edit the old one,
+so the ladder's history is auditable by date.
+
 ## Storage
 
 Today a pack is JSON stored in SQLite rows (not a dedicated table, not single files):
@@ -187,7 +201,7 @@ Today a pack is JSON stored in SQLite rows (not a dedicated table, not single fi
 
 The ladder changes this in two ways:
 
-1. The durable pack record gains a `ladder` field - the ranked endpoint array for its (role, task), replacing
+1. The durable pack record gains a `ladder` field - a ranked array of rungs {endpointId, rank, status} for its (role, task), replacing
    the single scope.endpointId. It stays JSON inside the existing rows (no new files), but the ladder becomes
    first-class data rather than an implied single preference.
 2. A new index maps (roleId, taskTypeId) -> active ladder so the router and the dispatcher answer 'what is the
@@ -200,7 +214,9 @@ The ladder changes this in two ways:
 Replay dispatch stops picking a task at random and instead fills ladder gaps:
 
 - Enumerate every (role, task) scope whose ladder is incomplete (fewer endpoints ranked than the available
-  eligible set for that scope). That incomplete set is the work queue.
+  eligible set for that scope) AND that has at least one replayable request/capture. A taxonomy (role, task)
+  with no recorded request has nothing to replay, so it is excluded from the work queue even if its ladder is
+  empty. That constrained set is the work queue.
 - Dispatch counterfactuals to fill each scope's ladder one task at a time, until every available endpoint for
   that task is ranked.
 - A task whose ladder is complete (all available endpoints ranked) is marked complete and NOT replayed until
