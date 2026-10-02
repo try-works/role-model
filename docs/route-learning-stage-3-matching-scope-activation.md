@@ -54,6 +54,8 @@ removal only - it is not the router's per-request eligibility, which is applied 
 - knowledge-worker: derive and persist the ladder (aggregate pairwise comparisons per scope), replacing the
   single scope.endpointId.
 - knowledge-store: add the rollback path for a (role, task) ladder (see Rollback).
+- runtime-ui (learning.tsx, Packs page): render the ladder index (top-3 per task, status, completeness), sorted
+  complete-first, with a per-row rollback toggle wired to the backend flag.
 
 ## Resolved decisions
 
@@ -158,6 +160,20 @@ challengeBatchSize (how many top-down challenge comparisons a new endpoint may r
 itself is sequential - one rung per comparison). The runtime reads
 them through the existing product-defaults loader.
 
+## UI: Packs page (the ladder index)
+
+The Packs page under Learning becomes a scrollable ladder index - one row per (role, task) the runtime has
+seen. Each row shows the task's (role, task) name, its TOP 3 ranked endpoints (best first), its status
+('active' = influencing routing, or 'rolled back' = the user's override), and its completeness
+(admitted / configured endpoints). Rows are ordered so the most-reviewable tasks surface first:
+
+1. fully-ranked tasks (every configured endpoint admitted) at the top;
+2. then partially-ranked tasks, most-unfilled first;
+3. tasks with no admitted endpoint (no ladder yet) at the bottom.
+
+The user scrolls the index to review it and toggles the per-task rollback flag directly from the row. The
+top-3 display is a projection of the ladder; the full ranking lives on a per-task detail view.
+
 ## Effect requirement
 
 All ladder code is implemented in Effect, using the vendored Effect v4 tree (vendor/effect, re-exported
@@ -184,6 +200,8 @@ Data.TaggedEnum; queue-runtime: Layer + ManagedRuntime + Fiber + Duration).
 - A user-removed endpoint flips to 'unavailable' and is skipped; the next available rung is used.
 - Rollback of one task's ladder does not disturb another, and a rolled-back task routes by baseline.
 - No pack routes directly (advisory_only preserved).
+- The Packs page shows the ladder index (top-3 per task, status, completeness), ordered complete-first, and the
+  per-row rollback toggle flips the backend flag.
 
 ## Scope-wide packs do not exist
 
