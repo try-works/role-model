@@ -1173,6 +1173,11 @@ export function createRuntimeObservationBundle(
     nowMs: currentSample.timestamp_ms,
   });
   if (!profile) {
+    // Temporary diagnostic (addendum 14 follow-on): name the traffic class and source type that
+    // produced a null profile so the replay observation path can be corrected.
+    console.error(
+      `[run104-observation] profile null: trafficClass=${String(input.trafficClass)} source_type=${currentSample.source_type} endpoint=${input.decision.chosen_endpoint_id}`,
+    );
     throw new Error("A live runtime observation must produce an operational profile.");
   }
   const capturePolicy = buildCapturePolicyReceipt(input.maintenancePolicy, input.capturePolicy);
