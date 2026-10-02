@@ -1786,7 +1786,25 @@ function readAgentStrategyBlock(
   if (raw === undefined || raw === null) {
     return undefined;
   }
-  if (typeof raw !== "object" || Array.isArray(raw)) {
+  // The normalized config stores this block as `AgentStrategyEntry[]`, not a name-keyed
+  // mapping. Re-entering the normalizer with an already-normalized config (the downstream-openai
+  // discovery route does exactly that) must therefore be idempotent: accept the array form and
+  // hand it straight through. An array whose members are not already-decoded entries is still
+  // rejected, so a malformed list keeps failing closed instead of being silently accepted.
+  if (Array.isArray(raw)) {
+    if (
+      raw.some(
+        (entry) =>
+          typeof entry !== "object" ||
+          entry === null ||
+          typeof (entry as { name?: unknown }).name !== "string",
+      )
+    ) {
+      throw new Error(`${kind === "role" ? "agent_strategies" : "workloads"} must be a mapping.`);
+    }
+    return raw as readonly AgentStrategyEntry[];
+  }
+  if (typeof raw !== "object") {
     throw new Error(`${kind === "role" ? "agent_strategies" : "workloads"} must be a mapping.`);
   }
   return Object.entries(raw as Record<string, unknown>).map(([name, value]) =>

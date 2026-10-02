@@ -357,7 +357,6 @@ import {
   deriveUnifiedRuntimeRoutingAliasMode,
   isPrimaryRoutingAliasId,
   mergeUnifiedRuntimeConfigDocuments,
-  normalizeUnifiedRuntimeConfigInput,
   parseUnifiedRuntimeConfigText,
   removeUnifiedRuntimeConfigProviderModel,
   renderUnifiedRuntimeConfigText,
@@ -9561,7 +9560,7 @@ async function resolveConfiguredModelAliases(
 
 async function resolveConfiguredRuntimeConfig(
   readRuntimeConfig: StartBridgeServerOptions["readRuntimeConfig"],
-): Promise<ReturnType<typeof normalizeUnifiedRuntimeConfigInput> | null> {
+): Promise<UnifiedRuntimeConfig | null> {
   if (!readRuntimeConfig) {
     return null;
   }
@@ -9578,7 +9577,12 @@ async function resolveConfiguredRuntimeConfig(
   if (!configValue || typeof configValue !== "object" || Array.isArray(configValue)) {
     return null;
   }
-  return normalizeUnifiedRuntimeConfigInput(configValue);
+  // `readRuntimeConfig()` returns the runtime's already-normalized config
+  // (`currentUnifiedRuntimeConfig`). Normalizing it again re-enters the input normalizer with
+  // `agentStrategies`/`workloads` as arrays, which it rejects with "agent_strategies must be a
+  // mapping." and breaks the downstream-openai discovery route. Hand the normalized value
+  // through unchanged instead.
+  return configValue as UnifiedRuntimeConfig;
 }
 
 function readForwardedHeaderValue(value: string | string[] | undefined): string | undefined {

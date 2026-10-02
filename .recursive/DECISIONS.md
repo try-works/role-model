@@ -784,3 +784,24 @@ Date: `2026-10-01`
   Active posture rail followed; the weight editor appears only for Custom. The operator's posture was
   restored afterwards (`baseline` + `quality`, `remote_only`). Evidence:
   `addenda/03-implementation-summary.post-lock-routing-save.addendum-04.md`.
+
+### Delivery: merged, promoted to stage, stage candidate published
+
+Date: `2026-10-01`
+
+- Run 103 merged to public `dev` as `de4089c2` (PR #291, all checks green except the owner-authored CLA
+  check the operator authorized skipping). Peer PRs #286 (catalog refresh), #288 (design document) and
+  #292 (dsh-role-model alias persistence) were merged on the operator's instruction with the review
+  requirement overridden; `dev` is `a35b676a`.
+- The `R7` release dependency is closed: private PR #121 aligned the registry to `min_samples` 5..30 and
+  `max_delta_ms` 10 000 for the effective-latency metric, promoted to private `stage` as `96450a40`
+  (PR #122) and recorded in `ROLE_MODEL_PAIRED_PRIVATE_SHA` before the public promotion.
+- Public `dev -> stage` merged as `14fce6cf` (PR #293, all checks green) and published the stage candidate
+  prerelease `stage-rc-14fce6cffcd1` (win32-x64 sha256
+  `aac6d635af5b8f9f55fbe986e6d37a2ce1b4c6a4254852f932d64a587f257301`).
+- The exact candidate runs on the stage channel `:3457`: healthy, run-103 readback present, a
+  `baseline.remote-only` request answered 200, and a restart kept the persisted posture and the 50 stored
+  decisions. `accept-release-candidate` has not been run; the candidate awaits the operator's acceptance.
+- Closeout also repaired two CI blockers the pull request exposed: BOM'd phase-5 evidence JSON files and
+  the vendored `effect` build missing from the bridge test lanes. Evidence:
+  `addenda/09-closeout.post-lock-release.addendum-01.md`.
