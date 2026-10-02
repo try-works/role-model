@@ -5383,6 +5383,11 @@ export async function main(): Promise<void> {
     const startHostAutoReplayLoop = (
       endpoints: () => readonly string[],
       healthyEndpoints: () => Promise<readonly string[] | null>,
+      endpointDescriptors: () => readonly {
+        endpointId: string;
+        modelId: string;
+        reasoningEffort: string | null;
+      }[],
     ): ReturnType<typeof startAutoReplayLoop> | null => {
       const operations = postObservationOperations;
       const channel = packagedProfile?.channel ?? "development";
@@ -7369,9 +7374,70 @@ export async function main(): Promise<void> {
            * removed, exactly as the addendum's TODO required. The offer below is unchanged.
            */
           if (handoffRequest && lateBoundEvaluationQueue.mode !== "legacy") {
+            // Run 104 R9 producer plumbing (addendum 16): record the resume entry (counterfactual packages +
+            // per-arm effort comparability) before offering, like the supervised path — otherwise the evaluation
+            // worker's resume is a silent no-op and the comparison never carries effortComparability.
+            const evaluationJobId = `evaluation-replay-${createHash("sha256")
+              .update(String(handoffRequest.replayJobId))
+              .digest("hex")
+              .slice(0, 20)}`;
+            const arms = candidates.map((endpointId) => {
+              const descriptor = endpointDescriptors().find((d) => d.endpointId === endpointId);
+              return {
+                endpointId,
+                modelId: descriptor?.modelId ?? "",
+                reasoningEffort: descriptor?.reasoningEffort ?? null,
+              };
+            });
+            const replayArmEffortComparability = classifyReplayArmEffort({
+              arms,
+              sourceModelId:
+                typeof sourceCapture.modelId === "string" ? sourceCapture.modelId : "",
+              sourceReasoningEffort:
+                typeof sourceCapture.reasoningEffort === "string"
+                  ? sourceCapture.reasoningEffort
+                  : null,
+            });
             /** Run 101 addendum 27: the offer is an Effect program with a bounded retry (see the helper). */
-            const offered = await offerEvaluationHandoff({
-              replayJobId: handoffRequest.replayJobId,
+            const offered = await offerRecordedEvaluationHandoff({
+              replayJobId: String(handoffRequest.replayJobId),
+              record: () => {
+                const resumeStore = evaluationResumeStoreRef.current;
+                if (!resumeStore) return;
+                resumeStore.record({
+                  schemaVersion: "role-model.supervised-replay-evaluation-resume.v1",
+                  replayJobId: String(handoffRequest.replayJobId),
+                  evaluationJobId,
+                  requestId: capture.captureRef,
+                  sourceCaptureRequestId:
+                    typeof sourceCapture.requestId === "string"
+                      ? sourceCapture.requestId
+                      : capture.captureRef,
+                  sourceEndpointId:
+                    typeof sourceCapture.endpointId === "string"
+                      ? sourceCapture.endpointId
+                      : capture.sourceEndpointId ?? "",
+                  sourceModelId:
+                    typeof sourceCapture.modelId === "string" ? sourceCapture.modelId : "",
+                  counterfactualPackages: arms.map((arm) => ({
+                    endpointId: arm.endpointId,
+                    modelId: arm.modelId,
+                    reasoningEffort: arm.reasoningEffort,
+                  })),
+                  effortComparability: replayArmEffortComparability,
+                  evaluationCriteria:
+                    derivedCriteria.criteria as unknown as Readonly<Record<string, unknown>>,
+                  evaluationCriteriaDigest: createHash("sha256")
+                    .update(JSON.stringify(derivedCriteria.criteria))
+                    .digest("hex"),
+                  scope: lastReplayCaptureScope,
+                  recordedAtMs: Date.now(),
+                  attempts: 0,
+                  resolvedAtMs: null,
+                  outcome: null,
+                  lastError: null,
+                });
+              },
               offer: (request) => lateBoundEvaluationQueue.offer(request),
             });
             if (!offered.enqueued) {
@@ -10215,6 +10281,15 @@ export async function main(): Promise<void> {
             return null;
           }
         },
+        () =>
+          created.effectiveRegistry.endpoints.map((endpoint) => ({
+            endpointId: endpoint.identity.endpoint_id,
+            modelId: typeof (endpoint as { modelId?: unknown }).modelId === "string" ? String((endpoint as { modelId?: unknown }).modelId) : "",
+            reasoningEffort:
+              typeof (endpoint as { reasoningEffort?: unknown }).reasoningEffort === "string"
+                ? String((endpoint as { reasoningEffort?: unknown }).reasoningEffort)
+                : null,
+          })),
       );
       configuredEndpointIdsRef.current = created.effectiveRegistry.endpoints.map(
         (endpoint) => endpoint.identity.endpoint_id,
