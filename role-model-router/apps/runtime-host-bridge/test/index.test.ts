@@ -7815,6 +7815,8 @@ describe("runtime-host-bridge", () => {
           ) => Promise<unknown>;
           readRuntimeConfig: () => Promise<{
             config: {
+              executionMode: string;
+              routingStrategy: string;
               modelAliases: readonly {
                 aliasId: string;
                 modelIds: readonly string[];
@@ -7832,6 +7834,8 @@ describe("runtime-host-bridge", () => {
       },
       readRuntimeConfig: async () => ({
         config: {
+          executionMode: "remote_only",
+          routingStrategy: "baseline",
           modelAliases: [
             {
               aliasId: "gpt-5.4",
@@ -7874,6 +7878,109 @@ describe("runtime-host-bridge", () => {
           }),
         }),
       );
+    } finally {
+      await server.close();
+    }
+  });
+
+  test("serves the downstream provider config when readRuntimeConfig returns an already-normalized config", async () => {
+    // The runtime's readRuntimeConfig returns `currentUnifiedRuntimeConfig`, which is the
+    // NORMALIZED form: `agentStrategies` and `workloads` are arrays, not name-keyed mappings.
+    // Re-normalizing that value must not 500 the discovery route.
+    const server = await (
+      bridge as {
+        startBridgeServer: (options: {
+          host: string;
+          port: number;
+          registry: EndpointRegistryResult;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<unknown>;
+          readRuntimeConfig: () => Promise<{
+            config: {
+              executionMode: string;
+              routingStrategy: string;
+              modelAliases: readonly {
+                aliasId: string;
+                modelIds: readonly string[];
+              }[];
+              agentStrategies: readonly {
+                name: string;
+                kind: "role";
+                roleId: string | null;
+                scoringStrategy: string | null;
+                routingMode: string | null;
+                computePreference: string | null;
+                modelIds: readonly string[];
+                requiredCapabilities: readonly string[];
+                violations: readonly string[];
+              }[];
+              workloads: readonly {
+                name: string;
+                kind: "workload";
+                roleId: string | null;
+                scoringStrategy: string | null;
+                routingMode: string | null;
+                computePreference: string | null;
+                modelIds: readonly string[];
+                requiredCapabilities: readonly string[];
+                violations: readonly string[];
+              }[];
+            };
+          }>;
+        }) => Promise<{ port: number; close(): Promise<void> }>;
+      }
+    ).startBridgeServer({
+      host: "127.0.0.1",
+      port: 0,
+      registry,
+      executeChatCompletions: async () => {
+        throw new Error("not used");
+      },
+      readRuntimeConfig: async () => ({
+        config: {
+          executionMode: "remote_only",
+          routingStrategy: "hybrid",
+          modelAliases: [{ aliasId: "hybrid.remote-only", modelIds: ["chatgpt/gpt-5.6-luna"] }],
+          agentStrategies: [
+            {
+              name: "tester",
+              kind: "role",
+              roleId: "tester",
+              scoringStrategy: "quality",
+              routingMode: "baseline",
+              computePreference: null,
+              modelIds: [],
+              requiredCapabilities: [],
+              violations: [],
+            },
+          ],
+          workloads: [
+            {
+              name: "batch",
+              kind: "workload",
+              roleId: null,
+              scoringStrategy: "cost",
+              routingMode: null,
+              computePreference: null,
+              modelIds: [],
+              requiredCapabilities: [],
+              violations: [],
+            },
+          ],
+        },
+      }),
+    });
+
+    try {
+      const modelsResponse = await fetch(`http://127.0.0.1:${server.port}/v1/models`);
+      expect(modelsResponse.status).toBe(200);
+
+      const providerResponse = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/downstream/openai`,
+      );
+      expect(providerResponse.status).toBe(200);
     } finally {
       await server.close();
     }
