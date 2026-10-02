@@ -45,7 +45,8 @@ removal only - it is not the router's per-request eligibility, which is applied 
 ## Change list (code sites)
 
 - knowledge-store activatePack: key the rollout by (roleId, taskTypeId) instead of the runtime scopeId.
-- route-advisory-source.ts: read the (role, task) pack, return its ranked ladder, and carry
+- route-advisory-source.ts: read the (role, task) pack and return its ranked ladder in place of the single
+  preferredRoutePackage (the advisory's shape changes from one endpoint to an ordered list), carrying
   taskTypeId/taxonomyVersion/roleId.
 - core/src/router.ts: replace the single preferred-endpoint check with a ladder walk (highest routable rung
   becomes the preferred endpoint; fall through on unavailable or ineligible rungs).
@@ -104,7 +105,8 @@ the ladder history to be auditable by date. Re-running a comparison appends a ne
 
 One pack per (role, task), stored as JSON in SQLite rows (the existing knowledge-store learning_records,
 kind='pack'), keyed by a (role_id, task_type_id) UNIQUE index. The pack's body is the ladder: rungs
-{ endpointId, rank, status }, plus completeness (ranked / configured endpoints) and nextEligibleAtMs. There is
+{ endpointId, rank, status }, plus completeness (admitted / configured endpoints, where 'admitted' means
+passed the admission floor) and nextEligibleAtMs. There is
 no separate derived index - the pack table IS the lookup, and the (role_id, task_type_id) unique index makes
 'ladder for this task' a single indexed read.
 
@@ -122,18 +124,21 @@ The dispatcher fills one task's ladder to completion before moving to the next (
 
 - Select the current task: the (role, task) with an incomplete ladder (fewer CONFIGURED endpoints ranked than
   the runtime has configured) and at least one replayable capture. If several qualify, pick most-requested
-  first (over the retention window), then most-unfilled.
-- Dispatch counterfactuals for that task until every configured endpoint is ranked; then advance.
+  first (request count over the last 30 days), then most-unfilled.
+- Dispatch counterfactuals for that task until every configured endpoint is ranked; then advance. Each
+  counterfactual is the task's source request replayed against an as-yet-unranked configured endpoint (the
+  existing replay-intent mechanism, re-targeted by ladder gap).
 - A complete task idles 30 days, then is eligible for a refresh replay and its ladder is recomputed.
 - A NEW configured endpoint always breaks the idle immediately and starts its top-down challenge.
 
 ## Activation model
 
-There is no separate promote-then-activate step. The ladder is DERIVED (recomputed from the append-only
-comparison records), and a task's ladder is 'active' - its advisory is used - automatically once it meets the
-admission floor (K comparisons + 0.7 confidence). This removes the 'sweep only activates the pack it promotes
-that tick' defect: there is no mutable active-pack pointer to go stale, because the ladder is always the
-current projection of the evidence.
+There is no separate promote-then-activate step and no mutable active-pack pointer. The ladder is a
+MATERIALIZED DERIVED snapshot: it is recomputed from the append-only comparison records and REWRITTEN to the
+pack store whenever new evidence arrives for the task - it is not recomputed on every read, and it is never
+manually promoted. A task's ladder is 'active' - its advisory is used - automatically once at least one of its
+endpoints has passed the admission floor (K comparisons + 0.7 confidence). Because the ranking is always
+recomputed from evidence (then stored for fast reads), there is no stale pack to go out of date.
 
 ## Rollback (per-task toggle)
 
@@ -141,14 +146,16 @@ A pack carries a rollback flag per (role, task), default OFF. When the user turn
 like the ladder rank and do not want the task routed by it), the advisory source returns no advisory for that
 task and routing falls back to the baseline strategy. It is a plain boolean the user toggles in the UI, and the
 backend supports it by checking the flag before serving the ladder: ON means the ladder does not influence
-routing; OFF means it does. The flag is recorded with the operator's reason and is reversible (toggle back to
-OFF re-enables the ladder once it is re-derived or re-validated).
+routing; OFF means it does. While ON, replay/eval dispatch for that task is also paused (the ladder is not
+recomputed), so the user's override is stable until they roll forward. The flag is recorded with the operator's
+reason and is reversible.
 
 ## Configuration
 
 The ladder constants live in product-defaults.json (the machine authority) under a routeLearning block:
 minComparisons (K, default 5), minConfidence (default 0.7), stalenessWindowDays (default 30), and
-challengeBatchSize (the bounded sample of rungs a new endpoint challenges per dispatch). The runtime reads
+challengeBatchSize (how many top-down challenge comparisons a new endpoint may run per dispatch; the challenge
+itself is sequential - one rung per comparison). The runtime reads
 them through the existing product-defaults loader.
 
 ## Effect requirement
