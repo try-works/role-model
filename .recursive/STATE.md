@@ -13,10 +13,13 @@ in the comparison's validity. Phases 0-6 are locked; Phase 5 ran the rebuilt run
 with its own state root — the matrix passed (text control, image through `difficulty.remote-only` selecting the
 DeepSeek flash endpoint, PDF control, `hybrid.remote-only`) and the monitored window ran 61.5 minutes with 123
 samples. One commitment transfers: `R8`'s live disposition drain, which needs a channel that already carries a
-route package. `R9`'s producer plumbing is now wired (post-closeout `8aa114ed`): the comparison identity carries
-`effortComparability`, so `arm_effort_mismatch` can fire on a live comparison. Both are carried by the post-closeout
-addenda (`post-closeout.r9-r8-pickup.addendum-01.md`, `post-closeout.r9-producer-threading.addendum-02.md`,
-`post-closeout.r8-live-drain.addendum-03.md`).
+route package. `R9`'s producer plumbing is now wired and verified live end-to-end (post-closeout `8aa114ed` plus addenda
+08-20): the comparison identity carries `effortComparability`, and a finalized comparison on `:3457` records
+per-arm `matched`/`mismatched` instead of only `source_effort_unspecified`. The queue was traced live and
+repaired in turn — the restricted-tick no-op, the resume-entry record with `classifyReplayArmEffort`, the
+resume-store `effortComparability` persistence, the `capture_missing` retryability, and the compact replay-job
+dispatch projection. The addenda run `post-closeout.r9-r8-pickup.addendum-01.md` through
+`post-closeout.r9-finalized-effort-comparability.addendum-20.md`.
 Promotion remains a separate release operation.
 
 Run `103-agent-strategy-and-scoring-strategy` is the current increment: the routing posture is split into the

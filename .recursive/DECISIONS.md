@@ -827,9 +827,12 @@ Date: `2026-10-02`
   `d938049d`).
 - Arm comparability is a first-class dimension: arms are repointed to the same model's variant at the source
   capture's effort when the registry holds one, every arm's comparability is published, and a mismatched arm is
-  named `arm_effort_mismatch` in the comparison's validity. The public plumbing is now wired (post-closeout
-  `8aa114ed`): the comparison identity carries `effortComparability`, so the exclusion can fire on a live comparison
-  (`SP6`, private `885eda30`; post-closeout `8aa114ed`).
+  named `arm_effort_mismatch` in the comparison's validity. The public plumbing is now wired and verified live
+  end-to-end (post-closeout `8aa114ed` plus addenda 08-20): a finalized comparison on `:3457` records per-arm
+  `matched`/`mismatched`. The queue was traced live and repaired in turn — the restricted-tick no-op, the
+  resume-entry record with `classifyReplayArmEffort`, the resume-store `effortComparability` persistence, the
+  `capture_missing` retryability, and the compact replay-job dispatch projection
+  (`SP6`, private `885eda30`; post-closeout `8aa114ed`, `1294feae`, `b3e29909`, `ec33aba5`, `23ae04dd`).
 - The `Effect` rule is applied where it is a genuine fit: `Match.exhaustive` terminates the traffic-class mapper so
   a new variant is a type error, and the private handoff uses `ManagedRuntime`/`Effect.gen`. No dependency changed.
 - Phase 5 ran the rebuilt runtime on its own channel (`:3459`) with its own state root: the matrix passed
