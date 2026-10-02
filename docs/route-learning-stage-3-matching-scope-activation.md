@@ -55,7 +55,7 @@ removal only - it is not the router's per-request eligibility, which is applied 
   single scope.endpointId.
 - knowledge-store: add the rollback path for a (role, task) ladder (see Rollback).
 - runtime-ui (learning.tsx, Packs page): render the ladder index (top-3 per task, status, completeness), sorted
-  complete-first, with a per-row rollback toggle wired to the backend flag.
+  complete-first, with a per-row Activate / Roll back toggle and a clear status badge wired to the backend flag.
 
 ## Resolved decisions
 
@@ -163,16 +163,23 @@ them through the existing product-defaults loader.
 ## UI: Packs page (the ladder index)
 
 The Packs page under Learning becomes a scrollable ladder index - one row per (role, task) the runtime has
-seen. Each row shows the task's (role, task) name, its TOP 3 ranked endpoints (best first), its status
-('active' = influencing routing, or 'rolled back' = the user's override), and its completeness
-(admitted / configured endpoints). Rows are ordered so the most-reviewable tasks surface first:
+seen. Each row shows the task's (role, task) name, its TOP 3 ranked endpoints (best first), and its
+completeness (admitted / configured endpoints), plus a clear current-status badge and a per-task
+Activate / Roll back toggle:
+
+- Active: the ladder is influencing routing (the toggle reads 'Roll back');
+- Rolled back: the user has overridden it and the ladder is not influencing routing (the toggle reads
+  'Activate').
+
+The toggle is a two-way control the user flips per task; the backend flag defaults to Active and the UI shows
+the current state unambiguously. Rows are ordered so the most-reviewable tasks surface first:
 
 1. fully-ranked tasks (every configured endpoint admitted) at the top;
 2. then partially-ranked tasks, most-unfilled first;
 3. tasks with no admitted endpoint (no ladder yet) at the bottom.
 
-The user scrolls the index to review it and toggles the per-task rollback flag directly from the row. The
-top-3 display is a projection of the ladder; the full ranking lives on a per-task detail view.
+The user scrolls the index to review it and flips Activate / Roll back directly from the row. The top-3
+display is a projection of the ladder; the full ranking lives on a per-task detail view.
 
 ## Effect requirement
 
@@ -200,8 +207,8 @@ Data.TaggedEnum; queue-runtime: Layer + ManagedRuntime + Fiber + Duration).
 - A user-removed endpoint flips to 'unavailable' and is skipped; the next available rung is used.
 - Rollback of one task's ladder does not disturb another, and a rolled-back task routes by baseline.
 - No pack routes directly (advisory_only preserved).
-- The Packs page shows the ladder index (top-3 per task, status, completeness), ordered complete-first, and the
-  per-row rollback toggle flips the backend flag.
+- The Packs page shows the ladder index (top-3 per task, status, completeness), ordered complete-first, each row
+  with a clear Active / Rolled back status and a two-way Activate / Roll back toggle that flips the backend flag.
 
 ## Scope-wide packs do not exist
 
