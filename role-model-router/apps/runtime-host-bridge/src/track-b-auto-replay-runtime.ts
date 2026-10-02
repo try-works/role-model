@@ -367,6 +367,8 @@ export function startAutoReplayLoop(input: {
     readonly toolPolicy: ReplayToolPolicy;
     readonly policySet: ReplayPolicySet;
     readonly reservationId: string;
+    /** Aborted when the per-capture budget expires, so the provider fetch/branch append is cancelled (addendum 12). */
+    readonly signal?: AbortSignal;
   }) => Promise<AutoReplayExecution>;
   readonly intervalMs?: number;
   readonly maxCapturesPerTick?: number;

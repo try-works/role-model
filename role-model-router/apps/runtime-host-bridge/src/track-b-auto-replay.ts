@@ -689,6 +689,13 @@ type AutoReplayExecutorRequest = {
    * that follows it can record the judge that really scored the comparison instead of assuming the controller.
    */
   readonly judgeEndpointId?: string | null;
+  /**
+   * Run 104 post-closeout (addendum 12): the bounded executor aborts this signal when the per-capture
+   * budget expires, so a timed-out dispatch cannot leave the provider fetch / branch append running in
+   * the background and hold the queue's single claim. The caller's executor merges it with its own
+   * per-request timeout.
+   */
+  readonly signal?: AbortSignal;
 };
 
 async function runBoundedExecutor(
@@ -704,16 +711,19 @@ async function runBoundedExecutor(
       ? { explicitMs: Number(input.executorTimeoutMs) }
       : {}),
   });
+  const controller = new AbortController();
   let timer: ReturnType<typeof setTimeout> | undefined;
   try {
     return await Promise.race([
-      input.executor(request),
+      input.executor({ ...request, signal: controller.signal }),
       new Promise<never>((_resolve, reject) => {
         timer = setTimeout(
-          () =>
+          () => {
+            controller.abort();
             reject(
               new Error(`replay execution exceeded ${timeoutMs}ms (bounded per-capture budget)`),
-            ),
+            );
+          },
           timeoutMs,
         );
         (timer as { unref?: () => void } | undefined)?.unref?.();
@@ -721,6 +731,7 @@ async function runBoundedExecutor(
     ]);
   } finally {
     if (timer !== undefined) clearTimeout(timer);
+    controller.abort();
   }
 }
 

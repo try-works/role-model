@@ -7191,7 +7191,7 @@ export async function main(): Promise<void> {
           }
           return null;
         },
-        executor: async ({ capture, candidates, reservationId }) => {
+        executor: async ({ capture, candidates, reservationId, signal }) => {
           const sourceCapture = (await operations.readLocalRouteCapture({
             requestId: capture.captureRef,
           })) as Record<string, unknown> | null;
@@ -7303,7 +7303,10 @@ export async function main(): Promise<void> {
                      * expired. The request's own deadline is the authority here, plus a bounded grace for the
                      * response to travel back.
                      */
-                    signal: AbortSignal.timeout(Math.min(replayDeadlineMs + 60_000, 1_800_000)),
+                    signal: AbortSignal.any([
+                      ...(signal ? [signal] : []),
+                      AbortSignal.timeout(Math.min(replayDeadlineMs + 60_000, 1_800_000)),
+                    ]),
                   },
                 );
                 if (attempt.ok) return { ok: true as const, value: await attempt.json() };
