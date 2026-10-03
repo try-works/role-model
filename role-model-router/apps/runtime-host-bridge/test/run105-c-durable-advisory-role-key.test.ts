@@ -8,13 +8,15 @@ import {
 
 /**
  * Run 105 package C (C11): the advisory layer had no roleId anywhere, so one scope's advisory
- * could be recalled for another role. The durable cache key gains the role dimension
- * (`channel NUL scope NUL roleId`), remember/recall accept it, a re-remember refreshes recency,
+ * could be recalled for another role. The durable cache key is the exact (channel, scope, role, task)
+ * tuple; source attribution owns the role/task, a re-remember refreshes recency,
  * and the cache bound is raised for the per-(role, task) fan-out.
  */
 
 const advisory = (preferredRoutePackage: string | null, overrides: Record<string, unknown> = {}) => ({
   preferredRoutePackage,
+  roleId: "role.coder",
+  advisoryLadder: preferredRoutePackage ? [{ endpointId: preferredRoutePackage, rank: 1, status: "available" as const }] : [],
   advisoryState: "fresh" as const,
   confidence: 0.8,
   candidateId: "candidate-1",
@@ -41,12 +43,12 @@ describe("run105 C durable advisory role key", () => {
       channel: "stage",
       scope: "scope-c",
       roleId: "role.planner",
-      advisory: advisory("endpoint-b") as never,
+      advisory: advisory("endpoint-b", { roleId: "role.planner" }) as never,
       nowMs: 2_000,
     });
 
     expect(
-      recallTrackBDurableRouteAdvisory({ channel: "stage", scope: "scope-c", roleId: "role.coder" })
+      recallTrackBDurableRouteAdvisory({ channel: "stage", scope: "scope-c", roleId: "role.coder", taskTypeId: "coder.review" })
         ?.preferredRoutePackage,
     ).toBe("endpoint-a");
     expect(
@@ -54,20 +56,61 @@ describe("run105 C durable advisory role key", () => {
         channel: "stage",
         scope: "scope-c",
         roleId: "role.planner",
+        taskTypeId: "coder.review",
       })?.preferredRoutePackage,
     ).toBe("endpoint-b");
     // A different role never reads the other role's entitlement.
     expect(
-      recallTrackBDurableRouteAdvisory({ channel: "stage", scope: "scope-c", roleId: "role.other" }),
+      recallTrackBDurableRouteAdvisory({ channel: "stage", scope: "scope-c", roleId: "role.other", taskTypeId: "coder.review" }),
     ).toBeNull();
   });
 
-  test("C11 a null roleId keeps the pre-run105 (channel, scope) behaviour", () => {
+  test("C11 unsafe partial lookup never borrows an exact pair", () => {
     clearTrackBDurableRouteAdvisoryCacheForTests();
+    rememberTrackBDurableRouteAdvisory({
+      channel: "stage", scope: "scope-partial", roleId: "role.coder",
+      advisory: advisory("endpoint-a") as never, nowMs: 1_000,
+    });
+    // The original role-only success pin authorized an unspecified task. Exact-pair isolation
+    // intentionally changes that expectation to null; task-only and legacy reads cannot borrow either.
+    expect(recallTrackBDurableRouteAdvisory({
+      channel: "stage", scope: "scope-partial", roleId: "role.coder",
+    })).toBeNull();
+    expect(recallTrackBDurableRouteAdvisory({
+      channel: "stage", scope: "scope-partial", taskTypeId: "coder.review",
+    })).toBeNull();
+    expect(recallTrackBDurableRouteAdvisory({ channel: "stage", scope: "scope-partial" })).toBeNull();
+    expect(recallTrackBDurableRouteAdvisory({
+      channel: "stage", scope: "scope-partial", roleId: "role.coder", taskTypeId: "coder.review",
+    })?.preferredRoutePackage).toBe("endpoint-a");
+  });
+
+  test("C11 publisher attribution cannot relabel the source role", () => {
+    clearTrackBDurableRouteAdvisoryCacheForTests();
+    const entry = rememberTrackBDurableRouteAdvisory({
+      channel: "stage", scope: "scope-attribution", roleId: "role.planner",
+      advisory: advisory("endpoint-a") as never, nowMs: 1_000,
+    });
+    expect(entry).toMatchObject({ roleId: "role.coder", taskTypeId: "coder.review" });
+    expect(recallTrackBDurableRouteAdvisory({
+      channel: "stage", scope: "scope-attribution", roleId: "role.planner", taskTypeId: "coder.review",
+    })).toBeNull();
+    expect(recallTrackBDurableRouteAdvisory({
+      channel: "stage", scope: "scope-attribution", roleId: "role.coder", taskTypeId: "coder.review",
+    })?.preferredRoutePackage).toBe("endpoint-a");
+  });
+
+  test("C11 genuinely absent role AND task keep the pre-run105 (channel, scope) behaviour", () => {
+    clearTrackBDurableRouteAdvisoryCacheForTests();
+    // A role-less but task-bearing fixture is partial classification, NOT legacy compatibility.
+    // Omit BOTH fields, rather than manufacturing an unscoped role with a classified task.
+    const { roleId: _role, taskTypeId: _task, ...legacyAdvisory } = advisory("endpoint-c");
+    expect(legacyAdvisory).not.toHaveProperty("roleId");
+    expect(legacyAdvisory).not.toHaveProperty("taskTypeId");
     rememberTrackBDurableRouteAdvisory({
       channel: "stage",
       scope: "scope-unscoped",
-      advisory: advisory("endpoint-c") as never,
+      advisory: legacyAdvisory as never,
       nowMs: 1_000,
     });
     expect(
@@ -76,7 +119,7 @@ describe("run105 C durable advisory role key", () => {
     ).toBe("endpoint-c");
   });
 
-  test("C11 re-remembering the same (channel, scope, role) refreshes the entry in place", () => {
+  test("C11 re-remembering the same (channel, scope, role, task) refreshes the entry in place", () => {
     clearTrackBDurableRouteAdvisoryCacheForTests();
     rememberTrackBDurableRouteAdvisory({
       channel: "stage",
@@ -96,6 +139,7 @@ describe("run105 C durable advisory role key", () => {
       channel: "stage",
       scope: "scope-refresh",
       roleId: "role.coder",
+      taskTypeId: "coder.review",
     });
     expect(entry?.preferredRoutePackage).toBe("endpoint-d");
     expect(entry?.cachedAtMs).toBe(9_000);
@@ -115,6 +159,7 @@ describe("run105 C durable advisory role key", () => {
         channel: "stage",
         scope: "scope-age",
         roleId: "role.coder",
+        taskTypeId: "coder.review",
         nowMs: 2_000,
         maxAgeMs: 500,
       })?.advisoryState,
@@ -138,6 +183,7 @@ describe("run105 C durable advisory role key", () => {
         channel: "stage",
         scope: "scope-519",
         roleId: "role.coder",
+        taskTypeId: "coder.review",
       })?.preferredRoutePackage,
     ).toBe("endpoint-519");
     expect(
@@ -145,13 +191,20 @@ describe("run105 C durable advisory role key", () => {
         channel: "stage",
         scope: "scope-200",
         roleId: "role.coder",
+        taskTypeId: "coder.review",
       })?.preferredRoutePackage,
     ).toBe("endpoint-200");
+    expect(
+      recallTrackBDurableRouteAdvisory({
+        channel: "stage", scope: "scope-8", roleId: "role.coder", taskTypeId: "coder.review",
+      })?.preferredRoutePackage,
+    ).toBe("endpoint-8");
     expect(
       recallTrackBDurableRouteAdvisory({
         channel: "stage",
         scope: "scope-7",
         roleId: "role.coder",
+        taskTypeId: "coder.review",
       }),
     ).toBeNull();
   });

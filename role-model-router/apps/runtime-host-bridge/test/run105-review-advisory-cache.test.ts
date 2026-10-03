@@ -113,7 +113,11 @@ describe("run105 review exact advisory cache", () => {
   });
   test("source wrapper forwards explicit effective stage and cohort", async () => {
     const document = { type: "route_ladder_evidence", version: 1, scope,
-      provenance: { scopeId: scope, ...pair, taxonomyVersion: "1.0.0-alpha.1", groupIds: ["group-a"], endpointEvidence: { "endpoint-a": { comparisonCount: 1, meanConfidence: 0.82 } }, confidence: 0.82, evidenceAtMs: 1000 } };
+      provenance: { scopeId: scope, ...pair, taxonomyVersion: "1.0.0-alpha.1", groupIds: ["group-a"],
+        effectiveAdmittedEndpointIds: ["endpoint-a"], admissionPolicy: { minComparisons: 1, minConfidence: 0.7 },
+        rankEvidenceGroupIds: ["group-a"], rankEvidenceDigest: "a".repeat(64),
+        endpointEvidence: { "endpoint-a": { comparisonCount: 1, meanConfidence: 0.82, evidenceAtMs: 1000, taxonomyVersion: "1.0.0-alpha.1", groupIds: ["group-a"] } },
+        confidence: 0.82, evidenceAtMs: 1000 } };
     const canonical = (value: unknown): string => Array.isArray(value) ? "[" + value.map(canonical).join(",") + "]" : value && typeof value === "object" ? "{" + Object.keys(value).sort().map(key => JSON.stringify(key) + ":" + canonical((value as Record<string, unknown>)[key])).join(",") + "}" : JSON.stringify(value);
     const packId = createHash("sha256").update(canonical(document)).digest("hex");
     const invoke = vi.fn(async (_id: string, envelope: { capability: string }) => {

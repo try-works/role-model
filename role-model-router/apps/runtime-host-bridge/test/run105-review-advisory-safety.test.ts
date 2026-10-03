@@ -25,13 +25,23 @@ const group = (id: string, confidence: number, atMs: number | null) => ({
   comparability: {
     roleId,
     taskTypeId,
+    taxonomyVersion: "taxonomy:105",
     sourceCandidateRef: "endpoint:a",
     counterfactualCandidateRef: "endpoint:b",
   },
   scorerDisagreement: false,
   scorerOutcomes: [{ scorerKey: "judge", outcome: "source" }],
   validityIssues: [],
-  effortComparability: [{ endpointId: "endpoint:b", modelId: "b", comparability: "matched" }],
+  effortComparability: [
+    {
+      endpointId: "endpoint:b",
+      modelId: "b",
+      sourceModelId: "a",
+      reasoningEffort: "high",
+      sourceReasoningEffort: "high",
+      comparability: "matched",
+    },
+  ],
   members: [
     { trialId: id + ":a", candidateRef: "endpoint:a", role: "source", confidence },
     { trialId: id + ":b", candidateRef: "endpoint:b", role: "counterfactual", confidence: 0.75 },
@@ -72,7 +82,7 @@ async function setup(atMs: number | null = 1000) {
     },
   });
   const groups = [group("g1", 0.8, atMs), group("g2", 0.9, atMs)];
-  const materialize = (nowMs: number) =>
+  const materialize = (nowMs: number, overrides: Record<string, unknown> = {}) =>
     materializeRouteLadders({
       groups,
       configuredEndpointIds: ["endpoint:a", "endpoint:b"],
@@ -81,6 +91,7 @@ async function setup(atMs: number | null = 1000) {
       nowMs,
       taxonomyVersion: "taxonomy:105",
       scopeId,
+      ...overrides,
     });
   await materialize(2000);
   calls.length = 0;
@@ -94,7 +105,7 @@ async function setup(atMs: number | null = 1000) {
     stage: "S3",
     policyCohortPercent: 25,
   };
-  return { input, invoke, calls, materialize };
+  return { input, invoke, calls, materialize, groups };
 }
 async function changed(capability: string, mutate: (value: any) => any) {
   const s = await setup();
@@ -373,5 +384,162 @@ test.each([null, "roleOnly", "taskOnly"])(
       ).advisoryState,
     ).toBe("unavailable");
     expect(s.calls).toEqual([]);
+  },
+);
+async function storedMetadataChange(mutate: (metadata: any) => void) {
+  const s = await setup();
+  const row = await s.invoke("knowledge:read-route-ladder", { scopeId, roleId, taskTypeId });
+  const doc = await s.invoke("knowledge:read", { id: row.ladder.packId, scope: scopeId });
+  mutate(doc.provenance);
+  const written = await s.invoke("knowledge:write", { value: doc });
+  await s.invoke("knowledge:write-route-ladder", {
+    ...row.ladder,
+    roleId,
+    taskTypeId,
+    packId: written.id,
+    version: row.ladder.version + 1,
+  });
+  return read(s.input);
+}
+test("retained removed endpoint proof does not disable legitimate remaining rung", async () => {
+  const s = await setup();
+  await s.materialize(2500, { configuredEndpointIds: ["endpoint:b"] });
+  expect(await read(s.input)).toMatchObject({
+    advisoryState: "fresh",
+    confidence: 0.75,
+    preferredRoutePackage: "endpoint:b",
+    taxonomyVersion: "taxonomy:105",
+    advisoryLadder: [{ endpointId: "endpoint:b", rank: 2, status: "available" }],
+  });
+});
+test("all-empty new floor preserves old admission and applies user removal", async () => {
+  const s = await setup();
+  await s.materialize(2500, {
+    configuredEndpointIds: ["endpoint:b"],
+    defaults: { minComparisons: 5, minConfidence: 0.99, stalenessWindowDays: 30 },
+  });
+  expect(await read(s.input)).toMatchObject({
+    advisoryState: "fresh",
+    confidence: 0.75,
+    preferredRoutePackage: "endpoint:b",
+  });
+});
+test("new regression evidence preserves accepted confidence/time/rank while current removal still applies", async () => {
+  const s = await setup();
+  const low = group("g3", 0.1, 2000);
+  low.members[1].confidence = 0.1;
+  await s.materialize(2500, {
+    groups: [...s.groups, low],
+    configuredEndpointIds: ["endpoint:b"],
+    taxonomyVersion: "caller:must-not-relabel",
+  });
+  expect(await read(s.input)).toMatchObject({
+    advisoryState: "fresh",
+    confidence: 0.75,
+    preferredRoutePackage: "endpoint:b",
+    taxonomyVersion: "taxonomy:105",
+  });
+  expect((await read({ ...s.input, nowMs: 11500 })).advisoryState).toBe("stale");
+});
+test("refused larger admission leaves bounded prior real snapshot routable", async () => {
+  const s = await setup();
+  const before = await s.invoke("knowledge:read-route-ladder", { scopeId, roleId, taskTypeId });
+  const result = await s.materialize(2500, {
+    groups: [
+      ...s.groups,
+      ...Array.from({ length: 90 }, (_, i) =>
+        group("huge:" + i + ":" + "x".repeat(180), 0.9, 2000),
+      ),
+    ],
+  });
+  expect(result.ladders[0].status).toBe("refused");
+  expect(
+    (await s.invoke("knowledge:read-route-ladder", { scopeId, roleId, taskTypeId })).ladder.packId,
+  ).toBe(before.ladder.packId);
+  expect((await read(s.input)).advisoryState).toBe("fresh");
+});
+test.each([
+  "missingPolicy",
+  "badK",
+  "shortOwnProof",
+  "belowOwnMean",
+  "missingEffective",
+  "extraEffective",
+  "missingOwnGroups",
+  "duplicateOwnGroups",
+  "unknownOwnGroup",
+  "badOwnTime",
+  "badOwnTaxonomy",
+  "missingRankEvidence",
+])("real stored accepted evidence %s fails closed", async (kind) => {
+  const result = await storedMetadataChange((m) => {
+    const e = m.endpointEvidence["endpoint:a"];
+    if (kind === "missingPolicy") delete m.admissionPolicy;
+    if (kind === "badK") m.admissionPolicy.minComparisons = 0;
+    if (kind === "shortOwnProof") {
+      e.comparisonCount = 1;
+      e.groupIds = ["g1"];
+    }
+    if (kind === "belowOwnMean") {
+      e.meanConfidence = 0.65;
+      m.confidence = 0.65;
+    }
+    if (kind === "missingEffective") delete m.effectiveAdmittedEndpointIds;
+    if (kind === "extraEffective") m.effectiveAdmittedEndpointIds.push("not-a-rung");
+    if (kind === "missingOwnGroups") delete e.groupIds;
+    if (kind === "duplicateOwnGroups") e.groupIds = ["g1", "g1"];
+    if (kind === "unknownOwnGroup") e.groupIds = ["g1", "unknown"];
+    if (kind === "badOwnTime") e.evidenceAtMs = 3000;
+    if (kind === "badOwnTaxonomy") e.taxonomyVersion = "other";
+    if (kind === "missingRankEvidence") delete m.rankEvidenceGroupIds;
+  });
+  expect(result.advisoryState).toBe("unavailable");
+});
+test("all historical endpoints removed under empty new floor yields no advisory but retains proof", async () => {
+  const s = await setup();
+  await s.materialize(2500, {
+    configuredEndpointIds: ["endpoint:c"],
+    defaults: { minComparisons: 5, minConfidence: 0.99, stalenessWindowDays: 30 },
+  });
+  const row = await s.invoke("knowledge:read-route-ladder", { scopeId, roleId, taskTypeId });
+  expect(row.ladder.rungs).toHaveLength(2);
+  expect(row.ladder.rungs.every((r: any) => r.status === "unavailable")).toBe(true);
+  expect((await read(s.input)).advisoryState).toBe("unavailable");
+  const doc = await s.invoke("knowledge:read", { id: row.ladder.packId, scope: scopeId });
+  expect(doc.provenance.effectiveAdmittedEndpointIds).toEqual(["endpoint:a", "endpoint:b"]);
+});
+test("unknown measured taxonomy never receives caller taxonomy relabel", async () => {
+  const s = await setup();
+  const unknown = s.groups.map((g: any) => ({
+    ...g,
+    comparability: { ...g.comparability, taxonomyVersion: null },
+  }));
+  // New evidence scope in a separate real store, not a stale subset of the existing one.
+  const row = await s.invoke("knowledge:read-route-ladder", { scopeId, roleId, taskTypeId });
+  const doc = await s.invoke("knowledge:read", { id: row.ladder.packId, scope: scopeId });
+  expect(unknown.every((g) => g.comparability.taxonomyVersion === null)).toBe(true);
+  const changedScopeGroups = unknown.map((g) => ({
+    ...g,
+    groupId: g.groupId + ":unknown",
+    comparability: { ...g.comparability, taskTypeId: "task:unknown" },
+  }));
+  await s.materialize(2500, { groups: changedScopeGroups, taxonomyVersion: "caller:context-only" });
+  const result = await read({ ...s.input, taskTypeId: "task:unknown" });
+  expect(result).toMatchObject({ advisoryState: "fresh", taxonomyVersion: null });
+  expect(doc.provenance.taxonomyVersion).toBe("taxonomy:105");
+});
+test.each(["countMismatch", "badPolicyMean", "badRankDigest", "rankOutsideWatermark"])(
+  "accepted metadata relationship %s refuses",
+  async (kind) => {
+    expect(
+      (
+        await storedMetadataChange((m) => {
+          if (kind === "countMismatch") m.endpointEvidence["endpoint:a"].comparisonCount = 3;
+          if (kind === "badPolicyMean") m.admissionPolicy.minConfidence = 1.1;
+          if (kind === "badRankDigest") m.rankEvidenceDigest = "not-a-digest";
+          if (kind === "rankOutsideWatermark") m.rankEvidenceGroupIds.push("never-observed");
+        })
+      ).advisoryState,
+    ).toBe("unavailable");
   },
 );

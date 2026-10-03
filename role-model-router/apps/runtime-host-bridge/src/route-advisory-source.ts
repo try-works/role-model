@@ -251,36 +251,77 @@ export async function readTrackBRouteAdvisoryFromRollout(
       metadata.taxonomyVersion !== taxonomyVersion
     )
       return refuse("route ladder evidence scope or provenance mismatch");
-    const groupIds = metadata.groupIds;
-    if (
-      !Array.isArray(groupIds) ||
-      groupIds.length < 1 ||
-      groupIds.length > 4096 ||
-      groupIds.some((id) => !boundedText(id)) ||
-      new Set(groupIds).size !== groupIds.length
-    )
-      return refuse("route ladder evidence groups malformed");
+    // Observed watermark and accepted ranking are different: a below-floor append must not
+    // replace the last authoritative proof, and USER removal must not erase historical proof.
+    const groupIds = parseUniqueIds(metadata.groupIds, 4096);
+    const rankGroupIds = parseUniqueIds(metadata.rankEvidenceGroupIds, 4096);
+    const effectiveIds = parseUniqueIds(metadata.effectiveAdmittedEndpointIds, 64);
     const endpointEvidence = asRecord(metadata.endpointEvidence);
-    if (!endpointEvidence || Object.keys(endpointEvidence).length !== advisoryLadder.length)
-      return refuse("route ladder endpoint evidence unavailable");
-    const means: number[] = [];
-    for (const rung of advisoryLadder) {
+    const admissionPolicy = asRecord(metadata.admissionPolicy);
+    if (
+      !groupIds ||
+      !rankGroupIds ||
+      rankGroupIds.some((id) => !groupIds.includes(id)) ||
+      typeof metadata.rankEvidenceDigest !== "string" ||
+      !/^[a-f0-9]{64}$/.test(metadata.rankEvidenceDigest)
+    )
+      return refuse("route ladder accepted ranking evidence unavailable");
+    if (
+      !effectiveIds ||
+      !endpointEvidence ||
+      effectiveIds.length !== rungs.length ||
+      Object.keys(endpointEvidence).length !== effectiveIds.length ||
+      rungs.some((rung) => !effectiveIds.includes(rung.endpointId)) ||
+      effectiveIds.some((id) => !Object.hasOwn(endpointEvidence, id))
+    )
+      return refuse("route ladder effective endpoint evidence unavailable");
+    if (
+      !admissionPolicy ||
+      !Number.isSafeInteger(admissionPolicy.minComparisons) ||
+      Number(admissionPolicy.minComparisons) < 1 ||
+      !validUnit(admissionPolicy.minConfidence)
+    )
+      return refuse("route ladder accepted admission policy unavailable");
+    const means: number[] = [],
+      times: number[] = [],
+      versions: (string | null)[] = [];
+    for (const rung of rungs) {
       const evidence = asRecord(endpointEvidence[rung.endpointId]);
+      const ownGroups = parseUniqueIds(evidence?.groupIds, 4096);
+      const ownVersion = evidence?.taxonomyVersion;
       if (
         !evidence ||
+        !ownGroups ||
         !Number.isSafeInteger(evidence.comparisonCount) ||
-        Number(evidence.comparisonCount) < 1 ||
-        Number(evidence.comparisonCount) > groupIds.length ||
-        !validUnit(evidence.meanConfidence)
+        Number(evidence.comparisonCount) < Number(admissionPolicy.minComparisons) ||
+        Number(evidence.comparisonCount) !== ownGroups.length ||
+        ownGroups.some((id) => !groupIds.includes(id)) ||
+        !validUnit(evidence.meanConfidence) ||
+        evidence.meanConfidence < admissionPolicy.minConfidence ||
+        (ownVersion !== null && !boundedText(ownVersion)) ||
+        (evidence.evidenceAtMs !== null &&
+          (!validTime(evidence.evidenceAtMs) || evidence.evidenceAtMs > input.nowMs))
       )
-        return refuse("route ladder endpoint evidence malformed");
-      means.push(evidence.meanConfidence);
+        return refuse("route ladder accepted endpoint proof malformed");
+      versions.push(ownVersion as string | null);
+      if (rung.status === "available") {
+        if (!validTime(evidence.evidenceAtMs))
+          return refuse("route ladder evidence time unavailable");
+        means.push(evidence.meanConfidence);
+        times.push(evidence.evidenceAtMs);
+      }
     }
-    const confidence = Math.min(...means);
+    // Taxonomy is solely measured provenance. Caller context cannot relabel old evidence.
+    const uniqueVersions = [...new Set(versions)];
+    const measuredVersion = uniqueVersions.length === 1 ? uniqueVersions[0] : null;
+    if (taxonomyVersion !== measuredVersion)
+      return refuse("route ladder evidence taxonomy mismatch");
+    const confidence = Math.min(...means),
+      evidenceAtMs = Math.min(...times);
     if (!validUnit(metadata.confidence) || Math.abs(metadata.confidence - confidence) > 1e-12)
       return refuse("route ladder confidence mismatch");
-    if (!validTime(metadata.evidenceAtMs) || metadata.evidenceAtMs > input.nowMs)
-      return refuse("route ladder evidence time unavailable");
+    if (!validTime(metadata.evidenceAtMs) || metadata.evidenceAtMs !== evidenceAtMs)
+      return refuse("route ladder evidence time mismatch");
     // Derived activation never requires activePackageId/promotion, but scope-wide safety remains.
     const rollout = asRecord(await input.invoke("knowledge:rollout-state", { scopeId, limit: 1 }));
     if (
@@ -374,6 +415,23 @@ const validTime = (value: unknown): value is number =>
   typeof value === "number" && Number.isFinite(value) && value >= 0;
 const positiveFinite = (value: unknown): value is number =>
   typeof value === "number" && Number.isFinite(value) && value > 0;
+function parseUniqueIds(value: unknown, limit: number): string[] | null {
+  if (
+    !Array.isArray(value) ||
+    !value.length ||
+    value.length > limit ||
+    value.some(
+      (id) =>
+        typeof id !== "string" ||
+        !id.trim() ||
+        id.includes("\0") ||
+        Buffer.byteLength(id, "utf8") > 256,
+    ) ||
+    new Set(value).size !== value.length
+  )
+    return null;
+  return value as string[];
+}
 function parseRungs(value: unknown): TrackBRouteAdvisoryRung[] | null {
   if (!Array.isArray(value) || value.length > 64) return null;
   const ranks = new Set<number>(),
