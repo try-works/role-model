@@ -59,6 +59,15 @@ stored endpoint). If the gates decline, the request routes by baseline, as today
 carried for provenance (the advisory surface requires it); matching is (roleId, taskTypeId) exact only - a
 taxonomyVersion difference does not block the advisory in this stage.
 
+The machinery itself is Run 98 R5's gated re-rank (evaluateRouteAdvisoryConsideration), not a score weight: the
+advised endpoint can take the leader's place only when the advisory is fresh, the stage is S2/S3/S4, the kill
+switch is off, the endpoint is eligible (the advisory can never add or widen a candidate), the (role, task)
+matches exactly, confidence >= minAdvisoryConfidence, the decision's cohort bucket (FNV-1a of the decision seed
+% 100) < cohortPercent, and the advised endpoint is within scoreBand of the leader (gap = leader - advised <=
+band); explorationPercent adds a stochastic flip for measurement, and every gate failure leaves the baseline
+selection untouched with a typed fallbackReason. Stage 3 changes only the source of the preferred endpoint; the
+gates are unchanged.
+
 ## Error behaviors (tagged errors)
 
 - InsufficientEvidence: the task has no admitted endpoint -> the advisory source returns NO advisory; baseline

@@ -1,8 +1,8 @@
 Run: `/.recursive/run/105-route-learning-matching-scope-activation/`
 Phase: `00 Requirements`
 Status: `LOCKED`
-LockedAt: `2026-10-03T02:25:11.229Z`
-LockHash: `7c0aa3e8ffdc44d0aa242a64a66a2bdbb3c7289d1a891e3aeacc467b8eb03d7f`
+LockedAt: `2026-10-03T02:28:38.934Z`
+LockHash: `378225feb3dc97293946c026e1de893b0b0305e83fc8fc1c8b2b108b85ed028e`
 Workflow version: `recursive-mode-audit-v2`
 Inputs:
 - Baseline (2026-10-03): public `origin/dev` `701b8b8fc0b0eeebdfe818b757f5702f50021488` ("Merge run-104 R22-A/B + R23 +
@@ -107,8 +107,21 @@ of one stored endpoint). If the gates decline, the request routes by baseline, a
 directly.
 - The ladder changes the preferred endpoint, never the selection directly.
 - A removed/unavailable/ineligible top rung falls through to the next.
-- The preferred endpoint enters the existing score-band/cohort/confidence machinery where today's single
-  preferredRoutePackage entered; if the gates decline, baseline routing.
+- The preferred endpoint enters the existing advisory-consideration machinery
+  (evaluateRouteAdvisoryConsideration, Run 98 R5) exactly where today's single preferredRoutePackage entered;
+  if the gates decline, baseline routing.
+- The machinery is a GATED RE-RANK, not a score weight: the router first scores the eligible candidates by the
+  scoring strategy, then the advised endpoint may take the leader's place only when ALL of the following hold
+  (each failure returns a typed fallbackReason and leaves the baseline selection untouched): fresh advisory,
+  stage in S2/S3/S4, kill switch off, the endpoint in the request's eligible set (the advisory can never add or
+  widen a candidate), exact (role, task) match, confidence >= minAdvisoryConfidence, the decision's cohort
+  bucket (FNV-1a of the decision seed % 100) < cohortPercent, and the advised endpoint's score within scoreBand
+  of the leader's (gap = leader - advised <= band).
+- explorationPercent adds a stochastic flip for measurement: with explorationPercent% probability the re-rank is
+  applied in exploration mode; the applied decision records selectionProbability (the propensity),
+  scoreGapBefore, and the cohortBucket.
+- Stage 3 changes only the SOURCE of the preferred endpoint (a ladder walk instead of one stored endpoint); every
+  gate, threshold, and fallback stays exactly as it is today.
 
 ### R6 — Immutable pairwise replay record with a created-at date
 Each finalized comparison group is an append-only record (sourceCandidateRef, counterfactualCandidateRef,
