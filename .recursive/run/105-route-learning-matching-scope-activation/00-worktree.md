@@ -1,6 +1,8 @@
 Run: `/.recursive/run/105-route-learning-matching-scope-activation/`
 Phase: `00 Worktree`
-Status: `DRAFT`
+Status: `LOCKED`
+LockedAt: `2026-10-03T02:00:34.984Z`
+LockHash: `7aea8cf50e10c7f6eb3b630c7f51f2401432ffcc6469590cf5a7ad4d320cb6a9`
 Workflow version: `recursive-mode-audit-v2`
 Inputs:
 - `/.recursive/run/105-route-learning-matching-scope-activation/00-requirements.md`
@@ -13,10 +15,10 @@ Scope note: This document records the Phase 0 worktree context and the executabl
 
 - [x] Confirm the selected worktree location and isolation approach
 - [x] Confirm the base branch and worktree branch values
-- [ ] Run setup and verify the clean test baseline
+- [x] Run setup and verify the clean test baseline
 - [x] Confirm the diff basis fields still match live git state
-- [ ] Complete Coverage Gate checklist
-- [ ] Complete Approval Gate checklist
+- [x] Complete Coverage Gate checklist
+- [x] Complete Approval Gate checklist
 
 ## Directory Selection
 
@@ -64,7 +66,7 @@ Result: both worktrees created clean; public HEAD `701b8b8f`, private HEAD `c993
 
 ## Setup
 
-- Setup command (public + private): `corepack pnpm install` (to run at Phase 0 completion; the worktrees are
-  fresh checkouts and do not share the controller checkouts' node_modules).
-- Baseline test command: `corepack pnpm run runtime:test-critical` (public); result recorded at Phase 0 completion.
+- Setup command (public + private): `corepack pnpm install --frozen-lockfile` -> both exit 0 (2026-10-03).
+- Baseline test command: `corepack pnpm run runtime:test-critical` (public) -> PASS: Test Files 6 passed (6),
+  Tests 113 passed (113), then 6 passed (6), 150 passed (150); exit 0 (2026-10-03).
 - Subsequent phases run from the worktrees, not the controller checkouts.
