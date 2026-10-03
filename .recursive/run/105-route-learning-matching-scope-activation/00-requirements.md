@@ -217,16 +217,21 @@ Work packages touch disjoint files (the change list), so they can run in paralle
   pipeline the ladder builds on).
 - Handoff: tester subagents run and report; the controller re-runs the full suite before 04-test-summary.md.
 
-### Phase 5 — Manual QA + live verification (controller + subagent probes)
+### Phase 5 — Manual QA + live verification (deepseek-flash subagents, controller-verified)
+Phase 5 probes are delegated to deepseek-flash subagents: the browser UI inspection requires vision, and
+deepseek-flash is the vision-capable probe model for this run (operator decision; if a router policy is
+configured, route through recursive-router rather than hardcoding).
 - Rebuild the runtime (paired build, dev channel) and verify the rebuilt DEV build on :3458 (healthz ready,
   no frame/identity errors).
 - Verify routing via live pi requests: a task-scoped request is served by its matching pack's preferred
   endpoint; a non-matching pack is refused with advisory_task_mismatch; an unclassified request gets no
   advisory; the ladder walk falls through on unavailable/ineligible rungs; advisory_only is preserved.
-- Verify the Packs page UI by inspecting it in the browser: rows ordered complete-first, top-3 + status +
-  completeness shown, the toggle flips the backend flag (and a rolled-back task routes by baseline).
-- Handoff: subagent probes may drive the pi requests and capture the UI; the controller inspects and records
-  05-manual-qa.md with receipts.
+- Verify the Packs page UI by inspecting it in the browser (deepseek-flash takes and reads the screenshots):
+  rows ordered complete-first, top-3 + status + completeness shown, the toggle flips the backend flag (and a
+  rolled-back task routes by baseline).
+- Handoff: deepseek-flash subagents drive the pi requests and capture + visually inspect the UI, returning
+  screenshots and observations; the controller re-verifies the evidence and records 05-manual-qa.md with
+  receipts.
 
 ### Phase 6-8 — Decisions, state, memory (controller)
 - 06-decisions-update.md (decisions taken), 07-state-update.md (STATE.md), 08-memory-impact.md (durable
