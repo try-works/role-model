@@ -1,0 +1,20 @@
+# Package E private sidecar projection GREEN
+# workdir: D:\DEV\role-model-internal\.worktrees\105-route-learning-matching-scope-activation
+# command: node --test --test-concurrency=1 --test-timeout=120000 tests/track-b/run105-e5-ladder-index-readback.test.mjs 2>&1 | Out-String
+# exit: 0
+
+(node:13276) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ Run105 E5: the records readback carries the frozen ladder index beside intact records (38.9076ms)
+✔ Run105 E5: a store that does not answer keeps records intact with ladders unavailable (5.9626ms)
+✔ Run105 E5: scope-wide packs produce no ladder rows (6.2785ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1069.1018
+
+
