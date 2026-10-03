@@ -1677,6 +1677,77 @@ function projectBoundedRoutingDiagnostics(value: unknown): Record<string, unknow
   return projected;
 }
 
+// R15: budget the serialized JSON string, not JS code units or just UTF-8 text.
+// Escaped controls can cost six bytes each; code-point iteration avoids split surrogates.
+const FAILURE_MESSAGE_PREVIEW_JSON_BYTES = 512;
+function projectFailureErrorPreview(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const source = value as Record<string, unknown>;
+  const preview: Record<string, unknown> = {};
+  for (const key of ["statusCode", "errorClass"] as const) {
+    if (source[key] !== undefined) preview[key] = source[key];
+  }
+  if (typeof source.message === "string") {
+    let message = "";
+    let jsonBytes = 2; // JSON quotes
+    for (const point of source.message) {
+      const pointBytes = Buffer.byteLength(JSON.stringify(point), "utf8") - 2;
+      if (jsonBytes + pointBytes > FAILURE_MESSAGE_PREVIEW_JSON_BYTES) break;
+      message += point;
+      jsonBytes += pointBytes;
+    }
+    preview.message = message;
+    if (message !== source.message) {
+      preview.messageTruncated = true;
+      preview.messageOriginalUtf8Bytes = Buffer.byteLength(source.message, "utf8");
+    }
+  }
+  return preview;
+}
+
+/**
+ * Budget the final failure envelope, including its artifact pointer and failure fields.
+ * Evict secondary evidence before correlation IDs, classification or measured counters.
+ * Unusually large primary identifiers still fail closed; callers must never let secondary
+ * persistence errors replace the provider error. No global inline cap is increased.
+ */
+export function boundRuntimeTelemetryFailureStub(stub: Record<string, unknown>): void {
+  const bytes = () => Buffer.byteLength(JSON.stringify(stub), "utf8");
+  if (bytes() <= LEGACY_INLINE_CAP_BYTES) return;
+  const originalUtf8Bytes = bytes();
+  const omittedFields: string[] = [];
+  stub.compactTruncation = { reason: "inline_byte_budget", originalUtf8Bytes, omittedFields };
+  for (const key of [
+    "retrievalReceipt", "routingDiagnostics", "telemetrySnapshot", "observedPerformance",
+    "graphEvidence", "contextEnvelope", "captureDegradation", "run88Correlation",
+    "taxonomyDimensions", "providerEvidence", "capturePolicy", "privacyReceipt", "cacheObservability",
+  ]) {
+    if (bytes() <= LEGACY_INLINE_CAP_BYTES) return;
+    if (stub[key] !== undefined) {
+      delete stub[key];
+      omittedFields.push(key);
+    }
+  }
+  // If optional trees were not sufficient, shed message bytes only. Attempt IDs,
+  // error status/class, retry/cooldown facts and stream counters remain unchanged.
+  const semantics = stub.executionSemantics as Record<string, unknown> | undefined;
+  const attempts = semantics?.failedAttempts;
+  if (Array.isArray(attempts)) {
+    for (const attempt of attempts) {
+      if (bytes() <= LEGACY_INLINE_CAP_BYTES) return;
+      const preview = attempt.errorPreview as Record<string, unknown> | undefined;
+      if (preview && typeof preview.message === "string" && preview.message.length) {
+        preview.messageOriginalUtf8Bytes ??= Buffer.byteLength(preview.message, "utf8");
+        preview.message = "";
+        preview.messageTruncated = true;
+        if (!omittedFields.includes("executionSemantics.failedAttempts.errorPreview.message")) {
+          omittedFields.push("executionSemantics.failedAttempts.errorPreview.message");
+        }
+      }
+    }
+  }
+}
+
 export function buildCompactRuntimeObservationStub(
   observation: Readonly<Record<string, unknown>>,
 ): Record<string, unknown> {
@@ -1810,11 +1881,7 @@ export function buildCompactRuntimeObservationStub(
           ]),
           ...(attempt.errorPreview && typeof attempt.errorPreview === "object"
             ? {
-                errorPreview: pickRecord(attempt.errorPreview, [
-                  "message",
-                  "statusCode",
-                  "errorClass",
-                ]),
+                errorPreview: projectFailureErrorPreview(attempt.errorPreview),
               }
             : {}),
         }))

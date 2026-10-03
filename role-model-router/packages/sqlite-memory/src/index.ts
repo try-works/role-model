@@ -33,6 +33,7 @@ import {
 import {
   LEGACY_INLINE_CAP_BYTES,
   buildCompactRuntimeObservationStub,
+  boundRuntimeTelemetryFailureStub,
   hydrateRuntimeObservationGraphPointer,
   isDegradedCaptureObservation as isDegradedCaptureObservationRecord,
   readRuntimeObservationStorageState,
@@ -5133,6 +5134,7 @@ export function persistRuntimeTelemetryFailure(input: PersistRuntimeTelemetryFai
         // Failure rows are classification stubs. Diagnostics and inspection captures may
         // contain provider errors or raw response bodies, so they remain graph/artifact
         // content and are never copied into this SQLite row.
+        boundRuntimeTelemetryFailureStub(stub);
         const payload = JSON.stringify(stub);
         if (Buffer.byteLength(payload, "utf8") > LEGACY_INLINE_CAP_BYTES) {
           throw new Error(

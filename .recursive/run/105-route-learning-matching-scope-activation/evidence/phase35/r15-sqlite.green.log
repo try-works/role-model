@@ -1,0 +1,27 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/packages/sqlite-memory
+
+(node:14476) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:4576) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | test/run105-telemetry-failure-size-limit.test.ts > R15 ASCII large allowed errorPreview persists primary failure (graph=false)
+R15 measured persisted UTF-8 bytes: 7081
+
+stdout | test/run105-telemetry-failure-size-limit.test.ts > R15 UTF-8 large allowed errorPreview persists primary failure (graph=false)
+R15 measured persisted UTF-8 bytes: 7065
+
+stdout | test/run105-telemetry-failure-size-limit.test.ts > R15 ASCII large allowed errorPreview persists primary failure (graph=true)
+R15 measured persisted UTF-8 bytes: 7313
+
+stdout | test/run105-telemetry-failure-size-limit.test.ts > R15 UTF-8 large allowed errorPreview persists primary failure (graph=true)
+R15 measured persisted UTF-8 bytes: 7297
+
+ ✓ test/run94-compact-stub.test.ts (6 tests) 1434ms
+ ✓ test/run105-telemetry-failure-size-limit.test.ts (8 tests) 1823ms
+
+ Test Files  2 passed (2)
+      Tests  14 passed (14)
+   Start at  15:42:48
+   Duration  4.09s (transform 744ms, setup 0ms, collect 1.48s, tests 3.26s, environment 1ms, prepare 971ms)
+
