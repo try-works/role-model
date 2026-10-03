@@ -36,6 +36,8 @@ export interface LadderRowView {
   readonly taxonomyVersion: string | null;
   /** At most three endpoints, rank ascending; every extra rung stays below the fold. */
   readonly topEndpoints: readonly LadderEndpointView[];
+  /** Full ranking only when explicitly published; never inferred from the top-three projection. */
+  readonly rungs?: readonly LadderEndpointView[];
   readonly rankedCount: number | null;
   readonly completeness: {
     readonly admitted: number | null;
@@ -65,13 +67,17 @@ const asRecord = (value: unknown): Record<string, unknown> =>
 
 /**
  * The top-3 projection (R12): the three lowest ranks in rank order. Unrankable rungs are
- * kept as bounded absence rather than dropped silently, and the list is capped at three -
- * a fifth rung is below the fold, never shown.
+ * kept as bounded absence rather than dropped silently, and the index is capped at three.
+ * Explicit full rungs share the same normalization but remain uncapped for task detail.
  */
 export function topLadderEndpoints(
   input: unknown,
 ): readonly LadderEndpointView[] {
   const raw = Array.isArray(input) ? input : asRecord(input).topEndpoints;
+  return normalizeLadderEndpoints(raw).slice(0, 3);
+}
+
+function normalizeLadderEndpoints(raw: unknown): readonly LadderEndpointView[] {
   if (!Array.isArray(raw)) return [];
   const views: LadderEndpointView[] = [];
   for (const entry of raw) {
@@ -85,7 +91,7 @@ export function topLadderEndpoints(
     });
   }
   views.sort((left, right) => left.rank - right.rank);
-  return views.slice(0, 3);
+  return views;
 }
 
 /**
@@ -108,6 +114,7 @@ export function normalizeLadderRows(input: unknown): readonly LadderRowView[] {
       taskTypeId,
       taxonomyVersion: boundedText(row.taxonomyVersion),
       topEndpoints: topLadderEndpoints(row),
+      ...(Array.isArray(row.rungs) ? { rungs: normalizeLadderEndpoints(row.rungs) } : {}),
       rankedCount: boundedInteger(row.rankedCount),
       completeness: {
         admitted: boundedInteger(asRecord(row.completeness).admitted),

@@ -930,15 +930,26 @@ export function LearningLadderRow({
   const completeness = formatLadderCompleteness(row.completeness);
   const scopeLine = `${row.roleId || NOT_REPORTED} . ${row.taskTypeId || NOT_REPORTED}`;
   /**
-   * R10: the toggle reads 'Roll back' when the row is Active and 'Activate' when it is
-   * rolled back. A row with no endpoint ladder has no flag to flip, so the control is
-   * disabled and states the reason instead of offering a no-op.
+   * R10: the toggle reads 'Roll back' when Active and 'Activate' when rolled back.
+   * No admitted endpoint disables it; missing admission data also disables it without
+   * assuming that the endpoint ladder read answered with zero.
    */
+  const admissionReported = row.completeness.admitted !== null;
   const hasLadder = state !== "no_ladder";
-  const disabledReason = hasLadder ? null : "no endpoint ladder: nothing admitted yet";
+  const disabledReason = hasLadder
+    ? null
+    : admissionReported
+      ? "no endpoint ladder: nothing admitted yet"
+      : "endpoint ladder admission state not reported";
   const badgeTone: BadgeTone =
     state === "rolled_back" ? "warning" : active ? "success" : "neutral";
-  const badgeLabel = state === "rolled_back" ? "Rolled back" : active ? "Active" : "No endpoint ladder";
+  const badgeLabel = state === "rolled_back"
+    ? "Rolled back"
+    : active
+      ? "Active"
+      : admissionReported
+        ? "No endpoint ladder"
+        : "Endpoint ladder state not reported";
   return (
     <tr className={tableRowClassName}>
       <td className="py-3 pr-3">
@@ -956,7 +967,7 @@ export function LearningLadderRow({
       </td>
       <td className="py-3 pr-3">
         {row.topEndpoints.length === 0 ? (
-          <p className={tableCellMetaClassName}>no ranked endpoint yet</p>
+          <p className={tableCellMetaClassName}>no ranked endpoints reported</p>
         ) : (
           <ol className="space-y-1">
             {row.topEndpoints.map((endpoint) => (
@@ -972,11 +983,50 @@ export function LearningLadderRow({
             ))}
           </ol>
         )}
+        <details className="mt-3">
+          <summary className={secondaryButtonClassName + " cursor-pointer list-item h-auto min-h-[36px] py-2 break-words"}>
+            {`Endpoint ladder detail for ${scopeLine}`}
+          </summary>
+          <div className="mt-2 space-y-2">
+            <p className={tableCellValueClassName}>Full endpoint ranking</p>
+            <p className={tableCellMetaClassName}>
+              {`endpoint ladder version ${row.ladderVersion ?? NOT_REPORTED}`}
+            </p>
+            {row.rolledBack?.on ? (
+              <p className={tableCellMetaClassName}>
+                {row.rolledBack.reason ? `rollback reason ${row.rolledBack.reason}` : "rollback reason not reported"}
+              </p>
+            ) : null}
+            {row.rungs === undefined ? (
+              <p className={tableCellNoteClassName}>Full endpoint ranking not reported by this readback.</p>
+            ) : row.rungs.length === 0 ? (
+              <p className={tableCellNoteClassName}>No ranked endpoints reported.</p>
+            ) : (
+              <ol className="space-y-1">
+                {row.rungs.map((endpoint, index) => (
+                  <li className="flex items-baseline gap-2" key={`${endpoint.rank}:${endpoint.endpointId}:${index}`}>
+                    <span className={tableScoreLaneClassName}>
+                      {Number.isFinite(endpoint.rank) ? endpoint.rank : NOT_REPORTED}
+                    </span>
+                    <span className="min-w-0 break-words">
+                      <span className={`${tableCellValueClassName} break-words`} title={endpoint.endpointId}>
+                        {endpoint.endpointId}
+                      </span>
+                      <span className={`ml-2 ${tableCellMetaClassName}`}>{endpoint.status}</span>
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
+        </details>
       </td>
       <td className="py-3 pr-3">
         <p className={tableCellValueClassName}>{completeness}</p>
         <p className={`mt-0.5 ${tableCellNoteClassName}`}>
-          {state === "complete"
+          {!admissionReported
+            ? "endpoint ladder admission state not reported"
+            : state === "complete"
             ? "every configured endpoint is admitted"
             : state === "no_ladder"
               ? "no endpoint has passed the admission floor"
@@ -1042,12 +1092,16 @@ export function LearningLadderIndex({
   rows,
   laddersState = "reported",
   busyRoleTask = null,
+  busyRoleTasks = [],
+  errorsByRoleTask = {},
   error = null,
   onToggle,
 }: {
   readonly rows: readonly LadderRowView[];
   readonly laddersState?: "reported" | "unavailable" | "not_asked";
   readonly busyRoleTask?: string | null;
+  readonly busyRoleTasks?: readonly string[];
+  readonly errorsByRoleTask?: Readonly<Record<string, string>>;
   readonly error?: string | null;
   readonly onToggle: (row: LadderRowView, rolledBack: boolean) => void;
 }) {
@@ -1081,8 +1135,8 @@ export function LearningLadderIndex({
         <tbody>
           {ordered.map((row) => (
             <LearningLadderRow
-              busy={busyRoleTask === `${row.roleId}\u0000${row.taskTypeId}`}
-              error={error}
+              busy={busyRoleTask === `${row.roleId}\u0000${row.taskTypeId}` || busyRoleTasks.includes(`${row.roleId}\u0000${row.taskTypeId}`)}
+              error={errorsByRoleTask[`${row.roleId}\u0000${row.taskTypeId}`] ?? error}
               key={`${row.roleId}\u0000${row.taskTypeId}`}
               onToggle={onToggle}
               row={row}
@@ -1591,8 +1645,9 @@ export function LearningPacksPage() {
     () => normalizeLadderRows(asRecord(records.value)),
     [records.value],
   );
-  const [busyLadder, setBusyLadder] = useState<string | null>(null);
-  const [ladderError, setLadderError] = useState<string | null>(null);
+  const [busyLadders, setBusyLadders] = useState<readonly string[]>([]);
+  const pendingLadders = useRef(new Set<string>());
+  const [ladderErrors, setLadderErrors] = useState<Readonly<Record<string, string>>>({});
   /** Run 104 R22 (`R22-B3`): how many shown packs cannot name a role or task, and why. */
   const packScopeNote = learningPackScopeNote(rows);
   const rolloutValue = asRecord(rollout.value);
@@ -1657,6 +1712,8 @@ export function LearningPacksPage() {
    * the row shows the error rather than a fabricated new state.
    */
   const toggleLadder = async (row: LadderRowView, rolledBack: boolean) => {
+    const key = `${row.roleId}\u0000${row.taskTypeId}`;
+    if (pendingLadders.current.has(key)) return;
     const label = `${row.roleId} . ${row.taskTypeId}`;
     if (
       typeof window !== "undefined" &&
@@ -1667,8 +1724,13 @@ export function LearningPacksPage() {
       )
     )
       return;
-    setLadderError(null);
-    setBusyLadder(`${row.roleId}\u0000${row.taskTypeId}`);
+    setLadderErrors((current) => {
+      const next = { ...current };
+      delete next[key];
+      return next;
+    });
+    pendingLadders.current.add(key);
+    setBusyLadders([...pendingLadders.current]);
     try {
       await rollbackLearningLadder(
         {
@@ -1688,9 +1750,10 @@ export function LearningPacksPage() {
       );
       await records.reload();
     } catch (toggleError) {
-      setLadderError(describeOperatorWriteError(toggleError));
+      setLadderErrors((current) => ({ ...current, [key]: describeOperatorWriteError(toggleError) }));
     } finally {
-      setBusyLadder(null);
+      pendingLadders.current.delete(key);
+      setBusyLadders([...pendingLadders.current]);
     }
   };
   const killSwitch = async () => {
@@ -1755,17 +1818,12 @@ export function LearningPacksPage() {
         <p className={monoEyebrowClassName}>Endpoint ladder index</p>
         <p className={`mt-1 ${supportingTextClassName}`}>
           One row per role · task: the top three ranked endpoints, how many configured endpoints are
-          admitted, and the per-task Activate / Roll back toggle.
+          admitted, the per-task full-ranking detail, and the Activate / Roll back toggle.
         </p>
-        {ladderError ? (
-          <div className="mt-3">
-            <ErrorState label={ladderError} />
-          </div>
-        ) : null}
         {degraded(records.loading, records.error) ?? (
           <LearningLadderIndex
-            busyRoleTask={busyLadder}
-            error={null}
+            busyRoleTasks={busyLadders}
+            errorsByRoleTask={ladderErrors}
             laddersState={laddersState}
             onToggle={(row, rolledBack) => void toggleLadder(row, rolledBack)}
             rows={ladderRows}
