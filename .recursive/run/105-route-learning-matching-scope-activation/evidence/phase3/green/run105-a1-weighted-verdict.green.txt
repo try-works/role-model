@@ -1,0 +1,17 @@
+✔ A1: a unanimous source win weighs confidence * 1 (12.237ms)
+✔ A1: confidence outside [0,1] is clamped (1.2781ms)
+✔ A1: disagreement down-weights by the non-tie scorer share, clamped at 0.5 (2.2169ms)
+✔ A1: a unanimous candidate win makes the source a loss (0.712ms)
+✔ A1: an extreme minority (clamp 0.5) still records the decided winner (1.2518ms)
+✔ A1: a tie contributes 0 regardless of confidence or disagreement (0.8542ms)
+✔ A1: tie outcomes never count as scorers (0.6603ms)
+✔ A1: the LadderRecord schema accepts the aggregate input shape (0.505ms)
+✔ A1: the LadderRung schema only accepts available|unavailable status (7.8055ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1195.3534
