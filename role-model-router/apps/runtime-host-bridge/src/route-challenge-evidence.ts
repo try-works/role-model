@@ -209,8 +209,9 @@ export async function readPendingRouteDispatches(input: {
     // failure; treating it as unavailable prevents the very first classified capture from ever
     // being dispatched. Every other unavailable/malformed shape remains fail-closed.
     const freshEmptyQueue =
-      page?.available === false &&
-      page.reason === "queue store has no rows yet" &&
+      page?.schemaVersion === "role-model.operator-queue-jobs.v1" &&
+      page.queue === "replay.dispatch" &&
+      page.available === false &&
       Array.isArray(page.jobs) &&
       page.jobs.length === 0;
     // Existing queue API is capped, not paginated. A saturated 500 is explicitly incomplete.
