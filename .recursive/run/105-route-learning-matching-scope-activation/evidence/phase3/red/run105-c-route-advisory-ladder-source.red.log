@@ -1,0 +1,162 @@
+npm warn Unknown env config "manage-package-manager-versions". This will stop working in the next major version of npm.
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/run105-c-route-advisory-ladder-source.test.ts (6 tests | 5 failed) 97ms
+   × run105 C route advisory ladder source > reads one role-task ladder and returns rank-sorted status-filtered rungs 56ms
+     → expected { preferredRoutePackage: null, …(9) } to match object { advisoryState: 'fresh', …(5) }
+(6 matching properties omitted from actual)
+   × run105 C route advisory ladder source > an all-unavailable ladder is unavailable and never invents a preferred endpoint 8ms
+     → expected { preferredRoutePackage: null, …(9) } to match object { advisoryState: 'unavailable', …(2) }
+(8 matching properties omitted from actual)
+   × run105 C route advisory ladder source > an empty or absent ladder is unavailable with the same bounded reason 5ms
+     → expected { preferredRoutePackage: null, …(9) } to match object { advisoryState: 'unavailable', …(2) }
+(8 matching properties omitted from actual)
+   × run105 C route advisory ladder source > a rolled-back ladder is refused before any rung is offered 6ms
+     → expected { preferredRoutePackage: null, …(9) } to match object { advisoryState: 'unavailable', …(2) }
+(8 matching properties omitted from actual)
+   ✓ run105 C route advisory ladder source > a store failure degrades to unavailable, never to influence 3ms
+   × run105 C route advisory ladder source > a missing role or task id refuses the read instead of querying the store 10ms
+     → expected { preferredRoutePackage: null, …(9) } to match object { advisoryState: 'unavailable', …(1) }
+(9 matching properties omitted from actual)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run105-c-route-advisory-ladder-source.test.ts > run105 C route advisory ladder source > reads one role-task ladder and returns rank-sorted status-filtered rungs
+AssertionError: expected { preferredRoutePackage: null, …(9) } to match object { advisoryState: 'fresh', …(5) }
+(6 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "advisoryLadder": [
+-     {
+-       "endpointId": "endpoint-b",
+-       "rank": 2,
+-       "status": "available",
+-     },
+-     {
+-       "endpointId": "endpoint-c",
+-       "rank": 3,
+-       "status": "available",
+-     },
+-   ],
+-   "advisoryState": "fresh",
+-   "preferredRoutePackage": "endpoint-b",
+-   "roleId": "role.coder",
+-   "taskTypeId": "coder.review",
+-   "taxonomyVersion": "taxonomy-v1-alpha.1",
++   "advisoryState": "unavailable",
++   "preferredRoutePackage": null,
++   "taskTypeId": null,
++   "taxonomyVersion": null,
+  }
+
+ ❯ test/run105-c-route-advisory-ladder-source.test.ts:60:20
+     58|     const ctx = context(ladderRead());
+     59|     const result = await readTrackBRouteAdvisoryFromRollout(ctx as nev…
+     60|     expect(result).toMatchObject({
+       |                    ^
+     61|       advisoryState: "fresh",
+     62|       roleId: "role.coder",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  test/run105-c-route-advisory-ladder-source.test.ts > run105 C route advisory ladder source > an all-unavailable ladder is unavailable and never invents a preferred endpoint
+AssertionError: expected { preferredRoutePackage: null, …(9) } to match object { advisoryState: 'unavailable', …(2) }
+(8 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "advisoryLadder": [],
+    "advisoryState": "unavailable",
+    "preferredRoutePackage": null,
+  }
+
+ ❯ test/run105-c-route-advisory-ladder-source.test.ts:90:20
+     88|     );
+     89|     const result = await readTrackBRouteAdvisoryFromRollout(ctx as nev…
+     90|     expect(result).toMatchObject({
+       |                    ^
+     91|       advisoryState: "unavailable",
+     92|       preferredRoutePackage: null,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  test/run105-c-route-advisory-ladder-source.test.ts > run105 C route advisory ladder source > an empty or absent ladder is unavailable with the same bounded reason
+AssertionError: expected { preferredRoutePackage: null, …(9) } to match object { advisoryState: 'unavailable', …(2) }
+(8 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "advisoryLadder": [],
+    "advisoryState": "unavailable",
+    "preferredRoutePackage": null,
+  }
+
+ ❯ test/run105-c-route-advisory-ladder-source.test.ts:105:22
+    103|     ]) {
+    104|       const result = await readTrackBRouteAdvisoryFromRollout(context(…
+    105|       expect(result).toMatchObject({
+       |                      ^
+    106|         advisoryState: "unavailable",
+    107|         preferredRoutePackage: null,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  test/run105-c-route-advisory-ladder-source.test.ts > run105 C route advisory ladder source > a rolled-back ladder is refused before any rung is offered
+AssertionError: expected { preferredRoutePackage: null, …(9) } to match object { advisoryState: 'unavailable', …(2) }
+(8 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "advisoryLadder": [],
+    "advisoryState": "unavailable",
+    "preferredRoutePackage": null,
+  }
+
+ ❯ test/run105-c-route-advisory-ladder-source.test.ts:124:20
+    122|     );
+    123|     const result = await readTrackBRouteAdvisoryFromRollout(ctx as nev…
+    124|     expect(result).toMatchObject({
+       |                    ^
+    125|       advisoryState: "unavailable",
+    126|       preferredRoutePackage: null,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  test/run105-c-route-advisory-ladder-source.test.ts > run105 C route advisory ladder source > a missing role or task id refuses the read instead of querying the store
+AssertionError: expected { preferredRoutePackage: null, …(9) } to match object { advisoryState: 'unavailable', …(1) }
+(9 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "advisoryLadder": [],
+    "advisoryState": "unavailable",
+  }
+
+ ❯ test/run105-c-route-advisory-ladder-source.test.ts:150:20
+    148|     const ctx = context(ladderRead());
+    149|     const result = await readTrackBRouteAdvisoryFromRollout({ ...ctx, …
+    150|     expect(result).toMatchObject({ advisoryState: "unavailable", advis…
+       |                    ^
+    151|     expect(ctx.calls).toEqual([]);
+    152|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 1 passed (6)
+   Start at  12:29:58
+   Duration  2.32s (transform 687ms, setup 0ms, collect 483ms, tests 97ms, environment 1ms, prepare 631ms)
+

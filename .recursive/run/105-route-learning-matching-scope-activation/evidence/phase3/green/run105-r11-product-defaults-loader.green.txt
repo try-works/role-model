@@ -1,0 +1,11 @@
+npm warn Unknown env config "manage-package-manager-versions". This will stop working in the next major version of npm.
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-host-bridge
+
+ ✓ test/run105-r11-product-defaults-loader.test.ts (7 tests) 70ms
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  13:42:07
+   Duration  9.73s (transform 4.85s, setup 0ms, collect 8.60s, tests 70ms, environment 1ms, prepare 405ms)
+

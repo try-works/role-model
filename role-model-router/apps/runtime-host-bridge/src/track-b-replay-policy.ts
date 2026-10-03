@@ -127,6 +127,14 @@ export const REPLAY_REFUSAL_CODES = [
    * capable arm merely is unavailable (unhealthy or excluded), because the pool can change.
    */
   "candidate_input_unsupported",
+  /**
+   * Run 105 R1/R8: the capture carries no (role, task) classification, so it can never be admitted
+   * to the replay/eval queue. Scope-wide packs do not exist in stage 3, so there is no ladder for an
+   * unclassified request to fill and no advisory it could be served - the class is TERMINAL (no
+   * future tick can classify a capture that never recorded a classification) and is named here so
+   * the disposition plane counts it instead of it arriving as a generic refusal.
+   */
+  "no_route_classification",
 ] as const;
 
 export type ReplayRefusalCode = (typeof REPLAY_REFUSAL_CODES)[number];

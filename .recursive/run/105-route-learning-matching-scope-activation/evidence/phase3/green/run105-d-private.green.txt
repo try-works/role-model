@@ -1,0 +1,19 @@
+✔ run105 R8: the challenge walks top-down, one comparison per rung, bounded by the batch size (10.6262ms)
+✔ run105 R8: a user-removed rung is skipped, and the new endpoint never challenges itself (3.5033ms)
+✔ run105 R8: nextChallengeRung resumes the walk and reports exhaustion as null (1.2185ms)
+✔ run105 R14/R8: completeness is admitted / currently-configured and derives the lifecycle state (1.5467ms)
+(node:27444) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ run105 R10: the operator toggle is reversible, keeps the reason, and pauses replay while ON (153.2948ms)
+✔ run105 R10: the toggle touches one task only (per-(role, task) isolation) (112.1548ms)
+✔ run105 R10/D8: the toggle writes only the ladder row - no pack, no validation receipt (90.7663ms)
+✔ run105 R8: mark-ladder-eligible recomputes nextEligibleAtMs without touching rungs or version (86.1569ms)
+✔ run105 R8/E: list-route-ladders enumerates the scope rows E renders (99.1038ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1029.3279

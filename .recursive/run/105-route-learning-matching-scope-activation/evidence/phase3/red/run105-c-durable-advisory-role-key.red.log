@@ -1,0 +1,195 @@
+npm warn Unknown env config "manage-package-manager-versions". This will stop working in the next major version of npm.
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-host-bridge
+
+(node:4516) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/run105-c-durable-advisory-role-key.test.ts (5 tests | 5 failed) 52ms
+   × run105 C durable advisory role key > C11 two roles in one scope keep separate durable entries 26ms
+     → (0 , clearTrackBDurableRouteAdvisoryCacheForTests) is not a function
+   × run105 C durable advisory role key > C11 a null roleId keeps the pre-run105 (channel, scope) behaviour 2ms
+     → (0 , clearTrackBDurableRouteAdvisoryCacheForTests) is not a function
+   × run105 C durable advisory role key > C11 re-remembering the same (channel, scope, role) refreshes the entry in place 2ms
+     → (0 , clearTrackBDurableRouteAdvisoryCacheForTests) is not a function
+   × run105 C durable advisory role key > C11 the recency bound still ages a role-scoped entry 5ms
+     → (0 , clearTrackBDurableRouteAdvisoryCacheForTests) is not a function
+   × run105 C durable advisory role key > C11 the cache bound is raised to 512 for the per-(role, task) fan-out 6ms
+     → (0 , clearTrackBDurableRouteAdvisoryCacheForTests) is not a function
+(node:18728) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/run105-c-advisory-rung-observation.test.ts (3 tests | 2 failed) 154ms
+   × run105 C advisory rung observation > C13 records the walked rung, its rank, the ladder length and the skipped count 100ms
+     → expected { …(26) } to match object { advisoryLadderLength: 3, …(3) }
+(26 matching properties omitted from actual)
+   ✓ run105 C advisory rung observation > C13 the rung fields are omitted when the caller has no ladder (back-compat) 16ms
+   × run105 C advisory rung observation > C13 the skipped count is bounded to 32 so a hostile ladder cannot widen the ledger row 16ms
+     → expected { …(26) } to match object { advisoryLadderLength: 64, …(2) }
+(26 matching properties omitted from actual)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run105-c-advisory-rung-observation.test.ts > run105 C advisory rung observation > C13 records the walked rung, its rank, the ladder length and the skipped count
+AssertionError: expected { …(26) } to match object { advisoryLadderLength: 3, …(3) }
+(26 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "advisoryLadderLength": 3,
+-   "advisoryRungRank": 2,
+-   "advisoryRungSkipped": 1,
+-   "advisoryRungWalked": "endpoint-b",
++   "advisoryId": "pack-c",
++   "advisoryState": "fresh",
++   "applied": false,
++   "candidateId": "shadow-c",
++   "cohortBucket": 3,
++   "cohortPercent": 100,
++   "confidence": 0.8,
++   "decisionId": "decision-run105-c",
++   "eligibleRoutePackageCount": 3,
++   "fallbackReason": "advisory_matches_baseline",
++   "mode": "advisory_considered",
++   "observedAtMs": 1789440400000,
++   "origin": "live",
++   "preferredEligible": true,
++   "preferredRoutePackage": "endpoint-b",
++   "profileSnapshotIds": [],
++   "requestTaskTypeId": "coder.review",
++   "routePackage": "endpoint-leader",
++   "schemaVersion": "role-model.route-advisory-observation.v1",
++   "scoreGapBefore": 0,
++   "selection": "baseline_retained",
++   "selectionMode": "policy_deterministic",
++   "selectionProbability": 1,
++   "stage": "S2",
++   "taskTypeId": "coder.review",
++   "wouldHaveChanged": false,
+  }
+
+ ❯ test/run105-c-advisory-rung-observation.test.ts:51:25
+     49|       }) as never,
+     50|     );
+     51|     expect(observation).toMatchObject({
+       |                         ^
+     52|       advisoryLadderLength: 3,
+     53|       advisoryRungRank: 2,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/7]⎯
+
+ FAIL  test/run105-c-advisory-rung-observation.test.ts > run105 C advisory rung observation > C13 the skipped count is bounded to 32 so a hostile ladder cannot widen the ledger row
+AssertionError: expected { …(26) } to match object { advisoryLadderLength: 64, …(2) }
+(26 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "advisoryLadderLength": 64,
+-   "advisoryRungRank": 33,
+-   "advisoryRungSkipped": 32,
++   "advisoryId": "pack-c",
++   "advisoryState": "fresh",
++   "applied": false,
++   "candidateId": "shadow-c",
++   "cohortBucket": 3,
++   "cohortPercent": 100,
++   "confidence": 0.8,
++   "decisionId": "decision-run105-c",
++   "eligibleRoutePackageCount": 3,
++   "fallbackReason": "advisory_matches_baseline",
++   "mode": "advisory_considered",
++   "observedAtMs": 1789440400000,
++   "origin": "live",
++   "preferredEligible": true,
++   "preferredRoutePackage": "endpoint-b",
++   "profileSnapshotIds": [],
++   "requestTaskTypeId": "coder.review",
++   "routePackage": "endpoint-leader",
++   "schemaVersion": "role-model.route-advisory-observation.v1",
++   "scoreGapBefore": 0,
++   "selection": "baseline_retained",
++   "selectionMode": "policy_deterministic",
++   "selectionProbability": 1,
++   "stage": "S2",
++   "taskTypeId": "coder.review",
++   "wouldHaveChanged": false,
+  }
+
+ ❯ test/run105-c-advisory-rung-observation.test.ts:82:25
+     80|       }) as never,
+     81|     );
+     82|     expect(observation).toMatchObject({
+       |                         ^
+     83|       advisoryLadderLength: 64,
+     84|       advisoryRungRank: 33,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/7]⎯
+
+ FAIL  test/run105-c-durable-advisory-role-key.test.ts > run105 C durable advisory role key > C11 two roles in one scope keep separate durable entries
+TypeError: (0 , clearTrackBDurableRouteAdvisoryCacheForTests) is not a function
+ ❯ test/run105-c-durable-advisory-role-key.test.ts:32:5
+     30| describe("run105 C durable advisory role key", () => {
+     31|   test("C11 two roles in one scope keep separate durable entries", () …
+     32|     clearTrackBDurableRouteAdvisoryCacheForTests();
+       |     ^
+     33|     rememberTrackBDurableRouteAdvisory({
+     34|       channel: "stage",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/7]⎯
+
+ FAIL  test/run105-c-durable-advisory-role-key.test.ts > run105 C durable advisory role key > C11 a null roleId keeps the pre-run105 (channel, scope) behaviour
+TypeError: (0 , clearTrackBDurableRouteAdvisoryCacheForTests) is not a function
+ ❯ test/run105-c-durable-advisory-role-key.test.ts:66:5
+     64| 
+     65|   test("C11 a null roleId keeps the pre-run105 (channel, scope) behavi…
+     66|     clearTrackBDurableRouteAdvisoryCacheForTests();
+       |     ^
+     67|     rememberTrackBDurableRouteAdvisory({
+     68|       channel: "stage",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/7]⎯
+
+ FAIL  test/run105-c-durable-advisory-role-key.test.ts > run105 C durable advisory role key > C11 re-remembering the same (channel, scope, role) refreshes the entry in place
+TypeError: (0 , clearTrackBDurableRouteAdvisoryCacheForTests) is not a function
+ ❯ test/run105-c-durable-advisory-role-key.test.ts:80:5
+     78| 
+     79|   test("C11 re-remembering the same (channel, scope, role) refreshes t…
+     80|     clearTrackBDurableRouteAdvisoryCacheForTests();
+       |     ^
+     81|     rememberTrackBDurableRouteAdvisory({
+     82|       channel: "stage",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/7]⎯
+
+ FAIL  test/run105-c-durable-advisory-role-key.test.ts > run105 C durable advisory role key > C11 the recency bound still ages a role-scoped entry
+TypeError: (0 , clearTrackBDurableRouteAdvisoryCacheForTests) is not a function
+ ❯ test/run105-c-durable-advisory-role-key.test.ts:105:5
+    103| 
+    104|   test("C11 the recency bound still ages a role-scoped entry", () => {
+    105|     clearTrackBDurableRouteAdvisoryCacheForTests();
+       |     ^
+    106|     rememberTrackBDurableRouteAdvisory({
+    107|       channel: "stage",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/7]⎯
+
+ FAIL  test/run105-c-durable-advisory-role-key.test.ts > run105 C durable advisory role key > C11 the cache bound is raised to 512 for the per-(role, task) fan-out
+TypeError: (0 , clearTrackBDurableRouteAdvisoryCacheForTests) is not a function
+ ❯ test/run105-c-durable-advisory-role-key.test.ts:125:5
+    123| 
+    124|   test("C11 the cache bound is raised to 512 for the per-(role, task) …
+    125|     clearTrackBDurableRouteAdvisoryCacheForTests();
+       |     ^
+    126|     for (let index = 0; index < 520; index += 1) {
+    127|       rememberTrackBDurableRouteAdvisory({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/7]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  7 failed | 1 passed (8)
+   Start at  12:30:31
+   Duration  12.00s (transform 4.31s, setup 0ms, collect 8.79s, tests 206ms, environment 1ms, prepare 1.16s)
+

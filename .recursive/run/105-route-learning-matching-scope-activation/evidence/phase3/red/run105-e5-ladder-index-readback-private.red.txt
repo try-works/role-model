@@ -1,0 +1,78 @@
+# E5 private sidecar projection RED
+# command: node --test --test-concurrency=1 --test-timeout=120000 tests/track-b/run105-e5-ladder-index-readback.test.mjs
+# exit: 1
+
+(node:18320) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✖ Run105 E5: the records readback carries the frozen ladder index beside intact records (40.4314ms)
+✖ Run105 E5: a store that does not answer keeps records intact with ladders unavailable (8.9173ms)
+✖ Run105 E5: scope-wide packs produce no ladder rows (6.8105ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 0
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1315.0778
+
+✖ failing tests:
+
+test at tests\track-b\run105-e5-ladder-index-readback.test.mjs:82:1
+✖ Run105 E5: the records readback carries the frozen ladder index beside intact records (40.4314ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + undefined
+  - 'reported'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/105-route-learning-matching-scope-activation/tests/track-b/run105-e5-ladder-index-readback.test.mjs:110:12)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: 'reported',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\track-b\run105-e5-ladder-index-readback.test.mjs:137:1
+✖ Run105 E5: a store that does not answer keeps records intact with ladders unavailable (8.9173ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + undefined
+  - 'unavailable'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/105-route-learning-matching-scope-activation/tests/track-b/run105-e5-ladder-index-readback.test.mjs:159:12)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: 'unavailable',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\track-b\run105-e5-ladder-index-readback.test.mjs:168:1
+✖ Run105 E5: scope-wide packs produce no ladder rows (6.8105ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + undefined
+  - 'reported'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/105-route-learning-matching-scope-activation/tests/track-b/run105-e5-ladder-index-readback.test.mjs:195:12)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: 'reported',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+

@@ -40,6 +40,7 @@ import {
   fetchLearningPolicy,
   fetchLearningRecords,
   fetchLearningRollout,
+  rollbackLearningLadder,
   rollbackLearningPack,
   rollbackLearningPolicy,
   saveLearningPolicy,
@@ -48,6 +49,12 @@ import {
 } from "../lib/learning-api";
 import { fetchLearningActivity, fetchLearningHistory } from "../lib/learning-api";
 import { formatLearningClaim } from "../lib/learning-claim";
+import {
+  type LadderRowView,
+  compareLadderRows,
+  formatLadderCompleteness,
+  normalizeLadderRows,
+} from "../lib/learning-ladder";
 import { summarizePolicyResolution } from "../lib/learning-policy-resolution";
 import {
   appliedShareOf,
@@ -893,6 +900,200 @@ export function LearningPackRow({
   );
 }
 
+
+/**
+ * Run 105 R12 (stage 3): the endpoint ladder index.
+ *
+ * One row per (roleId, taskTypeId) projected from the records readback's sibling `ladders`
+ * array. The row shows the top-3 endpoints (rank marks + leaf model labels, the full
+ * endpoint id in `title`), the completeness (`3 / 7 admitted`), a badge, and the two-way
+ * Activate / Roll back toggle wired to the per-task backend flag (R10).
+ *
+ * Naming (D9): the word "ladder" alone stays reserved for the cohort exposure ladder, so
+ * every string on this surface says "endpoint ladder". "Active" is DERIVED from the
+ * published fields and is never stored (R14); a row the readback did not answer is bounded
+ * absence - the row renders what it carries rather than a fabricated value.
+ */
+export function LearningLadderRow({
+  row,
+  busy = false,
+  error = null,
+  onToggle,
+}: {
+  readonly row: LadderRowView;
+  readonly busy?: boolean;
+  readonly error?: string | null;
+  readonly onToggle: (row: LadderRowView, rolledBack: boolean) => void;
+}) {
+  const state = ladderRowStateOf(row);
+  const active = ladderRowActiveOf(row);
+  const completeness = formatLadderCompleteness(row.completeness);
+  const scopeLine = `${row.roleId || NOT_REPORTED} . ${row.taskTypeId || NOT_REPORTED}`;
+  /**
+   * R10: the toggle reads 'Roll back' when the row is Active and 'Activate' when it is
+   * rolled back. A row with no endpoint ladder has no flag to flip, so the control is
+   * disabled and states the reason instead of offering a no-op.
+   */
+  const hasLadder = state !== "no_ladder";
+  const disabledReason = hasLadder ? null : "no endpoint ladder: nothing admitted yet";
+  const badgeTone: BadgeTone =
+    state === "rolled_back" ? "warning" : active ? "success" : "neutral";
+  const badgeLabel = state === "rolled_back" ? "Rolled back" : active ? "Active" : "No endpoint ladder";
+  return (
+    <tr className={tableRowClassName}>
+      <td className="py-3 pr-3">
+        <p className={tableCellValueClassName} title={`${row.roleId} . ${row.taskTypeId}`}>
+          {scopeLine}
+        </p>
+        <p className={`mt-0.5 ${tableCellMetaClassName}`}>
+          {row.taxonomyVersion ? `taxonomy ${row.taxonomyVersion}` : NOT_REPORTED}
+        </p>
+        <p className={`mt-0.5 ${tableCellNoteClassName}`}>
+          {row.rankedCount === null
+            ? "ranked rungs not reported"
+            : `${row.rankedCount} ranked rung${row.rankedCount === 1 ? "" : "s"} · top 3 shown`}
+        </p>
+      </td>
+      <td className="py-3 pr-3">
+        {row.topEndpoints.length === 0 ? (
+          <p className={tableCellMetaClassName}>no ranked endpoint yet</p>
+        ) : (
+          <ol className="space-y-1">
+            {row.topEndpoints.map((endpoint) => (
+              <li className="flex items-baseline gap-2" key={`${endpoint.rank}:${endpoint.endpointId}`}>
+                <span className={tableScoreLaneClassName}>{endpoint.rank}</span>
+                <span className="min-w-0 break-words">
+                  <span className={`${tableCellValueClassName} break-words`} title={endpoint.endpointId}>
+                    {formatEndpointModelLabel(endpoint.endpointId)}
+                  </span>
+                  <span className={`ml-2 ${tableCellMetaClassName}`}>{endpoint.status}</span>
+                </span>
+              </li>
+            ))}
+          </ol>
+        )}
+      </td>
+      <td className="py-3 pr-3">
+        <p className={tableCellValueClassName}>{completeness}</p>
+        <p className={`mt-0.5 ${tableCellNoteClassName}`}>
+          {state === "complete"
+            ? "every configured endpoint is admitted"
+            : state === "no_ladder"
+              ? "no endpoint has passed the admission floor"
+              : "more configured endpoints are still to be challenged"}
+        </p>
+      </td>
+      <td className="py-3 pr-3">
+        <Badge tone={badgeTone}>{badgeLabel}</Badge>
+        {row.rolledBack?.on ? (
+          <p className={`mt-1 ${tableCellMetaClassName}`} title={row.rolledBack.reason ?? undefined}>
+            {row.rolledBack.reason ? `reason ${row.rolledBack.reason}` : "no reason recorded"}
+          </p>
+        ) : null}
+      </td>
+      <td className="py-3 pr-3">
+        <button
+          className={secondaryButtonClassName}
+          disabled={busy || !hasLadder}
+          onClick={() => onToggle(row, active)}
+          title={disabledReason ?? undefined}
+          type="button"
+        >
+          {active ? "Roll back" : "Activate"}
+        </button>
+        {disabledReason ? (
+          <p className={`mt-1 ${tableCellNoteClassName}`}>{disabledReason}</p>
+        ) : null}
+        {error ? (
+          <p className={`mt-1 ${tableCellMetaClassName}`} role="alert">
+            {error}
+          </p>
+        ) : null}
+      </td>
+    </tr>
+  );
+}
+
+/** R14: the row's observable lifecycle state, computed from the published fields. */
+function ladderRowStateOf(row: LadderRowView): LadderStateForRow {
+  if (row.rolledBack?.on) return "rolled_back";
+  const admitted = row.completeness.admitted;
+  const configured = row.completeness.configured;
+  if (admitted === null || admitted <= 0) return "no_ladder";
+  if (configured !== null && configured > 0 && admitted >= configured) return "complete";
+  return "partial";
+}
+
+type LadderStateForRow = "no_ladder" | "partial" | "complete" | "rolled_back";
+
+/** R14: Active is DERIVED (admitted > 0 AND not rolled back), never stored. */
+function ladderRowActiveOf(row: LadderRowView): boolean {
+  const state = ladderRowStateOf(row);
+  return state === "partial" || state === "complete";
+}
+
+/**
+ * The ladder index table above the legacy pack table. Rows are ordered complete-first, then
+ * partial by the largest unfilled gap, then no ladder (deterministic; ties by roleId then
+ * taskTypeId). The legacy pack table below is unchanged and keeps rendering whatever the
+ * readback's `records` array carries.
+ */
+export function LearningLadderIndex({
+  rows,
+  laddersState = "reported",
+  busyRoleTask = null,
+  error = null,
+  onToggle,
+}: {
+  readonly rows: readonly LadderRowView[];
+  readonly laddersState?: "reported" | "unavailable" | "not_asked";
+  readonly busyRoleTask?: string | null;
+  readonly error?: string | null;
+  readonly onToggle: (row: LadderRowView, rolledBack: boolean) => void;
+}) {
+  const ordered = useMemo(() => [...rows].sort(compareLadderRows), [rows]);
+  if (ordered.length === 0) {
+    return (
+      <div className="mt-4">
+        <p className={tableCellNoteClassName}>
+          {laddersState === "unavailable"
+            ? "The endpoint ladder index is unavailable: the store did not answer the ladder read. The legacy pack table below is unaffected."
+            : laddersState === "not_asked"
+              ? "No endpoint ladder index was requested for this readback; the legacy pack table below still renders every pack record."
+              : "No endpoint ladder has been derived for this scope yet. The legacy pack table below still renders every pack record."}
+        </p>
+      </div>
+    );
+  }
+  return (
+    <div className="mt-4 overflow-x-auto">
+      <table className={`${tableClassName} min-w-[860px]`}>
+        <colgroup>
+          <col style={{ width: "200px" }} />
+          <col style={{ width: "320px" }} />
+          <col style={{ width: "160px" }} />
+          <col style={{ width: "150px" }} />
+          <col />
+        </colgroup>
+        <LearningTableHead
+          columns={["Role . task (id)", "Ranked endpoints (top 3)", "Completeness", "State", "Action"]}
+        />
+        <tbody>
+          {ordered.map((row) => (
+            <LearningLadderRow
+              busy={busyRoleTask === `${row.roleId}\u0000${row.taskTypeId}`}
+              error={error}
+              key={`${row.roleId}\u0000${row.taskTypeId}`}
+              onToggle={onToggle}
+              row={row}
+            />
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 /** The column header row shared by the three tables (real `th` cells, so the columns are associated). */
 function LearningTableHead({ columns }: { readonly columns: readonly string[] }) {
   return (
@@ -1376,12 +1577,35 @@ export function LearningPacksPage() {
   const rows = Array.isArray(asRecord(records.value).records)
     ? (asRecord(records.value).records as readonly Record<string, unknown>[])
     : [];
+  /**
+   * Run 105 R12 (package E): the endpoint ladder index rides the EXISTING records readback as a
+   * sibling `ladders` array (the host bridge passes the whole readback through, so this is the
+   * only read the page needs). `laddersState` is the store's own word about the read, so an
+   * unanswered ladder read renders an honest note instead of the "no pack records" empty state.
+   */
+  const laddersState = (() => {
+    const state = asRecord(records.value).laddersState;
+    return state === "unavailable" || state === "not_asked" ? state : ("reported" as const);
+  })();
+  const ladderRows = useMemo(
+    () => normalizeLadderRows(asRecord(records.value)),
+    [records.value],
+  );
+  const [busyLadder, setBusyLadder] = useState<string | null>(null);
+  const [ladderError, setLadderError] = useState<string | null>(null);
   /** Run 104 R22 (`R22-B3`): how many shown packs cannot name a role or task, and why. */
   const packScopeNote = learningPackScopeNote(rows);
   const rolloutValue = asRecord(rollout.value);
   const act = async (packId: string) => {
     if (
       typeof window !== "undefined" &&
+      // Run 105 R12/E: this confirm belongs to the LEGACY pack table, where activation still
+      // starts the scope-wide cohort rollout at the first cohort-ladder step - the sentence is
+      // accurate for that table and stays. The endpoint-ladder rows below never reach it: their
+      // per-task toggle has its own confirm in `toggleLadder` and never calls `activateLearningPack`.
+      // Run 105 R12/E: this confirm text stays byte-identical - it is accurate for the LEGACY
+      // scope-wide pack table below. The endpoint-ladder rows never reach it: their per-task toggle
+      // has its own confirm in `toggleLadder` and calls `rollbackLearningLadder`, not this.
       !window.confirm(`Activate ${packId}? Cohort rollout starts at the first ladder step.`)
     )
       return;
@@ -1424,6 +1648,49 @@ export function LearningPacksPage() {
       await rollout.reload();
     } catch (rollbackError) {
       setError(describeOperatorWriteError(rollbackError));
+    }
+  };
+  /**
+   * Run 105 R10/R12 (package E): the per-task rollback toggle. It posts the frozen body
+   * `{scopeId, roleId, taskTypeId, rolledBack, reason}` to the EXISTING rollback-pack route and
+   * reloads the readback, so a row the backend refused stays exactly as the readback states it and
+   * the row shows the error rather than a fabricated new state.
+   */
+  const toggleLadder = async (row: LadderRowView, rolledBack: boolean) => {
+    const label = `${row.roleId} . ${row.taskTypeId}`;
+    if (
+      typeof window !== "undefined" &&
+      !window.confirm(
+        rolledBack
+          ? `Roll back the endpoint ladder for ${label}? Routing falls back to baseline for this task and its replay dispatch pauses.`
+          : `Activate the endpoint ladder for ${label}? The ladder becomes consultable for this task again.`,
+      )
+    )
+      return;
+    setLadderError(null);
+    setBusyLadder(`${row.roleId}\u0000${row.taskTypeId}`);
+    try {
+      await rollbackLearningLadder(
+        {
+          scopeId: textOrNull(asRecord(records.value).scopeId) ?? "standalone-runtime-stage",
+          roleId: row.roleId,
+          taskTypeId: row.taskTypeId,
+          rolledBack,
+          reason: rolledBack ? "operator_ui_ladder_rollback" : "operator_ui_ladder_activate",
+        },
+        fetch,
+        token || undefined,
+      );
+      setNotice(
+        rolledBack
+          ? `Endpoint ladder for ${label} rolled back; routing falls back to baseline for this task.`
+          : `Endpoint ladder for ${label} activated; the ladder is consultable again.`,
+      );
+      await records.reload();
+    } catch (toggleError) {
+      setLadderError(describeOperatorWriteError(toggleError));
+    } finally {
+      setBusyLadder(null);
     }
   };
   const killSwitch = async () => {
@@ -1479,6 +1746,35 @@ export function LearningPacksPage() {
         </div>
       ) : null}
       {packScopeNote ? <p className={`mt-3 ${supportingTextClassName}`}>{packScopeNote}</p> : null}
+      {/**
+       * Run 105 R12/R14 (package E): the endpoint ladder index - one row per (role, task), ordered
+       * complete-first, with the top-3 endpoints, completeness and the per-task toggle. The legacy
+       * pack table below is unchanged and still renders every pack record it is handed.
+       */}
+      <div className="mt-6">
+        <p className={monoEyebrowClassName}>Endpoint ladder index</p>
+        <p className={`mt-1 ${supportingTextClassName}`}>
+          One row per role · task: the top three ranked endpoints, how many configured endpoints are
+          admitted, and the per-task Activate / Roll back toggle.
+        </p>
+        {ladderError ? (
+          <div className="mt-3">
+            <ErrorState label={ladderError} />
+          </div>
+        ) : null}
+        {degraded(records.loading, records.error) ?? (
+          <LearningLadderIndex
+            busyRoleTask={busyLadder}
+            error={null}
+            laddersState={laddersState}
+            onToggle={(row, rolledBack) => void toggleLadder(row, rolledBack)}
+            rows={ladderRows}
+          />
+        )}
+      </div>
+      <div className="mt-8">
+        <p className={monoEyebrowClassName}>Scope-wide cohort rollout (legacy)</p>
+      </div>
       {degraded(records.loading, records.error) ??
         (rows.length === 0 ? (
           <EmptyState label="No pack records have been derived for this scope yet." />
@@ -1516,6 +1812,11 @@ export function LearningPacksPage() {
             </table>
           </div>
         ))}
+      {/**
+       * Run 105 R12/E: these three controls are the SCOPE-WIDE legacy surface. The per-task
+       * endpoint-ladder toggle lives on each index row above and never touches them; the heading
+       * added above the legacy table says which surface the operator is looking at.
+       */}
       <div className="mt-4 flex flex-wrap gap-2">
         <button
           className={secondaryButtonClassName}
@@ -1523,7 +1824,7 @@ export function LearningPacksPage() {
           onClick={() => void rollback()}
           type="button"
         >
-          Roll back active pack
+          Roll back active pack (scope-wide)
         </button>
         <button
           className={secondaryButtonClassName}

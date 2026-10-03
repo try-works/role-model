@@ -1,5 +1,7 @@
 import { createHash } from "node:crypto";
 
+import { classifyRouteLadderServingState } from "@role-model-router/core";
+
 import { type ReplayLedger, replayBudgetAvailable } from "./track-b-replay-ledger.js";
 import {
   type ReplayCandidateEligibilityProfile,
@@ -416,6 +418,15 @@ export interface AutoReplayCapture {
    */
   readonly requirements?: ReplayRequestRequirements;
   readonly messages?: readonly unknown[];
+  /**
+   * Run 105 R1/R8: the request's route classification. Queue admission requires a (role, task)
+   * classification - a capture without BOTH ids is never admitted to the replay/eval queue and
+   * never gets an advisory, because a scope-wide pack does not exist. The tick's classification
+   * gate reads these and refuses by name; the projection supplies them from the capture's
+   * recorded decision.
+   */
+  readonly roleId?: string | null;
+  readonly taskTypeId?: string | null;
 }
 
 export interface AutoReplayBranch {
@@ -911,6 +922,14 @@ export async function runAutoReplayTick(input: {
    * endpoint) keeps the pre-existing selection behaviour for that endpoint.
    */
   readonly endpointProfiles?: readonly ReplayCandidateEligibilityProfile[];
+  /**
+   * Run 105 R8: when the dispatcher holds a focus task, its ladder gap decides the counterfactual.
+   * The narrowing applies to the focused capture ONLY (matched by ref), so every other capture keeps
+   * the rotation behaviour above, and one dispatch performs exactly one pairwise comparison against
+   * the as-yet-unranked configured endpoint the walk selected.
+   */
+  readonly focusCandidateEndpointId?: string | null;
+  readonly focusCaptureRef?: string | null;
 }): Promise<AutoReplayTickResult> {
   const maxCapturesPerTick = input.maxCapturesPerTick ?? DEFAULT_MAX_CAPTURES_PER_TICK;
   const tickBudgetMs = input.tickBudgetMs ?? DEFAULT_TICK_BUDGET_MS;
@@ -958,6 +977,29 @@ export async function runAutoReplayTick(input: {
     }
     processed += 1;
     cursor = capture.captureRef;
+
+    /**
+     * Run 105 R1/R8: queue admission requires a (role, task) classification. A capture without BOTH
+     * ids is never admitted - a scope-wide pack does not exist, so there is no ladder to fill and no
+     * advisory to serve - and the class is named so the census can count it instead of watching the
+     * captures disappear. This sits ahead of every other gate: an unclassified capture is refused
+     * for what it is, never for a downstream symptom.
+     */
+    const routeClassification = classifyRouteLadderServingState({
+      roleId: capture.roleId,
+      taskTypeId: capture.taskTypeId,
+    });
+    if (!routeClassification.classified) {
+      refused += 1;
+      emit({
+        captureRef: capture.captureRef,
+        outcome: "refused",
+        code: routeClassification.code as ReplayRefusalCode,
+        detail:
+          "the capture carries no (role, task) classification, so it is never admitted to the replay/eval queue and gets no advisory",
+      });
+      continue;
+    }
 
     const judgeEndpointId =
       typeof input.judgeEndpointId === "string" && input.judgeEndpointId.trim().length > 0
@@ -1018,14 +1060,33 @@ export async function runAutoReplayTick(input: {
         ? undefined
         : readReplayRequestRequirements({ messages: capture.messages }));
     const rejectedArms: ReplayCandidateRejection[] = [];
+    /**
+     * Run 105 R8: the focus task's ladder gap owns the counterfactual for the capture the dispatcher
+     * is filling. The narrowing is applied to THAT capture only (matched by ref) and pins the plan
+     * to the single endpoint the top-down walk selected, so the dispatch is exactly one pairwise
+     * comparison against an as-yet-unranked configured endpoint. Every other capture keeps the
+     * rotation below, and the narrowing can never widen the configured pool: an endpoint that is not
+     * configured (or is excluded, unhealthy, the source, or ineligible) is still filtered out by
+     * selectReplayCandidates, which is why this is an input to it rather than a replacement for it.
+     */
+    const focusNarrowingEndpointId =
+      typeof input.focusCandidateEndpointId === "string" &&
+      input.focusCandidateEndpointId.trim().length > 0 &&
+      typeof input.focusCaptureRef === "string" &&
+      input.focusCaptureRef === capture.captureRef
+        ? input.focusCandidateEndpointId.trim()
+        : null;
     const candidates = selectReplayCandidates({
-      configuredEndpointIds: input.configuredEndpointIds,
+      ...(focusNarrowingEndpointId
+        ? { configuredEndpointIds: [focusNarrowingEndpointId] }
+        : { configuredEndpointIds: input.configuredEndpointIds }),
       ...(input.healthyEndpointIds ? { healthyEndpointIds: input.healthyEndpointIds } : {}),
       sourceEndpointId: capture.sourceEndpointId,
       ...(effectiveJudgeEndpointId ? { excludedEndpointIds: [effectiveJudgeEndpointId] } : {}),
       // Run 98 addendum 33 S3: rotate the counterfactual with the capture, so the comparison graph grows
-      // edges instead of every capture comparing the same two candidates.
-      rotationKey: capture.captureRef,
+      // edges instead of every capture comparing the same two candidates. A narrowed (focus) plan names
+      // its own single arm, so the rotation must not reorder it.
+      ...(focusNarrowingEndpointId ? {} : { rotationKey: capture.captureRef }),
       ...(requestRequirements ? { requirements: requestRequirements } : {}),
       ...(input.endpointProfiles ? { endpointProfiles: input.endpointProfiles } : {}),
       onRejected: (rejection) => rejectedArms.push(rejection),

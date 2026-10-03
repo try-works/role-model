@@ -1,0 +1,122 @@
+# learning-ladder-index RED (run 105 package E)
+# command: corepack pnpm --filter @role-model-router/runtime-ui exec vitest run app/routes/learning-ladder-index.test.tsx
+# exit: 1
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-ui
+
+ ❯ app/routes/learning-ladder-index.test.tsx (5 tests | 5 failed) 67ms
+   × Learning ladder index > renders rows with Roll back on Active rows and Activate on rolled-back rows 43ms
+     → Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+   × Learning ladder index > a no-ladder row cannot be toggled and states why 3ms
+     → Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+   × Learning ladder index > laddersState unavailable renders an honest note, never the no-pack empty state 3ms
+     → Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+   × Learning ladder index > no ladder rows at all leaves the legacy pack table to render 5ms
+     → Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+   × Learning ladder index > a rejected toggle leaves the row unchanged and renders the error 9ms
+     → Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/routes/learning-ladder-index.test.tsx > Learning ladder index > renders rows with Roll back on Active rows and Activate on rolled-back rows
+Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+ ❯ renderElement ../../../node_modules/.pnpm/react-dom@19.2.5_react@19.2.5/node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6119:15
+ ❯ retryNode ../../../node_modules/.pnpm/react-dom@19.2.5_react@19.2.5/node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6428:21
+ ❯ performWork ../../../node_modules/.pnpm/react-dom@19.2.5_react@19.2.5/node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:7435:17
+ ❯ startWork ../../../node_modules/.pnpm/react-dom@19.2.5_react@19.2.5/node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:8270:7
+ ❯ renderToStringImpl ../../../node_modules/.pnpm/react-dom@19.2.5_react@19.2.5/node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:8380:7
+ ❯ process.env.NODE_ENV.exports.renderToStaticMarkup ../../../node_modules/.pnpm/react-dom@19.2.5_react@19.2.5/node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:9861:14
+ ❯ app/routes/learning-ladder-index.test.tsx:15:20
+     13| describe("Learning ladder index", () => {
+     14|   test("renders rows with Roll back on Active rows and Activate on rol…
+     15|     const markup = renderToStaticMarkup(
+       |                    ^
+     16|       <learningRoute.LearningLadderIndex
+     17|         onToggle={vi.fn()}
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  app/routes/learning-ladder-index.test.tsx > Learning ladder index > a no-ladder row cannot be toggled and states why
+Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+ ❯ renderElement ../../../node_modules/.pnpm/react-dom@19.2.5_react@19.2.5/node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6119:15
+ ❯ retryNode ../../../node_modules/.pnpm/react-dom@19.2.5_react@19.2.5/node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6428:21
+ ❯ performWork ../../../node_modules/.pnpm/react-dom@19.2.5_react@19.2.5/node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:7435:17
+ ❯ startWork ../../../node_modules/.pnpm/react-dom@19.2.5_react@19.2.5/node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:8270:7
+ ❯ renderToStringImpl ../../../node_modules/.pnpm/react-dom@19.2.5_react@19.2.5/node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:8380:7
+ ❯ process.env.NODE_ENV.exports.renderToStaticMarkup ../../../node_modules/.pnpm/react-dom@19.2.5_react@19.2.5/node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:9861:14
+ ❯ app/routes/learning-ladder-index.test.tsx:29:20
+     27| 
+     28|   test("a no-ladder row cannot be toggled and states why", () => {
+     29|     const markup = renderToStaticMarkup(
+       |                    ^
+     30|       <learningRoute.LearningLadderIndex
+     31|         onToggle={vi.fn()}
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  app/routes/learning-ladder-index.test.tsx > Learning ladder index > laddersState unavailable renders an honest note, never the no-pack empty state
+Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+ ❯ renderElement ../../../node_modules/.pnpm/react-dom@19.2.5_react@19.2.5/node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6119:15
+ ❯ retryNode ../../../node_modules/.pnpm/react-dom@19.2.5_react@19.2.5/node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6428:21
+ ❯ performWork ../../../node_modules/.pnpm/react-dom@19.2.5_react@19.2.5/node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:7435:17
+ ❯ startWork ../../../node_modules/.pnpm/react-dom@19.2.5_react@19.2.5/node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:8270:7
+ ❯ renderToStringImpl ../../../node_modules/.pnpm/react-dom@19.2.5_react@19.2.5/node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:8380:7
+ ❯ process.env.NODE_ENV.exports.renderToStaticMarkup ../../../node_modules/.pnpm/react-dom@19.2.5_react@19.2.5/node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:9861:14
+ ❯ app/routes/learning-ladder-index.test.tsx:41:20
+     39| 
+     40|   test("laddersState unavailable renders an honest note, never the no-…
+     41|     const markup = renderToStaticMarkup(
+       |                    ^
+     42|       <learningRoute.LearningLadderIndex laddersState="unavailable" on…
+     43|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  app/routes/learning-ladder-index.test.tsx > Learning ladder index > no ladder rows at all leaves the legacy pack table to render
+Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+ ❯ renderElement ../../../node_modules/.pnpm/react-dom@19.2.5_react@19.2.5/node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6119:15
+ ❯ retryNode ../../../node_modules/.pnpm/react-dom@19.2.5_react@19.2.5/node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6428:21
+ ❯ performWork ../../../node_modules/.pnpm/react-dom@19.2.5_react@19.2.5/node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:7435:17
+ ❯ startWork ../../../node_modules/.pnpm/react-dom@19.2.5_react@19.2.5/node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:8270:7
+ ❯ renderToStringImpl ../../../node_modules/.pnpm/react-dom@19.2.5_react@19.2.5/node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:8380:7
+ ❯ process.env.NODE_ENV.exports.renderToStaticMarkup ../../../node_modules/.pnpm/react-dom@19.2.5_react@19.2.5/node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:9861:14
+ ❯ app/routes/learning-ladder-index.test.tsx:49:20
+     47| 
+     48|   test("no ladder rows at all leaves the legacy pack table to render",…
+     49|     const markup = renderToStaticMarkup(
+       |                    ^
+     50|       <learningRoute.LearningLadderIndex laddersState="not_asked" onTo…
+     51|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  app/routes/learning-ladder-index.test.tsx > Learning ladder index > a rejected toggle leaves the row unchanged and renders the error
+Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+ ❯ renderElement ../../../node_modules/.pnpm/react-dom@19.2.5_react@19.2.5/node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6119:15
+ ❯ retryNode ../../../node_modules/.pnpm/react-dom@19.2.5_react@19.2.5/node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6428:21
+ ❯ performWork ../../../node_modules/.pnpm/react-dom@19.2.5_react@19.2.5/node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:7435:17
+ ❯ startWork ../../../node_modules/.pnpm/react-dom@19.2.5_react@19.2.5/node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:8270:7
+ ❯ renderToStringImpl ../../../node_modules/.pnpm/react-dom@19.2.5_react@19.2.5/node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:8380:7
+ ❯ process.env.NODE_ENV.exports.renderToStaticMarkup ../../../node_modules/.pnpm/react-dom@19.2.5_react@19.2.5/node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:9861:14
+ ❯ app/routes/learning-ladder-index.test.tsx:57:20
+     55| 
+     56|   test("a rejected toggle leaves the row unchanged and renders the err…
+     57|     const markup = renderToStaticMarkup(
+       |                    ^
+     58|       <learningRoute.LearningLadderIndex
+     59|         error="Could not update the endpoint ladder rollback: 409 conf…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed (5)
+   Start at  12:51:44
+   Duration  54.95s (transform 3.99s, setup 0ms, collect 50.44s, tests 67ms, environment 6ms, prepare 2.00s)
+
+undefined
+D:\DEV\role-model\.worktrees\105-route-learning-matching-scope-activation\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run app/routes/learning-ladder-index.test.tsx
+
+

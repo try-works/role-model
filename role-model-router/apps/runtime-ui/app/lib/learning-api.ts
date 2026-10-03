@@ -263,6 +263,37 @@ export async function rollbackLearningPack(
   });
 }
 
+/**
+ * Run 105 R10 (package E): the per-task rollback toggle. It rides the EXISTING
+ * `POST /operator/learning/rollback-pack` route (zero new route work) and posts exactly
+ * the frozen body `{scopeId, roleId, taskTypeId, rolledBack, reason}`; the backend keys the
+ * flag by (roleId, taskTypeId), so one task's rollback never disturbs another.
+ */
+export async function rollbackLearningLadder(
+  body: {
+    readonly scopeId: string;
+    readonly roleId: string;
+    readonly taskTypeId: string;
+    readonly rolledBack: boolean;
+    readonly reason: string;
+  },
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<Record<string, unknown>> {
+  return postJson(
+    "/api/role-model/operator/learning/rollback-pack",
+    {
+      scopeId: body.scopeId,
+      roleId: body.roleId,
+      taskTypeId: body.taskTypeId,
+      rolledBack: body.rolledBack,
+      reason: body.reason,
+    },
+    fetcher,
+    { ...(operatorToken ? { authorization: `Bearer ${operatorToken}` } : {}) },
+  );
+}
+
 export async function engageLearningKillSwitch(
   body: Record<string, unknown>,
   fetcher: RuntimeFetcher = fetch,

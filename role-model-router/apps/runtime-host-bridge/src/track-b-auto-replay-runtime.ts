@@ -1,3 +1,14 @@
+import {
+  NoReplayableRequest,
+  type RouteFocusCandidate,
+  type RouteLadderRolledBack,
+  type RouteLadderRung,
+  type RouteLearningDefaults,
+  planChallenge,
+  planFocusDispatch,
+  selectFocusTask,
+  stalenessWindowMs,
+} from "@role-model-router/core";
 import { Effect, Schedule } from "effect";
 
 import {
@@ -299,6 +310,19 @@ export interface AutoReplayOperations {
   recoverHandedOffEvaluations?(input: Record<string, unknown>): Promise<unknown>;
 }
 
+/**
+ * Run 105 R8/R9: the ladder row the store answers for one (role, task) - the shape Package B owns.
+ * Optional fields stay optional so a store that answers a narrower row (a legacy readback) does not
+ * break the tick; the focus readouts then report what is actually known.
+ */
+export interface RouteLadderRow {
+  readonly rungs?: readonly RouteLadderRung[] | null;
+  readonly completeness?: { readonly admitted?: number; readonly configured?: number } | null;
+  readonly nextEligibleAtMs?: number | null;
+  readonly version?: number | null;
+  readonly rolledBack?: RouteLadderRolledBack | null;
+}
+
 export interface AutoReplayLoopHealth {
   readonly ticks: number;
   readonly running: boolean;
@@ -316,6 +340,18 @@ export interface AutoReplayLoopHealth {
   readonly lastReclaimedEvaluations: number;
   /** Handed-off replays the recovery pass turned back into completable evaluation work. */
   readonly lastRecoveredHandoffs: number;
+  /**
+   * Run 105 R8/R9: the focus ladder readouts. The dispatcher holds ONE focus task and fills its
+   * ladder depth-first, so an operator needs to see which (role, task) is being filled, how many
+   * configured endpoints are still unranked, and whether a new-endpoint challenge is in flight.
+   * focusTaskKey is the composite `roleId\u0000taskTypeId` scope key (D9) and is null when no
+   * classified task has recorded a request.
+   */
+  readonly focusTaskKey: string | null;
+  readonly focusRemaining: number;
+  readonly challengeInFlight: boolean;
+  /** Captures this tick refused for carrying no (role, task) classification (R1/R8). */
+  readonly lastUnclassifiedCaptures: number;
 }
 
 export interface AutoReplayLoopStatus extends AutoReplayLoopHealth {
@@ -424,6 +460,42 @@ export function startAutoReplayLoop(input: {
   readonly now?: () => number;
   readonly setIntervalFn?: (handler: () => void, timeout: number) => unknown;
   readonly clearIntervalFn?: (handle: unknown) => void;
+  /**
+   * Run 105 R8/R9: the focus-task census and the per-task ladder readback. Both are providers, not
+   * snapshots, so an endpoint added (or a task rolled back) while the runtime is up takes effect on
+   * the next tick - the same rule the configured-endpoint list already follows. Omitted keeps the
+   * pre-105 behaviour exactly: no focus is selected and no capture is narrowed.
+   */
+  readonly routeFocusCandidates?: () => Promise<readonly RouteFocusCandidate[] | null> | readonly RouteFocusCandidate[] | null;
+  readonly readRouteLadder?: (input: {
+    readonly roleId: string;
+    readonly taskTypeId: string;
+  }) => Promise<RouteLadderRow | null> | RouteLadderRow | null;
+  /**
+   * Run 105 R8: the classification census reported once per tick. When supplied, the loop logs the
+   * named class (and never more than once per tick) instead of staying silent about the captures it
+   * refused.
+   */
+  readonly reportUnclassifiedCaptures?: (input: {
+    readonly count: number;
+    readonly code: "no_route_classification";
+  }) => void;
+  /**
+   * Run 105 R11: the routeLearning constants, read through the product-defaults loader. They govern
+   * the challenge batch bound and the staleness window; omitted keeps the documented shipped values,
+   * so a runtime without the wiring behaves exactly as the guidance copy says.
+   */
+  readonly routeLearningDefaults?: RouteLearningDefaults | null;
+  /**
+   * Run 105 R8: recompute one task's refresh eligibility (nextEligibleAtMs). Called by the sweep for
+   * a complete task whose window has not been recorded yet; a new configured endpoint sets it to
+   * "now" through the same capability, which is what breaks the idle immediately.
+   */
+  readonly markRouteLadderEligible?: (input: {
+    readonly roleId: string;
+    readonly taskTypeId: string;
+    readonly nextEligibleAtMs: number;
+  }) => Promise<unknown> | unknown;
 }): {
   tick(): Promise<AutoReplayTickResult & { readonly skipped?: boolean }>;
   /**
@@ -455,6 +527,14 @@ export function startAutoReplayLoop(input: {
   let lastStrandedEvaluations = 0;
   let lastReclaimedEvaluations = 0;
   let lastRecoveredHandoffs = 0;
+  /**
+   * Run 105 R8/R9: the focus ladder state the tick maintains. It is DERIVED each tick from the
+   * classification census and the ladders the store answers - never a stored active-pack pointer
+   * (D7), so a task activates the moment its floor is met.
+   */
+  let focusTaskKey: string | null = null;
+  let focusRemaining = 0;
+  let challengeInFlight = false;
   let timer: unknown = null;
 
   const pendingCaptures = (value: unknown): readonly AutoReplayCapture[] => {
@@ -504,10 +584,27 @@ export function startAutoReplayLoop(input: {
         // captures it produced while replaying, and the producer refuses them with
         // `amplification_depth_exceeded` instead of dispatching again.
         replayProduced: row.replayProduced === true,
+        /**
+         * Run 105 R1/R8: the route classification travels with the capture. The tick's gate refuses
+         * a capture that lacks BOTH ids (a scope-wide pack does not exist, so there is no ladder to
+         * fill), and the focus-task census counts the classified ones. Absent on a capture whose
+         * recorded decision predates the field, which is exactly the case the gate names.
+         */
+        roleId: typeof row.roleId === "string" && row.roleId.trim() ? row.roleId.trim() : null,
+        taskTypeId:
+          typeof row.taskTypeId === "string" && row.taskTypeId.trim() ? row.taskTypeId.trim() : null,
       });
     }
     return captures;
   };
+
+  /**
+   * Run 105 R1/R8: the per-tick classification census. A capture without BOTH ids is never
+   * admitted, and the loop reports the count ONCE per tick (with the named code) instead of
+   * logging per capture, so an operator sees the class without the log being flooded by it.
+   */
+  let lastUnclassifiedCaptures = 0;
+  let lastRouteClassificationReportedAtMs: number | null = null;
 
   /**
    * Run 98 addendum 04 §7 (`L7`), measured live on v171/v172: a work tick walks up to eight captures
@@ -538,6 +635,8 @@ export function startAutoReplayLoop(input: {
     recovered: number;
     derived: number;
     derivationBacklog: number;
+    /** Run 105 R8: complete tasks whose staleness window elapsed and are due a refresh replay. */
+    refreshedLadders: number;
     /** Addendum 39: reports the post-finalization signals sweep produced this tick. */
     finalizationSignals: number;
     /** Addendum 39: candidates that sweep left for the next tick (bound or wall-clock budget). */
@@ -554,6 +653,7 @@ export function startAutoReplayLoop(input: {
         recovered: 0,
         derived: 0,
         derivationBacklog: 0,
+        refreshedLadders: 0,
         finalizationSignals: 0,
         finalizationSignalsDeferred: 0,
         error: null,
@@ -573,6 +673,8 @@ export function startAutoReplayLoop(input: {
     let derivationBacklog = 0;
     let finalizationSignals = 0;
     let finalizationSignalsDeferred = 0;
+    /** Run 105 R8: complete ladders whose staleness window elapsed this sweep. */
+    let refreshedLadders = 0;
     let error: string | null = null;
     try {
       if (typeof input.operations.expireStaleReplayJobs === "function") {
@@ -762,6 +864,58 @@ export function startAutoReplayLoop(input: {
           error = error ? `${error}; ${detail}` : detail;
         }
       }
+      /**
+       * Run 105 R8: the ladder's refresh eligibility. A COMPLETE task idles for stalenessWindowDays
+       * (one constant, R11) and then becomes eligible for a refresh replay whose ladder is
+       * recomputed; a task that is not complete is always eligible. This pass is the eligibility
+       * half only - it recomputes nextEligibleAtMs for a task whose window elapsed and reports how
+       * many are due, so the next dispatch cycle picks the task up. It never dispatches and never
+       * marks an idle task complete, so it cannot double-fill a ladder.
+       */
+      if (
+        typeof input.routeFocusCandidates === "function" &&
+        typeof input.markRouteLadderEligible === "function"
+      ) {
+        try {
+          const census = (await input.routeFocusCandidates()) ?? [];
+          const defaults = input.routeLearningDefaults ?? null;
+          const windowMs = defaults ? stalenessWindowMs(defaults) : 30 * 24 * 60 * 60 * 1000;
+          const atMs = now();
+          for (const candidate of census) {
+            if (candidate.rolledBack) continue;
+            const complete =
+              candidate.configured > 0 && candidate.admitted >= candidate.configured;
+            if (!complete) continue;
+            const ladder = input.readRouteLadder
+              ? await input.readRouteLadder({
+                  roleId: candidate.roleId,
+                  taskTypeId: candidate.taskTypeId,
+                })
+              : null;
+            const nextEligibleAtMs = ladder?.nextEligibleAtMs ?? null;
+            /**
+             * A complete task with no recorded eligibility has never idled (a fresh ladder), so the
+             * window starts now and the refresh becomes due exactly stalenessWindowDays later.
+             */
+            if (!Number.isFinite(nextEligibleAtMs)) {
+              await input.markRouteLadderEligible({
+                roleId: candidate.roleId,
+                taskTypeId: candidate.taskTypeId,
+                nextEligibleAtMs: atMs + windowMs,
+              });
+              refreshedLadders += 1;
+              continue;
+            }
+            if (Number(nextEligibleAtMs) <= atMs) refreshedLadders += 1;
+          }
+        } catch (cause) {
+          const detail =
+            cause instanceof Error
+              ? `route ladder refresh eligibility failed: ${cause.message.slice(0, 200)}`
+              : "route ladder refresh eligibility failed";
+          error = error ? `${error}; ${detail}` : detail;
+        }
+      }
       // Run 100 addendum 04 S7: a replay that handed its branches off but was interrupted before its
       // evaluation job existed is unclaimable and would otherwise be lost; recover it into the resume store
       // the evaluation sweep above completes.
@@ -794,6 +948,7 @@ export function startAutoReplayLoop(input: {
       recovered,
       derived: derivedCandidates,
       derivationBacklog,
+      refreshedLadders,
       finalizationSignals,
       finalizationSignalsDeferred,
       error,
@@ -833,11 +988,143 @@ export function startAutoReplayLoop(input: {
     }
     running = true;
     try {
+      /**
+       * Run 105 R8/R9: resolve the focus task BEFORE the capture read, so this tick's dispatch is
+       * aimed at the one task the dispatcher holds and its ladder gap decides the counterfactual.
+       * The census is a provider, so an endpoint added (or a rollback flipped) while the runtime is
+       * up takes effect on this tick. A provider that throws degrades the focus readouts only - the
+       * replay path itself keeps running exactly as before.
+       */
+      let plannedFocus: ReturnType<typeof selectFocusTask> = null;
+      let focusCaptureRef: string | null = null;
+      let focusEndpointId: string | null = null;
+      let routeLadder: RouteLadderRow | null = null;
+      if (typeof input.routeFocusCandidates === "function") {
+        try {
+          const census = await input.routeFocusCandidates();
+          plannedFocus = selectFocusTask(census ?? null);
+        } catch (error) {
+          plannedFocus = null;
+          console.error(
+            `[run105] route focus census failed: ${String(
+              (error as { message?: unknown })?.message ?? error,
+            ).slice(0, 200)}`,
+          );
+        }
+      }
+      if (plannedFocus) {
+        focusTaskKey = plannedFocus.scopeKey;
+        focusRemaining = plannedFocus.remaining;
+        if (typeof input.readRouteLadder === "function") {
+          try {
+            routeLadder = await input.readRouteLadder({
+              roleId: plannedFocus.roleId,
+              taskTypeId: plannedFocus.taskTypeId,
+            });
+          } catch {
+            routeLadder = null;
+          }
+        }
+        /**
+         * D7/R14: a rolled-back task is PAUSED (R10) - its ladder is neither filled nor consulted
+         * while the flag is ON - so the dispatcher holds no focus for it and the next eligible task
+         * is picked on the following tick.
+         */
+        if (routeLadder?.rolledBack?.on === true) {
+          focusRemaining = 0;
+          challengeInFlight = false;
+          plannedFocus = null;
+        }
+      } else {
+        focusTaskKey = null;
+        focusRemaining = 0;
+        challengeInFlight = false;
+      }
       const pending = await input.operations.listPendingReplayCaptures({
         policySetDigest: input.policySet.policySetDigest,
         limit: maxCapturesPerTick * 4,
       });
       const captures = pendingCaptures(pending);
+      /**
+       * Run 105 R8: a new configured endpoint breaks the task's idle immediately and starts a
+       * TOP-DOWN challenge (leader first, then the next rung). "New" is a configured endpoint the
+       * stored ladder does not carry a rung for, and it is derived here rather than stored, so an
+       * endpoint added while the runtime is up is a challenge on the very next tick.
+       */
+      const configuredNow =
+        typeof input.configuredEndpointIds === "function"
+          ? input.configuredEndpointIds()
+          : input.configuredEndpointIds;
+      const rankedEndpointIds = new Set(
+        (routeLadder?.rungs ?? [])
+          .map((rung) => rung.endpointId)
+          .filter((value): value is string => typeof value === "string" && value.length > 0),
+      );
+      const newEndpointIds = (configuredNow ?? []).filter(
+        (endpointId) =>
+          typeof endpointId === "string" &&
+          endpointId.length > 0 &&
+          !rankedEndpointIds.has(endpointId),
+      );
+      const challengeBatchSize = input.routeLearningDefaults?.challengeBatchSize ?? 1;
+      const challengePlan = plannedFocus
+        ? planChallenge({
+            newEndpointId: newEndpointIds[0] ?? "",
+            rungs: routeLadder?.rungs ?? [],
+            challengeBatchSize,
+          })
+        : [];
+      challengeInFlight = challengePlan.length > 0;
+      /**
+       * The focus task owns ONE capture: its own recorded request. Selecting it here keeps the
+       * narrowing honest - a capture belonging to another task is never re-aimed at this ladder.
+       * The counterfactual is the as-yet-unranked configured endpoint the depth-first fill picks,
+       * or - when a new endpoint arrived - the first rung of its top-down challenge.
+       */
+      if (plannedFocus) {
+        const owned = captures.find(
+          (capture) =>
+            capture.roleId === plannedFocus?.roleId &&
+            capture.taskTypeId === plannedFocus?.taskTypeId,
+        );
+        focusCaptureRef = owned ? owned.captureRef : null;
+        const fill = planFocusDispatch({
+          focus: { roleId: plannedFocus.roleId, taskTypeId: plannedFocus.taskTypeId },
+          replayableCapture: owned ? { captureRef: owned.captureRef } : null,
+          configuredEndpointIds: configuredNow ?? [],
+          admittedEndpointIds: (routeLadder?.rungs ?? [])
+            .filter((rung) => rung.status === "available")
+            .map((rung) => rung.endpointId),
+          rungs: routeLadder?.rungs ?? [],
+        });
+        focusEndpointId =
+          challengePlan[0]?.againstEndpointId ??
+          (fill && !(fill instanceof NoReplayableRequest) && "endpointId" in fill
+            ? fill.endpointId
+            : null);
+        focusRemaining = owned ? Math.max(0, plannedFocus.remaining) : 0;
+      }
+      const unclassifiedRouteCaptures = captures.filter(
+        (capture) =>
+          !(typeof capture.roleId === "string" && capture.roleId.length > 0) ||
+          !(typeof capture.taskTypeId === "string" && capture.taskTypeId.length > 0),
+      ).length;
+      lastUnclassifiedCaptures = unclassifiedRouteCaptures;
+      /**
+       * R1/R8: report the class ONCE per tick. The count is what an operator needs; a line per
+       * capture would flood the log for a class that is a property of the traffic, not of a request.
+       */
+      if (unclassifiedRouteCaptures > 0 && typeof input.reportUnclassifiedCaptures === "function") {
+        try {
+          input.reportUnclassifiedCaptures({
+            count: unclassifiedRouteCaptures,
+            code: "no_route_classification",
+          });
+          lastRouteClassificationReportedAtMs = now();
+        } catch {
+          // A reporting hook is observability, never a reason to fail the tick.
+        }
+      }
       const onlyCaptureRefs = options?.onlyCaptureRefs;
       const scopedCaptures = onlyCaptureRefs
         ? captures.filter((capture) => onlyCaptureRefs.includes(capture.captureRef))
@@ -942,6 +1229,17 @@ export function startAutoReplayLoop(input: {
          * handler is the execution authority.
          */
         ...(input.dispatchQueue && !onlyCaptureRefs ? { dispatchQueue: input.dispatchQueue } : {}),
+        /**
+         * Run 105 R8: aim this tick at the focus task's ladder gap. The narrowing names the capture
+         * it belongs to, so the tick applies it to that capture alone and every other capture keeps
+         * its rotation - one pairwise comparison per rung, and never a widened candidate pool.
+         */
+        ...(focusEndpointId && focusCaptureRef
+          ? {
+              focusCandidateEndpointId: focusEndpointId,
+              focusCaptureRef,
+            }
+          : {}),
         now,
       });
       await Promise.all(dispositionWrites);
@@ -1046,6 +1344,10 @@ export function startAutoReplayLoop(input: {
         lastStrandedEvaluations,
         lastReclaimedEvaluations,
         lastRecoveredHandoffs,
+        focusTaskKey,
+        focusRemaining,
+        challengeInFlight,
+        lastUnclassifiedCaptures,
       };
     },
     status() {
@@ -1059,6 +1361,10 @@ export function startAutoReplayLoop(input: {
         lastStrandedEvaluations,
         lastReclaimedEvaluations,
         lastRecoveredHandoffs,
+        focusTaskKey,
+        focusRemaining,
+        challengeInFlight,
+        lastUnclassifiedCaptures,
       };
     },
   };
