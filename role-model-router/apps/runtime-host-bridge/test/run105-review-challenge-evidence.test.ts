@@ -202,6 +202,12 @@ test("pending restart reads actual authenticated ReplayCore job plus complete re
  await Effect.runPromise(Effect.gen(function* () { yield* PersistedQueue.make({ name: "replay.dispatch", schema: Schema.Struct({ captureRef: Schema.String, endpointIds: Schema.Array(Schema.String), policySetDigest: Schema.String }), maxAttempts: 1 }); }).pipe(Effect.provide(makeQueueStoreLayer({ filePath: resolveQueueStorePath({ stateRoot: root }) })), Effect.scoped));
  expect(await pendingReader!(pendingInput())).toEqual([{ sourceType: "replay", replayJobId: actualReplayJob.jobId, queueJobId: null, captureRef: request.captureRef, newEndpointId: request.newEndpointId, againstEndpointId: request.againstEndpointId, createdAtMs: actualReplayJob.createdAtMs, state: "queued" }]);
 });
+test("fresh queue store with no rows is a complete empty pending-dispatch projection", async () => {
+ expect(pendingReader).toBeTypeOf("function");
+ const value = await pendingReader!({ ...pendingInput(), invoke: async (_id, capability, _value) => capability === "replay:list-jobs" ? { value: [] } : invoke(_id, capability, _value), readQueueJobs: async () => ({ schemaVersion: "role-model.operator-queue-jobs.v1", available: false, reason: "queue store has no rows yet", jobs: [] }), readQueueJob: async () => ({ available: false, reason: "queue job not found" }) });
+ expect(value).toEqual([]);
+});
+
 test("genuine pre-replay queue row preserves actual queue ID and never invents a replayJobId", async () => {
  expect(pendingReader).toBeTypeOf("function");
  await Effect.runPromise(Effect.gen(function* () {

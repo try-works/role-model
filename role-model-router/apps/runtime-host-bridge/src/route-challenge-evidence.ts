@@ -204,8 +204,17 @@ export async function readPendingRouteDispatches(input: {
     }
     if (!complete) return null;
     const page = row(await input.readQueueJobs());
+    // The operator queue projection intentionally reports an uncreated fresh store as
+    // `available:false` with an empty list. That is a complete empty queue, not an authority
+    // failure; treating it as unavailable prevents the very first classified capture from ever
+    // being dispatched. Every other unavailable/malformed shape remains fail-closed.
+    const freshEmptyQueue =
+      page?.available === false &&
+      page.reason === "queue store has no rows yet" &&
+      Array.isArray(page.jobs) &&
+      page.jobs.length === 0;
     // Existing queue API is capped, not paginated. A saturated 500 is explicitly incomplete.
-    if (!page || page.available !== true || !Array.isArray(page.jobs) || page.jobs.length >= 500) return null;
+    if (!page || (!freshEmptyQueue && page.available !== true) || !Array.isArray(page.jobs) || page.jobs.length >= 500) return null;
     const queueIds = new Set<string>();
     for (const entry of page.jobs) {
       const summary = row(entry), queueJobId = text(summary?.id);
