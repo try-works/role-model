@@ -34,6 +34,7 @@ import {
   LEGACY_INLINE_CAP_BYTES,
   buildCompactRuntimeObservationStub,
   boundRuntimeTelemetryFailureStub,
+  projectRuntimeTelemetryFailureDimensions,
   hydrateRuntimeObservationGraphPointer,
   isDegradedCaptureObservation as isDegradedCaptureObservationRecord,
   readRuntimeObservationStorageState,
@@ -5100,7 +5101,10 @@ export function persistRuntimeTelemetryFailure(input: PersistRuntimeTelemetryFai
   let artifactRef = input.artifactRef;
   let createdArtifact: import("./legacy-migration.js").LegacyArtifactWriteResult | undefined;
   if (input.observation && input.graphStore && !artifactRef) {
-    const content = JSON.stringify(input.observation);
+    const content = JSON.stringify({
+      ...input.observation,
+      ...(input.dimensions ? { telemetryDimensions: input.dimensions } : {}),
+    });
     const contentHash = createHash("sha256").update(content).digest("hex");
     createdArtifact = input.graphStore.write({
       scopeId: input.graphStore.scopeId,
@@ -5172,7 +5176,10 @@ export function persistRuntimeTelemetryFailure(input: PersistRuntimeTelemetryFai
         .prepare(
           `INSERT OR REPLACE INTO runtime_telemetry_records (${RUNTIME_TELEMETRY_INSERT_COLUMNS.join(", ")}) VALUES (${RUNTIME_TELEMETRY_INSERT_COLUMNS.map(() => "?").join(", ")})`,
         )
-        .run(...runtimeTelemetryInsertValues(telemetryRecord));
+        .run(...runtimeTelemetryInsertValues({
+          ...telemetryRecord,
+          dimensions: projectRuntimeTelemetryFailureDimensions(input.dimensions, artifactRef),
+        }));
     });
   } catch (error) {
     if (createdArtifact) {
