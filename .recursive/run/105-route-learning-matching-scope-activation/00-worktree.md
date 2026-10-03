@@ -2,7 +2,7 @@ Run: `/.recursive/run/105-route-learning-matching-scope-activation/`
 Phase: `00 Worktree`
 Status: `LOCKED`
 LockedAt: `2026-10-03T02:00:34.984Z`
-LockHash: `7aea8cf50e10c7f6eb3b630c7f51f2401432ffcc6469590cf5a7ad4d320cb6a9`
+LockHash: `7b8b7a1a95614c7d28b69f7032a4132b607bf5779c4dd15bf1798b1669f27cff`
 Workflow version: `recursive-mode-audit-v2`
 Inputs:
 - `/.recursive/run/105-route-learning-matching-scope-activation/00-requirements.md`

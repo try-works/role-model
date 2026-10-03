@@ -1,12 +1,12 @@
 {
   "artifact": "01-as-is.md",
-  "artifact_hash": "cab1ee486d997b0d0a8ea06956a162e40a63724ad1f3d8bf6b2ccb17c5376147",
+  "artifact_hash": "9f16eb01c5503c72cceb1eb5d5bb02dbe531d6ad3462f50f71f87abf2884e090",
   "artifact_path": "D:\\DEV\\role-model\\.worktrees\\105-route-learning-matching-scope-activation\\.recursive\\run\\105-route-learning-matching-scope-activation\\01-as-is.md",
   "locked_at": "2026-10-03T02:59:15.477Z",
   "prerequisite_hashes": {
-    "00-requirements.md": "378225feb3dc97293946c026e1de893b0b0305e83fc8fc1c8b2b108b85ed028e",
-    "00-worktree.md": "7aea8cf50e10c7f6eb3b630c7f51f2401432ffcc6469590cf5a7ad4d320cb6a9"
+    "00-requirements.md": "f3b5c3fcbb583d277329cfea83f35066ee82819a425ab3a4ec671b09fdd3d356",
+    "00-worktree.md": "7b8b7a1a95614c7d28b69f7032a4132b607bf5779c4dd15bf1798b1669f27cff"
   },
-  "previous_receipt_hash": "143799eb1b910ee47509230b9e8cf77ee8fbe7da69c272d9be533ff5a3544b41",
-  "receipt_hash": "cf8ae316c94bf3e482bd741a8bfba8071f7652d9694b1c5ffb8c4f827e0c569d"
+  "previous_receipt_hash": "f12fd781ee731c61873630263ad9b0157dde6317d5688826c1f80294fb52563b",
+  "receipt_hash": "237d9d7013c1fb58b8b28787ade280713e741420de082afaba49fe1931c903c2"
 }
