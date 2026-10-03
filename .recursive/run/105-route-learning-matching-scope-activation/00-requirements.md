@@ -28,6 +28,10 @@ single active pack is scope-wide, the router refuses it for task-scoped requests
 bare runtime scope. Stage 3 turns the pack into a per-(role, task) ranked endpoint ladder that the router consults
 as an advisory, with an operator-visible index and per-task rollback.
 
+Stage 3 is controlled activation: the pack's recommendation is ALLOWED to influence routing - under matching
+scope, a confidence threshold, policy, receipts, and rollback - but it does not become the route itself. That last
+step is stage 4 (route-package routing), which this run does not do.
+
 The operator's definition: a pack routes a (role, task) to the endpoint counterfactual evals have proven best; it
 carries a ranked ladder (best first); we continuously replay/evaluate to keep the ladder honest, and the operator
 can review and roll back any task's ladder from the UI.
@@ -123,7 +127,9 @@ Layer + Context.Tag for the store service, Effect + Schedule + Duration + Clock 
 
 ## Out of Scope
 
-- Production route-package routing (stage 4 of the proposal) — packs stay advisory_only.
+- Route-package routing (stage 4 of the proposal): the pack never OVERRIDES the router's score-based selection;
+  it only supplies the preferred endpoint through the existing score-band/cohort/confidence gates. Packs stay
+  advisory_only (R5).
 - Production deployment; this is a dev/stage-channel implementation.
 - The run-104 queue fixes (R22-A/B/R24) themselves — they are in the baseline; only the stage-3 ladder work is in
   scope.
