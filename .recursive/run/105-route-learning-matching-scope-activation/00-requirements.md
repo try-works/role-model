@@ -161,16 +161,76 @@ Effect v4 tree (vendor/effect, re-exported through role-model-router/packages/ef
   promote an endpoint the request cannot route to. Mitigate with an eligibility filter before ranking (R4, R5).
 - A pure, unit-tested scope-match function and a deterministic tie-break keep the N-way surface correct (R1, R3).
 
-## Execution and verification
+## Phases, tasks, subagents, and verification
 
-- Strict TDD: no production code without a failing test first (RED-GREEN-REFACTOR per the recursive-tdd Iron Law).
-- E2E tests: the ladder lifecycle end-to-end (dispatch -> comparison -> aggregation -> activation -> rollback) is
-  covered by e2e tests, not unit tests alone.
-- Regression tests: the existing run-104 replay/evaluation/learning suites must stay green - the ladder work must
-  not regress the pipeline it builds on.
-- Phase 5: rebuild the runtime and verify the rebuilt DEV build on :3458 (the development channel port).
-- Phase 5: verify routing behavior via live pi requests against the rebuilt runtime.
-- Phase 5: verify the Packs page UI (R12) by inspecting it in the browser.
+Standing rules for every phase: the run is executed with parallel subagents under controller verification; strict
+TDD (no production code without a failing test first, the recursive-tdd Iron Law); every subagent handoff is
+bounded and re-verified by the controller before its output is accepted.
+
+### Phase 0 — Requirements + worktree (this artifact, controller)
+- Task: pin the baseline, fork the branch, write 00-requirements.md + 00-worktree.md.
+- Verification: the draft covers every design-doc section (audit done); the operator approves, then LOCK.
+
+### Phase 1 — AS-IS (controller + analyst subagents)
+- Task: audit the code sites (the change list) in the baseline to confirm the defect claims: one
+  activePackageId per runtime scope, advisory_task_unscoped / advisory_candidate_not_eligible refusals, single
+  endpointId (no fallback), and the current Packs page rendering.
+- Handoff: one analyst subagent per area (router + advisory source; knowledge-store/worker; runtime-ui), each
+  returns findings with file:line citations; the controller re-verifies every claim before 01-as-is.md.
+- Testing/verification: read-only; each claim must cite code, and the AS-IS must match the baseline commit.
+
+### Phase 2 — To-be plan (controller + planner subagents)
+- Task: map R1-R13 to the code sites, fix the implementation order and the failing tests per R#.
+- Handoff: a planner subagent drafts 02-to-be-plan.md; the controller verifies it is traceable to every R#, the
+  R13 primitive map, and the work packages below.
+- Testing/verification: every R# has a named failing test before Phase 3 starts; no plan item without a test.
+
+### Phase 3 — Implementation (implementer subagents, strict TDD, controller verification)
+Work packages touch disjoint files (the change list), so they can run in parallel:
+- Package A — ladder aggregation + replay record (R3, R6): knowledge-worker + evaluation-core.
+  Sub-tasks: A1 weighted-verdict fold (confidence*agreement) RED test then code; A2 tie-break + total order;
+  A3 created_at column (net-new) on the comparison group.
+- Package B — ladder store + activation keying (R2, R7): knowledge-store learning_records kind='pack' with the
+  (role_id, task_type_id) UNIQUE index, completeness + nextEligibleAtMs, rewrite-on-evidence; activatePack keyed
+  by (roleId, taskTypeId).
+- Package C — advisory + router ladder walk (R1, R4, R5): route-advisory-source returns the ordered ladder in
+  place of the single preferredRoutePackage (carrying taskTypeId/taxonomyVersion/roleId); core/src/router.ts
+  walks to the highest routable rung and falls through on unavailable or ineligible rungs.
+- Package D — dispatch + activation + rollback (R8, R9, R10): depth-first dispatch (classification gate,
+  30-day idle + refresh, top-down challenge); derived floor-based activation (no promote-then-activate);
+  per-task rollback flag default OFF, backend check before serving, replay paused while ON, operator reason.
+- Package E — Packs page UI (R12): ladder index rows (top-3, status badge, completeness), complete-first
+  ordering, two-way Activate / Roll back toggle wired to the backend flag, per-task detail view.
+- Handoff: one implementer subagent per package; each writes the failing tests FIRST, then the code, then runs
+  the package suite; the controller re-runs the tests and verifies the diff before accepting.
+
+### Phase 3.5 — Code review (code-reviewer subagents)
+- Task: one review bundle per work package (recursive-review-bundle); the controller verifies every finding and
+  applies the accepted fixes before 03.5-code-review.md.
+
+### Phase 4 — Tests (tester subagents)
+- Unit: the per-R# suites (aggregation determinism, tie-break, scope-match, ladder walk fallback, admission
+  floor, rollback flag semantics, product-defaults wiring).
+- E2E: the ladder lifecycle end-to-end (dispatch -> comparison -> aggregation -> activation -> rollback ->
+  UI toggle).
+- Regression: the existing run-104 replay/evaluation/learning suites stay green (no regressions in the
+  pipeline the ladder builds on).
+- Handoff: tester subagents run and report; the controller re-runs the full suite before 04-test-summary.md.
+
+### Phase 5 — Manual QA + live verification (controller + subagent probes)
+- Rebuild the runtime (paired build, dev channel) and verify the rebuilt DEV build on :3458 (healthz ready,
+  no frame/identity errors).
+- Verify routing via live pi requests: a task-scoped request is served by its matching pack's preferred
+  endpoint; a non-matching pack is refused with advisory_task_mismatch; an unclassified request gets no
+  advisory; the ladder walk falls through on unavailable/ineligible rungs; advisory_only is preserved.
+- Verify the Packs page UI by inspecting it in the browser: rows ordered complete-first, top-3 + status +
+  completeness shown, the toggle flips the backend flag (and a rolled-back task routes by baseline).
+- Handoff: subagent probes may drive the pi requests and capture the UI; the controller inspects and records
+  05-manual-qa.md with receipts.
+
+### Phase 6-8 — Decisions, state, memory (controller)
+- 06-decisions-update.md (decisions taken), 07-state-update.md (STATE.md), 08-memory-impact.md (durable
+  memory extraction). No subagent handoffs; controller-authored and reviewed.
 
 ## Out of Scope
 
