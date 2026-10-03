@@ -188,6 +188,10 @@ describe("run105 C router ladder walk", () => {
     // every other key is compared exactly.
     const { scoreGapBefore, ...rest } = output;
     expect(scoreGapBefore).toBeCloseTo(0.02, 12);
+    // R5: a legacy outcome must not gain ladder evidence keys at all.
+    for (const key of ["advisoryLadderLength", "advisoryRungRank", "advisoryRungWalked", "advisoryRungSkipped"]) {
+      expect(Object.hasOwn(output, key)).toBe(false);
+    }
     expect(rest).toEqual({
       applied: true,
       explorationMode: "advisory_considered",
@@ -205,10 +209,7 @@ describe("run105 C router ladder walk", () => {
       advisoryTaskTypeId: "coder.review",
       requestTaskTypeId: "coder.review",
       advisoryTaxonomyVersion: "taxonomy-v1-alpha.1",
-      advisoryLadderLength: 0,
-      advisoryRungRank: null,
-      advisoryRungWalked: null,
-      advisoryRungSkipped: 0,
+
     });
   });
 

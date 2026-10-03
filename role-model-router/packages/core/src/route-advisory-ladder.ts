@@ -1,4 +1,4 @@
-import { Data, Option } from "effect";
+import { Data, Option, Schema } from "effect";
 
 import type { RouteAdvisoryRung } from "./types.js";
 
@@ -34,15 +34,28 @@ export const RungWalkOutcome = Data.taggedEnum<RungWalkOutcome>();
 export const ADVISORY_RUNG_SKIP_BOUND = 32;
 
 /**
- * The tag this module raises when a caller hands it a ladder it cannot decode. The walk itself
- * never throws for a merely non-routable ladder (that is `Starved`); only a structurally invalid
- * rung list is a decode error, so a corrupt store row degrades to "no advisory" instead of
- * silently walking nonsense.
+ * Legacy exported decode-error type retained for API compatibility. The resolver now decodes
+ * the complete rung list with Schema and returns Starved on failure instead of throwing, so
+ * corrupt stored evidence cannot escape the router's existing eligibility fallback.
  */
-export class RouteAdvisoryLadderDecodeError extends Data.TaggedError("RouteAdvisoryLadderDecodeError")<{
+export class RouteAdvisoryLadderDecodeError extends Data.TaggedError(
+  "RouteAdvisoryLadderDecodeError",
+)<{
   readonly reason: string;
   readonly rungIndex: number;
 }> {}
+
+// Decode the complete ladder before sorting or walking: a corrupt later rung must not be
+// hidden by an earlier routable rung. Decode failure stays an ordinary bounded fallback.
+const decodeAdvisoryRungs = Schema.decodeUnknownResult(
+  Schema.Array(
+    Schema.Struct({
+      endpointId: Schema.String.pipe(Schema.check(Schema.isMinLength(1))),
+      rank: Schema.Int.pipe(Schema.check(Schema.isGreaterThanOrEqualTo(1))),
+      status: Schema.Literals(["available", "unavailable"]),
+    }),
+  ),
+);
 
 /**
  * R4/R5: walk the ladder rank-ascending and return the first ROUTABLE rung.
@@ -54,21 +67,18 @@ export function resolveAdvisoryRung(
   rungs: readonly RouteAdvisoryRung[] | null | undefined,
   eligibleEndpointIds: readonly string[],
 ): RungWalkOutcome {
-  if (!Array.isArray(rungs) || rungs.length === 0) return RungWalkOutcome.NoLadder({ skipped: 0 });
+  if (rungs == null) return RungWalkOutcome.NoLadder({ skipped: 0 });
+  const decoded = decodeAdvisoryRungs(rungs);
+  if (decoded._tag === "Failure") return RungWalkOutcome.Starved({ skipped: 0 });
+  if (decoded.success.length === 0) return RungWalkOutcome.NoLadder({ skipped: 0 });
   const eligible = new Set(
     (eligibleEndpointIds ?? []).filter(
       (endpointId): endpointId is string => typeof endpointId === "string" && endpointId.length > 0,
     ),
   );
-  const ordered = [...rungs].sort((left, right) => left.rank - right.rank);
+  const ordered = [...decoded.success].sort((left, right) => left.rank - right.rank);
   let skipped = 0;
   for (const rung of ordered) {
-    if (!rung || typeof rung.endpointId !== "string" || !Number.isInteger(rung.rank)) {
-      throw new RouteAdvisoryLadderDecodeError({
-        reason: "rung must carry a string endpointId and an integer rank",
-        rungIndex: skipped,
-      });
-    }
     const routable = rung.status !== "unavailable" && eligible.has(rung.endpointId);
     if (routable) {
       return RungWalkOutcome.Walked({

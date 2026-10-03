@@ -69,11 +69,14 @@ export function evaluateRouteAdvisoryConsideration(input: {
     return trimmed.length > 0 ? trimmed : null;
   };
   const advisory = input.advisory;
+  const preferredLadder = advisory?.preferredLadder ?? null;
   const requestTaskTypeId = normalizeScopeId(input.requestTaskTypeId);
   const requestRoleId = normalizeScopeId(input.requestRoleId);
   const advisoryTaskTypeId = advisory
     ? (normalizeScopeId(advisory.taskTypeId) ??
-      (advisory.preferredFor?.length === 1 ? normalizeScopeId(advisory.preferredFor[0]) : null))
+      (preferredLadder === null && advisory.preferredFor?.length === 1
+        ? normalizeScopeId(advisory.preferredFor[0])
+        : null))
     : null;
   const advisoryTaxonomyVersion = advisory ? normalizeScopeId(advisory.taxonomyVersion) : null;
   const advisoryRoleId = advisory ? normalizeScopeId(advisory.roleId) : null;
@@ -108,12 +111,15 @@ export function evaluateRouteAdvisoryConsideration(input: {
     // to the pre-run105 outcome (R5 back-compat).
     ...(advisoryRoleId ? { advisoryRoleId } : {}),
     ...(requestRoleId ? { requestRoleId } : {}),
-    // Run 105 C13: the ladder walk's evidence. Zeroed here and filled in by the walk below, so a
-    // caller that supplies no ladder keeps exactly the pre-run105 outcome (R5 back-compat).
-    advisoryLadderLength: advisory?.preferredLadder?.length ?? 0,
-    advisoryRungRank: null as number | null,
-    advisoryRungWalked: null as string | null,
-    advisoryRungSkipped: 0,
+    // R5: no ladder means these keys are absent, not merely zero/null.
+    ...(preferredLadder === null
+      ? {}
+      : {
+          advisoryLadderLength: preferredLadder.length,
+          advisoryRungRank: null as number | null,
+          advisoryRungWalked: null as string | null,
+          advisoryRungSkipped: 0,
+        }),
   };
   const fallback = (reason: string): RouteAdvisoryConsiderationOutcome => ({
     ...base,
@@ -144,7 +150,6 @@ export function evaluateRouteAdvisoryConsideration(input: {
   // the walk below has run, so the eligibility invariant is applied to the WALKED rung instead of
   // the single stored one. Without a ladder this branch is byte-for-byte today's check on today's
   // value (R5 back-compat).
-  const preferredLadder = advisory.preferredLadder ?? null;
   if (preferredLadder === null) {
     const storedPreference = advisory.preferredEndpointId;
     // AC-R05-01: an advisory can never add or widen a candidate.
@@ -173,7 +178,11 @@ export function evaluateRouteAdvisoryConsideration(input: {
   // A role mismatch is refused with the SAME code the task mismatch already uses, so no new
   // vocabulary reaches the operator surface (R5). A request that declares no role keeps the
   // pre-run105 behaviour, exactly like the task gate above.
-  if (requestRoleId && advisoryRoleId && advisoryRoleId !== requestRoleId) {
+  if (
+    requestRoleId &&
+    (preferredLadder !== null || advisoryRoleId) &&
+    advisoryRoleId !== requestRoleId
+  ) {
     return fallback("advisory_task_mismatch");
   }
   // Run 105 R4/R5 (stage 3): the scope gates above have all passed, so the (role, task) ladder may
@@ -243,9 +252,7 @@ export function evaluateRouteAdvisoryConsideration(input: {
       cohortBucket: bucket,
       advisoryPackageId,
       advisoryPackageEligible,
-      advisoryRungRank,
-      advisoryRungWalked,
-      advisoryRungSkipped,
+      ...(resolvedRung ?? {}),
     };
   const explorationPercent = Number.isFinite(advisory.explorationPercent)
     ? Math.min(100, Math.max(0, Number(advisory.explorationPercent)))
@@ -263,9 +270,7 @@ export function evaluateRouteAdvisoryConsideration(input: {
     applied,
     advisoryPackageId,
     advisoryPackageEligible,
-    advisoryRungRank,
-    advisoryRungWalked,
-    advisoryRungSkipped,
+    ...(resolvedRung ?? {}),
     explorationMode: explore
       ? "advisory_exploration"
       : applied

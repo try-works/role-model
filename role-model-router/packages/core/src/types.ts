@@ -337,12 +337,12 @@ export interface RouteAdvisoryConsiderationOutcome {
    * Run 105 C13/R13: the ladder walk's own evidence. `advisoryLadderLength` is the number of
    * rungs offered, `advisoryRungRank`/`advisoryRungWalked` name the rung the walk landed on
    * (null when it landed on none), and `advisoryRungSkipped` counts the non-routable rungs it
-   * passed over (bounded to 32). All four are 0/null when no ladder was supplied.
+   * passed over (bounded to 32). All four are omitted when no ladder was supplied.
    */
-  readonly advisoryLadderLength: number;
-  readonly advisoryRungRank: number | null;
-  readonly advisoryRungWalked: string | null;
-  readonly advisoryRungSkipped: number;
+  readonly advisoryLadderLength?: number;
+  readonly advisoryRungRank?: number | null;
+  readonly advisoryRungWalked?: string | null;
+  readonly advisoryRungSkipped?: number;
   /** Run 105 R1: the scope the walk actually read, for the observation. */
   /** Run 105 C11: present only when a role was actually in play (byte-compat when null). */
   readonly advisoryRoleId?: string | null;
