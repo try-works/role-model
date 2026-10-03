@@ -228,6 +228,30 @@ export interface RouteRequestInput {
   advisoryConsideration?: RouteAdvisoryConsiderationInput;
 }
 
+/**
+ * Run 105 R4 (stage 3): one rung of the per-(role, task) endpoint ladder.
+ *
+ * `status` is the STORED user-removal flag ("available"/"unavailable"); the router's
+ * per-request eligibility is applied separately at walk time (R4 - the two filters are
+ * deliberately independent). Ranks are 1-based and ascending.
+ */
+export interface RouteAdvisoryRung {
+  readonly endpointId: string;
+  readonly rank: number;
+  readonly status: "available" | "unavailable";
+}
+
+/**
+ * Run 105 R1: the (role, task) scope one advisory was learned under. `taxonomyVersion` is
+ * PROVENANCE only (addendum A1) - the match key is `(roleId, taskTypeId)` exact, and the
+ * pre-existing taxonomy gate is unchanged.
+ */
+export interface RouteLearningAdvisoryScope {
+  readonly roleId: string;
+  readonly taskTypeId: string;
+  readonly taxonomyVersion: string | null;
+}
+
 export interface RouteAdvisoryConsiderationInput {
   /** The learned candidate the advisory was derived from. */
   readonly candidateId: string | null;
@@ -259,10 +283,30 @@ export interface RouteAdvisoryConsiderationInput {
   readonly preferredFor?: readonly string[];
   readonly avoidFor?: readonly string[];
   /**
+   * Run 105 R4/R5 (stage 3): the per-(role, task) endpoint ladder this advisory was derived
+   * from, rank-ordered best-first. When present the router WALKS it, skipping only the rungs
+   * that are not routable (`status: unavailable`, or not in the request's eligible set) and
+   * taking the first routable rung as `preferredEndpointId`. The walk is deliberately NOT
+   * band-aware (addendum A2): the existing score band still decides whether the walked
+   * preference is APPLIED. Absent -> byte-for-byte pre-run105 behaviour.
+   */
+  readonly preferredLadder?: readonly RouteAdvisoryRung[];
+  /**
+   * Run 105 R1: the role the advisory was learned for. The match key is
+   * `(roleId, taskTypeId)` exact; a mismatch is refused with the EXISTING
+   * `advisory_task_mismatch` code rather than a new vocabulary.
+   */
+  readonly roleId?: string | null;
+  /**
    * Run 99 R33: the taxonomy identity the host resolved the *request* against, so the router can
    * fail closed when the advisory was learned under a different taxonomy revision.
    */
   readonly requestTaxonomyVersion?: string | null;
+  /**
+   * Run 105 R1: the role the REQUEST was routed with, so the advisory can be role-checked the
+   * same way it is already task-checked. `null` keeps the pre-run105 behaviour (no role gate).
+   */
+  readonly requestRoleId?: string | null;
 }
 
 export interface RouteAdvisoryConsiderationOutcome {
@@ -282,4 +326,26 @@ export interface RouteAdvisoryConsiderationOutcome {
   readonly advisoryTaskTypeId: string | null;
   readonly requestTaskTypeId: string | null;
   readonly advisoryTaxonomyVersion: string | null;
+  /**
+   * Run 99 R27: these two are produced by the gate and consumed by the live observation
+   * (index.ts) but were never declared (run 105 C14). Declaring them is additive: no runtime
+   * value changes.
+   */
+  readonly advisoryPackageEligible: boolean;
+  readonly eligibleEndpointCount: number;
+  /**
+   * Run 105 C13/R13: the ladder walk's own evidence. `advisoryLadderLength` is the number of
+   * rungs offered, `advisoryRungRank`/`advisoryRungWalked` name the rung the walk landed on
+   * (null when it landed on none), and `advisoryRungSkipped` counts the non-routable rungs it
+   * passed over (bounded to 32). All four are 0/null when no ladder was supplied.
+   */
+  readonly advisoryLadderLength: number;
+  readonly advisoryRungRank: number | null;
+  readonly advisoryRungWalked: string | null;
+  readonly advisoryRungSkipped: number;
+  /** Run 105 R1: the scope the walk actually read, for the observation. */
+  /** Run 105 C11: present only when a role was actually in play (byte-compat when null). */
+  readonly advisoryRoleId?: string | null;
+  /** Run 105 C11: present only when the request declared a role (byte-compat when null). */
+  readonly requestRoleId?: string | null;
 }

@@ -26419,6 +26419,11 @@ export async function createRuntimeBridgeBackend(
       // family and the taxonomy it was resolved against, so a preference learned for one family
       // cannot move another family's traffic.
       const requestTaskTypeId = plan.routingRequest.taskType ?? null;
+      // Run 105 C11/R1: the advisory key is (role, task). The role comes from the SAME chain
+      // `buildRequestClassificationForPlan` resolves (declared role -> resolved taxonomy identity ->
+      // intent role), so the ladder the runtime recalls cannot drift from the classification the
+      // observation records.
+      const requestRoleId = buildRequestClassificationForPlan(plan)?.roleId ?? null;
       const requestTaxonomyVersion = taxonomyManifest.taxonomyVersion ?? null;
       const advisoryConsideration = ["S2", "S3", "S4"].includes(learningStage)
         ? (() => {
@@ -26429,6 +26434,7 @@ export async function createRuntimeBridgeBackend(
             const durable = recallTrackBDurableRouteAdvisory({
               channel: runtimeChannel,
               scope: options.scopeId,
+              roleId: requestRoleId,
               taskTypeId: requestTaskTypeId,
               // Run 99 R33 (addendum 21 D12): the operator's advisory-source age bound is
               // enforced on every live consultation.
@@ -26499,6 +26505,26 @@ export async function createRuntimeBridgeBackend(
               taskTypeId: cached.taskTypeId ?? null,
               taxonomyVersion: cached.taxonomyVersion ?? null,
               requestTaxonomyVersion,
+              // Run 105 R1/R5: the (role, task) scope of the advisory and of this request, plus the
+              // ordered ladder the router walks. `preferredEndpointId` above stays the walked rung's
+              // fallback (rank-1 available), so a cached entry from a pre-run105 source behaves
+              // exactly as before.
+              roleId: cached.roleId ?? null,
+              requestRoleId,
+              ...((cached as { readonly advisoryLadder?: readonly { readonly endpointId: string; readonly rank: number; readonly status: "available" | "unavailable" }[] })
+                .advisoryLadder?.length
+                ? {
+                    preferredLadder: (
+                      cached as {
+                        readonly advisoryLadder: readonly {
+                          readonly endpointId: string;
+                          readonly rank: number;
+                          readonly status: "available" | "unavailable";
+                        }[];
+                      }
+                    ).advisoryLadder,
+                  }
+                : {}),
             };
           })()
         : undefined;
@@ -26681,6 +26707,11 @@ export async function createRuntimeBridgeBackend(
                 readonly scoreGapBefore?: number | null;
                 readonly advisoryPackageEligible?: boolean;
                 readonly eligibleEndpointCount?: number;
+                /** Run 105 C13: the ladder walk's evidence, read back off the decision. */
+                readonly advisoryLadderLength?: number;
+                readonly advisoryRungRank?: number | null;
+                readonly advisoryRungWalked?: string | null;
+                readonly advisoryRungSkipped?: number;
               };
             }
           ).advisory_consideration;
@@ -26726,6 +26757,22 @@ export async function createRuntimeBridgeBackend(
                   eligibleEndpointCount:
                     typeof outcome.eligibleEndpointCount === "number"
                       ? outcome.eligibleEndpointCount
+                      : undefined,
+                  // Run 105 C13: record WHICH rung the walk landed on, so the ladder's influence is
+                  // measurable rather than invisible (addendum A2's recorded consequence).
+                  advisoryLadderLength:
+                    typeof outcome.advisoryLadderLength === "number"
+                      ? outcome.advisoryLadderLength
+                      : undefined,
+                  advisoryRungRank:
+                    typeof outcome.advisoryRungRank === "number" ? outcome.advisoryRungRank : null,
+                  advisoryRungWalked:
+                    typeof outcome.advisoryRungWalked === "string"
+                      ? outcome.advisoryRungWalked
+                      : null,
+                  advisoryRungSkipped:
+                    typeof outcome.advisoryRungSkipped === "number"
+                      ? outcome.advisoryRungSkipped
                       : undefined,
                 }
               : null,

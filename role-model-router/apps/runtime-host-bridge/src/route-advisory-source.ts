@@ -18,7 +18,18 @@ export const ROUTE_ADVISORY_SOURCE_SCHEMA = "role-model.route-advisory-source.v1
 export type TrackBRouteAdvisoryStateName = "fresh" | "stale" | "unavailable";
 
 export interface TrackBRouteAdvisorySourceResult {
+  /**
+   * Run 105 R5: the rank-1 AVAILABLE rung of the (role, task) ladder. Retained for the existing
+   * single-endpoint consumers; the ladder itself travels in `advisoryLadder`.
+   */
   readonly preferredRoutePackage: string | null;
+  /**
+   * Run 105 R1/R5 (stage 3): the (role, task) ladder, rank-sorted, status-filtered ONLY (the
+   * router applies per-request eligibility itself - R4 keeps the two filters separate).
+   */
+  readonly advisoryLadder: readonly TrackBRouteAdvisoryRung[];
+  /** Run 105 R1: the role the ladder was learned for; the router matches (role, task) exact. */
+  readonly roleId: string | null;
   readonly advisoryState: TrackBRouteAdvisoryStateName;
   readonly confidence: number;
   readonly candidateId: string | null;
@@ -39,6 +50,13 @@ export interface TrackBRouteAdvisorySourceResult {
   readonly revalidationDue: boolean;
 }
 
+/** Run 105 R4: one rung of the stored (role, task) ladder (status is the STORED user-removal flag). */
+export interface TrackBRouteAdvisoryRung {
+  readonly endpointId: string;
+  readonly rank: number;
+  readonly status: "available" | "unavailable";
+}
+
 export interface TrackBRouteAdvisorySourceInput {
   /** Invokes one `knowledge-store` capability and returns its business result. */
   readonly invoke: (
@@ -46,6 +64,12 @@ export interface TrackBRouteAdvisorySourceInput {
     value: Readonly<Record<string, unknown>>,
   ) => Promise<unknown>;
   readonly scopeId: string;
+  /**
+   * Run 105 R1: the (role, task) key of the ladder to read. Both are required: a scope-wide pack
+   * does not exist any more, so a request with no classification gets no advisory.
+   */
+  readonly roleId: string | null;
+  readonly taskTypeId: string | null;
   readonly nowMs: number;
   readonly evidenceMaxAgeMs: number;
   /** `revalidationIntervalDays` from the operator policy, as milliseconds. */
@@ -91,6 +115,8 @@ const clampUnit = (value: number): number => Math.min(1, Math.max(0, value));
 function unavailable(reason: string, cohortPercent = 0): TrackBRouteAdvisorySourceResult {
   return {
     preferredRoutePackage: null,
+    advisoryLadder: [],
+    roleId: null,
     advisoryState: "unavailable",
     confidence: 0,
     candidateId: null,
@@ -133,121 +159,68 @@ export async function readTrackBRouteAdvisoryFromRollout(
   input: TrackBRouteAdvisorySourceInput,
 ): Promise<TrackBRouteAdvisorySourceResult> {
   const scopeId = boundedText(input.scopeId);
+  const roleId = boundedText(input.roleId);
+  const taskTypeId = boundedText(input.taskTypeId);
   if (!scopeId) return unavailable("scope id required");
+  if (!roleId || !taskTypeId) return unavailable("role and task scope required");
 
-  let rolloutAnswer: unknown;
+  let answer: unknown;
   try {
-    // Run 99 R33 (S37 live finding): the advisory only needs the rollout row and the newest
-    // activation receipt, but the store's default read returns up to 100 receipts. On the stage
-    // root that response tripped the extension host's 16 KiB inline frame cap
-    // ("frame exceeds inline limit"), which silently disabled every advisory. Bound the read to
-    // the single receipt the advisory uses.
-    rolloutAnswer = await input.invoke("knowledge:rollout-state", { scopeId, limit: 1 });
+    // Run 105 R7: one indexed lookup keyed by (role_id, task_type_id). The source deliberately
+    // does not read the old scope-wide rollout/pack records: D7 made derived ladder activation
+    // the sole routing authority, and R1 removed scope-wide packs from the routing surface.
+    answer = await input.invoke("knowledge:read-route-ladder", { roleId, taskTypeId });
   } catch (error) {
     return unavailable(
-      `rollout state unavailable: ${String(
-        (error as { message?: unknown })?.message ?? error,
-      ).slice(0, 120)}`,
+      "route ladder unavailable: " + String((error as { message?: unknown })?.message ?? error).slice(0, 120),
     );
   }
-  const rollout = asRecord(rolloutAnswer);
-  if (!rollout || isDegradationReceipt(rollout)) {
-    return unavailable("rollout state unavailable");
-  }
-  const cohortPercentRaw = finiteOrNull(rollout.cohortPercent) ?? 0;
-  const cohortPercent = Math.min(100, Math.max(0, cohortPercentRaw));
-  const killSwitchAtMs = finiteOrNull(rollout.killSwitchAtMs);
-  if (killSwitchAtMs !== null) return unavailable("kill switch engaged", cohortPercent);
-  const activePackageId = boundedText(rollout.activePackageId);
-  if (!activePackageId) return unavailable("no active pack", cohortPercent);
+  const payload = asRecord(answer);
+  if (!payload || isDegradationReceipt(payload)) return unavailable("route ladder unavailable");
+  const ladder = asRecord(payload.ladder);
+  if (!ladder) return unavailable("no admitted rung");
+  const rolledBack = asRecord(ladder.rolledBack);
+  if (rolledBack?.on === true) return unavailable("rolled back");
 
-  let packAnswer: unknown;
-  let validationAnswer: unknown;
-  try {
-    packAnswer = await input.invoke("knowledge:list-learning", {
-      scopeId,
-      kind: "pack",
-      limit: 200,
-    });
-    validationAnswer = await input.invoke("knowledge:list-learning", {
-      scopeId,
-      kind: "validation_receipt",
-      limit: 200,
-    });
-  } catch (error) {
-    return unavailable(
-      `learning records unavailable: ${String(
-        (error as { message?: unknown })?.message ?? error,
-      ).slice(0, 120)}`,
-      cohortPercent,
-    );
-  }
+  // R4/R5: the SOURCE filters only the stored rung status; the router applies per-request
+  // eligibility separately when it walks. Ranks are sorted ascending (rank 1 = best).
+  const rawRungs = Array.isArray(ladder.rungs) ? ladder.rungs : [];
+  const advisoryLadder = rawRungs
+    .flatMap((entry): TrackBRouteAdvisoryRung[] => {
+      const rung = asRecord(entry);
+      if (!rung) return [];
+      const endpointId = boundedText(rung.endpointId);
+      const rank = finiteOrNull(rung.rank);
+      const status =
+        rung.status === "unavailable"
+          ? ("unavailable" as const)
+          : rung.status === "available"
+            ? ("available" as const)
+            : null;
+      if (!endpointId || rank === null || status === null) return [];
+      return [{ endpointId, rank, status }];
+    })
+    .sort((left, right) => left.rank - right.rank)
+    .filter((rung) => rung.status === "available");
+  if (advisoryLadder.length === 0) return unavailable("no admitted rung");
 
-  const packEntry = findRecord(packAnswer, activePackageId);
-  const pack = asRecord(packEntry?.record);
-  if (!pack) return unavailable("active pack record unavailable", cohortPercent);
-  // The Knowledge Store persists the pack scope as an endpoint id (observed live on
-  // pack-4f96d9b1…), while an older or auxiliary shape may carry route-package attribution.
-  const packScope = asRecord(pack.scope);
-  const routePackage =
-    boundedText(packScope?.endpointId) ??
-    boundedText(packScope?.routePackage) ??
-    boundedText(asRecord(pack.routePackageAttribution)?.routePackage);
-  if (!routePackage) return unavailable("active pack carries no route package", cohortPercent);
-  const taskTypeId =
-    boundedText(packScope?.taskTypeId) ??
-    boundedText(asRecord(pack.routePackageAttribution)?.taskTypeId);
-  const taxonomyVersion = boundedText(packScope?.taxonomyVersion);
-  const validationReceiptId = boundedText(pack.validationReceiptId);
-  if (!validationReceiptId) {
-    return unavailable("active pack has no validation receipt", cohortPercent);
-  }
-
-  const validationEntry = findRecord(validationAnswer, validationReceiptId);
-  const validation = asRecord(validationEntry?.record);
-  if (!validation) return unavailable("validation receipt unavailable", cohortPercent);
-  if (boundedText(validation.decision) !== "validate") {
-    return unavailable("validation receipt does not validate", cohortPercent);
-  }
-  const confidenceLower = finiteOrNull(validation.confidenceLower);
-  if (confidenceLower === null) {
-    return unavailable("validation receipt carries no confidence", cohortPercent);
-  }
-  const confidence = clampUnit(confidenceLower);
-  const createdAtMs = parseTimestampMs(validation.createdAt);
-  const withinWindow =
-    createdAtMs === null
-      ? true
-      : !Number.isFinite(input.evidenceMaxAgeMs) ||
-        input.evidenceMaxAgeMs <= 0 ||
-        input.nowMs - createdAtMs <= input.evidenceMaxAgeMs;
-  const revalidationIntervalMs =
-    typeof input.revalidationIntervalMs === "number" &&
-    Number.isFinite(input.revalidationIntervalMs) &&
-    input.revalidationIntervalMs > 0
-      ? input.revalidationIntervalMs
-      : null;
-  const revalidationDue =
-    revalidationIntervalMs !== null &&
-    createdAtMs !== null &&
-    input.nowMs - createdAtMs > revalidationIntervalMs;
-  const experienceIds = Array.isArray(pack.experienceIds) ? pack.experienceIds : [];
-  const candidateId = boundedText(experienceIds[0]);
-
+  const taxonomyVersion = boundedText(ladder.taxonomyVersion) ?? null;
+  const packId = boundedText(ladder.packId);
   return {
-    preferredRoutePackage: routePackage,
-    advisoryState: withinWindow && !revalidationDue ? "fresh" : "stale",
-    confidence,
-    candidateId,
-    advisoryId: activePackageId,
-    cohortPercent,
-    reason: !withinWindow
-      ? "validation evidence beyond the evidence window"
-      : revalidationDue
-        ? "validation evidence beyond the revalidation interval"
-        : null,
+    preferredRoutePackage: advisoryLadder[0]?.endpointId ?? null,
+    advisoryLadder,
+    advisoryState: "fresh",
+    // Run 105 R9/D7: activation is DERIVED from the admitted rungs, so there is no validation
+    // receipt to re-read; the ladder's existence under this key IS the admission. Confidence 1
+    // keeps the router's existing confidence floor (0.7) pass for an admitted ladder.
+    confidence: 1,
+    candidateId: packId,
+    advisoryId: packId,
+    cohortPercent: 100,
+    reason: null,
+    roleId,
     taskTypeId,
     taxonomyVersion,
-    revalidationDue,
+    revalidationDue: false,
   };
 }
