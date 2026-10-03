@@ -1320,13 +1320,17 @@ export function startAutoReplayLoop(input: {
           eligible.push({ ...candidate, configured: configuredNow.length, admitted: admitted.length });
         }
         const held = Ref.getUnsafe(heldFocus);
-        const retained = eligible.find(candidate => candidate.roleId + "\u0000" + candidate.taskTypeId === held);
+        let remainingFocusCandidates = [...eligible];
+        let skippedReplayableTasks = 0;
+        while (remainingFocusCandidates.length > 0) {
+        const retained = remainingFocusCandidates.find(candidate => candidate.roleId + "\u0000" + candidate.taskTypeId === held);
         plannedFocus = retained && retained.admitted < retained.configured
-          ? selectFocusTask([retained]) : selectFocusTask(eligible);
+          ? selectFocusTask([retained]) : selectFocusTask(remainingFocusCandidates);
         focusTaskKey = plannedFocus?.scopeKey ?? null;
         focusRemaining = plannedFocus?.remaining ?? 0;
         challengeInFlight = false;
         Effect.runSync(Ref.set(heldFocus, focusTaskKey));
+        try {
         if (plannedFocus) {
           routeLadder = rows.get(plannedFocus.scopeKey) ?? null;
           let progress = Ref.getUnsafe(challenges).get(plannedFocus.scopeKey);
@@ -1342,7 +1346,7 @@ export function startAutoReplayLoop(input: {
               (!progress || progress.done)) {
             const source = owned.find(item => configuredNow.some(id => id !== item.sourceEndpointId));
             const endpointId = configuredNow.find(id => id !== source?.sourceEndpointId);
-            if (!source?.sourceEndpointId || !endpointId) throw new Error("NoReplayableRequest: complete ladder has no distinct refresh pair");
+            if (!source?.sourceEndpointId || !endpointId) throw new NoReplayableRequest({ detail: "complete ladder has no distinct refresh pair", roleId: plannedFocus.roleId, taskTypeId: plannedFocus.taskTypeId });
             progress = { kind: "refresh", startedAtMs: now(), endpointId, against: [source.sourceEndpointId], cursor: 0,
               pendingCaptureRef: null, done: false };
             setChallenge(plannedFocus.scopeKey, progress);
@@ -1363,7 +1367,7 @@ export function startAutoReplayLoop(input: {
                 (!current.pendingCaptureRef || item.captureRef === current.pendingCaptureRef));
               const source = pairSources.find(item => !current.usedCaptureRefs?.includes(item.captureRef)) ??
                 (input.readRouteDispatchEvidence && current.placementComplete ? pairSources[0] : undefined);
-              if (!source) throw new Error("NoReplayableRequest: no recorded request from the challenged rung");
+              if (!source) throw new NoReplayableRequest({ detail: "no recorded request from the challenged rung", roleId: plannedFocus.roleId, taskTypeId: plannedFocus.taskTypeId });
               focusCaptureRef = source.captureRef; focusEndpointId = current.endpointId;
             }
           } else {
@@ -1373,13 +1377,30 @@ export function startAutoReplayLoop(input: {
               configuredEndpointIds: configuredNow.filter(id => id !== source?.sourceEndpointId),
               admittedEndpointIds: (routeLadder?.rungs ?? []).filter(rung => rung.status === "available").map(rung => rung.endpointId),
               rungs: routeLadder?.rungs });
-            if (fill instanceof NoReplayableRequest) throw new Error("NoReplayableRequest: focus task has no replayable capture");
+            if (fill instanceof NoReplayableRequest) throw fill;
             focusCaptureRef = source?.captureRef ?? null; focusEndpointId = fill?.endpointId ?? null;
             if (source && !focusEndpointId && Number(routeLadder?.nextEligibleAtMs ?? Infinity) <= now()) {
               focusEndpointId = configuredNow.find(id => id !== source.sourceEndpointId) ?? null;
             }
           }
         }
+        break;
+        } catch (cause) {
+          // R8 skips only a KNOWN empty task corpus, never unavailable/unknown context.
+          if (!(cause instanceof NoReplayableRequest)) throw cause;
+          skippedReplayableTasks += 1;
+          const skippedKey = plannedFocus?.scopeKey;
+          remainingFocusCandidates = remainingFocusCandidates.filter(candidate =>
+            candidate.roleId + "\u0000" + candidate.taskTypeId !== skippedKey);
+          focusTaskKey = null; focusRemaining = 0; challengeInFlight = false;
+          focusCaptureRef = null; focusEndpointId = null; challengeKey = null; plannedFocus = null;
+          Effect.runSync(Ref.set(heldFocus, null));
+        }
+        }
+        if (!plannedFocus && skippedReplayableTasks > 0) {
+          throw new Error("NoReplayableRequest: all eligible tasks lack a replayable source; tasks skipped");
+        }
+        if (!plannedFocus) { focusTaskKey = null; focusRemaining = 0; challengeInFlight = false; }
       } else { focusTaskKey = null; focusRemaining = 0; challengeInFlight = false; }
       const unclassifiedRouteCaptures = captures.filter(
         (capture) =>

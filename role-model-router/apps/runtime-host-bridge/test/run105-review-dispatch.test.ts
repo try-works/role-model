@@ -417,6 +417,34 @@ test("actual queue processing claim executes own persisted round while real repl
   cleanups.push(() => loop.stop()); await loop.dispatchCapture("idle-a", "own-processing-round");
   expect(h.calls).toHaveLength(1);
 });
+test("high-demand task with no replayable request is skipped so lower-demand task fills in same tick", async () => {
+  const h = harness();
+  h.rows.set("busy", { ...ladder(["a"], 0), completeness: { admitted: 1, configured: 3 } });
+  h.rows.set("quiet", { ...ladder(["a"], 0), completeness: { admitted: 1, configured: 3 } });
+  h.census([task("busy", 100, 1, 3), task("quiet", 5, 1, 3)]); h.pending([capture("quiet", "a")]);
+  await h.loop.tick();
+  expect(h.calls.map(item => item.captureRef)).toEqual(["quiet-a"]);
+  expect(h.loop.health().focusTaskKey).toBe("role\u0000quiet");
+  h.pending([capture("quiet", "a", "-next")]); await h.loop.tick();
+  expect(h.calls.map(item => item.captureRef)).toEqual(["quiet-a", "quiet-a-next"]);
+});
+test("missing high-demand challenged-rung source skips task rather than starving lower eligible task", async () => {
+  const h = harness(); h.configure(["a", "b", "c", "new"]);
+  h.rows.set("busy", ladder());
+  h.rows.set("quiet", { ...ladder(["a"], 0), completeness: { admitted: 1, configured: 4 } });
+  h.census([task("busy", 100, 3, 4), task("quiet", 5, 1, 4)]);
+  h.pending([capture("busy", "b"), capture("quiet", "a")]); await h.loop.tick();
+  expect(h.calls).toEqual([{ captureRef: "quiet-a", source: "a", candidates: ["b"] }]);
+  expect(h.loop.health().focusTaskKey).toBe("role\u0000quiet");
+});
+test("unknown historical corpus availability fails closed and is not treated as a skippable empty task", async () => {
+  const h = harness();
+  h.rows.set("busy", { ...ladder(["a"], 0), completeness: { admitted: 1, configured: 3 } });
+  h.rows.set("quiet", { ...ladder(["a"], 0), completeness: { admitted: 1, configured: 3 } });
+  h.census([task("busy", 100, 1, 3), task("quiet", 5, 1, 3)]); h.pending([capture("quiet", "a")]);
+  const loop = startAutoReplayLoop({ ...h.input, readRouteReplayableCaptures: async () => null }); cleanups.push(() => loop.stop());
+  await loop.tick(); expect(h.calls).toEqual([]); expect(loop.health().lastError).toContain("route replayable corpus unavailable");
+});
 test("missing challenged-rung capture never substitutes a different source pair", async () => {
   const h = harness(); h.configure(["a", "b", "c", "new"]); h.census([task("idle", 10, 3, 4)]);
   h.pending([capture("idle", "b")]); await h.loop.tick(); expect(h.calls).toEqual([]);
