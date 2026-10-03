@@ -10,6 +10,19 @@ have proven best, best first. We continuously replay and evaluate whether we are
 the task, update the ladder, and use it for routing. There is no separate 'pack' and 'ladder' - one pack per
 (role, task), and the pack's body is the ladder.
 
+## Pack lifecycle and states
+
+The stored pack record is: ladder (rungs { endpointId, rank, status }), completeness, nextEligibleAtMs, a
+monotonic version, and the rollback flag rolledBack { on, reason, atMs }. 'Active' is DERIVED, never stored: a
+task's ladder is active when at least one endpoint has passed the admission floor AND rolledBack.on is false.
+The observable states are:
+
+- no ladder: zero admitted endpoints - the task has no advisory and routes by baseline.
+- partial: some but not all configured endpoints admitted - advisory available for the admitted rungs.
+- complete: every configured endpoint admitted - the ladder idles (30 days) until refresh.
+- rolled back: rolledBack.on is true - no advisory, routing by baseline, replay paused (the ladder is kept,
+  not deleted, so roll-forward restores it).
+
 ## Background
 
 The proposal (guidance/13_profile_learner.md 'Post-v1 route-package attribution') defines a four-stage ladder:
@@ -34,6 +47,26 @@ endpointId rather than a ranked ladder, so there is no fallback.
 3. A rung is routable when its status is 'available' AND the endpoint passes the router's per-request
    eligibility (posture/key-tier). The two are separate filters: status is a stored property; eligibility is
    per request.
+
+## Advisory flow (who walks, who gates)
+
+route-advisory-source reads the (role, task) pack and returns the ordered ladder (carrying taskTypeId /
+taxonomyVersion / roleId). core/src/router.ts walks the ladder top-down, skipping unavailable and ineligible
+rungs, and takes the first routable rung as the PREFERRED endpoint. That preferred endpoint then enters the
+EXISTING advisory-consideration machinery (score-band, cohort, confidence) exactly where today's single
+preferredRoutePackage entered - the only change is the source of the preference (a ladder walk instead of one
+stored endpoint). If the gates decline, the request routes by baseline, as today. The taxonomyVersion is
+carried for provenance (the advisory surface requires it); matching is (roleId, taskTypeId) exact only - a
+taxonomyVersion difference does not block the advisory in this stage.
+
+## Error behaviors (tagged errors)
+
+- InsufficientEvidence: the task has no admitted endpoint -> the advisory source returns NO advisory; baseline
+  routing.
+- NoReplayableRequest: the task has no replayable capture -> the dispatcher skips it (never scheduled).
+- EndpointUnavailable: a rung is unavailable -> the walk skips it and continues to the next rung.
+- ScopeMismatch: no pack matches the (role, task) -> the advisory is refused (advisory_task_mismatch); baseline
+  routing.
 
 ## The endpoint ladder
 
@@ -89,12 +122,14 @@ Step 4 - slot-in (top-down challenge) and removal.
   challenged rung). This breaks a complete task's 30-day idle immediately - a new endpoint always triggers
   its challenge replays.
 
-  Removal: a user-removed endpoint is marked 'unavailable' (rung kept, not routable); routing falls through to
-  the next available rung.
+  Removal: a user-removed endpoint is marked 'unavailable' (rung kept, not routable) and leaves the
+  completeness denominator (denominator = currently configured endpoints); routing falls through to the next
+  available rung.
 
 Step 5 - admission floor: an endpoint is admitted to the ACTIVE ladder when it has at least K finalized
-effort-comparable comparisons in scope (default 5) and mean confidence >= 0.7. Below the floor it is a shadow
-candidate and the previous ladder remains authoritative.
+effort-comparable comparisons in scope (default 5) and mean confidence >= 0.7 (the mean over its own finalized
+comparisons). Below the floor it is a shadow candidate and the previous ladder remains authoritative. A task
+whose endpoints are ALL below the floor has no ladder at all and gets no advisory (baseline routing).
 
 ## Pairwise replay record
 
@@ -108,7 +143,7 @@ the ladder history to be auditable by date. Re-running a comparison appends a ne
 One pack per (role, task), stored as JSON in SQLite rows (the existing knowledge-store learning_records,
 kind='pack'), keyed by a (role_id, task_type_id) UNIQUE index. The pack's body is the ladder: rungs
 { endpointId, rank, status }, plus completeness (admitted / configured endpoints, where 'admitted' means
-passed the admission floor) and nextEligibleAtMs. There is
+passed the admission floor), nextEligibleAtMs, a monotonic version, and rolledBack { on, reason, atMs }. There is
 no separate derived index - the pack table IS the lookup, and the (role_id, task_type_id) unique index makes
 'ladder for this task' a single indexed read.
 
@@ -116,6 +151,13 @@ Index storage: a regular SQLite TABLE with WAL mode, not a view. SQLite has no m
 is a stored query re-run on each read), so a plain table keyed by (role_id, task_type_id) is the right shape.
 WAL supports concurrent readers plus one writer - the routing path is read-heavy and the ladder updates are
 infrequent, which is exactly the access pattern WAL serves.
+
+## Concurrency and determinism
+
+Ladder rewrites are serialized per (role, task): the knowledge-worker folds newly finalized comparison records
+into the stored ladder and rewrites it atomically, guarded by the monotonic version - a stale rewrite (an older
+version) is discarded. Given the same set of finalized records, the ladder is always the same order; concurrent
+evidence arrival only changes WHEN the rewrite happens, never the resulting order.
 
 ## Replay/eval dispatch prioritization
 
@@ -130,8 +172,11 @@ The dispatcher fills one task's ladder to completion before moving to the next (
 - Dispatch counterfactuals for that task until every configured endpoint is ranked; then advance. Each
   counterfactual is the task's source request replayed against an as-yet-unranked configured endpoint (the
   existing replay-intent mechanism, re-targeted by ladder gap).
-- A complete task idles 30 days, then is eligible for a refresh replay and its ladder is recomputed.
-- A NEW configured endpoint always breaks the idle immediately and starts its top-down challenge.
+- A complete task idles 30 days (nextEligibleAtMs), then is eligible for a refresh replay (one comparison
+  re-run) and its ladder is recomputed; the refresh is picked up on the next dispatch cycle.
+- A NEW configured endpoint always breaks the idle immediately: the affected tasks' nextEligibleAtMs becomes
+  now, so the dispatcher schedules their top-down challenges on the next cycle (a new endpoint never waits 30
+  days). The challenge does not preempt the current focus task mid-fill.
 
 ## Activation model
 
@@ -149,8 +194,10 @@ like the ladder rank and do not want the task routed by it), the advisory source
 task and routing falls back to the baseline strategy. It is a plain boolean the user toggles in the UI, and the
 backend supports it by checking the flag before serving the ladder: ON means the ladder does not influence
 routing; OFF means it does. While ON, replay/eval dispatch for that task is also paused (the ladder is not
-recomputed), so the user's override is stable until they roll forward. The flag is recorded with the operator's
-reason and is reversible.
+recomputed), so the user's override is stable until they roll forward. The flag is stored as
+rolledBack { on, reason, atMs } on the pack. Rolling forward (OFF) makes the ladder consultable again
+immediately and resumes the task's replay dispatch on the next dispatch cycle; the reason is kept for the
+audit trail.
 
 ## Configuration
 
@@ -217,9 +264,16 @@ Scope-wide packs (endpoint-only scope, no roleId/taskTypeId) do not exist in sta
 a classification, so there is no capture to replay and no ladder to derive. Such a request gets no advisory and
 routes by the baseline strategy only. This removes the scope-wide pack entirely rather than special-casing it.
 
+Migration: the existing scope-wide packs and the single active scope-wide rollout are NOT consulted for routing
+anymore - the run clears the scope-wide activePackageId and never activates an endpoint-only pack; the old
+records stay in the store for history. The knowledge_route_rollouts activation surface becomes per-(role,
+task): at most one active pack per (roleId, taskTypeId).
+
 ## Risks
 
 - The ladder walk must respect both stored status and per-request eligibility at each rung, or fallback could
   promote an endpoint the request cannot route to. Mitigate with an eligibility filter before ranking.
 - The learner's candidate scope must be complete (role/task present) for a pack to match (R22-B plumbing).
 - A pure, unit-tested scope-match function and a deterministic tie-break keep the N-way surface correct.
+- Concurrent evidence arrival for one task must not produce a non-deterministic ladder; the per-(role, task)
+  serialized rewrite with the monotonic version is the guard.
