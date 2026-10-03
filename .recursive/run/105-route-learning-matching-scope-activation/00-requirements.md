@@ -1,6 +1,8 @@
 Run: `/.recursive/run/105-route-learning-matching-scope-activation/`
 Phase: `00 Requirements`
-Status: `DRAFT`
+Status: `LOCKED`
+LockedAt: `2026-10-03T01:55:19.798Z`
+LockHash: `afc5989c78381440d0e79b023653f29797aaa6a4418dba0835b88d971f7a5e19`
 Workflow version: `recursive-mode-audit-v2`
 Inputs:
 - Baseline (2026-10-03): public `origin/dev` `701b8b8fc0b0eeebdfe818b757f5702f50021488` ("Merge run-104 R22-A/B + R23 +
@@ -17,7 +19,7 @@ Inputs:
 
 ## TODO
 
-- [ ] Operator approves this draft (then Status -> LOCKED with LockHash)
+- [x] Operator approved this draft (Status -> LOCKED with LockHash)
 - [x] Baseline pinned (dev @ 701b8b8f / c993b2f2; includes the R22-B role/task plumbing the design assumes)
 - [x] Run id/slug: 105-route-learning-matching-scope-activation
 
