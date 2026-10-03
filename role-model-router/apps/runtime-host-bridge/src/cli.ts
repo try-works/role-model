@@ -5538,7 +5538,7 @@ export async function main(): Promise<void> {
         readonly extensionId: string;
         readonly capability: string;
         readonly value: Record<string, unknown>;
-        readonly evaluationAuthoritySecret: string;
+        readonly evaluationAuthoritySecret?: string;
         readonly scopeOverride?: string;
         readonly query?: Record<string, unknown>;
       }) => ({
@@ -5552,7 +5552,9 @@ export async function main(): Promise<void> {
         value: input.value,
         ...(input.query ? { query: input.query } : {}),
         ...(input.extensionId === "knowledge-store" ? { payload: input.value } : {}),
-        evaluationAuthoritySecret: input.evaluationAuthoritySecret,
+        ...(input.evaluationAuthoritySecret
+          ? { evaluationAuthoritySecret: input.evaluationAuthoritySecret }
+          : {}),
       });
       // RC07 (L2): the bounded expiration sweep goes straight through the extension
       // host the producer already uses for replay-core, because the operator boundary's
@@ -7202,7 +7204,9 @@ export async function main(): Promise<void> {
           const operations = currentPostObservationOperations();
           if (!runtime || !operations) return null;
           try {
-            const authority = await resolveDurableEvaluationAuthority({ channel, stateRoot: options.runtimeStateRoot, scopeId: options.scopeId });
+            // Pending replay/queue inspection is read-only and invokes Replay Core only. Requiring
+            // the Evaluation Core authority here made a fresh runtime with no managed evaluation
+            // key return `null` before either authoritative pending plane was read.
             const replayJobScope = resolveDurableReplayJobScope({ channel, runtimeStateRoot: options.runtimeStateRoot, scopeId: options.scopeId });
             const { readPendingRouteDispatches } = await import("./route-challenge-evidence.js");
             return await readPendingRouteDispatches({
@@ -7214,7 +7218,7 @@ export async function main(): Promise<void> {
                 stateRoot: options.runtimeStateRoot, scopeId: options.scopeId,
                 value: unwrapCapabilityPayload(await runtime.invoke(extensionId, learnerSweepEnvelope({
                   requestPrefix: "route-dispatch-pending", extensionId, capability, value,
-                  scopeOverride: replayJobScope, evaluationAuthoritySecret: authority.authoritySecret,
+                  scopeOverride: replayJobScope,
                 }))),
               }),
             });
