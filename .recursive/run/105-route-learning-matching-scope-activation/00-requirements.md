@@ -161,6 +161,17 @@ Effect v4 tree (vendor/effect, re-exported through role-model-router/packages/ef
   promote an endpoint the request cannot route to. Mitigate with an eligibility filter before ranking (R4, R5).
 - A pure, unit-tested scope-match function and a deterministic tie-break keep the N-way surface correct (R1, R3).
 
+## Execution and verification
+
+- Strict TDD: no production code without a failing test first (RED-GREEN-REFACTOR per the recursive-tdd Iron Law).
+- E2E tests: the ladder lifecycle end-to-end (dispatch -> comparison -> aggregation -> activation -> rollback) is
+  covered by e2e tests, not unit tests alone.
+- Regression tests: the existing run-104 replay/evaluation/learning suites must stay green - the ladder work must
+  not regress the pipeline it builds on.
+- Phase 5: rebuild the runtime and verify the rebuilt DEV build on :3458 (the development channel port).
+- Phase 5: verify routing behavior via live pi requests against the rebuilt runtime.
+- Phase 5: verify the Packs page UI (R12) by inspecting it in the browser.
+
 ## Out of Scope
 
 - Route-package routing (stage 4 of the proposal): the pack never OVERRIDES the router's score-based selection;
