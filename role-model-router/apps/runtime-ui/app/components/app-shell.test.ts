@@ -67,6 +67,15 @@ function measured(input: {
   });
 }
 
+describe("run105 Phase5 responsive app shell", () => {
+  test("mobile shell hides the fixed desktop sidebar and keeps the content lane full width", () => {
+    const source = require("node:fs").readFileSync(new URL("./app-shell.tsx", import.meta.url), "utf8");
+    expect(source).toMatch(/<Sidebar[^>]+className="[^"]*hidden[^"]*md:flex/);
+    expect(source).toContain("md:hidden");
+    expect(source).toContain("overflow-x-auto");
+  });
+});
+
 describe("run104 R14 app-shell footer sampling", () => {
   test("samples the newest live request, not the newer benchmark row", () => {
     const sample = sampleFooterCacheHitRate({
