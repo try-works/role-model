@@ -1,0 +1,37 @@
+
+### GREEN run: bridge
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-host-bridge
+
+(node:38592) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run104-advisory-classification-variant.test.ts (3 tests) 22ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  19:44:08
+   Duration  6.93s (transform 3.48s, setup 0ms, collect 5.77s, tests 22ms, environment 1ms, prepare 393ms)
+
+### GREEN run: ui
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-ui
+
+ ✓ app/lib/sidebar-footer.test.ts (6 tests) 23ms
+ ✓ app/components/app-shell.test.ts (3 tests) 9ms
+
+ Test Files  2 passed (2)
+      Tests  9 passed (9)
+   Start at  19:44:13
+   Duration  7.28s (transform 2.21s, setup 0ms, collect 5.79s, tests 33ms, environment 1ms, prepare 2.60s)
+
+### GREEN run: pkgui
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/packages/ui
+
+ ✓ src/sidebar.test.ts (6 tests) 132ms
+
+ Test Files  1 passed (1)
+      Tests  6 passed (6)
+   Start at  19:44:09
+   Duration  2.24s (transform 244ms, setup 0ms, collect 414ms, tests 132ms, environment 0ms, prepare 435ms)
+

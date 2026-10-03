@@ -1,0 +1,26 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-host-bridge
+
+ ✓ test/run97-replay-admission.test.ts (11 tests) 2339ms
+   ✓ run97 admission admits every capture when no policy input blocks it  2298ms
+ ✓ test/run97-replay-auto-loop.test.ts (15 tests) 1017ms
+ ✓ test/run97-replay-auto-producer.test.ts (7 tests) 268ms
+ ✓ test/run155-judge-dedup-tick.test.ts (5 tests) 143ms
+ ✓ test/run154-item8a-replay-failure-classes.test.ts (6 tests) 108ms
+ ✓ test/run150-item3-probe-replay-exclusion.test.ts (4 tests) 165ms
+(node:17312) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run100a-benchmark-replay-exclusion.test.ts (4 tests) 344ms
+ ✓ test/run108-judge-unresolved-tick.test.ts (4 tests) 285ms
+ ✓ test/run101-r4-replay-queue-wiring.test.ts (4 tests) 67ms
+ ✓ test/run98-a56-judge-excluded-from-replay-arms.test.ts (2 tests) 204ms
+ ✓ test/run98-a52-replay-reservation-reconcile.test.ts (3 tests) 218ms
+ ✓ test/run100i-executor-bound-invariant.test.ts (2 tests) 220ms
+ ✓ test/run98-a33-candidate-rotation.test.ts (3 tests) 81ms
+ ✓ test/run108-judge-unresolved-admission.test.ts (2 tests) 14ms
+
+ Test Files  14 passed (14)
+      Tests  72 passed (72)
+   Start at  19:06:21
+   Duration  56.61s (transform 8.69s, setup 0ms, collect 32.70s, tests 5.47s, environment 10ms, prepare 7.42s)
+

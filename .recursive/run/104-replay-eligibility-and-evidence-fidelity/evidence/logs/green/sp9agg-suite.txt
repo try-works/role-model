@@ -1,0 +1,227 @@
+
+> @role-model-router/sqlite-memory@0.0.0 test D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\packages\sqlite-memory
+> vitest run test
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/packages/sqlite-memory
+
+(node:45516) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:57284) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:61704) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66028) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:7164) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:43312) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:18956) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:4072) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:3272) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:49760) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:62052) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:13988) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:47720) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:21508) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:20488) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run94-sp48-null-retain.test.ts (4 tests) 1956ms
+   ✓ SP48 fresh failure rows receive the canonical 90-day expiry classification  562ms
+   ✓ SP48 NULL-retain legacy rows become deletion-eligible after the canonical 90 days  438ms
+   ✓ SP48 telemetry JSON columns fail closed past the 16 KiB inline cap  611ms
+   ✓ SP48 the compact-stub enforcement migration receipt and postcondition are asserted at startup  329ms
+ ✓ test/run98-a43-stub-profile-write.test.ts (3 tests) 2327ms
+   ✓ run98 a43 S3: a caller-supplied stub profile cannot overwrite the endpoint's measured profile  1264ms
+   ✓ run98 a43 S3: a legacy stub snapshot is rebuilt from samples on the next initialization  464ms
+   ✓ run98 a43 S3: a stub is rebuilt from the endpoint's current identity, not its whole history  582ms
+ ✓ test/run104-live-only-summary.test.ts (3 tests) 2468ms
+   ✓ run104: the default summary is live-only and publishes the excluded classes  827ms
+   ✓ run104: legacy live_request rows stay live and an explicit request can include every class  642ms
+   ✓ run104: request_class_source records a declaration and marks backfilled rows inferred  953ms
+ ✓ test/effort-instance-identity.test.ts (3 tests) 2775ms
+   ✓ sqlite effort instance persistence > migrates a pre-Run-91 endpoint table without changing legacy endpoint identity  1146ms
+   ✓ sqlite effort instance persistence > rolls back the whole endpoint batch when any row cannot be persisted  699ms
+   ✓ sqlite effort instance persistence > stores explicit null versus opaque effort without deriving it from endpoint ids  924ms
+ ✓ test/recursive-87-atomic-observation.test.ts (2 tests) 3331ms
+   ✓ Phase 3.5 graph-primary observation persistence rolls back every SQLite row after a late failure  3141ms
+ ✓ test/run94-storage-corrections-red.test.ts (5 tests) 3453ms
+   ✓ Run 94 public storage corrections > RED: enforces the 16 KiB cap by UTF-8 bytes on UPDATE, not SQLite characters  748ms
+   ✓ Run 94 public storage corrections > RED: classifies malformed legacy rows as quarantine and blocks shadow cutover  1624ms
+   ✓ Run 94 public storage corrections > failure classification keeps routing fields but never persists raw diagnostics or response bodies  967ms
+ ✓ test/run98-a40-deferred-capture-persist.test.ts (2 tests) 4117ms
+   ✓ a40 L2: an observation whose capture was deferred persists without a graph artifact  2286ms
+   ✓ a40 L2: a graph-state store still refuses an artifact-free observation that claims full capture  1786ms
+ ✓ test/run98-a40-latency-buckets.test.ts (2 tests) 4541ms
+   ✓ a40 L5: latency percentiles are reported per endpoint and prompt-size bucket  2984ms
+   ✓ a40 L5: buckets below the operator's sample floor are withheld instead of reported  1543ms
+ ✓ test/run94-compact-stub.test.ts (6 tests) 4694ms
+   ✓ run94 SP36: a long-conversation observation persists a <=16KiB stub with bounded node-id locators  604ms
+   ✓ run94 SP36: a bounded failure observation with a long conversation persists without throwing  592ms
+   ✓ run94 F1: persistRuntimeObservationBundle writes a <=16KiB compact stub with no journal present when graph content is externalized  1006ms
+   ✓ run94 F1: schema guard rejects accidental rich inline persistence beyond 16 KiB  379ms
+   ✓ run94 F1: persistRuntimeObservationBundle fails closed instead of writing rich content inline without graph externalization  1189ms
+   ✓ run94 F1: persistRuntimeTelemetryFailure writes a bounded classification stub, never the original observation  880ms
+ ✓ test/run98-a40-client-latency.test.ts (4 tests) 4754ms
+   ✓ a40 L1: the provider breakdown is recorded separately from the existing header latency  1028ms
+   ✓ a40 L1: the flushed response duration is written afterwards and drives its own percentile  1766ms
+   ✓ a40 L1: rows written before this change keep the provider percentile and report no client latency  1129ms
+   ✓ a40 L1: updating an unknown request reports that nothing was written  817ms
+ ✓ test/recursive-87-history-policy.test.ts (4 tests) 6702ms
+   ✓ SP3 bounds raw performance history, bytes, rebuild work, late data, and restart state  2330ms
+   ✓ Phase 3.5 wall-clock aging and policy rollback restore the prior physical history  1798ms
+   ✓ Phase 3.5 normal benchmark writes expire stale samples against wall clock  766ms
+   ✓ Phase 3.5 policy rollback archives have a fixed retention bound  1775ms
+ ✓ test/run96-migration-inventory.test.ts (5 tests) 7118ms
+   ✓ R22 audits artifact, occurrence, capture, replay, evaluation, and projection inventories  917ms
+   ✓ R22 inventories the artifact-store edge tables by their canonical names  504ms
+   ✓ R22 blocks cutover when an inventoried legacy domain has no provable target  1176ms
+   ✓ R22 records a restart-safe checkpoint with N/N-1 compatibility and physical receipts  2517ms
+   ✓ R22 reconciles performance rows written during the shadow window before parity  1966ms
+(node:61272) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:30312) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:39308) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:28268) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:56636) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/provider-attempt-ids.test.ts (1 test) 62ms
+(node:53024) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:58556) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run95-migration-parity.test.ts (1 test) 53ms
+ ✓ test/run95-bounded-storage.test.ts (1 test) 30ms
+ ✓ test/run98-a40-stub-fidelity.test.ts (1 test) 915ms
+   ✓ stub fidelity: a stubbed observation yields the same telemetry capabilities as the whole bundle  890ms
+ ✓ test/run98-a43-benchmark-sample-runs.test.ts (1 test) 711ms
+   ✓ run98 a43 S4: sample-backed runs carry per-endpoint counts and a stall-aware state  689ms
+ ✓ test/recursive-87-maintenance.test.ts (1 test) 966ms
+   ✓ SP5 SQLite maintenance is bounded, hold-safe, physical, and restart durable  949ms
+ ✓ test/run104-traffic-class-aggregate.test.ts (2 tests) 1518ms
+   ✓ run104: the telemetry summary can be restricted to live traffic  815ms
+   ✓ run104: legacy live_request rows count as live traffic  684ms
+ ✓ test/legacy-migration.test.ts (11 tests) 16076ms
+   ✓ TB04 real SQLite legacy migration > audits legacy storage without mutating the database  6355ms
+   ✓ TB04 real SQLite legacy migration > backfills real rows, cuts over once, and retires only after second parity and hold expiry  3113ms
+   ✓ TB04 real SQLite legacy migration > persists the bounded shadow deadline and refuses parity after it expires  795ms
+   ✓ TB04 real SQLite legacy migration > Run 95 accepts a verifier-confirmed graph-primary pointer without treating it as unresolved legacy residue  448ms
+   ✓ TB04 real SQLite legacy migration > Run 95 reprocesses a stale unresolved-pointer quarantine after its artifact becomes verified  600ms
+   ✓ TB04 real SQLite legacy migration > rollback restores the populated legacy database and removes backfilled artifacts  684ms
+   ✓ TB04 real SQLite legacy migration > graph-primary runtime writes reject inline rich observations and persist only an artifact reference  1387ms
+   ✓ TB04 real SQLite legacy migration > R22 AC-R22-06 reclaims legacy rich JSON and closure files and fences a resumed writer  2592ms
+stdout | test/index.test.ts > initializeSqliteMemory > persists runtime observation bundles, profile snapshots, and maintenance-policy reads
+[run115] eligibility candidates=3 eligible=1 codes=BUDGET_EXCEEDED=1,CAPABILITY_MISSING=1 request=req-adapter-validation alias=- model=- effort=- pass=- allow=[] denied=[anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+stdout | test/index.test.ts > initializeSqliteMemory > externalizes and hydrates normal runtime observations across graph-primary cutover
+[run115] eligibility candidates=3 eligible=1 codes=BUDGET_EXCEEDED=1,CAPABILITY_MISSING=1 request=req-adapter-validation alias=- model=- effort=- pass=- allow=[] denied=[anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+stdout | test/index.test.ts > initializeSqliteMemory > persists and reads segmented observed samples and profiles by difficulty bucket
+[run115] eligibility candidates=3 eligible=1 codes=BUDGET_EXCEEDED=1,CAPABILITY_MISSING=1 request=req-adapter-validation alias=- model=- effort=- pass=- allow=[] denied=[anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+stdout | test/index.test.ts > initializeSqliteMemory > reads the latest observed profiles for a set of endpoint ids
+[run115] eligibility candidates=3 eligible=1 codes=BUDGET_EXCEEDED=1,CAPABILITY_MISSING=1 request=req-adapter-validation alias=- model=- effort=- pass=- allow=[] denied=[anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+stdout | test/index.test.ts > initializeSqliteMemory > flattens persisted runtime observations into canonical telemetry summary, comparison, and request rows
+[run115] eligibility candidates=3 eligible=1 codes=BUDGET_EXCEEDED=1,CAPABILITY_MISSING=1 request=req-adapter-validation alias=- model=- effort=- pass=- allow=[] denied=[anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+ ✓ test/run90-telemetry-query-semantics.test.ts (5 tests) 31552ms
+   ✓ Run 90 aggregates are independent of the 50-row page and use a half-open window  6536ms
+   ✓ Run 90 exact telemetry lookup reads by request identity without a bounded page scan  9955ms
+   ✓ Run 90 canonical corpus is exactly 257 in-window plus nine out-of-window rows  11399ms
+   ✓ Run 90 performance corpus keeps aggregate and lookup plans indexed  3541ms
+stdout | test/index.test.ts > initializeSqliteMemory > persistRuntimeTelemetryFailure records latencyMs in telemetry summary average
+[run115] eligibility candidates=3 eligible=1 codes=BUDGET_EXCEEDED=1,CAPABILITY_MISSING=1 request=req-adapter-validation alias=- model=- effort=- pass=- allow=[] denied=[anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+stdout | test/index.test.ts > initializeSqliteMemory > keeps positive legacy token counts available when provenance metadata is absent
+[run115] eligibility candidates=3 eligible=1 codes=BUDGET_EXCEEDED=1,CAPABILITY_MISSING=1 request=req-adapter-validation alias=- model=- effort=- pass=- allow=[] denied=[anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+stdout | test/index.test.ts > initializeSqliteMemory > persistRuntimeTelemetryFailure preserves caller correlation and request classification for failed rows
+[run115] eligibility candidates=3 eligible=1 codes=BUDGET_EXCEEDED=1,CAPABILITY_MISSING=1 request=req-adapter-validation alias=- model=- effort=- pass=- allow=[] denied=[anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+stdout | test/index.test.ts > initializeSqliteMemory > persistRuntimeTelemetryFailure preserves routed provider failure context and structured observation
+[run115] eligibility candidates=3 eligible=1 codes=BUDGET_EXCEEDED=1,CAPABILITY_MISSING=1 request=req-adapter-validation alias=- model=- effort=- pass=- allow=[] denied=[anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+stdout | test/index.test.ts > initializeSqliteMemory > persistRuntimeTelemetryFailure persists authoritative zero-cost metadata for pre-execution failures
+[run115] eligibility candidates=3 eligible=1 codes=BUDGET_EXCEEDED=1,CAPABILITY_MISSING=1 request=req-adapter-validation alias=- model=- effort=- pass=- allow=[] denied=[anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+stdout | test/index.test.ts > initializeSqliteMemory > persistRuntimeObservationBundle projects telemetry handling receipts into the telemetry ledger
+[run115] eligibility candidates=3 eligible=1 codes=BUDGET_EXCEEDED=1,CAPABILITY_MISSING=1 request=req-adapter-validation alias=- model=- effort=- pass=- allow=[] denied=[anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+stdout | test/index.test.ts > initializeSqliteMemory > persistRuntimeObservationBundle projects execution semantics receipts into the telemetry ledger
+[run115] eligibility candidates=3 eligible=1 codes=BUDGET_EXCEEDED=1,CAPABILITY_MISSING=1 request=req-adapter-validation alias=- model=- effort=- pass=- allow=[] denied=[anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+stdout | test/index.test.ts > initializeSqliteMemory > exports persisted runtime state for operator drills
+[run115] eligibility candidates=3 eligible=1 codes=BUDGET_EXCEEDED=1,CAPABILITY_MISSING=1 request=req-adapter-validation alias=- model=- effort=- pass=- allow=[] denied=[anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+stdout | test/index.test.ts > initializeSqliteMemory > restores runtime state from a backup after scoped deletion
+[run115] eligibility candidates=3 eligible=1 codes=BUDGET_EXCEEDED=1,CAPABILITY_MISSING=1 request=req-adapter-validation alias=- model=- effort=- pass=- allow=[] denied=[anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+stdout | test/index.test.ts > persistObservedBenchmarkSample benchmark_mode > retries through a transient sqlite write lock when persisting runtime observation bundles
+[run115] eligibility candidates=3 eligible=1 codes=BUDGET_EXCEEDED=1,CAPABILITY_MISSING=1 request=req-adapter-validation alias=- model=- effort=- pass=- allow=[] denied=[anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+stdout | test/index.test.ts > persistObservedBenchmarkSample benchmark_mode > waits through a transient sqlite lock when listing runtime telemetry records
+[run115] eligibility candidates=3 eligible=1 codes=BUDGET_EXCEEDED=1,CAPABILITY_MISSING=1 request=req-adapter-validation alias=- model=- effort=- pass=- allow=[] denied=[anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+stdout | test/index.test.ts > persistObservedBenchmarkSample benchmark_mode > waits through a transient sqlite lock when reading batched observation telemetry columns
+[run115] eligibility candidates=3 eligible=1 codes=BUDGET_EXCEEDED=1,CAPABILITY_MISSING=1 request=req-adapter-validation alias=- model=- effort=- pass=- allow=[] denied=[anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+ ✓ test/index.test.ts (47 tests) 37123ms
+   ✓ initializeSqliteMemory > creates the planned schema, WAL mode, and initial migration receipt under the runtime state root  561ms
+   ✓ initializeSqliteMemory > persists validated provider accounts by credential reference without storing raw secrets  1320ms
+   ✓ initializeSqliteMemory > upserts and lists provider accounts for runtime control-plane reads  846ms
+   ✓ initializeSqliteMemory > persists runtime-managed endpoint activations for dynamic registry materialization  711ms
+   ✓ initializeSqliteMemory > persists and reads the global controller assignment for the runtime control plane  409ms
+   ✓ initializeSqliteMemory > persists device-auth session state for runtime OAuth polling  324ms
+   ✓ initializeSqliteMemory > records explicit maintenance defaults and idempotent migration behavior  406ms
+   ✓ initializeSqliteMemory > does not repeat observation metadata JSON backfills after migration receipt  510ms
+   ✓ initializeSqliteMemory > persists and reloads the continuity rows needed for bounded context assembly  435ms
+   ✓ initializeSqliteMemory > persists retrieval receipts for later routing diagnostics  335ms
+   ✓ initializeSqliteMemory > persists runtime observation bundles, profile snapshots, and maintenance-policy reads  2342ms
+   ✓ initializeSqliteMemory > externalizes and hydrates normal runtime observations across graph-primary cutover  2223ms
+   ✓ initializeSqliteMemory > listRecentRuntimeObservations > uses the projected client request id without reading the observation JSON blob  308ms
+   ✓ initializeSqliteMemory > listRecentRuntimeRequestIds > enforces limit 10 for the lightweight latest-id query  335ms
+   ✓ initializeSqliteMemory > listRecentRuntimeRequestIds > returns an empty array when no runtime observations exist  468ms
+   ✓ initializeSqliteMemory > uses matching indexes for endpoint profile and sample ordering  388ms
+   ✓ initializeSqliteMemory > stores and reads conversation-level difficulty classification cache entries  327ms
+   ✓ initializeSqliteMemory > persists and reads segmented observed samples and profiles by difficulty bucket  1595ms
+   ✓ initializeSqliteMemory > derives an advisory max-difficulty recommendation from bucketed observed profiles  574ms
+   ✓ initializeSqliteMemory > reads the latest observed profiles for a set of endpoint ids  2245ms
+   ✓ initializeSqliteMemory > flattens persisted runtime observations into canonical telemetry summary, comparison, and request rows  1548ms
+   ✓ initializeSqliteMemory > persistRuntimeTelemetryFailure records latencyMs in telemetry summary average  2210ms
+   ✓ initializeSqliteMemory > keeps positive legacy token counts available when provenance metadata is absent  994ms
+   ✓ initializeSqliteMemory > persistRuntimeTelemetryFailure preserves caller correlation and request classification for failed rows  734ms
+   ✓ initializeSqliteMemory > persistRuntimeTelemetryFailure preserves routed provider failure context and structured observation  556ms
+   ✓ initializeSqliteMemory > persistRuntimeTelemetryFailure persists authoritative zero-cost metadata for pre-execution failures  687ms
+   ✓ initializeSqliteMemory > persistRuntimeObservationBundle projects telemetry handling receipts into the telemetry ledger  557ms
+   ✓ initializeSqliteMemory > persistRuntimeObservationBundle projects execution semantics receipts into the telemetry ledger  613ms
+   ✓ initializeSqliteMemory > exports persisted runtime state for operator drills  852ms
+   ✓ initializeSqliteMemory > restores runtime state from a backup after scoped deletion  1001ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > retries through a transient sqlite write lock when persisting benchmark samples  745ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > retries through a transient sqlite write lock when persisting runtime observation bundles  1237ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > waits through a transient sqlite lock when reading difficulty classification cache  676ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > retries through a transient sqlite write lock when persisting difficulty classification cache  902ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > waits through a transient sqlite lock when reading advisory max difficulty recommendations  890ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > waits through a transient sqlite lock when listing runtime telemetry records  1538ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > waits through a transient sqlite lock when reading batched observation telemetry columns  1388ms
+   ✓ clearObservedBenchmarkDataForEndpoint > keeps benchmark-only evidence out of the operational endpoint profile  385ms
+   ✓ readLatestBenchmarkProfilesByEndpointIds membership revision > excludes failed, cancelled, and revisionless benchmark evidence from current profiles  424ms
+   ✓ runRuntimeStateValidation > validates provider accounts and initializes SQLite through the local validation path  494ms
+
+ Test Files  22 passed (22)
+      Tests  114 passed (114)
+   Start at  19:16:08
+   Duration  55.06s (transform 27.31s, setup 0ms, collect 66.68s, tests 137.25s, environment 63ms, prepare 23.84s)
+

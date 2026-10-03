@@ -1,0 +1,66 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/run104-sp7-contribution-budget.test.ts (3 tests | 2 failed) 335ms
+   × run104 SP7 contribution aggregate budget > pins the contribution aggregate budget to a documented, operator-visible constant 52ms
+     → expected undefined to be 5000 // Object.is equality
+   × run104 SP7 contribution aggregate budget > classifies a timed-out aggregate as a retryable typed timeout and retries it under the shared schedule 206ms
+     → expected TrackBPrivateOperationError: private Trac… { status: … } to match object { …(5) }
+   ✓ run104 SP7 contribution aggregate budget > does not retry a refused aggregate into a double upload 64ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run104-sp7-contribution-budget.test.ts > run104 SP7 contribution aggregate budget > pins the contribution aggregate budget to a documented, operator-visible constant
+AssertionError: expected undefined to be 5000 // Object.is equality
+
+- Expected: 
+5000
+
++ Received: 
+undefined
+
+ ❯ test/run104-sp7-contribution-budget.test.ts:62:55
+     60|   test("pins the contribution aggregate budget to a documented, operat…
+     61|     // (c) the budget is asserted against the constant so a future edi…
+     62|     expect(DEFAULT_CONTRIBUTION_AGGREGATE_TIMEOUT_MS).toBe(5_000);
+       |                                                       ^
+     63|     // The operations default is 600 s; the aggregate cap must stay th…
+     64|     expect(resolveContributionAggregateTimeoutMs(600_000)).toBe(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/run104-sp7-contribution-budget.test.ts > run104 SP7 contribution aggregate budget > classifies a timed-out aggregate as a retryable typed timeout and retries it under the shared schedule
+AssertionError: expected TrackBPrivateOperationError: private Trac… { status: … } to match object { …(5) }
+
+- Expected
++ Received
+
+- {
+-   "attempts": undefined,
+-   "message": "private Track B operation timed out after 40ms",
+-   "name": "TrackBPrivateOperationTimeoutError",
+-   "retryable": true,
++ TrackBPrivateOperationError {
++   "name": "TrackBPrivateOperationError",
+    "status": 504,
+  }
+
+ ❯ test/run104-sp7-contribution-budget.test.ts:112:5
+    110|     });
+    111| 
+    112|     await expect(operations.recordContributionAggregate(aggregatePaylo…
+       |     ^
+    113|       name: "TrackBPrivateOperationTimeoutError",
+    114|       status: 504,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 1 passed (3)
+   Start at  19:04:28
+   Duration  6.29s (transform 2.11s, setup 0ms, collect 4.59s, tests 335ms, environment 1ms, prepare 551ms)
+
+undefined
+D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/run104-sp7-contribution-budget.test.ts

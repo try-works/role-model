@@ -427,6 +427,18 @@ export interface RuntimeParameterSanitizationDecision {
   readonly vendorId: string;
 }
 
+/**
+ * Run 104 / R14 (addendum-03): the persisted traffic-class vocabulary carried into the observation sample.
+ * `unknown` is deliberately absent - an unclassified execution is `live`, matching the execution plane default.
+ */
+export type ObservedTrafficClass = "live" | "replay" | "evaluation" | "benchmark" | "probe";
+
+export function toObservedSourceType(
+  trafficClass?: ObservedTrafficClass | null,
+): ObservedPerformanceSample["source_type"] {
+  return trafficClass ?? "live";
+}
+
 export interface RuntimeObservationBundleInput {
   readonly decision: {
     readonly request_id: string;
@@ -439,6 +451,11 @@ export interface RuntimeObservationBundleInput {
     readonly profile_revision?: string | null;
   };
   readonly clientRequestId?: string;
+  /**
+   * Run 104 / R14 (addendum-03): the request's declared traffic class. The observation sample's `source_type`
+   * carries it so the telemetry row and the observation row agree; an unclassified execution is `live`.
+   */
+  readonly trafficClass?: ObservedTrafficClass;
   /** Explicit request effort; null means the provider-default instance. */
   readonly reasoningEffort?: string | null;
   readonly effortSource?: RuntimeEffortSource;
@@ -709,7 +726,7 @@ function buildObservedPerformanceSample(
     model_id: identity.model_id,
     reasoning_effort: effort.reasoningEffort,
     effort_source: effort.effortSource,
-    source_type: "live_request",
+    source_type: toObservedSourceType(input.trafficClass),
     ...(input.routingDiagnostics?.difficultyRouting?.difficulty
       ? { difficulty_bucket: input.routingDiagnostics.difficultyRouting.difficulty }
       : {}),
@@ -1156,6 +1173,11 @@ export function createRuntimeObservationBundle(
     nowMs: currentSample.timestamp_ms,
   });
   if (!profile) {
+    // Temporary diagnostic (addendum 14 follow-on): name the traffic class and source type that
+    // produced a null profile so the replay observation path can be corrected.
+    console.error(
+      `[run104-observation] profile null: trafficClass=${String(input.trafficClass)} source_type=${currentSample.source_type} endpoint=${input.decision.chosen_endpoint_id}`,
+    );
     throw new Error("A live runtime observation must produce an operational profile.");
   }
   const capturePolicy = buildCapturePolicyReceipt(input.maintenancePolicy, input.capturePolicy);

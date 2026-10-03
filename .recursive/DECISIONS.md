@@ -805,3 +805,38 @@ Date: `2026-10-01`
 - Closeout also repaired two CI blockers the pull request exposed: BOM'd phase-5 evidence JSON files and
   the vendored `effect` build missing from the bridge test lanes. Evidence:
   `addenda/09-closeout.post-lock-release.addendum-01.md`.
+
+### Run 104: replay eligibility, evidence fidelity and the traffic-class typing
+
+Date: `2026-10-02`
+
+- The replay lane now refuses by name instead of deferring generically: `candidate_input_unsupported` carries the
+  blocking modality or capability and the rejected endpoint ids, terminal when the declared pool can never serve
+  the capture and deferrable when a capable arm is merely unavailable (`SP2`).
+- The persisted traffic-class vocabulary is `live | replay | evaluation | benchmark | probe | unknown`, with the
+  legacy `live_request` still read. The operator's aggregates are live-only and publish the excluded counts and
+  their classes, so a replay or a benchmark can no longer move the live cache-hit rate, counts, latency or cost
+  (`SP9`, `R14`). An undeclared write is still counted live; that residual is recorded with the Phase 3.5 review.
+- The live stall's cause is decided, not hypothesised: the packaged launcher never supplied `handoffEvaluation`,
+  so a replay that reached `awaiting_evaluation` was never re-listed; and the completion contract demanded every
+  trial of a job be covered by a finalized group although train-partition trials are structurally ineligible, so a
+  four-trial job with two comparable trials could never complete (`SP10`, private `21dd180f`; `b3ac491a`).
+- The durable branch-append recovery was reading the write-side `outputText` while the capture projection
+  publishes `responseText`, so it refused even for readable captures; it re-attaches now, and a projection that
+  saturated the boundary's 2 KiB excerpt cap refuses rather than attaching a truncated artifact (`efab6bc3`,
+  `d938049d`).
+- Arm comparability is a first-class dimension: arms are repointed to the same model's variant at the source
+  capture's effort when the registry holds one, every arm's comparability is published, and a mismatched arm is
+  named `arm_effort_mismatch` in the comparison's validity. The public plumbing is now wired and verified live
+  end-to-end (post-closeout `8aa114ed` plus addenda 08-20): a finalized comparison on `:3457` records per-arm
+  `matched`/`mismatched`. The queue was traced live and repaired in turn — the restricted-tick no-op, the
+  resume-entry record with `classifyReplayArmEffort`, the resume-store `effortComparability` persistence, the
+  `capture_missing` retryability, and the compact replay-job dispatch projection
+  (`SP6`, private `885eda30`; post-closeout `8aa114ed`, `1294feae`, `b3e29909`, `ec33aba5`, `23ae04dd`).
+- The `Effect` rule is applied where it is a genuine fit: `Match.exhaustive` terminates the traffic-class mapper so
+  a new variant is a type error, and the private handoff uses `ManagedRuntime`/`Effect.gen`. No dependency changed.
+- Phase 5 ran the rebuilt runtime on its own channel (`:3459`) with its own state root: the matrix passed
+  (text control, an image request through `difficulty.remote-only` that selected the DeepSeek flash endpoint, a
+  PDF control and `hybrid.remote-only`) and the monitored window ran 61.5 minutes with 123 samples. The live
+  replay drain could not be shown because a fresh state root has no route package; recorded in the locked
+  addendum rather than asserted.

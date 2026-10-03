@@ -2,12 +2,18 @@ import { createHash } from "node:crypto";
 
 import { type ReplayLedger, replayBudgetAvailable } from "./track-b-replay-ledger.js";
 import {
+  type ReplayCandidateEligibilityProfile,
+  type ReplayCandidateRejection,
   type ReplayPolicySet,
   type ReplayRefusalCode,
+  type ReplayRequestRequirements,
   type ReplayToolPolicy,
+  classifyReplayCandidateShortfall,
   decideReplayAdmission,
   isBenchmarkReplaySourceRef,
   isSyntheticProbeSourceClass,
+  readReplayRequestRequirements,
+  recheckReplayCandidatesForDispatch,
   resolveReplayToolPolicy,
   selectReplayCandidates,
 } from "./track-b-replay-policy.js";
@@ -403,6 +409,13 @@ export interface AutoReplayCapture {
    * capture cannot discriminate two candidates and is refused terminally at admission.
    */
   readonly sourceClass?: string | null;
+  /**
+   * Run 104 R1: the request requirements the arm must be able to serve. The pending projection that
+   * owns this record supplies it from the capture's recorded decision when it can; absent, the tick
+   * infers it from `messages` (and leaves selection unfiltered when it has neither).
+   */
+  readonly requirements?: ReplayRequestRequirements;
+  readonly messages?: readonly unknown[];
 }
 
 export interface AutoReplayBranch {
@@ -431,6 +444,12 @@ export interface AutoReplayDisposition {
   readonly code?: ReplayRefusalCode | "replay_failed";
   readonly detail?: string;
   readonly branches?: number;
+  /**
+   * Run 104 R1: the arms the router's own capability/modality rule rejected for this capture, with the
+   * endpoint id and the router's exclusion code, so an operator can count them instead of wondering
+   * where the candidates went.
+   */
+  readonly rejectedArms?: readonly ReplayCandidateRejection[];
 }
 
 export interface AutoReplayTickResult {
@@ -670,6 +689,13 @@ type AutoReplayExecutorRequest = {
    * that follows it can record the judge that really scored the comparison instead of assuming the controller.
    */
   readonly judgeEndpointId?: string | null;
+  /**
+   * Run 104 post-closeout (addendum 12): the bounded executor aborts this signal when the per-capture
+   * budget expires, so a timed-out dispatch cannot leave the provider fetch / branch append running in
+   * the background and hold the queue's single claim. The caller's executor merges it with its own
+   * per-request timeout.
+   */
+  readonly signal?: AbortSignal;
 };
 
 async function runBoundedExecutor(
@@ -685,23 +711,24 @@ async function runBoundedExecutor(
       ? { explicitMs: Number(input.executorTimeoutMs) }
       : {}),
   });
+  const controller = new AbortController();
   let timer: ReturnType<typeof setTimeout> | undefined;
   try {
     return await Promise.race([
-      input.executor(request),
+      input.executor({ ...request, signal: controller.signal }),
       new Promise<never>((_resolve, reject) => {
-        timer = setTimeout(
-          () =>
-            reject(
-              new Error(`replay execution exceeded ${timeoutMs}ms (bounded per-capture budget)`),
-            ),
-          timeoutMs,
-        );
+        timer = setTimeout(() => {
+          controller.abort();
+          reject(
+            new Error(`replay execution exceeded ${timeoutMs}ms (bounded per-capture budget)`),
+          );
+        }, timeoutMs);
         (timer as { unref?: () => void } | undefined)?.unref?.();
       }),
     ]);
   } finally {
     if (timer !== undefined) clearTimeout(timer);
+    controller.abort();
   }
 }
 
@@ -879,6 +906,11 @@ export async function runAutoReplayTick(input: {
       readonly policySetDigest: string;
     }) => Promise<{ readonly enqueued: boolean; readonly reason?: string }>;
   };
+  /**
+   * Run 104 R1: the configured endpoints' declarations, keyed by endpoint id. Omitted (or missing an
+   * endpoint) keeps the pre-existing selection behaviour for that endpoint.
+   */
+  readonly endpointProfiles?: readonly ReplayCandidateEligibilityProfile[];
 }): Promise<AutoReplayTickResult> {
   const maxCapturesPerTick = input.maxCapturesPerTick ?? DEFAULT_MAX_CAPTURES_PER_TICK;
   const tickBudgetMs = input.tickBudgetMs ?? DEFAULT_TICK_BUDGET_MS;
@@ -976,6 +1008,16 @@ export async function runAutoReplayTick(input: {
       });
       continue;
     }
+    /**
+     * Run 104 R1: the capture's own recorded decision is the authority; a capture that predates the
+     * field is read from its messages and the value is marked inferred.
+     */
+    const requestRequirements =
+      capture.requirements ??
+      (capture.messages === undefined
+        ? undefined
+        : readReplayRequestRequirements({ messages: capture.messages }));
+    const rejectedArms: ReplayCandidateRejection[] = [];
     const candidates = selectReplayCandidates({
       configuredEndpointIds: input.configuredEndpointIds,
       ...(input.healthyEndpointIds ? { healthyEndpointIds: input.healthyEndpointIds } : {}),
@@ -984,7 +1026,32 @@ export async function runAutoReplayTick(input: {
       // Run 98 addendum 33 S3: rotate the counterfactual with the capture, so the comparison graph grows
       // edges instead of every capture comparing the same two candidates.
       rotationKey: capture.captureRef,
+      ...(requestRequirements ? { requirements: requestRequirements } : {}),
+      ...(input.endpointProfiles ? { endpointProfiles: input.endpointProfiles } : {}),
+      onRejected: (rejection) => rejectedArms.push(rejection),
     });
+    const emitCapture = (row: Omit<AutoReplayDisposition, "captureRef" | "rejectedArms">): void => {
+      emit({
+        captureRef: capture.captureRef,
+        ...row,
+        ...(rejectedArms.length > 0 ? { rejectedArms: [...rejectedArms] } : {}),
+      });
+    };
+    /**
+     * Run 104 R2: name the class when the eligibility rule left the plan empty, so the refusal carries
+     * the blocking modality/capability and the rejected endpoint ids instead of arriving as the generic,
+     * deferrable `no_distinct_candidate_configured`. Reuses the policy module's own classifier (and,
+     * through it, the R1 rejection list) rather than restating the eligibility rule here.
+     */
+    const plannedArmShortfall = () =>
+      classifyReplayCandidateShortfall({
+        configuredEndpointIds: input.configuredEndpointIds,
+        ...(requestRequirements ? { requirements: requestRequirements } : {}),
+        ...(input.endpointProfiles ? { endpointProfiles: input.endpointProfiles } : {}),
+        ...(capture.sourceEndpointId ? { sourceEndpointId: capture.sourceEndpointId } : {}),
+        ...(effectiveJudgeEndpointId ? { excludedEndpointIds: [effectiveJudgeEndpointId] } : {}),
+        ...(input.healthyEndpointIds ? { healthyEndpointIds: input.healthyEndpointIds } : {}),
+      });
     const status = input.ledger.status();
     const admission = decideReplayAdmission({
       channelReplayEnabled: input.channelReplayEnabled ?? true,
@@ -1020,11 +1087,31 @@ export async function runAutoReplayTick(input: {
       ...(judgeExpected ? { judgeResolved: judgeEndpointId !== null } : {}),
     });
     if (!admission.admitted) {
+      /**
+       * Run 104 phase-3.5 F2: the named-input refusal answers only for the outcome it replaces. It used to
+       * run *before* admission, so a benchmark capture (or an already-processed one) that also happened to
+       * have one ineligible arm was recorded as `candidate_input_unsupported` instead of its own class -
+       * polluting the per-class census this run added. Admission's named refusals keep precedence; the
+       * shortfall names the pool-exhaustion case only.
+       */
+      const candidateShortfall =
+        admission.code === "no_distinct_candidate_configured" && rejectedArms.length > 0
+          ? plannedArmShortfall()
+          : null;
+      if (candidateShortfall) {
+        if (candidateShortfall.outcome === "deferred") deferred += 1;
+        else refused += 1;
+        emitCapture({
+          outcome: candidateShortfall.outcome,
+          code: candidateShortfall.code,
+          detail: candidateShortfall.detail,
+        });
+        continue;
+      }
       const outcome = RETRYABLE_REPLAY_REFUSAL_CODES.has(admission.code) ? "deferred" : "refused";
       if (outcome === "deferred") deferred += 1;
       else refused += 1;
-      emit({
-        captureRef: capture.captureRef,
+      emitCapture({
         outcome,
         code: admission.code,
         detail: admission.detail,
@@ -1032,17 +1119,61 @@ export async function runAutoReplayTick(input: {
       continue;
     }
 
+    /**
+     * Run 104 R1 pre-dispatch guard: between planning and dispatch the declarations can change, so the
+     * planned arms are re-checked with the router's own rule. An arm that no longer satisfies the
+     * capture's requirements is dropped with its reason recorded, and a plan left with no arm fails
+     * cheaply here instead of being dispatched into a provider refusal.
+     */
+    const staleArms = recheckReplayCandidatesForDispatch({
+      endpointIds: candidates,
+      ...(requestRequirements ? { requirements: requestRequirements } : {}),
+      ...(input.endpointProfiles ? { endpointProfiles: input.endpointProfiles } : {}),
+    });
+    let dispatchCandidates = candidates;
+    if (staleArms.length > 0) {
+      rejectedArms.push(...staleArms);
+      const staleEndpointIds = new Set(staleArms.map((row) => row.endpointId));
+      dispatchCandidates = candidates.filter((endpointId) => !staleEndpointIds.has(endpointId));
+      if (dispatchCandidates.length === 0) {
+        /**
+         * Run 104 R2: the same named class answers here - terminal when every declared arm fails the
+         * rule, deferrable when a capable arm is merely unavailable. The generic deferrable code stays
+         * only for a shortfall the classifier cannot name (no declared pool to blame).
+         */
+        const staleShortfall = plannedArmShortfall();
+        if (staleShortfall) {
+          if (staleShortfall.outcome === "deferred") deferred += 1;
+          else refused += 1;
+          emitCapture({
+            outcome: staleShortfall.outcome,
+            code: staleShortfall.code,
+            detail: staleShortfall.detail,
+          });
+        } else {
+          deferred += 1;
+          emitCapture({
+            outcome: "deferred",
+            code: "no_distinct_candidate_configured",
+            detail: `no planned replay arm can serve the capture's requirements: ${staleArms
+              .map((row) => `${row.endpointId} (${row.code})`)
+              .join(", ")}`,
+          });
+        }
+        continue;
+      }
+    }
+
     const reservation = input.ledger.reserve({
       captureRef: capture.captureRef,
       policySetDigest: input.policySet.policySetDigest,
-      candidateDispatches: candidates.length,
+      candidateDispatches: dispatchCandidates.length,
     });
     if (!reservation.accepted) {
       const outcome = reservation.code === "budget_exhausted" ? "deferred" : "refused";
       if (outcome === "deferred") deferred += 1;
       else refused += 1;
-      emit({
-        captureRef: capture.captureRef,
+      emitCapture({
         outcome,
         code: reservation.code,
         detail: reservation.detail,
@@ -1060,14 +1191,13 @@ export async function runAutoReplayTick(input: {
     if (input.dispatchQueue && input.dispatchQueue.mode !== "legacy") {
       const offered = await input.dispatchQueue.offer({
         captureRef: capture.captureRef,
-        endpointIds: [...candidates],
+        endpointIds: [...dispatchCandidates],
         policySetDigest: input.policySet.policySetDigest,
       });
       if (!offered.enqueued) {
         // The offer can only be refused by the queue's own id/validation rules;
         // the capture then stays on the legacy path rather than being lost.
-        emit({
-          captureRef: capture.captureRef,
+        emitCapture({
           outcome: "deferred",
           code: "replay_dispatch_offer_refused",
           detail: offered.reason ?? "the replay queue refused the offer",
@@ -1081,7 +1211,7 @@ export async function runAutoReplayTick(input: {
     try {
       execution = await runBoundedExecutor(input, {
         capture,
-        candidates,
+        candidates: dispatchCandidates,
         toolPolicy,
         policySet: input.policySet,
         reservationId: reservation.reservationId,
@@ -1094,8 +1224,7 @@ export async function runAutoReplayTick(input: {
       const classification = classifyReplayExecutorFailure(detail);
       if (classification.terminal) refused += 1;
       else deferred += 1;
-      emit({
-        captureRef: capture.captureRef,
+      emitCapture({
         outcome: classification.terminal ? "refused" : "deferred",
         code: classification.code,
         detail,
@@ -1137,8 +1266,7 @@ export async function runAutoReplayTick(input: {
       // replayable deferrals stay pending.
       if (execution.terminal) {
         refused += 1;
-        emit({
-          captureRef: capture.captureRef,
+        emitCapture({
           outcome: "refused",
           code: "replay_window_elapsed",
           detail: execution.failureDetail ?? "replay window elapsed without a completed branch",
@@ -1163,8 +1291,7 @@ export async function runAutoReplayTick(input: {
           refused += 1;
           deferred -= 1;
         }
-        emit({
-          captureRef: capture.captureRef,
+        emitCapture({
           outcome: classification.terminal ? "refused" : "deferred",
           code: classification.code,
           detail,
@@ -1188,8 +1315,7 @@ export async function runAutoReplayTick(input: {
           refused += 1;
           deferred -= 1;
         }
-        emit({
-          captureRef: capture.captureRef,
+        emitCapture({
           outcome: classification.terminal ? "refused" : "deferred",
           code: classification.code,
           detail,
@@ -1205,8 +1331,7 @@ export async function runAutoReplayTick(input: {
     });
     input.ledger.release(reservation.reservationId);
     replayed += 1;
-    emit({
-      captureRef: capture.captureRef,
+    emitCapture({
       outcome: "replayed",
       branches: completedBranches,
     });

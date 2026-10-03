@@ -1,0 +1,16 @@
+SQL1: SELECT COUNT(*) FROM evaluation_comparison_groups WHERE result_json LIKE '%luna%' AND result_json LIKE '%sol%'
+{"n":16}
+SQL2: SELECT COUNT(*) FROM evaluation_comparison_groups WHERE result_json LIKE '%effortComparability%'
+{"n":0}
+SQL3: SELECT status,COUNT(*) FROM evaluation_comparison_groups GROUP BY status
+[{"status":"finalized","n":21}]
+SQL4: SELECT t.candidate_ref,COUNT(*) FROM evaluation_trials t JOIN evaluation_comparison_group_members m ON m.trial_id=t.trial_id GROUP BY t.candidate_ref ORDER BY 2 DESC
+16 openai.personal.openai-codex-subscription.global.gpt-5.6-luna
+14 openai.personal.openai-codex-subscription.global.gpt-5.6-sol-medium
+7 deepseek.personal.deepseek-api-key.global.deepseek-v4-pro
+5 deepseek.personal.deepseek-api-key.global.deepseek-v4-flash-max
+(node:60812) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+openai.personal.openai-codex-subscription.global.gpt-5.6-sol-medium | model=chatgpt/gpt-5.6-sol | reasoningEffort=medium
+openai.personal.openai-codex-subscription.global.gpt-5.6-sol-low | model=chatgpt/gpt-5.6-sol | reasoningEffort=low
+openai.personal.openai-codex-subscription.global.gpt-5.6-luna | model=chatgpt/gpt-5.6-luna | reasoningEffort=

@@ -1,0 +1,19 @@
+✔ run97 rc04 judge dispatch captures are classified as replay-produced (4.4799ms)
+✔ run97 rc04 live user traffic and malformed judge ids stay replayable (0.8108ms)
+✔ run97 rc04 replay branch captures keep their existing markers (2.3944ms)
+✔ run99 R33 a short-suffix replay dispatch capture is replay-produced (0.5153ms)
+(node:52236) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ run98 a48: a named key is flushed without waiting behind the backlog (134.1569ms)
+✔ run98 a48: a bounded pass drains the backlog without walking it all (236.604ms)
+(node:61244) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ run99 R33 a multi-megabyte tool trajectory is captured, not degraded (1731.9104ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3092.9859

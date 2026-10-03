@@ -8,7 +8,7 @@ import { pathToFileURL } from "node:url";
 import { ExtensionHost } from "./index.mjs";
 import { createInputTransferArtifact, hydrateInputTransferArtifact } from "./transfer-artifact.mjs";
 
-const baseEnvelope = (body = "x".repeat(20 * 1024)) => ({
+const baseEnvelope = (body = "x".repeat(2 * 1024 * 1024)) => ({
   requestId: "run96-large-input",
   sessionId: "session:run96-large-input",
   protocolVersion: "1.1.0",
@@ -52,7 +52,7 @@ test("oversized process input uses an authenticated channel-local transfer artif
       pathToFileURL(fixture).href,
     );
     const result = await host.invoke("large-input-fixture", baseEnvelope());
-    assert.equal(result.bodyLength, 20 * 1024);
+    assert.equal(result.bodyLength, 2 * 1024 * 1024);
     assert.equal(result.rawResponsePresent, false);
     assert.equal(result.requestId, "run96-large-input");
     assert.equal(result.scope, "run96");
@@ -93,7 +93,7 @@ test("input transfer artifacts bind request channel scope epoch capability diges
       },
       nowMs: 1_001,
     });
-    assert.equal(hydrated.value.body.length, 20 * 1024);
+    assert.equal(hydrated.value.body.length, 2 * 1024 * 1024);
     assert.equal(Object.hasOwn(hydrated.value.nested, "rawResponse"), false);
     await assert.rejects(readFile(path.join(root, transferArtifact.relativePath)), /ENOENT/);
   } finally {

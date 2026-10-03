@@ -1,0 +1,106 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/run104-sp7-finalized-listing-cache.test.ts (6 tests | 6 failed) 23ms
+   × R10: a second read inside the window reuses the listing instead of re-listing 13ms
+     → run104 RED probe: cache not implemented
+   × R10: the listing is reloaded once the window expires 2ms
+     → run104 RED probe: cache not implemented
+   × R10: an empty listing is cached too, so an empty store is not re-listed every tick 2ms
+     → run104 RED probe: cache not implemented
+   × R10: concurrent callers share one in-flight load 1ms
+     → run104 RED probe: cache not implemented
+   × R10: a failed load is not cached, so the next read retries instead of serving a stale empty page 2ms
+     → run104 RED probe: cache not implemented
+   × R10: listings for different scopes do not collide 1ms
+     → run104 RED probe: cache not implemented
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run104-sp7-finalized-listing-cache.test.ts > R10: a second read inside the window reuses the listing instead of re-listing
+Error: run104 RED probe: cache not implemented
+ ❯ createFinalizedGroupListingCache src/finalized-group-listing-cache.ts:33:9
+     31|   readonly now?: () => number;
+     32| }): FinalizedGroupListingCache<T> {
+     33|   throw new Error("run104 RED probe: cache not implemented");
+       |         ^
+     34|   // @ts-expect-error -- unreachable RED probe body
+     35|   const ttlMs = options?.ttlMs ?? FINALIZED_GROUP_LISTING_TTL_MS;
+ ❯ test/run104-sp7-finalized-listing-cache.test.ts:16:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  test/run104-sp7-finalized-listing-cache.test.ts > R10: the listing is reloaded once the window expires
+Error: run104 RED probe: cache not implemented
+ ❯ createFinalizedGroupListingCache src/finalized-group-listing-cache.ts:33:9
+     31|   readonly now?: () => number;
+     32| }): FinalizedGroupListingCache<T> {
+     33|   throw new Error("run104 RED probe: cache not implemented");
+       |         ^
+     34|   // @ts-expect-error -- unreachable RED probe body
+     35|   const ttlMs = options?.ttlMs ?? FINALIZED_GROUP_LISTING_TTL_MS;
+ ❯ test/run104-sp7-finalized-listing-cache.test.ts:37:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  test/run104-sp7-finalized-listing-cache.test.ts > R10: an empty listing is cached too, so an empty store is not re-listed every tick
+Error: run104 RED probe: cache not implemented
+ ❯ createFinalizedGroupListingCache src/finalized-group-listing-cache.ts:33:9
+     31|   readonly now?: () => number;
+     32| }): FinalizedGroupListingCache<T> {
+     33|   throw new Error("run104 RED probe: cache not implemented");
+       |         ^
+     34|   // @ts-expect-error -- unreachable RED probe body
+     35|   const ttlMs = options?.ttlMs ?? FINALIZED_GROUP_LISTING_TTL_MS;
+ ❯ test/run104-sp7-finalized-listing-cache.test.ts:53:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  test/run104-sp7-finalized-listing-cache.test.ts > R10: concurrent callers share one in-flight load
+Error: run104 RED probe: cache not implemented
+ ❯ createFinalizedGroupListingCache src/finalized-group-listing-cache.ts:33:9
+     31|   readonly now?: () => number;
+     32| }): FinalizedGroupListingCache<T> {
+     33|   throw new Error("run104 RED probe: cache not implemented");
+       |         ^
+     34|   // @ts-expect-error -- unreachable RED probe body
+     35|   const ttlMs = options?.ttlMs ?? FINALIZED_GROUP_LISTING_TTL_MS;
+ ❯ test/run104-sp7-finalized-listing-cache.test.ts:66:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  test/run104-sp7-finalized-listing-cache.test.ts > R10: a failed load is not cached, so the next read retries instead of serving a stale empty page
+Error: run104 RED probe: cache not implemented
+ ❯ createFinalizedGroupListingCache src/finalized-group-listing-cache.ts:33:9
+     31|   readonly now?: () => number;
+     32| }): FinalizedGroupListingCache<T> {
+     33|   throw new Error("run104 RED probe: cache not implemented");
+       |         ^
+     34|   // @ts-expect-error -- unreachable RED probe body
+     35|   const ttlMs = options?.ttlMs ?? FINALIZED_GROUP_LISTING_TTL_MS;
+ ❯ test/run104-sp7-finalized-listing-cache.test.ts:85:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  test/run104-sp7-finalized-listing-cache.test.ts > R10: listings for different scopes do not collide
+Error: run104 RED probe: cache not implemented
+ ❯ createFinalizedGroupListingCache src/finalized-group-listing-cache.ts:33:9
+     31|   readonly now?: () => number;
+     32| }): FinalizedGroupListingCache<T> {
+     33|   throw new Error("run104 RED probe: cache not implemented");
+       |         ^
+     34|   // @ts-expect-error -- unreachable RED probe body
+     35|   const ttlMs = options?.ttlMs ?? FINALIZED_GROUP_LISTING_TTL_MS;
+ ❯ test/run104-sp7-finalized-listing-cache.test.ts:100:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  6 failed (6)
+   Start at  19:54:01
+   Duration  900ms (transform 96ms, setup 0ms, collect 94ms, tests 23ms, environment 1ms, prepare 296ms)
+
+undefined
+D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/run104-sp7-finalized-listing-cache.test.ts

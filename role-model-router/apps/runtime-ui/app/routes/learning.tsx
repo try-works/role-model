@@ -193,6 +193,8 @@ const NOT_REPORTED = "not reported";
  * reason its counts are absent, so a receipt with no counts stops rendering identically to a value nobody recorded.
  */
 const RECEIPT_CARRIES_NO_COUNTS = "the receipt carries no comparison counts";
+/** `R7`: said out loud rather than rendering a zero the runtime never published. */
+const FLOOR_NOT_REPORTED = "floor not reported";
 
 const tableClassName = "w-full table-fixed border-collapse text-left";
 const tableHeaderClassName = `border-b border-[var(--rm-border)] pb-3 pr-3 text-left align-bottom font-normal ${monoEyebrowClassName}`;
@@ -315,6 +317,55 @@ export interface LearningEvidenceView {
   readonly claimTitle: string | null;
   /** `A49-R5`: `reported` when the joined receipt carries counts, `receipt_carries_none` when it does not. */
   readonly countsState: string | null;
+  /** Run 104 `R7`: `"2 / 3 decisive · 1.8 effective"`, or `null` when either side is unpublished. */
+  readonly floorProgress: string | null;
+  /** Run 104 `R7`: the honest placeholder shown when a receipt carries counts but no floor. */
+  readonly floorNote: string | null;
+}
+
+export interface LearningFloorView {
+  readonly decisive: number | null;
+  readonly holdout: number | null;
+  readonly distinctCaptures: number | null;
+}
+
+const finiteNumberOrNull = (value: unknown): number | null => {
+  if (value === null || value === undefined || value === "") return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+/**
+ * Run 104 `R7`: the operator floor the learner's counts are measured against, read from the published
+ * activation policy readback (`effective.minDecisiveComparisons` and its siblings - the same policy the
+ * learning pass resolved the pass-time floor from). A policy that does not publish a value leaves that
+ * side `null`, so the caller states the absence instead of rendering a zero.
+ */
+export function learningEvidenceFloor(policy: Record<string, unknown>): LearningFloorView {
+  const effective = asRecord(asRecord(policy).effective);
+  return {
+    decisive: finiteNumberOrNull(effective.minDecisiveComparisons),
+    holdout: finiteNumberOrNull(effective.minHoldoutComparisons),
+    distinctCaptures: finiteNumberOrNull(effective.minDistinctCaptures),
+  };
+}
+
+/**
+ * `"2 / 3 decisive · 1.8 effective"` - the decisive count against the floor, with the decayed count the
+ * floor was actually measured on when the producer published a different one. `null` when either side is
+ * unpublished: progress requires both numbers, and neither is invented.
+ */
+export function formatLearningFloorProgress(
+  counts: Record<string, unknown>,
+  floor: LearningFloorView,
+): string | null {
+  const decisive = finiteNumberOrNull(counts.decisive);
+  if (decisive === null || floor.decisive === null) return null;
+  const nominal = `${decisive} / ${floor.decisive} decisive`;
+  const effective = finiteNumberOrNull(counts.effectiveDecisive);
+  return effective !== null && effective !== decisive
+    ? `${nominal} · ${effective} effective`
+    : nominal;
 }
 
 /**
@@ -333,6 +384,25 @@ export function learningEvidence(row: Record<string, unknown>): LearningEvidence
   const family = { ...asRecord(record.familyEvidence), ...asRecord(row.familyEvidence) };
   const judgeConsistency = asRecord(family.judgeConsistency);
   const counts = asRecord(evidence.counts);
+  const effectiveCounts = asRecord(evidence.effectiveCounts);
+  const publishedFloor = asRecord(evidence.floor);
+  const countsState = textOrNull(evidence.countsState);
+  /**
+   * Run 104 `R7`: the floor travels with the receipt join (`evidence.floor`, from the producer or the
+   * effective activation policy). A row whose receipt carries counts but no floor says exactly that; the
+   * cell never renders a zero for a value the readback did not publish.
+   */
+  const floorProgress = formatLearningFloorProgress(
+    {
+      decisive: counts.decisive ?? family.decisiveComparisons,
+      effectiveDecisive: effectiveCounts.decisive ?? family.effectiveDecisiveComparisons,
+    },
+    {
+      decisive: finiteNumberOrNull(publishedFloor.minDecisiveComparisons),
+      holdout: finiteNumberOrNull(publishedFloor.minHoldoutComparisons),
+      distinctCaptures: finiteNumberOrNull(publishedFloor.minDistinctCaptures),
+    },
+  );
   const winnerRef = textOrNull(evidence.winnerCandidateRef);
   const members = (Array.isArray(evidence.members) ? evidence.members : []).map(
     (member): LearningCandidateScoreView => {
@@ -374,12 +444,17 @@ export function learningEvidence(row: Record<string, unknown>): LearningEvidence
     ),
     claim: formatLearningClaim(evidence.claim),
     claimTitle: textOrNull(evidence.claim),
-    countsState: textOrNull(evidence.countsState),
+    countsState,
+    floorProgress,
+    floorNote:
+      floorProgress !== null ? null : countsState === "reported" ? FLOOR_NOT_REPORTED : null,
   };
 }
 
 export interface LearningTaskCellView {
   readonly task: string | null;
+  /** Run 104 `R6`: the task variant the runtime resolved, when the readback published one. */
+  readonly variant: string | null;
   readonly scope: string | null;
   readonly toolClasses: string | null;
   readonly requestFamily: string | null;
@@ -399,8 +474,10 @@ export function learningTaskCell(row: Record<string, unknown>): LearningTaskCell
       ? row.toolClassIds.map((entry) => textOrNull(entry) ?? NOT_REPORTED).join(", ")
       : null;
   const requestFamily = textOrNull(row.requestTaskTypeId);
+  const variant = textOrNull(classification.taskVariant) ?? textOrNull(row.taskVariant);
   return {
     task,
+    variant,
     scope:
       roleId || taxonomy
         ? `${roleId ?? NOT_REPORTED} · taxonomy ${taxonomy ?? NOT_REPORTED}`
@@ -408,6 +485,70 @@ export function learningTaskCell(row: Record<string, unknown>): LearningTaskCell
     toolClasses,
     requestFamily: requestFamily && requestFamily !== task ? requestFamily : null,
   };
+}
+
+/**
+ * Run 104 R22 (`R22-A3`): what the evidence join actually did, in words.
+ *
+ * Every column of the Decisions table is read from the row's `evidence` object, and a field the object
+ * does not carry renders the bounded `not reported` placeholder. That placeholder is honest per field,
+ * but it cannot say *why* the object is missing: measured live, the readback answered a page of 100
+ * rows with no evidence at all because the candidate walk had returned an empty index, and the table
+ * read as "the runtime recorded nothing" rather than "this read did not finish". The readback already
+ * publishes `evidenceJoin`; this turns it into the sentence the table was missing.
+ *
+ * `null` means the read reported nothing to explain - a runtime that predates the join report, or a
+ * page whose evidence all resolved - so the caller renders no note rather than an empty one.
+ */
+export function learningEvidenceJoinNote(readback: Record<string, unknown>): string | null {
+  const join = asRecord(asRecord(readback).evidenceJoin);
+  if (Object.keys(join).length === 0) return null;
+  const candidates = asRecord(join.candidateJoin);
+  const requestedGroups = finiteNumberOrNull(join.requestedGroups);
+  const resolvedGroups = finiteNumberOrNull(join.resolvedGroups);
+  const shortfall =
+    requestedGroups !== null && resolvedGroups !== null && resolvedGroups < requestedGroups;
+  if (join.unavailable === true) {
+    return "Evidence could not be read: the comparison store did not answer, so these rows show no verdict, judge or receipt. This is a read failure, not an absent decision.";
+  }
+  if (candidates.unavailable === true || candidates.failed === true) {
+    return "Evidence could not be joined: the candidate listing did not answer, so the comparison behind each row could not be found. This is a read failure, not an absent decision.";
+  }
+  if (join.truncated === true || shortfall) {
+    const counts =
+      requestedGroups !== null && resolvedGroups !== null
+        ? ` (${resolvedGroups} of ${requestedGroups} comparison groups resolved)`
+        : "";
+    return `Evidence is incomplete${counts}: the read hit its bound before it finished, so some rows show no verdict, judge or receipt even though the runtime recorded them.`;
+  }
+  if (candidates.exhausted === true && finiteNumberOrNull(candidates.resolvedCandidates) === 0) {
+    return "Evidence could not be joined: no candidate record matched these rows, so no comparison could be found for them.";
+  }
+  return null;
+}
+
+/**
+ * Run 104 R22 (`R22-B3`): a page of packs that cannot name a role or task says why.
+ *
+ * `scope-wide` is the correct label for a pack whose own scope is endpoint-id-only and whose comparison
+ * and validation receipt are both silent - the learner genuinely has no family to name. Measured live
+ * though, every such pack came from the *replay* comparison path, which dropped the capture's declared
+ * classification before the candidate was derived, so the label described a plumbing gap rather than a
+ * decision the learner made. The table cannot tell those apart per pack, but it can say how many of the
+ * rows it is showing are affected, so an operator sees a pattern instead of a mystery.
+ *
+ * `null` when every shown pack names a scope - there is nothing to explain.
+ */
+export function learningPackScopeNote(rows: readonly Record<string, unknown>[]): string | null {
+  if (rows.length === 0) return null;
+  const wide = rows.filter((row) => {
+    const declared = asRecord(row.scope);
+    const record = asRecord(row.record);
+    const recordScope = asRecord(record.scope);
+    return declared.scopeWide === true || recordScope.scopeWide === true;
+  }).length;
+  if (wide === 0) return null;
+  return `${wide} of ${rows.length} shown packs are scope-wide: they name only a routing target, so no role or task could be resolved for them from the pack, its validation receipt or its comparison. A pack promoted before the capture's declared role reached the learner is scope-wide this way.`;
 }
 
 function verdictTone(verdict: string): BadgeTone {
@@ -495,6 +636,14 @@ export function LearningDecisionRow({
           <ObservationCountMarker row={row} />
         </p>
         <p className={`mt-0.5 ${tableCellNoteClassName}`}>{task.scope ?? NOT_REPORTED}</p>
+        {task.variant ? (
+          <p
+            className={`mt-0.5 truncate ${tableCellMetaClassName}`}
+            title={`variant ${task.variant}`}
+          >
+            variant {task.variant}
+          </p>
+        ) : null}
         {task.toolClasses ? (
           <p
             className={`mt-0.5 truncate ${tableCellMetaClassName}`}
@@ -554,6 +703,12 @@ export function LearningDecisionRow({
         ) : (
           <p className={tableCellMetaClassName}>no verdict recorded</p>
         )}
+        {/* Run 104 `R7`: progress against the floor the receipt was measured on, in numbers. */}
+        {evidence.floorProgress ? (
+          <p className={`mt-0.5 ${tableCellValueClassName}`}>{evidence.floorProgress}</p>
+        ) : evidence.floorNote ? (
+          <p className={`mt-0.5 ${tableCellMetaClassName}`}>{evidence.floorNote}</p>
+        ) : null}
         <p className={`mt-0.5 ${tableCellMetaClassName}`}>
           {`outcome ${evidence.outcome ?? NOT_REPORTED}`}
         </p>
@@ -1221,6 +1376,8 @@ export function LearningPacksPage() {
   const rows = Array.isArray(asRecord(records.value).records)
     ? (asRecord(records.value).records as readonly Record<string, unknown>[])
     : [];
+  /** Run 104 R22 (`R22-B3`): how many shown packs cannot name a role or task, and why. */
+  const packScopeNote = learningPackScopeNote(rows);
   const rolloutValue = asRecord(rollout.value);
   const act = async (packId: string) => {
     if (
@@ -1321,6 +1478,7 @@ export function LearningPacksPage() {
           <ErrorState label={error} />
         </div>
       ) : null}
+      {packScopeNote ? <p className={`mt-3 ${supportingTextClassName}`}>{packScopeNote}</p> : null}
       {degraded(records.loading, records.error) ??
         (rows.length === 0 ? (
           <EmptyState label="No pack records have been derived for this scope yet." />
@@ -1441,6 +1599,12 @@ export function LearningDecisionsPage() {
   const taskOptions = distinctOptions(rows.map(taskOf));
   const outcomeOptions = distinctOptions(rows.map((row) => learningEvidence(row).verdict));
   const truncated = asRecord(decisions.value).truncated === true;
+  /**
+   * Run 104 R22 (`R22-A3`): a degraded evidence join is named above the table. Without it a read that
+   * never finished is indistinguishable from a runtime that recorded nothing, which is exactly how the
+   * operator read the table this addendum came from.
+   */
+  const evidenceJoinNote = learningEvidenceJoinNote(asRecord(decisions.value));
   return (
     <SectionCard
       title="Decision receipts"
@@ -1501,6 +1665,9 @@ export function LearningDecisionsPage() {
           </select>
         </label>
       </div>
+      {evidenceJoinNote ? (
+        <p className={`mt-3 ${supportingTextClassName}`}>{evidenceJoinNote}</p>
+      ) : null}
       {degraded(decisions.loading, decisions.error) ??
         (filtered.length === 0 ? (
           <EmptyState label="No decisions match this filter yet." />
@@ -1570,6 +1737,17 @@ export function LearningEvidencePage() {
     () => fetchLearningSummary(fetch, token || undefined),
     [token],
   );
+  /**
+   * Run 104 `R7`: the floor the learner's counts are measured against is published by the activation
+   * policy readback (`effective.minDecisiveComparisons` and its siblings). The durable record's own
+   * `learnerEvidence.floor` is only written when the producer persisted one, so the page composes the
+   * progress from the policy the pass resolved rather than rendering a bare `insufficient`.
+   */
+  const learningPolicy = useOperatorSurface<LearningPolicyView>(
+    () => fetchLearningPolicy(fetch, token || undefined),
+    [token],
+  );
+  const policyFloor = learningEvidenceFloor(asRecord(learningPolicy.value));
   const learnerEvidence = asRecord(asRecord(learnerSummary.value).learnerEvidence);
   const exclusionReasons = Object.entries(asRecord(learnerEvidence.excludedByReason))
     .map(([reason, count]) => ({ reason, count: Number(count) }))
@@ -1705,6 +1883,18 @@ export function LearningEvidencePage() {
                 <Metric
                   label="Newest decisive comparisons"
                   value={show(newestEvidence.decisiveComparisons)}
+                />
+                <Metric
+                  label="Decisive / floor"
+                  value={
+                    formatLearningFloorProgress(
+                      {
+                        decisive: newestEvidence.decisiveComparisons,
+                        effectiveDecisive: newestEvidence.effectiveDecisiveComparisons,
+                      },
+                      policyFloor,
+                    ) ?? FLOOR_NOT_REPORTED
+                  }
                 />
                 <Metric
                   label="Floor met"

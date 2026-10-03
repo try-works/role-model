@@ -101,6 +101,23 @@ export interface SupervisedReplayEvaluationResumeEntry {
   readonly sourceEndpointId: string;
   readonly sourceModelId: string;
   readonly counterfactualPackages: readonly SupervisedReplayEvaluationCounterfactual[];
+  /**
+   * Run 104 R9: how each arm's reasoning effort relates to the source capture's (`matched`, `mismatched`, or
+   * unspecified on either side). Optional because entries recorded before this field existed carry none; a
+   * reader must treat its absence as "not recorded", never as "matched".
+   */
+  readonly effortComparability?: readonly {
+    readonly endpointId: string;
+    readonly modelId: string;
+    readonly sourceModelId: string;
+    readonly reasoningEffort: string | null;
+    readonly sourceReasoningEffort: string | null;
+    readonly comparability:
+      | "matched"
+      | "mismatched"
+      | "source_effort_unspecified"
+      | "arm_effort_unspecified";
+  }[];
   readonly evaluationCriteria: Readonly<Record<string, unknown>>;
   readonly evaluationCriteriaDigest: string;
   /**
@@ -297,6 +314,51 @@ function boundedCounterfactuals(
  */
 const reconciledAbandonedEntries = new WeakMap<object, Set<string>>();
 
+function boundedEffortComparability(
+  value: SupervisedReplayEvaluationResumeEntry["effortComparability"],
+): SupervisedReplayEvaluationResumeEntry["effortComparability"] {
+  if (value === undefined) return undefined;
+  if (!Array.isArray(value) || value.length === 0 || value.length > 8) {
+    throw new Error(
+      "supervised replay evaluation resume effort comparability must be a bounded non-empty list",
+    );
+  }
+  return value.map((record) => {
+    if (!record || typeof record !== "object") {
+      throw new Error(
+        "supervised replay evaluation resume effort comparability record must be an object",
+      );
+    }
+    const comparability = record.comparability;
+    if (
+      comparability !== "matched" &&
+      comparability !== "mismatched" &&
+      comparability !== "source_effort_unspecified" &&
+      comparability !== "arm_effort_unspecified"
+    ) {
+      throw new Error(
+        "supervised replay evaluation resume effort comparability record comparability is invalid",
+      );
+    }
+    const reasoningEffort = record.reasoningEffort;
+    const sourceReasoningEffort = record.sourceReasoningEffort;
+    return {
+      endpointId: boundedText(record.endpointId, "effort comparability endpoint"),
+      modelId: boundedText(record.modelId, "effort comparability model"),
+      sourceModelId: boundedText(record.sourceModelId, "effort comparability source model"),
+      reasoningEffort:
+        reasoningEffort === null || reasoningEffort === undefined
+          ? null
+          : boundedText(String(reasoningEffort), "effort comparability effort"),
+      sourceReasoningEffort:
+        sourceReasoningEffort === null || sourceReasoningEffort === undefined
+          ? null
+          : boundedText(String(sourceReasoningEffort), "effort comparability source effort"),
+      comparability,
+    };
+  });
+}
+
 function normalizeEntry(
   entry: SupervisedReplayEvaluationResumeEntry,
 ): SupervisedReplayEvaluationResumeEntry {
@@ -342,6 +404,9 @@ function normalizeEntry(
     sourceEndpointId: boundedText(entry.sourceEndpointId, "sourceEndpointId"),
     sourceModelId: boundedText(entry.sourceModelId, "sourceModelId"),
     counterfactualPackages: boundedCounterfactuals(entry.counterfactualPackages),
+    // Run 104 R9: the per-arm effort comparability is carried through the resume store so the
+    // comparison can answer whether the arms were effort-matched. Absent means not recorded.
+    effortComparability: boundedEffortComparability(entry.effortComparability),
     evaluationCriteria: boundedCriteria(entry.evaluationCriteria),
     evaluationCriteriaDigest: boundedDigest(
       entry.evaluationCriteriaDigest,

@@ -18,6 +18,7 @@ import {
 import { startDeferredLiveRefresh } from "../lib/live-refresh";
 import {
   type RuntimeRefreshStreamEvent,
+  type RuntimeTelemetryRequestRecord,
   fetchDownstreamOpenAIProviderConfig,
   fetchRouterSummary,
   fetchRuntimeConfig,
@@ -34,6 +35,7 @@ import {
   cacheHitRateFromRequest,
   createEmptySidebarFooter,
   formatRouterEndpointHost,
+  latestLiveRequest,
   resolveActiveRouterAlias,
 } from "../lib/sidebar-footer";
 import {
@@ -67,12 +69,35 @@ function readResolvedTheme(): RuntimeTheme {
   });
 }
 
+/**
+ * Run 104 / R14: the shell's footer state carries the cache sample's *absence*. The shared
+ * `SidebarFooterState` (`lib/sidebar-footer.ts`, SP9) still types the rate as a number, so the shell
+ * widens it locally instead of editing another slice's file.
+ */
+export type ShellFooterState = Omit<SidebarFooterState, "cacheHitRate"> & {
+  readonly cacheHitRate: number | null;
+};
+
+/**
+ * Run 104 / R14: the footer samples the newest **live** request across the polled page and the
+ * dashboard fallback. A newer replay/evaluation/benchmark/probe row is never the sample, and a
+ * window with no live row resolves to `null` so the sidebar renders its absence label instead of
+ * `0%`.
+ */
+export function resolveFooterCacheHitRate(input: {
+  readonly requests: readonly RuntimeTelemetryRequestRecord[];
+  readonly dashboardRequests: readonly RuntimeTelemetryRequestRecord[];
+}): number | null {
+  const latestLive = latestLiveRequest([...input.requests, ...input.dashboardRequests]);
+  return latestLive ? cacheHitRateFromRequest(latestLive) : null;
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
   const contentScrollRef = useRef<HTMLElement | null>(null);
   const { actions, override } = useShellHeaderState();
-  const [footer, setFooter] = useState<SidebarFooterState>(() => createEmptySidebarFooter());
+  const [footer, setFooter] = useState<ShellFooterState>(() => createEmptySidebarFooter());
   const [theme, setTheme] = useState<RuntimeTheme>("dark");
   const [contentRevision, setContentRevision] = useState(0);
   const route = getRuntimeRouteDefinition(location.pathname) ?? getRuntimeRouteDefinition("/app");
@@ -154,15 +179,16 @@ export function AppShell({ children }: { children: ReactNode }) {
           return;
         }
         const telemetryRows = dashboardResult.dashboard?.rows ?? [];
-        const latestRequest =
-          latestRequestsResult.requests[0] ?? dashboardResult.dashboard?.requests[0];
         setFooter({
           models: buildSidebarModels({
             models,
             endpoints,
             telemetryRows,
           }),
-          cacheHitRate: cacheHitRateFromRequest(latestRequest),
+          cacheHitRate: resolveFooterCacheHitRate({
+            requests: latestRequestsResult.requests,
+            dashboardRequests: dashboardResult.dashboard?.requests ?? [],
+          }),
           routerEndpoint: formatRouterEndpointHost(downstream),
           routerAlias: resolveActiveRouterAlias({
             config: configRecord?.config,
@@ -192,10 +218,14 @@ export function AppShell({ children }: { children: ReactNode }) {
       subscribe: (onEvent) =>
         subscribeRuntimeRefreshStream((event: RuntimeRefreshStreamEvent) => {
           if (event.eventName === "telemetry.update") {
-            setFooter((current) => ({
-              ...current,
-              cacheHitRate: cacheHitRateFromRequest(event.request),
-            }));
+            // Run 104 / R14: a pushed replay/benchmark/probe row must not replace the live sample.
+            const live = latestLiveRequest([event.request]);
+            if (live) {
+              setFooter((current) => ({
+                ...current,
+                cacheHitRate: cacheHitRateFromRequest(live),
+              }));
+            }
           } else {
             // A keyed fragment remounts the active route, making every runtime-backed
             // page re-fetch after durable admission, health or benchmark changes.

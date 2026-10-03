@@ -1,0 +1,71 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-ui
+
+7:36:14 PM [react-router] Config saved
+ ❯ app/components/app-shell.test.ts (3 tests | 3 failed) 27ms
+   × run104 R14 app-shell footer sampling > samples the newest live request, not the newer benchmark row 21ms
+     → expected undefined to be type of 'function'
+   × run104 R14 app-shell footer sampling > no live request in either source means no sample at all 2ms
+     → expected undefined to be type of 'function'
+   × run104 R14 app-shell footer sampling > the dashboard fallback is sampled by the same live-only rule 2ms
+     → expected undefined to be type of 'function'
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/components/app-shell.test.ts > run104 R14 app-shell footer sampling > samples the newest live request, not the newer benchmark row
+AssertionError: expected undefined to be type of 'function'
+
+Expected: "function"
+Received: "undefined"
+
+ ❯ app/components/app-shell.test.ts:64:39
+     62| describe("run104 R14 app-shell footer sampling", () => {
+     63|   test("samples the newest live request, not the newer benchmark row",…
+     64|     expect(resolveFooterCacheHitRate).toBeTypeOf("function");
+       |                                       ^
+     65|     const sample = resolveFooterCacheHitRate!({
+     66|       requests: [
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  app/components/app-shell.test.ts > run104 R14 app-shell footer sampling > no live request in either source means no sample at all
+AssertionError: expected undefined to be type of 'function'
+
+Expected: "function"
+Received: "undefined"
+
+ ❯ app/components/app-shell.test.ts:76:39
+     74| 
+     75|   test("no live request in either source means no sample at all", () =…
+     76|     expect(resolveFooterCacheHitRate).toBeTypeOf("function");
+       |                                       ^
+     77|     expect(
+     78|       resolveFooterCacheHitRate!({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  app/components/app-shell.test.ts > run104 R14 app-shell footer sampling > the dashboard fallback is sampled by the same live-only rule
+AssertionError: expected undefined to be type of 'function'
+
+Expected: "function"
+Received: "undefined"
+
+ ❯ app/components/app-shell.test.ts:88:39
+     86| 
+     87|   test("the dashboard fallback is sampled by the same live-only rule",…
+     88|     expect(resolveFooterCacheHitRate).toBeTypeOf("function");
+       |                                       ^
+     89|     expect(
+     90|       resolveFooterCacheHitRate!({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed (3)
+   Start at  19:36:08
+   Duration  7.72s (transform 2.00s, setup 0ms, collect 4.87s, tests 27ms, environment 1ms, prepare 1.51s)
+
+undefined
+D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run app/components/app-shell.test.ts

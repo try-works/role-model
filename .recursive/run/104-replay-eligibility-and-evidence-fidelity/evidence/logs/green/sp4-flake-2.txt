@@ -1,0 +1,19 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-host-bridge
+
+(node:22088) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | test/index.test.ts > runtime-host-bridge > rehydrates persisted controller assignment for controller aliases after restart even without a controller block in runtime config
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-controller-restart-001:controller alias=- model=- effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > rehydrates persisted controller assignment for controller aliases after restart even without a controller block in runtime config
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-controller-restart-001 alias=controller.remote-only model=controller.remote-only effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+ ✓ test/index.test.ts (215 tests | 214 skipped) 8953ms
+   ✓ runtime-host-bridge > rehydrates persisted controller assignment for controller aliases after restart even without a controller block in runtime config  8945ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 214 skipped (215)
+   Start at  19:18:57
+   Duration  28.98s (transform 12.27s, setup 0ms, collect 18.83s, tests 8.95s, environment 1ms, prepare 420ms)
+

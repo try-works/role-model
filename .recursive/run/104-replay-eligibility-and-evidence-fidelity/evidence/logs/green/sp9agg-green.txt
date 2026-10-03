@@ -1,0 +1,15 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/packages/sqlite-memory
+
+(node:34896) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run104-live-only-summary.test.ts (3 tests) 1451ms
+   ✓ run104: the default summary is live-only and publishes the excluded classes  519ms
+   ✓ run104: legacy live_request rows stay live and an explicit request can include every class  370ms
+   ✓ run104: request_class_source records a declaration and marks backfilled rows inferred  535ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  19:07:24
+   Duration  7.49s (transform 2.45s, setup 0ms, collect 2.75s, tests 1.45s, environment 1ms, prepare 1.24s)
+

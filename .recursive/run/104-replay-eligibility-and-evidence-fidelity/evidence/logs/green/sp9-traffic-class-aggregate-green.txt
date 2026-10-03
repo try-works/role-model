@@ -1,0 +1,12 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/packages/sqlite-memory
+
+(node:46020) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run104-traffic-class-aggregate.test.ts (2 tests) 491ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  17:05:57
+   Duration  4.36s (transform 851ms, setup 0ms, collect 1.01s, tests 491ms, environment 1ms, prepare 742ms)
+

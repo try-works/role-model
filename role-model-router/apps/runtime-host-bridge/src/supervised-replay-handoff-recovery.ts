@@ -753,6 +753,12 @@ export function unresolvedArmsArePermanent(unreadable: readonly UnresolvedArmEvi
        * Addendum 38: only a capture the job *names*, on a dispatch that `complete`d, and that the store cannot
        * serve is an eviction. `capture_not_written_dispatch_failed`, `capture_unreadable` and
        * `capture_has_no_output` are all retryable and must never terminalize a replay as evicted evidence.
+       *
+       * Run 104 R9 (addendum 18, superseded by addendum 19): `capture_missing` stays permanent here. The
+       * auto-replay stall was *not* an eviction - the replay:job projection had dropped the dispatch
+       * locators, so the resume only ever saw a derived name with no producer. Addendum 19 restores the
+       * compact per-arm `providerResultRef`, so the resume resolves the real capture and never reaches
+       * `capture_missing` for a re-dispatched arm.
        */
       (arm) => arm.reason === "capture_missing" || arm.reason === "capture_not_named",
     )

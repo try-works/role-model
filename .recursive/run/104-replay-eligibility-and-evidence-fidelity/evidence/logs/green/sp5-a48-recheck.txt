@@ -1,0 +1,72 @@
+(node:45820) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ Run101 A48-R1: the comparison readback resolves the worker store the writer uses (735.3928ms)
+✔ Run101 A48-R2/R3: a pack row names its replay models, the winner and its own model (641.7547ms)
+✔ Run101 A48-R4: a decision row carries evidence only where the receipt covers it (644.9772ms)
+✖ Run101 A48-R1: an externalized comparison page is decoded before it is projected (619.0769ms)
+✔ Run101 A48-R2: the candidate join reads the worker-scoped knowledge store (1662.9874ms)
+[run101] comparison evidence readback unavailable: extension evaluation-core failed: frame exceeds inline limit; use a channel-local transfer artifact
+✖ Run101 A48-R8: a page that names more groups than the old read asked for resolves all of them (1246.1118ms)
+[run101] comparison evidence readback unavailable: extension evaluation-core failed: frame exceeds inline limit; use a channel-local transfer artifact
+✖ Run101 A48-R9: more groups than one request may name are still resolved (2460.3647ms)
+✔ Run101 A48-R10: a truncated comparison read is reported on the readback, not as absent evidence (642.5775ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 5
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9800.4733
+
+✖ failing tests:
+
+test at tests\track-b\run101-a48-learning-evidence-readback.test.mjs:537:1
+✖ Run101 A48-R1: an externalized comparison page is decoded before it is projected (619.0769ms)
+  Error: extension evaluation-core failed: frame exceeds inline limit; use a channel-local transfer artifact
+      at execute (file:///D:/DEV/role-model/.worktrees/00-direct-track-b-v1-1-implementation/packages/extension-host/index.mjs:373:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+    [cause]: Error: frame exceeds inline limit; use a channel-local transfer artifact
+        at Socket.<anonymous> (file:///D:/DEV/role-model/.worktrees/00-direct-track-b-v1-1-implementation/packages/extension-host/index.mjs:64:31)
+        at Socket.emit (node:events:508:28)
+        at addChunk (node:internal/streams/readable:559:12)
+        at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+        at Readable.push (node:internal/streams/readable:390:5)
+        at Pipe.onStreamRead (node:internal/stream_base_commons:189:23)
+  }
+
+test at tests\track-b\run101-a48-learning-evidence-readback.test.mjs:669:1
+✖ Run101 A48-R8: a page that names more groups than the old read asked for resolves all of them (1246.1118ms)
+  AssertionError [ERR_ASSERTION]: every row whose group is in the store must carry evidence, not just the first 64: pack-a48-cap-r8-0, pack-a48-cap-r8-1, pack-a48-cap-r8-2, pack-a48-cap-r8-3, pack-a48-cap-r8-4, pack-a48-cap-r8-5, pack-a48-cap-r8-6, pack-a48-cap-r8-7, pack-a48-cap-r8-8, pack-a48-cap-r8-9, pack-a48-cap-r8-10, pack-a48-cap-r8-11, pack-a48-cap-r8-12, pack-a48-cap-r8-13, pack-a48-cap-r8-14, pack-a48-cap-r8-15, pack-a48-cap-r8-16, pack-a48-cap-r8-17, pack-a48-cap-r8-18, pack-a48-cap-r8-19, pack-a48-cap-r8-20, pack-a48-cap-r8-21, pack-a48-cap-r8-22, pack-a48-cap-r8-23, pack-a48-cap-r8-24, pack-a48-cap-r8-25, pack-a48-cap-r8-26, pack-a48-cap-r8-27, pack-a48-cap-r8-28, pack-a48-cap-r8-29, pack-a48-cap-r8-30, pack-a48-cap-r8-31, pack-a48-cap-r8-32, pack-a48-cap-r8-33, pack-a48-cap-r8-34, pack-a48-cap-r8-35, pack-a48-cap-r8-36, pack-a48-cap-r8-37, pack-a48-cap-r8-38, pack-a48-cap-r8-39, pack-a48-cap-r8-40, pack-a48-cap-r8-41, pack-a48-cap-r8-42, pack-a48-cap-r8-43, pack-a48-cap-r8-44, pack-a48-cap-r8-45, pack-a48-cap-r8-46, pack-a48-cap-r8-47, pack-a48-cap-r8-48, pack-a48-cap-r8-49, pack-a48-cap-r8-50, pack-a48-cap-r8-51, pack-a48-cap-r8-52, pack-a48-cap-r8-53, pack-a48-cap-r8-54, pack-a48-cap-r8-55, pack-a48-cap-r8-56, pack-a48-cap-r8-57, pack-a48-cap-r8-58, pack-a48-cap-r8-59, pack-a48-cap-r8-60, pack-a48-cap-r8-61, pack-a48-cap-r8-62, pack-a48-cap-r8-63, pack-a48-cap-r8-64, pack-a48-cap-r8-65, pack-a48-cap-r8-66, pack-a48-cap-r8-67, pack-a48-cap-r8-68, pack-a48-cap-r8-69, pack-a48-cap-r8-70, pack-a48-cap-r8-71, pack-a48-cap-r8-72, pack-a48-cap-r8-73, pack-a48-cap-r8-74, pack-a48-cap-r8-75, pack-a48-cap-r8-76, pack-a48-cap-r8-77, pack-a48-cap-r8-78, pack-a48-cap-r8-79
+  
+  80 !== 0
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/104-replay-eligibility-and-evidence-fidelity/tests/track-b/run101-a48-learning-evidence-readback.test.mjs:706:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 80,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\track-b\run101-a48-learning-evidence-readback.test.mjs:729:1
+✖ Run101 A48-R9: more groups than one request may name are still resolved (2460.3647ms)
+  AssertionError [ERR_ASSERTION]: every group the store holds must resolve, past any per-request filter bound: pack-a48-cap-r9-0, pack-a48-cap-r9-1, pack-a48-cap-r9-2, pack-a48-cap-r9-3, pack-a48-cap-r9-4, pack-a48-cap-r9-5, pack-a48-cap-r9-6, pack-a48-cap-r9-7
+  
+  300 !== 0
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/104-replay-eligibility-and-evidence-fidelity/tests/track-b/run101-a48-learning-evidence-readback.test.mjs:766:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 300,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

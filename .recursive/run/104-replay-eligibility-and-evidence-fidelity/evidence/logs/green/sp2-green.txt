@@ -1,0 +1,41 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-host-bridge
+
+ ✓ test/run104-sp2-refusal-semantics.test.ts (4 tests) 177ms
+ ❯ test/run104-sp1-replay-eligibility.test.ts (7 tests | 1 failed) 72ms
+   ✓ run104 SP1 reads the capture's recorded decision and marks it recorded 11ms
+   ✓ run104 SP1 infers the requirement from message content and records the inference 5ms
+   ✓ run104 SP1 plans no arm against a text-only pool and records every rejected arm 3ms
+   ✓ run104 SP1 plans the image arm and records the text-only arm's reason 2ms
+   ✓ run104 SP1 satisfies capability requirements through the router's exported rule only 2ms
+   ✓ run104 SP1 pre-dispatch re-check fails a stale arm cheaply with the reason 2ms
+   × run104 SP1 auto-replay tick dispatches nothing for an ineligible arm and records it 43ms
+     → expected 'candidate_input_unsupported' to be 'no_distinct_candidate_configured' // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run104-sp1-replay-eligibility.test.ts > run104 SP1 auto-replay tick dispatches nothing for an ineligible arm and records it
+AssertionError: expected 'candidate_input_unsupported' to be 'no_distinct_candidate_configured' // Object.is equality
+
+Expected: "no_distinct_candidate_configured"
+Received: "candidate_input_unsupported"
+
+ ❯ test/run104-sp1-replay-eligibility.test.ts:173:42
+    171|     expect(result.replayed).toBe(0);
+    172|     expect(result.dispositions).toHaveLength(1);
+    173|     expect(result.dispositions[0]?.code).toBe("no_distinct_candidate_c…
+       |                                          ^
+    174|     expect(
+    175|       result.dispositions[0]?.rejectedArms?.map((row) => [row.endpoint…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 10 passed (11)
+   Start at  19:05:05
+   Duration  6.87s (transform 1.28s, setup 0ms, collect 4.09s, tests 249ms, environment 1ms, prepare 957ms)
+
+undefined
+D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/run104-sp2-refusal-semantics.test.ts test/run104-sp1-replay-eligibility.test.ts

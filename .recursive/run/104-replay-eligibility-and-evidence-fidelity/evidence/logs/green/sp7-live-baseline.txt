@@ -1,0 +1,16 @@
+run104 SP7 live read-only baseline 2026-10-01T19:13:23.8182775+08:00
+stage error log: E:\tmp\run103-evidence\stage-3457.err.log (236849 bytes, last write 2026-10-01T19:13:17.1084939+08:00)
+contribution upload degraded lines total: 1018
+last 3:
+[run98] contribution upload degraded:req-ceace897-2932-4aec-a450-4d80ec55cf07 TrackBPrivateOperationError private Track B operation timed out after 5000ms
+[run98] contribution upload degraded:req-bd165f12-b32b-4de7-bd15-5687b771ac45 TrackBPrivateOperationError private Track B operation timed out after 5000ms
+[run98] contribution upload degraded:req-92234076-7038-4694-b2d4-ec55a868331d TrackBPrivateOperationError private Track B operation timed out after 5000ms
+[1] 000 20.006223  http://127.0.0.1:3457/api/role-model/operator/queues
+[2] 000 20.019383  http://127.0.0.1:3457/api/role-model/operator/queues
+[3] 000 20.020161  http://127.0.0.1:3457/api/role-model/operator/queues
+[1] 000 20.016721  http://127.0.0.1:3457/api/role-model/operator/learning/activity?windowMinutes=60&limit=24
+[2] 000 20.001954  http://127.0.0.1:3457/api/role-model/operator/learning/activity?windowMinutes=60&limit=24
+[3] 000 20.005797  http://127.0.0.1:3457/api/role-model/operator/learning/activity?windowMinutes=60&limit=24
+[1] 200 0.220761  http://127.0.0.1:3457/api/role-model/operator/learning/measurement
+[2] 200 0.221645  http://127.0.0.1:3457/api/role-model/operator/learning/measurement
+[3] 200 0.180631  http://127.0.0.1:3457/api/role-model/operator/learning/measurement

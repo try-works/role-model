@@ -30,8 +30,11 @@ export type SidebarIntegration = {
 
 export type SidebarProps = {
   readonly models: readonly SidebarModel[];
-  /** Most recent request’s cache hit rate, 0–100. */
-  readonly cacheHitRate: number;
+  /**
+   * Most recent **live** request’s cache hit rate, 0–100 — `null` when the window holds no live
+   * request, in which case the card renders its absence instead of `0%`.
+   */
+  readonly cacheHitRate: number | null;
   /** Host URL, e.g. `127.0.0.1:3456/v1`. */
   readonly routerEndpoint: string;
   /** Active alias, e.g. `baseline.remote-only`. */
@@ -176,14 +179,21 @@ function ModelInventory({ models }: { models: readonly SidebarModel[] }) {
   );
 }
 
-function CacheHitRate({ rate }: { rate: number }) {
-  const pct = clampCacheHitRate(rate);
-  const label = formatCacheHitRate(rate);
+/** Run 104 / R14: the footer's wording when the window holds no live request to sample. */
+export const NO_LIVE_SAMPLES_LABEL = "no live samples";
+
+function CacheHitRate({ rate }: { rate: number | null }) {
+  // Run 104 / R14: `null` is the *absence* of a live sample, not a measured zero. The card says so
+  // and the meter is left unfilled instead of showing a rate taken from replay/benchmark traffic.
+  const hasSample = rate !== null;
+  const pct = hasSample ? clampCacheHitRate(rate) : 0;
+  const label = hasSample ? formatCacheHitRate(rate) : NO_LIVE_SAMPLES_LABEL;
   const reduced = usePrefersReducedMotion();
 
   return (
     <div
       data-slot="role-model-cache"
+      data-has-sample={hasSample ? "true" : "false"}
       className="flex shrink-0 flex-col gap-1.5 border-t border-sidebar-border p-2"
     >
       <div className="flex h-6 shrink-0 items-center justify-between gap-2 px-2.5">
@@ -197,19 +207,25 @@ function CacheHitRate({ rate }: { rate: number }) {
       </div>
       <div
         className="mx-2.5 mb-1 flex h-1.5 shrink-0 items-center overflow-hidden rounded-full bg-border"
-        role="progressbar"
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={Math.round(pct)}
-        aria-label="Cache hit rate"
+        {...(hasSample
+          ? {
+              role: "progressbar" as const,
+              "aria-valuemin": 0,
+              "aria-valuemax": 100,
+              "aria-valuenow": Math.round(pct),
+              "aria-label": "Cache hit rate",
+            }
+          : {})}
       >
-        <div
-          className={cn(
-            "rm3-cache-bar-fill h-full shrink-0 rounded-full bg-chart-cache",
-            !reduced && "transition-[width] duration-[250ms] ease-out",
-          )}
-          style={{ width: `${pct}%` }}
-        />
+        {hasSample ? (
+          <div
+            className={cn(
+              "rm3-cache-bar-fill h-full shrink-0 rounded-full bg-chart-cache",
+              !reduced && "transition-[width] duration-[250ms] ease-out",
+            )}
+            style={{ width: `${pct}%` }}
+          />
+        ) : null}
       </div>
     </div>
   );

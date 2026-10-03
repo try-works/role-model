@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   MODEL_STATUS_DOT_CLASS,
+  SidebarCache,
   SidebarModelInventory,
   clampCacheHitRate,
   formatCacheHitRate,
@@ -48,5 +49,21 @@ describe("rm3 sidebar helpers", () => {
     expect(markup).toContain("group-hover:opacity-100");
     expect(markup).toContain("group-focus-within:opacity-100");
     expect(markup).toContain(identity);
+  });
+
+  /**
+   * Run 104 / R14: the cache sample is the latest *live* request. A window with no live request has
+   * no rate to show, so the card says so instead of rendering an invented `0%`.
+   */
+  it("renders the absence of a live sample instead of a zero rate", () => {
+    const markup = renderToStaticMarkup(createElement(SidebarCache, { rate: null }));
+    expect(markup).toContain("no live samples");
+    expect(markup).not.toContain("0%");
+  });
+
+  it("renders the measured latest live rate", () => {
+    const markup = renderToStaticMarkup(createElement(SidebarCache, { rate: 73.4 }));
+    expect(markup).toContain("73%");
+    expect(markup).toContain('role="progressbar"');
   });
 });

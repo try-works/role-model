@@ -98,6 +98,7 @@ const DEFAULT_DEADLINE_MS = 24 * 60 * 60 * 1000;
 
 function captureQueueSchema(database: DatabaseSync): void {
   database.exec(`
+    PRAGMA busy_timeout=5000;
     CREATE TABLE IF NOT EXISTS track_b_route_capture_pending (
       request_id TEXT PRIMARY KEY,
       routing_decision_id TEXT NOT NULL,

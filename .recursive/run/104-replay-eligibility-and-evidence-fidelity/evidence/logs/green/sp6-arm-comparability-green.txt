@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-host-bridge
+
+ ✓ test/run104-sp6-arm-comparability.test.ts (8 tests) 18ms
+
+ Test Files  1 passed (1)
+      Tests  8 passed (8)
+   Start at  19:49:18
+   Duration  3.31s (transform 768ms, setup 0ms, collect 2.06s, tests 18ms, environment 1ms, prepare 410ms)
+

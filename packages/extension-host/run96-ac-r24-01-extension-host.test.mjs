@@ -77,7 +77,7 @@ async function createHost(root) {
   return host;
 }
 
-test("AC-R24-01 aggregate: real process ExtensionHost enforces the authenticated 16 KiB-to-64 MiB transfer conjunction", async () => {
+test("AC-R24-01 aggregate: real process ExtensionHost enforces the authenticated 1 MiB-to-64 MiB transfer conjunction", async () => {
   await mkdir(RECEIPT_ROOT, { recursive: true });
   const root = await mkdtemp(path.join(RECEIPT_ROOT, "run96-r24-01-extension-host-"));
   const host = await createHost(root);
@@ -91,10 +91,10 @@ test("AC-R24-01 aggregate: real process ExtensionHost enforces the authenticated
           envelope: baseEnvelope("x".repeat(MAX_INLINE_BYTES)),
         }),
       /inline limit/,
-      "the IPC frame must keep the 16 KiB inline threshold",
+      "the IPC frame must keep the 1 MiB inline threshold",
     );
 
-    const large = baseEnvelope("x".repeat(20 * 1024));
+    const large = baseEnvelope("x".repeat(2 * 1024 * 1024));
     const result = await host.invoke(extensionId, large);
     assert.deepEqual(
       {
@@ -109,7 +109,7 @@ test("AC-R24-01 aggregate: real process ExtensionHost enforces the authenticated
         hasRawContent: result.hasRawContent,
       },
       {
-        bodyLength: 20 * 1024,
+        bodyLength: 2 * 1024 * 1024,
         protocolVersion,
         channel: "development",
         scope: "run96-ac-r24-01",
@@ -163,7 +163,7 @@ test("AC-R24-01 aggregate: real process ExtensionHost enforces the authenticated
     );
 
     const directRoot = path.join(root, "direct-transfer");
-    const directEnvelope = baseEnvelope("x".repeat(20 * 1024));
+    const directEnvelope = baseEnvelope("x".repeat(2 * 1024 * 1024));
     const artifact = await createInputTransferArtifact({
       stateRoot: directRoot,
       transferKey: "run96-transfer-key",
@@ -212,7 +212,7 @@ test("AC-R24-01 aggregate: real process ExtensionHost enforces the authenticated
       envelope: { ...directEnvelope, transferArtifact: artifact },
       nowMs: 1_001,
     });
-    assert.equal(hydrated.payload.body.length, 20 * 1024);
+    assert.equal(hydrated.payload.body.length, 2 * 1024 * 1024);
     await assert.rejects(
       hydrateInputTransferArtifact({
         stateRoot: directRoot,

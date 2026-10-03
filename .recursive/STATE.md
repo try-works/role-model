@@ -2,6 +2,26 @@
 
 ## Current State
 
+Run `104-replay-eligibility-and-evidence-fidelity` is the current increment: the replay lane refuses by name
+(`candidate_input_unsupported`, terminal when the declared pool can never serve the capture and deferrable when a
+capable arm is merely unavailable), traffic classes are typed end to end so the operator's aggregates are
+live-only with visible excluded counts, the live stall's cause is decided and fixed (the packaged launcher never
+supplied `handoffEvaluation`, and the completion contract demanded every trial be covered although
+train-partition trials are structurally ineligible), the branch-append recovery re-attaches from the boundary's
+own field and refuses a saturated excerpt, and arm effort comparability is published with a mismatched arm named
+in the comparison's validity. Phases 0-6 are locked; Phase 5 ran the rebuilt runtime on its own channel `:3459`
+with its own state root — the matrix passed (text control, image through `difficulty.remote-only` selecting the
+DeepSeek flash endpoint, PDF control, `hybrid.remote-only`) and the monitored window ran 61.5 minutes with 123
+samples. One commitment transfers: `R8`'s live disposition drain, which needs a channel that already carries a
+route package. `R9`'s producer plumbing is now wired and verified live end-to-end (post-closeout `8aa114ed` plus addenda
+08-20): the comparison identity carries `effortComparability`, and a finalized comparison on `:3457` records
+per-arm `matched`/`mismatched` instead of only `source_effort_unspecified`. The queue was traced live and
+repaired in turn — the restricted-tick no-op, the resume-entry record with `classifyReplayArmEffort`, the
+resume-store `effortComparability` persistence, the `capture_missing` retryability, and the compact replay-job
+dispatch projection. The addenda run `post-closeout.r9-r8-pickup.addendum-01.md` through
+`post-closeout.r9-finalized-effort-comparability.addendum-20.md`.
+Promotion remains a separate release operation.
+
 Run `103-agent-strategy-and-scoring-strategy` is the current increment: the routing posture is split into the
 planner axis (`routing.mode`) and the scoring axis (`routing.scoring_strategy`), the five scoring strategies
 actually rank candidates, `pin_weights` blocks the automatic overrides, agent-strategy and workload postures

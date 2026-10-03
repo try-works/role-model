@@ -1,0 +1,12 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-host-bridge
+
+(node:19492) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run104-sp4-taxonomy-fallback.test.ts (9 tests) 45ms
+
+ Test Files  1 passed (1)
+      Tests  9 passed (9)
+   Start at  19:07:04
+   Duration  33.97s (transform 20.18s, setup 0ms, collect 32.17s, tests 45ms, environment 1ms, prepare 606ms)
+

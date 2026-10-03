@@ -179,6 +179,7 @@ import {
 } from "./track-b-learning-pass.js";
 import {
   DEFAULT_REPLAY_CANDIDATE_CAP,
+  classifyReplayArmEffort,
   isBenchmarkReplaySourceRef,
 } from "./track-b-replay-policy.js";
 import {
@@ -7859,6 +7860,12 @@ export type TrackBRouteAdvisorySelection = "baseline_retained" | "advisory_appli
 export interface TrackBRouteAdvisoryClassification {
   readonly taskTypeId?: string | null;
   readonly roleId?: string | null;
+  /**
+   * Run 104 `R6`: the task variant `buildRequestClassification` recorded with this classification.
+   * It travels with the family because the route capture reads the classification back off the
+   * observation ledger entry.
+   */
+  readonly taskVariant?: string | null;
   readonly toolClassIds?: readonly string[] | null;
   readonly taxonomyVersion?: string | null;
   readonly contentRevision?: string | null;
@@ -7893,6 +7900,7 @@ function normalizeTrackBRouteAdvisoryClassification(
 ): TrackBRouteAdvisoryClassification | null {
   if (!value || typeof value !== "object") return null;
   const taskTypeId = boundedClassificationId(value.taskTypeId);
+  const taskVariant = boundedClassificationId(value.taskVariant);
   const roleId = boundedClassificationId(value.roleId);
   const toolClassIds = Array.isArray(value.toolClassIds)
     ? [
@@ -7918,6 +7926,9 @@ function normalizeTrackBRouteAdvisoryClassification(
   }
   return {
     taskTypeId,
+    // Run 104 `R6`: the variant is projected exactly as `buildRequestClassification` emitted it,
+    // bounded and omitted when absent, so a classification without one stays byte-identical.
+    ...(taskVariant ? { taskVariant } : {}),
     roleId,
     toolClassIds,
     taxonomyVersion,
@@ -8796,6 +8807,18 @@ export async function runTrackBShadowPipeline(
       firstCounterfactual.endpointId,
       "counterfactual candidate",
     ),
+    // Run 104 R9 (post-closeout): the arm-effort dimension travels with the comparison identity, so
+    // Evaluation Core's arm_effort_mismatch exclusion can fire on a live comparison.
+    effortComparability: classifyReplayArmEffort({
+      arms: counterfactualRollouts.map((arm) => ({
+        endpointId: typeof arm.endpointId === "string" ? arm.endpointId : "",
+        modelId: typeof arm.modelId === "string" ? arm.modelId : "",
+        reasoningEffort: typeof arm.reasoningEffort === "string" ? arm.reasoningEffort : null,
+      })),
+      sourceModelId: typeof sourceRollout.modelId === "string" ? sourceRollout.modelId : "",
+      sourceReasoningEffort:
+        typeof sourceRollout.reasoningEffort === "string" ? sourceRollout.reasoningEffort : null,
+    }),
   };
   if (
     sourceRollout.evidenceRef !== comparability.sourceEvidenceRef ||
@@ -10985,6 +11008,15 @@ async function runTrackBObservationPipeline(
     readonly identity: TrackBVariantIdentity;
     readonly occurrence?: Readonly<{ occurrenceId: string; contentId: string }>;
     /**
+     * Run 104 R22 (R22-B): the classification the capture declared, so the evidence this pipeline
+     * plans is scoped to the family, role and taxonomy revision the request was routed under rather
+     * than being scope-free. Optional: an unclassified capture keeps the pre-R22 behaviour.
+     */
+    readonly taskTypeId?: string | null;
+    readonly taxonomyVersion?: string | null;
+    readonly roleId?: string | null;
+    readonly classification?: TrackBRouteAdvisoryClassification | null;
+    /**
      * R3: when the runtime has distinct configured candidates, the observation
      * records a durable replay intent instead of the `R14_NO_DISTINCT_COUNTERFACTUAL`
      * refusal. The canonical extension closure is unchanged: replay-core,
@@ -11124,6 +11156,17 @@ async function runTrackBReplayIntentPipeline(
     readonly candidates: readonly string[];
     readonly identity: TrackBVariantIdentity;
     readonly occurrence: Readonly<{ occurrenceId: string; contentId: string }>;
+    /**
+     * Run 104 R22 (R22-B): the taxonomy the captured request was classified under. This branch is the
+     * one that lost it - measured live, packs promoted from a replay comparison were 27/27
+     * endpoint-id-only while the live branch's were role-scoped - so the family, the role and the
+     * revision travel here exactly as the shadow branch carries them. Optional: a caller that has no
+     * classification keeps the pre-R22 behaviour rather than inventing one.
+     */
+    readonly taskTypeId?: string | null;
+    readonly taxonomyVersion?: string | null;
+    readonly roleId?: string | null;
+    readonly classification?: TrackBRouteAdvisoryClassification | null;
   },
 ) {
   // The replay intent is owned by the automatic producer, not by the supervised
@@ -11144,6 +11187,12 @@ async function runTrackBReplayIntentPipeline(
     trajectoryEvents: input.trajectoryEvents,
     identity: input.identity,
     occurrence: input.occurrence,
+    // Run 104 R22 (R22-B): the classification travels into the observation pipeline so the case it
+    // plans carries the family, the role and the revision the capture declared.
+    ...(input.taskTypeId ? { taskTypeId: input.taskTypeId } : {}),
+    ...(input.taxonomyVersion ? { taxonomyVersion: input.taxonomyVersion } : {}),
+    ...(input.roleId ? { roleId: input.roleId } : {}),
+    ...(input.classification ? { classification: input.classification } : {}),
     replayIntent: {
       jobId: replayIntentJobId,
       candidateEndpointIds: [...input.candidates],
@@ -11579,6 +11628,23 @@ export async function runTrackBPostObservation(
   const judgeEndpointId = input.resolveJudgeEndpointId
     ? await Promise.resolve(input.resolveJudgeEndpointId()).catch(() => null)
     : (input.judgeEndpointId ?? null);
+  /**
+   * Run 104 R22 (R22-B): the role the capture was classified under, resolved once for the shadow
+   * pipeline below. The capture records the whole classification; a role declared at the top level
+   * wins, then the classification's own `roleId`. Bounded like every other classification id, and
+   * `null` (never an invented value) when the capture classified no role.
+   */
+  const captureClassification =
+    observation.classification && typeof observation.classification === "object"
+      ? (observation.classification as TrackBRouteAdvisoryClassification)
+      : null;
+  const declaredCaptureRoleId =
+    (typeof observation.roleId === "string" && observation.roleId.trim()
+      ? observation.roleId.trim().slice(0, 128)
+      : null) ??
+    (typeof captureClassification?.roleId === "string" && captureClassification.roleId.trim()
+      ? captureClassification.roleId.trim().slice(0, 128)
+      : null);
   const armBound =
     typeof input.maxCounterfactualArms === "number" &&
     Number.isSafeInteger(input.maxCounterfactualArms) &&
@@ -11612,6 +11678,22 @@ export async function runTrackBPostObservation(
           ...(typeof observation.taxonomyVersion === "string" && observation.taxonomyVersion.trim()
             ? { taxonomyVersion: observation.taxonomyVersion.trim() }
             : {}),
+          /**
+           * Run 104 R22 (R22-B): the role the capture was classified under had to reach the comparison,
+           * the learned candidate and the promoted pack. Only the whole classification travelled on this
+           * path, while the pipeline reads input.roleId alone when it stamps comparability.roleId (and
+           * from there the candidate's own scope), so every pack promoted from a routing-shadow
+           * comparison was role-less and the Packs table could only render it as scope-wide. Measured
+           * live on the stage state root: 113 of 219 candidate records carried a runtime:<hash> scope
+           * with 0% role coverage against ~64% for the scope-bearing path, and 27 of 40 packs were
+           * endpoint-id-only.
+           *
+           * The capture records the whole classification (addendum 19-21), so the role is read from it
+           * here, falling back to a top-level field for a caller that declares one directly. A capture
+           * that classified no role keeps the pre-R22 role-less scope rather than inventing one (the
+           * pipeline omits roleId when it is absent).
+           */
+          ...(declaredCaptureRoleId ? { roleId: declaredCaptureRoleId } : {}),
           // Run 99 close-out (addendas 19-21 S33): the capture now records the whole classification,
           // so the shadow observation can carry it instead of only the family string. The builder
           // bounds it again on the way in.
@@ -11662,6 +11744,22 @@ export async function runTrackBPostObservation(
             candidates: configuredCounterfactualCandidates,
             identity,
             occurrence,
+            /**
+             * Run 104 R22 (R22-B): the replay-intent branch is the one measured live to lose the
+             * taxonomy. Every pack promoted from a replay comparison was endpoint-id-only (27/27)
+             * while the live branch's packs were role-scoped, because only the shadow branch carried
+             * the capture's classification. It travels here now, from the same two sources the other
+             * branch reads.
+             */
+            ...(typeof observation.taskTypeId === "string" && observation.taskTypeId.trim()
+              ? { taskTypeId: observation.taskTypeId.trim() }
+              : {}),
+            ...(typeof observation.taxonomyVersion === "string" &&
+            observation.taxonomyVersion.trim()
+              ? { taxonomyVersion: observation.taxonomyVersion.trim() }
+              : {}),
+            ...(declaredCaptureRoleId ? { roleId: declaredCaptureRoleId } : {}),
+            ...(captureClassification ? { classification: captureClassification } : {}),
           })
         : await runTrackBObservationPipeline(observedRuntime, {
             requestId,

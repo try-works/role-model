@@ -1,0 +1,67 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/run104-sp2-refusal-semantics.test.ts (4 tests | 3 failed) 213ms
+   × run104 SP2 refuses an unsupported capture terminally, by name, once 85ms
+     → expected 'no_distinct_candidate_configured' to be 'candidate_input_unsupported' // Object.is equality
+   × run104 SP2 keeps a capable-but-unavailable pool deferrable, named 12ms
+     → expected 'no_distinct_candidate_configured' to be 'candidate_input_unsupported' // Object.is equality
+   ✓ run104 SP2 leaves a text-only capture's plan and outcome unchanged 105ms
+   × run104 SP2 classifies the shortfall: terminal only when every declared arm cannot serve 5ms
+     → classifyReplayCandidateShortfall is not a function
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run104-sp2-refusal-semantics.test.ts > run104 SP2 refuses an unsupported capture terminally, by name, once
+AssertionError: expected 'no_distinct_candidate_configured' to be 'candidate_input_unsupported' // Object.is equality
+
+Expected: "candidate_input_unsupported"
+Received: "no_distinct_candidate_configured"
+
+ ❯ test/run104-sp2-refusal-semantics.test.ts:72:31
+     70|     expect(result.dispositions).toHaveLength(1);
+     71|     const disposition = result.dispositions[0];
+     72|     expect(disposition?.code).toBe("candidate_input_unsupported");
+       |                               ^
+     73|     expect(disposition?.outcome).toBe("refused");
+     74|     expect(disposition?.detail).toContain("image");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  test/run104-sp2-refusal-semantics.test.ts > run104 SP2 keeps a capable-but-unavailable pool deferrable, named
+AssertionError: expected 'no_distinct_candidate_configured' to be 'candidate_input_unsupported' // Object.is equality
+
+Expected: "candidate_input_unsupported"
+Received: "no_distinct_candidate_configured"
+
+ ❯ test/run104-sp2-refusal-semantics.test.ts:113:31
+    111|     expect(dispatched).toBe(0);
+    112|     const disposition = result.dispositions[0];
+    113|     expect(disposition?.code).toBe("candidate_input_unsupported");
+       |                               ^
+    114|     expect(disposition?.outcome).toBe("deferred");
+    115|     expect(disposition?.detail).toContain("image-arm");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  test/run104-sp2-refusal-semantics.test.ts > run104 SP2 classifies the shortfall: terminal only when every declared arm cannot serve
+TypeError: classifyReplayCandidateShortfall is not a function
+ ❯ test/run104-sp2-refusal-semantics.test.ts:160:20
+    158| test("run104 SP2 classifies the shortfall: terminal only when every de…
+    159|   const { classifyReplayCandidateShortfall } = await import("../src/tr…
+    160|   const terminal = classifyReplayCandidateShortfall({
+       |                    ^
+    161|     configuredEndpointIds: ["endpoint-a", "endpoint-b"],
+    162|     sourceEndpointId: "endpoint-a",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 1 passed (4)
+   Start at  19:03:49
+   Duration  5.57s (transform 1.64s, setup 0ms, collect 3.80s, tests 213ms, environment 1ms, prepare 599ms)
+
+undefined
+D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/run104-sp2-refusal-semantics.test.ts

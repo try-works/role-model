@@ -1,0 +1,24 @@
+== replay-disposition.sqlite (read-only) ==
+SELECT refusal_code, COUNT(*) AS n FROM replay_dispositions WHERE refusal_code IS NOT NULL GROUP BY refusal_code ORDER BY n DESC;
+           refusal_code              n
+-----------------------------------  --
+replay_failed                        33
+replay_job_not_ready_for_evaluation   5
+replay_branch_append_unavailable      1
+
+SELECT capture_ref, outcome, refusal_code, detail, counters_json, updated_at_ms FROM replay_dispositions WHERE refusal_code='replay_branch_append_unavailable';
+  capture_ref: req-a29409df-11de-4660-9439-b8ee671f8f3b
+      outcome: deferred
+ refusal_code: replay_branch_append_unavailable
+       detail: replay endpoint HTTP 409: {"error":"durable replay branch append has no host dispatch receipt"}
+counters_json: {"deferrals":1}
+      updated: 2026-10-01 07:16:55
+
+== retention_captures (read-only, capture ring) ==
+SELECT request_id, datetime(updated_at_ms/1000,'unixepoch') FROM retention_captures WHERE request_id LIKE '%a29409df%';
+                                      request_id                                              updated
+--------------------------------------------------------------------------------------  -------------------
+req-a29409df-11de-4660-9439-b8ee671f8f3b                                                2026-10-01 07:04:35
+replay-req-a29409df-11de-4660-9439-b8ee671f8f3b-c39a7d7e3619a5d2-prepared-7d378fd328b6  2026-10-01 07:11:34
+replay-req-a29409df-11de-4660-9439-b8ee671f8f3b-84165abdc60fa3af-branch                 2026-10-01 07:14:21
+replay-req-a29409df-11de-4660-9439-b8ee671f8f3b-84165abdc60fa3af                        2026-10-01 09:11:11

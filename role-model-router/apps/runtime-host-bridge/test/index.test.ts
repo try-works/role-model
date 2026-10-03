@@ -11575,7 +11575,8 @@ describe("runtime-host-bridge", () => {
       expect.arrayContaining([
         expect.objectContaining({
           requestId,
-          requestClass: "live_request",
+          // Run 104 / R14: the persisted class is `live`; legacy `live_request` rows stay readable.
+          requestClass: "live",
         }),
       ]),
     );
@@ -22598,7 +22599,9 @@ describe("runtime-host-bridge", () => {
         expect.arrayContaining([
           expect.objectContaining({
             clientRequestId,
-            requestClass: "live_request",
+            // Run 104 / R14: the telemetry writer persists the declared class (`live`) instead of the legacy
+            // `live_request`; readback still accepts the legacy value for pre-migration rows.
+            requestClass: "live",
             reasoningEffort: null,
             effortSource: "none",
           }),
@@ -22606,7 +22609,7 @@ describe("runtime-host-bridge", () => {
             clientRequestId: capabilityClientRequestId,
             errorClass: "no_eligible_target",
             modelId: "deepseek/chat-capture-v1",
-            requestClass: "live_request",
+            requestClass: "live",
             requestedModelId: "deepseek/chat-capture-v1",
             requestOperation: "chat",
             dimensions: expect.objectContaining({
