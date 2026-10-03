@@ -1,8 +1,8 @@
 Run: `/.recursive/run/105-route-learning-matching-scope-activation/`
 Phase: `00 Requirements`
 Status: `LOCKED`
-LockedAt: `2026-10-03T02:13:35.940Z`
-LockHash: `d23946c11d1670cd9148eb2c0be1edcb91c0cce743973c1977d655e82d5db30a`
+LockedAt: `2026-10-03T02:15:53.100Z`
+LockHash: `ff8d6ff2cc053e72f97a73a97a25f85945ade414bc2399b66f007353f7d24d56`
 Workflow version: `recursive-mode-audit-v2`
 Inputs:
 - Baseline (2026-10-03): public `origin/dev` `701b8b8fc0b0eeebdfe818b757f5702f50021488` ("Merge run-104 R22-A/B + R23 +
@@ -38,6 +38,14 @@ The operator's definition: a pack routes a (role, task) to the endpoint counterf
 carries a ranked ladder (best first); we continuously replay/evaluate to keep the ladder honest, and the operator
 can review and roll back any task's ladder from the UI.
 
+## Current state (the defect)
+
+knowledge_route_rollouts holds ONE activePackageId per runtime scope_id, not per (role, task).
+route-advisory-source.ts reads that one pack and feeds it to the router for every request, so a scope-wide pack is
+refused with advisory_task_unscoped for any task-scoped request, and its single endpoint is refused with
+advisory_candidate_not_eligible when that endpoint is not eligible. Each pack carries a single endpointId rather
+than a ranked ladder, so there is no fallback.
+
 ## Requirements
 
 ### R1 — A pack is a per-(role, task) ranked endpoint ladder
@@ -60,7 +68,9 @@ promoted.
 - Rewrites are serialized per (role, task) and guarded by a monotonic version; a stale rewrite is discarded.
 
 ### R3 — Pairwise-to-total-order aggregation
-The ladder aggregates the evaluation core's finalized pairwise comparison groups for a scope: winner beats loser by
+Each finalized comparison group compares a source and a counterfactual endpoint and records a winner (or tie),
+per-scorer outcomes, a scorer-disagreement flag, and judge confidence. The ladder aggregates those groups for a
+scope: winner beats loser by
 w = confidence * agreement (confidence = winning judge confidence clamped [0,1]; agreement = 1 if unanimous else
 scorers-for-winner/total-scorers clamped [0.5,1]); a tie contributes 0. rankScore(E) = sum of +w win / -w loss / 0
 tie, where 'total-scorers' = the number of scorers that returned a non-tie outcome for that comparison; order
@@ -77,10 +87,14 @@ stored on the rung. The router's per-request eligibility (posture/key-tier) is a
 - A removed endpoint leaves the completeness denominator (denominator = currently configured endpoints).
 - An available-but-ineligible endpoint is also skipped at routing time.
 
-### R5 — advisory_only ladder walk
-The router walks the ladder and takes the highest-ranked routable rung as the advisory's PREFERRED endpoint. The
-existing score-band, cohort and confidence gates still decide whether the preference is applied. A pack never
-routes directly.
+### R5 — advisory_only ladder walk (who walks, who gates)
+route-advisory-source reads the (role, task) pack and returns the ordered ladder (carrying taskTypeId /
+taxonomyVersion / roleId). core/src/router.ts walks the ladder top-down, skipping unavailable and ineligible
+rungs, and takes the first routable rung as the advisory's PREFERRED endpoint. That preferred endpoint then
+enters the EXISTING advisory-consideration machinery (score-band, cohort, confidence) exactly where today's
+single preferredRoutePackage entered - the only change is the source of the preference (a ladder walk instead
+of one stored endpoint). If the gates decline, the request routes by baseline, as today. A pack never routes
+directly.
 - The ladder changes the preferred endpoint, never the selection directly.
 - A removed/unavailable/ineligible top rung falls through to the next.
 - The preferred endpoint enters the existing score-band/cohort/confidence machinery where today's single
@@ -94,7 +108,9 @@ created_at field is added (net-new) so the ladder history is auditable by date.
 
 ### R7 — Ladder storage in SQLite WAL, keyed by (role_id, task_type_id)
 One pack per (role, task) as JSON in SQLite (the knowledge-store learning_records kind='pack'), with a
-(role_id, task_type_id) UNIQUE index, plus completeness (admitted / configured) and nextEligibleAtMs. No separate
+(role_id, task_type_id) UNIQUE index. The pack record carries the rungs { endpointId, rank, status }, completeness
+(admitted / configured endpoints, where 'admitted' means passed the admission floor), nextEligibleAtMs, a monotonic
+version, and rolledBack { on, reason, atMs }. No separate
 derived index table; no view (SQLite has no materialized views).
 - 'ladder for this task' is one indexed read.
 - Concurrent readers + one writer (WAL).
@@ -108,7 +124,10 @@ top-down challenge (leader first, then next rung).
 - Only classified requests enter the queue.
 - A (role, task) with no recorded request never enters the work queue.
 - A task with no replayable capture is skipped (NoReplayableRequest).
-- Completeness = admitted endpoints / configured endpoints; most-requested (last 30 days) then most-unfilled.
+- Completeness = admitted endpoints / configured endpoints (the configured set = every endpoint configured in the
+  current runtime, not the whole catalog); most-requested (last 30 days) then most-unfilled.
+- Each counterfactual is the task's source request replayed against an as-yet-unranked configured endpoint (the
+  existing replay-intent mechanism, re-targeted by ladder gap).
 - The 30-day refresh (one comparison re-run + recompute) is picked up on the next dispatch cycle after
   nextEligibleAtMs passes.
 - A new endpoint makes the affected tasks eligible immediately (nextEligibleAtMs = now) and does not preempt the
@@ -151,7 +170,10 @@ Effect v4 tree (vendor/effect, re-exported through role-model-router/packages/ef
 (scoring-strategy.ts: Schema + Data.TaggedEnum; queue-runtime: Layer + ManagedRuntime + Fiber + Duration):
 - Data contracts -> Schema (rung status Schema.Literal('available','unavailable'); completeness Schema.check;
   staleness a Duration).
-- Tagged errors -> Data.TaggedError (InsufficientEvidence, NoReplayableRequest, EndpointUnavailable, ScopeMismatch).
+- Tagged errors -> Data.TaggedError with fixed behaviors: InsufficientEvidence (no admitted endpoint -> no
+  advisory, baseline routing), NoReplayableRequest (no replayable capture -> the dispatcher skips the task),
+  EndpointUnavailable (skip the rung, continue the walk), ScopeMismatch (refuse the advisory as
+  advisory_task_mismatch, baseline routing).
 - Aggregation -> a pure Effect over Chunk/Order, folding records into a HashMap<endpointId, rankScore>.
 - Persistence -> Layer + Context.Tag (the pack/ladder store, WAL SQLite).
 - Dispatch scheduler -> Effect + Schedule + Duration + Clock + Ref/Queue (hold the focus task, depth-first).
@@ -280,8 +302,8 @@ configured, route through recursive-router rather than hardcoding).
 
 - Baseline: public origin/dev @ 701b8b8f + private origin/dev @ c993b2f2 (the run-104 merge; the R22-B role/task
   plumbing the pack scope needs is IN this baseline, so no prerequisite merge remains).
-- The design doc docs/route-learning-stage-3-matching-scope-activation.md is in the baseline and is the source of
-  truth for the ladder semantics.
+- This requirements doc is self-contained (it carries the design doc's details inline); the design doc
+  docs/route-learning-stage-3-matching-scope-activation.md is in the baseline as the design history.
 - Effect is the default substrate (RECURSIVE.md rule 6; read .agents/skills/effect-ts/SKILL.md before Effect code).
 - The stage channel runtime (built from this baseline) is live on :3457 for verification; the run must rebuild it
   after changes (paired build: private build:run00-runtime with ROLE_MODEL_BUILD_CHANNEL=stage +

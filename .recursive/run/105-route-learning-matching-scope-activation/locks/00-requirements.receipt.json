@@ -1,9 +1,9 @@
 {
   "artifact": "00-requirements.md",
-  "artifact_hash": "d23946c11d1670cd9148eb2c0be1edcb91c0cce743973c1977d655e82d5db30a",
+  "artifact_hash": "ff8d6ff2cc053e72f97a73a97a25f85945ade414bc2399b66f007353f7d24d56",
   "artifact_path": "D:\\DEV\\role-model\\.worktrees\\105-route-learning-matching-scope-activation\\.recursive\\run\\105-route-learning-matching-scope-activation\\00-requirements.md",
-  "locked_at": "2026-10-03T02:13:35.940Z",
+  "locked_at": "2026-10-03T02:15:53.100Z",
   "prerequisite_hashes": {},
-  "previous_receipt_hash": "9b1380ecc3400ef041d32645eaf0a1d75e1a72cb42ee174b0eb04294a904f342",
-  "receipt_hash": "0b24e079d0ac44509072460f1946292129a0a407c027be1562a20e3000fc1325"
+  "previous_receipt_hash": "0b24e079d0ac44509072460f1946292129a0a407c027be1562a20e3000fc1325",
+  "receipt_hash": "a5ee5134b77b35feec926c4ac739f33b8b994f09e01aebdd845766632866c5f6"
 }
