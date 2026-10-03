@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 import {
   NoReplayableRequest,
   type RouteFocusCandidate,
@@ -9,7 +11,7 @@ import {
   selectFocusTask,
   stalenessWindowMs,
 } from "@role-model-router/core";
-import { Effect, Schedule } from "effect";
+import { Effect, Ref, Schedule } from "effect";
 
 import {
   type AutoReplayCapture,
@@ -315,12 +317,108 @@ export interface AutoReplayOperations {
  * Optional fields stay optional so a store that answers a narrower row (a legacy readback) does not
  * break the tick; the focus readouts then report what is actually known.
  */
+/** Durable evaluation readback, NOT a provider/branch completion receipt. Null means not finalized. */
+export interface FinalizedRouteChallenge {
+  readonly comparisonGroupId: string;
+  readonly finalizedAtMs: number;
+  readonly effortComparable: boolean;
+  /** Null is a finalized tie; a winner must be one of the requested pair. */
+  readonly winnerEndpointId: string | null;
+}
+
+export interface RouteChallengeReadRequest {
+  /** Require a genuinely finalized group created at/after this scheduling cutoff. */
+  readonly sinceMs?: number;
+  readonly excludedComparisonGroupIds?: readonly string[];
+  readonly roleId: string;
+  readonly taskTypeId: string;
+  readonly captureRef: string;
+  readonly newEndpointId: string;
+  readonly againstEndpointId: string;
+}
+
+export interface RouteDispatchEvidence extends FinalizedRouteChallenge {
+  readonly captureRef: string;
+  readonly newEndpointId: string;
+  readonly againstEndpointId: string;
+  readonly judgeConfidence: number;
+  /** Actual confidence for request.endpointId, not the comparison winner. */
+  readonly endpointConfidence: number;
+}
+export interface PendingRouteDispatch {
+  readonly dispatchRoundId?: string;
+  readonly sourceType: "replay" | "queue";
+  readonly replayJobId: string | null;
+  readonly queueJobId: string | null;
+  readonly captureRef: string;
+  readonly newEndpointId: string;
+  readonly againstEndpointId: string;
+  readonly createdAtMs: number;
+  readonly state: "queued" | "running" | "awaiting_evaluation" | "failed" | "cancelled" | "timed_out";
+}
+export interface PendingRouteDispatchReadRequest {
+  readonly roleId: string;
+  readonly taskTypeId: string;
+}
+export interface RouteDispatchEvidenceReadRequest {
+  readonly roleId: string;
+  readonly taskTypeId: string;
+  readonly endpointId: string;
+  readonly sinceMs?: number;
+}
+
 export interface RouteLadderRow {
   readonly rungs?: readonly RouteLadderRung[] | null;
   readonly completeness?: { readonly admitted?: number; readonly configured?: number } | null;
   readonly nextEligibleAtMs?: number | null;
   readonly version?: number | null;
   readonly rolledBack?: RouteLadderRolledBack | null;
+}
+
+/**
+ * Run 105 Phase 3.5 CLI-compile repair: decode a store answer into the typed RouteLadderRow the
+ * tick consumes. The answer crosses a process boundary as JSON, so this is the ONE place where it
+ * becomes typed - the provider returns this instead of `unknown` (the original TS2322 at cli.ts).
+ *
+ * It decodes only the fields the tick reads and NEVER throws: a malformed or absent answer is
+ * `null` ("no ladder known"), which is the fail-closed path the tick already handles. A rung whose
+ * status is outside the contract is dropped rather than coerced, so an unknown status can never be
+ * walked as if it were `available`.
+ */
+export function decodeRouteLadderRow(value: unknown): RouteLadderRow | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const record = value as Record<string, unknown>;
+  const rungs = (Array.isArray(record.rungs) ? record.rungs : []).flatMap((rung) => {
+    if (!rung || typeof rung !== "object" || Array.isArray(rung)) return [];
+    const row = rung as Record<string, unknown>;
+    const endpointId = typeof row.endpointId === "string" ? row.endpointId : "";
+    const rank = Number.isSafeInteger(row.rank) ? Number(row.rank) : 0;
+    const status = row.status;
+    if (!endpointId || rank < 1) return [];
+    if (status !== "available" && status !== "unavailable") return [];
+    return [{ endpointId, rank, status } as RouteLadderRung];
+  });
+  const completenessRecord =
+    record.completeness && typeof record.completeness === "object" && !Array.isArray(record.completeness)
+      ? (record.completeness as Record<string, unknown>)
+      : {};
+  const admitted = Number.isSafeInteger(completenessRecord.admitted) ? Number(completenessRecord.admitted) : 0;
+  const configured = Number.isSafeInteger(completenessRecord.configured) ? Number(completenessRecord.configured) : 0;
+  const rolledBackRecord =
+    record.rolledBack && typeof record.rolledBack === "object" && !Array.isArray(record.rolledBack)
+      ? (record.rolledBack as Record<string, unknown>)
+      : {};
+  return {
+    rungs,
+    completeness: { admitted, configured },
+    nextEligibleAtMs: Number.isFinite(record.nextEligibleAtMs) ? Number(record.nextEligibleAtMs) : null,
+    version: Number.isSafeInteger(record.version) ? Number(record.version) : null,
+    rolledBack: {
+      on: rolledBackRecord.on === true,
+      reason: typeof rolledBackRecord.reason === "string" ? rolledBackRecord.reason : null,
+      atMs: Number.isFinite(rolledBackRecord.atMs) ? Number(rolledBackRecord.atMs) : null,
+    },
+  };
 }
 
 export interface AutoReplayLoopHealth {
@@ -398,6 +496,7 @@ export function startAutoReplayLoop(input: {
     | readonly string[]
     | (() => readonly string[] | null | Promise<readonly string[] | null>);
   readonly executor: (input: {
+    readonly dispatchRoundId?: string;
     readonly capture: AutoReplayCapture;
     readonly candidates: readonly string[];
     readonly toolPolicy: ReplayToolPolicy;
@@ -439,6 +538,7 @@ export function startAutoReplayLoop(input: {
       readonly captureRef: string;
       readonly endpointIds: readonly string[];
       readonly policySetDigest: string;
+      readonly dispatchRoundId?: string;
     }) => Promise<{ readonly enqueued: boolean; readonly reason?: string }>;
   };
   /**
@@ -486,6 +586,20 @@ export function startAutoReplayLoop(input: {
    * so a runtime without the wiring behaves exactly as the guidance copy says.
    */
   readonly routeLearningDefaults?: RouteLearningDefaults | null;
+  /** Exact-task durable replay jobs; null unavailable, [] a complete empty read. */
+  readonly readPendingRouteDispatches?: (request: PendingRouteDispatchReadRequest) =>
+    Promise<readonly PendingRouteDispatch[] | null> | readonly PendingRouteDispatch[] | null;
+  /** Complete durable enumeration. Null means unavailable, [] means no finalized groups. */
+  readonly readRouteDispatchEvidence?: (request: RouteDispatchEvidenceReadRequest) =>
+    Promise<readonly RouteDispatchEvidence[] | null> | readonly RouteDispatchEvidence[] | null;
+  /** Exact task historical capture readback; actual replayability/terminal state stays with owner. */
+  readonly readRouteReplayableCaptures?: (request: { readonly roleId: string; readonly taskTypeId: string }) =>
+    Promise<readonly AutoReplayCapture[] | null> | readonly AutoReplayCapture[] | null;
+  /** CLI must bind to finalized, effort-comparable groups for this exact task/capture/pair.
+   * Never synthesize a verdict from replay terminal state, branches, or a ladder version change. */
+  readonly readFinalizedRouteChallenge?: (
+    request: RouteChallengeReadRequest,
+  ) => Promise<FinalizedRouteChallenge | null> | FinalizedRouteChallenge | null;
   /**
    * Run 105 R8: recompute one task's refresh eligibility (nextEligibleAtMs). Called by the sweep for
    * a complete task whose window has not been recorded yet; a new configured endpoint sets it to
@@ -505,6 +619,7 @@ export function startAutoReplayLoop(input: {
    */
   dispatchCapture(
     captureRef: string,
+    dispatchRoundId?: string,
   ): Promise<AutoReplayTickResult & { readonly skipped?: boolean }>;
   stop(): void;
   pause(): void;
@@ -535,6 +650,58 @@ export function startAutoReplayLoop(input: {
   let focusTaskKey: string | null = null;
   let focusRemaining = 0;
   let challengeInFlight = false;
+  interface ChallengeProgress {
+    readonly kind?: "refresh" | "challenge";
+    readonly startedAtMs?: number;
+    readonly endpointId: string;
+    readonly against: readonly string[];
+    readonly cursor: number;
+    readonly pendingCaptureRef: string | null;
+    readonly done: boolean;
+    readonly usedCaptureRefs?: readonly string[];
+    readonly placementComplete?: boolean;
+    readonly completedGroupIds?: readonly string[];
+    readonly pendingRoundId?: string;
+  }
+  // Ref holds only scheduling progress. Admission/activation remain derived from the store's floor.
+  // Durable pair verdicts stay in Evaluation Core; this process never writes an invented receipt.
+  const challenges = Ref.makeUnsafe(new Map<string, ChallengeProgress>());
+  const heldFocus = Ref.makeUnsafe<string | null>(null);
+  const stageExecutionBusy = Ref.makeUnsafe(false);
+  const seenConfigured = Ref.makeUnsafe(new Map<string, readonly string[]>());
+  const dispatchedChallenges = new Set<string>();
+  const setChallenge = (key: string, value: ChallengeProgress) => Effect.runSync(
+    Ref.update(challenges, current => new Map(current).set(key, value)),
+  );
+  const readFinalized = async (request: RouteChallengeReadRequest) => {
+    if (!input.readFinalizedRouteChallenge) throw new Error("route challenge finalization unavailable: CLI binding required");
+    return Effect.runPromise(Effect.tryPromise({
+      try: async () => input.readFinalizedRouteChallenge!(request),
+      catch: cause => new Error(
+        "route challenge finalization unavailable: " + (cause instanceof Error ? cause.message : String(cause)),
+      ),
+    }));
+  };
+  const applyFinalized = async (key: string, progress: ChallengeProgress, answer: FinalizedRouteChallenge | null) => {
+    if (!answer || progress.completedGroupIds?.includes(answer.comparisonGroupId)) return false;
+    const againstEndpointId = progress.against[progress.cursor];
+    if (!answer.comparisonGroupId || !Number.isFinite(answer.finalizedAtMs) ||
+        answer.effortComparable !== true || answer.finalizedAtMs < (progress.startedAtMs ?? 0) ||
+        (answer.winnerEndpointId !== null && answer.winnerEndpointId !== progress.endpointId &&
+          answer.winnerEndpointId !== againstEndpointId)) {
+      throw new Error("route challenge finalization unavailable: invalid or non-comparable pair verdict");
+    }
+    if (progress.kind === "refresh") {
+      if (!input.markRouteLadderEligible) throw new Error("route ladder eligibility unavailable: CLI binding required");
+      const [roleId, taskTypeId] = key.split("\u0000");
+      const windowMs = input.routeLearningDefaults ? stalenessWindowMs(input.routeLearningDefaults) : 30 * 24 * 60 * 60 * 1000;
+      await input.markRouteLadderEligible({ roleId: roleId!, taskTypeId: taskTypeId!, nextEligibleAtMs: now() + windowMs });
+    }
+    const cursor = progress.cursor + 1;
+    setChallenge(key, { ...progress, cursor, pendingCaptureRef: null, pendingRoundId: undefined,
+      done: answer.winnerEndpointId === progress.endpointId || cursor >= progress.against.length });
+    return true;
+  };
   let timer: unknown = null;
 
   const pendingCaptures = (value: unknown): readonly AutoReplayCapture[] => {
@@ -962,10 +1129,10 @@ export function startAutoReplayLoop(input: {
    * worker calls it with the queue disabled, which is what keeps a queued job
    * from re-enqueueing itself.
    */
-  const tick = async (options?: { readonly onlyCaptureRefs?: readonly string[] }): Promise<
+  const tick = async (options?: { readonly onlyCaptureRefs?: readonly string[]; readonly dispatchRoundId?: string }): Promise<
     AutoReplayTickResult & { readonly skipped?: boolean }
   > => {
-    if (paused || (running && !options?.onlyCaptureRefs)) {
+    if (paused || Ref.getUnsafe(stageExecutionBusy) || (running && !options?.onlyCaptureRefs)) {
       // `L7`: this is the interval path while a long work tick is in flight. Run the liveness sweeps
       // here instead of skipping them, so an overdue job is still expired on schedule.
       // Run 104 post-closeout (addendum 15): the queue worker's restricted tick (`onlyCaptureRefs`)
@@ -987,123 +1154,233 @@ export function startAutoReplayLoop(input: {
       return { ...emptyResult(), skipped: true };
     }
     running = true;
+    const dispositionWrites: Promise<unknown>[] = [];
     try {
-      /**
-       * Run 105 R8/R9: resolve the focus task BEFORE the capture read, so this tick's dispatch is
-       * aimed at the one task the dispatcher holds and its ladder gap decides the counterfactual.
-       * The census is a provider, so an endpoint added (or a rollback flipped) while the runtime is
-       * up takes effect on this tick. A provider that throws degrades the focus readouts only - the
-       * replay path itself keeps running exactly as before.
-       */
+      const stageEnabled = typeof input.routeFocusCandidates === "function";
       let plannedFocus: ReturnType<typeof selectFocusTask> = null;
       let focusCaptureRef: string | null = null;
       let focusEndpointId: string | null = null;
       let routeLadder: RouteLadderRow | null = null;
-      if (typeof input.routeFocusCandidates === "function") {
+      let challengeKey: string | null = null;
+      const configuredNow = typeof input.configuredEndpointIds === "function"
+        ? input.configuredEndpointIds() : input.configuredEndpointIds;
+      const pending = await input.operations.listPendingReplayCaptures({
+        policySetDigest: input.policySet.policySetDigest, limit: maxCapturesPerTick * 4,
+      });
+      let captures = pendingCaptures(pending);
+      const challengeBatchSize = input.routeLearningDefaults?.challengeBatchSize ?? 1;
+      if (stageEnabled) {
+        if (!input.readRouteLadder) throw new Error("route ladder context unavailable: CLI binding required");
+        let census: readonly RouteFocusCandidate[];
         try {
-          const census = await input.routeFocusCandidates();
-          plannedFocus = selectFocusTask(census ?? null);
-        } catch (error) {
-          plannedFocus = null;
-          console.error(
-            `[run105] route focus census failed: ${String(
-              (error as { message?: unknown })?.message ?? error,
-            ).slice(0, 200)}`,
-          );
+          const answer = await input.routeFocusCandidates!();
+          if (!answer) throw new Error("missing census");
+          census = answer;
+        } catch (cause) { throw new Error("route focus census unavailable: " + String(cause)); }
+        const rows = new Map<string, RouteLadderRow | null>();
+        const eligible: RouteFocusCandidate[] = [];
+        for (const candidate of census) {
+          if (!selectFocusTask([candidate])) continue;
+          const key = candidate.roleId + "\u0000" + candidate.taskTypeId;
+          let row: RouteLadderRow | null;
+          try { row = await input.readRouteLadder(candidate); }
+          catch (cause) { throw new Error("route ladder context unavailable: " + String(cause)); }
+          rows.set(key, row);
+          if (row?.rolledBack?.on) continue;
+          const admitted = (row?.rungs ?? []).filter(rung => rung.status === "available" && configuredNow.includes(rung.endpointId));
+          const missing = configuredNow.filter(id => !admitted.some(rung => rung.endpointId === id));
+          // A stored complete snapshot identifies endpoint arrival, not an ordinary below-floor gap.
+          // Counts may already reflect a changed denominator. Require the stored snapshot's
+          // actual rungs to substantiate completeness; removal must not masquerade as arrival.
+          const storedAvailable = (row?.rungs ?? []).filter(rung => rung.status === "available");
+          const wasComplete = Boolean(row?.completeness && Number(row.completeness.configured) > 0 &&
+            Number(row.completeness.admitted) >= Number(row.completeness.configured) &&
+            storedAvailable.length >= Number(row.completeness.configured) &&
+            !(row?.rungs ?? []).some(rung => rung.status === "unavailable"));
+          const previous = Ref.getUnsafe(seenConfigured).get(key);
+          const added = previous ? configuredNow.some(id => !previous.includes(id)) : wasComplete && missing.length > 0;
+          const alreadyDue = Number.isFinite(row?.nextEligibleAtMs) && Number(row!.nextEligibleAtMs) <= now();
+          if (added && (!alreadyDue || Boolean(previous))) {
+            if (!input.markRouteLadderEligible) throw new Error("route ladder eligibility unavailable: CLI binding required");
+            await input.markRouteLadderEligible({ roleId: candidate.roleId, taskTypeId: candidate.taskTypeId, nextEligibleAtMs: now() });
+          }
+          Effect.runSync(Ref.update(seenConfigured, current => new Map(current).set(key, [...configuredNow])));
+          let progress = Ref.getUnsafe(challenges).get(key);
+          if (progress && !progress.done && progress.kind !== "refresh") {
+            const remaining = progress.against.slice(progress.cursor).filter(id => admitted.some(rung => rung.endpointId === id));
+            if (remaining[0] !== progress.against[progress.cursor]) {
+              progress = { ...progress, against: remaining, cursor: 0, pendingCaptureRef: null, done: remaining.length === 0 };
+              setChallenge(key, progress);
+            }
+          }
+          const challenger = missing.find(id => !(progress?.kind !== "refresh" && progress?.endpointId === id && progress.done));
+          if (challenger && (!progress ? wasComplete : progress.done && admitted.some(rung => rung.endpointId === progress!.endpointId))) {
+            if (!input.markRouteLadderEligible) throw new Error("route ladder eligibility unavailable: CLI binding required");
+            if (!added && !alreadyDue) await input.markRouteLadderEligible({ roleId: candidate.roleId, taskTypeId: candidate.taskTypeId, nextEligibleAtMs: now() });
+            const against = planChallenge({ newEndpointId: challenger, rungs: admitted,
+              challengeBatchSize: admitted.length }).map(pair => pair.againstEndpointId);
+            setChallenge(key, { startedAtMs: Number.isFinite(row?.nextEligibleAtMs) && Number(row!.nextEligibleAtMs) <= now() ? Number(row!.nextEligibleAtMs) : now(), endpointId: challenger, against, cursor: 0, pendingCaptureRef: null, done: against.length === 0 });
+          }
+          let active = Ref.getUnsafe(challenges).get(key);
+          if (input.readPendingRouteDispatches && (missing.length > 0 || Number(row?.nextEligibleAtMs ?? Infinity) <= now())) {
+            const jobs = await input.readPendingRouteDispatches(candidate);
+            if (jobs === null) throw new Error("route pending dispatches unavailable");
+            const cutoff = active?.startedAtMs ?? (alreadyDue ? Number(row!.nextEligibleAtMs) : now());
+            const relevant = jobs.filter(job => (job.sourceType === "replay" ? Boolean(job.replayJobId) : job.sourceType === "queue" && Boolean(job.queueJobId)) && job.captureRef && Number.isFinite(job.createdAtMs) &&
+              job.createdAtMs >= cutoff && job.createdAtMs <= now() && job.newEndpointId !== job.againstEndpointId &&
+              configuredNow.includes(job.newEndpointId) && configuredNow.includes(job.againstEndpointId) &&
+              (!active || job.newEndpointId === active.endpointId) &&
+              (missing.length === 0 || missing.includes(job.newEndpointId)))
+              .sort((a, b) => b.createdAtMs - a.createdAtMs || String(a.replayJobId ?? a.queueJobId).localeCompare(String(b.replayJobId ?? b.queueJobId)));
+            const pendingJob = relevant.find(job => job.state === "queued" || job.state === "running" || job.state === "awaiting_evaluation");
+            if (pendingJob && (!active || !active.done)) {
+              const against = missing.length === 0 ? [pendingJob.againstEndpointId] :
+                planChallenge({ newEndpointId: pendingJob.newEndpointId, rungs: admitted,
+                  challengeBatchSize: admitted.length }).map(pair => pair.againstEndpointId);
+              const cursor = against.indexOf(pendingJob.againstEndpointId);
+              if (cursor >= 0) {
+                active = { ...(active ?? {}), kind: missing.length === 0 ? "refresh" : "challenge",
+                  startedAtMs: cutoff, endpointId: pendingJob.newEndpointId, against,
+                  cursor, pendingCaptureRef: pendingJob.captureRef, pendingRoundId: pendingJob.dispatchRoundId, done: false };
+                setChallenge(key, active);
+                const ownsProcessingQueueRound = pendingJob.sourceType === "queue" && pendingJob.state === "running" &&
+                  options?.onlyCaptureRefs?.includes(pendingJob.captureRef) && options.dispatchRoundId !== undefined &&
+                  pendingJob.dispatchRoundId === options.dispatchRoundId;
+                if (pendingJob.state === "queued" || ownsProcessingQueueRound) dispatchedChallenges.delete(pendingJob.captureRef);
+                else dispatchedChallenges.add(pendingJob.captureRef);
+              }
+            } else if (active?.pendingCaptureRef && relevant.some(job => job.captureRef === active!.pendingCaptureRef &&
+                (job.state === "failed" || job.state === "cancelled" || job.state === "timed_out"))) {
+              dispatchedChallenges.delete(active.pendingCaptureRef);
+              active = { ...active, pendingCaptureRef: null };
+              setChallenge(key, active);
+            }
+          }
+          if (active && active.kind !== "refresh" && input.readRouteDispatchEvidence) {
+            const answer = await input.readRouteDispatchEvidence({ roleId: candidate.roleId, taskTypeId: candidate.taskTypeId,
+              endpointId: active.endpointId, sinceMs: active.startedAtMs });
+            if (answer === null) throw new Error("route dispatch evidence unavailable");
+            const groups = [...new Map(answer.filter(record => record.newEndpointId === active!.endpointId &&
+              record.effortComparable === true && record.comparisonGroupId && Number.isFinite(record.finalizedAtMs) &&
+              record.finalizedAtMs >= (active!.startedAtMs ?? 0) && Number.isFinite(record.judgeConfidence) &&
+              record.judgeConfidence >= 0 && record.judgeConfidence <= 1 &&
+              Number.isFinite(record.endpointConfidence) && record.endpointConfidence >= 0 && record.endpointConfidence <= 1 &&
+              (record.winnerEndpointId === null || record.winnerEndpointId === record.newEndpointId ||
+                record.winnerEndpointId === record.againstEndpointId))
+              .map(record => [record.comparisonGroupId, record] as const)).values()]
+              .sort((a, b) => a.finalizedAtMs - b.finalizedAtMs || a.comparisonGroupId.localeCompare(b.comparisonGroupId));
+            let cursor = 0; let placed = false;
+            for (const record of groups) {
+              if (record.againstEndpointId !== active.against[cursor]) continue;
+              if (record.winnerEndpointId === active.endpointId) { placed = true; break; }
+              cursor += 1;
+              if (cursor >= active.against.length) { placed = true; break; }
+            }
+            const floor = input.routeLearningDefaults?.minComparisons ?? 5;
+            const confidence = input.routeLearningDefaults?.minConfidence ?? 0.7;
+            const met = groups.length >= floor && groups.reduce((sum, record) => sum + record.endpointConfidence, 0) / groups.length >= confidence;
+            const pendingSatisfied = groups.some(record => record.captureRef === active!.pendingCaptureRef);
+            if (placed || cursor > active.cursor || pendingSatisfied) {
+              active = { ...active, cursor: placed ? 0 : cursor, placementComplete: placed,
+                against: placed ? [active.against[Math.min(cursor, active.against.length - 1)]!] : active.against,
+                done: placed && met, completedGroupIds: groups.map(record => record.comparisonGroupId),
+                usedCaptureRefs: groups.map(record => record.captureRef),
+                pendingCaptureRef: pendingSatisfied ? null : active.pendingCaptureRef,
+                pendingRoundId: pendingSatisfied ? undefined : active.pendingRoundId };
+              setChallenge(key, active);
+            }
+          }
+          if (active?.kind !== "refresh" && active?.done && missing.length > 0) continue; // Wait for genuine floor/publication.
+          if (missing.length === 0 && configuredNow.length > 0 &&
+              Number(row?.nextEligibleAtMs ?? Infinity) <= now() && !active && input.readRouteDispatchEvidence) {
+            // Recover a completed refresh after interruption between real evaluation finalization
+            // and eligibility write. The persisted due timestamp is the evidence cutoff.
+            let recovered: RouteDispatchEvidence | undefined;
+            for (const endpointId of configuredNow) {
+              const answer = await input.readRouteDispatchEvidence({ roleId: candidate.roleId,
+                taskTypeId: candidate.taskTypeId, endpointId, sinceMs: Number(row!.nextEligibleAtMs) });
+              if (answer === null) throw new Error("route dispatch evidence unavailable");
+              recovered = answer.find(record => record.newEndpointId === endpointId &&
+                record.newEndpointId !== record.againstEndpointId && configuredNow.includes(record.againstEndpointId) &&
+                record.effortComparable === true && Boolean(record.comparisonGroupId) &&
+                Number.isFinite(record.finalizedAtMs) && record.finalizedAtMs >= Number(row!.nextEligibleAtMs) &&
+                record.finalizedAtMs <= now() && (record.winnerEndpointId === null ||
+                  record.winnerEndpointId === endpointId || record.winnerEndpointId === record.againstEndpointId));
+              if (recovered) break;
+            }
+            if (recovered) {
+              if (!input.markRouteLadderEligible) throw new Error("route ladder eligibility unavailable: CLI binding required");
+              const windowMs = input.routeLearningDefaults ? stalenessWindowMs(input.routeLearningDefaults) : 30 * 24 * 60 * 60 * 1000;
+              await input.markRouteLadderEligible({ roleId: candidate.roleId, taskTypeId: candidate.taskTypeId,
+                nextEligibleAtMs: now() + windowMs });
+              continue;
+            }
+          }
+          if (missing.length === 0 && configuredNow.length > 0 && Number(row?.nextEligibleAtMs ?? Infinity) > now()) continue;
+          eligible.push({ ...candidate, configured: configuredNow.length, admitted: admitted.length });
         }
-      }
-      if (plannedFocus) {
-        focusTaskKey = plannedFocus.scopeKey;
-        focusRemaining = plannedFocus.remaining;
-        if (typeof input.readRouteLadder === "function") {
-          try {
-            routeLadder = await input.readRouteLadder({
-              roleId: plannedFocus.roleId,
-              taskTypeId: plannedFocus.taskTypeId,
-            });
-          } catch {
-            routeLadder = null;
+        const held = Ref.getUnsafe(heldFocus);
+        const retained = eligible.find(candidate => candidate.roleId + "\u0000" + candidate.taskTypeId === held);
+        plannedFocus = retained && retained.admitted < retained.configured
+          ? selectFocusTask([retained]) : selectFocusTask(eligible);
+        focusTaskKey = plannedFocus?.scopeKey ?? null;
+        focusRemaining = plannedFocus?.remaining ?? 0;
+        challengeInFlight = false;
+        Effect.runSync(Ref.set(heldFocus, focusTaskKey));
+        if (plannedFocus) {
+          routeLadder = rows.get(plannedFocus.scopeKey) ?? null;
+          let progress = Ref.getUnsafe(challenges).get(plannedFocus.scopeKey);
+          if (input.readRouteReplayableCaptures) {
+            const history = await input.readRouteReplayableCaptures(plannedFocus);
+            if (history === null) throw new Error("route replayable corpus unavailable");
+            const existing = new Set(captures.map(item => item.captureRef));
+            captures = [...captures, ...history.filter(item => item.roleId === plannedFocus!.roleId &&
+              item.taskTypeId === plannedFocus!.taskTypeId && !existing.has(item.captureRef))];
+          }
+          const owned = captures.filter(item => item.roleId === plannedFocus!.roleId && item.taskTypeId === plannedFocus!.taskTypeId);
+          if (plannedFocus.remaining === 0 && Number(routeLadder?.nextEligibleAtMs ?? Infinity) <= now() &&
+              (!progress || progress.done)) {
+            const source = owned.find(item => configuredNow.some(id => id !== item.sourceEndpointId));
+            const endpointId = configuredNow.find(id => id !== source?.sourceEndpointId);
+            if (!source?.sourceEndpointId || !endpointId) throw new Error("NoReplayableRequest: complete ladder has no distinct refresh pair");
+            progress = { kind: "refresh", startedAtMs: now(), endpointId, against: [source.sourceEndpointId], cursor: 0,
+              pendingCaptureRef: null, done: false };
+            setChallenge(plannedFocus.scopeKey, progress);
+          }
+          if (progress && !progress.done) {
+            challengeKey = plannedFocus.scopeKey; challengeInFlight = progress.kind !== "refresh";
+            if (!input.readFinalizedRouteChallenge) throw new Error("route challenge finalization unavailable: CLI binding required");
+            if (progress.pendingCaptureRef) {
+              await applyFinalized(challengeKey, progress, await readFinalized({ roleId: plannedFocus.roleId,
+                taskTypeId: plannedFocus.taskTypeId, sinceMs: progress.startedAtMs, excludedComparisonGroupIds: progress.completedGroupIds, captureRef: progress.pendingCaptureRef,
+                newEndpointId: progress.endpointId, againstEndpointId: progress.against[progress.cursor]! }));
+            }
+            const current = Ref.getUnsafe(challenges).get(challengeKey)!;
+            challengeInFlight = current.kind !== "refresh" && !current.done;
+            if (!current.done && (!current.pendingCaptureRef || (options?.onlyCaptureRefs?.includes(current.pendingCaptureRef) &&
+                !dispatchedChallenges.has(current.pendingCaptureRef)))) {
+              const pairSources = owned.filter(item => item.sourceEndpointId === current.against[current.cursor] &&
+                (!current.pendingCaptureRef || item.captureRef === current.pendingCaptureRef));
+              const source = pairSources.find(item => !current.usedCaptureRefs?.includes(item.captureRef)) ??
+                (input.readRouteDispatchEvidence && current.placementComplete ? pairSources[0] : undefined);
+              if (!source) throw new Error("NoReplayableRequest: no recorded request from the challenged rung");
+              focusCaptureRef = source.captureRef; focusEndpointId = current.endpointId;
+            }
+          } else {
+            const source = owned.find(item => configuredNow.some(id => id !== item.sourceEndpointId &&
+              !(routeLadder?.rungs ?? []).some(rung => rung.endpointId === id && rung.status === "available"))) ?? owned[0];
+            const fill = planFocusDispatch({ focus: plannedFocus, replayableCapture: source,
+              configuredEndpointIds: configuredNow.filter(id => id !== source?.sourceEndpointId),
+              admittedEndpointIds: (routeLadder?.rungs ?? []).filter(rung => rung.status === "available").map(rung => rung.endpointId),
+              rungs: routeLadder?.rungs });
+            if (fill instanceof NoReplayableRequest) throw new Error("NoReplayableRequest: focus task has no replayable capture");
+            focusCaptureRef = source?.captureRef ?? null; focusEndpointId = fill?.endpointId ?? null;
+            if (source && !focusEndpointId && Number(routeLadder?.nextEligibleAtMs ?? Infinity) <= now()) {
+              focusEndpointId = configuredNow.find(id => id !== source.sourceEndpointId) ?? null;
+            }
           }
         }
-        /**
-         * D7/R14: a rolled-back task is PAUSED (R10) - its ladder is neither filled nor consulted
-         * while the flag is ON - so the dispatcher holds no focus for it and the next eligible task
-         * is picked on the following tick.
-         */
-        if (routeLadder?.rolledBack?.on === true) {
-          focusRemaining = 0;
-          challengeInFlight = false;
-          plannedFocus = null;
-        }
-      } else {
-        focusTaskKey = null;
-        focusRemaining = 0;
-        challengeInFlight = false;
-      }
-      const pending = await input.operations.listPendingReplayCaptures({
-        policySetDigest: input.policySet.policySetDigest,
-        limit: maxCapturesPerTick * 4,
-      });
-      const captures = pendingCaptures(pending);
-      /**
-       * Run 105 R8: a new configured endpoint breaks the task's idle immediately and starts a
-       * TOP-DOWN challenge (leader first, then the next rung). "New" is a configured endpoint the
-       * stored ladder does not carry a rung for, and it is derived here rather than stored, so an
-       * endpoint added while the runtime is up is a challenge on the very next tick.
-       */
-      const configuredNow =
-        typeof input.configuredEndpointIds === "function"
-          ? input.configuredEndpointIds()
-          : input.configuredEndpointIds;
-      const rankedEndpointIds = new Set(
-        (routeLadder?.rungs ?? [])
-          .map((rung) => rung.endpointId)
-          .filter((value): value is string => typeof value === "string" && value.length > 0),
-      );
-      const newEndpointIds = (configuredNow ?? []).filter(
-        (endpointId) =>
-          typeof endpointId === "string" &&
-          endpointId.length > 0 &&
-          !rankedEndpointIds.has(endpointId),
-      );
-      const challengeBatchSize = input.routeLearningDefaults?.challengeBatchSize ?? 1;
-      const challengePlan = plannedFocus
-        ? planChallenge({
-            newEndpointId: newEndpointIds[0] ?? "",
-            rungs: routeLadder?.rungs ?? [],
-            challengeBatchSize,
-          })
-        : [];
-      challengeInFlight = challengePlan.length > 0;
-      /**
-       * The focus task owns ONE capture: its own recorded request. Selecting it here keeps the
-       * narrowing honest - a capture belonging to another task is never re-aimed at this ladder.
-       * The counterfactual is the as-yet-unranked configured endpoint the depth-first fill picks,
-       * or - when a new endpoint arrived - the first rung of its top-down challenge.
-       */
-      if (plannedFocus) {
-        const owned = captures.find(
-          (capture) =>
-            capture.roleId === plannedFocus?.roleId &&
-            capture.taskTypeId === plannedFocus?.taskTypeId,
-        );
-        focusCaptureRef = owned ? owned.captureRef : null;
-        const fill = planFocusDispatch({
-          focus: { roleId: plannedFocus.roleId, taskTypeId: plannedFocus.taskTypeId },
-          replayableCapture: owned ? { captureRef: owned.captureRef } : null,
-          configuredEndpointIds: configuredNow ?? [],
-          admittedEndpointIds: (routeLadder?.rungs ?? [])
-            .filter((rung) => rung.status === "available")
-            .map((rung) => rung.endpointId),
-          rungs: routeLadder?.rungs ?? [],
-        });
-        focusEndpointId =
-          challengePlan[0]?.againstEndpointId ??
-          (fill && !(fill instanceof NoReplayableRequest) && "endpointId" in fill
-            ? fill.endpointId
-            : null);
-        focusRemaining = owned ? Math.max(0, plannedFocus.remaining) : 0;
-      }
+      } else { focusTaskKey = null; focusRemaining = 0; challengeInFlight = false; }
       const unclassifiedRouteCaptures = captures.filter(
         (capture) =>
           !(typeof capture.roleId === "string" && capture.roleId.length > 0) ||
@@ -1126,9 +1403,26 @@ export function startAutoReplayLoop(input: {
         }
       }
       const onlyCaptureRefs = options?.onlyCaptureRefs;
-      const scopedCaptures = onlyCaptureRefs
-        ? captures.filter((capture) => onlyCaptureRefs.includes(capture.captureRef))
-        : captures;
+      if (options?.dispatchRoundId !== undefined) {
+        const progress = challengeKey ? Ref.getUnsafe(challenges).get(challengeKey) : undefined;
+        if (!stageEnabled || !onlyCaptureRefs?.includes(focusCaptureRef ?? "") ||
+            !progress || progress.pendingCaptureRef !== focusCaptureRef ||
+            progress.pendingRoundId !== options.dispatchRoundId) {
+          throw new Error("claimed route dispatch round mismatch: no actual matching pending task/capture/pair round");
+        }
+      }
+      const dispatchRoundFor = (endpointId: string | null) => {
+        if (!challengeKey || !plannedFocus) return undefined;
+        const progress = Ref.getUnsafe(challenges).get(challengeKey)!;
+        return options?.dispatchRoundId ?? progress.pendingRoundId ?? createHash("sha256").update(JSON.stringify({
+          scopeKey: plannedFocus.scopeKey, endpointId, startedAtMs: progress.startedAtMs,
+          groupIds: [...(progress.completedGroupIds ?? [])].sort(),
+        })).digest("hex");
+      };
+      const scopedCaptures = stageEnabled
+        ? captures.filter(capture => capture.captureRef === focusCaptureRef && Boolean(focusEndpointId) &&
+            (!onlyCaptureRefs || onlyCaptureRefs.includes(capture.captureRef)))
+        : onlyCaptureRefs ? captures.filter(capture => onlyCaptureRefs.includes(capture.captureRef)) : captures;
       // Temporary diagnostic (addendum 14 follow-on): name what the replay-pending source returned.
       console.error(
         `[run104-pending] captures=${captures.length} scoped=${scopedCaptures.length} first=${captures
@@ -1155,7 +1449,7 @@ export function startAutoReplayLoop(input: {
        * written as soon as its capture finishes; the post-tick loop is gone, so nothing is written
        * twice.
        */
-      const dispositionWrites: Promise<unknown>[] = [];
+
       const writeDisposition = (disposition: {
         readonly captureRef: string;
         readonly outcome: string;
@@ -1180,8 +1474,9 @@ export function startAutoReplayLoop(input: {
               ).slice(0, 200)}`,
             );
           });
-      const result = await runAutoReplayTick({
-        captures: scopedCaptures,
+      const runDispatch = async (dispatchCaptures: readonly AutoReplayCapture[], endpointId: string | null,
+        captureRef: string | null) => runAutoReplayTick({
+        captures: dispatchCaptures,
         configuredEndpointIds,
         // Run 98 addendum 56 §6: the judge is excluded from the planned arms, and a capture whose own endpoint
         // is the judge is deferred with the named code rather than dispatched into a refusal.
@@ -1202,7 +1497,12 @@ export function startAutoReplayLoop(input: {
           : {}),
         ledger: input.ledger,
         policySet: input.policySet,
-        executor: input.executor,
+        executor: async request => {
+          if (!stageEnabled) return input.executor(request);
+          Effect.runSync(Ref.set(stageExecutionBusy, true));
+          try { return await input.executor(request); }
+          finally { Effect.runSync(Ref.set(stageExecutionBusy, false)); }
+        },
         maxCapturesPerTick,
         dispositionSink: (disposition) => {
           dispositionWrites.push(writeDisposition(disposition));
@@ -1234,14 +1534,56 @@ export function startAutoReplayLoop(input: {
          * it belongs to, so the tick applies it to that capture alone and every other capture keeps
          * its rotation - one pairwise comparison per rung, and never a widened candidate pool.
          */
-        ...(focusEndpointId && focusCaptureRef
-          ? {
-              focusCandidateEndpointId: focusEndpointId,
-              focusCaptureRef,
-            }
-          : {}),
+        ...(endpointId && captureRef
+          ? { focusCandidateEndpointId: endpointId, focusCaptureRef: captureRef } : {}),
+        // Pre-stage callers keep their historical capture semantics; stage callers fail closed.
+        requireRouteClassification: stageEnabled || captures.some(capture => Boolean(capture.roleId || capture.taskTypeId)),
+        ...(challengeKey && plannedFocus ? { dispatchRoundId: dispatchRoundFor(endpointId) } : {}),
         now,
       });
+      let result = emptyResult();
+      const batchStartedAtMs = now();
+      const bound = challengeKey ? Math.max(0, Math.floor(challengeBatchSize)) : 1;
+      for (let step = 0; step < bound; step += 1) {
+        if (input.tickBudgetMs && now() - batchStartedAtMs >= input.tickBudgetMs) break;
+        const dispatchCaptures = step === 0 ? scopedCaptures : captures.filter(c => c.captureRef === focusCaptureRef);
+        if (challengeKey && plannedFocus && dispatchCaptures.length > 0) {
+          // Re-read rollback immediately before EACH sequential arm, including queue claims.
+          const latest = await input.readRouteLadder!(plannedFocus);
+          if (latest?.rolledBack?.on) { challengeInFlight = false; break; }
+          const progress = Ref.getUnsafe(challenges).get(challengeKey)!;
+          setChallenge(challengeKey, { ...progress, pendingCaptureRef: focusCaptureRef, pendingRoundId: dispatchRoundFor(focusEndpointId) });
+        }
+        const part = await runDispatch(dispatchCaptures, focusEndpointId, focusCaptureRef);
+        result = { processed: result.processed + part.processed, replayed: result.replayed + part.replayed,
+          refused: result.refused + part.refused, deferred: result.deferred + part.deferred,
+          queued: (result.queued ?? 0) + (part.queued ?? 0),
+          dispositions: [...result.dispositions, ...part.dispositions], cursor: part.cursor,
+          budgetExhausted: result.budgetExhausted || part.budgetExhausted };
+        if (!challengeKey || !plannedFocus || !focusCaptureRef || dispatchCaptures.length === 0) break;
+        if ((part.queued ?? 0) > 0) break; // Worker uses dispatchCapture; never a concurrent next arm.
+        if (part.dispositions.some(row => row.code === "replay_dispatch_offer_refused" || row.outcome === "refused" ||
+            (row.outcome === "deferred" && !(Number(row.branches) > 0)))) {
+          const progress = Ref.getUnsafe(challenges).get(challengeKey)!;
+          setChallenge(challengeKey, { ...progress, pendingCaptureRef: null });
+          dispatchedChallenges.delete(focusCaptureRef);
+          break;
+        }
+        if (part.replayed > 0 || part.deferred > 0) dispatchedChallenges.add(focusCaptureRef);
+        const progress = Ref.getUnsafe(challenges).get(challengeKey)!;
+        if (!await applyFinalized(challengeKey, progress, await readFinalized({ roleId: plannedFocus.roleId,
+          taskTypeId: plannedFocus.taskTypeId, sinceMs: progress.startedAtMs, excludedComparisonGroupIds: progress.completedGroupIds, captureRef: focusCaptureRef,
+          newEndpointId: progress.endpointId, againstEndpointId: progress.against[progress.cursor]! }))) break;
+        const next = Ref.getUnsafe(challenges).get(challengeKey)!;
+        challengeInFlight = next.kind !== "refresh" && !next.done;
+        if (next.done) break;
+        const source = captures.find(c => c.roleId === plannedFocus!.roleId && c.taskTypeId === plannedFocus!.taskTypeId &&
+          c.sourceEndpointId === next.against[next.cursor]);
+        if (!source) break; // Next tick names NoReplayableRequest; never invent a rung source.
+        focusCaptureRef = source.captureRef; focusEndpointId = next.endpointId;
+        // A queue worker can only execute the capture it claimed, not the next rung's capture.
+        if (onlyCaptureRefs) break;
+      }
       await Promise.all(dispositionWrites);
       // RC07 (L2): one bounded sweep per tick. A job whose deadline elapsed without
       // reaching a terminal state is expired with a typed receipt instead of living on
@@ -1265,6 +1607,7 @@ export function startAutoReplayLoop(input: {
       lastError = error instanceof Error ? error.message.slice(0, 300) : "auto replay tick failed";
       return emptyResult();
     } finally {
+      await Promise.all(dispositionWrites);
       ticks += 1;
       running = false;
     }
@@ -1291,11 +1634,11 @@ export function startAutoReplayLoop(input: {
      * queue disabled - so the job is executed through the path this loop has
      * always used, and a failure is the worker's retry signal.
      */
-    async dispatchCapture(captureRef: string) {
+    async dispatchCapture(captureRef: string, dispatchRoundId?: string) {
       if (!captureRef || typeof captureRef !== "string") {
         throw new Error("dispatchCapture requires a capture ref");
       }
-      const result = await tick({ onlyCaptureRefs: [captureRef] });
+      const result = await tick({ onlyCaptureRefs: [captureRef], ...(dispatchRoundId !== undefined ? { dispatchRoundId } : {}) });
       /**
        * Run 101 addendum 25. `queued` counts the captures the tick could not enqueue - the ones still pending for
        * the next tick (`track-b-auto-replay.ts:1016`). A restricted tick that leaves `queued === 0` has nothing left

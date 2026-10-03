@@ -2051,6 +2051,19 @@ export function createTrackBOperations({
       });
     },
     /**
+     * Run 105 Phase 3.5 repair (controller-approved minimal client seam): the host-only route
+     * ladder materialization. The body travels with the caller's operator action context
+     * (channel/scope/authorization epoch headers in requestOperator); the private sidecar host
+     * re-checks the context and refuses any caller-supplied store path.
+     */
+    async materializeRouteLadders(body: Record<string, unknown>): Promise<unknown> {
+      return requestOperator(
+        "learning route ladder materialization",
+        "operator/learning/materialize-route-ladders",
+        { method: "POST", body },
+      );
+    },
+    /**
      * Run 98 addendum 54 (implementing addendum 53 §3): record a measured guardrail breach through the
      * runtime's own extension path, so A44-S2's sustained-window rollback can be measured live. The sidecar
      * decides the window from the operator policy when the caller omits one and refuses the route on the

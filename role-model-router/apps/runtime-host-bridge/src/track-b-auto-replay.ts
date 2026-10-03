@@ -312,6 +312,8 @@ export function buildAutoReplayIdempotencyKey(input: {
    * contract revision mints a new job instead of colliding, and the previous job retires on its deadline.
    */
   readonly providerCallBudget?: number;
+  /** Explicit completed-comparison round; stable on retries, never a reservation nonce. */
+  readonly dispatchRoundId?: string;
 }): string {
   const captureRef = input.captureRef.trim();
   if (!captureRef) throw new Error("auto replay idempotency requires a capture reference");
@@ -332,7 +334,8 @@ export function buildAutoReplayIdempotencyKey(input: {
       ? Number(input.providerCallBudget)
       : null;
   const contractDigest = createHash("sha256")
-    .update(JSON.stringify({ policySetDigest, candidateEndpointIds, providerCallBudget }))
+    .update(JSON.stringify({ policySetDigest, candidateEndpointIds, providerCallBudget,
+      ...(input.dispatchRoundId ? { dispatchRoundId: input.dispatchRoundId } : {}) }))
     .digest("hex");
   return `auto:${captureRef}:${contractDigest}`;
 }
@@ -688,7 +691,8 @@ export function resolveAutoReplayExecutorTimeoutMs(input: {
   );
 }
 
-type AutoReplayExecutorRequest = {
+export type AutoReplayExecutorRequest = {
+  readonly dispatchRoundId?: string;
   readonly capture: AutoReplayCapture;
   readonly candidates: readonly string[];
   readonly toolPolicy: ReplayToolPolicy;
@@ -842,6 +846,7 @@ export async function runAutoReplayTick(input: {
   readonly ledger: ReplayLedger;
   readonly policySet: ReplayPolicySet;
   readonly executor: (input: {
+    readonly dispatchRoundId?: string;
     readonly capture: AutoReplayCapture;
     readonly candidates: readonly string[];
     readonly toolPolicy: ReplayToolPolicy;
@@ -915,6 +920,7 @@ export async function runAutoReplayTick(input: {
       readonly captureRef: string;
       readonly endpointIds: readonly string[];
       readonly policySetDigest: string;
+      readonly dispatchRoundId?: string;
     }) => Promise<{ readonly enqueued: boolean; readonly reason?: string }>;
   };
   /**
@@ -930,6 +936,9 @@ export async function runAutoReplayTick(input: {
    */
   readonly focusCandidateEndpointId?: string | null;
   readonly focusCaptureRef?: string | null;
+  /** Stage-3 runtime requires classification; omitted preserves pre-stage producers. */
+  readonly requireRouteClassification?: boolean;
+  readonly dispatchRoundId?: string;
 }): Promise<AutoReplayTickResult> {
   const maxCapturesPerTick = input.maxCapturesPerTick ?? DEFAULT_MAX_CAPTURES_PER_TICK;
   const tickBudgetMs = input.tickBudgetMs ?? DEFAULT_TICK_BUDGET_MS;
@@ -977,6 +986,9 @@ export async function runAutoReplayTick(input: {
     }
     processed += 1;
     cursor = capture.captureRef;
+    // Namespaced accounting identity only. The capture and actual policy contract are unchanged.
+    const dispatchRoundId = input.requireRouteClassification === true ? input.dispatchRoundId : undefined;
+    const ledgerPolicyDigest = dispatchRoundId ? input.policySet.policySetDigest + ":round:" + dispatchRoundId : input.policySet.policySetDigest;
 
     /**
      * Run 105 R1/R8: queue admission requires a (role, task) classification. A capture without BOTH
@@ -989,7 +1001,7 @@ export async function runAutoReplayTick(input: {
       roleId: capture.roleId,
       taskTypeId: capture.taskTypeId,
     });
-    if (!routeClassification.classified) {
+    if (input.requireRouteClassification === true && !routeClassification.classified) {
       refused += 1;
       emit({
         captureRef: capture.captureRef,
@@ -1078,7 +1090,8 @@ export async function runAutoReplayTick(input: {
         : null;
     const candidates = selectReplayCandidates({
       ...(focusNarrowingEndpointId
-        ? { configuredEndpointIds: [focusNarrowingEndpointId] }
+        ? { configuredEndpointIds: input.configuredEndpointIds.includes(focusNarrowingEndpointId)
+            ? [focusNarrowingEndpointId] : [] }
         : { configuredEndpointIds: input.configuredEndpointIds }),
       ...(input.healthyEndpointIds ? { healthyEndpointIds: input.healthyEndpointIds } : {}),
       sourceEndpointId: capture.sourceEndpointId,
@@ -1136,7 +1149,7 @@ export async function runAutoReplayTick(input: {
       budgetAvailable: replayBudgetAvailable(status),
       alreadyProcessed: input.ledger.hasTerminalCounterfactual(
         capture.captureRef,
-        input.policySet.policySetDigest,
+        ledgerPolicyDigest,
       ),
       sourceIsReplayProduced: capture.replayProduced === true,
       policyIdsResolvable: true,
@@ -1227,7 +1240,7 @@ export async function runAutoReplayTick(input: {
 
     const reservation = input.ledger.reserve({
       captureRef: capture.captureRef,
-      policySetDigest: input.policySet.policySetDigest,
+      policySetDigest: ledgerPolicyDigest,
       candidateDispatches: dispatchCandidates.length,
     });
     if (!reservation.accepted) {
@@ -1254,6 +1267,7 @@ export async function runAutoReplayTick(input: {
         captureRef: capture.captureRef,
         endpointIds: [...dispatchCandidates],
         policySetDigest: input.policySet.policySetDigest,
+        ...(dispatchRoundId ? { dispatchRoundId } : {}),
       });
       if (!offered.enqueued) {
         // The offer can only be refused by the queue's own id/validation rules;
@@ -1263,6 +1277,11 @@ export async function runAutoReplayTick(input: {
           code: "replay_dispatch_offer_refused",
           detail: offered.reason ?? "the replay queue refused the offer",
         });
+        if (input.requireRouteClassification === true) {
+          input.ledger.release(reservation.reservationId);
+          deferred += 1;
+          continue; // Stage scheduler retries the offer; never secretly executes refused queue work.
+        }
       } else if (input.dispatchQueue.mode === "queue") {
         queued += 1;
         continue;
@@ -1277,6 +1296,7 @@ export async function runAutoReplayTick(input: {
         policySet: input.policySet,
         reservationId: reservation.reservationId,
         judgeEndpointId: effectiveJudgeEndpointId,
+        ...(dispatchRoundId ? { dispatchRoundId } : {}),
       });
     } catch (error) {
       input.ledger.release(reservation.reservationId);
@@ -1308,7 +1328,7 @@ export async function runAutoReplayTick(input: {
       const recorded = input.ledger.record({
         reservationId: reservation.reservationId,
         captureRef: capture.captureRef,
-        policySetDigest: input.policySet.policySetDigest,
+        policySetDigest: ledgerPolicyDigest,
         counterfactualRef: `cf:${capture.captureRef}`,
         dispatchKind: dispatch.kind,
         candidateEndpointId: dispatch.endpointId,
@@ -1388,7 +1408,7 @@ export async function runAutoReplayTick(input: {
     // that succeeded but whose branch/evaluation step failed stays retryable.
     input.ledger.completeCounterfactual({
       captureRef: capture.captureRef,
-      policySetDigest: input.policySet.policySetDigest,
+      policySetDigest: ledgerPolicyDigest,
     });
     input.ledger.release(reservation.reservationId);
     replayed += 1;

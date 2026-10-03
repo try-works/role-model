@@ -634,6 +634,8 @@ describe("production Track B composition", () => {
       "activateLearningPack",
       "rollbackLearningPack",
       "engageLearningKillSwitch",
+      // Run 105 Phase 3.5 repair: the host-only ladder materialization operation.
+      "materializeRouteLadders",
     ] as const;
     const backend = Object.fromEntries(names.map((name) => [name, async () => name]));
     const serverOptions = createTrackBBridgeServerOptions(backend);

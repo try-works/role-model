@@ -787,6 +787,8 @@ const trackBServerOperationNames = [
   "activateLearningPack",
   "rollbackLearningPack",
   "engageLearningKillSwitch",
+  // Run 105 Phase 3.5 repair: the host-only ladder materialization operation.
+  "materializeRouteLadders",
 ] as const;
 
 export function createTrackBBridgeServerOptions<

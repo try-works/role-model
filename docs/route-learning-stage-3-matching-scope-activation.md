@@ -57,16 +57,32 @@ EXISTING advisory-consideration machinery (score-band, cohort, confidence) exact
 preferredRoutePackage entered - the only change is the source of the preference (a ladder walk instead of one
 stored endpoint). If the gates decline, the request routes by baseline, as today. The taxonomyVersion is
 carried for provenance (the advisory surface requires it); matching is (roleId, taskTypeId) exact only - a
-taxonomyVersion difference does not block the advisory in this stage.
+taxonomyVersion is not a lookup key, but the pre-existing `advisory_taxonomy_mismatch` refusal remains unchanged and fails closed (effective requirements addendum A1).
 
 The machinery itself is Run 98 R5's gated re-rank (evaluateRouteAdvisoryConsideration), not a score weight: the
 advised endpoint can take the leader's place only when the advisory is fresh, the stage is S2/S3/S4, the kill
 switch is off, the endpoint is eligible (the advisory can never add or widen a candidate), the (role, task)
 matches exactly, confidence >= minAdvisoryConfidence, the decision's cohort bucket (FNV-1a of the decision seed
 % 100) < cohortPercent, and the advised endpoint is within scoreBand of the leader (gap = leader - advised <=
-band); explorationPercent adds a stochastic flip for measurement, and every gate failure leaves the baseline
+band); explorationPercent labels the existing exploration/propensity measurement mode (it does not add a new random selection flip), and every gate failure leaves the baseline
 selection untouched with a typed fallbackReason. Stage 3 changes only the source of the preferred endpoint; the
 gates are unchanged.
+
+## Production publication and safety authority
+
+The authenticated runtime host pages finalized comparison groups and materializes exact task ladders through
+its supervised KnowledgeStore boundary. An isolated worker never opens a sibling worker's database. The learner
+sweep calls this host operation; helper existence alone is not acceptance evidence. The durable advisory refresh
+pages the scoped ladder index and publishes each exact `(channel, runtimeScope, roleId, taskTypeId)` entry.
+Classified live requests never borrow a transient or legacy scope-only advisory after a missing/rolled-back
+answer. Refresh passes are serialized; evidence age is measured from persisted comparison evidence time, not
+cache refresh time. Scope-wide kill switch and sustained guardrail suppressors remain effective without
+writing per-task rollback flags. Explicit stage/cohort policy and measured confidence still gate influence.
+
+Ladder rank and baseline score rank are independent: a deeper available/eligible rung can influence routing
+if it is not the baseline leader and passes the one-shot score-band/cohort/confidence gates. The initial
+addendum A2's prediction that deeper walked rungs always match the leader was incorrect; its band-unaware
+walk decision remains authoritative.
 
 ## Error behaviors (tagged errors)
 
@@ -115,7 +131,7 @@ Each finalized comparison group compares a source and a counterfactual endpoint 
 per-scorer outcomes, a scorer-disagreement flag, and judge confidence.
 
 Step 1 - weighted verdict: winner beats loser by w = confidence * agreement, where confidence = winning side's
-judge confidence (clamped [0,1]), and agreement = 1 if unanimous else (scorers-for-winner / total-scorers,
+judge confidence from the `members[]` entry named by `winnerTrialId` (clamped [0,1]), and agreement = 1 if unanimous else (scorers-for-winner / total-scorers,
 clamped [0.5,1]). A tie contributes 0 to both. 'total-scorers' = the number of scorers that returned a non-tie
 outcome for that comparison.
 
@@ -149,8 +165,12 @@ the ladder history to be auditable by date. Re-running a comparison appends a ne
 
 ## Storage
 
-One pack per (role, task), stored as JSON in SQLite rows (the existing knowledge-store learning_records,
-kind='pack'), keyed by a (role_id, task_type_id) UNIQUE index. The pack's body is the ladder: rungs
+One endpoint-ladder pack per (role, task), stored as JSON in the additive `knowledge_route_ladders` SQLite table,
+keyed by a `(role_id, task_type_id)` UNIQUE index. The closed legacy ExperiencePackCandidate contract and
+append-only learning-record history stay unchanged; rewriting those records is not a supported ladder store.
+A supplied runtime scope must match the stored row, otherwise the operation fails closed. Content-addressed
+evidence metadata in the same KnowledgeStore supplies measured confidence, evidence time and provenance;
+it is not a second ranking or an independent mutable active-pack pointer. The pack's body is the ladder: rungs
 { endpointId, rank, status }, plus completeness (admitted / configured endpoints, where 'admitted' means
 passed the admission floor), nextEligibleAtMs, a monotonic version, and rolledBack { on, reason, atMs }. There is
 no separate derived index - the pack table IS the lookup, and the (role_id, task_type_id) unique index makes
@@ -189,7 +209,9 @@ The dispatcher fills one task's ladder to completion before moving to the next (
 
 ## Activation model
 
-There is no separate promote-then-activate step and no mutable active-pack pointer. The ladder is a
+For the new ladder routing path there is no separate promote-then-activate step or mutable active-pack pointer.
+Legacy operator pack activation remains functional for its historical surface, not as authority for classified
+ladder routing. The ladder is a
 MATERIALIZED DERIVED snapshot: it is recomputed from the append-only comparison records and REWRITTEN to the
 pack store whenever new evidence arrives for the task - it is not recomputed on every read, and it is never
 manually promoted. A task's ladder is 'active' - its advisory is used - automatically once at least one of its
@@ -216,12 +238,12 @@ challengeBatchSize (how many top-down challenge comparisons a new endpoint may r
 itself is sequential - one rung per comparison). The read path is NET-NEW wiring: the runtime does not
 currently load product-defaults.json (today's only learner default is the hardcoded minConfidence 0.7 limit in
 extensions/evaluation-core/learning-integrity.mjs); the run adds the routeLearning block and the read path, and
-the existing 0.7 becomes a product-defaults value rather than a hardcoded number.
+the ladder admission floor is independently configurable through product-defaults. The existing learning-integrity.mjs 0.7 is a different quantity and remains unchanged (effective plan D6).
 
 ## UI: Packs page (the ladder index)
 
 The Packs page under Learning becomes a scrollable ladder index - one row per (role, task) the runtime has
-seen. Each row shows the task's (role, task) name, its TOP 3 ranked endpoints (best first), and its
+seen. Each row shows the exact raw `(roleId, taskTypeId)` identifiers (effective addendum A3), its TOP 3 ranked endpoints (best first), and its
 completeness (admitted / configured endpoints), plus a clear current-status badge and a per-task
 Activate / Roll back toggle:
 

@@ -3389,6 +3389,8 @@ export interface StartBridgeServerOptions {
   readonly restoreLearningScenarioActivation?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly rollbackLearningPack?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly engageLearningKillSwitch?: (body: Record<string, unknown>) => Promise<unknown>;
+  /** Run 105 Phase 3.5 repair: the host-only route-ladder materialization operation. */
+  readonly materializeRouteLadders?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly measureNoRichCaptureBaseline?: (body: Record<string, unknown>) => Promise<unknown>;
   /** Safe, credential-free development verification lease status. */
   readonly readDevelopmentVerificationStatus?: () => Promise<unknown>;
@@ -3659,6 +3661,8 @@ export interface RuntimeBridgeBackend {
   rollbackLearningPolicy(body: Record<string, unknown>): Promise<unknown>;
   activateLearningPack(body: Record<string, unknown>): Promise<unknown>;
   rollbackLearningPack(body: Record<string, unknown>): Promise<unknown>;
+  /** Run 105 Phase 3.5 repair: the host-only route-ladder materialization operation. */
+  materializeRouteLadders(body: Record<string, unknown>): Promise<unknown>;
   /** Run 98 addendum 54: the operator surface's guardrail-breach recorder (non-production channels only). */
   recordLearningGuardrailBreach(body: Record<string, unknown>): Promise<unknown>;
   /** Run 98 addendum 57 slice 1: the operator surface's scenario restore (non-production channels only). */
@@ -4114,6 +4118,7 @@ export interface CreateRuntimeBridgeBackendOptions {
   readonly rollbackLearningPolicy?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly activateLearningPack?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly rollbackLearningPack?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly materializeRouteLadders?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly recordLearningGuardrailBreach?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly restoreLearningScenarioActivation?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly engageLearningKillSwitch?: (body: Record<string, unknown>) => Promise<unknown>;
@@ -17602,6 +17607,17 @@ function createRequestHandler(options: StartBridgeServerOptions) {
           writeOperatorMutationResult(response, await options.rollbackLearningPack(operatorBody));
           return;
         }
+        if (
+          request.method === "POST" &&
+          url.pathname === "/api/role-model/operator/learning/materialize-route-ladders"
+        ) {
+          if (!options.materializeRouteLadders) {
+            writeOperatorUnavailable(response, "learning route ladder materialization");
+            return;
+          }
+          writeOperatorMutationResult(response, await options.materializeRouteLadders(operatorBody));
+          return;
+        }
         /**
          * Run 98 addendum 54 (implementing addendum 53 §3): A44-S2's sustained-breach half needs a way to record
          * a guardrail breach through the runtime's own extension path. The knowledge store implements the window
@@ -30513,6 +30529,12 @@ export async function createRuntimeBridgeBackend(
     async rollbackLearningPack(body: Record<string, unknown>): Promise<unknown> {
       return (
         options.rollbackLearningPack?.(body) ?? unavailableOperatorPayload("learning pack rollback")
+      );
+    },
+    async materializeRouteLadders(body: Record<string, unknown>): Promise<unknown> {
+      return (
+        options.materializeRouteLadders?.(body) ??
+        unavailableOperatorPayload("learning route ladder materialization")
       );
     },
     async recordLearningGuardrailBreach(body: Record<string, unknown>): Promise<unknown> {
