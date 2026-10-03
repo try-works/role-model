@@ -18,6 +18,7 @@ import { DatabaseSync } from "node:sqlite";
 import { setTimeout as delay } from "node:timers/promises";
 import { parse } from "yaml";
 import { evaluateDispatchContextGuard } from "./dispatch-context-guard.js";
+import { persistFailureTelemetrySafely } from "./failure-telemetry-persistence.js";
 
 import {
   type NormalizedCatalog,
@@ -20281,25 +20282,27 @@ export async function createRuntimeBridgeBackend(
       dimensions,
       toolingUsed: input.toolingUsed,
     });
-    persistRuntimeTelemetryFailure({
-      databasePath: initialization.databasePath,
-      requestId: input.requestId,
-      clientRequestId: input.clientRequestId ?? null,
-      requestClass: toPersistedTrafficClass(input.requestClass),
-      sourceType: currentUnifiedRuntimeConfig?.executionMode === "remote_only" ? "remote" : "local",
-      endpointId: input.endpointId,
-      reasoningEffort: failureEffort.reasoningEffort,
-      effortSource: failureEffort.effortSource,
-      modelId: input.modelId,
-      requestedModelId: input.modelId,
-      requestOperation: input.requestOperation,
-      statusCode,
-      errorClass: runtimeTelemetryErrorClassFor(input.error),
-      latencyMs,
-      dimensions,
-      observation: failureObservation,
-      ...(localGraphStore ? { graphStore: localGraphStore } : {}),
-    });
+    persistFailureTelemetrySafely(() =>
+      persistRuntimeTelemetryFailure({
+        databasePath: initialization.databasePath,
+        requestId: input.requestId,
+        clientRequestId: input.clientRequestId ?? null,
+        requestClass: toPersistedTrafficClass(input.requestClass),
+        sourceType: currentUnifiedRuntimeConfig?.executionMode === "remote_only" ? "remote" : "local",
+        endpointId: input.endpointId,
+        reasoningEffort: failureEffort.reasoningEffort,
+        effortSource: failureEffort.effortSource,
+        modelId: input.modelId,
+        requestedModelId: input.modelId,
+        requestOperation: input.requestOperation,
+        statusCode,
+        errorClass: runtimeTelemetryErrorClassFor(input.error),
+        latencyMs,
+        dimensions,
+        observation: failureObservation,
+        ...(localGraphStore ? { graphStore: localGraphStore } : {}),
+      }),
+    );
     if (options.trackBPostObservation) {
       try {
         await options.trackBPostObservation(failureObservation);
@@ -27778,88 +27781,90 @@ export async function createRuntimeBridgeBackend(
         ...baseFailureObservation,
         ...(graphEvidence ? { graphEvidence } : {}),
       });
-      persistRuntimeTelemetryFailure({
-        databasePath: initialization.databasePath,
-        requestId,
-        routingDecisionId,
-        endpointId: selectedEndpointId,
-        reasoningEffort: selectedReasoningEffort,
-        effortSource: selectedEffortSource,
-        modelId: selectedModelId ?? undefined,
-        requestedModelId: executionOptions?.requestedModel ?? selectedModelId,
-        selectedModelId,
-        requestOperation: executionOptions?.requestOperation ?? "chat",
-        statusCode: error.statusCode,
-        errorClass: error.errorClass,
-        latencyMs: failureLatencyMs,
-        /**
-         * Run 101 addendum 23: the failure row must carry what the client actually received. The builder used to
-         * write a literal zero, so a response that had streamed 789 chunks was recorded (and read by this operator)
-         * as `streamTextDeltaCount: 0` - the number that made a post-content drop look like a pre-content failure
-         * for two repair cycles. This is the count of chunks that carried content or tool calls.
-         */
-        streamTextDeltaCount: deliveredSubstantiveChunkCount,
-        clientRequestId: executionOptions?.requestOptions?.clientRequestId ?? null,
-        requestClass: toPersistedTrafficClass(
-          executionOptions?.requestOptions?.executionTrafficClass,
-        ),
-        sourceType,
-        providerKind: selectedCandidate?.identity.provider_kind ?? null,
-        providerFamily: error.providerFamily,
-        vendorId: error.vendorId ?? null,
-        providerId: error.providerId,
-        providerAccountId:
-          selectedProviderAccount?.providerAccountId ??
-          selectedRuntimeEndpoint?.providerAccountId ??
-          null,
-        endpointKind: selectedCandidate?.identity.endpoint_kind ?? "remote_api",
-        servingSource:
-          selectedCandidate?.identity.serving_source ?? error.executionFamily ?? "remote-service",
-        region: selectedCandidate?.identity.region ?? null,
-        lifecycleStateAtRequest: selectedCandidate?.status ?? "unknown",
-        healthStatusAtRequest: selectedProviderAccount?.healthStatus ?? null,
-        routingMode: requestRoutingMode?.effectiveMode ?? null,
-        selectedStrategy: plan.routingRequest.strategy,
-        sourceClient,
-        executionFamily: error.executionFamily,
-        adapterFamily: error.adapterFamily,
-        requestPayloadBytes: payloadBytes.ingress,
-        ingressPayloadBytes: payloadBytes.ingress,
-        translatedPayloadBytes: payloadBytes.translated,
-        providerCanonicalPayloadBytes: payloadBytes.providerCanonical,
-        providerWirePayloadBytes: payloadBytes.providerWire,
-        responsePayloadBytes: payloadBytes.providerResponse,
-        retryCount: executionSemanticsReceipt.retryCount,
-        rerouteCount: executionSemanticsReceipt.rerouteCount,
-        cooldownDecision: executionSemanticsReceipt.cooldownDecision,
-        idempotencyDecision: "not_needed",
-        toolSideEffectState: "none",
-        toolingUsed: Boolean(plan.executionRequest.tools?.length),
-        cacheState: "unknown",
-        roleIds: telemetrySnapshot.roleIds,
-        eligibleEndpointIds,
-        eligibleModelIds,
-        candidateCostSnapshot: telemetrySnapshot.candidateCostSnapshot,
-        selectedPricingSnapshot: telemetrySnapshot.selectedPricingSnapshot,
-        selectedUncachedCostUsd: telemetrySnapshot.selectedUncachedCostUsd,
-        baselineMaxEligibleCostUsd: telemetrySnapshot.baselineMaxEligibleCostUsd,
-        routingCostSavingsUsd: telemetrySnapshot.routingCostSavingsUsd,
-        cacheCostSavingsUsd: telemetrySnapshot.cacheCostSavingsUsd,
-        totalAvoidedCostUsd: telemetrySnapshot.totalAvoidedCostUsd,
-        costBaselineSource: telemetrySnapshot.costBaselineSource,
-        costSavingsSupport: telemetrySnapshot.costSavingsSupport,
-        samplingRate: failureObservation.privacyReceipt.samplingRate,
-        retentionTtlHours: failureObservation.privacyReceipt.retentionTtlHours,
-        retainUntil: failureObservation.privacyReceipt.retainUntil,
-        redactionLevel: capturePolicy.redactionLevel,
-        retentionClass: capturePolicy.retentionClass,
-        structuredInspectionMode: capturePolicy.structuredInspectionMode,
-        rawCaptureAvailable: capturePolicy.rawCaptureAvailable,
-        structuredInspectionAvailable: capturePolicy.structuredInspectionAvailable,
-        dimensions: selectedEndpointDimensions,
-        observation: failureObservation,
-        ...(localGraphStore ? { graphStore: localGraphStore } : {}),
-      });
+      const persisted = persistFailureTelemetrySafely(() =>
+        persistRuntimeTelemetryFailure({
+          databasePath: initialization.databasePath,
+          requestId,
+          routingDecisionId,
+          endpointId: selectedEndpointId,
+          reasoningEffort: selectedReasoningEffort,
+          effortSource: selectedEffortSource,
+          modelId: selectedModelId ?? undefined,
+          requestedModelId: executionOptions?.requestedModel ?? selectedModelId,
+          selectedModelId,
+          requestOperation: executionOptions?.requestOperation ?? "chat",
+          statusCode: error.statusCode,
+          errorClass: error.errorClass,
+          latencyMs: failureLatencyMs,
+          /**
+           * Run 101 addendum 23: the failure row must carry what the client actually received. The builder used to
+           * write a literal zero, so a response that had streamed 789 chunks was recorded (and read by this operator)
+           * as `streamTextDeltaCount: 0` - the number that made a post-content drop look like a pre-content failure
+           * for two repair cycles. This is the count of chunks that carried content or tool calls.
+           */
+          streamTextDeltaCount: deliveredSubstantiveChunkCount,
+          clientRequestId: executionOptions?.requestOptions?.clientRequestId ?? null,
+          requestClass: toPersistedTrafficClass(
+            executionOptions?.requestOptions?.executionTrafficClass,
+          ),
+          sourceType,
+          providerKind: selectedCandidate?.identity.provider_kind ?? null,
+          providerFamily: error.providerFamily,
+          vendorId: error.vendorId ?? null,
+          providerId: error.providerId,
+          providerAccountId:
+            selectedProviderAccount?.providerAccountId ??
+            selectedRuntimeEndpoint?.providerAccountId ??
+            null,
+          endpointKind: selectedCandidate?.identity.endpoint_kind ?? "remote_api",
+          servingSource:
+            selectedCandidate?.identity.serving_source ?? error.executionFamily ?? "remote-service",
+          region: selectedCandidate?.identity.region ?? null,
+          lifecycleStateAtRequest: selectedCandidate?.status ?? "unknown",
+          healthStatusAtRequest: selectedProviderAccount?.healthStatus ?? null,
+          routingMode: requestRoutingMode?.effectiveMode ?? null,
+          selectedStrategy: plan.routingRequest.strategy,
+          sourceClient,
+          executionFamily: error.executionFamily,
+          adapterFamily: error.adapterFamily,
+          requestPayloadBytes: payloadBytes.ingress,
+          ingressPayloadBytes: payloadBytes.ingress,
+          translatedPayloadBytes: payloadBytes.translated,
+          providerCanonicalPayloadBytes: payloadBytes.providerCanonical,
+          providerWirePayloadBytes: payloadBytes.providerWire,
+          responsePayloadBytes: payloadBytes.providerResponse,
+          retryCount: executionSemanticsReceipt.retryCount,
+          rerouteCount: executionSemanticsReceipt.rerouteCount,
+          cooldownDecision: executionSemanticsReceipt.cooldownDecision,
+          idempotencyDecision: "not_needed",
+          toolSideEffectState: "none",
+          toolingUsed: Boolean(plan.executionRequest.tools?.length),
+          cacheState: "unknown",
+          roleIds: telemetrySnapshot.roleIds,
+          eligibleEndpointIds,
+          eligibleModelIds,
+          candidateCostSnapshot: telemetrySnapshot.candidateCostSnapshot,
+          selectedPricingSnapshot: telemetrySnapshot.selectedPricingSnapshot,
+          selectedUncachedCostUsd: telemetrySnapshot.selectedUncachedCostUsd,
+          baselineMaxEligibleCostUsd: telemetrySnapshot.baselineMaxEligibleCostUsd,
+          routingCostSavingsUsd: telemetrySnapshot.routingCostSavingsUsd,
+          cacheCostSavingsUsd: telemetrySnapshot.cacheCostSavingsUsd,
+          totalAvoidedCostUsd: telemetrySnapshot.totalAvoidedCostUsd,
+          costBaselineSource: telemetrySnapshot.costBaselineSource,
+          costSavingsSupport: telemetrySnapshot.costSavingsSupport,
+          samplingRate: failureObservation.privacyReceipt.samplingRate,
+          retentionTtlHours: failureObservation.privacyReceipt.retentionTtlHours,
+          retainUntil: failureObservation.privacyReceipt.retainUntil,
+          redactionLevel: capturePolicy.redactionLevel,
+          retentionClass: capturePolicy.retentionClass,
+          structuredInspectionMode: capturePolicy.structuredInspectionMode,
+          rawCaptureAvailable: capturePolicy.rawCaptureAvailable,
+          structuredInspectionAvailable: capturePolicy.structuredInspectionAvailable,
+          dimensions: selectedEndpointDimensions,
+          observation: failureObservation,
+          ...(localGraphStore ? { graphStore: localGraphStore } : {}),
+        }),
+      );
       if (options.trackBPostObservation) {
         try {
           await options.trackBPostObservation(failureObservation);
@@ -27867,8 +27872,10 @@ export async function createRuntimeBridgeBackend(
           console.error("Track B failure post-observation processing failed", postObservationError);
         }
       }
-      markRuntimeTelemetryPersisted(error);
-      emitTelemetryUpdate(requestId);
+      if (persisted) {
+        markRuntimeTelemetryPersisted(error);
+        emitTelemetryUpdate(requestId);
+      }
     };
     const executeCurrentExecutionRequest = async (
       executionRequest: RuntimeExecutionRequest,
