@@ -26444,13 +26444,12 @@ export async function createRuntimeBridgeBackend(
               nowMs: Date.now(),
               maxAgeMs: learningPolicySnapshot?.effective.advisorySourceMaxAgeMs ?? 900000,
             });
-            const cached =
-              durable ??
-              recallNewestTrackBRouteAdvisory({
-                channel: runtimeChannel,
-                scope: options.scopeId,
-                taskTypeId: requestTaskTypeId,
-              });
+            // A classified request requires exact durable authorization, including an unavailable
+            // rollback answer. Transient scope-wide evidence is only for genuine legacy requests.
+            const cached = durable ??
+              (requestRoleId === null && requestTaskTypeId === null
+                ? recallNewestTrackBRouteAdvisory({ channel: runtimeChannel, scope: options.scopeId })
+                : null);
             if (!cached) {
               // Bounded diagnostic (run 99 R24): an S2+ runtime with no advisory at all is the
               // signal that the durable refresh never published, not that the gate refused.
@@ -26512,21 +26511,10 @@ export async function createRuntimeBridgeBackend(
               // ordered ladder the router walks. `preferredEndpointId` above stays the walked rung's
               // fallback (rank-1 available), so a cached entry from a pre-run105 source behaves
               // exactly as before.
-              roleId: cached.roleId ?? null,
+              roleId: "roleId" in cached ? cached.roleId : null,
               requestRoleId,
-              ...((cached as { readonly advisoryLadder?: readonly { readonly endpointId: string; readonly rank: number; readonly status: "available" | "unavailable" }[] })
-                .advisoryLadder?.length
-                ? {
-                    preferredLadder: (
-                      cached as {
-                        readonly advisoryLadder: readonly {
-                          readonly endpointId: string;
-                          readonly rank: number;
-                          readonly status: "available" | "unavailable";
-                        }[];
-                      }
-                    ).advisoryLadder,
-                  }
+              ...("advisoryLadder" in cached && cached.advisoryLadder.length
+                ? { preferredLadder: cached.advisoryLadder }
                 : {}),
             };
           })()

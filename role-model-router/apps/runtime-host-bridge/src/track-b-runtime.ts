@@ -7573,18 +7573,18 @@ export interface TrackBDurableRouteAdvisoryEntry {
 }
 
 const trackBDurableRouteAdvisoryCache = new Map<string, TrackBDurableRouteAdvisoryEntry>();
-// Run 105 C11: one entry per (channel, scope, role) so a role-scoped ladder can never be
-// recalled for another role's request. 512 covers the per-(role, task) fan-out (the old 128 was
-// sized for one scope-wide pack).
+// One entry per exact (channel, runtime scope, role, task); neither partial classification
+// nor a legacy lookup may borrow another pair. 512 covers the per-pair fan-out.
 const TRACK_B_DURABLE_ADVISORY_CACHE_MAX_ENTRIES = 512;
 
-const durableAdvisoryKey = (channel: string, scope: string, roleId: string | null): string =>
-  roleId ? `${channel}\u0000${scope}\u0000${roleId}` : `${channel}\u0000${scope}`;
+const durableAdvisoryKey = (
+  channel: string, scope: string, roleId: string | null, taskTypeId: string | null,
+): string => JSON.stringify([channel, scope, roleId, taskTypeId]);
 
 export function rememberTrackBDurableRouteAdvisory(input: {
   readonly channel: string;
   readonly scope: string;
-  /** Run 105 C11: the role component of the durable key; null keeps the pre-run105 key. */
+  /** Redundant publisher attribution; the strict source owns the persisted role identity. */
   readonly roleId?: string | null;
   readonly advisory: TrackBRouteAdvisorySourceResult;
   readonly nowMs: number;
@@ -7592,10 +7592,7 @@ export function rememberTrackBDurableRouteAdvisory(input: {
   const entry: TrackBDurableRouteAdvisoryEntry = {
     preferredRoutePackage: input.advisory.preferredRoutePackage,
     advisoryLadder: [...(input.advisory.advisoryLadder ?? [])],
-    roleId:
-      typeof input.advisory.roleId === "string" && input.advisory.roleId.trim()
-        ? input.advisory.roleId.trim()
-        : null,
+    roleId: input.advisory.roleId ?? null,
     advisoryState: input.advisory.advisoryState,
     confidence: Number.isFinite(input.advisory.confidence) ? input.advisory.confidence : 0,
     candidateId: input.advisory.candidateId,
@@ -7607,7 +7604,9 @@ export function rememberTrackBDurableRouteAdvisory(input: {
     revalidationDue: input.advisory.revalidationDue === true,
     cachedAtMs: input.nowMs,
   };
-  const key = durableAdvisoryKey(input.channel, input.scope, input.roleId ?? null);
+  const key = durableAdvisoryKey(input.channel, input.scope, entry.roleId, entry.taskTypeId);
+  // Map.set alone preserves the old insertion position: delete first to refresh recency.
+  trackBDurableRouteAdvisoryCache.delete(key);
   trackBDurableRouteAdvisoryCache.set(key, entry);
   while (trackBDurableRouteAdvisoryCache.size > TRACK_B_DURABLE_ADVISORY_CACHE_MAX_ENTRIES) {
     const oldest = trackBDurableRouteAdvisoryCache.keys().next().value;
@@ -7620,12 +7619,9 @@ export function rememberTrackBDurableRouteAdvisory(input: {
 export function recallTrackBDurableRouteAdvisory(input: {
   readonly channel: string;
   readonly scope: string;
-  /** Run 105 C11: the role component of the durable key; null keeps the pre-run105 lookup. */
+  /** Exact classification; only absence of both role and task selects the legacy key. */
   readonly roleId?: string | null;
-  /**
-   * Run 99 R33: when the request declares a family, only that family's entry (or an unscoped
-   * entry, which the router then refuses) may be returned.
-   */
+  /** Never borrow another task or a partial/unscoped entry. */
   readonly taskTypeId?: string | null;
   /**
    * Run 99 R33 (addendum 21 D12): when both are supplied the record's age is enforced, so an
@@ -7637,7 +7633,7 @@ export function recallTrackBDurableRouteAdvisory(input: {
 }): TrackBDurableRouteAdvisoryEntry | null {
   const entry =
     trackBDurableRouteAdvisoryCache.get(
-      durableAdvisoryKey(input.channel, input.scope, input.roleId ?? null),
+      durableAdvisoryKey(input.channel, input.scope, input.roleId ?? null, input.taskTypeId ?? null),
     ) ?? null;
   if (!entry) return null;
   const maxAgeMs =
@@ -7651,14 +7647,7 @@ export function recallTrackBDurableRouteAdvisory(input: {
     input.nowMs - entry.cachedAtMs > maxAgeMs
       ? { ...entry, advisoryState: "stale" as const, reason: "advisory source beyond max age" }
       : entry;
-  const resolved = aged;
-  // Run 99 R33 (S37 live finding): a family-mismatched entry must reach the router so it answers
-  // `advisory_task_mismatch` — the operator has to see *why* the learned preference was refused.
-  // Withholding it here made the host fall through to the transient pipeline advisory, which is
-  // refused earlier by the eligibility gate and reported as `advisory_candidate_not_eligible`,
-  // hiding the family verdict. The router still cannot apply a mismatched advisory, so the safety
-  // property is unchanged; only the reported reason becomes truthful.
-  return resolved;
+  return aged;
 }
 
 /**
@@ -7679,6 +7668,8 @@ export async function readTrackBRouteAdvisorySourceFromRuntime(input: {
   /** Run 99 R33 D12: `revalidationIntervalDays` as milliseconds, when the caller has it. */
   readonly revalidationIntervalMs?: number | null;
   readonly requestId?: string;
+  readonly stage?: string;
+  readonly policyCohortPercent?: number;
 }): Promise<TrackBRouteAdvisorySourceResult> {
   const requestId = input.requestId ?? `route-advisory:${input.scope}:${input.nowMs}`;
   const invoke = async (capability: string, value: Readonly<Record<string, unknown>>) => {
@@ -7707,6 +7698,8 @@ export async function readTrackBRouteAdvisorySourceFromRuntime(input: {
     scopeId: input.scope,
     roleId: input.roleId ?? null,
     taskTypeId: input.taskTypeId ?? null,
+    stage: input.stage,
+    policyCohortPercent: input.policyCohortPercent,
     nowMs: input.nowMs,
     evidenceMaxAgeMs: input.evidenceMaxAgeMs,
     ...(Number.isFinite(input.revalidationIntervalMs)
