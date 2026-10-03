@@ -1,0 +1,73 @@
+(node:15372) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✖ A3: a store created WITHOUT the column (legacy shape) gains created_at_ms on open, bodies stay byte-identical (165.1834ms)
+✖ A3: the FINALIZED insert stamps created_at_ms from the core clock and never enters the bodies (195.1625ms)
+✖ A3: the REJECTED insert stamps created_at_ms too (169.1011ms)
+✖ A3: evaluation:list-groups exposes createdAtMs as a SIBLING of each row (181.9654ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 0
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 863.6511
+
+✖ failing tests:
+
+test at tests\track-b\run105-a3-created-at.test.mjs:157:1
+✖ A3: a store created WITHOUT the column (legacy shape) gains created_at_ms on open, bodies stay byte-identical (165.1834ms)
+  AssertionError [ERR_ASSERTION]: created_at_ms missing; columns=group_id,status,group_json,result_json
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/105-route-learning-matching-scope-activation/tests/track-b/run105-a3-created-at.test.mjs:182:16)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests\track-b\run105-a3-created-at.test.mjs:194:1
+✖ A3: the FINALIZED insert stamps created_at_ms from the core clock and never enters the bodies (195.1625ms)
+  Error: no such column: created_at_ms
+      at groupRow (file:///D:/DEV/role-model-internal/.worktrees/105-route-learning-matching-scope-activation/tests/track-b/run105-a3-created-at.test.mjs:143:21)
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/105-route-learning-matching-scope-activation/tests/track-b/run105-a3-created-at.test.mjs:209:21)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    code: 'ERR_SQLITE_ERROR',
+    errcode: 1,
+    errstr: 'SQL logic error'
+  }
+
+test at tests\track-b\run105-a3-created-at.test.mjs:224:1
+✖ A3: the REJECTED insert stamps created_at_ms too (169.1011ms)
+  Error: no such column: created_at_ms
+      at groupRow (file:///D:/DEV/role-model-internal/.worktrees/105-route-learning-matching-scope-activation/tests/track-b/run105-a3-created-at.test.mjs:143:21)
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/105-route-learning-matching-scope-activation/tests/track-b/run105-a3-created-at.test.mjs:239:21)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    code: 'ERR_SQLITE_ERROR',
+    errcode: 1,
+    errstr: 'SQL logic error'
+  }
+
+test at tests\track-b\run105-a3-created-at.test.mjs:249:1
+✖ A3: evaluation:list-groups exposes createdAtMs as a SIBLING of each row (181.9654ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + undefined
+  - 1700000333333
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/105-route-learning-matching-scope-activation/tests/track-b/run105-a3-created-at.test.mjs:275:12)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: 1700000333333,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

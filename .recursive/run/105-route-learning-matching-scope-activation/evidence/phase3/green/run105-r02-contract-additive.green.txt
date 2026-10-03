@@ -1,0 +1,12 @@
+✔ run105 C1/C7: both canonical schema copies gain $defs.routeLadderPack and the oneOf branch (5.6256ms)
+✔ run105 R2-contract: the regenerated public module and the public JSON are byte-parity (9.4365ms)
+✔ run105 R2-contract: the TS contracts declare the ladder interfaces and the union member (4.1977ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 281.5657
+EXIT=0
