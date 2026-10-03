@@ -1,8 +1,8 @@
 Run: `/.recursive/run/105-route-learning-matching-scope-activation/`
 Phase: `00 Requirements`
 Status: `LOCKED`
-LockedAt: `2026-10-03T02:15:53.100Z`
-LockHash: `ff8d6ff2cc053e72f97a73a97a25f85945ade414bc2399b66f007353f7d24d56`
+LockedAt: `2026-10-03T02:23:17.054Z`
+LockHash: `d4091b0b44efccc97405a0d50ab95aac3b81a766199df4b41f46b20b5276a9a3`
 Workflow version: `recursive-mode-audit-v2`
 Inputs:
 - Baseline (2026-10-03): public `origin/dev` `701b8b8fc0b0eeebdfe818b757f5702f50021488` ("Merge run-104 R22-A/B + R23 +
@@ -16,6 +16,14 @@ Inputs:
   Packs page is the scrollable ladder index (top-3 per task, status, completeness, per-row toggle).
 - Design doc: `docs/route-learning-stage-3-matching-scope-activation.md` (in the baseline via the run-104 merge;
   this run implements it).
+- Codebase audit (2026-10-03, verified against the baseline worktrees): the defect claims are accurate
+  (knowledge_route_rollouts scope_id PRIMARY KEY; router.ts carries advisory_task_unscoped /
+  advisory_task_mismatch / advisory_candidate_not_eligible; route-advisory-source.ts reads one activePackageId
+  per scope; activatePack keys by scopeId; promoteCandidate stamps priority advisory_only; evaluation comparison
+  groups have no created_at; the replay pipeline is live-request-driven (R14_NO_DISTINCT_COUNTERFACTUAL); the
+  Packs page exists with the R22-B3 scope-wide note). One correction applied: R11's 'existing product-defaults
+  loader' was wrong - the runtime has no product-defaults loader; the 0.7 floor lives in
+  extensions/evaluation-core/learning-integrity.mjs; the product-defaults read path is net-new work.
 
 ## TODO
 
@@ -154,7 +162,10 @@ task and routing falls back to baseline; replay dispatch for that task is also p
 ### R11 — Ladder constants in product-defaults.json
 routeLearning block: minComparisons (5), minConfidence (0.7), stalenessWindowDays (30), challengeBatchSize
 (how many sequential top-down challenge comparisons a new endpoint may run per dispatch).
-- The runtime reads them through the existing product-defaults loader; no new hardcoded magic numbers.
+- The read path is NET-NEW wiring: the runtime does not currently load product-defaults.json (today's only
+  learner default is the hardcoded minConfidence 0.7 limit in extensions/evaluation-core/learning-integrity.mjs);
+  the run adds the routeLearning block + the read path, and the existing 0.7 becomes a product-defaults value
+  rather than a hardcoded number.
 
 ### R12 — Packs page shows the ladder index
 The Packs page under Learning becomes a scrollable index, one row per (role, task): the top-3 ranked endpoints, a

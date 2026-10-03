@@ -204,8 +204,10 @@ audit trail.
 The ladder constants live in product-defaults.json (the machine authority) under a routeLearning block:
 minComparisons (K, default 5), minConfidence (default 0.7), stalenessWindowDays (default 30), and
 challengeBatchSize (how many top-down challenge comparisons a new endpoint may run per dispatch; the challenge
-itself is sequential - one rung per comparison). The runtime reads
-them through the existing product-defaults loader.
+itself is sequential - one rung per comparison). The read path is NET-NEW wiring: the runtime does not
+currently load product-defaults.json (today's only learner default is the hardcoded minConfidence 0.7 limit in
+extensions/evaluation-core/learning-integrity.mjs); the run adds the routeLearning block and the read path, and
+the existing 0.7 becomes a product-defaults value rather than a hardcoded number.
 
 ## UI: Packs page (the ladder index)
 
