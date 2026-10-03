@@ -56,7 +56,9 @@ promoted.
 The ladder aggregates the evaluation core's finalized pairwise comparison groups for a scope: winner beats loser by
 w = confidence * agreement (confidence = winning judge confidence clamped [0,1]; agreement = 1 if unanimous else
 scorers-for-winner/total-scorers clamped [0.5,1]); a tie contributes 0. rankScore(E) = sum of +w win / -w loss / 0
-tie; order desc, tie-broken by head-to-head, fewer losses, higher count, endpoint id.
+tie, where 'total-scorers' = the number of scorers that returned a non-tie outcome for that comparison; order
+desc, tie-broken by (1) direct head-to-head, (2) fewer losses then more wins, (3) higher confidence-weighted
+count, (4) endpoint id.
 - Given a fixed set of comparison records, the ladder is deterministic.
 - Only effort-comparable comparisons are combined (arms carry effortComparability).
 - Scorer disagreement down-weights (0.5 clamp), never resolves by fiat.
@@ -90,8 +92,9 @@ derived index table; no view (SQLite has no materialized views).
 ### R8 — Depth-first replay dispatch that fills one task's ladder
 Tasks are discovered from live requests (queue admission requires a (role, task) classification). The dispatcher
 holds one focus task and dispatches counterfactuals (source request vs an unranked configured endpoint) until every
-CONFIGURED endpoint is admitted, then advances. A complete task idles 30 days; a new configured endpoint always
-breaks the idle and starts a top-down challenge (leader first, then next rung).
+CONFIGURED endpoint is admitted, then advances. A complete task idles 30 days, then is eligible for a refresh
+replay and its ladder is recomputed; a new configured endpoint always breaks the idle immediately and starts a
+top-down challenge (leader first, then next rung).
 - Only classified requests enter the queue.
 - A (role, task) with no recorded request never enters the work queue.
 - Completeness = admitted endpoints / configured endpoints; most-requested (last 30 days) then most-unfilled.
@@ -101,15 +104,19 @@ breaks the idle and starts a top-down challenge (leader first, then next rung).
 A task's ladder is active (its advisory is used) automatically once at least one endpoint passes the floor (K
 finalized effort-comparable comparisons, default 5, and mean confidence >= 0.7). No mutable active-pack pointer.
 - An endpoint below the floor is a shadow candidate and is not in the active ladder.
+- Two task families can each have an active ladder simultaneously (per-(role, task) isolation).
 
 ### R10 — Per-task rollback (Activate / Roll back)
 A pack carries a rollback flag per (role, task), default OFF. ON = the advisory source returns no advisory for that
 task and routing falls back to baseline; replay dispatch for that task is also paused. Reversible.
 - The flag is toggled by the operator, wired to the backend and the UI.
 - A rolled-back task routes by baseline and is not replayed while rolled back.
+- Rollback of one task's ladder does not disturb another (per-(role, task) isolation).
+- The flag is recorded with the operator's reason.
 
 ### R11 — Ladder constants in product-defaults.json
-routeLearning block: minComparisons (5), minConfidence (0.7), stalenessWindowDays (30), challengeBatchSize.
+routeLearning block: minComparisons (5), minConfidence (0.7), stalenessWindowDays (30), challengeBatchSize
+(how many sequential top-down challenge comparisons a new endpoint may run per dispatch).
 - The runtime reads them through the existing product-defaults loader; no new hardcoded magic numbers.
 
 ### R12 — Packs page shows the ladder index
@@ -118,12 +125,41 @@ clear Active / Rolled back status badge, completeness, and a two-way Activate / 
 complete-first, then partial, then none.
 - Each row shows top-3, status, completeness, and the toggle.
 - The toggle flips the backend flag from R10.
+- The top-3 is a projection of the ladder; the full ranking lives on a per-task detail view.
 
-### R13 — Effect-first implementation
+### R13 — Effect-first implementation with a pinned primitive map
 All ladder code (aggregation, store/index, dispatch, activation) is implemented in Effect, using the vendored
-Effect v4 tree (vendor/effect) and following the repo pattern (Schema + Data.TaggedEnum for contracts/errors,
-Layer + Context.Tag for the store service, Effect + Schedule + Duration + Clock + Ref/Queue for the dispatch).
+Effect v4 tree (vendor/effect, re-exported through role-model-router/packages/effect), following the repo patterns
+(scoring-strategy.ts: Schema + Data.TaggedEnum; queue-runtime: Layer + ManagedRuntime + Fiber + Duration):
+- Data contracts -> Schema (rung status Schema.Literal('available','unavailable'); completeness Schema.check;
+  staleness a Duration).
+- Tagged errors -> Data.TaggedError (InsufficientEvidence, NoReplayableRequest, EndpointUnavailable, ScopeMismatch).
+- Aggregation -> a pure Effect over Chunk/Order, folding records into a HashMap<endpointId, rankScore>.
+- Persistence -> Layer + Context.Tag (the pack/ladder store, WAL SQLite).
+- Dispatch scheduler -> Effect + Schedule + Duration + Clock + Ref/Queue (hold the focus task, depth-first).
+- Optional/partial -> Option for the ladder lookup, Data.TaggedEnum (win | loss | tie) for the verdict.
 - New code uses vendored Effect; where not used, the reason is recorded.
+
+## Code sites (from the design doc's change list)
+
+- knowledge-store activatePack: key the rollout by (roleId, taskTypeId) instead of the runtime scopeId.
+- route-advisory-source.ts: read the (role, task) pack and return its ranked ladder in place of the single
+  preferredRoutePackage (the advisory's shape changes from one endpoint to an ordered list), carrying
+  taskTypeId/taxonomyVersion/roleId.
+- core/src/router.ts: replace the single preferred-endpoint check with a ladder walk (highest routable rung
+  becomes the preferred endpoint; fall through on unavailable or ineligible rungs).
+- cli.ts learner sweep: key activation by (roleId, taskTypeId).
+- knowledge-worker: derive and persist the ladder (aggregate pairwise comparisons per scope), replacing the
+  single scope.endpointId.
+- knowledge-store: add the rollback path for a (role, task) ladder (R10).
+- runtime-ui (learning.tsx, Packs page): render the ladder index (R12).
+- evaluation-core comparison groups: add the created_at field (R6, net-new).
+
+## Risks
+
+- The ladder walk must respect both stored status and per-request eligibility at each rung, or fallback could
+  promote an endpoint the request cannot route to. Mitigate with an eligibility filter before ranking (R4, R5).
+- A pure, unit-tested scope-match function and a deterministic tie-break keep the N-way surface correct (R1, R3).
 
 ## Out of Scope
 
