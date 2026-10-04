@@ -117,8 +117,20 @@
     "reasoning_effort": { "type": ["string", "null"], "minLength": 1, "maxLength": 128 },
     "effort_source": {
       "type": "string",
-      "enum": ["none", "client", "variant", "variant_coerced"]
+      "enum": ["named", "disabled", "provider_default", "none"]
     },
+    "effort_resolution": {
+      "type": "string",
+      "enum": [
+        "router_managed",
+        "exact_primary",
+        "exact_fallback_expanded",
+        "unsupported_fallback",
+        "strict_rejected",
+        "equivalent_mapped"
+      ]
+    },
+    "effective_effort": { "type": ["string", "null"], "minLength": 1, "maxLength": 128 },
     "fallback_endpoint_ids": { "type": "array", "items": { "type": "string" } },
     "selection_reasons": {
       "type": "array",

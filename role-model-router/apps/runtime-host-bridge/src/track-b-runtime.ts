@@ -5233,9 +5233,9 @@ function outboxSchema(database: DatabaseSync): void {
          model_id IS NULL
          OR trim(model_id) = ''
          OR effort_source IS NULL
-         OR effort_source NOT IN ('none', 'client', 'variant', 'variant_coerced')
-         OR (reasoning_effort IS NULL AND effort_source <> 'none')
-         OR (reasoning_effort IS NOT NULL AND effort_source = 'none')
+         OR effort_source NOT IN ('named', 'disabled', 'provider_default', 'none', 'client', 'variant', 'variant_coerced')
+         OR (reasoning_effort IS NULL AND effort_source IN ('named', 'client', 'variant', 'variant_coerced'))
+         OR (reasoning_effort IS NOT NULL AND effort_source IN ('disabled', 'provider_default', 'none'))
        )
   `);
 }
@@ -8158,7 +8158,13 @@ async function appendTrackBRouteAdvisoryObservationExclusive(input: {
   return next;
 }
 
+// Both the canonical four-state vocabulary and the historical readable values are accepted here:
+// a persisted observation from an older build still carries `client`/`variant`/`variant_coerced`/`none`,
+// and must remain readable without being rewritten. New builds write canonical values.
 const TRACK_B_EFFORT_SOURCES = new Set<RuntimeEffortSourceValue>([
+  "named",
+  "disabled",
+  "provider_default",
   "none",
   "client",
   "variant",
@@ -8206,10 +8212,12 @@ function normalizeTrackBVariantIdentity(
   ) {
     throw new Error("persisted observation effort identity effortSource is invalid");
   }
-  if (
-    (reasoningEffort === null && effortSource !== "none") ||
-    (reasoningEffort !== null && effortSource === "none")
-  ) {
+  const namedLikeSource =
+    effortSource === "named" ||
+    effortSource === "client" ||
+    effortSource === "variant" ||
+    effortSource === "variant_coerced";
+  if ((reasoningEffort === null && namedLikeSource) || (reasoningEffort !== null && !namedLikeSource)) {
     throw new Error("persisted observation effort identity effort/source pair is inconsistent");
   }
   if (

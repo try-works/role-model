@@ -175,7 +175,8 @@ describe("Run 91 effort instance identity", () => {
     expect(resolution.executionRequest.reasoning).toEqual({ effort: "high" });
     expect(resolution.receipt).toEqual({
       reasoningEffort: "high",
-      effortSource: "variant_coerced",
+      effortSource: "named",
+      coerced: true,
     });
   });
 
@@ -190,7 +191,8 @@ describe("Run 91 effort instance identity", () => {
 
     expect(resolution.receipt).toEqual({
       reasoningEffort: "high",
-      effortSource: "variant",
+      effortSource: "named",
+      coerced: false,
     });
   });
 
@@ -204,7 +206,11 @@ describe("Run 91 effort instance identity", () => {
     });
 
     expect(resolution.executionRequest.reasoning).toBeUndefined();
-    expect(resolution.receipt).toEqual({ reasoningEffort: null, effortSource: "none" });
+    expect(resolution.receipt).toEqual({
+      reasoningEffort: null,
+      effortSource: "provider_default",
+      coerced: false,
+    });
   });
 
   test("discovery retains the aggregate row and emits one selectable endpoint row per sibling", () => {
@@ -504,7 +510,11 @@ describe("Run 91 effort instance identity", () => {
     });
 
     expect(resolution.executionRequest.reasoning).toEqual({ effort: "high" });
-    expect(resolution.receipt).toEqual({ reasoningEffort: "high", effortSource: "client" });
+    expect(resolution.receipt).toEqual({
+      reasoningEffort: "high",
+      effortSource: "named",
+      coerced: false,
+    });
   });
 
   test("reports a bounded reasoning-effort error instead of blaming capabilities", () => {

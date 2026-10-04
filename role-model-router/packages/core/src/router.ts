@@ -1980,7 +1980,15 @@ export function routeRequest(input: RouteRequestInput): RouterDecisionRecord {
     ...(chosen
       ? {
           reasoning_effort: chosenReasoningEffort,
-          effort_source: chosenReasoningEffort === null ? ("none" as const) : ("variant" as const),
+          effort_source: chosenReasoningEffort === null
+            ? ("provider_default" as const)
+            : ("named" as const),
+        }
+      : {}),
+    ...(normalizedInput.effortResolution
+      ? {
+          effort_resolution: normalizedInput.effortResolution.resolution,
+          effective_effort: normalizedInput.effortResolution.effectiveEffort,
         }
       : {}),
     fallback_endpoint_ids: orderedFallbacks.slice(1).map((candidate) => candidate.endpoint_id),

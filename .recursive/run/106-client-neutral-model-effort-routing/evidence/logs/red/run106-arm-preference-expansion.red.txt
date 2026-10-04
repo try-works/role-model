@@ -1,0 +1,3 @@
+run106-arm-preference-expansion RED
+command: corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/run106-arm-preference-expansion.test.ts
+observed: 4 tests failed - expandPreferredEndpointIdsToEffortArms not exported; controller/advisory base-endpoint preference does not yet expand to eligible effort arms.

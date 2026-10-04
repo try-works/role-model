@@ -405,6 +405,8 @@ export interface RuntimeEffortReceiptInput {
   readonly effortSource?: RuntimeEffortSourceValue;
   readonly reasoning_effort?: string | null;
   readonly effort_source?: RuntimeEffortSourceValue;
+  /** Explicit coercion attribution; when absent it is derived from a legacy `variant_coerced` source. */
+  readonly coerced?: boolean;
 }
 
 /**
@@ -433,7 +435,7 @@ export function normalizeRuntimeEffortReceipt(
   return {
     reasoningEffort,
     effortSource: normalized.source,
-    coerced: normalized.coerced,
+    coerced: input.coerced ?? normalized.coerced,
   };
 }
 
@@ -488,6 +490,8 @@ export interface RuntimeObservationBundleInput {
   /** Explicit request effort; null means the provider-default instance. */
   readonly reasoningEffort?: string | null;
   readonly effortSource?: RuntimeEffortSourceValue;
+  /** True when the named effort was coerced from a variant (historical `variant_coerced`). */
+  readonly effortCoerced?: boolean;
   readonly normalizedIntent?: Readonly<Record<string, unknown>>;
   readonly routingDiagnostics?: RuntimeRoutingDiagnostics;
   readonly retrievalReceipt: RuntimeRetrievalReceipt;
@@ -1194,7 +1198,10 @@ export const extractTaxonomyFields = extractTaxonomyDimensions;
 export function createRuntimeObservationBundle(
   input: RuntimeObservationBundleInput,
 ): RuntimeObservationBundle {
-  const effort = normalizeRuntimeEffortReceipt(input);
+  const effort = normalizeRuntimeEffortReceipt({
+    ...input,
+    ...(input.effortCoerced !== undefined ? { coerced: input.effortCoerced } : {}),
+  });
   const endpointVersion = deriveEndpointVersion(input.execution);
   const currentSample = buildObservedPerformanceSample(input, endpointVersion, effort);
   const priorSamples = (input.priorSamples ?? []).filter(

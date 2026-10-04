@@ -31,6 +31,7 @@ import {
   supportsCapabilityRequirement,
   taxonomyManifest,
 } from "@role-model-router/core";
+import type { EffortResolution } from "@role-model-router/core";
 import type { EndpointRegistryResult } from "@role-model-router/endpoint-registry";
 import {
   type RegistrySources,
@@ -66,6 +67,7 @@ import { createOpenAIProviderAdapter } from "@role-model-router/provider-openai"
 import { createRetrievalReceipt } from "@role-model-router/retrieval-receipt";
 import {
   type RuntimeCapturePolicy,
+  type RuntimeEffortReceipt,
   type RuntimeEffortSourceValue,
   type RuntimeExecutionCooldownReceipt,
   type RuntimeExecutionFailedAttemptReceipt,
@@ -439,10 +441,7 @@ export function resolveEndpointExecutionEffort(input: {
   readonly executionRequest: RuntimeExecutionRequest;
 }): {
   readonly executionRequest: RuntimeExecutionRequest;
-  readonly receipt: {
-    readonly reasoningEffort: string | null;
-    readonly effortSource: RuntimeEffortSourceValue;
-  };
+  readonly receipt: RuntimeEffortReceipt;
 } {
   const fixedEffort = input.fixedEffort?.trim() || null;
   const clientEffort = input.executionRequest.reasoning?.effort?.trim() || null;
@@ -457,7 +456,8 @@ export function resolveEndpointExecutionEffort(input: {
         executionRequest: input.executionRequest,
         receipt: {
           reasoningEffort: clientEffort,
-          effortSource: "client",
+          effortSource: "named",
+          coerced: false,
         },
       };
     }
@@ -472,7 +472,8 @@ export function resolveEndpointExecutionEffort(input: {
       executionRequest,
       receipt: {
         reasoningEffort: null,
-        effortSource: "none",
+        effortSource: "provider_default",
+        coerced: false,
       },
     };
   }
@@ -486,8 +487,8 @@ export function resolveEndpointExecutionEffort(input: {
     },
     receipt: {
       reasoningEffort: fixedEffort,
-      effortSource:
-        clientEffort !== null && clientEffort !== fixedEffort ? "variant_coerced" : "variant",
+      effortSource: "named",
+      coerced: clientEffort !== null && clientEffort !== fixedEffort,
     },
   };
 }
@@ -1264,6 +1265,8 @@ export interface BridgeExecutionPlan {
   readonly routingRequest: Parameters<typeof routeRuntimeRequest>[0]["request"];
   readonly executionRequest: RuntimeExecutionRequest;
   readonly routingModel?: RoutingModelSelection;
+  /** Run 106 R10: the effort policy resolution the host computed before narrowing the pool. */
+  readonly effortResolution?: EffortResolution;
   readonly routingDiagnostics?: Pick<
     RuntimeRoutingDiagnostics,
     | "aliasResolution"
@@ -2415,21 +2418,71 @@ function mergeCapabilityList(
   return merged;
 }
 
+function baseEndpointIdOfEndpoint(endpoint: {
+  readonly endpoint_id: string;
+  readonly reasoning_effort?: string | null;
+}): string {
+  const effort = endpoint.reasoning_effort?.trim() || null;
+  if (effort === null) {
+    return endpoint.endpoint_id;
+  }
+  const suffix = `-${encodeURIComponent(effort)}`;
+  return endpoint.endpoint_id.endsWith(suffix)
+    ? endpoint.endpoint_id.slice(0, -suffix.length)
+    : endpoint.endpoint_id;
+}
+
+/**
+ * Run 106 R6: a controller/advisory preference for a base model/endpoint expands deterministically
+ * to every already-eligible effort arm of that base endpoint. The expansion is bounded by
+ * `allowEndpoints` (it can never invent an effort arm), and a preference that already names a
+ * specific arm stays exact.
+ */
+export function expandPreferredEndpointIdsToEffortArms(input: {
+  readonly registry: EndpointRegistryResult;
+  readonly allowEndpoints: readonly string[];
+  readonly preferredEndpointIds: readonly string[];
+}): readonly string[] {
+  const allowed = new Set(input.allowEndpoints);
+  const baseIdByEndpointId = new Map<string, string>();
+  for (const endpoint of input.registry.endpoints) {
+    if (!allowed.has(endpoint.identity.endpoint_id)) {
+      continue;
+    }
+    baseIdByEndpointId.set(endpoint.identity.endpoint_id, baseEndpointIdOfEndpoint(endpoint.identity));
+  }
+  const baseIds = new Set(baseIdByEndpointId.values());
+  const matched = new Set<string>();
+  for (const preferredId of input.preferredEndpointIds) {
+    if (baseIds.has(preferredId)) {
+      for (const [endpointId, baseId] of baseIdByEndpointId) {
+        if (baseId === preferredId) {
+          matched.add(endpointId);
+        }
+      }
+    } else if (allowed.has(preferredId)) {
+      matched.add(preferredId);
+    }
+  }
+  return input.allowEndpoints.filter((endpointId) => matched.has(endpointId));
+}
+
 function collectPreferredEndpointIds(
+  registry: EndpointRegistryResult,
   allowEndpoints: readonly string[] | undefined,
   preferredEndpointIds: readonly string[] | undefined,
 ): readonly string[] {
-  const allowSet = new Set(allowEndpoints ?? []);
-  const filtered: string[] = [];
-  for (const endpointId of preferredEndpointIds ?? []) {
-    if (allowSet.has(endpointId) && !filtered.includes(endpointId)) {
-      filtered.push(endpointId);
-    }
-  }
-  if (allowSet.size > 0 && filtered.length === allowSet.size) {
+  const allow = allowEndpoints ?? [];
+  const expanded = expandPreferredEndpointIdsToEffortArms({
+    registry,
+    allowEndpoints: allow,
+    preferredEndpointIds: preferredEndpointIds ?? [],
+  });
+  // When the preference already covers the whole eligible pool, it carries no selection signal.
+  if (allow.length > 0 && expanded.length === allow.length) {
     return [];
   }
-  return filtered;
+  return expanded;
 }
 
 function isOpenAICodexSubscriptionEndpointId(endpointId: string): boolean {
@@ -2490,6 +2543,7 @@ function maybeApplyControllerRouting(input: {
   readonly effectiveRoutingMode: RuntimeRoutingMode;
   readonly pinWeights?: boolean;
   readonly requestedModel: string;
+  readonly registry: EndpointRegistryResult;
   readonly modelAliases: readonly UnifiedRuntimeModelAliasConfig[];
   readonly routingRequest: Parameters<typeof routeRuntimeRequest>[0]["request"];
   readonly routingDiagnostics?: Pick<
@@ -2570,6 +2624,7 @@ function maybeApplyControllerRouting(input: {
     knownCapabilities,
   );
   const preferredEndpointIds = collectPreferredEndpointIds(
+    input.registry,
     input.routingRequest.allowEndpoints ?? [],
     guidance.preferredEndpointIds,
   );
@@ -4553,17 +4608,22 @@ function normalizeCacheContinuityKeyValue(value: string | undefined): string | u
   return typeof value === "string" && value.trim().length > 0 ? value.trim() : undefined;
 }
 
-function toCacheContinuityScopeDescriptor(executionRequest: RuntimeExecutionRequest): {
+export function toCacheContinuityScopeDescriptor(executionRequest: RuntimeExecutionRequest): {
   readonly scopeSource: CacheContinuityScopeSource;
   readonly scopeKey: string;
   readonly scopeId: string;
 } | null {
+  // Run 106 R6: cache continuity is effort-aware. A prompt-cache key or session id is only a
+  // continuity scope within one effort arm, so the requested reasoning effort is folded into the
+  // scope id. Requests without a requested effort keep the historical effort-free key.
+  const effort = normalizeCacheContinuityKeyValue(executionRequest.reasoning?.effort);
+  const effortSuffix = effort ? `:effort:${effort}` : "";
   const promptCacheKey = normalizeCacheContinuityKeyValue(executionRequest.promptCache?.key);
   if (promptCacheKey) {
     return {
       scopeSource: "prompt_cache_key",
       scopeKey: promptCacheKey,
-      scopeId: `prompt_cache_key:${promptCacheKey}`,
+      scopeId: `prompt_cache_key:${promptCacheKey}${effortSuffix}`,
     };
   }
   const sessionId = normalizeCacheContinuityKeyValue(executionRequest.sessionAffinity?.sessionId);
@@ -4571,7 +4631,7 @@ function toCacheContinuityScopeDescriptor(executionRequest: RuntimeExecutionRequ
     return {
       scopeSource: "session_affinity",
       scopeKey: sessionId,
-      scopeId: `session_affinity:${sessionId}`,
+      scopeId: `session_affinity:${sessionId}${effortSuffix}`,
     };
   }
   return null;
@@ -10926,6 +10986,7 @@ export function mapChatCompletionsRequest(
     effectiveRoutingMode,
     pinWeights: routingPosture?.pinWeights === true,
     requestedModel: body.model,
+    registry,
     modelAliases,
     routingRequest: {
       requestId,
@@ -11009,6 +11070,10 @@ export function mapChatCompletionsRequest(
       ...(typeof body.temperature === "number" ? { temperature: body.temperature } : {}),
     },
     ...(effectiveRoutingModel ? { routingModel: effectiveRoutingModel } : {}),
+    effortResolution: {
+      resolution: effortAppliedToModelPool.resolution,
+      effectiveEffort: effortAppliedToModelPool.effectiveEffort,
+    },
     routingDiagnostics: withAliasPostureBinding(
       withStrategyProvenance(
         rolePolicyExecution.routingDiagnostics,
@@ -11207,6 +11272,7 @@ export function mapResponsesRequest(
     effectiveRoutingMode,
     pinWeights: routingPosture?.pinWeights === true,
     requestedModel: body.model,
+    registry,
     modelAliases,
     routingRequest: {
       requestId,
@@ -11286,6 +11352,10 @@ export function mapResponsesRequest(
       ...(typeof body.temperature === "number" ? { temperature: body.temperature } : {}),
     },
     ...(effectiveRoutingModel ? { routingModel: effectiveRoutingModel } : {}),
+    effortResolution: {
+      resolution: effortAppliedToModelPool.resolution,
+      effectiveEffort: effortAppliedToModelPool.effectiveEffort,
+    },
     routingDiagnostics: withAliasPostureBinding(
       withStrategyProvenance(
         rolePolicyExecution.routingDiagnostics,
@@ -20491,11 +20561,8 @@ export async function createRuntimeBridgeBackend(
     const requestedEffort = input.requestedEffort?.trim() || null;
     const failureEffort = {
       reasoningEffort: fixedEffort,
-      effortSource: (fixedEffort === null
-        ? "none"
-        : requestedEffort !== null && requestedEffort !== fixedEffort
-          ? "variant_coerced"
-          : "variant") as RuntimeEffortSourceValue,
+      effortSource: (fixedEffort === null ? "provider_default" : "named") as RuntimeEffortSourceValue,
+      coerced: fixedEffort !== null && requestedEffort !== null && requestedEffort !== fixedEffort,
     };
     const failureObservation = buildPreExecutionFailureObservation({
       requestId: input.requestId,
@@ -20520,6 +20587,7 @@ export async function createRuntimeBridgeBackend(
       endpointId: input.endpointId,
       reasoningEffort: failureEffort.reasoningEffort,
       effortSource: failureEffort.effortSource,
+      effortCoerced: failureEffort.coerced,
       modelId: input.modelId,
       requestedModelId: input.modelId,
       requestOperation: input.requestOperation,
@@ -26831,6 +26899,7 @@ export async function createRuntimeBridgeBackend(
           taskDefinitions: executionSnapshot.taskDefinitions,
           roleBindings,
           routingModel: plan.routingModel ?? executionSnapshot.routingModel ?? undefined,
+          ...(plan.effortResolution ? { effortResolution: plan.effortResolution } : {}),
           ...(advisoryConsideration ? { advisoryConsideration } : {}),
           ...(cacheContinuityRouteHints
             ? {
@@ -27732,7 +27801,7 @@ export async function createRuntimeBridgeBackend(
       const selectedModelId =
         selectedCandidate?.identity.model_id ?? executionOptions?.requestedModel ?? null;
       const selectedReasoningEffort = selectedCandidate?.identity.reasoning_effort ?? null;
-      const selectedEffortSource = selectedReasoningEffort === null ? "none" : "variant";
+      const selectedEffortSource = selectedReasoningEffort === null ? "provider_default" : "named";
       const selectedEndpointDimensions = {
         selectedEndpointId,
         candidateCount: eligibleEndpointIds.length,
@@ -28606,6 +28675,7 @@ export async function createRuntimeBridgeBackend(
         trafficClass: observedTrafficClass,
         reasoningEffort: effectiveEffort.reasoningEffort,
         effortSource: effectiveEffort.effortSource,
+        effortCoerced: effectiveEffort.coerced,
         // Run 98 addendum 40 (L1): record the provider breakdown beside the historical header time,
         // so telemetry can report what the client waited for instead of the provider's first byte.
         latencyBreakdown: {

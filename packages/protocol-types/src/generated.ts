@@ -190,6 +190,10 @@ export interface DownstreamOpenAIDiscovery {
    * @minItems 1
    */
   models: [DownstreamOpenAIModelRecord, ...DownstreamOpenAIModelRecord[]];
+  effort: {
+    union: StringList;
+    portableIntersection: StringList;
+  };
   setup: {
     recommendedModel: string | null;
     notes: string[];
@@ -416,7 +420,15 @@ export interface RouterDecision {
   }[];
   chosen_endpoint_id: string;
   reasoning_effort?: string | null;
-  effort_source?: "none" | "client" | "variant" | "variant_coerced";
+  effort_source?: "named" | "disabled" | "provider_default" | "none";
+  effort_resolution?:
+    | "router_managed"
+    | "exact_primary"
+    | "exact_fallback_expanded"
+    | "unsupported_fallback"
+    | "strict_rejected"
+    | "equivalent_mapped";
+  effective_effort?: string | null;
   fallback_endpoint_ids: string[];
   selection_reasons: (
     | "BEST_TOTAL_SCORE"

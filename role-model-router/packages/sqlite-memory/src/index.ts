@@ -1322,6 +1322,7 @@ export interface PersistedRuntimeObservationBundle {
   readonly endpointId: string;
   readonly reasoningEffort?: string | null;
   readonly effortSource?: EffortSourceValue;
+  readonly effortCoerced?: boolean;
   readonly conversationId: string;
   readonly usageEvent: {
     readonly timestamp_ms: number;
@@ -3184,6 +3185,7 @@ function toRuntimeTelemetryRecord(
       telemetrySnapshot?.effortSource ??
       (reasoningEffort === null ? "provider_default" : "named"),
   );
+  const effortCoerced = observation.effortCoerced ?? normalizedEffortSource.coerced;
   const difficultyBucketCandidate =
     routingDiagnostics?.difficultyRouting?.difficulty ??
     observation.observedPerformance.sample.difficulty_bucket ??
@@ -3255,7 +3257,7 @@ function toRuntimeTelemetryRecord(
     endpointId: observation.endpointId,
     reasoningEffort,
     effortSource: normalizedEffortSource.source,
-    ...(normalizedEffortSource.coerced ? { effortCoerced: true } : {}),
+    ...(effortCoerced ? { effortCoerced: true } : {}),
     conversationId: observation.conversationId,
     createdAtMs: observation.usageEvent.timestamp_ms,
     clientRequestId: observation.clientRequestId ?? null,
@@ -3532,19 +3534,16 @@ function toFailureRuntimeTelemetryRecord(
     input.observation.capturePolicy !== null
       ? (input.observation.capturePolicy as Record<string, unknown>)
       : null;
+  const normalizedEffortSource = normalizeEffortSource(
+    input.effortSource ?? (input.reasoningEffort ? "named" : "provider_default"),
+  );
   return {
     requestId: input.requestId,
     routingDecisionId,
     endpointId,
     reasoningEffort: input.reasoningEffort ?? null,
-    effortSource: normalizeEffortSource(
-      input.effortSource ?? (input.reasoningEffort ? "named" : "provider_default"),
-    ).source,
-    ...(normalizeEffortSource(
-      input.effortSource ?? (input.reasoningEffort ? "named" : "provider_default"),
-    ).coerced
-      ? { effortCoerced: true }
-      : {}),
+    effortSource: normalizedEffortSource.source,
+    ...(input.effortCoerced ?? normalizedEffortSource.coerced ? { effortCoerced: true } : {}),
     conversationId: "conversation-main",
     createdAtMs,
     clientRequestId: input.clientRequestId ?? null,
@@ -5053,6 +5052,8 @@ export interface PersistRuntimeTelemetryFailureInput {
   readonly endpointId?: string;
   readonly reasoningEffort?: string | null;
   readonly effortSource?: EffortSourceValue;
+  /** True when the named effort was coerced from a variant (historical `variant_coerced`). */
+  readonly effortCoerced?: boolean;
   readonly modelId?: string;
   readonly requestedModelId?: string | null;
   readonly selectedModelId?: string | null;

@@ -60,6 +60,8 @@ export interface ProjectRuntimeRouteInputInput {
    * effective learning stage is S2 or above; hard eligibility and scoring still run first.
    */
   advisoryConsideration?: RouteRequestInput["advisoryConsideration"];
+  /** Run 106 R10: the effort policy resolution computed by the host before narrowing the pool. */
+  effortResolution?: RouteRequestInput["effortResolution"];
   /**
    * Run 100 addendum 10, E1: who is being routed. The verdict line is the only place a live eligibility collapse
    * leaves a trace that does not require a store query, and without this the line named neither the request nor the
@@ -319,6 +321,9 @@ export function projectRuntimeRouteInput(
       routingTimeMs: input.routingTimeMs,
       ...(input.advisoryConsideration
         ? { advisoryConsideration: input.advisoryConsideration }
+        : {}),
+      ...(input.effortResolution
+        ? { effortResolution: input.effortResolution }
         : {}),
     },
     routingDiagnostics: {

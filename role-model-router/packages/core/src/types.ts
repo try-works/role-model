@@ -210,6 +210,19 @@ export interface RoutingIntent {
   }[];
 }
 
+export type EffortResolutionKind =
+  | "router_managed"
+  | "exact_primary"
+  | "exact_fallback_expanded"
+  | "unsupported_fallback"
+  | "strict_rejected"
+  | "equivalent_mapped";
+
+export interface EffortResolution {
+  readonly resolution: EffortResolutionKind;
+  readonly effectiveEffort: string | null;
+}
+
 export interface RouteRequestInput {
   request: RoutingRequest;
   candidates: readonly EndpointCandidate[];
@@ -227,6 +240,12 @@ export interface RouteRequestInput {
    * exact same decision it produced before.
    */
   advisoryConsideration?: RouteAdvisoryConsiderationInput;
+  /**
+   * Run 106 R10: the effort policy resolution the host computed before narrowing the pool.
+   * Recorded verbatim on the decision so provenance (resolution kind + effective effort)
+   * survives the router's own scoring/selection pass.
+   */
+  effortResolution?: EffortResolution;
 }
 
 export interface RouteAdvisoryConsiderationInput {
