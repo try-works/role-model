@@ -726,6 +726,21 @@ function applyTelemetryAdvisory(
   };
 }
 
+export function shouldPreferNonInferiorChallenger(input: {
+  readonly incumbentQuality: number;
+  readonly challengerQuality: number;
+  readonly qualityMargin: number;
+  readonly incumbentLatencyMs: number;
+  readonly challengerLatencyMs: number;
+  readonly incumbentCostUsd: number;
+  readonly challengerCostUsd: number;
+}): boolean {
+  const nonInferior = input.challengerQuality >= input.incumbentQuality - input.qualityMargin;
+  const faster = input.challengerLatencyMs < input.incumbentLatencyMs;
+  const cheaper = input.challengerCostUsd < input.incumbentCostUsd;
+  return nonInferior && faster && cheaper;
+}
+
 export function resolveBorrowedQualityPrior(input: {
   readonly relatedEffortScore?: number;
   readonly discountFactor?: number;
