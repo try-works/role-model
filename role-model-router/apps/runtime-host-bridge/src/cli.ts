@@ -7404,12 +7404,24 @@ export async function main(): Promise<void> {
         // Run 98 addendum 56 §6: the configured controller is the judge (addendum 45), so it must never be
         // planned as a counterfactual arm; resolved per tick so a controller change takes effect immediately.
         resolveJudgeEndpointId: async () => {
-          // The auto-replay starter is handed the narrow bridge options type, while the object it receives at
-          // runtime is the full server composition (which binds `readControllerAssignment`). Reading it
-          // defensively keeps a runtime without the binding on the previous behaviour instead of failing.
-          const readControllerAssignment = (
-            options as { readControllerAssignment?: () => Promise<unknown> }
-          ).readControllerAssignment;
+          // Run 105 bug 3: the auto-replay starter is handed the narrow bridge options type whose
+          // `readControllerAssignment` binding is NOT wired, so it fell back to the (empty) durable table and
+          // returned null while the supervised replay endpoint resolved the controller judge as deepseek-flash.
+          // Read the wired backend binding first (the same source `bindBackendMethod` uses), so the focus
+          // planner excludes the SAME judge the supervised endpoint will reject.
+          const readControllerAssignment = (() => {
+            try {
+              return (
+                requireBackend() as unknown as {
+                  readControllerAssignment?: () => Promise<unknown>;
+                }
+              ).readControllerAssignment;
+            } catch {
+              return (
+                options as { readControllerAssignment?: () => Promise<unknown> }
+              ).readControllerAssignment;
+            }
+          })();
           const assignment = await Promise.resolve(readControllerAssignment?.()).catch(() => null);
           const endpointId =
             assignment && typeof assignment === "object" && !Array.isArray(assignment)
