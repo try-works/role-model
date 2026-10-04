@@ -726,6 +726,31 @@ function applyTelemetryAdvisory(
   };
 }
 
+export function computeEffortUnionAndIntersection(input: {
+  readonly modelEfforts: readonly (readonly (string | null)[])[];
+}): { union: readonly string[]; portableIntersection: readonly string[] } {
+  const union = new Set<string>();
+  const models = input.modelEfforts.map(
+    (efforts) => new Set(efforts.filter((effort): effort is string => effort !== null)),
+  );
+  for (const efforts of models) {
+    for (const effort of efforts) {
+      union.add(effort);
+    }
+  }
+  let intersection: Set<string> | null = null;
+  if (models.length > 0) {
+    intersection = new Set(models[0]);
+    for (let index = 1; index < models.length; index += 1) {
+      intersection = new Set([...intersection].filter((effort) => models[index].has(effort)));
+    }
+  }
+  return {
+    union: [...union].sort(),
+    portableIntersection: [...(intersection ?? [])].sort(),
+  };
+}
+
 export function shouldPreferNonInferiorChallenger(input: {
   readonly incumbentQuality: number;
   readonly challengerQuality: number;
