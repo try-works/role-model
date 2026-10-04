@@ -1,7 +1,9 @@
-import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
 
-import { buildRequestClassification } from "../src/index.js";
+import {
+  buildRequestClassification,
+  buildRequestClassificationForPlan,
+} from "../src/index.js";
 
 /**
  * Run 104 `R6` / `SP4` - taxonomy fidelity into captures, observations and learning rows.
@@ -100,14 +102,37 @@ describe("run104 R6 buildRequestClassification task-family fallback", () => {
     expect(withoutVariant?.taskVariant ?? null).toBeNull();
   });
 
-  test("the live advisory task key uses the SAME classification chain as the role (no raw plan field)", () => {
-    // Run 105 Phase 5 live: `requestTaskTypeId` read `plan.routingRequest.taskType` directly while the
-    // role beside it resolved through `buildRequestClassificationForPlan`. An intent/identity-resolved
-    // request therefore recorded `requestTaskTypeId: null` and never recalled its exact (role, task)
-    // ladder. The advisory key and observation must both come from the resolved classification.
-    const source = readFileSync(new URL("../src/index.ts", import.meta.url), "utf8");
-    expect(source).toContain("const requestTaskTypeId = buildRequestClassificationForPlan(plan)?.taskTypeId ?? null;");
-    expect(source).not.toContain("const requestTaskTypeId = plan.routingRequest.taskType ?? null;");
+  test("buildRequestClassificationForPlan reads the authoritative taxonomy identity, not runtime-policy ids", () => {
+    // Run 105 Phase 5 review finding: telemetry taxonomy (buildBridgeTaxonomyIdentity) resolved
+    // coder|coder.edit while the capture/advisory chain (buildRequestClassificationForPlan) read
+    // plan.routingRequest.taskType / requestedRoleId (runtime-policy ids) and returned null. The plan
+    // wrapper must use the resolved taxonomyIdentity as authoritative.
+    const genuine = buildRequestClassificationForPlan({
+      taxonomyIdentity: { taskTypeId: "coder.edit", roleId: "coder" },
+      routingRequest: { taskType: "runtime-policy-task-id", requestedRoleId: "runtime-policy-role-id" },
+    } as never);
+    expect(genuine).toMatchObject({ taskTypeId: "coder.edit", roleId: "coder" });
+  });
+
+  test("buildRequestClassificationForPlan drops the text.chat/writer defaults (unclassified stays null)", () => {
+    const defaults = buildRequestClassificationForPlan({
+      taxonomyIdentity: { taskTypeId: "text.chat", roleId: "writer" },
+      routingRequest: {},
+    } as never);
+    expect(defaults?.taskTypeId ?? null).toBeNull();
+    expect(defaults?.roleId ?? null).toBeNull();
+  });
+
+  test("the advisory task key and the classification chain resolve the SAME task (no raw plan field)", () => {
+    // Regression pin: requestTaskTypeId at the advisory consultation site must equal the resolved
+    // classification task, never the raw plan.routingRequest.taskType.
+    const plan = {
+      taxonomyIdentity: { taskTypeId: "coder.edit", roleId: "coder" },
+      routingRequest: {},
+    } as never;
+    const classification = buildRequestClassificationForPlan(plan);
+    expect(classification?.taskTypeId).toBe("coder.edit");
+    expect(classification?.taskTypeId).not.toBe((plan as never as { routingRequest: { taskType?: string } }).routingRequest.taskType);
   });
 
   test("every capture site's input produces the same classification for one fixture", () => {

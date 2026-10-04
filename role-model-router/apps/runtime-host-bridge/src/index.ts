@@ -8310,19 +8310,28 @@ const boundedRequestClassificationId = (value: unknown): string | null =>
  * the failed-route capture, the observation bundle and the supervised-replay capture cannot drift
  * apart. The three task sources are the same chain `buildRequestClassification` validates.
  */
-function buildRequestClassificationForPlan(
+export function buildRequestClassificationForPlan(
   plan: BridgeExecutionPlan,
 ): BridgeRequestClassification | null {
+  // Run 105 Phase 5 (review finding): align with buildBridgeTaxonomyIdentity. The runtime-policy
+  // identifiers plan.routingRequest.taskType / requestedRoleId are not taxonomy identifiers, so
+  // reading them as the declared source made buildRequestClassification stop on a non-taxonomy id
+  // and return null even though buildBridgeTaxonomyIdentity had already resolved a genuine
+  // coder|coder.edit identity. The authoritative resolved taxonomy identity is the source; its
+  // "text.chat" task and correlated "writer" role defaults are dropped so a genuinely unclassified
+  // request stays null rather than leaking a default role into capture/advisory classification.
+  const identity = plan.taxonomyIdentity;
+  const genuineTaskTypeId =
+    identity?.taskTypeId &&
+    canonicalTaxonomy.tasks.some((task) => task.id === identity.taskTypeId)
+      ? identity.taskTypeId
+      : null;
   return buildRequestClassification({
-    taskTypeId: plan.routingRequest.taskType ?? null,
-    identityTaskTypeId: plan.taxonomyIdentity?.taskTypeId ?? null,
+    taskTypeId: genuineTaskTypeId,
+    identityTaskTypeId: genuineTaskTypeId,
     intentTaskTypeId: plan.routingRequest.roleModelIntent?.task?.id ?? null,
     taskVariant: plan.routingRequest.roleModelIntent?.taskVariant ?? null,
-    roleId:
-      plan.routingRequest.requestedRoleId ??
-      plan.taxonomyIdentity?.roleId ??
-      plan.routingRequest.roleModelIntent?.role?.id ??
-      null,
+    roleId: genuineTaskTypeId ? (identity?.roleId ?? null) : null,
     toolClasses: plan.routingRequest.roleModelIntent?.toolClasses ?? null,
   });
 }
