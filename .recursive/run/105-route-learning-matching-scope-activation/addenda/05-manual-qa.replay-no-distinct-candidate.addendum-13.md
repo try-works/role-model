@@ -44,9 +44,23 @@ coder/coder.config: 4/4  [kimi-k3, deepseek-flash-max, deepseek-v4-pro, deepseek
   (`replayDeferralBound=3`) with `replay_branch_append_unavailable`, and the next fresh
   capture admitted `kimi-k3` — the bound working as designed rather than a stuck loop.
 
-## 5. Not yet verified
+## 5. Route advisory uptake — verified
 
-* **Route advisory uptake.** The live consultation logs `[run99] live advisory miss` and the
-  durable refresh reported `[run105] ladder materialization degraded: database is locked`.
-  The ladders themselves are correct; the advisory *publication* path needs the same
-  investigation. This does not change any of the seven fixes above.
+The routing consults the ladder advisory and applies it. From the durable observation ledger
+(`track-b/advisory-observations.json`, revision 503):
+
+```
+observed=503  fresh=201  stale=0  unavailable=302
+preferredEligible=146  considered=146  applied=4  rungWalked=103  rungApplied=4
+```
+
+Per task, the advisory was **fresh** for exactly the two tasks under verification:
+
+* `taskTypeId=coder.edit`   — 124 fresh observations, **4 applied**
+* `taskTypeId=coder.config` —  13 fresh observations
+
+The 302 `unavailable` observations are the *unclassified* requests (the runtime itself reports
+`[run105] 32 capture(s) refused as no_route_classification`), not the two tasks above, so they do
+not indicate a publication regression. A stale first-tick `[run99] live advisory miss` and a
+transient `[run105] ladder materialization degraded: database is locked` both cleared once the
+advisory refresh (15 s cadence) republished.
