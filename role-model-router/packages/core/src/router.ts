@@ -726,6 +726,18 @@ function applyTelemetryAdvisory(
   };
 }
 
+export function resolveBorrowedQualityPrior(input: {
+  readonly relatedEffortScore?: number;
+  readonly discountFactor?: number;
+}): { value: number; source: "borrowed" } | null {
+  const score = input.relatedEffortScore;
+  if (typeof score !== "number" || !Number.isFinite(score)) {
+    return null;
+  }
+  const discount = typeof input.discountFactor === "number" ? input.discountFactor : 0.7;
+  return { value: clamp(score * discount), source: "borrowed" };
+}
+
 export function getQualityMetric(
   candidate: EndpointCandidate,
   input: RouteRequestInput,

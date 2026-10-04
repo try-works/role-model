@@ -1,0 +1,3 @@
+SP3 GREEN - borrowed quality prior
+command: corepack pnpm --filter @role-model-router/core exec vitest run test/run106-borrowed-quality-prior.test.ts
+result: 4 tests passed (4).
