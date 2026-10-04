@@ -236,7 +236,11 @@ export async function readTrackBRouteAdvisoryFromRollout(
     if (!packId || (ladder.taxonomyVersion != null && !taxonomyVersion))
       return refuse("route ladder provenance unavailable");
     // packId is the real content-addressed knowledge DOCUMENT, not a learning-record id.
-    const document = asRecord(await input.invoke("knowledge:read", { id: packId, scope: scopeId }));
+    const rawDocument = asRecord(await input.invoke("knowledge:read", { id: packId, scope: scopeId }));
+    // The host envelope merges the transport fields (businessOutput, durableLocator, evidenceRef,
+    // readCapability, workerPid) beside the document, so the content-addressed digest must be computed
+    // over the INNER document the knowledge-store actually addressed, not the envelope.
+    const document = asRecord(rawDocument?.businessOutput) ?? rawDocument;
     const metadata = asRecord(document?.provenance);
     if (process.env.ROLE_MODEL_ADVISORY_DIAG) {
       console.error(`[advisory-diag] doc keys=${Object.keys(document ?? {}).join(",")} type=${document?.type} ver=${document?.version} docScope=${document?.scope} scopeId=${scopeId} mScopeId=${metadata?.scopeId} mRole=${metadata?.roleId} roleId=${roleId} mTask=${metadata?.taskTypeId} taskId=${taskTypeId} mTax=${metadata?.taxonomyVersion} tax=${taxonomyVersion} digestMatch=${document ? documentDigest(document) === packId : false}`);
