@@ -238,6 +238,9 @@ export async function readTrackBRouteAdvisoryFromRollout(
     // packId is the real content-addressed knowledge DOCUMENT, not a learning-record id.
     const document = asRecord(await input.invoke("knowledge:read", { id: packId, scope: scopeId }));
     const metadata = asRecord(document?.provenance);
+    if (process.env.ROLE_MODEL_ADVISORY_DIAG) {
+      console.error(`[advisory-diag] doc keys=${Object.keys(document ?? {}).join(",")} type=${document?.type} ver=${document?.version} docScope=${document?.scope} scopeId=${scopeId} mScopeId=${metadata?.scopeId} mRole=${metadata?.roleId} roleId=${roleId} mTask=${metadata?.taskTypeId} taskId=${taskTypeId} mTax=${metadata?.taxonomyVersion} tax=${taxonomyVersion} digestMatch=${document ? documentDigest(document) === packId : false}`);
+    }
     if (
       !document ||
       isDegradationReceipt(document) ||
