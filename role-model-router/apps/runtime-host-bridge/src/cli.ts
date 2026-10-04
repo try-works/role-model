@@ -8210,10 +8210,9 @@ export async function main(): Promise<void> {
             // Run 98 addendum 33 S3: rotate the counterfactual per request so the comparison graph gains
             // edges across captures rather than repeating one pair (the live store's 465-of-465 star).
             rotationKey: requestId,
-            // Run 98 addendum 30 S1/S2 (`guidance/11` `judgePolicy.excludeFromLiveEvaluation`): the
-            // judge is a designated client and is never offered as a scored candidate, so a battle
-            // cannot contain the endpoint that judges it.
-            ...(evalJudgeEndpointId ? { excludedEndpointIds: [evalJudgeEndpointId] } : {}),
+            // Run 105 bug 3: the configured judge may also be a candidate endpoint, so it is NOT excluded
+            // here. When a challenger equals the judge, the evaluation de-conflicts (dedupeJudgeAgainstPair
+            // picks an alternative judge), so the controller endpoint can still be admitted as a challenger.
             requirements: replayRequestRequirements,
             endpointProfiles: replayEndpointProfiles,
             onRejected: (rejection) => replayCandidateRejections.push(rejection),
@@ -8401,12 +8400,11 @@ export async function main(): Promise<void> {
             );
           }
           if (process.env.ROLE_MODEL_FOCUS_DIAG) { console.error("[source-diag] requestId=" + requestId.slice(0,16) + " endpointId=" + (sourceCapture.endpointId||null) + " sourceEndpointId=" + (sourceCapture.sourceEndpointId||null) + " capturedSource=" + (capturedSourceEndpointId||null) + " judge=" + (evalJudgeEndpointId||null) + " candidates=" + candidatePackages.map(function(c){return c.endpointId.split(".").pop();}).join(",")); }
+          // Run 105 bug 3: the configured judge may also be a candidate endpoint, so it is NOT excluded
+          // here. Only the source is filtered; a challenger that equals the judge is de-conflicted at the
+          // evaluation (dedupeJudgeAgainstPair picks an alternative judge).
           const counterfactualPackages = candidatePackages.filter(
-            (candidate) =>
-              candidate.endpointId !== sourceEndpointId &&
-              // Run 98 addendum 30 S2: the designated judge is never a scored candidate, whatever
-              // the dispatch list said.
-              (!evalJudgeEndpointId || candidate.endpointId !== evalJudgeEndpointId),
+            (candidate) => candidate.endpointId !== sourceEndpointId,
           );
           if (counterfactualPackages.length === 0) {
             throw new Error(

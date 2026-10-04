@@ -1095,7 +1095,9 @@ export async function runAutoReplayTick(input: {
         : { configuredEndpointIds: input.configuredEndpointIds }),
       ...(input.healthyEndpointIds ? { healthyEndpointIds: input.healthyEndpointIds } : {}),
       sourceEndpointId: capture.sourceEndpointId,
-      ...(effectiveJudgeEndpointId ? { excludedEndpointIds: [effectiveJudgeEndpointId] } : {}),
+      // Run 105 bug 3: the configured judge may also be a candidate endpoint, so it is NOT excluded here.
+      // When a challenger equals the judge, the evaluation de-conflicts (dedupeJudgeAgainstPair picks an
+      // alternative judge), so the controller endpoint can still be admitted as a challenger.
       // Run 98 addendum 33 S3: rotate the counterfactual with the capture, so the comparison graph grows
       // edges instead of every capture comparing the same two candidates. A narrowed (focus) plan names
       // its own single arm, so the rotation must not reorder it.

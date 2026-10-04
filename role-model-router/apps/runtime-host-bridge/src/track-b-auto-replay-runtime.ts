@@ -19,7 +19,6 @@ import {
   type AutoReplayTickResult,
   resolveReplayJudgeFallbackEndpointIds,
   runAutoReplayTick,
-  selectAlternativeJudgeEndpoint,
 } from "./track-b-auto-replay.js";
 
 /**
@@ -1374,34 +1373,19 @@ export function startAutoReplayLoop(input: {
           } else {
             const source = owned.find(item => configuredNow.some(id => id !== item.sourceEndpointId &&
               !(routeLadder?.rungs ?? []).some(rung => rung.endpointId === id && rung.status === "available"))) ?? owned[0];
-            // Run 105 bug 3: the focus endpoint must not be an endpoint the arm planner will refuse
-            // (the configured judge), or the narrowed plan zeroes out and the capture is refused
-            // no_distinct_candidate_configured. The tick also substitutes an ALTERNATIVE judge when the
-            // configured judge is the source endpoint, so that alternative must be excluded too - otherwise
-            // planFocusDispatch still picks an endpoint selectReplayCandidates then rejects.
+            // Run 105 bug 3: the configured judge may also be a candidate endpoint, so it is NOT excluded
+            // from the challenger set here. When a challenger equals the judge, the evaluation de-conflicts
+            // (dedupeJudgeAgainstPair picks an alternative judge), so the controller endpoint can still be
+            // admitted as a challenger. The judge is resolved for diagnostics and the tick's judge receipt.
             const judgeId = typeof input.resolveJudgeEndpointId === "function"
               ? await input.resolveJudgeEndpointId().catch(() => null)
               : null;
-            const excludedFocusEndpoints = new Set<string>();
-            if (judgeId && typeof judgeId === "string" && judgeId.length > 0) {
-              excludedFocusEndpoints.add(judgeId);
-              if (source?.sourceEndpointId && judgeId === source.sourceEndpointId) {
-                const alternative = selectAlternativeJudgeEndpoint({
-                  collidingJudgeEndpointId: judgeId,
-                  sourceEndpointId: source.sourceEndpointId,
-                  fallbackEndpointIds: configuredNow,
-                });
-                if (alternative) excludedFocusEndpoints.add(alternative);
-              }
-            }
             const fill = planFocusDispatch({ focus: plannedFocus, replayableCapture: source,
               configuredEndpointIds: configuredNow.filter(id => id !== source?.sourceEndpointId),
               admittedEndpointIds: (routeLadder?.rungs ?? []).filter(rung => rung.status === "available").map(rung => rung.endpointId),
-              ...(excludedFocusEndpoints.size > 0
-                ? { excludedEndpointIds: [...excludedFocusEndpoints] } : {}),
               rungs: routeLadder?.rungs });
             if (process.env.ROLE_MODEL_FOCUS_DIAG) {
-              console.error(`[focus-diag] source=${source?.sourceEndpointId?.split(".").pop()} judge=${judgeId?.split(".").pop() ?? null} excluded=${[...excludedFocusEndpoints].map(id=>id.split(".").pop()).join(",")} focusEndpoint=${fill instanceof NoReplayableRequest ? "NoReplayableRequest" : (fill?.endpointId?.split(".").pop() ?? null)} configured=${configuredNow.map(id=>id.split(".").pop()).join(",")} admitted=${(routeLadder?.rungs ?? []).filter(rung=>rung.status==="available").map(rung=>rung.endpointId.split(".").pop()).join(",")}`);
+              console.error(`[focus-diag] source=${source?.sourceEndpointId?.split(".").pop()} judge=${judgeId?.split(".").pop() ?? null} focusEndpoint=${fill instanceof NoReplayableRequest ? "NoReplayableRequest" : (fill?.endpointId?.split(".").pop() ?? null)} configured=${configuredNow.map(id=>id.split(".").pop()).join(",")} admitted=${(routeLadder?.rungs ?? []).filter(rung=>rung.status==="available").map(rung=>rung.endpointId.split(".").pop()).join(",")}`);
             }
             if (fill instanceof NoReplayableRequest) throw fill;
             focusCaptureRef = source?.captureRef ?? null; focusEndpointId = fill?.endpointId ?? null;
