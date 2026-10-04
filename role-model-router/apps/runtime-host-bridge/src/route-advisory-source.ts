@@ -118,6 +118,7 @@ const finiteOrNull = (value: unknown): number | null =>
 const clampUnit = (value: number): number => Math.min(1, Math.max(0, value));
 
 function unavailable(reason: string, cohortPercent = 0): TrackBRouteAdvisorySourceResult {
+  if (process.env.ROLE_MODEL_ADVISORY_DIAG) console.error(`[advisory-diag] unavailable: ${reason}`);
   return {
     preferredRoutePackage: null,
     advisoryLadder: [],
