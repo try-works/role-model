@@ -371,7 +371,11 @@ export function buildEndpointRegistry(input: BuildEndpointRegistryInput): Endpoi
       region: source.region,
       modelId: source.modelId,
       fixedEffort: source.reasoningEffort ?? null,
-      declaredLevels: model.reasoningEffortLevels,
+      // Run 106 R2: a catalog reasoning_effort_levels declaration alone cannot
+      // make an arm routable (a durable runtime endpoint source is the execution
+      // mapping). Each activated endpoint is its own arm; declared levels stay
+      // advertised on the provider-default arm's declared.reasoning_effort_levels
+      // for discovery (R9) but do not expand into un-executable routing arms.
       baseEndpointId: source.endpointId,
     });
     for (const arm of arms) {

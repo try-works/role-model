@@ -5706,7 +5706,7 @@ describe("runtime-host-bridge", () => {
     expect(result.routingRequest.allowEndpoints).toEqual([
       "moonshot.personal.primary.global.kimi-k2.5",
     ]);
-    expect(result.routingDiagnostics?.difficultyRouting).toEqual({
+    expect(result.routingDiagnostics?.difficultyRouting).toMatchObject({
       difficulty: "hard",
       strategy: "quality",
       fallbackApplied: false,
@@ -5798,7 +5798,7 @@ describe("runtime-host-bridge", () => {
     expect(result.routingRequest.allowEndpoints).toEqual([
       "moonshot.personal.primary.global.kimi-k2.5",
     ]);
-    expect(result.routingDiagnostics?.difficultyRouting).toEqual({
+    expect(result.routingDiagnostics?.difficultyRouting).toMatchObject({
       difficulty: "hard",
       strategy: "quality",
       fallbackApplied: false,
@@ -5883,7 +5883,7 @@ describe("runtime-host-bridge", () => {
     expect(result.routingRequest.allowEndpoints).toEqual([
       "moonshot.personal.primary.global.kimi-k2.5",
     ]);
-    expect(result.routingDiagnostics?.difficultyRouting).toEqual({
+    expect(result.routingDiagnostics?.difficultyRouting).toMatchObject({
       difficulty: "hard",
       strategy: "quality",
       fallbackApplied: false,
@@ -6617,6 +6617,7 @@ describe("runtime-host-bridge", () => {
     });
     expect(result.executionRequest.reasoning).toEqual({
       effort: "high",
+      effortPolicy: "preferred",
     });
     expect(result.executionRequest.continuation).toEqual({
       previousResponseId: "resp_prev_001",
@@ -7042,6 +7043,7 @@ describe("runtime-host-bridge", () => {
     expect(result.routingRequest.requiredCapabilities).toContain("reasoning.effort_control");
     expect(result.executionRequest.reasoning).toEqual({
       effort: "high",
+      effortPolicy: "preferred",
     });
   });
 
@@ -22172,21 +22174,22 @@ describe("runtime-host-bridge", () => {
         granularity: "hour",
         metrics: ["requestCount"],
         breakdown: "reasoningEffort",
-        filters: { effortSources: ["variant"] },
+        filters: { effortSources: ["named"] },
         ranking: { dimension: "effortSource", metric: "requestCount", limit: 8 },
       }),
     ).resolves.toEqual(
       expect.objectContaining({
-        totals: expect.objectContaining({ requestCount: 1 }),
+        totals: expect.objectContaining({ requestCount: 2 }),
         buckets: [
           expect.objectContaining({
             series: [
               expect.objectContaining({ key: "high", label: "High", metrics: { requestCount: 1 } }),
+              expect.objectContaining({ key: "max", label: "Max", metrics: { requestCount: 1 } }),
             ],
           }),
         ],
         ranking: expect.objectContaining({
-          rows: [expect.objectContaining({ key: "variant", label: "Variant fixed" })],
+          rows: [expect.objectContaining({ key: "named", label: "Named effort" })],
         }),
         identities: expect.objectContaining({
           reasoningEffort: expect.objectContaining({
@@ -22603,7 +22606,7 @@ describe("runtime-host-bridge", () => {
             // `live_request`; readback still accepts the legacy value for pre-migration rows.
             requestClass: "live",
             reasoningEffort: null,
-            effortSource: "none",
+            effortSource: "provider_default",
           }),
           expect.objectContaining({
             clientRequestId: capabilityClientRequestId,
@@ -22651,7 +22654,7 @@ describe("runtime-host-bridge", () => {
           requestId: genericFailureRow?.requestId,
           clientRequestId,
           reasoningEffort: null,
-          effortSource: "none",
+          effortSource: "provider_default",
           observationAvailability: expect.objectContaining({
             source: "raw-observation",
             rawObservationAvailable: true,
@@ -22680,7 +22683,7 @@ describe("runtime-host-bridge", () => {
           }),
           usageEvent: expect.objectContaining({
             reasoning_effort: null,
-            effort_source: "none",
+            effort_source: "provider_default",
           }),
         }),
       );

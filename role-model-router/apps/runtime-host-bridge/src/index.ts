@@ -24259,8 +24259,13 @@ export async function createRuntimeBridgeBackend(
     }
     if (dimension === "effortSource") {
       const labels: Readonly<Record<string, string>> = {
+        // Canonical four-state vocabulary (run 106 R4/R10).
+        named: "Named effort",
+        disabled: "Reasoning disabled",
+        provider_default: "Provider default",
+        none: "Router managed",
+        // Historical readable values (pre-migration rows).
         client: "Client requested",
-        none: "Provider default",
         variant: "Variant fixed",
         variant_coerced: "Variant coerced",
         fixed: "Endpoint fixed",
