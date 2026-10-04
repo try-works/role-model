@@ -310,8 +310,9 @@ describe("Run 91 effort instance identity", () => {
    * ineligibility (`eligible=2 codes=POLICY_DENY_ENDPOINT=5`, `eligible=1` for `low`). The effort now orders the pool
    * through `routingModel.preferredEndpointIds` (the core router's `routingModelRank` adjustment) and no longer
    * removes members. Exact instance selection still applies to an explicit model id or endpoint row - see the
-   * "keeps an exact fixed endpoint authoritative" and "fails closed when an alias effort has neither a matching
-   * variant nor provider-default" cases below.
+   * "keeps an exact fixed endpoint authoritative" case below. An alias or model id whose effort has no exact arm is
+   * unsupported_fallback (R3/D5): the hint is ignored and the pool stays router-managed - see the "keeps the pool and
+   * records unsupported_fallback" cases below.
    */
   test("routes an alias with explicit reasoning effort across the pool while preferring matching fixed variants", () => {
     const aliases = [
@@ -360,51 +361,77 @@ describe("Run 91 effort instance identity", () => {
     ]);
   });
 
-  test("fails closed rather than treating provider-default as an unconfigured effort variant", () => {
-    expect(() =>
-      mapChatCompletionsRequest(
-        registry,
+  test("keeps the pool and records unsupported_fallback when an alias effort has no exact arm", () => {
+    const plan = mapChatCompletionsRequest(
+      registry,
+      {
+        model: "baseline.remote-only",
+        messages: [{ role: "user", content: "hello" }],
+        reasoning_effort: "high",
+      } as never,
+      "run91-alias-high-no-variant",
+      [
         {
-          model: "baseline.remote-only",
-          messages: [{ role: "user", content: "hello" }],
-          reasoning_effort: "high",
-        } as never,
-        "run91-alias-high-no-variant",
-        [
-          {
-            aliasId: "baseline.remote-only",
-            modelIds: ["deepseek/deepseek-v4-pro"],
-            executionMode: "remote_only",
-          },
-        ] as never,
-      ),
-    ).toThrow(/no targets|no registry endpoints|no execution target/i);
+          aliasId: "baseline.remote-only",
+          modelIds: ["deepseek/deepseek-v4-pro"],
+          executionMode: "remote_only",
+        },
+      ] as never,
+    );
+
+    // R3/D5: preferred + zero exact arms -> unsupported_fallback: ignore the hint and router-manage the whole pool.
+    expect(plan.routingRequest.allowEndpoints).toEqual(
+      expect.arrayContaining([
+        "account.global.deepseek-v4-pro",
+        "account.global.deepseek-v4-pro-medium",
+        "account.global.deepseek-v4-pro-max",
+      ]),
+    );
+    expect(plan.routingRequest.allowEndpoints).toHaveLength(3);
+    expect(plan.routingModel).toBeUndefined();
+    expect(plan.effortResolution).toEqual({
+      resolution: "unsupported_fallback",
+      effectiveEffort: null,
+    });
   });
 
-  test("fails closed when an alias effort has neither a matching variant nor provider-default", () => {
+  test("keeps the fixed-only pool and records unsupported_fallback when no exact arm exists", () => {
     const fixedOnlyRegistry = {
       ...registry,
       endpoints: [mediumEndpoint, maxEndpoint],
     } as unknown as EndpointRegistryResult;
 
-    expect(() =>
-      mapChatCompletionsRequest(
-        fixedOnlyRegistry,
+    const plan = mapChatCompletionsRequest(
+      fixedOnlyRegistry,
+      {
+        model: "baseline.remote-only",
+        messages: [{ role: "user", content: "hello" }],
+        reasoning_effort: "high",
+      } as never,
+      "run91-alias-high-no-fallback",
+      [
         {
-          model: "baseline.remote-only",
-          messages: [{ role: "user", content: "hello" }],
-          reasoning_effort: "high",
-        } as never,
-        "run91-alias-high-no-fallback",
-        [
-          {
-            aliasId: "baseline.remote-only",
-            modelIds: ["deepseek/deepseek-v4-pro"],
-            executionMode: "remote_only",
-          },
-        ] as never,
-      ),
-    ).toThrow(/no targets|no registry endpoints|no execution target/i);
+          aliasId: "baseline.remote-only",
+          modelIds: ["deepseek/deepseek-v4-pro"],
+          executionMode: "remote_only",
+        },
+      ] as never,
+    );
+
+    // R3/D5: "high" has no exact arm and no provider-default declares it, so the hint is ignored and the pool stays
+    // router-managed (unsupported_fallback) instead of failing closed.
+    expect(plan.routingRequest.allowEndpoints).toEqual(
+      expect.arrayContaining([
+        "account.global.deepseek-v4-pro-medium",
+        "account.global.deepseek-v4-pro-max",
+      ]),
+    );
+    expect(plan.routingRequest.allowEndpoints).toHaveLength(2);
+    expect(plan.routingModel).toBeUndefined();
+    expect(plan.effortResolution).toEqual({
+      resolution: "unsupported_fallback",
+      effectiveEffort: null,
+    });
   });
 
   test("keeps an exact fixed endpoint authoritative when client effort conflicts", () => {
@@ -517,7 +544,7 @@ describe("Run 91 effort instance identity", () => {
     });
   });
 
-  test("reports a bounded reasoning-effort error instead of blaming capabilities", () => {
+  test("records unsupported_fallback instead of a reasoning-effort error for an undeclared effort", () => {
     const undeclaredRegistry = {
       endpoints: [
         endpoint("moonshot.personal.kimi-code.global.kimi-k2.7-code", null, {
@@ -528,42 +555,42 @@ describe("Run 91 effort instance identity", () => {
       diagnostics: [],
       lifecycleSummary: { active: 1, degraded: 0, offline: 0 },
     } as unknown as EndpointRegistryResult;
-    let caught: { statusCode?: number; body?: { error?: Record<string, unknown> } } | null = null;
-    try {
-      mapChatCompletionsRequest(
-        undeclaredRegistry,
-        {
-          model: "baseline.remote-only",
-          messages: [
-            {
-              role: "user",
-              content: [
-                { type: "text", text: "Describe this." },
-                { type: "image_url", image_url: { url: "data:image/png;base64,abc" } },
-              ],
-            },
-          ],
-          reasoning_effort: "high",
-        } as never,
-        "run98-effort-undeclared-level",
-        [
-          {
-            aliasId: "baseline.remote-only",
-            modelIds: ["moonshot/kimi-k2.7-code"],
-            executionMode: "remote_only",
-          },
-        ] as never,
-      );
-    } catch (error) {
-      caught = error as typeof caught;
-    }
 
-    expect(caught?.statusCode).toBe(400);
-    expect(caught?.body?.error).toMatchObject({
-      type: "routing_eligibility_error",
-      code: "reasoning_effort_unavailable",
-      requestedModel: "baseline.remote-only",
-      requestedEffort: "high",
+    const plan = mapChatCompletionsRequest(
+      undeclaredRegistry,
+      {
+        model: "baseline.remote-only",
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "text", text: "Describe this." },
+              { type: "image_url", image_url: { url: "data:image/png;base64,abc" } },
+            ],
+          },
+        ],
+        reasoning_effort: "high",
+      } as never,
+      "run98-effort-undeclared-level",
+      [
+        {
+          aliasId: "baseline.remote-only",
+          modelIds: ["moonshot/kimi-k2.7-code"],
+          executionMode: "remote_only",
+        },
+      ] as never,
+    );
+
+    // R3/D5: an alias effort the single provider-default endpoint does not declare is unsupported_fallback, so the
+    // request stays router-managed on that endpoint instead of surfacing a bounded 400.
+    expect(plan.routingRequest.allowEndpoints).toEqual([
+      "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+    ]);
+    expect(plan.routingRequest.requiredModalities).toEqual(["image", "text"]);
+    expect(plan.routingModel).toBeUndefined();
+    expect(plan.effortResolution).toEqual({
+      resolution: "unsupported_fallback",
+      effectiveEffort: null,
     });
   });
 });
