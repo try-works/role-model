@@ -8398,6 +8398,7 @@ export async function main(): Promise<void> {
               "supervised replay source capture lacks independently observable output identity",
             );
           }
+          if (process.env.ROLE_MODEL_FOCUS_DIAG) { console.error("[source-diag] requestId=" + requestId.slice(0,16) + " endpointId=" + (sourceCapture.endpointId||null) + " sourceEndpointId=" + (sourceCapture.sourceEndpointId||null) + " capturedSource=" + (capturedSourceEndpointId||null) + " judge=" + (evalJudgeEndpointId||null) + " candidates=" + candidatePackages.map(function(c){return c.endpointId.split(".").pop();}).join(",")); }
           const counterfactualPackages = candidatePackages.filter(
             (candidate) =>
               candidate.endpointId !== sourceEndpointId &&
