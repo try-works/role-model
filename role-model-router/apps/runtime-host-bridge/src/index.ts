@@ -976,6 +976,30 @@ export function normalizeReasoningEffortPolicy(
   return { effort: policy === "router" ? undefined : effort, policy };
 }
 
+export type EffortPolicyResolutionKind =
+  | "router_managed"
+  | "exact_primary"
+  | "unsupported_fallback"
+  | "strict_rejected";
+
+export function resolveEffortPolicy(input: {
+  readonly requestedEffort: string | undefined;
+  readonly policy: "strict" | "preferred" | "router";
+  readonly availableEfforts: readonly (string | null)[];
+}): { resolution: EffortPolicyResolutionKind; effectiveEffort: string | null } {
+  if (input.policy === "router" || input.requestedEffort === undefined) {
+    return { resolution: "router_managed", effectiveEffort: null };
+  }
+  const hasExact = input.availableEfforts.includes(input.requestedEffort);
+  if (hasExact) {
+    return { resolution: "exact_primary", effectiveEffort: input.requestedEffort };
+  }
+  if (input.policy === "strict") {
+    return { resolution: "strict_rejected", effectiveEffort: null };
+  }
+  return { resolution: "unsupported_fallback", effectiveEffort: null };
+}
+
 function normalizeEffortPolicyValue(value: string | undefined): NormalizedEffortPolicy | undefined {
   if (value === undefined) {
     return undefined;
