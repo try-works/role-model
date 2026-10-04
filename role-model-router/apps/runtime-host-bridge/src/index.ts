@@ -8334,9 +8334,6 @@ export function buildRequestClassificationForPlan(
        knownRole(plan.taxonomyIdentity?.roleId) ??
        knownRole(plan.routingRequest.roleModelIntent?.role?.id))
     : null;
-  if (process.env.ROLE_MODEL_CLASSIFY_DIAG) {
-    console.error(`[classify-diag] routingTask=${plan.routingRequest.taskType} requestedRole=${plan.routingRequest.requestedRoleId} identityTask=${plan.taxonomyIdentity?.taskTypeId} identityRole=${plan.taxonomyIdentity?.roleId} intentTask=${plan.routingRequest.roleModelIntent?.task?.id} intentRole=${plan.routingRequest.roleModelIntent?.role?.id} => taskTypeId=${taskTypeId} roleId=${roleId}`);
-  }
   return buildRequestClassification({
     taskTypeId,
     identityTaskTypeId: taskTypeId,
