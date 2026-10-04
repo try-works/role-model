@@ -19,6 +19,11 @@ import {
 import type { ProviderAccountRecord } from "@role-model-router/provider-account";
 import type { ObservedPerformanceProfile } from "@role-model/protocol-types";
 import {
+  type EffortSource,
+  type EffortSourceValue,
+  normalizeEffortSource,
+} from "@role-model-router/core";
+import {
   PERFORMANCE_HISTORY_POLICY_MAX_ARCHIVES,
   PERFORMANCE_HISTORY_POLICY_MAX_ARCHIVE_BYTES,
   PERFORMANCE_HISTORY_POLICY_MAX_ARCHIVE_ROWS,
@@ -51,6 +56,7 @@ const REQUEST_CLASS_SOURCE_BACKFILL_MIGRATION_ID = "run104-request-class-source-
 const RECENT_OBSERVATIONS_INDEX_MIGRATION_ID = "run77-recent-observations-index-v1";
 const OBSERVED_PROFILE_INDEXES_MIGRATION_ID = "run77-observed-profile-indexes-v1";
 const EFFORT_INSTANCE_IDENTITY_MIGRATION_ID = "run91-effort-instance-identity-v1";
+const EFFORT_SOURCE_VOCABULARY_MIGRATION_ID = "run106-effort-source-vocabulary-v1";
 const CURRENT_SCHEMA_VERSION = 1;
 const COST_CALCULATION_VERSION = "run49.v1";
 const RUNTIME_TELEMETRY_INSERT_COLUMNS = [
@@ -817,6 +823,15 @@ export interface DifficultyClassificationCacheRecord {
   readonly difficulty: "easy" | "medium" | "hard";
   readonly fallbackApplied: boolean;
   readonly fallbackReason?: string;
+  readonly classifierVersion?: string;
+  readonly decisiveFeatures?: readonly string[];
+  readonly features?: {
+    readonly currentTurnBurden: number;
+    readonly conversationBurden: number;
+    readonly operationRisk: number;
+    readonly requiredQuality: number;
+    readonly latencySensitivity: number;
+  };
   readonly cachedAtMs: number;
   readonly expiresAtMs: number;
   readonly rubricSignals: {
@@ -999,7 +1014,9 @@ export interface RuntimeTelemetryRecord {
   readonly routingDecisionId: string;
   readonly endpointId: string;
   readonly reasoningEffort: string | null;
-  readonly effortSource: "none" | "client" | "variant" | "variant_coerced";
+  readonly effortSource: EffortSource;
+  /** True when the named effort was coerced from a variant (historical variant_coerced). */
+  readonly effortCoerced?: boolean;
   readonly conversationId: string;
   readonly createdAtMs: number;
   readonly clientRequestId: string | null;
@@ -1304,7 +1321,7 @@ export interface PersistedRuntimeObservationBundle {
   readonly routingDecisionId: string;
   readonly endpointId: string;
   readonly reasoningEffort?: string | null;
-  readonly effortSource?: "none" | "client" | "variant" | "variant_coerced";
+  readonly effortSource?: EffortSourceValue;
   readonly conversationId: string;
   readonly usageEvent: {
     readonly timestamp_ms: number;
@@ -1412,7 +1429,7 @@ export interface PersistedRuntimeObservationBundle {
   };
   readonly telemetrySnapshot?: {
     readonly reasoningEffort?: string | null;
-    readonly effortSource?: "none" | "client" | "variant" | "variant_coerced";
+    readonly effortSource?: EffortSourceValue;
     readonly providerId: string | null;
     readonly providerAccountId: string | null;
     readonly sourceType: "local" | "remote";
@@ -1734,6 +1751,23 @@ function initializeSchema(database: DatabaseSync): void {
       !runtimeTelemetryColumns.has("reasoning_effort") ||
       !runtimeTelemetryColumns.has("effort_source"),
     () => undefined,
+  );
+  // Run 106 / R4: deterministically migrate the legacy effort-source vocabulary onto the lossless
+  // four-state vocabulary. Historical `none` (a null-effort provider-default instance) becomes
+  // `provider_default`; `client`/`variant` become `named`; `variant_coerced` stays readable
+  // (the read path rehydrates it as a coerced named effort); and nullable rows resolve from the
+  // presence of a named reasoning effort.
+  runOnceMigration(
+    database,
+    EFFORT_SOURCE_VOCABULARY_MIGRATION_ID,
+    true,
+    () =>
+      database.exec(`
+        UPDATE runtime_telemetry_records SET effort_source = 'named' WHERE effort_source IN ('client', 'variant');
+        UPDATE runtime_telemetry_records SET effort_source = 'provider_default' WHERE effort_source = 'none';
+        UPDATE runtime_telemetry_records SET effort_source = 'named' WHERE effort_source IS NULL AND reasoning_effort IS NOT NULL;
+        UPDATE runtime_telemetry_records SET effort_source = 'provider_default' WHERE effort_source IS NULL AND reasoning_effort IS NULL;
+      `),
   );
   runOnceMigration(
     database,
@@ -2946,17 +2980,14 @@ function mapRuntimeTelemetryRecord(row: {
     dimensions?.promptCacheRequestSource === "synthesized"
       ? dimensions.promptCacheRequestSource
       : null;
+  const normalizedEffortSource = normalizeEffortSource(row.effort_source);
   return {
     requestId: row.request_id,
     routingDecisionId: row.routing_decision_id,
     endpointId: row.endpoint_id,
     reasoningEffort: row.reasoning_effort ?? null,
-    effortSource:
-      row.effort_source === "client" ||
-      row.effort_source === "variant" ||
-      row.effort_source === "variant_coerced"
-        ? row.effort_source
-        : "none",
+    effortSource: normalizedEffortSource.source,
+    ...(normalizedEffortSource.coerced ? { effortCoerced: true } : {}),
     conversationId: row.conversation_id,
     createdAtMs: row.created_at_ms,
     clientRequestId: row.client_request_id,
@@ -3148,10 +3179,11 @@ function toRuntimeTelemetryRecord(
   const routingDiagnostics = observation.routingDiagnostics;
   const telemetrySnapshot = observation.telemetrySnapshot;
   const reasoningEffort = observation.reasoningEffort ?? telemetrySnapshot?.reasoningEffort ?? null;
-  const effortSource =
+  const normalizedEffortSource = normalizeEffortSource(
     observation.effortSource ??
-    telemetrySnapshot?.effortSource ??
-    (reasoningEffort === null ? "none" : "client");
+      telemetrySnapshot?.effortSource ??
+      (reasoningEffort === null ? "provider_default" : "named"),
+  );
   const difficultyBucketCandidate =
     routingDiagnostics?.difficultyRouting?.difficulty ??
     observation.observedPerformance.sample.difficulty_bucket ??
@@ -3222,7 +3254,8 @@ function toRuntimeTelemetryRecord(
     routingDecisionId: observation.routingDecisionId,
     endpointId: observation.endpointId,
     reasoningEffort,
-    effortSource,
+    effortSource: normalizedEffortSource.source,
+    ...(normalizedEffortSource.coerced ? { effortCoerced: true } : {}),
     conversationId: observation.conversationId,
     createdAtMs: observation.usageEvent.timestamp_ms,
     clientRequestId: observation.clientRequestId ?? null,
@@ -3381,7 +3414,7 @@ function runtimeTelemetryInsertValues(
     record.routingDecisionId,
     record.endpointId,
     record.reasoningEffort,
-    record.effortSource,
+    record.effortCoerced ? "variant_coerced" : record.effortSource,
     record.conversationId,
     record.createdAtMs,
     record.clientRequestId,
@@ -3504,7 +3537,14 @@ function toFailureRuntimeTelemetryRecord(
     routingDecisionId,
     endpointId,
     reasoningEffort: input.reasoningEffort ?? null,
-    effortSource: input.effortSource ?? (input.reasoningEffort ? "client" : "none"),
+    effortSource: normalizeEffortSource(
+      input.effortSource ?? (input.reasoningEffort ? "named" : "provider_default"),
+    ).source,
+    ...(normalizeEffortSource(
+      input.effortSource ?? (input.reasoningEffort ? "named" : "provider_default"),
+    ).coerced
+      ? { effortCoerced: true }
+      : {}),
     conversationId: "conversation-main",
     createdAtMs,
     clientRequestId: input.clientRequestId ?? null,
@@ -5012,7 +5052,7 @@ export interface PersistRuntimeTelemetryFailureInput {
   readonly routingDecisionId?: string;
   readonly endpointId?: string;
   readonly reasoningEffort?: string | null;
-  readonly effortSource?: "none" | "client" | "variant" | "variant_coerced";
+  readonly effortSource?: EffortSourceValue;
   readonly modelId?: string;
   readonly requestedModelId?: string | null;
   readonly selectedModelId?: string | null;

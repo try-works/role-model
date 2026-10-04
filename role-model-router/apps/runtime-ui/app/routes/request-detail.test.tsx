@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+
 import { describe, expect, test } from "vitest";
 
 import { readPromptCacheRequestSource, readTokenTruth } from "./request-detail";
@@ -54,4 +56,11 @@ describe("request detail token truth", () => {
     );
     expect(readPromptCacheRequestSource({ promptCacheRequested: true })).toBeNull();
   });
+});
+
+const requestDetailSource = readFileSync(new URL("./request-detail.tsx", import.meta.url), "utf8");
+
+test("shows effective reasoning effort on the request detail (R11)", () => {
+  expect(requestDetailSource).toContain("formatEffectiveEffortDisclosure");
+  expect(requestDetailSource).toContain("effort_source");
 });

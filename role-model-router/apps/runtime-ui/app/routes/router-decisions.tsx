@@ -17,6 +17,7 @@ import {
   supportingTextClassName,
 } from "../lib/design-system";
 import { formatEndpointDisplayPath, formatModelIdentity } from "../lib/effort-identity";
+import { formatEffectiveEffortDisclosure } from "../lib/effort-truth";
 import { startDeferredLiveRefresh } from "../lib/live-refresh";
 import {
   type RouterDecisionListItem,
@@ -109,6 +110,14 @@ export default function RouterDecisionsRoute() {
                       value: formatEndpointDisplayPath({
                         endpointId: decision.selectedEndpointId,
                         reasoningEffort: decision.reasoningEffort,
+                      }),
+                    },
+                    {
+                      id: "effort",
+                      label: "Effort",
+                      value: formatEffectiveEffortDisclosure({
+                        reasoningEffort: decision.reasoningEffort,
+                        effortSource: decision.effortSource,
                       }),
                     },
                     {

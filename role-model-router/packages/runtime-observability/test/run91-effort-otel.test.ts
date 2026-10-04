@@ -60,20 +60,20 @@ describe("Run 91 runtime effort receipts", () => {
         priorSamples: history.byEndpointId[validation.decision.chosen_endpoint_id] ?? [],
         capturePolicy: policy,
         reasoningEffort: "medium",
-        effortSource: "variant",
+        effortSource: "named",
       });
 
       expect(bundle).toMatchObject({
         reasoningEffort: "medium",
-        effortSource: "variant",
+        effortSource: "named",
         usageEvent: {
           reasoning_effort: "medium",
-          effort_source: "variant",
+          effort_source: "named",
         },
       });
       expect(otel.createOpenTelemetryGenAiExport(bundle).attributes).toMatchObject({
         "role_model.reasoning_effort": "medium",
-        "role_model.effort_source": "variant",
+        "role_model.effort_source": "named",
       });
     } finally {
       await rm(runtimeStateRoot, { recursive: true, force: true });
@@ -86,7 +86,8 @@ describe("Run 91 runtime effort receipts", () => {
     );
     expect(runtimeModuleImport.normalizeRuntimeEffortReceipt({})).toEqual({
       reasoningEffort: null,
-      effortSource: "none",
+      effortSource: "provider_default",
+      coerced: false,
     });
   });
 });

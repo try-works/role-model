@@ -2,19 +2,23 @@ import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import type { TraceEvent, TraceSpan } from "@role-model/protocol-types";
+import type { EffortSource, EffortSourceValue } from "@role-model-router/core";
 
 export * from "./projections/index.js";
 export * from "./lineage.js";
 
-export type TraceEffortSource = "none" | "client" | "variant" | "variant_coerced";
+export type TraceEffortSource = EffortSource;
+export type TraceEffortSourceValue = EffortSourceValue;
 
 export interface TraceEffortFields {
   readonly reasoning_effort?: string | null;
   readonly effort_source?: TraceEffortSource;
 }
 
-export type TraceSpanRecord = TraceSpan & TraceEffortFields;
-export type TraceEventRecord = TraceEvent & TraceEffortFields;
+export type TraceSpanRecord = Omit<TraceSpan, "effort_source" | "reasoning_effort"> &
+  TraceEffortFields;
+export type TraceEventRecord = Omit<TraceEvent, "effort_source" | "reasoning_effort"> &
+  TraceEffortFields;
 
 export async function writeTraceArtifacts(
   outputDir: string,

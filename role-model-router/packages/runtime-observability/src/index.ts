@@ -6,6 +6,11 @@ import {
 import type { ToolRegistryExecution } from "@role-model-router/tool-registry";
 import type { ObservedPerformanceProfile } from "@role-model/protocol-types";
 import { extractTaxonomyDimensions } from "@role-model/protocol-types";
+import {
+  type EffortSource,
+  type EffortSourceValue,
+  normalizeEffortSource,
+} from "@role-model-router/core";
 
 export type RuntimeRoutingMode = "baseline" | "difficulty" | "controller" | "hybrid";
 
@@ -85,6 +90,15 @@ export interface RuntimeRoutingDiagnostics {
     readonly cacheInvalidated?: boolean;
     readonly cacheInvalidationReasons?: readonly string[];
     readonly fallbackReason?: string;
+    readonly classifierVersion?: string;
+    readonly decisiveFeatures?: readonly string[];
+    readonly features?: {
+      readonly currentTurnBurden: number;
+      readonly conversationBurden: number;
+      readonly operationRisk: number;
+      readonly requiredQuality: number;
+      readonly latencySensitivity: number;
+    };
     readonly excludedEndpointIds?: readonly string[];
     readonly overrideAppliedEndpointIds?: readonly string[];
     readonly overrideRecommendedMaxDifficultyByEndpointId?: Record<
@@ -376,36 +390,51 @@ export interface RuntimeReasoningStreamReceipt {
   readonly unavailableReason?: string;
 }
 
-export type RuntimeEffortSource = "none" | "client" | "variant" | "variant_coerced";
+export type RuntimeEffortSource = EffortSource;
+export type RuntimeEffortSourceValue = EffortSourceValue;
 
 export interface RuntimeEffortReceipt {
   readonly reasoningEffort: string | null;
   readonly effortSource: RuntimeEffortSource;
+  /** True when the named effort was coerced from a variant (historical `variant_coerced`). */
+  readonly coerced: boolean;
 }
 
 export interface RuntimeEffortReceiptInput {
   readonly reasoningEffort?: string | null;
-  readonly effortSource?: RuntimeEffortSource;
+  readonly effortSource?: RuntimeEffortSourceValue;
   readonly reasoning_effort?: string | null;
-  readonly effort_source?: RuntimeEffortSource;
+  readonly effort_source?: RuntimeEffortSourceValue;
 }
 
-/** Normalize new and historical receipt shapes without inferring effort from endpoint identity. */
+/**
+ * Normalize new and historical receipt shapes onto the canonical four-state vocabulary without
+ * inferring effort from endpoint identity. Historical `client`/`variant` collapse onto `named`,
+ * `variant_coerced` remains readable as a coerced named effort, and an unspecified source defaults
+ * to `provider_default` (the historical "null effort" semantics).
+ */
 export function normalizeRuntimeEffortReceipt(
   input: RuntimeEffortReceiptInput = {},
 ): RuntimeEffortReceipt {
   const reasoningEffort = input.reasoningEffort ?? input.reasoning_effort ?? null;
-  const effortSource = input.effortSource ?? input.effort_source ?? "none";
+  const rawEffortSource = input.effortSource ?? input.effort_source;
+  const normalized = normalizeEffortSource(
+    rawEffortSource ?? (reasoningEffort === null ? "provider_default" : "named"),
+  );
   if (reasoningEffort !== null && !reasoningEffort) {
     throw new Error("reasoningEffort must be null or a non-empty value.");
   }
-  if (reasoningEffort === null && effortSource !== "none") {
-    throw new Error("effortSource must be none when reasoningEffort is null.");
+  if (normalized.source === "named" && reasoningEffort === null) {
+    throw new Error("named effortSource requires a non-null reasoningEffort.");
   }
-  if (reasoningEffort !== null && effortSource === "none") {
-    throw new Error("effortSource is required for an efforted request.");
+  if (normalized.source !== "named" && reasoningEffort !== null) {
+    throw new Error("non-named effortSource requires a null reasoningEffort.");
   }
-  return { reasoningEffort, effortSource };
+  return {
+    reasoningEffort,
+    effortSource: normalized.source,
+    coerced: normalized.coerced,
+  };
 }
 
 export interface RuntimeDiagnostic {
@@ -458,7 +487,7 @@ export interface RuntimeObservationBundleInput {
   readonly trafficClass?: ObservedTrafficClass;
   /** Explicit request effort; null means the provider-default instance. */
   readonly reasoningEffort?: string | null;
-  readonly effortSource?: RuntimeEffortSource;
+  readonly effortSource?: RuntimeEffortSourceValue;
   readonly normalizedIntent?: Readonly<Record<string, unknown>>;
   readonly routingDiagnostics?: RuntimeRoutingDiagnostics;
   readonly retrievalReceipt: RuntimeRetrievalReceipt;
@@ -534,6 +563,8 @@ export interface RuntimeObservationBundle {
   readonly clientRequestId?: string;
   readonly reasoningEffort: string | null;
   readonly effortSource: RuntimeEffortSource;
+  /** True when the named effort was coerced from a variant; absent otherwise. */
+  readonly effortCoerced?: boolean;
   readonly routingDecisionId: string;
   readonly endpointId: string;
   readonly conversationId: string;
@@ -543,7 +574,10 @@ export interface RuntimeObservationBundle {
   readonly retrievalReceipt: RuntimeRetrievalReceipt;
   readonly contextEnvelope: RuntimeContextEnvelopeSummary;
   readonly trace: RoutedExecutionResult["trace"];
-  readonly usageEvent: RoutedExecutionResult["usageEvent"];
+  readonly usageEvent: Omit<RoutedExecutionResult["usageEvent"], "reasoning_effort" | "effort_source"> & {
+    readonly reasoning_effort: string | null;
+    readonly effort_source: EffortSource;
+  };
   /** Run 98 addendum 40 (L1): provider header/completion/first-token breakdown for this request. */
   readonly latencyBreakdown?: RuntimeObservationBundleInput["latencyBreakdown"];
   readonly observedPerformance: {
@@ -1201,6 +1235,7 @@ export function createRuntimeObservationBundle(
     ...(input.clientRequestId ? { clientRequestId: input.clientRequestId } : {}),
     reasoningEffort: effort.reasoningEffort,
     effortSource: effort.effortSource,
+    ...(effort.coerced ? { effortCoerced: true } : {}),
     routingDecisionId: input.decision.routing_decision_id,
     endpointId: input.decision.chosen_endpoint_id,
     conversationId: input.contextEnvelope.conversationId,

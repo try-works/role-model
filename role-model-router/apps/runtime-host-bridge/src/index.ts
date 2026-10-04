@@ -66,7 +66,7 @@ import { createOpenAIProviderAdapter } from "@role-model-router/provider-openai"
 import { createRetrievalReceipt } from "@role-model-router/retrieval-receipt";
 import {
   type RuntimeCapturePolicy,
-  type RuntimeEffortSource,
+  type RuntimeEffortSourceValue,
   type RuntimeExecutionCooldownReceipt,
   type RuntimeExecutionFailedAttemptReceipt,
   type RuntimeObservationBundle,
@@ -441,7 +441,7 @@ export function resolveEndpointExecutionEffort(input: {
   readonly executionRequest: RuntimeExecutionRequest;
   readonly receipt: {
     readonly reasoningEffort: string | null;
-    readonly effortSource: RuntimeEffortSource;
+    readonly effortSource: RuntimeEffortSourceValue;
   };
 } {
   const fixedEffort = input.fixedEffort?.trim() || null;
@@ -1305,6 +1305,9 @@ interface BridgeDifficultyRoutingContext {
     readonly cacheInvalidated?: boolean;
     readonly cacheInvalidationReasons?: readonly string[];
     readonly fallbackReason?: string;
+    readonly classifierVersion?: string;
+    readonly decisiveFeatures?: readonly string[];
+    readonly features?: DifficultyFeatureSet;
     readonly rubricSignals: DifficultyRoutingSignals;
   };
 }
@@ -1409,26 +1412,29 @@ function summarizeDifficultySignals(input: {
     declaredToolCount: input.toolCount,
   });
   const userMessages = input.messages.filter((message) => message.role === "user");
-  const combined = combineDifficultyMessageText(input.messages);
-  const askModeBurdenSource = askMode
-    ? combineLastUserDifficultyMessageText(input.messages)
-    : combined;
+  /**
+   * Run 106 R7 (F4): current-turn signals are derived from the newest user turn only, so a trivial
+   * follow-up in a long coding session does not inherit the code/schema or constraint burden of the
+   * whole transcript. Conversation burden (history turn count + context tokens) still reflects the
+   * full session and is handled by the bounded/diminishing feature model in the classifier.
+   */
+  const currentTurnText = combineLastUserDifficultyMessageText(input.messages);
   const instructionConstraintCount = countMatches(
-    askModeBurdenSource.toLowerCase(),
+    currentTurnText.toLowerCase(),
     /\b(must|should|need to|required|preserve|verify|strict|do not|don't|never|without|constraint|compatible|ensure|maintain|avoid|breaking|regression)\b/g,
   );
   const decompositionKeywordCount = countMatches(
-    combined.toLowerCase(),
+    currentTurnText.toLowerCase(),
     /\b(analyze|compare|iterate|plan|step|decompose|refactor|workflow|multi-step|across|identify|explain|investigate|debug|patch|regression)\b/g,
   );
   const codePathSignal =
     /(?:^|[\s"'`])(?:[\w.-]+[\\/])+[\w.-]+\.(?:ts|tsx|js|jsx|py|rs|go|java|c|cc|cpp|cs|json|yaml|yml|md)\b/i.test(
-      askModeBurdenSource,
+      currentTurnText,
     );
   const workspaceFileActionSignal =
     /\b(file|folder|directory|workspace|repo|repository|symbol|exported)\b/i.test(
-      askModeBurdenSource,
-    ) && /\b(read|write|create|patch|edit|inspect|open|grep|search)\b/i.test(askModeBurdenSource);
+      currentTurnText,
+    ) && /\b(read|write|create|patch|edit|inspect|open|grep|search)\b/i.test(currentTurnText);
   const effectiveToolCount = askMode ? 0 : input.toolCount;
   const effectiveHistoryTurnCount = askMode ? userMessages.length : input.messages.length;
   const effectiveContextTokens = askMode
@@ -1441,10 +1447,81 @@ function summarizeDifficultySignals(input: {
     instructionConstraintCount,
     decompositionKeywordCount,
     codeOrSchemaBurden:
-      /\b(code|diff|patch|refactor|schema|contract|validation|test)\b/i.test(askModeBurdenSource) ||
+      /\b(code|diff|patch|refactor|schema|contract|validation|test)\b/i.test(currentTurnText) ||
       codePathSignal ||
       workspaceFileActionSignal,
   };
+}
+
+/**
+ * Run 106 R7 (F4): the heuristic difficulty classifier's version. Receipts and the difficulty
+ * classification cache carry this value so a classification produced by an older classifier is
+ * refused rather than silently reused (see shouldInvalidateDifficultyClassifierVersion).
+ */
+export const DIFFICULTY_CLASSIFIER_VERSION = "run106-turn-aware-v1";
+
+export type DifficultyFeatureName =
+  | "currentTurnBurden"
+  | "conversationBurden"
+  | "operationRisk"
+  | "requiredQuality"
+  | "latencySensitivity";
+
+export interface DifficultyFeatureSet {
+  readonly currentTurnBurden: number;
+  readonly conversationBurden: number;
+  readonly operationRisk: number;
+  readonly requiredQuality: number;
+  readonly latencySensitivity: number;
+}
+
+/**
+ * Run 106 R7 (F4): turn-aware feature separation. Conversation burden (history + context) is
+ * bounded and diminishing - it contributes at most two points and never escalates further, so a
+ * long session cannot force "hard" on its own. Current-turn burden, operation risk and required
+ * quality are the upward forces; latency sensitivity (a short, single-turn interactive ask) pulls
+ * toward the cheap/fast end.
+ */
+export function computeDifficultyFeatures(signals: DifficultyRoutingSignals): DifficultyFeatureSet {
+  const currentTurnBurden =
+    (signals.instructionConstraintCount >= 5
+      ? 2
+      : signals.instructionConstraintCount >= 2
+        ? 1
+        : 0) +
+    (signals.decompositionKeywordCount >= 3
+      ? 2
+      : signals.decompositionKeywordCount >= 1
+        ? 1
+        : 0);
+  const conversationBurden =
+    (signals.historyTurnCount >= 2 ? 1 : 0) + (signals.contextTokens >= 10_000 ? 1 : 0);
+  const operationRisk =
+    (signals.toolCount >= 5 ? 3 : signals.toolCount >= 2 ? 2 : signals.toolCount === 1 ? 1 : 0) +
+    (signals.codeOrSchemaBurden ? 2 : 0);
+  const requiredQuality =
+    signals.instructionConstraintCount >= 5 ? 2 : signals.instructionConstraintCount >= 2 ? 1 : 0;
+  const latencySensitivity =
+    signals.historyTurnCount <= 1 && signals.contextTokens < 2_000 ? 1 : 0;
+  return {
+    currentTurnBurden,
+    conversationBurden,
+    operationRisk,
+    requiredQuality,
+    latencySensitivity,
+  };
+}
+
+/**
+ * Run 106 R7 (F4): cache invalidation follows the revised features. A cached classification whose
+ * classifier version differs from the current one (including a pre-versioning cache entry, which is
+ * undefined) is materially stale and must be reclassified.
+ */
+export function shouldInvalidateDifficultyClassifierVersion(
+  cachedClassifierVersion: string | undefined,
+  currentClassifierVersion: string,
+): boolean {
+  return cachedClassifierVersion !== currentClassifierVersion;
 }
 
 export function shouldShortcutToHard(input: {
@@ -1467,94 +1544,71 @@ export function classifyDifficultyFromSignals(input: {
   readonly difficulty: UnifiedRuntimeDifficultyBucket;
   readonly fallbackApplied: boolean;
   readonly fallbackReason?: string;
+  readonly features: DifficultyFeatureSet;
+  readonly decisiveFeatures: readonly DifficultyFeatureName[];
 } {
+  const features = computeDifficultyFeatures(input.signals);
   if (input.signals.historyTurnCount === 0) {
     return {
       difficulty: input.classifier?.fallbackDifficulty ?? "hard",
       fallbackApplied: true,
       fallbackReason: "missing-request-content",
+      features,
+      decisiveFeatures: [],
     };
   }
 
-  if (
-    shouldShortcutToHard({
-      toolCount: input.signals.toolCount,
-      codeOrSchemaBurden: input.signals.codeOrSchemaBurden,
-      instructionConstraintCount: input.signals.instructionConstraintCount,
-      decompositionKeywordCount: input.signals.decompositionKeywordCount,
-    })
-  ) {
+  /**
+   * Run 106 R7 (F4) documented risk rule: a current-turn tool-using code/schema operation is
+   * materially risky and stays hard. This replaces the pre-SP5 unconditional toolCount > 0 &&
+   * codeOrSchemaBurden => hard saturation: codeOrSchemaBurden is now computed from the current
+   * turn only (see summarizeDifficultySignals), so a trivial follow-up in a long coding session has
+   * codeOrSchemaBurden === false and does not reach this branch, while genuinely risky
+   * tool/code/schema work still does.
+   */
+  if (input.signals.toolCount > 0 && input.signals.codeOrSchemaBurden) {
     return {
       difficulty: "hard",
       fallbackApplied: false,
+      features,
+      decisiveFeatures: ["operationRisk"],
     };
   }
 
-  let score = 0;
-  // Run 98 addendum 32 S3 (external audit §6): the rubric saturated because `contextTokens >= 2000`,
-  // `toolCount >= 2` and `historyTurnCount >= 4` - worth 8 points together, already "hard" - are true
-  // for essentially every agent session, so a 562K-token tool-heavy session shared a bucket with a
-  // 2K-token one and the gate stopped selecting. The context contribution is graded across the observed
-  // range (live `contextTokens` p50 = 130, p95 = 450,732) and the tool/history steps keep climbing
-  // instead of stopping at the first rung.
-  if (input.signals.contextTokens >= 200_000) {
-    score += 5;
-  } else if (input.signals.contextTokens >= 50_000) {
-    score += 4;
-  } else if (input.signals.contextTokens >= 10_000) {
-    score += 3;
-  } else if (input.signals.contextTokens >= 2_000) {
-    score += 2;
-  } else if (input.signals.contextTokens >= 600) {
-    score += 1;
+  // Turn-aware rubric: conversation burden is bounded/diminishing (max +2 via the feature model), so
+  // it cannot saturate hard on its own; current-turn burden, operation risk and required quality are
+  // the decisive upward forces and latency sensitivity (a short interactive ask) pulls toward easy.
+  const score =
+    features.currentTurnBurden +
+    features.conversationBurden +
+    features.operationRisk +
+    features.requiredQuality -
+    features.latencySensitivity;
+
+  const decisiveFeatures: DifficultyFeatureName[] = [];
+  if (features.currentTurnBurden >= 2) {
+    decisiveFeatures.push("currentTurnBurden");
   }
-  if (input.signals.toolCount >= 5) {
-    score += 3;
-  } else if (input.signals.toolCount >= 2) {
-    score += 2;
-  } else if (input.signals.toolCount === 1) {
-    score += 1;
+  if (features.conversationBurden >= 2) {
+    decisiveFeatures.push("conversationBurden");
   }
-  if (input.signals.historyTurnCount >= 16) {
-    score += 3;
-  } else if (input.signals.historyTurnCount >= 6) {
-    score += 2;
-  } else if (input.signals.historyTurnCount >= 2) {
-    score += 1;
+  if (features.operationRisk >= 2) {
+    decisiveFeatures.push("operationRisk");
   }
-  if (input.signals.instructionConstraintCount >= 5) {
-    score += 2;
-  } else if (input.signals.instructionConstraintCount >= 2) {
-    score += 1;
+  if (features.requiredQuality >= 2) {
+    decisiveFeatures.push("requiredQuality");
   }
-  if (input.signals.decompositionKeywordCount >= 3) {
-    score += 2;
-  } else if (input.signals.decompositionKeywordCount >= 1) {
-    score += 1;
-  }
-  if (input.signals.codeOrSchemaBurden) {
-    score += 2;
-  }
-  if (input.signals.codeOrSchemaBurden && input.signals.instructionConstraintCount >= 3) {
-    score += 1;
+  if (features.latencySensitivity >= 1) {
+    decisiveFeatures.push("latencySensitivity");
   }
 
   if (score >= 7) {
-    return {
-      difficulty: "hard",
-      fallbackApplied: false,
-    };
+    return { difficulty: "hard", fallbackApplied: false, features, decisiveFeatures };
   }
   if (score >= 3) {
-    return {
-      difficulty: "medium",
-      fallbackApplied: false,
-    };
+    return { difficulty: "medium", fallbackApplied: false, features, decisiveFeatures };
   }
-  return {
-    difficulty: "easy",
-    fallbackApplied: false,
-  };
+  return { difficulty: "easy", fallbackApplied: false, features, decisiveFeatures };
 }
 
 function createDifficultyFallbackResult(input: {
@@ -1566,7 +1620,10 @@ function createDifficultyFallbackResult(input: {
     difficulty: input.classifier?.fallbackDifficulty ?? "hard",
     fallbackApplied: true,
     fallbackReason: input.reason,
+    classifierVersion: DIFFICULTY_CLASSIFIER_VERSION,
     rubricSignals: input.signals,
+    features: computeDifficultyFeatures(input.signals),
+    decisiveFeatures: [],
   };
 }
 
@@ -2316,6 +2373,11 @@ function maybeApplyDifficultyRouting(input: {
         difficulty: classified.difficulty,
         strategy,
         fallbackApplied: classified.fallbackApplied,
+        classifierVersion: DIFFICULTY_CLASSIFIER_VERSION,
+        ...(classified.decisiveFeatures?.length
+          ? { decisiveFeatures: classified.decisiveFeatures }
+          : {}),
+        ...(classified.features ? { features: classified.features } : {}),
         ...(classified.cacheHit ? { cacheHit: true } : {}),
         ...(classified.cacheInvalidated ? { cacheInvalidated: true } : {}),
         ...(classified.cacheInvalidationReasons?.length
@@ -5444,7 +5506,7 @@ function buildPreExecutionFailureObservation(input: {
   readonly modelId: string;
   readonly sourceType: "local" | "remote";
   readonly reasoningEffort: string | null;
-  readonly effortSource: RuntimeEffortSource;
+  readonly effortSource: RuntimeEffortSourceValue;
   readonly requestOperation?: "chat" | "responses";
   readonly error: unknown;
   readonly latencyMs: number;
@@ -20345,7 +20407,7 @@ export async function createRuntimeBridgeBackend(
     readonly endpointId: string;
     readonly modelId: string;
     readonly reasoningEffort: string | null;
-    readonly effortSource: RuntimeEffortSource;
+    readonly effortSource: RuntimeEffortSourceValue;
     readonly taskType: string;
     readonly inputTokens: number;
     readonly outputTokens: number;
@@ -20433,7 +20495,7 @@ export async function createRuntimeBridgeBackend(
         ? "none"
         : requestedEffort !== null && requestedEffort !== fixedEffort
           ? "variant_coerced"
-          : "variant") as RuntimeEffortSource,
+          : "variant") as RuntimeEffortSourceValue,
     };
     const failureObservation = buildPreExecutionFailureObservation({
       requestId: input.requestId,
@@ -29019,6 +29081,12 @@ export async function createRuntimeBridgeBackend(
             currentSignals: signals,
             invalidation: cachePolicy.invalidation,
           }),
+          ...(shouldInvalidateDifficultyClassifierVersion(
+            cachedClassification.classifierVersion,
+            DIFFICULTY_CLASSIFIER_VERSION,
+          )
+            ? (["classifier-version-change"] as const)
+            : []),
         ]
       : [];
     if (cachedClassification && cacheInvalidationReasons.length === 0) {
@@ -29029,6 +29097,11 @@ export async function createRuntimeBridgeBackend(
           ? { fallbackReason: cachedClassification.fallbackReason }
           : {}),
         cacheHit: true,
+        classifierVersion: cachedClassification.classifierVersion ?? DIFFICULTY_CLASSIFIER_VERSION,
+        ...(cachedClassification.decisiveFeatures
+          ? { decisiveFeatures: cachedClassification.decisiveFeatures }
+          : {}),
+        ...(cachedClassification.features ? { features: cachedClassification.features } : {}),
         rubricSignals: signals,
       };
     }
@@ -29044,6 +29117,11 @@ export async function createRuntimeBridgeBackend(
           ...(classification.fallbackReason
             ? { fallbackReason: classification.fallbackReason }
             : {}),
+          classifierVersion: DIFFICULTY_CLASSIFIER_VERSION,
+          ...(classification.decisiveFeatures
+            ? { decisiveFeatures: classification.decisiveFeatures }
+            : {}),
+          ...(classification.features ? { features: classification.features } : {}),
           cachedAtMs: nowMs,
           expiresAtMs: nowMs + cachePolicy.cacheTtlMs,
           rubricSignals: signals,

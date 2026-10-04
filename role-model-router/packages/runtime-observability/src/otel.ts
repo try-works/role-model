@@ -28,6 +28,9 @@ export function createOpenTelemetryGenAiExport(
   if (bundle.reasoningEffort !== null) {
     attributes["role_model.reasoning_effort"] = bundle.reasoningEffort;
   }
+  if (bundle.effortCoerced === true) {
+    attributes["role_model.effort_coerced"] = true;
+  }
 
   return {
     traceId: rootSpan.trace_id,

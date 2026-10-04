@@ -10,6 +10,11 @@ import {
 } from "../components/page-primitives";
 import { bodyStrongTextClassName, cardClassName } from "../lib/design-system";
 import { formatEndpointDisplayPath, formatModelIdentity } from "../lib/effort-identity";
+import {
+  classifyEffortEvidence,
+  formatEffectiveEffortDisclosure,
+  formatEffortEvidenceLabel,
+} from "../lib/effort-truth";
 import { formatScore } from "../lib/format-score";
 import { type RouterCandidate, fetchRouterCandidates } from "../lib/runtime-api";
 
@@ -111,7 +116,7 @@ export default function RouterCandidatesRoute() {
     <div className="space-y-6">
       <SectionCard
         title="Candidate inventory"
-        description="CAP is exact endpoint benchmark capability. Live p50, failure, and samples come only from the exact endpoint's operational telemetry profile."
+        description="CAP is benchmark capability; its evidence is labeled exact, borrowed, or prior so a provider-default arm never reads as a fixed arm's benchmark. Live p50, failure, and samples come only from the exact endpoint's operational telemetry profile."
       >
         {candidates.length === 0 ? (
           <EmptyState label="No routing candidates are available yet." />
@@ -159,6 +164,24 @@ export default function RouterCandidatesRoute() {
                         id: "cap",
                         label: "Cap",
                         value: formatScore(capability?.overallScore),
+                      },
+                      {
+                        id: "effort",
+                        label: "Effort",
+                        value: formatEffectiveEffortDisclosure({
+                          reasoningEffort: candidate.reasoningEffort,
+                          effortSource: candidate.effortSource,
+                        }),
+                      },
+                      {
+                        id: "evidence",
+                        label: "Evidence",
+                        value: formatEffortEvidenceLabel(
+                          classifyEffortEvidence({
+                            evidenceSource: capability?.evidenceSource,
+                            relatedEffortOverallScore: capability?.relatedEffortOverallScore,
+                          }),
+                        ),
                       },
                       {
                         id: "p50",

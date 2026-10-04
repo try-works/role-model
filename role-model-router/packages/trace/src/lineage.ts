@@ -1,5 +1,7 @@
 import { createHash } from "node:crypto";
 
+import type { EffortSource } from "@role-model-router/core";
+
 export const LIVE_TRACE_SCHEMA_VERSION = "run91-live-pi-trace.v1" as const;
 
 export const LIVE_TRACE_STAGES = [
@@ -20,7 +22,7 @@ export type TraceLineageDisposition =
   | "consumed"
   | "not_eligible"
   | "failed";
-export type TraceLineageEffortSource = "none" | "client" | "variant" | "variant_coerced";
+export type TraceLineageEffortSource = EffortSource;
 
 export interface TraceLineageStageReceipt {
   readonly stage_id: string;
@@ -80,11 +82,11 @@ function assertEffort(
   if (reasoningEffort !== null && !reasoningEffort) {
     throw new Error("reasoning_effort must be null or a non-empty value.");
   }
-  if (reasoningEffort === null && effortSource !== "none") {
-    throw new Error("effort_source must be none when reasoning_effort is null.");
+  if (effortSource === "named" && reasoningEffort === null) {
+    throw new Error("named effort_source requires a non-null reasoning_effort.");
   }
-  if (reasoningEffort !== null && effortSource === "none") {
-    throw new Error("effort_source is required for an efforted request.");
+  if (effortSource !== "named" && reasoningEffort !== null) {
+    throw new Error("non-named effort_source requires a null reasoning_effort.");
   }
 }
 

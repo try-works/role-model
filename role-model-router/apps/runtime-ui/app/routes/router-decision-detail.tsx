@@ -25,6 +25,14 @@ import {
   supportingTextClassName,
 } from "../lib/design-system";
 import { formatEndpointDisplayPath, formatModelIdentity } from "../lib/effort-identity";
+import {
+  classifyEffortEvidence,
+  formatEffectiveEffortDisclosure,
+  formatEffortEvidenceLabel,
+  formatEffortResolutionLabel,
+  isProminentEffortResolution,
+  readEffortResolutionKind,
+} from "../lib/effort-truth";
 import { type RouterDecisionDetail, fetchRouterDecisionDetail } from "../lib/runtime-api";
 
 export default function RouterDecisionDetailRoute() {
@@ -75,6 +83,7 @@ export default function RouterDecisionDetailRoute() {
   const strategyReceipt = readStrategyReceipt(detail.routingDiagnostics);
   const latencyReceipt = readLatencyReceipt(detail.routingDiagnostics);
   const aliasPostureReceipt = readAliasPostureReceipt(detail.routingDiagnostics);
+  const effortResolutionKind = readEffortResolutionKind(detail.routingDiagnostics);
 
   return (
     <div className="space-y-6">
@@ -121,9 +130,20 @@ export default function RouterDecisionDetailRoute() {
                   reasoningEffort: detail.reasoningEffort,
                 })}
               </p>
+              <p className={`mt-3 ${supportingTextClassName}`}>
+                {formatEffectiveEffortDisclosure({
+                  reasoningEffort: detail.reasoningEffort,
+                  effortSource: detail.effortSource,
+                })}
+              </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 <Badge tone="accent">
                   {strategyReceipt ? strategyReceipt.strategyLabel : "no strategy receipt"}
+                </Badge>
+                <Badge tone={effortResolutionKind && isProminentEffortResolution(effortResolutionKind) ? "warning" : "neutral"}>
+                  {effortResolutionKind
+                    ? formatEffortResolutionLabel(effortResolutionKind)
+                    : "no effort resolution recorded"}
                 </Badge>
                 <Badge tone="neutral">
                   {detail.fallbackEndpointIds.length} fallback
@@ -170,7 +190,9 @@ export default function RouterDecisionDetailRoute() {
                     <p className={`mt-2 ${supportingTextClassName}`}>
                       {benchmarkDecision.runId ?? "profile-derived evidence"}
                       {benchmarkDecision.runMode ? ` · ${benchmarkDecision.runMode}` : ""}
-                      {` · ${benchmarkDecision.evidenceSource}`}
+                      {` · ${formatEffortEvidenceLabel(
+                        classifyEffortEvidence({ evidenceSource: benchmarkDecision.evidenceSource }),
+                      )}`}
                       {benchmarkDecision.reason ? ` · ${benchmarkDecision.reason}` : ""}
                     </p>
                     <p className={`mt-2 ${supportingTextClassName}`}>

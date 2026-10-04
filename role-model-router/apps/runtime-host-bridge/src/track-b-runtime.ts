@@ -140,7 +140,7 @@ export function extensionHostTiming(env: Record<string, string | undefined> = pr
   };
 }
 
-import type { RuntimeEffortSource } from "@role-model-router/runtime-observability";
+import type { RuntimeEffortSourceValue } from "@role-model-router/runtime-observability";
 import {
   type GraphArtifactReference,
   type LegacyArtifactWriteInput,
@@ -4232,7 +4232,7 @@ export interface TrackBPostObservationWorkItem extends Readonly<Record<string, u
   readonly endpointId: string;
   readonly modelId?: string;
   readonly reasoningEffort?: string | null;
-  readonly effortSource?: RuntimeEffortSource;
+  readonly effortSource?: RuntimeEffortSourceValue;
   readonly legacyIdentityMissing?: true;
   readonly run88Correlation?: Readonly<Record<string, unknown>>;
   readonly occurrenceId?: string;
@@ -5636,7 +5636,7 @@ export function createTrackBPostObservationOutbox({
                     endpoint_id: string;
                     model_id: string | null;
                     reasoning_effort: string | null;
-                    effort_source: RuntimeEffortSource | null;
+                    effort_source: RuntimeEffortSourceValue | null;
                     run88_correlation_json: string | null;
                     observation_json: string | null;
                     legacy_identity_missing: number;
@@ -7021,7 +7021,7 @@ export interface TrackBVariantIdentity {
   readonly endpointId: string;
   readonly modelId: string;
   readonly reasoningEffort: string | null;
-  readonly effortSource: RuntimeEffortSource;
+  readonly effortSource: RuntimeEffortSourceValue;
 }
 
 export type TrackBRouteAdvisoryState = "fresh" | "stale" | "unavailable";
@@ -8158,7 +8158,7 @@ async function appendTrackBRouteAdvisoryObservationExclusive(input: {
   return next;
 }
 
-const TRACK_B_EFFORT_SOURCES = new Set<RuntimeEffortSource>([
+const TRACK_B_EFFORT_SOURCES = new Set<RuntimeEffortSourceValue>([
   "none",
   "client",
   "variant",
@@ -8202,7 +8202,7 @@ function normalizeTrackBVariantIdentity(
   const effortSource = observation.effortSource;
   if (
     typeof effortSource !== "string" ||
-    !TRACK_B_EFFORT_SOURCES.has(effortSource as RuntimeEffortSource)
+    !TRACK_B_EFFORT_SOURCES.has(effortSource as RuntimeEffortSourceValue)
   ) {
     throw new Error("persisted observation effort identity effortSource is invalid");
   }
@@ -8227,7 +8227,7 @@ function normalizeTrackBVariantIdentity(
     endpointId,
     modelId,
     reasoningEffort: reasoningEffort as string | null,
-    effortSource: effortSource as RuntimeEffortSource,
+    effortSource: effortSource as RuntimeEffortSourceValue,
   };
 }
 

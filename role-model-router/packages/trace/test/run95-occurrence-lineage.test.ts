@@ -20,7 +20,7 @@ function input(): TraceLineageManifestInput {
     endpoint_id: "deepseek.personal.deepseek-v4-flash-max",
     model_id: "deepseek/deepseek-v4-flash",
     reasoning_effort: "max",
-    effort_source: "variant" as const,
+    effort_source: "named" as const,
   };
   return {
     ...common,
@@ -52,7 +52,7 @@ describe("Run 95 occurrence-aware trace lineage", () => {
       content_id: "content-message-1",
       predecessor_occurrence_id: "occurrence-root-1",
       reasoning_effort: "max",
-      effort_source: "variant",
+      effort_source: "named",
     });
 
     const base = input();

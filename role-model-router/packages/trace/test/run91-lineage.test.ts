@@ -12,7 +12,7 @@ const common = {
   endpoint_id: "deepseek.personal.deepseek-v4-pro.medium",
   model_id: "deepseek/deepseek-v4-pro",
   reasoning_effort: "medium",
-  effort_source: "variant" as const,
+  effort_source: "named" as const,
 };
 
 const stageNames = [
@@ -64,7 +64,7 @@ describe("Run 91 live trace lineage", () => {
       endpoint_id: common.endpoint_id,
       model_id: common.model_id,
       reasoning_effort: "medium",
-      effort_source: "variant",
+      effort_source: "named",
       source_set_digest: expect.stringMatching(/^sha256:[a-f0-9]{64}$/),
     });
     expect(manifest.stages).toHaveLength(stageNames.length);

@@ -1,0 +1,74 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/106-client-neutral-model-effort-routing/role-model-router/packages/sqlite-memory[39m
+
+(node:28344) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [31m❯[39m test/run106-effort-source-migration.test.ts [2m([22m[2m1 test[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 340[2mms[22m[39m
+[31m   [31m×[31m Run 106 effort-source migration[2m > [22mmigrates legacy and nullable effort_source rows deterministically to the four-state vocabulary[39m[33m 337[2mms[22m[39m
+[31m     → expected [ …(6) ] to deeply equal [ …(6) ][39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m test/run106-effort-source-migration.test.ts[2m > [22mRun 106 effort-source migration[2m > [22mmigrates legacy and nullable effort_source rows deterministically to the four-state vocabulary
+[31m[1mAssertionError[22m: expected [ …(6) ] to deeply equal [ …(6) ][39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  [[22m
+[2m    {[22m
+[32m-     "effort_source": "named",[39m
+[31m+     "effort_source": "client",[39m
+[2m      "reasoning_effort": "high",[22m
+[2m      "request_id": "req-client",[22m
+[2m    },[22m
+[2m    {[22m
+[32m-     "effort_source": "named",[39m
+[31m+     "effort_source": "variant",[39m
+[2m      "reasoning_effort": "high",[22m
+[2m      "request_id": "req-variant",[22m
+[2m    },[22m
+[2m    {[22m
+[2m      "effort_source": "variant_coerced",[22m
+[2m      "reasoning_effort": "max",[22m
+[2m      "request_id": "req-coerced",[22m
+[2m    },[22m
+[2m    {[22m
+[32m-     "effort_source": "provider_default",[39m
+[31m+     "effort_source": "none",[39m
+[2m      "reasoning_effort": null,[22m
+[2m      "request_id": "req-none",[22m
+[2m    },[22m
+[2m    {[22m
+[32m-     "effort_source": "named",[39m
+[31m+     "effort_source": null,[39m
+[2m      "reasoning_effort": "low",[22m
+[2m      "request_id": "req-null-named",[22m
+[2m    },[22m
+[2m    {[22m
+[32m-     "effort_source": "provider_default",[39m
+[31m+     "effort_source": null,[39m
+[2m      "reasoning_effort": null,[22m
+[2m      "request_id": "req-null-default",[22m
+[2m    },[22m
+[2m  ][22m
+
+[36m [2m❯[22m test/run106-effort-source-migration.test.ts:[2m51:22[22m[39m
+    [90m 49| [39m      reopened[33m.[39m[34mclose[39m()[33m;[39m
+    [90m 50| [39m
+    [90m 51| [39m      [34mexpect[39m(stored)[33m.[39m[34mtoEqual[39m([
+    [90m   | [39m                     [31m^[39m
+    [90m 52| [39m        { request_id: "req-client", reasoning_effort: "high", effort_s…
+    [90m 53| [39m        { request_id: "req-variant", reasoning_effort: "high", effort_…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m   Start at [22m 12:44:46
+[2m   Duration [22m 1.90s[2m (transform 432ms, setup 0ms, collect 492ms, tests 340ms, environment 0ms, prepare 429ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\106-client-neutral-model-effort-routing\role-model-router\packages\sqlite-memory:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/run106-effort-source-migration.test.ts

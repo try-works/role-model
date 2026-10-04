@@ -14,6 +14,7 @@ import {
   supportingTextClassName,
 } from "../lib/design-system";
 import { formatScore, formatScoreWithCoverage } from "../lib/format-score";
+import { classifyEffortEvidence, formatEffortEvidenceLabel } from "../lib/effort-truth";
 import { ModelRoleBindingTree } from "../lib/role-task-hierarchy";
 import {
   type ModelTelemetryRollup,
@@ -208,6 +209,8 @@ export function buildConfiguredModelInventoryPills(input: {
   readonly toolCallingSupported: boolean;
   readonly endpointCount: number;
   readonly capabilityScore: number | null | undefined;
+  readonly evidenceLabel?: string | null;
+  readonly evidenceTone?: BadgeTone;
 }): ConfiguredModelInventoryPill[] {
   return [
     {
@@ -225,6 +228,9 @@ export function buildConfiguredModelInventoryPills(input: {
             tone: "advisory" as const,
           },
         ]
+      : []),
+    ...(input.evidenceLabel && input.evidenceTone
+      ? [{ label: input.evidenceLabel, tone: input.evidenceTone }]
       : []),
   ];
 }
@@ -1090,13 +1096,31 @@ export default function ControlModelsRoute() {
                     {cards.map((card) => {
                       const cardKey = configuredModelCardKey(card);
                       const selected = selectedModelId === cardKey;
-                      const capabilityScore =
-                        resolveSelectedBenchmarkCandidate(candidates, card)?.benchmarkCapability
-                          ?.overallScore ?? null;
+                      const benchmarkCapability = resolveSelectedBenchmarkCandidate(
+                        candidates,
+                        card,
+                      )?.benchmarkCapability;
+                      const capabilityScore = benchmarkCapability?.overallScore ?? null;
+                      const evidenceKind = classifyEffortEvidence({
+                        evidenceSource: benchmarkCapability?.evidenceSource,
+                        relatedEffortOverallScore: benchmarkCapability?.relatedEffortOverallScore,
+                      });
+                      const evidenceTone: BadgeTone =
+                        evidenceKind === "borrowed"
+                          ? "warning"
+                          : evidenceKind === "prior"
+                            ? "advisory"
+                            : "info";
                       const inventoryPills = buildConfiguredModelInventoryPills({
                         toolCallingSupported: card.toolCallingSupported,
                         endpointCount: card.endpointCount,
                         capabilityScore,
+                        ...(evidenceKind === "none"
+                          ? {}
+                          : {
+                              evidenceLabel: formatEffortEvidenceLabel(evidenceKind),
+                              evidenceTone,
+                            }),
                       });
                       return (
                         <button
