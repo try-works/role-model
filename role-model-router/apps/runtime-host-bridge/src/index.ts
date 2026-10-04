@@ -8313,25 +8313,33 @@ const boundedRequestClassificationId = (value: unknown): string | null =>
 export function buildRequestClassificationForPlan(
   plan: BridgeExecutionPlan,
 ): BridgeRequestClassification | null {
-  // Run 105 Phase 5 (review finding): align with buildBridgeTaxonomyIdentity. The runtime-policy
-  // identifiers plan.routingRequest.taskType / requestedRoleId are not taxonomy identifiers, so
-  // reading them as the declared source made buildRequestClassification stop on a non-taxonomy id
-  // and return null even though buildBridgeTaxonomyIdentity had already resolved a genuine
-  // coder|coder.edit identity. The authoritative resolved taxonomy identity is the source; its
-  // "text.chat" task and correlated "writer" role defaults are dropped so a genuinely unclassified
-  // request stays null rather than leaking a default role into capture/advisory classification.
-  const identity = plan.taxonomyIdentity;
-  const genuineTaskTypeId =
-    identity?.taskTypeId &&
-    canonicalTaxonomy.tasks.some((task) => task.id === identity.taskTypeId)
-      ? identity.taskTypeId
-      : null;
+  // Run 105 Phase 5 (review finding): resolve the role/task from the SAME sources
+  // buildBridgeTaxonomyIdentity uses, and fall through to the resolved taxonomy identity when the
+  // declared value is not a taxonomy id. plan.routingRequest.taskType / requestedRoleId can be
+  // runtime-policy ids (not taxonomy ids) for intent-less Pi traffic; treating them as the only
+  // source made buildRequestClassification stop on a non-taxonomy id and return null while telemetry
+  // (buildBridgeTaxonomyIdentity) already resolved a genuine coder|coder.edit identity.
+  const knownTask = (id: string | null | undefined): string | null =>
+    id && canonicalTaxonomy.tasks.some((task) => task.id === id) ? id : null;
+  const knownRole = (id: string | null | undefined): string | null =>
+    id && canonicalTaxonomy.roles.some((role) => role.id === id) ? id : null;
+  const taskTypeId =
+    knownTask(plan.routingRequest.taskType) ??
+    knownTask(plan.taxonomyIdentity?.taskTypeId) ??
+    knownTask(plan.routingRequest.roleModelIntent?.task?.id);
+  // A genuine role only ever accompanies a genuine (non-default) task, so gate the role on the
+  // resolved task to avoid leaking the correlated "writer" default for an unclassified request.
+  const roleId = taskTypeId
+    ? (knownRole(plan.routingRequest.requestedRoleId) ??
+       knownRole(plan.taxonomyIdentity?.roleId) ??
+       knownRole(plan.routingRequest.roleModelIntent?.role?.id))
+    : null;
   return buildRequestClassification({
-    taskTypeId: genuineTaskTypeId,
-    identityTaskTypeId: genuineTaskTypeId,
+    taskTypeId,
+    identityTaskTypeId: taskTypeId,
     intentTaskTypeId: plan.routingRequest.roleModelIntent?.task?.id ?? null,
     taskVariant: plan.routingRequest.roleModelIntent?.taskVariant ?? null,
-    roleId: genuineTaskTypeId ? (identity?.roleId ?? null) : null,
+    roleId,
     toolClasses: plan.routingRequest.roleModelIntent?.toolClasses ?? null,
   });
 }

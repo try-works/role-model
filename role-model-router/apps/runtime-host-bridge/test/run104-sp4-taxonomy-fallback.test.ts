@@ -123,6 +123,15 @@ describe("run104 R6 buildRequestClassification task-family fallback", () => {
     expect(defaults?.roleId ?? null).toBeNull();
   });
 
+  test("a declared taxonomy task/role still wins over the resolved identity", () => {
+    const plan = {
+      taxonomyIdentity: { taskTypeId: "coder.review", roleId: "coder" },
+      routingRequest: { taskType: "coder.edit", requestedRoleId: "coder" },
+    } as never;
+    const classification = buildRequestClassificationForPlan(plan);
+    expect(classification).toMatchObject({ taskTypeId: "coder.edit", roleId: "coder" });
+  });
+
   test("the advisory task key and the classification chain resolve the SAME task (no raw plan field)", () => {
     // Regression pin: requestTaskTypeId at the advisory consultation site must equal the resolved
     // classification task, never the raw plan.routingRequest.taskType.
