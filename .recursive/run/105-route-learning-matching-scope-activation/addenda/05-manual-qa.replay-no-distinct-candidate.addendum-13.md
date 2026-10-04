@@ -64,3 +64,48 @@ The 302 `unavailable` observations are the *unclassified* requests (the runtime 
 not indicate a publication regression. A stale first-tick `[run99] live advisory miss` and a
 transient `[run105] ladder materialization degraded: database is locked` both cleared once the
 advisory refresh (15 s cadence) republished.
+
+## 6. Operational caveats carried forward
+
+These are **not** defects in the shipped fix. They are recorded so the next replay-lane increment
+picks them up deliberately; they are summarised in `/.recursive/STATE.md` under the run-105 entry.
+
+### 6.1 `kimi-k3` provider flakiness
+
+The only failing endpoint. Evidence at closeout: 3 `timed_out` replay jobs, and refusals reading
+`durable replay evaluation has no comparable counterfactual arm: excluded ...kimi-k3 (durable replay
+evaluation is missing counterfactual output evidence)`. `replayDeferralBound=3` retires such
+captures, so the queue self-heals rather than wedging — but the retries consume the daily budget
+(103 dispatches for 26 counterfactuals at closeout). A per-endpoint flake/retry metric would make
+this visible before it distorts a promotion decision.
+
+### 6.2 An orphaned `awaiting_evaluation` job stalls the dispatcher
+
+A replay job whose `leaseOwner` named a runtime that no longer existed parked in
+`awaiting_evaluation` with an already-expired lease, and re-lease was refused with
+`replay job is awaiting evaluation and cannot be re-leased`. The focus loop then re-picked that same
+capture every tick, so `counterfactuals` oscillated and `dispatches` froze. The deferral bound
+eventually retired the capture; clearing the parked row from
+`track-b/extensions/workers/replay-core/replay-core.json` unblocked it immediately. Expected
+behaviour: a parked job with an expired lease is reclaimable by the lease sweep.
+
+### 6.3 Advisory influence is still narrow
+
+`track-b/advisory-observations.json` at closeout: `observed=505 fresh=201 stale=0 unavailable=304
+wouldHaveChanged=47 preferredEligible=146 considered=146 applied=4 rungApplied=4`. The 304
+`unavailable` are unclassified requests, not the two verified tasks. Only 4 decisions actually
+applied the advisory, and 47 more would have changed the route but retained the baseline under
+`mode=shadow`. That is consistent with the `cohortLadder: [10,25,50,100]` rollout, but pack steering
+stays small until the cohort widens.
+
+### 6.4 The direct launch does not provision the managed `artifact-digest.key`
+
+This cost the most investigation time and should be closed structurally. `resolveDurableEvaluationAuthority`
+looks for `artifact-digest.key` under `<stateRoot>/managed-keys`, `<stateRoot>/<scopeId>/track-b/managed-keys`,
+or `<stateRoot>/track-b/managed-keys`; the packaged launcher supplies it via `--artifact-digest-key-file`,
+but a direct `role-model-dev.exe` launch supplies nothing. It then throws
+`managed artifact digest key not found for the durable evaluation authority`, so the
+`readRouteDispatchEvidence` binding returns null and **every replay tick dies with
+`route dispatch evidence unavailable` before it plans a focus** — which presents as a planner/queue bug
+while the queue is in fact healthy. Recommendation: provision a key when absent at startup, or refuse
+to start with a message naming the missing key.
