@@ -1,8 +1,8 @@
 Run: /.recursive/run/106-client-neutral-model-effort-routing/
 Phase: 02 TO-BE Plan
 Status: `LOCKED`
-LockedAt: `2026-10-04T01:40:56Z`
-LockHash: `10423e563b65dbfce257f55320e09e5e8b98d5ba5ccf99063a81b462c0a7b55f`
+LockedAt: `2026-10-04T01:44:35Z`
+LockHash: `1d080de4ee4b8e630516ad9c89c15d87c95ba58176e2765af0b86935e7b90afc`
 Workflow version: recursive-mode-audit-v2
 Inputs:
 - /.recursive/run/106-client-neutral-model-effort-routing/00-requirements.md (LOCKED)
@@ -31,7 +31,8 @@ Scope note: ExecPlan-grade plan mapping R1-R15 to concrete file-level changes wi
 - role-model-router/apps/runtime-host-bridge/src/benchmark-summary.ts: key benchmark evidence by (endpointId, modelId, effectiveEffort) and add a borrowed/prior evidence label.
 - role-model-router/packages/sqlite-memory/src/index.ts: add effort to observed-sample identity and a migration for nullable historical effort.
 - role-model-router/apps/runtime-host-bridge/src/downstream-openai-discovery.ts: publish effort union, portable intersection, arm kind, and supported policies.
-- role-model-router/packages/runtime-observability/src/index.ts + trace/lineage.ts: converge the three effort-source vocabularies and add resolution provenance.
+- role-model-router/apps/runtime-host-bridge/src/routing-latency-selection.ts + index.ts (latencySelectionAuthorized ~26367): unify the measured-latency selector with the non-inferiority model, or keep it explicitly separate and surface its authority/precedence in decision/config.
+- role-model-router/packages/runtime-observability/src/index.ts + role-model-router/packages/trace/src/lineage.ts: converge the three effort-source vocabularies (decision none|variant in core/router.ts:1832-1833, endpoint fixed|provider-default|unknown in endpoint-registry, execution none|client|variant|variant_coerced in trace/lineage.ts + sqlite-memory) and add resolution provenance.
 - role-model-router/apps/runtime-ui/app/lib/*: co-display model+effort+exact/borrowed evidence and configured-vs-effective strategy.
 - packages/pi-role-model + packages/dsh-role-model + packages/codex-role-model: emit the normalized effort_policy input (or omit for router-managed).
 
@@ -62,6 +63,7 @@ Each subphase follows strict TDD: write the failing RED test (evidence/logs/red/
 - SP4: RED - strict/preferred/router and unsupported_fallback cross-product fails; GREEN - policy resolution + fallback.
 - SP5: RED - trivial follow-up in a long session classifies below hard fails; GREEN - turn-aware classifier.
 - SP6: RED - a non-inferior faster/cheaper arm outranks a dominated arm fails; GREEN - Pareto rule + normalization.
+- SP6b: RED - the measured-latency selector's authority relative to the Pareto/non-inferiority rule is explicit in the decision/config surface (or unified) fails; GREEN - unify or surface authority.
 - SP7: RED - discovery union/intersection and resolution provenance fail; GREEN - discovery + provenance.
 - SP8: RED - model+effort+evidence co-display fixture fails; GREEN - UI projections.
 - SP9: RED - packaged SEA smoke + Pi-bound discovery assertion fails; GREEN - package/client integration harness.
@@ -80,6 +82,12 @@ Only if SP8 UI changes warrant browser coverage; otherwise the runtime-ui compon
 
 Phase 5 runs the R15 matrix: router-managed omitted effort; preferred exact effort; pool-wide unsupported preferred fallback; strict unsupported rejection; exact support by only some models; exact primary unavailable with receipted fallback; distinct none/default states; a Pi-vs-second-client parity pair. All on a non-3456/3457/3458 port with a separately launched Pi bound to the rebuilt runtime.
 
+## Phase-1 Known Unknowns -> Investigation Tasks
+
+- Adapter-executable effort vocabulary: SP2 reads resolveAdapterGatedReasoningEfforts to enumerate the exact executable set per adapter before expanding arms.
+- Catalog reasoning_effort_levels fidelity: SP2 verifies catalog declarations match adapter execution mapping; SP7 surfaces the result in discovery.
+- Migration safety for nullable historical effort: SP3 adds a migration test that preserves attribution and round-trips the four states.
+
 ## Idempotence and Recovery
 
 - Migrations are idempotent and preserve historical nullable effort.
@@ -90,18 +98,17 @@ Phase 5 runs the R15 matrix: router-managed omitted effort; preferred exact effo
 
 SP1 R1,R4 normalized effort schema/policy + adapters.
 SP2 R2,R4 arm abstraction/expansion/dedupe/dispatch.
-SP3 R4,R5,R10 effort-scoped evidence + migration + priors.
+SP3 R4,R5 effort-scoped evidence + migration + priors.
 SP4 R3,R6 policy resolution + fallback + controller/cache/circuit.
 SP5 R7 turn-aware difficulty.
 SP6 R8 cost/latency normalization + non-inferiority.
 SP7 R9,R10 discovery + provenance.
 SP8 R11 UI truthfulness.
-SP9 R12,R15 package/client integration + isolated QA harness.
+SP9 R12,R15 package/client integration + isolated QA harness (R12 is cross-cutting all SPs with SP9 as packaging owner).
 
 ## Run-105 Overlap Reconciliation
 
-Run 105 (route-learning-matching-scope-activation) touches apps/runtime-host-bridge/src/index.ts (advisory recall) and packages/sqlite-memory/src/index.ts (route-learning persistence). Run 106's SP4 and SP3 touch the same files in disjoint regions (effort resolution vs advisory recall; effort evidence keys vs route-learning persistence). Phase 3 will re-read run 105's actual diff before writing each file and rebase onto post-105 dev before the PR; no cross-branch merge during implementation.
-
+Run 105 (recursive/105-route-learning-matching-scope-activation, head 80ad810e) has three product conflict surfaces, re-read at Phase 2 via git diff 701b8b8..80ad810e. Concrete region facts: (1) role-model-router/apps/runtime-host-bridge/src/index.ts - run-105 changed createRuntimeBridgeBackend advisory-recall hunks (~17601, ~20281, ~26419, ~27731, ~30473); run-106 targets the disjoint effort-resolution regions selectReasoningEffortInstanceIds (~9489), applyReasoningEffortToModelPool (~9605), classifyDifficultyFromSignals (~1384), with the latency gate (~26367) adjacent to run-105's ~26419 hunk and needing care. (2) role-model-router/packages/sqlite-memory/src/index.ts - run-105 changed telemetry failure dimensions; run-106 targets the disjoint observed-sample effort identity + effort-scoped evidence key. (3) role-model-router/packages/core/src/router.ts - run-105 changed evaluateRouteAdvisoryConsideration (~59-268) and routeRequest (~1780-1892); run-106 targets getQualityMetric (~729)/getLatencyMetric (~916)/getCostMetric (~1018)/scoreCandidate (~1531) and the effort-resolution provenance fields inside routeRequest. Disjointness is field/function-level per surface as stated; rebase onto post-105 dev before the PR, never a cross-branch merge during implementation.
 ## Requirement Completion Status
 
 - R1 | Status: planned | Implementation Surface: `role-model-router/apps/runtime-host-bridge/src/index.ts` | Verification Surface: focused vitest run in the touched package | QA Surface: `SP1`
@@ -132,6 +139,7 @@ Run 105 (route-learning-matching-scope-activation) touches apps/runtime-host-bri
 - R2 -> SP2 -> arm expansion/dedupe tests
 - R3 -> SP4 -> strict/preferred/router + fallback tests
 - R4 -> SP1-SP3 -> effort-state round-trip tests
+- R10 -> SP7 (not SP3) -> resolution-provenance tests; the locked requirements' subphase-table 'SP3 R5,R10' is resolved in favor of its traceability-table 'R10 -> SP7'
 - R5 -> SP3 -> borrowed-prior tests (default 0.5 regression)
 - R6 -> SP4 -> arm-aware controller/cache tests
 - R7 -> SP5 -> trivial-follow-up-below-hard tests
@@ -152,12 +160,11 @@ Run 105 (route-learning-matching-scope-activation) touches apps/runtime-host-bri
 
 ## Audit Context
 
-Audit Execution Mode: self-audit
+Audit Execution Mode: subagent
 Subagent Availability: available
-Subagent Capability Probe: in-session subagents available; the traceability auditor (5c071c27) was dispatched.
-Delegation Decision Basis: Phase 2 is audited; requirement-to-plan coverage is the guarded failure mode.
-Delegation Override Reason: the dispatched traceability auditor was still running after an extended wait; the controller self-audited the R#->file->RED mapping (all 14 planned files verified to exist; every R1-R15 mapped) to avoid indefinite blocking. Any late auditor findings are reconciled as an addendum.
-Audit Inputs Provided: 02-to-be-plan.md, 00-requirements.md, 01-as-is.md, 01.5-root-cause.md, 00-worktree.md.
+Subagent Capability Probe: in-session subagents available; the traceability auditor (5c071c27) returned a complete R1-R15 coverage verification.
+Delegation Decision Basis: Phase 2 is audited; requirement-to-plan coverage is the guarded failure mode, and the traceability auditor performed it.
+Audit Inputs Provided: 02-to-be-plan.md, 00-requirements.md, 01-as-is.md, 01.5-root-cause.md, 00-worktree.md; the auditor returned 7 findings (2 HIGH, 2 MEDIUM, 3 LOW), all now repaired.
 
 ## Effective Inputs Re-read
 
@@ -169,11 +176,11 @@ Phase 2 carries the Phase 1 diff basis unchanged; no product code exists yet; pl
 
 ## Subagent Contribution Verification
 
-Reviewed Action Records: none
-Main-Agent Verification Performed: `/.recursive/run/106-client-neutral-model-effort-routing/02-to-be-plan.md`
+Reviewed Action Records: `/.recursive/run/106-client-neutral-model-effort-routing/subagents/auditor-5c071c27.md`
+Main-Agent Verification Performed: reconciled the action record's claimed file impact against the run diff and the worktree; reviewed code read-only and untouched in the diff: `role-model-router/apps/runtime-host-bridge/src/index.ts`, `role-model-router/packages/core/src/router.ts`, `role-model-router/apps/runtime-host-bridge/src/scoring-strategy.ts`, `role-model-router/apps/runtime-host-bridge/src/routing-latency-selection.ts`, `role-model-router/packages/sqlite-memory/src/index.ts`; reviewed phase artifact `/.recursive/run/106-client-neutral-model-effort-routing/02-to-be-plan.md`; applied the 7 auditor findings.
 Acceptance Decision: accepted
-Refresh Handling: none
-Repair Performed After Verification: none
+Refresh Handling: refreshed after all 7 repairs were applied.
+Repair Performed After Verification: `/.recursive/run/106-client-neutral-model-effort-routing/02-to-be-plan.md`
 
 ## Worktree Diff Audit
 
