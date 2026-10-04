@@ -8211,6 +8211,7 @@ export async function main(): Promise<void> {
             endpointProfiles: replayEndpointProfiles,
             onRejected: (rejection) => replayCandidateRejections.push(rejection),
           });
+          if (process.env.ROLE_MODEL_FOCUS_DIAG) { console.error("[supervised-cand] source=" + (capturedSourceEndpointId ? capturedSourceEndpointId.split(".").pop() : null) + " judge=" + (evalJudgeEndpointId ? evalJudgeEndpointId.split(".").pop() : null) + " candidates=" + candidateEndpointIds.map(function(c){return c.split(".").pop();}).join(",") + " reqMod=" + JSON.stringify(replayRequestRequirements.requiredModalities) + " reqCap=" + JSON.stringify(replayRequestRequirements.requiredCapabilities) + " profiles=" + replayEndpointProfiles.map(function(p){return p.endpointId.split(".").pop() + ":[" + (p.modalities||[]).join(",") + "][" + (p.capabilities||[]).join(",") + "]";}).join("|") + " selected=" + distinctReplayCandidates.map(function(c){return c.split(".").pop();}).join(",") + " rejected=" + replayCandidateRejections.map(function(r){return r.endpointId.split(".").pop() + ":" + r.code;}).join(",")); }
           const replayPolicySet = buildReplayPolicySet();
           const replayLedger = createReplayLedger({
             filePath: path.join(
