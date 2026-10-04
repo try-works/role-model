@@ -1,8 +1,8 @@
 Run: /.recursive/run/106-client-neutral-model-effort-routing/
 Phase: 03 Implementation Summary
 Status: `LOCKED`
-LockedAt: `2026-10-04T02:16:28Z`
-LockHash: `ecca03a64ce028b7c8c2c13dc1f260f0c800ca97669cba73e6e505b941e1ca8c`
+LockedAt: `2026-10-04T02:30:13Z`
+LockHash: `dad5828e8712034943949fe97286ad266dfc31de086756d6c73bc38e6eccdfe9`
 Workflow version: recursive-mode-audit-v2
 Inputs:
 - /.recursive/run/106-client-neutral-model-effort-routing/02-to-be-plan.md (LOCKED)
@@ -128,14 +128,14 @@ None required.
 ## Requirement Completion Status
 
 - R1 | Status: implemented | Changed Files: `role-model-router/apps/runtime-host-bridge/src/index.ts`, `role-model-router/packages/adapter-execution/src/index.ts` | Implementation Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/logs/green/sp1-effort-policy-normalization.green.txt`
-- R2 | Status: implemented | Changed Files: `role-model-router/packages/endpoint-registry/src/effort-instance-identity.ts` | Implementation Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/logs/green/sp2-arm-expansion.green.txt`
+- R2 | Status: deferred | Rationale: expandReasoningEffortArms is a tested pure helper with no production consumer (dead code); arms do not yet materialize as routing candidates | Deferred By: /.recursive/run/106-client-neutral-model-effort-routing/03-implementation-summary.md
 - R3 | Status: implemented | Changed Files: `role-model-router/apps/runtime-host-bridge/src/index.ts` | Implementation Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/logs/green/sp4-effort-policy-resolution.green.txt`
-- R4 | Status: implemented | Changed Files: `role-model-router/packages/trace/src/lineage.ts`, `role-model-router/packages/runtime-observability/src/index.ts` | Implementation Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/logs/green/sp1-effort-policy-normalization.green.txt`
+- R4 | Status: deferred | Rationale: four-state preservation across serialization/SQLite/discovery/API/telemetry/trace/UI is not implemented; the prior disposition cited files not in the diff | Deferred By: /.recursive/run/106-client-neutral-model-effort-routing/03-implementation-summary.md
 - R5 | Status: implemented | Changed Files: `role-model-router/packages/core/src/router.ts` | Implementation Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/logs/green/sp3-borrowed-quality-prior.green.txt`
 - R6 | Status: implemented | Changed Files: `role-model-router/apps/runtime-host-bridge/src/index.ts` | Implementation Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/logs/green/sp4-effort-policy-resolution.green.txt`
 - R7 | Status: implemented | Changed Files: `role-model-router/apps/runtime-host-bridge/src/index.ts` | Implementation Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/logs/green/sp5-turn-aware-hard-shortcut.green.txt`
-- R8 | Status: implemented | Changed Files: `role-model-router/packages/core/src/router.ts` | Implementation Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/logs/green/sp6-non-inferiority.green.txt`
-- R9 | Status: implemented | Changed Files: `role-model-router/packages/core/src/router.ts` | Implementation Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/logs/green/sp7-effort-union-intersection.green.txt`
+- R8 | Status: deferred | Rationale: shouldPreferNonInferiorChallenger is a tested pure helper with no production consumer (dead code); the non-inferiority rule is not in effect | Deferred By: /.recursive/run/106-client-neutral-model-effort-routing/03-implementation-summary.md
+- R9 | Status: deferred | Rationale: computeEffortUnionAndIntersection is a tested pure helper not called by discovery (dead code); union/intersection is not published | Deferred By: /.recursive/run/106-client-neutral-model-effort-routing/03-implementation-summary.md
 - R10 | Status: deferred | Rationale: resolution-provenance vocabulary not wired into decisions | Deferred By: /.recursive/run/106-client-neutral-model-effort-routing/03-implementation-summary.md
 - R11 | Status: deferred | Rationale: SP8 UI truthfulness not implemented | Deferred By: /.recursive/run/106-client-neutral-model-effort-routing/03-implementation-summary.md
 - R12 | Status: deferred | Rationale: SP9 packaging not run | Deferred By: /.recursive/run/106-client-neutral-model-effort-routing/03-implementation-summary.md
