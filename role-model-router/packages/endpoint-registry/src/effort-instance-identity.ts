@@ -117,4 +117,84 @@ export function readLegacyEndpointReasoningEffort(endpointId: string): string | 
   }
 }
 
+export interface ReasoningEffortArm {
+  readonly endpointId: string;
+  readonly providerAccountId: string;
+  readonly region: string;
+  readonly modelId: string;
+  readonly effectiveEffort: string | null;
+  readonly source: "fixed" | "provider-default";
+}
+
+export function expandReasoningEffortArms(input: {
+  readonly providerAccountId: string;
+  readonly region: string;
+  readonly modelId: string;
+  readonly fixedEffort: string | null;
+  readonly declaredLevels?: readonly string[];
+}): ReasoningEffortArm[] {
+  const fixedEffort = normalizeReasoningEffort(input.fixedEffort);
+  if (fixedEffort !== null) {
+    const identity = createEndpointInstanceIdentity({
+      providerAccountId: input.providerAccountId,
+      region: input.region,
+      modelId: input.modelId,
+      reasoningEffort: fixedEffort,
+    });
+    return [
+      {
+        endpointId: identity.endpointId,
+        providerAccountId: identity.providerAccountId,
+        region: identity.region,
+        modelId: identity.modelId,
+        effectiveEffort: fixedEffort,
+        source: "fixed",
+      },
+    ];
+  }
+
+  const base = createEndpointInstanceIdentity({
+    providerAccountId: input.providerAccountId,
+    region: input.region,
+    modelId: input.modelId,
+    reasoningEffort: null,
+  });
+  const arms: ReasoningEffortArm[] = [
+    {
+      endpointId: base.endpointId,
+      providerAccountId: base.providerAccountId,
+      region: base.region,
+      modelId: base.modelId,
+      effectiveEffort: null,
+      source: "provider-default",
+    },
+  ];
+  const seen = new Set<string>([base.endpointId]);
+  for (const level of new Set(input.declaredLevels ?? [])) {
+    const normalized = normalizeReasoningEffort(level);
+    if (normalized === null) {
+      continue;
+    }
+    const identity = createEndpointInstanceIdentity({
+      providerAccountId: input.providerAccountId,
+      region: input.region,
+      modelId: input.modelId,
+      reasoningEffort: normalized,
+    });
+    if (seen.has(identity.endpointId)) {
+      continue;
+    }
+    seen.add(identity.endpointId);
+    arms.push({
+      endpointId: identity.endpointId,
+      providerAccountId: identity.providerAccountId,
+      region: identity.region,
+      modelId: identity.modelId,
+      effectiveEffort: normalized,
+      source: "fixed",
+    });
+  }
+  return arms;
+}
+
 export { EFFORT_PREFIX, MAX_REASONING_EFFORT_BYTES };
