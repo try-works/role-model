@@ -7261,7 +7261,7 @@ export async function main(): Promise<void> {
         },
         readRouteDispatchEvidence: async (request) => {
           const runtime = extensionRuntimeRef.current;
-          if (!runtime) return null;
+          if (!runtime) { console.error(`[route-evidence-binding] no runtime; request=${request?.roleId}/${request?.taskTypeId}/${request?.endpointId}`); return null; }
           try {
             const authority = await resolveDurableEvaluationAuthority({ channel, stateRoot: options.runtimeStateRoot, scopeId: options.scopeId });
             const replayJobScope = resolveDurableReplayJobScope({ channel, runtimeStateRoot: options.runtimeStateRoot, scopeId: options.scopeId });
@@ -7279,7 +7279,7 @@ export async function main(): Promise<void> {
                 }))),
               }),
             });
-          } catch { return null; }
+          } catch (cause) { console.error(`[route-evidence-binding] failed: ${cause instanceof Error ? cause.message : String(cause)}`); return null; }
         },
         operations: sweepOperations,
         ledger,
