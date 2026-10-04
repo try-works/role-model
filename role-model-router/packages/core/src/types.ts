@@ -112,6 +112,7 @@ export interface EndpointCandidate {
   readonly benchmarkCapability?: {
     readonly evidenceSource?: "run-artifact" | "profile-derived";
     readonly overallScore?: number | null;
+    readonly relatedEffortOverallScore?: number | null;
     readonly lastRunId?: string | null;
     readonly lastRunCompletedAtMs?: number | null;
     readonly lastRunMode?: "quick" | "full" | null;

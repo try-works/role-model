@@ -936,6 +936,21 @@ export function getQualityMetric(
     });
   }
 
+  const relatedPrior = resolveBorrowedQualityPrior({
+    relatedEffortScore: candidate.benchmarkCapability?.relatedEffortOverallScore ?? undefined,
+  });
+  if (relatedPrior !== null) {
+    return applyTelemetryAdvisory(input, candidate, {
+      value: relatedPrior.value,
+      source: "benchmark",
+      raw: {
+        related_effort_prior: true,
+        related_effort_score: candidate.benchmarkCapability?.relatedEffortOverallScore,
+        benchmark_reason: "related_effort_prior",
+      },
+    });
+  }
+
   return applyTelemetryAdvisory(input, candidate, {
     value: 0.5,
     source: "default",
