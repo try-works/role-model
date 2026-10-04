@@ -171,7 +171,12 @@ export function expandReasoningEffortArms(input: {
   ];
   const seen = new Set<string>([base.endpointId]);
   for (const level of new Set(input.declaredLevels ?? [])) {
-    const normalized = normalizeReasoningEffort(level);
+    let normalized: string | null;
+    try {
+      normalized = normalizeReasoningEffort(level);
+    } catch {
+      continue;
+    }
     if (normalized === null) {
       continue;
     }

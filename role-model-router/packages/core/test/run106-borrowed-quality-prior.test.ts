@@ -6,7 +6,7 @@ describe("run106 borrowed quality prior", () => {
     const prior = resolveBorrowedQualityPrior({ relatedEffortScore: 0.958, discountFactor: 0.7 });
     expect(prior).not.toBeNull();
     expect(prior?.source).toBe("borrowed");
-    expect(prior?.value).toBeCloseTo(0.6706, 4);
+    expect(prior?.value).toBeCloseTo(0.8206, 4);
   });
   it("clamps the discounted prior to the unit interval", () => {
     expect(resolveBorrowedQualityPrior({ relatedEffortScore: 1.5, discountFactor: 0.9 })?.value).toBe(1);
@@ -15,6 +15,6 @@ describe("run106 borrowed quality prior", () => {
     expect(resolveBorrowedQualityPrior({})).toBeNull();
   });
   it("defaults the discount factor to 0.7", () => {
-    expect(resolveBorrowedQualityPrior({ relatedEffortScore: 0.5 })?.value).toBeCloseTo(0.35, 4);
+    expect(resolveBorrowedQualityPrior({ relatedEffortScore: 0.5 })?.value).toBeCloseTo(0.5, 4);
   });
 });

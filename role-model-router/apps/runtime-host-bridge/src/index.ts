@@ -973,7 +973,7 @@ export function normalizeReasoningEffortPolicy(
   explicitPolicy: string | undefined,
 ): { effort: string | undefined; policy: NormalizedEffortPolicy } {
   const policy = normalizeEffortPolicyValue(explicitPolicy) ?? (effort ? "preferred" : "router");
-  return { effort: policy === "router" ? undefined : effort, policy };
+  return { effort, policy };
 }
 
 export type EffortPolicyResolutionKind =
@@ -1008,7 +1008,14 @@ function normalizeEffortPolicyValue(value: string | undefined): NormalizedEffort
   if (trimmed === "strict" || trimmed === "preferred" || trimmed === "router") {
     return trimmed;
   }
-  throw new Error(`Invalid effort_policy: ${value}`);
+  throw new BridgeHttpError(400, {
+    error: {
+      type: "routing_eligibility_error",
+      code: "invalid_effort_policy",
+      message: `Invalid effort_policy: ${value}`,
+      received: value,
+    },
+  });
 }
 
 function readOpenAIReasoningRequest(
@@ -9719,11 +9726,17 @@ export function applyReasoningEffortToModelPool(input: {
     requestedEffort,
   });
   if (effortInstanceIds.length === 0) {
-    // No executable arm for the requested effort: strict refuses, preferred records unsupported_fallback
-    // at the caller. Both empty the pool here so the caller can raise the bounded refusal.
+    if (policy === "strict") {
+      // strict requires an exact arm; empty pool lets the caller raise reasoning_effort_unavailable.
+      return {
+        allowEndpoints: [],
+        preferredEndpointIds: [],
+      };
+    }
+    // preferred with zero exact arms -> unsupported_fallback: ignore the hint and router-manage the pool (R3/D5).
     return {
-      allowEndpoints: [],
-      preferredEndpointIds: [],
+      allowEndpoints: input.allowEndpoints,
+      preferredEndpointIds: input.preferredEndpointIds,
     };
   }
   if (policy === "strict") {

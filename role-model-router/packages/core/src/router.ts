@@ -775,7 +775,9 @@ export function resolveBorrowedQualityPrior(input: {
     return null;
   }
   const discount = typeof input.discountFactor === "number" ? input.discountFactor : 0.7;
-  return { value: clamp(score * discount), source: "borrowed" };
+  // Symmetric shrink toward neutral (0.5): a borrowed sibling-effort score regresses toward the
+  // unknown default rather than collapsing to zero. Documented in R5.
+  return { value: clamp(0.5 + (score - 0.5) * discount), source: "borrowed" };
 }
 
 export function getQualityMetric(
