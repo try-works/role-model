@@ -1400,6 +1400,9 @@ export function startAutoReplayLoop(input: {
               ...(excludedFocusEndpoints.size > 0
                 ? { excludedEndpointIds: [...excludedFocusEndpoints] } : {}),
               rungs: routeLadder?.rungs });
+            if (process.env.ROLE_MODEL_FOCUS_DIAG) {
+              console.error(`[focus-diag] source=${source?.sourceEndpointId?.split(".").pop()} judge=${judgeId?.split(".").pop() ?? null} excluded=${[...excludedFocusEndpoints].map(id=>id.split(".").pop()).join(",")} focusEndpoint=${fill instanceof NoReplayableRequest ? "NoReplayableRequest" : (fill?.endpointId?.split(".").pop() ?? null)} configured=${configuredNow.map(id=>id.split(".").pop()).join(",")} admitted=${(routeLadder?.rungs ?? []).filter(rung=>rung.status==="available").map(rung=>rung.endpointId.split(".").pop()).join(",")}`);
+            }
             if (fill instanceof NoReplayableRequest) throw fill;
             focusCaptureRef = source?.captureRef ?? null; focusEndpointId = fill?.endpointId ?? null;
             if (source && !focusEndpointId && Number(routeLadder?.nextEligibleAtMs ?? Infinity) <= now()) {
