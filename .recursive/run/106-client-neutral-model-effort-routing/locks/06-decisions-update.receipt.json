@@ -1,8 +1,8 @@
 {
   "artifact": "06-decisions-update.md",
-  "artifact_hash": "9f9a422ab59e120cde70d8a70a57ce32a2c1ef333938d19b55ab95d6c4c02b64",
+  "artifact_hash": "2eb4d144eb5e75709ce932b9054ea126b353de533fa81fb2e1eaf507f3923bae",
   "artifact_path": "D:\\DEV\\role-model\\.worktrees\\106-client-neutral-model-effort-routing\\.recursive\\run\\106-client-neutral-model-effort-routing\\06-decisions-update.md",
-  "locked_at": "2026-10-04T03:15:50Z",
+  "locked_at": "2026-10-04T03:18:26Z",
   "prerequisite_hashes": {
     "00-requirements.md": "9be64e945082f71fd7f93376c739ea49d90f002dfaf6e7d71e45dd16f764928f",
     "00-worktree.md": "92c639d820bd6cf940ad9effa9b48ce184f361c902ba2e1db6734428f0bee763",
@@ -12,8 +12,8 @@
     "03-implementation-summary.md": "365ca194e5fa458dea62e85a7e995d03cecf369603de6c82bde0d0bce74fef0c",
     "03.5-code-review.md": "0fd44db3302a04fc098f14997323d271b630929497e23752969f636f40ef2447",
     "04-test-summary.md": "dcafd2fb4336bfea12bef520cf127d8586715b4c76dd1bf7e8fe45bf390d3e8d",
-    "05-manual-qa.md": "a6f9750fd5e08985444ca9f2041751c3e5566d7e198b80719b0f2d80fdcef621"
+    "05-manual-qa.md": "9d4d6bf23866e460abbc59d8c61801c0eddbfcd5065b9361be85dec52161b6e2"
   },
   "previous_receipt_hash": null,
-  "receipt_hash": "6d14e4a7b1ff0b8e613c9e73faf1c0bd353a3568874beacf38d467ff5ed3a41a"
+  "receipt_hash": "855f445156f5d7e02a83f09242323d0926d2ef4766bb357d9dad5850d613cc12"
 }
