@@ -1,0 +1,14 @@
+{
+  "artifact": "02-to-be-plan.md",
+  "artifact_hash": "10423e563b65dbfce257f55320e09e5e8b98d5ba5ccf99063a81b462c0a7b55f",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\106-client-neutral-model-effort-routing\\.recursive\\run\\106-client-neutral-model-effort-routing\\02-to-be-plan.md",
+  "locked_at": "2026-10-04T01:40:56Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "9be64e945082f71fd7f93376c739ea49d90f002dfaf6e7d71e45dd16f764928f",
+    "00-worktree.md": "92c639d820bd6cf940ad9effa9b48ce184f361c902ba2e1db6734428f0bee763",
+    "01-as-is.md": "4eb5dd07463e24b05ac886cf5b894980faba13814ec76a55df2f516d26583120",
+    "01.5-root-cause.md": "2556019928b11363103a46decbb523eda6290bcff4934f90df908c5419a288c6"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "2be2c7c15b4ec05fedaca8ed2292864212be90aa8d85718554ab1c5ce49bb3cd"
+}
