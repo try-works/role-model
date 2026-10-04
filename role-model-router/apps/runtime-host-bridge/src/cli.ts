@@ -5427,7 +5427,7 @@ export async function main(): Promise<void> {
     ): ReturnType<typeof startAutoReplayLoop> | null => {
       const operations = postObservationOperations;
       const channel = packagedProfile?.channel ?? "development";
-      console.error(`[replay-loop] start check: operations=${operations ? "wired" : "null"} channel=${channel} port=${options.port}`);
+      if (process.env.ROLE_MODEL_FOCUS_DIAG) console.error(`[replay-loop] start check: operations=${operations ? "wired" : "null"} channel=${channel} port=${options.port}`);
       if (!operations || channel === "production") return null;
       const port = options.port;
       if (!Number.isInteger(port) || port <= 0) return null;

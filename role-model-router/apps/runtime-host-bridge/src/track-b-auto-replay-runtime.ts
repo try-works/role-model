@@ -1133,7 +1133,7 @@ export function startAutoReplayLoop(input: {
     AutoReplayTickResult & { readonly skipped?: boolean }
   > => {
     if (paused || Ref.getUnsafe(stageExecutionBusy) || (running && !options?.onlyCaptureRefs)) {
-      console.error(`[replay-tick] skip: paused=${paused} busy=${Ref.getUnsafe(stageExecutionBusy)} running=${running}`);
+      if (process.env.ROLE_MODEL_FOCUS_DIAG) console.error(`[replay-tick] skip: paused=${paused} busy=${Ref.getUnsafe(stageExecutionBusy)} running=${running}`);
       // `L7`: this is the interval path while a long work tick is in flight. Run the liveness sweeps
       // here instead of skipping them, so an overdue job is still expired on schedule.
       // Run 104 post-closeout (addendum 15): the queue worker's restricted tick (`onlyCaptureRefs`)
@@ -1169,7 +1169,7 @@ export function startAutoReplayLoop(input: {
         policySetDigest: input.policySet.policySetDigest, limit: maxCapturesPerTick * 4,
       });
       let captures = pendingCaptures(pending);
-      console.error(`[replay-tick] run: captures=${captures.length} pendingCount=${(pending as { pendingCount?: number }).pendingCount ?? "?"}`);
+      if (process.env.ROLE_MODEL_FOCUS_DIAG) console.error(`[replay-tick] run: captures=${captures.length} pendingCount=${(pending as { pendingCount?: number }).pendingCount ?? "?"}`);
       const challengeBatchSize = input.routeLearningDefaults?.challengeBatchSize ?? 1;
       if (stageEnabled) {
         if (!input.readRouteLadder) throw new Error("route ladder context unavailable: CLI binding required");
@@ -1336,10 +1336,10 @@ export function startAutoReplayLoop(input: {
         if (plannedFocus) {
           routeLadder = rows.get(plannedFocus.scopeKey) ?? null;
           let progress = Ref.getUnsafe(challenges).get(plannedFocus.scopeKey);
-          console.error(`[replay-tick] before readRouteReplayableCaptures focus=${plannedFocus.roleId}/${plannedFocus.taskTypeId}`);
+          if (process.env.ROLE_MODEL_FOCUS_DIAG) console.error(`[replay-tick] before readRouteReplayableCaptures focus=${plannedFocus.roleId}/${plannedFocus.taskTypeId}`);
           if (input.readRouteReplayableCaptures) {
             const history = await input.readRouteReplayableCaptures(plannedFocus);
-            console.error(`[replay-tick] after readRouteReplayableCaptures history=${history === null ? "null" : history.length}`);
+            if (process.env.ROLE_MODEL_FOCUS_DIAG) console.error(`[replay-tick] after readRouteReplayableCaptures history=${history === null ? "null" : history.length}`);
             if (history === null) throw new Error("route replayable corpus unavailable");
             const existing = new Set(captures.map(item => item.captureRef));
             captures = [...captures, ...history.filter(item => item.roleId === plannedFocus!.roleId &&
@@ -1589,9 +1589,9 @@ export function startAutoReplayLoop(input: {
           const progress = Ref.getUnsafe(challenges).get(challengeKey)!;
           setChallenge(challengeKey, { ...progress, pendingCaptureRef: focusCaptureRef, pendingRoundId: dispatchRoundFor(focusEndpointId) });
         }
-        console.error(`[replay-tick] before runDispatch focusEndpoint=${focusEndpointId} dispatchCaptures=${dispatchCaptures.length}`);
+        if (process.env.ROLE_MODEL_FOCUS_DIAG) console.error(`[replay-tick] before runDispatch focusEndpoint=${focusEndpointId} dispatchCaptures=${dispatchCaptures.length}`);
         const part = await runDispatch(dispatchCaptures, focusEndpointId, focusCaptureRef);
-        console.error(`[replay-tick] after runDispatch part=${part.processed}`);
+        if (process.env.ROLE_MODEL_FOCUS_DIAG) console.error(`[replay-tick] after runDispatch part=${part.processed}`);
         result = { processed: result.processed + part.processed, replayed: result.replayed + part.replayed,
           refused: result.refused + part.refused, deferred: result.deferred + part.deferred,
           queued: (result.queued ?? 0) + (part.queued ?? 0),
