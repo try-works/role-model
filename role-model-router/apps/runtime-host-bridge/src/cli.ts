@@ -5423,6 +5423,7 @@ export async function main(): Promise<void> {
         modelId: string;
         reasoningEffort: string | null;
       }[],
+      judgeResolver?: () => Promise<string | null>,
     ): ReturnType<typeof startAutoReplayLoop> | null => {
       const operations = postObservationOperations;
       const channel = packagedProfile?.channel ?? "development";
@@ -7404,24 +7405,18 @@ export async function main(): Promise<void> {
         // Run 98 addendum 56 §6: the configured controller is the judge (addendum 45), so it must never be
         // planned as a counterfactual arm; resolved per tick so a controller change takes effect immediately.
         resolveJudgeEndpointId: async () => {
-          // Run 105 bug 3: the auto-replay starter is handed the narrow bridge options type whose
-          // `readControllerAssignment` binding is NOT wired, so it fell back to the (empty) durable table and
-          // returned null while the supervised replay endpoint resolved the controller judge as deepseek-flash.
-          // Read the wired backend binding first (the same source `bindBackendMethod` uses), so the focus
-          // planner excludes the SAME judge the supervised endpoint will reject.
-          const readControllerAssignment = (() => {
-            try {
-              return (
-                requireBackend() as unknown as {
-                  readControllerAssignment?: () => Promise<unknown>;
-                }
-              ).readControllerAssignment;
-            } catch {
-              return (
-                options as { readControllerAssignment?: () => Promise<unknown> }
-              ).readControllerAssignment;
-            }
-          })();
+          if (judgeResolver) {
+            const wiredJudge = await judgeResolver().catch(() => null);
+            if (wiredJudge && wiredJudge.length > 0) return wiredJudge;
+          }
+          // Run 105 bug 3: the auto-replay starter is handed the narrow bridge options type, while the object
+          // it receives at runtime is the full server composition (which binds `readControllerAssignment`). Reading
+          // it defensively keeps a runtime without the binding on the previous behaviour instead of failing. The
+          // wired resolution is passed in explicitly (see the `judgeResolver` argument at the call site) because
+          // that binding is not reachable from this scope.
+          const readControllerAssignment = (
+            options as { readControllerAssignment?: () => Promise<unknown> }
+          ).readControllerAssignment;
           const assignment = await Promise.resolve(readControllerAssignment?.()).catch(() => null);
           const endpointId =
             assignment && typeof assignment === "object" && !Array.isArray(assignment)
@@ -10547,6 +10542,26 @@ export async function main(): Promise<void> {
                 ? String((endpoint as { reasoningEffort?: unknown }).reasoningEffort)
                 : null,
           })),
+        // Run 105 bug 3: pass the wired judge resolution down so the dispatcher's focus planner excludes the
+        // SAME controller judge the supervised replay endpoint will reject (deepseek-flash), instead of
+        // returning null from the empty durable table and planning the judge as a counterfactual arm.
+        async () => {
+          try {
+            const snapshot = readLearningPolicyFile({
+              repoRoot: options.repoRoot,
+              stateRoot: resolveLearningPolicyStateRoot({
+                runtimeStateRoot: options.runtimeStateRoot,
+                scopeId: options.scopeId,
+              }),
+              channel: packagedProfile?.channel ?? "development",
+              scopeId: options.scopeId,
+            });
+            const judge = await resolveControllerJudge(created, snapshot);
+            return judge.endpointId || null;
+          } catch {
+            return null;
+          }
+        },
       );
       configuredEndpointIdsRef.current = created.effectiveRegistry.endpoints.map(
         (endpoint) => endpoint.identity.endpoint_id,
