@@ -1,0 +1,47 @@
+{
+  "piRoutingTrace": {
+    "port": 3462,
+    "isolated": true,
+    "notIn": [
+      3456,
+      3457,
+      3458
+    ],
+    "requestId": "req-9d68e76b",
+    "routingDecisionId": "decision-req-9d68e76b",
+    "routedModel": "deepseek-v4-pro",
+    "scenarios": [
+      {
+        "id": "S1-strict-max",
+        "request": {
+          "model": "deepseek/deepseek-v4-flash",
+          "reasoning": {
+            "effort": "max",
+            "effort_policy": "strict"
+          }
+        },
+        "result": {
+          "status": 200,
+          "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash-max",
+          "verdict": "PASS - strict policy routed to the exact-effort arm"
+        }
+      },
+      {
+        "id": "S2-router-max",
+        "request": {
+          "model": "deepseek/deepseek-v4-flash",
+          "reasoning": {
+            "effort": "max",
+            "effort_policy": "router"
+          }
+        },
+        "result": {
+          "status": 200,
+          "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+          "verdict": "PASS - router-managed selection"
+        }
+      }
+    ],
+    "secondClientParity": "PASS - a semantically identical request through a second client path produced the same normalized routing decision"
+  }
+}
