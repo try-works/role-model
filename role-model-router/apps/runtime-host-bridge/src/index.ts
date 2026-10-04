@@ -26437,7 +26437,12 @@ export async function createRuntimeBridgeBackend(
       // Run 99 R33 (addendum 19 S33/S35): the live decision carries the request's own task
       // family and the taxonomy it was resolved against, so a preference learned for one family
       // cannot move another family's traffic.
-      const requestTaskTypeId = plan.routingRequest.taskType ?? null;
+      // Run 105 live Phase 5: the task must resolve through the SAME classification chain as the
+      // role (`buildRequestClassificationForPlan`). Reading `plan.routingRequest.taskType` directly
+      // left the advisory key and observation as `requestTaskTypeId: null` for requests that declared
+      // no top-level task but carried a resolved intent/identity task, so an exact (role, task) ladder
+      // was never recalled for them.
+      const requestTaskTypeId = buildRequestClassificationForPlan(plan)?.taskTypeId ?? null;
       // Run 105 C11/R1: the advisory key is (role, task). The role comes from the SAME chain
       // `buildRequestClassificationForPlan` resolves (declared role -> resolved taxonomy identity ->
       // intent role), so the ladder the runtime recalls cannot drift from the classification the

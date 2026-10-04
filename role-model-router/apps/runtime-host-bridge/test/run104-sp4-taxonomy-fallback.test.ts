@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
 
 import { buildRequestClassification } from "../src/index.js";
@@ -97,6 +98,16 @@ describe("run104 R6 buildRequestClassification task-family fallback", () => {
 
     const withoutVariant = buildRequestClassification({ taskTypeId: "data.quality.audit" });
     expect(withoutVariant?.taskVariant ?? null).toBeNull();
+  });
+
+  test("the live advisory task key uses the SAME classification chain as the role (no raw plan field)", () => {
+    // Run 105 Phase 5 live: `requestTaskTypeId` read `plan.routingRequest.taskType` directly while the
+    // role beside it resolved through `buildRequestClassificationForPlan`. An intent/identity-resolved
+    // request therefore recorded `requestTaskTypeId: null` and never recalled its exact (role, task)
+    // ladder. The advisory key and observation must both come from the resolved classification.
+    const source = readFileSync(new URL("../src/index.ts", import.meta.url), "utf8");
+    expect(source).toContain("const requestTaskTypeId = buildRequestClassificationForPlan(plan)?.taskTypeId ?? null;");
+    expect(source).not.toContain("const requestTaskTypeId = plan.routingRequest.taskType ?? null;");
   });
 
   test("every capture site's input produces the same classification for one fixture", () => {
