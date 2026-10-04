@@ -70,6 +70,7 @@ export interface PromptCacheRequest {
 export interface RuntimeExecutionReasoningRequest {
   readonly channel?: "reasoning" | "thinking";
   readonly effort?: string;
+  readonly effortPolicy?: "strict" | "preferred" | "router";
   readonly raw?: Record<string, unknown>;
 }
 

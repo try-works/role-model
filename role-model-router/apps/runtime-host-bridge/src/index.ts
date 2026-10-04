@@ -966,19 +966,46 @@ function isOpenAIChatCompletionsMessage(
   );
 }
 
+export type NormalizedEffortPolicy = "strict" | "preferred" | "router";
+
+export function normalizeReasoningEffortPolicy(
+  effort: string | undefined,
+  explicitPolicy: string | undefined,
+): { effort: string | undefined; policy: NormalizedEffortPolicy } {
+  const policy = normalizeEffortPolicyValue(explicitPolicy) ?? (effort ? "preferred" : "router");
+  return { effort: policy === "router" ? undefined : effort, policy };
+}
+
+function normalizeEffortPolicyValue(value: string | undefined): NormalizedEffortPolicy | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  if (trimmed === "strict" || trimmed === "preferred" || trimmed === "router") {
+    return trimmed;
+  }
+  throw new Error(`Invalid effort_policy: ${value}`);
+}
+
 function readOpenAIReasoningRequest(
   body: Pick<OpenAIResponsesBody, "reasoning_effort" | "reasoning" | "thinking">,
 ): RuntimeExecutionRequest["reasoning"] | undefined {
   if (typeof body.reasoning_effort === "string") {
     return {
       effort: body.reasoning_effort,
+      effortPolicy: "preferred",
     };
   }
 
   const reasoning = asPlainRecord(body.reasoning);
   if (reasoning) {
+    const effort = typeof reasoning.effort === "string" ? reasoning.effort : undefined;
+    const explicitPolicy =
+      typeof reasoning.effort_policy === "string" ? reasoning.effort_policy : undefined;
+    const normalized = normalizeReasoningEffortPolicy(effort, explicitPolicy);
     return {
-      ...(typeof reasoning.effort === "string" ? { effort: reasoning.effort } : {}),
+      ...(normalized.effort !== undefined ? { effort: normalized.effort } : {}),
+      effortPolicy: normalized.policy,
       raw: reasoning,
     };
   }
