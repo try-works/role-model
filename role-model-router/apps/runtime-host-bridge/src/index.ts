@@ -9677,11 +9677,13 @@ export function applyReasoningEffortToModelPool(input: {
   readonly registry: EndpointRegistryResult;
   readonly requestedModel: string;
   readonly requestedEffort?: string | null;
+  readonly requestedPolicy?: "strict" | "preferred" | "router";
   readonly allowEndpoints: readonly string[];
   readonly preferredEndpointIds: readonly string[];
   readonly requestedEndpointId?: string | null;
 }): ReasoningEffortPoolApplication {
   const requestedEffort = input.requestedEffort?.trim() || null;
+  const policy = input.requestedPolicy ?? (requestedEffort ? "preferred" : "router");
   /**
    * The client named an instance only when it used an endpoint row - as the requested model value or as the
    * explicit `endpointId` request option. Everything else (an alias, a model id) names a pool.
@@ -9704,7 +9706,8 @@ export function applyReasoningEffortToModelPool(input: {
       preferredEndpointIds: input.preferredEndpointIds,
     };
   }
-  if (requestedEffort === null) {
+  if (policy === "router" || requestedEffort === null) {
+    // Router-managed: the effort hint is ignored and the whole pool is scored jointly.
     return {
       allowEndpoints: input.allowEndpoints,
       preferredEndpointIds: input.preferredEndpointIds,
@@ -9716,11 +9719,17 @@ export function applyReasoningEffortToModelPool(input: {
     requestedEffort,
   });
   if (effortInstanceIds.length === 0) {
-    // An effort that names no instance in this pool is not executable at all, and it keeps the bounded
-    // `reasoning_effort_unavailable` refusal the callers already raise on an empty pool (run 98). The pool rule is
-    // about the pool's *membership*: an effort that does name instances may order them, never trim them.
+    // No executable arm for the requested effort: strict refuses, preferred records unsupported_fallback
+    // at the caller. Both empty the pool here so the caller can raise the bounded refusal.
     return {
       allowEndpoints: [],
+      preferredEndpointIds: [],
+    };
+  }
+  if (policy === "strict") {
+    // Exact-effort arms only; non-exact arms are ineligible.
+    return {
+      allowEndpoints: effortInstanceIds,
       preferredEndpointIds: [],
     };
   }
@@ -10645,6 +10654,7 @@ export function mapChatCompletionsRequest(
     registry,
     requestedModel: body.model,
     requestedEffort: reasoning?.effort,
+    requestedPolicy: reasoning?.effortPolicy,
     allowEndpoints: applyRequestedEndpointOverride({
       requestedModel: body.model,
       allowEndpoints: modelAllowEndpoints,
@@ -10949,6 +10959,7 @@ export function mapResponsesRequest(
     registry,
     requestedModel: body.model,
     requestedEffort: reasoning?.effort,
+    requestedPolicy: reasoning?.effortPolicy,
     allowEndpoints: applyRequestedEndpointOverride({
       requestedModel: body.model,
       allowEndpoints: modelAllowEndpoints,
