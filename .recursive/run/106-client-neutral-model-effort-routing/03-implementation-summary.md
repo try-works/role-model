@@ -1,8 +1,8 @@
 Run: /.recursive/run/106-client-neutral-model-effort-routing/
 Phase: 03 Implementation Summary
 Status: `LOCKED`
-LockedAt: `2026-10-04T02:30:13Z`
-LockHash: `dad5828e8712034943949fe97286ad266dfc31de086756d6c73bc38e6eccdfe9`
+LockedAt: `2026-10-04T02:34:54Z`
+LockHash: `13ee8fe3f774cd7be77c74a37213608f9ec52274e51033c1886137c7d5849c13`
 Workflow version: recursive-mode-audit-v2
 Inputs:
 - /.recursive/run/106-client-neutral-model-effort-routing/02-to-be-plan.md (LOCKED)
@@ -48,6 +48,8 @@ TDD Compliance: PASS
 RED Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/logs/red/`
 GREEN Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/logs/green/`
 ## Plan Deviations
+
+- Known follow-ups (recorded per Phase 3.5 re-review): MEDIUM-3a - the borrowed-prior source is relabeled benchmark in getQualityMetric while resolveBorrowedQualityPrior returns borrowed (not yet in the MetricSource union); add borrowed and use the returned source when the producer/R10 wiring lands. MEDIUM-3c - benchmark-summary.ts must populate relatedEffortOverallScore from a sibling-effort benchmark (the router-side consumer is wired; the producer is not). R5 is therefore partial: router consumer implemented, producer + source-label follow-up deferred.
 
 - SP8 (R11 UI truthfulness) not implemented: the pure routing primitives are in place but the runtime-ui co-display of model+effort+exact/borrowed evidence was not built in this run's controller rounds.
 - SP9 (R12/R15 packaging + isolated Pi QA) not implemented: no SEA packaging or isolated-port Pi matrix was run.
@@ -131,7 +133,7 @@ None required.
 - R2 | Status: deferred | Rationale: expandReasoningEffortArms is a tested pure helper with no production consumer (dead code); arms do not yet materialize as routing candidates | Deferred By: /.recursive/run/106-client-neutral-model-effort-routing/03-implementation-summary.md
 - R3 | Status: implemented | Changed Files: `role-model-router/apps/runtime-host-bridge/src/index.ts` | Implementation Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/logs/green/sp4-effort-policy-resolution.green.txt`
 - R4 | Status: deferred | Rationale: four-state preservation across serialization/SQLite/discovery/API/telemetry/trace/UI is not implemented; the prior disposition cited files not in the diff | Deferred By: /.recursive/run/106-client-neutral-model-effort-routing/03-implementation-summary.md
-- R5 | Status: implemented | Changed Files: `role-model-router/packages/core/src/router.ts` | Implementation Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/logs/green/sp3-borrowed-quality-prior.green.txt`
+- R5 | Status: implemented | Changed Files: `role-model-router/packages/core/src/router.ts` | Implementation Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/logs/green/sp3-borrowed-quality-prior.green.txt` | Audit Note: partial - router-side consumer (getQualityMetric) wired; benchmark-summary producer and the borrowed source label are recorded follow-ups (MEDIUM-3a/3c)
 - R6 | Status: implemented | Changed Files: `role-model-router/apps/runtime-host-bridge/src/index.ts` | Implementation Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/logs/green/sp4-effort-policy-resolution.green.txt`
 - R7 | Status: implemented | Changed Files: `role-model-router/apps/runtime-host-bridge/src/index.ts` | Implementation Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/logs/green/sp5-turn-aware-hard-shortcut.green.txt`
 - R8 | Status: deferred | Rationale: shouldPreferNonInferiorChallenger is a tested pure helper with no production consumer (dead code); the non-inferiority rule is not in effect | Deferred By: /.recursive/run/106-client-neutral-model-effort-routing/03-implementation-summary.md
