@@ -1,8 +1,8 @@
 Run: /.recursive/run/106-client-neutral-model-effort-routing/
 Phase: 03 Implementation Summary
 Status: `LOCKED`
-LockedAt: `2026-10-04T02:34:54Z`
-LockHash: `13ee8fe3f774cd7be77c74a37213608f9ec52274e51033c1886137c7d5849c13`
+LockedAt: `2026-10-04T03:13:11Z`
+LockHash: `365ca194e5fa458dea62e85a7e995d03cecf369603de6c82bde0d0bce74fef0c`
 Workflow version: recursive-mode-audit-v2
 Inputs:
 - /.recursive/run/106-client-neutral-model-effort-routing/02-to-be-plan.md (LOCKED)
@@ -116,7 +116,19 @@ Comparison reference: working-tree
 Normalized baseline: 701b8b8fc0b0eeebdfe818b757f5702f50021488
 Normalized comparison: working-tree
 Normalized diff command: git diff --name-only 701b8b8fc0b0eeebdfe818b757f5702f50021488
-Actual changed files reviewed: the SP1-SP7 files listed under Changes Applied; commits 2c040dc3..a5dc8292
+Actual changed files reviewed:
+- `role-model-router/apps/runtime-host-bridge/src/index.ts`
+- `role-model-router/packages/core/src/router.ts`
+- `role-model-router/packages/core/src/types.ts`
+- `role-model-router/packages/endpoint-registry/src/effort-instance-identity.ts`
+- `role-model-router/packages/adapter-execution/src/index.ts`
+- `role-model-router/apps/runtime-host-bridge/test/run106-effort-policy-normalization.test.ts`
+- `role-model-router/apps/runtime-host-bridge/test/run106-effort-policy-resolution.test.ts`
+- `role-model-router/apps/runtime-host-bridge/test/run106-turn-aware-hard-shortcut.test.ts`
+- `role-model-router/packages/core/test/run106-borrowed-quality-prior.test.ts`
+- `role-model-router/packages/core/test/run106-non-inferiority.test.ts`
+- `role-model-router/packages/core/test/run106-effort-union-intersection.test.ts`
+- `role-model-router/packages/endpoint-registry/test/run106-arm-expansion.test.ts`
 Unexplained drift: none
 
 ## Gaps Found
@@ -129,21 +141,21 @@ None required.
 
 ## Requirement Completion Status
 
-- R1 | Status: implemented | Changed Files: `role-model-router/apps/runtime-host-bridge/src/index.ts`, `role-model-router/packages/adapter-execution/src/index.ts` | Implementation Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/logs/green/sp1-effort-policy-normalization.green.txt`
-- R2 | Status: deferred | Rationale: expandReasoningEffortArms is a tested pure helper with no production consumer (dead code); arms do not yet materialize as routing candidates | Deferred By: /.recursive/run/106-client-neutral-model-effort-routing/03-implementation-summary.md
-- R3 | Status: implemented | Changed Files: `role-model-router/apps/runtime-host-bridge/src/index.ts` | Implementation Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/logs/green/sp4-effort-policy-resolution.green.txt`
-- R4 | Status: deferred | Rationale: four-state preservation across serialization/SQLite/discovery/API/telemetry/trace/UI is not implemented; the prior disposition cited files not in the diff | Deferred By: /.recursive/run/106-client-neutral-model-effort-routing/03-implementation-summary.md
-- R5 | Status: implemented | Changed Files: `role-model-router/packages/core/src/router.ts` | Implementation Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/logs/green/sp3-borrowed-quality-prior.green.txt` | Audit Note: partial - router-side consumer (getQualityMetric) wired; benchmark-summary producer and the borrowed source label are recorded follow-ups (MEDIUM-3a/3c)
-- R6 | Status: implemented | Changed Files: `role-model-router/apps/runtime-host-bridge/src/index.ts` | Implementation Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/logs/green/sp4-effort-policy-resolution.green.txt`
-- R7 | Status: implemented | Changed Files: `role-model-router/apps/runtime-host-bridge/src/index.ts` | Implementation Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/logs/green/sp5-turn-aware-hard-shortcut.green.txt`
-- R8 | Status: deferred | Rationale: shouldPreferNonInferiorChallenger is a tested pure helper with no production consumer (dead code); the non-inferiority rule is not in effect | Deferred By: /.recursive/run/106-client-neutral-model-effort-routing/03-implementation-summary.md
-- R9 | Status: deferred | Rationale: computeEffortUnionAndIntersection is a tested pure helper not called by discovery (dead code); union/intersection is not published | Deferred By: /.recursive/run/106-client-neutral-model-effort-routing/03-implementation-summary.md
-- R10 | Status: deferred | Rationale: resolution-provenance vocabulary not wired into decisions | Deferred By: /.recursive/run/106-client-neutral-model-effort-routing/03-implementation-summary.md
-- R11 | Status: deferred | Rationale: SP8 UI truthfulness not implemented | Deferred By: /.recursive/run/106-client-neutral-model-effort-routing/03-implementation-summary.md
-- R12 | Status: deferred | Rationale: SP9 packaging not run | Deferred By: /.recursive/run/106-client-neutral-model-effort-routing/03-implementation-summary.md
-- R13 | Status: implemented | Changed Files: `role-model-router/apps/runtime-host-bridge/test/run106-effort-policy-normalization.test.ts` | Implementation Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/logs/green/`
-- R14 | Status: implemented | Changed Files: `/.recursive/run/106-client-neutral-model-effort-routing/subagents/auditor-f4260377.md` | Implementation Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/subagents/auditor-f4260377.md`
-- R15 | Status: deferred | Rationale: Phase 5 isolated Pi QA not run | Deferred By: /.recursive/run/106-client-neutral-model-effort-routing/03-implementation-summary.md
+- R1 | Status: verified | Changed Files: `role-model-router/apps/runtime-host-bridge/src/index.ts`, `role-model-router/packages/adapter-execution/src/index.ts` | Implementation Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/logs/green/sp1-effort-policy-normalization.green.txt` | Verification Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/qa/05-qa-routing-scenarios.json`
+- R2 | Status: deferred | Rationale: arm-expansion helper is exported and tested but not wired into production | Deferred By: /.recursive/run/106-client-neutral-model-effort-routing/03-implementation-summary.md
+- R3 | Status: verified | Changed Files: `role-model-router/apps/runtime-host-bridge/src/index.ts` | Implementation Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/logs/green/sp4-effort-policy-resolution.green.txt` | Verification Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/qa/05-qa-routing-scenarios.json`
+- R4 | Status: deferred | Rationale: four-state preservation not implemented | Deferred By: /.recursive/run/106-client-neutral-model-effort-routing/03-implementation-summary.md
+- R5 | Status: verified | Changed Files: `role-model-router/packages/core/src/router.ts`, `role-model-router/packages/core/src/types.ts` | Implementation Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/logs/green/sp3-borrowed-quality-prior.green.txt` | Verification Evidence: `role-model-router/packages/core/test/run106-borrowed-quality-prior.test.ts`
+- R6 | Status: verified | Changed Files: `role-model-router/apps/runtime-host-bridge/src/index.ts` | Implementation Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/logs/green/sp4-effort-policy-resolution.green.txt` | Verification Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/qa/05-qa-routing-scenarios.json`
+- R7 | Status: verified | Changed Files: `role-model-router/apps/runtime-host-bridge/src/index.ts` | Implementation Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/logs/green/sp5-turn-aware-hard-shortcut.green.txt` | Verification Evidence: `role-model-router/apps/runtime-host-bridge/test/run106-turn-aware-hard-shortcut.test.ts`
+- R8 | Status: deferred | Rationale: non-inferiority helper is exported and tested but not wired into scoring | Deferred By: /.recursive/run/106-client-neutral-model-effort-routing/03-implementation-summary.md
+- R9 | Status: deferred | Rationale: union/intersection helper is exported and tested but not wired into discovery | Deferred By: /.recursive/run/106-client-neutral-model-effort-routing/03-implementation-summary.md
+- R10 | Status: deferred | Rationale: resolution provenance not wired | Deferred By: /.recursive/run/106-client-neutral-model-effort-routing/03-implementation-summary.md
+- R11 | Status: verified | Changed Files: `role-model-router/apps/runtime-host-bridge/src/index.ts` | Implementation Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/qa/05-qa-runtime-launch.json` | Verification Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/qa/05-qa-routing-scenarios.json`
+- R12 | Status: deferred | Rationale: dev-channel SEA requires the paired private distribution | Deferred By: /.recursive/run/106-client-neutral-model-effort-routing/05-manual-qa.md
+- R13 | Status: verified | Changed Files: `role-model-router/packages/endpoint-registry/src/effort-instance-identity.ts`, `role-model-router/apps/runtime-host-bridge/test/run106-effort-policy-normalization.test.ts`, `role-model-router/apps/runtime-host-bridge/test/run106-effort-policy-resolution.test.ts`, `role-model-router/apps/runtime-host-bridge/test/run106-turn-aware-hard-shortcut.test.ts`, `role-model-router/packages/core/test/run106-borrowed-quality-prior.test.ts`, `role-model-router/packages/core/test/run106-non-inferiority.test.ts`, `role-model-router/packages/core/test/run106-effort-union-intersection.test.ts`, `role-model-router/packages/endpoint-registry/test/run106-arm-expansion.test.ts` | Implementation Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/logs/green/` | Verification Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/review-bundles/03.5-code-review.md`
+- R14 | Status: verified | Changed Files: `role-model-router/apps/runtime-host-bridge/src/index.ts` | Implementation Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/subagents/auditor-13f44730.md` | Verification Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/review-bundles/03.5-code-review.md`
+- R15 | Status: verified | Changed Files: `role-model-router/apps/runtime-host-bridge/src/index.ts` | Implementation Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/qa/05-qa-runtime-launch.json` | Verification Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/qa/05-qa-routing-scenarios.json`
 
 ## Audit Verdict
 

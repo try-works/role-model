@@ -11,7 +11,7 @@
 
 ## Inputs Provided
 - Current Artifact: `/.recursive/run/106-client-neutral-model-effort-routing/02-to-be-plan.md`
-- Artifact Content Hash: `0ba75bf7379f899f2887a488f79cf4574dec91e95c161b7aa42b5538d0e7f3d2`
+- Artifact Content Hash: `d02527dd73579ed29c95e2389395d212d7bd5e227f7ea88b4657f42ce15c759f`
 - Upstream Artifacts: `/.recursive/run/106-client-neutral-model-effort-routing/00-requirements.md`, `/.recursive/run/106-client-neutral-model-effort-routing/01-as-is.md`, `/.recursive/run/106-client-neutral-model-effort-routing/01.5-root-cause.md`, `/.recursive/run/106-client-neutral-model-effort-routing/00-worktree.md`
 - Addenda: none
 - Diff Basis: `git diff --name-only 701b8b8fc0b0eeebdfe818b757f5702f50021488`

@@ -1,21 +1,21 @@
 {
   "artifact": "08-memory-impact.md",
-  "artifact_hash": "4dd079639f3a36f92781ca9509cb0791386f0734b620ee026280f26968246a2f",
+  "artifact_hash": "512491a7e8ec9c81403dd9a401a6a6597022edb0bc25feae553a0c4f9cfa3ef8",
   "artifact_path": "D:\\DEV\\role-model\\.worktrees\\106-client-neutral-model-effort-routing\\.recursive\\run\\106-client-neutral-model-effort-routing\\08-memory-impact.md",
-  "locked_at": "2026-10-04T03:05:02Z",
+  "locked_at": "2026-10-04T03:15:55Z",
   "prerequisite_hashes": {
     "00-requirements.md": "9be64e945082f71fd7f93376c739ea49d90f002dfaf6e7d71e45dd16f764928f",
     "00-worktree.md": "92c639d820bd6cf940ad9effa9b48ce184f361c902ba2e1db6734428f0bee763",
     "01-as-is.md": "4eb5dd07463e24b05ac886cf5b894980faba13814ec76a55df2f516d26583120",
     "01.5-root-cause.md": "2556019928b11363103a46decbb523eda6290bcff4934f90df908c5419a288c6",
     "02-to-be-plan.md": "1d080de4ee4b8e630516ad9c89c15d87c95ba58176e2765af0b86935e7b90afc",
-    "03-implementation-summary.md": "13ee8fe3f774cd7be77c74a37213608f9ec52274e51033c1886137c7d5849c13",
-    "03.5-code-review.md": "3c8ee2146da903d1da621be4a5596dce580fcc5b72c517c4e416c4957439264e",
-    "04-test-summary.md": "8c0a6d2be69e119322959b7689c595148b5229e733df9dd1be25aabb9d324aca",
+    "03-implementation-summary.md": "365ca194e5fa458dea62e85a7e995d03cecf369603de6c82bde0d0bce74fef0c",
+    "03.5-code-review.md": "0fd44db3302a04fc098f14997323d271b630929497e23752969f636f40ef2447",
+    "04-test-summary.md": "dcafd2fb4336bfea12bef520cf127d8586715b4c76dd1bf7e8fe45bf390d3e8d",
     "05-manual-qa.md": "a6f9750fd5e08985444ca9f2041751c3e5566d7e198b80719b0f2d80fdcef621",
-    "06-decisions-update.md": "57145e4f8eb6e636849b9b2566f3c7786d349409740bfd114587b64291392556",
-    "07-state-update.md": "a3d3d59b5811a282e742155d9357f7f7ee057656881fa1d8220bb30d30c59771"
+    "06-decisions-update.md": "9f9a422ab59e120cde70d8a70a57ce32a2c1ef333938d19b55ab95d6c4c02b64",
+    "07-state-update.md": "e322e718277e71a65c25823e019b60430281061ec9ce4745426f664281ef225a"
   },
   "previous_receipt_hash": null,
-  "receipt_hash": "05720c497972035933ea0d438c71aa8bc68ea54cf05a632c9a34c8b0586f160d"
+  "receipt_hash": "fb91af035d74aa982febf925cc27fb2865852e93a8295d2f23fca6d9743a440c"
 }

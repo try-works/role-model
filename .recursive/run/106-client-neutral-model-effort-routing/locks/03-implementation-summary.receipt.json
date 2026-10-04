@@ -1,8 +1,8 @@
 {
   "artifact": "03-implementation-summary.md",
-  "artifact_hash": "13ee8fe3f774cd7be77c74a37213608f9ec52274e51033c1886137c7d5849c13",
+  "artifact_hash": "365ca194e5fa458dea62e85a7e995d03cecf369603de6c82bde0d0bce74fef0c",
   "artifact_path": "D:\\DEV\\role-model\\.worktrees\\106-client-neutral-model-effort-routing\\.recursive\\run\\106-client-neutral-model-effort-routing\\03-implementation-summary.md",
-  "locked_at": "2026-10-04T02:34:54Z",
+  "locked_at": "2026-10-04T03:13:11Z",
   "prerequisite_hashes": {
     "00-requirements.md": "9be64e945082f71fd7f93376c739ea49d90f002dfaf6e7d71e45dd16f764928f",
     "00-worktree.md": "92c639d820bd6cf940ad9effa9b48ce184f361c902ba2e1db6734428f0bee763",
@@ -11,5 +11,5 @@
     "02-to-be-plan.md": "1d080de4ee4b8e630516ad9c89c15d87c95ba58176e2765af0b86935e7b90afc"
   },
   "previous_receipt_hash": null,
-  "receipt_hash": "9d8c1291be5817883cc742bcec8034c41d1b49ed1522f88217406e5ca2473ddc"
+  "receipt_hash": "b425a2d2e9a9a3fa6199a620cb311f6bdc3c53c519531d6ceb74d1248e3b5481"
 }

@@ -1,17 +1,17 @@
 {
   "artifact": "04-test-summary.md",
-  "artifact_hash": "8c0a6d2be69e119322959b7689c595148b5229e733df9dd1be25aabb9d324aca",
+  "artifact_hash": "dcafd2fb4336bfea12bef520cf127d8586715b4c76dd1bf7e8fe45bf390d3e8d",
   "artifact_path": "D:\\DEV\\role-model\\.worktrees\\106-client-neutral-model-effort-routing\\.recursive\\run\\106-client-neutral-model-effort-routing\\04-test-summary.md",
-  "locked_at": "2026-10-04T02:43:00Z",
+  "locked_at": "2026-10-04T03:15:45Z",
   "prerequisite_hashes": {
     "00-requirements.md": "9be64e945082f71fd7f93376c739ea49d90f002dfaf6e7d71e45dd16f764928f",
     "00-worktree.md": "92c639d820bd6cf940ad9effa9b48ce184f361c902ba2e1db6734428f0bee763",
     "01-as-is.md": "4eb5dd07463e24b05ac886cf5b894980faba13814ec76a55df2f516d26583120",
     "01.5-root-cause.md": "2556019928b11363103a46decbb523eda6290bcff4934f90df908c5419a288c6",
     "02-to-be-plan.md": "1d080de4ee4b8e630516ad9c89c15d87c95ba58176e2765af0b86935e7b90afc",
-    "03-implementation-summary.md": "13ee8fe3f774cd7be77c74a37213608f9ec52274e51033c1886137c7d5849c13",
-    "03.5-code-review.md": "3c8ee2146da903d1da621be4a5596dce580fcc5b72c517c4e416c4957439264e"
+    "03-implementation-summary.md": "365ca194e5fa458dea62e85a7e995d03cecf369603de6c82bde0d0bce74fef0c",
+    "03.5-code-review.md": "0fd44db3302a04fc098f14997323d271b630929497e23752969f636f40ef2447"
   },
   "previous_receipt_hash": null,
-  "receipt_hash": "9d11b8fe22352d868aaaa2549e5e93bd4f38066c6e17b76e747e4dadf21ebd7d"
+  "receipt_hash": "2cfeb2a43b889d1f401bc86217b763f4d4bf75abe3a071e7ab0fdbb066137ffe"
 }
