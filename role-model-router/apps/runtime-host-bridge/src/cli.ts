@@ -8339,6 +8339,8 @@ export async function main(): Promise<void> {
             configuredEndpoints: configuredReplayArms,
             sourceModelId: replaySourceModelId,
             sourceReasoningEffort: replaySourceReasoningEffort,
+            sourceEndpointId:
+              typeof sourceCapture.endpointId === "string" ? sourceCapture.endpointId : null,
           });
           const replayArmPlan = planReplayDispatchArms({
             requestedEndpointIds: effortMatchedReplayArms.map((arm) => arm.endpointId),

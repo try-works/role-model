@@ -925,15 +925,21 @@ export function preferEffortMatchedReplayArms(input: {
   readonly configuredEndpoints: readonly ReplayArmDescriptor[];
   readonly sourceModelId: string;
   readonly sourceReasoningEffort: string | null;
+  readonly sourceEndpointId?: string | null;
 }): readonly ReplayArmDescriptor[] {
   const sourceEffort = normalizeEffort(input.sourceReasoningEffort);
   if (sourceEffort === null) return input.arms;
+  const sourceEndpointId =
+    typeof input.sourceEndpointId === "string" ? input.sourceEndpointId.trim() : "";
   return input.arms.map((arm) => {
     if (normalizeEffort(arm.reasoningEffort) === sourceEffort) return arm;
     const variant = input.configuredEndpoints.find(
       (endpoint) =>
         endpoint.modelId === arm.modelId &&
-        normalizeEffort(endpoint.reasoningEffort) === sourceEffort,
+        normalizeEffort(endpoint.reasoningEffort) === sourceEffort &&
+        // Run 105 bug 3: the effort-matched sibling must not be the source endpoint itself, or the
+        // counterfactual collapses back onto the source and the distinct-source gate rejects it.
+        (sourceEndpointId === "" || endpoint.endpointId !== sourceEndpointId),
     );
     return variant ?? arm;
   });
