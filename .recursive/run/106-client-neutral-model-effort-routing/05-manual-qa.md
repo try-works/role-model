@@ -1,8 +1,6 @@
 Run: /.recursive/run/106-client-neutral-model-effort-routing/
 Phase: 05 Manual QA
-Status: `LOCKED`
-LockedAt: `2026-10-04T03:17:58Z`
-LockHash: `9d4d6bf23866e460abbc59d8c61801c0eddbfcd5065b9361be85dec52161b6e2`
+Status: `DRAFT`
 Workflow version: recursive-mode-audit-v2
 Inputs:
 - /.recursive/run/106-client-neutral-model-effort-routing/03-implementation-summary.md (LOCKED)

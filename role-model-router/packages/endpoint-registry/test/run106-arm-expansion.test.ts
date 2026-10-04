@@ -30,4 +30,33 @@ describe("run106 reasoning-effort arm expansion", () => {
     expect(arms).toHaveLength(1);
     expect(arms[0].effectiveEffort).toBeNull();
   });
+
+  it("preserves a caller-supplied baseEndpointId and appends declared-level suffixes", () => {
+    const arms = expandReasoningEffortArms({
+      ...base,
+      fixedEffort: null,
+      declaredLevels: ["low", "high"],
+      baseEndpointId: "deepseek.capture.account.global.chat-capture-v1",
+    });
+    expect(arms.map((arm) => arm.endpointId)).toEqual([
+      "deepseek.capture.account.global.chat-capture-v1",
+      "deepseek.capture.account.global.chat-capture-v1-low",
+      "deepseek.capture.account.global.chat-capture-v1-high",
+    ]);
+    expect(arms[0].source).toBe("provider-default");
+    expect(arms[1].source).toBe("fixed");
+    expect(arms[2].source).toBe("fixed");
+  });
+
+  it("fixed endpoint with a caller-supplied baseEndpointId preserves it verbatim (no double suffix)", () => {
+    const arms = expandReasoningEffortArms({
+      ...base,
+      fixedEffort: "max",
+      baseEndpointId: "deepseek.personal.global.deepseek-flash-max",
+    });
+    expect(arms).toHaveLength(1);
+    expect(arms[0].endpointId).toBe("deepseek.personal.global.deepseek-flash-max");
+    expect(arms[0].source).toBe("fixed");
+    expect(arms[0].effectiveEffort).toBe("max");
+  });
 });

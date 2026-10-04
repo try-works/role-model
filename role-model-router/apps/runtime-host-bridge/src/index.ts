@@ -42,6 +42,7 @@ import { ProcessSupervisor } from "@role-model-router/process-supervisor";
 import {
   type ObservedPerformanceSample,
   aggregateOperationalPerformanceSamples,
+  resolveRelatedEffortOverallScore,
   resolveRoutingBenchmarkQuality,
 } from "@role-model-router/profile-aggregator";
 import {
@@ -244,6 +245,7 @@ import {
   evaluateBenchmarkTargetEligibility,
 } from "./benchmark-start-guards.js";
 import {
+  type BenchmarkCapability,
   buildBenchmarkCapabilityForEndpoint,
   listBenchmarkRuns,
   readBenchmarkPreferences,
@@ -979,8 +981,10 @@ export function normalizeReasoningEffortPolicy(
 export type EffortPolicyResolutionKind =
   | "router_managed"
   | "exact_primary"
+  | "exact_fallback_expanded"
   | "unsupported_fallback"
-  | "strict_rejected";
+  | "strict_rejected"
+  | "equivalent_mapped";
 
 export function resolveEffortPolicy(input: {
   readonly requestedEffort: string | undefined;
@@ -992,7 +996,11 @@ export function resolveEffortPolicy(input: {
   }
   const hasExact = input.availableEfforts.includes(input.requestedEffort);
   if (hasExact) {
-    return { resolution: "exact_primary", effectiveEffort: input.requestedEffort };
+    // strict names only the exact arms as the primary pool; preferred keeps the exact arms primary while the rest of
+    // the pool stays eligible as a receipted fallback (R3: exact_primary vs exact_fallback_expanded).
+    return input.policy === "strict"
+      ? { resolution: "exact_primary", effectiveEffort: input.requestedEffort }
+      : { resolution: "exact_fallback_expanded", effectiveEffort: input.requestedEffort };
   }
   if (input.policy === "strict") {
     return { resolution: "strict_rejected", effectiveEffort: null };
@@ -9256,6 +9264,38 @@ function collectConfiguredReasoningEfforts(
   return [...levels].sort(compareText);
 }
 
+/**
+ * The efforts this pool can execute as an exact arm. A fixed-effort endpoint is always an exact arm for its own
+ * level; a provider-default endpoint (no fixed effort) executes its declared levels. A fixed-effort endpoint's own
+ * declared levels are catalog metadata, not executable arms, so they are deliberately excluded - matching
+ * `selectReasoningEffortInstanceIds` (run 116) rather than the broader error-reporting set in
+ * `collectConfiguredReasoningEfforts`.
+ */
+function collectExecutableReasoningEfforts(
+  registry: EndpointRegistryResult,
+  allowEndpoints: readonly string[],
+): readonly string[] {
+  const allowed = new Set(allowEndpoints);
+  const levels = new Set<string>();
+  for (const endpoint of registry.endpoints) {
+    if (!allowed.has(endpoint.identity.endpoint_id)) {
+      continue;
+    }
+    const fixedEffort = endpoint.identity.reasoning_effort?.trim();
+    if (fixedEffort) {
+      levels.add(fixedEffort);
+      continue;
+    }
+    for (const level of endpoint.declared.reasoning_effort_levels ?? []) {
+      const trimmed = level.trim();
+      if (trimmed) {
+        levels.add(trimmed);
+      }
+    }
+  }
+  return [...levels].sort(compareText);
+}
+
 function throwReasoningEffortUnavailable(input: {
   readonly requestedModel: string;
   readonly requestedEffort: string;
@@ -9658,6 +9698,8 @@ export function classifyBridgeRoutePass(input: {
 export interface ReasoningEffortPoolApplication {
   readonly allowEndpoints: readonly string[];
   readonly preferredEndpointIds: readonly string[];
+  readonly resolution: EffortPolicyResolutionKind;
+  readonly effectiveEffort: string | null;
 }
 
 /**
@@ -9703,56 +9745,87 @@ export function applyReasoningEffortToModelPool(input: {
         toLegacyCredentializedEndpointId(endpoint.identity.endpoint_id) === input.requestedModel,
     );
   if (instanceSelected) {
-    return {
-      allowEndpoints: filterRequestedModelPoolByReasoningEffort({
-        registry: input.registry,
-        requestedModel: input.requestedModel,
-        requestedEffort,
-        allowEndpoints: input.allowEndpoints,
-      }),
-      preferredEndpointIds: input.preferredEndpointIds,
-    };
-  }
-  if (policy === "router" || requestedEffort === null) {
-    // Router-managed: the effort hint is ignored and the whole pool is scored jointly.
-    return {
+    const narrowedAllowEndpoints = filterRequestedModelPoolByReasoningEffort({
+      registry: input.registry,
+      requestedModel: input.requestedModel,
+      requestedEffort,
       allowEndpoints: input.allowEndpoints,
+    });
+    return {
+      allowEndpoints: narrowedAllowEndpoints,
       preferredEndpointIds: input.preferredEndpointIds,
+      resolution: narrowedAllowEndpoints.length > 0 ? "exact_primary" : "strict_rejected",
+      effectiveEffort: narrowedAllowEndpoints.length > 0 ? requestedEffort : null,
     };
   }
-  const effortInstanceIds = selectReasoningEffortInstanceIds({
-    registry: input.registry,
-    allowEndpoints: input.allowEndpoints,
-    requestedEffort,
+  const availableEfforts = collectExecutableReasoningEfforts(input.registry, input.allowEndpoints);
+  const resolved = resolveEffortPolicy({
+    requestedEffort: requestedEffort ?? undefined,
+    policy,
+    availableEfforts,
   });
-  if (effortInstanceIds.length === 0) {
-    if (policy === "strict") {
+  const effortInstanceIds =
+    requestedEffort === null
+      ? []
+      : selectReasoningEffortInstanceIds({
+          registry: input.registry,
+          allowEndpoints: input.allowEndpoints,
+          requestedEffort,
+        });
+  switch (resolved.resolution) {
+    case "router_managed":
+      // Router-managed: the effort hint is ignored and the whole pool is scored jointly.
+      return {
+        allowEndpoints: input.allowEndpoints,
+        preferredEndpointIds: input.preferredEndpointIds,
+        resolution: resolved.resolution,
+        effectiveEffort: resolved.effectiveEffort,
+      };
+    case "exact_primary":
+      // Exact-effort arms only; non-exact arms are ineligible.
+      return {
+        allowEndpoints: effortInstanceIds,
+        preferredEndpointIds: [],
+        resolution: resolved.resolution,
+        effectiveEffort: resolved.effectiveEffort,
+      };
+    case "exact_fallback_expanded":
+      // Preferred keeps the exact arms primary while the rest of the pool stays eligible as a receipted fallback.
+      return {
+        allowEndpoints: input.allowEndpoints,
+        preferredEndpointIds: [
+          ...effortInstanceIds,
+          ...input.preferredEndpointIds.filter((endpointId) => !effortInstanceIds.includes(endpointId)),
+        ],
+        resolution: resolved.resolution,
+        effectiveEffort: resolved.effectiveEffort,
+      };
+    case "strict_rejected":
       // strict requires an exact arm; empty pool lets the caller raise reasoning_effort_unavailable.
       return {
         allowEndpoints: [],
         preferredEndpointIds: [],
+        resolution: resolved.resolution,
+        effectiveEffort: resolved.effectiveEffort,
       };
-    }
-    // preferred with zero exact arms -> unsupported_fallback: ignore the hint and router-manage the pool (R3/D5).
-    return {
-      allowEndpoints: input.allowEndpoints,
-      preferredEndpointIds: input.preferredEndpointIds,
-    };
+    case "unsupported_fallback":
+      // preferred with zero exact arms -> unsupported_fallback: ignore the hint and router-manage the pool (R3/D5).
+      return {
+        allowEndpoints: input.allowEndpoints,
+        preferredEndpointIds: input.preferredEndpointIds,
+        resolution: resolved.resolution,
+        effectiveEffort: resolved.effectiveEffort,
+      };
+    case "equivalent_mapped":
+      // `resolveEffortPolicy` does not produce this without explicit, versioned provider equivalence (R3/OOS1);
+      // treated defensively as router-managed until an equivalence table exists.
+      return {
+        allowEndpoints: input.allowEndpoints,
+        preferredEndpointIds: input.preferredEndpointIds,
+        resolution: resolved.resolution,
+        effectiveEffort: resolved.effectiveEffort,
+      };
   }
-  if (policy === "strict") {
-    // Exact-effort arms only; non-exact arms are ineligible.
-    return {
-      allowEndpoints: effortInstanceIds,
-      preferredEndpointIds: [],
-    };
-  }
-  return {
-    allowEndpoints: input.allowEndpoints,
-    preferredEndpointIds: [
-      ...effortInstanceIds,
-      ...input.preferredEndpointIds.filter((endpointId) => !effortInstanceIds.includes(endpointId)),
-    ],
-  };
 }
 
 function applyRequestedEndpointOverride(input: {
@@ -25974,7 +26047,7 @@ export async function createRuntimeBridgeBackend(
     const portfolioByEndpointId = new Map(
       benchmarkPortfolio.entries.map((entry) => [entry.endpointId, entry] as const),
     );
-    return Object.fromEntries(
+    const capabilitiesByEndpointId: Record<string, BenchmarkCapability | null> = Object.fromEntries(
       currentRegistry.endpoints.map((endpoint) => {
         const endpointId = endpoint.identity.endpoint_id;
         const profile = profilesByEndpointId[endpointId];
@@ -25991,6 +26064,61 @@ export async function createRuntimeBridgeBackend(
         ] as const;
       }),
     );
+    /**
+     * Run 106 R5 (producer): a provider-default arm has no effort-encoded benchmark key, so it falls
+     * to the neutral default even though a fixed-effort sibling of the same model/provider holds the
+     * only benchmark evidence. Borrow that sibling's exact score as a labeled related-effort prior:
+     * this arm's own `overallScore` stays null (never exact benchmark evidence) and the router-side
+     * `resolveBorrowedQualityPrior` applies the symmetric regression toward neutral.
+     */
+    const benchmarkEvidenceSubjects = currentRegistry.endpoints.map((endpoint) => {
+      const endpointId = endpoint.identity.endpoint_id;
+      const modelId = endpoint.identity.model_id;
+      return {
+        endpointId,
+        modelId,
+        providerId: currentModelsById.get(modelId)?.providerId ?? null,
+        reasoningEffort: endpoint.identity.reasoning_effort ?? null,
+        overallScore: capabilitiesByEndpointId[endpointId]?.overallScore ?? null,
+      } as const;
+    });
+    for (const endpoint of currentRegistry.endpoints) {
+      const endpointId = endpoint.identity.endpoint_id;
+      const capability = capabilitiesByEndpointId[endpointId];
+      if (typeof capability?.overallScore === "number") {
+        continue;
+      }
+      const relatedEffortOverallScore = resolveRelatedEffortOverallScore({
+        endpointId,
+        modelId: endpoint.identity.model_id,
+        providerId: currentModelsById.get(endpoint.identity.model_id)?.providerId ?? null,
+        reasoningEffort: endpoint.identity.reasoning_effort ?? null,
+        subjects: benchmarkEvidenceSubjects,
+      });
+      if (relatedEffortOverallScore === null) {
+        continue;
+      }
+      capabilitiesByEndpointId[endpointId] = {
+        ...(capability ?? {
+          evidenceSource: "profile-derived",
+          overallScore: null,
+          scoresByBucket: {},
+          benchmarkSamples: 0,
+          sampleCount: 0,
+          measuredAtMs: null,
+          freshnessScore: null,
+          lastRunId: null,
+          lastRunCompletedAtMs: null,
+          lastRunMode: null,
+          lastRunSuiteId: null,
+          judgeEndpointId: null,
+          judgeModelId: null,
+          profileRevision: null,
+        }),
+        relatedEffortOverallScore,
+      };
+    }
+    return capabilitiesByEndpointId;
   };
   const buildEffectiveEligibilitySnapshot = () => {
     // A configured runtime instance is eligible only after its own durable

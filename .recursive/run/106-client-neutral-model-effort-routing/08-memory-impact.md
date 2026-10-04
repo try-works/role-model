@@ -1,8 +1,6 @@
 Run: /.recursive/run/106-client-neutral-model-effort-routing/
 Phase: 08 Memory Impact
-Status: `LOCKED`
-LockedAt: `2026-10-04T03:18:35Z`
-LockHash: `b11ee788eff03c6c82cefe7ffe3af2b00c9881b14db0ca8141c8ba182ff9cd0d`
+Status: `DRAFT`
 Workflow version: recursive-mode-audit-v2
 Inputs:
 - /.recursive/run/106-client-neutral-model-effort-routing/00-worktree.md

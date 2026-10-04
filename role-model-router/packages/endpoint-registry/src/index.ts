@@ -5,6 +5,8 @@ import type {
 } from "@role-model-router/catalog";
 import type { ProviderAccountRecord } from "@role-model-router/provider-account";
 
+import { expandReasoningEffortArms, type ReasoningEffortArm } from "./effort-instance-identity.js";
+
 export * from "./effort-instance-identity.js";
 
 export type RegistryEndpointKind =
@@ -229,10 +231,14 @@ function createCloudEndpoint(
   model: NormalizedCatalogModel,
   account: ProviderAccountRecord,
   source: CloudRegistrySource,
+  arm?: ReasoningEffortArm,
 ): EndpointCandidate {
+  const endpointId = arm?.endpointId ?? source.endpointId;
+  const reasoningEffort = arm ? arm.effectiveEffort : (source.reasoningEffort ?? null);
+  const isProviderDefault = arm ? arm.source === "provider-default" : true;
   return {
     identity: {
-      endpoint_id: source.endpointId,
+      endpoint_id: endpointId,
       endpoint_kind: normalizeEndpointKind(source.endpointKind),
       provider_kind: normalizeProviderKind(account.providerKind),
       serving_source: source.servingSource,
@@ -246,10 +252,10 @@ function createCloudEndpoint(
       device_class: "server",
       region: source.region,
       org_scope: account.orgScope,
-      ...(source.reasoningEffort !== undefined ? { reasoning_effort: source.reasoningEffort } : {}),
+      reasoning_effort: reasoningEffort,
     },
     declared: {
-      endpoint_id: source.endpointId,
+      endpoint_id: endpointId,
       capabilities: toNonEmptyList(
         model.capabilities,
         `Catalog model ${model.modelId} capabilities`,
@@ -262,7 +268,9 @@ function createCloudEndpoint(
       },
       supports_embeddings: model.capabilities.includes("embeddings.text"),
       platform_constraints: [],
-      ...(Array.isArray(model.reasoningEffortLevels) && model.reasoningEffortLevels.length > 0
+      ...(isProviderDefault &&
+      Array.isArray(model.reasoningEffortLevels) &&
+      model.reasoningEffortLevels.length > 0
         ? { reasoning_effort_levels: [...model.reasoningEffortLevels] }
         : {}),
     },
@@ -358,7 +366,17 @@ export function buildEndpointRegistry(input: BuildEndpointRegistryInput): Endpoi
       continue;
     }
 
-    endpoints.push(createCloudEndpoint(model, account, source));
+    const arms = expandReasoningEffortArms({
+      providerAccountId: source.providerAccountId,
+      region: source.region,
+      modelId: source.modelId,
+      fixedEffort: source.reasoningEffort ?? null,
+      declaredLevels: model.reasoningEffortLevels,
+      baseEndpointId: source.endpointId,
+    });
+    for (const arm of arms) {
+      endpoints.push(createCloudEndpoint(model, account, source, arm));
+    }
   }
 
   for (const source of input.sources.local) {

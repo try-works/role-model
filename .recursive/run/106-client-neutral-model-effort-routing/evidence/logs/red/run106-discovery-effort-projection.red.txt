@@ -1,0 +1,11 @@
+R9 RED - discovery effort union/intersection projection (createDownstreamOpenAIDiscovery)
+command: corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/run106-discovery-effort-projection.test.ts
+
+--- vitest stdout ---
+ RUN  v3.2.4
+
+ FAIL  test/run106-discovery-effort-projection.test.ts > run106 discovery effort projection (R9 integration) > publishes the pool-wide effort union and portable intersection
+AssertionError: expected undefined to deeply equal { union: ["high","low","max"], portableIntersection: ["low"] }
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)

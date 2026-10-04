@@ -273,7 +273,7 @@ describe("buildEndpointRegistry", () => {
       } as never,
     } as never);
 
-    expect(result.endpoints).toHaveLength(1);
+    expect(result.endpoints).toHaveLength(3);
     expect(result.endpoints[0]?.declared.reasoning_effort_levels).toEqual(["low", "high"]);
   });
 });

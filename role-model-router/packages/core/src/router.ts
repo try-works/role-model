@@ -766,6 +766,76 @@ export function shouldPreferNonInferiorChallenger(input: {
   return nonInferior && faster && cheaper;
 }
 
+/**
+ * Run 106 R8 (F5): non-inferiority preference thresholds. After weighted scoring, a challenger
+ * arm may outrank the weighted leader when it is (1) statistically non-inferior on quality — its
+ * quality is within NON_INFERIORITY_QUALITY_MARGIN of the leader — and (2) materially faster AND
+ * materially cheaper. "Material" is a documented floor so noise-level latency/cost differences
+ * cannot flip a stable ranking. Missing quality never establishes non-inferiority: the rule only
+ * fires when both arms carry a non-default quality metric.
+ */
+const NON_INFERIORITY_QUALITY_MARGIN = 0.05;
+/** A challenger must beat the leader by at least this many milliseconds to count as "faster". */
+const NON_INFERIORITY_MIN_LATENCY_ADVANTAGE_MS = 200;
+/** A challenger must be at least this fraction cheaper than the leader to count as "cheaper". */
+const NON_INFERIORITY_MIN_COST_ADVANTAGE_FRACTION = 0.1;
+
+function getScoredCostUsd(scored: CandidateScoreResult): number {
+  const estimated = scored.metric_breakdown.cost.raw?.estimated_request_usd;
+  if (typeof estimated === "number") {
+    return estimated;
+  }
+  const per1k = scored.metric_breakdown.cost.raw?.cost_per_1k_tokens_est;
+  return typeof per1k === "number" ? per1k : DEFAULT_COST_TARGET;
+}
+
+/**
+ * Run 106 R8: return the index of the highest-ranked challenger that is statistically non-inferior
+ * on quality and materially faster and cheaper than the weighted leader, or -1 when none qualifies.
+ */
+function findNonInferiorChallengerIndex(scored: readonly CandidateScoreResult[]): number {
+  const leader = scored[0];
+  if (!leader || leader.metric_breakdown.quality.source === "default") {
+    return -1;
+  }
+  const incumbentQuality = leader.metric_breakdown.quality.value;
+  const incumbentLatencyMs = leader.tie_break.latency_ms;
+  const incumbentCostUsd = getScoredCostUsd(leader);
+
+  for (let index = 1; index < scored.length; index += 1) {
+    const challenger = scored[index];
+    if (challenger.metric_breakdown.quality.source === "default") {
+      continue;
+    }
+    const challengerLatencyMs = challenger.tie_break.latency_ms;
+    const challengerCostUsd = getScoredCostUsd(challenger);
+
+    const latencyAdvantageMs = incumbentLatencyMs - challengerLatencyMs;
+    const costAdvantageFraction =
+      incumbentCostUsd > 0 ? (incumbentCostUsd - challengerCostUsd) / incumbentCostUsd : 0;
+    if (latencyAdvantageMs < NON_INFERIORITY_MIN_LATENCY_ADVANTAGE_MS) {
+      continue;
+    }
+    if (costAdvantageFraction < NON_INFERIORITY_MIN_COST_ADVANTAGE_FRACTION) {
+      continue;
+    }
+    if (
+      shouldPreferNonInferiorChallenger({
+        incumbentQuality,
+        challengerQuality: challenger.metric_breakdown.quality.value,
+        qualityMargin: NON_INFERIORITY_QUALITY_MARGIN,
+        incumbentLatencyMs,
+        challengerLatencyMs,
+        incumbentCostUsd,
+        challengerCostUsd,
+      })
+    ) {
+      return index;
+    }
+  }
+  return -1;
+}
+
 export function resolveBorrowedQualityPrior(input: {
   readonly relatedEffortScore?: number;
   readonly discountFactor?: number;
@@ -1834,6 +1904,17 @@ export function routeRequest(input: RouteRequestInput): RouterDecisionRecord {
       ),
     );
   });
+
+  // Run 106 R8 (F5): a statistically non-inferior + materially faster/cheaper arm may outrank a
+  // dominated weighted leader. This runs after weighted scoring and before the advisory, so the
+  // advisory re-ranks on top of the non-inferiority-adjusted order.
+  const nonInferiorityIndex = findNonInferiorChallengerIndex(scored);
+  if (nonInferiorityIndex > 0) {
+    const [promoted] = scored.splice(nonInferiorityIndex, 1);
+    if (promoted) {
+      scored.unshift(promoted);
+    }
+  }
 
   // Run 98 R5: the advisory is consulted only here, after hard eligibility and scoring,
   // and only within the policy's score band.

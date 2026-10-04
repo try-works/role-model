@@ -1,0 +1,10 @@
+R9 GREEN - discovery effort union/intersection projection (createDownstreamOpenAIDiscovery)
+command: corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/run106-discovery-effort-projection.test.ts
+
+--- vitest stdout ---
+ RUN  v3.2.4
+
+ ✓ test/run106-discovery-effort-projection.test.ts (1 test) 40ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)

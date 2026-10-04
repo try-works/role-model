@@ -121,7 +121,7 @@ describe("run116 E3: an alias keeps its pool and treats the requested effort as 
     expect(applied.preferredEndpointIds).toEqual([flashLow]);
   });
 
-  test("an alias request whose effort names no instance in the pool still refuses instead of coercing silently", () => {
+  test("an alias request whose effort names no instance in the pool records unsupported_fallback and keeps the pool", () => {
     const applied = applyReasoningEffortToModelPool({
       registry,
       requestedModel: "baseline.remote-only",
@@ -130,11 +130,11 @@ describe("run116 E3: an alias keeps its pool and treats the requested effort as 
       preferredEndpointIds: [flashLow],
     });
 
-    // An empty pool is what the callers turn into the bounded `reasoning_effort_unavailable` error (run 98), so an
-    // effort nothing in the pool can run stays a refusal - the pool keeps its membership only when the effort can be
-    // honoured by at least one of its instances.
-    expect(applied.allowEndpoints).toEqual([]);
-    expect(applied.preferredEndpointIds).toEqual([]);
+    // Run 106 R3/D5: preferred + zero exact executable arms records unsupported_fallback, ignores the hint, and
+    // keeps the pool router-managed instead of refusing; the effort is never silently coerced.
+    expect(applied.allowEndpoints).toEqual(aliasPool);
+    expect(applied.preferredEndpointIds).toEqual([flashLow]);
+    expect(applied.resolution).toBe("unsupported_fallback");
   });
 
   test("a model id is a pool: the requested effort orders it and the pool keeps its members", () => {
@@ -153,7 +153,7 @@ describe("run116 E3: an alias keeps its pool and treats the requested effort as 
     expect(applied.preferredEndpointIds).toEqual([flashHigh]);
   });
 
-  test("an explicit model id with an unsupported effort still refuses the pool", () => {
+  test("an explicit model id with an unsupported effort records unsupported_fallback and keeps the pool", () => {
     const modelPool = [flashLow, flashHigh, flashMax];
     const applied = applyReasoningEffortToModelPool({
       registry,
@@ -163,7 +163,8 @@ describe("run116 E3: an alias keeps its pool and treats the requested effort as 
       preferredEndpointIds: [],
     });
 
-    expect(applied.allowEndpoints).toEqual([]);
+    expect(applied.allowEndpoints).toEqual(modelPool);
+    expect(applied.resolution).toBe("unsupported_fallback");
   });
 
   test("an endpoint row as the model value keeps exact instance selection", () => {

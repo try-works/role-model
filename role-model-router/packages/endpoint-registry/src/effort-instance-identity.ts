@@ -132,44 +132,41 @@ export function expandReasoningEffortArms(input: {
   readonly modelId: string;
   readonly fixedEffort: string | null;
   readonly declaredLevels?: readonly string[];
+  /** Optional explicit base id; preserves the caller's exact endpoint id (e.g. source.endpointId). */
+  readonly baseEndpointId?: string;
 }): ReasoningEffortArm[] {
   const fixedEffort = normalizeReasoningEffort(input.fixedEffort);
   if (fixedEffort !== null) {
-    const identity = createEndpointInstanceIdentity({
-      providerAccountId: input.providerAccountId,
-      region: input.region,
-      modelId: input.modelId,
-      reasoningEffort: fixedEffort,
-    });
+    // A fixed-effort source endpointId already carries its effort suffix; preserve it verbatim.
+    const endpointId =
+      input.baseEndpointId ??
+      `${createLegacyEndpointId(input.providerAccountId, input.region, input.modelId)}-${encodeURIComponent(fixedEffort)}`;
     return [
       {
-        endpointId: identity.endpointId,
-        providerAccountId: identity.providerAccountId,
-        region: identity.region,
-        modelId: identity.modelId,
+        endpointId,
+        providerAccountId: input.providerAccountId,
+        region: input.region,
+        modelId: input.modelId,
         effectiveEffort: fixedEffort,
         source: "fixed",
       },
     ];
   }
 
-  const base = createEndpointInstanceIdentity({
-    providerAccountId: input.providerAccountId,
-    region: input.region,
-    modelId: input.modelId,
-    reasoningEffort: null,
-  });
+  const baseEndpointId =
+    input.baseEndpointId ??
+    createLegacyEndpointId(input.providerAccountId, input.region, input.modelId);
   const arms: ReasoningEffortArm[] = [
     {
-      endpointId: base.endpointId,
-      providerAccountId: base.providerAccountId,
-      region: base.region,
-      modelId: base.modelId,
+      endpointId: baseEndpointId,
+      providerAccountId: input.providerAccountId,
+      region: input.region,
+      modelId: input.modelId,
       effectiveEffort: null,
       source: "provider-default",
     },
   ];
-  const seen = new Set<string>([base.endpointId]);
+  const seen = new Set<string>([baseEndpointId]);
   for (const level of new Set(input.declaredLevels ?? [])) {
     let normalized: string | null;
     try {
@@ -180,21 +177,16 @@ export function expandReasoningEffortArms(input: {
     if (normalized === null) {
       continue;
     }
-    const identity = createEndpointInstanceIdentity({
+    const endpointId = `${baseEndpointId}-${encodeURIComponent(normalized)}`;
+    if (seen.has(endpointId)) {
+      continue;
+    }
+    seen.add(endpointId);
+    arms.push({
+      endpointId,
       providerAccountId: input.providerAccountId,
       region: input.region,
       modelId: input.modelId,
-      reasoningEffort: normalized,
-    });
-    if (seen.has(identity.endpointId)) {
-      continue;
-    }
-    seen.add(identity.endpointId);
-    arms.push({
-      endpointId: identity.endpointId,
-      providerAccountId: identity.providerAccountId,
-      region: identity.region,
-      modelId: identity.modelId,
       effectiveEffort: normalized,
       source: "fixed",
     });
