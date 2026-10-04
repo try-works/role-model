@@ -14,7 +14,49 @@
 - `86-runtime-ui-rm3-design-system-frontend` - RM v3 design system + `@role-model/ui` kit migration for router runtime-ui; Paper `4-0`/`5-0`/`6-0`/`7-0` IA; FD#15 config→strategy; SP8 floor green; hybrid Phase 5 QA on rebuilt `:3470` with human Paper sign-off; operator polish P1–P8 (Phases 0-8). Folder: `.recursive/run/86-runtime-ui-rm3-design-system-frontend/`. Soft-closes run `60-runtime-ui-paper-linear-review-alignment` as live styling authority for migrated surfaces (Linear/Paper-Linear historical).
 - `92-configured-model-pool-benchmark-convergence` - Endpoint-variant-exact membership revision token stamped at persist/read/portfolio/decision time; honest null candidate-space (no synthetic 0/0%); membership-revision + stale benchmark quarantine; destructive-confirm final-controller eject; decision revision; transactional benchmark clear (Phases 0-8, strict TDD, agent-operated QA on rebuilt `:3501`). Folder: `.recursive/run/92-configured-model-pool-benchmark-convergence/`. Soft-closes run 76's membership-authority contract with a revision-token convergence wave.
 
+- `106-client-neutral-model-effort-routing` - Client-neutral model-effort routing: reasoning effort becomes a first-class routing dimension (`strict`/`preferred`/`router` policy, executable model-endpoint-effort arms, effort-scoped evidence with borrowed/related priors, four-state effort-source vocabulary, canonical decision/telemetry/trace provenance, UI truthfulness, packaged SEA + real-Pi Phase 5 QA on `:3462`) (Phases 0-8). Folder: `.recursive/run/106-client-neutral-model-effort-routing/`.
 - `103-agent-strategy-and-scoring-strategy` - Routing posture split (`routing.mode` + `routing.scoring_strategy` + `pin_weights` + `weights`), real scoring strategies, agent-strategy and workload postures with `<name>.<scope>` aliases, strategy/latency/alias receipts on every decision, measured-latency effective metric, three runtime-ui surfaces; strict TDD, two delegated review rounds, agent-operated rebuilt-runtime pi-CLI QA on `:3458` (Phases 0-8). Folder: `.recursive/run/103-agent-strategy-and-scoring-strategy/`.
+
+## Run: `106-client-neutral-model-effort-routing`
+
+Date: `2026-10-04`
+
+### What changed
+
+- Reasoning effort becomes a first-class, client-neutral routing dimension: the normalized input separates `requested_effort` from `effort_policy` (`strict | preferred | router`); omitted effort -> router, legacy scalar -> preferred, explicit policy -> authoritative (R1).
+- The router selects over executable model-endpoint-effort arms (`expandReasoningEffortArms` + adapter execution mapping) rather than base endpoints (R2).
+- `strict` considers exact-effort arms only (else `reasoning_effort_unavailable`); `preferred` falls back through named hard-eligibility/provider-attempt receipts; `preferred` with zero exact arms records `unsupported_fallback` and performs router-managed selection (R3).
+- Four lossless effort states (`named | disabled | provider-default | no-client-preference`) are preserved through core types, serialization, SQLite, discovery, telemetry, trace, and UI; the occurrence boundary keeps a binary `effort_source` vocabulary while the decision keeps the four-state (R4, M-3 fix `9260a10b`).
+- Benchmark/operational evidence is keyed by the effort arm; cross-effort evidence acts only as a labeled, discounted prior (`resolveBorrowedQualityPrior` + `getQualityMetric` + `benchmark-summary` + `profile-aggregator`) (R5).
+- Arm-aware strategy/controller/cache/fallback (R6), turn-aware difficulty (R7), non-inferiority ranking (R8), arm-level discovery union/intersection (R9), and canonical decision/telemetry/trace/error provenance (R10).
+- UI truthfulness: model + effective effort + exact/borrowed evidence on operator surfaces (R11).
+- Packaged SEA (`role-model-dev.exe`, sha256 `e181c6011a50a7e9681d6f16314ae7cefcbe7ca26bb21eeac34343b3befc7364`) + real Pi CLI on `:3462` (requestId `req-9d68e76b`, decision `decision-req-9d68e76b` -> deepseek-v4-pro; strict+max -> v4-flash-max, router+max -> v4-flash) (R12/R15).
+- Strict TDD (SP1-SP7 RED/GREEN) + delegated audits + controller verification (R13/R14).
+
+### Why
+
+- High-effort traffic mostly selected V4 Pro although Flash was faster, cheaper, and strongly benchmarked; the arithmetic was consistent but the arm/evidence identity and its presentation were not.
+
+### How
+
+- Strict TDD (SP1-SP7) + SP3b/SP4b and batch 1/2/3 wiring; Phase 3.5 delegated re-review (12 findings addressed); Phase 4 test audit (Tier A 23 files green, Tier B 2063/2068); Phase 5 agent-operated packaged-SEA + real-Pi QA on `:3462`.
+
+### What was not done (OOS / residuals)
+
+- Provider-specific effort ordering/auto-mapping without published equivalence (OOS1); re-benchmarking every provider/model/effort (OOS2); stage/main promotion (OOS4).
+
+### Follow-ups
+
+- Merge feature branch `recursive/106-client-neutral-model-effort-routing` (rebase onto post-105 dev) and open PR.
+- Non-blocking LOW documentation follow-ups (materiality, threshold documentation, strict-with-no-effort docs).
+
+### Artifact references
+
+- `.recursive/run/106-client-neutral-model-effort-routing/00-requirements.md`
+- `.recursive/run/106-client-neutral-model-effort-routing/03-implementation-summary.md`
+- `.recursive/run/106-client-neutral-model-effort-routing/03.5-code-review.md`
+- `.recursive/run/106-client-neutral-model-effort-routing/04-test-summary.md`
+- `.recursive/run/106-client-neutral-model-effort-routing/05-manual-qa.md`
 
 ## Run: `92-configured-model-pool-benchmark-convergence`
 
