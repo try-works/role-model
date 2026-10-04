@@ -309,6 +309,12 @@ export interface RouteFocusDispatchInput {
   readonly replayableCapture: { readonly captureRef: string } | null | undefined;
   readonly configuredEndpointIds: readonly string[];
   readonly admittedEndpointIds: readonly string[];
+  /**
+   * Run 105 bug 3 fix: endpoints the replay arm planner will refuse to score, notably the configured
+   * judge. The dispatcher must not pick such an endpoint as the counterfactual arm, or the narrowed
+   * plan zeroes out and the capture is refused no_distinct_candidate_configured.
+   */
+  readonly excludedEndpointIds?: readonly string[];
   readonly rungs?: readonly RouteLadderRung[] | null;
 }
 
@@ -352,6 +358,11 @@ export function planFocusDispatch(
       .map((rung) => rung.endpointId)
       .filter((value): value is string => typeof value === "string" && value.length > 0),
   );
+  const excluded = new Set(
+    (input.excludedEndpointIds ?? []).filter(
+      (value) => typeof value === "string" && value.length > 0,
+    ),
+  );
   /**
    * R8: the counterfactual is an AS-YET-UNRANKED endpoint. A rung that already carries a rank is
    * ranked (whether or not it passed the floor), so it is not the gap this fill targets.
@@ -366,6 +377,7 @@ export function planFocusDispatch(
     if (admitted.has(endpointId)) continue;
     if (unavailable.has(endpointId)) continue;
     if (ranked.has(endpointId)) continue;
+    if (excluded.has(endpointId)) continue;
     return {
       roleId: focus.roleId,
       taskTypeId: focus.taskTypeId,

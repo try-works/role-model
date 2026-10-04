@@ -1373,9 +1373,17 @@ export function startAutoReplayLoop(input: {
           } else {
             const source = owned.find(item => configuredNow.some(id => id !== item.sourceEndpointId &&
               !(routeLadder?.rungs ?? []).some(rung => rung.endpointId === id && rung.status === "available"))) ?? owned[0];
+            // Run 105 bug 3: the focus endpoint must not be an endpoint the arm planner will refuse
+            // (the configured judge), or the narrowed plan zeroes out and the capture is refused
+            // no_distinct_candidate_configured. Resolve the judge per tick so it cannot pick it.
+            const judgeId = typeof input.resolveJudgeEndpointId === "function"
+              ? await input.resolveJudgeEndpointId().catch(() => null)
+              : null;
             const fill = planFocusDispatch({ focus: plannedFocus, replayableCapture: source,
               configuredEndpointIds: configuredNow.filter(id => id !== source?.sourceEndpointId),
               admittedEndpointIds: (routeLadder?.rungs ?? []).filter(rung => rung.status === "available").map(rung => rung.endpointId),
+              ...(judgeId && typeof judgeId === "string" && judgeId.length > 0
+                ? { excludedEndpointIds: [judgeId] } : {}),
               rungs: routeLadder?.rungs });
             if (fill instanceof NoReplayableRequest) throw fill;
             focusCaptureRef = source?.captureRef ?? null; focusEndpointId = fill?.endpointId ?? null;
