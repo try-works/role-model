@@ -14,8 +14,8 @@ describe("run106 effort policy normalization", () => {
   it("explicit preferred policy is authoritative", () => {
     expect(normalizeReasoningEffortPolicy("high", "preferred")).toEqual({ effort: "high", policy: "preferred" });
   });
-  it("router policy ignores the effort hint", () => {
-    expect(normalizeReasoningEffortPolicy("high", "router")).toEqual({ effort: undefined, policy: "router" });
+  it("router policy preserves the requested effort for provenance", () => {
+    expect(normalizeReasoningEffortPolicy("high", "router")).toEqual({ effort: "high", policy: "router" });
   });
   it("rejects an invalid policy", () => {
     expect(() => normalizeReasoningEffortPolicy("high", "bogus" as never)).toThrow();
