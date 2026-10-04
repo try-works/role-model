@@ -272,11 +272,25 @@ export async function readRouteReplayableCaptures(input: {
     ids = entries.map(entry => entry.request_id as string);
   } catch { return null; } finally { database?.close(); }
   const scope = resolveDurableReplayJobScope(input);
+  // Run 105 verification: exclude captures whose replay disposition is terminal (replayed/refused), matching
+  // listPendingReplayCaptures' pending() filter, so the dispatcher does not re-pick an already-replayed capture
+  // (which the tick then refuses as duplicate_already_processed) and instead advances to fresh captures.
+  const terminalRefs = (() => {
+    const dispositionPath = `${input.runtimeStateRoot}/${input.scopeId}/track-b/replay-disposition.sqlite`;
+    if (!existsSync(dispositionPath)) return new Set<string>();
+    let disposition: DatabaseSync | undefined;
+    try {
+      disposition = new DatabaseSync(dispositionPath, { readOnly: true });
+      const rows = disposition.prepare("SELECT capture_ref FROM replay_dispositions WHERE outcome IN ('replayed','refused')").all() as { capture_ref?: unknown }[];
+      return new Set(rows.map((r) => (typeof r.capture_ref === "string" ? r.capture_ref : "")).filter(Boolean));
+    } catch { return new Set<string>(); } finally { disposition?.close(); }
+  })();
   const captures: AutoReplayCapture[] = [];
   try {
     for (const requestId of ids) {
       const capture = row(await input.readCapture(requestId));
       if (!capture) continue; // Exact read knows eviction/absence; telemetry alone is not a capsule.
+      if (terminalRefs.has(requestId)) continue;
       const classification = row(capture.classification), trace = row(capture.trace), source = row(capture.replaySource);
       const roleId = text(capture.roleId) ?? text(classification?.roleId);
       const taskTypeId = text(capture.taskTypeId) ?? text(classification?.taskTypeId);
