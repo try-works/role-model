@@ -119,12 +119,12 @@ export async function readRouteDispatchEvidence(input: {
       const projected = await project(record, request, input.invoke);
       if (projected) {
         const prior = answers.get(projected.comparisonGroupId);
-        if (prior && canonical(prior) !== canonical(projected)) return null;
+        if (prior && canonical(prior) !== canonical(projected)) { console.error(`[route-evidence] duplicate group canonical mismatch: ${projected.comparisonGroupId}`); return null; }
         answers.set(projected.comparisonGroupId, projected);
       }
     }
     return [...answers.values()].sort((a, b) => a.finalizedAtMs - b.finalizedAtMs || a.comparisonGroupId.localeCompare(b.comparisonGroupId));
-  } catch { return null; }
+  } catch (cause) { console.error(`[route-evidence] readRouteDispatchEvidence failed: ${cause instanceof Error ? cause.message : String(cause)}`); return null; }
 }
 
 export async function readFinalizedRouteChallengeEvidence(input: {
