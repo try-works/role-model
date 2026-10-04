@@ -1133,6 +1133,7 @@ export function startAutoReplayLoop(input: {
     AutoReplayTickResult & { readonly skipped?: boolean }
   > => {
     if (paused || Ref.getUnsafe(stageExecutionBusy) || (running && !options?.onlyCaptureRefs)) {
+      console.error(`[replay-tick] skip: paused=${paused} busy=${Ref.getUnsafe(stageExecutionBusy)} running=${running}`);
       // `L7`: this is the interval path while a long work tick is in flight. Run the liveness sweeps
       // here instead of skipping them, so an overdue job is still expired on schedule.
       // Run 104 post-closeout (addendum 15): the queue worker's restricted tick (`onlyCaptureRefs`)
@@ -1168,6 +1169,7 @@ export function startAutoReplayLoop(input: {
         policySetDigest: input.policySet.policySetDigest, limit: maxCapturesPerTick * 4,
       });
       let captures = pendingCaptures(pending);
+      console.error(`[replay-tick] run: captures=${captures.length} pendingCount=${(pending as { pendingCount?: number }).pendingCount ?? "?"}`);
       const challengeBatchSize = input.routeLearningDefaults?.challengeBatchSize ?? 1;
       if (stageEnabled) {
         if (!input.readRouteLadder) throw new Error("route ladder context unavailable: CLI binding required");
