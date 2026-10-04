@@ -1432,6 +1432,19 @@ function summarizeDifficultySignals(input: {
   };
 }
 
+export function shouldShortcutToHard(input: {
+  readonly toolCount: number;
+  readonly codeOrSchemaBurden: boolean;
+  readonly instructionConstraintCount: number;
+  readonly decompositionKeywordCount: number;
+}): boolean {
+  return (
+    input.toolCount > 0 &&
+    input.codeOrSchemaBurden &&
+    (input.instructionConstraintCount >= 3 || input.decompositionKeywordCount >= 3)
+  );
+}
+
 export function classifyDifficultyFromSignals(input: {
   readonly signals: DifficultyRoutingSignals;
   readonly classifier?: UnifiedRuntimeDifficultyClassifierConfig;
@@ -1448,7 +1461,14 @@ export function classifyDifficultyFromSignals(input: {
     };
   }
 
-  if (input.signals.toolCount > 0 && input.signals.codeOrSchemaBurden) {
+  if (
+    shouldShortcutToHard({
+      toolCount: input.signals.toolCount,
+      codeOrSchemaBurden: input.signals.codeOrSchemaBurden,
+      instructionConstraintCount: input.signals.instructionConstraintCount,
+      decompositionKeywordCount: input.signals.decompositionKeywordCount,
+    })
+  ) {
     return {
       difficulty: "hard",
       fallbackApplied: false,
