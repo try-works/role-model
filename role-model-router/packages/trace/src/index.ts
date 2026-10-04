@@ -2,13 +2,12 @@ import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import type { TraceEvent, TraceSpan } from "@role-model/protocol-types";
-import type { EffortSource, EffortSourceValue } from "@role-model-router/core";
 
 export * from "./projections/index.js";
 export * from "./lineage.js";
 
-export type TraceEffortSource = EffortSource;
-export type TraceEffortSourceValue = EffortSourceValue;
+export type TraceEffortSource = "none" | "client" | "variant" | "variant_coerced";
+export type TraceEffortSourceValue = TraceEffortSource;
 
 export interface TraceEffortFields {
   readonly reasoning_effort?: string | null;

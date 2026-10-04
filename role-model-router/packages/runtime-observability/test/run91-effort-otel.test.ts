@@ -60,33 +60,33 @@ describe("Run 91 runtime effort receipts", () => {
         priorSamples: history.byEndpointId[validation.decision.chosen_endpoint_id] ?? [],
         capturePolicy: policy,
         reasoningEffort: "medium",
-        effortSource: "named",
+        effortSource: "variant",
       });
 
       expect(bundle).toMatchObject({
         reasoningEffort: "medium",
-        effortSource: "named",
+        effortSource: "variant",
         usageEvent: {
           reasoning_effort: "medium",
-          effort_source: "named",
+          effort_source: "variant",
         },
       });
       expect(otel.createOpenTelemetryGenAiExport(bundle).attributes).toMatchObject({
         "role_model.reasoning_effort": "medium",
-        "role_model.effort_source": "named",
+        "role_model.effort_source": "variant",
       });
     } finally {
       await rm(runtimeStateRoot, { recursive: true, force: true });
     }
   });
 
-  test("normalizes missing historical effort receipt to provider-default null", async () => {
+  test("normalizes missing historical effort receipt to none null", async () => {
     const runtimeModuleImport = await import(
       pathToFileURL(path.join(__dirname, "..", "src", "index.js")).href
     );
     expect(runtimeModuleImport.normalizeRuntimeEffortReceipt({})).toEqual({
       reasoningEffort: null,
-      effortSource: "provider_default",
+      effortSource: "none",
       coerced: false,
     });
   });

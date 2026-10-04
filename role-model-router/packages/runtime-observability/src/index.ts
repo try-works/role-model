@@ -6,11 +6,6 @@ import {
 import type { ToolRegistryExecution } from "@role-model-router/tool-registry";
 import type { ObservedPerformanceProfile } from "@role-model/protocol-types";
 import { extractTaxonomyDimensions } from "@role-model/protocol-types";
-import {
-  type EffortSource,
-  type EffortSourceValue,
-  normalizeEffortSource,
-} from "@role-model-router/core";
 
 export type RuntimeRoutingMode = "baseline" | "difficulty" | "controller" | "hybrid";
 
@@ -390,8 +385,8 @@ export interface RuntimeReasoningStreamReceipt {
   readonly unavailableReason?: string;
 }
 
-export type RuntimeEffortSource = EffortSource;
-export type RuntimeEffortSourceValue = EffortSourceValue;
+export type RuntimeEffortSource = "none" | "client" | "variant" | "variant_coerced";
+export type RuntimeEffortSourceValue = RuntimeEffortSource;
 
 export interface RuntimeEffortReceipt {
   readonly reasoningEffort: string | null;
@@ -410,32 +405,30 @@ export interface RuntimeEffortReceiptInput {
 }
 
 /**
- * Normalize new and historical receipt shapes onto the canonical four-state vocabulary without
- * inferring effort from endpoint identity. Historical `client`/`variant` collapse onto `named`,
- * `variant_coerced` remains readable as a coerced named effort, and an unspecified source defaults
- * to `provider_default` (the historical "null effort" semantics).
+ * Normalize runtime receipt shapes onto the occurrence/telemetry effort-source vocabulary
+ * (`none` for a null reasoning effort, otherwise `client`/`variant`/`variant_coerced`) without
+ * inferring effort from endpoint identity. This is deliberately distinct from the decision's
+ * four-state vocabulary (`named`/`disabled`/`provider_default`/`none`).
  */
 export function normalizeRuntimeEffortReceipt(
   input: RuntimeEffortReceiptInput = {},
 ): RuntimeEffortReceipt {
   const reasoningEffort = input.reasoningEffort ?? input.reasoning_effort ?? null;
-  const rawEffortSource = input.effortSource ?? input.effort_source;
-  const normalized = normalizeEffortSource(
-    rawEffortSource ?? (reasoningEffort === null ? "provider_default" : "named"),
-  );
+  const effortSource =
+    input.effortSource ?? input.effort_source ?? (reasoningEffort === null ? "none" : "client");
   if (reasoningEffort !== null && !reasoningEffort) {
     throw new Error("reasoningEffort must be null or a non-empty value.");
   }
-  if (normalized.source === "named" && reasoningEffort === null) {
-    throw new Error("named effortSource requires a non-null reasoningEffort.");
+  if (reasoningEffort === null && effortSource !== "none") {
+    throw new Error("effortSource must be none when reasoningEffort is null.");
   }
-  if (normalized.source !== "named" && reasoningEffort !== null) {
-    throw new Error("non-named effortSource requires a null reasoningEffort.");
+  if (reasoningEffort !== null && effortSource === "none") {
+    throw new Error("effortSource is required for an efforted request.");
   }
   return {
     reasoningEffort,
-    effortSource: normalized.source,
-    coerced: input.coerced ?? normalized.coerced,
+    effortSource,
+    coerced: input.coerced ?? effortSource === "variant_coerced",
   };
 }
 
@@ -580,7 +573,7 @@ export interface RuntimeObservationBundle {
   readonly trace: RoutedExecutionResult["trace"];
   readonly usageEvent: Omit<RoutedExecutionResult["usageEvent"], "reasoning_effort" | "effort_source"> & {
     readonly reasoning_effort: string | null;
-    readonly effort_source: EffortSource;
+    readonly effort_source: RuntimeEffortSource;
   };
   /** Run 98 addendum 40 (L1): provider header/completion/first-token breakdown for this request. */
   readonly latencyBreakdown?: RuntimeObservationBundleInput["latencyBreakdown"];

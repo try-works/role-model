@@ -8158,13 +8158,9 @@ async function appendTrackBRouteAdvisoryObservationExclusive(input: {
   return next;
 }
 
-// Both the canonical four-state vocabulary and the historical readable values are accepted here:
-// a persisted observation from an older build still carries `client`/`variant`/`variant_coerced`/`none`,
-// and must remain readable without being rewritten. New builds write canonical values.
+// The occurrence/telemetry effort-source vocabulary. A persisted observation carries
+// `none` for a null reasoning effort and `client`/`variant`/`variant_coerced` for a named effort.
 const TRACK_B_EFFORT_SOURCES = new Set<RuntimeEffortSourceValue>([
-  "named",
-  "disabled",
-  "provider_default",
   "none",
   "client",
   "variant",
@@ -8213,7 +8209,6 @@ function normalizeTrackBVariantIdentity(
     throw new Error("persisted observation effort identity effortSource is invalid");
   }
   const namedLikeSource =
-    effortSource === "named" ||
     effortSource === "client" ||
     effortSource === "variant" ||
     effortSource === "variant_coerced";

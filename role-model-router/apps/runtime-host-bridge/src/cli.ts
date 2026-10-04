@@ -2513,7 +2513,7 @@ export function createSupervisedReplayEvaluationCompleter(input: {
           effortSource:
             typeof input.sourceCapture.effortSource === "string"
               ? input.sourceCapture.effortSource
-              : "provider_default",
+              : "none",
           evidenceRef: sourceRolloutReferences.evidenceRef,
           artifactRef: sourceRolloutReferences.artifactRef,
           evaluationActual: input.sourceOutput,
@@ -2541,7 +2541,7 @@ export function createSupervisedReplayEvaluationCompleter(input: {
               modelId: candidate.modelId,
               policyId: "run96-supervised-replay",
               reasoningEffort: candidate.reasoningEffort,
-              effortSource: "named",
+              effortSource: "variant",
               evidenceRef: rolloutReferences.evidenceRef,
               artifactRef: rolloutReferences.artifactRef,
               evaluationActual: output,
@@ -2591,11 +2591,11 @@ export function createSupervisedReplayEvaluationCompleter(input: {
         effortSource:
           typeof input.sourceCapture.effortSource === "string"
             ? (input.sourceCapture.effortSource as
-                | "named"
-                | "disabled"
-                | "provider_default"
-                | "none")
-            : "provider_default",
+                | "none"
+                | "client"
+                | "variant"
+                | "variant_coerced")
+            : "none",
       },
       // Run 98 R3/R15: the learning pass validates against the effective, versioned
       // activation-policy floors for this scope rather than a hardcoded threshold.
@@ -8449,13 +8449,13 @@ export async function main(): Promise<void> {
                 phase: "prepared",
                 attemptToken: replayAttemptToken,
               });
-              // A candidate without a reasoning effort is captured with `provider_default`,
-              // not `named`: the durable capture contract couples a null effort to the
-              // `provider_default` source, and a mixed pair is rejected at the capture boundary.
+              // A candidate without a reasoning effort is captured with `none`, not `variant`:
+              // the durable capture contract couples a null effort to the `none` source, and a
+              // mixed pair is rejected at the capture boundary.
               const preparedEffort =
                 typeof candidate.reasoningEffort === "string" && candidate.reasoningEffort
-                  ? { reasoningEffort: candidate.reasoningEffort, effortSource: "named" as const }
-                  : { reasoningEffort: null, effortSource: "provider_default" as const };
+                  ? { reasoningEffort: candidate.reasoningEffort, effortSource: "variant" as const }
+                  : { reasoningEffort: null, effortSource: "none" as const };
               const branch = (await operations.recordLocalRouteCapture({
                 requestId: branchRequestId,
                 routingDecisionId: String(branchRequest.sourceDecisionId),
@@ -8533,9 +8533,9 @@ export async function main(): Promise<void> {
                   typeof candidate.reasoningEffort === "string" && candidate.reasoningEffort
                     ? {
                         reasoningEffort: candidate.reasoningEffort,
-                        effortSource: "named" as const,
+                        effortSource: "variant" as const,
                       }
-                    : { reasoningEffort: null, effortSource: "provider_default" as const };
+                    : { reasoningEffort: null, effortSource: "none" as const };
                 const failureBranch = (await operations.recordLocalRouteCapture({
                   requestId: failureRequestId,
                   routingDecisionId: String(branchRequest.sourceDecisionId),
@@ -8615,9 +8615,9 @@ export async function main(): Promise<void> {
                 typeof resultCandidateReasoningEffort === "string" && resultCandidateReasoningEffort
                   ? {
                       reasoningEffort: resultCandidateReasoningEffort,
-                      effortSource: "named" as const,
+                      effortSource: "variant" as const,
                     }
-                  : { reasoningEffort: null, effortSource: "provider_default" as const };
+                  : { reasoningEffort: null, effortSource: "none" as const };
               const branch = (await operations.recordLocalRouteCapture({
                 requestId: branchRequestId,
                 routingDecisionId: requireReplayRouterDecisionId(

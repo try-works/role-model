@@ -51,35 +51,35 @@ function makeInput(effort: {
 }
 
 describe("Run 106 trace lineage effort-source", () => {
-  test("round-trips all four canonical effort states", () => {
+  test("round-trips the occurrence/telemetry effort-source vocabulary", () => {
     expect(
-      createTraceLineageManifest(makeInput({ reasoning_effort: "high", effort_source: "named" })),
-    ).toMatchObject({ reasoning_effort: "high", effort_source: "named" });
+      createTraceLineageManifest(makeInput({ reasoning_effort: "high", effort_source: "client" })),
+    ).toMatchObject({ reasoning_effort: "high", effort_source: "client" });
 
     expect(
-      createTraceLineageManifest(makeInput({ reasoning_effort: null, effort_source: "disabled" })),
-    ).toMatchObject({ reasoning_effort: null, effort_source: "disabled" });
+      createTraceLineageManifest(makeInput({ reasoning_effort: "high", effort_source: "variant" })),
+    ).toMatchObject({ reasoning_effort: "high", effort_source: "variant" });
 
     expect(
       createTraceLineageManifest(
-        makeInput({ reasoning_effort: null, effort_source: "provider_default" }),
+        makeInput({ reasoning_effort: "high", effort_source: "variant_coerced" }),
       ),
-    ).toMatchObject({ reasoning_effort: null, effort_source: "provider_default" });
+    ).toMatchObject({ reasoning_effort: "high", effort_source: "variant_coerced" });
 
     expect(
       createTraceLineageManifest(makeInput({ reasoning_effort: null, effort_source: "none" })),
     ).toMatchObject({ reasoning_effort: null, effort_source: "none" });
   });
 
-  test("rejects a named source without an effort level", () => {
+  test("rejects a non-none source without an effort level", () => {
     expect(() =>
-      createTraceLineageManifest(makeInput({ reasoning_effort: null, effort_source: "named" })),
-    ).toThrow(/effort|named/i);
+      createTraceLineageManifest(makeInput({ reasoning_effort: null, effort_source: "variant" })),
+    ).toThrow(/effort|none/i);
   });
 
-  test("rejects a non-named source carrying an effort level", () => {
+  test("rejects a none source carrying an effort level", () => {
     expect(() =>
-      createTraceLineageManifest(makeInput({ reasoning_effort: "high", effort_source: "disabled" })),
-    ).toThrow(/effort|disabled/i);
+      createTraceLineageManifest(makeInput({ reasoning_effort: "high", effort_source: "none" })),
+    ).toThrow(/effort|none/i);
   });
 });

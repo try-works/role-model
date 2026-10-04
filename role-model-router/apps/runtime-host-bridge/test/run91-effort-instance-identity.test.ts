@@ -175,7 +175,7 @@ describe("Run 91 effort instance identity", () => {
     expect(resolution.executionRequest.reasoning).toEqual({ effort: "high" });
     expect(resolution.receipt).toEqual({
       reasoningEffort: "high",
-      effortSource: "named",
+      effortSource: "variant_coerced",
       coerced: true,
     });
   });
@@ -191,7 +191,7 @@ describe("Run 91 effort instance identity", () => {
 
     expect(resolution.receipt).toEqual({
       reasoningEffort: "high",
-      effortSource: "named",
+      effortSource: "variant",
       coerced: false,
     });
   });
@@ -208,7 +208,7 @@ describe("Run 91 effort instance identity", () => {
     expect(resolution.executionRequest.reasoning).toBeUndefined();
     expect(resolution.receipt).toEqual({
       reasoningEffort: null,
-      effortSource: "provider_default",
+      effortSource: "none",
       coerced: false,
     });
   });
@@ -545,7 +545,7 @@ describe("Run 91 effort instance identity", () => {
     expect(resolution.executionRequest.reasoning).toEqual({ effort: "high" });
     expect(resolution.receipt).toEqual({
       reasoningEffort: "high",
-      effortSource: "named",
+      effortSource: "client",
       coerced: false,
     });
   });

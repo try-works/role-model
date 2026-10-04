@@ -3,16 +3,16 @@ import { describe, expect, test } from "vitest";
 import { normalizeRuntimeEffortReceipt } from "../src/index.js";
 
 describe("Run 106 runtime effort-source round-trip", () => {
-  test("round-trips all four canonical states", () => {
-    expect(normalizeRuntimeEffortReceipt({ reasoningEffort: "high", effortSource: "named" })).toEqual(
-      { reasoningEffort: "high", effortSource: "named", coerced: false },
+  test("round-trips the occurrence/telemetry effort-source vocabulary", () => {
+    expect(normalizeRuntimeEffortReceipt({ reasoningEffort: "high", effortSource: "client" })).toEqual(
+      { reasoningEffort: "high", effortSource: "client", coerced: false },
     );
-    expect(normalizeRuntimeEffortReceipt({ reasoningEffort: null, effortSource: "disabled" })).toEqual(
-      { reasoningEffort: null, effortSource: "disabled", coerced: false },
+    expect(normalizeRuntimeEffortReceipt({ reasoningEffort: "high", effortSource: "variant" })).toEqual(
+      { reasoningEffort: "high", effortSource: "variant", coerced: false },
     );
     expect(
-      normalizeRuntimeEffortReceipt({ reasoningEffort: null, effortSource: "provider_default" }),
-    ).toEqual({ reasoningEffort: null, effortSource: "provider_default", coerced: false });
+      normalizeRuntimeEffortReceipt({ reasoningEffort: "high", effortSource: "variant_coerced" }),
+    ).toEqual({ reasoningEffort: "high", effortSource: "variant_coerced", coerced: true });
     expect(normalizeRuntimeEffortReceipt({ reasoningEffort: null, effortSource: "none" })).toEqual({
       reasoningEffort: null,
       effortSource: "none",
@@ -20,35 +20,31 @@ describe("Run 106 runtime effort-source round-trip", () => {
     });
   });
 
-  test("normalizes legacy sources onto the canonical vocabulary", () => {
-    expect(normalizeRuntimeEffortReceipt({ reasoningEffort: "high", effortSource: "client" })).toEqual(
-      { reasoningEffort: "high", effortSource: "named", coerced: false },
-    );
-    expect(normalizeRuntimeEffortReceipt({ reasoningEffort: "high", effortSource: "variant" })).toEqual(
-      { reasoningEffort: "high", effortSource: "named", coerced: false },
-    );
-    expect(
-      normalizeRuntimeEffortReceipt({ reasoningEffort: "high", effortSource: "variant_coerced" }),
-    ).toEqual({ reasoningEffort: "high", effortSource: "named", coerced: true });
-  });
-
-  test("defaults a missing source to provider_default for a null-effort request", () => {
+  test("defaults a missing source to none for a null-effort request", () => {
     expect(normalizeRuntimeEffortReceipt({ reasoningEffort: null })).toEqual({
       reasoningEffort: null,
-      effortSource: "provider_default",
+      effortSource: "none",
       coerced: false,
     });
   });
 
-  test("rejects a named source without a reasoning effort", () => {
-    expect(() => normalizeRuntimeEffortReceipt({ reasoningEffort: null, effortSource: "named" })).toThrow(
-      /named|reasoningEffort|effort/i,
-    );
+  test("defaults a missing source to client for an efforted request", () => {
+    expect(normalizeRuntimeEffortReceipt({ reasoningEffort: "high" })).toEqual({
+      reasoningEffort: "high",
+      effortSource: "client",
+      coerced: false,
+    });
   });
 
-  test("rejects a non-named source carrying a reasoning effort", () => {
+  test("rejects a non-none source without a reasoning effort", () => {
     expect(() =>
-      normalizeRuntimeEffortReceipt({ reasoningEffort: "high", effortSource: "disabled" }),
-    ).toThrow(/disabled|reasoningEffort|effort/i);
+      normalizeRuntimeEffortReceipt({ reasoningEffort: null, effortSource: "variant" }),
+    ).toThrow(/none|reasoningEffort|effort/i);
+  });
+
+  test("rejects a none source carrying a reasoning effort", () => {
+    expect(() =>
+      normalizeRuntimeEffortReceipt({ reasoningEffort: "high", effortSource: "none" }),
+    ).toThrow(/none|reasoningEffort|effort/i);
   });
 });

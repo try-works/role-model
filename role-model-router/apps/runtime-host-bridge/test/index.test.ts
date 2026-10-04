@@ -22612,7 +22612,7 @@ describe("runtime-host-bridge", () => {
             // `live_request`; readback still accepts the legacy value for pre-migration rows.
             requestClass: "live",
             reasoningEffort: null,
-            effortSource: "provider_default",
+            effortSource: "none",
           }),
           expect.objectContaining({
             clientRequestId: capabilityClientRequestId,
@@ -22660,7 +22660,7 @@ describe("runtime-host-bridge", () => {
           requestId: genericFailureRow?.requestId,
           clientRequestId,
           reasoningEffort: null,
-          effortSource: "provider_default",
+          effortSource: "none",
           observationAvailability: expect.objectContaining({
             source: "raw-observation",
             rawObservationAvailable: true,
@@ -22689,7 +22689,7 @@ describe("runtime-host-bridge", () => {
           }),
           usageEvent: expect.objectContaining({
             reasoning_effort: null,
-            effort_source: "provider_default",
+            effort_source: "none",
           }),
         }),
       );

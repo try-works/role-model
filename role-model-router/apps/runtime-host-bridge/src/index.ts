@@ -427,7 +427,7 @@ export function resolveEndpointExecutionEffort(input: {
         executionRequest: executionRequestWithoutReasoning,
         receipt: {
           reasoningEffort: null,
-          effortSource: "disabled",
+          effortSource: "none",
           coerced: false,
         },
       };
@@ -442,7 +442,7 @@ export function resolveEndpointExecutionEffort(input: {
         executionRequest: input.executionRequest,
         receipt: {
           reasoningEffort: clientEffort,
-          effortSource: "named",
+          effortSource: "client",
           coerced: false,
         },
       };
@@ -458,11 +458,12 @@ export function resolveEndpointExecutionEffort(input: {
       executionRequest,
       receipt: {
         reasoningEffort: null,
-        effortSource: "provider_default",
+        effortSource: "none",
         coerced: false,
       },
     };
   }
+  const coerced = clientEffort !== null && clientEffort !== fixedEffort;
   return {
     executionRequest: {
       ...input.executionRequest,
@@ -473,8 +474,8 @@ export function resolveEndpointExecutionEffort(input: {
     },
     receipt: {
       reasoningEffort: fixedEffort,
-      effortSource: "named",
-      coerced: clientEffort !== null && clientEffort !== fixedEffort,
+      effortSource: coerced ? "variant_coerced" : "variant",
+      coerced,
     },
   };
 }
@@ -20576,10 +20577,16 @@ export async function createRuntimeBridgeBackend(
     );
     const fixedEffort = fallbackEndpoint?.identity.reasoning_effort?.trim() || null;
     const requestedEffort = input.requestedEffort?.trim() || null;
+    const failureCoerced =
+      fixedEffort !== null && requestedEffort !== null && requestedEffort !== fixedEffort;
     const failureEffort = {
       reasoningEffort: fixedEffort,
-      effortSource: (fixedEffort === null ? "provider_default" : "named") as RuntimeEffortSourceValue,
-      coerced: fixedEffort !== null && requestedEffort !== null && requestedEffort !== fixedEffort,
+      effortSource: (fixedEffort === null
+        ? "none"
+        : failureCoerced
+          ? "variant_coerced"
+          : "variant") as RuntimeEffortSourceValue,
+      coerced: failureCoerced,
     };
     const failureObservation = buildPreExecutionFailureObservation({
       requestId: input.requestId,
@@ -27823,7 +27830,7 @@ export async function createRuntimeBridgeBackend(
       const selectedModelId =
         selectedCandidate?.identity.model_id ?? executionOptions?.requestedModel ?? null;
       const selectedReasoningEffort = selectedCandidate?.identity.reasoning_effort ?? null;
-      const selectedEffortSource = selectedReasoningEffort === null ? "provider_default" : "named";
+      const selectedEffortSource = selectedReasoningEffort === null ? "none" : "variant";
       const selectedEndpointDimensions = {
         selectedEndpointId,
         candidateCount: eligibleEndpointIds.length,

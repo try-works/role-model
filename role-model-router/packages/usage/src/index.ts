@@ -3,7 +3,7 @@ import path from "node:path";
 
 import type { UsageEvent } from "@role-model/protocol-types";
 
-export type UsageEffortSource = "none" | "disabled" | "named" | "provider_default" | "client" | "variant" | "variant_coerced";
+export type UsageEffortSource = "none" | "client" | "variant" | "variant_coerced";
 
 export interface UsageEffortFields {
   readonly reasoning_effort?: string | null;
@@ -16,7 +16,6 @@ export interface UsageLinkageDecision {
   readonly request_id: string;
   readonly routing_decision_id: string;
   readonly reasoning_effort?: string | null;
-  readonly effort_source?: UsageEffortSource;
 }
 
 function normalizeEffortFields(event: UsageEventRecord): Required<UsageEffortFields> {
@@ -115,11 +114,6 @@ export function validateUsageLinkage(
     if (eventEffort.reasoning_effort !== decisionEffort) {
       throw new Error(
         `Usage event ${event.event_id} reasoning_effort ${eventEffort.reasoning_effort ?? "default"} does not match ${decisionEffort ?? "default"}.`,
-      );
-    }
-    if (decision.effort_source && eventEffort.effort_source !== decision.effort_source) {
-      throw new Error(
-        `Usage event ${event.event_id} effort_source ${eventEffort.effort_source} does not match ${decision.effort_source}.`,
       );
     }
   }
