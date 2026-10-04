@@ -1,0 +1,34 @@
+{
+  "verifiedAt": "2026-10-03T13:25:31.525Z",
+  "releaseDir": "E:/tmp/run105-full-public/role-model-router/dist/release-private-da40a115/win32-x64",
+  "exe": {
+    "declared": "ffc3f58a45992d72b5eae539e3450b9b5bded5954335567da64c219e17768d78",
+    "computed": "ffc3f58a45992d72b5eae539e3450b9b5bded5954335567da64c219e17768d78",
+    "match": true
+  },
+  "sidecar": {
+    "declared": "42757bdf5a910d9d921fc5a45f945aa87b478d1b8cb0128d054b8ef0580ae9a2",
+    "computed": "42757bdf5a910d9d921fc5a45f945aa87b478d1b8cb0128d054b8ef0580ae9a2",
+    "match": true
+  },
+  "manifest": {
+    "declared": "463d29a07beb3f5de71fc32fc81e3a3634723c86bc6186e92f5f02c444260206",
+    "computed": "463d29a07beb3f5de71fc32fc81e3a3634723c86bc6186e92f5f02c444260206",
+    "match": true
+  },
+  "adapter": {
+    "declared": "29b6e7b1ff9f332ac9d1ac579fbc12631be92d0a459cd75aeb897f2831381e32",
+    "computed": "29b6e7b1ff9f332ac9d1ac579fbc12631be92d0a459cd75aeb897f2831381e32",
+    "match": true
+  },
+  "manifestFile": {
+    "source_tree": "d391ec693cf10e8af812e1e26c57934649f202ba",
+    "commit": "83308e29c7e9505054a0885f56da378330e76e5e",
+    "version": "0.0.14-745-g83308e29",
+    "channel": "development",
+    "port": 3458,
+    "scope_id": "standalone-runtime-dev",
+    "extension_count": 13,
+    "generation": "N"
+  }
+}

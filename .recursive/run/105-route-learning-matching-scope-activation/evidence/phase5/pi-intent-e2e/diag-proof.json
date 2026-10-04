@@ -1,0 +1,653 @@
+{
+  "chosen": {
+    "summary": {
+      "requestId": "req-5399e8d1-8301-4a14-aabd-dd6ddaf90690",
+      "clientRequestId": null,
+      "routingDecisionId": "decision-req-5399e8d1-8301-4a14-aabd-dd6ddaf90690",
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+      "createdAtMs": 1791082703530
+    },
+    "detail": {
+      "requestId": "req-5399e8d1-8301-4a14-aabd-dd6ddaf90690",
+      "routingDecisionId": "decision-req-5399e8d1-8301-4a14-aabd-dd6ddaf90690",
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+      "reasoningEffort": "max",
+      "effortSource": "variant_coerced",
+      "conversationId": "standalone-runtime-dev-empty-conversation",
+      "usageEvent": {
+        "timestamp_ms": 1791082703530,
+        "request_id": "req-5399e8d1-8301-4a14-aabd-dd6ddaf90690",
+        "routing_decision_id": "decision-req-5399e8d1-8301-4a14-aabd-dd6ddaf90690",
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+        "model_id": "deepseek/deepseek-flash",
+        "provider_kind": "remote_openai_compat",
+        "tokens_in": 424,
+        "tokens_out": 389,
+        "latency_ms": 1151,
+        "cost_estimate": 0.000297,
+        "currency": "USD"
+      },
+      "cacheObservability": {
+        "promptCacheRequested": true,
+        "promptCacheRequestSource": "synthesized",
+        "promptCacheUsed": true,
+        "cacheReadTokens": 256,
+        "cacheWriteTokens": 0,
+        "routingCacheAffinity": false
+      },
+      "executionTelemetry": {
+        "providerFamily": "deepseek",
+        "finishReason": "stop",
+        "costProvenance": "estimated",
+        "usageSupport": {
+          "inputTokens": true,
+          "outputTokens": true,
+          "cacheReadTokens": true,
+          "cacheWriteTokens": true
+        },
+        "promptCaching": {
+          "supported": true
+        },
+        "streamSupport": {
+          "text": "delta",
+          "toolCalls": "delta",
+          "toolArguments": "delta"
+        },
+        "stream": {
+          "requested": true,
+          "textDeltas": 388,
+          "toolCallDeltas": 0,
+          "toolArgumentDeltas": 0
+        }
+      },
+      "executionSemantics": {
+        "sourceClient": "openai.chat.completions",
+        "executionFamily": "remote-service",
+        "adapterFamily": "ai-sdk-openai-compatible",
+        "toolSideEffectState": "none",
+        "idempotencyDecision": "not_needed",
+        "providerAttemptIds": [
+          "attempt:req-5399e8d1-8301-4a14-aabd-dd6ddaf90690:final"
+        ],
+        "payloadBytes": {
+          "ingress": 1954,
+          "translated": 2023,
+          "providerCanonical": 1996,
+          "providerWire": 1996,
+          "providerResponse": 117838
+        }
+      },
+      "contextEnvelope": {
+        "conversationId": "standalone-runtime-dev-empty-conversation",
+        "latestHandoffId": null,
+        "estimatedTokenCount": 0
+      },
+      "retrievalReceipt": {
+        "receiptId": "standalone-runtime-dev-empty-conversation-retrieval-receipt",
+        "summary": {
+          "selectedTurns": 0,
+          "selectedArtifacts": 0,
+          "omittedTurns": 0,
+          "omittedArtifacts": 0,
+          "estimatedTokens": 0
+        }
+      },
+      "capturePolicy": {
+        "environment": "local-dev",
+        "redactionLevel": "strict",
+        "retentionClass": "standard",
+        "structuredInspectionMode": "redacted",
+        "rawCaptureAvailable": true,
+        "structuredInspectionAvailable": true
+      },
+      "captureDegradation": {
+        "contract": "CaptureDegradationReceiptV1",
+        "failureStage": "graph_write",
+        "actionTaken": "queued_for_retry",
+        "reasonCode": "unknown",
+        "routingContinued": true,
+        "reason": "track-b-capture-deferred"
+      },
+      "statusFamily": "degraded-capture",
+      "routingDiagnostics": {
+        "observedProfile": {
+          "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+          "source": "runtime-state",
+          "readMode": "per-request",
+          "measuredAtMs": 1791081984864
+        },
+        "effectiveMetrics": {
+          "quality": {
+            "value": 0.9825,
+            "source": "benchmark",
+            "measuredAtMs": 1791081984864,
+            "freshnessWeight": 1,
+            "freshnessSource": "passthrough",
+            "timeDecayApplied": false
+          },
+          "latency": {
+            "value": 0.00043591642991758217,
+            "source": "measured",
+            "measuredAtMs": 1791081984864,
+            "freshnessWeight": 0.9991281671401648,
+            "freshnessSource": "time-decay",
+            "timeDecayApplied": true
+          },
+          "throughput": {
+            "value": 0.9995640835700824,
+            "source": "measured",
+            "measuredAtMs": 1791081984864,
+            "freshnessWeight": 0.9991281671401648,
+            "freshnessSource": "time-decay",
+            "timeDecayApplied": true
+          },
+          "reliability": {
+            "value": 1,
+            "source": "measured",
+            "measuredAtMs": 1791081984864,
+            "freshnessWeight": 1,
+            "freshnessSource": "passthrough",
+            "timeDecayApplied": false
+          },
+          "cost": {
+            "value": 0.9400495157677871,
+            "source": "catalog",
+            "measuredAtMs": 1791081984864,
+            "freshnessWeight": 1,
+            "freshnessSource": "passthrough",
+            "timeDecayApplied": false
+          }
+        },
+        "throughputPenalty": {
+          "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+          "active": false
+        },
+        "strategyResolution": {
+          "strategy": "latency",
+          "source": "operator",
+          "weights": {
+            "quality": 0.15,
+            "latency": 0.45,
+            "throughput": 0.15,
+            "cost": 0.05,
+            "reliability": 0.15,
+            "preference": 0.05
+          },
+          "weightsDigest": "sha256:cad28f36964f4255e9431893a35ccc65044603eaddf74b69d770ad6288e0d0bb"
+        },
+        "selection": {
+          "mode": "best-total-score",
+          "scoreTieEpsilon": 0.01,
+          "scoreDelta": 0.010862642437425518,
+          "winnerEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+          "winnerTotalScore": 0.5320082507173646,
+          "runnerUpEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+          "runnerUpTotalScore": 0.521145608279939,
+          "tieBreakOrder": [
+            "quality",
+            "latency_ms",
+            "reliability",
+            "endpoint_id"
+          ]
+        },
+        "latencySelection": {
+          "outcome": "disabled",
+          "chosenEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+          "bucketUpperBoundTokens": null,
+          "reason": "measured-latency selection input is not authorized"
+        },
+        "aliasResolution": {
+          "requestedModel": "baseline.remote-only",
+          "aliasId": "baseline.remote-only",
+          "resolvedModelIds": [
+            "deepseek/deepseek-flash",
+            "deepseek/deepseek-v4-pro",
+            "moonshot/kimi-k3"
+          ],
+          "allowEndpoints": [
+            "deepseek.personal.deepseek-api-key.global.deepseek-flash",
+            "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+            "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+            "moonshot.personal.kimi-code.global.kimi-k3"
+          ]
+        },
+        "rewrite": {
+          "requestedModel": "baseline.remote-only",
+          "downstreamModelId": "deepseek/deepseek-flash",
+          "applied": true,
+          "reason": "requested-model-rewritten-for-selected-endpoint"
+        },
+        "cacheContinuity": {
+          "enabled": true,
+          "scopeSource": "prompt_cache_key",
+          "activeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+          "previousActiveEndpointId": null,
+          "selectedEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+          "advisorySelectionApplied": false
+        },
+        "catalogEconomics": {
+          "canonicalModelId": "deepseek/deepseek-flash",
+          "tokenEconomicsSource": "catalog",
+          "inputPer1M": 0.15,
+          "outputPer1M": 0.6,
+          "estimatedRequestUsd": 0.23046345,
+          "cost_per_1k_tokens_est": 0.0005995048423221295
+        }
+      },
+      "privacyReceipt": {
+        "samplingRate": 1,
+        "retentionTtlHours": 720,
+        "retainUntil": 1793674703601
+      },
+      "taxonomyDimensions": {
+        "taxonomy_group_id": "engineering",
+        "taxonomy_role_id": "coder",
+        "taxonomy_task_type": "coder.edit",
+        "taxonomy_task_variant": null,
+        "taxonomy_capability_ids": [
+          "code.read",
+          "code.write",
+          "reasoning.multi_step"
+        ],
+        "taxonomy_modality_ids": [
+          "text"
+        ],
+        "taxonomy_tool_class_ids": null
+      },
+      "providerEvidence": {
+        "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+        "modelId": "deepseek/deepseek-flash",
+        "status": "ok",
+        "attemptIds": [
+          "req-5399e8d1-8301-4a14-aabd-dd6ddaf90690:attempt:1"
+        ]
+      },
+      "observedPerformance": {
+        "endpointVersion": "run07-registry-v1:custom-base-url",
+        "sample": {
+          "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+          "endpoint_version": "run07-registry-v1:custom-base-url",
+          "model_id": "deepseek/deepseek-flash",
+          "source_type": "live",
+          "timestamp_ms": 1791082703530,
+          "latency_ms": 1151
+        },
+        "profile": {
+          "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+          "endpoint_version": "run07-registry-v1:custom-base-url",
+          "measured_at_ms": 1791082703530,
+          "measurement_window": {
+            "started_at_ms": 1791082703530,
+            "ended_at_ms": 1791082703530
+          },
+          "sample_size": 1,
+          "sources": {
+            "live_request_samples": 1,
+            "benchmark_samples": 0
+          },
+          "latency_ms_p50": 1151,
+          "latency_ms_p95": 1151,
+          "failure_rate": 0,
+          "freshness_score": 1,
+          "confidence_score": 0.1762914343888821,
+          "tokens_per_sec": 338,
+          "cost_per_1k_tokens_est": 0.0003653136531365314,
+          "currency": "USD"
+        }
+      },
+      "telemetrySnapshot": {
+        "providerId": "deepseek",
+        "providerAccountId": "deepseek.personal.deepseek-api-key",
+        "sourceType": "remote",
+        "endpointKind": "remote_api",
+        "servingSource": "remote-service",
+        "region": "global",
+        "lifecycleStateAtRequest": "active",
+        "healthStatusAtRequest": "healthy",
+        "requestedModelId": "baseline.remote-only",
+        "selectedModelId": "deepseek/deepseek-flash",
+        "requestOperation": "chat",
+        "toolingUsed": false,
+        "cacheState": "hit",
+        "selectedUncachedCostUsd": 0.23046345,
+        "baselineMaxEligibleCostUsd": 5.7612689999999995,
+        "routingCostSavingsUsd": 5.530806,
+        "cacheCostSavingsUsd": 0.000038,
+        "totalAvoidedCostUsd": 5.530844,
+        "costBaselineSource": "eligible_candidate_max",
+        "costSavingsSupport": "full",
+        "eligibleEndpointIds": [
+          "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+          "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+          "moonshot.personal.kimi-code.global.kimi-k3",
+          "deepseek.personal.deepseek-api-key.global.deepseek-flash"
+        ],
+        "eligibleModelIds": [
+          "deepseek/deepseek-flash",
+          "deepseek/deepseek-v4-pro",
+          "moonshot/kimi-k3"
+        ],
+        "candidateCostSnapshot": {
+          "deepseek.personal.deepseek-api-key.global.deepseek-flash-max": {
+            "modelId": "deepseek/deepseek-flash",
+            "providerId": "deepseek",
+            "providerKind": "remote_openai_compat",
+            "sourceType": "remote",
+            "endpointKind": "remote_api",
+            "servingSource": "remote-service",
+            "region": "global",
+            "tokenEconomicsSource": "catalog",
+            "estimatedRequestUsd": 0.23046345,
+            "costPer1kTokensEst": 0.0005995048423221295,
+            "inputPer1M": 0.15,
+            "outputPer1M": 0.6
+          },
+          "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro": {
+            "modelId": "deepseek/deepseek-v4-pro",
+            "providerId": null,
+            "providerKind": "remote_openai_compat",
+            "sourceType": "remote",
+            "endpointKind": "remote_api",
+            "servingSource": "remote-service",
+            "region": "global",
+            "tokenEconomicsSource": "catalog",
+            "estimatedRequestUsd": 0.334264005,
+            "costPer1kTokensEst": 0.0008695213475780585,
+            "inputPer1M": 0.435,
+            "outputPer1M": 0.87
+          },
+          "moonshot.personal.kimi-code.global.kimi-k3": {
+            "modelId": "moonshot/kimi-k3",
+            "providerId": null,
+            "providerKind": "remote_openai_compat",
+            "sourceType": "remote",
+            "endpointKind": "remote_api",
+            "servingSource": "remote-service",
+            "region": "global",
+            "tokenEconomicsSource": "catalog",
+            "estimatedRequestUsd": 5.7612689999999995,
+            "costPer1kTokensEst": 0.014986795795256786,
+            "inputPer1M": 3,
+            "outputPer1M": 15
+          },
+          "deepseek.personal.deepseek-api-key.global.deepseek-flash": {
+            "modelId": "deepseek/deepseek-flash",
+            "providerId": null,
+            "providerKind": "remote_openai_compat",
+            "sourceType": "remote",
+            "endpointKind": "remote_api",
+            "servingSource": "remote-service",
+            "region": "global",
+            "tokenEconomicsSource": "catalog",
+            "estimatedRequestUsd": 0.23046345,
+            "costPer1kTokensEst": 0.0005995048423221295,
+            "inputPer1M": 0.15,
+            "outputPer1M": 0.6
+          }
+        },
+        "selectedPricingSnapshot": {
+          "modelId": "deepseek/deepseek-flash",
+          "providerId": "deepseek",
+          "providerAccountId": "deepseek.personal.deepseek-api-key",
+          "sourceType": "remote",
+          "tokenEconomicsSource": "catalog",
+          "estimatedRequestUsd": 0.23046345,
+          "costPer1kTokensEst": 0.0005995048423221295,
+          "inputPer1M": 0.15,
+          "outputPer1M": 0.6
+        }
+      },
+      "sourceType": "remote",
+      "providerId": "deepseek",
+      "endpointKind": "remote_api",
+      "servingSource": "remote-service",
+      "healthStatus": "healthy",
+      "status": "active",
+      "roleIds": [
+        "analyst",
+        "architect",
+        "coder",
+        "coordinator",
+        "creative",
+        "data",
+        "designer",
+        "educator",
+        "finance",
+        "health",
+        "knowledge",
+        "legal",
+        "marketer",
+        "mathematician",
+        "operator",
+        "planner",
+        "procurement",
+        "product",
+        "recruiter",
+        "researcher",
+        "scientist",
+        "security",
+        "seller",
+        "strategist",
+        "support",
+        "tester",
+        "translator",
+        "writer"
+      ],
+      "observationAvailability": {
+        "source": "raw-observation",
+        "rawObservationAvailable": true,
+        "structuredInspectionAvailable": true,
+        "reason": "Request detail is backed by the preserved runtime observation bundle plus telemetry ledger supplements."
+      },
+      "latencyMs": 1151,
+      "effectiveCostUsd": 0.000297,
+      "costCalculationBasis": "estimated_vendor_cost",
+      "costCalculationVersion": "run49.v1",
+      "selectedUncachedCostUsd": 0.23046345,
+      "baselineMaxEligibleCostUsd": 5.7612689999999995,
+      "routingCostSavingsUsd": 5.530806,
+      "cacheCostSavingsUsd": 0.000038,
+      "totalAvoidedCostUsd": 5.530844,
+      "costBaselineSource": "eligible_candidate_max",
+      "costSavingsSupport": "full",
+      "correlationId": "corr-8bbb8295cca8c15401178316",
+      "graphEvidence": {
+        "rootArtifactId": "d298da0298588544f533ff1992b99b130ff448204d9a6eb5cc91b8275890d194",
+        "messageNodeIds": [
+          "5faf1c0f1374ccf5ee4eec606913fd86d7df7ded45d4130efa52a9883919da12",
+          "c934e1bd1fdaeb4fc5a632f8105232e10eb2baeb1026e28ca19485258b71a906"
+        ],
+        "responseNodeId": "325fa9980dc3f96b32266c906bcee833fbba67eed4d6d9ab7a5bfd01ca4a3459",
+        "toolExecutionNodeIds": [],
+        "toolCallNodeIds": [],
+        "toolResultNodeIds": [],
+        "captureMetrics": {
+          "captureCpuMs": 859,
+          "captureWallMs": 912.2764,
+          "sqliteLockWaitMs": 0.0461,
+          "queueDepthBefore": 0,
+          "queueDepthAfter": 0,
+          "filesystemBytesBefore": 296723116,
+          "filesystemBytesAfter": 296815568,
+          "casBytesBefore": 69502247,
+          "casBytesAfter": 69524019,
+          "normalizedStateBytesBefore": 227220869,
+          "normalizedStateBytesAfter": 227291549,
+          "archiveManifestInlineContentBytes": 0
+        },
+        "edgeCount": 9
+      },
+      "liveBudgetEvidence": {
+        "compactObservationBytes": 10089,
+        "runtimeRssBytes": 164548608,
+        "captureCpuMs": 859,
+        "captureWallMs": 912.2764,
+        "sqliteLockWaitMs": 0.0461,
+        "queueDepthBefore": 0,
+        "queueDepthAfter": 0,
+        "filesystemBytesBefore": 296723116,
+        "filesystemBytesAfter": 296815568,
+        "casBytesBefore": 69502247,
+        "casBytesAfter": 69524019,
+        "normalizedStateBytesBefore": 227220869,
+        "normalizedStateBytesAfter": 227291549,
+        "archiveManifestInlineContentBytes": 0
+      }
+    }
+  },
+  "decision": {
+    "schemaVersion": "role-model.route-advisory-observation.v1",
+    "decisionId": "decision-req-5399e8d1-8301-4a14-aabd-dd6ddaf90690",
+    "routePackage": "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+    "preferredRoutePackage": null,
+    "preferredEligible": false,
+    "eligibleRoutePackageCount": 2,
+    "wouldHaveChanged": false,
+    "advisoryState": "unavailable",
+    "confidence": 0,
+    "candidateId": null,
+    "advisoryId": null,
+    "mode": "shadow",
+    "selection": "baseline_retained",
+    "taskTypeId": null,
+    "requestTaskTypeId": null,
+    "origin": "shadow",
+    "observedAtMs": 1791082703917,
+    "roleId": null,
+    "taxonomyVersion": null,
+    "toolClassIds": [],
+    "observationCount": 2,
+    "evidence": null
+  },
+  "allIds": [
+    "decision-req-5399e8d1-8301-4a14-aabd-dd6ddaf90690",
+    "decision-req-1f66992b-67ac-4982-83f7-640f813b4249",
+    "decision-req-d63ccea4-34be-4567-a95d-35fd8981ccf9",
+    "decision-req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18",
+    "decision-req-4c8385c6-a893-4061-8d06-3ec07d8c482f",
+    "decision-replay-judge-5377ff8696cefcc5",
+    "decision-replay-req-f93fa856-889d-4660-96b3-700de2ae4771-cb6c10a00906cd7b",
+    "decision-replay-judge-4c2670be06aaeb28",
+    "decision-replay-req-93157239-ef3c-4750-889a-6b6410c384d6-5b46ef31703db9e3",
+    "decision-replay-judge-91779adc82a03399",
+    "decision-replay-replay-judge-67aeaacacd7aeaf6-2608b0a3a5f68c3f",
+    "decision-replay-judge-7a769f608f07a514",
+    "decision-replay-req-972390fb-a414-474b-b4f5-e9f53703f883-2fda10b9ecbd1fb3",
+    "decision-replay-judge-33c0cab493ac1a70",
+    "decision-replay-req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39-92ba65d1d62d49d5",
+    "decision-req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39",
+    "decision-req-79b100ea-4e63-4781-9498-657829bb1641",
+    "decision-req-972390fb-a414-474b-b4f5-e9f53703f883",
+    "decision-replay-judge-67aeaacacd7aeaf6",
+    "decision-replay-req-93157239-ef3c-4750-889a-6b6410c384d6-ca1b3832fd81597b",
+    "decision-replay-judge-ce6ffd70a2bba97b",
+    "decision-replay-req-07497f2e-bfe2-4faf-9271-5f06cbab19ac-459f60f9add54958",
+    "decision-replay-judge-8fd332d210b51c69",
+    "decision-replay-req-07497f2e-bfe2-4faf-9271-5f06cbab19ac-e3cf71bf9fb06e31",
+    "decision-replay-judge-eb9e11eac0d0e5bc",
+    "decision-replay-req-07497f2e-bfe2-4faf-9271-5f06cbab19ac-200db881374e8a80",
+    "decision-replay-judge-2c7156b36ebc149a",
+    "decision-replay-req-07497f2e-bfe2-4faf-9271-5f06cbab19ac-fbc09d3e04c5a244",
+    "decision-replay-judge-cb3b768fc985b768",
+    "decision-replay-req-07497f2e-bfe2-4faf-9271-5f06cbab19ac-97959ad7ed557568",
+    "decision-req-2abc1709-d896-4592-8fe2-3745b9a46fb6",
+    "decision-req-93157239-ef3c-4750-889a-6b6410c384d6",
+    "decision-req-f93fa856-889d-4660-96b3-700de2ae4771",
+    "decision-req-07497f2e-bfe2-4faf-9271-5f06cbab19ac",
+    "decision-req-6486293a-009e-4527-8996-3746c755c61d",
+    "decision-req-c15446a4-42f8-47e4-aaa1-b2f6330d101a",
+    "decision-req-399ddc8f-b9ab-4ad8-b24a-a56e32a5d90e",
+    "decision-req-25523bba-7973-4afd-9839-a0a82737bb9a",
+    "decision-req-dcca85a5-d420-4fe9-b515-0db877e63a72",
+    "decision-req-2ed242d6-4fd8-42cb-a626-e91a71d29105",
+    "decision-req-03cb9f76-434a-4b36-913e-1a96c625d173",
+    "decision-req-ff3e1e61-49fb-43a9-8cc0-929f6d721b83",
+    "decision-req-122c1b20-2bff-4ebd-ba46-d3ea41a0f2c9",
+    "decision-req-83d244e6-3adc-4964-9ce1-9b1d02c11c44",
+    "decision-req-2a0b3dc8-917e-4ea1-ab47-22df5a2062b2",
+    "decision-req-9dc7279f-95b0-41c8-8ac5-a449b477fbd2",
+    "decision-req-8362cc85-e6d8-4339-8fb1-dd48414adea8",
+    "decision-req-d06cbb38-aa54-4d83-be00-7e762cba3fc8",
+    "decision-req-5e1a2455-10ed-4143-baf6-406639499260",
+    "decision-req-b24a94c0-d492-4eb1-a018-d42e6c0fc49e",
+    "decision-req-c72b1515-b0da-46f3-a825-6baef6c29179",
+    "decision-req-3a956fc5-b814-4926-898e-2d12ee80dd07",
+    "decision-req-7106ce7c-fe59-4095-a21f-b6802f9b7835",
+    "decision-req-626b4550-1cfa-4389-9664-bd3e6f5d9fdf",
+    "decision-req-f411f91d-1275-4746-9be3-9e170d194f19",
+    "decision-req-f7cd48be-cbb7-4cd5-aea7-6bab2151a728",
+    "decision-req-51748447-9951-4b86-a64b-62c42ce6a20a",
+    "decision-req-0a2737f2-61d0-4544-8300-9fc2277ce14a",
+    "decision-req-c8d50c38-c576-4328-b849-95b4e0b2144a",
+    "decision-req-3fa95fff-273a-43bc-bb24-07c61911d174",
+    "decision-req-26d813b4-83e3-41b8-8010-f36bf951cc84",
+    "decision-req-44e35ee9-8f4e-4c18-b82e-eab5ea075ac2",
+    "decision-req-fe57c547-e2a6-4497-9baa-ccddb44dd201",
+    "decision-req-3c55775c-1581-49aa-ac7f-a84c360c9518",
+    "decision-req-2be47bb9-8d0d-4502-a011-3d4755ce8c83",
+    "decision-req-b1c2f8b5-f4ac-42c8-a3dd-450a6a66b650",
+    "decision-req-27492821-ae3f-4131-8084-122ee67a166f",
+    "decision-req-d8346031-c1b5-4171-ada1-28cf75d9fc96",
+    "decision-req-6e27dc3f-66fa-4653-a497-b7345f867d2f",
+    "decision-req-28510e3c-a339-49f5-8de6-90c95ceafaac",
+    "decision-req-9fac2644-8a10-4ca9-8fae-6de30a662180",
+    "decision-req-0f7b2d24-fe46-4c78-bb78-edb000570b7a",
+    "decision-req-bafd5c58-2b49-4e2a-b188-f82e68ae986b",
+    "decision-req-2c8bc01d-f43e-4421-87c4-1cfe5a2f3773",
+    "decision-req-c877e9db-a9a9-463d-adc5-46fe4eb38127",
+    "decision-req-b086bb7c-6008-422e-8d32-ac313875650c",
+    "decision-req-d920025b-c608-4fed-9cc2-70fe3ee49625",
+    "decision-req-e0ef30ab-b592-4b1d-8466-42f4b955628f",
+    "decision-req-1ac3165e-b8fa-430c-bcd7-2f638b01e856",
+    "decision-req-bd67d316-0527-4ae7-a5ea-417265e7ced0",
+    "decision-req-c99e3add-df76-4f69-bfdb-3ca83a55fe89",
+    "decision-req-3ca6d778-fa30-48bf-8a22-a221170e7bc3",
+    "decision-req-50f04421-04aa-412a-8bdc-8a36fdf5b8c3",
+    "decision-req-623388e1-6ddc-47ab-a1d2-ed3c2d9c6a9c",
+    "decision-req-47ab9496-1f20-44e7-b1d4-16b483c66a7f",
+    "decision-req-99faeca1-5da4-4c57-ad93-0b4014c1e465",
+    "decision-req-03ce610d-ac93-41fb-8dcc-a0aeb1d9c60e",
+    "decision-req-17a55b30-ef70-48dd-b019-1832725f23f7",
+    "decision-req-80600475-8a66-4b63-bae4-bd4dadaf038a",
+    "decision-req-bc89d1b4-59ce-4a22-96f8-5feaf7567c62",
+    "decision-req-6d48c181-b653-49ce-9a7d-9d7c5c227b70",
+    "decision-req-cfd2566b-4323-4bdd-a4f6-e68ad5a3c39e",
+    "decision-req-47b42a44-09bc-449d-8d74-0ea5ba89ce6d",
+    "decision-req-34f56207-9316-4a18-b992-1feea096c8e4",
+    "decision-req-df2e63e3-87be-420b-b9b5-b0f65613f62a",
+    "decision-req-2250cc1f-695e-4e89-825a-b618ce0629ee",
+    "decision-req-8e736066-70e3-4366-a121-7ddb001531d5",
+    "decision-req-e0619e11-c3af-4e17-97ff-a49a67e904df",
+    "decision-req-c9c1d333-0bfe-45ff-94e6-82672d6c4572",
+    "decision-req-316a19f6-c075-4573-97ff-de1ef643136a"
+  ],
+  "status": {
+    "ticks": 1,
+    "running": false,
+    "paused": false,
+    "lastOutcome": "ok",
+    "lastError": null,
+    "lastProcessedAtMs": 1791082730525,
+    "budget": {
+      "window": "2026-10-04",
+      "counterfactuals": 0,
+      "reservedCounterfactuals": 0,
+      "reservedDispatches": 0,
+      "dispatches": 22,
+      "counterfactualLimit": 100,
+      "dispatchLimit": 300,
+      "enforced": false
+    },
+    "lastDispositions": 1,
+    "lastExpiredJobs": 0,
+    "lastResumedEvaluations": 0,
+    "lastReconciledEvaluations": 0,
+    "lastStrandedEvaluations": 0,
+    "lastReclaimedEvaluations": 0,
+    "lastRecoveredHandoffs": 0,
+    "focusTaskKey": "coder\u0000coder.edit",
+    "focusRemaining": 2,
+    "challengeInFlight": false,
+    "lastUnclassifiedCaptures": 32
+  }
+}

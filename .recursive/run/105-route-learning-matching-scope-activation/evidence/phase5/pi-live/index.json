@@ -1,0 +1,118 @@
+{
+  "schemaVersion": "role-model.run105.phase5.pi-live-evidence.v1",
+  "capturedAt": "2026-10-03T13:49:52.076Z",
+  "outcome": "PASS",
+  "requirement": "At least one successful end-to-end actual pi request through the final 833 build on dev 3458 via localhost mock provider",
+  "piRun1": {
+    "exitCode": 0,
+    "markerResponse": true
+  },
+  "piRun2": {
+    "exitCode": 0,
+    "markerResponse": true
+  },
+  "healthBefore": {
+    "commit": "83308e29c7e9505054a0885f56da378330e76e5e",
+    "sourceTree": "d391ec693cf10e8af812e1e26c57934649f202ba",
+    "exeSha": "ffc3f58a45992d72b5eae539e3450b9b5bded5954335567da64c219e17768d78",
+    "status": "healthy",
+    "executionMode": "decision_only"
+  },
+  "healthAfter": {
+    "commit": "83308e29c7e9505054a0885f56da378330e76e5e",
+    "sourceTree": "d391ec693cf10e8af812e1e26c57934649f202ba",
+    "exeSha": "ffc3f58a45992d72b5eae539e3450b9b5bded5954335567da64c219e17768d78",
+    "status": "healthy",
+    "executionMode": "decision_only"
+  },
+  "files": [
+    {
+      "name": "account-post.json",
+      "size": 2217
+    },
+    {
+      "name": "cleanup.json",
+      "size": 6533
+    },
+    {
+      "name": "endpoint-inventory-after-admission.json",
+      "size": 4255
+    },
+    {
+      "name": "endpoint-post.json",
+      "size": 524
+    },
+    {
+      "name": "health-after.json",
+      "size": 3396
+    },
+    {
+      "name": "health-before.json",
+      "size": 3396
+    },
+    {
+      "name": "inventories-after.json",
+      "size": 6914
+    },
+    {
+      "name": "mock-models-list.json",
+      "size": 260
+    },
+    {
+      "name": "mock-provider-receipt-copy.json",
+      "size": 4323
+    },
+    {
+      "name": "mock-provider-receipt.json",
+      "size": 4323
+    },
+    {
+      "name": "pi-run-1-result.json",
+      "size": 41
+    },
+    {
+      "name": "pi-run-1-stderr.txt",
+      "size": 385
+    },
+    {
+      "name": "pi-run-1-stdout.txt",
+      "size": 136
+    },
+    {
+      "name": "pi-run-2-stderr.txt",
+      "size": 0
+    },
+    {
+      "name": "pi-run-2-stdout.txt",
+      "size": 136
+    },
+    {
+      "name": "run105-pi-live-mock-provider.mjs",
+      "size": 6246
+    },
+    {
+      "name": "runtime-config-remote-only.json",
+      "size": 4023
+    },
+    {
+      "name": "runtime-explain-capture.json",
+      "size": 73128
+    },
+    {
+      "name": "runtime-requests-after-pi1.json",
+      "size": 23639
+    },
+    {
+      "name": "runtime-requests-after-pi2.json",
+      "size": 91556
+    },
+    {
+      "name": "setup.json",
+      "size": 1397
+    },
+    {
+      "name": "summary.json",
+      "size": 154844
+    }
+  ]
+}

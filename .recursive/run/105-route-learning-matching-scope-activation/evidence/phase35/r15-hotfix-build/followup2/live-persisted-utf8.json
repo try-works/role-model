@@ -1,0 +1,355 @@
+{
+  "telemetry": {
+    "request_id": "req-4c441dc1-6f8c-431a-82b6-4cc91c510424",
+    "routing_decision_id": "decision-req-4c441dc1-6f8c-431a-82b6-4cc91c510424",
+    "endpoint_id": "deepseek.personal.r15-local-mock.global.deepseek-v4-pro",
+    "reasoning_effort": null,
+    "effort_source": "none",
+    "conversation_id": "conversation-main",
+    "created_at_ms": 1791025906065,
+    "client_request_id": "r15-followup2-utf8",
+    "request_class": "live",
+    "source_type": "remote",
+    "model_id": "deepseek/deepseek-v4-pro",
+    "provider_kind": "remote_openai_compat",
+    "provider_family": "deepseek",
+    "vendor_id": null,
+    "provider_id": "deepseek",
+    "provider_account_id": "deepseek.personal.r15-local-mock",
+    "selected_model_id": "deepseek/deepseek-v4-pro",
+    "endpoint_kind": "remote_api",
+    "serving_source": "remote-service",
+    "region": "global",
+    "lifecycle_state_at_request": "active",
+    "health_status_at_request": "healthy",
+    "requested_model_id": "baseline.remote-only",
+    "difficulty_bucket": null,
+    "routing_mode": null,
+    "requested_role_id": null,
+    "selected_strategy": "balanced",
+    "request_operation": "chat",
+    "source_client": "openai.chat.completions",
+    "execution_family": "remote-service",
+    "adapter_family": "ai-sdk-openai-compatible",
+    "status_family": "failure",
+    "request_payload_bytes": 126,
+    "ingress_payload_bytes": 126,
+    "translated_payload_bytes": 299,
+    "provider_canonical_payload_bytes": 299,
+    "provider_wire_payload_bytes": 299,
+    "response_payload_bytes": 900636,
+    "retry_count": 0,
+    "reroute_count": 0,
+    "cooldown_decision": "not_applied",
+    "idempotency_decision": "not_needed",
+    "tool_side_effect_state": "none",
+    "tooling_used": 0,
+    "cache_state": "unknown",
+    "role_ids_json": "[]",
+    "eligible_endpoint_ids_json": "[\"deepseek.personal.r15-local-mock.global.deepseek-v4-pro\"]",
+    "eligible_model_ids_json": "[\"deepseek/deepseek-v4-pro\"]",
+    "candidate_cost_snapshot_json": "{\"deepseek.personal.r15-local-mock.global.deepseek-v4-pro\":{\"modelId\":\"deepseek/deepseek-v4-pro\",\"providerId\":\"deepseek\",\"providerKind\":\"remote_openai_compat\",\"sourceType\":\"remote\",\"endpointKind\":\"remote_api\",\"servingSource\":\"remote-service\",\"region\":\"global\",\"tokenEconomicsSource\":\"catalog\",\"estimatedRequestUsd\":0.0035687399999999995}}",
+    "selected_pricing_snapshot_json": "{\"canonicalModelId\":\"deepseek/deepseek-v4-pro\",\"tokenEconomicsSource\":\"catalog\",\"inputPer1M\":0.435,\"outputPer1M\":0.87,\"estimatedRequestUsd\":0.0035687399999999995}",
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "total_tokens": 0,
+    "latency_ms": 77,
+    "provider_completion_latency_ms": null,
+    "time_to_first_token_ms": null,
+    "request_latency_ms": 136,
+    "error_class": "execution_failed",
+    "status_code": 422,
+    "finish_reason": null,
+    "prompt_cache_requested": 0,
+    "prompt_cache_supported": 1,
+    "prompt_cache_used": 0,
+    "cache_read_tokens": 0,
+    "cache_read_tokens_supported": 1,
+    "cache_write_tokens": 0,
+    "cache_write_tokens_supported": 1,
+    "stream_text_delta_count": 0,
+    "stream_text_supported": 1,
+    "stream_tool_call_delta_count": 0,
+    "stream_tool_call_supported": 1,
+    "stream_tool_argument_delta_count": 0,
+    "stream_tool_argument_supported": 1,
+    "tool_call_count": 0,
+    "tool_execution_count": 0,
+    "cost_provenance": "unavailable",
+    "actual_cost_usd": null,
+    "estimated_cost_usd": null,
+    "effective_cost_usd": 0,
+    "selected_uncached_cost_usd": 0.0035687399999999995,
+    "baseline_max_eligible_cost_usd": 0,
+    "routing_cost_savings_usd": 0,
+    "cache_cost_savings_usd": 0,
+    "total_avoided_cost_usd": 0,
+    "cost_calculation_basis": "no_execution_zero",
+    "cost_calculation_version": "run49.v1",
+    "cost_baseline_source": null,
+    "cost_savings_support": "partial",
+    "sampling_rate": 1,
+    "retention_ttl_hours": 720,
+    "retain_until_ms": 1793617906063,
+    "redaction_level": "strict",
+    "retention_class": "standard",
+    "structured_inspection_mode": "summary",
+    "raw_capture_available": 0,
+    "structured_inspection_available": 1,
+    "taxonomy_group_id": null,
+    "taxonomy_role_id": null,
+    "taxonomy_task_type": null,
+    "taxonomy_task_variant": null,
+    "taxonomy_capability_ids_json": "[]",
+    "taxonomy_modality_ids_json": "[]",
+    "taxonomy_tool_class_ids_json": "[]",
+    "currency": null,
+    "dimensions_json": "{\"selectedEndpointId\":\"deepseek.personal.r15-local-mock.global.deepseek-v4-pro\",\"candidateCount\":1,\"failurePhase\":\"provider_execution\",\"retryable\":false,\"fallbackEligible\":false,\"errorPreview\":{\"statusCode\":422,\"code\":\"r15_mock_contract_rejection\",\"type\":\"invalid_request_error\",\"message\":\"R15_NONSECRET_UTF8_漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂\",\"messageTruncated\":true,\"messageOriginalUtf8Bytes\":300019},\"compactTruncation\":{\"reason\":\"diagnostic_projection\",\"originalUtf8Bytes\":300312,\"omittedFields\":[\"errorPreview.message\"]}}",
+    "request_class_source": "declared"
+  },
+  "observation": {
+    "requestId": "req-4c441dc1-6f8c-431a-82b6-4cc91c510424",
+    "clientRequestId": "r15-followup2-utf8",
+    "routingDecisionId": "decision-req-4c441dc1-6f8c-431a-82b6-4cc91c510424",
+    "endpointId": "deepseek.personal.r15-local-mock.global.deepseek-v4-pro",
+    "reasoningEffort": null,
+    "effortSource": "none",
+    "conversationId": "standalone-runtime-dev-empty-conversation",
+    "usageEvent": {
+      "timestamp_ms": 1791025906063,
+      "request_id": "req-4c441dc1-6f8c-431a-82b6-4cc91c510424",
+      "routing_decision_id": "decision-req-4c441dc1-6f8c-431a-82b6-4cc91c510424",
+      "endpoint_id": "deepseek.personal.r15-local-mock.global.deepseek-v4-pro",
+      "model_id": "deepseek/deepseek-v4-pro",
+      "provider_kind": "remote_openai_compat",
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "latency_ms": 77,
+      "cost_actual": null,
+      "cost_estimate": null,
+      "currency": "USD",
+      "error_class": "execution_failed"
+    },
+    "executionTelemetry": {
+      "providerFamily": "deepseek",
+      "finishReason": "error",
+      "costProvenance": "unavailable",
+      "usageSupport": {
+        "inputTokens": true,
+        "outputTokens": true,
+        "cacheReadTokens": true,
+        "cacheWriteTokens": true
+      },
+      "promptCaching": {
+        "supported": true
+      },
+      "stream": {
+        "requested": false,
+        "textDeltas": 0,
+        "toolCallDeltas": 0,
+        "toolArgumentDeltas": 0
+      }
+    },
+    "executionSemantics": {
+      "sourceClient": "openai.chat.completions",
+      "executionFamily": "remote-service",
+      "adapterFamily": "ai-sdk-openai-compatible",
+      "toolSideEffectState": "none",
+      "idempotencyDecision": "not_needed",
+      "providerAttemptIds": [
+        "req-4c441dc1-6f8c-431a-82b6-4cc91c510424:attempt:1"
+      ],
+      "payloadBytes": {
+        "ingress": 126,
+        "translated": 299,
+        "providerCanonical": 299,
+        "providerWire": 299,
+        "providerResponse": 900636
+      },
+      "failedAttempts": [
+        {
+          "attemptId": "req-4c441dc1-6f8c-431a-82b6-4cc91c510424:attempt:1",
+          "routedAttemptId": "req-4c441dc1-6f8c-431a-82b6-4cc91c510424:attempt:1",
+          "requestId": "req-4c441dc1-6f8c-431a-82b6-4cc91c510424",
+          "routingDecisionId": "decision-req-4c441dc1-6f8c-431a-82b6-4cc91c510424",
+          "failedEndpointId": "deepseek.personal.r15-local-mock.global.deepseek-v4-pro",
+          "providerId": "deepseek",
+          "providerFamily": "deepseek",
+          "executionFamily": "remote-service",
+          "adapterFamily": "ai-sdk-openai-compatible",
+          "statusCode": 422,
+          "failureClass": "execution_failed",
+          "retryable": false,
+          "fallbackEligible": false,
+          "failurePhase": "provider_execution",
+          "cooldownRecorded": false,
+          "errorPreview": {
+            "statusCode": 422,
+            "message": "R15_NONSECRET_UTF8_漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂漢字🙂",
+            "messageTruncated": true,
+            "messageOriginalUtf8Bytes": 300019
+          }
+        }
+      ]
+    },
+    "contextEnvelope": {
+      "conversationId": "standalone-runtime-dev-empty-conversation",
+      "latestHandoffId": null,
+      "estimatedTokenCount": 0
+    },
+    "retrievalReceipt": {
+      "receiptId": "standalone-runtime-dev-empty-conversation-retrieval-receipt",
+      "summary": {
+        "selectedTurns": 0,
+        "selectedArtifacts": 0,
+        "omittedTurns": 0,
+        "omittedArtifacts": 0,
+        "estimatedTokens": 0
+      }
+    },
+    "capturePolicy": {
+      "environment": "runtime-failure",
+      "redactionLevel": "strict",
+      "retentionClass": "standard",
+      "structuredInspectionMode": "summary",
+      "rawCaptureAvailable": false,
+      "structuredInspectionAvailable": true
+    },
+    "routingDiagnostics": {
+      "effectiveMetrics": {
+        "quality": {
+          "value": 0.5,
+          "source": "default"
+        },
+        "latency": {
+          "value": 0.5,
+          "source": "default"
+        },
+        "throughput": {
+          "value": 0.5,
+          "source": "default"
+        },
+        "reliability": {
+          "value": 0.7,
+          "source": "default"
+        },
+        "cost": {
+          "value": 0.9131270691333983,
+          "source": "catalog",
+          "freshnessWeight": 1,
+          "freshnessSource": "passthrough",
+          "timeDecayApplied": false
+        }
+      },
+      "throughputPenalty": {
+        "endpointId": "deepseek.personal.r15-local-mock.global.deepseek-v4-pro",
+        "active": false
+      },
+      "strategyResolution": {
+        "strategy": "balanced",
+        "source": "operator",
+        "weights": {
+          "quality": 0.3,
+          "latency": 0.2,
+          "throughput": 0.1,
+          "cost": 0.2,
+          "reliability": 0.15,
+          "preference": 0.05
+        },
+        "weightsDigest": "sha256:8c49b853bebd72f4596c926b2fc2181c67f8e2580c387d7ac8fb86457e7db9e9"
+      },
+      "selection": {
+        "mode": "best-total-score",
+        "scoreTieEpsilon": 0.01,
+        "winnerEndpointId": "deepseek.personal.r15-local-mock.global.deepseek-v4-pro",
+        "winnerTotalScore": 0.8305016553067186,
+        "tieBreakOrder": [
+          "quality",
+          "latency_ms",
+          "reliability",
+          "endpoint_id"
+        ]
+      },
+      "aliasResolution": {
+        "requestedModel": "baseline.remote-only",
+        "aliasId": "baseline.remote-only",
+        "resolvedModelIds": [
+          "deepseek/deepseek-v4-pro"
+        ],
+        "allowEndpoints": [
+          "deepseek.personal.r15-local-mock.global.deepseek-v4-pro"
+        ]
+      },
+      "cacheContinuity": {
+        "activeEndpointId": null
+      },
+      "catalogEconomics": {
+        "canonicalModelId": "deepseek/deepseek-v4-pro",
+        "tokenEconomicsSource": "catalog",
+        "inputPer1M": 0.435,
+        "outputPer1M": 0.87,
+        "estimatedRequestUsd": 0.0035687399999999995,
+        "cost_per_1k_tokens_est": 0.0008687293086660174
+      }
+    },
+    "privacyReceipt": {
+      "samplingRate": 1,
+      "retentionTtlHours": 720,
+      "retainUntil": 1793617906063
+    },
+    "telemetrySnapshot": {
+      "providerId": "deepseek",
+      "providerAccountId": "deepseek.personal.r15-local-mock",
+      "sourceType": "remote",
+      "endpointKind": "remote_api",
+      "servingSource": "remote-service",
+      "region": "global",
+      "lifecycleStateAtRequest": "active",
+      "healthStatusAtRequest": "healthy",
+      "requestedModelId": "baseline.remote-only",
+      "selectedModelId": "deepseek/deepseek-v4-pro",
+      "requestOperation": "chat",
+      "toolingUsed": false,
+      "cacheState": "unknown",
+      "selectedUncachedCostUsd": 0.0035687399999999995,
+      "baselineMaxEligibleCostUsd": null,
+      "routingCostSavingsUsd": 0,
+      "cacheCostSavingsUsd": 0,
+      "totalAvoidedCostUsd": 0,
+      "costBaselineSource": null,
+      "costSavingsSupport": "partial",
+      "eligibleEndpointIds": [
+        "deepseek.personal.r15-local-mock.global.deepseek-v4-pro"
+      ],
+      "eligibleModelIds": [
+        "deepseek/deepseek-v4-pro"
+      ],
+      "candidateCostSnapshot": {
+        "deepseek.personal.r15-local-mock.global.deepseek-v4-pro": {
+          "modelId": "deepseek/deepseek-v4-pro",
+          "providerId": "deepseek",
+          "providerKind": "remote_openai_compat",
+          "sourceType": "remote",
+          "endpointKind": "remote_api",
+          "servingSource": "remote-service",
+          "region": "global",
+          "tokenEconomicsSource": "catalog",
+          "estimatedRequestUsd": 0.0035687399999999995
+        }
+      },
+      "selectedPricingSnapshot": {
+        "canonicalModelId": "deepseek/deepseek-v4-pro",
+        "tokenEconomicsSource": "catalog",
+        "inputPer1M": 0.435,
+        "outputPer1M": 0.87,
+        "estimatedRequestUsd": 0.0035687399999999995
+      }
+    },
+    "statusFamily": "failure",
+    "failure": {
+      "statusCode": 422,
+      "errorClass": "execution_failed",
+      "latencyMs": 77
+    }
+  }
+}

@@ -1,0 +1,41 @@
+# E5 readback+rollback + materializer production suites GREEN
+# workdir: D:\DEV\role-model-internal\.worktrees\105-route-learning-matching-scope-activation
+# command: node --test --test-concurrency=1 --test-timeout=120000 tests/track-b/run105-e5-ladder-index-readback.test.mjs tests/track-b/run105-e5-ladder-rollback-roundtrip.test.mjs tests/track-b/run105-production-materialization.test.mjs 2>&1 | Out-String
+# exit: 0
+
+(node:38400) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ Run105 E5: the records readback carries the frozen ladder index beside intact records (28.46ms)
+✔ Run105 E5: a store that does not answer keeps records intact with ladders unavailable (4.2542ms)
+✔ Run105 E5: scope-wide packs produce no ladder rows (4.5704ms)
+✔ Run105 E5: a rolled-back ladder keeps its state, active false, and its rollback flag (4.6523ms)
+✔ Run105 E5 design audit: the index row carries the FULL bounded rung list beside the top-3 (3.9451ms)
+(node:29644) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ Run105 E5 repair: ON -> GET -> OFF -> GET lands the per-task flag, keeps rungs and reason, isolates the other task (156.3207ms)
+✔ Run105 E5 repair: a legacy scope-wide body still reaches the legacy rollback unchanged (66.5651ms)
+✔ Run105 E5 repair: a malformed toggle body is refused instead of coerced (55.9341ms)
+(node:32300) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ production: finalized authentic group fixtures become stored floor-filtered ladder without promotion (149.1411ms)
+✔ production: repeated permuted duplicate evidence does not advance version or freshness (107.2826ms)
+✔ production: exact role/task isolates floors; all below-floor scope has no ladder (110.0783ms)
+✔ production: removed admitted rungs survive unavailable and leave completeness denominator (161.6796ms)
+✔ production: rollback ON pauses rewrite; roll-forward reason/time survive later evidence (232.757ms)
+✔ production: stale evidence subsets and conflicting group ids never overwrite authoritative snapshot (221.8935ms)
+✔ production: worker dispatcher refuses unauthenticated cross-worker file-path writes (6.8525ms)
+✔ production: genuine EvaluationCore finalization reaches real store (423.5278ms)
+✔ production: unknown evidence time stays unknown without fabricated freshness (82.8035ms)
+✔ production: finalized evidence with another runtime's reference proofs is rejected (42.3731ms)
+✔ production: result refers to actually stored content-addressed evidence document (83.3954ms)
+✔ production: store CAS options preserve rollback and refused writes are never reported written (2.1905ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 20
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4764.4788
+
+

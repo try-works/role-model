@@ -1,0 +1,10 @@
+npm warn Unknown env config "manage-package-manager-versions". This will stop working in the next major version of npm.
+
+added 1 package, and audited 2 packages in 22s
+
+found 0 vulnerabilities
+npm warn Unknown env config "manage-package-manager-versions". This will stop working in the next major version of npm.
+
+added 1 package, and audited 3 packages in 8s
+
+found 0 vulnerabilities

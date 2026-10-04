@@ -1,0 +1,127 @@
+{
+  "capturedAt": "2026-10-03T13:24:45.041Z",
+  "packsUrl": "http://127.0.0.1:3458/app/learning/packs",
+  "results": {
+    "desktopBody": "role-model\nOverview\nStudio\nLocal\nRemote\nModels\nRouter\nObserve\nConnect\nSystem\nLearning\nMODELS\nREQUESTS\ndeepseek/deepseek-flash\ndeepseek/deepseek-flash\n0\ndeepseek/deepseek-v4-pro\ndeepseek/deepseek-v4-pro\n0\nCACHE\nno live samples\nROUTER ENDPOINT\n127.0.0.1:3458/v1\nbaseline.decision-only\nLearned packs\nOverview\nConfiguration\nPacks\nDecisions\nEvidence\nHistory\nLearned packs\n\nCandidate and pack records with their validation receipts, holdout evidence and activation state.\n\nOperator token\nThis machine's owner is trusted: readbacks, policy changes, pack activation/rollback and the kill switch all work here without a token. Set one only for clients that are not the device owner — the value is the runtime's --operator-auth-token, and a runtime exposed beyond loopback still requires it.\n\nENDPOINT LADDER INDEX\n\nOne row per role · task: the top three ranked endpoints, how many configured endpoints are admitted, the per-task full-ranking detail, and the Activate / Roll back toggle.\n\nNo endpoint ladder has been derived for this scope yet. The legacy pack table below still renders every pack record.\n\nSCOPE-WIDE COHORT ROLLOUT (LEGACY)\n\nNo pack records have been derived for this scope yet.\n\nRoll back active pack (scope-wide)\nEngage kill switch\nRelease kill switch",
+    "desktopA11y": {
+      "tabs": [
+        {
+          "t": "Overview",
+          "tab": 0,
+          "role": null
+        },
+        {
+          "t": "Studio",
+          "tab": 0,
+          "role": null
+        },
+        {
+          "t": "Local",
+          "tab": 0,
+          "role": null
+        },
+        {
+          "t": "Remote",
+          "tab": 0,
+          "role": null
+        },
+        {
+          "t": "Models",
+          "tab": 0,
+          "role": null
+        },
+        {
+          "t": "Router",
+          "tab": 0,
+          "role": null
+        },
+        {
+          "t": "Observe",
+          "tab": 0,
+          "role": null
+        },
+        {
+          "t": "Connect",
+          "tab": 0,
+          "role": null
+        },
+        {
+          "t": "System",
+          "tab": 0,
+          "role": null
+        },
+        {
+          "t": "Learning",
+          "tab": 0,
+          "role": null
+        },
+        {
+          "t": "",
+          "tab": 0,
+          "role": null
+        },
+        {
+          "t": "Overview",
+          "tab": 0,
+          "role": null
+        },
+        {
+          "t": "Configuration",
+          "tab": 0,
+          "role": null
+        },
+        {
+          "t": "Packs",
+          "tab": 0,
+          "role": null
+        },
+        {
+          "t": "Decisions",
+          "tab": 0,
+          "role": null
+        },
+        {
+          "t": "Evidence",
+          "tab": 0,
+          "role": null
+        },
+        {
+          "t": "History",
+          "tab": 0,
+          "role": null
+        },
+        {
+          "t": "Roll back active pack (scope-wide)",
+          "tab": 0,
+          "role": null
+        },
+        {
+          "t": "Engage kill switch",
+          "tab": 0,
+          "role": null
+        },
+        {
+          "t": "Release kill switch",
+          "tab": 0,
+          "role": null
+        }
+      ],
+      "active": "BODY:window.__reactRouterContext.streamContro",
+      "overflowX": false,
+      "scrollWidth": 1264,
+      "clientWidth": 1264,
+      "lang": "en"
+    },
+    "tabSequence": [
+      "BUTTON:Overview"
+    ],
+    "mobileBody": "role-model\nOverview\nStudio\nLocal\nRemote\nModels\nRouter\nObserve\nConnect\nSystem\nLearning\nMODELS\nREQUESTS\ndeepseek/deepseek-flash\ndeepseek/deepseek-flash\n0\ndeepseek/deepseek-v4-pro\ndeepseek/deepseek-v4-pro\n0\nCACHE\nno live samples\nROUTER ENDPOINT\n127.0.0.1:3458/v1\nbaseline.decision-only\nLearned packs\nOverview\nConfiguration\nPacks\nDecisions\nEvidence\nHistory\nLearned packs\n\nCandidate and pack records with their validation receipts, holdout evidence and activation state.\n\nOperator token\nThis machine's owner is trusted: readbacks, policy changes, pack activation/rollback and the kill switch all work here without a token. Set one only for clients that are not the device owner — the value is the runtime's --operator-auth-token, and a runtime exposed beyond loopback still requires it.\n\nENDPOINT LADDER INDEX\n\nOne row per role · task: the top three ranked endpoints, how many configured endpoints are admitted, the per-task full-ranking detail, and the Activate / Roll back toggle.\n\nNo endpoint ladder has been derived for this scope yet. The legacy pack table below still renders every pack record.\n\nSCOPE-WIDE COHORT ROLLOUT (LEGACY)\n\nNo pack records have been derived for this scope yet.\n\nRoll back active pack (scope-wide)\nEngage kill switch\nRelease kill switch",
+    "mobileA11y": {
+      "overflowX": false,
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "hasMetaViewport": true,
+      "vp": "width=device-width, initial-scale=1"
+    }
+  }
+}

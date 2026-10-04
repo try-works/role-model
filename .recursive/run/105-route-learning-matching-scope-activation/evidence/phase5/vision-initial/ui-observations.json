@@ -1,0 +1,81 @@
+{
+  "capturedAt": "2026-10-03T13:29:23.442Z",
+  "baseUrl": "http://127.0.0.1:3458",
+  "desktopLearningUrl": "http://127.0.0.1:3458/app/learning",
+  "desktopPacksNav": {
+    "click": "CLICKED",
+    "url": "http://127.0.0.1:3458/app/learning/packs"
+  },
+  "desktopPacksBody": "role-model\nOverview\nStudio\nLocal\nRemote\nModels\nRouter\nObserve\nConnect\nSystem\nLearning\nMODELS\nREQUESTS\ndeepseek/deepseek-flash\ndeepseek/deepseek-flash\n0\ndeepseek/deepseek-v4-pro\ndeepseek/deepseek-v4-pro\n0\nCACHE\nno live samples\nROUTER ENDPOINT\n127.0.0.1:3458/v1\nbaseline.decision-only\nLearned packs\nOverview\nConfiguration\nPacks\nDecisions\nEvidence\nHistory\nLearned packs\n\nCandidate and pack records with their validation receipts, holdout evidence and activation state.\n\nOperator token\nThis machine's owner is trusted: readbacks, policy changes, pack activation/rollback and the kill switch all work here without a token. Set one only for clients that are not the device owner — the value is the runtime's --operator-auth-token, and a runtime exposed beyond loopback still requires it.\n\nENDPOINT LADDER INDEX\n\nOne row per role · task: the top three ranked endpoints, how many configured endpoints are admitted, the per-task full-ranking detail, and the Activate / Roll back toggle.\n\nNo endpoint ladder has been derived for this scope yet. The legacy pack table below still renders every pack record.\n\nSCOPE-WIDE COHORT ROLLOUT (LEGACY)\n\nNo pack records have been derived for this scope yet.\n\nRoll back active pack (scope-wide)\nEngage kill switch\nRelease kill switch",
+  "desktopA11y": {
+    "overflowX": false,
+    "scrollWidth": 1264,
+    "clientWidth": 1264,
+    "rows": 0,
+    "toggles": [
+      {
+        "t": "Roll back active pack (scope-wide)",
+        "disabled": true,
+        "tab": 0
+      },
+      {
+        "t": "Engage kill switch",
+        "disabled": true,
+        "tab": 0
+      },
+      {
+        "t": "Release kill switch",
+        "disabled": true,
+        "tab": 0
+      }
+    ],
+    "activeEl": "BODY"
+  },
+  "desktopTabOrder": [
+    "BUTTON:Overview",
+    "BUTTON:Studio",
+    "BUTTON:Local",
+    "BUTTON:Remote",
+    "BUTTON:Models",
+    "BUTTON:Router",
+    "BUTTON:Observe",
+    "BUTTON:Connect",
+    "BUTTON:System",
+    "BUTTON:Learning"
+  ],
+  "mobileLearningUrl": "http://127.0.0.1:3458/app/learning",
+  "mobilePacksNav": {
+    "click": "CLICKED",
+    "url": "http://127.0.0.1:3458/app/learning/packs"
+  },
+  "mobilePacksBody": "role-model\nOverview\nStudio\nLocal\nRemote\nModels\nRouter\nObserve\nConnect\nSystem\nLearning\nMODELS\nREQUESTS\ndeepseek/deepseek-flash\ndeepseek/deepseek-flash\n0\ndeepseek/deepseek-v4-pro\ndeepseek/deepseek-v4-pro\n0\nCACHE\nno live samples\nROUTER ENDPOINT\n127.0.0.1:3458/v1\nbaseline.decision-only\nLearned packs\nOverview\nConfiguration\nPacks\nDecisions\nEvidence\nHistory\nLearned packs\n\nCandidate and pack records with their validation receipts, holdout evidence and activation state.\n\nOperator token\nThis machine's owner is trusted: readbacks, policy changes, pack activation/rollback and the kill switch all work here without a token. Set one only for clients that are not the device owner — the value is the runtime's --operator-auth-token, and a runtime exposed beyond loopback still requires it.\n\nENDPOINT LADDER INDEX\n\nOne row per role · task: the top three ranked endpoints, how many configured endpoints are admitted, the per-task full-ranking detail, and the Activate / Roll back toggle.\n\nNo endpoint ladder has been derived for this scope yet. The legacy pack table below still renders every pack record.\n\nSCOPE-WIDE COHORT ROLLOUT (LEGACY)\n\nNo pack records have been derived for this scope yet.\n\nRoll back active pack (scope-wide)\nEngage kill switch\nRelease kill switch",
+  "mobileA11y": {
+    "overflowX": false,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "metaViewport": "width=device-width, initial-scale=1"
+  },
+  "console": [
+    {
+      "level": "verbose",
+      "text": "[DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o",
+      "url": "http://127.0.0.1:3458/app/learning"
+    },
+    {
+      "level": "verbose",
+      "text": "[DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o",
+      "url": "http://127.0.0.1:3458/app/learning/packs"
+    },
+    {
+      "level": "verbose",
+      "text": "[DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o",
+      "url": "http://127.0.0.1:3458/app/learning"
+    },
+    {
+      "level": "verbose",
+      "text": "[DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o",
+      "url": "http://127.0.0.1:3458/app/learning/packs"
+    }
+  ],
+  "netErrors": []
+}

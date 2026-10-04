@@ -1,0 +1,21 @@
+(node:36292) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `role-model-dev --trace-warnings ...` to show where the warning was created)
+{
+  "status": "listening",
+  "host": "127.0.0.1",
+  "port": 3458
+}
+[track-b-sidecar] (node:31524) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+[track-b-sidecar] (Use `node --trace-warnings ...` to show where the warning was created)
+[run105] durable task advisory refresh: scope=standalone-runtime-dev pairs=0 stage=S4
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run105] ladder materialization degraded: configured endpoint count must be 1..64
+[run101] replay job scope: derived runtime:f00dd8041d703450676e19a6a2582f1f
+[run101] recovery page payload shape: value,businessOutput,durableLocator,evidenceRef,readCapability,workerPid
+[run101] recovery page came back empty: scope=runtime:f00dd8041d703450676e19a6a2582f1f channel=development cursor=start
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run105] ladder materialization degraded: configured endpoint count must be 1..64
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run105] ladder materialization degraded: configured endpoint count must be 1..64
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run105] ladder materialization degraded: configured endpoint count must be 1..64

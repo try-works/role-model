@@ -1,0 +1,46 @@
+(node:26724) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+{
+  "schemaVersion": "run105.full-dev-build.v1",
+  "verifiedAt": "2026-10-03T12:39:12.364Z",
+  "scope": "COMPLETE run105 paired source offline development build; NOT Phase5 PASS; full objective every phase remains in progress",
+  "serverLaunched": false,
+  "portProbed": false,
+  "stageOrProductionTouched": false,
+  "releasePath": "E:/tmp/run105-full-public/role-model-router/dist/release/win32-x64",
+  "executablePath": "E:\\tmp\\run105-full-public\\role-model-router\\dist\\release\\win32-x64\\role-model-dev.exe",
+  "publicIdentity": {
+    "root": "E:/tmp/run105-full-public",
+    "branch": "recursive/105-full-build-verification-public",
+    "commit": "83308e29c7e9505054a0885f56da378330e76e5e",
+    "tree": "d391ec693cf10e8af812e1e26c57934649f202ba",
+    "status": ""
+  },
+  "privateIdentity": {
+    "root": "E:/tmp/run105-full-private",
+    "branch": "recursive/105-full-build-verification-private",
+    "commit": "4d78ce60cfbf34734e286b34b878291617266261",
+    "tree": "914efc317adb82dfdb1aee2c406ea0712a97e02c",
+    "status": ""
+  },
+  "originalPrivateCommit": "3fe39e88300f1fb746c725132ab9f96264a0593a",
+  "executableSha256": "ffc3f58a45992d72b5eae539e3450b9b5bded5954335567da64c219e17768d78",
+  "releaseManifestSha256": "69ac667e6c03c691f7f32b78fd336207fbba2b7dcb94977e005cc108dcab3896",
+  "privateDistributionManifestSha256": "27599b3c87d618f9bfab1072cb8ddbb1fc97eb34e7585930e66b1fb17e9b69cb",
+  "artifactClosureVerified": true,
+  "sourceSeal": {
+    "status": "sealed_clean",
+    "releaseEligible": true,
+    "privateClean": true,
+    "publicClean": true
+  },
+  "runtimeChannelContext": {
+    "channel": "development",
+    "scopeId": "standalone-runtime-dev",
+    "authorizationEpoch": 1
+  },
+  "extensionCount": 13,
+  "releaseFiles": {
+    "count": 152
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "publicCommit": "a3ca6663cb4ee4218c33fdbd22318ea39cf59ed2",
+  "publicTree": "09489ead28cb7a988f3442fa9333b942559278ef",
+  "privateCommitDuringChecks": "3fe39e88300f1fb746c725132ab9f96264a0593a",
+  "privateRepairCommit": "4d78ce60cfbf34734e286b34b878291617266261",
+  "results": {
+    "publicFrozenInstall": 0,
+    "privateFrozenInstall": 0,
+    "publicBridgeDependencyBuildIncludingTypecheck": 0,
+    "normalRuntimeUi": {
+      "exitCode": 0,
+      "tests": 684,
+      "files": 72,
+      "chromium": true
+    },
+    "bridgeCritical": {
+      "exitCode": 0,
+      "tests": 113,
+      "files": 6
+    },
+    "sqliteNoEmitTypecheck": 0,
+    "privatePackageAlignmentAfterRepair": 0
+  },
+  "initialPrivateBuild": {
+    "exitCode": 1,
+    "error": "knowledge-store package permission registry drift",
+    "job": "pwsh-2012"
+  },
+  "fullHostTestsDuplicated": false,
+  "runtimeStarted": false,
+  "portsProbed": false,
+  "phase5Pass": false
+}

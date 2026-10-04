@@ -1,0 +1,1546 @@
+{
+  "test": "run105 phase5 vision-final-responsive retest",
+  "modelIdentity": "unknown",
+  "flashClaim": false,
+  "url": "http://127.0.0.1:3458",
+  "startedAt": "2026-10-03T14:47:43.542Z",
+  "identity": {
+    "healthStatus": 200,
+    "healthBodyLen": 4945,
+    "runningExeSha256": "ffc3f58a45992d72b5eae539e3450b9b5bded5954335567da64c219e17768d78",
+    "publicCommit": "7162930d76dc1c317c8d192a2e3fbbdcde6f878c",
+    "publicTree": "21149251eb844b2b3f345ce1e8a0e7d8ceec2803",
+    "privateCommit": "da40a115237432b248f6b5282a4ac42f8fb90179",
+    "appShellBlobAt7162930d": "c808b842bdd45ebe0052a3523fec5cff09ed3341"
+  },
+  "browser": {
+    "chromePath": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+    "port": 9222,
+    "chromeVersion": "Chrome/154.0.8037.93"
+  },
+  "phases": {
+    "desktop": {
+      "overview": {
+        "vw": 1280,
+        "vh": 844,
+        "path": "/app/learning",
+        "docTitle": "",
+        "doc": {
+          "scrollW": 1280,
+          "clientW": 1280,
+          "overflow": 0
+        },
+        "main": {
+          "scrollW": 1056,
+          "clientW": 1056,
+          "overflow": 0,
+          "rect": {
+            "l": 224,
+            "r": 1280,
+            "t": 48,
+            "b": 844,
+            "w": 1056,
+            "h": 796
+          },
+          "laneFilled": false
+        },
+        "sidebar": {
+          "display": "flex",
+          "rect": {
+            "l": 0,
+            "r": 224,
+            "t": 0,
+            "b": 844,
+            "w": 224,
+            "h": 844
+          }
+        },
+        "primaryNav": {
+          "display": "none",
+          "rect": {
+            "l": 0,
+            "r": 0,
+            "t": 0,
+            "b": 0,
+            "w": 0,
+            "h": 0
+          },
+          "scrollW": 0,
+          "clientW": 0,
+          "scrollLeft": 0,
+          "buttons": [
+            {
+              "text": "Overview",
+              "current": null
+            },
+            {
+              "text": "Studio",
+              "current": null
+            },
+            {
+              "text": "Local",
+              "current": null
+            },
+            {
+              "text": "Remote",
+              "current": null
+            },
+            {
+              "text": "Models",
+              "current": null
+            },
+            {
+              "text": "Router",
+              "current": null
+            },
+            {
+              "text": "Observe",
+              "current": null
+            },
+            {
+              "text": "Connect",
+              "current": null
+            },
+            {
+              "text": "System",
+              "current": null
+            },
+            {
+              "text": "Learning",
+              "current": "page"
+            }
+          ]
+        },
+        "segmented": {
+          "ariaLabel": "Learning secondary navigation",
+          "rect": {
+            "l": 240,
+            "r": 743.5,
+            "t": 68,
+            "b": 104,
+            "w": 503.5,
+            "h": 36
+          },
+          "scrollW": 501,
+          "clientW": 501,
+          "buttons": [
+            {
+              "text": "Overview",
+              "pressed": "true",
+              "l": 245,
+              "r": 328,
+              "w": 83
+            },
+            {
+              "text": "Configuration",
+              "pressed": "false",
+              "l": 332,
+              "r": 438.2,
+              "w": 106.2
+            },
+            {
+              "text": "Packs",
+              "pressed": "false",
+              "l": 442.2,
+              "r": 501,
+              "w": 58.8
+            },
+            {
+              "text": "Decisions",
+              "pressed": "false",
+              "l": 505,
+              "r": 587,
+              "w": 82
+            },
+            {
+              "text": "Evidence",
+              "pressed": "false",
+              "l": 591,
+              "r": 669,
+              "w": 78
+            },
+            {
+              "text": "History",
+              "pressed": "false",
+              "l": 673,
+              "r": 738.5,
+              "w": 65.5
+            }
+          ]
+        },
+        "title": {
+          "text": "Learning overview",
+          "rect": {
+            "l": 240,
+            "r": 353.4,
+            "t": 14.5,
+            "b": 32.5,
+            "w": 113.4,
+            "h": 18
+          },
+          "clippedRight": false,
+          "clippedLeft": false,
+          "truncated": false
+        },
+        "ladder": {
+          "empty": false,
+          "unavailable": false,
+          "notAsked": false,
+          "hasIndexHeading": false,
+          "legacyEmpty": false,
+          "loading": false
+        }
+      },
+      "keyboard": {
+        "hit": {
+          "tag": "BUTTON",
+          "text": "Overview",
+          "current": null,
+          "inAside": true,
+          "inPrimary": false,
+          "inSeg": false,
+          "outline": "auto",
+          "outlineWidth": "1px"
+        },
+        "seq": [
+          {
+            "tag": "BUTTON",
+            "text": "Overview",
+            "current": null,
+            "inAside": true,
+            "inPrimary": false,
+            "inSeg": false,
+            "outline": "auto",
+            "outlineWidth": "1px"
+          }
+        ],
+        "tabsUsed": 1,
+        "pathBefore": "/app/learning",
+        "pathAfter": "/app"
+      },
+      "packsClickWorked": true,
+      "packs": {
+        "vw": 1280,
+        "vh": 844,
+        "path": "/app/learning/packs",
+        "docTitle": "",
+        "doc": {
+          "scrollW": 1280,
+          "clientW": 1280,
+          "overflow": 0
+        },
+        "main": {
+          "scrollW": 1056,
+          "clientW": 1056,
+          "overflow": 0,
+          "rect": {
+            "l": 224,
+            "r": 1280,
+            "t": 48,
+            "b": 844,
+            "w": 1056,
+            "h": 796
+          },
+          "laneFilled": false
+        },
+        "sidebar": {
+          "display": "flex",
+          "rect": {
+            "l": 0,
+            "r": 224,
+            "t": 0,
+            "b": 844,
+            "w": 224,
+            "h": 844
+          }
+        },
+        "primaryNav": {
+          "display": "none",
+          "rect": {
+            "l": 0,
+            "r": 0,
+            "t": 0,
+            "b": 0,
+            "w": 0,
+            "h": 0
+          },
+          "scrollW": 0,
+          "clientW": 0,
+          "scrollLeft": 0,
+          "buttons": [
+            {
+              "text": "Overview",
+              "current": null
+            },
+            {
+              "text": "Studio",
+              "current": null
+            },
+            {
+              "text": "Local",
+              "current": null
+            },
+            {
+              "text": "Remote",
+              "current": null
+            },
+            {
+              "text": "Models",
+              "current": null
+            },
+            {
+              "text": "Router",
+              "current": null
+            },
+            {
+              "text": "Observe",
+              "current": null
+            },
+            {
+              "text": "Connect",
+              "current": null
+            },
+            {
+              "text": "System",
+              "current": null
+            },
+            {
+              "text": "Learning",
+              "current": "page"
+            }
+          ]
+        },
+        "segmented": {
+          "ariaLabel": "Learning secondary navigation",
+          "rect": {
+            "l": 240,
+            "r": 741.8,
+            "t": 68,
+            "b": 104,
+            "w": 501.8,
+            "h": 36
+          },
+          "scrollW": 500,
+          "clientW": 500,
+          "buttons": [
+            {
+              "text": "Overview",
+              "pressed": "false",
+              "l": 245,
+              "r": 324.6,
+              "w": 79.6
+            },
+            {
+              "text": "Configuration",
+              "pressed": "false",
+              "l": 328.6,
+              "r": 434.8,
+              "w": 106.2
+            },
+            {
+              "text": "Packs",
+              "pressed": "true",
+              "l": 438.8,
+              "r": 499.4,
+              "w": 60.6
+            },
+            {
+              "text": "Decisions",
+              "pressed": "false",
+              "l": 503.4,
+              "r": 585.3,
+              "w": 82
+            },
+            {
+              "text": "Evidence",
+              "pressed": "false",
+              "l": 589.3,
+              "r": 667.4,
+              "w": 78
+            },
+            {
+              "text": "History",
+              "pressed": "false",
+              "l": 671.4,
+              "r": 736.8,
+              "w": 65.5
+            }
+          ]
+        },
+        "title": {
+          "text": "Learned packs",
+          "rect": {
+            "l": 240,
+            "r": 331.3,
+            "t": 14.5,
+            "b": 32.5,
+            "w": 91.3,
+            "h": 18
+          },
+          "clippedRight": false,
+          "clippedLeft": false,
+          "truncated": false
+        },
+        "ladder": {
+          "empty": true,
+          "unavailable": false,
+          "notAsked": false,
+          "hasIndexHeading": false,
+          "legacyEmpty": true,
+          "loading": false
+        }
+      }
+    },
+    "mobile": {
+      "landing": {
+        "vw": 390,
+        "vh": 844,
+        "path": "/app",
+        "docTitle": "",
+        "doc": {
+          "scrollW": 390,
+          "clientW": 390,
+          "overflow": 0
+        },
+        "main": {
+          "scrollW": 390,
+          "clientW": 390,
+          "overflow": 0,
+          "rect": {
+            "l": 0,
+            "r": 390,
+            "t": 101,
+            "b": 844,
+            "w": 390,
+            "h": 743
+          },
+          "laneFilled": true
+        },
+        "sidebar": {
+          "display": "none",
+          "rect": {
+            "l": 0,
+            "r": 0,
+            "t": 0,
+            "b": 0,
+            "w": 0,
+            "h": 0
+          }
+        },
+        "primaryNav": {
+          "display": "flex",
+          "rect": {
+            "l": 0,
+            "r": 390,
+            "t": 0,
+            "b": 53,
+            "w": 390,
+            "h": 53
+          },
+          "scrollW": 780,
+          "clientW": 390,
+          "scrollLeft": 0,
+          "buttons": [
+            {
+              "text": "Overview",
+              "current": "page"
+            },
+            {
+              "text": "Studio",
+              "current": null
+            },
+            {
+              "text": "Local",
+              "current": null
+            },
+            {
+              "text": "Remote",
+              "current": null
+            },
+            {
+              "text": "Models",
+              "current": null
+            },
+            {
+              "text": "Router",
+              "current": null
+            },
+            {
+              "text": "Observe",
+              "current": null
+            },
+            {
+              "text": "Connect",
+              "current": null
+            },
+            {
+              "text": "System",
+              "current": null
+            },
+            {
+              "text": "Learning",
+              "current": null
+            }
+          ]
+        },
+        "segmented": {
+          "ariaLabel": "Time range",
+          "rect": {
+            "l": 16,
+            "r": 272.3,
+            "t": 143,
+            "b": 179,
+            "w": 256.3,
+            "h": 36
+          },
+          "scrollW": 254,
+          "clientW": 254,
+          "buttons": [
+            {
+              "text": "Day",
+              "pressed": "true",
+              "l": 21,
+              "r": 66.7,
+              "w": 45.7
+            },
+            {
+              "text": "Week",
+              "pressed": "false",
+              "l": 70.7,
+              "r": 127,
+              "w": 56.4
+            },
+            {
+              "text": "Month",
+              "pressed": "false",
+              "l": 131,
+              "r": 192,
+              "w": 61
+            },
+            {
+              "text": "90 days",
+              "pressed": "false",
+              "l": 196,
+              "r": 267.3,
+              "w": 71.2
+            }
+          ]
+        },
+        "title": {
+          "text": "Runtime overview",
+          "rect": {
+            "l": 16,
+            "r": 127.5,
+            "t": 67.5,
+            "b": 85.5,
+            "w": 111.5,
+            "h": 18
+          },
+          "clippedRight": false,
+          "clippedLeft": false,
+          "truncated": false
+        },
+        "ladder": {
+          "empty": false,
+          "unavailable": false,
+          "notAsked": false,
+          "hasIndexHeading": false,
+          "legacyEmpty": false,
+          "loading": false
+        }
+      },
+      "keyboard": {
+        "hit": {
+          "tag": "BUTTON",
+          "text": "Learning",
+          "current": null,
+          "inAside": false,
+          "inPrimary": true,
+          "inSeg": false,
+          "outline": "auto",
+          "outlineWidth": "1px"
+        },
+        "seq": [
+          {
+            "tag": "BUTTON",
+            "text": "Overview",
+            "current": "page",
+            "inAside": false,
+            "inPrimary": true,
+            "inSeg": false,
+            "outline": "auto",
+            "outlineWidth": "1px"
+          },
+          {
+            "tag": "BUTTON",
+            "text": "Studio",
+            "current": null,
+            "inAside": false,
+            "inPrimary": true,
+            "inSeg": false,
+            "outline": "auto",
+            "outlineWidth": "1px"
+          },
+          {
+            "tag": "BUTTON",
+            "text": "Local",
+            "current": null,
+            "inAside": false,
+            "inPrimary": true,
+            "inSeg": false,
+            "outline": "auto",
+            "outlineWidth": "1px"
+          },
+          {
+            "tag": "BUTTON",
+            "text": "Remote",
+            "current": null,
+            "inAside": false,
+            "inPrimary": true,
+            "inSeg": false,
+            "outline": "auto",
+            "outlineWidth": "1px"
+          },
+          {
+            "tag": "BUTTON",
+            "text": "Models",
+            "current": null,
+            "inAside": false,
+            "inPrimary": true,
+            "inSeg": false,
+            "outline": "auto",
+            "outlineWidth": "1px"
+          },
+          {
+            "tag": "BUTTON",
+            "text": "Router",
+            "current": null,
+            "inAside": false,
+            "inPrimary": true,
+            "inSeg": false,
+            "outline": "auto",
+            "outlineWidth": "1px"
+          },
+          {
+            "tag": "BUTTON",
+            "text": "Observe",
+            "current": null,
+            "inAside": false,
+            "inPrimary": true,
+            "inSeg": false,
+            "outline": "auto",
+            "outlineWidth": "1px"
+          },
+          {
+            "tag": "BUTTON",
+            "text": "Connect",
+            "current": null,
+            "inAside": false,
+            "inPrimary": true,
+            "inSeg": false,
+            "outline": "auto",
+            "outlineWidth": "1px"
+          },
+          {
+            "tag": "BUTTON",
+            "text": "System",
+            "current": null,
+            "inAside": false,
+            "inPrimary": true,
+            "inSeg": false,
+            "outline": "auto",
+            "outlineWidth": "1px"
+          },
+          {
+            "tag": "BUTTON",
+            "text": "Learning",
+            "current": null,
+            "inAside": false,
+            "inPrimary": true,
+            "inSeg": false,
+            "outline": "auto",
+            "outlineWidth": "1px"
+          }
+        ],
+        "tabsUsed": 10,
+        "pathBefore": "/app",
+        "pathAfter": "/app/learning",
+        "kbdOk": true
+      },
+      "learning": {
+        "vw": 390,
+        "vh": 844,
+        "path": "/app/learning",
+        "docTitle": "",
+        "doc": {
+          "scrollW": 390,
+          "clientW": 390,
+          "overflow": 0
+        },
+        "main": {
+          "scrollW": 687,
+          "clientW": 390,
+          "overflow": 297,
+          "rect": {
+            "l": 0,
+            "r": 390,
+            "t": 101,
+            "b": 844,
+            "w": 390,
+            "h": 743
+          },
+          "laneFilled": true
+        },
+        "sidebar": {
+          "display": "none",
+          "rect": {
+            "l": 0,
+            "r": 0,
+            "t": 0,
+            "b": 0,
+            "w": 0,
+            "h": 0
+          }
+        },
+        "primaryNav": {
+          "display": "flex",
+          "rect": {
+            "l": 0,
+            "r": 390,
+            "t": 0,
+            "b": 53,
+            "w": 390,
+            "h": 53
+          },
+          "scrollW": 780,
+          "clientW": 390,
+          "scrollLeft": 390,
+          "buttons": [
+            {
+              "text": "Overview",
+              "current": null
+            },
+            {
+              "text": "Studio",
+              "current": null
+            },
+            {
+              "text": "Local",
+              "current": null
+            },
+            {
+              "text": "Remote",
+              "current": null
+            },
+            {
+              "text": "Models",
+              "current": null
+            },
+            {
+              "text": "Router",
+              "current": null
+            },
+            {
+              "text": "Observe",
+              "current": null
+            },
+            {
+              "text": "Connect",
+              "current": null
+            },
+            {
+              "text": "System",
+              "current": null
+            },
+            {
+              "text": "Learning",
+              "current": "page"
+            }
+          ]
+        },
+        "segmented": {
+          "ariaLabel": "Learning secondary navigation",
+          "rect": {
+            "l": 16,
+            "r": 519.5,
+            "t": 121,
+            "b": 157,
+            "w": 503.5,
+            "h": 36
+          },
+          "scrollW": 501,
+          "clientW": 501,
+          "buttons": [
+            {
+              "text": "Overview",
+              "pressed": "true",
+              "l": 21,
+              "r": 104,
+              "w": 83
+            },
+            {
+              "text": "Configuration",
+              "pressed": "false",
+              "l": 108,
+              "r": 214.2,
+              "w": 106.2
+            },
+            {
+              "text": "Packs",
+              "pressed": "false",
+              "l": 218.2,
+              "r": 277,
+              "w": 58.8
+            },
+            {
+              "text": "Decisions",
+              "pressed": "false",
+              "l": 281,
+              "r": 363,
+              "w": 82
+            },
+            {
+              "text": "Evidence",
+              "pressed": "false",
+              "l": 367,
+              "r": 445,
+              "w": 78
+            },
+            {
+              "text": "History",
+              "pressed": "false",
+              "l": 449,
+              "r": 514.5,
+              "w": 65.5
+            }
+          ]
+        },
+        "title": {
+          "text": "Learning overview",
+          "rect": {
+            "l": 16,
+            "r": 129.4,
+            "t": 67.5,
+            "b": 85.5,
+            "w": 113.4,
+            "h": 18
+          },
+          "clippedRight": false,
+          "clippedLeft": false,
+          "truncated": false
+        },
+        "ladder": {
+          "empty": false,
+          "unavailable": false,
+          "notAsked": false,
+          "hasIndexHeading": false,
+          "legacyEmpty": false,
+          "loading": false
+        }
+      },
+      "keyboardPacks": {
+        "hit": {
+          "tag": "BUTTON",
+          "text": "Packs",
+          "current": null,
+          "inAside": false,
+          "inPrimary": false,
+          "inSeg": true,
+          "outline": "auto",
+          "outlineWidth": "1px"
+        },
+        "seq": [
+          {
+            "tag": "BUTTON",
+            "text": "",
+            "current": null,
+            "inAside": false,
+            "inPrimary": false,
+            "inSeg": false,
+            "outline": "none",
+            "outlineWidth": "1px"
+          },
+          {
+            "tag": "BUTTON",
+            "text": "Overview",
+            "current": null,
+            "inAside": false,
+            "inPrimary": false,
+            "inSeg": true,
+            "outline": "auto",
+            "outlineWidth": "1px"
+          },
+          {
+            "tag": "BUTTON",
+            "text": "Configuration",
+            "current": null,
+            "inAside": false,
+            "inPrimary": false,
+            "inSeg": true,
+            "outline": "auto",
+            "outlineWidth": "1px"
+          },
+          {
+            "tag": "BUTTON",
+            "text": "Packs",
+            "current": null,
+            "inAside": false,
+            "inPrimary": false,
+            "inSeg": true,
+            "outline": "auto",
+            "outlineWidth": "1px"
+          }
+        ],
+        "tabsUsed": 4,
+        "kbdPacksOk": true,
+        "pathAfter": "/app/learning/packs"
+      },
+      "navScroll": {
+        "afterSet": 240,
+        "afterReset": 0,
+        "scrollW": 780,
+        "clientW": 390
+      },
+      "packsClickWorked": true,
+      "packs": {
+        "vw": 390,
+        "vh": 844,
+        "path": "/app/learning/packs",
+        "docTitle": "",
+        "doc": {
+          "scrollW": 390,
+          "clientW": 390,
+          "overflow": 0
+        },
+        "main": {
+          "scrollW": 518,
+          "clientW": 390,
+          "overflow": 128,
+          "rect": {
+            "l": 0,
+            "r": 390,
+            "t": 101,
+            "b": 844,
+            "w": 390,
+            "h": 743
+          },
+          "laneFilled": true
+        },
+        "sidebar": {
+          "display": "none",
+          "rect": {
+            "l": 0,
+            "r": 0,
+            "t": 0,
+            "b": 0,
+            "w": 0,
+            "h": 0
+          }
+        },
+        "primaryNav": {
+          "display": "flex",
+          "rect": {
+            "l": 0,
+            "r": 390,
+            "t": 0,
+            "b": 53,
+            "w": 390,
+            "h": 53
+          },
+          "scrollW": 780,
+          "clientW": 390,
+          "scrollLeft": 0,
+          "buttons": [
+            {
+              "text": "Overview",
+              "current": null
+            },
+            {
+              "text": "Studio",
+              "current": null
+            },
+            {
+              "text": "Local",
+              "current": null
+            },
+            {
+              "text": "Remote",
+              "current": null
+            },
+            {
+              "text": "Models",
+              "current": null
+            },
+            {
+              "text": "Router",
+              "current": null
+            },
+            {
+              "text": "Observe",
+              "current": null
+            },
+            {
+              "text": "Connect",
+              "current": null
+            },
+            {
+              "text": "System",
+              "current": null
+            },
+            {
+              "text": "Learning",
+              "current": "page"
+            }
+          ]
+        },
+        "segmented": {
+          "ariaLabel": "Learning secondary navigation",
+          "rect": {
+            "l": 16,
+            "r": 517.8,
+            "t": 121,
+            "b": 157,
+            "w": 501.8,
+            "h": 36
+          },
+          "scrollW": 500,
+          "clientW": 500,
+          "buttons": [
+            {
+              "text": "Overview",
+              "pressed": "false",
+              "l": 21,
+              "r": 100.6,
+              "w": 79.6
+            },
+            {
+              "text": "Configuration",
+              "pressed": "false",
+              "l": 104.6,
+              "r": 210.8,
+              "w": 106.2
+            },
+            {
+              "text": "Packs",
+              "pressed": "true",
+              "l": 214.8,
+              "r": 275.4,
+              "w": 60.6
+            },
+            {
+              "text": "Decisions",
+              "pressed": "false",
+              "l": 279.4,
+              "r": 361.3,
+              "w": 82
+            },
+            {
+              "text": "Evidence",
+              "pressed": "false",
+              "l": 365.3,
+              "r": 443.4,
+              "w": 78
+            },
+            {
+              "text": "History",
+              "pressed": "false",
+              "l": 447.4,
+              "r": 512.8,
+              "w": 65.5
+            }
+          ]
+        },
+        "title": {
+          "text": "Learned packs",
+          "rect": {
+            "l": 16,
+            "r": 107.3,
+            "t": 67.5,
+            "b": 85.5,
+            "w": 91.3,
+            "h": 18
+          },
+          "clippedRight": false,
+          "clippedLeft": false,
+          "truncated": false
+        },
+        "ladder": {
+          "empty": true,
+          "unavailable": false,
+          "notAsked": false,
+          "hasIndexHeading": false,
+          "legacyEmpty": true,
+          "loading": false
+        }
+      }
+    }
+  },
+  "checks": [
+    {
+      "name": "desktop(1280): /app/learning page-level no horizontal overflow",
+      "pass": true,
+      "detail": {
+        "scrollW": 1280,
+        "clientW": 1280,
+        "overflow": 0
+      }
+    },
+    {
+      "name": "desktop: sidebar visible (md:flex, w=224)",
+      "pass": true,
+      "detail": {
+        "display": "flex",
+        "rect": {
+          "l": 0,
+          "r": 224,
+          "t": 0,
+          "b": 844,
+          "w": 224,
+          "h": 844
+        }
+      }
+    },
+    {
+      "name": "desktop: mobile primary nav hidden",
+      "pass": true,
+      "detail": "none"
+    },
+    {
+      "name": "desktop: title \"Learning overview\" unclipped/not truncated",
+      "pass": true,
+      "detail": {
+        "text": "Learning overview",
+        "rect": {
+          "l": 240,
+          "r": 353.4,
+          "t": 14.5,
+          "b": 32.5,
+          "w": 113.4,
+          "h": 18
+        },
+        "clippedRight": false,
+        "clippedLeft": false,
+        "truncated": false
+      }
+    },
+    {
+      "name": "desktop: 6 Learning tabs rendered incl Packs, all inside viewport",
+      "pass": true,
+      "detail": {
+        "ariaLabel": "Learning secondary navigation",
+        "buttons": [
+          {
+            "text": "Overview",
+            "pressed": "true",
+            "l": 245,
+            "r": 328,
+            "w": 83
+          },
+          {
+            "text": "Configuration",
+            "pressed": "false",
+            "l": 332,
+            "r": 438.2,
+            "w": 106.2
+          },
+          {
+            "text": "Packs",
+            "pressed": "false",
+            "l": 442.2,
+            "r": 501,
+            "w": 58.8
+          },
+          {
+            "text": "Decisions",
+            "pressed": "false",
+            "l": 505,
+            "r": 587,
+            "w": 82
+          },
+          {
+            "text": "Evidence",
+            "pressed": "false",
+            "l": 591,
+            "r": 669,
+            "w": 78
+          },
+          {
+            "text": "History",
+            "pressed": "false",
+            "l": 673,
+            "r": 738.5,
+            "w": 65.5
+          }
+        ]
+      }
+    },
+    {
+      "name": "desktop: content lane fills viewport right of sidebar (224+1056=1280, no gap/overlap)",
+      "pass": true,
+      "detail": {
+        "sidebar": {
+          "l": 0,
+          "r": 224,
+          "t": 0,
+          "b": 844,
+          "w": 224,
+          "h": 844
+        },
+        "main": {
+          "l": 224,
+          "r": 1280,
+          "t": 48,
+          "b": 844,
+          "w": 1056,
+          "h": 796
+        }
+      }
+    },
+    {
+      "name": "desktop: keyboard Tab reaches sidebar section button (focus visible)",
+      "pass": true,
+      "detail": {
+        "tag": "BUTTON",
+        "text": "Overview",
+        "current": null,
+        "inAside": true,
+        "inPrimary": false,
+        "inSeg": false,
+        "outline": "auto",
+        "outlineWidth": "1px"
+      }
+    },
+    {
+      "name": "desktop: Enter on focused sidebar button navigates",
+      "pass": true,
+      "detail": {
+        "before": "/app/learning",
+        "after": "/app"
+      }
+    },
+    {
+      "name": "desktop: real click Packs tab -> /app/learning/packs",
+      "pass": true,
+      "detail": {
+        "clickWorked": true,
+        "path": "/app/learning/packs"
+      }
+    },
+    {
+      "name": "desktop: packs page no page-level overflow",
+      "pass": true,
+      "detail": {
+        "scrollW": 1280,
+        "clientW": 1280,
+        "overflow": 0
+      }
+    },
+    {
+      "name": "desktop: packs title \"Learned packs\" unclipped",
+      "pass": true,
+      "detail": {
+        "text": "Learned packs",
+        "rect": {
+          "l": 240,
+          "r": 331.3,
+          "t": 14.5,
+          "b": 32.5,
+          "w": 91.3,
+          "h": 18
+        },
+        "clippedRight": false,
+        "clippedLeft": false,
+        "truncated": false
+      }
+    },
+    {
+      "name": "desktop: truthful ladder state (bounded note, no fabricated zeros)",
+      "pass": true,
+      "detail": {
+        "empty": true,
+        "unavailable": false,
+        "notAsked": false,
+        "hasIndexHeading": false,
+        "legacyEmpty": true,
+        "loading": false
+      }
+    },
+    {
+      "name": "mobile(390): /app page-level no horizontal overflow",
+      "pass": true,
+      "detail": {
+        "scrollW": 390,
+        "clientW": 390,
+        "overflow": 0
+      }
+    },
+    {
+      "name": "mobile: desktop sidebar hidden",
+      "pass": true,
+      "detail": "none"
+    },
+    {
+      "name": "mobile: horizontal primary nav visible",
+      "pass": true,
+      "detail": {
+        "display": "flex",
+        "rect": {
+          "l": 0,
+          "r": 390,
+          "t": 0,
+          "b": 53,
+          "w": 390,
+          "h": 53
+        },
+        "buttons": [
+          {
+            "text": "Overview",
+            "current": "page"
+          },
+          {
+            "text": "Studio",
+            "current": null
+          },
+          {
+            "text": "Local",
+            "current": null
+          },
+          {
+            "text": "Remote",
+            "current": null
+          },
+          {
+            "text": "Models",
+            "current": null
+          },
+          {
+            "text": "Router",
+            "current": null
+          },
+          {
+            "text": "Observe",
+            "current": null
+          },
+          {
+            "text": "Connect",
+            "current": null
+          },
+          {
+            "text": "System",
+            "current": null
+          },
+          {
+            "text": "Learning",
+            "current": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "mobile: primary nav horizontally scrollable (scrollW>clientW, scrollLeft settable+resettable)",
+      "pass": true,
+      "detail": {
+        "afterSet": 240,
+        "afterReset": 0,
+        "scrollW": 780,
+        "clientW": 390
+      }
+    },
+    {
+      "name": "mobile: keyboard Tab reaches Learning nav button, Enter -> /app/learning",
+      "pass": true,
+      "detail": {
+        "hit": {
+          "tag": "BUTTON",
+          "text": "Learning",
+          "current": null,
+          "inAside": false,
+          "inPrimary": true,
+          "inSeg": false,
+          "outline": "auto",
+          "outlineWidth": "1px"
+        },
+        "pathAfter": "/app/learning",
+        "kbdOk": true
+      }
+    },
+    {
+      "name": "mobile: learning page no page-level overflow",
+      "pass": true,
+      "detail": {
+        "scrollW": 390,
+        "clientW": 390,
+        "overflow": 0
+      }
+    },
+    {
+      "name": "mobile: title \"Learning overview\" unclipped at 390",
+      "pass": true,
+      "detail": {
+        "text": "Learning overview",
+        "rect": {
+          "l": 16,
+          "r": 129.4,
+          "t": 67.5,
+          "b": 85.5,
+          "w": 113.4,
+          "h": 18
+        },
+        "clippedRight": false,
+        "clippedLeft": false,
+        "truncated": false
+      }
+    },
+    {
+      "name": "mobile: 6 Learning tabs rendered incl Packs",
+      "pass": true,
+      "detail": {
+        "ariaLabel": "Learning secondary navigation",
+        "buttons": [
+          {
+            "text": "Overview",
+            "pressed": "true",
+            "l": 21,
+            "r": 104,
+            "w": 83
+          },
+          {
+            "text": "Configuration",
+            "pressed": "false",
+            "l": 108,
+            "r": 214.2,
+            "w": 106.2
+          },
+          {
+            "text": "Packs",
+            "pressed": "false",
+            "l": 218.2,
+            "r": 277,
+            "w": 58.8
+          },
+          {
+            "text": "Decisions",
+            "pressed": "false",
+            "l": 281,
+            "r": 363,
+            "w": 82
+          },
+          {
+            "text": "Evidence",
+            "pressed": "false",
+            "l": 367,
+            "r": 445,
+            "w": 78
+          },
+          {
+            "text": "History",
+            "pressed": "false",
+            "l": 449,
+            "r": 514.5,
+            "w": 65.5
+          }
+        ]
+      }
+    },
+    {
+      "name": "mobile: content fullwidth (main 0..390) + no page-level clip; tab strip scrolls inside main lane only",
+      "pass": true,
+      "detail": {
+        "main": {
+          "l": 0,
+          "r": 390,
+          "t": 101,
+          "b": 844,
+          "w": 390,
+          "h": 743
+        },
+        "mainOverflow": 297,
+        "doc": {
+          "scrollW": 390,
+          "clientW": 390,
+          "overflow": 0
+        }
+      }
+    },
+    {
+      "name": "mobile: keyboard Tab reaches Packs tab, Enter -> /app/learning/packs",
+      "pass": true,
+      "detail": {
+        "hit": {
+          "tag": "BUTTON",
+          "text": "Packs",
+          "current": null,
+          "inAside": false,
+          "inPrimary": false,
+          "inSeg": true,
+          "outline": "auto",
+          "outlineWidth": "1px"
+        },
+        "pathAfter": "/app/learning/packs",
+        "kbdPacksOk": true
+      }
+    },
+    {
+      "name": "mobile: real click Packs -> /app/learning/packs",
+      "pass": true,
+      "detail": {
+        "clickWorked": true,
+        "path": "/app/learning/packs"
+      }
+    },
+    {
+      "name": "mobile: packs page no page-level overflow",
+      "pass": true,
+      "detail": {
+        "scrollW": 390,
+        "clientW": 390,
+        "overflow": 0
+      }
+    },
+    {
+      "name": "mobile: packs title \"Learned packs\" unclipped",
+      "pass": true,
+      "detail": {
+        "text": "Learned packs",
+        "rect": {
+          "l": 16,
+          "r": 107.3,
+          "t": 67.5,
+          "b": 85.5,
+          "w": 91.3,
+          "h": 18
+        },
+        "clippedRight": false,
+        "clippedLeft": false,
+        "truncated": false
+      }
+    },
+    {
+      "name": "mobile: truthful ladder state (bounded note, no fabricated zeros)",
+      "pass": true,
+      "detail": {
+        "empty": true,
+        "unavailable": false,
+        "notAsked": false,
+        "hasIndexHeading": false,
+        "legacyEmpty": true,
+        "loading": false
+      }
+    },
+    {
+      "name": "screenshots written (desktop.png + mobile.png)",
+      "pass": true,
+      "detail": {
+        "desktopBytes": 66231,
+        "mobileBytes": 125158
+      }
+    }
+  ],
+  "overall": "PASS",
+  "consoleSummary": {
+    "errors": 0,
+    "totalConsole": 7,
+    "totalNetwork3458": 271
+  },
+  "finishedAt": "2026-10-03T14:48:01.916Z"
+}

@@ -1,0 +1,155 @@
+(node:40280) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `role-model-dev --trace-warnings ...` to show where the warning was created)
+{
+  "status": "listening",
+  "host": "127.0.0.1",
+  "port": 3458
+}
+[track-b-sidecar] (node:39356) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+[track-b-sidecar] (Use `node --trace-warnings ...` to show where the warning was created)
+[run105] durable task advisory refresh: scope=standalone-runtime-dev pairs=1 stage=S4
+[run115] eligibility candidates=4 eligible=4 codes=none request=req-64861786-1450-46a4-ac39-482d39d9fd01 alias=baseline.remote-only model=baseline.remote-only effort=max pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro,moonshot.personal.kimi-code.global.kimi-k3] denied=[]
+[run98] remote-health recovery: deepseek.personal.deepseek-api-key.global.deepseek-flash, deepseek.personal.deepseek-api-key.global.deepseek-flash-max, deepseek.personal.deepseek-api-key.global.deepseek-v4-pro, moonshot.personal.kimi-code.global.kimi-k3
+[run101] replay job scope: derived runtime:e22187fbf8a85949e6e4b00d1c480633
+[run101] recovery page payload shape: value,businessOutput,durableLocator,evidenceRef,readCapability,workerPid
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[focus-diag] source=deepseek-v4-pro judge=kimi-k3 focusEndpoint=deepseek-flash configured=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 admitted=deepseek-flash-max,deepseek-v4-pro
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=73 scoped=1 first=req-3101ccd4-935b-4595-99d6-ebe03610f33d,req-6953e720-91c2-46a2-b04f-550e9831aaee,req-b6d894e7-4fde-439c-8b35-04b2fcdcc655 only=none pendingCount=32 captureCount=200
+[select-diag] cfg=deepseek-flash source=deepseek-v4-pro reqMod=["text"] reqCap=[] profiles= => selected=deepseek-flash
+[cand-diag] ref=req-0e208911 source=deepseek-v4-pro focus=deepseek-flash judge=kimi-k3 reqCap=[] reqMod=["text"] candidates=deepseek-flash rejected= cfg=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 healthy=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3
+[focus-diag] source=deepseek-v4-pro judge=kimi-k3 focusEndpoint=deepseek-flash configured=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 admitted=deepseek-flash-max,deepseek-v4-pro
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=73 scoped=1 first=req-3101ccd4-935b-4595-99d6-ebe03610f33d,req-6953e720-91c2-46a2-b04f-550e9831aaee,req-b6d894e7-4fde-439c-8b35-04b2fcdcc655 only=none pendingCount=32 captureCount=200
+[select-diag] cfg=deepseek-flash source=deepseek-v4-pro reqMod=["text"] reqCap=[] profiles= => selected=deepseek-flash
+[cand-diag] ref=req-0e208911 source=deepseek-v4-pro focus=deepseek-flash judge=kimi-k3 reqCap=[] reqMod=["text"] candidates=deepseek-flash rejected= cfg=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 healthy=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3
+[run115] eligibility candidates=4 eligible=4 codes=none request=req-9b2bea13-73ac-4493-9c10-600793aad6b8 alias=baseline.remote-only model=baseline.remote-only effort=max pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro,moonshot.personal.kimi-code.global.kimi-k3] denied=[]
+[run115] eligibility candidates=4 eligible=4 codes=none request=req-b26e9a72-a75b-41de-ad79-ee7610f61aec alias=baseline.remote-only model=baseline.remote-only effort=max pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro,moonshot.personal.kimi-code.global.kimi-k3] denied=[]
+[run115] eligibility candidates=4 eligible=4 codes=none request=req-2c59ff6f-a071-455e-8380-191d3e376354 alias=baseline.remote-only model=baseline.remote-only effort=max pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro,moonshot.personal.kimi-code.global.kimi-k3] denied=[]
+[focus-diag] source=deepseek-v4-pro judge=kimi-k3 focusEndpoint=deepseek-flash configured=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 admitted=deepseek-flash-max,deepseek-v4-pro
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=74 scoped=1 first=req-3101ccd4-935b-4595-99d6-ebe03610f33d,req-6953e720-91c2-46a2-b04f-550e9831aaee,req-b6d894e7-4fde-439c-8b35-04b2fcdcc655 only=none pendingCount=32 captureCount=200
+[select-diag] cfg=deepseek-flash source=deepseek-v4-pro reqMod=["text"] reqCap=[] profiles= => selected=deepseek-flash
+[cand-diag] ref=req-0e208911 source=deepseek-v4-pro focus=deepseek-flash judge=kimi-k3 reqCap=[] reqMod=["text"] candidates=deepseek-flash rejected= cfg=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 healthy=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run115] eligibility candidates=4 eligible=4 codes=none request=req-b1952557-1734-491d-8b1e-bdbf67bae4a4 alias=baseline.remote-only model=baseline.remote-only effort=max pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro,moonshot.personal.kimi-code.global.kimi-k3] denied=[]
+[run115] eligibility candidates=4 eligible=4 codes=none request=req-a6f9c876-53fe-4146-8690-bd9abd7cd3a3 alias=baseline.remote-only model=baseline.remote-only effort=max pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro,moonshot.personal.kimi-code.global.kimi-k3] denied=[]
+[focus-diag] source=deepseek-v4-pro judge=kimi-k3 focusEndpoint=deepseek-flash configured=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 admitted=deepseek-flash-max,deepseek-v4-pro
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=74 scoped=1 first=req-2c59ff6f-a071-455e-8380-191d3e376354,req-9b2bea13-73ac-4493-9c10-600793aad6b8,req-b26e9a72-a75b-41de-ad79-ee7610f61aec only=none pendingCount=32 captureCount=200
+[select-diag] cfg=deepseek-flash source=deepseek-v4-pro reqMod=["text"] reqCap=[] profiles= => selected=deepseek-flash
+[cand-diag] ref=req-0e208911 source=deepseek-v4-pro focus=deepseek-flash judge=kimi-k3 reqCap=[] reqMod=["text"] candidates=deepseek-flash rejected= cfg=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 healthy=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3
+[focus-diag] source=deepseek-v4-pro judge=kimi-k3 focusEndpoint=deepseek-flash configured=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 admitted=deepseek-flash-max,deepseek-v4-pro
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=74 scoped=1 first=req-b1952557-1734-491d-8b1e-bdbf67bae4a4,req-2c59ff6f-a071-455e-8380-191d3e376354,req-9b2bea13-73ac-4493-9c10-600793aad6b8 only=none pendingCount=32 captureCount=200
+[select-diag] cfg=deepseek-flash source=deepseek-v4-pro reqMod=["text"] reqCap=[] profiles= => selected=deepseek-flash
+[cand-diag] ref=req-0e208911 source=deepseek-v4-pro focus=deepseek-flash judge=kimi-k3 reqCap=[] reqMod=["text"] candidates=deepseek-flash rejected= cfg=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 healthy=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3
+[run115] eligibility candidates=4 eligible=4 codes=none request=req-dc84f7fb-93c2-4368-ac71-989b00294e8d alias=baseline.remote-only model=baseline.remote-only effort=max pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro,moonshot.personal.kimi-code.global.kimi-k3] denied=[]
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[focus-diag] source=deepseek-v4-pro judge=kimi-k3 focusEndpoint=deepseek-flash configured=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 admitted=deepseek-flash-max,deepseek-v4-pro
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=74 scoped=1 first=req-a6f9c876-53fe-4146-8690-bd9abd7cd3a3,req-b1952557-1734-491d-8b1e-bdbf67bae4a4,req-2c59ff6f-a071-455e-8380-191d3e376354 only=none pendingCount=32 captureCount=200
+[select-diag] cfg=deepseek-flash source=deepseek-v4-pro reqMod=["text"] reqCap=[] profiles= => selected=deepseek-flash
+[cand-diag] ref=req-0e208911 source=deepseek-v4-pro focus=deepseek-flash judge=kimi-k3 reqCap=[] reqMod=["text"] candidates=deepseek-flash rejected= cfg=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 healthy=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3
+[focus-diag] source=deepseek-v4-pro judge=kimi-k3 focusEndpoint=deepseek-flash configured=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 admitted=deepseek-flash-max,deepseek-v4-pro
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=74 scoped=1 first=req-dc84f7fb-93c2-4368-ac71-989b00294e8d,req-a6f9c876-53fe-4146-8690-bd9abd7cd3a3,req-b1952557-1734-491d-8b1e-bdbf67bae4a4 only=none pendingCount=32 captureCount=200
+[select-diag] cfg=deepseek-flash source=deepseek-v4-pro reqMod=["text"] reqCap=[] profiles= => selected=deepseek-flash
+[cand-diag] ref=req-0e208911 source=deepseek-v4-pro focus=deepseek-flash judge=kimi-k3 reqCap=[] reqMod=["text"] candidates=deepseek-flash rejected= cfg=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 healthy=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3
+[focus-diag] source=deepseek-v4-pro judge=kimi-k3 focusEndpoint=deepseek-flash configured=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 admitted=deepseek-flash-max,deepseek-v4-pro
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=74 scoped=1 first=req-dc84f7fb-93c2-4368-ac71-989b00294e8d,req-a6f9c876-53fe-4146-8690-bd9abd7cd3a3,req-b1952557-1734-491d-8b1e-bdbf67bae4a4 only=none pendingCount=32 captureCount=200
+[select-diag] cfg=deepseek-flash source=deepseek-v4-pro reqMod=["text"] reqCap=[] profiles= => selected=deepseek-flash
+[cand-diag] ref=req-0e208911 source=deepseek-v4-pro focus=deepseek-flash judge=kimi-k3 reqCap=[] reqMod=["text"] candidates=deepseek-flash rejected= cfg=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 healthy=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3
+[focus-diag] source=deepseek-v4-pro judge=kimi-k3 focusEndpoint=deepseek-flash configured=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 admitted=deepseek-flash-max,deepseek-v4-pro
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=74 scoped=1 first=req-dc84f7fb-93c2-4368-ac71-989b00294e8d,req-a6f9c876-53fe-4146-8690-bd9abd7cd3a3,req-b1952557-1734-491d-8b1e-bdbf67bae4a4 only=none pendingCount=32 captureCount=200
+[select-diag] cfg=deepseek-flash source=deepseek-v4-pro reqMod=["text"] reqCap=[] profiles= => selected=deepseek-flash
+[cand-diag] ref=req-0e208911 source=deepseek-v4-pro focus=deepseek-flash judge=kimi-k3 reqCap=[] reqMod=["text"] candidates=deepseek-flash rejected= cfg=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 healthy=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[focus-diag] source=deepseek-v4-pro judge=kimi-k3 focusEndpoint=deepseek-flash configured=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 admitted=deepseek-flash-max,deepseek-v4-pro
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=74 scoped=1 first=req-dc84f7fb-93c2-4368-ac71-989b00294e8d,req-a6f9c876-53fe-4146-8690-bd9abd7cd3a3,req-b1952557-1734-491d-8b1e-bdbf67bae4a4 only=none pendingCount=32 captureCount=200
+[select-diag] cfg=deepseek-flash source=deepseek-v4-pro reqMod=["text"] reqCap=[] profiles= => selected=deepseek-flash
+[cand-diag] ref=req-0e208911 source=deepseek-v4-pro focus=deepseek-flash judge=kimi-k3 reqCap=[] reqMod=["text"] candidates=deepseek-flash rejected= cfg=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 healthy=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3
+[focus-diag] source=deepseek-v4-pro judge=kimi-k3 focusEndpoint=deepseek-flash configured=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 admitted=deepseek-flash-max,deepseek-v4-pro
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=74 scoped=1 first=req-dc84f7fb-93c2-4368-ac71-989b00294e8d,req-a6f9c876-53fe-4146-8690-bd9abd7cd3a3,req-b1952557-1734-491d-8b1e-bdbf67bae4a4 only=none pendingCount=32 captureCount=200
+[select-diag] cfg=deepseek-flash source=deepseek-v4-pro reqMod=["text"] reqCap=[] profiles= => selected=deepseek-flash
+[cand-diag] ref=req-0e208911 source=deepseek-v4-pro focus=deepseek-flash judge=kimi-k3 reqCap=[] reqMod=["text"] candidates=deepseek-flash rejected= cfg=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 healthy=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[focus-diag] source=deepseek-v4-pro judge=kimi-k3 focusEndpoint=deepseek-flash configured=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 admitted=deepseek-flash-max,deepseek-v4-pro
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=74 scoped=1 first=req-dc84f7fb-93c2-4368-ac71-989b00294e8d,req-a6f9c876-53fe-4146-8690-bd9abd7cd3a3,req-b1952557-1734-491d-8b1e-bdbf67bae4a4 only=none pendingCount=32 captureCount=200
+[select-diag] cfg=deepseek-flash source=deepseek-v4-pro reqMod=["text"] reqCap=[] profiles= => selected=deepseek-flash
+[cand-diag] ref=req-0e208911 source=deepseek-v4-pro focus=deepseek-flash judge=kimi-k3 reqCap=[] reqMod=["text"] candidates=deepseek-flash rejected= cfg=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 healthy=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[focus-diag] source=deepseek-v4-pro judge=kimi-k3 focusEndpoint=deepseek-flash configured=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 admitted=deepseek-flash-max,deepseek-v4-pro
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=74 scoped=1 first=req-dc84f7fb-93c2-4368-ac71-989b00294e8d,req-a6f9c876-53fe-4146-8690-bd9abd7cd3a3,req-b1952557-1734-491d-8b1e-bdbf67bae4a4 only=none pendingCount=32 captureCount=200
+[select-diag] cfg=deepseek-flash source=deepseek-v4-pro reqMod=["text"] reqCap=[] profiles= => selected=deepseek-flash
+[cand-diag] ref=req-0e208911 source=deepseek-v4-pro focus=deepseek-flash judge=kimi-k3 reqCap=[] reqMod=["text"] candidates=deepseek-flash rejected= cfg=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 healthy=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3
+[focus-diag] source=deepseek-v4-pro judge=kimi-k3 focusEndpoint=deepseek-flash configured=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 admitted=deepseek-flash-max,deepseek-v4-pro
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=74 scoped=1 first=req-dc84f7fb-93c2-4368-ac71-989b00294e8d,req-a6f9c876-53fe-4146-8690-bd9abd7cd3a3,req-b1952557-1734-491d-8b1e-bdbf67bae4a4 only=none pendingCount=32 captureCount=200
+[select-diag] cfg=deepseek-flash source=deepseek-v4-pro reqMod=["text"] reqCap=[] profiles= => selected=deepseek-flash
+[cand-diag] ref=req-0e208911 source=deepseek-v4-pro focus=deepseek-flash judge=kimi-k3 reqCap=[] reqMod=["text"] candidates=deepseek-flash rejected= cfg=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 healthy=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3
+[focus-diag] source=deepseek-v4-pro judge=kimi-k3 focusEndpoint=deepseek-flash configured=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 admitted=deepseek-flash-max,deepseek-v4-pro
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=74 scoped=1 first=req-dc84f7fb-93c2-4368-ac71-989b00294e8d,req-a6f9c876-53fe-4146-8690-bd9abd7cd3a3,req-b1952557-1734-491d-8b1e-bdbf67bae4a4 only=none pendingCount=32 captureCount=200
+[select-diag] cfg=deepseek-flash source=deepseek-v4-pro reqMod=["text"] reqCap=[] profiles= => selected=deepseek-flash
+[cand-diag] ref=req-0e208911 source=deepseek-v4-pro focus=deepseek-flash judge=kimi-k3 reqCap=[] reqMod=["text"] candidates=deepseek-flash rejected= cfg=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 healthy=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[focus-diag] source=deepseek-v4-pro judge=kimi-k3 focusEndpoint=deepseek-flash configured=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 admitted=deepseek-flash-max,deepseek-v4-pro
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=74 scoped=1 first=req-dc84f7fb-93c2-4368-ac71-989b00294e8d,req-a6f9c876-53fe-4146-8690-bd9abd7cd3a3,req-b1952557-1734-491d-8b1e-bdbf67bae4a4 only=none pendingCount=32 captureCount=200
+[select-diag] cfg=deepseek-flash source=deepseek-v4-pro reqMod=["text"] reqCap=[] profiles= => selected=deepseek-flash
+[cand-diag] ref=req-0e208911 source=deepseek-v4-pro focus=deepseek-flash judge=kimi-k3 reqCap=[] reqMod=["text"] candidates=deepseek-flash rejected= cfg=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 healthy=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3
+[focus-diag] source=deepseek-v4-pro judge=kimi-k3 focusEndpoint=deepseek-flash configured=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 admitted=deepseek-flash-max,deepseek-v4-pro
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=74 scoped=1 first=req-dc84f7fb-93c2-4368-ac71-989b00294e8d,req-a6f9c876-53fe-4146-8690-bd9abd7cd3a3,req-b1952557-1734-491d-8b1e-bdbf67bae4a4 only=none pendingCount=32 captureCount=200
+[select-diag] cfg=deepseek-flash source=deepseek-v4-pro reqMod=["text"] reqCap=[] profiles= => selected=deepseek-flash
+[cand-diag] ref=req-0e208911 source=deepseek-v4-pro focus=deepseek-flash judge=kimi-k3 reqCap=[] reqMod=["text"] candidates=deepseek-flash rejected= cfg=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 healthy=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[focus-diag] source=deepseek-v4-pro judge=kimi-k3 focusEndpoint=deepseek-flash configured=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 admitted=deepseek-flash-max,deepseek-v4-pro
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=74 scoped=1 first=req-dc84f7fb-93c2-4368-ac71-989b00294e8d,req-a6f9c876-53fe-4146-8690-bd9abd7cd3a3,req-b1952557-1734-491d-8b1e-bdbf67bae4a4 only=none pendingCount=32 captureCount=200
+[select-diag] cfg=deepseek-flash source=deepseek-v4-pro reqMod=["text"] reqCap=[] profiles= => selected=deepseek-flash
+[cand-diag] ref=req-0e208911 source=deepseek-v4-pro focus=deepseek-flash judge=kimi-k3 reqCap=[] reqMod=["text"] candidates=deepseek-flash rejected= cfg=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 healthy=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3
+[focus-diag] source=deepseek-v4-pro judge=kimi-k3 focusEndpoint=deepseek-flash configured=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 admitted=deepseek-flash-max,deepseek-v4-pro
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=74 scoped=1 first=req-dc84f7fb-93c2-4368-ac71-989b00294e8d,req-a6f9c876-53fe-4146-8690-bd9abd7cd3a3,req-b1952557-1734-491d-8b1e-bdbf67bae4a4 only=none pendingCount=32 captureCount=200
+[select-diag] cfg=deepseek-flash source=deepseek-v4-pro reqMod=["text"] reqCap=[] profiles= => selected=deepseek-flash
+[cand-diag] ref=req-0e208911 source=deepseek-v4-pro focus=deepseek-flash judge=kimi-k3 reqCap=[] reqMod=["text"] candidates=deepseek-flash rejected= cfg=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 healthy=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3
+[focus-diag] source=deepseek-v4-pro judge=kimi-k3 focusEndpoint=deepseek-flash configured=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 admitted=deepseek-flash-max,deepseek-v4-pro
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=74 scoped=1 first=req-dc84f7fb-93c2-4368-ac71-989b00294e8d,req-a6f9c876-53fe-4146-8690-bd9abd7cd3a3,req-b1952557-1734-491d-8b1e-bdbf67bae4a4 only=none pendingCount=32 captureCount=200
+[select-diag] cfg=deepseek-flash source=deepseek-v4-pro reqMod=["text"] reqCap=[] profiles= => selected=deepseek-flash
+[cand-diag] ref=req-0e208911 source=deepseek-v4-pro focus=deepseek-flash judge=kimi-k3 reqCap=[] reqMod=["text"] candidates=deepseek-flash rejected= cfg=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 healthy=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[focus-diag] source=deepseek-v4-pro judge=kimi-k3 focusEndpoint=deepseek-flash configured=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 admitted=deepseek-flash-max,deepseek-v4-pro
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=74 scoped=1 first=req-dc84f7fb-93c2-4368-ac71-989b00294e8d,req-a6f9c876-53fe-4146-8690-bd9abd7cd3a3,req-b1952557-1734-491d-8b1e-bdbf67bae4a4 only=none pendingCount=32 captureCount=200
+[select-diag] cfg=deepseek-flash source=deepseek-v4-pro reqMod=["text"] reqCap=[] profiles= => selected=deepseek-flash
+[cand-diag] ref=req-0e208911 source=deepseek-v4-pro focus=deepseek-flash judge=kimi-k3 reqCap=[] reqMod=["text"] candidates=deepseek-flash rejected= cfg=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 healthy=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3
+[focus-diag] source=deepseek-v4-pro judge=kimi-k3 focusEndpoint=deepseek-flash configured=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 admitted=deepseek-flash-max,deepseek-v4-pro
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=74 scoped=1 first=req-dc84f7fb-93c2-4368-ac71-989b00294e8d,req-a6f9c876-53fe-4146-8690-bd9abd7cd3a3,req-b1952557-1734-491d-8b1e-bdbf67bae4a4 only=none pendingCount=32 captureCount=200
+[select-diag] cfg=deepseek-flash source=deepseek-v4-pro reqMod=["text"] reqCap=[] profiles= => selected=deepseek-flash
+[cand-diag] ref=req-0e208911 source=deepseek-v4-pro focus=deepseek-flash judge=kimi-k3 reqCap=[] reqMod=["text"] candidates=deepseek-flash rejected= cfg=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 healthy=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3
+[focus-diag] source=deepseek-v4-pro judge=kimi-k3 focusEndpoint=deepseek-flash configured=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 admitted=deepseek-flash-max,deepseek-v4-pro
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=74 scoped=1 first=req-dc84f7fb-93c2-4368-ac71-989b00294e8d,req-a6f9c876-53fe-4146-8690-bd9abd7cd3a3,req-b1952557-1734-491d-8b1e-bdbf67bae4a4 only=none pendingCount=32 captureCount=200
+[select-diag] cfg=deepseek-flash source=deepseek-v4-pro reqMod=["text"] reqCap=[] profiles= => selected=deepseek-flash
+[cand-diag] ref=req-0e208911 source=deepseek-v4-pro focus=deepseek-flash judge=kimi-k3 reqCap=[] reqMod=["text"] candidates=deepseek-flash rejected= cfg=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 healthy=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[focus-diag] source=deepseek-v4-pro judge=kimi-k3 focusEndpoint=deepseek-flash configured=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 admitted=deepseek-flash-max,deepseek-v4-pro
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=74 scoped=1 first=req-dc84f7fb-93c2-4368-ac71-989b00294e8d,req-a6f9c876-53fe-4146-8690-bd9abd7cd3a3,req-b1952557-1734-491d-8b1e-bdbf67bae4a4 only=none pendingCount=32 captureCount=200
+[select-diag] cfg=deepseek-flash source=deepseek-v4-pro reqMod=["text"] reqCap=[] profiles= => selected=deepseek-flash
+[cand-diag] ref=req-0e208911 source=deepseek-v4-pro focus=deepseek-flash judge=kimi-k3 reqCap=[] reqMod=["text"] candidates=deepseek-flash rejected= cfg=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 healthy=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3
+[focus-diag] source=deepseek-v4-pro judge=kimi-k3 focusEndpoint=deepseek-flash configured=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 admitted=deepseek-flash-max,deepseek-v4-pro
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=74 scoped=1 first=req-dc84f7fb-93c2-4368-ac71-989b00294e8d,req-a6f9c876-53fe-4146-8690-bd9abd7cd3a3,req-b1952557-1734-491d-8b1e-bdbf67bae4a4 only=none pendingCount=32 captureCount=200
+[select-diag] cfg=deepseek-flash source=deepseek-v4-pro reqMod=["text"] reqCap=[] profiles= => selected=deepseek-flash
+[cand-diag] ref=req-0e208911 source=deepseek-v4-pro focus=deepseek-flash judge=kimi-k3 reqCap=[] reqMod=["text"] candidates=deepseek-flash rejected= cfg=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 healthy=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3

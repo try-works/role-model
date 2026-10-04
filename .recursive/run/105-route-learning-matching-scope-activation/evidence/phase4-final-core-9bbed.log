@@ -1,0 +1,23 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/packages/core
+
+ ✓ test/taxonomy-docs.test.ts (2 tests) 18ms
+ ✓ src/taxonomy/index.test.ts (1 test) 18ms
+ ✓ test/taxonomy-data-files.test.ts (5 tests) 419ms
+ ✓ test/taxonomy-catalog.test.ts (9 tests) 472ms
+   ✓ canonical taxonomy catalog > validates task naming, references, and classifier guidance  357ms
+ ✓ test/run105-d-route-ladder-dispatch.test.ts (32 tests) 85ms
+ ✓ test/observed-data-decay-policy.test.ts (5 tests) 36ms
+ ✓ test/run99-r33-family-scoped-advisory.test.ts (8 tests) 34ms
+ ✓ test/run98-a57-code-capability-implication.test.ts (4 tests) 33ms
+ ✓ test/routing-intent.test.ts (36 tests) 135ms
+ ✓ test/run98-r05-advisory-considered.test.ts (5 tests) 107ms
+ ✓ test/run105-c-router-ladder-walk.test.ts (9 tests) 43ms
+ ✓ test/run105-review-router-safety.test.ts (31 tests) 166ms
+ ✓ test/run98-a58-taxonomy-totality.test.ts (7 tests) 510ms
+
+ Test Files  13 passed (13)
+      Tests  154 passed (154)
+   Start at  08:58:36
+   Duration  12.03s (transform 9.91s, setup 0ms, collect 94.82s, tests 2.08s, environment 8ms, prepare 9.95s)
+

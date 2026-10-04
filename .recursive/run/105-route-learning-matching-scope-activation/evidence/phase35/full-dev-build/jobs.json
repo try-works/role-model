@@ -1,0 +1,113 @@
+{
+  "updatedAt": "2026-10-03T12:51:41.099Z",
+  "jobs": [
+    {
+      "id": "pwsh-1999",
+      "task": "public frozen install",
+      "exitCode": 0,
+      "collected": true
+    },
+    {
+      "id": "pwsh-2000",
+      "task": "private frozen install",
+      "exitCode": 0,
+      "collected": true
+    },
+    {
+      "id": "pwsh-2012",
+      "task": "initial exact private3fe build",
+      "exitCode": 1,
+      "collected": true
+    },
+    {
+      "id": "pwsh-2026",
+      "task": "public bridge dependency build including typecheck",
+      "exitCode": 0,
+      "collected": true
+    },
+    {
+      "id": "pwsh-2027",
+      "task": "normal runtime UI suite with Chromium,684 tests72files",
+      "exitCode": 0,
+      "collected": true
+    },
+    {
+      "id": "pwsh-2031",
+      "task": "bridge critical113tests6files",
+      "exitCode": 0,
+      "collected": true
+    },
+    {
+      "id": "pwsh-2032",
+      "task": "SQLite noEmit typecheck",
+      "exitCode": 0,
+      "collected": true
+    }
+  ],
+  "controllerRuntimeJob": "1862 (not touched, probed, or collected by worker)",
+  "fullHostSuiteDuplicated": false,
+  "phase5Pass": false,
+  "finalForegroundChecks": [
+    "private package alignment",
+    "bridge-before-final noEmit",
+    "SQLite final noEmit",
+    "independent release closure verifier"
+  ],
+  "allOwnedJobsCollected": true,
+  "supersededFinalJobs": [
+    {
+      "id": "pwsh-2067",
+      "task": "final private distribution",
+      "exitCode": 0,
+      "collected": true
+    },
+    {
+      "id": "pwsh-2068",
+      "task": "final UI684tests72files Chromium",
+      "exitCode": 0,
+      "collected": true
+    },
+    {
+      "id": "pwsh-2069",
+      "task": "final bridge noEmit",
+      "exitCode": 0,
+      "collected": true
+    },
+    {
+      "id": "pwsh-2074",
+      "task": "final SEA",
+      "exitCode": 0,
+      "collected": true
+    },
+    {
+      "id": "pwsh-2076",
+      "task": "final bounded bridge critical",
+      "exitCode": 0,
+      "collected": true
+    }
+  ],
+  "latestPair": {
+    "public": "83308e29c7e9505054a0885f56da378330e76e5e",
+    "private": "da40a115237432b248f6b5282a4ac42f8fb90179"
+  },
+  "latestJobs": [
+    {
+      "id": "pwsh-2086",
+      "task": "da40 private build",
+      "exitCode": 0,
+      "collected": true
+    },
+    {
+      "id": "pwsh-2089",
+      "task": "da40 private20focusedtests",
+      "exitCode": 0,
+      "collected": true
+    },
+    {
+      "id": "pwsh-2090",
+      "task": "da40 SEA",
+      "exitCode": 0,
+      "collected": true
+    }
+  ]
+}

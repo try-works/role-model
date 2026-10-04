@@ -1,0 +1,16 @@
+node:internal/modules/esm/load:183
+    throw new ERR_UNSUPPORTED_ESM_URL_SCHEME(parsed, schemes);
+          ^
+
+Error [ERR_UNSUPPORTED_ESM_URL_SCHEME]: Only URLs with a scheme in: file, data, and node are supported by the default ESM loader. On Windows, absolute paths must be valid file:// URLs. Received protocol 'e:'
+    at throwIfUnsupportedURLScheme (node:internal/modules/esm/load:183:11)
+    at defaultLoad (node:internal/modules/esm/load:78:3)
+    at ModuleLoader.load (node:internal/modules/esm/loader:841:12)
+    at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:612:31)
+    at #createModuleJob (node:internal/modules/esm/loader:643:36)
+    at #getJobFromResolveResult (node:internal/modules/esm/loader:353:34)
+    at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:318:41) {
+  code: 'ERR_UNSUPPORTED_ESM_URL_SCHEME'
+}
+
+Node.js v24.11.0

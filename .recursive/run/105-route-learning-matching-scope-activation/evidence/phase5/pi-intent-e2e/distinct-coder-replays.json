@@ -1,0 +1,15 @@
+{
+  "chosen": [
+    "req-93157239-ef3c-4750-889a-6b6410c384d6",
+    "req-f93fa856-889d-4660-96b3-700de2ae4771"
+  ],
+  "out": [
+    {
+      "id": "req-93157239-ef3c-4750-889a-6b6410c384d6",
+      "status": 409,
+      "body": {
+        "error": "extension evaluation-core failed: worker exited: (node:40300) ExperimentalWarning: SQLite is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)"
+      }
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+Scope: all 50 workspace projects
+(node:33008) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ WARN  There are cyclic workspace dependencies: E:\tmp\run105-full2-public\role-model-router\packages\adapter-execution, E:\tmp\run105-full2-public\role-model-router\packages\provider-anthropic
+Lockfile is up to date, resolution step is skipped
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Packages: +679
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 679, reused 564, downloaded 0, added 0
+Progress: resolved 679, reused 672, downloaded 0, added 31
+Progress: resolved 679, reused 672, downloaded 0, added 78
+Progress: resolved 679, reused 672, downloaded 0, added 187
+Progress: resolved 679, reused 672, downloaded 0, added 257
+Progress: resolved 679, reused 672, downloaded 0, added 326
+Progress: resolved 679, reused 672, downloaded 0, added 373
+Progress: resolved 679, reused 672, downloaded 0, added 441
+Progress: resolved 679, reused 672, downloaded 0, added 540
+Progress: resolved 679, reused 672, downloaded 0, added 598
+Progress: resolved 679, reused 672, downloaded 0, added 617
+Progress: resolved 679, reused 672, downloaded 0, added 622
+Progress: resolved 679, reused 672, downloaded 0, added 662
+Progress: resolved 679, reused 672, downloaded 0, added 674
+Progress: resolved 679, reused 672, downloaded 0, added 675
+Progress: resolved 679, reused 672, downloaded 0, added 676
+Progress: resolved 679, reused 672, downloaded 0, added 677
+Progress: resolved 679, reused 672, downloaded 0, added 678
+Progress: resolved 679, reused 672, downloaded 0, added 679
+Progress: resolved 679, reused 672, downloaded 0, added 679, done
+
+devDependencies:
++ @biomejs/biome 1.9.4
++ @types/node 22.19.17
++ ajv 8.18.0
++ ajv-formats 3.0.1
++ commander 13.1.0
++ esbuild 0.25.12
++ json-schema-to-typescript 15.0.4
++ postject 1.0.0-alpha.6
++ tsx 4.21.0
++ typescript 5.9.3
++ vitest 3.2.4
+
+╭ Warning ─────────────────────────────────────────────────────────────────────╮│                                                                              ││   Ignored build scripts: @biomejs/biome, @google/genai, esbuild,             ││   protobufjs, sharp, workerd.                                                ││   Run "pnpm approve-builds" to pick which dependencies should be allowed     ││   to run scripts.                                                            ││                                                                              │╰──────────────────────────────────────────────────────────────────────────────╯
+
+Done in 27.6s using pnpm v10.6.5

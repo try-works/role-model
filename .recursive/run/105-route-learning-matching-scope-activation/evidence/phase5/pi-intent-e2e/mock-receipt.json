@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "1.0",
+  "providerKind": "run105-pi-live-loopback-openai-success",
+  "startedAt": "2026-10-03T21:30:46.119Z",
+  "port": 3466,
+  "modelListCount": 0,
+  "admissionProbeCount": 1,
+  "chatCompletionsCount": 4,
+  "responsesCount": 0,
+  "rejectedRequestCount": 0,
+  "requests": [
+    {
+      "at": "2026-10-03T21:31:49.785Z",
+      "kind": "admission-probe",
+      "model": "deepseek-flash",
+      "stream": false,
+      "messageRoles": [
+        "user"
+      ],
+      "userContentPreview": "role-model admission readiness probe",
+      "intentMetadata": null
+    },
+    {
+      "at": "2026-10-03T21:33:24.614Z",
+      "kind": "chat-completion",
+      "model": "deepseek-flash",
+      "stream": true,
+      "messageRoles": [
+        "system",
+        "user"
+      ],
+      "userContentPreview": "[{\"type\":\"text\",\"text\":\"Review the TypeScript change const total = a + b for correctness and regression risk. Reply exactly RUN105-PI-INTENT-OK.\"}]",
+      "intentMetadata": null
+    },
+    {
+      "at": "2026-10-03T21:34:23.448Z",
+      "kind": "chat-completion",
+      "model": "deepseek-flash",
+      "stream": true,
+      "messageRoles": [
+        "system",
+        "user"
+      ],
+      "userContentPreview": "[{\"type\":\"text\",\"text\":\"Review this TypeScript change for correctness: const total = a + b. Reply exactly RUN105-PI-EXPLICIT-INTENT-OK.\"}]",
+      "intentMetadata": null
+    },
+    {
+      "at": "2026-10-03T21:35:57.526Z",
+      "kind": "chat-completion",
+      "model": "deepseek-flash",
+      "stream": true,
+      "messageRoles": [
+        "system",
+        "user"
+      ],
+      "userContentPreview": "[{\"type\":\"text\",\"text\":\"Audit a TypeScript function for security and correctness. Reply RUN105-VERBOSE.\"}]",
+      "intentMetadata": null
+    },
+    {
+      "at": "2026-10-03T21:36:33.533Z",
+      "kind": "chat-completion",
+      "model": "deepseek-flash",
+      "stream": true,
+      "messageRoles": [
+        "system",
+        "user"
+      ],
+      "userContentPreview": "[{\"type\":\"text\",\"text\":\"Review code for correctness and security. Reply RUN105-HOOK-LOG.\"}]",
+      "intentMetadata": null
+    }
+  ]
+}

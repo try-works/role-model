@@ -1,0 +1,46 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-host-bridge
+
+(node:31404) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | test/run105-review-live-advisory-publisher.test.ts > run105 production publisher scope > enumerates actual stored role-task ladders and reads each exact pair, never one scope-only advisory
+[run105] durable task advisory refresh: scope=publisher-test pairs=2 stage=S3
+
+stderr | test/run105-review-live-advisory-publisher.test.ts > run105 production publisher scope > a slow refresh never overlaps another timer pass
+[run105] durable task advisory refresh: scope=slow-refresh pairs=0 stage=S3
+
+ ❯ test/run105-review-live-advisory-publisher.test.ts (2 tests | 1 failed) 27ms
+   ✓ run105 production publisher scope > enumerates actual stored role-task ladders and reads each exact pair, never one scope-only advisory 12ms
+   × run105 production publisher scope > a slow refresh never overlaps another timer pass 12ms
+     → expected 4 to be 1 // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run105-review-live-advisory-publisher.test.ts > run105 production publisher scope > a slow refresh never overlaps another timer pass
+AssertionError: expected 4 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 4
+
+ ❯ test/run105-review-live-advisory-publisher.test.ts:45:28
+     43|     try {
+     44|       await vi.advanceTimersByTimeAsync(45_000);
+     45|       expect(listingCalls).toBe(1);
+       |                            ^
+     46|     } finally { stop(); release?.(); await vi.advanceTimersByTimeAsync…
+     47|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  17:03:26
+   Duration  9.63s (transform 5.84s, setup 0ms, collect 8.87s, tests 27ms, environment 0ms, prepare 242ms)
+
+undefined
+D:\DEV\role-model\.worktrees\105-route-learning-matching-scope-activation\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/run105-review-live-advisory-publisher.test.ts

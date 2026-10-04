@@ -1,0 +1,134 @@
+{
+  "probe": "01-healthz",
+  "note": "runtime health",
+  "request": {
+    "method": "GET",
+    "url": "http://127.0.0.1:3458/healthz",
+    "headers": {}
+  },
+  "response": {
+    "status": 200,
+    "statusText": "OK",
+    "contentType": "application/json",
+    "ms": 89,
+    "body": {
+      "runtime": {
+        "version": "0.0.14-745-g83308e29",
+        "release_version": "0.0.14-745-g83308e29",
+        "commit": "83308e29c7e9505054a0885f56da378330e76e5e",
+        "build_date": "2026-10-03T12:49:17.219Z",
+        "channel": "development",
+        "name": "role-model-dev",
+        "endpoint": "http://127.0.0.1:3458",
+        "source_tree": "d391ec693cf10e8af812e1e26c57934649f202ba",
+        "executable_sha256": "ffc3f58a45992d72b5eae539e3450b9b5bded5954335567da64c219e17768d78",
+        "core_payload_sha256": "ffc3f58a45992d72b5eae539e3450b9b5bded5954335567da64c219e17768d78"
+      },
+      "status": "healthy",
+      "executionMode": "decision_only",
+      "vendors": {
+        "llama-swap": {
+          "vendorId": "llama-swap",
+          "healthStatus": "inactive"
+        },
+        "litellm": {
+          "vendorId": "litellm",
+          "healthStatus": "inactive"
+        }
+      },
+      "inactiveVendors": [
+        "llama-swap",
+        "litellm"
+      ],
+      "credentialLifecycleAuthority": {
+        "state": "authoritative",
+        "bootstrapStatus": "ready"
+      },
+      "sessionBootstrap": {
+        "status": "ready",
+        "startedAt": "2026-10-03T12:55:27.158Z",
+        "finishedAt": "2026-10-03T12:55:27.217Z",
+        "stages": [
+          {
+            "stageId": "credentials",
+            "status": "ready",
+            "startedAt": "2026-10-03T12:55:27.158Z",
+            "finishedAt": "2026-10-03T12:55:27.183Z",
+            "details": {
+              "pendingAttempted": 0,
+              "pendingSucceeded": 0,
+              "pendingConnected": 0,
+              "pendingFailed": 0,
+              "pendingDeferred": 0,
+              "refreshAttempted": 0,
+              "refreshSucceeded": 0,
+              "refreshFailed": 0
+            }
+          },
+          {
+            "stageId": "endpoints",
+            "status": "ready",
+            "startedAt": "2026-10-03T12:55:27.197Z",
+            "finishedAt": "2026-10-03T12:55:27.216Z",
+            "details": {
+              "source": "manifest",
+              "count": 0,
+              "reconciled": 0,
+              "failed": 0,
+              "skipped": 0
+            }
+          },
+          {
+            "stageId": "peers",
+            "status": "skipped",
+            "startedAt": "2026-10-03T12:55:27.216Z",
+            "finishedAt": "2026-10-03T12:55:27.216Z",
+            "message": "no peer loads in manifest",
+            "details": {
+              "reloaded": 0,
+              "failed": 0
+            }
+          },
+          {
+            "stageId": "vendors",
+            "status": "skipped",
+            "startedAt": "2026-10-03T12:55:27.216Z",
+            "finishedAt": "2026-10-03T12:55:27.216Z",
+            "message": "unified runtime config disabled"
+          },
+          {
+            "stageId": "local-reload",
+            "status": "skipped",
+            "startedAt": "2026-10-03T12:55:27.216Z",
+            "finishedAt": "2026-10-03T12:55:27.217Z",
+            "message": "no llama-swap loads in manifest"
+          },
+          {
+            "stageId": "remote-health",
+            "status": "skipped",
+            "startedAt": "2026-10-03T12:55:27.217Z",
+            "finishedAt": "2026-10-03T12:55:27.217Z",
+            "message": "execution probes skipped in decision_only mode"
+          },
+          {
+            "stageId": "inventory",
+            "status": "skipped",
+            "startedAt": "2026-10-03T12:55:27.217Z",
+            "finishedAt": "2026-10-03T12:55:27.217Z",
+            "message": "no routable endpoints in inventory",
+            "details": {
+              "modelIdCount": 0,
+              "endpointIdCount": 0,
+              "localEndpointCount": 0,
+              "remoteEndpointCount": 0,
+              "emptyAliasIds": []
+            }
+          }
+        ]
+      },
+      "ready": true
+    },
+    "bodyTruncated": 0
+  },
+  "capturedAt": "2026-10-03T13:25:31.316Z"
+}

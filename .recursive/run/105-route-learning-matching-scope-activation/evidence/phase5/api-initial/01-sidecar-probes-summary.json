@@ -1,0 +1,120 @@
+{
+  "capturedAt": "2026-10-03T13:28:36.112Z",
+  "sidecar": "http://127.0.0.1:62096",
+  "summary": [
+    {
+      "probe": "s01-sidecar-healthz",
+      "status": 401,
+      "ms": 97,
+      "bodyLen": 0
+    },
+    {
+      "probe": "s02-operator-status-unauth",
+      "status": 401,
+      "ms": 2,
+      "bodyLen": 0
+    },
+    {
+      "probe": "s03-operator-status",
+      "status": 401,
+      "ms": 2,
+      "bodyLen": 0
+    },
+    {
+      "probe": "s04-learning-records",
+      "status": 401,
+      "ms": 1,
+      "bodyLen": 0
+    },
+    {
+      "probe": "s05-learning-activity",
+      "status": 401,
+      "ms": 1,
+      "bodyLen": 0
+    },
+    {
+      "probe": "s06-learning-policy",
+      "status": 401,
+      "ms": 2,
+      "bodyLen": 0
+    },
+    {
+      "probe": "s07-learning-state",
+      "status": 401,
+      "ms": 1,
+      "bodyLen": 0
+    },
+    {
+      "probe": "s08-learning-decisions",
+      "status": 401,
+      "ms": 2,
+      "bodyLen": 0
+    },
+    {
+      "probe": "s09-learning-history",
+      "status": 401,
+      "ms": 2,
+      "bodyLen": 0
+    },
+    {
+      "probe": "s10-learning-measurement",
+      "status": 401,
+      "ms": 1,
+      "bodyLen": 0
+    },
+    {
+      "probe": "s11-learning-rollout",
+      "status": 401,
+      "ms": 1,
+      "bodyLen": 0
+    },
+    {
+      "probe": "s12-route-ladders-read",
+      "status": 401,
+      "ms": 5,
+      "bodyLen": 0
+    },
+    {
+      "probe": "s13-rollback-malformed",
+      "status": 401,
+      "ms": 1,
+      "bodyLen": 0
+    },
+    {
+      "probe": "s14-rollback-read",
+      "status": 401,
+      "ms": 3,
+      "bodyLen": 0
+    },
+    {
+      "probe": "s15-queues",
+      "status": 401,
+      "ms": 1,
+      "bodyLen": 0
+    },
+    {
+      "probe": "s16-storage",
+      "status": 401,
+      "ms": 1,
+      "bodyLen": 0
+    },
+    {
+      "probe": "s17-trace-roots",
+      "status": 401,
+      "ms": 1,
+      "bodyLen": 0
+    },
+    {
+      "probe": "s18-replay-health",
+      "status": 401,
+      "ms": 1,
+      "bodyLen": 0
+    },
+    {
+      "probe": "s19-capture",
+      "status": 401,
+      "ms": 2,
+      "bodyLen": 0
+    }
+  ]
+}
