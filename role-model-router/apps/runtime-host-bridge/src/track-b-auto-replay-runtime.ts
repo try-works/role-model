@@ -1336,8 +1336,10 @@ export function startAutoReplayLoop(input: {
         if (plannedFocus) {
           routeLadder = rows.get(plannedFocus.scopeKey) ?? null;
           let progress = Ref.getUnsafe(challenges).get(plannedFocus.scopeKey);
+          console.error(`[replay-tick] before readRouteReplayableCaptures focus=${plannedFocus.roleId}/${plannedFocus.taskTypeId}`);
           if (input.readRouteReplayableCaptures) {
             const history = await input.readRouteReplayableCaptures(plannedFocus);
+            console.error(`[replay-tick] after readRouteReplayableCaptures history=${history === null ? "null" : history.length}`);
             if (history === null) throw new Error("route replayable corpus unavailable");
             const existing = new Set(captures.map(item => item.captureRef));
             captures = [...captures, ...history.filter(item => item.roleId === plannedFocus!.roleId &&
@@ -1587,7 +1589,9 @@ export function startAutoReplayLoop(input: {
           const progress = Ref.getUnsafe(challenges).get(challengeKey)!;
           setChallenge(challengeKey, { ...progress, pendingCaptureRef: focusCaptureRef, pendingRoundId: dispatchRoundFor(focusEndpointId) });
         }
+        console.error(`[replay-tick] before runDispatch focusEndpoint=${focusEndpointId} dispatchCaptures=${dispatchCaptures.length}`);
         const part = await runDispatch(dispatchCaptures, focusEndpointId, focusCaptureRef);
+        console.error(`[replay-tick] after runDispatch part=${part.processed}`);
         result = { processed: result.processed + part.processed, replayed: result.replayed + part.replayed,
           refused: result.refused + part.refused, deferred: result.deferred + part.deferred,
           queued: (result.queued ?? 0) + (part.queued ?? 0),
