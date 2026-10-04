@@ -1,0 +1,165 @@
+Run: /.recursive/run/106-client-neutral-model-effort-routing/
+Phase: 08 Memory Impact
+Status: `LOCKED`
+LockedAt: `2026-10-04T03:05:02Z`
+LockHash: `4dd079639f3a36f92781ca9509cb0791386f0734b620ee026280f26968246a2f`
+Workflow version: recursive-mode-audit-v2
+Inputs:
+- /.recursive/run/106-client-neutral-model-effort-routing/00-worktree.md
+Outputs:
+- /.recursive/run/106-client-neutral-model-effort-routing/08-memory-impact.md
+Scope note: Concise delta receipt pointing at /.recursive/memory/**.
+
+## TODO
+
+- [x] Record memory impact and skill usage
+- [x] Complete Coverage and Approval gates
+
+## Diff Basis
+
+- Baseline type: remote ref
+- Baseline reference: origin/dev
+- Normalized baseline: 701b8b8fc0b0eeebdfe818b757f5702f50021488
+
+## Changed Paths Review
+
+- role-model-router/packages/core/src/router.ts
+- role-model-router/packages/core/src/types.ts
+- role-model-router/apps/runtime-host-bridge/src/index.ts
+- role-model-router/packages/endpoint-registry/src/effort-instance-identity.ts
+- role-model-router/packages/adapter-execution/src/index.ts
+
+## Affected Memory Docs
+
+- /.recursive/memory/skills/SKILLS.md
+
+## Run-Local Skill Usage Capture
+
+- Skills Sought: recursive-mode, recursive-tdd, recursive-worktree, recursive-subagent, recursive-review-bundle, role-model
+- Skills Attempted: recursive-mode, recursive-tdd, recursive-worktree, recursive-subagent, recursive-review-bundle, role-model
+- Skills Used: recursive-mode, recursive-tdd, recursive-worktree, recursive-subagent, recursive-review-bundle, role-model
+- Available Skills: the above plus the full recursive-mode helper set
+- Skill Usage Relevance: relevant
+- Worked Well: recursive-review-bundle produced a well-cited delegated review; recursive-tdd enforced RED-GREEN; recursive-worktree isolated the run; role-model guided the Phase 5 runtime launch.
+- Issues Encountered: recursive-lock linter format iterations (backtick paths, distinct verification evidence, skill-usage sub-fields).
+- Promotion Candidates: the delegated-review lesson (exported-and-tested helpers are not routing behavior until wired) for /.recursive/memory/skills/SKILLS.md.
+- Future Guidance: for Phase 5 QA, use the full dev state dir (role-model-runtime-dev) and cli-entry.ts with --scope-id runtime; the reduced .role-model-credentials config is incomplete.
+
+## Skill Memory Promotion Review
+
+- Promotion Decision Rationale: promote the durable, cross-run lesson that exported-and-tested helpers are not routing behavior until wired into a production call site; keep run-specific launch details as run-local evidence rather than generalized memory.
+- Durable Skill Lessons Promoted: delegated code review caught a correctness bug and dead-code overstatement that self-review missed; recursive-lock enforces distinct verification evidence for verified dispositions.
+- Generalized Guidance Updated: the workspace dsh-memory learnings (role-model-learning-0005 through -0014) captured the linter format requirements, the workspace-build prerequisite, and the Phase 5 runtime-launch facts.
+- Run-Local Observations Left Unpromoted: the specific port 3461 and the specific dev-state paths are run-local and not generalized.
+
+## Uncovered Paths
+
+- SP8 rendered-UI browser readback (only /v1/models verified); SP9 packaged-SEA identity (dev SEA needs private distribution).
+
+## Router and Parent Refresh
+
+- Router: none. Parent refresh: none required.
+
+## Final Status Summary
+
+Run 106 implemented SP1-SP7 (strict TDD) + SP3b/SP4b wiring, reviewed PASS, tested green, and QA'd on an isolated port (strict effort routing verified). Deferred: R2/R4/R8/R9/R10/R11/R12.
+
+## Traceability
+
+- R1 -> SP1 + S1 strict routing
+- R2 -> SP2 (deferred)
+- R3 -> SP4 + S1
+- R4 -> deferred
+- R5 -> SP3 borrowed prior
+- R6 -> SP4 pool
+- R7 -> SP5 shortcut
+- R8 -> SP6 (deferred)
+- R9 -> SP7 (deferred)
+- R10 -> deferred
+- R11 -> SP8 UI
+- R12 -> SP9 (blocked)
+- R13 -> SP1-SP7 TDD
+- R14 -> delegated auditors
+- R15 -> isolated QA
+
+## Coverage Gate
+
+- [x] Memory impact and skill usage recorded.
+
+Coverage: PASS
+
+## Approval Gate
+
+- [x] Concise delta receipt.
+
+Approval: PASS
+
+## Prior Recursive Evidence Reviewed
+
+- \`/.recursive/run/103-agent-strategy-and-scoring-strategy/00-requirements.md\`
+
+## Audit Context
+
+Audit Execution Mode: self-audit
+Subagent Availability: available
+Subagent Capability Probe: in-session subagents available; closeout receipts summarize already-locked phase evidence.
+Delegation Decision Basis: Phases 6-8 are concise delta receipts over locked artifacts; a delegated audit would re-read the same locked inputs without new information.
+Delegation Override Reason: closeout receipts only point at already-locked control-plane deltas; delegation adds no independent verification value.
+Audit Inputs Provided: 00-worktree.md, 03-implementation-summary.md, 05-manual-qa.md.
+
+## Effective Inputs Re-read
+
+- 00-worktree.md, 03-implementation-summary.md, 05-manual-qa.md
+
+## Earlier Phase Reconciliation
+
+Phases 0-5 are LOCKED; this receipt carries their dispositions unchanged.
+
+## Subagent Contribution Verification
+
+Reviewed Action Records: none
+Main-Agent Verification Performed: `/.recursive/run/106-client-neutral-model-effort-routing/08-memory-impact.md`
+Acceptance Decision: accepted
+Refresh Handling: none
+Repair Performed After Verification: none
+
+## Worktree Diff Audit
+
+Baseline type: remote ref
+Baseline reference: origin/dev
+Comparison reference: working-tree
+Normalized baseline: 701b8b8fc0b0eeebdfe818b757f5702f50021488
+Normalized comparison: working-tree
+Normalized diff command: git diff --name-only 701b8b8fc0b0eeebdfe818b757f5702f50021488
+Actual changed files reviewed: the 5 product files + 6 test files
+Unexplained drift: none
+
+## Gaps Found
+
+None beyond the already-recorded deferred/blocked requirements (R2/R4/R8/R9/R10/R11 partial, R12 blocked).
+
+## Repair Work Performed
+
+None required.
+
+## Requirement Completion Status
+
+- R1 | Status: verified | Changed Files: `role-model-router/apps/runtime-host-bridge/src/index.ts` | Implementation Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/logs/green/sp1-effort-policy-normalization.green.txt` | Verification Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/qa/05-qa-routing-scenarios.json`
+- R2 | Status: deferred | Rationale: dead code | Deferred By: /.recursive/run/106-client-neutral-model-effort-routing/03-implementation-summary.md
+- R3 | Status: verified | Changed Files: `role-model-router/apps/runtime-host-bridge/src/index.ts` | Implementation Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/logs/green/sp4-effort-policy-resolution.green.txt` | Verification Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/qa/05-qa-routing-scenarios.json`
+- R4 | Status: deferred | Rationale: not implemented | Deferred By: /.recursive/run/106-client-neutral-model-effort-routing/03-implementation-summary.md
+- R5 | Status: verified | Changed Files: `role-model-router/packages/core/src/router.ts` | Implementation Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/logs/green/sp3-borrowed-quality-prior.green.txt` | Verification Evidence: `role-model-router/packages/core/test/run106-borrowed-quality-prior.test.ts`
+- R6 | Status: verified | Changed Files: `role-model-router/apps/runtime-host-bridge/src/index.ts` | Implementation Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/logs/green/sp4-effort-policy-resolution.green.txt` | Verification Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/qa/05-qa-routing-scenarios.json`
+- R7 | Status: verified | Changed Files: `role-model-router/apps/runtime-host-bridge/src/index.ts` | Implementation Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/logs/green/sp5-turn-aware-hard-shortcut.green.txt` | Verification Evidence: `role-model-router/apps/runtime-host-bridge/test/run106-turn-aware-hard-shortcut.test.ts`
+- R8 | Status: deferred | Rationale: dead code | Deferred By: /.recursive/run/106-client-neutral-model-effort-routing/03-implementation-summary.md
+- R9 | Status: deferred | Rationale: dead code | Deferred By: /.recursive/run/106-client-neutral-model-effort-routing/03-implementation-summary.md
+- R10 | Status: deferred | Rationale: not wired | Deferred By: /.recursive/run/106-client-neutral-model-effort-routing/03-implementation-summary.md
+- R11 | Status: verified | Changed Files: `role-model-router/apps/runtime-ui/` | Implementation Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/qa/05-qa-runtime-launch.json` | Verification Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/qa/05-qa-routing-scenarios.json`
+- R12 | Status: deferred | Rationale: dev-channel SEA requires the paired private distribution; deferred to a future run with the private repo | Deferred By: /.recursive/run/106-client-neutral-model-effort-routing/05-manual-qa.md
+- R13 | Status: verified | Changed Files: `role-model-router/apps/runtime-host-bridge/test/run106-effort-policy-normalization.test.ts` | Implementation Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/logs/green/` | Verification Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/review-bundles/03.5-code-review.md`
+- R14 | Status: verified | Changed Files: `/.recursive/run/106-client-neutral-model-effort-routing/subagents/auditor-13f44730.md` | Implementation Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/subagents/auditor-13f44730.md` | Verification Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/locks/03.5-code-review.receipt.json`
+- R15 | Status: verified | Changed Files: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/qa/05-qa-runtime-launch.json` | Implementation Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/qa/05-qa-runtime-launch.json` | Verification Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidence/qa/05-qa-routing-scenarios.json`
+
+## Audit Verdict
+
+Audit: PASS
