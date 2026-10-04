@@ -749,6 +749,7 @@ export function selectReplayCandidates(input: {
     selected.push(endpointId);
     if (selected.length === cap) break;
   }
+  if (process.env.ROLE_MODEL_FOCUS_DIAG) { console.error("[select-diag] cfg=" + input.configuredEndpointIds.map(function(c){return c.split(".").pop();}).join(",") + " source=" + ((input.sourceEndpointId||"").split(".").pop()||null) + " reqMod=" + JSON.stringify(input.requirements ? input.requirements.requiredModalities : null) + " reqCap=" + JSON.stringify(input.requirements ? input.requirements.requiredCapabilities : null) + " profiles=" + (input.endpointProfiles||[]).map(function(p){return p.endpointId.split(".").pop() + ":mod[" + ((p.modalities)||[]).join(",") + "]:cap[" + ((p.capabilities)||[]).join(",") + "]";}).join("|") + " => selected=" + selected.map(function(c){return c.split(".").pop();}).join(",")); }
   return selected;
 }
 
