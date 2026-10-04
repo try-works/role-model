@@ -55,4 +55,24 @@ describe("run106 canonical effort emission (R10)", () => {
     expect(result.receipt).toEqual({ reasoningEffort: null, effortSource: "provider_default", coerced: false });
     expect(result.executionRequest.reasoning).toBeUndefined();
   });
+
+  it("provider-default arm with disabled reasoning (none) emits disabled and strips reasoning", () => {
+    const result = resolveEndpointExecutionEffort({
+      fixedEffort: null,
+      declaredEffortLevels: ["low", "high"],
+      executionRequest: executionRequest("none"),
+    });
+    expect(result.receipt).toEqual({ reasoningEffort: null, effortSource: "disabled", coerced: false });
+    expect(result.executionRequest.reasoning).toBeUndefined();
+  });
+
+  it("provider-default arm with disabled reasoning (off) emits disabled", () => {
+    const result = resolveEndpointExecutionEffort({
+      fixedEffort: null,
+      declaredEffortLevels: ["low", "high"],
+      executionRequest: executionRequest("off"),
+    });
+    expect(result.receipt).toEqual({ reasoningEffort: null, effortSource: "disabled", coerced: false });
+    expect(result.executionRequest.reasoning).toBeUndefined();
+  });
 });

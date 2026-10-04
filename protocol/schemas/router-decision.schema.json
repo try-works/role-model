@@ -117,7 +117,7 @@
     "reasoning_effort": { "type": ["string", "null"], "minLength": 1, "maxLength": 128 },
     "effort_source": {
       "type": "string",
-      "enum": ["named", "disabled", "provider_default", "none"]
+      "enum": ["named", "disabled", "provider_default", "none", "client", "variant", "variant_coerced"]
     },
     "effort_resolution": {
       "type": "string",
@@ -131,6 +131,25 @@
       ]
     },
     "effective_effort": { "type": ["string", "null"], "minLength": 1, "maxLength": 128 },
+    "requested_effort": { "type": ["string", "null"], "minLength": 1, "maxLength": 128 },
+    "requested_policy": { "type": ["string", "null"], "enum": ["strict", "preferred", "router"] },
+    "effort_exact_arm_count_before_hard_eligibility": { "type": "integer", "minimum": 0 },
+    "effort_exact_arm_count_after_hard_eligibility": { "type": "integer", "minimum": 0 },
+    "effort_fallback_applied": { "type": "boolean" },
+    "non_inferiority_promotion": {
+      "description": "Run 106 R8 (F5): records the non-inferiority promotion receipt - which arm outranked the weighted leader, the displaced leader, the rule thresholds, and whether it changed the weighted selection. Present only when the rule promoted a challenger.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["promoted_endpoint_id", "displaced_endpoint_id", "quality_margin", "min_latency_advantage_ms", "min_cost_advantage_fraction", "changed_weighted_selection"],
+      "properties": {
+        "promoted_endpoint_id": { "type": "string" },
+        "displaced_endpoint_id": { "type": "string" },
+        "quality_margin": { "type": "number" },
+        "min_latency_advantage_ms": { "type": "number" },
+        "min_cost_advantage_fraction": { "type": "number" },
+        "changed_weighted_selection": { "type": "boolean" }
+      }
+    },
     "fallback_endpoint_ids": { "type": "array", "items": { "type": "string" } },
     "selection_reasons": {
       "type": "array",
@@ -157,7 +176,9 @@
           "BENCHMARK_ROLE_SCORE",
           "BENCHMARK_GROUP_SCORE",
           "BENCHMARK_FALLBACK_OVERALL_SCORE",
-          "TELEMETRY_TASK_PERFORMANCE"
+          "TELEMETRY_TASK_PERFORMANCE",
+          "NON_INFERIOR_PROMOTION",
+          "EFFORT_FALLBACK_APPLIED"
         ]
       }
     },
@@ -216,7 +237,7 @@
         "value": { "type": "number", "minimum": 0, "maximum": 1 },
         "source": {
           "type": "string",
-          "enum": ["measured", "declared", "default", "catalog", "benchmark"]
+          "enum": ["measured", "declared", "default", "catalog", "benchmark", "borrowed"]
         },
         "raw": {
           "type": "object",

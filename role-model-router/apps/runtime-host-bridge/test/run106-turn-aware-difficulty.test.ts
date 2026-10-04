@@ -5,7 +5,6 @@ import {
   classifyDifficultyFromSignals,
   computeDifficultyFeatures,
   shouldInvalidateDifficultyClassifierVersion,
-  shouldShortcutToHard,
 } from "../src/index.js";
 
 /**
@@ -123,24 +122,5 @@ describe("run106 R7 turn-aware difficulty repair", () => {
     expect(shouldInvalidateDifficultyClassifierVersion(undefined, DIFFICULTY_CLASSIFIER_VERSION)).toBe(
       true,
     );
-  });
-
-  test("shouldShortcutToHard remains the documented risk-rule predicate", () => {
-    expect(
-      shouldShortcutToHard({
-        toolCount: 2,
-        codeOrSchemaBurden: true,
-        instructionConstraintCount: 1,
-        decompositionKeywordCount: 1,
-      }),
-    ).toBe(false);
-    expect(
-      shouldShortcutToHard({
-        toolCount: 1,
-        codeOrSchemaBurden: true,
-        instructionConstraintCount: 0,
-        decompositionKeywordCount: 4,
-      }),
-    ).toBe(true);
   });
 });

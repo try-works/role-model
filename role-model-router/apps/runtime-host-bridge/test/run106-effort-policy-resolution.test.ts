@@ -22,4 +22,8 @@ describe("run106 effort policy resolution", () => {
     expect(resolveEffortPolicy({ requestedEffort: undefined, policy: "preferred", availableEfforts: ["low"] }))
       .toEqual({ resolution: "router_managed", effectiveEffort: null });
   });
+  it("strict with no requested effort is a typed refusal", () => {
+    expect(resolveEffortPolicy({ requestedEffort: undefined, policy: "strict", availableEfforts: ["high"] }))
+      .toEqual({ resolution: "strict_rejected", effectiveEffort: null });
+  });
 });

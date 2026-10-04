@@ -3,6 +3,7 @@ import type {
   NormalizedCatalogModel,
   RequestShapeHints,
 } from "@role-model-router/catalog";
+import { resolveAdapterGatedReasoningEfforts } from "@role-model-router/catalog";
 import type { ProviderAccountRecord } from "@role-model-router/provider-account";
 
 import { expandReasoningEffortArms, type ReasoningEffortArm } from "./effort-instance-identity.js";
@@ -252,7 +253,7 @@ function createCloudEndpoint(
       device_class: "server",
       region: source.region,
       org_scope: account.orgScope,
-      reasoning_effort: reasoningEffort,
+      ...(reasoningEffort !== null ? { reasoning_effort: reasoningEffort } : {}),
     },
     declared: {
       endpoint_id: endpointId,
@@ -316,6 +317,19 @@ function createLocalEndpoint(source: LocalRegistrySource): EndpointCandidate {
   };
 }
 
+function resolveAdapterFamilyForSource(
+  catalog: NormalizedCatalog,
+  account: ProviderAccountRecord,
+): string | null {
+  if (account.providerAccountId.endsWith(".litellm")) {
+    return "litellm-proxy";
+  }
+  return (
+    catalog.providers.find((provider) => provider.providerId === account.providerId)
+      ?.adapterFamily ?? null
+  );
+}
+
 export function buildEndpointRegistry(input: BuildEndpointRegistryInput): EndpointRegistryResult {
   const modelsById = new Map(input.catalog.models.map((model) => [model.modelId, model]));
   const accountsById = new Map(
@@ -366,16 +380,24 @@ export function buildEndpointRegistry(input: BuildEndpointRegistryInput): Endpoi
       continue;
     }
 
+    // Run 106 R2: expansion is gated on actual adapter executability, not the
+    // catalog declaration alone. Only declared levels with a valid adapter
+    // execution mapping (a tested reasoning-effort serializer) become fixed
+    // routing arms; the provider-default arm still advertises the full declared
+    // set on declared.reasoning_effort_levels for discovery (R9).
+    const executableLevels = resolveAdapterGatedReasoningEfforts({
+      providerId: account.providerId,
+      modelId: model.modelId,
+      capabilities: model.capabilities,
+      catalogLevels: model.reasoningEffortLevels ?? [],
+      adapterFamily: resolveAdapterFamilyForSource(input.catalog, account),
+    });
     const arms = expandReasoningEffortArms({
       providerAccountId: source.providerAccountId,
       region: source.region,
       modelId: source.modelId,
       fixedEffort: source.reasoningEffort ?? null,
-      // Run 106 R2: a catalog reasoning_effort_levels declaration alone cannot
-      // make an arm routable (a durable runtime endpoint source is the execution
-      // mapping). Each activated endpoint is its own arm; declared levels stay
-      // advertised on the provider-default arm's declared.reasoning_effort_levels
-      // for discovery (R9) but do not expand into un-executable routing arms.
+      declaredLevels: executableLevels,
       baseEndpointId: source.endpointId,
     });
     for (const arm of arms) {

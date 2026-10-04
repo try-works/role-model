@@ -221,6 +221,24 @@ export type EffortResolutionKind =
 export interface EffortResolution {
   readonly resolution: EffortResolutionKind;
   readonly effectiveEffort: string | null;
+  /**
+   * Run 106 R10: the client's requested reasoning effort, when one was supplied. Carries the
+   * client request across the router so the decision record can explain what was requested even
+   * when it degrades to unsupported_fallback (effectiveEffort null).
+   */
+  readonly requestedEffort?: string | null;
+  /**
+   * Run 106 R10: the client's requested effort policy (strict | preferred | router). Absent when
+   * the client omitted effort and the host resolved router-managed.
+   */
+  readonly requestedPolicy?: "strict" | "preferred" | "router";
+  /**
+   * Run 106 R4: the client's effort source (named | disabled | none), carried so the decision can
+   * emit the lossless four-state effort_source instead of collapsing no-client-preference onto
+   * provider_default. Absent on legacy paths, where the router falls back to the chosen arm's
+   * identity (provider_default | named).
+   */
+  readonly source?: EffortSource;
 }
 
 export interface RouteRequestInput {

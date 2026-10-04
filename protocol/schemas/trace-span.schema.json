@@ -23,7 +23,7 @@
     "reasoning_effort": { "type": ["string", "null"], "minLength": 1, "maxLength": 128 },
     "effort_source": {
       "type": "string",
-      "enum": ["none", "client", "variant", "variant_coerced"]
+      "enum": ["named", "disabled", "provider_default", "none", "client", "variant", "variant_coerced"]
     },
     "span_type": {
       "type": "string",

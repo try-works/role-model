@@ -237,9 +237,10 @@ function buildEndpointIdsByModelId(registry: EndpointRegistryResult): Map<string
 
 /**
  * Run 106 R9: group executable arms by model and collect each model's named effort values. A
- * provider-default slot (reasoning_effort null/undefined) is passed through as null so
- * computeEffortUnionAndIntersection ignores it in the union without hiding a model that has no
- * fixed-effort arm.
+ * fixed-effort arm contributes its own level; a provider-default slot (reasoning_effort
+ * null/undefined) contributes its declared reasoning_effort_levels plus a null placeholder so
+ * computeEffortUnionAndIntersection ignores the placeholder without hiding a model that has no
+ * fixed-effort arm. This mirrors collectExecutableReasoningEfforts.
  */
 function buildModelEffortLists(
   registry: EndpointRegistryResult,
@@ -249,7 +250,16 @@ function buildModelEffortLists(
     const modelId = endpoint.identity.model_id;
     const list = byModelId.get(modelId) ?? [];
     const effort = endpoint.identity.reasoning_effort;
-    list.push(typeof effort === "string" && effort.length > 0 ? effort : null);
+    const fixedEffort = typeof effort === "string" && effort.length > 0 ? effort : null;
+    list.push(fixedEffort);
+    if (fixedEffort === null) {
+      for (const level of endpoint.declared.reasoning_effort_levels ?? []) {
+        const trimmed = level.trim();
+        if (trimmed) {
+          list.push(trimmed);
+        }
+      }
+    }
     byModelId.set(modelId, list);
   }
   return [...byModelId.values()].map((list) => [...new Set(list)]);

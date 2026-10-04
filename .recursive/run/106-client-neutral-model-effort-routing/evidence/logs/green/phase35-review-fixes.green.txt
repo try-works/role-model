@@ -1,0 +1,4 @@
+phase35-review-fixes GREEN (H-2, M-1, M-2, L-4)
+command: corepack pnpm --filter @role-model-router/core exec vitest run test/run106-phase35-review-fixes.test.ts
+result: 6 tests passed (6).
+followup: full core suite also green (17 files, 113 tests) and tsc build green for @role-model-router/core + @role-model/protocol-types.

@@ -1,37 +1,87 @@
-
- RUN  v3.2.4 D:/DEV/role-model/.worktrees/106-client-neutral-model-effort-routing/role-model-router/packages/endpoint-registry
-
- ❯ test/run106-registry-arm-expansion.test.ts (1 test | 1 failed) 37ms
-   × run106 registry arm expansion integration > materializes one distinct routing arm per declared level plus a provider-default arm 34ms
-     → expected [ { identity: { …(14) }, …(3) } ] to have a length of 3 but got 1
-
-⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
-
- FAIL  test/run106-registry-arm-expansion.test.ts > run106 registry arm expansion integration > materializes one distinct routing arm per declared level plus a provider-default arm
-AssertionError: expected [ { identity: { …(14) }, …(3) } ] to have a length of 3 but got 1
-
-- Expected
-+ Received
-
-- 3
-+ 1
-
- ❯ test/run106-registry-arm-expansion.test.ts:106:30
-    104| 
-    105|     // The registry must produce exactly the arms the identity helper …
-    106|     expect(result.endpoints).toHaveLength(expected.length);
-       |                              ^
-    107|     expect(result.endpoints.map((entry) => entry.identity.endpoint_id)…
-    108|       expected.map((arm) => arm.endpointId).sort(),
-
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+command: corepack pnpm --filter @role-model-router/endpoint-registry exec vitest run test/run106-registry-arm-expansion.test.ts
+exit code: 1
 
 
- Test Files  1 failed (1)
-      Tests  1 failed (1)
-   Start at  11:38:39
-   Duration  1.87s (transform 254ms, setup 0ms, collect 266ms, tests 37ms, environment 1ms, prepare 498ms)
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/106-client-neutral-model-effort-routing/role-model-router/packages/endpoint-registry[39m
+
+ [31m❯[39m test/run106-registry-arm-expansion.test.ts [2m([22m[2m4 tests[22m[2m | [22m[31m3 failed[39m[2m)[22m[32m 54[2mms[22m[39m
+   [32m✓[39m run106 registry arm assembly[2m > [22mfixed-effort source yields a single fixed arm carrying its level in identity[32m 11[2mms[22m[39m
+[31m   [31m×[31m run106 registry arm assembly[2m > [22mprovider-default source without reasoning capability keeps a single provider-default arm[39m[32m 19[2mms[22m[39m
+[31m     → expected null to be undefined[39m
+[31m   [31m×[31m run106 registry arm assembly[2m > [22mprovider-default source with an executable adapter expands declared levels into fixed arms plus a provider-default arm[39m[32m 10[2mms[22m[39m
+[31m     → expected [ 'openai.effort.us-east-1' ] to deeply equal [ 'openai.effort.us-east-1', …(2) ][39m
+[31m   [31m×[31m run106 registry arm assembly[2m > [22mprovider-default source with declared levels but no executable adapter keeps a single provider-default arm[39m[32m 3[2mms[22m[39m
+[31m     → expected null to be undefined[39m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m3 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (4)[39m
+[2m   Start at [22m 18:44:58
+[2m   Duration [22m 1.72s[2m (transform 222ms, setup 0ms, collect 229ms, tests 54ms, environment 1ms, prepare 510ms)[22m
 
 undefined
 D:\DEV\role-model\.worktrees\106-client-neutral-model-effort-routing\role-model-router\packages\endpoint-registry:
  ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/run106-registry-arm-expansion.test.ts
+
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 3 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m test/run106-registry-arm-expansion.test.ts[2m > [22mrun106 registry arm assembly[2m > [22mprovider-default source without reasoning capability keeps a single provider-default arm
+[31m[1mAssertionError[22m: expected null to be undefined[39m
+
+[32m- Expected:[39m 
+undefined
+
+[31m+ Received:[39m 
+null
+
+[36m [2m❯[22m test/run106-registry-arm-expansion.test.ts:[2m136:59[22m[39m
+    [90m134| [39m    [34mexpect[39m(result[33m.[39mendpoints)[33m.[39m[34mtoHaveLength[39m([34m1[39m)[33m;[39m
+    [90m135| [39m    expect(result.endpoints[0].identity.endpoint_id).toBe(baseEndpoint…
+    [90m136| [39m    expect(result.endpoints[0].identity.reasoning_effort).toBeUndefine…
+    [90m   | [39m                                                          [31m^[39m
+    [90m137| [39m    expect(result.endpoints[0].declared.reasoning_effort_levels).toEqu…
+    [90m138| [39m  })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/run106-registry-arm-expansion.test.ts[2m > [22mrun106 registry arm assembly[2m > [22mprovider-default source with an executable adapter expands declared levels into fixed arms plus a provider-default arm
+[31m[1mAssertionError[22m: expected [ 'openai.effort.us-east-1' ] to deeply equal [ 'openai.effort.us-east-1', …(2) ][39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  [[22m
+[2m    "openai.effort.us-east-1",[22m
+[32m-   "openai.effort.us-east-1-low",[39m
+[32m-   "openai.effort.us-east-1-high",[39m
+[2m  ][22m
+
+[36m [2m❯[22m test/run106-registry-arm-expansion.test.ts:[2m150:79[22m[39m
+    [90m148| [39m    })[33m;[39m
+    [90m149| [39m
+    [90m150| [39m    expect(result.endpoints.map((endpoint) => endpoint.identity.endpoi…
+    [90m   | [39m                                                                              [31m^[39m
+    [90m151| [39m      baseEndpointId[33m,[39m
+    [90m152| [39m      [32m`[39m[36m${[39mbaseEndpointId[36m}[39m[32m-low`[39m[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/run106-registry-arm-expansion.test.ts[2m > [22mrun106 registry arm assembly[2m > [22mprovider-default source with declared levels but no executable adapter keeps a single provider-default arm
+[31m[1mAssertionError[22m: expected null to be undefined[39m
+
+[32m- Expected:[39m 
+undefined
+
+[31m+ Received:[39m 
+null
+
+[36m [2m❯[22m test/run106-registry-arm-expansion.test.ts:[2m176:59[22m[39m
+    [90m174| [39m    [34mexpect[39m(result[33m.[39mendpoints)[33m.[39m[34mtoHaveLength[39m([34m1[39m)[33m;[39m
+    [90m175| [39m    expect(result.endpoints[0].identity.endpoint_id).toBe(baseEndpoint…
+    [90m176| [39m    expect(result.endpoints[0].identity.reasoning_effort).toBeUndefine…
+    [90m   | [39m                                                          [31m^[39m
+    [90m177| [39m    expect(result.endpoints[0].declared.reasoning_effort_levels).toEqu…
+    [90m178| [39m  })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯[22m[39m
+

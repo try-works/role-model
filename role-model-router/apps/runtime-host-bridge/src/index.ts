@@ -23,7 +23,7 @@ import {
   type NormalizedCatalog,
   type NormalizedCatalogModel,
   type PricingHints,
-  resolveReasoningEffortLevels,
+  resolveAdapterGatedReasoningEfforts,
 } from "@role-model-router/catalog";
 import { assembleContextEnvelope } from "@role-model-router/context-envelope";
 import {
@@ -369,41 +369,11 @@ import {
   rewriteUnifiedRuntimeConfigController,
 } from "./unified-runtime-config.js";
 
-const REASONING_EFFORT_SERIALIZER_VERSION_BY_ADAPTER = new Map<string, string>([
-  ["ai-sdk-openai-compatible", "run91.openai-compatible.reasoning-effort.v1"],
-  ["litellm-proxy", "run91.openai-compatible.reasoning-effort.v1"],
-  ["codex-subscription-responses", "run91.codex-responses.reasoning-effort.v1"],
-  ["ai-sdk-anthropic", "run93.anthropic.thinking-budget-tokens.v1"],
-]);
-
-export function resolveAdapterGatedReasoningEfforts(input: {
-  readonly providerId: string;
-  readonly modelId: string;
-  readonly capabilities: readonly string[];
-  readonly catalogLevels: readonly string[];
-  readonly adapterFamily: string | null;
-}): readonly string[] {
-  const adapterFamily = input.adapterFamily;
-  const version =
-    adapterFamily === null
-      ? undefined
-      : REASONING_EFFORT_SERIALIZER_VERSION_BY_ADAPTER.get(adapterFamily);
-  return resolveReasoningEffortLevels({
-    providerId: input.providerId,
-    modelId: input.modelId,
-    capabilities: input.capabilities,
-    reasoningEffortLevels: input.catalogLevels,
-    reasoningOptionKinds: ["effort"],
-    adapter:
-      version && adapterFamily
-        ? {
-            family: adapterFamily,
-            version,
-            serializers: input.catalogLevels,
-          }
-        : null,
-  });
-}
+// Run 106 H-1: the adapter-gated reasoning-effort resolver now lives in
+// @role-model-router/catalog (next to resolveReasoningEffortLevels) so both the
+// runtime-host-bridge activation path and the endpoint-registry arm expansion can
+// resolve the executable effort set from one source of truth.
+export { resolveAdapterGatedReasoningEfforts } from "@role-model-router/catalog";
 
 function markPhase(label: string): void {
   if (process.env.ROLE_MODEL_PHASE_TIMING === "1") {
@@ -446,6 +416,22 @@ export function resolveEndpointExecutionEffort(input: {
   const fixedEffort = input.fixedEffort?.trim() || null;
   const clientEffort = input.executionRequest.reasoning?.effort?.trim() || null;
   if (fixedEffort === null) {
+    const clientEffortSource = input.executionRequest.reasoning?.effortSource;
+    if (
+      clientEffortSource === "disabled" ||
+      (clientEffort !== null && isDisabledReasoningEffort(clientEffort))
+    ) {
+      const { reasoning: _clientReasoning, ...executionRequestWithoutReasoning } =
+        input.executionRequest;
+      return {
+        executionRequest: executionRequestWithoutReasoning,
+        receipt: {
+          reasoningEffort: null,
+          effortSource: "disabled",
+          coerced: false,
+        },
+      };
+    }
     const declaredEffortLevels = new Set(
       (input.declaredEffortLevels ?? [])
         .map((level) => level.trim())
@@ -970,13 +956,23 @@ function isOpenAIChatCompletionsMessage(
 }
 
 export type NormalizedEffortPolicy = "strict" | "preferred" | "router";
+export type ClientEffortSource = "named" | "disabled" | "none";
+
+function isDisabledReasoningEffort(effort: string | undefined): boolean {
+  const trimmed = effort?.trim().toLowerCase();
+  return trimmed === "none" || trimmed === "off";
+}
 
 export function normalizeReasoningEffortPolicy(
   effort: string | undefined,
   explicitPolicy: string | undefined,
-): { effort: string | undefined; policy: NormalizedEffortPolicy } {
-  const policy = normalizeEffortPolicyValue(explicitPolicy) ?? (effort ? "preferred" : "router");
-  return { effort, policy };
+): { effort: string | undefined; policy: NormalizedEffortPolicy; source: ClientEffortSource } {
+  const disabled = isDisabledReasoningEffort(effort);
+  const effectiveEffort = disabled ? undefined : effort;
+  const policy =
+    normalizeEffortPolicyValue(explicitPolicy) ?? (effectiveEffort ? "preferred" : "router");
+  const source: ClientEffortSource = disabled ? "disabled" : effectiveEffort ? "named" : "none";
+  return { effort: effectiveEffort, policy, source };
 }
 
 export type EffortPolicyResolutionKind =
@@ -992,8 +988,14 @@ export function resolveEffortPolicy(input: {
   readonly policy: "strict" | "preferred" | "router";
   readonly availableEfforts: readonly (string | null)[];
 }): { resolution: EffortPolicyResolutionKind; effectiveEffort: string | null } {
-  if (input.policy === "router" || input.requestedEffort === undefined) {
+  if (input.policy === "router") {
     return { resolution: "router_managed", effectiveEffort: null };
+  }
+  if (input.requestedEffort === undefined) {
+    // strict with no requested effort is a contradiction: refuse rather than silently router-managing.
+    return input.policy === "strict"
+      ? { resolution: "strict_rejected", effectiveEffort: null }
+      : { resolution: "router_managed", effectiveEffort: null };
   }
   const hasExact = input.availableEfforts.includes(input.requestedEffort);
   if (hasExact) {
@@ -1031,9 +1033,11 @@ function readOpenAIReasoningRequest(
   body: Pick<OpenAIResponsesBody, "reasoning_effort" | "reasoning" | "thinking">,
 ): RuntimeExecutionRequest["reasoning"] | undefined {
   if (typeof body.reasoning_effort === "string") {
+    const normalized = normalizeReasoningEffortPolicy(body.reasoning_effort, undefined);
     return {
-      effort: body.reasoning_effort,
-      effortPolicy: "preferred",
+      ...(normalized.effort !== undefined ? { effort: normalized.effort } : {}),
+      effortPolicy: normalized.policy,
+      effortSource: normalized.source,
     };
   }
 
@@ -1046,6 +1050,7 @@ function readOpenAIReasoningRequest(
     return {
       ...(normalized.effort !== undefined ? { effort: normalized.effort } : {}),
       effortPolicy: normalized.policy,
+      effortSource: normalized.source,
       raw: reasoning,
     };
   }
@@ -1525,19 +1530,6 @@ export function shouldInvalidateDifficultyClassifierVersion(
   currentClassifierVersion: string,
 ): boolean {
   return cachedClassifierVersion !== currentClassifierVersion;
-}
-
-export function shouldShortcutToHard(input: {
-  readonly toolCount: number;
-  readonly codeOrSchemaBurden: boolean;
-  readonly instructionConstraintCount: number;
-  readonly decompositionKeywordCount: number;
-}): boolean {
-  return (
-    input.toolCount > 0 &&
-    input.codeOrSchemaBurden &&
-    (input.instructionConstraintCount >= 3 || input.decompositionKeywordCount >= 3)
-  );
 }
 
 export function classifyDifficultyFromSignals(input: {
@@ -2430,6 +2422,25 @@ function baseEndpointIdOfEndpoint(endpoint: {
   return endpoint.endpoint_id.endsWith(suffix)
     ? endpoint.endpoint_id.slice(0, -suffix.length)
     : endpoint.endpoint_id;
+}
+
+/**
+ * Run 106 R2 (fallback dedup): a provider-default endpoint expands into effort arms that all
+ * resolve to the same downstream source. When one arm fails, falling back to a sibling arm would
+ * re-dispatch to that same source (and fail identically), so a provider-execution failure denies
+ * every endpoint in the arm's physical-source family, not just the failed arm id.
+ */
+function collectSharedSourceEndpointIds(
+  registry: EndpointRegistryResult,
+  endpointId: string,
+): readonly string[] {
+  const target = registry.endpoints.find(
+    (candidate) => candidate.identity.endpoint_id === endpointId,
+  );
+  const baseId = baseEndpointIdOfEndpoint(target?.identity ?? { endpoint_id: endpointId });
+  return registry.endpoints
+    .filter((candidate) => baseEndpointIdOfEndpoint(candidate.identity) === baseId)
+    .map((candidate) => candidate.identity.endpoint_id);
 }
 
 /**
@@ -11073,6 +11084,9 @@ export function mapChatCompletionsRequest(
     effortResolution: {
       resolution: effortAppliedToModelPool.resolution,
       effectiveEffort: effortAppliedToModelPool.effectiveEffort,
+      requestedEffort: reasoning?.effort ?? null,
+      requestedPolicy: reasoning?.effortPolicy,
+      source: reasoning?.effortSource ?? (reasoning?.effort ? "named" : "none"),
     },
     routingDiagnostics: withAliasPostureBinding(
       withStrategyProvenance(
@@ -11355,6 +11369,9 @@ export function mapResponsesRequest(
     effortResolution: {
       resolution: effortAppliedToModelPool.resolution,
       effectiveEffort: effortAppliedToModelPool.effectiveEffort,
+      requestedEffort: reasoning?.effort ?? null,
+      requestedPolicy: reasoning?.effortPolicy,
+      source: reasoning?.effortSource ?? (reasoning?.effort ? "named" : "none"),
     },
     routingDiagnostics: withAliasPostureBinding(
       withStrategyProvenance(
@@ -28415,7 +28432,14 @@ export async function createRuntimeBridgeBackend(
             await persistRoutedProviderFailure(error);
             throw error;
           }
-          deniedEndpointIds.push(error.endpointId);
+          for (const sharedSourceEndpointId of collectSharedSourceEndpointIds(
+            executionSnapshot.registry,
+            error.endpointId,
+          )) {
+            if (!deniedEndpointIds.includes(sharedSourceEndpointId)) {
+              deniedEndpointIds.push(sharedSourceEndpointId);
+            }
+          }
           let nextRoute: ReturnType<typeof routeExecutionRequest>;
           try {
             nextRoute = routeExecutionRequest(deniedEndpointIds);

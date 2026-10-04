@@ -6618,6 +6618,7 @@ describe("runtime-host-bridge", () => {
     expect(result.executionRequest.reasoning).toEqual({
       effort: "high",
       effortPolicy: "preferred",
+      effortSource: "named",
     });
     expect(result.executionRequest.continuation).toEqual({
       previousResponseId: "resp_prev_001",
@@ -7044,6 +7045,7 @@ describe("runtime-host-bridge", () => {
     expect(result.executionRequest.reasoning).toEqual({
       effort: "high",
       effortPolicy: "preferred",
+      effortSource: "named",
     });
   });
 
@@ -16456,7 +16458,11 @@ describe("runtime-host-bridge", () => {
           statusCode: 402,
           adapterFamily: "ai-sdk-openai-compatible",
           executionFamily: "remote-service",
-          eligibleEndpointIds: [endpoint.endpointId],
+          eligibleEndpointIds: [
+            endpoint.endpointId,
+            `${endpoint.endpointId}-high`,
+            `${endpoint.endpointId}-max`,
+          ],
         }),
       );
       expect(failureRow?.endpointId).not.toBe("routing.failed.pre-execution");

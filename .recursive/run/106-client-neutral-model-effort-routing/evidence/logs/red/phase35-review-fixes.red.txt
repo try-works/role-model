@@ -1,0 +1,8 @@
+phase35-review-fixes RED (H-2, M-1, M-2, L-4)
+command: corepack pnpm --filter @role-model-router/core exec vitest run test/run106-phase35-review-fixes.test.ts
+observed: 5 tests failed, 1 passed (6):
+- M-1 getQualityMetric returns source "benchmark" not "borrowed" for a related-effort prior.
+- M-1 borrowed leader still establishes non-inferiority (chosen endpoint = benchmark-challenger).
+- M-2 non_inferiority_promotion receipt is undefined; NON_INFERIOR_PROMOTION selection reason absent.
+- H-2 requested_effort / requested_policy / effort_exact_arm_count_* fields are undefined.
+- L-4 effort_fallback_applied is undefined; EFFORT_FALLBACK_APPLIED selection reason absent.

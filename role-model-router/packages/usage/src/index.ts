@@ -3,7 +3,7 @@ import path from "node:path";
 
 import type { UsageEvent } from "@role-model/protocol-types";
 
-export type UsageEffortSource = "none" | "client" | "variant" | "variant_coerced";
+export type UsageEffortSource = "none" | "disabled" | "named" | "provider_default" | "client" | "variant" | "variant_coerced";
 
 export interface UsageEffortFields {
   readonly reasoning_effort?: string | null;

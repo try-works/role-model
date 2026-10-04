@@ -93,4 +93,34 @@ describe("run106 canonical decision provenance (R10)", () => {
     expect(decision.effort_resolution).toBe("router_managed");
     expect(decision.effective_effort).toBeNull();
   });
+
+  test("effortResolution source none records the no-client-preference effort_source", () => {
+    const decision = routeRequest(
+      buildInput({
+        candidates: [candidate("provider-default", null)],
+        effortResolution: { resolution: "router_managed", effectiveEffort: null, source: "none" },
+      }),
+    );
+    expect(decision.effort_source).toBe("none");
+  });
+
+  test("effortResolution source disabled records the disabled-reasoning effort_source", () => {
+    const decision = routeRequest(
+      buildInput({
+        candidates: [candidate("provider-default", null)],
+        effortResolution: { resolution: "router_managed", effectiveEffort: null, source: "disabled" },
+      }),
+    );
+    expect(decision.effort_source).toBe("disabled");
+  });
+
+  test("effortResolution source named records the named effort_source", () => {
+    const decision = routeRequest(
+      buildInput({
+        candidates: [candidate("fixed-high", "high")],
+        effortResolution: { resolution: "exact_primary", effectiveEffort: "high", source: "named" },
+      }),
+    );
+    expect(decision.effort_source).toBe("named");
+  });
 });

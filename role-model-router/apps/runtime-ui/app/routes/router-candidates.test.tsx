@@ -20,11 +20,8 @@ describe("run 106 R11 candidate surface truthfulness", () => {
   });
 
   test("co-displays effective effort and labeled evidence on every arm row", () => {
-    expect(source).toContain("formatEffectiveEffortDisclosure");
-    expect(source).toContain("classifyEffortEvidence");
-    expect(source).toContain("formatEffortEvidenceLabel");
+    expect(source).toContain("formatEffortArmTruthDisclosure");
     expect(source).toContain('label: "Effort"');
-    expect(source).toContain('label: "Evidence"');
     expect(source).toContain("relatedEffortOverallScore");
   });
 

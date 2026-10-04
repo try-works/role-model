@@ -392,6 +392,9 @@ describe("Run 91 effort instance identity", () => {
     expect(plan.effortResolution).toEqual({
       resolution: "unsupported_fallback",
       effectiveEffort: null,
+      requestedEffort: "high",
+      requestedPolicy: "preferred",
+      source: "named",
     });
   });
 
@@ -431,6 +434,9 @@ describe("Run 91 effort instance identity", () => {
     expect(plan.effortResolution).toEqual({
       resolution: "unsupported_fallback",
       effectiveEffort: null,
+      requestedEffort: "high",
+      requestedPolicy: "preferred",
+      source: "named",
     });
   });
 
@@ -591,6 +597,9 @@ describe("Run 91 effort instance identity", () => {
     expect(plan.effortResolution).toEqual({
       resolution: "unsupported_fallback",
       effectiveEffort: null,
+      requestedEffort: "high",
+      requestedPolicy: "preferred",
+      source: "named",
     });
   });
 });

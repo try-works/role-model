@@ -356,7 +356,7 @@ export interface RoleDefinition {
 
 export interface MetricEntry {
   value: number;
-  source: "measured" | "declared" | "default" | "catalog" | "benchmark";
+  source: "measured" | "declared" | "default" | "catalog" | "benchmark" | "borrowed";
   raw?: {
     [k: string]: unknown;
   };
@@ -420,7 +420,14 @@ export interface RouterDecision {
   }[];
   chosen_endpoint_id: string;
   reasoning_effort?: string | null;
-  effort_source?: "named" | "disabled" | "provider_default" | "none";
+  effort_source?:
+    | "named"
+    | "disabled"
+    | "provider_default"
+    | "none"
+    | "client"
+    | "variant"
+    | "variant_coerced";
   effort_resolution?:
     | "router_managed"
     | "exact_primary"
@@ -429,6 +436,22 @@ export interface RouterDecision {
     | "strict_rejected"
     | "equivalent_mapped";
   effective_effort?: string | null;
+  requested_effort?: string | null;
+  requested_policy?: ("strict" | "preferred" | "router") | null;
+  effort_exact_arm_count_before_hard_eligibility?: number;
+  effort_exact_arm_count_after_hard_eligibility?: number;
+  effort_fallback_applied?: boolean;
+  /**
+   * Run 106 R8 (F5): records the non-inferiority promotion receipt - which arm outranked the weighted leader, the displaced leader, the rule thresholds, and whether it changed the weighted selection. Present only when the rule promoted a challenger.
+   */
+  non_inferiority_promotion?: {
+    promoted_endpoint_id: string;
+    displaced_endpoint_id: string;
+    quality_margin: number;
+    min_latency_advantage_ms: number;
+    min_cost_advantage_fraction: number;
+    changed_weighted_selection: boolean;
+  };
   fallback_endpoint_ids: string[];
   selection_reasons: (
     | "BEST_TOTAL_SCORE"
@@ -452,6 +475,8 @@ export interface RouterDecision {
     | "BENCHMARK_GROUP_SCORE"
     | "BENCHMARK_FALLBACK_OVERALL_SCORE"
     | "TELEMETRY_TASK_PERFORMANCE"
+    | "NON_INFERIOR_PROMOTION"
+    | "EFFORT_FALLBACK_APPLIED"
   )[];
   used_measured: boolean;
   used_declared: boolean;
@@ -537,7 +562,14 @@ export interface TraceEvent {
   request_id: string;
   routing_decision_id: string;
   reasoning_effort?: string | null;
-  effort_source?: "none" | "client" | "variant" | "variant_coerced";
+  effort_source?:
+    | "named"
+    | "disabled"
+    | "provider_default"
+    | "none"
+    | "client"
+    | "variant"
+    | "variant_coerced";
   timestamp_ms: number;
   event_type:
     | "router.decision.created"
@@ -558,7 +590,14 @@ export interface TraceSpan {
   request_id: string;
   routing_decision_id: string;
   reasoning_effort?: string | null;
-  effort_source?: "none" | "client" | "variant" | "variant_coerced";
+  effort_source?:
+    | "named"
+    | "disabled"
+    | "provider_default"
+    | "none"
+    | "client"
+    | "variant"
+    | "variant_coerced";
   span_type:
     | "router.eligibility"
     | "router.scoring"
@@ -589,7 +628,14 @@ export interface UsageEvent {
   endpoint_id: string;
   model_id?: string;
   reasoning_effort?: string | null;
-  effort_source?: "none" | "client" | "variant" | "variant_coerced";
+  effort_source?:
+    | "named"
+    | "disabled"
+    | "provider_default"
+    | "none"
+    | "client"
+    | "variant"
+    | "variant_coerced";
   package_id?: string;
   provider_kind: string;
   tokens_in: number;

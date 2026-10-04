@@ -1,13 +1,13 @@
+command: corepack pnpm --filter @role-model-router/endpoint-registry exec vitest run test/run106-registry-arm-expansion.test.ts
+exit code: 0
 
- RUN  v3.2.4 D:/DEV/role-model/.worktrees/106-client-neutral-model-effort-routing/role-model-router/packages/endpoint-registry
 
- ✓ test/run106-arm-expansion.test.ts (6 tests) 19ms
- ✓ test/index.test.ts (2 tests) 18ms
- ✓ test/run106-registry-arm-expansion.test.ts (1 test) 19ms
- ✓ test/effort-instance-identity.test.ts (3 tests) 21ms
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/106-client-neutral-model-effort-routing/role-model-router/packages/endpoint-registry[39m
 
- Test Files  4 passed (4)
-      Tests  12 passed (12)
-   Start at  12:08:26
-   Duration  1.38s (transform 523ms, setup 0ms, collect 777ms, tests 78ms, environment 2ms, prepare 1.79s)
+ [32m✓[39m test/run106-registry-arm-expansion.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m4 passed[39m[22m[90m (4)[39m
+[2m   Start at [22m 18:48:51
+[2m   Duration [22m 2.28s[2m (transform 473ms, setup 0ms, collect 533ms, tests 25ms, environment 1ms, prepare 552ms)[22m
 
