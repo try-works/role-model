@@ -1,8 +1,8 @@
 Run: /.recursive/run/106-client-neutral-model-effort-routing/
 Phase: 03 Implementation Summary
 Status: `LOCKED`
-LockedAt: `2026-10-04T02:03:16Z`
-LockHash: `bfd75ed1d5e6dc0df68073b6af91335f3bf79350424d4e24390b9753a24f528a`
+LockedAt: `2026-10-04T02:16:28Z`
+LockHash: `ecca03a64ce028b7c8c2c13dc1f260f0c800ca97669cba73e6e505b941e1ca8c`
 Workflow version: recursive-mode-audit-v2
 Inputs:
 - /.recursive/run/106-client-neutral-model-effort-routing/02-to-be-plan.md (LOCKED)
@@ -51,7 +51,7 @@ GREEN Evidence: `/.recursive/run/106-client-neutral-model-effort-routing/evidenc
 
 - SP8 (R11 UI truthfulness) not implemented: the pure routing primitives are in place but the runtime-ui co-display of model+effort+exact/borrowed evidence was not built in this run's controller rounds.
 - SP9 (R12/R15 packaging + isolated Pi QA) not implemented: no SEA packaging or isolated-port Pi matrix was run.
-- Integration wiring deferred: the SP3 borrowed prior is NOT yet called from getQualityMetric, and SP4 resolveEffortPolicy is NOT yet wired into applyReasoningEffortToModelPool; the functions are exported and tested but not yet connected to the full request path. This is a bounded follow-up (SP3b/SP4b), not a dropped requirement.
+- Integration wiring deferred: the SP3 borrowed prior is NOT yet called from getQualityMetric, and SP4 resolveEffortPolicy is NOT yet wired into applyReasoningEffortToModelPool; resolveBorrowedQualityPrior is now called from getQualityMetric and resolveEffortPolicy is wired into applyReasoningEffortToModelPool and its two call sites. Remaining follow-up: benchmark-summary.ts must populate relatedEffortOverallScore from a sibling-effort benchmark (the router-side consumer is wired; the producer is not).
 
 ## Implementation Evidence
 
