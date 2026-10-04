@@ -7633,10 +7633,11 @@ export function recallTrackBDurableRouteAdvisory(input: {
   readonly nowMs?: number;
   readonly maxAgeMs?: number | null;
 }): TrackBDurableRouteAdvisoryEntry | null {
-  const entry =
-    trackBDurableRouteAdvisoryCache.get(
-      durableAdvisoryKey(input.channel, input.scope, input.roleId ?? null, input.taskTypeId ?? null),
-    ) ?? null;
+  const rkey = durableAdvisoryKey(input.channel, input.scope, input.roleId ?? null, input.taskTypeId ?? null);
+  const entry = trackBDurableRouteAdvisoryCache.get(rkey) ?? null;
+  if (process.env.ROLE_MODEL_ADVISORY_DIAG) {
+    console.error(`[advisory-recall] key=${rkey} hit=${entry !== null} cacheSize=${trackBDurableRouteAdvisoryCache.size} keys=${[...trackBDurableRouteAdvisoryCache.keys()].join(" | ")}`);
+  }
   if (!entry) return null;
   const maxAgeMs =
     typeof input.maxAgeMs === "number" && Number.isFinite(input.maxAgeMs) && input.maxAgeMs > 0
