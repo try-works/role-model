@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "role-model.knowledge-learning-records.v1",
+  "scopeId": "standalone-runtime-dev",
+  "records": [],
+  "ladders": [],
+  "laddersState": "reported",
+  "laddersCensus": {
+    "state": "reported",
+    "reason": null
+  },
+  "laddersPagination": {
+    "total": 0,
+    "truncated": false,
+    "nextCursor": null,
+    "pages": 1,
+    "reason": null
+  },
+  "laddersCompleteness": "complete"
+}

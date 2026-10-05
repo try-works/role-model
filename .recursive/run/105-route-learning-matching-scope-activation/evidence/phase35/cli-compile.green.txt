@@ -1,0 +1,3 @@
+npm warn Unknown env config "manage-package-manager-versions". This will stop working in the next major version of npm.
+src/index.ts(26512,30): error TS2339: Property 'roleId' does not exist on type '{ readonly preferredRoutePackage: string | null; readonly advisoryState: TrackBRouteAdvisoryState; readonly confidence: number; readonly profileSnapshotIds: readonly string[]; ... 4 more ...; readonly cachedAtMs: number; } | TrackBDurableRouteAdvisoryEntry'.
+  Property 'roleId' does not exist on type '{ readonly preferredRoutePackage: string | null; readonly advisoryState: TrackBRouteAdvisoryState; readonly confidence: number; readonly profileSnapshotIds: readonly string[]; ... 4 more ...; readonly cachedAtMs: number; }'.

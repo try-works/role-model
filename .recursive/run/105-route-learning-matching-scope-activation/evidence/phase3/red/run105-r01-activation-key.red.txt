@@ -1,0 +1,34 @@
+(node:23716) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ run105 R1: activatePack without role/task keeps the legacy scope-wide key byte-identical (232.1534ms)
+✖ run105 R1: activatePack with role+task keys per (role, task) and receipts the composite scope (160.5242ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 1
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 645.7309
+
+✖ failing tests:
+
+test at tests\track-b\run105-r01-activation-key.test.mjs:82:1
+✖ run105 R1: activatePack with role+task keys per (role, task) and receipts the composite scope (160.5242ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + undefined
+  - 'role:code-review'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/105-route-learning-matching-scope-activation/tests/track-b/run105-r01-activation-key.test.mjs:97:12)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: 'role:code-review',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+EXIT=1

@@ -1677,6 +1677,239 @@ function projectBoundedRoutingDiagnostics(value: unknown): Record<string, unknow
   return projected;
 }
 
+// R15: budget the serialized JSON string, not JS code units or just UTF-8 text.
+// Escaped controls can cost six bytes each; code-point iteration avoids split surrogates.
+const FAILURE_MESSAGE_PREVIEW_JSON_BYTES = 512;
+function projectFailureErrorPreview(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const source = value as Record<string, unknown>;
+  const preview: Record<string, unknown> = {};
+  for (const key of ["statusCode", "errorClass"] as const) {
+    if (source[key] !== undefined) preview[key] = source[key];
+  }
+  if (typeof source.message === "string") {
+    let message = "";
+    let jsonBytes = 2; // JSON quotes
+    for (const point of source.message) {
+      const pointBytes = Buffer.byteLength(JSON.stringify(point), "utf8") - 2;
+      if (jsonBytes + pointBytes > FAILURE_MESSAGE_PREVIEW_JSON_BYTES) break;
+      message += point;
+      jsonBytes += pointBytes;
+    }
+    preview.message = message;
+    if (message !== source.message) {
+      preview.messageTruncated = true;
+      preview.messageOriginalUtf8Bytes = Buffer.byteLength(source.message, "utf8");
+    }
+  }
+  return preview;
+}
+
+/**
+ * R15 dimensions are a separate compact metadata column, not a request-size limit.
+ * Project recognized structured provider diagnostics; leave unrelated necessary metadata
+ * untouched so its byte guard still fails closed rather than silently losing facts.
+ */
+export function projectRuntimeTelemetryFailureDimensions(
+  dimensions: Readonly<Record<string, unknown>> | null | undefined,
+  artifactRef?: GraphArtifactReference,
+): Record<string, unknown> | null {
+  if (!dimensions) return null;
+  const result: Record<string, unknown> = { ...dimensions };
+  const originalUtf8Bytes = Buffer.byteLength(JSON.stringify(dimensions), "utf8");
+  const omittedFields: string[] = [];
+  const note = (field: string) => {
+    if (omittedFields.length < 32) omittedFields.push(field);
+  };
+  const factKeys = [
+    "requestId",
+    "routingDecisionId",
+    "attemptId",
+    "routedAttemptId",
+    "endpointId",
+    "failedEndpointId",
+    "providerId",
+    "providerFamily",
+    "vendorId",
+    "executionFamily",
+    "adapterFamily",
+    "statusCode",
+    "errorClass",
+    "failureClass",
+    "code",
+    "type",
+    "failurePhase",
+    "retryable",
+    "fallbackEligible",
+    "cooldownRecorded",
+    "cooldownFailureCount",
+    "cooldownUntilMs",
+  ];
+  const project = (value: unknown, field: string, depth = 0): Record<string, unknown> => {
+    if (depth > 2) {
+      note(field);
+      return {};
+    }
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+      note(field);
+      return {};
+    }
+    const source = value as Record<string, unknown>;
+    const out: Record<string, unknown> = {};
+    for (const key of factKeys) {
+      const entry = source[key];
+      if (entry === null || ["string", "number", "boolean"].includes(typeof entry))
+        out[key] = entry;
+    }
+    const preview = projectFailureErrorPreview(source);
+    for (const key of ["message", "messageTruncated", "messageOriginalUtf8Bytes"]) {
+      if (preview[key] !== undefined) out[key] = preview[key];
+    }
+    if (preview.messageTruncated) note(`${field}.message`);
+    if (source.errorPreview !== undefined)
+      out.errorPreview = project(source.errorPreview, `${field}.errorPreview`, depth + 1);
+    for (const key of Object.keys(source)) {
+      if (![...factKeys, "message", "errorPreview"].includes(key)) note(`${field}.${key}`);
+    }
+    return out;
+  };
+  let recognized = false;
+  for (const key of ["errorContext", "errorPreview"]) {
+    const source = dimensions[key];
+    if (source && typeof source === "object" && !Array.isArray(source)) {
+      result[key] = project(source, key);
+      recognized = true;
+    }
+  }
+  if (Array.isArray(dimensions.failedAttempts)) {
+    result.failedAttempts = dimensions.failedAttempts
+      .slice(0, 8)
+      .map((entry, i) => project(entry, `failedAttempts.${i}`));
+    if (dimensions.failedAttempts.length > 8) note("failedAttempts");
+    recognized = true;
+  }
+  // Raw capture trees are not necessary classification metadata, even if a caller
+  // put them in dimensions. They remain in the graph artifact, never inline.
+  for (const key of [
+    "prompt",
+    "messages",
+    "responseBody",
+    "providerResponse",
+    "requestCapture",
+    "responseCapture",
+    "inspection",
+    "diagnostics",
+  ]) {
+    if (result[key] !== undefined && recognized) {
+      delete result[key];
+      note(key);
+    }
+  }
+  if (!recognized) return result; // Invalid raw scalar previews still hit the existing byte/privacy guard.
+  const receipt: Record<string, unknown> = {
+    reason: "diagnostic_projection",
+    originalUtf8Bytes,
+    omittedFields,
+  };
+  if (omittedFields.length) result.compactTruncation = receipt;
+  if (artifactRef && omittedFields.length) result.artifactRef = artifactRef;
+  const bytes = () => Buffer.byteLength(JSON.stringify(result), "utf8");
+  const diagnosticBytes = () =>
+    Buffer.byteLength(
+      JSON.stringify(
+        Object.fromEntries(
+          ["errorContext", "errorPreview", "failedAttempts"].flatMap((key) =>
+            result[key] === undefined ? [] : [[key, result[key]]],
+          ),
+        ),
+      ),
+      "utf8",
+    );
+  const withinBudget = () => bytes() <= LEGACY_INLINE_CAP_BYTES && diagnosticBytes() <= 8 * 1024;
+  const shedMessages = (value: unknown, field: string): void => {
+    if (withinBudget() || !value || typeof value !== "object") return;
+    if (Array.isArray(value)) {
+      value.forEach((entry, i) => shedMessages(entry, `${field}.${i}`));
+      return;
+    }
+    const record = value as Record<string, unknown>;
+    if (typeof record.message === "string" && record.message.length) {
+      record.messageOriginalUtf8Bytes ??= Buffer.byteLength(record.message, "utf8");
+      record.message = "";
+      record.messageTruncated = true;
+      note(`${field}.message`);
+      result.compactTruncation = receipt;
+    }
+    shedMessages(record.errorPreview, `${field}.errorPreview`);
+  };
+  for (const key of ["errorContext", "errorPreview", "failedAttempts"])
+    shedMessages(result[key], key);
+  if (diagnosticBytes() > 8 * 1024) {
+    // Facts are not previews. Keep correlation/classification intact while making
+    // the diagnostic budget exception explicit; the final metadata cap still applies.
+    receipt.reason = "diagnostic_facts_budget";
+    receipt.diagnosticFactsAvailable = true;
+    receipt.diagnosticUtf8Bytes = diagnosticBytes();
+    result.compactTruncation = receipt;
+    if (artifactRef) result.artifactRef = artifactRef;
+  }
+  if (artifactRef && omittedFields.length) result.artifactRef = artifactRef;
+  return result;
+}
+
+/**
+ * Budget the final failure envelope, including its artifact pointer and failure fields.
+ * Evict secondary evidence before correlation IDs, classification or measured counters.
+ * Unusually large primary identifiers still fail closed; callers must never let secondary
+ * persistence errors replace the provider error. No global inline cap is increased.
+ */
+export function boundRuntimeTelemetryFailureStub(stub: Record<string, unknown>): void {
+  const bytes = () => Buffer.byteLength(JSON.stringify(stub), "utf8");
+  if (bytes() <= LEGACY_INLINE_CAP_BYTES) return;
+  const originalUtf8Bytes = bytes();
+  const omittedFields: string[] = [];
+  stub.compactTruncation = { reason: "inline_byte_budget", originalUtf8Bytes, omittedFields };
+  for (const key of [
+    "retrievalReceipt",
+    "routingDiagnostics",
+    "telemetrySnapshot",
+    "observedPerformance",
+    "graphEvidence",
+    "contextEnvelope",
+    "captureDegradation",
+    "run88Correlation",
+    "taxonomyDimensions",
+    "providerEvidence",
+    "capturePolicy",
+    "privacyReceipt",
+    "cacheObservability",
+  ]) {
+    if (bytes() <= LEGACY_INLINE_CAP_BYTES) return;
+    if (stub[key] !== undefined) {
+      delete stub[key];
+      omittedFields.push(key);
+    }
+  }
+  // If optional trees were not sufficient, shed message bytes only. Attempt IDs,
+  // error status/class, retry/cooldown facts and stream counters remain unchanged.
+  const semantics = stub.executionSemantics as Record<string, unknown> | undefined;
+  const attempts = semantics?.failedAttempts;
+  if (Array.isArray(attempts)) {
+    for (const attempt of attempts) {
+      if (bytes() <= LEGACY_INLINE_CAP_BYTES) return;
+      const preview = attempt.errorPreview as Record<string, unknown> | undefined;
+      if (preview && typeof preview.message === "string" && preview.message.length) {
+        preview.messageOriginalUtf8Bytes ??= Buffer.byteLength(preview.message, "utf8");
+        preview.message = "";
+        preview.messageTruncated = true;
+        if (!omittedFields.includes("executionSemantics.failedAttempts.errorPreview.message")) {
+          omittedFields.push("executionSemantics.failedAttempts.errorPreview.message");
+        }
+      }
+    }
+  }
+}
+
 export function buildCompactRuntimeObservationStub(
   observation: Readonly<Record<string, unknown>>,
 ): Record<string, unknown> {
@@ -1810,11 +2043,7 @@ export function buildCompactRuntimeObservationStub(
           ]),
           ...(attempt.errorPreview && typeof attempt.errorPreview === "object"
             ? {
-                errorPreview: pickRecord(attempt.errorPreview, [
-                  "message",
-                  "statusCode",
-                  "errorClass",
-                ]),
+                errorPreview: projectFailureErrorPreview(attempt.errorPreview),
               }
             : {}),
         }))

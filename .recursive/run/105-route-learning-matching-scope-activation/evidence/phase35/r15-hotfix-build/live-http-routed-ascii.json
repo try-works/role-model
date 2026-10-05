@@ -1,0 +1,31 @@
+{
+  "status": 400,
+  "headers": {
+    "access-control-allow-headers": "Content-Type, Authorization, X-Request-ID, X-Role-Model-Routing-Mode, X-Role-Model-Endpoint-Id, X-Role-Model-Requested-Role-Id, X-Role-Model-Channel, X-Role-Model-Scope, X-Role-Model-Authorization-Epoch, X-Role-Model-Capability",
+    "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
+    "access-control-allow-origin": "*",
+    "connection": "keep-alive",
+    "content-length": "364",
+    "content-type": "application/json",
+    "date": "Sat, 03 Oct 2026 10:02:34 GMT",
+    "keep-alive": "timeout=5"
+  },
+  "body": {
+    "error": {
+      "type": "capability_eligibility_error",
+      "code": "no_eligible_target",
+      "message": "no_eligible_target: no targets for model baseline.remote-only satisfy the inferred request capabilities.",
+      "requestedModel": "baseline.remote-only",
+      "requiredInputModalities": [
+        "text"
+      ],
+      "requiredOutputModalities": [
+        "text"
+      ],
+      "requiredCapabilities": [
+        "text.chat"
+      ],
+      "excludedTargets": []
+    }
+  }
+}

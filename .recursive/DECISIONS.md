@@ -15,6 +15,7 @@
 - `92-configured-model-pool-benchmark-convergence` - Endpoint-variant-exact membership revision token stamped at persist/read/portfolio/decision time; honest null candidate-space (no synthetic 0/0%); membership-revision + stale benchmark quarantine; destructive-confirm final-controller eject; decision revision; transactional benchmark clear (Phases 0-8, strict TDD, agent-operated QA on rebuilt `:3501`). Folder: `.recursive/run/92-configured-model-pool-benchmark-convergence/`. Soft-closes run 76's membership-authority contract with a revision-token convergence wave.
 
 - `103-agent-strategy-and-scoring-strategy` - Routing posture split (`routing.mode` + `routing.scoring_strategy` + `pin_weights` + `weights`), real scoring strategies, agent-strategy and workload postures with `<name>.<scope>` aliases, strategy/latency/alias receipts on every decision, measured-latency effective metric, three runtime-ui surfaces; strict TDD, two delegated review rounds, agent-operated rebuilt-runtime pi-CLI QA on `:3458` (Phases 0-8). Folder: `.recursive/run/103-agent-strategy-and-scoring-strategy/`.
+- `105-route-learning-matching-scope-activation` - Stage-3 matching-scope activation: per-(role,task) ranked endpoint ladder (aggregation, store, advisory walk, dispatch/activation/rollback, Packs UI) plus the Phase 3.5 classification-alignment repair (capture/advisory reads the authoritative taxonomy identity, not runtime-policy ids); strict TDD, delegated review + re-review, agent-operated rebuilt-runtime pi-CLI QA on `:3458` (Phases 0-8). Folder: `.recursive/run/105-route-learning-matching-scope-activation/`.
 
 ## Run: `92-configured-model-pool-benchmark-convergence`
 
@@ -654,6 +655,28 @@ Date: `2026-09-30`
   other directives and every eligibility gate still apply. A suppressed directive that names the pinned strategy
   is recorded as a no-op, not as a discard.
 - Agent strategy postures (`agent_strategies.<name>`, role-bound) and workload postures (`workloads.<name>`,
+
+## Run: `105-route-learning-matching-scope-activation`
+
+Date: `2026-10-03`
+
+### Decisions
+
+- One route-learning pack is the mutable endpoint ladder for one exact `(roleId, taskTypeId)`; the closed legacy pack contract and scope-wide active pointer are not routing authority.
+- Finalized effort-comparable groups materialize a deterministic total order. Admission uses each endpoint own comparison confidence; accepted rank/admission provenance stays authoritative when later evidence regresses. Mixed-policy snapshots are forbidden.
+- Router walks stored availability + per-request eligibility, then applies the unchanged one-shot score band/cohort/confidence/taxonomy/kill-switch gates. Ladder rank and score rank are independent.
+- Derived activation is authoritative; legacy promote/activate remains a historical operator surface only. Per-task rollback is reversible and never aliases guardrail/kill-switch rollback receipts.
+- Request demand and complete-ladder idle both use the same product-default `stalenessWindowDays`; sequential challenges count only genuine finalized groups. Stable `dispatchRoundId` separates repeated comparisons without mutating capture identity.
+- SQLite inline telemetry metadata remains 16 KiB by direct user decision. Structured previews are bounded and disclosed; rich diagnostic content is not admitted inline merely by raising the cap. Secondary telemetry failures never replace the primary provider error.
+- Build/runtime verification for this run is development `:3458` only. `:3457` is not a run-105 QA target and was not touched.
+- Final paired source is public `7162930d76dc1c317c8d192a2e3fbbdcde6f878c` / private `da40a115237432b248f6b5282a4ac42f8fb90179`. Promotion/merge to other branches is outside this run.
+
+### Residuals
+
+- CAS-loser evidence documents can orphan and count toward the per-scope document budget; routing remains fail-closed.
+- A restart during an in-flight challenge can duplicate bounded provider work; append-only evidence and strict acceptance keep ordering/routing safe.
+- Live routed telemetry preserves bounded diagnostics but no full graph pointer was available; full rich diagnostic preservation is not claimed.
+
   optional `required_capabilities`) each materialise one `<name>.<scope>` alias per execution scope. A declared
   role beats the alias preset; a declared `model_ids` slice narrows the alias pool; an empty slice reports
   `ALIAS_POOL_EMPTY` and is never widened. An unknown `role_id`, a reserved name, a duplicate name and a

@@ -1,0 +1,54 @@
+(node:23340) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+{
+  "schemaVersion": "run105.r15-hotfix-build.v1",
+  "verifiedAt": "2026-10-03T09:04:39.552Z",
+  "scope": "R15-only provisional development build; NOT full run105 Phase5",
+  "serverLaunched": false,
+  "stageOrProductionTouched": false,
+  "releasePath": "E:/tmp/run105-r15-hotfix-public/role-model-router/dist/release/win32-x64",
+  "executablePath": "E:\\tmp\\run105-r15-hotfix-public\\role-model-router\\dist\\release\\win32-x64\\role-model-dev.exe",
+  "publicIdentity": {
+    "root": "E:/tmp/run105-r15-hotfix-public",
+    "commit": "ca91d98aeb0532a0bdcded0b5b4e9f19617ceac5",
+    "tree": "52b42ccc1d55ca39012f12214ce1e46caded0c2e",
+    "status": ""
+  },
+  "privateIdentity": {
+    "root": "E:/tmp/run105-r15-hotfix-private",
+    "commit": "c993b2f2ebe8e1daa8ee506a50af0ea09f61b5f9",
+    "tree": "e8bda7aed6e36771cdaf140afc7b15b63786d9bc",
+    "status": ""
+  },
+  "publicBaseline": "701b8b8fc0b0eeebdfe818b757f5702f50021488",
+  "cherryPickSources": [
+    "368f7264a1a3c80a7d7d91c0041a7626511f4533",
+    "d8485ea1381b7fc9d04799ecdcda3b177392ff94"
+  ],
+  "executableSha256": "7ac9a92d45b5f9f58e30d40b164fa1995581ba8da17942c8326531e6cfde35df",
+  "releaseManifestSha256": "3f00d89a305f0de6bcdf47f919c180785851f115e497fbc14ec9b399bacd0369",
+  "privateDistributionManifestSha256": "1cade800d3db8abf067bcceb839e5c6919ed3106fd17fceabb51a2d92e338801",
+  "artifactClosureVerified": true,
+  "sourceSeal": {
+    "status": "sealed_clean",
+    "releaseEligible": true,
+    "privateClean": true,
+    "publicClean": true
+  },
+  "runtimeChannelContext": {
+    "channel": "development",
+    "scopeId": "standalone-runtime-dev",
+    "authorizationEpoch": 1
+  },
+  "regressions": {
+    "sqliteFocused": 22,
+    "bridgeFocused": 4,
+    "sqliteFull": 130,
+    "sqliteFullFiles": 23,
+    "bridgeTypecheck": "PASS",
+    "sqliteTypecheck": "PASS"
+  },
+  "releaseFiles": {
+    "count": 152
+  }
+}

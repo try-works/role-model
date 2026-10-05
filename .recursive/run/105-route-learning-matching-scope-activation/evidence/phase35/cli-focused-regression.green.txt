@@ -1,0 +1,22 @@
+npm warn Unknown env config "manage-package-manager-versions". This will stop working in the next major version of npm.
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-host-bridge
+
+stderr | test/run105-r10-per-task-rollback.test.ts > run105 R10/R1 classification gate in the replay tick > a capture without BOTH roleId and taskTypeId is never admitted and is reported once as no_route_classification
+[run104-pending] captures=2 scoped=2 first=capture:unclassified,capture:classified only=none pendingCount=2 captureCount=n/a
+
+ ✓ test/run105-r10-per-task-rollback.test.ts (4 tests) 49ms
+stderr | test/run105-r09-derived-activation.test.ts > run105 R9 derived activation > the replay loop's own health never reports a ladder activation it did not derive
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=n/a
+
+ ✓ test/run105-r09-derived-activation.test.ts (5 tests) 23ms
+ ✓ test/run105-r08-idle-refresh-and-challenge.test.ts (4 tests) 15ms
+ ✓ test/run105-r08-focus-task-selection.test.ts (3 tests) 8ms
+ ✓ test/run105-r11-product-defaults-loader.test.ts (7 tests) 46ms
+ ✓ test/run105-cli-route-ladder-decode.test.ts (4 tests) 12ms
+
+ Test Files  6 passed (6)
+      Tests  27 passed (27)
+   Start at  14:55:30
+   Duration  16.04s (transform 2.34s, setup 0ms, collect 12.28s, tests 154ms, environment 2ms, prepare 1.45s)
+

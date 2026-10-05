@@ -1,0 +1,175 @@
+
+> @role-model/internal@1.1.0 build:run00-runtime E:\tmp\run105-full-private
+> node scripts/track-b/build-runtime-distribution.mjs
+
+▲ [WARNING] Ignoring this import because "../run105-full-public/role-model-router/packages/effect/dist/chunks/chunk-F7ZNG73B.js" was marked as having no side effects [ignored-bare-import]
+
+    ../run105-full-public/role-model-router/packages/effect/dist/index.js:35:7:
+      35 │ import "./chunks/chunk-F7ZNG73B.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  It was excluded from the "sideEffects" array in the enclosing "package.json" file:
+
+    ../run105-full-public/role-model-router/packages/effect/package.json:21:2:
+      21 │   "sideEffects": ["./src/index.ts"],
+         ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../run105-full-public/role-model-router/packages/effect/dist/chunks/chunk-EZVVN7BT.js" was marked as having no side effects [ignored-bare-import]
+
+    ../run105-full-public/role-model-router/packages/effect/dist/index.js:36:7:
+      36 │ import "./chunks/chunk-EZVVN7BT.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  It was excluded from the "sideEffects" array in the enclosing "package.json" file:
+
+    ../run105-full-public/role-model-router/packages/effect/package.json:21:2:
+      21 │   "sideEffects": ["./src/index.ts"],
+         ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../run105-full-public/role-model-router/packages/effect/dist/chunks/chunk-LTSWO3MI.js" was marked as having no side effects [ignored-bare-import]
+
+    ../run105-full-public/role-model-router/packages/effect/dist/index.js:37:7:
+      37 │ import "./chunks/chunk-LTSWO3MI.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  It was excluded from the "sideEffects" array in the enclosing "package.json" file:
+
+    ../run105-full-public/role-model-router/packages/effect/package.json:21:2:
+      21 │   "sideEffects": ["./src/index.ts"],
+         ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../run105-full-public/role-model-router/packages/effect/dist/chunks/chunk-P44K6ZFC.js" was marked as having no side effects [ignored-bare-import]
+
+    ../run105-full-public/role-model-router/packages/effect/dist/index.js:41:7:
+      41 │ import "./chunks/chunk-P44K6ZFC.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  It was excluded from the "sideEffects" array in the enclosing "package.json" file:
+
+    ../run105-full-public/role-model-router/packages/effect/package.json:21:2:
+      21 │   "sideEffects": ["./src/index.ts"],
+         ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../run105-full-public/role-model-router/packages/effect/dist/chunks/chunk-DBUXQOMS.js" was marked as having no side effects [ignored-bare-import]
+
+    ../run105-full-public/role-model-router/packages/effect/dist/index.js:42:7:
+      42 │ import "./chunks/chunk-DBUXQOMS.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  It was excluded from the "sideEffects" array in the enclosing "package.json" file:
+
+    ../run105-full-public/role-model-router/packages/effect/package.json:21:2:
+      21 │   "sideEffects": ["./src/index.ts"],
+         ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../run105-full-public/role-model-router/packages/effect/dist/chunks/chunk-D5FHL44E.js" was marked as having no side effects [ignored-bare-import]
+
+    ../run105-full-public/role-model-router/packages/effect/dist/index.js:43:7:
+      43 │ import "./chunks/chunk-D5FHL44E.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  It was excluded from the "sideEffects" array in the enclosing "package.json" file:
+
+    ../run105-full-public/role-model-router/packages/effect/package.json:21:2:
+      21 │   "sideEffects": ["./src/index.ts"],
+         ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../run105-full-public/role-model-router/packages/effect/dist/chunks/chunk-T6YTVYST.js" was marked as having no side effects [ignored-bare-import]
+
+    ../run105-full-public/role-model-router/packages/effect/dist/index.js:80:7:
+      80 │ import "./chunks/chunk-T6YTVYST.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  It was excluded from the "sideEffects" array in the enclosing "package.json" file:
+
+    ../run105-full-public/role-model-router/packages/effect/package.json:21:2:
+      21 │   "sideEffects": ["./src/index.ts"],
+         ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../run105-full-public/role-model-router/packages/effect/dist/chunks/chunk-WHF3L6PH.js" was marked as having no side effects [ignored-bare-import]
+
+    ../run105-full-public/role-model-router/packages/effect/dist/index.js:245:7:
+      245 │ import "./chunks/chunk-WHF3L6PH.js";
+          ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  It was excluded from the "sideEffects" array in the enclosing "package.json" file:
+
+    ../run105-full-public/role-model-router/packages/effect/package.json:21:2:
+      21 │   "sideEffects": ["./src/index.ts"],
+         ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../run105-full-public/role-model-router/packages/effect/dist/chunks/chunk-GPKC4G7C.js" was marked as having no side effects [ignored-bare-import]
+
+    ../run105-full-public/role-model-router/packages/effect/dist/index.js:246:7:
+      246 │ import "./chunks/chunk-GPKC4G7C.js";
+          ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  It was excluded from the "sideEffects" array in the enclosing "package.json" file:
+
+    ../run105-full-public/role-model-router/packages/effect/package.json:21:2:
+      21 │   "sideEffects": ["./src/index.ts"],
+         ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../run105-full-public/role-model-router/packages/effect/dist/chunks/chunk-DNDSLLKF.js" was marked as having no side effects [ignored-bare-import]
+
+    ../run105-full-public/role-model-router/packages/effect/dist/index.js:247:7:
+      247 │ import "./chunks/chunk-DNDSLLKF.js";
+          ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  It was excluded from the "sideEffects" array in the enclosing "package.json" file:
+
+    ../run105-full-public/role-model-router/packages/effect/package.json:21:2:
+      21 │   "sideEffects": ["./src/index.ts"],
+         ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../run105-full-public/role-model-router/packages/effect/dist/chunks/chunk-37C2CP6S.js" was marked as having no side effects [ignored-bare-import]
+
+    ../run105-full-public/role-model-router/packages/effect/dist/index.js:248:7:
+      248 │ import "./chunks/chunk-37C2CP6S.js";
+          ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  It was excluded from the "sideEffects" array in the enclosing "package.json" file:
+
+    ../run105-full-public/role-model-router/packages/effect/package.json:21:2:
+      21 │   "sideEffects": ["./src/index.ts"],
+         ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../run105-full-public/role-model-router/packages/effect/dist/chunks/chunk-3NFYQEQM.js" was marked as having no side effects [ignored-bare-import]
+
+    ../run105-full-public/role-model-router/packages/effect/dist/index.js:249:7:
+      249 │ import "./chunks/chunk-3NFYQEQM.js";
+          ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  It was excluded from the "sideEffects" array in the enclosing "package.json" file:
+
+    ../run105-full-public/role-model-router/packages/effect/package.json:21:2:
+      21 │   "sideEffects": ["./src/index.ts"],
+         ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../run105-full-public/role-model-router/packages/effect/dist/chunks/chunk-S5J3FXE2.js" was marked as having no side effects [ignored-bare-import]
+
+    ../run105-full-public/role-model-router/packages/effect/dist/index.js:256:7:
+      256 │ import "./chunks/chunk-S5J3FXE2.js";
+          ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  It was excluded from the "sideEffects" array in the enclosing "package.json" file:
+
+    ../run105-full-public/role-model-router/packages/effect/package.json:21:2:
+      21 │   "sideEffects": ["./src/index.ts"],
+         ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../run105-full-public/role-model-router/packages/effect/dist/chunks/chunk-446BBSPZ.js" was marked as having no side effects [ignored-bare-import]
+
+    ../run105-full-public/role-model-router/packages/effect/dist/index.js:605:7:
+      605 │ import "./chunks/chunk-446BBSPZ.js";
+          ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  It was excluded from the "sideEffects" array in the enclosing "package.json" file:
+
+    ../run105-full-public/role-model-router/packages/effect/package.json:21:2:
+      21 │   "sideEffects": ["./src/index.ts"],
+         ╵   ~~~~~~~~~~~~~
+
+(node:23336) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+{"status":"PASS","extensionCount":13,"sidecarSha256":"42757bdf5a910d9d921fc5a45f945aa87b478d1b8cb0128d054b8ef0580ae9a2"}

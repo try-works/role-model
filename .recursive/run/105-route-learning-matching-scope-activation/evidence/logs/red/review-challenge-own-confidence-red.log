@@ -1,0 +1,59 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-host-bridge
+
+(node:17744) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/run105-review-challenge-evidence.test.ts (19 tests | 1 failed) 15407ms
+   ✓ genuine finalize/list/read wrappers and real replay job yield actual winner and sibling time 17ms
+   ✓ no borrowing evidence for mismatched request {"captureRef":"other"} 8ms
+   ✓ no borrowing evidence for mismatched request {"roleId":"other"} 4ms
+   ✓ no borrowing evidence for mismatched request {"taskTypeId":"other"} 4ms
+   ✓ no borrowing evidence for mismatched request {"newEndpointId":"other"} 4ms
+   ✓ unknown sibling time stays pending despite fabricated result date 1ms
+   ✓ provider completion alone is not finalized evidence 0ms
+   ✓ mismatched listed winner cannot replace actual readback 4ms
+   ✓ unknown or mismatched effort remains pending 2ms
+   ✓ fresh cutoff never borrows a previous comparison 4ms
+   ✓ real evidence behind a continuation page is reached 8ms
+   ✓ cyclic or malformed pages are unavailable rather than claimed complete 0ms
+   × enumerable durable evidence carries winning-member confidence and exact capture; cutoff refuses old evidence 19ms
+     → expected [ { …(8) } ] to deeply equal [ { …(9) } ]
+   ✓ execute production CLI callbacks over genuine evaluation/replay wrappers with auth envelope and transfer decode 106ms
+   ✓ genuine retained terminal-disposition capture is enumerated from real live telemetry and exact capsule read 18ms
+   ✓ history fails closed for wrong capsule scope/readiness/identity/classification and excludes replay output 27ms
+   ✓ history index unavailable and 501 matching ids are null, never a truncated complete corpus  7280ms
+   ✓ CLI history callback must actually bind supported exact read operation 4ms
+   ✓ CLI finalized and enumerable callbacks actually bind authenticated extension reads 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run105-review-challenge-evidence.test.ts > enumerable durable evidence carries winning-member confidence and exact capture; cutoff refuses old evidence
+AssertionError: expected [ { …(8) } ] to deeply equal [ { …(9) } ]
+
+- Expected
++ Received
+
+@@ -2,11 +2,10 @@
+    {
+      "againstEndpointId": "endpoint:source",
+      "captureRef": "capture-real",
+      "comparisonGroupId": "comparison:unrelated-to-capture",
+      "effortComparable": true,
+-     "endpointConfidence": 0.1,
+      "finalizedAtMs": 1700000111111,
+      "judgeConfidence": 0.9,
+      "newEndpointId": "endpoint:new",
+      "winnerEndpointId": "endpoint:source",
+    },
+
+ ❯ test/run105-review-challenge-evidence.test.ts:119:53
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 18 passed (19)
+   Start at  18:52:20
+   Duration  17.54s (transform 4.56s, setup 0ms, collect 1.47s, tests 15.41s, environment 0ms, prepare 228ms)
+

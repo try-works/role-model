@@ -1,0 +1,20 @@
+# Package E private sidecar projection GREEN (4 cases incl. R14 rollback-preservation)
+# command: node --test --test-concurrency=1 --test-timeout=120000 tests/track-b/run105-e5-ladder-index-readback.test.mjs
+# exit: 0
+
+(node:17828) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ Run105 E5: the records readback carries the frozen ladder index beside intact records (36.9789ms)
+✔ Run105 E5: a store that does not answer keeps records intact with ladders unavailable (5.6319ms)
+✔ Run105 E5: scope-wide packs produce no ladder rows (5.598ms)
+✔ Run105 E5: a rolled-back ladder keeps its state, active false, and its rollback flag (5.3673ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1298.8836
+
+

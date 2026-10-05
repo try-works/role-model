@@ -1,0 +1,53 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-host-bridge
+
+(node:19256) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/run105-review-advisory-cache.test.ts (10 tests | 1 failed | 9 skipped) 53ms
+   ↓ run105 review exact advisory cache > classified live backend never resurrects transient advisory after missing
+   ↓ run105 review exact advisory cache > classified live backend never resurrects transient advisory after stopped
+   ↓ run105 review exact advisory cache > classified live backend never resurrects transient advisory after excluded
+   ↓ run105 review exact advisory cache > same role retains two tasks without overwriting or borrowing
+   ↓ run105 review exact advisory cache > same task retains different roles without borrowing
+   ↓ run105 review exact advisory cache > channel and runtime scope isolate identical pairs
+   ↓ run105 review exact advisory cache > only genuinely no-role/no-task recall can use legacy entry
+   ↓ run105 review exact advisory cache > re-remember refreshes actual recency beyond 512 entries
+   × run105 review exact advisory cache > source wrapper forwards explicit effective stage and cohort 46ms
+     → expected { preferredRoutePackage: null, …(11) } to match object { advisoryState: 'fresh', …(3) }
+(8 matching properties omitted from actual)
+   ↓ run105 review exact advisory cache > source role and task persist when publisher omits redundant role input
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run105-review-advisory-cache.test.ts > run105 review exact advisory cache > source wrapper forwards explicit effective stage and cohort
+AssertionError: expected { preferredRoutePackage: null, …(11) } to match object { advisoryState: 'fresh', …(3) }
+(8 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "advisoryState": "fresh",
+-   "cohortPercent": 15,
++   "advisoryState": "unavailable",
++   "cohortPercent": 0,
+    "roleId": "coder",
+    "taskTypeId": "coder.review",
+  }
+
+ ❯ test/run105-review-advisory-cache.test.ts:125:20
+    123|     const result = await readTrackBRouteAdvisorySourceFromRuntime({ ch…
+    124|       stage: "S3", policyCohortPercent: 15, nowMs: 1000, evidenceMaxAg…
+    125|     expect(result).toMatchObject({ advisoryState: "fresh", cohortPerce…
+       |                    ^
+    126|   });
+    127|   test("source role and task persist when publisher omits redundant ro…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 9 skipped (10)
+   Start at  16:46:33
+   Duration  17.53s (transform 10.25s, setup 0ms, collect 16.41s, tests 53ms, environment 1ms, prepare 396ms)
+

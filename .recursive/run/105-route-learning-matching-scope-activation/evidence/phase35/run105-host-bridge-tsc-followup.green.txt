@@ -1,0 +1,7 @@
+# host-bridge typecheck GREEN
+# workdir: D:\DEV\role-model\.worktrees\105-route-learning-matching-scope-activation\role-model-router
+# command: corepack pnpm --filter @role-model-router/runtime-host-bridge exec tsc -p tsconfig.json --noEmit 2>&1 | Out-String
+# exit: 0
+
+
+

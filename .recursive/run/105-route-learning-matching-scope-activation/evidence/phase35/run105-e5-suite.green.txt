@@ -1,0 +1,27 @@
+# E5 readback + rollback roundtrip GREEN
+# workdir: D:\DEV\role-model-internal\.worktrees\105-route-learning-matching-scope-activation
+# command: node --test --test-concurrency=1 --test-timeout=120000 tests/track-b/run105-e5-ladder-index-readback.test.mjs tests/track-b/run105-e5-ladder-rollback-roundtrip.test.mjs 2>&1 | Out-String
+# exit: 0
+
+(node:35316) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ Run105 E5: the records readback carries the frozen ladder index beside intact records (22.8678ms)
+✔ Run105 E5: a store that does not answer keeps records intact with ladders unavailable (3.1027ms)
+✔ Run105 E5: scope-wide packs produce no ladder rows (2.9682ms)
+✔ Run105 E5: a rolled-back ladder keeps its state, active false, and its rollback flag (2.8036ms)
+✔ Run105 E5 design audit: the index row carries the FULL bounded rung list beside the top-3 (2.7034ms)
+(node:2800) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ Run105 E5 repair: ON -> GET -> OFF -> GET lands the per-task flag, keeps rungs and reason, isolates the other task (108.9818ms)
+✔ Run105 E5 repair: a legacy scope-wide body still reaches the legacy rollback unchanged (50.5967ms)
+✔ Run105 E5 repair: a malformed toggle body is refused instead of coerced (48.6802ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1720.3593
+
+

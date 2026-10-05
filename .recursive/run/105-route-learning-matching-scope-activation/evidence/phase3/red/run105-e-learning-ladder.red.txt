@@ -1,0 +1,35 @@
+# learning-ladder RED (run 105 package E)
+# command: corepack pnpm --filter @role-model-router/runtime-ui exec vitest run app/lib/learning-ladder.test.ts
+# exit: 1
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-ui
+
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/lib/learning-ladder.test.ts [ app/lib/learning-ladder.test.ts ]
+Error: Cannot find module './learning-ladder' imported from 'D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-ui/app/lib/learning-ladder.test.ts'
+ ❯ app/lib/learning-ladder.test.ts:2:1
+      1| import { describe, expect, test } from "vitest";
+      2| import {
+       | ^
+      3|   compareLadderRows,
+      4|   formatLadderCompleteness,
+
+Caused by: Error: Failed to load url ./learning-ladder (resolved id: ./learning-ladder) in D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-ui/app/lib/learning-ladder.test.ts. Does the file exist?
+ ❯ loadAndTransform ../../../node_modules/.pnpm/vite@7.3.2_@types+node@22.1_d71bf8265f9610ce90201e170d5dc2b8/node_modules/vite/dist/node/chunks/config.js:22663:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  13:23:42
+   Duration  2.36s (transform 208ms, setup 0ms, collect 0ms, tests 0ms, environment 0ms, prepare 1.00s)
+
+undefined
+D:\DEV\role-model\.worktrees\105-route-learning-matching-scope-activation\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run app/lib/learning-ladder.test.ts
+
+

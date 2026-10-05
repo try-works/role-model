@@ -1,0 +1,76 @@
+Scope: 29 of 50 workspace projects
+role-model-router/packages/catalog build$ tsc -p tsconfig.json
+packages/protocol-types build$ tsc -p tsconfig.json
+role-model-router/packages/effect build$ node build.mjs
+role-model-router/packages/bench-judge build$ tsc -p tsconfig.json
+role-model-router/packages/effect build: ▲ [WARNING] Cannot find base config file "../../tsconfig.base.json" [tsconfig.json]
+role-model-router/packages/effect build:     ../../../vendor/effect/packages/effect/tsconfig.json:3:13:
+role-model-router/packages/effect build:       3 │   "extends": "../../tsconfig.base.json",
+role-model-router/packages/effect build:         ╵              ~~~~~~~~~~~~~~~~~~~~~~~~~~
+role-model-router/packages/effect build: ▲ [WARNING] Use "../../../vendor/effect/packages/effect/src/Match.ts" instead of "../../../vendor/effect/packages/effect/src/match.ts" to avoid issues with case-sensitive file systems [different-path-case]
+role-model-router/packages/effect build: ▲ [WARNING] Use "../../../vendor/effect/packages/effect/src/Schema.ts" instead of "../../../vendor/effect/packages/effect/src/schema.ts" to avoid issues with case-sensitive file systems [different-path-case]
+role-model-router/packages/bench-judge build: Done
+.../packages/process-supervisor build$ tsc -p tsconfig.json
+role-model-router/packages/catalog build: Done
+role-model-router/packages/tool-registry build$ tsc -p tsconfig.json
+packages/protocol-types build: Done
+.../packages/vendor-abstraction build$ tsc -p tsconfig.json
+.../packages/process-supervisor build: Done
+role-model-router/packages/tool-registry build: Done
+.../packages/vendor-abstraction build: Done
+role-model-router/packages/effect build: {"status":"PASS","package":"effect","entries":["BigDecimal","Brand","ByteSize","Cache","Cause","Clock","Config","ConfigProvider","Console","Context","Crypto","Data","DateTime","Duration","Effect","ErrorReporter","ExecutionPlan","Exit","Fiber","FileSystem","Function","Graph","HashMap","Layer","Logger","Match","Metric","MutableList","Option","Path","PubSub","Queue","Random","Redacted","References","Result","Schedule","Scheduler","Schema","Scope","Semaphore","Stream","Terminal","Tracer","index","match","schema","testing","unstable/ai","unstable/ai/DecisionModel","unstable/ai/EmbeddingModel","unstable/ai/LanguageModel","unstable/ai/McpSchema","unstable/ai/Model","unstable/arbitrary","unstable/cli","unstable/cli/CliConfig","unstable/cli/Prompt","unstable/cluster","unstable/encoding","unstable/eventlog","unstable/eventlog/EventLog","unstable/eventlog/EventLogRemote","unstable/http","unstable/http/Cookies","unstable/http/Headers","unstable/http/Multipart","unstable/http/UrlParams","unstable/httpapi","unstable/net","unstable/observability","unstable/persistence","unstable/process","unstable/reactivity","unstable/reactivity/Reactivity","unstable/rpc","unstable/schema","unstable/schema/SchemaCompiler","unstable/sql","unstable/sql/Migrator","unstable/sql/SqlClient","unstable/sql/SqlConnection","unstable/sql/SqlError","unstable/sql/Statement","unstable/workflow"],"types":"E:\\tmp\\run105-full-public\\role-model-router\\packages\\effect\\dist\\types"}
+role-model-router/packages/effect build: Done
+.../packages/provider-account build$ tsc -p tsconfig.json
+role-model-router/packages/core build$ tsc -p tsconfig.json
+.../packages/profile-aggregator build$ tsc -p tsconfig.json
+role-model-router/packages/trace build$ tsc -p tsconfig.json
+.../packages/provider-account build: Done
+role-model-router/packages/usage build$ tsc -p tsconfig.json
+.../packages/profile-aggregator build: Done
+role-model-router/packages/bench-routing build$ tsc -p tsconfig.json
+role-model-router/packages/trace build: Done
+.../packages/vendor-llama-swap build$ tsc -p tsconfig.json
+role-model-router/packages/usage build: Done
+.../packages/vendor-litellm build$ tsc -p tsconfig.json
+.../packages/vendor-llama-swap build: Done
+.../packages/sql-sqlite-node build$ node build.mjs
+role-model-router/packages/bench-routing build: Done
+role-model-router/packages/effect-mq build$ node build.mjs
+.../packages/sql-sqlite-node build: ▲ [WARNING] Cannot find base config file "../../../tsconfig.base.json" [tsconfig.json]
+.../packages/sql-sqlite-node build:     ../../../vendor/effect/packages/sql/sqlite-node/tsconfig.json:3:13:
+.../packages/sql-sqlite-node build:       3 │   "extends": "../../../tsconfig.base.json",
+.../packages/sql-sqlite-node build:         ╵              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.../packages/sql-sqlite-node build: {"status":"PASS","package":"@effect/sql-sqlite-node","entries":["index"]}
+role-model-router/packages/effect-mq build: ▲ [WARNING] Cannot find base config file "../../tsconfig.base.json" [tsconfig.json]
+role-model-router/packages/effect-mq build:     ../../../vendor/effect-mq/packages/effect-mq/tsconfig.json:2:13:
+role-model-router/packages/effect-mq build:       2 │   "extends": "../../tsconfig.base.json",
+role-model-router/packages/effect-mq build:         ╵              ~~~~~~~~~~~~~~~~~~~~~~~~~~
+role-model-router/packages/effect-mq build: {"status":"PASS","package":"effect-mq","entries":["index","testing"]}
+role-model-router/packages/core build: Done
+.../packages/vendor-litellm build: Done
+.../packages/sql-sqlite-node build: Done
+role-model-router/packages/effect-mq build: Done
+role-model-router/packages/sqlite-memory build$ tsc -p tsconfig.json
+role-model-router/packages/provider-mcp build$ tsc -p tsconfig.json
+role-model-router/packages/sqlite-memory build: Done
+role-model-router/packages/provider-mcp build: Done
+.../packages/context-envelope build$ tsc -p tsconfig.json
+.../packages/context-envelope build: Done
+.../packages/retrieval-receipt build$ tsc -p tsconfig.json
+.../packages/retrieval-receipt build: Done
+.../packages/endpoint-registry build$ tsc -p tsconfig.json
+.../packages/endpoint-registry build: Done
+.../packages/protocol-routing build$ tsc -p tsconfig.json
+.../packages/protocol-routing build: Done
+.../packages/adapter-execution build$ tsc -p tsconfig.json
+.../packages/provider-anthropic build$ tsc -p tsconfig.json
+.../packages/provider-anthropic build: Done
+.../packages/adapter-execution build: Done
+.../packages/provider-openai build$ tsc -p tsconfig.json
+.../packages/runtime-observability build$ tsc -p tsconfig.json
+.../packages/runtime-observability build: Done
+.../packages/provider-openai build: Done
+.../packages/provider-litellm build$ tsc -p tsconfig.json
+.../packages/provider-litellm build: Done
+.../apps/runtime-host-bridge build$ tsc -p tsconfig.json
+.../apps/runtime-host-bridge build: Done

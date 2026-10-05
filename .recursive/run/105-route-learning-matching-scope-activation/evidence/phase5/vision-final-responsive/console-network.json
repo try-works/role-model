@@ -1,0 +1,1667 @@
+{
+  "console": [
+    {
+      "ts": 591,
+      "type": "log:verbose",
+      "text": "[DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o"
+    },
+    {
+      "ts": 4776,
+      "type": "log:verbose",
+      "text": "[DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o"
+    },
+    {
+      "ts": 7236,
+      "type": "log:verbose",
+      "text": "[DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o"
+    },
+    {
+      "ts": 12279,
+      "type": "log:verbose",
+      "text": "[DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o"
+    },
+    {
+      "ts": 13308,
+      "type": "log:verbose",
+      "text": "[DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o"
+    },
+    {
+      "ts": 14168,
+      "type": "log:verbose",
+      "text": "[DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o"
+    },
+    {
+      "ts": 16601,
+      "type": "log:verbose",
+      "text": "[DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o"
+    }
+  ],
+  "network": [
+    {
+      "ts": 261,
+      "url": "http://127.0.0.1:3458/app/learning",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 307,
+      "url": "http://127.0.0.1:3458/assets/fonts/geist-latin-400-normal.woff2",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 308,
+      "url": "http://127.0.0.1:3458/assets/fonts/geist-latin-600-normal.woff2",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 308,
+      "url": "http://127.0.0.1:3458/assets/fonts/geist-mono-latin-400-normal.woff2",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 309,
+      "url": "http://127.0.0.1:3458/assets/manifest-735a11fb.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 309,
+      "url": "http://127.0.0.1:3458/assets/entry.client-B4czBmcP.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 310,
+      "url": "http://127.0.0.1:3458/assets/chunk-EVOBXE3Y-g5m91DvX.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 310,
+      "url": "http://127.0.0.1:3458/assets/root-BGsZS7xD.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 310,
+      "url": "http://127.0.0.1:3458/assets/theme-rIEsxy66.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 311,
+      "url": "http://127.0.0.1:3458/assets/not-found-CkHQlBq7.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 311,
+      "url": "http://127.0.0.1:3458/assets/page-primitives-DaboOJBc.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 311,
+      "url": "http://127.0.0.1:3458/assets/chart-grid-CqXjTUqn.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 312,
+      "url": "http://127.0.0.1:3458/assets/design-system-D3bmhYK2.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 312,
+      "url": "http://127.0.0.1:3458/assets/root-fpG44ViH.css",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 401,
+      "url": "http://127.0.0.1:3458/favicon.ico",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 431,
+      "url": "http://127.0.0.1:3458/assets/app-layout-B6AmaQMB.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 431,
+      "url": "http://127.0.0.1:3458/assets/learning-DunG2HYS.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 437,
+      "url": "http://127.0.0.1:3458/assets/segmented-control-OFrtyx20.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 437,
+      "url": "http://127.0.0.1:3458/assets/live-refresh-DcaagJbF.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 437,
+      "url": "http://127.0.0.1:3458/assets/runtime-api-Dwx7hwc2.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 438,
+      "url": "http://127.0.0.1:3458/assets/shell-header-context-DojSALrV.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 438,
+      "url": "http://127.0.0.1:3458/assets/effort-identity-DTM8zi6R.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 438,
+      "url": "http://127.0.0.1:3458/assets/view-models-D967q-Jz.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 439,
+      "url": "http://127.0.0.1:3458/assets/format-score-CvKL6Nty.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 442,
+      "url": "http://127.0.0.1:3458/assets/queue-api-Cn-u6NZO.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 443,
+      "url": "http://127.0.0.1:3458/assets/learning-api-bGRA194G.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 522,
+      "url": "http://127.0.0.1:3458/assets/fonts/geist-latin-500-normal.woff2",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 538,
+      "url": "http://127.0.0.1:3458/api/role-model/operator/learning/policy",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 539,
+      "url": "http://127.0.0.1:3458/api/role-model/operator/learning/rollout",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 539,
+      "url": "http://127.0.0.1:3458/api/role-model/track-b/learning/summary",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 540,
+      "url": "http://127.0.0.1:3458/api/role-model/operator/learning/decisions?limit=100",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 541,
+      "url": "http://127.0.0.1:3458/api/role-model/operator/learning/activity?windowMinutes=60&limit=24",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 542,
+      "url": "http://127.0.0.1:3458/api/role-model/operator/learning/history?hours=24",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 542,
+      "url": "http://127.0.0.1:3458/api/role-model/operator/learning/profile",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 543,
+      "url": "http://127.0.0.1:3458/api/role-model/models",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 543,
+      "url": "http://127.0.0.1:3458/api/role-model/endpoints",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 544,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/summary?asOfMs=1791038865107",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 545,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/rows?asOfMs=1791038865107",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 545,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/requests?asOfMs=1791038865107",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 546,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/requests?limit=1",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 546,
+      "url": "http://127.0.0.1:3458/api/role-model/downstream/openai",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 547,
+      "url": "http://127.0.0.1:3458/api/role-model/router/summary",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 547,
+      "url": "http://127.0.0.1:3458/api/role-model/runtime/config",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 692,
+      "url": "http://127.0.0.1:3458/assets/fonts/geist-mono-latin-600-normal.woff2",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 702,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/stream",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 3357,
+      "url": "http://127.0.0.1:3458/assets/dashboard-8XQ2n5Ve.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 3366,
+      "url": "http://127.0.0.1:3458/assets/telemetry-route-models-farb3vII.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 3366,
+      "url": "http://127.0.0.1:3458/assets/page-filters-DWW_Up4G.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 3457,
+      "url": "http://127.0.0.1:3458/api/role-model/endpoints",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 3457,
+      "url": "http://127.0.0.1:3458/api/role-model/roles",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 3458,
+      "url": "http://127.0.0.1:3458/api/role-model/router/candidates",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 3458,
+      "url": "http://127.0.0.1:3458/api/role-model/models",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 3459,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/requests?limit=60&windowMs=86400000",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 3460,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/query",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "ts": 3460,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/query",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "ts": 3461,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/query",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "ts": 3461,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/query",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "ts": 3461,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/query",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "ts": 3462,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/query",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "ts": 3462,
+      "url": "http://127.0.0.1:3458/api/role-model/models",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 3463,
+      "url": "http://127.0.0.1:3458/api/role-model/endpoints",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 3463,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/summary?asOfMs=1791038868027",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 3464,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/rows?asOfMs=1791038868027",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 3464,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/requests?asOfMs=1791038868027",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 3465,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/requests?limit=1",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 3465,
+      "url": "http://127.0.0.1:3458/api/role-model/downstream/openai",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 3465,
+      "url": "http://127.0.0.1:3458/api/role-model/router/summary",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 3466,
+      "url": "http://127.0.0.1:3458/api/role-model/runtime/config",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 3466,
+      "url": "http://127.0.0.1:3458/favicon.ico",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 3498,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/stream",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 3530,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/stream",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4577,
+      "url": "http://127.0.0.1:3458/app/learning",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4598,
+      "url": "http://127.0.0.1:3458/assets/fonts/geist-latin-400-normal.woff2",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4599,
+      "url": "http://127.0.0.1:3458/assets/fonts/geist-latin-600-normal.woff2",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4601,
+      "url": "http://127.0.0.1:3458/assets/fonts/geist-mono-latin-400-normal.woff2",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4602,
+      "url": "http://127.0.0.1:3458/assets/manifest-735a11fb.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4602,
+      "url": "http://127.0.0.1:3458/assets/entry.client-B4czBmcP.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4602,
+      "url": "http://127.0.0.1:3458/assets/chunk-EVOBXE3Y-g5m91DvX.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4603,
+      "url": "http://127.0.0.1:3458/assets/root-BGsZS7xD.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4603,
+      "url": "http://127.0.0.1:3458/assets/theme-rIEsxy66.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4603,
+      "url": "http://127.0.0.1:3458/assets/not-found-CkHQlBq7.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4603,
+      "url": "http://127.0.0.1:3458/assets/page-primitives-DaboOJBc.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4604,
+      "url": "http://127.0.0.1:3458/assets/chart-grid-CqXjTUqn.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4604,
+      "url": "http://127.0.0.1:3458/assets/design-system-D3bmhYK2.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4604,
+      "url": "http://127.0.0.1:3458/assets/root-fpG44ViH.css",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4639,
+      "url": "http://127.0.0.1:3458/favicon.ico",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4644,
+      "url": "http://127.0.0.1:3458/assets/app-layout-B6AmaQMB.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4645,
+      "url": "http://127.0.0.1:3458/assets/learning-DunG2HYS.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4649,
+      "url": "http://127.0.0.1:3458/assets/segmented-control-OFrtyx20.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4650,
+      "url": "http://127.0.0.1:3458/assets/live-refresh-DcaagJbF.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4650,
+      "url": "http://127.0.0.1:3458/assets/runtime-api-Dwx7hwc2.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4650,
+      "url": "http://127.0.0.1:3458/assets/shell-header-context-DojSALrV.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4650,
+      "url": "http://127.0.0.1:3458/assets/effort-identity-DTM8zi6R.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4651,
+      "url": "http://127.0.0.1:3458/assets/view-models-D967q-Jz.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4651,
+      "url": "http://127.0.0.1:3458/assets/format-score-CvKL6Nty.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4654,
+      "url": "http://127.0.0.1:3458/assets/queue-api-Cn-u6NZO.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4654,
+      "url": "http://127.0.0.1:3458/assets/learning-api-bGRA194G.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4713,
+      "url": "http://127.0.0.1:3458/api/role-model/operator/learning/policy",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4714,
+      "url": "http://127.0.0.1:3458/api/role-model/operator/learning/rollout",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4714,
+      "url": "http://127.0.0.1:3458/api/role-model/track-b/learning/summary",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4714,
+      "url": "http://127.0.0.1:3458/api/role-model/operator/learning/decisions?limit=100",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4715,
+      "url": "http://127.0.0.1:3458/api/role-model/operator/learning/activity?windowMinutes=60&limit=24",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4715,
+      "url": "http://127.0.0.1:3458/api/role-model/operator/learning/history?hours=24",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4716,
+      "url": "http://127.0.0.1:3458/api/role-model/operator/learning/profile",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4716,
+      "url": "http://127.0.0.1:3458/assets/fonts/geist-latin-500-normal.woff2",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4716,
+      "url": "http://127.0.0.1:3458/api/role-model/models",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4717,
+      "url": "http://127.0.0.1:3458/api/role-model/endpoints",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4717,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/summary?asOfMs=1791038869284",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4718,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/rows?asOfMs=1791038869284",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4718,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/requests?asOfMs=1791038869284",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4719,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/requests?limit=1",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4719,
+      "url": "http://127.0.0.1:3458/api/role-model/downstream/openai",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4720,
+      "url": "http://127.0.0.1:3458/api/role-model/router/summary",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4720,
+      "url": "http://127.0.0.1:3458/api/role-model/runtime/config",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4799,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/stream",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 4815,
+      "url": "http://127.0.0.1:3458/assets/fonts/geist-mono-latin-600-normal.woff2",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 7147,
+      "url": "http://127.0.0.1:3458/api/role-model/operator/learning/records?kind=pack",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 7147,
+      "url": "http://127.0.0.1:3458/api/role-model/operator/learning/rollout",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 7148,
+      "url": "http://127.0.0.1:3458/api/role-model/models",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 7148,
+      "url": "http://127.0.0.1:3458/api/role-model/endpoints",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 7148,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/summary?asOfMs=1791038871718",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 7149,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/rows?asOfMs=1791038871718",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 7150,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/requests?asOfMs=1791038871718",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 7150,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/requests?limit=1",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 7151,
+      "url": "http://127.0.0.1:3458/api/role-model/downstream/openai",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 7151,
+      "url": "http://127.0.0.1:3458/api/role-model/router/summary",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 7152,
+      "url": "http://127.0.0.1:3458/api/role-model/runtime/config",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 7152,
+      "url": "http://127.0.0.1:3458/favicon.ico",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 7202,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/stream",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 7923,
+      "url": "http://127.0.0.1:3458/app",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 7948,
+      "url": "http://127.0.0.1:3458/assets/fonts/geist-latin-400-normal.woff2",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 7948,
+      "url": "http://127.0.0.1:3458/assets/fonts/geist-latin-600-normal.woff2",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 7948,
+      "url": "http://127.0.0.1:3458/assets/fonts/geist-mono-latin-400-normal.woff2",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 7949,
+      "url": "http://127.0.0.1:3458/assets/manifest-735a11fb.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 7949,
+      "url": "http://127.0.0.1:3458/assets/entry.client-B4czBmcP.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 7949,
+      "url": "http://127.0.0.1:3458/assets/chunk-EVOBXE3Y-g5m91DvX.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 7949,
+      "url": "http://127.0.0.1:3458/assets/root-BGsZS7xD.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 7949,
+      "url": "http://127.0.0.1:3458/assets/theme-rIEsxy66.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 7949,
+      "url": "http://127.0.0.1:3458/assets/not-found-CkHQlBq7.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 7950,
+      "url": "http://127.0.0.1:3458/assets/page-primitives-DaboOJBc.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 7950,
+      "url": "http://127.0.0.1:3458/assets/chart-grid-CqXjTUqn.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 7950,
+      "url": "http://127.0.0.1:3458/assets/design-system-D3bmhYK2.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 7950,
+      "url": "http://127.0.0.1:3458/assets/root-fpG44ViH.css",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 7988,
+      "url": "http://127.0.0.1:3458/favicon.ico",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 7989,
+      "url": "http://127.0.0.1:3458/assets/app-layout-B6AmaQMB.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 7989,
+      "url": "http://127.0.0.1:3458/assets/dashboard-8XQ2n5Ve.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 7994,
+      "url": "http://127.0.0.1:3458/assets/segmented-control-OFrtyx20.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 7994,
+      "url": "http://127.0.0.1:3458/assets/live-refresh-DcaagJbF.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 7994,
+      "url": "http://127.0.0.1:3458/assets/runtime-api-Dwx7hwc2.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 7994,
+      "url": "http://127.0.0.1:3458/assets/shell-header-context-DojSALrV.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 7994,
+      "url": "http://127.0.0.1:3458/assets/effort-identity-DTM8zi6R.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 7995,
+      "url": "http://127.0.0.1:3458/assets/view-models-D967q-Jz.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 7995,
+      "url": "http://127.0.0.1:3458/assets/format-score-CvKL6Nty.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 7996,
+      "url": "http://127.0.0.1:3458/assets/telemetry-route-models-farb3vII.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 7996,
+      "url": "http://127.0.0.1:3458/assets/page-filters-DWW_Up4G.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 8056,
+      "url": "http://127.0.0.1:3458/api/role-model/endpoints",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 8056,
+      "url": "http://127.0.0.1:3458/api/role-model/roles",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 8057,
+      "url": "http://127.0.0.1:3458/api/role-model/router/candidates",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 8057,
+      "url": "http://127.0.0.1:3458/api/role-model/models",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 8057,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/requests?limit=60&windowMs=86400000",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 8058,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/query",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "ts": 8058,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/query",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "ts": 8059,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/query",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "ts": 8059,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/query",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "ts": 8060,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/query",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "ts": 8060,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/query",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "ts": 8061,
+      "url": "http://127.0.0.1:3458/assets/fonts/geist-latin-500-normal.woff2",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 8061,
+      "url": "http://127.0.0.1:3458/api/role-model/models",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 8061,
+      "url": "http://127.0.0.1:3458/api/role-model/endpoints",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 8062,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/summary?asOfMs=1791038872627",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 8062,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/rows?asOfMs=1791038872627",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 8063,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/requests?asOfMs=1791038872627",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 8063,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/requests?limit=1",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 8064,
+      "url": "http://127.0.0.1:3458/api/role-model/downstream/openai",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 8064,
+      "url": "http://127.0.0.1:3458/api/role-model/router/summary",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 8065,
+      "url": "http://127.0.0.1:3458/api/role-model/runtime/config",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 8076,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/stream",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 8105,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/stream",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 12157,
+      "url": "http://127.0.0.1:3458/assets/learning-DunG2HYS.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 12166,
+      "url": "http://127.0.0.1:3458/assets/queue-api-Cn-u6NZO.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 12166,
+      "url": "http://127.0.0.1:3458/assets/learning-api-bGRA194G.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 12206,
+      "url": "http://127.0.0.1:3458/api/role-model/operator/learning/policy",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 12207,
+      "url": "http://127.0.0.1:3458/api/role-model/operator/learning/rollout",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 12207,
+      "url": "http://127.0.0.1:3458/api/role-model/track-b/learning/summary",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 12208,
+      "url": "http://127.0.0.1:3458/api/role-model/operator/learning/decisions?limit=100",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 12208,
+      "url": "http://127.0.0.1:3458/api/role-model/operator/learning/activity?windowMinutes=60&limit=24",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 12209,
+      "url": "http://127.0.0.1:3458/api/role-model/operator/learning/history?hours=24",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 12209,
+      "url": "http://127.0.0.1:3458/api/role-model/operator/learning/profile",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 12209,
+      "url": "http://127.0.0.1:3458/api/role-model/models",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 12210,
+      "url": "http://127.0.0.1:3458/api/role-model/endpoints",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 12211,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/summary?asOfMs=1791038876777",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 12211,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/rows?asOfMs=1791038876777",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 12211,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/requests?asOfMs=1791038876777",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 12212,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/requests?limit=1",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 12212,
+      "url": "http://127.0.0.1:3458/api/role-model/downstream/openai",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 12213,
+      "url": "http://127.0.0.1:3458/api/role-model/router/summary",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 12213,
+      "url": "http://127.0.0.1:3458/api/role-model/runtime/config",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 12213,
+      "url": "http://127.0.0.1:3458/favicon.ico",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 12319,
+      "url": "http://127.0.0.1:3458/assets/fonts/geist-mono-latin-600-normal.woff2",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 12338,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/stream",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 13213,
+      "url": "http://127.0.0.1:3458/api/role-model/operator/learning/records?kind=pack",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 13214,
+      "url": "http://127.0.0.1:3458/api/role-model/operator/learning/rollout",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 13214,
+      "url": "http://127.0.0.1:3458/api/role-model/models",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 13215,
+      "url": "http://127.0.0.1:3458/api/role-model/endpoints",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 13215,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/summary?asOfMs=1791038877785",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 13216,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/rows?asOfMs=1791038877785",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 13216,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/requests?asOfMs=1791038877785",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 13216,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/requests?limit=1",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 13217,
+      "url": "http://127.0.0.1:3458/api/role-model/downstream/openai",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 13217,
+      "url": "http://127.0.0.1:3458/api/role-model/router/summary",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 13218,
+      "url": "http://127.0.0.1:3458/api/role-model/runtime/config",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 13218,
+      "url": "http://127.0.0.1:3458/favicon.ico",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 13254,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/stream",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 13944,
+      "url": "http://127.0.0.1:3458/app/learning",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 13973,
+      "url": "http://127.0.0.1:3458/assets/fonts/geist-latin-400-normal.woff2",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 13973,
+      "url": "http://127.0.0.1:3458/assets/fonts/geist-latin-600-normal.woff2",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 13973,
+      "url": "http://127.0.0.1:3458/assets/fonts/geist-mono-latin-400-normal.woff2",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 13974,
+      "url": "http://127.0.0.1:3458/assets/manifest-735a11fb.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 13974,
+      "url": "http://127.0.0.1:3458/assets/entry.client-B4czBmcP.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 13974,
+      "url": "http://127.0.0.1:3458/assets/chunk-EVOBXE3Y-g5m91DvX.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 13974,
+      "url": "http://127.0.0.1:3458/assets/root-BGsZS7xD.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 13974,
+      "url": "http://127.0.0.1:3458/assets/theme-rIEsxy66.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 13975,
+      "url": "http://127.0.0.1:3458/assets/not-found-CkHQlBq7.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 13975,
+      "url": "http://127.0.0.1:3458/assets/page-primitives-DaboOJBc.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 13975,
+      "url": "http://127.0.0.1:3458/assets/chart-grid-CqXjTUqn.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 13975,
+      "url": "http://127.0.0.1:3458/assets/design-system-D3bmhYK2.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 13976,
+      "url": "http://127.0.0.1:3458/assets/root-fpG44ViH.css",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 14022,
+      "url": "http://127.0.0.1:3458/favicon.ico",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 14029,
+      "url": "http://127.0.0.1:3458/assets/app-layout-B6AmaQMB.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 14029,
+      "url": "http://127.0.0.1:3458/assets/learning-DunG2HYS.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 14033,
+      "url": "http://127.0.0.1:3458/assets/segmented-control-OFrtyx20.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 14034,
+      "url": "http://127.0.0.1:3458/assets/live-refresh-DcaagJbF.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 14034,
+      "url": "http://127.0.0.1:3458/assets/runtime-api-Dwx7hwc2.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 14034,
+      "url": "http://127.0.0.1:3458/assets/shell-header-context-DojSALrV.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 14035,
+      "url": "http://127.0.0.1:3458/assets/effort-identity-DTM8zi6R.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 14035,
+      "url": "http://127.0.0.1:3458/assets/view-models-D967q-Jz.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 14035,
+      "url": "http://127.0.0.1:3458/assets/format-score-CvKL6Nty.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 14038,
+      "url": "http://127.0.0.1:3458/assets/queue-api-Cn-u6NZO.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 14038,
+      "url": "http://127.0.0.1:3458/assets/learning-api-bGRA194G.js",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 14096,
+      "url": "http://127.0.0.1:3458/api/role-model/operator/learning/policy",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 14097,
+      "url": "http://127.0.0.1:3458/api/role-model/operator/learning/rollout",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 14097,
+      "url": "http://127.0.0.1:3458/api/role-model/track-b/learning/summary",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 14098,
+      "url": "http://127.0.0.1:3458/api/role-model/operator/learning/decisions?limit=100",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 14098,
+      "url": "http://127.0.0.1:3458/api/role-model/operator/learning/activity?windowMinutes=60&limit=24",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 14099,
+      "url": "http://127.0.0.1:3458/api/role-model/operator/learning/history?hours=24",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 14099,
+      "url": "http://127.0.0.1:3458/api/role-model/operator/learning/profile",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 14100,
+      "url": "http://127.0.0.1:3458/assets/fonts/geist-latin-500-normal.woff2",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 14100,
+      "url": "http://127.0.0.1:3458/api/role-model/models",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 14100,
+      "url": "http://127.0.0.1:3458/api/role-model/endpoints",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 14101,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/summary?asOfMs=1791038878666",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 14101,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/rows?asOfMs=1791038878666",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 14102,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/requests?asOfMs=1791038878666",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 14102,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/requests?limit=1",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 14102,
+      "url": "http://127.0.0.1:3458/api/role-model/downstream/openai",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 14103,
+      "url": "http://127.0.0.1:3458/api/role-model/router/summary",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 14103,
+      "url": "http://127.0.0.1:3458/api/role-model/runtime/config",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 14195,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/stream",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 14224,
+      "url": "http://127.0.0.1:3458/assets/fonts/geist-mono-latin-600-normal.woff2",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 16510,
+      "url": "http://127.0.0.1:3458/api/role-model/operator/learning/records?kind=pack",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 16511,
+      "url": "http://127.0.0.1:3458/api/role-model/operator/learning/rollout",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 16511,
+      "url": "http://127.0.0.1:3458/api/role-model/models",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 16512,
+      "url": "http://127.0.0.1:3458/api/role-model/endpoints",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 16512,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/summary?asOfMs=1791038881080",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 16513,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/rows?asOfMs=1791038881080",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 16514,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/requests?asOfMs=1791038881080",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 16514,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/requests?limit=1",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 16515,
+      "url": "http://127.0.0.1:3458/api/role-model/downstream/openai",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 16515,
+      "url": "http://127.0.0.1:3458/api/role-model/router/summary",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 16516,
+      "url": "http://127.0.0.1:3458/api/role-model/runtime/config",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 16516,
+      "url": "http://127.0.0.1:3458/favicon.ico",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "ts": 16551,
+      "url": "http://127.0.0.1:3458/api/role-model/telemetry/stream",
+      "method": "GET",
+      "status": 200
+    }
+  ]
+}

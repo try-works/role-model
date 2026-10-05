@@ -1,0 +1,255 @@
+{
+  "accounts": [
+    {
+      "providerAccountId": "deepseek.personal.deepseek-api-key",
+      "providerId": "deepseek",
+      "providerKind": "provider-openai",
+      "orgScope": "personal",
+      "accountScope": "workspace-default",
+      "credentialRef": {
+        "backend": "local-file",
+        "ref": "api-key/deepseek/deepseek.personal.deepseek-api-key"
+      },
+      "authMode": "api-key-static",
+      "regionPolicy": {
+        "mode": "prefer",
+        "regions": [
+          "global"
+        ]
+      },
+      "baseUrlOverride": "https://api.deepseek.com/v1",
+      "allowedModels": [
+        "deepseek/deepseek-flash",
+        "deepseek/deepseek-v4-pro"
+      ],
+      "modelRoleBindings": [
+        {
+          "modelId": "deepseek/deepseek-v4-pro",
+          "roleIds": [],
+          "roleAssignmentMode": "all",
+          "enabledRoleIds": [],
+          "disabledRoleIds": []
+        },
+        {
+          "modelId": "deepseek/deepseek-v4-pro",
+          "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+          "roleIds": [],
+          "roleAssignmentMode": "all",
+          "enabledRoleIds": [],
+          "disabledRoleIds": []
+        },
+        {
+          "modelId": "deepseek/deepseek-flash",
+          "roleIds": [],
+          "roleAssignmentMode": "all",
+          "enabledRoleIds": [],
+          "disabledRoleIds": []
+        },
+        {
+          "modelId": "deepseek/deepseek-flash",
+          "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash",
+          "roleIds": [],
+          "roleAssignmentMode": "all",
+          "enabledRoleIds": [],
+          "disabledRoleIds": []
+        }
+      ],
+      "deniedModels": [],
+      "entitlementTags": [
+        "chat"
+      ],
+      "budgetPolicyRef": "budget.default",
+      "quotaPolicyRef": "quota.default",
+      "status": "active",
+      "healthStatus": "healthy",
+      "rotationState": "stable"
+    },
+    {
+      "providerAccountId": "deepseek.personal.run105-pi-live-mock",
+      "providerId": "deepseek",
+      "providerKind": "provider-openai",
+      "orgScope": "personal",
+      "accountScope": "run105-pi-live",
+      "credentialRef": {
+        "backend": "local-file",
+        "ref": "api-key/deepseek/deepseek.personal.deepseek-api-key"
+      },
+      "authMode": "api-key-static",
+      "regionPolicy": {
+        "mode": "prefer",
+        "regions": [
+          "global"
+        ]
+      },
+      "baseUrlOverride": "http://127.0.0.1:3465/v1",
+      "allowedModels": [
+        "deepseek/deepseek-flash"
+      ],
+      "modelRoleBindings": [
+        {
+          "modelId": "deepseek/deepseek-flash",
+          "endpointId": "deepseek.personal.run105-pi-live-mock.global.deepseek-flash-high",
+          "roleIds": [
+            "coder",
+            "writer"
+          ],
+          "roleAssignmentMode": "include",
+          "enabledRoleIds": [],
+          "disabledRoleIds": []
+        },
+        {
+          "modelId": "deepseek/deepseek-flash",
+          "roleIds": [
+            "coder",
+            "writer"
+          ],
+          "roleAssignmentMode": "include",
+          "enabledRoleIds": [],
+          "disabledRoleIds": []
+        }
+      ],
+      "deniedModels": [],
+      "entitlementTags": [
+        "chat"
+      ],
+      "budgetPolicyRef": "budget.run105-pi-live",
+      "quotaPolicyRef": "quota.run105-pi-live",
+      "status": "active",
+      "healthStatus": "healthy",
+      "rotationState": "stable"
+    }
+  ],
+  "endpoints": [
+    {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash",
+      "modelId": "deepseek/deepseek-flash",
+      "providerId": "deepseek",
+      "providerAccountId": "deepseek.personal.deepseek-api-key",
+      "roleIds": [
+        "analyst",
+        "architect",
+        "coder",
+        "coordinator",
+        "creative",
+        "data",
+        "designer",
+        "educator",
+        "finance",
+        "health",
+        "knowledge",
+        "legal",
+        "marketer",
+        "mathematician",
+        "operator",
+        "planner",
+        "procurement",
+        "product",
+        "recruiter",
+        "researcher",
+        "scientist",
+        "security",
+        "seller",
+        "strategist",
+        "support",
+        "tester",
+        "translator",
+        "writer"
+      ],
+      "endpointKind": "remote_api",
+      "servingSource": "remote-service",
+      "sourceType": "remote",
+      "healthStatus": "healthy",
+      "routingEligible": true,
+      "benchmarkEligible": true,
+      "capabilities": [
+        "text.chat",
+        "tools.function_calling",
+        "reasoning",
+        "structured.output",
+        "code.edit"
+      ],
+      "toolCallingSupported": true,
+      "toolCallingStyle": "none",
+      "displayName": "DeepSeek V4.1 Flash",
+      "upstreamModelId": "deepseek/deepseek-flash",
+      "reasoningEffort": null,
+      "reasoningEffortLevels": [
+        "low",
+        "high",
+        "max"
+      ],
+      "effortSource": "provider-default",
+      "webSearchSupport": {
+        "mode": "runtime-fallback",
+        "currentRuntimeContract": null,
+        "documentedProviderContract": "deepseek.anthropic.server_web_search"
+      },
+      "status": "active"
+    },
+    {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+      "modelId": "deepseek/deepseek-v4-pro",
+      "providerId": "deepseek",
+      "providerAccountId": "deepseek.personal.deepseek-api-key",
+      "roleIds": [
+        "analyst",
+        "architect",
+        "coder",
+        "coordinator",
+        "creative",
+        "data",
+        "designer",
+        "educator",
+        "finance",
+        "health",
+        "knowledge",
+        "legal",
+        "marketer",
+        "mathematician",
+        "operator",
+        "planner",
+        "procurement",
+        "product",
+        "recruiter",
+        "researcher",
+        "scientist",
+        "security",
+        "seller",
+        "strategist",
+        "support",
+        "tester",
+        "translator",
+        "writer"
+      ],
+      "endpointKind": "remote_api",
+      "servingSource": "remote-service",
+      "sourceType": "remote",
+      "healthStatus": "healthy",
+      "routingEligible": true,
+      "benchmarkEligible": true,
+      "capabilities": [
+        "reasoning",
+        "structured.output",
+        "text.chat",
+        "tools.function_calling",
+        "code.edit"
+      ],
+      "toolCallingSupported": true,
+      "toolCallingStyle": "none",
+      "displayName": "DeepSeek V4 Pro",
+      "upstreamModelId": "deepseek/deepseek-v4-pro",
+      "reasoningEffort": null,
+      "reasoningEffortLevels": [
+        "high",
+        "max"
+      ],
+      "effortSource": "provider-default",
+      "webSearchSupport": {
+        "mode": "runtime-fallback",
+        "currentRuntimeContract": null,
+        "documentedProviderContract": "deepseek.anthropic.server_web_search"
+      },
+      "status": "active"
+    }
+  ]
+}

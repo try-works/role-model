@@ -1,0 +1,201 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-host-bridge
+
+(node:31056) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | test/run105-review-advisory-cache.test.ts > run105 review exact advisory cache > classified live backend never resurrects transient advisory after missing
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2,CAPABILITY_MISSING=1 request=req-cache-missing alias=- model=- effort=- pass=live allow=[openai.personal.codex-subscription.global.gpt-5.4] denied=[test.capture.chat-v1,cli.local.coder]
+
+stdout | test/run105-review-advisory-cache.test.ts > run105 review exact advisory cache > classified live backend never resurrects transient advisory after stopped
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2,CAPABILITY_MISSING=1 request=req-cache-stopped alias=- model=- effort=- pass=live allow=[openai.personal.codex-subscription.global.gpt-5.4] denied=[test.capture.chat-v1,cli.local.coder]
+
+stdout | test/run105-review-advisory-cache.test.ts > run105 review exact advisory cache > classified live backend never resurrects transient advisory after excluded
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2,CAPABILITY_MISSING=1 request=req-cache-excluded alias=- model=- effort=- pass=live allow=[openai.personal.codex-subscription.global.gpt-5.4] denied=[test.capture.chat-v1,cli.local.coder]
+
+ ❯ test/run105-review-advisory-cache.test.ts (9 tests | 7 failed) 5214ms
+   × run105 review exact advisory cache > classified live backend never resurrects transient advisory after missing 1667ms
+     → expected { …(18) } to be undefined
+   × run105 review exact advisory cache > classified live backend never resurrects transient advisory after stopped 1377ms
+     → expected { candidateId: 'candidate-a', …(18) } to match object { roleId: 'coder', …(3) }
+(15 matching properties omitted from actual)
+   × run105 review exact advisory cache > classified live backend never resurrects transient advisory after excluded 2153ms
+     → expected { candidateId: 'candidate-a', …(18) } to match object { roleId: 'coder', …(3) }
+(15 matching properties omitted from actual)
+   × run105 review exact advisory cache > same role retains two tasks without overwriting or borrowing 6ms
+     → expected 'explain' to be 'review' // Object.is equality
+   ✓ run105 review exact advisory cache > same task retains different roles without borrowing 1ms
+   ✓ run105 review exact advisory cache > channel and runtime scope isolate identical pairs 1ms
+   × run105 review exact advisory cache > only genuinely no-role/no-task recall can use legacy entry 2ms
+     → expected { …(13) } to be null
+   × run105 review exact advisory cache > re-remember refreshes actual recency beyond 512 entries 3ms
+     → expected 'new' to be 'refreshed' // Object.is equality
+   × run105 review exact advisory cache > source role and task persist when publisher omits redundant role input 2ms
+     → expected null to match object { roleId: 'coder', …(1) }
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run105-review-advisory-cache.test.ts > run105 review exact advisory cache > classified live backend never resurrects transient advisory after missing
+AssertionError: expected { …(18) } to be undefined
+
+- Expected: 
+undefined
+
++ Received: 
+{
+  "advisoryId": "transient-pack",
+  "advisoryState": "fresh",
+  "candidateId": "transient-candidate",
+  "cohortPercent": 100,
+  "confidence": 1,
+  "explorationPercent": 0,
+  "killSwitch": false,
+  "minAdvisoryConfidence": 0.7,
+  "policyVersion": "policy:1:7862ddce85addd0d",
+  "preferredEndpointId": "openai.personal.codex-subscription.global.gpt-5.4",
+  "requestRoleId": "coder",
+  "requestTaxonomyVersion": "1.0.0-alpha.1",
+  "roleId": null,
+  "scoreBand": 0.05,
+  "stage": "S3",
+  "taskTypeId": null,
+  "taxonomyVersion": null,
+  "thresholdSetVersion": null,
+}
+
+ ❯ test/run105-review-advisory-cache.test.ts:70:48
+     68|       expect(routing.advisories.length).toBeGreaterThan(0);
+     69|       for (const value of routing.advisories) {
+     70|         if (state === "missing") expect(value).toBeUndefined();
+       |                                                ^
+     71|         else expect(value).toMatchObject({ roleId: "coder", taskTypeId…
+     72|       }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/7]⎯
+
+ FAIL  test/run105-review-advisory-cache.test.ts > run105 review exact advisory cache > classified live backend never resurrects transient advisory after stopped
+ FAIL  test/run105-review-advisory-cache.test.ts > run105 review exact advisory cache > classified live backend never resurrects transient advisory after excluded
+AssertionError: expected { candidateId: 'candidate-a', …(18) } to match object { roleId: 'coder', …(3) }
+(15 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "advisoryState": "unavailable",
+-   "preferredEndpointId": null,
++   "advisoryState": "fresh",
++   "preferredEndpointId": "openai.personal.codex-subscription.global.gpt-5.4",
+    "roleId": "coder",
+-   "taskTypeId": "coder.review",
++   "taskTypeId": "coder.explain",
+  }
+
+ ❯ test/run105-review-advisory-cache.test.ts:71:28
+     69|       for (const value of routing.advisories) {
+     70|         if (state === "missing") expect(value).toBeUndefined();
+     71|         else expect(value).toMatchObject({ roleId: "coder", taskTypeId…
+       |                            ^
+     72|       }
+     73|     } finally { await backend.shutdown?.(); await rm(root, { recursive…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/7]⎯
+
+ FAIL  test/run105-review-advisory-cache.test.ts > run105 review exact advisory cache > same role retains two tasks without overwriting or borrowing
+AssertionError: expected 'explain' to be 'review' // Object.is equality
+
+Expected: "review"
+Received: "explain"
+
+ ❯ test/run105-review-advisory-cache.test.ts:78:68
+     76|   test("same role retains two tasks without overwriting or borrowing",…
+     77|     remember("coder", "coder.review", "review"); remember("coder", "co…
+     78|     expect(recall("coder", "coder.review")?.preferredRoutePackage).toB…
+       |                                                                    ^
+     79|     expect(recall("coder", "coder.explain")?.preferredRoutePackage).to…
+     80|     expect(recall("coder", "coder.edit")).toBeNull();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/7]⎯
+
+ FAIL  test/run105-review-advisory-cache.test.ts > run105 review exact advisory cache > only genuinely no-role/no-task recall can use legacy entry
+AssertionError: expected { …(13) } to be null
+
+- Expected: 
+null
+
++ Received: 
+{
+  "advisoryId": "pack-a",
+  "advisoryLadder": [
+    {
+      "endpointId": "classified",
+      "rank": 1,
+      "status": "available",
+    },
+  ],
+  "advisoryState": "fresh",
+  "cachedAtMs": 1000,
+  "candidateId": "candidate-a",
+  "cohortPercent": 25,
+  "confidence": 0.82,
+  "preferredRoutePackage": "classified",
+  "reason": null,
+  "revalidationDue": false,
+  "roleId": "coder",
+  "taskTypeId": "coder.review",
+  "taxonomyVersion": "1.0.0-alpha.1",
+}
+
+ ❯ test/run105-review-advisory-cache.test.ts:99:35
+     97|     remember(null, null, "legacy"); remember("coder", "coder.review", …
+     98|     expect(recall(null, null)?.preferredRoutePackage).toBe("legacy");
+     99|     expect(recall("coder", null)).toBeNull(); expect(recall(null, "cod…
+       |                                   ^
+    100|   });
+    101|   test("re-remember refreshes actual recency beyond 512 entries", () =…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/7]⎯
+
+ FAIL  test/run105-review-advisory-cache.test.ts > run105 review exact advisory cache > re-remember refreshes actual recency beyond 512 entries
+AssertionError: expected 'new' to be 'refreshed' // Object.is equality
+
+Expected: "refreshed"
+Received: "new"
+
+ ❯ test/run105-review-advisory-cache.test.ts:104:62
+    102|     for (let i = 0; i < 512; i++) remember("coder", "task-" + i, "endp…
+    103|     remember("coder", "task-0", "refreshed", 1000); remember("coder", …
+    104|     expect(recall("coder", "task-0")?.preferredRoutePackage).toBe("ref…
+       |                                                              ^
+    105|     expect(recall("coder", "task-1")).toBeNull();
+    106|     expect(recall("coder", "task-512")?.preferredRoutePackage).toBe("n…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/7]⎯
+
+ FAIL  test/run105-review-advisory-cache.test.ts > run105 review exact advisory cache > source role and task persist when publisher omits redundant role input
+AssertionError: expected null to match object { roleId: 'coder', …(1) }
+
+- Expected: 
+{
+  "roleId": "coder",
+  "taskTypeId": "coder.review",
+}
+
++ Received: 
+null
+
+ ❯ test/run105-review-advisory-cache.test.ts:110:45
+    108|   test("source role and task persist when publisher omits redundant ro…
+    109|     rememberTrackBDurableRouteAdvisory({ channel, scope, advisory: adv…
+    110|     expect(recall("coder", "coder.review")).toMatchObject(pair); expec…
+       |                                             ^
+    111|   });
+    112| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/7]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  7 failed | 2 passed (9)
+   Start at  16:30:09
+   Duration  13.77s (transform 4.95s, setup 0ms, collect 7.81s, tests 5.21s, environment 0ms, prepare 274ms)
+

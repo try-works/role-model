@@ -72,7 +72,11 @@ test("run97 admission maps every blocking input to one closed refusal code", asy
 
 test("run97 refusal codes never encode tool use, capability, or transcript shape", async () => {
   const { REPLAY_REFUSAL_CODES } = await import("../src/track-b-replay-policy.js");
+  // Run 105 R1/R8 explicitly requires classified captures for per-(role, task) replay.
+  // Permit only this named exception; keep every other legacy exclusion prohibition intact.
+  expect(REPLAY_REFUSAL_CODES).toContain("no_route_classification");
   for (const code of REPLAY_REFUSAL_CODES) {
+    if (code === "no_route_classification") continue;
     expect(code).not.toMatch(/tool|capab|classification|role|model|transcript|endpoint/);
   }
 });

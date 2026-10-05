@@ -1,0 +1,44 @@
+{
+  "actualBytes": 240535,
+  "projectedBytes": 1732,
+  "projectedWithPointerBytes": 1948,
+  "eightAttemptsDiagnosticBytes": 13113,
+  "eightAttemptsFactsWithoutMessagesBytes": 4745,
+  "proposal": {
+    "previewSerializedBytes": 512,
+    "failedAttemptsCount": 8,
+    "diagnosticAggregateBytes": 8192,
+    "metadataAggregateBytes": 16384
+  },
+  "projected": {
+    "errorContext": {
+      "endpointId": "deepseek.personal.r15-diagnostic.global.deepseek-v4-pro",
+      "providerId": "deepseek",
+      "providerFamily": "deepseek",
+      "executionFamily": "remote-service",
+      "adapterFamily": "ai-sdk-openai-compatible",
+      "statusCode": 422,
+      "code": "execution_failed",
+      "type": "execution_failed",
+      "failurePhase": "provider_execution",
+      "retryable": false,
+      "fallbackEligible": false,
+      "message": "R15_NONSECRET_ASCII_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "messageTruncated": true,
+      "messageOriginalUtf8Bytes": 120020,
+      "errorPreview": {
+        "statusCode": 422,
+        "code": "r15_mock_contract_rejection",
+        "type": "invalid_request_error",
+        "message": "R15_NONSECRET_ASCII_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "messageTruncated": true,
+        "messageOriginalUtf8Bytes": 120020
+      }
+    },
+    "compactTruncation": {
+      "reason": "diagnostic_projection",
+      "originalUtf8Bytes": 240535,
+      "omittedFields": []
+    }
+  }
+}

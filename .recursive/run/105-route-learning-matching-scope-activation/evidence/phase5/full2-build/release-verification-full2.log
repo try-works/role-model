@@ -1,0 +1,17 @@
+file:///E:/tmp/run105-full2-public/role-model-router/packages/core/dist/taxonomy/index.js:34
+    throw new Error(`Unable to read taxonomy data file ${fileName}:\n${errors.join("\n")}`);
+          ^
+
+Error: Unable to read taxonomy data file manifest.json:
+C:\Program Files\nodejs\role-model-router\packages\core\data\taxonomy: ENOENT: no such file or directory, open 'C:\Program Files\nodejs\role-model-router\packages\core\data\taxonomy\manifest.json'
+D:\DEV\role-model-internal\data\taxonomy: ENOENT: no such file or directory, open 'D:\DEV\role-model-internal\data\taxonomy\manifest.json'
+D:\packages\core\data\taxonomy: ENOENT: no such file or directory, open 'D:\packages\core\data\taxonomy\manifest.json'
+D:\DEV\role-model-internal\role-model-router\packages\core\data\taxonomy: ENOENT: no such file or directory, open 'D:\DEV\role-model-internal\role-model-router\packages\core\data\taxonomy\manifest.json'
+D:\role-model-router\packages\core\data\taxonomy: ENOENT: no such file or directory, open 'D:\role-model-router\packages\core\data\taxonomy\manifest.json'
+    at readTaxonomyJson (file:///E:/tmp/run105-full2-public/role-model-router/packages/core/dist/taxonomy/index.js:34:11)
+    at file:///E:/tmp/run105-full2-public/role-model-router/packages/core/dist/taxonomy/index.js:40:33
+    at ModuleJob.run (node:internal/modules/esm/module_job:377:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:691:26)
+    at async file:///D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/.recursive/run/105-route-learning-matching-scope-activation/evidence/phase5/full2-build/verify-release-full2.mjs:34:50
+
+Node.js v24.11.0

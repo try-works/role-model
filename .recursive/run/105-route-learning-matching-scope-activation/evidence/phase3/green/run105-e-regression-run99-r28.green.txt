@@ -1,0 +1,18 @@
+# run99-r28 externalized readback regression GREEN
+# command: corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/run99-r28-externalized-readback.test.ts 2>&1 | Out-String
+# exit: 0
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-host-bridge
+
+(node:24080) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run99-r28-externalized-readback.test.ts (3 tests) 89ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  13:45:18
+   Duration  8.61s (transform 4.44s, setup 0ms, collect 7.62s, tests 89ms, environment 0ms, prepare 334ms)
+
+
+

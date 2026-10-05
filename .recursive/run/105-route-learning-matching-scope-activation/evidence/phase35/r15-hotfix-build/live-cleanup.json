@@ -1,0 +1,191 @@
+{
+  "/api/role-model/endpoints/deepseek.personal.r15-local-mock.global.deepseek-v4-pro": {
+    "status": 200,
+    "body": {
+      "endpointId": "deepseek.personal.r15-local-mock.global.deepseek-v4-pro",
+      "status": "removed"
+    }
+  },
+  "/api/role-model/accounts": {
+    "status": 400,
+    "body": {
+      "error": "accounts[0].authMode must be a non-empty string"
+    }
+  },
+  "/api/role-model/runtime/config": {
+    "status": 200,
+    "body": {
+      "applied": true,
+      "path": "E:\\tmp\\run105-r15-verification-state\\state\\runtime-config.yaml",
+      "config": {
+        "version": "1.1",
+        "routingStrategy": "baseline",
+        "routingPosture": {
+          "mode": "baseline",
+          "scoringStrategy": "balanced",
+          "pinWeights": false,
+          "operator": {
+            "name": "balanced",
+            "weights": {
+              "quality": 0.3,
+              "latency": 0.2,
+              "throughput": 0.1,
+              "cost": 0.2,
+              "reliability": 0.15,
+              "preference": 0.05
+            }
+          },
+          "degradations": []
+        },
+        "executionMode": "decision_only",
+        "modelAliases": [
+          {
+            "aliasId": "default.decision-only",
+            "mode": "basic",
+            "modelIds": [
+              "deepseek/deepseek-v4-pro"
+            ]
+          },
+          {
+            "aliasId": "baseline.decision-only",
+            "mode": "basic",
+            "modelIds": [
+              "deepseek/deepseek-v4-pro"
+            ]
+          },
+          {
+            "aliasId": "controller.decision-only",
+            "mode": "intelligent",
+            "modelIds": [
+              "deepseek/deepseek-v4-pro"
+            ]
+          },
+          {
+            "aliasId": "difficulty.decision-only",
+            "mode": "difficulty",
+            "modelIds": [
+              "deepseek/deepseek-v4-pro"
+            ]
+          },
+          {
+            "aliasId": "hybrid.decision-only",
+            "mode": "hybrid",
+            "modelIds": [
+              "deepseek/deepseek-v4-pro"
+            ]
+          },
+          {
+            "aliasId": "default.hybrid",
+            "mode": "basic",
+            "modelIds": [
+              "deepseek/deepseek-v4-pro"
+            ]
+          },
+          {
+            "aliasId": "baseline.hybrid",
+            "mode": "basic",
+            "modelIds": [
+              "deepseek/deepseek-v4-pro"
+            ]
+          },
+          {
+            "aliasId": "controller.hybrid",
+            "mode": "intelligent",
+            "modelIds": [
+              "deepseek/deepseek-v4-pro"
+            ]
+          },
+          {
+            "aliasId": "difficulty.hybrid",
+            "mode": "difficulty",
+            "modelIds": [
+              "deepseek/deepseek-v4-pro"
+            ]
+          },
+          {
+            "aliasId": "hybrid.hybrid",
+            "mode": "hybrid",
+            "modelIds": [
+              "deepseek/deepseek-v4-pro"
+            ]
+          },
+          {
+            "aliasId": "default.remote-only",
+            "mode": "basic",
+            "modelIds": [
+              "deepseek/deepseek-v4-pro"
+            ]
+          },
+          {
+            "aliasId": "baseline.remote-only",
+            "mode": "basic",
+            "modelIds": [
+              "deepseek/deepseek-v4-pro"
+            ]
+          },
+          {
+            "aliasId": "controller.remote-only",
+            "mode": "intelligent",
+            "modelIds": [
+              "deepseek/deepseek-v4-pro"
+            ]
+          },
+          {
+            "aliasId": "difficulty.remote-only",
+            "mode": "difficulty",
+            "modelIds": [
+              "deepseek/deepseek-v4-pro"
+            ]
+          },
+          {
+            "aliasId": "hybrid.remote-only",
+            "mode": "hybrid",
+            "modelIds": [
+              "deepseek/deepseek-v4-pro"
+            ]
+          }
+        ],
+        "llamaSwap": {
+          "enabled": false,
+          "models": [],
+          "process": {
+            "command": null,
+            "args": [],
+            "env": {},
+            "cwd": null,
+            "startupTimeoutMs": null
+          }
+        },
+        "liteLLM": {
+          "enabled": false,
+          "providers": [],
+          "routerSettings": {},
+          "litellmSettings": {},
+          "process": {
+            "command": null,
+            "args": [],
+            "env": {},
+            "cwd": null,
+            "startupTimeoutMs": null
+          }
+        }
+      }
+    }
+  },
+  "health": {
+    "ready": true,
+    "status": "healthy",
+    "runtime": {
+      "version": "0.0.14-716-gca91d98a",
+      "release_version": "0.0.14-716-gca91d98a",
+      "commit": "ca91d98aeb0532a0bdcded0b5b4e9f19617ceac5",
+      "build_date": "2026-10-03T08:58:43.979Z",
+      "channel": "development",
+      "name": "role-model-dev",
+      "endpoint": "http://127.0.0.1:3458",
+      "source_tree": "52b42ccc1d55ca39012f12214ce1e46caded0c2e",
+      "executable_sha256": "7ac9a92d45b5f9f58e30d40b164fa1995581ba8da17942c8326531e6cfde35df",
+      "core_payload_sha256": "7ac9a92d45b5f9f58e30d40b164fa1995581ba8da17942c8326531e6cfde35df"
+    }
+  }
+}

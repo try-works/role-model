@@ -1,0 +1,89 @@
+{
+  "request": {
+    "providerAccountId": "deepseek.personal.run105-pi-live-mock",
+    "providerId": "deepseek",
+    "providerKind": "provider-openai",
+    "orgScope": "personal",
+    "accountScope": "run105-pi-live",
+    "credentialRef": {
+      "backend": "local-file",
+      "ref": "<redacted-local-credential-ref>"
+    },
+    "authMode": "api-key-static",
+    "baseUrlOverride": "http://127.0.0.1:3465/v1",
+    "regionPolicy": {
+      "mode": "prefer",
+      "regions": [
+        "global"
+      ]
+    },
+    "allowedModels": [
+      "deepseek/deepseek-flash"
+    ],
+    "modelRoleBindings": [
+      {
+        "modelId": "deepseek/deepseek-flash",
+        "roleIds": [
+          "coder",
+          "writer"
+        ],
+        "roleAssignmentMode": "include",
+        "enabledRoleIds": [],
+        "disabledRoleIds": []
+      }
+    ],
+    "deniedModels": [],
+    "entitlementTags": [
+      "chat"
+    ],
+    "budgetPolicyRef": "budget.run105-pi-live",
+    "quotaPolicyRef": "quota.run105-pi-live",
+    "status": "active",
+    "healthStatus": "healthy",
+    "rotationState": "stable"
+  },
+  "status": 200,
+  "response": {
+    "providerAccountId": "deepseek.personal.run105-pi-live-mock",
+    "providerId": "deepseek",
+    "providerKind": "provider-openai",
+    "orgScope": "personal",
+    "accountScope": "run105-pi-live",
+    "credentialRef": {
+      "backend": "local-file",
+      "ref": "api-key/deepseek/deepseek.personal.deepseek-api-key"
+    },
+    "authMode": "api-key-static",
+    "regionPolicy": {
+      "mode": "prefer",
+      "regions": [
+        "global"
+      ]
+    },
+    "baseUrlOverride": "http://127.0.0.1:3465/v1",
+    "allowedModels": [
+      "deepseek/deepseek-flash"
+    ],
+    "modelRoleBindings": [
+      {
+        "modelId": "deepseek/deepseek-flash",
+        "roleIds": [
+          "coder",
+          "writer"
+        ],
+        "roleAssignmentMode": "include",
+        "enabledRoleIds": [],
+        "disabledRoleIds": []
+      }
+    ],
+    "deniedModels": [],
+    "entitlementTags": [
+      "chat"
+    ],
+    "budgetPolicyRef": "budget.run105-pi-live",
+    "quotaPolicyRef": "quota.run105-pi-live",
+    "status": "active",
+    "healthStatus": "healthy",
+    "rotationState": "stable"
+  }
+}

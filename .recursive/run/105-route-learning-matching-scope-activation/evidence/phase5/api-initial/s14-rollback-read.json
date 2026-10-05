@@ -1,0 +1,23 @@
+{
+  "probe": "s14-rollback-read",
+  "note": "rollback flag read",
+  "target": "sidecar http://127.0.0.1:62096 (child of :3458 host, pid 34760)",
+  "request": {
+    "method": "POST",
+    "url": "http://127.0.0.1:62096/operator/learning/route-ladder-rollback/read",
+    "headers": {
+      "authorization": "Bearer REDACTED",
+      "content-type": "application/json"
+    },
+    "body": {}
+  },
+  "response": {
+    "status": 401,
+    "statusText": "Unauthorized",
+    "contentType": null,
+    "ms": 3,
+    "body": "",
+    "bodyTruncated": 0
+  },
+  "capturedAt": "2026-10-03T13:28:36.100Z"
+}

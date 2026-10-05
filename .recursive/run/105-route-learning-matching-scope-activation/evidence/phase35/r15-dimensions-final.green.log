@@ -1,0 +1,50 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/packages/sqlite-memory
+
+(node:24316) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:25872) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:4288) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | test/run105-telemetry-failure-dimensions.test.ts > R15 necessary metadata boundary 16383
+R15 final dimensions bytes: 16383
+
+stdout | test/run105-telemetry-failure-size-limit.test.ts > R15 ASCII large allowed errorPreview persists primary failure (graph=false)
+R15 measured persisted UTF-8 bytes: 7081
+
+stdout | test/run105-telemetry-failure-dimensions.test.ts > R15 necessary metadata boundary 16384
+R15 final dimensions bytes: 16384
+
+stdout | test/run105-telemetry-failure-size-limit.test.ts > R15 UTF-8 large allowed errorPreview persists primary failure (graph=false)
+R15 measured persisted UTF-8 bytes: 7065
+
+stdout | test/run105-telemetry-failure-dimensions.test.ts > R15 necessary metadata boundary 16385
+R15 actual dimensions reproduction: runtime telemetry dimensions_json exceeds 16384 bytes; externalize rich content via artifactRefs
+
+stdout | test/run105-telemetry-failure-size-limit.test.ts > R15 ASCII large allowed errorPreview persists primary failure (graph=true)
+R15 measured persisted UTF-8 bytes: 7313
+
+ ✓ test/run94-sp48-null-retain.test.ts (4 tests) 1047ms
+stdout | test/run105-telemetry-failure-dimensions.test.ts > R15 exact saved live dimensions input persists (graph=false)
+R15 final dimensions bytes: 1790
+
+stdout | test/run105-telemetry-failure-size-limit.test.ts > R15 UTF-8 large allowed errorPreview persists primary failure (graph=true)
+R15 measured persisted UTF-8 bytes: 7297
+
+stdout | test/run105-telemetry-failure-dimensions.test.ts > R15 exact saved live dimensions input persists (graph=true)
+R15 final dimensions bytes: 2014
+
+stdout | test/run105-telemetry-failure-dimensions.test.ts > R15 dimensions bound Unicode lists and aggregate while preserving primary facts and privacy
+R15 final dimensions bytes: 8969
+
+ ✓ test/run105-telemetry-failure-dimensions.test.ts (9 tests) 1762ms
+   ✓ R15 dimensions bound Unicode lists and aggregate while preserving primary facts and privacy  332ms
+ ✓ test/run105-telemetry-failure-size-limit.test.ts (16 tests) 2247ms
+   ✓ R15 ASCII large allowed errorPreview persists primary failure (graph=true)  341ms
+
+ Test Files  3 passed (3)
+      Tests  29 passed (29)
+   Start at  18:42:59
+   Duration  4.62s (transform 1.16s, setup 0ms, collect 2.50s, tests 5.06s, environment 2ms, prepare 2.28s)
+

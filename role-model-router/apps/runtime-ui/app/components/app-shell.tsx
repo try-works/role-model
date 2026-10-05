@@ -260,8 +260,24 @@ export function AppShell({ children }: { children: ReactNode }) {
       data-slot="role-model-page-shell"
       className="flex h-screen w-full overflow-hidden bg-background text-foreground"
     >
-      <Sidebar {...footer} navItems={navItems} className="h-full shrink-0" />
+      <Sidebar {...footer} navItems={navItems} className="hidden h-full shrink-0 md:flex" />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-background">
+        <nav
+          aria-label="Primary navigation"
+          className="flex min-h-11 shrink-0 gap-1 overflow-x-auto border-b border-border bg-background px-2 py-1 md:hidden"
+        >
+          {navItems.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              aria-current={item.active ? "page" : undefined}
+              className={`min-h-11 shrink-0 rounded-md px-3 text-sm ${item.active ? "bg-muted font-medium text-foreground" : "text-muted-foreground"}`}
+              onClick={item.onSelect}
+            >
+              {item.label}
+            </button>
+          ))}
+        </nav>
         <SubPageHeaderBar title={title} theme={theme} onThemeChange={handleThemeChange}>
           {actions}
         </SubPageHeaderBar>

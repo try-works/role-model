@@ -1,0 +1,51 @@
+(node:21492) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✖ run105 R7/C6: a legacy store migrates in place without a SCHEMA_VERSION bump (additive marker) (180.8476ms)
+✖ run105 R7: a fresh store has the ladder table and WAL from the first open (108.6035ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 0
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 553.5668
+
+✖ failing tests:
+
+test at tests\track-b\run105-r07-rollout-key-migration.test.mjs:18:1
+✖ run105 R7/C6: a legacy store migrates in place without a SCHEMA_VERSION bump (additive marker) (180.8476ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'pack:legacy'
+  - null
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/105-route-learning-matching-scope-activation/tests/track-b/run105-r07-rollout-key-migration.test.mjs:59:12)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'pack:legacy',
+    expected: null,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\track-b\run105-r07-rollout-key-migration.test.mjs:100:1
+✖ run105 R7: a fresh store has the ladder table and WAL from the first open (108.6035ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(columns.includes("role_id"))
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/105-route-learning-matching-scope-activation/tests/track-b/run105-r07-rollout-key-migration.test.mjs:109:12)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+EXIT=1

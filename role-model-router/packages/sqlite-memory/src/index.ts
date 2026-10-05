@@ -32,9 +32,11 @@ import {
 } from "./history-policy.js";
 import {
   LEGACY_INLINE_CAP_BYTES,
+  boundRuntimeTelemetryFailureStub,
   buildCompactRuntimeObservationStub,
   hydrateRuntimeObservationGraphPointer,
   isDegradedCaptureObservation as isDegradedCaptureObservationRecord,
+  projectRuntimeTelemetryFailureDimensions,
   readRuntimeObservationStorageState,
   recordRuntimeObservationGraphReference,
   resolveRuntimeObservationStoragePayload,
@@ -5099,7 +5101,10 @@ export function persistRuntimeTelemetryFailure(input: PersistRuntimeTelemetryFai
   let artifactRef = input.artifactRef;
   let createdArtifact: import("./legacy-migration.js").LegacyArtifactWriteResult | undefined;
   if (input.observation && input.graphStore && !artifactRef) {
-    const content = JSON.stringify(input.observation);
+    const content = JSON.stringify({
+      ...input.observation,
+      ...(input.dimensions ? { telemetryDimensions: input.dimensions } : {}),
+    });
     const contentHash = createHash("sha256").update(content).digest("hex");
     createdArtifact = input.graphStore.write({
       scopeId: input.graphStore.scopeId,
@@ -5133,6 +5138,7 @@ export function persistRuntimeTelemetryFailure(input: PersistRuntimeTelemetryFai
         // Failure rows are classification stubs. Diagnostics and inspection captures may
         // contain provider errors or raw response bodies, so they remain graph/artifact
         // content and are never copied into this SQLite row.
+        boundRuntimeTelemetryFailureStub(stub);
         const payload = JSON.stringify(stub);
         if (Buffer.byteLength(payload, "utf8") > LEGACY_INLINE_CAP_BYTES) {
           throw new Error(
@@ -5170,7 +5176,12 @@ export function persistRuntimeTelemetryFailure(input: PersistRuntimeTelemetryFai
         .prepare(
           `INSERT OR REPLACE INTO runtime_telemetry_records (${RUNTIME_TELEMETRY_INSERT_COLUMNS.join(", ")}) VALUES (${RUNTIME_TELEMETRY_INSERT_COLUMNS.map(() => "?").join(", ")})`,
         )
-        .run(...runtimeTelemetryInsertValues(telemetryRecord));
+        .run(
+          ...runtimeTelemetryInsertValues({
+            ...telemetryRecord,
+            dimensions: projectRuntimeTelemetryFailureDimensions(input.dimensions, artifactRef),
+          }),
+        );
     });
   } catch (error) {
     if (createdArtifact) {

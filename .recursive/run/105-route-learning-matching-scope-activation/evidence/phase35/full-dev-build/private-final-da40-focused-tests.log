@@ -1,0 +1,30 @@
+✔ run105 every canonical extension package exactly matches runtime capabilities and protocol (20.2365ms)
+(node:18988) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ production: finalized authentic group fixtures become stored floor-filtered ladder without promotion (104.7494ms)
+✔ production: repeated permuted duplicate evidence does not advance version or freshness (81.1382ms)
+✔ production: exact role/task isolates floors; all below-floor scope has no ladder (79.0698ms)
+✔ production: removed admitted rungs survive unavailable and leave completeness denominator (118.787ms)
+✔ production: rollback ON pauses rewrite; roll-forward reason/time survive later evidence (161.5794ms)
+✔ production: stale evidence subsets and conflicting group ids never overwrite authoritative snapshot (81.6328ms)
+✔ production: worker dispatcher refuses unauthenticated cross-worker file-path writes (5.1803ms)
+✔ production: genuine EvaluationCore finalization reaches real store (305.8036ms)
+✔ production: unknown evidence time stays unknown without fabricated freshness (75.6953ms)
+✔ production: finalized evidence with another runtime's reference proofs is rejected (43.3355ms)
+✔ production: result refers to actually stored content-addressed evidence document (73.6391ms)
+✔ production: store CAS options preserve rollback and refused writes are never reported written (2.1203ms)
+✔ safety resume: below-floor update retains authoritative ranks and measured effective admission (141.6301ms)
+✔ safety: mixed policy regression freezes prior snapshot and defers new admissions (112.7478ms)
+✔ safety resume: all-floor-empty recompute still applies USER removals (103.1374ms)
+✔ safety resume: caller taxonomy never fabricates provenance on old or unknown evidence (155.0832ms)
+✔ safety resume: 65 historical admitted rungs produce explicit bounded refusal without deleting history (158.9782ms)
+✔ safety resume: rejected floor evidence cannot refresh rank provenance or prior admission policy (111.8649ms)
+✔ safety resume: oversized evidence metadata refuses explicitly before writing rather than dropping provenance (116.5255ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 20
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2572.221

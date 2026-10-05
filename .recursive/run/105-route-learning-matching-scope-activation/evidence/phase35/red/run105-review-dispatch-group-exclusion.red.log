@@ -1,0 +1,270 @@
+Exit 1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/run105-review-dispatch.test.ts (36 tests | 1 failed) 1335ms
+   ✓ new endpoint records now and challenges future-idle ladder using the real rung source 63ms
+   ✓ focus fill stays depth-first when another task becomes busier and gains a new endpoint 81ms
+   ✓ terminal provider branches do not advance; finalized loss advances on next tick 63ms
+   ✓ challengeBatchSize runs sequential finalized comparisons and bounds one dispatch 85ms
+   ✓ finalized challenger win stops descent before ladder publication catches up 43ms
+   ✓ rollback pauses and roll forward resumes the pending challenge 87ms
+   ✓ stage census failure fails closed rather than replaying scope-wide 5ms
+   ✓ absent finalized callback fails closed and reports required binding 2ms
+   ✓ request-volume ties use most-unfilled and never dispatch other task captures 27ms
+   ✓ endpoint arrival marks partial tasks eligible without preempting an in-flight focus fill 65ms
+   ✓ concurrent queue claims never execute same task arms concurrently 32ms
+   ✓ queue offer holds one rung and claimed worker executes the same narrowed pair 48ms
+   ✓ finalization failure still settles the actual disposition write before tick returns 31ms
+   ✓ expired complete ladder refreshes one pair and records a new window only after finalized comparison 46ms
+   ✓ removed endpoint stale completeness never fabricates an endpoint arrival challenge 31ms
+   ✓ multiple and later endpoint arrivals each start at the top after prior admission readback 75ms
+   ✓ queue refusal clears pending rung for a genuine next-cycle offer retry 41ms
+   ✓ unavailable challenged rung is skipped without waiting for its absent finalized verdict 72ms
+   ✓ restart rebuilds top-down cursor from distinct durable finalized groups even when old capture is absent 33ms
+   ✓ placed below-floor challenger replenishes distinct captures until K groups then waits genuine publication 149ms
+   ✓ unavailable durable enumeration fails closed and never treats null as empty evidence 4ms
+   ✓ historical replayable source seam retains exact task classification and actual source receipt 21ms
+   ✓ restart preserves recorded challenge cutoff rather than rewriting now and hiding durable groups 19ms
+   ✓ stale exact-pair finalized signal never advances a newly started challenge 25ms
+   ✓ executor failure before any branches resets pending for a genuine bounded retry 31ms
+   ✓ losing challenger's low own confidence cannot borrow high winning judge confidence for K floor 12ms
+   ✓ restart recovers finalized complete refresh from durable group without redispatching absent old source 3ms
+   ✓ restart queued durable pair is not offered again and claimed worker resumes exact source pair 13ms
+   ✓ restart running or awaiting-evaluation durable pair never starts duplicate provider work 6ms
+   ✓ restart awaiting-evaluation complete refresh waits real finalization then resets window 4ms
+   ✓ real pre-replay queue identity recovers without inventing a replay job id 11ms
+   ✓ same immutable historical capsule and pair create fresh bounded replay jobs for distinct finalized rounds 32ms
+   ✓ explicit dispatch round id is stable on retries and changes only a completed round context 1ms
+   ✓ repeat round cannot consume same old group again while new evaluation remains pending 42ms
+   × repeated capsule exact-finalization lookup excludes stable distinct previously consumed group ids 24ms
+     → expected [ { roleId: 'role', …(5) } ] to deep equally contain ObjectContaining{…}
+   ✓ missing challenged-rung capture never substitutes a different source pair 1ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 35 passed (36)
+   Start at  19:15:37
+   Duration  6.14s (transform 2.01s, setup 0ms, collect 4.18s, tests 1.34s, environment 0ms, prepare 221ms)
+
+
+stderr | test/run105-review-dispatch.test.ts > new endpoint records now and challenges future-idle ladder using the real rung source
+[run104-pending] captures=3 scoped=0 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > new endpoint records now and challenges future-idle ladder using the real rung source
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > focus fill stays depth-first when another task becomes busier and gains a new endpoint
+[run104-pending] captures=2 scoped=1 first=fill-a,idle-a only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > focus fill stays depth-first when another task becomes busier and gains a new endpoint
+[run104-pending] captures=2 scoped=1 first=fill-a-next,idle-a only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > terminal provider branches do not advance; finalized loss advances on next tick
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > terminal provider branches do not advance; finalized loss advances on next tick
+[run104-pending] captures=3 scoped=0 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > terminal provider branches do not advance; finalized loss advances on next tick
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > challengeBatchSize runs sequential finalized comparisons and bounds one dispatch
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > challengeBatchSize runs sequential finalized comparisons and bounds one dispatch
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > finalized challenger win stops descent before ladder publication catches up
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > finalized challenger win stops descent before ladder publication catches up
+[run104-pending] captures=3 scoped=0 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > rollback pauses and roll forward resumes the pending challenge
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > rollback pauses and roll forward resumes the pending challenge
+[run104-pending] captures=3 scoped=0 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > rollback pauses and roll forward resumes the pending challenge
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > request-volume ties use most-unfilled and never dispatch other task captures
+[run104-pending] captures=3 scoped=1 first=few-a,more-a,never-a only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > endpoint arrival marks partial tasks eligible without preempting an in-flight focus fill
+[run104-pending] captures=2 scoped=1 first=fill-a,idle-a only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > endpoint arrival marks partial tasks eligible without preempting an in-flight focus fill
+[run104-pending] captures=2 scoped=1 first=fill-a-next,idle-a only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > concurrent queue claims never execute same task arms concurrently
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=idle-a pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > queue offer holds one rung and claimed worker executes the same narrowed pair
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > queue offer holds one rung and claimed worker executes the same narrowed pair
+[run104-pending] captures=3 scoped=0 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > queue offer holds one rung and claimed worker executes the same narrowed pair
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=idle-a pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > finalization failure still settles the actual disposition write before tick returns
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > expired complete ladder refreshes one pair and records a new window only after finalized comparison
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > expired complete ladder refreshes one pair and records a new window only after finalized comparison
+[run104-pending] captures=3 scoped=0 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > expired complete ladder refreshes one pair and records a new window only after finalized comparison
+[run104-pending] captures=3 scoped=0 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > expired complete ladder refreshes one pair and records a new window only after finalized comparison
+[run104-pending] captures=3 scoped=0 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > removed endpoint stale completeness never fabricates an endpoint arrival challenge
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > multiple and later endpoint arrivals each start at the top after prior admission readback
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > multiple and later endpoint arrivals each start at the top after prior admission readback
+[run104-pending] captures=1 scoped=1 first=idle-new-later only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > queue refusal clears pending rung for a genuine next-cycle offer retry
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > queue refusal clears pending rung for a genuine next-cycle offer retry
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > unavailable challenged rung is skipped without waiting for its absent finalized verdict
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > unavailable challenged rung is skipped without waiting for its absent finalized verdict
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > restart rebuilds top-down cursor from distinct durable finalized groups even when old capture is absent
+[run104-pending] captures=1 scoped=1 first=idle-b-fresh only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > placed below-floor challenger replenishes distinct captures until K groups then waits genuine publication
+[run104-pending] captures=2 scoped=1 first=idle-a-second,idle-a-third only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > placed below-floor challenger replenishes distinct captures until K groups then waits genuine publication
+[run104-pending] captures=2 scoped=1 first=idle-a-second,idle-a-third only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > placed below-floor challenger replenishes distinct captures until K groups then waits genuine publication
+[run104-pending] captures=2 scoped=0 first=idle-a-second,idle-a-third only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > historical replayable source seam retains exact task classification and actual source receipt
+[run104-pending] captures=1 scoped=1 first=idle-a-history only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > restart preserves recorded challenge cutoff rather than rewriting now and hiding durable groups
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > stale exact-pair finalized signal never advances a newly started challenge
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > executor failure before any branches resets pending for a genuine bounded retry
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > executor failure before any branches resets pending for a genuine bounded retry
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > losing challenger's low own confidence cannot borrow high winning judge confidence for K floor
+[run104-pending] captures=1 scoped=1 first=idle-c-replenish only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > restart recovers finalized complete refresh from durable group without redispatching absent old source
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > restart queued durable pair is not offered again and claimed worker resumes exact source pair
+[run104-pending] captures=3 scoped=0 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > restart queued durable pair is not offered again and claimed worker resumes exact source pair
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=idle-a pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > restart running or awaiting-evaluation durable pair never starts duplicate provider work
+[run104-pending] captures=3 scoped=0 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > restart running or awaiting-evaluation durable pair never starts duplicate provider work
+[run104-pending] captures=3 scoped=0 first=idle-a,idle-b,idle-c only=idle-a pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > restart running or awaiting-evaluation durable pair never starts duplicate provider work
+[run104-pending] captures=3 scoped=0 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > restart running or awaiting-evaluation durable pair never starts duplicate provider work
+[run104-pending] captures=3 scoped=0 first=idle-a,idle-b,idle-c only=idle-a pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > restart awaiting-evaluation complete refresh waits real finalization then resets window
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > restart awaiting-evaluation complete refresh waits real finalization then resets window
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > real pre-replay queue identity recovers without inventing a replay job id
+[run104-pending] captures=3 scoped=0 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > real pre-replay queue identity recovers without inventing a replay job id
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=idle-a pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > same immutable historical capsule and pair create fresh bounded replay jobs for distinct finalized rounds
+[run104-pending] captures=1 scoped=1 first=idle-a only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > same immutable historical capsule and pair create fresh bounded replay jobs for distinct finalized rounds
+[run104-pending] captures=1 scoped=1 first=idle-a only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > same immutable historical capsule and pair create fresh bounded replay jobs for distinct finalized rounds
+[run104-pending] captures=1 scoped=0 first=idle-a only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > repeat round cannot consume same old group again while new evaluation remains pending
+[run104-pending] captures=1 scoped=1 first=idle-a only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > repeat round cannot consume same old group again while new evaluation remains pending
+[run104-pending] captures=1 scoped=1 first=idle-a only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > repeat round cannot consume same old group again while new evaluation remains pending
+[run104-pending] captures=1 scoped=1 first=idle-a only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > repeat round cannot consume same old group again while new evaluation remains pending
+[run104-pending] captures=1 scoped=1 first=idle-a only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > repeated capsule exact-finalization lookup excludes stable distinct previously consumed group ids
+[run104-pending] captures=1 scoped=1 first=idle-a only=none pendingCount=n/a captureCount=n/a
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run105-review-dispatch.test.ts > repeated capsule exact-finalization lookup excludes stable distinct previously consumed group ids
+AssertionError: expected [ { roleId: 'role', …(5) } ] to deep equally contain ObjectContaining{…}
+
+- Expected: 
+ObjectContaining {
+  "excludedComparisonGroupIds": [
+    "real-consumed",
+  ],
+}
+
++ Received: 
+[
+  {
+    "againstEndpointId": "a",
+    "captureRef": "idle-a",
+    "newEndpointId": "new",
+    "roleId": "role",
+    "sinceMs": 900,
+    "taskTypeId": "idle",
+  },
+]
+
+ ❯ test/run105-review-dispatch.test.ts:389:21
+    387|     readFinalizedRouteChallenge: async request => { requested.push(req…
+    388|   cleanups.push(() => loop.stop()); await loop.tick();
+    389|   expect(requested).toContainEqual(expect.objectContaining({ excludedC…
+       |                     ^
+    390| });
+    391| test("missing challenged-rung capture never substitutes a different so…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+

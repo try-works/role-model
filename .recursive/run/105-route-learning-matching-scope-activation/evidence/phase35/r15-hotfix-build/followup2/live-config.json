@@ -1,0 +1,160 @@
+{
+  "status": 200,
+  "body": {
+    "applied": true,
+    "path": "E:\\tmp\\run105-r15-verification2-state\\state\\runtime-config.yaml",
+    "config": {
+      "version": "1.1",
+      "routingStrategy": "baseline",
+      "routingPosture": {
+        "mode": "baseline",
+        "scoringStrategy": "balanced",
+        "pinWeights": false,
+        "operator": {
+          "name": "balanced",
+          "weights": {
+            "quality": 0.3,
+            "latency": 0.2,
+            "throughput": 0.1,
+            "cost": 0.2,
+            "reliability": 0.15,
+            "preference": 0.05
+          }
+        },
+        "degradations": []
+      },
+      "executionMode": "remote_only",
+      "llamaSwap": {
+        "enabled": false,
+        "models": [],
+        "process": {
+          "command": null,
+          "args": [],
+          "env": {},
+          "cwd": null,
+          "startupTimeoutMs": null
+        }
+      },
+      "liteLLM": {
+        "enabled": false,
+        "providers": [],
+        "routerSettings": {},
+        "litellmSettings": {},
+        "process": {
+          "command": null,
+          "args": [],
+          "env": {},
+          "cwd": null,
+          "startupTimeoutMs": null
+        }
+      },
+      "modelAliases": [
+        {
+          "aliasId": "default.decision-only",
+          "mode": "basic",
+          "modelIds": [
+            "deepseek/deepseek-v4-pro"
+          ]
+        },
+        {
+          "aliasId": "baseline.decision-only",
+          "mode": "basic",
+          "modelIds": [
+            "deepseek/deepseek-v4-pro"
+          ]
+        },
+        {
+          "aliasId": "controller.decision-only",
+          "mode": "intelligent",
+          "modelIds": [
+            "deepseek/deepseek-v4-pro"
+          ]
+        },
+        {
+          "aliasId": "difficulty.decision-only",
+          "mode": "difficulty",
+          "modelIds": [
+            "deepseek/deepseek-v4-pro"
+          ]
+        },
+        {
+          "aliasId": "hybrid.decision-only",
+          "mode": "hybrid",
+          "modelIds": [
+            "deepseek/deepseek-v4-pro"
+          ]
+        },
+        {
+          "aliasId": "default.hybrid",
+          "mode": "basic",
+          "modelIds": [
+            "deepseek/deepseek-v4-pro"
+          ]
+        },
+        {
+          "aliasId": "baseline.hybrid",
+          "mode": "basic",
+          "modelIds": [
+            "deepseek/deepseek-v4-pro"
+          ]
+        },
+        {
+          "aliasId": "controller.hybrid",
+          "mode": "intelligent",
+          "modelIds": [
+            "deepseek/deepseek-v4-pro"
+          ]
+        },
+        {
+          "aliasId": "difficulty.hybrid",
+          "mode": "difficulty",
+          "modelIds": [
+            "deepseek/deepseek-v4-pro"
+          ]
+        },
+        {
+          "aliasId": "hybrid.hybrid",
+          "mode": "hybrid",
+          "modelIds": [
+            "deepseek/deepseek-v4-pro"
+          ]
+        },
+        {
+          "aliasId": "default.remote-only",
+          "mode": "basic",
+          "modelIds": [
+            "deepseek/deepseek-v4-pro"
+          ]
+        },
+        {
+          "aliasId": "baseline.remote-only",
+          "mode": "basic",
+          "modelIds": [
+            "deepseek/deepseek-v4-pro"
+          ]
+        },
+        {
+          "aliasId": "controller.remote-only",
+          "mode": "intelligent",
+          "modelIds": [
+            "deepseek/deepseek-v4-pro"
+          ]
+        },
+        {
+          "aliasId": "difficulty.remote-only",
+          "mode": "difficulty",
+          "modelIds": [
+            "deepseek/deepseek-v4-pro"
+          ]
+        },
+        {
+          "aliasId": "hybrid.remote-only",
+          "mode": "hybrid",
+          "modelIds": [
+            "deepseek/deepseek-v4-pro"
+          ]
+        }
+      ]
+    }
+  }
+}

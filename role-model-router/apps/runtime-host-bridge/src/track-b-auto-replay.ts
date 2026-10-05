@@ -1,5 +1,7 @@
 import { createHash } from "node:crypto";
 
+import { classifyRouteLadderServingState } from "@role-model-router/core";
+
 import { type ReplayLedger, replayBudgetAvailable } from "./track-b-replay-ledger.js";
 import {
   type ReplayCandidateEligibilityProfile,
@@ -310,6 +312,8 @@ export function buildAutoReplayIdempotencyKey(input: {
    * contract revision mints a new job instead of colliding, and the previous job retires on its deadline.
    */
   readonly providerCallBudget?: number;
+  /** Explicit completed-comparison round; stable on retries, never a reservation nonce. */
+  readonly dispatchRoundId?: string;
 }): string {
   const captureRef = input.captureRef.trim();
   if (!captureRef) throw new Error("auto replay idempotency requires a capture reference");
@@ -330,7 +334,14 @@ export function buildAutoReplayIdempotencyKey(input: {
       ? Number(input.providerCallBudget)
       : null;
   const contractDigest = createHash("sha256")
-    .update(JSON.stringify({ policySetDigest, candidateEndpointIds, providerCallBudget }))
+    .update(
+      JSON.stringify({
+        policySetDigest,
+        candidateEndpointIds,
+        providerCallBudget,
+        ...(input.dispatchRoundId ? { dispatchRoundId: input.dispatchRoundId } : {}),
+      }),
+    )
     .digest("hex");
   return `auto:${captureRef}:${contractDigest}`;
 }
@@ -416,6 +427,27 @@ export interface AutoReplayCapture {
    */
   readonly requirements?: ReplayRequestRequirements;
   readonly messages?: readonly unknown[];
+  /**
+   * Run 105 R1/R8: the request's route classification. Queue admission requires a (role, task)
+   * classification - a capture without BOTH ids is never admitted to the replay/eval queue and
+   * never gets an advisory, because a scope-wide pack does not exist. The tick's classification
+   * gate reads these and refuses by name; the projection supplies them from the capture's
+   * recorded decision.
+   */
+  readonly roleId?: string | null;
+  readonly taskTypeId?: string | null;
+  /**
+   * Run 105: this capture already holds a TERMINAL durable replay disposition (`replayed`/`refused`),
+   * read from the replay-disposition store at the same scope as the corpus.
+   *
+   * The corpus read stays a faithful projection and still ENUMERATES such a capture — this is an
+   * annotation, never a drop, so the operator readback and the audit trail keep showing everything the
+   * telemetry and the exact capsule read agree exists. The dispatch planner is the layer that acts on it:
+   * it skips an annotated capture when choosing a challenge source, so the tick advances to a fresh
+   * capture instead of re-picking one whose dispatch would only be refused as
+   * `duplicate_already_processed`.
+   */
+  readonly replayDispositionSettled?: boolean;
 }
 
 export interface AutoReplayBranch {
@@ -677,7 +709,8 @@ export function resolveAutoReplayExecutorTimeoutMs(input: {
   );
 }
 
-type AutoReplayExecutorRequest = {
+export type AutoReplayExecutorRequest = {
+  readonly dispatchRoundId?: string;
   readonly capture: AutoReplayCapture;
   readonly candidates: readonly string[];
   readonly toolPolicy: ReplayToolPolicy;
@@ -831,6 +864,7 @@ export async function runAutoReplayTick(input: {
   readonly ledger: ReplayLedger;
   readonly policySet: ReplayPolicySet;
   readonly executor: (input: {
+    readonly dispatchRoundId?: string;
     readonly capture: AutoReplayCapture;
     readonly candidates: readonly string[];
     readonly toolPolicy: ReplayToolPolicy;
@@ -904,6 +938,7 @@ export async function runAutoReplayTick(input: {
       readonly captureRef: string;
       readonly endpointIds: readonly string[];
       readonly policySetDigest: string;
+      readonly dispatchRoundId?: string;
     }) => Promise<{ readonly enqueued: boolean; readonly reason?: string }>;
   };
   /**
@@ -911,6 +946,17 @@ export async function runAutoReplayTick(input: {
    * endpoint) keeps the pre-existing selection behaviour for that endpoint.
    */
   readonly endpointProfiles?: readonly ReplayCandidateEligibilityProfile[];
+  /**
+   * Run 105 R8: when the dispatcher holds a focus task, its ladder gap decides the counterfactual.
+   * The narrowing applies to the focused capture ONLY (matched by ref), so every other capture keeps
+   * the rotation behaviour above, and one dispatch performs exactly one pairwise comparison against
+   * the as-yet-unranked configured endpoint the walk selected.
+   */
+  readonly focusCandidateEndpointId?: string | null;
+  readonly focusCaptureRef?: string | null;
+  /** Stage-3 runtime requires classification; omitted preserves pre-stage producers. */
+  readonly requireRouteClassification?: boolean;
+  readonly dispatchRoundId?: string;
 }): Promise<AutoReplayTickResult> {
   const maxCapturesPerTick = input.maxCapturesPerTick ?? DEFAULT_MAX_CAPTURES_PER_TICK;
   const tickBudgetMs = input.tickBudgetMs ?? DEFAULT_TICK_BUDGET_MS;
@@ -958,6 +1004,35 @@ export async function runAutoReplayTick(input: {
     }
     processed += 1;
     cursor = capture.captureRef;
+    // Namespaced accounting identity only. The capture and actual policy contract are unchanged.
+    const dispatchRoundId =
+      input.requireRouteClassification === true ? input.dispatchRoundId : undefined;
+    const ledgerPolicyDigest = dispatchRoundId
+      ? `${input.policySet.policySetDigest}:round:${dispatchRoundId}`
+      : input.policySet.policySetDigest;
+
+    /**
+     * Run 105 R1/R8: queue admission requires a (role, task) classification. A capture without BOTH
+     * ids is never admitted - a scope-wide pack does not exist, so there is no ladder to fill and no
+     * advisory to serve - and the class is named so the census can count it instead of watching the
+     * captures disappear. This sits ahead of every other gate: an unclassified capture is refused
+     * for what it is, never for a downstream symptom.
+     */
+    const routeClassification = classifyRouteLadderServingState({
+      roleId: capture.roleId,
+      taskTypeId: capture.taskTypeId,
+    });
+    if (input.requireRouteClassification === true && !routeClassification.classified) {
+      refused += 1;
+      emit({
+        captureRef: capture.captureRef,
+        outcome: "refused",
+        code: routeClassification.code as ReplayRefusalCode,
+        detail:
+          "the capture carries no (role, task) classification, so it is never admitted to the replay/eval queue and gets no advisory",
+      });
+      continue;
+    }
 
     const judgeEndpointId =
       typeof input.judgeEndpointId === "string" && input.judgeEndpointId.trim().length > 0
@@ -1018,18 +1093,59 @@ export async function runAutoReplayTick(input: {
         ? undefined
         : readReplayRequestRequirements({ messages: capture.messages }));
     const rejectedArms: ReplayCandidateRejection[] = [];
+    /**
+     * Run 105 R8: the focus task's ladder gap owns the counterfactual for the capture the dispatcher
+     * is filling. The narrowing is applied to THAT capture only (matched by ref) and pins the plan
+     * to the single endpoint the top-down walk selected, so the dispatch is exactly one pairwise
+     * comparison against an as-yet-unranked configured endpoint. Every other capture keeps the
+     * rotation below, and the narrowing can never widen the configured pool: an endpoint that is not
+     * configured (or is excluded, unhealthy, the source, or ineligible) is still filtered out by
+     * selectReplayCandidates, which is why this is an input to it rather than a replacement for it.
+     */
+    const focusNarrowingEndpointId =
+      typeof input.focusCandidateEndpointId === "string" &&
+      input.focusCandidateEndpointId.trim().length > 0 &&
+      typeof input.focusCaptureRef === "string" &&
+      input.focusCaptureRef === capture.captureRef
+        ? input.focusCandidateEndpointId.trim()
+        : null;
     const candidates = selectReplayCandidates({
-      configuredEndpointIds: input.configuredEndpointIds,
+      ...(focusNarrowingEndpointId
+        ? {
+            configuredEndpointIds: input.configuredEndpointIds.includes(focusNarrowingEndpointId)
+              ? [focusNarrowingEndpointId]
+              : [],
+          }
+        : { configuredEndpointIds: input.configuredEndpointIds }),
       ...(input.healthyEndpointIds ? { healthyEndpointIds: input.healthyEndpointIds } : {}),
       sourceEndpointId: capture.sourceEndpointId,
-      ...(effectiveJudgeEndpointId ? { excludedEndpointIds: [effectiveJudgeEndpointId] } : {}),
+      // Run 98 addendum 30 S1/S2 with run 100 addendum 22: a comparison must not be scored by one of its own
+      // arms, so the EFFECTIVE judge (the configured judge, or the deterministic alternative when the configured
+      // judge is the capture's own source) is excluded from the planned arms.
+      //
+      // Run 105 bug 3 carves out exactly one case: when the arm being planned IS the rung the ladder walk is
+      // admitting (`focusNarrowingEndpointId`). Excluding the judge there narrowed the plan to nothing and
+      // refused the capture `no_distinct_candidate_configured`, so the controller endpoint could never be
+      // admitted and the ladder could never complete. In that one case the comparison keeps the judge as an arm
+      // and the evaluation de-conflicts: `dedupeJudgeAgainstPair` scores it with an alternative judge instead
+      // (observed live as `evaluation_judge_switches: kimi-k3 -> deepseek-flash`). Every other capture still
+      // excludes the judge, so no battle is ever judged by one of its own arms.
+      ...(effectiveJudgeEndpointId && effectiveJudgeEndpointId !== focusNarrowingEndpointId
+        ? { excludedEndpointIds: [effectiveJudgeEndpointId] }
+        : {}),
       // Run 98 addendum 33 S3: rotate the counterfactual with the capture, so the comparison graph grows
-      // edges instead of every capture comparing the same two candidates.
-      rotationKey: capture.captureRef,
+      // edges instead of every capture comparing the same two candidates. A narrowed (focus) plan names
+      // its own single arm, so the rotation must not reorder it.
+      ...(focusNarrowingEndpointId ? {} : { rotationKey: capture.captureRef }),
       ...(requestRequirements ? { requirements: requestRequirements } : {}),
       ...(input.endpointProfiles ? { endpointProfiles: input.endpointProfiles } : {}),
       onRejected: (rejection) => rejectedArms.push(rejection),
     });
+    if (process.env.ROLE_MODEL_FOCUS_DIAG) {
+      console.error(
+        `[cand-diag] ref=${capture.captureRef.slice(0, 12)} source=${capture.sourceEndpointId ? capture.sourceEndpointId.split(".").pop() : null} focus=${focusNarrowingEndpointId ? focusNarrowingEndpointId.split(".").pop() : null} judge=${effectiveJudgeEndpointId ? effectiveJudgeEndpointId.split(".").pop() : null} reqCap=${JSON.stringify(requestRequirements ? requestRequirements.requiredCapabilities : [])} reqMod=${JSON.stringify(requestRequirements ? requestRequirements.requiredModalities : [])} candidates=${candidates.map((c) => c.split(".").pop()).join(",")} rejected=${rejectedArms.map((r) => `${r.endpointId.split(".").pop()}:${r.code}`).join(",")} cfg=${(input.configuredEndpointIds || []).map((c) => c.split(".").pop()).join(",")} healthy=${(input.healthyEndpointIds || []).map((h) => h.split(".").pop()).join(",")}`,
+      );
+    }
     const emitCapture = (row: Omit<AutoReplayDisposition, "captureRef" | "rejectedArms">): void => {
       emit({
         captureRef: capture.captureRef,
@@ -1075,7 +1191,7 @@ export async function runAutoReplayTick(input: {
       budgetAvailable: replayBudgetAvailable(status),
       alreadyProcessed: input.ledger.hasTerminalCounterfactual(
         capture.captureRef,
-        input.policySet.policySetDigest,
+        ledgerPolicyDigest,
       ),
       sourceIsReplayProduced: capture.replayProduced === true,
       policyIdsResolvable: true,
@@ -1166,7 +1282,7 @@ export async function runAutoReplayTick(input: {
 
     const reservation = input.ledger.reserve({
       captureRef: capture.captureRef,
-      policySetDigest: input.policySet.policySetDigest,
+      policySetDigest: ledgerPolicyDigest,
       candidateDispatches: dispatchCandidates.length,
     });
     if (!reservation.accepted) {
@@ -1193,6 +1309,7 @@ export async function runAutoReplayTick(input: {
         captureRef: capture.captureRef,
         endpointIds: [...dispatchCandidates],
         policySetDigest: input.policySet.policySetDigest,
+        ...(dispatchRoundId ? { dispatchRoundId } : {}),
       });
       if (!offered.enqueued) {
         // The offer can only be refused by the queue's own id/validation rules;
@@ -1202,6 +1319,11 @@ export async function runAutoReplayTick(input: {
           code: "replay_dispatch_offer_refused",
           detail: offered.reason ?? "the replay queue refused the offer",
         });
+        if (input.requireRouteClassification === true) {
+          input.ledger.release(reservation.reservationId);
+          deferred += 1;
+          continue; // Stage scheduler retries the offer; never secretly executes refused queue work.
+        }
       } else if (input.dispatchQueue.mode === "queue") {
         queued += 1;
         continue;
@@ -1216,6 +1338,7 @@ export async function runAutoReplayTick(input: {
         policySet: input.policySet,
         reservationId: reservation.reservationId,
         judgeEndpointId: effectiveJudgeEndpointId,
+        ...(dispatchRoundId ? { dispatchRoundId } : {}),
       });
     } catch (error) {
       input.ledger.release(reservation.reservationId);
@@ -1247,7 +1370,7 @@ export async function runAutoReplayTick(input: {
       const recorded = input.ledger.record({
         reservationId: reservation.reservationId,
         captureRef: capture.captureRef,
-        policySetDigest: input.policySet.policySetDigest,
+        policySetDigest: ledgerPolicyDigest,
         counterfactualRef: `cf:${capture.captureRef}`,
         dispatchKind: dispatch.kind,
         candidateEndpointId: dispatch.endpointId,
@@ -1327,7 +1450,7 @@ export async function runAutoReplayTick(input: {
     // that succeeded but whose branch/evaluation step failed stays retryable.
     input.ledger.completeCounterfactual({
       captureRef: capture.captureRef,
-      policySetDigest: input.policySet.policySetDigest,
+      policySetDigest: ledgerPolicyDigest,
     });
     input.ledger.release(reservation.reservationId);
     replayed += 1;

@@ -1,0 +1,805 @@
+{
+  "schemaVersion": "run105.full2.v1",
+  "verifiedAt": "2026-10-03T13:52:35.096Z",
+  "scope": "Run105 Phase5 responsive final: full2 exact paired development build; static seal + closure verification only",
+  "serverLaunched": false,
+  "portsTouched": false,
+  "stageOrProductionTouched": false,
+  "releasePath": "E:/tmp/run105-full2-public/role-model-router/dist/release/win32-x64",
+  "executablePath": "E:\\tmp\\run105-full2-public\\role-model-router\\dist\\release\\win32-x64\\role-model-dev.exe",
+  "publicIdentity": {
+    "root": "E:/tmp/run105-full2-public",
+    "commit": "7162930d76dc1c317c8d192a2e3fbbdcde6f878c",
+    "tree": "21149251eb844b2b3f345ce1e8a0e7d8ceec2803",
+    "branch": "recursive/105-full2-public",
+    "status": ""
+  },
+  "privateIdentity": {
+    "root": "E:/tmp/run105-full2-private",
+    "commit": "da40a115237432b248f6b5282a4ac42f8fb90179",
+    "tree": "148cbe9db5304ac6e9fc6b39d2b152fdd022bdde",
+    "branch": "recursive/105-full2-private",
+    "status": ""
+  },
+  "publicExpectedCommit": "7162930d76dc1c317c8d192a2e3fbbdcde6f878c",
+  "privateExpectedCommit": "da40a115237432b248f6b5282a4ac42f8fb90179",
+  "executableSha256": "ffc3f58a45992d72b5eae539e3450b9b5bded5954335567da64c219e17768d78",
+  "releaseManifestSha256": "7506ad615503f3b7f2f68a99585625aa2017786fffbdfa6459a187ad1a21bbb4",
+  "privateDistributionManifestSha256": "fedaa87fad8acb04b26365f5931f32d3e9ceba253f54f95d36ab917b0ebc38c2",
+  "stagedDistributionManifestSha256": "fedaa87fad8acb04b26365f5931f32d3e9ceba253f54f95d36ab917b0ebc38c2",
+  "artifactClosureVerified": true,
+  "artifactClosureEntryCount": 3,
+  "sourceSeal": {
+    "status": "sealed_clean",
+    "releaseEligible": true,
+    "privateClean": true,
+    "publicClean": true
+  },
+  "runtimeChannelContext": {
+    "channel": "development",
+    "scopeId": "standalone-runtime-dev",
+    "authorizationEpoch": 1
+  },
+  "releaseFiles": [
+    {
+      "path": "build/client/assets/agent-strategy-BU-f-gIG.js",
+      "bytes": 362,
+      "sha256": "200835d328740af8b038608296065a8a6cbe627d994cd1132b25c0f1416325a0"
+    },
+    {
+      "path": "build/client/assets/app-layout-B6AmaQMB.js",
+      "bytes": 14800,
+      "sha256": "a06e4c693e8853e52eb1c856da7f3cc04b1323053c9a9a86d89d2405f1db85d0"
+    },
+    {
+      "path": "build/client/assets/chart-grid-CqXjTUqn.js",
+      "bytes": 78208,
+      "sha256": "5ad28753eab98798d9c6c3c014dd787d3713d4203968b716d265c47df803349e"
+    },
+    {
+      "path": "build/client/assets/checkbox-control-6q5rTQPB.js",
+      "bytes": 1061,
+      "sha256": "f0676447f44fa393353b97e7c11700a6fcbd5a9d80d320ed2bc150388f763d58"
+    },
+    {
+      "path": "build/client/assets/chunk-EVOBXE3Y-g5m91DvX.js",
+      "bytes": 128071,
+      "sha256": "10dbe8360d68a3a51ae9df45bd2f28566d689f64c9484b5eb02f2e2866e41029"
+    },
+    {
+      "path": "build/client/assets/control-benchmark-wazmM5Vr.js",
+      "bytes": 21793,
+      "sha256": "b7d8e5030fa1c415557962aafe5dbd43e208a76a21f4d2a63819692a768a24e9"
+    },
+    {
+      "path": "build/client/assets/control-controller-D54Rkm_S.js",
+      "bytes": 3432,
+      "sha256": "ec5486eab50cdca907c67df436b370063c5272c4d7e4bfcfa4ea7cc726c634cb"
+    },
+    {
+      "path": "build/client/assets/control-models-VEdxdwh8.js",
+      "bytes": 20121,
+      "sha256": "f1f20a18bb480a032d76b7760ed2e3651cc5d0fcbdfbee0fa79b4ecec3e9717e"
+    },
+    {
+      "path": "build/client/assets/control-roles-DwBDCK3N.js",
+      "bytes": 12598,
+      "sha256": "1fd74aeb4e49729362c77668b18132e7d199c7114959c61ef0a7718356b6ea1b"
+    },
+    {
+      "path": "build/client/assets/control-routing-strategy-C4jN_g8g.js",
+      "bytes": 10944,
+      "sha256": "136593526c778b3a72fe3031190c6abe178a2d7730d3ec96dcc40506ccae2082"
+    },
+    {
+      "path": "build/client/assets/control-runtime-config-D3_LW-gy.js",
+      "bytes": 4164,
+      "sha256": "9acc13f435ca5fcd69c4ef2b71ca16f2df7a755dd83334edcdb747b1f490983e"
+    },
+    {
+      "path": "build/client/assets/dashboard-8XQ2n5Ve.js",
+      "bytes": 19487,
+      "sha256": "30df20d3e12c69c91111fe1236173db221c5077a18ebee95cbb00d9263d6ec89"
+    },
+    {
+      "path": "build/client/assets/decision-receipt-jk1p1UMS.js",
+      "bytes": 2742,
+      "sha256": "de7d31bb637749f98660dba993d8d8418c18144c088b6269ab240f40b5717f9e"
+    },
+    {
+      "path": "build/client/assets/design-system-D3bmhYK2.js",
+      "bytes": 29345,
+      "sha256": "7f784e8b44ea7e5dcf0ec7361def3976d89a74d1b391ee8f7a85debd0e8f02f4"
+    },
+    {
+      "path": "build/client/assets/effort-identity-DTM8zi6R.js",
+      "bytes": 3189,
+      "sha256": "fbaa2d32ccb9d4667d25b18684712a083163f632737663d3f334af9581ad40a3"
+    },
+    {
+      "path": "build/client/assets/endpoints-DelO4Agy.js",
+      "bytes": 5254,
+      "sha256": "016fbd11e4bffa02aace9eb13c2e7850c16cf31a61bd35f6f7b695c7c12e0f24"
+    },
+    {
+      "path": "build/client/assets/entry.client-B4czBmcP.js",
+      "bytes": 190574,
+      "sha256": "d50564d357d2670639dbeec50bca05d7c4125312294fbac7ac81c728f010f7f3"
+    },
+    {
+      "path": "build/client/assets/extensions-BwBNXEkV.js",
+      "bytes": 19791,
+      "sha256": "94447e3ed9095b918cf80c6a4815c6aa7583ffee36c86896dde5118edadcc162"
+    },
+    {
+      "path": "build/client/assets/fonts/geist-latin-400-normal.woff2",
+      "bytes": 45244,
+      "sha256": "d8bce822db092746889bcf3f57350b41f53708b025458fe7af30729ec4ce0df2"
+    },
+    {
+      "path": "build/client/assets/fonts/geist-latin-500-normal.woff2",
+      "bytes": 46372,
+      "sha256": "b0a0867cda44efef4529a4b13ce37fd9fd6e1597708615287542a51bc7452ab4"
+    },
+    {
+      "path": "build/client/assets/fonts/geist-latin-600-normal.woff2",
+      "bytes": 46596,
+      "sha256": "b1e6a1dd2122485d0a1f3a8d30a45443aa9453224f83018bec35f8266bc77915"
+    },
+    {
+      "path": "build/client/assets/fonts/geist-latin-700-normal.woff2",
+      "bytes": 46496,
+      "sha256": "04f948593dca628e846e6b41b3ef66bc39ad59fee3571c589a3cd4e267122be2"
+    },
+    {
+      "path": "build/client/assets/fonts/geist-mono-latin-400-normal.woff2",
+      "bytes": 50356,
+      "sha256": "e4507fb4fb5f832fbbb6c06aea4206274ba3083007f23fa8cbc0e87a10acf95b"
+    },
+    {
+      "path": "build/client/assets/fonts/geist-mono-latin-500-normal.woff2",
+      "bytes": 51500,
+      "sha256": "85b99e603f84a47dc8118b5af058ad8f387d7c507a00faeef1b5b60eb371e844"
+    },
+    {
+      "path": "build/client/assets/fonts/geist-mono-latin-600-normal.woff2",
+      "bytes": 51604,
+      "sha256": "8416445afd947018ffeb31844da808bd7f4356f5dc7d73a084659c32eae26548"
+    },
+    {
+      "path": "build/client/assets/fonts/geist-mono-latin-700-normal.woff2",
+      "bytes": 51836,
+      "sha256": "c1287452c531c82457793da41dd5512af95d01fbc851c8b928203f9ca4967279"
+    },
+    {
+      "path": "build/client/assets/fonts/ibm-plex-mono-latin-400-normal.woff2",
+      "bytes": 14708,
+      "sha256": "08949f728dc52d528e69b1667d15c89a5686a4ee9a296ff90983985f99c380f7"
+    },
+    {
+      "path": "build/client/assets/fonts/ibm-plex-mono-latin-500-normal.woff2",
+      "bytes": 14888,
+      "sha256": "01d285447409c8a588692162439a038b8cbd7871309ee20267b0d2d91c6e8e22"
+    },
+    {
+      "path": "build/client/assets/fonts/ibm-plex-mono-latin-600-normal.woff2",
+      "bytes": 15620,
+      "sha256": "0d1f0b8d0722224e32e9f28261bdc86c79115be73444ae5eceb73976a1bcdf83"
+    },
+    {
+      "path": "build/client/assets/fonts/inter-latin-400-normal.woff2",
+      "bytes": 23664,
+      "sha256": "8909904ab6c872eb994093482a88a28eca2cd95912d7b6fecd72103b0dc07edc"
+    },
+    {
+      "path": "build/client/assets/fonts/inter-latin-600-normal.woff2",
+      "bytes": 24452,
+      "sha256": "f9a06e79cd3a2a20951c0f0e28f66dd0e6d3fda73911d640a2125c8fcb78f21a"
+    },
+    {
+      "path": "build/client/assets/fonts/inter-latin-700-normal.woff2",
+      "bytes": 24356,
+      "sha256": "6f56409fd3d64bb85f7d070bce20749db2d66b6d63cec586cc22d1c761be2491"
+    },
+    {
+      "path": "build/client/assets/fonts/licenses/geist-LICENSE.txt",
+      "bytes": 4460,
+      "sha256": "dbb04b3625e63512d8242b3cae4d1b2c2955eb7c47bb80d4e468ec3c5a8e5c7b"
+    },
+    {
+      "path": "build/client/assets/fonts/licenses/ibm-plex-mono-OFL.txt",
+      "bytes": 5392,
+      "sha256": "03b9b5ee8909a33418aaebfa6a807da48c6edebdde79b5b026258a2463e2919b"
+    },
+    {
+      "path": "build/client/assets/fonts/licenses/inter-OFL.txt",
+      "bytes": 4570,
+      "sha256": "05f6002bf3f86f0040a2b0cec4d103346ba12f6659817838196f76a218d55724"
+    },
+    {
+      "path": "build/client/assets/format-score-CvKL6Nty.js",
+      "bytes": 273,
+      "sha256": "b3ca97d4b060300c0f0130338980b4f317d873c74cdac39a89d2026e198502b2"
+    },
+    {
+      "path": "build/client/assets/index-CKLjkIRh.js",
+      "bytes": 147,
+      "sha256": "024f022e202ff688560a08e0f658427dab774ae38132a8d8b97da0d8a213f353"
+    },
+    {
+      "path": "build/client/assets/integrations-downstream-C1fP7R68.js",
+      "bytes": 2761,
+      "sha256": "23fb1e45d153597892dec526c32db1c1af6e02c56151dc890b74c62438ba785f"
+    },
+    {
+      "path": "build/client/assets/integrations-upstream-B2u2P9D5.js",
+      "bytes": 4363,
+      "sha256": "8533d3771c4bbc83f5ed8ce79ecacd93c302115b3d798feacc652493945f2cb5"
+    },
+    {
+      "path": "build/client/assets/learning-api-bGRA194G.js",
+      "bytes": 3825,
+      "sha256": "460e88c0d8bc84cdc53a0040d9bf5908233e3687513b43f0c08121b008ca0407"
+    },
+    {
+      "path": "build/client/assets/learning-DunG2HYS.js",
+      "bytes": 76098,
+      "sha256": "f609b89ce936fcb85a39120b05687dbdbf7634a669516e80b884c11e4f414837"
+    },
+    {
+      "path": "build/client/assets/legacy-redirect-BuGSblma.js",
+      "bytes": 1237,
+      "sha256": "0509fa4f75c581a87d56445d8b3c313925a48bdcebe2c5c04d7ee8c1b5c8ebed"
+    },
+    {
+      "path": "build/client/assets/live-refresh-DcaagJbF.js",
+      "bytes": 156,
+      "sha256": "e7eb24828694c4315de22ef58ad223134d0b5d0a3734943ebe08a949addaa4b9"
+    },
+    {
+      "path": "build/client/assets/llama-swap-setup-zJl1O37-.js",
+      "bytes": 820,
+      "sha256": "53aef85489a07d9e5407df8d7ff4d89e8bc33912d3e633e032a799e43faf79c5"
+    },
+    {
+      "path": "build/client/assets/local-choose-C5umZTSp.js",
+      "bytes": 1674,
+      "sha256": "5cddc8e78c76908b0ee5b5bf0295f7e458d0ff278c83155212ba4859c6d6bc8c"
+    },
+    {
+      "path": "build/client/assets/local-llama-swap-models-C7k4YbIH.js",
+      "bytes": 7092,
+      "sha256": "5c69be5de18e346678fd6f9d6c36714656becde7cc1b2b68be913c45f8ff297d"
+    },
+    {
+      "path": "build/client/assets/local-logs-69Xnyb37.js",
+      "bytes": 4191,
+      "sha256": "2269ca92d4d15e6b54b89b76415c9701eeadb2c9a2b4f6cc3c9bcfa114f9a3e8"
+    },
+    {
+      "path": "build/client/assets/local-matrix-CdXZR64P.js",
+      "bytes": 181,
+      "sha256": "f5ced9f0a39e04a50d2629c2889f92b880c48a4f15fdbb591d8b4fb7e108fa1c"
+    },
+    {
+      "path": "build/client/assets/local-model-role-picker-p59CnAkt.js",
+      "bytes": 8969,
+      "sha256": "e3681a0573ac0e7c5770e9dd80ec71455a4f2da58b0c221f04e3cc24b67a78bb"
+    },
+    {
+      "path": "build/client/assets/local-models-B4n-mSaY.js",
+      "bytes": 160,
+      "sha256": "045ede526e6dd87ff63284973d6ef66a19632698ca1468535dec3fe3b6d4c5cc"
+    },
+    {
+      "path": "build/client/assets/local-peer-models-Kkbb28Kr.js",
+      "bytes": 5786,
+      "sha256": "83bf6e26ac8f0801cf3c38fa65756fee1fe6a0707dee05a366edca1f6dd1202b"
+    },
+    {
+      "path": "build/client/assets/local-peers-OD-VI7u0.js",
+      "bytes": 4098,
+      "sha256": "433fe2775014127b5ef54b2a605b1602251c1452c99fa6e1cd6c3b13370395ac"
+    },
+    {
+      "path": "build/client/assets/local-policy-CjJhEz_c.js",
+      "bytes": 3594,
+      "sha256": "0a81de5f3cc5216853a462792ddbc22b72e6dbf9aeecd908b4b1f7662fa80993"
+    },
+    {
+      "path": "build/client/assets/local-swap-CnA_uYQm.js",
+      "bytes": 3298,
+      "sha256": "b7ff5daecba85694f9d1734fb02ff8438b7769334eedb70cb436af1c470bb548"
+    },
+    {
+      "path": "build/client/assets/manifest-735a11fb.js",
+      "bytes": 40176,
+      "sha256": "76d26ab2f3e7d6b1afed8dadc8398df33802708c7f79149cbdf06924ec240d8a"
+    },
+    {
+      "path": "build/client/assets/metric-strip-BbsrEd3y.js",
+      "bytes": 2724,
+      "sha256": "c38cd93ffdd4a2201c5c72d20a741ffaded75ce12523dac650e49a732318e090"
+    },
+    {
+      "path": "build/client/assets/not-found-CkHQlBq7.js",
+      "bytes": 1041,
+      "sha256": "dbfca81acabd5f9d5ef1ee941fa2c0be0770da66b754e37932b48b53d3026279"
+    },
+    {
+      "path": "build/client/assets/observe-activity-7UDhmnId.js",
+      "bytes": 4686,
+      "sha256": "8e5d62b0be9a5cc23bf79a8905ab699b6401ad8963db9185bb9f117e97ee50ba"
+    },
+    {
+      "path": "build/client/assets/observe-logs-CjFy_Iv7.js",
+      "bytes": 3510,
+      "sha256": "95b67200ad16c4b9e5e3cde68c99e8a699f172890be3fe0bea9f95b04b1f8e61"
+    },
+    {
+      "path": "build/client/assets/observe-queues-WRyE-dkm.js",
+      "bytes": 6528,
+      "sha256": "2f6fdf2ed4738aa58a44d8663d6de5bff417d81a66942fcb539928e4c34e4cbd"
+    },
+    {
+      "path": "build/client/assets/observe-routing-_4-_q0Oy.js",
+      "bytes": 6326,
+      "sha256": "99c73be6b9f04f5b36c7e5cf75928d2df31e3cb8ab698c706a5ef105804ad207"
+    },
+    {
+      "path": "build/client/assets/operator-controls-Bgx4FFED.js",
+      "bytes": 12781,
+      "sha256": "8b5b6eb97ee4f425869bc6873f147fc7738bbd5dc68dde71d50e84708f2e5d89"
+    },
+    {
+      "path": "build/client/assets/page-filters-DWW_Up4G.js",
+      "bytes": 4389,
+      "sha256": "b34906371f330d6f7e32ef3c671b88cb1845c8fab62c1ae0c411473c00992ca6"
+    },
+    {
+      "path": "build/client/assets/page-primitives-DaboOJBc.js",
+      "bytes": 7734,
+      "sha256": "e038fe71e0b9e8dad141c04ae4fff652d05b969527ced1735953e3bca42b3a1b"
+    },
+    {
+      "path": "build/client/assets/posture-entries-page-El4Ph-NS.js",
+      "bytes": 19643,
+      "sha256": "340ca7c18c58a3c91887c7252b10a9907e71ab54c7e00bda3d62705e86e8fd25"
+    },
+    {
+      "path": "build/client/assets/providers-CR8wvtsm.js",
+      "bytes": 27076,
+      "sha256": "cb7e2a02feb98a6163487240da498edb0484e2f2d9756d64286e46d118632b2e"
+    },
+    {
+      "path": "build/client/assets/queue-api-Cn-u6NZO.js",
+      "bytes": 1679,
+      "sha256": "41e50631e6ddce11bcb4b2e09b444db27e4642f379d60cd0727c3740c426e2cf"
+    },
+    {
+      "path": "build/client/assets/request-detail-AnK3z8F4.js",
+      "bytes": 21166,
+      "sha256": "cf01f23fcc367169749236bffc4dd13f8850300076a08b5e0b638bf3adea967a"
+    },
+    {
+      "path": "build/client/assets/requests-Dt2rQmx0.js",
+      "bytes": 10717,
+      "sha256": "0b3a62c599c53f299e4ebc5c5280714a437b0aba7f749c08b3cef85708043c76"
+    },
+    {
+      "path": "build/client/assets/role-task-hierarchy-BVTlJa65.js",
+      "bytes": 5288,
+      "sha256": "03de937747de3711e56883961079367842596f0941b79e6eaa726cf123735bb3"
+    },
+    {
+      "path": "build/client/assets/root-BGsZS7xD.js",
+      "bytes": 4156,
+      "sha256": "c7569eb40c326c71bcdcc22d72868ecb0f576fe1c4b235cced586315597b0536"
+    },
+    {
+      "path": "build/client/assets/root-fpG44ViH.css",
+      "bytes": 82868,
+      "sha256": "e8cf015bd166e30681ef4d4d5250db09e4772e18c96c1ee2402925e7e7a376d8"
+    },
+    {
+      "path": "build/client/assets/router-candidates-BsArxd8K.js",
+      "bytes": 3106,
+      "sha256": "b3443febbb278076c49661046da99508aa57849f3abadba50da0949898a4c81c"
+    },
+    {
+      "path": "build/client/assets/router-config-6C-g6hXx.js",
+      "bytes": 163,
+      "sha256": "6a680aca928318071227e2ac0f0ac65083b8e315f1e9afaf9bf20d67f2acd36b"
+    },
+    {
+      "path": "build/client/assets/router-decision-detail-DeXV0TFt.js",
+      "bytes": 11214,
+      "sha256": "04ca600e2e6699d6520444e47b01706ae71b41eb67c2daeeba46152fdf255ffd"
+    },
+    {
+      "path": "build/client/assets/router-decisions-puzXbEOr.js",
+      "bytes": 2831,
+      "sha256": "25e1b6fe2225f7be4217d1ffaf0d2c3971ea442d3b9038544c2ba322c1edc065"
+    },
+    {
+      "path": "build/client/assets/router-w9Q03SF1.js",
+      "bytes": 8775,
+      "sha256": "e6f29c5a9bb32a0bebd3c0b13fd6dce5ac24f2d6e16e61df5dbe8b29d81f872a"
+    },
+    {
+      "path": "build/client/assets/routing-mode-D7cw-oRu.js",
+      "bytes": 7068,
+      "sha256": "79794968f22ab960e8cbe3ccfea2637c514786162a0f6ea295fc5dd5fcdf8203"
+    },
+    {
+      "path": "build/client/assets/runtime-api-Dwx7hwc2.js",
+      "bytes": 22022,
+      "sha256": "039ef24ff9a8bc39c28be7404c36326d5651cc49fa829d91eb0a820802728d25"
+    },
+    {
+      "path": "build/client/assets/runtime-DXDyvEGZ.js",
+      "bytes": 4212,
+      "sha256": "eb37c9b55ef6c551937a1e38dd0c3fbec4a1f49cf010fdc0ded9f3f32c3c3451"
+    },
+    {
+      "path": "build/client/assets/segmented-control-OFrtyx20.js",
+      "bytes": 859,
+      "sha256": "756ef949a603b885eed06391481d25d696f20bd22dc14ccc1a9661bb25d2eecc"
+    },
+    {
+      "path": "build/client/assets/session-readiness-BvTXd4XC.js",
+      "bytes": 5367,
+      "sha256": "853b5524f65759c753c12850d99a0c367d3c1129f249075f82e16cf6087d429e"
+    },
+    {
+      "path": "build/client/assets/shell-header-context-DojSALrV.js",
+      "bytes": 649,
+      "sha256": "dab5d7be2b099c2b08d2982679569eed5e0f0c360e13812f29bd8dfce4c588ef"
+    },
+    {
+      "path": "build/client/assets/storage-retention-BcPR3CfI.js",
+      "bytes": 12569,
+      "sha256": "f0dcbe60945be040e1b3cc9f68c96291784872025cdd75d79ca09bb32c9e0c3c"
+    },
+    {
+      "path": "build/client/assets/studio-advanced-FDgDUirv.js",
+      "bytes": 3764,
+      "sha256": "47662fd183db3c1ddf371b6298b49ba568c0353403c8a577caddcbd7e1541a2e"
+    },
+    {
+      "path": "build/client/assets/studio-audio-C9dGFyUL.js",
+      "bytes": 7121,
+      "sha256": "d5b011dbced0ce46931bc1bb8b83da3bc34b91f7b571fac4a9a79993870a5cb0"
+    },
+    {
+      "path": "build/client/assets/studio-images-BOBfIe26.js",
+      "bytes": 4095,
+      "sha256": "1e85e2caa17caa3fa7d7133c9ee277dc424370121f4d30ea7c162ac4f99b40b7"
+    },
+    {
+      "path": "build/client/assets/studio-rerank-DsmoK77y.js",
+      "bytes": 3800,
+      "sha256": "a3d04bd809369f9edecebe89a03065db21096ef5231ad12506912e0efdeb0624"
+    },
+    {
+      "path": "build/client/assets/system-peers-CpDKhZM8.js",
+      "bytes": 4711,
+      "sha256": "8c077cde92962ce0611886932ad7997f641d7ba7f8ce395704a391f576c6b908"
+    },
+    {
+      "path": "build/client/assets/telemetry-page-filters-PDRI37zk.js",
+      "bytes": 9413,
+      "sha256": "6dbcdc89b112492fb74713f7b3029bebfc8d97d9f7c493a4c69a2f28af3c308c"
+    },
+    {
+      "path": "build/client/assets/telemetry-route-models-farb3vII.js",
+      "bytes": 389848,
+      "sha256": "2e6bb0a1fe466e5788612cdee34d42c08a645084ab603d322e23d33c79e8d843"
+    },
+    {
+      "path": "build/client/assets/theme-rIEsxy66.js",
+      "bytes": 1135,
+      "sha256": "ab39a28d9d92539ea0bb7e458019bc81383d9c85ca6223503ec5f04b11d84851"
+    },
+    {
+      "path": "build/client/assets/view-models-D967q-Jz.js",
+      "bytes": 25975,
+      "sha256": "96633955cfcbee8d5dbbaca1fdbb3dfa3e813c6359624f1c4348cbc04d8914a7"
+    },
+    {
+      "path": "build/client/assets/workbench-CP5TDstS.js",
+      "bytes": 4150,
+      "sha256": "6b7b0eb2f27fa109da96db01f9d69c889544ebf46fc56ce45721cb84de9d95ed"
+    },
+    {
+      "path": "build/client/assets/workloads-DyXAQTO7.js",
+      "bytes": 366,
+      "sha256": "1ce71a9c5af5cb563514d35c4876b65c07709600ff8d8ed0412f430b4835e686"
+    },
+    {
+      "path": "build/client/index.html",
+      "bytes": 4945,
+      "sha256": "8945b2aa86864e1e278eac8e423f93755aff057d5494e9da7f60dcdaadf208a2"
+    },
+    {
+      "path": "manifest.json",
+      "bytes": 6410,
+      "sha256": "7506ad615503f3b7f2f68a99585625aa2017786fffbdfa6459a187ad1a21bbb4"
+    },
+    {
+      "path": "packages/extension-host/index.mjs",
+      "bytes": 34376,
+      "sha256": "4a6ccb046b8d305f6f23180609fd3c8ca2f0cf2da3919f67795aeb7f2a15e3dc"
+    },
+    {
+      "path": "packages/extension-host/retained-response-store.mjs",
+      "bytes": 2499,
+      "sha256": "249b0d889cc86b9f478b6f08c8776aaf054716756fe138980563c6ee389cf96c"
+    },
+    {
+      "path": "packages/extension-host/transfer-artifact.mjs",
+      "bytes": 6850,
+      "sha256": "e42c07201567b577f5b45749e70d879e17d7070cbe700975198433900cc250a9"
+    },
+    {
+      "path": "packages/extension-host/worker-runtime.mjs",
+      "bytes": 9578,
+      "sha256": "27deb40c12db4978f910f3c69b8d93f55b64790e11515a79d3aea599242adfd3"
+    },
+    {
+      "path": "packages/extension-sdk/index.mjs",
+      "bytes": 8904,
+      "sha256": "a250db4a7f30b97e8278ea40092e45390dc6fb4be01e927d3ec58c29473464d1"
+    },
+    {
+      "path": "packages/protocol-types/generated/product-contracts.json",
+      "bytes": 6254,
+      "sha256": "1bc2505acc7c086d7397e10c0c32615736e05473a7753ae55c3c7d1bb61d01bf"
+    },
+    {
+      "path": "role-model-dev-launcher.exe",
+      "bytes": 9164800,
+      "sha256": "f4681e65d90d0c5c8291197ac831b7a6c58db6f0c04b4ed11ec4db2170c94980"
+    },
+    {
+      "path": "role-model-dev.bat",
+      "bytes": 219,
+      "sha256": "1ef9682289875134eec2434e3ff9af2101e09ee6d37e4a5ecbecc643573956d1"
+    },
+    {
+      "path": "role-model-dev.exe",
+      "bytes": 104091648,
+      "sha256": "ffc3f58a45992d72b5eae539e3450b9b5bded5954335567da64c219e17768d78"
+    },
+    {
+      "path": "role-model-dev.exe.sha256",
+      "bytes": 86,
+      "sha256": "14984b4e182b8c48ced631e0b5cddaa42dd1169a810f0c116e9120ddb8e6e1ed"
+    },
+    {
+      "path": "role-model-router/packages/catalog/data/normalized-catalog.json",
+      "bytes": 3389031,
+      "sha256": "f3addb1b6b0c4d831c853a59e48272a34306ef5d3ae5185cd8b74cec2420d167"
+    },
+    {
+      "path": "role-model-router/packages/core/data/taxonomy/capabilities.json",
+      "bytes": 19151,
+      "sha256": "8318320ad8d755bd6ea0709adbafbc545f1526dce92e7389a74384998c66f68e"
+    },
+    {
+      "path": "role-model-router/packages/core/data/taxonomy/groups.json",
+      "bytes": 3244,
+      "sha256": "dafd8ba0d20c79795dea157aa5484e7bdd81ca0999c67ad0c961d7d342c83c59"
+    },
+    {
+      "path": "role-model-router/packages/core/data/taxonomy/intent-presets.json",
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "role-model-router/packages/core/data/taxonomy/manifest.json",
+      "bytes": 1392,
+      "sha256": "d8bc8562b45a416d286257ae06e4284ecd588a6ea5a382cb88108c5e133206b6"
+    },
+    {
+      "path": "role-model-router/packages/core/data/taxonomy/modalities.json",
+      "bytes": 2957,
+      "sha256": "6de4f8ed64d14c567bbc725d29db1519b7a9e4462764114cfec48435685a9018"
+    },
+    {
+      "path": "role-model-router/packages/core/data/taxonomy/roles.json",
+      "bytes": 45989,
+      "sha256": "2f9caa873b8c3269f3fc9b76fe853534265c2cbf6986ef4dfa29847ca1076df5"
+    },
+    {
+      "path": "role-model-router/packages/core/data/taxonomy/task-types.json",
+      "bytes": 213173,
+      "sha256": "c4c9dfa1ac2d3a30efc4fe9c42d9433380fc29eec04a112ae91d0b58535a503e"
+    },
+    {
+      "path": "role-model-router/packages/core/data/taxonomy/tool-classes.json",
+      "bytes": 6070,
+      "sha256": "ff8962fe2cbdbc208cabf53599365bfe99d14958ba0ba10e7fb296041034ba2c"
+    },
+    {
+      "path": "role-model-router/packages/extension-host/index.mjs",
+      "bytes": 535,
+      "sha256": "2e253c422f6856042ba4ff1ba86d2052e9abcaff48ea91bf182a56fd1c2a967e"
+    },
+    {
+      "path": "role-model-router/packages/vendor-litellm/data/model-prices.json",
+      "bytes": 1243645,
+      "sha256": "ed6f8298598967a6e5344796003741c6b3345670be1e57f678d9a14ca2e807ef"
+    },
+    {
+      "path": "shared/graph/registry.json",
+      "bytes": 38285,
+      "sha256": "143e2050bc7936c677775678a8c175bd9523afe4405fe8a39c3c5cef2fe77289"
+    },
+    {
+      "path": "shared/queue-policy.json",
+      "bytes": 1308,
+      "sha256": "1fa0e04a38cc44b112b8dfca4005f941e18c78cfef0557f44057cdaab610a647"
+    },
+    {
+      "path": "shared/route-learning-activation-policy.json",
+      "bytes": 1907,
+      "sha256": "080a161a09f40d0a077510d8b39c05b532649823a8522518dafa25e0b8b25cdb"
+    },
+    {
+      "path": "track-b-runtime/capacity-slo-contracts.v2.json",
+      "bytes": 2720,
+      "sha256": "47bb9b1c59eea7c4990c672dc4b61ee0c9f9c9c683a99f301ae77bc41fa95b72"
+    },
+    {
+      "path": "track-b-runtime/capacity-slo-contracts.v3.json",
+      "bytes": 2721,
+      "sha256": "16b7eefb9b55ad5c7f60217340d77cbdfc12e4d6ac7dbb0a6e90bd4e8b976081"
+    },
+    {
+      "path": "track-b-runtime/capacity-slo-contracts.v3.schema.json",
+      "bytes": 10025,
+      "sha256": "b99214a5dfeb055425ee42cd9f3796e8e27d0f9ad2155c497e30ef88ccde8cd7"
+    },
+    {
+      "path": "track-b-runtime/contracts/capacity-slo-contracts.v3.json",
+      "bytes": 2721,
+      "sha256": "16b7eefb9b55ad5c7f60217340d77cbdfc12e4d6ac7dbb0a6e90bd4e8b976081"
+    },
+    {
+      "path": "track-b-runtime/contracts/capacity-slo-contracts.v3.schema.json",
+      "bytes": 10025,
+      "sha256": "b99214a5dfeb055425ee42cd9f3796e8e27d0f9ad2155c497e30ef88ccde8cd7"
+    },
+    {
+      "path": "track-b-runtime/contracts/contract-registry.schema.json",
+      "bytes": 3579,
+      "sha256": "6d47c952822ccee1b689dda769f1fc063955248a904517872dbd256e1aa3c696"
+    },
+    {
+      "path": "track-b-runtime/contracts/package-registry.json",
+      "bytes": 24198,
+      "sha256": "2a41f3488660796e7243d4abc1c3c21fb561bc73aa5a3f4590c5c020d8d762ee"
+    },
+    {
+      "path": "track-b-runtime/contracts/runtime-channel-contracts.schema.json",
+      "bytes": 3181,
+      "sha256": "192a2570347fc564d7ff90fe021887ff3bc72ab2c7dfe6e2827a07fd0f038668"
+    },
+    {
+      "path": "track-b-runtime/contracts/runtime-channel-contracts.v1.json",
+      "bytes": 2045,
+      "sha256": "100362e249020b1f06bde6764cd253e3d500ab0baa6a498ca17fc39ada7e2326"
+    },
+    {
+      "path": "track-b-runtime/contracts/runtime-channel-source-matrix.json",
+      "bytes": 1664,
+      "sha256": "c8b3b4bab795a2e5d272248144502f1bfb938d0c5aecf570c2207289c06efd5f"
+    },
+    {
+      "path": "track-b-runtime/extensions/artifact-store.mjs",
+      "bytes": 171851,
+      "sha256": "aa643db0324a2d8c90aecb32fee44e15b189d6815fcaaa9d01d08b5a808e0056"
+    },
+    {
+      "path": "track-b-runtime/extensions/background-evidence-scheduler.mjs",
+      "bytes": 66060,
+      "sha256": "499442baece82af74145eedfbfb9ed6bc6086593c9e941c0acc4e83194947c67"
+    },
+    {
+      "path": "track-b-runtime/extensions/crowdsourced-learning.mjs",
+      "bytes": 50929,
+      "sha256": "f723d2ac96fc06196c03a6b9b1ac50358061ec1cba559a6215fa4198c4e0ef36"
+    },
+    {
+      "path": "track-b-runtime/extensions/evaluation-core.mjs",
+      "bytes": 330161,
+      "sha256": "df91c52418a925568117a550f8b08cfd4e1c397ddf8647722792afeada1cc413"
+    },
+    {
+      "path": "track-b-runtime/extensions/evaluation-runner-local.mjs",
+      "bytes": 383117,
+      "sha256": "b4e2e866d2d8ffbbd9116aff82bb6e7e21c29a6be788edffb499244540511336"
+    },
+    {
+      "path": "track-b-runtime/extensions/event-log.mjs",
+      "bytes": 32009,
+      "sha256": "f1303d4ed67a3dcb58535c71c2ff9420edf2b2f7bf8ab1b4466a5e04e0756901"
+    },
+    {
+      "path": "track-b-runtime/extensions/knowledge-store.mjs",
+      "bytes": 84558,
+      "sha256": "7fe3a7a44ae22edde76f92bf891fce3cc36d2096749af7ad722c94321d257f8b"
+    },
+    {
+      "path": "track-b-runtime/extensions/knowledge-worker.mjs",
+      "bytes": 1980343,
+      "sha256": "cdc99d92ced0c6699cb825351ca36371e7925c52bc3fcf7dd9072b26988f6b5d"
+    },
+    {
+      "path": "track-b-runtime/extensions/memory-store.mjs",
+      "bytes": 25603,
+      "sha256": "586c6a22f958717bdf64f60edd7e1c96428b937629f2ac27d71e726d88c8ef17"
+    },
+    {
+      "path": "track-b-runtime/extensions/profile-learner.mjs",
+      "bytes": 148411,
+      "sha256": "813d564785984d190125106cfe011b31ba3e69da6ca4dd660b1daac0c233c274"
+    },
+    {
+      "path": "track-b-runtime/extensions/replay-core.mjs",
+      "bytes": 222432,
+      "sha256": "df8c83c48b3921f687dce3f5b45af9954bab1b9c0d5147fa1d6a6d1f6ec41a8c"
+    },
+    {
+      "path": "track-b-runtime/extensions/repository-context.mjs",
+      "bytes": 8099,
+      "sha256": "758a74e817f03de6763a9f0ecb97a030a61b5b6e2e6dfb41d451d5e6fe833faa"
+    },
+    {
+      "path": "track-b-runtime/extensions/trajectory-signals.mjs",
+      "bytes": 44345,
+      "sha256": "4c0764cbd5b461a58f8590ed89a8f2a8f0a3b5a141cdf9ed5698607a987a8135"
+    },
+    {
+      "path": "track-b-runtime/public-extension-host.mjs",
+      "bytes": 33553,
+      "sha256": "5a079ea129429fe67b4923f0d05dc732f83aa66adf80d579fce5c953abfa6aac"
+    },
+    {
+      "path": "track-b-runtime/public-router/migrations/0001_tb04_legacy_graph_performance.sql",
+      "bytes": 1129,
+      "sha256": "375da274ec8d594afec3286d1a9d0e9eea96993f82d659d0e82290659e675e71"
+    },
+    {
+      "path": "track-b-runtime/public-router/migrations/0002_compact_stub_enforcement.sql",
+      "bytes": 1039,
+      "sha256": "b0e11f67521dee4db650511baf8042a7a7c878bed74b6e0e1c409a34bec2d146"
+    },
+    {
+      "path": "track-b-runtime/public-router/migrations/registry.json",
+      "bytes": 1325,
+      "sha256": "ac83d2129b7e59b48779b1121de4003729fb973f4163e56cd85c8165c29e3654"
+    },
+    {
+      "path": "track-b-runtime/public-runtime-adapter.mjs",
+      "bytes": 1753888,
+      "sha256": "bcbb79017c9bce9a47fa9df5f746f38fe336836a31166dfaa04acc7d7958012b"
+    },
+    {
+      "path": "track-b-runtime/runtime-operations-server.mjs",
+      "bytes": 3215238,
+      "sha256": "42757bdf5a910d9d921fc5a45f945aa87b478d1b8cb0128d054b8ef0580ae9a2"
+    },
+    {
+      "path": "track-b-runtime/track-b-runtime-manifest.json",
+      "bytes": 93526,
+      "sha256": "fedaa87fad8acb04b26365f5931f32d3e9ceba253f54f95d36ab917b0ebc38c2"
+    },
+    {
+      "path": "track-b-runtime/worker-runtime.mjs",
+      "bytes": 17726,
+      "sha256": "0277de1fb738a28fe322cc9ae88e2d89965af18a14d5d0d136242ba5c0ab49c6"
+    }
+  ]
+}

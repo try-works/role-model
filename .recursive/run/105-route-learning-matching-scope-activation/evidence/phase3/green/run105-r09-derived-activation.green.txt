@@ -1,0 +1,14 @@
+npm warn Unknown env config "manage-package-manager-versions". This will stop working in the next major version of npm.
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-host-bridge
+
+stderr | test/run105-r09-derived-activation.test.ts > run105 R9 derived activation > the replay loop's own health never reports a ladder activation it did not derive
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=n/a
+
+ ✓ test/run105-r09-derived-activation.test.ts (5 tests) 48ms
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  13:41:35
+   Duration  7.42s (transform 3.41s, setup 0ms, collect 6.44s, tests 48ms, environment 0ms, prepare 351ms)
+

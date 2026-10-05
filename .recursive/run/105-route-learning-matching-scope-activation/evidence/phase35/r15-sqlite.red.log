@@ -1,0 +1,98 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/packages/sqlite-memory
+
+(node:5760) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | test/run105-telemetry-failure-size-limit.test.ts > R15 ASCII large allowed errorPreview persists primary failure (graph=false)
+R15 exact reproduction: runtime telemetry failure classification stub exceeds 16384 bytes
+
+stdout | test/run105-telemetry-failure-size-limit.test.ts > R15 UTF-8 large allowed errorPreview persists primary failure (graph=false)
+R15 exact reproduction: runtime telemetry failure classification stub exceeds 16384 bytes
+
+stdout | test/run105-telemetry-failure-size-limit.test.ts > R15 ASCII large allowed errorPreview persists primary failure (graph=true)
+R15 exact reproduction: runtime telemetry failure classification stub exceeds 16384 bytes
+
+stdout | test/run105-telemetry-failure-size-limit.test.ts > R15 UTF-8 large allowed errorPreview persists primary failure (graph=true)
+R15 exact reproduction: runtime telemetry failure classification stub exceeds 16384 bytes
+
+ ❯ test/run105-telemetry-failure-size-limit.test.ts (8 tests | 6 failed) 1106ms
+   × R15 ASCII large allowed errorPreview persists primary failure (graph=false) 143ms
+     → secondary diagnostics must not replace the primary provider failure: expected Error: runtime telemetry failure classifi… to be undefined
+   × R15 UTF-8 large allowed errorPreview persists primary failure (graph=false) 121ms
+     → secondary diagnostics must not replace the primary provider failure: expected Error: runtime telemetry failure classifi… to be undefined
+   × R15 ASCII large allowed errorPreview persists primary failure (graph=true) 122ms
+     → secondary diagnostics must not replace the primary provider failure: expected Error: runtime telemetry failure classifi… to be undefined
+   × R15 UTF-8 large allowed errorPreview persists primary failure (graph=true) 128ms
+     → secondary diagnostics must not replace the primary provider failure: expected Error: runtime telemetry failure classifi… to be undefined
+   ✓ R15 allowed diagnostic at original envelope boundary 16383 140ms
+   ✓ R15 allowed diagnostic at original envelope boundary 16384 165ms
+   × R15 allowed diagnostic at original envelope boundary 16385 131ms
+     → expected [Function] to not throw an error but 'Error: runtime telemetry failure clas…' was thrown
+   × R15 aggregate pressure evicts optional diagnostics explicitly, retaining attempts and counters 155ms
+     → expected [Function] to not throw an error but 'Error: runtime telemetry failure clas…' was thrown
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run105-telemetry-failure-size-limit.test.ts > R15 ASCII large allowed errorPreview persists primary failure (graph=false)
+ FAIL  test/run105-telemetry-failure-size-limit.test.ts > R15 UTF-8 large allowed errorPreview persists primary failure (graph=false)
+ FAIL  test/run105-telemetry-failure-size-limit.test.ts > R15 ASCII large allowed errorPreview persists primary failure (graph=true)
+ FAIL  test/run105-telemetry-failure-size-limit.test.ts > R15 UTF-8 large allowed errorPreview persists primary failure (graph=true)
+AssertionError: secondary diagnostics must not replace the primary provider failure: expected Error: runtime telemetry failure classifi… to be undefined
+
+- Expected: 
+undefined
+
++ Received: 
+Error {
+  "message": "runtime telemetry failure classification stub exceeds 16384 bytes",
+}
+
+ ❯ test/run105-telemetry-failure-size-limit.test.ts:55:92
+     53|     try { persist(databasePath, obs, graphStore); } catch (error) { fa…
+     54|     if (failure) console.log("R15 exact reproduction:", (failure as Er…
+     55|     expect(failure, "secondary diagnostics must not replace the primar…
+       |                                                                                            ^
+     56|     const { payload, stub, telemetry } = read(databasePath);
+     57|     console.log("R15 measured persisted UTF-8 bytes:", Buffer.byteLeng…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  test/run105-telemetry-failure-size-limit.test.ts > R15 allowed diagnostic at original envelope boundary 16385
+AssertionError: expected [Function] to not throw an error but 'Error: runtime telemetry failure clas…' was thrown
+
+- Expected: 
+undefined
+
++ Received: 
+"Error: runtime telemetry failure classification stub exceeds 16384 bytes"
+
+ ❯ test/run105-telemetry-failure-size-limit.test.ts:84:48
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  test/run105-telemetry-failure-size-limit.test.ts > R15 aggregate pressure evicts optional diagnostics explicitly, retaining attempts and counters
+AssertionError: expected [Function] to not throw an error but 'Error: runtime telemetry failure clas…' was thrown
+
+- Expected: 
+undefined
+
++ Received: 
+"Error: runtime telemetry failure classification stub exceeds 16384 bytes"
+
+ ❯ test/run105-telemetry-failure-size-limit.test.ts:92:48
+     90|   obs.retrievalReceipt = { receiptId: "receipt-r15", summary: "界".repe…
+     91|   obs.routingDiagnostics = { selection: { detail: "x".repeat(20000) } …
+     92|   expect(() => persist(databasePath, obs)).not.toThrow();
+       |                                                ^
+     93|   const { payload, stub } = read(databasePath);
+     94|   expect(Buffer.byteLength(payload, "utf8")).toBeLessThanOrEqual(16384…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  6 failed | 2 passed (8)
+   Start at  15:40:32
+   Duration  2.26s (transform 367ms, setup 0ms, collect 405ms, tests 1.11s, environment 0ms, prepare 297ms)
+

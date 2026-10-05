@@ -1,0 +1,42 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-host-bridge
+
+(node:17028) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | test/run105-review-live-advisory-publisher.test.ts > run105 production publisher scope > enumerates actual stored role-task ladders and reads each exact pair, never one scope-only advisory
+[run99] durable route advisory published: state=unavailable reason=role and task scope required package=none confidence=0 cohort=0 stage=S3
+
+ ❯ test/run105-review-live-advisory-publisher.test.ts (1 test | 1 failed) 35ms
+   × run105 production publisher scope > enumerates actual stored role-task ladders and reads each exact pair, never one scope-only advisory 32ms
+     → expected false to be true // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run105-review-live-advisory-publisher.test.ts > run105 production publisher scope > enumerates actual stored role-task ladders and reads each exact pair, never one scope-only advisory
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ test/run105-review-live-advisory-publisher.test.ts:27:88
+     25|     try {
+     26|       await vi.advanceTimersByTimeAsync(0);
+     27|       expect(calls.some((call) => call.capability === "knowledge:list-…
+       |                                                                                        ^
+     28|       expect(calls.filter((call) => call.capability === "knowledge:rea…
+     29|     } finally { stop(); }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  14:40:44
+   Duration  19.09s (transform 12.17s, setup 0ms, collect 17.97s, tests 35ms, environment 1ms, prepare 362ms)
+
+undefined
+D:\DEV\role-model\.worktrees\105-route-learning-matching-scope-activation\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/run105-review-live-advisory-publisher.test.ts

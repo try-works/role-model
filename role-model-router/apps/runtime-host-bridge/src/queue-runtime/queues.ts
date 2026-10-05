@@ -1,8 +1,8 @@
 /**
  * Run 101 / R4 - the replay plane's queue definition and its enqueue gate.
  *
- * Identity is the capture: one job per `captureRef`, so a duplicate admission
- * cannot become a second job (the class the design names
+ * Legacy identity is the capture. Explicit rounds identify the immutable capture,
+ * pair and round, so retry admission cannot become a second job (the class the design names
  * `replay_capture_idempotency_conflict`). Retries come from the policy's
  * `attempts` plus an exponential backoff capped by `backoffCapMs`, which is what
  * replaces the hand-rolled deferral budget.
@@ -11,6 +11,8 @@
  * passes the admission decision it already made (budget reservation and
  * benchmark exclusion), and a refused capture is never offered.
  */
+import { createHash } from "node:crypto";
+
 import { Duration, Effect, Schedule, Schema } from "effect";
 import { PersistedQueue } from "effect/unstable/persistence";
 
@@ -23,6 +25,8 @@ export const ReplayDispatchJob = Schema.Struct({
   captureRef: Schema.String,
   endpointIds: Schema.Array(Schema.String),
   policySetDigest: Schema.String,
+  // Missing keys keep old SQLite payloads byte-identical and decodable.
+  dispatchRoundId: Schema.optionalKey(Schema.String),
 });
 
 export type ReplayDispatchJob = Schema.Schema.Type<typeof ReplayDispatchJob>;
@@ -86,8 +90,9 @@ export type EnqueueReplayDispatchResult =
   | { readonly enqueued: false; readonly reason: string };
 
 /**
- * Offers one capture. The job id is the capture ref, so an identical offer is a
- * no-op for the store rather than a second job.
+ * Offers one capture/round. An explicit round survives retries and allows a later
+ * finalized comparison of the same capsule/pair to create a distinct job.
+ * Absent rounds retain the historical capture-ref id exactly.
  */
 export function enqueueReplayDispatch({
   queue,
@@ -100,7 +105,18 @@ export function enqueueReplayDispatch({
   if (!capture.captureRef) {
     return Effect.succeed({ enqueued: false as const, reason: "capture_ref_required" });
   }
-  return queue
-    .offer(capture, { id: capture.captureRef })
-    .pipe(Effect.as({ enqueued: true as const, jobId: capture.captureRef }));
+  const jobId =
+    capture.dispatchRoundId === undefined
+      ? capture.captureRef
+      : `replay-round-${createHash("sha256")
+          .update(
+            JSON.stringify({
+              captureRef: capture.captureRef,
+              endpointIds: [...capture.endpointIds].sort(),
+              policySetDigest: capture.policySetDigest,
+              dispatchRoundId: capture.dispatchRoundId,
+            }),
+          )
+          .digest("hex")}`;
+  return queue.offer(capture, { id: jobId }).pipe(Effect.as({ enqueued: true as const, jobId }));
 }

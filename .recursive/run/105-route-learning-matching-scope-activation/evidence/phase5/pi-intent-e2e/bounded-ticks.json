@@ -1,0 +1,290 @@
+[
+  {
+    "i": 0,
+    "status": 200,
+    "body": {
+      "action": "resume",
+      "status": {
+        "ticks": 9,
+        "running": false,
+        "paused": false,
+        "lastOutcome": "ok",
+        "lastError": null,
+        "lastProcessedAtMs": 1791071872247,
+        "budget": {
+          "window": "2026-10-03",
+          "counterfactuals": 0,
+          "reservedCounterfactuals": 0,
+          "reservedDispatches": 0,
+          "dispatches": 0,
+          "counterfactualLimit": 100,
+          "dispatchLimit": 300,
+          "enforced": false
+        },
+        "lastDispositions": 1,
+        "lastExpiredJobs": 0,
+        "lastResumedEvaluations": 0,
+        "lastReconciledEvaluations": 0,
+        "lastStrandedEvaluations": 0,
+        "lastReclaimedEvaluations": 0,
+        "lastRecoveredHandoffs": 0,
+        "focusTaskKey": "coder\u0000coder.edit",
+        "focusRemaining": 3,
+        "challengeInFlight": false,
+        "lastUnclassifiedCaptures": 32
+      }
+    }
+  },
+  {
+    "i": 1,
+    "status": 200,
+    "body": {
+      "action": "resume",
+      "status": {
+        "ticks": 9,
+        "running": false,
+        "paused": false,
+        "lastOutcome": "ok",
+        "lastError": null,
+        "lastProcessedAtMs": 1791071872247,
+        "budget": {
+          "window": "2026-10-03",
+          "counterfactuals": 0,
+          "reservedCounterfactuals": 0,
+          "reservedDispatches": 0,
+          "dispatches": 0,
+          "counterfactualLimit": 100,
+          "dispatchLimit": 300,
+          "enforced": false
+        },
+        "lastDispositions": 1,
+        "lastExpiredJobs": 0,
+        "lastResumedEvaluations": 0,
+        "lastReconciledEvaluations": 0,
+        "lastStrandedEvaluations": 0,
+        "lastReclaimedEvaluations": 0,
+        "lastRecoveredHandoffs": 0,
+        "focusTaskKey": "coder\u0000coder.edit",
+        "focusRemaining": 3,
+        "challengeInFlight": false,
+        "lastUnclassifiedCaptures": 32
+      }
+    }
+  },
+  {
+    "i": 2,
+    "status": 200,
+    "body": {
+      "action": "resume",
+      "status": {
+        "ticks": 9,
+        "running": false,
+        "paused": false,
+        "lastOutcome": "ok",
+        "lastError": null,
+        "lastProcessedAtMs": 1791071872247,
+        "budget": {
+          "window": "2026-10-03",
+          "counterfactuals": 0,
+          "reservedCounterfactuals": 0,
+          "reservedDispatches": 0,
+          "dispatches": 0,
+          "counterfactualLimit": 100,
+          "dispatchLimit": 300,
+          "enforced": false
+        },
+        "lastDispositions": 1,
+        "lastExpiredJobs": 0,
+        "lastResumedEvaluations": 0,
+        "lastReconciledEvaluations": 0,
+        "lastStrandedEvaluations": 0,
+        "lastReclaimedEvaluations": 0,
+        "lastRecoveredHandoffs": 0,
+        "focusTaskKey": "coder\u0000coder.edit",
+        "focusRemaining": 3,
+        "challengeInFlight": false,
+        "lastUnclassifiedCaptures": 32
+      }
+    }
+  },
+  {
+    "i": 3,
+    "status": 200,
+    "body": {
+      "action": "resume",
+      "status": {
+        "ticks": 9,
+        "running": false,
+        "paused": false,
+        "lastOutcome": "ok",
+        "lastError": null,
+        "lastProcessedAtMs": 1791071872247,
+        "budget": {
+          "window": "2026-10-03",
+          "counterfactuals": 0,
+          "reservedCounterfactuals": 0,
+          "reservedDispatches": 0,
+          "dispatches": 0,
+          "counterfactualLimit": 100,
+          "dispatchLimit": 300,
+          "enforced": false
+        },
+        "lastDispositions": 1,
+        "lastExpiredJobs": 0,
+        "lastResumedEvaluations": 0,
+        "lastReconciledEvaluations": 0,
+        "lastStrandedEvaluations": 0,
+        "lastReclaimedEvaluations": 0,
+        "lastRecoveredHandoffs": 0,
+        "focusTaskKey": "coder\u0000coder.edit",
+        "focusRemaining": 3,
+        "challengeInFlight": false,
+        "lastUnclassifiedCaptures": 32
+      }
+    }
+  },
+  {
+    "i": 4,
+    "status": 200,
+    "body": {
+      "action": "resume",
+      "status": {
+        "ticks": 9,
+        "running": false,
+        "paused": false,
+        "lastOutcome": "ok",
+        "lastError": null,
+        "lastProcessedAtMs": 1791071872247,
+        "budget": {
+          "window": "2026-10-03",
+          "counterfactuals": 0,
+          "reservedCounterfactuals": 0,
+          "reservedDispatches": 0,
+          "dispatches": 0,
+          "counterfactualLimit": 100,
+          "dispatchLimit": 300,
+          "enforced": false
+        },
+        "lastDispositions": 1,
+        "lastExpiredJobs": 0,
+        "lastResumedEvaluations": 0,
+        "lastReconciledEvaluations": 0,
+        "lastStrandedEvaluations": 0,
+        "lastReclaimedEvaluations": 0,
+        "lastRecoveredHandoffs": 0,
+        "focusTaskKey": "coder\u0000coder.edit",
+        "focusRemaining": 3,
+        "challengeInFlight": false,
+        "lastUnclassifiedCaptures": 32
+      }
+    }
+  },
+  {
+    "i": 5,
+    "status": 200,
+    "body": {
+      "action": "resume",
+      "status": {
+        "ticks": 9,
+        "running": false,
+        "paused": false,
+        "lastOutcome": "ok",
+        "lastError": null,
+        "lastProcessedAtMs": 1791071872247,
+        "budget": {
+          "window": "2026-10-03",
+          "counterfactuals": 0,
+          "reservedCounterfactuals": 0,
+          "reservedDispatches": 0,
+          "dispatches": 0,
+          "counterfactualLimit": 100,
+          "dispatchLimit": 300,
+          "enforced": false
+        },
+        "lastDispositions": 1,
+        "lastExpiredJobs": 0,
+        "lastResumedEvaluations": 0,
+        "lastReconciledEvaluations": 0,
+        "lastStrandedEvaluations": 0,
+        "lastReclaimedEvaluations": 0,
+        "lastRecoveredHandoffs": 0,
+        "focusTaskKey": "coder\u0000coder.edit",
+        "focusRemaining": 3,
+        "challengeInFlight": false,
+        "lastUnclassifiedCaptures": 32
+      }
+    }
+  },
+  {
+    "i": 6,
+    "status": 200,
+    "body": {
+      "action": "resume",
+      "status": {
+        "ticks": 9,
+        "running": false,
+        "paused": false,
+        "lastOutcome": "ok",
+        "lastError": null,
+        "lastProcessedAtMs": 1791071872247,
+        "budget": {
+          "window": "2026-10-03",
+          "counterfactuals": 0,
+          "reservedCounterfactuals": 0,
+          "reservedDispatches": 0,
+          "dispatches": 0,
+          "counterfactualLimit": 100,
+          "dispatchLimit": 300,
+          "enforced": false
+        },
+        "lastDispositions": 1,
+        "lastExpiredJobs": 0,
+        "lastResumedEvaluations": 0,
+        "lastReconciledEvaluations": 0,
+        "lastStrandedEvaluations": 0,
+        "lastReclaimedEvaluations": 0,
+        "lastRecoveredHandoffs": 0,
+        "focusTaskKey": "coder\u0000coder.edit",
+        "focusRemaining": 3,
+        "challengeInFlight": false,
+        "lastUnclassifiedCaptures": 32
+      }
+    }
+  },
+  {
+    "i": 7,
+    "status": 200,
+    "body": {
+      "action": "resume",
+      "status": {
+        "ticks": 9,
+        "running": false,
+        "paused": false,
+        "lastOutcome": "ok",
+        "lastError": null,
+        "lastProcessedAtMs": 1791071872247,
+        "budget": {
+          "window": "2026-10-03",
+          "counterfactuals": 0,
+          "reservedCounterfactuals": 0,
+          "reservedDispatches": 0,
+          "dispatches": 0,
+          "counterfactualLimit": 100,
+          "dispatchLimit": 300,
+          "enforced": false
+        },
+        "lastDispositions": 1,
+        "lastExpiredJobs": 0,
+        "lastResumedEvaluations": 0,
+        "lastReconciledEvaluations": 0,
+        "lastStrandedEvaluations": 0,
+        "lastReclaimedEvaluations": 0,
+        "lastRecoveredHandoffs": 0,
+        "focusTaskKey": "coder\u0000coder.edit",
+        "focusRemaining": 3,
+        "challengeInFlight": false,
+        "lastUnclassifiedCaptures": 32
+      }
+    }
+  }
+]

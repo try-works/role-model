@@ -1,0 +1,33 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-host-bridge
+
+(node:5380) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | test/run105-review-advisory-cache.test.ts > run105 review exact advisory cache > classified live backend never resurrects transient advisory after missing
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2,CAPABILITY_MISSING=1 request=req-cache-missing alias=- model=- effort=- pass=live allow=[openai.personal.codex-subscription.global.gpt-5.4] denied=[test.capture.chat-v1,cli.local.coder]
+
+stderr | test/run105-review-advisory-cache.test.ts > run105 review exact advisory cache > classified live backend never resurrects transient advisory after missing
+[run99] live advisory miss: stage=S3 channel=development scope=run105-review-advisory-cache
+
+stdout | test/run105-review-advisory-cache.test.ts > run105 review exact advisory cache > classified live backend never resurrects transient advisory after stopped
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2,CAPABILITY_MISSING=1 request=req-cache-stopped alias=- model=- effort=- pass=live allow=[openai.personal.codex-subscription.global.gpt-5.4] denied=[test.capture.chat-v1,cli.local.coder]
+
+stdout | test/run105-review-advisory-cache.test.ts > run105 review exact advisory cache > classified live backend never resurrects transient advisory after excluded
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2,CAPABILITY_MISSING=1 request=req-cache-excluded alias=- model=- effort=- pass=live allow=[openai.personal.codex-subscription.global.gpt-5.4] denied=[test.capture.chat-v1,cli.local.coder]
+
+ ✓ test/run105-review-advisory-cache.test.ts (11 tests) 4620ms
+   ✓ run105 review exact advisory cache > classified live backend never resurrects transient advisory after missing  1791ms
+   ✓ run105 review exact advisory cache > classified live backend never resurrects transient advisory after stopped  1412ms
+   ✓ run105 review exact advisory cache > classified live backend never resurrects transient advisory after excluded  1399ms
+(node:16204) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | test/run105-review-live-advisory-publisher.test.ts > run105 production publisher scope > enumerates actual stored role-task ladders and reads each exact pair, never one scope-only advisory
+[run105] durable task advisory refresh: scope=publisher-test pairs=2 stage=S3
+
+ ✓ test/run105-review-live-advisory-publisher.test.ts (1 test) 22ms
+
+ Test Files  2 passed (2)
+      Tests  12 passed (12)
+   Start at  16:57:27
+   Duration  20.68s (transform 7.63s, setup 0ms, collect 14.58s, tests 4.64s, environment 1ms, prepare 551ms)
+

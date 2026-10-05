@@ -1,0 +1,222 @@
+(node:11616) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `role-model-dev --trace-warnings ...` to show where the warning was created)
+{
+  "status": "listening",
+  "host": "127.0.0.1",
+  "port": 3458
+}
+[track-b-sidecar] (node:10136) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+[track-b-sidecar] (Use `node --trace-warnings ...` to show where the warning was created)
+[run105] durable task advisory refresh: scope=standalone-runtime-dev pairs=1 stage=S4
+[run115] eligibility candidates=3 eligible=3 codes=none request=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18 alias=baseline.remote-only model=baseline.remote-only effort=high pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[]
+[run98] remote-health recovery: deepseek.personal.deepseek-api-key.global.deepseek-flash, deepseek.personal.deepseek-api-key.global.deepseek-flash-max, deepseek.personal.deepseek-api-key.global.deepseek-v4-pro
+[run101] replay job scope: derived runtime:e22187fbf8a85949e6e4b00d1c480633
+[run101] recovery page payload shape: value,businessOutput,durableLocator,evidenceRef,readCapability,workerPid
+[run101] recovery page came back empty: scope=runtime:e22187fbf8a85949e6e4b00d1c480633 channel=development cursor=start
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=40 scoped=1 first=req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39,req-79b100ea-4e63-4781-9498-657829bb1641 only=none pendingCount=32 captureCount=164
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-ad3b7f75-39e6-4df4-be17-34cc6bb15a18,req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 only=none pendingCount=32 captureCount=165
