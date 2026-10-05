@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { existsSync } from "node:fs";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -109,6 +110,15 @@ const publicRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".
 const privateRoot =
   process.env.ROLE_MODEL_INTERNAL_WORKTREE ??
   path.resolve(publicRoot, "../../../role-model-internal/.worktrees", path.basename(publicRoot));
+/**
+ * The paired private half supplies the genuine evaluation and replay extension wrappers. The public CI
+ * image checks out only this repository, so these cases SKIP when the private checkout is absent rather
+ * than failing in `beforeAll` on a module that was never fetched; the private suite owns that half.
+ */
+const privateSuiteAvailable = existsSync(
+  path.join(privateRoot, "extensions/evaluation-core/index.mjs"),
+);
+const privateTest = privateSuiteAvailable ? test : test.skip;
 const request: RouteChallengeReadRequest = {
   roleId: "role:operator",
   taskTypeId: "task:summarize",
@@ -125,6 +135,7 @@ let reader: Reader | null;
 let listed: Row;
 let finalized: Row;
 beforeAll(async () => {
+  if (!privateSuiteAvailable) return;
   reader = await import(
     /* @vite-ignore */ new URL("../src/route-challenge-evidence.js", import.meta.url).href
   )
@@ -433,19 +444,22 @@ async function read(overrides: Partial<RouteChallengeReadRequest> = {}, replacem
     pageLimit: 1,
   });
 }
-test("genuine finalize/list/read wrappers and real replay job yield actual winner and sibling time", async () => {
-  expect(finalized.outcome).toBe("source");
-  expect(finalized).not.toHaveProperty("confidence");
-  expect(finalized).not.toHaveProperty("createdAtMs");
-  expect(listed.createdAtMs).toBe(time);
-  expect(await read()).toMatchObject({
-    comparisonGroupId: groupId,
-    finalizedAtMs: time,
-    effortComparable: true,
-    winnerEndpointId: request.againstEndpointId,
-  });
-});
-test.each([
+privateTest(
+  "genuine finalize/list/read wrappers and real replay job yield actual winner and sibling time",
+  async () => {
+    expect(finalized.outcome).toBe("source");
+    expect(finalized).not.toHaveProperty("confidence");
+    expect(finalized).not.toHaveProperty("createdAtMs");
+    expect(listed.createdAtMs).toBe(time);
+    expect(await read()).toMatchObject({
+      comparisonGroupId: groupId,
+      finalizedAtMs: time,
+      effortComparable: true,
+      winnerEndpointId: request.againstEndpointId,
+    });
+  },
+);
+privateTest.each([
   { captureRef: "other" },
   { roleId: "other" },
   { taskTypeId: "other" },
@@ -459,7 +473,7 @@ const mutate =
     cap === "evaluation:list-groups"
       ? { groups: [transform(structuredClone(listed))], nextCursor: null, hasMore: false }
       : invoke(id, cap, value);
-test("unknown sibling time stays pending despite fabricated result date", async () => {
+privateTest("unknown sibling time stays pending despite fabricated result date", async () => {
   expect(
     await read(
       {},
@@ -471,7 +485,7 @@ test("unknown sibling time stays pending despite fabricated result date", async 
     ),
   ).toBeNull();
 });
-test("provider completion alone is not finalized evidence", async () => {
+privateTest("provider completion alone is not finalized evidence", async () => {
   expect(
     await read({}, async () => ({
       terminal: true,
@@ -479,7 +493,7 @@ test("provider completion alone is not finalized evidence", async () => {
     })),
   ).toBeNull();
 });
-test("mismatched listed winner cannot replace actual readback", async () => {
+privateTest("mismatched listed winner cannot replace actual readback", async () => {
   expect(
     await read(
       {},
@@ -487,7 +501,7 @@ test("mismatched listed winner cannot replace actual readback", async () => {
     ),
   ).toBeNull();
 });
-test("unknown or mismatched effort remains pending", async () => {
+privateTest("unknown or mismatched effort remains pending", async () => {
   for (const effort of [
     undefined,
     [],
@@ -510,10 +524,10 @@ test("unknown or mismatched effort remains pending", async () => {
     expect(await read({}, alteredInvoke)).toBeNull();
   }
 });
-test("fresh cutoff never borrows a previous comparison", async () => {
+privateTest("fresh cutoff never borrows a previous comparison", async () => {
   expect(await read({ sinceMs: time + 1 })).toBeNull();
 });
-test("real evidence behind a continuation page is reached", async () => {
+privateTest("real evidence behind a continuation page is reached", async () => {
   const cursors: unknown[] = [];
   const paged: Invoke = async (id, cap, value) => {
     if (cap !== "evaluation:list-groups") return invoke(id, cap, value);
@@ -525,235 +539,250 @@ test("real evidence behind a continuation page is reached", async () => {
   expect(await read({}, paged)).not.toBeNull();
   expect(cursors).toEqual([undefined, "before-real"]);
 });
-test("cyclic or malformed pages are unavailable rather than claimed complete", async () => {
+privateTest("cyclic or malformed pages are unavailable rather than claimed complete", async () => {
   expect(
     await read({}, async () => ({ groups: [listed], nextCursor: "cycle", hasMore: true })),
   ).toBeNull();
 });
-test("enumerable durable evidence carries winning-member confidence and exact capture; cutoff refuses old evidence", async () => {
-  expect(enumerate).toBeTypeOf("function");
-  const req = {
-    roleId: request.roleId,
-    taskTypeId: request.taskTypeId,
-    endpointId: request.newEndpointId,
-  };
-  expect(await enumerate?.({ request: req, invoke })).toEqual([
-    {
-      comparisonGroupId: groupId,
-      finalizedAtMs: time,
-      effortComparable: true,
-      winnerEndpointId: request.againstEndpointId,
-      captureRef: request.captureRef,
-      newEndpointId: request.newEndpointId,
-      againstEndpointId: request.againstEndpointId,
-      judgeConfidence: 0.9,
-      endpointConfidence: 0.1,
-    },
-  ]);
-  expect(await enumerate?.({ request: { ...req, sinceMs: time + 1 }, invoke })).toEqual([]);
-  expect(
-    await enumerate?.({
-      request: req,
-      invoke: async () => {
-        throw new Error("auth refused");
-      },
-    }),
-  ).toBeNull();
-});
-test("execute production CLI callbacks over genuine evaluation/replay wrappers with auth envelope and transfer decode", async () => {
-  const source = await readFile(new URL("../src/cli.ts", import.meta.url), "utf8");
-  const start = source.indexOf("        readFinalizedRouteChallenge: async (request) => {");
-  const end = source.indexOf("        operations: sweepOperations,", start);
-  expect(start).toBeGreaterThan(0);
-  expect(end).toBeGreaterThan(start);
-  const helper = await import(
-    /* @vite-ignore */ new URL("../src/route-challenge-evidence.js", import.meta.url).href
-  );
-  // Only the module-loader lexical seam is injected; callback bodies and actual capability records are real.
-  // The seam is matched as a pattern, not as one exact string: the formatter is free to wrap the import across
-  // lines, and a whitespace-sensitive match would silently stop stubbing it and let the real dynamic import run
-  // (which has no import callback inside `new Function`). What this test pins is the callback bodies and the real
-  // capability records, not the layout of the import statement.
-  const body = source
-    .slice(start, end)
-    .replaceAll(/import\(\s*"\.\/route-challenge-evidence\.js"\s*\)/g, "Promise.resolve(helper)");
-  const js = ts.transpileModule(`const callbacks = {${body}};`, {
-    compilerOptions: { target: ts.ScriptTarget.ES2022 },
-  }).outputText;
-  const envelopes: Row[] = [];
-  const runtime = {
-    invoke: async (id: string, envelope: Row) => {
-      envelopes.push(envelope);
-      return invoke(id, envelope.capability as string, envelope.value as Row);
-    },
-  };
-  const run = new Function(
-    "extensionRuntimeRef",
-    "resolveDurableEvaluationAuthority",
-    "resolveDurableReplayJobScope",
-    "decodeExternalizedOperatorReadback",
-    "unwrapCapabilityPayload",
-    "learnerSweepEnvelope",
-    "options",
-    "channel",
-    "helper",
-    `${js}return callbacks;`,
-  );
-  const decodeCalls: Row[] = [];
-  const callbacks = run(
-    { current: runtime },
-    async () => ({ authoritySecret: "real-test-authority" }),
-    () => "runtime:challenge-evidence",
-    (v: Row) => {
-      decodeCalls.push(v);
-      return v.value;
-    },
-    (v: unknown) => v,
-    (v: Row) => ({
-      channel: "development",
-      scope: v.scopeOverride ?? "operator:test",
-      authorizationEpoch: 1,
-      evaluationAuthoritySecret: v.evaluationAuthoritySecret,
-      capability: v.capability,
-      value: v.value,
-    }),
-    { runtimeStateRoot: root, scopeId: "operator:test" },
-    "development",
-    helper,
-  ) as {
-    readFinalizedRouteChallenge(
-      req: RouteChallengeReadRequest,
-    ): Promise<FinalizedRouteChallenge | null>;
-    readRouteDispatchEvidence(req: {
-      roleId: string;
-      taskTypeId: string;
-      endpointId: string;
-    }): Promise<unknown>;
-  };
-  expect(await callbacks.readFinalizedRouteChallenge(request)).toMatchObject({
-    comparisonGroupId: groupId,
-    winnerEndpointId: request.againstEndpointId,
-    finalizedAtMs: time,
-  });
-  expect(
-    await callbacks.readRouteDispatchEvidence({
+privateTest(
+  "enumerable durable evidence carries winning-member confidence and exact capture; cutoff refuses old evidence",
+  async () => {
+    expect(enumerate).toBeTypeOf("function");
+    const req = {
       roleId: request.roleId,
       taskTypeId: request.taskTypeId,
       endpointId: request.newEndpointId,
-    }),
-  ).toHaveLength(1);
-  expect(
-    envelopes.every(
-      (v) => v.evaluationAuthoritySecret === "real-test-authority" && v.authorizationEpoch === 1,
-    ),
-  ).toBe(true);
-  expect(envelopes.find((v) => v.capability === "replay:job")?.scope).toBe(
-    "runtime:challenge-evidence",
-  );
-  expect(envelopes.find((v) => v.capability === "evaluation:list-groups")?.scope).toBe(
-    "operator:test",
-  );
-  expect(decodeCalls.every((v) => v.stateRoot === root && v.scopeId === "operator:test")).toBe(
-    true,
-  );
-});
-test("genuine retained terminal-disposition capture is enumerated from real live telemetry and exact capsule read", async () => {
-  expect(history).toBeTypeOf("function");
-  expect(
-    (await retention.listPendingReplayCaptures({ policySetDigest: "actual-policy" })).pending.some(
-      (capture) => capture.captureRef === historicalId,
-    ),
-  ).toBe(false);
-  const captures = await history?.({
-    ...historyState,
-    channel: "development",
-    request,
-    readCapture: (id) => retention.readRouteCapture({ requestId: id }),
-  });
-  expect(captures).toHaveLength(1);
-  expect(captures?.[0]).toMatchObject({
-    captureRef: historicalId,
-    roleId: request.roleId,
-    taskTypeId: request.taskTypeId,
-    sourceEndpointId: request.againstEndpointId,
-    hasRecordedToolResults: false,
-  });
-  expect(captures?.[0]?.messages).toEqual(retainedCapture.messages);
-});
-test("history fails closed for wrong capsule scope/readiness/identity/classification and excludes replay output", async () => {
-  expect(history).toBeTypeOf("function");
-  for (const patch of [
-    { scope: "wrong" },
-    { requestId: "wrong" },
-    { classification: { roleId: "wrong", taskTypeId: request.taskTypeId } },
-    { trace: { ...(retainedCapture.trace as Row), readiness: "degraded" } },
-    { branchKind: "replay" },
-    { replaySource: null },
-  ]) {
+    };
+    expect(await enumerate?.({ request: req, invoke })).toEqual([
+      {
+        comparisonGroupId: groupId,
+        finalizedAtMs: time,
+        effortComparable: true,
+        winnerEndpointId: request.againstEndpointId,
+        captureRef: request.captureRef,
+        newEndpointId: request.newEndpointId,
+        againstEndpointId: request.againstEndpointId,
+        judgeConfidence: 0.9,
+        endpointConfidence: 0.1,
+      },
+    ]);
+    expect(await enumerate?.({ request: { ...req, sinceMs: time + 1 }, invoke })).toEqual([]);
     expect(
-      await history?.({
-        ...historyState,
-        channel: "development",
-        request,
-        readCapture: async () => ({ ...retainedCapture, ...patch }),
+      await enumerate?.({
+        request: req,
+        invoke: async () => {
+          throw new Error("auth refused");
+        },
       }),
-    ).toEqual([]);
-  }
-  expect(
-    await history?.({
+    ).toBeNull();
+  },
+);
+privateTest(
+  "execute production CLI callbacks over genuine evaluation/replay wrappers with auth envelope and transfer decode",
+  async () => {
+    const source = await readFile(new URL("../src/cli.ts", import.meta.url), "utf8");
+    const start = source.indexOf("        readFinalizedRouteChallenge: async (request) => {");
+    const end = source.indexOf("        operations: sweepOperations,", start);
+    expect(start).toBeGreaterThan(0);
+    expect(end).toBeGreaterThan(start);
+    const helper = await import(
+      /* @vite-ignore */ new URL("../src/route-challenge-evidence.js", import.meta.url).href
+    );
+    // Only the module-loader lexical seam is injected; callback bodies and actual capability records are real.
+    // The seam is matched as a pattern, not as one exact string: the formatter is free to wrap the import across
+    // lines, and a whitespace-sensitive match would silently stop stubbing it and let the real dynamic import run
+    // (which has no import callback inside `new Function`). What this test pins is the callback bodies and the real
+    // capability records, not the layout of the import statement.
+    const body = source
+      .slice(start, end)
+      .replaceAll(/import\(\s*"\.\/route-challenge-evidence\.js"\s*\)/g, "Promise.resolve(helper)");
+    const js = ts.transpileModule(`const callbacks = {${body}};`, {
+      compilerOptions: { target: ts.ScriptTarget.ES2022 },
+    }).outputText;
+    const envelopes: Row[] = [];
+    const runtime = {
+      invoke: async (id: string, envelope: Row) => {
+        envelopes.push(envelope);
+        return invoke(id, envelope.capability as string, envelope.value as Row);
+      },
+    };
+    const run = new Function(
+      "extensionRuntimeRef",
+      "resolveDurableEvaluationAuthority",
+      "resolveDurableReplayJobScope",
+      "decodeExternalizedOperatorReadback",
+      "unwrapCapabilityPayload",
+      "learnerSweepEnvelope",
+      "options",
+      "channel",
+      "helper",
+      `${js}return callbacks;`,
+    );
+    const decodeCalls: Row[] = [];
+    const callbacks = run(
+      { current: runtime },
+      async () => ({ authoritySecret: "real-test-authority" }),
+      () => "runtime:challenge-evidence",
+      (v: Row) => {
+        decodeCalls.push(v);
+        return v.value;
+      },
+      (v: unknown) => v,
+      (v: Row) => ({
+        channel: "development",
+        scope: v.scopeOverride ?? "operator:test",
+        authorizationEpoch: 1,
+        evaluationAuthoritySecret: v.evaluationAuthoritySecret,
+        capability: v.capability,
+        value: v.value,
+      }),
+      { runtimeStateRoot: root, scopeId: "operator:test" },
+      "development",
+      helper,
+    ) as {
+      readFinalizedRouteChallenge(
+        req: RouteChallengeReadRequest,
+      ): Promise<FinalizedRouteChallenge | null>;
+      readRouteDispatchEvidence(req: {
+        roleId: string;
+        taskTypeId: string;
+        endpointId: string;
+      }): Promise<unknown>;
+    };
+    expect(await callbacks.readFinalizedRouteChallenge(request)).toMatchObject({
+      comparisonGroupId: groupId,
+      winnerEndpointId: request.againstEndpointId,
+      finalizedAtMs: time,
+    });
+    expect(
+      await callbacks.readRouteDispatchEvidence({
+        roleId: request.roleId,
+        taskTypeId: request.taskTypeId,
+        endpointId: request.newEndpointId,
+      }),
+    ).toHaveLength(1);
+    expect(
+      envelopes.every(
+        (v) => v.evaluationAuthoritySecret === "real-test-authority" && v.authorizationEpoch === 1,
+      ),
+    ).toBe(true);
+    expect(envelopes.find((v) => v.capability === "replay:job")?.scope).toBe(
+      "runtime:challenge-evidence",
+    );
+    expect(envelopes.find((v) => v.capability === "evaluation:list-groups")?.scope).toBe(
+      "operator:test",
+    );
+    expect(decodeCalls.every((v) => v.stateRoot === root && v.scopeId === "operator:test")).toBe(
+      true,
+    );
+  },
+);
+privateTest(
+  "genuine retained terminal-disposition capture is enumerated from real live telemetry and exact capsule read",
+  async () => {
+    expect(history).toBeTypeOf("function");
+    expect(
+      (
+        await retention.listPendingReplayCaptures({ policySetDigest: "actual-policy" })
+      ).pending.some((capture) => capture.captureRef === historicalId),
+    ).toBe(false);
+    const captures = await history?.({
       ...historyState,
       channel: "development",
       request,
-      readCapture: async () => {
-        throw new Error("auth unavailable");
-      },
-    }),
-  ).toBeNull();
-});
-test("history index unavailable and 501 matching ids are null, never a truncated complete corpus", async () => {
-  expect(history).toBeTypeOf("function");
-  expect(
-    await history?.({
-      runtimeStateRoot: path.join(root, "absent"),
-      scopeId: historyState.scopeId,
-      channel: "development",
-      request,
-      readCapture: async () => retainedCapture,
-    }),
-  ).toBeNull();
-  const db = new DatabaseSync(historyState.databasePath);
-  try {
-    for (let i = 0; i < 500; i++)
-      persistRuntimeTelemetryFailure({
-        databasePath: historyState.databasePath,
-        requestId: `req-overflow-${i}`,
-        statusCode: 400,
-        errorClass: "invalid_request",
-        taxonomyRoleId: request.roleId,
-        taxonomyTaskType: request.taskTypeId,
-        requestClass: "live",
-      });
-    let reads = 0;
+      readCapture: (id) => retention.readRouteCapture({ requestId: id }),
+    });
+    expect(captures).toHaveLength(1);
+    expect(captures?.[0]).toMatchObject({
+      captureRef: historicalId,
+      roleId: request.roleId,
+      taskTypeId: request.taskTypeId,
+      sourceEndpointId: request.againstEndpointId,
+      hasRecordedToolResults: false,
+    });
+    expect(captures?.[0]?.messages).toEqual(retainedCapture.messages);
+  },
+);
+privateTest(
+  "history fails closed for wrong capsule scope/readiness/identity/classification and excludes replay output",
+  async () => {
+    expect(history).toBeTypeOf("function");
+    for (const patch of [
+      { scope: "wrong" },
+      { requestId: "wrong" },
+      { classification: { roleId: "wrong", taskTypeId: request.taskTypeId } },
+      { trace: { ...(retainedCapture.trace as Row), readiness: "degraded" } },
+      { branchKind: "replay" },
+      { replaySource: null },
+    ]) {
+      expect(
+        await history?.({
+          ...historyState,
+          channel: "development",
+          request,
+          readCapture: async () => ({ ...retainedCapture, ...patch }),
+        }),
+      ).toEqual([]);
+    }
     expect(
       await history?.({
         ...historyState,
         channel: "development",
         request,
         readCapture: async () => {
-          reads++;
-          return retainedCapture;
+          throw new Error("auth unavailable");
         },
       }),
     ).toBeNull();
-    expect(reads).toBe(0);
-  } finally {
-    db.prepare(
-      "DELETE FROM runtime_telemetry_records WHERE request_id LIKE 'req-overflow-%'",
-    ).run();
-    db.close();
-  }
-});
-test("CLI history callback must actually bind supported exact read operation", async () => {
+  },
+);
+privateTest(
+  "history index unavailable and 501 matching ids are null, never a truncated complete corpus",
+  async () => {
+    expect(history).toBeTypeOf("function");
+    expect(
+      await history?.({
+        runtimeStateRoot: path.join(root, "absent"),
+        scopeId: historyState.scopeId,
+        channel: "development",
+        request,
+        readCapture: async () => retainedCapture,
+      }),
+    ).toBeNull();
+    const db = new DatabaseSync(historyState.databasePath);
+    try {
+      for (let i = 0; i < 500; i++)
+        persistRuntimeTelemetryFailure({
+          databasePath: historyState.databasePath,
+          requestId: `req-overflow-${i}`,
+          statusCode: 400,
+          errorClass: "invalid_request",
+          taxonomyRoleId: request.roleId,
+          taxonomyTaskType: request.taskTypeId,
+          requestClass: "live",
+        });
+      let reads = 0;
+      expect(
+        await history?.({
+          ...historyState,
+          channel: "development",
+          request,
+          readCapture: async () => {
+            reads++;
+            return retainedCapture;
+          },
+        }),
+      ).toBeNull();
+      expect(reads).toBe(0);
+    } finally {
+      db.prepare(
+        "DELETE FROM runtime_telemetry_records WHERE request_id LIKE 'req-overflow-%'",
+      ).run();
+      db.close();
+    }
+  },
+);
+privateTest("CLI history callback must actually bind supported exact read operation", async () => {
   const source = await readFile(new URL("../src/cli.ts", import.meta.url), "utf8");
   const loop = source.slice(source.indexOf("const loop = startAutoReplayLoop({"));
   expect(loop).toContain("readRouteReplayableCaptures:");
@@ -803,248 +832,274 @@ const pendingInput = () => ({
   readQueueJob: async (jobId: string) =>
     queueReads.readQueueJob({ stateRoot: root, queueName: "replay.dispatch", jobId }),
 });
-test("pending restart reads actual authenticated ReplayCore job plus complete real empty queue", async () => {
-  expect(pendingReader).toBeTypeOf("function");
-  await Effect.runPromise(
-    Effect.gen(function* () {
-      yield* PersistedQueue.make({
-        name: "replay.dispatch",
-        schema: Schema.Struct({
-          captureRef: Schema.String,
-          endpointIds: Schema.Array(Schema.String),
-          policySetDigest: Schema.String,
-        }),
-        maxAttempts: 1,
-      });
-    }).pipe(
-      Effect.provide(makeQueueStoreLayer({ filePath: resolveQueueStorePath({ stateRoot: root }) })),
-      Effect.scoped,
-    ),
-  );
-  expect(await pendingReader?.(pendingInput())).toEqual([
-    {
-      sourceType: "replay",
-      replayJobId: actualReplayJob.jobId,
-      queueJobId: null,
-      captureRef: request.captureRef,
-      newEndpointId: request.newEndpointId,
-      againstEndpointId: request.againstEndpointId,
-      createdAtMs: actualReplayJob.createdAtMs,
-      state: "queued",
-    },
-  ]);
-});
-test("fresh queue store with no rows is a complete empty pending-dispatch projection", async () => {
-  expect(pendingReader).toBeTypeOf("function");
-  const value = await pendingReader?.({
-    ...pendingInput(),
-    invoke: async (_id, capability, _value) =>
-      capability === "replay:list-jobs" ? { value: [] } : invoke(_id, capability, _value),
-    readQueueJobs: async () => ({
-      schemaVersion: "role-model.operator-queue-jobs.v1",
-      queue: "replay.dispatch",
-      available: false,
-      jobs: [],
-    }),
-    readQueueJob: async () => ({ available: false, reason: "queue job not found" }),
-  });
-  expect(value).toEqual([]);
-});
-
-test("genuine pre-replay queue row preserves actual queue ID and never invents a replayJobId", async () => {
-  expect(pendingReader).toBeTypeOf("function");
-  await Effect.runPromise(
-    Effect.gen(function* () {
-      const queue = yield* PersistedQueue.make({
-        name: "replay.dispatch",
-        schema: Schema.Struct({
-          captureRef: Schema.String,
-          endpointIds: Schema.Array(Schema.String),
-          policySetDigest: Schema.String,
-          dispatchRoundId: Schema.String,
-        }),
-        maxAttempts: 1,
-      });
-      yield* queue.offer(
-        {
-          captureRef: historicalId,
-          endpointIds: [request.newEndpointId],
-          policySetDigest: "actual-policy",
-          dispatchRoundId: "round:actual-persisted",
-        },
-        { id: historicalId },
-      );
-    }).pipe(
-      Effect.provide(makeQueueStoreLayer({ filePath: resolveQueueStorePath({ stateRoot: root }) })),
-      Effect.scoped,
-    ),
-  );
-  const queueRecord = (
-    queueReads.readQueueJob({
-      stateRoot: root,
-      queueName: "replay.dispatch",
-      jobId: historicalId,
-    }) as { job: { createdAt: string } }
-  ).job;
-  const createdAtMs = Date.parse(`${queueRecord.createdAt.replace(" ", "T")}Z`);
-  expect(await pendingReader?.(pendingInput())).toEqual([
-    {
-      sourceType: "replay",
-      replayJobId: actualReplayJob.jobId,
-      queueJobId: null,
-      captureRef: request.captureRef,
-      newEndpointId: request.newEndpointId,
-      againstEndpointId: request.againstEndpointId,
-      createdAtMs: actualReplayJob.createdAtMs,
-      state: "queued",
-    },
-    {
-      sourceType: "queue",
-      replayJobId: null,
-      queueJobId: historicalId,
-      dispatchRoundId: "round:actual-persisted",
-      captureRef: historicalId,
-      newEndpointId: request.newEndpointId,
-      againstEndpointId: request.againstEndpointId,
-      createdAtMs,
-      state: "queued",
-    },
-  ]);
-  expect(
-    await pendingReader?.({
+privateTest(
+  "pending restart reads actual authenticated ReplayCore job plus complete real empty queue",
+  async () => {
+    expect(pendingReader).toBeTypeOf("function");
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        yield* PersistedQueue.make({
+          name: "replay.dispatch",
+          schema: Schema.Struct({
+            captureRef: Schema.String,
+            endpointIds: Schema.Array(Schema.String),
+            policySetDigest: Schema.String,
+          }),
+          maxAttempts: 1,
+        });
+      }).pipe(
+        Effect.provide(
+          makeQueueStoreLayer({ filePath: resolveQueueStorePath({ stateRoot: root }) }),
+        ),
+        Effect.scoped,
+      ),
+    );
+    expect(await pendingReader?.(pendingInput())).toEqual([
+      {
+        sourceType: "replay",
+        replayJobId: actualReplayJob.jobId,
+        queueJobId: null,
+        captureRef: request.captureRef,
+        newEndpointId: request.newEndpointId,
+        againstEndpointId: request.againstEndpointId,
+        createdAtMs: actualReplayJob.createdAtMs,
+        state: "queued",
+      },
+    ]);
+  },
+);
+privateTest(
+  "fresh queue store with no rows is a complete empty pending-dispatch projection",
+  async () => {
+    expect(pendingReader).toBeTypeOf("function");
+    const value = await pendingReader?.({
       ...pendingInput(),
-      readQueueJobs: async () => ({ available: false, jobs: [] }),
-    }),
-  ).toBeNull();
-  expect(
-    await pendingReader?.({
-      ...pendingInput(),
+      invoke: async (_id, capability, _value) =>
+        capability === "replay:list-jobs" ? { value: [] } : invoke(_id, capability, _value),
       readQueueJobs: async () => ({
-        available: true,
-        jobs: Array.from({ length: 500 }, () => ({})),
+        schemaVersion: "role-model.operator-queue-jobs.v1",
+        queue: "replay.dispatch",
+        available: false,
+        jobs: [],
       }),
-    }),
-  ).toBeNull();
-});
-test("execute fourth production callback against actual replay and pre-replay Effect queue records", async () => {
-  expect(pendingReader).toBeTypeOf("function");
-  const source = await readFile(new URL("../src/cli.ts", import.meta.url), "utf8");
-  const start = source.indexOf("        readPendingRouteDispatches: async (request) => {");
-  const end = source.indexOf("        readRouteReplayableCaptures:", start);
-  const helper = await import(
-    /* @vite-ignore */ new URL("../src/route-challenge-evidence.js", import.meta.url).href
-  );
-  const body = source
-    .slice(start, end)
-    .replaceAll('import("./route-challenge-evidence.js")', "Promise.resolve(helper)");
-  const js = ts.transpileModule(`const callbacks = {${body}};`, {
-    compilerOptions: { target: ts.ScriptTarget.ES2022 },
-  }).outputText;
-  const envelopes: Row[] = [];
-  const ids: string[] = [];
-  const runtime = {
-    invoke: async (id: string, envelope: Row) => {
-      envelopes.push(envelope);
-      return invoke(id, envelope.capability as string, envelope.value as Row);
-    },
-  };
-  const run = new Function(
-    "extensionRuntimeRef",
-    "currentPostObservationOperations",
-    "resolveDurableEvaluationAuthority",
-    "resolveDurableReplayJobScope",
-    "decodeExternalizedOperatorReadback",
-    "unwrapCapabilityPayload",
-    "learnerSweepEnvelope",
-    "options",
-    "channel",
-    "helper",
-    `${js}return callbacks.readPendingRouteDispatches;`,
-  );
-  const callback = run(
-    { current: runtime },
-    () => ({
-      readLocalRouteCapture: async ({ requestId }: { requestId: string }) =>
-        retention.readRouteCapture({ requestId }),
-      readQueueJobs: async (name: string, query: Record<string, string>) => {
-        expect(name).toBe("replay.dispatch");
-        expect(query.limit).toBe("500");
-        return pendingInput().readQueueJobs();
-      },
-      readQueueJob: async (name: string, id: string) => {
-        expect(name).toBe("replay.dispatch");
-        ids.push(id);
-        return pendingInput().readQueueJob(id);
-      },
-    }),
-    async () => {
-      throw new Error("evaluation authority unavailable");
-    },
-    () => actualReplayJob.scope,
-    (v: Row) => v.value,
-    (v: unknown) => v,
-    (v: Row) => ({
-      scope: v.scopeOverride,
-      authorizationEpoch: 1,
-      capability: v.capability,
-      value: v.value,
-      evaluationAuthoritySecret: v.evaluationAuthoritySecret,
-    }),
-    { runtimeStateRoot: root, scopeId: "operator-history" },
-    "development",
-    helper,
-  ) as (req: typeof request) => Promise<unknown>;
-  expect(await callback(request)).toHaveLength(2);
-  expect(ids).toEqual([historicalId]);
-  expect(
-    envelopes.every(
-      (envelope) =>
-        envelope.scope === actualReplayJob.scope &&
-        envelope.evaluationAuthoritySecret === undefined,
-    ),
-  ).toBe(true);
-});
-test("exact same capture/pair with two genuine finalized groups uses explicit excluded group IDs, not arbitrary winner", async () => {
-  const evaluation = (await import(
-    /* @vite-ignore */ pathToFileURL(path.join(privateRoot, "extensions/evaluation-core/index.mjs"))
-      .href
-  )) as EvaluationModule;
-  const core = new evaluation.EvaluationCore({
-    filePath: path.join(root, "evaluation.sqlite"),
-    channel: "development",
-    scope: actualReplayJob.scope,
-    authorizationEpoch: 1,
-    clock: () => time + 100,
-    artifactResolver: { resolve: (scope: string, reference: string) => ({ scope, reference }) },
-  });
-  try {
-    core.finalizeComparisonGroup({
-      groupId: "comparison:fresh-second",
-      trialIds: finalized.trialIds,
-      comparability: finalized.comparability,
-      holdout: finalized.holdout,
+      readQueueJob: async () => ({ available: false, reason: "queue job not found" }),
     });
-  } finally {
-    core.close();
-  }
-  expect(await read()).toBeNull();
-  expect(await read({ excludedComparisonGroupIds: [groupId] })).toMatchObject({
-    comparisonGroupId: "comparison:fresh-second",
-    finalizedAtMs: time + 100,
-  });
-  expect(await read({ excludedComparisonGroupIds: [groupId, groupId] })).toBeNull();
-});
-test("CLI must bind pending restart to authenticated replay reads AND actual queue read authority", async () => {
-  const source = await readFile(new URL("../src/cli.ts", import.meta.url), "utf8");
-  expect(source.slice(source.indexOf("const loop = startAutoReplayLoop({"))).toContain(
-    "readPendingRouteDispatches:",
-  );
-});
-test("CLI finalized and enumerable callbacks actually bind authenticated extension reads", async () => {
-  const source = await readFile(new URL("../src/cli.ts", import.meta.url), "utf8");
-  const loop = source.slice(source.indexOf("const loop = startAutoReplayLoop({"));
-  expect(loop).toContain("readFinalizedRouteChallenge:");
-  expect(loop).toContain("readRouteDispatchEvidence:");
-  expect(loop).toContain("route-challenge-evidence.js");
-  expect(loop).toContain("evaluationAuthoritySecret: authority.authoritySecret");
-});
+    expect(value).toEqual([]);
+  },
+);
+
+privateTest(
+  "genuine pre-replay queue row preserves actual queue ID and never invents a replayJobId",
+  async () => {
+    expect(pendingReader).toBeTypeOf("function");
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        const queue = yield* PersistedQueue.make({
+          name: "replay.dispatch",
+          schema: Schema.Struct({
+            captureRef: Schema.String,
+            endpointIds: Schema.Array(Schema.String),
+            policySetDigest: Schema.String,
+            dispatchRoundId: Schema.String,
+          }),
+          maxAttempts: 1,
+        });
+        yield* queue.offer(
+          {
+            captureRef: historicalId,
+            endpointIds: [request.newEndpointId],
+            policySetDigest: "actual-policy",
+            dispatchRoundId: "round:actual-persisted",
+          },
+          { id: historicalId },
+        );
+      }).pipe(
+        Effect.provide(
+          makeQueueStoreLayer({ filePath: resolveQueueStorePath({ stateRoot: root }) }),
+        ),
+        Effect.scoped,
+      ),
+    );
+    const queueRecord = (
+      queueReads.readQueueJob({
+        stateRoot: root,
+        queueName: "replay.dispatch",
+        jobId: historicalId,
+      }) as { job: { createdAt: string } }
+    ).job;
+    const createdAtMs = Date.parse(`${queueRecord.createdAt.replace(" ", "T")}Z`);
+    expect(await pendingReader?.(pendingInput())).toEqual([
+      {
+        sourceType: "replay",
+        replayJobId: actualReplayJob.jobId,
+        queueJobId: null,
+        captureRef: request.captureRef,
+        newEndpointId: request.newEndpointId,
+        againstEndpointId: request.againstEndpointId,
+        createdAtMs: actualReplayJob.createdAtMs,
+        state: "queued",
+      },
+      {
+        sourceType: "queue",
+        replayJobId: null,
+        queueJobId: historicalId,
+        dispatchRoundId: "round:actual-persisted",
+        captureRef: historicalId,
+        newEndpointId: request.newEndpointId,
+        againstEndpointId: request.againstEndpointId,
+        createdAtMs,
+        state: "queued",
+      },
+    ]);
+    expect(
+      await pendingReader?.({
+        ...pendingInput(),
+        readQueueJobs: async () => ({ available: false, jobs: [] }),
+      }),
+    ).toBeNull();
+    expect(
+      await pendingReader?.({
+        ...pendingInput(),
+        readQueueJobs: async () => ({
+          available: true,
+          jobs: Array.from({ length: 500 }, () => ({})),
+        }),
+      }),
+    ).toBeNull();
+  },
+);
+privateTest(
+  "execute fourth production callback against actual replay and pre-replay Effect queue records",
+  async () => {
+    expect(pendingReader).toBeTypeOf("function");
+    const source = await readFile(new URL("../src/cli.ts", import.meta.url), "utf8");
+    const start = source.indexOf("        readPendingRouteDispatches: async (request) => {");
+    const end = source.indexOf("        readRouteReplayableCaptures:", start);
+    const helper = await import(
+      /* @vite-ignore */ new URL("../src/route-challenge-evidence.js", import.meta.url).href
+    );
+    const body = source
+      .slice(start, end)
+      .replaceAll('import("./route-challenge-evidence.js")', "Promise.resolve(helper)");
+    const js = ts.transpileModule(`const callbacks = {${body}};`, {
+      compilerOptions: { target: ts.ScriptTarget.ES2022 },
+    }).outputText;
+    const envelopes: Row[] = [];
+    const ids: string[] = [];
+    const runtime = {
+      invoke: async (id: string, envelope: Row) => {
+        envelopes.push(envelope);
+        return invoke(id, envelope.capability as string, envelope.value as Row);
+      },
+    };
+    const run = new Function(
+      "extensionRuntimeRef",
+      "currentPostObservationOperations",
+      "resolveDurableEvaluationAuthority",
+      "resolveDurableReplayJobScope",
+      "decodeExternalizedOperatorReadback",
+      "unwrapCapabilityPayload",
+      "learnerSweepEnvelope",
+      "options",
+      "channel",
+      "helper",
+      `${js}return callbacks.readPendingRouteDispatches;`,
+    );
+    const callback = run(
+      { current: runtime },
+      () => ({
+        readLocalRouteCapture: async ({ requestId }: { requestId: string }) =>
+          retention.readRouteCapture({ requestId }),
+        readQueueJobs: async (name: string, query: Record<string, string>) => {
+          expect(name).toBe("replay.dispatch");
+          expect(query.limit).toBe("500");
+          return pendingInput().readQueueJobs();
+        },
+        readQueueJob: async (name: string, id: string) => {
+          expect(name).toBe("replay.dispatch");
+          ids.push(id);
+          return pendingInput().readQueueJob(id);
+        },
+      }),
+      async () => {
+        throw new Error("evaluation authority unavailable");
+      },
+      () => actualReplayJob.scope,
+      (v: Row) => v.value,
+      (v: unknown) => v,
+      (v: Row) => ({
+        scope: v.scopeOverride,
+        authorizationEpoch: 1,
+        capability: v.capability,
+        value: v.value,
+        evaluationAuthoritySecret: v.evaluationAuthoritySecret,
+      }),
+      { runtimeStateRoot: root, scopeId: "operator-history" },
+      "development",
+      helper,
+    ) as (req: typeof request) => Promise<unknown>;
+    expect(await callback(request)).toHaveLength(2);
+    expect(ids).toEqual([historicalId]);
+    expect(
+      envelopes.every(
+        (envelope) =>
+          envelope.scope === actualReplayJob.scope &&
+          envelope.evaluationAuthoritySecret === undefined,
+      ),
+    ).toBe(true);
+  },
+);
+privateTest(
+  "exact same capture/pair with two genuine finalized groups uses explicit excluded group IDs, not arbitrary winner",
+  async () => {
+    const evaluation = (await import(
+      /* @vite-ignore */ pathToFileURL(
+        path.join(privateRoot, "extensions/evaluation-core/index.mjs"),
+      ).href
+    )) as EvaluationModule;
+    const core = new evaluation.EvaluationCore({
+      filePath: path.join(root, "evaluation.sqlite"),
+      channel: "development",
+      scope: actualReplayJob.scope,
+      authorizationEpoch: 1,
+      clock: () => time + 100,
+      artifactResolver: { resolve: (scope: string, reference: string) => ({ scope, reference }) },
+    });
+    try {
+      core.finalizeComparisonGroup({
+        groupId: "comparison:fresh-second",
+        trialIds: finalized.trialIds,
+        comparability: finalized.comparability,
+        holdout: finalized.holdout,
+      });
+    } finally {
+      core.close();
+    }
+    expect(await read()).toBeNull();
+    expect(await read({ excludedComparisonGroupIds: [groupId] })).toMatchObject({
+      comparisonGroupId: "comparison:fresh-second",
+      finalizedAtMs: time + 100,
+    });
+    expect(await read({ excludedComparisonGroupIds: [groupId, groupId] })).toBeNull();
+  },
+);
+privateTest(
+  "CLI must bind pending restart to authenticated replay reads AND actual queue read authority",
+  async () => {
+    const source = await readFile(new URL("../src/cli.ts", import.meta.url), "utf8");
+    expect(source.slice(source.indexOf("const loop = startAutoReplayLoop({"))).toContain(
+      "readPendingRouteDispatches:",
+    );
+  },
+);
+privateTest(
+  "CLI finalized and enumerable callbacks actually bind authenticated extension reads",
+  async () => {
+    const source = await readFile(new URL("../src/cli.ts", import.meta.url), "utf8");
+    const loop = source.slice(source.indexOf("const loop = startAutoReplayLoop({"));
+    expect(loop).toContain("readFinalizedRouteChallenge:");
+    expect(loop).toContain("readRouteDispatchEvidence:");
+    expect(loop).toContain("route-challenge-evidence.js");
+    expect(loop).toContain("evaluationAuthoritySecret: authority.authoritySecret");
+  },
+);

@@ -1,13 +1,29 @@
+import { existsSync } from "node:fs";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { afterEach, expect, test } from "vitest";
 import { readTrackBRouteAdvisoryFromRollout as read } from "../src/route-advisory-source.js";
 // Paired checkout integration: genuine materializer + temporary SQLite store, never a mock literal.
-const privateRoot =
-  process.env.RUN105_PRIVATE_ROOT ??
-  "D:/DEV/role-model-internal/.worktrees/105-route-learning-matching-scope-activation";
+const privateRoot = (() => {
+  const configured = process.env.ROLE_MODEL_INTERNAL_WORKTREE ?? process.env.RUN105_PRIVATE_ROOT;
+  if (configured && configured.trim().length > 0) return configured.trim();
+  const publicRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../..");
+  return path.resolve(
+    publicRoot,
+    "../../../role-model-internal/.worktrees",
+    path.basename(publicRoot),
+  );
+})();
+/**
+ * The paired private half supplies the genuine knowledge store and ladder materializer. The public CI
+ * image checks out only this repository, so the cases below SKIP when the private checkout is absent
+ * instead of failing on a module that was never fetched; the private suite owns that half of the pair.
+ */
+const privateTest = existsSync(path.join(privateRoot, "extensions/knowledge-store/index.mjs"))
+  ? test
+  : test.skip;
 const roots: string[] = [];
 afterEach(async () => {
   for (const root of roots.splice(0)) await rm(root, { recursive: true, force: true });
@@ -121,34 +137,37 @@ async function changed(
     },
   });
 }
-test("real-store admitted confidence, explicit cohort and exact scoped reads without promotion", async () => {
-  const s = await setup();
-  expect((await read(s.input)).reason).toBeNull();
-  expect(await read(s.input)).toMatchObject({
-    advisoryState: "fresh",
-    confidence: 0.75,
-    cohortPercent: 25,
-    roleId,
-    taskTypeId,
-    taxonomyVersion: "taxonomy:105",
-    preferredRoutePackage: "endpoint:a",
-  });
-  const row = await s.invoke("knowledge:read-route-ladder", { scopeId, roleId, taskTypeId });
-  expect(s.calls).toContainEqual({
-    capability: "knowledge:read-route-ladder",
-    value: { scopeId, roleId, taskTypeId },
-  });
-  expect(s.calls).toContainEqual({
-    capability: "knowledge:read",
-    value: { id: row.ladder.packId, scope: scopeId },
-  });
-  expect(s.calls).toContainEqual({
-    capability: "knowledge:rollout-state",
-    value: { scopeId, limit: 1 },
-  });
-  expect((await s.invoke("knowledge:rollout-state", { scopeId })).activePackageId).toBeNull();
-});
-test("real-store rewrite/cache time cannot refresh evidence", async () => {
+privateTest(
+  "real-store admitted confidence, explicit cohort and exact scoped reads without promotion",
+  async () => {
+    const s = await setup();
+    expect((await read(s.input)).reason).toBeNull();
+    expect(await read(s.input)).toMatchObject({
+      advisoryState: "fresh",
+      confidence: 0.75,
+      cohortPercent: 25,
+      roleId,
+      taskTypeId,
+      taxonomyVersion: "taxonomy:105",
+      preferredRoutePackage: "endpoint:a",
+    });
+    const row = await s.invoke("knowledge:read-route-ladder", { scopeId, roleId, taskTypeId });
+    expect(s.calls).toContainEqual({
+      capability: "knowledge:read-route-ladder",
+      value: { scopeId, roleId, taskTypeId },
+    });
+    expect(s.calls).toContainEqual({
+      capability: "knowledge:read",
+      value: { id: row.ladder.packId, scope: scopeId },
+    });
+    expect(s.calls).toContainEqual({
+      capability: "knowledge:rollout-state",
+      value: { scopeId, limit: 1 },
+    });
+    expect((await s.invoke("knowledge:rollout-state", { scopeId })).activePackageId).toBeNull();
+  },
+);
+privateTest("real-store rewrite/cache time cannot refresh evidence", async () => {
   const s = await setup();
   const before = await s.invoke("knowledge:read-route-ladder", { scopeId, roleId, taskTypeId });
   await s.materialize(999999);
@@ -161,18 +180,18 @@ test("real-store rewrite/cache time cannot refresh evidence", async () => {
     revalidationDue: false,
   });
 });
-test("revalidation uses evidence age", async () => {
+privateTest("revalidation uses evidence age", async () => {
   const s = await setup();
   expect(await read({ ...s.input, revalidationIntervalMs: 500 })).toMatchObject({
     advisoryState: "stale",
     revalidationDue: true,
   });
 });
-test("unknown evidence time never becomes fresh", async () => {
+privateTest("unknown evidence time never becomes fresh", async () => {
   const s = await setup(null);
   expect((await read(s.input)).advisoryState).not.toBe("fresh");
 });
-test("real scope kill switch suppresses derived ladder", async () => {
+privateTest("real scope kill switch suppresses derived ladder", async () => {
   const s = await setup();
   await s.invoke("knowledge:engage-kill-switch", { scopeId });
   expect(await read(s.input)).toMatchObject({
@@ -182,35 +201,38 @@ test("real scope kill switch suppresses derived ladder", async () => {
     taskTypeId,
   });
 });
-test("real pending guardrail stays fresh but sustained breach suppresses without activePackageId", async () => {
-  const s = await setup();
-  const first = await s.invoke("knowledge:record-guardrail-breach", {
-    scopeId,
-    metric: "latency",
-    observed: 20,
-    bound: 10,
-    windowMs: 1000,
-    nowMs: 1000,
-  });
-  expect(first.rollback).toBeNull();
-  expect((await read(s.input)).advisoryState).toBe("fresh");
-  const second = await s.invoke("knowledge:record-guardrail-breach", {
-    scopeId,
-    metric: "latency",
-    observed: 20,
-    bound: 10,
-    windowMs: 1000,
-    nowMs: 2000,
-  });
-  expect(second.breach.sustainedMs).toBe(1000);
-  expect(await read(s.input)).toMatchObject({
-    advisoryState: "unavailable",
-    advisoryLadder: [],
-    roleId,
-    taskTypeId,
-  });
-});
-test("real per-task rollback reversible with exact unavailable identity", async () => {
+privateTest(
+  "real pending guardrail stays fresh but sustained breach suppresses without activePackageId",
+  async () => {
+    const s = await setup();
+    const first = await s.invoke("knowledge:record-guardrail-breach", {
+      scopeId,
+      metric: "latency",
+      observed: 20,
+      bound: 10,
+      windowMs: 1000,
+      nowMs: 1000,
+    });
+    expect(first.rollback).toBeNull();
+    expect((await read(s.input)).advisoryState).toBe("fresh");
+    const second = await s.invoke("knowledge:record-guardrail-breach", {
+      scopeId,
+      metric: "latency",
+      observed: 20,
+      bound: 10,
+      windowMs: 1000,
+      nowMs: 2000,
+    });
+    expect(second.breach.sustainedMs).toBe(1000);
+    expect(await read(s.input)).toMatchObject({
+      advisoryState: "unavailable",
+      advisoryLadder: [],
+      roleId,
+      taskTypeId,
+    });
+  },
+);
+privateTest("real per-task rollback reversible with exact unavailable identity", async () => {
   const s = await setup();
   await s.invoke("knowledge:set-route-ladder-rollback", {
     scopeId,
@@ -228,7 +250,7 @@ test("real per-task rollback reversible with exact unavailable identity", async 
   });
   expect((await read(s.input)).advisoryState).toBe("fresh");
 });
-test.each([undefined, null, -1, 101, Number.NaN])(
+privateTest.each([undefined, null, -1, 101, Number.NaN])(
   "invalid policy %s never widens exposure",
   async (policy) => {
     const s = await setup();
@@ -238,22 +260,25 @@ test.each([undefined, null, -1, 101, Number.NaN])(
     });
   },
 );
-test.each(["S2", "S3", "S4"])(
+privateTest.each(["S2", "S3", "S4"])(
   "stage %s uses configured policy when no rollout promotion",
   async (stage) => {
     const s = await setup();
     expect((await read({ ...s.input, stage, policyCohortPercent: 10 })).cohortPercent).toBe(10);
   },
 );
-test.each(["scopeId", "roleId", "taskTypeId"])("rejects mismatched ladder %s", async (key) => {
-  const result = await changed("knowledge:read-route-ladder", (row) => {
-    if (key === "scopeId") row.ladder.scopeId = "other";
-    else row[key] = "other";
-    return row;
-  });
-  expect(result.advisoryState).toBe("unavailable");
-});
-test.each([
+privateTest.each(["scopeId", "roleId", "taskTypeId"])(
+  "rejects mismatched ladder %s",
+  async (key) => {
+    const result = await changed("knowledge:read-route-ladder", (row) => {
+      if (key === "scopeId") row.ladder.scopeId = "other";
+      else row[key] = "other";
+      return row;
+    });
+    expect(result.advisoryState).toBe("unavailable");
+  },
+);
+privateTest.each([
   "id",
   "type",
   "version",
@@ -274,7 +299,7 @@ test.each([
   });
   expect(result.advisoryState).not.toBe("fresh");
 });
-test.each([0, -1, 1.5, Number.NaN, "1"])(
+privateTest.each([0, -1, 1.5, Number.NaN, "1"])(
   "corrupt rung rank %s returns unavailable not throw",
   async (rank) => {
     expect(
@@ -287,7 +312,7 @@ test.each([0, -1, 1.5, Number.NaN, "1"])(
     ).toBe("unavailable");
   },
 );
-test.each(["duplicateRank", "duplicateEndpoint", "badStatus", "overBound"])(
+privateTest.each(["duplicateRank", "duplicateEndpoint", "badStatus", "overBound"])(
   "bounded corruption %s fails closed",
   async (kind) => {
     expect(
@@ -309,7 +334,7 @@ test.each(["duplicateRank", "duplicateEndpoint", "badStatus", "overBound"])(
     ).toBe("unavailable");
   },
 );
-test.each(["knowledge:read-route-ladder", "knowledge:read", "knowledge:rollout-state"])(
+privateTest.each(["knowledge:read-route-ladder", "knowledge:read", "knowledge:rollout-state"])(
   "unreadable %s is bounded unavailable",
   async (capability) => {
     const s = await setup();
@@ -330,7 +355,7 @@ test.each(["knowledge:read-route-ladder", "knowledge:read", "knowledge:rollout-s
 );
 // Re-write corruption THROUGH the real store and repoint to its new digest: semantic checks,
 // not simply a content-hash mismatch. Genuine valid inputs are tested above.
-test.each([
+privateTest.each([
   "scopeId",
   "roleId",
   "taskTypeId",
@@ -359,7 +384,7 @@ test.each([
   });
   expect((await read(s.input)).advisoryState).toBe("unavailable");
 });
-test.each(["rolled_back", "degraded", "wrongScope", "badCohort", "missingKillState"])(
+privateTest.each(["rolled_back", "degraded", "wrongScope", "badCohort", "missingKillState"])(
   "corrupt/suppressed rollout %s refuses",
   async (kind) => {
     const result = await changed("knowledge:rollout-state", (row) => {
@@ -373,7 +398,7 @@ test.each(["rolled_back", "degraded", "wrongScope", "badCohort", "missingKillSta
     expect(result.advisoryState).toBe("unavailable");
   },
 );
-test.each([null, "roleOnly", "taskOnly"])(
+privateTest.each([null, "roleOnly", "taskOnly"])(
   "explicit unclassified/partial %s never borrows legacy scope",
   async (kind) => {
     const s = await setup();
@@ -405,18 +430,21 @@ async function storedMetadataChange(mutate: (metadata: Record<string, unknown>) 
   });
   return read(s.input);
 }
-test("retained removed endpoint proof does not disable legitimate remaining rung", async () => {
-  const s = await setup();
-  await s.materialize(2500, { configuredEndpointIds: ["endpoint:b"] });
-  expect(await read(s.input)).toMatchObject({
-    advisoryState: "fresh",
-    confidence: 0.75,
-    preferredRoutePackage: "endpoint:b",
-    taxonomyVersion: "taxonomy:105",
-    advisoryLadder: [{ endpointId: "endpoint:b", rank: 2, status: "available" }],
-  });
-});
-test("all-empty new floor preserves old admission and applies user removal", async () => {
+privateTest(
+  "retained removed endpoint proof does not disable legitimate remaining rung",
+  async () => {
+    const s = await setup();
+    await s.materialize(2500, { configuredEndpointIds: ["endpoint:b"] });
+    expect(await read(s.input)).toMatchObject({
+      advisoryState: "fresh",
+      confidence: 0.75,
+      preferredRoutePackage: "endpoint:b",
+      taxonomyVersion: "taxonomy:105",
+      advisoryLadder: [{ endpointId: "endpoint:b", rank: 2, status: "available" }],
+    });
+  },
+);
+privateTest("all-empty new floor preserves old admission and applies user removal", async () => {
   const s = await setup();
   await s.materialize(2500, {
     configuredEndpointIds: ["endpoint:b"],
@@ -428,24 +456,27 @@ test("all-empty new floor preserves old admission and applies user removal", asy
     preferredRoutePackage: "endpoint:b",
   });
 });
-test("new regression evidence preserves accepted confidence/time/rank while current removal still applies", async () => {
-  const s = await setup();
-  const low = group("g3", 0.1, 2000);
-  low.members[1].confidence = 0.1;
-  await s.materialize(2500, {
-    groups: [...s.groups, low],
-    configuredEndpointIds: ["endpoint:b"],
-    taxonomyVersion: "caller:must-not-relabel",
-  });
-  expect(await read(s.input)).toMatchObject({
-    advisoryState: "fresh",
-    confidence: 0.75,
-    preferredRoutePackage: "endpoint:b",
-    taxonomyVersion: "taxonomy:105",
-  });
-  expect((await read({ ...s.input, nowMs: 11500 })).advisoryState).toBe("stale");
-});
-test("refused larger admission leaves bounded prior real snapshot routable", async () => {
+privateTest(
+  "new regression evidence preserves accepted confidence/time/rank while current removal still applies",
+  async () => {
+    const s = await setup();
+    const low = group("g3", 0.1, 2000);
+    low.members[1].confidence = 0.1;
+    await s.materialize(2500, {
+      groups: [...s.groups, low],
+      configuredEndpointIds: ["endpoint:b"],
+      taxonomyVersion: "caller:must-not-relabel",
+    });
+    expect(await read(s.input)).toMatchObject({
+      advisoryState: "fresh",
+      confidence: 0.75,
+      preferredRoutePackage: "endpoint:b",
+      taxonomyVersion: "taxonomy:105",
+    });
+    expect((await read({ ...s.input, nowMs: 11500 })).advisoryState).toBe("stale");
+  },
+);
+privateTest("refused larger admission leaves bounded prior real snapshot routable", async () => {
   const s = await setup();
   const before = await s.invoke("knowledge:read-route-ladder", { scopeId, roleId, taskTypeId });
   const result = await s.materialize(2500, {
@@ -460,7 +491,7 @@ test("refused larger admission leaves bounded prior real snapshot routable", asy
   ).toBe(before.ladder.packId);
   expect((await read(s.input)).advisoryState).toBe("fresh");
 });
-test.each([
+privateTest.each([
   "missingPolicy",
   "badK",
   "shortOwnProof",
@@ -497,20 +528,25 @@ test.each([
   });
   expect(result.advisoryState).toBe("unavailable");
 });
-test("all historical endpoints removed under empty new floor yields no advisory but retains proof", async () => {
-  const s = await setup();
-  await s.materialize(2500, {
-    configuredEndpointIds: ["endpoint:c"],
-    defaults: { minComparisons: 5, minConfidence: 0.99, stalenessWindowDays: 30 },
-  });
-  const row = await s.invoke("knowledge:read-route-ladder", { scopeId, roleId, taskTypeId });
-  expect(row.ladder.rungs).toHaveLength(2);
-  expect(row.ladder.rungs.every((r: { status: string }) => r.status === "unavailable")).toBe(true);
-  expect((await read(s.input)).advisoryState).toBe("unavailable");
-  const doc = await s.invoke("knowledge:read", { id: row.ladder.packId, scope: scopeId });
-  expect(doc.provenance.effectiveAdmittedEndpointIds).toEqual(["endpoint:a", "endpoint:b"]);
-});
-test("unknown measured taxonomy never receives caller taxonomy relabel", async () => {
+privateTest(
+  "all historical endpoints removed under empty new floor yields no advisory but retains proof",
+  async () => {
+    const s = await setup();
+    await s.materialize(2500, {
+      configuredEndpointIds: ["endpoint:c"],
+      defaults: { minComparisons: 5, minConfidence: 0.99, stalenessWindowDays: 30 },
+    });
+    const row = await s.invoke("knowledge:read-route-ladder", { scopeId, roleId, taskTypeId });
+    expect(row.ladder.rungs).toHaveLength(2);
+    expect(row.ladder.rungs.every((r: { status: string }) => r.status === "unavailable")).toBe(
+      true,
+    );
+    expect((await read(s.input)).advisoryState).toBe("unavailable");
+    const doc = await s.invoke("knowledge:read", { id: row.ladder.packId, scope: scopeId });
+    expect(doc.provenance.effectiveAdmittedEndpointIds).toEqual(["endpoint:a", "endpoint:b"]);
+  },
+);
+privateTest("unknown measured taxonomy never receives caller taxonomy relabel", async () => {
   const s = await setup();
   const unknown = s.groups.map((g: Record<string, unknown>) => ({
     ...g,
@@ -530,7 +566,7 @@ test("unknown measured taxonomy never receives caller taxonomy relabel", async (
   expect(result).toMatchObject({ advisoryState: "fresh", taxonomyVersion: null });
   expect(doc.provenance.taxonomyVersion).toBe("taxonomy:105");
 });
-test.each(["countMismatch", "badPolicyMean", "badRankDigest", "rankOutsideWatermark"])(
+privateTest.each(["countMismatch", "badPolicyMean", "badRankDigest", "rankOutsideWatermark"])(
   "accepted metadata relationship %s refuses",
   async (kind) => {
     expect(
