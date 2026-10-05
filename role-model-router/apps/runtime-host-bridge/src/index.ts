@@ -8338,7 +8338,7 @@ export function buildRequestClassificationForPlan(
   const taskTypeId =
     identitySource === "runtime_heuristic" && identityTask
       ? identityTask
-      : declaredTask ?? identityTask ?? intentTask;
+      : (declaredTask ?? identityTask ?? intentTask);
   // A genuine role only ever accompanies a genuine (non-default) task, so gate the role on the
   // resolved task to avoid leaking the correlated "writer" default for an unclassified request.
   const roleId = taskTypeId
