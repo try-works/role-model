@@ -130,9 +130,26 @@ describe("Run105 R12 per-task full endpoint ranking", () => {
   });
 });
 
+/**
+ * The browser cases need an installed Playwright Chromium. A checkout that has never run
+ * `pnpm exec playwright install` - which includes the CI image - must SKIP them rather than fail the
+ * suite at `chromium.launch`, reporting a missing browser as if the ladder UI were broken.
+ */
+const chromiumAvailable = await (async () => {
+  try {
+    // Probe the launch the suite actually performs: `executablePath()` names the full Chromium while a
+    // headless launch uses the separate headless-shell download, so only a real launch proves both.
+    const probe = await chromium.launch({ headless: true });
+    await probe.close();
+    return true;
+  } catch {
+    return false;
+  }
+})();
+
 // Real React/Chromium interactions, without starting another application server.
 // The API fixture is explicitly synthetic; controller Phase 5 still owns live readback validation.
-describe("Run105 R12 React browser interactions", () => {
+describe.skipIf(!chromiumAvailable)("Run105 R12 React browser interactions", () => {
   let browser: Browser;
   let bundle: string;
   beforeAll(async () => {
