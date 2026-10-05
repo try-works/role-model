@@ -8323,16 +8323,30 @@ export function buildRequestClassificationForPlan(
     id && canonicalTaxonomy.tasks.some((task) => task.id === id) ? id : null;
   const knownRole = (id: string | null | undefined): string | null =>
     id && canonicalTaxonomy.roles.some((role) => role.id === id) ? id : null;
+  // Run 105 stage-RC fix (measured on stage-rc-e06beb3ceee4): for an intent-less request the plan's
+  // routingRequest.taskType carries the ROLE-DEFAULT task (e.g. coder.edit resolved by
+  // resolveRequestedRoleTaskDefinition), which is a valid taxonomy id and therefore shadowed the
+  // authoritative derived identity (e.g. tester.unit.plan). The capture recorded coder.edit while
+  // the telemetry/focus recorded tester.unit.plan, and the route-challenge-evidence corpus filter
+  // dropped every such capture (NoReplayableRequest) - no pack could ever form. When the identity
+  // was DERIVED (source runtime_heuristic), it is authoritative over the plan's defaulted task;
+  // a DECLARED task keeps winning exactly as before.
+  const identitySource = plan.taxonomyIdentity?.source ?? null;
+  const identityTask = knownTask(plan.taxonomyIdentity?.taskTypeId);
+  const declaredTask = knownTask(plan.routingRequest.taskType);
+  const intentTask = knownTask(plan.routingRequest.roleModelIntent?.task?.id);
   const taskTypeId =
-    knownTask(plan.routingRequest.taskType) ??
-    knownTask(plan.taxonomyIdentity?.taskTypeId) ??
-    knownTask(plan.routingRequest.roleModelIntent?.task?.id);
+    identitySource === "runtime_heuristic" && identityTask
+      ? identityTask
+      : declaredTask ?? identityTask ?? intentTask;
   // A genuine role only ever accompanies a genuine (non-default) task, so gate the role on the
   // resolved task to avoid leaking the correlated "writer" default for an unclassified request.
   const roleId = taskTypeId
-    ? (knownRole(plan.routingRequest.requestedRoleId) ??
-      knownRole(plan.taxonomyIdentity?.roleId) ??
-      knownRole(plan.routingRequest.roleModelIntent?.role?.id))
+    ? identitySource === "runtime_heuristic" && knownRole(plan.taxonomyIdentity?.roleId)
+      ? knownRole(plan.taxonomyIdentity?.roleId)
+      : (knownRole(plan.routingRequest.requestedRoleId) ??
+        knownRole(plan.taxonomyIdentity?.roleId) ??
+        knownRole(plan.routingRequest.roleModelIntent?.role?.id))
     : null;
   return buildRequestClassification({
     taskTypeId,

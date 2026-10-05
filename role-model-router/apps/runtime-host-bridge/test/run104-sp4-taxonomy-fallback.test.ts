@@ -132,6 +132,23 @@ describe("run104 R6 buildRequestClassification task-family fallback", () => {
     expect(classification).toMatchObject({ taskTypeId: "coder.edit", roleId: "coder" });
   });
 
+  test("a role-defaulted task never shadows the derived identity for intent-less traffic", () => {
+    // Run 105 stage-RC fix (measured on stage-rc-e06beb3ceee4): for an intent-less request the plan
+    // taskType carries the role default (coder.edit) while the identity was DERIVED (tester.unit.plan).
+    // The derived identity must win, or the capture records coder.edit while the telemetry/focus record
+    // tester.unit.plan and the corpus filter drops the capture (NoReplayableRequest).
+    const plan = {
+      taxonomyIdentity: {
+        taskTypeId: "tester.unit.plan",
+        roleId: "tester",
+        source: "runtime_heuristic",
+      },
+      routingRequest: { taskType: "coder.edit", requestedRoleId: "coder" },
+    } as never;
+    const classification = buildRequestClassificationForPlan(plan);
+    expect(classification).toMatchObject({ taskTypeId: "tester.unit.plan", roleId: "tester" });
+  });
+
   test("the advisory task key and the classification chain resolve the SAME task (no raw plan field)", () => {
     // Regression pin: requestTaskTypeId at the advisory consultation site must equal the resolved
     // classification task, never the raw plan.routingRequest.taskType.
