@@ -10467,18 +10467,25 @@ export async function main(): Promise<void> {
               scope: options.scopeId,
               authorizationEpoch: 1,
               capability: "evaluation:list-completion-receipts",
-              value: { jobId: job.evaluationJobId },
+              // The capability reads a bounded JOB ID LIST; a single-id object is not a
+              // supported query and would answer the whole newest page, never the job.
+              value: { jobIds: [job.evaluationJobId] },
             })) as unknown;
             const receiptRecord = decodeExternalizedOperatorReadback({
               stateRoot: options.runtimeStateRoot,
               scopeId: options.scopeId,
               value: receiptAnswer,
             });
-            const receipt =
-              receiptRecord && typeof receiptRecord === "object"
-                ? ((receiptRecord as Record<string, unknown>).receipt ??
-                  (receiptRecord as Record<string, unknown>))
-                : null;
+            // The answer is a list of parsed receipt records; take the receipt the queried job
+            // owns (its groupIds name the comparison groups this completion covers).
+            const receiptList = Array.isArray(receiptRecord) ? receiptRecord : [];
+            const receipt = receiptList.find(
+              (candidate): candidate is Record<string, unknown> =>
+                candidate !== null &&
+                typeof candidate === "object" &&
+                !Array.isArray(candidate) &&
+                Array.isArray((candidate as Record<string, unknown>).groupIds),
+            );
             const groupIds = Array.isArray((receipt as Record<string, unknown> | null)?.groupIds)
               ? (((receipt as Record<string, unknown>).groupIds as unknown[]).filter(
                   (value): value is string => typeof value === "string" && value.length > 0,
