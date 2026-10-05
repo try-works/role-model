@@ -124,13 +124,13 @@ describe("run105 R15 primary failure isolation", () => {
     "routed provider status/class/request survive injected secondary %s persistence failure",
     async (layer) => {
       const diagnostic = vi.spyOn(console, "error").mockImplementation(() => {});
-      const secondary = new Error(layer + ": SECRET_PROVIDER_PAYLOAD " + "秘密🚨".repeat(20_000));
+      const secondary = new Error(`${layer}: SECRET_PROVIDER_PAYLOAD ${"秘密🚨".repeat(20_000)}`);
       persistence.persist.mockImplementation(() => {
         throw secondary;
       });
       const runtime = await createBackend();
       try {
-        const requestId = "req-r15-" + layer;
+        const requestId = `req-r15-${layer}`;
         const error = await rejection(
           runtime.backend.executeChatCompletions(
             {

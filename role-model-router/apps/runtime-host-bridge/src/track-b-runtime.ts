@@ -7580,7 +7580,10 @@ const trackBDurableRouteAdvisoryCache = new Map<string, TrackBDurableRouteAdviso
 const TRACK_B_DURABLE_ADVISORY_CACHE_MAX_ENTRIES = 512;
 
 const durableAdvisoryKey = (
-  channel: string, scope: string, roleId: string | null, taskTypeId: string | null,
+  channel: string,
+  scope: string,
+  roleId: string | null,
+  taskTypeId: string | null,
 ): string => JSON.stringify([channel, scope, roleId, taskTypeId]);
 
 export function rememberTrackBDurableRouteAdvisory(input: {
@@ -7633,10 +7636,17 @@ export function recallTrackBDurableRouteAdvisory(input: {
   readonly nowMs?: number;
   readonly maxAgeMs?: number | null;
 }): TrackBDurableRouteAdvisoryEntry | null {
-  const rkey = durableAdvisoryKey(input.channel, input.scope, input.roleId ?? null, input.taskTypeId ?? null);
+  const rkey = durableAdvisoryKey(
+    input.channel,
+    input.scope,
+    input.roleId ?? null,
+    input.taskTypeId ?? null,
+  );
   const entry = trackBDurableRouteAdvisoryCache.get(rkey) ?? null;
   if (process.env.ROLE_MODEL_ADVISORY_DIAG) {
-    console.error(`[advisory-recall] key=${rkey} hit=${entry !== null} cacheSize=${trackBDurableRouteAdvisoryCache.size} keys=${[...trackBDurableRouteAdvisoryCache.keys()].join(" | ")}`);
+    console.error(
+      `[advisory-recall] key=${rkey} hit=${entry !== null} cacheSize=${trackBDurableRouteAdvisoryCache.size} keys=${[...trackBDurableRouteAdvisoryCache.keys()].join(" | ")}`,
+    );
   }
   if (!entry) return null;
   const maxAgeMs =

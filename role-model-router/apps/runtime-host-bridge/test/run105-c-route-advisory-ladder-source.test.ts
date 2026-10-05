@@ -41,10 +41,14 @@ const context = (answer: unknown) => {
 // Confidence and freshness belong to persisted evidence; neither rank nor read/cache time supplies them.
 const canonical = (value: unknown): string =>
   Array.isArray(value)
-    ? "[" + value.map(canonical).join(",") + "]"
+    ? `[${value.map(canonical).join(",")}]`
     : value && typeof value === "object"
-      ? "{" + Object.keys(value).sort().map((key) =>
-          JSON.stringify(key) + ":" + canonical((value as Record<string, unknown>)[key])).join(",") + "}"
+      ? `{${Object.keys(value)
+          .sort()
+          .map(
+            (key) => `${JSON.stringify(key)}:${canonical((value as Record<string, unknown>)[key])}`,
+          )
+          .join(",")}}`
       : JSON.stringify(value);
 const digest = (value: unknown) => createHash("sha256").update(canonical(value)).digest("hex");
 const groupIds = ["group-c-1", "group-c-2"];
@@ -53,7 +57,7 @@ const evidenceDocument = {
   type: "route_ladder_evidence",
   version: 1,
   scope: "scope-c",
-  artifactRef: "sha256:" + evidenceDigest,
+  artifactRef: `sha256:${evidenceDigest}`,
   provenance: {
     scopeId: "scope-c",
     roleId: "role.coder",
@@ -66,15 +70,36 @@ const evidenceDocument = {
     admissionPolicy: { minComparisons: 2, minConfidence: 0.7 },
     effectiveAdmittedEndpointIds: ["endpoint-a", "endpoint-b", "endpoint-c"],
     taxonomyVersions: ["taxonomy-v1-alpha.1"],
-    materializationDigest: digest({ groupIds, configured: ["endpoint-b", "endpoint-c", "endpoint-d"] }),
+    materializationDigest: digest({
+      groupIds,
+      configured: ["endpoint-b", "endpoint-c", "endpoint-d"],
+    }),
     confidence: 0.75,
     evidenceAtMs: 500,
     // Accepted proof covers ALL historical rungs, including removed endpoint-a. Availability
     // changes routing, not admission history. Only available-rung means/times set aggregate freshness.
     endpointEvidence: {
-      "endpoint-a": { comparisonCount: 2, meanConfidence: 0.9, groupIds, evidenceAtMs: 400, taxonomyVersion: "taxonomy-v1-alpha.1" },
-      "endpoint-b": { comparisonCount: 2, meanConfidence: 0.85, groupIds, evidenceAtMs: 600, taxonomyVersion: "taxonomy-v1-alpha.1" },
-      "endpoint-c": { comparisonCount: 2, meanConfidence: 0.75, groupIds, evidenceAtMs: 500, taxonomyVersion: "taxonomy-v1-alpha.1" },
+      "endpoint-a": {
+        comparisonCount: 2,
+        meanConfidence: 0.9,
+        groupIds,
+        evidenceAtMs: 400,
+        taxonomyVersion: "taxonomy-v1-alpha.1",
+      },
+      "endpoint-b": {
+        comparisonCount: 2,
+        meanConfidence: 0.85,
+        groupIds,
+        evidenceAtMs: 600,
+        taxonomyVersion: "taxonomy-v1-alpha.1",
+      },
+      "endpoint-c": {
+        comparisonCount: 2,
+        meanConfidence: 0.75,
+        groupIds,
+        evidenceAtMs: 500,
+        taxonomyVersion: "taxonomy-v1-alpha.1",
+      },
     },
     rollbackReason: null,
     rollbackAtMs: null,
@@ -234,7 +259,9 @@ describe("run105 C route advisory ladder source", () => {
       const ctx = context(ladderRead());
       const result = await readTrackBRouteAdvisoryFromRollout({ ...ctx, ...missing });
       expect(result).toMatchObject({ advisoryState: "unavailable", advisoryLadder: [] });
-      expect(result.reason).toBe("scopeId" in missing ? "scope id required" : "role and task scope required");
+      expect(result.reason).toBe(
+        "scopeId" in missing ? "scope id required" : "role and task scope required",
+      );
       expect(ctx.calls).toEqual([]);
     }
   });

@@ -1,8 +1,8 @@
-import { afterEach, expect, test } from "vitest";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { afterEach, expect, test } from "vitest";
 import { readTrackBRouteAdvisoryFromRollout as read } from "../src/route-advisory-source.js";
 // Paired checkout integration: genuine materializer + temporary SQLite store, never a mock literal.
 const privateRoot =
@@ -12,14 +12,14 @@ const roots: string[] = [];
 afterEach(async () => {
   for (const root of roots.splice(0)) await rm(root, { recursive: true, force: true });
 });
-const scopeId = "tenant:safety",
-  roleId = "role:reviewer",
-  taskTypeId = "task:review";
+const scopeId = "tenant:safety";
+const roleId = "role:reviewer";
+const taskTypeId = "task:review";
 const group = (id: string, confidence: number, atMs: number | null) => ({
   groupId: id,
   status: "finalized",
   outcome: "source",
-  winnerTrialId: id + ":a",
+  winnerTrialId: `${id}:a`,
   winnerRole: "source",
   createdAtMs: atMs,
   comparability: {
@@ -43,8 +43,8 @@ const group = (id: string, confidence: number, atMs: number | null) => ({
     },
   ],
   members: [
-    { trialId: id + ":a", candidateRef: "endpoint:a", role: "source", confidence },
-    { trialId: id + ":b", candidateRef: "endpoint:b", role: "counterfactual", confidence: 0.75 },
+    { trialId: `${id}:a`, candidateRef: "endpoint:a", role: "source", confidence },
+    { trialId: `${id}:b`, candidateRef: "endpoint:b", role: "counterfactual", confidence: 0.75 },
   ],
 });
 async function setup(atMs: number | null = 1000) {
@@ -73,7 +73,8 @@ async function setup(atMs: number | null = 1000) {
     });
   };
   const adapter = createRouteLadderStoreAdapter({
-    invoke: async (_id: string, envelope: any) => invoke(envelope.capability, envelope.payload),
+    invoke: async (_id: string, envelope: { capability: string; payload: unknown }) =>
+      invoke(envelope.capability, envelope.payload),
     envelope: {
       channel: "development",
       scope: scopeId,
@@ -107,7 +108,10 @@ async function setup(atMs: number | null = 1000) {
   };
   return { input, invoke, calls, materialize, groups };
 }
-async function changed(capability: string, mutate: (value: any) => any) {
+async function changed(
+  capability: string,
+  mutate: (value: Record<string, unknown>) => Record<string, unknown>,
+) {
   const s = await setup();
   return read({
     ...s.input,
@@ -224,7 +228,7 @@ test("real per-task rollback reversible with exact unavailable identity", async 
   });
   expect((await read(s.input)).advisoryState).toBe("fresh");
 });
-test.each([undefined, null, -1, 101, NaN])(
+test.each([undefined, null, -1, 101, Number.NaN])(
   "invalid policy %s never widens exposure",
   async (policy) => {
     const s = await setup();
@@ -270,7 +274,7 @@ test.each([
   });
   expect(result.advisoryState).not.toBe("fresh");
 });
-test.each([0, -1, 1.5, NaN, "1"])(
+test.each([0, -1, 1.5, Number.NaN, "1"])(
   "corrupt rung rank %s returns unavailable not throw",
   async (rank) => {
     expect(
@@ -295,7 +299,7 @@ test.each(["duplicateRank", "duplicateEndpoint", "badStatus", "overBound"])(
           if (kind === "badStatus") row.ladder.rungs[0].status = "unknown";
           if (kind === "overBound")
             row.ladder.rungs = Array.from({ length: 65 }, (_, i) => ({
-              endpointId: "ep:" + i,
+              endpointId: `ep:${i}`,
               rank: i + 1,
               status: "available",
             }));
@@ -386,7 +390,7 @@ test.each([null, "roleOnly", "taskOnly"])(
     expect(s.calls).toEqual([]);
   },
 );
-async function storedMetadataChange(mutate: (metadata: any) => void) {
+async function storedMetadataChange(mutate: (metadata: Record<string, unknown>) => void) {
   const s = await setup();
   const row = await s.invoke("knowledge:read-route-ladder", { scopeId, roleId, taskTypeId });
   const doc = await s.invoke("knowledge:read", { id: row.ladder.packId, scope: scopeId });
@@ -447,9 +451,7 @@ test("refused larger admission leaves bounded prior real snapshot routable", asy
   const result = await s.materialize(2500, {
     groups: [
       ...s.groups,
-      ...Array.from({ length: 90 }, (_, i) =>
-        group("huge:" + i + ":" + "x".repeat(180), 0.9, 2000),
-      ),
+      ...Array.from({ length: 90 }, (_, i) => group(`huge:${i}:${"x".repeat(180)}`, 0.9, 2000)),
     ],
   });
   expect(result.ladders[0].status).toBe("refused");
@@ -503,14 +505,14 @@ test("all historical endpoints removed under empty new floor yields no advisory 
   });
   const row = await s.invoke("knowledge:read-route-ladder", { scopeId, roleId, taskTypeId });
   expect(row.ladder.rungs).toHaveLength(2);
-  expect(row.ladder.rungs.every((r: any) => r.status === "unavailable")).toBe(true);
+  expect(row.ladder.rungs.every((r: { status: string }) => r.status === "unavailable")).toBe(true);
   expect((await read(s.input)).advisoryState).toBe("unavailable");
   const doc = await s.invoke("knowledge:read", { id: row.ladder.packId, scope: scopeId });
   expect(doc.provenance.effectiveAdmittedEndpointIds).toEqual(["endpoint:a", "endpoint:b"]);
 });
 test("unknown measured taxonomy never receives caller taxonomy relabel", async () => {
   const s = await setup();
-  const unknown = s.groups.map((g: any) => ({
+  const unknown = s.groups.map((g: Record<string, unknown>) => ({
     ...g,
     comparability: { ...g.comparability, taxonomyVersion: null },
   }));
@@ -520,7 +522,7 @@ test("unknown measured taxonomy never receives caller taxonomy relabel", async (
   expect(unknown.every((g) => g.comparability.taxonomyVersion === null)).toBe(true);
   const changedScopeGroups = unknown.map((g) => ({
     ...g,
-    groupId: g.groupId + ":unknown",
+    groupId: `${g.groupId}:unknown`,
     comparability: { ...g.comparability, taskTypeId: "task:unknown" },
   }));
   await s.materialize(2500, { groups: changedScopeGroups, taxonomyVersion: "caller:context-only" });

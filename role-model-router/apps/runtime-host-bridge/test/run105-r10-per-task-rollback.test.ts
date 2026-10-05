@@ -24,14 +24,22 @@ const harness = () => {
   const dir = mkdtempSync(path.join(os.tmpdir(), "run105-r10-"));
   return {
     dir,
-    ledger: createReplayLedger({ filePath: path.join(dir, "ledger.json"), now: () => Date.parse("2026-10-03T00:00:00Z") }),
+    ledger: createReplayLedger({
+      filePath: path.join(dir, "ledger.json"),
+      now: () => Date.parse("2026-10-03T00:00:00Z"),
+    }),
     cleanup: () => rmSync(dir, { recursive: true, force: true }),
   };
 };
 
 describe("run105 R10 rollback toggle (pure)", () => {
   test("default OFF: an untouched ladder is not rolled back", () => {
-    expect(landRollbackToggle({ rolledBack: { on: false, reason: null, atMs: null }, rolledBackOn: false })).toEqual({
+    expect(
+      landRollbackToggle({
+        rolledBack: { on: false, reason: null, atMs: null },
+        rolledBackOn: false,
+      }),
+    ).toEqual({
       on: false,
       reason: null,
       atMs: null,
@@ -39,7 +47,12 @@ describe("run105 R10 rollback toggle (pure)", () => {
   });
 
   test("ON records the operator reason and the time; OFF is reversible and keeps the reason", () => {
-    const on = landRollbackToggle({ rolledBack: { on: false, reason: null, atMs: null }, rolledBackOn: true, reason: "operator_rollback", atMs: 100 });
+    const on = landRollbackToggle({
+      rolledBack: { on: false, reason: null, atMs: null },
+      rolledBackOn: true,
+      reason: "operator_rollback",
+      atMs: 100,
+    });
     expect(on).toEqual({ on: true, reason: "operator_rollback", atMs: 100 });
     const off = landRollbackToggle({ rolledBack: on, rolledBackOn: false });
     expect(off.on).toBe(false);
@@ -47,7 +60,11 @@ describe("run105 R10 rollback toggle (pure)", () => {
   });
 
   test("D8: the toggle carries no pack/receipt identity - it is not the legacy receipt-bound rollback", () => {
-    const landed = landRollbackToggle({ rolledBack: { on: false, reason: null, atMs: null }, rolledBackOn: true, reason: "operator_rollback" });
+    const landed = landRollbackToggle({
+      rolledBack: { on: false, reason: null, atMs: null },
+      rolledBackOn: true,
+      reason: "operator_rollback",
+    });
     expect(Object.keys(landed).sort()).toEqual(["atMs", "on", "reason"]);
   });
 });
@@ -63,8 +80,17 @@ describe("run105 R10/R1 classification gate in the replay tick", () => {
           async listPendingReplayCaptures() {
             return {
               pending: [
-                { captureRef: "capture:unclassified", roleId: "role:code-review", sourceEndpointId: "endpoint:a" },
-                { captureRef: "capture:classified", roleId: "role:code-review", taskTypeId: "task:code-review", sourceEndpointId: "endpoint:a" },
+                {
+                  captureRef: "capture:unclassified",
+                  roleId: "role:code-review",
+                  sourceEndpointId: "endpoint:a",
+                },
+                {
+                  captureRef: "capture:classified",
+                  roleId: "role:code-review",
+                  taskTypeId: "task:code-review",
+                  sourceEndpointId: "endpoint:a",
+                },
               ],
               pendingCount: 2,
             };
@@ -79,7 +105,13 @@ describe("run105 R10/R1 classification gate in the replay tick", () => {
         configuredEndpointIds: ["endpoint:a", "endpoint:b"],
         executor: async ({ capture, candidates }) => {
           executed.push(capture.captureRef);
-          return { terminal: true, branches: candidates.map((endpointId) => ({ endpointId, outcome: "complete" as const })) };
+          return {
+            terminal: true,
+            branches: candidates.map((endpointId) => ({
+              endpointId,
+              outcome: "complete" as const,
+            })),
+          };
         },
         intervalMs: 60_000,
         now: () => Date.parse("2026-10-03T00:00:00Z"),

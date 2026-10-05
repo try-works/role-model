@@ -4,9 +4,9 @@ import {
   type LearningPolicyField,
   fetchLearningActivity,
   fetchLearningPolicy,
+  fetchLearningRecords,
   fetchLearningRollout,
   rollbackLearningLadder,
-  fetchLearningRecords,
   validatePolicyDraft,
 } from "./learning-api";
 
@@ -209,17 +209,47 @@ describe("run105 R10 ladder rollback API", () => {
     const fetcher = (async (path: string, init?: RequestInit) => {
       seenPath = path;
       seenInit = init;
-      return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { "content-type": "application/json" } });
+      return new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
     }) as unknown as typeof fetch;
-    await rollbackLearningLadder({ scopeId: "scope-1", roleId: "writer", taskTypeId: "coder.explain", rolledBack: true, reason: "operator requested" }, fetcher, "operator-token");
+    await rollbackLearningLadder(
+      {
+        scopeId: "scope-1",
+        roleId: "writer",
+        taskTypeId: "coder.explain",
+        rolledBack: true,
+        reason: "operator requested",
+      },
+      fetcher,
+      "operator-token",
+    );
     expect(seenPath).toBe("/api/role-model/operator/learning/rollback-pack");
-    expect(JSON.parse(String(seenInit?.body))).toEqual({ scopeId: "scope-1", roleId: "writer", taskTypeId: "coder.explain", rolledBack: true, reason: "operator requested" });
+    expect(JSON.parse(String(seenInit?.body))).toEqual({
+      scopeId: "scope-1",
+      roleId: "writer",
+      taskTypeId: "coder.explain",
+      rolledBack: true,
+      reason: "operator requested",
+    });
   });
 
   test("fetchLearningRecords returns the ladders sibling untouched and preserves rollout fixtures", async () => {
-    const readback = { state: "active", activePackageId: "pack-retry", ladders: [{ roleId: "writer", taskTypeId: "coder.explain" }] };
-    const fetcher = (async () => new Response(JSON.stringify(readback), { status: 200, headers: { "content-type": "application/json" } })) as unknown as typeof fetch;
+    const readback = {
+      state: "active",
+      activePackageId: "pack-retry",
+      ladders: [{ roleId: "writer", taskTypeId: "coder.explain" }],
+    };
+    const fetcher = (async () =>
+      new Response(JSON.stringify(readback), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      })) as unknown as typeof fetch;
     await expect(fetchLearningRecords(fetcher)).resolves.toEqual(readback);
-    await expect(fetchLearningRollout(fetcher)).resolves.toMatchObject({ state: "active", activePackageId: "pack-retry" });
+    await expect(fetchLearningRollout(fetcher)).resolves.toMatchObject({
+      state: "active",
+      activePackageId: "pack-retry",
+    });
   });
 });

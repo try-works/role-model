@@ -1,4 +1,4 @@
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
@@ -28,15 +28,28 @@ const workspace = () => {
   };
 };
 
-const writeDefaults = (root: string, document: unknown, relativePath = PRODUCT_DEFAULTS_RELATIVE_PATH) => {
+const writeDefaults = (
+  root: string,
+  document: unknown,
+  relativePath = PRODUCT_DEFAULTS_RELATIVE_PATH,
+) => {
   const target = path.join(root, relativePath);
   mkdirSync(path.dirname(target), { recursive: true });
-  writeFileSync(target, typeof document === "string" ? document : JSON.stringify(document, null, 2), "utf8");
+  writeFileSync(
+    target,
+    typeof document === "string" ? document : JSON.stringify(document, null, 2),
+    "utf8",
+  );
 };
 
 const shipped = {
   schema: "role-model.product-defaults.v2",
-  routeLearning: { minComparisons: 5, minConfidence: 0.7, stalenessWindowDays: 30, challengeBatchSize: 1 },
+  routeLearning: {
+    minComparisons: 5,
+    minConfidence: 0.7,
+    stalenessWindowDays: 30,
+    challengeBatchSize: 1,
+  },
 };
 
 describe("run105 R11 route learning defaults", () => {
@@ -44,7 +57,11 @@ describe("run105 R11 route learning defaults", () => {
     const space = workspace();
     try {
       writeDefaults(space.root, shipped);
-      const resolved = readRouteLearningDefaults({ repoRoot: space.root, channel: "development", stateRoot: null });
+      const resolved = readRouteLearningDefaults({
+        repoRoot: space.root,
+        channel: "development",
+        stateRoot: null,
+      });
       expect(resolved.routeLearning).toEqual({
         minComparisons: 5,
         minConfidence: 0.7,
@@ -64,7 +81,14 @@ describe("run105 R11 route learning defaults", () => {
       writeDefaults(space.root, shipped);
       writeDefaults(
         space.root,
-        { routeLearning: { minComparisons: 9, minConfidence: 0.9, stalenessWindowDays: 7, challengeBatchSize: 4 } },
+        {
+          routeLearning: {
+            minComparisons: 9,
+            minConfidence: 0.9,
+            stalenessWindowDays: 7,
+            challengeBatchSize: 4,
+          },
+        },
         path.join("learning", "product-defaults-state.json"),
       );
       const resolved = readRouteLearningDefaults({
@@ -72,7 +96,12 @@ describe("run105 R11 route learning defaults", () => {
         channel: "development",
         stateRoot: space.root,
       });
-      expect(resolved.routeLearning).toMatchObject({ minComparisons: 9, minConfidence: 0.9, stalenessWindowDays: 7, challengeBatchSize: 4 });
+      expect(resolved.routeLearning).toMatchObject({
+        minComparisons: 9,
+        minConfidence: 0.9,
+        stalenessWindowDays: 7,
+        challengeBatchSize: 4,
+      });
       expect(resolved.source).toContain("product-defaults-state.json");
     } finally {
       space.cleanup();
@@ -82,7 +111,11 @@ describe("run105 R11 route learning defaults", () => {
   test("a missing file degrades to the documented constants with product_defaults_missing and never throws", () => {
     const space = workspace();
     try {
-      const resolved = readRouteLearningDefaults({ repoRoot: space.root, channel: "development", stateRoot: null });
+      const resolved = readRouteLearningDefaults({
+        repoRoot: space.root,
+        channel: "development",
+        stateRoot: null,
+      });
       expect(resolved.routeLearning).toEqual(ROUTE_LEARNING_DOCUMENTED_DEFAULTS);
       expect(resolved.degradation).toMatchObject({ reason: "product_defaults_missing" });
     } finally {
@@ -94,7 +127,11 @@ describe("run105 R11 route learning defaults", () => {
     const space = workspace();
     try {
       writeDefaults(space.root, "{ not json");
-      const resolved = readRouteLearningDefaults({ repoRoot: space.root, channel: "development", stateRoot: null });
+      const resolved = readRouteLearningDefaults({
+        repoRoot: space.root,
+        channel: "development",
+        stateRoot: null,
+      });
       expect(resolved.routeLearning).toEqual(ROUTE_LEARNING_DOCUMENTED_DEFAULTS);
       expect(resolved.degradation).not.toBeNull();
       expect(resolved.degradation?.reason).toMatch(/product_defaults_/);
@@ -107,7 +144,11 @@ describe("run105 R11 route learning defaults", () => {
     const space = workspace();
     try {
       writeDefaults(space.root, { routeLearning: { minComparisons: 8 } });
-      const resolved = readRouteLearningDefaults({ repoRoot: space.root, channel: "development", stateRoot: null });
+      const resolved = readRouteLearningDefaults({
+        repoRoot: space.root,
+        channel: "development",
+        stateRoot: null,
+      });
       expect(resolved.routeLearning).toEqual({
         minComparisons: 8,
         minConfidence: 0.7,
@@ -123,9 +164,18 @@ describe("run105 R11 route learning defaults", () => {
     const space = workspace();
     try {
       writeDefaults(space.root, {
-        routeLearning: { minComparisons: 0, minConfidence: 2, stalenessWindowDays: -5, challengeBatchSize: 1.5 },
+        routeLearning: {
+          minComparisons: 0,
+          minConfidence: 2,
+          stalenessWindowDays: -5,
+          challengeBatchSize: 1.5,
+        },
       });
-      const resolved = readRouteLearningDefaults({ repoRoot: space.root, channel: "development", stateRoot: null });
+      const resolved = readRouteLearningDefaults({
+        repoRoot: space.root,
+        channel: "development",
+        stateRoot: null,
+      });
       expect(resolved.routeLearning).toEqual(ROUTE_LEARNING_DOCUMENTED_DEFAULTS);
     } finally {
       space.cleanup();
@@ -136,7 +186,11 @@ describe("run105 R11 route learning defaults", () => {
     const space = workspace();
     try {
       writeDefaults(space.root, shipped);
-      const resolved = readRouteLearningDefaults({ repoRoot: space.root, channel: "development", stateRoot: null });
+      const resolved = readRouteLearningDefaults({
+        repoRoot: space.root,
+        channel: "development",
+        stateRoot: null,
+      });
       // The returned shape names ONLY the ladder constants: no integrity-gate field leaks in.
       expect(Object.keys(resolved.routeLearning).sort()).toEqual([
         "challengeBatchSize",
@@ -144,7 +198,9 @@ describe("run105 R11 route learning defaults", () => {
         "minConfidence",
         "stalenessWindowDays",
       ]);
-      expect(JSON.stringify(resolved)).not.toMatch(/learning-integrity|minSupport|DEFAULT_GATE_THRESHOLDS/);
+      expect(JSON.stringify(resolved)).not.toMatch(
+        /learning-integrity|minSupport|DEFAULT_GATE_THRESHOLDS/,
+      );
     } finally {
       space.cleanup();
     }

@@ -359,15 +359,14 @@ describe("Run 96 operator evidence routes", () => {
     }
   });
 
-
   test("binds route-ladder materialization to the authenticated operator boundary", async () => {
     const token = "run105-materialize-boundary-token";
     const requests: string[] = [];
     const bodies: unknown[] = [];
     const sidecar = createServer((request, response) => {
       const route = request.url ?? "/";
-      requests.push(request.method + " " + route);
-      expect(request.headers.authorization).toBe("Bearer " + token);
+      requests.push(`${request.method} ${route}`);
+      expect(request.headers.authorization).toBe(`Bearer ${token}`);
       expect(request.headers["x-role-model-channel"]).toBe("development");
       expect(request.headers["x-role-model-scope"]).toBe("run105:materialize-boundary");
       expect(request.headers["x-role-model-authorization-epoch"]).toBe("105");
@@ -377,7 +376,12 @@ describe("Run 96 operator evidence routes", () => {
       request.on("end", () => {
         bodies.push(JSON.parse(Buffer.concat(chunks).toString("utf8") || "{}"));
         response.writeHead(200, { "content-type": "application/json" });
-        response.end(JSON.stringify({ schemaVersion: "role-model.route-ladder-materialization.v1", ladders: [] }));
+        response.end(
+          JSON.stringify({
+            schemaVersion: "role-model.route-ladder-materialization.v1",
+            ladders: [],
+          }),
+        );
       });
     });
     await new Promise<void>((resolve) => sidecar.listen(0, "127.0.0.1", resolve));
@@ -385,9 +389,12 @@ describe("Run 96 operator evidence routes", () => {
     if (!address || typeof address === "string") throw new Error("operator sidecar did not bind");
     try {
       const operations = createTrackBOperations({
-        statePath: path.join(os.tmpdir(), "run105-materialize-boundary-state-" + process.pid + "-" + Date.now() + ".json"),
+        statePath: path.join(
+          os.tmpdir(),
+          `run105-materialize-boundary-state-${process.pid}-${Date.now()}.json`,
+        ),
         catalog: [],
-        operationsEndpoint: "http://127.0.0.1:" + address.port,
+        operationsEndpoint: `http://127.0.0.1:${address.port}`,
         operationsToken: token,
         runtimeChannel: "development",
         scope: "run105:materialize-boundary",
@@ -423,7 +430,7 @@ describe("Run 96 operator evidence routes", () => {
     });
     try {
       const response = await fetch(
-        "http://127.0.0.1:" + server.port + "/api/role-model/operator/learning/materialize-route-ladders",
+        `http://127.0.0.1:${server.port}/api/role-model/operator/learning/materialize-route-ladders`,
         {
           method: "POST",
           headers: {

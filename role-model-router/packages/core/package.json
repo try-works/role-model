@@ -10,11 +10,7 @@
       "default": "./src/index.ts"
     }
   },
-  "files": [
-    "src",
-    "dist",
-    "data"
-  ],
+  "files": ["src", "dist", "data"],
   "dependencies": {
     "@role-model/protocol-types": "workspace:*",
     "effect": "workspace:*"

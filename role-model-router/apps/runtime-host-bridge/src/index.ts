@@ -8331,8 +8331,8 @@ export function buildRequestClassificationForPlan(
   // resolved task to avoid leaking the correlated "writer" default for an unclassified request.
   const roleId = taskTypeId
     ? (knownRole(plan.routingRequest.requestedRoleId) ??
-       knownRole(plan.taxonomyIdentity?.roleId) ??
-       knownRole(plan.routingRequest.roleModelIntent?.role?.id))
+      knownRole(plan.taxonomyIdentity?.roleId) ??
+      knownRole(plan.routingRequest.roleModelIntent?.role?.id))
     : null;
   return buildRequestClassification({
     taskTypeId,
@@ -17632,7 +17632,10 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             writeOperatorUnavailable(response, "learning route ladder materialization");
             return;
           }
-          writeOperatorMutationResult(response, await options.materializeRouteLadders(operatorBody));
+          writeOperatorMutationResult(
+            response,
+            await options.materializeRouteLadders(operatorBody),
+          );
           return;
         }
         /**
@@ -20321,7 +20324,8 @@ export async function createRuntimeBridgeBackend(
         requestId: input.requestId,
         clientRequestId: input.clientRequestId ?? null,
         requestClass: toPersistedTrafficClass(input.requestClass),
-        sourceType: currentUnifiedRuntimeConfig?.executionMode === "remote_only" ? "remote" : "local",
+        sourceType:
+          currentUnifiedRuntimeConfig?.executionMode === "remote_only" ? "remote" : "local",
         endpointId: input.endpointId,
         reasoningEffort: failureEffort.reasoningEffort,
         effortSource: failureEffort.effortSource,
@@ -26484,9 +26488,13 @@ export async function createRuntimeBridgeBackend(
             });
             // A classified request requires exact durable authorization, including an unavailable
             // rollback answer. Transient scope-wide evidence is only for genuine legacy requests.
-            const cached = durable ??
+            const cached =
+              durable ??
               (requestRoleId === null && requestTaskTypeId === null
-                ? recallNewestTrackBRouteAdvisory({ channel: runtimeChannel, scope: options.scopeId })
+                ? recallNewestTrackBRouteAdvisory({
+                    channel: runtimeChannel,
+                    scope: options.scopeId,
+                  })
                 : null);
             if (!cached) {
               // Bounded diagnostic (run 99 R24): an S2+ runtime with no advisory at all is the

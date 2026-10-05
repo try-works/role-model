@@ -105,15 +105,18 @@ export function enqueueReplayDispatch({
   if (!capture.captureRef) {
     return Effect.succeed({ enqueued: false as const, reason: "capture_ref_required" });
   }
-  const jobId = capture.dispatchRoundId === undefined
-    ? capture.captureRef
-    : `replay-round-${createHash("sha256").update(JSON.stringify({
-        captureRef: capture.captureRef,
-        endpointIds: [...capture.endpointIds].sort(),
-        policySetDigest: capture.policySetDigest,
-        dispatchRoundId: capture.dispatchRoundId,
-      })).digest("hex")}`;
-  return queue
-    .offer(capture, { id: jobId })
-    .pipe(Effect.as({ enqueued: true as const, jobId }));
+  const jobId =
+    capture.dispatchRoundId === undefined
+      ? capture.captureRef
+      : `replay-round-${createHash("sha256")
+          .update(
+            JSON.stringify({
+              captureRef: capture.captureRef,
+              endpointIds: [...capture.endpointIds].sort(),
+              policySetDigest: capture.policySetDigest,
+              dispatchRoundId: capture.dispatchRoundId,
+            }),
+          )
+          .digest("hex")}`;
+  return queue.offer(capture, { id: jobId }).pipe(Effect.as({ enqueued: true as const, jobId }));
 }

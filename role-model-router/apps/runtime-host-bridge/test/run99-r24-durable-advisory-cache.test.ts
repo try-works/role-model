@@ -161,7 +161,11 @@ describe("run99 R24 durable route advisory cache", () => {
       taskTypeId: "coder.test.write",
     });
     expect(other).toBeNull();
-    const matched = recallTrackBDurableRouteAdvisory({ channel, scope, taskTypeId: "coder.review" });
+    const matched = recallTrackBDurableRouteAdvisory({
+      channel,
+      scope,
+      taskTypeId: "coder.review",
+    });
     expect(matched?.taskTypeId).toBe("coder.review");
     expect(matched?.advisoryState).toBe("fresh");
   });

@@ -3764,45 +3764,83 @@ export function startDurableRouteAdvisoryRefresh(options: {
     for (let page = 0; page < 10 && !stopped; page++) {
       const value = { scopeId: options.scopeId, limit: 200, ...(cursor ?? {}) };
       const listing = decodeExternalizedOperatorReadback({
-        stateRoot: options.runtimeStateRoot, scopeId: options.scopeId,
-        value: unwrapCapabilityPayload(await runtime.invoke("knowledge-store", {
-          requestId: `route-advisory-index:${options.scopeId}:${nowMs}:${page}`,
-          sessionId: `route-advisory:${options.scopeId}`,
-          protocolVersion: "1.1.0", channel: options.channel, scope: options.scopeId,
-          authorizationEpoch: 1, capability: "knowledge:list-route-ladders", value, payload: value,
-        })),
+        stateRoot: options.runtimeStateRoot,
+        scopeId: options.scopeId,
+        value: unwrapCapabilityPayload(
+          await runtime.invoke("knowledge-store", {
+            requestId: `route-advisory-index:${options.scopeId}:${nowMs}:${page}`,
+            sessionId: `route-advisory:${options.scopeId}`,
+            protocolVersion: "1.1.0",
+            channel: options.channel,
+            scope: options.scopeId,
+            authorizationEpoch: 1,
+            capability: "knowledge:list-route-ladders",
+            value,
+            payload: value,
+          }),
+        ),
       });
-      if (!listing || typeof listing !== "object" || !Array.isArray((listing as { ladders?: unknown }).ladders)) throw new Error("route ladder index unavailable");
+      if (
+        !listing ||
+        typeof listing !== "object" ||
+        !Array.isArray((listing as { ladders?: unknown }).ladders)
+      )
+        throw new Error("route ladder index unavailable");
       const index = listing as { ladders: unknown[]; truncated?: boolean; nextCursor?: unknown };
       rows.push(...index.ladders);
       if (index.nextCursor == null) {
-        if (index.truncated === true || (index.truncated === undefined && index.ladders.length >= 200)) throw new Error("route ladder index incomplete");
-        complete = true; break;
+        if (
+          index.truncated === true ||
+          (index.truncated === undefined && index.ladders.length >= 200)
+        )
+          throw new Error("route ladder index incomplete");
+        complete = true;
+        break;
       }
       const next = index.nextCursor as { afterRoleId?: unknown; afterTaskTypeId?: unknown };
-      if (typeof next.afterRoleId !== "string" || typeof next.afterTaskTypeId !== "string") throw new Error("route ladder index cursor invalid");
+      if (typeof next.afterRoleId !== "string" || typeof next.afterTaskTypeId !== "string")
+        throw new Error("route ladder index cursor invalid");
       cursor = { afterRoleId: next.afterRoleId, afterTaskTypeId: next.afterTaskTypeId };
       const key = JSON.stringify(cursor);
       if (visited.has(key)) throw new Error("route ladder index cursor repeated");
       visited.add(key);
     }
-    if (!complete || rows.length > 2000) throw new Error("route ladder index exceeds refresh budget");
+    if (!complete || rows.length > 2000)
+      throw new Error("route ladder index exceeds refresh budget");
     for (const row of rows) {
       if (stopped || !row || typeof row !== "object") continue;
       const pair = row as { roleId?: unknown; taskTypeId?: unknown };
-      if (typeof pair.roleId !== "string" || !pair.roleId.trim() || typeof pair.taskTypeId !== "string" || !pair.taskTypeId.trim()) continue;
+      if (
+        typeof pair.roleId !== "string" ||
+        !pair.roleId.trim() ||
+        typeof pair.taskTypeId !== "string" ||
+        !pair.taskTypeId.trim()
+      )
+        continue;
       const roleId = pair.roleId.trim();
       const taskTypeId = pair.taskTypeId.trim();
       const advisory = await readTrackBRouteAdvisorySourceFromRuntime({
-        runtime: runtime as unknown as Parameters<typeof readTrackBRouteAdvisorySourceFromRuntime>[0]["runtime"],
-        channel: options.channel, scope: options.scopeId, roleId, taskTypeId,
-        stage, policyCohortPercent: snapshot?.effective.cohortPercent ?? 0,
-        stateRoot: options.runtimeStateRoot, nowMs, evidenceMaxAgeMs,
+        runtime: runtime as unknown as Parameters<
+          typeof readTrackBRouteAdvisorySourceFromRuntime
+        >[0]["runtime"],
+        channel: options.channel,
+        scope: options.scopeId,
+        roleId,
+        taskTypeId,
+        stage,
+        policyCohortPercent: snapshot?.effective.cohortPercent ?? 0,
+        stateRoot: options.runtimeStateRoot,
+        nowMs,
+        evidenceMaxAgeMs,
         revalidationIntervalMs: (snapshot?.effective.revalidationIntervalDays ?? 7) * 86400000,
         requestId: `route-advisory:${options.scopeId}:${roleId}:${taskTypeId}:${nowMs}`,
       });
       rememberTrackBDurableRouteAdvisory({
-        channel: options.channel, scope: options.scopeId, roleId, advisory, nowMs,
+        channel: options.channel,
+        scope: options.scopeId,
+        roleId,
+        advisory,
+        nowMs,
       });
     }
     const published = `scope=${options.scopeId} pairs=${rows.length} stage=${stage}`;
@@ -3822,7 +3860,13 @@ export function startDurableRouteAdvisoryRefresh(options: {
   const scheduleRefresh = async (): Promise<void> => {
     if (stopped || refreshing) return;
     refreshing = true;
-    try { await refresh(); } catch (error) { report(error); } finally { refreshing = false; }
+    try {
+      await refresh();
+    } catch (error) {
+      report(error);
+    } finally {
+      refreshing = false;
+    }
   };
   const timer = setInterval(() => {
     void scheduleRefresh();
@@ -5427,7 +5471,10 @@ export async function main(): Promise<void> {
     ): ReturnType<typeof startAutoReplayLoop> | null => {
       const operations = postObservationOperations;
       const channel = packagedProfile?.channel ?? "development";
-      if (process.env.ROLE_MODEL_FOCUS_DIAG) console.error(`[replay-loop] start check: operations=${operations ? "wired" : "null"} channel=${channel} port=${options.port}`);
+      if (process.env.ROLE_MODEL_FOCUS_DIAG)
+        console.error(
+          `[replay-loop] start check: operations=${operations ? "wired" : "null"} channel=${channel} port=${options.port}`,
+        );
       if (!operations || channel === "production") return null;
       const port = options.port;
       if (!Number.isInteger(port) || port <= 0) return null;
@@ -5916,7 +5963,7 @@ export async function main(): Promise<void> {
            * assert. The legacy activate-pack MACHINERY remains untouched and reachable; only this
            * sweep's call was removed.
            */
-          let activated = 0;
+          const activated = 0;
           for (const candidate of pending.slice(0, 2)) {
             const candidateId = String(candidate.candidateId);
             const scorerSetVersion =
@@ -6336,13 +6383,22 @@ export async function main(): Promise<void> {
                 configuredEndpointIds: endpoints(),
                 defaults: defaultsSnapshot,
               });
-              if (materialized && typeof materialized === "object" && !Array.isArray(materialized)) {
+              if (
+                materialized &&
+                typeof materialized === "object" &&
+                !Array.isArray(materialized)
+              ) {
                 const record = materialized as Record<string, unknown>;
                 const ladders = Array.isArray(record.ladders) ? record.ladders : [];
                 const written = ladders.filter((entry) => {
-                  return Boolean(entry) && typeof entry === "object" && (entry as Record<string, unknown>).status === "written";
+                  return (
+                    Boolean(entry) &&
+                    typeof entry === "object" &&
+                    (entry as Record<string, unknown>).status === "written"
+                  );
                 }).length;
-                if (written > 0) console.error(`[run105] ladder materialization wrote ${written} ladder row(s)`);
+                if (written > 0)
+                  console.error(`[run105] ladder materialization wrote ${written} ladder row(s)`);
               }
             } catch (materializationError) {
               console.error(
@@ -7209,22 +7265,39 @@ export async function main(): Promise<void> {
             // Pending replay/queue inspection is read-only and invokes Replay Core only. Requiring
             // the Evaluation Core authority here made a fresh runtime with no managed evaluation
             // key return `null` before either authoritative pending plane was read.
-            const replayJobScope = resolveDurableReplayJobScope({ channel, runtimeStateRoot: options.runtimeStateRoot, scopeId: options.scopeId });
+            const replayJobScope = resolveDurableReplayJobScope({
+              channel,
+              runtimeStateRoot: options.runtimeStateRoot,
+              scopeId: options.scopeId,
+            });
             const { readPendingRouteDispatches } = await import("./route-challenge-evidence.js");
             return await readPendingRouteDispatches({
               request,
               readCapture: async (requestId) => operations.readLocalRouteCapture({ requestId }),
-              readQueueJobs: async () => operations.readQueueJobs("replay.dispatch", { limit: "500" }),
+              readQueueJobs: async () =>
+                operations.readQueueJobs("replay.dispatch", { limit: "500" }),
               readQueueJob: async (jobId) => operations.readQueueJob("replay.dispatch", jobId),
-              invoke: async (extensionId, capability, value) => decodeExternalizedOperatorReadback({
-                stateRoot: options.runtimeStateRoot, scopeId: options.scopeId,
-                value: unwrapCapabilityPayload(await runtime.invoke(extensionId, learnerSweepEnvelope({
-                  requestPrefix: "route-dispatch-pending", extensionId, capability, value,
-                  scopeOverride: replayJobScope,
-                }))),
-              }),
+              invoke: async (extensionId, capability, value) =>
+                decodeExternalizedOperatorReadback({
+                  stateRoot: options.runtimeStateRoot,
+                  scopeId: options.scopeId,
+                  value: unwrapCapabilityPayload(
+                    await runtime.invoke(
+                      extensionId,
+                      learnerSweepEnvelope({
+                        requestPrefix: "route-dispatch-pending",
+                        extensionId,
+                        capability,
+                        value,
+                        scopeOverride: replayJobScope,
+                      }),
+                    ),
+                  ),
+                }),
             });
-          } catch { return null; }
+          } catch {
+            return null;
+          }
         },
         readRouteReplayableCaptures: async (request) => {
           const operations = currentPostObservationOperations();
@@ -7232,54 +7305,105 @@ export async function main(): Promise<void> {
           try {
             const { readRouteReplayableCaptures } = await import("./route-challenge-evidence.js");
             return await readRouteReplayableCaptures({
-              runtimeStateRoot: options.runtimeStateRoot, scopeId: options.scopeId, channel, request,
+              runtimeStateRoot: options.runtimeStateRoot,
+              scopeId: options.scopeId,
+              channel,
+              request,
               readCapture: async (requestId) => operations.readLocalRouteCapture({ requestId }),
             });
-          } catch { return null; }
+          } catch {
+            return null;
+          }
         },
         readFinalizedRouteChallenge: async (request) => {
           const runtime = extensionRuntimeRef.current;
           if (!runtime) return null;
           try {
-            const authority = await resolveDurableEvaluationAuthority({ channel, stateRoot: options.runtimeStateRoot, scopeId: options.scopeId });
-            const replayJobScope = resolveDurableReplayJobScope({ channel, runtimeStateRoot: options.runtimeStateRoot, scopeId: options.scopeId });
-            const { readFinalizedRouteChallengeEvidence } = await import("./route-challenge-evidence.js");
+            const authority = await resolveDurableEvaluationAuthority({
+              channel,
+              stateRoot: options.runtimeStateRoot,
+              scopeId: options.scopeId,
+            });
+            const replayJobScope = resolveDurableReplayJobScope({
+              channel,
+              runtimeStateRoot: options.runtimeStateRoot,
+              scopeId: options.scopeId,
+            });
+            const { readFinalizedRouteChallengeEvidence } = await import(
+              "./route-challenge-evidence.js"
+            );
             return await readFinalizedRouteChallengeEvidence({
               request,
-              invoke: async (extensionId, capability, value) => decodeExternalizedOperatorReadback({
-                stateRoot: options.runtimeStateRoot,
-                scopeId: options.scopeId,
-                value: unwrapCapabilityPayload(await runtime.invoke(extensionId, learnerSweepEnvelope({
-                  requestPrefix: "route-challenge-evidence",
-                  extensionId, capability, value,
-                  scopeOverride: extensionId === "replay-core" ? replayJobScope : undefined,
-                  evaluationAuthoritySecret: authority.authoritySecret,
-                }))),
-              }),
+              invoke: async (extensionId, capability, value) =>
+                decodeExternalizedOperatorReadback({
+                  stateRoot: options.runtimeStateRoot,
+                  scopeId: options.scopeId,
+                  value: unwrapCapabilityPayload(
+                    await runtime.invoke(
+                      extensionId,
+                      learnerSweepEnvelope({
+                        requestPrefix: "route-challenge-evidence",
+                        extensionId,
+                        capability,
+                        value,
+                        scopeOverride: extensionId === "replay-core" ? replayJobScope : undefined,
+                        evaluationAuthoritySecret: authority.authoritySecret,
+                      }),
+                    ),
+                  ),
+                }),
             });
-          } catch { return null; }
+          } catch {
+            return null;
+          }
         },
         readRouteDispatchEvidence: async (request) => {
           const runtime = extensionRuntimeRef.current;
-          if (!runtime) { console.error(`[route-evidence-binding] no runtime; request=${request?.roleId}/${request?.taskTypeId}/${request?.endpointId}`); return null; }
+          if (!runtime) {
+            console.error(
+              `[route-evidence-binding] no runtime; request=${request?.roleId}/${request?.taskTypeId}/${request?.endpointId}`,
+            );
+            return null;
+          }
           try {
-            const authority = await resolveDurableEvaluationAuthority({ channel, stateRoot: options.runtimeStateRoot, scopeId: options.scopeId });
-            const replayJobScope = resolveDurableReplayJobScope({ channel, runtimeStateRoot: options.runtimeStateRoot, scopeId: options.scopeId });
+            const authority = await resolveDurableEvaluationAuthority({
+              channel,
+              stateRoot: options.runtimeStateRoot,
+              scopeId: options.scopeId,
+            });
+            const replayJobScope = resolveDurableReplayJobScope({
+              channel,
+              runtimeStateRoot: options.runtimeStateRoot,
+              scopeId: options.scopeId,
+            });
             const { readRouteDispatchEvidence } = await import("./route-challenge-evidence.js");
             return await readRouteDispatchEvidence({
               request,
-              invoke: async (extensionId, capability, value) => decodeExternalizedOperatorReadback({
-                stateRoot: options.runtimeStateRoot,
-                scopeId: options.scopeId,
-                value: unwrapCapabilityPayload(await runtime.invoke(extensionId, learnerSweepEnvelope({
-                  requestPrefix: "route-challenge-evidence",
-                  extensionId, capability, value,
-                  scopeOverride: extensionId === "replay-core" ? replayJobScope : undefined,
-                  evaluationAuthoritySecret: authority.authoritySecret,
-                }))),
-              }),
+              invoke: async (extensionId, capability, value) =>
+                decodeExternalizedOperatorReadback({
+                  stateRoot: options.runtimeStateRoot,
+                  scopeId: options.scopeId,
+                  value: unwrapCapabilityPayload(
+                    await runtime.invoke(
+                      extensionId,
+                      learnerSweepEnvelope({
+                        requestPrefix: "route-challenge-evidence",
+                        extensionId,
+                        capability,
+                        value,
+                        scopeOverride: extensionId === "replay-core" ? replayJobScope : undefined,
+                        evaluationAuthoritySecret: authority.authoritySecret,
+                      }),
+                    ),
+                  ),
+                }),
             });
-          } catch (cause) { console.error(`[route-evidence-binding] failed: ${cause instanceof Error ? cause.message : String(cause)}`); return null; }
+          } catch (cause) {
+            console.error(
+              `[route-evidence-binding] failed: ${cause instanceof Error ? cause.message : String(cause)}`,
+            );
+            return null;
+          }
         },
         operations: sweepOperations,
         ledger,
@@ -7313,8 +7437,18 @@ export async function main(): Promise<void> {
             let cursor: string | undefined;
             const cursors = new Set<string>();
             for (let page = 0; page < 10; page++) {
-              const index = unwrapCapabilityPayload(await runtime.invoke("knowledge-store", routeLadderEnvelopeFor("knowledge:list-route-ladders", { scopeId: options.scopeId, limit: 200, ...(cursor ? { cursor } : {}) })));
-              if (!index || typeof index !== "object" || Array.isArray(index)) throw new Error("ladder index unavailable");
+              const index = unwrapCapabilityPayload(
+                await runtime.invoke(
+                  "knowledge-store",
+                  routeLadderEnvelopeFor("knowledge:list-route-ladders", {
+                    scopeId: options.scopeId,
+                    limit: 200,
+                    ...(cursor ? { cursor } : {}),
+                  }),
+                ),
+              );
+              if (!index || typeof index !== "object" || Array.isArray(index))
+                throw new Error("ladder index unavailable");
               const record = index as Record<string, unknown>;
               if (!Array.isArray(record.ladders)) throw new Error("ladder index unavailable");
               rows.push(...record.ladders);
@@ -7325,14 +7459,34 @@ export async function main(): Promise<void> {
                 if (record.ladders.length >= 200) throw new Error("ladder index bounded limit");
                 break;
               }
-              if (typeof nextCursor !== "string" || !nextCursor || cursors.has(nextCursor) || page === 9) throw new Error("ladder index bounded limit");
+              if (
+                typeof nextCursor !== "string" ||
+                !nextCursor ||
+                cursors.has(nextCursor) ||
+                page === 9
+              )
+                throw new Error("ladder index bounded limit");
               cursors.add(nextCursor);
               cursor = nextCursor;
             }
-            const defaults = readRouteLearningDefaults({ repoRoot: options.repoRoot, channel, stateRoot: resolveLearningPolicyStateRoot({ runtimeStateRoot: options.runtimeStateRoot, scopeId: options.scopeId }) }).routeLearning;
-            const census = readRouteLadderCensus({ runtimeStateRoot: options.runtimeStateRoot, scopeId: options.scopeId, nowMs: Date.now(), stalenessWindowDays: defaults.stalenessWindowDays, configuredEndpointIds: endpoints(), ladderRows: rows });
+            const defaults = readRouteLearningDefaults({
+              repoRoot: options.repoRoot,
+              channel,
+              stateRoot: resolveLearningPolicyStateRoot({
+                runtimeStateRoot: options.runtimeStateRoot,
+                scopeId: options.scopeId,
+              }),
+            }).routeLearning;
+            const census = readRouteLadderCensus({
+              runtimeStateRoot: options.runtimeStateRoot,
+              scopeId: options.scopeId,
+              nowMs: Date.now(),
+              stalenessWindowDays: defaults.stalenessWindowDays,
+              configuredEndpointIds: endpoints(),
+              ladderRows: rows,
+            });
             if (census.status === "degraded") {
-              console.error("[run105] route census degraded:" + census.reason);
+              console.error(`[run105] route census degraded:${census.reason}`);
               return null;
             }
             return census.candidates;
@@ -7357,7 +7511,7 @@ export async function main(): Promise<void> {
             );
             const ladder =
               read && typeof read === "object" && !Array.isArray(read)
-                ? (read as Record<string, unknown>).ladder ?? null
+                ? ((read as Record<string, unknown>).ladder ?? null)
                 : null;
             return decodeRouteLadderRow(ladder);
           } catch {
@@ -7384,7 +7538,7 @@ export async function main(): Promise<void> {
         },
         reportUnclassifiedCaptures: ({ count }) => {
           console.error(
-            "[run105] " + count + " capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory",
+            `[run105] ${count} capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory`,
           );
         },
         // Run 101 R4: the replay plane's queue, whose mode comes from the
@@ -8218,7 +8372,20 @@ export async function main(): Promise<void> {
             endpointProfiles: replayEndpointProfiles,
             onRejected: (rejection) => replayCandidateRejections.push(rejection),
           });
-          if (process.env.ROLE_MODEL_FOCUS_DIAG) { console.error("[supervised-cand] source=" + (capturedSourceEndpointId ? capturedSourceEndpointId.split(".").pop() : null) + " judge=" + (evalJudgeEndpointId ? evalJudgeEndpointId.split(".").pop() : null) + " candidates=" + candidateEndpointIds.map(function(c){return c.split(".").pop();}).join(",") + " reqMod=" + JSON.stringify(replayRequestRequirements.requiredModalities) + " reqCap=" + JSON.stringify(replayRequestRequirements.requiredCapabilities) + " profiles=" + replayEndpointProfiles.map(function(p){return p.endpointId.split(".").pop() + ":[" + (p.modalities||[]).join(",") + "][" + (p.capabilities||[]).join(",") + "]";}).join("|") + " selected=" + distinctReplayCandidates.map(function(c){return c.split(".").pop();}).join(",") + " rejected=" + replayCandidateRejections.map(function(r){return r.endpointId.split(".").pop() + ":" + r.code;}).join(",")); }
+          if (process.env.ROLE_MODEL_FOCUS_DIAG) {
+            console.error(
+              `[supervised-cand] source=${capturedSourceEndpointId ? capturedSourceEndpointId.split(".").pop() : null} judge=${evalJudgeEndpointId ? evalJudgeEndpointId.split(".").pop() : null} candidates=${candidateEndpointIds.map((c) => c.split(".").pop()).join(",")} reqMod=${JSON.stringify(replayRequestRequirements.requiredModalities)} reqCap=${JSON.stringify(replayRequestRequirements.requiredCapabilities)} profiles=${replayEndpointProfiles
+                .map(
+                  (p) =>
+                    `${p.endpointId.split(".").pop()}:[${(p.modalities || []).join(",")}][${(p.capabilities || []).join(",")}]`,
+                )
+                .join(
+                  "|",
+                )} selected=${distinctReplayCandidates.map((c) => c.split(".").pop()).join(",")} rejected=${replayCandidateRejections
+                .map((r) => `${r.endpointId.split(".").pop()}:${r.code}`)
+                .join(",")}`,
+            );
+          }
           const replayPolicySet = buildReplayPolicySet();
           const replayLedger = createReplayLedger({
             filePath: path.join(
@@ -8400,7 +8567,11 @@ export async function main(): Promise<void> {
               "supervised replay source capture lacks independently observable output identity",
             );
           }
-          if (process.env.ROLE_MODEL_FOCUS_DIAG) { console.error("[source-diag] requestId=" + requestId.slice(0,16) + " endpointId=" + (sourceCapture.endpointId||null) + " sourceEndpointId=" + (sourceCapture.sourceEndpointId||null) + " capturedSource=" + (capturedSourceEndpointId||null) + " judge=" + (evalJudgeEndpointId||null) + " candidates=" + candidatePackages.map(function(c){return c.endpointId.split(".").pop();}).join(",")); }
+          if (process.env.ROLE_MODEL_FOCUS_DIAG) {
+            console.error(
+              `[source-diag] requestId=${requestId.slice(0, 16)} endpointId=${sourceCapture.endpointId || null} sourceEndpointId=${sourceCapture.sourceEndpointId || null} capturedSource=${capturedSourceEndpointId || null} judge=${evalJudgeEndpointId || null} candidates=${candidatePackages.map((c) => c.endpointId.split(".").pop()).join(",")}`,
+            );
+          }
           // Run 105 bug 3: the configured judge may also be a candidate endpoint, so it is NOT excluded
           // here. Only the source is filtered; a challenger that equals the judge is de-conflicted at the
           // evaluation (dedupeJudgeAgainstPair picks an alternative judge).

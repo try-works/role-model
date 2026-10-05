@@ -21,12 +21,18 @@ describe("run105 R8 focus task selection", () => {
   test("only a classified request with recorded volume becomes the focus task", () => {
     expect(selectFocusTask([task({ requestCount: 0 })])).toBeNull();
     expect(selectFocusTask([])).toBeNull();
-    expect(selectFocusTask([task({ requestCount: 1 })])).toMatchObject({ roleId: "role:code-review", taskTypeId: "task:code-review" });
+    expect(selectFocusTask([task({ requestCount: 1 })])).toMatchObject({
+      roleId: "role:code-review",
+      taskTypeId: "task:code-review",
+    });
   });
 
   test("depth-first: most-requested wins, then most-unfilled", () => {
     expect(
-      selectFocusTask([task({ taskTypeId: "quiet", requestCount: 1 }), task({ taskTypeId: "busy", requestCount: 40 })]),
+      selectFocusTask([
+        task({ taskTypeId: "quiet", requestCount: 1 }),
+        task({ taskTypeId: "busy", requestCount: 40 }),
+      ]),
     ).toMatchObject({ taskTypeId: "busy" });
     expect(
       selectFocusTask([

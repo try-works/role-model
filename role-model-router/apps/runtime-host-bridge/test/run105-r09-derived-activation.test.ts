@@ -4,10 +4,7 @@ import path from "node:path";
 
 import { describe, expect, test, vi } from "vitest";
 
-import {
-  InsufficientEvidence,
-  evaluateRouteLadderActivation,
-} from "@role-model-router/core";
+import { InsufficientEvidence, evaluateRouteLadderActivation } from "@role-model-router/core";
 import { Effect } from "effect";
 
 import { startAutoReplayLoop } from "../src/track-b-auto-replay-runtime.js";
@@ -23,12 +20,25 @@ import { buildReplayPolicySet } from "../src/track-b-replay-policy.js";
  * R9's floor is a NEW quantity (K finalized effort-comparable comparisons AND mean confidence >=
  * 0.7); it does not repurpose learning-integrity's own 0.7 (C4/D6).
  */
-const DEFAULTS = { minComparisons: 5, minConfidence: 0.7, stalenessWindowDays: 30, challengeBatchSize: 1 };
+const DEFAULTS = {
+  minComparisons: 5,
+  minConfidence: 0.7,
+  stalenessWindowDays: 30,
+  challengeBatchSize: 1,
+};
 
 const records = (count: number) =>
-  Array.from({ length: count }, () => ({ endpointId: "endpoint:a", confidence: 0.8, effortComparable: true }));
+  Array.from({ length: count }, () => ({
+    endpointId: "endpoint:a",
+    confidence: 0.8,
+    effortComparable: true,
+  }));
 
-const floorAdmitting = (admitted: string[]) => () => ({ admitted, admittedStats: {}, belowFloorStats: {} });
+const floorAdmitting = (admitted: string[]) => () => ({
+  admitted,
+  admittedStats: {},
+  belowFloorStats: {},
+});
 
 describe("run105 R9 derived activation", () => {
   test("activation never invokes knowledge:activate-pack (D7: no promote-then-activate)", async () => {
@@ -94,7 +104,10 @@ describe("run105 R9 derived activation", () => {
 
   test("the replay loop's own health never reports a ladder activation it did not derive", async () => {
     const dir = mkdtempSync(path.join(os.tmpdir(), "run105-derived-"));
-    const ledger = createReplayLedger({ filePath: path.join(dir, "ledger.json"), now: () => Date.parse("2026-10-03T00:00:00Z") });
+    const ledger = createReplayLedger({
+      filePath: path.join(dir, "ledger.json"),
+      now: () => Date.parse("2026-10-03T00:00:00Z"),
+    });
     try {
       const loop = startAutoReplayLoop({
         operations: {

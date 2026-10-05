@@ -900,7 +900,6 @@ export function LearningPackRow({
   );
 }
 
-
 /**
  * Run 105 R12 (stage 3): the endpoint ladder index.
  *
@@ -941,15 +940,15 @@ export function LearningLadderRow({
     : admissionReported
       ? "no endpoint ladder: nothing admitted yet"
       : "endpoint ladder admission state not reported";
-  const badgeTone: BadgeTone =
-    state === "rolled_back" ? "warning" : active ? "success" : "neutral";
-  const badgeLabel = state === "rolled_back"
-    ? "Rolled back"
-    : active
-      ? "Active"
-      : admissionReported
-        ? "No endpoint ladder"
-        : "Endpoint ladder state not reported";
+  const badgeTone: BadgeTone = state === "rolled_back" ? "warning" : active ? "success" : "neutral";
+  const badgeLabel =
+    state === "rolled_back"
+      ? "Rolled back"
+      : active
+        ? "Active"
+        : admissionReported
+          ? "No endpoint ladder"
+          : "Endpoint ladder state not reported";
   return (
     <tr className={tableRowClassName}>
       <td className="py-3 pr-3">
@@ -971,10 +970,16 @@ export function LearningLadderRow({
         ) : (
           <ol className="space-y-1">
             {row.topEndpoints.map((endpoint) => (
-              <li className="flex items-baseline gap-2" key={`${endpoint.rank}:${endpoint.endpointId}`}>
+              <li
+                className="flex items-baseline gap-2"
+                key={`${endpoint.rank}:${endpoint.endpointId}`}
+              >
                 <span className={tableScoreLaneClassName}>{endpoint.rank}</span>
                 <span className="min-w-0 break-words">
-                  <span className={`${tableCellValueClassName} break-words`} title={endpoint.endpointId}>
+                  <span
+                    className={`${tableCellValueClassName} break-words`}
+                    title={endpoint.endpointId}
+                  >
                     {formatEndpointModelLabel(endpoint.endpointId)}
                   </span>
                   <span className={`ml-2 ${tableCellMetaClassName}`}>{endpoint.status}</span>
@@ -984,7 +989,9 @@ export function LearningLadderRow({
           </ol>
         )}
         <details className="mt-3">
-          <summary className={secondaryButtonClassName + " cursor-pointer list-item h-auto min-h-[36px] py-2 break-words"}>
+          <summary
+            className={`${secondaryButtonClassName} cursor-pointer list-item h-auto min-h-[36px] py-2 break-words`}
+          >
             {`Endpoint ladder detail for ${scopeLine}`}
           </summary>
           <div className="mt-2 space-y-2">
@@ -994,22 +1001,32 @@ export function LearningLadderRow({
             </p>
             {row.rolledBack?.on ? (
               <p className={tableCellMetaClassName}>
-                {row.rolledBack.reason ? `rollback reason ${row.rolledBack.reason}` : "rollback reason not reported"}
+                {row.rolledBack.reason
+                  ? `rollback reason ${row.rolledBack.reason}`
+                  : "rollback reason not reported"}
               </p>
             ) : null}
             {row.rungs === undefined ? (
-              <p className={tableCellNoteClassName}>Full endpoint ranking not reported by this readback.</p>
+              <p className={tableCellNoteClassName}>
+                Full endpoint ranking not reported by this readback.
+              </p>
             ) : row.rungs.length === 0 ? (
               <p className={tableCellNoteClassName}>No ranked endpoints reported.</p>
             ) : (
               <ol className="space-y-1">
                 {row.rungs.map((endpoint, index) => (
-                  <li className="flex items-baseline gap-2" key={`${endpoint.rank}:${endpoint.endpointId}:${index}`}>
+                  <li
+                    className="flex items-baseline gap-2"
+                    key={`${endpoint.rank}:${endpoint.endpointId}:${index}`}
+                  >
                     <span className={tableScoreLaneClassName}>
                       {Number.isFinite(endpoint.rank) ? endpoint.rank : NOT_REPORTED}
                     </span>
                     <span className="min-w-0 break-words">
-                      <span className={`${tableCellValueClassName} break-words`} title={endpoint.endpointId}>
+                      <span
+                        className={`${tableCellValueClassName} break-words`}
+                        title={endpoint.endpointId}
+                      >
                         {endpoint.endpointId}
                       </span>
                       <span className={`ml-2 ${tableCellMetaClassName}`}>{endpoint.status}</span>
@@ -1027,16 +1044,19 @@ export function LearningLadderRow({
           {!admissionReported
             ? "endpoint ladder admission state not reported"
             : state === "complete"
-            ? "every configured endpoint is admitted"
-            : state === "no_ladder"
-              ? "no endpoint has passed the admission floor"
-              : "more configured endpoints are still to be challenged"}
+              ? "every configured endpoint is admitted"
+              : state === "no_ladder"
+                ? "no endpoint has passed the admission floor"
+                : "more configured endpoints are still to be challenged"}
         </p>
       </td>
       <td className="py-3 pr-3">
         <Badge tone={badgeTone}>{badgeLabel}</Badge>
         {row.rolledBack?.on ? (
-          <p className={`mt-1 ${tableCellMetaClassName}`} title={row.rolledBack.reason ?? undefined}>
+          <p
+            className={`mt-1 ${tableCellMetaClassName}`}
+            title={row.rolledBack.reason ?? undefined}
+          >
             {row.rolledBack.reason ? `reason ${row.rolledBack.reason}` : "no reason recorded"}
           </p>
         ) : null}
@@ -1130,12 +1150,21 @@ export function LearningLadderIndex({
           <col />
         </colgroup>
         <LearningTableHead
-          columns={["Role . task (id)", "Ranked endpoints (top 3)", "Completeness", "State", "Action"]}
+          columns={[
+            "Role . task (id)",
+            "Ranked endpoints (top 3)",
+            "Completeness",
+            "State",
+            "Action",
+          ]}
         />
         <tbody>
           {ordered.map((row) => (
             <LearningLadderRow
-              busy={busyRoleTask === `${row.roleId}\u0000${row.taskTypeId}` || busyRoleTasks.includes(`${row.roleId}\u0000${row.taskTypeId}`)}
+              busy={
+                busyRoleTask === `${row.roleId}\u0000${row.taskTypeId}` ||
+                busyRoleTasks.includes(`${row.roleId}\u0000${row.taskTypeId}`)
+              }
               error={errorsByRoleTask[`${row.roleId}\u0000${row.taskTypeId}`] ?? error}
               key={`${row.roleId}\u0000${row.taskTypeId}`}
               onToggle={onToggle}
@@ -1641,10 +1670,7 @@ export function LearningPacksPage() {
     const state = asRecord(records.value).laddersState;
     return state === "unavailable" || state === "not_asked" ? state : ("reported" as const);
   })();
-  const ladderRows = useMemo(
-    () => normalizeLadderRows(asRecord(records.value)),
-    [records.value],
-  );
+  const ladderRows = useMemo(() => normalizeLadderRows(asRecord(records.value)), [records.value]);
   const [busyLadders, setBusyLadders] = useState<readonly string[]>([]);
   const pendingLadders = useRef(new Set<string>());
   const [ladderErrors, setLadderErrors] = useState<Readonly<Record<string, string>>>({});
@@ -1750,7 +1776,10 @@ export function LearningPacksPage() {
       );
       await records.reload();
     } catch (toggleError) {
-      setLadderErrors((current) => ({ ...current, [key]: describeOperatorWriteError(toggleError) }));
+      setLadderErrors((current) => ({
+        ...current,
+        [key]: describeOperatorWriteError(toggleError),
+      }));
     } finally {
       pendingLadders.current.delete(key);
       setBusyLadders([...pendingLadders.current]);

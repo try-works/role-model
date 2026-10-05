@@ -18,14 +18,20 @@ import { describe, expect, test } from "vitest";
 describe("run105 cli derive materialize independence", () => {
   test("materialization runs before the runtime/authority early returns and uses only the host op", () => {
     const source = readFileSync(new URL("../src/cli.ts", import.meta.url), "utf8");
-    const start = source.indexOf("async deriveLearnerCandidates(input: Record<string, unknown> = {})");
+    const start = source.indexOf(
+      "async deriveLearnerCandidates(input: Record<string, unknown> = {})",
+    );
     const end = source.indexOf("async retroFinalizeEvaluations()", start);
     expect(start).toBeGreaterThan(-1);
     const block = source.slice(start, end);
 
     const materializeAt = block.indexOf("materializeDerivedLadders");
-    const runtimeGuardAt = block.indexOf("if (!runtime) return { examined: 0, derived: 0, pending: 0 };");
-    const authorityGuardAt = block.indexOf("if (!authority) return { examined: 0, derived: 0, pending: 0 };");
+    const runtimeGuardAt = block.indexOf(
+      "if (!runtime) return { examined: 0, derived: 0, pending: 0 };",
+    );
+    const authorityGuardAt = block.indexOf(
+      "if (!authority) return { examined: 0, derived: 0, pending: 0 };",
+    );
     expect(materializeAt).toBeGreaterThan(-1);
     expect(runtimeGuardAt).toBeGreaterThan(-1);
     expect(authorityGuardAt).toBeGreaterThan(-1);
@@ -38,7 +44,10 @@ describe("run105 cli derive materialize independence", () => {
     expect(awaitedCallAt).toBeLessThan(authorityGuardAt);
 
     // The helper's body uses the authenticated host operation only.
-    const helper = block.slice(materializeAt, block.indexOf("const runtime = extensionRuntimeRef.current;", materializeAt));
+    const helper = block.slice(
+      materializeAt,
+      block.indexOf("const runtime = extensionRuntimeRef.current;", materializeAt),
+    );
     expect(helper).toContain("operations.materializeRouteLadders");
     expect(helper).toContain("configuredEndpointIds: endpoints()");
     expect(helper).toContain("defaults: defaultsSnapshot");

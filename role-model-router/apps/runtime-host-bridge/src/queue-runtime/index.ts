@@ -168,7 +168,9 @@ export function startReplayQueueRuntime(options: ReplayQueueRuntimeOptions): Rep
                 captureRef: job.captureRef,
                 endpointIds: [...job.endpointIds],
                 policySetDigest: job.policySetDigest,
-                ...(job.dispatchRoundId !== undefined ? { dispatchRoundId: job.dispatchRoundId } : {}),
+                ...(job.dispatchRoundId !== undefined
+                  ? { dispatchRoundId: job.dispatchRoundId }
+                  : {}),
               },
             });
           }),

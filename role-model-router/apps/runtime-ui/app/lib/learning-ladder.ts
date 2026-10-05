@@ -70,9 +70,7 @@ const asRecord = (value: unknown): Record<string, unknown> =>
  * kept as bounded absence rather than dropped silently, and the index is capped at three.
  * Explicit full rungs share the same normalization but remain uncapped for task detail.
  */
-export function topLadderEndpoints(
-  input: unknown,
-): readonly LadderEndpointView[] {
+export function topLadderEndpoints(input: unknown): readonly LadderEndpointView[] {
   const raw = Array.isArray(input) ? input : asRecord(input).topEndpoints;
   return normalizeLadderEndpoints(raw).slice(0, 3);
 }
@@ -124,7 +122,11 @@ export function normalizeLadderRows(input: unknown): readonly LadderRowView[] {
       active: typeof row.active === "boolean" ? row.active : null,
       rolledBack: (() => {
         const rolledBack = asRecord(row.rolledBack);
-        return { on: Boolean(rolledBack.on), reason: boundedText(rolledBack.reason), atMs: boundedNumber(rolledBack.atMs) };
+        return {
+          on: Boolean(rolledBack.on),
+          reason: boundedText(rolledBack.reason),
+          atMs: boundedNumber(rolledBack.atMs),
+        };
       })(),
       ladderVersion: boundedInteger(row.ladderVersion),
       nextEligibleAtMs: boundedNumber(row.nextEligibleAtMs),
@@ -143,7 +145,9 @@ export function ladderRowState(input: unknown): LadderState {
   if (rolledBack.on === true) return "rolled_back";
   const completeness = asRecord(row.completeness);
   const admitted = Number.isInteger(completeness.admitted) ? (completeness.admitted as number) : 0;
-  const configured = Number.isInteger(completeness.configured) ? (completeness.configured as number) : 0;
+  const configured = Number.isInteger(completeness.configured)
+    ? (completeness.configured as number)
+    : 0;
   if (admitted <= 0) return "no_ladder";
   if (configured > 0 && admitted >= configured) return "complete";
   return "partial";
@@ -181,7 +185,8 @@ export function compareLadderRows(left: LadderRowView, right: LadderRowView): nu
   }
   const byRole = left.roleId < right.roleId ? -1 : left.roleId > right.roleId ? 1 : 0;
   if (byRole !== 0) return byRole;
-  const byTask = left.taskTypeId < right.taskTypeId ? -1 : left.taskTypeId > right.taskTypeId ? 1 : 0;
+  const byTask =
+    left.taskTypeId < right.taskTypeId ? -1 : left.taskTypeId > right.taskTypeId ? 1 : 0;
   return byTask;
 }
 

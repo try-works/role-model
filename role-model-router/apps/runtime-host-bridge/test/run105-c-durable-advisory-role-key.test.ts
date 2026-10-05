@@ -13,10 +13,15 @@ import {
  * and the cache bound is raised for the per-(role, task) fan-out.
  */
 
-const advisory = (preferredRoutePackage: string | null, overrides: Record<string, unknown> = {}) => ({
+const advisory = (
+  preferredRoutePackage: string | null,
+  overrides: Record<string, unknown> = {},
+) => ({
   preferredRoutePackage,
   roleId: "role.coder",
-  advisoryLadder: preferredRoutePackage ? [{ endpointId: preferredRoutePackage, rank: 1, status: "available" as const }] : [],
+  advisoryLadder: preferredRoutePackage
+    ? [{ endpointId: preferredRoutePackage, rank: 1, status: "available" as const }]
+    : [],
   advisoryState: "fresh" as const,
   confidence: 0.8,
   candidateId: "candidate-1",
@@ -48,8 +53,12 @@ describe("run105 C durable advisory role key", () => {
     });
 
     expect(
-      recallTrackBDurableRouteAdvisory({ channel: "stage", scope: "scope-c", roleId: "role.coder", taskTypeId: "coder.review" })
-        ?.preferredRoutePackage,
+      recallTrackBDurableRouteAdvisory({
+        channel: "stage",
+        scope: "scope-c",
+        roleId: "role.coder",
+        taskTypeId: "coder.review",
+      })?.preferredRoutePackage,
     ).toBe("endpoint-a");
     expect(
       recallTrackBDurableRouteAdvisory({
@@ -61,43 +70,79 @@ describe("run105 C durable advisory role key", () => {
     ).toBe("endpoint-b");
     // A different role never reads the other role's entitlement.
     expect(
-      recallTrackBDurableRouteAdvisory({ channel: "stage", scope: "scope-c", roleId: "role.other", taskTypeId: "coder.review" }),
+      recallTrackBDurableRouteAdvisory({
+        channel: "stage",
+        scope: "scope-c",
+        roleId: "role.other",
+        taskTypeId: "coder.review",
+      }),
     ).toBeNull();
   });
 
   test("C11 unsafe partial lookup never borrows an exact pair", () => {
     clearTrackBDurableRouteAdvisoryCacheForTests();
     rememberTrackBDurableRouteAdvisory({
-      channel: "stage", scope: "scope-partial", roleId: "role.coder",
-      advisory: advisory("endpoint-a") as never, nowMs: 1_000,
+      channel: "stage",
+      scope: "scope-partial",
+      roleId: "role.coder",
+      advisory: advisory("endpoint-a") as never,
+      nowMs: 1_000,
     });
     // The original role-only success pin authorized an unspecified task. Exact-pair isolation
     // intentionally changes that expectation to null; task-only and legacy reads cannot borrow either.
-    expect(recallTrackBDurableRouteAdvisory({
-      channel: "stage", scope: "scope-partial", roleId: "role.coder",
-    })).toBeNull();
-    expect(recallTrackBDurableRouteAdvisory({
-      channel: "stage", scope: "scope-partial", taskTypeId: "coder.review",
-    })).toBeNull();
-    expect(recallTrackBDurableRouteAdvisory({ channel: "stage", scope: "scope-partial" })).toBeNull();
-    expect(recallTrackBDurableRouteAdvisory({
-      channel: "stage", scope: "scope-partial", roleId: "role.coder", taskTypeId: "coder.review",
-    })?.preferredRoutePackage).toBe("endpoint-a");
+    expect(
+      recallTrackBDurableRouteAdvisory({
+        channel: "stage",
+        scope: "scope-partial",
+        roleId: "role.coder",
+      }),
+    ).toBeNull();
+    expect(
+      recallTrackBDurableRouteAdvisory({
+        channel: "stage",
+        scope: "scope-partial",
+        taskTypeId: "coder.review",
+      }),
+    ).toBeNull();
+    expect(
+      recallTrackBDurableRouteAdvisory({ channel: "stage", scope: "scope-partial" }),
+    ).toBeNull();
+    expect(
+      recallTrackBDurableRouteAdvisory({
+        channel: "stage",
+        scope: "scope-partial",
+        roleId: "role.coder",
+        taskTypeId: "coder.review",
+      })?.preferredRoutePackage,
+    ).toBe("endpoint-a");
   });
 
   test("C11 publisher attribution cannot relabel the source role", () => {
     clearTrackBDurableRouteAdvisoryCacheForTests();
     const entry = rememberTrackBDurableRouteAdvisory({
-      channel: "stage", scope: "scope-attribution", roleId: "role.planner",
-      advisory: advisory("endpoint-a") as never, nowMs: 1_000,
+      channel: "stage",
+      scope: "scope-attribution",
+      roleId: "role.planner",
+      advisory: advisory("endpoint-a") as never,
+      nowMs: 1_000,
     });
     expect(entry).toMatchObject({ roleId: "role.coder", taskTypeId: "coder.review" });
-    expect(recallTrackBDurableRouteAdvisory({
-      channel: "stage", scope: "scope-attribution", roleId: "role.planner", taskTypeId: "coder.review",
-    })).toBeNull();
-    expect(recallTrackBDurableRouteAdvisory({
-      channel: "stage", scope: "scope-attribution", roleId: "role.coder", taskTypeId: "coder.review",
-    })?.preferredRoutePackage).toBe("endpoint-a");
+    expect(
+      recallTrackBDurableRouteAdvisory({
+        channel: "stage",
+        scope: "scope-attribution",
+        roleId: "role.planner",
+        taskTypeId: "coder.review",
+      }),
+    ).toBeNull();
+    expect(
+      recallTrackBDurableRouteAdvisory({
+        channel: "stage",
+        scope: "scope-attribution",
+        roleId: "role.coder",
+        taskTypeId: "coder.review",
+      })?.preferredRoutePackage,
+    ).toBe("endpoint-a");
   });
 
   test("C11 genuinely absent role AND task keep the pre-run105 (channel, scope) behaviour", () => {
@@ -196,7 +241,10 @@ describe("run105 C durable advisory role key", () => {
     ).toBe("endpoint-200");
     expect(
       recallTrackBDurableRouteAdvisory({
-        channel: "stage", scope: "scope-8", roleId: "role.coder", taskTypeId: "coder.review",
+        channel: "stage",
+        scope: "scope-8",
+        roleId: "role.coder",
+        taskTypeId: "coder.review",
       })?.preferredRoutePackage,
     ).toBe("endpoint-8");
     expect(

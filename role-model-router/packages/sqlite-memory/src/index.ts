@@ -32,11 +32,11 @@ import {
 } from "./history-policy.js";
 import {
   LEGACY_INLINE_CAP_BYTES,
-  buildCompactRuntimeObservationStub,
   boundRuntimeTelemetryFailureStub,
-  projectRuntimeTelemetryFailureDimensions,
+  buildCompactRuntimeObservationStub,
   hydrateRuntimeObservationGraphPointer,
   isDegradedCaptureObservation as isDegradedCaptureObservationRecord,
+  projectRuntimeTelemetryFailureDimensions,
   readRuntimeObservationStorageState,
   recordRuntimeObservationGraphReference,
   resolveRuntimeObservationStoragePayload,
@@ -5176,10 +5176,12 @@ export function persistRuntimeTelemetryFailure(input: PersistRuntimeTelemetryFai
         .prepare(
           `INSERT OR REPLACE INTO runtime_telemetry_records (${RUNTIME_TELEMETRY_INSERT_COLUMNS.join(", ")}) VALUES (${RUNTIME_TELEMETRY_INSERT_COLUMNS.map(() => "?").join(", ")})`,
         )
-        .run(...runtimeTelemetryInsertValues({
-          ...telemetryRecord,
-          dimensions: projectRuntimeTelemetryFailureDimensions(input.dimensions, artifactRef),
-        }));
+        .run(
+          ...runtimeTelemetryInsertValues({
+            ...telemetryRecord,
+            dimensions: projectRuntimeTelemetryFailureDimensions(input.dimensions, artifactRef),
+          }),
+        );
     });
   } catch (error) {
     if (createdArtifact) {

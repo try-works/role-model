@@ -236,14 +236,18 @@ export async function readTrackBRouteAdvisoryFromRollout(
     if (!packId || (ladder.taxonomyVersion != null && !taxonomyVersion))
       return refuse("route ladder provenance unavailable");
     // packId is the real content-addressed knowledge DOCUMENT, not a learning-record id.
-    const rawDocument = asRecord(await input.invoke("knowledge:read", { id: packId, scope: scopeId }));
+    const rawDocument = asRecord(
+      await input.invoke("knowledge:read", { id: packId, scope: scopeId }),
+    );
     // The host envelope merges the transport fields (businessOutput, durableLocator, evidenceRef,
     // readCapability, workerPid) beside the document, so the content-addressed digest must be computed
     // over the INNER document the knowledge-store actually addressed, not the envelope.
     const document = asRecord(rawDocument?.businessOutput) ?? rawDocument;
     const metadata = asRecord(document?.provenance);
     if (process.env.ROLE_MODEL_ADVISORY_DIAG) {
-      console.error(`[advisory-diag] doc keys=${Object.keys(document ?? {}).join(",")} type=${document?.type} ver=${document?.version} docScope=${document?.scope} scopeId=${scopeId} mScopeId=${metadata?.scopeId} mRole=${metadata?.roleId} roleId=${roleId} mTask=${metadata?.taskTypeId} taskId=${taskTypeId} mTax=${metadata?.taxonomyVersion} tax=${taxonomyVersion} digestMatch=${document ? documentDigest(document) === packId : false}`);
+      console.error(
+        `[advisory-diag] doc keys=${Object.keys(document ?? {}).join(",")} type=${document?.type} ver=${document?.version} docScope=${document?.scope} scopeId=${scopeId} mScopeId=${metadata?.scopeId} mRole=${metadata?.roleId} roleId=${roleId} mTask=${metadata?.taskTypeId} taskId=${taskTypeId} mTax=${metadata?.taxonomyVersion} tax=${taxonomyVersion} digestMatch=${document ? documentDigest(document) === packId : false}`,
+      );
     }
     if (
       !document ||
@@ -290,9 +294,9 @@ export async function readTrackBRouteAdvisoryFromRollout(
       !validUnit(admissionPolicy.minConfidence)
     )
       return refuse("route ladder accepted admission policy unavailable");
-    const means: number[] = [],
-      times: number[] = [],
-      versions: (string | null)[] = [];
+    const means: number[] = [];
+    const times: number[] = [];
+    const versions: (string | null)[] = [];
     for (const rung of rungs) {
       const evidence = asRecord(endpointEvidence[rung.endpointId]);
       const ownGroups = parseUniqueIds(evidence?.groupIds, 4096);
@@ -324,8 +328,8 @@ export async function readTrackBRouteAdvisoryFromRollout(
     const measuredVersion = uniqueVersions.length === 1 ? uniqueVersions[0] : null;
     if (taxonomyVersion !== measuredVersion)
       return refuse("route ladder evidence taxonomy mismatch");
-    const confidence = Math.min(...means),
-      evidenceAtMs = Math.min(...times);
+    const confidence = Math.min(...means);
+    const evidenceAtMs = Math.min(...times);
     if (!validUnit(metadata.confidence) || Math.abs(metadata.confidence - confidence) > 1e-12)
       return refuse("route ladder confidence mismatch");
     if (!validTime(metadata.evidenceAtMs) || metadata.evidenceAtMs !== evidenceAtMs)
@@ -364,7 +368,7 @@ export async function readTrackBRouteAdvisoryFromRollout(
         return refuse("sustained guardrail rollback engaged");
     }
     const cohortPercent = resolveAdvisoryCohortPercent({
-      stage: input.stage!,
+      stage: input.stage as string,
       policyCohortPercent: input.policyCohortPercent,
       rolloutCohortPercent: rollout.cohortPercent,
     });
@@ -398,19 +402,15 @@ export async function readTrackBRouteAdvisoryFromRollout(
 // Match KnowledgeStore.put/get: get returns raw JSON without an invented id wrapper.
 const canonicalDocument = (value: unknown): string =>
   Array.isArray(value)
-    ? "[" + value.map(canonicalDocument).join(",") + "]"
+    ? `[${value.map(canonicalDocument).join(",")}]`
     : value && typeof value === "object"
-      ? "{" +
-        Object.keys(value)
+      ? `{${Object.keys(value)
           .sort()
           .map(
             (key) =>
-              JSON.stringify(key) +
-              ":" +
-              canonicalDocument((value as Record<string, unknown>)[key]),
+              `${JSON.stringify(key)}:${canonicalDocument((value as Record<string, unknown>)[key])}`,
           )
-          .join(",") +
-        "}"
+          .join(",")}}`
       : JSON.stringify(value);
 const documentDigest = (value: Record<string, unknown>): string =>
   createHash("sha256").update(canonicalDocument(value)).digest("hex");
@@ -442,13 +442,13 @@ function parseUniqueIds(value: unknown, limit: number): string[] | null {
 }
 function parseRungs(value: unknown): TrackBRouteAdvisoryRung[] | null {
   if (!Array.isArray(value) || value.length > 64) return null;
-  const ranks = new Set<number>(),
-    endpoints = new Set<string>();
+  const ranks = new Set<number>();
+  const endpoints = new Set<string>();
   const rungs: TrackBRouteAdvisoryRung[] = [];
   for (const entry of value) {
-    const rung = asRecord(entry),
-      endpointId = boundedText(rung?.endpointId),
-      rank = finiteOrNull(rung?.rank);
+    const rung = asRecord(entry);
+    const endpointId = boundedText(rung?.endpointId);
+    const rank = finiteOrNull(rung?.rank);
     if (
       !rung ||
       !endpointId ||

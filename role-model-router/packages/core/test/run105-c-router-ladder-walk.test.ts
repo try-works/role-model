@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 
-import { evaluateRouteAdvisoryConsideration } from "../src/router.js";
 import { resolveAdvisoryRung } from "../src/route-advisory-ladder.js";
+import { evaluateRouteAdvisoryConsideration } from "../src/router.js";
 import type { RouteAdvisoryConsiderationInput } from "../src/types.js";
 
 /**
@@ -78,7 +78,12 @@ describe("run105 C router ladder walk", () => {
       ],
       ["endpoint-b"],
     );
-    expect(ineligibleTop).toMatchObject({ _tag: "Walked", endpointId: "endpoint-b", rank: 2, skipped: 1 });
+    expect(ineligibleTop).toMatchObject({
+      _tag: "Walked",
+      endpointId: "endpoint-b",
+      rank: 2,
+      skipped: 1,
+    });
   });
 
   test("R5 a ladder whose rungs are all non-routable starves without inventing a rung", () => {
@@ -189,7 +194,12 @@ describe("run105 C router ladder walk", () => {
     const { scoreGapBefore, ...rest } = output;
     expect(scoreGapBefore).toBeCloseTo(0.02, 12);
     // R5: a legacy outcome must not gain ladder evidence keys at all.
-    for (const key of ["advisoryLadderLength", "advisoryRungRank", "advisoryRungWalked", "advisoryRungSkipped"]) {
+    for (const key of [
+      "advisoryLadderLength",
+      "advisoryRungRank",
+      "advisoryRungWalked",
+      "advisoryRungSkipped",
+    ]) {
       expect(Object.hasOwn(output, key)).toBe(false);
     }
     expect(rest).toEqual({
@@ -209,7 +219,6 @@ describe("run105 C router ladder walk", () => {
       advisoryTaskTypeId: "coder.review",
       requestTaskTypeId: "coder.review",
       advisoryTaxonomyVersion: "taxonomy-v1-alpha.1",
-
     });
   });
 

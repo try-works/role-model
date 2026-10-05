@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
-import { type RouteLearningDefaults } from "@role-model-router/core";
+import type { RouteLearningDefaults } from "@role-model-router/core";
 
 /**
  * Run 105 R11: the runtime read side of the routeLearning block in product-defaults.json.
@@ -144,7 +144,7 @@ function resolveDefaultsFile(
       ok: false,
       degradation: degradation(
         "product_defaults_unreadable",
-        "the product-defaults document could not be parsed: " + detail,
+        `the product-defaults document could not be parsed: ${detail}`,
         source,
       ),
     };
@@ -155,7 +155,7 @@ function resolveDefaultsFile(
       ok: false,
       degradation: degradation(
         "product_defaults_unknown_version",
-        "the product-defaults document declares an unknown schema " + String(document.schema),
+        `the product-defaults document declares an unknown schema ${String(document.schema)}`,
         source,
       ),
     };
@@ -164,7 +164,9 @@ function resolveDefaultsFile(
 }
 
 /** The durable operator state is the control plane; a foreign or damaged file is ignored. */
-function resolveDurableDefaultsState(stateRoot: string | null | undefined): DefaultsSourceResolution {
+function resolveDurableDefaultsState(
+  stateRoot: string | null | undefined,
+): DefaultsSourceResolution {
   if (typeof stateRoot !== "string" || !stateRoot.trim()) {
     return {
       ok: false,
@@ -228,9 +230,14 @@ export function readRouteLearningDefaults(input: {
         resolved.source !== durable.degradation.source
           ? durable.degradation
           : null;
-      return { routeLearning: resolved.routeLearning, source: resolved.source, degradation: inherited };
+      return {
+        routeLearning: resolved.routeLearning,
+        source: resolved.source,
+        degradation: inherited,
+      };
     }
-    const stagedFailure = staged && staged.ok === false && staged.optional !== true ? staged.degradation : null;
+    const stagedFailure =
+      staged && staged.ok === false && staged.optional !== true ? staged.degradation : null;
     const durableFailure = durable.ok === false ? durable.degradation : null;
     const failure =
       stagedFailure ??

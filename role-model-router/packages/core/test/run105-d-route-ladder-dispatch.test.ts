@@ -1,5 +1,5 @@
-import { describe, expect, test } from "vitest";
 import { Effect, Schema } from "effect";
+import { describe, expect, test } from "vitest";
 
 import {
   Complete,
@@ -32,9 +32,18 @@ import {
  * D9: the endpoint ladder is named rungs / routeLadder; RouteScopeKey is the composite key.
  */
 
-const DEFAULTS = { minComparisons: 5, minConfidence: 0.7, stalenessWindowDays: 30, challengeBatchSize: 1 };
+const DEFAULTS = {
+  minComparisons: 5,
+  minConfidence: 0.7,
+  stalenessWindowDays: 30,
+  challengeBatchSize: 1,
+};
 
-const rung = (endpointId: string, rank: number, status: "available" | "unavailable" = "available") => ({
+const rung = (
+  endpointId: string,
+  rank: number,
+  status: "available" | "unavailable" = "available",
+) => ({
   endpointId,
   rank,
   status,
@@ -88,9 +97,16 @@ describe("run105 D RouteScopeKey (R1/D9)", () => {
 
 describe("run105 D contracts (R7/R13)", () => {
   test("RouteLadderRung pins status to available|unavailable", () => {
-    expect(Schema.decodeUnknownSync(RouteLadderRung)(rung("endpoint:a", 1)).status).toBe("available");
-    expect(Schema.decodeUnknownSync(RouteLadderRung)(rung("endpoint:a", 1, "unavailable")).status).toBe("unavailable");
-    expect(Schema.decodeUnknownResult(RouteLadderRung)({ endpointId: "e", rank: 1, status: "removed" })._tag).toBe("Failure");
+    expect(Schema.decodeUnknownSync(RouteLadderRung)(rung("endpoint:a", 1)).status).toBe(
+      "available",
+    );
+    expect(
+      Schema.decodeUnknownSync(RouteLadderRung)(rung("endpoint:a", 1, "unavailable")).status,
+    ).toBe("unavailable");
+    expect(
+      Schema.decodeUnknownResult(RouteLadderRung)({ endpointId: "e", rank: 1, status: "removed" })
+        ._tag,
+    ).toBe("Failure");
   });
 
   test("RouteLadder carries rungs, completeness, nextEligibleAtMs, version and rolledBack", () => {
@@ -102,7 +118,12 @@ describe("run105 D contracts (R7/R13)", () => {
 
   test("RouteLearningDefaults is the single source of the four constants (R11, one 30-day constant)", () => {
     const decoded = Schema.decodeUnknownSync(RouteLearningDefaults)(DEFAULTS);
-    expect(decoded).toEqual({ minComparisons: 5, minConfidence: 0.7, stalenessWindowDays: 30, challengeBatchSize: 1 });
+    expect(decoded).toEqual({
+      minComparisons: 5,
+      minConfidence: 0.7,
+      stalenessWindowDays: 30,
+      challengeBatchSize: 1,
+    });
   });
 });
 
@@ -123,16 +144,30 @@ describe("run105 D RouteLadderState is derived, never stored (R14/R9)", () => {
 
   test("derives no_ladder / partial / complete / rolled_back from the ladder alone", () => {
     expect(deriveRouteLadderState(null)._tag).toBe("NoLadder");
-    expect(deriveRouteLadderState(ladder({ completeness: { admitted: 0, configured: 2 } }))._tag).toBe("NoLadder");
-    expect(deriveRouteLadderState(ladder({ completeness: { admitted: 1, configured: 3 } }))._tag).toBe("Partial");
-    expect(deriveRouteLadderState(ladder({ completeness: { admitted: 3, configured: 3 } }))._tag).toBe("Complete");
-    expect(deriveRouteLadderState(ladder({ rolledBack: { on: true, reason: "operator_rollback", atMs: 7 } }))._tag).toBe("RolledBack");
+    expect(
+      deriveRouteLadderState(ladder({ completeness: { admitted: 0, configured: 2 } }))._tag,
+    ).toBe("NoLadder");
+    expect(
+      deriveRouteLadderState(ladder({ completeness: { admitted: 1, configured: 3 } }))._tag,
+    ).toBe("Partial");
+    expect(
+      deriveRouteLadderState(ladder({ completeness: { admitted: 3, configured: 3 } }))._tag,
+    ).toBe("Complete");
+    expect(
+      deriveRouteLadderState(
+        ladder({ rolledBack: { on: true, reason: "operator_rollback", atMs: 7 } }),
+      )._tag,
+    ).toBe("RolledBack");
   });
 
   test("active is derived (admitted >= 1 AND not rolled back) and is never a stored state", () => {
     expect(deriveRouteLadderState(ladder()).active).toBe(true);
-    expect(deriveRouteLadderState(ladder({ rolledBack: { on: true, reason: "r", atMs: 1 } })).active).toBe(false);
-    expect(deriveRouteLadderState(ladder({ completeness: { admitted: 0, configured: 2 } })).active).toBe(false);
+    expect(
+      deriveRouteLadderState(ladder({ rolledBack: { on: true, reason: "r", atMs: 1 } })).active,
+    ).toBe(false);
+    expect(
+      deriveRouteLadderState(ladder({ completeness: { admitted: 0, configured: 2 } })).active,
+    ).toBe(false);
   });
 });
 
@@ -247,7 +282,11 @@ describe("run105 D planFocusDispatch (R8 depth-first fill)", () => {
 
 describe("run105 D evaluateRouteLadderActivation (R9 derived activation)", () => {
   const records = (count: number, confidence = 0.8) =>
-    Array.from({ length: count }, () => ({ endpointId: "endpoint:a", confidence, effortComparable: true }));
+    Array.from({ length: count }, () => ({
+      endpointId: "endpoint:a",
+      confidence,
+      effortComparable: true,
+    }));
 
   test("an endpoint at or above the floor admits and activates, with no mutable active pointer", async () => {
     const calls: unknown[] = [];
@@ -308,7 +347,11 @@ describe("run105 D evaluateRouteLadderActivation (R9 derived activation)", () =>
           records: records(5),
           configuredEndpointIds: ["endpoint:a"],
           defaults: DEFAULTS,
-          admissionFloor: () => ({ admitted: ["endpoint:a"], admittedStats: {}, belowFloorStats: {} }),
+          admissionFloor: () => ({
+            admitted: ["endpoint:a"],
+            admittedStats: {},
+            belowFloorStats: {},
+          }),
           roleId,
           taskTypeId: "task:t",
         }),
@@ -324,7 +367,11 @@ describe("run105 D evaluateRouteLadderActivation (R9 derived activation)", () =>
         records: records(5),
         configuredEndpointIds: ["endpoint:a"],
         defaults: DEFAULTS,
-        admissionFloor: () => ({ admitted: ["endpoint:a"], admittedStats: {}, belowFloorStats: {} }),
+        admissionFloor: () => ({
+          admitted: ["endpoint:a"],
+          admittedStats: {},
+          belowFloorStats: {},
+        }),
         rolledBack: { on: true, reason: "operator_rollback", atMs: 11 },
       }),
     );
@@ -340,13 +387,33 @@ describe("run105 D planChallenge (R8 top-down challenge)", () => {
       rungs: [rung("endpoint:leader", 1), rung("endpoint:next", 2), rung("endpoint:last", 3)],
       challengeBatchSize: 3,
     });
-    expect(planned.map((row) => row.againstEndpointId)).toEqual(["endpoint:leader", "endpoint:next", "endpoint:last"]);
-    expect(planned[0]).toMatchObject({ newEndpointId: "endpoint:new", againstEndpointId: "endpoint:leader", rank: 1 });
+    expect(planned.map((row) => row.againstEndpointId)).toEqual([
+      "endpoint:leader",
+      "endpoint:next",
+      "endpoint:last",
+    ]);
+    expect(planned[0]).toMatchObject({
+      newEndpointId: "endpoint:new",
+      againstEndpointId: "endpoint:leader",
+      rank: 1,
+    });
   });
 
   test("is bounded by challengeBatchSize (the shipped default is one per dispatch)", () => {
-    expect(planChallenge({ newEndpointId: "e", rungs: [rung("a", 1), rung("b", 2)], challengeBatchSize: 1 })).toHaveLength(1);
-    expect(planChallenge({ newEndpointId: "e", rungs: [rung("a", 1), rung("b", 2)], challengeBatchSize: 0 })).toHaveLength(0);
+    expect(
+      planChallenge({
+        newEndpointId: "e",
+        rungs: [rung("a", 1), rung("b", 2)],
+        challengeBatchSize: 1,
+      }),
+    ).toHaveLength(1);
+    expect(
+      planChallenge({
+        newEndpointId: "e",
+        rungs: [rung("a", 1), rung("b", 2)],
+        challengeBatchSize: 0,
+      }),
+    ).toHaveLength(0);
   });
 
   test("skips unavailable rungs but keeps rank order", () => {
@@ -360,7 +427,11 @@ describe("run105 D planChallenge (R8 top-down challenge)", () => {
 
   test("a rung that is already the new endpoint is never challenged against itself", () => {
     expect(
-      planChallenge({ newEndpointId: "a", rungs: [rung("a", 1), rung("b", 2)], challengeBatchSize: 2 }).map((row) => row.againstEndpointId),
+      planChallenge({
+        newEndpointId: "a",
+        rungs: [rung("a", 1), rung("b", 2)],
+        challengeBatchSize: 2,
+      }).map((row) => row.againstEndpointId),
     ).toEqual(["b"]);
   });
 
@@ -372,12 +443,22 @@ describe("run105 D planChallenge (R8 top-down challenge)", () => {
 describe("run105 D landRollbackToggle (R10 per-task rollback)", () => {
   test("rolling back turns the flag on and records the operator reason", () => {
     expect(
-      landRollbackToggle({ rolledBack: { on: false, reason: null, atMs: null }, rolledBackOn: true, reason: "operator_rollback", atMs: 42 }),
+      landRollbackToggle({
+        rolledBack: { on: false, reason: null, atMs: null },
+        rolledBackOn: true,
+        reason: "operator_rollback",
+        atMs: 42,
+      }),
     ).toEqual({ on: true, reason: "operator_rollback", atMs: 42 });
   });
 
   test("rolling forward is reversible and keeps the reason for the audit trail", () => {
-    const rolled = landRollbackToggle({ rolledBack: { on: false, reason: null, atMs: null }, rolledBackOn: true, reason: "operator_rollback", atMs: 42 });
+    const rolled = landRollbackToggle({
+      rolledBack: { on: false, reason: null, atMs: null },
+      rolledBackOn: true,
+      reason: "operator_rollback",
+      atMs: 42,
+    });
     const forward = landRollbackToggle({ rolledBack: rolled, rolledBackOn: false });
     expect(forward.on).toBe(false);
     expect(forward.reason).toBe("operator_rollback");
@@ -385,12 +466,20 @@ describe("run105 D landRollbackToggle (R10 per-task rollback)", () => {
 
   test("the toggle is idempotent for an unchanged flag", () => {
     const current = { on: true, reason: "operator_rollback", atMs: 42 };
-    expect(landRollbackToggle({ rolledBack: current, rolledBackOn: true, atMs: 99 })).toEqual(current);
+    expect(landRollbackToggle({ rolledBack: current, rolledBackOn: true, atMs: 99 })).toEqual(
+      current,
+    );
   });
 
   test("the toggle writes only the ladder flag: it never names a validation receipt or a pack (D8)", () => {
-    const landed = landRollbackToggle({ rolledBack: { on: false, reason: null, atMs: null }, rolledBackOn: true, reason: "operator_rollback" });
+    const landed = landRollbackToggle({
+      rolledBack: { on: false, reason: null, atMs: null },
+      rolledBackOn: true,
+      reason: "operator_rollback",
+    });
     expect(Object.keys(landed).sort()).toEqual(["atMs", "on", "reason"]);
-    expect(JSON.stringify(landed)).not.toMatch(/rolledBackWithValidationReceiptId|rollbackPack|activePackageId/);
+    expect(JSON.stringify(landed)).not.toMatch(
+      /rolledBackWithValidationReceiptId|rollbackPack|activePackageId/,
+    );
   });
 });

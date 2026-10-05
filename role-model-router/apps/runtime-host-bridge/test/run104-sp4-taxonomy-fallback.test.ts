@@ -1,9 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import {
-  buildRequestClassification,
-  buildRequestClassificationForPlan,
-} from "../src/index.js";
+import { buildRequestClassification, buildRequestClassificationForPlan } from "../src/index.js";
 
 /**
  * Run 104 `R6` / `SP4` - taxonomy fidelity into captures, observations and learning rows.
@@ -109,7 +106,10 @@ describe("run104 R6 buildRequestClassification task-family fallback", () => {
     // wrapper must use the resolved taxonomyIdentity as authoritative.
     const genuine = buildRequestClassificationForPlan({
       taxonomyIdentity: { taskTypeId: "coder.edit", roleId: "coder" },
-      routingRequest: { taskType: "runtime-policy-task-id", requestedRoleId: "runtime-policy-role-id" },
+      routingRequest: {
+        taskType: "runtime-policy-task-id",
+        requestedRoleId: "runtime-policy-role-id",
+      },
     } as never);
     expect(genuine).toMatchObject({ taskTypeId: "coder.edit", roleId: "coder" });
   });
@@ -141,7 +141,9 @@ describe("run104 R6 buildRequestClassification task-family fallback", () => {
     } as never;
     const classification = buildRequestClassificationForPlan(plan);
     expect(classification?.taskTypeId).toBe("coder.edit");
-    expect(classification?.taskTypeId).not.toBe((plan as never as { routingRequest: { taskType?: string } }).routingRequest.taskType);
+    expect(classification?.taskTypeId).not.toBe(
+      (plan as never as { routingRequest: { taskType?: string } }).routingRequest.taskType,
+    );
   });
 
   test("every capture site's input produces the same classification for one fixture", () => {

@@ -334,8 +334,14 @@ export function buildAutoReplayIdempotencyKey(input: {
       ? Number(input.providerCallBudget)
       : null;
   const contractDigest = createHash("sha256")
-    .update(JSON.stringify({ policySetDigest, candidateEndpointIds, providerCallBudget,
-      ...(input.dispatchRoundId ? { dispatchRoundId: input.dispatchRoundId } : {}) }))
+    .update(
+      JSON.stringify({
+        policySetDigest,
+        candidateEndpointIds,
+        providerCallBudget,
+        ...(input.dispatchRoundId ? { dispatchRoundId: input.dispatchRoundId } : {}),
+      }),
+    )
     .digest("hex");
   return `auto:${captureRef}:${contractDigest}`;
 }
@@ -430,6 +436,18 @@ export interface AutoReplayCapture {
    */
   readonly roleId?: string | null;
   readonly taskTypeId?: string | null;
+  /**
+   * Run 105: this capture already holds a TERMINAL durable replay disposition (`replayed`/`refused`),
+   * read from the replay-disposition store at the same scope as the corpus.
+   *
+   * The corpus read stays a faithful projection and still ENUMERATES such a capture — this is an
+   * annotation, never a drop, so the operator readback and the audit trail keep showing everything the
+   * telemetry and the exact capsule read agree exists. The dispatch planner is the layer that acts on it:
+   * it skips an annotated capture when choosing a challenge source, so the tick advances to a fresh
+   * capture instead of re-picking one whose dispatch would only be refused as
+   * `duplicate_already_processed`.
+   */
+  readonly replayDispositionSettled?: boolean;
 }
 
 export interface AutoReplayBranch {
@@ -987,8 +1005,11 @@ export async function runAutoReplayTick(input: {
     processed += 1;
     cursor = capture.captureRef;
     // Namespaced accounting identity only. The capture and actual policy contract are unchanged.
-    const dispatchRoundId = input.requireRouteClassification === true ? input.dispatchRoundId : undefined;
-    const ledgerPolicyDigest = dispatchRoundId ? input.policySet.policySetDigest + ":round:" + dispatchRoundId : input.policySet.policySetDigest;
+    const dispatchRoundId =
+      input.requireRouteClassification === true ? input.dispatchRoundId : undefined;
+    const ledgerPolicyDigest = dispatchRoundId
+      ? `${input.policySet.policySetDigest}:round:${dispatchRoundId}`
+      : input.policySet.policySetDigest;
 
     /**
      * Run 105 R1/R8: queue admission requires a (role, task) classification. A capture without BOTH
@@ -1090,14 +1111,28 @@ export async function runAutoReplayTick(input: {
         : null;
     const candidates = selectReplayCandidates({
       ...(focusNarrowingEndpointId
-        ? { configuredEndpointIds: input.configuredEndpointIds.includes(focusNarrowingEndpointId)
-            ? [focusNarrowingEndpointId] : [] }
+        ? {
+            configuredEndpointIds: input.configuredEndpointIds.includes(focusNarrowingEndpointId)
+              ? [focusNarrowingEndpointId]
+              : [],
+          }
         : { configuredEndpointIds: input.configuredEndpointIds }),
       ...(input.healthyEndpointIds ? { healthyEndpointIds: input.healthyEndpointIds } : {}),
       sourceEndpointId: capture.sourceEndpointId,
-      // Run 105 bug 3: the configured judge may also be a candidate endpoint, so it is NOT excluded here.
-      // When a challenger equals the judge, the evaluation de-conflicts (dedupeJudgeAgainstPair picks an
-      // alternative judge), so the controller endpoint can still be admitted as a challenger.
+      // Run 98 addendum 30 S1/S2 with run 100 addendum 22: a comparison must not be scored by one of its own
+      // arms, so the EFFECTIVE judge (the configured judge, or the deterministic alternative when the configured
+      // judge is the capture's own source) is excluded from the planned arms.
+      //
+      // Run 105 bug 3 carves out exactly one case: when the arm being planned IS the rung the ladder walk is
+      // admitting (`focusNarrowingEndpointId`). Excluding the judge there narrowed the plan to nothing and
+      // refused the capture `no_distinct_candidate_configured`, so the controller endpoint could never be
+      // admitted and the ladder could never complete. In that one case the comparison keeps the judge as an arm
+      // and the evaluation de-conflicts: `dedupeJudgeAgainstPair` scores it with an alternative judge instead
+      // (observed live as `evaluation_judge_switches: kimi-k3 -> deepseek-flash`). Every other capture still
+      // excludes the judge, so no battle is ever judged by one of its own arms.
+      ...(effectiveJudgeEndpointId && effectiveJudgeEndpointId !== focusNarrowingEndpointId
+        ? { excludedEndpointIds: [effectiveJudgeEndpointId] }
+        : {}),
       // Run 98 addendum 33 S3: rotate the counterfactual with the capture, so the comparison graph grows
       // edges instead of every capture comparing the same two candidates. A narrowed (focus) plan names
       // its own single arm, so the rotation must not reorder it.
@@ -1106,7 +1141,11 @@ export async function runAutoReplayTick(input: {
       ...(input.endpointProfiles ? { endpointProfiles: input.endpointProfiles } : {}),
       onRejected: (rejection) => rejectedArms.push(rejection),
     });
-    if (process.env.ROLE_MODEL_FOCUS_DIAG) { console.error("[cand-diag] ref=" + capture.captureRef.slice(0,12) + " source=" + (capture.sourceEndpointId ? capture.sourceEndpointId.split(".").pop() : null) + " focus=" + (focusNarrowingEndpointId ? focusNarrowingEndpointId.split(".").pop() : null) + " judge=" + (effectiveJudgeEndpointId ? effectiveJudgeEndpointId.split(".").pop() : null) + " reqCap=" + JSON.stringify(requestRequirements ? requestRequirements.requiredCapabilities : []) + " reqMod=" + JSON.stringify(requestRequirements ? requestRequirements.requiredModalities : []) + " candidates=" + candidates.map(function(c){return c.split(".").pop();}).join(",") + " rejected=" + rejectedArms.map(function(r){return r.endpointId.split(".").pop() + ":" + r.code;}).join(",") + " cfg=" + (input.configuredEndpointIds||[]).map(function(c){return c.split(".").pop();}).join(",") + " healthy=" + (input.healthyEndpointIds||[]).map(function(h){return h.split(".").pop();}).join(",")); }
+    if (process.env.ROLE_MODEL_FOCUS_DIAG) {
+      console.error(
+        `[cand-diag] ref=${capture.captureRef.slice(0, 12)} source=${capture.sourceEndpointId ? capture.sourceEndpointId.split(".").pop() : null} focus=${focusNarrowingEndpointId ? focusNarrowingEndpointId.split(".").pop() : null} judge=${effectiveJudgeEndpointId ? effectiveJudgeEndpointId.split(".").pop() : null} reqCap=${JSON.stringify(requestRequirements ? requestRequirements.requiredCapabilities : [])} reqMod=${JSON.stringify(requestRequirements ? requestRequirements.requiredModalities : [])} candidates=${candidates.map((c) => c.split(".").pop()).join(",")} rejected=${rejectedArms.map((r) => `${r.endpointId.split(".").pop()}:${r.code}`).join(",")} cfg=${(input.configuredEndpointIds || []).map((c) => c.split(".").pop()).join(",")} healthy=${(input.healthyEndpointIds || []).map((h) => h.split(".").pop()).join(",")}`,
+      );
+    }
     const emitCapture = (row: Omit<AutoReplayDisposition, "captureRef" | "rejectedArms">): void => {
       emit({
         captureRef: capture.captureRef,

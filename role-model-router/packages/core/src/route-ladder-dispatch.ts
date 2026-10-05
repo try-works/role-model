@@ -1,4 +1,3 @@
-
 /**
  * Run 105 package D (R8 dispatch, R9 derived activation, R10 per-task rollback, R11 defaults).
  *
@@ -174,7 +173,9 @@ interface LadderLike {
 }
 
 /** R14: no_ladder | partial | complete | rolled_back, from the ladder row alone. */
-export function deriveRouteLadderState(ladder: LadderLike | null | undefined): DerivedRouteLadderState {
+export function deriveRouteLadderState(
+  ladder: LadderLike | null | undefined,
+): DerivedRouteLadderState {
   const admitted = Number.isFinite(ladder?.completeness?.admitted)
     ? Number(ladder?.completeness?.admitted)
     : 0;
@@ -182,7 +183,7 @@ export function deriveRouteLadderState(ladder: LadderLike | null | undefined): D
     ? Number(ladder?.completeness?.configured)
     : 0;
   const reason = ladder?.rolledBack?.reason ?? null;
-  if (Boolean(ladder?.rolledBack?.on)) {
+  if (ladder?.rolledBack?.on) {
     return { _tag: "RolledBack", active: false, admitted, configured, reason };
   }
   if (admitted <= 0) return { _tag: "NoLadder", active: false, admitted, configured, reason };
@@ -518,7 +519,8 @@ export const evaluateRouteLadderActivation = (
       evidence:
         admittedEndpointIds.length === 0
           ? new InsufficientEvidence({
-              detail: "no endpoint passed the admission floor, so there is no ladder and no advisory",
+              detail:
+                "no endpoint passed the admission floor, so there is no ladder and no advisory",
             })
           : null,
       rungs,
@@ -616,7 +618,8 @@ export function isRefreshEligible(input: {
   readonly nowMs: number;
 }): boolean {
   const complete =
-    input.completeness.configured > 0 && input.completeness.admitted >= input.completeness.configured;
+    input.completeness.configured > 0 &&
+    input.completeness.admitted >= input.completeness.configured;
   if (!complete) return true;
   if (!Number.isFinite(input.nextEligibleAtMs)) return true;
   return Number(input.nextEligibleAtMs) <= input.nowMs;

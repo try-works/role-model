@@ -3,17 +3,17 @@ import os from "node:os";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { fileURLToPath } from "node:url";
-import ts from "typescript";
-import { afterEach, describe, expect, test, vi } from "vitest";
+import { selectFocusTask } from "@role-model-router/core";
 import {
   initializeSqliteMemory,
   persistRuntimeTelemetryFailure,
 } from "@role-model-router/sqlite-memory";
-import { selectFocusTask } from "@role-model-router/core";
+import ts from "typescript";
+import { afterEach, describe, expect, test, vi } from "vitest";
 const hostRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const roots: string[] = [];
-const nowMs = Date.UTC(2026, 9, 4),
-  day = 86400000;
+const nowMs = Date.UTC(2026, 9, 4);
+const day = 86400000;
 afterEach(async () => {
   vi.restoreAllMocks();
   for (const root of roots.splice(0)) await rm(root, { recursive: true, force: true });
@@ -62,7 +62,7 @@ async function census(
   const end = source.indexOf("        readRouteLadder:", begin);
   expect(begin).toBeGreaterThan(0);
   expect(end).toBeGreaterThan(begin);
-  const js = ts.transpileModule("const provider = {" + source.slice(begin, end) + "};", {
+  const js = ts.transpileModule(`const provider = {${source.slice(begin, end)}};`, {
     compilerOptions: { target: ts.ScriptTarget.ES2022 },
   }).outputText;
   const modulePath = "../src/route-ladder-census.ts";
@@ -82,7 +82,7 @@ async function census(
     "readRouteLearningDefaults",
     "resolveLearningPolicyStateRoot",
     "readRouteLadderCensus",
-    js + "return provider.routeFocusCandidates();",
+    `${js}return provider.routeFocusCandidates();`,
   );
   const clock = vi.spyOn(Date, "now").mockReturnValue(nowMs);
   try {
@@ -121,7 +121,7 @@ describe("run105 R8 production census", () => {
     const a = await state();
     const result = await census(
       a,
-      Array.from({ length: 200 }, (_, i) => ladder("task-" + i)),
+      Array.from({ length: 200 }, (_, i) => ladder(`task-${i}`)),
     );
     expect(result.candidates).toBeNull();
     expect(result.logs.length).toBeGreaterThan(0);
@@ -209,7 +209,7 @@ describe("run105 R8 production census", () => {
   });
   test("rollback is excluded and volume precedes unfilled-gap tie breaks", async () => {
     const a = await state();
-    for (let i = 0; i < 5; i++) seed(a.databasePath, "rollback-" + i, "writer", "rolled");
+    for (let i = 0; i < 5; i++) seed(a.databasePath, `rollback-${i}`, "writer", "rolled");
     seed(a.databasePath, "busy-1", "writer", "busy");
     seed(a.databasePath, "busy-2", "writer", "busy");
     seed(a.databasePath, "gap-1", "writer", "gap");

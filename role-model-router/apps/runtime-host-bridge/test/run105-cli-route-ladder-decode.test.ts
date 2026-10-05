@@ -42,7 +42,11 @@ describe("run105 CLI compile repair: RouteLadderRow decoding", () => {
   });
 
   test("a ladder without a rollback flag decodes to OFF rather than undefined", () => {
-    const decoded = decodeRouteLadderRow({ rungs: [], completeness: { admitted: 0, configured: 2 }, version: 1 });
+    const decoded = decodeRouteLadderRow({
+      rungs: [],
+      completeness: { admitted: 0, configured: 2 },
+      version: 1,
+    });
     expect(decoded?.rolledBack).toEqual({ on: false, reason: null, atMs: null });
     expect(decoded?.nextEligibleAtMs).toBeNull();
   });

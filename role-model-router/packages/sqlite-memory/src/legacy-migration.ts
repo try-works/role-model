@@ -1718,30 +1718,58 @@ export function projectRuntimeTelemetryFailureDimensions(
   const result: Record<string, unknown> = { ...dimensions };
   const originalUtf8Bytes = Buffer.byteLength(JSON.stringify(dimensions), "utf8");
   const omittedFields: string[] = [];
-  const note = (field: string) => { if (omittedFields.length < 32) omittedFields.push(field); };
+  const note = (field: string) => {
+    if (omittedFields.length < 32) omittedFields.push(field);
+  };
   const factKeys = [
-    "requestId", "routingDecisionId", "attemptId", "routedAttemptId", "endpointId", "failedEndpointId",
-    "providerId", "providerFamily", "vendorId", "executionFamily", "adapterFamily", "statusCode",
-    "errorClass", "failureClass", "code", "type", "failurePhase", "retryable", "fallbackEligible",
-    "cooldownRecorded", "cooldownFailureCount", "cooldownUntilMs",
+    "requestId",
+    "routingDecisionId",
+    "attemptId",
+    "routedAttemptId",
+    "endpointId",
+    "failedEndpointId",
+    "providerId",
+    "providerFamily",
+    "vendorId",
+    "executionFamily",
+    "adapterFamily",
+    "statusCode",
+    "errorClass",
+    "failureClass",
+    "code",
+    "type",
+    "failurePhase",
+    "retryable",
+    "fallbackEligible",
+    "cooldownRecorded",
+    "cooldownFailureCount",
+    "cooldownUntilMs",
   ];
   const project = (value: unknown, field: string, depth = 0): Record<string, unknown> => {
-    if (depth > 2) { note(field); return {}; }
-    if (!value || typeof value !== "object" || Array.isArray(value)) { note(field); return {}; }
+    if (depth > 2) {
+      note(field);
+      return {};
+    }
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+      note(field);
+      return {};
+    }
     const source = value as Record<string, unknown>;
     const out: Record<string, unknown> = {};
     for (const key of factKeys) {
       const entry = source[key];
-      if (entry === null || ["string", "number", "boolean"].includes(typeof entry)) out[key] = entry;
+      if (entry === null || ["string", "number", "boolean"].includes(typeof entry))
+        out[key] = entry;
     }
     const preview = projectFailureErrorPreview(source);
     for (const key of ["message", "messageTruncated", "messageOriginalUtf8Bytes"]) {
       if (preview[key] !== undefined) out[key] = preview[key];
     }
-    if (preview.messageTruncated) note(field + ".message");
-    if (source.errorPreview !== undefined) out.errorPreview = project(source.errorPreview, field + ".errorPreview", depth + 1);
+    if (preview.messageTruncated) note(`${field}.message`);
+    if (source.errorPreview !== undefined)
+      out.errorPreview = project(source.errorPreview, `${field}.errorPreview`, depth + 1);
     for (const key of Object.keys(source)) {
-      if (![...factKeys, "message", "errorPreview"].includes(key)) note(field + "." + key);
+      if (![...factKeys, "message", "errorPreview"].includes(key)) note(`${field}.${key}`);
     }
     return out;
   };
@@ -1754,39 +1782,68 @@ export function projectRuntimeTelemetryFailureDimensions(
     }
   }
   if (Array.isArray(dimensions.failedAttempts)) {
-    result.failedAttempts = dimensions.failedAttempts.slice(0, 8).map((entry, i) => project(entry, "failedAttempts." + i));
+    result.failedAttempts = dimensions.failedAttempts
+      .slice(0, 8)
+      .map((entry, i) => project(entry, `failedAttempts.${i}`));
     if (dimensions.failedAttempts.length > 8) note("failedAttempts");
     recognized = true;
   }
   // Raw capture trees are not necessary classification metadata, even if a caller
   // put them in dimensions. They remain in the graph artifact, never inline.
-  for (const key of ["prompt", "messages", "responseBody", "providerResponse", "requestCapture", "responseCapture", "inspection", "diagnostics"]) {
-    if (result[key] !== undefined && recognized) { delete result[key]; note(key); }
+  for (const key of [
+    "prompt",
+    "messages",
+    "responseBody",
+    "providerResponse",
+    "requestCapture",
+    "responseCapture",
+    "inspection",
+    "diagnostics",
+  ]) {
+    if (result[key] !== undefined && recognized) {
+      delete result[key];
+      note(key);
+    }
   }
   if (!recognized) return result; // Invalid raw scalar previews still hit the existing byte/privacy guard.
-  const receipt: Record<string, unknown> = { reason: "diagnostic_projection", originalUtf8Bytes, omittedFields };
+  const receipt: Record<string, unknown> = {
+    reason: "diagnostic_projection",
+    originalUtf8Bytes,
+    omittedFields,
+  };
   if (omittedFields.length) result.compactTruncation = receipt;
   if (artifactRef && omittedFields.length) result.artifactRef = artifactRef;
   const bytes = () => Buffer.byteLength(JSON.stringify(result), "utf8");
-  const diagnosticBytes = () => Buffer.byteLength(JSON.stringify(Object.fromEntries(
-    ["errorContext", "errorPreview", "failedAttempts"].flatMap(key =>
-      result[key] === undefined ? [] : [[key, result[key]]]),
-  )), "utf8");
+  const diagnosticBytes = () =>
+    Buffer.byteLength(
+      JSON.stringify(
+        Object.fromEntries(
+          ["errorContext", "errorPreview", "failedAttempts"].flatMap((key) =>
+            result[key] === undefined ? [] : [[key, result[key]]],
+          ),
+        ),
+      ),
+      "utf8",
+    );
   const withinBudget = () => bytes() <= LEGACY_INLINE_CAP_BYTES && diagnosticBytes() <= 8 * 1024;
   const shedMessages = (value: unknown, field: string): void => {
     if (withinBudget() || !value || typeof value !== "object") return;
-    if (Array.isArray(value)) { value.forEach((entry, i) => shedMessages(entry, field + "." + i)); return; }
+    if (Array.isArray(value)) {
+      value.forEach((entry, i) => shedMessages(entry, `${field}.${i}`));
+      return;
+    }
     const record = value as Record<string, unknown>;
     if (typeof record.message === "string" && record.message.length) {
       record.messageOriginalUtf8Bytes ??= Buffer.byteLength(record.message, "utf8");
       record.message = "";
       record.messageTruncated = true;
-      note(field + ".message");
+      note(`${field}.message`);
       result.compactTruncation = receipt;
     }
-    shedMessages(record.errorPreview, field + ".errorPreview");
+    shedMessages(record.errorPreview, `${field}.errorPreview`);
   };
-  for (const key of ["errorContext", "errorPreview", "failedAttempts"]) shedMessages(result[key], key);
+  for (const key of ["errorContext", "errorPreview", "failedAttempts"])
+    shedMessages(result[key], key);
   if (diagnosticBytes() > 8 * 1024) {
     // Facts are not previews. Keep correlation/classification intact while making
     // the diagnostic budget exception explicit; the final metadata cap still applies.
@@ -1813,9 +1870,19 @@ export function boundRuntimeTelemetryFailureStub(stub: Record<string, unknown>):
   const omittedFields: string[] = [];
   stub.compactTruncation = { reason: "inline_byte_budget", originalUtf8Bytes, omittedFields };
   for (const key of [
-    "retrievalReceipt", "routingDiagnostics", "telemetrySnapshot", "observedPerformance",
-    "graphEvidence", "contextEnvelope", "captureDegradation", "run88Correlation",
-    "taxonomyDimensions", "providerEvidence", "capturePolicy", "privacyReceipt", "cacheObservability",
+    "retrievalReceipt",
+    "routingDiagnostics",
+    "telemetrySnapshot",
+    "observedPerformance",
+    "graphEvidence",
+    "contextEnvelope",
+    "captureDegradation",
+    "run88Correlation",
+    "taxonomyDimensions",
+    "providerEvidence",
+    "capturePolicy",
+    "privacyReceipt",
+    "cacheObservability",
   ]) {
     if (bytes() <= LEGACY_INLINE_CAP_BYTES) return;
     if (stub[key] !== undefined) {

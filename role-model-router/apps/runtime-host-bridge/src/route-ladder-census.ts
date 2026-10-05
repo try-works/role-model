@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
-import { resolveSqliteMemoryLocation } from "@role-model-router/sqlite-memory";
 import type { RouteFocusCandidate } from "@role-model-router/core";
+import { resolveSqliteMemoryLocation } from "@role-model-router/sqlite-memory";
 
 export const ROUTE_CENSUS_MAX_PAIRS = 2000;
 export type RouteLadderCensusResult =

@@ -75,12 +75,18 @@ test("run107 P13 the live record shapes are what the closed contracts refuse", (
     channel: "stage",
     scopeId: "standalone-runtime-stage",
   });
-  expect(validateV11ContractDefinition("routeLearning", "packCandidate", {
-    ...builtPack,
-    scope: { ...builtPack.scope, taxonomyVersion: liveShapedPack.scope.taxonomyVersion },
-  }).valid).toBe(true);
+  expect(
+    validateV11ContractDefinition("routeLearning", "packCandidate", {
+      ...builtPack,
+      scope: { ...builtPack.scope, taxonomyVersion: liveShapedPack.scope.taxonomyVersion },
+    }).valid,
+  ).toBe(true);
   const { scope: _scope, ...missingScopePack } = builtPack;
-  const missingScope = validateV11ContractDefinition("routeLearning", "packCandidate", missingScopePack);
+  const missingScope = validateV11ContractDefinition(
+    "routeLearning",
+    "packCandidate",
+    missingScopePack,
+  );
   expect(missingScope.valid).toBe(false);
   expect(missingScope.errors.join(" ")).toMatch(/required property.*scope/i);
 

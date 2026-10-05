@@ -1,13 +1,21 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test, vi } from "vitest";
-import * as learningRoute from "./learning";
 import type { LadderRowView } from "../lib/learning-ladder";
+import * as learningRoute from "./learning";
 
 const activeRow = (overrides: Partial<LadderRowView> = {}): LadderRowView => ({
-  roleId: "writer", taskTypeId: "coder.explain", taxonomyVersion: "1.0",
+  roleId: "writer",
+  taskTypeId: "coder.explain",
+  taxonomyVersion: "1.0",
   topEndpoints: [{ endpointId: "provider.model-a", rank: 1, status: "available" }],
-  rankedCount: 5, completeness: { admitted: 3, configured: 7 }, state: "partial", active: true,
-  rolledBack: { on: false, reason: null, atMs: null }, ladderVersion: 1, nextEligibleAtMs: null, ...overrides,
+  rankedCount: 5,
+  completeness: { admitted: 3, configured: 7 },
+  state: "partial",
+  active: true,
+  rolledBack: { on: false, reason: null, atMs: null },
+  ladderVersion: 1,
+  nextEligibleAtMs: null,
+  ...overrides,
 });
 
 describe("Learning ladder index", () => {
@@ -15,7 +23,14 @@ describe("Learning ladder index", () => {
     const markup = renderToStaticMarkup(
       <learningRoute.LearningLadderIndex
         onToggle={vi.fn()}
-        rows={[activeRow(), activeRow({ roleId: "tester", rolledBack: { on: true, reason: null, atMs: null }, active: false })]}
+        rows={[
+          activeRow(),
+          activeRow({
+            roleId: "tester",
+            rolledBack: { on: true, reason: null, atMs: null },
+            active: false,
+          }),
+        ]}
       />,
     );
     // A3: raw role/task ids, no display names - the header names the id; the separator is the
@@ -31,7 +46,15 @@ describe("Learning ladder index", () => {
     const markup = renderToStaticMarkup(
       <learningRoute.LearningLadderIndex
         onToggle={vi.fn()}
-        rows={[activeRow({ state: "no_ladder", active: false, completeness: { admitted: 0, configured: 7 }, topEndpoints: [], rankedCount: 0 })]}
+        rows={[
+          activeRow({
+            state: "no_ladder",
+            active: false,
+            completeness: { admitted: 0, configured: 7 },
+            topEndpoints: [],
+            rankedCount: 0,
+          }),
+        ]}
       />,
     );
     expect(markup).toContain("disabled");

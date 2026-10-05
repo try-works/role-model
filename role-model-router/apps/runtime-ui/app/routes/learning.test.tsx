@@ -6,9 +6,9 @@ import { describe, expect, test } from "vitest";
 import type { LearningPolicyField } from "../lib/learning-api";
 import {
   LearningDecisionRow,
+  LearningLadderRow,
   LearningOverviewPage,
   LearningPackRow,
-  LearningLadderRow,
   formatLearningScore,
   formatPolicyRange,
   learningRecentDecisionRows,
@@ -888,14 +888,28 @@ describe("run101 addendum 49", () => {
 
 describe("run105 R12 endpoint ladder row", () => {
   test("renders raw role/task ids, top three endpoint labels, ranks, completeness and badge", () => {
-    const markup = renderToStaticMarkup(<LearningLadderRow row={{
-      roleId: "writer", taskTypeId: "coder.explain", taxonomyVersion: "1.0",
-      topEndpoints: [
-        { endpointId: "provider.alpha.gpt-5", rank: 1, status: "available" },
-        { endpointId: "provider.beta.kimi-k3", rank: 2, status: "available" },
-        { endpointId: "provider.gamma.deepseek-v4", rank: 3, status: "unavailable" },
-      ], rankedCount: 5, completeness: { admitted: 3, configured: 7 }, state: "partial", active: true, rolledBack: { on: false, reason: null, atMs: null }, ladderVersion: 2, nextEligibleAtMs: null,
-    }} onToggle={() => {}} />);
+    const markup = renderToStaticMarkup(
+      <LearningLadderRow
+        row={{
+          roleId: "writer",
+          taskTypeId: "coder.explain",
+          taxonomyVersion: "1.0",
+          topEndpoints: [
+            { endpointId: "provider.alpha.gpt-5", rank: 1, status: "available" },
+            { endpointId: "provider.beta.kimi-k3", rank: 2, status: "available" },
+            { endpointId: "provider.gamma.deepseek-v4", rank: 3, status: "unavailable" },
+          ],
+          rankedCount: 5,
+          completeness: { admitted: 3, configured: 7 },
+          state: "partial",
+          active: true,
+          rolledBack: { on: false, reason: null, atMs: null },
+          ladderVersion: 2,
+          nextEligibleAtMs: null,
+        }}
+        onToggle={() => {}}
+      />,
+    );
     expect(markup).toContain("writer . coder.explain");
     expect(markup).toContain("gpt-5");
     expect(markup).toContain("kimi-k3");
