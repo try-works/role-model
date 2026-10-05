@@ -220,16 +220,14 @@ export function validateRun88ProductionPromotion({
     !/^[0-9a-f]{64}$/.test(production.track_b_runtime.manifest_sha256 ?? "")
   )
     throw new Error("private runtime manifest digest is invalid");
-  const stageChannel = stageRuntime?.runtimeChannelContext?.channel;
-  if (stageChannel !== "stage")
-    throw new Error("tested stage runtime does not identify as the stage channel");
-  const productionChannel = productionRuntime?.runtimeChannelContext?.channel;
-  if (productionChannel !== "production")
-    throw new Error("production runtime does not identify as the production channel");
   const stageBody = privateRuntimeBody(stageRuntime);
   const productionBody = privateRuntimeBody(productionRuntime);
   if (!stageBody || !productionBody)
     throw new Error("both private runtime manifests are required for the production pair check");
+  if (stageRuntime.runtimeChannelContext?.channel !== "stage")
+    throw new Error("tested stage runtime does not identify as the stage channel");
+  if (productionRuntime.runtimeChannelContext?.channel !== "production")
+    throw new Error("production runtime does not identify as the production channel");
   const stageBodyDigest = createHash("sha256").update(canonicalJson(stageBody)).digest("hex");
   const productionBodyDigest = createHash("sha256")
     .update(canonicalJson(productionBody))
