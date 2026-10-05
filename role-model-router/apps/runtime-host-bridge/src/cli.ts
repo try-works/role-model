@@ -10437,7 +10437,8 @@ export async function main(): Promise<void> {
               }),
             );
             if (!fullRecord) continue;
-            const expirationReceipt = (fullRecord as { expirationReceipt?: unknown }).expirationReceipt;
+            const expirationReceipt = (fullRecord as { expirationReceipt?: unknown })
+              .expirationReceipt;
             if (!expirationReceipt || typeof expirationReceipt !== "object") continue;
             const entry = evaluationResumeStore
               .list()
@@ -10475,12 +10476,10 @@ export async function main(): Promise<void> {
             });
             const receipt =
               receiptRecord && typeof receiptRecord === "object"
-                ? (receiptRecord as Record<string, unknown>).receipt ??
-                  (receiptRecord as Record<string, unknown>)
+                ? ((receiptRecord as Record<string, unknown>).receipt ??
+                  (receiptRecord as Record<string, unknown>))
                 : null;
-            const groupIds = Array.isArray(
-              (receipt as Record<string, unknown> | null)?.groupIds,
-            )
+            const groupIds = Array.isArray((receipt as Record<string, unknown> | null)?.groupIds)
               ? (((receipt as Record<string, unknown>).groupIds as unknown[]).filter(
                   (value): value is string => typeof value === "string" && value.length > 0,
                 ) as string[])
