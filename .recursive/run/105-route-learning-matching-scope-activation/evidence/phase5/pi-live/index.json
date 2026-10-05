@@ -95,24 +95,24 @@
       "size": 4023
     },
     {
-      "name": "runtime-explain-capture.json",
-      "size": 73128
+      "name": "runtime-explain-capture.capture.txt",
+      "size": 51167
     },
     {
-      "name": "runtime-requests-after-pi1.json",
-      "size": 23639
+      "name": "runtime-requests-after-pi1.capture.txt",
+      "size": 20382
     },
     {
-      "name": "runtime-requests-after-pi2.json",
-      "size": 91556
+      "name": "runtime-requests-after-pi2.capture.txt",
+      "size": 51163
     },
     {
       "name": "setup.json",
       "size": 1397
     },
     {
-      "name": "summary.json",
-      "size": 154844
+      "name": "summary.capture.txt",
+      "size": 51131
     }
   ]
 }
