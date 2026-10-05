@@ -126,7 +126,9 @@ describe("runtime-observability", () => {
         },
         observedPerformance: {
           sample: {
-            source_type: "live_request",
+            // Run 104 / R14: an unclassified execution persists `live` (the legacy `live_request` value is
+            // still accepted on read for pre-migration rows).
+            source_type: "live",
             request_id: validation.decision.request_id,
             routing_decision_id: validation.decision.routing_decision_id,
           },

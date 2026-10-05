@@ -1,0 +1,29 @@
+(node:8024) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✖ run105 R10: the per-task rollback flag defaults OFF and toggles ON/OFF with the reason preserved (116.4945ms)
+✖ run105 R10: rolling back one task never disturbs another (102.7342ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 0
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 568.0114
+
+✖ failing tests:
+
+test at tests\track-b\run105-r10-rollback-flag.test.mjs:38:1
+✖ run105 R10: the per-task rollback flag defaults OFF and toggles ON/OFF with the reason preserved (116.4945ms)
+  TypeError: Cannot read properties of undefined (reading 'rolledBack')
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/105-route-learning-matching-scope-activation/tests/track-b/run105-r10-rollback-flag.test.mjs:48:37)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
+
+test at tests\track-b\run105-r10-rollback-flag.test.mjs:87:1
+✖ run105 R10: rolling back one task never disturbs another (102.7342ms)
+  TypeError: Cannot read properties of undefined (reading 'rolledBack')
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/105-route-learning-matching-scope-activation/tests/track-b/run105-r10-rollback-flag.test.mjs:109:31)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7)
+EXIT=1

@@ -1,0 +1,11 @@
+import { readFileSync, writeFileSync } from 'node:fs';
+const actual=JSON.parse(readFileSync(new URL('./r15-hotfix-build/diagnostic-actual-observation.json',import.meta.url),'utf8'));
+const bytes=x=>Buffer.byteLength(JSON.stringify(x));
+const allowed=['requestId','routingDecisionId','attemptId','routedAttemptId','endpointId','failedEndpointId','providerId','providerFamily','vendorId','executionFamily','adapterFamily','statusCode','errorClass','failureClass','code','type','failurePhase','retryable','fallbackEligible','cooldownRecorded','cooldownFailureCount','cooldownUntilMs'];
+function preview(src){const out={};for(const k of allowed)if(src[k]!==undefined)out[k]=src[k];if(typeof src.message==='string'){let msg='',n=2;for(const p of src.message){const b=bytes(p)-2;if(n+b>512)break;msg+=p;n+=b;}out.message=msg;if(msg!==src.message){out.messageTruncated=true;out.messageOriginalUtf8Bytes=Buffer.byteLength(src.message);}}if(src.errorPreview&&typeof src.errorPreview==='object')out.errorPreview=preview(src.errorPreview);return out;}
+const projected={...actual.dimensions,errorContext:preview(actual.dimensions.errorContext)};
+projected.compactTruncation={reason:'diagnostic_projection',originalUtf8Bytes:bytes(actual.dimensions),omittedFields:[]};
+const artifactRef={scopeId:'r15-dimensions',artifactId:'dimensions-artifact',contentHash:'a'.repeat(64),artifactPath:'D:/runtime/r15/dimensions-artifact.json'};
+const attempts=Array.from({length:8},(_,i)=>({...preview(actual.dimensions.errorContext),attemptId:'attempt-'+i}));
+const facts=attempts.map(a=>{const x=structuredClone(a);delete x.message;delete x.errorPreview.message;return x;});
+const result={actualBytes:bytes(actual.dimensions),projectedBytes:bytes(projected),projectedWithPointerBytes:bytes({...projected,artifactRef}),eightAttemptsDiagnosticBytes:bytes(attempts),eightAttemptsFactsWithoutMessagesBytes:bytes(facts),proposal:{previewSerializedBytes:512,failedAttemptsCount:8,diagnosticAggregateBytes:8192,metadataAggregateBytes:16384},projected};writeFileSync(new URL('./r15-dimensions-projection-measurement.json',import.meta.url),JSON.stringify(result,null,2));console.log(JSON.stringify({...result,projected:undefined},null,2));

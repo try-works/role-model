@@ -1,0 +1,11 @@
+npm warn Unknown env config "manage-package-manager-versions". This will stop working in the next major version of npm.
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-host-bridge
+
+ ✓ test/run105-r08-focus-task-selection.test.ts (3 tests) 14ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  13:41:06
+   Duration  5.90s (transform 2.71s, setup 0ms, collect 5.11s, tests 14ms, environment 1ms, prepare 288ms)
+

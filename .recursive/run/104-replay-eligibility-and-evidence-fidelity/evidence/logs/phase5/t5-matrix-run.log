@@ -1,0 +1,12 @@
+=== text-control-baseline-remote-only model=baseline.remote-only started 2026-10-02T00:29:21.0109402+08:00
+exit=0 seconds=9 log=E:\tmp\run104-phase5\t5-matrix-text-control-baseline-remote-only.txt
+t5-text-ok
+=== image-difficulty-remote-only model=difficulty.remote-only started 2026-10-02T00:29:30.1379285+08:00
+exit=0 seconds=284 log=E:\tmp\run104-phase5\t5-matrix-image-difficulty-remote-only.txt
+It's a dark-themed dashboard panel showing a replay request's selected model, endpoint, status, latency, token, and cost details.
+=== pdf-baseline-remote-only model=baseline.remote-only started 2026-10-02T00:34:13.7112354+08:00
+exit=0 seconds=9 log=E:\tmp\run104-phase5\t5-matrix-pdf-baseline-remote-only.txt
+t5-pdf-ok
+=== hybrid-remote-only model=hybrid.remote-only started 2026-10-02T00:34:22.8031362+08:00
+exit=0 seconds=25 log=E:\tmp\run104-phase5\t5-matrix-hybrid-remote-only.txt
+t5-hybrid-ok

@@ -1,0 +1,13 @@
+(node:26812) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `role-model-dev --trace-warnings ...` to show where the warning was created)
+{
+  "status": "listening",
+  "host": "127.0.0.1",
+  "port": 3458
+}
+[track-b-sidecar] (node:36808) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+[track-b-sidecar] (Use `node --trace-warnings ...` to show where the warning was created)
+[track-b-sidecar] [run99] rotated stale evaluation extension journal (evaluation-core module changed) -> E:\tmp\run105-full2-verification-state\standalone-runtime-dev\track-b\extension-host.journal.ndjson.stale-1791069420105.ndjson
+[track-b-sidecar] [run99] rotated stale operator extension journal (replay-core module changed, evaluation-core module changed, profile-learner module changed, knowledge-worker module changed, knowledge-store module changed, trajectory-signals module changed) -> E:\tmp\run105-full2-verification-state\standalone-runtime-dev\track-b\operator-extension-host.journal.ndjson.stale-1791069420457.ndjson
+[run105] durable task advisory refresh: scope=standalone-runtime-dev pairs=0 stage=S4
+[run98] remote-health recovery: deepseek.personal.deepseek-api-key.global.deepseek-flash, deepseek.personal.deepseek-api-key.global.deepseek-flash-max, deepseek.personal.deepseek-api-key.global.deepseek-v4-pro

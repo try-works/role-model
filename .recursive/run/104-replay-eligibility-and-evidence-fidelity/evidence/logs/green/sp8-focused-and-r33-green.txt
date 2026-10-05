@@ -1,0 +1,15 @@
+(node:9360) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ run104 sp8 a tool-call-shaped arm resolves to a bounded durable serialisation, not a refusal (4.0561ms)
+✔ run104 sp8 durable_preferred keeps the in-process buffer as the primary source (0.7673ms)
+✔ run104 sp8 an arm with no comparable output is excluded by name (0.6565ms)
+✔ run104 sp8 the exclusion bound refuses a thinner comparison instead of evaluating it (4.0389ms)
+✔ run99 R33 every published activation-policy field is read by a consumer (1326.1284ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1798.0748

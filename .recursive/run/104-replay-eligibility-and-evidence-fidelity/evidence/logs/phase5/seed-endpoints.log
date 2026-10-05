@@ -1,0 +1,10 @@
+run already has 0 endpoints
+stage has 6 endpoints
+FAILED deepseek.personal.deepseek-api-key.global.deepseek-flash -> The remote server returned an error: (400) Bad Request.
+FAILED deepseek.personal.deepseek-api-key.global.deepseek-flash-high -> The remote server returned an error: (400) Bad Request.
+FAILED deepseek.personal.deepseek-api-key.global.deepseek-flash-max -> The remote server returned an error: (400) Bad Request.
+FAILED deepseek.personal.deepseek-api-key.global.deepseek-v4-pro -> The remote server returned an error: (400) Bad Request.
+FAILED openai.personal.openai-codex-subscription.global.gpt-5.6-luna -> The remote server returned an error: (400) Bad Request.
+FAILED openai.personal.openai-codex-subscription.global.gpt-5.6-sol-medium -> The remote server returned an error: (400) Bad Request.
+activated=0 failed=6
+run now has 0 endpoints

@@ -1,0 +1,41 @@
+# E5 rollback-preserves-ladder RED (R14: rolling back does not delete the ladder)
+# command: node --test --test-concurrency=1 --test-timeout=120000 tests/track-b/run105-e5-ladder-index-readback.test.mjs
+# exit: 1
+
+(node:27368) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ Run105 E5: the records readback carries the frozen ladder index beside intact records (29.1259ms)
+✔ Run105 E5: a store that does not answer keeps records intact with ladders unavailable (5.0506ms)
+✔ Run105 E5: scope-wide packs produce no ladder rows (4.3111ms)
+✖ Run105 E5: a rolled-back ladder keeps its state, active false, and its rollback flag (6.2088ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 3
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1034.9044
+
+✖ failing tests:
+
+test at tests\track-b\run105-e5-ladder-index-readback.test.mjs:204:1
+✖ Run105 E5: a rolled-back ladder keeps its state, active false, and its rollback flag (6.2088ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'no_ladder'
+  - 'partial'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/105-route-learning-matching-scope-activation/tests/track-b/run105-e5-ladder-index-readback.test.mjs:234:12)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'no_ladder',
+    expected: 'partial',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+

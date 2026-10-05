@@ -33,6 +33,8 @@ import {
   readLearningPolicyFile,
   resolveLearningPolicyStateRoot,
 } from "./learning-policy-file.js";
+import { readRouteLearningDefaults } from "./product-defaults-file.js";
+import { readRouteLadderCensus } from "./route-ladder-census.js";
 import {
   CURRENT_RUNTIME_CHANNEL_VERSION,
   PREVIOUS_RUNTIME_CHANNEL_VERSION,
@@ -96,6 +98,7 @@ import {
 } from "./queue-runtime/index.js";
 import {
   autoReplayExecutionFromCommandReceipt,
+  decodeRouteLadderRow,
   evaluationHandoffRequestFromCommandReceipt,
   offerEvaluationHandoff,
   offerRecordedEvaluationHandoff,
@@ -136,12 +139,17 @@ import {
   resolveReplayLedgerLimits,
 } from "./track-b-replay-ledger.js";
 import {
+  type ReplayCandidateRejection,
   buildReplayPolicySet,
+  classifyReplayArmEffort,
   decideReplayAdmission,
   hasRecordedToolResults,
   hasToolCalls,
   isBenchmarkReplaySourceRef,
   isSyntheticProbeSourceClass,
+  planReplayDispatchArms,
+  preferEffortMatchedReplayArms,
+  readReplayRequestRequirements,
   replayBudgetEnforcedForChannel,
   resolveReplayPolicySet,
   resolveReplayToolPolicy,
@@ -499,6 +507,7 @@ function resolveChannelScopedReplayLedgerLimits(input: {
     ),
   };
 }
+import { createFinalizedGroupListingCache } from "./finalized-group-listing-cache.js";
 import {
   buildExperiencePackCandidate,
   buildRouteLearningValidationReceipt,
@@ -760,15 +769,40 @@ export function replayRequestIdFromProviderResultRef(
  * Rebuild the execution identity a branch append needs from the durable replay capture: the routing
  * decision the provider answered under, the model that produced it, and the bounded output text the
  * capture records. A capture without recorded provider output is not a recovery source.
+ *
+ * Run 104 Phase 3 (R8): the capture this reads is the one the private boundary *publishes*
+ * (`POST /capture/read` → `readRouteCapture`), and that projection names the bounded assistant text
+ * `responseText` — never `outputText`, which is the write-side field this branch records. Reading
+ * only the write-side name made every recovered execution `undefined`, so the append refused
+ * `durable replay branch append has no host dispatch receipt` for captures that were present and
+ * readable (live `req-a29409df…`, frozen stage disposition ledger, 2026-10-01 07:16:55Z). Both names
+ * are accepted: the projection's `responseText` and the in-process `outputText`.
+ *
+ * `replayRequestId`, when given, pins the durable identity: the capture must be the one the dispatch
+ * receipt named, so a degraded or mismatched readback can never attach a branch to another capture's
+ * evidence.
+ *
+ * Run 104 phase-3.5 F1: the boundary also *bounds* the text it projects ("Only the first 2 KiB of
+ * assistant text is returned", `runtime-operations-server.mjs`), and the projection reports no flag when
+ * it saturates that cap. A saturated projection is an excerpt, not the provider's output, so the
+ * recovered execution carries `outputTruncated` and the caller refuses instead of writing a truncated
+ * artifact to the durable branch under `statusCode: 200`.
  */
+const CAPTURE_PROJECTION_OUTPUT_CAP = 2_048;
+
 export function buildReplayAppendExecution(input: {
   readonly capture: unknown;
   readonly routerDecisionId?: unknown;
+  readonly replayRequestId?: unknown;
 }):
   | {
       readonly routingDecisionId: string;
       readonly model: string;
       readonly outputText: string;
+      /** Where the recovered text came from: the boundary projection or this process's own write path. */
+      readonly outputSource: "capture_projection" | "in_process";
+      /** True when the source bounded the text, i.e. the value is an excerpt rather than the whole reply. */
+      readonly outputTruncated: boolean;
       readonly vendorId?: string;
       readonly adapterFamily?: string;
     }
@@ -778,7 +812,21 @@ export function buildReplayAppendExecution(input: {
       ? (input.capture as Record<string, unknown>)
       : null;
   if (!capture) return undefined;
-  const outputText = typeof capture.outputText === "string" ? capture.outputText : "";
+  const expectedRequestId =
+    typeof input.replayRequestId === "string" ? input.replayRequestId.trim() : "";
+  if (
+    expectedRequestId &&
+    !(typeof capture.requestId === "string" && capture.requestId.trim() === expectedRequestId)
+  ) {
+    return undefined;
+  }
+  const writeSideOutput = typeof capture.outputText === "string" ? capture.outputText : null;
+  const projectedOutput = typeof capture.responseText === "string" ? capture.responseText : null;
+  const outputText = writeSideOutput ?? projectedOutput ?? "";
+  const outputSource: "capture_projection" | "in_process" =
+    writeSideOutput !== null ? "in_process" : "capture_projection";
+  const outputTruncated =
+    outputSource === "capture_projection" && outputText.length >= CAPTURE_PROJECTION_OUTPUT_CAP;
   if (!outputText.trim()) return undefined;
   const routingDecisionId =
     typeof input.routerDecisionId === "string" && input.routerDecisionId.trim()
@@ -805,9 +853,56 @@ export function buildReplayAppendExecution(input: {
     routingDecisionId,
     model,
     outputText,
+    outputSource,
+    outputTruncated,
     ...(vendorId ? { vendorId } : {}),
     ...(adapterFamily ? { adapterFamily } : {}),
   };
+}
+
+/**
+ * Run 104 Phase 3 (R8): the append-recovery leg's whole decision, in one place, so the shape the
+ * boundary really answers can be exercised without standing up the packaged launcher.
+ *
+ * Replay Core re-presents an `append_recovery` request carrying the durable receipt of a provider
+ * dispatch that already ran; the resumed process holds no in-process dispatch for it. The receipt's
+ * `providerResultRef` names the replay's own route capture, and that capture is the durable record of
+ * the provider execution, so the branch is re-attached from it. When the request names no capture, or
+ * the capture the boundary answers for is missing, unreadable or not the one the receipt named, the
+ * append still refuses with the text `track-b-auto-replay.ts` classifies on
+ * (`replay_branch_append_unavailable`) — an append with no durable branch must never succeed.
+ */
+export function resolveResumedReplayAppendDispatch(input: {
+  readonly branchRequest: unknown;
+  readonly capture: unknown;
+}): {
+  readonly execution: NonNullable<ReturnType<typeof buildReplayAppendExecution>>;
+  readonly replayRequestId: string;
+} {
+  const branchRequest =
+    input.branchRequest &&
+    typeof input.branchRequest === "object" &&
+    !Array.isArray(input.branchRequest)
+      ? (input.branchRequest as Record<string, unknown>)
+      : {};
+  const replayRequestId = replayRequestIdFromProviderResultRef(branchRequest.providerResultRef);
+  const execution = replayRequestId
+    ? buildReplayAppendExecution({
+        capture: input.capture,
+        routerDecisionId: branchRequest.routerDecisionId,
+        replayRequestId,
+      })
+    : undefined;
+  /**
+   * Run 104 phase-3.5 F1: a saturated projection is an excerpt. Attaching it would write a truncated
+   * artifact to the durable branch and record the provider execution as a completed 200, so the recovery
+   * refuses instead — the same deferrable refusal that already covers a missing capture. An excerpt may
+   * recover on a later attempt once the boundary's input is smaller.
+   */
+  if (!execution || !replayRequestId || execution.outputTruncated) {
+    throw new Error("durable replay branch append has no host dispatch receipt");
+  }
+  return { execution, replayRequestId };
 }
 
 function assertDistinctDurableReferences(references: readonly string[], label: string): void {
@@ -3661,33 +3756,97 @@ export function startDurableRouteAdvisoryRefresh(options: {
     // S0/S1 never consult an advisory, so there is nothing to publish.
     if (stage !== "S2" && stage !== "S3" && stage !== "S4") return;
     const nowMs = Date.now();
-    const evidenceMaxAgeMs = (snapshot?.effective.evidenceMaxAgeDays ?? 30) * 24 * 60 * 60 * 1_000;
-    const advisory = await readTrackBRouteAdvisorySourceFromRuntime({
-      runtime: runtime as unknown as Parameters<
-        typeof readTrackBRouteAdvisorySourceFromRuntime
-      >[0]["runtime"],
-      channel: options.channel,
-      scope: options.scopeId,
-      stateRoot: options.runtimeStateRoot,
-      nowMs,
-      evidenceMaxAgeMs,
-      // Run 99 R33 D12: the scheduled revalidation interval is enforced by the advisory source.
-      revalidationIntervalMs:
-        (snapshot?.effective.revalidationIntervalDays ?? 7) * 24 * 60 * 60 * 1_000,
-      requestId: `route-advisory:${options.scopeId}:${nowMs}`,
-    });
-    rememberTrackBDurableRouteAdvisory({
-      channel: options.channel,
-      scope: options.scopeId,
-      advisory,
-      nowMs,
-    });
-    const published = `${advisory.advisoryState}\u0000${advisory.reason ?? ""}\u0000${advisory.preferredRoutePackage ?? ""}\u0000${advisory.confidence}\u0000${advisory.cohortPercent}`;
+    const evidenceMaxAgeMs = (snapshot?.effective.evidenceMaxAgeDays ?? 30) * 86400000;
+    const rows: unknown[] = [];
+    let cursor: { afterRoleId: string; afterTaskTypeId: string } | null = null;
+    const visited = new Set<string>();
+    let complete = false;
+    for (let page = 0; page < 10 && !stopped; page++) {
+      const value = { scopeId: options.scopeId, limit: 200, ...(cursor ?? {}) };
+      const listing = decodeExternalizedOperatorReadback({
+        stateRoot: options.runtimeStateRoot,
+        scopeId: options.scopeId,
+        value: unwrapCapabilityPayload(
+          await runtime.invoke("knowledge-store", {
+            requestId: `route-advisory-index:${options.scopeId}:${nowMs}:${page}`,
+            sessionId: `route-advisory:${options.scopeId}`,
+            protocolVersion: "1.1.0",
+            channel: options.channel,
+            scope: options.scopeId,
+            authorizationEpoch: 1,
+            capability: "knowledge:list-route-ladders",
+            value,
+            payload: value,
+          }),
+        ),
+      });
+      if (
+        !listing ||
+        typeof listing !== "object" ||
+        !Array.isArray((listing as { ladders?: unknown }).ladders)
+      )
+        throw new Error("route ladder index unavailable");
+      const index = listing as { ladders: unknown[]; truncated?: boolean; nextCursor?: unknown };
+      rows.push(...index.ladders);
+      if (index.nextCursor == null) {
+        if (
+          index.truncated === true ||
+          (index.truncated === undefined && index.ladders.length >= 200)
+        )
+          throw new Error("route ladder index incomplete");
+        complete = true;
+        break;
+      }
+      const next = index.nextCursor as { afterRoleId?: unknown; afterTaskTypeId?: unknown };
+      if (typeof next.afterRoleId !== "string" || typeof next.afterTaskTypeId !== "string")
+        throw new Error("route ladder index cursor invalid");
+      cursor = { afterRoleId: next.afterRoleId, afterTaskTypeId: next.afterTaskTypeId };
+      const key = JSON.stringify(cursor);
+      if (visited.has(key)) throw new Error("route ladder index cursor repeated");
+      visited.add(key);
+    }
+    if (!complete || rows.length > 2000)
+      throw new Error("route ladder index exceeds refresh budget");
+    for (const row of rows) {
+      if (stopped || !row || typeof row !== "object") continue;
+      const pair = row as { roleId?: unknown; taskTypeId?: unknown };
+      if (
+        typeof pair.roleId !== "string" ||
+        !pair.roleId.trim() ||
+        typeof pair.taskTypeId !== "string" ||
+        !pair.taskTypeId.trim()
+      )
+        continue;
+      const roleId = pair.roleId.trim();
+      const taskTypeId = pair.taskTypeId.trim();
+      const advisory = await readTrackBRouteAdvisorySourceFromRuntime({
+        runtime: runtime as unknown as Parameters<
+          typeof readTrackBRouteAdvisorySourceFromRuntime
+        >[0]["runtime"],
+        channel: options.channel,
+        scope: options.scopeId,
+        roleId,
+        taskTypeId,
+        stage,
+        policyCohortPercent: snapshot?.effective.cohortPercent ?? 0,
+        stateRoot: options.runtimeStateRoot,
+        nowMs,
+        evidenceMaxAgeMs,
+        revalidationIntervalMs: (snapshot?.effective.revalidationIntervalDays ?? 7) * 86400000,
+        requestId: `route-advisory:${options.scopeId}:${roleId}:${taskTypeId}:${nowMs}`,
+      });
+      rememberTrackBDurableRouteAdvisory({
+        channel: options.channel,
+        scope: options.scopeId,
+        roleId,
+        advisory,
+        nowMs,
+      });
+    }
+    const published = `scope=${options.scopeId} pairs=${rows.length} stage=${stage}`;
     if (published !== lastPublished) {
       lastPublished = published;
-      console.error(
-        `[run99] durable route advisory published: state=${advisory.advisoryState} reason=${advisory.reason ?? "none"} package=${advisory.preferredRoutePackage ?? "none"} confidence=${advisory.confidence} cohort=${advisory.cohortPercent} stage=${stage}`,
-      );
+      console.error(`[run105] durable task advisory refresh: ${published}`);
     }
   };
   const report = (error: unknown): void => {
@@ -3697,12 +3856,24 @@ export function startDurableRouteAdvisoryRefresh(options: {
       ).slice(0, 200)}`,
     );
   };
+  let refreshing = false;
+  const scheduleRefresh = async (): Promise<void> => {
+    if (stopped || refreshing) return;
+    refreshing = true;
+    try {
+      await refresh();
+    } catch (error) {
+      report(error);
+    } finally {
+      refreshing = false;
+    }
+  };
   const timer = setInterval(() => {
-    void refresh().catch(report);
+    void scheduleRefresh();
   }, options.intervalMs ?? 15_000);
   // A background refresh must never hold the process open.
   (timer as { unref?: () => void }).unref?.();
-  void refresh().catch(report);
+  void scheduleRefresh();
   return () => {
     stopped = true;
     clearInterval(timer);
@@ -5291,9 +5462,19 @@ export async function main(): Promise<void> {
     const startHostAutoReplayLoop = (
       endpoints: () => readonly string[],
       healthyEndpoints: () => Promise<readonly string[] | null>,
+      endpointDescriptors: () => readonly {
+        endpointId: string;
+        modelId: string;
+        reasoningEffort: string | null;
+      }[],
+      judgeResolver?: () => Promise<string | null>,
     ): ReturnType<typeof startAutoReplayLoop> | null => {
       const operations = postObservationOperations;
       const channel = packagedProfile?.channel ?? "development";
+      if (process.env.ROLE_MODEL_FOCUS_DIAG)
+        console.error(
+          `[replay-loop] start check: operations=${operations ? "wired" : "null"} channel=${channel} port=${options.port}`,
+        );
       if (!operations || channel === "production") return null;
       const port = options.port;
       if (!Number.isInteger(port) || port <= 0) return null;
@@ -5340,6 +5521,15 @@ export async function main(): Promise<void> {
        * on every tick; a restart re-scans from the newest end (the reads are idempotent).
        */
       const finalizationSignalsSettled = new Set<string>();
+      /**
+       * Run 104 R10: the sweep's `evaluation:list-groups` listing is its whole cost - 293,159 bytes per call,
+       * 61 calls in 30 minutes while the operator readbacks hung. Reuse the listing across ticks inside a
+       * bounded window; a group finalized inside the window is picked up by the next listing, and each
+       * settled group's own report is idempotent.
+       */
+      const finalizedGroupListingCache =
+        createFinalizedGroupListingCache<Record<string, unknown>>();
+      const finalizedGroupListingKey = `${options.runtimeStateRoot}|${options.scopeId}`;
       /** S27 diagnostics: report the resolved job scope and an empty recovery page once per process. */
       let replayJobScopeReported = false;
       let emptyRecoveryPageReported = false;
@@ -5397,7 +5587,7 @@ export async function main(): Promise<void> {
         readonly extensionId: string;
         readonly capability: string;
         readonly value: Record<string, unknown>;
-        readonly evaluationAuthoritySecret: string;
+        readonly evaluationAuthoritySecret?: string;
         readonly scopeOverride?: string;
         readonly query?: Record<string, unknown>;
       }) => ({
@@ -5411,7 +5601,9 @@ export async function main(): Promise<void> {
         value: input.value,
         ...(input.query ? { query: input.query } : {}),
         ...(input.extensionId === "knowledge-store" ? { payload: input.value } : {}),
-        evaluationAuthoritySecret: input.evaluationAuthoritySecret,
+        ...(input.evaluationAuthoritySecret
+          ? { evaluationAuthoritySecret: input.evaluationAuthoritySecret }
+          : {}),
       });
       // RC07 (L2): the bounded expiration sweep goes straight through the extension
       // host the producer already uses for replay-core, because the operator boundary's
@@ -5764,8 +5956,14 @@ export async function main(): Promise<void> {
           };
           const groups = await readComparisonGroups();
           let consumed = 0;
-          /** Run 107 P6: validated packs this sweep put into the rollout (see the activation step below). */
-          let activated = 0;
+          /**
+           * Run 105 R9/D7: derived activation has no per-sweep activation step, so the counter stays
+           * at zero and is only kept because the sweep's answer shape (consumed/activated/remaining)
+           * is part of the bounded operations contract the queue plane and the run-107 readbacks
+           * assert. The legacy activate-pack MACHINERY remains untouched and reachable; only this
+           * sweep's call was removed.
+           */
+          const activated = 0;
           for (const candidate of pending.slice(0, 2)) {
             const candidateId = String(candidate.candidateId);
             const scorerSetVersion =
@@ -6109,65 +6307,23 @@ export async function main(): Promise<void> {
                    * validation receipt, and keys its receipt by the pack, scope, gate and receipt id, so a
                    * repeated sweep is idempotent rather than a second activation.
                    */
-                  const activationStage = (() => {
-                    try {
-                      // A damaged durable policy degrades to no stage, and no stage means no
-                      // activation - the sweep never invents an operator setting.
-                      return (
-                        readLearningPolicyFile({
-                          repoRoot: options.repoRoot,
-                          stateRoot: resolveLearningPolicyStateRoot({
-                            runtimeStateRoot: options.runtimeStateRoot,
-                            scopeId: options.scopeId,
-                          }),
-                          channel,
-                          scopeId: options.scopeId,
-                        })?.effective?.stage ?? null
-                      );
-                    } catch {
-                      return null;
-                    }
-                  })();
-                  if (activationStageAllowsPackActivation(activationStage)) {
-                    try {
-                      const activationAnswer = unwrapCapabilityPayload(
-                        await runtime.invoke(
-                          "knowledge-store",
-                          envelopeFor("knowledge-store", "knowledge:activate-pack", {
-                            scopeId: options.scopeId,
-                            packId,
-                            validationReceiptId: receiptId,
-                            channel,
-                            policyGateId: `gate:route-package-activation@${activationStage}`,
-                          }),
-                        ),
-                      );
-                      /**
-                       * P11: the store answers a bounded degradation receipt instead of throwing, so a
-                       * counter that only watched for exceptions reported activations that never reached
-                       * the rollout. The answer is read back and classified.
-                       */
-                      const activationVerdict = classifyPackActivationAnswer(
-                        activationAnswer,
-                        packId,
-                      );
-                      if (activationVerdict.activated) {
-                        activated += 1;
-                      } else {
-                        console.error(
-                          `[run107] learner sweep: pack ${packId.slice(0, 24)} was not activated: ${String(
-                            activationVerdict.reason ?? "no activation receipt",
-                          ).slice(0, 160)}`,
-                        );
-                      }
-                    } catch (error) {
-                      console.error(
-                        `[run107] learner sweep: pack ${packId.slice(0, 24)} recorded but not activated: ${String(
-                          (error as { message?: unknown })?.message ?? error,
-                        ).slice(0, 160)}`,
-                      );
-                    }
-                  }
+                  /**
+                   * Run 105 R9 / D7: derived activation is the ONLY routing authority, so the sweep
+                   * NO LONGER calls knowledge:activate-pack. An activation is now a property of the
+                   * evidence - the (role, task) ladder goes active the moment its admission floor is
+                   * met (K finalized effort-comparable comparisons at mean confidence >= the
+                   * product-defaults minimum) - and there is no mutable active-pack pointer left for
+                   * a sweep to write.
+                   *
+                   * Removing the CALL is not removing the MACHINERY: activatePack/rollbackPack, the
+                   * cohort ladder, the validation-receipt guard and the kill switch are untouched and
+                   * remain reachable for the legacy callers the run-98/run-107 suites assert.
+                   * activationStageAllowsPackActivation stays exported for the same reason - it is
+                   * asserted directly by run-107.
+                   *
+                   * Derived activation reads the ladder the worker already wrote, so this is a
+                   * deletion of a write, not a replacement with a different write.
+                   */
                 }
               }
             } catch (error) {
@@ -6205,6 +6361,54 @@ export async function main(): Promise<void> {
          * two groups per tick, idempotent, and it never dispatches a provider call or invents a trajectory.
          */
         async deriveLearnerCandidates(input: Record<string, unknown> = {}) {
+          /**
+           * Run 105 Phase 3.5 follow-up: the ladder materialization must NOT ride the legacy
+           * consumer-secret derivation path - a runtime whose durable-evaluation authority secret
+           * is missing would silently skip materialization even though the host's own authenticated
+           * operator operation can serve it. Materialization therefore runs FIRST, through the
+           * authenticated host op only (no runtime.invoke, no authority secret), so it proceeds even
+           * when every legacy derivation precondition below fails.
+           */
+          const materializeDerivedLadders = async () => {
+            try {
+              const defaultsSnapshot = readRouteLearningDefaults({
+                repoRoot: options.repoRoot,
+                channel,
+                stateRoot: resolveLearningPolicyStateRoot({
+                  runtimeStateRoot: options.runtimeStateRoot,
+                  scopeId: options.scopeId,
+                }),
+              }).routeLearning;
+              const materialized = await operations.materializeRouteLadders({
+                configuredEndpointIds: endpoints(),
+                defaults: defaultsSnapshot,
+              });
+              if (
+                materialized &&
+                typeof materialized === "object" &&
+                !Array.isArray(materialized)
+              ) {
+                const record = materialized as Record<string, unknown>;
+                const ladders = Array.isArray(record.ladders) ? record.ladders : [];
+                const written = ladders.filter((entry) => {
+                  return (
+                    Boolean(entry) &&
+                    typeof entry === "object" &&
+                    (entry as Record<string, unknown>).status === "written"
+                  );
+                }).length;
+                if (written > 0)
+                  console.error(`[run105] ladder materialization wrote ${written} ladder row(s)`);
+              }
+            } catch (materializationError) {
+              console.error(
+                `[run105] ladder materialization degraded: ${String(
+                  (materializationError as { message?: unknown })?.message ?? materializationError,
+                ).slice(0, 160)}`,
+              );
+            }
+          };
+          await materializeDerivedLadders();
           const runtime = extensionRuntimeRef.current;
           if (!runtime) return { examined: 0, derived: 0, pending: 0 };
           const authority = await (async () => {
@@ -6475,26 +6679,30 @@ export async function main(): Promise<void> {
            * newest end first.
            */
           const groups = (
-            await collectPagedComparisonGroups({
-              readPage: async (cursor) => {
-                const decoded = decodeExternalizedOperatorReadback({
-                  stateRoot: options.runtimeStateRoot,
-                  scopeId: options.scopeId,
-                  value: unwrapCapabilityPayload(
-                    await runtime.invoke(
-                      "evaluation-core",
-                      envelopeFor("evaluation-core", "evaluation:list-groups", {
-                        page: true,
-                        status: "finalized",
-                        limit: LEARNING_GROUP_PAGE_LIMIT,
-                        ...(cursor ? { cursor } : {}),
-                      }),
-                    ),
-                  ),
-                });
-                return decoded;
-              },
-            }).catch(() => [])
+            await finalizedGroupListingCache
+              .read(finalizedGroupListingKey, async () => {
+                return collectPagedComparisonGroups({
+                  readPage: async (cursor) => {
+                    const decoded = decodeExternalizedOperatorReadback({
+                      stateRoot: options.runtimeStateRoot,
+                      scopeId: options.scopeId,
+                      value: unwrapCapabilityPayload(
+                        await runtime.invoke(
+                          "evaluation-core",
+                          envelopeFor("evaluation-core", "evaluation:list-groups", {
+                            page: true,
+                            status: "finalized",
+                            limit: LEARNING_GROUP_PAGE_LIMIT,
+                            ...(cursor ? { cursor } : {}),
+                          }),
+                        ),
+                      ),
+                    });
+                    return decoded;
+                  },
+                }).catch(() => []);
+              })
+              .catch(() => [])
           ).filter((group): group is Record<string, unknown> => {
             return Boolean(group) && typeof group === "object" && !Array.isArray(group);
           });
@@ -6605,6 +6813,7 @@ export async function main(): Promise<void> {
              */
             value: {
               state: ["awaiting_evaluation", "evaluating"],
+              summary: true,
               limit: MAX_HANDOFF_RECOVERY_LIST_PAGE,
             },
           })) as { readonly jobs?: unknown } | readonly unknown[] | null;
@@ -7008,6 +7217,7 @@ export async function main(): Promise<void> {
           readonly captureRef: string;
           readonly endpointIds: readonly string[];
           readonly policySetDigest: string;
+          readonly dispatchRoundId?: string;
         }) =>
           queueRuntime?.dispatchQueue?.offer(job) ??
           Promise.resolve({ enqueued: false, reason: "queue_runtime_not_started" }),
@@ -7028,12 +7238,309 @@ export async function main(): Promise<void> {
           return learnerDeriveQueueRuntime?.dispatchQueue?.mode ?? "legacy";
         },
       };
+      /**
+       * Run 105 Phase 3.5 CLI-compile repair: the D providers below invoke knowledge-store through
+       * the extension runtime, and the learner sweep's own `envelopeFor` is NOT in scope here (it is
+       * declared inside the sweep closure, indent 10; this block is indent 6). This is the local
+       * envelope for the ladder reads, built to the same extension-envelope shape the runtime
+       * expects - the sweep helper is left untouched for its own callers.
+       */
+      const routeLadderEnvelopeFor = (capability: string, value: Record<string, unknown>) => ({
+        requestId: `route-ladder:${capability}:${Date.now()}`,
+        sessionId: `route-ladder:${options.scopeId}`,
+        protocolVersion: "1.1.0",
+        channel,
+        scope: options.scopeId,
+        authorizationEpoch: 1,
+        capability,
+        value,
+        payload: value,
+      });
       const loop = startAutoReplayLoop({
+        readPendingRouteDispatches: async (request) => {
+          const runtime = extensionRuntimeRef.current;
+          const operations = currentPostObservationOperations();
+          if (!runtime || !operations) return null;
+          try {
+            // Pending replay/queue inspection is read-only and invokes Replay Core only. Requiring
+            // the Evaluation Core authority here made a fresh runtime with no managed evaluation
+            // key return `null` before either authoritative pending plane was read.
+            const replayJobScope = resolveDurableReplayJobScope({
+              channel,
+              runtimeStateRoot: options.runtimeStateRoot,
+              scopeId: options.scopeId,
+            });
+            const { readPendingRouteDispatches } = await import("./route-challenge-evidence.js");
+            return await readPendingRouteDispatches({
+              request,
+              readCapture: async (requestId) => operations.readLocalRouteCapture({ requestId }),
+              readQueueJobs: async () =>
+                operations.readQueueJobs("replay.dispatch", { limit: "500" }),
+              readQueueJob: async (jobId) => operations.readQueueJob("replay.dispatch", jobId),
+              invoke: async (extensionId, capability, value) =>
+                decodeExternalizedOperatorReadback({
+                  stateRoot: options.runtimeStateRoot,
+                  scopeId: options.scopeId,
+                  value: unwrapCapabilityPayload(
+                    await runtime.invoke(
+                      extensionId,
+                      learnerSweepEnvelope({
+                        requestPrefix: "route-dispatch-pending",
+                        extensionId,
+                        capability,
+                        value,
+                        scopeOverride: replayJobScope,
+                      }),
+                    ),
+                  ),
+                }),
+            });
+          } catch {
+            return null;
+          }
+        },
+        readRouteReplayableCaptures: async (request) => {
+          const operations = currentPostObservationOperations();
+          if (!operations) return null;
+          try {
+            const { readRouteReplayableCaptures } = await import("./route-challenge-evidence.js");
+            return await readRouteReplayableCaptures({
+              runtimeStateRoot: options.runtimeStateRoot,
+              scopeId: options.scopeId,
+              channel,
+              request,
+              readCapture: async (requestId) => operations.readLocalRouteCapture({ requestId }),
+            });
+          } catch {
+            return null;
+          }
+        },
+        readFinalizedRouteChallenge: async (request) => {
+          const runtime = extensionRuntimeRef.current;
+          if (!runtime) return null;
+          try {
+            const authority = await resolveDurableEvaluationAuthority({
+              channel,
+              stateRoot: options.runtimeStateRoot,
+              scopeId: options.scopeId,
+            });
+            const replayJobScope = resolveDurableReplayJobScope({
+              channel,
+              runtimeStateRoot: options.runtimeStateRoot,
+              scopeId: options.scopeId,
+            });
+            const { readFinalizedRouteChallengeEvidence } = await import(
+              "./route-challenge-evidence.js"
+            );
+            return await readFinalizedRouteChallengeEvidence({
+              request,
+              invoke: async (extensionId, capability, value) =>
+                decodeExternalizedOperatorReadback({
+                  stateRoot: options.runtimeStateRoot,
+                  scopeId: options.scopeId,
+                  value: unwrapCapabilityPayload(
+                    await runtime.invoke(
+                      extensionId,
+                      learnerSweepEnvelope({
+                        requestPrefix: "route-challenge-evidence",
+                        extensionId,
+                        capability,
+                        value,
+                        scopeOverride: extensionId === "replay-core" ? replayJobScope : undefined,
+                        evaluationAuthoritySecret: authority.authoritySecret,
+                      }),
+                    ),
+                  ),
+                }),
+            });
+          } catch {
+            return null;
+          }
+        },
+        readRouteDispatchEvidence: async (request) => {
+          const runtime = extensionRuntimeRef.current;
+          if (!runtime) {
+            console.error(
+              `[route-evidence-binding] no runtime; request=${request?.roleId}/${request?.taskTypeId}/${request?.endpointId}`,
+            );
+            return null;
+          }
+          try {
+            const authority = await resolveDurableEvaluationAuthority({
+              channel,
+              stateRoot: options.runtimeStateRoot,
+              scopeId: options.scopeId,
+            });
+            const replayJobScope = resolveDurableReplayJobScope({
+              channel,
+              runtimeStateRoot: options.runtimeStateRoot,
+              scopeId: options.scopeId,
+            });
+            const { readRouteDispatchEvidence } = await import("./route-challenge-evidence.js");
+            return await readRouteDispatchEvidence({
+              request,
+              invoke: async (extensionId, capability, value) =>
+                decodeExternalizedOperatorReadback({
+                  stateRoot: options.runtimeStateRoot,
+                  scopeId: options.scopeId,
+                  value: unwrapCapabilityPayload(
+                    await runtime.invoke(
+                      extensionId,
+                      learnerSweepEnvelope({
+                        requestPrefix: "route-challenge-evidence",
+                        extensionId,
+                        capability,
+                        value,
+                        scopeOverride: extensionId === "replay-core" ? replayJobScope : undefined,
+                        evaluationAuthoritySecret: authority.authoritySecret,
+                      }),
+                    ),
+                  ),
+                }),
+            });
+          } catch (cause) {
+            console.error(
+              `[route-evidence-binding] failed: ${cause instanceof Error ? cause.message : String(cause)}`,
+            );
+            return null;
+          }
+        },
         operations: sweepOperations,
         ledger,
         policySet,
         configuredEndpointIds: endpoints,
         healthyEndpointIds: healthyEndpoints,
+        /**
+         * Run 105 R8/R9/R11: the ladder providers the depth-first dispatcher consumes. Each is a
+         * provider (not a snapshot) so an endpoint added - or a rollback flipped - while the runtime
+         * is up takes effect on the next tick, exactly like configuredEndpointIds above.
+         */
+        routeLearningDefaults: (() => {
+          try {
+            return readRouteLearningDefaults({
+              repoRoot: options.repoRoot,
+              channel,
+              stateRoot: resolveLearningPolicyStateRoot({
+                runtimeStateRoot: options.runtimeStateRoot,
+                scopeId: options.scopeId,
+              }),
+            }).routeLearning;
+          } catch {
+            return null;
+          }
+        })(),
+        routeFocusCandidates: async () => {
+          const runtime = extensionRuntimeRef.current;
+          if (!runtime) return null;
+          try {
+            const rows: unknown[] = [];
+            let cursor: string | undefined;
+            const cursors = new Set<string>();
+            for (let page = 0; page < 10; page++) {
+              const index = unwrapCapabilityPayload(
+                await runtime.invoke(
+                  "knowledge-store",
+                  routeLadderEnvelopeFor("knowledge:list-route-ladders", {
+                    scopeId: options.scopeId,
+                    limit: 200,
+                    ...(cursor ? { cursor } : {}),
+                  }),
+                ),
+              );
+              if (!index || typeof index !== "object" || Array.isArray(index))
+                throw new Error("ladder index unavailable");
+              const record = index as Record<string, unknown>;
+              if (!Array.isArray(record.ladders)) throw new Error("ladder index unavailable");
+              rows.push(...record.ladders);
+              const nextCursor = record.nextCursor;
+              // Older knowledge-store lists have no continuation metadata. A full page
+              // cannot prove absence of omitted rollback rows, so refuse that census.
+              if (nextCursor == null) {
+                if (record.ladders.length >= 200) throw new Error("ladder index bounded limit");
+                break;
+              }
+              if (
+                typeof nextCursor !== "string" ||
+                !nextCursor ||
+                cursors.has(nextCursor) ||
+                page === 9
+              )
+                throw new Error("ladder index bounded limit");
+              cursors.add(nextCursor);
+              cursor = nextCursor;
+            }
+            const defaults = readRouteLearningDefaults({
+              repoRoot: options.repoRoot,
+              channel,
+              stateRoot: resolveLearningPolicyStateRoot({
+                runtimeStateRoot: options.runtimeStateRoot,
+                scopeId: options.scopeId,
+              }),
+            }).routeLearning;
+            const census = readRouteLadderCensus({
+              runtimeStateRoot: options.runtimeStateRoot,
+              scopeId: options.scopeId,
+              nowMs: Date.now(),
+              stalenessWindowDays: defaults.stalenessWindowDays,
+              configuredEndpointIds: endpoints(),
+              ladderRows: rows,
+            });
+            if (census.status === "degraded") {
+              console.error(`[run105] route census degraded:${census.reason}`);
+              return null;
+            }
+            return census.candidates;
+          } catch {
+            console.error("[run105] route census degraded:ladder_unavailable");
+            return null;
+          }
+        },
+        readRouteLadder: async ({ roleId, taskTypeId }) => {
+          const runtime = extensionRuntimeRef.current;
+          if (!runtime) return null;
+          try {
+            const read = unwrapCapabilityPayload(
+              await runtime.invoke(
+                "knowledge-store",
+                routeLadderEnvelopeFor("knowledge:read-route-ladder", {
+                  scopeId: options.scopeId,
+                  roleId,
+                  taskTypeId,
+                }),
+              ),
+            );
+            const ladder =
+              read && typeof read === "object" && !Array.isArray(read)
+                ? ((read as Record<string, unknown>).ladder ?? null)
+                : null;
+            return decodeRouteLadderRow(ladder);
+          } catch {
+            return null;
+          }
+        },
+        markRouteLadderEligible: async ({ roleId, taskTypeId, nextEligibleAtMs }) => {
+          const runtime = extensionRuntimeRef.current;
+          if (!runtime) return { marked: false };
+          try {
+            return unwrapCapabilityPayload(
+              await runtime.invoke(
+                "knowledge-store",
+                routeLadderEnvelopeFor("knowledge:mark-ladder-eligible", {
+                  roleId,
+                  taskTypeId,
+                  nextEligibleAtMs,
+                }),
+              ),
+            );
+          } catch {
+            return { marked: false };
+          }
+        },
+        reportUnclassifiedCaptures: ({ count }) => {
+          console.error(
+            `[run105] ${count} capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory`,
+          );
+        },
         // Run 101 R4: the replay plane's queue, whose mode comes from the
         // operator's policy document rather than from this composition.
         dispatchQueue: lateBoundDispatchQueue,
@@ -7053,9 +7560,15 @@ export async function main(): Promise<void> {
         // Run 98 addendum 56 §6: the configured controller is the judge (addendum 45), so it must never be
         // planned as a counterfactual arm; resolved per tick so a controller change takes effect immediately.
         resolveJudgeEndpointId: async () => {
-          // The auto-replay starter is handed the narrow bridge options type, while the object it receives at
-          // runtime is the full server composition (which binds `readControllerAssignment`). Reading it
-          // defensively keeps a runtime without the binding on the previous behaviour instead of failing.
+          if (judgeResolver) {
+            const wiredJudge = await judgeResolver().catch(() => null);
+            if (wiredJudge && wiredJudge.length > 0) return wiredJudge;
+          }
+          // Run 105 bug 3: the auto-replay starter is handed the narrow bridge options type, while the object
+          // it receives at runtime is the full server composition (which binds `readControllerAssignment`). Reading
+          // it defensively keeps a runtime without the binding on the previous behaviour instead of failing. The
+          // wired resolution is passed in explicitly (see the `judgeResolver` argument at the call site) because
+          // that binding is not reachable from this scope.
           const readControllerAssignment = (
             options as { readControllerAssignment?: () => Promise<unknown> }
           ).readControllerAssignment;
@@ -7085,7 +7598,7 @@ export async function main(): Promise<void> {
           }
           return null;
         },
-        executor: async ({ capture, candidates, reservationId }) => {
+        executor: async ({ capture, candidates, reservationId, signal, dispatchRoundId }) => {
           const sourceCapture = (await operations.readLocalRouteCapture({
             requestId: capture.captureRef,
           })) as Record<string, unknown> | null;
@@ -7143,6 +7656,7 @@ export async function main(): Promise<void> {
             idempotencyKey: buildAutoReplayIdempotencyKey({
               captureRef: capture.captureRef,
               policySetDigest: policySet.policySetDigest,
+              ...(dispatchRoundId ? { dispatchRoundId } : {}),
               candidateEndpointIds: candidates,
               // S12: the key covers the job contract its budget mints, so a contract revision cannot collide
               // with a job created under the previous one.
@@ -7197,7 +7711,10 @@ export async function main(): Promise<void> {
                      * expired. The request's own deadline is the authority here, plus a bounded grace for the
                      * response to travel back.
                      */
-                    signal: AbortSignal.timeout(Math.min(replayDeadlineMs + 60_000, 1_800_000)),
+                    signal: AbortSignal.any([
+                      ...(signal ? [signal] : []),
+                      AbortSignal.timeout(Math.min(replayDeadlineMs + 60_000, 1_800_000)),
+                    ]),
                   },
                 );
                 if (attempt.ok) return { ok: true as const, value: await attempt.json() };
@@ -7260,9 +7777,70 @@ export async function main(): Promise<void> {
            * removed, exactly as the addendum's TODO required. The offer below is unchanged.
            */
           if (handoffRequest && lateBoundEvaluationQueue.mode !== "legacy") {
+            // Run 104 R9 producer plumbing (addendum 16): record the resume entry (counterfactual packages +
+            // per-arm effort comparability) before offering, like the supervised path — otherwise the evaluation
+            // worker's resume is a silent no-op and the comparison never carries effortComparability.
+            const evaluationJobId = `evaluation-replay-${createHash("sha256")
+              .update(String(handoffRequest.replayJobId))
+              .digest("hex")
+              .slice(0, 20)}`;
+            const arms = candidates.map((endpointId) => {
+              const descriptor = endpointDescriptors().find((d) => d.endpointId === endpointId);
+              return {
+                endpointId,
+                modelId: descriptor?.modelId ?? "",
+                reasoningEffort: descriptor?.reasoningEffort ?? null,
+              };
+            });
+            const replayArmEffortComparability = classifyReplayArmEffort({
+              arms,
+              sourceModelId: typeof sourceCapture.modelId === "string" ? sourceCapture.modelId : "",
+              sourceReasoningEffort:
+                typeof sourceCapture.reasoningEffort === "string"
+                  ? sourceCapture.reasoningEffort
+                  : null,
+            });
             /** Run 101 addendum 27: the offer is an Effect program with a bounded retry (see the helper). */
-            const offered = await offerEvaluationHandoff({
-              replayJobId: handoffRequest.replayJobId,
+            const offered = await offerRecordedEvaluationHandoff({
+              replayJobId: String(handoffRequest.replayJobId),
+              record: () => {
+                const resumeStore = evaluationResumeStoreRef.current;
+                if (!resumeStore) return;
+                resumeStore.record({
+                  schemaVersion: "role-model.supervised-replay-evaluation-resume.v1",
+                  replayJobId: String(handoffRequest.replayJobId),
+                  evaluationJobId,
+                  requestId: capture.captureRef,
+                  sourceCaptureRequestId:
+                    typeof sourceCapture.requestId === "string"
+                      ? sourceCapture.requestId
+                      : capture.captureRef,
+                  sourceEndpointId:
+                    typeof sourceCapture.endpointId === "string"
+                      ? sourceCapture.endpointId
+                      : (capture.sourceEndpointId ?? ""),
+                  sourceModelId:
+                    typeof sourceCapture.modelId === "string" ? sourceCapture.modelId : "",
+                  counterfactualPackages: arms.map((arm) => ({
+                    endpointId: arm.endpointId,
+                    modelId: arm.modelId,
+                    reasoningEffort: arm.reasoningEffort,
+                  })),
+                  effortComparability: replayArmEffortComparability,
+                  evaluationCriteria: derivedCriteria.criteria as unknown as Readonly<
+                    Record<string, unknown>
+                  >,
+                  evaluationCriteriaDigest: createHash("sha256")
+                    .update(JSON.stringify(derivedCriteria.criteria))
+                    .digest("hex"),
+                  scope: lastReplayCaptureScope,
+                  recordedAtMs: Date.now(),
+                  attempts: 0,
+                  resolvedAtMs: null,
+                  outcome: null,
+                  lastError: null,
+                });
+              },
               offer: (request) => lateBoundEvaluationQueue.offer(request),
             });
             if (!offered.enqueued) {
@@ -7280,7 +7858,7 @@ export async function main(): Promise<void> {
         stateRoot: queueStateRoot,
         shippedRoot: options.repoRoot,
         handler: async (job) => {
-          await loop.dispatchCapture(job.captureRef);
+          await loop.dispatchCapture(job.captureRef, job.dispatchRoundId);
         },
         onAttemptFailure: (error, job) => {
           console.error(
@@ -7769,17 +8347,45 @@ export async function main(): Promise<void> {
               }),
             )
           ).endpointId;
+          /**
+           * Run 104 R1: the arm must be able to serve the capture's request, so the planner reads the
+           * capture's own recorded decision (inferred and marked when the capture predates the field)
+           * and the configured endpoints' declarations, and applies the router's own rule.
+           */
+          const replayRequestRequirements = readReplayRequestRequirements(sourceCapture);
+          const replayEndpointProfiles = created.effectiveRegistry.endpoints.map((endpoint) => ({
+            endpointId: endpoint.identity.endpoint_id,
+            capabilities: endpoint.declared.capabilities,
+            modalities: endpoint.declared.modalities,
+          }));
+          const replayCandidateRejections: ReplayCandidateRejection[] = [];
           const distinctReplayCandidates = selectReplayCandidates({
             configuredEndpointIds: candidateEndpointIds,
             sourceEndpointId: capturedSourceEndpointId,
             // Run 98 addendum 33 S3: rotate the counterfactual per request so the comparison graph gains
             // edges across captures rather than repeating one pair (the live store's 465-of-465 star).
             rotationKey: requestId,
-            // Run 98 addendum 30 S1/S2 (`guidance/11` `judgePolicy.excludeFromLiveEvaluation`): the
-            // judge is a designated client and is never offered as a scored candidate, so a battle
-            // cannot contain the endpoint that judges it.
-            ...(evalJudgeEndpointId ? { excludedEndpointIds: [evalJudgeEndpointId] } : {}),
+            // Run 105 bug 3: the configured judge may also be a candidate endpoint, so it is NOT excluded
+            // here. When a challenger equals the judge, the evaluation de-conflicts (dedupeJudgeAgainstPair
+            // picks an alternative judge), so the controller endpoint can still be admitted as a challenger.
+            requirements: replayRequestRequirements,
+            endpointProfiles: replayEndpointProfiles,
+            onRejected: (rejection) => replayCandidateRejections.push(rejection),
           });
+          if (process.env.ROLE_MODEL_FOCUS_DIAG) {
+            console.error(
+              `[supervised-cand] source=${capturedSourceEndpointId ? capturedSourceEndpointId.split(".").pop() : null} judge=${evalJudgeEndpointId ? evalJudgeEndpointId.split(".").pop() : null} candidates=${candidateEndpointIds.map((c) => c.split(".").pop()).join(",")} reqMod=${JSON.stringify(replayRequestRequirements.requiredModalities)} reqCap=${JSON.stringify(replayRequestRequirements.requiredCapabilities)} profiles=${replayEndpointProfiles
+                .map(
+                  (p) =>
+                    `${p.endpointId.split(".").pop()}:[${(p.modalities || []).join(",")}][${(p.capabilities || []).join(",")}]`,
+                )
+                .join(
+                  "|",
+                )} selected=${distinctReplayCandidates.map((c) => c.split(".").pop()).join(",")} rejected=${replayCandidateRejections
+                .map((r) => `${r.endpointId.split(".").pop()}:${r.code}`)
+                .join(",")}`,
+            );
+          }
           const replayPolicySet = buildReplayPolicySet();
           const replayLedger = createReplayLedger({
             filePath: path.join(
@@ -7834,15 +8440,89 @@ export async function main(): Promise<void> {
             judgeResolved: Boolean(evalJudgeEndpointId),
           });
           if (!admission.admitted) {
-            throw new Error(`${admission.code}: ${admission.detail}`);
+            /**
+             * Run 104 R1: arms the router's rule rejected are named in the failure, so a planner that
+             * ran out of candidates says which endpoints could not serve the request and why.
+             */
+            const rejectedDetail =
+              replayCandidateRejections.length === 0
+                ? ""
+                : ` (rejected arms: ${replayCandidateRejections
+                    .map((rejection) => `${rejection.endpointId} (${rejection.code})`)
+                    .join(", ")})`;
+            throw new Error(`${admission.code}: ${admission.detail}${rejectedDetail}`);
           }
           const { toolPolicy: resolvedReplayToolPolicy, reason: replayToolPolicyReason } =
             resolveReplayToolPolicy({
               hasRecordedToolResults: hasRecordedToolResults(sourceCapture),
               hasToolCalls: hasToolCalls(sourceCapture),
             });
+          /**
+           * Run 104 R1: the dispatch set is the requested arms minus the arms the router's own rule rejected,
+           * re-checked at the dispatch boundary so a configuration change between planning and dispatch cannot
+           * turn into a provider-bound 400. Rejections are recorded; the replay only fails when nothing
+           * survives, instead of aborting whenever any requested arm is ineligible.
+           */
+          const replayDispatchPlan = planReplayDispatchArms({
+            requestedEndpointIds: candidateEndpointIds,
+            selectionRejections: replayCandidateRejections,
+            requirements: replayRequestRequirements,
+            endpointProfiles: replayEndpointProfiles,
+          });
+          if (replayDispatchPlan.plannedEndpointIds.length === 0) {
+            throw new Error(
+              `replay arm cannot serve the capture's request requirements: ${replayDispatchPlan.rejections
+                .map((rejection) => `${rejection.endpointId} (${rejection.code})`)
+                .join(", ")}`,
+            );
+          }
           const endpoints = created.effectiveRegistry.endpoints;
-          const candidatePackages = candidateEndpointIds.map((endpointId) => {
+          /**
+           * Run 104 R9: an arm whose own model is configured at the source capture's reasoning effort under a
+           * different endpoint id is repointed to that variant, so the comparison does not confound capability
+           * with effort. The repointed set is re-checked against the same eligibility rule before dispatch, and
+           * the comparability of every surviving arm travels with the replay payload.
+           */
+          const configuredReplayArms = endpoints.map((endpoint) => ({
+            endpointId: endpoint.identity.endpoint_id,
+            modelId: endpoint.identity.model_id,
+            reasoningEffort: endpoint.identity.reasoning_effort ?? null,
+          }));
+          const replaySourceModelId =
+            typeof sourceCapture.modelId === "string" ? sourceCapture.modelId : "";
+          const replaySourceReasoningEffort =
+            typeof sourceCapture.reasoningEffort === "string"
+              ? sourceCapture.reasoningEffort
+              : null;
+          const effortMatchedReplayArms = preferEffortMatchedReplayArms({
+            arms: replayDispatchPlan.plannedEndpointIds.map(
+              (endpointId) =>
+                configuredReplayArms.find((item) => item.endpointId === endpointId) ?? {
+                  endpointId,
+                  modelId: "",
+                  reasoningEffort: null,
+                },
+            ),
+            configuredEndpoints: configuredReplayArms,
+            sourceModelId: replaySourceModelId,
+            sourceReasoningEffort: replaySourceReasoningEffort,
+            sourceEndpointId:
+              typeof sourceCapture.endpointId === "string" ? sourceCapture.endpointId : null,
+          });
+          const replayArmPlan = planReplayDispatchArms({
+            requestedEndpointIds: effortMatchedReplayArms.map((arm) => arm.endpointId),
+            selectionRejections: replayDispatchPlan.rejections,
+            requirements: replayRequestRequirements,
+            endpointProfiles: replayEndpointProfiles,
+          });
+          if (replayArmPlan.plannedEndpointIds.length === 0) {
+            throw new Error(
+              `replay arm cannot serve the capture's request requirements: ${replayArmPlan.rejections
+                .map((rejection) => `${rejection.endpointId} (${rejection.code})`)
+                .join(", ")}`,
+            );
+          }
+          const candidatePackages = replayArmPlan.plannedEndpointIds.map((endpointId) => {
             const endpoint = endpoints.find((item) => item.identity.endpoint_id === endpointId);
             if (!endpoint)
               throw new Error(
@@ -7887,18 +8567,35 @@ export async function main(): Promise<void> {
               "supervised replay source capture lacks independently observable output identity",
             );
           }
+          if (process.env.ROLE_MODEL_FOCUS_DIAG) {
+            console.error(
+              `[source-diag] requestId=${requestId.slice(0, 16)} endpointId=${sourceCapture.endpointId || null} sourceEndpointId=${sourceCapture.sourceEndpointId || null} capturedSource=${capturedSourceEndpointId || null} judge=${evalJudgeEndpointId || null} candidates=${candidatePackages.map((c) => c.endpointId.split(".").pop()).join(",")}`,
+            );
+          }
+          // Run 105 bug 3: the configured judge may also be a candidate endpoint, so it is NOT excluded
+          // here. Only the source is filtered; a challenger that equals the judge is de-conflicted at the
+          // evaluation (dedupeJudgeAgainstPair picks an alternative judge).
           const counterfactualPackages = candidatePackages.filter(
-            (candidate) =>
-              candidate.endpointId !== sourceEndpointId &&
-              // Run 98 addendum 30 S2: the designated judge is never a scored candidate, whatever
-              // the dispatch list said.
-              (!evalJudgeEndpointId || candidate.endpointId !== evalJudgeEndpointId),
+            (candidate) => candidate.endpointId !== sourceEndpointId,
           );
           if (counterfactualPackages.length === 0) {
             throw new Error(
               "supervised replay requires an eligible counterfactual distinct from the source endpoint",
             );
           }
+          /**
+           * Run 104 R9: the comparability dimension the receipt has to be able to answer - was this comparison
+           * effort-matched, or is capability confounded with a reasoning-effort variant?
+           */
+          const replayArmEffortComparability = classifyReplayArmEffort({
+            arms: counterfactualPackages.map((candidate) => ({
+              endpointId: candidate.endpointId,
+              modelId: candidate.modelId,
+              reasoningEffort: candidate.reasoningEffort ?? null,
+            })),
+            sourceModelId,
+            sourceReasoningEffort: replaySourceReasoningEffort,
+          });
           const channel = packagedProfile?.channel ?? "development";
           // Bind the replay source to the capture's own runtime scope: the durable
           // capture records the private runtime scope, which is not necessarily the
@@ -7941,6 +8638,11 @@ export async function main(): Promise<void> {
                   modelId: candidate.modelId,
                   reasoningEffort: candidate.reasoningEffort ?? null,
                 })),
+                /**
+                 * Run 104 R9: per-arm effort comparability against the source capture, so the validation
+                 * receipt can record a confound instead of presenting it as a capability result.
+                 */
+                effortComparability: replayArmEffortComparability,
                 evaluationCriteria: evaluationCriteria as unknown as Readonly<
                   Record<string, unknown>
                 >,
@@ -7977,7 +8679,7 @@ export async function main(): Promise<void> {
                       : capturedSourceEndpointId
                         ? [capturedSourceEndpointId]
                         : []),
-                    ...candidateEndpointIds,
+                    ...replayDispatchPlan.plannedEndpointIds,
                   ]),
                 ].sort();
           const attestation = createReplaySourceAttestation({
@@ -8295,28 +8997,32 @@ export async function main(): Promise<void> {
                  * capture with the provider work already paid for. The recovery request names the dispatch
                  * receipt (`providerResultRef` = the replay's own route capture), and that capture is the
                  * durable record of the provider execution, so the branch is rebuilt from it.
+                 *
+                 * Run 104 Phase 3 (R8): the rebuild lives in `resolveResumedReplayAppendDispatch` so the
+                 * projection the boundary really answers for can be tested directly. Reading only the
+                 * write-side `outputText` (the projection publishes `responseText`) made the recovered
+                 * execution `undefined` on every pass, so this leg refused captures that were present and
+                 * readable and spent the capture's deferral budget instead of finishing paid work.
                  */
                 const recoveredReplayRequestId = replayRequestIdFromProviderResultRef(
                   (branchRequest as Record<string, unknown>).providerResultRef,
                 );
-                if (recoveredReplayRequestId) {
-                  const recoveredCapture = (await operations.readLocalRouteCapture({
-                    requestId: recoveredReplayRequestId,
-                  })) as Record<string, unknown> | null;
-                  const recoveredExecution = buildReplayAppendExecution({
-                    capture: recoveredCapture,
-                    routerDecisionId: (branchRequest as Record<string, unknown>).routerDecisionId,
-                  });
-                  if (recoveredExecution) {
-                    dispatch = {
-                      execution: recoveredExecution as unknown as Awaited<
-                        ReturnType<typeof created.executeChatCompletions>
-                      >,
-                      replayRequestId: recoveredReplayRequestId,
-                    };
-                    dispatched.set(candidateEndpointId, dispatch);
-                  }
-                }
+                const recoveredCapture = recoveredReplayRequestId
+                  ? ((await operations.readLocalRouteCapture({
+                      requestId: recoveredReplayRequestId,
+                    })) as Record<string, unknown> | null)
+                  : null;
+                const recovered = resolveResumedReplayAppendDispatch({
+                  branchRequest,
+                  capture: recoveredCapture,
+                });
+                dispatch = {
+                  execution: recovered.execution as unknown as Awaited<
+                    ReturnType<typeof created.executeChatCompletions>
+                  >,
+                  replayRequestId: recovered.replayRequestId,
+                };
+                dispatched.set(candidateEndpointId, dispatch);
               }
               if (!dispatch)
                 throw new Error("durable replay branch append has no host dispatch receipt");
@@ -9993,6 +10699,38 @@ export async function main(): Promise<void> {
             // An empty healthy set is a real observation (nothing can be dispatched),
             // so it is returned as-is rather than being confused with "no filter".
             return healthy;
+          } catch {
+            return null;
+          }
+        },
+        () =>
+          created.effectiveRegistry.endpoints.map((endpoint) => ({
+            endpointId: endpoint.identity.endpoint_id,
+            modelId:
+              typeof (endpoint as { modelId?: unknown }).modelId === "string"
+                ? String((endpoint as { modelId?: unknown }).modelId)
+                : "",
+            reasoningEffort:
+              typeof (endpoint as { reasoningEffort?: unknown }).reasoningEffort === "string"
+                ? String((endpoint as { reasoningEffort?: unknown }).reasoningEffort)
+                : null,
+          })),
+        // Run 105 bug 3: pass the wired judge resolution down so the dispatcher's focus planner excludes the
+        // SAME controller judge the supervised replay endpoint will reject (deepseek-flash), instead of
+        // returning null from the empty durable table and planning the judge as a counterfactual arm.
+        async () => {
+          try {
+            const snapshot = readLearningPolicyFile({
+              repoRoot: options.repoRoot,
+              stateRoot: resolveLearningPolicyStateRoot({
+                runtimeStateRoot: options.runtimeStateRoot,
+                scopeId: options.scopeId,
+              }),
+              channel: packagedProfile?.channel ?? "development",
+              scopeId: options.scopeId,
+            });
+            const judge = await resolveControllerJudge(created, snapshot);
+            return judge.endpointId || null;
           } catch {
             return null;
           }

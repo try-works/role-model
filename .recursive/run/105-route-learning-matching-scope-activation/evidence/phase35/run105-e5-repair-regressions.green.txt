@@ -1,0 +1,42 @@
+# Phase 3.5 repair regressions - legacy rollback + E readback + learning endpoints GREEN
+# command: node --test --test-concurrency=1 --test-timeout=180000 tests/track-b/run105-e5-ladder-index-readback.test.mjs tests/track-b/run105-r10-rollback-flag.test.mjs tests/track-b/run98-r07-cohort-rollback.test.mjs tests/track-b/run99-r28-kill-switch-release.test.mjs tests/track-b/run98-r17-learning-endpoints.test.mjs 2>&1 | Out-String
+# workdir: D:\DEV\role-model-internal\.worktrees\105-route-learning-matching-scope-activation
+# exit: 0
+
+(node:20400) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ Run105 E5: the records readback carries the frozen ladder index beside intact records (39.1766ms)
+✔ Run105 E5: a store that does not answer keeps records intact with ladders unavailable (5.5477ms)
+✔ Run105 E5: scope-wide packs produce no ladder rows (6.3388ms)
+✔ Run105 E5: a rolled-back ladder keeps its state, active false, and its rollback flag (5.0203ms)
+(node:9128) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ run105 R10: the per-task rollback flag defaults OFF and toggles ON/OFF with the reason preserved (105.3951ms)
+✔ run105 R10: rolling back one task never disturbs another (90.5055ms)
+(node:28292) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ AC-R07-01/02 activation emits a closed RoutePackageActivationReceiptV1 and advances the ladder one rung (184.8052ms)
+✔ AC-R07-02 cohort assignment is deterministic and follows the active step (88.0427ms)
+✔ AC-R07-03 a guardrail breach is recorded and rolls back once it has persisted for the window (150.9063ms)
+✔ AC-R07-04 an operator rollback restores the prior package and the kill switch disables activation (224.8646ms)
+(node:10024) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ run98 r17 the learning domain exposes the rollout readback and actions (22.1173ms)
+✔ run98 r17 the rollout readback and actions reach the supervised owner (13.1273ms)
+✔ run98 r17 the advisory decision readback is bounded and scope-filtered (23.5805ms)
+✔ run98 a25 the decisions readback honours a query-string limit instead of falling back to 100 (35.3875ms)
+✔ run98 a25 the activity and history readbacks honour query-string windows (15.6691ms)
+✔ run98 r17 a missing rollout owner reports the supervised-process requirement (4.7018ms)
+(node:28268) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ run99 R28 releasing the kill switch clears the flag, receipts it, and never silently re-activates (336.9173ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4244.7696
+
+

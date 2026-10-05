@@ -1,0 +1,12 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-host-bridge
+
+ ✓ test/run104-sp7-finalized-listing-cache.test.ts (6 tests) 22ms
+ ✓ test/run104-sp6-arm-comparability.test.ts (8 tests) 16ms
+ ✓ test/run104-sp1-dispatch-subset.test.ts (6 tests) 11ms
+
+ Test Files  3 passed (3)
+      Tests  20 passed (20)
+   Start at  19:56:37
+   Duration  4.40s (transform 518ms, setup 0ms, collect 2.21s, tests 49ms, environment 1ms, prepare 839ms)
+

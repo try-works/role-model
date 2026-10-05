@@ -1,0 +1,271 @@
+(node:13232) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `role-model-dev --trace-warnings ...` to show where the warning was created)
+{
+  "status": "listening",
+  "host": "127.0.0.1",
+  "port": 3458
+}
+[track-b-sidecar] (node:28688) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+[track-b-sidecar] (Use `node --trace-warnings ...` to show where the warning was created)
+[run99] durable route advisory published: state=unavailable reason=no active pack package=none confidence=0 cohort=0 stage=S4
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run101] replay job scope: derived runtime:d108326a7496e81b8ac19047c819e682
+[run101] recovery page payload shape: value,businessOutput,durableLocator,evidenceRef,readCapability,workerPid
+[run101] recovery page came back empty: scope=runtime:d108326a7496e81b8ac19047c819e682 channel=development cursor=start
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-0f1eb9ad-01cc-48e1-a9c3-5c841773f751 alias=- model=- effort=- pass=live allow=[deepseek.personal.r15-local-mock.global.deepseek-v4-pro] denied=[]
+Runtime failure telemetry persistence failed; original execution error preserved.
+Runtime failure telemetry persistence failed; original execution error preserved.
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-3f23c88f-74f1-4217-9b73-507baa9ec028 alias=- model=- effort=- pass=live allow=[deepseek.personal.r15-local-mock.global.deepseek-v4-pro] denied=[]
+Runtime failure telemetry persistence failed; original execution error preserved.
+Runtime failure telemetry persistence failed; original execution error preserved.
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-9f337ad2-9cb3-4108-b2c0-038bb1c64307 alias=- model=- effort=- pass=live allow=[deepseek.personal.r15-local-mock.global.deepseek-v4-pro] denied=[]
+Runtime failure telemetry persistence failed; original execution error preserved.
+Runtime failure telemetry persistence failed; original execution error preserved.
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-59422e40-0abc-41ff-a3d4-d251a7a61f66 alias=- model=- effort=- pass=live allow=[deepseek.personal.r15-local-mock.global.deepseek-v4-pro] denied=[]
+Runtime failure telemetry persistence failed; original execution error preserved.
+Runtime failure telemetry persistence failed; original execution error preserved.
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run98] remote-health recovery: deepseek.personal.r15-local-mock.global.deepseek-v4-pro
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-65a12bd7-c525-4292-92d6-0caf43244f38 alias=baseline.remote-only model=baseline.remote-only effort=- pass=live allow=[deepseek.personal.r15-local-mock.global.deepseek-v4-pro] denied=[]
+Runtime failure telemetry persistence failed; original execution error preserved.
+Runtime failure telemetry persistence failed; original execution error preserved.
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-635477b7-c1ed-453e-90dd-b97e2111f900 alias=baseline.remote-only model=baseline.remote-only effort=- pass=live allow=[deepseek.personal.r15-local-mock.global.deepseek-v4-pro] denied=[]
+Runtime failure telemetry persistence failed; original execution error preserved.
+Runtime failure telemetry persistence failed; original execution error preserved.
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0

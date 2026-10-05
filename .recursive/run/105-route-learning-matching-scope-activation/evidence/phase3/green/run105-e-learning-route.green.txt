@@ -1,0 +1,17 @@
+# learning route GREEN
+# workdir: D:\DEV\role-model\.worktrees\105-route-learning-matching-scope-activation\role-model-router
+# command: corepack pnpm --filter @role-model-router/runtime-ui exec vitest run app/routes/learning.test.tsx 2>&1 | Out-String
+# exit: 0
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-ui
+
+ ✓ app/routes/learning.test.tsx (27 tests) 260ms
+
+ Test Files  1 passed (1)
+      Tests  27 passed (27)
+   Start at  13:44:14
+   Duration  7.58s (transform 2.36s, setup 0ms, collect 4.98s, tests 260ms, environment 1ms, prepare 903ms)
+
+
+

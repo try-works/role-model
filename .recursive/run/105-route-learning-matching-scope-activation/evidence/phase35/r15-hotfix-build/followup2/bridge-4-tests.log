@@ -1,0 +1,25 @@
+
+ RUN  v3.2.4 E:/tmp/run105-r15-hotfix2-public/role-model-router/apps/runtime-host-bridge
+
+(node:21336) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | test/run105-r15-primary-failure.test.ts > run105 R15 primary failure isolation > routed provider status/class/request survive injected secondary graph persistence failure
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2,CAPABILITY_MISSING=1 request=req-r15-graph alias=- model=- effort=- pass=live allow=[openai.personal.codex-subscription.global.gpt-5.4] denied=[test.capture.chat-v1,cli.local.coder]
+
+stdout | test/run105-r15-primary-failure.test.ts > run105 R15 primary failure isolation > routed provider status/class/request survive injected secondary sqlite persistence failure
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2,CAPABILITY_MISSING=1 request=req-r15-sqlite alias=- model=- effort=- pass=live allow=[openai.personal.codex-subscription.global.gpt-5.4] denied=[test.capture.chat-v1,cli.local.coder]
+
+stdout | test/run105-r15-primary-failure.test.ts > run105 R15 primary failure isolation > successful routed persistence marks the primary error and avoids duplicate outer persistence
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2,CAPABILITY_MISSING=1 request=req-r15-success alias=- model=- effort=- pass=live allow=[openai.personal.codex-subscription.global.gpt-5.4] denied=[test.capture.chat-v1,cli.local.coder]
+
+ ✓ test/run105-r15-primary-failure.test.ts (4 tests) 5307ms
+   ✓ run105 R15 primary failure isolation > routed provider status/class/request survive injected secondary graph persistence failure  1441ms
+   ✓ run105 R15 primary failure isolation > routed provider status/class/request survive injected secondary sqlite persistence failure  1569ms
+   ✓ run105 R15 primary failure isolation > successful routed persistence marks the primary error and avoids duplicate outer persistence  1163ms
+   ✓ run105 R15 primary failure isolation > pre-execution input error survives secondary persistence failure unchanged  1131ms
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  18:57:49
+   Duration  13.40s (transform 4.72s, setup 0ms, collect 7.11s, tests 5.31s, environment 0ms, prepare 323ms)
+

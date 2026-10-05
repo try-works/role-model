@@ -1,0 +1,27 @@
+
+> @role-model-router/catalog@0.0.0 test D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\packages\catalog
+> vitest run test
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/packages/catalog
+
+ ✓ test/run91-reasoning-effort.test.ts (10 tests) 159ms
+ ✓ test/run104-alias-lineage.test.ts (3 tests) 747ms
+   ✓ run104 R3/R4 catalog lineage and override modalities > R3 the shipped catalog models the v4.1 base and the deprecated flash alias  640ms
+ ✓ test/token-economics.test.ts (12 tests) 2611ms
+   ✓ token-economics > maps operator Kimi model id to models.dev pricing row  322ms
+   ✓ token-economics > derives catalog-based routing estimates and ranks local below Kimi  307ms
+   ✓ token-economics > respects priced gateway rows and resolves unpriced aliases to models.dev pricing  337ms
+ ✓ test/index.test.ts (16 tests) 4856ms
+   ✓ normalizeCatalogSnapshot > keeps the tracked compact catalog at least forty percent below the pinned baseline  486ms
+   ✓ normalizeCatalogSnapshot > loads the tracked compact artifact through the canonical hydrated file boundary  400ms
+   ✓ exportCatalogArtifacts > writes stable normalized catalog and vendor ledger artifacts for local validation  1225ms
+   ✓ runCatalogExportCli > derives the repo-local catalog export paths for the validation command  918ms
+   ✓ runCatalogExportCli > exports moonshot/kimi-k3 from local supplement into normalized catalog  833ms
+   ✓ runCatalogExportCli > rewrites tracked package-data catalog artifacts alongside the runtime-output export  769ms
+
+ Test Files  4 passed (4)
+      Tests  41 passed (41)
+   Start at  18:45:19
+   Duration  8.62s (transform 1.55s, setup 0ms, collect 2.98s, tests 8.37s, environment 3ms, prepare 3.51s)
+

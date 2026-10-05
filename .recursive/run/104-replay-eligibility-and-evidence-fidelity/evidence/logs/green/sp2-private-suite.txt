@@ -1,0 +1,28 @@
+(node:7004) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ run100j the deferral budget takes the policy's bound (6.7693ms)
+✔ run100j a busy-runtime hold never consumes the deferral budget (0.7498ms)
+(node:57472) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ run97 disposition store records and reads a capture disposition (41.4268ms)
+✔ run97 pending excludes terminal dispositions and keeps deferred work (59.2264ms)
+✔ run97 disposition list pages with a cursor (61.5157ms)
+✔ run97 disposition store persists across reopen and reports health (51.8224ms)
+(node:25708) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ run99 R22 a first deferral is counted and stays retryable (4.2792ms)
+✔ run99 R22 deferrals accumulate up to the budget (0.8158ms)
+✔ run99 R22 the next deferral past the budget becomes a typed terminal refusal (1.8574ms)
+✔ run99 R22 terminal and replayed dispositions are never re-budgeted (2.9604ms)
+✔ run99 R22 an exhausted capture is not counted as deferred again (0.9345ms)
+✔ run99 R33 an in-flight lease conflict never consumes the deferral budget (0.8819ms)
+✔ run99 R33 a queued replay job never consumes the deferral budget (1.0349ms)
+✔ run98 a04 a job awaiting evaluation completion never consumes the deferral budget (0.8032ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1680.5622

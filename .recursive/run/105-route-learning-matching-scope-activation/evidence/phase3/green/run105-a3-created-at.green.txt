@@ -1,0 +1,14 @@
+(node:28004) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ A3: a store created WITHOUT the column keeps its legacy shape on open; only a write adds it (284.0817ms)
+✔ A3: the FINALIZED insert stamps created_at_ms from the core clock and never enters the bodies (270.3102ms)
+✔ A3: the REJECTED insert stamps created_at_ms too (251.6815ms)
+✔ A3: evaluation:list-groups exposes createdAtMs as a SIBLING of each row (355.0349ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1506.5664

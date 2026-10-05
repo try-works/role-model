@@ -15,6 +15,7 @@
 - `92-configured-model-pool-benchmark-convergence` - Endpoint-variant-exact membership revision token stamped at persist/read/portfolio/decision time; honest null candidate-space (no synthetic 0/0%); membership-revision + stale benchmark quarantine; destructive-confirm final-controller eject; decision revision; transactional benchmark clear (Phases 0-8, strict TDD, agent-operated QA on rebuilt `:3501`). Folder: `.recursive/run/92-configured-model-pool-benchmark-convergence/`. Soft-closes run 76's membership-authority contract with a revision-token convergence wave.
 
 - `103-agent-strategy-and-scoring-strategy` - Routing posture split (`routing.mode` + `routing.scoring_strategy` + `pin_weights` + `weights`), real scoring strategies, agent-strategy and workload postures with `<name>.<scope>` aliases, strategy/latency/alias receipts on every decision, measured-latency effective metric, three runtime-ui surfaces; strict TDD, two delegated review rounds, agent-operated rebuilt-runtime pi-CLI QA on `:3458` (Phases 0-8). Folder: `.recursive/run/103-agent-strategy-and-scoring-strategy/`.
+- `105-route-learning-matching-scope-activation` - Stage-3 matching-scope activation: per-(role,task) ranked endpoint ladder (aggregation, store, advisory walk, dispatch/activation/rollback, Packs UI) plus the Phase 3.5 classification-alignment repair (capture/advisory reads the authoritative taxonomy identity, not runtime-policy ids); strict TDD, delegated review + re-review, agent-operated rebuilt-runtime pi-CLI QA on `:3458` (Phases 0-8). Folder: `.recursive/run/105-route-learning-matching-scope-activation/`.
 
 ## Run: `92-configured-model-pool-benchmark-convergence`
 
@@ -654,6 +655,28 @@ Date: `2026-09-30`
   other directives and every eligibility gate still apply. A suppressed directive that names the pinned strategy
   is recorded as a no-op, not as a discard.
 - Agent strategy postures (`agent_strategies.<name>`, role-bound) and workload postures (`workloads.<name>`,
+
+## Run: `105-route-learning-matching-scope-activation`
+
+Date: `2026-10-03`
+
+### Decisions
+
+- One route-learning pack is the mutable endpoint ladder for one exact `(roleId, taskTypeId)`; the closed legacy pack contract and scope-wide active pointer are not routing authority.
+- Finalized effort-comparable groups materialize a deterministic total order. Admission uses each endpoint own comparison confidence; accepted rank/admission provenance stays authoritative when later evidence regresses. Mixed-policy snapshots are forbidden.
+- Router walks stored availability + per-request eligibility, then applies the unchanged one-shot score band/cohort/confidence/taxonomy/kill-switch gates. Ladder rank and score rank are independent.
+- Derived activation is authoritative; legacy promote/activate remains a historical operator surface only. Per-task rollback is reversible and never aliases guardrail/kill-switch rollback receipts.
+- Request demand and complete-ladder idle both use the same product-default `stalenessWindowDays`; sequential challenges count only genuine finalized groups. Stable `dispatchRoundId` separates repeated comparisons without mutating capture identity.
+- SQLite inline telemetry metadata remains 16 KiB by direct user decision. Structured previews are bounded and disclosed; rich diagnostic content is not admitted inline merely by raising the cap. Secondary telemetry failures never replace the primary provider error.
+- Build/runtime verification for this run is development `:3458` only. `:3457` is not a run-105 QA target and was not touched.
+- Final paired source is public `7162930d76dc1c317c8d192a2e3fbbdcde6f878c` / private `da40a115237432b248f6b5282a4ac42f8fb90179`. Promotion/merge to other branches is outside this run.
+
+### Residuals
+
+- CAS-loser evidence documents can orphan and count toward the per-scope document budget; routing remains fail-closed.
+- A restart during an in-flight challenge can duplicate bounded provider work; append-only evidence and strict acceptance keep ordering/routing safe.
+- Live routed telemetry preserves bounded diagnostics but no full graph pointer was available; full rich diagnostic preservation is not claimed.
+
   optional `required_capabilities`) each materialise one `<name>.<scope>` alias per execution scope. A declared
   role beats the alias preset; a declared `model_ids` slice narrows the alias pool; an empty slice reports
   `ALIAS_POOL_EMPTY` and is never widened. An unknown `role_id`, a reserved name, a duplicate name and a
@@ -805,3 +828,38 @@ Date: `2026-10-01`
 - Closeout also repaired two CI blockers the pull request exposed: BOM'd phase-5 evidence JSON files and
   the vendored `effect` build missing from the bridge test lanes. Evidence:
   `addenda/09-closeout.post-lock-release.addendum-01.md`.
+
+### Run 104: replay eligibility, evidence fidelity and the traffic-class typing
+
+Date: `2026-10-02`
+
+- The replay lane now refuses by name instead of deferring generically: `candidate_input_unsupported` carries the
+  blocking modality or capability and the rejected endpoint ids, terminal when the declared pool can never serve
+  the capture and deferrable when a capable arm is merely unavailable (`SP2`).
+- The persisted traffic-class vocabulary is `live | replay | evaluation | benchmark | probe | unknown`, with the
+  legacy `live_request` still read. The operator's aggregates are live-only and publish the excluded counts and
+  their classes, so a replay or a benchmark can no longer move the live cache-hit rate, counts, latency or cost
+  (`SP9`, `R14`). An undeclared write is still counted live; that residual is recorded with the Phase 3.5 review.
+- The live stall's cause is decided, not hypothesised: the packaged launcher never supplied `handoffEvaluation`,
+  so a replay that reached `awaiting_evaluation` was never re-listed; and the completion contract demanded every
+  trial of a job be covered by a finalized group although train-partition trials are structurally ineligible, so a
+  four-trial job with two comparable trials could never complete (`SP10`, private `21dd180f`; `b3ac491a`).
+- The durable branch-append recovery was reading the write-side `outputText` while the capture projection
+  publishes `responseText`, so it refused even for readable captures; it re-attaches now, and a projection that
+  saturated the boundary's 2 KiB excerpt cap refuses rather than attaching a truncated artifact (`efab6bc3`,
+  `d938049d`).
+- Arm comparability is a first-class dimension: arms are repointed to the same model's variant at the source
+  capture's effort when the registry holds one, every arm's comparability is published, and a mismatched arm is
+  named `arm_effort_mismatch` in the comparison's validity. The public plumbing is now wired and verified live
+  end-to-end (post-closeout `8aa114ed` plus addenda 08-20): a finalized comparison on `:3457` records per-arm
+  `matched`/`mismatched`. The queue was traced live and repaired in turn — the restricted-tick no-op, the
+  resume-entry record with `classifyReplayArmEffort`, the resume-store `effortComparability` persistence, the
+  `capture_missing` retryability, and the compact replay-job dispatch projection
+  (`SP6`, private `885eda30`; post-closeout `8aa114ed`, `1294feae`, `b3e29909`, `ec33aba5`, `23ae04dd`).
+- The `Effect` rule is applied where it is a genuine fit: `Match.exhaustive` terminates the traffic-class mapper so
+  a new variant is a type error, and the private handoff uses `ManagedRuntime`/`Effect.gen`. No dependency changed.
+- Phase 5 ran the rebuilt runtime on its own channel (`:3459`) with its own state root: the matrix passed
+  (text control, an image request through `difficulty.remote-only` that selected the DeepSeek flash endpoint, a
+  PDF control and `hybrid.remote-only`) and the monitored window ran 61.5 minutes with 123 samples. The live
+  replay drain could not be shown because a fresh state root has no route package; recorded in the locked
+  addendum rather than asserted.

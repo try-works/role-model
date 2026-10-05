@@ -11,13 +11,17 @@ const SECRET_KEYS = new Set([
 ]);
 /**
  * The protocol's transfer conjunction (R24-01 / R27-01): an envelope of at most this size travels inline, and
- * anything larger is externalized into a channel-local transfer artifact (bounded at 64 MiB). Run 100
- * addendum `replay-dispatch-lifecycle.addendum-04` S10 measured the consequence of crossing it from a
- * caller's side: the host's handed-off-replay recovery pass asked replay-core for a 25-job page and the
- * frame layer refused the answer with `frame exceeds inline limit; use a channel-local transfer artifact`.
- * The caller's page size is what has to respect this bound, not the protocol.
+ * anything larger is externalized into a channel-local transfer artifact (bounded at 64 MiB).
+ *
+ * Run 104 R24 (2026-10-03, measured live on :3457): the 16 KiB ceiling repeatedly overflowed single-object
+ * readbacks - a `replay:job` response and a finalized `evaluation_comparison_group` (`result_json` is
+ * ~40 KiB with reference-proofs repeated per member) both crossed it, so the post-finalization signals sweep
+ * refused 9,372 groups with `frame exceeds inline limit` and the learner could never validate a candidate.
+ * The ceiling is raised to 1 MiB: still bounded and far below the 64 MiB transfer-artifact cap, but large
+ * enough that one durable object (not a whole page of them) travels inline. Callers must still page their
+ * own reads; this is a per-frame bound, not a license to inline an unbounded page.
  */
-export const MAX_INLINE_BYTES = 16 * 1024;
+export const MAX_INLINE_BYTES = 1024 * 1024;
 export const CONTROL_FRAME_VERSION = 1;
 export const CONTROL_FRAME_DIRECTIONS = Object.freeze(["host->worker", "worker->host"]);
 

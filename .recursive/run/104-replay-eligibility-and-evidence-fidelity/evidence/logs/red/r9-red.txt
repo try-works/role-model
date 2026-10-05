@@ -1,0 +1,116 @@
+(node:36932) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✖ R9: matched arms stay promotion evidence and the dimension is durable (299.3188ms)
+✖ R9: a mismatched arm is excluded from promotion evidence by name, in the durable record (227.2373ms)
+✔ R9: an entry with no recorded effort comparability behaves exactly as before (257.1402ms)
+✖ R9: an unspecified effort on either side is published and stays eligible (202.5453ms)
+✖ R9: the declared dimension must be the durable job's own - a drift is refused (207.9979ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 1
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1391.8008
+
+✖ failing tests:
+
+test at tests\track-b\run104-r9-effort-exclusion.test.mjs:175:1
+✖ R9: matched arms stay promotion evidence and the dimension is durable (299.3188ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + undefined
+  - [
+  -   {
+  -     comparability: 'matched',
+  -     endpointId: 'endpoint:sol',
+  -     modelId: 'sol',
+  -     reasoningEffort: 'high',
+  -     sourceModelId: 'luna',
+  -     sourceReasoningEffort: 'high'
+  -   }
+  - ]
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/104-replay-eligibility-and-evidence-fidelity/tests/track-b/run104-r9-effort-exclusion.test.mjs:195:12)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: [ { endpointId: 'endpoint:sol', modelId: 'sol', sourceModelId: 'luna', reasoningEffort: 'high', sourceReasoningEffort: 'high', comparability: 'matched' } ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests\track-b\run104-r9-effort-exclusion.test.mjs:208:1
+✖ R9: a mismatched arm is excluded from promotion evidence by name, in the durable record (227.2373ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + undefined
+  - [
+  -   'arm_effort_mismatch'
+  - ]
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/104-replay-eligibility-and-evidence-fidelity/tests/track-b/run104-r9-effort-exclusion.test.mjs:230:12)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: [ 'arm_effort_mismatch' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests\track-b\run104-r9-effort-exclusion.test.mjs:273:1
+✖ R9: an unspecified effort on either side is published and stays eligible (202.5453ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + undefined
+  - [
+  -   {
+  -     comparability: 'source_effort_unspecified',
+  -     endpointId: 'endpoint:sol',
+  -     modelId: 'sol',
+  -     reasoningEffort: 'high',
+  -     sourceModelId: 'luna',
+  -     sourceReasoningEffort: null
+  -   },
+  -   {
+  -     comparability: 'arm_effort_unspecified',
+  -     endpointId: 'endpoint:sol',
+  -     modelId: 'sol',
+  -     reasoningEffort: null,
+  -     sourceModelId: 'luna',
+  -     sourceReasoningEffort: 'medium'
+  -   }
+  - ]
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/104-replay-eligibility-and-evidence-fidelity/tests/track-b/run104-r9-effort-exclusion.test.mjs:294:12)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: [ { endpointId: 'endpoint:sol', modelId: 'sol', sourceModelId: 'luna', reasoningEffort: 'high', sourceReasoningEffort: null, comparability: 'source_effort_unspecified' }, { endpointId: 'endpoint:sol', modelId: 'sol', sourceModelId: 'luna', reasoningEffort: null, sourceReasoningEffort: 'medium', comparability: 'arm_effort_unspecified' } ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests\track-b\run104-r9-effort-exclusion.test.mjs:301:1
+✖ R9: the declared dimension must be the durable job's own - a drift is refused (207.9979ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/104-replay-eligibility-and-evidence-fidelity/tests/track-b/run104-r9-effort-exclusion.test.mjs:314:12)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /submitted trials with matching durable comparability and holdout evidence required/,
+    operator: 'throws',
+    diff: 'simple'
+  }

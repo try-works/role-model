@@ -1,0 +1,35 @@
+node:internal/modules/esm/resolve:274
+    throw new ERR_MODULE_NOT_FOUND(
+          ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module 'D:\DEV\role-model-internal\.worktrees\105-route-learning-matching-scope-activation\shared\route-learning\challenge-batch.mjs' imported from D:\DEV\role-model-internal\.worktrees\105-route-learning-matching-scope-activation\tests\track-b\run105-r08-challenge-batch-policy.test.mjs
+    at finalizeResolution (node:internal/modules/esm/resolve:274:11)
+    at moduleResolve (node:internal/modules/esm/resolve:864:10)
+    at defaultResolve (node:internal/modules/esm/resolve:990:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:757:20)
+    at ModuleLoader.resolve (node:internal/modules/esm/loader:734:38)
+    at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:317:38)
+    at onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:685:36)
+    at TracingChannel.tracePromise (node:diagnostics_channel:350:14)
+    at ModuleLoader.import (node:internal/modules/esm/loader:684:21)
+    at defaultImportModuleDynamicallyForModule (node:internal/modules/esm/utils:229:31) {
+  code: 'ERR_MODULE_NOT_FOUND',
+  url: 'file:///D:/DEV/role-model-internal/.worktrees/105-route-learning-matching-scope-activation/shared/route-learning/challenge-batch.mjs'
+}
+
+Node.js v24.11.0
+✖ tests\track-b\run105-r08-challenge-batch-policy.test.mjs (225.8121ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 258.5937
+
+✖ failing tests:
+
+test at tests\track-b\run105-r08-challenge-batch-policy.test.mjs:1:1
+✖ tests\track-b\run105-r08-challenge-batch-policy.test.mjs (225.8121ms)
+  'test failed'

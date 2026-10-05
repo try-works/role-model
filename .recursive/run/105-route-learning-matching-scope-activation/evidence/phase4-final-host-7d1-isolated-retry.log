@@ -1,0 +1,25 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-host-bridge
+
+(node:40328) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | test/index.test.ts > runtime-host-bridge > retries transient API timeouts once and falls back to a secondary endpoint after quota exhaustion
+[run115] eligibility candidates=5 eligible=2 codes=POLICY_DENY_ENDPOINT=3,CAPABILITY_MISSING=1 request=req-runtime-bridge-live-fallback-001 alias=- model=- effort=- pass=live allow=[moonshot.personal.a-primary.global.kimi-k2.5,moonshot.personal.z-backup.global.kimi-k2.5] denied=[openai.personal.primary.us-east-1.fast,anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > retries transient API timeouts once and falls back to a secondary endpoint after quota exhaustion
+[run115] eligibility candidates=5 eligible=1 codes=POLICY_DENY_ENDPOINT=4,CAPABILITY_MISSING=1 request=req-runtime-bridge-live-fallback-001 alias=- model=- effort=- pass=live:reroute allow=[moonshot.personal.a-primary.global.kimi-k2.5,moonshot.personal.z-backup.global.kimi-k2.5] denied=[openai.personal.primary.us-east-1.fast,anthropic.team.shared.us-east-1.default,moonshot.personal.a-primary.global.kimi-k2.5,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > retries transient API timeouts once and falls back to a secondary endpoint after quota exhaustion
+[run115] eligibility candidates=5 eligible=2 codes=POLICY_DENY_ENDPOINT=3,CAPABILITY_MISSING=1 request=req-runtime-bridge-live-fallback-002 alias=- model=- effort=- pass=live allow=[moonshot.personal.a-primary.global.kimi-k2.5,moonshot.personal.z-backup.global.kimi-k2.5] denied=[openai.personal.primary.us-east-1.fast,anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > retries transient API timeouts once and falls back to a secondary endpoint after quota exhaustion
+[run115] eligibility candidates=5 eligible=1 codes=POLICY_DENY_ENDPOINT=4,CAPABILITY_MISSING=1 request=req-runtime-bridge-live-fallback-002 alias=- model=- effort=- pass=live:reroute allow=[moonshot.personal.a-primary.global.kimi-k2.5,moonshot.personal.z-backup.global.kimi-k2.5] denied=[openai.personal.primary.us-east-1.fast,anthropic.team.shared.us-east-1.default,moonshot.personal.a-primary.global.kimi-k2.5,cli.local.coder]
+
+ ✓ test/index.test.ts (216 tests | 215 skipped) 2337ms
+   ✓ runtime-host-bridge > retries transient API timeouts once and falls back to a secondary endpoint after quota exhaustion  2332ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 215 skipped (216)
+   Start at  07:07:14
+   Duration  14.25s (transform 7.22s, setup 0ms, collect 10.99s, tests 2.34s, environment 0ms, prepare 272ms)
+

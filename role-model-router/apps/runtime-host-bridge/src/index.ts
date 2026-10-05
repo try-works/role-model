@@ -18,6 +18,7 @@ import { DatabaseSync } from "node:sqlite";
 import { setTimeout as delay } from "node:timers/promises";
 import { parse } from "yaml";
 import { evaluateDispatchContextGuard } from "./dispatch-context-guard.js";
+import { persistFailureTelemetrySafely } from "./failure-telemetry-persistence.js";
 
 import {
   type NormalizedCatalog,
@@ -177,6 +178,7 @@ import {
   createTrackBRouteCaptureQueue,
   resolveDeferredCaptureMaxBytes,
 } from "./track-b-capture-queue.js";
+import { type StoredTrafficClass, toPersistedTrafficClass } from "./traffic-class.js";
 export type {
   RuntimeContributionOutcome,
   RuntimeContributionObservation,
@@ -578,7 +580,17 @@ const CONTROLLER_MAX_OUTPUT_TOKENS = 1024;
 export type OpenAICodexSubscriptionModelLifecycle = "supported" | "preview" | "deprecated";
 
 export interface OpenAICodexSubscriptionModelProfile {
-  readonly modelId: `chatgpt/gpt-5.${string}`;
+  /**
+   * The subscription surface spans more than the GPT-5 line, so the id is constrained by its
+   * `chatgpt/` prefix rather than pinned to `gpt-5.`.
+   *
+   * Pinning it to `gpt-5.` is why the newer rows could not be offered at all: the catalog has priced
+   * and described `gpt-6-astra`, `gpt-6-luna`, `gpt-6-sol` and `gpt-6.1-sol` since
+   * `feat(catalog): add the new OpenAI models and bill context tiers` (#286), but a `gpt-6.x` id could
+   * not be declared in this matrix, so the runtime never exposed them while the catalog already knew
+   * their capabilities, context window, reasoning efforts and cost tiers.
+   */
+  readonly modelId: `chatgpt/gpt-${string}`;
   readonly lifecycle: OpenAICodexSubscriptionModelLifecycle;
   readonly supportsFunctionCalling: boolean;
   readonly supportsHostedWebSearch: boolean;
@@ -587,6 +599,47 @@ export interface OpenAICodexSubscriptionModelProfile {
 }
 
 export const OPENAI_CODEX_SUBSCRIPTION_MODEL_MATRIX = [
+  /**
+   * The GPT-6 rows the catalog has carried since `feat(catalog): add the new OpenAI models and bill
+   * context tiers` (#286). They were priced, described and tiered in
+   * `packages/catalog/data/normalized-catalog.json` from that PR on, but never offered, because this
+   * matrix is the runtime's own declaration of the subscription surface and #286 did not touch it -
+   * the models were consequently absent from every `models.dev`-derived readback while the catalog
+   * already answered for them. `reasoningEffortLevels` is the set the catalog publishes for each row,
+   * which is what the resolver uses when it differs from models.dev's own default.
+   *
+   * The models.dev `gpt-daybreak-blue-latest` / `gpt-daybreak-red-latest` rows are deliberately not
+   * listed: they are the provider ids behind GPT-5.6 Sol and GPT-5.6 Cyber rather than models in
+   * their own right, so they stay catalog aliases and never become selectable subscription entries.
+   */
+  {
+    modelId: "chatgpt/gpt-6.1-sol",
+    lifecycle: "supported",
+    supportsFunctionCalling: true,
+    supportsHostedWebSearch: true,
+    reasoningEffortLevels: ["low", "medium", "high", "xhigh", "max"],
+  },
+  {
+    modelId: "chatgpt/gpt-6-sol",
+    lifecycle: "supported",
+    supportsFunctionCalling: true,
+    supportsHostedWebSearch: true,
+    reasoningEffortLevels: ["none", "low", "medium", "high", "xhigh", "max"],
+  },
+  {
+    modelId: "chatgpt/gpt-6-luna",
+    lifecycle: "supported",
+    supportsFunctionCalling: true,
+    supportsHostedWebSearch: true,
+    reasoningEffortLevels: ["none", "low", "medium", "high", "xhigh", "max"],
+  },
+  {
+    modelId: "chatgpt/gpt-6-astra",
+    lifecycle: "supported",
+    supportsFunctionCalling: true,
+    supportsHostedWebSearch: true,
+    reasoningEffortLevels: ["low", "medium", "high", "xhigh", "max"],
+  },
   {
     modelId: "chatgpt/gpt-5.6-sol",
     lifecycle: "supported",
@@ -667,6 +720,33 @@ export const OPENAI_CODEX_SUBSCRIPTION_MODEL_MATRIX = [
 export const OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS = OPENAI_CODEX_SUBSCRIPTION_MODEL_MATRIX.map(
   (entry) => entry.modelId,
 );
+
+/**
+ * The OpenAI catalog rows at or above the subscription version floor that this surface deliberately
+ * does not offer, each with the reason. Everything else the catalog carries at or above the floor must
+ * appear in the matrix above - `openai-codex-subscription-catalog-conformance.test.ts` fails otherwise,
+ * in both directions:
+ *
+ * - a catalog row at or above the floor that is neither offered nor excluded here, which is how
+ *   `feat(catalog): add the new OpenAI models and bill context tiers` (#286) added six OpenAI rows
+ *   (`gpt-6-astra`, `gpt-6-luna`, `gpt-6-sol`, `gpt-6.1-sol`, and the daybreak pair) that no runtime ever
+ *   offered - they were priced and described in the catalog while the matrix, which is the runtime's own
+ *   declaration of the surface, silently stayed at twelve;
+ * - a matrix entry with no catalog row, which `createRuntimeModelRecords` below drops without a word
+ *   (`if (!source) return []`), so a typo or a removed catalog row removes a model from the surface with
+ *   no failure anywhere.
+ *
+ * The floor and its version parse live with the test, because the rule it encodes is a conformance
+ * statement about the catalog rather than something the runtime evaluates.
+ */
+export const OPENAI_CODEX_SUBSCRIPTION_MODEL_EXCLUSIONS = {
+  "gpt-5.6":
+    "the bare 5.6 row is not a Codex subscription target; the offered 5.6 rows are its named variants",
+  "gpt-daybreak-blue-latest":
+    "the provider id behind GPT-5.6 Sol, not a model in its own right - listing it would offer a second name for one model",
+  "gpt-daybreak-red-latest":
+    "the provider id behind GPT-5.6 Cyber, not a model in its own right - listing it would offer a second name for one model",
+} as const satisfies Readonly<Record<string, string>>;
 const OPENAI_CODEX_SUBSCRIPTION_MODEL_ID_SET = new Set<string>(OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS);
 const OPENAI_CODEX_SUBSCRIPTION_ENDPOINT_ID_MARKERS = [
   `.${OPENAI_CODEX_SUBSCRIPTION_VARIANT_ID}.`,
@@ -2564,6 +2644,7 @@ export type BridgeTelemetryAnalyticsMetric =
   | "p95LatencyMs";
 
 export type BridgeTelemetryAnalyticsDimension =
+  | "requestClass"
   | "sourceType"
   | "endpointId"
   | "modelId"
@@ -2588,6 +2669,8 @@ export type BridgeTelemetryAnalyticsDimension =
   | "taxonomyToolClassId";
 
 export interface BridgeTelemetryAnalyticsFilters {
+  /** Run 104 / R14: restrict to traffic classes; `live` also matches legacy `live_request` rows. */
+  readonly trafficClasses?: readonly StoredTrafficClass[];
   readonly sourceTypes?: readonly ("local" | "remote")[];
   readonly endpointIds?: readonly string[];
   readonly modelIds?: readonly string[];
@@ -2939,7 +3022,7 @@ export type BridgeTelemetryRequestRecord = ReturnType<
   typeof listRuntimeTelemetryRecords
 >[number] & {
   readonly clientRequestId?: string | null;
-  readonly requestClass?: "benchmark" | "live_request" | "unknown";
+  readonly requestClass?: StoredTrafficClass;
   /** Canonical upstream model identity retained alongside the endpoint instance. */
   readonly upstreamModelId?: string | null;
   /** Provider-fixed effort for the selected endpoint, when present. */
@@ -3306,6 +3389,8 @@ export interface StartBridgeServerOptions {
   readonly restoreLearningScenarioActivation?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly rollbackLearningPack?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly engageLearningKillSwitch?: (body: Record<string, unknown>) => Promise<unknown>;
+  /** Run 105 Phase 3.5 repair: the host-only route-ladder materialization operation. */
+  readonly materializeRouteLadders?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly measureNoRichCaptureBaseline?: (body: Record<string, unknown>) => Promise<unknown>;
   /** Safe, credential-free development verification lease status. */
   readonly readDevelopmentVerificationStatus?: () => Promise<unknown>;
@@ -3576,6 +3661,8 @@ export interface RuntimeBridgeBackend {
   rollbackLearningPolicy(body: Record<string, unknown>): Promise<unknown>;
   activateLearningPack(body: Record<string, unknown>): Promise<unknown>;
   rollbackLearningPack(body: Record<string, unknown>): Promise<unknown>;
+  /** Run 105 Phase 3.5 repair: the host-only route-ladder materialization operation. */
+  materializeRouteLadders(body: Record<string, unknown>): Promise<unknown>;
   /** Run 98 addendum 54: the operator surface's guardrail-breach recorder (non-production channels only). */
   recordLearningGuardrailBreach(body: Record<string, unknown>): Promise<unknown>;
   /** Run 98 addendum 57 slice 1: the operator surface's scenario restore (non-production channels only). */
@@ -4031,6 +4118,7 @@ export interface CreateRuntimeBridgeBackendOptions {
   readonly rollbackLearningPolicy?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly activateLearningPack?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly rollbackLearningPack?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly materializeRouteLadders?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly recordLearningGuardrailBreach?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly restoreLearningScenarioActivation?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly engageLearningKillSwitch?: (body: Record<string, unknown>) => Promise<unknown>;
@@ -8144,11 +8232,26 @@ export function createRoleModelNormalizedIntentObservation(
  * class this runtime does not have. Returns `null` when nothing at all is known, so a record shows
  * absence rather than an invented classification.
  */
-function buildRequestClassification(input: {
+export interface BridgeRequestClassification extends TrackBRouteAdvisoryClassification {
+  /**
+   * Run 104 `R6`: the task variant the runtime resolved for this request, carried with the
+   * classification when the intent declared one.
+   */
+  readonly taskVariant?: string | null;
+}
+
+export function buildRequestClassification(input: {
+  /** The task the request declared (`routingRequest.taskType`), authoritative when present. */
   readonly taskTypeId?: string | null;
+  /** Run 104 `R6`: the taxonomy identity the runtime resolved (`taxonomyIdentity.taskTypeId`). */
+  readonly identityTaskTypeId?: string | null;
+  /** Run 104 `R6`: the intent's own task id, used when neither source above resolved one. */
+  readonly intentTaskTypeId?: string | null;
+  /** Run 104 `R6`: the task variant the runtime resolved, when it resolved one. */
+  readonly taskVariant?: string | null;
   readonly roleId?: string | null;
   readonly toolClasses?: readonly string[] | null;
-}): TrackBRouteAdvisoryClassification | null {
+}): BridgeRequestClassification | null {
   const knownToolClasses = new Set(canonicalTaxonomy.toolClasses.map((toolClass) => toolClass.id));
   const knownRoleIds = new Set(canonicalTaxonomy.roles.map((role) => role.id));
   const toolClassIds = [
@@ -8159,10 +8262,29 @@ function buildRequestClassification(input: {
       ),
     ),
   ];
-  const declaredTaskTypeId = boundedRequestClassificationId(input.taskTypeId);
+  /**
+   * Run 104 `R6` (`T1.2d`): the task family uses the same three-step fallback chain the role next to
+   * it already uses - the declaration is authoritative, then the taxonomy identity the runtime
+   * resolved (which defaults to `text.chat`), then the intent's own task id. The chosen value is
+   * validated against the shipped taxonomy exactly as before, so an unknown identifier is still
+   * dropped rather than guessed: a declaration that names something unknown stops the chain (the
+   * role chain behaves the same way), and a fallback that names something unknown is skipped so the
+   * chain can reach the intent task id instead of stopping on the identity's non-taxonomy default.
+   */
   const knownTaskTypes = new Set(canonicalTaxonomy.tasks.map((task) => task.id));
-  const taskTypeId =
-    declaredTaskTypeId && knownTaskTypes.has(declaredTaskTypeId) ? declaredTaskTypeId : null;
+  const declaredTaskTypeId = boundedRequestClassificationId(input.taskTypeId);
+  const identityTaskTypeId = boundedRequestClassificationId(input.identityTaskTypeId);
+  const intentTaskTypeId = boundedRequestClassificationId(input.intentTaskTypeId);
+  const taskTypeId = declaredTaskTypeId
+    ? knownTaskTypes.has(declaredTaskTypeId)
+      ? declaredTaskTypeId
+      : null
+    : identityTaskTypeId && knownTaskTypes.has(identityTaskTypeId)
+      ? identityTaskTypeId
+      : intentTaskTypeId && knownTaskTypes.has(intentTaskTypeId)
+        ? intentTaskTypeId
+        : null;
+  const taskVariant = boundedRequestClassificationId(input.taskVariant);
   const declaredRoleId = boundedRequestClassificationId(input.roleId);
   const roleId = declaredRoleId && knownRoleIds.has(declaredRoleId) ? declaredRoleId : null;
   const taxonomyVersion = boundedRequestClassificationId(taxonomyManifest.taxonomyVersion);
@@ -8171,6 +8293,7 @@ function buildRequestClassification(input: {
   if (!taskTypeId && !roleId && !taxonomyVersion && toolClassIds.length === 0) return null;
   return {
     taskTypeId,
+    ...(taskVariant ? { taskVariant } : {}),
     roleId,
     toolClassIds,
     taxonomyVersion,
@@ -8181,6 +8304,45 @@ function buildRequestClassification(input: {
 
 const boundedRequestClassificationId = (value: unknown): string | null =>
   typeof value === "string" && value.trim() ? value.trim().slice(0, 128) : null;
+
+/**
+ * Run 104 `R6`: one place resolves the classification sources from a plan, so the routed capture,
+ * the failed-route capture, the observation bundle and the supervised-replay capture cannot drift
+ * apart. The three task sources are the same chain `buildRequestClassification` validates.
+ */
+export function buildRequestClassificationForPlan(
+  plan: BridgeExecutionPlan,
+): BridgeRequestClassification | null {
+  // Run 105 Phase 5 (review finding): resolve the role/task from the SAME sources
+  // buildBridgeTaxonomyIdentity uses, and fall through to the resolved taxonomy identity when the
+  // declared value is not a taxonomy id. plan.routingRequest.taskType / requestedRoleId can be
+  // runtime-policy ids (not taxonomy ids) for intent-less Pi traffic; treating them as the only
+  // source made buildRequestClassification stop on a non-taxonomy id and return null while telemetry
+  // (buildBridgeTaxonomyIdentity) already resolved a genuine coder|coder.edit identity.
+  const knownTask = (id: string | null | undefined): string | null =>
+    id && canonicalTaxonomy.tasks.some((task) => task.id === id) ? id : null;
+  const knownRole = (id: string | null | undefined): string | null =>
+    id && canonicalTaxonomy.roles.some((role) => role.id === id) ? id : null;
+  const taskTypeId =
+    knownTask(plan.routingRequest.taskType) ??
+    knownTask(plan.taxonomyIdentity?.taskTypeId) ??
+    knownTask(plan.routingRequest.roleModelIntent?.task?.id);
+  // A genuine role only ever accompanies a genuine (non-default) task, so gate the role on the
+  // resolved task to avoid leaking the correlated "writer" default for an unclassified request.
+  const roleId = taskTypeId
+    ? (knownRole(plan.routingRequest.requestedRoleId) ??
+      knownRole(plan.taxonomyIdentity?.roleId) ??
+      knownRole(plan.routingRequest.roleModelIntent?.role?.id))
+    : null;
+  return buildRequestClassification({
+    taskTypeId,
+    identityTaskTypeId: taskTypeId,
+    intentTaskTypeId: plan.routingRequest.roleModelIntent?.task?.id ?? null,
+    taskVariant: plan.routingRequest.roleModelIntent?.taskVariant ?? null,
+    roleId,
+    toolClasses: plan.routingRequest.roleModelIntent?.toolClasses ?? null,
+  });
+}
 
 function resolveRoleModelIntentTaskType(input: {
   readonly roleModelIntent?: BridgeExecutionPlan["routingRequest"]["roleModelIntent"];
@@ -11334,6 +11496,9 @@ function readTelemetryQuery(url: URL): BridgeTelemetryQuery {
   const sourceTypes = readOptionalTelemetryStringList(url.searchParams, "sourceTypes") as
     | readonly ("local" | "remote")[]
     | undefined;
+  const trafficClasses = readOptionalTelemetryStringList(url.searchParams, "trafficClasses") as
+    | readonly StoredTrafficClass[]
+    | undefined;
   const endpointIds = readOptionalTelemetryStringList(url.searchParams, "endpointIds");
   const modelIds = readOptionalTelemetryStringList(url.searchParams, "modelIds");
   const providerIds = readOptionalTelemetryStringList(url.searchParams, "providerIds");
@@ -11360,6 +11525,7 @@ function readTelemetryQuery(url: URL): BridgeTelemetryQuery {
     | undefined;
   const requestOperations = readOptionalTelemetryStringList(url.searchParams, "requestOperations");
   const filters = {
+    ...(trafficClasses ? { trafficClasses } : {}),
     ...(sourceTypes ? { sourceTypes } : {}),
     ...(endpointIds ? { endpointIds } : {}),
     ...(modelIds ? { modelIds } : {}),
@@ -17458,6 +17624,20 @@ function createRequestHandler(options: StartBridgeServerOptions) {
           writeOperatorMutationResult(response, await options.rollbackLearningPack(operatorBody));
           return;
         }
+        if (
+          request.method === "POST" &&
+          url.pathname === "/api/role-model/operator/learning/materialize-route-ladders"
+        ) {
+          if (!options.materializeRouteLadders) {
+            writeOperatorUnavailable(response, "learning route ladder materialization");
+            return;
+          }
+          writeOperatorMutationResult(
+            response,
+            await options.materializeRouteLadders(operatorBody),
+          );
+          return;
+        }
         /**
          * Run 98 addendum 54 (implementing addendum 53 §3): A44-S2's sustained-breach half needs a way to record
          * a guardrail breach through the runtime's own extension path. The knowledge store implements the window
@@ -20104,6 +20284,7 @@ export async function createRuntimeBridgeBackend(
     readonly toolingUsed: boolean;
     readonly executionStartedAtMs: number;
     readonly error: unknown;
+    readonly requestClass?: ExecutionTrafficClass;
   }): Promise<void> => {
     const statusCode = input.error instanceof BridgeHttpError ? input.error.statusCode : 400;
     const latencyMs = Math.max(0, Date.now() - input.executionStartedAtMs);
@@ -20137,25 +20318,28 @@ export async function createRuntimeBridgeBackend(
       dimensions,
       toolingUsed: input.toolingUsed,
     });
-    persistRuntimeTelemetryFailure({
-      databasePath: initialization.databasePath,
-      requestId: input.requestId,
-      clientRequestId: input.clientRequestId ?? null,
-      requestClass: "live_request",
-      sourceType: currentUnifiedRuntimeConfig?.executionMode === "remote_only" ? "remote" : "local",
-      endpointId: input.endpointId,
-      reasoningEffort: failureEffort.reasoningEffort,
-      effortSource: failureEffort.effortSource,
-      modelId: input.modelId,
-      requestedModelId: input.modelId,
-      requestOperation: input.requestOperation,
-      statusCode,
-      errorClass: runtimeTelemetryErrorClassFor(input.error),
-      latencyMs,
-      dimensions,
-      observation: failureObservation,
-      ...(localGraphStore ? { graphStore: localGraphStore } : {}),
-    });
+    persistFailureTelemetrySafely(() =>
+      persistRuntimeTelemetryFailure({
+        databasePath: initialization.databasePath,
+        requestId: input.requestId,
+        clientRequestId: input.clientRequestId ?? null,
+        requestClass: toPersistedTrafficClass(input.requestClass),
+        sourceType:
+          currentUnifiedRuntimeConfig?.executionMode === "remote_only" ? "remote" : "local",
+        endpointId: input.endpointId,
+        reasoningEffort: failureEffort.reasoningEffort,
+        effortSource: failureEffort.effortSource,
+        modelId: input.modelId,
+        requestedModelId: input.modelId,
+        requestOperation: input.requestOperation,
+        statusCode,
+        errorClass: runtimeTelemetryErrorClassFor(input.error),
+        latencyMs,
+        dimensions,
+        observation: failureObservation,
+        ...(localGraphStore ? { graphStore: localGraphStore } : {}),
+      }),
+    );
     if (options.trackBPostObservation) {
       try {
         await options.trackBPostObservation(failureObservation);
@@ -23572,6 +23756,7 @@ export async function createRuntimeBridgeBackend(
     "p95LatencyMs",
   ];
   const SUPPORTED_TELEMETRY_ANALYTICS_DIMENSIONS: readonly BridgeTelemetryAnalyticsDimension[] = [
+    "requestClass",
     "sourceType",
     "endpointId",
     "modelId",
@@ -23734,6 +23919,10 @@ export async function createRuntimeBridgeBackend(
     dimension: BridgeTelemetryAnalyticsDimension,
   ): readonly string[] => {
     switch (dimension) {
+      case "requestClass": {
+        const requestClass = record.requestClass ?? "unknown";
+        return [requestClass === "live_request" ? "live" : requestClass];
+      }
       case "sourceType":
         return [record.sourceType];
       case "endpointId":
@@ -24190,6 +24379,31 @@ export async function createRuntimeBridgeBackend(
       ...(filtersBody
         ? {
             filters: {
+              ...(readEnumStringList(filtersBody.trafficClasses, "filters.trafficClasses", [
+                "live",
+                "live_request",
+                "replay",
+                "evaluation",
+                "benchmark",
+                "probe",
+                "unknown",
+              ] as const)
+                ? {
+                    trafficClasses: readEnumStringList(
+                      filtersBody.trafficClasses,
+                      "filters.trafficClasses",
+                      [
+                        "live",
+                        "live_request",
+                        "replay",
+                        "evaluation",
+                        "benchmark",
+                        "probe",
+                        "unknown",
+                      ] as const,
+                    ),
+                  }
+                : {}),
               ...(readEnumStringList(filtersBody.sourceTypes, "filters.sourceTypes", [
                 "local",
                 "remote",
@@ -24399,6 +24613,16 @@ export async function createRuntimeBridgeBackend(
       return records;
     }
     return records.filter((record) => {
+      if (
+        filters.trafficClasses &&
+        !filters.trafficClasses.some(
+          (trafficClass) =>
+            (record.requestClass ?? "unknown") === trafficClass ||
+            (trafficClass === "live" && record.requestClass === "live_request"),
+        )
+      ) {
+        return false;
+      }
       if (filters.sourceTypes && !filters.sourceTypes.includes(record.sourceType)) {
         return false;
       }
@@ -24583,6 +24807,11 @@ export async function createRuntimeBridgeBackend(
         requestP95Index >= 0 ? (requestLatencies[requestP95Index] ?? null) : null,
       requestLatencySampleCount: requestLatencies.length,
       lastSeenAtMs: records[0]?.createdAtMs ?? null,
+      // Run 104 / R14: this projection summarises a caller-filtered record set, so no row was dropped by
+      // the live-only default behind the caller's back; the unfiltered readback reports the excluded
+      // classes from the storage aggregate instead.
+      excludedRequestCount: 0,
+      excludedByClass: [],
     };
   };
   const getTelemetryEndpointMeta = (endpointId: string): BridgeTelemetryEndpointMeta => {
@@ -24890,6 +25119,7 @@ export async function createRuntimeBridgeBackend(
       [
         query.breakdown ?? undefined,
         query.ranking?.dimension,
+        ...(query.filters?.trafficClasses ? (["requestClass"] as const) : []),
         ...(query.filters?.sourceTypes ? (["sourceType"] as const) : []),
         ...(query.filters?.endpointIds ? (["endpointId"] as const) : []),
         ...(query.filters?.modelIds ? (["modelId"] as const) : []),
@@ -24927,6 +25157,7 @@ export async function createRuntimeBridgeBackend(
       [
         query.breakdown ?? undefined,
         query.ranking?.dimension,
+        ...(query.filters?.trafficClasses ? (["requestClass"] as const) : []),
         ...(query.filters?.sourceTypes ? (["sourceType"] as const) : []),
         ...(query.filters?.endpointIds ? (["endpointId"] as const) : []),
         ...(query.filters?.modelIds ? (["modelId"] as const) : []),
@@ -26227,7 +26458,17 @@ export async function createRuntimeBridgeBackend(
       // Run 99 R33 (addendum 19 S33/S35): the live decision carries the request's own task
       // family and the taxonomy it was resolved against, so a preference learned for one family
       // cannot move another family's traffic.
-      const requestTaskTypeId = plan.routingRequest.taskType ?? null;
+      // Run 105 live Phase 5: the task must resolve through the SAME classification chain as the
+      // role (`buildRequestClassificationForPlan`). Reading `plan.routingRequest.taskType` directly
+      // left the advisory key and observation as `requestTaskTypeId: null` for requests that declared
+      // no top-level task but carried a resolved intent/identity task, so an exact (role, task) ladder
+      // was never recalled for them.
+      const requestTaskTypeId = buildRequestClassificationForPlan(plan)?.taskTypeId ?? null;
+      // Run 105 C11/R1: the advisory key is (role, task). The role comes from the SAME chain
+      // `buildRequestClassificationForPlan` resolves (declared role -> resolved taxonomy identity ->
+      // intent role), so the ladder the runtime recalls cannot drift from the classification the
+      // observation records.
+      const requestRoleId = buildRequestClassificationForPlan(plan)?.roleId ?? null;
       const requestTaxonomyVersion = taxonomyManifest.taxonomyVersion ?? null;
       const advisoryConsideration = ["S2", "S3", "S4"].includes(learningStage)
         ? (() => {
@@ -26238,19 +26479,23 @@ export async function createRuntimeBridgeBackend(
             const durable = recallTrackBDurableRouteAdvisory({
               channel: runtimeChannel,
               scope: options.scopeId,
+              roleId: requestRoleId,
               taskTypeId: requestTaskTypeId,
               // Run 99 R33 (addendum 21 D12): the operator's advisory-source age bound is
               // enforced on every live consultation.
               nowMs: Date.now(),
               maxAgeMs: learningPolicySnapshot?.effective.advisorySourceMaxAgeMs ?? 900000,
             });
+            // A classified request requires exact durable authorization, including an unavailable
+            // rollback answer. Transient scope-wide evidence is only for genuine legacy requests.
             const cached =
               durable ??
-              recallNewestTrackBRouteAdvisory({
-                channel: runtimeChannel,
-                scope: options.scopeId,
-                taskTypeId: requestTaskTypeId,
-              });
+              (requestRoleId === null && requestTaskTypeId === null
+                ? recallNewestTrackBRouteAdvisory({
+                    channel: runtimeChannel,
+                    scope: options.scopeId,
+                  })
+                : null);
             if (!cached) {
               // Bounded diagnostic (run 99 R24): an S2+ runtime with no advisory at all is the
               // signal that the durable refresh never published, not that the gate refused.
@@ -26308,6 +26553,15 @@ export async function createRuntimeBridgeBackend(
               taskTypeId: cached.taskTypeId ?? null,
               taxonomyVersion: cached.taxonomyVersion ?? null,
               requestTaxonomyVersion,
+              // Run 105 R1/R5: the (role, task) scope of the advisory and of this request, plus the
+              // ordered ladder the router walks. `preferredEndpointId` above stays the walked rung's
+              // fallback (rank-1 available), so a cached entry from a pre-run105 source behaves
+              // exactly as before.
+              roleId: "roleId" in cached ? cached.roleId : null,
+              requestRoleId,
+              ...("advisoryLadder" in cached && cached.advisoryLadder.length
+                ? { preferredLadder: cached.advisoryLadder }
+                : {}),
             };
           })()
         : undefined;
@@ -26490,6 +26744,11 @@ export async function createRuntimeBridgeBackend(
                 readonly scoreGapBefore?: number | null;
                 readonly advisoryPackageEligible?: boolean;
                 readonly eligibleEndpointCount?: number;
+                /** Run 105 C13: the ladder walk's evidence, read back off the decision. */
+                readonly advisoryLadderLength?: number;
+                readonly advisoryRungRank?: number | null;
+                readonly advisoryRungWalked?: string | null;
+                readonly advisoryRungSkipped?: number;
               };
             }
           ).advisory_consideration;
@@ -26519,15 +26778,9 @@ export async function createRuntimeBridgeBackend(
             // Run 99 close-out (addenda 19-21 S33/D1/D2): record the classification the request was
             // routed with, so the evidence is keyed by family *and* by the taxonomy identity it was
             // classified against rather than by a bare family string.
-            classification: buildRequestClassification({
-              taskTypeId: plan.routingRequest.taskType ?? null,
-              roleId:
-                plan.routingRequest.requestedRoleId ??
-                plan.taxonomyIdentity?.roleId ??
-                plan.routingRequest.roleModelIntent?.role?.id ??
-                null,
-              toolClasses: plan.routingRequest.roleModelIntent?.toolClasses ?? null,
-            }),
+            // Run 104 R6: the helper resolves the task through the declaration -> resolved identity ->
+            // intent chain, so a request that declared no task no longer records `taskTypeId: null`.
+            classification: buildRequestClassificationForPlan(plan),
             // Run 99 close-out (D6): a live routed answer is the policy's own deterministic choice.
             outcome: outcome
               ? {
@@ -26541,6 +26794,22 @@ export async function createRuntimeBridgeBackend(
                   eligibleEndpointCount:
                     typeof outcome.eligibleEndpointCount === "number"
                       ? outcome.eligibleEndpointCount
+                      : undefined,
+                  // Run 105 C13: record WHICH rung the walk landed on, so the ladder's influence is
+                  // measurable rather than invisible (addendum A2's recorded consequence).
+                  advisoryLadderLength:
+                    typeof outcome.advisoryLadderLength === "number"
+                      ? outcome.advisoryLadderLength
+                      : undefined,
+                  advisoryRungRank:
+                    typeof outcome.advisoryRungRank === "number" ? outcome.advisoryRungRank : null,
+                  advisoryRungWalked:
+                    typeof outcome.advisoryRungWalked === "string"
+                      ? outcome.advisoryRungWalked
+                      : null,
+                  advisoryRungSkipped:
+                    typeof outcome.advisoryRungSkipped === "number"
+                      ? outcome.advisoryRungSkipped
                       : undefined,
                 }
               : null,
@@ -27510,15 +27779,8 @@ export async function createRuntimeBridgeBackend(
           effortSource: selectedEffortSource,
           // Run 99 close-out (addendas 19-21 S33): a failed request is still evidence, so its
           // capture records the same classification the routed path would have.
-          classification: buildRequestClassification({
-            taskTypeId: plan.routingRequest.taskType ?? null,
-            roleId:
-              plan.routingRequest.requestedRoleId ??
-              plan.taxonomyIdentity?.roleId ??
-              plan.routingRequest.roleModelIntent?.role?.id ??
-              null,
-            toolClasses: plan.routingRequest.roleModelIntent?.toolClasses ?? null,
-          }),
+          // Run 104 R6: the same fallback chain as the routed capture, resolved in one place.
+          classification: buildRequestClassificationForPlan(plan),
           comparability: { scorerSetVersion: RUN96_ROUTING_SHADOW_SCORER_SET_VERSION },
           messages: captureInput,
           failure: {
@@ -27553,86 +27815,90 @@ export async function createRuntimeBridgeBackend(
         ...baseFailureObservation,
         ...(graphEvidence ? { graphEvidence } : {}),
       });
-      persistRuntimeTelemetryFailure({
-        databasePath: initialization.databasePath,
-        requestId,
-        routingDecisionId,
-        endpointId: selectedEndpointId,
-        reasoningEffort: selectedReasoningEffort,
-        effortSource: selectedEffortSource,
-        modelId: selectedModelId ?? undefined,
-        requestedModelId: executionOptions?.requestedModel ?? selectedModelId,
-        selectedModelId,
-        requestOperation: executionOptions?.requestOperation ?? "chat",
-        statusCode: error.statusCode,
-        errorClass: error.errorClass,
-        latencyMs: failureLatencyMs,
-        /**
-         * Run 101 addendum 23: the failure row must carry what the client actually received. The builder used to
-         * write a literal zero, so a response that had streamed 789 chunks was recorded (and read by this operator)
-         * as `streamTextDeltaCount: 0` - the number that made a post-content drop look like a pre-content failure
-         * for two repair cycles. This is the count of chunks that carried content or tool calls.
-         */
-        streamTextDeltaCount: deliveredSubstantiveChunkCount,
-        clientRequestId: executionOptions?.requestOptions?.clientRequestId ?? null,
-        requestClass: "live_request",
-        sourceType,
-        providerKind: selectedCandidate?.identity.provider_kind ?? null,
-        providerFamily: error.providerFamily,
-        vendorId: error.vendorId ?? null,
-        providerId: error.providerId,
-        providerAccountId:
-          selectedProviderAccount?.providerAccountId ??
-          selectedRuntimeEndpoint?.providerAccountId ??
-          null,
-        endpointKind: selectedCandidate?.identity.endpoint_kind ?? "remote_api",
-        servingSource:
-          selectedCandidate?.identity.serving_source ?? error.executionFamily ?? "remote-service",
-        region: selectedCandidate?.identity.region ?? null,
-        lifecycleStateAtRequest: selectedCandidate?.status ?? "unknown",
-        healthStatusAtRequest: selectedProviderAccount?.healthStatus ?? null,
-        routingMode: requestRoutingMode?.effectiveMode ?? null,
-        selectedStrategy: plan.routingRequest.strategy,
-        sourceClient,
-        executionFamily: error.executionFamily,
-        adapterFamily: error.adapterFamily,
-        requestPayloadBytes: payloadBytes.ingress,
-        ingressPayloadBytes: payloadBytes.ingress,
-        translatedPayloadBytes: payloadBytes.translated,
-        providerCanonicalPayloadBytes: payloadBytes.providerCanonical,
-        providerWirePayloadBytes: payloadBytes.providerWire,
-        responsePayloadBytes: payloadBytes.providerResponse,
-        retryCount: executionSemanticsReceipt.retryCount,
-        rerouteCount: executionSemanticsReceipt.rerouteCount,
-        cooldownDecision: executionSemanticsReceipt.cooldownDecision,
-        idempotencyDecision: "not_needed",
-        toolSideEffectState: "none",
-        toolingUsed: Boolean(plan.executionRequest.tools?.length),
-        cacheState: "unknown",
-        roleIds: telemetrySnapshot.roleIds,
-        eligibleEndpointIds,
-        eligibleModelIds,
-        candidateCostSnapshot: telemetrySnapshot.candidateCostSnapshot,
-        selectedPricingSnapshot: telemetrySnapshot.selectedPricingSnapshot,
-        selectedUncachedCostUsd: telemetrySnapshot.selectedUncachedCostUsd,
-        baselineMaxEligibleCostUsd: telemetrySnapshot.baselineMaxEligibleCostUsd,
-        routingCostSavingsUsd: telemetrySnapshot.routingCostSavingsUsd,
-        cacheCostSavingsUsd: telemetrySnapshot.cacheCostSavingsUsd,
-        totalAvoidedCostUsd: telemetrySnapshot.totalAvoidedCostUsd,
-        costBaselineSource: telemetrySnapshot.costBaselineSource,
-        costSavingsSupport: telemetrySnapshot.costSavingsSupport,
-        samplingRate: failureObservation.privacyReceipt.samplingRate,
-        retentionTtlHours: failureObservation.privacyReceipt.retentionTtlHours,
-        retainUntil: failureObservation.privacyReceipt.retainUntil,
-        redactionLevel: capturePolicy.redactionLevel,
-        retentionClass: capturePolicy.retentionClass,
-        structuredInspectionMode: capturePolicy.structuredInspectionMode,
-        rawCaptureAvailable: capturePolicy.rawCaptureAvailable,
-        structuredInspectionAvailable: capturePolicy.structuredInspectionAvailable,
-        dimensions: selectedEndpointDimensions,
-        observation: failureObservation,
-        ...(localGraphStore ? { graphStore: localGraphStore } : {}),
-      });
+      const persisted = persistFailureTelemetrySafely(() =>
+        persistRuntimeTelemetryFailure({
+          databasePath: initialization.databasePath,
+          requestId,
+          routingDecisionId,
+          endpointId: selectedEndpointId,
+          reasoningEffort: selectedReasoningEffort,
+          effortSource: selectedEffortSource,
+          modelId: selectedModelId ?? undefined,
+          requestedModelId: executionOptions?.requestedModel ?? selectedModelId,
+          selectedModelId,
+          requestOperation: executionOptions?.requestOperation ?? "chat",
+          statusCode: error.statusCode,
+          errorClass: error.errorClass,
+          latencyMs: failureLatencyMs,
+          /**
+           * Run 101 addendum 23: the failure row must carry what the client actually received. The builder used to
+           * write a literal zero, so a response that had streamed 789 chunks was recorded (and read by this operator)
+           * as `streamTextDeltaCount: 0` - the number that made a post-content drop look like a pre-content failure
+           * for two repair cycles. This is the count of chunks that carried content or tool calls.
+           */
+          streamTextDeltaCount: deliveredSubstantiveChunkCount,
+          clientRequestId: executionOptions?.requestOptions?.clientRequestId ?? null,
+          requestClass: toPersistedTrafficClass(
+            executionOptions?.requestOptions?.executionTrafficClass,
+          ),
+          sourceType,
+          providerKind: selectedCandidate?.identity.provider_kind ?? null,
+          providerFamily: error.providerFamily,
+          vendorId: error.vendorId ?? null,
+          providerId: error.providerId,
+          providerAccountId:
+            selectedProviderAccount?.providerAccountId ??
+            selectedRuntimeEndpoint?.providerAccountId ??
+            null,
+          endpointKind: selectedCandidate?.identity.endpoint_kind ?? "remote_api",
+          servingSource:
+            selectedCandidate?.identity.serving_source ?? error.executionFamily ?? "remote-service",
+          region: selectedCandidate?.identity.region ?? null,
+          lifecycleStateAtRequest: selectedCandidate?.status ?? "unknown",
+          healthStatusAtRequest: selectedProviderAccount?.healthStatus ?? null,
+          routingMode: requestRoutingMode?.effectiveMode ?? null,
+          selectedStrategy: plan.routingRequest.strategy,
+          sourceClient,
+          executionFamily: error.executionFamily,
+          adapterFamily: error.adapterFamily,
+          requestPayloadBytes: payloadBytes.ingress,
+          ingressPayloadBytes: payloadBytes.ingress,
+          translatedPayloadBytes: payloadBytes.translated,
+          providerCanonicalPayloadBytes: payloadBytes.providerCanonical,
+          providerWirePayloadBytes: payloadBytes.providerWire,
+          responsePayloadBytes: payloadBytes.providerResponse,
+          retryCount: executionSemanticsReceipt.retryCount,
+          rerouteCount: executionSemanticsReceipt.rerouteCount,
+          cooldownDecision: executionSemanticsReceipt.cooldownDecision,
+          idempotencyDecision: "not_needed",
+          toolSideEffectState: "none",
+          toolingUsed: Boolean(plan.executionRequest.tools?.length),
+          cacheState: "unknown",
+          roleIds: telemetrySnapshot.roleIds,
+          eligibleEndpointIds,
+          eligibleModelIds,
+          candidateCostSnapshot: telemetrySnapshot.candidateCostSnapshot,
+          selectedPricingSnapshot: telemetrySnapshot.selectedPricingSnapshot,
+          selectedUncachedCostUsd: telemetrySnapshot.selectedUncachedCostUsd,
+          baselineMaxEligibleCostUsd: telemetrySnapshot.baselineMaxEligibleCostUsd,
+          routingCostSavingsUsd: telemetrySnapshot.routingCostSavingsUsd,
+          cacheCostSavingsUsd: telemetrySnapshot.cacheCostSavingsUsd,
+          totalAvoidedCostUsd: telemetrySnapshot.totalAvoidedCostUsd,
+          costBaselineSource: telemetrySnapshot.costBaselineSource,
+          costSavingsSupport: telemetrySnapshot.costSavingsSupport,
+          samplingRate: failureObservation.privacyReceipt.samplingRate,
+          retentionTtlHours: failureObservation.privacyReceipt.retentionTtlHours,
+          retainUntil: failureObservation.privacyReceipt.retainUntil,
+          redactionLevel: capturePolicy.redactionLevel,
+          retentionClass: capturePolicy.retentionClass,
+          structuredInspectionMode: capturePolicy.structuredInspectionMode,
+          rawCaptureAvailable: capturePolicy.rawCaptureAvailable,
+          structuredInspectionAvailable: capturePolicy.structuredInspectionAvailable,
+          dimensions: selectedEndpointDimensions,
+          observation: failureObservation,
+          ...(localGraphStore ? { graphStore: localGraphStore } : {}),
+        }),
+      );
       if (options.trackBPostObservation) {
         try {
           await options.trackBPostObservation(failureObservation);
@@ -27640,8 +27906,10 @@ export async function createRuntimeBridgeBackend(
           console.error("Track B failure post-observation processing failed", postObservationError);
         }
       }
-      markRuntimeTelemetryPersisted(error);
-      emitTelemetryUpdate(requestId);
+      if (persisted) {
+        markRuntimeTelemetryPersisted(error);
+        emitTelemetryUpdate(requestId);
+      }
     };
     const executeCurrentExecutionRequest = async (
       executionRequest: RuntimeExecutionRequest,
@@ -28122,6 +28390,15 @@ export async function createRuntimeBridgeBackend(
         decisionPortfolio.entries.find(
           (entry) => entry.endpointId === routed.decision.chosen_endpoint_id,
         )?.profileRevision ?? null;
+      /**
+       * Run 104 / R14 (addendum-03): the declared execution class travels into the observation sample, so the
+       * telemetry row and the observation/sample row for the same request agree. An unresolved class is `live`.
+       */
+      const declaredTrafficClass = toPersistedTrafficClass(
+        executionOptions?.requestOptions?.executionTrafficClass,
+      );
+      const observedTrafficClass =
+        declaredTrafficClass === "unknown" ? "live" : declaredTrafficClass;
       const baseBundle = createRuntimeObservationBundle({
         decision: {
           ...routed.decision,
@@ -28129,6 +28406,7 @@ export async function createRuntimeBridgeBackend(
           profile_revision: decisionProfileRevision,
         },
         clientRequestId: executionOptions?.requestOptions?.clientRequestId,
+        trafficClass: observedTrafficClass,
         reasoningEffort: effectiveEffort.reasoningEffort,
         effortSource: effectiveEffort.effortSource,
         // Run 98 addendum 40 (L1): record the provider breakdown beside the historical header time,
@@ -28272,6 +28550,8 @@ export async function createRuntimeBridgeBackend(
             correlationId,
           })
         : undefined;
+      // Run 104 R6: the observation bundle carries the same classification the routed capture records.
+      const routeClassification = buildRequestClassificationForPlan(plan);
       const bundle = Object.freeze({
         ...baseBundle,
         providerEvidence: buildProviderEvidenceFromObservation(
@@ -28330,11 +28610,14 @@ export async function createRuntimeBridgeBackend(
           : {}),
         // Run 99 R33 (addendum 19 S33): the capture records the task family the request was
         // routed for, so replay, evaluation, learning and the advisory can all be scoped to it.
-        ...(plan.routingRequest.taskType ? { taskTypeId: plan.routingRequest.taskType } : {}),
+        // Run 104 R6: the flat family is the one the classification resolved, so the bare key and the
+        // classification object below can never disagree.
+        ...(routeClassification?.taskTypeId ? { taskTypeId: routeClassification.taskTypeId } : {}),
         ...(taxonomyManifest.taxonomyVersion
           ? { taxonomyVersion: taxonomyManifest.taxonomyVersion }
           : {}),
         ...(run88Correlation ? { run88Correlation } : {}),
+        classification: routeClassification,
       });
       let artifactRef:
         | { readonly scopeId: string; readonly artifactId: string; readonly contentHash: string }
@@ -28363,28 +28646,24 @@ export async function createRuntimeBridgeBackend(
             : Array.isArray(requestBody.input)
               ? requestBody.input
               : [];
+          // Run 104 R6: one classification per capture, shared by the bare family key and the object.
+          const routeCaptureClassification = buildRequestClassificationForPlan(plan);
           const routeCapturePayload = {
             requestId,
             routingDecisionId,
             endpointId: execution.target.endpointId,
             // Run 99 R33 (S34 live finding): the capture records the task family, so the recovered
             // capture read by the supervised replay can carry it into the comparison.
-            ...(plan.routingRequest.taskType ? { taskTypeId: plan.routingRequest.taskType } : {}),
+            ...(routeCaptureClassification?.taskTypeId
+              ? { taskTypeId: routeCaptureClassification.taskTypeId }
+              : {}),
             ...(taxonomyManifest.taxonomyVersion
               ? { taxonomyVersion: taxonomyManifest.taxonomyVersion }
               : {}),
             // Run 99 close-out (addendas 19-21 S33/D1/D2): the capture records the whole
             // classification — family, role, tool classes and the taxonomy identity — not only the
             // family string, so the evidence is keyed by the taxonomy it was classified against.
-            classification: buildRequestClassification({
-              taskTypeId: plan.routingRequest.taskType ?? null,
-              roleId:
-                plan.routingRequest.requestedRoleId ??
-                plan.taxonomyIdentity?.roleId ??
-                plan.routingRequest.roleModelIntent?.role?.id ??
-                null,
-              toolClasses: plan.routingRequest.roleModelIntent?.toolClasses ?? null,
-            }),
+            classification: routeCaptureClassification,
             // Run 99 close-out (addendum 21 §4 S33): the comparability key's scorer-set identity is
             // a property of this runtime, so it is known before the request is even dispatched. The
             // two digests and the judge order policy are resolved when the evaluation case is built
@@ -29096,6 +29375,7 @@ export async function createRuntimeBridgeBackend(
           toolingUsed: Boolean(body.tools?.length),
           executionStartedAtMs,
           error,
+          requestClass: requestOptions?.executionTrafficClass,
         });
       try {
         executionStartedAtMs = Date.now();
@@ -29452,6 +29732,7 @@ export async function createRuntimeBridgeBackend(
             toolingUsed: Boolean(body.tools?.length),
             executionStartedAtMs,
             error,
+            requestClass: requestOptions?.executionTrafficClass,
           });
         }
         throw error;
@@ -30278,6 +30559,12 @@ export async function createRuntimeBridgeBackend(
     async rollbackLearningPack(body: Record<string, unknown>): Promise<unknown> {
       return (
         options.rollbackLearningPack?.(body) ?? unavailableOperatorPayload("learning pack rollback")
+      );
+    },
+    async materializeRouteLadders(body: Record<string, unknown>): Promise<unknown> {
+      return (
+        options.materializeRouteLadders?.(body) ??
+        unavailableOperatorPayload("learning route ladder materialization")
       );
     },
     async recordLearningGuardrailBreach(body: Record<string, unknown>): Promise<unknown> {

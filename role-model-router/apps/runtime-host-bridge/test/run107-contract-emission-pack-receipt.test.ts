@@ -24,7 +24,7 @@ import {
 const liveShapedPack = {
   packId: "pack-18f93505252e5213848700b148004f1d5a8d2ad3c41f90757ac50f6562ea8e95",
   version: 1,
-  // A pack whose scope carries the runtime's own taxonomy member - the shape that fails today.
+  // Historical live shape: Run 105 now permits this taxonomy provenance; the raw envelope is still absent.
   scope: {
     endpointId: "moonshot.personal.kimi-code.global.kimi-k3",
     taskTypeId: "coder.review",
@@ -67,7 +67,35 @@ const liveShapedReceipt = {
 test("run107 P13 the live record shapes are what the closed contracts refuse", () => {
   const pack = validateV11ContractDefinition("routeLearning", "packCandidate", liveShapedPack);
   expect(pack.valid).toBe(false);
-  expect(pack.errors.join(" ")).toMatch(/scope/i);
+  // Run 105 R1/A1 permits taxonomyVersion as scope provenance; the raw row still lacks its envelope.
+  expect(pack.errors.join(" ")).toMatch(/required property.*contract/i);
+
+  const builtPack = buildExperiencePackCandidate({
+    pack: liveShapedPack,
+    channel: "stage",
+    scopeId: "standalone-runtime-stage",
+  });
+  expect(
+    validateV11ContractDefinition("routeLearning", "packCandidate", {
+      ...builtPack,
+      scope: { ...builtPack.scope, taxonomyVersion: liveShapedPack.scope.taxonomyVersion },
+    }).valid,
+  ).toBe(true);
+  const { scope: _scope, ...missingScopePack } = builtPack;
+  const missingScope = validateV11ContractDefinition(
+    "routeLearning",
+    "packCandidate",
+    missingScopePack,
+  );
+  expect(missingScope.valid).toBe(false);
+  expect(missingScope.errors.join(" ")).toMatch(/required property.*scope/i);
+
+  const unknownScopeMember = validateV11ContractDefinition("routeLearning", "packCandidate", {
+    ...builtPack,
+    scope: { ...builtPack.scope, unknownScopeMember: "forbidden" },
+  });
+  expect(unknownScopeMember.valid).toBe(false);
+  expect(unknownScopeMember.errors.join(" ")).toMatch(/scope.*additional/i);
   const receipt = validateV11ContractDefinition(
     "routeLearning",
     "validationReceipt",
@@ -75,6 +103,16 @@ test("run107 P13 the live record shapes are what the closed contracts refuse", (
   );
   expect(receipt.valid).toBe(false);
   expect(receipt.errors.join(" ")).toMatch(/familyEvidence|additional/i);
+  const receiptWithExtra = validateV11ContractDefinition("routeLearning", "validationReceipt", {
+    ...buildRouteLearningValidationReceipt({
+      receipt: liveShapedReceipt,
+      channel: "stage",
+      scopeId: "standalone-runtime-stage",
+    }),
+    familyEvidence: liveShapedReceipt.familyEvidence,
+  });
+  expect(receiptWithExtra.valid).toBe(false);
+  expect(receiptWithExtra.errors.join(" ")).toMatch(/additional/i);
 });
 
 test("run107 P13 the built pack candidate passes the repo's own validator and keeps the documented identity", () => {

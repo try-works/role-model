@@ -1,0 +1,11 @@
+{
+  "rows": 600,
+  "mixed_cached": 576,
+  "mixed_rate_pct": 96.0,
+  "live_rows": 597,
+  "live_cached": 576,
+  "live_rate_pct": 96.5,
+  "excluded_rows": 3,
+  "classes": "live_request=600",
+  "id_families": "bench=2, replay=1, req=597"
+}

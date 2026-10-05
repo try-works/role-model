@@ -1,0 +1,14 @@
+✔ A2: rankScore is the signed sum of weighted verdicts (21.6257ms)
+✔ A2: order desc by rankScore; ties keep the deterministic key order (4.2126ms)
+✔ A2: the comparator is a total order on the full key tuple (51.7212ms)
+✔ A2: head-to-head resolves a rankScore tie before losses/wins/count (1.8111ms)
+✔ A2: 50 shuffles produce the identical ladder (55.6986ms)
+✔ A2: the rung list carries { endpointId, rank, status } with rank from 1 (1.2079ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1588.8172

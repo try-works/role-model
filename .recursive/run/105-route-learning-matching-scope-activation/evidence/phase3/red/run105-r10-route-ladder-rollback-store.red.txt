@@ -1,0 +1,69 @@
+(node:17828) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✖ run105 R10: the operator toggle is reversible, keeps the reason, and pauses replay while ON (78.2147ms)
+✖ run105 R10: the toggle touches one task only (per-(role, task) isolation) (76.7876ms)
+✔ run105 R10/D8: the toggle writes only the ladder row - no pack, no validation receipt (62.9946ms)
+✖ run105 R8: mark-ladder-eligible recomputes nextEligibleAtMs without touching rungs or version (55.4461ms)
+✖ run105 R8/E: list-route-ladders enumerates the scope rows E renders (75.2062ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 1
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 588.619
+
+✖ failing tests:
+
+test at tests\track-b\run105-r10-route-ladder-rollback-store.test.mjs:46:1
+✖ run105 R10: the operator toggle is reversible, keeps the reason, and pauses replay while ON (78.2147ms)
+  TypeError: Cannot read properties of undefined (reading 'on')
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/105-route-learning-matching-scope-activation/tests/track-b/run105-r10-route-ladder-rollback-store.test.mjs:57:32)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
+
+test at tests\track-b\run105-r10-route-ladder-rollback-store.test.mjs:85:1
+✖ run105 R10: the toggle touches one task only (per-(role, task) isolation) (76.7876ms)
+  TypeError: Cannot read properties of undefined (reading 'on')
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/105-route-learning-matching-scope-activation/tests/track-b/run105-r10-route-ladder-rollback-store.test.mjs:102:35)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7)
+
+test at tests\track-b\run105-r10-route-ladder-rollback-store.test.mjs:129:1
+✖ run105 R8: mark-ladder-eligible recomputes nextEligibleAtMs without touching rungs or version (55.4461ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + undefined
+  - 1800000000000
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/105-route-learning-matching-scope-activation/tests/track-b/run105-r10-route-ladder-rollback-store.test.mjs:139:12)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: 1800000000000,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\track-b\run105-r10-route-ladder-rollback-store.test.mjs:156:1
+✖ run105 R8/E: list-route-ladders enumerates the scope rows E renders (75.2062ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + undefined
+  - 'available'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/105-route-learning-matching-scope-activation/tests/track-b/run105-r10-route-ladder-rollback-store.test.mjs:162:12)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: 'available',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

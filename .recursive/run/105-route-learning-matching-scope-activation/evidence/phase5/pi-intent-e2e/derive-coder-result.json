@@ -1,0 +1,1182 @@
+{
+  "ticks": [
+    {
+      "status": 200,
+      "body": {
+        "action": "resume",
+        "status": {
+          "ticks": 85,
+          "running": true,
+          "paused": false,
+          "lastOutcome": "ok",
+          "lastError": null,
+          "lastProcessedAtMs": 1791074510038,
+          "budget": {
+            "window": "2026-10-04",
+            "counterfactuals": 0,
+            "reservedCounterfactuals": 0,
+            "reservedDispatches": 0,
+            "dispatches": 22,
+            "counterfactualLimit": 100,
+            "dispatchLimit": 300,
+            "enforced": false
+          },
+          "lastDispositions": 1,
+          "lastExpiredJobs": 0,
+          "lastResumedEvaluations": 0,
+          "lastReconciledEvaluations": 0,
+          "lastStrandedEvaluations": 0,
+          "lastReclaimedEvaluations": 0,
+          "lastRecoveredHandoffs": 0,
+          "focusTaskKey": "coder\u0000coder.edit",
+          "focusRemaining": 1,
+          "challengeInFlight": false,
+          "lastUnclassifiedCaptures": 32
+        }
+      }
+    },
+    {
+      "status": 200,
+      "body": {
+        "action": "resume",
+        "status": {
+          "ticks": 85,
+          "running": true,
+          "paused": false,
+          "lastOutcome": "ok",
+          "lastError": null,
+          "lastProcessedAtMs": 1791074510038,
+          "budget": {
+            "window": "2026-10-04",
+            "counterfactuals": 0,
+            "reservedCounterfactuals": 0,
+            "reservedDispatches": 0,
+            "dispatches": 22,
+            "counterfactualLimit": 100,
+            "dispatchLimit": 300,
+            "enforced": false
+          },
+          "lastDispositions": 1,
+          "lastExpiredJobs": 0,
+          "lastResumedEvaluations": 0,
+          "lastReconciledEvaluations": 0,
+          "lastStrandedEvaluations": 0,
+          "lastReclaimedEvaluations": 0,
+          "lastRecoveredHandoffs": 0,
+          "focusTaskKey": "coder\u0000coder.edit",
+          "focusRemaining": 1,
+          "challengeInFlight": false,
+          "lastUnclassifiedCaptures": 32
+        }
+      }
+    },
+    {
+      "status": 200,
+      "body": {
+        "action": "resume",
+        "status": {
+          "ticks": 85,
+          "running": true,
+          "paused": false,
+          "lastOutcome": "ok",
+          "lastError": null,
+          "lastProcessedAtMs": 1791074510038,
+          "budget": {
+            "window": "2026-10-04",
+            "counterfactuals": 0,
+            "reservedCounterfactuals": 0,
+            "reservedDispatches": 0,
+            "dispatches": 22,
+            "counterfactualLimit": 100,
+            "dispatchLimit": 300,
+            "enforced": false
+          },
+          "lastDispositions": 1,
+          "lastExpiredJobs": 0,
+          "lastResumedEvaluations": 0,
+          "lastReconciledEvaluations": 0,
+          "lastStrandedEvaluations": 0,
+          "lastReclaimedEvaluations": 0,
+          "lastRecoveredHandoffs": 0,
+          "focusTaskKey": "coder\u0000coder.edit",
+          "focusRemaining": 1,
+          "challengeInFlight": false,
+          "lastUnclassifiedCaptures": 32
+        }
+      }
+    },
+    {
+      "status": 200,
+      "body": {
+        "action": "resume",
+        "status": {
+          "ticks": 85,
+          "running": true,
+          "paused": false,
+          "lastOutcome": "ok",
+          "lastError": null,
+          "lastProcessedAtMs": 1791074510038,
+          "budget": {
+            "window": "2026-10-04",
+            "counterfactuals": 0,
+            "reservedCounterfactuals": 0,
+            "reservedDispatches": 0,
+            "dispatches": 22,
+            "counterfactualLimit": 100,
+            "dispatchLimit": 300,
+            "enforced": false
+          },
+          "lastDispositions": 1,
+          "lastExpiredJobs": 0,
+          "lastResumedEvaluations": 0,
+          "lastReconciledEvaluations": 0,
+          "lastStrandedEvaluations": 0,
+          "lastReclaimedEvaluations": 0,
+          "lastRecoveredHandoffs": 0,
+          "focusTaskKey": "coder\u0000coder.edit",
+          "focusRemaining": 1,
+          "challengeInFlight": false,
+          "lastUnclassifiedCaptures": 32
+        }
+      }
+    }
+  ],
+  "coder": [
+    {
+      "roleId": "coder",
+      "taskTypeId": "coder.edit",
+      "taxonomyVersion": "1.0.0-alpha.1",
+      "topEndpoints": [
+        {
+          "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+          "rank": 1,
+          "status": "available"
+        },
+        {
+          "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+          "rank": 2,
+          "status": "available"
+        }
+      ],
+      "rungs": [
+        {
+          "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+          "rank": 1,
+          "status": "available"
+        },
+        {
+          "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+          "rank": 2,
+          "status": "available"
+        }
+      ],
+      "rankedCount": 2,
+      "completeness": {
+        "admitted": 2,
+        "configured": 3
+      },
+      "state": "partial",
+      "active": true,
+      "rolledBack": {
+        "on": false,
+        "reason": null,
+        "atMs": null
+      },
+      "ladderVersion": 1,
+      "nextEligibleAtMs": 1791074506336,
+      "configuredSource": "runtime_endpoints"
+    }
+  ],
+  "records": [
+    {
+      "recordId": "validation-e73995798bc19dce0bdfdb91832016d4fb62e71bc84ebfc1f5670a5811b274d1",
+      "kind": "validation_receipt",
+      "state": "insufficient_evidence",
+      "scopeId": "standalone-runtime-dev",
+      "record": {
+        "baselineId": "sha256:d0e35ee6a81b2122a825ef8e028fa7d9881872fa7c2793b01d1142260b02fd52",
+        "bootstrapSeed": 0,
+        "boundaryProtocolVersion": "1.1",
+        "candidateId": "shadow-52572d3743080afccbd3e101a56cafe97d1228fda98b52b27e96b06345b8d949",
+        "candidateType": "experience",
+        "caseManifestRef": "manifest:learning-pass:1:73",
+        "confidenceLower": 1,
+        "confidenceUpper": 1,
+        "contract": "RouteLearningValidationReceiptV1",
+        "createdAt": "2026-10-04T00:29:30.348Z",
+        "decision": "insufficient_evidence",
+        "estimatorVersion": "paired-cluster-bootstrap@1",
+        "familyEvidence": {
+          "baselinePackageId": "sha256:d0e35ee6a81b2122a825ef8e028fa7d9881872fa7c2793b01d1142260b02fd52",
+          "causalClaim": "observational",
+          "comparable": {
+            "candidates": [
+              "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+              "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+            ],
+            "cases": 2
+          },
+          "decisiveComparisons": 1,
+          "developmentComparisons": 0,
+          "distinctCaptures": 1,
+          "drift": null,
+          "effectiveDecisiveComparisons": 0.9,
+          "effectiveDevelopmentComparisons": 0,
+          "effectiveHoldoutComparisons": 0.9,
+          "effectiveSampleSize": 0.9,
+          "evidenceClasses": {
+            "counterfactual_replay": 1
+          },
+          "excludedByReason": {
+            "incomparable:single_outcome": 3
+          },
+          "floorMet": false,
+          "hierarchy": {
+            "confidence": 0.1525,
+            "effectiveN": 0.9,
+            "fallbackLevel": null,
+            "level": "task_family",
+            "priorMean": null,
+            "priorStrength": 5,
+            "shrunkValue": 0
+          },
+          "holdoutComparisons": 1,
+          "judgeConsistency": {
+            "belowFloor": false,
+            "consistency": 1,
+            "floor": 0.5,
+            "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash",
+            "orderChecks": 4
+          },
+          "maxCaptureShare": 1,
+          "propensityCoverage": 0,
+          "taskTypeId": "educator.example.generate",
+          "taxonomyVersion": "1.0.0-alpha.1"
+        },
+        "guardrailsPassed": true,
+        "holdoutSampleCount": 2,
+        "qualityDelta": 1,
+        "receiptId": "validation-e73995798bc19dce0bdfdb91832016d4fb62e71bc84ebfc1f5670a5811b274d1",
+        "runtimeChannel": "development",
+        "scopeId": "standalone-runtime-dev",
+        "splitHash": "ce304de0ff95d83c01abdbb4dce06c933d9a1dd7a9f9d889854b1f78644f9dbd"
+      },
+      "identity": {
+        "judgeEndpointId": null,
+        "scorerSetVersion": "run96-semantic-criteria@3+16364bdcbc6f"
+      },
+      "evidence": {
+        "comparisonId": "comparison:supervised-replay:2b543d8e59eec2c8a1d768e8b41d159905c8b44f31cbb4f54ec1db8297b60a62",
+        "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash",
+        "judgeSource": "controller",
+        "outcome": "source",
+        "members": [
+          {
+            "candidateRef": "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+            "role": "source",
+            "score": 0.5,
+            "disposition": "positive",
+            "dimensionScores": [
+              {
+                "scorerKey": "role_model_pairwise_judge.battle@2+ea60d2b24ad8:sha256:cad844e19027898ac0c661b24f7e56eff54a3713e4f09015bed31576d97404e7:task_specific_quality",
+                "score": 1
+              },
+              {
+                "scorerKey": "run96-semantic-criteria@3+16364bdcbc6f:sha256:744f6dbe130fb06cec11ebde1f23bc9b92578460f702db0c3b6ae89adaea3021:correctness",
+                "score": 0
+              }
+            ]
+          },
+          {
+            "candidateRef": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+            "role": "counterfactual",
+            "score": 0.25,
+            "disposition": "negative",
+            "dimensionScores": [
+              {
+                "scorerKey": "role_model_pairwise_judge.battle@2+ea60d2b24ad8:sha256:cad844e19027898ac0c661b24f7e56eff54a3713e4f09015bed31576d97404e7:task_specific_quality",
+                "score": 0
+              },
+              {
+                "scorerKey": "run96-semantic-criteria@3+16364bdcbc6f:sha256:744f6dbe130fb06cec11ebde1f23bc9b92578460f702db0c3b6ae89adaea3021:correctness",
+                "score": 0.5
+              }
+            ]
+          }
+        ],
+        "winnerCandidateRef": null,
+        "replayRef": null,
+        "captureRef": null,
+        "verdict": "insufficient_evidence",
+        "validationRef": "validation-e73995798bc19dce0bdfdb91832016d4fb62e71bc84ebfc1f5670a5811b274d1",
+        "qualityDelta": 1,
+        "claim": "deepseek.personal.deepseek-api-key.global.deepseek-flash-max outperformed deepseek.personal.deepseek-api-key.global.deepseek-v4-pro for decision-req-07497f2e-bfe2-4faf-9271-5f06cbab19ac:holdout on run96-semantic-criteria@3+16364bdcbc6f by 1.00 (holdout art",
+        "counts": {
+          "comparisons": 1,
+          "decisive": 1,
+          "holdout": 1
+        },
+        "effectiveCounts": {
+          "decisive": 0.9,
+          "holdout": 0.9,
+          "development": 0
+        },
+        "floor": {
+          "minDecisiveComparisons": 3,
+          "minHoldoutComparisons": 1,
+          "minDistinctCaptures": 3
+        },
+        "countsState": "reported",
+        "floorState": "reported"
+      }
+    },
+    {
+      "recordId": "validation-85a9e288faa5ceab859ce2307d97a4c342ad771c03e485657d57393eae9d2635",
+      "kind": "validation_receipt",
+      "state": "insufficient_evidence",
+      "scopeId": "standalone-runtime-dev",
+      "record": {
+        "baselineId": "sha256:d7c5d770f2a4ada1794f68e33d81859f9b2f4e6b57427ad8947ffbb9b7b138ba",
+        "bootstrapSeed": 0,
+        "boundaryProtocolVersion": "1.1",
+        "candidateId": "shadow-0ff8e1e2df449cf72a6d8a19b52b49acba9eabbe187eb071c466d4fab663bba1",
+        "candidateType": "experience",
+        "caseManifestRef": "manifest:learning-pass:2:147",
+        "confidenceLower": 1,
+        "confidenceUpper": 1,
+        "contract": "RouteLearningValidationReceiptV1",
+        "createdAt": "2026-10-04T00:35:45.054Z",
+        "decision": "insufficient_evidence",
+        "estimatorVersion": "paired-cluster-bootstrap@1",
+        "familyEvidence": {
+          "baselinePackageId": "sha256:d7c5d770f2a4ada1794f68e33d81859f9b2f4e6b57427ad8947ffbb9b7b138ba",
+          "causalClaim": "observational",
+          "comparable": {
+            "candidates": [
+              "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+              "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+            ],
+            "cases": 4
+          },
+          "decisiveComparisons": 1,
+          "developmentComparisons": 0,
+          "distinctCaptures": 1,
+          "drift": null,
+          "effectiveDecisiveComparisons": 0.9,
+          "effectiveDevelopmentComparisons": 0,
+          "effectiveHoldoutComparisons": 0.9,
+          "effectiveSampleSize": 0.9,
+          "evidenceClasses": {
+            "counterfactual_replay": 1
+          },
+          "excludedByReason": {
+            "incomparable:single_outcome": 4
+          },
+          "floorMet": false,
+          "hierarchy": {
+            "confidence": 0.1525,
+            "effectiveN": 0.9,
+            "fallbackLevel": null,
+            "level": "task_family",
+            "priorMean": null,
+            "priorStrength": 5,
+            "shrunkValue": 0
+          },
+          "holdoutComparisons": 1,
+          "judgeConsistency": {
+            "belowFloor": false,
+            "consistency": 1,
+            "floor": 0.5,
+            "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash",
+            "orderChecks": 6
+          },
+          "maxCaptureShare": 1,
+          "propensityCoverage": 0,
+          "taskTypeId": "coder.edit",
+          "taxonomyVersion": "1.0.0-alpha.1"
+        },
+        "guardrailsPassed": true,
+        "holdoutSampleCount": 2,
+        "qualityDelta": 1,
+        "receiptId": "validation-85a9e288faa5ceab859ce2307d97a4c342ad771c03e485657d57393eae9d2635",
+        "runtimeChannel": "development",
+        "scopeId": "standalone-runtime-dev",
+        "splitHash": "727c0fc33258c9bcce3a91de7c90fd81e0539410b9b4f06abffb9bbe7000df56"
+      },
+      "identity": {
+        "judgeEndpointId": null,
+        "scorerSetVersion": "run96-semantic-criteria@3+16364bdcbc6f"
+      },
+      "evidence": {
+        "comparisonId": "comparison:supervised-replay:25471ecbd9b5b1fd5c5bbd602fa6301b78f1126dad60832021837e949d540356",
+        "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash",
+        "judgeSource": "controller",
+        "outcome": "source",
+        "members": [
+          {
+            "candidateRef": "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+            "role": "source",
+            "score": 0.5,
+            "disposition": "positive",
+            "dimensionScores": [
+              {
+                "scorerKey": "role_model_pairwise_judge.battle@2+ea60d2b24ad8:sha256:cad844e19027898ac0c661b24f7e56eff54a3713e4f09015bed31576d97404e7:task_specific_quality",
+                "score": 1
+              },
+              {
+                "scorerKey": "run96-semantic-criteria@3+16364bdcbc6f:sha256:744f6dbe130fb06cec11ebde1f23bc9b92578460f702db0c3b6ae89adaea3021:correctness",
+                "score": 0
+              }
+            ]
+          },
+          {
+            "candidateRef": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+            "role": "counterfactual",
+            "score": 0,
+            "disposition": "negative",
+            "dimensionScores": [
+              {
+                "scorerKey": "role_model_pairwise_judge.battle@2+ea60d2b24ad8:sha256:cad844e19027898ac0c661b24f7e56eff54a3713e4f09015bed31576d97404e7:task_specific_quality",
+                "score": 0
+              },
+              {
+                "scorerKey": "run96-semantic-criteria@3+16364bdcbc6f:sha256:744f6dbe130fb06cec11ebde1f23bc9b92578460f702db0c3b6ae89adaea3021:correctness",
+                "score": 0
+              }
+            ]
+          }
+        ],
+        "winnerCandidateRef": null,
+        "replayRef": null,
+        "captureRef": null,
+        "verdict": "insufficient_evidence",
+        "validationRef": "validation-85a9e288faa5ceab859ce2307d97a4c342ad771c03e485657d57393eae9d2635",
+        "qualityDelta": 1,
+        "claim": "deepseek.personal.deepseek-api-key.global.deepseek-flash-max outperformed deepseek.personal.deepseek-api-key.global.deepseek-v4-pro for decision-req-93157239-ef3c-4750-889a-6b6410c384d6:holdout on run96-semantic-criteria@3+16364bdcbc6f by 1.00 (holdout art",
+        "counts": {
+          "comparisons": 1,
+          "decisive": 1,
+          "holdout": 1
+        },
+        "effectiveCounts": {
+          "decisive": 0.9,
+          "holdout": 0.9,
+          "development": 0
+        },
+        "floor": {
+          "minDecisiveComparisons": 3,
+          "minHoldoutComparisons": 1,
+          "minDistinctCaptures": 3
+        },
+        "countsState": "reported",
+        "floorState": "reported"
+      }
+    },
+    {
+      "recordId": "validation-1e80d811b5d22307037a434cb0821ffb1053e400a660c0d642c6b7d7094e291f",
+      "kind": "validation_receipt",
+      "state": "insufficient_evidence",
+      "scopeId": "standalone-runtime-dev",
+      "record": {
+        "baselineId": "sha256:4efccd1827fc6f3573b71a7cce69017f0763d259f57c3db87b89e02a1c0ba43c",
+        "bootstrapSeed": 0,
+        "boundaryProtocolVersion": "1.1",
+        "candidateId": "shadow-e8a49e7a7a524a51ff01e5c2044e1b3b1a7fb883bdb13f6db5ef885282dbdc35",
+        "candidateType": "experience",
+        "caseManifestRef": "manifest:learning-pass:3:221",
+        "confidenceLower": 1,
+        "confidenceUpper": 1,
+        "contract": "RouteLearningValidationReceiptV1",
+        "createdAt": "2026-10-04T00:39:56.176Z",
+        "decision": "insufficient_evidence",
+        "estimatorVersion": "paired-cluster-bootstrap@1",
+        "familyEvidence": {
+          "baselinePackageId": "sha256:4efccd1827fc6f3573b71a7cce69017f0763d259f57c3db87b89e02a1c0ba43c",
+          "causalClaim": "observational",
+          "comparable": {
+            "candidates": [
+              "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+              "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+            ],
+            "cases": 6
+          },
+          "decisiveComparisons": 2,
+          "developmentComparisons": 0,
+          "distinctCaptures": 2,
+          "drift": null,
+          "effectiveDecisiveComparisons": 1.8,
+          "effectiveDevelopmentComparisons": 0,
+          "effectiveHoldoutComparisons": 1.8,
+          "effectiveSampleSize": 1.8,
+          "evidenceClasses": {
+            "counterfactual_replay": 2
+          },
+          "excludedByReason": {
+            "incomparable:single_outcome": 4
+          },
+          "floorMet": false,
+          "hierarchy": {
+            "confidence": 0.2647,
+            "effectiveN": 1.8,
+            "fallbackLevel": null,
+            "level": "task_family",
+            "priorMean": null,
+            "priorStrength": 5,
+            "shrunkValue": 0
+          },
+          "holdoutComparisons": 2,
+          "judgeConsistency": {
+            "belowFloor": false,
+            "consistency": 1,
+            "floor": 0.5,
+            "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash",
+            "orderChecks": 7
+          },
+          "maxCaptureShare": 0.5,
+          "propensityCoverage": 0,
+          "taskTypeId": "coder.edit",
+          "taxonomyVersion": "1.0.0-alpha.1"
+        },
+        "guardrailsPassed": true,
+        "holdoutSampleCount": 2,
+        "qualityDelta": 1,
+        "receiptId": "validation-1e80d811b5d22307037a434cb0821ffb1053e400a660c0d642c6b7d7094e291f",
+        "runtimeChannel": "development",
+        "scopeId": "standalone-runtime-dev",
+        "splitHash": "413073cf1aaebe6dc31f9ae34923d60c848f7fad766284c2b14e1523693068be"
+      },
+      "identity": {
+        "judgeEndpointId": null,
+        "scorerSetVersion": "run96-semantic-criteria@3+16364bdcbc6f"
+      },
+      "evidence": {
+        "comparisonId": "comparison:supervised-replay:9de7e5e55d70e35acefd204613118989b360124faddfe04aaa681ced6554ab11",
+        "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash",
+        "judgeSource": "controller",
+        "outcome": "source",
+        "members": [
+          {
+            "candidateRef": "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+            "role": "source",
+            "score": 1,
+            "disposition": "positive",
+            "dimensionScores": [
+              {
+                "scorerKey": "role_model_pairwise_judge.battle@2+ea60d2b24ad8:sha256:cad844e19027898ac0c661b24f7e56eff54a3713e4f09015bed31576d97404e7:task_specific_quality",
+                "score": 1
+              },
+              {
+                "scorerKey": "run96-semantic-criteria@3+16364bdcbc6f:sha256:744f6dbe130fb06cec11ebde1f23bc9b92578460f702db0c3b6ae89adaea3021:correctness",
+                "score": 1
+              }
+            ]
+          },
+          {
+            "candidateRef": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+            "role": "counterfactual",
+            "score": 0.5,
+            "disposition": "negative",
+            "dimensionScores": [
+              {
+                "scorerKey": "role_model_pairwise_judge.battle@2+ea60d2b24ad8:sha256:cad844e19027898ac0c661b24f7e56eff54a3713e4f09015bed31576d97404e7:task_specific_quality",
+                "score": 0
+              },
+              {
+                "scorerKey": "run96-semantic-criteria@3+16364bdcbc6f:sha256:744f6dbe130fb06cec11ebde1f23bc9b92578460f702db0c3b6ae89adaea3021:correctness",
+                "score": 1
+              }
+            ]
+          }
+        ],
+        "winnerCandidateRef": null,
+        "replayRef": null,
+        "captureRef": null,
+        "verdict": "insufficient_evidence",
+        "validationRef": "validation-1e80d811b5d22307037a434cb0821ffb1053e400a660c0d642c6b7d7094e291f",
+        "qualityDelta": 1,
+        "claim": "deepseek.personal.deepseek-api-key.global.deepseek-flash-max outperformed deepseek.personal.deepseek-api-key.global.deepseek-v4-pro for decision-req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39:holdout on run96-semantic-criteria@3+16364bdcbc6f by 1.00 (holdout art",
+        "counts": {
+          "comparisons": 2,
+          "decisive": 2,
+          "holdout": 2
+        },
+        "effectiveCounts": {
+          "decisive": 1.8,
+          "holdout": 1.8,
+          "development": 0
+        },
+        "floor": {
+          "minDecisiveComparisons": 3,
+          "minHoldoutComparisons": 1,
+          "minDistinctCaptures": 3
+        },
+        "countsState": "reported",
+        "floorState": "reported"
+      }
+    },
+    {
+      "recordId": "validation-2d8c8574645e2e02585ffa7547c50f67f253d61144217e8758db7a0ee8702c69",
+      "kind": "validation_receipt",
+      "state": "insufficient_evidence",
+      "scopeId": "standalone-runtime-dev",
+      "record": {
+        "baselineId": "sha256:e48cce655606edd8b94cc780dd6957ec58febed4f7dff3a3dd15277ebaa37c5b",
+        "bootstrapSeed": 0,
+        "boundaryProtocolVersion": "1.1",
+        "candidateId": "shadow-5f59a0b735c1e04c7996f402a132ee7135fead71ee07cd603d7ad34a9e79ec35",
+        "candidateType": "experience",
+        "caseManifestRef": "manifest:learning-pass:4:295",
+        "confidenceLower": 1,
+        "confidenceUpper": 1,
+        "contract": "RouteLearningValidationReceiptV1",
+        "createdAt": "2026-10-04T00:40:23.292Z",
+        "decision": "insufficient_evidence",
+        "estimatorVersion": "paired-cluster-bootstrap@1",
+        "familyEvidence": {
+          "baselinePackageId": "sha256:e48cce655606edd8b94cc780dd6957ec58febed4f7dff3a3dd15277ebaa37c5b",
+          "causalClaim": "observational",
+          "comparable": {
+            "candidates": [
+              "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+              "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+            ],
+            "cases": 8
+          },
+          "decisiveComparisons": 3,
+          "developmentComparisons": 0,
+          "distinctCaptures": 3,
+          "drift": null,
+          "effectiveDecisiveComparisons": 2.7,
+          "effectiveDevelopmentComparisons": 0,
+          "effectiveHoldoutComparisons": 2.7,
+          "effectiveSampleSize": 2.7,
+          "evidenceClasses": {
+            "counterfactual_replay": 3
+          },
+          "excludedByReason": {
+            "incomparable:single_outcome": 4
+          },
+          "floorMet": false,
+          "hierarchy": {
+            "confidence": 0.3506,
+            "effectiveN": 2.7,
+            "fallbackLevel": null,
+            "level": "task_family",
+            "priorMean": null,
+            "priorStrength": 5,
+            "shrunkValue": 0
+          },
+          "holdoutComparisons": 3,
+          "judgeConsistency": {
+            "belowFloor": false,
+            "consistency": 1,
+            "floor": 0.5,
+            "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash",
+            "orderChecks": 8
+          },
+          "maxCaptureShare": 0.3333,
+          "propensityCoverage": 0,
+          "taskTypeId": "coder.edit",
+          "taxonomyVersion": "1.0.0-alpha.1"
+        },
+        "guardrailsPassed": true,
+        "holdoutSampleCount": 2,
+        "qualityDelta": 1,
+        "receiptId": "validation-2d8c8574645e2e02585ffa7547c50f67f253d61144217e8758db7a0ee8702c69",
+        "runtimeChannel": "development",
+        "scopeId": "standalone-runtime-dev",
+        "splitHash": "5982f11e7d4665bd383e8729982d7a58835bd9945f44344dbedadb25f375b824"
+      },
+      "identity": {
+        "judgeEndpointId": null,
+        "scorerSetVersion": "run96-semantic-criteria@3+16364bdcbc6f"
+      },
+      "evidence": {
+        "comparisonId": "comparison:supervised-replay:e13e9c99ae845b4a2cd35cf33a5ea418390701f8406f37d5e6973253407f4f31",
+        "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash",
+        "judgeSource": "controller",
+        "outcome": "source",
+        "members": [
+          {
+            "candidateRef": "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+            "role": "source",
+            "score": 1,
+            "disposition": "positive",
+            "dimensionScores": [
+              {
+                "scorerKey": "role_model_pairwise_judge.battle@2+ea60d2b24ad8:sha256:cad844e19027898ac0c661b24f7e56eff54a3713e4f09015bed31576d97404e7:task_specific_quality",
+                "score": 1
+              },
+              {
+                "scorerKey": "run96-semantic-criteria@3+16364bdcbc6f:sha256:744f6dbe130fb06cec11ebde1f23bc9b92578460f702db0c3b6ae89adaea3021:correctness",
+                "score": 1
+              }
+            ]
+          },
+          {
+            "candidateRef": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+            "role": "counterfactual",
+            "score": 0.5,
+            "disposition": "negative",
+            "dimensionScores": [
+              {
+                "scorerKey": "role_model_pairwise_judge.battle@2+ea60d2b24ad8:sha256:cad844e19027898ac0c661b24f7e56eff54a3713e4f09015bed31576d97404e7:task_specific_quality",
+                "score": 0
+              },
+              {
+                "scorerKey": "run96-semantic-criteria@3+16364bdcbc6f:sha256:744f6dbe130fb06cec11ebde1f23bc9b92578460f702db0c3b6ae89adaea3021:correctness",
+                "score": 1
+              }
+            ]
+          }
+        ],
+        "winnerCandidateRef": null,
+        "replayRef": null,
+        "captureRef": null,
+        "verdict": "insufficient_evidence",
+        "validationRef": "validation-2d8c8574645e2e02585ffa7547c50f67f253d61144217e8758db7a0ee8702c69",
+        "qualityDelta": 1,
+        "claim": "deepseek.personal.deepseek-api-key.global.deepseek-flash-max outperformed deepseek.personal.deepseek-api-key.global.deepseek-v4-pro for decision-req-972390fb-a414-474b-b4f5-e9f53703f883:holdout on run96-semantic-criteria@3+16364bdcbc6f by 1.00 (holdout art",
+        "counts": {
+          "comparisons": 3,
+          "decisive": 3,
+          "holdout": 3
+        },
+        "effectiveCounts": {
+          "decisive": 2.7,
+          "holdout": 2.7,
+          "development": 0
+        },
+        "floor": {
+          "minDecisiveComparisons": 3,
+          "minHoldoutComparisons": 1,
+          "minDistinctCaptures": 3
+        },
+        "countsState": "reported",
+        "floorState": "reported"
+      }
+    },
+    {
+      "recordId": "validation-0a554318ea20b1134745ef08c06920ab2aa94d89f3712a190c4f710421063d5b",
+      "kind": "validation_receipt",
+      "state": "insufficient_evidence",
+      "scopeId": "standalone-runtime-dev",
+      "record": {
+        "baselineId": "sha256:fef7535cad285eb66a3537ca87b5e4d75bd9830d173b33e76cd8cce280964e5b",
+        "bootstrapSeed": 0,
+        "boundaryProtocolVersion": "1.1",
+        "candidateId": "shadow-daf2375bfef5de0989d19ed0bb0dee2a5d7abd46822ec628b1bcadbe396154de",
+        "candidateType": "experience",
+        "caseManifestRef": "manifest:learning-pass:1:73",
+        "confidenceLower": 1,
+        "confidenceUpper": 1,
+        "contract": "RouteLearningValidationReceiptV1",
+        "createdAt": "2026-10-04T00:40:44.647Z",
+        "decision": "insufficient_evidence",
+        "estimatorVersion": "paired-cluster-bootstrap@1",
+        "familyEvidence": {
+          "baselinePackageId": "sha256:fef7535cad285eb66a3537ca87b5e4d75bd9830d173b33e76cd8cce280964e5b",
+          "causalClaim": "observational",
+          "comparable": {
+            "candidates": [
+              "deepseek.personal.deepseek-api-key.global.deepseek-flash",
+              "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+            ],
+            "cases": 2
+          },
+          "decisiveComparisons": 1,
+          "developmentComparisons": 0,
+          "distinctCaptures": 1,
+          "drift": null,
+          "effectiveDecisiveComparisons": 0.9,
+          "effectiveDevelopmentComparisons": 0,
+          "effectiveHoldoutComparisons": 0.9,
+          "effectiveSampleSize": 0.9,
+          "evidenceClasses": {
+            "counterfactual_replay": 1
+          },
+          "excludedByReason": {
+            "incomparable:single_outcome": 4,
+            "package_not_involved": 4
+          },
+          "floorMet": false,
+          "hierarchy": {
+            "confidence": 0.1525,
+            "effectiveN": 0.9,
+            "fallbackLevel": null,
+            "level": "task_family",
+            "priorMean": null,
+            "priorStrength": 5,
+            "shrunkValue": 0
+          },
+          "holdoutComparisons": 1,
+          "maxCaptureShare": 1,
+          "propensityCoverage": 0,
+          "taskTypeId": "coder.edit",
+          "taxonomyVersion": "1.0.0-alpha.1"
+        },
+        "guardrailsPassed": true,
+        "holdoutSampleCount": 2,
+        "qualityDelta": 1,
+        "receiptId": "validation-0a554318ea20b1134745ef08c06920ab2aa94d89f3712a190c4f710421063d5b",
+        "runtimeChannel": "development",
+        "scopeId": "standalone-runtime-dev",
+        "splitHash": "f0594f04fe73697ca623b7e0d8945217b9847c20b6efcb3ae95534227b993637"
+      },
+      "identity": {
+        "judgeEndpointId": null,
+        "scorerSetVersion": "run96-semantic-criteria@3+16364bdcbc6f"
+      },
+      "evidence": {
+        "comparisonId": "comparison:supervised-replay:61c65a9de1086089e306bf4845c2361a767c251d6e85adbdf6b1586dfdb2985d",
+        "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+        "judgeSource": "controller",
+        "outcome": "source",
+        "members": [
+          {
+            "candidateRef": "deepseek.personal.deepseek-api-key.global.deepseek-flash",
+            "role": "source",
+            "score": 1,
+            "disposition": "positive",
+            "dimensionScores": [
+              {
+                "scorerKey": "role_model_pairwise_judge.battle@2+d1b8bb16b9be:sha256:84c1ecc7e9f795465d0cb2eb5f173fc6f3decb005e80bb18e244b17f5295b10a:task_specific_quality",
+                "score": 1
+              },
+              {
+                "scorerKey": "run96-semantic-criteria@3+16364bdcbc6f:sha256:744f6dbe130fb06cec11ebde1f23bc9b92578460f702db0c3b6ae89adaea3021:correctness",
+                "score": 1
+              }
+            ]
+          },
+          {
+            "candidateRef": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+            "role": "counterfactual",
+            "score": 0.5,
+            "disposition": "negative",
+            "dimensionScores": [
+              {
+                "scorerKey": "role_model_pairwise_judge.battle@2+d1b8bb16b9be:sha256:84c1ecc7e9f795465d0cb2eb5f173fc6f3decb005e80bb18e244b17f5295b10a:task_specific_quality",
+                "score": 0
+              },
+              {
+                "scorerKey": "run96-semantic-criteria@3+16364bdcbc6f:sha256:744f6dbe130fb06cec11ebde1f23bc9b92578460f702db0c3b6ae89adaea3021:correctness",
+                "score": 1
+              }
+            ]
+          }
+        ],
+        "winnerCandidateRef": null,
+        "replayRef": null,
+        "captureRef": null,
+        "verdict": "insufficient_evidence",
+        "validationRef": "validation-0a554318ea20b1134745ef08c06920ab2aa94d89f3712a190c4f710421063d5b",
+        "qualityDelta": 1,
+        "claim": "deepseek.personal.deepseek-api-key.global.deepseek-flash outperformed deepseek.personal.deepseek-api-key.global.deepseek-v4-pro for decision-replay-judge-67aeaacacd7aeaf6:holdout on run96-semantic-criteria@3+16364bdcbc6f by 1.00 (holdout artifact:d6d18cc64",
+        "counts": {
+          "comparisons": 1,
+          "decisive": 1,
+          "holdout": 1
+        },
+        "effectiveCounts": {
+          "decisive": 0.9,
+          "holdout": 0.9,
+          "development": 0
+        },
+        "floor": {
+          "minDecisiveComparisons": 3,
+          "minHoldoutComparisons": 1,
+          "minDistinctCaptures": 3
+        },
+        "countsState": "reported",
+        "floorState": "reported"
+      }
+    },
+    {
+      "recordId": "validation-0115c985affd2aa9bc49f3f52019f3b3d56b9fab1f9a239b7b01afc1e02165a7",
+      "kind": "validation_receipt",
+      "state": "insufficient_evidence",
+      "scopeId": "standalone-runtime-dev",
+      "record": {
+        "baselineId": "sha256:3439be559cb18c429991dc7610090eff351c6542d64e70cc771ef2fa65a9e408",
+        "bootstrapSeed": 0,
+        "boundaryProtocolVersion": "1.1",
+        "candidateId": "shadow-3d511ab3e83f55dc5097e3ed30665350c86d3d784183b0de96d67d21790ba9ae",
+        "candidateType": "experience",
+        "caseManifestRef": "manifest:learning-pass:6:369",
+        "confidenceLower": 1,
+        "confidenceUpper": 1,
+        "contract": "RouteLearningValidationReceiptV1",
+        "createdAt": "2026-10-04T00:41:20.600Z",
+        "decision": "insufficient_evidence",
+        "estimatorVersion": "paired-cluster-bootstrap@1",
+        "familyEvidence": {
+          "baselinePackageId": "sha256:3439be559cb18c429991dc7610090eff351c6542d64e70cc771ef2fa65a9e408",
+          "causalClaim": "observational",
+          "comparable": {
+            "candidates": [
+              "deepseek.personal.deepseek-api-key.global.deepseek-flash",
+              "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+              "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+            ],
+            "cases": 12
+          },
+          "decisiveComparisons": 5,
+          "developmentComparisons": 0,
+          "distinctCaptures": 4,
+          "drift": null,
+          "effectiveDecisiveComparisons": 4.5,
+          "effectiveDevelopmentComparisons": 0,
+          "effectiveHoldoutComparisons": 4.5,
+          "effectiveSampleSize": 4.5,
+          "evidenceClasses": {
+            "counterfactual_replay": 5
+          },
+          "excludedByReason": {
+            "incomparable:single_outcome": 4
+          },
+          "floorMet": false,
+          "hierarchy": {
+            "confidence": 0.4737,
+            "effectiveN": 4.5,
+            "fallbackLevel": null,
+            "level": "task_family",
+            "priorMean": null,
+            "priorStrength": 5,
+            "shrunkValue": 0
+          },
+          "holdoutComparisons": 5,
+          "judgeConsistency": {
+            "belowFloor": false,
+            "consistency": 1,
+            "floor": 0.5,
+            "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash",
+            "orderChecks": 9
+          },
+          "maxCaptureShare": 0.4,
+          "propensityCoverage": 0,
+          "taskTypeId": "coder.edit",
+          "taxonomyVersion": "1.0.0-alpha.1"
+        },
+        "guardrailsPassed": true,
+        "holdoutSampleCount": 2,
+        "qualityDelta": 1,
+        "receiptId": "validation-0115c985affd2aa9bc49f3f52019f3b3d56b9fab1f9a239b7b01afc1e02165a7",
+        "runtimeChannel": "development",
+        "scopeId": "standalone-runtime-dev",
+        "splitHash": "7db0ab7118380ce3aa1bac308eab4412b4c8ff91f2efbb86096125c25a3f45a5"
+      },
+      "identity": {
+        "judgeEndpointId": null,
+        "scorerSetVersion": "run96-semantic-criteria@3+16364bdcbc6f"
+      },
+      "evidence": {
+        "comparisonId": "comparison:supervised-replay:b72a808e256e68dcaae3f3a07b0d3554b9e65992c11a8dc3165ff6682a6432b9",
+        "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash",
+        "judgeSource": "controller",
+        "outcome": "candidate",
+        "members": [
+          {
+            "candidateRef": "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+            "role": "source",
+            "score": 0,
+            "disposition": "negative",
+            "dimensionScores": [
+              {
+                "scorerKey": "role_model_pairwise_judge.battle@2+ea60d2b24ad8:sha256:cad844e19027898ac0c661b24f7e56eff54a3713e4f09015bed31576d97404e7:task_specific_quality",
+                "score": 0
+              },
+              {
+                "scorerKey": "run96-semantic-criteria@3+16364bdcbc6f:sha256:744f6dbe130fb06cec11ebde1f23bc9b92578460f702db0c3b6ae89adaea3021:correctness",
+                "score": 0
+              }
+            ]
+          },
+          {
+            "candidateRef": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+            "role": "counterfactual",
+            "score": 0.5,
+            "disposition": "positive",
+            "dimensionScores": [
+              {
+                "scorerKey": "role_model_pairwise_judge.battle@2+ea60d2b24ad8:sha256:cad844e19027898ac0c661b24f7e56eff54a3713e4f09015bed31576d97404e7:task_specific_quality",
+                "score": 1
+              },
+              {
+                "scorerKey": "run96-semantic-criteria@3+16364bdcbc6f:sha256:744f6dbe130fb06cec11ebde1f23bc9b92578460f702db0c3b6ae89adaea3021:correctness",
+                "score": 0
+              }
+            ]
+          }
+        ],
+        "winnerCandidateRef": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "replayRef": null,
+        "captureRef": null,
+        "verdict": "insufficient_evidence",
+        "validationRef": "validation-0115c985affd2aa9bc49f3f52019f3b3d56b9fab1f9a239b7b01afc1e02165a7",
+        "qualityDelta": 1,
+        "claim": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro outperformed deepseek.personal.deepseek-api-key.global.deepseek-flash-max for decision-req-93157239-ef3c-4750-889a-6b6410c384d6:holdout on run96-semantic-criteria@3+16364bdcbc6f by 1.00 (holdout art",
+        "counts": {
+          "comparisons": 5,
+          "decisive": 5,
+          "holdout": 5
+        },
+        "effectiveCounts": {
+          "decisive": 4.5,
+          "holdout": 4.5,
+          "development": 0
+        },
+        "floor": {
+          "minDecisiveComparisons": 3,
+          "minHoldoutComparisons": 1,
+          "minDistinctCaptures": 3
+        },
+        "countsState": "reported",
+        "floorState": "reported"
+      }
+    },
+    {
+      "recordId": "validation-9f650c40d7c1b496b81d67c7913fa4f378959c58f7416f8975e5d2540121de44",
+      "kind": "validation_receipt",
+      "state": "insufficient_evidence",
+      "scopeId": "standalone-runtime-dev",
+      "record": {
+        "baselineId": "sha256:05d6ecb137ac3041173e22ddcbca4a47fb46393cd7dd8872312cc197febe3dcf",
+        "bootstrapSeed": 0,
+        "boundaryProtocolVersion": "1.1",
+        "candidateId": "shadow-a2bcbfdc230fac902f2ec773b37d80ce765b8c94788309ee9f69e66f9399dd9b",
+        "candidateType": "experience",
+        "caseManifestRef": "manifest:learning-pass:7:443",
+        "confidenceLower": 1,
+        "confidenceUpper": 1,
+        "contract": "RouteLearningValidationReceiptV1",
+        "createdAt": "2026-10-04T00:41:42.698Z",
+        "decision": "insufficient_evidence",
+        "estimatorVersion": "paired-cluster-bootstrap@1",
+        "familyEvidence": {
+          "baselinePackageId": "sha256:05d6ecb137ac3041173e22ddcbca4a47fb46393cd7dd8872312cc197febe3dcf",
+          "causalClaim": "observational",
+          "comparable": {
+            "candidates": [
+              "deepseek.personal.deepseek-api-key.global.deepseek-flash",
+              "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+              "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+            ],
+            "cases": 14
+          },
+          "decisiveComparisons": 6,
+          "developmentComparisons": 0,
+          "distinctCaptures": 5,
+          "drift": null,
+          "effectiveDecisiveComparisons": 5.4,
+          "effectiveDevelopmentComparisons": 0,
+          "effectiveHoldoutComparisons": 5.4,
+          "effectiveSampleSize": 5.4,
+          "evidenceClasses": {
+            "counterfactual_replay": 6
+          },
+          "excludedByReason": {
+            "incomparable:single_outcome": 4
+          },
+          "floorMet": false,
+          "hierarchy": {
+            "confidence": 0.5192,
+            "effectiveN": 5.4,
+            "fallbackLevel": null,
+            "level": "task_family",
+            "priorMean": null,
+            "priorStrength": 5,
+            "shrunkValue": 0
+          },
+          "holdoutComparisons": 6,
+          "judgeConsistency": {
+            "belowFloor": false,
+            "consistency": 1,
+            "floor": 0.5,
+            "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash",
+            "orderChecks": 10
+          },
+          "maxCaptureShare": 0.3333,
+          "propensityCoverage": 0,
+          "taskTypeId": "coder.edit",
+          "taxonomyVersion": "1.0.0-alpha.1"
+        },
+        "guardrailsPassed": true,
+        "holdoutSampleCount": 2,
+        "qualityDelta": 1,
+        "receiptId": "validation-9f650c40d7c1b496b81d67c7913fa4f378959c58f7416f8975e5d2540121de44",
+        "runtimeChannel": "development",
+        "scopeId": "standalone-runtime-dev",
+        "splitHash": "3b5e5514cbe0424121861672e2ae655f4fbe43eb63fcff0fc70ee5d13089cbf0"
+      },
+      "identity": {
+        "judgeEndpointId": null,
+        "scorerSetVersion": "run96-semantic-criteria@3+16364bdcbc6f"
+      },
+      "evidence": {
+        "comparisonId": "comparison:supervised-replay:95528b356477dd729295cb788b40c98e48c94b790819c9680345c1c16540fc1c",
+        "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash",
+        "judgeSource": "controller",
+        "outcome": "candidate",
+        "members": [
+          {
+            "candidateRef": "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+            "role": "source",
+            "score": 0,
+            "disposition": "negative",
+            "dimensionScores": [
+              {
+                "scorerKey": "role_model_pairwise_judge.battle@2+ea60d2b24ad8:sha256:cad844e19027898ac0c661b24f7e56eff54a3713e4f09015bed31576d97404e7:task_specific_quality",
+                "score": 0
+              },
+              {
+                "scorerKey": "run96-semantic-criteria@3+16364bdcbc6f:sha256:744f6dbe130fb06cec11ebde1f23bc9b92578460f702db0c3b6ae89adaea3021:correctness",
+                "score": 0
+              }
+            ]
+          },
+          {
+            "candidateRef": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+            "role": "counterfactual",
+            "score": 0.5,
+            "disposition": "positive",
+            "dimensionScores": [
+              {
+                "scorerKey": "role_model_pairwise_judge.battle@2+ea60d2b24ad8:sha256:cad844e19027898ac0c661b24f7e56eff54a3713e4f09015bed31576d97404e7:task_specific_quality",
+                "score": 1
+              },
+              {
+                "scorerKey": "run96-semantic-criteria@3+16364bdcbc6f:sha256:744f6dbe130fb06cec11ebde1f23bc9b92578460f702db0c3b6ae89adaea3021:correctness",
+                "score": 0
+              }
+            ]
+          }
+        ],
+        "winnerCandidateRef": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "replayRef": null,
+        "captureRef": null,
+        "verdict": "insufficient_evidence",
+        "validationRef": "validation-9f650c40d7c1b496b81d67c7913fa4f378959c58f7416f8975e5d2540121de44",
+        "qualityDelta": 1,
+        "claim": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro outperformed deepseek.personal.deepseek-api-key.global.deepseek-flash-max for decision-req-f93fa856-889d-4660-96b3-700de2ae4771:holdout on run96-semantic-criteria@3+16364bdcbc6f by 1.00 (holdout art",
+        "counts": {
+          "comparisons": 6,
+          "decisive": 6,
+          "holdout": 6
+        },
+        "effectiveCounts": {
+          "decisive": 5.4,
+          "holdout": 5.4,
+          "development": 0
+        },
+        "floor": {
+          "minDecisiveComparisons": 3,
+          "minHoldoutComparisons": 1,
+          "minDistinctCaptures": 3
+        },
+        "countsState": "reported",
+        "floorState": "reported"
+      }
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "status": 409,
+  "body": {
+    "error": "extension replay-core failed: replay job identity, intent, trace root, and scope required"
+  }
+}

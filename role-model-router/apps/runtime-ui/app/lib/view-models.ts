@@ -977,6 +977,41 @@ function humanizeTelemetryErrorClass(errorClass: string | null | undefined): str
   return normalized.length > 0 ? normalized.charAt(0).toUpperCase() + normalized.slice(1) : "ok";
 }
 
+/**
+ * Run 104 / R14: a human sentence for the traffic the live-only aggregate left out, e.g.
+ * "3 non-live excluded (benchmark 2 · replay 1)". Runtimes older than the excluded-count fields render
+ * nothing rather than inventing a number.
+ */
+export function formatExcludedTraffic(
+  summary: Pick<RuntimeTelemetrySummary, "excludedRequestCount" | "excludedByClass">,
+): string {
+  const excludedCount = summary.excludedRequestCount;
+  if (typeof excludedCount !== "number" || excludedCount <= 0) {
+    return "";
+  }
+  const classes = (summary.excludedByClass ?? [])
+    .filter((row) => row.requestCount > 0)
+    .map((row) => `${row.requestClass} ${row.requestCount}`)
+    .join(" · ");
+  return classes.length > 0
+    ? `${excludedCount} non-live excluded (${classes})`
+    : `${excludedCount} non-live excluded`;
+}
+
+/**
+ * Run 104 / R14: `live` traffic, including the legacy `live_request` spelling and rows that never
+ * established a class (`unknown`/absent on an older runtime). A replay/benchmark/probe row is never live.
+ */
+export function isLiveRequestClass(requestClass: string | null | undefined): boolean {
+  return (
+    requestClass === "live" ||
+    requestClass === "live_request" ||
+    requestClass === "unknown" ||
+    requestClass === null ||
+    requestClass === undefined
+  );
+}
+
 function buildTelemetryStatusLabel(
   row: Pick<RuntimeTelemetryRequestRecord, "statusCode" | "errorClass" | "dimensions">,
 ): string {
@@ -991,11 +1026,14 @@ function buildTelemetryStatusLabel(
 export function summarizeTelemetryStats(
   summary: RuntimeTelemetrySummary,
 ): Array<{ label: string; value: string; detail: string }> {
+  // Run 104 / R14: the aggregate is live-only, so the surface says what it left out instead of letting
+  // the operator wonder why the denominator shrank.
+  const excluded = formatExcludedTraffic(summary);
   return [
     {
       label: "Requests",
       value: String(summary.requestCount),
-      detail: `${summary.sourceBreakdown.local.requestCount} local · ${summary.sourceBreakdown.remote.requestCount} remote`,
+      detail: `${summary.sourceBreakdown.local.requestCount} local · ${summary.sourceBreakdown.remote.requestCount} remote${excluded.length > 0 ? ` · ${excluded}` : ""}`,
     },
     {
       label: "Failures",
@@ -1240,8 +1278,11 @@ export function buildDashboardLatestRequestRows(
     interactionCount: number;
   }
 > {
-  const liveRows = rows.filter((row) => row.requestClass !== "benchmark");
-  const selectedRows = liveRows.length > 0 ? liveRows : rows;
+  // Run 104 / R14: the "latest request" sample never falls back to a replay/benchmark/probe row. When no
+  // live request exists the caller renders "no live samples" instead of a rate taken from other traffic.
+  // Run 104 / R14: the "latest request" sample never falls back to a replay/benchmark/probe row. When no
+  // live request exists the caller renders "no live samples" instead of a rate taken from other traffic.
+  const selectedRows = rows.filter((row) => isLiveRequestClass(row.requestClass));
   const sortedRows = [...selectedRows].sort((left, right) => right.createdAtMs - left.createdAtMs);
   const rowsByInteraction = new Map<string, typeof sortedRows>();
 

@@ -1,0 +1,34 @@
+{
+  "note": "One isolated synthetic single-process SQLite WAL NORMAL benchmark, 200 rows. Not runtime p95 or privacy justification.",
+  "results": [
+    {
+      "bytes": 16384,
+      "rows": 200,
+      "writeMs": 19.7746,
+      "readMs": 11.5414,
+      "parseMs": 4.6537,
+      "sqliteBytes": 3387392
+    },
+    {
+      "bytes": 262144,
+      "rows": 200,
+      "writeMs": 511.0943,
+      "readMs": 105.0992,
+      "parseMs": 69.4697,
+      "sqliteBytes": 52539392
+    },
+    {
+      "bytes": 1048576,
+      "rows": 200,
+      "writeMs": 2311.1583,
+      "readMs": 493.2174,
+      "parseMs": 355.2178,
+      "sqliteBytes": 209997824
+    }
+  ],
+  "actualFailure": {
+    "dimensionsBytes": 240535,
+    "errorContextBytes": 240518,
+    "observationBytes": 725433
+  }
+}

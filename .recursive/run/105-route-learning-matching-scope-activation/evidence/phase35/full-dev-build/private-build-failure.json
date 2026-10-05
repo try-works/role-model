@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "run105.full-dev-build-failure.v1",
+  "publicCommit": "a3ca6663cb4ee4218c33fdbd22318ea39cf59ed2",
+  "publicTree": "09489ead28cb7a988f3442fa9333b942559278ef",
+  "privateCommit": "3fe39e88300f1fb746c725132ab9f96264a0593a",
+  "privateTree": "52daf28b42b5a09db08d4158182075fabbb50318",
+  "jobId": "pwsh-2012",
+  "exitCode": 1,
+  "error": "package runtime contract drift for knowledge-store",
+  "guard": "scripts/track-b/build-runtime-distribution.mjs:205-209",
+  "registryCapabilitiesCount": 21,
+  "packagePermissionsCount": 25,
+  "protocol": "1.1.0",
+  "extraPermissions": [
+    "knowledge:land-route-ladder-rollback",
+    "knowledge:read-route-ladder-rollback",
+    "knowledge:mark-ladder-eligible",
+    "knowledge:list-route-ladders"
+  ],
+  "sourceEditPerformed": false,
+  "retryPerformed": false,
+  "serverLaunched": false,
+  "portProbed": false,
+  "phase5Pass": false
+}

@@ -1,0 +1,8 @@
+hybrid.remote-only | endpoint=deepseek.personal.deepseek-api-key.global.deepseek-v4-pro | status=200 | class=live/ | lat=17768ms | cache=True | tokens=1981 | created=1790872487463
+chatgpt/gpt-5.6-sol | endpoint=openai.personal.openai-codex-subscription.global.gpt-5.6-sol-medium | status=400 | class=replay/ | lat=ms | cache=False | tokens=0 | created=1790872467383
+baseline.remote-only | endpoint=deepseek.personal.deepseek-api-key.global.deepseek-flash-max | status=200 | class=live/ | lat=1572ms | cache=True | tokens=1884 | created=1790872462595
+difficulty.remote-only | endpoint=deepseek.personal.deepseek-api-key.global.deepseek-flash-max | status=200 | class=live/ | lat=78174ms | cache=True | tokens=6484 | created=1790872453520
+deepseek/deepseek-v4-pro | endpoint=deepseek.personal.deepseek-api-key.global.deepseek-v4-pro | status=400 | class=replay/ | lat=ms | cache=False | tokens=0 | created=1790872447253
+chatgpt/gpt-5.6-luna | endpoint=openai.personal.openai-codex-subscription.global.gpt-5.6-luna | status=400 | class=replay/ | lat=ms | cache=False | tokens=0 | created=1790872424819
+chatgpt/gpt-5.6-sol | endpoint=openai.personal.openai-codex-subscription.global.gpt-5.6-sol-medium | status=400 | class=replay/ | lat=ms | cache=False | tokens=0 | created=1790872400259
+deepseek/deepseek-v4-pro | endpoint=deepseek.personal.deepseek-api-key.global.deepseek-v4-pro | status=400 | class=replay/ | lat=ms | cache=False | tokens=0 | created=1790872382548

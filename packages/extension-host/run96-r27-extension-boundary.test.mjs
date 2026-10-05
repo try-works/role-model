@@ -127,14 +127,14 @@ test("AC-R27-01 tuple: real ExtensionHost and worker-runtime preserve authentica
       await makeProcessFixture(root),
     );
 
-    const result = await host.invoke(extensionId, envelopeFor("x".repeat(20 * 1024)));
+    const result = await host.invoke(extensionId, envelopeFor("x".repeat(2 * 1024 * 1024)));
     assert.deepEqual(result.identity, {
       protocolVersion,
       channel: "development",
       scope: "run96-r27",
       authorizationEpoch,
     });
-    assert.equal(result.bodyLength, 20 * 1024);
+    assert.equal(result.bodyLength, 2 * 1024 * 1024);
     assert.deepEqual(result.privateKeys, []);
     assert.equal(result.readCapability, "extension-output:read");
     assert.ok(result.durableLocator.outputKey);
@@ -156,7 +156,7 @@ test("AC-R27-02 tuple: transfer-artifact authenticates scope/channel/epoch, boun
   } = await import("./transfer-artifact.mjs");
   const root = await mkdtemp(path.join(os.tmpdir(), "role-model-run96-r27-transfer-"));
   const transferKey = "run96-r27-transfer-key";
-  const envelope = envelopeFor("x".repeat(20 * 1024));
+  const envelope = envelopeFor("x".repeat(2 * 1024 * 1024));
   try {
     const locator = await createInputTransferArtifact({
       stateRoot: root,
@@ -206,7 +206,7 @@ test("AC-R27-02 tuple: transfer-artifact authenticates scope/channel/epoch, boun
       envelope: locatorEnvelope,
       nowMs: 1_001,
     });
-    assert.equal(hydrated.payload.body.length, 20 * 1024);
+    assert.equal(hydrated.payload.body.length, 2 * 1024 * 1024);
     assert.equal(Object.hasOwn(hydrated.payload, "rawContent"), false);
     await assert.rejects(
       hydrateInputTransferArtifact({

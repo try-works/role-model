@@ -1,0 +1,12 @@
+✔ run105 D10: legacy/scope seed mode reproduces the byte-identical frozen cohort buckets (10.0784ms)
+✔ run105 D10: only role_task mode composes the composite seed; a missing component fails closed (4.8474ms)
+✔ run105 D10: the cohort ladder and step machinery are untouched (frozen buckets stay frozen) (1.6666ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 257.6246
+EXIT=0

@@ -1,0 +1,12 @@
+
+> @role-model-router/runtime-host-bridge@0.0.0 build D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\apps\runtime-host-bridge
+> tsc -p tsconfig.json
+
+src/index.ts(24653,5): error TS2739: Type '{ requestCount: number; successCount: number; failureCount: number; totalInputTokens: number; totalOutputTokens: number; totalTokens: number; cachedRequestCount: number; totalActualCostUsd: number; ... 7 more ...; lastSeenAtMs: number; }' is missing the following properties from type 'RuntimeTelemetrySummary': excludedRequestCount, excludedByClass
+src/track-b-operations.ts(2857,15): error TS2552: Cannot find name 'contributionAggregateTimeoutAttempts'. Did you mean 'boundedContributionAggregateTimeoutMs'?
+src/track-b-operations.ts(2859,27): error TS2552: Cannot find name 'contributionAggregateTimeoutAttempts'. Did you mean 'boundedContributionAggregateTimeoutMs'?
+src/track-b-operations.ts(2868,109): error TS2552: Cannot find name 'contributionAggregateTimeoutAttempts'. Did you mean 'boundedContributionAggregateTimeoutMs'?
+../../packages/sqlite-memory/src/index.ts(6095,3): error TS2739: Type '{ requestCount: number; successCount: number; failureCount: number; totalInputTokens: number; totalOutputTokens: number; totalTokens: number; cachedRequestCount: number; totalActualCostUsd: number; ... 7 more ...; lastSeenAtMs: number | null; }' is missing the following properties from type 'RuntimeTelemetrySummary': excludedRequestCount, excludedByClass
+D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @role-model-router/runtime-host-bridge@0.0.0 build: `tsc -p tsconfig.json`
+Exit status 2

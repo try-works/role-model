@@ -1,0 +1,43 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-host-bridge
+
+(node:7860) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/run104-branch-append-recovery.test.ts (5 tests | 1 failed) 33ms
+   ✓ the durable read projection rebuilds the execution identity the recovery append needs 7ms
+   ✓ a resumed append-recovery re-attaches to the durable capture instead of refusing 2ms
+   × an append with no durable capture at all still refuses 18ms
+     → expected [Function] to throw an error
+   ✓ a recovery must not re-attach a branch to a different capture's evidence 1ms
+   ✓ a resumed recovery re-runs idempotently from the same durable capture 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run104-branch-append-recovery.test.ts > an append with no durable capture at all still refuses
+AssertionError: expected [Function] to throw an error
+
+- Expected: 
+null
+
++ Received: 
+undefined
+
+ ❯ test/run104-branch-append-recovery.test.ts:136:5
+    134|       },
+    135|     }),
+    136|   ).toThrowError("durable replay branch append has no host dispatch re…
+       |     ^
+    137| 
+    138|   // Below the cap the projection is the whole recorded reply and the …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 passed (5)
+   Start at  22:57:51
+   Duration  17.18s (transform 9.01s, setup 0ms, collect 16.29s, tests 33ms, environment 1ms, prepare 311ms)
+
+undefined
+D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/run104-branch-append-recovery.test.ts

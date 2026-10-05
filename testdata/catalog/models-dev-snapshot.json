@@ -45144,35 +45144,6 @@
       }
     },
     {
-      "modelId": "deepseek/deepseek-reasoner",
-      "providerId": "deepseek",
-      "displayName": "DeepSeek Reasoner",
-      "version": "2025-12-01",
-      "capabilities": [
-        "text.chat",
-        "tools.function_calling",
-        "reasoning"
-      ],
-      "modalities": [
-        "text"
-      ],
-      "contextWindow": 1000000,
-      "maxOutputTokens": 384000,
-      "pricing": {
-        "inputPer1M": 0.14,
-        "outputPer1M": 0.28,
-        "currency": "USD",
-        "costDimensionsPer1M": {
-          "input": 0.14,
-          "output": 0.28,
-          "reasoning": 0.28,
-          "cacheRead": 0.0028
-        },
-        "costUnit": "USD per 1M tokens"
-      },
-      "reasoningOptions": []
-    },
-    {
       "modelId": "deepseek/deepseek-flash",
       "providerId": "deepseek",
       "displayName": "DeepSeek V4.1 Flash",
@@ -45216,10 +45187,40 @@
       ]
     },
     {
+      "modelId": "deepseek/deepseek-reasoner",
+      "providerId": "deepseek",
+      "displayName": "DeepSeek Reasoner",
+      "version": "2025-12-01",
+      "capabilities": [
+        "text.chat",
+        "tools.function_calling",
+        "reasoning"
+      ],
+      "modalities": [
+        "text"
+      ],
+      "contextWindow": 1000000,
+      "maxOutputTokens": 384000,
+      "pricing": {
+        "inputPer1M": 0.14,
+        "outputPer1M": 0.28,
+        "currency": "USD",
+        "costDimensionsPer1M": {
+          "input": 0.14,
+          "output": 0.28,
+          "reasoning": 0.28,
+          "cacheRead": 0.0028
+        },
+        "costUnit": "USD per 1M tokens"
+      },
+      "reasoningOptions": []
+    },
+    {
       "modelId": "deepseek/deepseek-v4-flash",
       "providerId": "deepseek",
       "displayName": "DeepSeek V4 Flash",
       "version": "2026-04-24",
+      "extends": "deepseek/deepseek-v4.1-flash",
       "capabilities": [
         "reasoning",
         "structured.output",
@@ -45227,6 +45228,7 @@
         "tools.function_calling"
       ],
       "modalities": [
+        "image",
         "text"
       ],
       "contextWindow": 1000000,
@@ -45327,6 +45329,64 @@
           ]
         }
       ]
+    },
+    {
+      "modelId": "deepseek/deepseek-v4.1-flash",
+      "providerId": "deepseek",
+      "displayName": "DeepSeek V4.1 Flash",
+      "version": "2026-09-10",
+      "capabilities": [
+        "text.chat",
+        "tools.function_calling",
+        "reasoning",
+        "structured.output"
+      ],
+      "modalities": [
+        "text",
+        "image"
+      ],
+      "contextWindow": 1000000,
+      "maxOutputTokens": 384000,
+      "reasoningOptions": [
+        {
+          "type": "toggle"
+        },
+        {
+          "type": "effort",
+          "values": [
+            "low",
+            "high",
+            "max"
+          ]
+        }
+      ],
+      "pricing": {
+        "inputPer1M": 0.14,
+        "outputPer1M": 0.28,
+        "currency": "USD",
+        "costDimensionsPer1M": {
+          "input": 0.14,
+          "output": 0.28,
+          "reasoning": 0.28,
+          "cacheRead": 0.0028
+        },
+        "costUnit": "USD per 1M tokens",
+        "provenance": {
+          "vendor": "models.dev",
+          "commit": "978733d4459d91bee9af1c0839e0636deebb7194",
+          "sourcePaths": [
+            "providers/deepseek/provider.toml",
+            "providers/deepseek/models/deepseek-v4-flash.toml"
+          ],
+          "sourceHashes": [
+            "3ce95b9a51dd0df0409e4e862aa3be99c4948133a1e93cb1b1a2c560da48a290",
+            "a8a8b9f5939698a13bfa563f107be50893879b2e907131a80afc36c5157ba010"
+          ],
+          "capturedAt": "2026-08-15T04:03:00Z",
+          "unit": "USD per 1M tokens",
+          "currency": "USD"
+        }
+      }
     },
     {
       "modelId": "digitalocean/alibaba-qwen3-32b",
@@ -68616,9 +68676,9 @@
       "displayName": "GPT-4.1 Mini",
       "version": "2025-04-14",
       "capabilities": [
+        "structured.output",
         "text.chat",
-        "tools.function_calling",
-        "structured.output"
+        "tools.function_calling"
       ],
       "modalities": [
         "text"
@@ -110179,9 +110239,9 @@
       "displayName": "Kimi K2.5",
       "version": "2026-04-01",
       "capabilities": [
+        "structured.output",
         "text.chat",
-        "tools.function_calling",
-        "structured.output"
+        "tools.function_calling"
       ],
       "modalities": [
         "text"
@@ -110212,9 +110272,9 @@
       "displayName": "Kimi K2.6",
       "version": "2026-05-01",
       "capabilities": [
+        "structured.output",
         "text.chat",
-        "tools.function_calling",
-        "structured.output"
+        "tools.function_calling"
       ],
       "modalities": [
         "text"
@@ -110245,14 +110305,14 @@
       "displayName": "Kimi K2.7 Code",
       "version": "2026-06-12",
       "capabilities": [
-        "text.chat",
-        "tools.function_calling",
         "reasoning",
-        "structured.output"
+        "structured.output",
+        "text.chat",
+        "tools.function_calling"
       ],
       "modalities": [
-        "text",
         "image",
+        "text",
         "video"
       ],
       "contextWindow": 262144,
@@ -110281,28 +110341,18 @@
       "displayName": "Kimi K3",
       "version": "2026-07-16",
       "capabilities": [
-        "text.chat",
-        "tools.function_calling",
         "reasoning",
-        "structured.output"
+        "structured.output",
+        "text.chat",
+        "tools.function_calling"
       ],
       "modalities": [
-        "text",
         "image",
+        "text",
         "video"
       ],
       "contextWindow": 1048576,
       "maxOutputTokens": 131072,
-      "reasoningOptions": [
-        {
-          "type": "effort",
-          "values": [
-            "low",
-            "high",
-            "max"
-          ]
-        }
-      ],
       "requestShapeHints": {
         "providerShape": "openai.chat.completions",
         "bodyKeys": [
@@ -110318,6 +110368,16 @@
         {
           "modeId": "reasoning.long-context",
           "label": "Long context reasoning"
+        }
+      ],
+      "reasoningOptions": [
+        {
+          "type": "effort",
+          "values": [
+            "low",
+            "high",
+            "max"
+          ]
         }
       ]
     },
@@ -143384,8 +143444,10 @@
       "modelId": "openai/gpt-4.1-mini-fast",
       "providerId": "openai",
       "displayName": "GPT-4.1 Mini Fast",
-      "extends": "gpt-4.1-mini",
       "version": "2025-04-14-fast",
+      "extends": "gpt-4.1-mini",
+      "capabilities": [],
+      "modalities": [],
       "experimentalModes": [
         {
           "modeId": "reasoning.high",

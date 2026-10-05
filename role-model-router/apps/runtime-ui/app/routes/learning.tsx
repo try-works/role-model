@@ -40,6 +40,7 @@ import {
   fetchLearningPolicy,
   fetchLearningRecords,
   fetchLearningRollout,
+  rollbackLearningLadder,
   rollbackLearningPack,
   rollbackLearningPolicy,
   saveLearningPolicy,
@@ -48,6 +49,12 @@ import {
 } from "../lib/learning-api";
 import { fetchLearningActivity, fetchLearningHistory } from "../lib/learning-api";
 import { formatLearningClaim } from "../lib/learning-claim";
+import {
+  type LadderRowView,
+  compareLadderRows,
+  formatLadderCompleteness,
+  normalizeLadderRows,
+} from "../lib/learning-ladder";
 import { summarizePolicyResolution } from "../lib/learning-policy-resolution";
 import {
   appliedShareOf,
@@ -193,6 +200,8 @@ const NOT_REPORTED = "not reported";
  * reason its counts are absent, so a receipt with no counts stops rendering identically to a value nobody recorded.
  */
 const RECEIPT_CARRIES_NO_COUNTS = "the receipt carries no comparison counts";
+/** `R7`: said out loud rather than rendering a zero the runtime never published. */
+const FLOOR_NOT_REPORTED = "floor not reported";
 
 const tableClassName = "w-full table-fixed border-collapse text-left";
 const tableHeaderClassName = `border-b border-[var(--rm-border)] pb-3 pr-3 text-left align-bottom font-normal ${monoEyebrowClassName}`;
@@ -315,6 +324,55 @@ export interface LearningEvidenceView {
   readonly claimTitle: string | null;
   /** `A49-R5`: `reported` when the joined receipt carries counts, `receipt_carries_none` when it does not. */
   readonly countsState: string | null;
+  /** Run 104 `R7`: `"2 / 3 decisive · 1.8 effective"`, or `null` when either side is unpublished. */
+  readonly floorProgress: string | null;
+  /** Run 104 `R7`: the honest placeholder shown when a receipt carries counts but no floor. */
+  readonly floorNote: string | null;
+}
+
+export interface LearningFloorView {
+  readonly decisive: number | null;
+  readonly holdout: number | null;
+  readonly distinctCaptures: number | null;
+}
+
+const finiteNumberOrNull = (value: unknown): number | null => {
+  if (value === null || value === undefined || value === "") return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+/**
+ * Run 104 `R7`: the operator floor the learner's counts are measured against, read from the published
+ * activation policy readback (`effective.minDecisiveComparisons` and its siblings - the same policy the
+ * learning pass resolved the pass-time floor from). A policy that does not publish a value leaves that
+ * side `null`, so the caller states the absence instead of rendering a zero.
+ */
+export function learningEvidenceFloor(policy: Record<string, unknown>): LearningFloorView {
+  const effective = asRecord(asRecord(policy).effective);
+  return {
+    decisive: finiteNumberOrNull(effective.minDecisiveComparisons),
+    holdout: finiteNumberOrNull(effective.minHoldoutComparisons),
+    distinctCaptures: finiteNumberOrNull(effective.minDistinctCaptures),
+  };
+}
+
+/**
+ * `"2 / 3 decisive · 1.8 effective"` - the decisive count against the floor, with the decayed count the
+ * floor was actually measured on when the producer published a different one. `null` when either side is
+ * unpublished: progress requires both numbers, and neither is invented.
+ */
+export function formatLearningFloorProgress(
+  counts: Record<string, unknown>,
+  floor: LearningFloorView,
+): string | null {
+  const decisive = finiteNumberOrNull(counts.decisive);
+  if (decisive === null || floor.decisive === null) return null;
+  const nominal = `${decisive} / ${floor.decisive} decisive`;
+  const effective = finiteNumberOrNull(counts.effectiveDecisive);
+  return effective !== null && effective !== decisive
+    ? `${nominal} · ${effective} effective`
+    : nominal;
 }
 
 /**
@@ -333,6 +391,25 @@ export function learningEvidence(row: Record<string, unknown>): LearningEvidence
   const family = { ...asRecord(record.familyEvidence), ...asRecord(row.familyEvidence) };
   const judgeConsistency = asRecord(family.judgeConsistency);
   const counts = asRecord(evidence.counts);
+  const effectiveCounts = asRecord(evidence.effectiveCounts);
+  const publishedFloor = asRecord(evidence.floor);
+  const countsState = textOrNull(evidence.countsState);
+  /**
+   * Run 104 `R7`: the floor travels with the receipt join (`evidence.floor`, from the producer or the
+   * effective activation policy). A row whose receipt carries counts but no floor says exactly that; the
+   * cell never renders a zero for a value the readback did not publish.
+   */
+  const floorProgress = formatLearningFloorProgress(
+    {
+      decisive: counts.decisive ?? family.decisiveComparisons,
+      effectiveDecisive: effectiveCounts.decisive ?? family.effectiveDecisiveComparisons,
+    },
+    {
+      decisive: finiteNumberOrNull(publishedFloor.minDecisiveComparisons),
+      holdout: finiteNumberOrNull(publishedFloor.minHoldoutComparisons),
+      distinctCaptures: finiteNumberOrNull(publishedFloor.minDistinctCaptures),
+    },
+  );
   const winnerRef = textOrNull(evidence.winnerCandidateRef);
   const members = (Array.isArray(evidence.members) ? evidence.members : []).map(
     (member): LearningCandidateScoreView => {
@@ -374,12 +451,17 @@ export function learningEvidence(row: Record<string, unknown>): LearningEvidence
     ),
     claim: formatLearningClaim(evidence.claim),
     claimTitle: textOrNull(evidence.claim),
-    countsState: textOrNull(evidence.countsState),
+    countsState,
+    floorProgress,
+    floorNote:
+      floorProgress !== null ? null : countsState === "reported" ? FLOOR_NOT_REPORTED : null,
   };
 }
 
 export interface LearningTaskCellView {
   readonly task: string | null;
+  /** Run 104 `R6`: the task variant the runtime resolved, when the readback published one. */
+  readonly variant: string | null;
   readonly scope: string | null;
   readonly toolClasses: string | null;
   readonly requestFamily: string | null;
@@ -399,8 +481,10 @@ export function learningTaskCell(row: Record<string, unknown>): LearningTaskCell
       ? row.toolClassIds.map((entry) => textOrNull(entry) ?? NOT_REPORTED).join(", ")
       : null;
   const requestFamily = textOrNull(row.requestTaskTypeId);
+  const variant = textOrNull(classification.taskVariant) ?? textOrNull(row.taskVariant);
   return {
     task,
+    variant,
     scope:
       roleId || taxonomy
         ? `${roleId ?? NOT_REPORTED} · taxonomy ${taxonomy ?? NOT_REPORTED}`
@@ -408,6 +492,70 @@ export function learningTaskCell(row: Record<string, unknown>): LearningTaskCell
     toolClasses,
     requestFamily: requestFamily && requestFamily !== task ? requestFamily : null,
   };
+}
+
+/**
+ * Run 104 R22 (`R22-A3`): what the evidence join actually did, in words.
+ *
+ * Every column of the Decisions table is read from the row's `evidence` object, and a field the object
+ * does not carry renders the bounded `not reported` placeholder. That placeholder is honest per field,
+ * but it cannot say *why* the object is missing: measured live, the readback answered a page of 100
+ * rows with no evidence at all because the candidate walk had returned an empty index, and the table
+ * read as "the runtime recorded nothing" rather than "this read did not finish". The readback already
+ * publishes `evidenceJoin`; this turns it into the sentence the table was missing.
+ *
+ * `null` means the read reported nothing to explain - a runtime that predates the join report, or a
+ * page whose evidence all resolved - so the caller renders no note rather than an empty one.
+ */
+export function learningEvidenceJoinNote(readback: Record<string, unknown>): string | null {
+  const join = asRecord(asRecord(readback).evidenceJoin);
+  if (Object.keys(join).length === 0) return null;
+  const candidates = asRecord(join.candidateJoin);
+  const requestedGroups = finiteNumberOrNull(join.requestedGroups);
+  const resolvedGroups = finiteNumberOrNull(join.resolvedGroups);
+  const shortfall =
+    requestedGroups !== null && resolvedGroups !== null && resolvedGroups < requestedGroups;
+  if (join.unavailable === true) {
+    return "Evidence could not be read: the comparison store did not answer, so these rows show no verdict, judge or receipt. This is a read failure, not an absent decision.";
+  }
+  if (candidates.unavailable === true || candidates.failed === true) {
+    return "Evidence could not be joined: the candidate listing did not answer, so the comparison behind each row could not be found. This is a read failure, not an absent decision.";
+  }
+  if (join.truncated === true || shortfall) {
+    const counts =
+      requestedGroups !== null && resolvedGroups !== null
+        ? ` (${resolvedGroups} of ${requestedGroups} comparison groups resolved)`
+        : "";
+    return `Evidence is incomplete${counts}: the read hit its bound before it finished, so some rows show no verdict, judge or receipt even though the runtime recorded them.`;
+  }
+  if (candidates.exhausted === true && finiteNumberOrNull(candidates.resolvedCandidates) === 0) {
+    return "Evidence could not be joined: no candidate record matched these rows, so no comparison could be found for them.";
+  }
+  return null;
+}
+
+/**
+ * Run 104 R22 (`R22-B3`): a page of packs that cannot name a role or task says why.
+ *
+ * `scope-wide` is the correct label for a pack whose own scope is endpoint-id-only and whose comparison
+ * and validation receipt are both silent - the learner genuinely has no family to name. Measured live
+ * though, every such pack came from the *replay* comparison path, which dropped the capture's declared
+ * classification before the candidate was derived, so the label described a plumbing gap rather than a
+ * decision the learner made. The table cannot tell those apart per pack, but it can say how many of the
+ * rows it is showing are affected, so an operator sees a pattern instead of a mystery.
+ *
+ * `null` when every shown pack names a scope - there is nothing to explain.
+ */
+export function learningPackScopeNote(rows: readonly Record<string, unknown>[]): string | null {
+  if (rows.length === 0) return null;
+  const wide = rows.filter((row) => {
+    const declared = asRecord(row.scope);
+    const record = asRecord(row.record);
+    const recordScope = asRecord(record.scope);
+    return declared.scopeWide === true || recordScope.scopeWide === true;
+  }).length;
+  if (wide === 0) return null;
+  return `${wide} of ${rows.length} shown packs are scope-wide: they name only a routing target, so no role or task could be resolved for them from the pack, its validation receipt or its comparison. A pack promoted before the capture's declared role reached the learner is scope-wide this way.`;
 }
 
 function verdictTone(verdict: string): BadgeTone {
@@ -495,6 +643,14 @@ export function LearningDecisionRow({
           <ObservationCountMarker row={row} />
         </p>
         <p className={`mt-0.5 ${tableCellNoteClassName}`}>{task.scope ?? NOT_REPORTED}</p>
+        {task.variant ? (
+          <p
+            className={`mt-0.5 truncate ${tableCellMetaClassName}`}
+            title={`variant ${task.variant}`}
+          >
+            variant {task.variant}
+          </p>
+        ) : null}
         {task.toolClasses ? (
           <p
             className={`mt-0.5 truncate ${tableCellMetaClassName}`}
@@ -554,6 +710,12 @@ export function LearningDecisionRow({
         ) : (
           <p className={tableCellMetaClassName}>no verdict recorded</p>
         )}
+        {/* Run 104 `R7`: progress against the floor the receipt was measured on, in numbers. */}
+        {evidence.floorProgress ? (
+          <p className={`mt-0.5 ${tableCellValueClassName}`}>{evidence.floorProgress}</p>
+        ) : evidence.floorNote ? (
+          <p className={`mt-0.5 ${tableCellMetaClassName}`}>{evidence.floorNote}</p>
+        ) : null}
         <p className={`mt-0.5 ${tableCellMetaClassName}`}>
           {`outcome ${evidence.outcome ?? NOT_REPORTED}`}
         </p>
@@ -735,6 +897,283 @@ export function LearningPackRow({
         </button>
       </td>
     </tr>
+  );
+}
+
+/**
+ * Run 105 R12 (stage 3): the endpoint ladder index.
+ *
+ * One row per (roleId, taskTypeId) projected from the records readback's sibling `ladders`
+ * array. The row shows the top-3 endpoints (rank marks + leaf model labels, the full
+ * endpoint id in `title`), the completeness (`3 / 7 admitted`), a badge, and the two-way
+ * Activate / Roll back toggle wired to the per-task backend flag (R10).
+ *
+ * Naming (D9): the word "ladder" alone stays reserved for the cohort exposure ladder, so
+ * every string on this surface says "endpoint ladder". "Active" is DERIVED from the
+ * published fields and is never stored (R14); a row the readback did not answer is bounded
+ * absence - the row renders what it carries rather than a fabricated value.
+ */
+export function LearningLadderRow({
+  row,
+  busy = false,
+  error = null,
+  onToggle,
+}: {
+  readonly row: LadderRowView;
+  readonly busy?: boolean;
+  readonly error?: string | null;
+  readonly onToggle: (row: LadderRowView, rolledBack: boolean) => void;
+}) {
+  const state = ladderRowStateOf(row);
+  const active = ladderRowActiveOf(row);
+  const completeness = formatLadderCompleteness(row.completeness);
+  const scopeLine = `${row.roleId || NOT_REPORTED} . ${row.taskTypeId || NOT_REPORTED}`;
+  /**
+   * R10: the toggle reads 'Roll back' when Active and 'Activate' when rolled back.
+   * No admitted endpoint disables it; missing admission data also disables it without
+   * assuming that the endpoint ladder read answered with zero.
+   */
+  const admissionReported = row.completeness.admitted !== null;
+  const hasLadder = state !== "no_ladder";
+  const disabledReason = hasLadder
+    ? null
+    : admissionReported
+      ? "no endpoint ladder: nothing admitted yet"
+      : "endpoint ladder admission state not reported";
+  const badgeTone: BadgeTone = state === "rolled_back" ? "warning" : active ? "success" : "neutral";
+  const badgeLabel =
+    state === "rolled_back"
+      ? "Rolled back"
+      : active
+        ? "Active"
+        : admissionReported
+          ? "No endpoint ladder"
+          : "Endpoint ladder state not reported";
+  return (
+    <tr className={tableRowClassName}>
+      <td className="py-3 pr-3">
+        <p className={tableCellValueClassName} title={`${row.roleId} . ${row.taskTypeId}`}>
+          {scopeLine}
+        </p>
+        <p className={`mt-0.5 ${tableCellMetaClassName}`}>
+          {row.taxonomyVersion ? `taxonomy ${row.taxonomyVersion}` : NOT_REPORTED}
+        </p>
+        <p className={`mt-0.5 ${tableCellNoteClassName}`}>
+          {row.rankedCount === null
+            ? "ranked rungs not reported"
+            : `${row.rankedCount} ranked rung${row.rankedCount === 1 ? "" : "s"} · top 3 shown`}
+        </p>
+      </td>
+      <td className="py-3 pr-3">
+        {row.topEndpoints.length === 0 ? (
+          <p className={tableCellMetaClassName}>no ranked endpoints reported</p>
+        ) : (
+          <ol className="space-y-1">
+            {row.topEndpoints.map((endpoint) => (
+              <li
+                className="flex items-baseline gap-2"
+                key={`${endpoint.rank}:${endpoint.endpointId}`}
+              >
+                <span className={tableScoreLaneClassName}>{endpoint.rank}</span>
+                <span className="min-w-0 break-words">
+                  <span
+                    className={`${tableCellValueClassName} break-words`}
+                    title={endpoint.endpointId}
+                  >
+                    {formatEndpointModelLabel(endpoint.endpointId)}
+                  </span>
+                  <span className={`ml-2 ${tableCellMetaClassName}`}>{endpoint.status}</span>
+                </span>
+              </li>
+            ))}
+          </ol>
+        )}
+        <details className="mt-3">
+          <summary
+            className={`${secondaryButtonClassName} cursor-pointer list-item h-auto min-h-[36px] py-2 break-words`}
+          >
+            {`Endpoint ladder detail for ${scopeLine}`}
+          </summary>
+          <div className="mt-2 space-y-2">
+            <p className={tableCellValueClassName}>Full endpoint ranking</p>
+            <p className={tableCellMetaClassName}>
+              {`endpoint ladder version ${row.ladderVersion ?? NOT_REPORTED}`}
+            </p>
+            {row.rolledBack?.on ? (
+              <p className={tableCellMetaClassName}>
+                {row.rolledBack.reason
+                  ? `rollback reason ${row.rolledBack.reason}`
+                  : "rollback reason not reported"}
+              </p>
+            ) : null}
+            {row.rungs === undefined ? (
+              <p className={tableCellNoteClassName}>
+                Full endpoint ranking not reported by this readback.
+              </p>
+            ) : row.rungs.length === 0 ? (
+              <p className={tableCellNoteClassName}>No ranked endpoints reported.</p>
+            ) : (
+              <ol className="space-y-1">
+                {row.rungs.map((endpoint, index) => (
+                  <li
+                    className="flex items-baseline gap-2"
+                    key={`${endpoint.rank}:${endpoint.endpointId}:${index}`}
+                  >
+                    <span className={tableScoreLaneClassName}>
+                      {Number.isFinite(endpoint.rank) ? endpoint.rank : NOT_REPORTED}
+                    </span>
+                    <span className="min-w-0 break-words">
+                      <span
+                        className={`${tableCellValueClassName} break-words`}
+                        title={endpoint.endpointId}
+                      >
+                        {endpoint.endpointId}
+                      </span>
+                      <span className={`ml-2 ${tableCellMetaClassName}`}>{endpoint.status}</span>
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
+        </details>
+      </td>
+      <td className="py-3 pr-3">
+        <p className={tableCellValueClassName}>{completeness}</p>
+        <p className={`mt-0.5 ${tableCellNoteClassName}`}>
+          {!admissionReported
+            ? "endpoint ladder admission state not reported"
+            : state === "complete"
+              ? "every configured endpoint is admitted"
+              : state === "no_ladder"
+                ? "no endpoint has passed the admission floor"
+                : "more configured endpoints are still to be challenged"}
+        </p>
+      </td>
+      <td className="py-3 pr-3">
+        <Badge tone={badgeTone}>{badgeLabel}</Badge>
+        {row.rolledBack?.on ? (
+          <p
+            className={`mt-1 ${tableCellMetaClassName}`}
+            title={row.rolledBack.reason ?? undefined}
+          >
+            {row.rolledBack.reason ? `reason ${row.rolledBack.reason}` : "no reason recorded"}
+          </p>
+        ) : null}
+      </td>
+      <td className="py-3 pr-3">
+        <button
+          className={secondaryButtonClassName}
+          disabled={busy || !hasLadder}
+          onClick={() => onToggle(row, active)}
+          title={disabledReason ?? undefined}
+          type="button"
+        >
+          {active ? "Roll back" : "Activate"}
+        </button>
+        {disabledReason ? (
+          <p className={`mt-1 ${tableCellNoteClassName}`}>{disabledReason}</p>
+        ) : null}
+        {error ? (
+          <p className={`mt-1 ${tableCellMetaClassName}`} role="alert">
+            {error}
+          </p>
+        ) : null}
+      </td>
+    </tr>
+  );
+}
+
+/** R14: the row's observable lifecycle state, computed from the published fields. */
+function ladderRowStateOf(row: LadderRowView): LadderStateForRow {
+  if (row.rolledBack?.on) return "rolled_back";
+  const admitted = row.completeness.admitted;
+  const configured = row.completeness.configured;
+  if (admitted === null || admitted <= 0) return "no_ladder";
+  if (configured !== null && configured > 0 && admitted >= configured) return "complete";
+  return "partial";
+}
+
+type LadderStateForRow = "no_ladder" | "partial" | "complete" | "rolled_back";
+
+/** R14: Active is DERIVED (admitted > 0 AND not rolled back), never stored. */
+function ladderRowActiveOf(row: LadderRowView): boolean {
+  const state = ladderRowStateOf(row);
+  return state === "partial" || state === "complete";
+}
+
+/**
+ * The ladder index table above the legacy pack table. Rows are ordered complete-first, then
+ * partial by the largest unfilled gap, then no ladder (deterministic; ties by roleId then
+ * taskTypeId). The legacy pack table below is unchanged and keeps rendering whatever the
+ * readback's `records` array carries.
+ */
+export function LearningLadderIndex({
+  rows,
+  laddersState = "reported",
+  busyRoleTask = null,
+  busyRoleTasks = [],
+  errorsByRoleTask = {},
+  error = null,
+  onToggle,
+}: {
+  readonly rows: readonly LadderRowView[];
+  readonly laddersState?: "reported" | "unavailable" | "not_asked";
+  readonly busyRoleTask?: string | null;
+  readonly busyRoleTasks?: readonly string[];
+  readonly errorsByRoleTask?: Readonly<Record<string, string>>;
+  readonly error?: string | null;
+  readonly onToggle: (row: LadderRowView, rolledBack: boolean) => void;
+}) {
+  const ordered = useMemo(() => [...rows].sort(compareLadderRows), [rows]);
+  if (ordered.length === 0) {
+    return (
+      <div className="mt-4">
+        <p className={tableCellNoteClassName}>
+          {laddersState === "unavailable"
+            ? "The endpoint ladder index is unavailable: the store did not answer the ladder read. The legacy pack table below is unaffected."
+            : laddersState === "not_asked"
+              ? "No endpoint ladder index was requested for this readback; the legacy pack table below still renders every pack record."
+              : "No endpoint ladder has been derived for this scope yet. The legacy pack table below still renders every pack record."}
+        </p>
+      </div>
+    );
+  }
+  return (
+    <div className="mt-4 overflow-x-auto">
+      <table className={`${tableClassName} min-w-[860px]`}>
+        <colgroup>
+          <col style={{ width: "200px" }} />
+          <col style={{ width: "320px" }} />
+          <col style={{ width: "160px" }} />
+          <col style={{ width: "150px" }} />
+          <col />
+        </colgroup>
+        <LearningTableHead
+          columns={[
+            "Role . task (id)",
+            "Ranked endpoints (top 3)",
+            "Completeness",
+            "State",
+            "Action",
+          ]}
+        />
+        <tbody>
+          {ordered.map((row) => (
+            <LearningLadderRow
+              busy={
+                busyRoleTask === `${row.roleId}\u0000${row.taskTypeId}` ||
+                busyRoleTasks.includes(`${row.roleId}\u0000${row.taskTypeId}`)
+              }
+              error={errorsByRoleTask[`${row.roleId}\u0000${row.taskTypeId}`] ?? error}
+              key={`${row.roleId}\u0000${row.taskTypeId}`}
+              onToggle={onToggle}
+              row={row}
+            />
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -1221,10 +1660,33 @@ export function LearningPacksPage() {
   const rows = Array.isArray(asRecord(records.value).records)
     ? (asRecord(records.value).records as readonly Record<string, unknown>[])
     : [];
+  /**
+   * Run 105 R12 (package E): the endpoint ladder index rides the EXISTING records readback as a
+   * sibling `ladders` array (the host bridge passes the whole readback through, so this is the
+   * only read the page needs). `laddersState` is the store's own word about the read, so an
+   * unanswered ladder read renders an honest note instead of the "no pack records" empty state.
+   */
+  const laddersState = (() => {
+    const state = asRecord(records.value).laddersState;
+    return state === "unavailable" || state === "not_asked" ? state : ("reported" as const);
+  })();
+  const ladderRows = useMemo(() => normalizeLadderRows(asRecord(records.value)), [records.value]);
+  const [busyLadders, setBusyLadders] = useState<readonly string[]>([]);
+  const pendingLadders = useRef(new Set<string>());
+  const [ladderErrors, setLadderErrors] = useState<Readonly<Record<string, string>>>({});
+  /** Run 104 R22 (`R22-B3`): how many shown packs cannot name a role or task, and why. */
+  const packScopeNote = learningPackScopeNote(rows);
   const rolloutValue = asRecord(rollout.value);
   const act = async (packId: string) => {
     if (
       typeof window !== "undefined" &&
+      // Run 105 R12/E: this confirm belongs to the LEGACY pack table, where activation still
+      // starts the scope-wide cohort rollout at the first cohort-ladder step - the sentence is
+      // accurate for that table and stays. The endpoint-ladder rows below never reach it: their
+      // per-task toggle has its own confirm in `toggleLadder` and never calls `activateLearningPack`.
+      // Run 105 R12/E: this confirm text stays byte-identical - it is accurate for the LEGACY
+      // scope-wide pack table below. The endpoint-ladder rows never reach it: their per-task toggle
+      // has its own confirm in `toggleLadder` and calls `rollbackLearningLadder`, not this.
       !window.confirm(`Activate ${packId}? Cohort rollout starts at the first ladder step.`)
     )
       return;
@@ -1267,6 +1729,60 @@ export function LearningPacksPage() {
       await rollout.reload();
     } catch (rollbackError) {
       setError(describeOperatorWriteError(rollbackError));
+    }
+  };
+  /**
+   * Run 105 R10/R12 (package E): the per-task rollback toggle. It posts the frozen body
+   * `{scopeId, roleId, taskTypeId, rolledBack, reason}` to the EXISTING rollback-pack route and
+   * reloads the readback, so a row the backend refused stays exactly as the readback states it and
+   * the row shows the error rather than a fabricated new state.
+   */
+  const toggleLadder = async (row: LadderRowView, rolledBack: boolean) => {
+    const key = `${row.roleId}\u0000${row.taskTypeId}`;
+    if (pendingLadders.current.has(key)) return;
+    const label = `${row.roleId} . ${row.taskTypeId}`;
+    if (
+      typeof window !== "undefined" &&
+      !window.confirm(
+        rolledBack
+          ? `Roll back the endpoint ladder for ${label}? Routing falls back to baseline for this task and its replay dispatch pauses.`
+          : `Activate the endpoint ladder for ${label}? The ladder becomes consultable for this task again.`,
+      )
+    )
+      return;
+    setLadderErrors((current) => {
+      const next = { ...current };
+      delete next[key];
+      return next;
+    });
+    pendingLadders.current.add(key);
+    setBusyLadders([...pendingLadders.current]);
+    try {
+      await rollbackLearningLadder(
+        {
+          scopeId: textOrNull(asRecord(records.value).scopeId) ?? "standalone-runtime-stage",
+          roleId: row.roleId,
+          taskTypeId: row.taskTypeId,
+          rolledBack,
+          reason: rolledBack ? "operator_ui_ladder_rollback" : "operator_ui_ladder_activate",
+        },
+        fetch,
+        token || undefined,
+      );
+      setNotice(
+        rolledBack
+          ? `Endpoint ladder for ${label} rolled back; routing falls back to baseline for this task.`
+          : `Endpoint ladder for ${label} activated; the ladder is consultable again.`,
+      );
+      await records.reload();
+    } catch (toggleError) {
+      setLadderErrors((current) => ({
+        ...current,
+        [key]: describeOperatorWriteError(toggleError),
+      }));
+    } finally {
+      pendingLadders.current.delete(key);
+      setBusyLadders([...pendingLadders.current]);
     }
   };
   const killSwitch = async () => {
@@ -1321,6 +1837,31 @@ export function LearningPacksPage() {
           <ErrorState label={error} />
         </div>
       ) : null}
+      {packScopeNote ? <p className={`mt-3 ${supportingTextClassName}`}>{packScopeNote}</p> : null}
+      {/**
+       * Run 105 R12/R14 (package E): the endpoint ladder index - one row per (role, task), ordered
+       * complete-first, with the top-3 endpoints, completeness and the per-task toggle. The legacy
+       * pack table below is unchanged and still renders every pack record it is handed.
+       */}
+      <div className="mt-6">
+        <p className={monoEyebrowClassName}>Endpoint ladder index</p>
+        <p className={`mt-1 ${supportingTextClassName}`}>
+          One row per role · task: the top three ranked endpoints, how many configured endpoints are
+          admitted, the per-task full-ranking detail, and the Activate / Roll back toggle.
+        </p>
+        {degraded(records.loading, records.error) ?? (
+          <LearningLadderIndex
+            busyRoleTasks={busyLadders}
+            errorsByRoleTask={ladderErrors}
+            laddersState={laddersState}
+            onToggle={(row, rolledBack) => void toggleLadder(row, rolledBack)}
+            rows={ladderRows}
+          />
+        )}
+      </div>
+      <div className="mt-8">
+        <p className={monoEyebrowClassName}>Scope-wide cohort rollout (legacy)</p>
+      </div>
       {degraded(records.loading, records.error) ??
         (rows.length === 0 ? (
           <EmptyState label="No pack records have been derived for this scope yet." />
@@ -1358,6 +1899,11 @@ export function LearningPacksPage() {
             </table>
           </div>
         ))}
+      {/**
+       * Run 105 R12/E: these three controls are the SCOPE-WIDE legacy surface. The per-task
+       * endpoint-ladder toggle lives on each index row above and never touches them; the heading
+       * added above the legacy table says which surface the operator is looking at.
+       */}
       <div className="mt-4 flex flex-wrap gap-2">
         <button
           className={secondaryButtonClassName}
@@ -1365,7 +1911,7 @@ export function LearningPacksPage() {
           onClick={() => void rollback()}
           type="button"
         >
-          Roll back active pack
+          Roll back active pack (scope-wide)
         </button>
         <button
           className={secondaryButtonClassName}
@@ -1441,6 +1987,12 @@ export function LearningDecisionsPage() {
   const taskOptions = distinctOptions(rows.map(taskOf));
   const outcomeOptions = distinctOptions(rows.map((row) => learningEvidence(row).verdict));
   const truncated = asRecord(decisions.value).truncated === true;
+  /**
+   * Run 104 R22 (`R22-A3`): a degraded evidence join is named above the table. Without it a read that
+   * never finished is indistinguishable from a runtime that recorded nothing, which is exactly how the
+   * operator read the table this addendum came from.
+   */
+  const evidenceJoinNote = learningEvidenceJoinNote(asRecord(decisions.value));
   return (
     <SectionCard
       title="Decision receipts"
@@ -1501,6 +2053,9 @@ export function LearningDecisionsPage() {
           </select>
         </label>
       </div>
+      {evidenceJoinNote ? (
+        <p className={`mt-3 ${supportingTextClassName}`}>{evidenceJoinNote}</p>
+      ) : null}
       {degraded(decisions.loading, decisions.error) ??
         (filtered.length === 0 ? (
           <EmptyState label="No decisions match this filter yet." />
@@ -1570,6 +2125,17 @@ export function LearningEvidencePage() {
     () => fetchLearningSummary(fetch, token || undefined),
     [token],
   );
+  /**
+   * Run 104 `R7`: the floor the learner's counts are measured against is published by the activation
+   * policy readback (`effective.minDecisiveComparisons` and its siblings). The durable record's own
+   * `learnerEvidence.floor` is only written when the producer persisted one, so the page composes the
+   * progress from the policy the pass resolved rather than rendering a bare `insufficient`.
+   */
+  const learningPolicy = useOperatorSurface<LearningPolicyView>(
+    () => fetchLearningPolicy(fetch, token || undefined),
+    [token],
+  );
+  const policyFloor = learningEvidenceFloor(asRecord(learningPolicy.value));
   const learnerEvidence = asRecord(asRecord(learnerSummary.value).learnerEvidence);
   const exclusionReasons = Object.entries(asRecord(learnerEvidence.excludedByReason))
     .map(([reason, count]) => ({ reason, count: Number(count) }))
@@ -1705,6 +2271,18 @@ export function LearningEvidencePage() {
                 <Metric
                   label="Newest decisive comparisons"
                   value={show(newestEvidence.decisiveComparisons)}
+                />
+                <Metric
+                  label="Decisive / floor"
+                  value={
+                    formatLearningFloorProgress(
+                      {
+                        decisive: newestEvidence.decisiveComparisons,
+                        effectiveDecisive: newestEvidence.effectiveDecisiveComparisons,
+                      },
+                      policyFloor,
+                    ) ?? FLOOR_NOT_REPORTED
+                  }
                 />
                 <Metric
                   label="Floor met"

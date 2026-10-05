@@ -1,0 +1,36 @@
+# Run105 Phase3.5 repair - host materialization TRUE integration RED
+# command: node --test --test-concurrency=1 --test-timeout=240000 tests/track-b/run105-e2-host-materialization.test.mjs
+# ROLE_MODEL_PUBLIC_WORKTREE=D:\DEV\role-model\.worktrees\105-route-learning-matching-scope-activation
+# exit: 1
+# cause: the adapter calls invoke(id,envelope) (host 2-arg) while the packaged sidecar invoke is (extensionId,capability,value) (3-arg); the envelope object lands in the capability slot -> 'capability denied' for knowledge:read-route-ladder.
+
+(node:16020) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+[run105-e2] host store invoke capability=knowledge:read-route-ladder id=knowledge-store
+✖ Run105 E2 host authority: the real adapter operation materializes a finalized group into the real store (2542.3324ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3653.7858
+
+✖ failing tests:
+
+test at tests\track-b\run105-e2-host-materialization.test.mjs:201:1
+✖ Run105 E2 host authority: the real adapter operation materializes a finalized group into the real store (2542.3324ms)
+  Error: capability denied
+      at ExtensionHost.invoke (file:///D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/packages/extension-host/index.mjs:784:29)
+      at invoke (file:///D:/DEV/role-model-internal/.worktrees/105-route-learning-matching-scope-activation/scripts/track-b/runtime-operations-server.mjs:1069:28)
+      at invoke (file:///D:/DEV/role-model-internal/.worktrees/105-route-learning-matching-scope-activation/scripts/track-b/runtime-operations-server.mjs:1291:18)
+      at call (file:///D:/DEV/role-model-internal/.worktrees/105-route-learning-matching-scope-activation/shared/route-learning/route-ladder-materialization.mjs:26:60)
+      at readLadder (file:///D:/DEV/role-model-internal/.worktrees/105-route-learning-matching-scope-activation/shared/route-learning/route-ladder-materialization.mjs:29:41)
+      at file:///D:/DEV/role-model-internal/.worktrees/105-route-learning-matching-scope-activation/shared/route-learning/route-ladder-materialization.mjs:87:36
+      at try (file:///D:/DEV/role-model-internal/.worktrees/105-route-learning-matching-scope-activation/shared/route-learning/route-ladder-materialization.mjs:12:55)
+      at file:///D:/DEV/role-model-internal/.worktrees/105-route-learning-matching-scope-activation/shared/effect/dist/chunks/chunk-AEL6SF2S.js:1043:26
+      at ~effect/Utils/internal (file:///D:/DEV/role-model-internal/.worktrees/105-route-learning-matching-scope-activation/shared/effect/dist/chunks/chunk-PS66ZRAZ.js:907:14)
+      at MixedScheduler.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/105-route-learning-matching-scope-activation/shared/effect/dist/chunks/chunk-AEL6SF2S.js:1043:7)
+
+

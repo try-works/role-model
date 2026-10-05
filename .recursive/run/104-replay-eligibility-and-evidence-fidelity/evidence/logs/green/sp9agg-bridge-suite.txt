@@ -1,0 +1,16 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-host-bridge
+
+(node:67404) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run90-telemetry-query-semantics.test.ts (5 tests) 22530ms
+   ✓ Run 90 host aggregates ignore the activity page limit  3007ms
+   ✓ Run 90 request pages carry a filter-bound snapshot cursor and total  3132ms
+   ✓ Run 90 canonical host view reconciles 257 totals with a 50-row page  10104ms
+   ✓ Run 90 router decisions expose a full total beside the bounded page  6247ms
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  19:23:53
+   Duration  38.53s (transform 9.80s, setup 0ms, collect 14.90s, tests 22.53s, environment 1ms, prepare 435ms)
+

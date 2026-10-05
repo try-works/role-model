@@ -798,13 +798,37 @@ const runtimePlan = (state: BridgeState, sourceRevision: number): RetentionPlan 
   };
 };
 
-class TrackBPrivateOperationError extends Error {
+export class TrackBPrivateOperationError extends Error {
   readonly status: number;
 
   constructor(status: number, message: string) {
     super(message);
     this.name = "TrackBPrivateOperationError";
     this.status = status;
+  }
+}
+
+/**
+ * Run 104 SP7 (`R10`): a timeout was previously indistinguishable from any other private-operation
+ * failure, so a caller could not tell a slow-but-healthy boundary from a refused one. It stays the
+ * same `TrackBPrivateOperationError` for every existing reader (same name family, same 504 status,
+ * same message text) and adds the two facts a retry policy needs: `retryable` and the attempt count.
+ */
+export class TrackBPrivateOperationTimeoutError extends TrackBPrivateOperationError {
+  readonly code = "track_b_private_operation_timeout";
+  readonly retryable = true;
+  readonly timeoutMs: number;
+  readonly attempts: number;
+
+  constructor(
+    timeoutMs: number,
+    options: { readonly attempts?: number; readonly cause?: unknown } = {},
+  ) {
+    super(504, `private Track B operation timed out after ${timeoutMs}ms`);
+    this.name = "TrackBPrivateOperationTimeoutError";
+    this.timeoutMs = timeoutMs;
+    this.attempts = options.attempts ?? 1;
+    if (options.cause !== undefined) (this as { cause?: unknown }).cause = options.cause;
   }
 }
 
@@ -874,7 +898,23 @@ export class RouteCaptureBoundaryCoolingDownError extends Error {
     this.name = "RouteCaptureBoundaryCoolingDownError";
   }
 }
-const DEFAULT_CONTRIBUTION_AGGREGATE_TIMEOUT_MS = 5_000;
+// Run 104 post-closeout (addendum 11): the mature stage root's aggregate commit exceeds the 5 s cap
+// under cross-process write load (measured "contribution aggregate timed out after 5000ms"), which starved
+// the auto-replay producer so freshly captured requests were never replayed. Raised to 30 s (still bounded
+// well below the 600 s operations bound).
+export const DEFAULT_CONTRIBUTION_AGGREGATE_TIMEOUT_MS = 30_000;
+
+/**
+ * Run 104 SP7 (`R10`): the aggregate cap is a hard ceiling on one caller-side attempt, so a
+ * starved boundary cannot hold the background outbox drain open. A *timeout* is therefore
+ * retried instead of silently degrading the upload: the retry re-uses the caller's request
+ * identity (`requestId`/`correlationId`), which the private boundary's
+ * `contribution_request_receipts` idempotency key absorbs, so no second aggregate is uploaded for
+ * the same routed request.
+ */
+export function resolveContributionAggregateTimeoutMs(operationsTimeoutMs: number): number {
+  return Math.min(operationsTimeoutMs, DEFAULT_CONTRIBUTION_AGGREGATE_TIMEOUT_MS);
+}
 
 /**
  * Run 99 R33 live finding (stage v146, with real coding-agent traffic flowing): the eight-second
@@ -926,6 +966,62 @@ export function resolveTrackBOperationsTimeoutMs(
  */
 const PRIVATE_OPERATIONS_TRANSPORT_RETRIES = 4;
 export const PRIVATE_OPERATIONS_TRANSPORT_RETRY_DELAYS_MS = [250, 1_000, 2_500, 5_000];
+
+/**
+ * Run 104 SP7 (`R10`): the contribution aggregate re-uses the bridge's one retry schedule rather
+ * than inventing a backoff of its own. A connection-level failure already gets the full schedule
+ * inside `privateRetentionRequest`; a *timeout* now gets the first two delays as whole attempts,
+ * because the private boundary keeps working after the caller stops waiting (~10 s of extra bounded
+ * drain time in the worst case) and the request identity makes the repeat idempotent.
+ */
+export const CONTRIBUTION_AGGREGATE_TIMEOUT_RETRY_ATTEMPTS = 3;
+export const CONTRIBUTION_AGGREGATE_TIMEOUT_RETRY_DELAYS_MS =
+  PRIVATE_OPERATIONS_TRANSPORT_RETRY_DELAYS_MS.slice(
+    0,
+    CONTRIBUTION_AGGREGATE_TIMEOUT_RETRY_ATTEMPTS - 1,
+  );
+
+/**
+ * Retries only the typed private-operation timeout. A stated status (409/4xx), a protocol error or
+ * a caller abort is terminal: retrying those is what would turn one routed request into a double
+ * upload. Exported so the policy is testable with an injected sleeper (no real waits in tests).
+ */
+export async function withContributionAggregateTimeoutRetry<T>(
+  invoke: () => Promise<T>,
+  options: {
+    readonly attempts?: number;
+    readonly delaysMs?: readonly number[];
+    readonly sleep?: (delayMs: number) => Promise<void>;
+    readonly onRetry?: (
+      error: TrackBPrivateOperationTimeoutError,
+      attempt: number,
+      delayMs: number,
+    ) => void;
+  } = {},
+): Promise<T> {
+  const attempts = Math.max(1, options.attempts ?? CONTRIBUTION_AGGREGATE_TIMEOUT_RETRY_ATTEMPTS);
+  const delays = options.delaysMs ?? CONTRIBUTION_AGGREGATE_TIMEOUT_RETRY_DELAYS_MS;
+  const sleep =
+    options.sleep ??
+    ((delayMs: number) => new Promise<void>((resolve) => setTimeout(resolve, delayMs)));
+  let lastTimeout: TrackBPrivateOperationTimeoutError | null = null;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await invoke();
+    } catch (error) {
+      if (!(error instanceof TrackBPrivateOperationTimeoutError)) throw error;
+      lastTimeout = error;
+      if (attempt >= attempts) break;
+      const delayMs = delays[attempt - 1] ?? delays[delays.length - 1] ?? 250;
+      options.onRetry?.(error, attempt, delayMs);
+      await sleep(delayMs);
+    }
+  }
+  throw new TrackBPrivateOperationTimeoutError(lastTimeout?.timeoutMs ?? 0, {
+    attempts,
+    ...(lastTimeout ? { cause: lastTimeout } : {}),
+  });
+}
 
 const RETRYABLE_PRIVATE_OPERATION_TRANSPORT_CODES = new Set([
   "ECONNRESET",
@@ -1002,10 +1098,7 @@ const privateRetentionRequest = async (
       break;
     } catch (error) {
       if (error instanceof Error && error.name === "TimeoutError") {
-        throw new TrackBPrivateOperationError(
-          504,
-          `private Track B operation timed out after ${timeoutMs}ms`,
-        );
+        throw new TrackBPrivateOperationTimeoutError(timeoutMs, { cause: error });
       }
       lastTransportError = error;
       if (
@@ -1421,6 +1514,7 @@ export function createTrackBOperations({
   // without a rebuild — the constant alone left the documented override inert.
   operationsTimeoutMs = resolveTrackBOperationsTimeoutMs(),
   contributionDeliveryTimeoutMs = DEFAULT_CONTRIBUTION_DELIVERY_TIMEOUT_MS,
+  contributionAggregateRetry = {},
   extensionRuntime,
   contractStateRoot,
 }: {
@@ -1437,6 +1531,12 @@ export function createTrackBOperations({
   readonly operationsTimeoutMs?: number;
   /** Bounds an acknowledged aggregate-delivery write without truncating the cloud commit path. */
   readonly contributionDeliveryTimeoutMs?: number;
+  /** Test seam for `withContributionAggregateTimeoutRetry`; production uses the shared schedule. */
+  readonly contributionAggregateRetry?: {
+    readonly attempts?: number;
+    readonly delaysMs?: readonly number[];
+    readonly sleep?: (delayMs: number) => Promise<void>;
+  };
   readonly extensionRuntime?: {
     listExtensions(): readonly unknown[] | Promise<readonly unknown[]>;
     mutateExtension(input: Record<string, unknown>): unknown | Promise<unknown>;
@@ -1484,9 +1584,11 @@ export function createTrackBOperations({
   // Run 98 S1 follow-up: the contribution aggregate is another sidecar call in the
   // request path — bound it far below the 180 s operations default so a starved
   // boundary cannot hold a request open for minutes.
-  const boundedContributionAggregateTimeoutMs = Math.min(
-    operationsTimeoutMs,
-    DEFAULT_CONTRIBUTION_AGGREGATE_TIMEOUT_MS,
+  const boundedContributionAggregateTimeoutMs =
+    resolveContributionAggregateTimeoutMs(operationsTimeoutMs);
+  const contributionAggregateTimeoutAttempts = Math.max(
+    1,
+    contributionAggregateRetry.attempts ?? CONTRIBUTION_AGGREGATE_TIMEOUT_RETRY_ATTEMPTS,
   );
   const requestPrivate = (
     route: string,
@@ -1947,6 +2049,19 @@ export function createTrackBOperations({
         method: "POST",
         body,
       });
+    },
+    /**
+     * Run 105 Phase 3.5 repair (controller-approved minimal client seam): the host-only route
+     * ladder materialization. The body travels with the caller's operator action context
+     * (channel/scope/authorization epoch headers in requestOperator); the private sidecar host
+     * re-checks the context and refuses any caller-supplied store path.
+     */
+    async materializeRouteLadders(body: Record<string, unknown>): Promise<unknown> {
+      return requestOperator(
+        "learning route ladder materialization",
+        "operator/learning/materialize-route-ladders",
+        { method: "POST", body },
+      );
     },
     /**
      * Run 98 addendum 54 (implementing addendum 53 §3): record a measured guardrail breach through the
@@ -2743,13 +2858,37 @@ export function createTrackBOperations({
       return next;
     },
     async recordContributionAggregate(input: Record<string, unknown>): Promise<unknown> {
-      const remote = await requestPrivate(
-        "contribution/aggregate",
+      /**
+       * Run 104 SP7 (`R10`): one typed timeout used to surface as `contribution upload degraded:
+       * … timed out after 5000ms` even though the private boundary was still finishing the same
+       * request. The retry re-sends the identical body (same `requestId`/`correlationId`), and the
+       * boundary's `contribution_request_receipts` row answers the repeat instead of aggregating it
+       * twice; a stated refusal is not retried at all.
+       */
+      const remote = await withContributionAggregateTimeoutRetry(
+        () =>
+          requestPrivate(
+            "contribution/aggregate",
+            {
+              method: "POST",
+              body: sanitizeOperatorBody(input),
+            },
+            boundedContributionAggregateTimeoutMs,
+          ),
         {
-          method: "POST",
-          body: sanitizeOperatorBody(input),
+          attempts: contributionAggregateTimeoutAttempts,
+          ...(contributionAggregateRetry.delaysMs === undefined
+            ? {}
+            : { delaysMs: contributionAggregateRetry.delaysMs }),
+          ...(contributionAggregateRetry.sleep === undefined
+            ? {}
+            : { sleep: contributionAggregateRetry.sleep }),
+          onRetry: (error, attempt, delayMs) => {
+            console.error(
+              `[run104] contribution aggregate timed out after ${error.timeoutMs}ms; retry ${attempt + 1}/${contributionAggregateTimeoutAttempts} in ${delayMs}ms for ${String(input.requestId ?? "unknown")}`,
+            );
+          },
         },
-        boundedContributionAggregateTimeoutMs,
       );
       return remote === null
         ? { status: "operations_boundary_unconfigured" }

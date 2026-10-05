@@ -1,0 +1,45 @@
+# learning-api-extended RED (run 105 package E)
+# command: corepack pnpm --filter @role-model-router/runtime-ui exec vitest run app/lib/learning-api.test.ts
+# exit: 1
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-ui
+
+ ❯ app/lib/learning-api.test.ts (10 tests | 1 failed) 780ms
+   ✓ learning policy draft validation > run98 a47: a boolean field accepts the text its input produces 13ms
+   ✓ learning policy draft validation > accepts an in-bounds change and reports only the changed field 1ms
+   ✓ learning policy draft validation > refuses out-of-range, wrong-type and fractional-integer values 2ms
+   ✓ learning policy draft validation > refuses read-only fields and unknown fields 1ms
+   ✓ learning policy draft validation > validates enum values and the monotone percentage ladder 2ms
+   ✓ learning policy draft validation > does not report unchanged values as changes 1ms
+   ✓ learning readback start-up retry > retries a warming operator capability and then returns the durable state 240ms
+   ✓ learning readback start-up retry > retries a warming capability for the policy and activity readbacks too  464ms
+   × run105 R10 ladder rollback API > posts exactly the per-task rollback body to the existing rollback-pack route 25ms
+     → (0 , rollbackLearningLadder) is not a function
+   ✓ run105 R10 ladder rollback API > fetchLearningRecords returns the ladders sibling untouched and preserves rollout fixtures 20ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/lib/learning-api.test.ts > run105 R10 ladder rollback API > posts exactly the per-task rollback body to the existing rollback-pack route
+TypeError: (0 , rollbackLearningLadder) is not a function
+ ❯ app/lib/learning-api.test.ts:214:11
+    212|       return new Response(JSON.stringify({ ok: true }), { status: 200,…
+    213|     }) as unknown as typeof fetch;
+    214|     await rollbackLearningLadder({ scopeId: "scope-1", roleId: "writer…
+       |           ^
+    215|     expect(seenPath).toBe("/api/role-model/operator/learning/rollback-…
+    216|     expect(JSON.parse(String(seenInit?.body))).toEqual({ scopeId: "sco…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 9 passed (10)
+   Start at  12:54:00
+   Duration  7.79s (transform 627ms, setup 0ms, collect 1.47s, tests 780ms, environment 1ms, prepare 3.00s)
+
+undefined
+D:\DEV\role-model\.worktrees\105-route-learning-matching-scope-activation\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run app/lib/learning-api.test.ts
+
+

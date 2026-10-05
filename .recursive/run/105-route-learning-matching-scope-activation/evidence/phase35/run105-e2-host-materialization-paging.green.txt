@@ -1,0 +1,24 @@
+# E2 host paging fail-closed + defaults validation GREEN (6/6, byte-safe 24/page)
+# workdir: D:\DEV\role-model-internal\.worktrees\105-route-learning-matching-scope-activation
+# command: node --test --test-concurrency=1 --test-timeout=240000 tests/track-b/run105-e2-host-materialization.test.mjs 2>&1 | Out-String
+# exit: 0
+
+(node:32320) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ Run105 E2 host authority: the real adapter operation materializes a finalized group into the real store (1878.2455ms)
+✔ Run105 E2 paging repair: hasMore without nextCursor is refused, never a partial materialization (1365.3235ms)
+✔ Run105 E2 paging repair: a repeated cursor is refused as a cycle (1455.5342ms)
+✔ Run105 E2 paging repair: hasMore that never completes exhausts the budget and refuses (1674.2699ms)
+✔ Run105 E2 defaults repair: a caller-supplied invalid defaults snapshot is refused, not ignored (1572.332ms)
+[e2-paging] materialization entries: 71 written: 71
+✔ Run105 E2 paging regression: a real store larger than one page materializes completely (6665.0176ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 15339.517
+
+

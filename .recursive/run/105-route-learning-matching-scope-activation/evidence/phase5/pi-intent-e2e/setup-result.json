@@ -1,0 +1,235 @@
+{
+  "a": {
+    "status": 200,
+    "body": {
+      "providerAccountId": "deepseek.personal.run105-pi-intent-mock",
+      "providerId": "deepseek",
+      "providerKind": "provider-openai",
+      "orgScope": "personal",
+      "accountScope": "run105-pi-intent",
+      "credentialRef": {
+        "backend": "local-file",
+        "ref": "api-key/deepseek/deepseek.personal.deepseek-api-key"
+      },
+      "authMode": "api-key-static",
+      "regionPolicy": {
+        "mode": "prefer",
+        "regions": [
+          "global"
+        ]
+      },
+      "baseUrlOverride": "http://127.0.0.1:3466/v1",
+      "allowedModels": [
+        "deepseek/deepseek-flash"
+      ],
+      "modelRoleBindings": [
+        {
+          "modelId": "deepseek/deepseek-flash",
+          "roleIds": [
+            "coder",
+            "writer"
+          ],
+          "roleAssignmentMode": "include",
+          "enabledRoleIds": [],
+          "disabledRoleIds": []
+        }
+      ],
+      "deniedModels": [],
+      "entitlementTags": [
+        "chat"
+      ],
+      "budgetPolicyRef": "budget.run105-pi-intent",
+      "quotaPolicyRef": "quota.run105-pi-intent",
+      "status": "active",
+      "healthStatus": "healthy",
+      "rotationState": "stable"
+    }
+  },
+  "e": {
+    "status": 200,
+    "body": {
+      "endpointId": "deepseek.personal.run105-pi-intent-mock.global.deepseek-flash-high",
+      "providerAccountId": "deepseek.personal.run105-pi-intent-mock",
+      "providerId": "deepseek",
+      "modelId": "deepseek/deepseek-flash",
+      "roleIds": [
+        "coder",
+        "writer"
+      ],
+      "status": "active"
+    }
+  },
+  "inv": {
+    "status": 200,
+    "body": [
+      {
+        "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash",
+        "modelId": "deepseek/deepseek-flash",
+        "providerId": "deepseek",
+        "providerAccountId": "deepseek.personal.deepseek-api-key",
+        "roleIds": [
+          "analyst",
+          "architect",
+          "coder",
+          "coordinator",
+          "creative",
+          "data",
+          "designer",
+          "educator",
+          "finance",
+          "health",
+          "knowledge",
+          "legal",
+          "marketer",
+          "mathematician",
+          "operator",
+          "planner",
+          "procurement",
+          "product",
+          "recruiter",
+          "researcher",
+          "scientist",
+          "security",
+          "seller",
+          "strategist",
+          "support",
+          "tester",
+          "translator",
+          "writer"
+        ],
+        "endpointKind": "remote_api",
+        "servingSource": "remote-service",
+        "sourceType": "remote",
+        "healthStatus": "healthy",
+        "routingEligible": true,
+        "benchmarkEligible": true,
+        "capabilities": [
+          "text.chat",
+          "tools.function_calling",
+          "reasoning",
+          "structured.output",
+          "code.edit"
+        ],
+        "toolCallingSupported": true,
+        "toolCallingStyle": "none",
+        "displayName": "DeepSeek V4.1 Flash",
+        "upstreamModelId": "deepseek/deepseek-flash",
+        "reasoningEffort": null,
+        "reasoningEffortLevels": [
+          "low",
+          "high",
+          "max"
+        ],
+        "effortSource": "provider-default",
+        "webSearchSupport": {
+          "mode": "runtime-fallback",
+          "currentRuntimeContract": null,
+          "documentedProviderContract": "deepseek.anthropic.server_web_search"
+        },
+        "status": "active"
+      },
+      {
+        "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "modelId": "deepseek/deepseek-v4-pro",
+        "providerId": "deepseek",
+        "providerAccountId": "deepseek.personal.deepseek-api-key",
+        "roleIds": [
+          "analyst",
+          "architect",
+          "coder",
+          "coordinator",
+          "creative",
+          "data",
+          "designer",
+          "educator",
+          "finance",
+          "health",
+          "knowledge",
+          "legal",
+          "marketer",
+          "mathematician",
+          "operator",
+          "planner",
+          "procurement",
+          "product",
+          "recruiter",
+          "researcher",
+          "scientist",
+          "security",
+          "seller",
+          "strategist",
+          "support",
+          "tester",
+          "translator",
+          "writer"
+        ],
+        "endpointKind": "remote_api",
+        "servingSource": "remote-service",
+        "sourceType": "remote",
+        "healthStatus": "healthy",
+        "routingEligible": true,
+        "benchmarkEligible": true,
+        "capabilities": [
+          "reasoning",
+          "structured.output",
+          "text.chat",
+          "tools.function_calling",
+          "code.edit"
+        ],
+        "toolCallingSupported": true,
+        "toolCallingStyle": "none",
+        "displayName": "DeepSeek V4 Pro",
+        "upstreamModelId": "deepseek/deepseek-v4-pro",
+        "reasoningEffort": null,
+        "reasoningEffortLevels": [
+          "high",
+          "max"
+        ],
+        "effortSource": "provider-default",
+        "webSearchSupport": {
+          "mode": "runtime-fallback",
+          "currentRuntimeContract": null,
+          "documentedProviderContract": "deepseek.anthropic.server_web_search"
+        },
+        "status": "active"
+      },
+      {
+        "endpointId": "deepseek.personal.run105-pi-intent-mock.global.deepseek-flash-high",
+        "modelId": "deepseek/deepseek-flash",
+        "providerId": "deepseek",
+        "providerAccountId": "deepseek.personal.run105-pi-intent-mock",
+        "roleIds": [],
+        "endpointKind": "remote_api",
+        "servingSource": "remote-service",
+        "sourceType": "remote",
+        "healthStatus": "healthy",
+        "routingEligible": true,
+        "benchmarkEligible": true,
+        "capabilities": [
+          "text.chat",
+          "tools.function_calling",
+          "reasoning",
+          "structured.output",
+          "code.edit"
+        ],
+        "toolCallingSupported": true,
+        "toolCallingStyle": "none",
+        "displayName": "DeepSeek V4.1 Flash",
+        "upstreamModelId": "deepseek/deepseek-flash",
+        "reasoningEffort": "high",
+        "reasoningEffortLevels": [
+          "low",
+          "high",
+          "max"
+        ],
+        "effortSource": "fixed",
+        "webSearchSupport": {
+          "mode": "runtime-fallback",
+          "currentRuntimeContract": null,
+          "documentedProviderContract": "deepseek.anthropic.server_web_search"
+        },
+        "status": "active"
+      }
+    ]
+  }
+}

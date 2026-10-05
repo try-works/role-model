@@ -142,6 +142,11 @@ export interface V11RouteLearningScope {
   readonly modelFamily?: string;
   readonly endpointId?: string;
   readonly promptAdapterId?: string;
+  /**
+   * Run 105 R1/A1: provenance, NOT a match key. The match key is (roleId, taskTypeId) exact, and the
+   * router's existing `advisory_taxonomy_mismatch` gate stays byte-identical and still fails closed.
+   */
+  readonly taxonomyVersion?: string;
 }
 
 export interface V11RoutePackage {
@@ -280,6 +285,45 @@ export interface RoutePackageActivationReceiptV1 extends V11ContractEnvelope {
   readonly rolledBackAt?: string;
 }
 
+/**
+ * Run 105 R1/R2/R7: the per-(role, task) endpoint ladder. The endpoint ladder is named
+ * `routeLadder`/`rungs`; the word `ladder` alone stays reserved for the COHORT exposure ladder
+ * (D9), which is untouched. The ladder is stored OUTSIDE the closed `ExperiencePackCandidateV1`
+ * body (D1), so that contract keeps its `additionalProperties: false` shape.
+ */
+export interface RouteLadderRungV1 {
+  readonly endpointId: string;
+  /** 1-based, gapless rank; rank 1 is the preferred endpoint. */
+  readonly rank: number;
+  /** `unavailable` means the USER removed the endpoint (R4); router eligibility is applied separately. */
+  readonly status: "available" | "unavailable";
+}
+
+export interface RouteLadderPackV1 extends V11ContractEnvelope {
+  readonly contract: "RouteLadderPackV1";
+  readonly packId: string;
+  /** Monotonic: a lower-version rewrite is discarded (R2). */
+  readonly version: number;
+  readonly roleId: string;
+  readonly taskTypeId: string;
+  readonly taxonomyVersion?: string;
+  readonly rungs: readonly RouteLadderRungV1[];
+  readonly completeness: {
+    /** Endpoints that passed the admission floor. */
+    readonly admitted: number;
+    /** Currently CONFIGURED endpoints (the denominator, R4). */
+    readonly configured: number;
+  };
+  readonly nextEligibleAtMs?: number;
+  readonly rolledBack: {
+    readonly on: boolean;
+    readonly reason?: string | null;
+    readonly atMs?: number | null;
+  };
+  /** Observable lifecycle; `active` is DERIVED (admitted >= 1 and not rolled back) and never stored (R14). */
+  readonly lifecycleState?: "no_ladder" | "partial" | "complete" | "rolled_back";
+}
+
 export type V11RouteLearningContract =
   | RoutingEvaluationExecutionContextV1
   | RoutingRolloutGroupLifecycleV1
@@ -287,4 +331,5 @@ export type V11RouteLearningContract =
   | ExperiencePackCandidateV1
   | RouteLearningValidationReceiptV1
   | RoutePackageAttributionV1
-  | RoutePackageActivationReceiptV1;
+  | RoutePackageActivationReceiptV1
+  | RouteLadderPackV1;

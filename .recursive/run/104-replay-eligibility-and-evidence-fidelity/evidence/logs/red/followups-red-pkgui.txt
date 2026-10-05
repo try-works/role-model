@@ -1,0 +1,39 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/packages/ui
+
+ ❯ src/sidebar.test.ts (6 tests | 1 failed) 177ms
+   ✓ rm3 sidebar helpers > formats request counts with grouping separators 72ms
+   ✓ rm3 sidebar helpers > clamps and formats cache hit rate 2ms
+   ✓ rm3 sidebar helpers > maps model status to semantic dot classes 1ms
+   ✓ rm3 sidebar helpers > discloses a truncated model identity on pointer hover 63ms
+   × rm3 sidebar helpers > renders the absence of a live sample instead of a zero rate 32ms
+     → expected '<div data-slot="role-model-cache" cla…' to contain 'no live samples'
+   ✓ rm3 sidebar helpers > renders the measured latest live rate 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/sidebar.test.ts > rm3 sidebar helpers > renders the absence of a live sample instead of a zero rate
+AssertionError: expected '<div data-slot="role-model-cache" cla…' to contain 'no live samples'
+
+Expected: "no live samples"
+Received: "<div data-slot="role-model-cache" class="flex shrink-0 flex-col gap-1.5 border-t border-sidebar-border p-2"><div class="flex h-6 shrink-0 items-center justify-between gap-2 px-2.5"><div class="font-mono text-[11px] leading-4 tracking-[0.08em] text-muted-foreground uppercase">Cache</div><span class="shrink-0 text-right font-mono text-[11px] leading-4 text-foreground tabular-nums">0%</span></div><div class="mx-2.5 mb-1 flex h-1.5 shrink-0 items-center overflow-hidden rounded-full bg-border" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Cache hit rate"><div class="rm3-cache-bar-fill h-full shrink-0 rounded-full bg-chart-cache transition-[width] duration-[250ms] ease-out" style="width:0%"></div></div></div>"
+
+ ❯ src/sidebar.test.ts:60:20
+     58|   it("renders the absence of a live sample instead of a zero rate", ()…
+     59|     const markup = renderToStaticMarkup(createElement(SidebarCache, { …
+     60|     expect(markup).toContain("no live samples");
+       |                    ^
+     61|     expect(markup).not.toContain("0%");
+     62|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 passed (6)
+   Start at  19:36:03
+   Duration  2.37s (transform 405ms, setup 0ms, collect 557ms, tests 177ms, environment 1ms, prepare 524ms)
+
+undefined
+D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\packages\ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/sidebar.test.ts

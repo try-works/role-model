@@ -1,0 +1,11 @@
+npm warn Unknown env config "manage-package-manager-versions". This will stop working in the next major version of npm.
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/packages/core
+
+ ✓ test/run105-d-route-ladder-dispatch.test.ts (32 tests) 63ms
+
+ Test Files  1 passed (1)
+      Tests  32 passed (32)
+   Start at  13:28:03
+   Duration  6.55s (transform 2.98s, setup 0ms, collect 4.73s, tests 63ms, environment 0ms, prepare 634ms)
+

@@ -1,0 +1,48 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-host-bridge
+
+(node:15000) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run104-traffic-class-filter.test.ts (1 test) 1587ms
+   ✓ run104: the telemetry request query filters by traffic class  1584ms
+ ✓ test/run97-replay-admission.test.ts (11 tests) 764ms
+   ✓ run97 admission admits every capture when no policy input blocks it  737ms
+stderr | test/run104-sp7-contribution-budget.test.ts > run104 SP7 contribution aggregate budget > classifies a timed-out aggregate as a retryable typed timeout and retries it under the shared schedule
+[run104] contribution aggregate timed out after 250ms; retry 2/3 in 250ms for req-104-sp7-contribution
+
+stderr | test/run104-sp7-contribution-budget.test.ts > run104 SP7 contribution aggregate budget > classifies a timed-out aggregate as a retryable typed timeout and retries it under the shared schedule
+[run104] contribution aggregate timed out after 250ms; retry 3/3 in 1000ms for req-104-sp7-contribution
+
+ ✓ test/run104-sp7-contribution-budget.test.ts (3 tests) 873ms
+   ✓ run104 SP7 contribution aggregate budget > classifies a timed-out aggregate as a retryable typed timeout and retries it under the shared schedule  833ms
+ ✓ test/run97-replay-auto-loop.test.ts (15 tests) 385ms
+(node:27668) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run96-replay-router-adapter.test.ts (24 tests) 121ms
+(node:38360) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | test/run96-cli-supervised-replay-evaluation.test.ts > Run96 CLI production completion reaches trusted Evaluation Core and declines unsupported learning
+[run97] shadow pipeline start supervised-replay:67800cb80ac008bcc4a2d0086fdf173df6d42f8c8857073565835005cf808e1c
+
+stderr | test/run96-cli-supervised-replay-evaluation.test.ts > Run96 CLI production completion reaches trusted Evaluation Core and declines unsupported learning
+[run97] learning degraded signals:supervised-replay:67800cb80ac008bcc4a2d0086fdf173df6d42f8c8857073565835005cf808e1c omit_signals 
+
+stderr | test/run96-cli-supervised-replay-evaluation.test.ts > Run96 CLI production completion reaches trusted Evaluation Core and declines unsupported learning
+[run97] shadow pipeline start supervised-replay:e7fc4e42e8bff5188fa940945f5e44225a82affc80e0ab81fa2e54c51293f667
+
+stderr | test/run96-cli-supervised-replay-evaluation.test.ts > Run96 CLI production completion reaches trusted Evaluation Core and declines unsupported learning
+[run97] learning degraded signals:supervised-replay:e7fc4e42e8bff5188fa940945f5e44225a82affc80e0ab81fa2e54c51293f667 omit_signals 
+
+ ✓ test/run96-cli-supervised-replay-evaluation.test.ts (11 tests) 110ms
+ ✓ test/run104-sp1-replay-eligibility.test.ts (7 tests) 28ms
+ ✓ test/run104-sp7-finalized-listing-cache.test.ts (6 tests) 23ms
+ ✓ test/run104-sp6-arm-comparability.test.ts (8 tests) 13ms
+(node:16704) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run104-advisory-classification-variant.test.ts (3 tests) 11ms
+
+ Test Files  10 passed (10)
+      Tests  89 passed (89)
+   Start at  22:59:08
+   Duration  35.29s (transform 9.93s, setup 0ms, collect 24.39s, tests 3.91s, environment 5ms, prepare 2.80s)
+

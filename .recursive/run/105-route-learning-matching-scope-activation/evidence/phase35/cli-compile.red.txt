@@ -1,0 +1,21 @@
+npm warn Unknown env config "manage-package-manager-versions". This will stop working in the next major version of npm.
+src/cli.ts(7139,17): error TS2304: Cannot find name 'envelopeFor'.
+src/cli.ts(7180,9): error TS2322: Type '({ roleId, taskTypeId }: { readonly roleId: string; readonly taskTypeId: string; }) => Promise<unknown>' is not assignable to type '(input: { readonly roleId: string; readonly taskTypeId: string; }) => RouteLadderRow | Promise<RouteLadderRow | null> | null'.
+  Type 'Promise<unknown>' is not assignable to type 'RouteLadderRow | Promise<RouteLadderRow | null> | null'.
+    Type 'Promise<unknown>' is not assignable to type 'Promise<RouteLadderRow | null>'.
+      Type 'unknown' is not assignable to type 'RouteLadderRow | null'.
+src/cli.ts(7187,17): error TS2304: Cannot find name 'envelopeFor'.
+src/cli.ts(7210,17): error TS2304: Cannot find name 'envelopeFor'.
+src/index.ts(26512,30): error TS2339: Property 'roleId' does not exist on type '{ readonly preferredRoutePackage: string | null; readonly advisoryState: TrackBRouteAdvisoryState; readonly confidence: number; readonly profileSnapshotIds: readonly string[]; ... 4 more ...; readonly cachedAtMs: number; } | TrackBDurableRouteAdvisoryEntry'.
+  Property 'roleId' does not exist on type '{ readonly preferredRoutePackage: string | null; readonly advisoryState: TrackBRouteAdvisoryState; readonly confidence: number; readonly profileSnapshotIds: readonly string[]; ... 4 more ...; readonly cachedAtMs: number; }'.
+src/queue-runtime/index.ts(71,32): error TS2345: Argument of type 'Effect<never, any, any>' is not assignable to parameter of type 'Effect<never, any, never>'.
+  Type 'any' is not assignable to type 'never'.
+src/queue-runtime/index.ts(156,44): error TS2345: Argument of type 'Layer<PersistedQueueFactory, any, any>' is not assignable to parameter of type 'Layer<PersistedQueueFactory, any, never>'.
+  Type 'any' is not assignable to type 'never'.
+src/queue-runtime/index.ts(276,44): error TS2345: Argument of type 'Layer<PersistedQueueFactory, any, any>' is not assignable to parameter of type 'Layer<PersistedQueueFactory, any, never>'.
+  Type 'any' is not assignable to type 'never'.
+src/queue-runtime/index.ts(389,44): error TS2345: Argument of type 'Layer<PersistedQueueFactory, any, any>' is not assignable to parameter of type 'Layer<PersistedQueueFactory, any, never>'.
+  Type 'any' is not assignable to type 'never'.
+src/queue-runtime/store.ts(18,30): error TS2307: Cannot find module '@effect/sql-sqlite-node' or its corresponding type declarations.
+src/queue-runtime/workers.ts(330,5): error TS2345: Argument of type 'Effect<void, never, any>' is not assignable to parameter of type 'Effect<void, never, never>'.
+  Type 'any' is not assignable to type 'never'.

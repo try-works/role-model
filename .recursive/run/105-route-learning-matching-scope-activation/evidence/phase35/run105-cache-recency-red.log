@@ -1,0 +1,46 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-host-bridge
+
+(node:10072) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/run105-review-advisory-cache.test.ts (11 tests | 1 failed | 10 skipped) 24ms
+   ↓ run105 review exact advisory cache > classified live backend never resurrects transient advisory after missing
+   ↓ run105 review exact advisory cache > classified live backend never resurrects transient advisory after stopped
+   ↓ run105 review exact advisory cache > classified live backend never resurrects transient advisory after excluded
+   ↓ run105 review exact advisory cache > same role retains two tasks without overwriting or borrowing
+   ↓ run105 review exact advisory cache > same task retains different roles without borrowing
+   ↓ run105 review exact advisory cache > channel and runtime scope isolate identical pairs
+   ↓ run105 review exact advisory cache > only genuinely no-role/no-task recall can use legacy entry
+   × run105 review exact advisory cache > re-remember refreshes actual recency beyond 512 entries 20ms
+     → expected undefined to be 'refreshed' // Object.is equality
+   ↓ run105 review exact advisory cache > source wrapper forwards explicit effective stage and cohort
+   ↓ run105 review exact advisory cache > publisher role cannot relabel a fresh advisory learned for another role
+   ↓ run105 review exact advisory cache > source role and task persist when publisher omits redundant role input
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run105-review-advisory-cache.test.ts > run105 review exact advisory cache > re-remember refreshes actual recency beyond 512 entries
+AssertionError: expected undefined to be 'refreshed' // Object.is equality
+
+- Expected: 
+"refreshed"
+
++ Received: 
+undefined
+
+ ❯ test/run105-review-advisory-cache.test.ts:106:62
+    104|     for (let i = 0; i < 512; i++) remember("coder", "task-" + i, "endp…
+    105|     remember("coder", "task-0", "refreshed", 1000); remember("coder", …
+    106|     expect(recall("coder", "task-0")?.preferredRoutePackage).toBe("ref…
+       |                                                              ^
+    107|     expect(recall("coder", "task-1")).toBeNull();
+    108|     expect(recall("coder", "task-512")?.preferredRoutePackage).toBe("n…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 10 skipped (11)
+   Start at  16:55:03
+   Duration  11.42s (transform 7.20s, setup 0ms, collect 10.68s, tests 24ms, environment 0ms, prepare 255ms)
+

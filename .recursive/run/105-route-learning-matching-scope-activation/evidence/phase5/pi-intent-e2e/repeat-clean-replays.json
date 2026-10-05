@@ -1,0 +1,122 @@
+[
+  {
+    "i": 4,
+    "status": 200,
+    "body": {
+      "schemaVersion": "role-model.supervised-replay-command-receipt.v1",
+      "requestId": "req-07497f2e-bfe2-4faf-9271-5f06cbab19ac",
+      "replayJobId": "433fe6b8d2cb2a3211635e494e43bddb177ecbd32faf8a52579234d9abf7f3be",
+      "state": "complete",
+      "evaluationJobId": "evaluation-replay-a8d7cf0402c2ec6ffcb6",
+      "evaluationOutcome": "tie",
+      "comparisonGroupId": "comparison:supervised-replay:9e86309fd223094a8314cb822146aa28f943410dae495c199db772786ca21313",
+      "branches": [
+        {
+          "candidateEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+          "outcome": "complete",
+          "branchRootRef": "a88d8cdaf7453a531e0166a3d4596b5c7d8ee6e232be4c52f6977f908f5ce991"
+        }
+      ],
+      "dispatches": [
+        {
+          "kind": "candidate",
+          "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+          "attempt": 1,
+          "costMicros": 0,
+          "bytes": 0,
+          "outcome": "complete"
+        }
+      ]
+    }
+  },
+  {
+    "i": 5,
+    "status": 200,
+    "body": {
+      "schemaVersion": "role-model.supervised-replay-command-receipt.v1",
+      "requestId": "req-07497f2e-bfe2-4faf-9271-5f06cbab19ac",
+      "replayJobId": "e169fd59558cd2852e1281d461498493892e37d767113791ff364c5ea1130d42",
+      "state": "complete",
+      "evaluationJobId": "evaluation-replay-a711f427a468a87bfab5",
+      "evaluationOutcome": "tie",
+      "comparisonGroupId": "comparison:supervised-replay:15f0e7c961de6829b11d7866da25e9626ab790ca079dd1dadaaa579a7e478bbc",
+      "branches": [
+        {
+          "candidateEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+          "outcome": "complete",
+          "branchRootRef": "c255786cb5e3e91c915e61f369e8163c2fa6694fd1a1efac3c6a4fc531d3f012"
+        }
+      ],
+      "dispatches": [
+        {
+          "kind": "candidate",
+          "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+          "attempt": 1,
+          "costMicros": 0,
+          "bytes": 0,
+          "outcome": "complete"
+        }
+      ]
+    }
+  },
+  {
+    "i": 6,
+    "status": 200,
+    "body": {
+      "schemaVersion": "role-model.supervised-replay-command-receipt.v1",
+      "requestId": "req-07497f2e-bfe2-4faf-9271-5f06cbab19ac",
+      "replayJobId": "82965fee1ba78af3bab5ba44f1025e9ebbbb69c15c1f553ddc448e2c4c20e9fb",
+      "state": "complete",
+      "evaluationJobId": "evaluation-replay-4e7be309023edfae348f",
+      "evaluationOutcome": "source",
+      "comparisonGroupId": "comparison:supervised-replay:2b543d8e59eec2c8a1d768e8b41d159905c8b44f31cbb4f54ec1db8297b60a62",
+      "branches": [
+        {
+          "candidateEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+          "outcome": "complete",
+          "branchRootRef": "2580c6047502e29d00c4454f1696ac9a01b2cb9c5bd13600e9e44c82c069009f"
+        }
+      ],
+      "dispatches": [
+        {
+          "kind": "candidate",
+          "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+          "attempt": 1,
+          "costMicros": 0,
+          "bytes": 0,
+          "outcome": "complete"
+        }
+      ]
+    }
+  },
+  {
+    "i": 7,
+    "status": 200,
+    "body": {
+      "schemaVersion": "role-model.supervised-replay-command-receipt.v1",
+      "requestId": "req-07497f2e-bfe2-4faf-9271-5f06cbab19ac",
+      "replayJobId": "e86ac2f8edce37dbb7a74085608f1f62d05b687e7af71e1341e9753292c4f9a3",
+      "state": "complete",
+      "evaluationJobId": "evaluation-replay-b32eb0be383a54791963",
+      "evaluationOutcome": "tie",
+      "comparisonGroupId": "comparison:supervised-replay:ea583300cb749978d9550069b121ad3b58a46862f0929486ce74b5f73822b40c",
+      "branches": [
+        {
+          "candidateEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+          "outcome": "complete",
+          "branchRootRef": "68e7c6211fb813b9f8a84c8bd16d9d3595dffb4318a4a9a4d6fbce208b216d91"
+        }
+      ],
+      "dispatches": [
+        {
+          "kind": "candidate",
+          "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+          "attempt": 1,
+          "costMicros": 0,
+          "bytes": 0,
+          "outcome": "complete"
+        }
+      ]
+    }
+  }
+]

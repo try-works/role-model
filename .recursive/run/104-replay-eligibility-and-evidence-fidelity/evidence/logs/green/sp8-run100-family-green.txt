@@ -1,0 +1,34 @@
+(node:10092) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ run100 item3c an unjudged deterministic tie is recorded as insufficient evidence, not as a judged tie (663.0918ms)
+✔ run100 item3c a genuinely judged equal comparison still records a tie (504.3938ms)
+(node:46472) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ run100 item8 a released job whose trials are only submitted is stranded, then reclaimed with a named reason (530.7901ms)
+✔ run100 item8 a job a runner is actively working is never reclaimed (256.8065ms)
+(node:63280) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ run100 r6.1 the learning summary carries the learner's evidence and exclusions by reason (72.4521ms)
+✔ run100 r6.1 a state root with no learner receipts reports an empty evidence section (4.998ms)
+✔ run100 r6.1 a receipt carrying its own taskTypeId appears in the per-family view (53.6878ms)
+(node:38544) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ run100 r4 a retried receipt that differs only in volatile fields is recorded idempotently (195.4563ms)
+✔ run100 r4 a retried receipt with a different decision is still refused (149.1891ms)
+(node:45068) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ run100 RC-1: a three-arm capture finalises its primary pair (the comparison it actually judged) (733.5474ms)
+✔ run100 RC-1: a third arm on the same job cannot refuse the primary pair's comparison (414.6225ms)
+✔ run100 r7 the new parameters are registry entries with bounds, defaults and UI exposure (6.1812ms)
+✔ run100 r7 the shipped default policy carries the effective values (19.8943ms)
+✔ run100 r7 an out-of-range arm bound fails closed by name (3.9947ms)
+✔ run100 r7 an unknown judge-exclusion value fails closed by name (1.1284ms)
+✔ run100 r7 a scope override resolves to the effective arm bound (3.0847ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1528.2017

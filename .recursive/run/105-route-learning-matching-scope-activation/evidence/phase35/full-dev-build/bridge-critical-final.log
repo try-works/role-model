@@ -1,0 +1,67 @@
+
+ RUN  v3.2.4 E:/tmp/run105-full-public/role-model-router/apps/runtime-host-bridge
+
+(node:26896) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/provider-overlap-metadata.test.ts (50 tests) 34203ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for baseten  1276ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for cerebras  1685ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for cohere  1776ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for crusoe  1668ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for databricks  1207ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for deepinfra  1239ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for deepseek  1206ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for groq  1353ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for minimax  1268ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for mistral  1302ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for morph  1417ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for nebius  1297ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for openrouter  1358ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for ovhcloud  1291ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for perplexity  1207ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for sarvam  1284ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for v0  1282ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for wandb  1511ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for watsonx  1474ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for xai  1393ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for zai  1147ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes one OpenAI provider with API Key and Codex Subscription variants  1337ms
+   ✓ listProviders overlap metadata (R1 integration) > every remote connection method resolves its allowed models through the same effort-aware catalog  1942ms
+(node:15308) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | test/validate-ui.test.ts > runRuntimeUiValidation > validates runtime config reads and the main control-plane mutations
+[run115] eligibility candidates=2 eligible=1 codes=CAPABILITY_MISSING=1 request=req-adapter-validation alias=- model=- effort=- pass=- allow=[] denied=[cli.local.coder]
+
+stdout | test/validate-ui.test.ts > runRuntimeUiValidation > validates runtime config reads and the main control-plane mutations
+[run115] eligibility candidates=2 eligible=1 codes=CAPABILITY_MISSING=1 request=req-adapter-validation alias=- model=- effort=- pass=- allow=[] denied=[cli.local.coder]
+
+ ✓ test/validate-ui.test.ts (2 tests) 53136ms
+   ✓ runRuntimeUiValidation > validates runtime config reads and the main control-plane mutations  53105ms
+(node:5116) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | test/account-repair.test.ts > account repair mutations > Codex Subscription OAuth completion admits endpoints without an automatic readiness execution
+[run115] eligibility candidates=5 eligible=3 codes=POLICY_DENY_ENDPOINT=2,CAPABILITY_MISSING=1,PROVIDER_OFFLINE=1 request=req-codex-subscription-001 alias=- model=- effort=- pass=live:reroute allow=[openai.personal.codex-subscription.global.gpt-5.3-codex,openai.personal.codex-subscription.global.gpt-5.3-codex-high,openai.personal.codex-subscription.global.gpt-5.3-codex-medium,openai.personal.codex-subscription.global.gpt-5.3-codex-xhigh] denied=[openai.personal.codex-subscription.global.gpt-5.3-codex-medium,cli.local.coder]
+
+ ✓ test/account-repair.test.ts (7 tests) 24251ms
+   ✓ account repair mutations > starting Kimi Code authorization for k3 preserves existing allowed models and active endpoints  1339ms
+   ✓ account repair mutations > reconnect returns the current pending device-authorization session for the same account  976ms
+   ✓ account repair mutations > reconnect starts a fresh Codex Subscription device-code session instead of reusing a stale pending one  983ms
+   ✓ account repair mutations > starting Codex Subscription authorization again supersedes the older pending session  1032ms
+   ✓ account repair mutations > update API key preserves account identity, bindings, and endpoint associations  16076ms
+   ✓ account repair mutations > rejects overlapping repair mutations for the same account without partially mutating state  1496ms
+   ✓ account repair mutations > Codex Subscription OAuth completion admits endpoints without an automatic readiness execution  2344ms
+(node:33052) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | test/validate-observability.test.ts > runRuntimeObservabilityValidation > proves structured request, capture, metrics, and otel observability over the real host path
+[run115] eligibility candidates=2 eligible=1 codes=CAPABILITY_MISSING=1 request=req-adapter-validation alias=- model=- effort=- pass=- allow=[] denied=[cli.local.coder]
+
+ ✓ test/validate-observability.test.ts (1 test) 23536ms
+   ✓ runRuntimeObservabilityValidation > proves structured request, capture, metrics, and otel observability over the real host path  23534ms
+ ✓ test/benchmark-summary.test.ts (22 tests) 145ms
+ ✓ test/unified-runtime-config.test.ts (31 tests) 190ms
+
+ Test Files  6 passed (6)
+      Tests  113 passed (113)
+   Start at  20:36:20
+   Duration  156.75s (transform 5.03s, setup 0ms, collect 17.34s, tests 135.46s, environment 2ms, prepare 1.48s)
+

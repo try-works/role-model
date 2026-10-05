@@ -1,0 +1,36 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-ui
+
+ ❯ app/routes/learning-task-family.test.tsx (3 tests | 1 failed) 116ms
+   ✓ run104 R6 Recent decisions task family > renders the task family the readback published 51ms
+   ✓ run104 R6 Recent decisions task family > an unpublished family reads as an honest placeholder, not an invented one 4ms
+   × run104 R6 Recent decisions task family > renders the task variant when it travelled with the classification 47ms
+     → expected '<tr class="border-b border-[var(--rm-…' to contain 'variant audit'
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/routes/learning-task-family.test.tsx > run104 R6 Recent decisions task family > renders the task variant when it travelled with the classification
+AssertionError: expected '<tr class="border-b border-[var(--rm-…' to contain 'variant audit'
+
+Expected: "variant audit"
+Received: "<tr class="border-b border-[var(--rm-border)] align-top"><td class="py-3 pr-3"><p class="font-mono text-[13px] font-medium leading-[18px] text-[var(--rm-fg)] flex items-baseline gap-2"><span class="min-w-0 truncate" title="data.quality.audit">data.quality.audit</span></p><p class="mt-0.5 font-sans text-[11px] leading-4 text-[var(--rm-secondary)]">not reported</p></td><td class="py-3 pr-3"><p class="font-mono text-[11px] leading-4 text-[var(--rm-muted)]">not reported</p></td><td class="py-3 pr-3"><p class="font-mono text-[12px] leading-[18px] text-[var(--rm-fg)] truncate">not reported</p><p class="mt-0.5 break-words font-mono text-[11px] leading-4 text-[var(--rm-muted)]">not reported</p></td><td class="py-3 pr-3"><p class="font-mono text-[11px] leading-4 text-[var(--rm-muted)]">not reported</p></td><td class="py-3 pr-3"><p class="font-mono text-[11px] leading-4 text-[var(--rm-muted)]">no verdict recorded</p><p class="mt-0.5 font-mono text-[11px] leading-4 text-[var(--rm-muted)]">outcome not reported</p></td></tr>"
+
+ ❯ app/routes/learning-task-family.test.tsx:53:20
+     51|       classification: { taskTypeId: "data.quality.audit", taskVariant:…
+     52|     });
+     53|     expect(markup).toContain("variant audit");
+       |                    ^
+     54|   });
+     55| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  19:02:48
+   Duration  62.76s (transform 11.85s, setup 0ms, collect 53.60s, tests 116ms, environment 1ms, prepare 4.77s)
+
+undefined
+D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run app/routes/learning-task-family.test.tsx

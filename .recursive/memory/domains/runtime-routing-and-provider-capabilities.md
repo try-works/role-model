@@ -298,3 +298,67 @@ After run 69, the benchmark stack itself is validated by fresh `VALID` quick and
 - Reference: `.recursive/DECISIONS.md` (run `103-agent-strategy-and-scoring-strategy`), `docs/operations/05-agent-strategy-and-workload-postures.md`,
   `role-model-router/apps/runtime-host-bridge/src/scoring-strategy.ts`.
 - Source-Runs: added `103-agent-strategy-and-scoring-strategy`; Last-Validated: `2026-09-30`.
+
+## Run 104 replay eligibility, traffic classes and evidence fidelity
+
+Run `104-replay-eligibility-and-evidence-fidelity` (2026-10-02) changed three durable truths in this domain and
+one in the Track B spine.
+
+- **Replay refusals are named.** `candidate_input_unsupported` carries the blocking modality or capability and
+  the rejected endpoint ids. It is **terminal** (`refused`, once) when every *declared* arm fails the router's own
+  eligibility rule, and **deferrable** when a capable arm is merely unhealthy or excluded, or when a configured
+  endpoint still declares nothing. The generic `no_distinct_candidate_configured` remains only for a shortfall the
+  classifier cannot name, and admission's own refusals (benchmark, already-processed, budget) keep precedence over
+  the named class. `planReplayDispatchArms` is the single source of the dispatch set on both the tick and the
+  on-demand planner.
+- **Traffic classes are typed end to end.** The persisted vocabulary is
+  `live | replay | evaluation | benchmark | probe | unknown`, with the legacy `live_request` still read. The
+  declared class travels from the producer through the observation, the sample and the telemetry row. The
+  operator's aggregates are **live-only** and publish `excludedRequestCount` / `excludedByClass`, so a replay or
+  benchmark cannot move the live cache-hit rate, counts, latency or cost. `request_class_source` distinguishes a
+  declared class from a backfilled one. Known residual: an undeclared write stores no class and is counted live,
+  because strict `live`-only dropped every legacy live failure row.
+- **Arm effort comparability is first-class.** `preferEffortMatchedReplayArms` repoints an arm to the *same*
+  model's variant at the source capture's effort when the registry holds one (never crossing models, never
+  inventing an endpoint) and the repointed set is re-checked for eligibility; `classifyReplayArmEffort` publishes
+  `matched | mismatched | source_effort_unspecified | arm_effort_unspecified` on the durable replay payload, and a
+  comparison containing a mismatched arm publishes the validity issue `arm_effort_mismatch` (which the learning
+  pass counts as `incomparable:arm_effort_mismatch`). **The public producer link is now wired (post-closeout `8aa114ed`)**: the comparison identity carries
+  `effortComparability` (threaded through `classifyReplayArmEffort` in the comparability builder), so the exclusion
+  can fire against a live comparison.
+- **Effect discipline that this repo expects.** A mapper whose comment claims exhaustiveness must terminate with
+  `Match.exhaustive`, not `Match.orElse`: the phase-4 audit found `traffic-class.ts` claiming the former while
+  using the latter, and a new variant would have fallen silently into `unknown`. The private handoff uses
+  `ManagedRuntime`/`Effect.gen`. No dependency changed.
+- **A fresh state root drains replays once its credentials + candidate pool are correct** (post-closeout):
+  restoring the operator's OAuth credential (`<stateRoot>/<scope>/credentials/oauth/openai/*.json`) and restarting
+  the runtime (so the replay candidate pool re-reads the registry) makes the advisory observation *record*
+  (`decisionId`+`routePackage`) instead of skipping, and replays refuse by name (terminal) rather than sitting
+  `deferred`/`replay_failed`. Seeding a fresh channel also needs the
+  operator's *provider accounts* (including the `local-file` OAuth credential under
+  `<stateRoot>/<scope>/credentials/`) and activation bodies that carry the **source** endpoint kind
+  (`remote-openai-compatible`); posting the readback's normalised `remote_api` re-normalises to `local_engine` and
+  yields `routingEligible: false`.
+- **pi points at a channel through its agent directory, not an env var.** The provider base URL lives in
+  `<agent dir>/models.json`; `ROLE_MODEL_ENDPOINT` does not redirect it. Use a run-private
+  `PI_CODING_AGENT_DIR` (copy the models store, settings and installed `npm` tree, and rewrite the package paths
+  to absolute) to avoid touching the operator's `D:\pi\agent`.
+## Run 105 matching-scope activation and classification alignment
+
+Run `105-route-learning-matching-scope-activation` (2026-10-04) shipped stage-3 matching-scope activation and fixed a
+classification divergence in the routing domain.
+
+- **A pack is a per-(role, task) ranked endpoint ladder** (exact match only), materialized from pairwise comparisons,
+  walked advisory-only top-down, with derived floor-based activation and per-task rollback. Scope-wide packs are not
+  consulted.
+- **The telemetry taxonomy and the capture/advisory classification can diverge if they read different plan fields.**
+  Telemetry = extractTaxonomyFields(deriveTaxonomyClassification(...).normalizedIntent); capture = buildRequestClassificationForPlan(plan).
+  deriveTaxonomyClassification returns taskTypeId and normalizedIntent.task.id as IDENTICAL values, so the divergence
+  is entirely in buildRequestClassificationForPlan reading the wrong field: plan.routingRequest.taskType / requestedRoleId
+  are runtime-policy ids, not taxonomy ids. Fix (public d797a185, tree 5da40073): resolve from the authoritative
+  plan.taxonomyIdentity (declared-wins, else resolved identity) with the role gated on a genuine task so the
+  text.chat/writer defaults do not leak. Behavioural tests replace the source-assertion; full host suite 2250/5-skip;
+  live pi request classifies coder|coder.edit and lastUnclassifiedCaptures drops to 0.
+- **The two classification builders have different contracts:** buildBridgeTaxonomyIdentity is TOTAL (never null,
+  defaults to writer/text.chat); buildRequestClassification is PARTIAL (null when unclassified). Align capture/advisory
+  to the resolved identity, never to the raw runtime-policy plan fields.

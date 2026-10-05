@@ -1,0 +1,13 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-host-bridge
+
+ ✓ test/run104-sp2-refusal-semantics.test.ts (5 tests) 72ms
+(node:66756) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run104-branch-append-recovery.test.ts (5 tests) 34ms
+
+ Test Files  2 passed (2)
+      Tests  10 passed (10)
+   Start at  22:58:41
+   Duration  14.34s (transform 7.92s, setup 0ms, collect 12.62s, tests 106ms, environment 1ms, prepare 600ms)
+

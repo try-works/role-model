@@ -1,5 +1,7 @@
 import { createHash } from "node:crypto";
 
+import { supportsCapabilityRequirement } from "@role-model-router/core";
+
 /**
  * Run 97 replay policy surface.
  *
@@ -114,6 +116,25 @@ export const REPLAY_REFUSAL_CODES = [
    * exhaustion, because whether the partial batch is recoverable is not established.
    */
   "replay_partial_trial_scores",
+  /**
+   * Run 104 R2: the capture's request cannot be served by any arm the configured pool can offer.
+   * R1's eligibility rule rejects such arms individually (`MODALITY_UNSUPPORTED` / `CAPABILITY_MISSING`)
+   * before dispatch; when every arm is rejected the capture used to arrive as the generic
+   * `no_distinct_candidate_configured`, which is deferrable by definition, so it was re-planned on
+   * every tick and the disposition plane could not count the class. The named class travels with the
+   * blocking modality or capability and the endpoint ids that were rejected. Terminal when every
+   * declared arm says it cannot serve the input (the pool can never change that); deferrable when a
+   * capable arm merely is unavailable (unhealthy or excluded), because the pool can change.
+   */
+  "candidate_input_unsupported",
+  /**
+   * Run 105 R1/R8: the capture carries no (role, task) classification, so it can never be admitted
+   * to the replay/eval queue. Scope-wide packs do not exist in stage 3, so there is no ladder for an
+   * unclassified request to fill and no advisory it could be served - the class is TERMINAL (no
+   * future tick can classify a capture that never recorded a classification) and is named here so
+   * the disposition plane counts it instead of it arriving as a generic refusal.
+   */
+  "no_route_classification",
 ] as const;
 
 export type ReplayRefusalCode = (typeof REPLAY_REFUSAL_CODES)[number];
@@ -293,6 +314,351 @@ export function replayBudgetEnforcedForChannel(
   return (channel ?? "").trim().toLowerCase() === "production";
 }
 
+/**
+ * Run 104 R1: the request requirements a replay arm must be able to serve.
+ *
+ * A replay arm may only be planned against an endpoint that could serve the capture's request, so the
+ * filter has to know what the request needed. The capture's own recorded decision is the authority;
+ * captures written before that field existed are read from their message/attachment content and the
+ * value is marked `inferred` so the operator can tell a recorded fact from a derivation.
+ */
+export interface ReplayRequestRequirements {
+  readonly requiredCapabilities: readonly string[];
+  readonly requiredModalities: readonly string[];
+  readonly source: "recorded" | "inferred";
+}
+
+/** The declaration pair the router's eligibility rule reads, keyed by endpoint. */
+export interface ReplayCandidateEligibilityProfile {
+  readonly endpointId: string;
+  readonly capabilities: readonly string[];
+  readonly modalities: readonly string[];
+}
+
+/**
+ * Run 104 R1: the router's two candidate-input exclusion codes, named with the endpoint that carries them.
+ * The vocabulary is the router's own (`toCandidateExclusion`, `packages/core/src/router.ts`), not a
+ * replay-local restatement, so an operator sees the same names on both paths.
+ */
+export type ReplayEligibilityRejectionCode = "MODALITY_UNSUPPORTED" | "CAPABILITY_MISSING";
+
+export interface ReplayCandidateRejection {
+  readonly endpointId: string;
+  readonly code: ReplayEligibilityRejectionCode;
+  readonly detail: string;
+  /**
+   * Run 104 R2: the blocking input this endpoint failed on. Carried by the rejection itself (the single
+   * place that owns the eligibility rule) so a refusal can name the modality or capability without
+   * re-deriving the rule at the call site.
+   */
+  readonly blockedModality?: string;
+  readonly blockedCapability?: string;
+}
+
+/**
+ * Run 104 R2: the named refusal for a capture no counterfactual arm can serve.
+ * `outcome` is the disposition the caller must record: `refused` once when the declared pool can never
+ * serve the input, `deferred` while a capable or still-undeclared arm may return.
+ */
+export interface ReplayCandidateShortfall {
+  readonly code: "candidate_input_unsupported";
+  readonly outcome: "refused" | "deferred";
+  readonly blockedModality: string | null;
+  readonly blockedCapability: string | null;
+  readonly rejectedEndpointIds: readonly string[];
+  readonly unavailableEndpointIds: readonly string[];
+  readonly detail: string;
+}
+
+const REQUIREMENT_CONTAINER_KEYS = [
+  "requestRequirements",
+  "routingRequirements",
+  "routingDecision",
+  "decision",
+  "requirements",
+] as const;
+
+const CAPABILITY_KEYS = ["requiredCapabilities", "required_capabilities"] as const;
+const MODALITY_KEYS = ["requiredModalities", "required_modalities"] as const;
+
+function readStringList(record: Record<string, unknown>, keys: readonly string[]): string[] | null {
+  for (const key of keys) {
+    const value = record[key];
+    if (value === undefined) continue;
+    if (!Array.isArray(value)) continue;
+    return [
+      ...new Set(
+        value
+          .filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+          .map((item) => item.trim()),
+      ),
+    ];
+  }
+  return null;
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+const CONTENT_MODALITY_TYPES: Readonly<Record<string, string>> = {
+  image_url: "image",
+  input_image: "image",
+  image: "image",
+  input_audio: "audio",
+  audio: "audio",
+  audio_url: "audio",
+  video_url: "video",
+  video: "video",
+  file: "file",
+  document: "file",
+};
+
+function modalityForMimeType(mimeType: string): string | null {
+  const normalized = mimeType.trim().toLowerCase();
+  if (normalized.startsWith("image/")) return "image";
+  if (normalized.startsWith("audio/")) return "audio";
+  if (normalized.startsWith("video/")) return "video";
+  if (normalized === "application/pdf" || normalized === "application/x-pdf") return "pdf";
+  return null;
+}
+
+/**
+ * Run 104 R1 inference leg: read the non-text modalities a capture's own bytes demand. Conservative by
+ * design - only a declared content type or attachment mime names a modality, so an ordinary transcript
+ * infers `["text"]` and keeps today's behaviour byte-identical.
+ */
+function inferReplayRequiredModalities(capture: Record<string, unknown>): string[] {
+  const found = new Set<string>();
+  const messages = Array.isArray(capture.messages) ? capture.messages : [];
+  for (const message of messages) {
+    const record = asRecord(message);
+    if (!record) continue;
+    const content = Array.isArray(record.content) ? record.content : [];
+    for (const part of content) {
+      const partRecord = asRecord(part);
+      if (!partRecord) continue;
+      const type = typeof partRecord.type === "string" ? partRecord.type.trim().toLowerCase() : "";
+      const mapped = CONTENT_MODALITY_TYPES[type];
+      if (mapped === "file") {
+        const mime =
+          (typeof partRecord.mimeType === "string" && partRecord.mimeType) ||
+          (typeof partRecord.mime_type === "string" && partRecord.mime_type) ||
+          (asRecord(partRecord.file)?.mime_type as string | undefined) ||
+          "";
+        const fromMime = typeof mime === "string" && mime ? modalityForMimeType(mime) : null;
+        if (fromMime) found.add(fromMime);
+        continue;
+      }
+      if (mapped) found.add(mapped);
+    }
+  }
+  const attachments = Array.isArray(capture.attachments) ? capture.attachments : [];
+  for (const attachment of attachments) {
+    const record = asRecord(attachment);
+    if (!record) continue;
+    const mime = [
+      record.mimeType,
+      record.mime_type,
+      record.contentType,
+      record.content_type,
+      record.type,
+    ].find((value): value is string => typeof value === "string" && value.trim().length > 0);
+    if (!mime) continue;
+    const mapped = modalityForMimeType(mime);
+    if (mapped) found.add(mapped);
+  }
+  return ["text", ...[...found].sort()];
+}
+
+/**
+ * Run 104 R1: read the capture's request requirements. The recorded decision wins; only when no
+ * container states modalities or capabilities does the reader fall back to content inference, and the
+ * result then says so.
+ */
+export function readReplayRequestRequirements(
+  capture: Record<string, unknown>,
+): ReplayRequestRequirements {
+  const containers: Record<string, unknown>[] = [capture];
+  for (const key of REQUIREMENT_CONTAINER_KEYS) {
+    const nested = asRecord(capture[key]);
+    if (nested) containers.push(nested);
+  }
+  let requiredCapabilities: string[] | null = null;
+  let requiredModalities: string[] | null = null;
+  for (const container of containers) {
+    requiredCapabilities ??= readStringList(container, CAPABILITY_KEYS);
+    requiredModalities ??= readStringList(container, MODALITY_KEYS);
+  }
+  if (requiredCapabilities !== null || requiredModalities !== null) {
+    return {
+      requiredCapabilities: requiredCapabilities ?? [],
+      requiredModalities: requiredModalities ?? ["text"],
+      source: "recorded",
+    };
+  }
+  return {
+    requiredCapabilities: [],
+    requiredModalities: inferReplayRequiredModalities(capture),
+    source: "inferred",
+  };
+}
+
+/**
+ * Run 104 R1: the router's own candidate-input rule, applied to one endpoint declaration.
+ *
+ * The capability half calls the exported `supportsCapabilityRequirement` (no second table); the modality
+ * half is the router's `MODALITY_UNSUPPORTED` comparison (every required modality must be declared).
+ */
+export function evaluateReplayCandidateEligibility(input: {
+  readonly endpointId: string;
+  readonly capabilities: readonly string[];
+  readonly modalities: readonly string[];
+  readonly requirements: ReplayRequestRequirements;
+}): ReplayCandidateRejection | null {
+  const missingModality = input.requirements.requiredModalities.find(
+    (modality) => !input.modalities.includes(modality),
+  );
+  if (missingModality !== undefined) {
+    return {
+      endpointId: input.endpointId,
+      code: "MODALITY_UNSUPPORTED",
+      detail: `Endpoint does not support required modality ${missingModality}.`,
+      blockedModality: missingModality,
+    };
+  }
+  const missingCapability = input.requirements.requiredCapabilities.find(
+    (capability) => !supportsCapabilityRequirement(input.capabilities, capability),
+  );
+  if (missingCapability !== undefined) {
+    return {
+      endpointId: input.endpointId,
+      code: "CAPABILITY_MISSING",
+      detail: `Endpoint is missing required capability ${missingCapability}.`,
+      blockedCapability: missingCapability,
+    };
+  }
+  return null;
+}
+
+/**
+ * Run 104 R2: name the shortfall when no counterfactual arm can serve the capture's input.
+ *
+ * Terminal (`refused`) only when the *declared* pool is exhausted: every endpoint that could have been
+ * an arm carries a profile and every one of them fails the router's own eligibility rule. Deferrable
+ * (`deferred`) when a capable endpoint exists but is unavailable (unhealthy or excluded), or when a
+ * configured endpoint still declares nothing - in both cases the pool can change, and the old
+ * deferral behaviour is kept. `null` when an arm can serve the capture, or when no endpoint declares
+ * anything at all (the pre-existing filters own that case and behaviour is unchanged).
+ */
+export function classifyReplayCandidateShortfall(input: {
+  readonly configuredEndpointIds: readonly string[];
+  readonly requirements?: ReplayRequestRequirements;
+  readonly endpointProfiles?: readonly ReplayCandidateEligibilityProfile[];
+  readonly sourceEndpointId?: string | null;
+  readonly excludedEndpointIds?: readonly string[];
+  readonly healthyEndpointIds?: readonly string[];
+}): ReplayCandidateShortfall | null {
+  if (!input.requirements) return null;
+  const profiles = new Map(
+    (input.endpointProfiles ?? [])
+      .filter((profile) => profile.endpointId.trim().length > 0)
+      .map((profile) => [profile.endpointId.trim(), profile] as const),
+  );
+  if (profiles.size === 0) return null;
+  const excluded = new Set(
+    (input.excludedEndpointIds ?? [])
+      .map((value) => value.trim())
+      .filter((value) => value.length > 0),
+  );
+  const healthy =
+    input.healthyEndpointIds === undefined
+      ? null
+      : new Set(
+          input.healthyEndpointIds.map((value) => value.trim()).filter((value) => value.length > 0),
+        );
+  const rejected: ReplayCandidateRejection[] = [];
+  const unavailable: string[] = [];
+  let undeclared = 0;
+  const seen = new Set<string>();
+  for (const endpointId of input.configuredEndpointIds) {
+    const normalized = endpointId.trim();
+    if (!normalized || seen.has(normalized)) continue;
+    seen.add(normalized);
+    // The source can never be its own counterfactual arm, so it is not part of the pool this answers for.
+    if (input.sourceEndpointId !== undefined && input.sourceEndpointId !== null) {
+      if (normalized === input.sourceEndpointId) continue;
+    }
+    const profile = profiles.get(normalized);
+    if (!profile) {
+      undeclared += 1;
+      continue;
+    }
+    const rejection = evaluateReplayCandidateEligibility({
+      endpointId: normalized,
+      capabilities: profile.capabilities,
+      modalities: profile.modalities,
+      requirements: input.requirements,
+    });
+    if (rejection) {
+      rejected.push(rejection);
+      continue;
+    }
+    if (excluded.has(normalized) || (healthy !== null && !healthy.has(normalized))) {
+      unavailable.push(normalized);
+      continue;
+    }
+    // A counterfactual arm can serve the capture; there is no shortfall to name.
+    return null;
+  }
+  if (rejected.length === 0 && unavailable.length === 0) return null;
+  const blockedModality = rejected.find((row) => row.blockedModality)?.blockedModality ?? null;
+  const blockedCapability =
+    rejected.find((row) => row.blockedCapability)?.blockedCapability ?? null;
+  const rejectedEndpointIds = rejected.map((row) => row.endpointId);
+  if (unavailable.length > 0 || undeclared > 0) {
+    const reasons: string[] = [];
+    if (unavailable.length > 0) {
+      reasons.push(`capable but unavailable: ${unavailable.join(", ")}`);
+    }
+    if (undeclared > 0) {
+      reasons.push(`${undeclared} configured endpoint(s) declare no modalities or capabilities`);
+    }
+    return {
+      code: "candidate_input_unsupported",
+      outcome: "deferred",
+      blockedModality,
+      blockedCapability,
+      rejectedEndpointIds,
+      unavailableEndpointIds: unavailable,
+      detail:
+        `no eligible replay arm can serve the capture's input yet; ${reasons.join("; ")}`.slice(
+          0,
+          512,
+        ),
+    };
+  }
+  const blocked =
+    blockedModality !== null
+      ? `required modality ${blockedModality}`
+      : blockedCapability !== null
+        ? `required capability ${blockedCapability}`
+        : "the capture's required input";
+  return {
+    code: "candidate_input_unsupported",
+    outcome: "refused",
+    blockedModality,
+    blockedCapability,
+    rejectedEndpointIds,
+    unavailableEndpointIds: [],
+    detail: `candidate input unsupported: ${blocked}; rejected endpoints: ${
+      rejectedEndpointIds.join(", ") || "none declared"
+    }`.slice(0, 512),
+  };
+}
+
 export function selectReplayCandidates(input: {
   readonly configuredEndpointIds: readonly string[];
   readonly healthyEndpointIds?: readonly string[];
@@ -312,6 +678,14 @@ export function selectReplayCandidates(input: {
    */
   readonly rotationKey?: string | null;
   readonly cap?: number;
+  /**
+   * Run 104 R1: the capture's request requirements and the configured endpoints' declarations. An
+   * endpoint with no profile is left to the pre-existing filters (unchanged behaviour for callers that
+   * carry no declarations yet).
+   */
+  readonly requirements?: ReplayRequestRequirements;
+  readonly endpointProfiles?: readonly ReplayCandidateEligibilityProfile[];
+  readonly onRejected?: (rejection: ReplayCandidateRejection) => void;
 }): readonly string[] {
   const cap = input.cap ?? DEFAULT_REPLAY_CANDIDATE_CAP;
   if (!Number.isSafeInteger(cap) || cap < 1) return [];
@@ -324,6 +698,11 @@ export function selectReplayCandidates(input: {
       .map((value) => value.trim())
       .filter((value) => value.length > 0),
   );
+  const profiles = new Map(
+    (input.endpointProfiles ?? [])
+      .filter((profile) => profile.endpointId.trim().length > 0)
+      .map((profile) => [profile.endpointId.trim(), profile] as const),
+  );
   const selected: string[] = [];
   const seen = new Set<string>();
   const eligible: string[] = [];
@@ -335,6 +714,24 @@ export function selectReplayCandidates(input: {
       if (normalized === input.sourceEndpointId) continue;
     }
     if (healthy && !healthy.has(normalized)) continue;
+    /**
+     * Run 104 R1: the router's own capability/modality rule decides whether this arm could serve the
+     * capture's request. Rejected arms are handed to the caller so they are recorded rather than
+     * silently dropped.
+     */
+    const profile = profiles.get(normalized);
+    if (profile && input.requirements) {
+      const rejection = evaluateReplayCandidateEligibility({
+        endpointId: normalized,
+        capabilities: profile.capabilities,
+        modalities: profile.modalities,
+        requirements: input.requirements,
+      });
+      if (rejection) {
+        input.onRejected?.(rejection);
+        continue;
+      }
+    }
     seen.add(normalized);
     eligible.push(normalized);
   }
@@ -352,7 +749,211 @@ export function selectReplayCandidates(input: {
     selected.push(endpointId);
     if (selected.length === cap) break;
   }
+  if (process.env.ROLE_MODEL_FOCUS_DIAG) {
+    console.error(
+      `[select-diag] cfg=${input.configuredEndpointIds.map((c) => c.split(".").pop()).join(",")} source=${(input.sourceEndpointId || "").split(".").pop() || null} reqMod=${JSON.stringify(input.requirements ? input.requirements.requiredModalities : null)} reqCap=${JSON.stringify(input.requirements ? input.requirements.requiredCapabilities : null)} profiles=${(
+        input.endpointProfiles || []
+      )
+        .map(
+          (p) =>
+            `${p.endpointId.split(".").pop()}:mod[${(p.modalities || []).join(",")}]:cap[${(p.capabilities || []).join(",")}]`,
+        )
+        .join("|")} => selected=${selected.map((c) => c.split(".").pop()).join(",")}`,
+    );
+  }
   return selected;
+}
+
+/**
+ * Run 104 R1 pre-dispatch guard: re-check the planned arms against the same rules immediately before
+ * dispatch, so a configuration change between planning and dispatch cannot turn into a provider-bound
+ * 400. The caller fails cheaply with the reasons recorded here.
+ */
+export function recheckReplayCandidatesForDispatch(input: {
+  readonly endpointIds: readonly string[];
+  readonly requirements?: ReplayRequestRequirements;
+  readonly endpointProfiles?: readonly ReplayCandidateEligibilityProfile[];
+}): readonly ReplayCandidateRejection[] {
+  if (!input.requirements) return [];
+  const profiles = new Map(
+    (input.endpointProfiles ?? [])
+      .filter((profile) => profile.endpointId.trim().length > 0)
+      .map((profile) => [profile.endpointId.trim(), profile] as const),
+  );
+  const rejections: ReplayCandidateRejection[] = [];
+  for (const endpointId of input.endpointIds) {
+    const normalized = endpointId.trim();
+    const profile = profiles.get(normalized);
+    if (!profile) continue;
+    const rejection = evaluateReplayCandidateEligibility({
+      endpointId: normalized,
+      capabilities: profile.capabilities,
+      modalities: profile.modalities,
+      requirements: input.requirements,
+    });
+    if (rejection) rejections.push(rejection);
+  }
+  return rejections;
+}
+
+/**
+ * Run 104 R1 (on-demand planner): turn the caller's requested arms plus the selection pass's rejections into
+ * the set the plan may actually dispatch.
+ *
+ * The durable tick already drops the rejected arms, keeps the rest and only defers when nothing survives; the
+ * on-demand planner did not - it still built `candidatePackages` from the unfiltered requested list and threw
+ * when *any* requested arm was ineligible, so an image capture against `[text-only, image]` either dispatched
+ * the text-only arm or aborted the whole replay. This helper is the single source of that decision so both
+ * callers share it.
+ *
+ * Semantics:
+ * - the plan is the caller's requested order, trimmed and deduped, minus the selection rejections and minus the
+ *   arms the pre-dispatch re-check rejects;
+ * - an endpoint with no declared profile is never dropped (its eligibility is unknown, not false);
+ * - rejections are deduped by endpoint id, selection first, so the pre-dispatch detail cannot overwrite what
+ *   the selection pass already recorded.
+ */
+export function planReplayDispatchArms(input: {
+  readonly requestedEndpointIds: readonly string[];
+  /** Rejections collected by `selectReplayCandidates`' `onRejected` callback. */
+  readonly selectionRejections: readonly ReplayCandidateRejection[];
+  readonly requirements?: ReplayRequestRequirements;
+  readonly endpointProfiles?: readonly ReplayCandidateEligibilityProfile[];
+}): {
+  readonly plannedEndpointIds: readonly string[];
+  readonly rejections: readonly ReplayCandidateRejection[];
+} {
+  const requested: string[] = [];
+  const seen = new Set<string>();
+  for (const endpointId of input.requestedEndpointIds) {
+    const normalized = endpointId.trim();
+    if (!normalized || seen.has(normalized)) continue;
+    seen.add(normalized);
+    requested.push(normalized);
+  }
+
+  const rejections: ReplayCandidateRejection[] = [];
+  const rejectedIds = new Set<string>();
+  for (const rejection of input.selectionRejections) {
+    const normalized = rejection.endpointId.trim();
+    if (!normalized || rejectedIds.has(normalized)) continue;
+    rejectedIds.add(normalized);
+    rejections.push(rejection);
+  }
+  const stale = recheckReplayCandidatesForDispatch({
+    endpointIds: requested.filter((endpointId) => !rejectedIds.has(endpointId)),
+    ...(input.requirements ? { requirements: input.requirements } : {}),
+    ...(input.endpointProfiles ? { endpointProfiles: input.endpointProfiles } : {}),
+  });
+  for (const rejection of stale) {
+    const normalized = rejection.endpointId.trim();
+    if (!normalized || rejectedIds.has(normalized)) continue;
+    rejectedIds.add(normalized);
+    rejections.push(rejection);
+  }
+
+  return {
+    plannedEndpointIds: requested.filter((endpointId) => !rejectedIds.has(endpointId)),
+    rejections,
+  };
+}
+
+/**
+ * Run 104 R9: how a replay arm's reasoning effort relates to the source capture's.
+ *
+ * `mismatched` means both sides declared an effort and they differ - the comparison confounds capability with
+ * effort, so it must be recorded as a comparability dimension (and excluded from promotion evidence) rather
+ * than silently treated as a capability result. The two `*_unspecified` values are not mismatches: one side
+ * simply ran with the model's default, which is a fact worth publishing but not a confound to exclude on.
+ */
+export type ReplayArmEffortComparability =
+  | "matched"
+  | "mismatched"
+  | "source_effort_unspecified"
+  | "arm_effort_unspecified";
+
+export interface ReplayArmEffortRecord {
+  readonly endpointId: string;
+  readonly modelId: string;
+  readonly sourceModelId: string;
+  readonly reasoningEffort: string | null;
+  readonly sourceReasoningEffort: string | null;
+  readonly comparability: ReplayArmEffortComparability;
+}
+
+export interface ReplayArmDescriptor {
+  readonly endpointId: string;
+  readonly modelId: string;
+  readonly reasoningEffort: string | null;
+}
+
+function normalizeEffort(value: string | null | undefined): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim().toLowerCase();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+/**
+ * Run 104 R9: the comparability record for every counterfactual arm in one comparison. Pure: the caller
+ * attaches the records to the replay payload so the receipt can answer "were these arms effort-matched?".
+ */
+export function classifyReplayArmEffort(input: {
+  readonly arms: readonly ReplayArmDescriptor[];
+  readonly sourceModelId: string;
+  readonly sourceReasoningEffort: string | null;
+}): readonly ReplayArmEffortRecord[] {
+  const sourceEffort = normalizeEffort(input.sourceReasoningEffort);
+  return input.arms.map((arm) => {
+    const armEffort = normalizeEffort(arm.reasoningEffort);
+    const comparability: ReplayArmEffortComparability =
+      sourceEffort === null
+        ? "source_effort_unspecified"
+        : armEffort === null
+          ? "arm_effort_unspecified"
+          : armEffort === sourceEffort
+            ? "matched"
+            : "mismatched";
+    return {
+      endpointId: arm.endpointId,
+      modelId: arm.modelId,
+      sourceModelId: input.sourceModelId,
+      reasoningEffort: arm.reasoningEffort ?? null,
+      sourceReasoningEffort: input.sourceReasoningEffort ?? null,
+      comparability,
+    };
+  });
+}
+
+/**
+ * Run 104 R9 matched-effort path: when the source ran at a declared effort and the arm's own model is
+ * configured at that same effort under a different endpoint id, the arm is repointed to that variant. The
+ * repoint never crosses models and never invents an endpoint - it only chooses among endpoints the registry
+ * already holds for the arm's own model. An arm without a matching variant is kept exactly as requested; the
+ * caller records the resulting comparability with `classifyReplayArmEffort`.
+ */
+export function preferEffortMatchedReplayArms(input: {
+  readonly arms: readonly ReplayArmDescriptor[];
+  readonly configuredEndpoints: readonly ReplayArmDescriptor[];
+  readonly sourceModelId: string;
+  readonly sourceReasoningEffort: string | null;
+  readonly sourceEndpointId?: string | null;
+}): readonly ReplayArmDescriptor[] {
+  const sourceEffort = normalizeEffort(input.sourceReasoningEffort);
+  if (sourceEffort === null) return input.arms;
+  const sourceEndpointId =
+    typeof input.sourceEndpointId === "string" ? input.sourceEndpointId.trim() : "";
+  return input.arms.map((arm) => {
+    if (normalizeEffort(arm.reasoningEffort) === sourceEffort) return arm;
+    const variant = input.configuredEndpoints.find(
+      (endpoint) =>
+        endpoint.modelId === arm.modelId &&
+        normalizeEffort(endpoint.reasoningEffort) === sourceEffort &&
+        // Run 105 bug 3: the effort-matched sibling must not be the source endpoint itself, or the
+        // counterfactual collapses back onto the source and the distinct-source gate rejects it.
+        (sourceEndpointId === "" || endpoint.endpointId !== sourceEndpointId),
+    );
+    return variant ?? arm;
+  });
 }
 
 export type ReplayToolPolicy = "recorded_results_only" | "sandboxed_allowlist";

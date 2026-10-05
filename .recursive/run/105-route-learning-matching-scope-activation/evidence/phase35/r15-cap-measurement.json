@@ -1,0 +1,183 @@
+{
+  "actualDimensionsBytes": 240535,
+  "metadataWithoutMessagesBytes": 469,
+  "richMessageBytes": 240066,
+  "actualLeaves": [
+    {
+      "field": "errorContext.message",
+      "jsonBytes": 120022,
+      "utf8Bytes": 120020
+    },
+    {
+      "field": "errorContext.errorPreview.message",
+      "jsonBytes": 120022,
+      "utf8Bytes": 120020
+    },
+    {
+      "field": "errorContext.endpointId",
+      "jsonBytes": 57,
+      "utf8Bytes": 55
+    },
+    {
+      "field": "errorContext.errorPreview.code",
+      "jsonBytes": 29,
+      "utf8Bytes": 27
+    },
+    {
+      "field": "errorContext.adapterFamily",
+      "jsonBytes": 26,
+      "utf8Bytes": 24
+    },
+    {
+      "field": "errorContext.errorPreview.type",
+      "jsonBytes": 23,
+      "utf8Bytes": 21
+    },
+    {
+      "field": "errorContext.failurePhase",
+      "jsonBytes": 20,
+      "utf8Bytes": 18
+    },
+    {
+      "field": "errorContext.type",
+      "jsonBytes": 18,
+      "utf8Bytes": 16
+    },
+    {
+      "field": "errorContext.code",
+      "jsonBytes": 18,
+      "utf8Bytes": 16
+    },
+    {
+      "field": "errorContext.executionFamily",
+      "jsonBytes": 16,
+      "utf8Bytes": 14
+    },
+    {
+      "field": "errorContext.providerId",
+      "jsonBytes": 10,
+      "utf8Bytes": 8
+    },
+    {
+      "field": "errorContext.providerFamily",
+      "jsonBytes": 10,
+      "utf8Bytes": 8
+    }
+  ],
+  "histogram": {
+    "under512": 10,
+    "over512": 2,
+    "over16KiB": 2
+  },
+  "benchmarks": [
+    {
+      "cap": 16384,
+      "shape": "actual-policy",
+      "rowBytes": 469,
+      "write200Ms": 2.325100000000006,
+      "readParse100Ms": 0.6341999999999928,
+      "serialize100Ms": 0.9744999999999919,
+      "page100Bytes": 47013,
+      "rowsPer1MiBFrame": 2235,
+      "sqlite200RowsBytes": 110592,
+      "checkpoint": [
+        {
+          "busy": 0,
+          "log": 0,
+          "checkpointed": 0
+        }
+      ]
+    },
+    {
+      "cap": 16384,
+      "shape": "at-cap",
+      "rowBytes": 16384,
+      "write200Ms": 24.2239,
+      "readParse100Ms": 7.4879999999999995,
+      "serialize100Ms": 3.5908000000000015,
+      "page100Bytes": 1638513,
+      "rowsPer1MiBFrame": 63,
+      "sqlite200RowsBytes": 3387392,
+      "checkpoint": [
+        {
+          "busy": 0,
+          "log": 0,
+          "checkpointed": 0
+        }
+      ]
+    },
+    {
+      "cap": 262144,
+      "shape": "actual-policy",
+      "rowBytes": 240535,
+      "write200Ms": 536.2682,
+      "readParse100Ms": 134.05970000000002,
+      "serialize100Ms": 67.24959999999999,
+      "page100Bytes": 24053613,
+      "rowsPer1MiBFrame": 4,
+      "sqlite200RowsBytes": 48340992,
+      "checkpoint": [
+        {
+          "busy": 0,
+          "log": 0,
+          "checkpointed": 0
+        }
+      ]
+    },
+    {
+      "cap": 262144,
+      "shape": "at-cap",
+      "rowBytes": 262144,
+      "write200Ms": 482.65570000000014,
+      "readParse100Ms": 99.41570000000002,
+      "serialize100Ms": 58.47230000000013,
+      "page100Bytes": 26214513,
+      "rowsPer1MiBFrame": 3,
+      "sqlite200RowsBytes": 52539392,
+      "checkpoint": [
+        {
+          "busy": 0,
+          "log": 0,
+          "checkpointed": 0
+        }
+      ]
+    },
+    {
+      "cap": 1048576,
+      "shape": "actual-policy",
+      "rowBytes": 240535,
+      "write200Ms": 450.21040000000016,
+      "readParse100Ms": 74.2860999999998,
+      "serialize100Ms": 48.170900000000074,
+      "page100Bytes": 24053613,
+      "rowsPer1MiBFrame": 4,
+      "sqlite200RowsBytes": 48340992,
+      "checkpoint": [
+        {
+          "busy": 0,
+          "log": 0,
+          "checkpointed": 0
+        }
+      ]
+    },
+    {
+      "cap": 1048576,
+      "shape": "at-cap",
+      "rowBytes": 1048576,
+      "write200Ms": 2465.2872,
+      "readParse100Ms": 396.7394000000004,
+      "serialize100Ms": 205.9294,
+      "page100Bytes": 104857713,
+      "rowsPer1MiBFrame": 0,
+      "sqlite200RowsBytes": 209997824,
+      "checkpoint": [
+        {
+          "busy": 0,
+          "log": 0,
+          "checkpointed": 0
+        }
+      ]
+    }
+  ],
+  "note": "Single host synthetic isolated SQLite measurement; at-cap padding measures capacity cost, not approved content policy. No production cap edits."
+}

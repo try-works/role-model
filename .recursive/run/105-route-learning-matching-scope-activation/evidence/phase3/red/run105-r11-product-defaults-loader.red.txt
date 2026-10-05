@@ -1,0 +1,28 @@
+npm warn Unknown env config "manage-package-manager-versions". This will stop working in the next major version of npm.
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-host-bridge
+
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run105-r11-product-defaults-loader.test.ts [ test/run105-r11-product-defaults-loader.test.ts ]
+Error: Cannot find module '../src/product-defaults-file.js' imported from 'D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-host-bridge/test/run105-r11-product-defaults-loader.test.ts'
+ ❯ test/run105-r11-product-defaults-loader.test.ts:7:1
+      5| import { describe, expect, test } from "vitest";
+      6| 
+      7| import {
+       | ^
+      8|   PRODUCT_DEFAULTS_RELATIVE_PATH,
+      9|   ROUTE_LEARNING_DOCUMENTED_DEFAULTS,
+
+Caused by: Error: Failed to load url ../src/product-defaults-file.js (resolved id: ../src/product-defaults-file.js) in D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-host-bridge/test/run105-r11-product-defaults-loader.test.ts. Does the file exist?
+ ❯ loadAndTransform ../../../node_modules/.pnpm/vite@7.3.2_@types+node@22.1_d71bf8265f9610ce90201e170d5dc2b8/node_modules/vite/dist/node/chunks/config.js:22663:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  13:44:39
+   Duration  1.02s (transform 109ms, setup 0ms, collect 0ms, tests 0ms, environment 0ms, prepare 338ms)
+

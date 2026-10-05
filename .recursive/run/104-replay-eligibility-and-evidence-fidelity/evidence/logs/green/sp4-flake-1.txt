@@ -1,0 +1,19 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-host-bridge
+
+(node:4100) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | test/index.test.ts > runtime-host-bridge > keeps fresh endpoint-wide metrics when unrevisioned hard-bucket benchmark evidence is quarantined
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=req-runtime-bridge-difficulty-merge-001:difficulty-classifier alias=- model=- effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[anthropic.litellm.global.claude-3-7-sonnet]
+
+stdout | test/index.test.ts > runtime-host-bridge > keeps fresh endpoint-wide metrics when unrevisioned hard-bucket benchmark evidence is quarantined
+[run115] eligibility candidates=2 eligible=2 codes=none request=req-runtime-bridge-difficulty-merge-001 alias=gpt-5.4 model=gpt-5.4 effort=- pass=live allow=[anthropic.litellm.global.claude-3-7-sonnet,openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+ ✓ test/index.test.ts (215 tests | 214 skipped) 4216ms
+   ✓ runtime-host-bridge > keeps fresh endpoint-wide metrics when unrevisioned hard-bucket benchmark evidence is quarantined  4207ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 214 skipped (215)
+   Start at  19:14:41
+   Duration  32.17s (transform 17.18s, setup 0ms, collect 26.25s, tests 4.22s, environment 1ms, prepare 584ms)
+

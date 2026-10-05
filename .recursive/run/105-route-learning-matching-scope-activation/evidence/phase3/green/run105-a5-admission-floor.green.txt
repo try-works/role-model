@@ -1,0 +1,16 @@
+✔ A5: five final comparisons at mean 0.8 admit the endpoint (79.8036ms)
+✔ A5: an endpoint with 4 comparisons stays below the floor regardless of confidence (1.4565ms)
+✔ A5: mean confidence below 0.7 fails the floor even with many comparisons (1.1522ms)
+✔ A5: the mean counts only the endpoint OWN finalized comparisons (R9/D6) (1.0579ms)
+✔ A5: custom minComparisons/minConfidence are honored (1.0522ms)
+✔ A5: a tie participates in the mean (its confidence is a judge confidence) (0.874ms)
+✔ A5: an excluded comparison contributes to neither the count nor the mean (2.0063ms)
+✔ A5: the floor and completeness schemas validate the derived shapes (17.0405ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1841.2989

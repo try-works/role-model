@@ -1,0 +1,385 @@
+(node:30492) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `role-model-dev --trace-warnings ...` to show where the warning was created)
+{
+  "status": "listening",
+  "host": "127.0.0.1",
+  "port": 3458
+}
+[track-b-sidecar] (node:34784) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+[track-b-sidecar] (Use `node --trace-warnings ...` to show where the warning was created)
+[replay-loop] start check: operations=wired channel=development port=3458
+[run105] durable task advisory refresh: scope=standalone-runtime-dev pairs=2 stage=S4
+[replay-tick] run: captures=32 pendingCount=32
+[replay-tick] before readRouteReplayableCaptures focus=coder/coder.config
+[replay-tick] skip: paused=false busy=false running=true
+[run176] finalization signals skipped comparison:supervised-replay:011992ddca0ce38635ef2ae4a6233b9df3d811aafabbbf22c15da8c540e8d37f: its report is already persisted
+[run176] finalization signals skipped comparison:supervised-replay:a316a8748578eba951dac49db327f84934ae783fa1bc14c73dadda69045ff840: its report is already persisted
+[run176] finalization signals skipped comparison:supervised-replay:f58c677d1da2e0f6008b1f7e6d3a1b1cb7adfae9f90a358c71e899cf6934c2ac: its report is already persisted
+[run176] finalization signals skipped comparison:supervised-replay:2efab027c10e0c8fb5725072c30f508e892f46f365e5eb6e7539a27e51fa993b: its report is already persisted
+[run176] finalization signals skipped comparison:supervised-replay:c7f30d5efe32d058bfd28b52ba871c1e7800be1e4bd831fa1b59188ca3cfcc79: its report is already persisted
+[run176] finalization signals skipped comparison:supervised-replay:dc391a2b987c18d6845175f9f01791e55cd431c434a802cedf8498736310fd6f: its report is already persisted
+[run176] finalization signals skipped comparison:supervised-replay:f45837d1df302a99ac8fe237e23b34c912fe2f71a8fe5230ddeb059aa8478e6e: its report is already persisted
+[run176] finalization signals skipped comparison:supervised-replay:24f228e1bd91b58afd933ac73a4568c74a274e6b77cb9d2a23e86b1ba8a79daf: its report is already persisted
+[run176] finalization signals skipped comparison:supervised-replay:a8e4e6445058597260411739afb27588dfb227fcb3e0d0b7a585b93baa7cff97: its report is already persisted
+[run176] finalization signals skipped comparison:supervised-replay:c22d95f4ef6ab2d073a8885663bb3461d4fd0c4d2f95c7b004da1bd71059b034: its report is already persisted
+[run176] finalization signals skipped comparison:supervised-replay:200bbb0381079e5a45de1c20af4db487447bce3a14b54fbae418689b1ad51136: its report is already persisted
+[run176] finalization signals skipped comparison:supervised-replay:ad8220dc9a40f683e8eb90b4435cf879ea3602fc4d7d9f0a0d8bec7617cfeb77: its report is already persisted
+[run176] finalization signals skipped comparison:supervised-replay:b683da7302f0a4930821092382c9edfd6e73f0ce438395df4a640b41cad01850: its report is already persisted
+[run176] finalization signals skipped comparison:supervised-replay:1cd05de9480be911048aba39f985dc4da0fa997c66251f813c694d94992eab2d: its report is already persisted
+[run176] finalization signals skipped comparison:supervised-replay:0a5fbab40e220a3419d87152beac3b5ca5f1c1262797718fdbc599604eb826eb: its report is already persisted
+[run176] finalization signals skipped comparison:supervised-replay:aacd698fe3895b60b4b301776d721542a43d30ca79fa0ab224a0b0f34030b580: its report is already persisted
+[run176] finalization signals skipped comparison:supervised-replay:7496c96d009bfbe719179f29d75e5cf0cb1f06e09abbba690a183a4204057d1e: its report is already persisted
+[run176] finalization signals skipped comparison:supervised-replay:d85bd666b50ba78f851f71d9d6b74461db5f3a1e4072462ed4505e5d2b11aeb2: its report is already persisted
+[run176] finalization signals skipped comparison:supervised-replay:1ae29f0e8fde9096581a66416671960554c5cdd87945dc6c17bf8ae0a71e5d32: its report is already persisted
+[run176] finalization signals skipped comparison:supervised-replay:95528b356477dd729295cb788b40c98e48c94b790819c9680345c1c16540fc1c: its report is already persisted
+[run176] finalization signals skipped comparison:supervised-replay:b72a808e256e68dcaae3f3a07b0d3554b9e65992c11a8dc3165ff6682a6432b9: its report is already persisted
+[run176] finalization signals skipped comparison:supervised-replay:61c65a9de1086089e306bf4845c2361a767c251d6e85adbdf6b1586dfdb2985d: its report is already persisted
+[run176] finalization signals skipped comparison:supervised-replay:e13e9c99ae845b4a2cd35cf33a5ea418390701f8406f37d5e6973253407f4f31: its report is already persisted
+[run176] finalization signals skipped comparison:supervised-replay:9de7e5e55d70e35acefd204613118989b360124faddfe04aaa681ced6554ab11: its report is already persisted
+[run176] finalization signals skipped comparison:supervised-replay:25471ecbd9b5b1fd5c5bbd602fa6301b78f1126dad60832021837e949d540356: its report is already persisted
+[replay-tick] after readRouteReplayableCaptures history=24
+[focus-diag] source=deepseek-flash-max judge=kimi-k3 focusEndpoint=kimi-k3 configured=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 admitted=deepseek-v4-pro,deepseek-flash
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=56 scoped=1 first=req-5414aff6-35db-471f-bfda-ee7a8adc0929,req-fc679707-a048-4f44-8da7-c08001104489,req-376cd83d-96e2-4251-97f8-53e96b1994b0 only=none pendingCount=32 captureCount=200
+[replay-tick] before runDispatch focusEndpoint=moonshot.personal.kimi-code.global.kimi-k3 dispatchCaptures=1
+[select-diag] cfg=kimi-k3 source=deepseek-flash-max reqMod=["text"] reqCap=[] profiles= => selected=kimi-k3
+[cand-diag] ref=req-3c55775c source=deepseek-flash-max focus=kimi-k3 judge=kimi-k3 reqCap=[] reqMod=["text"] candidates=kimi-k3 rejected= cfg=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 healthy=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3
+[run176] finalization signals skipped comparison:supervised-replay:2b543d8e59eec2c8a1d768e8b41d159905c8b44f31cbb4f54ec1db8297b60a62: its report is already persisted
+[run176] finalization signals: examined 26, analyzed 0, skipped 26, refused 0, deferred 0
+[run101] retrieval index rebuilt: ? document(s)
+[run146] learner sweep served retrieval results=8 matches=26 receipt=6a34d37eeb6bfe1d3938e62838e52fba6474d56db9712a1f706878a3b89ce877 recorded=true
+[run101] learner sweep: 7 candidate(s) without a validation receipt, consumed 2
+[run98] remote-health recovery: deepseek.personal.deepseek-api-key.global.deepseek-flash, deepseek.personal.deepseek-api-key.global.deepseek-flash-max, deepseek.personal.deepseek-api-key.global.deepseek-v4-pro, moonshot.personal.kimi-code.global.kimi-k3
+[select-diag] cfg=kimi-k3 source=null reqMod=["text"] reqCap=[] profiles=deepseek-flash:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:mod[text]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:mod[image,text,video]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit] => selected=kimi-k3
+[supervised-cand] source=null judge=kimi-k3 candidates=kimi-k3 reqMod=["text"] reqCap=[] profiles=deepseek-flash:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:[text][reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:[image,text,video][reasoning,structured.output,text.chat,tools.function_calling,code.edit] selected=kimi-k3 rejected=
+[source-diag] requestId=req-3c55775c-158 endpointId=deepseek.personal.deepseek-api-key.global.deepseek-flash-max sourceEndpointId=null capturedSource=null judge=moonshot.personal.kimi-code.global.kimi-k3 candidates=kimi-k3
+[run120] learner derivation consumed comparison:supervised-replay:011992ddca0ce38635ef2ae4a6233b9df3d811aafabbbf22c15da8c540e8d37f (1+/1-) candidate=shadow-a65cfbcee4a168b75542dff462d84c2efe024c225a98c95ceebb607dd43f38dc
+[run120] learner derivation consumed comparison:supervised-replay:a316a8748578eba951dac49db327f84934ae783fa1bc14c73dadda69045ff840 (1+/1-) candidate=shadow-bfa5fcbe67792c620e3a27dffe718ebbceb123918151d7e35469ed2a7a3c2678
+[run120] learner derivation consumed comparison:supervised-replay:f58c677d1da2e0f6008b1f7e6d3a1b1cb7adfae9f90a358c71e899cf6934c2ac (1+/1-) candidate=shadow-bdce3d8563726464408b3a01263e740b7ebb8c005cfebf1ce7527fefecd8c1bf
+[run120] learner derivation consumed comparison:supervised-replay:2efab027c10e0c8fb5725072c30f508e892f46f365e5eb6e7539a27e51fa993b (1+/1-) candidate=shadow-f18b3d436419eba58a5b4c42d197386ac5ad9289697eefa91b5a5528cac58335
+[run120] learner derivation consumed comparison:supervised-replay:c7f30d5efe32d058bfd28b52ba871c1e7800be1e4bd831fa1b59188ca3cfcc79 (1+/1-) candidate=shadow-2313b92f5bf2ce1ca66393c45a8694bdcbf48afd43d9d7d859b02916bf0cc2ac
+[run120] learner derivation consumed comparison:supervised-replay:dc391a2b987c18d6845175f9f01791e55cd431c434a802cedf8498736310fd6f (1+/1-) candidate=shadow-f499d3b73af0a9492bff3e1a58ab446d700e03f38ca44681c69ca73eb8230781
+[run120] learner derivation consumed comparison:supervised-replay:f45837d1df302a99ac8fe237e23b34c912fe2f71a8fe5230ddeb059aa8478e6e (1+/1-) candidate=shadow-58d07f7254e50437b2e5d8e620b6710a6ab391f9a5d16dd5266ef0bcc948508e
+[run120] learner derivation consumed comparison:supervised-replay:24f228e1bd91b58afd933ac73a4568c74a274e6b77cb9d2a23e86b1ba8a79daf (1+/1-) candidate=shadow-f1bb8fad04831a69bfc3b0b936c29cf4dd05e03d131f328c522d710c94cdf6c5
+[run120] learner derivation consumed comparison:supervised-replay:a8e4e6445058597260411739afb27588dfb227fcb3e0d0b7a585b93baa7cff97 (1+/1-) candidate=shadow-6a1789e21c0c3b7ecf2ea3df23e26da0e83719e6c4db542d530257ceadded5e0
+[run120] learner derivation consumed comparison:supervised-replay:c22d95f4ef6ab2d073a8885663bb3461d4fd0c4d2f95c7b004da1bd71059b034 (1+/1-) candidate=shadow-6004c62f7b0a08d896d047c6add5b42bb6a608a559869ecab7de865c337e0c14
+[run120] learner derivation consumed comparison:supervised-replay:200bbb0381079e5a45de1c20af4db487447bce3a14b54fbae418689b1ad51136 (1+/1-) candidate=shadow-ab730904892c5f417c37076142bf6a801d58ccaa6ed8bc5f6040bf7170001ff2
+[run120] learner derivation consumed comparison:supervised-replay:ad8220dc9a40f683e8eb90b4435cf879ea3602fc4d7d9f0a0d8bec7617cfeb77 (1+/1-) candidate=shadow-8890d218d532bd1951eed6a7c9c5464cc4513a35fe659fc78e730dff735efe26
+[run120] learner derivation consumed comparison:supervised-replay:b683da7302f0a4930821092382c9edfd6e73f0ce438395df4a640b41cad01850 (1+/1-) candidate=shadow-ab10896695713dd300559ab694b6a6ad3dfb88f68e4cff85eeaf21a5c1cf0d2b
+[run120] learner derivation consumed comparison:supervised-replay:1cd05de9480be911048aba39f985dc4da0fa997c66251f813c694d94992eab2d (1+/1-) candidate=shadow-cbce7ca69a692546cb5797fcc2224e27c48bba4ba9280ad50669a4e3ab7f0e5a
+[run120] learner derivation consumed comparison:supervised-replay:0a5fbab40e220a3419d87152beac3b5ca5f1c1262797718fdbc599604eb826eb (1+/1-) candidate=shadow-3691e16da7bcc48f2a00bddbd795903300eb7238f9d85361cd550da272904d6c
+[run120] learner derivation consumed comparison:supervised-replay:aacd698fe3895b60b4b301776d721542a43d30ca79fa0ab224a0b0f34030b580 (1+/1-) candidate=shadow-0b71534ccbc311d7226216d3eecb413808adf49f08b39e4a6134f55ad861dd93
+[run120] learner derivation consumed comparison:supervised-replay:7496c96d009bfbe719179f29d75e5cf0cb1f06e09abbba690a183a4204057d1e (1+/1-) candidate=shadow-01b3d54642b660b788af4873165edff660c2d99ed22a3a88364d1f6966a73c9a
+[run120] learner derivation consumed comparison:supervised-replay:d85bd666b50ba78f851f71d9d6b74461db5f3a1e4072462ed4505e5d2b11aeb2 (1+/1-) candidate=shadow-6c8430d925049b6998bcce3bc2819f60339c80f34b6001ed9d1e0bb0901c5d62
+[run120] learner derivation consumed comparison:supervised-replay:1ae29f0e8fde9096581a66416671960554c5cdd87945dc6c17bf8ae0a71e5d32 (1+/1-) candidate=shadow-632b017b662c9222886cad3427924d2c4db75605b9ed2887282a278106358710
+[run120] learner derivation consumed comparison:supervised-replay:95528b356477dd729295cb788b40c98e48c94b790819c9680345c1c16540fc1c (1+/1-) candidate=shadow-5ac707a6f4d874547f536d9e07d9d12767e6677e8f939dad015e12b254132182
+[run120] learner derivation consumed comparison:supervised-replay:b72a808e256e68dcaae3f3a07b0d3554b9e65992c11a8dc3165ff6682a6432b9 (1+/1-) candidate=shadow-940c3f72d846c6175f05bb3b0da914c34688234be8a5a80e1a0ec59fd8e890db
+[run120] learner derivation consumed comparison:supervised-replay:61c65a9de1086089e306bf4845c2361a767c251d6e85adbdf6b1586dfdb2985d (1+/1-) candidate=shadow-10ef78d67e76566bcd9c03fd2db5e82b66385b91a7a53adf9ce321e7718ada89
+[run120] learner derivation consumed comparison:supervised-replay:e13e9c99ae845b4a2cd35cf33a5ea418390701f8406f37d5e6973253407f4f31 (1+/1-) candidate=shadow-c50f21ef6d6b25a0349b415f5ffc0ee0bb22e5b5ca6351827de6e99aa541cbb2
+[run120] learner derivation consumed comparison:supervised-replay:9de7e5e55d70e35acefd204613118989b360124faddfe04aaa681ced6554ab11 (1+/1-) candidate=shadow-60f465d1228694a40cba12c22f587a3219a96fef4224d2886c0f14954f816958
+[run120] learner derivation: examined 26, derived 24, skipped 2, refused 0, backlog 2
+[replay-tick] after runDispatch part=1
+[run101] replay job scope: learned runtime:e22187fbf8a85949e6e4b00d1c480633
+[run101] recovery page payload shape: value,businessOutput,durableLocator,evidenceRef,readCapability,workerPid
+[run101] recovery sweep: examined=2 candidates=2 recovered=0 - every candidate already has its evaluation
+[replay-tick] run: captures=32 pendingCount=32
+[replay-tick] skip: paused=false busy=false running=true
+[run120] learner derivation consumed comparison:supervised-replay:25471ecbd9b5b1fd5c5bbd602fa6301b78f1126dad60832021837e949d540356 (1+/1-) candidate=shadow-d60f08c7829402459a64a9f0ea2c5d606d0e853048b33be29f7fecf7e37d5d65
+[run120] learner derivation consumed comparison:supervised-replay:2b543d8e59eec2c8a1d768e8b41d159905c8b44f31cbb4f54ec1db8297b60a62 (1+/1-) candidate=shadow-89bfade5372aed09e1665d16cc02294f3b7ce9f014c0e2d63b2d6f0763921a3b
+[run120] learner derivation: examined 6, derived 2, skipped 4, refused 0, backlog 0
+[replay-tick] skip: paused=false busy=false running=true
+[replay-tick] skip: paused=false busy=false running=true
+[replay-tick] skip: paused=false busy=false running=true
+[replay-tick] before readRouteReplayableCaptures focus=coder/coder.config
+[run101] recovery sweep: examined=2 candidates=2 recovered=0 - every candidate already has its evaluation
+[replay-tick] after readRouteReplayableCaptures history=24
+[focus-diag] source=deepseek-flash-max judge=kimi-k3 focusEndpoint=kimi-k3 configured=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 admitted=deepseek-v4-pro,deepseek-flash
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=56 scoped=1 first=req-5414aff6-35db-471f-bfda-ee7a8adc0929,req-fc679707-a048-4f44-8da7-c08001104489,req-376cd83d-96e2-4251-97f8-53e96b1994b0 only=none pendingCount=32 captureCount=200
+[replay-tick] before runDispatch focusEndpoint=moonshot.personal.kimi-code.global.kimi-k3 dispatchCaptures=1
+[select-diag] cfg=kimi-k3 source=deepseek-flash-max reqMod=["text"] reqCap=[] profiles= => selected=kimi-k3
+[cand-diag] ref=req-3c55775c source=deepseek-flash-max focus=kimi-k3 judge=kimi-k3 reqCap=[] reqMod=["text"] candidates=kimi-k3 rejected= cfg=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 healthy=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3
+[select-diag] cfg=kimi-k3 source=null reqMod=["text"] reqCap=[] profiles=deepseek-flash:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:mod[text]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:mod[image,text,video]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit] => selected=kimi-k3
+[supervised-cand] source=null judge=kimi-k3 candidates=kimi-k3 reqMod=["text"] reqCap=[] profiles=deepseek-flash:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:[text][reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:[image,text,video][reasoning,structured.output,text.chat,tools.function_calling,code.edit] selected=kimi-k3 rejected=
+[source-diag] requestId=req-3c55775c-158 endpointId=deepseek.personal.deepseek-api-key.global.deepseek-flash-max sourceEndpointId=null capturedSource=null judge=moonshot.personal.kimi-code.global.kimi-k3 candidates=kimi-k3
+[select-diag] cfg=kimi-k3 source=null reqMod=["text"] reqCap=[] profiles=deepseek-flash:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:mod[text]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:mod[image,text,video]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit] => selected=kimi-k3
+[supervised-cand] source=null judge=kimi-k3 candidates=kimi-k3 reqMod=["text"] reqCap=[] profiles=deepseek-flash:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:[text][reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:[image,text,video][reasoning,structured.output,text.chat,tools.function_calling,code.edit] selected=kimi-k3 rejected=
+[source-diag] requestId=req-3c55775c-158 endpointId=deepseek.personal.deepseek-api-key.global.deepseek-flash-max sourceEndpointId=null capturedSource=null judge=moonshot.personal.kimi-code.global.kimi-k3 candidates=kimi-k3
+[select-diag] cfg=kimi-k3 source=null reqMod=["text"] reqCap=[] profiles=deepseek-flash:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:mod[text]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:mod[image,text,video]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit] => selected=kimi-k3
+[supervised-cand] source=null judge=kimi-k3 candidates=kimi-k3 reqMod=["text"] reqCap=[] profiles=deepseek-flash:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:[text][reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:[image,text,video][reasoning,structured.output,text.chat,tools.function_calling,code.edit] selected=kimi-k3 rejected=
+[source-diag] requestId=req-3c55775c-158 endpointId=deepseek.personal.deepseek-api-key.global.deepseek-flash-max sourceEndpointId=null capturedSource=null judge=moonshot.personal.kimi-code.global.kimi-k3 candidates=kimi-k3
+[replay-tick] skip: paused=false busy=true running=true
+[select-diag] cfg=kimi-k3 source=null reqMod=["text"] reqCap=[] profiles=deepseek-flash:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:mod[text]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:mod[image,text,video]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit] => selected=kimi-k3
+[supervised-cand] source=null judge=kimi-k3 candidates=kimi-k3 reqMod=["text"] reqCap=[] profiles=deepseek-flash:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:[text][reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:[image,text,video][reasoning,structured.output,text.chat,tools.function_calling,code.edit] selected=kimi-k3 rejected=
+[source-diag] requestId=req-3c55775c-158 endpointId=deepseek.personal.deepseek-api-key.global.deepseek-flash-max sourceEndpointId=null capturedSource=null judge=moonshot.personal.kimi-code.global.kimi-k3 candidates=kimi-k3
+[replay-tick] skip: paused=false busy=true running=true
+[select-diag] cfg=kimi-k3 source=null reqMod=["text"] reqCap=[] profiles=deepseek-flash:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:mod[text]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:mod[image,text,video]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit] => selected=kimi-k3
+[supervised-cand] source=null judge=kimi-k3 candidates=kimi-k3 reqMod=["text"] reqCap=[] profiles=deepseek-flash:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:[text][reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:[image,text,video][reasoning,structured.output,text.chat,tools.function_calling,code.edit] selected=kimi-k3 rejected=
+[source-diag] requestId=req-3c55775c-158 endpointId=deepseek.personal.deepseek-api-key.global.deepseek-flash-max sourceEndpointId=null capturedSource=null judge=moonshot.personal.kimi-code.global.kimi-k3 candidates=kimi-k3
+[replay-tick] skip: paused=false busy=true running=true
+[select-diag] cfg=kimi-k3 source=null reqMod=["text"] reqCap=[] profiles=deepseek-flash:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:mod[text]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:mod[image,text,video]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit] => selected=kimi-k3
+[supervised-cand] source=null judge=kimi-k3 candidates=kimi-k3 reqMod=["text"] reqCap=[] profiles=deepseek-flash:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:[text][reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:[image,text,video][reasoning,structured.output,text.chat,tools.function_calling,code.edit] selected=kimi-k3 rejected=
+[source-diag] requestId=req-3c55775c-158 endpointId=deepseek.personal.deepseek-api-key.global.deepseek-flash-max sourceEndpointId=null capturedSource=null judge=moonshot.personal.kimi-code.global.kimi-k3 candidates=kimi-k3
+[replay-tick] skip: paused=false busy=true running=true
+[select-diag] cfg=kimi-k3 source=null reqMod=["text"] reqCap=[] profiles=deepseek-flash:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:mod[text]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:mod[image,text,video]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit] => selected=kimi-k3
+[supervised-cand] source=null judge=kimi-k3 candidates=kimi-k3 reqMod=["text"] reqCap=[] profiles=deepseek-flash:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:[text][reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:[image,text,video][reasoning,structured.output,text.chat,tools.function_calling,code.edit] selected=kimi-k3 rejected=
+[source-diag] requestId=req-3c55775c-158 endpointId=deepseek.personal.deepseek-api-key.global.deepseek-flash-max sourceEndpointId=null capturedSource=null judge=moonshot.personal.kimi-code.global.kimi-k3 candidates=kimi-k3
+[replay-tick] skip: paused=false busy=true running=true
+[run105] ladder materialization degraded: database is locked
+[run101] recovery sweep: examined=2 candidates=2 recovered=0 - every candidate already has its evaluation
+[select-diag] cfg=kimi-k3 source=null reqMod=["text"] reqCap=[] profiles=deepseek-flash:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:mod[text]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:mod[image,text,video]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit] => selected=kimi-k3
+[supervised-cand] source=null judge=kimi-k3 candidates=kimi-k3 reqMod=["text"] reqCap=[] profiles=deepseek-flash:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:[text][reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:[image,text,video][reasoning,structured.output,text.chat,tools.function_calling,code.edit] selected=kimi-k3 rejected=
+[source-diag] requestId=req-3c55775c-158 endpointId=deepseek.personal.deepseek-api-key.global.deepseek-flash-max sourceEndpointId=null capturedSource=null judge=moonshot.personal.kimi-code.global.kimi-k3 candidates=kimi-k3
+[replay-tick] after runDispatch part=1
+[replay-tick] run: captures=32 pendingCount=32
+[replay-tick] skip: paused=false busy=false running=true
+[replay-tick] skip: paused=false busy=false running=true
+[replay-tick] skip: paused=false busy=false running=true
+[run101] recovery sweep: examined=2 candidates=2 recovered=0 - every candidate already has its evaluation
+[replay-tick] skip: paused=false busy=false running=true
+[replay-tick] skip: paused=false busy=false running=true
+[replay-tick] skip: paused=false busy=false running=true
+[replay-tick] before readRouteReplayableCaptures focus=coder/coder.config
+[replay-tick] after readRouteReplayableCaptures history=24
+[focus-diag] source=deepseek-flash-max judge=kimi-k3 focusEndpoint=kimi-k3 configured=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 admitted=deepseek-v4-pro,deepseek-flash
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=56 scoped=1 first=req-5414aff6-35db-471f-bfda-ee7a8adc0929,req-fc679707-a048-4f44-8da7-c08001104489,req-376cd83d-96e2-4251-97f8-53e96b1994b0 only=none pendingCount=32 captureCount=200
+[replay-tick] before runDispatch focusEndpoint=moonshot.personal.kimi-code.global.kimi-k3 dispatchCaptures=1
+[select-diag] cfg=kimi-k3 source=deepseek-flash-max reqMod=["text"] reqCap=[] profiles= => selected=kimi-k3
+[cand-diag] ref=req-3c55775c source=deepseek-flash-max focus=kimi-k3 judge=kimi-k3 reqCap=[] reqMod=["text"] candidates=kimi-k3 rejected= cfg=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 healthy=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3
+[select-diag] cfg=kimi-k3 source=null reqMod=["text"] reqCap=[] profiles=deepseek-flash:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:mod[text]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:mod[image,text,video]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit] => selected=kimi-k3
+[supervised-cand] source=null judge=kimi-k3 candidates=kimi-k3 reqMod=["text"] reqCap=[] profiles=deepseek-flash:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:[text][reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:[image,text,video][reasoning,structured.output,text.chat,tools.function_calling,code.edit] selected=kimi-k3 rejected=
+[source-diag] requestId=req-3c55775c-158 endpointId=deepseek.personal.deepseek-api-key.global.deepseek-flash-max sourceEndpointId=null capturedSource=null judge=moonshot.personal.kimi-code.global.kimi-k3 candidates=kimi-k3
+[select-diag] cfg=kimi-k3 source=null reqMod=["text"] reqCap=[] profiles=deepseek-flash:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:mod[text]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:mod[image,text,video]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit] => selected=kimi-k3
+[supervised-cand] source=null judge=kimi-k3 candidates=kimi-k3 reqMod=["text"] reqCap=[] profiles=deepseek-flash:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:[text][reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:[image,text,video][reasoning,structured.output,text.chat,tools.function_calling,code.edit] selected=kimi-k3 rejected=
+[source-diag] requestId=req-3c55775c-158 endpointId=deepseek.personal.deepseek-api-key.global.deepseek-flash-max sourceEndpointId=null capturedSource=null judge=moonshot.personal.kimi-code.global.kimi-k3 candidates=kimi-k3
+[replay-tick] skip: paused=false busy=true running=true
+[select-diag] cfg=kimi-k3 source=null reqMod=["text"] reqCap=[] profiles=deepseek-flash:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:mod[text]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:mod[image,text,video]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit] => selected=kimi-k3
+[supervised-cand] source=null judge=kimi-k3 candidates=kimi-k3 reqMod=["text"] reqCap=[] profiles=deepseek-flash:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:[text][reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:[image,text,video][reasoning,structured.output,text.chat,tools.function_calling,code.edit] selected=kimi-k3 rejected=
+[source-diag] requestId=req-3c55775c-158 endpointId=deepseek.personal.deepseek-api-key.global.deepseek-flash-max sourceEndpointId=null capturedSource=null judge=moonshot.personal.kimi-code.global.kimi-k3 candidates=kimi-k3
+[select-diag] cfg=kimi-k3 source=null reqMod=["text"] reqCap=[] profiles=deepseek-flash:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:mod[text]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:mod[image,text,video]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit] => selected=kimi-k3
+[supervised-cand] source=null judge=kimi-k3 candidates=kimi-k3 reqMod=["text"] reqCap=[] profiles=deepseek-flash:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:[text][reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:[image,text,video][reasoning,structured.output,text.chat,tools.function_calling,code.edit] selected=kimi-k3 rejected=
+[source-diag] requestId=req-3c55775c-158 endpointId=deepseek.personal.deepseek-api-key.global.deepseek-flash-max sourceEndpointId=null capturedSource=null judge=moonshot.personal.kimi-code.global.kimi-k3 candidates=kimi-k3
+[replay-tick] skip: paused=false busy=true running=true
+[run99] durable route advisory degraded: route ladder index unavailable
+[run101] recovery sweep: examined=2 candidates=2 recovered=0 - every candidate already has its evaluation
+[select-diag] cfg=kimi-k3 source=null reqMod=["text"] reqCap=[] profiles=deepseek-flash:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:mod[text]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:mod[image,text,video]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit] => selected=kimi-k3
+[supervised-cand] source=null judge=kimi-k3 candidates=kimi-k3 reqMod=["text"] reqCap=[] profiles=deepseek-flash:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:[text][reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:[image,text,video][reasoning,structured.output,text.chat,tools.function_calling,code.edit] selected=kimi-k3 rejected=
+[source-diag] requestId=req-3c55775c-158 endpointId=deepseek.personal.deepseek-api-key.global.deepseek-flash-max sourceEndpointId=null capturedSource=null judge=moonshot.personal.kimi-code.global.kimi-k3 candidates=kimi-k3
+[replay-tick] skip: paused=false busy=true running=true
+[select-diag] cfg=kimi-k3 source=null reqMod=["text"] reqCap=[] profiles=deepseek-flash:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:mod[text]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:mod[image,text,video]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit] => selected=kimi-k3
+[supervised-cand] source=null judge=kimi-k3 candidates=kimi-k3 reqMod=["text"] reqCap=[] profiles=deepseek-flash:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:[text][reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:[image,text,video][reasoning,structured.output,text.chat,tools.function_calling,code.edit] selected=kimi-k3 rejected=
+[source-diag] requestId=req-3c55775c-158 endpointId=deepseek.personal.deepseek-api-key.global.deepseek-flash-max sourceEndpointId=null capturedSource=null judge=moonshot.personal.kimi-code.global.kimi-k3 candidates=kimi-k3
+[replay-tick] after runDispatch part=1
+[replay-tick] run: captures=32 pendingCount=32
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=4 eligible=4 codes=none request=req-69398a90-4a66-4e51-a0a2-c446f2896ebc alias=baseline.remote-only model=baseline.remote-only effort=max pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro,moonshot.personal.kimi-code.global.kimi-k3] denied=[]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=4 eligible=4 codes=none request=req-b62a4a72-d565-4106-b023-7d0cb94afac8 alias=baseline.remote-only model=baseline.remote-only effort=max pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro,moonshot.personal.kimi-code.global.kimi-k3] denied=[]
+[replay-tick] skip: paused=false busy=false running=true
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=4 eligible=4 codes=none request=req-3afc7608-7ff1-442e-b041-05d369adc222 alias=baseline.remote-only model=baseline.remote-only effort=max pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro,moonshot.personal.kimi-code.global.kimi-k3] denied=[]
+[replay-tick] skip: paused=false busy=false running=true
+[run101] recovery sweep: examined=2 candidates=2 recovered=0 - every candidate already has its evaluation
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=4 eligible=4 codes=none request=req-2cc58ef0-d664-442d-9064-c75cbfbc009a alias=baseline.remote-only model=baseline.remote-only effort=max pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro,moonshot.personal.kimi-code.global.kimi-k3] denied=[]
+[replay-tick] skip: paused=false busy=false running=true
+[replay-tick] skip: paused=false busy=false running=true
+[replay-tick] skip: paused=false busy=false running=true
+[replay-tick] skip: paused=false busy=false running=true
+[replay-tick] before readRouteReplayableCaptures focus=coder/coder.config
+[replay-tick] skip: paused=false busy=false running=true
+[replay-tick] after readRouteReplayableCaptures history=23
+[focus-diag] source=deepseek-v4-pro judge=kimi-k3 focusEndpoint=deepseek-flash-max configured=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 admitted=deepseek-v4-pro,deepseek-flash
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=55 scoped=1 first=req-5414aff6-35db-471f-bfda-ee7a8adc0929,req-fc679707-a048-4f44-8da7-c08001104489,req-376cd83d-96e2-4251-97f8-53e96b1994b0 only=none pendingCount=32 captureCount=200
+[replay-tick] before runDispatch focusEndpoint=deepseek.personal.deepseek-api-key.global.deepseek-flash-max dispatchCaptures=1
+[select-diag] cfg=deepseek-flash-max source=deepseek-v4-pro reqMod=["text"] reqCap=[] profiles= => selected=deepseek-flash-max
+[cand-diag] ref=req-475a2347 source=deepseek-v4-pro focus=deepseek-flash-max judge=kimi-k3 reqCap=[] reqMod=["text"] candidates=deepseek-flash-max rejected= cfg=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 healthy=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3
+[select-diag] cfg=deepseek-flash-max source=null reqMod=["text"] reqCap=[] profiles=deepseek-flash:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:mod[text]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:mod[image,text,video]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit] => selected=deepseek-flash-max
+[supervised-cand] source=null judge=kimi-k3 candidates=deepseek-flash-max reqMod=["text"] reqCap=[] profiles=deepseek-flash:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:[text][reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:[image,text,video][reasoning,structured.output,text.chat,tools.function_calling,code.edit] selected=deepseek-flash-max rejected=
+[source-diag] requestId=req-475a2347-02f endpointId=deepseek.personal.deepseek-api-key.global.deepseek-v4-pro sourceEndpointId=null capturedSource=null judge=moonshot.personal.kimi-code.global.kimi-k3 candidates=deepseek-flash-max
+[run101] recovery sweep: examined=2 candidates=2 recovered=0 - every candidate already has its evaluation
+[run115] eligibility candidates=4 eligible=1 codes=POLICY_DENY_ENDPOINT=3 request=replay-req-475a2347-02fd-4254-bfb8-9c618faf05b1-17515aedca8e6780 alias=- model=- effort=- pass=replay allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash-max] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro,moonshot.personal.kimi-code.global.kimi-k3]
+[run97] shadow pipeline start supervised-replay:393abef458a4acc47824c98f097a163689eb41823fd7b9dc0cf0771707b5d589
+[run115] eligibility candidates=4 eligible=1 codes=POLICY_DENY_ENDPOINT=3 request=replay-judge-cef723397f44dbe4 alias=- model=- effort=- pass=replay allow=[moonshot.personal.kimi-code.global.kimi-k3] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[replay-tick] after runDispatch part=1
+[run120] learner derivation consumed comparison:supervised-replay:393abef458a4acc47824c98f097a163689eb41823fd7b9dc0cf0771707b5d589 (1+/1-) candidate=shadow-48f6b8fddf70abeb1821838a4237dfef0f3f7d59ee168221b859a4ad65464571
+[run120] learner derivation: examined 1, derived 1, skipped 0, refused 0, backlog 0
+[replay-tick] run: captures=32 pendingCount=32
+[replay-tick] skip: paused=false busy=false running=true
+[replay-tick] skip: paused=false busy=false running=true
+[run176] finalization signals skipped comparison:supervised-replay:393abef458a4acc47824c98f097a163689eb41823fd7b9dc0cf0771707b5d589: its report is already persisted
+[run176] finalization signals: examined 1, analyzed 0, skipped 1, refused 0, deferred 0
+[replay-tick] skip: paused=false busy=false running=true
+[run101] recovery sweep: examined=2 candidates=2 recovered=0 - every candidate already has its evaluation
+[replay-tick] skip: paused=false busy=false running=true
+[replay-tick] before readRouteReplayableCaptures focus=coder/coder.config
+[replay-tick] after readRouteReplayableCaptures history=22
+[focus-diag] source=deepseek-v4-pro judge=kimi-k3 focusEndpoint=deepseek-flash-max configured=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 admitted=deepseek-v4-pro,deepseek-flash
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=54 scoped=1 first=req-2cc58ef0-d664-442d-9064-c75cbfbc009a,req-3afc7608-7ff1-442e-b041-05d369adc222,req-b62a4a72-d565-4106-b023-7d0cb94afac8 only=none pendingCount=32 captureCount=200
+[replay-tick] before runDispatch focusEndpoint=deepseek.personal.deepseek-api-key.global.deepseek-flash-max dispatchCaptures=1
+[select-diag] cfg=deepseek-flash-max source=deepseek-v4-pro reqMod=["text"] reqCap=[] profiles= => selected=deepseek-flash-max
+[cand-diag] ref=req-4ff81636 source=deepseek-v4-pro focus=deepseek-flash-max judge=kimi-k3 reqCap=[] reqMod=["text"] candidates=deepseek-flash-max rejected= cfg=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 healthy=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3
+[select-diag] cfg=deepseek-flash-max source=null reqMod=["text"] reqCap=[] profiles=deepseek-flash:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:mod[text]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:mod[image,text,video]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit] => selected=deepseek-flash-max
+[supervised-cand] source=null judge=kimi-k3 candidates=deepseek-flash-max reqMod=["text"] reqCap=[] profiles=deepseek-flash:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:[text][reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:[image,text,video][reasoning,structured.output,text.chat,tools.function_calling,code.edit] selected=deepseek-flash-max rejected=
+[source-diag] requestId=req-4ff81636-f58 endpointId=deepseek.personal.deepseek-api-key.global.deepseek-v4-pro sourceEndpointId=null capturedSource=null judge=moonshot.personal.kimi-code.global.kimi-k3 candidates=deepseek-flash-max
+[run115] eligibility candidates=4 eligible=1 codes=POLICY_DENY_ENDPOINT=3 request=replay-req-4ff81636-f582-4740-981b-748ed0c9d685-59a718feaaf0aac2 alias=- model=- effort=- pass=replay allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash-max] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro,moonshot.personal.kimi-code.global.kimi-k3]
+[run97] shadow pipeline start supervised-replay:28ff4d7f5322b7eafd4ad9dee2d5a0124ddbbe2d788d723b56d74a3694e6660c
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=4 eligible=1 codes=POLICY_DENY_ENDPOINT=3 request=replay-judge-2af8b84485ae43d2 alias=- model=- effort=- pass=replay allow=[moonshot.personal.kimi-code.global.kimi-k3] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[replay-tick] skip: paused=false busy=true running=true
+[run97] shadow pipeline start supervised-replay:28ff4d7f5322b7eafd4ad9dee2d5a0124ddbbe2d788d723b56d74a3694e6660c
+[replay-tick] after runDispatch part=1
+[run120] learner derivation consumed comparison:supervised-replay:28ff4d7f5322b7eafd4ad9dee2d5a0124ddbbe2d788d723b56d74a3694e6660c (1+/1-) candidate=shadow-819fdf7721ff305c6b9321c37ecf07264bcd2c83f50c9c256ae51b4c0306b099
+[run120] learner derivation: examined 1, derived 1, skipped 0, refused 0, backlog 0
+[replay-tick] run: captures=32 pendingCount=32
+[replay-tick] skip: paused=false busy=false running=true
+[replay-tick] skip: paused=false busy=false running=true
+[run101] recovery sweep: examined=2 candidates=2 recovered=0 - every candidate already has its evaluation
+[replay-tick] skip: paused=false busy=false running=true
+[track-b-sidecar] [run140] profile invoke capability=profile:current-estimate scope=standalone-runtime-dev sessionId=operator filePath=E:\tmp\run105-full2-verification-state\standalone-runtime-dev\track-b\extensions\workers\profile-learner\profile-e983a260667256b09d300ef178f609d323eef2ceb50df234f6aeb1066c279f63.json
+[track-b-sidecar] [run140] profile invoke capability=profile:current-estimate scope=standalone-runtime-dev sessionId=operator filePath=E:\tmp\run105-full2-verification-state\standalone-runtime-dev\track-b\extensions\workers\profile-learner\profile-e983a260667256b09d300ef178f609d323eef2ceb50df234f6aeb1066c279f63.json
+[track-b-sidecar] [run138] learning profile hop keys=schemaVersion|id|generationId|generationKey|generation|state|previousGenerationId|estimateDigest|effects|bias state=active
+[track-b-sidecar] [run137] profile readback keys=schemaVersion|id|generationId|generationKey|generation|state|previousGenerationId|estimateDigest|effects|bias state=active
+[replay-tick] skip: paused=false busy=false running=true
+[replay-tick] before readRouteReplayableCaptures focus=coder/coder.config
+[replay-tick] skip: paused=false busy=false running=true
+[replay-tick] after readRouteReplayableCaptures history=21
+[focus-diag] source=deepseek-flash-max judge=kimi-k3 focusEndpoint=kimi-k3 configured=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 admitted=deepseek-v4-pro,deepseek-flash
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=53 scoped=1 first=req-2cc58ef0-d664-442d-9064-c75cbfbc009a,req-3afc7608-7ff1-442e-b041-05d369adc222,req-b62a4a72-d565-4106-b023-7d0cb94afac8 only=none pendingCount=32 captureCount=200
+[replay-tick] before runDispatch focusEndpoint=moonshot.personal.kimi-code.global.kimi-k3 dispatchCaptures=1
+[select-diag] cfg=kimi-k3 source=deepseek-flash-max reqMod=["text"] reqCap=[] profiles= => selected=kimi-k3
+[cand-diag] ref=req-59423fe5 source=deepseek-flash-max focus=kimi-k3 judge=kimi-k3 reqCap=[] reqMod=["text"] candidates=kimi-k3 rejected= cfg=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 healthy=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3
+[select-diag] cfg=kimi-k3 source=null reqMod=["text"] reqCap=[] profiles=deepseek-flash:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:mod[text]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:mod[image,text,video]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit] => selected=kimi-k3
+[supervised-cand] source=null judge=kimi-k3 candidates=kimi-k3 reqMod=["text"] reqCap=[] profiles=deepseek-flash:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:[text][reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:[image,text,video][reasoning,structured.output,text.chat,tools.function_calling,code.edit] selected=kimi-k3 rejected=
+[source-diag] requestId=req-59423fe5-8a0 endpointId=deepseek.personal.deepseek-api-key.global.deepseek-flash-max sourceEndpointId=null capturedSource=null judge=moonshot.personal.kimi-code.global.kimi-k3 candidates=kimi-k3
+[run115] eligibility candidates=4 eligible=1 codes=POLICY_DENY_ENDPOINT=3 request=replay-req-59423fe5-8a0c-49cd-89c8-0cf97314be1a-3de9b8f3aaaa9d85 alias=- model=- effort=- pass=replay allow=[moonshot.personal.kimi-code.global.kimi-k3] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[replay-tick] skip: paused=false busy=true running=true
+[run176] finalization signals skipped comparison:supervised-replay:28ff4d7f5322b7eafd4ad9dee2d5a0124ddbbe2d788d723b56d74a3694e6660c: its report is already persisted
+[run176] finalization signals: examined 1, analyzed 0, skipped 1, refused 0, deferred 0
+[run97] shadow pipeline start supervised-replay:ab17c5defaabde24acb3da757325bfa8d91504edb2972d53946fa9dd0ca8a2aa
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=4 eligible=1 codes=POLICY_DENY_ENDPOINT=3 request=replay-judge-2b461ffca0674eef alias=- model=- effort=- pass=replay allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro,moonshot.personal.kimi-code.global.kimi-k3]
+[replay-tick] after runDispatch part=1
+[run105] ladder materialization wrote 1 ladder row(s)
+[run120] learner derivation consumed comparison:supervised-replay:ab17c5defaabde24acb3da757325bfa8d91504edb2972d53946fa9dd0ca8a2aa (1+/1-) candidate=shadow-4117a375a3fe7faaadc76999429fbcbb01dc8911e9eacda2d6caa07fcd16b789
+[run120] learner derivation: examined 1, derived 1, skipped 0, refused 0, backlog 0
+[run101] recovery sweep: examined=2 candidates=2 recovered=0 - every candidate already has its evaluation
+[replay-tick] run: captures=32 pendingCount=32
+[replay-tick] skip: paused=false busy=false running=true
+[replay-tick] skip: paused=false busy=false running=true
+[replay-tick] skip: paused=false busy=false running=true
+[replay-tick] skip: paused=false busy=false running=true
+[run101] recovery sweep: examined=2 candidates=2 recovered=0 - every candidate already has its evaluation
+[replay-tick] before readRouteReplayableCaptures focus=coder/coder.config
+[replay-tick] after readRouteReplayableCaptures history=20
+[focus-diag] source=deepseek-v4-pro judge=kimi-k3 focusEndpoint=kimi-k3 configured=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 admitted=deepseek-flash-max,deepseek-v4-pro,deepseek-flash
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=52 scoped=1 first=req-2cc58ef0-d664-442d-9064-c75cbfbc009a,req-3afc7608-7ff1-442e-b041-05d369adc222,req-b62a4a72-d565-4106-b023-7d0cb94afac8 only=none pendingCount=32 captureCount=200
+[replay-tick] before runDispatch focusEndpoint=moonshot.personal.kimi-code.global.kimi-k3 dispatchCaptures=1
+[select-diag] cfg=kimi-k3 source=deepseek-v4-pro reqMod=["text"] reqCap=[] profiles= => selected=kimi-k3
+[cand-diag] ref=req-653049fd source=deepseek-v4-pro focus=kimi-k3 judge=kimi-k3 reqCap=[] reqMod=["text"] candidates=kimi-k3 rejected= cfg=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 healthy=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3
+[select-diag] cfg=kimi-k3 source=null reqMod=["text"] reqCap=[] profiles=deepseek-flash:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:mod[text]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:mod[image,text,video]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit] => selected=kimi-k3
+[supervised-cand] source=null judge=kimi-k3 candidates=kimi-k3 reqMod=["text"] reqCap=[] profiles=deepseek-flash:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:[text][reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:[image,text,video][reasoning,structured.output,text.chat,tools.function_calling,code.edit] selected=kimi-k3 rejected=
+[source-diag] requestId=req-653049fd-001 endpointId=deepseek.personal.deepseek-api-key.global.deepseek-v4-pro sourceEndpointId=null capturedSource=null judge=moonshot.personal.kimi-code.global.kimi-k3 candidates=kimi-k3
+[run115] eligibility candidates=4 eligible=1 codes=POLICY_DENY_ENDPOINT=3 request=replay-req-653049fd-0017-4049-845b-02844aae0500-57660f88e2bc54dc alias=- model=- effort=- pass=replay allow=[moonshot.personal.kimi-code.global.kimi-k3] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[replay-tick] skip: paused=false busy=true running=true
+[run97] shadow pipeline start supervised-replay:c715a6fd183acee0ba6117cc12a5d312b9d610360bbe2fb3144e1cc0c2d4a68b
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=4 eligible=1 codes=POLICY_DENY_ENDPOINT=3 request=replay-judge-e025c66891a36111 alias=- model=- effort=- pass=replay allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro,moonshot.personal.kimi-code.global.kimi-k3]
+[replay-tick] after runDispatch part=1
+[run105] ladder materialization wrote 1 ladder row(s)
+[run120] learner derivation consumed comparison:supervised-replay:c715a6fd183acee0ba6117cc12a5d312b9d610360bbe2fb3144e1cc0c2d4a68b (1+/1-) candidate=shadow-eaa8a3c9474ff7c0500f21dcf78d7f6b300fa52f1b65d390ef8b89966de828a9
+[run120] learner derivation: examined 1, derived 1, skipped 0, refused 0, backlog 0
+[replay-tick] run: captures=32 pendingCount=32
+[replay-tick] skip: paused=false busy=false running=true
+[replay-tick] skip: paused=false busy=false running=true
+[replay-tick] skip: paused=false busy=false running=true
+[run176] finalization signals skipped comparison:supervised-replay:c715a6fd183acee0ba6117cc12a5d312b9d610360bbe2fb3144e1cc0c2d4a68b: its report is already persisted
+[run176] finalization signals skipped comparison:supervised-replay:ab17c5defaabde24acb3da757325bfa8d91504edb2972d53946fa9dd0ca8a2aa: its report is already persisted
+[run176] finalization signals: examined 2, analyzed 0, skipped 2, refused 0, deferred 0
+[run101] recovery sweep: examined=2 candidates=2 recovered=0 - every candidate already has its evaluation
+[replay-tick] before readRouteReplayableCaptures focus=coder/coder.config
+[replay-tick] skip: paused=false busy=false running=true
+[replay-tick] after readRouteReplayableCaptures history=19
+[focus-diag] source=deepseek-v4-pro judge=kimi-k3 focusEndpoint=kimi-k3 configured=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 admitted=deepseek-flash-max,deepseek-flash,deepseek-v4-pro
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=51 scoped=1 first=req-2cc58ef0-d664-442d-9064-c75cbfbc009a,req-3afc7608-7ff1-442e-b041-05d369adc222,req-b62a4a72-d565-4106-b023-7d0cb94afac8 only=none pendingCount=32 captureCount=200
+[replay-tick] before runDispatch focusEndpoint=moonshot.personal.kimi-code.global.kimi-k3 dispatchCaptures=1
+[select-diag] cfg=kimi-k3 source=deepseek-v4-pro reqMod=["text"] reqCap=[] profiles= => selected=kimi-k3
+[cand-diag] ref=req-6b4a5274 source=deepseek-v4-pro focus=kimi-k3 judge=kimi-k3 reqCap=[] reqMod=["text"] candidates=kimi-k3 rejected= cfg=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 healthy=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3
+[select-diag] cfg=kimi-k3 source=null reqMod=["text"] reqCap=[] profiles=deepseek-flash:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:mod[text]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:mod[image,text,video]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit] => selected=kimi-k3
+[supervised-cand] source=null judge=kimi-k3 candidates=kimi-k3 reqMod=["text"] reqCap=[] profiles=deepseek-flash:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:[text][reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:[image,text,video][reasoning,structured.output,text.chat,tools.function_calling,code.edit] selected=kimi-k3 rejected=
+[source-diag] requestId=req-6b4a5274-adc endpointId=deepseek.personal.deepseek-api-key.global.deepseek-v4-pro sourceEndpointId=null capturedSource=null judge=moonshot.personal.kimi-code.global.kimi-k3 candidates=kimi-k3
+[run115] eligibility candidates=4 eligible=1 codes=POLICY_DENY_ENDPOINT=3 request=replay-req-6b4a5274-adcf-4722-b053-51a43f418b73-b5efa4c641471998 alias=- model=- effort=- pass=replay allow=[moonshot.personal.kimi-code.global.kimi-k3] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run97] shadow pipeline start supervised-replay:98c2c6941986841752c37eb3f66af767b87451fd42bfa07e913c2936851e9fde
+[run115] eligibility candidates=4 eligible=1 codes=POLICY_DENY_ENDPOINT=3 request=replay-judge-0b69ea5a84ba999b alias=- model=- effort=- pass=replay allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro,moonshot.personal.kimi-code.global.kimi-k3]
+[replay-tick] after runDispatch part=1
+[run105] ladder materialization wrote 1 ladder row(s)
+[run120] learner derivation consumed comparison:supervised-replay:98c2c6941986841752c37eb3f66af767b87451fd42bfa07e913c2936851e9fde (1+/1-) candidate=shadow-6c83c1c42d2744a817207c5b5885bab05cdbe67c3a34ecf346c1efdbb36d967d
+[run120] learner derivation: examined 1, derived 1, skipped 0, refused 0, backlog 0
+[replay-tick] run: captures=32 pendingCount=32
+[replay-tick] skip: paused=false busy=false running=true
+[replay-tick] skip: paused=false busy=false running=true
+[run101] recovery sweep: examined=2 candidates=2 recovered=0 - every candidate already has its evaluation
+[replay-tick] skip: paused=false busy=false running=true
+[replay-tick] before readRouteReplayableCaptures focus=writer/educator.example.generate
+[replay-tick] after readRouteReplayableCaptures history=17
+[focus-diag] source=deepseek-v4-pro judge=kimi-k3 focusEndpoint=deepseek-flash configured=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 admitted=
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=49 scoped=1 first=req-2cc58ef0-d664-442d-9064-c75cbfbc009a,req-3afc7608-7ff1-442e-b041-05d369adc222,req-b62a4a72-d565-4106-b023-7d0cb94afac8 only=none pendingCount=32 captureCount=200
+[replay-tick] before runDispatch focusEndpoint=deepseek.personal.deepseek-api-key.global.deepseek-flash dispatchCaptures=1
+[select-diag] cfg=deepseek-flash source=deepseek-v4-pro reqMod=["text"] reqCap=[] profiles= => selected=deepseek-flash
+[cand-diag] ref=req-0073acfc source=deepseek-v4-pro focus=deepseek-flash judge=kimi-k3 reqCap=[] reqMod=["text"] candidates=deepseek-flash rejected= cfg=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 healthy=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3
+[select-diag] cfg=deepseek-flash source=null reqMod=["text"] reqCap=[] profiles=deepseek-flash:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:mod[text]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:mod[image,text,video]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit] => selected=deepseek-flash
+[supervised-cand] source=null judge=kimi-k3 candidates=deepseek-flash reqMod=["text"] reqCap=[] profiles=deepseek-flash:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:[text][reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:[image,text,video][reasoning,structured.output,text.chat,tools.function_calling,code.edit] selected=deepseek-flash rejected=
+[source-diag] requestId=req-0073acfc-9b7 endpointId=deepseek.personal.deepseek-api-key.global.deepseek-v4-pro sourceEndpointId=null capturedSource=null judge=moonshot.personal.kimi-code.global.kimi-k3 candidates=deepseek-flash
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=4 eligible=1 codes=POLICY_DENY_ENDPOINT=3 request=replay-req-0073acfc-9b7e-435e-a30c-a9279bd35d2f-eed3029d06b6cf84 alias=- model=- effort=- pass=replay allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro,moonshot.personal.kimi-code.global.kimi-k3]
+[replay-tick] skip: paused=false busy=true running=true
+[run97] shadow pipeline start supervised-replay:d7411285cff64c97b9fb38124ecb779d06f5c986abcdcd897866a87a77630039
+[run115] eligibility candidates=4 eligible=1 codes=POLICY_DENY_ENDPOINT=3 request=replay-judge-dbcb6246104c9020 alias=- model=- effort=- pass=replay allow=[moonshot.personal.kimi-code.global.kimi-k3] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[replay-tick] after runDispatch part=1
+[run120] learner derivation consumed comparison:supervised-replay:d7411285cff64c97b9fb38124ecb779d06f5c986abcdcd897866a87a77630039 (1+/1-) candidate=shadow-9dc18a865730fba0b93f5ec059dce80480b4ade1af9342040007d6e5fb5a92cb
+[run120] learner derivation: examined 1, derived 1, skipped 0, refused 0, backlog 0
+[replay-tick] run: captures=32 pendingCount=32
+[replay-tick] skip: paused=false busy=false running=true
+[run101] recovery sweep: examined=2 candidates=2 recovered=0 - every candidate already has its evaluation
+[replay-tick] skip: paused=false busy=false running=true
+[replay-tick] skip: paused=false busy=false running=true
+[run176] finalization signals skipped comparison:supervised-replay:d7411285cff64c97b9fb38124ecb779d06f5c986abcdcd897866a87a77630039: its report is already persisted
+[run176] finalization signals skipped comparison:supervised-replay:98c2c6941986841752c37eb3f66af767b87451fd42bfa07e913c2936851e9fde: its report is already persisted
+[run176] finalization signals: examined 2, analyzed 0, skipped 2, refused 0, deferred 0
+[replay-tick] skip: paused=false busy=false running=true
+[track-b-sidecar] [run140] profile invoke capability=profile:current-estimate scope=standalone-runtime-dev sessionId=operator filePath=E:\tmp\run105-full2-verification-state\standalone-runtime-dev\track-b\extensions\workers\profile-learner\profile-e983a260667256b09d300ef178f609d323eef2ceb50df234f6aeb1066c279f63.json
+[track-b-sidecar] [run140] profile invoke capability=profile:current-estimate scope=standalone-runtime-dev sessionId=operator filePath=E:\tmp\run105-full2-verification-state\standalone-runtime-dev\track-b\extensions\workers\profile-learner\profile-e983a260667256b09d300ef178f609d323eef2ceb50df234f6aeb1066c279f63.json
+[track-b-sidecar] [run138] learning profile hop keys=schemaVersion|id|generationId|generationKey|generation|state|previousGenerationId|estimateDigest|effects|bias state=active
+[track-b-sidecar] [run137] profile readback keys=schemaVersion|id|generationId|generationKey|generation|state|previousGenerationId|estimateDigest|effects|bias state=active
+[replay-tick] skip: paused=false busy=false running=true
+[replay-tick] before readRouteReplayableCaptures focus=writer/educator.example.generate
+[replay-tick] after readRouteReplayableCaptures history=16
+[focus-diag] source=deepseek-flash-max judge=kimi-k3 focusEndpoint=deepseek-flash configured=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 admitted=
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=48 scoped=1 first=req-2cc58ef0-d664-442d-9064-c75cbfbc009a,req-3afc7608-7ff1-442e-b041-05d369adc222,req-b62a4a72-d565-4106-b023-7d0cb94afac8 only=none pendingCount=32 captureCount=200
+[replay-tick] before runDispatch focusEndpoint=deepseek.personal.deepseek-api-key.global.deepseek-flash dispatchCaptures=1
+[select-diag] cfg=deepseek-flash source=deepseek-flash-max reqMod=["text"] reqCap=[] profiles= => selected=deepseek-flash
+[cand-diag] ref=req-07497f2e source=deepseek-flash-max focus=deepseek-flash judge=kimi-k3 reqCap=[] reqMod=["text"] candidates=deepseek-flash rejected= cfg=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3 healthy=deepseek-flash,deepseek-flash-max,deepseek-v4-pro,kimi-k3
+[select-diag] cfg=deepseek-flash source=null reqMod=["text"] reqCap=[] profiles=deepseek-flash:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:mod[image,text]:cap[text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:mod[text]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:mod[image,text,video]:cap[reasoning,structured.output,text.chat,tools.function_calling,code.edit] => selected=deepseek-flash
+[supervised-cand] source=null judge=kimi-k3 candidates=deepseek-flash reqMod=["text"] reqCap=[] profiles=deepseek-flash:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-flash-max:[image,text][text.chat,tools.function_calling,reasoning,structured.output,code.edit]|deepseek-v4-pro:[text][reasoning,structured.output,text.chat,tools.function_calling,code.edit]|kimi-k3:[image,text,video][reasoning,structured.output,text.chat,tools.function_calling,code.edit] selected=deepseek-flash rejected=
+[source-diag] requestId=req-07497f2e-bfe endpointId=deepseek.personal.deepseek-api-key.global.deepseek-flash-max sourceEndpointId=null capturedSource=null judge=moonshot.personal.kimi-code.global.kimi-k3 candidates=deepseek-flash
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=4 eligible=1 codes=POLICY_DENY_ENDPOINT=3 request=replay-req-07497f2e-bfe2-4faf-9271-5f06cbab19ac-4f14bfff3eb39fd1 alias=- model=- effort=- pass=replay allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro,moonshot.personal.kimi-code.global.kimi-k3]
+[run97] shadow pipeline start supervised-replay:0d2bc59d4be883b496cfc8707ecbe40623473b5d0dfe4b188d2f9f47731173cd
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=4 eligible=1 codes=POLICY_DENY_ENDPOINT=3 request=replay-judge-3331402271fda5f2 alias=- model=- effort=- pass=replay allow=[moonshot.personal.kimi-code.global.kimi-k3] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run97] profile estimate retry:supervised-replay:0d2bc59d4be883b496cfc8707ecbe40623473b5d0dfe4b188d2f9f47731173cd keys=schemaVersion,degraded,capability,reason,routingContinues,atMs,receiptHash,businessOutput,durableLocator,evidenceRef,readCapability,workerPid reason=finalized decisive evaluation provenance required for profile learning
+[run97] learning degraded profile:supervised-replay:0d2bc59d4be883b496cfc8707ecbe40623473b5d0dfe4b188d2f9f47731173cd keys=schemaVersion,degraded,capability,reason,routingContinues,atMs,receiptHash,businessOutput,durableLocator,evidenceRef,readCapability,workerPid finalized decisive evaluation provenance required for profile learning
+[replay-tick] after runDispatch part=1
+[run120] learner derivation: examined 1, derived 0, skipped 1, refused 0, backlog 0
+[run101] recovery sweep: examined=2 candidates=2 recovered=0 - every candidate already has its evaluation
+[replay-tick] run: captures=32 pendingCount=32
+[replay-tick] skip: paused=false busy=false running=true
+[replay-tick] skip: paused=false busy=false running=true

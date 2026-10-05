@@ -1,0 +1,1216 @@
+{
+  "base": "http://127.0.0.1:3458",
+  "steps": [
+    {
+      "step": "health-before",
+      "at": "2026-10-03T13:41:37.885Z",
+      "body": {
+        "runtime": {
+          "version": "0.0.14-745-g83308e29",
+          "release_version": "0.0.14-745-g83308e29",
+          "commit": "83308e29c7e9505054a0885f56da378330e76e5e",
+          "build_date": "2026-10-03T12:49:17.219Z",
+          "channel": "development",
+          "name": "role-model-dev",
+          "endpoint": "http://127.0.0.1:3458",
+          "source_tree": "d391ec693cf10e8af812e1e26c57934649f202ba",
+          "executable_sha256": "ffc3f58a45992d72b5eae539e3450b9b5bded5954335567da64c219e17768d78",
+          "core_payload_sha256": "ffc3f58a45992d72b5eae539e3450b9b5bded5954335567da64c219e17768d78"
+        },
+        "status": "healthy",
+        "executionMode": "decision_only",
+        "vendors": {
+          "llama-swap": {
+            "vendorId": "llama-swap",
+            "healthStatus": "inactive"
+          },
+          "litellm": {
+            "vendorId": "litellm",
+            "healthStatus": "inactive"
+          }
+        },
+        "inactiveVendors": [
+          "llama-swap",
+          "litellm"
+        ],
+        "credentialLifecycleAuthority": {
+          "state": "authoritative",
+          "bootstrapStatus": "ready"
+        },
+        "sessionBootstrap": {
+          "status": "ready",
+          "startedAt": "2026-10-03T12:55:27.158Z",
+          "finishedAt": "2026-10-03T12:55:27.217Z",
+          "stages": [
+            {
+              "stageId": "credentials",
+              "status": "ready",
+              "startedAt": "2026-10-03T12:55:27.158Z",
+              "finishedAt": "2026-10-03T12:55:27.183Z",
+              "details": {
+                "pendingAttempted": 0,
+                "pendingSucceeded": 0,
+                "pendingConnected": 0,
+                "pendingFailed": 0,
+                "pendingDeferred": 0,
+                "refreshAttempted": 0,
+                "refreshSucceeded": 0,
+                "refreshFailed": 0
+              }
+            },
+            {
+              "stageId": "endpoints",
+              "status": "ready",
+              "startedAt": "2026-10-03T12:55:27.197Z",
+              "finishedAt": "2026-10-03T12:55:27.216Z",
+              "details": {
+                "source": "manifest",
+                "count": 0,
+                "reconciled": 0,
+                "failed": 0,
+                "skipped": 0
+              }
+            },
+            {
+              "stageId": "peers",
+              "status": "skipped",
+              "startedAt": "2026-10-03T12:55:27.216Z",
+              "finishedAt": "2026-10-03T12:55:27.216Z",
+              "message": "no peer loads in manifest",
+              "details": {
+                "reloaded": 0,
+                "failed": 0
+              }
+            },
+            {
+              "stageId": "vendors",
+              "status": "skipped",
+              "startedAt": "2026-10-03T12:55:27.216Z",
+              "finishedAt": "2026-10-03T12:55:27.216Z",
+              "message": "unified runtime config disabled"
+            },
+            {
+              "stageId": "local-reload",
+              "status": "skipped",
+              "startedAt": "2026-10-03T12:55:27.216Z",
+              "finishedAt": "2026-10-03T12:55:27.217Z",
+              "message": "no llama-swap loads in manifest"
+            },
+            {
+              "stageId": "remote-health",
+              "status": "skipped",
+              "startedAt": "2026-10-03T12:55:27.217Z",
+              "finishedAt": "2026-10-03T12:55:27.217Z",
+              "message": "execution probes skipped in decision_only mode"
+            },
+            {
+              "stageId": "inventory",
+              "status": "skipped",
+              "startedAt": "2026-10-03T12:55:27.217Z",
+              "finishedAt": "2026-10-03T12:55:27.217Z",
+              "message": "no routable endpoints in inventory",
+              "details": {
+                "modelIdCount": 0,
+                "endpointIdCount": 0,
+                "localEndpointCount": 0,
+                "remoteEndpointCount": 0,
+                "emptyAliasIds": []
+              }
+            }
+          ]
+        },
+        "ready": true
+      }
+    },
+    {
+      "step": "mock-restarted",
+      "at": "2026-10-03T13:41:40.176Z",
+      "mockJobId": "pwsh-2147",
+      "mockReady": true
+    },
+    {
+      "step": "account-post",
+      "at": "2026-10-03T13:41:40.210Z",
+      "status": 200,
+      "body": {
+        "providerAccountId": "deepseek.personal.run105-pi-live-mock",
+        "providerId": "deepseek",
+        "providerKind": "provider-openai",
+        "orgScope": "personal",
+        "accountScope": "run105-pi-live",
+        "credentialRef": {
+          "backend": "local-file",
+          "ref": "api-key/deepseek/deepseek.personal.deepseek-api-key"
+        },
+        "authMode": "api-key-static",
+        "regionPolicy": {
+          "mode": "prefer",
+          "regions": [
+            "global"
+          ]
+        },
+        "baseUrlOverride": "http://127.0.0.1:3465/v1",
+        "allowedModels": [
+          "deepseek/deepseek-flash"
+        ],
+        "modelRoleBindings": [
+          {
+            "modelId": "deepseek/deepseek-flash",
+            "roleIds": [
+              "coder",
+              "writer"
+            ],
+            "roleAssignmentMode": "include",
+            "enabledRoleIds": [],
+            "disabledRoleIds": []
+          }
+        ],
+        "deniedModels": [],
+        "entitlementTags": [
+          "chat"
+        ],
+        "budgetPolicyRef": "budget.run105-pi-live",
+        "quotaPolicyRef": "quota.run105-pi-live",
+        "status": "active",
+        "healthStatus": "healthy",
+        "rotationState": "stable"
+      }
+    },
+    {
+      "step": "endpoint-post",
+      "at": "2026-10-03T13:41:40.294Z",
+      "status": 200,
+      "body": {
+        "endpointId": "deepseek.personal.run105-pi-live-mock.global.deepseek-flash-high",
+        "providerAccountId": "deepseek.personal.run105-pi-live-mock",
+        "providerId": "deepseek",
+        "modelId": "deepseek/deepseek-flash",
+        "roleIds": [
+          "coder",
+          "writer"
+        ],
+        "status": "active"
+      }
+    },
+    {
+      "step": "endpoint-active",
+      "at": "2026-10-03T13:41:40.300Z",
+      "endpointActive": true,
+      "endpointId": "deepseek.personal.run105-pi-live-mock.global.deepseek-flash-high"
+    },
+    {
+      "step": "config-put-remote-only",
+      "at": "2026-10-03T13:41:40.437Z",
+      "status": 200,
+      "body": {
+        "applied": true,
+        "path": "E:\\tmp\\run105-full-verification-state-final\\state\\runtime-config.yaml",
+        "config": {
+          "version": "1.0",
+          "routingStrategy": "baseline",
+          "routingPosture": {
+            "mode": "baseline",
+            "scoringStrategy": "balanced",
+            "pinWeights": false,
+            "operator": {
+              "name": "balanced",
+              "weights": {
+                "quality": 0.3,
+                "latency": 0.2,
+                "throughput": 0.1,
+                "cost": 0.2,
+                "reliability": 0.15,
+                "preference": 0.05
+              }
+            },
+            "degradations": []
+          },
+          "executionMode": "remote_only",
+          "modelAliases": [
+            {
+              "aliasId": "default.decision-only",
+              "mode": "basic",
+              "modelIds": [
+                "deepseek/deepseek-flash",
+                "deepseek/deepseek-v4-pro"
+              ]
+            },
+            {
+              "aliasId": "baseline.decision-only",
+              "mode": "basic",
+              "modelIds": [
+                "deepseek/deepseek-flash",
+                "deepseek/deepseek-v4-pro"
+              ]
+            },
+            {
+              "aliasId": "controller.decision-only",
+              "mode": "intelligent",
+              "modelIds": [
+                "deepseek/deepseek-flash",
+                "deepseek/deepseek-v4-pro"
+              ]
+            },
+            {
+              "aliasId": "difficulty.decision-only",
+              "mode": "difficulty",
+              "modelIds": [
+                "deepseek/deepseek-flash",
+                "deepseek/deepseek-v4-pro"
+              ]
+            },
+            {
+              "aliasId": "hybrid.decision-only",
+              "mode": "hybrid",
+              "modelIds": [
+                "deepseek/deepseek-flash",
+                "deepseek/deepseek-v4-pro"
+              ]
+            },
+            {
+              "aliasId": "default.hybrid",
+              "mode": "basic",
+              "modelIds": [
+                "deepseek/deepseek-flash",
+                "deepseek/deepseek-v4-pro"
+              ]
+            },
+            {
+              "aliasId": "baseline.hybrid",
+              "mode": "basic",
+              "modelIds": [
+                "deepseek/deepseek-flash",
+                "deepseek/deepseek-v4-pro"
+              ]
+            },
+            {
+              "aliasId": "controller.hybrid",
+              "mode": "intelligent",
+              "modelIds": [
+                "deepseek/deepseek-flash",
+                "deepseek/deepseek-v4-pro"
+              ]
+            },
+            {
+              "aliasId": "difficulty.hybrid",
+              "mode": "difficulty",
+              "modelIds": [
+                "deepseek/deepseek-flash",
+                "deepseek/deepseek-v4-pro"
+              ]
+            },
+            {
+              "aliasId": "hybrid.hybrid",
+              "mode": "hybrid",
+              "modelIds": [
+                "deepseek/deepseek-flash",
+                "deepseek/deepseek-v4-pro"
+              ]
+            },
+            {
+              "aliasId": "default.remote-only",
+              "mode": "basic",
+              "modelIds": [
+                "deepseek/deepseek-flash",
+                "deepseek/deepseek-v4-pro"
+              ]
+            },
+            {
+              "aliasId": "baseline.remote-only",
+              "mode": "basic",
+              "modelIds": [
+                "deepseek/deepseek-flash",
+                "deepseek/deepseek-v4-pro"
+              ]
+            },
+            {
+              "aliasId": "controller.remote-only",
+              "mode": "intelligent",
+              "modelIds": [
+                "deepseek/deepseek-flash",
+                "deepseek/deepseek-v4-pro"
+              ]
+            },
+            {
+              "aliasId": "difficulty.remote-only",
+              "mode": "difficulty",
+              "modelIds": [
+                "deepseek/deepseek-flash",
+                "deepseek/deepseek-v4-pro"
+              ]
+            },
+            {
+              "aliasId": "hybrid.remote-only",
+              "mode": "hybrid",
+              "modelIds": [
+                "deepseek/deepseek-flash",
+                "deepseek/deepseek-v4-pro"
+              ]
+            }
+          ],
+          "llamaSwap": {
+            "enabled": false,
+            "models": [],
+            "process": {
+              "command": null,
+              "args": [],
+              "env": {},
+              "cwd": null,
+              "startupTimeoutMs": null
+            }
+          },
+          "liteLLM": {
+            "enabled": false,
+            "providers": [],
+            "routerSettings": {},
+            "litellmSettings": {},
+            "process": {
+              "command": null,
+              "args": [],
+              "env": {},
+              "cwd": null,
+              "startupTimeoutMs": null
+            }
+          }
+        }
+      }
+    },
+    {
+      "step": "pi-version",
+      "at": "2026-10-03T13:41:44.910Z",
+      "exitCode": 0,
+      "stdout": "0.84.1\n",
+      "stderr": ""
+    },
+    {
+      "step": "pi-run-1",
+      "at": "2026-10-03T13:42:25.925Z",
+      "exitCode": 0,
+      "stdout": "RUN105-PI-LIVE-MARKER-SUCCESS routed via role-model final build 83308e29 (tree d391ec69, exe ffc3f58a) through localhost mock provider.\n",
+      "stderr": "npm warn Unknown env config \"manage-package-manager-versions\". This will stop working in the next major version of npm.\n\nadded 1 package, and audited 2 packages in 22s\n\nfound 0 vulnerabilities\nnpm warn Unknown env config \"manage-package-manager-versions\". This will stop working in the next major version of npm.\n\nadded 1 package, and audited 3 packages in 8s\n\nfound 0 vulnerabilities\n",
+      "timedOut": false
+    },
+    {
+      "step": "telemetry-after-pi1",
+      "at": "2026-10-03T13:42:26.157Z",
+      "newRequestIds": [
+        "req-96037b06-6bca-4d69-8785-e73102374287"
+      ],
+      "details": [
+        {
+          "requestId": "req-96037b06-6bca-4d69-8785-e73102374287",
+          "detail": {
+            "status": 200,
+            "body": {
+              "requestId": "req-96037b06-6bca-4d69-8785-e73102374287",
+              "clientRequestId": "01a101ff-df87-7dfe-8308-ef15e2b43b7f",
+              "routingDecisionId": "decision-req-96037b06-6bca-4d69-8785-e73102374287",
+              "endpointId": "deepseek.personal.run105-pi-live-mock.global.deepseek-flash-high",
+              "reasoningEffort": "high",
+              "effortSource": "variant",
+              "conversationId": "standalone-runtime-dev-empty-conversation",
+              "usageEvent": {
+                "timestamp_ms": 1791034945673,
+                "request_id": "req-96037b06-6bca-4d69-8785-e73102374287",
+                "routing_decision_id": "decision-req-96037b06-6bca-4d69-8785-e73102374287",
+                "endpoint_id": "deepseek.personal.run105-pi-live-mock.global.deepseek-flash-high",
+                "model_id": "deepseek/deepseek-flash",
+                "provider_kind": "remote_openai_compat",
+                "tokens_in": 12,
+                "tokens_out": 32,
+                "latency_ms": 7,
+                "cost_estimate": 0.000021,
+                "currency": "USD"
+              },
+              "cacheObservability": {
+                "promptCacheRequested": true,
+                "promptCacheRequestSource": "synthesized",
+                "promptCacheUsed": false,
+                "cacheReadTokens": 0,
+                "cacheWriteTokens": 0,
+                "routingCacheAffinity": false
+              },
+              "executionTelemetry": {
+                "providerFamily": "deepseek",
+                "finishReason": "stop",
+                "costProvenance": "estimated",
+                "usageSupport": {
+                  "inputTokens": true,
+                  "outputTokens": true,
+                  "cacheReadTokens": true,
+                  "cacheWriteTokens": true
+                },
+                "promptCaching": {
+                  "supported": true
+                },
+                "streamSupport": {
+                  "text": "delta",
+                  "toolCalls": "delta",
+                  "toolArguments": "delta"
+                },
+                "stream": {
+                  "requested": true,
+                  "textDeltas": 1,
+                  "toolCallDeltas": 0,
+                  "toolArgumentDeltas": 0
+                }
+              },
+              "executionSemantics": {
+                "sourceClient": "openai.chat.completions",
+                "executionFamily": "remote-service",
+                "adapterFamily": "ai-sdk-openai-compatible",
+                "toolSideEffectState": "none",
+                "idempotencyDecision": "not_needed",
+                "providerAttemptIds": [
+                  "attempt:req-96037b06-6bca-4d69-8785-e73102374287:final"
+                ],
+                "payloadBytes": {
+                  "ingress": 3922,
+                  "translated": 2971,
+                  "providerCanonical": 2822,
+                  "providerWire": 2822,
+                  "providerResponse": 397
+                }
+              },
+              "contextEnvelope": {
+                "conversationId": "standalone-runtime-dev-empty-conversation",
+                "latestHandoffId": null,
+                "estimatedTokenCount": 0
+              },
+              "retrievalReceipt": {
+                "receiptId": "standalone-runtime-dev-empty-conversation-retrieval-receipt",
+                "summary": {
+                  "selectedTurns": 0,
+                  "selectedArtifacts": 0,
+                  "omittedTurns": 0,
+                  "omittedArtifacts": 0,
+                  "estimatedTokens": 0
+                }
+              },
+              "capturePolicy": {
+                "environment": "local-dev",
+                "redactionLevel": "strict",
+                "retentionClass": "standard",
+                "structuredInspectionMode": "redacted",
+                "rawCaptureAvailable": true,
+                "structuredInspectionAvailable": true
+              },
+              "captureDegradation": {
+                "contract": "CaptureDegradationReceiptV1",
+                "failureStage": "graph_write",
+                "actionTaken": "queued_for_retry",
+                "reasonCode": "unknown",
+                "routingContinued": true,
+                "reason": "track-b-capture-deferred"
+              },
+              "statusFamily": "degraded-capture",
+              "routingDiagnostics": {
+                "observedProfile": {
+                  "endpointId": "deepseek.personal.run105-pi-live-mock.global.deepseek-flash-high",
+                  "source": "none",
+                  "readMode": "per-request"
+                },
+                "effectiveMetrics": {
+                  "quality": {
+                    "value": 0.5,
+                    "source": "default"
+                  },
+                  "latency": {
+                    "value": 0.5,
+                    "source": "default"
+                  },
+                  "throughput": {
+                    "value": 0.5,
+                    "source": "default"
+                  },
+                  "reliability": {
+                    "value": 0.7,
+                    "source": "default"
+                  },
+                  "cost": {
+                    "value": 0.9460481825866441,
+                    "source": "catalog",
+                    "freshnessWeight": 1,
+                    "freshnessSource": "passthrough",
+                    "timeDecayApplied": false
+                  }
+                },
+                "throughputPenalty": {
+                  "endpointId": "deepseek.personal.run105-pi-live-mock.global.deepseek-flash-high",
+                  "active": false
+                },
+                "strategyResolution": {
+                  "strategy": "balanced",
+                  "source": "operator",
+                  "weights": {
+                    "quality": 0.3,
+                    "latency": 0.2,
+                    "throughput": 0.1,
+                    "cost": 0.2,
+                    "reliability": 0.15,
+                    "preference": 0.05
+                  },
+                  "weightsDigest": "sha256:8c49b853bebd72f4596c926b2fc2181c67f8e2580c387d7ac8fb86457e7db9e9"
+                },
+                "selection": {
+                  "mode": "best-total-score",
+                  "scoreTieEpsilon": 0.01,
+                  "scoreDelta": 0.030000000000000027,
+                  "winnerEndpointId": "deepseek.personal.run105-pi-live-mock.global.deepseek-flash-high",
+                  "winnerTotalScore": 0.9368385460693154,
+                  "runnerUpEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash",
+                  "runnerUpTotalScore": 0.9068385460693154,
+                  "tieBreakOrder": [
+                    "quality",
+                    "latency_ms",
+                    "reliability",
+                    "endpoint_id"
+                  ]
+                },
+                "latencySelection": {
+                  "outcome": "disabled",
+                  "chosenEndpointId": "deepseek.personal.run105-pi-live-mock.global.deepseek-flash-high",
+                  "bucketUpperBoundTokens": null,
+                  "reason": "measured-latency selection input is not authorized"
+                },
+                "aliasResolution": {
+                  "requestedModel": "baseline.remote-only",
+                  "aliasId": "baseline.remote-only",
+                  "resolvedModelIds": [
+                    "deepseek/deepseek-flash",
+                    "deepseek/deepseek-v4-pro"
+                  ],
+                  "allowEndpoints": [
+                    "deepseek.personal.deepseek-api-key.global.deepseek-flash",
+                    "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+                    "deepseek.personal.run105-pi-live-mock.global.deepseek-flash-high"
+                  ]
+                },
+                "rewrite": {
+                  "requestedModel": "baseline.remote-only",
+                  "downstreamModelId": "deepseek/deepseek-flash",
+                  "applied": true,
+                  "reason": "requested-model-rewritten-for-selected-endpoint"
+                },
+                "cacheContinuity": {
+                  "enabled": true,
+                  "scopeSource": "prompt_cache_key",
+                  "activeEndpointId": "deepseek.personal.run105-pi-live-mock.global.deepseek-flash-high",
+                  "previousActiveEndpointId": null,
+                  "selectedEndpointId": "deepseek.personal.run105-pi-live-mock.global.deepseek-flash-high",
+                  "advisorySelectionApplied": false
+                },
+                "catalogEconomics": {
+                  "canonicalModelId": "deepseek/deepseek-flash",
+                  "tokenEconomicsSource": "catalog",
+                  "inputPer1M": 0.15,
+                  "outputPer1M": 0.6,
+                  "estimatedRequestUsd": 0.0025529999999999997,
+                  "cost_per_1k_tokens_est": 0.0005395181741335587
+                }
+              },
+              "privacyReceipt": {
+                "samplingRate": 1,
+                "retentionTtlHours": 720,
+                "retainUntil": 1793626945700
+              },
+              "taxonomyDimensions": {
+                "taxonomy_group_id": "communication",
+                "taxonomy_role_id": "writer",
+                "taxonomy_task_type": "writer.docs.write",
+                "taxonomy_task_variant": "write",
+                "taxonomy_capability_ids": [
+                  "code.read",
+                  "text.chat"
+                ],
+                "taxonomy_modality_ids": [
+                  "text"
+                ],
+                "taxonomy_tool_class_ids": null
+              },
+              "providerEvidence": {
+                "endpointId": "deepseek.personal.run105-pi-live-mock.global.deepseek-flash-high",
+                "modelId": "deepseek/deepseek-flash",
+                "status": "ok",
+                "attemptIds": [
+                  "req-96037b06-6bca-4d69-8785-e73102374287:attempt:1"
+                ]
+              },
+              "observedPerformance": {
+                "endpointVersion": "run07-registry-v1:custom-base-url",
+                "sample": {
+                  "endpoint_id": "deepseek.personal.run105-pi-live-mock.global.deepseek-flash-high",
+                  "endpoint_version": "run07-registry-v1:custom-base-url",
+                  "model_id": "deepseek/deepseek-flash",
+                  "source_type": "live",
+                  "timestamp_ms": 1791034945673,
+                  "latency_ms": 7
+                },
+                "profile": {
+                  "endpoint_id": "deepseek.personal.run105-pi-live-mock.global.deepseek-flash-high",
+                  "endpoint_version": "run07-registry-v1:custom-base-url",
+                  "measured_at_ms": 1791034945673,
+                  "measurement_window": {
+                    "started_at_ms": 1791034945673,
+                    "ended_at_ms": 1791034945673
+                  },
+                  "sample_size": 1,
+                  "sources": {
+                    "live_request_samples": 1,
+                    "benchmark_samples": 0
+                  },
+                  "latency_ms_p50": 7,
+                  "latency_ms_p95": 7,
+                  "failure_rate": 0,
+                  "freshness_score": 1,
+                  "confidence_score": 0.1762914343888821,
+                  "tokens_per_sec": 4571,
+                  "cost_per_1k_tokens_est": 0.0004772727272727273,
+                  "currency": "USD"
+                }
+              },
+              "telemetrySnapshot": {
+                "providerId": "deepseek",
+                "providerAccountId": "deepseek.personal.run105-pi-live-mock",
+                "sourceType": "remote",
+                "endpointKind": "remote_api",
+                "servingSource": "remote-service",
+                "region": "global",
+                "lifecycleStateAtRequest": "active",
+                "healthStatusAtRequest": "healthy",
+                "requestedModelId": "baseline.remote-only",
+                "selectedModelId": "deepseek/deepseek-flash",
+                "requestOperation": "chat",
+                "toolingUsed": false,
+                "cacheState": "miss",
+                "selectedUncachedCostUsd": 0.0025529999999999997,
+                "baselineMaxEligibleCostUsd": 0.0038401799999999995,
+                "routingCostSavingsUsd": 0.001287,
+                "cacheCostSavingsUsd": 0,
+                "totalAvoidedCostUsd": 0.001287,
+                "costBaselineSource": "eligible_candidate_max",
+                "costSavingsSupport": "full",
+                "eligibleEndpointIds": [
+                  "deepseek.personal.run105-pi-live-mock.global.deepseek-flash-high",
+                  "deepseek.personal.deepseek-api-key.global.deepseek-flash",
+                  "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+                ],
+                "eligibleModelIds": [
+                  "deepseek/deepseek-flash",
+                  "deepseek/deepseek-v4-pro"
+                ],
+                "candidateCostSnapshot": {
+                  "deepseek.personal.run105-pi-live-mock.global.deepseek-flash-high": {
+                    "modelId": "deepseek/deepseek-flash",
+                    "providerId": "deepseek",
+                    "providerKind": "remote_openai_compat",
+                    "sourceType": "remote",
+                    "endpointKind": "remote_api",
+                    "servingSource": "remote-service",
+                    "region": "global",
+                    "tokenEconomicsSource": "catalog",
+                    "estimatedRequestUsd": 0.0025529999999999997,
+                    "costPer1kTokensEst": 0.0005395181741335587,
+                    "inputPer1M": 0.15,
+                    "outputPer1M": 0.6
+                  },
+                  "deepseek.personal.deepseek-api-key.global.deepseek-flash": {
+                    "modelId": "deepseek/deepseek-flash",
+                    "providerId": null,
+                    "providerKind": "remote_openai_compat",
+                    "sourceType": "remote",
+                    "endpointKind": "remote_api",
+                    "servingSource": "remote-service",
+                    "region": "global",
+                    "tokenEconomicsSource": "catalog",
+                    "estimatedRequestUsd": 0.0025529999999999997,
+                    "costPer1kTokensEst": 0.0005395181741335587,
+                    "inputPer1M": 0.15,
+                    "outputPer1M": 0.6
+                  },
+                  "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro": {
+                    "modelId": "deepseek/deepseek-v4-pro",
+                    "providerId": null,
+                    "providerKind": "remote_openai_compat",
+                    "sourceType": "remote",
+                    "endpointKind": "remote_api",
+                    "servingSource": "remote-service",
+                    "region": "global",
+                    "tokenEconomicsSource": "catalog",
+                    "estimatedRequestUsd": 0.0038401799999999995,
+                    "costPer1kTokensEst": 0.0008115342349957734,
+                    "inputPer1M": 0.435,
+                    "outputPer1M": 0.87
+                  }
+                },
+                "selectedPricingSnapshot": {
+                  "modelId": "deepseek/deepseek-flash",
+                  "providerId": "deepseek",
+                  "providerAccountId": "deepseek.personal.run105-pi-live-mock",
+                  "sourceType": "remote",
+                  "tokenEconomicsSource": "catalog",
+                  "estimatedRequestUsd": 0.0025529999999999997,
+                  "costPer1kTokensEst": 0.0005395181741335587,
+                  "inputPer1M": 0.15,
+                  "outputPer1M": 0.6
+                }
+              },
+              "sourceType": "remote",
+              "providerId": "deepseek",
+              "endpointKind": "remote_api",
+              "servingSource": "remote-service",
+              "healthStatus": "healthy",
+              "status": "active",
+              "roleIds": [],
+              "observationAvailability": {
+                "source": "raw-observation",
+                "rawObservationAvailable": true,
+                "structuredInspectionAvailable": true,
+                "reason": "Request detail is backed by the preserved runtime observation bundle plus telemetry ledger supplements."
+              },
+              "latencyMs": 7,
+              "effectiveCostUsd": 0.000021,
+              "costCalculationBasis": "estimated_vendor_cost",
+              "costCalculationVersion": "run49.v1",
+              "selectedUncachedCostUsd": 0.0025529999999999997,
+              "baselineMaxEligibleCostUsd": 0.0038401799999999995,
+              "routingCostSavingsUsd": 0.001287,
+              "cacheCostSavingsUsd": 0,
+              "totalAvoidedCostUsd": 0.001287,
+              "costBaselineSource": "eligible_candidate_max",
+              "costSavingsSupport": "full",
+              "correlationId": "corr-1c889e52be325952392830a4",
+              "graphEvidence": {
+                "rootArtifactId": "9719711fa843a8fa77afb6e5dd199d5e981954080b651c7d80a54dbe8702872a",
+                "messageNodeIds": [
+                  "04a6b64844013c3ab0406c60ff58b3c3ce4be913b62725b378f74fd1d7babd97",
+                  "036cbd24facae6decab9029f67925a1a70f8bf59612ef218f029d281bf9d047d"
+                ],
+                "responseNodeId": "7d88242130fb305db1e041112ef158a42818d81ca01fadb6dd8f7c57d0604182",
+                "toolExecutionNodeIds": [],
+                "toolCallNodeIds": [],
+                "toolResultNodeIds": [],
+                "captureMetrics": {
+                  "captureCpuMs": 140,
+                  "captureWallMs": 259.6845,
+                  "sqliteLockWaitMs": 0.0337,
+                  "queueDepthBefore": 0,
+                  "queueDepthAfter": 0,
+                  "filesystemBytesBefore": 13547121,
+                  "filesystemBytesAfter": 13850702,
+                  "casBytesBefore": 0,
+                  "casBytesAfter": 24304,
+                  "normalizedStateBytesBefore": 13547121,
+                  "normalizedStateBytesAfter": 13826398,
+                  "archiveManifestInlineContentBytes": 0
+                },
+                "edgeCount": 9
+              },
+              "liveBudgetEvidence": {
+                "compactObservationBytes": 9160,
+                "runtimeRssBytes": 131502080,
+                "captureCpuMs": 140,
+                "captureWallMs": 259.6845,
+                "sqliteLockWaitMs": 0.0337,
+                "queueDepthBefore": 0,
+                "queueDepthAfter": 0,
+                "filesystemBytesBefore": 13547121,
+                "filesystemBytesAfter": 13850702,
+                "casBytesBefore": 0,
+                "casBytesAfter": 24304,
+                "normalizedStateBytesBefore": 13547121,
+                "normalizedStateBytesAfter": 13826398,
+                "archiveManifestInlineContentBytes": 0
+              }
+            }
+          },
+          "explain": {
+            "status": 200,
+            "body": "<!DOCTYPE html><html lang=\"en\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><meta name=\"color-scheme\" content=\"light dark\"/><meta name=\"theme-color\" content=\"#0a0a0a\"/><meta name=\"theme-color\" content=\"#0a0a0a\" media=\"(prefers-color-scheme: dark)\"/><link rel=\"preload\" href=\"/assets/fonts/geist-latin-400-normal.woff2\" as=\"font\" type=\"font/woff2\" crossorigin=\"anonymous\"/><link rel=\"preload\" href=\"/assets/fonts/geist-latin-600-normal.woff2\" as=\"font\" type=\"font/woff2\" crossorigin=\"anonymous\"/><link rel=\"preload\" href=\"/assets/fonts/geist-mono-latin-400-normal.woff2\" as=\"font\" type=\"font/woff2\" crossorigin=\"anonymous\"/><link rel=\"modulepreload\" href=\"/assets/manifest-2c927c7a.js\"/><link rel=\"modulepreload\" href=\"/assets/entry.client-B4czBmcP.js\"/><link rel=\"modulepreload\" href=\"/assets/chunk-EVOBXE3Y-g5m91DvX.js\"/><link rel=\"modulepreload\" href=\"/assets/root--LZnvqFy.js\"/><link rel=\"modulepreload\" href=\"/assets/theme-rIEsxy66.js\"/><link rel=\"modulepreload\" href=\"/assets/not-found-CkHQlBq7.js\"/><link rel=\"modulepreload\" href=\"/assets/page-primitives-DaboOJBc.js\"/><link rel=\"modulepreload\" href=\"/assets/chart-grid-CqXjTUqn.js\"/><link rel=\"modulepreload\" href=\"/assets/design-system-D3bmhYK2.js\"/><script>\n(() => {\n  try {\n    const palettes = {\"dark\":{\"accent\":\"#ffffff\",\"bg\":\"#0a0a0a\",\"border\":\"#1f1f1f\",\"fg\":\"#ededed\",\"secondary\":\"#9a9a9a\",\"surface\":\"#0f0f0f\"},\"light\":{\"accent\":\"#0a0a0a\",\"bg\":\"#ffffff\",\"border\":\"#eaeaea\",\"fg\":\"#111111\",\"secondary\":\"#666666\",\"surface\":\"#ffffff\"}};\n    const rm3Tokens = {\"dark\":{\"background\":\"#0a0a0a\",\"foreground\":\"#ededed\",\"primary\":\"#ffffff\",\"border\":\"#1f1f1f\",\"card\":\"#0f0f0f\"},\"light\":{\"background\":\"#ffffff\",\"foreground\":\"#111111\",\"primary\":\"#0a0a0a\",\"border\":\"#eaeaea\",\"card\":\"#fffff... (line truncated to 2000 chars)
+          }
+        }
+      ]
+    },
+    {
+      "step": "pi-run-2",
+      "at": "2026-10-03T13:42:33.959Z",
+      "exitCode": 0,
+      "stdout": "RUN105-PI-LIVE-MARKER-SUCCESS routed via role-model final build 83308e29 (tree d391ec69, exe ffc3f58a) through localhost mock provider.\n",
+      "stderr": "",
+      "timedOut": false
+    },
+    {
+      "step": "telemetry-after-pi2",
+      "at": "2026-10-03T13:42:34.122Z",
+      "newRequestIds": [
+        "req-df4ef675-61f3-46a5-bf12-a51e24bc17de",
+        "req-383dadf9-6da6-4c7e-a552-7b5c5dc4831e",
+        "req-7c9b06b6-0b44-4920-8de0-f979013d27a2",
+        "req-65deb3e6-605c-4486-bdd1-c7ae5fc1469b",
+        "req-f4ebdc4a-a9b0-4ac5-a410-6cc03b55ac9e",
+        "req-768ad842-fb12-4f9d-9e2a-1347a50b9a40"
+      ],
+      "details": [
+        {
+          "requestId": "req-df4ef675-61f3-46a5-bf12-a51e24bc17de",
+          "detail": {
+            "status": 200,
+            "body": {
+              "requestId": "req-df4ef675-61f3-46a5-bf12-a51e24bc17de",
+              "clientRequestId": "01a10200-8134-7a36-bce1-ffd00d8db2cb",
+              "routingDecisionId": "decision-req-df4ef675-61f3-46a5-bf12-a51e24bc17de",
+              "endpointId": "deepseek.personal.run105-pi-live-mock.global.deepseek-flash-high",
+              "reasoningEffort": "high",
+              "effortSource": "variant",
+              "conversationId": "standalone-runtime-dev-empty-conversation",
+              "usageEvent": {
+                "timestamp_ms": 1791034953696,
+                "request_id": "req-df4ef675-61f3-46a5-bf12-a51e24bc17de",
+                "routing_decision_id": "decision-req-df4ef675-61f3-46a5-bf12-a51e24bc17de",
+                "endpoint_id": "deepseek.personal.run105-pi-live-mock.global.deepseek-flash-high",
+                "model_id": "deepseek/deepseek-flash",
+                "provider_kind": "remote_openai_compat",
+                "tokens_in": 12,
+                "tokens_out": 32,
+                "latency_ms": 6,
+                "cost_estimate": 0.000021,
+                "currency": "USD"
+              },
+              "cacheObservability": {
+                "promptCacheRequested": true,
+                "promptCacheRequestSource": "synthesized",
+                "promptCacheUsed": false,
+                "cacheReadTokens": 0,
+                "cacheWriteTokens": 0,
+                "routingCacheAffinity": false
+              },
+              "executionTelemetry": {
+                "providerFamily": "deepseek",
+                "finishReason": "stop",
+                "costProvenance": "estimated",
+                "usageSupport": {
+                  "inputTokens": true,
+                  "outputTokens": true,
+                  "cacheReadTokens": true,
+                  "cacheWriteTokens": true
+                },
+                "promptCaching": {
+                  "supported": true
+                },
+                "streamSupport": {
+                  "text": "delta",
+                  "toolCalls": "delta",
+                  "toolArguments": "delta"
+                },
+                "stream": {
+                  "requested": true,
+                  "textDeltas": 1,
+                  "toolCallDeltas": 0,
+                  "toolArgumentDeltas": 0
+                }
+              },
+              "executionSemantics": {
+                "sourceClient": "openai.chat.completions",
+                "executionFamily": "remote-service",
+                "adapterFamily": "ai-sdk-openai-compatible",
+                "toolSideEffectState": "none",
+                "idempotencyDecision": "not_needed",
+                "providerAttemptIds": [
+                  "attempt:req-df4ef675-61f3-46a5-bf12-a51e24bc17de:final"
+                ],
+                "payloadBytes": {
+                  "ingress": 5085,
+                  "translated": 4134,
+                  "providerCanonical": 3985,
+                  "providerWire": 3985,
+                  "providerResponse": 397
+                }
+              },
+              "contextEnvelope": {
+                "conversationId": "standalone-runtime-dev-empty-conversation",
+                "latestHandoffId": null,
+                "estimatedTokenCount": 0
+              },
+              "retrievalReceipt": {
+                "receiptId": "standalone-runtime-dev-empty-conversation-retrieval-receipt",
+                "summary": {
+                  "selectedTurns": 0,
+                  "selectedArtifacts": 0,
+                  "omittedTurns": 0,
+                  "omittedArtifacts": 0,
+                  "estimatedTokens": 0
+                }
+              },
+              "capturePolicy": {
+                "environment": "local-dev",
+                "redactionLevel": "strict",
+                "retentionClass": "standard",
+                "structuredInspectionMode": "redacted",
+                "rawCaptureAvailable": true,
+                "structuredInspectionAvailable": true
+              },
+              "captureDegradation": {
+                "contract": "CaptureDegradationReceiptV1",
+                "failureStage": "graph_write",
+                "actionTaken": "queued_for_retry",
+                "reasonCode": "unknown",
+                "routingContinued": true,
+                "reason": "track-b-capture-deferred"
+              },
+              "statusFamily": "degraded-capture",
+              "routingDiagnostics": {
+                "observedProfile": {
+                  "endpointId": "deepseek.personal.run105-pi-live-mock.global.deepseek-flash-high",
+                  "source": "runtime-state",
+                  "readMode": "per-request",
+                  "measuredAtMs": 1791034945673
+                },
+                "effectiveMetrics": {
+                  "quality": {
+                    "value": 0.5,
+                    "source": "default"
+                  },
+                  "latency": {
+                    "value": 0.9584790473957641,
+                    "source": "measured",
+                    "measuredAtMs": 1791034945673,
+                    "freshnessWeight": 0.999990237127653,
+                    "freshnessSource": "time-decay",
+                    "timeDecayApplied": true
+                  },
+                  "throughput": {
+                    "value": 0.9999951185638265,
+                    "source": "measured",
+                    "measuredAtMs": 1791034945673,
+                    "freshnessWeight": 0.999990237127653,
+                    "freshnessSource": "time-decay",
+                    "timeDecayApplied": true
+                  },
+                  "reliability": {
+                    "value": 1,
+                    "source": "measured",
+                    "measuredAtMs": 1791034945673,
+                    "freshnessWeight": 1,
+                    "freshnessSource": "passthrough",
+                    "timeDecayApplied": false
+                  },
+                  "cost": {
+                    "value": 0.9476277372262774,
+                    "source": "catalog",
+                    "measuredAtMs": 1791034945673,
+                    "freshnessWeight": 1,
+                    "freshnessSource": "passthrough",
+                    "timeDecayApplied": false
+                  }
+                },
+                "throughputPenalty": {
+                  "endpointId": "deepseek.personal.run105-pi-live-mock.global.deepseek-flash-high",
+                  "active": false
+                },
+                "strategyResolution": {
+                  "strategy": "balanced",
+                  "source": "operator",
+                  "weights": {
+                    "quality": 0.3,
+                    "latency": 0.2,
+                    "throughput": 0.1,
+                    "cost": 0.2,
+                    "reliability": 0.15,
+                    "preference": 0.05
+                  },
+                  "weightsDigest": "sha256:8c49b853bebd72f4596c926b2fc2181c67f8e2580c387d7ac8fb86457e7db9e9"
+                },
+                "selection": {
+                  "mode": "best-total-score",
+                  "scoreTieEpsilon": 0.01,
+                  "scoreDelta": 0.28456474476505056,
+                  "winnerEndpointId": "deepseek.personal.run105-pi-live-mock.global.deepseek-flash-high",
+                  "winnerTotalScore": 0.9731726696868441,
+                  "runnerUpEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash",
+                  "runnerUpTotalScore": 0.6886079249217936,
+                  "tieBreakOrder": [
+                    "quality",
+                    "latency_ms",
+                    "reliability",
+                    "endpoint_id"
+                  ]
+                },
+                "latencySelection": {
+                  "outcome": "disabled",
+                  "chosenEndpointId": "deepseek.personal.run105-pi-live-mock.global.deepseek-flash-high",
+                  "bucketUpperBoundTokens": null,
+                  "reason": "measured-latency selection input is not authorized"
+                },
+                "aliasResolution": {
+                  "requestedModel": "baseline.remote-only",
+                  "aliasId": "baseline.remote-only",
+                  "resolvedModelIds": [
+                    "deepseek/deepseek-flash",
+                    "deepseek/deepseek-v4-pro"
+                  ],
+                  "allowEndpoints": [
+                    "deepseek.personal.deepseek-api-key.global.deepseek-flash",
+                    "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+                    "deepseek.personal.run105-pi-live-mock.global.deepseek-flash-high"
+                  ]
+                },
+                "rewrite": {
+                  "requestedModel": "baseline.remote-only",
+                  "downstreamModelId": "deepseek/deepseek-flash",
+                  "applied": true,
+                  "reason": "requested-model-rewritten-for-selected-endpoint"
+                },
+                "cacheContinuity": {
+                  "enabled": true,
+                  "scopeSource": "prompt_cache_key",
+                  "activeEndpointId": "deepseek.personal.run105-pi-live-mock.global.deepseek-flash-high",
+                  "previousActiveEndpointId": "deepseek.personal.run105-pi-live-mock.global.deepseek-flash-high",
+                  "selectedEndpointId": "deepseek.personal.run105-pi-live-mock.global.deepseek-flash-high",
+                  "advisorySelectionApplied": false
+                },
+                "catalogEconomics": {
+                  "canonicalModelId": "deepseek/deepseek-flash",
+                  "tokenEconomicsSource": "catalog",
+                  "inputPer1M": 0.15,
+                  "outputPer1M": 0.6,
+                  "estimatedRequestUsd": 0.002583,
+                  "cost_per_1k_tokens_est": 0.0005237226277372263
+                }
+              },
+              "privacyReceipt": {
+                "samplingRate": 1,
+                "retentionTtlHours": 720,
+                "retainUntil": 1793626953720
+              },
+              "taxonomyDimensions": {
+                "taxonomy_group_id": "communication",
+                "taxonomy_role_id": "writer",
+                "taxonomy_task_type": "writer.docs.write",
+                "taxonomy_task_variant": "write",
+                "taxonomy_capability_ids": [
+                  "code.read",
+                  "text.chat"
+                ],
+                "taxonomy_modality_ids": [
+                  "text"
+                ],
+                "taxonomy_tool_class_ids": null
+              },
+              "providerEvidence": {
+                "endpointId": "deepseek.personal.run105-pi-live-mock.global.deepseek-flash-high",
+                "modelId": "deepseek/deepseek-flash",
+                "status": "ok",
+                "attemptIds": [
+                  "req-df4ef675-61f3-46a5-bf12-a51e24bc17de:attempt:1"
+                ]
+              },
+              "observedPerformance": {
+                "endpointVersion": "run07-registry-v1:custom-base-url",
+                "sample": {
+                  "endpoint_id": "deepseek.personal.run105-pi-live-mock.global.deepseek-flash-high",
+                  "endpoint_version": "run07-registry-v1:custom-base-url",
+                  "model_id": "deepseek/deepseek-flash",
+                  "source_type": "live",
+                  "timestamp_ms": 1791034953696,
+                  "latency_ms": 6
+                },
+                "profile": {
+                  "endpoint_id": "deepseek.personal.run105-pi-live-mock.global.deepseek-flash-high",
+                  "endpoint_version": "run07-registry-v1:custom-base-url",
+                  "measured_at_ms": 1791034953696,
+                  "measurement_window": {
+                    "started_at_ms": 1791034953696,
+                    "ended_at_ms": 1791034953696
+                  },
+                  "sample_size": 1,
+                  "sources": {
+                    "live_request_samples": 1,
+                    "benchmark_samples": 0
+                  },
+                  "latency_ms_p50": 6,
+                  "latency_ms_p95": 6,
+                  "failure_rate": 0,
+                  "freshness_score": 1,
+                  "confidence_score": 0.1762914343888821,
+                  "tokens_per_sec": 5333,
+                  "cost_per_1k_tokens_est": 0.0004772727272727273,
+                  "currency": "USD"
+                }
+              },
+              "telemetrySnapshot": {
+                "providerId": "deepseek",
+                "providerAccountId": "deepseek.personal.run105-pi-live-mock",
+                "sourceType": "remote",
+                "endpointKind": "remote_api",
+                "servingSource": "remote-service",
+                "region": "global",
+                "lifecycleStateAtRequest": "active",
+                "healthStatusAtRequest": "healthy",
+                "requestedModelId": "baseline.remote-only",
+                "selectedModelId": "deepseek/deepseek-flash",
+                "requestOperation": "chat",
+                "toolingUsed": false,
+                "cacheState": "miss",
+                "selectedUncachedCostUsd": 0.002583,
+                "baselineMaxEligibleCostUsd": 0.00392718,
+                "routingCostSavingsUsd": 0.001344,
+                "cacheCostSavingsUsd": 0,
+                "totalAvoidedCostUsd": 0.001344,
+                "costBaselineSource": "eligible_candidate_max",
+                "costSavingsSupport": "full",
+                "eligibleEndpointIds": [
+                  "deepseek.personal.run105-pi-live-mock.global.deepseek-flash-high",
+                  "deepseek.personal.deepseek-api-key.global.deepseek-flash",
+                  "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+                ],
+                "eligibleModelIds": [
+                  "deepseek/deepseek-flash",
+                  "deepseek/deepseek-v4-pro"
+                ],
+                "candidateCostSnapshot": {
+                  "deepseek.personal.run105-pi-live-mock.global.deepseek-flash-high": {
+                    "modelId": "deepseek/deepseek-flash",
+                    "providerId": "deepseek",
+                    "providerKind": "remote_openai_compat",
+                    "sourceType": "remote",
+                    "endpointKind": "remote_api",
+                    "servingSource": "remote-service",
+                    "region": "global",
+                    "tokenEconomicsSource": "catalog",
+                    "estimatedRequestUsd": 0.002583,
+                    "costPer1kTokensEst": 0.0005237226277372263,
+                    "inputPer1M": 0.15,
+                    "outputPer1M": 0.6
+                  },
+                  "deepseek.personal.deepseek-api-key.global.deepseek-flash": {
+                    "modelId": "deepseek/deepseek-flash",
+                    "providerId": null,
+                    "providerKind": "remote_openai_compat",
+                    "sourceType": "remote",
+                    "endpointKind": "remote_api",
+                    "servingSource": "remote-service",
+                    "region": "global",
+                    "tokenEconomicsSource": "catalog",
+                    "estimatedRequestUsd": 0.002583,
+                    "costPer1kTokensEst": 0.0005237226277372263,
+                    "inputPer1M": 0.15,
+                    "outputPer1M": 0.6
+                  },
+                  "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro": {
+                    "modelId": "deepseek/deepseek-v4-pro",
+                    "providerId": null,
+                    "providerKind": "remote_openai_compat",
+                    "sourceType": "remote",
+                    "endpointKind": "remote_api",
+                    "servingSource": "remote-service",
+                    "region": "global",
+                    "tokenEconomicsSource": "catalog",
+                    "estimatedRequestUsd": 0.00392718,
+                    "costPer1kTokensEst": 0.000796265206812652,
+                    "inputPer1M": 0.435,
+                    "outputPer1M": 0.87
+                  }
+                },
+                "selectedPricingSnapshot": {
+                  "modelId": "deepseek/deepseek-flash",
+                  "providerId": "deepseek",

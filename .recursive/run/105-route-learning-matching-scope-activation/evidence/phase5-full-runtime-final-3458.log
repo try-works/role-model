@@ -1,0 +1,381 @@
+(node:34760) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `role-model-dev --trace-warnings ...` to show where the warning was created)
+{
+  "status": "listening",
+  "host": "127.0.0.1",
+  "port": 3458
+}
+[track-b-sidecar] (node:31392) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+[track-b-sidecar] (Use `node --trace-warnings ...` to show where the warning was created)
+[run105] durable task advisory refresh: scope=standalone-runtime-dev pairs=0 stage=S4
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run105] ladder materialization degraded: configured endpoint count must be 1..64
+[run101] replay job scope: derived runtime:662f4799114a33ec4747ec2ae46d9e4e
+[run101] recovery page payload shape: value,businessOutput,durableLocator,evidenceRef,readCapability,workerPid
+[run101] recovery page came back empty: scope=runtime:662f4799114a33ec4747ec2ae46d9e4e channel=development cursor=start
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run105] ladder materialization degraded: configured endpoint count must be 1..64
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run105] ladder materialization degraded: configured endpoint count must be 1..64
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run105] ladder materialization degraded: configured endpoint count must be 1..64
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run105] ladder materialization degraded: configured endpoint count must be 1..64
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run105] ladder materialization degraded: configured endpoint count must be 1..64
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run105] ladder materialization degraded: configured endpoint count must be 1..64
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run105] ladder materialization degraded: configured endpoint count must be 1..64
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run105] ladder materialization degraded: configured endpoint count must be 1..64
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run105] ladder materialization degraded: configured endpoint count must be 1..64
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run105] ladder materialization degraded: configured endpoint count must be 1..64
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run105] ladder materialization degraded: configured endpoint count must be 1..64
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run105] ladder materialization degraded: configured endpoint count must be 1..64
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run105] ladder materialization degraded: configured endpoint count must be 1..64
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run105] ladder materialization degraded: configured endpoint count must be 1..64
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run105] ladder materialization degraded: configured endpoint count must be 1..64
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run105] ladder materialization degraded: configured endpoint count must be 1..64
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run105] ladder materialization degraded: configured endpoint count must be 1..64
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run105] ladder materialization degraded: configured endpoint count must be 1..64
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run105] ladder materialization degraded: configured endpoint count must be 1..64
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run105] ladder materialization degraded: configured endpoint count must be 1..64
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run105] ladder materialization degraded: configured endpoint count must be 1..64
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[track-b-sidecar] [run140] profile invoke capability=profile:current-estimate scope=standalone-runtime-dev sessionId=operator filePath=E:\tmp\run105-full-verification-state-final\standalone-runtime-dev\track-b\extensions\workers\profile-learner\profile-e983a260667256b09d300ef178f609d323eef2ceb50df234f6aeb1066c279f63.json
+[track-b-sidecar] [run140] profile invoke capability=profile:current-estimate scope=standalone-runtime-dev sessionId=operator filePath=E:\tmp\run105-full-verification-state-final\standalone-runtime-dev\track-b\extensions\workers\profile-learner\profile-e983a260667256b09d300ef178f609d323eef2ceb50df234f6aeb1066c279f63.json
+[track-b-sidecar] [run138] learning profile hop empty (input={"scopeId":null,"scope":null,"generationKey":null})
+[track-b-sidecar] [run137] profile readback empty from the operator hop (input={"scope":null,"scopeId":null,"generationKey":null})
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[track-b-sidecar] [run140] profile invoke capability=profile:current-estimate scope=standalone-runtime-dev sessionId=operator filePath=E:\tmp\run105-full-verification-state-final\standalone-runtime-dev\track-b\extensions\workers\profile-learner\profile-e983a260667256b09d300ef178f609d323eef2ceb50df234f6aeb1066c279f63.json
+[track-b-sidecar] [run140] profile invoke capability=profile:current-estimate scope=standalone-runtime-dev sessionId=operator filePath=E:\tmp\run105-full-verification-state-final\standalone-runtime-dev\track-b\extensions\workers\profile-learner\profile-e983a260667256b09d300ef178f609d323eef2ceb50df234f6aeb1066c279f63.json
+[track-b-sidecar] [run138] learning profile hop empty (input={"scopeId":null,"scope":null,"generationKey":null})
+[track-b-sidecar] [run137] profile readback empty from the operator hop (input={"scope":null,"scopeId":null,"generationKey":null})
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[track-b-sidecar] [run140] profile invoke capability=profile:current-estimate scope=standalone-runtime-dev sessionId=operator filePath=E:\tmp\run105-full-verification-state-final\standalone-runtime-dev\track-b\extensions\workers\profile-learner\profile-e983a260667256b09d300ef178f609d323eef2ceb50df234f6aeb1066c279f63.json
+[track-b-sidecar] [run140] profile invoke capability=profile:current-estimate scope=standalone-runtime-dev sessionId=operator filePath=E:\tmp\run105-full-verification-state-final\standalone-runtime-dev\track-b\extensions\workers\profile-learner\profile-e983a260667256b09d300ef178f609d323eef2ceb50df234f6aeb1066c279f63.json
+[track-b-sidecar] [run138] learning profile hop empty (input={"scopeId":null,"scope":null,"generationKey":null})
+[track-b-sidecar] [run137] profile readback empty from the operator hop (input={"scope":null,"scopeId":null,"generationKey":null})
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-p17-tools-multi-hard-deepseek.personal.deepseek-api-key.global.deepseek-flash-turn1-3135db43-e301-47a9-ae54-2524eba34b07 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-p17-tools-multi-hard-deepseek.personal.deepseek-api-key.global.deepseek-flash-turn2-583c2870-ea15-45dd-8203-94845d76343e alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-p17-tools-multi-hard-deepseek.personal.deepseek-api-key.global.deepseek-flash-turn3-3b828d29-fdc7-42c7-a6ae-df9f0fbf0dc6 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-x01-max-signal-deepseek.personal.deepseek-api-key.global.deepseek-flash-turn1-051e5921-0efe-4db7-8ce8-c9067c999976 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-x01-max-signal-deepseek.personal.deepseek-api-key.global.deepseek-flash-turn2-adb1599d-1dc4-4959-8441-599750e9b08b alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-x01-max-signal-deepseek.personal.deepseek-api-key.global.deepseek-flash-turn3-99cfa35a-3f2f-42d6-8f3a-07b2cbb67108 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h01-implement-two-sum-deepseek.personal.deepseek-api-key.global.deepseek-flash-turn1-583a9365-73c9-4940-ac05-fa0aeb46b18e alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h02-fix-async-counter-deepseek.personal.deepseek-api-key.global.deepseek-flash-turn1-fffc6e4a-8e64-4086-9215-118ae3f85b97 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h04-tool-read-router-deepseek.personal.deepseek-api-key.global.deepseek-flash-turn1-94ac322d-f0e7-4d2e-8d0d-12205b1f7056 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h04-tool-read-router-deepseek.personal.deepseek-api-key.global.deepseek-flash-turn2-d14dbd11-52be-4406-9661-53328a342151 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h05-tool-grep-eligibility-deepseek.personal.deepseek-api-key.global.deepseek-flash-turn1-2fce54ba-84cd-47f7-97a8-2e83501af49b alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h05-tool-grep-eligibility-deepseek.personal.deepseek-api-key.global.deepseek-flash-turn2-429d532a-d238-4e26-b692-ebf473a5ee10 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h05-tool-grep-eligibility-deepseek.personal.deepseek-api-key.global.deepseek-flash-turn3-f4fc89fb-8306-44b3-991d-1936988ca12e alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h06-tool-apply-patch-deepseek.personal.deepseek-api-key.global.deepseek-flash-turn1-0b5b7b03-3df8-470f-b342-0f5ffdbbf75a alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[track-b-sidecar] [run140] profile invoke capability=profile:current-estimate scope=standalone-runtime-dev sessionId=operator filePath=E:\tmp\run105-full-verification-state-final\standalone-runtime-dev\track-b\extensions\workers\profile-learner\profile-e983a260667256b09d300ef178f609d323eef2ceb50df234f6aeb1066c279f63.json
+[track-b-sidecar] [run140] profile invoke capability=profile:current-estimate scope=standalone-runtime-dev sessionId=operator filePath=E:\tmp\run105-full-verification-state-final\standalone-runtime-dev\track-b\extensions\workers\profile-learner\profile-e983a260667256b09d300ef178f609d323eef2ceb50df234f6aeb1066c279f63.json
+[track-b-sidecar] [run138] learning profile hop empty (input={"scopeId":null,"scope":null,"generationKey":null})
+[track-b-sidecar] [run137] profile readback empty from the operator hop (input={"scope":null,"scopeId":null,"generationKey":null})
+[track-b-sidecar] [run140] profile invoke capability=profile:current-estimate scope=standalone-runtime-dev sessionId=operator filePath=E:\tmp\run105-full-verification-state-final\standalone-runtime-dev\track-b\extensions\workers\profile-learner\profile-e983a260667256b09d300ef178f609d323eef2ceb50df234f6aeb1066c279f63.json
+[track-b-sidecar] [run140] profile invoke capability=profile:current-estimate scope=standalone-runtime-dev sessionId=operator filePath=E:\tmp\run105-full-verification-state-final\standalone-runtime-dev\track-b\extensions\workers\profile-learner\profile-e983a260667256b09d300ef178f609d323eef2ceb50df234f6aeb1066c279f63.json
+[track-b-sidecar] [run138] learning profile hop empty (input={"scopeId":null,"scope":null,"generationKey":null})
+[track-b-sidecar] [run137] profile readback empty from the operator hop (input={"scope":null,"scopeId":null,"generationKey":null})
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h06-tool-apply-patch-deepseek.personal.deepseek-api-key.global.deepseek-flash-turn2-e82f5699-79d8-4a04-af35-68eadf4cd57d alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h07-multi-turn-sla-guard-deepseek.personal.deepseek-api-key.global.deepseek-flash-turn1-60abbece-9fca-4d6b-9492-3d6e7042221f alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[track-b-sidecar] [run140] profile invoke capability=profile:current-estimate scope=standalone-runtime-dev sessionId=operator filePath=E:\tmp\run105-full-verification-state-final\standalone-runtime-dev\track-b\extensions\workers\profile-learner\profile-e983a260667256b09d300ef178f609d323eef2ceb50df234f6aeb1066c279f63.json
+[track-b-sidecar] [run140] profile invoke capability=profile:current-estimate scope=standalone-runtime-dev sessionId=operator filePath=E:\tmp\run105-full-verification-state-final\standalone-runtime-dev\track-b\extensions\workers\profile-learner\profile-e983a260667256b09d300ef178f609d323eef2ceb50df234f6aeb1066c279f63.json
+[track-b-sidecar] [run138] learning profile hop empty (input={"scopeId":null,"scope":null,"generationKey":null})
+[track-b-sidecar] [run137] profile readback empty from the operator hop (input={"scope":null,"scopeId":null,"generationKey":null})
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h08-multi-turn-tool-refine-deepseek.personal.deepseek-api-key.global.deepseek-flash-turn1-0cc23d84-f2ab-4f8e-935f-96e2737c38d7 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h08-multi-turn-tool-refine-deepseek.personal.deepseek-api-key.global.deepseek-flash-turn2-6cb4e37a-ee0e-4cec-917b-b7709dcc7854 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h09-agent-metrics-chain-deepseek.personal.deepseek-api-key.global.deepseek-flash-turn1-246125fc-3366-4cdf-b36c-73ccbd6dd7b0 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h09-agent-metrics-chain-deepseek.personal.deepseek-api-key.global.deepseek-flash-turn2-5adbcd12-0410-4df9-b6fa-adbd3616649f alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[track-b-sidecar] [run140] profile invoke capability=profile:current-estimate scope=standalone-runtime-dev sessionId=operator filePath=E:\tmp\run105-full-verification-state-final\standalone-runtime-dev\track-b\extensions\workers\profile-learner\profile-e983a260667256b09d300ef178f609d323eef2ceb50df234f6aeb1066c279f63.json
+[track-b-sidecar] [run140] profile invoke capability=profile:current-estimate scope=standalone-runtime-dev sessionId=operator filePath=E:\tmp\run105-full-verification-state-final\standalone-runtime-dev\track-b\extensions\workers\profile-learner\profile-e983a260667256b09d300ef178f609d323eef2ceb50df234f6aeb1066c279f63.json
+[track-b-sidecar] [run138] learning profile hop empty (input={"scopeId":null,"scope":null,"generationKey":null})
+[track-b-sidecar] [run137] profile readback empty from the operator hop (input={"scope":null,"scopeId":null,"generationKey":null})
+[track-b-sidecar] [run140] profile invoke capability=profile:current-estimate scope=standalone-runtime-dev sessionId=operator filePath=E:\tmp\run105-full-verification-state-final\standalone-runtime-dev\track-b\extensions\workers\profile-learner\profile-e983a260667256b09d300ef178f609d323eef2ceb50df234f6aeb1066c279f63.json
+[track-b-sidecar] [run140] profile invoke capability=profile:current-estimate scope=standalone-runtime-dev sessionId=operator filePath=E:\tmp\run105-full-verification-state-final\standalone-runtime-dev\track-b\extensions\workers\profile-learner\profile-e983a260667256b09d300ef178f609d323eef2ceb50df234f6aeb1066c279f63.json
+[track-b-sidecar] [run138] learning profile hop empty (input={"scopeId":null,"scope":null,"generationKey":null})
+[track-b-sidecar] [run137] profile readback empty from the operator hop (input={"scope":null,"scopeId":null,"generationKey":null})
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h09-agent-metrics-chain-deepseek.personal.deepseek-api-key.global.deepseek-flash-turn3-5fca1e55-3fce-4332-a24c-74eb73bce002 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h09-agent-metrics-chain-deepseek.personal.deepseek-api-key.global.deepseek-flash-turn4-81016b4b-24ed-4f05-89a1-c2fcbca90612 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h09-agent-metrics-chain-deepseek.personal.deepseek-api-key.global.deepseek-flash-turn5-48d425bb-d7d4-4063-95a7-8725f50025e0 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h10-agent-read-grep-patch-deepseek.personal.deepseek-api-key.global.deepseek-flash-turn1-bb2c0a4a-82eb-4a61-a2fd-498c3a9e4691 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h10-agent-read-grep-patch-deepseek.personal.deepseek-api-key.global.deepseek-flash-turn2-54ddf386-9018-4ad2-8872-d6ed9265e368 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h15-max-signal-v3-deepseek.personal.deepseek-api-key.global.deepseek-flash-turn1-2e9925fe-905e-4b85-83de-47cc12b6056e alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h15-max-signal-v3-deepseek.personal.deepseek-api-key.global.deepseek-flash-turn2-fc187d14-58db-4152-9d8e-13ad95c9f068 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h15-max-signal-v3-deepseek.personal.deepseek-api-key.global.deepseek-flash-turn3-ed078bf2-1e99-44cc-b2b0-5e67a2153a33 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[track-b-sidecar] [run140] profile invoke capability=profile:current-estimate scope=standalone-runtime-dev sessionId=operator filePath=E:\tmp\run105-full-verification-state-final\standalone-runtime-dev\track-b\extensions\workers\profile-learner\profile-e983a260667256b09d300ef178f609d323eef2ceb50df234f6aeb1066c279f63.json
+[track-b-sidecar] [run140] profile invoke capability=profile:current-estimate scope=standalone-runtime-dev sessionId=operator filePath=E:\tmp\run105-full-verification-state-final\standalone-runtime-dev\track-b\extensions\workers\profile-learner\profile-e983a260667256b09d300ef178f609d323eef2ceb50df234f6aeb1066c279f63.json
+[track-b-sidecar] [run138] learning profile hop empty (input={"scopeId":null,"scope":null,"generationKey":null})
+[track-b-sidecar] [run137] profile readback empty from the operator hop (input={"scope":null,"scopeId":null,"generationKey":null})
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[track-b-sidecar] [run140] profile invoke capability=profile:current-estimate scope=standalone-runtime-dev sessionId=operator filePath=E:\tmp\run105-full-verification-state-final\standalone-runtime-dev\track-b\extensions\workers\profile-learner\profile-e983a260667256b09d300ef178f609d323eef2ceb50df234f6aeb1066c279f63.json
+[track-b-sidecar] [run140] profile invoke capability=profile:current-estimate scope=standalone-runtime-dev sessionId=operator filePath=E:\tmp\run105-full-verification-state-final\standalone-runtime-dev\track-b\extensions\workers\profile-learner\profile-e983a260667256b09d300ef178f609d323eef2ceb50df234f6aeb1066c279f63.json
+[track-b-sidecar] [run138] learning profile hop empty (input={"scopeId":null,"scope":null,"generationKey":null})
+[track-b-sidecar] [run137] profile readback empty from the operator hop (input={"scope":null,"scopeId":null,"generationKey":null})
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-p17-tools-multi-hard-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-turn1-111ee322-8700-4bcd-b0fb-35bc67500a53 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-p17-tools-multi-hard-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-turn2-583adc5b-1761-4fed-992e-7d1cf0fd231d alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-p17-tools-multi-hard-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-turn3-157e0671-fa1f-471b-adf4-8f0bc5b95d38 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-x01-max-signal-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-turn1-4af7fbe7-b4fe-4b54-bc3c-58bf5ac5a3d7 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-x01-max-signal-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-turn2-1c5914c6-0f85-45f0-9534-dc7bb1c70459 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-x01-max-signal-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-turn3-77d8820d-9afe-4ae4-a812-212f797d28bf alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h01-implement-two-sum-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-turn1-af33d1de-8f14-43c2-96dd-110787a92181 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h02-fix-async-counter-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-turn1-17fb76c7-4a69-4190-9835-19b6e20cdeaf alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h04-tool-read-router-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-turn1-f4bbe0fd-7e01-4812-9f4d-9a9e3c2dae5a alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h04-tool-read-router-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-turn2-b25761c9-5f30-4744-9137-72843977661d alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h05-tool-grep-eligibility-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-turn1-0af30466-444f-40f1-b24f-0820b713dc16 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h05-tool-grep-eligibility-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-turn2-6dced8a6-2b9b-4014-a9ef-caaccfe28074 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h05-tool-grep-eligibility-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-turn3-4533f8cb-76ce-42d8-a383-7e96687f0178 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h06-tool-apply-patch-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-turn1-48b87488-0f60-41f7-b25e-c27ae5b25ccf alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h06-tool-apply-patch-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-turn2-29b10d42-a94d-4372-95ed-6f6c71439bc1 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h07-multi-turn-sla-guard-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-turn1-465d9b2f-79a5-42c5-adaa-321ccfb32f65 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h08-multi-turn-tool-refine-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-turn1-6acc27b2-fe9f-4ce1-a620-1357f79905d1 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h08-multi-turn-tool-refine-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-turn2-5e3e0136-eb6c-42ca-a0c3-af7bab1dd21a alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h09-agent-metrics-chain-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-turn1-67b1370e-5c8e-40ba-bb4a-d6330b5fd302 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h09-agent-metrics-chain-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-turn2-21256cd0-cc1c-47b7-84bf-23ee64d70ce0 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h09-agent-metrics-chain-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-turn3-861a6e34-efeb-4744-bc1c-74b4e22ff346 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h10-agent-read-grep-patch-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-turn1-3c409025-ed41-4639-98b6-571d5594e8d1 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h10-agent-read-grep-patch-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-turn2-40746fb9-8b55-4f81-b7cd-572c03425f80 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h10-agent-read-grep-patch-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-turn3-9d8d8f73-b1e2-4a7c-a9da-e91e5d4edfe3 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h15-max-signal-v3-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-turn1-9328cb8c-24e9-4938-bb36-b4a983f7a246 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h15-max-signal-v3-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-turn2-d3831aa8-92b1-48ad-9063-056e39035dc9 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-h15-max-signal-v3-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-turn3-00ad19f6-45e8-44d9-b7de-dcfa39db7412 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-judge-p17-tools-multi-hard-a1-7e0b8333-60b7-40c4-a20f-49c996b448cb alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-judge-x01-max-signal-a1-38f47190-65b2-44d3-aa05-6d4957419ae7 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-judge-h01-implement-two-sum-a1-d0e67c09-d570-4959-bc82-fce31012167c alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-judge-h02-fix-async-counter-a1-9b2e496d-0c00-4d8e-b426-3819e578408a alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-judge-h04-tool-read-router-a1-d4315b3f-b4e9-4142-a65c-c86b03835208 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-judge-h05-tool-grep-eligibility-a1-4a0101fe-8603-4425-8e4a-364d87724496 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-judge-h06-tool-apply-patch-a1-22c3e9cc-f918-4be6-8476-8ab3d58af1d4 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-judge-h07-multi-turn-sla-guard-a1-4c8442ac-47bf-48bd-a3be-8c888c95dab6 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[track-b-sidecar] [run140] profile invoke capability=profile:current-estimate scope=standalone-runtime-dev sessionId=operator filePath=E:\tmp\run105-full-verification-state-final\standalone-runtime-dev\track-b\extensions\workers\profile-learner\profile-e983a260667256b09d300ef178f609d323eef2ceb50df234f6aeb1066c279f63.json
+[track-b-sidecar] [run140] profile invoke capability=profile:current-estimate scope=standalone-runtime-dev sessionId=operator filePath=E:\tmp\run105-full-verification-state-final\standalone-runtime-dev\track-b\extensions\workers\profile-learner\profile-e983a260667256b09d300ef178f609d323eef2ceb50df234f6aeb1066c279f63.json
+[track-b-sidecar] [run138] learning profile hop empty (input={"scopeId":null,"scope":null,"generationKey":null})
+[track-b-sidecar] [run137] profile readback empty from the operator hop (input={"scope":null,"scopeId":null,"generationKey":null})
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2 request=bench-judge-h08-multi-turn-tool-refine-a1-3a1bb415-2579-415e-88f8-04e2bed5d3a8 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.run105-pi-live-mock.global.deepseek-flash-high]
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=3 eligible=3 codes=none request=req-96037b06-6bca-4d69-8785-e73102374287 alias=baseline.remote-only model=baseline.remote-only effort=high pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro,deepseek.personal.run105-pi-live-mock.global.deepseek-flash-high] denied=[]
+[run98] remote-health recovery: deepseek.personal.deepseek-api-key.global.deepseek-flash, deepseek.personal.deepseek-api-key.global.deepseek-v4-pro, deepseek.personal.run105-pi-live-mock.global.deepseek-flash-high
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=3 eligible=3 codes=none request=req-768ad842-fb12-4f9d-9e2a-1347a50b9a40 alias=baseline.remote-only model=baseline.remote-only effort=high pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro,deepseek.personal.run105-pi-live-mock.global.deepseek-flash-high] denied=[]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=3 eligible=3 codes=none request=req-f4ebdc4a-a9b0-4ac5-a410-6cc03b55ac9e alias=baseline.remote-only model=baseline.remote-only effort=high pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro,deepseek.personal.run105-pi-live-mock.global.deepseek-flash-high] denied=[]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=3 eligible=3 codes=none request=req-65deb3e6-605c-4486-bdd1-c7ae5fc1469b alias=baseline.remote-only model=baseline.remote-only effort=high pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro,deepseek.personal.run105-pi-live-mock.global.deepseek-flash-high] denied=[]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=3 eligible=3 codes=none request=req-7c9b06b6-0b44-4920-8de0-f979013d27a2 alias=baseline.remote-only model=baseline.remote-only effort=high pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro,deepseek.personal.run105-pi-live-mock.global.deepseek-flash-high] denied=[]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=3 eligible=3 codes=none request=req-383dadf9-6da6-4c7e-a552-7b5c5dc4831e alias=baseline.remote-only model=baseline.remote-only effort=high pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro,deepseek.personal.run105-pi-live-mock.global.deepseek-flash-high] denied=[]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=3 eligible=3 codes=none request=req-df4ef675-61f3-46a5-bf12-a51e24bc17de alias=baseline.remote-only model=baseline.remote-only effort=high pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro,deepseek.personal.run105-pi-live-mock.global.deepseek-flash-high] denied=[]
+[track-b-sidecar] [run140] profile invoke capability=profile:current-estimate scope=standalone-runtime-dev sessionId=operator filePath=E:\tmp\run105-full-verification-state-final\standalone-runtime-dev\track-b\extensions\workers\profile-learner\profile-e983a260667256b09d300ef178f609d323eef2ceb50df234f6aeb1066c279f63.json
+[track-b-sidecar] [run140] profile invoke capability=profile:current-estimate scope=standalone-runtime-dev sessionId=operator filePath=E:\tmp\run105-full-verification-state-final\standalone-runtime-dev\track-b\extensions\workers\profile-learner\profile-e983a260667256b09d300ef178f609d323eef2ceb50df234f6aeb1066c279f63.json
+[track-b-sidecar] [run138] learning profile hop empty (input={"scopeId":null,"scope":null,"generationKey":null})
+[track-b-sidecar] [run137] profile readback empty from the operator hop (input={"scope":null,"scopeId":null,"generationKey":null})
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-judge-h09-agent-metrics-chain-a1-cd4cb273-cded-4bb0-b3a5-021472fd2800 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-judge-h10-agent-read-grep-patch-a1-7f5686b1-db46-49a9-8367-b62006ed6ee7 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-judge-h15-max-signal-v3-a1-1d282b14-61b8-4e80-8fe2-6e3f5e8d2edc alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-judge-p17-tools-multi-hard-a1-463e03fb-c117-4a5e-a8c8-0050b6702d8d alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-judge-x01-max-signal-a1-4a5c7aed-0799-4b47-a162-c374c86884e0 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-judge-h01-implement-two-sum-a1-dd55abe0-b5e4-43ae-bc88-e456ecb1a88a alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-judge-h02-fix-async-counter-a1-785f4126-3a8c-4fb0-86a2-42ea2961df8c alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-judge-h04-tool-read-router-a1-a173d2c6-a749-4efc-bccd-4543aae2b306 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-judge-h05-tool-grep-eligibility-a1-a3127c98-7414-4f3c-ada6-905604c0f164 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-judge-h06-tool-apply-patch-a1-f3d41059-2b46-4a34-a750-d20b2c97a598 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-judge-h07-multi-turn-sla-guard-a1-465eabec-2865-4304-881a-fd61d4fbc7cc alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-judge-h08-multi-turn-tool-refine-a1-d9bc3a50-a841-4450-9494-8072e4e49cc8 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-judge-h09-agent-metrics-chain-a1-0814b613-4a79-47f0-9c0b-db3ac3e1430b alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-judge-h10-agent-read-grep-patch-a1-ddf125db-1dba-40ac-8559-b65936e95ee4 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-judge-h15-max-signal-v3-a1-e2873fd0-de9c-4039-8ead-2b975dcf7411 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-judge-compare-p17-tools-multi-hard-3bae82b2-ff5f-4f9e-80e6-f4a3904c5a6e alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-judge-compare-x01-max-signal-3cd0411f-a665-41e1-9646-f0ff546ce152 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-judge-compare-h01-implement-two-sum-940c7823-9843-4f62-b556-302dd810c7ed alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-judge-compare-h02-fix-async-counter-309d2bbc-89f3-4c27-8b23-f9fc0678565f alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=0 codes=POLICY_DENY_ENDPOINT=2 request=bench-judge-compare-h02-fix-async-counter-309d2bbc-89f3-4c27-8b23-f9fc0678565f alias=- model=- effort=- pass=live:reroute allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-judge-compare-h04-tool-read-router-9707f517-ef36-44cf-9390-1d14ca052945 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=0 codes=POLICY_DENY_ENDPOINT=2 request=bench-judge-compare-h04-tool-read-router-9707f517-ef36-44cf-9390-1d14ca052945 alias=- model=- effort=- pass=live:reroute allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-judge-compare-h05-tool-grep-eligibility-3473290c-ae6e-4386-bf47-f8d7980e5157 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-judge-compare-h06-tool-apply-patch-dafa653d-6e95-40a4-8014-a7ede1bd7d93 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-judge-compare-h07-multi-turn-sla-guard-aee8eaeb-356f-4889-b736-3b31752f79b8 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-judge-compare-h08-multi-turn-tool-refine-9316aebd-f86e-494f-9dd9-a869a60fdd39 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-judge-compare-h09-agent-metrics-chain-6817a085-d588-4ea0-8ae1-d3771ba1eee8 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-judge-compare-h10-agent-read-grep-patch-6422c85c-6da5-4b66-97b1-321888233fb4 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=bench-judge-compare-h15-max-signal-v3-5202e286-9cc4-4cad-a9ad-b725ef43e183 alias=- model=- effort=- pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash]
+[track-b-sidecar] [run140] profile invoke capability=profile:current-estimate scope=standalone-runtime-dev sessionId=operator filePath=E:\tmp\run105-full-verification-state-final\standalone-runtime-dev\track-b\extensions\workers\profile-learner\profile-e983a260667256b09d300ef178f609d323eef2ceb50df234f6aeb1066c279f63.json
+[track-b-sidecar] [run140] profile invoke capability=profile:current-estimate scope=standalone-runtime-dev sessionId=operator filePath=E:\tmp\run105-full-verification-state-final\standalone-runtime-dev\track-b\extensions\workers\profile-learner\profile-e983a260667256b09d300ef178f609d323eef2ceb50df234f6aeb1066c279f63.json
+[track-b-sidecar] [run138] learning profile hop empty (input={"scopeId":null,"scope":null,"generationKey":null})
+[track-b-sidecar] [run137] profile readback empty from the operator hop (input={"scope":null,"scopeId":null,"generationKey":null})

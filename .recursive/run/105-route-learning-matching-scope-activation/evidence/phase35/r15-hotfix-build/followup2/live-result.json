@@ -1,0 +1,64 @@
+{
+  "results": [
+    {
+      "mode": "ascii",
+      "clientId": "r15-followup2-ascii",
+      "requestId": "req-515cbe65-2260-4035-b95e-57b9472e418a",
+      "httpStatus": 422,
+      "errorClass": "execution_failed",
+      "messageUtf8Bytes": 120020,
+      "observationBytes": 6305,
+      "dimensionsBytes": 984,
+      "captureEnvironment": "runtime-failure",
+      "failedAttempts": [
+        {
+          "attemptId": "req-515cbe65-2260-4035-b95e-57b9472e418a:attempt:1",
+          "statusCode": 422,
+          "failureClass": "execution_failed",
+          "messageSerializedBytes": 512,
+          "messageTruncated": true,
+          "messageOriginalUtf8Bytes": 120020
+        }
+      ],
+      "dimensionTruncation": {
+        "reason": "diagnostic_projection",
+        "originalUtf8Bytes": 120313,
+        "omittedFields": [
+          "errorPreview.message"
+        ]
+      },
+      "graphPointer": null
+    },
+    {
+      "mode": "utf8",
+      "clientId": "r15-followup2-utf8",
+      "requestId": "req-4c441dc1-6f8c-431a-82b6-4cc91c510424",
+      "httpStatus": 422,
+      "errorClass": "execution_failed",
+      "messageUtf8Bytes": 300019,
+      "observationBytes": 6301,
+      "dimensionsBytes": 983,
+      "captureEnvironment": "runtime-failure",
+      "failedAttempts": [
+        {
+          "attemptId": "req-4c441dc1-6f8c-431a-82b6-4cc91c510424:attempt:1",
+          "statusCode": 422,
+          "failureClass": "execution_failed",
+          "messageSerializedBytes": 511,
+          "messageTruncated": true,
+          "messageOriginalUtf8Bytes": 300019
+        }
+      ],
+      "dimensionTruncation": {
+        "reason": "diagnostic_projection",
+        "originalUtf8Bytes": 300312,
+        "omittedFields": [
+          "errorPreview.message"
+        ]
+      },
+      "graphPointer": null
+    }
+  ],
+  "graphOriginalVerified": false,
+  "reason": "real configuredTrackB operations original-artifact authority gap"
+}

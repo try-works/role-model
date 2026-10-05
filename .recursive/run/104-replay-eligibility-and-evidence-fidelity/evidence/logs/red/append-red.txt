@@ -1,0 +1,109 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-host-bridge
+
+(node:54304) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/run104-branch-append-recovery.test.ts (5 tests | 5 failed) 61ms
+   × the durable read projection rebuilds the execution identity the recovery append needs 34ms
+     → expected undefined to match object { …(5) }
+   × a resumed append-recovery re-attaches to the durable capture instead of refusing 2ms
+     → (0 , resolveResumedReplayAppendDispatch) is not a function
+   × an append with no durable capture at all still refuses 15ms
+     → expected [Function] to throw error including 'durable replay branch append has no h…' but got '(0 , resolveRes…'
+   × a recovery must not re-attach a branch to a different capture's evidence 5ms
+     → expected [Function] to throw error including 'durable replay branch append has no h…' but got '(0 , resolveRes…'
+   × a resumed recovery re-runs idempotently from the same durable capture 2ms
+     → (0 , resolveResumedReplayAppendDispatch) is not a function
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run104-branch-append-recovery.test.ts > the durable read projection rebuilds the execution identity the recovery append needs
+AssertionError: expected undefined to match object { …(5) }
+
+- Expected: 
+{
+  "adapterFamily": "openai-compatible",
+  "model": "deepseek/deepseek-flash",
+  "outputText": "the bounded provider output the durable capture recorded",
+  "routingDecisionId": "decision-replay-req-a29409df-11de-4660-9439-b8ee671f8f3b-84165abdc60fa3af",
+  "vendorId": "deepseek",
+}
+
++ Received: 
+undefined
+
+ ❯ test/run104-branch-append-recovery.test.ts:98:21
+     96|     replayRequestId: RECOVERED_REPLAY_REQUEST_ID,
+     97|   });
+     98|   expect(execution).toMatchObject({
+       |                     ^
+     99|     routingDecisionId: `decision-${RECOVERED_REPLAY_REQUEST_ID}`,
+    100|     model: "deepseek/deepseek-flash",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  test/run104-branch-append-recovery.test.ts > a resumed append-recovery re-attaches to the durable capture instead of refusing
+TypeError: (0 , resolveResumedReplayAppendDispatch) is not a function
+ ❯ test/run104-branch-append-recovery.test.ts:108:21
+    106| 
+    107| test("a resumed append-recovery re-attaches to the durable capture ins…
+    108|   const recovered = resolveResumedReplayAppendDispatch({
+       |                     ^
+    109|     branchRequest: resumedAppendRecoveryRequest(),
+    110|     capture: boundaryCaptureProjection(),
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  test/run104-branch-append-recovery.test.ts > an append with no durable capture at all still refuses
+AssertionError: expected [Function] to throw error including 'durable replay branch append has no h…' but got '(0 , resolveRes…'
+
+Expected: "durable replay branch append has no host dispatch receipt"
+Received: "(0 , __vite_ssr_import_1__.resolveResumedReplayAppendDispatch) is not a function"
+
+ ❯ test/run104-branch-append-recovery.test.ts:127:5
+    125|       capture: null,
+    126|     }),
+    127|   ).toThrowError("durable replay branch append has no host dispatch re…
+       |     ^
+    128|   expect(() =>
+    129|     resolveResumedReplayAppendDispatch({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  test/run104-branch-append-recovery.test.ts > a recovery must not re-attach a branch to a different capture's evidence
+AssertionError: expected [Function] to throw error including 'durable replay branch append has no h…' but got '(0 , resolveRes…'
+
+Expected: "durable replay branch append has no host dispatch receipt"
+Received: "(0 , __vite_ssr_import_1__.resolveResumedReplayAppendDispatch) is not a function"
+
+ ❯ test/run104-branch-append-recovery.test.ts:155:5
+    153|       },
+    154|     }),
+    155|   ).toThrowError("durable replay branch append has no host dispatch re…
+       |     ^
+    156| });
+    157| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  test/run104-branch-append-recovery.test.ts > a resumed recovery re-runs idempotently from the same durable capture
+TypeError: (0 , resolveResumedReplayAppendDispatch) is not a function
+ ❯ test/run104-branch-append-recovery.test.ts:159:17
+    157| 
+    158| test("a resumed recovery re-runs idempotently from the same durable ca…
+    159|   const first = resolveResumedReplayAppendDispatch({
+       |                 ^
+    160|     branchRequest: resumedAppendRecoveryRequest(),
+    161|     capture: boundaryCaptureProjection(),
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed (5)
+   Start at  21:04:14
+   Duration  17.64s (transform 11.24s, setup 0ms, collect 16.40s, tests 61ms, environment 1ms, prepare 416ms)
+
+undefined
+D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/run104-branch-append-recovery.test.ts

@@ -1,0 +1,10 @@
+Scope: all 50 workspace projects
+(node:26908) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ WARN  There are cyclic workspace dependencies: E:\tmp\run105-full4-public\role-model-router\packages\adapter-execution, E:\tmp\run105-full4-public\role-model-router\packages\provider-anthropic
+Lockfile is up to date, resolution step is skipped
+Already up to date
+
+╭ Warning ─────────────────────────────────────────────────────────────────────╮│                                                                              ││   Ignored build scripts: @biomejs/biome, @google/genai, esbuild,             ││   protobufjs, sharp, workerd.                                                ││   Run "pnpm approve-builds" to pick which dependencies should be allowed     ││   to run scripts.                                                            ││                                                                              │╰──────────────────────────────────────────────────────────────────────────────╯
+
+Done in 4.7s using pnpm v10.6.5

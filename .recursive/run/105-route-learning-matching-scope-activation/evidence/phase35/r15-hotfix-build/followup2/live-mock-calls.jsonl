@@ -1,0 +1,4 @@
+{"at":"2026-10-03T11:11:43.134Z","url":"/v1/chat/completions","mode":"success","requestId":null,"model":"deepseek-v4-pro","messageChars":36}
+{"at":"2026-10-03T11:11:43.774Z","url":"/v1/chat/completions","mode":"ascii","requestId":null,"model":"deepseek-v4-pro","messageChars":38}
+{"at":"2026-10-03T11:11:46.041Z","url":"/v1/chat/completions","mode":"utf8","requestId":null,"model":"deepseek-v4-pro","messageChars":37}
+{"at":"2026-10-03T11:11:47.975Z","url":"/v1/models","mode":"utf8","requestId":null,"messageChars":0}
