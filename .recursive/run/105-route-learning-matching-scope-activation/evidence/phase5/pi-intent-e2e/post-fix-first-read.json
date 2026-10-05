@@ -1,0 +1,1109 @@
+{
+  "/healthz": {
+    "status": 200,
+    "body": {
+      "runtime": {
+        "version": "0.0.14-747-ge26bbc83",
+        "release_version": "0.0.14-747-ge26bbc83",
+        "commit": "e26bbc8350217273c8fb0a798e9f091f83590f0f",
+        "build_date": "2026-10-03T22:02:39.642Z",
+        "channel": "development",
+        "name": "role-model-dev",
+        "endpoint": "http://127.0.0.1:3458",
+        "source_tree": "d128ddc84aae7aa4486ca6ab2b1661214aaaa1f6",
+        "executable_sha256": "8829ba4c0b147b914f2caff7a605b44e790eb3c1b7632b4c8a68cebbdbcf58a6",
+        "core_payload_sha256": "8829ba4c0b147b914f2caff7a605b44e790eb3c1b7632b4c8a68cebbdbcf58a6",
+        "configVersion": "1.0"
+      },
+      "status": "healthy",
+      "executionMode": "remote_only",
+      "vendors": {
+        "llama-swap": {
+          "vendorId": "llama-swap",
+          "healthStatus": "inactive"
+        },
+        "litellm": {
+          "vendorId": "litellm",
+          "healthStatus": "inactive"
+        }
+      },
+      "inactiveVendors": [
+        "llama-swap",
+        "litellm"
+      ],
+      "credentialLifecycleAuthority": {
+        "state": "authoritative",
+        "bootstrapStatus": "ready"
+      },
+      "sessionBootstrap": {
+        "status": "ready",
+        "startedAt": "2026-10-03T22:22:10.474Z",
+        "finishedAt": "2026-10-03T22:22:23.598Z",
+        "stages": [
+          {
+            "stageId": "credentials",
+            "status": "ready",
+            "startedAt": "2026-10-03T22:22:10.474Z",
+            "finishedAt": "2026-10-03T22:22:10.551Z",
+            "details": {
+              "pendingAttempted": 0,
+              "pendingSucceeded": 0,
+              "pendingConnected": 0,
+              "pendingFailed": 0,
+              "pendingDeferred": 0,
+              "refreshAttempted": 0,
+              "refreshSucceeded": 0,
+              "refreshFailed": 0
+            }
+          },
+          {
+            "stageId": "endpoints",
+            "status": "ready",
+            "startedAt": "2026-10-03T22:22:10.578Z",
+            "finishedAt": "2026-10-03T22:22:10.625Z",
+            "details": {
+              "source": "sqlite+manifest",
+              "count": 3,
+              "reconciled": 0,
+              "failed": 0,
+              "skipped": 3
+            }
+          },
+          {
+            "stageId": "peers",
+            "status": "skipped",
+            "startedAt": "2026-10-03T22:22:10.625Z",
+            "finishedAt": "2026-10-03T22:22:10.626Z",
+            "message": "no peer loads in manifest",
+            "details": {
+              "reloaded": 0,
+              "failed": 0
+            }
+          },
+          {
+            "stageId": "vendors",
+            "status": "ready",
+            "startedAt": "2026-10-03T22:22:10.626Z",
+            "finishedAt": "2026-10-03T22:22:10.626Z"
+          },
+          {
+            "stageId": "local-reload",
+            "status": "skipped",
+            "startedAt": "2026-10-03T22:22:10.626Z",
+            "finishedAt": "2026-10-03T22:22:10.627Z",
+            "message": "no llama-swap loads in manifest"
+          },
+          {
+            "stageId": "remote-health",
+            "status": "ready",
+            "startedAt": "2026-10-03T22:22:10.627Z",
+            "finishedAt": "2026-10-03T22:22:23.588Z",
+            "details": {
+              "probed": 3,
+              "healthy": 3,
+              "degraded": 0,
+              "results": [
+                {
+                  "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash",
+                  "modelId": "deepseek/deepseek-flash",
+                  "reason": "healthy",
+                  "healthStatus": "healthy"
+                },
+                {
+                  "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+                  "modelId": "deepseek/deepseek-flash",
+                  "reason": "healthy",
+                  "healthStatus": "healthy"
+                },
+                {
+                  "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+                  "modelId": "deepseek/deepseek-v4-pro",
+                  "reason": "healthy",
+                  "healthStatus": "healthy"
+                }
+              ]
+            }
+          },
+          {
+            "stageId": "inventory",
+            "status": "ready",
+            "startedAt": "2026-10-03T22:22:23.588Z",
+            "finishedAt": "2026-10-03T22:22:23.597Z",
+            "details": {
+              "modelIdCount": 2,
+              "endpointIdCount": 3,
+              "localEndpointCount": 0,
+              "remoteEndpointCount": 3,
+              "emptyAliasIds": [],
+              "driftWarningCount": 0,
+              "driftWarnings": []
+            }
+          }
+        ]
+      },
+      "ready": true
+    }
+  },
+  "/api/role-model/track-b/replay/status": {
+    "status": 200,
+    "body": {
+      "ticks": 3,
+      "running": false,
+      "paused": false,
+      "lastOutcome": "degraded",
+      "lastError": "route pending dispatches unavailable",
+      "lastProcessedAtMs": null,
+      "budget": {
+        "window": "2026-10-03",
+        "counterfactuals": 0,
+        "reservedCounterfactuals": 0,
+        "reservedDispatches": 0,
+        "dispatches": 0,
+        "counterfactualLimit": 100,
+        "dispatchLimit": 300,
+        "enforced": false
+      },
+      "lastDispositions": 0,
+      "lastExpiredJobs": 0,
+      "lastResumedEvaluations": 0,
+      "lastReconciledEvaluations": 0,
+      "lastStrandedEvaluations": 0,
+      "lastReclaimedEvaluations": 0,
+      "lastRecoveredHandoffs": 0,
+      "focusTaskKey": null,
+      "focusRemaining": 0,
+      "challengeInFlight": false,
+      "lastUnclassifiedCaptures": 0
+    }
+  },
+  "/api/role-model/operator/queues": {
+    "status": 200,
+    "body": {
+      "schemaVersion": "role-model.operator-queues.v1",
+      "policyVersion": 1,
+      "available": false,
+      "reason": "queue store has no rows yet",
+      "queues": [
+        {
+          "name": "replay.dispatch",
+          "owner": "runtime-host",
+          "jobIdRule": "captureRef",
+          "mode": "legacy",
+          "concurrency": 1,
+          "attempts": 5,
+          "retentionDays": 30,
+          "killSwitch": false,
+          "draining": false,
+          "waiting": 0,
+          "active": 0,
+          "delayed": 0,
+          "failed": 0,
+          "completedRecent": 0,
+          "stalled": 0,
+          "oldestWaitingMs": null,
+          "p50Ms": null,
+          "p95Ms": null,
+          "completedSampled": 0,
+          "lastError": null
+        },
+        {
+          "name": "evaluation.score",
+          "owner": "runtime-operations",
+          "jobIdRule": "evaluation:<origin>:<groupId>",
+          "mode": "legacy",
+          "concurrency": 4,
+          "attempts": 4,
+          "retentionDays": 30,
+          "killSwitch": false,
+          "draining": false,
+          "waiting": 0,
+          "active": 0,
+          "delayed": 0,
+          "failed": 0,
+          "completedRecent": 0,
+          "stalled": 0,
+          "oldestWaitingMs": null,
+          "p50Ms": null,
+          "p95Ms": null,
+          "completedSampled": 0,
+          "lastError": null
+        },
+        {
+          "name": "learner.derive",
+          "owner": "runtime-host",
+          "jobIdRule": "groupId",
+          "mode": "legacy",
+          "concurrency": 2,
+          "attempts": 3,
+          "retentionDays": 30,
+          "killSwitch": false,
+          "draining": false,
+          "waiting": 0,
+          "active": 0,
+          "delayed": 0,
+          "failed": 0,
+          "completedRecent": 0,
+          "stalled": 0,
+          "oldestWaitingMs": null,
+          "p50Ms": null,
+          "p95Ms": null,
+          "completedSampled": 0,
+          "lastError": null
+        },
+        {
+          "name": "learner.promote",
+          "owner": "runtime-host",
+          "jobIdRule": "candidateId",
+          "mode": "legacy",
+          "concurrency": 1,
+          "attempts": 3,
+          "retentionDays": 30,
+          "killSwitch": false,
+          "draining": false,
+          "waiting": 0,
+          "active": 0,
+          "delayed": 0,
+          "failed": 0,
+          "completedRecent": 0,
+          "stalled": 0,
+          "oldestWaitingMs": null,
+          "p50Ms": null,
+          "p95Ms": null,
+          "completedSampled": 0,
+          "lastError": null
+        },
+        {
+          "name": "replay.disposition",
+          "planeKind": "ledger",
+          "draining": false,
+          "waiting": 0,
+          "active": 0,
+          "delayed": 0,
+          "failed": 0,
+          "completedRecent": 0,
+          "stalled": 0,
+          "oldestWaitingMs": null,
+          "lastEventAtMs": 0,
+          "lockExpirationMs": null,
+          "lastError": null,
+          "p50Ms": null,
+          "p95Ms": null,
+          "completedSampled": 0,
+          "refused": 0,
+          "refusalCodes": {},
+          "owner": "runtime-host",
+          "jobIdRule": "captureRef",
+          "mode": "ledger"
+        }
+      ]
+    }
+  },
+  "/api/role-model/operator/replay/jobs?limit=200": {
+    "status": 200,
+    "body": []
+  },
+  "/api/role-model/operator/evaluation/jobs?limit=200": {
+    "status": 200,
+    "body": []
+  },
+  "/api/role-model/operator/learning/activity": {
+    "status": 200,
+    "body": {
+      "schemaVersion": "role-model.learning-activity.v1",
+      "observedAtMs": 1791066247360,
+      "scopeId": "standalone-runtime-dev",
+      "window": {
+        "minutes": 60
+      },
+      "pipeline": [
+        {
+          "stage": "capture",
+          "pending": 0,
+          "wedged": 0,
+          "recent": 0,
+          "active": false,
+          "lastEventAtMs": null
+        },
+        {
+          "stage": "replay",
+          "pending": 0,
+          "wedged": 0,
+          "recent": 0,
+          "active": false,
+          "lastEventAtMs": null
+        },
+        {
+          "stage": "evaluation",
+          "pending": 0,
+          "wedged": 0,
+          "recent": 0,
+          "active": false,
+          "lastEventAtMs": null
+        },
+        {
+          "stage": "learner",
+          "pending": 0,
+          "wedged": 0,
+          "recent": 0,
+          "active": false,
+          "lastEventAtMs": null
+        }
+      ],
+      "budget": {
+        "day": "2026-10-03",
+        "currentWindow": true,
+        "counterfactuals": {
+          "used": 0,
+          "limit": 100
+        },
+        "dispatches": {
+          "used": 0,
+          "limit": 300
+        },
+        "byKind": [
+          {
+            "kind": "candidate",
+            "count": 0
+          },
+          {
+            "kind": "derived",
+            "count": 0
+          },
+          {
+            "kind": "retry",
+            "count": 0
+          }
+        ]
+      },
+      "recent": [],
+      "scannedStores": 4
+    }
+  },
+  "/api/role-model/operator/learning/records": {
+    "status": 200,
+    "body": {
+      "schemaVersion": "role-model.knowledge-learning-records.v1",
+      "scopeId": "standalone-runtime-dev",
+      "records": [],
+      "ladders": [
+        {
+          "roleId": "architect",
+          "taskTypeId": "architect.data_model",
+          "taxonomyVersion": null,
+          "topEndpoints": [],
+          "rungs": [],
+          "rankedCount": 0,
+          "completeness": {
+            "admitted": 0,
+            "configured": 3
+          },
+          "state": "no_ladder",
+          "active": false,
+          "rolledBack": {
+            "on": false,
+            "reason": null,
+            "atMs": null
+          },
+          "ladderVersion": null,
+          "nextEligibleAtMs": null,
+          "configuredSource": "runtime_endpoints"
+        },
+        {
+          "roleId": "coder",
+          "taskTypeId": "architect.api_design",
+          "taxonomyVersion": null,
+          "topEndpoints": [],
+          "rungs": [],
+          "rankedCount": 0,
+          "completeness": {
+            "admitted": 0,
+            "configured": 3
+          },
+          "state": "no_ladder",
+          "active": false,
+          "rolledBack": {
+            "on": false,
+            "reason": null,
+            "atMs": null
+          },
+          "ladderVersion": null,
+          "nextEligibleAtMs": null,
+          "configuredSource": "runtime_endpoints"
+        },
+        {
+          "roleId": "coder",
+          "taskTypeId": "coder.config",
+          "taxonomyVersion": null,
+          "topEndpoints": [],
+          "rungs": [],
+          "rankedCount": 0,
+          "completeness": {
+            "admitted": 0,
+            "configured": 3
+          },
+          "state": "no_ladder",
+          "active": false,
+          "rolledBack": {
+            "on": false,
+            "reason": null,
+            "atMs": null
+          },
+          "ladderVersion": null,
+          "nextEligibleAtMs": null,
+          "configuredSource": "runtime_endpoints"
+        },
+        {
+          "roleId": "coder",
+          "taskTypeId": "coder.edit",
+          "taxonomyVersion": null,
+          "topEndpoints": [],
+          "rungs": [],
+          "rankedCount": 0,
+          "completeness": {
+            "admitted": 0,
+            "configured": 3
+          },
+          "state": "no_ladder",
+          "active": false,
+          "rolledBack": {
+            "on": false,
+            "reason": null,
+            "atMs": null
+          },
+          "ladderVersion": null,
+          "nextEligibleAtMs": null,
+          "configuredSource": "runtime_endpoints"
+        },
+        {
+          "roleId": "coder",
+          "taskTypeId": "coder.review",
+          "taxonomyVersion": null,
+          "topEndpoints": [],
+          "rungs": [],
+          "rankedCount": 0,
+          "completeness": {
+            "admitted": 0,
+            "configured": 3
+          },
+          "state": "no_ladder",
+          "active": false,
+          "rolledBack": {
+            "on": false,
+            "reason": null,
+            "atMs": null
+          },
+          "ladderVersion": null,
+          "nextEligibleAtMs": null,
+          "configuredSource": "runtime_endpoints"
+        },
+        {
+          "roleId": "coder",
+          "taskTypeId": "coder.test.write",
+          "taxonomyVersion": null,
+          "topEndpoints": [],
+          "rungs": [],
+          "rankedCount": 0,
+          "completeness": {
+            "admitted": 0,
+            "configured": 3
+          },
+          "state": "no_ladder",
+          "active": false,
+          "rolledBack": {
+            "on": false,
+            "reason": null,
+            "atMs": null
+          },
+          "ladderVersion": null,
+          "nextEligibleAtMs": null,
+          "configuredSource": "runtime_endpoints"
+        },
+        {
+          "roleId": "coder",
+          "taskTypeId": "data.transform",
+          "taxonomyVersion": null,
+          "topEndpoints": [],
+          "rungs": [],
+          "rankedCount": 0,
+          "completeness": {
+            "admitted": 0,
+            "configured": 3
+          },
+          "state": "no_ladder",
+          "active": false,
+          "rolledBack": {
+            "on": false,
+            "reason": null,
+            "atMs": null
+          },
+          "ladderVersion": null,
+          "nextEligibleAtMs": null,
+          "configuredSource": "runtime_endpoints"
+        },
+        {
+          "roleId": "coder",
+          "taskTypeId": "operator.debug.api",
+          "taxonomyVersion": null,
+          "topEndpoints": [],
+          "rungs": [],
+          "rankedCount": 0,
+          "completeness": {
+            "admitted": 0,
+            "configured": 3
+          },
+          "state": "no_ladder",
+          "active": false,
+          "rolledBack": {
+            "on": false,
+            "reason": null,
+            "atMs": null
+          },
+          "ladderVersion": null,
+          "nextEligibleAtMs": null,
+          "configuredSource": "runtime_endpoints"
+        },
+        {
+          "roleId": "coder",
+          "taskTypeId": "operator.install",
+          "taxonomyVersion": null,
+          "topEndpoints": [],
+          "rungs": [],
+          "rankedCount": 0,
+          "completeness": {
+            "admitted": 0,
+            "configured": 3
+          },
+          "state": "no_ladder",
+          "active": false,
+          "rolledBack": {
+            "on": false,
+            "reason": null,
+            "atMs": null
+          },
+          "ladderVersion": null,
+          "nextEligibleAtMs": null,
+          "configuredSource": "runtime_endpoints"
+        },
+        {
+          "roleId": "coder",
+          "taskTypeId": "tester.integration.plan",
+          "taxonomyVersion": null,
+          "topEndpoints": [],
+          "rungs": [],
+          "rankedCount": 0,
+          "completeness": {
+            "admitted": 0,
+            "configured": 3
+          },
+          "state": "no_ladder",
+          "active": false,
+          "rolledBack": {
+            "on": false,
+            "reason": null,
+            "atMs": null
+          },
+          "ladderVersion": null,
+          "nextEligibleAtMs": null,
+          "configuredSource": "runtime_endpoints"
+        },
+        {
+          "roleId": "coder",
+          "taskTypeId": "tester.unit.plan",
+          "taxonomyVersion": null,
+          "topEndpoints": [],
+          "rungs": [],
+          "rankedCount": 0,
+          "completeness": {
+            "admitted": 0,
+            "configured": 3
+          },
+          "state": "no_ladder",
+          "active": false,
+          "rolledBack": {
+            "on": false,
+            "reason": null,
+            "atMs": null
+          },
+          "ladderVersion": null,
+          "nextEligibleAtMs": null,
+          "configuredSource": "runtime_endpoints"
+        },
+        {
+          "roleId": "creative",
+          "taskTypeId": "creative.script.write",
+          "taxonomyVersion": null,
+          "topEndpoints": [],
+          "rungs": [],
+          "rankedCount": 0,
+          "completeness": {
+            "admitted": 0,
+            "configured": 3
+          },
+          "state": "no_ladder",
+          "active": false,
+          "rolledBack": {
+            "on": false,
+            "reason": null,
+            "atMs": null
+          },
+          "ladderVersion": null,
+          "nextEligibleAtMs": null,
+          "configuredSource": "runtime_endpoints"
+        },
+        {
+          "roleId": "data",
+          "taskTypeId": "data.extract",
+          "taxonomyVersion": null,
+          "topEndpoints": [],
+          "rungs": [],
+          "rankedCount": 0,
+          "completeness": {
+            "admitted": 0,
+            "configured": 3
+          },
+          "state": "no_ladder",
+          "active": false,
+          "rolledBack": {
+            "on": false,
+            "reason": null,
+            "atMs": null
+          },
+          "ladderVersion": null,
+          "nextEligibleAtMs": null,
+          "configuredSource": "runtime_endpoints"
+        },
+        {
+          "roleId": "data",
+          "taskTypeId": "scientist.data.interpret",
+          "taxonomyVersion": null,
+          "topEndpoints": [],
+          "rungs": [],
+          "rankedCount": 0,
+          "completeness": {
+            "admitted": 0,
+            "configured": 3
+          },
+          "state": "no_ladder",
+          "active": false,
+          "rolledBack": {
+            "on": false,
+            "reason": null,
+            "atMs": null
+          },
+          "ladderVersion": null,
+          "nextEligibleAtMs": null,
+          "configuredSource": "runtime_endpoints"
+        },
+        {
+          "roleId": "finance",
+          "taskTypeId": "finance.compare_options",
+          "taxonomyVersion": null,
+          "topEndpoints": [],
+          "rungs": [],
+          "rankedCount": 0,
+          "completeness": {
+            "admitted": 0,
+            "configured": 3
+          },
+          "state": "no_ladder",
+          "active": false,
+          "rolledBack": {
+            "on": false,
+            "reason": null,
+            "atMs": null
+          },
+          "ladderVersion": null,
+          "nextEligibleAtMs": null,
+          "configuredSource": "runtime_endpoints"
+        },
+        {
+          "roleId": "health",
+          "taskTypeId": "health.info.general",
+          "taxonomyVersion": null,
+          "topEndpoints": [],
+          "rungs": [],
+          "rankedCount": 0,
+          "completeness": {
+            "admitted": 0,
+            "configured": 3
+          },
+          "state": "no_ladder",
+          "active": false,
+          "rolledBack": {
+            "on": false,
+            "reason": null,
+            "atMs": null
+          },
+          "ladderVersion": null,
+          "nextEligibleAtMs": null,
+          "configuredSource": "runtime_endpoints"
+        },
+        {
+          "roleId": "knowledge",
+          "taskTypeId": "knowledge.memory.update",
+          "taxonomyVersion": null,
+          "topEndpoints": [],
+          "rungs": [],
+          "rankedCount": 0,
+          "completeness": {
+            "admitted": 0,
+            "configured": 3
+          },
+          "state": "no_ladder",
+          "active": false,
+          "rolledBack": {
+            "on": false,
+            "reason": null,
+            "atMs": null
+          },
+          "ladderVersion": null,
+          "nextEligibleAtMs": null,
+          "configuredSource": "runtime_endpoints"
+        },
+        {
+          "roleId": "mathematician",
+          "taskTypeId": "mathematician.error.check",
+          "taxonomyVersion": null,
+          "topEndpoints": [],
+          "rungs": [],
+          "rankedCount": 0,
+          "completeness": {
+            "admitted": 0,
+            "configured": 3
+          },
+          "state": "no_ladder",
+          "active": false,
+          "rolledBack": {
+            "on": false,
+            "reason": null,
+            "atMs": null
+          },
+          "ladderVersion": null,
+          "nextEligibleAtMs": null,
+          "configuredSource": "runtime_endpoints"
+        },
+        {
+          "roleId": "mathematician",
+          "taskTypeId": "mathematician.model",
+          "taxonomyVersion": null,
+          "topEndpoints": [],
+          "rungs": [],
+          "rankedCount": 0,
+          "completeness": {
+            "admitted": 0,
+            "configured": 3
+          },
+          "state": "no_ladder",
+          "active": false,
+          "rolledBack": {
+            "on": false,
+            "reason": null,
+            "atMs": null
+          },
+          "ladderVersion": null,
+          "nextEligibleAtMs": null,
+          "configuredSource": "runtime_endpoints"
+        },
+        {
+          "roleId": "operator",
+          "taskTypeId": "operator.debug.api",
+          "taxonomyVersion": null,
+          "topEndpoints": [],
+          "rungs": [],
+          "rankedCount": 0,
+          "completeness": {
+            "admitted": 0,
+            "configured": 3
+          },
+          "state": "no_ladder",
+          "active": false,
+          "rolledBack": {
+            "on": false,
+            "reason": null,
+            "atMs": null
+          },
+          "ladderVersion": null,
+          "nextEligibleAtMs": null,
+          "configuredSource": "runtime_endpoints"
+        },
+        {
+          "roleId": "operator",
+          "taskTypeId": "operator.install",
+          "taxonomyVersion": null,
+          "topEndpoints": [],
+          "rungs": [],
+          "rankedCount": 0,
+          "completeness": {
+            "admitted": 0,
+            "configured": 3
+          },
+          "state": "no_ladder",
+          "active": false,
+          "rolledBack": {
+            "on": false,
+            "reason": null,
+            "atMs": null
+          },
+          "ladderVersion": null,
+          "nextEligibleAtMs": null,
+          "configuredSource": "runtime_endpoints"
+        },
+        {
+          "roleId": "operator",
+          "taskTypeId": "tester.performance",
+          "taxonomyVersion": null,
+          "topEndpoints": [],
+          "rungs": [],
+          "rankedCount": 0,
+          "completeness": {
+            "admitted": 0,
+            "configured": 3
+          },
+          "state": "no_ladder",
+          "active": false,
+          "rolledBack": {
+            "on": false,
+            "reason": null,
+            "atMs": null
+          },
+          "ladderVersion": null,
+          "nextEligibleAtMs": null,
+          "configuredSource": "runtime_endpoints"
+        },
+        {
+          "roleId": "researcher",
+          "taskTypeId": "data.extract",
+          "taxonomyVersion": null,
+          "topEndpoints": [],
+          "rungs": [],
+          "rankedCount": 0,
+          "completeness": {
+            "admitted": 0,
+            "configured": 3
+          },
+          "state": "no_ladder",
+          "active": false,
+          "rolledBack": {
+            "on": false,
+            "reason": null,
+            "atMs": null
+          },
+          "ladderVersion": null,
+          "nextEligibleAtMs": null,
+          "configuredSource": "runtime_endpoints"
+        },
+        {
+          "roleId": "researcher",
+          "taskTypeId": "researcher.source_find",
+          "taxonomyVersion": null,
+          "topEndpoints": [],
+          "rungs": [],
+          "rankedCount": 0,
+          "completeness": {
+            "admitted": 0,
+            "configured": 3
+          },
+          "state": "no_ladder",
+          "active": false,
+          "rolledBack": {
+            "on": false,
+            "reason": null,
+            "atMs": null
+          },
+          "ladderVersion": null,
+          "nextEligibleAtMs": null,
+          "configuredSource": "runtime_endpoints"
+        },
+        {
+          "roleId": "researcher",
+          "taskTypeId": "researcher.web_research.current",
+          "taxonomyVersion": null,
+          "topEndpoints": [],
+          "rungs": [],
+          "rankedCount": 0,
+          "completeness": {
+            "admitted": 0,
+            "configured": 3
+          },
+          "state": "no_ladder",
+          "active": false,
+          "rolledBack": {
+            "on": false,
+            "reason": null,
+            "atMs": null
+          },
+          "ladderVersion": null,
+          "nextEligibleAtMs": null,
+          "configuredSource": "runtime_endpoints"
+        },
+        {
+          "roleId": "researcher",
+          "taskTypeId": "security.safe_prompt.review",
+          "taxonomyVersion": null,
+          "topEndpoints": [],
+          "rungs": [],
+          "rankedCount": 0,
+          "completeness": {
+            "admitted": 0,
+            "configured": 3
+          },
+          "state": "no_ladder",
+          "active": false,
+          "rolledBack": {
+            "on": false,
+            "reason": null,
+            "atMs": null
+          },
+          "ladderVersion": null,
+          "nextEligibleAtMs": null,
+          "configuredSource": "runtime_endpoints"
+        },
+        {
+          "roleId": "support",
+          "taskTypeId": "knowledge.memory.update",
+          "taxonomyVersion": null,
+          "topEndpoints": [],
+          "rungs": [],
+          "rankedCount": 0,
+          "completeness": {
+            "admitted": 0,
+            "configured": 3
+          },
+          "state": "no_ladder",
+          "active": false,
+          "rolledBack": {
+            "on": false,
+            "reason": null,
+            "atMs": null
+          },
+          "ladderVersion": null,
+          "nextEligibleAtMs": null,
+          "configuredSource": "runtime_endpoints"
+        },
+        {
+          "roleId": "tester",
+          "taskTypeId": "tester.integration.plan",
+          "taxonomyVersion": null,
+          "topEndpoints": [],
+          "rungs": [],
+          "rankedCount": 0,
+          "completeness": {
+            "admitted": 0,
+            "configured": 3
+          },
+          "state": "no_ladder",
+          "active": false,
+          "rolledBack": {
+            "on": false,
+            "reason": null,
+            "atMs": null
+          },
+          "ladderVersion": null,
+          "nextEligibleAtMs": null,
+          "configuredSource": "runtime_endpoints"
+        },
+        {
+          "roleId": "tester",
+          "taskTypeId": "tester.performance",
+          "taxonomyVersion": null,
+          "topEndpoints": [],
+          "rungs": [],
+          "rankedCount": 0,
+          "completeness": {
+            "admitted": 0,
+            "configured": 3
+          },
+          "state": "no_ladder",
+          "active": false,
+          "rolledBack": {
+            "on": false,
+            "reason": null,
+            "atMs": null
+          },
+          "ladderVersion": null,
+          "nextEligibleAtMs": null,
+          "configuredSource": "runtime_endpoints"
+        },
+        {
+          "roleId": "writer",
+          "taskTypeId": "educator.example.generate",
+          "taxonomyVersion": null,
+          "topEndpoints": [],
+          "rungs": [],
+          "rankedCount": 0,
+          "completeness": {
+            "admitted": 0,
+            "configured": 3
+          },
+          "state": "no_ladder",
+          "active": false,
+          "rolledBack": {
+            "on": false,
+            "reason": null,
+            "atMs": null
+          },
+          "ladderVersion": null,
+          "nextEligibleAtMs": null,
+          "configuredSource": "runtime_endpoints"
+        },
+        {
+          "roleId": "writer",
+          "taskTypeId": "researcher.web_research.current",
+          "taxonomyVersion": null,
+          "topEndpoints": [],
+          "rungs": [],
+          "rankedCount": 0,
+          "completeness": {
+            "admitted": 0,
+            "configured": 3
+          },
+          "state": "no_ladder",
+          "active": false,
+          "rolledBack": {
+            "on": false,
+            "reason": null,
+            "atMs": null
+          },
+          "ladderVersion": null,
+          "nextEligibleAtMs": null,
+          "configuredSource": "runtime_endpoints"
+        },
+        {
+          "roleId": "writer",
+          "taskTypeId": "writer.summarize",
+          "taxonomyVersion": null,
+          "topEndpoints": [],
+          "rungs": [],
+          "rankedCount": 0,
+          "completeness": {
+            "admitted": 0,
+            "configured": 3
+          },
+          "state": "no_ladder",
+          "active": false,
+          "rolledBack": {
+            "on": false,
+            "reason": null,
+            "atMs": null
+          },
+          "ladderVersion": null,
+          "nextEligibleAtMs": null,
+          "configuredSource": "runtime_endpoints"
+        }
+      ],
+      "laddersState": "reported",
+      "laddersCensus": {
+        "state": "reported",
+        "reason": null
+      },
+      "laddersPagination": {
+        "total": 0,
+        "truncated": false,
+        "nextCursor": null,
+        "pages": 1,
+        "reason": null
+      },
+      "laddersCompleteness": "complete"
+    }
+  }
+}

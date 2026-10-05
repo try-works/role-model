@@ -1,0 +1,19 @@
+Run 96 / R27 public runtime-host-bridge criterion-owned TDD
+RED receipt against the locked public baseline.
+
+Baseline:
+  path: E:/role-model-temp/run96-r27-provider-attempt-ids-public-baseline-b52a1027
+  public commit: b52a10279de21f612911bf2ae758ab40fb61d164
+  product tree was clean before scratch tests; scratch tests were removed after capture.
+
+Semantic RED command:
+  .\\node_modules\\.bin\\vitest run role-model-router/apps/runtime-host-bridge/test/run96-r27-public-circuit-red.test.ts
+Raw receipt: E:/role-model-temp/run96-r27-public-circuit-red-b52-second.log
+Result: EXPECTED RED; 1 test failed because settleExecutionCircuitProbe was not a function.
+This is the owner-bound failed-half-open settlement gap, not a fixture or runner setup failure.
+
+The scratch test used production circuit state transitions and asserted that a failed owned probe
+reopens the endpoint with sourceAttemptId/sourceRequestId/sourceRoutingDecisionId while a separate
+durable admission object remains unchanged.
+
+Boundary: source-level TDD only. No Phase 5 live/provider/graph/storage/recovery PASS is claimed.

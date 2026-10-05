@@ -17,13 +17,20 @@ export interface ObservedPerformanceSample {
   model_id?: string;
   reasoning_effort?: string | null;
   effort_source?: string;
-  source_type: "benchmark" | "live_request";
+  /**
+   * Run 104 / R14 (addendum-03): the persisted vocabulary adds `live` (plus replay/evaluation/probe);
+   * `live_request` remains for pre-migration samples.
+   */
+  source_type: "live" | "live_request" | "replay" | "evaluation" | "benchmark" | "probe";
   difficulty_bucket?: "easy" | "medium" | "hard";
   timestamp_ms: number;
   latency_ms: number;
   latency_ms_p95?: number;
   tokens_per_sec?: number;
-  judge_score?: number;
+  judge_score?: number | null;
+  /** Run 98 addendum 32 S4: why a sample carries no judge score (e.g. `judge_unavailable`). */
+  missing_reason?: string;
+  grading_method?: string;
   cost_per_1k_tokens_est?: number;
   failure?: boolean;
   error_class?: string;
@@ -60,6 +67,24 @@ export type OperationalPerformanceProfile = ObservedPerformanceProfile & {
 
 export const FRESHNESS_HALFLIFE_MS = 7 * 24 * 60 * 60 * 1000;
 export const CONFIDENCE_SAMPLE_TARGET = 50;
+
+/**
+ * Run 104 / R14: `live` and the legacy `live_request` are the same traffic class for aggregation purposes.
+ *
+ * Run 104 post-closeout (addendum 14): a `replay` / `evaluation` / `probe` execution is still a real provider
+ * call, so its sample is a valid operational observation and must be admitted to the profile. Excluding it made
+ * the replay observation bundle throw `A live runtime observation must produce an operational profile.`
+ * (`benchmark` stays out: benchmark samples are durable input evidence, never a live projection).
+ */
+export function isLiveSourceType(sourceType: ObservedPerformanceSample["source_type"]): boolean {
+  return (
+    sourceType === "live" ||
+    sourceType === "live_request" ||
+    sourceType === "replay" ||
+    sourceType === "evaluation" ||
+    sourceType === "probe"
+  );
+}
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
@@ -172,8 +197,8 @@ export function aggregateObservedPerformanceSamples(
   const errorClassRates = Object.fromEntries(
     [...errorClassCounts.entries()].map(([errorClass, count]) => [errorClass, count / sampleSize]),
   );
-  const liveRequestSamples = samples.filter(
-    (sample) => sample.source_type === "live_request",
+  const liveRequestSamples = samples.filter((sample) =>
+    isLiveSourceType(sample.source_type),
   ).length;
   const benchmarkSamples = samples.filter((sample) => sample.source_type === "benchmark").length;
   const meanJudgeScore =
@@ -242,7 +267,7 @@ export function aggregateOperationalPerformanceSamples(
   samples: readonly ObservedPerformanceSample[],
   options: AggregateObservedPerformanceOptions = {},
 ): OperationalPerformanceProfile | null {
-  const liveSamples = samples.filter((sample) => sample.source_type === "live_request");
+  const liveSamples = samples.filter((sample) => isLiveSourceType(sample.source_type));
   if (liveSamples.length === 0) {
     return null;
   }

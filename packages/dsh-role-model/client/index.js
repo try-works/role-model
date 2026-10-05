@@ -1,0 +1,911 @@
+/**
+ * The browser half of the role-model plugin.
+ *
+ * Plain JavaScript by necessity: DSH's client module system serves this file to
+ * the page as a lazy-CJS bundle, so it is the shipped artifact rather than a build
+ * output. It calls `window.__ModuleLoader__.load({ id, factory })`; the factory
+ * receives the browser module table's `require` and returns `{ inject, apply }`.
+ *
+ * The only module it requests is `react`, which the module table provides. It does
+ * not import any harness client package: those change without notice, a plain-JS
+ * plugin has no type check against them, and a throwing component blanks the slot
+ * entry. Controls and styles are therefore written here.
+ *
+ * The page mirrors a shipped settings section (the Models page): the same section
+ * column, card chrome and type scale, using only theme tokens that actually exist —
+ * the label primary/secondary/tertiary aliases, the settings card fill and stroke
+ * aliases, the radius scale and the code font family. A token that does not exist is
+ * an invalid declaration: the browser drops the value and it falls back to inherited
+ * text, which is what made an earlier version of this page render as
+ * undifferentiated prose.
+ */
+
+window.__ModuleLoader__.load({
+  id: "@try-works/dsh-role-model",
+
+  factory(require) {
+    const React = require("react");
+    const h = React.createElement;
+
+    /**
+     * Page styles.
+     *
+     * Held as one string and injected as a React element, so unmounting removes
+     * them — the pattern the plugin guidance prescribes for component-local styles.
+     * Every class is prefixed to avoid colliding with host styles.
+     */
+    const CSS = `
+.rlm-page {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 720px;
+  color: var(--dsw-alias-label-primary);
+}
+.rlm-title {
+  margin: 0;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+  color: var(--dsw-alias-label-primary);
+}
+.rlm-intro {
+  margin: 0;
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--dsw-alias-label-tertiary);
+}
+.rlm-cards {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.rlm-card {
+  border: 0.5px solid var(--dsw-alias-settings-card-stroke);
+  background: var(--dsw-alias-settings-card-fill);
+  border-radius: var(--dsw-radius-xl);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.rlm-card-title {
+  margin: 0 0 6px;
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 600;
+  color: var(--dsw-alias-label-primary);
+}
+.rlm-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 5px 0;
+}
+.rlm-label {
+  flex: 0 0 148px;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--dsw-alias-label-secondary);
+}
+.rlm-value {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--dsw-alias-label-primary);
+  overflow-wrap: anywhere;
+}
+.rlm-code {
+  font-family: var(--ds-font-family-code);
+  font-size: 12px;
+}
+.rlm-note {
+  margin: 0;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--dsw-alias-label-secondary);
+}
+.rlm-codeblock {
+  margin: 4px 0 0;
+  padding: 10px 12px;
+  border: 0.5px solid var(--dsw-alias-border-l2);
+  border-radius: var(--dsw-radius-md);
+  background: var(--dsw-alias-bg-layer-1);
+  color: var(--dsw-alias-label-primary);
+  font-family: var(--ds-font-family-code);
+  font-size: 12px;
+  line-height: 18px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.rlm-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 0;
+}
+.rlm-field-label {
+  font-family: var(--ds-font-family-code);
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--dsw-alias-label-secondary);
+}
+.rlm-field input[type="text"],
+.rlm-field input[type="number"] {
+  box-sizing: border-box;
+  width: 100%;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: var(--dsw-radius-sm);
+  background: var(--dsw-alias-bg-layer-1);
+  color: var(--dsw-alias-label-primary);
+  font-family: var(--ds-font-family-code);
+  font-size: 12px;
+}
+.rlm-field input:focus-visible {
+  outline: 2px solid var(--dsw-alias-brand-primary);
+  outline-offset: 1px;
+}
+.rlm-field input[type="checkbox"] {
+  align-self: flex-start;
+  width: 16px;
+  height: 16px;
+  margin: 2px 0 0;
+}
+.rlm-field-help {
+  margin: 0;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--dsw-alias-label-tertiary);
+}
+.rlm-actions {
+  display: flex;
+  gap: 8px;
+  padding-top: 10px;
+}
+.rlm-button {
+  height: 30px;
+  padding: 0 14px;
+  border: none;
+  border-radius: var(--dsw-radius-sm);
+  background: var(--dsw-alias-button-primary-fill);
+  color: var(--dsw-alias-label-primary-inverted);
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.rlm-button:hover:not(:disabled) {
+  background: var(--dsw-alias-button-primary-hover);
+}
+.rlm-button-quiet {
+  background: transparent;
+  border: 1px solid var(--dsw-alias-border-l2);
+  color: var(--dsw-alias-label-primary);
+}
+.rlm-button-quiet:hover:not(:disabled) {
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+.rlm-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.rlm-button:focus-visible {
+  outline: 2px solid var(--dsw-alias-brand-primary);
+  outline-offset: 1px;
+}
+.rlm-status {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--dsw-alias-state-success-primary);
+}
+.rlm-status-error {
+  color: var(--dsw-alias-state-error-primary);
+}
+`;
+
+    /** One row inside a card: a muted label and a primary value. */
+    function Row(props) {
+      const { label, mono, children } = props ?? {};
+      return h(
+        "div",
+        { className: "rlm-row" },
+        h("span", { className: "rlm-label" }, label),
+        h("span", { className: mono === true ? "rlm-value rlm-code" : "rlm-value" }, children),
+      );
+    }
+
+    /**
+     * One card: a small heading and its rows.
+     *
+     * Children come from `props.children`, which is how React delivers them — and only
+     * that. React calls a function component as `Component(props, legacyContext)`, and
+     * the legacy context is an **empty object**, so treating extra call arguments as
+     * children made every card render `{}` as a child. react-dom rejects that with error
+     * #31, "Objects are not valid as a React child (found: object with keys {})", which
+     * blanked the whole settings page.
+     *
+     * They are spread rather than passed as one array because react-dom refuses to render
+     * an array that is itself a child: it cannot key it.
+     */
+    function Card(props) {
+      const { title, children } = props ?? {};
+      const rows = children === undefined || children === null ? [] : children;
+      return h(
+        "div",
+        { className: "rlm-card" },
+        h("h3", { className: "rlm-card-title" }, title),
+        ...(Array.isArray(rows) ? rows : [rows]),
+      );
+    }
+
+    /** A monospaced block for a value or command to copy verbatim. */
+    function CodeBlock(props) {
+      return h("pre", { className: "rlm-codeblock" }, props?.children);
+    }
+
+    /**
+     * The values a client needs, as a worked example.
+     *
+     * Held as one string so the example is copyable as a unit, and so the three
+     * values are visibly consistent with each other.
+     */
+    const REQUEST_EXAMPLE = [
+      "curl http://127.0.0.1:3457/v1/chat/completions \\",
+      '  -H "Authorization: Bearer role-model-local" \\',
+      '  -H "Content-Type: application/json" \\',
+      "  -d '{",
+      '    "model": "baseline.remote-only",',
+      '    "messages": [{"role": "user", "content": "hello"}]',
+      "  }'",
+    ].join("\n");
+
+    /**
+     * The plugin's settings namespace.
+     *
+     * `SettingsForms.describe()` keys a namespace by its entry id
+     * (`entry.options.id`), and this bundle's patch row declares `dsh-role-model`, so
+     * that id is also the write target here.
+     */
+    const SETTINGS_NS = "dsh-role-model";
+
+    /**
+     * The settings a user may edit, in display order.
+     *
+     * These are exactly the fields the host schema marks `.volatile()`; a field
+     * without that marker cannot be written and would be rejected by
+     * `SettingsForms.write()` with "not volatile".
+     */
+    const CONFIG_FIELDS = [
+      "port",
+      "endpoint",
+      "selectedAlias",
+      "providerRoute",
+      "requestTimeoutMs",
+      "allowRemote",
+      "hostLlmModule",
+    ];
+
+    /**
+     * The runtime channels the page offers: production first, because it is the default.
+     *
+     * Mirrors `RUNTIME_CHANNELS` in `src/config.ts`, which this plain-JavaScript half
+     * cannot import.
+     */
+    const RUNTIME_CHANNELS = [
+      { port: 3456, name: "production", runtime: "role-model" },
+      { port: 3457, name: "stage", runtime: "role-model-stage" },
+      { port: 3458, name: "development", runtime: "role-model-dev" },
+    ];
+
+    /**
+     * Sentinel for "no channel chosen", matching the schema's default.
+     *
+     * It exists because `endpoint` carries its own default: without a distinct unset
+     * state there is no way to tell a deliberate choice of production from leaving the
+     * field alone, and no way for a stored remote endpoint to survive.
+     */
+    const CHANNEL_DEFAULT = 0;
+
+    /** The select's options, the unset state first. */
+    const CHANNEL_OPTIONS = [
+      { port: CHANNEL_DEFAULT, label: "default — production (:3456)" },
+      ...RUNTIME_CHANNELS.filter((channel) => channel.port !== 3456).map((channel) => ({
+        port: channel.port,
+        label: `${channel.name} — ${channel.runtime} (:${channel.port})`,
+      })),
+    ];
+
+    /** Fields presented as a closed choice rather than free text. */
+    const SELECT_FIELDS = new Set(["port"]);
+
+    /** One-line explanations, so the form does not need the README. */
+    const FIELD_HELP = {
+      port: "Which runtime to route through: production 3456 (default), stage 3457, development 3458.",
+      endpoint:
+        "Full runtime URL. Set this to override the channel above, for example a remote host.",
+      selectedAlias:
+        "Preferred routing strategy, e.g. baseline.remote-only. Empty means no preference.",
+      providerRoute: "The route this plugin owns. Leave it as role-model.",
+      requestTimeoutMs: "Timeout for runtime metadata calls, in milliseconds.",
+      allowRemote:
+        "Permit a non-loopback endpoint. Off by default; a remote endpoint is refused before any request.",
+      hostLlmModule:
+        "Path to the harness's dsh-llm entry. Empty auto-resolves; set it when the host runs from a profile.",
+    };
+
+    /** Fields whose value is a boolean checkbox rather than a text input. */
+    const BOOLEAN_FIELDS = new Set(["allowRemote"]);
+
+    /**
+     * Fields holding a number.
+     *
+     * `port` is here as well as in {@link SELECT_FIELDS}: a `<select>` yields a string,
+     * and the host schema declares the port as a number, so a string would be refused.
+     */
+    const NUMERIC_FIELDS = new Set(["port", "requestTimeoutMs"]);
+
+    /**
+     * Read the settings Remote, when the context exposes one.
+     *
+     * Reached through `ctx.remote` rather than a hard `remote.settings` injection: an
+     * injection edge that cannot resolve means the plugin never mounts, which blanks
+     * the whole settings page — far worse than a form that cannot save. The write path
+     * is guarded the same way, and says so in the UI when the surface is missing.
+     * @param ctx - the client plugin context.
+     * @returns the namespace's surface, or undefined when it is not available.
+     */
+    function settingsRemote(ctx) {
+      const namespace = ctx?.remote?.settings;
+      return namespace !== undefined && typeof namespace.update === "function"
+        ? namespace
+        : undefined;
+    }
+
+    /**
+     * Read one namespace's current values through the settings Remote.
+     *
+     * Never throws: a settings surface that is unavailable must leave the form
+     * usable, so the caller renders placeholders instead of an error page.
+     * @param ctx - the client plugin context.
+     * @returns the current values, or undefined when they cannot be read.
+     */
+    async function readConfig(ctx) {
+      const namespace = settingsRemote(ctx);
+      if (namespace === undefined || typeof namespace.describe !== "function") return undefined;
+      try {
+        const response = await namespace.describe();
+        if (response === undefined || response.ok !== true) return undefined;
+        const namespaces = response.value?.namespaces;
+        if (!Array.isArray(namespaces)) return undefined;
+        const mine = namespaces.find((entry) => entry?.ns === SETTINGS_NS);
+        const value = mine?.value;
+        return value !== null && typeof value === "object" ? value : undefined;
+      } catch {
+        return undefined;
+      }
+    }
+
+    /**
+     * Narrow a draft value to the type its field holds.
+     * @param field - the configuration field.
+     * @param raw - the raw input or checkbox value.
+     * @returns the typed value, or undefined when the input is blank.
+     */
+    function narrowField(field, raw) {
+      const text = typeof raw === "string" ? raw : String(raw ?? "");
+      if (BOOLEAN_FIELDS.has(field)) return raw === true || raw === "true";
+      if (text.trim().length === 0)
+        return field === "selectedAlias" || field === "hostLlmModule" ? "" : undefined;
+      if (NUMERIC_FIELDS.has(field)) {
+        const parsed = Number(text);
+        return Number.isFinite(parsed) ? parsed : undefined;
+      }
+      return text.trim();
+    }
+
+    /**
+     * Build the patch for the fields the user actually changed.
+     *
+     * An unchanged field is deliberately omitted: `SettingsForms.update()` merges the
+     * patch into the user section, so restating a value the profile never overrode
+     * would pin an inherited value into this profile's document.
+     * @param current - the values last read from settings.
+     * @param draft - the values now in the form.
+     * @returns the patch to write, possibly empty.
+     */
+    function buildPatch(current, draft) {
+      const patch = {};
+      for (const field of CONFIG_FIELDS) {
+        if (!Object.hasOwn(draft, field)) continue;
+        const next = narrowField(field, draft[field]);
+        const before = current?.[field];
+        if (next === undefined) continue;
+        if (next === before) continue;
+        if (
+          typeof next === "string" &&
+          next.length === 0 &&
+          (before === undefined || before === null || before === "")
+        )
+          continue;
+        patch[field] = next;
+      }
+      return patch;
+    }
+
+    /**
+     * Write a patch to this plugin's settings namespace.
+     * @param ctx - the client plugin context.
+     * @param patch - the fields to merge.
+     * @returns undefined on success, or the message to show the user.
+     */
+    async function writeConfig(ctx, patch) {
+      if (Object.keys(patch).length === 0) return undefined;
+      const namespace = settingsRemote(ctx);
+      if (namespace === undefined) {
+        return "the settings service is unavailable, so this change cannot be saved yet";
+      }
+      try {
+        const response = await namespace.update(SETTINGS_NS, patch, undefined);
+        if (response !== undefined && response.ok === true) return undefined;
+        return response?.error?.message ?? "the settings service refused the write";
+      } catch (error) {
+        return error instanceof Error ? error.message : String(error);
+      }
+    }
+
+    /**
+     * One labelled form control.
+     *
+     * A closed-choice field renders a `<select>`: the channel is one of three ports, and
+     * a free-text field would let a typo select a runtime that is not running — silently,
+     * because the route registers against whatever it is given.
+     */
+    function Field(props) {
+      const { field, value, help, onChange, disabled } = props;
+      const id = `rlm-field-${field}`;
+      const control = SELECT_FIELDS.has(field)
+        ? h(
+            "select",
+            {
+              id,
+              name: field,
+              value: value === undefined || value === null ? "" : String(value),
+              disabled: disabled === true,
+              onChange: (event) => onChange(field, event.target.value),
+            },
+            ...CHANNEL_OPTIONS.map((option) =>
+              h("option", { key: option.port, value: option.port }, option.label),
+            ),
+          )
+        : BOOLEAN_FIELDS.has(field)
+          ? h("input", {
+              id,
+              name: field,
+              type: "checkbox",
+              checked: value === true,
+              disabled: disabled === true,
+              onChange: (event) => onChange(field, event.target.checked),
+            })
+          : h("input", {
+              id,
+              name: field,
+              type: NUMERIC_FIELDS.has(field) ? "number" : "text",
+              value: value ?? "",
+              disabled: disabled === true,
+              spellCheck: false,
+              autoComplete: "off",
+              onChange: (event) => onChange(field, event.target.value),
+            });
+      return h(
+        "div",
+        { className: "rlm-field" },
+        h("label", { className: "rlm-field-label", htmlFor: id }, field),
+        control,
+        h("p", { className: "rlm-field-help" }, help),
+      );
+    }
+
+    /** The editable configuration, shown at the top of the page. */
+    function ConfigurationCard() {
+      const [current, setCurrent] = React.useState(null);
+      const [draft, setDraft] = React.useState({});
+      const [message, setMessage] = React.useState(null);
+      const [saving, setSaving] = React.useState(false);
+      const context = panelContext;
+      // Defensive: an unread settings namespace leaves this undefined, and the form
+      // must still render (with placeholders) rather than blank the slot entry.
+      const values = draft ?? {};
+
+      React.useEffect(() => {
+        let cancelled = false;
+        void readConfig(context).then((loaded) => {
+          if (cancelled || loaded === undefined) return;
+          // Seed both the baseline and the draft from the same read, so an untouched
+          // field is never written back.
+          setCurrent(loaded);
+          setDraft({ ...loaded });
+        });
+        return () => {
+          cancelled = true;
+        };
+      }, []);
+
+      const onChange = (field, value) => {
+        setMessage(null);
+        setDraft((previous) => ({ ...previous, [field]: value }));
+      };
+
+      const onApply = () => {
+        setSaving(true);
+        setMessage(null);
+        const patch = buildPatch(current ?? {}, draft);
+        void writeConfig(context, patch).then((failure) => {
+          setSaving(false);
+          if (failure === undefined) {
+            setCurrent({ ...(current ?? {}), ...patch });
+            setMessage({
+              kind: "ok",
+              text: Object.keys(patch).length === 0 ? "No changes." : "Saved.",
+            });
+            return;
+          }
+          setMessage({ kind: "error", text: failure });
+        });
+      };
+
+      const onReset = () => {
+        setMessage(null);
+        setDraft({ ...(current ?? {}) });
+      };
+
+      return h(
+        Card,
+        { title: "Configuration" },
+        h(
+          "p",
+          { className: "rlm-note" },
+          "These values live in this plugin's profile patch row. The Models settings page cannot edit " +
+            "them: its provider editor only knows the llm-deepseek and llm-pi-ai adapter families, so " +
+            "it shows a reference and disables Apply.",
+        ),
+        ...CONFIG_FIELDS.map((field) =>
+          h(Field, {
+            key: field,
+            field,
+            value: values[field],
+            help: FIELD_HELP[field],
+            onChange,
+          }),
+        ),
+        h(
+          "div",
+          { className: "rlm-actions" },
+          h(
+            "button",
+            {
+              type: "button",
+              className: "rlm-button",
+              "data-role": "apply",
+              disabled: saving === true,
+              onClick: onApply,
+            },
+            saving === true ? "Applying…" : "Apply",
+          ),
+          h(
+            "button",
+            {
+              type: "button",
+              className: "rlm-button rlm-button-quiet",
+              "data-role": "reset",
+              disabled: saving === true,
+              onClick: onReset,
+            },
+            "Revert",
+          ),
+        ),
+        message === null
+          ? null
+          : h(
+              "p",
+              {
+                className: message.kind === "ok" ? "rlm-status" : "rlm-status rlm-status-error",
+                "data-role": "status",
+              },
+              message.text,
+            ),
+      );
+    }
+
+    /**
+     * The client context the panel writes through.
+     *
+     * Captured by {@link apply} rather than threaded through slot props, because the
+     * slot owner passes its own props and this page needs the plugin context.
+     */
+    let panelContext;
+
+    /** The settings page. */
+    function RoleModelPanel() {
+      const styleElement = React.useMemo(
+        () => h("style", { key: "rlm-styles", dangerouslySetInnerHTML: { __html: CSS } }),
+        [],
+      );
+
+      return h(
+        "div",
+        { className: "rlm-page" },
+        styleElement,
+
+        h("h2", { className: "rlm-title" }, "role-model"),
+        h(
+          "p",
+          { className: "rlm-intro" },
+          "This route forwards model requests to an externally running role-model runtime. The runtime " +
+            "owns routing: the model id you request is the routing strategy, and the runtime picks the " +
+            "endpoint behind it. Every ordinary request carries role_model intent metadata — the role and " +
+            "task this plugin classified, plus capabilities, modalities and tool classes — so the runtime " +
+            "can route on what the work needs rather than on the prompt text alone.",
+        ),
+
+        h(
+          "div",
+          { className: "rlm-cards" },
+
+          h(ConfigurationCard, null),
+
+          h(
+            Card,
+            { title: "Route" },
+            h(Row, { label: "provider route", mono: true }, "role-model"),
+            h(
+              Row,
+              { label: "endpoint" },
+              "Configured in this plugin's settings. The runtime is external: this plugin never starts, " +
+                "stops or updates it.",
+            ),
+            h(
+              Row,
+              { label: "intent metadata" },
+              "role_model.intent on every ordinary conversation request. Compaction and session-title " +
+                "calls are never annotated.",
+            ),
+            h(
+              Row,
+              { label: "credentials" },
+              "The bearer token is the runtime's published local placeholder. This plugin reads no " +
+                "credential and stores none.",
+            ),
+            h(
+              Row,
+              { label: "model selector" },
+              "The runtime's aliases, models and endpoints all appear under this route, recommended " +
+                "alias first.",
+            ),
+          ),
+
+          h(
+            Card,
+            { title: "Connect a client" },
+            h(Row, { label: "base URL", mono: true }, "http://127.0.0.1:3457/v1"),
+            h(Row, { label: "model", mono: true }, "baseline.remote-only"),
+            h(Row, { label: "API key", mono: true }, "role-model-local"),
+            h(
+              "p",
+              { className: "rlm-note" },
+              "Use the /v1 base URL, not the bare host: an OpenAI-compatible client appends " +
+                "/chat/completions to what you give it, so a base URL without /v1 fails with a 404. Any " +
+                "non-empty API key is accepted; role-model-local is the runtime's published local " +
+                "placeholder.",
+            ),
+            h(
+              "p",
+              { className: "rlm-note" },
+              "In this harness, enter these under Settings → Models: add a provider with the base URL " +
+                "above, then choose the model id you want. Every routing strategy, endpoint and concrete " +
+                "model the runtime advertises appears in this route's group in the model selector.",
+            ),
+            h(
+              "p",
+              { className: "rlm-note" },
+              "Ports differ by channel: 3456 is production (role-model), 3457 is stage " +
+                "(role-model-stage), and 3458 is development (role-model-dev). Point the base URL at the " +
+                "channel you mean.",
+            ),
+            h(CodeBlock, null, REQUEST_EXAMPLE),
+          ),
+
+          h(
+            Card,
+            { title: "Pick a routing strategy" },
+            h(
+              "p",
+              { className: "rlm-note" },
+              "A model id is <strategy>.<scope>. The strategy decides how the runtime chooses, and the " +
+                "scope decides how much of the decision it makes itself: decision-only returns the " +
+                "decision for you to execute, remote-only runs the chosen remote model, and hybrid picks " +
+                "between local and remote. baseline.remote-only is the recommended starting point.",
+            ),
+            h(
+              Row,
+              { label: "baseline", mono: true },
+              "a fixed baseline model, the simplest behaviour",
+            ),
+            h(Row, { label: "difficulty", mono: true }, "route on how hard the request looks"),
+            h(Row, { label: "hybrid", mono: true }, "choose between local and remote execution"),
+            h(
+              Row,
+              { label: "controller", mono: true },
+              "a learned policy over the classifier signals",
+            ),
+            h(Row, { label: "default", mono: true }, "the runtime's own default strategy"),
+            h(
+              "p",
+              { className: "rlm-note" },
+              "Each strategy pairs with those three scopes, giving ids such as baseline.decision-only, " +
+                "difficulty.remote-only and hybrid.hybrid. The runtime is the authority on the current " +
+                "set: /role-model alias list prints every alias it advertises right now, and " +
+                "/role-model alias recommended gives its own pick.",
+            ),
+          ),
+
+          h(
+            Card,
+            { title: "Commands" },
+            h(
+              Row,
+              { label: "/role-model status", mono: true },
+              "route health, discovery state, model count, selected alias",
+            ),
+            h(
+              Row,
+              { label: "/role-model doctor", mono: true },
+              "every discovery check, including degraded model metadata",
+            ),
+            h(
+              Row,
+              { label: "/role-model alias list", mono: true },
+              "every alias the runtime advertises",
+            ),
+            h(
+              Row,
+              { label: "/role-model alias use", mono: true },
+              "record the alias to prefer, for example /role-model alias use baseline.remote-only",
+            ),
+            h(Row, { label: "/role-model requests", mono: true }, "recent runtime requests"),
+            h(
+              Row,
+              { label: "/role-model explain", mono: true },
+              "one request and the routing decision it produced",
+            ),
+          ),
+
+          h(
+            Card,
+            { title: "Where to look" },
+            h(
+              "p",
+              { className: "rlm-note" },
+              "Run /role-model status for the live discovery state, model count and selected alias, and " +
+                "/role-model doctor when something is wrong: it walks endpoint reachability, the discovery " +
+                "contract, auth, endpoint trust, provider registration and any model whose metadata had to " +
+                "be sized conservatively.",
+            ),
+            h(
+              "p",
+              { className: "rlm-note" },
+              "Routing decisions, benchmarks and telemetry belong to the runtime, not to this plugin.",
+            ),
+          ),
+        ),
+      );
+    }
+
+    /**
+     * Report a render failure as text instead of a blank pane.
+     *
+     * This must be a real React **error boundary** — a class with
+     * `getDerivedStateFromError` — and its child must be handed to react-dom as an
+     * element. Two earlier attempts got this wrong and blanked the page:
+     *
+     * 1. A parent function component with a try/catch **cannot** catch a child's render
+     *    error, because the child is rendered later, during react-dom's own traversal.
+     * 2. Invoking the child to force the throw into the try/catch breaks hooks: there is
+     *    no current component during that call, so the first `useMemo`/`useState` in the
+     *    child throws "Invalid hook call". Every hook the page uses lives inside the
+     *    child, so the whole page failed to render.
+     *
+     * A class boundary sees errors in either its own render or its descendants', which
+     * is exactly the guarantee needed here.
+     *
+     * Written with `createElement` rather than JSX because this file is served as-is.
+     */
+    class PanelBoundary extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = { error: undefined };
+      }
+
+      static getDerivedStateFromError(error) {
+        return { error };
+      }
+
+      render() {
+        const error = this.state?.error;
+        if (error === undefined) return this.props?.children ?? null;
+        const detail =
+          error && (error.stack || error.message)
+            ? String(error.stack || error.message)
+            : String(error);
+        return h(
+          "div",
+          { className: "rlm-page" },
+          h("h2", { className: "rlm-title" }, "role-model could not render"),
+          h(
+            "p",
+            { className: "rlm-note" },
+            "The plugin mounted, but a component threw while rendering. The detail below is the " +
+              "browser's own error report; include it in a bug report.",
+          ),
+          h("pre", { className: "rlm-codeblock" }, detail),
+        );
+      }
+    }
+
+    return {
+      // The settings section slot is provided by the settings shell, so wait for it.
+      //
+      // `remote.settings` is deliberately NOT injected. A namespace is a Cordis child
+      // service (`remote.<namespace>`), and an injection edge that cannot resolve keeps
+      // the plugin from mounting at all — which blanks the entire settings page. The
+      // Remote is instead read through `ctx.remote` behind a guard, so an unavailable
+      // settings surface costs the save button, not the page.
+      inject: ["slots"],
+
+      apply(ctx) {
+        panelContext = ctx;
+        // The panel is wrapped in a real error boundary and handed over as an element,
+        // so a render failure shows the browser's error instead of an empty pane.
+        //
+        // It must NOT be invoked here: hooks require an active component, and calling the
+        // page outside React's render phase makes its first `useMemo` throw "Invalid hook
+        // call", which blanked this page twice. Hand it over as an element instead.
+        const panel = function RoleModelPanelWithBoundary(props) {
+          return h(PanelBoundary, props ?? {}, h(RoleModelPanel, null));
+        };
+        ctx.effect(() =>
+          ctx.slots.inject("settings.section", () =>
+            ctx.slots.register(
+              {
+                name: "settings.section",
+                id: "role-model",
+                // After the shipped sections (general 0, models 10, plugins 15,
+                // agent-presets 20), before anything opt-in.
+                order: 60,
+                label: "role-model",
+              },
+              panel,
+            ),
+          ),
+        );
+      },
+
+      /** Pure wiring, exposed so the write path can be tested without react-dom. */
+      __internals: {
+        SETTINGS_NS,
+        CONFIG_FIELDS,
+        SELECT_FIELDS,
+        RUNTIME_CHANNELS,
+        settingsRemote,
+        readConfig,
+        buildPatch,
+        writeConfig,
+      },
+    };
+  },
+});

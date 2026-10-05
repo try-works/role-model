@@ -505,6 +505,11 @@ export function gradeBenchmarkCase(input: {
       score: cappedScore,
       rationale: `[judge_unavailable] Heuristic fallback: ${cappedHeuristic.rationale}`,
       method: "heuristic",
+      // Run 98 addendum 32 S4: the heuristic stands in for a judge that never answered, so the case is
+      // missing evidence. Persistence must not average this cap as if the judge had scored it.
+      missing: true,
+      missingReason: "judge_unavailable",
+      gradingMethod: "heuristic",
     };
   }
   return cappedHeuristic;
@@ -625,6 +630,9 @@ export interface BenchmarkEndpointGrade {
     readonly judgeError?: string | null;
     readonly judgeUnavailable?: boolean;
     readonly cappedByValidator?: boolean;
+    /** Run 98 addendum 32 S4: missing evidence, excluded from every aggregate. */
+    readonly missing?: boolean;
+    readonly missingReason?: string;
   }[];
 }
 
@@ -645,6 +653,8 @@ export function summarizeEndpointGrade(
     hard: [],
   };
   for (const result of caseResults) {
+    // Run 98 addendum 32 S4: a case whose judge never answered is missing evidence, not a low score.
+    if (result.missing === true) continue;
     buckets[result.difficultyBucket].push(result.score);
   }
   for (const bucket of Object.keys(buckets) as BenchmarkDifficultyBucket[]) {
@@ -658,7 +668,9 @@ export function summarizeEndpointGrade(
     endpointId,
     modelId,
     sourceType,
-    overallScore: judgeAverage(caseResults.map((item) => item.score)),
+    overallScore: judgeAverage(
+      caseResults.filter((item) => item.missing !== true).map((item) => item.score),
+    ),
     byDifficulty,
     caseResults,
   };

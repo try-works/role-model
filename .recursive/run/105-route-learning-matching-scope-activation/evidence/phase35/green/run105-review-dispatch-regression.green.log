@@ -1,0 +1,481 @@
+Command: corepack pnpm exec vitest run test/run100j-abandoned-reconcile-batch.test.ts test/run100j-replay-concurrency-in-flight.test.ts test/run100j-sidecar-startup-bound.test.ts test/run101-r4-replay-queue-wiring.test.ts test/run101-r4-replay-queue.test.ts test/run101-r4-replay-worker.test.ts test/run104-sp1-dispatch-subset.test.ts test/run104-sp1-replay-eligibility.test.ts test/run97-replay-auto-loop.test.ts test/run97-replay-auto-producer.test.ts test/run97-replay-receipt-accounting.test.ts test/run98-r02-replay-window-retirement.test.ts test/run105-c-durable-advisory-role-key.test.ts test/run105-c-advisory-rung-observation.test.ts test/run105-r11-product-defaults-loader.test.ts test/run105-r08-focus-task-selection.test.ts test/run105-r08-idle-refresh-and-challenge.test.ts test/run105-r09-derived-activation.test.ts test/run105-r10-per-task-rollback.test.ts test/run105-e5-ladder-index-readback.test.ts test/run105-c-route-advisory-ladder-source.test.ts test/run105-cli-route-ladder-decode.test.ts test/run105-r15-primary-failure.test.ts test/run105-review-census.test.ts test/run105-review-advisory-safety.test.ts test/run105-review-advisory-cache.test.ts test/run105-review-live-advisory-publisher.test.ts test/run105-review-dispatch.test.ts
+Exit: 1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-host-bridge
+
+ ✓ test/run98-r02-replay-window-retirement.test.ts (7 tests) 80ms
+ ✓ test/run101-r4-replay-queue.test.ts (5 tests) 4763ms
+   ✓ @recursive:101-effect-mq-queue-rebuild @sp4 R4 replay.dispatch > offers exactly one job per captureRef  407ms
+   ✓ @recursive:101-effect-mq-queue-rebuild @sp4 R4 replay.dispatch > retries a retryable failure on the persisted attempt count and then succeeds  4043ms
+ ✓ test/run104-sp1-replay-eligibility.test.ts (7 tests) 40ms
+ ❯ test/run105-c-route-advisory-ladder-source.test.ts (6 tests | 4 failed) 77ms
+   × run105 C route advisory ladder source > reads one role-task ladder and returns rank-sorted status-filtered rungs 62ms
+     → expected { preferredRoutePackage: null, …(11) } to match object { advisoryState: 'fresh', …(5) }
+(6 matching properties omitted from actual)
+   × run105 C route advisory ladder source > an all-unavailable ladder is unavailable and never invents a preferred endpoint 4ms
+     → expected 'effective advisory policy unavailable' to match /no admitted rung/i
+   × run105 C route advisory ladder source > an empty or absent ladder is unavailable with the same bounded reason 3ms
+     → expected 'effective advisory policy unavailable' to match /no admitted rung|route ladder unavai…/i
+   × run105 C route advisory ladder source > a rolled-back ladder is refused before any rung is offered 2ms
+     → expected 'effective advisory policy unavailable' to match /rolled back/i
+   ✓ run105 C route advisory ladder source > a store failure degrades to unavailable, never to influence 1ms
+   ✓ run105 C route advisory ladder source > a missing role or task id refuses the read instead of querying the store 1ms
+ ✓ test/run105-review-advisory-safety.test.ts (58 tests) 9034ms
+   ✓ real-store admitted confidence, explicit cohort and exact scoped reads without promotion  4050ms
+stdout | test/run105-r15-primary-failure.test.ts > run105 R15 primary failure isolation > routed provider status/class/request survive injected secondary graph persistence failure
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2,CAPABILITY_MISSING=1 request=req-r15-graph alias=- model=- effort=- pass=live allow=[openai.personal.codex-subscription.global.gpt-5.4] denied=[test.capture.chat-v1,cli.local.coder]
+
+stdout | test/run105-r15-primary-failure.test.ts > run105 R15 primary failure isolation > routed provider status/class/request survive injected secondary sqlite persistence failure
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2,CAPABILITY_MISSING=1 request=req-r15-sqlite alias=- model=- effort=- pass=live allow=[openai.personal.codex-subscription.global.gpt-5.4] denied=[test.capture.chat-v1,cli.local.coder]
+
+stdout | test/run105-r15-primary-failure.test.ts > run105 R15 primary failure isolation > successful routed persistence marks the primary error and avoids duplicate outer persistence
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2,CAPABILITY_MISSING=1 request=req-r15-success alias=- model=- effort=- pass=live allow=[openai.personal.codex-subscription.global.gpt-5.4] denied=[test.capture.chat-v1,cli.local.coder]
+
+ ✓ test/run105-r15-primary-failure.test.ts (4 tests) 5834ms
+   ✓ run105 R15 primary failure isolation > routed provider status/class/request survive injected secondary graph persistence failure  1655ms
+   ✓ run105 R15 primary failure isolation > routed provider status/class/request survive injected secondary sqlite persistence failure  1292ms
+   ✓ run105 R15 primary failure isolation > successful routed persistence marks the primary error and avoids duplicate outer persistence  1403ms
+   ✓ run105 R15 primary failure isolation > pre-execution input error survives secondary persistence failure unchanged  1481ms
+stdout | test/run105-review-advisory-cache.test.ts > run105 review exact advisory cache > classified live backend never resurrects transient advisory after missing
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2,CAPABILITY_MISSING=1 request=req-cache-missing alias=- model=- effort=- pass=live allow=[openai.personal.codex-subscription.global.gpt-5.4] denied=[test.capture.chat-v1,cli.local.coder]
+
+stdout | test/run105-review-advisory-cache.test.ts > run105 review exact advisory cache > classified live backend never resurrects transient advisory after stopped
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2,CAPABILITY_MISSING=1 request=req-cache-stopped alias=- model=- effort=- pass=live allow=[openai.personal.codex-subscription.global.gpt-5.4] denied=[test.capture.chat-v1,cli.local.coder]
+
+stdout | test/run105-review-advisory-cache.test.ts > run105 review exact advisory cache > classified live backend never resurrects transient advisory after excluded
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2,CAPABILITY_MISSING=1 request=req-cache-excluded alias=- model=- effort=- pass=live allow=[openai.personal.codex-subscription.global.gpt-5.4] denied=[test.capture.chat-v1,cli.local.coder]
+
+ ✓ test/run105-review-advisory-cache.test.ts (11 tests) 5869ms
+   ✓ run105 review exact advisory cache > classified live backend never resurrects transient advisory after missing  2110ms
+   ✓ run105 review exact advisory cache > classified live backend never resurrects transient advisory after stopped  1998ms
+   ✓ run105 review exact advisory cache > classified live backend never resurrects transient advisory after excluded  1739ms
+ ✓ test/run105-review-census.test.ts (6 tests) 3678ms
+   ✓ run105 R8 production census > a saturated non-paginated ladder index degrades instead of treating omitted rollbacks as new tasks  337ms
+   ✓ run105 R8 production census > counts distinct classified live requests inside the window and unions no-ladder tasks  376ms
+   ✓ run105 R8 production census > state roots and scopes isolate counts and honor a custom window  475ms
+   ✓ run105 R8 production census > missing database is explicit and a successful census leaves the database bytes unchanged  2048ms
+ ✓ test/run97-replay-auto-loop.test.ts (15 tests) 363ms
+ ✓ test/run105-review-dispatch.test.ts (13 tests) 268ms
+ ✓ test/run105-r11-product-defaults-loader.test.ts (7 tests) 44ms
+ ✓ test/run101-r4-replay-worker.test.ts (3 tests) 6252ms
+   ✓ @recursive:101-effect-mq-queue-rebuild @sp4 R4 replay worker > claims an offered job and completes it  1599ms
+   ✓ @recursive:101-effect-mq-queue-rebuild @sp4 R4 replay worker > absorbs a per-attempt failure and lets the store retry it  3560ms
+   ✓ @recursive:101-effect-mq-queue-rebuild @sp4 R4 replay worker > stops claiming while the kill switch is engaged  1091ms
+ ✓ test/run104-sp1-dispatch-subset.test.ts (6 tests) 29ms
+ ❯ test/run105-c-durable-advisory-role-key.test.ts (5 tests | 5 failed) 25ms
+   × run105 C durable advisory role key > C11 two roles in one scope keep separate durable entries 13ms
+     → expected undefined to be 'endpoint-a' // Object.is equality
+   × run105 C durable advisory role key > C11 a null roleId keeps the pre-run105 (channel, scope) behaviour 1ms
+     → expected undefined to be 'endpoint-c' // Object.is equality
+   × run105 C durable advisory role key > C11 re-remembering the same (channel, scope, role) refreshes the entry in place 2ms
+     → expected undefined to be 'endpoint-d' // Object.is equality
+   × run105 C durable advisory role key > C11 the recency bound still ages a role-scoped entry 1ms
+     → expected undefined to be 'stale' // Object.is equality
+   × run105 C durable advisory role key > C11 the cache bound is raised to 512 for the per-(role, task) fan-out 4ms
+     → expected undefined to be 'endpoint-519' // Object.is equality
+ ✓ test/run97-replay-auto-producer.test.ts (7 tests) 163ms
+ ❯ test/run105-r10-per-task-rollback.test.ts (4 tests | 1 failed) 60ms
+   ✓ run105 R10 rollback toggle (pure) > default OFF: an untouched ladder is not rolled back 4ms
+   ✓ run105 R10 rollback toggle (pure) > ON records the operator reason and the time; OFF is reversible and keeps the reason 1ms
+   ✓ run105 R10 rollback toggle (pure) > D8: the toggle carries no pack/receipt identity - it is not the legacy receipt-bound rollback 0ms
+   × run105 R10/R1 classification gate in the replay tick > a capture without BOTH roleId and taskTypeId is never admitted and is reported once as no_route_classification 52ms
+     → expected [ 'capture:unclassified', …(1) ] to deeply equal [ 'capture:classified' ]
+ ✓ test/run105-r09-derived-activation.test.ts (5 tests) 33ms
+ ✓ test/run101-r4-replay-queue-wiring.test.ts (4 tests) 39ms
+ ✓ test/run100j-abandoned-reconcile-batch.test.ts (1 test) 97ms
+ ✓ test/run105-c-advisory-rung-observation.test.ts (3 tests) 12ms
+ ✓ test/run105-e5-ladder-index-readback.test.ts (1 test) 38ms
+ ✓ test/run105-review-live-advisory-publisher.test.ts (3 tests) 36ms
+ ✓ test/run105-r08-idle-refresh-and-challenge.test.ts (4 tests) 9ms
+ ✓ test/run105-cli-route-ladder-decode.test.ts (4 tests) 13ms
+ ✓ test/run97-replay-receipt-accounting.test.ts (3 tests) 13ms
+ ✓ test/run100j-replay-concurrency-in-flight.test.ts (2 tests) 11ms
+ ✓ test/run105-r08-focus-task-selection.test.ts (3 tests) 8ms
+ ✓ test/run100j-sidecar-startup-bound.test.ts (1 test) 1626ms
+   ✓ run100j the packaged sidecar startup bound fits a mature root  1623ms
+
+ Test Files  3 failed | 25 passed (28)
+      Tests  10 failed | 188 passed (198)
+   Start at  17:52:16
+   Duration  110.93s (transform 9.73s, setup 0ms, collect 52.03s, tests 38.51s, environment 12ms, prepare 8.04s)
+
+
+(node:23640) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | test/run98-r02-replay-window-retirement.test.ts > run98 R2 an undispatchable replay window is retired instead of re-deferred
+[run104-pending] captures=1 scoped=1 first=req-stale only=none pendingCount=1 captureCount=n/a
+
+stderr | test/run98-r02-replay-window-retirement.test.ts > run98 R2 an unrecoverable terminal replay still retires
+[run98] terminal replay evaluation recovery declined:job-recoverable evaluation evidence cannot be recovered
+
+stderr | test/run98-r02-replay-window-retirement.test.ts > run98 R2 a dispatched branch is not a completed counterfactual until evaluation finalizes
+[run104-pending] captures=1 scoped=1 first=req-evaluating only=none pendingCount=1 captureCount=n/a
+
+stderr | test/run98-r02-replay-window-retirement.test.ts > run98 R2 a durably evaluated replay is the only terminal counterfactual
+[run104-pending] captures=1 scoped=1 first=req-evaluating only=none pendingCount=1 captureCount=n/a
+
+(node:1808) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:13696) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:11812) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:13336) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | test/run105-review-advisory-cache.test.ts > run105 review exact advisory cache > classified live backend never resurrects transient advisory after missing
+[run99] live advisory miss: stage=S3 channel=development scope=run105-review-advisory-cache
+
+(node:31368) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | test/run97-replay-auto-loop.test.ts > run97 auto loop fetches pending captures, replays them, and writes dispositions
+[run104-pending] captures=2 scoped=2 first=req-1,req-2 only=none pendingCount=2 captureCount=n/a
+
+stderr | test/run97-replay-auto-loop.test.ts > run97 auto loop survives executor failure and reports it without throwing
+[run104-pending] captures=1 scoped=1 first=req-1 only=none pendingCount=1 captureCount=n/a
+
+stderr | test/run97-replay-auto-loop.test.ts > run97 auto loop never overlaps ticks and stops cleanly
+[run104-pending] captures=1 scoped=1 first=req-1 only=none pendingCount=1 captureCount=n/a
+
+stderr | test/run97-replay-auto-loop.test.ts > run97 auto loop pauses and resumes without disabling routing
+[run104-pending] captures=1 scoped=1 first=req-1 only=none pendingCount=1 captureCount=n/a
+
+stderr | test/run97-replay-auto-loop.test.ts > run97 auto loop reports bounded operator status
+[run104-pending] captures=1 scoped=1 first=req-1 only=none pendingCount=1 captureCount=n/a
+
+stderr | test/run97-replay-auto-loop.test.ts > run97 auto loop re-reads configured endpoints on every tick
+[run104-pending] captures=1 scoped=1 first=req-1 only=none pendingCount=1 captureCount=n/a
+
+stderr | test/run97-replay-auto-loop.test.ts > run97 auto loop re-reads configured endpoints on every tick
+[run104-pending] captures=1 scoped=1 first=req-1 only=none pendingCount=1 captureCount=n/a
+
+stderr | test/run97-replay-auto-loop.test.ts > run97 auto loop uses the capture's source endpoint to pick distinct candidates
+[run104-pending] captures=1 scoped=1 first=req-object-1 only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run97-replay-auto-loop.test.ts > run97 auto loop refuses replay-produced captures reported by the private boundary
+[run104-pending] captures=2 scoped=2 first=req-live-1,replay-req-live-1-1e03652ce6770a82 only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run97-replay-auto-loop.test.ts > run98 addendum 04 liveness sweeps still run while a long work tick is in flight
+[run104-pending] captures=1 scoped=1 first=req-long-1 only=none pendingCount=1 captureCount=n/a
+
+stderr | test/run97-replay-auto-loop.test.ts > run98 addendum 04 a disposition is recorded per capture instead of only when the tick ends
+[run104-pending] captures=2 scoped=2 first=req-slow-1,req-slow-2 only=none pendingCount=2 captureCount=n/a
+
+stderr | test/run97-replay-auto-loop.test.ts > run98 addendum 04 a hung replay execution is bounded instead of stalling the producer
+[run104-pending] captures=1 scoped=1 first=req-hung-1 only=none pendingCount=1 captureCount=n/a
+
+stderr | test/run97-replay-auto-loop.test.ts > run97 auto loop re-reads endpoint health and never dispatches a degraded candidate
+[run104-pending] captures=1 scoped=1 first=req-health-1 only=none pendingCount=1 captureCount=n/a
+
+stderr | test/run97-replay-auto-loop.test.ts > run97 auto loop re-reads endpoint health and never dispatches a degraded candidate
+[run104-pending] captures=1 scoped=1 first=req-health-1 only=none pendingCount=1 captureCount=n/a
+
+stderr | test/run97-replay-auto-loop.test.ts > run98 addendum 04 the tick stops starting captures once its wall-clock budget is spent
+[run104-pending] captures=4 scoped=4 first=req-1,req-2,req-3 only=none pendingCount=4 captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > new endpoint records now and challenges future-idle ladder using the real rung source
+[run104-pending] captures=3 scoped=0 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > new endpoint records now and challenges future-idle ladder using the real rung source
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > focus fill stays depth-first when another task becomes busier and gains a new endpoint
+[run104-pending] captures=2 scoped=1 first=fill-a,idle-a only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > focus fill stays depth-first when another task becomes busier and gains a new endpoint
+[run104-pending] captures=2 scoped=1 first=fill-a-next,idle-a only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > terminal provider branches do not advance; finalized loss advances on next tick
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > terminal provider branches do not advance; finalized loss advances on next tick
+[run104-pending] captures=3 scoped=0 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > terminal provider branches do not advance; finalized loss advances on next tick
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > challengeBatchSize runs sequential finalized comparisons and bounds one dispatch
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > challengeBatchSize runs sequential finalized comparisons and bounds one dispatch
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > finalized challenger win stops descent before ladder publication catches up
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > finalized challenger win stops descent before ladder publication catches up
+[run104-pending] captures=3 scoped=0 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > rollback pauses and roll forward resumes the pending challenge
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > rollback pauses and roll forward resumes the pending challenge
+[run104-pending] captures=3 scoped=0 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > rollback pauses and roll forward resumes the pending challenge
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > request-volume ties use most-unfilled and never dispatch other task captures
+[run104-pending] captures=3 scoped=1 first=few-a,more-a,never-a only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > endpoint arrival marks partial tasks eligible without preempting an in-flight focus fill
+[run104-pending] captures=2 scoped=1 first=fill-a,idle-a only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > endpoint arrival marks partial tasks eligible without preempting an in-flight focus fill
+[run104-pending] captures=2 scoped=1 first=fill-a-next,idle-a only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > concurrent queue claims never execute same task arms concurrently
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=idle-a pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > queue offer holds one rung and claimed worker executes the same narrowed pair
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > queue offer holds one rung and claimed worker executes the same narrowed pair
+[run104-pending] captures=3 scoped=0 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > queue offer holds one rung and claimed worker executes the same narrowed pair
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=idle-a pendingCount=n/a captureCount=n/a
+
+(node:8360) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:18456) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | test/run105-r10-per-task-rollback.test.ts > run105 R10/R1 classification gate in the replay tick > a capture without BOTH roleId and taskTypeId is never admitted and is reported once as no_route_classification
+[run104-pending] captures=2 scoped=2 first=capture:unclassified,capture:classified only=none pendingCount=2 captureCount=n/a
+
+stderr | test/run105-r09-derived-activation.test.ts > run105 R9 derived activation > the replay loop's own health never reports a ladder activation it did not derive
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=n/a
+
+(node:10604) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:21780) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:22744) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | test/run105-review-live-advisory-publisher.test.ts > run105 production publisher scope > enumerates actual stored role-task ladders and reads each exact pair, never one scope-only advisory
+[run105] durable task advisory refresh: scope=publisher-test pairs=2 stage=S3
+
+stderr | test/run105-review-live-advisory-publisher.test.ts > run105 production publisher scope > continues scoped keyset pages and publishes pairs beyond the first64
+[run105] durable task advisory refresh: scope=paged-publisher pairs=202 stage=S3
+
+stderr | test/run105-review-live-advisory-publisher.test.ts > run105 production publisher scope > a slow refresh never overlaps another timer pass
+[run105] durable task advisory refresh: scope=slow-refresh pairs=0 stage=S3
+
+(node:13336) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 10 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run105-c-durable-advisory-role-key.test.ts > run105 C durable advisory role key > C11 two roles in one scope keep separate durable entries
+AssertionError: expected undefined to be 'endpoint-a' // Object.is equality
+
+- Expected: 
+"endpoint-a"
+
++ Received: 
+undefined
+
+ ❯ test/run105-c-durable-advisory-role-key.test.ts:51:7
+     49|       recallTrackBDurableRouteAdvisory({ channel: "stage", scope: "sco…
+     50|         ?.preferredRoutePackage,
+     51|     ).toBe("endpoint-a");
+       |       ^
+     52|     expect(
+     53|       recallTrackBDurableRouteAdvisory({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/10]⎯
+
+ FAIL  test/run105-c-durable-advisory-role-key.test.ts > run105 C durable advisory role key > C11 a null roleId keeps the pre-run105 (channel, scope) behaviour
+AssertionError: expected undefined to be 'endpoint-c' // Object.is equality
+
+- Expected: 
+"endpoint-c"
+
++ Received: 
+undefined
+
+ ❯ test/run105-c-durable-advisory-role-key.test.ts:76:7
+     74|       recallTrackBDurableRouteAdvisory({ channel: "stage", scope: "sco…
+     75|         ?.preferredRoutePackage,
+     76|     ).toBe("endpoint-c");
+       |       ^
+     77|   });
+     78| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/10]⎯
+
+ FAIL  test/run105-c-durable-advisory-role-key.test.ts > run105 C durable advisory role key > C11 re-remembering the same (channel, scope, role) refreshes the entry in place
+AssertionError: expected undefined to be 'endpoint-d' // Object.is equality
+
+- Expected: 
+"endpoint-d"
+
++ Received: 
+undefined
+
+ ❯ test/run105-c-durable-advisory-role-key.test.ts:100:42
+     98|       roleId: "role.coder",
+     99|     });
+    100|     expect(entry?.preferredRoutePackage).toBe("endpoint-d");
+       |                                          ^
+    101|     expect(entry?.cachedAtMs).toBe(9_000);
+    102|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/10]⎯
+
+ FAIL  test/run105-c-durable-advisory-role-key.test.ts > run105 C durable advisory role key > C11 the recency bound still ages a role-scoped entry
+AssertionError: expected undefined to be 'stale' // Object.is equality
+
+- Expected: 
+"stale"
+
++ Received: 
+undefined
+
+ ❯ test/run105-c-durable-advisory-role-key.test.ts:121:7
+    119|         maxAgeMs: 500,
+    120|       })?.advisoryState,
+    121|     ).toBe("stale");
+       |       ^
+    122|   });
+    123| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/10]⎯
+
+ FAIL  test/run105-c-durable-advisory-role-key.test.ts > run105 C durable advisory role key > C11 the cache bound is raised to 512 for the per-(role, task) fan-out
+AssertionError: expected undefined to be 'endpoint-519' // Object.is equality
+
+- Expected: 
+"endpoint-519"
+
++ Received: 
+undefined
+
+ ❯ test/run105-c-durable-advisory-role-key.test.ts:142:7
+    140|         roleId: "role.coder",
+    141|       })?.preferredRoutePackage,
+    142|     ).toBe("endpoint-519");
+       |       ^
+    143|     expect(
+    144|       recallTrackBDurableRouteAdvisory({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/10]⎯
+
+ FAIL  test/run105-c-route-advisory-ladder-source.test.ts > run105 C route advisory ladder source > reads one role-task ladder and returns rank-sorted status-filtered rungs
+AssertionError: expected { preferredRoutePackage: null, …(11) } to match object { advisoryState: 'fresh', …(5) }
+(6 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "advisoryLadder": [
+-     {
+-       "endpointId": "endpoint-b",
+-       "rank": 2,
+-       "status": "available",
+-     },
+-     {
+-       "endpointId": "endpoint-c",
+-       "rank": 3,
+-       "status": "available",
+-     },
+-   ],
+-   "advisoryState": "fresh",
+-   "preferredRoutePackage": "endpoint-b",
++   "advisoryLadder": [],
++   "advisoryState": "unavailable",
++   "preferredRoutePackage": null,
+    "roleId": "role.coder",
+    "taskTypeId": "coder.review",
+-   "taxonomyVersion": "taxonomy-v1-alpha.1",
++   "taxonomyVersion": null,
+  }
+
+ ❯ test/run105-c-route-advisory-ladder-source.test.ts:60:20
+     58|     const ctx = context(ladderRead());
+     59|     const result = await readTrackBRouteAdvisoryFromRollout(ctx as nev…
+     60|     expect(result).toMatchObject({
+       |                    ^
+     61|       advisoryState: "fresh",
+     62|       roleId: "role.coder",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/10]⎯
+
+ FAIL  test/run105-c-route-advisory-ladder-source.test.ts > run105 C route advisory ladder source > an all-unavailable ladder is unavailable and never invents a preferred endpoint
+AssertionError: expected 'effective advisory policy unavailable' to match /no admitted rung/i
+
+- Expected: 
+/no admitted rung/i
+
++ Received: 
+"effective advisory policy unavailable"
+
+ ❯ test/run105-c-route-advisory-ladder-source.test.ts:95:27
+     93|       advisoryLadder: [],
+     94|     });
+     95|     expect(result.reason).toMatch(/no admitted rung/i);
+       |                           ^
+     96|   });
+     97| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/10]⎯
+
+ FAIL  test/run105-c-route-advisory-ladder-source.test.ts > run105 C route advisory ladder source > an empty or absent ladder is unavailable with the same bounded reason
+AssertionError: expected 'effective advisory policy unavailable' to match /no admitted rung|route ladder unavai…/i
+
+- Expected: 
+/no admitted rung|route ladder unavailable/i
+
++ Received: 
+"effective advisory policy unavailable"
+
+ ❯ test/run105-c-route-advisory-ladder-source.test.ts:114:29
+    112|         advisoryLadder: [],
+    113|       });
+    114|       expect(result.reason).toMatch(/no admitted rung|route ladder una…
+       |                             ^
+    115|     }
+    116|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/10]⎯
+
+ FAIL  test/run105-c-route-advisory-ladder-source.test.ts > run105 C route advisory ladder source > a rolled-back ladder is refused before any rung is offered
+AssertionError: expected 'effective advisory policy unavailable' to match /rolled back/i
+
+- Expected: 
+/rolled back/i
+
++ Received: 
+"effective advisory policy unavailable"
+
+ ❯ test/run105-c-route-advisory-ladder-source.test.ts:133:27
+    131|       advisoryLadder: [],
+    132|     });
+    133|     expect(result.reason).toMatch(/rolled back/i);
+       |                           ^
+    134|   });
+    135| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/10]⎯
+
+ FAIL  test/run105-r10-per-task-rollback.test.ts > run105 R10/R1 classification gate in the replay tick > a capture without BOTH roleId and taskTypeId is never admitted and is reported once as no_route_classification
+AssertionError: expected [ 'capture:unclassified', …(1) ] to deeply equal [ 'capture:classified' ]
+
+- Expected
++ Received
+
+  [
++   "capture:unclassified",
+    "capture:classified",
+  ]
+
+ ❯ test/run105-r10-per-task-rollback.test.ts:89:24
+     87|       const result = await loop.tick();
+     88|       loop.stop();
+     89|       expect(executed).toEqual(["capture:classified"]);
+       |                        ^
+     90|       const gate = recorded.filter((row) => row.refusalCode === "no_ro…
+     91|       expect(gate).toHaveLength(1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/10]⎯
+

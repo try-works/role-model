@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "role-model",
+    "description": "Connects this harness to an externally running role-model runtime: its aliases, models, and endpoints become selectable routes, and every request carries role_model intent metadata so the runtime can route on it."
+  }
+}

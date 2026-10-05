@@ -1,0 +1,61 @@
+(node:13308) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✖ run105 R2/R7: the ladder write/read round trips through one indexed (role, task) read (106.5366ms)
+✖ run105 R1: the ladder is keyed by (role_id, task_type_id); same role or same task alone never collides (98.8379ms)
+✖ run105 R2: a stale lower-version rewrite is discarded (110.6546ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 0
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 543.8851
+
+✖ failing tests:
+
+test at tests\track-b\run105-route-ladder-store.test.mjs:39:1
+✖ run105 R2/R7: the ladder write/read round trips through one indexed (role, task) read (106.5366ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + undefined
+  - 'role:code-review'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/105-route-learning-matching-scope-activation/tests/track-b/run105-route-ladder-store.test.mjs:46:12)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: 'role:code-review',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\track-b\run105-route-ladder-store.test.mjs:73:1
+✖ run105 R1: the ladder is keyed by (role_id, task_type_id); same role or same task alone never collides (98.8379ms)
+  TypeError: Cannot read properties of undefined (reading 'packId')
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/105-route-learning-matching-scope-activation/tests/track-b/run105-route-ladder-store.test.mjs:106:31)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7)
+
+test at tests\track-b\run105-route-ladder-store.test.mjs:136:1
+✖ run105 R2: a stale lower-version rewrite is discarded (110.6546ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + undefined
+  - false
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/105-route-learning-matching-scope-activation/tests/track-b/run105-route-ladder-store.test.mjs:143:12)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+EXIT=1

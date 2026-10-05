@@ -13,6 +13,7 @@ import { stringify } from "yaml";
 import type { NormalizedCatalog } from "@role-model-router/catalog";
 import { canonicalTaxonomy } from "@role-model-router/core";
 import type { EndpointRegistryResult } from "@role-model-router/endpoint-registry";
+import { resolveOpenAIProviderUpstreamModelId } from "@role-model-router/provider-openai";
 import { createRuntimeObservationBundle } from "@role-model-router/runtime-observability";
 import {
   initializeSqliteMemory,
@@ -105,6 +106,49 @@ function successfulCodexAdmissionReadinessProbe(requestId: string): {
     vendorMetadata: { vendorId: "chatgpt-codex-responses", latencyMs: 1 },
   };
 }
+
+test("Run 96 projects persisted provider evidence attempt identities when compact observations omit execution semantics", () => {
+  expect(
+    bridge.projectPublicProviderAttemptIds({
+      executionSemantics: {
+        providerAttemptIds: [],
+      },
+      providerEvidence: {
+        attemptIds: ["req-run96-projection:attempt:1"],
+      },
+    }),
+  ).toEqual(["req-run96-projection:attempt:1"]);
+});
+
+test("Run 96 F177: public provider attempt projection counts physical dispatches, not semantic labels", () => {
+  // A single successful provider call is described twice inside one
+  // observation: the execution semantics carry a router-owned terminal label
+  // (`attempt:<request>:final`) while the provider evidence carries the real
+  // provider attempt identity. Projecting both double-counts the dispatch and
+  // breaks the bounded Phase 5 provider-call ledger.
+  expect(
+    bridge.projectPublicProviderAttemptIds({
+      executionSemantics: { providerAttemptIds: ["attempt:req-run96-f177:final"] },
+      providerEvidence: { attemptIds: ["req-run96-f177:attempt:1"] },
+    }),
+  ).toEqual(["req-run96-f177:attempt:1"]);
+
+  // Retries still surface every physical attempt, including the failed ones
+  // that both projections agree on.
+  expect(
+    bridge.projectPublicProviderAttemptIds({
+      executionSemantics: {
+        providerAttemptIds: [
+          "req-run96-f177-retry:attempt:1",
+          "attempt:req-run96-f177-retry:final",
+        ],
+      },
+      providerEvidence: {
+        attemptIds: ["req-run96-f177-retry:attempt:1", "req-run96-f177-retry:attempt:2"],
+      },
+    }),
+  ).toEqual(["req-run96-f177-retry:attempt:1", "req-run96-f177-retry:attempt:2"]);
+});
 
 const registry: EndpointRegistryResult = {
   endpoints: [
@@ -202,6 +246,66 @@ function createLlamaSwapRunningModelsVendorScript(input: {
 }
 
 describe("runtime-host-bridge", () => {
+  test("caches the execution catalog projection until catalog, account, or endpoint inputs change", () => {
+    const catalog = {
+      catalogVersion: "test-catalog",
+      source: {
+        vendor: "test",
+        commit: "test",
+        capturedAt: "2026-09-06T00:00:00.000Z",
+        schemaVersion: "test.v1",
+      },
+      providers: [],
+      models: [],
+    } as NormalizedCatalog;
+    const accounts = [{ providerAccountId: "account-1", providerId: "openai" }] as never;
+    const endpoints = [
+      {
+        endpointId: "openai.account-1.global.runtime-only-model",
+        providerAccountId: "account-1",
+        modelId: "openai/runtime-only-model",
+      },
+    ];
+    const cache = (
+      bridge as unknown as {
+        createRuntimeExecutionCatalogCache: () => {
+          get: (
+            catalog: NormalizedCatalog,
+            accounts: typeof accounts,
+            endpoints: typeof endpoints,
+          ) => NormalizedCatalog;
+        };
+      }
+    ).createRuntimeExecutionCatalogCache();
+
+    const first = cache.get(catalog, accounts, endpoints);
+    const repeated = cache.get(catalog, accounts, endpoints);
+    const changedAccountProjection = cache.get(
+      catalog,
+      [{ providerAccountId: "account-1", providerId: "anthropic" }] as never,
+      endpoints,
+    );
+    const changedCatalogProjection = cache.get(
+      { ...catalog, catalogVersion: "test-catalog-2" },
+      accounts,
+      endpoints,
+    );
+    const changedEndpointProjection = cache.get(catalog, accounts, [
+      ...endpoints,
+      {
+        endpointId: "openai.account-1.global.runtime-only-model-2",
+        providerAccountId: "account-1",
+        modelId: "openai/runtime-only-model-2",
+      },
+    ]);
+
+    expect(first).not.toBe(catalog);
+    expect(repeated).toBe(first);
+    expect(changedAccountProjection).not.toBe(first);
+    expect(changedCatalogProjection).not.toBe(first);
+    expect(changedEndpointProjection).not.toBe(first);
+  });
+
   test("projects immutable benchmark evidence from the persisted decision snapshot", () => {
     expect(
       bridge.projectBenchmarkDecisionEvidence(
@@ -663,6 +767,29 @@ describe("runtime-host-bridge", () => {
         }),
       }),
     );
+  });
+
+  test("Run96 Phase5 RED: derives an explicitly labelled catalogue estimate when the provider omits billed cost", () => {
+    expect(
+      typeof (bridge as { resolveBridgeExecutionCost?: unknown }).resolveBridgeExecutionCost,
+    ).toBe("function");
+
+    const cost = (
+      bridge as {
+        resolveBridgeExecutionCost: (input: {
+          vendorCostUsd?: number;
+          inputTokens: number;
+          outputTokens: number;
+          pricing?: { inputPer1M?: number; outputPer1M?: number } | null;
+        }) => unknown;
+      }
+    ).resolveBridgeExecutionCost({
+      inputTokens: 1_000,
+      outputTokens: 500,
+      pricing: { inputPer1M: 2, outputPer1M: 4 },
+    });
+
+    expect(cost).toEqual({ usd: 0.004, source: "catalogue_estimate" });
   });
 
   test("builds QA bootstrap options with router surfaces and complete fixtures", () => {
@@ -1628,10 +1755,15 @@ describe("runtime-host-bridge", () => {
       "req-host-001",
     );
 
-    expect(result).toEqual({
+    /**
+     * Run 98 addendum 58 slice 2: a request that declares no taxonomy intent is classified locally, so the
+     * routing request carries a real taxonomy task (`writer.summarize` for this body) instead of the
+     * capability name `text.chat`.
+     */
+    expect(result).toMatchObject({
       routingRequest: {
         requestId: "req-host-001",
-        taskType: "text.chat",
+        taskType: "writer.summarize",
         requiredCapabilities: ["text.chat", "tools.function_calling"],
         preferredCapabilities: [],
         requiredModalities: ["text"],
@@ -1687,6 +1819,13 @@ describe("runtime-host-bridge", () => {
         },
       },
     });
+    expect(result.taxonomyIdentity).toMatchObject({
+      taskTypeId: "writer.summarize",
+      roleId: "writer",
+      groupId: "communication",
+      source: "runtime_heuristic",
+    });
+    expect(result.routingRequest.roleModelIntent?.source).toBe("runtime_heuristic");
   });
 
   test("maps custom alias endpoint preference into the normal routing-model signal", () => {
@@ -2135,9 +2274,13 @@ describe("runtime-host-bridge", () => {
     );
 
     expect(result.routingRequest.requestedRoleId).toBeUndefined();
+    /**
+     * Run 98 addendum 58 slice 2: the unknown declared task stays advisory metadata and the request is
+     * routed under a derived taxonomy task — never under the declaration's non-taxonomy id.
+     */
     expect(result.routingRequest).toEqual(
       expect.objectContaining({
-        taskType: "text.chat",
+        taskType: result.taxonomyIdentity?.taskTypeId,
         requiredCapabilities: expect.not.arrayContaining(["security.analysis"]),
         preferredCapabilities: expect.arrayContaining([
           "security.analysis",
@@ -2147,6 +2290,11 @@ describe("runtime-host-bridge", () => {
         ]),
       }),
     );
+    expect(result.routingRequest.roleModelIntent?.task?.id).toBe("not_a_role.not_a_task");
+    expect(canonicalTaxonomy.tasks.map((task) => task.id)).toContain(
+      result.routingRequest.taskType,
+    );
+    expect(result.taxonomyIdentity?.source).toBe("runtime_heuristic");
     expect(result.routingDiagnostics?.rolePolicy).toBeUndefined();
   });
 
@@ -4816,6 +4964,20 @@ describe("runtime-host-bridge", () => {
         ],
         excludedTargets: [],
       },
+      /** Run 103 SP3c: every decision carries the scoring-strategy receipt. */
+      strategyResolution: {
+        strategy: "balanced",
+        source: "default",
+        weights: {
+          quality: 0.3,
+          latency: 0.2,
+          throughput: 0.1,
+          cost: 0.2,
+          reliability: 0.15,
+          preference: 0.05,
+        },
+        weightsDigest: "sha256:8c49b853bebd72f4596c926b2fc2181c67f8e2580c387d7ac8fb86457e7db9e9",
+      },
     });
   });
 
@@ -5116,13 +5278,17 @@ describe("runtime-host-bridge", () => {
     );
 
     expect(result.routingRequest).toMatchObject({
-      taskType: "text.chat",
+      /** Run 98 addendum 58 slice 2: the baseline override no longer drops the request to the capability name. */
+      taskType: result.taxonomyIdentity?.taskTypeId,
       requiredCapabilities: ["text.chat", "tools.function_calling"],
       preferredCapabilities: [],
       strategy: "balanced",
       preferLocal: false,
       allowEndpoints: ["moonshot.personal.primary.global.kimi-k2.5"],
     });
+    expect(canonicalTaxonomy.tasks.map((task) => task.id)).toContain(
+      result.routingRequest.taskType,
+    );
     expect(result.routingModel).toBeUndefined();
     expect(result.routingDiagnostics).toEqual({
       aliasResolution: {
@@ -5144,6 +5310,20 @@ describe("runtime-host-bridge", () => {
             reasons: ["missing_capability.tools.function_calling"],
           },
         ],
+      },
+      /** Run 103 SP3c: every decision carries the scoring-strategy receipt. */
+      strategyResolution: {
+        strategy: "balanced",
+        source: "default",
+        weights: {
+          quality: 0.3,
+          latency: 0.2,
+          throughput: 0.1,
+          cost: 0.2,
+          reliability: 0.15,
+          preference: 0.05,
+        },
+        weightsDigest: "sha256:8c49b853bebd72f4596c926b2fc2181c67f8e2580c387d7ac8fb86457e7db9e9",
       },
     });
   });
@@ -5244,11 +5424,18 @@ describe("runtime-host-bridge", () => {
 
     expect(result.routingRequest).toMatchObject({
       requestedRoleId: "qa.reviewer",
-      taskType: "text.chat",
+      /**
+       * Run 98 addendum 58 slice 2: the requested role policy still applies, and the request is routed under a
+       * derived taxonomy task rather than the capability name the legacy role fixture lists.
+       */
+      taskType: result.taxonomyIdentity?.taskTypeId,
       requiredCapabilities: ["text.chat", "tools.function_calling"],
       preferredCapabilities: [],
       needsTools: true,
     });
+    expect(canonicalTaxonomy.tasks.map((task) => task.id)).toContain(
+      result.routingRequest.taskType,
+    );
     expect(result.executionRequest.messages).toEqual([
       {
         role: "system",
@@ -6045,6 +6232,20 @@ describe("runtime-host-bridge", () => {
           },
         ],
       },
+      /** Run 103 SP3c: every decision carries the scoring-strategy receipt. */
+      strategyResolution: {
+        strategy: "balanced",
+        source: "default",
+        weights: {
+          quality: 0.3,
+          latency: 0.2,
+          throughput: 0.1,
+          cost: 0.2,
+          reliability: 0.15,
+          preference: 0.05,
+        },
+        weightsDigest: "sha256:8c49b853bebd72f4596c926b2fc2181c67f8e2580c387d7ac8fb86457e7db9e9",
+      },
     });
   });
 
@@ -6089,6 +6290,11 @@ describe("runtime-host-bridge", () => {
                 preferLocal?: boolean;
               };
             };
+            strategyResolution?: {
+              strategy: string;
+              source: string;
+              weightsDigest: string;
+            };
           };
         };
       }
@@ -6132,6 +6338,11 @@ describe("runtime-host-bridge", () => {
           strategy: "quality",
           preferLocal: true,
         },
+      },
+      /** Run 103 R3: the receipt names the strategy that actually ranked the request. */
+      strategyResolution: {
+        strategy: "quality",
+        source: "controller",
       },
     });
   });
@@ -6200,6 +6411,20 @@ describe("runtime-host-bridge", () => {
           "moonshot.personal.primary.global.kimi-k2.5",
         ],
         excludedTargets: [],
+      },
+      /** Run 103 SP3c: every decision carries the scoring-strategy receipt. */
+      strategyResolution: {
+        strategy: "balanced",
+        source: "default",
+        weights: {
+          quality: 0.3,
+          latency: 0.2,
+          throughput: 0.1,
+          cost: 0.2,
+          reliability: 0.15,
+          preference: 0.05,
+        },
+        weightsDigest: "sha256:8c49b853bebd72f4596c926b2fc2181c67f8e2580c387d7ac8fb86457e7db9e9",
       },
     });
   });
@@ -7247,11 +7472,15 @@ describe("runtime-host-bridge", () => {
 
     expect(result.routingRequest).toMatchObject({
       requestedRoleId: "qa.reviewer",
-      taskType: "text.chat",
+      /** Run 98 addendum 58 slice 2 (responses path): the effective taxonomy task, role policy intact. */
+      taskType: result.taxonomyIdentity?.taskTypeId,
       requiredCapabilities: ["text.chat", "tools.function_calling"],
       preferredCapabilities: [],
       needsTools: true,
     });
+    expect(canonicalTaxonomy.tasks.map((task) => task.id)).toContain(
+      result.routingRequest.taskType,
+    );
     expect(result.executionRequest.messages).toEqual([
       {
         role: "system",
@@ -7420,6 +7649,7 @@ describe("runtime-host-bridge", () => {
             body: Record<string, unknown>,
             requestId: string,
           ) => Promise<unknown>;
+          readHealthStatus: () => Promise<Record<string, unknown>>;
         }) => Promise<{ port: number; close(): Promise<void> }>;
       }
     ).startBridgeServer({
@@ -7429,6 +7659,12 @@ describe("runtime-host-bridge", () => {
       executeChatCompletions: async () => {
         throw new Error("not used");
       },
+      readHealthStatus: async () => ({
+        status: "healthy",
+        executionMode: "decision_only",
+        vendors: {},
+        inactiveVendors: [],
+      }),
     });
 
     try {
@@ -7436,6 +7672,7 @@ describe("runtime-host-bridge", () => {
       expect(healthResponse.status).toBe(200);
       expect(await healthResponse.json()).toEqual({
         status: "healthy",
+        ready: true,
         executionMode: "decision_only",
         vendors: {},
         inactiveVendors: [],
@@ -7578,6 +7815,8 @@ describe("runtime-host-bridge", () => {
           ) => Promise<unknown>;
           readRuntimeConfig: () => Promise<{
             config: {
+              executionMode: string;
+              routingStrategy: string;
               modelAliases: readonly {
                 aliasId: string;
                 modelIds: readonly string[];
@@ -7595,6 +7834,8 @@ describe("runtime-host-bridge", () => {
       },
       readRuntimeConfig: async () => ({
         config: {
+          executionMode: "remote_only",
+          routingStrategy: "baseline",
           modelAliases: [
             {
               aliasId: "gpt-5.4",
@@ -7637,6 +7878,109 @@ describe("runtime-host-bridge", () => {
           }),
         }),
       );
+    } finally {
+      await server.close();
+    }
+  });
+
+  test("serves the downstream provider config when readRuntimeConfig returns an already-normalized config", async () => {
+    // The runtime's readRuntimeConfig returns `currentUnifiedRuntimeConfig`, which is the
+    // NORMALIZED form: `agentStrategies` and `workloads` are arrays, not name-keyed mappings.
+    // Re-normalizing that value must not 500 the discovery route.
+    const server = await (
+      bridge as {
+        startBridgeServer: (options: {
+          host: string;
+          port: number;
+          registry: EndpointRegistryResult;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<unknown>;
+          readRuntimeConfig: () => Promise<{
+            config: {
+              executionMode: string;
+              routingStrategy: string;
+              modelAliases: readonly {
+                aliasId: string;
+                modelIds: readonly string[];
+              }[];
+              agentStrategies: readonly {
+                name: string;
+                kind: "role";
+                roleId: string | null;
+                scoringStrategy: string | null;
+                routingMode: string | null;
+                computePreference: string | null;
+                modelIds: readonly string[];
+                requiredCapabilities: readonly string[];
+                violations: readonly string[];
+              }[];
+              workloads: readonly {
+                name: string;
+                kind: "workload";
+                roleId: string | null;
+                scoringStrategy: string | null;
+                routingMode: string | null;
+                computePreference: string | null;
+                modelIds: readonly string[];
+                requiredCapabilities: readonly string[];
+                violations: readonly string[];
+              }[];
+            };
+          }>;
+        }) => Promise<{ port: number; close(): Promise<void> }>;
+      }
+    ).startBridgeServer({
+      host: "127.0.0.1",
+      port: 0,
+      registry,
+      executeChatCompletions: async () => {
+        throw new Error("not used");
+      },
+      readRuntimeConfig: async () => ({
+        config: {
+          executionMode: "remote_only",
+          routingStrategy: "hybrid",
+          modelAliases: [{ aliasId: "hybrid.remote-only", modelIds: ["chatgpt/gpt-5.6-luna"] }],
+          agentStrategies: [
+            {
+              name: "tester",
+              kind: "role",
+              roleId: "tester",
+              scoringStrategy: "quality",
+              routingMode: "baseline",
+              computePreference: null,
+              modelIds: [],
+              requiredCapabilities: [],
+              violations: [],
+            },
+          ],
+          workloads: [
+            {
+              name: "batch",
+              kind: "workload",
+              roleId: null,
+              scoringStrategy: "cost",
+              routingMode: null,
+              computePreference: null,
+              modelIds: [],
+              requiredCapabilities: [],
+              violations: [],
+            },
+          ],
+        },
+      }),
+    });
+
+    try {
+      const modelsResponse = await fetch(`http://127.0.0.1:${server.port}/v1/models`);
+      expect(modelsResponse.status).toBe(200);
+
+      const providerResponse = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/downstream/openai`,
+      );
+      expect(providerResponse.status).toBe(200);
     } finally {
       await server.close();
     }
@@ -8424,6 +8768,7 @@ describe("runtime-host-bridge", () => {
         routingDecisionId: "route-001",
         selectedEndpointId: "cli.local.coder",
         selectedModelId: "gpt-5.4",
+        providerAttemptIds: ["attempt:req-router-001:final"],
         fallbackEndpointIds: ["moonshot.personal.primary.global.kimi-k2.5"],
         strategyLabel: "balanced",
         scoredCandidates: [
@@ -8900,6 +9245,7 @@ describe("runtime-host-bridge", () => {
         routingDecisionId: "route-001",
         selectedEndpointId: "cli.local.coder",
         selectedModelId: "gpt-5.4",
+        providerAttemptIds: ["attempt:req-router-001:final"],
         fallbackEndpointIds: ["moonshot.personal.primary.global.kimi-k2.5"],
         strategyLabel: "balanced",
         scoredCandidates: [
@@ -10550,6 +10896,15 @@ describe("runtime-host-bridge", () => {
     expect(
       typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
     ).toBe("function");
+    /**
+     * Run 98 addendum 40 (L3) serves routing preparation from a short-TTL snapshot keyed by the floor of the
+     * routing time, so two requests inside one tick share one profile read. This test asserts that the second
+     * request sees the profile the first one produced, which is the per-request freshness contract: the
+     * documented escape hatch (`ROLE_MODEL_ROUTING_PREP_CACHE_TTL_MS=0`) makes the snapshot a per-request read
+     * for this backend. The previous value is restored before the test ends.
+     */
+    const originalRoutingPrepCacheTtl = process.env.ROLE_MODEL_ROUTING_PREP_CACHE_TTL_MS;
+    process.env.ROLE_MODEL_ROUTING_PREP_CACHE_TTL_MS = "0";
 
     const backend = await (
       bridge as {
@@ -10686,6 +11041,11 @@ describe("runtime-host-bridge", () => {
         },
       },
     });
+    if (originalRoutingPrepCacheTtl === undefined) {
+      process.env.ROLE_MODEL_ROUTING_PREP_CACHE_TTL_MS = undefined;
+    } else {
+      process.env.ROLE_MODEL_ROUTING_PREP_CACHE_TTL_MS = originalRoutingPrepCacheTtl;
+    }
   });
 
   test("persists routing-mode override and rewrite-skipped diagnostics for exact-model runtime-backed chat requests", async () => {
@@ -11215,7 +11575,8 @@ describe("runtime-host-bridge", () => {
       expect.arrayContaining([
         expect.objectContaining({
           requestId,
-          requestClass: "live_request",
+          // Run 104 / R14: the persisted class is `live`; legacy `live_request` rows stay readable.
+          requestClass: "live",
         }),
       ]),
     );
@@ -15836,9 +16197,20 @@ describe("runtime-host-bridge", () => {
 
       expect(followUpResult.endpointId).toBe("moonshot.personal.z-backup.global.kimi-k2.5");
       expect(followUpResult.outputText).toBe("backup endpoint handled the request");
+      /**
+       * Run 98 addendum 43 S5 (pre-existing red gate): the follow-up request is allowed to select the
+       * primary again. One transient timeout does not exclude an endpoint — `recordExecutionCircuitFailure`
+       * puts a first connection/timeout failure in `probation`, and `evaluateExecutionCircuitEligibility`
+       * answers `eligible: true, probeRequired: false` for probation, so the recorded cooldown is a
+       * watch-and-escalate decision rather than a removal. Run 96's R27 evidence states the intended
+       * escalation: "keeps the first connection failure in probation then uses 5s, 15s, 60s, and 5m opens".
+       * The follow-up therefore hits the primary's quota response and reroutes to the backup, which is why
+       * the sequence has four entries rather than three.
+       */
       expect(seenAuthorizations).toEqual([
         "Bearer moonshot-primary-live-key",
         "Bearer moonshot-backup-live-key",
+        "Bearer moonshot-primary-live-key",
         "Bearer moonshot-backup-live-key",
       ]);
     } finally {
@@ -16041,6 +16413,14 @@ describe("runtime-host-bridge", () => {
             statusCode: 402,
             message: "Insufficient Balance",
           },
+          providerExecutions: [
+            {
+              attemptId: `attempt:${requestId}:failure`,
+              providerId: "deepseek",
+              adapterFamily: "ai-sdk-openai-compatible",
+              statusCode: 402,
+            },
+          ],
         }),
       ]);
       expect(postObservations).toEqual([
@@ -16416,10 +16796,15 @@ describe("runtime-host-bridge", () => {
         expect.arrayContaining([
           expect.objectContaining({
             endpointId: endpoint.endpointId,
-            status: "degraded",
-            healthStatus: "degraded",
-            routingEligible: false,
-            benchmarkEligible: false,
+            status: "active",
+            healthStatus: "healthy",
+            routingEligible: true,
+            benchmarkEligible: true,
+            executionCooldown: expect.objectContaining({
+              active: true,
+              circuitState: "open",
+              failureCount: 2,
+            }),
           }),
         ]),
       );
@@ -17940,6 +18325,26 @@ describe("runtime-host-bridge", () => {
         hasOtherEligibleEndpoint: true,
       }),
     ).toBe(false);
+    expect(
+      shouldRetry({
+        retryable: true,
+        errorClass: "upstream_connection_error",
+        statusCode: 503,
+        alreadyRetried: false,
+        fallbackEligible: true,
+        hasOtherEligibleEndpoint: false,
+      }),
+    ).toBe(true);
+    expect(
+      shouldRetry({
+        retryable: true,
+        errorClass: "upstream_connection_error",
+        statusCode: 503,
+        alreadyRetried: true,
+        fallbackEligible: true,
+        hasOtherEligibleEndpoint: false,
+      }),
+    ).toBe(false);
   });
 
   test("does not place Codex subscription endpoints on cooldown for invalid_request failures", async () => {
@@ -18241,7 +18646,9 @@ describe("runtime-host-bridge", () => {
 
           if (url === "https://api.deepseek.com/v1/chat/completions") {
             expect(body).toMatchObject({
-              model: "deepseek-v4-flash",
+              // DeepSeek advertises the renamed first-party flash id; the wire
+              // request must follow the provider, not the historical catalog id.
+              model: resolveOpenAIProviderUpstreamModelId("deepseek/deepseek-v4-flash"),
             });
             return new Response(
               JSON.stringify({
@@ -18580,7 +18987,7 @@ describe("runtime-host-bridge", () => {
       expect(providerRequests).toEqual([
         {
           authorization: "Bearer router-owned-test-secret",
-          model: "deepseek-v4-flash",
+          model: resolveOpenAIProviderUpstreamModelId("deepseek/deepseek-v4-flash"),
         },
       ]);
     } finally {
@@ -19854,7 +20261,7 @@ describe("runtime-host-bridge", () => {
               providerRequestBodies.push(requestBody);
               expect(requestBody).toEqual(
                 expect.objectContaining({
-                  model: deepseekModelId.split("/").slice(1).join("/"),
+                  model: resolveOpenAIProviderUpstreamModelId(deepseekModelId),
                 }),
               );
               if (providerRequestCount === 1) {
@@ -22192,7 +22599,9 @@ describe("runtime-host-bridge", () => {
         expect.arrayContaining([
           expect.objectContaining({
             clientRequestId,
-            requestClass: "live_request",
+            // Run 104 / R14: the telemetry writer persists the declared class (`live`) instead of the legacy
+            // `live_request`; readback still accepts the legacy value for pre-migration rows.
+            requestClass: "live",
             reasoningEffort: null,
             effortSource: "none",
           }),
@@ -22200,7 +22609,7 @@ describe("runtime-host-bridge", () => {
             clientRequestId: capabilityClientRequestId,
             errorClass: "no_eligible_target",
             modelId: "deepseek/chat-capture-v1",
-            requestClass: "live_request",
+            requestClass: "live",
             requestedModelId: "deepseek/chat-capture-v1",
             requestOperation: "chat",
             dimensions: expect.objectContaining({

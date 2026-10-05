@@ -1,0 +1,9 @@
+Run 96 canonical TDD receipt
+acceptanceCriterionId=AC-R33-07
+proofFamily=alias-pool-eligibility-diagnostic
+phase=CUMULATIVE GATE
+result=PASS
+testPath=public:role-model-router/apps/runtime-host-bridge/test/alias-capability-routing.test.ts
+assertionTitle=reports an empty alias pool before attempting capability eligibility
+command=corepack pnpm --dir role-model-router/apps/runtime-host-bridge run test:router
+cumulativeGate=PASS: the public router cumulative receipt records the alias/index owning regressions green; this remains source/build/test evidence only.

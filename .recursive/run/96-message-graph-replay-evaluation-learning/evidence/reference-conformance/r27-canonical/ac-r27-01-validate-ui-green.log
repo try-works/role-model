@@ -1,0 +1,21 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/96-message-graph-replay-evaluation-learning/role-model-router/apps/runtime-host-bridge
+
+(node:57792) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/validate-ui.test.ts > runRuntimeUiValidation > [AC-R27-01] accepts a degraded health response while bootstrap is already idle 17ms
+ ↓ test/validate-ui.test.ts > runRuntimeUiValidation > validates runtime config reads and the main control-plane mutations
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 1 skipped (2)
+   Start at  06:13:09
+   Duration  5.90s (transform 3.99s, setup 0ms, collect 5.15s, tests 20ms, environment 0ms, prepare 286ms)
+
+Run 96 canonical TDD receipt
+acceptanceCriterionId=AC-R27-01
+proofFamily=r27-ac-r27-01-validate-ui-bootstrap-readiness
+phase=focused GREEN
+result=PASS
+testPath=public:role-model-router/apps/runtime-host-bridge/test/validate-ui.test.ts
+assertionTitle=[AC-R27-01] accepts a degraded health response while bootstrap is already idle
+command=corepack pnpm --dir role-model-router/apps/runtime-host-bridge exec vitest run test/validate-ui.test.ts -t "[AC-R27-01] accepts a degraded health response while bootstrap is already idle" --reporter=verbose

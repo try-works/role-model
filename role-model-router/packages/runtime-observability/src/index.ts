@@ -11,6 +11,21 @@ export type RuntimeRoutingMode = "baseline" | "difficulty" | "controller" | "hyb
 
 export interface RuntimeRoutingDiagnostics {
   readonly retrievalReceiptId?: string;
+  /**
+   * Run 103 / SP3c: the scoring-strategy receipt - which strategy was applied, who chose it, the
+   * weights digest, and any override a pinned posture discarded.
+   */
+  readonly strategyResolution?: {
+    readonly strategy: string;
+    readonly source: string;
+    /** Run 103 R2: the effective weights, so a decision stays auditable after the profile changes. */
+    readonly weights?: Readonly<Record<string, number>>;
+    readonly weightsDigest: string;
+    readonly discarded?: {
+      readonly source: string;
+      readonly strategy: string;
+    };
+  };
   readonly aliasResolution?: {
     readonly requestedModel: string;
     readonly aliasId: string;
@@ -23,6 +38,23 @@ export interface RuntimeRoutingDiagnostics {
       readonly suggestedModelIds: readonly string[];
       readonly message: string;
     }[];
+  };
+  /**
+   * Run 103 / SP5g: the binding a posture alias handed the request - the declared role next to the
+   * alias preset it may have overridden, the required capabilities it added and the scoring
+   * strategy it carried.
+   */
+  readonly aliasPostureBinding?: {
+    readonly aliasId: string;
+    readonly name: string;
+    readonly kind: "role" | "workload";
+    readonly declaredRoleId: string | null;
+    readonly presetRoleId: string | null;
+    readonly roleId: string | null;
+    readonly roleSource: "declared" | "preset" | "none";
+    readonly requiredCapabilities: readonly string[];
+    readonly preferLocal: boolean;
+    readonly scoringStrategy: string | null;
   };
   readonly capabilityEligibility?: {
     readonly requiredInputModalities: readonly string[];
@@ -315,7 +347,14 @@ export interface RuntimeExecutionCooldownReceipt {
     | "provider_5xx"
     | "rate_limit"
     | "auth"
-    | "quota";
+    | "quota"
+    /**
+     * Run 101 addendum 45. An endpoint that answered "this model is not supported for this account" is a
+     * durable capability fact about the (account, model) pair, not a request defect, so it has its own
+     * category and its own bounded circuit ladder. Operators read it here; the router skips the pair until
+     * the record clears on a successful probe.
+     */
+    | "model_unavailable";
   readonly sequenceStartedAtMs?: number;
   readonly nextProbeAtMs?: number;
   readonly retryAfterMs?: number;
@@ -388,6 +427,18 @@ export interface RuntimeParameterSanitizationDecision {
   readonly vendorId: string;
 }
 
+/**
+ * Run 104 / R14 (addendum-03): the persisted traffic-class vocabulary carried into the observation sample.
+ * `unknown` is deliberately absent - an unclassified execution is `live`, matching the execution plane default.
+ */
+export type ObservedTrafficClass = "live" | "replay" | "evaluation" | "benchmark" | "probe";
+
+export function toObservedSourceType(
+  trafficClass?: ObservedTrafficClass | null,
+): ObservedPerformanceSample["source_type"] {
+  return trafficClass ?? "live";
+}
+
 export interface RuntimeObservationBundleInput {
   readonly decision: {
     readonly request_id: string;
@@ -400,6 +451,11 @@ export interface RuntimeObservationBundleInput {
     readonly profile_revision?: string | null;
   };
   readonly clientRequestId?: string;
+  /**
+   * Run 104 / R14 (addendum-03): the request's declared traffic class. The observation sample's `source_type`
+   * carries it so the telemetry row and the observation row agree; an unclassified execution is `live`.
+   */
+  readonly trafficClass?: ObservedTrafficClass;
   /** Explicit request effort; null means the provider-default instance. */
   readonly reasoningEffort?: string | null;
   readonly effortSource?: RuntimeEffortSource;
@@ -421,6 +477,13 @@ export interface RuntimeObservationBundleInput {
     readonly executions: readonly ToolRegistryExecution[];
   };
   readonly telemetrySnapshot?: RuntimeTelemetrySnapshot;
+  // Run 98 addendum 40 (L1): `execution.usageEvent.latency_ms` is the provider's response-header
+  // time. This carries the rest of the turn the client waited for so telemetry can report both.
+  readonly latencyBreakdown?: {
+    readonly providerHeaderMs?: number | null;
+    readonly providerCompletionMs?: number | null;
+    readonly timeToFirstTokenMs?: number | null;
+  };
   readonly telemetryConfig?: {
     readonly samplingRate?: number;
     readonly retentionTtlHours?: number;
@@ -429,6 +492,8 @@ export interface RuntimeObservationBundleInput {
     readonly sourceClient?: string;
     readonly executionFamily?: string;
     readonly adapterFamily?: string;
+    /** Opaque router-owned provider attempts, never provider content or credentials. */
+    readonly providerAttemptIds?: readonly string[];
     readonly payloadBytes?: {
       readonly ingress?: number;
       readonly translated?: number;
@@ -479,6 +544,8 @@ export interface RuntimeObservationBundle {
   readonly contextEnvelope: RuntimeContextEnvelopeSummary;
   readonly trace: RoutedExecutionResult["trace"];
   readonly usageEvent: RoutedExecutionResult["usageEvent"];
+  /** Run 98 addendum 40 (L1): provider header/completion/first-token breakdown for this request. */
+  readonly latencyBreakdown?: RuntimeObservationBundleInput["latencyBreakdown"];
   readonly observedPerformance: {
     readonly endpointVersion: string;
     readonly sample: ObservedPerformanceSample;
@@ -540,6 +607,8 @@ export interface RuntimeObservationBundle {
     readonly sourceClient?: string;
     readonly executionFamily: string;
     readonly adapterFamily: string;
+    /** Opaque router-owned provider attempts, never provider content or credentials. */
+    readonly providerAttemptIds?: readonly string[];
     readonly payloadBytes: {
       readonly ingress: number;
       readonly translated: number;
@@ -601,6 +670,38 @@ export interface RuntimeObservationBundle {
   };
 }
 
+/**
+ * Run 98 addendum 50 — the observed-cost signal is a rate per 1,000 tokens.
+ *
+ * The sample used to publish `usageEvent.cost_estimate` directly, which is the request's cost, not a rate. The
+ * router's cost metric reads `cost_per_1k_tokens_est`, so a request total of `0.000735` was scored as if 1,000
+ * tokens cost `$0.000735`. The rate is now derived from the request cost and its tokens, falling back to the
+ * catalog rate when usage is unavailable.
+ */
+export function resolveObservedCostPer1kTokens(input: {
+  readonly requestCostUsd?: number | null;
+  readonly inputTokens?: number | null;
+  readonly outputTokens?: number | null;
+  readonly catalogCostPer1k?: number | null;
+}): number | undefined {
+  const requestCostUsd = input.requestCostUsd;
+  const totalTokens =
+    (Number.isSafeInteger(input.inputTokens) ? (input.inputTokens as number) : 0) +
+    (Number.isSafeInteger(input.outputTokens) ? (input.outputTokens as number) : 0);
+  if (
+    typeof requestCostUsd === "number" &&
+    Number.isFinite(requestCostUsd) &&
+    requestCostUsd > 0 &&
+    totalTokens > 0
+  ) {
+    return (requestCostUsd / totalTokens) * 1000;
+  }
+  const catalogCostPer1k = input.catalogCostPer1k;
+  return typeof catalogCostPer1k === "number" && Number.isFinite(catalogCostPer1k)
+    ? catalogCostPer1k
+    : undefined;
+}
+
 function deriveEndpointVersion(execution: RoutedExecutionResult): string {
   const identity = execution.target.candidate.identity as {
     endpoint_version?: string;
@@ -625,7 +726,7 @@ function buildObservedPerformanceSample(
     model_id: identity.model_id,
     reasoning_effort: effort.reasoningEffort,
     effort_source: effort.effortSource,
-    source_type: "live_request",
+    source_type: toObservedSourceType(input.trafficClass),
     ...(input.routingDiagnostics?.difficultyRouting?.difficulty
       ? { difficulty_bucket: input.routingDiagnostics.difficultyRouting.difficulty }
       : {}),
@@ -639,7 +740,12 @@ function buildObservedPerformanceSample(
               1000,
           )
         : undefined,
-    cost_per_1k_tokens_est: input.execution.usageEvent.cost_estimate,
+    cost_per_1k_tokens_est: resolveObservedCostPer1kTokens({
+      requestCostUsd: input.execution.usageEvent.cost_estimate,
+      inputTokens: input.execution.normalized.usage.inputTokens,
+      outputTokens: input.execution.normalized.usage.outputTokens,
+      catalogCostPer1k: input.routingDiagnostics?.catalogEconomics?.cost_per_1k_tokens_est ?? null,
+    }),
     failure: Boolean(input.execution.normalized.errorClass),
     error_class: input.execution.normalized.errorClass ?? undefined,
     request_id: input.decision.request_id,
@@ -869,6 +975,16 @@ function buildExecutionSemantics(
     input.execution.target.adapterFamily;
   const adapterFamily =
     input.executionSemantics?.adapterFamily ?? input.execution.target.adapterFamily;
+  // Provider attempt identifiers are opaque router-owned correlation handles.
+  // Keep them in the bounded observation bundle so downstream persistence and
+  // the runtime UI can explain retries/fallbacks without retaining provider
+  // payloads or credentials.
+  const providerAttemptIds = input.executionSemantics?.providerAttemptIds
+    ?.filter(
+      (attemptId): attemptId is string =>
+        typeof attemptId === "string" && attemptId.trim().length > 0,
+    )
+    .slice(0, 64);
   const providerCanonicalBytes =
     readMeasuredPayloadBytes(input.executionSemantics?.payloadBytes?.providerCanonical) ??
     measurePayloadBytes(input.execution.requestCapture.body);
@@ -901,6 +1017,7 @@ function buildExecutionSemantics(
       : {}),
     executionFamily,
     adapterFamily,
+    ...(providerAttemptIds && providerAttemptIds.length > 0 ? { providerAttemptIds } : {}),
     payloadBytes: {
       ingress:
         readMeasuredPayloadBytes(input.executionSemantics?.payloadBytes?.ingress) ??
@@ -1056,6 +1173,11 @@ export function createRuntimeObservationBundle(
     nowMs: currentSample.timestamp_ms,
   });
   if (!profile) {
+    // Temporary diagnostic (addendum 14 follow-on): name the traffic class and source type that
+    // produced a null profile so the replay observation path can be corrected.
+    console.error(
+      `[run104-observation] profile null: trafficClass=${String(input.trafficClass)} source_type=${currentSample.source_type} endpoint=${input.decision.chosen_endpoint_id}`,
+    );
     throw new Error("A live runtime observation must produce an operational profile.");
   }
   const capturePolicy = buildCapturePolicyReceipt(input.maintenancePolicy, input.capturePolicy);
@@ -1093,6 +1215,7 @@ export function createRuntimeObservationBundle(
       reasoning_effort: effort.reasoningEffort,
       effort_source: effort.effortSource,
     },
+    ...(input.latencyBreakdown ? { latencyBreakdown: input.latencyBreakdown } : {}),
     observedPerformance: {
       endpointVersion,
       sample: currentSample,

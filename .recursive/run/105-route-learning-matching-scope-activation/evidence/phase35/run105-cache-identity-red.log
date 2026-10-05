@@ -1,0 +1,78 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-host-bridge
+
+(node:11612) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | test/run105-review-advisory-cache.test.ts > run105 review exact advisory cache > classified live backend never resurrects transient advisory after missing
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2,CAPABILITY_MISSING=1 request=req-cache-missing alias=- model=- effort=- pass=live allow=[openai.personal.codex-subscription.global.gpt-5.4] denied=[test.capture.chat-v1,cli.local.coder]
+
+stderr | test/run105-review-advisory-cache.test.ts > run105 review exact advisory cache > classified live backend never resurrects transient advisory after missing
+[run99] live advisory miss: stage=S3 channel=development scope=run105-review-advisory-cache
+
+stdout | test/run105-review-advisory-cache.test.ts > run105 review exact advisory cache > classified live backend never resurrects transient advisory after stopped
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2,CAPABILITY_MISSING=1 request=req-cache-stopped alias=- model=- effort=- pass=live allow=[openai.personal.codex-subscription.global.gpt-5.4] denied=[test.capture.chat-v1,cli.local.coder]
+
+stdout | test/run105-review-advisory-cache.test.ts > run105 review exact advisory cache > classified live backend never resurrects transient advisory after excluded
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2,CAPABILITY_MISSING=1 request=req-cache-excluded alias=- model=- effort=- pass=live allow=[openai.personal.codex-subscription.global.gpt-5.4] denied=[test.capture.chat-v1,cli.local.coder]
+
+ ❯ test/run105-review-advisory-cache.test.ts (11 tests | 1 failed) 6335ms
+   ✓ run105 review exact advisory cache > classified live backend never resurrects transient advisory after missing  1948ms
+   ✓ run105 review exact advisory cache > classified live backend never resurrects transient advisory after stopped  2224ms
+   ✓ run105 review exact advisory cache > classified live backend never resurrects transient advisory after excluded  2126ms
+   ✓ run105 review exact advisory cache > same role retains two tasks without overwriting or borrowing 2ms
+   ✓ run105 review exact advisory cache > same task retains different roles without borrowing 1ms
+   ✓ run105 review exact advisory cache > channel and runtime scope isolate identical pairs 1ms
+   ✓ run105 review exact advisory cache > only genuinely no-role/no-task recall can use legacy entry 1ms
+   ✓ run105 review exact advisory cache > re-remember refreshes actual recency beyond 512 entries 4ms
+   ✓ run105 review exact advisory cache > source wrapper forwards explicit effective stage and cohort 8ms
+   × run105 review exact advisory cache > publisher role cannot relabel a fresh advisory learned for another role 15ms
+     → expected { …(13) } to be null
+   ✓ run105 review exact advisory cache > source role and task persist when publisher omits redundant role input 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run105-review-advisory-cache.test.ts > run105 review exact advisory cache > publisher role cannot relabel a fresh advisory learned for another role
+AssertionError: expected { …(13) } to be null
+
+- Expected: 
+null
+
++ Received: 
+{
+  "advisoryId": "pack-a",
+  "advisoryLadder": [
+    {
+      "endpointId": "endpoint-a",
+      "rank": 1,
+      "status": "available",
+    },
+  ],
+  "advisoryState": "fresh",
+  "cachedAtMs": 1000,
+  "candidateId": "candidate-a",
+  "cohortPercent": 25,
+  "confidence": 0.82,
+  "preferredRoutePackage": "endpoint-a",
+  "reason": null,
+  "revalidationDue": false,
+  "roleId": "writer",
+  "taskTypeId": "coder.review",
+  "taxonomyVersion": "1.0.0-alpha.1",
+}
+
+ ❯ test/run105-review-advisory-cache.test.ts:129:46
+    127|   test("publisher role cannot relabel a fresh advisory learned for ano…
+    128|     rememberTrackBDurableRouteAdvisory({ channel, scope, roleId: "writ…
+    129|     expect(recall("writer", "coder.review")).toBeNull();
+       |                                              ^
+    130|     expect(recall("coder", "coder.review")).toMatchObject(pair);
+    131|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 10 passed (11)
+   Start at  16:50:20
+   Duration  19.18s (transform 7.81s, setup 0ms, collect 11.82s, tests 6.33s, environment 1ms, prepare 359ms)
+

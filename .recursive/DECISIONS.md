@@ -14,6 +14,9 @@
 - `86-runtime-ui-rm3-design-system-frontend` - RM v3 design system + `@role-model/ui` kit migration for router runtime-ui; Paper `4-0`/`5-0`/`6-0`/`7-0` IA; FD#15 config→strategy; SP8 floor green; hybrid Phase 5 QA on rebuilt `:3470` with human Paper sign-off; operator polish P1–P8 (Phases 0-8). Folder: `.recursive/run/86-runtime-ui-rm3-design-system-frontend/`. Soft-closes run `60-runtime-ui-paper-linear-review-alignment` as live styling authority for migrated surfaces (Linear/Paper-Linear historical).
 - `92-configured-model-pool-benchmark-convergence` - Endpoint-variant-exact membership revision token stamped at persist/read/portfolio/decision time; honest null candidate-space (no synthetic 0/0%); membership-revision + stale benchmark quarantine; destructive-confirm final-controller eject; decision revision; transactional benchmark clear (Phases 0-8, strict TDD, agent-operated QA on rebuilt `:3501`). Folder: `.recursive/run/92-configured-model-pool-benchmark-convergence/`. Soft-closes run 76's membership-authority contract with a revision-token convergence wave.
 
+- `103-agent-strategy-and-scoring-strategy` - Routing posture split (`routing.mode` + `routing.scoring_strategy` + `pin_weights` + `weights`), real scoring strategies, agent-strategy and workload postures with `<name>.<scope>` aliases, strategy/latency/alias receipts on every decision, measured-latency effective metric, three runtime-ui surfaces; strict TDD, two delegated review rounds, agent-operated rebuilt-runtime pi-CLI QA on `:3458` (Phases 0-8). Folder: `.recursive/run/103-agent-strategy-and-scoring-strategy/`.
+- `105-route-learning-matching-scope-activation` - Stage-3 matching-scope activation: per-(role,task) ranked endpoint ladder (aggregation, store, advisory walk, dispatch/activation/rollback, Packs UI) plus the Phase 3.5 classification-alignment repair (capture/advisory reads the authoritative taxonomy identity, not runtime-policy ids); strict TDD, delegated review + re-review, agent-operated rebuilt-runtime pi-CLI QA on `:3458` (Phases 0-8). Folder: `.recursive/run/105-route-learning-matching-scope-activation/`.
+
 ## Run: `92-configured-model-pool-benchmark-convergence`
 
 Date: `2026-08-21`
@@ -634,3 +637,229 @@ Date: `2026-08-23`
 - This repair does not itself publish a candidate or authorize main. CI must
   build a new artifact with exact commit identity, then Stage UAT and
   acceptance must pass.
+
+## Run: `103-agent-strategy-and-scoring-strategy`
+
+Date: `2026-09-30`
+
+### Decision
+
+- The routing posture is two axes: `routing.mode` (`baseline | difficulty | hybrid | intelligent`, `controller`
+  accepted as a compat spelling) and `routing.scoring_strategy` (`balanced | quality | latency | cost | custom`),
+  plus `routing.pin_weights` and the six-metric `routing.weights` profile (required iff `custom`). The legacy
+  single `routing.strategy` string is read-compatible, degraded with a recorded reason on read, rejected when it
+  names nothing on write, and never written back.
+- Resolution precedence is request intent > controller directive > difficulty bucket (`easy`→`cost`,
+  `hard`→`quality`, `medium` falls through) > saved scoring strategy > `balanced`. `pin_weights: true` blocks the
+  difficulty override and the controller's `strategy` directive (recording what it discarded); the controller's
+  other directives and every eligibility gate still apply. A suppressed directive that names the pinned strategy
+  is recorded as a no-op, not as a discard.
+- Agent strategy postures (`agent_strategies.<name>`, role-bound) and workload postures (`workloads.<name>`,
+
+## Run: `105-route-learning-matching-scope-activation`
+
+Date: `2026-10-03`
+
+### Decisions
+
+- One route-learning pack is the mutable endpoint ladder for one exact `(roleId, taskTypeId)`; the closed legacy pack contract and scope-wide active pointer are not routing authority.
+- Finalized effort-comparable groups materialize a deterministic total order. Admission uses each endpoint own comparison confidence; accepted rank/admission provenance stays authoritative when later evidence regresses. Mixed-policy snapshots are forbidden.
+- Router walks stored availability + per-request eligibility, then applies the unchanged one-shot score band/cohort/confidence/taxonomy/kill-switch gates. Ladder rank and score rank are independent.
+- Derived activation is authoritative; legacy promote/activate remains a historical operator surface only. Per-task rollback is reversible and never aliases guardrail/kill-switch rollback receipts.
+- Request demand and complete-ladder idle both use the same product-default `stalenessWindowDays`; sequential challenges count only genuine finalized groups. Stable `dispatchRoundId` separates repeated comparisons without mutating capture identity.
+- SQLite inline telemetry metadata remains 16 KiB by direct user decision. Structured previews are bounded and disclosed; rich diagnostic content is not admitted inline merely by raising the cap. Secondary telemetry failures never replace the primary provider error.
+- Build/runtime verification for this run is development `:3458` only. `:3457` is not a run-105 QA target and was not touched.
+- Final paired source is public `7162930d76dc1c317c8d192a2e3fbbdcde6f878c` / private `da40a115237432b248f6b5282a4ac42f8fb90179`. Promotion/merge to other branches is outside this run.
+
+### Residuals
+
+- CAS-loser evidence documents can orphan and count toward the per-scope document budget; routing remains fail-closed.
+- A restart during an in-flight challenge can duplicate bounded provider work; append-only evidence and strict acceptance keep ordering/routing safe.
+- Live routed telemetry preserves bounded diagnostics but no full graph pointer was available; full rich diagnostic preservation is not claimed.
+
+  optional `required_capabilities`) each materialise one `<name>.<scope>` alias per execution scope. A declared
+  role beats the alias preset; a declared `model_ids` slice narrows the alias pool; an empty slice reports
+  `ALIAS_POOL_EMPTY` and is never widened. An unknown `role_id`, a reserved name, a duplicate name and a
+  collision with the routing-alias namespace are config write errors; an unknown capability is a warning.
+- Every decision records `strategyResolution` (`strategy`, `source`, effective `weights`, `weightsDigest`, any
+  discarded directive), `aliasPostureBinding` (declared vs preset role, capabilities, alias strategy) and the
+  measured-latency outcome. These receipts are part of the decision wherever it is stored, including the compact
+  observation stub the Track-B capture falls back to.
+- The measured-latency override stays off by default; its comparison metric is the effective latency
+  `p50 + 0.25 * (p95 - p50)`, with `max_delta_ms` 10 000 and `min_samples` 5 (bounds 5..30), and it may only
+  substitute an endpoint the router already considered eligible.
+- Operator surfaces: `Routing strategy` (mode, scoring strategy, weights editor with a live sum check,
+  pin checkbox, execution scope, resolved-posture line, latency card), plus separate `Agent strategy` and
+  `Workloads` pages. No UI path can persist a legacy synonym.
+
+### Why
+
+- The strategies existed as names only: the saved scoring strategy never reached the scorer, every strategy
+  collapsed onto one router policy, and no surface could answer who chose the strategy or with which weights.
+  Downstream agents had no way to name a posture or a role.
+
+### Evidence
+
+- `.recursive/run/103-agent-strategy-and-scoring-strategy/evidence/logs/{red,green}/`
+- `.recursive/run/103-agent-strategy-and-scoring-strategy/evidence/phase5/` (live pi-CLI receipts on the rebuilt
+  development runtime, executable sha256 `ee6b5cbb24483d43f789ea79ffb3a153e69f1ba6ba9b40a72ca90fe04b0e3485`)
+
+### Carried commitments
+
+- `R7` paired private registry: `role-model-internal/shared/route-learning/activation-policy.mjs` still declares
+  `latencySelectionMinSamples` min 3 / max 1000 and `latencySelectionMaxDeltaMs` default 2000, while the public
+  read side declares 5..30 and 10 000. The private change is a release dependency of the first stage promotion
+  that ships this run; until it lands the operator write path can persist a value the reader clamps.
+- `R9` deviation: `apps/runtime-host-bridge/src/agent-strategy.ts` decodes posture entries with hand-written
+  violations instead of a `Schema`, because the entry contract needs per-key operator-facing messages
+  (`unknown key "temperature"`, `unknown role_id`) that the Schema parse report does not carry. The vocabulary
+  itself stays single-sourced in `scoring-strategy.ts`.
+- Coverage follow-ups for a later run: a same-candidate-set ranking-invariance test for R2, an import-policy
+  test for R9, an extension drill and a version-keyed migration test for R10, and a live `embedding` workload
+  request (the live matrix exercised `batch`).
+
+### Promotion boundary
+
+- This decision authorizes no automatic stage or main promotion; release operations must build a fresh
+  candidate from the merged commit, rebuild the paired private distribution, and repeat the live matrix.
+
+### Post-lock repair: config patches merge per entry and deletion stays an explicit operator action
+
+Date: `2026-10-01`
+
+- The operator reported that adding an agent strategy made the previously saved entries disappear. The cause
+  was structural, not cosmetic: the runtime's config write path merged a patch into the saved document with a
+  shallow `{ ...current, ...patch }`, so any patch that mentioned `agent_strategies`, `workloads` or
+  `model_aliases` replaced the whole block, and the Agent strategy editor's row key embedded the entry name, so
+  React remounted the card after every keystroke, truncated the name to one character and saved a block with
+  one entry. The runtime logged exactly that sequence (`coder`, `op`, `a`).
+- Operator decision: the name-keyed blocks merge per entry and, inside an entry, per field. A patch upserts
+  only the entries it names, `null` as an entry value deletes exactly that entry, and `null` as a field value
+  clears exactly that field. `model_aliases` is included, so materialised posture rows and other clients can
+  never drop an alias they did not name. `replace_blocks: true` is the explicit opt-in for a caller that hands
+  over the complete document (only the free-form JSON editor).
+- Operator decision: deletion happens only when the operator presses **Remove entry** on an entry displayed in
+  the UI. A rename upserts the new name and leaves the saved entry in place (the page says so before and after
+  the save); duplicate names are refused before any write.
+- Evidence and scope: `addenda/03-implementation-summary.post-lock-agent-strategy-editor.addendum-01.md`
+  (locked) records the root cause, the RED/GREEN suites, the packaged-runtime HTTP and UI verification, and the
+  reconciliation of the locked phase records. The config layout, the alias materialisation and the decision
+  receipts are unchanged; no migration is required.
+
+### Post-lock repair 2: the published alias pool mirrors request-time eligibility
+
+Date: `2026-10-01`
+
+- Operator report: the Posture diagnostics card printed the `ALIAS_POOL_EMPTY` marker twice, listed workload
+  scopes on the Agent strategy page, and the shipped `embedding` workload looked resolvable while a call
+  through `embedding.remote-only` answered `400 capability_eligibility_error / no_eligible_target` naming every
+  candidate as `missing_capability.embeddings.text` (reproduced live on the packaged development runtime).
+- Operator decisions: (1) repair the diagnostics scoping, duplication and placement inside run 103 as a
+  post-lock addendum; (2) make the *published* pool reflect the eligibility the router applies at request time;
+  (3) repoint the shipped `embedding` example at a capability the canonical taxonomy already carries instead of
+  extending the taxonomy.
+- Consequences: `required_capabilities` now narrows the materialised alias pool, and the page readback applies
+  the same rule to candidate counts and eligible endpoints; `supportsCapabilityRequirement` is exported from
+  `packages/core` as the single source of that rule. A pin nothing in the scope satisfies reports
+  `ALIAS_POOL_EMPTY` per scope instead of advertising candidates the first call would reject. The shipped
+  example pins `knowledge.retrieval`, which is honestly unresolvable in this deployment until an
+  embedding-capable model is admitted. The Agent strategy and Workloads pages list only the scopes that can
+  resolve and report the rest, in plain English, on the entry that owns them.
+- Requirement effect: R6's literal `embeddings.text` example and R5's pool-honesty sentence are amended by
+  `addenda/00-requirements.post-lock-shipped-embedding-capability.addendum-01.md`.
+- Deferred to its own run (operator decision): per-alias usage tracking — requests, success rate, p50/p95 and
+  last-used per alias — which needs a requested-alias dimension and filter in the telemetry plane.
+- Evidence: `addenda/03-implementation-summary.post-lock-capability-pool.addendum-02.md`.
+
+### Post-lock repair 3: the measured-latency override is one checkbox
+
+Date: `2026-10-01`
+
+- Operator directive: the Measured-latency override card on the Routing strategy page showed an entire
+  component (stage, window, sample floor, threshold, bucket bounds, max candidates, an evidence strip, a
+  save/reset pair and an always-visible operator receipt) where the operator asked for a checkbox.
+- The page now renders one checkbox that reads and writes the learning-policy flag
+  `latencySelectionEnabled`, with the policy version as the concurrency guard; a refused or stale write
+  restores the saved value. The other fields stay where they already have a schema-driven editor:
+  Learning -> Configuration. The operator token field appears only if the runtime refuses the write, so on
+  the machine that owns the runtime the switch is the whole interaction.
+- Verified live on the rebuilt dev runtime: toggle on -> policy version 2 with the flag true (reload keeps
+  it checked), toggle off -> version 3 with the flag false, i.e. the operator state is back at the shipped
+  default. Evidence: `addenda/03-implementation-summary.post-lock-latency-checkbox.addendum-03.md`.
+- Unchanged commitment: the effective threshold still comes from the learning policy file; the private
+  registry's `latencySelectionMaxDeltaMs` default (2000 against the public 10 000) remains the `R7` release
+  dependency. Hiding the field here does not resolve it.
+
+### Post-lock repair 4: the Routing strategy page writes the selected mode and scopes the weight editor to custom
+
+Date: `2026-10-01`
+
+- Operator report: "the weights should only be exposed when the user chooses custom strategy ... also save and
+  apply strategy seems to not work at all, it just stays baseline".
+- Root cause: `buildRoutingPatchDocument` derived the mode from the saved readback instead of the operator's
+  selection, so every save wrote the mode that was already stored; and the six-weight editor rendered
+  unconditionally with a caption saying it applied only to Custom.
+- Repair: the builder takes `mode` explicitly (normalized, unknown spellings refused), the page passes its
+  selection, and `showsCustomWeightEditor` is the single predicate for the weight editor, which now renders
+  only for the custom scoring strategy. `custom` itself was and stays selectable in the scoring-strategy
+  listbox.
+- Verified live: Intelligent + Custom persisted as `mode=intelligent, scoring_strategy=custom` and the
+  Active posture rail followed; the weight editor appears only for Custom. The operator's posture was
+  restored afterwards (`baseline` + `quality`, `remote_only`). Evidence:
+  `addenda/03-implementation-summary.post-lock-routing-save.addendum-04.md`.
+
+### Delivery: merged, promoted to stage, stage candidate published
+
+Date: `2026-10-01`
+
+- Run 103 merged to public `dev` as `de4089c2` (PR #291, all checks green except the owner-authored CLA
+  check the operator authorized skipping). Peer PRs #286 (catalog refresh), #288 (design document) and
+  #292 (dsh-role-model alias persistence) were merged on the operator's instruction with the review
+  requirement overridden; `dev` is `a35b676a`.
+- The `R7` release dependency is closed: private PR #121 aligned the registry to `min_samples` 5..30 and
+  `max_delta_ms` 10 000 for the effective-latency metric, promoted to private `stage` as `96450a40`
+  (PR #122) and recorded in `ROLE_MODEL_PAIRED_PRIVATE_SHA` before the public promotion.
+- Public `dev -> stage` merged as `14fce6cf` (PR #293, all checks green) and published the stage candidate
+  prerelease `stage-rc-14fce6cffcd1` (win32-x64 sha256
+  `aac6d635af5b8f9f55fbe986e6d37a2ce1b4c6a4254852f932d64a587f257301`).
+- The exact candidate runs on the stage channel `:3457`: healthy, run-103 readback present, a
+  `baseline.remote-only` request answered 200, and a restart kept the persisted posture and the 50 stored
+  decisions. `accept-release-candidate` has not been run; the candidate awaits the operator's acceptance.
+- Closeout also repaired two CI blockers the pull request exposed: BOM'd phase-5 evidence JSON files and
+  the vendored `effect` build missing from the bridge test lanes. Evidence:
+  `addenda/09-closeout.post-lock-release.addendum-01.md`.
+
+### Run 104: replay eligibility, evidence fidelity and the traffic-class typing
+
+Date: `2026-10-02`
+
+- The replay lane now refuses by name instead of deferring generically: `candidate_input_unsupported` carries the
+  blocking modality or capability and the rejected endpoint ids, terminal when the declared pool can never serve
+  the capture and deferrable when a capable arm is merely unavailable (`SP2`).
+- The persisted traffic-class vocabulary is `live | replay | evaluation | benchmark | probe | unknown`, with the
+  legacy `live_request` still read. The operator's aggregates are live-only and publish the excluded counts and
+  their classes, so a replay or a benchmark can no longer move the live cache-hit rate, counts, latency or cost
+  (`SP9`, `R14`). An undeclared write is still counted live; that residual is recorded with the Phase 3.5 review.
+- The live stall's cause is decided, not hypothesised: the packaged launcher never supplied `handoffEvaluation`,
+  so a replay that reached `awaiting_evaluation` was never re-listed; and the completion contract demanded every
+  trial of a job be covered by a finalized group although train-partition trials are structurally ineligible, so a
+  four-trial job with two comparable trials could never complete (`SP10`, private `21dd180f`; `b3ac491a`).
+- The durable branch-append recovery was reading the write-side `outputText` while the capture projection
+  publishes `responseText`, so it refused even for readable captures; it re-attaches now, and a projection that
+  saturated the boundary's 2 KiB excerpt cap refuses rather than attaching a truncated artifact (`efab6bc3`,
+  `d938049d`).
+- Arm comparability is a first-class dimension: arms are repointed to the same model's variant at the source
+  capture's effort when the registry holds one, every arm's comparability is published, and a mismatched arm is
+  named `arm_effort_mismatch` in the comparison's validity. The public plumbing is now wired and verified live
+  end-to-end (post-closeout `8aa114ed` plus addenda 08-20): a finalized comparison on `:3457` records per-arm
+  `matched`/`mismatched`. The queue was traced live and repaired in turn — the restricted-tick no-op, the
+  resume-entry record with `classifyReplayArmEffort`, the resume-store `effortComparability` persistence, the
+  `capture_missing` retryability, and the compact replay-job dispatch projection
+  (`SP6`, private `885eda30`; post-closeout `8aa114ed`, `1294feae`, `b3e29909`, `ec33aba5`, `23ae04dd`).
+- The `Effect` rule is applied where it is a genuine fit: `Match.exhaustive` terminates the traffic-class mapper so
+  a new variant is a type error, and the private handoff uses `ManagedRuntime`/`Effect.gen`. No dependency changed.
+- Phase 5 ran the rebuilt runtime on its own channel (`:3459`) with its own state root: the matrix passed
+  (text control, an image request through `difficulty.remote-only` that selected the DeepSeek flash endpoint, a
+  PDF control and `hybrid.remote-only`) and the monitored window ran 61.5 minutes with 123 samples. The live
+  replay drain could not be shown because a fresh state root has no route package; recorded in the locked
+  addendum rather than asserted.

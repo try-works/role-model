@@ -7,7 +7,34 @@ import {
   StorageRetentionRouteView,
   bytesToGbInput,
   gbInputToBytes,
+  selectEditableRetentionPolicy,
 } from "./storage-retention";
+
+describe("StorageRetentionRoute operator policy editing", () => {
+  test("edits the operator policy instead of an arbitrary canonical tier policy", () => {
+    const canonicalTierPolicy = {
+      policyId: "cloud-staging-short.v1",
+      scope: "global",
+      maxBytes: 268_435_456,
+      maxAgeDays: 3,
+      source: "canonical_machine_readable",
+    };
+    const operatorPolicy = {
+      policyId: "runtime-custom",
+      scope: "global",
+      maxBytes: 7_500_000_000,
+      maxAgeDays: 45,
+    };
+    expect(selectEditableRetentionPolicy([canonicalTierPolicy, operatorPolicy])?.policyId).toBe(
+      "runtime-custom",
+    );
+    // With only canonical tier policies there is no operator policy yet, so the
+    // form must keep its own defaults rather than showing a tier's preset.
+    expect(selectEditableRetentionPolicy([canonicalTierPolicy])).toBeNull();
+    // A saved 268,435,456-byte budget must not render as 0.268435.
+    expect(bytesToGbInput(268_435_456)).toBe("0.268");
+  });
+});
 
 describe("StorageRetentionRoute", () => {
   test("uses existing page primitives for dry-run, conflicts, receipts, and rollback", () => {
@@ -95,5 +122,30 @@ describe("StorageRetentionRoute", () => {
     expect(html).toContain(">Dry-run<");
     expect(html).toContain(">Execute plan<");
     expect(html).toContain("No legal holds or Managed policy conflicts.");
+  });
+
+  test("Run 96 R25/R31 renders complete byte attribution, capacity forecast, and actionable operator receipts", () => {
+    const source = readFileSync(new URL("./storage-retention.tsx", import.meta.url), "utf8");
+    for (const token of [
+      "Physical bytes",
+      "Logical bytes",
+      "Reserved bytes",
+      "Archived bytes",
+      "Unattributed bytes",
+      "Capacity forecast",
+      "Projected bytes",
+      "Days until high water",
+      "Operator action receipts",
+      "Expected impact",
+      "Rollback strategy",
+      "Proof of recovery",
+      "summary?.storageInventory?.byteTotals",
+      "summary?.storageInventory?.capacityForecast",
+      "receipt.expectedImpact",
+      "receipt.rollback?.strategy",
+      "receipt.recoveryProof?.status",
+    ]) {
+      expect(source).toContain(token);
+    }
   });
 });

@@ -1,0 +1,27 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-host-bridge
+
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run104-traffic-class.test.ts [ test/run104-traffic-class.test.ts ]
+Error: Cannot find module '../src/traffic-class.ts' imported from 'D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-host-bridge/test/run104-traffic-class.test.ts'
+ ❯ test/run104-traffic-class.test.ts:3:1
+      1| import { expect, test } from "vitest";
+      2| 
+      3| import { isLiveTrafficClass, toPersistedTrafficClass } from "../src/tr…
+       | ^
+      4| 
+      5| /**
+
+Caused by: Error: Failed to load url ../src/traffic-class.ts (resolved id: ../src/traffic-class.ts) in D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-host-bridge/test/run104-traffic-class.test.ts. Does the file exist?
+ ❯ loadAndTransform ../../../node_modules/.pnpm/vite@7.3.2_@types+node@22.1_d71bf8265f9610ce90201e170d5dc2b8/node_modules/vite/dist/node/chunks/config.js:22663:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  17:18:03
+   Duration  930ms (transform 83ms, setup 0ms, collect 0ms, tests 0ms, environment 1ms, prepare 327ms)
+

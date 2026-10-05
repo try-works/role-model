@@ -1,0 +1,17 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-host-bridge
+
+stderr | test/run104-sp7-contribution-budget.test.ts > run104 SP7 contribution aggregate budget > classifies a timed-out aggregate as a retryable typed timeout and retries it under the shared schedule
+[run104] contribution aggregate timed out after 250ms; retry 2/3 in 250ms for req-104-sp7-contribution
+
+stderr | test/run104-sp7-contribution-budget.test.ts > run104 SP7 contribution aggregate budget > classifies a timed-out aggregate as a retryable typed timeout and retries it under the shared schedule
+[run104] contribution aggregate timed out after 250ms; retry 3/3 in 1000ms for req-104-sp7-contribution
+
+ ✓ test/run104-sp7-contribution-budget.test.ts (3 tests) 1081ms
+   ✓ run104 SP7 contribution aggregate budget > classifies a timed-out aggregate as a retryable typed timeout and retries it under the shared schedule  949ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  19:17:01
+   Duration  6.31s (transform 1.76s, setup 0ms, collect 3.52s, tests 1.08s, environment 1ms, prepare 594ms)
+

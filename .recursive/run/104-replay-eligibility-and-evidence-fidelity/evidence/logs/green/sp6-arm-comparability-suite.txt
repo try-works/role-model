@@ -1,0 +1,13 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-host-bridge
+
+ ✓ test/run104-sp2-refusal-semantics.test.ts (4 tests) 60ms
+ ✓ test/run104-sp1-replay-eligibility.test.ts (7 tests) 21ms
+ ✓ test/run104-sp1-dispatch-subset.test.ts (6 tests) 14ms
+ ✓ test/run104-sp6-arm-comparability.test.ts (8 tests) 13ms
+
+ Test Files  4 passed (4)
+      Tests  25 passed (25)
+   Start at  19:50:04
+   Duration  7.00s (transform 596ms, setup 0ms, collect 3.89s, tests 108ms, environment 2ms, prepare 1.12s)
+

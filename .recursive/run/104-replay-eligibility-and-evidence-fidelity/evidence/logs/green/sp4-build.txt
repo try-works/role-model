@@ -1,0 +1,11 @@
+
+> @role-model-router/runtime-host-bridge@0.0.0 build D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\apps\runtime-host-bridge
+> tsc -p tsconfig.json
+
+src/index.ts(24661,5): error TS2739: Type '{ requestCount: number; successCount: number; failureCount: number; totalInputTokens: number; totalOutputTokens: number; totalTokens: number; cachedRequestCount: number; totalActualCostUsd: number; ... 7 more ...; lastSeenAtMs: number; }' is missing the following properties from type 'RuntimeTelemetrySummary': excludedRequestCount, excludedByClass
+../../packages/sqlite-memory/src/index.ts(3765,19): error TS2345: Argument of type '(row: { request_id: string; routing_decision_id: string; endpoint_id: string; reasoning_effort: string | null; effort_source: string | null; conversation_id: string; created_at_ms: number; ... 98 more ...; dimensions_json: string | null; }) => RuntimeTelemetryRecord' is not assignable to parameter of type '(value: { request_id: string; routing_decision_id: string; endpoint_id: string; reasoning_effort: string | null; effort_source: string | null; conversation_id: string; created_at_ms: number; ... 97 more ...; dimensions_json: string | null; }, index: number, array: { ...; }[]) => RuntimeTelemetryRecord'.
+  Types of parameters 'row' and 'value' are incompatible.
+    Property 'request_class_source' is missing in type '{ request_id: string; routing_decision_id: string; endpoint_id: string; reasoning_effort: string | null; effort_source: string | null; conversation_id: string; created_at_ms: number; ... 97 more ...; dimensions_json: string | null; }' but required in type '{ request_id: string; routing_decision_id: string; endpoint_id: string; reasoning_effort: string | null; effort_source: string | null; conversation_id: string; created_at_ms: number; ... 98 more ...; dimensions_json: string | null; }'.
+D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @role-model-router/runtime-host-bridge@0.0.0 build: `tsc -p tsconfig.json`
+Exit status 2

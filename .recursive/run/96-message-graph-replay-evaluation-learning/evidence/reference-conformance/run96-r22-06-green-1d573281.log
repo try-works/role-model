@@ -1,0 +1,13 @@
+Run 96 AC-R22-06 strict-TDD GREEN receipt
+repository=public
+current_paired_head=1d5732819480cf22587570bf8c60e02efcdbfb3e
+test=role-model-router/packages/sqlite-memory/test/legacy-migration.test.ts
+assertion_title=R22 AC-R22-06 reclaims legacy rich JSON and closure files and fences a resumed writer
+command=npm test -- --run test/legacy-migration.test.ts -t 'AC-R22-06' (role-model-router/packages/sqlite-memory)
+result=PASS_GREEN
+tests=1; passed=1; failed=0
+proof=legacy rich JSON and closure files are physically reclaimed, resumed writer is fenced before write, durable retirement receipt survives restart, and repeated retirement does not regrow the legacy root
+external_log=E:\role-model-temp\run96-r22-06\public-green.log
+verification_disposition=source-only
+phase3_status=DRAFT
+phase5_status=PENDING

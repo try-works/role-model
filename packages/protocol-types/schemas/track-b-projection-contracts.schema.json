@@ -1,0 +1,797 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://role-model.dev/schemas/track-b-projection-contracts.v2.json",
+  "title": "role-model Direct Track B projection contracts",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/traceGraphProjection"
+    },
+    {
+      "$ref": "#/$defs/routingTrainingExample"
+    },
+    {
+      "$ref": "#/$defs/exportProjection"
+    }
+  ],
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "idSet": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/id"
+      }
+    },
+    "structuralCompleteness": {
+      "enum": ["metadata_only", "summary_only", "transcript_partial", "transcript_full"]
+    },
+    "evaluationEvidence": {
+      "enum": [
+        "unscored",
+        "metrics_only",
+        "reward_scored",
+        "pairwise_scored",
+        "deterministic_verified"
+      ]
+    },
+    "tokenFidelity": {
+      "enum": ["none", "estimated", "provider_reported", "exact"]
+    },
+    "permittedUses": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "routingAnalysis",
+        "localReplay",
+        "localEvaluation",
+        "externalSftExport",
+        "externalRewardExport",
+        "externalRlExport"
+      ],
+      "properties": {
+        "routingAnalysis": {
+          "type": "boolean"
+        },
+        "localReplay": {
+          "type": "boolean"
+        },
+        "localEvaluation": {
+          "type": "boolean"
+        },
+        "externalSftExport": {
+          "type": "boolean"
+        },
+        "externalRewardExport": {
+          "type": "boolean"
+        },
+        "externalRlExport": {
+          "type": "boolean"
+        }
+      }
+    },
+    "policyClearance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "consent",
+        "redaction",
+        "licensing",
+        "instructionHierarchy",
+        "contamination",
+        "toolOutputSafety"
+      ],
+      "properties": {
+        "consent": {
+          "type": "boolean"
+        },
+        "redaction": {
+          "type": "boolean"
+        },
+        "licensing": {
+          "type": "boolean"
+        },
+        "instructionHierarchy": {
+          "type": "boolean"
+        },
+        "contamination": {
+          "type": "boolean"
+        },
+        "toolOutputSafety": {
+          "type": "boolean"
+        }
+      }
+    },
+    "materialization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "evictable", "reconstructableFrom"],
+      "properties": {
+        "mode": {
+          "enum": ["manifest_only", "materialized", "ephemeral"]
+        },
+        "evictable": {
+          "type": "boolean"
+        },
+        "reconstructableFrom": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "byteSize": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "traceGraphProjection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "schemaVersion",
+        "projectionId",
+        "sourceObservationIds",
+        "sourceRouteDecisionIds",
+        "sourceGraphNodeIds",
+        "sourceGraphEdgeIds",
+        "structuralCompleteness",
+        "evaluationEvidence",
+        "tokenFidelity",
+        "permittedUses",
+        "privacyReceiptId",
+        "retentionPolicyId",
+        "materialization",
+        "createdAt",
+        "runtimeChannel",
+        "scopeId",
+        "boundaryProtocolVersion"
+      ],
+      "properties": {
+        "contract": {
+          "const": "TraceGraphProjectionV2"
+        },
+        "schemaVersion": {
+          "const": "2.0.0"
+        },
+        "projectionId": {
+          "$ref": "#/$defs/id"
+        },
+        "sourceObservationIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "sourceRouteDecisionIds": {
+          "$ref": "#/$defs/idSet"
+        },
+        "sourceArtifactIds": {
+          "$ref": "#/$defs/idSet"
+        },
+        "sourceGraphNodeIds": {
+          "$ref": "#/$defs/idSet"
+        },
+        "sourceGraphEdgeIds": {
+          "$ref": "#/$defs/idSet"
+        },
+        "structuralCompleteness": {
+          "$ref": "#/$defs/structuralCompleteness"
+        },
+        "evaluationEvidence": {
+          "$ref": "#/$defs/evaluationEvidence"
+        },
+        "tokenFidelity": {
+          "$ref": "#/$defs/tokenFidelity"
+        },
+        "tokenTransitionEvidenceIds": {
+          "$ref": "#/$defs/idSet"
+        },
+        "scoreEvidenceIds": {
+          "$ref": "#/$defs/idSet"
+        },
+        "permittedUses": {
+          "$ref": "#/$defs/permittedUses"
+        },
+        "policyClearance": {
+          "$ref": "#/$defs/policyClearance"
+        },
+        "destinationAuthorizationIds": {
+          "$ref": "#/$defs/idSet"
+        },
+        "privacyReceiptId": {
+          "$ref": "#/$defs/id"
+        },
+        "redactionReceiptId": {
+          "$ref": "#/$defs/id"
+        },
+        "retentionPolicyId": {
+          "$ref": "#/$defs/id"
+        },
+        "pruningReceiptIds": {
+          "$ref": "#/$defs/idSet"
+        },
+        "materialization": {
+          "$ref": "#/$defs/materialization"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "runtimeChannel": {
+          "enum": ["production", "stage", "development"]
+        },
+        "scopeId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "boundaryProtocolVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+$"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "structuralCompleteness": {
+                "enum": ["transcript_partial", "transcript_full"]
+              }
+            },
+            "required": ["structuralCompleteness"]
+          },
+          "then": {
+            "properties": {
+              "sourceGraphNodeIds": {
+                "minItems": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "evaluationEvidence": {
+                "enum": ["reward_scored", "pairwise_scored", "deterministic_verified"]
+              }
+            },
+            "required": ["evaluationEvidence"]
+          },
+          "then": {
+            "required": ["scoreEvidenceIds"],
+            "properties": {
+              "scoreEvidenceIds": {
+                "minItems": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "tokenFidelity": {
+                "const": "exact"
+              }
+            },
+            "required": ["tokenFidelity"]
+          },
+          "then": {
+            "required": ["tokenTransitionEvidenceIds"],
+            "properties": {
+              "tokenTransitionEvidenceIds": {
+                "minItems": 1
+              },
+              "structuralCompleteness": {
+                "const": "transcript_full"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "anyOf": [
+              {
+                "properties": {
+                  "permittedUses": {
+                    "properties": {
+                      "externalSftExport": {
+                        "const": true
+                      }
+                    },
+                    "required": ["externalSftExport"]
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "permittedUses": {
+                    "properties": {
+                      "externalRewardExport": {
+                        "const": true
+                      }
+                    },
+                    "required": ["externalRewardExport"]
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "permittedUses": {
+                    "properties": {
+                      "externalRlExport": {
+                        "const": true
+                      }
+                    },
+                    "required": ["externalRlExport"]
+                  }
+                }
+              }
+            ]
+          },
+          "then": {
+            "required": ["policyClearance", "redactionReceiptId", "destinationAuthorizationIds"],
+            "properties": {
+              "destinationAuthorizationIds": {
+                "minItems": 1
+              },
+              "policyClearance": {
+                "properties": {
+                  "consent": {
+                    "const": true
+                  },
+                  "redaction": {
+                    "const": true
+                  },
+                  "licensing": {
+                    "const": true
+                  },
+                  "instructionHierarchy": {
+                    "const": true
+                  },
+                  "contamination": {
+                    "const": true
+                  },
+                  "toolOutputSafety": {
+                    "const": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "permittedUses": {
+                "properties": {
+                  "externalRlExport": {
+                    "const": true
+                  }
+                },
+                "required": ["externalRlExport"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "tokenFidelity": {
+                "const": "exact"
+              },
+              "evaluationEvidence": {
+                "enum": ["reward_scored", "pairwise_scored", "deterministic_verified"]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "endpointId",
+        "modelId",
+        "modelRevision",
+        "providerId",
+        "eligibilityStatus",
+        "selectionProbability"
+      ],
+      "properties": {
+        "endpointId": {
+          "$ref": "#/$defs/id"
+        },
+        "modelId": {
+          "$ref": "#/$defs/id"
+        },
+        "modelRevision": {
+          "$ref": "#/$defs/id"
+        },
+        "providerId": {
+          "$ref": "#/$defs/id"
+        },
+        "routePackageId": {
+          "$ref": "#/$defs/id"
+        },
+        "local": {
+          "type": "boolean"
+        },
+        "available": {
+          "type": "boolean"
+        },
+        "eligibilityStatus": {
+          "enum": ["eligible", "denied", "degraded", "unknown"]
+        },
+        "hardDenyCodes": {
+          "$ref": "#/$defs/idSet"
+        },
+        "capabilityMatchScore": {
+          "type": "number"
+        },
+        "benchmarkPriorScore": {
+          "type": "number"
+        },
+        "estimatedLatencyMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "estimatedCostUsd": {
+          "type": "number",
+          "minimum": 0
+        },
+        "cacheState": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "selectionProbability": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "routingTrainingExample": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "schemaVersion",
+        "exampleId",
+        "source",
+        "requestFeatures",
+        "policySnapshot",
+        "candidateSnapshot",
+        "chosen",
+        "selectionMode",
+        "outcome",
+        "evidenceStrength",
+        "runtimeChannel",
+        "scopeId",
+        "boundaryProtocolVersion"
+      ],
+      "properties": {
+        "contract": {
+          "const": "RoutingTrainingExampleV2"
+        },
+        "schemaVersion": {
+          "const": "2.0.0"
+        },
+        "exampleId": {
+          "$ref": "#/$defs/id"
+        },
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["observationBundleId", "routeDecisionId", "privacyReceiptId"],
+          "properties": {
+            "observationBundleId": {
+              "$ref": "#/$defs/id"
+            },
+            "routeDecisionId": {
+              "$ref": "#/$defs/id"
+            },
+            "endpointObservationId": {
+              "$ref": "#/$defs/id"
+            },
+            "benchmarkResultId": {
+              "$ref": "#/$defs/id"
+            },
+            "replayResultId": {
+              "$ref": "#/$defs/id"
+            },
+            "privacyReceiptId": {
+              "$ref": "#/$defs/id"
+            },
+            "projectionId": {
+              "$ref": "#/$defs/id"
+            }
+          }
+        },
+        "requestFeatures": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "roleId": {
+              "$ref": "#/$defs/id"
+            },
+            "taskTypeId": {
+              "$ref": "#/$defs/id"
+            },
+            "repoArchetype": {
+              "$ref": "#/$defs/id"
+            },
+            "language": {
+              "$ref": "#/$defs/id"
+            },
+            "modalityIds": {
+              "$ref": "#/$defs/idSet"
+            },
+            "toolClassIds": {
+              "$ref": "#/$defs/idSet"
+            },
+            "contextTokensEstimate": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "latencyPreference": {
+              "$ref": "#/$defs/id"
+            },
+            "costPreference": {
+              "$ref": "#/$defs/id"
+            },
+            "privacyConstraints": {
+              "$ref": "#/$defs/idSet"
+            }
+          }
+        },
+        "policySnapshot": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "routerPolicyVersion",
+            "weightsVersion",
+            "hardDenyCodes",
+            "budgetStateRef",
+            "tieBreakVersion"
+          ],
+          "properties": {
+            "routerPolicyVersion": {
+              "$ref": "#/$defs/id"
+            },
+            "weightsVersion": {
+              "$ref": "#/$defs/id"
+            },
+            "hardDenyCodes": {
+              "$ref": "#/$defs/idSet"
+            },
+            "budgetStateRef": {
+              "$ref": "#/$defs/id"
+            },
+            "tieBreakVersion": {
+              "$ref": "#/$defs/id"
+            }
+          }
+        },
+        "candidateSnapshot": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/candidate"
+          }
+        },
+        "chosen": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["endpointId", "modelId", "modelRevision", "selectionProbability"],
+          "properties": {
+            "endpointId": {
+              "$ref": "#/$defs/id"
+            },
+            "modelId": {
+              "$ref": "#/$defs/id"
+            },
+            "modelRevision": {
+              "$ref": "#/$defs/id"
+            },
+            "routePackageId": {
+              "$ref": "#/$defs/id"
+            },
+            "routeDecisionReasonRef": {
+              "$ref": "#/$defs/id"
+            },
+            "selectionProbability": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 1
+            }
+          }
+        },
+        "selectionMode": {
+          "enum": [
+            "policy_deterministic",
+            "policy_randomized",
+            "controlled_exploration",
+            "manual",
+            "replay_counterfactual"
+          ]
+        },
+        "outcome": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "success": {
+              "type": "boolean"
+            },
+            "userAccepted": {
+              "type": "boolean"
+            },
+            "userRetried": {
+              "type": "boolean"
+            },
+            "testPassRate": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "judgeScore": {
+              "type": "number"
+            },
+            "reward": {
+              "type": "number"
+            },
+            "latencyMs": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "costUsd": {
+              "type": "number",
+              "minimum": 0
+            },
+            "inputTokens": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "outputTokens": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "cacheHit": {
+              "type": "boolean"
+            },
+            "errorType": {
+              "type": "string",
+              "maxLength": 128
+            }
+          }
+        },
+        "evidenceStrength": {
+          "enum": [
+            "passive_signal",
+            "explicit_feedback",
+            "deterministic_outcome",
+            "benchmark",
+            "scorer",
+            "pairwise_comparison",
+            "counterfactual_replay"
+          ]
+        },
+        "scorerSetVersion": {
+          "$ref": "#/$defs/id"
+        },
+        "counterfactualManifestRef": {
+          "$ref": "#/$defs/id"
+        },
+        "runtimeChannel": {
+          "enum": ["production", "stage", "development"]
+        },
+        "scopeId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "boundaryProtocolVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+$"
+        }
+      }
+    },
+    "exportProjection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "exportId",
+        "format",
+        "sourceProjectionId",
+        "materialization",
+        "structuralCompleteness",
+        "evaluationEvidence",
+        "tokenFidelity",
+        "authorizationId",
+        "materializationSealId",
+        "createdAt",
+        "runtimeChannel",
+        "scopeId",
+        "boundaryProtocolVersion"
+      ],
+      "properties": {
+        "contract": {
+          "const": "ExportProjectionV2"
+        },
+        "exportId": {
+          "$ref": "#/$defs/id"
+        },
+        "format": {
+          "enum": ["verifiers_v1", "role_model_training_sample_v1"]
+        },
+        "sourceProjectionId": {
+          "$ref": "#/$defs/id"
+        },
+        "materialization": {
+          "$ref": "#/$defs/materialization"
+        },
+        "structuralCompleteness": {
+          "$ref": "#/$defs/structuralCompleteness"
+        },
+        "evaluationEvidence": {
+          "$ref": "#/$defs/evaluationEvidence"
+        },
+        "tokenFidelity": {
+          "$ref": "#/$defs/tokenFidelity"
+        },
+        "authorizationId": {
+          "$ref": "#/$defs/id"
+        },
+        "materializationSealId": {
+          "$ref": "#/$defs/id"
+        },
+        "adapterVersion": {
+          "$ref": "#/$defs/id"
+        },
+        "compatibilityLimitations": {
+          "$ref": "#/$defs/idSet"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "runtimeChannel": {
+          "enum": ["production", "stage", "development"]
+        },
+        "scopeId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "boundaryProtocolVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+$"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "format": {
+                "const": "verifiers_v1"
+              }
+            },
+            "required": ["format"]
+          },
+          "then": {
+            "required": ["adapterVersion"]
+          }
+        }
+      ]
+    }
+  }
+}

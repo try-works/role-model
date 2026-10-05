@@ -1,0 +1,25 @@
+(node:35416) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ REV-A1: a genuinely finalized group folds via members[].confidence and winnerTrialId (255.1176ms)
+✔ REV-A2: the WINNING member confidence is used, never the loser's (1.0268ms)
+✔ REV-A3: all-tie endpoints still rank (1.4743ms)
+✔ REV-A4: head-to-head net is oriented by the CANONICAL pair, not by arm order (1.265ms)
+✔ REV-A5: h2h only breaks a PRIMARY-SCORE tie (net is evaluated within tie groups) (2.434ms)
+✔ REV-A6: duplicate group ids are counted once (0.7341ms)
+✔ REV-A7: weightedCount is a confidence-WEIGHTED count, not a plain tally (0.7559ms)
+✔ REV-A8: every permutation folds to the identical ladder (14.0556ms)
+✔ REV-A9: the comparator is transitive and cycle-free (1.0281ms)
+✔ REV-A10: the admission floor reads each endpoint's OWN member confidence (0.962ms)
+✔ REV-A11: projection keeps the fail-closed exclusions on the authentic shape (0.3782ms)
+✔ REV-A12: a member with NO own confidence is never admitted by borrowing the record's winner confidence (0.6641ms)
+✔ REV-A13: a decisive winner missing its own member confidence cannot borrow the other member's mean (0.3404ms)
+✔ REV-A14: a flat record with NO members keeps its explicit top-level confidence (0.5705ms)
+✔ REV-A15: an effort entry with an unknown comparability value is excluded, not treated as clean (0.195ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 777.2708

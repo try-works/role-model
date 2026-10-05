@@ -1,0 +1,175 @@
+
+### RED run: bridge
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-host-bridge
+
+(node:59192) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/run104-advisory-classification-variant.test.ts (3 tests | 2 failed) 46ms
+   × run104 R6 advisory classification carries the task variant > records the resolved variant on the classification the observation persists 34ms
+     → expected undefined to be 'review' // Object.is equality
+   ✓ run104 R6 advisory classification carries the task variant > normalizes a classification without a variant byte-identically 3ms
+   × run104 R6 advisory classification carries the task variant > bounds the variant like every other classification id 3ms
+     → expected undefined to be 'vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv…' // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run104-advisory-classification-variant.test.ts > run104 R6 advisory classification carries the task variant > records the resolved variant on the classification the observation persists
+AssertionError: expected undefined to be 'review' // Object.is equality
+
+- Expected: 
+"review"
+
++ Received: 
+undefined
+
+ ❯ test/run104-advisory-classification-variant.test.ts:71:57
+     69|       unknown
+     70|     >;
+     71|     expect(readClassification(observation).taskVariant).toBe("review");
+       |                                                         ^
+     72|   });
+     73| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/run104-advisory-classification-variant.test.ts > run104 R6 advisory classification carries the task variant > bounds the variant like every other classification id
+AssertionError: expected undefined to be 'vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv…' // Object.is equality
+
+- Expected: 
+"vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+
++ Received: 
+undefined
+
+ ❯ test/run104-advisory-classification-variant.test.ts:89:53
+     87|       decision({ classification: classification({ taskVariant: long })…
+     88|     ) as Record<string, unknown>;
+     89|     expect(readClassification(bounded).taskVariant).toBe("v".repeat(12…
+       |                                                     ^
+     90| 
+     91|     const blank = buildLiveRouteAdvisoryObservation(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 1 passed (3)
+   Start at  19:36:03
+   Duration  8.12s (transform 3.88s, setup 0ms, collect 6.84s, tests 46ms, environment 1ms, prepare 626ms)
+
+undefined
+D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/run104-advisory-classification-variant.test.ts
+### RED run: ui
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-ui
+
+7:36:14 PM [react-router] Config saved
+ ❯ app/components/app-shell.test.ts (3 tests | 3 failed) 27ms
+   × run104 R14 app-shell footer sampling > samples the newest live request, not the newer benchmark row 21ms
+     → expected undefined to be type of 'function'
+   × run104 R14 app-shell footer sampling > no live request in either source means no sample at all 2ms
+     → expected undefined to be type of 'function'
+   × run104 R14 app-shell footer sampling > the dashboard fallback is sampled by the same live-only rule 2ms
+     → expected undefined to be type of 'function'
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/components/app-shell.test.ts > run104 R14 app-shell footer sampling > samples the newest live request, not the newer benchmark row
+AssertionError: expected undefined to be type of 'function'
+
+Expected: "function"
+Received: "undefined"
+
+ ❯ app/components/app-shell.test.ts:64:39
+     62| describe("run104 R14 app-shell footer sampling", () => {
+     63|   test("samples the newest live request, not the newer benchmark row",…
+     64|     expect(resolveFooterCacheHitRate).toBeTypeOf("function");
+       |                                       ^
+     65|     const sample = resolveFooterCacheHitRate!({
+     66|       requests: [
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  app/components/app-shell.test.ts > run104 R14 app-shell footer sampling > no live request in either source means no sample at all
+AssertionError: expected undefined to be type of 'function'
+
+Expected: "function"
+Received: "undefined"
+
+ ❯ app/components/app-shell.test.ts:76:39
+     74| 
+     75|   test("no live request in either source means no sample at all", () =…
+     76|     expect(resolveFooterCacheHitRate).toBeTypeOf("function");
+       |                                       ^
+     77|     expect(
+     78|       resolveFooterCacheHitRate!({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  app/components/app-shell.test.ts > run104 R14 app-shell footer sampling > the dashboard fallback is sampled by the same live-only rule
+AssertionError: expected undefined to be type of 'function'
+
+Expected: "function"
+Received: "undefined"
+
+ ❯ app/components/app-shell.test.ts:88:39
+     86| 
+     87|   test("the dashboard fallback is sampled by the same live-only rule",…
+     88|     expect(resolveFooterCacheHitRate).toBeTypeOf("function");
+       |                                       ^
+     89|     expect(
+     90|       resolveFooterCacheHitRate!({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed (3)
+   Start at  19:36:08
+   Duration  7.72s (transform 2.00s, setup 0ms, collect 4.87s, tests 27ms, environment 1ms, prepare 1.51s)
+
+undefined
+D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run app/components/app-shell.test.ts
+### RED run: pkgui
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/packages/ui
+
+ ❯ src/sidebar.test.ts (6 tests | 1 failed) 177ms
+   ✓ rm3 sidebar helpers > formats request counts with grouping separators 72ms
+   ✓ rm3 sidebar helpers > clamps and formats cache hit rate 2ms
+   ✓ rm3 sidebar helpers > maps model status to semantic dot classes 1ms
+   ✓ rm3 sidebar helpers > discloses a truncated model identity on pointer hover 63ms
+   × rm3 sidebar helpers > renders the absence of a live sample instead of a zero rate 32ms
+     → expected '<div data-slot="role-model-cache" cla…' to contain 'no live samples'
+   ✓ rm3 sidebar helpers > renders the measured latest live rate 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/sidebar.test.ts > rm3 sidebar helpers > renders the absence of a live sample instead of a zero rate
+AssertionError: expected '<div data-slot="role-model-cache" cla…' to contain 'no live samples'
+
+Expected: "no live samples"
+Received: "<div data-slot="role-model-cache" class="flex shrink-0 flex-col gap-1.5 border-t border-sidebar-border p-2"><div class="flex h-6 shrink-0 items-center justify-between gap-2 px-2.5"><div class="font-mono text-[11px] leading-4 tracking-[0.08em] text-muted-foreground uppercase">Cache</div><span class="shrink-0 text-right font-mono text-[11px] leading-4 text-foreground tabular-nums">0%</span></div><div class="mx-2.5 mb-1 flex h-1.5 shrink-0 items-center overflow-hidden rounded-full bg-border" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Cache hit rate"><div class="rm3-cache-bar-fill h-full shrink-0 rounded-full bg-chart-cache transition-[width] duration-[250ms] ease-out" style="width:0%"></div></div></div>"
+
+ ❯ src/sidebar.test.ts:60:20
+     58|   it("renders the absence of a live sample instead of a zero rate", ()…
+     59|     const markup = renderToStaticMarkup(createElement(SidebarCache, { …
+     60|     expect(markup).toContain("no live samples");
+       |                    ^
+     61|     expect(markup).not.toContain("0%");
+     62|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 passed (6)
+   Start at  19:36:03
+   Duration  2.37s (transform 405ms, setup 0ms, collect 557ms, tests 177ms, environment 1ms, prepare 524ms)
+
+undefined
+D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\packages\ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/sidebar.test.ts

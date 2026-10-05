@@ -1,0 +1,11 @@
+Run 96 R27 provider-attempt propagation REFACTOR receipt
+repository=public
+current_paired_head=1d5732819480cf22587570bf8c60e02efcdbfb3e
+selectors=role-model-router/packages/runtime-observability/src/index.ts; role-model-router/packages/runtime-observability/test/provider-attempt-ids.test.ts; role-model-router/packages/sqlite-memory/src/index.ts; role-model-router/packages/sqlite-memory/src/legacy-migration.ts; role-model-router/packages/sqlite-memory/test/provider-attempt-ids.test.ts
+commands=npx biome check role-model-router/packages/runtime-observability/src/index.ts role-model-router/packages/runtime-observability/test/provider-attempt-ids.test.ts role-model-router/packages/sqlite-memory/src/legacy-migration.ts role-model-router/packages/sqlite-memory/test/provider-attempt-ids.test.ts; git diff --check
+result=PASS_REFACTOR
+diagnostics=none
+external_logs=E:\role-model-temp\run96-r27-provider-attempt-ids-lint-green.log; E:\role-model-temp\run96-r27-provider-attempt-ids-format-green.log
+verification_disposition=source-only
+phase3_status=DRAFT
+phase5_status=PENDING

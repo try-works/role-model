@@ -1,0 +1,18 @@
+✔ A4: a finalized, valid, effort-comparable comparison projects as a record (9.5087ms)
+✔ A4: the join uses the own comparability roleId/taskTypeId, never taskRef (D4) (3.3575ms)
+✔ A4: status other than finalized is excluded (0.5779ms)
+✔ A4: a non-decisive outcome (insufficient/disagreement) is excluded (0.6081ms)
+✔ A4: any validity issue excludes the record by name (0.7841ms)
+✔ A4: a mismatched effortComparability entry excludes the record (0.5942ms)
+✔ A4: effortComparability absent excludes; present-and-clean admits; mismatched excludes (0.7877ms)
+✔ A4: a group with no comparability is unscoped_comparison (0.6947ms)
+✔ A4: roleId or taskTypeId absent is incomplete_scope, never guessed (0.7666ms)
+✔ A4: sortGroupsByCreatedAtMs is stable oldest-first (1.8737ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1739.7796

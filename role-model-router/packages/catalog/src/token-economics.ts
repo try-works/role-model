@@ -2,6 +2,17 @@ import type { NormalizedCatalog, NormalizedCatalogModel, PricingHints } from "./
 
 export type TokenEconomicsSource = "catalog" | "local-free" | "unknown";
 
+/**
+ * models.dev context-tier pricing (`cost.tiers`). The whole request bills at the tier's rates
+ * once it carries more than `minContextTokens` input tokens, which is how OpenAI and Google
+ * document long-context surcharges ("prompts longer than 272k tokens").
+ */
+export interface TokenCostTier {
+  readonly minContextTokens: number;
+  readonly inputPer1M: number;
+  readonly outputPer1M: number;
+}
+
 export interface TokenEconomics {
   readonly canonicalModelId: string;
   readonly inputPer1M: number | null;
@@ -9,6 +20,8 @@ export interface TokenEconomics {
   readonly cacheReadInputPer1M?: number | null;
   readonly cacheWriteInputPer1M?: number | null;
   readonly costDimensionsPer1M?: Readonly<Record<string, number>>;
+  /** Context tiers resolved from `pricing.costMetadata.tiers`, ascending by threshold. */
+  readonly costTiers?: readonly TokenCostTier[];
   readonly source: TokenEconomicsSource;
   readonly currency?: string;
 }
@@ -134,8 +147,9 @@ function findPricedModelByLookupIds(
   catalog: NormalizedCatalog,
   lookupIds: readonly string[],
 ): NormalizedCatalogModel | null {
+  const index = getCatalogPricingIndex(catalog);
   for (const lookupId of lookupIds) {
-    const model = catalog.models.find((entry) => entry.modelId === lookupId);
+    const model = index.byId.get(lookupId);
     if (model?.pricing) {
       return model;
     }
@@ -151,10 +165,7 @@ function findPricedModelByUniqueLeaf(
   if (!leaf || leaf.length < 3) {
     return null;
   }
-  const matches = catalog.models.filter(
-    (entry) =>
-      entry.pricing != null && (entry.modelId === leaf || entry.modelId.endsWith(`/${leaf}`)),
-  );
+  const matches = getCatalogPricingIndex(catalog).pricedByLeaf.get(leaf) ?? [];
   if (matches.length === 1) {
     return matches[0] ?? null;
   }
@@ -165,6 +176,39 @@ function findPricedModelByUniqueLeaf(
   return null;
 }
 
+interface CatalogPricingIndex {
+  readonly byId: ReadonlyMap<string, NormalizedCatalogModel>;
+  readonly pricedByLeaf: ReadonlyMap<string, readonly NormalizedCatalogModel[]>;
+}
+
+const catalogPricingIndexes = new WeakMap<NormalizedCatalog, CatalogPricingIndex>();
+
+function getCatalogPricingIndex(catalog: NormalizedCatalog): CatalogPricingIndex {
+  const cached = catalogPricingIndexes.get(catalog);
+  if (cached) {
+    return cached;
+  }
+
+  const byId = new Map<string, NormalizedCatalogModel>();
+  const pricedByLeaf = new Map<string, NormalizedCatalogModel[]>();
+  for (const model of catalog.models) {
+    byId.set(model.modelId, model);
+    if (!model.pricing) {
+      continue;
+    }
+    const leaf = model.modelId.includes("/")
+      ? (model.modelId.split("/").at(-1) ?? model.modelId)
+      : model.modelId;
+    const matches = pricedByLeaf.get(leaf) ?? [];
+    matches.push(model);
+    pricedByLeaf.set(leaf, matches);
+  }
+
+  const index = { byId, pricedByLeaf };
+  catalogPricingIndexes.set(catalog, index);
+  return index;
+}
+
 function findPricedCatalogModel(
   catalog: NormalizedCatalog,
   modelId: string,
@@ -173,6 +217,78 @@ function findPricedCatalogModel(
     findPricedModelByLookupIds(catalog, collectPricingLookupIds(modelId)) ??
     findPricedModelByUniqueLeaf(catalog, modelId)
   );
+}
+
+function asRecord(value: unknown): Record<string, unknown> | undefined {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : undefined;
+}
+
+/** `undefined` when the dimension is unnamed, `null` when it is named with an unusable rate. */
+function readTierRate(value: unknown): number | null | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : null;
+}
+
+/**
+ * Read models.dev context tiers from the losslessly retained cost metadata. Unrecognized or
+ * corrupt entries are skipped rather than failing routing; an unnamed rate falls back to the
+ * model's base rate for that dimension.
+ */
+function readContextCostTiers(pricing: PricingHints): TokenCostTier[] | undefined {
+  const rawTiers = asRecord(pricing.costMetadata)?.tiers;
+  if (!Array.isArray(rawTiers)) {
+    return undefined;
+  }
+
+  const tiers: TokenCostTier[] = [];
+  for (const rawTier of rawTiers) {
+    const record = asRecord(rawTier);
+    const tier = asRecord(record?.tier);
+    const size = tier?.size;
+    if (
+      tier?.type !== "context" ||
+      typeof size !== "number" ||
+      !Number.isFinite(size) ||
+      size <= 0
+    ) {
+      continue;
+    }
+    const input = readTierRate(record?.input);
+    const output = readTierRate(record?.output);
+    if (input === null || output === null || (input === undefined && output === undefined)) {
+      continue;
+    }
+    tiers.push({
+      minContextTokens: size,
+      inputPer1M: input ?? pricing.inputPer1M,
+      outputPer1M: output ?? pricing.outputPer1M,
+    });
+  }
+  if (tiers.length === 0) {
+    return undefined;
+  }
+  return tiers.sort((left, right) => left.minContextTokens - right.minContextTokens);
+}
+
+/** Highest tier the request exceeds; requests at exactly the threshold stay on the base rate. */
+function selectContextCostTier(
+  tiers: readonly TokenCostTier[] | undefined,
+  contextTokens: number,
+): TokenCostTier | undefined {
+  let selected: TokenCostTier | undefined;
+  for (const tier of tiers ?? []) {
+    if (
+      contextTokens > tier.minContextTokens &&
+      (selected?.minContextTokens ?? -1) < tier.minContextTokens
+    ) {
+      selected = tier;
+    }
+  }
+  return selected;
 }
 
 /** Resolve models.dev pricing hints for a model id (including gateway / operator aliases). */
@@ -262,6 +378,7 @@ export function resolveTokenEconomics(input: {
     inputPer1M: priced.pricing.inputPer1M,
     outputPer1M: priced.pricing.outputPer1M,
     costDimensionsPer1M: priced.pricing.costDimensionsPer1M,
+    costTiers: readContextCostTiers(priced.pricing),
     source: "catalog",
     currency: priced.pricing.currency,
   };
@@ -275,12 +392,16 @@ export function estimateRequestCostUsd(input: {
   if (input.economics.source === "local-free") {
     return 0;
   }
-  if (input.economics.inputPer1M == null || input.economics.outputPer1M == null) {
+  const contextTokens = Math.max(0, input.contextTokens);
+  const tier = selectContextCostTier(input.economics.costTiers, contextTokens);
+  const inputPer1M = tier?.inputPer1M ?? input.economics.inputPer1M;
+  const outputPer1M = tier?.outputPer1M ?? input.economics.outputPer1M;
+  if (inputPer1M == null || outputPer1M == null) {
     return null;
   }
 
-  const inputCost = (Math.max(0, input.contextTokens) / 1_000_000) * input.economics.inputPer1M;
-  const outputCost = (Math.max(0, input.maxOutputTokens) / 1_000_000) * input.economics.outputPer1M;
+  const inputCost = (contextTokens / 1_000_000) * inputPer1M;
+  const outputCost = (Math.max(0, input.maxOutputTokens) / 1_000_000) * outputPer1M;
   return inputCost + outputCost;
 }
 

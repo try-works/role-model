@@ -7,9 +7,9 @@ Watch-Paths:
 - `/.recursive/memory/skills/SKILLS.md`
 - `/.recursive/run/`
 Source-Runs:
-- `none (generic repository guidance)`
+- `105-route-learning-matching-scope-activation`
 Validated-At-Commit: `generic-repository-guidance`
-Last-Validated: `2026-04-09T00:00:00Z`
+Last-Validated: `2026-10-03T14:00:00Z`
 Tags:
 - `skills`
 - `subagent`
@@ -47,3 +47,12 @@ If repairs materially change the reviewed artifact, changed-file scope, or evide
 ## Rejection Rule
 
 If the main agent cannot verify delegated claims against actual files, actual artifacts, and the actual diff scope, reject the delegated result and fall back to self-audit for lockable completion evidence.
+
+## Run 105 reinforced pattern
+
+- Never accept a delegated `COMPLETE` claim while its child is still writing; stabilize the worktree and rerun the actual suite.
+- Green pure/helper tests do not prove a live caller. Trace evidence producer -> authenticated host -> durable store -> source -> cache -> router -> UI, and write at least one genuine cross-boundary test.
+- Review against requirements and the referenced design independently; correct stale design text instead of forcing code to match an obsolete statement.
+- Delegated model identity may be unknown. Record it as unknown; do not invent requested model labels.
+- Visual QA must navigate rendered routes rather than guess URLs, and controller must inspect screenshots. The first run105 screenshots were404s; the corrected live mobile screenshot exposed a real shell defect missed by unit tests.
+- When a late repair changes the exact build pair, reject stale artifacts even when executable hashes happen to match; verify source commit/tree, private manifest and full closure again.

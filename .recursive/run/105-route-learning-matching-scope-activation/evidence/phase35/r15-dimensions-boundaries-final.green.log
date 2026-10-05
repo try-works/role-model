@@ -1,0 +1,33 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/packages/sqlite-memory
+
+(node:18852) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:40024) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | test/run105-telemetry-failure-dimensions.test.ts > R15 necessary metadata boundary 16383
+R15 final dimensions bytes: 16383
+
+stdout | test/run105-telemetry-failure-dimensions.test.ts > R15 necessary metadata boundary 16384
+R15 final dimensions bytes: 16384
+
+stdout | test/run105-telemetry-failure-dimensions.test.ts > R15 necessary metadata boundary 16385
+R15 actual dimensions reproduction: runtime telemetry dimensions_json exceeds 16384 bytes; externalize rich content via artifactRefs
+
+ ✓ test/run94-sp48-null-retain.test.ts (4 tests) 820ms
+stdout | test/run105-telemetry-failure-dimensions.test.ts > R15 exact saved live dimensions input persists (graph=false)
+R15 final dimensions bytes: 1790
+
+stdout | test/run105-telemetry-failure-dimensions.test.ts > R15 exact saved live dimensions input persists (graph=true)
+R15 final dimensions bytes: 2014
+
+stdout | test/run105-telemetry-failure-dimensions.test.ts > R15 dimensions bound Unicode lists and aggregate while preserving primary facts and privacy
+R15 final dimensions bytes: 8969
+
+ ✓ test/run105-telemetry-failure-dimensions.test.ts (9 tests) 1231ms
+
+ Test Files  2 passed (2)
+      Tests  13 passed (13)
+   Start at  18:47:03
+   Duration  2.40s (transform 420ms, setup 0ms, collect 837ms, tests 2.05s, environment 1ms, prepare 534ms)
+

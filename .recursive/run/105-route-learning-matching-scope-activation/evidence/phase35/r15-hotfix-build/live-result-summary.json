@@ -1,0 +1,908 @@
+[
+  {
+    "requestId": "req-0f1eb9ad-01cc-48e1-a9c3-5c841773f751",
+    "clientId": "r15-live-ascii",
+    "bytes": 3007,
+    "observation": {
+      "requestId": "req-0f1eb9ad-01cc-48e1-a9c3-5c841773f751",
+      "clientRequestId": "r15-live-ascii",
+      "routingDecisionId": "decision-req-0f1eb9ad-01cc-48e1-a9c3-5c841773f751",
+      "endpointId": "deepseek.personal.r15-local-mock.global.deepseek-v4-pro",
+      "reasoningEffort": null,
+      "effortSource": "none",
+      "conversationId": "conversation-main",
+      "usageEvent": {
+        "timestamp_ms": 1791021360137,
+        "request_id": "req-0f1eb9ad-01cc-48e1-a9c3-5c841773f751",
+        "routing_decision_id": "decision-req-0f1eb9ad-01cc-48e1-a9c3-5c841773f751",
+        "endpoint_id": "deepseek.personal.r15-local-mock.global.deepseek-v4-pro",
+        "model_id": "deepseek/deepseek-v4-pro",
+        "tokens_in": 0,
+        "tokens_out": 0,
+        "latency_ms": 2229,
+        "cost_actual": null,
+        "cost_estimate": null,
+        "currency": "USD",
+        "error_class": "execution_failed"
+      },
+      "executionTelemetry": {
+        "providerFamily": "deepseek",
+        "finishReason": "error",
+        "costProvenance": "unavailable",
+        "usageSupport": {
+          "inputTokens": true,
+          "outputTokens": true,
+          "cacheReadTokens": true,
+          "cacheWriteTokens": true
+        },
+        "promptCaching": {
+          "supported": true
+        }
+      },
+      "executionSemantics": {
+        "executionFamily": "remote-service",
+        "adapterFamily": "ai-sdk-openai-compatible",
+        "toolSideEffectState": "none",
+        "idempotencyDecision": "not_needed",
+        "payloadBytes": {
+          "ingress": 0,
+          "translated": 0,
+          "providerCanonical": 0,
+          "providerWire": 0,
+          "providerResponse": 0
+        }
+      },
+      "capturePolicy": {
+        "environment": "runtime-pre-execution-failure",
+        "redactionLevel": "strict",
+        "retentionClass": "standard",
+        "structuredInspectionMode": "summary-only",
+        "rawCaptureAvailable": false,
+        "structuredInspectionAvailable": true
+      },
+      "privacyReceipt": {
+        "samplingRate": 1,
+        "retentionTtlHours": 720,
+        "retainUntil": 1793613360137
+      },
+      "observedPerformance": {
+        "endpointVersion": "pre-execution-failure",
+        "sample": {
+          "endpoint_id": "deepseek.personal.r15-local-mock.global.deepseek-v4-pro",
+          "endpoint_version": "pre-execution-failure",
+          "model_id": "deepseek/deepseek-v4-pro",
+          "source_type": "live_request",
+          "timestamp_ms": 1791021360137,
+          "latency_ms": 2229
+        },
+        "profile": {
+          "endpoint_id": "deepseek.personal.r15-local-mock.global.deepseek-v4-pro",
+          "endpoint_version": "pre-execution-failure",
+          "measured_at_ms": 1791021360137,
+          "measurement_window": {
+            "started_at_ms": 1791021360137,
+            "ended_at_ms": 1791021360137
+          },
+          "sample_size": 1,
+          "sources": {
+            "live_request_samples": 1,
+            "benchmark_samples": 0
+          },
+          "latency_ms_p50": 2229,
+          "latency_ms_p95": 2229,
+          "failure_rate": 1,
+          "freshness_score": 1,
+          "confidence_score": 0.1762914343888821,
+          "error_class_rates": {
+            "execution_failed": 1
+          }
+        }
+      },
+      "telemetrySnapshot": {
+        "providerId": "deepseek",
+        "providerAccountId": null,
+        "sourceType": "local",
+        "endpointKind": "unknown",
+        "servingSource": "remote-service",
+        "region": null,
+        "lifecycleStateAtRequest": "unknown",
+        "healthStatusAtRequest": null,
+        "requestedModelId": "deepseek/deepseek-v4-pro",
+        "requestOperation": "chat",
+        "toolingUsed": false,
+        "cacheState": "unknown",
+        "selectedUncachedCostUsd": 0,
+        "baselineMaxEligibleCostUsd": 0,
+        "routingCostSavingsUsd": 0,
+        "cacheCostSavingsUsd": 0,
+        "totalAvoidedCostUsd": 0,
+        "costBaselineSource": null,
+        "costSavingsSupport": null,
+        "selectedPricingSnapshot": null
+      },
+      "statusFamily": "failure",
+      "failure": {
+        "statusCode": 422,
+        "errorClass": "execution_failed",
+        "latencyMs": 2229
+      }
+    },
+    "response": {
+      "status": 422,
+      "keys": [
+        "error"
+      ],
+      "errorKeys": [
+        "message",
+        "type",
+        "code",
+        "retryable",
+        "fallbackEligible",
+        "endpointId",
+        "providerId",
+        "providerFamily",
+        "executionFamily",
+        "adapterFamily",
+        "failurePhase",
+        "errorPreview",
+        "upstreamBody"
+      ],
+      "errorClass": "execution_failed",
+      "errorCode": "execution_failed",
+      "messageBytes": 120020
+    }
+  },
+  {
+    "requestId": "req-3f23c88f-74f1-4217-9b73-507baa9ec028",
+    "clientId": "r15-live-utf8",
+    "bytes": 3001,
+    "observation": {
+      "requestId": "req-3f23c88f-74f1-4217-9b73-507baa9ec028",
+      "clientRequestId": "r15-live-utf8",
+      "routingDecisionId": "decision-req-3f23c88f-74f1-4217-9b73-507baa9ec028",
+      "endpointId": "deepseek.personal.r15-local-mock.global.deepseek-v4-pro",
+      "reasoningEffort": null,
+      "effortSource": "none",
+      "conversationId": "conversation-main",
+      "usageEvent": {
+        "timestamp_ms": 1791021360299,
+        "request_id": "req-3f23c88f-74f1-4217-9b73-507baa9ec028",
+        "routing_decision_id": "decision-req-3f23c88f-74f1-4217-9b73-507baa9ec028",
+        "endpoint_id": "deepseek.personal.r15-local-mock.global.deepseek-v4-pro",
+        "model_id": "deepseek/deepseek-v4-pro",
+        "tokens_in": 0,
+        "tokens_out": 0,
+        "latency_ms": 113,
+        "cost_actual": null,
+        "cost_estimate": null,
+        "currency": "USD",
+        "error_class": "execution_failed"
+      },
+      "executionTelemetry": {
+        "providerFamily": "deepseek",
+        "finishReason": "error",
+        "costProvenance": "unavailable",
+        "usageSupport": {
+          "inputTokens": true,
+          "outputTokens": true,
+          "cacheReadTokens": true,
+          "cacheWriteTokens": true
+        },
+        "promptCaching": {
+          "supported": true
+        }
+      },
+      "executionSemantics": {
+        "executionFamily": "remote-service",
+        "adapterFamily": "ai-sdk-openai-compatible",
+        "toolSideEffectState": "none",
+        "idempotencyDecision": "not_needed",
+        "payloadBytes": {
+          "ingress": 0,
+          "translated": 0,
+          "providerCanonical": 0,
+          "providerWire": 0,
+          "providerResponse": 0
+        }
+      },
+      "capturePolicy": {
+        "environment": "runtime-pre-execution-failure",
+        "redactionLevel": "strict",
+        "retentionClass": "standard",
+        "structuredInspectionMode": "summary-only",
+        "rawCaptureAvailable": false,
+        "structuredInspectionAvailable": true
+      },
+      "privacyReceipt": {
+        "samplingRate": 1,
+        "retentionTtlHours": 720,
+        "retainUntil": 1793613360299
+      },
+      "observedPerformance": {
+        "endpointVersion": "pre-execution-failure",
+        "sample": {
+          "endpoint_id": "deepseek.personal.r15-local-mock.global.deepseek-v4-pro",
+          "endpoint_version": "pre-execution-failure",
+          "model_id": "deepseek/deepseek-v4-pro",
+          "source_type": "live_request",
+          "timestamp_ms": 1791021360299,
+          "latency_ms": 113
+        },
+        "profile": {
+          "endpoint_id": "deepseek.personal.r15-local-mock.global.deepseek-v4-pro",
+          "endpoint_version": "pre-execution-failure",
+          "measured_at_ms": 1791021360299,
+          "measurement_window": {
+            "started_at_ms": 1791021360299,
+            "ended_at_ms": 1791021360299
+          },
+          "sample_size": 1,
+          "sources": {
+            "live_request_samples": 1,
+            "benchmark_samples": 0
+          },
+          "latency_ms_p50": 113,
+          "latency_ms_p95": 113,
+          "failure_rate": 1,
+          "freshness_score": 1,
+          "confidence_score": 0.1762914343888821,
+          "error_class_rates": {
+            "execution_failed": 1
+          }
+        }
+      },
+      "telemetrySnapshot": {
+        "providerId": "deepseek",
+        "providerAccountId": null,
+        "sourceType": "local",
+        "endpointKind": "unknown",
+        "servingSource": "remote-service",
+        "region": null,
+        "lifecycleStateAtRequest": "unknown",
+        "healthStatusAtRequest": null,
+        "requestedModelId": "deepseek/deepseek-v4-pro",
+        "requestOperation": "chat",
+        "toolingUsed": false,
+        "cacheState": "unknown",
+        "selectedUncachedCostUsd": 0,
+        "baselineMaxEligibleCostUsd": 0,
+        "routingCostSavingsUsd": 0,
+        "cacheCostSavingsUsd": 0,
+        "totalAvoidedCostUsd": 0,
+        "costBaselineSource": null,
+        "costSavingsSupport": null,
+        "selectedPricingSnapshot": null
+      },
+      "statusFamily": "failure",
+      "failure": {
+        "statusCode": 422,
+        "errorClass": "execution_failed",
+        "latencyMs": 113
+      }
+    },
+    "response": {
+      "status": 422,
+      "keys": [
+        "error"
+      ],
+      "errorKeys": [
+        "message",
+        "type",
+        "code",
+        "retryable",
+        "fallbackEligible",
+        "endpointId",
+        "providerId",
+        "providerFamily",
+        "executionFamily",
+        "adapterFamily",
+        "failurePhase",
+        "errorPreview",
+        "upstreamBody"
+      ],
+      "errorClass": "execution_failed",
+      "errorCode": "execution_failed",
+      "messageBytes": 300019
+    }
+  },
+  {
+    "requestId": "req-ddc3ae2c-d96d-4fb5-abeb-9757e14c5f84",
+    "clientId": "r15-live-routed-ascii",
+    "bytes": 2820,
+    "observation": {
+      "requestId": "req-ddc3ae2c-d96d-4fb5-abeb-9757e14c5f84",
+      "clientRequestId": "r15-live-routed-ascii",
+      "routingDecisionId": "decision-req-ddc3ae2c-d96d-4fb5-abeb-9757e14c5f84",
+      "endpointId": "routing.failed.pre-execution",
+      "reasoningEffort": null,
+      "effortSource": "none",
+      "conversationId": "conversation-main",
+      "usageEvent": {
+        "timestamp_ms": 1791021754498,
+        "request_id": "req-ddc3ae2c-d96d-4fb5-abeb-9757e14c5f84",
+        "routing_decision_id": "decision-req-ddc3ae2c-d96d-4fb5-abeb-9757e14c5f84",
+        "endpoint_id": "routing.failed.pre-execution",
+        "model_id": "baseline.remote-only",
+        "tokens_in": 0,
+        "tokens_out": 0,
+        "latency_ms": 9,
+        "cost_actual": null,
+        "cost_estimate": null,
+        "currency": "USD",
+        "error_class": "no_eligible_target"
+      },
+      "executionTelemetry": {
+        "finishReason": "error",
+        "costProvenance": "unavailable",
+        "usageSupport": {
+          "inputTokens": true,
+          "outputTokens": true,
+          "cacheReadTokens": true,
+          "cacheWriteTokens": true
+        },
+        "promptCaching": {
+          "supported": true
+        }
+      },
+      "executionSemantics": {
+        "executionFamily": "unknown",
+        "adapterFamily": "unknown",
+        "toolSideEffectState": "none",
+        "idempotencyDecision": "not_needed",
+        "payloadBytes": {
+          "ingress": 0,
+          "translated": 0,
+          "providerCanonical": 0,
+          "providerWire": 0,
+          "providerResponse": 0
+        }
+      },
+      "capturePolicy": {
+        "environment": "runtime-pre-execution-failure",
+        "redactionLevel": "strict",
+        "retentionClass": "standard",
+        "structuredInspectionMode": "summary-only",
+        "rawCaptureAvailable": false,
+        "structuredInspectionAvailable": true
+      },
+      "privacyReceipt": {
+        "samplingRate": 1,
+        "retentionTtlHours": 720,
+        "retainUntil": 1793613754498
+      },
+      "observedPerformance": {
+        "endpointVersion": "pre-execution-failure",
+        "sample": {
+          "endpoint_id": "routing.failed.pre-execution",
+          "endpoint_version": "pre-execution-failure",
+          "model_id": "baseline.remote-only",
+          "source_type": "live_request",
+          "timestamp_ms": 1791021754498,
+          "latency_ms": 9
+        },
+        "profile": {
+          "endpoint_id": "routing.failed.pre-execution",
+          "endpoint_version": "pre-execution-failure",
+          "measured_at_ms": 1791021754498,
+          "measurement_window": {
+            "started_at_ms": 1791021754498,
+            "ended_at_ms": 1791021754498
+          },
+          "sample_size": 1,
+          "sources": {
+            "live_request_samples": 1,
+            "benchmark_samples": 0
+          },
+          "latency_ms_p50": 9,
+          "latency_ms_p95": 9,
+          "failure_rate": 1,
+          "freshness_score": 1,
+          "confidence_score": 0.1762914343888821,
+          "error_class_rates": {
+            "no_eligible_target": 1
+          }
+        }
+      },
+      "telemetrySnapshot": {
+        "providerId": null,
+        "providerAccountId": null,
+        "sourceType": "local",
+        "endpointKind": "unknown",
+        "servingSource": "unknown",
+        "region": null,
+        "lifecycleStateAtRequest": "unknown",
+        "healthStatusAtRequest": null,
+        "requestedModelId": "baseline.remote-only",
+        "requestOperation": "chat",
+        "toolingUsed": false,
+        "cacheState": "unknown",
+        "selectedUncachedCostUsd": 0,
+        "baselineMaxEligibleCostUsd": 0,
+        "routingCostSavingsUsd": 0,
+        "cacheCostSavingsUsd": 0,
+        "totalAvoidedCostUsd": 0,
+        "costBaselineSource": null,
+        "costSavingsSupport": null,
+        "selectedPricingSnapshot": null
+      },
+      "statusFamily": "failure",
+      "failure": {
+        "statusCode": 400,
+        "errorClass": "no_eligible_target",
+        "latencyMs": 9
+      }
+    },
+    "response": {
+      "status": 400,
+      "keys": [
+        "error"
+      ],
+      "errorKeys": [
+        "type",
+        "code",
+        "message",
+        "requestedModel",
+        "requiredInputModalities",
+        "requiredOutputModalities",
+        "requiredCapabilities",
+        "excludedTargets"
+      ],
+      "errorClass": "capability_eligibility_error",
+      "errorCode": "no_eligible_target",
+      "messageBytes": 104
+    }
+  },
+  {
+    "requestId": "req-25cf16bd-10c5-4cb7-ad83-473255d749ba",
+    "clientId": "r15-live-routed-utf8",
+    "bytes": 2824,
+    "observation": {
+      "requestId": "req-25cf16bd-10c5-4cb7-ad83-473255d749ba",
+      "clientRequestId": "r15-live-routed-utf8",
+      "routingDecisionId": "decision-req-25cf16bd-10c5-4cb7-ad83-473255d749ba",
+      "endpointId": "routing.failed.pre-execution",
+      "reasoningEffort": null,
+      "effortSource": "none",
+      "conversationId": "conversation-main",
+      "usageEvent": {
+        "timestamp_ms": 1791021754557,
+        "request_id": "req-25cf16bd-10c5-4cb7-ad83-473255d749ba",
+        "routing_decision_id": "decision-req-25cf16bd-10c5-4cb7-ad83-473255d749ba",
+        "endpoint_id": "routing.failed.pre-execution",
+        "model_id": "baseline.remote-only",
+        "tokens_in": 0,
+        "tokens_out": 0,
+        "latency_ms": 10,
+        "cost_actual": null,
+        "cost_estimate": null,
+        "currency": "USD",
+        "error_class": "no_eligible_target"
+      },
+      "executionTelemetry": {
+        "finishReason": "error",
+        "costProvenance": "unavailable",
+        "usageSupport": {
+          "inputTokens": true,
+          "outputTokens": true,
+          "cacheReadTokens": true,
+          "cacheWriteTokens": true
+        },
+        "promptCaching": {
+          "supported": true
+        }
+      },
+      "executionSemantics": {
+        "executionFamily": "unknown",
+        "adapterFamily": "unknown",
+        "toolSideEffectState": "none",
+        "idempotencyDecision": "not_needed",
+        "payloadBytes": {
+          "ingress": 0,
+          "translated": 0,
+          "providerCanonical": 0,
+          "providerWire": 0,
+          "providerResponse": 0
+        }
+      },
+      "capturePolicy": {
+        "environment": "runtime-pre-execution-failure",
+        "redactionLevel": "strict",
+        "retentionClass": "standard",
+        "structuredInspectionMode": "summary-only",
+        "rawCaptureAvailable": false,
+        "structuredInspectionAvailable": true
+      },
+      "privacyReceipt": {
+        "samplingRate": 1,
+        "retentionTtlHours": 720,
+        "retainUntil": 1793613754557
+      },
+      "observedPerformance": {
+        "endpointVersion": "pre-execution-failure",
+        "sample": {
+          "endpoint_id": "routing.failed.pre-execution",
+          "endpoint_version": "pre-execution-failure",
+          "model_id": "baseline.remote-only",
+          "source_type": "live_request",
+          "timestamp_ms": 1791021754557,
+          "latency_ms": 10
+        },
+        "profile": {
+          "endpoint_id": "routing.failed.pre-execution",
+          "endpoint_version": "pre-execution-failure",
+          "measured_at_ms": 1791021754557,
+          "measurement_window": {
+            "started_at_ms": 1791021754557,
+            "ended_at_ms": 1791021754557
+          },
+          "sample_size": 1,
+          "sources": {
+            "live_request_samples": 1,
+            "benchmark_samples": 0
+          },
+          "latency_ms_p50": 10,
+          "latency_ms_p95": 10,
+          "failure_rate": 1,
+          "freshness_score": 1,
+          "confidence_score": 0.1762914343888821,
+          "error_class_rates": {
+            "no_eligible_target": 1
+          }
+        }
+      },
+      "telemetrySnapshot": {
+        "providerId": null,
+        "providerAccountId": null,
+        "sourceType": "local",
+        "endpointKind": "unknown",
+        "servingSource": "unknown",
+        "region": null,
+        "lifecycleStateAtRequest": "unknown",
+        "healthStatusAtRequest": null,
+        "requestedModelId": "baseline.remote-only",
+        "requestOperation": "chat",
+        "toolingUsed": false,
+        "cacheState": "unknown",
+        "selectedUncachedCostUsd": 0,
+        "baselineMaxEligibleCostUsd": 0,
+        "routingCostSavingsUsd": 0,
+        "cacheCostSavingsUsd": 0,
+        "totalAvoidedCostUsd": 0,
+        "costBaselineSource": null,
+        "costSavingsSupport": null,
+        "selectedPricingSnapshot": null
+      },
+      "statusFamily": "failure",
+      "failure": {
+        "statusCode": 400,
+        "errorClass": "no_eligible_target",
+        "latencyMs": 10
+      }
+    },
+    "response": {
+      "status": 400,
+      "keys": [
+        "error"
+      ],
+      "errorKeys": [
+        "type",
+        "code",
+        "message",
+        "requestedModel",
+        "requiredInputModalities",
+        "requiredOutputModalities",
+        "requiredCapabilities",
+        "excludedTargets"
+      ],
+      "errorClass": "capability_eligibility_error",
+      "errorCode": "no_eligible_target",
+      "messageBytes": 104
+    }
+  },
+  {
+    "requestId": "req-9f337ad2-9cb3-4108-b2c0-038bb1c64307",
+    "clientId": "r15-live-unpinned-ascii",
+    "bytes": 2908,
+    "observation": {
+      "requestId": "req-9f337ad2-9cb3-4108-b2c0-038bb1c64307",
+      "clientRequestId": "r15-live-unpinned-ascii",
+      "routingDecisionId": "decision-req-9f337ad2-9cb3-4108-b2c0-038bb1c64307",
+      "endpointId": "routing.failed.pre-execution",
+      "reasoningEffort": null,
+      "effortSource": "none",
+      "conversationId": "conversation-main",
+      "usageEvent": {
+        "timestamp_ms": 1791021886281,
+        "request_id": "req-9f337ad2-9cb3-4108-b2c0-038bb1c64307",
+        "routing_decision_id": "decision-req-9f337ad2-9cb3-4108-b2c0-038bb1c64307",
+        "endpoint_id": "routing.failed.pre-execution",
+        "model_id": "deepseek/deepseek-v4-pro",
+        "tokens_in": 0,
+        "tokens_out": 0,
+        "latency_ms": 2158,
+        "cost_actual": null,
+        "cost_estimate": null,
+        "currency": "USD",
+        "error_class": "execution_failed"
+      },
+      "executionTelemetry": {
+        "providerFamily": "deepseek",
+        "finishReason": "error",
+        "costProvenance": "unavailable",
+        "usageSupport": {
+          "inputTokens": true,
+          "outputTokens": true,
+          "cacheReadTokens": true,
+          "cacheWriteTokens": true
+        },
+        "promptCaching": {
+          "supported": true
+        }
+      },
+      "executionSemantics": {
+        "executionFamily": "remote-service",
+        "adapterFamily": "ai-sdk-openai-compatible",
+        "toolSideEffectState": "none",
+        "idempotencyDecision": "not_needed",
+        "payloadBytes": {
+          "ingress": 0,
+          "translated": 0,
+          "providerCanonical": 0,
+          "providerWire": 0,
+          "providerResponse": 0
+        }
+      },
+      "capturePolicy": {
+        "environment": "runtime-pre-execution-failure",
+        "redactionLevel": "strict",
+        "retentionClass": "standard",
+        "structuredInspectionMode": "summary-only",
+        "rawCaptureAvailable": false,
+        "structuredInspectionAvailable": true
+      },
+      "privacyReceipt": {
+        "samplingRate": 1,
+        "retentionTtlHours": 720,
+        "retainUntil": 1793613886281
+      },
+      "observedPerformance": {
+        "endpointVersion": "pre-execution-failure",
+        "sample": {
+          "endpoint_id": "routing.failed.pre-execution",
+          "endpoint_version": "pre-execution-failure",
+          "model_id": "deepseek/deepseek-v4-pro",
+          "source_type": "live_request",
+          "timestamp_ms": 1791021886281,
+          "latency_ms": 2158
+        },
+        "profile": {
+          "endpoint_id": "routing.failed.pre-execution",
+          "endpoint_version": "pre-execution-failure",
+          "measured_at_ms": 1791021886281,
+          "measurement_window": {
+            "started_at_ms": 1791021886281,
+            "ended_at_ms": 1791021886281
+          },
+          "sample_size": 1,
+          "sources": {
+            "live_request_samples": 1,
+            "benchmark_samples": 0
+          },
+          "latency_ms_p50": 2158,
+          "latency_ms_p95": 2158,
+          "failure_rate": 1,
+          "freshness_score": 1,
+          "confidence_score": 0.1762914343888821,
+          "error_class_rates": {
+            "execution_failed": 1
+          }
+        }
+      },
+      "telemetrySnapshot": {
+        "providerId": "deepseek",
+        "providerAccountId": null,
+        "sourceType": "local",
+        "endpointKind": "unknown",
+        "servingSource": "remote-service",
+        "region": null,
+        "lifecycleStateAtRequest": "unknown",
+        "healthStatusAtRequest": null,
+        "requestedModelId": "deepseek/deepseek-v4-pro",
+        "requestOperation": "chat",
+        "toolingUsed": false,
+        "cacheState": "unknown",
+        "selectedUncachedCostUsd": 0,
+        "baselineMaxEligibleCostUsd": 0,
+        "routingCostSavingsUsd": 0,
+        "cacheCostSavingsUsd": 0,
+        "totalAvoidedCostUsd": 0,
+        "costBaselineSource": null,
+        "costSavingsSupport": null,
+        "selectedPricingSnapshot": null
+      },
+      "statusFamily": "failure",
+      "failure": {
+        "statusCode": 422,
+        "errorClass": "execution_failed",
+        "latencyMs": 2158
+      }
+    },
+    "response": {
+      "status": 422,
+      "keys": [
+        "error"
+      ],
+      "errorKeys": [
+        "message",
+        "type",
+        "code",
+        "retryable",
+        "fallbackEligible",
+        "endpointId",
+        "providerId",
+        "providerFamily",
+        "executionFamily",
+        "adapterFamily",
+        "failurePhase",
+        "errorPreview",
+        "upstreamBody"
+      ],
+      "errorClass": "execution_failed",
+      "errorCode": "execution_failed",
+      "messageBytes": 120020
+    }
+  },
+  {
+    "requestId": "req-59422e40-0abc-41ff-a3d4-d251a7a61f66",
+    "clientId": "r15-live-unpinned-utf8",
+    "bytes": 2902,
+    "observation": {
+      "requestId": "req-59422e40-0abc-41ff-a3d4-d251a7a61f66",
+      "clientRequestId": "r15-live-unpinned-utf8",
+      "routingDecisionId": "decision-req-59422e40-0abc-41ff-a3d4-d251a7a61f66",
+      "endpointId": "routing.failed.pre-execution",
+      "reasoningEffort": null,
+      "effortSource": "none",
+      "conversationId": "conversation-main",
+      "usageEvent": {
+        "timestamp_ms": 1791021886500,
+        "request_id": "req-59422e40-0abc-41ff-a3d4-d251a7a61f66",
+        "routing_decision_id": "decision-req-59422e40-0abc-41ff-a3d4-d251a7a61f66",
+        "endpoint_id": "routing.failed.pre-execution",
+        "model_id": "deepseek/deepseek-v4-pro",
+        "tokens_in": 0,
+        "tokens_out": 0,
+        "latency_ms": 175,
+        "cost_actual": null,
+        "cost_estimate": null,
+        "currency": "USD",
+        "error_class": "execution_failed"
+      },
+      "executionTelemetry": {
+        "providerFamily": "deepseek",
+        "finishReason": "error",
+        "costProvenance": "unavailable",
+        "usageSupport": {
+          "inputTokens": true,
+          "outputTokens": true,
+          "cacheReadTokens": true,
+          "cacheWriteTokens": true
+        },
+        "promptCaching": {
+          "supported": true
+        }
+      },
+      "executionSemantics": {
+        "executionFamily": "remote-service",
+        "adapterFamily": "ai-sdk-openai-compatible",
+        "toolSideEffectState": "none",
+        "idempotencyDecision": "not_needed",
+        "payloadBytes": {
+          "ingress": 0,
+          "translated": 0,
+          "providerCanonical": 0,
+          "providerWire": 0,
+          "providerResponse": 0
+        }
+      },
+      "capturePolicy": {
+        "environment": "runtime-pre-execution-failure",
+        "redactionLevel": "strict",
+        "retentionClass": "standard",
+        "structuredInspectionMode": "summary-only",
+        "rawCaptureAvailable": false,
+        "structuredInspectionAvailable": true
+      },
+      "privacyReceipt": {
+        "samplingRate": 1,
+        "retentionTtlHours": 720,
+        "retainUntil": 1793613886500
+      },
+      "observedPerformance": {
+        "endpointVersion": "pre-execution-failure",
+        "sample": {
+          "endpoint_id": "routing.failed.pre-execution",
+          "endpoint_version": "pre-execution-failure",
+          "model_id": "deepseek/deepseek-v4-pro",
+          "source_type": "live_request",
+          "timestamp_ms": 1791021886500,
+          "latency_ms": 175
+        },
+        "profile": {
+          "endpoint_id": "routing.failed.pre-execution",
+          "endpoint_version": "pre-execution-failure",
+          "measured_at_ms": 1791021886500,
+          "measurement_window": {
+            "started_at_ms": 1791021886500,
+            "ended_at_ms": 1791021886500
+          },
+          "sample_size": 1,
+          "sources": {
+            "live_request_samples": 1,
+            "benchmark_samples": 0
+          },
+          "latency_ms_p50": 175,
+          "latency_ms_p95": 175,
+          "failure_rate": 1,
+          "freshness_score": 1,
+          "confidence_score": 0.1762914343888821,
+          "error_class_rates": {
+            "execution_failed": 1
+          }
+        }
+      },
+      "telemetrySnapshot": {
+        "providerId": "deepseek",
+        "providerAccountId": null,
+        "sourceType": "local",
+        "endpointKind": "unknown",
+        "servingSource": "remote-service",
+        "region": null,
+        "lifecycleStateAtRequest": "unknown",
+        "healthStatusAtRequest": null,
+        "requestedModelId": "deepseek/deepseek-v4-pro",
+        "requestOperation": "chat",
+        "toolingUsed": false,
+        "cacheState": "unknown",
+        "selectedUncachedCostUsd": 0,
+        "baselineMaxEligibleCostUsd": 0,
+        "routingCostSavingsUsd": 0,
+        "cacheCostSavingsUsd": 0,
+        "totalAvoidedCostUsd": 0,
+        "costBaselineSource": null,
+        "costSavingsSupport": null,
+        "selectedPricingSnapshot": null
+      },
+      "statusFamily": "failure",
+      "failure": {
+        "statusCode": 422,
+        "errorClass": "execution_failed",
+        "latencyMs": 175
+      }
+    },
+    "response": {
+      "status": 422,
+      "keys": [
+        "error"
+      ],
+      "errorKeys": [
+        "message",
+        "type",
+        "code",
+        "retryable",
+        "fallbackEligible",
+        "endpointId",
+        "providerId",
+        "providerFamily",
+        "executionFamily",
+        "adapterFamily",
+        "failurePhase",
+        "errorPreview",
+        "upstreamBody"
+      ],
+      "errorClass": "execution_failed",
+      "errorCode": "execution_failed",
+      "messageBytes": 300019
+    }
+  }
+]

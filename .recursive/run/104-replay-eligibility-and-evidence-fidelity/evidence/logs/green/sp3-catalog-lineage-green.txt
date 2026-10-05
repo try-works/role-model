@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/packages/catalog
+
+ ✓ test/run104-alias-lineage.test.ts (3 tests) 345ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  18:45:04
+   Duration  2.77s (transform 499ms, setup 0ms, collect 405ms, tests 345ms, environment 1ms, prepare 855ms)
+

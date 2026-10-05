@@ -1,0 +1,65 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/packages/sqlite-memory
+
+(node:40404) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | test/run105-telemetry-failure-dimensions.test.ts > R15 exact saved live dimensions input persists (graph=false)
+R15 actual dimensions reproduction: runtime telemetry dimensions_json exceeds 16384 bytes; externalize rich content via artifactRefs
+
+stdout | test/run105-telemetry-failure-dimensions.test.ts > R15 exact saved live dimensions input persists (graph=true)
+R15 actual dimensions reproduction: runtime telemetry dimensions_json exceeds 16384 bytes; externalize rich content via artifactRefs
+
+stdout | test/run105-telemetry-failure-dimensions.test.ts > R15 dimensions bound Unicode lists and aggregate while preserving primary facts and privacy
+R15 actual dimensions reproduction: runtime telemetry dimensions_json exceeds 16384 bytes; externalize rich content via artifactRefs
+
+ ❯ test/run105-telemetry-failure-dimensions.test.ts (3 tests | 3 failed) 577ms
+   × R15 exact saved live dimensions input persists (graph=false) 196ms
+     → actual live dimensions must not interrupt primary failure persistence: expected Error: runtime telemetry dimensions_json … to be undefined
+   × R15 exact saved live dimensions input persists (graph=true) 152ms
+     → actual live dimensions must not interrupt primary failure persistence: expected Error: runtime telemetry dimensions_json … to be undefined
+   × R15 dimensions bound Unicode lists and aggregate while preserving primary facts and privacy 226ms
+     → actual live dimensions must not interrupt primary failure persistence: expected Error: runtime telemetry dimensions_json … to be undefined
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run105-telemetry-failure-dimensions.test.ts > R15 exact saved live dimensions input persists (graph=false)
+ FAIL  test/run105-telemetry-failure-dimensions.test.ts > R15 exact saved live dimensions input persists (graph=true)
+AssertionError: actual live dimensions must not interrupt primary failure persistence: expected Error: runtime telemetry dimensions_json … to be undefined
+
+- Expected: 
+undefined
+
++ Received: 
+Error {
+  "message": "runtime telemetry dimensions_json exceeds 16384 bytes; externalize rich content via artifactRefs",
+}
+
+ ❯ persistCase test/run105-telemetry-failure-dimensions.test.ts:20:90
+
+ ❯ test/run105-telemetry-failure-dimensions.test.ts:33:47
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  test/run105-telemetry-failure-dimensions.test.ts > R15 dimensions bound Unicode lists and aggregate while preserving primary facts and privacy
+AssertionError: actual live dimensions must not interrupt primary failure persistence: expected Error: runtime telemetry dimensions_json … to be undefined
+
+- Expected: 
+undefined
+
++ Received: 
+Error {
+  "message": "runtime telemetry dimensions_json exceeds 16384 bytes; externalize rich content via artifactRefs",
+}
+
+ ❯ persistCase test/run105-telemetry-failure-dimensions.test.ts:20:90
+
+ ❯ test/run105-telemetry-failure-dimensions.test.ts:46:35
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed (3)
+   Start at  18:30:44
+   Duration  2.24s (transform 447ms, setup 0ms, collect 514ms, tests 577ms, environment 1ms, prepare 360ms)
+

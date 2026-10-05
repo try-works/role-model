@@ -1,0 +1,33 @@
+✖ run99 R33 every published activation-policy field is read by a consumer (1758.2406ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2536.3138
+
+✖ failing tests:
+
+test at tests\track-b\run99-r33-policy-consumers.test.mjs:92:1
+✖ run99 R33 every published activation-policy field is read by a consumer (1758.2406ms)
+  AssertionError [ERR_ASSERTION]: published policy fields with no consumer: perArmOutputEvidence, perArmOutputExclusionBound (wire them or remove them, and shrink KNOWN_UNWIRED)
+  + actual - expected
+  
+  + [
+  +   'perArmOutputEvidence',
+  +   'perArmOutputExclusionBound'
+  + ]
+  - []
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/104-replay-eligibility-and-evidence-fidelity/tests/track-b/run99-r33-policy-consumers.test.mjs:118:10)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ 'perArmOutputEvidence', 'perArmOutputExclusionBound' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

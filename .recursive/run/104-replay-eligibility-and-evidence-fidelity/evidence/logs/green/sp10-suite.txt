@@ -1,0 +1,131 @@
+(node:36996) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ run100h a leased job whose lease was lost is claimable instead of wedged (28.9156ms)
+✔ run100h a scoring job whose lease was lost is claimable again (18.5634ms)
+✔ run100h a live lease is still respected (15.9327ms)
+(node:33488) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ @recursive:101-effect-mq-queue-rebuild @sp5 R5: the shipped policy keeps the 15-minute evaluation lock (4.9892ms)
+✔ @recursive:101-effect-mq-queue-rebuild @sp5 R5: the job id is the finalized comparison (1.619ms)
+✔ @recursive:101-effect-mq-queue-rebuild @sp5 R5: a duplicate enqueue for one comparison is one job (1827.6001ms)
+✔ @recursive:101-effect-mq-queue-rebuild @sp5 R5: a handler that fails its evidence write is retried, not acknowledged (3684.7322ms)
+✔ @recursive:101-effect-mq-queue-rebuild @sp5 R5: a killed worker's job is recovered by lock expiry, with no plane loop running (7411.566ms)
+✔ @recursive:101-effect-mq-queue-rebuild @sp5 addendum05: the evaluation worker re-raises interrupt-only causes (2.3216ms)
+(node:23664) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ @recursive:104-replay-eligibility-and-evidence-fidelity @sp10 R8: a legacy evaluation plane leaves the handoff inert (62.5553ms)
+✔ @recursive:104-replay-eligibility-and-evidence-fidelity @sp10 R8: one completed replay job enqueues exactly one evaluation job (230.7966ms)
+✔ @recursive:104-replay-eligibility-and-evidence-fidelity @sp10 R8: the supervised owner hands an awaiting_evaluation job off once (80.651ms)
+✔ Run96 S4 regression: the declared route-learning workflow uses the durable Evaluation Core trial lifecycle (40.5793ms)
+✔ Run96 regression: replay-core advertises every durable supervised-replay capability (14.5635ms)
+(node:26856) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ Run96 regression: scheduler advertises every durable supervised-replay intent capability (14.9125ms)
+✔ Run96 S4 RED: Evaluation Core process capabilities own a fenced durable job lifecycle (498.3916ms)
+✔ Run96 Addendum 15 RED: Evaluation Core retries an identical durable trial job and score without duplicating it (366.2435ms)
+✔ Run96 S4 RED: Evaluation Core makes an exact completion retry idempotent (361.0786ms)
+✔ Run96 S4 RED: Evaluation Core cancels a queued job through its process capability (265.5059ms)
+✔ Run96 S4 RED: Evaluation Core cancels a scoring job and terminalizes its trial (384.5475ms)
+✔ Run96 S4 RED: Evaluation Core renews a lease before another worker can take it (274.5148ms)
+✔ Run96 S4 RED: Evaluation Core releases a fenced lease for another worker (348.8466ms)
+✔ Run96 S4 RED: Evaluation Core claims the host-selected durable trial rather than an arbitrary queued trial (310.221ms)
+✔ Run96 S4 RED: Evaluation Core materializes a durable case-candidate trial through its process API (311.7098ms)
+✔ Run96 S4 RED: Evaluation Core leases a materialized trial to one runner (295.2762ms)
+✔ Run96 S4 RED: Evaluation Core fences renewal and explicit release of a durable trial lease (367.0557ms)
+✔ Run96 S4 RED: Evaluation Core accepts a fenced trial result draft with artifact refs (690.1042ms)
+✔ Run96 S4 RED: Evaluation Core registers a versioned scorer manifest through its process API (226.4062ms)
+✔ Run96 Addendum 15 RED: Evaluation Core accepts the Runner Local semantic criteria scorer manifest (230.3343ms)
+✔ Run96 Addendum 17 RED: Evaluation Core binds semantic scores to the registered manifest (338.0932ms)
+✔ Run96 S4 RED: Evaluation Core retains multiple manifest-bound scores for one submitted trial (355.6435ms)
+✔ Run96 S4 RED: Evaluation Core finalizes a comparable group from durable scored trials (616.4198ms)
+✔ Run96 S4 RED: Evaluation Core retains durable scorer disagreement instead of collapsing it into a tie (681.3912ms)
+✔ Run96 S4 RED: Evaluation Core preserves an insufficient comparable group without inventing a winner (496.1063ms)
+✔ Run96 S4 RED: Evaluation Core retains missing manifest dimensions as an incomplete comparison (633.3342ms)
+✔ Run96 S4 RED: Evaluation Core durably retains rejected non-comparable trial members (339.1691ms)
+✔ Run96 S4 regression: Evaluation Core preserves judge provenance when a trial is rescored (416.7558ms)
+✔ Run96 S4 regression: Evaluation Core requires semantic scorer source and configuration when rescoring (366.3222ms)
+✔ Run96 S4 regression: identical semantic rescore retries are idempotent while changed retries conflict (284.4099ms)
+✔ Run96 S4 RED: Evaluation Core persists a bounded scoring retry after a submitted result (327.3538ms)
+✔ Run96 S4 RED: Evaluation Core resolves a scoring retry without re-executing its trial (623.7589ms)
+✔ Run96 S4 RED: Evaluation Core records an explicit durable schema migration history (199.7764ms)
+✔ Run96 S4 RED: schema-v3 evaluation fails closed on unresolved artifacts and records score missingness/linkage (401.0273ms)
+✔ Run96 S4 RED: schema-v3 process APIs pass artifact scope and resolver into Evaluation Core (310.4288ms)
+✔ Run96 S4 RED: schema-v3 process APIs accept an authoritative artifact attestation at the process boundary (438.2944ms)
+✔ Run96 S4 RED: Evaluation Core resolves artifact-prefixed refs through the durable Artifact Store adapter (649.8199ms)
+✔ Run96 S4 RED: schema-v3 comparison finalization binds all comparability dimensions and immutable holdout membership (431.1698ms)
+✔ Run96 S4 RED: schema-v3 comparison finalization treats missing scores as insufficient and preserves their linkage (391.275ms)
+✔ Run96 S4 RED: legacy schema comparison finalization fails closed before comparability or holdout can be bypassed (366.3791ms)
+✔ Run96 S4 RED: schema-v3 comparison rejects unresolved non-artifact evidence references (512.0747ms)
+✔ Run96 S4 RED: schema-v3 finalization revalidates every durable job attestation (437.2942ms)
+✔ Run96 S4 RED: Evaluation Core fails a leased trial and releases its lease (290.9503ms)
+✔ Run96 S4 RED: legacy evaluation work-once failure is rejected before claiming a durable job (324.8546ms)
+✔ Run96 S5 RED: trajectory analysis for learning requires finalized Evaluation Core provenance (33.8078ms)
+✔ Run96 S5 RED: finalized learning signals retain complete replay, score, route-package, and estimator lineage (1.7104ms)
+✔ Run96 S5 RED: profile estimates for learning require finalized evaluation and signal provenance (113.4937ms)
+✔ Run96 S5 RED: profile estimates retain reproducible weights and lower confidence for sparse or conflicting evidence (18.7319ms)
+(node:30424) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ Run96 R12-05/R13 process boundary: runner failure releases a durable lease (1294.5251ms)
+✔ Run96 R12/R15 process boundary: v3 creation fails closed without a trusted resolver (956.1058ms)
+✔ Run96 F69 process boundary: operator evaluation succeeds, survives host restart, and fails closed without its owner (1695.1473ms)
+✖ Run96 F69 packaged CLI: default sidecar owns Evaluation Core through the packaged ExtensionHost (5.838ms)
+(node:66256) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ Run 96 Evaluation Runner rejects execution, credential, environment, and path-bearing inputs (31.0358ms)
+✔ Run 96 Evaluation Runner publishes an honest non-executing local sandbox posture (14.5231ms)
+✔ Run 96 R14 RED: a no-egress semantic criterion scores output content without expected/actual equality (12.9727ms)
+✔ Run 96 Addendum 17 RED: the durable work-once runner binds semantic scorer provenance (386.6755ms)
+✔ Run 96 Addendum 17: the legacy work-once runner refuses to bypass durable provenance (13.6093ms)
+✔ Run 96 legacy work-once runner cannot claim a job (10.131ms)
+(node:25144) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ AC-R32-06 Evaluation Core manifest exposes the signed learning-integrity process boundary and deterministic fallback (157.7299ms)
+✔ AC-R32-04 learning-integrity modules freeze partition provenance before outcome inspection and validate composed manifests (27.9679ms)
+✔ AC-R13-03 evaluation-runner-local manifest exposes bounded durable-trial execution through its process capability (393.0951ms)
+✔ AC-R16-01 trajectory-signals manifest exposes finalized evaluation analysis with complete score lineage (75.8214ms)
+✔ AC-R17-01 profile-learner manifest exposes restart-readable finalized-evaluation estimation (66.706ms)
+✔ AC-R18-03 knowledge-worker manifest exposes versioned shadow candidate transition and rollback capabilities (224.0983ms)
+(node:64428) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ Run97 RC15: finalizing a comparable shadow replay completes its parent evaluation jobs (527.2703ms)
+✔ Run97 RC15: reopening the store reconciles a job whose durable work is terminally complete (379.1295ms)
+✔ Run97 RC15: reconciliation leaves a job with unscored durable work non-terminal (290.6995ms)
+(node:27740) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ run98 a04 a stranded job is observed first and only reclaimed after the grace (571.282ms)
+✔ run98 a04 a job whose trials are not all terminal is never reclaimed (236.0568ms)
+✔ run98 a04 a job holding a live lease is never reclaimed (332.1972ms)
+✔ run98 a04 a job that reaches a terminal state elsewhere drops its stranded marker (542.182ms)
+(node:22832) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ run98 A34 S5 a parked job records why its evaluation never started (174.38ms)
+✔ run98 A34 S5 a proven-unavailable evaluation can be terminalized with its reason (12.8285ms)
+✔ run98 A34 S5 terminalizing an evaluation refuses an empty reason (8.3979ms)
+(node:14072) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ run98 R2 a timed-out replay job still records its durable evaluation completion (40.2377ms)
+✔ run98 R2 an evaluation completion without the job's handoff identity is refused (2.8797ms)
+ℹ tests 85
+ℹ suites 0
+ℹ pass 84
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 46509.1831
+
+✖ failing tests:
+
+test at tests\track-b\run96-evaluation-process-boundary.test.mjs:448:1
+✖ Run96 F69 packaged CLI: default sidecar owns Evaluation Core through the packaged ExtensionHost (5.838ms)
+  AssertionError [ERR_ASSERTION]: packaged runtime manifest is missing: D:\DEV\role-model-internal\.worktrees\104-replay-eligibility-and-evidence-fidelity\dist\run00-dev\track-b-runtime-manifest.json
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/104-replay-eligibility-and-evidence-fidelity/tests/track-b/run96-evaluation-process-boundary.test.mjs:454:10)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

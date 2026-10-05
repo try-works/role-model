@@ -1,0 +1,41 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/packages/profile-aggregator
+
+ ❯ test/run104-traffic-class-source.test.ts (2 tests | 1 failed) 44ms
+   × run104: a persisted live sample counts as live traffic 35ms
+     → expected null to match object { sample_size: 1, sources: { …(2) } }
+   ✓ run104: the legacy live_request value still counts as live traffic 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run104-traffic-class-source.test.ts > run104: a persisted live sample counts as live traffic
+AssertionError: expected null to match object { sample_size: 1, sources: { …(2) } }
+
+- Expected: 
+{
+  "sample_size": 1,
+  "sources": {
+    "benchmark_samples": 0,
+    "live_request_samples": 1,
+  },
+}
+
++ Received: 
+null
+
+ ❯ test/run104-traffic-class-source.test.ts:30:19
+     28| test("run104: a persisted live sample counts as live traffic", () => {
+     29|   const profile = aggregateOperationalPerformanceSamples([sample("live…
+     30|   expect(profile).toMatchObject({
+       |                   ^
+     31|     sample_size: 1,
+     32|     sources: { live_request_samples: 1, benchmark_samples: 0 },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  17:35:26
+   Duration  2.65s (transform 289ms, setup 0ms, collect 306ms, tests 44ms, environment 1ms, prepare 550ms)
+

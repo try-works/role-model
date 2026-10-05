@@ -9,6 +9,7 @@ import {
   LoadingState,
   SectionCard,
 } from "../components/page-primitives";
+import { formatDecisionStrategyLabel } from "../lib/decision-receipt";
 import {
   accentActionTextClassName,
   bodyStrongTextClassName,
@@ -17,7 +18,6 @@ import {
 } from "../lib/design-system";
 import { formatEndpointDisplayPath, formatModelIdentity } from "../lib/effort-identity";
 import { startDeferredLiveRefresh } from "../lib/live-refresh";
-import { formatRoutingModeLabel } from "../lib/routing-mode";
 import {
   type RouterDecisionListItem,
   type RouterDecisionPage,
@@ -114,9 +114,8 @@ export default function RouterDecisionsRoute() {
                     {
                       id: "strategy",
                       label: "Strategy",
-                      value: decision.strategyLabel
-                        ? formatRoutingModeLabel(decision.strategyLabel)
-                        : "no strategy label",
+                      // Run 103 R3: the applied strategy, never the raw config string.
+                      value: formatDecisionStrategyLabel(decision.strategyLabel),
                     },
                     {
                       id: "source",

@@ -11,6 +11,7 @@ import {
   cacheHitRateFromRequest,
   createEmptySidebarFooter,
   formatRouterEndpointHost,
+  latestLiveRequest,
   mapEndpointHealthToSidebarStatus,
   resolveActiveRouterAlias,
 } from "./sidebar-footer";
@@ -136,6 +137,33 @@ describe("sidebar-footer", () => {
       "127.0.0.1:8091/v1",
     );
     expect(formatRouterEndpointHost(null, "127.0.0.1:3456")).toBe("127.0.0.1:3456/v1");
+  });
+
+  test("run104: the footer sample is the newest live request, never a replay or benchmark row", () => {
+    const benchmarkNewest: RuntimeTelemetryRequestRecord = {
+      requestId: "req-bench-003",
+      endpointId: "benchmark.endpoint",
+      createdAtMs: 300,
+      sourceType: "remote",
+      requestClass: "benchmark",
+    };
+    const replay: RuntimeTelemetryRequestRecord = {
+      requestId: "req-replay-002",
+      endpointId: "run104.endpoint",
+      createdAtMs: 250,
+      sourceType: "remote",
+      requestClass: "replay",
+    };
+    const live: RuntimeTelemetryRequestRecord = {
+      requestId: "req-live-001",
+      endpointId: "run104.endpoint",
+      createdAtMs: 200,
+      sourceType: "remote",
+      requestClass: "live",
+    };
+    expect(latestLiveRequest([benchmarkNewest, replay, live])?.requestId).toBe("req-live-001");
+    expect(latestLiveRequest([benchmarkNewest, replay])).toBeNull();
+    expect(latestLiveRequest([])).toBeNull();
   });
 
   test("empty footer uses the provided host until live data loads", () => {

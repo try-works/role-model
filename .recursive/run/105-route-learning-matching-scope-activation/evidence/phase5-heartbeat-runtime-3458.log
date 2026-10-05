@@ -1,0 +1,13 @@
+(node:25120) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `role-model-dev --trace-warnings ...` to show where the warning was created)
+{
+  "status": "listening",
+  "host": "127.0.0.1",
+  "port": 3458
+}
+[track-b-sidecar] (node:29372) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+[track-b-sidecar] (Use `node --trace-warnings ...` to show where the warning was created)
+[replay-loop] start check: operations=wired channel=development port=3458
+[run105] durable task advisory refresh: scope=standalone-runtime-dev pairs=1 stage=S4
+[run98] remote-health recovery: deepseek.personal.deepseek-api-key.global.deepseek-v4-pro, moonshot.personal.kimi-code.global.kimi-k3
+[run98] remote-health recovery: deepseek.personal.deepseek-api-key.global.deepseek-flash, deepseek.personal.deepseek-api-key.global.deepseek-flash-max, deepseek.personal.deepseek-api-key.global.deepseek-v4-pro, moonshot.personal.kimi-code.global.kimi-k3

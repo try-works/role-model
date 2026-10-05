@@ -46,6 +46,42 @@ Manual QA approval depends on the declared `QA Execution Mode` in the Manual QA 
 
 If recursive-mode is invoked in a repository that does not yet contain the required `/.recursive/` scaffold and bridge docs, the agent should run the supported bootstrap installer automatically before continuing. Do not require the user to perform a separate manual bootstrap step unless no supported runtime is available to execute the installer.
 
+6) Prefer Effect whenever it is possible and suitable.
+
+Effect is the default implementation substrate for new code. Use the vendored Effect v4 tree (`vendor/effect`, pinned
+in `vendor/effect/PROVENANCE.md`) for effects, services and layers, resource scopes, concurrency, streaming, schema,
+retries and schedules; use the vendored `effect-mq` (`vendor/effect-mq`, pinned in `vendor/effect-mq/PROVENANCE.md`)
+for background job queues, workers, retries, repeatable schedules and flows, including Effect's `PersistedQueue`
+(`effect/unstable/persistence`) for durable queues with locks and dedupe — instead of hand-rolling that machinery.
+
+"Possible and suitable" is a gate, not a slogan. All of the following must hold:
+
+- the code being changed can reach the dependency (the vendored trees are source-only today, so "reachable" means
+  the change also carries the wiring, or the code stays outside the packaged runtime);
+- it does not break the packaged-runtime constraints (SEA bundling, local-first SQLite state, two hosts on one state
+  root, no server dependency the local-first deployment cannot carry);
+- it does not silently change a public contract, a locked recursive artifact, or a pinned test;
+- it is not a one-off that a plain effect or a few lines express more clearly.
+
+When Effect is the obvious shape and you do not use it, say why in the change itself (code comment, addendum, or
+pull-request body): not yet wired into a build, not suitable for one of the constraints above, or a deliberate
+compatibility decision. New Effect-based code lands with tests, and never makes routing depend on replays,
+evaluations, or the learner.
+
+### Effect-first implementation rule (map)
+
+| need | use |
+| --- | --- |
+| effects, dependency injection, services, resource safety | `Effect`, `Layer`, `Context.Service`, `Scope` |
+| background jobs: queues, workers, retries, backoff, schedules, flows, metrics | `effect-mq` (`Job`, `Worker`, `JobStore`, `JobSchedules`, `Flow`, `Metrics`) |
+| durable queue with renewable locks and dedupe, no worker framework | `PersistedQueue` (`effect/unstable/persistence`) with a SQL store |
+| schema-first parsing and validation | `Schema` |
+| streaming and bounded pipelines | `Stream` |
+| SQL access | `@effect/sql-*` with the runtime's SQLite client where it fits |
+
+Confirm the vendored pins before relying on them:
+`node scripts/vendor-upstream.mjs --name effect --verify` and `--name effect-mq --verify`.
+
 ## Global artifacts (across all recursive-mode runs)
 
 recursive-mode uses two global documents shared by all requirements:
@@ -2365,3 +2401,21 @@ Use it for recursive-mode prompts such as Implement requirement 'run-id' and pha
 <!-- RECURSIVE-MODE-SKILL:END -->
 <!-- RECURSIVE-MODE-CANONICAL:END -->
 <!-- RECURSIVE-MODE-CANONICAL:END -->
+
+### Learning more about Effect (installed skills)
+
+This repository uses the Effect TypeScript library and installs the upstream Effect agent skills under
+`.agents/skills/`:
+
+- `.agents/skills/effect-ts/SKILL.md` - read this before writing any Effect code. Upstream points at
+  `node_modules/effect/AGENTS.md`; this repository consumes the vendored source drop instead, so the guidance it
+  refers to lives in `vendor/effect/packages/effect/*.md` (`SCHEMA.md`, `CONFIG.md`, `HTTPAPI.md`, `MCP.md`,
+  `OPTIC.md`, `ARBITRARY.md`).
+- `.agents/skills/effect-v3-to-v4/SKILL.md` - the bounded workflow for moving a file, package or module from Effect
+  v3 idioms to v4 against the generated `migration/v3-to-v4.md` reference.
+
+Both skills are verbatim copies of `https://github.com/effect-ts/skills` at commit
+`2309e6f27d9955b434c0e3f394b945c136e89fd2`; each directory carries a `PROVENANCE.md` with the pin and the digest.
+
+If you need to learn more about a particular Effect API or concept the guides do not cover, search the source in
+`role-model-router/packages/effect/src` (the workspace package published as `effect`) and `vendor/effect/packages/**/src`.

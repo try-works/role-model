@@ -80,7 +80,10 @@ export interface ModelsDevFirstPartySource {
 
 const DEEPSEEK_FIRST_PARTY_SOURCE_PATHS = {
   provider: "providers/deepseek/provider.toml",
-  flash: "providers/deepseek/models/deepseek-v4-flash.toml",
+  // DeepSeek renamed the first-party flash model file from
+  // `deepseek-v4-flash.toml` to `deepseek-flash.toml`. The pinned capture must
+  // follow the provider's current path or refresh fails closed on a 404.
+  flash: "providers/deepseek/models/deepseek-flash.toml",
   pro: "providers/deepseek/models/deepseek-v4-pro.toml",
 } as const;
 
@@ -127,7 +130,9 @@ export async function captureModelsDevFirstPartySource(
     providerPath: DEEPSEEK_FIRST_PARTY_SOURCE_PATHS.provider,
     providerSha256: hashes[0] as string,
     modelSources: {
-      "deepseek-v4-flash": {
+      // Keyed by the provider's own model id, which the models.dev catalog now
+      // publishes as `deepseek-flash` for the first-party flash slot.
+      "deepseek-flash": {
         path: DEEPSEEK_FIRST_PARTY_SOURCE_PATHS.flash,
         sha256: hashes[1] as string,
       },
@@ -427,7 +432,7 @@ function mergeSupplementModel(
   };
 }
 
-function mergeCatalogSnapshotWithSupplement(
+export function mergeCatalogSnapshotWithSupplement(
   snapshot: CatalogSnapshot,
   supplement: LocalCatalogSupplement | null,
 ): CatalogSnapshot {
@@ -494,7 +499,13 @@ export async function runCatalogRefreshCli(
     return (
       resolvedProviderId === "deepseek" &&
       Object.values(provider.models ?? {}).some(
-        (model) => model.id === "deepseek-v4-flash" || model.id === "deepseek-v4-pro",
+        (model) =>
+          // `deepseek-flash` is the provider's current id for the flash slot;
+          // `deepseek-v4-flash` is retained so a pinned older commit still
+          // satisfies first-party capture detection.
+          model.id === "deepseek-flash" ||
+          model.id === "deepseek-v4-flash" ||
+          model.id === "deepseek-v4-pro",
       )
     );
   });
@@ -527,9 +538,73 @@ export async function runCatalogRefreshCli(
   };
 }
 
+export interface MergeCatalogSupplementOptions {
+  readonly repoRoot?: string;
+  readonly snapshotPath?: string;
+  readonly supplementPath?: string;
+}
+
+export interface MergeCatalogSupplementResult {
+  readonly snapshotPath: string;
+  readonly providerCount: number;
+  readonly modelCount: number;
+  readonly supplementApplied: boolean;
+}
+
+/**
+ * Run 104 R3 offline path: apply the local supplement to the checked-in snapshot without contacting
+ * models.dev.
+ *
+ * The full refresh (`runCatalogRefreshCli`) needs two live endpoints - `models.dev/api.json` for the model
+ * rows and the commit API for the immutable sha - so it cannot run when the catalog host is unreachable.
+ * The supplement is the operator-authored half of the snapshot, and this entry point re-applies it through
+ * the exact same merge the live path uses, which keeps the checked-in snapshot and everything exported from
+ * it consistent while the live provenance refresh is blocked. It never invents upstream rows: only entries
+ * already carried by the supplement are merged.
+ */
+export async function mergeCatalogSupplementIntoSnapshotFile(
+  options: MergeCatalogSupplementOptions = {},
+): Promise<MergeCatalogSupplementResult> {
+  const repoRoot = options.repoRoot ?? path.resolve(__dirname, "..", "..", "..", "..");
+  const snapshotPath =
+    options.snapshotPath ?? path.join(repoRoot, "testdata", "catalog", "models-dev-snapshot.json");
+  const supplementPath =
+    options.supplementPath ??
+    path.join(repoRoot, "testdata", "catalog", "models-dev-local-supplement.json");
+
+  const snapshot = await readJsonFileIfPresent<CatalogSnapshot>(snapshotPath);
+  if (!snapshot) {
+    throw new Error(`Catalog snapshot is missing at ${snapshotPath}; run the live refresh first`);
+  }
+  const supplement = await readJsonFileIfPresent<LocalCatalogSupplement>(supplementPath);
+  const merged = mergeCatalogSnapshotWithSupplement(snapshot, supplement);
+
+  await writeFile(snapshotPath, `${JSON.stringify(merged, null, 2)}\n`, "utf8");
+
+  return {
+    snapshotPath,
+    providerCount: merged.providers.length,
+    modelCount: merged.models.length,
+    supplementApplied: supplement !== null,
+  };
+}
+
 if (process.argv[1] === __filename) {
-  const result = await runCatalogRefreshCli();
-  console.log(result.snapshotPath);
-  console.log(`${result.providerCount} providers`);
-  console.log(`${result.modelCount} models`);
+  /**
+   * Run 104 R3 offline path. `--merge-supplement` re-applies the local supplement to the checked-in
+   * snapshot without contacting models.dev, which is the only usable provenance path when the catalog host
+   * is unreachable; the live refresh below stays the default.
+   */
+  if (process.argv.includes("--merge-supplement")) {
+    const merged = await mergeCatalogSupplementIntoSnapshotFile();
+    console.log(merged.snapshotPath);
+    console.log(`${merged.providerCount} providers`);
+    console.log(`${merged.modelCount} models`);
+    console.log(`supplement applied: ${merged.supplementApplied}`);
+  } else {
+    const result = await runCatalogRefreshCli();
+    console.log(result.snapshotPath);
+    console.log(`${result.providerCount} providers`);
+    console.log(`${result.modelCount} models`);
+  }
 }

@@ -1,0 +1,70 @@
+npm warn Unknown env config "manage-package-manager-versions". This will stop working in the next major version of npm.
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/run105-cli-route-ladder-decode.test.ts (4 tests | 4 failed) 13ms
+   × run105 CLI compile repair: RouteLadderRow decoding > decodes the store's ladder answer into the typed row the tick consumes 8ms
+     → (0 , decodeRouteLadderRow) is not a function
+   × run105 CLI compile repair: RouteLadderRow decoding > a ladder without a rollback flag decodes to OFF rather than undefined 1ms
+     → (0 , decodeRouteLadderRow) is not a function
+   × run105 CLI compile repair: RouteLadderRow decoding > a wrong-typed value is refused, not coerced (a malformed rung drops the row's rungs) 1ms
+     → (0 , decodeRouteLadderRow) is not a function
+   × run105 CLI compile repair: RouteLadderRow decoding > a non-object answer is null (no ladder known), never a throw 1ms
+     → (0 , decodeRouteLadderRow) is not a function
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run105-cli-route-ladder-decode.test.ts > run105 CLI compile repair: RouteLadderRow decoding > decodes the store's ladder answer into the typed row the tick consumes
+TypeError: (0 , decodeRouteLadderRow) is not a function
+ ❯ test/run105-cli-route-ladder-decode.test.ts:18:21
+     16| describe("run105 CLI compile repair: RouteLadderRow decoding", () => {
+     17|   test("decodes the store's ladder answer into the typed row the tick …
+     18|     const decoded = decodeRouteLadderRow({
+       |                     ^
+     19|       contract: "RouteLadderPackV1",
+     20|       roleId: "role:code-review",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  test/run105-cli-route-ladder-decode.test.ts > run105 CLI compile repair: RouteLadderRow decoding > a ladder without a rollback flag decodes to OFF rather than undefined
+TypeError: (0 , decodeRouteLadderRow) is not a function
+ ❯ test/run105-cli-route-ladder-decode.test.ts:45:21
+     43| 
+     44|   test("a ladder without a rollback flag decodes to OFF rather than un…
+     45|     const decoded = decodeRouteLadderRow({ rungs: [], completeness: { …
+       |                     ^
+     46|     expect(decoded?.rolledBack).toEqual({ on: false, reason: null, atM…
+     47|     expect(decoded?.nextEligibleAtMs).toBeNull();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  test/run105-cli-route-ladder-decode.test.ts > run105 CLI compile repair: RouteLadderRow decoding > a wrong-typed value is refused, not coerced (a malformed rung drops the row's rungs)
+TypeError: (0 , decodeRouteLadderRow) is not a function
+ ❯ test/run105-cli-route-ladder-decode.test.ts:52:21
+     50|   test("a wrong-typed value is refused, not coerced (a malformed rung …
+     51|     // A status outside the contract must not be accepted as if it wer…
+     52|     const decoded = decodeRouteLadderRow({
+       |                     ^
+     53|       rungs: [{ endpointId: "endpoint:a", rank: 1, status: "removed" }…
+     54|       completeness: { admitted: 1, configured: 1 },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  test/run105-cli-route-ladder-decode.test.ts > run105 CLI compile repair: RouteLadderRow decoding > a non-object answer is null (no ladder known), never a throw
+TypeError: (0 , decodeRouteLadderRow) is not a function
+ ❯ test/run105-cli-route-ladder-decode.test.ts:61:14
+     59|   test("a non-object answer is null (no ladder known), never a throw",…
+     60|     for (const malformed of [null, undefined, "ladder", 42, []]) {
+     61|       expect(decodeRouteLadderRow(malformed)).toBeNull();
+       |              ^
+     62|     }
+     63|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed (4)
+   Start at  14:43:57
+   Duration  5.85s (transform 2.67s, setup 0ms, collect 4.83s, tests 13ms, environment 1ms, prepare 349ms)
+

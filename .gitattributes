@@ -9,6 +9,12 @@
 
 *.cjs text eol=lf
 *.css text eol=lf
+# Vendored upstream trees: pin LF so the checked-out bytes stay identical to the upstream blobs regardless of the
+# host's core.autocrlf (see vendor/effect/PROVENANCE.md for the recorded content digest).
+vendor/effect/** text eol=lf
+vendor/effect/**/*.tar.gz -text
+vendor/effect-mq/** text eol=lf
+vendor/effect-mq/**/*.png -text
 *.go text eol=lf
 *.html text eol=lf
 *.js text eol=lf

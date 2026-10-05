@@ -1,0 +1,22 @@
+# Package E host-bridge: E5 + run99-r28 GREEN
+# workdir: D:\DEV\role-model\.worktrees\105-route-learning-matching-scope-activation\role-model-router
+# command: corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/run105-e5-ladder-index-readback.test.ts test/run99-r28-externalized-readback.test.ts 2>&1 | Out-String
+# exit: 0
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-host-bridge
+
+(node:18652) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run99-r28-externalized-readback.test.ts (3 tests) 71ms
+(node:28340) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run105-e5-ladder-index-readback.test.ts (1 test) 47ms
+
+ Test Files  2 passed (2)
+      Tests  4 passed (4)
+   Start at  13:53:37
+   Duration  10.07s (transform 3.65s, setup 0ms, collect 7.85s, tests 118ms, environment 1ms, prepare 826ms)
+
+
+

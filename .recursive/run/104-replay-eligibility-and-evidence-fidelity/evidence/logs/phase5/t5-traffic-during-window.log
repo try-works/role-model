@@ -1,0 +1,15 @@
+[00:42:49] baseline.remote-only exit=0 seconds=96 -> t5-window-ok
+[00:44:29] hybrid.remote-only exit=0 seconds=25 -> Routing LLM requests by difficulty cuts costs by sending only complex tasks to expensive frontier models while simpler ones run on cheaper, faster models.
+[00:46:09] difficulty.remote-only exit=0 seconds=82 -> t5-window-live
+[00:47:49] controller.remote-only exit=0 seconds=12 -> A cache hit means the response for that request was already stored from an earlier identical request, so it's returned directly from the cache instead of being recomputed or sent upstream to a model provider.
+[00:49:29] baseline.remote-only exit=0 seconds=9 -> t5-window-ok
+[00:51:09] hybrid.remote-only exit=0 seconds=23 -> Routing by difficulty cuts cost and latency by sending easy prompts to cheaper/faster models while reserving expensive frontier models for genuinely hard requests.
+[00:52:50] difficulty.remote-only exit=0 seconds=86 -> t5-window-live
+[00:54:29] controller.remote-only exit=0 seconds=19 -> A cache hit means the request is served directly from a previously stored cached response instead of being recomputed or forwarded to an upstream provider.
+[00:56:09] baseline.remote-only exit=0 seconds=10 -> t5-window-ok
+[00:57:49] hybrid.remote-only exit=0 seconds=32 -> Routing by difficulty lets you send easy prompts to cheaper, faster models while reserving expensive frontier models for hard ones GÇö cutting cost and latency without materially hurting answer quality.
+[00:59:29] difficulty.remote-only exit=0 seconds=86 -> t5-window-live
+[01:01:09] controller.remote-only exit=0 seconds=25 -> A cache hit means the request's result was already stored in the cache, so it's returned immediately without re-executing the underlying computation or upstream call.
+[01:02:49] baseline.remote-only exit=0 seconds=96 -> t5-window-ok
+[01:04:29] hybrid.remote-only exit=0 seconds=46 -> Routing by difficulty cuts cost and latency by sending simple requests to cheap fast models while reserving expensive frontier models for genuinely hard ones GÇö without sacrificing quality where it matters.
+[done] 2026-10-02T01:06:09.6179004+08:00 requests=14

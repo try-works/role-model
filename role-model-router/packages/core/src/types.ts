@@ -46,6 +46,18 @@ export interface CatalogCostEstimateSignals {
   readonly outputPer1M: number | null;
   readonly estimatedRequestUsd: number | null;
   readonly cost_per_1k_tokens_est: number | null;
+  /**
+   * models.dev context tiers for the model, when the catalog publishes them. A request longer
+   * than a tier's threshold bills the whole request at that tier's rates, so downstream cost
+   * consumers (for example measured-usage estimates) must apply the same tiers as the router.
+   */
+  readonly costTiers?: readonly CatalogCostEstimateTier[];
+}
+
+export interface CatalogCostEstimateTier {
+  readonly minContextTokens: number;
+  readonly inputPer1M: number;
+  readonly outputPer1M: number;
 }
 
 export interface RuntimeEligibilitySignals {
@@ -206,4 +218,134 @@ export interface RouteRequestInput {
   observedDataConfig?: ObservedDataConfigRecord;
   throughputPenaltyStateByEndpointId?: Record<string, ThroughputPenaltyStateRecord>;
   routingTimeMs?: number;
+  /**
+   * Run 98 R5 (stage S2, advisory-considered): the operator-policy-gated advisory input.
+   * Hard eligibility and scoring run first; the advisory can only re-rank candidates that
+   * are already eligible and only within the configured score band. The host passes this
+   * only when the effective learning stage is S2 or above, so an S1 runtime produces the
+   * exact same decision it produced before.
+   */
+  advisoryConsideration?: RouteAdvisoryConsiderationInput;
+}
+
+/**
+ * Run 105 R4 (stage 3): one rung of the per-(role, task) endpoint ladder.
+ *
+ * `status` is the STORED user-removal flag ("available"/"unavailable"); the router's
+ * per-request eligibility is applied separately at walk time (R4 - the two filters are
+ * deliberately independent). Ranks are 1-based and ascending.
+ */
+export interface RouteAdvisoryRung {
+  readonly endpointId: string;
+  readonly rank: number;
+  readonly status: "available" | "unavailable";
+}
+
+/**
+ * Run 105 R1: the (role, task) scope one advisory was learned under. `taxonomyVersion` is
+ * PROVENANCE only (addendum A1) - the match key is `(roleId, taskTypeId)` exact, and the
+ * pre-existing taxonomy gate is unchanged.
+ */
+export interface RouteLearningAdvisoryScope {
+  readonly roleId: string;
+  readonly taskTypeId: string;
+  readonly taxonomyVersion: string | null;
+}
+
+export interface RouteAdvisoryConsiderationInput {
+  /** The learned candidate the advisory was derived from. */
+  readonly candidateId: string | null;
+  /** The route package/endpoint the advisory prefers. */
+  readonly preferredEndpointId: string | null;
+  readonly advisoryState: "fresh" | "stale" | "unavailable";
+  readonly confidence: number;
+  readonly advisoryId?: string | null;
+  readonly policyVersion?: string | null;
+  readonly stage: "S0" | "S1" | "S2" | "S3" | "S4";
+  /** Largest score shift the advisory may apply, in the router's normalized score units. */
+  readonly scoreBand: number;
+  readonly minAdvisoryConfidence: number;
+  /** Percentage of decisions the advisory may influence (S3+); 100 for S2. */
+  readonly cohortPercent: number;
+  /** Randomized exploration share within the band; 0 keeps the tie-break deterministic. */
+  readonly explorationPercent?: number;
+  readonly killSwitch?: boolean;
+  readonly thresholdSetVersion?: string | null;
+  /**
+   * Run 99 R33 (addendum 19 S35, addendum 20 D1-D3): the task family this advisory may
+   * influence, and the taxonomy identity it was learned under. Canonical
+   * `EndpointPreferenceRecordV1` applicability travels as `preferredFor`/`avoidFor`
+   * (`guidance/19`), so a preference learned from one family cannot move another family's
+   * traffic. A mismatch is refused before the confidence floor.
+   */
+  readonly taskTypeId?: string | null;
+  readonly taxonomyVersion?: string | null;
+  readonly preferredFor?: readonly string[];
+  readonly avoidFor?: readonly string[];
+  /**
+   * Run 105 R4/R5 (stage 3): the per-(role, task) endpoint ladder this advisory was derived
+   * from, rank-ordered best-first. When present the router WALKS it, skipping only the rungs
+   * that are not routable (`status: unavailable`, or not in the request's eligible set) and
+   * taking the first routable rung as `preferredEndpointId`. The walk is deliberately NOT
+   * band-aware (addendum A2): the existing score band still decides whether the walked
+   * preference is APPLIED. Absent -> byte-for-byte pre-run105 behaviour.
+   */
+  readonly preferredLadder?: readonly RouteAdvisoryRung[];
+  /**
+   * Run 105 R1: the role the advisory was learned for. The match key is
+   * `(roleId, taskTypeId)` exact; a mismatch is refused with the EXISTING
+   * `advisory_task_mismatch` code rather than a new vocabulary.
+   */
+  readonly roleId?: string | null;
+  /**
+   * Run 99 R33: the taxonomy identity the host resolved the *request* against, so the router can
+   * fail closed when the advisory was learned under a different taxonomy revision.
+   */
+  readonly requestTaxonomyVersion?: string | null;
+  /**
+   * Run 105 R1: the role the REQUEST was routed with, so the advisory can be role-checked the
+   * same way it is already task-checked. `null` keeps the pre-run105 behaviour (no role gate).
+   */
+  readonly requestRoleId?: string | null;
+}
+
+export interface RouteAdvisoryConsiderationOutcome {
+  readonly applied: boolean;
+  readonly explorationMode: "baseline" | "advisory_considered" | "advisory_exploration";
+  readonly selectionProbability: number | null;
+  readonly advisoryCandidateId: string | null;
+  readonly advisoryPackageId: string | null;
+  readonly advisoryConfidence: number;
+  readonly thresholdSetVersion: string | null;
+  readonly policyVersion: string | null;
+  readonly fallbackReason: string | null;
+  readonly scoreBand: number;
+  readonly scoreGapBefore: number | null;
+  readonly cohortBucket: number | null;
+  /** Run 99 R33: the scope that actually decided the family gate. */
+  readonly advisoryTaskTypeId: string | null;
+  readonly requestTaskTypeId: string | null;
+  readonly advisoryTaxonomyVersion: string | null;
+  /**
+   * Run 99 R27: these two are produced by the gate and consumed by the live observation
+   * (index.ts) but were never declared (run 105 C14). Declaring them is additive: no runtime
+   * value changes.
+   */
+  readonly advisoryPackageEligible: boolean;
+  readonly eligibleEndpointCount: number;
+  /**
+   * Run 105 C13/R13: the ladder walk's own evidence. `advisoryLadderLength` is the number of
+   * rungs offered, `advisoryRungRank`/`advisoryRungWalked` name the rung the walk landed on
+   * (null when it landed on none), and `advisoryRungSkipped` counts the non-routable rungs it
+   * passed over (bounded to 32). All four are omitted when no ladder was supplied.
+   */
+  readonly advisoryLadderLength?: number;
+  readonly advisoryRungRank?: number | null;
+  readonly advisoryRungWalked?: string | null;
+  readonly advisoryRungSkipped?: number;
+  /** Run 105 R1: the scope the walk actually read, for the observation. */
+  /** Run 105 C11: present only when a role was actually in play (byte-compat when null). */
+  readonly advisoryRoleId?: string | null;
+  /** Run 105 C11: present only when the request declared a role (byte-compat when null). */
+  readonly requestRoleId?: string | null;
 }

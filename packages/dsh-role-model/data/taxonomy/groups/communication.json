@@ -1,0 +1,7 @@
+{
+  "id": "communication",
+  "label": "Communication",
+  "description": "Writing, translation, creative work, user support, coordination, and follow-up communication.",
+  "primaryRoleIds": ["writer", "translator", "creative", "support", "coordinator"],
+  "secondaryRoleIds": []
+}

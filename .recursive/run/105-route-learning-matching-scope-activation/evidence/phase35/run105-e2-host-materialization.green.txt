@@ -1,0 +1,18 @@
+# E2 host materialization TRUE integration GREEN
+# workdir: D:\DEV\role-model-internal\.worktrees\105-route-learning-matching-scope-activation
+# command: node --test --test-concurrency=1 --test-timeout=240000 tests/track-b/run105-e2-host-materialization.test.mjs 2>&1 | Out-String
+# exit: 0
+
+(node:39688) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ Run105 E2 host authority: the real adapter operation materializes a finalized group into the real store (3585.6776ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4922.7731
+
+

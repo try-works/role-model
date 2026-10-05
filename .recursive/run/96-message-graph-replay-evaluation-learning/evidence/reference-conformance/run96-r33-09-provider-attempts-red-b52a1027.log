@@ -1,0 +1,19 @@
+Run 96 AC-R33-09 provider-attempt projection semantic RED receipt
+requirementId=R33
+acceptanceCriterionId=AC-R33-09
+proof-family=r33-09-provider-attempt-projection
+phase=semantic RED FAIL
+source-test=public:role-model-router/packages/runtime-observability/test/provider-attempt-ids-ac-r33-09.test.ts
+source-assertion=AC-R33-09
+assertion-title=AC-R33-09 preserves every opaque provider-attempt ID in the runtime-observation bundle
+command=npx vitest run test/provider-attempt-ids-ac-r33-09.baseline-red.test.ts
+execution-status=executed
+exit-code=1
+result=FAIL
+public-baseline=b52a10279de21f612911bf2ae758ab40fb61d164
+failure=locked public baseline returned undefined instead of both opaque provider-attempt IDs in executionSemantics
+external-log=E:/role-model-temp/run96-r27-ac-r33-09-public-baseline-b52a1027-red.log
+receipt_status=PASS_RED
+verification_disposition=phase5-required
+phase3_status=DRAFT
+phase5_status=PENDING

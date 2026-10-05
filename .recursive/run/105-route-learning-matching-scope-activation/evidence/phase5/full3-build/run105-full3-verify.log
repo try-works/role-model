@@ -1,0 +1,20 @@
+(node:29304) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+VERIFY_DONE {
+  "checks": {
+    "total": "PASS",
+    "failures": []
+  },
+  "executableSha256": "8829ba4c0b147b914f2caff7a605b44e790eb3c1b7632b4c8a68cebbdbcf58a6",
+  "releaseManifestSha256": "5128e89172923b9be20c163e47769abe58ec7d88cf9234ef8e0dfe5a1410b5ee",
+  "privateDistributionManifestSha256": "13a7bdfce6960e54bc151de7b1a135e59abec2a15b72a6eb55c91c327e264d4a",
+  "releaseFileCount": 152,
+  "extensionCount": 13,
+  "sourceSeal": {
+    "status": "sealed_clean",
+    "releaseEligible": true,
+    "privateClean": true,
+    "publicClean": true
+  },
+  "artifactClosureVerified": true
+}

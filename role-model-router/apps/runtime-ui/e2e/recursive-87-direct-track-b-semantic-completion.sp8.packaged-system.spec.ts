@@ -218,6 +218,8 @@ test.describe("@recursive:87-direct-track-b-semantic-completion @sp8 @smoke", ()
     await expect(
       page.getByRole("table").getByText("knowledge-worker", { exact: true }),
     ).toBeVisible();
-    await expect(page.getByText("Shadow-ready by default", { exact: true })).toBeVisible();
+    await expect(
+      page.getByText("Shadow by default · policy-gated (ceiling Advisory)", { exact: true }),
+    ).toBeVisible();
   });
 });

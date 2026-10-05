@@ -1,0 +1,25 @@
+{
+  "console": [
+    {
+      "level": "verbose",
+      "text": "[DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o",
+      "url": "http://127.0.0.1:3458/app/learning"
+    },
+    {
+      "level": "verbose",
+      "text": "[DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o",
+      "url": "http://127.0.0.1:3458/app/learning/packs"
+    },
+    {
+      "level": "verbose",
+      "text": "[DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o",
+      "url": "http://127.0.0.1:3458/app/learning"
+    },
+    {
+      "level": "verbose",
+      "text": "[DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o",
+      "url": "http://127.0.0.1:3458/app/learning/packs"
+    }
+  ],
+  "networkErrors": []
+}

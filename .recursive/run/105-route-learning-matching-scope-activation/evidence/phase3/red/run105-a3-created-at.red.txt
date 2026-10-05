@@ -1,0 +1,33 @@
+(node:24024) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✖ A3: a store created WITHOUT the column keeps its legacy shape on open; only a write adds it (221.1415ms)
+✔ A3: the FINALIZED insert stamps created_at_ms from the core clock and never enters the bodies (240.5005ms)
+✔ A3: the REJECTED insert stamps created_at_ms too (198.211ms)
+✔ A3: evaluation:list-groups exposes createdAtMs as a SIBLING of each row (198.8347ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 3
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1046.1785
+
+✖ failing tests:
+
+test at tests\track-b\run105-a3-created-at.test.mjs:157:1
+✖ A3: a store created WITHOUT the column keeps its legacy shape on open; only a write adds it (221.1415ms)
+  AssertionError [ERR_ASSERTION]: legacy shape must be preserved on open
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/105-route-learning-matching-scope-activation/tests/track-b/run105-a3-created-at.test.mjs:187:14)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

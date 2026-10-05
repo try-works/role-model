@@ -1,0 +1,18 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-host-bridge
+
+(node:20028) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | test/run105-review-live-advisory-publisher.test.ts > run105 production publisher scope > enumerates actual stored role-task ladders and reads each exact pair, never one scope-only advisory
+[run105] durable task advisory refresh: scope=publisher-test pairs=2 stage=S3
+
+stderr | test/run105-review-live-advisory-publisher.test.ts > run105 production publisher scope > a slow refresh never overlaps another timer pass
+[run105] durable task advisory refresh: scope=slow-refresh pairs=0 stage=S3
+
+ ✓ test/run105-review-live-advisory-publisher.test.ts (2 tests) 17ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  17:04:53
+   Duration  9.99s (transform 5.92s, setup 0ms, collect 8.90s, tests 17ms, environment 0ms, prepare 399ms)
+

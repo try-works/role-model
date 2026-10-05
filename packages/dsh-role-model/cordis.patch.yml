@@ -1,0 +1,30 @@
+# dsh-role-model bundle patch — the patch layer this package exports.
+#
+# Declared by `dsh.bundle.patch` in package.json. Installed into a profile with
+# `plugin_manager` `install_bundle`, dsh reconciles it into
+# `dsh.profile.bundles` and composes this layer over the profile.
+#
+# A single bare-name row mounts the plugin on the profile root. It owns its own
+# provider route (default `role-model`), which is deliberately separate from the
+# `role-model-3456` / `role-model-3457` routes the llm-pi-ai adapter already
+# serves, so a request can be compared with and without intent metadata.
+#
+# The row's `config` is the plugin's whole configuration surface. Alias state
+# lives here too (`selectedAlias`), per the settled decision, so it travels with
+# the user's patch layer and survives upgrades.
+- insert:
+    - id: dsh-role-model
+      name: '@try-works/dsh-role-model'
+      config:
+        # Runtime endpoint, without a trailing slash and without /v1.
+        endpoint: http://127.0.0.1:3456
+        # Non-loopback endpoints are refused unless this is true.
+        allowRemote: false
+        # Timeout for runtime metadata calls (discovery, taxonomy, inspection).
+        requestTimeoutMs: 2500
+        # Provider route this plugin owns. New route; never title-cased.
+        providerRoute: role-model
+        # Alias selected by /role-model alias use, or null.
+        selectedAlias: null
+        # Explicit host `dsh-llm` module path. Leave null to auto-resolve.
+        hostLlmModule: null

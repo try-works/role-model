@@ -1,0 +1,12 @@
+Run 96 R27 provider-attempt propagation cumulative-gate receipt
+repository=paired public/private
+public_head=1d5732819480cf22587570bf8c60e02efcdbfb3e
+private_head=64c75a3739217b083e24930286391b5994c710aa
+command=sequential runtime focused provider test; sqlite provider plus migration-inventory and legacy-migration tests; private observer test
+result=PASS_CUMULATIVE
+public_tests=15
+private_observer_tests=2
+external_log=E:\role-model-temp\run96-r27-provider-attempt-ids-cumulative.log
+notes=This is a source-level cumulative gate; Phase 5 measurement is exposed but not claimed live PASS.
+phase3_status=DRAFT
+phase5_status=PENDING

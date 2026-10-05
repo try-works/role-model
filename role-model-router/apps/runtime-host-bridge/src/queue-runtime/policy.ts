@@ -1,0 +1,282 @@
+/**
+ * Run 101 / R3-R4 - the host's view of the queue policy.
+ *
+ * The operator API (private repository) owns the catalogue and the write path;
+ * the host only ever *reads* the effective document, so the two repos cannot
+ * disagree about a queue's behaviour. Precedence is the same as the activation
+ * policy: the state-root document wins, the shipped document is the fallback,
+ * and a missing or invalid document is a named error rather than a silent
+ * default.
+ */
+import { readFileSync } from "node:fs";
+import path from "node:path";
+
+export const QUEUE_POLICY_SCHEMA_VERSION = "role-model.queue-policy.v1";
+export const QUEUE_POLICY_STATE_RELATIVE_PATH = "queues/queue-policy.json";
+export const QUEUE_POLICY_SHIPPED_RELATIVE_PATH = "shared/queue-policy.json";
+/**
+ * Run 101 addendum 01: the pre-repair location the operator API wrote to. The
+ * sidecar's own state root is `<scope>/track-b`, so this file - and not the
+ * canonical one - is what a live stage root carries today. The host reads it as
+ * a fallback so the cutover does not depend on which process boots first, and
+ * the operator's store moves it to the canonical path on first read/write.
+ */
+export const LEGACY_QUEUE_POLICY_STATE_RELATIVE_PATH = "track-b/queues/queue-policy.json";
+
+/** The directory name that distinguishes a Track B state root from its scope root. */
+export const TRACK_B_STATE_DIRECTORY_NAME = "track-b";
+
+/**
+ * The one definition of the queue plane's state root (public mirror of
+ * `shared/queues/queue-root.mjs`; a private-side test asserts the two agree).
+ *
+ * The queue root is the scope root, `<runtimeStateRoot>/<scopeId>`. The packaged
+ * host is launched with the base runtime state root and the sidecar with that
+ * scope's `track-b` directory, so a `track-b` root folds back to its parent and
+ * both hosts resolve the same document and the same store.
+ */
+export function resolveQueueStateRoot(stateRoot: string): string {
+  const resolved = path.resolve(stateRoot);
+  if (path.basename(resolved) !== TRACK_B_STATE_DIRECTORY_NAME) return resolved;
+  const parent = path.dirname(resolved);
+  return parent === resolved ? resolved : parent;
+}
+
+export const QUEUE_MODES = ["legacy", "shadow", "queue"] as const;
+export type QueueMode = (typeof QUEUE_MODES)[number];
+
+export const QUEUE_NAMES = [
+  "replay.dispatch",
+  "evaluation.score",
+  "learner.derive",
+  "learner.promote",
+] as const;
+export type QueueName = (typeof QUEUE_NAMES)[number];
+
+export interface QueueParameters {
+  readonly mode: QueueMode;
+  readonly concurrency: number;
+  readonly attempts: number;
+  /** Run 101 addendum 06: one attempt's wall clock bound (ffect-mq 	imeout). */
+  readonly attemptTimeoutMs: number;
+  readonly backoffBaseMs: number;
+  readonly backoffCapMs: number;
+  readonly lockRefreshMs: number;
+  readonly lockExpirationMs: number;
+  readonly retentionDays: number;
+}
+
+export interface QueuePolicyDocument {
+  readonly schemaVersion: string;
+  readonly policyVersion: number;
+  readonly global: { readonly killSwitch: boolean };
+  readonly queues: Record<string, QueueParameters>;
+  readonly updatedAt: number | null;
+  readonly receipts: readonly unknown[];
+}
+
+/**
+ * Bounds mirror `shared/queues/queue-policy.mjs`. They are repeated here because
+ * the host must fail closed on a hand-edited document even when the operator
+ * API is not running; a private-side test asserts the two tables agree.
+ */
+export const QUEUE_PARAMETER_BOUNDS = Object.freeze({
+  concurrency: { min: 1, max: 16 },
+  attempts: { min: 1, max: 10 },
+  /** Run 101 addendum 06 (effect-mq guidance #3): the per-attempt timeout the handler honours. */
+  attemptTimeoutMs: { min: 5_000, max: 3_600_000 },
+  backoffBaseMs: { min: 100, max: 60_000 },
+  backoffCapMs: { min: 1_000, max: 900_000 },
+  lockRefreshMs: { min: 1_000, max: 300_000 },
+  lockExpirationMs: { min: 5_000, max: 3_600_000 },
+  retentionDays: { min: 1, max: 730 },
+} as const);
+
+/**
+ * Run 101 addendum 06 (effect-mq guidance #3): the catalogue defaults, mirrored from
+ * `shared/queues/queue-policy.mjs` (the private suite asserts the two tables agree). A
+ * policy document that predates a parameter materializes it from here instead of failing
+ * to validate, so adding a parameter never invalidates an existing operator document.
+ */
+export const QUEUE_PARAMETER_DEFAULTS: Readonly<Record<string, Readonly<Record<string, number>>>> =
+  Object.freeze({
+    "replay.dispatch": Object.freeze({
+      concurrency: 1,
+      attempts: 5,
+      attemptTimeoutMs: 270_000,
+      backoffBaseMs: 1_000,
+      backoffCapMs: 300_000,
+      lockRefreshMs: 30_000,
+      lockExpirationMs: 300_000,
+      retentionDays: 30,
+    }),
+    "evaluation.score": Object.freeze({
+      concurrency: 4,
+      attempts: 4,
+      attemptTimeoutMs: 870_000,
+      backoffBaseMs: 2_000,
+      backoffCapMs: 60_000,
+      lockRefreshMs: 30_000,
+      lockExpirationMs: 900_000,
+      retentionDays: 30,
+    }),
+    "learner.derive": Object.freeze({
+      concurrency: 2,
+      attempts: 3,
+      attemptTimeoutMs: 270_000,
+      backoffBaseMs: 2_000,
+      backoffCapMs: 60_000,
+      lockRefreshMs: 30_000,
+      lockExpirationMs: 300_000,
+      retentionDays: 30,
+    }),
+    "learner.promote": Object.freeze({
+      concurrency: 1,
+      attempts: 3,
+      attemptTimeoutMs: 270_000,
+      backoffBaseMs: 5_000,
+      backoffCapMs: 300_000,
+      lockRefreshMs: 30_000,
+      lockExpirationMs: 300_000,
+      retentionDays: 30,
+    }),
+  });
+
+/** Declared as a function so TypeScript narrows after a failing check. */
+function fail(message: string): never {
+  throw new Error(`queue policy: ${message}`);
+}
+
+const isPlainObject = (value: unknown): value is Record<string, unknown> =>
+  Boolean(value) && typeof value === "object" && !Array.isArray(value);
+
+/** Validates the whole document; every failure names the queue and the field. */
+export function validateQueuePolicy(document: unknown): QueuePolicyDocument {
+  if (!isPlainObject(document)) fail("document must be an object");
+  const candidate = document as Record<string, unknown>;
+  if (candidate.schemaVersion !== QUEUE_POLICY_SCHEMA_VERSION) {
+    fail(`schemaVersion must be ${QUEUE_POLICY_SCHEMA_VERSION}`);
+  }
+  if (!Number.isSafeInteger(candidate.policyVersion) || (candidate.policyVersion as number) < 1) {
+    fail("policyVersion must be a positive integer");
+  }
+  const global = candidate.global;
+  if (!isPlainObject(global) || typeof global.killSwitch !== "boolean") {
+    fail("global.killSwitch must be a boolean");
+  }
+  const queues = candidate.queues;
+  if (!isPlainObject(queues)) fail("queues block is required");
+  for (const [queueName, block] of Object.entries(queues)) {
+    if (!(QUEUE_NAMES as readonly string[]).includes(queueName))
+      fail(`unknown queue: ${queueName}`);
+    if (!isPlainObject(block)) fail(`${queueName} block must be an object`);
+    for (const [name, value] of Object.entries(block)) {
+      if (name === "mode") {
+        if (!(QUEUE_MODES as readonly string[]).includes(String(value))) {
+          fail(`${queueName} mode must be one of ${QUEUE_MODES.join(" | ")}`);
+        }
+        continue;
+      }
+      const bounds = (QUEUE_PARAMETER_BOUNDS as Record<string, { min: number; max: number }>)[name];
+      if (!bounds) fail(`unknown parameter for ${queueName}: ${name}`);
+      if (
+        !Number.isSafeInteger(value) ||
+        (value as number) < bounds.min ||
+        (value as number) > bounds.max
+      ) {
+        fail(`${queueName} ${name} must be an integer between ${bounds.min} and ${bounds.max}`);
+      }
+    }
+    for (const name of [...Object.keys(QUEUE_PARAMETER_BOUNDS), "mode"]) {
+      /**
+       * Run 101 addendum 06: a parameter the document omits is materialized from the catalogue default rather
+       * than rejected, so adding a parameter (this run adds `attemptTimeoutMs`) does not invalidate every
+       * existing document. Unknown names and out-of-bounds values are still refused above.
+       */
+      if (!(name in block)) {
+        if (name === "mode") fail(`${queueName} mode is required`);
+        const fallback = QUEUE_PARAMETER_DEFAULTS[queueName]?.[name];
+        if (fallback === undefined) fail(`${queueName} ${name} is required`);
+        block[name] = fallback;
+      }
+    }
+  }
+  // Every field has been checked above; the cast records that the runtime shape
+  // now matches the interface rather than re-deriving it structurally.
+  return candidate as unknown as QueuePolicyDocument;
+}
+
+export interface QueuePolicyPaths {
+  readonly stateRoot: string;
+  readonly shippedRoot?: string;
+}
+
+export function resolveQueuePolicyPaths({ stateRoot, shippedRoot }: QueuePolicyPaths) {
+  const queueRoot = resolveQueueStateRoot(stateRoot);
+  return {
+    stateFilePath: path.join(queueRoot, ...QUEUE_POLICY_STATE_RELATIVE_PATH.split("/")),
+    legacyStateFilePath: path.join(
+      queueRoot,
+      ...LEGACY_QUEUE_POLICY_STATE_RELATIVE_PATH.split("/"),
+    ),
+    shippedFilePath: shippedRoot
+      ? path.join(shippedRoot, ...QUEUE_POLICY_SHIPPED_RELATIVE_PATH.split("/"))
+      : null,
+  };
+}
+
+function readJsonFile(filePath: string): unknown {
+  return JSON.parse(readFileSync(filePath, "utf8")) as unknown;
+}
+
+/**
+ * Reads the effective policy. The state-root document wins; the shipped
+ * document is the fallback; with neither present the caller gets a named error
+ * instead of a guessed default.
+ */
+export function readQueuePolicy({ stateRoot, shippedRoot }: QueuePolicyPaths): QueuePolicyDocument {
+  const { stateFilePath, legacyStateFilePath, shippedFilePath } = resolveQueuePolicyPaths({
+    stateRoot,
+    shippedRoot,
+  });
+  for (const candidate of [
+    stateFilePath,
+    legacyStateFilePath === stateFilePath ? null : legacyStateFilePath,
+    shippedFilePath,
+  ]) {
+    if (!candidate) continue;
+    try {
+      return validateQueuePolicy(readJsonFile(candidate));
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") continue;
+      throw error;
+    }
+  }
+  return fail(`no queue policy found (looked for ${stateFilePath})`);
+}
+
+export interface ResolvedQueuePolicy extends QueueParameters {
+  readonly queue: QueueName;
+  readonly killSwitch: boolean;
+  readonly policyVersion: number;
+}
+
+export function resolveQueuePolicy(
+  document: QueuePolicyDocument,
+  { queue }: { queue: QueueName },
+): ResolvedQueuePolicy {
+  validateQueuePolicy(document);
+  const parameters = document.queues[queue];
+  if (!parameters) fail(`unknown queue: ${queue}`);
+  return Object.freeze({
+    queue,
+    ...parameters,
+    killSwitch: document.global.killSwitch,
+    policyVersion: document.policyVersion,
+  });
+}
+
+/** True when the operator engaged the kill switch: no new claims, anywhere. */
+export function killSwitchEngaged(document: QueuePolicyDocument): boolean {
+  return validateQueuePolicy(document).global.killSwitch;
+}

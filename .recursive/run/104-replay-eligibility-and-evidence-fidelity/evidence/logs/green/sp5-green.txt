@@ -1,0 +1,13 @@
+(node:66388) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ run104 sp5 r7: a producer-published floor is projected verbatim beside the effective counts (45.1778ms)
+✔ run104 sp5 r7: a receipt without a floor is measured against the effective policy floor (6.8573ms)
+✔ run104 sp5 r7: a receipt that carries no counts says so rather than rendering a zero (5.998ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1172.4027

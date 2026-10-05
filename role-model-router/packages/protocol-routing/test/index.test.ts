@@ -1,7 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 
 import { buildEndpointRegistry } from "@role-model-router/endpoint-registry";
 
@@ -372,6 +372,30 @@ describe("projectRuntimeRouteInput", () => {
   });
 });
 
+function e1Endpoint(endpointId: string) {
+  return {
+    identity: {
+      endpoint_id: endpointId,
+      endpoint_kind: "remote_api",
+      provider_kind: "remote_openai_compat",
+      serving_source: "remote-service",
+      model_id: "openai/gpt-4.1-mini-fast",
+      runtime_version: "run116-e1",
+      region: "global",
+    },
+    declared: {
+      endpoint_id: endpointId,
+      capabilities: ["text.chat"],
+      modalities: ["text"],
+      max_context_tokens: 32768,
+      tool_calling: { supported: false, style: "none" },
+      supports_embeddings: false,
+      platform_constraints: [],
+    },
+    status: "active",
+  };
+}
+
 describe("routeRuntimeRequest", () => {
   test("treats generic reasoning capability as satisfying reasoning effort control requests", () => {
     const result = routeRuntimeRequest({
@@ -456,6 +480,84 @@ describe("routeRuntimeRequest", () => {
         eligible: true,
       }),
     ]);
+  });
+
+  /**
+   * Run 100 addendum 10, E1. Measured 2026-09-25: the E0 verdict line carried counts and codes only, so a window
+   * that read `eligible=5`, `1` or `0` could not be attributed to a pass, a request or a model without a store
+   * query - the E3 investigation needed the request record to prove the alias pool was intact. The line has to name
+   * the request, the alias, the requested effort, the pass and the endpoints the allow/deny lists removed.
+   */
+  test("the eligibility verdict line names the request, the alias, the requested effort, the pass and the denied endpoints", () => {
+    const lines: string[] = [];
+    const spy = vi.spyOn(console, "log").mockImplementation((...args: unknown[]) => {
+      lines.push(args.map((value) => String(value)).join(" "));
+    });
+    try {
+      routeRuntimeRequest({
+        request: {
+          requestId: "req-e1-verdict",
+          taskType: "text.chat",
+          requiredCapabilities: ["text.chat"],
+          preferredCapabilities: [],
+          requiredModalities: ["text"],
+          contextTokens: 64,
+          needsTools: false,
+          strategy: "balanced",
+          preferLocal: false,
+          allowEndpoints: ["remote.e1-a", "remote.e1-b"],
+          denyEndpoints: ["remote.e1-b"],
+        },
+        attribution: {
+          aliasId: "baseline.remote-only",
+          requestedModel: "baseline.remote-only",
+          requestedEffort: "high",
+          pass: "live",
+        },
+        catalog: TEST_CATALOG,
+        registry: {
+          endpoints: [e1Endpoint("remote.e1-a"), e1Endpoint("remote.e1-b")],
+          diagnostics: [],
+          lifecycleSummary: { active: 2, degraded: 0, offline: 0 },
+        },
+        observedProfilesByEndpointId: {},
+        envelope: {
+          sessionId: "session-e1",
+          conversationId: "conversation-e1",
+          selectedTurns: [],
+          selectedArtifacts: [],
+          latestHandoff: null,
+          estimatedTokenCount: 0,
+          diagnostics: [],
+        },
+        retrievalReceipt: {
+          receiptId: "conversation-e1-retrieval-receipt",
+          conversationId: "conversation-e1",
+          summary: {
+            selectedTurns: 0,
+            selectedArtifacts: 0,
+            omittedTurns: 0,
+            omittedArtifacts: 0,
+            estimatedTokens: 0,
+          },
+          entries: [],
+        },
+        roleDefinitions: [],
+        taskDefinitions: [],
+        roleBindings: [],
+      } as never);
+    } finally {
+      spy.mockRestore();
+    }
+
+    const line = lines.find((entry) => entry.includes("[run115] eligibility"));
+    expect(line).toBeTruthy();
+    expect(line).toContain("request=req-e1-verdict");
+    expect(line).toContain("alias=baseline.remote-only");
+    expect(line).toContain("effort=high");
+    expect(line).toContain("pass=live");
+    expect(line).toContain("allow=[remote.e1-a,remote.e1-b]");
+    expect(line).toContain("denied=[remote.e1-b]");
   });
 
   test("treats active role-binding effective capabilities as satisfying required task capabilities", () => {

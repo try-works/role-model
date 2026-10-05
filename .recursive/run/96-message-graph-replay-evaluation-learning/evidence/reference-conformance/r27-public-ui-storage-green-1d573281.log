@@ -1,0 +1,8 @@
+AC-R25-04
+proofFamily=run96-r27-public-ui-storage
+stage=focused GREEN
+testPath=public:role-model-router/apps/runtime-ui/app/routes/storage-retention.test.tsx
+assertionTitle=AC-R25-04: storage retention exposes complete byte attribution, capacity forecast, and actionable operator receipts
+command=corepack pnpm --dir role-model-router/apps/runtime-ui exec vitest run app/routes/storage-retention.test.tsx --reporter=dot
+result=PASS
+provenance=current paired public head 1d5732819480cf22587570bf8c60e02efcdbfb3e; included in 3-file/10-test run

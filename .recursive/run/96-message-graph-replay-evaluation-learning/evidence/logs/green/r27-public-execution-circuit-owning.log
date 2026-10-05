@@ -1,0 +1,20 @@
+Run 96 / R27 public runtime-host-bridge criterion-owned TDD
+Owning-suite GREEN receipt in the paired public worktree.
+
+Command:
+  corepack pnpm --dir role-model-router/apps/runtime-host-bridge exec vitest run
+    test/execution-circuit-breaker.test.ts
+    test/legacy-execution-admission-reconciliation.test.ts
+    test/alias-capability-routing.test.ts
+Result: PASS; 3 files, 32/32 tests.
+Raw receipt: E:/role-model-temp/run96-r27-public-circuit-owning.log
+
+The 32 tests include the full 17-test execution-circuit policy suite, the four legacy
+reconciliation tests, and the 11 alias/capability routing tests. Only the following exact source
+owners are grouped here:
+  public:role-model-router/apps/runtime-host-bridge/src/execution-circuit-breaker.ts
+  public:role-model-router/apps/runtime-host-bridge/src/index.ts (mapping/HTTP and runtime-backed
+    selectors named in r27-public-index-focused.log)
+  public:role-model-router/apps/runtime-host-bridge/src/legacy-execution-admission-reconciliation.ts
+
+Boundary: source-level TDD only. No Phase 5 live/provider/graph/storage/recovery PASS is claimed.

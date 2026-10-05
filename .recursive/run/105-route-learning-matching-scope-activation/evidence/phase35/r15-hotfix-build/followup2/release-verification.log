@@ -1,0 +1,55 @@
+(node:40740) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+{
+  "schemaVersion": "run105.r15-hotfix-build.v1",
+  "verifiedAt": "2026-10-03T11:02:19.213Z",
+  "scope": "R15-only provisional development build; NOT full run105 Phase5",
+  "serverLaunched": false,
+  "stageOrProductionTouched": false,
+  "releasePath": "E:/tmp/run105-r15-hotfix2-public/role-model-router/dist/release/win32-x64",
+  "executablePath": "E:\\tmp\\run105-r15-hotfix2-public\\role-model-router\\dist\\release\\win32-x64\\role-model-dev.exe",
+  "publicIdentity": {
+    "root": "E:/tmp/run105-r15-hotfix2-public",
+    "commit": "2f9db9b501d952710a92c8d26ff67e88d4285593",
+    "tree": "5cb17349885355a2db9add7be5bcb1ebb7125cb9",
+    "status": ""
+  },
+  "privateIdentity": {
+    "root": "E:/tmp/run105-r15-hotfix2-private",
+    "commit": "c993b2f2ebe8e1daa8ee506a50af0ea09f61b5f9",
+    "tree": "e8bda7aed6e36771cdaf140afc7b15b63786d9bc",
+    "status": ""
+  },
+  "publicBaseline": "701b8b8fc0b0eeebdfe818b757f5702f50021488",
+  "cherryPickSources": [
+    "368f7264a1a3c80a7d7d91c0041a7626511f4533",
+    "d8485ea1381b7fc9d04799ecdcda3b177392ff94",
+    "23ae73000a12e8b9c91d9df8e03b1403cdcdc554"
+  ],
+  "executableSha256": "37ee05032400c3adf6e9ce4b3527492a3f5c456154f7be2e159572a583a0cd7b",
+  "releaseManifestSha256": "d1b9fe3331c6901fd5f61a745ac96c470fb49032845ba28304ce57b1ca869912",
+  "privateDistributionManifestSha256": "a216b9ccaf44eafab031be8323aa5edda9fdd93c15aaa1ea9663ed0bd9ead757",
+  "artifactClosureVerified": true,
+  "sourceSeal": {
+    "status": "sealed_clean",
+    "releaseEligible": true,
+    "privateClean": true,
+    "publicClean": true
+  },
+  "runtimeChannelContext": {
+    "channel": "development",
+    "scopeId": "standalone-runtime-dev",
+    "authorizationEpoch": 1
+  },
+  "regressions": {
+    "sqliteFocused": 31,
+    "bridgeFocused": 4,
+    "sqliteFull": 139,
+    "sqliteFullFiles": 24,
+    "bridgeTypecheck": "PASS",
+    "sqliteTypecheck": "PASS"
+  },
+  "releaseFiles": {
+    "count": 152
+  }
+}

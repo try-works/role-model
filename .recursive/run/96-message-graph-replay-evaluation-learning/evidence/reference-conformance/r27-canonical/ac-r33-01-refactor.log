@@ -1,0 +1,9 @@
+Run 96 canonical TDD receipt
+acceptanceCriterionId=AC-R33-01
+proofFamily=legacy-admission-reconciliation
+phase=REFACTOR
+result=PASS
+testPath=public:role-model-router/apps/runtime-host-bridge/test/legacy-execution-admission-reconciliation.test.ts
+assertionTitle=restores only a source-bound transient circuit from the legacy degraded row shape
+command=corepack pnpm exec biome check role-model-router/apps/runtime-host-bridge/src/legacy-execution-admission-reconciliation.ts role-model-router/apps/runtime-host-bridge/test/legacy-execution-admission-reconciliation.test.ts
+refactor=PASS: the reconciler and its admission-safety matrix remain formatted after the refactor check.

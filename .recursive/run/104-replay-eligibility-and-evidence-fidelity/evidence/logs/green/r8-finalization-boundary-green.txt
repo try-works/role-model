@@ -1,0 +1,21 @@
+(node:52832) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ R8: the sweep completes a stranded job whose extra trials can never enter a comparison (502.4125ms)
+✔ R8: a job with no finalized comparison is retired by name within the grace, and the sweep is idempotent (346.0681ms)
+✔ R8: the learning summary reads back a producer-published floor from the durable record (49.3919ms)
+(node:19952) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ Run97 RC15: finalizing a comparable shadow replay completes its parent evaluation jobs (473.7532ms)
+✔ Run97 RC15: reopening the store reconciles a job whose durable work is terminally complete (398.7902ms)
+✔ Run97 RC15: reconciliation leaves a job with unscored durable work non-terminal (316.0652ms)
+(node:40928) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ run98 A33 S8 a terminalised job whose evidence is complete is re-finalized by the sweep (644.7665ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3672.9274

@@ -1,0 +1,162 @@
+[
+  {
+    "id": "data.query",
+    "label": "Data Query",
+    "description": "Write, inspect, or explain queries over structured data.",
+    "primaryRole": "data",
+    "compatibleRoles": ["data", "analyst", "coder"],
+    "requiredCapabilities": ["data.query"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": ["database.query"],
+    "classifier": {
+      "useWhen": "User asks for SQL/query work or data extraction.",
+      "doNotUseWhen": "User asks for web research."
+    },
+    "variants": []
+  },
+  {
+    "id": "data.schema.review",
+    "label": "Data Schema Review",
+    "description": "Review database, event, API, or analytics schemas.",
+    "primaryRole": "data",
+    "compatibleRoles": ["data", "architect", "analyst"],
+    "requiredCapabilities": ["data.schema"],
+    "preferredCapabilities": ["reasoning.multi_step"],
+    "requiredModalities": ["text"],
+    "toolClasses": ["database.query"],
+    "classifier": {
+      "useWhen": "User asks whether a schema is correct, stable, or useful.",
+      "doNotUseWhen": "User asks to edit frontend UI."
+    },
+    "variants": ["review"]
+  },
+  {
+    "id": "data.transform",
+    "label": "Data Transformation",
+    "description": "Transform, normalize, clean, or map data between shapes.",
+    "primaryRole": "data",
+    "compatibleRoles": ["data", "coder"],
+    "requiredCapabilities": ["data.transform"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": ["database.query"],
+    "classifier": {
+      "useWhen": "User asks to convert data formats or clean records.",
+      "doNotUseWhen": "User asks for legal advice."
+    },
+    "variants": []
+  },
+  {
+    "id": "data.analyze",
+    "label": "Data Analysis",
+    "description": "Analyze structured data for patterns, summaries, and conclusions.",
+    "primaryRole": "data",
+    "compatibleRoles": ["data", "analyst"],
+    "requiredCapabilities": ["data.query", "reasoning.multi_step"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": ["database.query"],
+    "classifier": {
+      "useWhen": "User asks what a dataset shows.",
+      "doNotUseWhen": "User asks for general web research."
+    },
+    "variants": []
+  },
+  {
+    "id": "data.visualize",
+    "label": "Data Visualization",
+    "description": "Plan charts, tables, or visual summaries for data.",
+    "primaryRole": "data",
+    "compatibleRoles": ["data", "analyst", "designer"],
+    "requiredCapabilities": ["data.query", "vision.output"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": ["database.query"],
+    "classifier": {
+      "useWhen": "User asks how to visualize data.",
+      "doNotUseWhen": "User asks for illustrative creative art."
+    },
+    "variants": []
+  },
+  {
+    "id": "data.validate",
+    "label": "Data Validation",
+    "description": "Validate data quality, constraints, completeness, and anomalies.",
+    "primaryRole": "data",
+    "compatibleRoles": ["data", "tester", "analyst"],
+    "requiredCapabilities": ["data.query", "data.schema"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": ["database.query"],
+    "classifier": {
+      "useWhen": "User asks whether data is correct or clean.",
+      "doNotUseWhen": "User asks for schema design only."
+    },
+    "variants": []
+  },
+  {
+    "id": "data.extract",
+    "label": "Data Extraction",
+    "description": "Extract structured data from text, files, tables, or documents.",
+    "primaryRole": "data",
+    "compatibleRoles": ["data", "researcher"],
+    "requiredCapabilities": ["data.transform", "text.chat"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": ["database.query"],
+    "classifier": {
+      "useWhen": "User asks to pull fields or records from content.",
+      "doNotUseWhen": "User asks for narrative summary only."
+    },
+    "variants": []
+  },
+  {
+    "id": "data.join",
+    "label": "Data Joining",
+    "description": "Combine datasets, keys, records, or tables into a coherent shape.",
+    "primaryRole": "data",
+    "compatibleRoles": ["data", "coder"],
+    "requiredCapabilities": ["data.query", "data.transform"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": ["database.query"],
+    "classifier": {
+      "useWhen": "User asks to merge or join data.",
+      "doNotUseWhen": "User asks for non-data writing."
+    },
+    "variants": []
+  },
+  {
+    "id": "data.quality.audit",
+    "label": "Data Quality Audit",
+    "description": "Audit quality, lineage, anomalies, duplication, and fitness for use.",
+    "primaryRole": "data",
+    "compatibleRoles": ["data", "analyst", "tester"],
+    "requiredCapabilities": ["data.query", "reasoning.multi_step"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": ["database.query"],
+    "classifier": {
+      "useWhen": "User asks for data quality review.",
+      "doNotUseWhen": "User asks for security audit only."
+    },
+    "variants": ["audit"]
+  },
+  {
+    "id": "data.metric.define",
+    "label": "Metric Definition",
+    "description": "Define metrics, dimensions, calculations, and caveats.",
+    "primaryRole": "data",
+    "compatibleRoles": ["data", "analyst", "product"],
+    "requiredCapabilities": ["data.query", "reasoning.multi_step"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": ["database.query"],
+    "classifier": {
+      "useWhen": "User asks to define a metric or analytics logic.",
+      "doNotUseWhen": "User asks for business strategy only."
+    },
+    "variants": ["define"]
+  }
+]

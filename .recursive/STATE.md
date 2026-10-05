@@ -2,6 +2,49 @@
 
 ## Current State
 
+Run `105-route-learning-matching-scope-activation` is the current increment: stage-3 matching-scope activation is shipped — a pack is a per-(role,task) ranked endpoint ladder (exact match only), materialized and aggregated pairwise, walked advisory-only, with derived floor-based activation and per-task rollback, and the Packs page renders the ladder index. The Phase 3.5 review found and the controller repaired a R1/R8 classification divergence: buildRequestClassificationForPlan read runtime-policy ids instead of the authoritative taxonomy identity, so capture/advisory classification was null while telemetry showed coder|coder.edit. Fixed at public d797a185 (tree 5da40073) + private da40a115; full host suite 2250/5-skip; live pi request classifies coder|coder.edit with lastUnclassifiedCaptures 0 on :3458 (dev channel only). Promotion remains a separate release operation.
+
+**Run 105 closeout — bug 3 verified, four operational caveats carried forward** (not defects in the shipped fix). Verified live on `:3458`: both `coder/coder.edit` and `coder/coder.config` built **4/4 ladders** through counterfactual replays (all configured endpoints admitted, including `kimi-k3` — the configured controller and therefore the judge — admitted as a *challenger*, with `evaluation_judge_switches` recording `kimi-k3 -> deepseek-flash` from `dedupeJudgeAgainstPair`), and the route advisory reached live routing (`selection=advisory_applied`; `deepseek-flash-max` x3, `deepseek-flash` x1). Queue at closeout: 28 dispositions (24 `replayed`), 36/39 replay jobs `complete`, 0 deferred-pending, 0 capture-WAL rows, 0 stuck ledger reservations. Four caveats for the next replay-lane increment:
+
+1. **`kimi-k3` provider flakiness.** 3 `timed_out` replay jobs and `durable replay evaluation ... missing counterfactual output evidence` refusals all trace to that endpoint. `replayDeferralBound=3` retires such captures so the queue self-heals, but it burns budget — 103 dispatches produced 26 counterfactuals. Worth a per-endpoint flake metric before the next promotion.
+2. **Orphaned `awaiting_evaluation` replay job blocks the dispatcher.** A job whose `leaseOwner` named a dead runtime parked in `awaiting_evaluation` with an expired lease and was refused re-lease (`replay job is awaiting evaluation and cannot be re-leased`), stalling the focus loop until the deferral bound retired the capture; it required manual state repair once (`track-b/extensions/workers/replay-core/replay-core.json`). A parked job with an expired lease should be reclaimable by the lease sweep.
+3. **Advisory influence is still narrow.** Of 505 advisory observations: only **4** `applied`; **47** `wouldHaveChanged=true` with `selection=baseline_retained` under `mode=shadow`; 304 `unavailable` are the unclassified requests. Consistent with the `cohortLadder: [10,25,50,100]` rollout rather than a defect, but pack steering is small until the cohort widens.
+4. **The direct launch does not provision the managed `artifact-digest.key`.** `resolveDurableEvaluationAuthority` then throws `managed artifact digest key not found`, the `readRouteDispatchEvidence` binding returns null, and **every replay tick dies with `route dispatch evidence unavailable` before planning a focus** — it looks exactly like a planner bug. The packaged launcher supplies the key via `--artifact-digest-key-file`; a direct `role-model-dev.exe` launch does not. Either provision a key at launch or fail loudly at startup.
+
+Full detail: `/.recursive/run/105-route-learning-matching-scope-activation/addenda/05-manual-qa.replay-no-distinct-candidate.addendum-13.md`.
+
+Run `104-replay-eligibility-and-evidence-fidelity` is the current increment: the replay lane refuses by name
+(`candidate_input_unsupported`, terminal when the declared pool can never serve the capture and deferrable when a
+capable arm is merely unavailable), traffic classes are typed end to end so the operator's aggregates are
+live-only with visible excluded counts, the live stall's cause is decided and fixed (the packaged launcher never
+supplied `handoffEvaluation`, and the completion contract demanded every trial be covered although
+train-partition trials are structurally ineligible), the branch-append recovery re-attaches from the boundary's
+own field and refuses a saturated excerpt, and arm effort comparability is published with a mismatched arm named
+in the comparison's validity. Phases 0-6 are locked; Phase 5 ran the rebuilt runtime on its own channel `:3459`
+with its own state root — the matrix passed (text control, image through `difficulty.remote-only` selecting the
+DeepSeek flash endpoint, PDF control, `hybrid.remote-only`) and the monitored window ran 61.5 minutes with 123
+samples. One commitment transfers: `R8`'s live disposition drain, which needs a channel that already carries a
+route package. `R9`'s producer plumbing is now wired and verified live end-to-end (post-closeout `8aa114ed` plus addenda
+08-20): the comparison identity carries `effortComparability`, and a finalized comparison on `:3457` records
+per-arm `matched`/`mismatched` instead of only `source_effort_unspecified`. The queue was traced live and
+repaired in turn — the restricted-tick no-op, the resume-entry record with `classifyReplayArmEffort`, the
+resume-store `effortComparability` persistence, the `capture_missing` retryability, and the compact replay-job
+dispatch projection. The addenda run `post-closeout.r9-r8-pickup.addendum-01.md` through
+`post-closeout.r9-finalized-effort-comparability.addendum-20.md`.
+Promotion remains a separate release operation.
+
+Run `103-agent-strategy-and-scoring-strategy` is the current increment: the routing posture is split into the
+planner axis (`routing.mode`) and the scoring axis (`routing.scoring_strategy`), the five scoring strategies
+actually rank candidates, `pin_weights` blocks the automatic overrides, agent-strategy and workload postures
+materialise `<name>.<scope>` aliases, and every decision records the strategy source, the effective weights, the
+alias posture binding and the measured-latency outcome. The operator UI gained the `Routing strategy`,
+`Agent strategy` and `Workloads` surfaces. Phases 0-8 are locked; the live matrix ran on the rebuilt development
+runtime on `:3458` with live `pi` CLI requests. Two commitments transfer to the next release operation: the
+paired private latency-policy registry update (min samples 5..30, max delta 10 000) and the recorded
+`agent-strategy.ts` decoder deviation. Promotion remains a separate release operation.
+
+## Current State
+
 Run `94-stage-manifest-commit-identity` repairs a release-blocking provenance
 defect found by the acceptance workflow: shallow CI had packaged the synthetic
 manifest commit `runtime-derived`. The repair makes `GITHUB_SHA` authoritative
@@ -78,3 +121,21 @@ Run `92-configured-model-pool-benchmark-convergence` is the **current closed-out
 - Private feature worktrees must live under `role-model-internal/.worktrees/` (not external `D:/DEV/.wt/`).
 - Cloud: `pnpm test:cloud` for offline worker coverage; live Cloudflare E2E is opt-in via `pnpm test:cloud:e2e` on **dev or stage only** (see `docs/testing.md`).
 - Global decisions: `.recursive/DECISIONS.md`. Memory plane: `.recursive/memory/` (domain/episode/skill shards).
+
+## Run 105 current state — route-learning matching-scope activation
+
+Run `105-route-learning-matching-scope-activation` implements controlled exact `(role, task)` endpoint-ladder routing. Final source pair: public `7162930d` / private `da40a115`; final sealed development artifact under `E:/tmp/run105-full2-public/.../win32-x64` (exe SHA `ffc3f58a...`, release manifest `7506ad61...`, private manifest `fedaa87f...`). The final runtime is healthy on **development :3458 only**; :3457 was not touched.
+
+Product state:
+- Finalized comparisons materialize scoped ladders with atomic CAS, rollback preservation, measured evidence metadata, keyset pagination and strict accepted-policy proof.
+- The publisher/cache/router enforce exact role/task, measured confidence/freshness/cohort, safety suppressors, eligibility and unchanged advisory gates.
+- Depth-first replay, 30-day refresh, sequential endpoint challenge and durable round identity are wired through genuine evaluation/replay/queue evidence.
+- Packs UI provides top-three index, full detail, truthful no-ladder/uncertainty states and per-task reversible rollback. Mobile shell repaired after live QA.
+- Telemetry overflow R15 keeps the user-approved16KiB metadata policy; actual long provider failures preserve422 and store compact dimensions with explicit truncation.
+
+Verification floor:
+- host bridge:2245passed/5skipped; core154/154; UI685/685; paired private run105159/159; SQLite139/139; final build closure13extensions/152files.
+- live :3458: health/source identity, API readbacks, bounded rollback409, two successful pi requests through localhost provider with cleanup, desktop/mobile browser27/27, zero network/console failures after responsive rebuild.
+
+Known limitations: evidence-doc CAS orphans and bounded duplicate challenge work after restart; no live graph pointer for full rich failure diagnostics; merge/promotion is separate.
+

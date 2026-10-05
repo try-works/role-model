@@ -1,0 +1,159 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-ui
+
+ ❯ app/lib/sidebar-footer.test.ts (6 tests | 1 failed) 53ms
+   ✓ sidebar-footer > maps endpoint health into sidebar model statuses 14ms
+   ✓ sidebar-footer > builds inventory rows sorted by request count with rolled-up status 6ms
+   ✓ sidebar-footer > derives cache hit rate from the latest request 1ms
+   ✓ sidebar-footer > resolves active alias and router endpoint host 3ms
+   × sidebar-footer > run104: the footer sample is the newest live request, never a replay or benchmark row 19ms
+     → (0 , latestLiveRequest) is not a function
+   ✓ sidebar-footer > empty footer uses the provided host until live data loads 1ms
+ ❯ app/lib/view-models.test.ts (53 tests | 2 failed) 324ms
+   ✓ buildProviderCards > turns provider variants and account state into provider cards for the onboarding page 10ms
+   ✓ summarizeRuntimeStats > creates stable dashboard stat cards from the runtime summary counts 3ms
+   ✓ session readiness view models > builds bootstrap rows and inventory stats from runtime summary 9ms
+   ✓ buildCredentialReadinessRows > turns the runtime readiness summary into operator-facing readiness rows 1ms
+   ✓ buildCredentialReadinessRows > prefers canonical credential lifecycle counts when they are present 1ms
+   ✓ buildCredentialLifecycleBanner > summarizes authority, blocking rows, and archived stale counts from the canonical lifecycle contract 1ms
+   ✓ buildCredentialLifecycleAccountRows > returns canonical lifecycle account diagnostics for blocking and ready accounts 49ms
+   ✓ buildCredentialLifecycleAccountRows > treats Codex Subscription as a standard connected account that can activate an endpoint 1ms
+   ✓ buildArchivedArtifactRows > returns archived stale diagnostics separately from blocking lifecycle rows 1ms
+   ✓ buildWorkbenchModelOptions > sorts and deduplicates model options for the workbench composer 19ms
+   ✓ buildWorkbenchModelOptions > lists routing-eligible effort endpoint instances as distinct Studio options 4ms
+   ✓ buildWorkbenchEndpointOptions > prefers saved OAuth endpoints over shared LiteLLM endpoints for the selected model 3ms
+   ✓ buildConfiguredModelCards > builds unified local and remote model cards with controller and tooling state 7ms
+   ✓ buildConfiguredModelCards > keeps role eligibility separate for effort endpoint siblings 3ms
+   ✓ buildConfiguredModelCards > keeps request counts unset when request evidence is still deferred 1ms
+   ✓ buildConfiguredModelCards > derives model status from endpoint health instead of lifecycle activation state 1ms
+   ✓ buildConfiguredModelMetadataRows > formats model specifications and pricing for the inspection panel 35ms
+   ✓ buildSelectedModelMetaPanel > builds Paper selected-meta facts, cost, and benchmark rows 3ms
+   ✓ buildSelectedModelMetaPanel > always renders Cost rows, using Unknown when pricing is missing 1ms
+   ✓ buildModelCatalogRows > turns the runtime model catalog into sorted rows with endpoint ids 2ms
+   ✓ buildEndpointCatalogRows > turns the runtime endpoint registry into stable endpoint catalog rows 2ms
+   ✓ countActiveEndpointModels > counts distinct active local and remote model ids from registry endpoints 1ms
+   ✓ buildAliasReadinessRows > summarizes alias pools across mixed local and remote endpoint candidates 2ms
+   ✓ buildDashboardLatestRequestRows > prefers live canonical requests over benchmark telemetry rows in the overview rail 35ms
+   ✓ buildDashboardLatestRequestRows > groups repeated alias-routed executions by caller interaction in the overview rail 3ms
+   ✓ buildStructuredLogRows > parses raw logs into structured rows with source, severity, and request correlation when available 3ms
+   ✓ buildStructuredLogRows > preserves request correlation for packaged runtime log lines without explicit severity tokens 1ms
+   ✓ buildAccountModelCatalogIds > prefers provider catalog order while constraining to account-allowed models 1ms
+   ✓ buildConfiguredProviderRows > summarizes configured providers and models from saved accounts plus live endpoints 2ms
+   ✓ buildConfiguredProviderRows > prefers canonical provider rollups over route-local readiness inference 1ms
+   ✓ buildConfiguredProviderRows > preserves env-unresolved and reconnect-required provider lifecycle counts from fallback account inference 1ms
+   ✓ buildProviderMaintenanceRows > formats saved-account lifecycle badges and normalized credential posture from the canonical lifecycle contract 2ms
+   ✓ buildConfiguredRemoteConnectionRows > falls back to canonical model identity when an endpoint or catalog display name is blank 3ms
+   ✓ buildConfiguredRemoteConnectionRows > excludes managed LiteLLM adapter records from user-configured provider connections 4ms
+   ✓ buildConfiguredRemoteConnectionRows > shows only configured remote endpoints and their models, excluding maintenance-only and local accounts 1ms
+   ✓ buildConfiguredRemoteConnectionRows > keeps provider health separate from adaptive circuit state and countdown 1ms
+   ✓ buildConfiguredRemoteConnectionRows > keeps selectable effort levels available to the providers surface 2ms
+   ✓ summarizeWorkbenchResult > extracts text, tool calls, tool executions, and usage for the studio inspector 2ms
+   ✓ summarizeWorkbenchResult > falls back to reasoning_content when chat completion content is empty 1ms
+   ✓ buildDownstreamProviderGuide > creates stable connection rows and examples for downstream OpenAI-compatible clients 2ms
+   ✓ buildActivitySummary > uses the aggregate telemetry summary for totals while retaining only the recent page 3ms
+   ✓ buildActivitySummary > turns raw activity metrics into operator summary cards and ledger rows 1ms
+   ✓ buildActivitySummary > preserves newest-first activity order from the metrics API instead of re-sorting by synthetic ids 1ms
+   ✓ buildActivitySummary > preserves the persisted request identity for stable capture links 1ms
+   ✓ telemetry view models > creates stable summary cards from the canonical telemetry summary 1ms
+   ✓ telemetry view models > builds telemetry comparison cards for local and remote endpoint rows 3ms
+   ✓ telemetry view models > builds telemetry-backed request ledger rows in newest-first order 3ms
+   ✓ telemetry view models > separates requested client effort from the selected endpoint variant identity 3ms
+   ✓ telemetry view models > prefers descriptive failure summaries over raw error-class slugs for failed request rows 2ms
+   × run104 live-only telemetry surfaces > states how many non-live requests the live-only summary excluded 49ms
+     → expected { label: 'Requests', value: '1', …(1) } to deeply equal { label: 'Requests', value: '1', …(1) }
+   ✓ run104 live-only telemetry surfaces > renders no excluded note on a runtime older than the excluded-count fields 5ms
+   × run104 live-only telemetry surfaces > never samples a replay or benchmark row as the latest request 9ms
+     → expected [ { …(23) } ] to deeply equal []
+   ✓ run104 live-only telemetry surfaces > falls back to the older live row when the newest row is a benchmark 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/lib/sidebar-footer.test.ts > sidebar-footer > run104: the footer sample is the newest live request, never a replay or benchmark row
+TypeError: (0 , latestLiveRequest) is not a function
+ ❯ app/lib/sidebar-footer.test.ts:164:12
+    162|       requestClass: "live",
+    163|     };
+    164|     expect(latestLiveRequest([benchmarkNewest, replay, live])?.request…
+       |            ^
+    165|     expect(latestLiveRequest([benchmarkNewest, replay])).toBeNull();
+    166|     expect(latestLiveRequest([])).toBeNull();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  app/lib/view-models.test.ts > run104 live-only telemetry surfaces > states how many non-live requests the live-only summary excluded
+AssertionError: expected { label: 'Requests', value: '1', …(1) } to deeply equal { label: 'Requests', value: '1', …(1) }
+
+- Expected
++ Received
+
+  {
+-   "detail": "0 local · 1 remote · 3 non-live excluded (benchmark 2 · replay 1)",
++   "detail": "0 local · 1 remote",
+    "label": "Requests",
+    "value": "1",
+  }
+
+ ❯ app/lib/view-models.test.ts:2558:22
+    2556|       },
+    2557|     } as never);
+    2558|     expect(stats[0]).toEqual({
+       |                      ^
+    2559|       label: "Requests",
+    2560|       value: "1",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  app/lib/view-models.test.ts > run104 live-only telemetry surfaces > never samples a replay or benchmark row as the latest request
+AssertionError: expected [ { …(23) } ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   {
++     "cacheLabel": "Caching unavailable",
++     "clientRequestId": null,
++     "costLabel": "$0.0000 est.",
++     "createdAtLabel": "Jan 01, 08:00 AM",
++     "displayName": "Run104.Endpoint",
++     "effortSource": null,
++     "endpointId": "run104.endpoint",
++     "endpointLabel": "run104.endpoint",
++     "finishReasonLabel": "unknown",
++     "interactionCount": 1,
++     "latencyLabel": "900 ms",
++     "modelId": undefined,
++     "primaryLabel": "req-replay-003",
++     "providerFamilyLabel": "unknown provider",
++     "reasoningEffort": null,
++     "requestId": "req-replay-003",
++     "requestedReasoningEffort": null,
++     "routingDecisionLabel": "n/a",
++     "secondaryLabel": null,
++     "sourceLabel": "Remote",
++     "statusLabel": "n/a ok",
++     "streamLabel": "Streaming unavailable",
++     "tokenLabel": "30 tokens",
++   },
++ ]
+
+ ❯ app/lib/view-models.test.ts:2609:18
+    2607|       },
+    2608|     ]);
+    2609|     expect(rows).toEqual([]);
+       |                  ^
+    2610|   });
+    2611| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  3 failed | 56 passed (59)
+   Start at  19:14:58
+   Duration  4.74s (transform 776ms, setup 0ms, collect 1.73s, tests 377ms, environment 1ms, prepare 3.17s)
+
+undefined
+D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run app/lib/view-models.test.ts app/lib/sidebar-footer.test.ts

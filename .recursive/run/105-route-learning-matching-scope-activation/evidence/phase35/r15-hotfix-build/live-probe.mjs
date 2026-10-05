@@ -1,0 +1,11 @@
+import {readFile,writeFile} from 'node:fs/promises';
+const root="D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/.recursive/run/105-route-learning-matching-scope-activation/evidence/phase35/r15-hotfix-build";
+const {port}=JSON.parse(await readFile(root+'/live-mock-ready.json','utf8'));
+const base='http://127.0.0.1:3458';
+const headers={authorization:'Bearer run105-local-verification','Content-Type':'application/json'};
+async function api(url,method='GET',body){const response=await fetch(base+url,{method,headers,...(body?{body:JSON.stringify(body)}:{})});const text=await response.text();let data;try{data=JSON.parse(text);}catch{data=text;}return{status:response.status,data};}
+const health=await api('/healthz');await writeFile(root+'/live-health-before.json',JSON.stringify(health,null,2));if(health.data.runtime.commit!=='ca91d98aeb0532a0bdcded0b5b4e9f19617ceac5'||!health.data.ready)throw Error('wrong runtime');
+const account=await api('/api/role-model/accounts','POST',{providerAccountId:'deepseek.personal.r15-local-mock',providerId:'deepseek',providerKind:'provider-openai',orgScope:'personal',accountScope:'workspace-default',credentialRef:{backend:'env',ref:'sk-r15-local-mock-not-a-real-key'},authMode:'api-key-static',regionPolicy:{mode:'prefer',regions:['global']},baseUrlOverride:'http://127.0.0.1:'+port+'/v1',allowedModels:['deepseek/deepseek-v4-pro'],modelRoleBindings:[{modelId:'deepseek/deepseek-v4-pro',roleIds:['general.chat']}],deniedModels:[],entitlementTags:['chat'],budgetPolicyRef:'budget.default',quotaPolicyRef:'quota.default',status:'active',healthStatus:'healthy',rotationState:'stable'});
+console.log('account status='+account.status); if(account.status!==200){console.log(account.data);throw Error('account config failed');}
+const endpoint=await api('/api/role-model/endpoints','POST',{providerAccountId:'deepseek.personal.r15-local-mock',modelId:'deepseek/deepseek-v4-pro',region:'global'});console.log('endpoint',JSON.stringify(endpoint));await writeFile(root+'/live-endpoint-admission.json',JSON.stringify(endpoint,null,2));if(endpoint.status!==200)throw Error('endpoint config failed');
+await writeFile(root+'/live-endpoint-id.json',JSON.stringify(endpoint.data));

@@ -371,6 +371,9 @@ describe("runtime design system", () => {
         routes: [
           "/app/router",
           "/app/router/strategy",
+          // Run 103 SP8: the two posture pages sit between Routing strategy and Controller.
+          "/app/router/agent-strategy",
+          "/app/router/workloads",
           "/app/router/controller",
           "/app/router/candidates",
           "/app/router/decisions",
@@ -381,6 +384,9 @@ describe("runtime design system", () => {
         routes: [
           "/app/observe/requests",
           "/app/observe/routing",
+          // Run 101 R10: queue truth has its own Observe page (depth per queue
+          // plus a job drill-in with attempts and the named failure).
+          "/app/observe/queues",
           "/app/observe/activity",
           "/app/observe/logs",
         ],
@@ -398,6 +404,19 @@ describe("runtime design system", () => {
           "/app/system/peers",
           "/app/system/extensions",
           "/app/system/storage-retention",
+        ],
+      },
+      {
+        // Run 98/99: the Learning section carries the operator surfaces, including the
+        // run-99 history page.
+        title: "Learning",
+        routes: [
+          "/app/learning",
+          "/app/learning/configuration",
+          "/app/learning/packs",
+          "/app/learning/decisions",
+          "/app/learning/evidence",
+          "/app/learning/history",
         ],
       },
     ]);
@@ -544,6 +563,23 @@ describe("runtime design system", () => {
         template: "ledger-inspector",
       }),
     );
+  });
+
+  test("resolves every Learning page through the route registry", () => {
+    // Run 99: the Learning pages (including the new History page) must resolve so the shell shows
+    // the page title and marks the Learning section active instead of falling back to Overview.
+    for (const [path, id, title] of [
+      ["/app/learning", "learning-overview", "Learning overview"],
+      ["/app/learning/configuration", "learning-configuration", "Learning configuration"],
+      ["/app/learning/packs", "learning-packs", "Learned packs"],
+      ["/app/learning/decisions", "learning-decisions", "Decision receipts"],
+      ["/app/learning/evidence", "learning-evidence", "Cohort evidence"],
+      ["/app/learning/history", "learning-history", "Learning history"],
+    ] as const) {
+      expect(getRuntimeRouteDefinition(path)).toEqual(
+        expect.objectContaining({ id, section: "Learning", title }),
+      );
+    }
   });
 
   test("uses analytics charts as the primary Observe entry point", () => {
@@ -872,7 +908,9 @@ describe("runtime design system", () => {
     expect(routerRouteSource).not.toContain("/app/router/strategy");
     expect(routerRouteSource).not.toContain("configuredAliasRows.slice(0, 3)");
     expect(routerRouteSource).toContain("selectOverviewRouterCandidates(candidates)");
-    expect(routingModeSource).toContain("Strategy A - Baseline");
+    // Run 103 SP8: the routing posture vocabulary is the two-axis one, not the strategy letters.
+    expect(routingModeSource).toContain("ROUTING_MODE_NAMES");
+    expect(routingModeSource).toContain("SCORING_STRATEGY_NAMES");
     expect(controlRoutingStrategySource).toContain("updateRuntimeConfig");
     expect(
       runtimeNavigationSections
@@ -972,7 +1010,10 @@ describe("runtime design system", () => {
     expect(controlRoutingStrategySource).toContain("monoEyebrowClassName");
     expect(controlRoutingStrategySource).toContain("Save and apply strategy");
     expect(controlRoutingStrategySource).toContain("await loadState();");
-    expect(controlRoutingStrategySource).toContain('variant="inventory"');
+    // Post-lock addendum-03: the measured-latency override is one checkbox, so the inventory-style
+    // evidence strip it used to carry is gone from this page.
+    expect(controlRoutingStrategySource).toContain("CheckboxControl");
+    expect(controlRoutingStrategySource).not.toContain('variant="inventory"');
     expect(controlRoutingStrategySource).not.toContain("border-l-2 border-[var(--rm-accent)]");
     expect(controlRoutingStrategySource).not.toContain("usePageActions");
     expect(controlRoutingStrategySource).not.toContain("Advanced config");
@@ -1438,12 +1479,17 @@ describe("runtime design system", () => {
     ).toContain("Loading routing strategy");
     expect(controlRoutingStrategySource).toContain("updateRuntimeConfig");
     expect(controlRoutingStrategySource).toContain("Save and apply strategy");
-    expect(controlRoutingStrategySource).toContain("formatDraftRoutingAlias");
+    expect(controlRoutingStrategySource).toContain("buildRoutingPatchDocument");
+    expect(controlRoutingStrategySource).toContain("resolveRoutingPostureSummary");
     expect(controlRoutingStrategySource).toContain("Active posture");
-    expect(routingModeSource).toContain("Strategy A - Baseline");
-    expect(routingModeSource).toContain("Strategy B - Intelligent");
-    expect(routingModeSource).toContain("Strategy C - Difficulty");
-    expect(controlRoutingStrategySource).not.toContain("Balanced");
+    expect(routingModeSource).toContain("Intelligent");
+    expect(routingModeSource).toContain("PIN_WEIGHTS_HELP_TEXT");
+    // Run 103 SP8: the canonical scoring vocabulary, including the Balanced preset, now lives on
+    // the page and comes from the vocabulary module rather than a route-local legacy mirror.
+    expect(controlRoutingStrategySource).toContain("SCORING_STRATEGY_OPTIONS");
+    expect(controlRoutingStrategySource).toContain("SCORING_PRESETS");
+    expect(controlRoutingStrategySource).toContain("WEIGHT_METRICS");
+    expect(controlRoutingStrategySource).not.toContain("formatDraftRoutingAlias");
     expect(getRuntimeRouteDefinition("/app/system/runtime-config")?.title).toBe("Runtime config");
     expect(
       renderRoute("/app/system/runtime-config", createElement(ControlRuntimeConfigRoute)),

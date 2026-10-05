@@ -1,0 +1,14 @@
+Run 96 R27-02 REFACTOR receipt
+acceptanceCriterionId=AC-R27-02
+proofFamily=transfer-artifact-authentication
+repository=public
+baseline_ref=b52a10279de21f612911bf2ae758ab40fb61d164
+implementationReferences=public:packages/extension-host/transfer-artifact.mjs#createTransferArtifact;public:packages/extension-host/transfer-artifact.mjs#consumeTransferArtifact
+testPath=public:packages/extension-host/run96-r27-extension-boundary.test.mjs
+assertionTitle=AC-R27-02 tuple: transfer-artifact authenticates scope/channel/epoch, bounds content, sanitizes private fields, and is single-use
+command=corepack pnpm exec biome check packages/extension-host/transfer-artifact.mjs
+external_log=E:\role-model-temp\run96-r27-02-refactor-b52a1027.log
+exit=0
+result=PASS
+diagnostics=none
+receipt_status=PASS_REFACTOR

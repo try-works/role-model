@@ -1,0 +1,19 @@
+# Phase 3.5 repairs — review FAIL
+
+Read effective requirements, addenda, plan, AS-IS, implementation summary and referenced design doc. Locked artifacts stay immutable. Use genuine assertion-driven RED->GREEN; no stash/reset/commit while others write. Controller owns production integration and cli refresh.
+
+## Aggregation correctness
+Private ladder-aggregation.mjs and new run105-review-aggregation.test.mjs only. Real groups use members[].confidence and winnerTrialId (not group.confidence). All-tie endpoints must rank. Orient head-to-head by canonical pair independent of source/candidate order; evaluate net within primary-score tie groups. weightedCount means confidence-weighted count. Deduplicate group ids; deterministic record ordering and summation. Test authentic group shape, reversed arms, all ties, unequal confidences, duplicate groups, permutation and cycle/transitivity. Do not relax expectations to conceal failure.
+
+## CLI compile
+Public cli.ts startAutoReplayLoop block and pending track-b-learning-pass helper only. envelopeFor is out of scope; use correct local envelopes. Decode RouteLadderRow rather than returning unknown. Capture typecheck RED/GREEN and focused regression tests. No private writes or aggregation caller (controller owns that).
+
+## UI toggle round trip
+Private runtime-operations-server.mjs rollbackPack wrapper and private e5 tests only. Existing UI-shaped rollback-pack body with roleId/taskTypeId/rolledBack must land/set per-task flag; legacy pack rollback unchanged. Test actual learning adapter plus real temp KnowledgeStore: ON->GET->OFF->GET, rungs retained, reason preserved, other task isolated; reject malformed Boolean/scope instead of coercion. Keep pending R14 correction. Do not just alter mocks.
+
+## Advisory safety and exact scope
+Public route-advisory-source.ts, track-b-runtime.ts, index.ts and focused tests only (controller owns cli.ts). Cache key must include channel/runtime/role/task; no role/task borrowing or transient fallback after rollback. Confidence must reflect admitted evidence, not constant 1; cohort/stage/freshness/kill switch and guardrails remain effective. No fabricated scope or 100% exposure. Band applies once to first eligible available rung; deeper ladder ranks CAN influence routing because ladder order and score order are independent. Report upstream policy decisions rather than silently relaxing a gate.
+
+## Production materialization (separate implementer)
+Private only: knowledge-worker/index.mjs capability wiring and a new shared/route-learning/route-ladder-materialization.mjs, relevant manifests/registry, new real-store integration tests. No aggregation-module edits (A owns), no knowledge-store edits, no ops-server or public edits. Export async materializeRouteLadders({groups,configuredEndpointIds,readLadder,writeLadder,defaults,nowMs,taxonomyVersion,scopeId}). Use tested aggregation (A repairing genuine group shape); per exact role/task, unique finalized group IDs, admission-floor-filtered rungs; preserve existing rollback reason/on/time and unavailable removed rungs; completeness counts admitted CURRENT configured endpoints; record effective confidence/evidence time/provenance separately, no constant 1; do not advance version on same evidence; no destructive replace. Write via existing knowledge:write-route-ladder capability. Real KnowledgeStore + actual evaluation-group fixtures test evidence->stored ladder without promote/activate and repeat idempotence, scope isolation, below-floor no advisory, rollback preserved. Expose knowledge:materialize-route-ladders in knowledge-worker dispatcher with permissions + registry, invoke envelopes forwarded to store respecting runtime scope/file paths; inspect existing store coupling before implementing. If capability scope auth cannot safely write store, export module to host runtime adapter with declaration and report exact seam. RED before code. Controller adds public sweep caller.
+

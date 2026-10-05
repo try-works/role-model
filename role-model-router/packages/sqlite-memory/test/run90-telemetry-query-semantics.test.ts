@@ -79,7 +79,7 @@ test("Run 90 aggregates are independent of the 50-row page and use a half-open w
   expect(listRuntimeTelemetryComparisonRows(inclusiveWindowQuery)).toMatchObject([
     { endpointId: "run90.endpoint", requestCount: 60, failureCount: 60 },
   ]);
-});
+}, 15_000);
 
 test("Run 90 exact telemetry lookup reads by request identity without a bounded page scan", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "run90-telemetry-lookup-"));

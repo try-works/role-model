@@ -1,4 +1,5 @@
-import { createHash, randomUUID } from "node:crypto";
+import { createHash, randomUUID, timingSafeEqual } from "node:crypto";
+
 import {
   appendFileSync,
   existsSync,
@@ -16,6 +17,8 @@ import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { setTimeout as delay } from "node:timers/promises";
 import { parse } from "yaml";
+import { evaluateDispatchContextGuard } from "./dispatch-context-guard.js";
+import { persistFailureTelemetrySafely } from "./failure-telemetry-persistence.js";
 
 import {
   type NormalizedCatalog,
@@ -24,7 +27,11 @@ import {
   resolveReasoningEffortLevels,
 } from "@role-model-router/catalog";
 import { assembleContextEnvelope } from "@role-model-router/context-envelope";
-import { canonicalTaxonomy, taxonomyManifest } from "@role-model-router/core";
+import {
+  canonicalTaxonomy,
+  supportsCapabilityRequirement,
+  taxonomyManifest,
+} from "@role-model-router/core";
 import type { EndpointRegistryResult } from "@role-model-router/endpoint-registry";
 import {
   type RegistrySources,
@@ -70,6 +77,7 @@ import {
   createRuntimeObservationBundle,
 } from "@role-model-router/runtime-observability";
 import {
+  BENCHMARK_SAMPLE_RUN_STALLED_AFTER_MS,
   buildAdvisoryMaxDifficultyRecommendation,
   buildCompactRuntimeObservationStub,
   clearAllObservedBenchmarkData,
@@ -91,8 +99,10 @@ import {
   persistRuntimeObservationBundle,
   persistRuntimeTelemetryFailure,
   readAdvisoryMaxDifficultyRecommendation,
+  readBenchmarkSampleRuns,
   readConversationContinuity,
   readDifficultyClassificationCache,
+  readEndpointLatencyBuckets,
   readLatestBenchmarkProfilesByEndpointIds,
   readLatestObservedProfile,
   readLatestObservedProfilesByEndpointIds,
@@ -107,6 +117,7 @@ import {
   readRuntimeTelemetryRecord,
   readRuntimeTelemetrySourceSummaries,
   readRuntimeTelemetrySummary,
+  updateRuntimeTelemetryClientLatency,
   upsertDifficultyClassificationCache,
   upsertObservedThroughputPenaltyState,
   upsertProviderDeviceAuthSession,
@@ -127,6 +138,7 @@ import {
   createToolRegistry,
   executeToolCalls,
 } from "@role-model-router/tool-registry";
+import { deriveRuntimeContributionOutcome } from "./contribution-outcome.js";
 import {
   buildCompactControllerSystemPrompt,
   buildControllerSystemPrompt,
@@ -150,21 +162,40 @@ import {
   releaseExecutionCircuitProbe,
   resolveExecutionCircuitRefusal,
   serializeExecutionCircuitState,
+  settleExecutionCircuitProbe,
   toExecutionCircuitReceipt,
 } from "./execution-circuit-breaker.js";
-import {
-  CONSECUTIVE_EXECUTION_FAILURE_DEGRADATION_THRESHOLD,
-  resolveEndpointHealthState,
-} from "./health-policy.js";
+import { resolveEndpointHealthState } from "./health-policy.js";
+import { reconcileLegacyExecutionAdmissionRows } from "./legacy-execution-admission-reconciliation.js";
 import { resolveModelCapabilityProfile } from "./model-capability-resolver.js";
+import { selectEndpointByMeasuredLatency } from "./routing-latency-selection.js";
+import { createRoutingPrepCache, resolveRoutingPrepCacheTtlMs } from "./routing-prep-cache.js";
+import {
+  type DerivedTaxonomyClassification,
+  deriveTaxonomyClassification,
+} from "./taxonomy-derivation.js";
+import {
+  createTrackBRouteCaptureQueue,
+  resolveDeferredCaptureMaxBytes,
+} from "./track-b-capture-queue.js";
+import { type StoredTrafficClass, toPersistedTrafficClass } from "./traffic-class.js";
+export type {
+  RuntimeContributionOutcome,
+  RuntimeContributionObservation,
+  RuntimeContributionOutcomeInput,
+} from "./contribution-outcome.js";
+export { deriveRuntimeContributionOutcome } from "./contribution-outcome.js";
+import { readLearningPolicyFile, resolveLearningPolicyStateRoot } from "./learning-policy-file.js";
 import {
   filterEndpointsByCapabilityRequirements,
   inferChatCompletionsCapabilityRequirements,
   inferResponsesCapabilityRequirements,
 } from "./request-capability-inference.js";
+import { resolveAdvisoryCohortPercent } from "./route-advisory-source.js";
 import { readPackagedRuntimeProfile, resolveRuntimeChannelProfile } from "./runtime-channel.js";
 import { type RuntimeVersionInfoRecord, resolveRuntimeVersionInfo } from "./runtime-version.js";
 import {
+  RouteCaptureBoundaryCoolingDownError,
   buildGraphEvidenceFromCapture,
   buildLegacyTerminalFailureRecoveryCapture,
   buildProviderEvidenceFromObservation,
@@ -172,9 +203,16 @@ import {
   createTrackBOperations as createTrackBOperationsFromState,
 } from "./track-b-operations.js";
 import {
+  RUN96_ROUTING_SHADOW_SCORER_SET_VERSION,
+  type TrackBRouteAdvisoryClassification,
+  appendTrackBRouteAdvisoryObservation,
+  buildLiveRouteAdvisoryObservation,
   createRun88RuntimeCorrelation,
   createRuntimeRequestCorrelationId,
   createTrackBFileGraphStore,
+  decodeExternalizedOperatorReadback,
+  recallNewestTrackBRouteAdvisory,
+  recallTrackBDurableRouteAdvisory,
 } from "./track-b-runtime.js";
 
 import {
@@ -247,8 +285,11 @@ import {
   writeOperatorIntent,
 } from "./operator-intent.js";
 import {
+  DEFAULT_REMOTE_PROBE_ATTEMPTS,
+  DEFAULT_REMOTE_PROBE_RETRY_DELAY_MS,
   type RemoteHealthProbeResult,
   type RemoteHealthProbeTarget,
+  isTransientTransportError,
   probeRemoteEndpointAdmission,
   probeRemoteEndpoints,
 } from "./remote-health-probe.js";
@@ -260,6 +301,20 @@ import {
   validateAliasInventoryResolution,
   warnAliasModelIdDrift,
 } from "./routable-inventory.js";
+import {
+  type RoutingModeName,
+  type RoutingPosture,
+  type ScoringStrategyName,
+  type WeightProfile,
+  decodeLegacyRoutingStrategy,
+  normalizeRoutingModeName,
+  normalizeScoringStrategyName,
+  overlayPostureOperator,
+  resolveControllerStrategyApplication,
+  resolveRequestStrategy,
+  toCoreRoutingStrategyName,
+  withStrategyProvenance,
+} from "./scoring-strategy.js";
 import {
   type BootstrapStageResult,
   type SessionBootstrapState,
@@ -276,6 +331,17 @@ import {
   loadLiteLLMModelPrices,
   readNormalizedCatalogFile,
 } from "@role-model-router/catalog";
+import {
+  type AgentStrategyEntry,
+  type AliasInventoryRow,
+  type PostureRequestBinding,
+  SHIPPED_WORKLOAD_EXAMPLES,
+  derivePostureAliasInventory,
+  findAgentStrategyAlias,
+  resolvePostureRequestBinding,
+  validateAgentStrategyBindings,
+  withAliasPostureBinding,
+} from "./agent-strategy.js";
 import { resolveValidationProviderMetadata } from "./provider-metadata-merge.js";
 import { resolveLlamaSwapCommand } from "./runtime-assets.js";
 import {
@@ -293,7 +359,6 @@ import {
   deriveUnifiedRuntimeRoutingAliasMode,
   isPrimaryRoutingAliasId,
   mergeUnifiedRuntimeConfigDocuments,
-  normalizeUnifiedRuntimeConfigInput,
   parseUnifiedRuntimeConfigText,
   removeUnifiedRuntimeConfigProviderModel,
   renderUnifiedRuntimeConfigText,
@@ -337,8 +402,39 @@ export function resolveAdapterGatedReasoningEfforts(input: {
   });
 }
 
+function markPhase(label: string): void {
+  if (process.env.ROLE_MODEL_PHASE_TIMING === "1") {
+    console.error(`[run98] phase ${label} ${Date.now()}`);
+  }
+}
+
+/**
+ * Run 98 addendum 39 S2: the OAuth refresh is a single network call, and a stalled
+ * token endpoint used to leave the credentials stage degraded with no way to tell a
+ * transport stall from a rejected grant. Retry only the transport class (the same
+ * classifier the health probes use) and let auth/provider errors surface as-is.
+ */
+export async function fetchWithTransientRetry(
+  networkFetcher: typeof fetch,
+  url: string,
+  init: RequestInit,
+  attempts = 3,
+): Promise<Response> {
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      return await networkFetcher(url, init);
+    } catch (error) {
+      if (attempt >= attempts || !isTransientTransportError(error)) {
+        throw error;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 500 * attempt));
+    }
+  }
+}
+
 export function resolveEndpointExecutionEffort(input: {
   readonly fixedEffort?: string | null;
+  readonly declaredEffortLevels?: readonly string[] | null;
   readonly executionRequest: RuntimeExecutionRequest;
 }): {
   readonly executionRequest: RuntimeExecutionRequest;
@@ -350,6 +446,20 @@ export function resolveEndpointExecutionEffort(input: {
   const fixedEffort = input.fixedEffort?.trim() || null;
   const clientEffort = input.executionRequest.reasoning?.effort?.trim() || null;
   if (fixedEffort === null) {
+    const declaredEffortLevels = new Set(
+      (input.declaredEffortLevels ?? [])
+        .map((level) => level.trim())
+        .filter((level) => level.length > 0),
+    );
+    if (clientEffort !== null && declaredEffortLevels.has(clientEffort)) {
+      return {
+        executionRequest: input.executionRequest,
+        receipt: {
+          reasoningEffort: clientEffort,
+          effortSource: "client",
+        },
+      };
+    }
     const { reasoning: clientReasoning, ...executionRequestWithoutReasoning } =
       input.executionRequest;
     const { effort: _clientEffort, ...providerDefaultReasoning } = clientReasoning ?? {};
@@ -470,7 +580,17 @@ const CONTROLLER_MAX_OUTPUT_TOKENS = 1024;
 export type OpenAICodexSubscriptionModelLifecycle = "supported" | "preview" | "deprecated";
 
 export interface OpenAICodexSubscriptionModelProfile {
-  readonly modelId: `chatgpt/gpt-5.${string}`;
+  /**
+   * The subscription surface spans more than the GPT-5 line, so the id is constrained by its
+   * `chatgpt/` prefix rather than pinned to `gpt-5.`.
+   *
+   * Pinning it to `gpt-5.` is why the newer rows could not be offered at all: the catalog has priced
+   * and described `gpt-6-astra`, `gpt-6-luna`, `gpt-6-sol` and `gpt-6.1-sol` since
+   * `feat(catalog): add the new OpenAI models and bill context tiers` (#286), but a `gpt-6.x` id could
+   * not be declared in this matrix, so the runtime never exposed them while the catalog already knew
+   * their capabilities, context window, reasoning efforts and cost tiers.
+   */
+  readonly modelId: `chatgpt/gpt-${string}`;
   readonly lifecycle: OpenAICodexSubscriptionModelLifecycle;
   readonly supportsFunctionCalling: boolean;
   readonly supportsHostedWebSearch: boolean;
@@ -479,6 +599,47 @@ export interface OpenAICodexSubscriptionModelProfile {
 }
 
 export const OPENAI_CODEX_SUBSCRIPTION_MODEL_MATRIX = [
+  /**
+   * The GPT-6 rows the catalog has carried since `feat(catalog): add the new OpenAI models and bill
+   * context tiers` (#286). They were priced, described and tiered in
+   * `packages/catalog/data/normalized-catalog.json` from that PR on, but never offered, because this
+   * matrix is the runtime's own declaration of the subscription surface and #286 did not touch it -
+   * the models were consequently absent from every `models.dev`-derived readback while the catalog
+   * already answered for them. `reasoningEffortLevels` is the set the catalog publishes for each row,
+   * which is what the resolver uses when it differs from models.dev's own default.
+   *
+   * The models.dev `gpt-daybreak-blue-latest` / `gpt-daybreak-red-latest` rows are deliberately not
+   * listed: they are the provider ids behind GPT-5.6 Sol and GPT-5.6 Cyber rather than models in
+   * their own right, so they stay catalog aliases and never become selectable subscription entries.
+   */
+  {
+    modelId: "chatgpt/gpt-6.1-sol",
+    lifecycle: "supported",
+    supportsFunctionCalling: true,
+    supportsHostedWebSearch: true,
+    reasoningEffortLevels: ["low", "medium", "high", "xhigh", "max"],
+  },
+  {
+    modelId: "chatgpt/gpt-6-sol",
+    lifecycle: "supported",
+    supportsFunctionCalling: true,
+    supportsHostedWebSearch: true,
+    reasoningEffortLevels: ["none", "low", "medium", "high", "xhigh", "max"],
+  },
+  {
+    modelId: "chatgpt/gpt-6-luna",
+    lifecycle: "supported",
+    supportsFunctionCalling: true,
+    supportsHostedWebSearch: true,
+    reasoningEffortLevels: ["none", "low", "medium", "high", "xhigh", "max"],
+  },
+  {
+    modelId: "chatgpt/gpt-6-astra",
+    lifecycle: "supported",
+    supportsFunctionCalling: true,
+    supportsHostedWebSearch: true,
+    reasoningEffortLevels: ["low", "medium", "high", "xhigh", "max"],
+  },
   {
     modelId: "chatgpt/gpt-5.6-sol",
     lifecycle: "supported",
@@ -559,6 +720,33 @@ export const OPENAI_CODEX_SUBSCRIPTION_MODEL_MATRIX = [
 export const OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS = OPENAI_CODEX_SUBSCRIPTION_MODEL_MATRIX.map(
   (entry) => entry.modelId,
 );
+
+/**
+ * The OpenAI catalog rows at or above the subscription version floor that this surface deliberately
+ * does not offer, each with the reason. Everything else the catalog carries at or above the floor must
+ * appear in the matrix above - `openai-codex-subscription-catalog-conformance.test.ts` fails otherwise,
+ * in both directions:
+ *
+ * - a catalog row at or above the floor that is neither offered nor excluded here, which is how
+ *   `feat(catalog): add the new OpenAI models and bill context tiers` (#286) added six OpenAI rows
+ *   (`gpt-6-astra`, `gpt-6-luna`, `gpt-6-sol`, `gpt-6.1-sol`, and the daybreak pair) that no runtime ever
+ *   offered - they were priced and described in the catalog while the matrix, which is the runtime's own
+ *   declaration of the surface, silently stayed at twelve;
+ * - a matrix entry with no catalog row, which `createRuntimeModelRecords` below drops without a word
+ *   (`if (!source) return []`), so a typo or a removed catalog row removes a model from the surface with
+ *   no failure anywhere.
+ *
+ * The floor and its version parse live with the test, because the rule it encodes is a conformance
+ * statement about the catalog rather than something the runtime evaluates.
+ */
+export const OPENAI_CODEX_SUBSCRIPTION_MODEL_EXCLUSIONS = {
+  "gpt-5.6":
+    "the bare 5.6 row is not a Codex subscription target; the offered 5.6 rows are its named variants",
+  "gpt-daybreak-blue-latest":
+    "the provider id behind GPT-5.6 Sol, not a model in its own right - listing it would offer a second name for one model",
+  "gpt-daybreak-red-latest":
+    "the provider id behind GPT-5.6 Cyber, not a model in its own right - listing it would offer a second name for one model",
+} as const satisfies Readonly<Record<string, string>>;
 const OPENAI_CODEX_SUBSCRIPTION_MODEL_ID_SET = new Set<string>(OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS);
 const OPENAI_CODEX_SUBSCRIPTION_ENDPOINT_ID_MARKERS = [
   `.${OPENAI_CODEX_SUBSCRIPTION_VARIANT_ID}.`,
@@ -1020,7 +1208,21 @@ export interface BridgeExecutionPlan {
     | "routingMode"
     | "rolePolicy"
     | "capabilityEligibility"
+    | "strategyResolution"
+    | "aliasPostureBinding"
   >;
+  /**
+   * Run 98 addendum 58 slice 2: the taxonomy identity the request was routed under — the declaration when it
+   * named a taxonomy task, the local derivation otherwise. Recorded so the observation, the capture and the
+   * advisory gate all key on the same identity instead of re-deriving or defaulting to `text.chat`.
+   */
+  readonly taxonomyIdentity?: {
+    readonly taskTypeId: string;
+    readonly roleId: string;
+    readonly groupId: string;
+    readonly confidence: number;
+    readonly source: "declared" | "runtime_heuristic";
+  };
 }
 
 interface BridgeDifficultyRoutingContext {
@@ -1180,7 +1382,7 @@ function summarizeDifficultySignals(input: {
   };
 }
 
-function classifyDifficultyFromSignals(input: {
+export function classifyDifficultyFromSignals(input: {
   readonly signals: DifficultyRoutingSignals;
   readonly classifier?: UnifiedRuntimeDifficultyClassifierConfig;
 }): {
@@ -1204,17 +1406,33 @@ function classifyDifficultyFromSignals(input: {
   }
 
   let score = 0;
-  if (input.signals.contextTokens >= 2000) {
+  // Run 98 addendum 32 S3 (external audit §6): the rubric saturated because `contextTokens >= 2000`,
+  // `toolCount >= 2` and `historyTurnCount >= 4` - worth 8 points together, already "hard" - are true
+  // for essentially every agent session, so a 562K-token tool-heavy session shared a bucket with a
+  // 2K-token one and the gate stopped selecting. The context contribution is graded across the observed
+  // range (live `contextTokens` p50 = 130, p95 = 450,732) and the tool/history steps keep climbing
+  // instead of stopping at the first rung.
+  if (input.signals.contextTokens >= 200_000) {
+    score += 5;
+  } else if (input.signals.contextTokens >= 50_000) {
+    score += 4;
+  } else if (input.signals.contextTokens >= 10_000) {
     score += 3;
+  } else if (input.signals.contextTokens >= 2_000) {
+    score += 2;
   } else if (input.signals.contextTokens >= 600) {
     score += 1;
   }
-  if (input.signals.toolCount >= 2) {
+  if (input.signals.toolCount >= 5) {
     score += 3;
+  } else if (input.signals.toolCount >= 2) {
+    score += 2;
   } else if (input.signals.toolCount === 1) {
     score += 1;
   }
-  if (input.signals.historyTurnCount >= 4) {
+  if (input.signals.historyTurnCount >= 16) {
+    score += 3;
+  } else if (input.signals.historyTurnCount >= 6) {
     score += 2;
   } else if (input.signals.historyTurnCount >= 2) {
     score += 1;
@@ -1364,10 +1582,70 @@ function parseClassifierDifficultyOutput(text: string): UnifiedRuntimeDifficulty
   return parseDifficultyBucket(matched);
 }
 
-function buildDifficultyClassifierMessages(input: {
+/**
+ * Run 99 R33 live finding (stage v145, operator report): the classifier prompt carried the *entire*
+ * transcript, so a multi-megabyte coding-agent turn overflowed the classifier model's context window
+ * and the whole turn failed before routing (`CONTEXT_WINDOW_EXCEEDED` on `difficulty.remote-only`).
+ *
+ * The classifier reasons about the rubric signals and the shape of the newest turn, so the excerpt is
+ * bounded: the newest `DIFFICULTY_CLASSIFIER_MAX_MESSAGES` messages, at most
+ * `DIFFICULTY_CLASSIFIER_MAX_CHARS_PER_MESSAGE` characters each (head and tail, so both the intent and
+ * the latest instruction survive), and `DIFFICULTY_CLASSIFIER_MAX_JSON_BYTES` of serialized prompt in
+ * total. Truncation is stated in the payload, never silent.
+ */
+export const DIFFICULTY_CLASSIFIER_MAX_MESSAGES = 12;
+export const DIFFICULTY_CLASSIFIER_MAX_CHARS_PER_MESSAGE = 4_000;
+export const DIFFICULTY_CLASSIFIER_MAX_JSON_BYTES = 48 * 1024;
+
+export function buildDifficultyClassifierMessages(input: {
   readonly messages: readonly OpenAIChatCompletionsMessage[];
   readonly signals: DifficultyRoutingSignals;
 }): readonly OpenAIChatCompletionsMessage[] {
+  const messages = Array.isArray(input.messages) ? input.messages : [];
+  const kept = messages.slice(-DIFFICULTY_CLASSIFIER_MAX_MESSAGES);
+  let contentTruncated = messages.length > kept.length;
+  const excerpt = kept.map((message) => {
+    const record = message as unknown as Record<string, unknown>;
+    const content = typeof record.content === "string" ? record.content : "";
+    let bounded = content;
+    if (content.length > DIFFICULTY_CLASSIFIER_MAX_CHARS_PER_MESSAGE) {
+      const half = Math.floor(DIFFICULTY_CLASSIFIER_MAX_CHARS_PER_MESSAGE / 2);
+      bounded = `${content.slice(0, half)}\n[…truncated for classification…]\n${content.slice(-half)}`;
+      contentTruncated = true;
+    }
+    return { ...record, content: bounded };
+  });
+  const payload = {
+    rubricSignals: input.signals,
+    messages: excerpt,
+    ...(contentTruncated
+      ? {
+          truncation: {
+            messagesOmitted: Math.max(0, messages.length - kept.length),
+            note: "The transcript was truncated for classification; difficulty is judged on the rubric signals and the newest turns.",
+          },
+        }
+      : {}),
+  };
+  let serialized = JSON.stringify(payload, null, 2);
+  while (
+    Buffer.byteLength(serialized) > DIFFICULTY_CLASSIFIER_MAX_JSON_BYTES &&
+    excerpt.length > 1
+  ) {
+    excerpt.shift();
+    serialized = JSON.stringify(
+      {
+        ...payload,
+        messages: excerpt,
+        truncation: {
+          messagesOmitted: messages.length - excerpt.length,
+          note: "The transcript was truncated for classification; difficulty is judged on the rubric signals and the newest turns.",
+        },
+      },
+      null,
+      2,
+    );
+  }
   return [
     {
       role: "system",
@@ -1376,19 +1654,39 @@ function buildDifficultyClassifierMessages(input: {
     },
     {
       role: "user",
-      content: JSON.stringify(
-        {
-          rubricSignals: input.signals,
-          messages: input.messages,
-        },
-        null,
-        2,
-      ),
+      content: serialized,
     },
   ];
 }
 
-function buildControllerRoutingMessages(input: {
+/**
+ * Run 99 R33 live finding (stage v145): both controller prompts serialized the entire transcript, so
+ * a multi-megabyte coding-agent turn would overflow the controller model exactly the way the
+ * difficulty classifier overflowed on `difficulty.remote-only`. The excerpt is bounded to the newest
+ * turns and says so, so routing still sees the shape of the conversation without exceeding a model
+ * context window.
+ */
+export const CONTROLLER_MAX_TRANSCRIPT_BYTES = 128 * 1024;
+
+function boundedControllerTranscript(messages: readonly OpenAIChatCompletionsMessage[]): {
+  readonly messages: readonly OpenAIChatCompletionsMessage[];
+  readonly truncation: { readonly messagesOmitted: number; readonly note: string } | null;
+} {
+  const list = Array.isArray(messages) ? messages : [];
+  const kept = [...list];
+  const note =
+    "The transcript was truncated for routing; the newest turns and the requested model decide the route.";
+  let truncation: { readonly messagesOmitted: number; readonly note: string } | null = null;
+  const fits = () =>
+    Buffer.byteLength(JSON.stringify(kept), "utf8") <= CONTROLLER_MAX_TRANSCRIPT_BYTES;
+  while (!fits() && kept.length > 1) {
+    kept.shift();
+    truncation = { messagesOmitted: list.length - kept.length, note };
+  }
+  return { messages: kept, truncation };
+}
+
+export function buildControllerRoutingMessages(input: {
   readonly requestedModel: string;
   readonly messages: readonly OpenAIChatCompletionsMessage[];
   readonly toolCount: number;
@@ -1396,12 +1694,14 @@ function buildControllerRoutingMessages(input: {
   readonly roleDefinitions?: readonly RuntimeRoleDefinitionRecord[];
   readonly taskDefinitions?: readonly RuntimeTaskDefinitionRecord[];
 }): readonly OpenAIChatCompletionsMessage[] {
+  const bounded = boundedControllerTranscript(input.messages);
   const userPayload = JSON.stringify(
     {
       requestedModel: input.requestedModel,
       toolCount: input.toolCount,
       candidateEndpointIds: input.candidateEndpointIds,
-      messages: input.messages,
+      messages: bounded.messages,
+      ...(bounded.truncation ? { truncation: bounded.truncation } : {}),
     },
     null,
     2,
@@ -1422,7 +1722,7 @@ function buildControllerRoutingMessages(input: {
   ];
 }
 
-function buildCompactControllerRoutingMessages(input: {
+export function buildCompactControllerRoutingMessages(input: {
   readonly requestedModel: string;
   readonly messages: readonly OpenAIChatCompletionsMessage[];
   readonly toolCount: number;
@@ -1430,12 +1730,14 @@ function buildCompactControllerRoutingMessages(input: {
   readonly roleDefinitions?: readonly RuntimeRoleDefinitionRecord[];
   readonly taskDefinitions?: readonly RuntimeTaskDefinitionRecord[];
 }): readonly OpenAIChatCompletionsMessage[] {
+  const bounded = boundedControllerTranscript(input.messages);
   const userPayload = JSON.stringify(
     {
       requestedModel: input.requestedModel,
       toolCount: input.toolCount,
       candidateEndpointIds: input.candidateEndpointIds,
-      messages: input.messages,
+      messages: bounded.messages,
+      ...(bounded.truncation ? { truncation: bounded.truncation } : {}),
     },
     null,
     2,
@@ -2039,6 +2341,7 @@ export function resolveObservedDifficultyBucketForPlan(plan: {
 
 function maybeApplyControllerRouting(input: {
   readonly effectiveRoutingMode: RuntimeRoutingMode;
+  readonly pinWeights?: boolean;
   readonly requestedModel: string;
   readonly modelAliases: readonly UnifiedRuntimeModelAliasConfig[];
   readonly routingRequest: Parameters<typeof routeRuntimeRequest>[0]["request"];
@@ -2060,6 +2363,8 @@ function maybeApplyControllerRouting(input: {
     | "difficultyRouting"
     | "controllerRouting"
     | "hybridArbitration"
+    | "strategyResolution"
+    | "aliasPostureBinding"
   >;
 } {
   if (!shouldApplyControllerRouting(input.effectiveRoutingMode)) {
@@ -2099,8 +2404,7 @@ function maybeApplyControllerRouting(input: {
     };
   }
 
-  const guidanceStrategy =
-    guidance.strategy && isBridgeRoutingStrategy(guidance.strategy) ? guidance.strategy : undefined;
+  const guidanceStrategy = normalizeScoringStrategyName(guidance.strategy) ?? undefined;
   const requestedRoleId = resolveControllerRequestedRoleId(
     guidance.requestedRoleId,
     input.roleDefinitions,
@@ -2137,7 +2441,12 @@ function maybeApplyControllerRouting(input: {
           input.routingRequest.requiredCapabilities,
           requiredCapabilitiesFromGuidance,
         );
-  const finalStrategy = guidanceStrategy ?? input.routingRequest.strategy;
+  const strategyApplication = resolveControllerStrategyApplication({
+    pinWeights: input.pinWeights === true,
+    requestStrategy: normalizeScoringStrategyName(input.routingRequest.strategy) ?? "balanced",
+    guidanceStrategy,
+  });
+  const finalStrategy = toCoreRoutingStrategyName(strategyApplication.strategy);
   const hybridArbitration = summarizeHybridArbitration({
     effectiveRoutingMode: input.effectiveRoutingMode,
     routingRequest: input.routingRequest,
@@ -2155,7 +2464,9 @@ function maybeApplyControllerRouting(input: {
       requiredCapabilities,
       preferredCapabilities:
         preferredCapabilitiesFromGuidance ?? input.routingRequest.preferredCapabilities,
-      ...(guidanceStrategy ? { strategy: guidanceStrategy } : {}),
+      ...(strategyApplication.strategy !== input.routingRequest.strategy
+        ? { strategy: toCoreRoutingStrategyName(strategyApplication.strategy) }
+        : {}),
       ...(typeof guidance.preferLocal === "boolean" ? { preferLocal: guidance.preferLocal } : {}),
     },
     ...(preferredEndpointIds.length
@@ -2170,6 +2481,9 @@ function maybeApplyControllerRouting(input: {
       ...input.routingDiagnostics,
       controllerRouting: {
         active: true,
+        ...(strategyApplication.discarded
+          ? { discardedStrategy: strategyApplication.discarded.strategy }
+          : {}),
         ...(input.controllerContext.fallbackApplied ? { fallbackApplied: true } : {}),
         ...(input.controllerContext.fallbackReason
           ? { fallbackReason: input.controllerContext.fallbackReason }
@@ -2229,6 +2543,14 @@ export interface BridgeChatCompletionsExecutionResult {
   readonly vendorMetadata?: {
     readonly costUsd?: number;
     readonly cacheUsed?: boolean;
+  };
+  /**
+   * Bounded cost usable by Replay Core. Catalogue estimates are intentionally
+   * distinct from provider-billed cost and must never be reported as actuals.
+   */
+  readonly replayCost?: {
+    readonly usd: number;
+    readonly source: "vendor_actual" | "catalogue_estimate";
   };
   readonly persistenceDegradation?: Readonly<{
     readonly schemaVersion: "role-model.degradation-receipt.v1";
@@ -2322,6 +2644,7 @@ export type BridgeTelemetryAnalyticsMetric =
   | "p95LatencyMs";
 
 export type BridgeTelemetryAnalyticsDimension =
+  | "requestClass"
   | "sourceType"
   | "endpointId"
   | "modelId"
@@ -2346,6 +2669,8 @@ export type BridgeTelemetryAnalyticsDimension =
   | "taxonomyToolClassId";
 
 export interface BridgeTelemetryAnalyticsFilters {
+  /** Run 104 / R14: restrict to traffic classes; `live` also matches legacy `live_request` rows. */
+  readonly trafficClasses?: readonly StoredTrafficClass[];
   readonly sourceTypes?: readonly ("local" | "remote")[];
   readonly endpointIds?: readonly string[];
   readonly modelIds?: readonly string[];
@@ -2505,6 +2830,47 @@ function finiteTelemetryNumber(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
+/**
+ * Resolves the cost receipt Replay Core can budget after a provider response.
+ * Providers that do not expose billed cost remain replayable only when the
+ * selected catalogue gives finite input and output token prices. The estimate
+ * is deliberately labelled so it cannot be mistaken for vendor billing.
+ */
+export function resolveBridgeExecutionCost(input: {
+  readonly vendorCostUsd?: number;
+  readonly inputTokens: number;
+  readonly outputTokens: number;
+  readonly pricing?: {
+    readonly inputPer1M?: number | null;
+    readonly outputPer1M?: number | null;
+  } | null;
+}): { readonly usd: number; readonly source: "vendor_actual" | "catalogue_estimate" } | null {
+  if (Number.isFinite(input.vendorCostUsd) && (input.vendorCostUsd ?? -1) >= 0) {
+    return { usd: roundTelemetryUsd(input.vendorCostUsd as number), source: "vendor_actual" };
+  }
+  const inputPer1M = input.pricing?.inputPer1M;
+  const outputPer1M = input.pricing?.outputPer1M;
+  if (
+    !Number.isSafeInteger(input.inputTokens) ||
+    input.inputTokens < 0 ||
+    !Number.isSafeInteger(input.outputTokens) ||
+    input.outputTokens < 0 ||
+    !Number.isFinite(inputPer1M) ||
+    (inputPer1M ?? -1) < 0 ||
+    !Number.isFinite(outputPer1M) ||
+    (outputPer1M ?? -1) < 0
+  ) {
+    return null;
+  }
+  return {
+    usd: roundTelemetryUsd(
+      (input.inputTokens * (inputPer1M as number) + input.outputTokens * (outputPer1M as number)) /
+        1_000_000,
+    ),
+    source: "catalogue_estimate",
+  };
+}
+
 export function buildRuntimeTelemetrySnapshot(input: {
   readonly routed: RouteRuntimeRequestResult;
   readonly execution: Pick<RoutedExecutionResult, "target" | "normalized">;
@@ -2656,7 +3022,7 @@ export type BridgeTelemetryRequestRecord = ReturnType<
   typeof listRuntimeTelemetryRecords
 >[number] & {
   readonly clientRequestId?: string | null;
-  readonly requestClass?: "benchmark" | "live_request" | "unknown";
+  readonly requestClass?: StoredTrafficClass;
   /** Canonical upstream model identity retained alongside the endpoint instance. */
   readonly upstreamModelId?: string | null;
   /** Provider-fixed effort for the selected endpoint, when present. */
@@ -2703,6 +3069,8 @@ export interface BridgeRouterDecisionPage {
     readonly sourceType: string;
     readonly providerId: string | null;
     readonly finishReason: string | null;
+    /** Durable, non-mutating Track B shadow advice for this exact request, when available. */
+    readonly shadowAdvice: Record<string, unknown> | null;
   }[];
   readonly totalMatching: number;
   readonly returned: number;
@@ -2845,9 +3213,38 @@ export interface RuntimeRevisionStreamEvent {
 
 export type RuntimeBridgeStreamEvent = RuntimeTelemetryStreamEvent | RuntimeRevisionStreamEvent;
 
+export type RuntimeOperatorAvailability =
+  | "available"
+  | "unavailable"
+  | "unobserved"
+  | "degraded"
+  | "blocked";
+
+export interface RuntimeOperatorStatus {
+  readonly schemaVersion: "role-model.operator-status.v1";
+  readonly overall: RuntimeOperatorAvailability;
+  readonly observedAtMs: number;
+  readonly reason?: string;
+  readonly reasons?: Readonly<Record<string, string>>;
+  readonly capabilities: Readonly<Record<string, RuntimeOperatorAvailability>>;
+}
+
+type RuntimeOperatorQuery = Readonly<Record<string, string>>;
+
+/** Non-secret binding required for every request to the operator surface. */
+export interface RuntimeOperatorContext {
+  readonly channel: "development" | "stage" | "production";
+  readonly scope: string;
+  readonly authorizationEpoch: number;
+}
+
 export interface StartBridgeServerOptions {
   readonly host: string;
   readonly port: number;
+  /** Bearer token required for mutating and inspecting operator state. */
+  readonly operatorAuthToken?: string;
+  /** Exact runtime binding required in addition to the bearer token. */
+  readonly operatorContext?: RuntimeOperatorContext;
   readonly runtimeStateRoot?: string;
   readonly runtimeChannel?: "development" | "stage" | "production";
   readonly registry: EndpointRegistryResult;
@@ -2855,7 +3252,7 @@ export interface StartBridgeServerOptions {
   readonly getExecutionCatalog?: () => NormalizedCatalog;
   readonly readStartupReadiness?: () => {
     readonly ready: boolean;
-    readonly status: "pending" | "ready" | "failed";
+    readonly status: "pending" | "ready" | "degraded" | "failed";
     readonly message?: string;
   };
   readonly executeChatCompletions: (
@@ -2877,6 +3274,16 @@ export interface StartBridgeServerOptions {
     query?: BridgeTelemetryQuery,
   ) => Promise<BridgeActivityMetricsPage>;
   readonly readActivityCapture?: (captureId: number | string) => Promise<unknown>;
+  /**
+   * Run 98 addendum 40 (L1): the duration the client actually waited for is only known once the
+   * response has been flushed. The host reports it here so telemetry can record it as a bounded
+   * follow-up write instead of leaving the provider response-header time as "request latency".
+   */
+  readonly recordClientLatency?: (input: {
+    readonly requestId: string;
+    readonly requestLatencyMs: number;
+    readonly timeToFirstTokenMs?: number | null;
+  }) => void;
   readonly readLogs?: () => Promise<string>;
   readonly proxyVendorLogStream?: (
     pathname: string,
@@ -2892,13 +3299,106 @@ export interface StartBridgeServerOptions {
   readonly mutateExtension?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly readTrackBQaExtensions?: () => Promise<readonly unknown[]>;
   readonly readTrackBShadowReceipts?: () => Promise<unknown>;
+  readonly readTrackBPostObservationReceipt?: (requestId: string) => Promise<unknown>;
+  readonly recordTrackBContributionAggregate?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly retryTrackBContributionAggregates?: () => Promise<unknown>;
   readonly readTrackBExtensionReadback?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly runTrackBSupervisedReplay?: (body: Record<string, unknown>) => Promise<unknown>;
+  /** Automatic replay operator surface: bounded loop status and pause/resume control. */
+  readonly readTrackBReplayStatus?: () => Promise<unknown> | unknown;
+  /** S42: can the boundary read this capture back, and if not, why. */
+  readonly readCaptureEvidence?: (requestId: string) => Promise<unknown> | unknown;
+  readonly controlTrackBReplay?: (body: Record<string, unknown>) => Promise<unknown>;
+  /** Bounded Evaluation Core and learner counters for the operator surface. */
+  readonly readTrackBLearningSummary?: () => Promise<unknown> | unknown;
+  readonly readOperatorStatus?: () => Promise<RuntimeOperatorStatus | unknown>;
+  /** Authenticated operator evidence projections supplied by the owning runtime authority. */
+  readonly listOperatorTraceRoots?: (query?: RuntimeOperatorQuery) => Promise<unknown>;
+  readonly readOperatorTraceRoot?: (traceRootId: string) => Promise<unknown>;
+  readonly listReplayJobs?: (query?: RuntimeOperatorQuery) => Promise<unknown>;
+  readonly createReplayJob?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly cancelReplayJob?: (jobId: string, body: Record<string, unknown>) => Promise<unknown>;
+  readonly readReplayJob?: (jobId: string) => Promise<unknown>;
+  readonly readReplayResults?: (jobId: string) => Promise<unknown>;
+  readonly listEvaluationJobs?: (query?: RuntimeOperatorQuery) => Promise<unknown>;
+  readonly readEvaluationJob?: (jobId: string) => Promise<unknown>;
+  readonly listEvaluationTrials?: (jobId: string) => Promise<unknown>;
+  readonly listEvaluationScorers?: (jobId: string) => Promise<unknown>;
+  readonly listEvaluationComparisons?: (jobId: string) => Promise<unknown>;
+  readonly listEvaluationGroups?: (jobId: string) => Promise<unknown>;
+  readonly cancelEvaluationJob?: (jobId: string, body: Record<string, unknown>) => Promise<unknown>;
+  readonly retryEvaluationJob?: (jobId: string, body: Record<string, unknown>) => Promise<unknown>;
+  readonly readLearningState?: () => Promise<unknown>;
+  readonly readLearningProfile?: () => Promise<unknown>;
+  readonly readLearningAdvisory?: () => Promise<unknown>;
+  readonly updateLearningMode?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly rollbackLearning?: (body: Record<string, unknown>) => Promise<unknown>;
+  /** Run 98 R17: Learning UI readback and rollout actions. */
+  readonly readLearningRollout?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  readonly readLearningRecords?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  readonly readLearningDecisions?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  readonly readLearningMeasurement?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  /** Run 99: the Learning UI live activity and history projections. */
+  readonly readLearningActivity?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  readonly readLearningHistory?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  /**
+   * Run 101 R9 (Phase 5 repair): the queue read model, its bounded configuration and the admin
+   * actions, forwarded to the same supervised sidecar that owns the queue store.
+   */
+  readonly readQueues?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  readonly readQueueJobs?: (
+    queueName: string,
+    query?: Readonly<Record<string, string>>,
+  ) => Promise<unknown>;
+  readonly readQueueJob?: (queueName: string, jobId: string) => Promise<unknown>;
+  readonly readQueueReceipts?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  readonly readQueueConfig?: () => Promise<unknown>;
+  readonly setQueueConfig?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly retryQueueJob?: (queueName: string, jobId: string) => Promise<unknown>;
+  readonly cancelQueueJob?: (queueName: string, jobId: string) => Promise<unknown>;
+  readonly setQueueDrain?: (queueName: string, body: Record<string, unknown>) => Promise<unknown>;
+  readonly readLearningPolicy?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  /**
+   * Run 98 addendum 44 `A44-S4`: what the *router* resolved for the live scope (source, version, digest and
+   * any bounded degradation). The policy readback attaches it, so the Configuration page can say which
+   * document is actually governing instead of presenting a stored policy the router is not using.
+   */
+  readonly resolveLearningPolicySource?: () => unknown;
+  /** Run 99 (option 2): anonymous loopback Learning readbacks (`on`/`off`, default by bind host). */
+  readonly anonymousLearningReads?: "on" | "off" | boolean;
+  /**
+   * Run 98 addendum 46: whether a loopback client is the trusted device owner. Defaults to on for a
+   * loopback bind host; `"off"` restores the token requirement for every operator path.
+   */
+  readonly deviceOwnerTrust?: "on" | "off" | boolean;
+  /**
+   * Run 98 addendum 34 S7 (addendum 33 S6's missing caller): re-score the newest completed supervised
+   * replays under one pinned scorer version into `evaluation_trial_score_revisions`.
+   */
+  readonly rescoreLearningScores?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly setLearningPolicy?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly rollbackLearningPolicy?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly activateLearningPack?: (body: Record<string, unknown>) => Promise<unknown>;
+  /**
+   * Run 98 addendum 54: record a measured guardrail breach through the runtime's own extension path. The
+   * sidecar refuses it on the production channel; it exists so the sustained-window rollback can be measured
+   * live instead of only in the extension tests.
+   */
+  readonly recordLearningGuardrailBreach?: (body: Record<string, unknown>) => Promise<unknown>;
+  /** Run 98 addendum 57 slice 1: release a scenario's own breach rows and restore the activation it displaced. */
+  readonly restoreLearningScenarioActivation?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly rollbackLearningPack?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly engageLearningKillSwitch?: (body: Record<string, unknown>) => Promise<unknown>;
+  /** Run 105 Phase 3.5 repair: the host-only route-ladder materialization operation. */
+  readonly materializeRouteLadders?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly measureNoRichCaptureBaseline?: (body: Record<string, unknown>) => Promise<unknown>;
+  /** Safe, credential-free development verification lease status. */
+  readonly readDevelopmentVerificationStatus?: () => Promise<unknown>;
   readonly readGraphMigration?: () => Promise<unknown>;
   readonly advanceGraphMigration?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly rollbackGraphMigration?: () => Promise<unknown>;
   readonly readStorageRetention?: () => Promise<unknown>;
-  readonly dryRunStorageRetention?: () => Promise<unknown>;
+  readonly dryRunStorageRetention?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly updateStorageRetentionPolicy?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly executeStorageRetention?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly cancelStorageRetentionJob?: () => Promise<unknown>;
@@ -2968,6 +3468,8 @@ export interface StartBridgeServerOptions {
   readonly readBenchmarkSummary?: () => Promise<unknown>;
   readonly readBenchmarkPortfolio?: () => Promise<unknown>;
   readonly listBenchmarkRuns?: () => Promise<unknown>;
+  /** Run 98 addendum 43 S4: sample-backed sweeps, including ones with no result artifact. */
+  readonly readBenchmarkSampleRunStates?: () => Promise<unknown>;
   readonly readBenchmarkSummariesByMode?: () => Promise<unknown>;
   readonly readBenchmarkPreferences?: () => Promise<unknown>;
   readonly updateBenchmarkPreferences?: (body: Record<string, unknown>) => Promise<unknown>;
@@ -3056,9 +3558,19 @@ export interface StartBridgeServerOptions {
 export interface RuntimeBridgeBackend {
   readonly registry: EndpointRegistryResult;
   readonly effectiveRegistry: EndpointRegistryResult;
+  readonly operatorAuthToken?: string;
   listActivityMetrics(): Promise<readonly unknown[]>;
   listActivityMetricsPage(query?: BridgeTelemetryQuery): Promise<BridgeActivityMetricsPage>;
   readActivityCapture(captureId: number | string): Promise<unknown | null>;
+  /**
+   * Run 98 addendum 40 (L1): persist the duration the client actually waited for, once the response
+   * has been flushed. Returns whether a telemetry row was updated.
+   */
+  recordClientLatency(input: {
+    readonly requestId: string;
+    readonly requestLatencyMs: number;
+    readonly timeToFirstTokenMs?: number | null;
+  }): boolean;
   executeChatCompletions: (
     body: OpenAIChatCompletionsBody,
     requestId: string,
@@ -3111,13 +3623,68 @@ export interface RuntimeBridgeBackend {
   mutateExtension(body: Record<string, unknown>): Promise<unknown>;
   readTrackBQaExtensions(): Promise<readonly unknown[]>;
   readTrackBShadowReceipts(): Promise<unknown>;
+  readTrackBPostObservationReceipt(requestId: string): Promise<unknown>;
+  recordTrackBContributionAggregate(body: Record<string, unknown>): Promise<unknown>;
+  retryTrackBContributionAggregates(): Promise<unknown>;
   readTrackBExtensionReadback(body: Record<string, unknown>): Promise<unknown>;
+  runTrackBSupervisedReplay(body: Record<string, unknown>): Promise<unknown>;
+  readOperatorStatus(): Promise<RuntimeOperatorStatus | unknown>;
+  listOperatorTraceRoots(query?: RuntimeOperatorQuery): Promise<unknown>;
+  readOperatorTraceRoot(traceRootId: string): Promise<unknown>;
+  listReplayJobs(query?: RuntimeOperatorQuery): Promise<unknown>;
+  createReplayJob(body: Record<string, unknown>): Promise<unknown>;
+  cancelReplayJob(jobId: string, body: Record<string, unknown>): Promise<unknown>;
+  readReplayJob(jobId: string): Promise<unknown>;
+  readReplayResults(jobId: string): Promise<unknown>;
+  listEvaluationJobs(query?: RuntimeOperatorQuery): Promise<unknown>;
+  readEvaluationJob(jobId: string): Promise<unknown>;
+  listEvaluationTrials(jobId: string): Promise<unknown>;
+  listEvaluationScorers(jobId: string): Promise<unknown>;
+  listEvaluationComparisons(jobId: string): Promise<unknown>;
+  listEvaluationGroups(jobId: string): Promise<unknown>;
+  cancelEvaluationJob(jobId: string, body: Record<string, unknown>): Promise<unknown>;
+  retryEvaluationJob(jobId: string, body: Record<string, unknown>): Promise<unknown>;
+  readLearningState(): Promise<unknown>;
+  readLearningProfile(): Promise<unknown>;
+  readLearningAdvisory(): Promise<unknown>;
+  updateLearningMode(body: Record<string, unknown>): Promise<unknown>;
+  rollbackLearning(body: Record<string, unknown>): Promise<unknown>;
+  /** Run 98 R17: Learning UI readback and rollout actions. */
+  readLearningRollout(query?: Readonly<Record<string, string>>): Promise<unknown>;
+  readLearningRecords(query?: Readonly<Record<string, string>>): Promise<unknown>;
+  readLearningDecisions(query?: Readonly<Record<string, string>>): Promise<unknown>;
+  readLearningMeasurement(query?: Readonly<Record<string, string>>): Promise<unknown>;
+  readLearningActivity(query?: Readonly<Record<string, string>>): Promise<unknown>;
+  readLearningHistory(query?: Readonly<Record<string, string>>): Promise<unknown>;
+  readLearningPolicy(query?: Readonly<Record<string, string>>): Promise<unknown>;
+  setLearningPolicy(body: Record<string, unknown>): Promise<unknown>;
+  rollbackLearningPolicy(body: Record<string, unknown>): Promise<unknown>;
+  activateLearningPack(body: Record<string, unknown>): Promise<unknown>;
+  rollbackLearningPack(body: Record<string, unknown>): Promise<unknown>;
+  /** Run 105 Phase 3.5 repair: the host-only route-ladder materialization operation. */
+  materializeRouteLadders(body: Record<string, unknown>): Promise<unknown>;
+  /** Run 98 addendum 54: the operator surface's guardrail-breach recorder (non-production channels only). */
+  recordLearningGuardrailBreach(body: Record<string, unknown>): Promise<unknown>;
+  /** Run 98 addendum 57 slice 1: the operator surface's scenario restore (non-production channels only). */
+  restoreLearningScenarioActivation(body: Record<string, unknown>): Promise<unknown>;
+  engageLearningKillSwitch(body: Record<string, unknown>): Promise<unknown>;
+  /** Run 101 R9 (Phase 5 repair): the queue read model, its configuration and the admin actions. */
+  readQueues(query?: Readonly<Record<string, string>>): Promise<unknown>;
+  readQueueJobs(queueName: string, query?: Readonly<Record<string, string>>): Promise<unknown>;
+  readQueueJob(queueName: string, jobId: string): Promise<unknown>;
+  readQueueReceipts(query?: Readonly<Record<string, string>>): Promise<unknown>;
+  readQueueConfig(): Promise<unknown>;
+  setQueueConfig(body: Record<string, unknown>): Promise<unknown>;
+  retryQueueJob(queueName: string, jobId: string): Promise<unknown>;
+  cancelQueueJob(queueName: string, jobId: string): Promise<unknown>;
+  setQueueDrain(queueName: string, body: Record<string, unknown>): Promise<unknown>;
   measureNoRichCaptureBaseline(body: Record<string, unknown>): Promise<unknown>;
+  readDevelopmentVerificationStatus(): Promise<unknown>;
   readGraphMigration(): Promise<unknown>;
   advanceGraphMigration(body: Record<string, unknown>): Promise<unknown>;
   rollbackGraphMigration(): Promise<unknown>;
   readStorageRetention(): Promise<unknown>;
-  dryRunStorageRetention(): Promise<unknown>;
+  dryRunStorageRetention(body?: Record<string, unknown>): Promise<unknown>;
   updateStorageRetentionPolicy(body: Record<string, unknown>): Promise<unknown>;
   executeStorageRetention(body: Record<string, unknown>): Promise<unknown>;
   cancelStorageRetentionJob(): Promise<unknown>;
@@ -3229,6 +3796,8 @@ export interface RuntimeBridgeBackend {
   readBenchmarkSummary(): Promise<unknown>;
   readBenchmarkPortfolio(): Promise<unknown>;
   listBenchmarkRuns(): Promise<unknown>;
+  /** Run 98 addendum 43 S4: sample-backed sweeps, including ones with no result artifact. */
+  readBenchmarkSampleRunStates(): Promise<unknown>;
   readBenchmarkSummariesByMode(): Promise<unknown>;
   readBenchmarkPreferences(): Promise<unknown>;
   updateBenchmarkPreferences(body: Record<string, unknown>): Promise<unknown>;
@@ -3485,7 +4054,74 @@ export interface CreateRuntimeBridgeBackendOptions {
     observation: Readonly<Record<string, unknown>>,
   ) => Promise<unknown>;
   readonly trackBPostObservationReceipts?: () => Promise<unknown>;
+  /**
+   * Returns the durable Track B receipt for exactly one router request. Router-decision
+   * read models use this to expose shadow advice without inferring it from another request.
+   */
+  readonly readTrackBPostObservationReceipt?: (requestId: string) => Promise<unknown>;
   readonly readTrackBExtensionReadback?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly runTrackBSupervisedReplay?: (body: Record<string, unknown>) => Promise<unknown>;
+  /** Automatic replay operator surface: bounded loop status and pause/resume control. */
+  readonly readTrackBReplayStatus?: () => Promise<unknown> | unknown;
+  /** S42: can the boundary read this capture back, and if not, why. */
+  readonly readCaptureEvidence?: (requestId: string) => Promise<unknown> | unknown;
+  readonly controlTrackBReplay?: (body: Record<string, unknown>) => Promise<unknown>;
+  /** Bounded Evaluation Core and learner counters for the operator surface. */
+  readonly readTrackBLearningSummary?: () => Promise<unknown> | unknown;
+  readonly operatorAuthToken?: string;
+  readonly readOperatorStatus?: () => Promise<RuntimeOperatorStatus | unknown>;
+  readonly listOperatorTraceRoots?: (query?: RuntimeOperatorQuery) => Promise<unknown>;
+  readonly readOperatorTraceRoot?: (traceRootId: string) => Promise<unknown>;
+  readonly listReplayJobs?: (query?: RuntimeOperatorQuery) => Promise<unknown>;
+  readonly createReplayJob?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly cancelReplayJob?: (jobId: string, body: Record<string, unknown>) => Promise<unknown>;
+  readonly readReplayJob?: (jobId: string) => Promise<unknown>;
+  readonly readReplayResults?: (jobId: string) => Promise<unknown>;
+  readonly listEvaluationJobs?: (query?: RuntimeOperatorQuery) => Promise<unknown>;
+  readonly readEvaluationJob?: (jobId: string) => Promise<unknown>;
+  readonly listEvaluationTrials?: (jobId: string) => Promise<unknown>;
+  readonly listEvaluationScorers?: (jobId: string) => Promise<unknown>;
+  readonly listEvaluationComparisons?: (jobId: string) => Promise<unknown>;
+  readonly listEvaluationGroups?: (jobId: string) => Promise<unknown>;
+  readonly cancelEvaluationJob?: (jobId: string, body: Record<string, unknown>) => Promise<unknown>;
+  readonly retryEvaluationJob?: (jobId: string, body: Record<string, unknown>) => Promise<unknown>;
+  readonly readLearningState?: () => Promise<unknown>;
+  readonly readLearningProfile?: () => Promise<unknown>;
+  readonly readLearningAdvisory?: () => Promise<unknown>;
+  readonly updateLearningMode?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly rollbackLearning?: (body: Record<string, unknown>) => Promise<unknown>;
+  /** Run 98 R17: Learning UI readback and rollout actions. */
+  readonly readLearningRollout?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  readonly readLearningRecords?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  readonly readLearningDecisions?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  readonly readLearningMeasurement?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  /** Run 99: the Learning UI live activity and history projections. */
+  readonly readLearningActivity?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  readonly readLearningHistory?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  readonly readLearningPolicy?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  /** Run 101 R9 (Phase 5 repair): the queue read model, its configuration and the admin actions. */
+  readonly readQueues?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  readonly readQueueJobs?: (
+    queueName: string,
+    query?: Readonly<Record<string, string>>,
+  ) => Promise<unknown>;
+  readonly readQueueJob?: (queueName: string, jobId: string) => Promise<unknown>;
+  readonly readQueueReceipts?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  readonly readQueueConfig?: () => Promise<unknown>;
+  readonly setQueueConfig?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly retryQueueJob?: (queueName: string, jobId: string) => Promise<unknown>;
+  readonly cancelQueueJob?: (queueName: string, jobId: string) => Promise<unknown>;
+  readonly setQueueDrain?: (queueName: string, body: Record<string, unknown>) => Promise<unknown>;
+  /** Run 99 (option 2): anonymous loopback Learning readbacks (`on`/`off`, default by bind host). */
+  readonly anonymousLearningReads?: "on" | "off" | boolean;
+  readonly setLearningPolicy?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly rollbackLearningPolicy?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly activateLearningPack?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly rollbackLearningPack?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly materializeRouteLadders?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly recordLearningGuardrailBreach?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly restoreLearningScenarioActivation?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly engageLearningKillSwitch?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly codexAuthAdapter?: CodexAuthAdapter;
   readonly codexExecutionAdapter?: CodexExecutionAdapter;
 }
@@ -4015,6 +4651,23 @@ function isQuotaExhaustedErrorText(text: string): boolean {
   );
 }
 
+/**
+ * Run 101 addendum 45 - the upstream wordings that mean "this account cannot serve this model", as opposed
+ * to "this request is malformed". Matched against `searchText`, which already carries the whole body.
+ *
+ * Deliberately narrow and bounded: each pattern names the *model* as unavailable to the *account*. A
+ * provider that says a parameter is invalid, or that a payload is too large, must not match here.
+ *
+ * Effect-first determination (AGENTS.md, "Effect-first implementation rule"): this is a pure, synchronous
+ * classification over a response body that is already in memory, and the circuit transition it feeds
+ * (`recordExecutionCircuitFailure`, `execution-circuit-breaker.ts`) is a pure function over a serialised
+ * record. There is no effect, resource, concurrency, or schedule to model here, so Effect is not used -
+ * the render-affecting async seams in this family (`offerRecordedEvaluationHandoff`,
+ * `claimEvaluationTrial`) are Effect programs and stay that way.
+ */
+const MODEL_AVAILABILITY_REJECTION =
+  /model is not supported when using|does not have access to (the )?model|you do not have access to model|model[^"]{0,60}not (available|supported) (on|for|with) (this|your) /;
+
 function buildUpstreamErrorPreview(input: {
   readonly statusCode: number;
   readonly message: string;
@@ -4139,6 +4792,12 @@ export function classifyUpstreamExecutionFailure(input: {
     searchText.includes("fetch failed") ||
     searchText.includes("network error") ||
     searchText.includes("socket hang up") ||
+    // Run 101 addendum 18: undici reports a connection the peer (or the path) closed as `terminated`, and the
+    // OpenAI-compatible dispatch rethrows it unclassified. Measured live on `:3457`: six requests failed with
+    // `terminated` / `fetch failed` after 21-98 s and none retried or failed over, because the retry/reroute gate
+    // only accepts an `UpstreamExecutionError`. It is a transport fact, so it classifies here as one.
+    searchText.includes("terminated") ||
+    searchText.includes("other side closed") ||
     searchText.includes("econnrefused") ||
     searchText.includes("econnreset") ||
     searchText.includes("ehostunreach") ||
@@ -4188,6 +4847,37 @@ export function classifyUpstreamExecutionFailure(input: {
     });
   }
 
+  /**
+   * Run 101 addendum 45, measured live on `:3457`: an endpoint can be configured, admitted and reported
+   * `healthy` while the account behind it cannot serve the model at all. The instance
+   * `openai.personal.openai-codex-subscription.global.gpt-5.4` was admitted on OAuth alone
+   * (`admitRuntimeEndpoint` skips the model probe for a device-code account), and every request to it came
+   * back `400 {"detail":"The 'gpt-5.4' model is not supported when using Codex with a ChatGPT account."}`.
+   * Telemetry for that one pair reads **19 requests / 19 failures / 0 successes**, and the failure row shows
+   * a second eligible candidate was never tried (`candidateCount: 2`,
+   * `eligibleModelIds: [chatgpt/gpt-5.4, chatgpt/gpt-5.6-sol]`, `rerouteCount: 0`).
+   *
+   * That is a statement about the account's entitlement, not about the request, so it must not share the
+   * classification of a genuinely malformed payload - those are `fallbackEligible: false` on purpose,
+   * because rerouting a bad payload wastes a second call. This one is exactly what fallback exists for.
+   * The body is already in `searchText` (`JSON.stringify(input.body)` above), so the distinction costs
+   * nothing to make, and the match is deliberately narrow: anything else keeps the branch below.
+   */
+  if (MODEL_AVAILABILITY_REJECTION.test(searchText)) {
+    return new UpstreamExecutionError({
+      statusCode,
+      errorClass: "model_unavailable",
+      message,
+      // Not retryable on the *same* endpoint - an entitlement does not change between two attempts - but
+      // fallback-eligible, so the router tries a candidate that can actually serve the request.
+      retryable: false,
+      fallbackEligible: true,
+      endpointId: input.endpointId,
+      ...baseErrorContext,
+      upstreamBody: input.body,
+    });
+  }
+
   if (
     statusCode === 400 ||
     searchText.includes("bad request") ||
@@ -4211,12 +4901,26 @@ export function classifyUpstreamExecutionFailure(input: {
     errorClass: "execution_failed",
     message,
     retryable: false,
-    fallbackEligible: false,
+    /**
+     * Run 101 addendum 13 (operator report: "a lot of random 503 requests that must be caused by the router").
+     * This was the last branch of the classifier and it marked every unclassified upstream failure as terminal,
+     * so the reroute loop (`executeCurrentExecutionRequest`, `if (!error.fallbackEligible) throw error`) surfaced
+     * one candidate's failure - the Codex vendor passes `fallbackStatusCode: 503` - as the whole request's
+     * status, even when the alias had other eligible candidates. A 5xx is a candidate-level fact; the request
+     * may still be served. A 4xx stays terminal (it is a verdict on the request itself).
+     */
+    fallbackEligible: statusCode >= 500,
     endpointId: input.endpointId,
     ...baseErrorContext,
     upstreamBody: input.body,
   });
 }
+
+const TRANSPORT_RETRY_ERROR_CLASSES: ReadonlySet<string> = new Set([
+  // A stalled connect/TLS handshake is not the endpoint's verdict: it is the
+  // transport's, and the same endpoint usually succeeds on a fresh connection.
+  "upstream_connection_error",
+]);
 
 export function shouldRetryUpstreamExecutionOnSameEndpoint(input: {
   readonly retryable: boolean;
@@ -4226,13 +4930,97 @@ export function shouldRetryUpstreamExecutionOnSameEndpoint(input: {
   readonly fallbackEligible: boolean;
   readonly hasOtherEligibleEndpoint: boolean;
 }): boolean {
-  return (
-    input.retryable &&
-    !input.alreadyRetried &&
-    classifyExecutionFailureCategory(input.errorClass, input.statusCode) !== "rate_limit" &&
-    !input.fallbackEligible &&
-    input.hasOtherEligibleEndpoint
-  );
+  if (!input.retryable || input.alreadyRetried) {
+    return false;
+  }
+  if (classifyExecutionFailureCategory(input.errorClass, input.statusCode) === "rate_limit") {
+    return false;
+  }
+  if (TRANSPORT_RETRY_ERROR_CLASSES.has(input.errorClass)) {
+    return true;
+  }
+  return !input.fallbackEligible && input.hasOtherEligibleEndpoint;
+}
+
+/**
+ * Run 101 addendum 18: the live loop's retry/reroute gate only understands `UpstreamExecutionError`, so a provider
+ * transport error that escaped its branch unclassified skipped the gate entirely - no retry, no failover, and the
+ * client received a bare `400`. Measured live on `:3457` (2026-09-27 ~18:20): six requests failed with
+ * `terminated` / `fetch failed` after 21-98 s with `retryCount: 0`, `rerouteCount: 0` and zero streamed deltas.
+ *
+ * Classifying at the gate covers every provider path at once: a genuine provider verdict keeps its own class, and a
+ * transport blip becomes retryable and fallback-eligible like any other candidate failure.
+ */
+export function classifyExecutionFailureIfNeeded(
+  error: unknown,
+  endpointId: string,
+  context: {
+    readonly providerId?: string;
+    readonly executionFamily?: string;
+    readonly adapterFamily?: string;
+  } = {},
+): UpstreamExecutionError {
+  if (error instanceof UpstreamExecutionError) {
+    return error;
+  }
+  /**
+   * A rejection that carries the provider's own status keeps it: only the statusless transport errors take the
+   * 502 default (which then reads as a 5xx candidate failure).
+   */
+  const record =
+    typeof error === "object" && error !== null ? (error as Record<string, unknown>) : {};
+  const explicitStatusCode =
+    typeof record.statusCode === "number"
+      ? record.statusCode
+      : typeof record.status === "number"
+        ? record.status
+        : undefined;
+  return classifyUpstreamExecutionFailure({
+    endpointId,
+    message: error instanceof Error ? error.message : "Provider request failed.",
+    providerId: context.providerId ?? "",
+    executionFamily: context.executionFamily ?? "",
+    adapterFamily: context.adapterFamily ?? "",
+    ...(explicitStatusCode === undefined ? {} : { statusCode: explicitStatusCode }),
+  });
+}
+
+/**
+ * Run 101 addendum 19: whether a streamed chat-completions chunk carries the client's actual answer.
+ *
+ * Measured live on `:3457` (2026-09-27 ~18:2x, RC `bb219bfa0224`): of the failures in the last 50 requests, every
+ * one had zero content deltas, and pi still reported "Stream ended without finish_reason" for about one request in
+ * ten. The ingress committed the downstream SSE head on the first chunk that carried *metadata* - which is a
+ * provider's opening role-only delta, not content - so a connection reset before the first token left the client
+ * with an open 200 stream that simply ended, and `streamedChunkCount > 0` then forbade the retry/failover the
+ * attempt still deserved.
+ *
+ * A chunk counts as substantive when it carries non-empty `delta.content` or a non-empty `delta.tool_calls` array.
+ * Role-only, reasoning-only and finish-only chunks do not, so they stay buffered until real content arrives.
+ */
+export function hasSubstantiveStreamDelta(chunk: unknown): boolean {
+  if (typeof chunk !== "object" || chunk === null) {
+    return false;
+  }
+  const choices = (chunk as { readonly choices?: unknown }).choices;
+  if (!Array.isArray(choices)) {
+    return false;
+  }
+  return choices.some((choice) => {
+    if (typeof choice !== "object" || choice === null) {
+      return false;
+    }
+    const delta = (choice as { readonly delta?: unknown }).delta;
+    if (typeof delta !== "object" || delta === null) {
+      return false;
+    }
+    const content = (delta as { readonly content?: unknown }).content;
+    if (typeof content === "string" && content.length > 0) {
+      return true;
+    }
+    const toolCalls = (delta as { readonly tool_calls?: unknown }).tool_calls;
+    return Array.isArray(toolCalls) && toolCalls.length > 0;
+  });
 }
 
 function readExecutionCircuitState(databasePath: string): ExecutionCircuitState {
@@ -4302,28 +5090,50 @@ function recordExecutionFailureCooldown(input: {
   readonly adapterFamily?: string;
   readonly failurePhase?: string;
   readonly statusCode?: number;
+  readonly probeOwnerId?: string;
 }): ExecutionCircuitRecord | undefined {
+  const state = readExecutionCircuitState(input.databasePath);
+  const source = {
+    ...(input.sourceAttemptId ? { sourceAttemptId: input.sourceAttemptId } : {}),
+    ...(input.sourceRequestId ? { sourceRequestId: input.sourceRequestId } : {}),
+    ...(input.sourceRoutingDecisionId
+      ? { sourceRoutingDecisionId: input.sourceRoutingDecisionId }
+      : {}),
+    ...(input.providerId ? { providerId: input.providerId } : {}),
+    ...(input.providerFamily ? { providerFamily: input.providerFamily } : {}),
+    ...(input.vendorId ? { vendorId: input.vendorId } : {}),
+    ...(input.executionFamily ? { executionFamily: input.executionFamily } : {}),
+    ...(input.adapterFamily ? { adapterFamily: input.adapterFamily } : {}),
+    ...(input.failurePhase ? { failurePhase: input.failurePhase } : {}),
+  };
+  if (input.probeOwnerId) {
+    const transition = settleExecutionCircuitProbe({
+      state,
+      endpointId: input.endpointId,
+      probeOwnerId: input.probeOwnerId,
+      nowMs: input.nowMs,
+      result: {
+        outcome: "failure",
+        errorClass: input.errorClass,
+        ...(input.statusCode === undefined ? {} : { statusCode: input.statusCode }),
+        ...(input.retryAfterMs === undefined ? {} : { retryAfterMs: input.retryAfterMs }),
+        source,
+      },
+    });
+    if (transition.settled) {
+      writeExecutionCircuitState(input.databasePath, transition.state);
+    }
+    return transition.record;
+  }
   const transition = recordExecutionCircuitFailure({
-    state: readExecutionCircuitState(input.databasePath),
+    state,
     endpointId: input.endpointId,
     errorClass: input.errorClass,
     nowMs: input.nowMs,
     trafficClass: input.trafficClass,
     ...(input.statusCode === undefined ? {} : { statusCode: input.statusCode }),
     ...(input.retryAfterMs === undefined ? {} : { retryAfterMs: input.retryAfterMs }),
-    source: {
-      ...(input.sourceAttemptId ? { sourceAttemptId: input.sourceAttemptId } : {}),
-      ...(input.sourceRequestId ? { sourceRequestId: input.sourceRequestId } : {}),
-      ...(input.sourceRoutingDecisionId
-        ? { sourceRoutingDecisionId: input.sourceRoutingDecisionId }
-        : {}),
-      ...(input.providerId ? { providerId: input.providerId } : {}),
-      ...(input.providerFamily ? { providerFamily: input.providerFamily } : {}),
-      ...(input.vendorId ? { vendorId: input.vendorId } : {}),
-      ...(input.executionFamily ? { executionFamily: input.executionFamily } : {}),
-      ...(input.adapterFamily ? { adapterFamily: input.adapterFamily } : {}),
-      ...(input.failurePhase ? { failurePhase: input.failurePhase } : {}),
-    },
+    source,
   });
   if (transition.changed) {
     writeExecutionCircuitState(input.databasePath, transition.state);
@@ -4555,6 +5365,7 @@ function buildPreExecutionFailureObservation(input: {
   readonly sourceType: "local" | "remote";
   readonly reasoningEffort: string | null;
   readonly effortSource: RuntimeEffortSource;
+  readonly requestOperation?: "chat" | "responses";
   readonly error: unknown;
   readonly latencyMs: number;
   readonly dimensions: Record<string, unknown> | null;
@@ -4692,7 +5503,7 @@ function buildPreExecutionFailureObservation(input: {
       lifecycleStateAtRequest: "unknown",
       healthStatusAtRequest: null,
       requestedModelId: input.modelId,
-      requestOperation: "chat",
+      requestOperation: input.requestOperation ?? "chat",
       roleIds: [],
       toolingUsed: input.toolingUsed,
       cacheState: "unknown",
@@ -4808,6 +5619,76 @@ function slugify(value: string): string {
     .toLowerCase();
 }
 
+/**
+ * Run 101 addendum 21: the terminal frame for a stream that dies after content was delivered.
+ *
+ * Measured live on `:3457` (RC `6f769013`, 2026-09-27 ~20:2x): two of six alias streams ended with no
+ * `finish_reason` and no `[DONE]` while having delivered 389 and 789 chunks (118 KB / 239 KB). The provider
+ * connection died mid-answer; the gate correctly refuses to fail over content the client already holds, so the
+ * router's remaining duty is to fail *cleanly* - a named terminal error frame plus the `[DONE]` sentinel - instead
+ * of closing the connection, which is what a streaming client reports as "Stream ended without finish_reason".
+ */
+export function buildTerminalStreamErrorPayload(error: unknown): {
+  readonly error: {
+    readonly message: string;
+    readonly type: string;
+    readonly code: string;
+    readonly statusCode?: number;
+  };
+} {
+  const record =
+    typeof error === "object" && error !== null ? (error as Record<string, unknown>) : {};
+  const message =
+    typeof record.message === "string" && record.message.length > 0
+      ? record.message
+      : error instanceof Error && error.message.length > 0
+        ? error.message
+        : "The streamed response was interrupted before it completed.";
+  const errorClass =
+    typeof record.errorClass === "string" && record.errorClass.length > 0
+      ? record.errorClass
+      : "upstream_error";
+  return {
+    error: {
+      message,
+      type: errorClass,
+      code: errorClass,
+      ...(typeof record.statusCode === "number" ? { statusCode: record.statusCode } : {}),
+    },
+  };
+}
+
+/**
+ * Run 101 addendum 22: whether a bootstrap state is a *runtime-level* blockage.
+ *
+ * The rule the run documented in addendum 11: a runtime that is serving is ready; the only runtime-level failures
+ * are a blocked bootstrap or a remote-health stage that found no usable endpoint at all. A partially degraded
+ * stage - one probe timeout out of several - is an endpoint-level fact the router already handles by excluding it.
+ *
+ * Measured live on RC `6f769013` (2026-09-27 ~20:3x): the boot probed three endpoints, two answered and
+ * `deepseek-v4-flash-max` timed out, and `/healthz` answered **503 / degraded / ready:false** while chat served
+ * normally. The previous implementation of this predicate answered "ready" for the first two branches and "blocked"
+ * for the last two, so a degraded stage with healthy > 0 was reported as a runtime failure - the exact case the
+ * rule says must not be one.
+ */
+export function isRuntimeBootstrapBlock(state: {
+  readonly status: string;
+  readonly stages: readonly {
+    readonly stageId: string;
+    readonly status: string;
+    readonly details?: unknown;
+  }[];
+}): boolean {
+  if (state.status === "blocked") return true;
+  if (state.status !== "degraded") return false;
+  const remoteHealth = state.stages.find((stage) => stage.stageId === "remote-health");
+  if (!remoteHealth || remoteHealth.status !== "degraded") return false;
+  const details = (remoteHealth.details ?? {}) as { readonly healthy?: unknown };
+  const healthy = typeof details.healthy === "number" ? details.healthy : null;
+  if (healthy === null) return false;
+  return healthy <= 0;
+}
+
 function createVendorError(vendorId: string, message: string): BridgeHttpError {
   const normalized = createVendorNotConfiguredError(vendorId, message);
   return new BridgeHttpError(503, {
@@ -4869,6 +5750,37 @@ function normalizeConfiguredRoutingMode(
     default:
       return null;
   }
+}
+
+/**
+ * Run 103 / SP5e - the saved posture: the structured `routing` block when the file declares one,
+ * otherwise the legacy single string read through the section-3 migration (requirements R1, R10).
+ */
+function resolveConfiguredRoutingPosture(config: {
+  readonly routingPosture?: RoutingPosture;
+  readonly routingStrategy: string | null;
+}): RoutingPosture {
+  return config.routingPosture ?? decodeLegacyRoutingStrategy(config.routingStrategy ?? null);
+}
+
+function resolveConfiguredRoutingPostureSummary(config: {
+  readonly routingPosture?: RoutingPosture;
+  readonly routingStrategy: string | null;
+}): {
+  readonly mode: RoutingPosture["mode"];
+  readonly scoringStrategy: RoutingPosture["scoringStrategy"];
+  readonly pinWeights: boolean;
+  readonly weights: WeightProfile | null;
+  readonly degradations: readonly string[];
+} {
+  const posture = resolveConfiguredRoutingPosture(config);
+  return {
+    mode: posture.mode,
+    scoringStrategy: posture.scoringStrategy,
+    pinWeights: posture.pinWeights,
+    weights: posture.operator ? { ...posture.operator.weights } : null,
+    degradations: [...posture.degradations],
+  };
 }
 
 function readBridgeRequestId(request: IncomingMessage): string {
@@ -6042,6 +6954,50 @@ function withRuntimeEndpointFallbackModels(
   };
 }
 
+type RuntimeExecutionCatalogEndpoint = {
+  readonly endpointId: string;
+  readonly providerAccountId: string;
+  readonly modelId: string;
+};
+
+/**
+ * Caches only the static catalog projection used by the execution path. Routing,
+ * telemetry, provider health, and credential state remain request-time reads.
+ */
+export function createRuntimeExecutionCatalogCache(): {
+  get(
+    catalog: NormalizedCatalog,
+    accounts: readonly ProviderAccountRecord[],
+    runtimeEndpoints: readonly RuntimeExecutionCatalogEndpoint[],
+  ): NormalizedCatalog;
+} {
+  let cached:
+    | {
+        readonly catalog: NormalizedCatalog;
+        readonly inputFingerprint: string;
+        readonly projection: NormalizedCatalog;
+      }
+    | undefined;
+  return {
+    get(catalog, accounts, runtimeEndpoints) {
+      const inputFingerprint = JSON.stringify({
+        accounts: accounts.map((account) => [account.providerAccountId, account.providerId]),
+        endpoints: runtimeEndpoints.map((endpoint) => [
+          endpoint.endpointId,
+          endpoint.providerAccountId,
+          endpoint.modelId,
+        ]),
+      });
+      if (cached?.catalog === catalog && cached.inputFingerprint === inputFingerprint) {
+        return cached.projection;
+      }
+      const projection = withRuntimeEndpointFallbackModels(catalog, accounts, runtimeEndpoints);
+      cached = { catalog, inputFingerprint, projection };
+      return projection;
+    },
+  };
+}
+
 function synthesizeUnifiedLiteLLMModel(input: {
   readonly modelId: string;
   readonly providerId: string;
@@ -7055,6 +8011,16 @@ export function createRoleModelNormalizedIntentObservation(
   roleModelIntent: BridgeExecutionPlan["routingRequest"]["roleModelIntent"] | undefined,
   roleDefinitions: readonly Pick<RuntimeRoleDefinitionRecord, "role_id">[],
   taskDefinitions: readonly Pick<RuntimeTaskDefinitionRecord, "task_type">[],
+  /**
+   * Run 98 addendum 58 slice 2: the identity the request was actually routed under when the declaration
+   * itself named something the taxonomy does not have (or named nothing). The declaration stays in
+   * `originalRoleHintId`/`originalTaskType`; these are recorded as the effective taxonomy dimensions so
+   * telemetry, replay and the advisory gate key on a taxonomy entry rather than on a null.
+   */
+  effective?: {
+    readonly effectiveTaskTypeId?: string | null;
+    readonly effectiveRoleId?: string | null;
+  },
 ): {
   readonly normalizedIntent?: Readonly<Record<string, unknown>>;
   readonly diagnostics: readonly {
@@ -7070,6 +8036,7 @@ export function createRoleModelNormalizedIntentObservation(
   }
 
   const knownRoleIds = new Set(roleDefinitions.map((role) => role.role_id));
+  const knownGroupIds = new Set(canonicalTaxonomy.groups.map((group) => group.id));
   const knownTaskTypes = new Set(taskDefinitions.map((task) => task.task_type));
   const knownCapabilities = new Set(
     canonicalTaxonomy.capabilities.map((capability) => capability.id),
@@ -7172,6 +8139,33 @@ export function createRoleModelNormalizedIntentObservation(
       ignored("task", roleModelIntent.task.id, Boolean(roleModelIntent.task.hard));
     }
   }
+  if (!normalizedIntent.task && effective?.effectiveTaskTypeId) {
+    const effectiveTaskTypeId = effective.effectiveTaskTypeId.trim();
+    if (knownTaskTypes.has(effectiveTaskTypeId)) {
+      normalizedIntent.task = { id: effectiveTaskTypeId, hard: false };
+    }
+  }
+  if (!normalizedIntent.role && effective?.effectiveRoleId) {
+    const effectiveRoleId = normalizeRuntimeRoleId(effective.effectiveRoleId.trim());
+    if (knownRoleIds.has(effectiveRoleId)) {
+      normalizedIntent.role = { id: effectiveRoleId, hard: false };
+    }
+  }
+  /**
+   * Run 98 addendum 58 slice 2: the group dimension travels beside the role so
+   * `extractTaxonomyDimensions` records `taxonomy_group_id` (its source is `normalizedIntent.groupId`)
+   * for declared classifications as well as derived ones. A role id always has a shipped group.
+   */
+  const resolvedRoleId = (normalizedIntent.role as { readonly id?: unknown } | undefined)?.id;
+  const declaredGroupId = (roleModelIntent as { readonly groupId?: unknown }).groupId;
+  if (typeof declaredGroupId === "string" && knownGroupIds.has(declaredGroupId)) {
+    normalizedIntent.groupId = declaredGroupId;
+  } else if (typeof resolvedRoleId === "string") {
+    const resolvedRole = canonicalTaxonomy.roles.find((role) => role.id === resolvedRoleId);
+    if (resolvedRole) {
+      normalizedIntent.groupId = resolvedRole.primaryGroupId;
+    }
+  }
 
   if (acceptedCapabilities.required.length > 0 || acceptedCapabilities.preferred.length > 0) {
     normalizedIntent.capabilities = {
@@ -7223,6 +8217,145 @@ export function createRoleModelNormalizedIntentObservation(
   }
 
   return { normalizedIntent, diagnostics };
+}
+
+/**
+ * Run 99 close-out (addenda 19-21 `S33`/`D1`/`D2`).
+ *
+ * The classification is already resolved and validated by the time a request is routed; this
+ * packages it so it can be *recorded* — on the capture, on the advisory observation and on the
+ * observation ledger entry — instead of leaving only the family behind.
+ *
+ * The taxonomy identity is always recorded (it is the taxonomy the request was classified
+ * against); `taskTypeId`, `roleId` and `toolClassIds` are recorded when the request declared them.
+ * Tool classes are filtered against the shipped taxonomy so a classification can never name a tool
+ * class this runtime does not have. Returns `null` when nothing at all is known, so a record shows
+ * absence rather than an invented classification.
+ */
+export interface BridgeRequestClassification extends TrackBRouteAdvisoryClassification {
+  /**
+   * Run 104 `R6`: the task variant the runtime resolved for this request, carried with the
+   * classification when the intent declared one.
+   */
+  readonly taskVariant?: string | null;
+}
+
+export function buildRequestClassification(input: {
+  /** The task the request declared (`routingRequest.taskType`), authoritative when present. */
+  readonly taskTypeId?: string | null;
+  /** Run 104 `R6`: the taxonomy identity the runtime resolved (`taxonomyIdentity.taskTypeId`). */
+  readonly identityTaskTypeId?: string | null;
+  /** Run 104 `R6`: the intent's own task id, used when neither source above resolved one. */
+  readonly intentTaskTypeId?: string | null;
+  /** Run 104 `R6`: the task variant the runtime resolved, when it resolved one. */
+  readonly taskVariant?: string | null;
+  readonly roleId?: string | null;
+  readonly toolClasses?: readonly string[] | null;
+}): BridgeRequestClassification | null {
+  const knownToolClasses = new Set(canonicalTaxonomy.toolClasses.map((toolClass) => toolClass.id));
+  const knownRoleIds = new Set(canonicalTaxonomy.roles.map((role) => role.id));
+  const toolClassIds = [
+    ...new Set(
+      (input.toolClasses ?? []).filter(
+        (toolClass): toolClass is string =>
+          typeof toolClass === "string" && knownToolClasses.has(toolClass),
+      ),
+    ),
+  ];
+  /**
+   * Run 104 `R6` (`T1.2d`): the task family uses the same three-step fallback chain the role next to
+   * it already uses - the declaration is authoritative, then the taxonomy identity the runtime
+   * resolved (which defaults to `text.chat`), then the intent's own task id. The chosen value is
+   * validated against the shipped taxonomy exactly as before, so an unknown identifier is still
+   * dropped rather than guessed: a declaration that names something unknown stops the chain (the
+   * role chain behaves the same way), and a fallback that names something unknown is skipped so the
+   * chain can reach the intent task id instead of stopping on the identity's non-taxonomy default.
+   */
+  const knownTaskTypes = new Set(canonicalTaxonomy.tasks.map((task) => task.id));
+  const declaredTaskTypeId = boundedRequestClassificationId(input.taskTypeId);
+  const identityTaskTypeId = boundedRequestClassificationId(input.identityTaskTypeId);
+  const intentTaskTypeId = boundedRequestClassificationId(input.intentTaskTypeId);
+  const taskTypeId = declaredTaskTypeId
+    ? knownTaskTypes.has(declaredTaskTypeId)
+      ? declaredTaskTypeId
+      : null
+    : identityTaskTypeId && knownTaskTypes.has(identityTaskTypeId)
+      ? identityTaskTypeId
+      : intentTaskTypeId && knownTaskTypes.has(intentTaskTypeId)
+        ? intentTaskTypeId
+        : null;
+  const taskVariant = boundedRequestClassificationId(input.taskVariant);
+  const declaredRoleId = boundedRequestClassificationId(input.roleId);
+  const roleId = declaredRoleId && knownRoleIds.has(declaredRoleId) ? declaredRoleId : null;
+  const taxonomyVersion = boundedRequestClassificationId(taxonomyManifest.taxonomyVersion);
+  const contentRevision = boundedRequestClassificationId(taxonomyManifest.contentRevision);
+  const taskTypesHash = boundedRequestClassificationId(taxonomyManifest.contentHashes?.taskTypes);
+  if (!taskTypeId && !roleId && !taxonomyVersion && toolClassIds.length === 0) return null;
+  return {
+    taskTypeId,
+    ...(taskVariant ? { taskVariant } : {}),
+    roleId,
+    toolClassIds,
+    taxonomyVersion,
+    contentRevision,
+    contentHashes: { taskTypes: taskTypesHash },
+  };
+}
+
+const boundedRequestClassificationId = (value: unknown): string | null =>
+  typeof value === "string" && value.trim() ? value.trim().slice(0, 128) : null;
+
+/**
+ * Run 104 `R6`: one place resolves the classification sources from a plan, so the routed capture,
+ * the failed-route capture, the observation bundle and the supervised-replay capture cannot drift
+ * apart. The three task sources are the same chain `buildRequestClassification` validates.
+ */
+export function buildRequestClassificationForPlan(
+  plan: BridgeExecutionPlan,
+): BridgeRequestClassification | null {
+  // Run 105 Phase 5 (review finding): resolve the role/task from the SAME sources
+  // buildBridgeTaxonomyIdentity uses, and fall through to the resolved taxonomy identity when the
+  // declared value is not a taxonomy id. plan.routingRequest.taskType / requestedRoleId can be
+  // runtime-policy ids (not taxonomy ids) for intent-less Pi traffic; treating them as the only
+  // source made buildRequestClassification stop on a non-taxonomy id and return null while telemetry
+  // (buildBridgeTaxonomyIdentity) already resolved a genuine coder|coder.edit identity.
+  const knownTask = (id: string | null | undefined): string | null =>
+    id && canonicalTaxonomy.tasks.some((task) => task.id === id) ? id : null;
+  const knownRole = (id: string | null | undefined): string | null =>
+    id && canonicalTaxonomy.roles.some((role) => role.id === id) ? id : null;
+  // Run 105 stage-RC fix (measured on stage-rc-e06beb3ceee4): for an intent-less request the plan's
+  // routingRequest.taskType carries the ROLE-DEFAULT task (e.g. coder.edit resolved by
+  // resolveRequestedRoleTaskDefinition), which is a valid taxonomy id and therefore shadowed the
+  // authoritative derived identity (e.g. tester.unit.plan). The capture recorded coder.edit while
+  // the telemetry/focus recorded tester.unit.plan, and the route-challenge-evidence corpus filter
+  // dropped every such capture (NoReplayableRequest) - no pack could ever form. When the identity
+  // was DERIVED (source runtime_heuristic), it is authoritative over the plan's defaulted task;
+  // a DECLARED task keeps winning exactly as before.
+  const identitySource = plan.taxonomyIdentity?.source ?? null;
+  const identityTask = knownTask(plan.taxonomyIdentity?.taskTypeId);
+  const declaredTask = knownTask(plan.routingRequest.taskType);
+  const intentTask = knownTask(plan.routingRequest.roleModelIntent?.task?.id);
+  const taskTypeId =
+    identitySource === "runtime_heuristic" && identityTask
+      ? identityTask
+      : (declaredTask ?? identityTask ?? intentTask);
+  // A genuine role only ever accompanies a genuine (non-default) task, so gate the role on the
+  // resolved task to avoid leaking the correlated "writer" default for an unclassified request.
+  const roleId = taskTypeId
+    ? identitySource === "runtime_heuristic" && knownRole(plan.taxonomyIdentity?.roleId)
+      ? knownRole(plan.taxonomyIdentity?.roleId)
+      : (knownRole(plan.routingRequest.requestedRoleId) ??
+        knownRole(plan.taxonomyIdentity?.roleId) ??
+        knownRole(plan.routingRequest.roleModelIntent?.role?.id))
+    : null;
+  return buildRequestClassification({
+    taskTypeId,
+    identityTaskTypeId: taskTypeId,
+    intentTaskTypeId: plan.routingRequest.roleModelIntent?.task?.id ?? null,
+    taskVariant: plan.routingRequest.roleModelIntent?.taskVariant ?? null,
+    roleId,
+    toolClasses: plan.routingRequest.roleModelIntent?.toolClasses ?? null,
+  });
 }
 
 function resolveRoleModelIntentTaskType(input: {
@@ -8058,6 +9191,76 @@ function throwNoEligibleCapabilityTarget(input: {
   });
 }
 
+function collectConfiguredReasoningEfforts(
+  registry: EndpointRegistryResult,
+  allowEndpoints: readonly string[],
+): readonly string[] {
+  const allowed = new Set(allowEndpoints);
+  const levels = new Set<string>();
+  for (const endpoint of registry.endpoints) {
+    if (!allowed.has(endpoint.identity.endpoint_id)) {
+      continue;
+    }
+    const fixedEffort = endpoint.identity.reasoning_effort?.trim();
+    if (fixedEffort) {
+      levels.add(fixedEffort);
+    }
+    for (const level of endpoint.declared.reasoning_effort_levels ?? []) {
+      const trimmed = level.trim();
+      if (trimmed) {
+        levels.add(trimmed);
+      }
+    }
+  }
+  return [...levels].sort(compareText);
+}
+
+function throwReasoningEffortUnavailable(input: {
+  readonly requestedModel: string;
+  readonly requestedEffort: string;
+  readonly availableEfforts: readonly string[];
+}): never {
+  throw new BridgeHttpError(400, {
+    error: {
+      type: "routing_eligibility_error",
+      code: "reasoning_effort_unavailable",
+      message: `no targets for model ${input.requestedModel} satisfy requested reasoning effort ${input.requestedEffort}.`,
+      requestedModel: input.requestedModel,
+      requestedEffort: input.requestedEffort,
+      availableEfforts: input.availableEfforts,
+    },
+  });
+}
+
+function readDeclaredEffortLevels(
+  registry: EndpointRegistryResult,
+  endpointId: string,
+): readonly string[] | null {
+  return (
+    registry.endpoints.find((endpoint) => endpoint.identity.endpoint_id === endpointId)?.declared
+      .reasoning_effort_levels ?? null
+  );
+}
+
+function throwAliasPoolEmpty(input: {
+  readonly requestedModel: string;
+  readonly routingDiagnostics?: Pick<RuntimeRoutingDiagnostics, "aliasResolution">;
+}): never {
+  const aliasResolution = input.routingDiagnostics?.aliasResolution;
+  throw new BridgeHttpError(503, {
+    error: {
+      type: "routing_configuration_error",
+      code: "alias_pool_empty",
+      message: `ALIAS_POOL_EMPTY: no routable targets are configured for alias ${input.requestedModel}.`,
+      requestedModel: input.requestedModel,
+      ...(aliasResolution?.aliasId ? { aliasId: aliasResolution.aliasId } : {}),
+      ...(aliasResolution?.resolvedModelIds
+        ? { resolvedModelIds: aliasResolution.resolvedModelIds }
+        : {}),
+    },
+  });
+}
+
 function filterAllowEndpointsForResponsesHostedTools(input: {
   readonly registry: EndpointRegistryResult;
   readonly allowEndpoints: readonly string[];
@@ -8314,6 +9517,55 @@ function resolveAliasRoutingModel(
     : undefined;
 }
 
+/**
+ * The endpoints in the pool that can execute the requested effort: the instances whose fixed effort equals it, or -
+ * when the pool has no such instance - the provider-default instances that declare the level. `[]` means the
+ * requested effort is not executable on this pool. Shared by the strict filter and the alias bias, so the two can
+ * never disagree about which instances an effort names.
+ */
+function selectReasoningEffortInstanceIds(input: {
+  readonly registry: EndpointRegistryResult;
+  readonly allowEndpoints: readonly string[];
+  readonly requestedEffort: string;
+}): readonly string[] {
+  const allowed = new Set(input.allowEndpoints);
+  const matchingFixedEndpointIds = input.registry.endpoints
+    .filter(
+      (endpoint) =>
+        allowed.has(endpoint.identity.endpoint_id) &&
+        (endpoint.identity.reasoning_effort?.trim() || null) === input.requestedEffort,
+    )
+    .map((endpoint) => endpoint.identity.endpoint_id);
+  if (matchingFixedEndpointIds.length > 0) {
+    return input.allowEndpoints.filter((endpointId) =>
+      matchingFixedEndpointIds.includes(endpointId),
+    );
+  }
+
+  // Provider-declared levels are executable on the provider-default instance:
+  // the request keeps the client effort and the receipt records "client".
+  const providerDeclaredEffortEndpointIds = input.registry.endpoints
+    .filter(
+      (endpoint) =>
+        allowed.has(endpoint.identity.endpoint_id) &&
+        (endpoint.identity.reasoning_effort?.trim() || null) === null &&
+        (endpoint.declared.reasoning_effort_levels ?? []).some(
+          (level) => level.trim() === input.requestedEffort,
+        ),
+    )
+    .map((endpoint) => endpoint.identity.endpoint_id);
+  if (providerDeclaredEffortEndpointIds.length > 0) {
+    return input.allowEndpoints.filter((endpointId) =>
+      providerDeclaredEffortEndpointIds.includes(endpointId),
+    );
+  }
+
+  // Provider-default is its own endpoint instance. An unsupported requested
+  // effort must not silently change the base endpoint's identity and semantics
+  // at execution time.
+  return [];
+}
+
 function filterRequestedModelPoolByReasoningEffort(input: {
   readonly registry: EndpointRegistryResult;
   readonly requestedModel: string;
@@ -8336,24 +9588,115 @@ function filterRequestedModelPoolByReasoningEffort(input: {
     return input.allowEndpoints;
   }
 
-  const allowed = new Set(input.allowEndpoints);
-  const matchingFixedEndpointIds = input.registry.endpoints
-    .filter(
-      (endpoint) =>
-        allowed.has(endpoint.identity.endpoint_id) &&
-        (endpoint.identity.reasoning_effort?.trim() || null) === requestedEffort,
-    )
-    .map((endpoint) => endpoint.identity.endpoint_id);
-  if (matchingFixedEndpointIds.length > 0) {
-    return input.allowEndpoints.filter((endpointId) =>
-      matchingFixedEndpointIds.includes(endpointId),
-    );
-  }
+  return selectReasoningEffortInstanceIds({
+    registry: input.registry,
+    allowEndpoints: input.allowEndpoints,
+    requestedEffort,
+  });
+}
 
-  // Provider-default is its own endpoint instance. A requested effort must
-  // resolve to an exact fixed sibling rather than changing the base endpoint's
-  // identity and semantics at execution time.
-  return [];
+/**
+ * Run 100 addendum 10, E1 follow-on: which pass produced a routing verdict.
+ *
+ * The live pass and the replay executor's counterfactual passes share this call site, so the pass cannot be assumed
+ * from the call stack. Measured live on `run118-d26c8343`: a counterfactual pass (`requestId` `replay-req-...`)
+ * reported `pass=live` because the host labelled every call the same way. The replay executor is the only producer
+ * that names its requests with the `replay-` prefix; an unattributed request is reported as `-` rather than guessed to
+ * be live.
+ */
+export function classifyBridgeRoutePass(input: {
+  readonly requestId?: string | null;
+  readonly denyCount: number;
+}): string {
+  const requestId = typeof input.requestId === "string" ? input.requestId.trim() : "";
+  if (requestId.length === 0) return "-";
+  if (requestId.startsWith("replay-")) return "replay";
+  return input.denyCount > 0 ? "live:reroute" : "live";
+}
+
+export interface ReasoningEffortPoolApplication {
+  readonly allowEndpoints: readonly string[];
+  readonly preferredEndpointIds: readonly string[];
+}
+
+/**
+ * Run 100 addendum 10, E3: how a requested reasoning effort applies to an already-resolved model pool.
+ *
+ * Measured live (`:3457`, 2026-09-24/25) through the E0 eligibility line: an alias request resolves to all seven
+ * endpoints, and then `filterRequestedModelPoolByReasoningEffort` replaces that pool with the endpoints whose fixed
+ * effort equals the requested one - `baseline.remote-only` + `high` reported `eligible=2`,
+ * `codes=POLICY_DENY_ENDPOINT=5`, and `low` reported `eligible=1` with six denials. The alias's pool is a property
+ * of the alias, not of the effort: the effort belongs in the router's preference channel
+ * (`routingModelRank`), where a preferred instance that is unhealthy, cooling down or over budget is a reason to
+ * pick the next candidate rather than a reason for the pool to have one member.
+ *
+ * Run 101 addendum 15 measured the same filter emptying a *model id's* pool: the 24-hour telemetry read on `:3457`
+ * (2026-09-27) showed every 503 row with `candidateCount = 1` and `rerouteCount = 0`, always on the requested
+ * model's effort instance (`chatgpt/gpt-5.6-sol` + `medium` -> `...gpt-5.6-sol-medium`, `deepseek/deepseek-v4-pro`
+ * -> `deepseek-v4-pro-max`). One provider flake ("terminated", TCP reset) is fallback-eligible, but a one-member
+ * pool has nothing to fail over to, so the attempt's own 503 became the request's status - and because replays
+ * dispatch through the same resolution, replay arms failed the same way. A model id names a pool just as an alias
+ * does; only an endpoint row names an instance, so only an endpoint row keeps exact effort-instance selection
+ * (run 91), including the documented refusal when the requested effort is not executable on that instance.
+ */
+export function applyReasoningEffortToModelPool(input: {
+  readonly registry: EndpointRegistryResult;
+  readonly requestedModel: string;
+  readonly requestedEffort?: string | null;
+  readonly allowEndpoints: readonly string[];
+  readonly preferredEndpointIds: readonly string[];
+  readonly requestedEndpointId?: string | null;
+}): ReasoningEffortPoolApplication {
+  const requestedEffort = input.requestedEffort?.trim() || null;
+  /**
+   * The client named an instance only when it used an endpoint row - as the requested model value or as the
+   * explicit `endpointId` request option. Everything else (an alias, a model id) names a pool.
+   */
+  const instanceSelected =
+    (input.requestedEndpointId?.trim().length ?? 0) > 0 ||
+    input.registry.endpoints.some(
+      (endpoint) =>
+        endpoint.identity.endpoint_id === input.requestedModel ||
+        toLegacyCredentializedEndpointId(endpoint.identity.endpoint_id) === input.requestedModel,
+    );
+  if (instanceSelected) {
+    return {
+      allowEndpoints: filterRequestedModelPoolByReasoningEffort({
+        registry: input.registry,
+        requestedModel: input.requestedModel,
+        requestedEffort,
+        allowEndpoints: input.allowEndpoints,
+      }),
+      preferredEndpointIds: input.preferredEndpointIds,
+    };
+  }
+  if (requestedEffort === null) {
+    return {
+      allowEndpoints: input.allowEndpoints,
+      preferredEndpointIds: input.preferredEndpointIds,
+    };
+  }
+  const effortInstanceIds = selectReasoningEffortInstanceIds({
+    registry: input.registry,
+    allowEndpoints: input.allowEndpoints,
+    requestedEffort,
+  });
+  if (effortInstanceIds.length === 0) {
+    // An effort that names no instance in this pool is not executable at all, and it keeps the bounded
+    // `reasoning_effort_unavailable` refusal the callers already raise on an empty pool (run 98). The pool rule is
+    // about the pool's *membership*: an effort that does name instances may order them, never trim them.
+    return {
+      allowEndpoints: [],
+      preferredEndpointIds: [],
+    };
+  }
+  return {
+    allowEndpoints: input.allowEndpoints,
+    preferredEndpointIds: [
+      ...effortInstanceIds,
+      ...input.preferredEndpointIds.filter((endpointId) => !effortInstanceIds.includes(endpointId)),
+    ],
+  };
 }
 
 function applyRequestedEndpointOverride(input: {
@@ -8393,7 +9736,7 @@ async function resolveConfiguredModelAliases(
 
 async function resolveConfiguredRuntimeConfig(
   readRuntimeConfig: StartBridgeServerOptions["readRuntimeConfig"],
-): Promise<ReturnType<typeof normalizeUnifiedRuntimeConfigInput> | null> {
+): Promise<UnifiedRuntimeConfig | null> {
   if (!readRuntimeConfig) {
     return null;
   }
@@ -8410,7 +9753,12 @@ async function resolveConfiguredRuntimeConfig(
   if (!configValue || typeof configValue !== "object" || Array.isArray(configValue)) {
     return null;
   }
-  return normalizeUnifiedRuntimeConfigInput(configValue);
+  // `readRuntimeConfig()` returns the runtime's already-normalized config
+  // (`currentUnifiedRuntimeConfig`). Normalizing it again re-enters the input normalizer with
+  // `agentStrategies`/`workloads` as arrays, which it rejects with "agent_strategies must be a
+  // mapping." and breaks the downstream-openai discovery route. Hand the normalized value
+  // through unchanged instead.
+  return configValue as UnifiedRuntimeConfig;
 }
 
 function readForwardedHeaderValue(value: string | string[] | undefined): string | undefined {
@@ -8624,6 +9972,20 @@ function toAliasRoutingMode(
   }
 }
 
+/** The stored alias vocabulary spells `baseline` as `basic` (design document section 3). */
+function toUnifiedAliasRoutingMode(mode: string): UnifiedRuntimeModelAliasConfig["mode"] {
+  switch (mode) {
+    case "difficulty":
+      return "difficulty";
+    case "hybrid":
+      return "hybrid";
+    case "intelligent":
+      return "intelligent";
+    default:
+      return "basic";
+  }
+}
+
 function summarizeAliasDefaultRoutingModeDiagnostics(input: {
   readonly requestedModel: string;
   readonly modelAliases: readonly UnifiedRuntimeModelAliasConfig[];
@@ -8682,6 +10044,56 @@ function resolveEffectiveRoutingMode(input: {
     return toAliasRoutingMode(alias.mode);
   }
   return input.defaultRoutingMode ?? "baseline";
+}
+
+/**
+ * Run 103 / SP5g - which posture entry, if any, the requested model names. A plain model id or a
+ * canonical routing alias has no entry and therefore no preset binding.
+ */
+function resolveRequestedPostureBinding(input: {
+  readonly requestedModel: string;
+  readonly entries: readonly AgentStrategyEntry[];
+  readonly declaredRoleId?: string | null;
+  readonly requiredCapabilities?: readonly string[];
+}): PostureRequestBinding | null {
+  const entry = findAgentStrategyAlias({
+    entries: input.entries,
+    executionModes: CANONICAL_ROUTING_ALIAS_EXECUTION_MODES,
+    aliasId: input.requestedModel,
+  });
+  return entry === null
+    ? null
+    : resolvePostureRequestBinding({
+        entry,
+        aliasId: input.requestedModel,
+        declaredRoleId: input.declaredRoleId ?? null,
+        requiredCapabilities: input.requiredCapabilities,
+      });
+}
+
+/**
+ * Run 103 R3 - the strategy the controller actually applied. `maybeApplyControllerRouting` records its
+ * accepted directive on the diagnostics, so the decision receipt can be computed from the same input
+ * the request path used instead of re-running the ladder without the controller step (the pin rule
+ * itself stays owned by `resolveStrategy`/`resolveControllerStrategyApplication`).
+ */
+function readAppliedControllerStrategy(
+  diagnostics: RuntimeRoutingDiagnostics | undefined,
+): ScoringStrategyName | null {
+  const controllerRouting = (
+    diagnostics as
+      | {
+          readonly controllerRouting?: {
+            readonly active?: boolean;
+            readonly acceptedDirectives?: { readonly strategy?: string };
+          };
+        }
+      | undefined
+  )?.controllerRouting;
+  if (!controllerRouting || controllerRouting.active !== true) {
+    return null;
+  }
+  return normalizeScoringStrategyName(controllerRouting.acceptedDirectives?.strategy ?? null);
 }
 
 function shouldApplyDifficultyRouting(effectiveRoutingMode: RuntimeRoutingMode): boolean {
@@ -8937,6 +10349,203 @@ function readRoleModelIntentFromRequestBody(
   };
 }
 
+/**
+ * Run 98 addendum 58 slice 2: the taxonomy text a request is classified from. The newest messages carry the
+ * intent, so they are read last-first and the result is bounded; no message content leaves the process.
+ */
+function readClassificationText(value: unknown, limit = 8_000): string {
+  const parts: string[] = [];
+  const readContent = (content: unknown): void => {
+    if (typeof content === "string") {
+      parts.push(content);
+      return;
+    }
+    if (!Array.isArray(content)) {
+      return;
+    }
+    for (const part of content) {
+      if (typeof part === "string") {
+        parts.push(part);
+        continue;
+      }
+      if (part && typeof part === "object") {
+        const record = part as Record<string, unknown>;
+        if (typeof record.text === "string") {
+          parts.push(record.text);
+        }
+      }
+    }
+  };
+  if (typeof value === "string") {
+    parts.push(value);
+  } else if (Array.isArray(value)) {
+    for (const entry of value.slice(-6)) {
+      if (entry && typeof entry === "object") {
+        readContent((entry as Record<string, unknown>).content);
+      }
+    }
+  }
+  return parts.join("\n").slice(-limit);
+}
+
+/**
+ * Run 98 addendum 58 slice 2: OpenAI-compatible tool declarations mapped onto the taxonomy's 15 tool
+ * classes. The mapping is conservative — a declaration that names no known tool shape contributes no
+ * tool class rather than a guessed one.
+ */
+export function inferTaxonomyToolClasses(toolNames: readonly string[]): string[] {
+  const toolClasses = new Set<string>();
+  for (const rawName of toolNames) {
+    const name = rawName.toLowerCase();
+    if (
+      /(^|[_\s.-])(shell|bash|zsh|pwsh|powershell|terminal|exec|execute|command|subprocess)([_\s.-]|$)/.test(
+        name,
+      )
+    ) {
+      toolClasses.add("shell.execute");
+    }
+    if (/(write|edit|patch|apply|create|save|mkdir|rename|delete|remove|move)/.test(name)) {
+      toolClasses.add("filesystem.write");
+    }
+    if (/(read|cat|view|open|list|glob|grep|stat|search_file)/.test(name)) {
+      toolClasses.add("filesystem.read");
+    }
+    if (/(browser|navigate|playwright|puppeteer|screenshot|click)/.test(name)) {
+      toolClasses.add("browser.control");
+    }
+    if (/(web[_\s-]?search|search_web|google|bing|internet)/.test(name)) {
+      toolClasses.add("web.search");
+    }
+    if (/(http|fetch|curl|request|api_call)/.test(name)) {
+      toolClasses.add("http.fetch");
+    }
+    if (/(sql|database|db_query|query_db)/.test(name)) {
+      toolClasses.add("database.query");
+    }
+    if (/(install|npm|pnpm|yarn|pip|apt|brew|package)/.test(name)) {
+      toolClasses.add("package.install");
+    }
+    if (/calendar/.test(name)) {
+      toolClasses.add(
+        /(write|create|update|delete)/.test(name) ? "calendar.write" : "calendar.read",
+      );
+    }
+    if (/(email|mail|gmail|outlook)/.test(name)) {
+      toolClasses.add(/(send|write|create)/.test(name) ? "email.write" : "email.read");
+    }
+    if (/memory/.test(name)) {
+      toolClasses.add(/(write|remember|store|save)/.test(name) ? "memory.write" : "memory.read");
+    }
+    if (/(vector|embedding|semantic)/.test(name)) {
+      toolClasses.add("vector.search");
+    }
+  }
+  return [...toolClasses].sort();
+}
+
+function readToolNames(tools: unknown): string[] {
+  if (!Array.isArray(tools)) {
+    return [];
+  }
+  const names: string[] = [];
+  for (const tool of tools) {
+    if (!tool || typeof tool !== "object") {
+      continue;
+    }
+    const record = tool as Record<string, unknown>;
+    if (typeof record.name === "string") {
+      names.push(record.name);
+      continue;
+    }
+    const fn = record.function;
+    if (fn && typeof fn === "object" && typeof (fn as Record<string, unknown>).name === "string") {
+      names.push((fn as Record<string, unknown>).name as string);
+    }
+  }
+  return names;
+}
+
+/** The taxonomy's modality identifiers are a subset of the inference vocabulary; `pdf` is the taxonomy's `document`. */
+const TAXONOMY_MODALITY_ALIASES: Readonly<Record<string, string>> = {
+  pdf: "document",
+  json: "structured_json",
+  audio: "audio",
+  video: "video",
+  image: "image",
+  file: "file",
+  text: "text",
+};
+
+function mapInferredModalitiesToTaxonomy(modalities: readonly string[]): string[] {
+  const mapped = new Set<string>();
+  for (const modality of modalities) {
+    const value = TAXONOMY_MODALITY_ALIASES[modality] ?? modality;
+    mapped.add(value);
+  }
+  if (mapped.size === 0) {
+    mapped.add("text");
+  }
+  return [...mapped].sort();
+}
+
+/**
+ * Run 98 addendum 58 slice 2: the single taxonomy identity a request is routed, captured and evaluated
+ * under. A declaration that names a taxonomy task is authoritative; anything else (no declaration, a
+ * capability name like `text.chat`, an unknown id) falls back to the local derivation. The role follows the
+ * declaration when it names a taxonomy role, otherwise the derivation's role, otherwise the task's own
+ * primary role — never an invented identifier.
+ */
+function buildBridgeTaxonomyIdentity(input: {
+  readonly declaredRoleModelIntent?: BridgeExecutionPlan["routingRequest"]["roleModelIntent"];
+  readonly declaredTaskTypeId?: string;
+  readonly declaredTaskIsTaxonomyTask: boolean;
+  readonly derived?: DerivedTaxonomyClassification;
+}): NonNullable<BridgeExecutionPlan["taxonomyIdentity"]> {
+  const declaredTaskTypeId =
+    input.declaredTaskIsTaxonomyTask && input.declaredTaskTypeId
+      ? input.declaredTaskTypeId
+      : undefined;
+  const derivedTaskTypeId =
+    input.derived?.taskTypeId &&
+    canonicalTaxonomy.tasks.some((task) => task.id === input.derived?.taskTypeId)
+      ? input.derived.taskTypeId
+      : undefined;
+  const taskTypeId =
+    declaredTaskTypeId ?? derivedTaskTypeId ?? input.declaredTaskTypeId ?? "text.chat";
+  const task = canonicalTaxonomy.tasks.find((entry) => entry.id === taskTypeId);
+  const declaredRoleId = input.declaredRoleModelIntent?.role?.id;
+  const declaredRoleIsTaxonomyRole =
+    typeof declaredRoleId === "string" &&
+    canonicalTaxonomy.roles.some((role) => role.id === declaredRoleId);
+  const derivedRoleId = input.derived?.roleId;
+  const roleId =
+    (declaredRoleIsTaxonomyRole && declaredRoleId ? declaredRoleId : undefined) ??
+    (derivedRoleId && canonicalTaxonomy.roles.some((role) => role.id === derivedRoleId)
+      ? derivedRoleId
+      : undefined) ??
+    task?.primaryRole ??
+    "writer";
+  const role = canonicalTaxonomy.roles.find((entry) => entry.id === roleId);
+  const confidence = input.declaredTaskIsTaxonomyTask
+    ? Math.min(
+        1,
+        Math.max(
+          0,
+          typeof input.declaredRoleModelIntent?.confidence === "number"
+            ? input.declaredRoleModelIntent.confidence
+            : 1,
+        ),
+      )
+    : (input.derived?.confidence ?? 0.2);
+  return {
+    taskTypeId,
+    roleId,
+    groupId: role?.primaryGroupId ?? input.derived?.groupId ?? "communication",
+    confidence,
+    source: input.declaredTaskIsTaxonomyTask ? "declared" : "runtime_heuristic",
+  };
+}
+
 export function mapChatCompletionsRequest(
   registry: EndpointRegistryResult,
   body: OpenAIChatCompletionsBody,
@@ -8949,18 +10558,56 @@ export function mapChatCompletionsRequest(
   defaultRoutingMode?: RuntimeRoutingMode,
   inventory: RoutableInventory | null = null,
   taskDefinitions?: readonly RuntimeTaskDefinitionRecord[],
+  routingPosture?: RoutingPosture,
+  agentStrategyEntries?: readonly AgentStrategyEntry[],
 ): BridgeExecutionPlan {
   const contextTokens = estimateContextTokens(body.messages, body.tools?.length ?? 0);
   const reasoning = readChatCompletionsReasoningRequest(body);
-  const roleModelIntent = readRoleModelIntentFromRequestBody(
-    body as unknown as Record<string, unknown>,
-  );
+  const bodyRecord = body as unknown as Record<string, unknown>;
+  const declaredRoleModelIntent = readRoleModelIntentFromRequestBody(bodyRecord);
+  const declaredTaskTypeId = declaredRoleModelIntent?.task?.id;
+  const declaredTaskIsTaxonomyTask =
+    typeof declaredTaskTypeId === "string" &&
+    canonicalTaxonomy.tasks.some((task) => task.id === declaredTaskTypeId);
+  /**
+   * Run 98 addendum 58 slice 2: a request that declares no intent is classified against the shipped
+   * taxonomy here, locally and deterministically, so replay, evaluation, packs and the advisory gate all
+   * see a taxonomy identity instead of `text.chat`/null. A declared intent whose task is not a taxonomy
+   * task type keeps its declaration as metadata but does not become the routing task type; the derivation
+   * supplies the effective identity instead.
+   */
+  const derivedTaxonomyClassification = declaredTaskIsTaxonomyTask
+    ? undefined
+    : (() => {
+        const inference = inferChatCompletionsCapabilityRequirements(bodyRecord);
+        return deriveTaxonomyClassification({
+          text: readClassificationText(bodyRecord.messages),
+          toolClassIds: inferTaxonomyToolClasses(readToolNames(bodyRecord.tools)),
+          modalityIds: mapInferredModalitiesToTaxonomy(inference.requiredInputModalities),
+          outputModalityIds: mapInferredModalitiesToTaxonomy(inference.requiredOutputModalities),
+        });
+      })();
+  const roleModelIntent =
+    declaredRoleModelIntent ?? derivedTaxonomyClassification?.normalizedIntent;
+  const taxonomyIdentity = buildBridgeTaxonomyIdentity({
+    ...(declaredRoleModelIntent ? { declaredRoleModelIntent } : {}),
+    ...(declaredTaskTypeId ? { declaredTaskTypeId } : {}),
+    declaredTaskIsTaxonomyTask,
+    ...(derivedTaxonomyClassification ? { derived: derivedTaxonomyClassification } : {}),
+  });
+  const effectiveTaxonomyTaskTypeId = taxonomyIdentity.taskTypeId;
   const {
     allowEndpoints: modelAllowEndpoints,
-    preferredEndpointIds: aliasPreferredEndpointIds,
+    preferredEndpointIds: modelPreferredEndpointIds,
     routingDiagnostics,
   } = resolveRequestedModelPool(registry, body.model, modelAliases, inventory);
-  const allowEndpoints = filterRequestedModelPoolByReasoningEffort({
+  /**
+   * E3 + addendum 15: a pool plus a bias. The requested effort orders the pool the target already had
+   * (`applyReasoningEffortToModelPool`) for an alias and for a model id alike; only an endpoint row narrows it to
+   * one instance, so a client that always sends `reasoning_effort` still sees every candidate its target offers and
+   * a single provider flake cannot become the request's status.
+   */
+  const effortAppliedToModelPool = applyReasoningEffortToModelPool({
     registry,
     requestedModel: body.model,
     requestedEffort: reasoning?.effort,
@@ -8969,7 +10616,11 @@ export function mapChatCompletionsRequest(
       allowEndpoints: modelAllowEndpoints,
       requestOptions,
     }),
+    preferredEndpointIds: modelPreferredEndpointIds,
+    requestedEndpointId: requestOptions?.endpointId ?? null,
   });
+  const allowEndpoints = effortAppliedToModelPool.allowEndpoints;
+  const aliasPreferredEndpointIds = effortAppliedToModelPool.preferredEndpointIds;
   const effectiveRoutingMode = resolveEffectiveRoutingMode({
     requestedModel: body.model,
     modelAliases,
@@ -9000,20 +10651,64 @@ export function mapChatCompletionsRequest(
           routingMode: configuredDefaultRoutingMode,
         }
       : routingDiagnostics;
+  const requestedReasoningEffort = reasoning?.effort?.trim() || null;
+  if (
+    requestedReasoningEffort !== null &&
+    modelAllowEndpoints.length > 0 &&
+    allowEndpoints.length === 0
+  ) {
+    throwReasoningEffortUnavailable({
+      requestedModel: body.model,
+      requestedEffort: requestedReasoningEffort,
+      availableEfforts: collectConfiguredReasoningEfforts(registry, modelAllowEndpoints),
+    });
+  }
+
+  if (baseRoutingDiagnostics?.aliasResolution?.poolEmptyReason === "ALIAS_POOL_EMPTY") {
+    throwAliasPoolEmpty({
+      requestedModel: body.model,
+      routingDiagnostics: baseRoutingDiagnostics,
+    });
+  }
   const capabilityRequirements = inferChatCompletionsCapabilityRequirements(
     body as unknown as Record<string, unknown>,
   );
+  /**
+   * Run 103 / SP5g - a posture alias hands the request its saved binding: the role preset (a
+   * declared role still wins), the workload's required capabilities and the alias's scoring
+   * strategy (requirements R5, R6).
+   */
+  const postureBinding = resolveRequestedPostureBinding({
+    requestedModel: body.model,
+    entries: agentStrategyEntries ?? [],
+    declaredRoleId: requestOptions?.requestedRoleId ?? null,
+    requiredCapabilities: capabilityRequirements.requiredCapabilities,
+  });
+  const effectiveCapabilityRequirements = postureBinding
+    ? {
+        ...capabilityRequirements,
+        requiredCapabilities: postureBinding.requiredCapabilities,
+      }
+    : capabilityRequirements;
+  const effectiveStrategyPosture = overlayPostureOperator({
+    posture: routingPosture,
+    aliasStrategy: postureBinding?.scoringStrategy ?? null,
+  });
+  const postureRequestOptions =
+    postureBinding?.roleSource === "preset" && postureBinding.roleId
+      ? { ...requestOptions, requestedRoleId: postureBinding.roleId }
+      : requestOptions;
   const capabilityFiltered = filterAllowEndpointsForCapabilityRequirements({
     registry,
     requestedModel: body.model,
     allowEndpoints,
-    requirements: capabilityRequirements,
+    requirements: effectiveCapabilityRequirements,
     routingDiagnostics: baseRoutingDiagnostics,
   });
   if (capabilityFiltered.allowEndpoints.length === 0) {
     throwNoEligibleCapabilityTarget({
       requestedModel: body.model,
-      requirements: capabilityRequirements,
+      requirements: effectiveCapabilityRequirements,
       routingDiagnostics: capabilityFiltered.routingDiagnostics,
     });
   }
@@ -9037,19 +10732,36 @@ export function mapChatCompletionsRequest(
 
   const controllerRouting = maybeApplyControllerRouting({
     effectiveRoutingMode,
+    pinWeights: routingPosture?.pinWeights === true,
     requestedModel: body.model,
     modelAliases,
     routingRequest: {
       requestId,
       ...(roleModelIntent ? { roleModelIntent } : {}),
-      taskType: "text.chat",
-      requiredCapabilities: capabilityRequirements.requiredCapabilities,
+      /**
+       * Run 98 addendum 57 §3.2: a declared intent's task family is the request's family. The routing request
+       * used to carry the capability default `text.chat` even when the caller declared one, so the advisory's
+       * family gate compared an advisory validated for `coder.review` against `text.chat` and refused it with
+       * `advisory_task_mismatch` — while the same decision recorded `taxonomy_task_type: coder.review`.
+       *
+       * Run 98 addendum 58 slice 2: a declaration that is not a taxonomy task type is metadata, not the
+       * request's family, and a request that declares nothing is classified against the taxonomy instead of
+       * falling back to the capability name — so every routed request carries a real taxonomy task.
+       */
+      taskType: effectiveTaxonomyTaskTypeId,
+      requiredCapabilities: effectiveCapabilityRequirements.requiredCapabilities,
       preferredCapabilities: [],
-      requiredModalities: capabilityRequirements.requiredInputModalities,
+      requiredModalities: effectiveCapabilityRequirements.requiredInputModalities,
       contextTokens,
       needsTools: Boolean(tools?.length),
-      strategy: difficultyRouting.strategy,
-      preferLocal: false,
+      strategy: toCoreRoutingStrategyName(
+        resolveRequestStrategy({
+          posture: effectiveStrategyPosture,
+          effectiveRoutingMode,
+          difficulty: difficultyRouting.routingDiagnostics?.difficultyRouting?.difficulty,
+        }).strategy,
+      ),
+      preferLocal: postureBinding?.preferLocal ?? false,
       allowEndpoints: difficultyRouting.allowEndpoints,
     },
     routingDiagnostics: difficultyRouting.routingDiagnostics,
@@ -9065,8 +10777,12 @@ export function mapChatCompletionsRequest(
     routingDiagnostics: controllerRouting.routingDiagnostics,
     roleDefinitions,
     taskDefinitions,
-    requestOptions,
+    requestOptions: postureRequestOptions,
   });
+  /** Run 103 R3: the receipt is built from the strategy the controller actually applied. */
+  const appliedControllerStrategy = readAppliedControllerStrategy(
+    controllerRouting.routingDiagnostics,
+  );
   const promptCache =
     readChatCompletionsPromptCacheRequest(body) ??
     synthesizePromptCacheRequest(
@@ -9101,9 +10817,22 @@ export function mapChatCompletionsRequest(
       ...(typeof body.temperature === "number" ? { temperature: body.temperature } : {}),
     },
     ...(effectiveRoutingModel ? { routingModel: effectiveRoutingModel } : {}),
-    ...(rolePolicyExecution.routingDiagnostics
-      ? { routingDiagnostics: rolePolicyExecution.routingDiagnostics }
-      : {}),
+    routingDiagnostics: withAliasPostureBinding(
+      withStrategyProvenance(
+        rolePolicyExecution.routingDiagnostics,
+        resolveRequestStrategy({
+          posture: effectiveStrategyPosture,
+          effectiveRoutingMode,
+          difficulty: difficultyRouting.routingDiagnostics?.difficultyRouting?.difficulty,
+          controllerActive: appliedControllerStrategy !== null,
+          ...(appliedControllerStrategy !== null
+            ? { controllerStrategy: appliedControllerStrategy }
+            : {}),
+        }),
+      ),
+      postureBinding,
+    ),
+    taxonomyIdentity,
   };
 }
 
@@ -9119,22 +10848,70 @@ export function mapResponsesRequest(
   defaultRoutingMode?: RuntimeRoutingMode,
   inventory: RoutableInventory | null = null,
   taskDefinitions?: readonly RuntimeTaskDefinitionRecord[],
+  routingPosture?: RoutingPosture,
+  agentStrategyEntries?: readonly AgentStrategyEntry[],
 ): BridgeExecutionPlan {
   const messages = toResponsesInputMessages(body.input);
   const contextTokens = estimateContextTokens(messages, body.tools?.length ?? 0);
   const reasoning = readResponsesReasoningRequest(body);
-  const roleModelIntent = readRoleModelIntentFromRequestBody(
-    body as unknown as Record<string, unknown>,
-  );
-  const capabilityRequirements = inferResponsesCapabilityRequirements(
-    body as unknown as Record<string, unknown>,
-  );
+  const responsesBodyRecord = body as unknown as Record<string, unknown>;
+  const declaredRoleModelIntent = readRoleModelIntentFromRequestBody(responsesBodyRecord);
+  const declaredTaskTypeId = declaredRoleModelIntent?.task?.id;
+  const declaredTaskIsTaxonomyTask =
+    typeof declaredTaskTypeId === "string" &&
+    canonicalTaxonomy.tasks.some((task) => task.id === declaredTaskTypeId);
+  const capabilityRequirements = inferResponsesCapabilityRequirements(responsesBodyRecord);
+  /** Run 103 / SP5g - the posture alias binding (see the chat path). */
+  const postureBinding = resolveRequestedPostureBinding({
+    requestedModel: body.model,
+    entries: agentStrategyEntries ?? [],
+    declaredRoleId: requestOptions?.requestedRoleId ?? null,
+    requiredCapabilities: capabilityRequirements.requiredCapabilities,
+  });
+  const effectiveCapabilityRequirements = postureBinding
+    ? {
+        ...capabilityRequirements,
+        requiredCapabilities: postureBinding.requiredCapabilities,
+      }
+    : capabilityRequirements;
+  const effectiveStrategyPosture = overlayPostureOperator({
+    posture: routingPosture,
+    aliasStrategy: postureBinding?.scoringStrategy ?? null,
+  });
+  const postureRequestOptions =
+    postureBinding?.roleSource === "preset" && postureBinding.roleId
+      ? { ...requestOptions, requestedRoleId: postureBinding.roleId }
+      : requestOptions;
+  /** Run 98 addendum 58 slice 2: the responses path classifies a request that declares no intent (see the chat path). */
+  const derivedTaxonomyClassification = declaredTaskIsTaxonomyTask
+    ? undefined
+    : deriveTaxonomyClassification({
+        text: readClassificationText(responsesBodyRecord.input),
+        toolClassIds: inferTaxonomyToolClasses(readToolNames(responsesBodyRecord.tools)),
+        modalityIds: mapInferredModalitiesToTaxonomy(
+          capabilityRequirements.requiredInputModalities,
+        ),
+        outputModalityIds: mapInferredModalitiesToTaxonomy(
+          capabilityRequirements.requiredOutputModalities,
+        ),
+      });
+  const roleModelIntent =
+    declaredRoleModelIntent ?? derivedTaxonomyClassification?.normalizedIntent;
+  const taxonomyIdentity = buildBridgeTaxonomyIdentity({
+    ...(declaredRoleModelIntent ? { declaredRoleModelIntent } : {}),
+    ...(declaredTaskTypeId ? { declaredTaskTypeId } : {}),
+    declaredTaskIsTaxonomyTask,
+    ...(derivedTaxonomyClassification ? { derived: derivedTaxonomyClassification } : {}),
+  });
+  const effectiveTaxonomyTaskTypeId = taxonomyIdentity.taskTypeId;
   const {
     allowEndpoints: modelAllowEndpoints,
-    preferredEndpointIds: aliasPreferredEndpointIds,
+    preferredEndpointIds: modelPreferredEndpointIds,
     routingDiagnostics,
   } = resolveRequestedModelPool(registry, body.model, modelAliases, inventory);
-  const allowEndpoints = filterRequestedModelPoolByReasoningEffort({
+  // E3 + addendum 15: the responses path resolves the pool the same way the chat path does - effort biases an alias
+  // or model pool and narrows only an explicitly named endpoint row.
+  const effortAppliedToModelPool = applyReasoningEffortToModelPool({
     registry,
     requestedModel: body.model,
     requestedEffort: reasoning?.effort,
@@ -9143,7 +10920,24 @@ export function mapResponsesRequest(
       allowEndpoints: modelAllowEndpoints,
       requestOptions,
     }),
+    preferredEndpointIds: modelPreferredEndpointIds,
+    requestedEndpointId: requestOptions?.endpointId ?? null,
   });
+  const allowEndpoints = effortAppliedToModelPool.allowEndpoints;
+  const aliasPreferredEndpointIds = effortAppliedToModelPool.preferredEndpointIds;
+  const requestedReasoningEffort = reasoning?.effort?.trim() || null;
+  if (
+    requestedReasoningEffort !== null &&
+    modelAllowEndpoints.length > 0 &&
+    allowEndpoints.length === 0
+  ) {
+    throwReasoningEffortUnavailable({
+      requestedModel: body.model,
+      requestedEffort: requestedReasoningEffort,
+      availableEfforts: collectConfiguredReasoningEfforts(registry, modelAllowEndpoints),
+    });
+  }
+
   const toolExecutionPlan = resolveResponsesToolExecutionPlan({
     registry,
     allowEndpoints,
@@ -9184,13 +10978,13 @@ export function mapResponsesRequest(
     registry,
     requestedModel: body.model,
     allowEndpoints: toolExecutionPlan.allowEndpoints,
-    requirements: capabilityRequirements,
+    requirements: effectiveCapabilityRequirements,
     routingDiagnostics: baseRoutingDiagnostics,
   });
   if (capabilityFiltered.allowEndpoints.length === 0) {
     throwNoEligibleCapabilityTarget({
       requestedModel: body.model,
-      requirements: capabilityRequirements,
+      requirements: effectiveCapabilityRequirements,
       routingDiagnostics: capabilityFiltered.routingDiagnostics,
     });
   }
@@ -9218,19 +11012,27 @@ export function mapResponsesRequest(
 
   const controllerRouting = maybeApplyControllerRouting({
     effectiveRoutingMode,
+    pinWeights: routingPosture?.pinWeights === true,
     requestedModel: body.model,
     modelAliases,
     routingRequest: {
       requestId,
       ...(roleModelIntent ? { roleModelIntent } : {}),
-      taskType: "text.chat",
-      requiredCapabilities: capabilityRequirements.requiredCapabilities,
+      /** Run 98 addendum 57 §3.2 with addendum 58 slice 2: the effective taxonomy task family (see the chat path). */
+      taskType: effectiveTaxonomyTaskTypeId,
+      requiredCapabilities: effectiveCapabilityRequirements.requiredCapabilities,
       preferredCapabilities: [],
-      requiredModalities: capabilityRequirements.requiredInputModalities,
+      requiredModalities: effectiveCapabilityRequirements.requiredInputModalities,
       contextTokens,
       needsTools: Boolean(tools?.length),
-      strategy: difficultyRouting.strategy,
-      preferLocal: false,
+      strategy: toCoreRoutingStrategyName(
+        resolveRequestStrategy({
+          posture: effectiveStrategyPosture,
+          effectiveRoutingMode,
+          difficulty: difficultyRouting.routingDiagnostics?.difficultyRouting?.difficulty,
+        }).strategy,
+      ),
+      preferLocal: postureBinding?.preferLocal ?? false,
       allowEndpoints: difficultyRouting.allowEndpoints,
     },
     routingDiagnostics: difficultyRouting.routingDiagnostics,
@@ -9246,8 +11048,12 @@ export function mapResponsesRequest(
     routingDiagnostics: controllerRouting.routingDiagnostics,
     roleDefinitions,
     taskDefinitions,
-    requestOptions,
+    requestOptions: postureRequestOptions,
   });
+  /** Run 103 R3: the receipt is built from the strategy the controller actually applied. */
+  const appliedControllerStrategy = readAppliedControllerStrategy(
+    controllerRouting.routingDiagnostics,
+  );
   const promptCache =
     readResponsesPromptCacheRequest(body) ??
     synthesizePromptCacheRequest(
@@ -9287,9 +11093,22 @@ export function mapResponsesRequest(
       ...(typeof body.temperature === "number" ? { temperature: body.temperature } : {}),
     },
     ...(effectiveRoutingModel ? { routingModel: effectiveRoutingModel } : {}),
-    ...(rolePolicyExecution.routingDiagnostics
-      ? { routingDiagnostics: rolePolicyExecution.routingDiagnostics }
-      : {}),
+    routingDiagnostics: withAliasPostureBinding(
+      withStrategyProvenance(
+        rolePolicyExecution.routingDiagnostics,
+        resolveRequestStrategy({
+          posture: effectiveStrategyPosture,
+          effectiveRoutingMode,
+          difficulty: difficultyRouting.routingDiagnostics?.difficultyRouting?.difficulty,
+          controllerActive: appliedControllerStrategy !== null,
+          ...(appliedControllerStrategy !== null
+            ? { controllerStrategy: appliedControllerStrategy }
+            : {}),
+        }),
+      ),
+      postureBinding,
+    ),
+    taxonomyIdentity,
   };
 }
 
@@ -9413,6 +11232,30 @@ function createBridgeRequestAbortSignal(
   return controller.signal;
 }
 
+/**
+ * Run 101 addendum 13: the live path's per-attempt provider bound.
+ *
+ * Measured live on `:3457`: the same alias answered in 2.5 s on one sample and failed with an empty 400 after
+ * ~90 s on others while exact-model requests stayed at 2-4 s - a stalled provider attempt consumed the caller's
+ * window. Queue claims got a bound in addendum 06 (`attemptTimeoutMs`); this is the live path's equivalent, and
+ * the operator can tune it with `ROLE_MODEL_LIVE_ATTEMPT_TIMEOUT_MS` (bounds 5 s - 10 min, default 2 min).
+ *
+ * Run 101 addendum 16 (measured live on stage RC `11eaf2b19492`): the unset case resolved to the five-second
+ * floor, not the default. `env.ROLE_MODEL_LIVE_ATTEMPT_TIMEOUT_MS ?? ""` makes an unset variable
+ * `Number("") === 0`, which is a safe integer, so the default branch never ran and every live attempt was aborted
+ * 5 s in - streams ended without `finish_reason`, non-streaming calls were answered `400 execution_failed` with
+ * "The operation was aborted due to timeout". An absent, empty, non-numeric, zero or negative value is now the
+ * documented two-minute default; only an explicit positive value is honoured and clamped to the 5 s - 10 min
+ * bounds.
+ */
+export function resolveLiveAttemptTimeoutMs(env: NodeJS.ProcessEnv = process.env): number {
+  const rawValue = env.ROLE_MODEL_LIVE_ATTEMPT_TIMEOUT_MS?.trim();
+  const raw = rawValue === undefined || rawValue.length === 0 ? Number.NaN : Number(rawValue);
+  if (!Number.isSafeInteger(raw) || raw <= 0) return 120_000;
+  if (raw < 5_000) return 5_000;
+  return Math.min(raw, 600_000);
+}
+
 function mergeBridgeRequestAbortSignal(
   requestOptions: BridgeExecutionRequestOptions | undefined,
   abortSignal: AbortSignal,
@@ -9471,17 +11314,38 @@ async function writeSseChunk(
   });
 }
 
-async function readJsonBody(request: IncomingMessage): Promise<Record<string, unknown>> {
+async function readJsonBody(
+  request: IncomingMessage,
+  maxBytes = MAX_REQUEST_BODY_BYTES,
+): Promise<Record<string, unknown>> {
+  const declaredLengthHeader = request.headers["content-length"];
+  const declaredLength = Array.isArray(declaredLengthHeader)
+    ? Number(declaredLengthHeader[0])
+    : Number(declaredLengthHeader);
+  if (Number.isFinite(declaredLength) && declaredLength > maxBytes) {
+    throw maxBytes === MAX_OPERATOR_BODY_BYTES
+      ? operatorBodyTooLarge()
+      : bodyTooLarge(maxBytes, "request_body_too_large");
+  }
+
   const chunks: Buffer[] = [];
+  let byteLength = 0;
   for await (const chunk of request) {
-    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    const bytes = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+    byteLength += bytes.byteLength;
+    if (byteLength > maxBytes) {
+      throw maxBytes === MAX_OPERATOR_BODY_BYTES
+        ? operatorBodyTooLarge()
+        : bodyTooLarge(maxBytes, "request_body_too_large");
+    }
+    chunks.push(bytes);
   }
 
   if (chunks.length === 0) {
     return {};
   }
 
-  return JSON.parse(Buffer.concat(chunks).toString("utf8")) as Record<string, unknown>;
+  return JSON.parse(Buffer.concat(chunks, byteLength).toString("utf8")) as Record<string, unknown>;
 }
 
 function readModelOverrideRecord(value: unknown, label: string): BridgeModelOverrideRecord {
@@ -9646,6 +11510,9 @@ function readTelemetryQuery(url: URL): BridgeTelemetryQuery {
   const sourceTypes = readOptionalTelemetryStringList(url.searchParams, "sourceTypes") as
     | readonly ("local" | "remote")[]
     | undefined;
+  const trafficClasses = readOptionalTelemetryStringList(url.searchParams, "trafficClasses") as
+    | readonly StoredTrafficClass[]
+    | undefined;
   const endpointIds = readOptionalTelemetryStringList(url.searchParams, "endpointIds");
   const modelIds = readOptionalTelemetryStringList(url.searchParams, "modelIds");
   const providerIds = readOptionalTelemetryStringList(url.searchParams, "providerIds");
@@ -9672,6 +11539,7 @@ function readTelemetryQuery(url: URL): BridgeTelemetryQuery {
     | undefined;
   const requestOperations = readOptionalTelemetryStringList(url.searchParams, "requestOperations");
   const filters = {
+    ...(trafficClasses ? { trafficClasses } : {}),
     ...(sourceTypes ? { sourceTypes } : {}),
     ...(endpointIds ? { endpointIds } : {}),
     ...(modelIds ? { modelIds } : {}),
@@ -10699,17 +12567,21 @@ async function exchangeOpenAICodexAuthorizationCode(input: {
   readonly authorizationCode: string;
   readonly codeVerifier: string;
 }): Promise<StoredCodexAuthPayload> {
-  const response = await input.networkFetcher(OPENAI_CODEX_OAUTH_TOKEN_ENDPOINT, {
-    method: "POST",
-    headers: { "content-type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      grant_type: "authorization_code",
-      client_id: OPENAI_CODEX_OAUTH_CLIENT_ID,
-      code: input.authorizationCode,
-      code_verifier: input.codeVerifier,
-      redirect_uri: "https://auth.openai.com/deviceauth/callback",
-    }),
-  });
+  const response = await fetchOauthDeviceResponse(
+    input.networkFetcher,
+    OPENAI_CODEX_OAUTH_TOKEN_ENDPOINT,
+    {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "authorization_code",
+        client_id: OPENAI_CODEX_OAUTH_CLIENT_ID,
+        code: input.authorizationCode,
+        code_verifier: input.codeVerifier,
+        redirect_uri: "https://auth.openai.com/deviceauth/callback",
+      }),
+    },
+  );
   const payload = await readOpenAICodexJsonResponse(
     response,
     "OpenAI Codex authorization-code exchange failed.",
@@ -10755,15 +12627,123 @@ async function cleanupManagedCodexDeviceCodeSession(
   await removeDirectoryWithRetries(payload.codexHome).catch(() => undefined);
 }
 
+/**
+ * Run 101 addendum 17: the device-authorization route to `auth.openai.com` is intermittently reset from the
+ * operator's network. Measured on `:3457` (2026-09-27): `POST /api/role-model/accounts/device/start` hung for more
+ * than 60 s, and a direct Node fetch to the user-code endpoint failed with `fetch failed | cause: ECONNRESET` after
+ * 10.8 s and again after 71.2 s while `curl` answered the same endpoint in 3.0 s. A single such blip permanently
+ * failed the login session ("the helper stopped"), so each device call now carries a bound and a bounded retry.
+ */
+const OAUTH_DEVICE_HTTP_DEFAULT_TIMEOUT_MS = 30_000;
+const OAUTH_DEVICE_HTTP_MAX_ATTEMPTS = 3;
+
+const TRANSIENT_PROVIDER_TRANSPORT_CODES: ReadonlySet<string> = new Set([
+  "ECONNRESET",
+  "ECONNREFUSED",
+  "ECONNABORTED",
+  "ETIMEDOUT",
+  "EPIPE",
+  "EHOSTUNREACH",
+  "ENETUNREACH",
+  "ENETRESET",
+  "EAI_AGAIN",
+  "UND_ERR_CONNECT_TIMEOUT",
+  "UND_ERR_HEADERS_TIMEOUT",
+  "UND_ERR_BODY_TIMEOUT",
+  "UND_ERR_SOCKET",
+  "UND_ERR_ABORTED",
+]);
+
+/**
+ * Whether a failure is a transport blip the caller may retry rather than the provider's verdict. Walks the cause
+ * chain because undici reports `TypeError: fetch failed` with the socket error underneath.
+ */
+export function isTransientProviderTransportError(error: unknown): boolean {
+  let current: unknown = error;
+  for (let depth = 0; current !== null && current !== undefined && depth < 8; depth += 1) {
+    if (typeof current !== "object") {
+      return false;
+    }
+    const record = current as {
+      readonly name?: unknown;
+      readonly code?: unknown;
+      readonly message?: unknown;
+      readonly cause?: unknown;
+    };
+    const name = typeof record.name === "string" ? record.name : "";
+    if (name === "TimeoutError" || name === "AbortError") {
+      return true;
+    }
+    const code = typeof record.code === "string" ? record.code.toUpperCase() : "";
+    if (code.length > 0 && TRANSIENT_PROVIDER_TRANSPORT_CODES.has(code)) {
+      return true;
+    }
+    const message = typeof record.message === "string" ? record.message.toLowerCase() : "";
+    if (
+      message.includes("fetch failed") ||
+      message.includes("socket hang up") ||
+      message.includes("aborted due to timeout") ||
+      message.includes("other side closed")
+    ) {
+      return true;
+    }
+    current = record.cause;
+  }
+  return false;
+}
+
+/**
+ * The bound for a single device-authorization HTTP call (bounds 1 s - 2 min, default 30 s). Absent, empty,
+ * non-numeric, zero and negative values take the default; the operator can tune it with
+ * `ROLE_MODEL_OAUTH_HTTP_TIMEOUT_MS`.
+ */
+export function resolveOauthDeviceHttpTimeoutMs(env: NodeJS.ProcessEnv = process.env): number {
+  const rawValue = env.ROLE_MODEL_OAUTH_HTTP_TIMEOUT_MS?.trim();
+  const raw = rawValue === undefined || rawValue.length === 0 ? Number.NaN : Number(rawValue);
+  if (!Number.isSafeInteger(raw) || raw <= 0) return OAUTH_DEVICE_HTTP_DEFAULT_TIMEOUT_MS;
+  return Math.min(Math.max(raw, 1_000), 120_000);
+}
+
+/**
+ * A device-authorization call with a per-attempt bound and a bounded retry for transport blips. A non-transient
+ * failure (an HTTP error the provider meant, a malformed body) is raised on the first attempt.
+ */
+async function fetchOauthDeviceResponse(
+  networkFetcher: typeof fetch,
+  url: string,
+  init: RequestInit,
+  options: { readonly attempts?: number; readonly timeoutMs?: number } = {},
+): Promise<Response> {
+  const attempts = Math.max(1, options.attempts ?? OAUTH_DEVICE_HTTP_MAX_ATTEMPTS);
+  const timeoutMs = options.timeoutMs ?? resolveOauthDeviceHttpTimeoutMs();
+  let lastError: unknown = null;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await networkFetcher(url, { ...init, signal: AbortSignal.timeout(timeoutMs) });
+    } catch (error) {
+      lastError = error;
+      if (!isTransientProviderTransportError(error) || attempt === attempts) {
+        throw error;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 250 * attempt));
+    }
+  }
+  throw lastError ?? new Error("The provider authorization request failed.");
+}
+
 function createSystemCodexAuthAdapter(networkFetcher: typeof fetch): CodexAuthAdapter {
   return {
     async startDeviceCodeLogin(input) {
       await mkdir(input.codexHome, { recursive: true });
-      const response = await networkFetcher(OPENAI_CODEX_DEVICE_USER_CODE_ENDPOINT, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ client_id: OPENAI_CODEX_OAUTH_CLIENT_ID }),
-      });
+      const response = await fetchOauthDeviceResponse(
+        networkFetcher,
+        OPENAI_CODEX_DEVICE_USER_CODE_ENDPOINT,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ client_id: OPENAI_CODEX_OAUTH_CLIENT_ID }),
+        },
+      );
       const payload = await readOpenAICodexJsonResponse(
         response,
         "OpenAI Codex device authorization failed.",
@@ -10782,14 +12762,18 @@ function createSystemCodexAuthAdapter(networkFetcher: typeof fetch): CodexAuthAd
       };
     },
     async readAccount(input) {
-      const response = await networkFetcher(OPENAI_CODEX_DEVICE_TOKEN_ENDPOINT, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          device_auth_id: input.loginId,
-          user_code: input.userCode,
-        }),
-      });
+      const response = await fetchOauthDeviceResponse(
+        networkFetcher,
+        OPENAI_CODEX_DEVICE_TOKEN_ENDPOINT,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            device_auth_id: input.loginId,
+            user_code: input.userCode,
+          }),
+        },
+      );
       const payloadText = await response.text();
       const payload =
         payloadText.length > 0 ? (JSON.parse(payloadText) as Record<string, unknown>) : {};
@@ -12876,8 +14860,11 @@ async function refreshOauthAccessToken(
   }
 
   const variant = getOauthVariant(providerPresets, liteLLMProviders, target.providerId);
-  const tokenResponse = await networkFetcher(variant.oauth.tokenEndpoint, {
+  const tokenResponse = await fetchWithTransientRetry(networkFetcher, variant.oauth.tokenEndpoint, {
     method: "POST",
+    // Run 98 addendum 39 S2: bound the refresh so a stalled token endpoint cannot
+    // hold the credentials stage open; the bootstrap already counts the attempt.
+    signal: AbortSignal.timeout(15_000),
     headers: createDeviceHeaders(
       resolveOauthHeaderDeviceId({
         runtimeStateRoot,
@@ -14481,8 +16468,490 @@ function setCorsHeaders(response: ServerResponse): void {
   response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   response.setHeader(
     "Access-Control-Allow-Headers",
-    "Content-Type, Authorization, X-Request-ID, X-Role-Model-Routing-Mode, X-Role-Model-Endpoint-Id, X-Role-Model-Requested-Role-Id",
+    "Content-Type, Authorization, X-Request-ID, X-Role-Model-Routing-Mode, X-Role-Model-Endpoint-Id, X-Role-Model-Requested-Role-Id, X-Role-Model-Channel, X-Role-Model-Scope, X-Role-Model-Authorization-Epoch, X-Role-Model-Capability",
   );
+}
+
+const MAX_OPERATOR_BODY_BYTES = 256 * 1024;
+const MAX_REQUEST_BODY_BYTES = 16 * 1024 * 1024;
+
+function bodyTooLarge(maxBytes: number, error: string): BridgeHttpError {
+  return new BridgeHttpError(413, {
+    error,
+    maxBytes,
+  });
+}
+
+function operatorBodyTooLarge(): BridgeHttpError {
+  return bodyTooLarge(MAX_OPERATOR_BODY_BYTES, "operator_body_too_large");
+}
+
+const RUNTIME_OPERATOR_CAPABILITIES = [
+  "graph",
+  "replay",
+  "evaluation",
+  "learning",
+  "extensions",
+  "storage",
+] as const;
+
+function unavailableOperatorStatus(reason: string): RuntimeOperatorStatus {
+  return {
+    schemaVersion: "role-model.operator-status.v1",
+    overall: "unavailable",
+    observedAtMs: Date.now(),
+    reason,
+    capabilities: Object.fromEntries(
+      RUNTIME_OPERATOR_CAPABILITIES.map((capability) => [capability, "unavailable"]),
+    ),
+  } as RuntimeOperatorStatus;
+}
+
+function readOperatorBearerToken(request: IncomingMessage): string | null {
+  const header = request.headers.authorization;
+  if (typeof header !== "string") {
+    return null;
+  }
+  const match = header.match(/^Bearer\s+(.+)$/iu);
+  return match?.[1]?.trim() || null;
+}
+
+function operatorTokenMatches(
+  request: IncomingMessage,
+  expectedToken: string | undefined,
+): boolean {
+  if (!expectedToken || expectedToken.trim().length === 0) {
+    return false;
+  }
+  const actualToken = readOperatorBearerToken(request);
+  if (!actualToken) {
+    return false;
+  }
+  const expectedDigest = createHash("sha256").update(expectedToken).digest();
+  const actualDigest = createHash("sha256").update(actualToken).digest();
+  return timingSafeEqual(expectedDigest, actualDigest);
+}
+
+type RuntimeOperatorContextField = "channel" | "scope" | "authorizationEpoch";
+
+function readOperatorHeader(request: IncomingMessage, name: string): string | undefined {
+  const value = request.headers[name];
+  if (Array.isArray(value)) {
+    if (value.length !== 1) {
+      throw new BridgeHttpError(403, {
+        error: "operator_context_mismatch",
+        field: name,
+      });
+    }
+    return value[0];
+  }
+  return value;
+}
+
+function normalizeOperatorContextValue(
+  field: RuntimeOperatorContextField,
+  value: string,
+): string | number {
+  if (field === "authorizationEpoch") {
+    const epoch = Number(value);
+    if (!Number.isSafeInteger(epoch) || epoch < 0) {
+      throw new BridgeHttpError(403, {
+        error: "operator_context_mismatch",
+        field,
+      });
+    }
+    return epoch;
+  }
+  if (!value.trim() || /[\r\n]/u.test(value)) {
+    throw new BridgeHttpError(403, {
+      error: "operator_context_mismatch",
+      field,
+    });
+  }
+  return value;
+}
+
+function operatorCapabilityForPath(pathname: string): string {
+  const operatorPath = pathname.replace(/^\/api\/role-model/u, "");
+  if (operatorPath === "/operator/status") return "status";
+  if (operatorPath.endsWith("/storage")) return "storage";
+  if (operatorPath.includes("/trace-roots")) return "trace";
+  if (operatorPath.includes("/replay/")) return "replay";
+  if (operatorPath.includes("/evaluation/")) return "evaluation";
+  if (operatorPath.includes("/learning")) return "learning";
+  return "operator";
+}
+
+function validateOperatorRequestContext(input: {
+  readonly request: IncomingMessage;
+  readonly url: URL;
+  readonly body: Record<string, unknown>;
+  readonly context: RuntimeOperatorContext | undefined;
+}): void {
+  const fields: readonly RuntimeOperatorContextField[] = ["channel", "scope", "authorizationEpoch"];
+  for (const field of fields) {
+    const headerName = `x-role-model-${field.replace(/[A-Z]/gu, (letter) => `-${letter.toLowerCase()}`)}`;
+    const supplied = readOperatorHeader(input.request, headerName);
+    const expected = input.context?.[field];
+    if (expected === undefined) {
+      throw new BridgeHttpError(403, {
+        error: "operator_context_mismatch",
+        field,
+      });
+    }
+    // Run 98 R17: the bearer token is the authority. The context headers stay supported
+    // for clients that bind explicitly, but a runtime with a single configured context
+    // accepts a header-less request (the UI's operator calls) and applies its own context.
+    if (supplied !== undefined && supplied !== "") {
+      const normalized = normalizeOperatorContextValue(field, supplied);
+      if (normalized !== expected) {
+        throw new BridgeHttpError(403, {
+          error: "operator_context_mismatch",
+          field,
+        });
+      }
+    }
+
+    const bodyValue = Object.prototype.hasOwnProperty.call(input.body, field)
+      ? input.body[field]
+      : undefined;
+    const queryValue = input.url.searchParams.has(field)
+      ? input.url.searchParams.get(field)
+      : undefined;
+    for (const alternate of [bodyValue, queryValue]) {
+      if (alternate === undefined || alternate === null) continue;
+      const alternateValue = normalizeOperatorContextValue(field, String(alternate));
+      if (alternateValue !== expected) {
+        throw new BridgeHttpError(403, {
+          error: "operator_context_mismatch",
+          field,
+        });
+      }
+    }
+  }
+
+  const expectedCapability = operatorCapabilityForPath(input.url.pathname);
+  const suppliedCapability = readOperatorHeader(input.request, "x-role-model-capability");
+  if (
+    suppliedCapability !== undefined &&
+    suppliedCapability !== "" &&
+    suppliedCapability !== expectedCapability
+  ) {
+    throw new BridgeHttpError(403, {
+      error: "operator_context_mismatch",
+      field: "capability",
+    });
+  }
+}
+
+function readOperatorJobId(pathname: string, prefix: string): string | null {
+  const encodedId = pathname.slice(prefix.length);
+  if (encodedId.length === 0 || encodedId.includes("/")) {
+    return null;
+  }
+  let jobId: string;
+  try {
+    jobId = decodeURIComponent(encodedId);
+  } catch {
+    return null;
+  }
+  const containsControlOrSeparator = [...jobId].some((character) => {
+    const codePoint = character.codePointAt(0) ?? 0;
+    return codePoint < 0x20 || codePoint === 0x7f || character === "/" || character === "\\";
+  });
+  if (jobId.length === 0 || jobId.length > 256 || containsControlOrSeparator) {
+    return null;
+  }
+  return jobId;
+}
+
+function writeOperatorUnauthorized(response: ServerResponse): void {
+  response.setHeader("WWW-Authenticate", "Bearer");
+  writeJson(response, 401, {
+    error: "operator_authentication_required",
+    message: "A valid operator bearer token is required.",
+  });
+}
+
+const LOOPBACK_OPERATOR_CLIENTS = new Set(["127.0.0.1", "::1", "::ffff:127.0.0.1"]);
+const LEARNING_READBACK_PREFIX = "/api/role-model/operator/learning/";
+
+/**
+ * Run 99: the Learning page is served by this runtime and used from the same machine, yet every
+ * readback required pasting the operator bearer token, so the whole surface rendered 401 until the
+ * operator found the token. Loopback reads of the Learning projections are now allowed anonymously
+ * — the same posture as the other local read APIs (telemetry, learning summary) — while every
+ * mutating operator call and every other operator surface stays token-gated. A request that *does*
+ * present an Authorization header must still present a valid one.
+ */
+const LOOPBACK_BIND_HOSTS = new Set(["127.0.0.1", "::1", "localhost", "[::1]"]);
+
+/**
+ * Run 99 (option 2): whether anonymous loopback reads of the Learning projections are allowed is
+ * explicit policy, not an accident of transport. `--anonymous-learning-reads on|off` (or
+ * `ROLE_MODEL_ANONYMOUS_LEARNING_READS`) wins; otherwise the default is `on` for a loopback bind
+ * (the operator's own machine) and `off` for a bind that accepts remote clients, where the bearer
+ * token stays the only way in.
+ */
+export function resolveAnonymousLearningReads(
+  host: string | undefined,
+  explicit?: "on" | "off" | boolean,
+): "on" | "off" {
+  if (explicit === "on" || explicit === true) return "on";
+  if (explicit === "off" || explicit === false) return "off";
+  return LOOPBACK_BIND_HOSTS.has(
+    String(host ?? "")
+      .trim()
+      .toLowerCase(),
+  )
+    ? "on"
+    : "off";
+}
+
+/**
+ * Run 98 addendum 46 — the device owner is trusted.
+ *
+ * Operator instruction (2026-09-20): "i shouldnt need a token to change policy on my own machine. token
+ * should be automatically encoded when im on local device making changes and this should be true for every
+ * path. device owner should be trusted."
+ *
+ * Every `/api/role-model/operator/*` path passes one gate, so trust is decided here rather than per route: a
+ * runtime bound to a loopback address is the operator's own machine, and a request whose peer address is
+ * loopback is that machine. The token remains accepted (and is still required for non-loopback bind hosts,
+ * or when an operator explicitly turns this off).
+ */
+export function resolveDeviceOwnerTrust(
+  host: string | undefined,
+  explicit?: "on" | "off" | boolean,
+): "on" | "off" {
+  if (explicit === "on" || explicit === true) return "on";
+  if (explicit === "off" || explicit === false) return "off";
+  return LOOPBACK_BIND_HOSTS.has(
+    String(host ?? "")
+      .trim()
+      .toLowerCase(),
+  )
+    ? "on"
+    : "off";
+}
+
+/** The request itself comes from the device: the peer address is loopback, whatever the bind host is. */
+function isLoopbackOperatorClient(request: IncomingMessage): boolean {
+  return LOOPBACK_OPERATOR_CLIENTS.has(String(request.socket?.remoteAddress ?? ""));
+}
+
+function isAnonymousLearningReadback(
+  request: IncomingMessage,
+  url: URL,
+  anonymousReads: "on" | "off",
+): boolean {
+  if (anonymousReads !== "on") return false;
+  if (request.method !== "GET") return false;
+  if (!url.pathname.startsWith(LEARNING_READBACK_PREFIX)) return false;
+  return LOOPBACK_OPERATOR_CLIENTS.has(String(request.socket?.remoteAddress ?? ""));
+}
+
+function unavailableOperatorPayload(capability: string): RuntimeOperatorStatus & {
+  readonly error: "operator_capability_unavailable";
+  readonly capability: string;
+} {
+  return {
+    ...unavailableOperatorStatus(`${capability} operator control is unavailable.`),
+    error: "operator_capability_unavailable",
+    capability,
+  };
+}
+
+function writeOperatorUnavailable(response: ServerResponse, capability: string): void {
+  writeJson(response, 503, unavailableOperatorPayload(capability));
+}
+
+/**
+ * Run 113 (addendum 09 R7): the profile learner's own generation document is the authority, and this route
+ * used to discard it. Measured live 2026-09-24: the store held an active estimate with route-package
+ * attribution (`state: "active"`, `effects` as an object) while every profile readback answered "no current
+ * estimate for this scope yet", because the usable-document check accepted only `state` in {available,
+ * unavailable} or an array-valued `effects`. The projection keeps the learner's own document (digest,
+ * generation, effects) in the bounded shape the Learning overview renders, and invents nothing.
+ */
+export function projectLearningProfileEstimate(value: unknown): Record<string, unknown> | null {
+  const record =
+    value && typeof value === "object" && !Array.isArray(value)
+      ? (value as Record<string, unknown>)
+      : null;
+  if (!record) return null;
+  const effects =
+    record.effects && typeof record.effects === "object" && !Array.isArray(record.effects)
+      ? (record.effects as Record<string, unknown>)
+      : null;
+  const generationDocument =
+    String(record.schemaVersion ?? "") === "role-model.profile-estimate-generation.v1";
+  if (!generationDocument && !(record.state === "active" && effects)) return null;
+  let sampleCount = 0;
+  for (const dimension of Object.values(effects ?? {})) {
+    const groups = Array.isArray((dimension as { groups?: unknown })?.groups)
+      ? ((dimension as { groups: unknown[] }).groups as Record<string, unknown>[])
+      : [];
+    for (const group of groups) {
+      const value = Number(group?.sampleCount);
+      if (Number.isFinite(value) && value > 0) sampleCount += value;
+    }
+  }
+  return {
+    schemaVersion: "role-model.learning-profile-inspection.v1",
+    state: "available",
+    reason: null,
+    generationKey: typeof record.generationKey === "string" ? record.generationKey : "default",
+    generation: Number.isSafeInteger(record.generation) ? record.generation : null,
+    estimateDigest: typeof record.estimateDigest === "string" ? record.estimateDigest : null,
+    estimateState: typeof record.state === "string" ? record.state : null,
+    sampleCount,
+    effects: effects ?? {},
+  };
+}
+
+/**
+ * Run 110: the profile readback is the one Learning route whose packaged composition resolves through the
+ * private-endpoint client (measured live: 503 `operator_capability_unavailable` with `detail: private transport
+ * answered null for operator/learning/profile`, while `records`, `decisions`, `policy` and `rollout` answer 200
+ * on the same build). The state readback carries the *same* profile projection and does answer in-process, so
+ * the route projects it from there instead of failing - and when neither source has an estimate, the answer is
+ * the bounded state the Learning overview already renders, not a transport error.
+ */
+export function resolveLearningProfileRouteResult(input: {
+  readonly profileReadback?: unknown;
+  readonly stateReadback?: unknown;
+}): Record<string, unknown> {
+  const usable = (value: unknown): Record<string, unknown> | null => {
+    const record =
+      value && typeof value === "object" && !Array.isArray(value)
+        ? (value as Record<string, unknown>)
+        : null;
+    if (!record) return null;
+    if (record.error === "operator_capability_unavailable") return null;
+    if (
+      record.state === "available" ||
+      record.state === "unavailable" ||
+      typeof record.confidence === "number" ||
+      Array.isArray(record.effects) ||
+      Array.isArray(record.generations)
+    ) {
+      return record;
+    }
+    return projectLearningProfileEstimate(record);
+  };
+  const direct = usable(input.profileReadback);
+  if (direct) return direct;
+  const state =
+    input.stateReadback &&
+    typeof input.stateReadback === "object" &&
+    !Array.isArray(input.stateReadback)
+      ? (input.stateReadback as Record<string, unknown>)
+      : null;
+  const projected = usable(state?.profile);
+  if (projected) return projected;
+  return {
+    schemaVersion: "role-model.learning-profile-inspection.v1",
+    state: "unavailable",
+    reason: "no current estimate for this scope yet",
+  };
+}
+
+function writeOperatorResult(response: ServerResponse, result: unknown): void {
+  const isUnavailable =
+    result &&
+    typeof result === "object" &&
+    !Array.isArray(result) &&
+    (result as Record<string, unknown>).error === "operator_capability_unavailable";
+  writeJson(response, isUnavailable ? 503 : 200, result);
+}
+
+/**
+ * Run 98 addendum 44 `A44-S4`: attach the router's own policy resolution to a policy readback.
+ *
+ * Best-effort by construction: a resolution probe that throws or answers nothing leaves the readback exactly
+ * as the sidecar sent it, because a diagnostic must never be able to break the operator surface it explains.
+ */
+export function attachRouterPolicyResolution(
+  payload: unknown,
+  resolve: (() => unknown) | undefined,
+): unknown {
+  if (!resolve || payload === null || typeof payload !== "object" || Array.isArray(payload)) {
+    return payload;
+  }
+  let resolution: unknown;
+  try {
+    resolution = resolve();
+  } catch {
+    return payload;
+  }
+  if (!resolution || typeof resolution !== "object" || Array.isArray(resolution)) return payload;
+  return { ...(payload as Record<string, unknown>), routerResolution: resolution };
+}
+
+/**
+ * Run 99 R28: a refused *mutation* must not be reported as success.
+ *
+ * Observed live: activating an unknown pack answered HTTP 200 with
+ * `role-model.degradation-receipt.v1` (`degraded: true`, reason "activation requires a recorded
+ * pack"), and the Learning UI reported "Activation receipt written for <packId>" while nothing
+ * changed. Reads keep their degradation-receipt semantics; mutations answer 409 (or 503 when the
+ * capability itself is unavailable) and carry the receipt so the surface can show the reason.
+ */
+function writeOperatorMutationResult(response: ServerResponse, result: unknown): void {
+  const record =
+    result && typeof result === "object" && !Array.isArray(result)
+      ? (result as Record<string, unknown>)
+      : null;
+  if (record?.error === "operator_capability_unavailable") {
+    writeJson(response, 503, result);
+    return;
+  }
+  if (record?.degraded === true) {
+    writeJson(response, 409, result);
+    return;
+  }
+  writeJson(response, 200, result);
+}
+
+function isReadyHealthProjection(value: unknown): boolean {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const record = value as Record<string, unknown>;
+  if (record.ready === false) return false;
+  const readiness = record.readiness;
+  if (readiness && typeof readiness === "object" && !Array.isArray(readiness)) {
+    const state = (readiness as Record<string, unknown>).state;
+    if (state !== undefined && state !== "ready" && state !== "healthy") return false;
+  }
+  const operator = record.operator;
+  if (operator && typeof operator === "object" && !Array.isArray(operator)) {
+    const overall = (operator as Record<string, unknown>).overall;
+    if (
+      overall !== undefined &&
+      overall !== "available" &&
+      overall !== "ready" &&
+      overall !== "healthy"
+    ) {
+      return false;
+    }
+  }
+  return record.status === "healthy" || record.status === "ok";
+}
+
+function writeHealthProjection(response: ServerResponse, value: unknown): void {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    writeJson(response, 503, {
+      status: "unavailable",
+      ready: false,
+      reason: "health_status_invalid",
+    });
+    return;
+  }
+  const body = value as Record<string, unknown>;
+  writeJson(response, isReadyHealthProjection(body) ? 200 : 503, {
+    ...body,
+    ready: isReadyHealthProjection(body),
+  });
 }
 
 function createRequestHandler(options: StartBridgeServerOptions) {
@@ -14503,18 +16972,23 @@ function createRequestHandler(options: StartBridgeServerOptions) {
     const url = new URL(request.url, `http://${options.host}`);
 
     if (request.method === "GET" && url.pathname === "/healthz") {
-      writeJson(
-        response,
-        200,
-        options.readHealthStatus
-          ? await options.readHealthStatus()
-          : {
-              status: "healthy",
-              executionMode: "decision_only",
-              vendors: {},
-              inactiveVendors: [],
-            },
-      );
+      if (!options.readHealthStatus) {
+        writeJson(response, 503, {
+          status: "unavailable",
+          ready: false,
+          reason: "health_status_not_configured",
+        });
+        return;
+      }
+      try {
+        writeHealthProjection(response, await options.readHealthStatus());
+      } catch {
+        writeJson(response, 503, {
+          status: "unavailable",
+          ready: false,
+          reason: "health_check_failed",
+        });
+      }
       return;
     }
 
@@ -14563,6 +17037,689 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       return;
     }
 
+    if (url.pathname.startsWith("/api/role-model/operator/")) {
+      const suppliedAuthorization = readOperatorHeader(request, "authorization");
+      const presentsCredential =
+        typeof suppliedAuthorization === "string" && suppliedAuthorization.length > 0;
+      // Run 98 addendum 46: the device owner is trusted for every operator path — reads and mutations alike.
+      const deviceOwner =
+        resolveDeviceOwnerTrust(options.host, options.deviceOwnerTrust) === "on" &&
+        isLoopbackOperatorClient(request);
+      const authorized = deviceOwner || operatorTokenMatches(request, options.operatorAuthToken);
+      const anonymousLearningRead =
+        !presentsCredential &&
+        !authorized &&
+        isAnonymousLearningReadback(
+          request,
+          url,
+          resolveAnonymousLearningReads(options.host, options.anonymousLearningReads),
+        );
+      if (!authorized && !anonymousLearningRead) {
+        writeOperatorUnauthorized(response);
+        return;
+      }
+
+      try {
+        // Run 99 R28: oversized readbacks arrive as an externalized transfer marker; decode them
+        // from the worker durable-output store so the Learning surface shows the durable state
+        // instead of an empty page.
+        const decodeReadback = (value: unknown): unknown =>
+          options.runtimeStateRoot
+            ? decodeExternalizedOperatorReadback({
+                stateRoot: options.runtimeStateRoot,
+                value,
+              })
+            : value;
+        const operatorBody =
+          request.method === "GET" ? {} : await readJsonBody(request, MAX_OPERATOR_BODY_BYTES);
+        validateOperatorRequestContext({
+          request,
+          url,
+          body: operatorBody,
+          context: options.operatorContext,
+        });
+
+        /**
+         * Run 100 addendum `handoff-evidence-durability.addendum-06` S42: the operator readback for capture
+         * evidence.
+         *
+         * The spine's completions depend on reading a durable capture back from the private boundary, and when
+         * that read fails the only trace was a reason string on a resume entry (`capture_missing`, then a
+         * disposition). The runtime can answer the question directly - does *this* request id resolve, and if
+         * not, why - which is what an operator needs to tell "the evidence is gone" from "the boundary cannot
+         * read it".
+         */
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/role-model/operator/capture-evidence"
+        ) {
+          if (!options.readCaptureEvidence) {
+            writeOperatorUnavailable(response, "capture evidence readback");
+            return;
+          }
+          const requestId = url.searchParams.get("requestId") ?? "";
+          writeOperatorResult(response, await options.readCaptureEvidence(requestId));
+          return;
+        }
+
+        if (request.method === "GET" && url.pathname === "/api/role-model/operator/status") {
+          if (!options.readOperatorStatus) {
+            writeOperatorUnavailable(response, "operator status");
+            return;
+          }
+          writeOperatorResult(response, await options.readOperatorStatus());
+          return;
+        }
+
+        if (request.method === "GET" && url.pathname === "/api/role-model/operator/trace-roots") {
+          if (!options.listOperatorTraceRoots) {
+            writeOperatorUnavailable(response, "trace root inspection");
+            return;
+          }
+          writeOperatorResult(
+            response,
+            await options.listOperatorTraceRoots(Object.fromEntries(url.searchParams.entries())),
+          );
+          return;
+        }
+
+        const traceRootPrefix = "/api/role-model/operator/trace-roots/";
+        if (request.method === "GET" && url.pathname.startsWith(traceRootPrefix)) {
+          if (!options.readOperatorTraceRoot) {
+            writeOperatorUnavailable(response, "trace root inspection");
+            return;
+          }
+          const traceRootId = readOperatorJobId(url.pathname, traceRootPrefix);
+          if (!traceRootId) {
+            writeJson(response, 400, { error: "invalid trace root id" });
+            return;
+          }
+          writeOperatorResult(response, await options.readOperatorTraceRoot(traceRootId));
+          return;
+        }
+
+        if (request.method === "GET" && url.pathname === "/api/role-model/operator/replay/jobs") {
+          if (!options.listReplayJobs) {
+            writeOperatorUnavailable(response, "replay inspection");
+            return;
+          }
+          writeOperatorResult(
+            response,
+            await options.listReplayJobs(Object.fromEntries(url.searchParams.entries())),
+          );
+          return;
+        }
+
+        if (request.method === "POST" && url.pathname === "/api/role-model/operator/replay/jobs") {
+          if (!options.createReplayJob) {
+            writeOperatorUnavailable(response, "replay creation");
+            return;
+          }
+          writeOperatorResult(response, await options.createReplayJob(operatorBody));
+          return;
+        }
+
+        const replayCancelPrefix = "/api/role-model/operator/replay/jobs/";
+        if (request.method === "GET" && url.pathname.startsWith(replayCancelPrefix)) {
+          const suffix = url.pathname.slice(replayCancelPrefix.length);
+          const resultsSuffix = "/results";
+          const isResults = suffix.endsWith(resultsSuffix);
+          const jobId = readOperatorJobId(
+            isResults ? suffix.slice(0, -resultsSuffix.length) : suffix,
+            "",
+          );
+          if (!jobId) {
+            writeJson(response, 400, { error: "invalid replay job id" });
+            return;
+          }
+          if (isResults) {
+            if (!options.readReplayResults) {
+              writeOperatorUnavailable(response, "replay results inspection");
+              return;
+            }
+            writeOperatorResult(response, await options.readReplayResults(jobId));
+            return;
+          }
+          if (!options.readReplayJob) {
+            writeOperatorUnavailable(response, "replay inspection");
+            return;
+          }
+          writeOperatorResult(response, await options.readReplayJob(jobId));
+          return;
+        }
+        if (
+          request.method === "POST" &&
+          url.pathname.endsWith("/cancel") &&
+          url.pathname.startsWith(replayCancelPrefix)
+        ) {
+          if (!options.cancelReplayJob) {
+            writeOperatorUnavailable(response, "replay cancellation");
+            return;
+          }
+          const encodedJobId = url.pathname.slice(replayCancelPrefix.length, -"/cancel".length);
+          const jobId = readOperatorJobId(encodedJobId, "");
+          if (!jobId) {
+            writeJson(response, 400, { error: "invalid replay job id" });
+            return;
+          }
+          writeOperatorResult(response, await options.cancelReplayJob(jobId, operatorBody));
+          return;
+        }
+
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/role-model/operator/evaluation/jobs"
+        ) {
+          if (!options.listEvaluationJobs) {
+            writeOperatorUnavailable(response, "evaluation inspection");
+            return;
+          }
+          writeOperatorResult(
+            response,
+            await options.listEvaluationJobs(Object.fromEntries(url.searchParams.entries())),
+          );
+          return;
+        }
+
+        const evaluationJobPrefix = "/api/role-model/operator/evaluation/jobs/";
+        if (url.pathname.startsWith(evaluationJobPrefix)) {
+          const suffix = url.pathname.slice(evaluationJobPrefix.length);
+          const action = suffix.endsWith("/cancel")
+            ? "cancel"
+            : suffix.endsWith("/retry")
+              ? "retry"
+              : suffix.endsWith("/trials")
+                ? "trials"
+                : suffix.endsWith("/scorers")
+                  ? "scorers"
+                  : suffix.endsWith("/comparisons")
+                    ? "comparisons"
+                    : suffix.endsWith("/groups")
+                      ? "groups"
+                      : null;
+          const encodedJobId = action ? suffix.slice(0, -(action.length + 1)) : suffix;
+          const jobId = readOperatorJobId(encodedJobId, "");
+          if (!jobId) {
+            writeJson(response, 400, { error: "invalid evaluation job id" });
+            return;
+          }
+          if (request.method === "GET" && action === null) {
+            if (!options.readEvaluationJob) {
+              writeOperatorUnavailable(response, "evaluation inspection");
+              return;
+            }
+            writeOperatorResult(response, await options.readEvaluationJob(jobId));
+            return;
+          }
+          if (request.method === "GET" && action === "trials") {
+            if (!options.listEvaluationTrials) {
+              writeOperatorUnavailable(response, "evaluation trials inspection");
+              return;
+            }
+            writeOperatorResult(response, await options.listEvaluationTrials(jobId));
+            return;
+          }
+          if (request.method === "GET" && action === "scorers") {
+            if (!options.listEvaluationScorers) {
+              writeOperatorUnavailable(response, "evaluation scorers inspection");
+              return;
+            }
+            writeOperatorResult(response, await options.listEvaluationScorers(jobId));
+            return;
+          }
+          if (request.method === "GET" && action === "comparisons") {
+            if (!options.listEvaluationComparisons) {
+              writeOperatorUnavailable(response, "evaluation comparisons inspection");
+              return;
+            }
+            writeOperatorResult(response, await options.listEvaluationComparisons(jobId));
+            return;
+          }
+          if (request.method === "GET" && action === "groups") {
+            if (!options.listEvaluationGroups) {
+              writeOperatorUnavailable(response, "evaluation groups inspection");
+              return;
+            }
+            writeOperatorResult(response, await options.listEvaluationGroups(jobId));
+            return;
+          }
+          if (request.method === "POST" && action === "cancel") {
+            if (!options.cancelEvaluationJob) {
+              writeOperatorUnavailable(response, "evaluation cancellation");
+              return;
+            }
+            writeOperatorResult(response, await options.cancelEvaluationJob(jobId, operatorBody));
+            return;
+          }
+          if (request.method === "POST" && action === "retry") {
+            if (!options.retryEvaluationJob) {
+              writeOperatorUnavailable(response, "evaluation retry");
+              return;
+            }
+            writeOperatorResult(response, await options.retryEvaluationJob(jobId, operatorBody));
+            return;
+          }
+        }
+
+        if (request.method === "GET" && url.pathname === "/api/role-model/operator/learning") {
+          if (!options.readLearningState) {
+            writeOperatorUnavailable(response, "learning inspection");
+            return;
+          }
+          writeOperatorResult(response, await options.readLearningState());
+          return;
+        }
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/role-model/operator/learning/profile"
+        ) {
+          /**
+           * Run 110: this is the one Learning route whose packaged composition resolves through the
+           * private-endpoint client, which the packaged runtime is not given (measured live: 503 with
+           * `detail: private transport answered null for operator/learning/profile`, while its siblings answer
+           * 200). The state readback carries the same profile projection in-process, so the route projects it
+           * from there; with no estimate in either source it answers the bounded state the UI renders.
+           */
+          /**
+           * `Promise.resolve` around each call: the packaged callbacks are typed as async, but a composition
+           * that answers synchronously must not turn a readback into a 409 - measured by the route-parity suite,
+           * which drives this route with plain-object callbacks.
+           */
+          const [profileReadback, stateReadback] = await Promise.all([
+            options.readLearningProfile
+              ? Promise.resolve(options.readLearningProfile()).catch(() => null)
+              : Promise.resolve(null),
+            options.readLearningState
+              ? Promise.resolve(options.readLearningState()).catch(() => null)
+              : Promise.resolve(null),
+          ]);
+          writeOperatorResult(
+            response,
+            resolveLearningProfileRouteResult({ profileReadback, stateReadback }),
+          );
+          return;
+        }
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/role-model/operator/learning/advisory"
+        ) {
+          if (!options.readLearningAdvisory) {
+            writeOperatorUnavailable(response, "learning advisory");
+            return;
+          }
+          writeOperatorResult(response, await options.readLearningAdvisory());
+          return;
+        }
+        if (
+          request.method === "POST" &&
+          url.pathname === "/api/role-model/operator/learning/mode"
+        ) {
+          if (!options.updateLearningMode) {
+            writeOperatorUnavailable(response, "learning mode update");
+            return;
+          }
+          writeOperatorMutationResult(response, await options.updateLearningMode(operatorBody));
+          return;
+        }
+        if (
+          request.method === "POST" &&
+          url.pathname === "/api/role-model/operator/learning/rollback"
+        ) {
+          if (!options.rollbackLearning) {
+            writeOperatorUnavailable(response, "learning rollback");
+            return;
+          }
+          writeOperatorMutationResult(response, await options.rollbackLearning(operatorBody));
+          return;
+        }
+        // Run 98 R17: Learning UI readback and rollout actions.
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/role-model/operator/learning/policy"
+        ) {
+          if (!options.readLearningPolicy) {
+            writeOperatorUnavailable(response, "learning policy readback");
+            return;
+          }
+          writeOperatorResult(
+            response,
+            attachRouterPolicyResolution(
+              await options.readLearningPolicy(Object.fromEntries(url.searchParams)),
+              options.resolveLearningPolicySource,
+            ),
+          );
+          return;
+        }
+        if (
+          request.method === "POST" &&
+          url.pathname === "/api/role-model/operator/learning/policy"
+        ) {
+          if (!options.setLearningPolicy) {
+            writeOperatorUnavailable(response, "learning policy change");
+            return;
+          }
+          writeOperatorMutationResult(response, await options.setLearningPolicy(operatorBody));
+          return;
+        }
+        if (
+          request.method === "POST" &&
+          url.pathname === "/api/role-model/operator/learning/policy/rollback"
+        ) {
+          if (!options.rollbackLearningPolicy) {
+            writeOperatorUnavailable(response, "learning policy rollback");
+            return;
+          }
+          writeOperatorMutationResult(response, await options.rollbackLearningPolicy(operatorBody));
+          return;
+        }
+        // Run 98 addendum 34 S7 (addendum 33 S6's missing caller): re-score stored trials under one
+        // pinned scorer version, so a corrected ruler corrects history instead of discarding it.
+        if (
+          request.method === "POST" &&
+          url.pathname === "/api/role-model/operator/learning/rescore"
+        ) {
+          if (!options.rescoreLearningScores) {
+            writeOperatorUnavailable(response, "learning re-score");
+            return;
+          }
+          writeOperatorMutationResult(response, await options.rescoreLearningScores(operatorBody));
+          return;
+        }
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/role-model/operator/learning/rollout"
+        ) {
+          if (!options.readLearningRollout) {
+            writeOperatorUnavailable(response, "learning rollout readback");
+            return;
+          }
+          writeOperatorResult(
+            response,
+            decodeReadback(await options.readLearningRollout(Object.fromEntries(url.searchParams))),
+          );
+          return;
+        }
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/role-model/operator/learning/records"
+        ) {
+          if (!options.readLearningRecords) {
+            writeOperatorUnavailable(response, "learning records readback");
+            return;
+          }
+          writeOperatorResult(
+            response,
+            decodeReadback(await options.readLearningRecords(Object.fromEntries(url.searchParams))),
+          );
+          return;
+        }
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/role-model/operator/learning/decisions"
+        ) {
+          if (!options.readLearningDecisions) {
+            writeOperatorUnavailable(response, "learning decisions readback");
+            return;
+          }
+          writeOperatorResult(
+            response,
+            decodeReadback(
+              await options.readLearningDecisions(Object.fromEntries(url.searchParams)),
+            ),
+          );
+          return;
+        }
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/role-model/operator/learning/measurement"
+        ) {
+          if (!options.readLearningMeasurement) {
+            writeOperatorUnavailable(response, "learning measurement readback");
+            return;
+          }
+          writeOperatorResult(
+            response,
+            await options.readLearningMeasurement(Object.fromEntries(url.searchParams)),
+          );
+          return;
+        }
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/role-model/operator/learning/activity"
+        ) {
+          if (!options.readLearningActivity) {
+            writeOperatorUnavailable(response, "learning activity readback");
+            return;
+          }
+          writeOperatorResult(
+            response,
+            await options.readLearningActivity(Object.fromEntries(url.searchParams)),
+          );
+          return;
+        }
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/role-model/operator/learning/history"
+        ) {
+          if (!options.readLearningHistory) {
+            writeOperatorUnavailable(response, "learning history readback");
+            return;
+          }
+          writeOperatorResult(
+            response,
+            await options.readLearningHistory(Object.fromEntries(url.searchParams)),
+          );
+          return;
+        }
+        /**
+         * Run 101 R9 (Phase 5 repair): the queue read model, its bounded configuration and the
+         * admin actions. Without these routes the packaged runtime answered 404 for every queue
+         * call, so `/app/observe/queues` and the Learning Configuration card rendered empty even
+         * though the sidecar served them.
+         */
+        if (url.pathname === "/api/role-model/operator/queues" && request.method === "GET") {
+          if (!options.readQueues) {
+            writeOperatorUnavailable(response, "queue readback");
+            return;
+          }
+          writeOperatorResult(
+            response,
+            await options.readQueues(Object.fromEntries(url.searchParams)),
+          );
+          return;
+        }
+        if (url.pathname === "/api/role-model/operator/queues/config") {
+          if (request.method === "GET") {
+            if (!options.readQueueConfig) {
+              writeOperatorUnavailable(response, "queue configuration readback");
+              return;
+            }
+            writeOperatorResult(response, await options.readQueueConfig());
+            return;
+          }
+          if (request.method === "POST") {
+            if (!options.setQueueConfig) {
+              writeOperatorUnavailable(response, "queue configuration write");
+              return;
+            }
+            writeOperatorMutationResult(response, await options.setQueueConfig(operatorBody));
+            return;
+          }
+        }
+        if (
+          url.pathname === "/api/role-model/operator/queues/receipts" &&
+          request.method === "GET"
+        ) {
+          if (!options.readQueueReceipts) {
+            writeOperatorUnavailable(response, "queue receipts readback");
+            return;
+          }
+          writeOperatorResult(
+            response,
+            await options.readQueueReceipts(Object.fromEntries(url.searchParams)),
+          );
+          return;
+        }
+        if (url.pathname.startsWith("/api/role-model/operator/queues/")) {
+          const segments = url.pathname
+            .slice("/api/role-model/operator/queues/".length)
+            .split("/")
+            .filter((part) => part.length > 0)
+            .map((part) => decodeURIComponent(part));
+          const [queueName, resource, jobId, action] = segments;
+          if (queueName && resource === "jobs") {
+            if (segments.length === 2 && request.method === "GET") {
+              if (!options.readQueueJobs) {
+                writeOperatorUnavailable(response, "queue jobs readback");
+                return;
+              }
+              writeOperatorResult(
+                response,
+                await options.readQueueJobs(queueName, Object.fromEntries(url.searchParams)),
+              );
+              return;
+            }
+            if (segments.length === 3 && request.method === "GET") {
+              if (!options.readQueueJob) {
+                writeOperatorUnavailable(response, "queue job readback");
+                return;
+              }
+              writeOperatorResult(response, await options.readQueueJob(queueName, jobId));
+              return;
+            }
+            if (segments.length === 4 && request.method === "POST" && action === "retry") {
+              if (!options.retryQueueJob) {
+                writeOperatorUnavailable(response, "queue job retry");
+                return;
+              }
+              writeOperatorMutationResult(response, await options.retryQueueJob(queueName, jobId));
+              return;
+            }
+            if (segments.length === 4 && request.method === "POST" && action === "cancel") {
+              if (!options.cancelQueueJob) {
+                writeOperatorUnavailable(response, "queue job cancel");
+                return;
+              }
+              writeOperatorMutationResult(response, await options.cancelQueueJob(queueName, jobId));
+              return;
+            }
+          }
+          if (queueName && resource === "drain" && request.method === "POST") {
+            if (!options.setQueueDrain) {
+              writeOperatorUnavailable(response, "queue drain");
+              return;
+            }
+            writeOperatorMutationResult(
+              response,
+              await options.setQueueDrain(queueName, operatorBody),
+            );
+            return;
+          }
+        }
+        if (
+          request.method === "POST" &&
+          url.pathname === "/api/role-model/operator/learning/activate-pack"
+        ) {
+          if (!options.activateLearningPack) {
+            writeOperatorUnavailable(response, "learning pack activation");
+            return;
+          }
+          writeOperatorMutationResult(response, await options.activateLearningPack(operatorBody));
+          return;
+        }
+        if (
+          request.method === "POST" &&
+          url.pathname === "/api/role-model/operator/learning/rollback-pack"
+        ) {
+          if (!options.rollbackLearningPack) {
+            writeOperatorUnavailable(response, "learning pack rollback");
+            return;
+          }
+          writeOperatorMutationResult(response, await options.rollbackLearningPack(operatorBody));
+          return;
+        }
+        if (
+          request.method === "POST" &&
+          url.pathname === "/api/role-model/operator/learning/materialize-route-ladders"
+        ) {
+          if (!options.materializeRouteLadders) {
+            writeOperatorUnavailable(response, "learning route ladder materialization");
+            return;
+          }
+          writeOperatorMutationResult(
+            response,
+            await options.materializeRouteLadders(operatorBody),
+          );
+          return;
+        }
+        /**
+         * Run 98 addendum 54 (implementing addendum 53 §3): A44-S2's sustained-breach half needs a way to record
+         * a guardrail breach through the runtime's own extension path. The knowledge store implements the window
+         * and the rollback, but its only caller is the runtime's signal loop, which staged traffic never makes
+         * fire (0 breaches in both stores), so the live half could only be claimed, not measured. The route
+         * forwards to the sidecar, which refuses it on the production channel.
+         */
+        if (
+          request.method === "POST" &&
+          url.pathname === "/api/role-model/operator/learning/guardrail-breach"
+        ) {
+          if (!options.recordLearningGuardrailBreach) {
+            writeOperatorUnavailable(response, "learning guardrail breach");
+            return;
+          }
+          writeOperatorMutationResult(
+            response,
+            await options.recordLearningGuardrailBreach(operatorBody),
+          );
+          return;
+        }
+        /**
+         * Run 98 addendum 57 slice 1: the explicit undo for a scenario's own guardrail measurement — it releases
+         * the breach rows the caller names and restores the activation they displaced, so a phase-5 run leaves
+         * the live scope as it found it. Non-production only, like the breach route itself.
+         */
+        if (
+          request.method === "POST" &&
+          url.pathname === "/api/role-model/operator/learning/scenario-restore"
+        ) {
+          if (!options.restoreLearningScenarioActivation) {
+            writeOperatorUnavailable(response, "learning scenario restore");
+            return;
+          }
+          writeOperatorMutationResult(
+            response,
+            await options.restoreLearningScenarioActivation(operatorBody),
+          );
+          return;
+        }
+        if (
+          request.method === "POST" &&
+          url.pathname === "/api/role-model/operator/learning/kill-switch"
+        ) {
+          if (!options.engageLearningKillSwitch) {
+            writeOperatorUnavailable(response, "learning kill switch");
+            return;
+          }
+          writeOperatorMutationResult(
+            response,
+            await options.engageLearningKillSwitch(operatorBody),
+          );
+          return;
+        }
+
+        writeJson(response, 404, { error: "operator route not found" });
+      } catch (error) {
+        if (error instanceof BridgeHttpError) {
+          writeJson(response, error.statusCode, error.body);
+          return;
+        }
+        writeJson(response, 409, {
+          error: error instanceof Error ? error.message : "operator operation failed",
+        });
+      }
+      return;
+    }
+
     const registry = options.getRegistry?.() ?? options.registry;
 
     if (request.method === "GET" && url.pathname === "/v1/models") {
@@ -14586,9 +17743,29 @@ function createRequestHandler(options: StartBridgeServerOptions) {
     }
 
     if (request.method === "POST" && url.pathname === "/v1/chat/completions") {
+      const requestId = readBridgeRequestId(request);
+      // Run 98 addendum 40 (L1): the wall clock the client is waiting on starts when the request
+      // reaches this handler, not when the provider accepts it. Declared outside the try so the
+      // failure path records the same client-visible duration.
+      const requestStartedAtMs = Date.now();
+      const recordClientLatency = (): void => {
+        options.recordClientLatency?.({
+          requestId,
+          requestLatencyMs: Math.max(0, Date.now() - requestStartedAtMs),
+        });
+      };
+      // The duration is only known once the response has been flushed. Hooking `finish` covers every
+      // outcome, including failures written by the outer error handler.
+      response.once("finish", recordClientLatency);
       try {
-        const requestId = readBridgeRequestId(request);
-        const requestAbortSignal = createBridgeRequestAbortSignal(request, response);
+        /**
+         * Run 101 addendum 13: the caller's disconnect signal and the per-attempt provider bound are merged, so
+         * one stalled attempt can no longer hold the request until the client gives up.
+         */
+        const requestAbortSignal = AbortSignal.any([
+          createBridgeRequestAbortSignal(request, response),
+          AbortSignal.timeout(resolveLiveAttemptTimeoutMs()),
+        ]);
         const requestOptions = mergeBridgeRequestAbortSignal(
           readBridgeExecutionRequestOptions(request),
           requestAbortSignal,
@@ -14601,7 +17778,13 @@ function createRequestHandler(options: StartBridgeServerOptions) {
           const streamWriter: BridgeStreamWriter = async (chunk, metadata) => {
             const serializedChunk = `data: ${JSON.stringify(chunk)}\n\n`;
             if (!wroteStreamChunk) {
-              if (!metadata) {
+              /**
+               * Run 101 addendum 19: commit the downstream stream only once the attempt has delivered something the
+               * client can keep - real content or a tool call. A role-only opening delta leaves the buffer intact, so
+               * a reset before the first token still leaves `streamedChunkCount === 0` and the attempt can retry or
+               * fail over instead of handing pi an open stream that ends without a `finish_reason`.
+               */
+              if (!metadata || !hasSubstantiveStreamDelta(chunk)) {
                 pendingChunks.push(serializedChunk);
                 return;
               }
@@ -14623,12 +17806,33 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             }
             await writeSseChunk(response, serializedChunk, requestAbortSignal);
           };
-          const result = await options.executeChatCompletions(
-            parsedBody,
-            requestId,
-            streamWriter,
-            requestOptions,
-          );
+          const result = await options
+            .executeChatCompletions(parsedBody, requestId, streamWriter, requestOptions)
+            .catch(async (error: unknown) => {
+              /**
+               * Run 101 addendum 21: once the head is committed the status line is spent, so a failure cannot be
+               * reported as an HTTP status. End the stream with a named error frame and the `[DONE]` sentinel so the
+               * client sees a complete, parseable termination instead of a bare EOF.
+               */
+              if (!wroteStreamChunk) {
+                throw error;
+              }
+              try {
+                await writeSseChunk(
+                  response,
+                  `data: ${JSON.stringify(buildTerminalStreamErrorPayload(error))}\n\n`,
+                  requestAbortSignal,
+                );
+                await writeSseChunk(response, "data: [DONE]\n\n", requestAbortSignal);
+              } catch {
+                // The client is already gone; nothing left to report to.
+              }
+              response.end();
+              return null;
+            });
+          if (result === null) {
+            return;
+          }
           if (!wroteStreamChunk) {
             response.writeHead(200, {
               "content-type": "text/event-stream; charset=utf-8",
@@ -14698,8 +17902,18 @@ function createRequestHandler(options: StartBridgeServerOptions) {
     }
 
     if (request.method === "POST" && url.pathname === "/v1/responses") {
+      const requestId = readBridgeRequestId(request);
+      // Run 98 addendum 40 (L1): same client-visible clock as the chat-completions surface.
+      const requestStartedAtMs = Date.now();
+      const recordClientLatency = (): void => {
+        options.recordClientLatency?.({
+          requestId,
+          requestLatencyMs: Math.max(0, Date.now() - requestStartedAtMs),
+        });
+      };
+      // Same contract as the chat-completions surface: record once the response is flushed.
+      response.once("finish", recordClientLatency);
       try {
-        const requestId = readBridgeRequestId(request);
         const requestAbortSignal = createBridgeRequestAbortSignal(request, response);
         const requestOptions = mergeBridgeRequestAbortSignal(
           readBridgeExecutionRequestOptions(request),
@@ -14879,6 +18093,68 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       return;
     }
 
+    const trackBReceiptMatch = url.pathname.match(
+      /^\/api\/role-model\/track-b\/shadow-receipts\/([^/]+)$/,
+    );
+    if (request.method === "GET" && trackBReceiptMatch) {
+      if (!options.readTrackBPostObservationReceipt) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      const requestId = decodeURIComponent(trackBReceiptMatch[1]);
+      if (!requestId || requestId.length > 256 || /[\r\n]/.test(requestId)) {
+        writeJson(response, 400, { error: "invalid request id" });
+        return;
+      }
+      const receipt = await options.readTrackBPostObservationReceipt(requestId);
+      if (!receipt) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, receipt);
+      return;
+    }
+
+    if (
+      request.method === "POST" &&
+      url.pathname === "/api/role-model/track-b/contribution/aggregate"
+    ) {
+      if (!options.recordTrackBContributionAggregate) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      try {
+        writeJson(
+          response,
+          200,
+          await options.recordTrackBContributionAggregate(await readJsonBody(request)),
+        );
+      } catch (error) {
+        writeJson(response, 409, {
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+      return;
+    }
+
+    if (
+      request.method === "POST" &&
+      url.pathname === "/api/role-model/track-b/contribution/retry"
+    ) {
+      if (!options.retryTrackBContributionAggregates) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      try {
+        writeJson(response, 200, await options.retryTrackBContributionAggregates());
+      } catch (error) {
+        writeJson(response, 409, {
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+      return;
+    }
+
     if (
       request.method === "POST" &&
       url.pathname === "/api/role-model/track-b/extension-readback"
@@ -14895,6 +18171,70 @@ function createRequestHandler(options: StartBridgeServerOptions) {
         );
       } catch (error) {
         writeJson(response, 400, {
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+      return;
+    }
+
+    if (request.method === "POST" && url.pathname === "/api/role-model/track-b/replay") {
+      if (!options.runTrackBSupervisedReplay) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      try {
+        writeJson(
+          response,
+          200,
+          await options.runTrackBSupervisedReplay(await readJsonBody(request)),
+        );
+      } catch (error) {
+        writeJson(response, 409, {
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/track-b/replay/status") {
+      if (!options.readTrackBReplayStatus) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      try {
+        writeJson(response, 200, await options.readTrackBReplayStatus());
+      } catch (error) {
+        writeJson(response, 409, {
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+      return;
+    }
+
+    if (request.method === "POST" && url.pathname === "/api/role-model/track-b/replay/control") {
+      if (!options.controlTrackBReplay) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      try {
+        writeJson(response, 200, await options.controlTrackBReplay(await readJsonBody(request)));
+      } catch (error) {
+        writeJson(response, 409, {
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/track-b/learning/summary") {
+      if (!options.readTrackBLearningSummary) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      try {
+        writeJson(response, 200, await options.readTrackBLearningSummary());
+      } catch (error) {
+        writeJson(response, 409, {
           error: error instanceof Error ? error.message : String(error),
         });
       }
@@ -14969,6 +18309,15 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       return;
     }
 
+    if (request.method === "GET" && url.pathname === "/api/role-model/development-verification") {
+      if (!options.readDevelopmentVerificationStatus) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.readDevelopmentVerificationStatus());
+      return;
+    }
+
     if (request.method === "GET" && url.pathname === "/api/role-model/storage-retention") {
       if (!options.readStorageRetention) {
         writeJson(response, 404, { error: "not found" });
@@ -14983,7 +18332,13 @@ function createRequestHandler(options: StartBridgeServerOptions) {
         writeJson(response, 404, { error: "not found" });
         return;
       }
-      writeJson(response, 200, await options.dryRunStorageRetention());
+      try {
+        writeJson(response, 200, await options.dryRunStorageRetention(await readJsonBody(request)));
+      } catch (error) {
+        writeJson(response, 400, {
+          error: error instanceof Error ? error.message : "storage retention dry-run failed",
+        });
+      }
       return;
     }
 
@@ -15682,6 +19037,21 @@ function createRequestHandler(options: StartBridgeServerOptions) {
         return;
       }
       writeJson(response, 200, await options.readActiveBenchmarkRun());
+      return;
+    }
+
+    /**
+     * Run 98 addendum 43 S4: the runs list above is artifact-backed, so a sweep whose result artifact was
+     * never written disappears even though its samples are durable and are what the model pool's quality
+     * axis reads. This route answers what the samples say, with a state that cannot report a stopped sweep
+     * as finished.
+     */
+    if (request.method === "GET" && url.pathname === "/api/role-model/benchmark/sample-runs") {
+      if (!options.readBenchmarkSampleRunStates) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.readBenchmarkSampleRunStates());
       return;
     }
 
@@ -16577,6 +19947,34 @@ export async function startBridgeServer(options: StartBridgeServerOptions): Prom
   };
 }
 
+/**
+ * Project the opaque provider-attempt identifiers retained by a persisted runtime
+ * observation. Compact post-cutover observations can omit execution semantics
+ * while retaining their derived provider evidence, so the public decision view
+ * must use that equivalent recorded evidence rather than reporting an empty
+ * attempt ledger.
+ */
+export function projectPublicProviderAttemptIds(observation: object): readonly string[] {
+  const readAttemptIds = (value: unknown, field: string): readonly string[] => {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return [];
+    const candidate = (value as Readonly<Record<string, unknown>>)[field];
+    if (!Array.isArray(candidate)) return [];
+    return candidate.filter(
+      (entry): entry is string => typeof entry === "string" && entry.trim().length > 0,
+    );
+  };
+  const source = observation as Readonly<Record<string, unknown>>;
+  const executionSemantics = readAttemptIds(source.executionSemantics, "providerAttemptIds");
+  const providerEvidence = readAttemptIds(source.providerEvidence, "attemptIds");
+  // Provider evidence names the physical provider dispatches.  Execution
+  // semantics additionally carry a router-owned terminal label for the same
+  // call, so merging both counts one dispatch twice and inflates every bounded
+  // provider-call ledger.  Prefer the physical identities and keep the
+  // semantics list only as the fallback for compact observations.
+  if (providerEvidence.length > 0) return [...new Set(providerEvidence)];
+  return [...new Set(executionSemantics)];
+}
+
 export async function createRuntimeBridgeBackend(
   options: CreateRuntimeBridgeBackendOptions,
 ): Promise<RuntimeBridgeBackend> {
@@ -16585,6 +19983,8 @@ export async function createRuntimeBridgeBackend(
     createTrackBOperationsFromState({
       ...input,
       runtimeChannel,
+      scope: options.scopeId,
+      authorizationEpoch: 1,
       operationsEndpoint: options.trackBOperationsEndpoint,
       operationsToken: options.trackBOperationsToken,
     });
@@ -16763,7 +20163,115 @@ export async function createRuntimeBridgeBackend(
       "track-b-production-bridge.json",
     ),
     catalog: [],
+    contractStateRoot: options.runtimeStateRoot,
   });
+  // Run 98 addendum 40 (L2) with v1.1 guidance 05 §"Post-v1 maintenance and shadow jobs": rich capture
+  // uses a bounded async queue with backoff so it never starves request handling. Enqueue is one
+  // bounded SQLite write; the operations boundary is called by the background drain.
+  const routeCaptureQueue = options.runtimeStateRoot
+    ? createTrackBRouteCaptureQueue({
+        filePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b",
+          "deferred-route-captures.sqlite",
+        ),
+        // Run 100 addendum `replay-dispatch-envelope-repair.addendum-03` S2: aligned with the admission
+        // decision (20 MiB default, operator-tunable) so a real 750-800 KB dsh capture is queued rather
+        // than refused before it can ever be replayed.
+        maxPayloadBytes: resolveDeferredCaptureMaxBytes(
+          process.env.ROLE_MODEL_DEFERRED_CAPTURE_MAX_BYTES,
+        ),
+      })
+    : null;
+  let routeCaptureDrainActive = false;
+  const scheduleDeferredRouteCaptureDrain = (): void => {
+    if (!routeCaptureQueue || routeCaptureDrainActive) return;
+    routeCaptureDrainActive = true;
+    void routeCaptureQueue
+      .drain(async (item) => {
+        try {
+          return await runtimeTrackBOperations.recordLocalRouteCapture({
+            ...item.payload,
+            requestId: item.requestId,
+            routingDecisionId: item.routingDecisionId,
+            endpointId: item.endpointId,
+          } as Record<string, unknown>);
+        } catch (error) {
+          // Run 98 addendum 48: a cooling-down boundary is not a delivery failure. Defer the item to the
+          // boundary's own retry time instead of spending one of its bounded attempts.
+          if (error instanceof RouteCaptureBoundaryCoolingDownError) {
+            return { deferredUntilMs: error.retryAtMs };
+          }
+          throw error;
+        }
+      })
+      .catch((error: unknown) => {
+        console.error("Track B deferred route capture drain failed", error);
+      })
+      .finally(() => {
+        routeCaptureDrainActive = false;
+      });
+  };
+  if (routeCaptureQueue) {
+    const routeCaptureDrainTimer = setInterval(scheduleDeferredRouteCaptureDrain, 15_000);
+    routeCaptureDrainTimer.unref?.();
+  }
+  // Run 98 addendum 40 (L3): routing preparation is served from a short-TTL shared snapshot so the
+  // per-request store work leaves the client-visible path (v1.1 guidance 05: maintenance must never
+  // starve request handling). `ROLE_MODEL_ROUTING_PREP_CACHE_TTL_MS=0` disables the snapshot.
+  const routingPrepCacheTtlMs = resolveRoutingPrepCacheTtlMs(process.env);
+  const routingPrepCache = createRoutingPrepCache({ ttlMs: routingPrepCacheTtlMs });
+  const recordDirectContribution = async (input: {
+    readonly requestId: string;
+    readonly routingDecisionId: string;
+    readonly endpointId: string;
+    readonly modelId: string;
+    readonly reasoningEffort: string | null;
+    readonly effortSource: RuntimeEffortSource;
+    readonly taskType: string;
+    readonly inputTokens: number;
+    readonly outputTokens: number;
+    readonly responseStatusCode?: unknown;
+    readonly usageErrorClass?: unknown;
+    readonly normalizedErrorClass?: unknown;
+    readonly executionFailure?: unknown;
+    readonly cancelled?: unknown;
+  }): Promise<void> => {
+    // When the post-observation wrapper is configured it owns the contribution
+    // write. Skipping the direct write here keeps one request from producing
+    // two aggregate deliveries while the wrapper performs Track B processing.
+    if (options.trackBPostObservation) return;
+    const contributionOutcome = deriveRuntimeContributionOutcome({
+      responseStatusCode: input.responseStatusCode,
+      usageErrorClass: input.usageErrorClass,
+      normalizedErrorClass: input.normalizedErrorClass,
+      executionFailure: input.executionFailure,
+      cancelled: input.cancelled,
+    });
+    if (!contributionOutcome) return;
+    try {
+      await runtimeTrackBOperations.recordContributionAggregate({
+        requestId: input.requestId,
+        correlationId: createRuntimeRequestCorrelationId({
+          scope: options.scopeId,
+          requestId: input.requestId,
+          routingDecisionId: input.routingDecisionId,
+        }),
+        routingDecisionId: input.routingDecisionId,
+        endpointId: input.endpointId,
+        modelId: input.modelId,
+        reasoningEffort: input.reasoningEffort,
+        effortSource: input.effortSource,
+        taskType: input.taskType,
+        inputTokens: input.inputTokens,
+        outputTokens: input.outputTokens,
+        ...contributionOutcome,
+      });
+    } catch {
+      // Contribution is non-routing-critical; its bounded outbox owns retry.
+    }
+  };
   const readExactRouteCapture = async (
     requestId: string,
   ): Promise<Record<string, unknown> | null> => {
@@ -16780,6 +20288,83 @@ export async function createRuntimeBridgeBackend(
           rootPath: path.join(options.runtimeStateRoot, options.scopeId, "track-b-graph"),
         })
       : undefined;
+  const recordPreExecutionFailure = async (input: {
+    readonly requestId: string;
+    readonly modelId: string;
+    readonly requestOperation: "chat" | "responses";
+    readonly clientRequestId?: string | null;
+    readonly endpointId: string;
+    readonly requestedEffort?: string | null;
+    readonly toolingUsed: boolean;
+    readonly executionStartedAtMs: number;
+    readonly error: unknown;
+    readonly requestClass?: ExecutionTrafficClass;
+  }): Promise<void> => {
+    const statusCode = input.error instanceof BridgeHttpError ? input.error.statusCode : 400;
+    const latencyMs = Math.max(0, Date.now() - input.executionStartedAtMs);
+    const dimensions = runtimeTelemetryDimensionsFor(input.error);
+    const fallbackEndpoint = currentRegistry.endpoints.find(
+      (endpoint) =>
+        endpoint.identity.endpoint_id === input.endpointId ||
+        toLegacyCredentializedEndpointId(endpoint.identity.endpoint_id) === input.endpointId,
+    );
+    const fixedEffort = fallbackEndpoint?.identity.reasoning_effort?.trim() || null;
+    const requestedEffort = input.requestedEffort?.trim() || null;
+    const failureEffort = {
+      reasoningEffort: fixedEffort,
+      effortSource: (fixedEffort === null
+        ? "none"
+        : requestedEffort !== null && requestedEffort !== fixedEffort
+          ? "variant_coerced"
+          : "variant") as RuntimeEffortSource,
+    };
+    const failureObservation = buildPreExecutionFailureObservation({
+      requestId: input.requestId,
+      clientRequestId: input.clientRequestId ?? null,
+      endpointId: input.endpointId,
+      modelId: input.modelId,
+      sourceType: currentUnifiedRuntimeConfig?.executionMode === "remote_only" ? "remote" : "local",
+      reasoningEffort: failureEffort.reasoningEffort,
+      effortSource: failureEffort.effortSource,
+      requestOperation: input.requestOperation,
+      error: input.error,
+      latencyMs,
+      dimensions,
+      toolingUsed: input.toolingUsed,
+    });
+    persistFailureTelemetrySafely(() =>
+      persistRuntimeTelemetryFailure({
+        databasePath: initialization.databasePath,
+        requestId: input.requestId,
+        clientRequestId: input.clientRequestId ?? null,
+        requestClass: toPersistedTrafficClass(input.requestClass),
+        sourceType:
+          currentUnifiedRuntimeConfig?.executionMode === "remote_only" ? "remote" : "local",
+        endpointId: input.endpointId,
+        reasoningEffort: failureEffort.reasoningEffort,
+        effortSource: failureEffort.effortSource,
+        modelId: input.modelId,
+        requestedModelId: input.modelId,
+        requestOperation: input.requestOperation,
+        statusCode,
+        errorClass: runtimeTelemetryErrorClassFor(input.error),
+        latencyMs,
+        dimensions,
+        observation: failureObservation,
+        ...(localGraphStore ? { graphStore: localGraphStore } : {}),
+      }),
+    );
+    if (options.trackBPostObservation) {
+      try {
+        await options.trackBPostObservation(failureObservation);
+      } catch (postObservationError) {
+        console.error(
+          "Track B pre-execution post-observation processing failed",
+          postObservationError,
+        );
+      }
+    }
+  };
   const readPersistedRuntimeObservation = (requestId: string) => {
     try {
       return readRuntimeObservationBundle({
@@ -17829,6 +21414,24 @@ export async function createRuntimeBridgeBackend(
   };
   let currentAccounts = [...readCurrentAccounts()];
   let runtimeEndpoints = [...listRuntimeEndpoints({ databasePath: initialization.databasePath })];
+  const legacyAdmissionReconciliation = reconcileLegacyExecutionAdmissionRows({
+    endpoints: runtimeEndpoints,
+    circuits: readExecutionCircuitState(initialization.databasePath),
+  });
+  if (legacyAdmissionReconciliation.restoredEndpointIds.length > 0) {
+    for (const endpointId of legacyAdmissionReconciliation.restoredEndpointIds) {
+      const restoredEndpoint = legacyAdmissionReconciliation.endpoints.find(
+        (endpoint) => endpoint.endpointId === endpointId,
+      );
+      if (restoredEndpoint) {
+        upsertSqliteRuntimeEndpoint({
+          databasePath: initialization.databasePath,
+          endpoint: restoredEndpoint,
+        });
+      }
+    }
+    runtimeEndpoints = [...listRuntimeEndpoints({ databasePath: initialization.databasePath })];
+  }
   let currentModelOverrides: Record<string, BridgeModelOverrideRecord> = readModelOverridesFromDisk(
     options.runtimeStateRoot,
   );
@@ -17845,8 +21448,9 @@ export async function createRuntimeBridgeBackend(
     filterRouterRegistryByExecutionMode(currentRegistry, getRouterExecutionMode());
   const getRouterEffectiveRoutableInventory = (): RoutableInventory =>
     buildRoutableInventory(getRouterEffectiveRegistry(), getCurrentRegistrySources());
+  const executionCatalogCache = createRuntimeExecutionCatalogCache();
   const getCurrentExecutionCatalog = (): NormalizedCatalog =>
-    withRuntimeEndpointFallbackModels(currentNormalizedCatalog, currentAccounts, runtimeEndpoints);
+    executionCatalogCache.get(currentNormalizedCatalog, currentAccounts, runtimeEndpoints);
   const emptyRoutableInventory = (): RoutableInventory => ({
     modelIds: [],
     endpointIds: [],
@@ -17908,12 +21512,46 @@ export async function createRuntimeBridgeBackend(
     config: UnifiedRuntimeConfig,
   ): UnifiedRuntimeConfig => {
     const preservedCustomAliases = (config.modelAliases ?? []).filter(
-      (alias) => !isPrimaryRoutingAliasId(alias.aliasId),
+      (alias) => !isPrimaryRoutingAliasId(alias.aliasId) && !alias.posture,
     );
     const canonicalAliases: UnifiedRuntimeModelAliasConfig[] = [];
+    const postureEntries: readonly AgentStrategyEntry[] = [
+      ...(config.agentStrategies ?? []),
+      ...(config.workloads ?? []),
+    ];
+    const modelIdsByExecutionMode = Object.fromEntries(
+      CANONICAL_ROUTING_ALIAS_EXECUTION_MODES.map((executionMode) => [
+        executionMode,
+        deriveRoutingAliasBootstrapModelIds(executionMode),
+      ]),
+    );
+    /**
+     * Run 103 post-lock repair (operator decision): the published alias pool must reflect the
+     * eligibility the router applies at request time, so the capability vocabulary the pool actually
+     * declares is indexed per model from the same registry the request path filters candidates with.
+     */
+    const supportedCapabilitiesByModelId = (() => {
+      const index: Record<string, Set<string>> = {};
+      for (const executionMode of CANONICAL_ROUTING_ALIAS_EXECUTION_MODES) {
+        for (const endpoint of filterRouterRegistryByExecutionMode(currentRegistry, executionMode)
+          .endpoints) {
+          const bucket = index[endpoint.identity.model_id] ?? new Set<string>();
+          index[endpoint.identity.model_id] = bucket;
+          for (const capability of endpoint.declared.capabilities) {
+            bucket.add(capability);
+          }
+        }
+      }
+      return Object.fromEntries(
+        Object.entries(index).map(([modelId, capabilities]) => [
+          modelId,
+          [...capabilities].sort(compareText),
+        ]),
+      ) satisfies Readonly<Record<string, readonly string[]>>;
+    })();
 
     for (const executionMode of CANONICAL_ROUTING_ALIAS_EXECUTION_MODES) {
-      const modelIds = deriveRoutingAliasBootstrapModelIds(executionMode);
+      const modelIds = modelIdsByExecutionMode[executionMode] ?? [];
       if (modelIds.length === 0) {
         continue;
       }
@@ -17929,11 +21567,70 @@ export async function createRuntimeBridgeBackend(
       }
     }
 
+    const canonicalRows: AliasInventoryRow[] = [...canonicalAliases, ...preservedCustomAliases].map(
+      (alias) => ({
+        aliasId: alias.aliasId,
+        mode: alias.mode ?? "basic",
+        modelIds: [...alias.modelIds],
+      }),
+    );
+    const derivation = derivePostureAliasInventory({
+      canonical: canonicalRows,
+      entries: postureEntries,
+      executionModes: CANONICAL_ROUTING_ALIAS_EXECUTION_MODES,
+      runtimeMode:
+        config.routingPosture?.mode ??
+        normalizeRoutingModeName(config.routingStrategy) ??
+        "baseline",
+      modelIdsByExecutionMode,
+      supportedCapabilitiesByModelId,
+    });
+    /** R5/R6: the runtime-side binding rules - an unknown `role_id` is a write error (SP5e). */
+    const bindingValidation = validateAgentStrategyBindings({
+      entries: postureEntries,
+      knownRoleIds: getAllowedRoleIds(),
+      knownCapabilities: [
+        ...new Set([
+          ...canonicalTaxonomy.capabilities.map((capability) => capability.id),
+          /** The registry's declared capabilities include the config-declared local and remote models. */
+          ...currentRegistry.endpoints.flatMap((endpoint) => [
+            ...(endpoint.declared?.capabilities ?? []),
+          ]),
+          ...currentNormalizedCatalog.models.flatMap((model) => [...model.capabilities]),
+        ]),
+      ],
+    });
+    currentPostureAliasDiagnostics = {
+      violations: [...derivation.violations, ...bindingValidation.violations],
+      skipped: derivation.skipped,
+      warnings: bindingValidation.warnings,
+    };
     if (canonicalAliases.length === 0) {
       return config;
     }
+    const canonicalIds = new Set(canonicalRows.map((row) => row.aliasId));
+    const postureAliases: UnifiedRuntimeModelAliasConfig[] = [];
+    for (const row of derivation.rows) {
+      if (canonicalIds.has(row.aliasId)) {
+        continue;
+      }
+      const entry = findAgentStrategyAlias({
+        entries: postureEntries,
+        executionModes: CANONICAL_ROUTING_ALIAS_EXECUTION_MODES,
+        aliasId: row.aliasId,
+      });
+      if (!entry) {
+        continue;
+      }
+      postureAliases.push({
+        aliasId: row.aliasId,
+        mode: toUnifiedAliasRoutingMode(row.mode),
+        posture: { kind: entry.kind, name: entry.name },
+        modelIds: [...row.modelIds],
+      });
+    }
 
-    const nextAliases = [...canonicalAliases, ...preservedCustomAliases];
+    const nextAliases = [...canonicalAliases, ...preservedCustomAliases, ...postureAliases];
     if (sameModelAliases(config.modelAliases ?? [], nextAliases)) {
       return config;
     }
@@ -17969,6 +21666,16 @@ export async function createRuntimeBridgeBackend(
   };
   let currentRoutableInventory: RoutableInventory = emptyRoutableInventory();
   let currentAliasDriftWarnings: readonly AliasDriftWarning[] = [];
+  /**
+   * Run 103 / SP5e - findings from the last posture-alias materialisation: a violation is a config
+   * write error, a skipped scope is an honest `ALIAS_POOL_EMPTY`, and an unknown capability is a
+   * surfaced warning (requirements R5, R6).
+   */
+  let currentPostureAliasDiagnostics: {
+    violations: readonly string[];
+    skipped: readonly { aliasId: string; reason: "ALIAS_POOL_EMPTY" }[];
+    warnings: readonly string[];
+  } = { violations: [], skipped: [], warnings: [] };
   const refreshRoutableInventoryState = (): void => {
     currentRoutableInventory = buildRoutableInventory(currentRegistry, getCurrentRegistrySources());
     const aliases = currentUnifiedRuntimeConfig?.modelAliases ?? [];
@@ -19177,6 +22884,8 @@ export async function createRuntimeBridgeBackend(
       refreshAuthorization: refreshProbeAuthorization,
       resolveProbeHeaders,
       networkFetcher,
+      probeAttempts: readRemoteHealthProbeAttempts(),
+      probeRetryDelayMs: readRemoteHealthProbeRetryDelayMs(),
     });
   };
 
@@ -19840,6 +23549,24 @@ export async function createRuntimeBridgeBackend(
     if (nextConfig !== null) {
       await persistMaterializedCanonicalRoutingAliasesIfNeeded();
     }
+    /**
+     * Run 103 / SP5e - the posture blocks are validated against runtime knowledge: an unknown
+     * `role_id` or a namespace collision is a write error, an unknown capability is surfaced, and
+     * an empty scope is reported as `ALIAS_POOL_EMPTY` instead of widening (requirements R5, R6).
+     */
+    if (currentPostureAliasDiagnostics.violations.length > 0) {
+      throw new Error(
+        `Runtime strategy posture config is invalid: ${currentPostureAliasDiagnostics.violations[0]}`,
+      );
+    }
+    for (const warning of currentPostureAliasDiagnostics.warnings) {
+      console.warn("Runtime strategy posture warning:", warning);
+    }
+    for (const skippedAlias of currentPostureAliasDiagnostics.skipped) {
+      console.warn(
+        `Runtime strategy posture scope ${skippedAlias.aliasId} has no routable targets (${skippedAlias.reason})`,
+      );
+    }
     const nextModelAliases = currentUnifiedRuntimeConfig?.modelAliases ?? [];
     if (
       currentUnifiedRuntimeConfig !== null &&
@@ -20043,6 +23770,7 @@ export async function createRuntimeBridgeBackend(
     "p95LatencyMs",
   ];
   const SUPPORTED_TELEMETRY_ANALYTICS_DIMENSIONS: readonly BridgeTelemetryAnalyticsDimension[] = [
+    "requestClass",
     "sourceType",
     "endpointId",
     "modelId",
@@ -20205,6 +23933,10 @@ export async function createRuntimeBridgeBackend(
     dimension: BridgeTelemetryAnalyticsDimension,
   ): readonly string[] => {
     switch (dimension) {
+      case "requestClass": {
+        const requestClass = record.requestClass ?? "unknown";
+        return [requestClass === "live_request" ? "live" : requestClass];
+      }
       case "sourceType":
         return [record.sourceType];
       case "endpointId":
@@ -20661,6 +24393,31 @@ export async function createRuntimeBridgeBackend(
       ...(filtersBody
         ? {
             filters: {
+              ...(readEnumStringList(filtersBody.trafficClasses, "filters.trafficClasses", [
+                "live",
+                "live_request",
+                "replay",
+                "evaluation",
+                "benchmark",
+                "probe",
+                "unknown",
+              ] as const)
+                ? {
+                    trafficClasses: readEnumStringList(
+                      filtersBody.trafficClasses,
+                      "filters.trafficClasses",
+                      [
+                        "live",
+                        "live_request",
+                        "replay",
+                        "evaluation",
+                        "benchmark",
+                        "probe",
+                        "unknown",
+                      ] as const,
+                    ),
+                  }
+                : {}),
               ...(readEnumStringList(filtersBody.sourceTypes, "filters.sourceTypes", [
                 "local",
                 "remote",
@@ -20870,6 +24627,16 @@ export async function createRuntimeBridgeBackend(
       return records;
     }
     return records.filter((record) => {
+      if (
+        filters.trafficClasses &&
+        !filters.trafficClasses.some(
+          (trafficClass) =>
+            (record.requestClass ?? "unknown") === trafficClass ||
+            (trafficClass === "live" && record.requestClass === "live_request"),
+        )
+      ) {
+        return false;
+      }
       if (filters.sourceTypes && !filters.sourceTypes.includes(record.sourceType)) {
         return false;
       }
@@ -21018,6 +24785,15 @@ export async function createRuntimeBridgeBackend(
     const totalLatency = latencies.reduce((sum, value) => sum + value, 0);
     const p95Index =
       latencies.length > 0 ? Math.max(0, Math.ceil(latencies.length * 0.95) - 1) : -1;
+    // Run 98 addendum 40 (L1): the projected summary reports the client-visible duration beside the
+    // provider response-header time, so a bridge-level summary never hides the tail either.
+    const requestLatencies = records
+      .map((record) => record.requestLatencyMs)
+      .filter((value): value is number => typeof value === "number")
+      .sort((left, right) => left - right);
+    const totalRequestLatency = requestLatencies.reduce((sum, value) => sum + value, 0);
+    const requestP95Index =
+      requestLatencies.length > 0 ? Math.max(0, Math.ceil(requestLatencies.length * 0.95) - 1) : -1;
     return {
       requestCount: records.length,
       successCount: records.filter((record) => record.errorClass === null).length,
@@ -21037,7 +24813,19 @@ export async function createRuntimeBridgeBackend(
       ),
       averageLatencyMs: latencies.length > 0 ? Math.round(totalLatency / latencies.length) : null,
       p95LatencyMs: p95Index >= 0 ? (latencies[p95Index] ?? null) : null,
+      averageRequestLatencyMs:
+        requestLatencies.length > 0
+          ? Math.round(totalRequestLatency / requestLatencies.length)
+          : null,
+      p95RequestLatencyMs:
+        requestP95Index >= 0 ? (requestLatencies[requestP95Index] ?? null) : null,
+      requestLatencySampleCount: requestLatencies.length,
       lastSeenAtMs: records[0]?.createdAtMs ?? null,
+      // Run 104 / R14: this projection summarises a caller-filtered record set, so no row was dropped by
+      // the live-only default behind the caller's back; the unfiltered readback reports the excluded
+      // classes from the storage aggregate instead.
+      excludedRequestCount: 0,
+      excludedByClass: [],
     };
   };
   const getTelemetryEndpointMeta = (endpointId: string): BridgeTelemetryEndpointMeta => {
@@ -21345,6 +25133,7 @@ export async function createRuntimeBridgeBackend(
       [
         query.breakdown ?? undefined,
         query.ranking?.dimension,
+        ...(query.filters?.trafficClasses ? (["requestClass"] as const) : []),
         ...(query.filters?.sourceTypes ? (["sourceType"] as const) : []),
         ...(query.filters?.endpointIds ? (["endpointId"] as const) : []),
         ...(query.filters?.modelIds ? (["modelId"] as const) : []),
@@ -21382,6 +25171,7 @@ export async function createRuntimeBridgeBackend(
       [
         query.breakdown ?? undefined,
         query.ranking?.dimension,
+        ...(query.filters?.trafficClasses ? (["requestClass"] as const) : []),
         ...(query.filters?.sourceTypes ? (["sourceType"] as const) : []),
         ...(query.filters?.endpointIds ? (["endpointId"] as const) : []),
         ...(query.filters?.modelIds ? (["modelId"] as const) : []),
@@ -21915,10 +25705,94 @@ export async function createRuntimeBridgeBackend(
       aliasInventory,
     };
   };
+  /**
+   * Run 103 / SP5e - the posture sections the Agent strategy and Workloads pages render: the saved
+   * binding plus one row per materialised `<name>.<scope>` alias with its live candidate pool
+   * (requirement R8).
+   */
+  const readPostureEntrySummaries = (
+    kind: "role" | "workload",
+    entries: readonly AgentStrategyEntry[],
+  ) =>
+    entries.map((entry) => {
+      const effectiveInventory = getRouterEffectiveRoutableInventory();
+      const effectiveRegistry = getRouterEffectiveRegistry();
+      return {
+        name: entry.name,
+        kind: entry.kind,
+        roleId: entry.roleId,
+        scoringStrategy: entry.scoringStrategy,
+        routingMode: entry.routingMode,
+        computePreference: entry.computePreference,
+        configuredModelIds: [...entry.modelIds],
+        requiredCapabilities: [...entry.requiredCapabilities],
+        violations: [...entry.violations],
+        aliases: (currentUnifiedRuntimeConfig?.modelAliases ?? [])
+          .filter(
+            (alias) =>
+              alias.posture?.kind === kind &&
+              alias.posture.name === entry.name &&
+              alias.aliasId.startsWith(`${entry.name}.`),
+          )
+          .map((alias) => {
+            const resolution = resolveAliasAllowEndpoints(
+              alias,
+              effectiveInventory,
+              effectiveRegistry,
+            );
+            /**
+             * Run 103 post-lock repair (operator decision): `required_capabilities` also narrows the
+             * endpoints the page reports, with the same rule the router applies at request time, so a
+             * capability-constrained alias cannot show candidates the first call would reject.
+             */
+            const allowEndpoints =
+              entry.requiredCapabilities.length === 0
+                ? resolution.allowEndpoints
+                : resolution.allowEndpoints.filter((endpointId) => {
+                    const endpoint = effectiveRegistry.endpoints.find(
+                      (candidate) => candidate.identity.endpoint_id === endpointId,
+                    );
+                    const supported = endpoint?.declared.capabilities ?? [];
+                    return entry.requiredCapabilities.every((capability) =>
+                      supportsCapabilityRequirement(supported, capability),
+                    );
+                  });
+            return {
+              aliasId: alias.aliasId,
+              mode: alias.mode ?? "basic",
+              candidateCount: allowEndpoints.length,
+              allowEndpointIds: [...allowEndpoints].sort(compareText),
+              poolEmpty: allowEndpoints.length === 0,
+            };
+          })
+          .sort((left, right) => compareText(left.aliasId, right.aliasId)),
+      };
+    });
+  const readConfiguredRoutingPosture = () =>
+    currentUnifiedRuntimeConfig
+      ? {
+          legacyStrategy: currentUnifiedRuntimeConfig.routingPosture
+            ? null
+            : (currentUnifiedRuntimeConfig.routingStrategy ?? null),
+          ...resolveConfiguredRoutingPostureSummary(currentUnifiedRuntimeConfig),
+        }
+      : null;
   const readRouterConfigData = () => ({
     persisted: {
       strategy: currentUnifiedRuntimeConfig?.routingStrategy ?? null,
       executionMode: currentUnifiedRuntimeConfig?.executionMode ?? "decision_only",
+    },
+    routing: readConfiguredRoutingPosture(),
+    agentStrategies: readPostureEntrySummaries(
+      "role",
+      currentUnifiedRuntimeConfig?.agentStrategies ?? [],
+    ),
+    workloads: readPostureEntrySummaries("workload", currentUnifiedRuntimeConfig?.workloads ?? []),
+    workloadExamples: SHIPPED_WORKLOAD_EXAMPLES,
+    postureDiagnostics: {
+      violations: [...currentPostureAliasDiagnostics.violations],
+      skipped: currentPostureAliasDiagnostics.skipped.map((entry) => ({ ...entry })),
+      warnings: [...currentPostureAliasDiagnostics.warnings],
     },
     controller: getCurrentControllerAssignment(),
     guidance: getRouterGuidance(),
@@ -22139,14 +26013,15 @@ export async function createRuntimeBridgeBackend(
       await buildBenchmarkCapabilityByEndpointId(profilesByEndpointId);
     const { executionEndpointIds, routingEligibleEndpointIds, benchmarkEligibleEndpointIds } =
       buildEffectiveEligibilitySnapshot();
-    const circuitDeniedEndpointIds = new Set(
-      readDeniedExecutionCircuitEndpointIds({
+    const executionCooldownsByEndpointId = new Map(
+      readExecutionCooldownReceipts({
         databasePath: initialization.databasePath,
         nowMs: Date.now(),
-      }),
+      }).map((receipt) => [receipt.endpointId, receipt] as const),
     );
     return currentRegistry.endpoints.map((endpoint) => {
       const endpointId = endpoint.identity.endpoint_id;
+      const executionCooldown = executionCooldownsByEndpointId.get(endpointId);
       const profile = profilesByEndpointId[endpointId];
       const benchmarkCapability = benchmarkCapabilitiesByEndpointId[endpointId] ?? null;
       const catalogPricing = resolveModelCapabilityProfile({
@@ -22186,7 +26061,7 @@ export async function createRuntimeBridgeBackend(
           const probeHealthStatus =
             runtimeEndpoint?.healthStatus ??
             (endpoint.deniedByPolicy ? "policy-blocked" : "healthy");
-          const circuitState = circuitDeniedEndpointIds.has(endpointId) ? "open" : null;
+          const circuitState = executionCooldown?.circuitState ?? null;
           return resolveEndpointHealthState({
             lifecycleState: runtimeEndpoint?.lifecycleState ?? "active",
             probeHealthStatus,
@@ -22219,10 +26094,22 @@ export async function createRuntimeBridgeBackend(
         advisoryMaxDifficultyRecommendation: profile.advisoryMaxDifficultyRecommendation,
         ...(profile.telemetryScores ? { telemetryScores: profile.telemetryScores } : {}),
         ...(benchmarkCapability ? { benchmarkCapability } : {}),
+        ...(executionCooldown
+          ? {
+              circuitState: executionCooldown.circuitState,
+              executionCooldown,
+            }
+          : {}),
       };
     });
   };
-  const toRouterDecisionData = (record: BridgeTelemetryRequestRecord) => {
+  const readShadowAdvice = async (requestId: string): Promise<Record<string, unknown> | null> => {
+    if (!options.readTrackBPostObservationReceipt) return null;
+    const receipt = asObjectRecord(await options.readTrackBPostObservationReceipt(requestId));
+    const result = asObjectRecord(receipt?.result);
+    return asObjectRecord(result?.advisory);
+  };
+  const toRouterDecisionData = async (record: BridgeTelemetryRequestRecord) => {
     const observation = readPersistedRuntimeObservation(record.requestId) as Record<
       string,
       unknown
@@ -22240,23 +26127,25 @@ export async function createRuntimeBridgeBackend(
       effortSource: record.effortSource ?? null,
       membershipRevision: asStringValue(decision?.membership_revision) ?? null,
       profileRevision: asStringValue(decision?.profile_revision) ?? null,
-      strategyLabel:
-        asStringValue(routingMode?.effectiveMode) ??
-        currentUnifiedRuntimeConfig?.routingStrategy ??
-        null,
+      strategyLabel: asStringValue(routingMode?.effectiveMode) ?? null,
       decidedAtMs: record.createdAtMs,
       sourceType: record.sourceType,
       providerId: record.providerId ?? null,
       finishReason: record.finishReason ?? null,
+      shadowAdvice: await readShadowAdvice(record.requestId),
     };
   };
-  const listRouterDecisionData = () =>
-    listTelemetryRequestRecords({ limit: DEFAULT_TELEMETRY_LIMIT }).map(toRouterDecisionData);
-  const listRouterDecisionPageData = (query?: BridgeTelemetryQuery): BridgeRouterDecisionPage => {
+  const listRouterDecisionData = async () =>
+    Promise.all(
+      listTelemetryRequestRecords({ limit: DEFAULT_TELEMETRY_LIMIT }).map(toRouterDecisionData),
+    );
+  const listRouterDecisionPageData = async (
+    query?: BridgeTelemetryQuery,
+  ): Promise<BridgeRouterDecisionPage> => {
     const page = listTelemetryRequestPage(query);
     return {
       ...page,
-      items: page.items.map(toRouterDecisionData),
+      items: await Promise.all(page.items.map(toRouterDecisionData)),
     };
   };
   function toProposalWireContract(
@@ -22318,7 +26207,7 @@ export async function createRuntimeBridgeBackend(
     };
   }
 
-  const readRouterDecisionData = (requestId: string) => {
+  const readRouterDecisionData = async (requestId: string) => {
     const observation = readPersistedRuntimeObservation(requestId) as
       | (RuntimeObservationBundle & BridgeTelemetryEndpointMeta)
       | null;
@@ -22328,6 +26217,7 @@ export async function createRuntimeBridgeBackend(
     const routingDiagnostics = asObjectRecord(observation.routingDiagnostics);
     const routingMode = asObjectRecord(routingDiagnostics?.routingMode);
     const decision = asObjectRecord(observation.decision);
+    const providerAttemptIds = projectPublicProviderAttemptIds(observation);
     const requestRecord = (() => {
       const record = readRuntimeTelemetryRecord({
         databasePath: initialization.databasePath,
@@ -22344,13 +26234,11 @@ export async function createRuntimeBridgeBackend(
       upstreamModelId: requestRecord?.upstreamModelId ?? requestRecord?.modelId ?? null,
       reasoningEffort: requestRecord?.reasoningEffort ?? null,
       effortSource: requestRecord?.effortSource ?? null,
+      providerAttemptIds,
       fallbackEndpointIds: Array.isArray(decision?.fallback_endpoint_ids)
         ? decision.fallback_endpoint_ids
         : [],
-      strategyLabel:
-        asStringValue(routingMode?.effectiveMode) ??
-        currentUnifiedRuntimeConfig?.routingStrategy ??
-        null,
+      strategyLabel: asStringValue(routingMode?.effectiveMode) ?? null,
       decision,
       benchmarkEvidence: projectBenchmarkDecisionEvidence(decision, observation.endpointId),
       telemetryEvidence: projectTelemetryDecisionEvidence(decision, observation.endpointId, {
@@ -22370,6 +26258,7 @@ export async function createRuntimeBridgeBackend(
         ? toProposalWireContract(observation.normalizedIntent as Record<string, unknown>)
         : null,
       endpointProfile: readEndpointProfileData(observation.endpointId),
+      shadowAdvice: await readShadowAdvice(requestId),
       observeRequestPath: `/app/observe/requests/${requestId}`,
     };
   };
@@ -22387,37 +26276,94 @@ export async function createRuntimeBridgeBackend(
       readonly executionSnapshot?: ReturnType<typeof createExecutionRuntimeSnapshot>;
     },
   ) => {
+    markPhase("bridge-plan-start");
     const executionSnapshot =
       executionOptions?.executionSnapshot ?? createExecutionRuntimeSnapshot(currentRegistry);
     const observedDataConfig = resolveUnifiedRuntimeObservedDataConfig(currentUnifiedRuntimeConfig);
     const routingTimeMs = Date.now();
-    const runtimeObservedProfiles = readObservedProfilesForRouting({
-      databasePath: initialization.databasePath,
-      registry: executionSnapshot.registry,
-      observedDataConfig,
-      difficultyBucket: resolveObservedDifficultyBucketForPlan(plan),
-      routingTimeMs,
-    });
-    const telemetryScoresByEndpointId = readLiveTaskTelemetryScoresByEndpointIds({
-      databasePath: initialization.databasePath,
-      endpointIds: executionSnapshot.registry.endpoints.map(
-        (candidate) => candidate.identity.endpoint_id,
-      ),
-      windowStartMs: Math.max(0, routingTimeMs - 7 * 24 * 60 * 60 * 1_000),
-      windowEndMs: routingTimeMs,
-      minimumSampleCount: observedDataConfig.aggregation.minSamples,
-    });
+    // Run 98 addendum 40 (L3): one shared snapshot per routing tick. The key carries the registry
+    // identity and the tick bucket, so a registry or tick change reads the store again while requests
+    // inside a tick reuse the same bounded inputs (identical inputs -> identical decisions).
+    const routingPrepRegistryIdentity = createHash("sha256")
+      .update(
+        executionSnapshot.registry.endpoints
+          .map(
+            (candidate) =>
+              `${candidate.identity.endpoint_id}@${candidate.identity.runtime_version ?? ""}`,
+          )
+          .join("|"),
+      )
+      .digest("hex")
+      .slice(0, 16);
+    const routingPrepTickKey = `${routingPrepRegistryIdentity}:${
+      routingPrepCacheTtlMs > 0
+        ? Math.floor(routingTimeMs / routingPrepCacheTtlMs)
+        : `t${routingTimeMs}`
+    }`;
+    const observedDifficultyBucket = resolveObservedDifficultyBucketForPlan(plan);
+    const runtimeObservedProfiles = await routingPrepCache.read(
+      `observed-profiles:${routingPrepTickKey}:${observedDifficultyBucket ?? "none"}`,
+      () =>
+        readObservedProfilesForRouting({
+          databasePath: initialization.databasePath,
+          registry: executionSnapshot.registry,
+          observedDataConfig,
+          difficultyBucket: observedDifficultyBucket,
+          routingTimeMs,
+        }),
+    );
+    const telemetryScoresByEndpointId = await routingPrepCache.read(
+      `live-telemetry:${routingPrepTickKey}:${observedDataConfig.aggregation.minSamples}`,
+      () =>
+        readLiveTaskTelemetryScoresByEndpointIds({
+          databasePath: initialization.databasePath,
+          endpointIds: executionSnapshot.registry.endpoints.map(
+            (candidate) => candidate.identity.endpoint_id,
+          ),
+          windowStartMs: Math.max(0, routingTimeMs - 7 * 24 * 60 * 60 * 1_000),
+          windowEndMs: routingTimeMs,
+          minimumSampleCount: observedDataConfig.aggregation.minSamples,
+        }),
+    );
     let streamedChunkCount = 0;
+    /** Run 101 addendum 20: chunks the client can keep (content / tool calls); the retry/reroute gate reads this. */
+    let deliveredSubstantiveChunkCount = 0;
     let streamedReasoningDeltaCount = 0;
+    // Run 98 addendum 40 (L1): the provider phase the client pays for. `latency_ms` on the usage
+    // event is only the response-header time; this pair brackets the whole dispatch, and the first
+    // streamed chunk (when the request streams) gives the first-token time.
+    let providerPhaseStartedAtMs: number | null = null;
+    let providerPhaseCompletedAtMs: number | null = null;
+    let firstStreamedChunkAtMs: number | null = null;
     const trackedStreamWriter: BridgeStreamWriter | undefined = streamWriter
       ? async (chunk, metadata) => {
           streamedChunkCount += 1;
+          firstStreamedChunkAtMs ??= Date.now();
           streamedReasoningDeltaCount += countChatCompletionsReasoningDeltas(chunk);
+          /**
+           * Run 101 addendum 20: the retry/reroute gate must know whether the *client* already holds part of the
+           * answer, which is the same predicate the ingress uses to commit the SSE head - not every chunk the
+           * executor emits. A dedicated counter keeps `streamedChunkCount`'s telemetry meaning (text deltas, first
+           * token) unchanged while the gate reads delivered content only. Measured on RC `247f383a`: six
+           * `terminated` failures with `streamTextDeltaCount: 0` still carried `retryCount: 0`/`rerouteCount: 0`
+           * because the executor's role-only opening chunk closed the gate.
+           */
+          /**
+           * Run 101 addendum 24: the gate must count what the *ingress* wrote, not what the executor emitted. A
+           * substantive chunk without metadata is buffered by the ingress and never reaches the client, yet it used
+           * to close the gate - that is the residual 502 (`terminated`, ~75 s, `retry 0` / `reroute 0`, top-level
+           * endpoint `routing.failed.pre-execution`, client-visible status 502 because the head was never
+           * committed). `metadata && substantive` is exactly the ingress's commit condition.
+           */
+          if (metadata && hasSubstantiveStreamDelta(chunk)) {
+            deliveredSubstantiveChunkCount += 1;
+          }
           await streamWriter(chunk, metadata);
         }
       : undefined;
-    const benchmarkCapabilitiesByEndpointId = await buildBenchmarkCapabilityByEndpointId(
-      readCandidateProfileDataByEndpointId(),
+    const benchmarkCapabilitiesByEndpointId = await routingPrepCache.read(
+      `benchmark-capabilities:${routingPrepTickKey}`,
+      () => buildBenchmarkCapabilityByEndpointId(readCandidateProfileDataByEndpointId()),
     );
     const roleBindings = buildRuntimeRoleBindings(
       [],
@@ -22447,6 +26393,59 @@ export async function createRuntimeBridgeBackend(
       });
       return [...new Set([...denyEndpoints, ...cooldownDeniedEndpoints])];
     };
+    // Bounded diagnostic for the run-99 R24 durable advisory wiring.
+    let runtimeAdvisoryMissLogged = 0;
+    // Run 98 addendum 40 (L5): resolve the measured-latency selection input once per request. The
+    // policy comes from the same versioned document as the other activation parameters, and the bucket
+    // read is served through the L3 snapshot and skipped entirely unless the operator has enabled the
+    // input at or above its stage — a default runtime pays nothing and decides exactly as before.
+    // Read once per request and shared with the routing block below: the policy document is the same
+    // file for both consumers, and reading it twice put a second synchronous file read + JSON parse
+    // inside the pre-provider window (run 98 addendum 40 L6 window: bridge->provider p50 368 ms).
+    const planLearningPolicySnapshot = readLearningPolicyFile({
+      repoRoot: options.repoRoot,
+      stateRoot: resolveLearningPolicyStateRoot({
+        runtimeStateRoot: options.runtimeStateRoot,
+        scopeId: options.scopeId,
+      }),
+      channel: runtimeChannel,
+      scopeId: options.scopeId,
+    });
+    const activationStageRank = (stage: string): number =>
+      ["S0", "S1", "S2", "S3", "S4"].indexOf(stage);
+    const latencySelectionStage =
+      process.env.ROLE_MODEL_LEARNING_STAGE?.trim() ??
+      planLearningPolicySnapshot?.effective.stage ??
+      "S1";
+    const latencySelectionPolicy = planLearningPolicySnapshot?.latencySelection;
+    const latencySelectionAuthorized =
+      latencySelectionPolicy?.policy.enabled === true &&
+      activationStageRank(latencySelectionStage) >=
+        activationStageRank(latencySelectionPolicy.policy.minStage);
+    const latencySelectionContext = latencySelectionAuthorized
+      ? {
+          ...latencySelectionPolicy?.policy,
+          estimatedInputTokens: plan.routingRequest.contextTokens ?? 0,
+          buckets: await routingPrepCache.read(
+            `latency-buckets:${routingPrepTickKey}:${latencySelectionPolicy?.policy.tokenBucketUpperBounds.join(",")}:${latencySelectionPolicy?.policy.minSamples}:${latencySelectionPolicy?.policy.windowHours}`,
+            () =>
+              readEndpointLatencyBuckets({
+                databasePath: initialization.databasePath,
+                endpointIds: executionSnapshot.registry.endpoints.map(
+                  (candidate) => candidate.identity.endpoint_id,
+                ),
+                windowStartMs: Math.max(
+                  0,
+                  routingTimeMs - latencySelectionPolicy?.policy.windowHours * 60 * 60 * 1_000,
+                ),
+                windowEndMs: routingTimeMs,
+                tokenBucketUpperBounds: latencySelectionPolicy?.policy.tokenBucketUpperBounds,
+                minimumSampleCount: latencySelectionPolicy?.policy.minSamples,
+              }),
+          ),
+        }
+      : undefined;
+    let latencySelectionOutcome: ReturnType<typeof selectEndpointByMeasuredLatency> | undefined;
     const routeExecutionRequest = (
       denyEndpoints: readonly string[],
     ): {
@@ -22458,12 +26457,152 @@ export async function createRuntimeBridgeBackend(
         databasePath: initialization.databasePath,
         executionRequest: plan.executionRequest,
       });
-      return {
-        deniedEndpointIds: mergedDenyEndpoints,
-        routed: routeRuntimeRequest({
+      // Run 98 R5 (AC-R05-04): S2+ is the only stage that passes an advisory into routing,
+      // so the default S1 runtime produces exactly the decision it produced before. The
+      // effective values come from the operator's versioned policy config (R15), with the
+      // environment kept as an explicit override for local experiments.
+      // Run 99 R23: the durable operator policy state is the control plane the Learning
+      // > Configuration page writes, so live routing must resolve the same Track B state root the
+      // sidecar uses. The snapshot is read once per request in the plan scope (identical inputs) and
+      // reused here instead of paying a second synchronous read on the pre-provider path.
+      const learningPolicySnapshot = planLearningPolicySnapshot;
+      const learningStage = (process.env.ROLE_MODEL_LEARNING_STAGE?.trim() ??
+        learningPolicySnapshot?.effective.stage ??
+        "S1") as "S0" | "S1" | "S2" | "S3" | "S4";
+      // Run 99 R33 (addendum 19 S33/S35): the live decision carries the request's own task
+      // family and the taxonomy it was resolved against, so a preference learned for one family
+      // cannot move another family's traffic.
+      // Run 105 live Phase 5: the task must resolve through the SAME classification chain as the
+      // role (`buildRequestClassificationForPlan`). Reading `plan.routingRequest.taskType` directly
+      // left the advisory key and observation as `requestTaskTypeId: null` for requests that declared
+      // no top-level task but carried a resolved intent/identity task, so an exact (role, task) ladder
+      // was never recalled for them.
+      const requestTaskTypeId = buildRequestClassificationForPlan(plan)?.taskTypeId ?? null;
+      // Run 105 C11/R1: the advisory key is (role, task). The role comes from the SAME chain
+      // `buildRequestClassificationForPlan` resolves (declared role -> resolved taxonomy identity ->
+      // intent role), so the ladder the runtime recalls cannot drift from the classification the
+      // observation records.
+      const requestRoleId = buildRequestClassificationForPlan(plan)?.roleId ?? null;
+      const requestTaxonomyVersion = taxonomyManifest.taxonomyVersion ?? null;
+      const advisoryConsideration = ["S2", "S3", "S4"].includes(learningStage)
+        ? (() => {
+            // Run 99 R24 / addendum 06: the operator-activated pack is the authorization for
+            // influence (`AC-R05-04`), so the durable advisory wins over the transient
+            // per-replay one; with no active pack the durable entry answers `unavailable` and
+            // the decision records that bounded reason instead of an empty fresh advisory.
+            const durable = recallTrackBDurableRouteAdvisory({
+              channel: runtimeChannel,
+              scope: options.scopeId,
+              roleId: requestRoleId,
+              taskTypeId: requestTaskTypeId,
+              // Run 99 R33 (addendum 21 D12): the operator's advisory-source age bound is
+              // enforced on every live consultation.
+              nowMs: Date.now(),
+              maxAgeMs: learningPolicySnapshot?.effective.advisorySourceMaxAgeMs ?? 900000,
+            });
+            // A classified request requires exact durable authorization, including an unavailable
+            // rollback answer. Transient scope-wide evidence is only for genuine legacy requests.
+            const cached =
+              durable ??
+              (requestRoleId === null && requestTaskTypeId === null
+                ? recallNewestTrackBRouteAdvisory({
+                    channel: runtimeChannel,
+                    scope: options.scopeId,
+                  })
+                : null);
+            if (!cached) {
+              // Bounded diagnostic (run 99 R24): an S2+ runtime with no advisory at all is the
+              // signal that the durable refresh never published, not that the gate refused.
+              if (runtimeAdvisoryMissLogged < 3) {
+                runtimeAdvisoryMissLogged += 1;
+                console.error(
+                  `[run99] live advisory miss: stage=${learningStage} channel=${runtimeChannel} scope=${options.scopeId}`,
+                );
+              }
+              return undefined;
+            }
+            const numeric = (value: string | undefined, fallback: number): number => {
+              const parsed = Number(value);
+              return Number.isFinite(parsed) ? parsed : fallback;
+            };
+            const policyCohortPercent = numeric(
+              process.env.ROLE_MODEL_LEARNING_COHORT_PERCENT,
+              learningPolicySnapshot?.effective.cohortPercent ?? 100,
+            );
+            // Run 99 R24: the receipted activation step bounds the cohort (S3/S4 follow the
+            // durable ladder, S2 can only be narrowed by it); a pipeline advisory keeps the
+            // policy value and can never widen the activation.
+            const cohortPercent = resolveAdvisoryCohortPercent({
+              stage: learningStage,
+              policyCohortPercent,
+              rolloutCohortPercent:
+                durable && Number.isFinite(durable.cohortPercent) ? durable.cohortPercent : null,
+            });
+            return {
+              candidateId: cached.candidateId,
+              preferredEndpointId: cached.preferredRoutePackage,
+              advisoryState: cached.advisoryState,
+              confidence: cached.confidence,
+              advisoryId: cached.advisoryId,
+              policyVersion:
+                process.env.ROLE_MODEL_LEARNING_POLICY_VERSION?.trim() ??
+                (learningPolicySnapshot
+                  ? `policy:${learningPolicySnapshot.policyVersion}:${learningPolicySnapshot.digest.slice(7, 23)}`
+                  : null),
+              stage: learningStage,
+              scoreBand: numeric(
+                process.env.ROLE_MODEL_LEARNING_SCORE_BAND,
+                learningPolicySnapshot?.effective.scoreBand ?? 0.05,
+              ),
+              minAdvisoryConfidence: numeric(
+                process.env.ROLE_MODEL_LEARNING_MIN_CONFIDENCE,
+                learningPolicySnapshot?.effective.minAdvisoryConfidence ?? 0.7,
+              ),
+              cohortPercent,
+              explorationPercent: numeric(process.env.ROLE_MODEL_LEARNING_EXPLORATION_PERCENT, 0),
+              killSwitch: process.env.ROLE_MODEL_LEARNING_KILL_SWITCH?.trim() === "true",
+              thresholdSetVersion: process.env.ROLE_MODEL_SCORER_SET_VERSION?.trim() ?? null,
+              // Run 99 R33: the activated pack's scope travels with the advisory so the router
+              // can enforce `preferredFor`/`avoidFor` and the taxonomy identity.
+              taskTypeId: cached.taskTypeId ?? null,
+              taxonomyVersion: cached.taxonomyVersion ?? null,
+              requestTaxonomyVersion,
+              // Run 105 R1/R5: the (role, task) scope of the advisory and of this request, plus the
+              // ordered ladder the router walks. `preferredEndpointId` above stays the walked rung's
+              // fallback (rank-1 available), so a cached entry from a pre-run105 source behaves
+              // exactly as before.
+              roleId: "roleId" in cached ? cached.roleId : null,
+              requestRoleId,
+              ...("advisoryLadder" in cached && cached.advisoryLadder.length
+                ? { preferredLadder: cached.advisoryLadder }
+                : {}),
+            };
+          })()
+        : undefined;
+      const computeRoute = (deny: readonly string[]) =>
+        routeRuntimeRequest({
           request: {
             ...plan.routingRequest,
-            ...(mergedDenyEndpoints.length > 0 ? { denyEndpoints: mergedDenyEndpoints } : {}),
+            ...(deny.length > 0 ? { denyEndpoints: deny } : {}),
+          },
+          /**
+           * Run 100 addendum 10, E1: name the request, the alias, the requested effort and the pass on the verdict
+           * line, so an eligibility count can be attributed without a store query. The live pass and its reroutes
+           * share this call; the counterfactual/replay passes take their own path, which is exactly why the pass name
+           * has to be recorded rather than assumed.
+           */
+          attribution: {
+            requestId: plan.routingRequest.requestId,
+            aliasId: plan.routingDiagnostics?.aliasResolution?.aliasId ?? null,
+            requestedModel: plan.routingDiagnostics?.aliasResolution?.requestedModel ?? null,
+            requestedEffort:
+              typeof plan.executionRequest.reasoning?.effort === "string"
+                ? plan.executionRequest.reasoning.effort.trim()
+                : null,
+            pass: classifyBridgeRoutePass({
+              requestId: plan.routingRequest.requestId,
+              denyCount: deny.length,
+            }),
           },
           registry: executionSnapshot.registry,
           catalog: executionSnapshot.executionCatalog,
@@ -22484,6 +26623,7 @@ export async function createRuntimeBridgeBackend(
           taskDefinitions: executionSnapshot.taskDefinitions,
           roleBindings,
           routingModel: plan.routingModel ?? executionSnapshot.routingModel ?? undefined,
+          ...(advisoryConsideration ? { advisoryConsideration } : {}),
           ...(cacheContinuityRouteHints
             ? {
                 cacheContinuity: {
@@ -22492,8 +26632,227 @@ export async function createRuntimeBridgeBackend(
                 },
               }
             : {}),
-        }),
-      };
+        });
+      let routed = computeRoute(mergedDenyEndpoints);
+      // Run 98 addendum 40 (L5): the measured-latency input may only move the *initial* decision; a
+      // retry's deny list is the router's own recovery path and is never reinterpreted here. When the
+      // selector prefers another eligible endpoint, the choice is applied by re-routing with the other
+      // eligible endpoints denied, so the router's eligibility, health and capability rules still
+      // decide whether that endpoint can serve the request at all.
+      if (denyEndpoints.length === 0 && latencySelectionContext) {
+        const eligibleEndpointIds = Array.isArray(routed.projected.routeInput.candidates)
+          ? routed.projected.routeInput.candidates.map(
+              (candidate) => candidate.identity.endpoint_id,
+            )
+          : [];
+        const selection = selectEndpointByMeasuredLatency({
+          enabled: true,
+          estimatedInputTokens: latencySelectionContext.estimatedInputTokens,
+          routerChosenEndpointId: String(routed.decision.chosen_endpoint_id),
+          eligibleEndpointIds,
+          buckets: latencySelectionContext.buckets,
+          tokenBucketUpperBounds: latencySelectionContext.tokenBucketUpperBounds,
+          maxDeltaMs: latencySelectionContext.maxDeltaMs,
+          maxCandidates: latencySelectionContext.maxCandidates,
+        });
+        if (selection.outcome === "selected_faster_candidate") {
+          const forcedDeny = eligibleEndpointIds.filter(
+            (endpointId) => endpointId !== selection.chosenEndpointId,
+          );
+          const forced = computeRoute(forcedDeny);
+          if (String(forced.decision.chosen_endpoint_id) === selection.chosenEndpointId) {
+            routed = forced;
+            latencySelectionOutcome = selection;
+          } else {
+            latencySelectionOutcome = {
+              ...selection,
+              outcome: "kept_router_choice",
+              chosenEndpointId: String(routed.decision.chosen_endpoint_id),
+              reason:
+                "the router could not select the measured-faster endpoint under its own eligibility rules",
+            };
+          }
+        } else {
+          latencySelectionOutcome = selection;
+        }
+      } else if (denyEndpoints.length === 0 && !latencySelectionContext) {
+        // Recorded so an operator reading a decision can tell "not authorized" from "no evidence".
+        latencySelectionOutcome = selectEndpointByMeasuredLatency({
+          enabled: false,
+          estimatedInputTokens: plan.routingRequest.contextTokens ?? 0,
+          routerChosenEndpointId: String(routed.decision.chosen_endpoint_id),
+          eligibleEndpointIds: [],
+          buckets: [],
+          tokenBucketUpperBounds: [],
+          maxDeltaMs: 0,
+          maxCandidates: 1,
+        });
+      }
+      // Run 98 addendum 40 L3 follow-up: split the pre-provider window into "read the inputs and route"
+      // and "prepare the dispatch", so the residual the L6 window measured (about 320-350 ms) can be
+      // attributed to one side instead of being reported as one undifferentiated block.
+      markPhase("routing-ready");
+      // Run 99 R33: the dispatch-side context guard. The router already excludes candidates whose
+      // *declared* context is too small, but the selected candidate was never re-checked before the
+      // provider call, so a prompt far beyond the model's window was forwarded and the overflow
+      // surfaced as a client-side "context overflow" instead of a clear runtime answer (observed:
+      // 630,034 estimated tokens handed to a deepseek endpoint, and the operator's DSH turn failing
+      // on `difficulty.remote-only`). Refuse with the estimate, the limit and the model named, and
+      // point at a larger-context alternative when one is eligible.
+      {
+        const guardCandidates = Array.isArray(routed.projected.routeInput.candidates)
+          ? routed.projected.routeInput.candidates
+          : [];
+        const chosenEndpointId = String(routed.decision.chosen_endpoint_id);
+        const selectedCandidate =
+          guardCandidates.find(
+            (candidate) => candidate.identity.endpoint_id === chosenEndpointId,
+          ) ?? null;
+        const contextGuard = evaluateDispatchContextGuard({
+          estimatedContextTokens: plan.routingRequest.contextTokens ?? null,
+          maxContextTokens: selectedCandidate?.declared.max_context_tokens ?? null,
+          modelId:
+            selectedCandidate?.declared.model_id ??
+            selectedCandidate?.identity.model_id ??
+            chosenEndpointId,
+          endpointId: chosenEndpointId,
+          alternatives: guardCandidates
+            .filter((candidate) => candidate.identity.endpoint_id !== chosenEndpointId)
+            .map((candidate) => ({
+              endpointId: candidate.identity.endpoint_id,
+              modelId: candidate.declared.model_id ?? candidate.identity.model_id,
+              maxContextTokens: candidate.declared.max_context_tokens ?? 0,
+            })),
+        });
+        if (!contextGuard.allowed) {
+          throw new BridgeHttpError(400, {
+            error: {
+              type: contextGuard.code,
+              code: contextGuard.code,
+              message: contextGuard.reason,
+              model: contextGuard.modelId,
+              endpoint_id: contextGuard.endpointId,
+              estimated_context_tokens: contextGuard.estimatedContextTokens,
+              max_context_tokens: contextGuard.maxContextTokens,
+              ...(contextGuard.reroute
+                ? {
+                    suggested_endpoint_id: contextGuard.reroute.endpointId,
+                    suggested_model: contextGuard.reroute.modelId,
+                  }
+                : {}),
+            },
+          });
+        }
+      }
+      // Run 99 R25 / `AC-R05-03`: record what the live router did with the advisory, so the
+      // operator surface can distinguish "considered but retained" (with the router's typed
+      // reason) from "applied" instead of reporting every decision as an S1 shadow.
+      if (advisoryConsideration) {
+        try {
+          const outcome = (
+            routed.decision as unknown as {
+              readonly advisory_consideration?: {
+                readonly applied?: boolean;
+                readonly fallbackReason?: string | null;
+                readonly cohortBucket?: number | null;
+                readonly scoreGapBefore?: number | null;
+                readonly advisoryPackageEligible?: boolean;
+                readonly eligibleEndpointCount?: number;
+                /** Run 105 C13: the ladder walk's evidence, read back off the decision. */
+                readonly advisoryLadderLength?: number;
+                readonly advisoryRungRank?: number | null;
+                readonly advisoryRungWalked?: string | null;
+                readonly advisoryRungSkipped?: number;
+              };
+            }
+          ).advisory_consideration;
+          const observation = buildLiveRouteAdvisoryObservation({
+            decisionId: routed.decision.routing_decision_id,
+            routePackage: routed.decision.chosen_endpoint_id,
+            eligibleRoutePackages: (routed.projected.routeInput.candidates ?? []).map(
+              (candidate) => candidate.identity.endpoint_id,
+            ),
+            advisory: {
+              candidateId: advisoryConsideration.candidateId ?? null,
+              preferredEndpointId: advisoryConsideration.preferredEndpointId ?? null,
+              advisoryId: advisoryConsideration.advisoryId ?? null,
+              advisoryState: advisoryConsideration.advisoryState,
+              confidence: advisoryConsideration.confidence,
+              stage: advisoryConsideration.stage,
+              policyVersion: advisoryConsideration.policyVersion ?? null,
+              cohortPercent: advisoryConsideration.cohortPercent ?? null,
+              scoreBand: advisoryConsideration.scoreBand ?? null,
+              // Run 99 R33 (addendum 19 S33): the observation records which family the advisory
+              // was scoped to and which family the request belonged to, so an operator can see
+              // why a preference did or did not reach a decision.
+              taskTypeId: advisoryConsideration.taskTypeId ?? null,
+              requestTaskTypeId,
+              taxonomyVersion: advisoryConsideration.taxonomyVersion ?? null,
+            },
+            // Run 99 close-out (addenda 19-21 S33/D1/D2): record the classification the request was
+            // routed with, so the evidence is keyed by family *and* by the taxonomy identity it was
+            // classified against rather than by a bare family string.
+            // Run 104 R6: the helper resolves the task through the declaration -> resolved identity ->
+            // intent chain, so a request that declared no task no longer records `taskTypeId: null`.
+            classification: buildRequestClassificationForPlan(plan),
+            // Run 99 close-out (D6): a live routed answer is the policy's own deterministic choice.
+            outcome: outcome
+              ? {
+                  applied: outcome.applied === true,
+                  fallbackReason: outcome.fallbackReason ?? null,
+                  cohortBucket:
+                    typeof outcome.cohortBucket === "number" ? outcome.cohortBucket : null,
+                  scoreGapBefore:
+                    typeof outcome.scoreGapBefore === "number" ? outcome.scoreGapBefore : null,
+                  advisoryPackageEligible: outcome.advisoryPackageEligible === true,
+                  eligibleEndpointCount:
+                    typeof outcome.eligibleEndpointCount === "number"
+                      ? outcome.eligibleEndpointCount
+                      : undefined,
+                  // Run 105 C13: record WHICH rung the walk landed on, so the ladder's influence is
+                  // measurable rather than invisible (addendum A2's recorded consequence).
+                  advisoryLadderLength:
+                    typeof outcome.advisoryLadderLength === "number"
+                      ? outcome.advisoryLadderLength
+                      : undefined,
+                  advisoryRungRank:
+                    typeof outcome.advisoryRungRank === "number" ? outcome.advisoryRungRank : null,
+                  advisoryRungWalked:
+                    typeof outcome.advisoryRungWalked === "string"
+                      ? outcome.advisoryRungWalked
+                      : null,
+                  advisoryRungSkipped:
+                    typeof outcome.advisoryRungSkipped === "number"
+                      ? outcome.advisoryRungSkipped
+                      : undefined,
+                }
+              : null,
+            observedAtMs: Date.now(),
+          });
+          void appendTrackBRouteAdvisoryObservation({
+            filePath: path.join(
+              options.runtimeStateRoot,
+              options.scopeId,
+              "track-b",
+              "advisory-observations.json",
+            ),
+            observation,
+          }).catch((error: unknown) => {
+            console.error(
+              `[run99] live advisory observation degraded: ${String(
+                (error as { message?: unknown })?.message ?? error,
+              ).slice(0, 200)}`,
+            );
+          });
+        } catch (error) {
+          console.error(
+            `[run99] live advisory observation skipped: ${String(
+              (error as { message?: unknown })?.message ?? error,
+            ).slice(0, 200)}`,
+          );
+        }
+      }
+      return { deniedEndpointIds: mergedDenyEndpoints, routed };
     };
     const throwUnavailableExecutionTarget = (input: {
       readonly deniedEndpointIds: readonly string[];
@@ -22947,6 +27306,17 @@ export async function createRuntimeBridgeBackend(
         (target.account?.credentialRef.backend === "local-file" ||
           target.account?.credentialRef.backend === "local-encrypted-file")
       ) {
+        /**
+         * Run 101 addendum 14 (operator: "the oauth workflow fallback and credential hot reloading still needs
+         * work, it doesn't by itself resolve and reflect successful oauth"). Measured live: the browser login
+         * wrote a fresh credential file, but the runtime kept presenting the token it had loaded at boot, so the
+         * account stayed auth-blocked until a restart.
+         *
+         * Two steps, in order: try the runtime's own refresh (the existing fallback), and if that fails or yields
+         * nothing new, re-resolve the credential from the store - which is what picks up a credential the
+         * operator replaced out-of-band (a browser login). Whichever value differs from the failed one gets the
+         * retry; if neither changed, the original response is classified as before.
+         */
         const refreshedCredentialValue = await refreshOauthAccessToken(
           options.runtimeStateRoot,
           options.scopeId,
@@ -22956,8 +27326,39 @@ export async function createRuntimeBridgeBackend(
           networkFetcher,
           deviceId,
           rebuildCurrentState,
-        );
-        ({ response, latencyMs } = await performRequest(refreshedCredentialValue));
+        ).catch(() => null);
+        const reResolvedCredentialValue =
+          refreshedCredentialValue ??
+          (await resolveCredentialValue(
+            options.runtimeStateRoot,
+            options.scopeId,
+            target,
+            providerPresets,
+            liteLLMProviders,
+            networkFetcher,
+            deviceId,
+            rebuildCurrentState,
+            providerCredentialEnvironment,
+          ).catch(() => null));
+        const retryCredentialValue =
+          reResolvedCredentialValue && reResolvedCredentialValue !== credentialValue
+            ? reResolvedCredentialValue
+            : null;
+        if (retryCredentialValue) {
+          ({ response, latencyMs } = await performRequest(retryCredentialValue));
+          if (response.status < 400) {
+            /**
+             * A rotated credential heals the endpoint: the auth block that was recorded against the old value is
+             * stale, and leaving it in place keeps the operator's account out of the pool until the next
+             * successful probe or restart (measured live: `gpt-5.6-luna` kept a stale `blocked_auth` record
+             * after a successful browser login).
+             */
+            clearExecutionFailureCooldown({
+              databasePath: initialization.databasePath,
+              endpointId: target.endpointId,
+            });
+          }
+        }
       }
       const measuredVendorMetadata = {
         latencyMs,
@@ -23320,6 +27721,9 @@ export async function createRuntimeBridgeBackend(
           sourceClient,
           executionFamily: error.executionFamily,
           adapterFamily: error.adapterFamily,
+          providerAttemptIds: executionSemanticsReceipt.failedAttempts.map(
+            (attempt) => attempt.attemptId,
+          ),
           payloadBytes,
           retryCount: executionSemanticsReceipt.retryCount,
           rerouteCount: executionSemanticsReceipt.rerouteCount,
@@ -23387,12 +27791,25 @@ export async function createRuntimeBridgeBackend(
           modelId: selectedModelId ?? selectedEndpointId,
           reasoningEffort: selectedReasoningEffort,
           effortSource: selectedEffortSource,
+          // Run 99 close-out (addendas 19-21 S33): a failed request is still evidence, so its
+          // capture records the same classification the routed path would have.
+          // Run 104 R6: the same fallback chain as the routed capture, resolved in one place.
+          classification: buildRequestClassificationForPlan(plan),
+          comparability: { scorerSetVersion: RUN96_ROUTING_SHADOW_SCORER_SET_VERSION },
           messages: captureInput,
           failure: {
             errorClass: error.errorClass,
             statusCode: error.statusCode,
             message: error.message,
           },
+          providerExecutions: [
+            {
+              attemptId: `attempt:${requestId}:failure`,
+              providerId: error.providerId,
+              adapterFamily: error.adapterFamily,
+              statusCode: error.statusCode,
+            },
+          ],
           toolExecutions: [],
         })) as Record<string, unknown>;
       } catch {
@@ -23412,79 +27829,90 @@ export async function createRuntimeBridgeBackend(
         ...baseFailureObservation,
         ...(graphEvidence ? { graphEvidence } : {}),
       });
-      persistRuntimeTelemetryFailure({
-        databasePath: initialization.databasePath,
-        requestId,
-        routingDecisionId,
-        endpointId: selectedEndpointId,
-        reasoningEffort: selectedReasoningEffort,
-        effortSource: selectedEffortSource,
-        modelId: selectedModelId ?? undefined,
-        requestedModelId: executionOptions?.requestedModel ?? selectedModelId,
-        selectedModelId,
-        requestOperation: executionOptions?.requestOperation ?? "chat",
-        statusCode: error.statusCode,
-        errorClass: error.errorClass,
-        latencyMs: failureLatencyMs,
-        clientRequestId: executionOptions?.requestOptions?.clientRequestId ?? null,
-        requestClass: "live_request",
-        sourceType,
-        providerKind: selectedCandidate?.identity.provider_kind ?? null,
-        providerFamily: error.providerFamily,
-        vendorId: error.vendorId ?? null,
-        providerId: error.providerId,
-        providerAccountId:
-          selectedProviderAccount?.providerAccountId ??
-          selectedRuntimeEndpoint?.providerAccountId ??
-          null,
-        endpointKind: selectedCandidate?.identity.endpoint_kind ?? "remote_api",
-        servingSource:
-          selectedCandidate?.identity.serving_source ?? error.executionFamily ?? "remote-service",
-        region: selectedCandidate?.identity.region ?? null,
-        lifecycleStateAtRequest: selectedCandidate?.status ?? "unknown",
-        healthStatusAtRequest: selectedProviderAccount?.healthStatus ?? null,
-        routingMode: requestRoutingMode?.effectiveMode ?? null,
-        selectedStrategy: plan.routingRequest.strategy,
-        sourceClient,
-        executionFamily: error.executionFamily,
-        adapterFamily: error.adapterFamily,
-        requestPayloadBytes: payloadBytes.ingress,
-        ingressPayloadBytes: payloadBytes.ingress,
-        translatedPayloadBytes: payloadBytes.translated,
-        providerCanonicalPayloadBytes: payloadBytes.providerCanonical,
-        providerWirePayloadBytes: payloadBytes.providerWire,
-        responsePayloadBytes: payloadBytes.providerResponse,
-        retryCount: executionSemanticsReceipt.retryCount,
-        rerouteCount: executionSemanticsReceipt.rerouteCount,
-        cooldownDecision: executionSemanticsReceipt.cooldownDecision,
-        idempotencyDecision: "not_needed",
-        toolSideEffectState: "none",
-        toolingUsed: Boolean(plan.executionRequest.tools?.length),
-        cacheState: "unknown",
-        roleIds: telemetrySnapshot.roleIds,
-        eligibleEndpointIds,
-        eligibleModelIds,
-        candidateCostSnapshot: telemetrySnapshot.candidateCostSnapshot,
-        selectedPricingSnapshot: telemetrySnapshot.selectedPricingSnapshot,
-        selectedUncachedCostUsd: telemetrySnapshot.selectedUncachedCostUsd,
-        baselineMaxEligibleCostUsd: telemetrySnapshot.baselineMaxEligibleCostUsd,
-        routingCostSavingsUsd: telemetrySnapshot.routingCostSavingsUsd,
-        cacheCostSavingsUsd: telemetrySnapshot.cacheCostSavingsUsd,
-        totalAvoidedCostUsd: telemetrySnapshot.totalAvoidedCostUsd,
-        costBaselineSource: telemetrySnapshot.costBaselineSource,
-        costSavingsSupport: telemetrySnapshot.costSavingsSupport,
-        samplingRate: failureObservation.privacyReceipt.samplingRate,
-        retentionTtlHours: failureObservation.privacyReceipt.retentionTtlHours,
-        retainUntil: failureObservation.privacyReceipt.retainUntil,
-        redactionLevel: capturePolicy.redactionLevel,
-        retentionClass: capturePolicy.retentionClass,
-        structuredInspectionMode: capturePolicy.structuredInspectionMode,
-        rawCaptureAvailable: capturePolicy.rawCaptureAvailable,
-        structuredInspectionAvailable: capturePolicy.structuredInspectionAvailable,
-        dimensions: selectedEndpointDimensions,
-        observation: failureObservation,
-        ...(localGraphStore ? { graphStore: localGraphStore } : {}),
-      });
+      const persisted = persistFailureTelemetrySafely(() =>
+        persistRuntimeTelemetryFailure({
+          databasePath: initialization.databasePath,
+          requestId,
+          routingDecisionId,
+          endpointId: selectedEndpointId,
+          reasoningEffort: selectedReasoningEffort,
+          effortSource: selectedEffortSource,
+          modelId: selectedModelId ?? undefined,
+          requestedModelId: executionOptions?.requestedModel ?? selectedModelId,
+          selectedModelId,
+          requestOperation: executionOptions?.requestOperation ?? "chat",
+          statusCode: error.statusCode,
+          errorClass: error.errorClass,
+          latencyMs: failureLatencyMs,
+          /**
+           * Run 101 addendum 23: the failure row must carry what the client actually received. The builder used to
+           * write a literal zero, so a response that had streamed 789 chunks was recorded (and read by this operator)
+           * as `streamTextDeltaCount: 0` - the number that made a post-content drop look like a pre-content failure
+           * for two repair cycles. This is the count of chunks that carried content or tool calls.
+           */
+          streamTextDeltaCount: deliveredSubstantiveChunkCount,
+          clientRequestId: executionOptions?.requestOptions?.clientRequestId ?? null,
+          requestClass: toPersistedTrafficClass(
+            executionOptions?.requestOptions?.executionTrafficClass,
+          ),
+          sourceType,
+          providerKind: selectedCandidate?.identity.provider_kind ?? null,
+          providerFamily: error.providerFamily,
+          vendorId: error.vendorId ?? null,
+          providerId: error.providerId,
+          providerAccountId:
+            selectedProviderAccount?.providerAccountId ??
+            selectedRuntimeEndpoint?.providerAccountId ??
+            null,
+          endpointKind: selectedCandidate?.identity.endpoint_kind ?? "remote_api",
+          servingSource:
+            selectedCandidate?.identity.serving_source ?? error.executionFamily ?? "remote-service",
+          region: selectedCandidate?.identity.region ?? null,
+          lifecycleStateAtRequest: selectedCandidate?.status ?? "unknown",
+          healthStatusAtRequest: selectedProviderAccount?.healthStatus ?? null,
+          routingMode: requestRoutingMode?.effectiveMode ?? null,
+          selectedStrategy: plan.routingRequest.strategy,
+          sourceClient,
+          executionFamily: error.executionFamily,
+          adapterFamily: error.adapterFamily,
+          requestPayloadBytes: payloadBytes.ingress,
+          ingressPayloadBytes: payloadBytes.ingress,
+          translatedPayloadBytes: payloadBytes.translated,
+          providerCanonicalPayloadBytes: payloadBytes.providerCanonical,
+          providerWirePayloadBytes: payloadBytes.providerWire,
+          responsePayloadBytes: payloadBytes.providerResponse,
+          retryCount: executionSemanticsReceipt.retryCount,
+          rerouteCount: executionSemanticsReceipt.rerouteCount,
+          cooldownDecision: executionSemanticsReceipt.cooldownDecision,
+          idempotencyDecision: "not_needed",
+          toolSideEffectState: "none",
+          toolingUsed: Boolean(plan.executionRequest.tools?.length),
+          cacheState: "unknown",
+          roleIds: telemetrySnapshot.roleIds,
+          eligibleEndpointIds,
+          eligibleModelIds,
+          candidateCostSnapshot: telemetrySnapshot.candidateCostSnapshot,
+          selectedPricingSnapshot: telemetrySnapshot.selectedPricingSnapshot,
+          selectedUncachedCostUsd: telemetrySnapshot.selectedUncachedCostUsd,
+          baselineMaxEligibleCostUsd: telemetrySnapshot.baselineMaxEligibleCostUsd,
+          routingCostSavingsUsd: telemetrySnapshot.routingCostSavingsUsd,
+          cacheCostSavingsUsd: telemetrySnapshot.cacheCostSavingsUsd,
+          totalAvoidedCostUsd: telemetrySnapshot.totalAvoidedCostUsd,
+          costBaselineSource: telemetrySnapshot.costBaselineSource,
+          costSavingsSupport: telemetrySnapshot.costSavingsSupport,
+          samplingRate: failureObservation.privacyReceipt.samplingRate,
+          retentionTtlHours: failureObservation.privacyReceipt.retentionTtlHours,
+          retainUntil: failureObservation.privacyReceipt.retainUntil,
+          redactionLevel: capturePolicy.redactionLevel,
+          retentionClass: capturePolicy.retentionClass,
+          structuredInspectionMode: capturePolicy.structuredInspectionMode,
+          rawCaptureAvailable: capturePolicy.rawCaptureAvailable,
+          structuredInspectionAvailable: capturePolicy.structuredInspectionAvailable,
+          dimensions: selectedEndpointDimensions,
+          observation: failureObservation,
+          ...(localGraphStore ? { graphStore: localGraphStore } : {}),
+        }),
+      );
       if (options.trackBPostObservation) {
         try {
           await options.trackBPostObservation(failureObservation);
@@ -23492,8 +27920,10 @@ export async function createRuntimeBridgeBackend(
           console.error("Track B failure post-observation processing failed", postObservationError);
         }
       }
-      markRuntimeTelemetryPersisted(error);
-      emitTelemetryUpdate(requestId);
+      if (persisted) {
+        markRuntimeTelemetryPersisted(error);
+        emitTelemetryUpdate(requestId);
+      }
     };
     const executeCurrentExecutionRequest = async (
       executionRequest: RuntimeExecutionRequest,
@@ -23536,8 +27966,14 @@ export async function createRuntimeBridgeBackend(
           );
           const effortResolution = resolveEndpointExecutionEffort({
             fixedEffort: selectedCandidate?.identity.reasoning_effort ?? null,
+            declaredEffortLevels: readDeclaredEffortLevels(
+              executionSnapshot.registry,
+              routed.decision.chosen_endpoint_id,
+            ),
             executionRequest,
           });
+          markPhase("provider-call-start");
+          providerPhaseStartedAtMs = Date.now();
           const result = await executeLiveRoutedRequest({
             routeResult: routed,
             catalog: executionSnapshot.executionCatalog,
@@ -23549,10 +27985,24 @@ export async function createRuntimeBridgeBackend(
             adapters,
             executeProviderRequest,
           });
-          clearExecutionFailureCooldown({
-            databasePath: initialization.databasePath,
-            endpointId: result.target.endpointId,
-          });
+          providerPhaseCompletedAtMs = Date.now();
+          if (ownedProbeEndpointId) {
+            const settledProbe = settleExecutionCircuitProbe({
+              state: readExecutionCircuitState(initialization.databasePath),
+              endpointId: ownedProbeEndpointId,
+              probeOwnerId: requestId,
+              nowMs: Date.now(),
+              result: { outcome: "success" },
+            });
+            if (settledProbe.settled) {
+              writeExecutionCircuitState(initialization.databasePath, settledProbe.state);
+            }
+          } else {
+            clearExecutionFailureCooldown({
+              databasePath: initialization.databasePath,
+              endpointId: result.target.endpointId,
+            });
+          }
           const recoveredEndpoint = runtimeEndpoints.find(
             (endpoint) => endpoint.endpointId === result.target.endpointId,
           );
@@ -23571,8 +28021,27 @@ export async function createRuntimeBridgeBackend(
           ownedProbeEndpointId = undefined;
           routingDecisionId = routed.decision.routing_decision_id;
           return result;
-        } catch (error) {
-          if (!(error instanceof UpstreamExecutionError) || streamedChunkCount > 0) {
+        } catch (rawError) {
+          /**
+           * Run 101 addendum 18: classify before the gate, so a provider transport error that its branch never
+           * classified still retries and fails over (measured live: `terminated` skipped both).
+           */
+          const failedEndpointRow = executionSnapshot.registry.endpoints.find(
+            (row) => row.identity.endpoint_id === routed.decision.chosen_endpoint_id,
+          );
+          const error = classifyExecutionFailureIfNeeded(
+            rawError,
+            routed.decision.chosen_endpoint_id,
+            {
+              providerId: failedEndpointRow?.identity.provider_kind ?? "",
+              executionFamily:
+                failedEndpointRow?.identity.serving_source ??
+                failedEndpointRow?.identity.endpoint_kind ??
+                "",
+              adapterFamily: failedEndpointRow?.identity.endpoint_kind ?? "",
+            },
+          );
+          if (!(error instanceof UpstreamExecutionError) || deliveredSubstantiveChunkCount > 0) {
             if (ownedProbeEndpointId) {
               const released = releaseExecutionCircuitProbe({
                 state: readExecutionCircuitState(initialization.databasePath),
@@ -23616,8 +28085,9 @@ export async function createRuntimeBridgeBackend(
             fallbackEligible: error.fallbackEligible,
             hasOtherEligibleEndpoint,
           });
+          const ownsFailedProbe = ownedProbeEndpointId === error.endpointId;
           let cooldownRecord: ExecutionCircuitRecord | undefined;
-          if (shouldRetry) {
+          if (shouldRetry && !ownsFailedProbe) {
             retriedEndpointIds.add(error.endpointId);
             executionSemanticsReceipt.retryCount += 1;
           } else if (failureCategory) {
@@ -23635,28 +28105,25 @@ export async function createRuntimeBridgeBackend(
               adapterFamily: error.adapterFamily,
               failurePhase: error.failurePhase,
               statusCode: error.statusCode,
+              ...(ownsFailedProbe ? { probeOwnerId: requestId } : {}),
             });
             if (cooldownRecord) {
               executionSemanticsReceipt.cooldownDecision = "recorded";
-              if (
-                cooldownRecord.failureCount >= CONSECUTIVE_EXECUTION_FAILURE_DEGRADATION_THRESHOLD
-              ) {
-                const failedEndpoint = runtimeEndpoints.find(
-                  (endpoint) => endpoint.endpointId === error.endpointId,
-                );
-                if (failedEndpoint && failedEndpoint.lifecycleState !== "degraded") {
-                  upsertSqliteRuntimeEndpoint({
-                    databasePath: initialization.databasePath,
-                    endpoint: {
-                      ...failedEndpoint,
-                      lifecycleState: "degraded",
-                      healthStatus: "degraded",
-                    },
-                  });
-                  rebuildCurrentState();
-                  emitRevisionUpdate();
-                }
-              }
+            }
+          }
+          if (shouldRetry && ownsFailedProbe) {
+            retriedEndpointIds.add(error.endpointId);
+            executionSemanticsReceipt.retryCount += 1;
+          }
+          if (ownsFailedProbe && !failureCategory) {
+            const released = releaseExecutionCircuitProbe({
+              state: readExecutionCircuitState(initialization.databasePath),
+              endpointId: error.endpointId,
+              probeOwnerId: requestId,
+              nowMs: Date.now(),
+            });
+            if (released.released) {
+              writeExecutionCircuitState(initialization.databasePath, released.state);
             }
           }
           ownedProbeEndpointId = undefined;
@@ -23843,6 +28310,10 @@ export async function createRuntimeBridgeBackend(
         : "openai.chat.completions";
     const effectiveEffort = resolveEndpointExecutionEffort({
       fixedEffort: execution.target.candidate.identity.reasoning_effort ?? null,
+      declaredEffortLevels: readDeclaredEffortLevels(
+        executionSnapshot.registry,
+        execution.target.endpointId,
+      ),
       executionRequest: plan.executionRequest as RuntimeExecutionRequest,
     }).receipt;
     const cacheContinuityOutcome = persistCacheContinuityOutcome({
@@ -23898,6 +28369,11 @@ export async function createRuntimeBridgeBackend(
         plan.routingRequest.roleModelIntent,
         executionSnapshot.roleDefinitions,
         executionSnapshot.taskDefinitions,
+        {
+          effectiveTaskTypeId: plan.taxonomyIdentity?.taskTypeId ?? plan.routingRequest.taskType,
+          effectiveRoleId:
+            plan.taxonomyIdentity?.roleId ?? plan.routingRequest.roleModelIntent?.role?.id ?? null,
+        },
       );
       const reasoningRequested = Boolean(plan.executionRequest.reasoning);
       const syntheticReasoningDeltaCount =
@@ -23928,6 +28404,15 @@ export async function createRuntimeBridgeBackend(
         decisionPortfolio.entries.find(
           (entry) => entry.endpointId === routed.decision.chosen_endpoint_id,
         )?.profileRevision ?? null;
+      /**
+       * Run 104 / R14 (addendum-03): the declared execution class travels into the observation sample, so the
+       * telemetry row and the observation/sample row for the same request agree. An unresolved class is `live`.
+       */
+      const declaredTrafficClass = toPersistedTrafficClass(
+        executionOptions?.requestOptions?.executionTrafficClass,
+      );
+      const observedTrafficClass =
+        declaredTrafficClass === "unknown" ? "live" : declaredTrafficClass;
       const baseBundle = createRuntimeObservationBundle({
         decision: {
           ...routed.decision,
@@ -23935,14 +28420,31 @@ export async function createRuntimeBridgeBackend(
           profile_revision: decisionProfileRevision,
         },
         clientRequestId: executionOptions?.requestOptions?.clientRequestId,
+        trafficClass: observedTrafficClass,
         reasoningEffort: effectiveEffort.reasoningEffort,
         effortSource: effectiveEffort.effortSource,
+        // Run 98 addendum 40 (L1): record the provider breakdown beside the historical header time,
+        // so telemetry can report what the client waited for instead of the provider's first byte.
+        latencyBreakdown: {
+          providerHeaderMs: execution.usageEvent.latency_ms ?? null,
+          providerCompletionMs:
+            providerPhaseStartedAtMs !== null && providerPhaseCompletedAtMs !== null
+              ? Math.max(0, providerPhaseCompletedAtMs - providerPhaseStartedAtMs)
+              : null,
+          timeToFirstTokenMs:
+            providerPhaseStartedAtMs !== null && firstStreamedChunkAtMs !== null
+              ? Math.max(0, firstStreamedChunkAtMs - providerPhaseStartedAtMs)
+              : null,
+        },
         ...(normalizedIntentObservation.normalizedIntent
           ? { normalizedIntent: normalizedIntentObservation.normalizedIntent }
           : {}),
         routingDiagnostics: {
           ...routed.routingDiagnostics,
           ...plan.routingDiagnostics,
+          // Run 98 addendum 40 (L5): the measured-latency input and its verdict are recorded beside the
+          // decision it did (or did not) move, so a decision is auditable without re-deriving it.
+          ...(latencySelectionOutcome ? { latencySelection: latencySelectionOutcome } : {}),
           ...(normalizedIntentObservation.diagnostics.length > 0
             ? {
                 roleModelIntent: {
@@ -23988,6 +28490,10 @@ export async function createRuntimeBridgeBackend(
               ? "openai.responses"
               : "openai.chat.completions",
           adapterFamily: effectiveExecutionAdapterFamily,
+          providerAttemptIds: [
+            ...executionSemanticsReceipt.failedAttempts.map((attempt) => attempt.attemptId),
+            `attempt:${requestId}:final`,
+          ],
           payloadBytes: {
             ingress: measureStructuredPayloadBytes(executionOptions?.requestBody ?? null),
             translated: measureStructuredPayloadBytes(plan.executionRequest),
@@ -24058,13 +28564,74 @@ export async function createRuntimeBridgeBackend(
             correlationId,
           })
         : undefined;
+      // Run 104 R6: the observation bundle carries the same classification the routed capture records.
+      const routeClassification = buildRequestClassificationForPlan(plan);
       const bundle = Object.freeze({
         ...baseBundle,
         providerEvidence: buildProviderEvidenceFromObservation(
           baseBundle as unknown as Readonly<Record<string, unknown>>,
         ),
         correlationId,
+        /**
+         * Run 98 addendum 32 S3/S5 (live finding, stage v207): the difficulty bucket the alias gate
+         * reads was never persisted for real requests — `runtime_telemetry_records.difficulty_bucket`
+         * was NULL on all 4055 rows and only benchmark samples carried one, so the de-saturated rubric
+         * could not be observed live and the request detail surface showed no bucket. The plan's
+         * routing diagnostics travel with the observation now; `toRuntimeTelemetryRecord` derives the
+         * bucket, the effective mode and the strategy from exactly these fields.
+         */
+        ...(plan.routingDiagnostics
+          ? {
+              routingDiagnostics: {
+                // Run 98 addendum 35 (live stage finding, 2026-09-18): this branch used to *replace*
+                // the bundle's diagnostics with these four difficulty keys, so any request whose plan
+                // carried only some of them persisted `routingDiagnostics: {}` — the per-request
+                // observed profile, the effective metric summary, the throughput penalty, the role
+                // policy and the alias/selection detail all vanished, ten runtime-host-bridge
+                // acceptance tests failed on the readback, and the live difficulty bucket stayed
+                // unobservable for exactly the traffic this block was added to make observable. The
+                // plan's difficulty evidence layers on top of the bundle's diagnostics; it never
+                // replaces them.
+                ...(((baseBundle as unknown as Record<string, unknown>).routingDiagnostics as
+                  | Record<string, unknown>
+                  | undefined) ?? {}),
+                ...(plan.routingDiagnostics.difficultyRouting
+                  ? { difficultyRouting: plan.routingDiagnostics.difficultyRouting }
+                  : {}),
+                ...(plan.routingDiagnostics.routingMode
+                  ? { routingMode: plan.routingDiagnostics.routingMode }
+                  : {}),
+                ...(plan.routingDiagnostics.controllerRouting
+                  ? { controllerRouting: plan.routingDiagnostics.controllerRouting }
+                  : {}),
+                ...(plan.routingDiagnostics.hybridArbitration
+                  ? { hybridArbitration: plan.routingDiagnostics.hybridArbitration }
+                  : {}),
+                /**
+                 * Run 103 / Phase 5 live finding: this bundle is the one the observation ledger keeps, so
+                 * the run-103 receipts have to travel with it - otherwise a decision answers every
+                 * question except "who chose this strategy and did the latency override act"
+                 * (R3, design document section 6.5).
+                 */
+                ...(plan.routingDiagnostics.strategyResolution
+                  ? { strategyResolution: plan.routingDiagnostics.strategyResolution }
+                  : {}),
+                ...(plan.routingDiagnostics.aliasPostureBinding
+                  ? { aliasPostureBinding: plan.routingDiagnostics.aliasPostureBinding }
+                  : {}),
+              },
+            }
+          : {}),
+        // Run 99 R33 (addendum 19 S33): the capture records the task family the request was
+        // routed for, so replay, evaluation, learning and the advisory can all be scoped to it.
+        // Run 104 R6: the flat family is the one the classification resolved, so the bare key and the
+        // classification object below can never disagree.
+        ...(routeClassification?.taskTypeId ? { taskTypeId: routeClassification.taskTypeId } : {}),
+        ...(taxonomyManifest.taxonomyVersion
+          ? { taxonomyVersion: taxonomyManifest.taxonomyVersion }
+          : {}),
         ...(run88Correlation ? { run88Correlation } : {}),
+        classification: routeClassification,
       });
       let artifactRef:
         | { readonly scopeId: string; readonly artifactId: string; readonly contentHash: string }
@@ -24093,28 +28660,73 @@ export async function createRuntimeBridgeBackend(
             : Array.isArray(requestBody.input)
               ? requestBody.input
               : [];
-          const capture = (await runtimeTrackBOperations.recordLocalRouteCapture({
+          // Run 104 R6: one classification per capture, shared by the bare family key and the object.
+          const routeCaptureClassification = buildRequestClassificationForPlan(plan);
+          const routeCapturePayload = {
             requestId,
             routingDecisionId,
             endpointId: execution.target.endpointId,
+            // Run 99 R33 (S34 live finding): the capture records the task family, so the recovered
+            // capture read by the supervised replay can carry it into the comparison.
+            ...(routeCaptureClassification?.taskTypeId
+              ? { taskTypeId: routeCaptureClassification.taskTypeId }
+              : {}),
+            ...(taxonomyManifest.taxonomyVersion
+              ? { taxonomyVersion: taxonomyManifest.taxonomyVersion }
+              : {}),
+            // Run 99 close-out (addendas 19-21 S33/D1/D2): the capture records the whole
+            // classification — family, role, tool classes and the taxonomy identity — not only the
+            // family string, so the evidence is keyed by the taxonomy it was classified against.
+            classification: routeCaptureClassification,
+            // Run 99 close-out (addendum 21 §4 S33): the comparability key's scorer-set identity is
+            // a property of this runtime, so it is known before the request is even dispatched. The
+            // two digests and the judge order policy are resolved when the evaluation case is built
+            // from the capture, so they stay on the comparison record rather than being pre-declared.
+            comparability: { scorerSetVersion: RUN96_ROUTING_SHADOW_SCORER_SET_VERSION },
             modelId: execution.target.candidate.identity.model_id,
             reasoningEffort: effectiveEffort.reasoningEffort,
             effortSource: effectiveEffort.effortSource,
+            eligibleEndpointIds: telemetrySnapshot.eligibleEndpointIds,
             messages: captureInput,
+            providerExecutions: [
+              {
+                attemptId: `attempt:${requestId}:final`,
+                providerId: execution.target.providerId,
+                adapterFamily: effectiveExecutionAdapterFamily,
+                statusCode: execution.responseCapture.statusCode,
+              },
+            ],
             outputText: execution.normalized.outputText,
             toolExecutions: toolExecutionResult.executions,
-          })) as Record<string, unknown>;
-          routeCapture = capture;
-          if (
-            typeof capture.scope === "string" &&
-            typeof capture.rootArtifactId === "string" &&
-            typeof capture.rootArtifactDigest === "string"
-          ) {
-            artifactRef = {
-              scopeId: capture.scope,
-              artifactId: capture.rootArtifactId,
-              contentHash: capture.rootArtifactDigest,
-            };
+          };
+          if (routeCaptureQueue) {
+            // v1.1 guidance 05: rich capture must not starve request handling. The capture is queued
+            // (actionTaken `queued_for_retry`) and delivered by the background drain; only its local
+            // graph pointer is deferred, and the receipt records that on the observation.
+            await routeCaptureQueue.enqueue({
+              requestId,
+              routingDecisionId,
+              endpointId: execution.target.endpointId,
+              payload: routeCapturePayload,
+            });
+            routeCaptureDegradationReason = "track-b-capture-deferred";
+            scheduleDeferredRouteCaptureDrain();
+          } else {
+            const capture = (await runtimeTrackBOperations.recordLocalRouteCapture(
+              routeCapturePayload,
+            )) as Record<string, unknown>;
+            routeCapture = capture;
+            if (
+              typeof capture.scope === "string" &&
+              typeof capture.rootArtifactId === "string" &&
+              typeof capture.rootArtifactDigest === "string"
+            ) {
+              artifactRef = {
+                scopeId: capture.scope,
+                artifactId: capture.rootArtifactId,
+                contentHash: capture.rootArtifactDigest,
+              };
+            }
           }
         }
       } catch (error) {
@@ -24135,7 +28747,17 @@ export async function createRuntimeBridgeBackend(
           status && status >= 100 && status <= 599
             ? `track-b-capture-boundary-http-${status}`
             : "track-b-capture-boundary-unavailable";
-        console.error("Track B route capture failed", routeCaptureDegradationReason);
+        // Bound and redact the reason: the private boundary message names the failing
+        // check and never carries request content.
+        const reason =
+          error && typeof error === "object" && "message" in error
+            ? String((error as { message?: unknown }).message ?? "").slice(0, 200)
+            : "";
+        console.error(
+          "Track B route capture failed",
+          routeCaptureDegradationReason,
+          reason ? `reason=${reason}` : "",
+        );
       }
       const graphEvidence = routeCapture
         ? {
@@ -24158,9 +28780,25 @@ export async function createRuntimeBridgeBackend(
               evidenceBundle as unknown as Readonly<Record<string, unknown>>,
             ),
             statusFamily: "degraded-capture",
-            captureDegradation: { reason: "track-b-capture-unavailable" },
+            // v1.1 guidance 01/03: a rich-capture failure keeps compact telemetry and routing and
+            // writes a CaptureDegradationReceipt carrying the stage, the reason and the fallback.
+            captureDegradation: {
+              contract: "CaptureDegradationReceiptV1",
+              failureStage: "graph_write",
+              actionTaken:
+                routeCaptureDegradationReason === "track-b-capture-deferred"
+                  ? "queued_for_retry"
+                  : "metadata_only",
+              reasonCode:
+                routeCaptureDegradationReason === "track-b-capture-deferred"
+                  ? "unknown"
+                  : "artifact_store_unavailable",
+              routingContinued: true,
+              reason: routeCaptureDegradationReason ?? "track-b-capture-unavailable",
+            },
           } as never);
       try {
+        markPhase("observation-persist-start");
         persistRuntimeObservationBundle({
           databasePath: initialization.databasePath,
           channel: runtimeChannel,
@@ -24198,11 +28836,21 @@ export async function createRuntimeBridgeBackend(
       emitTelemetryUpdate(bundle.requestId);
     }
 
+    const vendorCostUsd =
+      execution.normalized.vendorMetadata?.costUsd ??
+      execution.responseCapture.vendorMetadata?.costUsd;
+    const replayCost = resolveBridgeExecutionCost({
+      vendorCostUsd,
+      inputTokens: execution.normalized.usage.inputTokens,
+      outputTokens: execution.normalized.usage.outputTokens,
+      pricing: routed.catalogEconomicsByEndpointId[execution.target.endpointId] ?? null,
+    });
     return {
       routingDecisionId,
       execution,
       toolExecutionResult,
       effortReceipt: effectiveEffort,
+      ...(replayCost ? { replayCost } : {}),
       ...(persistenceDegradation ? { persistenceDegradation } : {}),
     };
   };
@@ -24607,8 +29255,20 @@ export async function createRuntimeBridgeBackend(
   };
 
   let lastDetectedModel: string | null = null;
+  /**
+   * Run 101 addendum 11: is the runtime *ready*, given its bootstrap receipts?
+   *
+   * A runtime that is serving is ready. The only runtime-level failures are a blocked bootstrap or a remote-health
+   * stage that found no usable endpoint at all; a partially degraded stage (one probe timeout out of seven, a
+   * single offline provider) is an endpoint-level fact that the router already handles by excluding it.
+   *
+   * Run 101 addendum 22: the predicate lives at module scope (`isRuntimeBootstrapBlock`) so the rule is unit-tested
+   * directly - the previous closure-local version answered "ready" for its first two branches and "blocked" for its
+   * last two, which reported a degraded-but-serving runtime as a fifty-three.
+   */
   let sessionBootstrapState: SessionBootstrapState = createPendingBootstrapState();
   const backend = {
+    operatorAuthToken: options.operatorAuthToken,
     get registry(): EndpointRegistryResult {
       return currentRegistry;
     },
@@ -24643,6 +29303,41 @@ export async function createRuntimeBridgeBackend(
         returned: entries.length,
       };
     },
+    /**
+     * Run 100 addendum `handoff-evidence-durability.addendum-06` S42: the operator readback for capture
+     * evidence - the runtime asks its own boundary the question the spine depends on, and answers with the
+     * outcome instead of leaving a reason string on a resume entry.
+     */
+    async readCaptureEvidence(requestId: string): Promise<unknown> {
+      const id = String(requestId ?? "").trim();
+      if (!id) return { status: "invalid", reason: "requestId is required" };
+      if (!configuredTrackBOperationsEndpoint) {
+        return { status: "unconfigured", reason: "the operations boundary is not configured" };
+      }
+      try {
+        const capture = (await readExactRouteCapture(id)) as Record<string, unknown> | null;
+        if (!capture) return { status: "missing", requestId: id };
+        return {
+          status: "ok",
+          requestId: id,
+          scope: typeof capture.scope === "string" ? capture.scope : null,
+          endpointId: typeof capture.endpointId === "string" ? capture.endpointId : null,
+          modelId: typeof capture.modelId === "string" ? capture.modelId : null,
+          rootArtifactId:
+            typeof capture.rootArtifactId === "string" ? capture.rootArtifactId : null,
+          branchKind: typeof capture.branchKind === "string" ? capture.branchKind : null,
+          hasResponseText:
+            typeof capture.responseText === "string" && capture.responseText.length > 0,
+          messageCount: Array.isArray(capture.messages) ? capture.messages.length : null,
+        };
+      } catch (error) {
+        return {
+          status: "unreadable",
+          requestId: id,
+          reason: String((error as { message?: unknown })?.message ?? error).slice(0, 300),
+        };
+      }
+    },
     async readActivityCapture(captureId: number | string): Promise<unknown | null> {
       if (typeof captureId === "string") {
         return readActivityCaptureByRequestId(captureId);
@@ -24650,6 +29345,27 @@ export async function createRuntimeBridgeBackend(
       return (
         buildObservedActivityEntries().find((entry) => entry.id === captureId)?.capture ?? null
       );
+    },
+    // Run 98 addendum 40 (L1): the client-visible duration is written after the response flushes, so
+    // the provider turn never pays for the measurement. A missing row (a request that never reached
+    // routing) returns false instead of throwing.
+    recordClientLatency(input: {
+      readonly requestId: string;
+      readonly requestLatencyMs: number;
+      readonly timeToFirstTokenMs?: number | null;
+    }): boolean {
+      try {
+        return updateRuntimeTelemetryClientLatency({
+          databasePath: initialization.databasePath,
+          channel: runtimeChannel,
+          requestId: input.requestId,
+          requestLatencyMs: input.requestLatencyMs,
+          timeToFirstTokenMs: input.timeToFirstTokenMs ?? null,
+        });
+      } catch (error) {
+        console.error("runtime client latency update failed", error);
+        return false;
+      }
     },
     async executeChatCompletions(
       body: OpenAIChatCompletionsBody,
@@ -24662,60 +29378,19 @@ export async function createRuntimeBridgeBackend(
         requestOptions?.endpointId && requestOptions.endpointId.trim().length > 0
           ? requestOptions.endpointId
           : "routing.failed.pre-execution";
-      const fallbackFailureSourceType: "local" | "remote" =
-        currentUnifiedRuntimeConfig?.executionMode === "remote_only" ? "remote" : "local";
-      const recordChatCompletionFailure = (error: unknown): void => {
-        const statusCode = error instanceof BridgeHttpError ? error.statusCode : 400;
-        const latencyMs = Math.max(0, Date.now() - executionStartedAtMs);
-        const dimensions = runtimeTelemetryDimensionsFor(error);
-        const fallbackEndpoint = currentRegistry.endpoints.find(
-          (endpoint) =>
-            endpoint.identity.endpoint_id === fallbackFailureEndpointId ||
-            toLegacyCredentializedEndpointId(endpoint.identity.endpoint_id) ===
-              fallbackFailureEndpointId,
-        );
-        const fixedEffort = fallbackEndpoint?.identity.reasoning_effort?.trim() || null;
-        const requestedEffort = readChatCompletionsReasoningRequest(body)?.effort?.trim() || null;
-        const failureEffort = {
-          reasoningEffort: fixedEffort,
-          effortSource: (fixedEffort === null
-            ? "none"
-            : requestedEffort !== null && requestedEffort !== fixedEffort
-              ? "variant_coerced"
-              : "variant") as RuntimeEffortSource,
-        };
-        persistRuntimeTelemetryFailure({
-          databasePath: initialization.databasePath,
+      const recordChatCompletionFailure = (error: unknown): Promise<void> =>
+        recordPreExecutionFailure({
           requestId,
-          clientRequestId: requestOptions?.clientRequestId ?? null,
-          requestClass: "live_request",
-          sourceType: fallbackFailureSourceType,
-          endpointId: fallbackFailureEndpointId,
-          reasoningEffort: failureEffort.reasoningEffort,
-          effortSource: failureEffort.effortSource,
           modelId: body.model,
-          requestedModelId: body.model,
           requestOperation: "chat",
-          statusCode,
-          errorClass: runtimeTelemetryErrorClassFor(error),
-          latencyMs,
-          dimensions,
-          observation: buildPreExecutionFailureObservation({
-            requestId,
-            clientRequestId: requestOptions?.clientRequestId ?? null,
-            endpointId: fallbackFailureEndpointId,
-            modelId: body.model,
-            sourceType: fallbackFailureSourceType,
-            reasoningEffort: failureEffort.reasoningEffort,
-            effortSource: failureEffort.effortSource,
-            error,
-            latencyMs,
-            dimensions,
-            toolingUsed: Boolean(body.tools?.length),
-          }),
-          ...(localGraphStore ? { graphStore: localGraphStore } : {}),
+          clientRequestId: requestOptions?.clientRequestId ?? null,
+          endpointId: fallbackFailureEndpointId,
+          requestedEffort: readChatCompletionsReasoningRequest(body)?.effort ?? null,
+          toolingUsed: Boolean(body.tools?.length),
+          executionStartedAtMs,
+          error,
+          requestClass: requestOptions?.executionTrafficClass,
         });
-      };
       try {
         executionStartedAtMs = Date.now();
         if (
@@ -24745,6 +29420,7 @@ export async function createRuntimeBridgeBackend(
         const executionRegistry = getRouterEffectiveRegistry();
         const executionInventory = getRouterEffectiveRoutableInventory();
         const executionSnapshot = createExecutionRuntimeSnapshot(executionRegistry);
+        markPhase("plan-map-start");
         const plan = mapChatCompletionsRequest(
           executionRegistry,
           body,
@@ -24779,12 +29455,21 @@ export async function createRuntimeBridgeBackend(
           normalizeConfiguredRoutingMode(currentUnifiedRuntimeConfig?.routingStrategy) ?? undefined,
           executionInventory.endpointIds.length > 0 ? executionInventory : null,
           currentRolePolicy.taskDefinitions,
+          currentUnifiedRuntimeConfig
+            ? resolveConfiguredRoutingPosture(currentUnifiedRuntimeConfig)
+            : undefined,
+          [
+            ...(currentUnifiedRuntimeConfig?.agentStrategies ?? []),
+            ...(currentUnifiedRuntimeConfig?.workloads ?? []),
+          ],
         );
+        markPhase("dispatch-start");
         const {
           execution,
           toolExecutionResult,
           routingDecisionId,
           effortReceipt,
+          replayCost,
           persistenceDegradation,
         } = await executeBridgePlan(plan, requestId, body.stream, streamWriter, {
           requestOptions,
@@ -24853,41 +29538,32 @@ export async function createRuntimeBridgeBackend(
                 },
               }
             : {}),
+          ...(replayCost ? { replayCost } : {}),
           ...(persistenceDegradation ? { persistenceDegradation } : {}),
         };
-        const trackBOperations = createTrackBOperations({
-          statePath: path.join(
-            options.runtimeStateRoot,
-            options.scopeId,
-            "track-b-production-bridge.json",
+        await recordDirectContribution({
+          requestId,
+          routingDecisionId,
+          endpointId: execution.target.endpointId,
+          modelId: bridgeResult.model,
+          reasoningEffort: effortReceipt.reasoningEffort,
+          effortSource: effortReceipt.effortSource,
+          taskType: "general.chat",
+          inputTokens: execution.normalized.usage.inputTokens,
+          outputTokens: execution.normalized.usage.outputTokens,
+          responseStatusCode: execution.responseCapture.statusCode,
+          usageErrorClass: execution.usageEvent.error_class,
+          normalizedErrorClass: execution.normalized.errorClass,
+          executionFailure: execution.diagnostics.find(
+            (diagnostic) => diagnostic.code === execution.normalized.errorClass,
           ),
-          catalog: [],
+          cancelled: requestOptions?.abortSignal?.aborted,
         });
-        try {
-          await trackBOperations.recordContributionAggregate({
-            requestId,
-            correlationId: createRuntimeRequestCorrelationId({
-              scope: options.scopeId,
-              requestId,
-              routingDecisionId,
-            }),
-            routingDecisionId,
-            endpointId: execution.target.endpointId,
-            modelId: bridgeResult.model,
-            reasoningEffort: effortReceipt.reasoningEffort,
-            effortSource: effortReceipt.effortSource,
-            taskType: "general.chat",
-            inputTokens: execution.normalized.usage.inputTokens,
-            outputTokens: execution.normalized.usage.outputTokens,
-            success: true,
-          });
-        } catch {
-          // Contribution is non-routing-critical; its bounded outbox owns retry.
-        }
+        markPhase("response-ready");
         return bridgeResult;
       } catch (error) {
         if (!hasRuntimeTelemetryPersisted(error)) {
-          recordChatCompletionFailure(error);
+          await recordChatCompletionFailure(error);
         }
         throw error;
       }
@@ -24898,148 +29574,146 @@ export async function createRuntimeBridgeBackend(
       streamWriter?: BridgeStreamWriter,
       requestOptions?: BridgeExecutionRequestOptions,
     ): Promise<BridgeResponsesExecutionResult> {
-      if (
-        currentUnifiedRuntimeConfig?.executionMode === "decision_only" &&
-        currentRegistry.endpoints.length === 0
-      ) {
-        throw createVendorError(
-          "runtime",
-          "Configure llama_swap.models or litellm_proxy.providers to enable execution.",
+      const executionStartedAtMs = Date.now();
+      try {
+        if (
+          currentUnifiedRuntimeConfig?.executionMode === "decision_only" &&
+          currentRegistry.endpoints.length === 0
+        ) {
+          throw createVendorError(
+            "runtime",
+            "Configure llama_swap.models or litellm_proxy.providers to enable execution.",
+          );
+        }
+        const responseMessages = toResponsesInputMessages(body.input);
+        const resolvedDifficultyClassification = await resolveDifficultyClassification({
+          requestId,
+          requestedModel: body.model,
+          messages: responseMessages,
+          contextTokens: estimateContextTokens(responseMessages, body.tools?.length ?? 0),
+          toolCount: body.tools?.length ?? 0,
+          requestOptions,
+        });
+        const resolvedControllerGuidance = await resolveControllerGuidance({
+          requestId,
+          requestedModel: body.model,
+          messages: responseMessages,
+          toolCount: body.tools?.length ?? 0,
+          requestOptions,
+        });
+        const executionRegistry = getRouterEffectiveRegistry();
+        const executionInventory = getRouterEffectiveRoutableInventory();
+        const executionSnapshot = createExecutionRuntimeSnapshot(executionRegistry);
+        const plan = mapResponsesRequest(
+          executionRegistry,
+          body,
+          requestId,
+          currentUnifiedRuntimeConfig?.modelAliases ?? [],
+          {
+            difficultyClassifier: currentUnifiedRuntimeConfig?.difficultyClassifier,
+            endpointMaxDifficultyByEndpointId: buildEndpointMaxDifficultyByEndpointId(
+              currentUnifiedRuntimeConfig,
+            ),
+            ...(resolvedDifficultyClassification
+              ? {
+                  overrideRecommendedMaxDifficultyByEndpointId:
+                    readObservedOverrideMaxDifficultyByEndpointId({
+                      databasePath: initialization.databasePath,
+                      endpointIds: executionRegistry.endpoints.map(
+                        (endpoint) => endpoint.identity.endpoint_id,
+                      ),
+                      observedDataConfig: resolveUnifiedRuntimeObservedDataConfig(
+                        currentUnifiedRuntimeConfig,
+                      ),
+                    }),
+                }
+              : {}),
+            ...(resolvedDifficultyClassification
+              ? { resolvedClassification: resolvedDifficultyClassification }
+              : {}),
+          },
+          resolvedControllerGuidance,
+          requestOptions,
+          currentRolePolicy.roleDefinitions,
+          normalizeConfiguredRoutingMode(currentUnifiedRuntimeConfig?.routingStrategy) ?? undefined,
+          executionInventory.endpointIds.length > 0 ? executionInventory : null,
+          currentRolePolicy.taskDefinitions,
+          currentUnifiedRuntimeConfig
+            ? resolveConfiguredRoutingPosture(currentUnifiedRuntimeConfig)
+            : undefined,
+          [
+            ...(currentUnifiedRuntimeConfig?.agentStrategies ?? []),
+            ...(currentUnifiedRuntimeConfig?.workloads ?? []),
+          ],
         );
-      }
-      const responseMessages = toResponsesInputMessages(body.input);
-      const resolvedDifficultyClassification = await resolveDifficultyClassification({
-        requestId,
-        requestedModel: body.model,
-        messages: responseMessages,
-        contextTokens: estimateContextTokens(responseMessages, body.tools?.length ?? 0),
-        toolCount: body.tools?.length ?? 0,
-        requestOptions,
-      });
-      const resolvedControllerGuidance = await resolveControllerGuidance({
-        requestId,
-        requestedModel: body.model,
-        messages: responseMessages,
-        toolCount: body.tools?.length ?? 0,
-        requestOptions,
-      });
-      const executionRegistry = getRouterEffectiveRegistry();
-      const executionInventory = getRouterEffectiveRoutableInventory();
-      const executionSnapshot = createExecutionRuntimeSnapshot(executionRegistry);
-      const plan = mapResponsesRequest(
-        executionRegistry,
-        body,
-        requestId,
-        currentUnifiedRuntimeConfig?.modelAliases ?? [],
-        {
-          difficultyClassifier: currentUnifiedRuntimeConfig?.difficultyClassifier,
-          endpointMaxDifficultyByEndpointId: buildEndpointMaxDifficultyByEndpointId(
-            currentUnifiedRuntimeConfig,
-          ),
-          ...(resolvedDifficultyClassification
+        markPhase("dispatch-start");
+        const { execution, toolExecutionResult, routingDecisionId, effortReceipt } =
+          await executeBridgePlan(plan, requestId, body.stream, streamWriter, {
+            requestOptions,
+            requestBody: body as unknown as Record<string, unknown>,
+            requestedModel: body.model,
+            requestOperation: "responses",
+            executionSnapshot,
+          });
+        const costUsd =
+          execution.normalized.vendorMetadata?.costUsd ??
+          execution.responseCapture.vendorMetadata?.costUsd;
+        const cacheUsed =
+          execution.normalized.vendorMetadata?.cacheUsed ??
+          execution.responseCapture.vendorMetadata?.cacheUsed;
+        const responseVendorId =
+          execution.responseCapture.vendorMetadata?.vendorId ??
+          execution.normalized.vendorMetadata?.vendorId;
+        const responseAdapterFamily = resolveEffectiveExecutionAdapterFamily({
+          endpointId: execution.target.endpointId,
+          adapterFamily: execution.target.adapterFamily,
+          vendorId: responseVendorId,
+        });
+        const shouldSuppressResponseToolCalls = hasRequestScopedDynamicToolExecution(
+          toolExecutionResult.executions,
+        );
+        const responseToolCalls = shouldSuppressResponseToolCalls
+          ? []
+          : execution.normalized.toolCalls;
+
+        const bridgeResult: BridgeResponsesExecutionResult = {
+          responseId: extractResponseId(execution.responseCapture.body) ?? "resp-role-model",
+          model: execution.target.modelId,
+          endpointId: execution.target.endpointId,
+          adapterFamily: responseAdapterFamily,
+          routingDecisionId,
+          ...(responseVendorId ? { vendorId: responseVendorId } : {}),
+          outputText: execution.normalized.outputText,
+          finishReason: shouldSuppressResponseToolCalls
+            ? "stop"
+            : execution.normalized.finishReason,
+          ...(responseToolCalls.length
             ? {
-                overrideRecommendedMaxDifficultyByEndpointId:
-                  readObservedOverrideMaxDifficultyByEndpointId({
-                    databasePath: initialization.databasePath,
-                    endpointIds: executionRegistry.endpoints.map(
-                      (endpoint) => endpoint.identity.endpoint_id,
-                    ),
-                    observedDataConfig: resolveUnifiedRuntimeObservedDataConfig(
-                      currentUnifiedRuntimeConfig,
-                    ),
-                  }),
+                toolCalls: responseToolCalls.map((toolCall, index) =>
+                  toBridgeToolCall(toolCall, index),
+                ),
               }
             : {}),
-          ...(resolvedDifficultyClassification
-            ? { resolvedClassification: resolvedDifficultyClassification }
+          ...(toolExecutionResult.executions.length
+            ? {
+                toolExecutions: toolExecutionResult.executions,
+              }
             : {}),
-        },
-        resolvedControllerGuidance,
-        requestOptions,
-        currentRolePolicy.roleDefinitions,
-        normalizeConfiguredRoutingMode(currentUnifiedRuntimeConfig?.routingStrategy) ?? undefined,
-        executionInventory.endpointIds.length > 0 ? executionInventory : null,
-        currentRolePolicy.taskDefinitions,
-      );
-      const { execution, toolExecutionResult, routingDecisionId, effortReceipt } =
-        await executeBridgePlan(plan, requestId, body.stream, streamWriter, {
-          requestOptions,
-          requestBody: body as unknown as Record<string, unknown>,
-          requestedModel: body.model,
-          requestOperation: "responses",
-          executionSnapshot,
-        });
-      const costUsd =
-        execution.normalized.vendorMetadata?.costUsd ??
-        execution.responseCapture.vendorMetadata?.costUsd;
-      const cacheUsed =
-        execution.normalized.vendorMetadata?.cacheUsed ??
-        execution.responseCapture.vendorMetadata?.cacheUsed;
-      const responseVendorId =
-        execution.responseCapture.vendorMetadata?.vendorId ??
-        execution.normalized.vendorMetadata?.vendorId;
-      const responseAdapterFamily = resolveEffectiveExecutionAdapterFamily({
-        endpointId: execution.target.endpointId,
-        adapterFamily: execution.target.adapterFamily,
-        vendorId: responseVendorId,
-      });
-      const shouldSuppressResponseToolCalls = hasRequestScopedDynamicToolExecution(
-        toolExecutionResult.executions,
-      );
-      const responseToolCalls = shouldSuppressResponseToolCalls
-        ? []
-        : execution.normalized.toolCalls;
-
-      const bridgeResult: BridgeResponsesExecutionResult = {
-        responseId: extractResponseId(execution.responseCapture.body) ?? "resp-role-model",
-        model: execution.target.modelId,
-        endpointId: execution.target.endpointId,
-        adapterFamily: responseAdapterFamily,
-        routingDecisionId,
-        ...(responseVendorId ? { vendorId: responseVendorId } : {}),
-        outputText: execution.normalized.outputText,
-        finishReason: shouldSuppressResponseToolCalls ? "stop" : execution.normalized.finishReason,
-        ...(responseToolCalls.length
-          ? {
-              toolCalls: responseToolCalls.map((toolCall, index) =>
-                toBridgeToolCall(toolCall, index),
-              ),
-            }
-          : {}),
-        ...(toolExecutionResult.executions.length
-          ? {
-              toolExecutions: toolExecutionResult.executions,
-            }
-          : {}),
-        usage: {
-          inputTokens: execution.normalized.usage.inputTokens,
-          outputTokens: execution.normalized.usage.outputTokens,
-        },
-        ...(typeof costUsd === "number" || typeof cacheUsed === "boolean"
-          ? {
-              vendorMetadata: {
-                ...(typeof costUsd === "number" ? { costUsd } : {}),
-                ...(typeof cacheUsed === "boolean" ? { cacheUsed } : {}),
-              },
-            }
-          : {}),
-      };
-      const trackBOperations = createTrackBOperations({
-        statePath: path.join(
-          options.runtimeStateRoot,
-          options.scopeId,
-          "track-b-production-bridge.json",
-        ),
-        catalog: [],
-      });
-      try {
-        await trackBOperations.recordContributionAggregate({
+          usage: {
+            inputTokens: execution.normalized.usage.inputTokens,
+            outputTokens: execution.normalized.usage.outputTokens,
+          },
+          ...(typeof costUsd === "number" || typeof cacheUsed === "boolean"
+            ? {
+                vendorMetadata: {
+                  ...(typeof costUsd === "number" ? { costUsd } : {}),
+                  ...(typeof cacheUsed === "boolean" ? { cacheUsed } : {}),
+                },
+              }
+            : {}),
+        };
+        await recordDirectContribution({
           requestId,
-          correlationId: createRuntimeRequestCorrelationId({
-            scope: options.scopeId,
-            requestId,
-            routingDecisionId,
-          }),
           routingDecisionId,
           endpointId: execution.target.endpointId,
           modelId: bridgeResult.model,
@@ -25048,12 +29722,35 @@ export async function createRuntimeBridgeBackend(
           taskType: "general.chat",
           inputTokens: execution.normalized.usage.inputTokens,
           outputTokens: execution.normalized.usage.outputTokens,
-          success: true,
+          responseStatusCode: execution.responseCapture.statusCode,
+          usageErrorClass: execution.usageEvent.error_class,
+          normalizedErrorClass: execution.normalized.errorClass,
+          executionFailure: execution.diagnostics.find(
+            (diagnostic) => diagnostic.code === execution.normalized.errorClass,
+          ),
+          cancelled: requestOptions?.abortSignal?.aborted,
         });
-      } catch {
-        // Contribution is non-routing-critical; its bounded outbox owns retry.
+        return bridgeResult;
+      } catch (error) {
+        if (!hasRuntimeTelemetryPersisted(error)) {
+          await recordPreExecutionFailure({
+            requestId,
+            modelId: body.model,
+            requestOperation: "responses",
+            clientRequestId: requestOptions?.clientRequestId ?? null,
+            endpointId:
+              requestOptions?.endpointId && requestOptions.endpointId.trim().length > 0
+                ? requestOptions.endpointId
+                : "routing.failed.pre-execution",
+            requestedEffort: readResponsesReasoningRequest(body)?.effort ?? null,
+            toolingUsed: Boolean(body.tools?.length),
+            executionStartedAtMs,
+            error,
+            requestClass: requestOptions?.executionTrafficClass,
+          });
+        }
+        throw error;
       }
-      return bridgeResult;
     },
     async readRuntimeSummary(): Promise<RuntimeBridgeSummary> {
       const credentialLifecycle = buildCredentialLifecycleSummary();
@@ -25126,8 +29823,14 @@ export async function createRuntimeBridgeBackend(
         litellm: currentLiteLLMVendor?.readStatus() ?? createInactiveVendorStatus("litellm"),
       };
       const summarized = summarizeHealthStatus(vendors);
-      const bootstrapBlocked =
-        sessionBootstrapState.status === "blocked" || sessionBootstrapState.status === "degraded";
+      /**
+       * Run 101 addendum 11. Measured live: one endpoint probe timed out at boot (`reason: "timeout"`) and this
+       * line flipped the whole runtime to `degraded`, so `/healthz` answered 503 for the rest of the process's
+       * life even though routing kept working and six of seven endpoints were healthy. A runtime is ready when
+       * it is serving: a partially degraded remote-health stage is an endpoint-level fact, and only a stage
+       * that leaves *no* usable endpoint (or a blocked bootstrap) is a runtime-level failure.
+       */
+      const bootstrapBlocked = isRuntimeBootstrapBlock(sessionBootstrapState);
       return {
         runtime: runtimeVersionInfo,
         status: bootstrapBlocked ? "degraded" : summarized.status,
@@ -25187,7 +29890,12 @@ export async function createRuntimeBridgeBackend(
           ? (parse(previousText) as Record<string, unknown>)
           : null;
         const nextConfig = mergeUnifiedRuntimeConfigDocuments(previousDocument, body);
-        let finalConfig = nextConfig;
+        /**
+         * Run 103 R1: the runtime applies what the file will say. The merge normalizes a legacy
+         * `routing.strategy` onto the canonical pair, so the rendered text is re-parsed before it is
+         * applied - otherwise the in-memory posture would keep the synonym the file no longer has.
+         */
+        let finalConfig = parseUnifiedRuntimeConfigText(renderUnifiedRuntimeConfigText(nextConfig));
         let finalText = renderUnifiedRuntimeConfigText(finalConfig);
 
         await writeConfigTextAtomically(unifiedRuntimeConfigPath, finalText);
@@ -25205,9 +29913,12 @@ export async function createRuntimeBridgeBackend(
           } else {
             await writeConfigTextAtomically(unifiedRuntimeConfigPath, previousText);
           }
-          if (previousConfig) {
-            await applyUnifiedRuntimeConfigState(previousConfig, "rollback");
-          }
+          /**
+           * Run 103 review F4: the rollback runs unconditionally. A rejected write used to leave the
+           * runtime serving the rejected posture in memory whenever there was no previous config to
+           * restore (a fresh state root), which is a fail-open on the write path.
+           */
+          await applyUnifiedRuntimeConfigState(previousConfig ?? null, "rollback");
           throw error;
         }
 
@@ -25614,14 +30325,285 @@ export async function createRuntimeBridgeBackend(
       }
       return options.trackBPostObservationReceipts();
     },
+    async readTrackBPostObservationReceipt(requestId: string): Promise<unknown> {
+      if (!options.readTrackBPostObservationReceipt) return null;
+      return options.readTrackBPostObservationReceipt(requestId);
+    },
+    async recordTrackBContributionAggregate(body: Record<string, unknown>): Promise<unknown> {
+      return createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog: options.trackBQaExtensionCatalog?.() ?? [],
+        extensionRuntime: options.trackBExtensionRuntime?.() ?? undefined,
+      }).recordContributionAggregate(body);
+    },
+    async retryTrackBContributionAggregates(): Promise<unknown> {
+      return createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog: options.trackBQaExtensionCatalog?.() ?? [],
+        extensionRuntime: options.trackBExtensionRuntime?.() ?? undefined,
+      }).retryContributionAggregates();
+    },
     async readTrackBExtensionReadback(body: Record<string, unknown>): Promise<unknown> {
       if (!options.readTrackBExtensionReadback) {
         throw new Error("Track B extension readback is unavailable");
       }
       return options.readTrackBExtensionReadback(body);
     },
+    async runTrackBSupervisedReplay(body: Record<string, unknown>): Promise<unknown> {
+      if (!options.runTrackBSupervisedReplay) {
+        throw new Error("Track B supervised replay is unavailable");
+      }
+      return options.runTrackBSupervisedReplay(body);
+    },
+    async readOperatorStatus(): Promise<RuntimeOperatorStatus | unknown> {
+      return options.readOperatorStatus?.() ?? unavailableOperatorStatus("operator status");
+    },
+    async listOperatorTraceRoots(query: RuntimeOperatorQuery = {}): Promise<unknown> {
+      return (
+        options.listOperatorTraceRoots?.(query) ??
+        unavailableOperatorPayload("trace root inspection")
+      );
+    },
+    async readOperatorTraceRoot(traceRootId: string): Promise<unknown> {
+      return (
+        options.readOperatorTraceRoot?.(traceRootId) ??
+        unavailableOperatorPayload("trace root inspection")
+      );
+    },
+    async listReplayJobs(query: RuntimeOperatorQuery = {}): Promise<unknown> {
+      return options.listReplayJobs?.(query) ?? unavailableOperatorPayload("replay inspection");
+    },
+    async createReplayJob(body: Record<string, unknown>): Promise<unknown> {
+      return options.createReplayJob?.(body) ?? unavailableOperatorPayload("replay creation");
+    },
+    async cancelReplayJob(jobId: string, body: Record<string, unknown>): Promise<unknown> {
+      return (
+        options.cancelReplayJob?.(jobId, body) ?? unavailableOperatorPayload("replay cancellation")
+      );
+    },
+    async readReplayJob(jobId: string): Promise<unknown> {
+      return options.readReplayJob?.(jobId) ?? unavailableOperatorPayload("replay inspection");
+    },
+    async readReplayResults(jobId: string): Promise<unknown> {
+      return (
+        options.readReplayResults?.(jobId) ??
+        unavailableOperatorPayload("replay results inspection")
+      );
+    },
+    async listEvaluationJobs(query: RuntimeOperatorQuery = {}): Promise<unknown> {
+      return (
+        options.listEvaluationJobs?.(query) ?? unavailableOperatorPayload("evaluation inspection")
+      );
+    },
+    async readEvaluationJob(jobId: string): Promise<unknown> {
+      return (
+        options.readEvaluationJob?.(jobId) ?? unavailableOperatorPayload("evaluation inspection")
+      );
+    },
+    async listEvaluationTrials(jobId: string): Promise<unknown> {
+      return (
+        options.listEvaluationTrials?.(jobId) ??
+        unavailableOperatorPayload("evaluation trials inspection")
+      );
+    },
+    async listEvaluationScorers(jobId: string): Promise<unknown> {
+      return (
+        options.listEvaluationScorers?.(jobId) ??
+        unavailableOperatorPayload("evaluation scorers inspection")
+      );
+    },
+    async listEvaluationComparisons(jobId: string): Promise<unknown> {
+      return (
+        options.listEvaluationComparisons?.(jobId) ??
+        unavailableOperatorPayload("evaluation comparisons inspection")
+      );
+    },
+    async listEvaluationGroups(jobId: string): Promise<unknown> {
+      return (
+        options.listEvaluationGroups?.(jobId) ??
+        unavailableOperatorPayload("evaluation groups inspection")
+      );
+    },
+    async cancelEvaluationJob(jobId: string, body: Record<string, unknown>): Promise<unknown> {
+      return (
+        options.cancelEvaluationJob?.(jobId, body) ??
+        unavailableOperatorPayload("evaluation cancellation")
+      );
+    },
+    async retryEvaluationJob(jobId: string, body: Record<string, unknown>): Promise<unknown> {
+      return (
+        options.retryEvaluationJob?.(jobId, body) ?? unavailableOperatorPayload("evaluation retry")
+      );
+    },
+    async readLearningState(): Promise<unknown> {
+      return options.readLearningState?.() ?? unavailableOperatorPayload("learning inspection");
+    },
+    async readLearningProfile(): Promise<unknown> {
+      return (
+        options.readLearningProfile?.() ?? unavailableOperatorPayload("learning profile inspection")
+      );
+    },
+    async readLearningAdvisory(): Promise<unknown> {
+      return options.readLearningAdvisory?.() ?? unavailableOperatorPayload("learning advisory");
+    },
+    async updateLearningMode(body: Record<string, unknown>): Promise<unknown> {
+      return (
+        options.updateLearningMode?.(body) ?? unavailableOperatorPayload("learning mode update")
+      );
+    },
+    async rollbackLearning(body: Record<string, unknown>): Promise<unknown> {
+      return options.rollbackLearning?.(body) ?? unavailableOperatorPayload("learning rollback");
+    },
+    // Run 98 R17: the Learning UI surfaces forward through the same operator options the
+    // CLI binds to the sidecar-backed Track B operations client.
+    async readLearningRollout(query: Readonly<Record<string, string>> = {}): Promise<unknown> {
+      return (
+        options.readLearningRollout?.(query) ??
+        unavailableOperatorPayload("learning rollout readback")
+      );
+    },
+    async readLearningRecords(query: Readonly<Record<string, string>> = {}): Promise<unknown> {
+      return (
+        options.readLearningRecords?.(query) ??
+        unavailableOperatorPayload("learning records readback")
+      );
+    },
+    async readLearningDecisions(query: Readonly<Record<string, string>> = {}): Promise<unknown> {
+      return (
+        options.readLearningDecisions?.(query) ??
+        unavailableOperatorPayload("learning decisions readback")
+      );
+    },
+    async readLearningMeasurement(query: Readonly<Record<string, string>> = {}): Promise<unknown> {
+      return (
+        options.readLearningMeasurement?.(query) ??
+        unavailableOperatorPayload("learning measurement readback")
+      );
+    },
+    // Run 99: the Learning UI live activity and history projections.
+    async readLearningActivity(query: Readonly<Record<string, string>> = {}): Promise<unknown> {
+      return (
+        options.readLearningActivity?.(query) ??
+        unavailableOperatorPayload("learning activity readback")
+      );
+    },
+    async readLearningHistory(query: Readonly<Record<string, string>> = {}): Promise<unknown> {
+      return (
+        options.readLearningHistory?.(query) ??
+        unavailableOperatorPayload("learning history readback")
+      );
+    },
+    /** Run 101 R9 (Phase 5 repair): the queue surface, backed by the supervised sidecar. */
+    async readQueues(query: Readonly<Record<string, string>> = {}): Promise<unknown> {
+      return options.readQueues?.(query) ?? unavailableOperatorPayload("queue readback");
+    },
+    async readQueueJobs(
+      queueName: string,
+      query: Readonly<Record<string, string>> = {},
+    ): Promise<unknown> {
+      return (
+        options.readQueueJobs?.(queueName, query) ??
+        unavailableOperatorPayload("queue jobs readback")
+      );
+    },
+    async readQueueJob(queueName: string, jobId: string): Promise<unknown> {
+      return (
+        options.readQueueJob?.(queueName, jobId) ?? unavailableOperatorPayload("queue job readback")
+      );
+    },
+    async readQueueReceipts(query: Readonly<Record<string, string>> = {}): Promise<unknown> {
+      return (
+        options.readQueueReceipts?.(query) ?? unavailableOperatorPayload("queue receipts readback")
+      );
+    },
+    async readQueueConfig(): Promise<unknown> {
+      return (
+        options.readQueueConfig?.() ?? unavailableOperatorPayload("queue configuration readback")
+      );
+    },
+    async setQueueConfig(body: Record<string, unknown>): Promise<unknown> {
+      return (
+        options.setQueueConfig?.(body) ?? unavailableOperatorPayload("queue configuration write")
+      );
+    },
+    async retryQueueJob(queueName: string, jobId: string): Promise<unknown> {
+      return (
+        options.retryQueueJob?.(queueName, jobId) ?? unavailableOperatorPayload("queue job retry")
+      );
+    },
+    async cancelQueueJob(queueName: string, jobId: string): Promise<unknown> {
+      return (
+        options.cancelQueueJob?.(queueName, jobId) ?? unavailableOperatorPayload("queue job cancel")
+      );
+    },
+    async setQueueDrain(queueName: string, body: Record<string, unknown>): Promise<unknown> {
+      return options.setQueueDrain?.(queueName, body) ?? unavailableOperatorPayload("queue drain");
+    },
+    async readLearningPolicy(query: Readonly<Record<string, string>> = {}): Promise<unknown> {
+      return (
+        options.readLearningPolicy?.(query) ??
+        unavailableOperatorPayload("learning policy readback")
+      );
+    },
+    async setLearningPolicy(body: Record<string, unknown>): Promise<unknown> {
+      return (
+        options.setLearningPolicy?.(body) ?? unavailableOperatorPayload("learning policy change")
+      );
+    },
+    async rollbackLearningPolicy(body: Record<string, unknown>): Promise<unknown> {
+      return (
+        options.rollbackLearningPolicy?.(body) ??
+        unavailableOperatorPayload("learning policy rollback")
+      );
+    },
+    async activateLearningPack(body: Record<string, unknown>): Promise<unknown> {
+      return (
+        options.activateLearningPack?.(body) ??
+        unavailableOperatorPayload("learning pack activation")
+      );
+    },
+    async rollbackLearningPack(body: Record<string, unknown>): Promise<unknown> {
+      return (
+        options.rollbackLearningPack?.(body) ?? unavailableOperatorPayload("learning pack rollback")
+      );
+    },
+    async materializeRouteLadders(body: Record<string, unknown>): Promise<unknown> {
+      return (
+        options.materializeRouteLadders?.(body) ??
+        unavailableOperatorPayload("learning route ladder materialization")
+      );
+    },
+    async recordLearningGuardrailBreach(body: Record<string, unknown>): Promise<unknown> {
+      return (
+        options.recordLearningGuardrailBreach?.(body) ??
+        unavailableOperatorPayload("learning guardrail breach")
+      );
+    },
+    async restoreLearningScenarioActivation(body: Record<string, unknown>): Promise<unknown> {
+      return (
+        options.restoreLearningScenarioActivation?.(body) ??
+        unavailableOperatorPayload("learning scenario restore")
+      );
+    },
+    async engageLearningKillSwitch(body: Record<string, unknown>): Promise<unknown> {
+      return (
+        options.engageLearningKillSwitch?.(body) ??
+        unavailableOperatorPayload("learning kill switch")
+      );
+    },
     async measureNoRichCaptureBaseline(body: Record<string, unknown>): Promise<unknown> {
       return runtimeTrackBOperations.measureNoRichCaptureBaseline(body);
+    },
+    async readDevelopmentVerificationStatus(): Promise<unknown> {
+      return runtimeTrackBOperations.readDevelopmentVerificationStatus();
     },
     async readGraphMigration(): Promise<unknown> {
       return createTrackBOperations({
@@ -25663,7 +30645,7 @@ export async function createRuntimeBridgeBackend(
         catalog: [],
       }).readStorageRetention();
     },
-    async dryRunStorageRetention(): Promise<unknown> {
+    async dryRunStorageRetention(body: Record<string, unknown> = {}): Promise<unknown> {
       return createTrackBOperations({
         statePath: path.join(
           options.runtimeStateRoot,
@@ -25671,7 +30653,7 @@ export async function createRuntimeBridgeBackend(
           "track-b-production-bridge.json",
         ),
         catalog: [],
-      }).dryRunStorageRetention();
+      }).dryRunStorageRetention(body);
     },
     async updateStorageRetentionPolicy(body: Record<string, unknown>): Promise<unknown> {
       return createTrackBOperations({
@@ -27086,23 +32068,46 @@ export async function createRuntimeBridgeBackend(
             wsUrl: payload.wsUrl,
             refreshToken: false,
           });
-        } catch {
+        } catch (error) {
+          /**
+           * Run 101 addendum 17: a transport blip is not the operator's verdict. A reset or a stalled attempt used
+           * to permanently fail the session and delete the device session, which is what the operator saw as "the
+           * login helper stopped". A transient failure now stays pending with the real cause recorded, so the next
+           * poll (the UI already polls) continues the same authorization; only a real failure ends the session.
+           */
+          const message = error instanceof Error ? error.message : "transport error";
+          if (isTransientProviderTransportError(error)) {
+            const transientError = `Codex Subscription device authorization is waiting on the network (${message}).`;
+            upsertProviderDeviceAuthSession({
+              databasePath: initialization.databasePath,
+              session: {
+                ...session,
+                lastError: transientError,
+              },
+            });
+            return {
+              authRequestId,
+              providerAccountId: session.providerAccountId,
+              status: "pending",
+              retryAfterSeconds: session.intervalSeconds,
+              lastError: transientError,
+            };
+          }
           await cleanupManagedCodexDeviceCodeSession(payload);
+          const failure = `Codex Subscription login could not be completed (${message}). Reconnect to continue.`;
           upsertProviderDeviceAuthSession({
             databasePath: initialization.databasePath,
             session: {
               ...session,
               status: "failed",
-              lastError:
-                "Codex Subscription login helper stopped before the device authorization completed. Reconnect to continue.",
+              lastError: failure,
             },
           });
           return {
             authRequestId,
             providerAccountId: session.providerAccountId,
             status: "failed",
-            lastError:
-              "Codex Subscription login helper stopped before the device authorization completed. Reconnect to continue.",
+            lastError: failure,
           };
         }
 
@@ -27486,6 +32491,20 @@ export async function createRuntimeBridgeBackend(
     },
     async listBenchmarkRuns(): Promise<unknown> {
       return listBenchmarkRuns(benchmarkArtifactRoot);
+    },
+    /**
+     * Run 98 addendum 43 S4: what the samples say about every benchmark run, with the artifact-backed runs
+     * marked `completed` and a sweep that has gone quiet for longer than the stall window marked `stalled`.
+     */
+    async readBenchmarkSampleRunStates(): Promise<unknown> {
+      const artifactRuns = await listBenchmarkRuns(benchmarkArtifactRoot);
+      return {
+        stalledAfterMs: BENCHMARK_SAMPLE_RUN_STALLED_AFTER_MS,
+        runs: readBenchmarkSampleRuns({
+          databasePath: initialization.databasePath,
+          completedRunIds: artifactRuns.map((run) => run.runId),
+        }),
+      };
     },
     async readBenchmarkSummariesByMode(): Promise<unknown> {
       return readBenchmarkSummariesByMode({
@@ -28719,6 +33738,7 @@ export async function createRuntimeBridgeBackend(
         }
 
         let refreshAttempted = 0;
+        let refreshFailureReason: string | null = null;
         let refreshSucceeded = 0;
         let refreshFailed = 0;
         for (const account of currentAccounts) {
@@ -28768,7 +33788,11 @@ export async function createRuntimeBridgeBackend(
             currentAccounts = [...readCurrentAccounts()];
             rebuildCurrentState();
             refreshSucceeded += 1;
-          } catch {
+          } catch (error) {
+            refreshFailureReason =
+              error instanceof Error
+                ? `${error.name}: ${error.message}`.slice(0, 200)
+                : String(error).slice(0, 200);
             upsertSqliteProviderAccount({
               databasePath: initialization.databasePath,
               account: {
@@ -28789,6 +33813,11 @@ export async function createRuntimeBridgeBackend(
 
         return {
           status: credentialsStatus,
+          ...(credentialsStatus !== "ready" && refreshFailureReason
+            ? {
+                message: `OAuth refresh failed for ${refreshFailed} account(s): ${refreshFailureReason}`,
+              }
+            : {}),
           details: {
             pendingAttempted,
             pendingSucceeded,
@@ -29042,6 +34071,8 @@ export async function createRuntimeBridgeBackend(
           refreshAuthorization: refreshProbeAuthorization,
           resolveProbeHeaders,
           networkFetcher,
+          probeAttempts: readRemoteHealthProbeAttempts(),
+          probeRetryDelayMs: readRemoteHealthProbeRetryDelayMs(),
         });
         applyRemoteHealthProbeResults(summary.results);
 
@@ -29113,6 +34144,70 @@ export async function createRuntimeBridgeBackend(
     };
   });
 
+  // A transient transport stall during bootstrap must not pin endpoints offline
+  // for the life of the process. Recoveries are the only thing this pass writes:
+  // a flaky background probe can never take a healthy endpoint away.
+  const remoteHealthReprobeIntervalMs = readRemoteHealthReprobeIntervalMs();
+  const remoteHealthReprobeMaxAttempts = readRemoteHealthReprobeMaxAttempts();
+  let remoteHealthReprobeAttempts = 0;
+  let remoteHealthReprobe: ReturnType<typeof setInterval> | null = null;
+  const stopRemoteHealthReprobe = (): void => {
+    if (remoteHealthReprobe !== null) {
+      clearInterval(remoteHealthReprobe);
+      remoteHealthReprobe = null;
+    }
+  };
+  if (remoteHealthReprobeIntervalMs > 0 && remoteHealthReprobeMaxAttempts > 0) {
+    remoteHealthReprobe = setInterval(async () => {
+      const executionMode = currentUnifiedRuntimeConfig?.executionMode ?? "decision_only";
+      if (executionMode === "decision_only") {
+        return;
+      }
+      if (remoteHealthReprobeAttempts >= remoteHealthReprobeMaxAttempts) {
+        stopRemoteHealthReprobe();
+        return;
+      }
+      remoteHealthReprobeAttempts += 1;
+      try {
+        const targets = collectRemoteHealthProbeTargets();
+        if (targets.length === 0) {
+          stopRemoteHealthReprobe();
+          return;
+        }
+        const summary = await probeRemoteEndpoints({
+          litellmHealthy: currentLiteLLMVendor?.readStatus().healthStatus === "healthy",
+          targets,
+          resolveAuthorization: resolveProbeAuthorization,
+          refreshAuthorization: refreshProbeAuthorization,
+          resolveProbeHeaders,
+          networkFetcher,
+          probeAttempts: readRemoteHealthProbeAttempts(),
+          probeRetryDelayMs: readRemoteHealthProbeRetryDelayMs(),
+        });
+        const recovered = summary.results.filter((result) => result.reason === "healthy");
+        if (recovered.length > 0) {
+          console.error(
+            `[run98] remote-health recovery: ${recovered
+              .map((result) => result.endpointId)
+              .join(", ")}`,
+          );
+          applyRemoteHealthProbeResults(recovered);
+          refreshRoutableInventoryState();
+        }
+        if (summary.degraded === 0) {
+          stopRemoteHealthReprobe();
+        } else if (remoteHealthReprobeAttempts >= remoteHealthReprobeMaxAttempts) {
+          console.error(
+            `[run98] remote-health recovery gave up after ${remoteHealthReprobeAttempts} attempts; ${summary.degraded} endpoint(s) still degraded`,
+          );
+        }
+      } catch {
+        // Bounded and silent: the next tick retries until the budget is spent.
+      }
+    }, remoteHealthReprobeIntervalMs);
+    remoteHealthReprobe.unref?.();
+  }
+
   const autoSwapInterval = setInterval(async () => {
     try {
       const models = await backend.listLocalModels();
@@ -29138,6 +34233,52 @@ export async function createRuntimeBridgeBackend(
 function usesWindowsPathDialect(value: string | undefined): boolean {
   const normalized = value?.trim();
   return normalized ? /^[A-Za-z]:\\/u.test(normalized) || normalized.includes("\\") : false;
+}
+
+function readBoundedEnvironmentInteger(
+  rawValue: string | undefined,
+  fallback: number,
+  minimum: number,
+  maximum: number,
+): number {
+  const parsed = Number(rawValue?.trim());
+  return Number.isSafeInteger(parsed) && parsed >= minimum && parsed <= maximum ? parsed : fallback;
+}
+
+function readRemoteHealthProbeAttempts(): number {
+  return readBoundedEnvironmentInteger(
+    process.env.ROLE_MODEL_REMOTE_HEALTH_PROBE_ATTEMPTS,
+    DEFAULT_REMOTE_PROBE_ATTEMPTS,
+    1,
+    10,
+  );
+}
+
+function readRemoteHealthProbeRetryDelayMs(): number {
+  return readBoundedEnvironmentInteger(
+    process.env.ROLE_MODEL_REMOTE_HEALTH_PROBE_RETRY_DELAY_MS,
+    DEFAULT_REMOTE_PROBE_RETRY_DELAY_MS,
+    0,
+    30_000,
+  );
+}
+
+function readRemoteHealthReprobeIntervalMs(): number {
+  return readBoundedEnvironmentInteger(
+    process.env.ROLE_MODEL_REMOTE_HEALTH_REPROBE_INTERVAL_MS,
+    60_000,
+    0,
+    3_600_000,
+  );
+}
+
+function readRemoteHealthReprobeMaxAttempts(): number {
+  return readBoundedEnvironmentInteger(
+    process.env.ROLE_MODEL_REMOTE_HEALTH_REPROBE_MAX_ATTEMPTS,
+    10,
+    0,
+    1_000,
+  );
 }
 
 function usesPosixPathDialect(value: string | undefined): boolean {

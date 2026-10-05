@@ -26,6 +26,9 @@ export default [
     route("remote/providers", "routes/providers.tsx"),
     route("control/providers", "routes/legacy-redirect.tsx", { id: "legacy-control-providers" }),
     route("router/strategy", "routes/control-routing-strategy.tsx"),
+    // Run 103 SP8: the two posture pages sit between Routing strategy and Controller.
+    route("router/agent-strategy", "routes/agent-strategy.tsx"),
+    route("router/workloads", "routes/workloads.tsx"),
     route("control/routing-strategy", "routes/legacy-redirect.tsx", {
       id: "legacy-control-routing-strategy",
     }),
@@ -55,6 +58,7 @@ export default [
     route("observe/activity", "routes/observe-activity.tsx"),
     route("observe/requests", "routes/requests.tsx"),
     route("observe/routing", "routes/observe-routing.tsx"),
+    route("observe/queues", "routes/observe-queues.tsx"),
     route("observe/requests/:requestId", "routes/request-detail.tsx"),
     route("observe/logs", "routes/observe-logs.tsx"),
     route("endpoints/downstream", "routes/legacy-redirect.tsx", {
@@ -70,6 +74,14 @@ export default [
       id: "legacy-integrations-upstream",
     }),
     route("system/runtime", "routes/runtime.tsx"),
+    // Run 98 R17: the Learning route (Overview, Configuration, Packs, Decisions, Evidence).
+    route("learning", "routes/learning.tsx", { id: "learning-overview" }),
+    route("learning/configuration", "routes/learning.tsx", { id: "learning-configuration" }),
+    route("learning/packs", "routes/learning.tsx", { id: "learning-packs" }),
+    route("learning/decisions", "routes/learning.tsx", { id: "learning-decisions" }),
+    route("learning/evidence", "routes/learning.tsx", { id: "learning-evidence" }),
+    route("learning/history", "routes/learning.tsx", { id: "learning-history" }),
+    route("system/operator", "routes/operator-controls.tsx", { id: "system-operator" }),
     route("system/session-readiness", "routes/session-readiness.tsx"),
     route("control/session-readiness", "routes/legacy-redirect.tsx", {
       id: "legacy-control-session-readiness",

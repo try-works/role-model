@@ -1,0 +1,25 @@
+(node:27544) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+VERIFY_DONE {
+  "checks": {
+    "total": "FAIL",
+    "failures": [
+      "public tree :: 5da40073962a4f1fb42eb937d95758bfb9072de1",
+      "source_tree binds public tree :: {\"source_tree\":\"5da40073962a4f1fb42eb937d95758bfb9072de1\",\"tb\":\"5da40073962a4f1fb42eb937d95758bfb9072de1\"}",
+      "private manifest binds both trees :: {\"pub\":\"5da40073962a4f1fb42eb937d95758bfb9072de1\",\"priv\":\"148cbe9db5304ac6e9fc6b39d2b152fdd022bdde\"}"
+    ]
+  },
+  "executableSha256": "02bf46e1b7251391b2cd792bce6cd4d393cf97778fbb20188551c1bfbf1ab8f5",
+  "releaseManifestSha256": "ac8e9fb775beceef49cff0c38ebda9857b3a9b37c060ad1b65c8d4a9a22bc3ea",
+  "privateDistributionManifestSha256": "31184a06345e4a739faf0da4d6169cd4639c99f7648e5a37732e432e15e0d2d3",
+  "sidecarSha256": "42757bdf5a910d9d921fc5a45f945aa87b478d1b8cb0128d054b8ef0580ae9a2",
+  "releaseFileCount": 152,
+  "extensionCount": 13,
+  "sourceSeal": {
+    "status": "sealed_clean",
+    "releaseEligible": true,
+    "privateClean": true,
+    "publicClean": true
+  },
+  "artifactClosureVerified": true
+}

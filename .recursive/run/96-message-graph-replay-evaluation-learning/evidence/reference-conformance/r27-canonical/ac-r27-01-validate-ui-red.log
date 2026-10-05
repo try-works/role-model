@@ -1,0 +1,45 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/96-message-graph-replay-evaluation-learning/role-model-router/apps/runtime-host-bridge
+
+(node:47948) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ × test/validate-ui.test.ts > runRuntimeUiValidation > [AC-R27-01] accepts a degraded health response while bootstrap is already idle 39ms
+   → (0 , waitForSessionBootstrapIdle) is not a function
+ ↓ test/validate-ui.test.ts > runRuntimeUiValidation > validates runtime config reads and the main control-plane mutations
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/validate-ui.test.ts > runRuntimeUiValidation > [AC-R27-01] accepts a degraded health response while bootstrap is already idle
+TypeError: (0 , waitForSessionBootstrapIdle) is not a function
+ ❯ test/validate-ui.test.ts:31:9
+     29|     try {
+     30|       await expect(
+     31|         waitForSessionBootstrapIdle("http://runtime", { connection: "c…
+       |         ^
+     32|       ).resolves.toBeUndefined();
+     33|       expect(fetchMock).toHaveBeenCalledWith("http://runtime/healthz",…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 skipped (2)
+   Start at  06:11:55
+   Duration  10.87s (transform 6.67s, setup 0ms, collect 8.44s, tests 43ms, environment 1ms, prepare 436ms)
+
+Run 96 canonical TDD receipt
+acceptanceCriterionId=AC-R27-01
+proofFamily=r27-ac-r27-01-validate-ui-bootstrap-readiness
+phase=semantic RED
+result=FAIL
+testPath=public:role-model-router/apps/runtime-host-bridge/test/validate-ui.test.ts
+assertionTitle=[AC-R27-01] accepts a degraded health response while bootstrap is already idle
+command=corepack pnpm --dir role-model-router/apps/runtime-host-bridge exec vitest run test/validate-ui.test.ts -t "[AC-R27-01] accepts a degraded health response while bootstrap is already idle" --reporter=verbose
+Run 96 canonical TDD receipt
+acceptanceCriterionId=AC-R27-01
+proofFamily=r27-ac-r27-01-validate-ui-bootstrap-readiness
+phase=semantic RED
+result=FAIL
+testPath=public:role-model-router/apps/runtime-host-bridge/test/validate-ui.test.ts
+assertionTitle=[AC-R27-01] accepts a degraded health response while bootstrap is already idle
+command=corepack pnpm --dir role-model-router/apps/runtime-host-bridge exec vitest run test/validate-ui.test.ts -t "[AC-R27-01] accepts a degraded health response while bootstrap is already idle" --reporter=verbose

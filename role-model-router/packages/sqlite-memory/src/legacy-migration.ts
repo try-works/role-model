@@ -1,9 +1,23 @@
 import { createHash } from "node:crypto";
-import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  renameSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 
 export const LEGACY_INLINE_CAP_BYTES = 16 * 1024;
+export const LEGACY_MIGRATION_INVENTORY_SCHEMA =
+  "role-model.legacy-migration-inventory.v1" as const;
+export const LEGACY_MIGRATION_CONTRACT_VERSION = "role-model.legacy-migration.v2" as const;
+export const LEGACY_MIGRATION_PREVIOUS_CONTRACT_VERSION = "role-model.legacy-migration.v1" as const;
 
 export type LegacyMigrationState =
   | "legacy_primary"
@@ -87,6 +101,50 @@ export interface LegacyMigrationJournal {
   readonly backupPath: string | null;
   readonly holdUntilMs: number | null;
   readonly secondParityVerified: boolean;
+  readonly writerFenced: boolean;
+  readonly writerFencedAtMs: number | null;
+}
+
+export type LegacyMigrationInventoryCategory =
+  | "artifact_content_edges"
+  | "occurrence_rows"
+  | "capture_roots_manifests"
+  | "replay_checkpoints"
+  | "evaluation_databases"
+  | "projection_consumers"
+  | "runtime_observations"
+  | "performance_samples";
+
+export interface LegacyMigrationInventoryEntry {
+  readonly category: LegacyMigrationInventoryCategory;
+  readonly tableName: string;
+  readonly rowCount: number;
+  readonly payloadBytes: number;
+  readonly rowHash: string;
+}
+
+export interface LegacyMigrationInventory {
+  readonly schemaVersion: typeof LEGACY_MIGRATION_INVENTORY_SCHEMA;
+  readonly contractVersion: typeof LEGACY_MIGRATION_CONTRACT_VERSION;
+  readonly entries: readonly LegacyMigrationInventoryEntry[];
+  readonly inventoryHash: string;
+  readonly totalRows: number;
+  readonly totalPayloadBytes: number;
+}
+
+export interface LegacyMigrationStageReceipt {
+  readonly migrationId: string;
+  readonly stage: LegacyMigrationState;
+  readonly sourceInventoryHash: string;
+  readonly targetInventoryHash: string;
+  readonly cursor: string | null;
+  readonly restartCount: number;
+  readonly compatibility: {
+    readonly current: typeof LEGACY_MIGRATION_CONTRACT_VERSION;
+    readonly previous: typeof LEGACY_MIGRATION_PREVIOUS_CONTRACT_VERSION;
+    readonly accepted: readonly string[];
+  };
+  readonly recordedAtMs: number;
 }
 
 export interface LegacyStorageAudit {
@@ -98,6 +156,53 @@ export interface LegacyStorageAudit {
   readonly quarantinedPointerRows: number;
   readonly quarantinedRows: number;
   readonly quarantinedRequestIds: readonly string[];
+  readonly inventory: LegacyMigrationInventory;
+  readonly unresolvedInventory: readonly LegacyMigrationInventoryEntry[];
+}
+
+export interface LegacyMigrationPhysicalFootprint {
+  readonly databaseBytes: number;
+  readonly walBytes: number;
+  readonly shmBytes: number;
+  readonly totalBytes: number;
+  readonly baselineBytes: number | null;
+  readonly growthBytes: number | null;
+  readonly bounded: boolean;
+  readonly databaseTotalBytes: number;
+  readonly physicalTotalBytes: number;
+  readonly legacyBytes: number;
+  readonly legacyBytesBefore: number;
+  readonly legacyFileCount: number;
+  readonly legacyFiles: readonly LegacyMigrationPhysicalFile[];
+  readonly legacyDisposition: LegacyMigrationPhysicalDisposition;
+  readonly legacyBytesReclaimed: number;
+  readonly legacyBytesQuarantined: number;
+}
+
+export interface LegacyMigrationPhysicalFile {
+  readonly path: string;
+  readonly bytes: number;
+}
+
+export type LegacyMigrationPhysicalDisposition =
+  | "none"
+  | "retained"
+  | "reclaimed"
+  | "quarantined"
+  | "mixed";
+
+export interface LegacyRichJsonWriteInput {
+  readonly requestId: string;
+  readonly observation: Readonly<Record<string, unknown>>;
+  readonly closure?: Readonly<Record<string, unknown>>;
+}
+
+export interface LegacyRichJsonWriteResult {
+  readonly requestId: string;
+  readonly richPath: string;
+  readonly closurePath: string | null;
+  readonly bytes: number;
+  readonly closureBytes: number;
 }
 
 export interface GraphArtifactReference {
@@ -140,6 +245,21 @@ function stateRequiresGraphWrite(state: LegacyMigrationState): boolean {
   );
 }
 
+/**
+ * Run 98 addendum 40 (L2): an observation whose route capture was deferred, or whose operations
+ * boundary was unavailable, is deliberately artifact-free. Callers already reduced it to the bounded
+ * compact stub; the graph-migration guards must recognise it instead of refusing to store it.
+ */
+export function isDegradedCaptureObservation(
+  observation: Readonly<Record<string, unknown>>,
+): boolean {
+  const captureDegradation = observation.captureDegradation;
+  return (
+    observation.statusFamily === "degraded-capture" ||
+    (typeof captureDegradation === "object" && captureDegradation !== null)
+  );
+}
+
 /** Records a live production write in the migration target while shadow mirroring is active. */
 export function mirrorShadowRuntimeObservation(
   database: DatabaseSync,
@@ -162,6 +282,9 @@ export function recordRuntimeObservationGraphReference(
 ): boolean {
   if (!stateRequiresGraphWrite(currentState(database))) return false;
   const requestId = input.observation.requestId;
+  // A degraded-capture observation has no graph reference to record by design; the bounded stub is
+  // the record. Everything else still requires its artifact while the store is graph-authoritative.
+  if (isDegradedCaptureObservation(input.observation)) return false;
   if (typeof requestId !== "string" || requestId.length === 0 || !input.artifactRef) {
     throw new Error("graph storage requires an artifact reference for every live observation");
   }
@@ -305,6 +428,619 @@ function tableExists(database: DatabaseSync, table: string): boolean {
   );
 }
 
+const LEGACY_MIGRATION_METADATA_TABLES = new Set([
+  "legacy_migration_inventory",
+  "legacy_migration_stage_receipts",
+  "legacy_migration_physical_receipts",
+  "legacy_migration_writer_fence",
+  "legacy_migration_quarantine",
+  "legacy_graph_migration_refs",
+  "normalized_performance_samples_v2",
+]);
+
+// These tables are already bounded relational authorities in the released
+// runtime. They still appear in the inventory so their rows/bytes participate
+// in parity, but they do not need a second graph artifact backfill.
+const LEGACY_MIGRATION_CANONICAL_TABLES = new Set([
+  "artifact_links",
+  "context_artifacts",
+  "projection_consumers",
+  "projection_state",
+]);
+
+function quoteIdentifier(value: string): string {
+  return `"${value.replaceAll('"', '""')}"`;
+}
+
+function legacyInventoryCategory(tableName: string): LegacyMigrationInventoryCategory | undefined {
+  if (LEGACY_MIGRATION_METADATA_TABLES.has(tableName)) return undefined;
+  if (tableName === "runtime_observations") return "runtime_observations";
+  if (tableName === "observed_performance_samples") return "performance_samples";
+  if (/occurrence|graph_nodes?/i.test(tableName)) return "occurrence_rows";
+  if (/(capture|route|trace).*(root|manifest)|(^|_)roots?($|_)/i.test(tableName)) {
+    return "capture_roots_manifests";
+  }
+  if (/(replay|checkpoint)/i.test(tableName)) return "replay_checkpoints";
+  if (/(^|_)(evaluation|eval)(_|$)/i.test(tableName)) return "evaluation_databases";
+  if (/(projection|materialization|consumer)/i.test(tableName)) {
+    return "projection_consumers";
+  }
+  if (
+    /(artifact|content).*(edge|link|record)|(^|_)links?($|_)|(^|_)(artifacts?|contents?|graph_edges?)($|_)/i.test(
+      tableName,
+    )
+  ) {
+    return "artifact_content_edges";
+  }
+  return undefined;
+}
+
+function stableSqlValue(value: unknown): string {
+  if (value === null || value === undefined) return "null";
+  if (typeof value === "bigint") return `bigint:${value.toString()}`;
+  if (typeof value === "number" || typeof value === "boolean" || typeof value === "string") {
+    return `${typeof value}:${String(value)}`;
+  }
+  if (value instanceof Uint8Array) return `blob:${Buffer.from(value).toString("base64")}`;
+  return `json:${JSON.stringify(value)}`;
+}
+
+interface LegacyTableColumn {
+  readonly name: string;
+  readonly pk: number;
+}
+
+function readTableColumns(database: DatabaseSync, tableName: string): LegacyTableColumn[] {
+  return database
+    .prepare(`PRAGMA table_info(${quoteIdentifier(tableName)})`)
+    .all()
+    .map((row) => {
+      const value = row as { name: string; pk: number };
+      return { name: value.name, pk: Number(value.pk) };
+    });
+}
+
+function ensureTableColumn(
+  database: DatabaseSync,
+  tableName: string,
+  columnName: string,
+  definition: string,
+): void {
+  if (!tableExists(database, tableName)) return;
+  if (readTableColumns(database, tableName).some((column) => column.name === columnName)) return;
+  database.exec(
+    `ALTER TABLE ${quoteIdentifier(tableName)} ADD COLUMN ${quoteIdentifier(columnName)} ${definition}`,
+  );
+}
+
+function inventoryTable(
+  database: DatabaseSync,
+  tableName: string,
+  pageSize: number,
+): {
+  readonly rowCount: number;
+  readonly payloadBytes: number;
+  readonly rowHash: string;
+} {
+  const columns = readTableColumns(database, tableName);
+  if (columns.length === 0) return { rowCount: 0, payloadBytes: 0, rowHash: sha256("") };
+  const table = quoteIdentifier(tableName);
+  const rowCount = Number(
+    (database.prepare(`SELECT COUNT(*) AS count FROM ${table}`).get() as { count: number }).count,
+  );
+  const payloadExpression = columns
+    .map((column) => `COALESCE(length(CAST(${quoteIdentifier(column.name)} AS BLOB)),0)`)
+    .join("+");
+  const payloadBytes = Number(
+    (
+      database
+        .prepare(`SELECT COALESCE(SUM(${payloadExpression}),0) AS bytes FROM ${table}`)
+        .get() as {
+        bytes: number;
+      }
+    ).bytes,
+  );
+  const primaryKey = columns
+    .filter((column) => column.pk > 0)
+    .sort((left, right) => left.pk - right.pk)
+    .map((column) => quoteIdentifier(column.name));
+  const orderBy = primaryKey.length > 0 ? primaryKey.join(",") : "rowid";
+  const digest = createHash("sha256");
+  let offset = 0;
+  for (;;) {
+    const rows = database
+      .prepare(`SELECT * FROM ${table} ORDER BY ${orderBy} LIMIT ? OFFSET ?`)
+      .all(pageSize, offset) as Array<Record<string, unknown>>;
+    if (rows.length === 0) break;
+    for (const row of rows) {
+      for (const column of columns) {
+        digest.update(`${column.name}\0${stableSqlValue(row[column.name])}\0`);
+      }
+      digest.update("\n");
+    }
+    offset += rows.length;
+    if (rows.length < pageSize) break;
+  }
+  return { rowCount, payloadBytes, rowHash: digest.digest("hex") };
+}
+
+function inspectLegacyMigrationInventoryFromDatabase(
+  database: DatabaseSync,
+  pageSize = 500,
+): LegacyMigrationInventory {
+  if (!Number.isInteger(pageSize) || pageSize < 1) throw new Error("inventory page size required");
+  const tableRows = database
+    .prepare(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name ASC",
+    )
+    .all() as Array<{ name: string }>;
+  const entries = tableRows.flatMap((row) => {
+    const category = legacyInventoryCategory(row.name);
+    if (!category) return [];
+    const table = inventoryTable(database, row.name, pageSize);
+    return [{ category, tableName: row.name, ...table }];
+  });
+  const inventoryHash = sha256(
+    entries
+      .map(
+        (entry) =>
+          `${entry.category}\0${entry.tableName}\0${entry.rowCount}\0${entry.payloadBytes}\0${entry.rowHash}`,
+      )
+      .join("\n"),
+  );
+  return {
+    schemaVersion: LEGACY_MIGRATION_INVENTORY_SCHEMA,
+    contractVersion: LEGACY_MIGRATION_CONTRACT_VERSION,
+    entries,
+    inventoryHash,
+    totalRows: entries.reduce((sum, entry) => sum + entry.rowCount, 0),
+    totalPayloadBytes: entries.reduce((sum, entry) => sum + entry.payloadBytes, 0),
+  };
+}
+
+/**
+ * Read-only inventory used by TB04 preflight and parity receipts. The inventory
+ * is deliberately table/row/hash based, so a large legacy database can be
+ * inspected without copying its rich values into a second projection.
+ */
+export function inspectLegacyMigrationInventory(
+  databasePath: string,
+  options: { readonly pageSize?: number } = {},
+): LegacyMigrationInventory {
+  const database = open(databasePath, true);
+  try {
+    return inspectLegacyMigrationInventoryFromDatabase(database, options.pageSize);
+  } finally {
+    database.close();
+  }
+}
+
+export function validateLegacyMigrationContractVersion(version: string): {
+  readonly compatible: boolean;
+  readonly current: typeof LEGACY_MIGRATION_CONTRACT_VERSION;
+  readonly previous: typeof LEGACY_MIGRATION_PREVIOUS_CONTRACT_VERSION;
+  readonly accepted: readonly string[];
+} {
+  const accepted = [
+    LEGACY_MIGRATION_CONTRACT_VERSION,
+    LEGACY_MIGRATION_PREVIOUS_CONTRACT_VERSION,
+  ] as const;
+  return {
+    compatible: accepted.includes(version as (typeof accepted)[number]),
+    current: LEGACY_MIGRATION_CONTRACT_VERSION,
+    previous: LEGACY_MIGRATION_PREVIOUS_CONTRACT_VERSION,
+    accepted,
+  };
+}
+
+export function assertLegacyMigrationContractVersion(version: string): void {
+  if (!validateLegacyMigrationContractVersion(version).compatible) {
+    throw new Error(`unsupported legacy migration contract version: ${version}`);
+  }
+}
+
+function ensureMigrationInventorySchema(database: DatabaseSync): void {
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS legacy_migration_inventory (
+      migration_id TEXT NOT NULL,
+      inventory_kind TEXT NOT NULL,
+      schema_version TEXT NOT NULL,
+      contract_version TEXT NOT NULL,
+      inventory_hash TEXT NOT NULL,
+      inventory_json TEXT NOT NULL,
+      captured_at_ms INTEGER NOT NULL,
+      PRIMARY KEY (migration_id, inventory_kind)
+    );
+    CREATE TABLE IF NOT EXISTS legacy_migration_stage_receipts (
+      migration_id TEXT NOT NULL,
+      stage TEXT NOT NULL,
+      source_inventory_hash TEXT NOT NULL,
+      target_inventory_hash TEXT NOT NULL,
+      cursor TEXT,
+      restart_count INTEGER NOT NULL DEFAULT 0,
+      compatibility_json TEXT NOT NULL,
+      recorded_at_ms INTEGER NOT NULL,
+      PRIMARY KEY (migration_id, stage)
+    );
+    CREATE TABLE IF NOT EXISTS legacy_migration_physical_receipts (
+      migration_id TEXT NOT NULL,
+      stage TEXT NOT NULL,
+      database_bytes INTEGER NOT NULL,
+      wal_bytes INTEGER NOT NULL,
+      shm_bytes INTEGER NOT NULL,
+      total_bytes INTEGER NOT NULL,
+      baseline_bytes INTEGER,
+      growth_bytes INTEGER,
+      bounded INTEGER NOT NULL,
+      recorded_at_ms INTEGER NOT NULL,
+      PRIMARY KEY (migration_id, stage)
+    );
+    CREATE TABLE IF NOT EXISTS legacy_migration_writer_fence (
+      migration_id TEXT PRIMARY KEY,
+      fenced_at_ms INTEGER NOT NULL,
+      state TEXT NOT NULL
+    );
+  `);
+  // Older Run 94/95 databases already have the physical receipt table. Keep
+  // those databases readable while extending the receipt with independently
+  // measured legacy rich-file bytes and their terminal disposition.
+  ensureTableColumn(
+    database,
+    "legacy_migration_physical_receipts",
+    "physical_total_bytes",
+    "INTEGER NOT NULL DEFAULT 0",
+  );
+  ensureTableColumn(
+    database,
+    "legacy_migration_physical_receipts",
+    "legacy_bytes",
+    "INTEGER NOT NULL DEFAULT 0",
+  );
+  ensureTableColumn(
+    database,
+    "legacy_migration_physical_receipts",
+    "legacy_bytes_before",
+    "INTEGER NOT NULL DEFAULT 0",
+  );
+  ensureTableColumn(
+    database,
+    "legacy_migration_physical_receipts",
+    "legacy_file_count",
+    "INTEGER NOT NULL DEFAULT 0",
+  );
+  ensureTableColumn(
+    database,
+    "legacy_migration_physical_receipts",
+    "legacy_files_json",
+    "TEXT NOT NULL DEFAULT '[]'",
+  );
+  ensureTableColumn(
+    database,
+    "legacy_migration_physical_receipts",
+    "legacy_disposition",
+    "TEXT NOT NULL DEFAULT 'retained'",
+  );
+  ensureTableColumn(
+    database,
+    "legacy_migration_physical_receipts",
+    "legacy_bytes_reclaimed",
+    "INTEGER NOT NULL DEFAULT 0",
+  );
+  ensureTableColumn(
+    database,
+    "legacy_migration_physical_receipts",
+    "legacy_bytes_quarantined",
+    "INTEGER NOT NULL DEFAULT 0",
+  );
+  database.exec(
+    `UPDATE legacy_migration_physical_receipts
+     SET physical_total_bytes = total_bytes
+     WHERE physical_total_bytes = 0`,
+  );
+}
+
+function writeInventoryReceipt(
+  database: DatabaseSync,
+  inventory: LegacyMigrationInventory,
+  nowMs: number,
+): void {
+  database
+    .prepare(
+      `INSERT OR REPLACE INTO legacy_migration_inventory
+       (migration_id,inventory_kind,schema_version,contract_version,inventory_hash,inventory_json,captured_at_ms)
+       VALUES (?,?,?,?,?,?,?)`,
+    )
+    .run(
+      MIGRATION_ID,
+      "source",
+      inventory.schemaVersion,
+      inventory.contractVersion,
+      inventory.inventoryHash,
+      JSON.stringify(inventory),
+      nowMs,
+    );
+}
+
+function readPersistedInventory(database: DatabaseSync): LegacyMigrationInventory | null {
+  if (!tableExists(database, "legacy_migration_inventory")) return null;
+  const row = database
+    .prepare(
+      "SELECT schema_version,contract_version,inventory_json FROM legacy_migration_inventory WHERE migration_id=? AND inventory_kind='source'",
+    )
+    .get(MIGRATION_ID) as
+    | { schema_version: string; contract_version: string; inventory_json: string }
+    | undefined;
+  if (!row) return null;
+  assertLegacyMigrationContractVersion(row.contract_version);
+  const inventory = JSON.parse(row.inventory_json) as LegacyMigrationInventory;
+  if (inventory.schemaVersion !== row.schema_version) {
+    throw new Error("legacy migration inventory schema mismatch");
+  }
+  if (inventory.inventoryHash !== computeInventoryHash(inventory.entries)) {
+    throw new Error("legacy migration inventory digest mismatch");
+  }
+  return inventory;
+}
+
+function computeInventoryHash(entries: readonly LegacyMigrationInventoryEntry[]): string {
+  return sha256(
+    entries
+      .map(
+        (entry) =>
+          `${entry.category}\0${entry.tableName}\0${entry.rowCount}\0${entry.payloadBytes}\0${entry.rowHash}`,
+      )
+      .join("\n"),
+  );
+}
+
+export function readLegacyMigrationInventory(
+  databasePath: string,
+): LegacyMigrationInventory | null {
+  const database = open(databasePath, true);
+  try {
+    return readPersistedInventory(database);
+  } finally {
+    database.close();
+  }
+}
+
+function measureLegacyPathBytes(filePath: string): number {
+  try {
+    const entry = statSync(filePath);
+    if (!entry.isDirectory()) return entry.size;
+    return readdirSync(filePath, { withFileTypes: true }).reduce(
+      (total, child) => total + measureLegacyPathBytes(path.join(filePath, child.name)),
+      0,
+    );
+  } catch {
+    return 0;
+  }
+}
+
+function normalizeLegacyPaths(paths: readonly string[] | undefined): readonly string[] {
+  const candidates = [
+    ...new Set((paths ?? []).filter(Boolean).map((value) => path.resolve(value))),
+  ];
+  return candidates.filter(
+    (candidate) =>
+      !candidates.some((parent) => {
+        if (parent === candidate) return false;
+        const relative = path.relative(parent, candidate);
+        return relative !== "" && !relative.startsWith("..") && !path.isAbsolute(relative);
+      }),
+  );
+}
+
+function legacyDisposition(input: {
+  readonly legacyBytes: number;
+  readonly requested?: LegacyMigrationPhysicalDisposition;
+  readonly legacyBytesReclaimed: number;
+  readonly legacyBytesQuarantined: number;
+}): LegacyMigrationPhysicalDisposition {
+  if (input.requested) return input.requested;
+  if (input.legacyBytesReclaimed > 0 && input.legacyBytesQuarantined > 0) return "mixed";
+  if (input.legacyBytesReclaimed > 0) return "reclaimed";
+  if (input.legacyBytesQuarantined > 0) return "quarantined";
+  return input.legacyBytes > 0 ? "retained" : "none";
+}
+
+export function measureLegacyMigrationFootprint(input: {
+  readonly databasePath: string;
+  readonly baselineBytes?: number;
+  readonly legacyPaths?: readonly string[];
+  readonly legacyBytesBefore?: number;
+  readonly legacyDisposition?: LegacyMigrationPhysicalDisposition;
+  readonly legacyBytesReclaimed?: number;
+  readonly legacyBytesQuarantined?: number;
+}): LegacyMigrationPhysicalFootprint {
+  const stat = (filePath: string): number => {
+    try {
+      return statSync(filePath).size;
+    } catch {
+      return 0;
+    }
+  };
+  const databaseBytes = stat(input.databasePath);
+  const walBytes = stat(`${input.databasePath}-wal`);
+  const shmBytes = stat(`${input.databasePath}-shm`);
+  const databaseTotalBytes = databaseBytes + walBytes + shmBytes;
+  const legacyFiles = normalizeLegacyPaths(input.legacyPaths).map((filePath) => ({
+    path: filePath,
+    bytes: measureLegacyPathBytes(filePath),
+  }));
+  const legacyBytes = legacyFiles.reduce((total, file) => total + file.bytes, 0);
+  const legacyBytesBefore = input.legacyBytesBefore ?? legacyBytes;
+  const legacyBytesReclaimed = input.legacyBytesReclaimed ?? 0;
+  const legacyBytesQuarantined = input.legacyBytesQuarantined ?? 0;
+  const totalBytes = databaseTotalBytes;
+  const physicalTotalBytes = databaseTotalBytes + legacyBytes;
+  const baselineBytes = input.baselineBytes ?? null;
+  const growthBytes = baselineBytes === null ? null : totalBytes - baselineBytes;
+  return {
+    databaseBytes,
+    walBytes,
+    shmBytes,
+    totalBytes,
+    baselineBytes,
+    growthBytes,
+    bounded:
+      growthBytes === null || growthBytes <= Math.max(LEGACY_INLINE_CAP_BYTES, baselineBytes ?? 0),
+    databaseTotalBytes,
+    physicalTotalBytes,
+    legacyBytes,
+    legacyBytesBefore,
+    legacyFileCount: legacyFiles.filter((file) => file.bytes > 0).length,
+    legacyFiles,
+    legacyDisposition: legacyDisposition({
+      legacyBytes,
+      requested: input.legacyDisposition,
+      legacyBytesReclaimed,
+      legacyBytesQuarantined,
+    }),
+    legacyBytesReclaimed,
+    legacyBytesQuarantined,
+  };
+}
+
+function writePhysicalReceipt(
+  database: DatabaseSync,
+  stage: LegacyMigrationState,
+  databasePath: string,
+  backupPath: string,
+  nowMs: number,
+  options: {
+    readonly legacyPaths?: readonly string[];
+    readonly legacyBytesBefore?: number;
+    readonly legacyDisposition?: LegacyMigrationPhysicalDisposition;
+    readonly legacyBytesReclaimed?: number;
+    readonly legacyBytesQuarantined?: number;
+  } = {},
+): void {
+  let baselineBytes: number | undefined;
+  try {
+    baselineBytes = statSync(backupPath).size;
+  } catch {
+    baselineBytes = undefined;
+  }
+  const footprint = measureLegacyMigrationFootprint({
+    databasePath,
+    baselineBytes,
+    ...options,
+  });
+  database
+    .prepare(
+      `INSERT OR REPLACE INTO legacy_migration_physical_receipts
+       (migration_id,stage,database_bytes,wal_bytes,shm_bytes,total_bytes,baseline_bytes,growth_bytes,bounded,
+        physical_total_bytes,legacy_bytes,legacy_bytes_before,legacy_file_count,legacy_files_json,
+        legacy_disposition,legacy_bytes_reclaimed,legacy_bytes_quarantined,recorded_at_ms)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+    )
+    .run(
+      MIGRATION_ID,
+      stage,
+      footprint.databaseBytes,
+      footprint.walBytes,
+      footprint.shmBytes,
+      footprint.totalBytes,
+      footprint.baselineBytes,
+      footprint.growthBytes,
+      Number(footprint.bounded),
+      footprint.physicalTotalBytes,
+      footprint.legacyBytes,
+      footprint.legacyBytesBefore,
+      footprint.legacyFileCount,
+      JSON.stringify(footprint.legacyFiles),
+      footprint.legacyDisposition,
+      footprint.legacyBytesReclaimed,
+      footprint.legacyBytesQuarantined,
+      nowMs,
+    );
+}
+
+export function readLegacyMigrationPhysicalReceipts(databasePath: string): readonly {
+  stage: LegacyMigrationState;
+  footprint: LegacyMigrationPhysicalFootprint;
+  recordedAtMs: number;
+}[] {
+  const database = open(databasePath, true);
+  try {
+    if (!tableExists(database, "legacy_migration_physical_receipts")) return [];
+    const columns = new Set(
+      readTableColumns(database, "legacy_migration_physical_receipts").map((column) => column.name),
+    );
+    const extended = [
+      "physical_total_bytes",
+      "legacy_bytes",
+      "legacy_bytes_before",
+      "legacy_file_count",
+      "legacy_files_json",
+      "legacy_disposition",
+      "legacy_bytes_reclaimed",
+      "legacy_bytes_quarantined",
+    ].every((column) => columns.has(column));
+    const rows = database
+      .prepare(
+        extended
+          ? `SELECT stage,database_bytes,wal_bytes,shm_bytes,total_bytes,baseline_bytes,growth_bytes,bounded,
+                    physical_total_bytes,legacy_bytes,legacy_bytes_before,legacy_file_count,legacy_files_json,
+                    legacy_disposition,legacy_bytes_reclaimed,legacy_bytes_quarantined,recorded_at_ms
+             FROM legacy_migration_physical_receipts WHERE migration_id=? ORDER BY recorded_at_ms ASC,stage ASC`
+          : `SELECT stage,database_bytes,wal_bytes,shm_bytes,total_bytes,baseline_bytes,growth_bytes,bounded,
+                    recorded_at_ms
+             FROM legacy_migration_physical_receipts WHERE migration_id=? ORDER BY recorded_at_ms ASC,stage ASC`,
+      )
+      .all(MIGRATION_ID) as Array<Record<string, string | number | null>>;
+    return rows.map((row) => {
+      const databaseTotalBytes =
+        Number(row.database_bytes) + Number(row.wal_bytes) + Number(row.shm_bytes);
+      const legacyBytes = extended ? Number(row.legacy_bytes ?? 0) : 0;
+      let legacyFiles: LegacyMigrationPhysicalFile[] = [];
+      if (extended && typeof row.legacy_files_json === "string") {
+        try {
+          legacyFiles = JSON.parse(row.legacy_files_json) as LegacyMigrationPhysicalFile[];
+        } catch {
+          legacyFiles = [];
+        }
+      }
+      const legacyBytesReclaimed = extended ? Number(row.legacy_bytes_reclaimed ?? 0) : 0;
+      const legacyBytesQuarantined = extended ? Number(row.legacy_bytes_quarantined ?? 0) : 0;
+      const disposition = extended
+        ? (String(row.legacy_disposition ?? "retained") as LegacyMigrationPhysicalDisposition)
+        : legacyBytes > 0
+          ? "retained"
+          : "none";
+      return {
+        stage: row.stage as LegacyMigrationState,
+        footprint: {
+          databaseBytes: Number(row.database_bytes),
+          walBytes: Number(row.wal_bytes),
+          shmBytes: Number(row.shm_bytes),
+          totalBytes: Number(row.total_bytes),
+          baselineBytes: row.baseline_bytes === null ? null : Number(row.baseline_bytes),
+          growthBytes: row.growth_bytes === null ? null : Number(row.growth_bytes),
+          bounded: Number(row.bounded) === 1,
+          databaseTotalBytes,
+          physicalTotalBytes: extended
+            ? Number(row.physical_total_bytes ?? 0) || Number(row.total_bytes) + legacyBytes
+            : Number(row.total_bytes),
+          legacyBytes,
+          legacyBytesBefore: extended
+            ? Number(row.legacy_bytes_before ?? legacyBytes)
+            : legacyBytes,
+          legacyFileCount: extended ? Number(row.legacy_file_count ?? 0) : 0,
+          legacyFiles,
+          legacyDisposition: disposition,
+          legacyBytesReclaimed,
+          legacyBytesQuarantined,
+        },
+        recordedAtMs: Number(row.recorded_at_ms),
+      };
+    });
+  } finally {
+    database.close();
+  }
+}
+
 type LegacyRowClassification =
   | { readonly kind: "import" }
   | { readonly kind: "canonical"; readonly reference: GraphArtifactReference }
@@ -423,6 +1159,129 @@ function currentState(database: DatabaseSync): LegacyMigrationState {
   return row?.state ?? "legacy_primary";
 }
 
+function ensureLegacyWriterFenceSchema(database: DatabaseSync): void {
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS legacy_migration_writer_fence (
+      migration_id TEXT PRIMARY KEY,
+      fenced_at_ms INTEGER NOT NULL,
+      state TEXT NOT NULL
+    );
+  `);
+}
+
+export interface LegacyMigrationWriterFence {
+  readonly migrationId: string;
+  readonly fenced: boolean;
+  readonly state: LegacyMigrationState | null;
+  readonly fencedAtMs: number | null;
+}
+
+export function readLegacyMigrationWriterFence(databasePath: string): LegacyMigrationWriterFence {
+  const database = open(databasePath, true);
+  try {
+    if (!tableExists(database, "legacy_migration_writer_fence")) {
+      return { migrationId: MIGRATION_ID, fenced: false, state: null, fencedAtMs: null };
+    }
+    const row = database
+      .prepare(
+        "SELECT migration_id,fenced_at_ms,state FROM legacy_migration_writer_fence WHERE migration_id=?",
+      )
+      .get(MIGRATION_ID) as
+      | { migration_id: string; fenced_at_ms: number; state: LegacyMigrationState }
+      | undefined;
+    if (!row) return { migrationId: MIGRATION_ID, fenced: false, state: null, fencedAtMs: null };
+    return {
+      migrationId: row.migration_id,
+      fenced: true,
+      state: row.state,
+      fencedAtMs: Number(row.fenced_at_ms),
+    };
+  } finally {
+    database.close();
+  }
+}
+
+function assertLegacyRichJsonRequestId(requestId: string): void {
+  if (!/^[A-Za-z0-9._-]+$/.test(requestId)) {
+    throw new Error("legacy rich JSON request ID must be a safe file name");
+  }
+}
+
+function stateAllowsLegacyRichWriter(state: LegacyMigrationState): boolean {
+  return (
+    state === "legacy_primary" ||
+    state === "backfill" ||
+    state === "shadow_mirror" ||
+    state === "parity_verified"
+  );
+}
+
+/**
+ * Fixture-compatible legacy rich JSON/closure writer used by the cutover proof.
+ * Every call re-reads the durable migration state, so a writer resumed in a
+ * fresh process cannot continue appending rich files after graph cutover.
+ */
+export class LegacyRichJsonWriter {
+  readonly #databasePath: string;
+  readonly #rootPath: string;
+
+  constructor(input: {
+    readonly databasePath: string;
+    readonly rootPath: string;
+    readonly now?: () => number;
+  }) {
+    this.#databasePath = input.databasePath;
+    this.#rootPath = path.resolve(input.rootPath);
+  }
+
+  write(input: LegacyRichJsonWriteInput): LegacyRichJsonWriteResult {
+    assertLegacyRichJsonRequestId(input.requestId);
+    const database = open(this.#databasePath, true);
+    try {
+      const state = currentState(database);
+      const fence = tableExists(database, "legacy_migration_writer_fence")
+        ? (database
+            .prepare(
+              "SELECT fenced_at_ms,state FROM legacy_migration_writer_fence WHERE migration_id=?",
+            )
+            .get(MIGRATION_ID) as { fenced_at_ms: number; state: LegacyMigrationState } | undefined)
+        : undefined;
+      if (!stateAllowsLegacyRichWriter(state) || fence) {
+        throw new Error("legacy rich writer fenced after graph cutover");
+      }
+    } finally {
+      database.close();
+    }
+
+    const richDirectory = path.join(this.#rootPath, "rich");
+    const closureDirectory = path.join(this.#rootPath, "closures");
+    mkdirSync(richDirectory, { recursive: true });
+    const richPath = path.join(richDirectory, `${input.requestId}.json`);
+    const richJson = JSON.stringify(input.observation, null, 2);
+    writeFileSync(richPath, richJson, "utf8");
+    let closurePath: string | null = null;
+    let closureBytes = 0;
+    if (input.closure !== undefined) {
+      mkdirSync(closureDirectory, { recursive: true });
+      closurePath = path.join(closureDirectory, `${input.requestId}.json`);
+      const closureJson = JSON.stringify(input.closure, null, 2);
+      writeFileSync(closurePath, closureJson, "utf8");
+      closureBytes = Buffer.byteLength(closureJson, "utf8");
+    }
+    return {
+      requestId: input.requestId,
+      richPath,
+      closurePath,
+      bytes: Buffer.byteLength(richJson, "utf8"),
+      closureBytes,
+    };
+  }
+
+  append(input: LegacyRichJsonWriteInput): LegacyRichJsonWriteResult {
+    return this.write(input);
+  }
+}
+
 function targetProof(database: DatabaseSync): { count: number; hash: string } {
   if (!tableExists(database, "legacy_graph_migration_refs")) return { count: 0, hash: sha256("") };
   const digest = createHash("sha256");
@@ -446,6 +1305,208 @@ function targetProof(database: DatabaseSync): { count: number; hash: string } {
   return { count, hash: digest.digest("hex") };
 }
 
+function performanceSourceProof(database: DatabaseSync): { count: number; hash: string } {
+  if (!tableExists(database, "observed_performance_samples")) {
+    return { count: 0, hash: sha256("") };
+  }
+  const digest = createHash("sha256");
+  const rows = database
+    .prepare(
+      "SELECT sample_id,sample_json FROM observed_performance_samples ORDER BY sample_id ASC",
+    )
+    .all() as Array<{ sample_id: string; sample_json: string }>;
+  rows.forEach((row, index) => {
+    if (index) digest.update("\n");
+    digest.update(`${row.sample_id}\0${sha256(row.sample_json)}`);
+  });
+  return { count: rows.length, hash: digest.digest("hex") };
+}
+
+function normalizedPerformanceTargetProof(database: DatabaseSync): { count: number; hash: string } {
+  if (!tableExists(database, "normalized_performance_samples_v2")) {
+    return { count: 0, hash: sha256("") };
+  }
+  const digest = createHash("sha256");
+  const rows = database
+    .prepare(
+      "SELECT sample_id,source_hash FROM normalized_performance_samples_v2 ORDER BY sample_id ASC",
+    )
+    .all() as Array<{ sample_id: string; source_hash: string }>;
+  rows.forEach((row, index) => {
+    if (index) digest.update("\n");
+    digest.update(`${row.sample_id}\0${row.source_hash}`);
+  });
+  return { count: rows.length, hash: digest.digest("hex") };
+}
+
+/**
+ * Reconcile performance rows that were written by the legacy writer during the
+ * shadow window. Runtime observation graph writes already have an explicit
+ * dual-write hook, but performance history is persisted by the normal SQLite
+ * writer. Replaying the source row into the normalized table here keeps the
+ * parity receipt grounded in the actual source contents after a restart or a
+ * live write, instead of trusting a caller-provided parity flag.
+ */
+function reconcilePerformanceTarget(database: DatabaseSync): void {
+  if (
+    !tableExists(database, "observed_performance_samples") ||
+    !tableExists(database, "normalized_performance_samples_v2")
+  ) {
+    return;
+  }
+  const rows = database
+    .prepare(
+      "SELECT sample_id,endpoint_id,request_id,routing_decision_id,source_type,timestamp_ms,sample_json FROM observed_performance_samples ORDER BY sample_id ASC",
+    )
+    .all() as Array<{
+    sample_id: string;
+    endpoint_id: string;
+    request_id: string | null;
+    routing_decision_id: string | null;
+    source_type: string;
+    timestamp_ms: number;
+    sample_json: string;
+  }>;
+  const insert = database.prepare(
+    `INSERT OR REPLACE INTO normalized_performance_samples_v2
+     (sample_id,endpoint_id,model_id,request_id,routing_decision_id,source_type,
+      timestamp_ms,latency_ms,success,source_hash) VALUES (?,?,?,?,?,?,?,?,?,?)`,
+  );
+  for (const row of rows) {
+    const parsed = JSON.parse(row.sample_json) as Record<string, unknown>;
+    insert.run(
+      row.sample_id,
+      row.endpoint_id,
+      typeof parsed.model_id === "string" ? parsed.model_id : null,
+      row.request_id,
+      row.routing_decision_id,
+      row.source_type,
+      row.timestamp_ms,
+      typeof parsed.latency_ms === "number" ? parsed.latency_ms : null,
+      typeof parsed.success === "boolean" ? Number(parsed.success) : null,
+      sha256(row.sample_json),
+    );
+  }
+}
+
+function unresolvedInventoryEntries(
+  inventory: LegacyMigrationInventory,
+): readonly LegacyMigrationInventoryEntry[] {
+  return inventory.entries.filter(
+    (entry) =>
+      entry.rowCount > 0 &&
+      !LEGACY_MIGRATION_CANONICAL_TABLES.has(entry.tableName) &&
+      entry.category !== "runtime_observations" &&
+      entry.category !== "performance_samples",
+  );
+}
+
+function migrationTargetInventory(
+  database: DatabaseSync,
+  sourceInventory: LegacyMigrationInventory,
+): LegacyMigrationInventory {
+  const runtimeTarget = targetProof(database);
+  const performanceTarget = normalizedPerformanceTargetProof(database);
+  const entries = sourceInventory.entries.map((entry) => {
+    if (entry.category === "runtime_observations") {
+      return {
+        ...entry,
+        rowCount: runtimeTarget.count,
+        rowHash: runtimeTarget.count === entry.rowCount ? entry.rowHash : runtimeTarget.hash,
+      };
+    }
+    if (entry.category === "performance_samples") {
+      return {
+        ...entry,
+        rowCount: performanceTarget.count,
+        rowHash:
+          performanceTarget.count === entry.rowCount ? entry.rowHash : performanceTarget.hash,
+      };
+    }
+    if (LEGACY_MIGRATION_CANONICAL_TABLES.has(entry.tableName)) return entry;
+    return { ...entry, rowCount: 0, payloadBytes: 0, rowHash: sha256("") };
+  });
+  return {
+    schemaVersion: LEGACY_MIGRATION_INVENTORY_SCHEMA,
+    contractVersion: LEGACY_MIGRATION_CONTRACT_VERSION,
+    entries,
+    inventoryHash: computeInventoryHash(entries),
+    totalRows: entries.reduce((sum, entry) => sum + entry.rowCount, 0),
+    totalPayloadBytes: entries.reduce((sum, entry) => sum + entry.payloadBytes, 0),
+  };
+}
+
+function writeStageReceipt(
+  database: DatabaseSync,
+  stage: LegacyMigrationState,
+  sourceInventoryHash: string,
+  targetInventoryHash: string,
+  cursor: string | null,
+  nowMs: number,
+): void {
+  const previous = database
+    .prepare(
+      "SELECT restart_count FROM legacy_migration_stage_receipts WHERE migration_id=? AND stage=?",
+    )
+    .get(MIGRATION_ID, stage) as { restart_count: number } | undefined;
+  const compatibility = validateLegacyMigrationContractVersion(LEGACY_MIGRATION_CONTRACT_VERSION);
+  database
+    .prepare(
+      `INSERT OR REPLACE INTO legacy_migration_stage_receipts
+       (migration_id,stage,source_inventory_hash,target_inventory_hash,cursor,restart_count,compatibility_json,recorded_at_ms)
+       VALUES (?,?,?,?,?,?,?,?)`,
+    )
+    .run(
+      MIGRATION_ID,
+      stage,
+      sourceInventoryHash,
+      targetInventoryHash,
+      cursor,
+      (previous?.restart_count ?? 0) + 1,
+      JSON.stringify(compatibility),
+      nowMs,
+    );
+}
+
+export function readLegacyMigrationStageReceipts(
+  databasePath: string,
+): readonly LegacyMigrationStageReceipt[] {
+  const database = open(databasePath, true);
+  try {
+    if (!tableExists(database, "legacy_migration_stage_receipts")) return [];
+    const rows = database
+      .prepare(
+        `SELECT migration_id,stage,source_inventory_hash,target_inventory_hash,cursor,
+                restart_count,compatibility_json,recorded_at_ms
+         FROM legacy_migration_stage_receipts WHERE migration_id=? ORDER BY recorded_at_ms ASC,stage ASC`,
+      )
+      .all(MIGRATION_ID) as Array<{
+      migration_id: string;
+      stage: LegacyMigrationState;
+      source_inventory_hash: string;
+      target_inventory_hash: string;
+      cursor: string | null;
+      restart_count: number;
+      compatibility_json: string;
+      recorded_at_ms: number;
+    }>;
+    return rows.map((row) => ({
+      migrationId: row.migration_id,
+      stage: row.stage,
+      sourceInventoryHash: row.source_inventory_hash,
+      targetInventoryHash: row.target_inventory_hash,
+      cursor: row.cursor,
+      restartCount: Number(row.restart_count),
+      compatibility: JSON.parse(
+        row.compatibility_json,
+      ) as LegacyMigrationStageReceipt["compatibility"],
+      recordedAtMs: Number(row.recorded_at_ms),
+    }));
+  } finally {
+    database.close();
+  }
+}
+
 export function readLegacyMigrationJournal(databasePath: string): LegacyMigrationJournal {
   const database = open(databasePath, true);
   try {
@@ -462,12 +1523,19 @@ export function readLegacyMigrationJournal(databasePath: string): LegacyMigratio
         backupPath: null,
         holdUntilMs: null,
         secondParityVerified: false,
+        writerFenced: false,
+        writerFencedAtMs: null,
       };
     }
     const row = database
       .prepare("SELECT * FROM legacy_migration_journal WHERE migration_id = ?")
       .get(MIGRATION_ID) as Record<string, string | number | null> | undefined;
     if (!row) throw new Error("legacy migration journal row is missing");
+    const fence = tableExists(database, "legacy_migration_writer_fence")
+      ? (database
+          .prepare("SELECT fenced_at_ms FROM legacy_migration_writer_fence WHERE migration_id=?")
+          .get(MIGRATION_ID) as { fenced_at_ms: number } | undefined)
+      : undefined;
     return {
       migrationId: String(row.migration_id),
       state: String(row.state) as LegacyMigrationState,
@@ -480,6 +1548,8 @@ export function readLegacyMigrationJournal(databasePath: string): LegacyMigratio
       backupPath: row.backup_path === null ? null : String(row.backup_path),
       holdUntilMs: row.hold_until_ms === null ? null : Number(row.hold_until_ms),
       secondParityVerified: Number(row.second_parity_verified) === 1,
+      writerFenced: Boolean(fence),
+      writerFencedAtMs: fence ? Number(fence.fenced_at_ms) : null,
     };
   } finally {
     database.close();
@@ -491,6 +1561,355 @@ export function readLegacyMigrationJournal(databasePath: string): LegacyMigratio
  * Rich content (messages, response bodies, tool payloads, captures, cumulative
  * history/recentSamples) is NEVER included: it is graph-external by contract.
  */
+/**
+ * Run 98 addendum 35: the diagnostics sub-trees the decision evidence needs, in the order they are
+ * worth spending the stub's byte budget on. The first group *is* the decision (which difficulty
+ * band, which effective mode, which strategy, which role, what the endpoint's live profile and
+ * metrics were, whether throughput was penalised); the second group is optional detail that may be
+ * dropped when the tree is oversized.
+ */
+const ROUTING_DIAGNOSTIC_REQUIRED_KEYS = [
+  "difficultyRouting",
+  "routingMode",
+  "hybridArbitration",
+  "controllerRouting",
+  "rolePolicy",
+  "observedProfile",
+  "effectiveMetrics",
+  "throughputPenalty",
+  /**
+   * Run 103 R3 (live dev finding): with the capture deferred the compact stub *is* the decision
+   * record, and its projection is an allowlist - so the run-103 receipts (who chose the strategy,
+   * with which weights, and which posture alias bound the request) have to be named here or every
+   * stubbed decision answers with no strategy at all.
+   */
+  "strategyResolution",
+  "aliasPostureBinding",
+] as const;
+const ROUTING_DIAGNOSTIC_OPTIONAL_KEYS = [
+  "selection",
+  // Run 98 addendum 40 L5 (live-window finding): the measured-latency verdict is decision evidence, so
+  // a stub must carry it. The projection is an allowlist, and omitting this key made the verdict
+  // invisible on every stubbed observation (which, with the capture deferred, is every live request).
+  "latencySelection",
+  "aliasResolution",
+  "rewrite",
+  "cacheContinuity",
+  "routingCacheAffinity",
+  "roleModelIntent",
+  "catalogEconomics",
+] as const;
+const ROUTING_DIAGNOSTIC_BUDGET_BYTES = 8 * 1024;
+
+/**
+ * Copy a diagnostics value without ever carrying rich content: scalars, small records, bounded
+ * arrays of scalars, bounded strings, bounded depth. Anything else is dropped rather than truncated
+ * mid-value, so the projection can never smuggle a prompt, a response body or a tool payload into
+ * the inline row.
+ */
+function projectBoundedDiagnosticValue(value: unknown, depth = 0): unknown {
+  if (value === null || typeof value === "number" || typeof value === "boolean") return value;
+  if (typeof value === "string") return value.length > 512 ? `${value.slice(0, 512)}…` : value;
+  if (Array.isArray(value)) {
+    if (depth >= 3) return undefined;
+    const entries = value
+      .slice(0, 32)
+      .map((entry) => projectBoundedDiagnosticValue(entry, depth + 1))
+      .filter((entry) => entry !== undefined);
+    return entries.length > 0 ? entries : undefined;
+  }
+  if (value && typeof value === "object") {
+    if (depth >= 3) return undefined;
+    const record = value as Record<string, unknown>;
+    const projected: Record<string, unknown> = {};
+    for (const key of Object.keys(record).slice(0, 64)) {
+      const entry = projectBoundedDiagnosticValue(record[key], depth + 1);
+      if (entry !== undefined) projected[key] = entry;
+    }
+    return Object.keys(projected).length > 0 ? projected : undefined;
+  }
+  return undefined;
+}
+
+function projectBoundedRoutingDiagnostics(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const source = value as Record<string, unknown>;
+  const projected: Record<string, unknown> = {};
+  for (const key of ROUTING_DIAGNOSTIC_REQUIRED_KEYS) {
+    const entry = projectBoundedDiagnosticValue(source[key]);
+    if (entry !== undefined) projected[key] = entry;
+  }
+  for (const key of ROUTING_DIAGNOSTIC_OPTIONAL_KEYS) {
+    const entry = projectBoundedDiagnosticValue(source[key]);
+    if (entry !== undefined) projected[key] = entry;
+  }
+  // Bound the projection inside the stub's own 16 KiB cap: drop optional detail first, then the
+  // optional-everything case, so the decision evidence is what survives an oversized tree.
+  if (Buffer.byteLength(JSON.stringify(projected), "utf8") > ROUTING_DIAGNOSTIC_BUDGET_BYTES) {
+    for (const key of ROUTING_DIAGNOSTIC_OPTIONAL_KEYS) delete projected[key];
+  }
+  for (const key of ["selection", "roleModelIntent", "catalogEconomics"] as const) {
+    if (Buffer.byteLength(JSON.stringify(projected), "utf8") <= ROUTING_DIAGNOSTIC_BUDGET_BYTES) {
+      break;
+    }
+    delete projected[key];
+  }
+  if (Buffer.byteLength(JSON.stringify(projected), "utf8") > ROUTING_DIAGNOSTIC_BUDGET_BYTES) {
+    // Still oversized: keep the scalar decision fields only.
+    for (const key of ["observedProfile", "effectiveMetrics", "throughputPenalty"] as const) {
+      const entry = projected[key];
+      if (entry && typeof entry === "object" && !Array.isArray(entry)) {
+        const shrunk: Record<string, unknown> = {};
+        for (const [field, fieldValue] of Object.entries(entry as Record<string, unknown>)) {
+          if (
+            fieldValue === null ||
+            typeof fieldValue === "number" ||
+            typeof fieldValue === "boolean" ||
+            (typeof fieldValue === "string" && fieldValue.length <= 512)
+          ) {
+            shrunk[field] = fieldValue;
+          }
+        }
+        projected[key] = shrunk;
+      }
+    }
+  }
+  return projected;
+}
+
+// R15: budget the serialized JSON string, not JS code units or just UTF-8 text.
+// Escaped controls can cost six bytes each; code-point iteration avoids split surrogates.
+const FAILURE_MESSAGE_PREVIEW_JSON_BYTES = 512;
+function projectFailureErrorPreview(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const source = value as Record<string, unknown>;
+  const preview: Record<string, unknown> = {};
+  for (const key of ["statusCode", "errorClass"] as const) {
+    if (source[key] !== undefined) preview[key] = source[key];
+  }
+  if (typeof source.message === "string") {
+    let message = "";
+    let jsonBytes = 2; // JSON quotes
+    for (const point of source.message) {
+      const pointBytes = Buffer.byteLength(JSON.stringify(point), "utf8") - 2;
+      if (jsonBytes + pointBytes > FAILURE_MESSAGE_PREVIEW_JSON_BYTES) break;
+      message += point;
+      jsonBytes += pointBytes;
+    }
+    preview.message = message;
+    if (message !== source.message) {
+      preview.messageTruncated = true;
+      preview.messageOriginalUtf8Bytes = Buffer.byteLength(source.message, "utf8");
+    }
+  }
+  return preview;
+}
+
+/**
+ * R15 dimensions are a separate compact metadata column, not a request-size limit.
+ * Project recognized structured provider diagnostics; leave unrelated necessary metadata
+ * untouched so its byte guard still fails closed rather than silently losing facts.
+ */
+export function projectRuntimeTelemetryFailureDimensions(
+  dimensions: Readonly<Record<string, unknown>> | null | undefined,
+  artifactRef?: GraphArtifactReference,
+): Record<string, unknown> | null {
+  if (!dimensions) return null;
+  const result: Record<string, unknown> = { ...dimensions };
+  const originalUtf8Bytes = Buffer.byteLength(JSON.stringify(dimensions), "utf8");
+  const omittedFields: string[] = [];
+  const note = (field: string) => {
+    if (omittedFields.length < 32) omittedFields.push(field);
+  };
+  const factKeys = [
+    "requestId",
+    "routingDecisionId",
+    "attemptId",
+    "routedAttemptId",
+    "endpointId",
+    "failedEndpointId",
+    "providerId",
+    "providerFamily",
+    "vendorId",
+    "executionFamily",
+    "adapterFamily",
+    "statusCode",
+    "errorClass",
+    "failureClass",
+    "code",
+    "type",
+    "failurePhase",
+    "retryable",
+    "fallbackEligible",
+    "cooldownRecorded",
+    "cooldownFailureCount",
+    "cooldownUntilMs",
+  ];
+  const project = (value: unknown, field: string, depth = 0): Record<string, unknown> => {
+    if (depth > 2) {
+      note(field);
+      return {};
+    }
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+      note(field);
+      return {};
+    }
+    const source = value as Record<string, unknown>;
+    const out: Record<string, unknown> = {};
+    for (const key of factKeys) {
+      const entry = source[key];
+      if (entry === null || ["string", "number", "boolean"].includes(typeof entry))
+        out[key] = entry;
+    }
+    const preview = projectFailureErrorPreview(source);
+    for (const key of ["message", "messageTruncated", "messageOriginalUtf8Bytes"]) {
+      if (preview[key] !== undefined) out[key] = preview[key];
+    }
+    if (preview.messageTruncated) note(`${field}.message`);
+    if (source.errorPreview !== undefined)
+      out.errorPreview = project(source.errorPreview, `${field}.errorPreview`, depth + 1);
+    for (const key of Object.keys(source)) {
+      if (![...factKeys, "message", "errorPreview"].includes(key)) note(`${field}.${key}`);
+    }
+    return out;
+  };
+  let recognized = false;
+  for (const key of ["errorContext", "errorPreview"]) {
+    const source = dimensions[key];
+    if (source && typeof source === "object" && !Array.isArray(source)) {
+      result[key] = project(source, key);
+      recognized = true;
+    }
+  }
+  if (Array.isArray(dimensions.failedAttempts)) {
+    result.failedAttempts = dimensions.failedAttempts
+      .slice(0, 8)
+      .map((entry, i) => project(entry, `failedAttempts.${i}`));
+    if (dimensions.failedAttempts.length > 8) note("failedAttempts");
+    recognized = true;
+  }
+  // Raw capture trees are not necessary classification metadata, even if a caller
+  // put them in dimensions. They remain in the graph artifact, never inline.
+  for (const key of [
+    "prompt",
+    "messages",
+    "responseBody",
+    "providerResponse",
+    "requestCapture",
+    "responseCapture",
+    "inspection",
+    "diagnostics",
+  ]) {
+    if (result[key] !== undefined && recognized) {
+      delete result[key];
+      note(key);
+    }
+  }
+  if (!recognized) return result; // Invalid raw scalar previews still hit the existing byte/privacy guard.
+  const receipt: Record<string, unknown> = {
+    reason: "diagnostic_projection",
+    originalUtf8Bytes,
+    omittedFields,
+  };
+  if (omittedFields.length) result.compactTruncation = receipt;
+  if (artifactRef && omittedFields.length) result.artifactRef = artifactRef;
+  const bytes = () => Buffer.byteLength(JSON.stringify(result), "utf8");
+  const diagnosticBytes = () =>
+    Buffer.byteLength(
+      JSON.stringify(
+        Object.fromEntries(
+          ["errorContext", "errorPreview", "failedAttempts"].flatMap((key) =>
+            result[key] === undefined ? [] : [[key, result[key]]],
+          ),
+        ),
+      ),
+      "utf8",
+    );
+  const withinBudget = () => bytes() <= LEGACY_INLINE_CAP_BYTES && diagnosticBytes() <= 8 * 1024;
+  const shedMessages = (value: unknown, field: string): void => {
+    if (withinBudget() || !value || typeof value !== "object") return;
+    if (Array.isArray(value)) {
+      value.forEach((entry, i) => shedMessages(entry, `${field}.${i}`));
+      return;
+    }
+    const record = value as Record<string, unknown>;
+    if (typeof record.message === "string" && record.message.length) {
+      record.messageOriginalUtf8Bytes ??= Buffer.byteLength(record.message, "utf8");
+      record.message = "";
+      record.messageTruncated = true;
+      note(`${field}.message`);
+      result.compactTruncation = receipt;
+    }
+    shedMessages(record.errorPreview, `${field}.errorPreview`);
+  };
+  for (const key of ["errorContext", "errorPreview", "failedAttempts"])
+    shedMessages(result[key], key);
+  if (diagnosticBytes() > 8 * 1024) {
+    // Facts are not previews. Keep correlation/classification intact while making
+    // the diagnostic budget exception explicit; the final metadata cap still applies.
+    receipt.reason = "diagnostic_facts_budget";
+    receipt.diagnosticFactsAvailable = true;
+    receipt.diagnosticUtf8Bytes = diagnosticBytes();
+    result.compactTruncation = receipt;
+    if (artifactRef) result.artifactRef = artifactRef;
+  }
+  if (artifactRef && omittedFields.length) result.artifactRef = artifactRef;
+  return result;
+}
+
+/**
+ * Budget the final failure envelope, including its artifact pointer and failure fields.
+ * Evict secondary evidence before correlation IDs, classification or measured counters.
+ * Unusually large primary identifiers still fail closed; callers must never let secondary
+ * persistence errors replace the provider error. No global inline cap is increased.
+ */
+export function boundRuntimeTelemetryFailureStub(stub: Record<string, unknown>): void {
+  const bytes = () => Buffer.byteLength(JSON.stringify(stub), "utf8");
+  if (bytes() <= LEGACY_INLINE_CAP_BYTES) return;
+  const originalUtf8Bytes = bytes();
+  const omittedFields: string[] = [];
+  stub.compactTruncation = { reason: "inline_byte_budget", originalUtf8Bytes, omittedFields };
+  for (const key of [
+    "retrievalReceipt",
+    "routingDiagnostics",
+    "telemetrySnapshot",
+    "observedPerformance",
+    "graphEvidence",
+    "contextEnvelope",
+    "captureDegradation",
+    "run88Correlation",
+    "taxonomyDimensions",
+    "providerEvidence",
+    "capturePolicy",
+    "privacyReceipt",
+    "cacheObservability",
+  ]) {
+    if (bytes() <= LEGACY_INLINE_CAP_BYTES) return;
+    if (stub[key] !== undefined) {
+      delete stub[key];
+      omittedFields.push(key);
+    }
+  }
+  // If optional trees were not sufficient, shed message bytes only. Attempt IDs,
+  // error status/class, retry/cooldown facts and stream counters remain unchanged.
+  const semantics = stub.executionSemantics as Record<string, unknown> | undefined;
+  const attempts = semantics?.failedAttempts;
+  if (Array.isArray(attempts)) {
+    for (const attempt of attempts) {
+      if (bytes() <= LEGACY_INLINE_CAP_BYTES) return;
+      const preview = attempt.errorPreview as Record<string, unknown> | undefined;
+      if (preview && typeof preview.message === "string" && preview.message.length) {
+        preview.messageOriginalUtf8Bytes ??= Buffer.byteLength(preview.message, "utf8");
+        preview.message = "";
+        preview.messageTruncated = true;
+        if (!omittedFields.includes("executionSemantics.failedAttempts.errorPreview.message")) {
+          omittedFields.push("executionSemantics.failedAttempts.errorPreview.message");
+        }
+      }
+    }
+  }
+}
+
 export function buildCompactRuntimeObservationStub(
   observation: Readonly<Record<string, unknown>>,
 ): Record<string, unknown> {
@@ -535,6 +1954,39 @@ export function buildCompactRuntimeObservationStub(
     "finishReason",
     "costProvenance",
   ]);
+  /**
+   * Run 98 addendum 40 (audit follow-up): capability flags and stream counters are bounded facts, not
+   * rich content, and the telemetry projection derives `cacheReadTokensSupported`,
+   * `cacheWriteTokensSupported`, `promptCacheSupported` and the stream support flags from them. Dropping
+   * them did not fail loudly — it flipped every derived flag to `false`, which is how 434 live rows
+   * reported "cache hit tokens unsupported" while still recording an average of 129k cached tokens.
+   * Each nested object is projected field by field so the stub still cannot absorb arbitrary content.
+   */
+  const executionTelemetrySource = observation.executionTelemetry as
+    | Record<string, unknown>
+    | undefined;
+  const usageSupport = pickRecord(executionTelemetrySource?.usageSupport, [
+    "inputTokens",
+    "outputTokens",
+    "cacheReadTokens",
+    "cacheWriteTokens",
+  ]);
+  if (Object.keys(usageSupport).length) executionTelemetry.usageSupport = usageSupport;
+  const promptCaching = pickRecord(executionTelemetrySource?.promptCaching, ["supported"]);
+  if (Object.keys(promptCaching).length) executionTelemetry.promptCaching = promptCaching;
+  const streamSupport = pickRecord(executionTelemetrySource?.streamSupport, [
+    "text",
+    "toolCalls",
+    "toolArguments",
+  ]);
+  if (Object.keys(streamSupport).length) executionTelemetry.streamSupport = streamSupport;
+  const streamCounters = pickRecord(executionTelemetrySource?.stream, [
+    "requested",
+    "textDeltas",
+    "toolCallDeltas",
+    "toolArgumentDeltas",
+  ]);
+  if (Object.keys(streamCounters).length) executionTelemetry.stream = streamCounters;
   const executionSemantics = pickRecord(observation.executionSemantics, [
     "sourceClient",
     "executionFamily",
@@ -543,6 +1995,23 @@ export function buildCompactRuntimeObservationStub(
     "toolSideEffectState",
     "idempotencyDecision",
   ]);
+  // Provider attempt identifiers are compact, opaque correlation handles. They
+  // must survive projection because the runtime bridge reads them from the
+  // persisted observation when rendering retry/fallback evidence. Keep the
+  // bounded list in the SQLite stub while leaving provider payloads external.
+  const executionProviderAttemptIds = Array.isArray(
+    (observation.executionSemantics as Record<string, unknown> | undefined)?.providerAttemptIds,
+  )
+    ? ((observation.executionSemantics as Record<string, unknown>).providerAttemptIds as unknown[])
+        .filter(
+          (attemptId): attemptId is string =>
+            typeof attemptId === "string" && attemptId.trim().length > 0,
+        )
+        .slice(0, 64)
+    : [];
+  if (executionProviderAttemptIds.length > 0) {
+    executionSemantics.providerAttemptIds = executionProviderAttemptIds;
+  }
   const failedAttempts = Array.isArray(
     (observation.executionSemantics as Record<string, unknown> | undefined)?.failedAttempts,
   )
@@ -574,11 +2043,7 @@ export function buildCompactRuntimeObservationStub(
           ]),
           ...(attempt.errorPreview && typeof attempt.errorPreview === "object"
             ? {
-                errorPreview: pickRecord(attempt.errorPreview, [
-                  "message",
-                  "statusCode",
-                  "errorClass",
-                ]),
+                errorPreview: projectFailureErrorPreview(attempt.errorPreview),
               }
             : {}),
         }))
@@ -624,6 +2089,49 @@ export function buildCompactRuntimeObservationStub(
     "structuredInspectionAvailable",
   ]);
   if (Object.keys(capturePolicy).length) stub.capturePolicy = capturePolicy;
+  /**
+   * v1.1 guidance 03 §"Compact event envelopes remain bounded" and 01 §"TB02/TB03 ownership": when
+   * rich capture fails the runtime keeps compact telemetry and routing and writes a
+   * `CaptureDegradationReceipt` with the stage, the reason and the fallback
+   * (`metadata_only` / `queued_for_retry` / `dropped_rich_payload`) — the receipt is *evidence about
+   * the evidence*, not rich content. Dropping it while projecting the bundle made a degraded capture
+   * indistinguishable from a request that had nothing to capture.
+   */
+  const captureDegradation = pickRecord(observation.captureDegradation, [
+    "contract",
+    "receiptId",
+    "observationId",
+    "routeDecisionId",
+    "failureStage",
+    "actionTaken",
+    "reasonCode",
+    "routingContinues",
+    "routingContinued",
+    "createdAt",
+    "runtimeChannel",
+    "scopeId",
+    "reason",
+  ]);
+  if (Object.keys(captureDegradation).length) stub.captureDegradation = captureDegradation;
+  if (observation.statusFamily === "degraded-capture") {
+    stub.statusFamily = "degraded-capture";
+  }
+  /**
+   * Run 98 addendum 35 (live stage finding, 2026-09-18): the stub dropped `routingDiagnostics` with
+   * the rich content, so every real request read back as having no routing diagnostics at all. Live
+   * telemetry wrote `difficulty_bucket = NULL`, `routing_mode = NULL` and `selected_strategy = NULL`
+   * for traffic whose decision had all three, and ten runtime-host-bridge acceptance tests failed on
+   * the same readback (the observed profile, the effective metric summary and the throughput penalty
+   * are what make a routing decision auditable, and the replay comparability, the telemetry
+   * projection and the Learning readbacks all consume them).
+   *
+   * Routing diagnostics are routing *evidence*, not rich content, so a bounded projection survives:
+   * scalars and small records only, bounded depth, bounded arrays, bounded strings, and a byte budget
+   * that drops the optional detail before the decision evidence. Messages, responses, tool payloads
+   * and capture bodies remain graph-external exactly as before.
+   */
+  const routingDiagnostics = projectBoundedRoutingDiagnostics(observation.routingDiagnostics);
+  if (Object.keys(routingDiagnostics).length) stub.routingDiagnostics = routingDiagnostics;
   const privacyReceipt = pickRecord(observation.privacyReceipt, [
     "samplingRate",
     "retentionTtlHours",
@@ -721,12 +2229,28 @@ export function buildCompactRuntimeObservationStub(
     "output_tokens",
   ]);
   const profile = pickRecord(observed?.profile, [
+    // Run 98 addendum 40 audit: these are the names the aggregator actually emits
+    // (`packages/profile-aggregator`). The previous list kept `latency_ms` / `sample_count` /
+    // `success_rate` / `throughput_tokens_per_sec`, none of which exist on a real profile, so the
+    // stored operational profile was metadata-only and the model pool's quality and speed axes — which
+    // read this record — rendered empty for every stubbed request.
+    "endpoint_id",
+    "endpoint_version",
     "measured_at_ms",
-    "sample_count",
-    "success_rate",
-    "latency_ms",
-    "throughput_tokens_per_sec",
+    "measurement_window",
+    "sample_size",
+    "sources",
+    "latency_ms_p50",
+    "latency_ms_p95",
+    "failure_rate",
+    "freshness_score",
+    "confidence_score",
+    "judge_score",
     "quality_score",
+    "tokens_per_sec",
+    "error_class_rates",
+    "cost_per_1k_tokens_est",
+    "currency",
   ]);
   const endpointVersion = observed?.endpointVersion;
   if (Object.keys(sample).length || Object.keys(profile).length || endpointVersion !== undefined) {
@@ -736,6 +2260,57 @@ export function buildCompactRuntimeObservationStub(
     if (Object.keys(profile).length) compactObserved.profile = profile;
     stub.observedPerformance = compactObserved;
   }
+  /**
+   * Run 98 addendum 40 audit: the telemetry snapshot is bounded decision/cost evidence (ids, dollar
+   * amounts, the candidate cost rollup and the selected pricing), not rich content, and the ledger and
+   * the cost charts read it. Dropping it entirely made `cost_savings_support` NULL on 656 of 971 live
+   * rows, which is the "rows do not support routingCostSavingsUsd" note and the flat cost chart.
+   */
+  const telemetrySnapshot = observation.telemetrySnapshot as Record<string, unknown> | undefined;
+  const snapshot = pickRecord(telemetrySnapshot, [
+    "providerId",
+    "providerAccountId",
+    "sourceType",
+    "endpointKind",
+    "servingSource",
+    "region",
+    "lifecycleStateAtRequest",
+    "healthStatusAtRequest",
+    "requestedModelId",
+    "selectedModelId",
+    "requestOperation",
+    "toolingUsed",
+    "cacheState",
+    "reasoningEffort",
+    "effortSource",
+    "selectedUncachedCostUsd",
+    "baselineMaxEligibleCostUsd",
+    "routingCostSavingsUsd",
+    "cacheCostSavingsUsd",
+    "totalAvoidedCostUsd",
+    "costBaselineSource",
+    "costSavingsSupport",
+  ]);
+  const boundedStringList = (value: unknown): string[] =>
+    Array.isArray(value)
+      ? value.filter((entry): entry is string => typeof entry === "string").slice(0, 64)
+      : [];
+  const roleIds = boundedStringList(telemetrySnapshot?.roleIds);
+  if (roleIds.length) snapshot.roleIds = roleIds;
+  const eligibleEndpointIds = boundedStringList(telemetrySnapshot?.eligibleEndpointIds);
+  if (eligibleEndpointIds.length) snapshot.eligibleEndpointIds = eligibleEndpointIds;
+  const eligibleModelIds = boundedStringList(telemetrySnapshot?.eligibleModelIds);
+  if (eligibleModelIds.length) snapshot.eligibleModelIds = eligibleModelIds;
+  const candidateCostSnapshot = projectBoundedDiagnosticValue(
+    telemetrySnapshot?.candidateCostSnapshot,
+  );
+  if (candidateCostSnapshot !== undefined) snapshot.candidateCostSnapshot = candidateCostSnapshot;
+  const selectedPricingSnapshot = projectBoundedDiagnosticValue(
+    telemetrySnapshot?.selectedPricingSnapshot,
+  );
+  if (selectedPricingSnapshot !== undefined)
+    snapshot.selectedPricingSnapshot = selectedPricingSnapshot;
+  if (Object.keys(snapshot).length) stub.telemetrySnapshot = snapshot;
   return stub;
 }
 
@@ -840,6 +2415,58 @@ export function hydrateRuntimeObservationGraphPointer(input: {
   return observation;
 }
 
+interface LegacyPhysicalReclamation {
+  readonly beforeBytes: number;
+  readonly reclaimedBytes: number;
+  readonly quarantinedBytes: number;
+  readonly retainedBytes: number;
+}
+
+function reclaimLegacyPaths(
+  legacyPaths: readonly string[],
+  quarantineRoot: string | null,
+): LegacyPhysicalReclamation {
+  let beforeBytes = 0;
+  let reclaimedBytes = 0;
+  let quarantinedBytes = 0;
+  let retainedBytes = 0;
+  for (const legacyPath of normalizeLegacyPaths(legacyPaths)) {
+    const bytes = measureLegacyPathBytes(legacyPath);
+    if (bytes === 0 && !existsSync(legacyPath)) continue;
+    beforeBytes += bytes;
+    try {
+      rmSync(legacyPath, { recursive: true, force: true });
+      reclaimedBytes += bytes;
+      continue;
+    } catch {
+      // A locked/permission-denied legacy file is moved to an explicit
+      // quarantine root when possible. The receipt distinguishes this from
+      // physical reclamation, so a failed move cannot be mistaken for proof.
+    }
+    if (quarantineRoot && path.resolve(quarantineRoot) !== path.resolve(legacyPath)) {
+      const relative = path.relative(path.resolve(legacyPath), path.resolve(quarantineRoot));
+      const quarantineInsideSource =
+        relative !== "" && !relative.startsWith("..") && !path.isAbsolute(relative);
+      if (!quarantineInsideSource) {
+        try {
+          mkdirSync(quarantineRoot, { recursive: true });
+          const target = path.join(
+            quarantineRoot,
+            `${path.basename(legacyPath)}-${sha256(path.resolve(legacyPath)).slice(0, 16)}`,
+          );
+          renameSync(legacyPath, target);
+          quarantinedBytes += bytes;
+          continue;
+        } catch {
+          // Leave the source path in place and report retained bytes below.
+        }
+      }
+    }
+    retainedBytes += bytes;
+  }
+  return { beforeBytes, reclaimedBytes, quarantinedBytes, retainedBytes };
+}
+
 export class LegacySqliteMigration {
   readonly #databasePath: string;
   readonly #backupPath: string;
@@ -847,6 +2474,8 @@ export class LegacySqliteMigration {
   readonly #artifactRollback?: (input: LegacyArtifactWriteResult) => void;
   readonly #now: () => number;
   readonly #routerRoot: string;
+  readonly #legacyPaths: readonly string[];
+  readonly #legacyQuarantinePath: string | null;
   readonly #canonicalPointerValidator?: (pointer: {
     readonly requestId: string;
     readonly artifactRef: GraphArtifactReference | string;
@@ -867,6 +2496,8 @@ export class LegacySqliteMigration {
     }) => boolean;
     readonly now?: () => number;
     readonly routerRoot?: string;
+    readonly legacyPaths?: readonly string[];
+    readonly legacyQuarantinePath?: string;
   }) {
     this.#databasePath = input.databasePath;
     this.#backupPath = input.backupPath;
@@ -875,11 +2506,16 @@ export class LegacySqliteMigration {
     this.#canonicalPointerValidator = input.canonicalPointerValidator;
     this.#now = input.now ?? Date.now;
     this.#routerRoot = input.routerRoot ?? resolveLegacyMigrationRouterRoot();
+    this.#legacyPaths = normalizeLegacyPaths(input.legacyPaths);
+    this.#legacyQuarantinePath = input.legacyQuarantinePath
+      ? path.resolve(input.legacyQuarantinePath)
+      : null;
   }
 
   audit(): LegacyStorageAudit {
     const database = open(this.#databasePath, true);
     try {
+      const inventory = inspectLegacyMigrationInventoryFromDatabase(database);
       const proof = sourceProof(database, 1_000, this.#canonicalPointerValidator);
       const rows = database
         .prepare(
@@ -933,6 +2569,8 @@ export class LegacySqliteMigration {
         quarantinedPointerRows: quarantined.length,
         quarantinedRows: quarantinedIds.length,
         quarantinedRequestIds: quarantinedIds,
+        inventory,
+        unresolvedInventory: unresolvedInventoryEntries(inventory),
       };
     } finally {
       database.close();
@@ -956,6 +2594,16 @@ export class LegacySqliteMigration {
     state: LegacyMigrationState,
     options: { readonly incrementAttempt?: boolean; readonly holdUntilMs?: number } = {},
   ): void {
+    if (state === "graph_primary" || state === "legacy_read_hold" || state === "legacy_retired") {
+      ensureLegacyWriterFenceSchema(database);
+      database
+        .prepare(
+          `INSERT INTO legacy_migration_writer_fence (migration_id,fenced_at_ms,state)
+           VALUES (?,?,?)
+           ON CONFLICT(migration_id) DO UPDATE SET fenced_at_ms=excluded.fenced_at_ms,state=excluded.state`,
+        )
+        .run(MIGRATION_ID, this.#now(), state);
+    }
     if (options.holdUntilMs !== undefined) {
       database
         .prepare(
@@ -971,9 +2619,78 @@ export class LegacySqliteMigration {
       .run(state, this.#now(), MIGRATION_ID);
   }
 
+  #recordLegacyReclamation(nowMs: number): LegacyMigrationPhysicalFootprint {
+    const current = measureLegacyMigrationFootprint({
+      databasePath: this.#databasePath,
+      legacyPaths: this.#legacyPaths,
+    });
+    const previous = readLegacyMigrationPhysicalReceipts(this.#databasePath).find(
+      (candidate) => candidate.stage === "legacy_retired",
+    );
+    if (
+      previous &&
+      current.legacyBytes === 0 &&
+      previous.footprint.legacyBytes === 0 &&
+      ["reclaimed", "quarantined", "mixed", "none"].includes(previous.footprint.legacyDisposition)
+    ) {
+      return previous.footprint;
+    }
+    const before = current;
+    const result = reclaimLegacyPaths(this.#legacyPaths, this.#legacyQuarantinePath);
+    const disposition: LegacyMigrationPhysicalDisposition =
+      result.retainedBytes > 0
+        ? "retained"
+        : result.reclaimedBytes > 0 && result.quarantinedBytes > 0
+          ? "mixed"
+          : result.reclaimedBytes > 0
+            ? "reclaimed"
+            : result.quarantinedBytes > 0
+              ? "quarantined"
+              : "none";
+    const database = open(this.#databasePath);
+    try {
+      ensureMigrationInventorySchema(database);
+      writePhysicalReceipt(
+        database,
+        "legacy_retired",
+        this.#databasePath,
+        this.#backupPath,
+        nowMs,
+        {
+          legacyPaths: this.#legacyPaths,
+          legacyBytesBefore: before.legacyBytes,
+          legacyDisposition: disposition,
+          legacyBytesReclaimed: result.reclaimedBytes,
+          legacyBytesQuarantined: result.quarantinedBytes,
+        },
+      );
+    } finally {
+      database.close();
+    }
+    const receipt = readLegacyMigrationPhysicalReceipts(this.#databasePath).find(
+      (candidate) => candidate.stage === "legacy_retired",
+    );
+    if (!receipt) throw new Error("legacy physical retirement receipt was not persisted");
+    return receipt.footprint;
+  }
+
+  /**
+   * Idempotently completes physical reclamation after a restart that happened
+   * after the durable graph cutover/retirement state was committed.
+   */
+  reclaimLegacyFiles(input: { readonly nowMs?: number } = {}): LegacyMigrationPhysicalFootprint {
+    const journal = readLegacyMigrationJournal(this.#databasePath);
+    if (journal.state !== "legacy_retired") {
+      throw new Error("legacy retirement state required before physical reclamation");
+    }
+    return this.#recordLegacyReclamation(input.nowMs ?? this.#now());
+  }
+
   backfill(input: { readonly scopeId: string; readonly batchSize: number }): {
     readonly migratedCount: number;
     readonly pendingCount: number;
+    readonly unresolvedCount: number;
+    readonly inventoryHash: string;
   } {
     if (!input.scopeId || !Number.isInteger(input.batchSize) || input.batchSize < 1) {
       throw new Error("bounded scoped backfill input required");
@@ -991,6 +2708,16 @@ export class LegacySqliteMigration {
       );
       database.exec(migrationSql);
       ensureQuarantineTable(database);
+      ensureMigrationInventorySchema(database);
+      const sourceInventory = inspectLegacyMigrationInventoryFromDatabase(database);
+      const persistedInventory = readPersistedInventory(database);
+      if (
+        persistedInventory &&
+        persistedInventory.inventoryHash !== sourceInventory.inventoryHash
+      ) {
+        throw new Error("legacy migration source inventory changed; restart requires a new audit");
+      }
+      if (!persistedInventory) writeInventoryReceipt(database, sourceInventory, this.#now());
       // A pointer may have been quarantined by an older runtime before its artifact
       // was durable or before this verifier was available. Reconsider only entries
       // which the current validator proves canonical; malformed or still-unresolved
@@ -1172,7 +2899,29 @@ export class LegacySqliteMigration {
           this.#now(),
           MIGRATION_ID,
         );
-      return { migratedCount, pendingCount: pending };
+      const targetInventory = migrationTargetInventory(database, sourceInventory);
+      writeStageReceipt(
+        database,
+        "backfill",
+        sourceInventory.inventoryHash,
+        targetInventory.inventoryHash,
+        rows.at(-1)?.request_id ?? null,
+        this.#now(),
+      );
+      writePhysicalReceipt(
+        database,
+        "backfill",
+        this.#databasePath,
+        this.#backupPath,
+        this.#now(),
+        { legacyPaths: this.#legacyPaths },
+      );
+      return {
+        migratedCount,
+        pendingCount: pending,
+        unresolvedCount: unresolvedInventoryEntries(sourceInventory).length,
+        inventoryHash: sourceInventory.inventoryHash,
+      };
     } finally {
       database.close();
     }
@@ -1184,6 +2933,21 @@ export class LegacySqliteMigration {
     try {
       if (currentState(database) !== "backfill")
         throw new Error("backfill required before shadow mirror");
+      ensureMigrationInventorySchema(database);
+      const sourceInventory = inspectLegacyMigrationInventoryFromDatabase(database);
+      const persistedInventory = readPersistedInventory(database);
+      if (!persistedInventory) throw new Error("legacy migration inventory receipt is required");
+      if (persistedInventory.inventoryHash !== sourceInventory.inventoryHash) {
+        throw new Error("legacy migration source inventory changed; parity requires a new audit");
+      }
+      const unresolved = unresolvedInventoryEntries(sourceInventory);
+      if (unresolved.length > 0) {
+        throw new Error(
+          `unresolved legacy migration inventory blocks shadow mirror: ${unresolved
+            .map((entry) => `${entry.tableName}(${entry.rowCount})`)
+            .join(",")}`,
+        );
+      }
       const pending = (
         database
           .prepare(
@@ -1198,6 +2962,23 @@ export class LegacySqliteMigration {
       if (quarantined.length > 0)
         throw new Error("legacy migration quarantine blocks shadow mirror");
       // Persist the live dual-write window so a restart cannot silently extend it.
+      const targetInventory = migrationTargetInventory(database, sourceInventory);
+      writeStageReceipt(
+        database,
+        "shadow_mirror",
+        sourceInventory.inventoryHash,
+        targetInventory.inventoryHash,
+        readLegacyMigrationJournal(this.#databasePath).cursor,
+        this.#now(),
+      );
+      writePhysicalReceipt(
+        database,
+        "shadow_mirror",
+        this.#databasePath,
+        this.#backupPath,
+        this.#now(),
+        { legacyPaths: this.#legacyPaths },
+      );
       this.#setState(database, "shadow_mirror", { holdUntilMs: input.deadlineMs });
     } finally {
       database.close();
@@ -1222,10 +3003,46 @@ export class LegacySqliteMigration {
       if (journal.holdUntilMs === null || this.#now() > journal.holdUntilMs) {
         throw new Error("shadow mirror deadline expired; restart backfill before parity");
       }
+      ensureMigrationInventorySchema(database);
+      const sourceInventory = inspectLegacyMigrationInventoryFromDatabase(database);
+      const persistedInventory = readPersistedInventory(database);
+      if (!persistedInventory) throw new Error("legacy migration inventory receipt is required");
+      if (unresolvedInventoryEntries(sourceInventory).length > 0) {
+        throw new Error("unresolved legacy migration inventory blocks parity");
+      }
+      reconcilePerformanceTarget(database);
       const source = sourceProof(database, 1_000, this.#canonicalPointerValidator);
       const target = targetProof(database);
       if (source.count !== target.count || source.hash !== target.hash)
         throw new Error("first parity mismatch");
+      const performanceSource = performanceSourceProof(database);
+      const performanceTarget = normalizedPerformanceTargetProof(database);
+      if (
+        performanceSource.count !== performanceTarget.count ||
+        performanceSource.hash !== performanceTarget.hash
+      ) {
+        throw new Error("performance history parity mismatch");
+      }
+      const targetInventory = migrationTargetInventory(database, sourceInventory);
+      if (targetInventory.inventoryHash !== sourceInventory.inventoryHash) {
+        throw new Error("migration inventory parity mismatch");
+      }
+      writeStageReceipt(
+        database,
+        "parity_verified",
+        sourceInventory.inventoryHash,
+        targetInventory.inventoryHash,
+        journal.cursor,
+        this.#now(),
+      );
+      writePhysicalReceipt(
+        database,
+        "parity_verified",
+        this.#databasePath,
+        this.#backupPath,
+        this.#now(),
+        { legacyPaths: this.#legacyPaths },
+      );
       this.#setState(database, "parity_verified");
       return { sourceCount: source.count, targetCount: target.count, hash: source.hash };
     } finally {
@@ -1271,11 +3088,39 @@ export class LegacySqliteMigration {
     try {
       if (currentState(database) !== "legacy_read_hold")
         throw new Error("legacy read hold required");
+      ensureMigrationInventorySchema(database);
+      const sourceInventory = inspectLegacyMigrationInventoryFromDatabase(database);
+      const persistedInventory = readPersistedInventory(database);
+      if (!persistedInventory) throw new Error("legacy migration inventory receipt is required");
+      if (unresolvedInventoryEntries(sourceInventory).length > 0) {
+        throw new Error("unresolved legacy migration inventory blocks parity");
+      }
+      reconcilePerformanceTarget(database);
       const source = sourceProof(database, 1_000, this.#canonicalPointerValidator);
       const target = targetProof(database);
       if (source.count !== target.count || source.hash !== target.hash) {
         throw new Error("second parity mismatch");
       }
+      const performanceSource = performanceSourceProof(database);
+      const performanceTarget = normalizedPerformanceTargetProof(database);
+      if (
+        performanceSource.count !== performanceTarget.count ||
+        performanceSource.hash !== performanceTarget.hash
+      ) {
+        throw new Error("performance history parity mismatch");
+      }
+      const targetInventory = migrationTargetInventory(database, sourceInventory);
+      if (targetInventory.inventoryHash !== sourceInventory.inventoryHash) {
+        throw new Error("migration inventory parity mismatch");
+      }
+      writeStageReceipt(
+        database,
+        "legacy_read_hold",
+        persistedInventory.inventoryHash,
+        targetInventory.inventoryHash,
+        readLegacyMigrationJournal(this.#databasePath).cursor,
+        this.#now(),
+      );
       database
         .prepare(
           "UPDATE legacy_migration_journal SET second_parity_verified = 1, updated_at_ms = ? WHERE migration_id = ?",
@@ -1288,6 +3133,10 @@ export class LegacySqliteMigration {
 
   retire(input: { readonly nowMs: number }): void {
     const journal = readLegacyMigrationJournal(this.#databasePath);
+    if (journal.state === "legacy_retired") {
+      this.#recordLegacyReclamation(input.nowMs);
+      return;
+    }
     if (journal.state !== "legacy_read_hold") throw new Error("legacy read hold required");
     if (!journal.secondParityVerified) throw new Error("second parity required before retirement");
     if (journal.holdUntilMs === null || input.nowMs < journal.holdUntilMs) return;
@@ -1311,6 +3160,7 @@ export class LegacySqliteMigration {
     } finally {
       database.close();
     }
+    this.#recordLegacyReclamation(input.nowMs);
   }
 
   rollback(): void {

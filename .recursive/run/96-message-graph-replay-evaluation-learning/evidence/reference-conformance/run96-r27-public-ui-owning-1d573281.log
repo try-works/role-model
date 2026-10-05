@@ -1,0 +1,8 @@
+Run 96 / R27 public UI TDD receipt
+Stage: OWNING SUITE (paired public worktree)
+Public head: 1d5732819480cf22587570bf8c60e02efcdbfb3e
+Command:
+  pnpm exec vitest run app/lib/run96-operator-controls.test.ts app/routes/operator-controls.test.tsx app/routes/storage-retention.test.tsx --reporter=dot
+Result: PASS
+Vitest summary: 3 test files, 10 tests passed; this is the bounded public UI/API owning suite.
+Claim boundary: source-level public UI/API behavior only; no Phase 5, rebuilt-runtime, provider, or live-operator result is claimed.

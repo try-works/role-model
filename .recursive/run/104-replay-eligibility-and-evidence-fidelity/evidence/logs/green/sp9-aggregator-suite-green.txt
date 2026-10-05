@@ -1,0 +1,12 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/packages/profile-aggregator
+
+ ✓ test/run104-traffic-class-source.test.ts (2 tests) 14ms
+ ✓ test/operational-profile.test.ts (4 tests) 21ms
+ ✓ test/benchmark-routing-quality.test.ts (6 tests) 341ms
+
+ Test Files  3 passed (3)
+      Tests  12 passed (12)
+   Start at  17:36:36
+   Duration  2.46s (transform 743ms, setup 0ms, collect 951ms, tests 376ms, environment 2ms, prepare 1.68s)
+

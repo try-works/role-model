@@ -1,0 +1,10 @@
+Run 96 canonical TDD receipt
+acceptanceCriterionId=AC-R33-05
+proofFamily=execution-circuit-failed-half-open-admission
+phase=semantic RED
+result=FAIL
+testPath=public:role-model-router/apps/runtime-host-bridge/test/execution-circuit-breaker.test.ts
+assertionTitle=reopens a failed half-open provider attempt with bounded provenance without mutating admission
+command=corepack pnpm --dir role-model-router/apps/runtime-host-bridge exec vitest run test/execution-circuit-breaker.test.ts -t "reopens a failed half-open provider attempt"
+baseline=b52a10279de21f612911bf2ae758ab40fb61d164
+observation=FAIL: the locked public baseline owner-bound probe test reported settleExecutionCircuitProbe is not a function. The durable admission snapshot assertion was therefore red before the production settlement seam existed.

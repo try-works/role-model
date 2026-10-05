@@ -1,0 +1,5 @@
+# Build output. `lib/index.js` is produced by `node scripts/build.mjs` and is the
+# entry the Harness loads once the package is installed; it is not authored here,
+# so it is not committed. `pnpm run build` regenerates it, and it ships through the
+# package's `files` list at publish time.
+lib/

@@ -1,0 +1,2 @@
+Warning: Model "batch.remote-only" not found for provider "role-model". Using custom model id.
+PI-VERIFY-BATCH

@@ -5,6 +5,7 @@ import { DatabaseSync } from "node:sqlite";
 import { setTimeout as delay } from "node:timers/promises";
 import { describe, expect, test } from "vitest";
 
+import { resolveOpenAIProviderUpstreamModelId } from "@role-model-router/provider-openai";
 import { resolveSqliteMemoryLocation } from "@role-model-router/sqlite-memory";
 
 import * as bridge from "../src/index.js";
@@ -328,7 +329,7 @@ describe("remote health bootstrap", () => {
         const admissionCall = calls.find((call) => call.url.endsWith("/chat/completions"));
         expect(JSON.parse(String(admissionCall?.init?.body))).toEqual(
           expect.objectContaining({
-            model: "deepseek-v4-flash",
+            model: resolveOpenAIProviderUpstreamModelId("deepseek/deepseek-v4-flash"),
             reasoning_effort: "high",
           }),
         );

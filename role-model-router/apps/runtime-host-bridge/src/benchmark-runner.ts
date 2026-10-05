@@ -1459,7 +1459,12 @@ function toObservedSample(input: {
 
   latencyMs: number;
 
-  judgeScore: number;
+  /** Run 98 addendum 32 S4: `null` records the case as missing instead of averaging a stand-in score. */
+  judgeScore: number | null;
+
+  missingReason?: string;
+
+  gradingMethod?: string;
 
   failure: boolean;
 
@@ -1490,7 +1495,15 @@ function toObservedSample(input: {
 
     latency_ms_p95: input.latencyMs,
 
-    judge_score: input.failure ? 0 : input.judgeScore,
+    ...(input.failure
+      ? { judge_score: 0 }
+      : input.judgeScore === null
+        ? { judge_score: null }
+        : { judge_score: input.judgeScore }),
+
+    ...(input.missingReason ? { missing_reason: input.missingReason } : {}),
+
+    ...(input.gradingMethod ? { grading_method: input.gradingMethod } : {}),
 
     failure: input.failure,
 
@@ -2038,7 +2051,13 @@ export async function runRoutingCapabilityBenchmark(
 
             latencyMs: stored.latencyMs,
 
-            judgeScore: grade.score,
+            // Run 98 addendum 32 S4: a case the judge could not grade is persisted as missing evidence,
+            // never as the heuristic cap it fell back to.
+            judgeScore: grade.missing === true ? null : grade.score,
+
+            ...(grade.missingReason ? { missingReason: grade.missingReason } : {}),
+
+            ...(grade.gradingMethod ? { gradingMethod: grade.gradingMethod } : {}),
 
             failure: stored.failure,
 
@@ -2056,6 +2075,11 @@ export async function runRoutingCapabilityBenchmark(
           rationale: grade.rationale,
 
           gradingMethod: grade.method,
+
+          // Run 98 addendum 32 S4: the row says the case is missing so the aggregate can exclude it.
+          ...(grade.missing === true
+            ? { missing: true, missingReason: grade.missingReason ?? "judge_unavailable" }
+            : {}),
 
           latencyMs: stored.latencyMs,
 

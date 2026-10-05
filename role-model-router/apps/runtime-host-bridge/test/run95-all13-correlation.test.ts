@@ -75,6 +75,7 @@ describe("Run 95 all-thirteen occurrence correlation", () => {
     expect(Object.keys(result.extensionClosure.registry)).toEqual(
       [...TRACK_B_CANONICAL_EXTENSION_IDS].sort(),
     );
+    expect(result.advisory).toBeNull();
     expect(envelopes.get("artifact-store")).toEqual(
       expect.arrayContaining([
         expect.objectContaining({

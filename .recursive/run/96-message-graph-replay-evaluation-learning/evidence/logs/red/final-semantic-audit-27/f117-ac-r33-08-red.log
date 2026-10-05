@@ -1,0 +1,12 @@
+Run 96 addendum 27 final semantic audit
+finding=F117
+acceptanceCriterionId=AC-R33-08
+proofFamily=r27-final-semantic-audit-f117-ac-r33-08
+stage=semantic RED
+testPath=public:role-model-router/apps/runtime-host-bridge/test/execution-circuit-breaker.test.ts
+assertionTitle=[AC-R33-08] covers default and fixed-effort siblings across text.chat/tools.function_calling auth, quota, transient, cooldown, expiry, repeated failure, success, and concurrent probes
+command=historical public baseline equivalent: corepack pnpm exec vitest run test/execution-circuit-breaker.test.ts -t <half-open lease and alias matrix assertion>
+result=FAIL
+executionStatus=historical-baseline-equivalent
+observed=The historical public baseline lacked the production probe settlement path and could not satisfy the half-open lease, alias, and operator matrix expectations. This is an earlier equivalent baseline observation; it is not a claim that the current repaired assertion was rerun to FAIL.
+phase3Disposition=source evidence only; Phase 5 remains pending.

@@ -1,5 +1,5 @@
-import { generateKeyPairSync, sign } from "node:crypto";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { createHash, generateKeyPairSync, sign } from "node:crypto";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { expect } from "vitest";
@@ -14,11 +14,14 @@ import { validateRun88PackagedStageIdentity } from "../src/runtime-version.js";
 import { createTrackBOperations } from "../src/track-b-operations.js";
 import {
   createRun88RuntimeCorrelation,
+  createRun96RoutingShadowScorer,
   createTrackBPostObservationOutbox,
   normalizeRun88RuntimeCorrelation,
   runTrackBShadowPipeline,
   validateRun88ProviderResponseObservation,
 } from "../src/track-b-runtime.js";
+
+const routingShadowScorer = createRun96RoutingShadowScorer();
 
 type Probe = () => unknown | Promise<unknown>;
 type ProbeLayers = Readonly<{
@@ -114,7 +117,9 @@ async function workflowBytes() {
 async function withDurableOutbox<T>(
   run: (outbox: ReturnType<typeof createTrackBPostObservationOutbox>) => Promise<T>,
 ) {
-  const root = await mkdtemp(path.join(os.tmpdir(), "run88-public-probe-"));
+  const tempRoot = process.env.ROLE_MODEL_TEST_TEMP_ROOT ?? os.tmpdir();
+  await mkdir(tempRoot, { recursive: true });
+  const root = await mkdtemp(path.join(tempRoot, "run88-public-probe-"));
   try {
     return await run(
       createTrackBPostObservationOutbox({ filePath: path.join(root, "outbox.json") }),
@@ -212,7 +217,9 @@ async function withRecommendationOperations<T>(
   recommendation: Readonly<Record<string, unknown>>,
   run: (operations: ReturnType<typeof createTrackBOperations>, statePath: string) => Promise<T>,
 ) {
-  const root = await mkdtemp(path.join(os.tmpdir(), "run88-recommendation-probe-"));
+  const tempRoot = process.env.ROLE_MODEL_TEST_TEMP_ROOT ?? os.tmpdir();
+  await mkdir(tempRoot, { recursive: true });
+  const root = await mkdtemp(path.join(tempRoot, "run88-recommendation-probe-"));
   const statePath = path.join(root, "track-b-production-bridge.json");
   try {
     await writeFile(
@@ -258,6 +265,42 @@ const recommendation = (overrides: Readonly<Record<string, unknown>> = {}) => ({
   ...overrides,
 });
 
+const shadowArtifact = (fill: string): string => `artifact:${fill.repeat(64)}`;
+const shadowReferences = Object.freeze({
+  task: shadowArtifact("8"),
+  environment: shadowArtifact("9"),
+  sourceRoot: shadowArtifact("a"),
+  sourceInput: shadowArtifact("b"),
+  sourceOutcome: shadowArtifact("c"),
+  sourceProvider: shadowArtifact("d"),
+  sourceResponse: shadowArtifact("e"),
+  sourceFork: shadowArtifact("f"),
+  toolPolicy: shadowArtifact("0"),
+  counterfactualRoot: shadowArtifact("1"),
+  counterfactualInput: shadowArtifact("2"),
+  counterfactualOutcome: shadowArtifact("3"),
+  counterfactualProvider: shadowArtifact("4"),
+  counterfactualResponse: shadowArtifact("5"),
+  sourceCase: shadowArtifact("6"),
+  counterfactualCase: shadowArtifact("7"),
+});
+
+const shadowEvaluationReferences = Object.freeze({
+  taskRef: shadowReferences.task,
+  inputRef: shadowReferences.sourceInput,
+  forkRef: shadowReferences.sourceFork,
+  toolPolicyDigest: shadowReferences.toolPolicy,
+  environmentDigest: shadowReferences.environment,
+  sourceEvidenceRef: shadowReferences.sourceRoot,
+  counterfactualEvidenceRef: shadowReferences.counterfactualRoot,
+  sourceOutcomeRef: shadowReferences.sourceOutcome,
+  counterfactualOutcomeRef: shadowReferences.counterfactualOutcome,
+  perCase: [
+    { caseId: "shadow-case-source", evidenceRef: shadowReferences.sourceCase },
+    { caseId: "shadow-case-counterfactual", evidenceRef: shadowReferences.counterfactualCase },
+  ],
+});
+
 const shadowInput = (overrides: Readonly<Record<string, unknown>> = {}) => ({
   requestId: "shadow-request-1",
   channel: "stage",
@@ -266,7 +309,7 @@ const shadowInput = (overrides: Readonly<Record<string, unknown>> = {}) => ({
   productionState: Object.freeze({ route: "unchanged", providerCalls: 1 }),
   routePackage: "candidate-stage",
   sourceDecisionId: "decision-1",
-  sourceGraphRef: "sha256:graph-1",
+  sourceGraphRef: shadowReferences.sourceRoot,
   prefix: ["request"],
   counterfactuals: [{ id: "candidate-control", suffix: ["candidate-control"] }],
   comparableEvidence: {
@@ -277,9 +320,14 @@ const shadowInput = (overrides: Readonly<Record<string, unknown>> = {}) => ({
       modelId: "model-stage",
       policyId: "policy-stage",
       reasoningEffort: "medium",
-      evidenceRef: "evidence:stage-candidate",
+      evidenceRef: shadowReferences.sourceRoot,
+      artifactRef: shadowReferences.sourceResponse,
       propensity: 0.6,
-      outcome: { status: "success", outcomeRef: "outcome:stage-candidate" },
+      outcome: {
+        status: "success",
+        outcomeRef: shadowReferences.sourceOutcome,
+        outcomeDigest: `sha256:${"8".repeat(64)}`,
+      },
     },
     counterfactuals: [
       {
@@ -289,9 +337,14 @@ const shadowInput = (overrides: Readonly<Record<string, unknown>> = {}) => ({
         modelId: "model-control",
         policyId: "policy-control",
         reasoningEffort: "high",
-        evidenceRef: "evidence:stage-control",
+        evidenceRef: shadowReferences.counterfactualRoot,
+        artifactRef: shadowReferences.counterfactualResponse,
         propensity: 0.4,
-        outcome: { status: "failure", outcomeRef: "outcome:stage-control" },
+        outcome: {
+          status: "failure",
+          outcomeRef: shadowReferences.counterfactualOutcome,
+          outcomeDigest: `sha256:${"9".repeat(64)}`,
+        },
       },
     ],
     candidateSet: [
@@ -305,23 +358,117 @@ const shadowInput = (overrides: Readonly<Record<string, unknown>> = {}) => ({
       actual: "candidate-stage",
       expectedRolloutId: "rollout-stage-candidate",
       actualRolloutId: "rollout-stage-control",
-      expectedOutcomeRef: "outcome:stage-candidate",
-      actualOutcomeRef: "outcome:stage-control",
-      expectedEvidenceRef: "evidence:stage-candidate",
-      actualEvidenceRef: "evidence:stage-control",
+      expectedOutcomeRef: shadowReferences.sourceOutcome,
+      actualOutcomeRef: shadowReferences.counterfactualOutcome,
+      expectedEvidenceRef: shadowReferences.sourceRoot,
+      actualEvidenceRef: shadowReferences.counterfactualRoot,
+      evaluationCriteria: {
+        schemaVersion: "role-model.semantic-criteria.v1",
+        requiredTerms: ["candidate-stage"],
+        minOutputChars: 1,
+      },
     },
   ],
   trajectoryEvents: [],
+  evaluationReferences: shadowEvaluationReferences,
   ...overrides,
 });
 
 const shadowRuntime = {
-  async invoke(id: string) {
+  async invoke(
+    id: string,
+    envelope?: {
+      readonly capability?: string;
+      readonly value?: unknown;
+      readonly channel?: string;
+      readonly scope?: string;
+      readonly authorizationEpoch?: number;
+    },
+  ) {
+    if (id === "replay-core")
+      return {
+        id: "replay-core-result",
+        digest: `sha256:${"d".repeat(64)}`,
+        sourceDecisionId: "decision-1",
+        sourceGraphRef: shadowReferences.sourceRoot,
+        sharedPrefixRef: shadowReferences.sourceFork,
+        branches: [{ id: "branch-stage-control" }],
+      };
+    if (id === "evaluation-core" && envelope?.capability === "evaluation:attest-references") {
+      const value = envelope.value as Record<string, unknown>;
+      const context = value.context as Record<string, unknown>;
+      const references = value.references as Record<string, unknown>;
+      const issuedAtMs = Date.now();
+      const expiresAtMs = issuedAtMs + 60_000;
+      const authority = "evaluation-reference-store";
+      return {
+        schemaVersion: "role-model.evaluation-reference-attestation.v1",
+        authority,
+        purpose: "evaluation",
+        channel: context.channel,
+        scope: context.scope,
+        authorizationEpoch: context.authorizationEpoch,
+        issuedAtMs,
+        expiresAtMs,
+        references: Object.fromEntries(
+          Object.entries(references).map(([field, reference]) => [
+            field,
+            {
+              reference,
+              resolved: true,
+              referenceDigest: `sha256:${createHash("sha256").update(String(reference)).digest("hex")}`,
+              purpose: "evaluation",
+              authority,
+              channel: context.channel,
+              scope: context.scope,
+              authorizationEpoch: context.authorizationEpoch,
+              issuedAtMs,
+              expiresAtMs,
+            },
+          ]),
+        ),
+      };
+    }
     if (id === "evaluation-runner-local")
       return {
-        scores: [1],
+        scores: [
+          {
+            dimension: "correctness",
+            // The registered routing-shadow scorer owns its generation and
+            // digest; the probe must echo the definition-bound identity.
+            scorerId: routingShadowScorer.id,
+            scorerVersion: routingShadowScorer.version,
+            scorerDigest: routingShadowScorer.digest,
+            score: 1,
+          },
+        ],
+        outputRef: "sha256:output-1",
+        outputDigest: "sha256:output-1",
+        stdoutRef: "sha256:stdout-1",
+        stderrRef: "sha256:stderr-1",
+        exitCode: 0,
+        measurements: { elapsedMs: 0, outputBytes: 1 },
         holdout: { passed: true, evidenceRef: "sha256:graph-1" },
         provenance: { evidenceRef: "sha256:graph-1" },
+      };
+    if (id === "evaluation-core" && envelope?.capability === "evaluation:list-trials")
+      return [{ trialId: "trial-stage-1", status: "queued" }];
+    if (id === "evaluation-core" && envelope?.capability === "evaluation:claim-trial")
+      return { trialId: "trial-stage-1", leaseId: "lease-stage-1" };
+    if (id === "evaluation-core" && envelope?.capability === "evaluation:read-comparison-group")
+      return {
+        groupId: "comparison:shadow-request-1",
+        status: "finalized",
+        outcome: "candidate",
+        holdout: { partition: "holdout" },
+        members: [{ score: 1 }],
+      };
+    if (id === "trajectory-signals")
+      return {
+        schemaVersion: "role-model.degradation-receipt.v1",
+        degraded: true,
+        capability: "signals:analyze-finalized-evaluation",
+        mode: "omit_signals",
       };
     if (id === "knowledge-worker") return { id: "shadow-candidate-1", state: "shadow" };
     return { id: `${id}-result` };

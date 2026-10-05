@@ -1,0 +1,162 @@
+[
+  {
+    "id": "strategist.business.plan",
+    "label": "Business Planning",
+    "description": "Develop business strategy, operating model, market approach, or strategic initiative plan.",
+    "primaryRole": "strategist",
+    "compatibleRoles": ["strategist", "product", "finance", "marketer"],
+    "requiredCapabilities": ["strategy.analysis"],
+    "preferredCapabilities": ["reasoning.multi_step"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for business strategy, GTM shape, or strategic planning.",
+      "doNotUseWhen": "User asks for technical implementation steps only."
+    },
+    "variants": ["plan"]
+  },
+  {
+    "id": "strategist.market.analyze",
+    "label": "Market Analysis",
+    "description": "Analyze market dynamics, segments, competitors, trends, and opportunities.",
+    "primaryRole": "strategist",
+    "compatibleRoles": ["strategist", "researcher", "marketer", "analyst"],
+    "requiredCapabilities": ["market.analysis"],
+    "preferredCapabilities": ["web.search"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks about market opportunity or strategic positioning.",
+      "doNotUseWhen": "User asks for verified breaking news only."
+    },
+    "variants": ["analyze"]
+  },
+  {
+    "id": "strategist.competitive.review",
+    "label": "Competitive Review",
+    "description": "Compare competitors, alternatives, differentiation, and strategic risks.",
+    "primaryRole": "strategist",
+    "compatibleRoles": ["strategist", "marketer", "analyst", "product"],
+    "requiredCapabilities": ["strategy.analysis", "market.analysis"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks how something compares competitively.",
+      "doNotUseWhen": "User asks for simple price comparison only."
+    },
+    "variants": ["review"]
+  },
+  {
+    "id": "strategist.risk.scenario",
+    "label": "Scenario Planning",
+    "description": "Explore scenarios, assumptions, risks, mitigations, and decision triggers.",
+    "primaryRole": "strategist",
+    "compatibleRoles": ["strategist", "analyst", "planner", "finance"],
+    "requiredCapabilities": ["strategy.analysis", "reasoning.multi_step"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks what could happen under different strategic assumptions.",
+      "doNotUseWhen": "User asks for exact forecast certainty."
+    },
+    "variants": ["scenario"]
+  },
+  {
+    "id": "strategist.swot",
+    "label": "SWOT Analysis",
+    "description": "Analyze strengths, weaknesses, opportunities, and threats.",
+    "primaryRole": "strategist",
+    "compatibleRoles": ["strategist", "analyst"],
+    "requiredCapabilities": ["strategy.analysis"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for SWOT or strategic situation analysis.",
+      "doNotUseWhen": "User asks for code review."
+    },
+    "variants": []
+  },
+  {
+    "id": "strategist.okr.define",
+    "label": "OKR Definition",
+    "description": "Define objectives, key results, initiatives, and measures.",
+    "primaryRole": "strategist",
+    "compatibleRoles": ["strategist", "planner", "product"],
+    "requiredCapabilities": ["strategy.analysis", "reasoning.multi_step"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for OKRs or strategic goals.",
+      "doNotUseWhen": "User asks for sprint task details only."
+    },
+    "variants": ["define"]
+  },
+  {
+    "id": "strategist.board.brief",
+    "label": "Board Brief",
+    "description": "Prepare board or executive strategy briefs.",
+    "primaryRole": "strategist",
+    "compatibleRoles": ["strategist", "writer", "finance"],
+    "requiredCapabilities": ["strategy.analysis", "text.chat"],
+    "preferredCapabilities": ["communication.user_facing"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for executive or board-level summary.",
+      "doNotUseWhen": "User asks for casual social post."
+    },
+    "variants": ["brief"]
+  },
+  {
+    "id": "strategist.operating.model",
+    "label": "Operating Model",
+    "description": "Design organizational operating models, responsibilities, and cadence.",
+    "primaryRole": "strategist",
+    "compatibleRoles": ["strategist", "planner", "coordinator"],
+    "requiredCapabilities": ["strategy.analysis", "reasoning.multi_step"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks how an organization should operate.",
+      "doNotUseWhen": "User asks for database schema."
+    },
+    "variants": ["model"]
+  },
+  {
+    "id": "strategist.pricing.strategy",
+    "label": "Pricing Strategy",
+    "description": "Develop pricing strategy, packaging, and market fit.",
+    "primaryRole": "strategist",
+    "compatibleRoles": ["strategist", "finance", "marketer"],
+    "requiredCapabilities": ["strategy.analysis", "finance.analysis"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for pricing strategy.",
+      "doNotUseWhen": "User asks for exact invoice review."
+    },
+    "variants": ["strategy"]
+  },
+  {
+    "id": "strategist.partnership.evaluate",
+    "label": "Partnership Evaluation",
+    "description": "Evaluate partnerships, channels, alliances, or ecosystem opportunities.",
+    "primaryRole": "strategist",
+    "compatibleRoles": ["strategist", "seller", "procurement"],
+    "requiredCapabilities": ["strategy.analysis", "market.analysis"],
+    "preferredCapabilities": ["reasoning.multi_step"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks whether a partnership makes sense.",
+      "doNotUseWhen": "User asks for vendor procurement scorecard only."
+    },
+    "variants": ["evaluate"]
+  }
+]

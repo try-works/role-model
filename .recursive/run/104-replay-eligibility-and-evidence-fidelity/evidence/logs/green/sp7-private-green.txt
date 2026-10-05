@@ -1,0 +1,15 @@
+✔ run104 sp7 the extension budget stays above the public contribution cap and documents the mismatch (19.8041ms)
+✔ run104 sp7 an operator override still cannot go below the public contribution cap (0.8767ms)
+✔ run98 a04 the packaged process hosts derive a bounded, operator-tunable timing profile (3.6965ms)
+✔ run98 a04 the timing profile accepts bounded operator overrides as strings (4.2717ms)
+✔ run98 a04 out-of-bounds or malformed overrides fall back to the bounded default (0.6144ms)
+✔ run98 a04 the profile only carries options the extension host accepts (0.5521ms)
+✔ run98 a04 every packaged host construction takes its bounds from the tuning profile (48.7829ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 407.6111

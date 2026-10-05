@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/packages/ui
+
+ ✓ src/sidebar.test.ts (6 tests) 132ms
+
+ Test Files  1 passed (1)
+      Tests  6 passed (6)
+   Start at  19:44:09
+   Duration  2.24s (transform 244ms, setup 0ms, collect 414ms, tests 132ms, environment 0ms, prepare 435ms)
+

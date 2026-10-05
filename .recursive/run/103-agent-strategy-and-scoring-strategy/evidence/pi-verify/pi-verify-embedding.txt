@@ -1,0 +1,2 @@
+Warning: Model "embedding.remote-only" not found for provider "role-model". Using custom model id.
+400: {"type":"capability_eligibility_error","code":"no_eligible_target","message":"no_eligible_target: no targets for model embedding.remote-only satisfy the inferred request capabilities.","requestedModel":"embedding.remote-only","requiredInputModalities":["text"],"requiredOutputModalities":["text"],"requiredCapabilities":["reasoning.effort_control","text.chat","tools.function_calling","knowledge.retrieval"],"excludedTargets":[]}

@@ -1,0 +1,39 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-host-bridge
+
+(node:64576) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | test/restart-rehydration.test.ts > restart rehydration > repairs stale bridge Kimi OAuth credentials from fresher standalone runtime tokens on restart
+Track B deferred route capture drain failed Error: unable to open database file
+    at withDatabase (D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\apps\runtime-host-bridge\src\track-b-capture-queue.ts:165:22)
+    at D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\apps\runtime-host-bridge\src\track-b-capture-queue.ts:301:11 {
+  code: 'ERR_SQLITE_ERROR',
+  errcode: 14,
+  errstr: 'unable to open database file'
+}
+
+stdout | test/restart-rehydration.test.ts > restart rehydration > repairs stale standalone Kimi OAuth credentials from fresher bridge tokens on restart and restores endpoint eligibility
+[run115] eligibility candidates=2 eligible=1 codes=CAPABILITY_MISSING=1,POLICY_DENY_ENDPOINT=1 request=req-kimi-standalone-restart-repair-001 alias=- model=- effort=- pass=live allow=[moonshot.personal.kimi-code.global.kimi-k2.5] denied=[cli.local.coder]
+
+ ✓ test/restart-rehydration.test.ts (15 tests) 57271ms
+   ✓ restart rehydration > restores activated endpoints and session readiness summary after backend restart  2776ms
+   ✓ restart rehydration > keeps restarted remote endpoints healthy when provider /models returns unprefixed ids  17957ms
+   ✓ restart rehydration > does not count expired pending device authorization as an active readiness blocker after restart  2500ms
+   ✓ restart rehydration > archives orphan pending authorizations and orphan credential files instead of counting them as active readiness  2427ms
+   ✓ restart rehydration > archives invalid persisted provider accounts instead of surfacing them as active lifecycle records  2519ms
+   ✓ restart rehydration > surfaces failed pending authorization polling in bootstrap stage details after restart  2509ms
+   ✓ restart rehydration > classifies failed startup OAuth refresh as expired auth after restart  2871ms
+   ✓ restart rehydration > repairs stale bridge Kimi OAuth credentials from fresher standalone runtime tokens on restart  2680ms
+   ✓ restart rehydration > repairs stale standalone Kimi OAuth credentials from fresher bridge tokens on restart and restores endpoint eligibility  2856ms
+   ✓ restart rehydration > sanitizes stale activation and endpoint evidence without expanding configured membership  2729ms
+   ✓ restart rehydration > refreshes Kimi OAuth after restart by honoring the stored token device id  2654ms
+   ✓ restart rehydration > polls the earliest-expiring pending authorizations first and surfaces deferred count  3488ms
+   ✓ restart rehydration > cleans up a pending Codex Subscription device-code session after restart  3858ms
+   ✓ restart rehydration > normalizes legacy local peer role bindings during restart rehydration  3787ms
+   ✓ restart rehydration > defers persisted peer auto-reload entries during restart bootstrap when peers are not configured  1652ms
+
+ Test Files  1 passed (1)
+      Tests  15 passed (15)
+   Start at  21:39:17
+   Duration  72.61s (transform 9.16s, setup 0ms, collect 14.34s, tests 57.27s, environment 1ms, prepare 399ms)
+

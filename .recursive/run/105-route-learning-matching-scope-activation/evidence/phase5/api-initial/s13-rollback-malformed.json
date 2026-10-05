@@ -1,0 +1,23 @@
+{
+  "probe": "s13-rollback-malformed",
+  "note": "malformed rollback -> bounded refusal, no write",
+  "target": "sidecar http://127.0.0.1:62096 (child of :3458 host, pid 34760)",
+  "request": {
+    "method": "POST",
+    "url": "http://127.0.0.1:62096/operator/learning/route-ladder-rollback",
+    "headers": {
+      "authorization": "Bearer REDACTED",
+      "content-type": "application/json"
+    },
+    "body": {}
+  },
+  "response": {
+    "status": 401,
+    "statusText": "Unauthorized",
+    "contentType": null,
+    "ms": 1,
+    "body": "",
+    "bodyTruncated": 0
+  },
+  "capturedAt": "2026-10-03T13:28:36.096Z"
+}

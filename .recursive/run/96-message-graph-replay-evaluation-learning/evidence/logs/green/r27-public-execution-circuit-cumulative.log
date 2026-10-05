@@ -1,0 +1,20 @@
+Run 96 / R27 public runtime-host-bridge criterion-owned TDD
+Cumulative regression receipt.
+
+Public host-bridge router command:
+  corepack pnpm --dir role-model-router/apps/runtime-host-bridge run test:router
+Result: PASS; 11 files, 58/58 tests.
+Raw receipt: E:/role-model-temp/run96-r27-public-router-cumulative.log
+
+Additive owning evidence:
+  execution-circuit + legacy reconciliation + alias capability: 3 files, 32/32 tests
+  Raw receipt: E:/role-model-temp/run96-r27-public-circuit-owning.log
+
+Paired private Run96 Phase 3 cumulative evidence (with this public worktree referenced):
+  E:/role-model-temp/run96-build-private/.recursive/run/96-message-graph-replay-evaluation-learning/evidence/logs/green/phase3-clean-candidate-cumulative-suite.audit-7.log
+  Result: PASS; 232/232 tests, 0 failed, 0 skipped, 0 cancelled. The receipt records the paired
+  public worktree path and explicitly limits the result to active source/build/test composition.
+
+Boundary: Phase 3 remains DRAFT. These are source/build/test regressions only; Phase 4 independent
+regression and Phase 5 rebuilt development runtime/live Pi/provider/graph/storage/recovery,
+no-mock, and exact-100 proof are not claimed here.

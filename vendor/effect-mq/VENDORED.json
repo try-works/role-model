@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "role-model.vendored-upstream.v1",
+  "upstream": {
+    "name": "effect-mq",
+    "url": "https://github.com/TeamWarp/effect-mq",
+    "tag": "v0.7.0",
+    "commit": "5fea694188ee33c132bed27e1f97c40533276511",
+    "commitDate": "2026-08-25T12:39:17-04:00",
+    "license": "MIT (Copyright (c) 2026 Adam Rankin)"
+  },
+  "vendoredInto": "role-model",
+  "vendoredAt": "2026-09-26T00:09:06.284Z",
+  "payload": {
+    "root": "vendor/effect-mq",
+    "includes": [
+      "packages/**",
+      "docs/**",
+      "LICENSE/**",
+      "README.md",
+      "CHANGELOG.md",
+      "ROADMAP.md"
+    ],
+    "excludes": [
+      ".git",
+      "node_modules",
+      "*.tsbuildinfo",
+      "examples/**",
+      "designs/**",
+      "tools/**",
+      ".github/**"
+    ]
+  },
+  "fileCount": 65,
+  "byteCount": 1104135,
+  "contentDigest": "aa7cae59104a2472ea5127488641643eca5498b5a4955d362b4ff37c5b76f655",
+  "wiring": "not a workspace package and not imported by any build; a lint-ignored source drop only"
+}

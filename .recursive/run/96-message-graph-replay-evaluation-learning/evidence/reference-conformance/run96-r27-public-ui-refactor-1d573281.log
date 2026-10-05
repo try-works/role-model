@@ -1,0 +1,10 @@
+Run 96 / R27 public UI TDD receipt
+Stage: REFACTOR (paired public worktree)
+Public head: 1d5732819480cf22587570bf8c60e02efcdbfb3e
+Pass command:
+  pnpm exec biome check app/lib/runtime-api.ts app/lib/run96-operator-controls.test.ts app/routes/operator-controls.tsx app/routes/operator-controls.test.tsx
+Pass result: 4 files checked; no diagnostics.
+Storage command:
+  pnpm exec biome check app/routes/storage-retention.tsx app/routes/storage-retention.test.tsx
+Storage result: BLOCKED by existing formatting diagnostics in storage-retention.tsx (2 files checked; no fixes applied). This is recorded rather than silently claiming a clean refactor gate.
+Claim boundary: source-level static check only; no Phase 5, rebuilt-runtime, provider, or live-operator result is claimed.

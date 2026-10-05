@@ -4,9 +4,9 @@ Status: CURRENT
 Scope: role-model-router
 Owns-Paths: track-b-runtime.ts, 02-to-be-plan.md, node --test tests/track-b/tb10.test.mjs, extensions.tsx, role-model-router/apps/runtime-host-bridge/test/track-b-runtime-composition.test.ts, role-model-router/apps/runtime-ui/app/lib/runtime-api.test.ts, role-model-router/apps/runtime-host-bridge/test/track-b-operations-api.test.ts, track-b-operations.ts, role-model/.worktrees/81-kw-activation-browser-recommendation-evidence/role-model-router/apps/runtime-ui/app/routes/extensions.tsx, role-model-router/apps/runtime-ui/e2e/track-b-operations.spec.ts
 Watch-Paths:
-Source-Runs: 81-kw-activation-browser-recommendation-evidence, 79-extension-control-and-recommendations-qa, 86-runtime-ui-rm3-design-system-frontend, 92-configured-model-pool-benchmark-convergence
+Source-Runs: 81-kw-activation-browser-recommendation-evidence, 79-extension-control-and-recommendations-qa, 86-runtime-ui-rm3-design-system-frontend, 92-configured-model-pool-benchmark-convergence, 105-route-learning-matching-scope-activation
 Validated-At-Commit:
-Last-Validated: 2026-08-21T13:30:29+00:00
+Last-Validated: 2026-10-03T14:00:00+00:00
 Tags: reasoningbank, training-free-grpo, configured-model-pool, membership-revision, benchmark-quarantine
 ---
 
@@ -147,3 +147,27 @@ Run `92-configured-model-pool-benchmark-convergence` closed out the endpoint-var
 6. Final-controller eject requires destructive confirmation; on confirm it clears the controller assignment and produces a durable empty-pool state with a recovery link. It is idempotent (backend returns `absent` on repeat).
 7. Routing decision detail shows `membershipRevision` and `profileRevision` (both membership-keyed, diagnostic-only).
 8. Benchmark clear is transactional (`BEGIN IMMEDIATE`) and writes a `clear-receipt.json` with membership revision and counts.
+
+## Run 103 routing posture, posture aliases and operator surfaces
+
+- The routing posture is two axes (`routing.mode` + `routing.scoring_strategy` + `pin_weights` + `weights`); the
+  precedence ladder is request intent > controller directive > difficulty bucket > saved strategy > `balanced`.
+- Agent-strategy (role-bound) and workload postures materialise `<name>.<scope>` aliases; declared intent beats
+  the alias preset and the decision records both; alias pools never widen.
+- Every decision carries `strategyResolution`, `aliasPostureBinding` and the measured-latency outcome, in the
+  observation ledger as well as the HTTP response.
+- Operator surfaces: `Routing strategy` (mode, scoring strategy, weights editor, pin, execution scope, resolved
+  posture, latency card), `Agent strategy` and `Workloads`; writes are canonical-only.
+- Companion documents: `.recursive/DECISIONS.md` (run `103-agent-strategy-and-scoring-strategy`),
+  `docs/operations/05-agent-strategy-and-workload-postures.md`.
+- Source-Runs: added `103-agent-strategy-and-scoring-strategy`; Last-Validated: `2026-09-30`.
+
+## Run 105 exact matching-scope endpoint ladders
+
+- The route-learning pack for classified traffic is `RouteLadderPackV1`: one mutable ranked ladder per exact `(roleId, taskTypeId)`. Scope-wide active-package pointers remain legacy surfaces only.
+- Materialize finalized effort-comparable groups through the authenticated host adapter into `knowledge_route_ladders`; preserve accepted rank/admission proof when later evidence regresses; do not mix admission policies.
+- Source reads ladder -> content-addressed evidence doc -> scope-wide safety rollout, and fails closed on scope/pair/taxonomy/proof/freshness/rollback/kill-switch/guardrail mismatches. Durable cache key includes channel, runtime scope, role and task.
+- Dispatcher demand uses live telemetry classifications; unavailable tasks are skipped, not allowed to starve lower tasks. Repeat comparisons use durable explicit round identity through queue/CLI; only finalized evidence advances.
+- UI readback unions observed no-ladder pairs and stored ladders, distinguishes census/pagination uncertainty, carries top3 + bounded full rungs, and uses existing rollback-pack route with composite task body.
+- R15 telemetry policy:16KiB is SQLite inline metadata—not request size. Bound previews, disclose truncation and preserve primary errors; larger rich diagnostics belong outside inline rows where policy/authority supports it.
+- Live/QA rule from run105: rebuild the exact paired source and verify only the explicitly assigned development port; inspect real mobile screenshots, because source/browser tests missed a fixed desktop sidebar until Phase5.

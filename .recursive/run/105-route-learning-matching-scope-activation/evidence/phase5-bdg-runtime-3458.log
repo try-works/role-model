@@ -1,0 +1,127 @@
+(node:40888) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `role-model-dev --trace-warnings ...` to show where the warning was created)
+{
+  "status": "listening",
+  "host": "127.0.0.1",
+  "port": 3458
+}
+[track-b-sidecar] (node:19152) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+[track-b-sidecar] (Use `node --trace-warnings ...` to show where the warning was created)
+[replay-loop] start check: operations=wired channel=development port=3458
+[run105] durable task advisory refresh: scope=standalone-runtime-dev pairs=1 stage=S4
+[replay-tick] run: captures=32 pendingCount=32
+[route-evidence-binding] failed: managed artifact digest key not found for the durable evaluation authority (looked in run105-full2-verification-state, track-b, track-b)
+[replay-tick] run: captures=32 pendingCount=32
+[run98] remote-health recovery: deepseek.personal.deepseek-api-key.global.deepseek-flash, deepseek.personal.deepseek-api-key.global.deepseek-flash-max, deepseek.personal.deepseek-api-key.global.deepseek-v4-pro, moonshot.personal.kimi-code.global.kimi-k3
+[route-evidence-binding] failed: managed artifact digest key not found for the durable evaluation authority (looked in run105-full2-verification-state, track-b, track-b)
+[replay-tick] run: captures=32 pendingCount=32
+[route-evidence-binding] failed: managed artifact digest key not found for the durable evaluation authority (looked in run105-full2-verification-state, track-b, track-b)
+[replay-tick] run: captures=32 pendingCount=32
+[route-evidence-binding] failed: managed artifact digest key not found for the durable evaluation authority (looked in run105-full2-verification-state, track-b, track-b)
+[replay-tick] run: captures=32 pendingCount=32
+[route-evidence-binding] failed: managed artifact digest key not found for the durable evaluation authority (looked in run105-full2-verification-state, track-b, track-b)
+[replay-tick] run: captures=32 pendingCount=32
+[route-evidence-binding] failed: managed artifact digest key not found for the durable evaluation authority (looked in run105-full2-verification-state, track-b, track-b)
+[replay-tick] run: captures=32 pendingCount=32
+[route-evidence-binding] failed: managed artifact digest key not found for the durable evaluation authority (looked in run105-full2-verification-state, track-b, track-b)
+[replay-tick] run: captures=32 pendingCount=32
+[replay-tick] skip: paused=false busy=false running=true
+[run97] shadow pipeline start supervised-replay:b683da7302f0a4930821092382c9edfd6e73f0ce438395df4a640b41cad01850
+[run176] finalization signals skipped comparison:supervised-replay:b683da7302f0a4930821092382c9edfd6e73f0ce438395df4a640b41cad01850: its report is already persisted
+[run176] finalization signals skipped comparison:supervised-replay:1cd05de9480be911048aba39f985dc4da0fa997c66251f813c694d94992eab2d: its report is already persisted
+[run176] finalization signals skipped comparison:supervised-replay:0a5fbab40e220a3419d87152beac3b5ca5f1c1262797718fdbc599604eb826eb: its report is already persisted
+[run176] finalization signals skipped comparison:supervised-replay:aacd698fe3895b60b4b301776d721542a43d30ca79fa0ab224a0b0f34030b580: its report is already persisted
+[run176] finalization signals skipped comparison:supervised-replay:7496c96d009bfbe719179f29d75e5cf0cb1f06e09abbba690a183a4204057d1e: its report is already persisted
+[run176] finalization signals skipped comparison:supervised-replay:d85bd666b50ba78f851f71d9d6b74461db5f3a1e4072462ed4505e5d2b11aeb2: its report is already persisted
+[run176] finalization signals skipped comparison:supervised-replay:1ae29f0e8fde9096581a66416671960554c5cdd87945dc6c17bf8ae0a71e5d32: its report is already persisted
+[run176] finalization signals skipped comparison:supervised-replay:95528b356477dd729295cb788b40c98e48c94b790819c9680345c1c16540fc1c: its report is already persisted
+[run176] finalization signals skipped comparison:supervised-replay:b72a808e256e68dcaae3f3a07b0d3554b9e65992c11a8dc3165ff6682a6432b9: its report is already persisted
+[run176] finalization signals skipped comparison:supervised-replay:61c65a9de1086089e306bf4845c2361a767c251d6e85adbdf6b1586dfdb2985d: its report is already persisted
+[run176] finalization signals skipped comparison:supervised-replay:e13e9c99ae845b4a2cd35cf33a5ea418390701f8406f37d5e6973253407f4f31: its report is already persisted
+[run176] finalization signals skipped comparison:supervised-replay:9de7e5e55d70e35acefd204613118989b360124faddfe04aaa681ced6554ab11: its report is already persisted
+[run176] finalization signals skipped comparison:supervised-replay:25471ecbd9b5b1fd5c5bbd602fa6301b78f1126dad60832021837e949d540356: its report is already persisted
+[run176] finalization signals skipped comparison:supervised-replay:2b543d8e59eec2c8a1d768e8b41d159905c8b44f31cbb4f54ec1db8297b60a62: its report is already persisted
+[run176] finalization signals: examined 14, analyzed 0, skipped 14, refused 0, deferred 0
+[run101] retrieval index rebuilt: ? document(s)
+[run146] learner sweep served retrieval results=8 matches=14 receipt=eb0408f6c650cd3bc2e676e5c30e300067dcd067cd1fa908ad7fafee8b7504a8 recorded=true
+[run105] ladder materialization wrote 1 ladder row(s)
+[run120] learner derivation consumed comparison:supervised-replay:b683da7302f0a4930821092382c9edfd6e73f0ce438395df4a640b41cad01850 (1+/1-) candidate=shadow-ab10896695713dd300559ab694b6a6ad3dfb88f68e4cff85eeaf21a5c1cf0d2b
+[run120] learner derivation consumed comparison:supervised-replay:1cd05de9480be911048aba39f985dc4da0fa997c66251f813c694d94992eab2d (1+/1-) candidate=shadow-cbce7ca69a692546cb5797fcc2224e27c48bba4ba9280ad50669a4e3ab7f0e5a
+[run120] learner derivation consumed comparison:supervised-replay:0a5fbab40e220a3419d87152beac3b5ca5f1c1262797718fdbc599604eb826eb (1+/1-) candidate=shadow-3691e16da7bcc48f2a00bddbd795903300eb7238f9d85361cd550da272904d6c
+[run120] learner derivation consumed comparison:supervised-replay:aacd698fe3895b60b4b301776d721542a43d30ca79fa0ab224a0b0f34030b580 (1+/1-) candidate=shadow-0b71534ccbc311d7226216d3eecb413808adf49f08b39e4a6134f55ad861dd93
+[run120] learner derivation consumed comparison:supervised-replay:7496c96d009bfbe719179f29d75e5cf0cb1f06e09abbba690a183a4204057d1e (1+/1-) candidate=shadow-01b3d54642b660b788af4873165edff660c2d99ed22a3a88364d1f6966a73c9a
+[run120] learner derivation consumed comparison:supervised-replay:d85bd666b50ba78f851f71d9d6b74461db5f3a1e4072462ed4505e5d2b11aeb2 (1+/1-) candidate=shadow-6c8430d925049b6998bcce3bc2819f60339c80f34b6001ed9d1e0bb0901c5d62
+[run120] learner derivation consumed comparison:supervised-replay:1ae29f0e8fde9096581a66416671960554c5cdd87945dc6c17bf8ae0a71e5d32 (1+/1-) candidate=shadow-632b017b662c9222886cad3427924d2c4db75605b9ed2887282a278106358710
+[run120] learner derivation consumed comparison:supervised-replay:95528b356477dd729295cb788b40c98e48c94b790819c9680345c1c16540fc1c (1+/1-) candidate=shadow-5ac707a6f4d874547f536d9e07d9d12767e6677e8f939dad015e12b254132182
+[run120] learner derivation consumed comparison:supervised-replay:b72a808e256e68dcaae3f3a07b0d3554b9e65992c11a8dc3165ff6682a6432b9 (1+/1-) candidate=shadow-940c3f72d846c6175f05bb3b0da914c34688234be8a5a80e1a0ec59fd8e890db
+[run120] learner derivation consumed comparison:supervised-replay:61c65a9de1086089e306bf4845c2361a767c251d6e85adbdf6b1586dfdb2985d (1+/1-) candidate=shadow-10ef78d67e76566bcd9c03fd2db5e82b66385b91a7a53adf9ce321e7718ada89
+[run120] learner derivation consumed comparison:supervised-replay:e13e9c99ae845b4a2cd35cf33a5ea418390701f8406f37d5e6973253407f4f31 (1+/1-) candidate=shadow-c50f21ef6d6b25a0349b415f5ffc0ee0bb22e5b5ca6351827de6e99aa541cbb2
+[run120] learner derivation consumed comparison:supervised-replay:9de7e5e55d70e35acefd204613118989b360124faddfe04aaa681ced6554ab11 (1+/1-) candidate=shadow-60f465d1228694a40cba12c22f587a3219a96fef4224d2886c0f14954f816958
+[run120] learner derivation consumed comparison:supervised-replay:25471ecbd9b5b1fd5c5bbd602fa6301b78f1126dad60832021837e949d540356 (1+/1-) candidate=shadow-d60f08c7829402459a64a9f0ea2c5d606d0e853048b33be29f7fecf7e37d5d65
+[run120] learner derivation consumed comparison:supervised-replay:2b543d8e59eec2c8a1d768e8b41d159905c8b44f31cbb4f54ec1db8297b60a62 (1+/1-) candidate=shadow-89bfade5372aed09e1665d16cc02294f3b7ce9f014c0e2d63b2d6f0763921a3b
+[run120] learner derivation: examined 19, derived 14, skipped 5, refused 0, backlog 0
+[run101] replay job scope: derived runtime:e22187fbf8a85949e6e4b00d1c480633
+[run101] recovery page payload shape: value,businessOutput,durableLocator,evidenceRef,readCapability,workerPid
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=101 scoped=0 first=req-5414aff6-35db-471f-bfda-ee7a8adc0929,req-fc679707-a048-4f44-8da7-c08001104489,req-376cd83d-96e2-4251-97f8-53e96b1994b0 only=none pendingCount=32 captureCount=200
+[run101] retrieval index rebuilt: ? document(s)
+[run146] learner sweep served retrieval results=8 matches=14 receipt=7b51c9d267b0bedbcee5c8ae859469c8ba8e89eaae4ceb3e2907c3a7f30f0193 recorded=true
+[run101] learner sweep: 14 candidate(s) without a validation receipt, consumed 2
+[replay-tick] run: captures=32 pendingCount=32
+[replay-tick] skip: paused=false busy=false running=true
+[run101] retrieval index rebuilt: ? document(s)
+[run146] learner sweep served retrieval results=8 matches=14 receipt=e79232591a999af8991537812ecc7291a28aab587816ce6c951ec93017d316d5 recorded=true
+[run101] learner sweep: 12 candidate(s) without a validation receipt, consumed 2
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=101 scoped=0 first=req-5414aff6-35db-471f-bfda-ee7a8adc0929,req-fc679707-a048-4f44-8da7-c08001104489,req-376cd83d-96e2-4251-97f8-53e96b1994b0 only=none pendingCount=32 captureCount=200
+[run101] retrieval index rebuilt: ? document(s)
+[run146] learner sweep served retrieval results=8 matches=14 receipt=dd55a294ffcccb04cc4607cebd976b043e4dae97f2786f5a1ec8db4e70dbdc2b recorded=true
+[run101] learner sweep: 10 candidate(s) without a validation receipt, consumed 2
+[replay-tick] run: captures=32 pendingCount=32
+[replay-tick] skip: paused=false busy=false running=true
+[run146] learner sweep served retrieval results=8 matches=14 receipt=6f48a729e6d7a8a3def8c43612c08f84047228beb210c0e49124bbacf77aafac recorded=true
+[run101] learner sweep: 8 candidate(s) without a validation receipt, consumed 2
+[replay-tick] skip: paused=false busy=false running=true
+[run146] learner sweep served retrieval results=8 matches=14 receipt=ddd4282fd133c9b182164cbc42395275a2a28a0d8a8187202b0d75f8e8135f16 recorded=true
+[run101] learner sweep: 6 candidate(s) without a validation receipt, consumed 2
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=101 scoped=0 first=req-5414aff6-35db-471f-bfda-ee7a8adc0929,req-fc679707-a048-4f44-8da7-c08001104489,req-376cd83d-96e2-4251-97f8-53e96b1994b0 only=none pendingCount=32 captureCount=200
+[run146] learner sweep served retrieval results=8 matches=14 receipt=e343aad41cd732ea237d4a53909db7a1bcfa39031b867e699cb4eb10ec15f2c5 recorded=true
+[run101] learner sweep: 4 candidate(s) without a validation receipt, consumed 2
+[replay-tick] run: captures=32 pendingCount=32
+[replay-tick] skip: paused=false busy=false running=true
+[run146] learner sweep served retrieval results=8 matches=14 receipt=b2e01bc7a8eed74d11d3befb8f26aec51d904fcc220db3094d95e6de1cddbb2a recorded=true
+[run101] learner sweep: 2 candidate(s) without a validation receipt, consumed 2
+[replay-tick] skip: paused=false busy=false running=true
+[run146] learner sweep served retrieval results=8 matches=14 receipt=2e8d5df28712af57b4a6c33df9b3e24fbdd46a97cf30616c17e1706b786e1549 recorded=true
+[replay-tick] skip: paused=false busy=false running=true
+[run146] learner sweep served retrieval results=8 matches=14 receipt=9bad0db4cdc5222600279fc25d7af92b5812e8596b22f8dc33ff982d843d14ef recorded=true
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=101 scoped=0 first=req-5414aff6-35db-471f-bfda-ee7a8adc0929,req-fc679707-a048-4f44-8da7-c08001104489,req-376cd83d-96e2-4251-97f8-53e96b1994b0 only=none pendingCount=32 captureCount=200
+[run146] learner sweep served retrieval results=8 matches=14 receipt=6a655a9f044d22580756f3bbe2df2c32d7eecef70e5e1fe8c1d7d5e482de7a2b recorded=true
+[replay-tick] run: captures=32 pendingCount=32
+[replay-tick] skip: paused=false busy=false running=true
+[run146] learner sweep served retrieval results=8 matches=14 receipt=6b1d2a43b6cf0276dc3715b909b7ae47031685a70aa7655e5a45e4c41a1e7521 recorded=true
+[replay-tick] skip: paused=false busy=false running=true
+[run146] learner sweep served retrieval results=8 matches=14 receipt=1f70960652aae1273cba4cd12ec11d69bab82928f900f69858f270419e1b6b91 recorded=true
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=101 scoped=0 first=req-5414aff6-35db-471f-bfda-ee7a8adc0929,req-fc679707-a048-4f44-8da7-c08001104489,req-376cd83d-96e2-4251-97f8-53e96b1994b0 only=none pendingCount=32 captureCount=200
+[run146] learner sweep served retrieval results=8 matches=14 receipt=38e0a9046b956eaaf79a1fc84ba81dc1a2e9ce83b3194f36739b1e42a83ad0bf recorded=true
+[replay-tick] run: captures=32 pendingCount=32
+[replay-tick] skip: paused=false busy=false running=true
+[run146] learner sweep served retrieval results=8 matches=14 receipt=fe5cbd2b347842426ce8b554cdbde34a4b59dfe843b54993e68b73736791fe2b recorded=true
+[run101] recovery sweep: examined=1 candidates=1 recovered=0 - every candidate already has its evaluation
+[replay-tick] skip: paused=false busy=false running=true
+[run146] learner sweep served retrieval results=8 matches=14 receipt=0339babf63f9bf948153e3c8eb7119ea9d60cfc16aba713c7aafffe05f1ae306 recorded=true
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=101 scoped=0 first=req-5414aff6-35db-471f-bfda-ee7a8adc0929,req-fc679707-a048-4f44-8da7-c08001104489,req-376cd83d-96e2-4251-97f8-53e96b1994b0 only=none pendingCount=32 captureCount=200
+[replay-tick] run: captures=32 pendingCount=32
+[replay-tick] skip: paused=false busy=false running=true
+[run146] learner sweep served retrieval results=8 matches=14 receipt=267832c4c066acfe3e55456d84f78c5102a62b642415d1b64543cff90bb27f4c recorded=true
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=101 scoped=0 first=req-5414aff6-35db-471f-bfda-ee7a8adc0929,req-fc679707-a048-4f44-8da7-c08001104489,req-376cd83d-96e2-4251-97f8-53e96b1994b0 only=none pendingCount=32 captureCount=200
+[run146] learner sweep served retrieval results=8 matches=14 receipt=f5821768cdc9b9cdb582772db6fd868115152eb3ea300f6efb331865227781b5 recorded=true
+[replay-tick] run: captures=32 pendingCount=32

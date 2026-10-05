@@ -1,9 +1,12 @@
+import { resolveAdvisoryRung } from "./route-advisory-ladder.js";
 import { canonicalTaxonomy } from "./taxonomy/index.js";
 import type {
   CandidateExclusion,
   EndpointCandidate,
   RoleBindingRecord,
   RoleDefinitionRecord,
+  RouteAdvisoryConsiderationInput,
+  RouteAdvisoryConsiderationOutcome,
   RouteRequestInput,
   RouterDecisionRecord,
   RoutingPolicySnapshot,
@@ -28,6 +31,257 @@ function clamp(value: number, minimum = 0, maximum = 1): number {
 }
 
 export const ROUTER_SCORE_TIE_EPSILON = 0.01;
+
+const ADVISORY_STAGES_WITH_INFLUENCE = new Set(["S2", "S3", "S4"]);
+
+const advisoryBucket = (seed: string): number => {
+  let hash = 2166136261;
+  for (let index = 0; index < seed.length; index += 1) {
+    hash ^= seed.charCodeAt(index);
+    hash = Math.imul(hash, 16777619) >>> 0;
+  }
+  return hash % 100;
+};
+
+/**
+ * Run 98 R5 (AC-R05-01..04): stage S2 advisory-considered selection.
+ *
+ * The advisory is consulted only after hard eligibility and scoring: it can re-rank
+ * candidates that are already eligible, and only when the advised candidate is within the
+ * configured score band of the leader. Every gate failure returns a typed fallback reason
+ * and leaves the baseline selection untouched, so an S1 runtime (or a stale/low-confidence
+ * advisory) produces exactly the same decision it produced before.
+ */
+export function evaluateRouteAdvisoryConsideration(input: {
+  readonly scored: readonly { readonly endpoint_id: string; readonly total_score: number }[];
+  readonly eligibleEndpointIds: readonly string[];
+  readonly decisionSeed: string;
+  readonly advisory?: RouteAdvisoryConsiderationInput | null;
+  /** Run 99 R33: the request's own family/taxonomy, so the advisory can be scope-checked. */
+  readonly requestTaskTypeId?: string | null;
+  readonly requestTaxonomyVersion?: string | null;
+  /** Run 105 R1: the request's own role, so the advisory's (role, task) scope can be checked. */
+  readonly requestRoleId?: string | null;
+}): RouteAdvisoryConsiderationOutcome {
+  const normalizeScopeId = (value: string | null | undefined): string | null => {
+    if (typeof value !== "string") return null;
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : null;
+  };
+  const advisory = input.advisory;
+  const preferredLadder = advisory?.preferredLadder ?? null;
+  const requestTaskTypeId = normalizeScopeId(input.requestTaskTypeId);
+  const requestRoleId = normalizeScopeId(input.requestRoleId);
+  const advisoryTaskTypeId = advisory
+    ? (normalizeScopeId(advisory.taskTypeId) ??
+      (preferredLadder === null && advisory.preferredFor?.length === 1
+        ? normalizeScopeId(advisory.preferredFor[0])
+        : null))
+    : null;
+  const advisoryTaxonomyVersion = advisory ? normalizeScopeId(advisory.taxonomyVersion) : null;
+  const advisoryRoleId = advisory ? normalizeScopeId(advisory.roleId) : null;
+  const band = Number.isFinite(input.advisory?.scoreBand) ? Number(input.advisory?.scoreBand) : 0;
+  const base = {
+    applied: false,
+    explorationMode: "baseline" as const,
+    selectionProbability: null,
+    advisoryCandidateId: input.advisory?.candidateId ?? null,
+    advisoryPackageId: input.advisory?.preferredEndpointId ?? null,
+    advisoryConfidence: Number.isFinite(input.advisory?.confidence)
+      ? Number(input.advisory?.confidence)
+      : 0,
+    thresholdSetVersion: input.advisory?.thresholdSetVersion ?? null,
+    policyVersion: input.advisory?.policyVersion ?? null,
+    scoreBand: band,
+    scoreGapBefore: null,
+    cohortBucket: null,
+    // Run 99 R27: the router's own eligibility verdict. The host's pre-filter candidate list is
+    // not this set, so a surface that reported eligibility from it claimed "eligible" while this
+    // gate refused the package.
+    advisoryPackageEligible: Boolean(
+      input.advisory?.preferredEndpointId &&
+        input.eligibleEndpointIds.includes(input.advisory.preferredEndpointId),
+    ),
+    eligibleEndpointCount: input.eligibleEndpointIds.length,
+    advisoryTaskTypeId,
+    requestTaskTypeId,
+    advisoryTaxonomyVersion,
+    // Run 105 C11/R1: the role dimension of the advisory scope and of the request. These two are
+    // present ONLY when a role was actually in play, so a no-role decision stays byte-identical
+    // to the pre-run105 outcome (R5 back-compat).
+    ...(advisoryRoleId ? { advisoryRoleId } : {}),
+    ...(requestRoleId ? { requestRoleId } : {}),
+    // R5: no ladder means these keys are absent, not merely zero/null.
+    ...(preferredLadder === null
+      ? {}
+      : {
+          advisoryLadderLength: preferredLadder.length,
+          advisoryRungRank: null as number | null,
+          advisoryRungWalked: null as string | null,
+          advisoryRungSkipped: 0,
+        }),
+  };
+  const fallback = (reason: string): RouteAdvisoryConsiderationOutcome => ({
+    ...base,
+    fallbackReason: reason,
+  });
+  /**
+   * Run 105 C13: after the walk has resolved the preference, every later refusal must report the
+   * rung it was about; otherwise "rung 2 was considered and refused" is unreadable. Pre-walk
+   * refusals (state/stage/kill switch/scope) keep the plain `base`, so their bytes are today's.
+   */
+  let resolvedRung: {
+    readonly advisoryPackageId: string | null;
+    readonly advisoryPackageEligible: boolean;
+    readonly advisoryRungRank: number | null;
+    readonly advisoryRungWalked: string | null;
+    readonly advisoryRungSkipped: number;
+  } | null = null;
+  const resolvedFallback = (reason: string): RouteAdvisoryConsiderationOutcome => ({
+    ...fallback(reason),
+    ...(resolvedRung ?? {}),
+  });
+  if (!advisory) return fallback("no_advisory");
+  if (advisory.advisoryState !== "fresh") return fallback(`advisory_${advisory.advisoryState}`);
+  if (!ADVISORY_STAGES_WITH_INFLUENCE.has(advisory.stage)) return fallback("stage_below_s2");
+  if (advisory.killSwitch === true) return fallback("kill_switch_engaged");
+  const confidence = Number.isFinite(advisory.confidence) ? Number(advisory.confidence) : 0;
+  // Run 105 R4/R5 (stage 3): when the advisory carries a LADDER the preference is not known until
+  // the walk below has run, so the eligibility invariant is applied to the WALKED rung instead of
+  // the single stored one. Without a ladder this branch is byte-for-byte today's check on today's
+  // value (R5 back-compat).
+  if (preferredLadder === null) {
+    const storedPreference = advisory.preferredEndpointId;
+    // AC-R05-01: an advisory can never add or widen a candidate.
+    if (!storedPreference || !input.eligibleEndpointIds.includes(storedPreference)) {
+      return fallback("advisory_candidate_not_eligible");
+    }
+  }
+  // Run 99 R33 (addendum 19 S35, addendum 20 D1-D3, D10): applicability is checked after the
+  // eligibility invariant and before the confidence floor, so the operator sees the real reason.
+  // A request that declares no family keeps the pre-R33 behaviour; once it declares one, an
+  // unscoped advisory is refused rather than trusted, and a taxonomy mismatch fails closed.
+  if (requestTaskTypeId) {
+    if (
+      advisory.avoidFor?.some((entry) => normalizeScopeId(entry) === requestTaskTypeId) === true
+    ) {
+      return fallback("advisory_task_avoided");
+    }
+    if (!advisoryTaskTypeId) return fallback("advisory_task_unscoped");
+    if (advisoryTaskTypeId !== requestTaskTypeId) return fallback("advisory_task_mismatch");
+    const requestTaxonomyVersion = normalizeScopeId(input.requestTaxonomyVersion);
+    if (requestTaxonomyVersion && requestTaxonomyVersion !== advisoryTaxonomyVersion) {
+      return fallback("advisory_taxonomy_mismatch");
+    }
+  }
+  // Run 105 R1 (stage 3): once a (role, task) scope is declared the match key is BOTH ids exact.
+  // A role mismatch is refused with the SAME code the task mismatch already uses, so no new
+  // vocabulary reaches the operator surface (R5). A request that declares no role keeps the
+  // pre-run105 behaviour, exactly like the task gate above.
+  if (
+    requestRoleId &&
+    (preferredLadder !== null || advisoryRoleId) &&
+    advisoryRoleId !== requestRoleId
+  ) {
+    return fallback("advisory_task_mismatch");
+  }
+  // Run 105 R4/R5 (stage 3): the scope gates above have all passed, so the (role, task) ladder may
+  // now decide WHICH rung is the advisory's preference. The walk skips only non-routable rungs
+  // (stored `unavailable`, or not in this request's eligible set) and is deliberately NOT
+  // band-aware (addendum A2): the score band below still gates whether the walked preference is
+  // APPLIED. The walked rung replaces the single stored preference everywhere downstream.
+  let preferred = advisory.preferredEndpointId;
+  let advisoryRungRank: number | null = null;
+  let advisoryRungWalked: string | null = null;
+  let advisoryRungSkipped = 0;
+  let advisoryPackageId: string | null = base.advisoryPackageId;
+  let advisoryPackageEligible = base.advisoryPackageEligible;
+  if (preferredLadder !== null) {
+    const walk = resolveAdvisoryRung(preferredLadder, input.eligibleEndpointIds);
+    advisoryRungSkipped = walk.skipped;
+    if (walk._tag === "Walked") {
+      preferred = walk.endpointId;
+      advisoryRungRank = walk.rank;
+      advisoryRungWalked = walk.endpointId;
+      // The walked rung is by construction in the eligible set, so the operator's eligibility
+      // verdict is about the rung that was actually offered.
+      advisoryPackageId = walk.endpointId;
+      advisoryPackageEligible = true;
+    } else {
+      // No routable rung (every rung unavailable/ineligible, or an empty ladder): the EXISTING
+      // eligibility fallback is returned - no new vocabulary (R5/A2).
+      return {
+        ...fallback("advisory_candidate_not_eligible"),
+        advisoryLadderLength: preferredLadder.length,
+        advisoryRungSkipped,
+      };
+    }
+  }
+  // AC-R05-01: an advisory can never add or widen a candidate. When a ladder walked, its rung was
+  // already filtered by this same set, so this stays an invariant check.
+  if (!preferred || !input.eligibleEndpointIds.includes(preferred)) {
+    return resolvedFallback("advisory_candidate_not_eligible");
+  }
+  if (preferredLadder !== null) {
+    resolvedRung = {
+      advisoryPackageId,
+      advisoryPackageEligible,
+      advisoryRungRank,
+      advisoryRungWalked,
+      advisoryRungSkipped,
+    };
+  }
+  if (confidence < advisory.minAdvisoryConfidence)
+    return resolvedFallback("below_confidence_floor");
+  const cohortPercent = Number.isFinite(advisory.cohortPercent)
+    ? Math.min(100, Math.max(0, Number(advisory.cohortPercent)))
+    : 0;
+  const bucket = advisoryBucket(input.decisionSeed);
+  if (cohortPercent <= 0) return resolvedFallback("cohort_excluded");
+  if (bucket >= cohortPercent) {
+    return { ...resolvedFallback("cohort_excluded"), cohortBucket: bucket };
+  }
+  const leader = input.scored[0];
+  const advised = input.scored.find((candidate) => candidate.endpoint_id === preferred);
+  if (!leader || !advised) return resolvedFallback("advisory_candidate_not_eligible");
+  const gap = leader.total_score - advised.total_score;
+  if (gap > band)
+    return {
+      ...resolvedFallback("outside_score_band"),
+      scoreGapBefore: gap,
+      cohortBucket: bucket,
+      advisoryPackageId,
+      advisoryPackageEligible,
+      ...(resolvedRung ?? {}),
+    };
+  const explorationPercent = Number.isFinite(advisory.explorationPercent)
+    ? Math.min(100, Math.max(0, Number(advisory.explorationPercent)))
+    : 0;
+  const rngBucket = advisoryBucket(`${input.decisionSeed}:exploration`);
+  const explore = explorationPercent > 0 && rngBucket < explorationPercent;
+  const applied = preferred !== leader.endpoint_id;
+  const selectionProbability = explore
+    ? explorationPercent / 100
+    : explorationPercent > 0
+      ? 1 - explorationPercent / 100
+      : 1;
+  return {
+    ...base,
+    applied,
+    advisoryPackageId,
+    advisoryPackageEligible,
+    ...(resolvedRung ?? {}),
+    explorationMode: explore
+      ? "advisory_exploration"
+      : applied
+        ? "advisory_considered"
+        : "baseline",
+    selectionProbability: applied ? selectionProbability : 1,
+    fallbackReason: applied ? null : "advisory_matches_baseline",
+    scoreGapBefore: gap,
+    cohortBucket: bucket,
+  };
+}
 const LATENCY_TARGET_MS = 150;
 const LATENCY_MAX_MS = 300;
 const THROUGHPUT_TARGET_TPS = 40;
@@ -38,7 +292,12 @@ const DEFAULT_METRIC_DECAY_PERCENT_PER_DAY = {
   latency: 10,
   throughput: 10,
 } as const;
-const STRATEGY_WEIGHTS: Record<
+/**
+ * Run 103 / SP1: the canonical scoring-strategy presets are exported so the runtime's
+ * scoring-strategy vocabulary (`.recursive/run/103-agent-strategy-and-scoring-strategy/`)
+ * resolves against this single source instead of copying the tables.
+ */
+export const STRATEGY_WEIGHTS: Record<
   RoutingPolicyStrategy,
   Record<"quality" | "latency" | "throughput" | "cost" | "reliability" | "preference", number>
 > = {
@@ -184,8 +443,8 @@ function getEffectiveRequiredCapabilities(input: RouteRequestInput): string[] {
   const { requestedRole, requestedTask } = getRequestedRoleAndTask(input);
   return unique([
     ...input.request.requiredCapabilities,
-    ...(requestedRole?.required_capabilities ?? []),
-    ...(requestedTask?.required_capabilities ?? []),
+    ...(taxonomyRoleRequirementsAreHard(input) ? (requestedRole?.required_capabilities ?? []) : []),
+    ...(taxonomyTaskRequirementsAreHard(input) ? (requestedTask?.required_capabilities ?? []) : []),
   ]);
 }
 
@@ -193,9 +452,31 @@ function getEffectivePreferredCapabilities(input: RouteRequestInput): string[] {
   const { requestedRole, requestedTask } = getRequestedRoleAndTask(input);
   return unique([
     ...input.request.preferredCapabilities,
+    ...(taxonomyRoleRequirementsAreHard(input) ? [] : (requestedRole?.required_capabilities ?? [])),
+    ...(taxonomyTaskRequirementsAreHard(input) ? [] : (requestedTask?.required_capabilities ?? [])),
     ...(requestedRole?.preferred_capabilities ?? []),
     ...(requestedTask?.preferred_capabilities ?? []),
   ]);
+}
+
+/**
+ * Run 98 addendum 58 slice 1: a taxonomy *definition's* capability expectations are hard requirements only
+ * when the role/task selection that named them is hard — the documented trusted-internal shape
+ * (`role: { hard: true }` / `task: { hard: true }`) or the internal routing API that calls the router with no
+ * intent at all. The stable Pi contract (`contract_version: 1`) and every advisory classification are hints:
+ * the canonical taxonomy contract says advisory values "influence diagnostics and scoring without excluding
+ * otherwise eligible candidates", while hard role, task, capability, modality and tool requirements narrow
+ * candidates. Transport truth (request-level required capabilities, modalities, tools, context, health and
+ * policy) is untouched by this split.
+ */
+function taxonomyTaskRequirementsAreHard(input: RouteRequestInput): boolean {
+  const intent = input.request.roleModelIntent;
+  return !intent || intent.task?.hard === true;
+}
+
+function taxonomyRoleRequirementsAreHard(input: RouteRequestInput): boolean {
+  const intent = input.request.roleModelIntent;
+  return !intent || intent.role?.hard === true;
 }
 
 function resolveBenchmarkGroupIdsForRequest(input: RouteRequestInput): string[] {
@@ -371,11 +652,31 @@ function getSupportedCapabilitiesForCandidate(
   return unique([...candidate.declared.capabilities, ...roleBinding.effective_capabilities]);
 }
 
-function supportsCapabilityRequirement(
+/**
+ * Run 103 post-lock repair (operator decision): the runtime's published alias pools must reflect the
+ * eligibility this function applies at request time, so it is exported as the single source of the
+ * capability-satisfaction rule (`code.edit` satisfies `code.read`/`code.write`, a `<req>.` family
+ * satisfies the family root, `reasoning` satisfies `reasoning.*`, and the structured-output pair).
+ */
+export function supportsCapabilityRequirement(
   supportedCapabilities: readonly string[],
   requirement: string,
 ): boolean {
   if (supportedCapabilities.includes(requirement)) {
+    return true;
+  }
+  /**
+   * Run 98 addendum 57 §3.3: the catalogue describes code-capable models with `code.edit`, while the taxonomy's
+   * code tasks require `code.read` (and `code.write`). A model that can edit code can read and write it, so the
+   * catalogue declaration satisfies those narrower requirements — without this, a request that declared a code
+   * family was refused as `no_eligible_target` on every endpoint and the code advisory could never apply.
+   * Deliberately narrow: it satisfies nothing else.
+   */
+  const impliedBy: Readonly<Record<string, readonly string[]>> = {
+    "code.read": ["code.edit"],
+    "code.write": ["code.edit"],
+  };
+  if (impliedBy[requirement]?.some((capability) => supportedCapabilities.includes(capability))) {
     return true;
   }
   if (supportedCapabilities.some((capability) => capability.startsWith(`${requirement}.`))) {
@@ -1256,12 +1557,17 @@ function evaluateEligibility(
       reasons.push("TOOLS_UNSUPPORTED");
     }
 
-    if (requestedRole && !requestedRole.task_types_supported.includes(input.request.taskType)) {
+    if (
+      requestedRole &&
+      taxonomyTaskRequirementsAreHard(input) &&
+      !requestedRole.task_types_supported.includes(input.request.taskType)
+    ) {
       reasons.push("TASK_NOT_SUPPORTED_BY_ROLE");
     }
     if (
       requestedRoleId &&
       requestedTask &&
+      taxonomyTaskRequirementsAreHard(input) &&
       !requestedTask.allowed_roles.includes(requestedRoleId)
     ) {
       reasons.push("ROLE_NOT_ALLOWED");
@@ -1572,12 +1878,40 @@ export function routeRequest(input: RouteRequestInput): RouterDecisionRecord {
     );
   });
 
-  const chosen = scored[0];
+  // Run 98 R5: the advisory is consulted only here, after hard eligibility and scoring,
+  // and only within the policy's score band.
+  const advisoryOutcome = evaluateRouteAdvisoryConsideration({
+    scored: scored.map((candidate) => ({
+      endpoint_id: candidate.endpoint_id,
+      total_score: candidate.total_score,
+    })),
+    eligibleEndpointIds: eligible.map((candidate) => candidate.identity.endpoint_id),
+    decisionSeed: normalizedInput.request.requestId,
+    advisory: normalizedInput.advisoryConsideration ?? null,
+    // Run 99 R33: the routing request already carries the task family; the host supplies the
+    // taxonomy identity it resolved the request against.
+    requestTaskTypeId: normalizedInput.request.taskType ?? null,
+    requestTaxonomyVersion: normalizedInput.advisoryConsideration?.requestTaxonomyVersion ?? null,
+    // Run 105 R1: the role the request was actually routed with (post intent normalization), so the
+    // advisory's (role, task) scope can be matched exactly.
+    requestRoleId: normalizedInput.request.requestedRoleId ?? null,
+  });
+  const advisoryPreferredIndex =
+    advisoryOutcome.applied && advisoryOutcome.advisoryPackageId
+      ? scored.findIndex((candidate) => candidate.endpoint_id === advisoryOutcome.advisoryPackageId)
+      : -1;
+  const chosen = advisoryPreferredIndex > 0 ? scored[advisoryPreferredIndex] : scored[0];
   const runnerUp = scored[1];
+  const orderedFallbacks = chosen
+    ? [chosen, ...scored.filter((candidate) => candidate !== chosen)]
+    : scored;
   const tieBreakApplied =
     Boolean(chosen) &&
     Boolean(runnerUp) &&
-    Math.abs((chosen?.total_score ?? 0) - (runnerUp?.total_score ?? 0)) <= ROUTER_SCORE_TIE_EPSILON;
+    (advisoryOutcome.applied
+      ? true
+      : Math.abs((chosen?.total_score ?? 0) - (runnerUp?.total_score ?? 0)) <=
+        ROUTER_SCORE_TIE_EPSILON);
   const selectionReasons: SelectionReasonCode[] = chosen
     ? unique<SelectionReasonCode>([
         "BEST_TOTAL_SCORE",
@@ -1614,10 +1948,13 @@ export function routeRequest(input: RouteRequestInput): RouterDecisionRecord {
           effort_source: chosenReasoningEffort === null ? ("none" as const) : ("variant" as const),
         }
       : {}),
-    fallback_endpoint_ids: scored.slice(1).map((candidate) => candidate.endpoint_id),
+    fallback_endpoint_ids: orderedFallbacks.slice(1).map((candidate) => candidate.endpoint_id),
     selection_reasons: selectionReasons,
     used_measured: chosen?.usedMeasured ?? false,
     used_declared: chosen?.usedDeclared ?? false,
     scoring_version: "baseline-v2",
+    ...(normalizedInput.advisoryConsideration === undefined
+      ? {}
+      : { advisory_consideration: advisoryOutcome }),
   };
 }

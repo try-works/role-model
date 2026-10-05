@@ -1,0 +1,9 @@
+Run 96 canonical TDD receipt
+acceptanceCriterionId=AC-R33-07
+proofFamily=alias-pool-eligibility-diagnostic
+phase=OWNING SUITE
+result=PASS
+testPath=public:role-model-router/apps/runtime-host-bridge/test/alias-capability-routing.test.ts
+assertionTitle=reports an empty alias pool before attempting capability eligibility
+command=corepack pnpm --dir role-model-router/apps/runtime-host-bridge exec vitest run test/alias-capability-routing.test.ts
+owningSuite=PASS: the owning alias-capability-routing suite and its related index fallback selectors passed; no provider or Phase 5 claim is made.

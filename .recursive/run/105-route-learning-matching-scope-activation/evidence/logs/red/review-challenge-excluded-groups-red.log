@@ -1,0 +1,57 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-host-bridge
+
+(node:23928) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/run105-review-challenge-evidence.test.ts (24 tests | 1 failed) 17382ms
+   ✓ genuine finalize/list/read wrappers and real replay job yield actual winner and sibling time 28ms
+   ✓ no borrowing evidence for mismatched request {"captureRef":"other"} 16ms
+   ✓ no borrowing evidence for mismatched request {"roleId":"other"} 10ms
+   ✓ no borrowing evidence for mismatched request {"taskTypeId":"other"} 7ms
+   ✓ no borrowing evidence for mismatched request {"newEndpointId":"other"} 7ms
+   ✓ unknown sibling time stays pending despite fabricated result date 1ms
+   ✓ provider completion alone is not finalized evidence 1ms
+   ✓ mismatched listed winner cannot replace actual readback 7ms
+   ✓ unknown or mismatched effort remains pending 3ms
+   ✓ fresh cutoff never borrows a previous comparison 7ms
+   ✓ real evidence behind a continuation page is reached 16ms
+   ✓ cyclic or malformed pages are unavailable rather than claimed complete 1ms
+   ✓ enumerable durable evidence carries winning-member confidence and exact capture; cutoff refuses old evidence 22ms
+   ✓ execute production CLI callbacks over genuine evaluation/replay wrappers with auth envelope and transfer decode 210ms
+   ✓ genuine retained terminal-disposition capture is enumerated from real live telemetry and exact capsule read 35ms
+   ✓ history fails closed for wrong capsule scope/readiness/identity/classification and excludes replay output 52ms
+   ✓ history index unavailable and 501 matching ids are null, never a truncated complete corpus  9901ms
+   ✓ CLI history callback must actually bind supported exact read operation 59ms
+   ✓ pending restart reads actual authenticated ReplayCore job plus complete real empty queue 246ms
+   ✓ genuine pre-replay queue row preserves actual queue ID and never invents a replayJobId 209ms
+   ✓ execute fourth production callback against actual replay and pre-replay Effect queue records 74ms
+   × exact same capture/pair with two genuine finalized groups uses explicit excluded group IDs, not arbitrary winner 118ms
+     → expected null to match object { …(2) }
+   ✓ CLI must bind pending restart to authenticated replay reads AND actual queue read authority 3ms
+   ✓ CLI finalized and enumerable callbacks actually bind authenticated extension reads 6ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run105-review-challenge-evidence.test.ts > exact same capture/pair with two genuine finalized groups uses explicit excluded group IDs, not arbitrary winner
+AssertionError: expected null to match object { …(2) }
+
+- Expected: 
+{
+  "comparisonGroupId": "comparison:fresh-second",
+  "finalizedAtMs": 1700000111211,
+}
+
++ Received: 
+null
+
+ ❯ test/run105-review-challenge-evidence.test.ts:240:64
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 23 passed (24)
+   Start at  19:22:15
+   Duration  24.81s (transform 6.23s, setup 0ms, collect 6.52s, tests 17.38s, environment 0ms, prepare 283ms)
+

@@ -1,0 +1,162 @@
+[
+  {
+    "id": "recruiter.job_description",
+    "label": "Job Description",
+    "description": "Write or revise role descriptions, responsibilities, qualifications, and hiring signals.",
+    "primaryRole": "recruiter",
+    "compatibleRoles": ["recruiter", "writer", "product"],
+    "requiredCapabilities": ["recruiting.analysis", "text.chat"],
+    "preferredCapabilities": ["communication.user_facing"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for a job description or hiring profile.",
+      "doNotUseWhen": "User asks for employment-law compliance review."
+    },
+    "variants": []
+  },
+  {
+    "id": "recruiter.interview.plan",
+    "label": "Interview Planning",
+    "description": "Create interview loops, questions, rubrics, and evaluation criteria.",
+    "primaryRole": "recruiter",
+    "compatibleRoles": ["recruiter", "planner", "educator"],
+    "requiredCapabilities": ["recruiting.analysis"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks how to interview for a role or assess skills.",
+      "doNotUseWhen": "User asks to make a hiring decision from protected characteristics."
+    },
+    "variants": ["plan"]
+  },
+  {
+    "id": "recruiter.candidate.screen",
+    "label": "Candidate Screening Support",
+    "description": "Summarize job-relevant candidate materials against explicit criteria.",
+    "primaryRole": "recruiter",
+    "compatibleRoles": ["recruiter", "analyst", "legal"],
+    "requiredCapabilities": ["recruiting.analysis"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks to screen resumes or compare candidates against stated job requirements.",
+      "doNotUseWhen": "User asks to infer protected attributes or make unlawful employment decisions."
+    },
+    "variants": ["screen"]
+  },
+  {
+    "id": "recruiter.sourcing.message",
+    "label": "Sourcing Message",
+    "description": "Draft candidate outreach and sourcing messages.",
+    "primaryRole": "recruiter",
+    "compatibleRoles": ["recruiter", "writer"],
+    "requiredCapabilities": ["recruiting.analysis", "communication.user_facing"],
+    "preferredCapabilities": ["text.chat"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for recruiting outreach.",
+      "doNotUseWhen": "User asks for sales prospecting."
+    },
+    "variants": ["message"]
+  },
+  {
+    "id": "recruiter.scorecard.create",
+    "label": "Scorecard Creation",
+    "description": "Create hiring scorecards, competencies, and evaluation criteria.",
+    "primaryRole": "recruiter",
+    "compatibleRoles": ["recruiter", "planner"],
+    "requiredCapabilities": ["recruiting.analysis"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for a hiring scorecard.",
+      "doNotUseWhen": "User asks for learner quiz rubric."
+    },
+    "variants": ["create"]
+  },
+  {
+    "id": "recruiter.interview.feedback",
+    "label": "Interview Feedback",
+    "description": "Structure interview notes and job-relevant feedback.",
+    "primaryRole": "recruiter",
+    "compatibleRoles": ["recruiter", "writer", "legal"],
+    "requiredCapabilities": ["recruiting.analysis", "text.chat"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks to write interview feedback.",
+      "doNotUseWhen": "User asks to infer protected attributes."
+    },
+    "variants": ["feedback"]
+  },
+  {
+    "id": "recruiter.offer.prepare",
+    "label": "Offer Preparation",
+    "description": "Prepare offer discussion points, constraints, and candidate communication.",
+    "primaryRole": "recruiter",
+    "compatibleRoles": ["recruiter", "finance", "writer"],
+    "requiredCapabilities": ["recruiting.analysis", "communication.user_facing"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for offer preparation.",
+      "doNotUseWhen": "User asks for payroll/legal final approval."
+    },
+    "variants": ["prepare"]
+  },
+  {
+    "id": "recruiter.pipeline.update",
+    "label": "Pipeline Update",
+    "description": "Summarize hiring pipeline status, blockers, and next steps.",
+    "primaryRole": "recruiter",
+    "compatibleRoles": ["recruiter", "coordinator"],
+    "requiredCapabilities": ["recruiting.analysis", "coordination.workflow"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for recruiting pipeline update.",
+      "doNotUseWhen": "User asks for sales pipeline update."
+    },
+    "variants": ["update"]
+  },
+  {
+    "id": "recruiter.role.intake",
+    "label": "Role Intake",
+    "description": "Define hiring role intake questions, requirements, and constraints.",
+    "primaryRole": "recruiter",
+    "compatibleRoles": ["recruiter", "product", "planner"],
+    "requiredCapabilities": ["recruiting.analysis"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks how to scope a role opening.",
+      "doNotUseWhen": "User asks for job ad copy only."
+    },
+    "variants": ["intake"]
+  },
+  {
+    "id": "recruiter.candidate.compare",
+    "label": "Candidate Comparison Support",
+    "description": "Compare candidates against explicit job criteria.",
+    "primaryRole": "recruiter",
+    "compatibleRoles": ["recruiter", "analyst", "legal"],
+    "requiredCapabilities": ["recruiting.analysis", "reasoning.multi_step"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks to compare candidate materials using a rubric.",
+      "doNotUseWhen": "User asks for unlawful or protected-class inference."
+    },
+    "variants": ["compare"]
+  }
+]

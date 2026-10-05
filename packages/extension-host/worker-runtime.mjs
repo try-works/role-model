@@ -1,10 +1,17 @@
-import { createHash } from "node:crypto";
+import { createHash, createHmac, randomUUID } from "node:crypto";
 import { once } from "node:events";
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { pathToFileURL } from "node:url";
-import { encodeFrame, extractFrames } from "../extension-sdk/index.mjs";
+import { encodeControlFrame, extractControlFrames } from "../extension-sdk/index.mjs";
+import {
+  DEFAULT_MAX_RETAINED_RESPONSES,
+  DEFAULT_MAX_RETAINED_RESPONSE_AGE_MS,
+  DEFAULT_MAX_RETAINED_RESPONSE_BYTES,
+  RetainedResponseStore,
+} from "./retained-response-store.mjs";
+import { hydrateInputTransferArtifact } from "./transfer-artifact.mjs";
 
 const moduleRef = process.argv[2];
 if (!moduleRef) throw new Error("worker module URL required");
@@ -36,6 +43,46 @@ outputDatabase.exec(`
 `);
 const MAX_INLINE_OUTPUT_BYTES = 16 * 1024;
 const MAX_DURABLE_OUTPUT_ROWS = 512;
+const CONTROL_AUTHENTICATION_SCHEMA = "role-model.extension-host.control-authentication.v1";
+const CONTROL_AUTHENTICATION_SYMBOL = Symbol.for(CONTROL_AUTHENTICATION_SCHEMA);
+
+function authenticateControlEnvelope(envelope) {
+  const nonce = randomUUID();
+  // The signature must cover the body the extension actually consumes, not a
+  // sibling alias that a caller may omit entirely.
+  const body = envelope.value ?? envelope.payload ?? null;
+  const payloadDigest = createHash("sha256").update(JSON.stringify(body)).digest("hex");
+  const message = JSON.stringify([
+    CONTROL_AUTHENTICATION_SCHEMA,
+    nonce,
+    envelope.requestId ?? null,
+    envelope.capability ?? "health:probe",
+    envelope.channel ?? null,
+    envelope.scope ?? null,
+    envelope.authorizationEpoch ?? 0,
+    payloadDigest,
+  ]);
+  const proof = Object.freeze({
+    schemaVersion: CONTROL_AUTHENTICATION_SCHEMA,
+    algorithm: "hmac-sha256",
+    nonce,
+    requestId: envelope.requestId ?? null,
+    capability: envelope.capability ?? "health:probe",
+    channel: envelope.channel ?? null,
+    scope: envelope.scope ?? null,
+    authorizationEpoch: envelope.authorizationEpoch ?? 0,
+    payloadDigest,
+    mac: createHmac("sha256", controlSecret).update(message).digest("hex"),
+  });
+  const authenticatedEnvelope = { ...envelope };
+  Object.defineProperty(authenticatedEnvelope, CONTROL_AUTHENTICATION_SYMBOL, {
+    value: proof,
+    enumerable: false,
+    configurable: false,
+    writable: false,
+  });
+  return authenticatedEnvelope;
+}
 
 function persistBusinessOutput(envelope, result) {
   const capability = envelope.capability ?? "health:probe";
@@ -55,7 +102,7 @@ function persistBusinessOutput(envelope, result) {
       envelope.scope,
       resultHash,
       byteLength,
-      byteLength <= MAX_INLINE_OUTPUT_BYTES ? resultJson : null,
+      resultJson,
       new Date().toISOString(),
     );
   outputDatabase
@@ -76,9 +123,32 @@ function persistBusinessOutput(envelope, result) {
   });
   const businessOutput =
     result && typeof result === "object" && !Array.isArray(result) ? result : { value: result };
-  return {
+  const inlineResponse = {
     ...businessOutput,
     businessOutput,
+    durableLocator,
+    evidenceRef: `extension-output:${outputKey}`,
+    readCapability: "extension-output:read",
+  };
+  const inlineBusinessOutput =
+    byteLength <= MAX_INLINE_OUTPUT_BYTES &&
+    Buffer.byteLength(
+      JSON.stringify({
+        type: "result",
+        requestId: envelope.requestId,
+        result: inlineResponse,
+      }),
+      "utf8",
+    ) <= MAX_INLINE_OUTPUT_BYTES
+      ? businessOutput
+      : Object.freeze({
+          transferState: "externalized",
+          resultHash,
+          byteLength,
+        });
+  return {
+    ...inlineBusinessOutput,
+    businessOutput: inlineBusinessOutput,
     durableLocator,
     evidenceRef: `extension-output:${outputKey}`,
     readCapability: "extension-output:read",
@@ -121,50 +191,89 @@ function readBusinessOutput(envelope) {
   };
 }
 
-const retained = new Map();
+const controlSecret =
+  process.env.ROLE_MODEL_EXTENSION_CONTROL_KEY ?? process.env.ROLE_MODEL_EXTENSION_TRANSFER_KEY;
+const retained = new RetainedResponseStore({
+  maxCount: DEFAULT_MAX_RETAINED_RESPONSES,
+  maxBytes: DEFAULT_MAX_RETAINED_RESPONSE_BYTES,
+  maxAgeMs: DEFAULT_MAX_RETAINED_RESPONSE_AGE_MS,
+});
+const retainedPruneTimer = setInterval(
+  () => retained.prune(),
+  DEFAULT_MAX_RETAINED_RESPONSE_AGE_MS,
+);
+retainedPruneTimer.unref?.();
 let input = Buffer.alloc(0);
-const send = async (value) => {
-  if (!process.stdout.write(encodeFrame(value))) await once(process.stdout, "drain");
+let inboundSequence = 0;
+let outboundSequence = 0;
+let sendChain = Promise.resolve();
+const send = (value) => {
+  const sequence = outboundSequence + 1;
+  const frame = encodeControlFrame(value, {
+    secret: controlSecret,
+    direction: "worker->host",
+    sequence,
+  });
+  outboundSequence = sequence;
+  sendChain = sendChain.then(async () => {
+    if (!process.stdout.write(frame)) await once(process.stdout, "drain");
+  });
+  return sendChain;
 };
 
 await send({ type: "ready", pid: process.pid });
 process.stdin.on("data", async (chunk) => {
-  input = Buffer.concat([input, chunk]);
-  const parsed = extractFrames(input);
-  input = parsed.remainder;
-  for (const message of parsed.values) {
-    if (message.type === "ack") {
-      retained.delete(message.requestId);
-      continue;
-    }
-    if (message.type === "shutdown") {
-      outputDatabase.close();
-      await send({ type: "shutdown-ack" });
-      process.exit(0);
-    }
-    if (message.type !== "invoke") continue;
-    try {
-      let result;
-      if (message.envelope.capability === "extension-output:read") {
-        result = readBusinessOutput(message.envelope);
-      } else {
-        const value = await extension.run(message.envelope);
-        result =
-          message.envelope.capability === "health:probe"
-            ? value
-            : persistBusinessOutput(message.envelope, value);
+  try {
+    input = Buffer.concat([input, chunk]);
+    const parsed = extractControlFrames(input, {
+      secret: controlSecret,
+      direction: "host->worker",
+      lastSequence: inboundSequence,
+    });
+    input = parsed.remainder;
+    inboundSequence = parsed.lastSequence;
+    for (const message of parsed.values) {
+      if (message.type === "ack") {
+        retained.delete(message.requestId);
+        continue;
       }
-      const response = { type: "result", requestId: message.requestId, result };
-      retained.set(message.requestId, response);
-      await send(response);
-    } catch (error) {
-      const response = {
-        type: "error",
-        requestId: message.requestId,
-        error: error?.message ?? String(error),
-      };
-      retained.set(message.requestId, response);
-      await send(response);
+      if (message.type === "shutdown") {
+        clearInterval(retainedPruneTimer);
+        outputDatabase.close();
+        await send({ type: "shutdown-ack" });
+        process.exit(0);
+      }
+      if (message.type !== "invoke") continue;
+      try {
+        const envelope = message.envelope?.transferArtifact
+          ? await hydrateInputTransferArtifact({
+              stateRoot,
+              transferKey: process.env.ROLE_MODEL_EXTENSION_TRANSFER_KEY,
+              envelope: message.envelope,
+            })
+          : message.envelope;
+        let result;
+        if (envelope.capability === "extension-output:read") {
+          result = readBusinessOutput(envelope);
+        } else {
+          const value = await extension.run(authenticateControlEnvelope(envelope));
+          result = persistBusinessOutput(envelope, value);
+        }
+        const response = { type: "result", requestId: message.requestId, result };
+        retained.set(message.requestId, response);
+        await send(response);
+      } catch (error) {
+        const response = {
+          type: "error",
+          requestId: message.requestId,
+          error: error?.message ?? String(error),
+        };
+        retained.set(message.requestId, response);
+        await send(response);
+      }
     }
+  } catch (error) {
+    process.stderr.write(`control frame rejected: ${error?.message ?? String(error)}\n`);
+    process.exit(1);
   }
 });

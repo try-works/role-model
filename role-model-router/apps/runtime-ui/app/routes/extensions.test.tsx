@@ -35,11 +35,12 @@ describe("ExtensionsRoute", () => {
     expect(routeSource).toContain("Health probe");
     expect(routeSource).toContain("LIFECYCLE_COPY");
     expect(routeSource).toContain("operatorBoundaryNote");
-    expect(routeSource).toContain("shadow-only");
-    expect(routeSource).toContain("Direct Track B v1.1");
-    expect(routeSource).toContain(
-      "cannot change production prompts, routes, weights, or active profiles",
-    );
+    expect(routeSource).toContain("activationBoundary");
+    expect(routeSource).toContain("allowedModes");
+    expect(routeSource).toContain("policy-gated");
+    expect(routeSource).toContain("Evidence-only package");
+    expect(routeSource).not.toContain("Shadow-ready by default");
+    expect(routeSource).not.toContain("shadow-only evaluation boundary");
     expect(routeSource).not.toContain("ceremony-bound ON");
     expect(routeSource).not.toContain("production prompt injection");
     expect(routeSource).not.toContain("do not expose a public enable/disable mutation API");
@@ -80,5 +81,13 @@ describe("ExtensionsRoute", () => {
     expect(html).toContain("Contribution posture");
     expect(html).toContain("Recommendation ledger");
     expect(html).not.toContain("installed: true");
+  });
+
+  test("keeps long recommendation identities inside their ledger card", () => {
+    // Recommendation ids and provenance digests are unbounded opaque strings.
+    // The ledger card must let them wrap instead of overflowing the panel.
+    const routeSource = readFileSync(new URL("./extensions.tsx", import.meta.url), "utf8");
+    expect(routeSource).toContain("min-w-0 flex-1");
+    expect(routeSource).toContain("break-all");
   });
 });

@@ -1,0 +1,57 @@
+(node:49432) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✖ R8: the sweep completes a stranded job whose extra trials can never enter a comparison (513.8138ms)
+✔ R8: a job with no finalized comparison is retired by name within the grace, and the sweep is idempotent (323.0679ms)
+✖ R8: the learning summary reads back a producer-published floor from the durable record (40.0129ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 1
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1203.0828
+
+✖ failing tests:
+
+test at tests\track-b\run104-r8-finalization-boundary.test.mjs:141:1
+✖ R8: the sweep completes a stranded job whose extra trials can never enter a comparison (513.8138ms)
+  AssertionError [ERR_ASSERTION]: {"candidates":0,"finalized":[],"declined":[],"retroCompleted":[]}
+  + actual - expected
+  
+  + 'failed'
+  - 'completed'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/104-replay-eligibility-and-evidence-fidelity/tests/track-b/run104-r8-finalization-boundary.test.mjs:172:12)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'failed',
+    expected: 'completed',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\track-b\run104-r8-finalization-boundary.test.mjs:211:1
+✖ R8: the learning summary reads back a producer-published floor from the durable record (40.0129ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + null
+  - {
+  -   minDecisiveComparisons: 3,
+  -   minDistinctCaptures: 5,
+  -   minHoldoutComparisons: 2
+  - }
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/104-replay-eligibility-and-evidence-fidelity/tests/track-b/run104-r8-finalization-boundary.test.mjs:242:12)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: { minDecisiveComparisons: 3, minHoldoutComparisons: 2, minDistinctCaptures: 5 },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

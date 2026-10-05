@@ -32,8 +32,11 @@ import {
 } from "./history-policy.js";
 import {
   LEGACY_INLINE_CAP_BYTES,
+  boundRuntimeTelemetryFailureStub,
   buildCompactRuntimeObservationStub,
   hydrateRuntimeObservationGraphPointer,
+  isDegradedCaptureObservation as isDegradedCaptureObservationRecord,
+  projectRuntimeTelemetryFailureDimensions,
   readRuntimeObservationStorageState,
   recordRuntimeObservationGraphReference,
   resolveRuntimeObservationStoragePayload,
@@ -46,6 +49,7 @@ const INITIAL_MIGRATION_ID = "run06-v1-initial-schema";
 const OPERATIONAL_PROFILE_REPROJECTION_MIGRATION_ID = "run91-operational-profile-reprojection-v1";
 const OBSERVATION_METADATA_BACKFILL_MIGRATION_ID = "run62-observation-metadata-backfill-v1";
 const TELEMETRY_METADATA_BACKFILL_MIGRATION_ID = "run62-telemetry-metadata-backfill-v1";
+const REQUEST_CLASS_SOURCE_BACKFILL_MIGRATION_ID = "run104-request-class-source-backfill-v1";
 const RECENT_OBSERVATIONS_INDEX_MIGRATION_ID = "run77-recent-observations-index-v1";
 const OBSERVED_PROFILE_INDEXES_MIGRATION_ID = "run77-observed-profile-indexes-v1";
 const EFFORT_INSTANCE_IDENTITY_MIGRATION_ID = "run91-effort-instance-identity-v1";
@@ -61,6 +65,7 @@ const RUNTIME_TELEMETRY_INSERT_COLUMNS = [
   "created_at_ms",
   "client_request_id",
   "request_class",
+  "request_class_source",
   "source_type",
   "model_id",
   "provider_kind",
@@ -106,6 +111,9 @@ const RUNTIME_TELEMETRY_INSERT_COLUMNS = [
   "output_tokens",
   "total_tokens",
   "latency_ms",
+  "provider_completion_latency_ms",
+  "time_to_first_token_ms",
+  "request_latency_ms",
   "error_class",
   "status_code",
   "finish_reason",
@@ -461,6 +469,9 @@ CREATE TABLE IF NOT EXISTS runtime_telemetry_records (
   output_tokens INTEGER NOT NULL,
   total_tokens INTEGER NOT NULL,
   latency_ms INTEGER,
+  provider_completion_latency_ms INTEGER,
+  time_to_first_token_ms INTEGER,
+  request_latency_ms INTEGER,
   error_class TEXT,
   status_code INTEGER,
   finish_reason TEXT,
@@ -994,7 +1005,13 @@ export interface RuntimeTelemetryRecord {
   readonly conversationId: string;
   readonly createdAtMs: number;
   readonly clientRequestId: string | null;
-  readonly requestClass: "benchmark" | "live_request" | "unknown" | null;
+  readonly requestClass: RuntimeTelemetryTrafficClass | null;
+  /**
+   * Run 104 / R14: `declared` when the writer stored the class its caller supplied, `inferred` when the
+   * class was derived from an observation sample or backfilled by a migration, and null when no class was
+   * ever established (`request_class IS NULL`, or the writer's `unknown` placeholder).
+   */
+  readonly requestClassSource: RuntimeTelemetryRequestClassSource | null;
   readonly sourceType: "local" | "remote" | null;
   readonly modelId: string | null;
   readonly providerKind: string | null;
@@ -1043,7 +1060,13 @@ export interface RuntimeTelemetryRecord {
   readonly outputTokensSource: "measured" | "normalized" | "estimated" | "unavailable";
   readonly outputTokensAvailable: boolean;
   readonly totalTokens: number;
+  // Run 98 addendum 40 (L1): provider response-header time. Kept under its historical name so
+  // existing readers and stored rows keep their meaning.
   readonly latencyMs: number | null;
+  readonly providerCompletionLatencyMs: number | null;
+  readonly timeToFirstTokenMs: number | null;
+  /** Client-visible duration; written after the response is flushed, null until then. */
+  readonly requestLatencyMs: number | null;
   readonly errorClass: string | null;
   readonly statusCode: number | null;
   readonly finishReason: string | null;
@@ -1112,7 +1135,26 @@ export interface RuntimeTelemetrySummary {
   readonly totalEffectiveCostUsd: number;
   readonly averageLatencyMs: number | null;
   readonly p95LatencyMs: number | null;
+  // Run 98 addendum 40 (L1): the provider response-header time above is not the latency a client
+  // experienced. These describe the flushed request duration; they stay null for rows written
+  // before the addendum, so historical windows keep reporting the provider percentile only.
+  readonly averageRequestLatencyMs: number | null;
+  readonly p95RequestLatencyMs: number | null;
+  readonly requestLatencySampleCount: number;
   readonly lastSeenAtMs: number | null;
+  /**
+   * Run 104 / R14: the aggregate above counts live traffic only. These describe the rows in the same
+   * window that the class predicate left out, so a surface can state the exclusion instead of silently
+   * shrinking the denominator.
+   */
+  readonly excludedRequestCount: number;
+  readonly excludedByClass: readonly RuntimeTelemetryExcludedClassCount[];
+}
+
+export interface RuntimeTelemetryExcludedClassCount {
+  /** A stored class, or `unclassified` for rows that never established one (`request_class IS NULL`). */
+  readonly requestClass: string;
+  readonly requestCount: number;
 }
 
 export interface RuntimeTelemetryComparisonRow {
@@ -1157,6 +1199,92 @@ export interface RuntimeTelemetryAggregateQueryInput {
   readonly endAtMs?: number;
   readonly startAtMs?: number;
   readonly asOfMs?: number;
+  /**
+   * Run 104 / R14: restrict the aggregate to the given traffic classes. `live` also matches the legacy
+   * `live_request` value, and `unknown` also matches rows with no stored class.
+   */
+  readonly trafficClasses?: readonly RuntimeTelemetryTrafficClass[];
+}
+
+export const RUNTIME_TELEMETRY_TRAFFIC_CLASSES = [
+  "live",
+  "replay",
+  "evaluation",
+  "benchmark",
+  "probe",
+  "unknown",
+] as const;
+
+export type RuntimeTelemetryTrafficClass =
+  | (typeof RUNTIME_TELEMETRY_TRAFFIC_CLASSES)[number]
+  | "live_request";
+
+/**
+ * Run 104 / R14: how a stored `request_class` came to be. A declaration is recorded by the writer from
+ * its caller; anything a migration or heuristic derived is `inferred` so a reader can never mistake a
+ * backfilled class for a declared one.
+ */
+export type RuntimeTelemetryRequestClassSource = "declared" | "inferred";
+
+/**
+ * Run 104 / R14: operator-facing aggregates are live-only unless a caller asks otherwise. `live` also
+ * matches the legacy `live_request` spelling, and `unknown` also matches rows that never established a
+ * class at all (`request_class IS NULL`) - the writer's placeholder for "no class was declared", which
+ * is how every live row written before the producer markers landed is stored. The default predicate is
+ * therefore `request_class IN ('live', 'live_request', 'unknown') OR request_class IS NULL`, so no
+ * legacy live traffic disappears from the operator's headline numbers, while the four known non-live
+ * classes can never contribute and are reported through `RuntimeTelemetrySummary.excludedByClass`.
+ */
+export const DEFAULT_LIVE_TRAFFIC_CLASSES: readonly RuntimeTelemetryTrafficClass[] = [
+  "live",
+  "unknown",
+];
+
+/**
+ * Run 104 / R14 (addendum-03): derive the persisted request class from an observation sample's source type.
+ * The legacy `live_request` value folds into `live` so a row written from either vocabulary agrees with the
+ * telemetry row for the same request.
+ */
+export function requestClassFromObservationSample(
+  sourceType?: string | null,
+): RuntimeTelemetryTrafficClass | null {
+  switch (sourceType) {
+    case "live":
+    case "live_request":
+      return "live";
+    case "replay":
+      return "replay";
+    case "evaluation":
+      return "evaluation";
+    case "benchmark":
+      return "benchmark";
+    case "probe":
+      return "probe";
+    default:
+      return null;
+  }
+}
+
+function telemetryTrafficClassFilter(classes: readonly RuntimeTelemetryTrafficClass[]): {
+  readonly values: readonly string[];
+  readonly includeNull: boolean;
+} {
+  const values = new Set<string>();
+  let includeNull = false;
+  for (const trafficClass of classes) {
+    if (trafficClass === "live" || trafficClass === "live_request") {
+      values.add("live");
+      values.add("live_request");
+      continue;
+    }
+    if (trafficClass === "unknown") {
+      values.add("unknown");
+      includeNull = true;
+      continue;
+    }
+    values.add(trafficClass);
+  }
+  return { values: [...values], includeNull };
 }
 
 export interface RuntimeTelemetryListQueryInput extends RuntimeTelemetryAggregateQueryInput {
@@ -1198,6 +1326,14 @@ export interface PersistedRuntimeObservationBundle {
     readonly cost_estimate?: number;
     readonly currency?: string;
     readonly error_class?: string;
+  };
+  // Run 98 addendum 40 (L1): `usageEvent.latency_ms` keeps its historical meaning (the provider's
+  // response-header time). This breakdown carries the rest of the request the client actually
+  // waited for, so the operator surface stops reporting the header time as request latency.
+  readonly latencyBreakdown?: {
+    readonly providerHeaderMs?: number | null;
+    readonly providerCompletionMs?: number | null;
+    readonly timeToFirstTokenMs?: number | null;
   };
   readonly observedPerformance: {
     readonly sample: ObservedPerformanceSample;
@@ -1262,6 +1398,7 @@ export interface PersistedRuntimeObservationBundle {
     readonly sourceClient?: string;
     readonly executionFamily?: string;
     readonly adapterFamily?: string;
+    readonly providerAttemptIds?: readonly string[];
     readonly payloadBytes?: {
       readonly ingress?: number;
       readonly translated?: number;
@@ -1501,6 +1638,7 @@ function initializeSchema(database: DatabaseSync): void {
     "effort_source TEXT",
     "client_request_id TEXT",
     "request_class TEXT",
+    "request_class_source TEXT",
     "source_type TEXT",
     "provider_family TEXT",
     "vendor_id TEXT",
@@ -1541,6 +1679,11 @@ function initializeSchema(database: DatabaseSync): void {
     "candidate_cost_snapshot_json TEXT",
     "selected_pricing_snapshot_json TEXT",
     "finish_reason TEXT",
+    // Run 98 addendum 40 (L1): provider completion time, first-token time, and the
+    // client-visible duration written once the response has been flushed.
+    "provider_completion_latency_ms INTEGER",
+    "time_to_first_token_ms INTEGER",
+    "request_latency_ms INTEGER",
     "prompt_cache_supported INTEGER NOT NULL DEFAULT 0",
     "cache_read_tokens_supported INTEGER NOT NULL DEFAULT 0",
     "cache_write_tokens_supported INTEGER NOT NULL DEFAULT 0",
@@ -1712,6 +1855,17 @@ function initializeSchema(database: DatabaseSync): void {
           OR taxonomy_modality_ids_json IS NULL
           OR taxonomy_tool_class_ids_json IS NULL`,
       ),
+  );
+  // Run 104 / R14: rows that already carried a class before source tracking existed were never recorded
+  // as declared, so the one-shot backfill marks them `inferred` rather than letting them read as if the
+  // producer had declared the class. Rows with no class at all stay null (unclassified).
+  runOnceMigration(database, REQUEST_CLASS_SOURCE_BACKFILL_MIGRATION_ID, true, () =>
+    database.exec(
+      `UPDATE runtime_telemetry_records SET request_class_source = 'inferred'
+         WHERE request_class_source IS NULL
+           AND request_class IS NOT NULL
+           AND request_class <> 'unknown'`,
+    ),
   );
 }
 
@@ -1958,6 +2112,8 @@ export function initializeSqliteMemory(
       throw error;
     }
   }
+
+  reconcileStubObservedProfiles(database, nowMs);
 
   database.close();
 
@@ -2665,6 +2821,7 @@ function mapRuntimeTelemetryRecord(row: {
   created_at_ms: number;
   client_request_id: string | null;
   request_class: string | null;
+  request_class_source: string | null;
   source_type: string | null;
   model_id: string | null;
   provider_kind: string | null;
@@ -2710,6 +2867,9 @@ function mapRuntimeTelemetryRecord(row: {
   output_tokens: number;
   total_tokens: number;
   latency_ms: number | null;
+  provider_completion_latency_ms: number | null;
+  time_to_first_token_ms: number | null;
+  request_latency_ms: number | null;
   error_class: string | null;
   status_code: number | null;
   finish_reason: string | null;
@@ -2803,10 +2963,18 @@ function mapRuntimeTelemetryRecord(row: {
     createdAtMs: row.created_at_ms,
     clientRequestId: row.client_request_id,
     requestClass:
+      row.request_class === "live" ||
+      row.request_class === "replay" ||
+      row.request_class === "evaluation" ||
       row.request_class === "benchmark" ||
+      row.request_class === "probe" ||
       row.request_class === "live_request" ||
       row.request_class === "unknown"
         ? row.request_class
+        : null,
+    requestClassSource:
+      row.request_class_source === "declared" || row.request_class_source === "inferred"
+        ? row.request_class_source
         : null,
     sourceType:
       row.source_type === "local" || row.source_type === "remote" ? row.source_type : null,
@@ -2888,6 +3056,9 @@ function mapRuntimeTelemetryRecord(row: {
         : usageTokenTruth === null && row.output_tokens > 0,
     totalTokens: row.total_tokens,
     latencyMs: row.latency_ms,
+    providerCompletionLatencyMs: row.provider_completion_latency_ms,
+    timeToFirstTokenMs: row.time_to_first_token_ms,
+    requestLatencyMs: row.request_latency_ms,
     errorClass: row.error_class,
     statusCode: row.status_code,
     finishReason: row.finish_reason,
@@ -3003,7 +3174,15 @@ function toRuntimeTelemetryRecord(
     routingDiagnostics?.controllerRouting?.acceptedDirectives?.strategy ??
     routingDiagnostics?.difficultyRouting?.strategy ??
     (routingMode ? "balanced" : null);
-  const statusCode = observation.inspection?.request?.responseCapture?.statusCode ?? null;
+  // Run 98 addendum 39: a successful observation must carry its status. The
+  // inspection payload is absent whenever capture is degraded, which left
+  // `status_code` NULL and therefore excluded the row from the success metric
+  // (`error_class IS NULL AND status_code >= 200 AND status_code < 400`).
+  const inspectedStatusCode = observation.inspection?.request?.responseCapture?.statusCode ?? null;
+  // This mapper only handles completed executions (the failure path uses
+  // `toFailureRuntimeTelemetryRecord`), so a missing inspection status still means
+  // the request itself succeeded.
+  const statusCode = inspectedStatusCode ?? 200;
   const errorClass =
     observation.usageEvent.error_class ??
     observation.observedPerformance.sample.error_class ??
@@ -3050,10 +3229,14 @@ function toRuntimeTelemetryRecord(
     createdAtMs: observation.usageEvent.timestamp_ms,
     clientRequestId: observation.clientRequestId ?? null,
     requestClass:
-      observation.observedPerformance.sample.source_type === "benchmark" ||
-      observation.observedPerformance.sample.source_type === "live_request"
-        ? observation.observedPerformance.sample.source_type
-        : "unknown",
+      requestClassFromObservationSample(observation.observedPerformance.sample.source_type) ??
+      "unknown",
+    // The class above is derived from the observation sample, never passed in by the caller.
+    requestClassSource: requestClassFromObservationSample(
+      observation.observedPerformance.sample.source_type,
+    )
+      ? "inferred"
+      : null,
     sourceType: telemetrySnapshot?.sourceType ?? null,
     modelId: observation.usageEvent.model_id ?? null,
     providerKind: observation.usageEvent.provider_kind ?? null,
@@ -3113,6 +3296,11 @@ function toRuntimeTelemetryRecord(
       observation.usageEvent.latency_ms ??
       observation.observedPerformance.sample.latency_ms ??
       null,
+    // Run 98 addendum 40 (L1): the provider breakdown and the client-visible duration.
+    providerCompletionLatencyMs: observation.latencyBreakdown?.providerCompletionMs ?? null,
+    timeToFirstTokenMs: observation.latencyBreakdown?.timeToFirstTokenMs ?? null,
+    // Written by `updateRuntimeTelemetryClientLatency` once the response has been flushed.
+    requestLatencyMs: null,
     errorClass,
     statusCode,
     finishReason: executionTelemetry?.finishReason ?? null,
@@ -3200,6 +3388,8 @@ function runtimeTelemetryInsertValues(
     record.createdAtMs,
     record.clientRequestId,
     record.requestClass,
+    record.requestClassSource ??
+      (record.requestClass === null || record.requestClass === "unknown" ? null : "declared"),
     record.sourceType,
     record.modelId,
     record.providerKind,
@@ -3245,6 +3435,9 @@ function runtimeTelemetryInsertValues(
     record.outputTokens,
     record.totalTokens,
     record.latencyMs,
+    record.providerCompletionLatencyMs,
+    record.timeToFirstTokenMs,
+    record.requestLatencyMs,
     record.errorClass,
     record.statusCode,
     record.finishReason,
@@ -3318,6 +3511,8 @@ function toFailureRuntimeTelemetryRecord(
     createdAtMs,
     clientRequestId: input.clientRequestId ?? null,
     requestClass: input.requestClass ?? "unknown",
+    // The caller supplied the class explicitly; the `unknown` placeholder is not a declaration.
+    requestClassSource: input.requestClass ? "declared" : null,
     sourceType: input.sourceType ?? null,
     modelId: input.modelId ?? null,
     providerKind: input.providerKind ?? null,
@@ -3367,6 +3562,11 @@ function toFailureRuntimeTelemetryRecord(
     outputTokensAvailable: false,
     totalTokens: 0,
     latencyMs: input.latencyMs ?? null,
+    // Run 98 addendum 40 (L1): the failure path records only the provider-header time it measured;
+    // the completion and client-visible durations are written by the callers that can observe them.
+    providerCompletionLatencyMs: null,
+    timeToFirstTokenMs: null,
+    requestLatencyMs: null,
     errorClass: input.errorClass,
     statusCode: input.statusCode,
     finishReason: null,
@@ -3378,11 +3578,11 @@ function toFailureRuntimeTelemetryRecord(
     cacheReadTokensSupported: true,
     cacheWriteTokens: 0,
     cacheWriteTokensSupported: true,
-    streamTextDeltaCount: 0,
+    streamTextDeltaCount: input.streamTextDeltaCount ?? 0,
     streamTextSupported: true,
-    streamToolCallDeltaCount: 0,
+    streamToolCallDeltaCount: input.streamToolCallDeltaCount ?? 0,
     streamToolCallSupported: true,
-    streamToolArgumentDeltaCount: 0,
+    streamToolArgumentDeltaCount: input.streamToolArgumentDeltaCount ?? 0,
     streamToolArgumentSupported: true,
     toolCallCount: 0,
     toolExecutionCount: 0,
@@ -3453,7 +3653,7 @@ function listRuntimeTelemetryRecordsInternal(
   const limitClause = typeof input.limit === "number" ? " LIMIT ?" : "";
   const rows = database
     .prepare(
-      `SELECT request_id, routing_decision_id, endpoint_id, reasoning_effort, effort_source, conversation_id, created_at_ms, client_request_id, request_class, source_type, model_id, provider_kind, provider_family, vendor_id, provider_id, provider_account_id, selected_model_id, endpoint_kind, serving_source, region, lifecycle_state_at_request, health_status_at_request, requested_model_id, difficulty_bucket, routing_mode, requested_role_id, selected_strategy, request_operation, source_client, execution_family, adapter_family, status_family, request_payload_bytes, ingress_payload_bytes, translated_payload_bytes, provider_canonical_payload_bytes, provider_wire_payload_bytes, response_payload_bytes, retry_count, reroute_count, cooldown_decision, idempotency_decision, tool_side_effect_state, tooling_used, cache_state, role_ids_json, eligible_endpoint_ids_json, eligible_model_ids_json, candidate_cost_snapshot_json, selected_pricing_snapshot_json, input_tokens, output_tokens, total_tokens, latency_ms, error_class, status_code, finish_reason, prompt_cache_requested, prompt_cache_supported, prompt_cache_used, cache_read_tokens, cache_read_tokens_supported, cache_write_tokens, cache_write_tokens_supported, stream_text_delta_count, stream_text_supported, stream_tool_call_delta_count, stream_tool_call_supported, stream_tool_argument_delta_count, stream_tool_argument_supported, tool_call_count, tool_execution_count, cost_provenance, actual_cost_usd, estimated_cost_usd, effective_cost_usd, selected_uncached_cost_usd, baseline_max_eligible_cost_usd, routing_cost_savings_usd, cache_cost_savings_usd, total_avoided_cost_usd, cost_calculation_basis, cost_calculation_version, cost_baseline_source, cost_savings_support, sampling_rate, retention_ttl_hours, retain_until_ms, redaction_level, retention_class, structured_inspection_mode, raw_capture_available, structured_inspection_available, taxonomy_group_id, taxonomy_role_id, taxonomy_task_type, taxonomy_task_variant, taxonomy_capability_ids_json, taxonomy_modality_ids_json, taxonomy_tool_class_ids_json, currency, dimensions_json FROM runtime_telemetry_records WHERE ${clauses.join(
+      `SELECT request_id, routing_decision_id, endpoint_id, reasoning_effort, effort_source, conversation_id, created_at_ms, client_request_id, request_class, source_type, model_id, provider_kind, provider_family, vendor_id, provider_id, provider_account_id, selected_model_id, endpoint_kind, serving_source, region, lifecycle_state_at_request, health_status_at_request, requested_model_id, difficulty_bucket, routing_mode, requested_role_id, selected_strategy, request_operation, source_client, execution_family, adapter_family, status_family, request_payload_bytes, ingress_payload_bytes, translated_payload_bytes, provider_canonical_payload_bytes, provider_wire_payload_bytes, response_payload_bytes, retry_count, reroute_count, cooldown_decision, idempotency_decision, tool_side_effect_state, tooling_used, cache_state, role_ids_json, eligible_endpoint_ids_json, eligible_model_ids_json, candidate_cost_snapshot_json, selected_pricing_snapshot_json, input_tokens, output_tokens, total_tokens, latency_ms, provider_completion_latency_ms, time_to_first_token_ms, request_latency_ms, error_class, status_code, finish_reason, prompt_cache_requested, prompt_cache_supported, prompt_cache_used, cache_read_tokens, cache_read_tokens_supported, cache_write_tokens, cache_write_tokens_supported, stream_text_delta_count, stream_text_supported, stream_tool_call_delta_count, stream_tool_call_supported, stream_tool_argument_delta_count, stream_tool_argument_supported, tool_call_count, tool_execution_count, cost_provenance, actual_cost_usd, estimated_cost_usd, effective_cost_usd, selected_uncached_cost_usd, baseline_max_eligible_cost_usd, routing_cost_savings_usd, cache_cost_savings_usd, total_avoided_cost_usd, cost_calculation_basis, cost_calculation_version, cost_baseline_source, cost_savings_support, sampling_rate, retention_ttl_hours, retain_until_ms, redaction_level, retention_class, structured_inspection_mode, raw_capture_available, structured_inspection_available, taxonomy_group_id, taxonomy_role_id, taxonomy_task_type, taxonomy_task_variant, taxonomy_capability_ids_json, taxonomy_modality_ids_json, taxonomy_tool_class_ids_json, currency, dimensions_json FROM runtime_telemetry_records WHERE ${clauses.join(
         " AND ",
       )} ORDER BY created_at_ms DESC, request_id DESC${limitClause}`,
     )
@@ -3467,6 +3667,7 @@ function listRuntimeTelemetryRecordsInternal(
     created_at_ms: number;
     client_request_id: string | null;
     request_class: string | null;
+    request_class_source: string | null;
     source_type: string | null;
     model_id: string | null;
     provider_kind: string | null;
@@ -3512,6 +3713,9 @@ function listRuntimeTelemetryRecordsInternal(
     output_tokens: number;
     total_tokens: number;
     latency_ms: number | null;
+    provider_completion_latency_ms: number | null;
+    time_to_first_token_ms: number | null;
+    request_latency_ms: number | null;
     error_class: string | null;
     status_code: number | null;
     finish_reason: string | null;
@@ -4019,6 +4223,151 @@ export interface ClearObservedBenchmarkDataForEndpointResult {
   readonly clearedSampleCount: number;
 }
 
+/**
+ * Run 98 addendum 43 S3: a profile that cannot answer "how many samples back this measurement, and how
+ * fast were they?" is a stub. The live stage carried `{"measured_at_ms": …}` snapshots for two endpoints
+ * whose samples sat beside them in `observed_performance_samples`, and every consumer read those rows as
+ * "no telemetry" — no sample size, no latency, no failure rate.
+ */
+function isStubShapedObservedProfile(profile: unknown): boolean {
+  if (typeof profile !== "object" || profile === null) {
+    return true;
+  }
+  const sampleSize = (profile as { readonly sample_size?: unknown }).sample_size;
+  return typeof sampleSize !== "number" || !Number.isFinite(sampleSize);
+}
+
+/**
+ * Run 98 addendum 43 S3: rebuild any endpoint whose latest snapshot is still stub-shaped.
+ *
+ * This runs on every initialization rather than as a one-shot migration because the rows it repairs were
+ * written by a build whose caller handed the store a stub profile. The write path now refuses that shape
+ * (see `persistRuntimeObservationBundle`), so this pass is a no-op on a clean store; it stays armed so a
+ * database that predates the guard is healed the first time the new build opens it. The scan reads the
+ * latest row per endpoint, so its cost is bounded by the number of configured endpoints.
+ */
+function reconcileStubObservedProfiles(database: DatabaseSync, nowMs: number): void {
+  const rows = database
+    .prepare(
+      `SELECT snapshot.endpoint_id AS endpoint_id, snapshot.profile_json AS profile_json
+         FROM observed_profile_snapshots AS snapshot
+         JOIN (
+           SELECT endpoint_id, MAX(measured_at_ms) AS newest
+             FROM observed_profile_snapshots
+            GROUP BY endpoint_id
+         ) AS latest
+           ON latest.endpoint_id = snapshot.endpoint_id
+          AND latest.newest = snapshot.measured_at_ms`,
+    )
+    .all() as Array<{ endpoint_id: string; profile_json: string }>;
+  const stubEndpointIds = rows
+    .filter((row) => {
+      try {
+        return isStubShapedObservedProfile(JSON.parse(row.profile_json) as unknown);
+      } catch {
+        return true;
+      }
+    })
+    .map((row) => row.endpoint_id);
+  if (stubEndpointIds.length === 0) {
+    return;
+  }
+  database.exec("BEGIN IMMEDIATE");
+  try {
+    for (const endpointId of stubEndpointIds) {
+      rebuildObservedProfilesForEndpointIfAggregable(database, endpointId, nowMs);
+    }
+    database.exec("COMMIT");
+  } catch (error) {
+    database.exec("ROLLBACK");
+    throw error;
+  }
+}
+
+/**
+ * The identity fields the operational aggregator refuses to mix (`assertStructuredIdentityConsistency`).
+ * A stored sample that never carried a field at all is a different generation from one that carries it,
+ * which is why the live store holds both: 476 of `deepseek-flash-high`'s samples predate
+ * `reasoning_effort`, while the newest ones carry it.
+ */
+function observedSampleIdentity(sample: {
+  readonly endpoint_version?: unknown;
+  readonly model_id?: unknown;
+  readonly reasoning_effort?: unknown;
+  readonly effort_source?: unknown;
+}): string {
+  const present = (field: string, value: unknown) =>
+    Object.prototype.hasOwnProperty.call(sample, field)
+      ? JSON.stringify(value ?? null)
+      : "__absent__";
+  return [
+    JSON.stringify(sample.endpoint_version ?? null),
+    JSON.stringify(sample.model_id ?? null),
+    present("reasoning_effort", sample.reasoning_effort),
+    present("effort_source", sample.effort_source),
+  ].join("|");
+}
+
+/**
+ * Run 98 addendum 43 S3: rebuild an endpoint's snapshot from the samples that share its **current**
+ * identity, and never fail the caller doing it.
+ *
+ * Rebuilding from the endpoint's whole history is not possible: the aggregator rejects a sample set whose
+ * structured identity conflicts, and every long-lived endpoint here mixes an older generation (no
+ * `reasoning_effort` key) with the current one. The profile that describes the endpoint now is the profile
+ * of the samples the newest write belongs to, so the newest sample's identity selects the set. Anything
+ * that still cannot be aggregated (a sample without `endpoint_version`, unparseable JSON) leaves the
+ * endpoint's existing row exactly as it was — a repair pass must never break initialization or a write.
+ */
+function rebuildObservedProfilesForEndpointIfAggregable(
+  database: DatabaseSync,
+  endpointId: string,
+  nowMs: number,
+): boolean {
+  const rows = database
+    .prepare(
+      "SELECT sample_json FROM observed_performance_samples WHERE endpoint_id = ? AND source_type = 'live_request' ORDER BY timestamp_ms ASC, sample_id ASC",
+    )
+    .all(endpointId) as Array<{ sample_json: string }>;
+  const samples: Array<Record<string, unknown>> = [];
+  for (const row of rows) {
+    try {
+      samples.push(JSON.parse(row.sample_json) as Record<string, unknown>);
+    } catch {
+      return false;
+    }
+  }
+  const newest = samples.at(-1);
+  if (!newest) {
+    return false;
+  }
+  const identity = observedSampleIdentity(newest);
+  const scoped = samples.filter((sample) => observedSampleIdentity(sample) === identity);
+  try {
+    const profile = aggregateOperationalPerformanceSamples(
+      scoped as unknown as Parameters<typeof aggregateOperationalPerformanceSamples>[0],
+      { nowMs },
+    );
+    if (!profile) {
+      return false;
+    }
+    database.prepare("DELETE FROM observed_profile_snapshots WHERE endpoint_id=?").run(endpointId);
+    database
+      .prepare(
+        "INSERT OR REPLACE INTO observed_profile_snapshots (snapshot_id, endpoint_id, measured_at_ms, profile_json) VALUES (?, ?, ?, ?)",
+      )
+      .run(
+        `${endpointId}:${profile.measured_at_ms}`,
+        endpointId,
+        profile.measured_at_ms,
+        JSON.stringify(profile),
+      );
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function rebuildObservedProfilesForEndpoint(
   database: DatabaseSync,
   endpointId: string,
@@ -4324,6 +4673,47 @@ export function persistObservedBenchmarkSample(input: PersistObservedBenchmarkSa
   }
 }
 
+export interface UpdateRuntimeTelemetryClientLatencyInput {
+  readonly databasePath: string;
+  readonly channel: unknown;
+  readonly requestId: string;
+  readonly requestLatencyMs: number;
+  readonly timeToFirstTokenMs?: number | null;
+}
+
+/**
+ * Run 98 addendum 40 (L1): the duration the client actually waited for is only known after the
+ * runtime has flushed the response, which is after the observation row was persisted. Record it as a
+ * bounded follow-up update so the provider turn itself never pays for the measurement.
+ *
+ * Returns `true` when a telemetry row was updated, `false` when the request has no row (for example a
+ * request that never reached routing), so callers can record the miss instead of assuming success.
+ */
+export function updateRuntimeTelemetryClientLatency(
+  input: UpdateRuntimeTelemetryClientLatencyInput,
+): boolean {
+  assertSqliteStorageWriteAllowed(input.databasePath, input.channel, ["sqlite_telemetry"]);
+  const requestLatencyMs = Math.max(0, Math.round(input.requestLatencyMs));
+  const timeToFirstTokenMs =
+    typeof input.timeToFirstTokenMs === "number" && Number.isFinite(input.timeToFirstTokenMs)
+      ? Math.max(0, Math.round(input.timeToFirstTokenMs))
+      : null;
+  const database = openSqliteDatabase(input.databasePath);
+  try {
+    const result = database
+      .prepare(
+        `UPDATE runtime_telemetry_records
+         SET request_latency_ms = ?,
+             time_to_first_token_ms = COALESCE(?, time_to_first_token_ms)
+         WHERE request_id = ?`,
+      )
+      .run(requestLatencyMs, timeToFirstTokenMs, input.requestId);
+    return Number(result.changes ?? 0) > 0;
+  } finally {
+    database.close();
+  }
+}
+
 export function persistRuntimeObservationBundle(input: PersistRuntimeObservationBundleInput): void {
   assertSqliteStorageWriteAllowed(input.databasePath, input.channel, [
     "sqlite_migration_journal",
@@ -4383,8 +4773,17 @@ export function persistRuntimeObservationBundle(input: PersistRuntimeObservation
       }
     });
   }
+  // Run 98 addendum 40 (L2): a request whose route capture was deferred (or whose operations boundary
+  // was unavailable) has no graph artifact by design. The caller already reduced it to the bounded
+  // degraded stub, so the graph-migration guard must not refuse it — refusing dropped the observation
+  // row and its telemetry, which is how a deferred capture turned into a lost request. Observations
+  // that claim a full capture still require their artifact below.
+  const isDegradedCaptureObservation = isDegradedCaptureObservationRecord(
+    observation as unknown as Readonly<Record<string, unknown>>,
+  );
   if (
     !artifactRef &&
+    !isDegradedCaptureObservation &&
     [
       "shadow_mirror",
       "parity_verified",
@@ -4463,11 +4862,7 @@ export function persistRuntimeObservationBundle(input: PersistRuntimeObservation
               ? observation.taxonomyDimensions.taxonomy_task_type
               : null,
             observation.clientRequestId ?? null,
-            observation.observedPerformance?.sample?.source_type === "benchmark"
-              ? "benchmark"
-              : observation.observedPerformance?.sample?.source_type === "live_request"
-                ? "live_request"
-                : null,
+            requestClassFromObservationSample(observation.observedPerformance?.sample?.source_type),
             resolveRuntimeObservationStoragePayload({
               databasePath: input.databasePath,
               observation: observation as unknown as Readonly<Record<string, unknown>>,
@@ -4541,19 +4936,33 @@ export function persistRuntimeObservationBundle(input: PersistRuntimeObservation
           endpointId: observation.endpointId,
           nowMs: historyNowMs,
         });
-        database
-          .prepare("DELETE FROM observed_profile_snapshots WHERE endpoint_id=?")
-          .run(observation.endpointId);
-        database
-          .prepare(
-            "INSERT OR REPLACE INTO observed_profile_snapshots (snapshot_id, endpoint_id, measured_at_ms, profile_json) VALUES (?, ?, ?, ?)",
-          )
-          .run(
-            `${observation.endpointId}:${observation.observedPerformance.profile.measured_at_ms}`,
+        /**
+         * Run 98 addendum 43 S3: this is where the caller's profile is persisted, and a caller that reduced
+         * it to a stub used to overwrite the endpoint's real measurement — the live stage still carries two
+         * such rows. A stub shape is refused here and the snapshot is rebuilt from the samples this write
+         * just retained, so the store can never hold a profile that answers less than its own samples.
+         */
+        if (isStubShapedObservedProfile(observation.observedPerformance.profile)) {
+          rebuildObservedProfilesForEndpointIfAggregable(
+            database,
             observation.endpointId,
-            observation.observedPerformance.profile.measured_at_ms,
-            JSON.stringify(observation.observedPerformance.profile),
+            historyNowMs,
           );
+        } else {
+          database
+            .prepare("DELETE FROM observed_profile_snapshots WHERE endpoint_id=?")
+            .run(observation.endpointId);
+          database
+            .prepare(
+              "INSERT OR REPLACE INTO observed_profile_snapshots (snapshot_id, endpoint_id, measured_at_ms, profile_json) VALUES (?, ?, ?, ?)",
+            )
+            .run(
+              `${observation.endpointId}:${observation.observedPerformance.profile.measured_at_ms}`,
+              observation.endpointId,
+              observation.observedPerformance.profile.measured_at_ms,
+              JSON.stringify(observation.observedPerformance.profile),
+            );
+        }
         database
           .prepare(
             `INSERT OR REPLACE INTO runtime_telemetry_records (${RUNTIME_TELEMETRY_INSERT_COLUMNS.join(", ")}) VALUES (${RUNTIME_TELEMETRY_INSERT_COLUMNS.map(() => "?").join(", ")})`,
@@ -4590,6 +4999,18 @@ export function persistRuntimeObservationBundle(input: PersistRuntimeObservation
 export interface PersistRuntimeTelemetryFailureInput {
   readonly databasePath: string;
   readonly requestId: string;
+  /**
+   * Run 101 addendum 23: how much of the answer had already been streamed when this attempt failed.
+   *
+   * Measured on `:3457` (2026-09-27 ~20:2x): a failure row read `streamTextDeltaCount: 0` even though the response
+   * had delivered 789 chunks - the failure builder wrote a literal zero, so the value was never measured. That
+   * misreading sent two repair cycles after a pre-content bug that did not exist. The counters are optional so a
+   * caller that cannot observe them still records zero, and a caller that can (the host bridge's execution loop)
+   * records what actually happened.
+   */
+  readonly streamTextDeltaCount?: number;
+  readonly streamToolCallDeltaCount?: number;
+  readonly streamToolArgumentDeltaCount?: number;
   readonly routingDecisionId?: string;
   readonly endpointId?: string;
   readonly reasoningEffort?: string | null;
@@ -4602,7 +5023,7 @@ export interface PersistRuntimeTelemetryFailureInput {
   readonly errorClass: string;
   readonly latencyMs?: number;
   readonly clientRequestId?: string | null;
-  readonly requestClass?: "benchmark" | "live_request" | "unknown";
+  readonly requestClass?: RuntimeTelemetryTrafficClass;
   readonly sourceType?: "local" | "remote" | null;
   readonly providerKind?: string | null;
   readonly providerFamily?: string | null;
@@ -4680,7 +5101,10 @@ export function persistRuntimeTelemetryFailure(input: PersistRuntimeTelemetryFai
   let artifactRef = input.artifactRef;
   let createdArtifact: import("./legacy-migration.js").LegacyArtifactWriteResult | undefined;
   if (input.observation && input.graphStore && !artifactRef) {
-    const content = JSON.stringify(input.observation);
+    const content = JSON.stringify({
+      ...input.observation,
+      ...(input.dimensions ? { telemetryDimensions: input.dimensions } : {}),
+    });
     const contentHash = createHash("sha256").update(content).digest("hex");
     createdArtifact = input.graphStore.write({
       scopeId: input.graphStore.scopeId,
@@ -4714,6 +5138,7 @@ export function persistRuntimeTelemetryFailure(input: PersistRuntimeTelemetryFai
         // Failure rows are classification stubs. Diagnostics and inspection captures may
         // contain provider errors or raw response bodies, so they remain graph/artifact
         // content and are never copied into this SQLite row.
+        boundRuntimeTelemetryFailureStub(stub);
         const payload = JSON.stringify(stub);
         if (Buffer.byteLength(payload, "utf8") > LEGACY_INLINE_CAP_BYTES) {
           throw new Error(
@@ -4751,7 +5176,12 @@ export function persistRuntimeTelemetryFailure(input: PersistRuntimeTelemetryFai
         .prepare(
           `INSERT OR REPLACE INTO runtime_telemetry_records (${RUNTIME_TELEMETRY_INSERT_COLUMNS.join(", ")}) VALUES (${RUNTIME_TELEMETRY_INSERT_COLUMNS.map(() => "?").join(", ")})`,
         )
-        .run(...runtimeTelemetryInsertValues(telemetryRecord));
+        .run(
+          ...runtimeTelemetryInsertValues({
+            ...telemetryRecord,
+            dimensions: projectRuntimeTelemetryFailureDimensions(input.dimensions, artifactRef),
+          }),
+        );
     });
   } catch (error) {
     if (createdArtifact) {
@@ -5117,7 +5547,7 @@ export function readLiveTaskTelemetryScoresByEndpointIds(input: {
         MAX(created_at_ms) AS last_observed_at_ms
       FROM runtime_telemetry_records
       WHERE endpoint_id IN (${placeholders})
-        AND request_class = 'live_request'
+        AND request_class IN ('live', 'live_request')
         AND taxonomy_task_type IS NOT NULL
         AND taxonomy_task_type <> ''
         AND created_at_ms >= ?
@@ -5160,6 +5590,244 @@ export function readLiveTaskTelemetryScoresByEndpointIds(input: {
     };
   }
   return result;
+}
+
+/**
+ * Run 98 addendum 40 (L5): measured provider latency per endpoint and prompt-size bucket.
+ *
+ * Buckets are `(-inf, b0], (b0, b1], …` by input tokens; the final bucket is open-ended and is reported
+ * with the largest configured bound. Buckets with fewer than `minimumSampleCount` observations are
+ * withheld entirely rather than reported thin, so a selection input can never rest on one sample.
+ */
+export interface RuntimeEndpointLatencyBucket {
+  readonly endpointId: string;
+  readonly bucketUpperBoundTokens: number;
+  readonly sampleCount: number;
+  readonly p50LatencyMs: number;
+  readonly p95LatencyMs: number;
+}
+
+export function readEndpointLatencyBuckets(input: {
+  readonly databasePath: string;
+  readonly endpointIds: readonly string[];
+  readonly windowStartMs: number;
+  readonly windowEndMs: number;
+  readonly tokenBucketUpperBounds: readonly number[];
+  readonly minimumSampleCount: number;
+}): readonly RuntimeEndpointLatencyBucket[] {
+  if (input.endpointIds.length === 0 || input.tokenBucketUpperBounds.length === 0) return [];
+  if (
+    !Number.isSafeInteger(input.windowStartMs) ||
+    !Number.isSafeInteger(input.windowEndMs) ||
+    input.windowStartMs < 0 ||
+    input.windowEndMs < input.windowStartMs ||
+    input.windowEndMs - input.windowStartMs > 30 * 24 * 60 * 60 * 1_000
+  ) {
+    throw new Error("Endpoint latency buckets require a valid bounded window of at most 30 days.");
+  }
+  if (!Number.isSafeInteger(input.minimumSampleCount) || input.minimumSampleCount < 1) {
+    throw new Error("Endpoint latency buckets require a positive minimum sample count.");
+  }
+  const upperBounds = [...input.tokenBucketUpperBounds];
+  for (const bound of upperBounds) {
+    if (!Number.isSafeInteger(bound) || bound <= 0) {
+      throw new Error("Endpoint latency bucket bounds must be positive integers.");
+    }
+  }
+  upperBounds.sort((left, right) => left - right);
+
+  const endpointIds = [...new Set(input.endpointIds)];
+  const placeholders = endpointIds.map(() => "?").join(", ");
+  const database = openSqliteDatabase(input.databasePath);
+  const rows = database
+    .prepare(
+      `SELECT endpoint_id, latency_ms, input_tokens
+       FROM runtime_telemetry_records
+       WHERE endpoint_id IN (${placeholders})
+         AND request_class IN ('live', 'live_request')
+         AND error_class IS NULL
+         AND status_code IS NOT NULL
+         AND status_code >= 200 AND status_code < 400
+         AND latency_ms IS NOT NULL
+         AND created_at_ms >= ?
+         AND created_at_ms <= ?`,
+    )
+    .all(...endpointIds, input.windowStartMs, input.windowEndMs) as Array<{
+    endpoint_id: string;
+    latency_ms: number;
+    input_tokens: number | null;
+  }>;
+  database.close();
+
+  const grouped = new Map<string, number[]>();
+  for (const row of rows) {
+    const tokens = typeof row.input_tokens === "number" ? Math.max(0, row.input_tokens) : 0;
+    const bucketIndex = upperBounds.findIndex((bound) => tokens <= bound);
+    // `upperBounds.length + 1` buckets: the final one is open-ended (tokens above the largest bound).
+    const resolvedIndex = bucketIndex === -1 ? upperBounds.length : bucketIndex;
+    const key = `${row.endpoint_id}\u0000${resolvedIndex}`;
+    const values = grouped.get(key);
+    if (values) values.push(row.latency_ms);
+    else grouped.set(key, [row.latency_ms]);
+  }
+
+  const result: RuntimeEndpointLatencyBucket[] = [];
+  for (const endpointId of endpointIds) {
+    for (let index = 0; index <= upperBounds.length; index += 1) {
+      const values = grouped.get(`${endpointId}\u0000${index}`);
+      if (!values || values.length < input.minimumSampleCount) continue;
+      values.sort((left, right) => left - right);
+      // The last bucket is open-ended (tokens above the largest configured bound), so it has no finite upper
+      // bound; an empty bound list leaves every bucket open-ended.
+      const lastUpperBound =
+        upperBounds.length > 0 ? upperBounds[upperBounds.length - 1] : Number.POSITIVE_INFINITY;
+      result.push({
+        endpointId,
+        bucketUpperBoundTokens: upperBounds[index] ?? lastUpperBound,
+        sampleCount: values.length,
+        p50LatencyMs: telemetryPercentile(values, 0.5),
+        p95LatencyMs: telemetryPercentile(values, 0.95),
+      });
+    }
+  }
+  return result;
+}
+
+function telemetryPercentile(sortedValues: readonly number[], quantile: number): number {
+  if (sortedValues.length === 0) {
+    throw new Error("Percentile requires at least one value.");
+  }
+  const index = Math.max(0, Math.ceil(quantile * sortedValues.length) - 1);
+  return sortedValues[Math.min(index, sortedValues.length - 1)] ?? 0;
+}
+
+/**
+ * Run 98 addendum 43 S4: how long a sample-backed sweep may go quiet before it is called stalled. The live
+ * stage's three sweeps stopped ~20 h ago, and the 12-case quick suite they run finishes in minutes.
+ */
+export const BENCHMARK_SAMPLE_RUN_STALLED_AFTER_MS = 6 * 60 * 60 * 1_000;
+
+export interface BenchmarkSampleRunEndpointCount {
+  readonly endpointId: string;
+  readonly sampleCount: number;
+  readonly lastSampleAtMs: number;
+}
+
+export interface BenchmarkSampleRunState {
+  readonly runId: string;
+  /** `benchmark_mode` as recorded on the samples, or null when they do not carry one. */
+  readonly mode: string | null;
+  readonly sampleCount: number;
+  readonly endpointCounts: readonly BenchmarkSampleRunEndpointCount[];
+  readonly firstSampleAtMs: number;
+  readonly lastSampleAtMs: number;
+  /**
+   * `completed` when an artifact-backed run of this id exists, `incomplete` while the newest sample is
+   * inside the stall window, `stalled` once it is not — so a sweep that stopped cannot read as finished.
+   */
+  readonly state: "completed" | "incomplete" | "stalled";
+  readonly stalledAfterMs: number;
+}
+
+/**
+ * Run 98 addendum 43 S4: what the *samples* say about each benchmark run.
+ *
+ * The benchmark runs API is artifact-backed, so a sweep whose result artifact was never written is invisible
+ * to it even though its samples are durable and are what the model pool's quality axis reads. This read
+ * groups `observed_performance_samples where source_type='benchmark'` by `benchmark_run_id` and reports the
+ * per-endpoint counts beside the run's window and derived state. The scan is scoped by `source_type` and the
+ * sample table is already bounded by the performance-history policy, so the work is proportional to the
+ * retained benchmark history rather than the whole store.
+ */
+export function readBenchmarkSampleRuns(input: {
+  readonly databasePath: string;
+  readonly completedRunIds?: readonly string[];
+  readonly nowMs?: number;
+  readonly stalledAfterMs?: number;
+}): readonly BenchmarkSampleRunState[] {
+  const database = openSqliteDatabase(input.databasePath);
+  let rows: Array<{
+    run_id: string;
+    endpoint_id: string;
+    mode: string | null;
+    timestamp_ms: number;
+  }>;
+  try {
+    rows = database
+      .prepare(
+        `SELECT json_extract(sample_json, '$.benchmark_run_id') AS run_id,
+                endpoint_id AS endpoint_id,
+                json_extract(sample_json, '$.benchmark_mode') AS mode,
+                timestamp_ms AS timestamp_ms
+           FROM observed_performance_samples
+          WHERE source_type = 'benchmark'
+            AND json_extract(sample_json, '$.benchmark_run_id') IS NOT NULL
+          ORDER BY run_id ASC, timestamp_ms ASC, sample_id ASC`,
+      )
+      .all() as Array<{
+      run_id: string;
+      endpoint_id: string;
+      mode: string | null;
+      timestamp_ms: number;
+    }>;
+  } finally {
+    database.close();
+  }
+
+  const completedRunIds = new Set(input.completedRunIds ?? []);
+  const nowMs = input.nowMs ?? Date.now();
+  const stalledAfterMs = input.stalledAfterMs ?? BENCHMARK_SAMPLE_RUN_STALLED_AFTER_MS;
+  const byRunId = new Map<
+    string,
+    {
+      mode: string | null;
+      sampleCount: number;
+      firstSampleAtMs: number;
+      lastSampleAtMs: number;
+      endpointCounts: Map<string, BenchmarkSampleRunEndpointCount>;
+    }
+  >();
+  for (const row of rows) {
+    const run = byRunId.get(row.run_id) ?? {
+      mode: row.mode ?? null,
+      sampleCount: 0,
+      firstSampleAtMs: row.timestamp_ms,
+      lastSampleAtMs: row.timestamp_ms,
+      endpointCounts: new Map<string, BenchmarkSampleRunEndpointCount>(),
+    };
+    run.sampleCount += 1;
+    run.firstSampleAtMs = Math.min(run.firstSampleAtMs, row.timestamp_ms);
+    run.lastSampleAtMs = Math.max(run.lastSampleAtMs, row.timestamp_ms);
+    if (run.mode === null && row.mode !== null) {
+      run.mode = row.mode;
+    }
+    const endpoint = run.endpointCounts.get(row.endpoint_id);
+    run.endpointCounts.set(row.endpoint_id, {
+      endpointId: row.endpoint_id,
+      sampleCount: (endpoint?.sampleCount ?? 0) + 1,
+      lastSampleAtMs: Math.max(endpoint?.lastSampleAtMs ?? row.timestamp_ms, row.timestamp_ms),
+    });
+    byRunId.set(row.run_id, run);
+  }
+
+  return [...byRunId]
+    .map(([runId, run]) => ({
+      runId,
+      mode: run.mode,
+      sampleCount: run.sampleCount,
+      endpointCounts: [...run.endpointCounts.values()].sort((left, right) =>
+        left.endpointId.localeCompare(right.endpointId, "en"),
+      ),
+      firstSampleAtMs: run.firstSampleAtMs,
+      lastSampleAtMs: run.lastSampleAtMs,
+      state: completedRunIds.has(runId)
+        ? ("completed" as const)
+        : nowMs - run.lastSampleAtMs > stalledAfterMs
+          ? ("stalled" as const)
+          : ("incomplete" as const),
+      stalledAfterMs,
+    }))
+    .sort((left, right) => right.lastSampleAtMs - left.lastSampleAtMs);
 }
 
 export function readLatestObservedProfile(
@@ -5397,6 +6065,8 @@ type RuntimeTelemetryAggregateRow = {
   total_effective_cost_usd: number | null;
   latency_count: number;
   total_latency_ms: number | null;
+  request_latency_count: number;
+  total_request_latency_ms: number | null;
   last_seen_at_ms: number | null;
 };
 
@@ -5419,6 +6089,7 @@ function telemetryWindow(input: RuntimeTelemetryAggregateQueryInput): {
 function telemetryWindowWhere(
   input: RuntimeTelemetryAggregateQueryInput,
   sourceType?: "local" | "remote",
+  trafficClasses: readonly RuntimeTelemetryTrafficClass[] | undefined = input.trafficClasses,
 ): { readonly where: string; readonly parameters: readonly (number | string)[] } {
   const window = telemetryWindow(input);
   const clauses = ["created_at_ms < ?"];
@@ -5431,7 +6102,69 @@ function telemetryWindowWhere(
     clauses.push("source_type = ?");
     parameters.push(sourceType);
   }
+  if (trafficClasses && trafficClasses.length > 0) {
+    const filter = telemetryTrafficClassFilter(trafficClasses);
+    const placeholders = filter.values.map(() => "?").join(", ");
+    clauses.push(
+      filter.includeNull
+        ? `(request_class IN (${placeholders}) OR request_class IS NULL)`
+        : `request_class IN (${placeholders})`,
+    );
+    parameters.push(...filter.values);
+  }
   return { where: clauses.join(" AND "), parameters };
+}
+
+/**
+ * Run 104 / R14: the same window and source scope without the class predicate, used to count what the
+ * live-only default left out.
+ */
+function telemetryWindowRangeWhere(
+  input: RuntimeTelemetryAggregateQueryInput,
+  sourceType?: "local" | "remote",
+): { readonly where: string; readonly parameters: readonly (number | string)[] } {
+  return telemetryWindowWhere(input, sourceType, []);
+}
+
+function readExcludedTelemetryClassCounts(
+  database: DatabaseSync,
+  input: RuntimeTelemetryAggregateQueryInput,
+  sourceType: "local" | "remote" | undefined,
+  trafficClasses: readonly RuntimeTelemetryTrafficClass[],
+): { readonly total: number; readonly counts: readonly RuntimeTelemetryExcludedClassCount[] } {
+  if (trafficClasses.length === 0) {
+    return { total: 0, counts: [] };
+  }
+  const filter = telemetryTrafficClassFilter(trafficClasses);
+  const included = new Set(filter.values);
+  const { where, parameters } = telemetryWindowRangeWhere(input, sourceType);
+  const rows = database
+    .prepare(
+      `SELECT COALESCE(request_class, 'unclassified') AS request_class, COUNT(*) AS request_count
+       FROM runtime_telemetry_records
+       WHERE ${where}
+       GROUP BY request_class`,
+    )
+    .all(...parameters) as Array<{ request_class: string; request_count: number }>;
+  const counts = rows
+    .filter(
+      (row) =>
+        !included.has(row.request_class) &&
+        !(row.request_class === "unclassified" && filter.includeNull),
+    )
+    .map((row) => ({
+      requestClass: row.request_class,
+      requestCount: Number(row.request_count),
+    }))
+    .sort(
+      (left, right) =>
+        right.requestCount - left.requestCount ||
+        left.requestClass.localeCompare(right.requestClass, "en"),
+    );
+  return {
+    total: counts.reduce((sum, row) => sum + row.requestCount, 0),
+    counts,
+  };
 }
 
 function readRuntimeTelemetryAggregateFromDatabase(
@@ -5439,7 +6172,10 @@ function readRuntimeTelemetryAggregateFromDatabase(
   input: RuntimeTelemetryAggregateQueryInput,
   sourceType?: "local" | "remote",
 ): RuntimeTelemetrySummary {
-  const { where, parameters } = telemetryWindowWhere(input, sourceType);
+  // Run 104 / R14: operator-facing aggregates are live-only by default. The predicate is applied here,
+  // at the storage boundary, so no surface can read a mixed denominator by accident.
+  const effectiveTrafficClasses = input.trafficClasses ?? DEFAULT_LIVE_TRAFFIC_CLASSES;
+  const { where, parameters } = telemetryWindowWhere(input, sourceType, effectiveTrafficClasses);
   const aggregate = database
     .prepare(
       `SELECT
@@ -5455,6 +6191,8 @@ function readRuntimeTelemetryAggregateFromDatabase(
          COALESCE(SUM(effective_cost_usd), 0) AS total_effective_cost_usd,
          COUNT(latency_ms) AS latency_count,
          COALESCE(SUM(latency_ms), 0) AS total_latency_ms,
+         COUNT(request_latency_ms) AS request_latency_count,
+         COALESCE(SUM(request_latency_ms), 0) AS total_request_latency_ms,
          MAX(created_at_ms) AS last_seen_at_ms
        FROM runtime_telemetry_records
        WHERE ${where}`,
@@ -5469,8 +6207,25 @@ function readRuntimeTelemetryAggregateFromDatabase(
     )
     .all(...parameters) as Array<{ latency_ms: number }>;
   const latencyValues = latencyRows.map((row) => row.latency_ms);
+  const requestLatencyRows = database
+    .prepare(
+      `SELECT request_latency_ms
+       FROM runtime_telemetry_records
+       WHERE ${where} AND request_latency_ms IS NOT NULL
+       ORDER BY request_latency_ms ASC`,
+    )
+    .all(...parameters) as Array<{ request_latency_ms: number }>;
+  const requestLatencyValues = requestLatencyRows.map((row) => row.request_latency_ms);
+  const excluded = readExcludedTelemetryClassCounts(
+    database,
+    input,
+    sourceType,
+    effectiveTrafficClasses,
+  );
   const latencyCount = Number(aggregate.latency_count ?? 0);
   const totalLatency = Number(aggregate.total_latency_ms ?? 0);
+  const requestLatencyCount = Number(aggregate.request_latency_count ?? 0);
+  const totalRequestLatency = Number(aggregate.total_request_latency_ms ?? 0);
   return {
     requestCount: Number(aggregate.request_count ?? 0),
     successCount: Number(aggregate.success_count ?? 0),
@@ -5484,10 +6239,16 @@ function readRuntimeTelemetryAggregateFromDatabase(
     totalEffectiveCostUsd: roundMetric(Number(aggregate.total_effective_cost_usd ?? 0)),
     averageLatencyMs: latencyCount > 0 ? Math.round(totalLatency / latencyCount) : null,
     p95LatencyMs: percentile95(latencyValues),
+    averageRequestLatencyMs:
+      requestLatencyCount > 0 ? Math.round(totalRequestLatency / requestLatencyCount) : null,
+    p95RequestLatencyMs: percentile95(requestLatencyValues),
+    requestLatencySampleCount: requestLatencyCount,
     lastSeenAtMs:
       aggregate.last_seen_at_ms === null || aggregate.last_seen_at_ms === undefined
         ? null
         : Number(aggregate.last_seen_at_ms),
+    excludedRequestCount: excluded.total,
+    excludedByClass: excluded.counts,
   };
 }
 
@@ -5525,7 +6286,7 @@ export function readRuntimeTelemetryRecord(
 }
 
 export function readRuntimeTelemetrySummary(
-  input: RuntimeTelemetryQueryInput,
+  input: RuntimeTelemetryAggregateQueryInput,
 ): RuntimeTelemetrySummary {
   const database = openSqliteDatabase(input.databasePath);
   // Aggregates are compact SQLite queries, never a rich-record page. The

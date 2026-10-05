@@ -1,0 +1,11 @@
+Run 96 R27 provider-attempt propagation owning-surface receipt
+repository=public
+current_paired_head=1d5732819480cf22587570bf8c60e02efcdbfb3e
+runtime_command=npm test (role-model-router/packages/runtime-observability)
+runtime_result=PASS_OWNING; test_files=5; tests=11
+sqlite_command=npx vitest run test/provider-attempt-ids.test.ts test/legacy-migration.test.ts test/run96-migration-inventory.test.ts test/index.test.ts (role-model-router/packages/sqlite-memory)
+sqlite_result=PASS_OWNING; test_files=4; tests=62
+external_logs=E:\role-model-temp\run96-r27-provider-attempt-ids-runtime-owning-green.log; E:\role-model-temp\run96-r27-provider-attempt-ids-sqlite-owning-green.log
+verification_disposition=source-only
+phase3_status=DRAFT
+phase5_status=PENDING

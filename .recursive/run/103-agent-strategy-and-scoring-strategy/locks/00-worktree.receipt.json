@@ -1,0 +1,11 @@
+{
+  "artifact": "00-worktree.md",
+  "artifact_hash": "408d89bf4d36b967873bdbca4d02138c08285be8030743ace88f5255b5db4bda",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\103-agent-strategy-and-scoring-strategy\\.recursive\\run\\103-agent-strategy-and-scoring-strategy\\00-worktree.md",
+  "locked_at": "2026-09-30T02:56:41Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "7e1cb6e0b39731d430dc4ff207bf873c53a89e186877c4f251f5d897dd9f4d8f"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "72fc2f585a3848895eef3244250724ee4ed76b62da74b9dff2c7eff17ff1f291"
+}

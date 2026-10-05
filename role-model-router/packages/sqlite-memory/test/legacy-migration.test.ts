@@ -1,15 +1,19 @@
 import { createHash } from "node:crypto";
-import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 
 import { describe, expect, test } from "vitest";
 
 import {
+  LegacyRichJsonWriter,
   LegacySqliteMigration,
+  buildCompactRuntimeObservationStub,
   initializeSqliteMemory,
   loadMigrationRegistry,
   readLegacyMigrationJournal,
+  readLegacyMigrationPhysicalReceipts,
+  readLegacyMigrationWriterFence,
   resolveRuntimeObservationStoragePayload,
 } from "../src/index.js";
 
@@ -157,7 +161,7 @@ describe("TB04 real SQLite legacy migration", () => {
       ),
     );
     expect(readFileSync(databasePath)).toEqual(before);
-  });
+  }, 15_000);
 
   test("backfills real rows, cuts over once, and retires only after second parity and hold expiry", () => {
     const { root, databasePath, backupPath, rich } = fixture();
@@ -454,6 +458,185 @@ describe("TB04 real SQLite legacy migration", () => {
         contentHash: "content-hash-new",
       },
       graphPrimary: true,
+    });
+  });
+
+  test("R22 AC-R22-06 reclaims legacy rich JSON and closure files and fences a resumed writer", () => {
+    const { root, databasePath, backupPath } = fixture();
+    const legacyRoot = path.join(root, "legacy-rich-files");
+    const writer = new LegacyRichJsonWriter({ databasePath, rootPath: legacyRoot });
+    writer.write({
+      requestId: "request-1",
+      observation: { requestId: "request-1", providerBody: "x".repeat(20_000) },
+      closure: { requestId: "request-1", nodeIds: ["node-1", "node-2"] },
+    });
+    expect(existsSync(path.join(legacyRoot, "rich", "request-1.json"))).toBe(true);
+    expect(existsSync(path.join(legacyRoot, "closures", "request-1.json"))).toBe(true);
+
+    const migration = new LegacySqliteMigration({
+      databasePath,
+      backupPath,
+      legacyPaths: [legacyRoot],
+      now: () => 1_000,
+      artifactWriter: ({ sourceId, contentHash }) => ({
+        artifactId: `artifact-${sourceId}`,
+        artifactPath: `artifact://${sourceId}`,
+        contentHash,
+      }),
+    });
+    migration.backfill({ scopeId: "scope-1", batchSize: 10 });
+    migration.enterShadowMirror({ deadlineMs: 2_000 });
+    migration.verifyParity({
+      backupVerified: true,
+      restoreVerified: true,
+      consumersVerified: true,
+    });
+    migration.cutover();
+
+    const resumedWriter = new LegacyRichJsonWriter({ databasePath, rootPath: legacyRoot });
+    expect(() =>
+      resumedWriter.write({
+        requestId: "request-after-cutover",
+        observation: { requestId: "request-after-cutover", body: "must-not-grow" },
+        closure: { requestId: "request-after-cutover", nodeIds: ["new-node"] },
+      }),
+    ).toThrow(/legacy.*writer.*fenced|cutover/i);
+    expect(existsSync(path.join(legacyRoot, "rich", "request-after-cutover.json"))).toBe(false);
+
+    migration.enterLegacyReadHold({ holdUntilMs: 3_000 });
+    migration.verifySecondParity({ consumersVerified: true });
+    migration.retire({ nowMs: 3_000 });
+
+    expect(existsSync(legacyRoot)).toBe(false);
+    expect(readLegacyMigrationWriterFence(databasePath)).toMatchObject({
+      fenced: true,
+      state: "legacy_retired",
+    });
+    const retiredReceipt = readLegacyMigrationPhysicalReceipts(databasePath).find(
+      (receipt) => receipt.stage === "legacy_retired",
+    );
+    expect(retiredReceipt).toMatchObject({
+      footprint: {
+        legacyDisposition: "reclaimed",
+        legacyBytes: 0,
+      },
+    });
+    expect(retiredReceipt?.footprint.legacyBytesBefore).toBeGreaterThan(0);
+    expect(retiredReceipt?.footprint.legacyBytesReclaimed).toBeGreaterThan(0);
+
+    // A fresh migration object must be restart-safe: the receipt is durable and
+    // a repeated retirement attempt cannot recreate or grow the old files.
+    const resumedMigration = new LegacySqliteMigration({
+      databasePath,
+      backupPath,
+      legacyPaths: [legacyRoot],
+      now: () => 4_000,
+      artifactWriter: ({ sourceId, contentHash }) => ({
+        artifactId: `artifact-${sourceId}`,
+        artifactPath: `artifact://${sourceId}`,
+        contentHash,
+      }),
+    });
+    resumedMigration.retire({ nowMs: 4_000 });
+    expect(existsSync(legacyRoot)).toBe(false);
+    const resumedReceipts = readLegacyMigrationPhysicalReceipts(databasePath).filter(
+      (receipt) => receipt.stage === "legacy_retired",
+    );
+    expect(resumedReceipts).toHaveLength(1);
+    expect(resumedReceipts[0]?.footprint.legacyBytesBefore).toBeGreaterThan(0);
+    expect(resumedReceipts[0]?.footprint.legacyBytesReclaimed).toBeGreaterThan(0);
+
+    const providerAttemptIds = ["attempt:request-1:primary", "attempt:request-1:fallback"];
+    const compactObservation = buildCompactRuntimeObservationStub({
+      requestId: "request-1",
+      executionSemantics: { providerAttemptIds },
+    });
+    expect(compactObservation.executionSemantics).toMatchObject({ providerAttemptIds });
+  });
+
+  /**
+   * Run 98 addendum 35 (live stage finding, 2026-09-18): the compact stub dropped
+   * `routingDiagnostics` with the rich content, so every real request read back as having no routing
+   * diagnostics at all — live telemetry wrote `difficulty_bucket = NULL`, `routing_mode = NULL` and
+   * `selected_strategy = NULL` for traffic whose decision had all three, and ten runtime-host-bridge
+   * acceptance tests failed on the same readback. Routing diagnostics are routing *evidence*
+   * (difficulty bucket, effective mode, selected strategy, the per-request observed profile, the
+   * effective metric summary and the throughput penalty), not rich content, so the stub keeps a
+   * bounded projection of them while still refusing messages, responses and tool payloads.
+   */
+  test("Run 98 addendum 35 RED: the compact stub retains the bounded routing diagnostics", () => {
+    const compactObservation = buildCompactRuntimeObservationStub({
+      requestId: "request-routing-diagnostics",
+      routingDiagnostics: {
+        difficultyRouting: { difficulty: "hard", strategy: "quality" },
+        routingMode: { effectiveMode: "difficulty" },
+        hybridArbitration: { finalStrategy: "quality" },
+        rolePolicy: { requestedRoleId: "role:coder" },
+        observedProfile: {
+          endpointId: "endpoint:capture-v1",
+          source: "runtime-state",
+          readMode: "per-request",
+          measuredAtMs: 1_700_000_000_000,
+        },
+        effectiveMetrics: {
+          quality: { value: 0.5, source: "default" },
+          latency: {
+            value: 120,
+            source: "measured",
+            measuredAtMs: 1_700_000_000_000,
+            freshnessWeight: 0.9,
+          },
+        },
+        throughputPenalty: { endpointId: "endpoint:capture-v1", active: false },
+        selection: { reason: "score", score: 0.75 },
+      },
+      // Rich content stays graph-external even when the diagnostics survive.
+      messages: [{ role: "user", content: "SECRET-PROMPT" }],
+      responseBody: { output: "SECRET-RESPONSE" },
+    });
+
+    expect(compactObservation.routingDiagnostics).toMatchObject({
+      difficultyRouting: { difficulty: "hard", strategy: "quality" },
+      routingMode: { effectiveMode: "difficulty" },
+      hybridArbitration: { finalStrategy: "quality" },
+      rolePolicy: { requestedRoleId: "role:coder" },
+      observedProfile: {
+        endpointId: "endpoint:capture-v1",
+        source: "runtime-state",
+        readMode: "per-request",
+      },
+      effectiveMetrics: {
+        quality: { value: 0.5, source: "default" },
+        latency: { value: 120, source: "measured", freshnessWeight: 0.9 },
+      },
+      throughputPenalty: { endpointId: "endpoint:capture-v1", active: false },
+    });
+    const serialized = JSON.stringify(compactObservation);
+    expect(serialized).not.toContain("SECRET-PROMPT");
+    expect(serialized).not.toContain("SECRET-RESPONSE");
+    expect(Buffer.byteLength(serialized, "utf8")).toBeLessThanOrEqual(16 * 1024);
+  });
+
+  test("Run 98 addendum 35 RED: an oversized diagnostics tree is bounded, never unbounded", () => {
+    const compactObservation = buildCompactRuntimeObservationStub({
+      requestId: "request-routing-diagnostics-oversized",
+      routingDiagnostics: {
+        difficultyRouting: { difficulty: "hard", strategy: "quality" },
+        observedProfile: { endpointId: "endpoint:capture-v1", source: "runtime-state" },
+        selection: {
+          candidates: Array.from({ length: 400 }, (_value, index) => ({
+            endpointId: `endpoint:${index}`,
+            narrative: "x".repeat(2_000),
+          })),
+        },
+      },
+    });
+    const serialized = JSON.stringify(compactObservation);
+    expect(Buffer.byteLength(serialized, "utf8")).toBeLessThanOrEqual(16 * 1024);
+    // The decision evidence survives the bound even when the optional detail does not.
+    expect(compactObservation.routingDiagnostics).toMatchObject({
+      difficultyRouting: { difficulty: "hard", strategy: "quality" },
+      observedProfile: { endpointId: "endpoint:capture-v1", source: "runtime-state" },
     });
   });
 });

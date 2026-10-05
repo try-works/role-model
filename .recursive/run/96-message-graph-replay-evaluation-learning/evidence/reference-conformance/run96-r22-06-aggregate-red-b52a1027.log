@@ -1,0 +1,21 @@
+Run 96 AC-R22-06 aggregate physical-cutover semantic RED receipt
+requirementId=R22
+acceptanceCriterionId=AC-R22-06
+proof-family=r22-06-aggregate-physical-cutover
+phase=semantic RED FAIL
+source-test=public:role-model-router/packages/sqlite-memory/test/legacy-migration.test.ts
+source-assertion=AC-R22-06
+assertion-title=R22 AC-R22-06 reclaims legacy rich JSON and closure files and fences a resumed writer
+command=npx vitest run test/r22-ac-r22-06.baseline-red.test.ts
+execution-status=executed
+exit-code=1
+result=FAIL
+public-baseline=b52a10279de21f612911bf2ae758ab40fb61d164
+failure=locked public baseline did not expose LegacyRichJsonWriter or the physical retirement and resumed-writer fence seams
+additional-provider-red=locked public baseline compact SQLite projection also omitted executionSemantics.providerAttemptIds
+private-supporting-test=private:tests/track-b/run96-r27-legacy-observer-baseline-red.test.mjs
+private-baseline=3ad6f61ae227ab9c692879769340c81f8ff34de0
+private-supporting-result=FAIL: independent legacy physical-path observer was absent
+receipt_status=PASS_RED
+phase3_status=DRAFT
+phase5_status=PENDING

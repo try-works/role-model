@@ -1,0 +1,64 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-host-bridge
+
+(node:33108) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/run105-review-challenge-evidence.test.ts (24 tests | 1 failed | 23 skipped) 4409ms
+   ↓ genuine finalize/list/read wrappers and real replay job yield actual winner and sibling time
+   ↓ no borrowing evidence for mismatched request {"captureRef":"other"}
+   ↓ no borrowing evidence for mismatched request {"roleId":"other"}
+   ↓ no borrowing evidence for mismatched request {"taskTypeId":"other"}
+   ↓ no borrowing evidence for mismatched request {"newEndpointId":"other"}
+   ↓ unknown sibling time stays pending despite fabricated result date
+   ↓ provider completion alone is not finalized evidence
+   ↓ mismatched listed winner cannot replace actual readback
+   ↓ unknown or mismatched effort remains pending
+   ↓ fresh cutoff never borrows a previous comparison
+   ↓ real evidence behind a continuation page is reached
+   ↓ cyclic or malformed pages are unavailable rather than claimed complete
+   ↓ enumerable durable evidence carries winning-member confidence and exact capture; cutoff refuses old evidence
+   ↓ execute production CLI callbacks over genuine evaluation/replay wrappers with auth envelope and transfer decode
+   ↓ genuine retained terminal-disposition capture is enumerated from real live telemetry and exact capsule read
+   ↓ history fails closed for wrong capsule scope/readiness/identity/classification and excludes replay output
+   ↓ history index unavailable and 501 matching ids are null, never a truncated complete corpus
+   ↓ CLI history callback must actually bind supported exact read operation
+   ↓ pending restart reads actual authenticated ReplayCore job plus complete real empty queue
+   × genuine pre-replay queue row preserves actual queue ID and never invents a replayJobId 106ms
+     → expected [ Array(2) ] to deeply equal [ Array(2) ]
+   ↓ execute fourth production callback against actual replay and pre-replay Effect queue records
+   ↓ exact same capture/pair with two genuine finalized groups uses explicit excluded group IDs, not arbitrary winner
+   ↓ CLI must bind pending restart to authenticated replay reads AND actual queue read authority
+   ↓ CLI finalized and enumerable callbacks actually bind authenticated extension reads
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run105-review-challenge-evidence.test.ts > genuine pre-replay queue row preserves actual queue ID and never invents a replayJobId
+AssertionError: expected [ Array(2) ] to deeply equal [ Array(2) ]
+
+- Expected
++ Received
+
+@@ -11,11 +11,10 @@
+    },
+    {
+      "againstEndpointId": "endpoint:source",
+      "captureRef": "req-history-real",
+      "createdAtMs": 1791026931000,
+-     "dispatchRoundId": "round:actual-persisted",
+      "newEndpointId": "endpoint:new",
+      "queueJobId": "req-history-real",
+      "replayJobId": null,
+      "sourceType": "queue",
+      "state": "queued",
+
+ ❯ test/run105-review-challenge-evidence.test.ts:213:47
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 23 skipped (24)
+   Start at  19:28:42
+   Duration  9.96s (transform 4.49s, setup 0ms, collect 5.00s, tests 4.41s, environment 0ms, prepare 199ms)
+

@@ -1,0 +1,22 @@
+Run 96 AC-R22-06 aggregate physical-cutover cumulative gate receipt
+requirementId=R22
+acceptanceCriterionId=AC-R22-06
+proof-family=r22-06-aggregate-physical-cutover
+phase=cumulative gate PASS
+source-test=public:role-model-router/packages/sqlite-memory/test/legacy-migration.test.ts
+source-assertion=AC-R22-06
+assertion-title=R22 AC-R22-06 reclaims legacy rich JSON and closure files and fences a resumed writer
+command=sequential public AC-R22-06 migration suite followed by private AC-R22-06 observer test
+execution-status=executed
+exit-code=0
+result=PASS
+public-head=1d5732819480cf22587570bf8c60e02efcdbfb3e
+private-head=64c75a3739217b083e24930286391b5994c710aa
+public-tests=15
+private-observer-tests=2
+proof=public physical reclamation/quarantine, durable retirement receipt, resumed-writer fencing, restart safety, bounded post-cutover growth, and compact SQLite provider-attempt projection are source-level green; private observer exposes rebuilt-runtime measurement for Phase 5
+private-supporting-test=private:tests/track-b/run96-legacy-migration-observer.test.mjs
+private-supporting-result=PASS with phase5Status PENDING and no live PASS claim
+verification_disposition=phase5-required
+phase3_status=DRAFT
+phase5_status=PENDING

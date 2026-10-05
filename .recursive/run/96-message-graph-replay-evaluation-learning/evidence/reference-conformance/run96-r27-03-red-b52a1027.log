@@ -1,0 +1,17 @@
+Run 96 R27-03 RED receipt
+acceptanceCriterionId=AC-R27-03
+proofFamily=sdk-allowlisted-sanitization
+repository=public
+baseline_ref=b52a10279de21f612911bf2ae758ab40fb61d164
+baseline_copy=E:\role-model-temp\run96-r27-public-baseline-b52a1027-b
+implementationReferences=public:packages/extension-sdk/index.mjs#sanitizeEnvelope;public:packages/extension-sdk/index.mjs#encodeFrame
+testPath=public:packages/extension-host/run96-r27-extension-boundary.test.mjs
+selector=public:packages/extension-host/run96-r27-extension-boundary.test.mjs#AC-R27-03 tuple: extension-sdk defines the allowlisted contract and removes private content before inline framing
+command=node --test --test-name-pattern="^AC-R27-03 tuple:" packages/extension-host/run96-r27-extension-boundary.test.mjs
+external_log=E:\role-model-temp\run96-r27-03-red-b52a1027.log
+exit=1
+tests=1
+passed=0
+failed=1
+failure=exact locked baseline leaves nested rawContent in sanitized metadata
+receipt_status=PASS_RED

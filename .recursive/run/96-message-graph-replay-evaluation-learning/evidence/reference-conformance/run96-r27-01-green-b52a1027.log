@@ -1,0 +1,15 @@
+Run 96 R27-01 GREEN receipt
+acceptanceCriterionId=AC-R27-01
+proofFamily=authenticated-process-transfer
+repository=public
+baseline_ref=b52a10279de21f612911bf2ae758ab40fb61d164
+implementationReferences=public:packages/extension-host/index.mjs#ExtensionHost.invoke;public:packages/extension-host/worker-runtime.mjs#process transfer
+testPath=public:packages/extension-host/run96-r27-extension-boundary.test.mjs
+selector=public:packages/extension-host/run96-r27-extension-boundary.test.mjs#AC-R27-01 tuple: real ExtensionHost and worker-runtime preserve authenticated identity across bounded process transfer
+command=node --test --test-name-pattern="^AC-R27-01 tuple:" packages/extension-host/run96-r27-extension-boundary.test.mjs
+external_log=E:\role-model-temp\run96-r27-01-green-b52a1027.log
+exit=0
+tests=1
+passed=1
+failed=0
+receipt_status=PASS_GREEN

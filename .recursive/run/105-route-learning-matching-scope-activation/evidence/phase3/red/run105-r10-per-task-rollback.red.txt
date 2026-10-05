@@ -1,0 +1,82 @@
+npm warn Unknown env config "manage-package-manager-versions". This will stop working in the next major version of npm.
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-host-bridge
+
+stderr | test/run105-r10-per-task-rollback.test.ts > run105 R10/R1 classification gate in the replay tick > a capture without BOTH roleId and taskTypeId is never admitted and is reported once as no_route_classification
+[run104-pending] captures=2 scoped=2 first=capture:unclassified,capture:classified only=none pendingCount=2 captureCount=n/a
+
+ ❯ test/run105-r10-per-task-rollback.test.ts (4 tests | 4 failed) 95ms
+   × run105 R10 rollback toggle (pure) > default OFF: an untouched ladder is not rolled back 11ms
+     → (0 , landRollbackToggle) is not a function
+   × run105 R10 rollback toggle (pure) > ON records the operator reason and the time; OFF is reversible and keeps the reason 5ms
+     → (0 , landRollbackToggle) is not a function
+   × run105 R10 rollback toggle (pure) > D8: the toggle carries no pack/receipt identity - it is not the legacy receipt-bound rollback 2ms
+     → (0 , landRollbackToggle) is not a function
+   × run105 R10/R1 classification gate in the replay tick > a capture without BOTH roleId and taskTypeId is never admitted and is reported once as no_route_classification 73ms
+     → expected [] to deeply equal [ 'capture:classified' ]
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run105-r10-per-task-rollback.test.ts > run105 R10 rollback toggle (pure) > default OFF: an untouched ladder is not rolled back
+TypeError: (0 , landRollbackToggle) is not a function
+ ❯ test/run105-r10-per-task-rollback.test.ts:34:12
+     32| describe("run105 R10 rollback toggle (pure)", () => {
+     33|   test("default OFF: an untouched ladder is not rolled back", () => {
+     34|     expect(landRollbackToggle({ rolledBack: { on: false, reason: null,…
+       |            ^
+     35|       on: false,
+     36|       reason: null,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  test/run105-r10-per-task-rollback.test.ts > run105 R10 rollback toggle (pure) > ON records the operator reason and the time; OFF is reversible and keeps the reason
+TypeError: (0 , landRollbackToggle) is not a function
+ ❯ test/run105-r10-per-task-rollback.test.ts:42:16
+     40| 
+     41|   test("ON records the operator reason and the time; OFF is reversible…
+     42|     const on = landRollbackToggle({ rolledBack: { on: false, reason: n…
+       |                ^
+     43|     expect(on).toEqual({ on: true, reason: "operator_rollback", atMs: …
+     44|     const off = landRollbackToggle({ rolledBack: on, rolledBackOn: fal…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  test/run105-r10-per-task-rollback.test.ts > run105 R10 rollback toggle (pure) > D8: the toggle carries no pack/receipt identity - it is not the legacy receipt-bound rollback
+TypeError: (0 , landRollbackToggle) is not a function
+ ❯ test/run105-r10-per-task-rollback.test.ts:50:20
+     48| 
+     49|   test("D8: the toggle carries no pack/receipt identity - it is not th…
+     50|     const landed = landRollbackToggle({ rolledBack: { on: false, reaso…
+       |                    ^
+     51|     expect(Object.keys(landed).sort()).toEqual(["atMs", "on", "reason"…
+     52|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  test/run105-r10-per-task-rollback.test.ts > run105 R10/R1 classification gate in the replay tick > a capture without BOTH roleId and taskTypeId is never admitted and is reported once as no_route_classification
+AssertionError: expected [] to deeply equal [ 'capture:classified' ]
+
+- Expected
++ Received
+
+- [
+-   "capture:classified",
+- ]
++ []
+
+ ❯ test/run105-r10-per-task-rollback.test.ts:89:24
+     87|       const result = await loop.tick();
+     88|       loop.stop();
+     89|       expect(executed).toEqual(["capture:classified"]);
+       |                        ^
+     90|       const gate = recorded.filter((row) => row.refusalCode === "no_ro…
+     91|       expect(gate).toHaveLength(1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed (4)
+   Start at  13:44:18
+   Duration  10.53s (transform 4.38s, setup 0ms, collect 9.19s, tests 95ms, environment 1ms, prepare 402ms)
+

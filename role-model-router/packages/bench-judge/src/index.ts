@@ -33,6 +33,14 @@ export interface JudgeGradingResult {
   readonly score: number;
   readonly rationale: string;
   readonly method: "heuristic" | "judge";
+  /**
+   * Run 98 addendum 32 S4: a case graded without its judge is *missing*, not low-scoring. The marker
+   * travels with the grade so persistence records the case as missing (with the reason and the grading
+   * method that stood in) instead of storing the heuristic cap as if a judge had scored it.
+   */
+  readonly missing?: boolean;
+  readonly missingReason?: string;
+  readonly gradingMethod?: string;
 }
 
 export const JUDGE_JSON_ONLY_FOLLOW_UP =

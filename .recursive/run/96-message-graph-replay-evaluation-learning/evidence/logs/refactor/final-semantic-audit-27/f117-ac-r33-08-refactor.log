@@ -1,0 +1,12 @@
+Run 96 addendum 27 final semantic audit
+finding=F117
+acceptanceCriterionId=AC-R33-08
+proofFamily=r27-final-semantic-audit-f117-ac-r33-08
+stage=refactor
+testPath=public:role-model-router/apps/runtime-host-bridge/test/execution-circuit-breaker.test.ts
+assertionTitle=[AC-R33-08] covers default and fixed-effort siblings across text.chat/tools.function_calling auth, quota, transient, cooldown, expiry, repeated failure, success, and concurrent probes
+command=corepack pnpm run build (PASS); git diff --check over changed runtime-host-bridge sources and tests (PASS)
+result=PASS
+executionStatus=current-worktree
+observed=git diff --check/build completed with exit code 0 Note: the separate Biome check was not clean; build and diff check are the only refactor claims here.
+phase3Disposition=source evidence only; Phase 5 remains pending.

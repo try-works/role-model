@@ -1,0 +1,14 @@
+npm warn Unknown env config "manage-package-manager-versions". This will stop working in the next major version of npm.
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-host-bridge
+
+stderr | test/run105-r10-per-task-rollback.test.ts > run105 R10/R1 classification gate in the replay tick > a capture without BOTH roleId and taskTypeId is never admitted and is reported once as no_route_classification
+[run104-pending] captures=2 scoped=2 first=capture:unclassified,capture:classified only=none pendingCount=2 captureCount=n/a
+
+ ✓ test/run105-r10-per-task-rollback.test.ts (4 tests) 55ms
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  13:41:51
+   Duration  7.31s (transform 3.14s, setup 0ms, collect 5.94s, tests 55ms, environment 0ms, prepare 395ms)
+

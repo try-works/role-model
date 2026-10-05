@@ -1,5 +1,4 @@
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
-import os from "node:os";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { describe, expect, test } from "vitest";
@@ -27,7 +26,9 @@ describe("cli startup readiness", () => {
   });
 
   test("binds health and static UI before backend initialization completes", async () => {
-    const staticRoot = await mkdtemp(path.join(os.tmpdir(), "runtime-ui-static-"));
+    const tempRoot = process.env.ROLE_MODEL_TEST_TEMP_ROOT ?? "E:/role-model-temp";
+    await mkdir(tempRoot, { recursive: true });
+    const staticRoot = await mkdtemp(path.join(tempRoot, "runtime-ui-static-"));
     const bootstrapState = {
       status: "pending" as const,
       message: "warming persisted runtime state",
@@ -56,10 +57,11 @@ describe("cli startup readiness", () => {
 
     try {
       const healthResponse = await fetch(`http://127.0.0.1:${server.port}/healthz`);
-      expect(healthResponse.status).toBe(200);
+      expect(healthResponse.status).toBe(503);
       await expect(healthResponse.json()).resolves.toEqual(
         expect.objectContaining({
           status: "degraded",
+          ready: false,
           sessionBootstrap: expect.objectContaining({
             status: "pending",
           }),

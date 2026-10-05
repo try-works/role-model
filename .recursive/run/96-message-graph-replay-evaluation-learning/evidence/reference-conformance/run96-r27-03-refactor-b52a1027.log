@@ -1,0 +1,14 @@
+Run 96 R27-03 REFACTOR receipt
+acceptanceCriterionId=AC-R27-03
+proofFamily=sdk-allowlisted-sanitization
+repository=public
+baseline_ref=b52a10279de21f612911bf2ae758ab40fb61d164
+implementationReferences=public:packages/extension-sdk/index.mjs#sanitizeEnvelope;public:packages/extension-sdk/index.mjs#encodeFrame
+testPath=public:packages/extension-host/run96-r27-extension-boundary.test.mjs
+assertionTitle=AC-R27-03 tuple: extension-sdk defines the allowlisted contract and removes private content before inline framing
+command=corepack pnpm exec biome check packages/extension-sdk/index.mjs
+external_log=E:\role-model-temp\run96-r27-03-refactor-b52a1027.log
+exit=0
+result=PASS
+diagnostics=none
+receipt_status=PASS_REFACTOR

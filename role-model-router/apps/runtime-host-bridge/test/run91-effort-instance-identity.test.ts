@@ -6,11 +6,50 @@ import { createDownstreamOpenAIDiscovery } from "../src/downstream-openai-discov
 import {
   createModelListResponse,
   createRuntimeModelRecords,
+  fetchWithTransientRetry,
   mapChatCompletionsRequest,
   mapResponsesRequest,
   resolveAdapterGatedReasoningEfforts,
   resolveEndpointExecutionEffort,
 } from "../src/index.js";
+
+describe("addendum 39 S2: the OAuth refresh retries transport failures only", () => {
+  test("retries a transient transport failure and returns the successful response", async () => {
+    let attempts = 0;
+    const response = await fetchWithTransientRetry(
+      async () => {
+        attempts += 1;
+        if (attempts < 2) {
+          const cause = Object.assign(new Error("connect timeout"), {
+            code: "UND_ERR_CONNECT_TIMEOUT",
+          });
+          throw new TypeError("fetch failed", { cause });
+        }
+        return new Response(JSON.stringify({ access_token: "token" }), { status: 200 });
+      },
+      "https://token.example/oauth",
+      { method: "POST" },
+    );
+
+    expect(attempts).toBe(2);
+    expect(response.status).toBe(200);
+  });
+
+  test("does not retry a rejected grant", async () => {
+    let attempts = 0;
+    await expect(
+      fetchWithTransientRetry(
+        async () => {
+          attempts += 1;
+          return new Response("invalid_grant", { status: 400 });
+        },
+        "https://token.example/oauth",
+        { method: "POST" },
+      ),
+    ).resolves.toMatchObject({ status: 400 });
+    expect(attempts).toBe(1);
+  });
+});
 
 const source = {
   vendor: "models.dev",
@@ -46,14 +85,22 @@ const catalog = {
   ],
 } as never;
 
-function endpoint(endpointId: string, reasoningEffort: string | null) {
+function endpoint(
+  endpointId: string,
+  reasoningEffort: string | null,
+  options: {
+    readonly modelId?: string;
+    readonly modalities?: readonly string[];
+    readonly declaredEffortLevels?: readonly string[];
+  } = {},
+) {
   return {
     identity: {
       endpoint_id: endpointId,
       endpoint_kind: "remote_api",
       provider_kind: "remote_openai_compat",
       serving_source: "remote-service",
-      model_id: "deepseek/deepseek-v4-pro",
+      model_id: options.modelId ?? "deepseek/deepseek-v4-pro",
       runtime_version: "run91-test",
       region: "global",
       ...(reasoningEffort === null ? {} : { reasoning_effort: reasoningEffort }),
@@ -61,10 +108,13 @@ function endpoint(endpointId: string, reasoningEffort: string | null) {
     declared: {
       endpoint_id: endpointId,
       capabilities: ["text.chat", "reasoning", "tools.function_calling"],
-      modalities: ["text"],
+      modalities: options.modalities ?? ["text"],
       max_context_tokens: 128_000,
       tool_calling: { supported: true, style: "openai" },
       supports_embeddings: false,
+      ...(options.declaredEffortLevels
+        ? { reasoning_effort_levels: [...options.declaredEffortLevels] }
+        : {}),
     },
     status: "active",
   };
@@ -247,7 +297,17 @@ describe("Run 91 effort instance identity", () => {
     expect(plan.routingRequest.allowEndpoints).toEqual(["account.global.deepseek-v4-pro-medium"]);
   });
 
-  test("routes an alias with explicit reasoning effort only to matching fixed variants", () => {
+  /**
+   * Revised by run 100 addendum 10 E3 (operator rule, measured live on `:3457` 2026-09-24/25): an alias is a pool
+   * plus a bias. A client that sends `reasoning_effort` - pi and DSH always do - collapsed the seven-endpoint alias
+   * to the two (or one) endpoints whose fixed effort matched, and the router then reported the collapse as routing
+   * ineligibility (`eligible=2 codes=POLICY_DENY_ENDPOINT=5`, `eligible=1` for `low`). The effort now orders the pool
+   * through `routingModel.preferredEndpointIds` (the core router's `routingModelRank` adjustment) and no longer
+   * removes members. Exact instance selection still applies to an explicit model id or endpoint row - see the
+   * "keeps an exact fixed endpoint authoritative" and "fails closed when an alias effort has neither a matching
+   * variant nor provider-default" cases below.
+   */
+  test("routes an alias with explicit reasoning effort across the pool while preferring matching fixed variants", () => {
     const aliases = [
       {
         aliasId: "baseline.remote-only",
@@ -277,10 +337,21 @@ describe("Run 91 effort instance identity", () => {
       aliases,
     );
 
-    expect(mediumPlan.routingRequest.allowEndpoints).toEqual([
+    expect(mediumPlan.routingRequest.allowEndpoints).toEqual(
+      expect.arrayContaining([
+        "account.global.deepseek-v4-pro",
+        "account.global.deepseek-v4-pro-medium",
+        "account.global.deepseek-v4-pro-max",
+      ]),
+    );
+    expect(mediumPlan.routingRequest.allowEndpoints).toHaveLength(3);
+    expect(mediumPlan.routingModel?.preferredEndpointIds).toEqual([
       "account.global.deepseek-v4-pro-medium",
     ]);
-    expect(maxPlan.routingRequest.allowEndpoints).toEqual(["account.global.deepseek-v4-pro-max"]);
+    expect(maxPlan.routingRequest.allowEndpoints).toHaveLength(3);
+    expect(maxPlan.routingModel?.preferredEndpointIds).toEqual([
+      "account.global.deepseek-v4-pro-max",
+    ]);
   });
 
   test("fails closed rather than treating provider-default as an unconfigured effort variant", () => {
@@ -375,6 +446,114 @@ describe("Run 91 effort instance identity", () => {
         effortControl: true,
         effortLevels: ["medium", "max"],
       },
+    });
+  });
+
+  test("routes an explicit effort to a provider-default endpoint that declares the level", () => {
+    const declarerRegistry = {
+      endpoints: [
+        endpoint("moonshot.personal.kimi-code.global.kimi-k3", null, {
+          modelId: "moonshot/kimi-k3",
+          modalities: ["text", "image", "video"],
+          declaredEffortLevels: ["low", "high", "max"],
+        }),
+      ],
+      diagnostics: [],
+      lifecycleSummary: { active: 1, degraded: 0, offline: 0 },
+    } as unknown as EndpointRegistryResult;
+
+    const plan = mapChatCompletionsRequest(
+      declarerRegistry,
+      {
+        model: "baseline.remote-only",
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "text", text: "Describe this." },
+              { type: "image_url", image_url: { url: "data:image/png;base64,abc" } },
+            ],
+          },
+        ],
+        reasoning_effort: "high",
+      } as never,
+      "run98-effort-declared-level",
+      [
+        {
+          aliasId: "baseline.remote-only",
+          modelIds: ["moonshot/kimi-k3"],
+          executionMode: "remote_only",
+        },
+      ] as never,
+    );
+
+    expect(plan.routingRequest.allowEndpoints).toEqual([
+      "moonshot.personal.kimi-code.global.kimi-k3",
+    ]);
+    expect(plan.routingRequest.requiredModalities).toEqual(["image", "text"]);
+  });
+
+  test("passes a declared provider effort through instead of stripping it", () => {
+    const resolution = resolveEndpointExecutionEffort({
+      fixedEffort: null,
+      declaredEffortLevels: ["low", "high", "max"],
+      executionRequest: {
+        messages: [{ role: "user", content: "hello" }],
+        reasoning: { effort: "high" },
+      } as never,
+    });
+
+    expect(resolution.executionRequest.reasoning).toEqual({ effort: "high" });
+    expect(resolution.receipt).toEqual({ reasoningEffort: "high", effortSource: "client" });
+  });
+
+  test("reports a bounded reasoning-effort error instead of blaming capabilities", () => {
+    const undeclaredRegistry = {
+      endpoints: [
+        endpoint("moonshot.personal.kimi-code.global.kimi-k2.7-code", null, {
+          modelId: "moonshot/kimi-k2.7-code",
+          modalities: ["text", "image", "video"],
+        }),
+      ],
+      diagnostics: [],
+      lifecycleSummary: { active: 1, degraded: 0, offline: 0 },
+    } as unknown as EndpointRegistryResult;
+    let caught: { statusCode?: number; body?: { error?: Record<string, unknown> } } | null = null;
+    try {
+      mapChatCompletionsRequest(
+        undeclaredRegistry,
+        {
+          model: "baseline.remote-only",
+          messages: [
+            {
+              role: "user",
+              content: [
+                { type: "text", text: "Describe this." },
+                { type: "image_url", image_url: { url: "data:image/png;base64,abc" } },
+              ],
+            },
+          ],
+          reasoning_effort: "high",
+        } as never,
+        "run98-effort-undeclared-level",
+        [
+          {
+            aliasId: "baseline.remote-only",
+            modelIds: ["moonshot/kimi-k2.7-code"],
+            executionMode: "remote_only",
+          },
+        ] as never,
+      );
+    } catch (error) {
+      caught = error as typeof caught;
+    }
+
+    expect(caught?.statusCode).toBe(400);
+    expect(caught?.body?.error).toMatchObject({
+      type: "routing_eligibility_error",
+      code: "reasoning_effort_unavailable",
+      requestedModel: "baseline.remote-only",
+      requestedEffort: "high",
     });
   });
 });

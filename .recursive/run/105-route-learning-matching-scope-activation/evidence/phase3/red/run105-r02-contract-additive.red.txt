@@ -1,0 +1,326 @@
+✖ run105 C1/C7: both canonical schema copies gain $defs.routeLadderPack and the oneOf branch (8.0879ms)
+✔ run105 R2-contract: the regenerated public module and the public JSON are byte-parity (10.0516ms)
+✖ run105 R2-contract: the TS contracts declare the ladder interfaces and the union member (5.7521ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 1
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 489.2355
+
+✖ failing tests:
+
+test at tests\track-b\run105-r02-contract-additive.test.mjs:22:1
+✖ run105 C1/C7: both canonical schema copies gain $defs.routeLadderPack and the oneOf branch (8.0879ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  false !== true
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/105-route-learning-matching-scope-activation/tests/track-b/run105-r02-contract-additive.test.mjs:27:12)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.start (node:internal/test_runner/test:1003:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\track-b\run105-r02-contract-additive.test.mjs:53:1
+✖ run105 R2-contract: the TS contracts declare the ladder interfaces and the union member (5.7521ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /export interface RouteLadderPackV1 extends V11ContractEnvelope/. Input:
+  
+  '/**\n' +
+    ' * v1.1 Direct Track B machine contracts.\n' +
+    ' *\n' +
+    ' * The proposal corpus owns these contracts as JSON Schema; this module carries the\n' +
+    ' * vendored schemas (see `scripts/embed-schemas.mjs`) and validates emitted artifacts\n' +
+    ' * against them, so the runtime, extensions, and tests speak the documented contract\n' +
+    ' * vocabulary instead of a parallel one.\n' +
+    ' */\n' +
+    'import type { ErrorObject, ValidateFunction } from "ajv";\n' +
+    'import * as ajvFormatsNamespace from "ajv-formats";\n' +
+    'import * as ajvNamespace from "ajv/dist/2020.js";\n' +
+    '\n' +
+    'import {\n' +
+    '  routeLearningSchema,\n' +
+    '  trackBProjectionSchema,\n' +
+    '  trackBStorageSchema,\n' +
+    '} from "./v1.1-schemas.generated.js";\n' +
+    '\n' +
+    'export const V11_CONTRACT_SCHEMAS = Object.freeze({\n' +
+    '  routeLearning: routeLearningSchema,\n' +
+    '  trackBStorage: trackBStorageSchema,\n' +
+    '  trackBProjection: trackBProjectionSchema,\n' +
+    '});\n' +
+    '\n' +
+    'export type V11ContractFamily = keyof typeof V11_CONTRACT_SCHEMAS;\n' +
+    '\n' +
+    'interface AjvLike {\n' +
+    '  compile(schema: unknown): ValidateFunction;\n' +
+    '  addSchema(schema: unknown, key: string): unknown;\n' +
+    '  getSchema(reference: string): ValidateFunction | undefined;\n' +
+    '}\n' +
+    '\n' +
+    '// ajv and ajv-formats ship CommonJS; the namespace imports keep ESM and CJS builds\n' +
+    "// working without depending on the compiler's default-interop mode.\n" +
+    'const Ajv2020 = ((ajvNamespace as unknown as { default?: unknown }).default ??\n' +
+    '  ajvNamespace) as new (\n' +
+    '  options?: Record<string, unknown>,\n' +
+    ') => AjvLike;\n' +
+    '\n' +
+    'const ajv = new Ajv2020({ allErrors: true, strict: false, allowUnionTypes: true });\n' +
+    '// ajv-formats ships CommonJS; the namespace import keeps ESM and CJS builds working.\n' +
+    'const addFormats = ((ajvFormatsNamespace as unknown as { default?: (instance: unknown) => void })\n' +
+    '  .default ?? (ajvFormatsNamespace as unknown as (instance: unknown) => void)) as (\n' +
+    '  instance: unknown,\n' +
+    ') => void;\n' +
+    'addFormats(ajv);\n' +
+    '\n' +
+    'for (const [family, schema] of Object.entries(V11_CONTRACT_SCHEMAS)) {\n' +
+    '  ajv.addSchema(schema, family);\n' +
+    '}\n' +
+    '\n' +
+    'const validators: Readonly<Record<V11ContractFamily, ValidateFunction>> = Object.freeze({\n' +
+    '  routeLearning: ajv.compile(routeLearningSchema),\n' +
+    '  trackBStorage: ajv.compile(trackBStorageSchema),\n' +
+    '  trackBProjection: ajv.compile(trackBProjectionSchema),\n' +
+    '});\n' +
+    '\n' +
+    'const definitionValidators = new Map<string, ValidateFunction>();\n' +
+    '\n' +
+    'const definitionValidator = (family: V11ContractFamily, definition: string): ValidateFunction => {\n' +
+    '  const key = `${family}:${definition}`;\n' +
+    '  const existing = definitionValidators.get(key);\n' +
+    '  if (existing) return existing;\n' +
+    '  const compiled = ajv.compile({ $ref: `${family}#/$defs/${definition}` });\n' +
+    '  definitionValidators.set(key, compiled);\n' +
+    '  return compiled;\n' +
+    '};\n' +
+    '\n' +
+    'export interface V11ContractValidation {\n' +
+    '  readonly valid: boolean;\n' +
+    '  readonly family: V11ContractFamily | null;\n' +
+    '  readonly contract: string | null;\n' +
+    '  readonly errors: readonly string[];\n' +
+    '}\n' +
+    '\n' +
+    'const formatError = (error: ErrorObject): string =>\n' +
+    '  `${error.instancePath || "/"} ${error.message ?? "invalid"}`.slice(0, 240);\n' +
+    '\n' +
+    '/**\n' +
+    ' * Validate one value against every v1.1 contract family. A value is valid when the\n' +
+    ' * route-learning, storage, or projection schema accepts it; the first accepting family\n' +
+    ' * is reported so callers can route the artifact without re-deriving its kind.\n' +
+    ' */\n' +
+    'export function validateV11Contract(value: unknown): V11ContractValidation {\n' +
+    '  const attempts: string[] = [];\n' +
+    '  for (const family of ["routeLearning", "trackBStorage", "trackBProjection"] as const) {\n' +
+    '    const validator = validators[family];\n' +
+    '    if (validator(value)) {\n' +
+    '      const contract =\n' +
+    '        value && typeof value === "object" && !Array.isArray(value)\n' +
+    '          ? String((value as Record<string, unknown>).contract ?? "") || null\n' +
+    '          : null;\n' +
+    '      return { valid: true, family, contract, errors: [] };\n' +
+    '    }\n' +
+    '    attempts.push(\n' +
+    '      `${family}: ${(validator.errors ?? []).slice(0, 12).map(formatError).join("; ")}`,\n' +
+    '    );\n' +
+    '  }\n' +
+    '  return { valid: false, family: null, contract: null, errors: attempts };\n' +
+    '}\n' +
+    '\n' +
+    'export function assertV11Contract(value: unknown): asserts value is Record<string, unknown> {\n' +
+    '  const result = validateV11Contract(value);\n' +
+    '  if (!result.valid) {\n' +
+    '    throw new Error(`v1.1 contract validation failed: ${result.errors.join(" | ")}`);\n' +
+    '  }\n' +
+    '}\n' +
+    '\n' +
+    '/**\n' +
+    ' * Validate one value against a named contract definition (for example\n' +
+    ' * `trackBStorage` / `graphNode`). Callers that already know the artifact kind get\n' +
+    ' * precise diagnostics instead of the union of every branch.\n' +
+    ' */\n' +
+    'export function validateV11ContractDefinition(\n' +
+    '  family: V11ContractFamily,\n' +
+    '  definition: string,\n' +
+    '  value: unknown,\n' +
+    '): V11ContractValidation {\n' +
+    '  const validator = definitionValidator(family, definition);\n' +
+    '  if (validator(value)) {\n' +
+    '    const contract =\n' +
+    '      value && typeof value === "object" && !Array.isArray(value)\n' +
+    '        ? String((value as Record<string, unknown>).contract ?? "") || null\n' +
+    '        : null;\n' +
+    '    return { valid: true, family, contract, errors: [] };\n' +
+    '  }\n' +
+    '  return {\n' +
+    '    valid: false,\n' +
+    '    family: null,\n' +
+    '    contract: null,\n' +
+    '    errors: (validator.errors ?? []).slice(0, 12).map(formatError),\n' +
+    '  };\n' +
+    '}\n' +
+    '\n' +
+    'export interface V11RouteLearningScope {\n' +
+    '  readonly repoArchetype?: string;\n' +
+    '  readonly roleId?: string;\n' +
+    '  readonly taskTypeId?: string;\n' +
+    '  readonly language?: string;\n' +
+    '  readonly clientId?: string;\n' +
+    '  readonly toolClassIds?: readonly string[];\n' +
+    '  readonly modelFamily?: string;\n' +
+    '  readonly endpointId?: string;\n' +
+    '  readonly promptAdapterId?: string;\n' +
+    '}\n' +
+    '\n' +
+    'export interface V11RoutePackage {\n' +
+    '  readonly packageId: string;\n' +
+    '  readonly endpointId: string;\n' +
+    '  readonly modelId: string;\n' +
+    '  readonly modelRevision: string;\n' +
+    '  readonly samplingProfileId: string;\n' +
+    '  readonly promptAdapterId?: string;\n' +
+    '  readonly toolPolicyId?: string;\n' +
+    '  readonly experiencePackId?: string;\n' +
+    '}\n' +
+    '\n' +
+    'interface V11ContractEnvelope {\n' +
+    '  readonly runtimeChannel: "production" | "stage" | "development";\n' +
+    '  readonly scopeId: string;\n' +
+    '  readonly boundaryProtocolVersion: string;\n' +
+    '}\n' +
+    '\n' +
+    'export interface RoutingEvaluationExecutionContextV1 extends V11ContractEnvelope {\n' +
+    '  readonly contract: "RoutingEvaluationExecutionContextV1";\n' +
+    '  readonly executionId: string;\n' +
+    '  readonly purpose: "routing_evaluation" | "routing_replay" | "route_package_attribution";\n' +
+    '  readonly tasksetRef: string;\n' +
+    '  readonly harnessRef: string;\n' +
+    '  readonly runtimeRef: string;\n' +
+    '  readonly routerPolicyVersion: string;\n' +
+    '  readonly contractVersion: "1.1.0";\n' +
+    '  readonly splitAlgorithm: "hash_partition_v1" | "stratified_hash_partition_v1";\n' +
+    '  readonly splitSeed: number;\n' +
+    '  readonly adapterDependency: "none";\n' +
+    '  readonly sourceProjectionIds?: readonly string[];\n' +
+    '  readonly createdAt: string;\n' +
+    '}\n' +
+    '\n' +
+    'export interface RoutingRolloutGroupLifecycleV1 extends V11ContractEnvelope {\n' +
+    '  readonly contract: "RoutingRolloutGroupLifecycleV1";\n' +
+    '  readonly groupId: string;\n' +
+    '  readonly executionContextId: string;\n' +
+    '  readonly state: "collecting" | "finalizing" | "finalized" | "partial" | "failed" | "expired";\n' +
+    '  readonly comparabilityKey: string;\n' +
+    '  readonly rolloutRefs: readonly string[];\n' +
+    '  readonly scoreRefs: readonly string[];\n' +
+    '  readonly positiveRolloutRefs?: readonly string[];\n' +
+    '  readonly negativeRolloutRefs?: readonly string[];\n' +
+    '  readonly scorerSetVersion: string;\n' +
+    '  readonly policySnapshotRef?: string;\n' +
+    '  readonly failureManifestRef?: string;\n' +
+    '  readonly createdAt: string;\n' +
+    '  readonly updatedAt: string;\n' +
+    '}\n' +
+    '\n' +
+    'export interface LearnedExperienceCandidateV1 extends V11ContractEnvelope {\n' +
+    '  readonly contract: "LearnedExperienceCandidateV1";\n' +
+    '  readonly experienceId: string;\n' +
+    '  readonly version: number;\n' +
+    '  readonly scope: V11RouteLearningScope;\n' +
+    '  readonly experienceTextRef: string;\n' +
+    '  readonly sourceGroupIds: readonly string[];\n' +
+    '  readonly positiveRolloutRefs: readonly string[];\n' +
+    '  readonly negativeRolloutRefs: readonly string[];\n' +
+    '  readonly status:\n' +
+    '    | "candidate"\n' +
+    '    | "shadow_validating"\n' +
+    '    | "validated"\n' +
+    '    | "promoted"\n' +
+    '    | "deprecated"\n' +
+    '    | "rejected"\n' +
+    '    | "superseded";\n' +
+    '  readonly redactionStatus: "raw" | "redacted" | "safe_for_prompt" | "blocked";\n' +
+    '  readonly instructionHierarchyChecked: boolean;\n' +
+    '  readonly promptInjectionReviewed: boolean;\n' +
+    '  readonly validationReceiptId?: string;\n' +
+    '  readonly createdAt: string;\n' +
+    '}\n' +
+    '\n' +
+    'export interface ExperiencePackCandidateV1 extends V11ContractEnvelope {\n' +
+    '  readonly contract: "ExperiencePackCandidateV1";\n' +
+    '  readonly packId: string;\n' +
+    '  readonly version: number;\n' +
+    '  readonly scope: V11RouteLearningScope;\n' +
+    '  readonly experienceIds: readonly string[];\n' +
+    '  readonly maxTokens: number;\n' +
+    '  readonly placement: "context_block" | "developer_extension";\n' +
+    '  readonly priority: "advisory_only";\n' +
+    '  readonly status: "candidate" | "shadow" | "validated" | "promoted" | "rejected" | "rolled_back";\n' +
+    '  readonly validationReceiptId?: string;\n' +
+    '  readonly rollbackTargetPackId?: string;\n' +
+    '  readonly createdAt: string;\n' +
+    '}\n' +
+    '\n' +
+    'export interface RouteLearningValidationReceiptV1 extends V11ContractEnvelope {\n' +
+    '  readonly contract: "RouteLearningValidationReceiptV1";\n' +
+    '  readonly receiptId: string;\n' +
+    '  readonly candidateType: "experience" | "pack" | "route_package";\n' +
+    '  readonly candidateId: string;\n' +
+    '  readonly baselineId: string;\n' +
+    '  readonly splitHash: string;\n' +
+    '  readonly caseManifestRef: string;\n' +
+    '  readonly estimatorVersion: string;\n' +
+    '  readonly bootstrapSeed: number;\n' +
+    '  readonly qualityDelta: number;\n' +
+    '  readonly confidenceLower: number;\n' +
+    '  readonly confidenceUpper: number;\n' +
+    '  readonly holdoutSampleCount: number;\n' +
+    '  readonly guardrailsPassed: boolean;\n' +
+    '  readonly decision: "validate" | "reject" | "insufficient_evidence";\n' +
+    '  readonly createdAt: string;\n' +
+    '}\n' +
+    '\n' +
+    'export interface RoutePackageAttributionV1 extends V11ContractEnvelope {\n' +
+    '  readonly contract: "RoutePackageAttributionV1";\n' +
+    '  readonly attributionId: string;\n' +
+    '  readonly routePackage: V11RoutePackage;\n' +
+    '  readonly scope: V11RouteLearningScope;\n' +
+    '  readonly baselinePackageId: string;\n' +
+    '  readonly qualityDelta: number;\n' +
+    '  readonly costDelta: number;\n' +
+    '  readonly latencyDelta: number;\n' +
+    '  readonly sampleCount: number;\n' +
+    '  readonly confidence: number;\n' +
+    '  readonly evidenceManifestRef: string;\n' +
+    '  readonly createdAt: string;\n' +
+    '}\n' +
+    '\n' +
+    'export interface RoutePackageActivationReceiptV1 extends V11ContractEnvelope {\n' +
+    '  readonly contract: "RoutePackageActivationReceiptV1";\n' +
+    '  readonly receiptId: string;\n' +
+    '  readonly packageId: str'... 562 more characters
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/105-route-learning-matching-scope-activation/tests/track-b/run105-r02-contract-additive.test.mjs:56:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '/**\n * v1.1 Direct Track B machine contracts.\n *\n * The proposal corpus owns these contracts as JSON Schema; this module carries the\n * vendored schemas (see `scripts/embed-schemas.mjs`) and validates emitted artifacts\n * against them, so the runtime, extensions, and tests speak the documented contract\n * vocabulary instead of a parallel one.\n */\nimport type { ErrorObject, ValidateFunction } from "ajv";\nimport * as ajvFormatsNamespace from "ajv-formats";\nimport * as ajvNamespace from "ajv/dist/2020.js";\n\nimport {\n  routeLearningSchema,\n  trackBProjectionSchema,\n  trackBStorageSchema,\n} from "./v1.1-schemas.generated.js";\n\nexport const V11_CONTRACT_SCHEMAS = Object.freeze({\n  routeLearning: routeLearningSchema,\n  trackBStorage: trackBStorageSchema,\n  trackBProjection: trackBProjectionSchema,\n});\n\nexport type V11ContractFamily = keyof typeof V11_CONTRACT_SCHEMAS;\n\ninterface AjvLike {\n  compile(schema: unknown): ValidateFunction;\n  addSchema(schema: unknown, key: string): unknown;\n  getSchema(reference: string): ValidateFunction | undefined;\n}\n\n// ajv and ajv-formats ship CommonJS; the namespace imports keep ESM and CJS builds\n// working without depending on the compiler\'s default-interop mode.\nconst Ajv2020 = ((ajvNamespace as unknown as { default?: unknown }).default ??\n  ajvNamespace) as new (\n  options?: Record<string, unknown>,\n) => AjvLike;\n\nconst ajv = new Ajv2020({ allErrors: true, strict: false, allowUnionTypes: true });\n// ajv-formats ships CommonJS; the namespace import keeps ESM and CJS builds working.\nconst addFormats = ((ajvFormatsNamespace as unknown as { default?: (instance: unknown) => void })\n  .default ?? (ajvFormatsNamespace as unknown as (instance: unknown) => void)) as (\n  instance: unknown,\n) => void;\naddFormats(ajv);\n\nfor (const [family, schema] of Object.entries(V11_CONTRACT_SCHEMAS)) {\n  ajv.addSchema(schema, family);\n}\n\nconst validators: Readonly<Record<V11ContractFamily, ValidateFunction>> = Object.freeze({\n  routeLearning: ajv.compile(routeLearningSchema),\n  trackBStorage: ajv.compile(trackBStorageSchema),\n  trackBProjection: ajv.compile(trackBProjectionSchema),\n});\n\nconst definitionValidators = new Map<string, ValidateFunction>();\n\nconst definitionValidator = (family: V11ContractFamily, definition: string): ValidateFunction => {\n  const key = `${family}:${definition}`;\n  const existing = definitionValidators.get(key);\n  if (existing) return existing;\n  const compiled = ajv.compile({ $ref: `${family}#/$defs/${definition}` });\n  definitionValidators.set(key, compiled);\n  return compiled;\n};\n\nexport interface V11ContractValidation {\n  readonly valid: boolean;\n  readonly family: V11ContractFamily | null;\n  readonly contract: string | null;\n  readonly errors: readonly string[];\n}\n\nconst formatError = (error: ErrorObject): string =>\n  `${error.instancePath || "/"} ${error.message ?? "invalid"}`.slice(0, 240);\n\n/**\n * Validate one value against every v1.1 contract family. A value is valid when the\n * route-learning, storage, or projection schema accepts it; the first accepting family\n * is reported so callers can route the artifact without re-deriving its kind.\n */\nexport function validateV11Contract(value: unknown): V11ContractValidation {\n  const attempts: string[] = [];\n  for (const family of ["routeLearning", "trackBStorage", "trackBProjection"] as const) {\n    const validator = validators[family];\n    if (validator(value)) {\n      const contract =\n        value && typeof value === "object" && !Array.isArray(value)\n          ? String((value as Record<string, unknown>).contract ?? "") || null\n          : null;\n      return { valid: true, family, contract, errors: [] };\n    }\n    attempts.push(\n      `${family}: ${(validator.errors ?? []).slice(0, 12).map(formatError).join("; ")}`,\n    );\n  }\n  return { valid: false, family: null, contract: null, errors: attempts };\n}\n\nexport function assertV11Contract(value: unknown): asserts value is Record<string, unknown> {\n  const result = validateV11Contract(value);\n  if (!result.valid) {\n    throw new Error(`v1.1 contract validation failed: ${result.errors.join(" | ")}`);\n  }\n}\n\n/**\n * Validate one value against a named contract definition (for example\n * `trackBStorage` / `graphNode`). Callers that already know the artifact kind get\n * precise diagnostics instead of the union of every branch.\n */\nexport function validateV11ContractDefinition(\n  family: V11ContractFamily,\n  definition: string,\n  value: unknown,\n): V11ContractValidation {\n  const validator = definitionValidator(family, definition);\n  if (validator(value)) {\n    const contract =\n      value && typeof value === "object" && !Array.isArray(value)\n        ? String((value as Record<string, unknown>).contract ?? "") || null\n        : null;\n    return { valid: true, family, contract, errors: [] };\n  }\n  return {\n    valid: false,\n    family: null,\n    contract: null,\n    errors: (validator.errors ?? []).slice(0, 12).map(formatError),\n  };\n}\n\nexport interface V11RouteLearningScope {\n  readonly repoArchetype?: string;\n  readonly roleId?: string;\n  readonly taskTypeId?: string;\n  readonly language?: string;\n  readonly clientId?: string;\n  readonly toolClassIds?: readonly string[];\n  readonly modelFamily?: string;\n  readonly endpointId?: string;\n  readonly promptAdapterId?: string;\n}\n\nexport interface V11RoutePackage {\n  readonly packageId: string;\n  readonly endpointId: string;\n  readonly modelId: string;\n  readonly modelRevision: string;\n  readonly samplingProfileId: string;\n  readonly promptAdapterId?: string;\n  readonly toolPolicyId?: string;\n  readonly experiencePackId?: string;\n}\n\ninterface V11ContractEnvelope {\n  readonly runtimeChannel: "production" | "stage" | "development";\n  readonly scopeId: string;\n  readonly boundaryProtocolVersion: string;\n}\n\nexport interface RoutingEvaluationExecutionContextV1 extends V11ContractEnvelope {\n  readonly contract: "RoutingEvaluationExecutionContextV1";\n  readonly executionId: string;\n  readonly purpose: "routing_evaluation" | "routing_replay" | "route_package_attribution";\n  readonly tasksetRef: string;\n  readonly harnessRef: string;\n  readonly runtimeRef: string;\n  readonly routerPolicyVersion: string;\n  readonly contractVersion: "1.1.0";\n  readonly splitAlgorithm: "hash_partition_v1" | "stratified_hash_partition_v1";\n  readonly splitSeed: number;\n  readonly adapterDependency: "none";\n  readonly sourceProjectionIds?: readonly string[];\n  readonly createdAt: string;\n}\n\nexport interface RoutingRolloutGroupLifecycleV1 extends V11ContractEnvelope {\n  readonly contract: "RoutingRolloutGroupLifecycleV1";\n  readonly groupId: string;\n  readonly executionContextId: string;\n  readonly state: "collecting" | "finalizing" | "finalized" | "partial" | "failed" | "expired";\n  readonly comparabilityKey: string;\n  readonly rolloutRefs: readonly string[];\n  readonly scoreRefs: readonly string[];\n  readonly positiveRolloutRefs?: readonly string[];\n  readonly negativeRolloutRefs?: readonly string[];\n  readonly scorerSetVersion: string;\n  readonly policySnapshotRef?: string;\n  readonly failureManifestRef?: string;\n  readonly createdAt: string;\n  readonly updatedAt: string;\n}\n\nexport interface LearnedExperienceCandidateV1 extends V11ContractEnvelope {\n  readonly contract: "LearnedExperienceCandidateV1";\n  readonly experienceId: string;\n  readonly version: number;\n  readonly scope: V11RouteLearningScope;\n  readonly experienceTextRef: string;\n  readonly sourceGroupIds: readonly string[];\n  readonly positiveRolloutRefs: readonly string[];\n  readonly negativeRolloutRefs: readonly string[];\n  readonly status:\n    | "candidate"\n    | "shadow_validating"\n    | "validated"\n    | "promoted"\n    | "deprecated"\n    | "rejected"\n    | "superseded";\n  readonly redactionStatus: "raw" | "redacted" | "safe_for_prompt" | "blocked";\n  readonly instructionHierarchyChecked: boolean;\n  readonly promptInjectionReviewed: boolean;\n  readonly validationReceiptId?: string;\n  readonly createdAt: string;\n}\n\nexport interface ExperiencePackCandidateV1 extends V11ContractEnvelope {\n  readonly contract: "ExperiencePackCandidateV1";\n  readonly packId: string;\n  readonly version: number;\n  readonly scope: V11RouteLearningScope;\n  readonly experienceIds: readonly string[];\n  readonly maxTokens: number;\n  readonly placement: "context_block" | "developer_extension";\n  readonly priority: "advisory_only";\n  readonly status: "candidate" | "shadow" | "validated" | "promoted" | "rejected" | "rolled_back";\n  readonly validationReceiptId?: string;\n  readonly rollbackTargetPackId?: string;\n  readonly createdAt: string;\n}\n\nexport interface RouteLearningValidationReceiptV1 extends V11ContractEnvelope {\n  readonly contract: "RouteLearningValidationReceiptV1";\n  readonly receiptId: string;\n  readonly candidateType: "experience" | "pack" | "route_package";\n  readonly candidateId: string;\n  readonly baselineId: string;\n  readonly splitHash: string;\n  readonly caseManifestRef: string;\n  readonly estimatorVersion: string;\n  readonly bootstrapSeed: number;\n  readonly qualityDelta: number;\n  readonly confidenceLower: number;\n  readonly confidenceUpper: number;\n  readonly holdoutSampleCount: number;\n  readonly guardrailsPassed: boolean;\n  readonly decision: "validate" | "reject" | "insufficient_evidence";\n  readonly createdAt: string;\n}\n\nexport interface RoutePackageAttributionV1 extends V11ContractEnvelope {\n  readonly contract: "RoutePackageAttributionV1";\n  readonly attributionId: string;\n  readonly routePackage: V11RoutePackage;\n  readonly scope: V11RouteLearningScope;\n  readonly baselinePackageId: string;\n  readonly qualityDelta: number;\n  readonly costDelta: number;\n  readonly latencyDelta: number;\n  readonly sampleCount: number;\n  readonly confidence: number;\n  readonly evidenceManifestRef: string;\n  readonly createdAt: string;\n}\n\nexport interface RoutePackageActivationReceiptV1 extends V11ContractEnvelope {\n  readonly contract: "RoutePackageActivationReceiptV1";\n  readonly receiptId: string;\n  readonly packageId: str'... 562 more characters,
+    expected: /export interface RouteLadderPackV1 extends V11ContractEnvelope/,
+    operator: 'match',
+    diff: 'simple'
+  }
+EXIT=1

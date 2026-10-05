@@ -1,13 +1,15 @@
 import { spawn } from "node:child_process";
-import { appendFile, mkdir, readFile } from "node:fs/promises";
+import { randomBytes } from "node:crypto";
+import { appendFile, mkdir, readFile, unlink } from "node:fs/promises";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import {
   defineExtension,
-  encodeFrame,
-  extractFrames,
+  encodeControlFrame,
+  extractControlFrames,
   verifySignedBundle,
 } from "../extension-sdk/index.mjs";
+import { createInputTransferArtifact } from "./transfer-artifact.mjs";
 
 /**
  * Reject malformed graph-contract metadata at the host boundary.  Extension
@@ -48,24 +50,63 @@ const resolveNodeWorkerExecutable = (configured = process.env.ROLE_MODEL_EXTENSI
 };
 
 class ProcessWorker {
-  constructor(moduleUrl, onExit, startupTimeoutMs, workerExecPath, extensionId, stateRoot) {
+  constructor(
+    moduleUrl,
+    onExit,
+    startupTimeoutMs,
+    workerExecPath,
+    extensionId,
+    stateRoot,
+    channel = null,
+  ) {
     this.moduleUrl = normalizeModuleUrl(moduleUrl);
     this.onExit = onExit;
     this.startupTimeoutMs = startupTimeoutMs;
     this.workerExecPath = workerExecPath;
     this.extensionId = extensionId;
     this.stateRoot = stateRoot;
+    this.channel = channel;
     this.pending = new Map();
     this.child = null;
     this.stderr = "";
+    // Run 98 addendum 04: the exhausted-budget report used to cite the worker's stderr tail, which
+    // for a Node worker is usually a warning (`ExperimentalWarning: SQLite …`). The exit status is
+    // the part of the failure that is always true, so it is captured alongside the stderr.
+    this.exitCode = null;
+    this.exitSignal = null;
     this.exited = true;
     this.stopping = false;
+    this.controlSecret = null;
+    this.outboundSequence = 0;
+    this.inboundSequence = 0;
+    this.terminationPromise = null;
+  }
+  #encode(value) {
+    const sequence = this.outboundSequence + 1;
+    const frame = encodeControlFrame(value, {
+      secret: this.controlSecret,
+      direction: "host->worker",
+      sequence,
+    });
+    this.outboundSequence = sequence;
+    return frame;
+  }
+  #rejectPending(error) {
+    for (const item of this.pending.values()) {
+      void item.cleanup?.().catch(() => {});
+      item.reject(error);
+    }
+    this.pending.clear();
   }
   async start() {
     if (this.child && !this.exited) return;
     if (this.stateRoot) await mkdir(this.stateRoot, { recursive: true });
     this.stopping = false;
     this.exited = false;
+    this.transferKey = randomBytes(32).toString("hex");
+    this.controlSecret = this.transferKey;
+    this.outboundSequence = 0;
+    this.inboundSequence = 0;
     this.child = spawn(this.workerExecPath, [runtimePath, this.moduleUrl], {
       stdio: ["pipe", "pipe", "pipe"],
       windowsHide: true,
@@ -73,47 +114,85 @@ class ProcessWorker {
         ...process.env,
         ROLE_MODEL_EXTENSION_ID: this.extensionId,
         ...(this.stateRoot ? { ROLE_MODEL_EXTENSION_STATE_ROOT: this.stateRoot } : {}),
+        ...(this.channel ? { ROLE_MODEL_EXTENSION_CHANNEL: this.channel } : {}),
+        ROLE_MODEL_EXTENSION_TRANSFER_KEY: this.transferKey,
+        ROLE_MODEL_EXTENSION_CONTROL_KEY: this.controlSecret,
       },
     });
     this.stderr = "";
     this.child.stderr.on("data", (chunk) => {
       this.stderr = `${this.stderr}${chunk.toString("utf8")}`.slice(-4096);
     });
+    this.exitCode = null;
+    this.exitSignal = null;
     let bytes = Buffer.alloc(0);
-    let settled = false;
+    let readyResolved = false;
+    let readyRejected = false;
     let rejectReady;
+    const rejectProtocol = (error) => {
+      const failure = error instanceof Error ? error : new Error(String(error));
+      this.#rejectPending(failure);
+      if (!readyResolved && !readyRejected) {
+        readyRejected = true;
+        rejectReady(failure);
+      }
+      if (!this.exited) {
+        this.stopping = false;
+        this.child.kill();
+      }
+    };
+    // A worker that dies or closes its pipes makes the host->worker socket emit an
+    // asynchronous `error` (EPIPE). Without a listener Node raises an uncaught
+    // exception and the whole packaged runtime process exits; that killed the Phase 5
+    // proof runtime under real traffic. Pipe errors now degrade the worker instead.
+    this.child.stdin.on("error", (error) => rejectProtocol(error));
+    this.child.stdout.on("error", (error) => rejectProtocol(error));
     const ready = new Promise((resolve, reject) => {
       rejectReady = reject;
       this.child.once("error", reject);
       this.child.stdout.on("data", (chunk) => {
-        bytes = Buffer.concat([bytes, chunk]);
-        const parsed = extractFrames(bytes);
-        bytes = parsed.remainder;
-        for (const message of parsed.values) {
-          if (message.type === "ready") {
-            settled = true;
-            this.pid = message.pid;
-            resolve();
-            continue;
+        try {
+          bytes = Buffer.concat([bytes, chunk]);
+          const parsed = extractControlFrames(bytes, {
+            secret: this.controlSecret,
+            direction: "worker->host",
+            lastSequence: this.inboundSequence,
+          });
+          bytes = parsed.remainder;
+          this.inboundSequence = parsed.lastSequence;
+          for (const message of parsed.values) {
+            if (message.type === "ready") {
+              readyResolved = true;
+              this.pid = message.pid;
+              resolve();
+              continue;
+            }
+            const pending = this.pending.get(message.requestId);
+            if (!pending) continue;
+            this.pending.delete(message.requestId);
+            void pending.cleanup?.().catch(() => {});
+            try {
+              this.child?.stdin.write(this.#encode({ type: "ack", requestId: message.requestId }));
+            } catch {
+              // The worker already closed its pipe; the pending invoke has settled.
+            }
+            if (message.type === "result")
+              pending.resolve({ ...message.result, workerPid: this.pid });
+            else pending.reject(new Error(message.error));
           }
-          const pending = this.pending.get(message.requestId);
-          if (!pending) continue;
-          this.pending.delete(message.requestId);
-          this.child?.stdin.write(encodeFrame({ type: "ack", requestId: message.requestId }));
-          if (message.type === "result")
-            pending.resolve({ ...message.result, workerPid: this.pid });
-          else pending.reject(new Error(message.error));
+        } catch (error) {
+          rejectProtocol(error);
         }
       });
     });
     this.child.once("exit", (code, signal) => {
       const expected = this.stopping;
       this.exited = true;
+      this.exitCode = code ?? null;
+      this.exitSignal = signal ?? null;
       const detail = this.stderr.trim();
-      for (const item of this.pending.values())
-        item.reject(new Error(detail ? `worker exited: ${detail}` : "worker exited"));
-      this.pending.clear();
-      if (!settled)
+      this.#rejectPending(new Error(detail ? `worker exited: ${detail}` : "worker exited"));
+      if (!readyResolved && !readyRejected)
         rejectReady(
           new Error(
             `worker exited during startup (${code ?? signal})${detail ? `: ${detail}` : ""}`,
@@ -139,26 +218,78 @@ class ProcessWorker {
       clearTimeout(timer);
     }
   }
-  invoke(envelope) {
+  async invoke(envelope) {
     if (this.exited || !this.child) return Promise.reject(new Error("worker exited"));
+    let wireEnvelope = envelope;
+    let transferPath = null;
+    let frame;
+    try {
+      frame = this.#encode({ type: "invoke", requestId: envelope.requestId, envelope });
+    } catch (error) {
+      if (
+        !/frame exceeds inline limit/i.test(error instanceof Error ? error.message : String(error))
+      ) {
+        throw error;
+      }
+      const transferArtifact = await createInputTransferArtifact({
+        stateRoot: this.stateRoot,
+        transferKey: this.transferKey,
+        envelope,
+      });
+      transferPath = join(this.stateRoot, ...transferArtifact.relativePath.split("/"));
+      wireEnvelope = {
+        requestId: envelope.requestId,
+        protocolVersion: envelope.protocolVersion,
+        authorizationEpoch: envelope.authorizationEpoch,
+        channel: envelope.channel,
+        scope: envelope.scope,
+        capability: envelope.capability,
+        transferArtifact,
+      };
+      frame = this.#encode({
+        type: "invoke",
+        requestId: envelope.requestId,
+        envelope: wireEnvelope,
+      });
+    }
+    const cleanup = async () => {
+      if (!transferPath) return;
+      try {
+        await unlink(transferPath);
+      } catch (error) {
+        if (error?.code !== "ENOENT") throw error;
+      }
+    };
     return new Promise((resolve, reject) => {
-      this.pending.set(envelope.requestId, { resolve, reject });
-      this.child.stdin.write(
-        encodeFrame({ type: "invoke", requestId: envelope.requestId, envelope }),
-        (error) => {
+      this.pending.set(envelope.requestId, { resolve, reject, cleanup });
+      try {
+        this.child.stdin.write(frame, (error) => {
           if (error) {
             this.pending.delete(envelope.requestId);
+            void cleanup().catch(() => {});
             reject(error);
           }
-        },
-      );
+        });
+      } catch (error) {
+        this.pending.delete(envelope.requestId);
+        void cleanup().catch(() => {});
+        reject(error);
+      }
     });
   }
   async stop() {
     if (!this.child || this.exited) return;
+    if (this.terminationPromise) {
+      await this.terminationPromise;
+      return;
+    }
     this.stopping = true;
     const child = this.child;
-    child.stdin.write(encodeFrame({ type: "shutdown" }));
+    try {
+      child.stdin.write(this.#encode({ type: "shutdown" }));
+    } catch {
+      child.kill();
+    }
     await new Promise((resolve) => {
       const timer = setTimeout(() => {
         if (!this.exited) child.kill();
@@ -170,11 +301,67 @@ class ProcessWorker {
     });
     this.child = null;
   }
+  async terminate() {
+    if (!this.child || this.exited) return;
+    if (this.terminationPromise) return this.terminationPromise;
+    const child = this.child;
+    this.stopping = false;
+    this.#rejectPending(new Error("worker terminated"));
+    this.terminationPromise = new Promise((resolve) => {
+      let settled = false;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve();
+      };
+      const timer = setTimeout(() => {
+        if (!this.exited) child.kill();
+        finish();
+      }, 250);
+      child.once("exit", finish);
+      try {
+        child.kill();
+      } catch {
+        finish();
+      }
+    }).finally(() => {
+      this.terminationPromise = null;
+    });
+    return this.terminationPromise;
+  }
   state() {
     return {
       pid: this.exited ? null : (this.pid ?? null),
       exited: this.exited,
     };
+  }
+  /**
+   * Run 98 addendum 04: an honest failure report for an exhausted restart budget. The exit
+   * code/signal is always reported, and the stderr tail is filtered down to its substantive lines —
+   * a Node `ExperimentalWarning`/`DeprecationWarning` and the `--trace-warnings` advice that follows
+   * it are not failure causes and must not be presented as one.
+   */
+  failureDetail() {
+    const exit =
+      this.exitCode !== null
+        ? `exit code ${this.exitCode}`
+        : this.exitSignal
+          ? `signal ${this.exitSignal}`
+          : null;
+    const detail = String(this.stderr ?? "")
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(
+        (line) =>
+          line &&
+          !/(ExperimentalWarning|DeprecationWarning|Warning):/.test(line) &&
+          !line.startsWith("(Use `node --trace-warnings"),
+      )
+      .join(" ")
+      .replace(/\s+/gu, " ")
+      .slice(-400);
+    return { exit, detail };
   }
 }
 
@@ -190,6 +377,13 @@ export class ExtensionHost {
     compatibleProtocolVersions = [],
     authorizationEpoch = 0,
     timeoutMs = 1_000,
+    /**
+     * Run 98 addendum 48 (live v288: `shadow-pipeline register-deterministic-scorer` and then silence):
+     * the per-invoke timeout used to be armed *inside* `execute()`, so a caller waiting for a concurrency slot
+     * could wait forever — `maxConcurrent` saturated invokes simply queued with no bound and no error. This is
+     * the bound on that queue wait; it defaults to the invoke timeout.
+     */
+    queueTimeoutMs = null,
     startupTimeoutMs = 2_000,
     maxConcurrent = 8,
     maxQueued = 64,
@@ -197,11 +391,23 @@ export class ExtensionHost {
     journalPath = null,
     maxRestarts = 3,
     restartBackoffMs = 10,
+    // Run 98 addendum 04: how long an exhausted restart budget stays latched before the host gives
+    // the worker a fresh budget. Without it a transient crash-loop disabled replays/evaluations for
+    // the lifetime of the runtime (stage v177).
+    restartCooldownMs = 60_000,
     workerExecPath = resolveNodeWorkerExecutable(),
+    /**
+     * Runtime channel this host serves. Envelopes that omit a channel are stamped
+     * with it, so extension-side scope bindings and reference resolvers see the
+     * channel the runtime actually serves instead of falling back to development.
+     */
+    channel = null,
   }) {
     this.protocolVersion = protocolVersion;
     this.protocolVersions = new Set([protocolVersion, ...compatibleProtocolVersions]);
     this.timeoutMs = timeoutMs;
+    this.queueTimeoutMs =
+      Number.isSafeInteger(queueTimeoutMs) && queueTimeoutMs > 0 ? queueTimeoutMs : timeoutMs;
     this.startupTimeoutMs = startupTimeoutMs;
     this.authorizationEpoch = authorizationEpoch;
     this.maxConcurrent = maxConcurrent;
@@ -210,7 +416,9 @@ export class ExtensionHost {
     this.journalPath = journalPath;
     this.maxRestarts = maxRestarts;
     this.restartBackoffMs = restartBackoffMs;
+    this.restartCooldownMs = restartCooldownMs;
     this.workerExecPath = workerExecPath;
+    this.channel = channel;
   }
   #validateDescriptor(descriptor) {
     const validated = defineExtension(descriptor);
@@ -234,13 +442,31 @@ export class ExtensionHost {
     record.restartPromise = (async () => {
       while (record.autoRestart && record.worker.exited) {
         if (record.restarts >= this.maxRestarts) {
-          record.lifecycle = "degraded";
+          const nowMs = Date.now();
+          // Run 98 addendum 04 (live v177): the budget is a circuit breaker, not a one-way latch.
+          // A transient crash-loop — CPU starvation, a slow disk, a restart storm — must not disable
+          // the extension until the runtime is restarted, so once the cooldown has elapsed the worker
+          // is given a fresh budget and tried again.
+          const retryAtMs = record.degradedUntilMs ?? nowMs + this.restartCooldownMs;
+          if (nowMs < retryAtMs) {
+            record.lifecycle = "degraded";
+            record.degradedUntilMs = retryAtMs;
+            await this.#journal({
+              type: "restart_exhausted",
+              extensionId: record.descriptor.id,
+              restart: record.restarts,
+              retryAtMs,
+            });
+            return;
+          }
+          record.restarts = 0;
+          record.degradedUntilMs = null;
+          record.lifecycle = "exited";
           await this.#journal({
-            type: "restart_exhausted",
+            type: "restart_budget_reset",
             extensionId: record.descriptor.id,
-            restart: record.restarts,
+            cooldownMs: this.restartCooldownMs,
           });
-          return;
         }
         await delay(this.restartBackoffMs * 2 ** record.restarts);
         if (!record.autoRestart || !record.worker.exited) return;
@@ -250,6 +476,7 @@ export class ExtensionHost {
         try {
           await record.worker.start();
           record.lifecycle = "ready";
+          record.degradedUntilMs = null;
           await this.#journal({
             type: "restarted",
             extensionId: record.descriptor.id,
@@ -292,6 +519,7 @@ export class ExtensionHost {
       restarts: 0,
       autoRestart: false,
       restartPromise: null,
+      transitions: 0,
     };
     record.worker = new ProcessWorker(
       normalized,
@@ -303,6 +531,7 @@ export class ExtensionHost {
       this.workerExecPath,
       validated.id,
       this.journalPath ? join(dirname(this.journalPath), "workers", validated.id) : null,
+      this.channel,
     );
     this.#workers.set(validated.id, record);
     try {
@@ -373,6 +602,10 @@ export class ExtensionHost {
       lifecycle: record.lifecycle,
       pid: record.kind === "process" ? record.worker.state().pid : null,
       restarts: record.restarts ?? 0,
+      // A supervised start/stop/restart is a bounded, expected transition.  The
+      // readiness projection must be able to tell it apart from a terminal
+      // worker failure, including the window between stop and start.
+      transitioning: (record.transitions ?? 0) > 0 || Boolean(record.restartPromise),
     };
   }
   listExtensionStates() {
@@ -381,33 +614,54 @@ export class ExtensionHost {
   async stopProcess(id) {
     const record = this.#workers.get(id);
     if (!record || record.kind !== "process") throw new Error(`unknown process extension ${id}`);
-    record.lifecycle = "stopping";
-    record.autoRestart = false;
-    await record.worker.stop();
-    record.lifecycle = "stopped";
-    await this.#journal({ type: "stopped", extensionId: id, pid: null });
-    return this.extensionState(id);
+    record.transitions = (record.transitions ?? 0) + 1;
+    try {
+      record.lifecycle = "stopping";
+      record.autoRestart = false;
+      await record.worker.stop();
+      record.lifecycle = "stopped";
+      await this.#journal({ type: "stopped", extensionId: id, pid: null });
+      return this.extensionState(id);
+    } finally {
+      record.transitions = Math.max(0, (record.transitions ?? 1) - 1);
+    }
   }
   async startProcess(id) {
     const record = this.#workers.get(id);
     if (!record || record.kind !== "process") throw new Error(`unknown process extension ${id}`);
     if (record.lifecycle === "ready" && !record.worker.exited) return this.extensionState(id);
-    record.lifecycle = "starting";
-    await record.worker.start();
-    record.lifecycle = "ready";
-    record.autoRestart = true;
-    await this.#journal({ type: "started", extensionId: id, pid: record.worker.state().pid });
-    return this.extensionState(id);
+    record.transitions = (record.transitions ?? 0) + 1;
+    try {
+      record.lifecycle = "starting";
+      await record.worker.start();
+      record.lifecycle = "ready";
+      record.autoRestart = true;
+      await this.#journal({ type: "started", extensionId: id, pid: record.worker.state().pid });
+      return this.extensionState(id);
+    } catch (error) {
+      // A failed supervised start is terminal for this attempt: leaving the
+      // record in `starting` would let readiness report an unbounded pending
+      // transition instead of a real worker failure.
+      record.lifecycle = "exited";
+      throw error;
+    } finally {
+      record.transitions = Math.max(0, (record.transitions ?? 1) - 1);
+    }
   }
   async restartProcess(id) {
     const record = this.#workers.get(id);
     if (!record || record.kind !== "process") throw new Error(`unknown process extension ${id}`);
-    await this.stopProcess(id);
-    record.restarts = (record.restarts ?? 0) + 1;
-    this.#restartCount += 1;
-    const state = await this.startProcess(id);
-    await this.#journal({ type: "restarted", extensionId: id, restart: record.restarts });
-    return state;
+    record.transitions = (record.transitions ?? 0) + 1;
+    try {
+      await this.stopProcess(id);
+      record.restarts = (record.restarts ?? 0) + 1;
+      this.#restartCount += 1;
+      const state = await this.startProcess(id);
+      await this.#journal({ type: "restarted", extensionId: id, restart: record.restarts });
+      return state;
+    } finally {
+      record.transitions = Math.max(0, (record.transitions ?? 1) - 1);
+    }
   }
   async removeProcess(id) {
     const record = this.#workers.get(id);
@@ -467,38 +721,59 @@ export class ExtensionHost {
   async #ensureProcess(record) {
     if (record.kind !== "process" || !record.worker.exited) return;
     await this.#recoverExitedProcess(record);
-    if (record.worker.exited) throw new Error("worker restart budget exhausted");
+    if (record.worker.exited) {
+      // Run 98 addendum 04: report the exit status and the substantive stderr lines. The previous
+      // message quoted the raw stderr tail, so the operator was shown a Node warning
+      // (`ExperimentalWarning: SQLite is an experimental feature …`) as if it were the cause.
+      const { exit, detail } = record.worker.failureDetail
+        ? record.worker.failureDetail()
+        : { exit: null, detail: "" };
+      const attempts = `${record.restarts} restart${record.restarts === 1 ? "" : "s"}`;
+      const suffix = [exit, detail].filter(Boolean).join(": ");
+      const retrySuffix =
+        typeof record.degradedUntilMs === "number"
+          ? `; the next recovery attempt is allowed at ${new Date(record.degradedUntilMs).toISOString()}`
+          : "";
+      throw new Error(
+        suffix
+          ? `worker restart budget exhausted after ${attempts} (${suffix})${retrySuffix}`
+          : `worker restart budget exhausted after ${attempts}${retrySuffix}`,
+      );
+    }
   }
-  invoke(id, envelope) {
+  invoke(id, incomingEnvelope) {
     if (!this.#enabled) return Promise.reject(new Error("extension discovery disabled"));
     const registered = this.#workers.get(id);
     if (!registered) return Promise.reject(new Error(`unknown extension ${id}`));
     if (registered.lifecycle === "stopped" || registered.lifecycle === "stopping")
       return Promise.reject(new Error(`extension ${id} is disabled or stopped`));
+    // The channel is stamped onto a copy rather than onto the caller's parameter object.
+    const envelope =
+      this.channel && incomingEnvelope && !incomingEnvelope.channel
+        ? { ...incomingEnvelope, channel: this.channel }
+        : incomingEnvelope;
     if (
       !envelope?.requestId ||
       !this.protocolVersions.has(envelope.protocolVersion) ||
       !envelope.channel ||
       !envelope.scope ||
+      !envelope.capability ||
       !Number.isInteger(envelope.authorizationEpoch)
     )
-      return Promise.reject(new Error("envelope identity is incomplete or incompatible"));
+      return Promise.reject(
+        new Error("envelope identity or capability is incomplete or incompatible"),
+      );
     if (envelope.authorizationEpoch !== this.authorizationEpoch)
       return Promise.reject(new Error("authorization epoch is stale or untrusted"));
+    if (envelope.transferArtifact)
+      return Promise.reject(new Error("caller-supplied input transfer artifacts are prohibited"));
     if (envelope.artifactRef && envelope.artifactRef.channel !== envelope.channel)
       return Promise.reject(new Error("artifact channel mismatch"));
     if (envelope.artifactRef && envelope.artifactRef.scope !== envelope.scope)
       return Promise.reject(new Error("artifact scope mismatch"));
     const inlineBytes = Buffer.byteLength(JSON.stringify(envelope.payload ?? null));
-    if (
-      inlineBytes > 16 * 1024 &&
-      (!envelope.transferArtifact ||
-        envelope.transferArtifact.channel !== envelope.channel ||
-        envelope.transferArtifact.scope !== envelope.scope)
-    )
-      return Promise.reject(
-        new Error("oversized payload requires a channel-local transfer artifact"),
-      );
+    if (inlineBytes > 16 * 1024 && registered.kind !== "process")
+      return Promise.reject(new Error("oversized inline-worker payload is prohibited"));
     const hostReadCapability =
       registered.kind === "process" && envelope.capability === "extension-output:read";
     if (
@@ -516,17 +791,38 @@ export class ExtensionHost {
       return Promise.reject(new Error("extension queue capacity exceeded"));
     }
     return new Promise((resolve, reject) => {
+      /**
+       * Run 98 addendum 48: bound the wait for a concurrency slot. Without this a saturated extension (or one
+       * whose in-flight calls never answer) left every later caller pending forever with no timeout armed.
+       */
+      const queueTimer = setTimeout(() => {
+        const index = this.#queue.indexOf(execute);
+        if (index >= 0) this.#queue.splice(index, 1);
+        this.#record(id, "queue_timeout", envelope);
+        reject(
+          new Error(
+            `extension ${id} failed: queue timeout after ${this.queueTimeoutMs}ms (${envelope.capability})`,
+          ),
+        );
+      }, this.queueTimeoutMs);
       const execute = async () => {
+        clearTimeout(queueTimer);
         this.#active += 1;
         let timer;
         let abort;
         try {
           await this.#ensureProcess(registered);
           const timeout = new Promise((_, timeoutReject) => {
-            timer = setTimeout(() => timeoutReject(new Error("timeout")), this.timeoutMs);
+            timer = setTimeout(() => {
+              if (registered.kind === "process") void registered.worker.terminate();
+              timeoutReject(new Error("timeout"));
+            }, this.timeoutMs);
           });
           const cancellation = new Promise((_, cancelReject) => {
-            abort = () => cancelReject(new Error("cancelled"));
+            abort = () => {
+              if (registered.kind === "process") void registered.worker.terminate();
+              cancelReject(new Error("cancelled"));
+            };
             envelope.signal?.addEventListener("abort", abort, { once: true });
           });
           const invocation =

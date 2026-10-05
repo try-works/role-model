@@ -169,6 +169,61 @@ the same contract.
 When only telemetry rows remain available, the host bridge reconstructs a compatible
 request-detail view from those persisted fields.
 
+### Latency reporting and the measured-latency selection input
+
+Run 98 addendum 40 splits "how long did the provider take to answer" from "how long did the
+caller wait", and lets a *measured* latency difference inform candidate selection without
+changing default behaviour.
+
+`latency_ms` in the telemetry ledger keeps its historical meaning: the provider's
+response-header time. Three fields are recorded beside it, all nullable so rows written
+before the change keep their old meaning:
+
+- `provider_completion_latency_ms` — provider dispatch to the response body being fully read;
+- `time_to_first_token_ms` — provider dispatch to the first streamed chunk (streaming only);
+- `request_latency_ms` — request arrival to the response being flushed, written after the flush
+  (`updateRuntimeTelemetryClientLatency`), because it is not knowable when the observation row
+  is persisted.
+
+Operator surfaces report the client-visible percentile beside the provider one and label which
+is which; a window whose rows predate the change says the client-visible duration was not
+measured rather than showing the provider number.
+
+**Selection input.** `readEndpointLatencyBuckets` (`packages/sqlite-memory`) reports p50/p95 and
+sample counts per endpoint per prompt-size bucket over a bounded window, counting only successful
+live requests and withholding buckets below the operator's sample floor. The parameters live in
+the same versioned policy document as the other activation values, under `latencySelection`
+(global, with channel and scope overrides that narrow the section field by field):
+
+| Field | Default | Bounds |
+| --- | --- | --- |
+| `enabled` | `false` | boolean — decisions are byte-identical while false |
+| `minStage` | `S2` | `S0`-`S4` |
+| `windowHours` | `24` | 1-168 |
+| `minSamples` | `5` | 3-1 000 |
+| `maxDeltaMs` | `2 000` | 0-60 000 |
+| `tokenBucketUpperBounds` | `[50 000, 150 000]` | 1-8 strictly increasing integers |
+| `maxCandidates` | `4` | 1-32 |
+
+A malformed or out-of-bounds value fails closed to the defaults with `enabled: false` and a
+recorded violation list; the environment may only narrow (disable, or lower the delta within
+bounds), never enable or widen.
+
+When authorized, the runtime consults only the request's own prompt-size bucket, requires
+evidence for the router's chosen endpoint before anything can move, and switches only when a
+candidate's measured p95 beats that choice by more than `maxDeltaMs`. The switch is applied by
+re-routing with the other eligible endpoints denied, so the router's eligibility, health and
+capability rules still decide whether the chosen endpoint may serve the request; if they refuse
+it, the original decision stands and the bounded reason is recorded. The verdict — bucket,
+ranked candidates with p95 and sample counts, chosen endpoint, reason — is stored on the
+observation's `routingDiagnostics.latencySelection` rather than on the `RouterDecision`
+contract, and the candidate work is bounded by `maxCandidates`.
+
+The routing-preparation reads that feed this (observed profiles, the seven-day telemetry
+rollup, the benchmark capability map, the latency buckets) are served from a short-TTL shared
+snapshot (`ROLE_MODEL_ROUTING_PREP_CACHE_TTL_MS`, default 5 s, `0` disables), so this work never
+starves request handling.
+
 ## Provider, Vendor, Execution, And Adapter Identity
 
 The run also hardens the identity contract so execution receipts stop classifying

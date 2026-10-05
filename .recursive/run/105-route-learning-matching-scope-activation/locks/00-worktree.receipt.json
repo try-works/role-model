@@ -1,0 +1,11 @@
+{
+  "artifact": "00-worktree.md",
+  "artifact_hash": "7b8b7a1a95614c7d28b69f7032a4132b607bf5779c4dd15bf1798b1669f27cff",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\105-route-learning-matching-scope-activation\\.recursive\\run\\105-route-learning-matching-scope-activation\\00-worktree.md",
+  "locked_at": "2026-10-03T02:00:34.984Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "f3b5c3fcbb583d277329cfea83f35066ee82819a425ab3a4ec671b09fdd3d356"
+  },
+  "previous_receipt_hash": "2a31017573b1bd19bdf054b9b26d01dc50dc766d161f6f21540c931fd8b33ac2",
+  "receipt_hash": "f12fd781ee731c61873630263ad9b0157dde6317d5688826c1f80294fb52563b"
+}

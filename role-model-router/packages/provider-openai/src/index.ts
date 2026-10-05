@@ -25,6 +25,19 @@ type OpenAIModelRequestPolicy = {
 };
 
 const OPENAI_MODEL_REQUEST_POLICIES: Record<string, OpenAIModelRequestPolicy> = {
+  // DeepSeek renamed its first-party models: the flash slot is now published as
+  // `deepseek-flash` while the pro slot keeps `deepseek-v4-pro`. The catalog
+  // keeps the historical canonical ids so existing endpoint configuration stays
+  // valid, and the provider request must use the ids the provider advertises.
+  "deepseek/deepseek-v4-flash": {
+    upstreamModelId: "deepseek-flash",
+  },
+  "deepseek/deepseek-flash": {
+    upstreamModelId: "deepseek-flash",
+  },
+  "deepseek/deepseek-v4-pro": {
+    upstreamModelId: "deepseek-v4-pro",
+  },
   "moonshot/kimi-k2.5": {
     omitChatCompletionsBodyKeys: ["temperature"],
   },

@@ -1,0 +1,12 @@
+(node:42940) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ Run96 F43 paired subprocess replay uses the real public host, survives restart/outage, and records one sandboxed branch (8356.2068ms)
+✔ AC-R10-01: paired replay crosses authenticated versioned channel/scope-bound IPC with bounded candidate identity (7752.7939ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 18419.845

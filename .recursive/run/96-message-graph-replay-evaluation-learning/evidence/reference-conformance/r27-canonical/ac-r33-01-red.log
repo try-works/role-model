@@ -1,0 +1,10 @@
+Run 96 canonical TDD receipt
+acceptanceCriterionId=AC-R33-01
+proofFamily=legacy-admission-reconciliation
+phase=semantic RED
+result=FAIL
+testPath=public:role-model-router/apps/runtime-host-bridge/test/legacy-execution-admission-reconciliation.test.ts
+assertionTitle=restores only a source-bound transient circuit from the legacy degraded row shape
+command=corepack pnpm --dir role-model-router/apps/runtime-host-bridge exec vitest run test/legacy-execution-admission-reconciliation.test.ts
+baseline=b52a10279de21f612911bf2ae758ab40fb61d164
+observation=FAIL: the locked baseline could not resolve ../src/legacy-execution-admission-reconciliation.js. The semantic migration test therefore failed before the reconciler existed; auth, quota, and incomplete-chain controls are part of the owning matrix.

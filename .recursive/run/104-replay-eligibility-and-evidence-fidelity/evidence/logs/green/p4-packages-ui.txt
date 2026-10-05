@@ -1,0 +1,20 @@
+
+> @role-model/ui@0.0.0 test D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\packages\ui
+> vitest run
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/packages/ui
+
+ ✓ src/chart-grid.test.ts (1 test) 9ms
+ ✓ src/badge.test.ts (2 tests) 55ms
+ ✓ src/sidebar.test.ts (6 tests) 136ms
+ ✓ src/chart.test.ts (13 tests) 25ms
+ ✓ src/chart-composition.test.ts (3 tests) 8ms
+ ✓ src/runtime-overview.test.ts (3 tests) 10ms
+ ✓ src/observe.test.ts (5 tests) 17ms
+
+ Test Files  7 passed (7)
+      Tests  33 passed (33)
+   Start at  22:21:40
+   Duration  3.60s (transform 1.26s, setup 0ms, collect 8.97s, tests 260ms, environment 5ms, prepare 3.44s)
+

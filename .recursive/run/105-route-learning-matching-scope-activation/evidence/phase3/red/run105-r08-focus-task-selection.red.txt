@@ -1,0 +1,56 @@
+npm warn Unknown env config "manage-package-manager-versions". This will stop working in the next major version of npm.
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/run105-r08-focus-task-selection.test.ts (3 tests | 3 failed) 15ms
+   × run105 R8 focus task selection > only a classified request with recorded volume becomes the focus task 9ms
+     → (0 , selectFocusTask) is not a function
+   × run105 R8 focus task selection > depth-first: most-requested wins, then most-unfilled 2ms
+     → (0 , selectFocusTask) is not a function
+   × run105 R8 focus task selection > the chosen focus task carries its completeness so the tick can size the fill 1ms
+     → (0 , selectFocusTask) is not a function
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run105-r08-focus-task-selection.test.ts > run105 R8 focus task selection > only a classified request with recorded volume becomes the focus task
+TypeError: (0 , selectFocusTask) is not a function
+ ❯ test/run105-r08-focus-task-selection.test.ts:22:12
+     20| 
+     21|   test("only a classified request with recorded volume becomes the foc…
+     22|     expect(selectFocusTask([task({ requestCount: 0 })])).toBeNull();
+       |            ^
+     23|     expect(selectFocusTask([])).toBeNull();
+     24|     expect(selectFocusTask([task({ requestCount: 1 })])).toMatchObject…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  test/run105-r08-focus-task-selection.test.ts > run105 R8 focus task selection > depth-first: most-requested wins, then most-unfilled
+TypeError: (0 , selectFocusTask) is not a function
+ ❯ test/run105-r08-focus-task-selection.test.ts:29:7
+     27|   test("depth-first: most-requested wins, then most-unfilled", () => {
+     28|     expect(
+     29|       selectFocusTask([task({ taskTypeId: "quiet", requestCount: 1 }),…
+       |       ^
+     30|     ).toMatchObject({ taskTypeId: "busy" });
+     31|     expect(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  test/run105-r08-focus-task-selection.test.ts > run105 R8 focus task selection > the chosen focus task carries its completeness so the tick can size the fill
+TypeError: (0 , selectFocusTask) is not a function
+ ❯ test/run105-r08-focus-task-selection.test.ts:40:19
+     38| 
+     39|   test("the chosen focus task carries its completeness so the tick can…
+     40|     const focus = selectFocusTask([task({ admitted: 1, configured: 4 }…
+       |                   ^
+     41|     expect(focus).toMatchObject({ admitted: 1, configured: 4 });
+     42|     expect(focus?.remaining).toBe(3);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed (3)
+   Start at  13:43:19
+   Duration  10.30s (transform 4.71s, setup 0ms, collect 8.73s, tests 15ms, environment 1ms, prepare 475ms)
+

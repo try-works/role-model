@@ -1,0 +1,9 @@
+Run 96 canonical TDD receipt
+acceptanceCriterionId=AC-R33-07
+proofFamily=alias-pool-eligibility-diagnostic
+phase=REFACTOR
+result=PASS
+testPath=public:role-model-router/apps/runtime-host-bridge/test/alias-capability-routing.test.ts
+assertionTitle=reports an empty alias pool before attempting capability eligibility
+command=corepack pnpm exec biome check role-model-router/apps/runtime-host-bridge/src/index.ts role-model-router/apps/runtime-host-bridge/test/alias-capability-routing.test.ts
+refactor=PASS: index routing diagnostics and the alias eligibility assertion remain formatted after the refactor check.

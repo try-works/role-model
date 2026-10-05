@@ -189,6 +189,13 @@ export interface BenchmarkCapability {
   readonly lastRunCompletedAtMs: number | null;
   readonly lastRunMode: "quick" | "full" | null;
   readonly lastRunSuiteId: string | null;
+  /**
+   * Run 98 addendum 42 B2: the run's per-endpoint latency, derived from the case audits exactly as the
+   * Benchmark scores page derives its P50/P95 columns. The model pool's speed axis falls back to these
+   * while an endpoint has no telemetry of its own.
+   */
+  readonly p50LatencyMs?: number | null;
+  readonly p95LatencyMs?: number | null;
   readonly judgeEndpointId: string | null;
   readonly judgeModelId: string | null;
   /** Immutable evidence revision for the selected endpoint's current benchmark profile. */
@@ -763,6 +770,16 @@ export function buildBenchmarkCapability(input: {
     }
   }
 
+  /**
+   * Run 98 addendum 42 B2: the benchmark profile is aggregated from this endpoint's own
+   * current-membership benchmark samples, and that aggregation already emits the p50/p95 it measured
+   * (`latency_ms_p50` / `latency_ms_p95`). Carrying them here is what lets the model pool's speed axis
+   * score an endpoint that has benchmark evidence but no telemetry yet; a profile without them keeps the
+   * axis empty rather than borrowing a measurement from somewhere else.
+   */
+  const p50LatencyMs = readNumber(profile, "latency_ms_p50") ?? readNumber(profile, "latencyMsP50");
+  const p95LatencyMs = readNumber(profile, "latency_ms_p95") ?? readNumber(profile, "latencyMsP95");
+
   return {
     evidenceSource: "profile-derived",
     overallScore,
@@ -778,6 +795,8 @@ export function buildBenchmarkCapability(input: {
     judgeEndpointId: null,
     judgeModelId: null,
     profileRevision: null,
+    ...(p50LatencyMs !== null && p50LatencyMs > 0 ? { p50LatencyMs } : {}),
+    ...(p95LatencyMs !== null && p95LatencyMs > 0 ? { p95LatencyMs } : {}),
   };
 }
 
@@ -796,20 +815,45 @@ export function buildBenchmarkCapabilityForEndpoint(input: {
   });
   const portfolioEntry =
     input.portfolioEntry?.endpointId === input.endpointId ? input.portfolioEntry : null;
-  // The portfolio is the single current-membership authority. The latest summary is
-  // intentionally not a fallback: it can describe a completed run for a different
-  // configured pool and must never become routing evidence for the current pool.
-  if (portfolioEntry) {
-    const summarySubject = portfolioEntry;
+  /**
+   * Run 98 addendum 42 B1: the portfolio is still the current-membership authority and still wins, but a
+   * completed run's summary is per-endpoint evidence — each subject names the endpoint it measured. When
+   * the portfolio has no entry (for example a run that completed before the current membership revision,
+   * which is the live stage's situation), the subject whose `endpointId` matches this candidate supplies
+   * the capability, so the model pool's quality axis is backed by benchmark data instead of nothing.
+   *
+   * The guard the previous comment described is preserved in the match itself: a subject for any other
+   * endpoint is never consulted, so a run that covered a different pool cannot leak evidence into this
+   * candidate, and a run that covered no configured endpoint still yields no capability at all.
+   */
+  const summarySubject =
+    input.summary.subjects?.find((subject) => subject.endpointId === input.endpointId) ?? null;
+  /**
+   * Precedence, highest first: the portfolio entry (current membership), then a revisioned profile
+   * capability (the store's benchmark evidence, already filtered by the caller's membership revision),
+   * and only then the matching summary subject. The middle rule is why this is not `?? summarySubject`:
+   * an unbound quick run must never override evidence that is bound to the current revision, which the
+   * `benchmark-candidates-routing-quality` suite asserts.
+   */
+  const subject = portfolioEntry ?? (profileCapability ? null : summarySubject);
+  if (subject) {
+    const runId = portfolioEntry?.runId ?? input.summary.runId ?? null;
+    const completedAtMs = portfolioEntry?.completedAtMs ?? input.summary.completedAtMs ?? null;
+    const runMode = portfolioEntry?.mode ?? input.summary.mode ?? null;
+    const suiteId = portfolioEntry?.suiteId ?? input.summary.suiteId ?? null;
+    const judgeEndpointId =
+      portfolioEntry?.judgeEndpointId ?? input.summary.judgeEndpointId ?? null;
+    const judgeModelId = portfolioEntry?.judgeModelId ?? input.summary.judgeModelId ?? null;
+    const profileRevision = portfolioEntry?.profileRevision ?? null;
     const capability =
       profileCapability ??
       ({
         evidenceSource: "run-artifact",
         overallScore: null,
         scoresByBucket: {},
-        benchmarkSamples: summarySubject.caseCount,
-        sampleCount: summarySubject.caseCount,
-        measuredAtMs: portfolioEntry.completedAtMs,
+        benchmarkSamples: subject.caseCount,
+        sampleCount: subject.caseCount,
+        measuredAtMs: completedAtMs,
         freshnessScore: null,
         lastRunId: null,
         lastRunCompletedAtMs: null,
@@ -819,46 +863,76 @@ export function buildBenchmarkCapabilityForEndpoint(input: {
         judgeModelId: null,
         profileRevision: null,
       } satisfies BenchmarkCapability);
-    const roleScores = summarySubject.taxonomyScores?.byRole;
+    const roleScores = subject.taxonomyScores?.byRole;
     const eligibleRoleScores = buildEligibleRoleScores({
       roleScores,
       availableRoleIds: input.availableRoleIds,
     });
     const { groupScores, groupCases } = buildGroupScores({
       eligibleRoleScores,
-      roleCases: summarySubject.taxonomyCoverage?.byRole,
+      roleCases: subject.taxonomyCoverage?.byRole,
     });
-    const lowCoverageRoleIds = Object.entries(summarySubject.taxonomyCoverage?.byRole ?? {})
+    const lowCoverageRoleIds = Object.entries(subject.taxonomyCoverage?.byRole ?? {})
       .filter(([, cases]) => cases < BENCHMARK_LOW_COVERAGE_CASE_COUNT)
       .map(([roleId]) => roleId);
     const lowCoverageGroupIds = Object.entries(groupCases ?? {})
       .filter(([, cases]) => cases < BENCHMARK_LOW_COVERAGE_CASE_COUNT)
       .map(([groupId]) => groupId);
+    /**
+     * Run 98 addendum 42 B2: per-endpoint latency from the run's case audits, bounded and filtered to the
+     * endpoint being described so one endpoint's audits can never become another's evidence.
+     *
+     * The audits also have to belong to the run this capability describes. A portfolio entry can name an
+     * earlier run than the summary, and its quality score comes from that earlier run; borrowing the
+     * summary run's latency would put two different measurements on one capability, so it is refused
+     * rather than mixed (the speed axis then stays empty until telemetry exists).
+     */
+    const auditsDescribeThisRun = runId !== null && runId === input.summary.runId;
+    const benchmarkLatencies = (auditsDescribeThisRun ? (input.summary.caseAudits ?? []) : [])
+      .filter(
+        (audit) =>
+          audit.endpointId === input.endpointId &&
+          typeof audit.latencyMs === "number" &&
+          Number.isFinite(audit.latencyMs) &&
+          audit.latencyMs > 0,
+      )
+      .map((audit) => audit.latencyMs as number)
+      .sort((left, right) => left - right)
+      .slice(0, 512);
+    const latencyPercentile = (quantile: number): number | null =>
+      benchmarkLatencies.length === 0
+        ? null
+        : (benchmarkLatencies[
+            Math.min(
+              benchmarkLatencies.length - 1,
+              Math.max(0, Math.ceil(quantile * benchmarkLatencies.length) - 1),
+            )
+          ] ?? null);
+    const p50LatencyMs = latencyPercentile(0.5);
+    const p95LatencyMs = latencyPercentile(0.95);
 
     return {
       ...capability,
       evidenceSource: "run-artifact",
-      overallScore: summarySubject.overallScore,
-      scoresByBucket: summarySubject.scoresByBucket,
-      lastRunId: portfolioEntry.runId,
-      lastRunCompletedAtMs: portfolioEntry.completedAtMs,
-      lastRunMode: portfolioEntry.mode,
-      lastRunSuiteId: portfolioEntry.suiteId,
-      judgeEndpointId: portfolioEntry.judgeEndpointId,
-      judgeModelId: portfolioEntry.judgeModelId,
-      profileRevision: portfolioEntry.profileRevision,
-      ...(summarySubject.taxonomyScores?.byTask
-        ? { taskScores: summarySubject.taxonomyScores.byTask }
-        : {}),
-      ...(summarySubject.taxonomyScores ? { taxonomyScores: summarySubject.taxonomyScores } : {}),
+      overallScore: subject.overallScore,
+      scoresByBucket: subject.scoresByBucket,
+      lastRunId: runId,
+      lastRunCompletedAtMs: completedAtMs,
+      lastRunMode: runMode,
+      lastRunSuiteId: suiteId,
+      judgeEndpointId,
+      judgeModelId,
+      profileRevision,
+      ...(p50LatencyMs !== null ? { p50LatencyMs } : {}),
+      ...(p95LatencyMs !== null ? { p95LatencyMs } : {}),
+      ...(subject.taxonomyScores?.byTask ? { taskScores: subject.taxonomyScores.byTask } : {}),
+      ...(subject.taxonomyScores ? { taxonomyScores: subject.taxonomyScores } : {}),
       ...(roleScores ? { roleScores } : {}),
       ...(eligibleRoleScores ? { eligibleRoleScores } : {}),
       ...(groupScores ? { groupScores } : {}),
       coverage: {
-        overallCases: summarySubject.caseCount,
-        ...(summarySubject.taxonomyCoverage?.byRole
-          ? { roleCases: summarySubject.taxonomyCoverage.byRole }
-          : {}),
+        overallCases: subject.caseCount,
+        ...(subject.taxonomyCoverage?.byRole ? { roleCases: subject.taxonomyCoverage.byRole } : {}),
         ...(groupCases ? { groupCases } : {}),
         lowCoverageRoleIds,
         lowCoverageGroupIds,

@@ -1,0 +1,25 @@
+file:///D:/DEV/role-model-internal/.worktrees/104-replay-eligibility-and-evidence-fidelity/tests/track-b/run104-sp10-replay-evaluation-handoff.test.mjs:28
+  createQueuedEvaluationHandoff,
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+SyntaxError: The requested module '../../scripts/track-b/runtime-operations-server.mjs' does not provide an export named 'createQueuedEvaluationHandoff'
+    at #_instantiate (node:internal/modules/esm/module_job:254:21)
+    at async ModuleJob.run (node:internal/modules/esm/module_job:369:5)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:691:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v24.11.0
+✖ tests\track-b\run104-sp10-replay-evaluation-handoff.test.mjs (2010.4179ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2070.7405
+
+✖ failing tests:
+
+test at tests\track-b\run104-sp10-replay-evaluation-handoff.test.mjs:1:1
+✖ tests\track-b\run104-sp10-replay-evaluation-handoff.test.mjs (2010.4179ms)
+  'test failed'

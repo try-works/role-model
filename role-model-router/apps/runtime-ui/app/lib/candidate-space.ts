@@ -1,3 +1,4 @@
+import { CANDIDATE_SPACE_SCORING_CONFIG } from "./candidate-space-config";
 import { formatCompactEndpointDisplayName } from "./effort-identity";
 import type { RouterCandidate } from "./runtime-api";
 
@@ -193,9 +194,35 @@ function shortModelLabel(candidate: RouterCandidate): string {
   });
 }
 
+/**
+ * Run 98 addendum 43 S2: how many measured benchmark samples back this capability. `benchmarkSamples` is
+ * the benchmark-only count the bridge records; `sampleCount` is the fallback for capabilities that predate
+ * it. A capability with no countable samples reads as 0 and is therefore treated as insufficient.
+ */
+function benchmarkSampleCount(candidate: RouterCandidate): number {
+  const capability = candidate.benchmarkCapability;
+  const count = capability?.benchmarkSamples ?? capability?.sampleCount;
+  return typeof count === "number" && Number.isFinite(count) && count > 0 ? Math.floor(count) : 0;
+}
+
+function hasEnoughBenchmarkSamples(candidate: RouterCandidate): boolean {
+  return (
+    benchmarkSampleCount(candidate) >= CANDIDATE_SPACE_SCORING_CONFIG.minimumQualityBenchmarkSamples
+  );
+}
+
 function scoreQuality(candidate: RouterCandidate): number | null {
   const overall = candidate.benchmarkCapability?.overallScore;
-  if (typeof overall === "number" && Number.isFinite(overall)) {
+  /**
+   * Run 98 addendum 43 S2: a benchmark score only drives the axis once enough samples back it. Below the
+   * floor the axis falls through to the other quality evidence instead of printing a score built from one
+   * sample, and the count is surfaced as a tag rather than silently dropped.
+   */
+  if (
+    typeof overall === "number" &&
+    Number.isFinite(overall) &&
+    hasEnoughBenchmarkSamples(candidate)
+  ) {
     return clamp01(overall);
   }
   const fromRouting = candidate.routingQualityScore;
@@ -221,16 +248,35 @@ function scoreQuality(candidate: RouterCandidate): number | null {
   return null;
 }
 
-function scoreSpeed(candidate: RouterCandidate, fastestLatencyMs: number): number | null {
+/**
+ * Run 98 addendum 42 B2: the speed axis prefers the endpoint's own observed p50 from the operational
+ * profile, and falls back to the p50 the benchmark run measured for that endpoint while requests are
+ * still scarce. The benchmark value comes from the run artifact's case audits, so it is real evidence
+ * rather than a synthesised score. Either way the value is a latency, which keeps the cohort ratio
+ * meaningful across a pool with mixed coverage.
+ */
+function readP50LatencyMs(candidate: RouterCandidate): number | null {
   const profile = asRecord(candidate.operationalProfile ?? candidate.latestProfile);
-  const latencyP50 = pickNumber(
+  const fromProfile = pickNumber(
     profile,
     "latency_ms_p50",
     "latencyMsP50",
     "latency_ms",
     "latencyMs",
   );
-  if (latencyP50 !== null && latencyP50 > 0) {
+  if (fromProfile !== null && fromProfile > 0) {
+    return fromProfile;
+  }
+  const fromBenchmark = candidate.benchmarkCapability?.p50LatencyMs;
+  if (typeof fromBenchmark === "number" && Number.isFinite(fromBenchmark) && fromBenchmark > 0) {
+    return fromBenchmark;
+  }
+  return null;
+}
+
+function scoreSpeed(candidate: RouterCandidate, fastestLatencyMs: number): number | null {
+  const latencyP50 = readP50LatencyMs(candidate);
+  if (latencyP50 !== null) {
     // Ratio to the cohort’s fastest p50 — higher = faster.
     // Avoids pinning the slowest model to S0 (reads as “no latency data”).
     // Zero/negative latency is treated as absent, not as "fastest".
@@ -288,24 +334,31 @@ function scoreRoute(
   quality: number | null,
   speed: number | null,
 ): number | null {
+  const { axisWeights } = CANDIDATE_SPACE_SCORING_CONFIG;
   const parts: number[] = [];
   const weights: number[] = [];
   if (cost !== null) {
     parts.push(cost);
-    weights.push(0.33);
+    weights.push(axisWeights.cost);
   }
   if (quality !== null) {
     parts.push(quality);
-    weights.push(0.34);
+    weights.push(axisWeights.quality);
   }
   if (speed !== null) {
     parts.push(speed);
-    weights.push(0.33);
+    weights.push(axisWeights.speed);
   }
   if (parts.length === 0) {
     return null;
   }
-  const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
+  /**
+   * Run 98 addendum 43 S1, operator rule: the denominator is the weight of a *fully* evidenced candidate,
+   * not the weight of the axes this candidate happens to have. A missing axis therefore contributes zero
+   * (capping a one-axis candidate at 0.33 and a two-axis candidate at 0.67) instead of being renormalised
+   * away — which is what let a cost-only candidate read as a 1.000 leader.
+   */
+  const totalWeight = axisWeights.cost + axisWeights.quality + axisWeights.speed;
   const weighted = parts.reduce((sum, part, index) => sum + part * (weights[index] ?? 0), 0);
   return clamp01(weighted / totalWeight);
 }
@@ -333,6 +386,13 @@ function candidateTags(candidate: RouterCandidate, selected: boolean, excluded: 
         ? "Benchmark run"
         : "Benchmark profile",
     );
+    // Run 98 addendum 43 S2: keep the reason the quality axis is empty visible, with the count, so an
+    // un-scored endpoint reads as thin evidence rather than as a model with no benchmark at all.
+    const sampleCount = benchmarkSampleCount(candidate);
+    const floor = CANDIDATE_SPACE_SCORING_CONFIG.minimumQualityBenchmarkSamples;
+    if (sampleCount < floor) {
+      tags.push(`Insufficient quality samples (${sampleCount} of ${floor})`);
+    }
   }
   const operationalProfile = asRecord(candidate.operationalProfile ?? candidate.latestProfile);
   if (operationalProfile?.profile_scope === "live-request-operational") {
@@ -433,16 +493,11 @@ export function buildCandidateSpacePoints(
   const pool = (eligible.length > 0 ? eligible : candidates).slice();
   const total = pool.length;
 
+  // Telemetry and benchmark p50s share one cohort, so an endpoint with only benchmark evidence still sets
+  // the fast end of the scale instead of every axis collapsing to a single-source subset.
   const latencies = pool
-    .map((candidate) =>
-      pickNumber(
-        asRecord(candidate.operationalProfile ?? candidate.latestProfile),
-        "latency_ms_p50",
-        "latencyMsP50",
-        "latency_ms",
-      ),
-    )
-    .filter((value): value is number => value !== null && value > 0);
+    .map((candidate) => readP50LatencyMs(candidate))
+    .filter((value): value is number => value !== null);
   const fastestLatencyMs =
     latencies.length > 0 ? Math.min(...latencies.map((value) => Math.max(value, 1))) : 1_000;
 

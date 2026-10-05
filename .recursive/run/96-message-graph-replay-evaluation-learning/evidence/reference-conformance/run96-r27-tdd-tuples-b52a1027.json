@@ -1,0 +1,261 @@
+{
+  "schemaVersion": "role-model.run96.r27-tdd-tuples.proposal.v1",
+  "runId": "96-message-graph-replay-evaluation-learning",
+  "publicBaseline": "b52a10279de21f612911bf2ae758ab40fb61d164",
+  "validator": "private:scripts/track-b/run96-phase3-proof-gate.mjs#validateR27TddCrosswalk",
+  "verificationDisposition": "source-only",
+  "rows": [
+    {
+      "acceptanceCriterionId": "AC-R27-01",
+      "requirementId": "R27",
+      "owner": "public:packages/extension-host/index.mjs",
+      "testPath": "public:packages/extension-host/run96-r27-extension-boundary.test.mjs",
+      "assertionTitle": "AC-R27-01 tuple: real ExtensionHost and worker-runtime preserve authenticated identity across bounded process transfer",
+      "implementationReferences": [
+        "public:packages/extension-host/index.mjs#ExtensionHost.invoke",
+        "public:packages/extension-host/worker-runtime.mjs#process transfer"
+      ],
+      "changedCodeSelectors": [
+        "public:packages/extension-host/index.mjs#ExtensionHost.invoke",
+        "public:packages/extension-host/worker-runtime.mjs#process transfer"
+      ],
+      "redEvidence": [
+        "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/run96-r27-01-red-b52a1027.log"
+      ],
+      "greenEvidence": [
+        "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/run96-r27-01-green-b52a1027.log"
+      ],
+      "productionVerification": {
+        "command": "node --test --test-name-pattern=\"^AC-R27-01 tuple:\" packages/extension-host/run96-r27-extension-boundary.test.mjs",
+        "result": "PASS"
+      },
+      "finalDisposition": "implemented",
+      "verificationDisposition": "source-only",
+      "tddEvidence": {
+        "red": {
+          "acceptanceCriterionId": "AC-R27-01",
+          "proofFamily": "authenticated-process-transfer",
+          "command": "node --test --test-name-pattern=\"^AC-R27-01 tuple:\" packages/extension-host/run96-r27-extension-boundary.test.mjs",
+          "testPath": "public:packages/extension-host/run96-r27-extension-boundary.test.mjs",
+          "assertionTitle": "AC-R27-01 tuple: real ExtensionHost and worker-runtime preserve authenticated identity across bounded process transfer",
+          "result": "FAIL",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/run96-r27-01-red-b52a1027.log"
+          ]
+        },
+        "green": {
+          "acceptanceCriterionId": "AC-R27-01",
+          "proofFamily": "authenticated-process-transfer",
+          "command": "node --test --test-name-pattern=\"^AC-R27-01 tuple:\" packages/extension-host/run96-r27-extension-boundary.test.mjs",
+          "testPath": "public:packages/extension-host/run96-r27-extension-boundary.test.mjs",
+          "assertionTitle": "AC-R27-01 tuple: real ExtensionHost and worker-runtime preserve authenticated identity across bounded process transfer",
+          "result": "PASS",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/run96-r27-01-green-b52a1027.log"
+          ]
+        },
+        "refactor": {
+          "acceptanceCriterionId": "AC-R27-01",
+          "proofFamily": "authenticated-process-transfer",
+          "command": "corepack pnpm exec biome check packages/extension-host/index.mjs packages/extension-host/worker-runtime.mjs",
+          "testPath": "public:packages/extension-host/run96-r27-extension-boundary.test.mjs",
+          "assertionTitle": "AC-R27-01 tuple: real ExtensionHost and worker-runtime preserve authenticated identity across bounded process transfer",
+          "result": "PASS",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/run96-r27-01-refactor-b52a1027.log"
+          ]
+        },
+        "owningSuite": {
+          "acceptanceCriterionId": "AC-R27-01",
+          "proofFamily": "authenticated-process-transfer",
+          "command": "node --test --test-name-pattern=\"^AC-R27-01 tuple:\" packages/extension-host/run96-r27-extension-boundary.test.mjs",
+          "testPath": "public:packages/extension-host/run96-r27-extension-boundary.test.mjs",
+          "assertionTitle": "AC-R27-01 tuple: real ExtensionHost and worker-runtime preserve authenticated identity across bounded process transfer",
+          "result": "PASS",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/run96-r27-01-owning-b52a1027.log"
+          ]
+        },
+        "cumulativeGate": {
+          "acceptanceCriterionId": "AC-R27-01",
+          "proofFamily": "authenticated-process-transfer",
+          "command": "node --test --test-name-pattern=\"^AC-R27-01 tuple:\" packages/extension-host/run96-r27-extension-boundary.test.mjs",
+          "testPath": "public:packages/extension-host/run96-r27-extension-boundary.test.mjs",
+          "assertionTitle": "AC-R27-01 tuple: real ExtensionHost and worker-runtime preserve authenticated identity across bounded process transfer",
+          "result": "PASS",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/run96-r27-01-cumulative-b52a1027.log"
+          ]
+        }
+      }
+    },
+    {
+      "acceptanceCriterionId": "AC-R27-02",
+      "requirementId": "R27",
+      "owner": "public:packages/extension-host/transfer-artifact.mjs",
+      "testPath": "public:packages/extension-host/run96-r27-extension-boundary.test.mjs",
+      "assertionTitle": "AC-R27-02 tuple: transfer-artifact authenticates scope/channel/epoch, bounds content, sanitizes private fields, and is single-use",
+      "implementationReferences": [
+        "public:packages/extension-host/transfer-artifact.mjs#createTransferArtifact",
+        "public:packages/extension-host/transfer-artifact.mjs#consumeTransferArtifact"
+      ],
+      "changedCodeSelectors": [
+        "public:packages/extension-host/transfer-artifact.mjs#createTransferArtifact",
+        "public:packages/extension-host/transfer-artifact.mjs#consumeTransferArtifact"
+      ],
+      "redEvidence": [
+        "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/run96-r27-02-red-b52a1027.log"
+      ],
+      "greenEvidence": [
+        "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/run96-r27-02-green-b52a1027.log"
+      ],
+      "productionVerification": {
+        "command": "node --test --test-name-pattern=\"^AC-R27-02 tuple:\" packages/extension-host/run96-r27-extension-boundary.test.mjs",
+        "result": "PASS"
+      },
+      "finalDisposition": "implemented",
+      "verificationDisposition": "source-only",
+      "tddEvidence": {
+        "red": {
+          "acceptanceCriterionId": "AC-R27-02",
+          "proofFamily": "transfer-artifact-authentication",
+          "command": "node --test --test-name-pattern=\"^AC-R27-02 tuple:\" packages/extension-host/run96-r27-extension-boundary.test.mjs",
+          "testPath": "public:packages/extension-host/run96-r27-extension-boundary.test.mjs",
+          "assertionTitle": "AC-R27-02 tuple: transfer-artifact authenticates scope/channel/epoch, bounds content, sanitizes private fields, and is single-use",
+          "result": "FAIL",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/run96-r27-02-red-b52a1027.log"
+          ]
+        },
+        "green": {
+          "acceptanceCriterionId": "AC-R27-02",
+          "proofFamily": "transfer-artifact-authentication",
+          "command": "node --test --test-name-pattern=\"^AC-R27-02 tuple:\" packages/extension-host/run96-r27-extension-boundary.test.mjs",
+          "testPath": "public:packages/extension-host/run96-r27-extension-boundary.test.mjs",
+          "assertionTitle": "AC-R27-02 tuple: transfer-artifact authenticates scope/channel/epoch, bounds content, sanitizes private fields, and is single-use",
+          "result": "PASS",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/run96-r27-02-green-b52a1027.log"
+          ]
+        },
+        "refactor": {
+          "acceptanceCriterionId": "AC-R27-02",
+          "proofFamily": "transfer-artifact-authentication",
+          "command": "corepack pnpm exec biome check packages/extension-host/transfer-artifact.mjs",
+          "testPath": "public:packages/extension-host/run96-r27-extension-boundary.test.mjs",
+          "assertionTitle": "AC-R27-02 tuple: transfer-artifact authenticates scope/channel/epoch, bounds content, sanitizes private fields, and is single-use",
+          "result": "PASS",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/run96-r27-02-refactor-b52a1027.log"
+          ]
+        },
+        "owningSuite": {
+          "acceptanceCriterionId": "AC-R27-02",
+          "proofFamily": "transfer-artifact-authentication",
+          "command": "node --test --test-name-pattern=\"^AC-R27-02 tuple:\" packages/extension-host/run96-r27-extension-boundary.test.mjs",
+          "testPath": "public:packages/extension-host/run96-r27-extension-boundary.test.mjs",
+          "assertionTitle": "AC-R27-02 tuple: transfer-artifact authenticates scope/channel/epoch, bounds content, sanitizes private fields, and is single-use",
+          "result": "PASS",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/run96-r27-02-owning-b52a1027.log"
+          ]
+        },
+        "cumulativeGate": {
+          "acceptanceCriterionId": "AC-R27-02",
+          "proofFamily": "transfer-artifact-authentication",
+          "command": "node --test --test-name-pattern=\"^AC-R27-02 tuple:\" packages/extension-host/run96-r27-extension-boundary.test.mjs",
+          "testPath": "public:packages/extension-host/run96-r27-extension-boundary.test.mjs",
+          "assertionTitle": "AC-R27-02 tuple: transfer-artifact authenticates scope/channel/epoch, bounds content, sanitizes private fields, and is single-use",
+          "result": "PASS",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/run96-r27-02-cumulative-b52a1027.log"
+          ]
+        }
+      }
+    },
+    {
+      "acceptanceCriterionId": "AC-R27-03",
+      "requirementId": "R27",
+      "owner": "public:packages/extension-sdk/index.mjs",
+      "testPath": "public:packages/extension-host/run96-r27-extension-boundary.test.mjs",
+      "assertionTitle": "AC-R27-03 tuple: extension-sdk defines the allowlisted contract and removes private content before inline framing",
+      "implementationReferences": [
+        "public:packages/extension-sdk/index.mjs#sanitizeEnvelope",
+        "public:packages/extension-sdk/index.mjs#encodeFrame"
+      ],
+      "changedCodeSelectors": [
+        "public:packages/extension-sdk/index.mjs#sanitizeEnvelope",
+        "public:packages/extension-sdk/index.mjs#encodeFrame"
+      ],
+      "redEvidence": [
+        "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/run96-r27-03-red-b52a1027.log"
+      ],
+      "greenEvidence": [
+        "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/run96-r27-03-green-b52a1027.log"
+      ],
+      "productionVerification": {
+        "command": "node --test --test-name-pattern=\"^AC-R27-03 tuple:\" packages/extension-host/run96-r27-extension-boundary.test.mjs",
+        "result": "PASS"
+      },
+      "finalDisposition": "implemented",
+      "verificationDisposition": "source-only",
+      "tddEvidence": {
+        "red": {
+          "acceptanceCriterionId": "AC-R27-03",
+          "proofFamily": "sdk-allowlisted-sanitization",
+          "command": "node --test --test-name-pattern=\"^AC-R27-03 tuple:\" packages/extension-host/run96-r27-extension-boundary.test.mjs",
+          "testPath": "public:packages/extension-host/run96-r27-extension-boundary.test.mjs",
+          "assertionTitle": "AC-R27-03 tuple: extension-sdk defines the allowlisted contract and removes private content before inline framing",
+          "result": "FAIL",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/run96-r27-03-red-b52a1027.log"
+          ]
+        },
+        "green": {
+          "acceptanceCriterionId": "AC-R27-03",
+          "proofFamily": "sdk-allowlisted-sanitization",
+          "command": "node --test --test-name-pattern=\"^AC-R27-03 tuple:\" packages/extension-host/run96-r27-extension-boundary.test.mjs",
+          "testPath": "public:packages/extension-host/run96-r27-extension-boundary.test.mjs",
+          "assertionTitle": "AC-R27-03 tuple: extension-sdk defines the allowlisted contract and removes private content before inline framing",
+          "result": "PASS",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/run96-r27-03-green-b52a1027.log"
+          ]
+        },
+        "refactor": {
+          "acceptanceCriterionId": "AC-R27-03",
+          "proofFamily": "sdk-allowlisted-sanitization",
+          "command": "corepack pnpm exec biome check packages/extension-sdk/index.mjs",
+          "testPath": "public:packages/extension-host/run96-r27-extension-boundary.test.mjs",
+          "assertionTitle": "AC-R27-03 tuple: extension-sdk defines the allowlisted contract and removes private content before inline framing",
+          "result": "PASS",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/run96-r27-03-refactor-b52a1027.log"
+          ]
+        },
+        "owningSuite": {
+          "acceptanceCriterionId": "AC-R27-03",
+          "proofFamily": "sdk-allowlisted-sanitization",
+          "command": "node --test --test-name-pattern=\"^AC-R27-03 tuple:\" packages/extension-host/run96-r27-extension-boundary.test.mjs",
+          "testPath": "public:packages/extension-host/run96-r27-extension-boundary.test.mjs",
+          "assertionTitle": "AC-R27-03 tuple: extension-sdk defines the allowlisted contract and removes private content before inline framing",
+          "result": "PASS",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/run96-r27-03-owning-b52a1027.log"
+          ]
+        },
+        "cumulativeGate": {
+          "acceptanceCriterionId": "AC-R27-03",
+          "proofFamily": "sdk-allowlisted-sanitization",
+          "command": "node --test --test-name-pattern=\"^AC-R27-03 tuple:\" packages/extension-host/run96-r27-extension-boundary.test.mjs",
+          "testPath": "public:packages/extension-host/run96-r27-extension-boundary.test.mjs",
+          "assertionTitle": "AC-R27-03 tuple: extension-sdk defines the allowlisted contract and removes private content before inline framing",
+          "result": "PASS",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/run96-r27-03-cumulative-b52a1027.log"
+          ]
+        }
+      }
+    }
+  ]
+}

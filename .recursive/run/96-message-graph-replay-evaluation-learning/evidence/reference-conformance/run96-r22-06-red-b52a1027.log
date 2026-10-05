@@ -1,0 +1,14 @@
+Run 96 AC-R22-06 strict-TDD RED receipt
+repository=public
+baseline_ref=b52a10279de21f612911bf2ae758ab40fb61d164
+baseline_worktree=E:\role-model-temp\run96-r27-provider-attempt-ids-public-baseline-b52a1027
+test=role-model-router/packages/sqlite-memory/test/r22-ac-r22-06.baseline-red.test.ts
+assertion_title=R22 AC-R22-06 reclaims legacy rich JSON and closure files and fences a resumed writer
+command=npx vitest run test/r22-ac-r22-06.baseline-red.test.ts
+result=FAIL_RED
+failure=locked baseline export LegacyRichJsonWriter was undefined; physical legacy-path reclamation and resumed-writer fencing seams were absent
+tests=1; passed=0; failed=1; exit=1
+external_log=E:\role-model-temp\run96-r27-ac-r22-06-public-baseline-b52a1027-red.log
+receipt_status=PASS_RED
+phase3_status=DRAFT
+phase5_status=PENDING

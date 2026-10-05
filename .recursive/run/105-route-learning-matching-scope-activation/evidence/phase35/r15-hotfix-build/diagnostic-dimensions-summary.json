@@ -1,0 +1,10 @@
+{
+  "inputDimensionsBytes": 240535,
+  "dimensionsFields": [
+    {
+      "field": "errorContext",
+      "bytes": 240518
+    }
+  ],
+  "observationBytes": 725433
+}

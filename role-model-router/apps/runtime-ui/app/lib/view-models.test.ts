@@ -2299,9 +2299,14 @@ describe("telemetry view models", () => {
       },
       { label: "Failures", value: "1", detail: "2 successful requests" },
       {
-        label: "Latency",
+        label: "Provider latency",
         value: "420 ms avg",
-        detail: "880 ms p95 · 420 ms avg",
+        detail: "880 ms p95 · 420 ms avg · provider response headers",
+      },
+      {
+        label: "Client latency",
+        value: "n/a",
+        detail: "Not measured for this window — rows written before the client-latency update",
       },
       {
         label: "Tokens",
@@ -2521,5 +2526,111 @@ describe("telemetry view models", () => {
         statusLabel: "400 No eligible remote endpoint satisfied alias difficulty.remote-only.",
       }),
     ]);
+  });
+});
+
+describe("run104 live-only telemetry surfaces", () => {
+  test("states how many non-live requests the live-only summary excluded", () => {
+    const stats = summarizeTelemetryStats({
+      requestCount: 1,
+      successCount: 1,
+      failureCount: 0,
+      totalInputTokens: 10,
+      totalOutputTokens: 5,
+      totalTokens: 15,
+      cachedRequestCount: 1,
+      totalActualCostUsd: 0.01,
+      totalEstimatedCostUsd: 0.01,
+      totalEffectiveCostUsd: 0.01,
+      averageLatencyMs: 100,
+      p95LatencyMs: 100,
+      lastSeenAtMs: 1_770_000_000_100,
+      excludedRequestCount: 3,
+      excludedByClass: [
+        { requestClass: "benchmark", requestCount: 2 },
+        { requestClass: "replay", requestCount: 1 },
+      ],
+      sourceBreakdown: {
+        local: { requestCount: 0 } as never,
+        remote: { requestCount: 1 } as never,
+      },
+    } as never);
+    expect(stats[0]).toEqual({
+      label: "Requests",
+      value: "1",
+      detail: "0 local · 1 remote · 3 non-live excluded (benchmark 2 · replay 1)",
+    });
+  });
+
+  test("renders no excluded note on a runtime older than the excluded-count fields", () => {
+    const stats = summarizeTelemetryStats({
+      requestCount: 4,
+      successCount: 4,
+      failureCount: 0,
+      totalInputTokens: 0,
+      totalOutputTokens: 0,
+      totalTokens: 0,
+      cachedRequestCount: 0,
+      totalActualCostUsd: 0,
+      totalEstimatedCostUsd: 0,
+      totalEffectiveCostUsd: 0,
+      averageLatencyMs: null,
+      p95LatencyMs: null,
+      lastSeenAtMs: null,
+      sourceBreakdown: {
+        local: { requestCount: 0 } as never,
+        remote: { requestCount: 4 } as never,
+      },
+    } as never);
+    expect(stats[0]?.detail).toBe("0 local · 4 remote");
+  });
+
+  test("never samples a replay or benchmark row as the latest request", () => {
+    const rows = buildDashboardLatestRequestRows([
+      {
+        requestId: "req-replay-003",
+        endpointId: "run104.endpoint",
+        sourceType: "remote",
+        createdAtMs: 300,
+        latencyMs: 900,
+        totalTokens: 30,
+        requestClass: "replay",
+      },
+      {
+        requestId: "req-bench-002",
+        endpointId: "run104.endpoint",
+        sourceType: "remote",
+        createdAtMs: 200,
+        latencyMs: 500,
+        totalTokens: 20,
+        requestClass: "benchmark",
+      },
+    ]);
+    expect(rows).toEqual([]);
+  });
+
+  test("falls back to the older live row when the newest row is a benchmark", () => {
+    const rows = buildDashboardLatestRequestRows([
+      {
+        requestId: "req-bench-003",
+        endpointId: "run104.endpoint",
+        sourceType: "remote",
+        createdAtMs: 300,
+        latencyMs: 500,
+        totalTokens: 30,
+        requestClass: "benchmark",
+      },
+      {
+        requestId: "req-live-002",
+        endpointId: "run104.endpoint",
+        sourceType: "remote",
+        createdAtMs: 200,
+        latencyMs: 120,
+        totalTokens: 12,
+        requestClass: "live",
+      },
+    ]);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ requestId: "req-live-002" });
   });
 });

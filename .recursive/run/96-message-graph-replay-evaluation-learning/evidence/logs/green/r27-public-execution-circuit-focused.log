@@ -1,0 +1,38 @@
+Run 96 / R27 public runtime-host-bridge criterion-owned TDD
+Focused GREEN receipt in the paired public worktree.
+
+Worktree:
+  public: D:/DEV/role-model/.worktrees/96-message-graph-replay-evaluation-learning
+  HEAD: 1d5732819480cf22587570bf8c60e02efcdbfb3e
+
+Focused commands and results:
+  corepack pnpm --dir role-model-router/apps/runtime-host-bridge exec vitest run
+    test/execution-circuit-breaker.test.ts -t "reopens a failed half-open provider attempt"
+  Result: PASS; 1 selected, 16 skipped.
+  Raw receipt: E:/role-model-temp/run96-r27-public-circuit-focused-single.log
+
+  corepack pnpm --dir role-model-router/apps/runtime-host-bridge exec vitest run
+    test/execution-circuit-breaker.test.ts
+  Result: PASS; 17/17 tests.
+  Raw receipt: E:/role-model-temp/run96-r27-public-execution-circuit-focused.log
+
+  corepack pnpm --dir role-model-router/apps/runtime-host-bridge exec vitest run
+    test/execution-circuit-breaker.test.ts -t "\\[AC-R33-02\\] route refusal exposes"
+  Result: PASS; 1 selected, 16 skipped. This is the route-level payload assertion.
+  Raw receipt: E:/role-model-temp/run96-r27-public-route-focused.log
+
+Criterion-owned selectors include:
+  [AC-R33-01] two transient live failures preserve the durable endpoint admission and health row
+  [AC-R33-04] a successful half-open alias request clears only the execution circuit and keeps admission routable
+  admits exactly one half-open probe while concurrent callers cannot duplicate it
+  reopens a failed half-open provider attempt with bounded provenance without mutating admission
+  [AC-R33-08] covers default and fixed-effort siblings across text.chat/tools.function_calling auth, quota, transient, cooldown, expiry, repeated failure, success, and concurrent probes
+  keeps the first connection failure in probation then uses 5s, 15s, 60s, and 5m opens
+  uses the provider 5xx 2s, 10s, 30s, and 2m capped ladder
+  honors bounded Retry-After and otherwise uses a 30 second rate-limit open
+  blocks auth and quota explicitly but ignores invalid and non-live failures
+  uses 503 only for timed cooldowns and reports configuration blocks separately
+
+Source selectors exercised: public:role-model-router/apps/runtime-host-bridge/src/execution-circuit-breaker.ts#recordExecutionCircuitFailure,
+#claimExecutionCircuitProbe, #settleExecutionCircuitProbe, and #clearExecutionCircuitEndpoint.
+Boundary: source-level TDD only. No Phase 5 live/provider/graph/storage/recovery PASS is claimed.

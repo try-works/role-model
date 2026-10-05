@@ -1,0 +1,10 @@
+Run 96 canonical TDD receipt
+acceptanceCriterionId=AC-R33-07
+proofFamily=alias-pool-eligibility-diagnostic
+phase=semantic RED
+result=FAIL
+testPath=public:role-model-router/apps/runtime-host-bridge/test/alias-capability-routing.test.ts
+assertionTitle=reports an empty alias pool before attempting capability eligibility
+command=corepack pnpm --dir role-model-router/apps/runtime-host-bridge exec vitest run test/alias-capability-routing.test.ts -t "reports an empty alias pool before attempting capability eligibility"
+baseline=b52a10279de21f612911bf2ae758ab40fb61d164
+observation=FAIL: the pre-repair assertion received no_eligible_target instead of the required ALIAS_POOL_EMPTY diagnostic. The alias pool was incorrectly treated as a capability mismatch.

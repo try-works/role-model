@@ -3,8 +3,11 @@ import {
   Boxes,
   Cable,
   Cpu,
+  FlaskConical,
   Gauge,
   GitBranch,
+  GitCompareArrows,
+  GraduationCap,
   Image,
   LayoutDashboard,
   LayoutGrid,
@@ -13,6 +16,7 @@ import {
   type LucideIcon,
   Mic,
   Network,
+  PackageCheck,
   PanelsTopLeft,
   SlidersHorizontal,
   Speech,
@@ -242,6 +246,32 @@ const controlRoutingStrategyRoute = createRoute({
     "Editable routing posture for the persisted scoring strategy and execution mode, with controller context and direct verification links.",
 });
 
+/** Run 103 SP8: role-bound postures (singular, like `Routing strategy`). */
+const agentStrategyRoute = createRoute({
+  id: "router-agent-strategy",
+  to: "/app/router/agent-strategy",
+  label: "Agent strategy",
+  section: "Router",
+  icon: GitBranch,
+  template: "registry-detail",
+  title: "Agent strategy",
+  description:
+    "Role-bound postures: one entry per agent strategy with its binding, its posture, its per-scope aliases, candidate counts and the endpoint that currently leads each pool.",
+});
+
+/** Run 103 SP8: workload postures (plural, like `Workloads`). */
+const workloadsRoute = createRoute({
+  id: "router-workloads",
+  to: "/app/router/workloads",
+  label: "Workloads",
+  section: "Router",
+  icon: GitBranch,
+  template: "registry-detail",
+  title: "Workloads",
+  description:
+    "Workload postures: one entry per workload shape with its optional capabilities, its per-scope aliases, candidate counts and the shipped templates.",
+});
+
 const controlRuntimeConfigRoute = createRoute({
   id: "system-runtime-config",
   to: "/app/system/runtime-config",
@@ -431,6 +461,23 @@ const observeLogsRoute = createRoute({
     "Preserved raw-host logs stay adjacent to canonical telemetry with request-level handoffs when correlation exists.",
 });
 
+/**
+ * Run 101 R10: queue truth gets its own Observe page - depth per queue plus a
+ * job drill-in with attempts, lock owner and the handler's named error, which is
+ * what makes a stalled or failing plane actionable.
+ */
+const observeQueuesRoute = createRoute({
+  id: "observe-queues",
+  to: "/app/observe/queues",
+  label: "Queues",
+  section: "Observe",
+  icon: ListChecks,
+  template: "ledger-inspector",
+  title: "Queue state",
+  description:
+    "Replay, evaluation and learner queues read straight from the shared store: depth, activity, retries, stalls, and per-job attempts with the named failure that stopped them.",
+});
+
 const integrationsDownstreamRoute = createRoute({
   id: "connect-downstream",
   to: "/app/connect/downstream",
@@ -465,6 +512,18 @@ const systemRuntimeRoute = createRoute({
   title: "Runtime topology",
   description:
     "Bridge lifecycle, validation floor, controller posture, version facts, and tooling runtime contracts in one system view.",
+});
+
+const systemOperatorRoute = createRoute({
+  id: "system-operator",
+  to: "/app/system/operator",
+  label: "Operator",
+  section: "System",
+  icon: PanelsTopLeft,
+  template: "system-topology",
+  title: "Operator controls",
+  description:
+    "Bounded replay, evaluation, and shadow-learning controls with explicit runtime capability status.",
 });
 
 const systemSessionReadinessRoute = createRoute({
@@ -504,6 +563,79 @@ const systemExtensionsRoute = createRoute({
     "Installed package lifecycle, scoped permissions, compatibility, retention, and bounded degradation without making routing depend on private workers.",
 });
 
+// Run 98 R17: the Learning route and its five pages.
+const learningOverviewRoute = createRoute({
+  id: "learning-overview",
+  to: "/app/learning",
+  label: "Overview",
+  section: "Learning",
+  icon: GraduationCap,
+  template: "summary-board",
+  title: "Learning overview",
+  description:
+    "Activation stage, policy identity, cohort progress, advisory influence, guardrail status and the most recent decisions.",
+});
+
+const learningConfigurationRoute = createRoute({
+  id: "learning-configuration",
+  to: "/app/learning/configuration",
+  label: "Configuration",
+  section: "Learning",
+  icon: SlidersHorizontal,
+  template: "contract-reference",
+  title: "Learning configuration",
+  description:
+    "Every activation parameter with its current value, unit, default and allowed range, editable inside enforced bounds.",
+});
+
+const learningPacksRoute = createRoute({
+  id: "learning-packs",
+  to: "/app/learning/packs",
+  label: "Packs",
+  section: "Learning",
+  icon: PackageCheck,
+  template: "summary-board",
+  title: "Learned packs",
+  description:
+    "Candidate and pack records with validation receipts, holdout evidence, activation state and rollback actions.",
+});
+
+const learningDecisionsRoute = createRoute({
+  id: "learning-decisions",
+  to: "/app/learning/decisions",
+  label: "Decisions",
+  section: "Learning",
+  icon: GitCompareArrows,
+  template: "summary-board",
+  title: "Decision receipts",
+  description:
+    "Filterable decision history with advisory state, counterfactual preference and the receipt chain behind each decision.",
+});
+
+const learningEvidenceRoute = createRoute({
+  id: "learning-evidence",
+  to: "/app/learning/evidence",
+  label: "Evidence",
+  section: "Learning",
+  icon: FlaskConical,
+  template: "summary-board",
+  title: "Cohort evidence",
+  description:
+    "Baseline-versus-advisory comparison on the paired holdout distribution with confidence bounds and guardrail verdicts.",
+});
+
+const learningHistoryRoute = createRoute({
+  id: "learning-history",
+  to: "/app/learning/history",
+  label: "History",
+  section: "Learning",
+  icon: Activity,
+  template: "summary-board",
+  title: "Learning history",
+  description:
+    "Windowed activity, decisive comparison mix with per-comparison deltas, the activation timeline and the guardrail verdicts.",
+});
+
 const systemStorageRetentionRoute = createRoute({
   id: "system-storage-retention",
   to: "/app/system/storage-retention",
@@ -533,6 +665,8 @@ const runtimeRouteDefinitions = [
   localMatrixRoute,
   controlProvidersRoute,
   controlRoutingStrategyRoute,
+  agentStrategyRoute,
+  workloadsRoute,
   controlRuntimeConfigRoute,
   controlControllerRoute,
   connectRegistryRoute,
@@ -547,13 +681,23 @@ const runtimeRouteDefinitions = [
   observeRequestsRoute,
   observeRoutingRoute,
   observeLogsRoute,
+  observeQueuesRoute,
   integrationsDownstreamRoute,
   integrationsUpstreamRoute,
   systemRuntimeRoute,
+  systemOperatorRoute,
   systemSessionReadinessRoute,
   systemPeersRoute,
   systemExtensionsRoute,
   systemStorageRetentionRoute,
+  // Run 98/99: the Learning section pages resolve through the same lookup as every other page,
+  // so the shell shows the page title and marks the Learning section active.
+  learningOverviewRoute,
+  learningConfigurationRoute,
+  learningPacksRoute,
+  learningDecisionsRoute,
+  learningEvidenceRoute,
+  learningHistoryRoute,
 ] as const;
 
 export const runtimeNavigationSections: readonly RuntimeNavigationSection[] = [
@@ -603,6 +747,8 @@ export const runtimeNavigationSections: readonly RuntimeNavigationSection[] = [
     items: [
       routerOverviewRoute,
       controlRoutingStrategyRoute,
+      agentStrategyRoute,
+      workloadsRoute,
       controlControllerRoute,
       routerCandidatesRoute,
       routerDecisionsRoute,
@@ -611,7 +757,13 @@ export const runtimeNavigationSections: readonly RuntimeNavigationSection[] = [
   {
     title: "Observe",
     icon: Activity,
-    items: [observeRequestsRoute, observeRoutingRoute, observeActivityRoute, observeLogsRoute],
+    items: [
+      observeRequestsRoute,
+      observeRoutingRoute,
+      observeQueuesRoute,
+      observeActivityRoute,
+      observeLogsRoute,
+    ],
   },
   {
     title: "Connect",
@@ -628,6 +780,19 @@ export const runtimeNavigationSections: readonly RuntimeNavigationSection[] = [
       systemPeersRoute,
       systemExtensionsRoute,
       systemStorageRetentionRoute,
+    ],
+  },
+  {
+    title: "Learning",
+    icon: GraduationCap,
+    hubTo: "/app/learning",
+    items: [
+      learningOverviewRoute,
+      learningConfigurationRoute,
+      learningPacksRoute,
+      learningDecisionsRoute,
+      learningEvidenceRoute,
+      learningHistoryRoute,
     ],
   },
 ] as const;

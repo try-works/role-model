@@ -1,0 +1,598 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-host-bridge
+
+(node:40248) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | test/index.test.ts > runtime-host-bridge > seeds deterministic QA telemetry for chart geometry and token-truth browser checks
+[run115] eligibility candidates=3 eligible=1 codes=BUDGET_EXCEEDED=1,CAPABILITY_MISSING=1 request=req-adapter-validation alias=- model=- effort=- pass=- allow=[] denied=[anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > creates a runtime backend that executes chat-completions through the real routing and adapter path
+[run115] eligibility candidates=2 eligible=1 codes=CAPABILITY_MISSING=1,POLICY_DENY_ENDPOINT=1 request=req-runtime-bridge-001 alias=- model=- effort=- pass=live allow=[test.capture.chat-v1] denied=[cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > creates a runtime backend that persists structured request and endpoint inspection state
+[run115] eligibility candidates=2 eligible=1 codes=CAPABILITY_MISSING=1,POLICY_DENY_ENDPOINT=1 request=req-runtime-bridge-observation-001 alias=- model=- effort=- pass=live allow=[test.capture.chat-v1] denied=[cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > creates a runtime backend that persists structured request and endpoint inspection state
+[run115] eligibility candidates=2 eligible=1 codes=CAPABILITY_MISSING=1,POLICY_DENY_ENDPOINT=1 request=req-runtime-bridge-observation-002 alias=- model=- effort=- pass=live allow=[test.capture.chat-v1] denied=[cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > persists routing-mode override and rewrite-skipped diagnostics for exact-model runtime-backed chat requests
+[run115] eligibility candidates=2 eligible=1 codes=CAPABILITY_MISSING=1,POLICY_DENY_ENDPOINT=1 request=req-runtime-bridge-routing-mode-001 alias=- model=- effort=- pass=live allow=[test.capture.chat-v1] denied=[cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > persists applied role policy diagnostics and injected system instructions for runtime-backed chat requests
+[run115] eligibility candidates=2 eligible=1 codes=CAPABILITY_MISSING=1,POLICY_DENY_ENDPOINT=1 request=req-runtime-bridge-role-policy-001 alias=- model=- effort=- pass=live allow=[test.capture.chat-v1] denied=[cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > persists alias-resolution diagnostics for runtime-backed chat requests
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-alias-001 alias=gpt-5.4 model=gpt-5.4 effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > executes every canonical remote alias through the runtime-backed chat path
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-alias-default-remote-only-001 alias=default.remote-only model=default.remote-only effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > executes every canonical remote alias through the runtime-backed chat path
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-alias-baseline-remote-only-001 alias=baseline.remote-only model=baseline.remote-only effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > executes every canonical remote alias through the runtime-backed chat path
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-alias-controller-remote-only-001:controller alias=- model=- effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > executes every canonical remote alias through the runtime-backed chat path
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-alias-controller-remote-only-001 alias=controller.remote-only model=controller.remote-only effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > executes every canonical remote alias through the runtime-backed chat path
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-alias-difficulty-remote-only-001:difficulty-classifier alias=- model=- effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > executes every canonical remote alias through the runtime-backed chat path
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-alias-difficulty-remote-only-001 alias=difficulty.remote-only model=difficulty.remote-only effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > executes every canonical remote alias through the runtime-backed chat path
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-alias-hybrid-remote-only-001:difficulty-classifier alias=- model=- effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > executes every canonical remote alias through the runtime-backed chat path
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-alias-hybrid-remote-only-001:controller alias=- model=- effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > executes every canonical remote alias through the runtime-backed chat path
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-alias-hybrid-remote-only-001 alias=hybrid.remote-only model=hybrid.remote-only effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > persists difficulty-routing diagnostics for runtime-backed chat requests
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-difficulty-001:difficulty-classifier alias=- model=- effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > persists difficulty-routing diagnostics for runtime-backed chat requests
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-difficulty-001 alias=gpt-5.4 model=gpt-5.4 effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > allows an observed max-difficulty override when bucketed performance supports a harder request
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-difficulty-override-001:difficulty-classifier alias=- model=- effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > allows an observed max-difficulty override when bucketed performance supports a harder request
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-difficulty-override-001 alias=gpt-5.4 model=gpt-5.4 effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > routes hard requests using bucketed live operational profiles and records the selected difficulty bucket
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=req-runtime-bridge-difficulty-bucket-001:difficulty-classifier alias=- model=- effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[anthropic.litellm.global.claude-3-7-sonnet]
+
+stdout | test/index.test.ts > runtime-host-bridge > routes hard requests using bucketed live operational profiles and records the selected difficulty bucket
+[run115] eligibility candidates=2 eligible=2 codes=none request=req-runtime-bridge-difficulty-bucket-001 alias=gpt-5.4 model=gpt-5.4 effort=- pass=live allow=[anthropic.litellm.global.claude-3-7-sonnet,openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > keeps fresh endpoint-wide metrics when unrevisioned hard-bucket benchmark evidence is quarantined
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=req-runtime-bridge-difficulty-merge-001:difficulty-classifier alias=- model=- effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[anthropic.litellm.global.claude-3-7-sonnet]
+
+stdout | test/index.test.ts > runtime-host-bridge > keeps fresh endpoint-wide metrics when unrevisioned hard-bucket benchmark evidence is quarantined
+[run115] eligibility candidates=2 eligible=2 codes=none request=req-runtime-bridge-difficulty-merge-001 alias=gpt-5.4 model=gpt-5.4 effort=- pass=live allow=[anthropic.litellm.global.claude-3-7-sonnet,openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > uses the configured remote classifier result for difficulty-mode runtime-backed chat requests
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-difficulty-classifier-001:difficulty-classifier alias=- model=- effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > uses the configured remote classifier result for difficulty-mode runtime-backed chat requests
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-difficulty-classifier-001 alias=gpt-5.4 model=gpt-5.4 effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > uses the configured remote controller result for intelligent runtime-backed chat requests
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-controller-001:controller alias=- model=- effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > uses the configured remote controller result for intelligent runtime-backed chat requests
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-controller-001 alias=gpt-5.4 model=gpt-5.4 effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > uses the default controller timeout budget for realistic remote controller latency
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-controller-default-timeout-001:controller alias=- model=- effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > uses the default controller timeout budget for realistic remote controller latency
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-controller-default-timeout-001 alias=gpt-5.4 model=gpt-5.4 effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > records sanitized controller guidance through the live HTTP bridge for intelligent aliases
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-0351a6b2-3aaf-4ddd-8688-2ca202e74767:controller alias=- model=- effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > records sanitized controller guidance through the live HTTP bridge for intelligent aliases
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-0351a6b2-3aaf-4ddd-8688-2ca202e74767 alias=gpt-5.4 model=gpt-5.4 effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > preserves accepted controller directives for known compatibility strategy aliases
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-controller-compat-alias-001:controller alias=- model=- effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > preserves accepted controller directives for known compatibility strategy aliases
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-controller-compat-alias-001 alias=controller.remote-only model=controller.remote-only effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > gives controller routing enough output budget to avoid empty truncated guidance
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-controller-budget-001:controller alias=- model=- effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > gives controller routing enough output budget to avoid empty truncated guidance
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-controller-budget-001 alias=controller.remote-only model=controller.remote-only effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > retries controller routing once with a compact prompt when the first controller response is empty
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-controller-compact-retry-001:controller alias=- model=- effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > retries controller routing once with a compact prompt when the first controller response is empty
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-controller-compact-retry-001:controller:compact-retry alias=- model=- effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > retries controller routing once with a compact prompt when the first controller response is empty
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-controller-compact-retry-001 alias=- model=- effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > falls back to heuristic controller guidance when the live controller returns prose instead of JSON
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-controller-heuristic-001:controller alias=- model=- effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > falls back to heuristic controller guidance when the live controller returns prose instead of JSON
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-controller-heuristic-001:controller:compact-retry alias=- model=- effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > falls back to heuristic controller guidance when the live controller returns prose instead of JSON
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-controller-heuristic-001 alias=controller.remote-only model=controller.remote-only effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > rehydrates persisted controller assignment for controller aliases after restart even without a controller block in runtime config
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-controller-restart-001:controller alias=- model=- effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > rehydrates persisted controller assignment for controller aliases after restart even without a controller block in runtime config
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-controller-restart-001 alias=controller.remote-only model=controller.remote-only effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > persists alias-default hybrid arbitration and rewrite-applied diagnostics for runtime-backed chat requests
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-hybrid-001:difficulty-classifier alias=- model=- effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > persists alias-default hybrid arbitration and rewrite-applied diagnostics for runtime-backed chat requests
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-hybrid-001:controller alias=- model=- effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > persists alias-default hybrid arbitration and rewrite-applied diagnostics for runtime-backed chat requests
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-hybrid-001 alias=gpt-5.4-hybrid model=gpt-5.4-hybrid effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > falls back deterministically when the configured classifier times out
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-difficulty-timeout-001:difficulty-classifier alias=- model=- effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > falls back deterministically when the configured classifier times out
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-difficulty-timeout-001 alias=gpt-5.4 model=gpt-5.4 effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > reuses cached difficulty classification for repeated requests in the same conversation when invalidation thresholds are not exceeded
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-difficulty-cache-001:difficulty-classifier alias=- model=- effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > reuses cached difficulty classification for repeated requests in the same conversation when invalidation thresholds are not exceeded
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-difficulty-cache-001 alias=gpt-5.4 model=gpt-5.4 effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > reuses cached difficulty classification for repeated requests in the same conversation when invalidation thresholds are not exceeded
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-difficulty-cache-002 alias=gpt-5.4 model=gpt-5.4 effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > reports cache invalidation reasons before reclassifying a repeated request
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-difficulty-invalidation-001:difficulty-classifier alias=- model=- effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > reports cache invalidation reasons before reclassifying a repeated request
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-difficulty-invalidation-001 alias=gpt-5.4 model=gpt-5.4 effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > reports cache invalidation reasons before reclassifying a repeated request
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-difficulty-invalidation-002:difficulty-classifier alias=- model=- effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > reports cache invalidation reasons before reclassifying a repeated request
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-difficulty-invalidation-002 alias=gpt-5.4 model=gpt-5.4 effort=- pass=live allow=[openai.litellm.global.openai-gpt-4-1-mini-fast] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > executes env-backed api-key accounts through the live provider path when the env credential resolves
+[run115] eligibility candidates=4 eligible=1 codes=POLICY_DENY_ENDPOINT=3,CAPABILITY_MISSING=1 request=req-runtime-bridge-live-env-001 alias=- model=- effort=- pass=live allow=[moonshot.personal.primary.global.kimi-k2.5] denied=[openai.personal.primary.us-east-1.fast,anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > retries transient API timeouts once and falls back to a secondary endpoint after quota exhaustion
+[run115] eligibility candidates=5 eligible=2 codes=POLICY_DENY_ENDPOINT=3,CAPABILITY_MISSING=1 request=req-runtime-bridge-live-fallback-001 alias=- model=- effort=- pass=live allow=[moonshot.personal.a-primary.global.kimi-k2.5,moonshot.personal.z-backup.global.kimi-k2.5] denied=[openai.personal.primary.us-east-1.fast,anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > retries transient API timeouts once and falls back to a secondary endpoint after quota exhaustion
+[run115] eligibility candidates=5 eligible=1 codes=POLICY_DENY_ENDPOINT=4,CAPABILITY_MISSING=1 request=req-runtime-bridge-live-fallback-001 alias=- model=- effort=- pass=live:reroute allow=[moonshot.personal.a-primary.global.kimi-k2.5,moonshot.personal.z-backup.global.kimi-k2.5] denied=[openai.personal.primary.us-east-1.fast,anthropic.team.shared.us-east-1.default,moonshot.personal.a-primary.global.kimi-k2.5,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > retries transient API timeouts once and falls back to a secondary endpoint after quota exhaustion
+[run115] eligibility candidates=5 eligible=2 codes=POLICY_DENY_ENDPOINT=3,CAPABILITY_MISSING=1 request=req-runtime-bridge-live-fallback-002 alias=- model=- effort=- pass=live allow=[moonshot.personal.a-primary.global.kimi-k2.5,moonshot.personal.z-backup.global.kimi-k2.5] denied=[openai.personal.primary.us-east-1.fast,anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > retries transient API timeouts once and falls back to a secondary endpoint after quota exhaustion
+[run115] eligibility candidates=5 eligible=1 codes=POLICY_DENY_ENDPOINT=4,CAPABILITY_MISSING=1 request=req-runtime-bridge-live-fallback-002 alias=- model=- effort=- pass=live:reroute allow=[moonshot.personal.a-primary.global.kimi-k2.5,moonshot.personal.z-backup.global.kimi-k2.5] denied=[openai.personal.primary.us-east-1.fast,anthropic.team.shared.us-east-1.default,moonshot.personal.a-primary.global.kimi-k2.5,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > persists routed provider execution failures with selected endpoint inspection context
+[run115] eligibility candidates=4 eligible=1 codes=POLICY_DENY_ENDPOINT=3,CAPABILITY_MISSING=1 request=req-runtime-bridge-routed-provider-failure-001 alias=- model=- effort=- pass=live allow=[deepseek.personal.failure-capture.global.deepseek-v4-pro] denied=[openai.personal.primary.us-east-1.fast,anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > persists routed provider execution failures with selected endpoint inspection context
+[run115] eligibility candidates=4 eligible=0 codes=POLICY_DENY_ENDPOINT=4,CAPABILITY_MISSING=1 request=req-runtime-bridge-routed-provider-failure-001 alias=- model=- effort=- pass=live:reroute allow=[deepseek.personal.failure-capture.global.deepseek-v4-pro] denied=[openai.personal.primary.us-east-1.fast,anthropic.team.shared.us-east-1.default,deepseek.personal.failure-capture.global.deepseek-v4-pro,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > preserves the original Codex timeout when exact-model fallback exhausts all eligible endpoints
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2,CAPABILITY_MISSING=1 request=req-runtime-bridge-codex-timeout-001 alias=- model=- effort=- pass=live allow=[openai.personal.codex-subscription.global.gpt-5.4-high] denied=[test.capture.chat-v1,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > preserves the original Codex timeout when exact-model fallback exhausts all eligible endpoints
+[run115] eligibility candidates=3 eligible=0 codes=POLICY_DENY_ENDPOINT=3,CAPABILITY_MISSING=1 request=req-runtime-bridge-codex-timeout-001 alias=- model=- effort=- pass=live:reroute allow=[openai.personal.codex-subscription.global.gpt-5.4-high] denied=[test.capture.chat-v1,openai.personal.codex-subscription.global.gpt-5.4-high,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > preserves the original Codex timeout when exact-model fallback exhausts all eligible endpoints
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2,CAPABILITY_MISSING=1 request=req-runtime-bridge-codex-timeout-002 alias=- model=- effort=- pass=live allow=[openai.personal.codex-subscription.global.gpt-5.4-high] denied=[test.capture.chat-v1,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > preserves the original Codex timeout when exact-model fallback exhausts all eligible endpoints
+[run115] eligibility candidates=3 eligible=0 codes=POLICY_DENY_ENDPOINT=3,CAPABILITY_MISSING=1 request=req-runtime-bridge-codex-timeout-002 alias=- model=- effort=- pass=live:reroute allow=[openai.personal.codex-subscription.global.gpt-5.4-high] denied=[test.capture.chat-v1,openai.personal.codex-subscription.global.gpt-5.4-high,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > preserves the original Codex timeout when exact-model fallback exhausts all eligible endpoints
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2,CAPABILITY_MISSING=1 request=req-runtime-bridge-codex-timeout-benchmark-001 alias=- model=- effort=- pass=live allow=[openai.personal.codex-subscription.global.gpt-5.4-high] denied=[test.capture.chat-v1,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > preserves the original Codex timeout when exact-model fallback exhausts all eligible endpoints
+[run115] eligibility candidates=3 eligible=0 codes=POLICY_DENY_ENDPOINT=3,CAPABILITY_MISSING=1 request=req-runtime-bridge-codex-timeout-benchmark-001 alias=- model=- effort=- pass=live:reroute allow=[openai.personal.codex-subscription.global.gpt-5.4-high] denied=[test.capture.chat-v1,openai.personal.codex-subscription.global.gpt-5.4-high,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > preserves the original Codex timeout when exact-model fallback exhausts all eligible endpoints
+[run115] eligibility candidates=3 eligible=0 codes=POLICY_DENY_ENDPOINT=3,CAPABILITY_MISSING=1 request=req-6fbc3065-4867-4fb9-85ba-e85eb88dabec alias=- model=- effort=- pass=live:reroute allow=[openai.personal.codex-subscription.global.gpt-5.4-high] denied=[test.capture.chat-v1,openai.personal.codex-subscription.global.gpt-5.4-high,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > executes direct exact-model chat requests through the Codex subscription endpoint
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2,CAPABILITY_MISSING=1 request=req-runtime-bridge-codex-direct-001 alias=- model=- effort=- pass=live allow=[openai.personal.codex-subscription.global.gpt-5.4] denied=[test.capture.chat-v1,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > Codex Subscription request detail preserves Responses-ingress parameter policy
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2,CAPABILITY_MISSING=1 request=req-runtime-bridge-codex-responses-policy-001 alias=- model=- effort=- pass=live allow=[openai.personal.codex-subscription.global.gpt-5.4] denied=[test.capture.chat-v1,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > exact Codex execution repairs stale bridge auth from standalone runtime and clears auth cooldowns
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2,CAPABILITY_MISSING=1 request=req-runtime-bridge-codex-auth-repair-001 alias=- model=- effort=- pass=live allow=[openai.personal.codex-subscription.global.gpt-5.4] denied=[test.capture.chat-v1,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > suppresses already-executed Codex dynamic tool calls from the final chat response and de-duplicates executions
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2,CAPABILITY_MISSING=1 request=req-runtime-bridge-codex-dynamic-collapse-001 alias=- model=- effort=- pass=live allow=[openai.personal.codex-subscription.global.gpt-5.4] denied=[test.capture.chat-v1,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > does not place Codex subscription endpoints on cooldown for invalid_request failures
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2,CAPABILITY_MISSING=1 request=req-runtime-bridge-codex-invalid-request-001 alias=- model=- effort=- pass=live allow=[openai.personal.codex-subscription.global.gpt-5.4] denied=[test.capture.chat-v1,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > does not place Codex subscription endpoints on cooldown for invalid_request failures
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2,CAPABILITY_MISSING=1 request=req-runtime-bridge-codex-invalid-request-002 alias=- model=- effort=- pass=live allow=[openai.personal.codex-subscription.global.gpt-5.4] denied=[test.capture.chat-v1,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > keeps Kimi Code and DeepSeek coding endpoints coder-eligible from the tracked catalog
+[run115] eligibility candidates=5 eligible=1 codes=POLICY_DENY_ENDPOINT=4,CAPABILITY_MISSING=2 request=req-runtime-bridge-kimi-coder-001 alias=- model=- effort=- pass=live allow=[moonshot.personal.primary.global.kimi-k2.7-code] denied=[openai.personal.primary.us-east-1.fast,anthropic.team.shared.us-east-1.default,deepseek.personal.primary.global.deepseek-v4-flash,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > keeps Kimi Code and DeepSeek coding endpoints coder-eligible from the tracked catalog
+[run115] eligibility candidates=5 eligible=1 codes=POLICY_DENY_ENDPOINT=4,CAPABILITY_MISSING=2 request=req-runtime-bridge-deepseek-coder-001 alias=- model=- effort=- pass=live allow=[deepseek.personal.primary.global.deepseek-v4-flash] denied=[openai.personal.primary.us-east-1.fast,anthropic.team.shared.us-east-1.default,moonshot.personal.primary.global.kimi-k2.7-code,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > executes env-backed OpenAI-compatible accounts directly when unified config has no LiteLLM provider
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-bridge-unified-env-direct-001 alias=- model=- effort=- pass=live allow=[deepseek.personal.run94.global.deepseek-v4-flash] denied=[]
+
+stdout | test/index.test.ts > runtime-host-bridge > registers configured local OpenAI-compatible peers as execution-ready model endpoints
+[run115] eligibility candidates=4 eligible=1 codes=POLICY_DENY_ENDPOINT=3,CAPABILITY_MISSING=1 request=req-runtime-bridge-local-peer-001 alias=- model=- effort=- pass=live allow=[local-openai-compatible.personal.local-main.local.lfm2.5-1.2b-instruct] denied=[openai.personal.primary.us-east-1.fast,anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > executes non-controller requested coder review task requests without empty chosen-endpoint failures
+[run115] eligibility candidates=4 eligible=1 codes=POLICY_DENY_ENDPOINT=3,CAPABILITY_MISSING=2 request=req-runtime-bridge-review-role-001 alias=- model=- effort=- pass=live allow=[moonshot.personal.primary.global.kimi-k2.7-code] denied=[openai.personal.primary.us-east-1.fast,anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > executes chat-completions through an activated Kimi Code endpoint
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2,CAPABILITY_MISSING=1 request=req-runtime-bridge-kimi-001 alias=- model=- effort=- pass=live allow=[moonshot.personal.kimi-code.global.kimi-k2.5] denied=[test.capture.chat-v1,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > executes exact Kimi hosted web-search requests through to a final assistant answer
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2,CAPABILITY_MISSING=1 request=req-runtime-bridge-kimi-hosted-web-search-001 alias=- model=- effort=- pass=live allow=[moonshot.personal.kimi-code.global.kimi-k2.7-code] denied=[test.capture.chat-v1,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > surfaces exact deepseek/deepseek-v4-flash web-search requests as consumer-managed tool calls
+[run115] eligibility candidates=4 eligible=1 codes=POLICY_DENY_ENDPOINT=3,CAPABILITY_MISSING=1 request=req-deepseek-deepseek-v4-flash-web-search-001 alias=- model=- effort=- pass=live allow=[deepseek.personal.primary.global.deepseek-v4-flash] denied=[openai.personal.primary.us-east-1.fast,anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > surfaces exact deepseek/deepseek-v4-pro web-search requests as consumer-managed tool calls
+[run115] eligibility candidates=4 eligible=1 codes=POLICY_DENY_ENDPOINT=3,CAPABILITY_MISSING=1 request=req-deepseek-deepseek-v4-pro-web-search-001 alias=- model=- effort=- pass=live allow=[deepseek.personal.primary.global.deepseek-v4-pro] denied=[openai.personal.primary.us-east-1.fast,anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > normalizes DeepSeek DSML web_search markup into consumer-visible tool calls
+[run115] eligibility candidates=4 eligible=1 codes=POLICY_DENY_ENDPOINT=3,CAPABILITY_MISSING=1 request=req-deepseek-dsml-web_search-001 alias=- model=- effort=- pass=live allow=[deepseek.personal.primary.global.deepseek-v4-pro] denied=[openai.personal.primary.us-east-1.fast,anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > normalizes DeepSeek DSML web_open markup into consumer-visible tool calls
+[run115] eligibility candidates=4 eligible=1 codes=POLICY_DENY_ENDPOINT=3,CAPABILITY_MISSING=1 request=req-deepseek-dsml-web_open-001 alias=- model=- effort=- pass=live allow=[deepseek.personal.primary.global.deepseek-v4-pro] denied=[openai.personal.primary.us-east-1.fast,anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > normalizes DeepSeek DSML web_browse markup into consumer-visible tool calls
+[run115] eligibility candidates=4 eligible=1 codes=POLICY_DENY_ENDPOINT=3,CAPABILITY_MISSING=1 request=req-deepseek-dsml-web_browse-001 alias=- model=- effort=- pass=live allow=[deepseek.personal.primary.global.deepseek-v4-pro] denied=[openai.personal.primary.us-east-1.fast,anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > creates a runtime backend that executes responses through the real routing and adapter path
+[run115] eligibility candidates=2 eligible=1 codes=CAPABILITY_MISSING=1,POLICY_DENY_ENDPOINT=1 request=req-runtime-bridge-responses-001 alias=- model=- effort=- pass=live allow=[test.capture.chat-v1] denied=[cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > persists applied role policy diagnostics and injected policy messages for runtime-backed responses requests
+[run115] eligibility candidates=2 eligible=1 codes=CAPABILITY_MISSING=1,POLICY_DENY_ENDPOINT=1 request=req-runtime-bridge-role-policy-responses-001 alias=- model=- effort=- pass=live allow=[test.capture.chat-v1] denied=[cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > serves structured request and endpoint inspection routes through the bridge server
+[run115] eligibility candidates=2 eligible=1 codes=CAPABILITY_MISSING=1,POLICY_DENY_ENDPOINT=1 request=req-8b31fa00-9c3b-4aca-9ad3-caef81c4754e alias=- model=- effort=- pass=live allow=[test.capture.chat-v1] denied=[cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > aggregates generic telemetry analytics from persisted request-time routing and cost facts
+[run115] eligibility candidates=3 eligible=1 codes=BUDGET_EXCEEDED=1,CAPABILITY_MISSING=1 request=req-adapter-validation alias=- model=- effort=- pass=- allow=[] denied=[anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > startup retention cleanup removes expired raw observations while preserving telemetry ledger evidence
+[run115] eligibility candidates=3 eligible=1 codes=BUDGET_EXCEEDED=1,CAPABILITY_MISSING=1 request=req-adapter-validation alias=- model=- effort=- pass=- allow=[] denied=[anthropic.team.shared.us-east-1.default,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > keeps duplicate caller request ids as separate canonical telemetry rows
+[run115] eligibility candidates=2 eligible=1 codes=CAPABILITY_MISSING=1,POLICY_DENY_ENDPOINT=1 request=req-e4c4a0df-2162-434d-96a7-c54b47c047d8 alias=- model=- effort=- pass=live allow=[test.capture.chat-v1] denied=[cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > keeps duplicate caller request ids as separate canonical telemetry rows
+[run115] eligibility candidates=2 eligible=1 codes=CAPABILITY_MISSING=1,POLICY_DENY_ENDPOINT=1 request=req-6ccde661-bc4f-44d9-99a5-38f9d37a0cc2 alias=- model=- effort=- pass=live allow=[test.capture.chat-v1] denied=[cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > streams canonical telemetry updates over SSE after new requests are persisted
+[run115] eligibility candidates=2 eligible=1 codes=CAPABILITY_MISSING=1,POLICY_DENY_ENDPOINT=1 request=req-e2f407a2-85c5-402d-9f09-827396915f82 alias=- model=- effort=- pass=live allow=[test.capture.chat-v1] denied=[cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > executes chat-completions through a LiteLLM-derived moonshot-oauth endpoint with X-Msh headers
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2,CAPABILITY_MISSING=1 request=req-litellm-oauth-001 alias=- model=- effort=- pass=live allow=[moonshot.personal.kimi-code.global.kimi-k2.5] denied=[test.capture.chat-v1,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > executes chat-completions through an api-key-static provider via environment credential
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2,CAPABILITY_MISSING=1 request=req-apikey-001 alias=- model=- effort=- pass=live allow=[moonshot.personal.apikey.global.kimi-k2.5] denied=[test.capture.chat-v1,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > propagates downstream stream-writer failures during direct provider streaming
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2,CAPABILITY_MISSING=1 request=req-stream-disconnect-001 alias=- model=- effort=- pass=live allow=[deepseek.personal.apikey.global.deepseek-v4-flash] denied=[test.capture.chat-v1,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > forwards reasoning-only upstream SSE chunks when chat-completions opted into reasoning
+[run115] eligibility candidates=3 eligible=1 codes=CAPABILITY_MISSING=2,POLICY_DENY_ENDPOINT=2 request=req-stream-normalization-001 alias=- model=- effort=high pass=live allow=[deepseek.personal.apikey.global.deepseek-v4-flash-high] denied=[test.capture.chat-v1,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > suppresses reasoning-only upstream SSE chunks until downstream-safe content is available when reasoning is not requested
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2,CAPABILITY_MISSING=1 request=req-stream-normalization-no-reasoning-001 alias=- model=- effort=- pass=live allow=[deepseek.personal.apikey.global.deepseek-v4-flash] denied=[test.capture.chat-v1,cli.local.coder]
+
+stdout | test/index.test.ts > runtime-host-bridge > accepts legacy credentialized endpoint ids when pinning a requested endpoint
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2,CAPABILITY_MISSING=1 request=req-legacy-endpoint-id-001 alias=- model=- effort=- pass=live allow=[moonshot.personal.api-key.global.kimi-k2.5] denied=[test.capture.chat-v1,cli.local.coder]
+
+ ❯ test/index.test.ts (215 tests | 2 failed) 318478ms
+   ✓ Run 96 projects persisted provider evidence attempt identities when compact observations omit execution semantics 13ms
+   ✓ Run 96 F177: public provider attempt projection counts physical dispatches, not semantic labels 3ms
+   ✓ runtime-host-bridge > caches the execution catalog projection until catalog, account, or endpoint inputs change 9ms
+   ✓ runtime-host-bridge > projects immutable benchmark evidence from the persisted decision snapshot 2ms
+   ✓ runtime-host-bridge > run 87 runtime HTTP logs require registered channel authority 8ms
+   ✓ runtime-host-bridge > summarizes selection diagnostics when a tie-break chooses the winner inside the score epsilon 7ms
+   ✓ runtime-host-bridge > creates a stable model-list response grouped by model id 73ms
+   ✓ runtime-host-bridge > creates alias entries in the model-list response alongside real models 2ms
+   ✓ runtime-host-bridge > adds compact Pi-compatible capability metadata to v1 model-list records 20ms
+   ✓ runtime-host-bridge > builds request-time routing telemetry snapshots from live routing candidates 8ms
+   ✓ runtime-host-bridge > Run96 Phase5 RED: derives an explicitly labelled catalogue estimate when the provider omits billed cost 1ms
+   ✓ runtime-host-bridge > builds QA bootstrap options with router surfaces and complete fixtures 19ms
+   ✓ runtime-host-bridge > builds QA backend options that start managed mock vendors for end-to-end Pi QA 1ms
+   ✓ runtime-host-bridge > seeds QA runtime config with executable local and remote mock backend commands 1ms
+   ✓ runtime-host-bridge > seeds QA runtime config with canonical task capabilities for role-routed backend QA 0ms
+   ✓ runtime-host-bridge > seeds deterministic QA telemetry for chart geometry and token-truth browser checks  1844ms
+   ✓ runtime-host-bridge > binds managed QA backends to canonical taxonomy roles for classified request QA 1ms
+   ✓ runtime-host-bridge > does not bootstrap placeholder remote control-plane endpoints by default 1ms
+   ✓ runtime-host-bridge > bootstraps QA control-plane state for mixed local+remote routing proof 2ms
+   ✓ runtime-host-bridge > builds packaged CLI options with static UI, router surfaces, and fixture-root defaults 15ms
+   ✓ runtime-host-bridge > passes the optional shutdown hook into CLI server options 6ms
+   ✓ runtime-host-bridge > suppresses placeholder provider accounts when using the packaged CLI defaults  1899ms
+   ✓ runtime-host-bridge > purges stale runtime-config LiteLLM endpoints when startup has no runtime config  2103ms
+   ✓ runtime-host-bridge > loads placeholder accounts only when fixture-root is explicitly provided  2151ms
+   ✓ runtime-host-bridge > maps a chat-completions request into role-model routing and execution inputs 51ms
+   ✓ runtime-host-bridge > maps custom alias endpoint preference into the normal routing-model signal 16ms
+   ✓ runtime-host-bridge > maps request role_model intent metadata into the routing request 3ms
+   ✓ runtime-host-bridge > maps stable proposal-shaped chat role_model intent metadata into the routing request 3ms
+   ✓ runtime-host-bridge > normalizes stable advisory role_model intent with ignored-field diagnostics 6ms
+   ✓ runtime-host-bridge > applies valid role_model intent as runtime role and task policy 6ms
+   ✓ runtime-host-bridge > keeps stable Pi role_model metadata advisory for exact-model routing 18ms
+   ✓ runtime-host-bridge > maps chat-completions tool-turn history with null assistant content without crashing 14ms
+   ✓ runtime-host-bridge > maps hosted OpenAI responses tools without rejecting them as function-only tools 16ms
+   ✓ runtime-host-bridge > maps mixed-provider responses web_search alias pools to runtime tool calling without excluding function-calling providers 14ms
+   ✓ runtime-host-bridge > maps exact non-OpenAI responses web-search requests to consumer-managed web_search tools 14ms
+   ✓ runtime-host-bridge > maps exact Kimi responses web-search requests to the hosted builtin_function contract 15ms
+   ✓ runtime-host-bridge > maps chat-completions continuation requests with Kimi hosted builtin_function tools 12ms
+   ✓ runtime-host-bridge > describes endpoint web-search support by active runtime transport 1ms
+   ✓ runtime-host-bridge > exports Codex dynamic-tool extraction for request-scoped function tools 2ms
+   ✓ runtime-host-bridge > exports createRequestScopedToolRegistry for request-scoped function tool registry 0ms
+   ✓ runtime-host-bridge > createRequestScopedToolRegistry produces explicit failures for unimplemented bridged tool names 5ms
+   ✓ runtime-host-bridge > seedManagedCodexWorkspaceFixture stages benchmark files for Codex tool-heavy cases 57ms
+   ✓ runtime-host-bridge > createRequestScopedToolRegistry executes read/list/write tools and apply_patch against a staged workspace 54ms
+   ✓ runtime-host-bridge > createRequestScopedToolRegistry fails explicitly for unsupported bridged tools 1ms
+   ✓ runtime-host-bridge > createRequestScopedToolRegistry tells Codex to use shell tools for external file paths 24ms
+   ✓ runtime-host-bridge > buildCodexDynamicTools output is compatible with createRequestScopedToolRegistry 1ms
+   ✓ runtime-host-bridge > Codex Subscription sanitizes unsupported Chat Completions optional parameters 219ms
+   ✓ runtime-host-bridge > Codex Subscription sanitizes unsupported Responses optional parameters 5ms
+   ✓ runtime-host-bridge > Codex Subscription preserves explicit parallel_tool_calls=false on Responses requests 6ms
+   ✓ runtime-host-bridge > Codex Subscription transforms forced chat tool_choice into Responses named-tool form 3ms
+   ✓ runtime-host-bridge > Codex Subscription leaves parallel_tool_calls unset when the caller omitted it 2ms
+   ✓ runtime-host-bridge > Codex Subscription applies the same parameter policy after alias routing 6ms
+   ✓ runtime-host-bridge > Codex Subscription execution uses ChatGPT Codex Responses SSE and preserves downstream chat deltas 10ms
+   ✓ runtime-host-bridge > Codex Subscription execution preserves supported-zero cache detail on non-streamed Responses replies 4ms
+   ✓ runtime-host-bridge > Codex Subscription execution surfaces sibling tool calls on non-stream chat-completions replies 5ms
+   ✓ runtime-host-bridge > Codex Subscription execution surfaces sibling tool calls on non-stream Responses replies 3ms
+   ✓ runtime-host-bridge > Codex Subscription execution writes chat-completions deltas before upstream completion 24ms
+   ✓ runtime-host-bridge > Codex Subscription request conversion preserves assistant history as output_text 3ms
+   ✓ runtime-host-bridge > Codex Subscription runtime source no longer contains app-server execution code 22ms
+   ✓ runtime-host-bridge > createRequestScopedToolRegistry does not require repoRoot or file system access 1ms
+   ✓ runtime-host-bridge > non-tool Codex behavior: buildCodexDynamicTools returns empty array when no function tools present 0ms
+   ✓ runtime-host-bridge > loadMcpConnectorConfigs throws ENOENT when testdata file is absent (reproduces original packaged-runtime crash) 6ms
+   ✓ runtime-host-bridge > Codex tool path surfaces explicit failures for unimplemented request-scoped tool names in packaged-runtime-like environments 5ms
+   ✓ runtime-host-bridge > createRequestScopedToolRegistry signature has no repoRoot parameter (architecture-level guard against testdata reads) 1ms
+   ✓ runtime-host-bridge > maps an alias chat-completions request into a pooled endpoint allow-list and alias diagnostics 15ms
+   ✓ runtime-host-bridge > keeps exact-model routing unchanged when aliases are configured 14ms
+   ✓ runtime-host-bridge > narrows exact-model chat routing to an explicitly requested endpoint 11ms
+   ✓ runtime-host-bridge > maps validated controller guidance into an intelligent alias routing plan 14ms
+   ✓ runtime-host-bridge > uses a baseline override to bypass intelligent alias controller routing 14ms
+   ✓ runtime-host-bridge > applies a directly requested role to chat routing and execution policy 13ms
+   ✓ runtime-host-bridge > records explicit hybrid arbitration when controller guidance alters the difficulty plan 16ms
+   ✓ runtime-host-bridge > maps a difficulty-mode alias chat request into a gated allow-list and difficulty diagnostics 19ms
+   ✓ runtime-host-bridge > escalates a high-risk single-turn code-change ask to hard difficulty and quality routing 13ms
+   ✓ runtime-host-bridge > escalates tool-bearing workspace file requests to hard difficulty instead of the cost lane 12ms
+   ✓ runtime-host-bridge > keeps ordinary tool code aliases provider agnostic 14ms
+   ✓ runtime-host-bridge > does not contain provider-specific routing pin helpers 19ms
+   ✓ runtime-host-bridge > keeps operator-configured Codex subscription exact endpoints eligible even when the model id is newer than the static matrix 13ms
+   ✓ runtime-host-bridge > uses a baseline override to bypass difficulty alias gating 13ms
+   ✓ runtime-host-bridge > uses the persisted Strategy B mode as the default routing mode when no alias mode or request override is set 10ms
+   ✓ runtime-host-bridge > maps an alias responses request into a pooled endpoint allow-list and alias diagnostics 10ms
+   ✓ runtime-host-bridge > maps responses role_model intent metadata into the routing request 2ms
+   ✓ runtime-host-bridge > maps stable proposal-shaped responses role_model intent metadata into the routing request 1ms
+   ✓ runtime-host-bridge > maps responses tool choice, reasoning, prompt cache, affinity, and previous response id into the execution request 13ms
+   ✓ runtime-host-bridge > maps responses parallel_tool_calls into the execution request 10ms
+   ✓ runtime-host-bridge > maps typed responses function-call replay items into execution messages 12ms
+   ✓ runtime-host-bridge > maps chat-completions session affinity and transport preference into the execution request 39ms
+   ✓ runtime-host-bridge > maps chat-completions prompt_cache_key into the execution request 12ms
+   ✓ runtime-host-bridge > maps chat-completions parallel_tool_calls into the execution request 12ms
+   ✓ runtime-host-bridge > tracks cache continuity per session across A -> B -> A and records create versus restore state 298ms
+   ✓ runtime-host-bridge > maps chat-completions reasoning effort into the execution request 11ms
+   ✓ runtime-host-bridge > maps chat-completions thinking controls into the execution request 10ms
+   ✓ runtime-host-bridge > treats unknown stable role_model task metadata as advisory before routing 10ms
+   ✓ runtime-host-bridge > treats unknown stable role_model requested role metadata as advisory before routing 10ms
+   ✓ runtime-host-bridge > rejects explicit hard role_model task metadata before routing 13ms
+   ✓ runtime-host-bridge > maps a difficulty-mode responses request into an easy strategy and keeps eligible endpoints 9ms
+   ✓ runtime-host-bridge > applies requested role execution policy to responses requests 12ms
+   ✓ runtime-host-bridge > prefers a configured alias in downstream OpenAI provider config 3ms
+   ✓ runtime-host-bridge > prefers the alias derived from the live runtime routing config in downstream OpenAI provider config 1ms
+   ✓ runtime-host-bridge > fallback downstream OpenAI provider config remains compatible with pi-role-model 2ms
+   ✓ runtime-host-bridge > serves health and model-list endpoints 161ms
+   ✓ runtime-host-bridge > serves lightweight latest request ids separately from the rich recent-request ledger 45ms
+   ✓ runtime-host-bridge > accepts a local shutdown request when a shutdown hook is configured 25ms
+   ✓ runtime-host-bridge > serves alias entries in model-list and downstream provider config from runtime config 41ms
+   ✓ runtime-host-bridge > serves preserved host observability and vendor-facing utility endpoints 49ms
+   ✓ runtime-host-bridge > returns JSON for /logs/stream before static root catch-all 35ms
+   ✓ runtime-host-bridge > serves the runtime UI shell from root and app routes when static root exists 40ms
+   ✓ runtime-host-bridge > preserves x-role-model-request-id as client correlation metadata while generating a canonical request id 21ms
+   ✓ runtime-host-bridge > does not attempt to write a fallback error after the response is already committed 2ms
+   ✓ runtime-host-bridge > terminates a committed chat stream after execution rejects and remains responsive 32ms
+   ✓ runtime-host-bridge > terminates a committed Responses stream after execution rejects 19ms
+   ✓ runtime-host-bridge > generates a unique canonical request id for each request when headers omit request ids 56ms
+   ✓ runtime-host-bridge > serves runtime control-plane summary, provider, account, and endpoint routes 128ms
+   ✓ runtime-host-bridge > serves canonical telemetry summary, comparison, and recent request routes 23ms
+   ✓ runtime-host-bridge > serves the generic telemetry analytics query route 13ms
+   ✓ runtime-host-bridge > serves downstream OpenAI-compatible provider metadata for consumer apps 13ms
+   ✓ runtime-host-bridge > serves chat-completions responses with role-model execution metadata 14ms
+   ✓ runtime-host-bridge > serves OpenAI-compatible SSE events for streaming responses requests 88ms
+   ✓ runtime-host-bridge > surfaces tool calls on chat-completions responses when the backend returns them 16ms
+   ✓ runtime-host-bridge > normalizes chat-completions provider SSE into Responses events on streamed /v1/responses 95ms
+   ✓ runtime-host-bridge > streams provider deltas through the bridge as they arrive 74ms
+   ✓ runtime-host-bridge > emits reasoning_content before visible content for synthetic chat-completions streams 15ms
+   ✓ runtime-host-bridge > forwards x-role-model-routing-mode to chat-completions execution 12ms
+   ✓ runtime-host-bridge > forwards ingress session, client correlation, and transport headers to chat-completions execution 12ms
+   ✓ runtime-host-bridge > accepts Pi session-affinity header aliases on chat-completions ingress 12ms
+   ✓ runtime-host-bridge > rejects an invalid x-role-model-routing-mode header 13ms
+   ✓ runtime-host-bridge > creates a runtime backend that executes chat-completions through the real routing and adapter path  2009ms
+   ✓ runtime-host-bridge > creates a runtime backend that persists structured request and endpoint inspection state  2488ms
+   ✓ runtime-host-bridge > persists routing-mode override and rewrite-skipped diagnostics for exact-model runtime-backed chat requests  2548ms
+   ✓ runtime-host-bridge > persists applied role policy diagnostics and injected system instructions for runtime-backed chat requests  2585ms
+   ✓ runtime-host-bridge > does not seed placeholder Anthropic/OpenAI accounts, endpoints, models, or router guidance in the default runtime bootstrap  2034ms
+   ✓ runtime-host-bridge > upsertProviderAccount updates one endpoint role assignment without replacing effort siblings  2102ms
+   ✓ runtime-host-bridge > persists alias-resolution diagnostics for runtime-backed chat requests  3471ms
+   ✓ runtime-host-bridge > executes every canonical remote alias through the runtime-backed chat path  21898ms
+   ✓ runtime-host-bridge > filters router summary aliases and candidates by explicit remote-only execution mode 2ms
+   ✓ runtime-host-bridge > maps the full canonical alias matrix to non-empty candidate pools when matching inventory exists  308ms
+   ✓ runtime-host-bridge > routes execution-facing planning through the effective execution-mode registry 26ms
+   ✓ runtime-host-bridge > persists difficulty-routing diagnostics for runtime-backed chat requests  2705ms
+   ✓ runtime-host-bridge > allows an observed max-difficulty override when bucketed performance supports a harder request  4107ms
+   ✓ runtime-host-bridge > routes hard requests using bucketed live operational profiles and records the selected difficulty bucket  6523ms
+   ✓ runtime-host-bridge > infers a hard observed-profile bucket from controller quality strategy when difficulty routing is absent 1ms
+   × runtime-host-bridge > keeps fresh endpoint-wide metrics when unrevisioned hard-bucket benchmark evidence is quarantined 11592ms
+     → expected { …(48) } to match object { …(3) }
+(287 matching properties omitted from actual)
+   ✓ runtime-host-bridge > uses the configured remote classifier result for difficulty-mode runtime-backed chat requests  6441ms
+   ✓ runtime-host-bridge > uses the configured remote controller result for intelligent runtime-backed chat requests  5086ms
+   ✓ runtime-host-bridge > uses the default controller timeout budget for realistic remote controller latency  8092ms
+   ✓ runtime-host-bridge > records sanitized controller guidance through the live HTTP bridge for intelligent aliases  5591ms
+   ✓ runtime-host-bridge > preserves accepted controller directives for known compatibility strategy aliases  4610ms
+   ✓ runtime-host-bridge > gives controller routing enough output budget to avoid empty truncated guidance  5880ms
+   ✓ runtime-host-bridge > backfills coding role and capability hints into minimal controller strategy guidance 2ms
+   ✓ runtime-host-bridge > does not infer coding guidance solely from consumer-declared default tools 1ms
+   ✓ runtime-host-bridge > retries controller routing once with a compact prompt when the first controller response is empty  5433ms
+   ✓ runtime-host-bridge > falls back to heuristic controller guidance when the live controller returns prose instead of JSON  4429ms
+   ✓ runtime-host-bridge > keeps controller.remote-only routing inside the remote-only alias slice even when the available inventory is hybrid 19ms
+   ✓ runtime-host-bridge > serves coherent live role and task policy over the HTTP control plane  2690ms
+   ✓ runtime-host-bridge > ignores unsupported controller task and capability directives while keeping valid preferred endpoint subsets for coding-role requests 11ms
+   ✓ runtime-host-bridge > resolves explicit non-controller coder.review requests onto a role-compatible task 16ms
+   ✓ runtime-host-bridge > drops controller preferred endpoints when they merely restate the full allowed pool 11ms
+   × runtime-host-bridge > rehydrates persisted controller assignment for controller aliases after restart even without a controller block in runtime config 10455ms
+     → Test timed out in 10000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+   ✓ runtime-host-bridge > persists alias-default hybrid arbitration and rewrite-applied diagnostics for runtime-backed chat requests  3452ms
+   ✓ runtime-host-bridge > falls back deterministically when the configured classifier times out  3905ms
+   ✓ runtime-host-bridge > reuses cached difficulty classification for repeated requests in the same conversation when invalidation thresholds are not exceeded  3974ms
+   ✓ runtime-host-bridge > reports cache invalidation reasons before reclassifying a repeated request  3620ms
+   ✓ runtime-host-bridge > creates a runtime backend that exposes provider presets, runtime summary, and account upserts  6133ms
+   ✓ runtime-host-bridge > persists runtime-managed role policy and task allowlists across backend restart  5618ms
+   ✓ runtime-host-bridge > executes env-backed api-key accounts through the live provider path when the env credential resolves  4042ms
+   ✓ runtime-host-bridge > retries transient API timeouts once and falls back to a secondary endpoint after quota exhaustion  6045ms
+   ✓ runtime-host-bridge > persists routed provider execution failures with selected endpoint inspection context  5410ms
+   ✓ runtime-host-bridge > preserves the original Codex timeout when exact-model fallback exhausts all eligible endpoints  4641ms
+   ✓ runtime-host-bridge > executes direct exact-model chat requests through the Codex subscription endpoint  5552ms
+   ✓ runtime-host-bridge > Codex Subscription request detail preserves Responses-ingress parameter policy  3548ms
+   ✓ runtime-host-bridge > exact Codex execution repairs stale bridge auth from standalone runtime and clears auth cooldowns  3428ms
+   ✓ runtime-host-bridge > suppresses already-executed Codex dynamic tool calls from the final chat response and de-duplicates executions  3412ms
+   ✓ runtime-host-bridge > classifies subscription quota exhaustion as fallback-eligible without retrying the same endpoint 2ms
+   ✓ runtime-host-bridge > classifies provider insufficient balance failures as quota exhaustion 3ms
+   ✓ runtime-host-bridge > does not expose the legacy endpoint-global cooldown schedule 0ms
+   ✓ runtime-host-bridge > does not immediately retry a rate-limited endpoint 3ms
+   ✓ runtime-host-bridge > does not place Codex subscription endpoints on cooldown for invalid_request failures  4778ms
+   ✓ runtime-host-bridge > keeps Kimi Code and DeepSeek coding endpoints coder-eligible from the tracked catalog  4016ms
+   ✓ runtime-host-bridge > executes env-backed OpenAI-compatible accounts directly when unified config has no LiteLLM provider  2957ms
+   ✓ runtime-host-bridge > registers configured local OpenAI-compatible peers as execution-ready model endpoints  3059ms
+   ✓ runtime-host-bridge > executes non-controller requested coder review task requests without empty chosen-endpoint failures  3552ms
+   ✓ runtime-host-bridge > exposes llama-swap ownership and config metadata on local model and endpoint readback  4626ms
+   ✓ runtime-host-bridge > rejects local model activation when no configured local endpoint exposes the requested model  2534ms
+   ✓ runtime-host-bridge > rehydrates connected OAuth accounts from stored token files on backend restart  5840ms
+   ✓ runtime-host-bridge > restores pending OAuth device-authorizations from SQLite after backend restart  4572ms
+   ✓ runtime-host-bridge > executes chat-completions through an activated Kimi Code endpoint  3153ms
+   ✓ runtime-host-bridge > executes exact Kimi hosted web-search requests through to a final assistant answer  4724ms
+   ✓ runtime-host-bridge > surfaces exact deepseek/deepseek-v4-flash web-search requests as consumer-managed tool calls  2811ms
+   ✓ runtime-host-bridge > surfaces exact deepseek/deepseek-v4-pro web-search requests as consumer-managed tool calls  3566ms
+   ✓ runtime-host-bridge > normalizes DeepSeek DSML web_search markup into consumer-visible tool calls  5471ms
+   ✓ runtime-host-bridge > normalizes DeepSeek DSML web_open markup into consumer-visible tool calls  6838ms
+   ✓ runtime-host-bridge > normalizes DeepSeek DSML web_browse markup into consumer-visible tool calls  5327ms
+   ✓ runtime-host-bridge > creates a runtime backend that executes responses through the real routing and adapter path  3436ms
+   ✓ runtime-host-bridge > persists applied role policy diagnostics and injected policy messages for runtime-backed responses requests  2893ms
+   ✓ runtime-host-bridge > serves structured request and endpoint inspection routes through the bridge server  3313ms
+   ✓ runtime-host-bridge > aggregates generic telemetry analytics from persisted request-time routing and cost facts  3334ms
+   ✓ runtime-host-bridge > aggregates telemetry analytics over the full requested slice with contract metadata and aligned ledger filters  3981ms
+   ✓ runtime-host-bridge > projects canonical model, endpoint, effort, and effort-source telemetry identities  2370ms
+   ✓ runtime-host-bridge > startup retention cleanup removes expired raw observations while preserving telemetry ledger evidence  2648ms
+   ✓ runtime-host-bridge > keeps duplicate caller request ids as separate canonical telemetry rows  2765ms
+   ✓ runtime-host-bridge > records caller correlation and live request classification for failed chat completions  2266ms
+   ✓ runtime-host-bridge > reads bucketed endpoint profiles with an advisory max-difficulty recommendation  2055ms
+   ✓ runtime-host-bridge > streams canonical telemetry updates over SSE after new requests are persisted  6335ms
+   ✓ runtime-host-bridge > aborts streamed chat execution when the downstream client disconnects 25ms
+   ✓ runtime-host-bridge > executes chat-completions through a LiteLLM-derived moonshot-oauth endpoint with X-Msh headers  3794ms
+   ✓ runtime-host-bridge > executes chat-completions through an api-key-static provider via environment credential  2485ms
+   ✓ runtime-host-bridge > propagates downstream stream-writer failures during direct provider streaming  3108ms
+   ✓ runtime-host-bridge > forwards reasoning-only upstream SSE chunks when chat-completions opted into reasoning  3011ms
+   ✓ runtime-host-bridge > suppresses reasoning-only upstream SSE chunks until downstream-safe content is available when reasoning is not requested  2845ms
+   ✓ runtime-host-bridge > accepts legacy credentialized endpoint ids when pinning a requested endpoint  3295ms
+   ✓ runtime-host-bridge > resolves bridge server options from explicit values and defaults 3ms
+   ✓ runtime-host-bridge > prefers an existing state-root runtime config when a packaged launch omits the flag 9ms
+   ✓ runtime-host-bridge > keeps repoRoot-derived static paths stable when runtimeStateRoot uses a different path dialect 2ms
+   ✓ runtime-host-bridge > resolves packaged bridge server options from executable path defaults 31ms
+   ✓ runtime-host-bridge > prefers repoRoot frontend assets over packaged assets when repoRoot is explicit 2ms
+   ✓ runtime-host-bridge > resolves packaged bridge server options from POSIX executable path defaults 2ms
+(node:56340) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | test/run100-declared-intent-travel.test.ts > run 100 R5 declared-intent travel > the capture's declared taxonomy identity reaches the comparison's comparability
+[run97] shadow pipeline start supervised-replay:74ea72a663cddb89aed11cf9fe4e71b6bcac0ba9d7acf7898102fd060ce5fccb
+
+stderr | test/run100-declared-intent-travel.test.ts > run 100 R5 declared-intent travel > the capture's declared taxonomy identity reaches the comparison's comparability
+[run97] learning degraded signals:supervised-replay:74ea72a663cddb89aed11cf9fe4e71b6bcac0ba9d7acf7898102fd060ce5fccb omit_signals 
+
+ ✓ test/run100-declared-intent-travel.test.ts (1 test) 101ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/index.test.ts > runtime-host-bridge > keeps fresh endpoint-wide metrics when unrevisioned hard-bucket benchmark evidence is quarantined
+AssertionError: expected { …(48) } to match object { …(3) }
+(287 matching properties omitted from actual)
+
+- Expected
++ Received
+
+@@ -6,12 +6,12 @@
+        "latency": ObjectContaining {
+          "measuredAtMs": 100000,
+        },
+      },
+      "observedProfile": {
+-       "bucketOverrideApplied": true,
+-       "difficultyBucket": "hard",
++       "bucketOverrideApplied": false,
++       "difficultyBucket": "easy",
+        "endpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        "measuredAtMs": 100000,
+        "readMode": "per-request",
+        "source": "runtime-state",
+      },
+
+ ❯ test/index.test.ts:12877:5
+    12875|     });
+    12876| 
+    12877|     await expect(backend.readRequestObservation(requestId)).resolves.t…
+       |     ^
+    12878|       requestId,
+    12879|       endpointId: "openai.litellm.global.openai-gpt-4-1-mini-fast",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/index.test.ts > runtime-host-bridge > rehydrates persisted controller assignment for controller aliases after restart even without a controller block in runtime config
+Error: Test timed out in 10000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ test/index.test.ts:14501:3
+    14499|   });
+    14500| 
+    14501|   test("rehydrates persisted controller assignment for controller alia…
+       |   ^
+    14502|     const runtimeStateRoot = await mkdtemp(
+    14503|       path.join(os.tmpdir(), "role-model-runtime-host-controller-resta…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  2 failed | 214 passed (216)
+   Start at  19:08:04
+   Duration  366.61s (transform 24.22s, setup 0ms, collect 44.67s, tests 318.58s, environment 1ms, prepare 1.11s)
+
+undefined
+D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/index.test.ts test/run100-declared-intent-travel.test.ts

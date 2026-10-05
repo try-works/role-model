@@ -1,0 +1,22 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-host-bridge
+
+(node:30516) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run98-r04-advisory-observed.test.ts (5 tests) 875ms
+   ✓ run98 R4 advisory observation > AC-R04-03 the ledger is bounded and survives a re-read  773ms
+(node:66856) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run99-r25-advisory-outcome-observation.test.ts (5 tests) 40ms
+(node:46220) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run104-advisory-classification-variant.test.ts (3 tests) 12ms
+(node:64632) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run99-r33-s33-classification-observation.test.ts (4 tests) 11ms
+
+ Test Files  4 passed (4)
+      Tests  17 passed (17)
+   Start at  19:38:02
+   Duration  10.95s (transform 1.65s, setup 0ms, collect 6.44s, tests 938ms, environment 2ms, prepare 1.26s)
+

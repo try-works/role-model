@@ -4,6 +4,56 @@ export type RuntimeFetcher = (
   input: string | URL | Request,
   init?: RequestInit,
 ) => Promise<Response>;
+
+/**
+ * Operator state is deliberately separate from ordinary runtime health. A
+ * worker can be alive while one operator capability is unavailable, blocked,
+ * or has not been observed yet; consumers must not turn those states into a
+ * fabricated "ready" indicator.
+ */
+export type RuntimeOperatorAvailability =
+  | "available"
+  | "unavailable"
+  | "unobserved"
+  | "degraded"
+  | "blocked"
+  | "maintenance"
+  | "pressure"
+  | "stale";
+
+export type RuntimeOperatorCapability =
+  | "graph"
+  | "replay"
+  | "evaluation"
+  | "learning"
+  | "extensions"
+  | "storage";
+
+export interface RuntimeOperatorStatus {
+  readonly schemaVersion: "role-model.operator-status.v1";
+  readonly overall: RuntimeOperatorAvailability;
+  readonly observedAtMs: number;
+  readonly reason?: string;
+  readonly reasons?: Readonly<Record<string, string>>;
+  readonly capabilities: Readonly<
+    Partial<Record<RuntimeOperatorCapability, RuntimeOperatorAvailability>>
+  >;
+}
+
+export interface RuntimeOperatorJob {
+  readonly jobId: string;
+  readonly status: string;
+  readonly [key: string]: unknown;
+}
+
+export interface RuntimeOperatorJobList {
+  readonly jobs: readonly RuntimeOperatorJob[];
+  readonly [key: string]: unknown;
+}
+
+export interface RuntimeOperatorResult {
+  readonly [key: string]: unknown;
+}
 export type SessionBootstrapStatus = "pending" | "running" | "ready" | "degraded" | "blocked";
 
 export type BootstrapStageStatus =
@@ -189,6 +239,20 @@ export interface RuntimeModelAlias {
 export interface RuntimeConfig {
   readonly version: string;
   readonly routingStrategy?: string | null;
+  /**
+   * Run 103: the parsed structured posture the runtime config readback carries when the file
+   * declares a `routing` block. Absent while the file is still on the legacy single string.
+   */
+  readonly routingPosture?: {
+    readonly mode: string;
+    readonly scoringStrategy: string | null;
+    readonly pinWeights: boolean;
+    readonly operator?: {
+      readonly name: string;
+      readonly weights: Readonly<Record<string, number>>;
+    } | null;
+    readonly degradations?: readonly string[];
+  } | null;
   readonly executionMode?: "decision_only" | "hybrid" | "local_only" | "remote_only";
   readonly modelAliases?: readonly RuntimeModelAlias[];
   readonly model_aliases?: readonly RuntimeModelAlias[];
@@ -322,7 +386,9 @@ export interface RuntimeEndpoint {
       | "provider_5xx"
       | "rate_limit"
       | "auth"
-      | "quota";
+      | "quota"
+      // Run 101 addendum 45: the (account, model) pair cannot serve this model at all.
+      | "model_unavailable";
     readonly lastErrorClass: string;
     readonly lastFailureAtMs?: number;
     readonly nextProbeAtMs?: number;
@@ -475,7 +541,24 @@ export interface RuntimeTelemetrySourceSummary {
   readonly totalEstimatedCostUsd: number;
   readonly averageLatencyMs: number | null;
   readonly p95LatencyMs: number | null;
+  /**
+   * Run 98 addendum 40 (L1): the provider response-header percentiles above are not the latency a
+   * caller experienced. These describe the flushed request duration; they are absent on responses
+   * from a runtime older than addendum 40 and null for windows whose rows predate it.
+   */
+  readonly averageRequestLatencyMs?: number | null;
+  readonly p95RequestLatencyMs?: number | null;
+  readonly requestLatencySampleCount?: number;
   readonly lastSeenAtMs: number | null;
+  /**
+   * Run 104 / R14: how many rows in the same window the live-only predicate left out, and of which
+   * class. Absent on responses from a runtime older than the live-only summary.
+   */
+  readonly excludedRequestCount?: number;
+  readonly excludedByClass?: readonly {
+    readonly requestClass: string;
+    readonly requestCount: number;
+  }[];
 }
 
 export interface RuntimeTelemetrySummary extends RuntimeTelemetrySourceSummary {
@@ -518,7 +601,18 @@ export interface RuntimeTelemetryRequestRecord {
   readonly upstreamModelId?: string | null;
   readonly reasoningEffort?: string | null;
   readonly effortSource?: string | null;
-  readonly requestClass?: "benchmark" | "live_request" | "unknown";
+  /**
+   * Run 104 / R14: the closed traffic-class vocabulary. `live_request` is the legacy spelling that folds
+   * into `live`; a runtime older than the vocabulary change may still omit the field entirely.
+   */
+  readonly requestClass?:
+    | "live"
+    | "replay"
+    | "evaluation"
+    | "benchmark"
+    | "probe"
+    | "live_request"
+    | "unknown";
   readonly conversationId?: string;
   readonly createdAtMs: number;
   readonly modelId?: string | null;
@@ -539,6 +633,11 @@ export interface RuntimeTelemetryRequestRecord {
   readonly outputTokens?: number;
   readonly totalTokens?: number;
   readonly latencyMs?: number | null;
+  /**
+   * Run 98 addendum 40 (L1): the request duration the caller experienced. The measured-latency
+   * override reads request durations, so the routing page counts evidence from this field first.
+   */
+  readonly requestLatencyMs?: number | null;
   readonly errorClass?: string | null;
   readonly statusCode?: number | null;
   readonly finishReason?: string | null;
@@ -1087,11 +1186,58 @@ export interface RouterSummary {
   };
 }
 
+export interface RouterRoutingPostureReadback {
+  /** Non-null only while the file still carries the pre-run-103 single-string spelling. */
+  readonly legacyStrategy: string | null;
+  readonly mode: string;
+  readonly scoringStrategy: string | null;
+  readonly pinWeights: boolean;
+  readonly weights: Readonly<Record<string, number>> | null;
+  readonly degradations: readonly string[];
+}
+
+export interface RouterPostureAliasReadback {
+  readonly aliasId: string;
+  readonly mode: string | null;
+  readonly candidateCount: number;
+  readonly allowEndpointIds: readonly string[];
+  readonly poolEmpty: boolean;
+}
+
+export interface RouterPostureEntryReadback {
+  readonly name: string;
+  readonly kind: "role" | "workload";
+  readonly roleId: string | null;
+  readonly scoringStrategy: string | null;
+  readonly routingMode: string | null;
+  readonly computePreference: string | null;
+  readonly configuredModelIds: readonly string[];
+  readonly requiredCapabilities: readonly string[];
+  readonly violations: readonly string[];
+  readonly aliases: readonly RouterPostureAliasReadback[];
+}
+
+export interface RouterPostureDiagnosticsReadback {
+  readonly violations: readonly string[];
+  readonly skipped: readonly { readonly aliasId: string; readonly reason: string }[];
+  readonly warnings: readonly string[];
+}
+
 export interface RouterConfig {
   readonly persisted: {
     readonly strategy: string | null;
     readonly executionMode: "decision_only" | "hybrid" | "local_only" | "remote_only";
   };
+  /**
+   * Run 103 / SP5e: the saved posture. `legacyStrategy` is set only while the file still carries the
+   * single pre-run-103 string, so the page can say the posture it shows is the migrated one.
+   */
+  readonly routing?: RouterRoutingPostureReadback | null;
+  readonly agentStrategies?: readonly RouterPostureEntryReadback[];
+  readonly workloads?: readonly RouterPostureEntryReadback[];
+  /** Run 103 / SP6: the shipped one-click workload templates the runtime validates. */
+  readonly workloadExamples?: Readonly<Record<string, Readonly<Record<string, unknown>>>>;
+  readonly postureDiagnostics?: RouterPostureDiagnosticsReadback;
   readonly controller: RuntimeControllerAssignment | null;
   readonly guidance: {
     readonly endpointId?: string | null;
@@ -1109,6 +1255,12 @@ export interface RouterConfig {
 export interface BenchmarkCapability {
   readonly evidenceSource?: "run-artifact" | "profile-derived";
   readonly overallScore: number | null;
+  /**
+   * Run 98 addendum 42 B2: the benchmark run's own latency for this endpoint, derived from its case
+   * audits. The model pool's speed axis uses it until telemetry exists for the endpoint.
+   */
+  readonly p50LatencyMs?: number | null;
+  readonly p95LatencyMs?: number | null;
   readonly scoresByBucket?: Partial<
     Record<"easy" | "medium" | "hard", { readonly score: number; readonly cases?: number }>
   >;
@@ -1131,6 +1283,11 @@ export interface BenchmarkCapability {
     readonly lowCoverageRoleIds?: readonly string[];
     readonly lowCoverageGroupIds?: readonly string[];
   };
+  /**
+   * Run 98 addendum 43 S2: `benchmarkSamples` is the benchmark-only count behind the score and
+   * `sampleCount` the broader sample size; the model pool's quality axis requires the configured floor
+   * before it will score this capability.
+   */
   readonly benchmarkSamples: number;
   readonly sampleCount: number;
   readonly measuredAtMs: number | null;
@@ -1359,6 +1516,8 @@ export interface RouterDecisionPage {
 export interface RouterDecisionDetail {
   readonly requestId: string;
   readonly routingDecisionId: string | null;
+  /** Opaque router-owned provider-attempt IDs; never request or provider content. */
+  readonly providerAttemptIds?: readonly string[];
   readonly selectedEndpointId: string;
   readonly selectedModelId: string | null;
   readonly displayName?: string | null;
@@ -1488,7 +1647,7 @@ async function extractErrorMessage(response: Response, path: string): Promise<st
   }
 }
 
-async function fetchJson<TValue>(
+export async function fetchJson<TValue>(
   path: string,
   fetcher: RuntimeFetcher,
   init?: RequestInit,
@@ -1519,6 +1678,44 @@ async function sleep(delayMs: number): Promise<void> {
 
 function isRuntimeInitializingError(error: unknown): boolean {
   return error instanceof Error && error.message.includes("runtime_initializing");
+}
+
+/**
+ * Run 99 R33 (Learning surface, observed live on stage v138/v139): the operator sidecar answers two
+ * different start-up 503s — `runtime_initializing` while the runtime boots, and
+ * `operator_capability_unavailable` while its learning domain is still warming. Both are transient
+ * and both used to reach the page as "surface unavailable" even though the same readback succeeded
+ * seconds later, so the readbacks retry either shape.
+ */
+function isRuntimeStartupError(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    (error.message.includes("runtime_initializing") ||
+      error.message.includes("operator_capability_unavailable"))
+  );
+}
+
+/**
+ * Bounded retry for operator readbacks that can arrive while the runtime is still starting.
+ */
+export async function withRuntimeStartupRetry<TValue>(
+  operation: () => Promise<TValue>,
+): Promise<TValue> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= RUNTIME_INITIALIZING_RETRY_DELAYS_MS.length; attempt += 1) {
+    if (attempt > 0) {
+      await sleep(RUNTIME_INITIALIZING_RETRY_DELAYS_MS[attempt - 1]);
+    }
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      if (!isRuntimeStartupError(error)) {
+        throw error;
+      }
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error("Runtime API is still starting.");
 }
 
 async function withRuntimeInitializingRetry<TValue>(
@@ -1578,18 +1775,410 @@ async function fetchBlob(path: string, fetcher: RuntimeFetcher, init?: RequestIn
   return response.blob();
 }
 
-async function postJson<TValue>(
+export async function postJson<TValue>(
   path: string,
   payload: unknown,
   fetcher: RuntimeFetcher,
+  headers?: Readonly<Record<string, string>>,
 ): Promise<TValue> {
   return fetchJson<TValue>(path, fetcher, {
     method: "POST",
     headers: {
       "content-type": "application/json",
+      ...headers,
     },
     body: JSON.stringify(payload),
   });
+}
+
+function withOperatorToken(
+  init: RequestInit | undefined,
+  operatorToken: string | undefined,
+): RequestInit | undefined {
+  if (!operatorToken) {
+    return init;
+  }
+  const inputHeaders = init?.headers;
+  const headers: Record<string, string> = {};
+  if (inputHeaders instanceof Headers) {
+    inputHeaders.forEach((value, key) => {
+      headers[key] = value;
+    });
+  } else if (Array.isArray(inputHeaders)) {
+    for (const [key, value] of inputHeaders) {
+      headers[key] = value;
+    }
+  } else if (inputHeaders) {
+    Object.assign(headers, inputHeaders);
+  }
+  headers.authorization = `Bearer ${operatorToken}`;
+  return { ...init, headers };
+}
+
+function operatorQuery(
+  query: Readonly<Record<string, string | number | boolean>> | undefined,
+): string {
+  if (!query) {
+    return "";
+  }
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(query)) {
+    params.set(key, String(value));
+  }
+  const serialized = params.toString();
+  return serialized.length > 0 ? `?${serialized}` : "";
+}
+
+function operatorGet<TValue>(
+  path: string,
+  fetcher: RuntimeFetcher,
+  operatorToken?: string,
+): Promise<TValue> {
+  return fetchJson<TValue>(path, fetcher, withOperatorToken(undefined, operatorToken));
+}
+
+function operatorPost<TValue>(
+  path: string,
+  payload: unknown,
+  fetcher: RuntimeFetcher,
+  operatorToken?: string,
+): Promise<TValue> {
+  return postJson<TValue>(path, payload, fetcher, {
+    ...(operatorToken ? { authorization: `Bearer ${operatorToken}` } : {}),
+  });
+}
+
+export async function fetchOperatorStatus(
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<RuntimeOperatorStatus> {
+  return operatorGet<RuntimeOperatorStatus>(
+    "/api/role-model/operator/status",
+    fetcher,
+    operatorToken,
+  );
+}
+
+/**
+ * Run 97 automatic replay automation surface: bounded loop status and pause/resume.
+ * Both routes return 404 when the loop is not configured for the channel.
+ */
+export async function fetchReplayAutomationStatus(
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<Record<string, unknown>> {
+  return operatorGet<Record<string, unknown>>(
+    "/api/role-model/track-b/replay/status",
+    fetcher,
+    operatorToken,
+  );
+}
+
+export async function controlReplayAutomation(
+  action: "pause" | "resume",
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<Record<string, unknown>> {
+  return operatorPost<Record<string, unknown>>(
+    "/api/role-model/track-b/replay/control",
+    { action },
+    fetcher,
+    operatorToken,
+  );
+}
+
+/**
+ * Bounded Evaluation Core and learner counters from the durable stores, used by the
+ * operator surface to answer whether replay is producing comparisons and candidates.
+ */
+export async function fetchLearningSummary(
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<Record<string, unknown>> {
+  // Run 99: the runtime serves this readback as a GET (the POST form 404s), which left the
+  // Learning overview's advisory counters rendering as "—" on every page load.
+  return operatorGet<Record<string, unknown>>(
+    "/api/role-model/track-b/learning/summary",
+    fetcher,
+    operatorToken,
+  );
+}
+
+export async function listReplayJobs(
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+  query?: Readonly<Record<string, string | number | boolean>>,
+): Promise<RuntimeOperatorJobList> {
+  return operatorGet<RuntimeOperatorJobList>(
+    `/api/role-model/operator/replay/jobs${operatorQuery(query)}`,
+    fetcher,
+    operatorToken,
+  );
+}
+
+export async function fetchOperatorTraceRoots(
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+  query?: Readonly<Record<string, string | number | boolean>>,
+): Promise<RuntimeOperatorResult> {
+  return operatorGet<RuntimeOperatorResult>(
+    `/api/role-model/operator/trace-roots${operatorQuery(query)}`,
+    fetcher,
+    operatorToken,
+  );
+}
+
+export async function fetchOperatorTraceRoot(
+  traceRootId: string,
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<RuntimeOperatorResult> {
+  return operatorGet<RuntimeOperatorResult>(
+    `/api/role-model/operator/trace-roots/${encodeURIComponent(traceRootId)}`,
+    fetcher,
+    operatorToken,
+  );
+}
+
+export async function createReplayJob(
+  body: Readonly<Record<string, unknown>>,
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<RuntimeOperatorResult> {
+  return operatorPost<RuntimeOperatorResult>(
+    "/api/role-model/operator/replay/jobs",
+    body,
+    fetcher,
+    operatorToken,
+  );
+}
+
+export async function cancelReplayJob(
+  jobId: string,
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<RuntimeOperatorResult> {
+  return operatorPost<RuntimeOperatorResult>(
+    `/api/role-model/operator/replay/jobs/${encodeURIComponent(jobId)}/cancel`,
+    {},
+    fetcher,
+    operatorToken,
+  );
+}
+
+export async function fetchReplayJob(
+  jobId: string,
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<RuntimeOperatorResult> {
+  return operatorGet<RuntimeOperatorResult>(
+    `/api/role-model/operator/replay/jobs/${encodeURIComponent(jobId)}`,
+    fetcher,
+    operatorToken,
+  );
+}
+
+export async function fetchReplayResults(
+  jobId: string,
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<RuntimeOperatorResult> {
+  return operatorGet<RuntimeOperatorResult>(
+    `/api/role-model/operator/replay/jobs/${encodeURIComponent(jobId)}/results`,
+    fetcher,
+    operatorToken,
+  );
+}
+
+export async function listEvaluationJobs(
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+  query?: Readonly<Record<string, string | number | boolean>>,
+): Promise<RuntimeOperatorJobList> {
+  return operatorGet<RuntimeOperatorJobList>(
+    `/api/role-model/operator/evaluation/jobs${operatorQuery(query)}`,
+    fetcher,
+    operatorToken,
+  );
+}
+
+export async function fetchEvaluationJob(
+  jobId: string,
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<RuntimeOperatorResult> {
+  return operatorGet<RuntimeOperatorResult>(
+    `/api/role-model/operator/evaluation/jobs/${encodeURIComponent(jobId)}`,
+    fetcher,
+    operatorToken,
+  );
+}
+
+export async function cancelEvaluationJob(
+  jobId: string,
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<RuntimeOperatorResult> {
+  return operatorPost<RuntimeOperatorResult>(
+    `/api/role-model/operator/evaluation/jobs/${encodeURIComponent(jobId)}/cancel`,
+    {},
+    fetcher,
+    operatorToken,
+  );
+}
+
+export async function retryEvaluationJob(
+  jobId: string,
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<RuntimeOperatorResult> {
+  return operatorPost<RuntimeOperatorResult>(
+    `/api/role-model/operator/evaluation/jobs/${encodeURIComponent(jobId)}/retry`,
+    {},
+    fetcher,
+    operatorToken,
+  );
+}
+
+async function fetchEvaluationEvidence(
+  jobId: string,
+  evidence: "trials" | "scorers" | "comparisons" | "groups",
+  fetcher: RuntimeFetcher,
+  operatorToken?: string,
+): Promise<RuntimeOperatorResult> {
+  return operatorGet<RuntimeOperatorResult>(
+    `/api/role-model/operator/evaluation/jobs/${encodeURIComponent(jobId)}/${evidence}`,
+    fetcher,
+    operatorToken,
+  );
+}
+
+export function fetchEvaluationTrials(
+  jobId: string,
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<RuntimeOperatorResult> {
+  return fetchEvaluationEvidence(jobId, "trials", fetcher, operatorToken);
+}
+
+export function fetchEvaluationScorers(
+  jobId: string,
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<RuntimeOperatorResult> {
+  return fetchEvaluationEvidence(jobId, "scorers", fetcher, operatorToken);
+}
+
+export function fetchEvaluationComparisons(
+  jobId: string,
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<RuntimeOperatorResult> {
+  return fetchEvaluationEvidence(jobId, "comparisons", fetcher, operatorToken);
+}
+
+export function fetchEvaluationGroups(
+  jobId: string,
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<RuntimeOperatorResult> {
+  return fetchEvaluationEvidence(jobId, "groups", fetcher, operatorToken);
+}
+
+export async function fetchLearningState(
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<RuntimeOperatorResult> {
+  return operatorGet<RuntimeOperatorResult>(
+    "/api/role-model/operator/learning",
+    fetcher,
+    operatorToken,
+  );
+}
+
+export async function fetchLearningProfile(
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<RuntimeOperatorResult> {
+  return operatorGet<RuntimeOperatorResult>(
+    "/api/role-model/operator/learning/profile",
+    fetcher,
+    operatorToken,
+  );
+}
+
+/**
+ * Run 98 addendum 44 `A44-S3`: the profile-inspection capability is not wired into the packaged stage, and the
+ * host answers a bounded `503 operator_capability_unavailable` with its reason. The Overview must show that as
+ * a first-class state rather than an error, so this read never throws: it reports what the runtime said.
+ */
+export async function fetchLearningProfileState(
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<{
+  readonly state: "available" | "unavailable";
+  readonly reason: string | null;
+  readonly value: Readonly<Record<string, unknown>> | null;
+}> {
+  const response = await fetcher(
+    "/api/role-model/operator/learning/profile",
+    withOperatorToken(undefined, operatorToken),
+  );
+  let payload: Record<string, unknown> | null = null;
+  try {
+    const parsed = await response.json();
+    payload =
+      typeof parsed === "object" && parsed !== null ? (parsed as Record<string, unknown>) : null;
+  } catch {
+    payload = null;
+  }
+  if (!response.ok) {
+    const reason =
+      typeof payload?.reason === "string" && payload.reason.trim()
+        ? payload.reason.trim()
+        : typeof payload?.message === "string" && payload.message.trim()
+          ? payload.message.trim()
+          : null;
+    return { state: "unavailable", reason, value: null };
+  }
+  return { state: "available", reason: null, value: payload };
+}
+
+export async function fetchLearningAdvisory(
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<RuntimeOperatorResult> {
+  return operatorGet<RuntimeOperatorResult>(
+    "/api/role-model/operator/learning/advisory",
+    fetcher,
+    operatorToken,
+  );
+}
+
+export async function updateLearningMode(
+  body: Readonly<Record<string, unknown>>,
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<RuntimeOperatorResult> {
+  return operatorPost<RuntimeOperatorResult>(
+    "/api/role-model/operator/learning/mode",
+    body,
+    fetcher,
+    operatorToken,
+  );
+}
+
+export async function rollbackLearning(
+  body: Readonly<Record<string, unknown>> = {},
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<RuntimeOperatorResult> {
+  return operatorPost<RuntimeOperatorResult>(
+    "/api/role-model/operator/learning/rollback",
+    body,
+    fetcher,
+    operatorToken,
+  );
 }
 
 async function putJson<TValue>(
@@ -1683,6 +2272,18 @@ export interface RuntimeExtensionStatus {
   readonly installed: boolean;
   readonly enabled: boolean;
   readonly enabledMode?: "disabled" | "shadow" | "advisory" | "bounded" | "active";
+  /**
+   * Declared activation boundary for this package (run 98 R18). The mode selector, the
+   * default label and the prohibited actions are rendered from this record instead of
+   * per-extension UI branching.
+   */
+  readonly activationBoundary?: {
+    readonly policyGated: boolean;
+    readonly defaultMode: "disabled" | "shadow" | "advisory" | "bounded" | "active";
+    readonly allowedModes: readonly ("disabled" | "shadow" | "advisory" | "bounded" | "active")[];
+    readonly prohibitedActions: readonly string[];
+    readonly prohibitedCapabilities: readonly string[];
+  };
   readonly channel: string;
   readonly scope: string;
   readonly authorizationEpoch: number;
@@ -1821,10 +2422,24 @@ export interface RuntimeStorageRetentionSummary {
   }[];
   readonly receipts: readonly {
     readonly id: string;
-    readonly status: string;
-    readonly affectedCount: number;
-    readonly rollbackAvailable: boolean;
+    readonly status?: string;
+    readonly affectedCount?: number;
+    readonly rollbackAvailable?: boolean;
     readonly manifestHash?: string;
+    readonly schemaVersion?: string;
+    readonly actionId?: string;
+    readonly owner?: string;
+    readonly trigger?: string;
+    readonly expectedImpact?: string;
+    readonly rollback?: {
+      readonly strategy: string;
+      readonly evidenceRef: string;
+    };
+    readonly recoveryProof?: {
+      readonly status: string;
+      readonly evidenceRef: string;
+      readonly recoveredAt: string;
+    };
   }[];
   readonly activeJob: {
     readonly id: string;
@@ -1853,6 +2468,29 @@ export interface RuntimeStorageRetentionSummary {
     readonly unobservedResourceCount?: number;
     /** Observed resources whose health probe reported unavailable. */
     readonly unavailableResourceCount?: number;
+    readonly byteTotals?: {
+      readonly physicalBytes: number;
+      readonly logicalBytes: number;
+      readonly reclaimableBytes: number;
+      readonly reservedBytes: number;
+      readonly archivedBytes: number;
+      readonly unattributedBytes: number;
+      readonly unavailableResourceCount: number;
+    };
+    readonly capacityForecast?: {
+      readonly schemaVersion: "role-model.storage-capacity-forecast.v1";
+      readonly elapsedDays: number;
+      readonly horizonDays: number;
+      readonly growthBytesPerDay: number;
+      readonly currentPhysicalBytes: number;
+      readonly projectedPhysicalBytes: number;
+      readonly maxBytes: number;
+      readonly highWatermarkBytes: number;
+      readonly daysToHighWatermark: number | null;
+      readonly state: "ready" | "pressure" | "unavailable";
+      readonly basis: string;
+      readonly capacityContract: string;
+    };
     readonly entries: readonly {
       readonly id: string;
       readonly owner: string;
@@ -2406,7 +3044,11 @@ export async function fetchRuntimeConfig(
 }
 
 export async function updateRuntimeConfig(
-  payload: RuntimeConfig,
+  /**
+   * Run 103: the endpoint merges a document patch into the saved file, so a page that owns one
+   * section sends just that section (snake_case) instead of echoing the whole config back.
+   */
+  payload: RuntimeConfig | Readonly<Record<string, unknown>>,
   fetcher: RuntimeFetcher = fetch,
 ): Promise<RuntimeConfigRecord> {
   return putJson<RuntimeConfigRecord>("/api/role-model/runtime/config", payload, fetcher);

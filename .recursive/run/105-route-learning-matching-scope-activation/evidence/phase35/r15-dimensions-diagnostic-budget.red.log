@@ -1,0 +1,78 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/packages/sqlite-memory
+
+(node:22816) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | test/run105-telemetry-failure-dimensions.test.ts > R15 necessary metadata boundary 16383
+R15 final dimensions bytes: 16383
+
+stdout | test/run105-telemetry-failure-dimensions.test.ts > R15 necessary metadata boundary 16384
+R15 final dimensions bytes: 16384
+
+stdout | test/run105-telemetry-failure-dimensions.test.ts > R15 necessary metadata boundary 16385
+R15 actual dimensions reproduction: runtime telemetry dimensions_json exceeds 16384 bytes; externalize rich content via artifactRefs
+
+stdout | test/run105-telemetry-failure-dimensions.test.ts > R15 exact saved live dimensions input persists (graph=false)
+R15 final dimensions bytes: 1790
+
+stdout | test/run105-telemetry-failure-dimensions.test.ts > R15 exact saved live dimensions input persists (graph=true)
+R15 final dimensions bytes: 2014
+
+stdout | test/run105-telemetry-failure-dimensions.test.ts > R15 dimensions bound Unicode lists and aggregate while preserving primary facts and privacy
+R15 final dimensions bytes: 15537
+
+ ❯ test/run105-telemetry-failure-dimensions.test.ts (9 tests | 2 failed) 1147ms
+   ✓ R15 necessary metadata boundary 16383 167ms
+   ✓ R15 necessary metadata boundary 16384 152ms
+   ✓ R15 necessary metadata boundary 16385 216ms
+   ✓ R15 diagnostic facts aggregate boundary 8191 1ms
+   ✓ R15 diagnostic facts aggregate boundary 8192 0ms
+   × R15 diagnostic facts aggregate boundary 8193 19ms
+     → expected undefined to match object { …(2) }
+   ✓ R15 exact saved live dimensions input persists (graph=false) 165ms
+   ✓ R15 exact saved live dimensions input persists (graph=true) 206ms
+   × R15 dimensions bound Unicode lists and aggregate while preserving primary facts and privacy 218ms
+     → expected 14348 to be less than or equal to 8192
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run105-telemetry-failure-dimensions.test.ts > R15 diagnostic facts aggregate boundary 8193
+AssertionError: expected undefined to match object { …(2) }
+
+- Expected: 
+{
+  "diagnosticFactsAvailable": true,
+  "reason": "diagnostic_facts_budget",
+}
+
++ Received: 
+undefined
+
+ ❯ test/run105-telemetry-failure-dimensions.test.ts:44:57
+     42|   const projected = projectRuntimeTelemetryFailureDimensions(base)!;
+     43|   expect(projected.errorContext).toEqual(base.errorContext);
+     44|   if (bytes > 8192) expect(projected.compactTruncation).toMatchObject(…
+       |                                                         ^
+     45| });
+     46| for (const graph of [false, true]) test("R15 exact saved live dimensio…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/run105-telemetry-failure-dimensions.test.ts > R15 dimensions bound Unicode lists and aggregate while preserving primary facts and privacy
+AssertionError: expected 14348 to be less than or equal to 8192
+ ❯ test/run105-telemetry-failure-dimensions.test.ts:67:139
+     65|   expect(dimensions.compactTruncation).toHaveProperty("omittedFields");
+     66|   expect(dimensions.requestId).toBe(input.requestId);
+     67|   expect(Buffer.byteLength(JSON.stringify({ errorContext: dimensions.e…
+       |                                                                                                                                           ^
+     68|   for (const secret of ["PRIVATE-RESPONSE", "PRIVATE-PROMPT", "PRIVATE…
+     69| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 7 passed (9)
+   Start at  18:41:54
+   Duration  2.60s (transform 435ms, setup 0ms, collect 498ms, tests 1.15s, environment 0ms, prepare 418ms)
+

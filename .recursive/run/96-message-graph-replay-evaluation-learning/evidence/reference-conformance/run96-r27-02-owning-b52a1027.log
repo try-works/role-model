@@ -1,0 +1,15 @@
+Run 96 R27-02 OWNING receipt
+acceptanceCriterionId=AC-R27-02
+proofFamily=transfer-artifact-authentication
+repository=public
+baseline_ref=b52a10279de21f612911bf2ae758ab40fb61d164
+testPath=public:packages/extension-host/run96-r27-extension-boundary.test.mjs
+selector=public:packages/extension-host/run96-r27-extension-boundary.test.mjs#AC-R27-02 tuple: transfer-artifact authenticates scope/channel/epoch, bounds content, sanitizes private fields, and is single-use
+command=node --test --test-name-pattern="^AC-R27-02 tuple:" packages/extension-host/run96-r27-extension-boundary.test.mjs
+external_log=E:\role-model-temp\run96-r27-02-owning-b52a1027.log
+exit=0
+tests=1
+passed=1
+failed=0
+result=PASS
+receipt_status=PASS_OWNING

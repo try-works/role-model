@@ -1,0 +1,28 @@
+
+ DEPRECATED  'basic' reporter is deprecated and will be removed in Vitest v3.
+Remove 'basic' from 'reporters' option. To match 'basic' reporter 100%, use configuration:
+{
+  "test": {
+    "reporters": [
+      [
+        "default",
+        {
+          "summary": false
+        }
+      ]
+    ]
+  }
+}
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/103-agent-strategy-and-scoring-strategy/role-model-router/apps/runtime-host-bridge
+
+ ✓ test/scoring-strategy-legacy.test.ts (7 tests) 15ms
+ ✓ test/scoring-strategy-config.test.ts (8 tests) 17ms
+ ✓ test/scoring-strategy.test.ts (9 tests) 21ms
+ ✓ test/scoring-strategy-resolution.test.ts (10 tests) 14ms
+
+
+ Test Files  4 passed (4)
+      Tests  34 passed (34)
+   Start at  12:08:21
+   Duration  12.60s (transform 2.42s, setup 0ms, collect 9.61s, tests 68ms, environment 2ms, prepare 1.20s)
+

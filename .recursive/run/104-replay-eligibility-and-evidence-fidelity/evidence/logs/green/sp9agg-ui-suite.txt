@@ -1,0 +1,170 @@
+
+> @role-model-router/runtime-ui@ test D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\apps\runtime-ui
+> vitest run
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-ui
+
+ ✓ app/lib/agent-strategy.test.ts (15 tests) 194ms
+ ✓ app/lib/routing-mode.test.ts (16 tests) 183ms
+stderr | app/lib/stale-refresh-diagnostics.test.ts > stale-refresh-diagnostics > emit and flush diagnostics > batches diagnostics until flushed
+[telemetry] Background analytics refresh reused stale data {
+  routeId: 'dashboard',
+  staleChartCount: 2,
+  charts: [
+    {
+      title: 'Chart A',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    },
+    {
+      title: 'Chart B',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    }
+  ]
+}
+
+stderr | app/lib/stale-refresh-diagnostics.test.ts > stale-refresh-diagnostics > emit and flush diagnostics > auto-flushes at max batch size
+[telemetry] Background analytics refresh reused stale data {
+  routeId: 'dashboard',
+  staleChartCount: 10,
+  charts: [
+    {
+      title: 'Chart 0',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    },
+    {
+      title: 'Chart 1',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    },
+    {
+      title: 'Chart 2',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    },
+    {
+      title: 'Chart 3',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    },
+    {
+      title: 'Chart 4',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    },
+    {
+      title: 'Chart 5',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    },
+    {
+      title: 'Chart 6',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    },
+    {
+      title: 'Chart 7',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    },
+    {
+      title: 'Chart 8',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    },
+    {
+      title: 'Chart 9',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    }
+  ]
+}
+
+ ✓ app/lib/stale-refresh-diagnostics.test.ts (14 tests) 63ms
+ ✓ app/lib/telemetry-analytics.test.ts (13 tests) 84ms
+ ✓ app/lib/learning-visuals.test.ts (10 tests) 216ms
+ ✓ app/lib/candidate-space.test.ts (29 tests) 554ms
+ ✓ app/lib/device-authorization.test.ts (19 tests) 232ms
+ ✓ app/lib/runtime-api.test.ts (68 tests) 1070ms
+ ✓ app/lib/view-models.test.ts (53 tests) 813ms
+ ✓ app/lib/effort-identity.test.ts (10 tests) 94ms
+ ✓ app/components/telemetry-charts.test.tsx (13 tests) 398ms
+ ✓ app/lib/run96-operator-controls.test.ts (4 tests) 152ms
+ ✓ app/lib/telemetry-route-models.test.ts (3 tests) 29ms
+ ✓ app/lib/learning-api.test.ts (8 tests) 873ms
+   ✓ learning readback start-up retry > retries a warming operator capability and then returns the durable state  309ms
+   ✓ learning readback start-up retry > retries a warming capability for the policy and activity readbacks too  477ms
+ ✓ app/lib/replay-status.test.ts (7 tests) 196ms
+ ✓ app/lib/sidebar-footer.test.ts (6 tests) 23ms
+ ✓ app/lib/theme.test.ts (6 tests) 49ms
+ ✓ app/lib/telemetry-chart-config.test.ts (3 tests) 28ms
+ ✓ app/lib/decision-receipt.test.ts (4 tests) 18ms
+ ✓ app/lib/router-candidate-labels.test.ts (5 tests) 56ms
+ ✓ app/lib/llama-swap-setup.test.ts (6 tests) 25ms
+ ✓ app/lib/learning-policy-resolution.test.ts (4 tests) 12ms
+ ✓ app/lib/learning-claim.test.ts (1 test) 17ms
+ ✓ app/lib/overview-chart-adapter.test.ts (14 tests) 161ms
+ ✓ app/components/local-model-role-picker.test.tsx (9 tests) 483ms
+ ✓ app/lib/role-task-hierarchy.test.tsx (4 tests) 236ms
+ ✓ app/routes/storage-retention.test.tsx (5 tests) 172ms
+ ✓ app/components/learning-visuals.test.tsx (8 tests) 425ms
+ ✓ app/routes/agent-strategy.test.tsx (5 tests) 277ms
+ ✓ app/routes/control-models.test.ts (31 tests) 435ms
+ ✓ app/routes/extensions.test.tsx (3 tests) 310ms
+ ✓ app/routes/control-routing-strategy.test.tsx (5 tests) 118ms
+ ✓ app/routes/providers.test.ts (19 tests) 546ms
+ ✓ app/components/page-primitives.test.tsx (7 tests) 229ms
+ ✓ app/lib/runtime-refresh-bus.test.ts (5 tests) 33ms
+ ✓ app/lib/replay-disposition-copy.test.ts (5 tests) 57ms
+ ✓ app/lib/benchmark-model-cards.test.ts (5 tests) 135ms
+ ✓ app/routes/startup-bootstrap-regression.test.ts (11 tests) 77ms
+ ✓ app/routes/learning.test.tsx (25 tests) 411ms
+ ✓ app/lib/benchmark-decision-evidence.test.ts (2 tests) 26ms
+ ✓ app/lib/live-refresh.test.ts (2 tests) 188ms
+ ✓ app/lib/queue-api.test.ts (4 tests) 201ms
+ ✓ app/lib/run98-a40-client-latency.test.ts (2 tests) 22ms
+ ✓ app/lib/latency-override.test.ts (4 tests) 88ms
+ ✓ app/lib/build-sync.test.ts (3 tests) 84ms
+ ✓ app/components/replay-automation-panel.test.tsx (3 tests) 109ms
+ ✓ app/lib/telemetry-performance-semantics.test.ts (3 tests) 73ms
+ ✓ app/root.test.tsx (3 tests) 20ms
+ ✓ app/lib/provider-account-state.test.ts (2 tests) 16ms
+ ✓ app/lib/format-score.test.ts (5 tests) 14ms
+ ✓ app/components/device-authorization-modal.test.tsx (1 test) 102ms
+ ✓ app/lib/operator-write-error.test.ts (2 tests) 13ms
+ ✓ app/routes/run94-storage-contract-red.test.tsx (1 test) 15ms
+ ✓ app/routes/index.test.tsx (1 test) 11ms
+ ✓ app/components/queues-configuration-card.test.tsx (2 tests) 515ms
+   ✓ @recursive:101-effect-mq-queue-rebuild @sp10 queues configuration card > renders the card with the catalogue's bounds when the API answers  457ms
+ ✓ app/lib/design-system.test.ts (97 tests) 980ms
+ ✓ app/routes/endpoints.test.tsx (1 test) 60ms
+ ✓ app/lib/benchmark-latency.test.ts (2 tests) 14ms
+ ✓ app/lib/observe-chart-adapter.test.ts (4 tests) 31ms
+ ✓ app/components/device-authorization-card.test.tsx (2 tests) 142ms
+ ✓ app/routes/learning-task-family.test.tsx (3 tests) 59ms
+ ✓ app/routes/router-decision-detail.test.tsx (3 tests) 70ms
+ ✓ app/routes/request-detail.test.tsx (6 tests) 34ms
+ ✓ app/routes/operator-controls.test.tsx (2 tests) 86ms
+ ✓ app/routes/control-benchmark.test.ts (1 test) 90ms
+ ✓ app/routes/studio-audio.test.ts (2 tests) 12ms
+
+ Test Files  66 passed (66)
+      Tests  641 passed (641)
+   Start at  19:17:34
+   Duration  48.91s (transform 97.84s, setup 0ms, collect 454.26s, tests 12.56s, environment 69ms, prepare 71.23s)
+

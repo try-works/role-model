@@ -1,0 +1,61 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/apps/runtime-host-bridge
+
+(node:59192) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/run104-advisory-classification-variant.test.ts (3 tests | 2 failed) 46ms
+   × run104 R6 advisory classification carries the task variant > records the resolved variant on the classification the observation persists 34ms
+     → expected undefined to be 'review' // Object.is equality
+   ✓ run104 R6 advisory classification carries the task variant > normalizes a classification without a variant byte-identically 3ms
+   × run104 R6 advisory classification carries the task variant > bounds the variant like every other classification id 3ms
+     → expected undefined to be 'vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv…' // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run104-advisory-classification-variant.test.ts > run104 R6 advisory classification carries the task variant > records the resolved variant on the classification the observation persists
+AssertionError: expected undefined to be 'review' // Object.is equality
+
+- Expected: 
+"review"
+
++ Received: 
+undefined
+
+ ❯ test/run104-advisory-classification-variant.test.ts:71:57
+     69|       unknown
+     70|     >;
+     71|     expect(readClassification(observation).taskVariant).toBe("review");
+       |                                                         ^
+     72|   });
+     73| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/run104-advisory-classification-variant.test.ts > run104 R6 advisory classification carries the task variant > bounds the variant like every other classification id
+AssertionError: expected undefined to be 'vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv…' // Object.is equality
+
+- Expected: 
+"vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+
++ Received: 
+undefined
+
+ ❯ test/run104-advisory-classification-variant.test.ts:89:53
+     87|       decision({ classification: classification({ taskVariant: long })…
+     88|     ) as Record<string, unknown>;
+     89|     expect(readClassification(bounded).taskVariant).toBe("v".repeat(12…
+       |                                                     ^
+     90| 
+     91|     const blank = buildLiveRouteAdvisoryObservation(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 1 passed (3)
+   Start at  19:36:03
+   Duration  8.12s (transform 3.88s, setup 0ms, collect 6.84s, tests 46ms, environment 1ms, prepare 626ms)
+
+undefined
+D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/run104-advisory-classification-variant.test.ts

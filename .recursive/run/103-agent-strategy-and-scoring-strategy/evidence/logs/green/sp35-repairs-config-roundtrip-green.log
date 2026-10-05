@@ -1,0 +1,42 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/103-agent-strategy-and-scoring-strategy/role-model-router/apps/runtime-host-bridge
+
+(node:59748) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/backend-unified-runtime-config.test.ts (30 tests) 41697ms
+   ✓ runtime-host-bridge unified runtime backend > rehydrates a persisted alias with a temporarily unroutable known endpoint without weakening live config validation  2911ms
+   ✓ runtime-host-bridge unified runtime backend > preserves the exact LiteLLM provider account on config-owned endpoint readback  943ms
+   ✓ runtime-host-bridge unified runtime backend > ejects config-owned membership durably across config reapply and restart  2643ms
+   ✓ runtime-host-bridge unified runtime backend > reassigns the controller when config-owned eject removes the active controller model  1795ms
+   ✓ runtime-host-bridge unified runtime backend > clears the controller when config-owned eject removes the last controller-backed model  1788ms
+   ✓ runtime-host-bridge unified runtime backend > router candidates expose every configured endpoint and mark current execution-mode eligibility  1736ms
+   ✓ runtime-host-bridge unified runtime backend > rejects benchmark runs that target endpoints excluded by execution mode  1816ms
+   ✓ runtime-host-bridge unified runtime backend > surfaces the derived execution mode in the runtime summary when a unified config file is provided  866ms
+   ✓ runtime-host-bridge unified runtime backend > reads and updates unified runtime config through the backend  961ms
+   ✓ runtime-host-bridge unified runtime backend > merges partial runtime config updates without dropping existing routing strategy  934ms
+   ✓ runtime-host-bridge unified runtime backend > canonicalizes the primary routing alias to the live routing matrix on startup  1053ms
+   ✓ runtime-host-bridge unified runtime backend > creates and updates unified runtime config when the configured path does not exist yet  899ms
+   ✓ runtime-host-bridge unified runtime backend > persists explicit hybrid execution mode from routing strategy updates  994ms
+   ✓ runtime-host-bridge unified runtime backend > bootstraps the primary routing alias when routing posture is saved without preconfigured aliases  1093ms
+   ✓ runtime-host-bridge unified runtime backend > bootstraps a settings-specific primary routing alias for remote-only posture without preconfigured aliases  1079ms
+   ✓ runtime-host-bridge unified runtime backend > maintains the routing alias matrix across strategy families and execution modes  2797ms
+   ✓ runtime-host-bridge unified runtime backend > persists the full canonical routing alias matrix instead of a single primary alias  1022ms
+   ✓ runtime-host-bridge unified runtime backend > normalizes legacy craft-ask routing strategy updates to the default alias family  931ms
+   ✓ runtime-host-bridge unified runtime backend > rewrites persisted craft-ask alias ids out of startup config materialization  1007ms
+   ✓ runtime-host-bridge unified runtime backend > rewrites legacy craft-ask matrix rows from persisted config even when the canonical matrix already exists  969ms
+   ✓ runtime-host-bridge unified runtime backend > rewrites legacy craft-ask matrix rows from persisted config even when startup does not need to re-materialize aliases  889ms
+   ✓ runtime-host-bridge unified runtime backend > renames the primary routing alias when routing strategy and execution mode change  996ms
+   ✓ runtime-host-bridge unified runtime backend > does not mark all candidates ignored when routing guidance has no preferred endpoints  1037ms
+   ✓ runtime-host-bridge unified runtime backend > preserves synthesized activated endpoint models across runtime config updates  1160ms
+   ✓ runtime-host-bridge unified runtime backend > returns no controller assignment when the unified config has no endpoints yet  931ms
+   ✓ runtime-host-bridge unified runtime backend > surfaces normalized provider docs and npm metadata through listProviders  1134ms
+   ✓ runtime-host-bridge unified runtime backend > uses YAML membership authority while preserving manual metadata on reserved-id collision  2344ms
+   ✓ runtime-host-bridge unified runtime backend > migrates a legacy standalone runtime config into the canonical state path on startup  913ms
+   ✓ runtime-host-bridge unified runtime backend > repairs stale standalone canonical remote aliases after restart bootstrap rehydrates env-backed persisted endpoints  2421ms
+   ✓ runtime-host-bridge unified runtime backend > surfaces LiteLLM-backed Moonshot models and endpoints from unified runtime config  1631ms
+
+ Test Files  1 passed (1)
+      Tests  30 passed (30)
+   Start at  17:42:48
+   Duration  48.19s (transform 3.84s, setup 0ms, collect 5.91s, tests 41.70s, environment 0ms, prepare 195ms)
+

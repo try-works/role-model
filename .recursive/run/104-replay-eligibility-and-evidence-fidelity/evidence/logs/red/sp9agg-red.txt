@@ -1,0 +1,81 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/104-replay-eligibility-and-evidence-fidelity/role-model-router/packages/sqlite-memory
+
+(node:63048) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/run104-live-only-summary.test.ts (3 tests | 3 failed) 799ms
+   × run104: the default summary is live-only and publishes the excluded classes 266ms
+     → expected 3 to be 1 // Object.is equality
+   × run104: legacy live_request rows stay live and an explicit request can include every class 221ms
+     → expected 2 to be 1 // Object.is equality
+   × run104: request_class_source records a declaration and marks backfilled rows inferred 308ms
+     → expected undefined to be 'declared' // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run104-live-only-summary.test.ts > run104: the default summary is live-only and publishes the excluded classes
+AssertionError: expected 3 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 3
+
+ ❯ test/run104-live-only-summary.test.ts:124:32
+    122|   // (e) the aggregate must equal a hand-computed value over the live …
+    123|   // "not equal to the mixed value".
+    124|   expect(summary.requestCount).toBe(1);
+       |                                ^
+    125|   expect(summary.successCount).toBe(1);
+    126|   expect(summary.failureCount).toBe(0);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  test/run104-live-only-summary.test.ts > run104: legacy live_request rows stay live and an explicit request can include every class
+AssertionError: expected 2 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 2
+
+ ❯ test/run104-live-only-summary.test.ts:170:33
+    168| 
+    169|   const liveOnly = readRuntimeTelemetrySummary({ databasePath, windowM…
+    170|   expect(liveOnly.requestCount).toBe(1);
+       |                                 ^
+    171|   expect(liveOnly.cachedRequestCount).toBe(1);
+    172|   expect(liveOnly.excludedRequestCount).toBe(1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  test/run104-live-only-summary.test.ts > run104: request_class_source records a declaration and marks backfilled rows inferred
+AssertionError: expected undefined to be 'declared' // Object.is equality
+
+- Expected: 
+"declared"
+
++ Received: 
+undefined
+
+ ❯ test/run104-live-only-summary.test.ts:195:111
+    193|     requestClass: "live",
+    194|   });
+    195|   expect(readRuntimeTelemetryRecord({ databasePath, requestId: "run104…
+       |                                                                                                               ^
+    196|     "declared",
+    197|   );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed (3)
+   Start at  19:04:57
+   Duration  5.11s (transform 1.87s, setup 0ms, collect 1.96s, tests 799ms, environment 1ms, prepare 807ms)
+
+undefined
+D:\DEV\role-model\.worktrees\104-replay-eligibility-and-evidence-fidelity\role-model-router\packages\sqlite-memory:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/run104-live-only-summary.test.ts

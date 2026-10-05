@@ -4,6 +4,7 @@ import {
   OVERVIEW_CHART_ORDER,
   OVERVIEW_CHART_SPANS,
   adaptOverviewChartBlock,
+  formatUsdAxisTick,
   mapTelemetryDataToKitHours,
   mapTelemetrySeriesToKit,
   resolveOverviewChartFormatters,
@@ -51,6 +52,24 @@ function expectFirstOverviewDefinition(timeRange: "day" | "week" | "quarter") {
 }
 
 describe("overview-chart-adapter", () => {
+  /**
+   * Run 98 addendum 49 (operator report): the "Cost avoided over time" axis read `$0.00` at every tick while the
+   * area was clearly drawn. Avoided cost is fractions of a cent, and the formatter hardcoded two decimals.
+   */
+  it("formats sub-cent cost ticks with enough precision to be readable", () => {
+    expect(formatUsdAxisTick(0)).toBe("$0.00");
+    expect(formatUsdAxisTick(0.008)).toBe("$0.008");
+    expect(formatUsdAxisTick(0.00042)).toBe("$0.00042");
+    expect(formatUsdAxisTick(0.05)).toBe("$0.05");
+    expect(formatUsdAxisTick(0.5)).toBe("$0.50");
+    expect(formatUsdAxisTick(1.23)).toBe("$1.23");
+    expect(formatUsdAxisTick(1234.5)).toBe("$1,234.50");
+    expect(formatUsdAxisTick(Number.NaN)).toBe("");
+    // The whole point: adjacent ticks of a sub-cent axis must not all collapse to the same label.
+    const ticks = [0, 0.002, 0.004, 0.006, 0.008].map(formatUsdAxisTick);
+    expect(new Set(ticks).size).toBeGreaterThan(3);
+  });
+
   it("maps overview chart spans to Paper 5-0 grid (cache full-width, success half)", () => {
     expect(OVERVIEW_CHART_SPANS["Token usage over time"]).toBe(12);
     expect(OVERVIEW_CHART_SPANS["Cache efficiency trend"]).toBe(12);

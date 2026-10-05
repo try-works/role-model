@@ -1,0 +1,1344 @@
+/**
+ * A Redis-backed `JobStore` built on `effect/unstable/persistence`'s `Redis`
+ * service. Every mutation is a single Lua script (see `scripts.ts`), so all
+ * `JobStore` operations are atomic on the server and safe across processes.
+ *
+ * Provide the `Redis` service from your platform package — `NodeRedis.layer`
+ * (`@effect/platform-node`, node-redis), `BunRedis.layer`
+ * (`@effect/platform-bun`, `Bun.redis`) — or `Redis.make` over any client.
+ *
+ * Wake-ups ride the client's pub/sub channel, so workers in other processes
+ * pick jobs up promptly; the worker's `pollInterval` is the fallback.
+ *
+ * @since 0.2.0
+ */
+import {
+  Clock,
+  type Context,
+  Data,
+  Deferred,
+  Duration,
+  Effect,
+  Exit,
+  Layer,
+  Option,
+  Queue,
+  Schedule,
+  type Scope
+} from "effect"
+import { Redis } from "effect/unstable/persistence"
+import * as JobStore from "../JobStore.ts"
+import * as scripts from "./scripts.ts"
+
+/**
+ * @since 0.2.0
+ */
+export interface RedisJobStoreOptions {
+  /** Key prefix for everything this store writes (default `effect-mq`). */
+  readonly prefix?: string | undefined
+  /**
+   * Store-level retention ceiling: terminal records older than this are
+   * removed by a periodic sweep — one duration for all terminal states or a
+   * per-state split (`{ completed: "1 day", failed: "30 days" }`). The sweep
+   * also honours stricter per-job `keep.age` rules.
+   */
+  readonly historyTtl?: JobStore.HistoryTtlInput | undefined
+  /** History sweep cadence (default 1 minute). */
+  readonly historySweepInterval?: Duration.Input | undefined
+  /**
+   * Generator for store-assigned job ids (e.g. `() => \`job_${ulid()}\``).
+   * Default: `j-<n>` from the store's counter. See `JobStore.IdGenerator`.
+   */
+  readonly idGenerator?: JobStore.IdGenerator | undefined
+  /**
+   * The optional list indexes: `p:byname:<name>` and `p:byqueue:<queue>`,
+   * both scored by `enqueuedAt`, serving `list({ name })` / `list({ queue })`
+   * without a full scan. Default: all on. `false` disables both; a partial
+   * object disables one (`{ name: false }`). Disable an index only when you
+   * never list that way — a `list` that ROUTES to a disabled index dies with
+   * `ListIndexDisabledError` (a query servable from another structure, e.g.
+   * `name` + terminal `states` ordered by `finishedAt`, never touches it).
+   *
+   * This setting is a PER-PREFIX invariant: every store instance sharing a
+   * key prefix must agree on it. Index writes happen at insert time in the
+   * writing process, so a store with an index off inserts rows that index
+   * never sees — enabled readers on the same prefix silently miss those rows
+   * (the `p:index:<kind>:ready` marker churn between mixed stores is a
+   * symptom of the misconfiguration, not a safety net against it).
+   *
+   * Init reconciles each index one-shot. Enabled with no `ready` marker: a
+   * full driver-paged ZSCAN of `p:all` rebuilds it, then stamps the marker
+   * with the rebuild's start time. Enabled with a marker: rows enqueued since
+   * the marker minus a 60s margin are (re-)indexed — so a rolling deploy
+   * whose old, index-less writers kept inserting after the marker landed is
+   * healed by the last new-code boot — and the marker is re-stamped.
+   * Disabled: only the marker is deleted (a future re-enable then does a full
+   * rebuild instead of trusting stale zsets). The zsets themselves are NEVER
+   * deleted at init — this store cannot know whether an enabled sibling is
+   * serving reads from them. After disabling everywhere, reclaim the memory
+   * manually, e.g.:
+   * `redis-cli --scan --pattern '<prefix>:byname:*' | xargs redis-cli del`.
+   *
+   * @since 0.7.0
+   */
+  readonly indexes?: { readonly name?: boolean | undefined; readonly queue?: boolean | undefined } | false | undefined
+}
+
+/**
+ * A `list` query routed to a list index this store is configured not to
+ * maintain (`RedisJobStoreOptions.indexes`). Delivered as a defect, not a
+ * typed failure: the configuration said "we never list this way", so the
+ * query contradicting it is a programming mistake, matching the library's
+ * die-on-config-mistake idiom.
+ *
+ * @since 0.7.0
+ */
+export class ListIndexDisabledError extends Data.TaggedError("ListIndexDisabledError")<{
+  readonly index: "name" | "queue"
+  readonly message: string
+}> {}
+
+const TERMINAL_STATES: ReadonlySet<JobStore.JobState> = new Set(["completed", "failed", "cancelled"])
+
+/**
+ * The `list` predicates the routed structure does NOT pin, applied per row
+ * inside the list script. Field names are part of the script's contract.
+ */
+interface ResidualFilters {
+  readonly queue?: JobStore.QueueName | undefined
+  readonly name?: string | undefined
+  readonly states?: ReadonlyArray<JobStore.JobState> | undefined
+  readonly metadata?: Readonly<Record<string, string>> | undefined
+}
+
+const storeError = (message: string) => (cause: unknown) => new JobStore.JobStoreError({ message, cause })
+
+/** Fold a Lua `HGETALL` reply (flat `[field, value, ...]`) into a map. */
+const foldPairs = (flat: ReadonlyArray<string>): ReadonlyMap<string, string> => {
+  const out = new Map<string, string>()
+  for (let i = 0; i + 1 < flat.length; i += 2) {
+    const field = flat[i]
+    const value = flat[i + 1]
+    if (field !== undefined && value !== undefined) {
+      out.set(field, value)
+    }
+  }
+  return out
+}
+
+// Hash fields use "" for absent optional values.
+const optionalString = (value: string | undefined): string | undefined =>
+  value === undefined || value === "" ? undefined : value
+
+const optionalNumber = (value: string | undefined): number | undefined =>
+  value === undefined || value === "" ? undefined : Number(value)
+
+const optionalJson = <A = unknown>(value: string | undefined): A | undefined => {
+  if (value === undefined || value === "") return undefined
+  // SAFETY: the value round-trips JSON this driver itself wrote for the field.
+  return JSON.parse(value) as A
+}
+
+const toRecord = (hash: ReadonlyMap<string, string>): JobStore.JobRecord => ({
+  id: JobStore.JobId(hash.get("id") ?? ""),
+  name: hash.get("name") ?? "",
+  queue: JobStore.QueueName(hash.get("queue") ?? ""),
+  payload: optionalJson(hash.get("payload")) ?? null,
+  metadata: optionalJson<Readonly<Record<string, string>>>(hash.get("metadata")) ?? {},
+  // SAFETY: the state field is only ever written with JobState members.
+  state: (hash.get("state") ?? "waiting") as JobStore.JobState,
+  priority: Number(hash.get("priority") ?? 0),
+  attemptsMax: Number(hash.get("attemptsMax") ?? 1),
+  attemptsMade: Number(hash.get("attemptsMade") ?? 0),
+  stalledCount: Number(hash.get("stalledCount") ?? 0),
+  backoff: optionalJson<JobStore.BackoffPolicy>(hash.get("backoff")),
+  keep: optionalJson<JobStore.KeepPolicy>(hash.get("keep")),
+  timeoutMs: optionalNumber(hash.get("timeoutMs")),
+  cancelRequested: hash.get("cancelRequested") === "1",
+  dedupeKey: optionalString(hash.get("dedupeKey")),
+  trace: optionalJson<JobStore.TraceContext>(hash.get("trace")),
+  parent: optionalJson<JobStore.ParentEnvelope>(hash.get("parent")),
+  // Manifest presence IS the phase marker: hashes written before flows (or
+  // parents that never fanned out) simply lack the flow fields.
+  flow: optionalString(hash.get("flowPending")) === undefined
+    ? undefined
+    : {
+      failFast: hash.get("flowFailFast") === "1",
+      pending: Number(hash.get("flowPending")),
+      completed: Number(hash.get("flowCompleted") ?? 0),
+      failed: Number(hash.get("flowFailed") ?? 0),
+      cancelled: Number(hash.get("flowCancelled") ?? 0)
+    },
+  runAt: Number(hash.get("runAt") ?? 0),
+  enqueuedAt: Number(hash.get("enqueuedAt") ?? 0),
+  processedAt: optionalNumber(hash.get("processedAt")),
+  finishedAt: optionalNumber(hash.get("finishedAt")),
+  exit: optionalJson(hash.get("exit")),
+  failedReason: optionalString(hash.get("failedReason"))
+})
+
+const toSchedule = (hash: ReadonlyMap<string, string>): JobStore.ScheduleRecord => ({
+  key: JobStore.ScheduleKey(hash.get("key") ?? ""),
+  jobName: hash.get("jobName") ?? "",
+  queue: JobStore.QueueName(hash.get("queue") ?? ""),
+  cron: optionalString(hash.get("cron")),
+  tz: optionalString(hash.get("tz")),
+  everyMs: optionalNumber(hash.get("everyMs")),
+  payload: optionalJson(hash.get("payload")),
+  metadata: optionalJson<Readonly<Record<string, string>>>(hash.get("metadata")) ?? {},
+  priority: Number(hash.get("priority") ?? 0),
+  attemptsMax: Number(hash.get("attemptsMax") ?? 1),
+  backoff: optionalJson<JobStore.BackoffPolicy>(hash.get("backoff")),
+  keep: optionalJson<JobStore.KeepPolicy>(hash.get("keep")),
+  timeoutMs: optionalNumber(hash.get("timeoutMs")),
+  group: optionalString(hash.get("group")),
+  nextRunAt: Number(hash.get("nextRunAt") ?? 0)
+})
+
+// cjson encodes an empty Lua table as {}, not [] — normalize.
+const asArray = <A>(value: ReadonlyArray<A> | Record<string, never>): ReadonlyArray<A> =>
+  Array.isArray(value) ? value : []
+
+/**
+ * Decode one outbox zset member: `<seq>\0<json>` where the json carries the
+ * verbatim parent envelope plus the terminal outcome. The full member string
+ * is the opaque entry id (deleteOutbox is then a plain ZREM).
+ */
+const toOutboxEntry = (member: string): JobStore.OutboxEntry => {
+  const sep = member.indexOf("\u0000")
+  const body: {
+    parent: JobStore.ParentEnvelope
+    outcome: JobStore.FlowChildReport["outcome"]
+    exit?: unknown
+    failedReason?: string
+  } = JSON.parse(member.slice(sep + 1))
+  return {
+    id: member,
+    flowName: body.parent.flowName,
+    parentStoreKey: body.parent.parentStoreKey,
+    report: {
+      flowId: body.parent.flowId,
+      childKey: body.parent.childKey,
+      outcome: body.outcome,
+      // The exit key is omitted entirely when absent (ledger convention),
+      // so a legitimate encoded null exit survives the round trip.
+      exit: Object.hasOwn(body, "exit") ? body.exit : undefined,
+      failedReason: body.failedReason
+    }
+  }
+}
+
+const JOB_STATES: ReadonlyArray<JobStore.JobState> = [
+  "waiting",
+  "delayed",
+  "active",
+  "waiting-children",
+  "completed",
+  "failed",
+  "cancelled"
+]
+
+/**
+ * Fold one positional dependency-row tuple into a `FlowChildRecord`. The
+ * order must stay in lockstep with the HMGET field list in the
+ * `listChildResults` script:
+ * childKey, storeKey, childJobId, name, status, exit, failedReason, cascaded.
+ */
+const toChildRecord = (
+  flowId: JobStore.JobId,
+  row: ReadonlyArray<string>
+): JobStore.FlowChildRecord => ({
+  flowId,
+  childKey: row[0] ?? "",
+  storeKey: row[1] ?? "",
+  childJobId: JobStore.JobId(row[2] ?? ""),
+  name: row[3] ?? "",
+  // SAFETY: the status field is only ever written with FlowChildRecord
+  // status members ("pending" at insert, a report/settle outcome after).
+  status: (row[4] ?? "pending") as JobStore.FlowChildRecord["status"],
+  exit: optionalJson(row[5]),
+  failedReason: optionalString(row[6]),
+  cascaded: row[7] === "1"
+})
+
+/**
+ * Build a `RedisJobStore` service. Needs the `Redis` service and a `Scope`
+ * (the wake-up subscription and the optional history sweeper live in it).
+ *
+ * @since 0.2.0
+ */
+export const make = (
+  options?: RedisJobStoreOptions | undefined
+): Effect.Effect<JobStore.Service, never, Redis.Redis | Scope.Scope> =>
+  Effect.gen(function*() {
+    const redis = yield* Redis.Redis
+    const prefix = options?.prefix ?? "effect-mq"
+    const wakeChannel = `${prefix}:wake`
+    const indexOptions = options?.indexes
+    const indexes: scripts.IndexConfig = indexOptions === false
+      ? { name: false, queue: false }
+      : { name: indexOptions?.name ?? true, queue: indexOptions?.queue ?? true }
+    const HELPERS = scripts.helpers(indexes)
+
+    const evalEnqueue = redis.eval(scripts.enqueue(HELPERS))
+    const evalClaim = redis.eval(scripts.claim(HELPERS))
+    const evalAck = redis.eval(scripts.ack(HELPERS))
+    const evalRelease = redis.eval(scripts.release(HELPERS))
+    const evalExtendLocks = redis.eval(scripts.extendLocks(HELPERS))
+    const evalRecoverStalled = redis.eval(scripts.recoverStalled(HELPERS))
+    const evalGetJob = redis.eval(scripts.getJob(HELPERS))
+    const evalList = redis.eval(scripts.list(HELPERS))
+    const evalIndexMembers = redis.eval(scripts.indexMembers(HELPERS))
+    const evalIndexTailPage = redis.eval(scripts.indexTailPage(HELPERS))
+    const evalCounts = redis.eval(scripts.counts(HELPERS))
+    const evalRemove = redis.eval(scripts.remove(HELPERS))
+    const evalRetry = redis.eval(scripts.retry(HELPERS))
+    const evalCancel = redis.eval(scripts.cancel(HELPERS))
+    const evalPromote = redis.eval(scripts.promote(HELPERS))
+    const evalUpsertSchedule = redis.eval(scripts.upsertSchedule(HELPERS))
+    const evalRemoveSchedule = redis.eval(scripts.removeSchedule(HELPERS))
+    const evalListSchedules = redis.eval(scripts.listSchedules(HELPERS))
+    const evalDueSchedules = redis.eval(scripts.dueSchedules(HELPERS))
+    const evalAdvanceSchedule = redis.eval(scripts.advanceSchedule(HELPERS))
+    const evalTickSchedule = redis.eval(scripts.tickSchedule(HELPERS))
+    const evalEnqueueMany = redis.eval(scripts.enqueueMany(HELPERS))
+    const evalSweepState = redis.eval(scripts.sweepState(HELPERS))
+    const evalSweepDedupes = redis.eval(scripts.sweepDedupes(HELPERS))
+    const evalFanOut = redis.eval(scripts.fanOut(HELPERS))
+    const evalRecordChildResults = redis.eval(scripts.recordChildResults(HELPERS))
+    const evalListChildResults = redis.eval(scripts.listChildResults(HELPERS))
+    const evalFlowSweepWork = redis.eval(scripts.flowSweepWork(HELPERS))
+    const evalMarkChildrenCascaded = redis.eval(scripts.markChildrenCascaded(HELPERS))
+
+    // List-index reconcile, once per boot per index. All work is driver-paged
+    // — never one giant Lua call — so the single-threaded server is never
+    // held. There is no build lock: concurrent boots duplicate idempotent
+    // ZADDs, a crash before the marker stamp makes the next boot redo the
+    // work, and rows inserted meanwhile are indexed live by insertJobRow.
+    //
+    // - enabled, no marker: full rebuild via ZSCAN over `all` (cursor-based
+    //   and linear — immune to score ties and rank shifts; every member
+    //   present for the whole scan is guaranteed returned). Rows deleted
+    //   mid-scan leave at most stale members the read path self-heals.
+    // - enabled, marker present: heal the tail. Index writes are per-process,
+    //   so writers without them (an older version mid-rolling-deploy, or a
+    //   misconfigured indexes-off store) may have inserted unindexed rows
+    //   AFTER the marker landed. Re-indexing everything enqueued since the
+    //   marker minus a 60s margin closes that window: the last enabled boot
+    //   after such writers stop covers everything they wrote before it.
+    // - disabled: delete ONLY the marker (a later re-enable must not trust
+    //   stale zsets). The zsets stay — an enabled sibling may be reading
+    //   them, and this store cannot know.
+    //
+    // Both paths re-stamp the marker with this boot's start time. Init-time
+    // infra failures die — the store never starts half-configured.
+    yield* Effect.gen(function*() {
+      const bootAt = yield* Clock.currentTimeMillis
+      for (const kind of ["name", "queue"] as const) {
+        const marker = `${prefix}:index:${kind}:ready`
+        if (!indexes[kind]) {
+          yield* redis.send("DEL", marker)
+          continue
+        }
+        // SAFETY: GET always replies with a bulk string or null.
+        const stamped = (yield* redis.send("GET", marker)) as string | null
+        const markerAt = stamped === null || stamped === "" ? Number.NaN : Number(stamped)
+        if (Number.isNaN(markerAt)) {
+          let cursor = "0"
+          do {
+            const reply = yield* redis.send("ZSCAN", `${prefix}:all`, cursor, "COUNT", "500")
+            // SAFETY: ZSCAN always replies [nextCursor, member/score pairs].
+            const [next, flat] = reply as [string, ReadonlyArray<string>]
+            cursor = next
+            const ids: Array<string> = []
+            for (let i = 0; i < flat.length; i += 2) {
+              const id = flat[i]
+              if (id !== undefined) ids.push(id)
+            }
+            // COUNT is only a hint — chunk what actually came back.
+            for (let start = 0; start < ids.length; start += 500) {
+              yield* evalIndexMembers(prefix, kind, JSON.stringify(ids.slice(start, start + 500)))
+            }
+          } while (cursor !== "0")
+        } else {
+          const min = String(markerAt - 60_000)
+          let offset = 0
+          while (true) {
+            const scanned = Number(yield* evalIndexTailPage(prefix, kind, min, offset, 500))
+            if (scanned < 500) break
+            offset += scanned
+          }
+        }
+        yield* redis.send("SET", marker, String(bootAt))
+      }
+    }).pipe(Effect.orDie)
+
+    // Wake protocol: a queue-filtered waiter registry (same-process wake-ups
+    // never depend on the pub/sub round trip), with the channel carrying
+    // cross-process wake-ups — the message names the queue ("*" broadcasts).
+    // Filtering matters at scale: without it every enqueue wakes every idle
+    // taker of every queue on the store.
+    let wakeVersion = 0
+    let lastBroadcast = 0
+    const lastWake = new Map<JobStore.QueueName, number>()
+    interface Waiter {
+      readonly queues: ReadonlySet<JobStore.QueueName>
+      readonly deferred: Deferred.Deferred<void>
+    }
+    const waiters = new Set<Waiter>()
+    const lastWakeFor = (queue: JobStore.QueueName) => Math.max(lastWake.get(queue) ?? 0, lastBroadcast)
+    const signalWakeLocal = (queue?: JobStore.QueueName) => {
+      wakeVersion += 1
+      if (queue === undefined) {
+        lastBroadcast = wakeVersion
+      } else {
+        lastWake.set(queue, wakeVersion)
+      }
+      // Snapshot-and-clear BEFORE resolving: doneUnsafe resumes waiting
+      // fibers synchronously, and a woken taker that re-parks registers a
+      // NEW waiter — resolving inside the live Set iteration would visit it
+      // and livelock.
+      const toWake: Array<Waiter> = []
+      for (const waiter of waiters) {
+        if (queue === undefined || waiter.queues.has(queue)) {
+          waiters.delete(waiter)
+          toWake.push(waiter)
+        }
+      }
+      for (const waiter of toWake) {
+        Deferred.doneUnsafe(waiter.deferred, Exit.succeed<void>(void 0))
+      }
+    }
+    const wakeUp = (queue?: JobStore.QueueName): Effect.Effect<void> =>
+      Effect.suspend(() => {
+        signalWakeLocal(queue)
+        return redis.send("PUBLISH", wakeChannel, queue !== undefined && queue.length > 0 ? queue : "*").pipe(
+          Effect.ignore
+        )
+      })
+
+    // Cross-process wake-ups. The pump resubscribes on connection loss (Bun
+    // subscribers do not auto-reconnect); the retry delay only ever runs
+    // after a real failure, so TestClock runs are unaffected.
+    yield* Effect.scoped(
+      Effect.gen(function*() {
+        const messages = yield* redis.subscribe(wakeChannel)
+        while (true) {
+          const message = yield* Queue.take(messages)
+          signalWakeLocal(message.message === "*" ? undefined : JobStore.QueueName(message.message))
+        }
+      })
+    ).pipe(
+      Effect.retry(Schedule.spaced("1 second")),
+      Effect.catchCause((cause) => Effect.logWarning("effect-mq: redis wake subscription failed", cause)),
+      Effect.forkScoped
+    )
+
+    if (options?.historyTtl !== undefined) {
+      const ttlByState = JobStore.normalizeHistoryTtl(options.historyTtl)
+      const intervalMs = Duration.toMillis(options.historySweepInterval ?? "1 minute")
+      yield* Effect.gen(function*() {
+        yield* Effect.sleep(intervalMs)
+        const now = yield* Clock.currentTimeMillis
+        // Per-state ceilings refined by stricter per-row keep ages, paged by
+        // an offset cursor so young rows are visited once per sweep.
+        for (const state of ["completed", "failed", "cancelled"] as const) {
+          const ttl = ttlByState[state]
+          let offset = 0
+          while (true) {
+            const page: { scanned: number; deleted: number } = JSON.parse(
+              yield* evalSweepState(prefix, state, ttl === undefined ? "" : String(ttl), 200, offset, now)
+            )
+            if (page.scanned < 200) break
+            offset += page.scanned - page.deleted
+          }
+        }
+        while ((yield* evalSweepDedupes(prefix, 200, now)) !== "0") {
+          // bounded batches until the dedup backlog is clean
+        }
+      }).pipe(
+        Effect.catchCause((cause) => Effect.logError("effect-mq: redis history sweep failed", cause)),
+        Effect.forever,
+        Effect.forkScoped
+      )
+    }
+
+    const generateCandidate = (request: JobStore.EnqueueRequest, generate: JobStore.IdGenerator) =>
+      Effect.suspend(() => {
+        const raw = generate(request)
+        return Effect.isEffect(raw) ? raw : Effect.succeed(raw)
+      })
+
+    const enqueueOnce = (
+      request: JobStore.EnqueueRequest,
+      idMode: "user" | "generated" | "auto",
+      id: string,
+      now: number
+    ) =>
+      evalEnqueue(
+        prefix,
+        idMode,
+        id,
+        request.name,
+        request.queue,
+        JSON.stringify(request.payload ?? null),
+        JSON.stringify(request.metadata),
+        request.priority,
+        request.attemptsMax,
+        request.backoff === undefined ? "" : JSON.stringify(request.backoff),
+        request.keep === undefined ? "" : JSON.stringify(request.keep),
+        request.timeoutMs === undefined ? "" : String(request.timeoutMs),
+        Math.max(0, request.delayMs),
+        now,
+        request.dedupe?.key ?? "",
+        request.dedupe?.ttlMs === undefined ? "" : String(request.dedupe.ttlMs),
+        request.dedupe?.extend === true ? "1" : "0",
+        request.dedupe?.replace === true ? "1" : "0",
+        request.trace === undefined ? "" : JSON.stringify(request.trace),
+        request.parent === undefined ? "" : JSON.stringify(request.parent)
+      )
+
+    // The FanOut ack. Large manifests chunk their dependency rows across
+    // several lock-token-guarded script calls (ARGV strides, like
+    // enqueueMany); only the FINAL chunk writes the manifest and flips the
+    // state, so a crash mid-staging leaves the job active and recoverable —
+    // the next attempt's first chunk clears the orphaned staged rows.
+    const fanOutAck = (
+      id: JobStore.JobId,
+      token: string,
+      failFast: boolean,
+      children: ReadonlyArray<JobStore.FlowChildSpec>
+    ) =>
+      Effect.gen(function*() {
+        if (children.some((child) => child.request.id === undefined)) {
+          // Validate BEFORE any script call, so a bad spec cannot leave the
+          // job half-acked (rows staged, ledger written, still active).
+          return yield* new JobStore.JobStoreError({
+            message: "FanOut child specs require an explicit request.id"
+          })
+        }
+        const now = yield* Clock.currentTimeMillis
+        const chunks: Array<ReadonlyArray<JobStore.FlowChildSpec>> = []
+        for (let start = 0; start < children.length; start += 500) {
+          chunks.push(children.slice(start, start + 500))
+        }
+        // An empty manifest still needs the final (state-flipping) call.
+        if (chunks.length === 0) chunks.push([])
+        for (let i = 0; i < chunks.length; i++) {
+          const chunk = chunks[i]
+          if (chunk === undefined) continue
+          const items: Array<string> = []
+          for (const child of chunk) {
+            items.push(
+              child.childKey,
+              child.storeKey,
+              child.request.id ?? "",
+              child.request.name,
+              JSON.stringify(child.request)
+            )
+          }
+          const reply: { error?: string; wake?: boolean; queue?: string } = JSON.parse(
+            yield* evalFanOut(
+              prefix,
+              id,
+              token,
+              i === chunks.length - 1 ? "1" : "0",
+              i === 0 ? "1" : "0",
+              failFast ? "1" : "0",
+              children.length,
+              now,
+              chunk.length,
+              items
+            ).pipe(Effect.mapError(storeError("ack failed")))
+          )
+          if (reply.error === "notfound") return yield* new JobStore.JobNotFoundError({ jobId: id })
+          if (reply.error === "locklost") return yield* new JobStore.LockLostError({ jobId: id })
+          if (reply.wake === true) {
+            yield* wakeUp(reply.queue !== undefined ? JobStore.QueueName(reply.queue) : undefined)
+          }
+        }
+      })
+
+    // Shared by cancel and cancelByDedupe.
+    const cancelJob = (id: JobStore.JobId) =>
+      Effect.gen(function*() {
+        const now = yield* Clock.currentTimeMillis
+        const reply: { error?: string; state?: JobStore.JobState } = JSON.parse(
+          yield* evalCancel(prefix, id, now).pipe(Effect.mapError(storeError("cancel failed")))
+        )
+        if (reply.error === "notfound") return yield* new JobStore.JobNotFoundError({ jobId: id })
+        if (reply.error === "state") {
+          return yield* new JobStore.JobNotCancellableError({ jobId: id, state: reply.state ?? "completed" })
+        }
+      })
+
+    const enqueueJob = (request: JobStore.EnqueueRequest) =>
+      Effect.gen(function*() {
+        const now = yield* Clock.currentTimeMillis
+        const generate = options?.idGenerator
+        for (let i = 0; i < 5; i++) {
+          const mode = request.id !== undefined
+            ? "user" as const
+            : generate !== undefined
+            ? "generated" as const
+            : "auto" as const
+          const candidate = mode === "user"
+            ? request.id ?? ""
+            : mode === "generated" && generate !== undefined
+            ? yield* generateCandidate(request, generate)
+            : ""
+          const reply: {
+            id?: string
+            duplicate?: boolean
+            wake?: boolean
+            collision?: boolean
+            error?: string
+            queue?: string
+          } = JSON.parse(yield* enqueueOnce(request, mode, candidate, now))
+          if (reply.collision === true) continue
+          if (reply.error !== undefined || reply.id === undefined) {
+            return yield* new JobStore.JobStoreError({
+              message: "enqueue failed: could not generate a unique job id"
+            })
+          }
+          if (reply.wake === true) {
+            // A replace-while-delayed reply names the keyed job's queue.
+            yield* wakeUp(reply.queue !== undefined ? JobStore.QueueName(reply.queue) : request.queue)
+          }
+          return { id: JobStore.JobId(reply.id), duplicate: reply.duplicate === true }
+        }
+        return yield* new JobStore.JobStoreError({
+          message: "enqueue failed: could not generate a unique job id"
+        })
+      }).pipe(
+        Effect.mapError((error) =>
+          error instanceof JobStore.JobStoreError ? error : storeError("enqueue failed")(error)
+        )
+      )
+
+    // One EVALSHA per chunk of plain (non-dedup) items. Ids resolve in-script
+    // ("auto") or client-side (user/generated); a generated id that collides
+    // re-draws and retries in the next round, like the single-enqueue path.
+    const insertBatch = (requests: ReadonlyArray<JobStore.EnqueueRequest>) =>
+      Effect.gen(function*() {
+        const generate = options?.idGenerator
+        const results: Array<JobStore.EnqueueResult | undefined> = requests.map(() => undefined)
+        let pending = requests.map((request, index) => ({ request, index }))
+        for (let round = 0; round < 5 && pending.length > 0; round++) {
+          const now = yield* Clock.currentTimeMillis
+          const stillPending: typeof pending = []
+          for (let start = 0; start < pending.length; start += 500) {
+            const chunk = pending.slice(start, start + 500)
+            const itemArgs: Array<string> = []
+            for (const { request } of chunk) {
+              const mode = request.id !== undefined
+                ? "user"
+                : generate !== undefined
+                ? "generated"
+                : "auto"
+              const candidate = request.id !== undefined
+                ? request.id
+                : generate !== undefined
+                ? yield* generateCandidate(request, generate)
+                : ""
+              itemArgs.push(
+                mode,
+                candidate,
+                request.name,
+                request.queue,
+                JSON.stringify(request.payload ?? null),
+                JSON.stringify(request.metadata),
+                String(request.priority),
+                String(request.attemptsMax),
+                request.backoff === undefined ? "" : JSON.stringify(request.backoff),
+                request.keep === undefined ? "" : JSON.stringify(request.keep),
+                request.timeoutMs === undefined ? "" : String(request.timeoutMs),
+                request.trace === undefined ? "" : JSON.stringify(request.trace),
+                request.parent === undefined ? "" : JSON.stringify(request.parent),
+                String(Math.max(0, request.delayMs))
+              )
+            }
+            const replies: Array<{ id?: string; duplicate?: boolean; collision?: boolean; error?: string }> = JSON
+              .parse(yield* evalEnqueueMany(prefix, now, chunk.length, itemArgs))
+            const freshQueues = new Set<JobStore.QueueName>()
+            let failed = false
+            for (let i = 0; i < chunk.length; i++) {
+              const reply = replies[i]
+              const item = chunk[i]
+              if (item === undefined) continue
+              if (reply === undefined || reply.error !== undefined) {
+                failed = true
+                continue
+              }
+              if (reply.collision === true) {
+                // Generated-id collision: re-draw and re-insert next round.
+                // NOTE this lands the item after its batch-mates in FIFO
+                // order — acceptable for a pathological collision, and
+                // documented on the contract.
+                stillPending.push(item)
+                continue
+              }
+              if (reply.id === undefined) {
+                failed = true
+                continue
+              }
+              results[item.index] = { id: JobStore.JobId(reply.id), duplicate: reply.duplicate === true }
+              if (reply.duplicate !== true) {
+                freshQueues.add(item.request.queue)
+              }
+            }
+            // The script is not transactional across items: inserts that
+            // landed before a failing item are durable, so wake their queues
+            // BEFORE surfacing the error.
+            for (const queue of freshQueues) {
+              yield* wakeUp(queue)
+            }
+            if (failed) {
+              return yield* new JobStore.JobStoreError({
+                message: "enqueueMany failed: could not generate a unique job id"
+              })
+            }
+          }
+          pending = stillPending
+        }
+        const resolved: Array<JobStore.EnqueueResult> = []
+        for (const result of results) {
+          if (result === undefined) {
+            return yield* new JobStore.JobStoreError({
+              message: "enqueueMany failed: could not generate a unique job id"
+            })
+          }
+          resolved.push(result)
+        }
+        return resolved
+      }).pipe(
+        Effect.mapError((error) =>
+          error instanceof JobStore.JobStoreError ? error : storeError("enqueueMany failed")(error)
+        )
+      )
+
+    const store: JobStore.Service = {
+      enqueue: enqueueJob,
+
+      enqueueMany: (requests) =>
+        Effect.gen(function*() {
+          const results: Array<JobStore.EnqueueResult> = []
+          let batch: Array<JobStore.EnqueueRequest> = []
+          const flush = () =>
+            Effect.gen(function*() {
+              if (batch.length === 0) return
+              const items = batch
+              batch = []
+              // No spread: a six-figure batch would blow the engine's
+              // argument-count limit after the rows already committed.
+              for (const result of yield* insertBatch(items)) {
+                results.push(result)
+              }
+            })
+          for (const request of requests) {
+            // Dedup items run through the single-enqueue decision tree in
+            // order; runs of plain items between them batch into one script.
+            if (request.dedupe !== undefined) {
+              yield* flush()
+              results.push(yield* enqueueJob(request))
+            } else {
+              batch.push(request)
+            }
+          }
+          yield* flush()
+          return results
+        }),
+
+      claim: (claimOptions) =>
+        // Snapshot BEFORE the script runs: a wake that fires while the claim
+        // executes must make awaitWake(token) return immediately.
+        Effect.suspend(() => {
+          const observedWake = wakeVersion
+          return Effect.gen(function*() {
+            const now = yield* Clock.currentTimeMillis
+            const reply: { job?: ReadonlyArray<string>; empty?: boolean; nextRunAt?: number } = JSON.parse(
+              yield* evalClaim(
+                prefix,
+                claimOptions.queue,
+                JSON.stringify(claimOptions.names),
+                claimOptions.token,
+                claimOptions.lockDurationMs,
+                now
+              )
+            )
+            if (reply.job !== undefined) {
+              const claimed: JobStore.ClaimResult = { _tag: "Claimed", job: toRecord(foldPairs(reply.job)) }
+              return claimed
+            }
+            const empty: JobStore.ClaimResult = {
+              _tag: "Empty",
+              nextRunAt: reply.nextRunAt,
+              wakeToken: observedWake
+            }
+            return empty
+          })
+        }).pipe(Effect.mapError(storeError("claim failed"))),
+
+      ack: (id, token, outcome) => {
+        if (outcome._tag === "FanOut") {
+          return fanOutAck(id, token, outcome.failFast, outcome.children)
+        }
+        // Narrowed binding: the closure below must see the FanOut-free union.
+        const settled = outcome
+        return Effect.gen(function*() {
+          const now = yield* Clock.currentTimeMillis
+          const exitJson = settled._tag === "Cancelled" || settled.exit === undefined
+            ? ""
+            : JSON.stringify(settled.exit)
+          const delayMs = settled._tag === "Retry" ? Math.max(0, settled.delayMs) : 0
+          const reply: { error?: string; wake?: boolean; queue?: string } = JSON.parse(
+            yield* evalAck(prefix, id, token, settled._tag, exitJson, delayMs, now).pipe(
+              Effect.mapError(storeError("ack failed"))
+            )
+          )
+          if (reply.error === "notfound") return yield* new JobStore.JobNotFoundError({ jobId: id })
+          if (reply.error === "locklost") return yield* new JobStore.LockLostError({ jobId: id })
+          if (reply.wake === true) {
+            yield* wakeUp(reply.queue !== undefined ? JobStore.QueueName(reply.queue) : undefined)
+          }
+        })
+      },
+
+      release: (id, token) =>
+        Effect.gen(function*() {
+          const now = yield* Clock.currentTimeMillis
+          const reply: { error?: string; wake?: boolean; queue?: string } = JSON.parse(
+            yield* evalRelease(prefix, id, token, now).pipe(Effect.mapError(storeError("release failed")))
+          )
+          if (reply.error === "notfound") return yield* new JobStore.JobNotFoundError({ jobId: id })
+          if (reply.error === "locklost") return yield* new JobStore.LockLostError({ jobId: id })
+          if (reply.wake === true) {
+            yield* wakeUp(reply.queue !== undefined ? JobStore.QueueName(reply.queue) : undefined)
+          }
+        }),
+
+      extendLocks: (locks, durationMs) =>
+        Effect.gen(function*() {
+          if (locks.length === 0) {
+            const empty: JobStore.ExtendLocksResult = { lost: [], cancelRequested: [] }
+            return empty
+          }
+          const now = yield* Clock.currentTimeMillis
+          const reply: {
+            lost: ReadonlyArray<string> | Record<string, never>
+            cancel: ReadonlyArray<string> | Record<string, never>
+          } = JSON.parse(yield* evalExtendLocks(prefix, JSON.stringify(locks), durationMs, now))
+          const result: JobStore.ExtendLocksResult = {
+            lost: asArray(reply.lost).map(JobStore.JobId),
+            cancelRequested: asArray(reply.cancel).map(JobStore.JobId)
+          }
+          return result
+        }).pipe(Effect.mapError(storeError("extendLocks failed"))),
+
+      recoverStalled: (recoverOptions) =>
+        Effect.gen(function*() {
+          const now = yield* Clock.currentTimeMillis
+          const recovered: ReadonlyArray<{ id: string; failed: boolean }> = JSON.parse(
+            yield* evalRecoverStalled(prefix, recoverOptions.maxStalledCount, now)
+          )
+          const result = recovered.map((entry) => ({ id: JobStore.JobId(entry.id), failed: entry.failed }))
+          if (result.some((entry) => !entry.failed)) {
+            yield* wakeUp()
+          }
+          return result
+        }).pipe(Effect.mapError(storeError("recoverStalled failed"))),
+
+      awaitWake: (queues, wakeToken) =>
+        Effect.suspend(() => {
+          if (queues.some((queue) => lastWakeFor(queue) > wakeToken)) return Effect.void
+          const waiter: Waiter = { queues: new Set(queues), deferred: Deferred.makeUnsafe<void>() }
+          waiters.add(waiter)
+          return Deferred.await(waiter.deferred).pipe(
+            Effect.ensuring(Effect.sync(() => waiters.delete(waiter)))
+          )
+        }),
+
+      getJob: (id) =>
+        evalGetJob(prefix, id).pipe(
+          Effect.mapError(storeError("getJob failed")),
+          Effect.map((raw) => {
+            const flat: ReadonlyArray<string> = JSON.parse(raw)
+            return flat.length === 0 ? Option.none() : Option.some(toRecord(foldPairs(flat)))
+          })
+        ),
+
+      getAttempts: (id) =>
+        redis.send("LRANGE", `${prefix}:attempts:${id}`, "0", "-1").pipe(
+          Effect.mapError(storeError("getAttempts failed")),
+          Effect.map((raw) => {
+            // SAFETY: LRANGE always replies with an array of bulk strings.
+            const entries = raw as ReadonlyArray<string>
+            return entries.map((entry) => {
+              const parsed: {
+                attempt: number
+                startedAt: number | null
+                finishedAt: number
+                outcome: JobStore.AttemptRecord["outcome"]
+                exit?: unknown
+              } = JSON.parse(entry)
+              const record: JobStore.AttemptRecord = {
+                attempt: parsed.attempt,
+                startedAt: parsed.startedAt ?? undefined,
+                finishedAt: parsed.finishedAt,
+                outcome: parsed.outcome,
+                // The ledger omits the key entirely for absent exits, so a
+                // legitimate encoded null exit survives the round trip.
+                exit: Object.hasOwn(parsed, "exit") ? parsed.exit : undefined
+              }
+              return record
+            })
+          })
+        ),
+
+      list: (listOptions) =>
+        Effect.gen(function*() {
+          const limit = Math.max(1, listOptions.limit ?? 50)
+          const { metadata, name, queue, states } = listOptions
+          const orderBy = listOptions.orderBy ?? "enqueuedAt"
+          const order = listOptions.order ?? "desc"
+          // Routing: the narrowest structure whose zset score IS the
+          // requested order value; everything it does not pin stays a
+          // residual predicate applied in-script. Routing runs BEFORE the
+          // disabled-index check — a query another structure serves (e.g.
+          // name + terminal states ordered by finishedAt) must never die.
+          let sources: ReadonlyArray<string>
+          let residual: ResidualFilters
+          if (orderBy === "finishedAt") {
+            if (states === undefined || states.some((state) => !TERMINAL_STATES.has(state))) {
+              return yield* Effect.die(
+                new JobStore.ListOrderUnsupportedError({
+                  orderBy,
+                  message: "effect-mq: the Redis store serves orderBy \"finishedAt\" only with " +
+                    "states ⊆ {completed, failed, cancelled} (the finished/terminal zsets carry that order)"
+                })
+              )
+            }
+            // ≤3 per-state sources, merged by (finishedAt, id) in-script.
+            const uniqueStates = [...new Set(states)]
+            sources = name === undefined
+              ? uniqueStates.map((state) => `${prefix}:finished:${state}`)
+              : uniqueStates.map((state) => `${prefix}:terminal:${name}:${state}`)
+            residual = { queue, metadata }
+          } else if (orderBy === "runAt") {
+            const onlyDelayed = states !== undefined && states.length > 0 &&
+              states.every((state) => state === "delayed")
+            if (queue === undefined || !onlyDelayed) {
+              return yield* Effect.die(
+                new JobStore.ListOrderUnsupportedError({
+                  orderBy,
+                  message: "effect-mq: the Redis store serves orderBy \"runAt\" only with " +
+                    "states: [\"delayed\"] and a queue (the delayed:<queue> zset carries that order)"
+                })
+              )
+            }
+            sources = [`${prefix}:delayed:${queue}`]
+            residual = { name, metadata }
+          } else if (name !== undefined) {
+            if (!indexes.name) {
+              return yield* Effect.die(
+                new ListIndexDisabledError({
+                  index: "name",
+                  message: "effect-mq: list({ name }) routes to the byname index, " +
+                    "but RedisJobStoreOptions.indexes.name is disabled for this store"
+                })
+              )
+            }
+            sources = [`${prefix}:byname:${name}`]
+            residual = { queue, states, metadata }
+          } else if (queue !== undefined) {
+            if (!indexes.queue) {
+              return yield* Effect.die(
+                new ListIndexDisabledError({
+                  index: "queue",
+                  message: "effect-mq: list({ queue }) routes to the byqueue index, " +
+                    "but RedisJobStoreOptions.indexes.queue is disabled for this store"
+                })
+              )
+            }
+            sources = [`${prefix}:byqueue:${queue}`]
+            residual = { states, metadata }
+          } else {
+            sources = [`${prefix}:all`]
+            residual = { states, metadata }
+          }
+          const reply: { items: ReadonlyArray<ReadonlyArray<string>> | Record<string, never>; more: boolean } = JSON
+            .parse(
+              yield* evalList(
+                prefix,
+                JSON.stringify(sources),
+                order,
+                JSON.stringify(residual),
+                listOptions.cursor ?? "",
+                limit
+              ).pipe(Effect.mapError(storeError("list failed")))
+            )
+          const items = asArray(reply.items).map((flat) => toRecord(foldPairs(flat)))
+          const last = items[items.length - 1]
+          // The cursor value is the order field, which equals the routed
+          // zset's score for every row the script returned.
+          const orderValue = last === undefined
+            ? 0
+            : orderBy === "enqueuedAt"
+            ? last.enqueuedAt
+            : orderBy === "runAt"
+            ? last.runAt
+            : last.finishedAt ?? 0
+          const result: JobStore.ListResult = {
+            items,
+            cursor: reply.more && last !== undefined ? `${orderValue}:${last.id}` : undefined
+          }
+          return result
+        }),
+
+      retry: (id) =>
+        Effect.gen(function*() {
+          const now = yield* Clock.currentTimeMillis
+          const reply: { error?: string; state?: JobStore.JobState; queue?: string } = JSON.parse(
+            yield* evalRetry(prefix, id, now).pipe(Effect.mapError(storeError("retry failed")))
+          )
+          if (reply.error === "notfound") return yield* new JobStore.JobNotFoundError({ jobId: id })
+          if (reply.error === "state") {
+            return yield* new JobStore.JobNotRetryableError({ jobId: id, state: reply.state ?? "failed" })
+          }
+          yield* wakeUp(reply.queue !== undefined ? JobStore.QueueName(reply.queue) : undefined)
+        }),
+
+      counts: (queue) =>
+        evalCounts(prefix).pipe(
+          Effect.mapError(storeError("counts failed")),
+          Effect.map((raw) => {
+            const flat: ReadonlyArray<string> = JSON.parse(raw)
+            const byField = foldPairs(flat)
+            // SAFETY: fromEntries over the exhaustive JOB_STATES list yields
+            // exactly one zeroed entry per JobState member.
+            const totals = Object.fromEntries(JOB_STATES.map((state) => [state, 0])) as Record<
+              JobStore.JobState,
+              number
+            >
+            for (const [field, count] of byField) {
+              const split = field.lastIndexOf("|")
+              const fieldQueue = field.slice(0, split)
+              // SAFETY: counts fields are written as `<queue>|<JobState>`.
+              const state = field.slice(split + 1) as JobStore.JobState
+              if (queue === undefined || fieldQueue === queue) {
+                totals[state] += Number(count)
+              }
+            }
+            return totals
+          })
+        ),
+
+      remove: (id) =>
+        evalRemove(prefix, id).pipe(
+          Effect.mapError(storeError("remove failed")),
+          Effect.map((raw) => raw !== "0")
+        ),
+
+      cancel: (id) => cancelJob(id),
+
+      cancelByDedupe: (name, key) =>
+        Effect.gen(function*() {
+          const jobId = yield* redis.send("HGET", `${prefix}:dedupe:${name}\u0000${key}`, "jobId").pipe(
+            Effect.mapError(storeError("cancelByDedupe failed"))
+          )
+          if (jobId === null || jobId === undefined || jobId === "") return false
+          return yield* cancelJob(JobStore.JobId(String(jobId))).pipe(
+            Effect.as(true),
+            // Idempotent: a vanished or already-terminal keyed job is
+            // "nothing pending", not an error.
+            Effect.catchTag(["JobNotFoundError", "JobNotCancellableError"], () => Effect.succeed(false))
+          )
+        }),
+
+      promote: (id) =>
+        Effect.gen(function*() {
+          const now = yield* Clock.currentTimeMillis
+          const reply: { error?: string; state?: JobStore.JobState; queue?: string } = JSON.parse(
+            yield* evalPromote(prefix, id, now).pipe(Effect.mapError(storeError("promote failed")))
+          )
+          if (reply.error === "notfound") return yield* new JobStore.JobNotFoundError({ jobId: id })
+          if (reply.error === "state") {
+            return yield* new JobStore.JobNotPromotableError({ jobId: id, state: reply.state ?? "completed" })
+          }
+          yield* wakeUp(reply.queue !== undefined ? JobStore.QueueName(reply.queue) : undefined)
+        }),
+
+      pause: (queue) =>
+        redis.send("SADD", `${prefix}:paused`, queue).pipe(
+          Effect.mapError(storeError("pause failed")),
+          Effect.asVoid
+        ),
+
+      resume: (queue) =>
+        redis.send("SREM", `${prefix}:paused`, queue).pipe(
+          Effect.mapError(storeError("resume failed")),
+          Effect.flatMap((removed) => Number(removed) > 0 ? wakeUp(queue) : Effect.void)
+        ),
+
+      pausedQueues: () =>
+        redis.send("SMEMBERS", `${prefix}:paused`).pipe(
+          Effect.mapError(storeError("pausedQueues failed")),
+          Effect.map((raw) => {
+            // SAFETY: SMEMBERS always replies with an array of bulk strings.
+            const members = raw as ReadonlyArray<string>
+            return members.map(JobStore.QueueName)
+          })
+        ),
+
+      upsertSchedule: (schedule) =>
+        evalUpsertSchedule(
+          prefix,
+          schedule.key,
+          schedule.jobName,
+          schedule.queue,
+          schedule.cron ?? "",
+          schedule.tz ?? "",
+          schedule.everyMs === undefined ? "" : String(schedule.everyMs),
+          schedule.payload === undefined ? "" : JSON.stringify(schedule.payload),
+          JSON.stringify(schedule.metadata),
+          String(schedule.priority),
+          String(schedule.attemptsMax),
+          schedule.backoff === undefined ? "" : JSON.stringify(schedule.backoff),
+          schedule.keep === undefined ? "" : JSON.stringify(schedule.keep),
+          schedule.timeoutMs === undefined ? "" : String(schedule.timeoutMs),
+          schedule.group ?? "",
+          schedule.nextRunAt
+        ).pipe(
+          Effect.mapError(storeError("upsertSchedule failed")),
+          Effect.andThen(wakeUp(schedule.queue))
+        ),
+
+      removeSchedule: (key) =>
+        evalRemoveSchedule(prefix, key).pipe(
+          Effect.mapError(storeError("removeSchedule failed")),
+          Effect.map((raw) => raw !== "0")
+        ),
+
+      listSchedules: (listOptions) =>
+        evalListSchedules(prefix, JSON.stringify(listOptions ?? {})).pipe(
+          Effect.mapError(storeError("listSchedules failed")),
+          Effect.map((raw) => {
+            const flat: ReadonlyArray<ReadonlyArray<string>> = JSON.parse(raw)
+            return flat.map((pairs) => toSchedule(foldPairs(pairs)))
+          })
+        ),
+
+      dueSchedules: () =>
+        Effect.gen(function*() {
+          const now = yield* Clock.currentTimeMillis
+          const flat: ReadonlyArray<ReadonlyArray<string>> = JSON.parse(yield* evalDueSchedules(prefix, now))
+          return flat.map((pairs) => toSchedule(foldPairs(pairs)))
+        }).pipe(Effect.mapError(storeError("dueSchedules failed"))),
+
+      tickSchedule: (key, expectedRunAt, nextRunAt, request) =>
+        Effect.gen(function*() {
+          if (request.id === undefined) {
+            return yield* new JobStore.JobStoreError({
+              message: "tickSchedule requires an explicit request.id"
+            })
+          }
+          const now = yield* Clock.currentTimeMillis
+          const fired = (yield* evalTickSchedule(
+            prefix,
+            key,
+            expectedRunAt,
+            nextRunAt,
+            request.id,
+            request.name,
+            request.queue,
+            JSON.stringify(request.payload ?? null),
+            JSON.stringify(request.metadata),
+            request.priority,
+            request.attemptsMax,
+            request.backoff === undefined ? "" : JSON.stringify(request.backoff),
+            request.keep === undefined ? "" : JSON.stringify(request.keep),
+            request.timeoutMs === undefined ? "" : String(request.timeoutMs),
+            request.trace === undefined ? "" : JSON.stringify(request.trace),
+            request.parent === undefined ? "" : JSON.stringify(request.parent),
+            Math.max(0, request.delayMs),
+            now
+          )) === "1"
+          if (fired) {
+            yield* wakeUp(request.queue)
+          }
+          return fired
+        }).pipe(
+          Effect.mapError((error) =>
+            error instanceof JobStore.JobStoreError ? error : storeError("tickSchedule failed")(error)
+          )
+        ),
+
+      advanceSchedule: (key, expectedRunAt, nextRunAt) =>
+        evalAdvanceSchedule(prefix, key, expectedRunAt, nextRunAt).pipe(
+          Effect.mapError(storeError("advanceSchedule failed")),
+          Effect.asVoid
+        ),
+
+      recordChildResults: (reports) =>
+        Effect.gen(function*() {
+          if (reports.length === 0) {
+            const none: ReadonlyArray<{ applied: boolean; parentSettled: boolean }> = []
+            return none
+          }
+          const now = yield* Clock.currentTimeMillis
+          const all: Array<{ applied: boolean; parentSettled: boolean }> = []
+          // One atomic batch per chunk of 500 (ARGV headroom); the
+          // contract's per-batch settle semantics then apply per chunk.
+          for (let start = 0; start < reports.length; start += 500) {
+            const chunk = reports.slice(start, start + 500)
+            const items: Array<string> = []
+            for (const report of chunk) {
+              items.push(
+                report.flowId,
+                report.childKey,
+                report.outcome,
+                report.exit === undefined ? "" : JSON.stringify(report.exit),
+                report.failedReason ?? ""
+              )
+            }
+            const reply: {
+              results: ReadonlyArray<{ applied: boolean; parentSettled: boolean }>
+              wakes: ReadonlyArray<string> | Record<string, never>
+            } = JSON.parse(yield* evalRecordChildResults(prefix, now, chunk.length, items))
+            for (const queue of asArray(reply.wakes)) {
+              // A parent settled to runnable collect: wake its queue.
+              yield* wakeUp(JobStore.QueueName(queue))
+            }
+            for (const result of reply.results) {
+              all.push(result)
+            }
+          }
+          return all
+        }).pipe(Effect.mapError(storeError("recordChildResults failed"))),
+
+      peekOutbox: (peekOptions) =>
+        Effect.gen(function*() {
+          const limit = Math.floor(peekOptions.limit)
+          if (limit <= 0) {
+            const none: ReadonlyArray<JobStore.OutboxEntry> = []
+            return none
+          }
+          // The `after` cursor compares by the id's embedded score (the seq
+          // prefix before the NUL), so the walk moves past the named entry
+          // whether or not it still exists. Unparseable input reads as unset.
+          let afterSeq: number | undefined = undefined
+          if (peekOptions.after !== undefined) {
+            const nul = peekOptions.after.indexOf("\u0000")
+            const seq = nul > 0 ? Number(peekOptions.after.slice(0, nul)) : Number.NaN
+            if (Number.isFinite(seq)) afterSeq = seq
+          }
+          const raw = afterSeq === undefined
+            ? yield* redis.send("ZRANGE", `${prefix}:flowoutbox`, "0", String(limit - 1))
+            : yield* redis.send(
+              "ZRANGEBYSCORE",
+              `${prefix}:flowoutbox`,
+              `(${afterSeq}`,
+              "+inf",
+              "LIMIT",
+              "0",
+              String(limit)
+            )
+          // SAFETY: ZRANGE/ZRANGEBYSCORE always reply with arrays of bulk
+          // strings.
+          const members = raw as ReadonlyArray<string>
+          return members.map(toOutboxEntry)
+        }).pipe(Effect.mapError(storeError("peekOutbox failed"))),
+
+      deleteOutbox: (ids) =>
+        Effect.gen(function*() {
+          // Chunked ZREMs keep the variadic argument count bounded; each
+          // chunk is idempotent, so a partial failure just redelivers.
+          for (let start = 0; start < ids.length; start += 500) {
+            yield* redis.send("ZREM", `${prefix}:flowoutbox`, ...ids.slice(start, start + 500))
+          }
+        }).pipe(Effect.mapError(storeError("deleteOutbox failed"))),
+
+      listChildResults: (flowId, listOptions) =>
+        Effect.gen(function*() {
+          const limit = Math.max(1, listOptions?.limit ?? 1000)
+          const reply: { items: ReadonlyArray<ReadonlyArray<string>> | Record<string, never>; more: boolean } = JSON
+            .parse(
+              yield* evalListChildResults(prefix, flowId, listOptions?.cursor ?? "", limit)
+            )
+          const items = asArray(reply.items).map((row) => toChildRecord(flowId, row))
+          const last = items[items.length - 1]
+          return {
+            items,
+            cursor: reply.more && last !== undefined ? last.childKey : undefined
+          }
+        }).pipe(Effect.mapError(storeError("listChildResults failed"))),
+
+      flowSweepWork: (sweepOptions) =>
+        Effect.gen(function*() {
+          const now = yield* Clock.currentTimeMillis
+          const limit = Math.max(1, sweepOptions.limit ?? 1000)
+          const reply: {
+            reconcile:
+              | ReadonlyArray<{
+                flowId: string
+                children: ReadonlyArray<{ childKey: string; storeKey: string; spec: string }>
+              }>
+              | Record<string, never>
+            cascade:
+              | ReadonlyArray<{
+                flowId: string
+                children: ReadonlyArray<{ childKey: string; storeKey: string; childJobId: string }>
+              }>
+              | Record<string, never>
+          } = JSON.parse(yield* evalFlowSweepWork(prefix, sweepOptions.pendingAgeMs, limit, now))
+          const work: JobStore.FlowSweepWork = {
+            reconcile: asArray(reply.reconcile).map((group) => ({
+              flowId: JobStore.JobId(group.flowId),
+              children: group.children.map((child) => {
+                // The stored spec is the verbatim JSON this driver wrote at
+                // fan-out time (never routed through cjson), so it re-parses
+                // to the original EnqueueRequest.
+                const request: JobStore.EnqueueRequest = JSON.parse(child.spec)
+                return { childKey: child.childKey, storeKey: child.storeKey, request }
+              })
+            })),
+            cascade: asArray(reply.cascade).map((group) => ({
+              flowId: JobStore.JobId(group.flowId),
+              children: group.children.map((child) => ({
+                childKey: child.childKey,
+                storeKey: child.storeKey,
+                childJobId: JobStore.JobId(child.childJobId)
+              }))
+            }))
+          }
+          return work
+        }).pipe(Effect.mapError(storeError("flowSweepWork failed"))),
+
+      markChildrenCascaded: (flowId, childKeys) =>
+        evalMarkChildrenCascaded(prefix, flowId, JSON.stringify(childKeys)).pipe(
+          Effect.mapError(storeError("markChildrenCascaded failed")),
+          Effect.asVoid
+        )
+    }
+
+    return store
+  })
+
+/**
+ * A Redis-backed layer for the default `JobStore`.
+ *
+ * @since 0.2.0
+ */
+export const layer = (
+  options?: RedisJobStoreOptions | undefined
+): Layer.Layer<JobStore.JobStore, never, Redis.Redis> => Layer.effect(JobStore.JobStore, make(options))
+
+/**
+ * A Redis-backed layer for a specific named store key.
+ *
+ * @since 0.2.0
+ */
+export const layerFor = <StoreId>(
+  store: Context.Key<StoreId, JobStore.Service>,
+  options?: RedisJobStoreOptions | undefined
+): Layer.Layer<StoreId, never, Redis.Redis> => Layer.effect(store, make(options))
