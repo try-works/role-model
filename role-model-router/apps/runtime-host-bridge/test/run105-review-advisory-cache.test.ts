@@ -210,10 +210,23 @@ describe("run105 review exact advisory cache", () => {
           {
             model: "chatgpt/gpt-5.4",
             messages: [{ role: "user", content: "Review this change." }],
+            // Run 105 stage-RC fix: the declaration that classifies the request is the request body's
+            // role_model intent (the pi stable format), not an inert options field. A declared
+            // coder|coder.edit intent is what makes this request consult the (coder, coder.edit)
+            // durable entry; intent-less traffic now classifies by the derived taxonomy identity.
+            role_model: {
+              contract_version: 1,
+              intent: {
+                taxonomy_version: "1.0.0-alpha.1",
+                classification_contract_version: "1.0.0",
+                requested_role_id: "coder",
+                task_type: "coder.edit",
+              },
+            },
           },
           `req-cache-${state}`,
           undefined,
-          { requestedRoleId: "coder", taskType: "coder.edit" },
+          { requestedRoleId: "coder" },
         );
         expect(routing.advisories.length).toBeGreaterThan(0);
         for (const value of routing.advisories) {
