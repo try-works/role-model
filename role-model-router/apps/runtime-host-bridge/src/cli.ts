@@ -9712,13 +9712,6 @@ export async function main(): Promise<void> {
        * comparison is finalized once and evidence writing stays in one place.
        * Without it the sweep behaves exactly as before.
        */
-      /**
-       * Run 105 stage-RC fix: where the expired-handoff recovery listing resumes. Process lifetime by
-       * design (the same rule the handoff recovery pass documents): the durable jobs are the record,
-       * a restart re-scans from the newest end, and without a cursor the pass reads the same first
-       * page every tick and never reaches an older stuck job.
-       */
-      let expiredHandoffRecoveryCursor: RecoveryPageCursor | null = null;
       const resumePendingEvaluations = async (scope?: { readonly onlyReplayJobId?: string }) => {
         const runtime = extensionRuntimeRef.current;
         const operations = currentPostObservationOperations();
@@ -10392,10 +10385,6 @@ export async function main(): Promise<void> {
          * evaluation result (the entry's own resolved outcome), and move on. Bounded per tick.
          */
         const recoveredExpiredHandoffs: string[] = [];
-        /** Bounded per-process diagnostics: every refusal in this pass names itself once. */
-        let expiredHandoffSkipLogged = 0;
-        /** The page this pass read, so the recovery cursor can advance past exactly it (S24). */
-        let listedJobsForCursor: readonly DurableReplayJobSummary[] = [];
         try {
           const replayJobScope = replayJobScopeRef.current
             ? await replayJobScopeRef.current()
@@ -10408,7 +10397,7 @@ export async function main(): Promise<void> {
             scope: replayJobScope,
             authorizationEpoch: 1,
             capability: "replay:list-jobs",
-            value: terminalRecoveryListingValue({ cursor: expiredHandoffRecoveryCursor }),
+            value: terminalRecoveryListingValue({ cursor: null }),
           })) as unknown;
           const decodedListing = decodeExternalizedOperatorReadback({
             stateRoot: options.runtimeStateRoot,
@@ -10426,7 +10415,6 @@ export async function main(): Promise<void> {
                 ? (listingPayload?.jobs as unknown[])
                 : []
           ) as readonly DurableReplayJobSummary[];
-          listedJobsForCursor = listedJobs;
           for (const job of listedJobs) {
             if (recoveredExpiredHandoffs.length >= 2) break;
             if (job.state !== "timed_out") continue;
@@ -10457,35 +10445,20 @@ export async function main(): Promise<void> {
               .find((candidate) => candidate.replayJobId === jobId);
             const outcome = entry?.outcome;
             if (!outcome) continue;
-            // A job another owner still holds is not recoverable yet: claiming it would only be
-            // refused ("already leased") and would churn its attempt counter every tick.
-            const leaseExpiresAtMs = Number(
-              (fullRecord as { leaseExpiresAtMs?: unknown }).leaseExpiresAtMs ?? 0,
-            );
-            if (Number.isFinite(leaseExpiresAtMs) && leaseExpiresAtMs > Date.now()) continue;
-            // The replay-core boundary wraps its answer (the same envelope every other replay
-            // readback decodes); an undecoded answer has no fenceToken and the claim would be
-            // repeated every tick without ever recording the result.
-            const claimed = coerceDurableReplayJobRecord(
-              decodeExternalizedOperatorReadback({
-                stateRoot: options.runtimeStateRoot,
-                scopeId: options.scopeId,
-                value: await runtime.invoke("replay-core", {
-                  requestId: `replay-recovery-claim:${jobId}`,
-                  sessionId: `replay-recovery-claim:${options.scopeId}`,
-                  protocolVersion: "1.1.0",
-                  channel,
-                  scope: replayJobScope,
-                  authorizationEpoch: 1,
-                  capability: "replay:claim-job",
-                  value: {
-                    jobId,
-                    leaseOwner: `runtime-host:expired-handoff-recovery:${options.scopeId}`,
-                    leaseMs: 60_000,
-                  },
-                }),
-              }),
-            ) as Record<string, unknown> | null;
+            const claimed = (await runtime.invoke("replay-core", {
+              requestId: `replay-recovery-claim:${jobId}`,
+              sessionId: `replay-recovery-claim:${options.scopeId}`,
+              protocolVersion: "1.1.0",
+              channel,
+              scope: replayJobScope,
+              authorizationEpoch: 1,
+              capability: "replay:claim-job",
+              value: {
+                jobId,
+                leaseOwner: `runtime-host:expired-handoff-recovery:${options.scopeId}`,
+                leaseMs: 60_000,
+              },
+            })) as Record<string, unknown>;
             const receiptAnswer = (await runtime.invoke("evaluation-core", {
               requestId: `replay-recovery-receipt:${jobId}`,
               sessionId: `replay-recovery-receipt:${options.scopeId}`,
@@ -10494,56 +10467,24 @@ export async function main(): Promise<void> {
               scope: options.scopeId,
               authorizationEpoch: 1,
               capability: "evaluation:list-completion-receipts",
-              // The capability reads a bounded JOB ID LIST; a single-id object is not a
-              // supported query and would answer the whole newest page, never the job.
-              value: { jobIds: [job.evaluationJobId] },
+              value: { jobId: job.evaluationJobId },
             })) as unknown;
             const receiptRecord = decodeExternalizedOperatorReadback({
               stateRoot: options.runtimeStateRoot,
               scopeId: options.scopeId,
               value: receiptAnswer,
             });
-            // The answer is a list of parsed receipt records; take the receipt the queried job
-            // owns (its groupIds name the comparison groups this completion covers).
-            const receiptList = Array.isArray(receiptRecord) ? receiptRecord : [];
-            const receipt = receiptList.find(
-              (candidate): candidate is Record<string, unknown> =>
-                candidate !== null &&
-                typeof candidate === "object" &&
-                !Array.isArray(candidate) &&
-                Array.isArray((candidate as Record<string, unknown>).groupIds),
-            );
+            const receipt =
+              receiptRecord && typeof receiptRecord === "object"
+                ? ((receiptRecord as Record<string, unknown>).receipt ??
+                  (receiptRecord as Record<string, unknown>))
+                : null;
             const groupIds = Array.isArray((receipt as Record<string, unknown> | null)?.groupIds)
               ? (((receipt as Record<string, unknown>).groupIds as unknown[]).filter(
                   (value): value is string => typeof value === "string" && value.length > 0,
                 ) as string[])
               : [];
-            if (expiredHandoffSkipLogged < 3) {
-              expiredHandoffSkipLogged += 1;
-              console.error(
-                `[run105] expired handoff recovery probe ${jobId.slice(0, 12)}: claimedKeys=${Object.keys(claimed ?? {}).join(",")} fenceToken=${String((claimed as Record<string, unknown> | null)?.fenceToken)} groups=${groupIds.length}`,
-              );
-            }
-            // A silent skip here is what hid the first two defects in this pass; every refusal
-            // names its own precondition (bounded to three lines per process).
-            if (groupIds.length === 0) {
-              if (expiredHandoffSkipLogged < 3) {
-                expiredHandoffSkipLogged += 1;
-                console.error(
-                  `[run105] expired handoff recovery skipped ${jobId.slice(0, 12)}: the evaluation completion receipt names no comparison group`,
-                );
-              }
-              continue;
-            }
-            if (typeof claimed?.fenceToken !== "number") {
-              if (expiredHandoffSkipLogged < 3) {
-                expiredHandoffSkipLogged += 1;
-                console.error(
-                  `[run105] expired handoff recovery skipped ${jobId.slice(0, 12)}: the recovery claim returned no fence token`,
-                );
-              }
-              continue;
-            }
+            if (groupIds.length === 0 || typeof claimed?.fenceToken !== "number") continue;
             await runtime.invoke("replay-core", {
               requestId: `replay-recovery-result:${jobId}`,
               sessionId: `replay-recovery-result:${options.scopeId}`,
@@ -10572,17 +10513,6 @@ export async function main(): Promise<void> {
             ).slice(0, 200)}`,
           );
         }
-        // S24: advance past exactly the jobs this pass examined, so the scan converges on the whole
-        // terminal set instead of repeating its first page for ever.
-        expiredHandoffRecoveryCursor = nextHandoffRecoveryCursor({
-          currentCursor: expiredHandoffRecoveryCursor,
-          pageEntries: listedJobsForCursor.map((job) => ({
-            jobId: String(job.jobId ?? ""),
-            createdAtMs: Number.isSafeInteger(job.createdAtMs) ? Number(job.createdAtMs) : 0,
-          })),
-          examinedCount: listedJobsForCursor.length,
-          pageSize: MAX_HANDOFF_RECOVERY_LIST_PAGE,
-        });
         return {
           ...sweepResult,
           recoveredExpiredHandoffs: recoveredExpiredHandoffs.length,
