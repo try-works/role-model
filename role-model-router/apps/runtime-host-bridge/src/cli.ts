@@ -10502,6 +10502,12 @@ export async function main(): Promise<void> {
                   (value): value is string => typeof value === "string" && value.length > 0,
                 ) as string[])
               : [];
+            if (expiredHandoffSkipLogged < 3) {
+              expiredHandoffSkipLogged += 1;
+              console.error(
+                `[run105] expired handoff recovery probe ${jobId.slice(0, 12)}: claimedKeys=${Object.keys(claimed ?? {}).join(",")} fenceToken=${String((claimed as Record<string, unknown> | null)?.fenceToken)} groups=${groupIds.length}`,
+              );
+            }
             // A silent skip here is what hid the first two defects in this pass; every refusal
             // names its own precondition (bounded to three lines per process).
             if (groupIds.length === 0) {
