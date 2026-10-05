@@ -10385,6 +10385,8 @@ export async function main(): Promise<void> {
          * evaluation result (the entry's own resolved outcome), and move on. Bounded per tick.
          */
         const recoveredExpiredHandoffs: string[] = [];
+        /** Bounded per-process diagnostics: every refusal in this pass names itself once. */
+        let expiredHandoffSkipLogged = 0;
         try {
           const replayJobScope = replayJobScopeRef.current
             ? await replayJobScopeRef.current()
@@ -10445,20 +10447,29 @@ export async function main(): Promise<void> {
               .find((candidate) => candidate.replayJobId === jobId);
             const outcome = entry?.outcome;
             if (!outcome) continue;
-            const claimed = (await runtime.invoke("replay-core", {
-              requestId: `replay-recovery-claim:${jobId}`,
-              sessionId: `replay-recovery-claim:${options.scopeId}`,
-              protocolVersion: "1.1.0",
-              channel,
-              scope: replayJobScope,
-              authorizationEpoch: 1,
-              capability: "replay:claim-job",
-              value: {
-                jobId,
-                leaseOwner: `runtime-host:expired-handoff-recovery:${options.scopeId}`,
-                leaseMs: 60_000,
-              },
-            })) as Record<string, unknown>;
+            // The replay-core boundary wraps its answer (the same envelope every other replay
+            // readback decodes); an undecoded answer has no fenceToken and the claim would be
+            // repeated every tick without ever recording the result.
+            const claimed = coerceDurableReplayJobRecord(
+              decodeExternalizedOperatorReadback({
+                stateRoot: options.runtimeStateRoot,
+                scopeId: options.scopeId,
+                value: await runtime.invoke("replay-core", {
+                  requestId: `replay-recovery-claim:${jobId}`,
+                  sessionId: `replay-recovery-claim:${options.scopeId}`,
+                  protocolVersion: "1.1.0",
+                  channel,
+                  scope: replayJobScope,
+                  authorizationEpoch: 1,
+                  capability: "replay:claim-job",
+                  value: {
+                    jobId,
+                    leaseOwner: `runtime-host:expired-handoff-recovery:${options.scopeId}`,
+                    leaseMs: 60_000,
+                  },
+                }),
+              }),
+            ) as Record<string, unknown> | null;
             const receiptAnswer = (await runtime.invoke("evaluation-core", {
               requestId: `replay-recovery-receipt:${jobId}`,
               sessionId: `replay-recovery-receipt:${options.scopeId}`,
@@ -10491,7 +10502,26 @@ export async function main(): Promise<void> {
                   (value): value is string => typeof value === "string" && value.length > 0,
                 ) as string[])
               : [];
-            if (groupIds.length === 0 || typeof claimed?.fenceToken !== "number") continue;
+            // A silent skip here is what hid the first two defects in this pass; every refusal
+            // names its own precondition (bounded to three lines per process).
+            if (groupIds.length === 0) {
+              if (expiredHandoffSkipLogged < 3) {
+                expiredHandoffSkipLogged += 1;
+                console.error(
+                  `[run105] expired handoff recovery skipped ${jobId.slice(0, 12)}: the evaluation completion receipt names no comparison group`,
+                );
+              }
+              continue;
+            }
+            if (typeof claimed?.fenceToken !== "number") {
+              if (expiredHandoffSkipLogged < 3) {
+                expiredHandoffSkipLogged += 1;
+                console.error(
+                  `[run105] expired handoff recovery skipped ${jobId.slice(0, 12)}: the recovery claim returned no fence token`,
+                );
+              }
+              continue;
+            }
             await runtime.invoke("replay-core", {
               requestId: `replay-recovery-result:${jobId}`,
               sessionId: `replay-recovery-result:${options.scopeId}`,
