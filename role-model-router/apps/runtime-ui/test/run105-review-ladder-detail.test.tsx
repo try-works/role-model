@@ -32,7 +32,7 @@ interface LadderTestWindow extends Window {
   __confirm: boolean;
   __respond: (roleId: string, status: number) => void;
   __mountRows: (rows: unknown) => void;
-  __mountPacks: (packs: unknown) => void;
+  __mountPacks: (packs?: unknown) => void;
   __toggles: unknown[];
 }
 
@@ -223,9 +223,11 @@ describe("Run105 R12 React browser interactions", () => {
           };
           w.__respond = (roleId: string, status: number) => {
             const pending = w.__pending.find((p) => p.body.roleId === roleId && !p.done);
+            if (!pending) throw new Error(`no pending request for ${roleId}`);
             pending.done = true;
             if (status === 200) {
               const row = w.__fixture.ladders.find((r) => r.roleId === roleId);
+              if (!row) throw new Error(`no fixture ladder for ${roleId}`);
               row.rolledBack = {
                 on: pending.body.rolledBack,
                 reason: pending.body.reason,
