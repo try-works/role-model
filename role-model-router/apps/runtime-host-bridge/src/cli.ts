@@ -9727,7 +9727,7 @@ export async function main(): Promise<void> {
           };
         }
         const channel = packagedProfile?.channel ?? "development";
-        return resumePendingSupervisedReplayEvaluations({
+        const sweepResult = await resumePendingSupervisedReplayEvaluations({
           store: scope?.onlyReplayJobId
             ? scopeResumeStoreToReplayJob(evaluationResumeStore, scope.onlyReplayJobId)
             : evaluationResumeStore,
@@ -10374,6 +10374,150 @@ export async function main(): Promise<void> {
             }
           },
         });
+        /**
+         * Run 105 stage-RC fix (the second-order wedge, measured on stage-rc-0c24e69eef6f): a resume
+         * completion finalizes the comparison, but the replay job never receives its evaluation
+         * result receipt, so it stays awaiting_evaluation until the expiry sweep ends its window
+         * with the run-98 R2 recovery receipt (timed_out + expirationReceipt + evaluationJobId).
+         * Nothing ever drove the documented recovery lease, so the capture re-dispatched in a
+         * cycle. This pass drives it: claim the job under a fenced recovery lease, read the
+         * completed evaluation's comparison group from its completion receipt, record the
+         * evaluation result (the entry's own resolved outcome), and move on. Bounded per tick.
+         */
+        const recoveredExpiredHandoffs: string[] = [];
+        try {
+          const replayJobScope = replayJobScopeRef.current
+            ? await replayJobScopeRef.current()
+            : options.scopeId;
+          const listing = (await runtime.invoke("replay-core", {
+            requestId: `replay-recovery-list:${options.scopeId}`,
+            sessionId: `replay-recovery-list:${options.scopeId}`,
+            protocolVersion: "1.1.0",
+            channel,
+            scope: replayJobScope,
+            authorizationEpoch: 1,
+            capability: "replay:list-jobs",
+            value: terminalRecoveryListingValue({ cursor: null }),
+          })) as unknown;
+          const decodedListing = decodeExternalizedOperatorReadback({
+            stateRoot: options.runtimeStateRoot,
+            scopeId: options.scopeId,
+            value: listing,
+          });
+          const listingPayload =
+            decodedListing && typeof decodedListing === "object" && !Array.isArray(decodedListing)
+              ? (decodedListing as Record<string, unknown>)
+              : null;
+          const listedJobs = (
+            Array.isArray(listingPayload?.value)
+              ? (listingPayload?.value as unknown[])
+              : Array.isArray(listingPayload?.jobs)
+                ? (listingPayload?.jobs as unknown[])
+                : []
+          ) as readonly DurableReplayJobSummary[];
+          for (const job of listedJobs) {
+            if (recoveredExpiredHandoffs.length >= 2) break;
+            if (job.state !== "timed_out") continue;
+            const jobId = String(job.jobId ?? "").trim();
+            if (!jobId || typeof job.evaluationJobId !== "string" || !job.evaluationJobId) continue;
+            const fullRecord = coerceDurableReplayJobRecord(
+              decodeExternalizedOperatorReadback({
+                stateRoot: options.runtimeStateRoot,
+                scopeId: options.scopeId,
+                value: await runtime.invoke("replay-core", {
+                  requestId: `replay-recovery-read:${jobId}`,
+                  sessionId: `replay-recovery-read:${options.scopeId}`,
+                  protocolVersion: "1.1.0",
+                  channel,
+                  scope: replayJobScope,
+                  authorizationEpoch: 1,
+                  capability: "replay:job",
+                  value: { jobId },
+                }),
+              }),
+            );
+            if (!fullRecord) continue;
+            const expirationReceipt = (fullRecord as { expirationReceipt?: unknown }).expirationReceipt;
+            if (!expirationReceipt || typeof expirationReceipt !== "object") continue;
+            const entry = evaluationResumeStore
+              .list()
+              .find((candidate) => candidate.replayJobId === jobId);
+            const outcome = entry?.outcome;
+            if (!outcome) continue;
+            const claimed = (await runtime.invoke("replay-core", {
+              requestId: `replay-recovery-claim:${jobId}`,
+              sessionId: `replay-recovery-claim:${options.scopeId}`,
+              protocolVersion: "1.1.0",
+              channel,
+              scope: replayJobScope,
+              authorizationEpoch: 1,
+              capability: "replay:claim-job",
+              value: {
+                jobId,
+                leaseOwner: `runtime-host:expired-handoff-recovery:${options.scopeId}`,
+                leaseMs: 60_000,
+              },
+            })) as Record<string, unknown>;
+            const receiptAnswer = (await runtime.invoke("evaluation-core", {
+              requestId: `replay-recovery-receipt:${jobId}`,
+              sessionId: `replay-recovery-receipt:${options.scopeId}`,
+              protocolVersion: "1.1.0",
+              channel,
+              scope: options.scopeId,
+              authorizationEpoch: 1,
+              capability: "evaluation:list-completion-receipts",
+              value: { jobId: job.evaluationJobId },
+            })) as unknown;
+            const receiptRecord = decodeExternalizedOperatorReadback({
+              stateRoot: options.runtimeStateRoot,
+              scopeId: options.scopeId,
+              value: receiptAnswer,
+            });
+            const receipt =
+              receiptRecord && typeof receiptRecord === "object"
+                ? (receiptRecord as Record<string, unknown>).receipt ??
+                  (receiptRecord as Record<string, unknown>)
+                : null;
+            const groupIds = Array.isArray(
+              (receipt as Record<string, unknown> | null)?.groupIds,
+            )
+              ? (((receipt as Record<string, unknown>).groupIds as unknown[]).filter(
+                  (value): value is string => typeof value === "string" && value.length > 0,
+                ) as string[])
+              : [];
+            if (groupIds.length === 0 || typeof claimed?.fenceToken !== "number") continue;
+            await runtime.invoke("replay-core", {
+              requestId: `replay-recovery-result:${jobId}`,
+              sessionId: `replay-recovery-result:${options.scopeId}`,
+              protocolVersion: "1.1.0",
+              channel,
+              scope: replayJobScope,
+              authorizationEpoch: 1,
+              capability: "replay:record-evaluation-result",
+              value: {
+                jobId,
+                leaseOwner: claimed.leaseOwner,
+                fenceToken: claimed.fenceToken,
+                evaluation: {
+                  evaluationJobId: job.evaluationJobId,
+                  comparisonGroupId: groupIds[0],
+                  outcome,
+                },
+              },
+            });
+            recoveredExpiredHandoffs.push(jobId);
+          }
+        } catch (recoveryError) {
+          console.error(
+            `[run105] expired handoff completion recovery degraded: ${String(
+              (recoveryError as { message?: unknown })?.message ?? recoveryError,
+            ).slice(0, 200)}`,
+          );
+        }
+        return {
+          ...sweepResult,
+          recoveredExpiredHandoffs: recoveredExpiredHandoffs.length,
+        };
       };
       resumeEvaluationsRef.current = resumePendingEvaluations;
       /**
