@@ -9712,6 +9712,13 @@ export async function main(): Promise<void> {
        * comparison is finalized once and evidence writing stays in one place.
        * Without it the sweep behaves exactly as before.
        */
+      /**
+       * Run 105 stage-RC fix: where the expired-handoff recovery listing resumes. Process lifetime by
+       * design (the same rule the handoff recovery pass documents): the durable jobs are the record,
+       * a restart re-scans from the newest end, and without a cursor the pass reads the same first
+       * page every tick and never reaches an older stuck job.
+       */
+      let expiredHandoffRecoveryCursor: RecoveryPageCursor | null = null;
       const resumePendingEvaluations = async (scope?: { readonly onlyReplayJobId?: string }) => {
         const runtime = extensionRuntimeRef.current;
         const operations = currentPostObservationOperations();
@@ -10387,6 +10394,8 @@ export async function main(): Promise<void> {
         const recoveredExpiredHandoffs: string[] = [];
         /** Bounded per-process diagnostics: every refusal in this pass names itself once. */
         let expiredHandoffSkipLogged = 0;
+        /** The page this pass read, so the recovery cursor can advance past exactly it (S24). */
+        let listedJobsForCursor: readonly DurableReplayJobSummary[] = [];
         try {
           const replayJobScope = replayJobScopeRef.current
             ? await replayJobScopeRef.current()
@@ -10399,7 +10408,7 @@ export async function main(): Promise<void> {
             scope: replayJobScope,
             authorizationEpoch: 1,
             capability: "replay:list-jobs",
-            value: terminalRecoveryListingValue({ cursor: null }),
+            value: terminalRecoveryListingValue({ cursor: expiredHandoffRecoveryCursor }),
           })) as unknown;
           const decodedListing = decodeExternalizedOperatorReadback({
             stateRoot: options.runtimeStateRoot,
@@ -10417,6 +10426,7 @@ export async function main(): Promise<void> {
                 ? (listingPayload?.jobs as unknown[])
                 : []
           ) as readonly DurableReplayJobSummary[];
+          listedJobsForCursor = listedJobs;
           for (const job of listedJobs) {
             if (recoveredExpiredHandoffs.length >= 2) break;
             if (job.state !== "timed_out") continue;
@@ -10447,6 +10457,12 @@ export async function main(): Promise<void> {
               .find((candidate) => candidate.replayJobId === jobId);
             const outcome = entry?.outcome;
             if (!outcome) continue;
+            // A job another owner still holds is not recoverable yet: claiming it would only be
+            // refused ("already leased") and would churn its attempt counter every tick.
+            const leaseExpiresAtMs = Number(
+              (fullRecord as { leaseExpiresAtMs?: unknown }).leaseExpiresAtMs ?? 0,
+            );
+            if (Number.isFinite(leaseExpiresAtMs) && leaseExpiresAtMs > Date.now()) continue;
             // The replay-core boundary wraps its answer (the same envelope every other replay
             // readback decodes); an undecoded answer has no fenceToken and the claim would be
             // repeated every tick without ever recording the result.
@@ -10556,6 +10572,17 @@ export async function main(): Promise<void> {
             ).slice(0, 200)}`,
           );
         }
+        // S24: advance past exactly the jobs this pass examined, so the scan converges on the whole
+        // terminal set instead of repeating its first page for ever.
+        expiredHandoffRecoveryCursor = nextHandoffRecoveryCursor({
+          currentCursor: expiredHandoffRecoveryCursor,
+          pageEntries: listedJobsForCursor.map((job) => ({
+            jobId: String(job.jobId ?? ""),
+            createdAtMs: Number.isSafeInteger(job.createdAtMs) ? Number(job.createdAtMs) : 0,
+          })),
+          examinedCount: listedJobsForCursor.length,
+          pageSize: MAX_HANDOFF_RECOVERY_LIST_PAGE,
+        });
         return {
           ...sweepResult,
           recoveredExpiredHandoffs: recoveredExpiredHandoffs.length,
