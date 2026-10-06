@@ -515,6 +515,7 @@ export async function readRouteReplayableCaptures(input: {
   readonly scopeId: string;
   readonly channel: string;
   readonly request: { readonly roleId: string; readonly taskTypeId: string };
+  /** The capsule read resolves the transcript out of the encrypted artifact store itself. */
   readonly readCapture: (requestId: string) => Promise<unknown>;
 }): Promise<readonly AutoReplayCapture[] | null> {
   if (!text(input.request.roleId) || !text(input.request.taskTypeId) || !text(input.scopeId))
@@ -568,48 +569,75 @@ export async function readRouteReplayableCaptures(input: {
     for (const requestId of ids) {
       const capture = row(await input.readCapture(requestId));
       if (!capture) continue; // Exact read knows eviction/absence; telemetry alone is not a capsule.
+      const messages = capture.messages;
       const classification = row(capture.classification);
       const trace = row(capture.trace);
       const source = row(capture.replaySource);
       const roleId = text(capture.roleId) ?? text(classification?.roleId);
       const taskTypeId = text(capture.taskTypeId) ?? text(classification?.taskTypeId);
       const sourceClass = text(row(capture.replayEvidenceClass)?.class);
-      if (
-        capture.requestId !== requestId ||
-        capture.scope !== scope ||
-        roleId !== input.request.roleId ||
-        taskTypeId !== input.request.taskTypeId ||
-        (classification?.roleId != null && classification.roleId !== roleId) ||
-        (classification?.taskTypeId != null && classification.taskTypeId !== taskTypeId) ||
-        !text(capture.endpointId) ||
-        !text(capture.rootArtifactId) ||
-        !source ||
-        !trace ||
-        trace.scopeId !== scope ||
-        trace.channel !== input.channel ||
-        trace.readiness !== "ready" ||
-        trace.completeness !== "complete" ||
-        !Number.isSafeInteger(trace.generation) ||
-        Number(trace.generation) < 0 ||
-        !text(trace.rootOccurrenceId) ||
-        !text(trace.closedAt) ||
-        ![
+      /**
+       * Every gate is named once, in one ordered table, so the corpus read has exactly one
+       * expression of its admission rule. A rejected capture used to leave the tick with an
+       * unattributable "no replayable request", which is what made a corpus that persisted and
+       * hydrated correctly look like it had never been captured. The names are operator-facing:
+       * with ROLE_MODEL_FOCUS_DIAG set, one tick prints the gate that dropped each capture.
+       */
+      const rejections: string[] = [];
+      const gate = (name: string, admitted: boolean): void => {
+        if (!admitted) rejections.push(name);
+      };
+      gate("request_id", capture.requestId === requestId);
+      gate("scope", capture.scope === scope);
+      gate("role", roleId === input.request.roleId);
+      gate("task", taskTypeId === input.request.taskTypeId);
+      gate(
+        "classification_role",
+        classification?.roleId == null || classification.roleId === roleId,
+      );
+      gate(
+        "classification_task",
+        classification?.taskTypeId == null || classification.taskTypeId === taskTypeId,
+      );
+      gate("endpoint", text(capture.endpointId) != null);
+      gate("root_artifact", text(capture.rootArtifactId) != null);
+      gate("replay_source", source != null);
+      gate("trace", trace != null);
+      gate("trace_scope", trace?.scopeId === scope);
+      gate("trace_channel", trace?.channel === input.channel);
+      gate("trace_readiness", trace?.readiness === "ready");
+      gate("trace_completeness", trace?.completeness === "complete");
+      gate(
+        "trace_generation",
+        Number.isSafeInteger(trace?.generation) && Number(trace?.generation) >= 0,
+      );
+      gate("trace_root_occurrence", text(trace?.rootOccurrenceId) != null);
+      gate("trace_closed_at", text(trace?.closedAt) != null);
+      gate(
+        "replay_source_refs",
+        [
           "normalizedRequestRef",
           "sharedPrefixRef",
           "forkOccurrenceId",
           "policySnapshotRef",
           "capturePolicyRef",
-        ].every((key) => text(source[key])) ||
-        !Array.isArray(capture.messages) ||
-        capture.messages.length === 0 ||
-        capture.branchKind != null ||
-        capture.branchPhase != null ||
-        capture.replayProduced === true ||
-        /^replay-/.test(requestId) ||
-        isBenchmarkReplaySourceRef(requestId) ||
-        isSyntheticProbeSourceClass(sourceClass)
-      )
+        ].every((key) => text(source?.[key]) != null),
+      );
+      gate("messages", Array.isArray(messages) && messages.length > 0);
+      gate("not_branch", capture.branchKind == null && capture.branchPhase == null);
+      gate("not_replay_produced", capture.replayProduced !== true);
+      gate("not_replay_request_id", !/^replay-/.test(requestId));
+      gate("not_benchmark_source", !isBenchmarkReplaySourceRef(requestId));
+      gate("not_synthetic_probe", !isSyntheticProbeSourceClass(sourceClass));
+      if (rejections.length > 0) {
+        if (process.env.ROLE_MODEL_FOCUS_DIAG)
+          console.error(
+            `[replay-projection] capture=${requestId} rejected=${rejections.join(",")} trace=${trace ? `${String(trace.scopeId) === scope ? "scope-ok" : "scope-mismatch"}/${String(trace.channel)}/${String(trace.readiness)}/${String(trace.completeness)}` : "absent"} messages=${Array.isArray(messages) ? messages.length : "unreadable"}`,
+          );
         continue;
+      }
+      // Narrowing only: the messages gate above already rejected every non-array transcript.
+      if (!Array.isArray(messages)) continue;
       captures.push({
         captureRef: requestId,
         sourceEndpointId: capture.endpointId as string,
@@ -618,13 +646,17 @@ export async function readRouteReplayableCaptures(input: {
         hasRecordedToolResults: hasRecordedToolResults(capture),
         replayProduced: false,
         sourceClass,
-        messages: capture.messages,
+        messages,
         requirements: readReplayRequestRequirements(capture),
         replayDispositionSettled: settledRefs.has(requestId),
       });
     }
     return captures;
-  } catch {
+  } catch (error) {
+    if (process.env.ROLE_MODEL_FOCUS_DIAG)
+      console.error(
+        `[replay-projection] unavailable: ${error instanceof Error ? error.message : String(error)}`,
+      );
     return null;
   }
 }

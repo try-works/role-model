@@ -517,6 +517,35 @@ test("historical replayable source seam retains exact task classification and ac
   await loop.tick();
   expect(h.calls).toEqual([{ captureRef: "idle-a-history", source: "a", candidates: ["new"] }]);
 });
+/**
+ * Run 106 cold-start regression: the cheap pending view and the rich corpus read are two projections of
+ * the SAME captures, and only the corpus read carries the route classification. Deduping by capture ref
+ * alone discarded the classified row and kept the unclassified one, so a task whose captures all fit in
+ * the pending scan window - a task that has just started being routed, or any small state root - threw
+ * NoReplayableRequest on every tick for ever. The pending fixture below is the sidecar's real shape: the
+ * same capture ref, without identity.
+ */
+test("cold-start task owns an unclassified pending row once the corpus read proves its classification", async () => {
+  const h = harness();
+  h.configure(["a", "b", "c", "new"]);
+  h.census([task("idle", 10, 3, 4)]);
+  h.pending([
+    {
+      captureRef: "idle-a",
+      sourceEndpointId: "a",
+      hasRecordedToolResults: false,
+      roleId: null,
+      taskTypeId: null,
+    },
+  ]);
+  const loop = startAutoReplayLoop({
+    ...h.input,
+    readRouteReplayableCaptures: async () => [capture("idle", "a")],
+  });
+  cleanups.push(() => loop.stop());
+  await loop.tick();
+  expect(h.calls).toEqual([{ captureRef: "idle-a", source: "a", candidates: ["new"] }]);
+});
 test("restart preserves recorded challenge cutoff rather than rewriting now and hiding durable groups", async () => {
   const h = harness();
   h.configure(["a", "b", "c", "new"]);

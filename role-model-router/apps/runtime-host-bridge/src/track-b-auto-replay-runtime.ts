@@ -1591,21 +1591,42 @@ export function startAutoReplayLoop(input: {
                     `[replay-tick] after readRouteReplayableCaptures history=${history === null ? "null" : history.length}`,
                   );
                 if (history === null) throw new Error("route replayable corpus unavailable");
-                const existing = new Set(captures.map((item) => item.captureRef));
-                captures = [
-                  ...captures,
-                  ...history.filter(
-                    (item) =>
-                      item.roleId === plannedFocus?.roleId &&
-                      item.taskTypeId === plannedFocus?.taskTypeId &&
-                      !existing.has(item.captureRef) &&
-                      // Run 105: the corpus read stays a faithful projection and still ENUMERATES a capture whose
-                      // replay disposition is terminal. The dispatch planner is the layer that acts on that
-                      // annotation, so the tick advances to a fresh capture instead of re-picking one whose
-                      // dispatch the lane would only refuse as duplicate_already_processed.
-                      item.replayDispositionSettled !== true,
-                  ),
-                ];
+                /**
+                 * Run 106 cold-start repair: the pending view and the corpus read are two projections of the
+                 * SAME captures, and only the corpus read carries the route classification. Deduping by
+                 * capture ref alone therefore discarded the classified row and kept the unclassified one, so
+                 * the ownership filter below matched nothing. Whenever every capture of the focus task also
+                 * fit inside the pending scan window - which is exactly the state of a task that has just
+                 * started being routed, and of any small state root - the tick livelocked on
+                 * `NoReplayableRequest` for ever: no dispatch, no disposition, so the pending row was never
+                 * retired. A capture that is already present is now ENRICHED instead of dropped, so an
+                 * unclassified row can never mask the identity the corpus read proved it has. A capture that
+                 * is already classified keeps the cheap row, because then the two views agree.
+                 */
+                const byCaptureRef = new Map(captures.map((item) => [item.captureRef, item]));
+                for (const item of history) {
+                  if (item.roleId !== plannedFocus?.roleId) continue;
+                  if (item.taskTypeId !== plannedFocus?.taskTypeId) continue;
+                  // Run 105: the corpus read stays a faithful projection and still ENUMERATES a capture whose
+                  // replay disposition is terminal. The dispatch planner is the layer that acts on that
+                  // annotation, so the tick advances to a fresh capture instead of re-picking one whose
+                  // dispatch the lane would only refuse as duplicate_already_processed.
+                  if (item.replayDispositionSettled === true) continue;
+                  const present = byCaptureRef.get(item.captureRef);
+                  if (!present) {
+                    captures = [...captures, item];
+                    byCaptureRef.set(item.captureRef, item);
+                    continue;
+                  }
+                  if (present.roleId != null && present.taskTypeId != null) continue;
+                  const enriched = {
+                    ...present,
+                    roleId: item.roleId ?? present.roleId,
+                    taskTypeId: item.taskTypeId ?? present.taskTypeId,
+                  };
+                  captures = captures.map((entry) => (entry === present ? enriched : entry));
+                  byCaptureRef.set(item.captureRef, enriched);
+                }
               }
               const owned = captures.filter(
                 (item) =>
