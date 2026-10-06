@@ -8889,8 +8889,9 @@ export async function runTrackBShadowPipeline(
       firstCounterfactual.endpointId,
       "counterfactual candidate",
     ),
-    // Run 104 R9 (post-closeout): the arm-effort dimension travels with the comparison identity, so
-    // Evaluation Core's arm_effort_mismatch exclusion can fire on a live comparison.
+    // Run 104 R9 (post-closeout): the arm-effort dimension travels with the comparison identity, so a
+    // receipt can answer "was this comparison effort-confounded?". Run 106: it is recorded, not gating -
+    // an arm at a different effort than the source no longer costs the comparison its eligibility.
     effortComparability: classifyReplayArmEffort({
       arms: counterfactualRollouts.map((arm) => ({
         endpointId: typeof arm.endpointId === "string" ? arm.endpointId : "",

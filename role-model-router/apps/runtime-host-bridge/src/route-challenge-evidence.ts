@@ -88,6 +88,18 @@ function replayIdForGroup(group: Row): string | null {
   return replayIds.every((id) => id !== null && id === replayIds[0]) ? replayIds[0] : null;
 }
 
+/**
+ * Run 106: the comparability spellings the durable record may carry for one arm's reasoning effort. The
+ * dimension is recorded, never gating (see the guard below), but an unknown spelling still fails closed so
+ * this readback stays a faithful projection of what Evaluation Core wrote.
+ */
+const ARM_EFFORT_COMPARABILITY_VALUES = new Set([
+  "matched",
+  "mismatched",
+  "source_effort_unspecified",
+  "arm_effort_unspecified",
+]);
+
 async function project(
   listed: Row,
   request: RouteDispatchEvidenceReadRequest,
@@ -130,9 +142,20 @@ async function project(
     return null;
   if (actual.outcome !== "source" && actual.outcome !== "candidate" && actual.outcome !== "tie")
     return null;
+  /**
+   * Run 106 (operator decision, 2026-10-07): the effort dimension is recorded, never gating. A comparison
+   * whose arms run at different reasoning efforts is valid evidence - a judge grading its own arm or two
+   * byte-identical outcomes are not, and those keep their fail-closed meaning here. The dimension is still
+   * required to be present and well formed, so the readback stays a faithful projection of the durable
+   * record rather than accepting whatever shape arrives.
+   */
+  const COMPARABILITY_ONLY_VALIDITY_ISSUES = new Set(["arm_effort_mismatch"]);
   if (
     actual.validityIssues !== undefined &&
-    (!Array.isArray(actual.validityIssues) || actual.validityIssues.length > 0)
+    (!Array.isArray(actual.validityIssues) ||
+      actual.validityIssues.some(
+        (issue) => !COMPARABILITY_ONLY_VALIDITY_ISSUES.has(text(issue) ?? ""),
+      ))
   )
     return null;
   const effort = proof.effortComparability;
@@ -141,11 +164,9 @@ async function project(
   if (
     !arm ||
     arm.endpointId !== candidate ||
-    arm.comparability !== "matched" ||
+    !ARM_EFFORT_COMPARABILITY_VALUES.has(text(arm.comparability) ?? "") ||
     !text(arm.modelId) ||
-    !text(arm.sourceModelId) ||
-    !text(arm.reasoningEffort) ||
-    arm.reasoningEffort !== arm.sourceReasoningEffort
+    !text(arm.sourceModelId)
   )
     return null;
   if (

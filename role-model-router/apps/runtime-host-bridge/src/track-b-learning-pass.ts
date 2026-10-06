@@ -1112,10 +1112,19 @@ export function buildTrackBLearningEvidenceSummary(input: {
     // Run 99 R33 (addendum 21 D10, `guidance/11` "incomparable ... groups are ineligible for
     // promotion evidence"): a comparison that reports validity issues — including the judge's
     // own position-order disagreement — is excluded and counted by code, never averaged in.
+    /**
+     * Run 106 (operator decision, 2026-10-07): `arm_effort_mismatch` is a recorded comparability
+     * dimension, not a validity issue - see the durable writer in Evaluation Core. Groups finalized
+     * before that decision still carry the name in their durable `validityIssues`, so it is filtered
+     * here too and the comparison is learned from like any other. Every other issue keeps its meaning:
+     * a comparison reporting one is excluded and counted by code, never averaged in.
+     */
+    const COMPARABILITY_ONLY_VALIDITY_ISSUES = new Set(["arm_effort_mismatch"]);
     const validityIssues = Array.isArray(result.validityIssues)
       ? result.validityIssues
           .map((issue) => boundedText(issue))
           .filter((issue): issue is string => issue !== null)
+          .filter((issue) => !COMPARABILITY_ONLY_VALIDITY_ISSUES.has(issue))
       : [];
     if (
       result.orderDisagreement === true ||
