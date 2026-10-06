@@ -501,6 +501,25 @@ export function startAutoReplayLoop(input: {
    */
   readonly configuredEndpointIds: readonly string[] | (() => readonly string[]);
   /**
+   * Run 106 (live finding on the dev replay queue, 2026-10-07): the configured endpoints' declared model and
+   * reasoning effort. The focus-dispatch walk is otherwise effort-blind, and an arm whose effort differs from
+   * the source capture's is finalized `arm_effort_mismatch` and discarded fail-closed by the learner's
+   * admission floor - it spends a replay and a paid provider call to produce evidence nothing can use. A
+   * provider (not a snapshot) so an endpoint added or reconfigured while the runtime is up takes effect on
+   * the next tick, exactly like `configuredEndpointIds` above. Absent keeps the previous behaviour.
+   */
+  readonly configuredEndpointDescriptors?:
+    | readonly {
+        readonly endpointId: string;
+        readonly modelId: string;
+        readonly reasoningEffort: string | null;
+      }[]
+    | (() => readonly {
+        readonly endpointId: string;
+        readonly modelId: string;
+        readonly reasoningEffort: string | null;
+      }[]);
+  /**
    * Endpoints the runtime can actually dispatch to. A provider may be supplied so a
    * credential-less or degraded endpoint is re-evaluated every tick instead of being
    * frozen at loop construction; resolving to null means "no health filter is
@@ -1219,6 +1238,28 @@ export function startAutoReplayLoop(input: {
         typeof input.configuredEndpointIds === "function"
           ? input.configuredEndpointIds()
           : input.configuredEndpointIds;
+      /**
+       * Run 106: endpointId -> declared reasoning effort, read from the same provider the CLI wires from the
+       * endpoint registry. Empty when the caller supplies none, which leaves the focus-dispatch walk exactly
+       * as it was.
+       */
+      const endpointEffortsByEndpointId: Record<string, string | null> = {};
+      try {
+        const descriptors =
+          typeof input.configuredEndpointDescriptors === "function"
+            ? input.configuredEndpointDescriptors()
+            : (input.configuredEndpointDescriptors ?? []);
+        for (const descriptor of descriptors) {
+          if (typeof descriptor?.endpointId !== "string" || !descriptor.endpointId) continue;
+          endpointEffortsByEndpointId[descriptor.endpointId] =
+            typeof descriptor.reasoningEffort === "string" && descriptor.reasoningEffort.trim()
+              ? descriptor.reasoningEffort.trim()
+              : null;
+        }
+      } catch {
+        // An unreadable registry leaves the map empty: the walk keeps its previous behaviour rather than
+        // refusing to dispatch.
+      }
       const pending = await input.operations.listPendingReplayCaptures({
         policySetDigest: input.policySet.policySetDigest,
         limit: maxCapturesPerTick * 4,
@@ -1737,6 +1778,14 @@ export function startAutoReplayLoop(input: {
                     .filter((rung) => rung.status === "available")
                     .map((rung) => rung.endpointId),
                   rungs: routeLadder?.rungs,
+                  // Run 106: the arm must run at the source capture's effort, or the comparison is voided.
+                  // The capture records where it came from, and the endpoint registry records the effort
+                  // that endpoint runs at, so no extra capture plumbing is needed.
+                  endpointEfforts: endpointEffortsByEndpointId,
+                  sourceReasoningEffort:
+                    (source?.sourceEndpointId
+                      ? endpointEffortsByEndpointId[source.sourceEndpointId]
+                      : null) ?? null,
                 });
                 if (process.env.ROLE_MODEL_FOCUS_DIAG) {
                   console.error(

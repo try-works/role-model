@@ -7434,6 +7434,15 @@ export async function main(): Promise<void> {
         ledger,
         policySet,
         configuredEndpointIds: endpoints,
+        /**
+         * Run 106: the same descriptors the supervised-replay path already builds from the registry
+         * (`configuredReplayArms`), handed to the loop so the focus-dispatch walk can prefer a
+         * counterfactual arm that runs at the source capture's reasoning effort. Without it the arm is
+         * effort-mismatched whenever the source's own model is the arm's model, the comparison is finalized
+         * `arm_effort_mismatch`, and the admission floor discards it - a replay and a paid provider call
+         * spent on evidence nothing can use.
+         */
+        configuredEndpointDescriptors: endpointDescriptors,
         healthyEndpointIds: healthyEndpoints,
         /**
          * Run 105 R8/R9/R11: the ladder providers the depth-first dispatcher consumes. Each is a

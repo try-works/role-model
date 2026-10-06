@@ -930,6 +930,13 @@ export function classifyReplayArmEffort(input: {
  * repoint never crosses models and never invents an endpoint - it only chooses among endpoints the registry
  * already holds for the arm's own model. An arm without a matching variant is kept exactly as requested; the
  * caller records the resulting comparability with `classifyReplayArmEffort`.
+ *
+ * Run 106 note: this repair is a same-model patch on a decision taken upstream, and it can only act when the
+ * requested arm's model has an effort variant that is not the source endpoint. Where the arm's model IS the
+ * source's model, that is impossible by construction, so the arm keeps the effort it was handed and the
+ * comparison is finalized `arm_effort_mismatch` - which the learner's admission floor discards. The
+ * selection layer (`route-ladder-dispatch.planFocusDispatch`) is the layer that owns the choice, and it is
+ * where the effort view now lives; this function is left exactly as the run-104 contract states it.
  */
 export function preferEffortMatchedReplayArms(input: {
   readonly arms: readonly ReplayArmDescriptor[];
