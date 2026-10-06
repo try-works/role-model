@@ -95,22 +95,25 @@ test("production rebuilds Track B against the accepted stage public commit", () 
   assert.match(workflow, /Checkout exact accepted stage public revision/);
   assert.match(workflow, /ref:\s*\$\{\{ steps\.stage_candidate\.outputs\.stage_sha \}\}/);
   assert.match(workflow, /path:\s*\.cache\/paired-public/);
-  assert.match(
-    workflow,
-    /ROLE_MODEL_PUBLIC_WORKTREE:[\s\S]*?ROLE_MODEL_BUILD_CHANNEL == 'production'[\s\S]*?\.cache\/paired-public/,
-  );
+  /**
+   * Measured while releasing v0.0.16: assembling Track B from a second checkout at
+   * `.cache/paired-public` made the private bundle embed "../paired-public/packages/..." where the
+   * tested candidate embedded "../../packages/...", so the production pair check rejected a package
+   * whose only real difference was that build-layout label. Production now runs from the accepted
+   * candidate's own checkout (the gate already proves the tagged tree is that same tree), and the
+   * private distribution is built against the workspace.
+   */
+  assert.match(workflow, /Align the production checkout with the accepted stage revision/);
+  assert.match(workflow, /git checkout --detach "\$ACCEPTED_STAGE_SHA"/);
+  assert.match(workflow, /ROLE_MODEL_PUBLIC_WORKTREE:\s*\$\{\{ github\.workspace \}\}/);
 });
 
-test("production installs dependencies in the accepted stage checkout before Track B bundling", () => {
-  assert.match(workflow, /Install exact accepted stage public dependencies/);
+test("production installs the accepted stage checkout before Track B bundling", () => {
   assert.match(
     workflow,
-    /Install exact accepted stage public dependencies[\s\S]*?working-directory:\s*\.cache\/paired-public[\s\S]*?corepack pnpm install --frozen-lockfile/,
+    /Align the production checkout with the accepted stage revision[\s\S]*?Install dependencies[\s\S]*?pnpm install --frozen-lockfile/,
   );
-  assert.match(
-    workflow,
-    /Install exact accepted stage public dependencies[\s\S]*?if: env\.ROLE_MODEL_BUILD_CHANNEL == 'production'/,
-  );
+  assert.doesNotMatch(workflow, /Install exact accepted stage public dependencies/);
 });
 
 test("paired Track B packaging builds public runtime dependencies before bundling source imports", () => {
