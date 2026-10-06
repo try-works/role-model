@@ -749,6 +749,29 @@ export function readCaptureRoleId(capture: DurableReplayCapture): string | undef
 }
 
 /**
+ * Run 106 (live finding on the dev replay queue, 2026-10-07): the task family the capture was classified
+ * under, read from the same two places as the role and the revision. The learner's floor and its pack
+ * scope are keyed by (roleId, taskTypeId) and a comparison whose comparability block names only the role
+ * is excluded fail-closed as `incomplete_scope` - the comparison group is finalized, the floor never
+ * counts it, and no pack can ever be written for the task.
+ *
+ * `roleId` and `taxonomyVersion` have always been read through a classification fallback. `taskTypeId`
+ * was read straight off the capture record, so it worked only while the capture writer also stamped the
+ * redundant top-level copy; a capture that records the family ONLY where the contract puts it - the
+ * classification - produced an unscoped comparison. Read it exactly like its two siblings.
+ */
+export function readCaptureTaskTypeId(capture: DurableReplayCapture): string | undefined {
+  const direct = capture.taskTypeId;
+  if (typeof direct === "string" && direct.trim()) return direct.trim();
+  const classification = capture.classification;
+  if (!classification || typeof classification !== "object" || Array.isArray(classification)) {
+    return undefined;
+  }
+  const taskTypeId = (classification as Readonly<Record<string, unknown>>).taskTypeId;
+  return typeof taskTypeId === "string" && taskTypeId.trim() ? taskTypeId.trim() : undefined;
+}
+
+/**
  * Run 98 addendum 58 §23 (live v316, 08:33Z): Replay Core re-presents an `append_recovery` request when a
  * previous attempt already burned the nonce and persisted the provider receipt but never appended the
  * branch. The receipt's `providerResultRef` names the replay's own route capture, which is the durable
@@ -2430,11 +2453,13 @@ export function createSupervisedReplayEvaluationCompleter(input: {
       // Run 99 R33 (S34 live finding): every comparison in the live store carried no task family
       // because this supervised-replay path never passed the capture's family, so the learner's
       // family-scoped floor could never be met from real traffic. The capture records the family
-      // (`addendum 19 S33`), so it travels with the replay.
-      ...(typeof input.sourceCapture.taskTypeId === "string" &&
-      input.sourceCapture.taskTypeId.trim()
-        ? { taskTypeId: input.sourceCapture.taskTypeId.trim() }
-        : {}),
+      // (`addendum 19 S33`), so it travels with the replay - read through the same classification
+      // fallback the role and the revision already use (Run 106), because a capture that records the
+      // family only on its classification produced a comparison the floor excludes as incomplete_scope.
+      ...(() => {
+        const taskTypeId = readCaptureTaskTypeId(input.sourceCapture);
+        return taskTypeId ? { taskTypeId } : {};
+      })(),
       // Run 98 addendum 58 §22.2.3: the revision the capture was classified under travels with the
       // family, so the comparability key — and the pack scope the learner derives from it — is
       // version-stamped and the advisory's version gate can match it instead of failing closed.
