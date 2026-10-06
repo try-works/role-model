@@ -576,6 +576,7 @@ describe("editing configuration from the panel", () => {
     CONFIG_FIELDS: readonly string[];
     SELECT_FIELDS: ReadonlySet<string>;
     RUNTIME_CHANNELS: readonly { port: number; name: string; runtime: string }[];
+    CHANNEL_OPTIONS: readonly { port: number; label: string }[];
     settingsRemote: (ctx: unknown) => unknown;
     readConfig: (ctx: unknown) => Promise<Record<string, unknown> | undefined>;
     buildPatch: (
@@ -746,15 +747,31 @@ describe("editing configuration from the panel", () => {
     for (const child of panelChildren()) walk(child);
     expect(select, "no port select").toBeDefined();
     const options = childrenOf(select as ExpandedElement).filter(isElement);
-    // The unset state comes first and names the default it resolves to; production is
-    // not listed twice, because choosing it is the same as leaving the field alone.
+    // The unset sentinel comes first, then every channel as an explicit, selectable port.
     expect(options[0]?.props.value).toBe(0);
-    expect(childrenOf(options[0] as ExpandedElement).join("")).toContain("default");
-    expect(options[0] && childrenOf(options[0]).join("")).toContain("3456");
-    expect(options.map((option) => option.props.value)).toEqual([0, 3457, 3458]);
+    expect(options.map((option) => option.props.value)).toEqual([0, 3456, 3457, 3458]);
     const labels = options.map((option) => childrenOf(option).join(""));
-    expect(labels[1]).toContain("stage");
-    expect(labels[2]).toContain("development");
+    expect(labels[1]).toContain("production");
+    expect(labels[2]).toContain("stage");
+    expect(labels[3]).toContain("development");
+  });
+
+  /**
+   * Every runtime channel must be selectable, including production 3456.
+   *
+   * `port: 3456` is the schema default and a legal stored value. When the option list
+   * omits it the select carries a value no option has, so the channel control shows
+   * nothing selected and reads as broken — the reported "the UI that chooses
+   * dev/stage/prod doesn't work".
+   */
+  test("offers every runtime channel as a selectable option", () => {
+    const { internals } = applyWith(fakeSettings().settings);
+    const offered = internals.CHANNEL_OPTIONS.map((option) => option.port);
+    for (const channel of internals.RUNTIME_CHANNELS) {
+      expect(offered, `channel ${String(channel.port)} is not selectable`).toContain(channel.port);
+    }
+    // The unset sentinel stays distinct from a deliberate choice of production.
+    expect(offered).toContain(0);
   });
 
   test("the port is a closed choice, not free text", () => {

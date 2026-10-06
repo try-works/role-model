@@ -312,10 +312,14 @@ window.__ModuleLoader__.load({
      */
     const CHANNEL_DEFAULT = 0;
 
-    /** The select's options, the unset state first. */
+    /** The select's options, the unset sentinel first. */
     const CHANNEL_OPTIONS = [
-      { port: CHANNEL_DEFAULT, label: "default — production (:3456)" },
-      ...RUNTIME_CHANNELS.filter((channel) => channel.port !== 3456).map((channel) => ({
+      { port: CHANNEL_DEFAULT, label: "unset — keep the endpoint field (defaults to :3456)" },
+      // Production is listed explicitly rather than folded into the sentinel. `port: 3456`
+      // is the schema default and a legal stored value, so omitting it left the select
+      // carrying a value no option had: the control showed nothing selected and read as
+      // broken. Every channel must be representable AND selectable.
+      ...RUNTIME_CHANNELS.map((channel) => ({
         port: channel.port,
         label: `${channel.name} — ${channel.runtime} (:${channel.port})`,
       })),
@@ -901,6 +905,7 @@ window.__ModuleLoader__.load({
         CONFIG_FIELDS,
         SELECT_FIELDS,
         RUNTIME_CHANNELS,
+        CHANNEL_OPTIONS,
         settingsRemote,
         readConfig,
         buildPatch,
