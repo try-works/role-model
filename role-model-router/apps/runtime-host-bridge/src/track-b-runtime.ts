@@ -140,7 +140,7 @@ export function extensionHostTiming(env: Record<string, string | undefined> = pr
   };
 }
 
-import type { RuntimeEffortSource } from "@role-model-router/runtime-observability";
+import type { RuntimeEffortSourceValue } from "@role-model-router/runtime-observability";
 import {
   type GraphArtifactReference,
   type LegacyArtifactWriteInput,
@@ -4235,7 +4235,7 @@ export interface TrackBPostObservationWorkItem extends Readonly<Record<string, u
   readonly endpointId: string;
   readonly modelId?: string;
   readonly reasoningEffort?: string | null;
-  readonly effortSource?: RuntimeEffortSource;
+  readonly effortSource?: RuntimeEffortSourceValue;
   readonly legacyIdentityMissing?: true;
   readonly run88Correlation?: Readonly<Record<string, unknown>>;
   readonly occurrenceId?: string;
@@ -5236,9 +5236,9 @@ function outboxSchema(database: DatabaseSync): void {
          model_id IS NULL
          OR trim(model_id) = ''
          OR effort_source IS NULL
-         OR effort_source NOT IN ('none', 'client', 'variant', 'variant_coerced')
-         OR (reasoning_effort IS NULL AND effort_source <> 'none')
-         OR (reasoning_effort IS NOT NULL AND effort_source = 'none')
+         OR effort_source NOT IN ('named', 'disabled', 'provider_default', 'none', 'client', 'variant', 'variant_coerced')
+         OR (reasoning_effort IS NULL AND effort_source IN ('named', 'client', 'variant', 'variant_coerced'))
+         OR (reasoning_effort IS NOT NULL AND effort_source IN ('disabled', 'provider_default', 'none'))
        )
   `);
 }
@@ -5639,7 +5639,7 @@ export function createTrackBPostObservationOutbox({
                     endpoint_id: string;
                     model_id: string | null;
                     reasoning_effort: string | null;
-                    effort_source: RuntimeEffortSource | null;
+                    effort_source: RuntimeEffortSourceValue | null;
                     run88_correlation_json: string | null;
                     observation_json: string | null;
                     legacy_identity_missing: number;
@@ -7024,7 +7024,7 @@ export interface TrackBVariantIdentity {
   readonly endpointId: string;
   readonly modelId: string;
   readonly reasoningEffort: string | null;
-  readonly effortSource: RuntimeEffortSource;
+  readonly effortSource: RuntimeEffortSourceValue;
 }
 
 export type TrackBRouteAdvisoryState = "fresh" | "stale" | "unavailable";
@@ -8236,7 +8236,9 @@ async function appendTrackBRouteAdvisoryObservationExclusive(input: {
   return next;
 }
 
-const TRACK_B_EFFORT_SOURCES = new Set<RuntimeEffortSource>([
+// The occurrence/telemetry effort-source vocabulary. A persisted observation carries
+// `none` for a null reasoning effort and `client`/`variant`/`variant_coerced` for a named effort.
+const TRACK_B_EFFORT_SOURCES = new Set<RuntimeEffortSourceValue>([
   "none",
   "client",
   "variant",
@@ -8280,13 +8282,15 @@ function normalizeTrackBVariantIdentity(
   const effortSource = observation.effortSource;
   if (
     typeof effortSource !== "string" ||
-    !TRACK_B_EFFORT_SOURCES.has(effortSource as RuntimeEffortSource)
+    !TRACK_B_EFFORT_SOURCES.has(effortSource as RuntimeEffortSourceValue)
   ) {
     throw new Error("persisted observation effort identity effortSource is invalid");
   }
+  const namedLikeSource =
+    effortSource === "client" || effortSource === "variant" || effortSource === "variant_coerced";
   if (
-    (reasoningEffort === null && effortSource !== "none") ||
-    (reasoningEffort !== null && effortSource === "none")
+    (reasoningEffort === null && namedLikeSource) ||
+    (reasoningEffort !== null && !namedLikeSource)
   ) {
     throw new Error("persisted observation effort identity effort/source pair is inconsistent");
   }
@@ -8305,7 +8309,7 @@ function normalizeTrackBVariantIdentity(
     endpointId,
     modelId,
     reasoningEffort: reasoningEffort as string | null,
-    effortSource: effortSource as RuntimeEffortSource,
+    effortSource: effortSource as RuntimeEffortSourceValue,
   };
 }
 

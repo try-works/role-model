@@ -68,4 +68,45 @@ describe("buildRuntimeConnectionRows", () => {
     ]);
     expect(rows.some((row) => row.connectionLabel === "deepseek.litellm")).toBe(false);
   });
+
+  test("labels each endpoint row's effective reasoning effort (R11)", () => {
+    const endpoints = [
+      {
+        endpointId: "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-high",
+        modelId: "deepseek/deepseek-v4-pro",
+        providerId: "deepseek",
+        providerAccountId: "deepseek.personal.deepseek-api-key",
+        sourceType: "remote" as const,
+        servingSource: "remote-service",
+        endpointKind: "remote_api",
+        status: "active",
+        healthStatus: "healthy",
+        routingEligible: true,
+        benchmarkEligible: true,
+        reasoningEffort: "high",
+        effortSource: "fixed",
+      },
+      {
+        endpointId: "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        modelId: "deepseek/deepseek-v4-flash",
+        providerId: "deepseek",
+        providerAccountId: "deepseek.personal.deepseek-api-key",
+        sourceType: "remote" as const,
+        servingSource: "remote-service",
+        endpointKind: "remote_api",
+        status: "active",
+        healthStatus: "healthy",
+        routingEligible: true,
+        benchmarkEligible: true,
+        reasoningEffort: null,
+        effortSource: "provider-default",
+      },
+    ];
+    const rows = buildRuntimeConnectionRows({
+      providerRows: buildConfiguredProviderRows({ accounts: [], endpoints }),
+      endpointRows: buildEndpointCatalogRows(endpoints),
+    });
+    expect(rows).toContainEqual(expect.objectContaining({ effortLabel: "High (fixed)" }));
+    expect(rows).toContainEqual(expect.objectContaining({ effortLabel: "Provider default" }));
+  });
 });

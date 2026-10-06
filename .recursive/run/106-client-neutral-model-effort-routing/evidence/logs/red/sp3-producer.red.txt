@@ -1,0 +1,3 @@
+SP3 RED - producer (borrowed related-effort benchmark score)
+command: corepack pnpm --filter @role-model-router/profile-aggregator exec vitest run test/run106-related-effort-borrow.test.ts
+observed: 5 tests failed - resolveRelatedEffortOverallScore not exported yet (TypeError: not a function).

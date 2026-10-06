@@ -1256,6 +1256,12 @@ export interface BenchmarkCapability {
   readonly evidenceSource?: "run-artifact" | "profile-derived";
   readonly overallScore: number | null;
   /**
+   * Run 106 R5 (borrowed): cross-effort score from a sibling fixed-effort arm of the same model/provider,
+   * present only when this arm has no exact benchmark evidence of its own. Borrowed evidence is always
+   * labeled and never styled as exact (R11).
+   */
+  readonly relatedEffortOverallScore?: number | null;
+  /**
    * Run 98 addendum 42 B2: the benchmark run's own latency for this endpoint, derived from its case
    * audits. The model pool's speed axis uses it until telemetry exists for the endpoint.
    */

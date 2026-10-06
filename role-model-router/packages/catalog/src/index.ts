@@ -664,6 +664,8 @@ import { applyAliasedCatalogPricing } from "./token-economics.js";
 
 export {
   resolveReasoningEffortLevels,
+  resolveAdapterGatedReasoningEfforts,
+  REASONING_EFFORT_SERIALIZER_VERSION_BY_ADAPTER,
   type ReasoningEffortAdapterCapability,
   type ReasoningEffortFallback,
   type ReasoningEffortResolutionInput,

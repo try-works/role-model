@@ -1,0 +1,9 @@
+SP5 RED - turn-aware difficulty repair (R7)
+command: corepack pnpm exec vitest run test/run106-turn-aware-difficulty.test.ts
+observed: 6 failed | 4 passed (10)
+  - trivial follow-up in long session => still hard (expected below hard)
+  - trivial tool-bearing follow-up (no current-turn code/schema) => still hard (expected below hard)
+  - fresh genuinely risky tool/code/schema task => medium (expected hard)
+  - computeDifficultyFeatures => not a function (missing export)
+  - DIFFICULTY_CLASSIFIER_VERSION => undefined (missing export)
+  - shouldInvalidateDifficultyClassifierVersion => not a function (missing export)

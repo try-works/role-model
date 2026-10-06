@@ -1,0 +1,3 @@
+SP6 RED - non-inferiority preference
+command: corepack pnpm --filter @role-model-router/core exec vitest run test/run106-non-inferiority.test.ts
+observed: 4 tests failed - shouldPreferNonInferiorChallenger not exported yet.

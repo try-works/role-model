@@ -70,6 +70,13 @@ export interface PromptCacheRequest {
 export interface RuntimeExecutionReasoningRequest {
   readonly channel?: "reasoning" | "thinking";
   readonly effort?: string;
+  readonly effortPolicy?: "strict" | "preferred" | "router";
+  /**
+   * Run 106 R4: the client's reasoning-effort source. "disabled" marks OpenAI's disabled-reasoning
+   * convention (reasoning.effort === "none" | "off"); "named" marks a concrete named effort level;
+   * "none" marks no client preference. Absent on legacy callers, which resolve from effort alone.
+   */
+  readonly effortSource?: "named" | "disabled" | "none";
   readonly raw?: Record<string, unknown>;
 }
 
@@ -386,6 +393,29 @@ function findCloudSource(
   return registrySources.cloud.find((source) => source.endpointId === endpointId);
 }
 
+/**
+ * Run 106 H-1: a provider-default endpoint expands into one fixed arm per
+ * adapter-executable declared level (base endpoint id plus an encoded-effort
+ * suffix). Those arms share the provider-default source's execution mapping;
+ * resolve them back to that base source when the exact endpoint id is not
+ * itself a durable source.
+ */
+function resolveExpandedArmCloudSource(
+  registrySources: RegistrySources,
+  endpointId: string,
+  reasoningEffort: string | null | undefined,
+): RegistrySources["cloud"][number] | undefined {
+  if (typeof reasoningEffort !== "string" || reasoningEffort.length === 0) {
+    return undefined;
+  }
+  const suffix = `-${encodeURIComponent(reasoningEffort)}`;
+  if (!endpointId.endsWith(suffix)) {
+    return undefined;
+  }
+  const baseEndpointId = endpointId.slice(0, -suffix.length);
+  return registrySources.cloud.find((source) => source.endpointId === baseEndpointId);
+}
+
 function findLocalSource(
   registrySources: RegistrySources,
   endpointId: string,
@@ -408,7 +438,13 @@ export function resolveExecutionTarget(
     throw new Error(`Chosen endpoint ${endpointId} is not present in the registry result.`);
   }
 
-  const cloudSource = findCloudSource(input.registrySources, endpointId);
+  const cloudSource =
+    findCloudSource(input.registrySources, endpointId) ??
+    resolveExpandedArmCloudSource(
+      input.registrySources,
+      endpointId,
+      candidate.identity.reasoning_effort,
+    );
   if (cloudSource) {
     const account = input.accounts.find(
       (entry) => entry.providerAccountId === cloudSource.providerAccountId,

@@ -1,0 +1,3 @@
+run106-effort-aware-cache-continuity RED
+command: corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/run106-effort-aware-cache-continuity.test.ts
+observed: 4 tests failed - toCacheContinuityScopeDescriptor is not exported and the cache continuity scope key is not effort-aware.

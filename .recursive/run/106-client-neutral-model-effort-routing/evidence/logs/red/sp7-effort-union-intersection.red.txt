@@ -1,0 +1,3 @@
+SP7 RED - effort union/intersection
+command: corepack pnpm --filter @role-model-router/core exec vitest run test/run106-effort-union-intersection.test.ts
+observed: 4 tests failed - computeEffortUnionAndIntersection not exported yet.

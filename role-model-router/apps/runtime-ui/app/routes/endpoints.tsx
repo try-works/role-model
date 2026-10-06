@@ -15,6 +15,7 @@ import {
   supportingTextClassName,
 } from "../lib/design-system";
 import { formatEndpointDisplayPath } from "../lib/effort-identity";
+import { formatEffectiveEffortDisclosure } from "../lib/effort-truth";
 import {
   type RuntimeSnapshot,
   fetchRuntimeAccounts,
@@ -96,6 +97,7 @@ export function buildRuntimeConnectionRows(input: {
   connectionLabel: string;
   modelLabel: string;
   endpointLabel: string;
+  effortLabel: string;
   sourceLabel: string;
   healthLabel: string;
   healthTone: "success" | "warning" | "neutral";
@@ -121,6 +123,10 @@ export function buildRuntimeConnectionRows(input: {
         connectionLabel: endpoint.providerAccountId ?? "—",
         modelLabel: endpoint.displayName ?? endpoint.modelId,
         endpointLabel: formatEndpointDisplayPath(endpoint),
+        effortLabel: formatEffectiveEffortDisclosure({
+          reasoningEffort: endpoint.reasoningEffort,
+          effortSource: endpoint.effortSource,
+        }),
         sourceLabel: `${formatServingSource(endpoint.servingSource, endpoint.sourceLabel)} / ${endpoint.endpointKind}`,
         healthLabel: endpoint.healthStatus,
         healthTone: healthTone(endpoint.healthStatus),
@@ -149,6 +155,7 @@ export function buildRuntimeConnectionRows(input: {
         modelLabel:
           provider.configuredModels.length > 0 ? provider.configuredModels.join(", ") : "No model",
         endpointLabel: `${provider.activeEndpointCount}/${provider.endpointCount} active`,
+        effortLabel: "—",
         sourceLabel: provider.authModes.join(", ") || "provider account",
         healthLabel,
         healthTone: healthTone(healthLabel),
@@ -247,6 +254,7 @@ export default function EndpointsRoute() {
                   <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Connection</th>
                   <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Model</th>
                   <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Endpoint</th>
+                  <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Effort</th>
                   <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Source</th>
                   <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Health</th>
                   <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Readiness</th>
@@ -259,6 +267,7 @@ export default function EndpointsRoute() {
                     <td className={tableValueCellClassName}>{row.connectionLabel}</td>
                     <td className={tableValueCellClassName}>{row.modelLabel}</td>
                     <td className={tableValueCellClassName}>{row.endpointLabel}</td>
+                    <td className={tableValueCellClassName}>{row.effortLabel}</td>
                     <td className={tableValueCellClassName}>{row.sourceLabel}</td>
                     <td className="py-3">
                       <Badge tone={row.healthTone}>{row.healthLabel}</Badge>

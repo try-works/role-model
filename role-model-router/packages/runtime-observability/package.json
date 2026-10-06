@@ -19,6 +19,7 @@
   "dependencies": {
     "@role-model/protocol-types": "workspace:*",
     "@role-model-router/adapter-execution": "workspace:*",
+    "@role-model-router/core": "workspace:*",
     "@role-model-router/profile-aggregator": "workspace:*",
     "@role-model-router/tool-registry": "workspace:*",
     "@role-model-router/trace": "workspace:*",

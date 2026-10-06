@@ -1,0 +1,5 @@
+SP1 RED - effort policy normalization
+command: corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/run106-effort-policy-normalization.test.ts
+expected: import { normalizeReasoningEffortPolicy } resolves
+observed: FAIL - module resolution error (normalizeReasoningEffortPolicy not yet exported from ../src/index.js)
+This is the RED state: the behavior under test does not exist yet.

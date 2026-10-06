@@ -8871,9 +8871,9 @@ export async function main(): Promise<void> {
                 phase: "prepared",
                 attemptToken: replayAttemptToken,
               });
-              // A candidate without a reasoning effort is captured with `none`, not
-              // `variant`: the durable capture contract couples a null effort to the
-              // `none` source, and a mixed pair is rejected at the capture boundary.
+              // A candidate without a reasoning effort is captured with `none`, not `variant`:
+              // the durable capture contract couples a null effort to the `none` source, and a
+              // mixed pair is rejected at the capture boundary.
               const preparedEffort =
                 typeof candidate.reasoningEffort === "string" && candidate.reasoningEffort
                   ? { reasoningEffort: candidate.reasoningEffort, effortSource: "variant" as const }

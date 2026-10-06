@@ -68,8 +68,9 @@ Source-Runs:
 - `71-runtime-startup-lifecycle-and-health-truth-reconciliation`
 - `72-standalone-runtime-config-authority-and-alias-rematerialization`
 - `74-kimi-k3-kimi-code-oauth-support`
-Validated-At-Commit: `working-tree`
-Last-Validated: `2026-07-17`
+- `106-client-neutral-model-effort-routing`
+Validated-At-Commit: `working-tree Run 106 closeout (HEAD 9260a10b)`
+Last-Validated: `2026-10-04`
 Tags:
 - `runtime`
 - `routing`
