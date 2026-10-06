@@ -50,6 +50,14 @@ test("production packaging rebuilds and verifies the complete tested stage pair"
   );
   assert.match(binaries, /ROLE_MODEL_TRACK_B_DISTRIBUTION_ROOT:[\s\S]*?production/);
   assert.match(binaries, /Verify complete production pair matches the tested stage candidate/);
+  /**
+   * Measured while releasing v0.0.16: the production job assembled Track B from .cache/paired-public,
+   * so the bundle embedded "../paired-public/packages/..." where the candidate embedded
+   * "../../packages/...". The pair check then rejected a package whose only real difference was that
+   * build-layout label, so the production checkout must be the accepted candidate's own layout.
+   */
+  assert.match(binaries, /Align the production checkout with the accepted stage revision/);
+  assert.match(binaries, /ROLE_MODEL_PUBLIC_WORKTREE: \$\{\{ github\.workspace \}\}/);
   assert.match(binaries, /validateRun88ProductionPromotion|--verify-production-manifest/);
   assert.doesNotMatch(binaries, /Verify production core matches the tested stage candidate/);
 });
