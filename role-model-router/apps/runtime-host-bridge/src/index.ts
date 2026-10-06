@@ -24275,9 +24275,7 @@ export async function createRuntimeBridgeBackend(
         // analytics effortSource dimension presents the canonical four-state "named"
         // value. Map the named-like legacy sources to "named"; pass "none" and any
         // already-canonical value through unchanged.
-        return [
-          raw === "client" || raw === "variant" || raw === "variant_coerced" ? "named" : raw,
-        ];
+        return [raw === "client" || raw === "variant" || raw === "variant_coerced" ? "named" : raw];
       }
       case "providerId":
         return record.providerId ? [record.providerId] : [];
