@@ -24267,8 +24267,18 @@ export async function createRuntimeBridgeBackend(
         return record.modelId ? [record.modelId] : [];
       case "reasoningEffort":
         return record.reasoningEffort ? [record.reasoningEffort] : [];
-      case "effortSource":
-        return record.effortSource ? [record.effortSource] : [];
+      case "effortSource": {
+        const raw = record.effortSource;
+        if (!raw) return [];
+        // Query-time projection (run 106 R4 readback): the occurrence/telemetry layer
+        // stores the binary vocabulary (client|variant|variant_coerced|none), while the
+        // analytics effortSource dimension presents the canonical four-state "named"
+        // value. Map the named-like legacy sources to "named"; pass "none" and any
+        // already-canonical value through unchanged.
+        return [
+          raw === "client" || raw === "variant" || raw === "variant_coerced" ? "named" : raw,
+        ];
+      }
       case "providerId":
         return record.providerId ? [record.providerId] : [];
       case "providerKind":
