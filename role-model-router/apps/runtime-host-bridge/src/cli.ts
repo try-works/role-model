@@ -10738,18 +10738,33 @@ export async function main(): Promise<void> {
             return null;
           }
         },
+        /**
+         * Run 106 (live finding on the dev replay queue, 2026-10-07): the descriptor read the model and the
+         * effort off the endpoint's TOP LEVEL, where a registry endpoint candidate does not carry them - the
+         * identity lives at `identity.model_id` and `identity.reasoning_effort` (see
+         * `EndpointCandidate` in packages/endpoint-registry). Every descriptor therefore answered
+         * `modelId: ""` and `reasoningEffort: null`, so the arm comparability the queue handoff records
+         * was always `arm_effort_unspecified` and the focus-dispatch effort view was empty - which is
+         * exactly why an effort-mismatched arm could be chosen and then voided downstream. Read the identity
+         * fields, keeping the top-level shape as a fallback for an endpoint object that carries them.
+         */
         () =>
-          created.effectiveRegistry.endpoints.map((endpoint) => ({
-            endpointId: endpoint.identity.endpoint_id,
-            modelId:
-              typeof (endpoint as { modelId?: unknown }).modelId === "string"
-                ? String((endpoint as { modelId?: unknown }).modelId)
-                : "",
-            reasoningEffort:
-              typeof (endpoint as { reasoningEffort?: unknown }).reasoningEffort === "string"
-                ? String((endpoint as { reasoningEffort?: unknown }).reasoningEffort)
-                : null,
-          })),
+          created.effectiveRegistry.endpoints.map((endpoint) => {
+            const declared = endpoint as {
+              readonly modelId?: unknown;
+              readonly reasoningEffort?: unknown;
+            };
+            const modelId = endpoint.identity.model_id ?? declared.modelId;
+            const reasoningEffort = endpoint.identity.reasoning_effort ?? declared.reasoningEffort;
+            return {
+              endpointId: endpoint.identity.endpoint_id,
+              modelId: typeof modelId === "string" ? modelId : "",
+              reasoningEffort:
+                typeof reasoningEffort === "string" && reasoningEffort.trim()
+                  ? reasoningEffort
+                  : null,
+            };
+          }),
         // Run 105 bug 3: pass the wired judge resolution down so the dispatcher's focus planner excludes the
         // SAME controller judge the supervised replay endpoint will reject (deepseek-flash), instead of
         // returning null from the empty durable table and planning the judge as a counterfactual arm.
