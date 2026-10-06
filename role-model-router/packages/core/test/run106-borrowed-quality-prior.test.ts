@@ -9,7 +9,9 @@ describe("run106 borrowed quality prior", () => {
     expect(prior?.value).toBeCloseTo(0.8206, 4);
   });
   it("clamps the discounted prior to the unit interval", () => {
-    expect(resolveBorrowedQualityPrior({ relatedEffortScore: 1.5, discountFactor: 0.9 })?.value).toBe(1);
+    expect(
+      resolveBorrowedQualityPrior({ relatedEffortScore: 1.5, discountFactor: 0.9 })?.value,
+    ).toBe(1);
   });
   it("returns null when no related-effort score is available", () => {
     expect(resolveBorrowedQualityPrior({})).toBeNull();

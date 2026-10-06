@@ -156,6 +156,7 @@ import {
 import { createProjectionV2 } from "@role-model-router/trace";
 
 import {
+  type TrackBRouteAdvisoryRung,
   type TrackBRouteAdvisorySourceResult,
   readTrackBRouteAdvisoryFromRollout,
 } from "./route-advisory-source.js";
@@ -786,6 +787,8 @@ const trackBServerOperationNames = [
   "activateLearningPack",
   "rollbackLearningPack",
   "engageLearningKillSwitch",
+  // Run 105 Phase 3.5 repair: the host-only ladder materialization operation.
+  "materializeRouteLadders",
 ] as const;
 
 export function createTrackBBridgeServerOptions<
@@ -7505,6 +7508,11 @@ export function clearTrackBRouteAdvisoryCacheForTests() {
   trackBRouteAdvisoryCache.clear();
 }
 
+/** Run 105 C11: test seam for the durable cache (one entry per channel/scope/role). */
+export function clearTrackBDurableRouteAdvisoryCacheForTests() {
+  trackBDurableRouteAdvisoryCache.clear();
+}
+
 /**
  * Run 98 R5: the newest advisory for a scope, whichever route package produced it. The
  * live decision needs this before the route package is chosen, because the advisory's
@@ -7548,6 +7556,10 @@ export function recallNewestTrackBRouteAdvisory(input: {
  */
 export interface TrackBDurableRouteAdvisoryEntry {
   readonly preferredRoutePackage: string | null;
+  /** Run 105 R5: the (role, task) ladder the advisory was derived from (status-filtered, rank-sorted). */
+  readonly advisoryLadder: readonly TrackBRouteAdvisoryRung[];
+  /** Run 105 R1/C11: the role the ladder was learned for; the cache key carries it. */
+  readonly roleId: string | null;
   readonly advisoryState: TrackBRouteAdvisoryState;
   readonly confidence: number;
   readonly candidateId: string | null;
@@ -7563,18 +7575,29 @@ export interface TrackBDurableRouteAdvisoryEntry {
 }
 
 const trackBDurableRouteAdvisoryCache = new Map<string, TrackBDurableRouteAdvisoryEntry>();
-const TRACK_B_DURABLE_ADVISORY_CACHE_MAX_ENTRIES = 128;
+// One entry per exact (channel, runtime scope, role, task); neither partial classification
+// nor a legacy lookup may borrow another pair. 512 covers the per-pair fan-out.
+const TRACK_B_DURABLE_ADVISORY_CACHE_MAX_ENTRIES = 512;
 
-const durableAdvisoryKey = (channel: string, scope: string): string => `${channel}\u0000${scope}`;
+const durableAdvisoryKey = (
+  channel: string,
+  scope: string,
+  roleId: string | null,
+  taskTypeId: string | null,
+): string => JSON.stringify([channel, scope, roleId, taskTypeId]);
 
 export function rememberTrackBDurableRouteAdvisory(input: {
   readonly channel: string;
   readonly scope: string;
+  /** Redundant publisher attribution; the strict source owns the persisted role identity. */
+  readonly roleId?: string | null;
   readonly advisory: TrackBRouteAdvisorySourceResult;
   readonly nowMs: number;
 }): TrackBDurableRouteAdvisoryEntry {
   const entry: TrackBDurableRouteAdvisoryEntry = {
     preferredRoutePackage: input.advisory.preferredRoutePackage,
+    advisoryLadder: [...(input.advisory.advisoryLadder ?? [])],
+    roleId: input.advisory.roleId ?? null,
     advisoryState: input.advisory.advisoryState,
     confidence: Number.isFinite(input.advisory.confidence) ? input.advisory.confidence : 0,
     candidateId: input.advisory.candidateId,
@@ -7586,7 +7609,9 @@ export function rememberTrackBDurableRouteAdvisory(input: {
     revalidationDue: input.advisory.revalidationDue === true,
     cachedAtMs: input.nowMs,
   };
-  const key = durableAdvisoryKey(input.channel, input.scope);
+  const key = durableAdvisoryKey(input.channel, input.scope, entry.roleId, entry.taskTypeId);
+  // Map.set alone preserves the old insertion position: delete first to refresh recency.
+  trackBDurableRouteAdvisoryCache.delete(key);
   trackBDurableRouteAdvisoryCache.set(key, entry);
   while (trackBDurableRouteAdvisoryCache.size > TRACK_B_DURABLE_ADVISORY_CACHE_MAX_ENTRIES) {
     const oldest = trackBDurableRouteAdvisoryCache.keys().next().value;
@@ -7599,10 +7624,9 @@ export function rememberTrackBDurableRouteAdvisory(input: {
 export function recallTrackBDurableRouteAdvisory(input: {
   readonly channel: string;
   readonly scope: string;
-  /**
-   * Run 99 R33: when the request declares a family, only that family's entry (or an unscoped
-   * entry, which the router then refuses) may be returned.
-   */
+  /** Exact classification; only absence of both role and task selects the legacy key. */
+  readonly roleId?: string | null;
+  /** Never borrow another task or a partial/unscoped entry. */
   readonly taskTypeId?: string | null;
   /**
    * Run 99 R33 (addendum 21 D12): when both are supplied the record's age is enforced, so an
@@ -7612,8 +7636,18 @@ export function recallTrackBDurableRouteAdvisory(input: {
   readonly nowMs?: number;
   readonly maxAgeMs?: number | null;
 }): TrackBDurableRouteAdvisoryEntry | null {
-  const entry =
-    trackBDurableRouteAdvisoryCache.get(durableAdvisoryKey(input.channel, input.scope)) ?? null;
+  const rkey = durableAdvisoryKey(
+    input.channel,
+    input.scope,
+    input.roleId ?? null,
+    input.taskTypeId ?? null,
+  );
+  const entry = trackBDurableRouteAdvisoryCache.get(rkey) ?? null;
+  if (process.env.ROLE_MODEL_ADVISORY_DIAG) {
+    console.error(
+      `[advisory-recall] key=${rkey} hit=${entry !== null} cacheSize=${trackBDurableRouteAdvisoryCache.size} keys=${[...trackBDurableRouteAdvisoryCache.keys()].join(" | ")}`,
+    );
+  }
   if (!entry) return null;
   const maxAgeMs =
     typeof input.maxAgeMs === "number" && Number.isFinite(input.maxAgeMs) && input.maxAgeMs > 0
@@ -7626,14 +7660,7 @@ export function recallTrackBDurableRouteAdvisory(input: {
     input.nowMs - entry.cachedAtMs > maxAgeMs
       ? { ...entry, advisoryState: "stale" as const, reason: "advisory source beyond max age" }
       : entry;
-  const resolved = aged;
-  // Run 99 R33 (S37 live finding): a family-mismatched entry must reach the router so it answers
-  // `advisory_task_mismatch` — the operator has to see *why* the learned preference was refused.
-  // Withholding it here made the host fall through to the transient pipeline advisory, which is
-  // refused earlier by the eligibility gate and reported as `advisory_candidate_not_eligible`,
-  // hiding the family verdict. The router still cannot apply a mismatched advisory, so the safety
-  // property is unchanged; only the reported reason becomes truthful.
-  return resolved;
+  return aged;
 }
 
 /**
@@ -7644,6 +7671,9 @@ export async function readTrackBRouteAdvisorySourceFromRuntime(input: {
   readonly runtime: TrackBShadowPipelineRuntime;
   readonly channel: string;
   readonly scope: string;
+  /** Run 105 R1: the (role, task) ladder key the source must read. */
+  readonly roleId?: string | null;
+  readonly taskTypeId?: string | null;
   readonly stateRoot?: string;
   readonly authorizationEpoch?: number;
   readonly nowMs: number;
@@ -7651,6 +7681,8 @@ export async function readTrackBRouteAdvisorySourceFromRuntime(input: {
   /** Run 99 R33 D12: `revalidationIntervalDays` as milliseconds, when the caller has it. */
   readonly revalidationIntervalMs?: number | null;
   readonly requestId?: string;
+  readonly stage?: string;
+  readonly policyCohortPercent?: number;
 }): Promise<TrackBRouteAdvisorySourceResult> {
   const requestId = input.requestId ?? `route-advisory:${input.scope}:${input.nowMs}`;
   const invoke = async (capability: string, value: Readonly<Record<string, unknown>>) => {
@@ -7677,6 +7709,10 @@ export async function readTrackBRouteAdvisorySourceFromRuntime(input: {
   return readTrackBRouteAdvisoryFromRollout({
     invoke,
     scopeId: input.scope,
+    roleId: input.roleId ?? null,
+    taskTypeId: input.taskTypeId ?? null,
+    stage: input.stage,
+    policyCohortPercent: input.policyCohortPercent,
     nowMs: input.nowMs,
     evidenceMaxAgeMs: input.evidenceMaxAgeMs,
     ...(Number.isFinite(input.revalidationIntervalMs)
@@ -7755,6 +7791,14 @@ export function buildTrackBRouteAdvisoryObservation(input: {
   readonly taskTypeId?: string | null;
   readonly requestTaskTypeId?: string | null;
   readonly taxonomyVersion?: string | null;
+  /**
+   * Run 105 C13: the ladder walk's evidence. Omitted when the caller has no ladder, so every
+   * pre-run105 observation stays byte-identical.
+   */
+  readonly advisoryLadderLength?: number | null;
+  readonly advisoryRungRank?: number | null;
+  readonly advisoryRungWalked?: string | null;
+  readonly advisoryRungSkipped?: number | null;
   /** Run 99 close-out (addenda 19-21 S33/D1/D2): the classification the request was routed with. */
   readonly classification?: TrackBRouteAdvisoryClassification | null;
   /** Run 99 close-out (addenda 19-21 D6): how the observed arm was selected, and its propensity. */
@@ -7823,6 +7867,20 @@ export function buildTrackBRouteAdvisoryObservation(input: {
       : { requestTaskTypeId: null }),
     ...(input.taxonomyVersion
       ? { taxonomyVersion: String(input.taxonomyVersion).slice(0, 128) }
+      : {}),
+    // Run 105 C13: the ladder walk's evidence, bounded and omitted when absent so a decision with
+    // no ladder keeps the byte-identical pre-run105 row. `advisoryRungSkipped` is capped at 32.
+    ...(Number.isSafeInteger(input.advisoryLadderLength)
+      ? { advisoryLadderLength: Math.max(0, Math.min(64, Number(input.advisoryLadderLength))) }
+      : {}),
+    ...(Number.isSafeInteger(input.advisoryRungRank)
+      ? { advisoryRungRank: Math.max(0, Math.min(64, Number(input.advisoryRungRank))) }
+      : {}),
+    ...(typeof input.advisoryRungWalked === "string" && input.advisoryRungWalked
+      ? { advisoryRungWalked: String(input.advisoryRungWalked).slice(0, 128) }
+      : {}),
+    ...(Number.isSafeInteger(input.advisoryRungSkipped)
+      ? { advisoryRungSkipped: Math.max(0, Math.min(32, Number(input.advisoryRungSkipped))) }
       : {}),
     ...(normalizedClassification ? { classification: normalizedClassification } : {}),
     ...(input.selectionMode
@@ -7982,6 +8040,11 @@ export function buildLiveRouteAdvisoryObservation(input: {
     readonly scoreGapBefore?: number | null;
     readonly advisoryPackageEligible?: boolean;
     readonly eligibleEndpointCount?: number;
+    /** Run 105 C13: the ladder walk's evidence, forwarded additively. */
+    readonly advisoryLadderLength?: number | null;
+    readonly advisoryRungRank?: number | null;
+    readonly advisoryRungWalked?: string | null;
+    readonly advisoryRungSkipped?: number | null;
   } | null;
   readonly observedAtMs: number;
 }): Record<string, unknown> {
@@ -8022,6 +8085,12 @@ export function buildLiveRouteAdvisoryObservation(input: {
     ...(Number.isSafeInteger(input.outcome?.eligibleEndpointCount)
       ? { eligibleRoutePackageCountOverride: input.outcome?.eligibleEndpointCount }
       : {}),
+    // Run 105 C13: the rung the walk landed on (and the non-routable rungs it passed over), so
+    // "rung 2 applied" is distinguishable from "baseline retained".
+    advisoryLadderLength: input.outcome?.advisoryLadderLength ?? null,
+    advisoryRungRank: input.outcome?.advisoryRungRank ?? null,
+    advisoryRungWalked: input.outcome?.advisoryRungWalked ?? null,
+    advisoryRungSkipped: input.outcome?.advisoryRungSkipped ?? null,
     cohortPercent: input.advisory.cohortPercent ?? null,
     stage,
     policyVersion: input.advisory.policyVersion ?? null,
@@ -8107,6 +8176,10 @@ async function appendTrackBRouteAdvisoryObservationExclusive(input: {
       // different outcomes, and only the applied count is influence.
       considered: 0,
       applied: 0,
+      // Run 105 C13/R13: a walked rung and an applied rung are different outcomes; the walk is
+      // measurable only if both are totalled.
+      rungWalked: 0,
+      rungApplied: 0,
     },
     entries: [] as Readonly<Record<string, unknown>>[],
   };
@@ -8143,6 +8216,11 @@ async function appendTrackBRouteAdvisoryObservationExclusive(input: {
         ? 1
         : 0),
     applied: ledger.totals.applied + (observation.applied === true ? 1 : 0),
+    rungWalked:
+      ledger.totals.rungWalked + (typeof observation.advisoryRungWalked === "string" ? 1 : 0),
+    rungApplied:
+      ledger.totals.rungApplied +
+      (observation.applied === true && typeof observation.advisoryRungWalked === "string" ? 1 : 0),
   };
   const next = {
     schemaVersion: TRACK_B_ROUTE_ADVISORY_OBSERVATION_LEDGER_SCHEMA,
@@ -8209,10 +8287,11 @@ function normalizeTrackBVariantIdentity(
     throw new Error("persisted observation effort identity effortSource is invalid");
   }
   const namedLikeSource =
-    effortSource === "client" ||
-    effortSource === "variant" ||
-    effortSource === "variant_coerced";
-  if ((reasoningEffort === null && namedLikeSource) || (reasoningEffort !== null && !namedLikeSource)) {
+    effortSource === "client" || effortSource === "variant" || effortSource === "variant_coerced";
+  if (
+    (reasoningEffort === null && namedLikeSource) ||
+    (reasoningEffort !== null && !namedLikeSource)
+  ) {
     throw new Error("persisted observation effort identity effort/source pair is inconsistent");
   }
   if (

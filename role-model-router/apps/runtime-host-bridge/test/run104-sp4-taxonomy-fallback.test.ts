@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { buildRequestClassification } from "../src/index.js";
+import { buildRequestClassification, buildRequestClassificationForPlan } from "../src/index.js";
 
 /**
  * Run 104 `R6` / `SP4` - taxonomy fidelity into captures, observations and learning rows.
@@ -97,6 +97,70 @@ describe("run104 R6 buildRequestClassification task-family fallback", () => {
 
     const withoutVariant = buildRequestClassification({ taskTypeId: "data.quality.audit" });
     expect(withoutVariant?.taskVariant ?? null).toBeNull();
+  });
+
+  test("buildRequestClassificationForPlan reads the authoritative taxonomy identity, not runtime-policy ids", () => {
+    // Run 105 Phase 5 review finding: telemetry taxonomy (buildBridgeTaxonomyIdentity) resolved
+    // coder|coder.edit while the capture/advisory chain (buildRequestClassificationForPlan) read
+    // plan.routingRequest.taskType / requestedRoleId (runtime-policy ids) and returned null. The plan
+    // wrapper must use the resolved taxonomyIdentity as authoritative.
+    const genuine = buildRequestClassificationForPlan({
+      taxonomyIdentity: { taskTypeId: "coder.edit", roleId: "coder" },
+      routingRequest: {
+        taskType: "runtime-policy-task-id",
+        requestedRoleId: "runtime-policy-role-id",
+      },
+    } as never);
+    expect(genuine).toMatchObject({ taskTypeId: "coder.edit", roleId: "coder" });
+  });
+
+  test("buildRequestClassificationForPlan drops the text.chat/writer defaults (unclassified stays null)", () => {
+    const defaults = buildRequestClassificationForPlan({
+      taxonomyIdentity: { taskTypeId: "text.chat", roleId: "writer" },
+      routingRequest: {},
+    } as never);
+    expect(defaults?.taskTypeId ?? null).toBeNull();
+    expect(defaults?.roleId ?? null).toBeNull();
+  });
+
+  test("a declared taxonomy task/role still wins over the resolved identity", () => {
+    const plan = {
+      taxonomyIdentity: { taskTypeId: "coder.review", roleId: "coder" },
+      routingRequest: { taskType: "coder.edit", requestedRoleId: "coder" },
+    } as never;
+    const classification = buildRequestClassificationForPlan(plan);
+    expect(classification).toMatchObject({ taskTypeId: "coder.edit", roleId: "coder" });
+  });
+
+  test("a role-defaulted task never shadows the derived identity for intent-less traffic", () => {
+    // Run 105 stage-RC fix (measured on stage-rc-e06beb3ceee4): for an intent-less request the plan
+    // taskType carries the role default (coder.edit) while the identity was DERIVED (tester.unit.plan).
+    // The derived identity must win, or the capture records coder.edit while the telemetry/focus record
+    // tester.unit.plan and the corpus filter drops the capture (NoReplayableRequest).
+    const plan = {
+      taxonomyIdentity: {
+        taskTypeId: "tester.unit.plan",
+        roleId: "tester",
+        source: "runtime_heuristic",
+      },
+      routingRequest: { taskType: "coder.edit", requestedRoleId: "coder" },
+    } as never;
+    const classification = buildRequestClassificationForPlan(plan);
+    expect(classification).toMatchObject({ taskTypeId: "tester.unit.plan", roleId: "tester" });
+  });
+
+  test("the advisory task key and the classification chain resolve the SAME task (no raw plan field)", () => {
+    // Regression pin: requestTaskTypeId at the advisory consultation site must equal the resolved
+    // classification task, never the raw plan.routingRequest.taskType.
+    const plan = {
+      taxonomyIdentity: { taskTypeId: "coder.edit", roleId: "coder" },
+      routingRequest: {},
+    } as never;
+    const classification = buildRequestClassificationForPlan(plan);
+    expect(classification?.taskTypeId).toBe("coder.edit");
+    expect(classification?.taskTypeId).not.toBe(
+      (plan as never as { routingRequest: { taskType?: string } }).routingRequest.taskType,
+    );
   });
 
   test("every capture site's input produces the same classification for one fixture", () => {

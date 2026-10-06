@@ -140,7 +140,41 @@ export async function bindRun88StageManifest(input = {}) {
   return bindRun88ReleaseManifest(input);
 }
 
-export function validateRun88ProductionPromotion({ stage, production } = {}) {
+/**
+ * The runtime channel identity is the one thing a production package MUST change: the stage
+ * candidate identifies as `stage`, the production package as `production`. Everything else in
+ * the private runtime distribution has to be byte-for-byte the build that was tested, so the pair
+ * is compared with exactly that one field removed.
+ *
+ * Measured live (v0.0.16, all four platforms): the previous check compared the sha256 of the whole
+ * `track-b-runtime-manifest.json`, which embeds `runtimeChannelContext`, so production could never
+ * equal the stage candidate and no stable release could ever be built.
+ */
+const RUNTIME_CHANNEL_CONTEXT_KEY = "runtimeChannelContext";
+
+function canonicalJson(value) {
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`;
+  if (value && typeof value === "object")
+    return `{${Object.keys(value)
+      .sort()
+      .map((key) => `${JSON.stringify(key)}:${canonicalJson(value[key])}`)
+      .join(",")}}`;
+  return JSON.stringify(value ?? null);
+}
+
+/** The manifest body that must be identical across channels: everything but the channel identity. */
+function privateRuntimeBody(manifest) {
+  if (!manifest || typeof manifest !== "object" || Array.isArray(manifest)) return null;
+  const { [RUNTIME_CHANNEL_CONTEXT_KEY]: _channelContext, ...body } = manifest;
+  return body;
+}
+
+export function validateRun88ProductionPromotion({
+  stage,
+  production,
+  stageRuntime,
+  productionRuntime,
+} = {}) {
   validateReleasePackage(stage);
   validateReleasePackage(production);
   if (stage.channel !== "stage" || production.channel !== "production")
@@ -154,16 +188,6 @@ export function validateRun88ProductionPromotion({ stage, production } = {}) {
     ["core payload", stage.core_payload_sha256, production.core_payload_sha256],
     ["release id", stage.release_id, production.release_id],
     ["private source", stage.private_source_commit, production.private_source_commit],
-    [
-      "private distribution",
-      stage.private_distribution_sha256,
-      production.private_distribution_sha256,
-    ],
-    [
-      "private manifest",
-      stage.track_b_runtime.manifest_sha256,
-      production.track_b_runtime.manifest_sha256,
-    ],
     [
       "private sidecar",
       stage.track_b_runtime.sidecar_sha256,
@@ -184,14 +208,41 @@ export function validateRun88ProductionPromotion({ stage, production } = {}) {
     if (expected !== actual)
       throw new Error(`production ${field} does not match the tested stage candidate`);
   }
-  if (production.private_distribution_sha256 !== production.track_b_runtime.manifest_sha256)
-    throw new Error("production private distribution binding is inconsistent");
+  for (const [side, manifest] of [
+    ["stage", stage],
+    ["production", production],
+  ]) {
+    if (manifest.private_distribution_sha256 !== manifest.track_b_runtime.manifest_sha256)
+      throw new Error(`${side} private distribution binding is inconsistent`);
+  }
+  if (
+    !/^[0-9a-f]{64}$/.test(stage.track_b_runtime.manifest_sha256 ?? "") ||
+    !/^[0-9a-f]{64}$/.test(production.track_b_runtime.manifest_sha256 ?? "")
+  )
+    throw new Error("private runtime manifest digest is invalid");
+  const stageBody = privateRuntimeBody(stageRuntime);
+  const productionBody = privateRuntimeBody(productionRuntime);
+  if (!stageBody || !productionBody)
+    throw new Error("both private runtime manifests are required for the production pair check");
+  if (stageRuntime.runtimeChannelContext?.channel !== "stage")
+    throw new Error("tested stage runtime does not identify as the stage channel");
+  if (productionRuntime.runtimeChannelContext?.channel !== "production")
+    throw new Error("production runtime does not identify as the production channel");
+  const stageBodyDigest = createHash("sha256").update(canonicalJson(stageBody)).digest("hex");
+  const productionBodyDigest = createHash("sha256")
+    .update(canonicalJson(productionBody))
+    .digest("hex");
+  if (stageBodyDigest !== productionBodyDigest)
+    throw new Error(
+      "production private runtime differs from the tested stage candidate beyond its runtime channel identity",
+    );
   return Object.freeze({
     ok: true,
     releaseId: production.release_id,
     privateSourceCommit: production.private_source_commit,
     privateDistributionSha256: production.private_distribution_sha256,
     extensionCount: production.track_b_runtime.extension_count,
+    privateRuntimeBodySha256: productionBodyDigest,
   });
 }
 
@@ -203,15 +254,55 @@ function cliArg(name) {
 if (import.meta.url === pathToFileURL(path.resolve(process.argv[1] ?? "")).href) {
   const productionManifestPath = cliArg("--verify-production-manifest");
   const operation = productionManifestPath
-    ? Promise.all([
-        readFile(path.resolve(cliArg("--stage-manifest") ?? ""), "utf8"),
-        readFile(path.resolve(productionManifestPath), "utf8"),
-      ]).then(([stage, production]) =>
-        validateRun88ProductionPromotion({
+    ? (async () => {
+        const stageManifestPath = path.resolve(cliArg("--stage-manifest") ?? "");
+        const resolvedProductionPath = path.resolve(productionManifestPath);
+        /**
+         * The private runtime manifest sits beside the release manifest in both packages (the
+         * release manifest only records its digest, and the digest cannot be compared across
+         * channels - see validateRun88ProductionPromotion).
+         */
+        const readRuntimeManifest = async (explicitPath, releaseManifestPath, side) => {
+          const runtimePath =
+            explicitPath ??
+            path.join(
+              path.dirname(releaseManifestPath),
+              "track-b-runtime",
+              "track-b-runtime-manifest.json",
+            );
+          let raw;
+          try {
+            raw = await readFile(runtimePath, "utf8");
+          } catch {
+            throw new Error(
+              `${side} private runtime manifest is missing beside its release manifest: ${runtimePath}`,
+            );
+          }
+          return JSON.parse(raw);
+        };
+        const [stage, production] = await Promise.all([
+          readFile(stageManifestPath, "utf8"),
+          readFile(resolvedProductionPath, "utf8"),
+        ]);
+        const [stageRuntime, productionRuntime] = await Promise.all([
+          readRuntimeManifest(
+            cliArg("--stage-runtime-manifest"),
+            stageManifestPath,
+            "tested stage",
+          ),
+          readRuntimeManifest(
+            cliArg("--production-runtime-manifest"),
+            resolvedProductionPath,
+            "production",
+          ),
+        ]);
+        return validateRun88ProductionPromotion({
           stage: JSON.parse(stage),
           production: JSON.parse(production),
-        }),
-      )
+          stageRuntime,
+          productionRuntime,
+        });
+      })()
     : (async () => {
         const manifestPath = path.resolve(cliArg("--manifest") ?? "");
         const manifest = JSON.parse(await readFile(manifestPath, "utf8"));

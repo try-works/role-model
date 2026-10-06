@@ -265,17 +265,29 @@ jobs:
           go version
           git --version
 
+      - name: Align the production checkout with the accepted stage revision
+        if: env.ROLE_MODEL_BUILD_CHANNEL == 'production'
+        shell: bash
+        env:
+          ACCEPTED_STAGE_SHA: ${{ steps.stage_candidate.outputs.stage_sha }}
+        run: |
+          # The stable gate proves the tagged tree and the accepted candidate tree are the same
+          # tree, so the production package may be assembled from either checkout - and it must be
+          # assembled from the candidate's own layout. The private distribution embeds the relative
+          # path of the public sources it was built against, and assembling it from
+          # .cache/paired-public made the production pair differ from the tested candidate by that
+          # label alone (measured while releasing v0.0.16: "../paired-public/packages/..." against
+          # the candidate's "../../packages/...").
+          if [[ ! "$ACCEPTED_STAGE_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "Accepted stage revision is not an exact commit."
+            exit 1
+          fi
+          candidate_tag="stage-rc-${ACCEPTED_STAGE_SHA:0:12}"
+          git fetch --no-tags origin "refs/tags/${candidate_tag}:refs/tags/${candidate_tag}"
+          git checkout --detach "$ACCEPTED_STAGE_SHA"
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
-      # Production Track B is deliberately built against the immutable public
-      # Stage checkout, not the main checkout.  Install its workspace links
-      # separately so esbuild can resolve the public runtime packages without
-      # changing the Stage-source provenance binding.
-      - name: Install exact accepted stage public dependencies
-        if: env.ROLE_MODEL_BUILD_CHANNEL == 'production'
-        working-directory: .cache/paired-public
-        run: corepack pnpm install --frozen-lockfile
 
       - name: Build UI
         run: pnpm --filter @role-model-router/runtime-ui run build
@@ -287,7 +299,6 @@ jobs:
       # can be assembled.
       - name: Build public runtime adapter dependencies
         if: env.ROLE_MODEL_BUILD_CHANNEL == 'stage' || env.ROLE_MODEL_BUILD_CHANNEL == 'production'
-        working-directory: ${{ env.ROLE_MODEL_BUILD_CHANNEL == 'production' && '.cache/paired-public' || '.' }}
         run: corepack pnpm --filter @role-model-router/profile-aggregator... build
 
       - name: Validate exact private release revision
@@ -337,7 +348,7 @@ jobs:
         if: env.ROLE_MODEL_BUILD_CHANNEL == 'stage' || env.ROLE_MODEL_BUILD_CHANNEL == 'production'
         working-directory: .cache/paired-private
         env:
-          ROLE_MODEL_PUBLIC_WORKTREE: ${{ env.ROLE_MODEL_BUILD_CHANNEL == 'production' && format('{0}/.cache/paired-public', github.workspace) || github.workspace }}
+          ROLE_MODEL_PUBLIC_WORKTREE: ${{ github.workspace }}
           NODE_OPTIONS: --conditions=runtime
         run: |
           corepack pnpm install --frozen-lockfile

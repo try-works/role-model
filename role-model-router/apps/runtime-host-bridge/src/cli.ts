@@ -33,6 +33,8 @@ import {
   readLearningPolicyFile,
   resolveLearningPolicyStateRoot,
 } from "./learning-policy-file.js";
+import { readRouteLearningDefaults } from "./product-defaults-file.js";
+import { readRouteLadderCensus } from "./route-ladder-census.js";
 import {
   CURRENT_RUNTIME_CHANNEL_VERSION,
   PREVIOUS_RUNTIME_CHANNEL_VERSION,
@@ -96,6 +98,7 @@ import {
 } from "./queue-runtime/index.js";
 import {
   autoReplayExecutionFromCommandReceipt,
+  decodeRouteLadderRow,
   evaluationHandoffRequestFromCommandReceipt,
   offerEvaluationHandoff,
   offerRecordedEvaluationHandoff,
@@ -3753,33 +3756,97 @@ export function startDurableRouteAdvisoryRefresh(options: {
     // S0/S1 never consult an advisory, so there is nothing to publish.
     if (stage !== "S2" && stage !== "S3" && stage !== "S4") return;
     const nowMs = Date.now();
-    const evidenceMaxAgeMs = (snapshot?.effective.evidenceMaxAgeDays ?? 30) * 24 * 60 * 60 * 1_000;
-    const advisory = await readTrackBRouteAdvisorySourceFromRuntime({
-      runtime: runtime as unknown as Parameters<
-        typeof readTrackBRouteAdvisorySourceFromRuntime
-      >[0]["runtime"],
-      channel: options.channel,
-      scope: options.scopeId,
-      stateRoot: options.runtimeStateRoot,
-      nowMs,
-      evidenceMaxAgeMs,
-      // Run 99 R33 D12: the scheduled revalidation interval is enforced by the advisory source.
-      revalidationIntervalMs:
-        (snapshot?.effective.revalidationIntervalDays ?? 7) * 24 * 60 * 60 * 1_000,
-      requestId: `route-advisory:${options.scopeId}:${nowMs}`,
-    });
-    rememberTrackBDurableRouteAdvisory({
-      channel: options.channel,
-      scope: options.scopeId,
-      advisory,
-      nowMs,
-    });
-    const published = `${advisory.advisoryState}\u0000${advisory.reason ?? ""}\u0000${advisory.preferredRoutePackage ?? ""}\u0000${advisory.confidence}\u0000${advisory.cohortPercent}`;
+    const evidenceMaxAgeMs = (snapshot?.effective.evidenceMaxAgeDays ?? 30) * 86400000;
+    const rows: unknown[] = [];
+    let cursor: { afterRoleId: string; afterTaskTypeId: string } | null = null;
+    const visited = new Set<string>();
+    let complete = false;
+    for (let page = 0; page < 10 && !stopped; page++) {
+      const value = { scopeId: options.scopeId, limit: 200, ...(cursor ?? {}) };
+      const listing = decodeExternalizedOperatorReadback({
+        stateRoot: options.runtimeStateRoot,
+        scopeId: options.scopeId,
+        value: unwrapCapabilityPayload(
+          await runtime.invoke("knowledge-store", {
+            requestId: `route-advisory-index:${options.scopeId}:${nowMs}:${page}`,
+            sessionId: `route-advisory:${options.scopeId}`,
+            protocolVersion: "1.1.0",
+            channel: options.channel,
+            scope: options.scopeId,
+            authorizationEpoch: 1,
+            capability: "knowledge:list-route-ladders",
+            value,
+            payload: value,
+          }),
+        ),
+      });
+      if (
+        !listing ||
+        typeof listing !== "object" ||
+        !Array.isArray((listing as { ladders?: unknown }).ladders)
+      )
+        throw new Error("route ladder index unavailable");
+      const index = listing as { ladders: unknown[]; truncated?: boolean; nextCursor?: unknown };
+      rows.push(...index.ladders);
+      if (index.nextCursor == null) {
+        if (
+          index.truncated === true ||
+          (index.truncated === undefined && index.ladders.length >= 200)
+        )
+          throw new Error("route ladder index incomplete");
+        complete = true;
+        break;
+      }
+      const next = index.nextCursor as { afterRoleId?: unknown; afterTaskTypeId?: unknown };
+      if (typeof next.afterRoleId !== "string" || typeof next.afterTaskTypeId !== "string")
+        throw new Error("route ladder index cursor invalid");
+      cursor = { afterRoleId: next.afterRoleId, afterTaskTypeId: next.afterTaskTypeId };
+      const key = JSON.stringify(cursor);
+      if (visited.has(key)) throw new Error("route ladder index cursor repeated");
+      visited.add(key);
+    }
+    if (!complete || rows.length > 2000)
+      throw new Error("route ladder index exceeds refresh budget");
+    for (const row of rows) {
+      if (stopped || !row || typeof row !== "object") continue;
+      const pair = row as { roleId?: unknown; taskTypeId?: unknown };
+      if (
+        typeof pair.roleId !== "string" ||
+        !pair.roleId.trim() ||
+        typeof pair.taskTypeId !== "string" ||
+        !pair.taskTypeId.trim()
+      )
+        continue;
+      const roleId = pair.roleId.trim();
+      const taskTypeId = pair.taskTypeId.trim();
+      const advisory = await readTrackBRouteAdvisorySourceFromRuntime({
+        runtime: runtime as unknown as Parameters<
+          typeof readTrackBRouteAdvisorySourceFromRuntime
+        >[0]["runtime"],
+        channel: options.channel,
+        scope: options.scopeId,
+        roleId,
+        taskTypeId,
+        stage,
+        policyCohortPercent: snapshot?.effective.cohortPercent ?? 0,
+        stateRoot: options.runtimeStateRoot,
+        nowMs,
+        evidenceMaxAgeMs,
+        revalidationIntervalMs: (snapshot?.effective.revalidationIntervalDays ?? 7) * 86400000,
+        requestId: `route-advisory:${options.scopeId}:${roleId}:${taskTypeId}:${nowMs}`,
+      });
+      rememberTrackBDurableRouteAdvisory({
+        channel: options.channel,
+        scope: options.scopeId,
+        roleId,
+        advisory,
+        nowMs,
+      });
+    }
+    const published = `scope=${options.scopeId} pairs=${rows.length} stage=${stage}`;
     if (published !== lastPublished) {
       lastPublished = published;
-      console.error(
-        `[run99] durable route advisory published: state=${advisory.advisoryState} reason=${advisory.reason ?? "none"} package=${advisory.preferredRoutePackage ?? "none"} confidence=${advisory.confidence} cohort=${advisory.cohortPercent} stage=${stage}`,
-      );
+      console.error(`[run105] durable task advisory refresh: ${published}`);
     }
   };
   const report = (error: unknown): void => {
@@ -3789,12 +3856,24 @@ export function startDurableRouteAdvisoryRefresh(options: {
       ).slice(0, 200)}`,
     );
   };
+  let refreshing = false;
+  const scheduleRefresh = async (): Promise<void> => {
+    if (stopped || refreshing) return;
+    refreshing = true;
+    try {
+      await refresh();
+    } catch (error) {
+      report(error);
+    } finally {
+      refreshing = false;
+    }
+  };
   const timer = setInterval(() => {
-    void refresh().catch(report);
+    void scheduleRefresh();
   }, options.intervalMs ?? 15_000);
   // A background refresh must never hold the process open.
   (timer as { unref?: () => void }).unref?.();
-  void refresh().catch(report);
+  void scheduleRefresh();
   return () => {
     stopped = true;
     clearInterval(timer);
@@ -5388,9 +5467,14 @@ export async function main(): Promise<void> {
         modelId: string;
         reasoningEffort: string | null;
       }[],
+      judgeResolver?: () => Promise<string | null>,
     ): ReturnType<typeof startAutoReplayLoop> | null => {
       const operations = postObservationOperations;
       const channel = packagedProfile?.channel ?? "development";
+      if (process.env.ROLE_MODEL_FOCUS_DIAG)
+        console.error(
+          `[replay-loop] start check: operations=${operations ? "wired" : "null"} channel=${channel} port=${options.port}`,
+        );
       if (!operations || channel === "production") return null;
       const port = options.port;
       if (!Number.isInteger(port) || port <= 0) return null;
@@ -5503,7 +5587,7 @@ export async function main(): Promise<void> {
         readonly extensionId: string;
         readonly capability: string;
         readonly value: Record<string, unknown>;
-        readonly evaluationAuthoritySecret: string;
+        readonly evaluationAuthoritySecret?: string;
         readonly scopeOverride?: string;
         readonly query?: Record<string, unknown>;
       }) => ({
@@ -5517,7 +5601,9 @@ export async function main(): Promise<void> {
         value: input.value,
         ...(input.query ? { query: input.query } : {}),
         ...(input.extensionId === "knowledge-store" ? { payload: input.value } : {}),
-        evaluationAuthoritySecret: input.evaluationAuthoritySecret,
+        ...(input.evaluationAuthoritySecret
+          ? { evaluationAuthoritySecret: input.evaluationAuthoritySecret }
+          : {}),
       });
       // RC07 (L2): the bounded expiration sweep goes straight through the extension
       // host the producer already uses for replay-core, because the operator boundary's
@@ -5870,8 +5956,14 @@ export async function main(): Promise<void> {
           };
           const groups = await readComparisonGroups();
           let consumed = 0;
-          /** Run 107 P6: validated packs this sweep put into the rollout (see the activation step below). */
-          let activated = 0;
+          /**
+           * Run 105 R9/D7: derived activation has no per-sweep activation step, so the counter stays
+           * at zero and is only kept because the sweep's answer shape (consumed/activated/remaining)
+           * is part of the bounded operations contract the queue plane and the run-107 readbacks
+           * assert. The legacy activate-pack MACHINERY remains untouched and reachable; only this
+           * sweep's call was removed.
+           */
+          const activated = 0;
           for (const candidate of pending.slice(0, 2)) {
             const candidateId = String(candidate.candidateId);
             const scorerSetVersion =
@@ -6215,65 +6307,23 @@ export async function main(): Promise<void> {
                    * validation receipt, and keys its receipt by the pack, scope, gate and receipt id, so a
                    * repeated sweep is idempotent rather than a second activation.
                    */
-                  const activationStage = (() => {
-                    try {
-                      // A damaged durable policy degrades to no stage, and no stage means no
-                      // activation - the sweep never invents an operator setting.
-                      return (
-                        readLearningPolicyFile({
-                          repoRoot: options.repoRoot,
-                          stateRoot: resolveLearningPolicyStateRoot({
-                            runtimeStateRoot: options.runtimeStateRoot,
-                            scopeId: options.scopeId,
-                          }),
-                          channel,
-                          scopeId: options.scopeId,
-                        })?.effective?.stage ?? null
-                      );
-                    } catch {
-                      return null;
-                    }
-                  })();
-                  if (activationStageAllowsPackActivation(activationStage)) {
-                    try {
-                      const activationAnswer = unwrapCapabilityPayload(
-                        await runtime.invoke(
-                          "knowledge-store",
-                          envelopeFor("knowledge-store", "knowledge:activate-pack", {
-                            scopeId: options.scopeId,
-                            packId,
-                            validationReceiptId: receiptId,
-                            channel,
-                            policyGateId: `gate:route-package-activation@${activationStage}`,
-                          }),
-                        ),
-                      );
-                      /**
-                       * P11: the store answers a bounded degradation receipt instead of throwing, so a
-                       * counter that only watched for exceptions reported activations that never reached
-                       * the rollout. The answer is read back and classified.
-                       */
-                      const activationVerdict = classifyPackActivationAnswer(
-                        activationAnswer,
-                        packId,
-                      );
-                      if (activationVerdict.activated) {
-                        activated += 1;
-                      } else {
-                        console.error(
-                          `[run107] learner sweep: pack ${packId.slice(0, 24)} was not activated: ${String(
-                            activationVerdict.reason ?? "no activation receipt",
-                          ).slice(0, 160)}`,
-                        );
-                      }
-                    } catch (error) {
-                      console.error(
-                        `[run107] learner sweep: pack ${packId.slice(0, 24)} recorded but not activated: ${String(
-                          (error as { message?: unknown })?.message ?? error,
-                        ).slice(0, 160)}`,
-                      );
-                    }
-                  }
+                  /**
+                   * Run 105 R9 / D7: derived activation is the ONLY routing authority, so the sweep
+                   * NO LONGER calls knowledge:activate-pack. An activation is now a property of the
+                   * evidence - the (role, task) ladder goes active the moment its admission floor is
+                   * met (K finalized effort-comparable comparisons at mean confidence >= the
+                   * product-defaults minimum) - and there is no mutable active-pack pointer left for
+                   * a sweep to write.
+                   *
+                   * Removing the CALL is not removing the MACHINERY: activatePack/rollbackPack, the
+                   * cohort ladder, the validation-receipt guard and the kill switch are untouched and
+                   * remain reachable for the legacy callers the run-98/run-107 suites assert.
+                   * activationStageAllowsPackActivation stays exported for the same reason - it is
+                   * asserted directly by run-107.
+                   *
+                   * Derived activation reads the ladder the worker already wrote, so this is a
+                   * deletion of a write, not a replacement with a different write.
+                   */
                 }
               }
             } catch (error) {
@@ -6311,6 +6361,54 @@ export async function main(): Promise<void> {
          * two groups per tick, idempotent, and it never dispatches a provider call or invents a trajectory.
          */
         async deriveLearnerCandidates(input: Record<string, unknown> = {}) {
+          /**
+           * Run 105 Phase 3.5 follow-up: the ladder materialization must NOT ride the legacy
+           * consumer-secret derivation path - a runtime whose durable-evaluation authority secret
+           * is missing would silently skip materialization even though the host's own authenticated
+           * operator operation can serve it. Materialization therefore runs FIRST, through the
+           * authenticated host op only (no runtime.invoke, no authority secret), so it proceeds even
+           * when every legacy derivation precondition below fails.
+           */
+          const materializeDerivedLadders = async () => {
+            try {
+              const defaultsSnapshot = readRouteLearningDefaults({
+                repoRoot: options.repoRoot,
+                channel,
+                stateRoot: resolveLearningPolicyStateRoot({
+                  runtimeStateRoot: options.runtimeStateRoot,
+                  scopeId: options.scopeId,
+                }),
+              }).routeLearning;
+              const materialized = await operations.materializeRouteLadders({
+                configuredEndpointIds: endpoints(),
+                defaults: defaultsSnapshot,
+              });
+              if (
+                materialized &&
+                typeof materialized === "object" &&
+                !Array.isArray(materialized)
+              ) {
+                const record = materialized as Record<string, unknown>;
+                const ladders = Array.isArray(record.ladders) ? record.ladders : [];
+                const written = ladders.filter((entry) => {
+                  return (
+                    Boolean(entry) &&
+                    typeof entry === "object" &&
+                    (entry as Record<string, unknown>).status === "written"
+                  );
+                }).length;
+                if (written > 0)
+                  console.error(`[run105] ladder materialization wrote ${written} ladder row(s)`);
+              }
+            } catch (materializationError) {
+              console.error(
+                `[run105] ladder materialization degraded: ${String(
+                  (materializationError as { message?: unknown })?.message ?? materializationError,
+                ).slice(0, 160)}`,
+              );
+            }
+          };
+          await materializeDerivedLadders();
           const runtime = extensionRuntimeRef.current;
           if (!runtime) return { examined: 0, derived: 0, pending: 0 };
           const authority = await (async () => {
@@ -7119,6 +7217,7 @@ export async function main(): Promise<void> {
           readonly captureRef: string;
           readonly endpointIds: readonly string[];
           readonly policySetDigest: string;
+          readonly dispatchRoundId?: string;
         }) =>
           queueRuntime?.dispatchQueue?.offer(job) ??
           Promise.resolve({ enqueued: false, reason: "queue_runtime_not_started" }),
@@ -7139,12 +7238,309 @@ export async function main(): Promise<void> {
           return learnerDeriveQueueRuntime?.dispatchQueue?.mode ?? "legacy";
         },
       };
+      /**
+       * Run 105 Phase 3.5 CLI-compile repair: the D providers below invoke knowledge-store through
+       * the extension runtime, and the learner sweep's own `envelopeFor` is NOT in scope here (it is
+       * declared inside the sweep closure, indent 10; this block is indent 6). This is the local
+       * envelope for the ladder reads, built to the same extension-envelope shape the runtime
+       * expects - the sweep helper is left untouched for its own callers.
+       */
+      const routeLadderEnvelopeFor = (capability: string, value: Record<string, unknown>) => ({
+        requestId: `route-ladder:${capability}:${Date.now()}`,
+        sessionId: `route-ladder:${options.scopeId}`,
+        protocolVersion: "1.1.0",
+        channel,
+        scope: options.scopeId,
+        authorizationEpoch: 1,
+        capability,
+        value,
+        payload: value,
+      });
       const loop = startAutoReplayLoop({
+        readPendingRouteDispatches: async (request) => {
+          const runtime = extensionRuntimeRef.current;
+          const operations = currentPostObservationOperations();
+          if (!runtime || !operations) return null;
+          try {
+            // Pending replay/queue inspection is read-only and invokes Replay Core only. Requiring
+            // the Evaluation Core authority here made a fresh runtime with no managed evaluation
+            // key return `null` before either authoritative pending plane was read.
+            const replayJobScope = resolveDurableReplayJobScope({
+              channel,
+              runtimeStateRoot: options.runtimeStateRoot,
+              scopeId: options.scopeId,
+            });
+            const { readPendingRouteDispatches } = await import("./route-challenge-evidence.js");
+            return await readPendingRouteDispatches({
+              request,
+              readCapture: async (requestId) => operations.readLocalRouteCapture({ requestId }),
+              readQueueJobs: async () =>
+                operations.readQueueJobs("replay.dispatch", { limit: "500" }),
+              readQueueJob: async (jobId) => operations.readQueueJob("replay.dispatch", jobId),
+              invoke: async (extensionId, capability, value) =>
+                decodeExternalizedOperatorReadback({
+                  stateRoot: options.runtimeStateRoot,
+                  scopeId: options.scopeId,
+                  value: unwrapCapabilityPayload(
+                    await runtime.invoke(
+                      extensionId,
+                      learnerSweepEnvelope({
+                        requestPrefix: "route-dispatch-pending",
+                        extensionId,
+                        capability,
+                        value,
+                        scopeOverride: replayJobScope,
+                      }),
+                    ),
+                  ),
+                }),
+            });
+          } catch {
+            return null;
+          }
+        },
+        readRouteReplayableCaptures: async (request) => {
+          const operations = currentPostObservationOperations();
+          if (!operations) return null;
+          try {
+            const { readRouteReplayableCaptures } = await import("./route-challenge-evidence.js");
+            return await readRouteReplayableCaptures({
+              runtimeStateRoot: options.runtimeStateRoot,
+              scopeId: options.scopeId,
+              channel,
+              request,
+              readCapture: async (requestId) => operations.readLocalRouteCapture({ requestId }),
+            });
+          } catch {
+            return null;
+          }
+        },
+        readFinalizedRouteChallenge: async (request) => {
+          const runtime = extensionRuntimeRef.current;
+          if (!runtime) return null;
+          try {
+            const authority = await resolveDurableEvaluationAuthority({
+              channel,
+              stateRoot: options.runtimeStateRoot,
+              scopeId: options.scopeId,
+            });
+            const replayJobScope = resolveDurableReplayJobScope({
+              channel,
+              runtimeStateRoot: options.runtimeStateRoot,
+              scopeId: options.scopeId,
+            });
+            const { readFinalizedRouteChallengeEvidence } = await import(
+              "./route-challenge-evidence.js"
+            );
+            return await readFinalizedRouteChallengeEvidence({
+              request,
+              invoke: async (extensionId, capability, value) =>
+                decodeExternalizedOperatorReadback({
+                  stateRoot: options.runtimeStateRoot,
+                  scopeId: options.scopeId,
+                  value: unwrapCapabilityPayload(
+                    await runtime.invoke(
+                      extensionId,
+                      learnerSweepEnvelope({
+                        requestPrefix: "route-challenge-evidence",
+                        extensionId,
+                        capability,
+                        value,
+                        scopeOverride: extensionId === "replay-core" ? replayJobScope : undefined,
+                        evaluationAuthoritySecret: authority.authoritySecret,
+                      }),
+                    ),
+                  ),
+                }),
+            });
+          } catch {
+            return null;
+          }
+        },
+        readRouteDispatchEvidence: async (request) => {
+          const runtime = extensionRuntimeRef.current;
+          if (!runtime) {
+            console.error(
+              `[route-evidence-binding] no runtime; request=${request?.roleId}/${request?.taskTypeId}/${request?.endpointId}`,
+            );
+            return null;
+          }
+          try {
+            const authority = await resolveDurableEvaluationAuthority({
+              channel,
+              stateRoot: options.runtimeStateRoot,
+              scopeId: options.scopeId,
+            });
+            const replayJobScope = resolveDurableReplayJobScope({
+              channel,
+              runtimeStateRoot: options.runtimeStateRoot,
+              scopeId: options.scopeId,
+            });
+            const { readRouteDispatchEvidence } = await import("./route-challenge-evidence.js");
+            return await readRouteDispatchEvidence({
+              request,
+              invoke: async (extensionId, capability, value) =>
+                decodeExternalizedOperatorReadback({
+                  stateRoot: options.runtimeStateRoot,
+                  scopeId: options.scopeId,
+                  value: unwrapCapabilityPayload(
+                    await runtime.invoke(
+                      extensionId,
+                      learnerSweepEnvelope({
+                        requestPrefix: "route-challenge-evidence",
+                        extensionId,
+                        capability,
+                        value,
+                        scopeOverride: extensionId === "replay-core" ? replayJobScope : undefined,
+                        evaluationAuthoritySecret: authority.authoritySecret,
+                      }),
+                    ),
+                  ),
+                }),
+            });
+          } catch (cause) {
+            console.error(
+              `[route-evidence-binding] failed: ${cause instanceof Error ? cause.message : String(cause)}`,
+            );
+            return null;
+          }
+        },
         operations: sweepOperations,
         ledger,
         policySet,
         configuredEndpointIds: endpoints,
         healthyEndpointIds: healthyEndpoints,
+        /**
+         * Run 105 R8/R9/R11: the ladder providers the depth-first dispatcher consumes. Each is a
+         * provider (not a snapshot) so an endpoint added - or a rollback flipped - while the runtime
+         * is up takes effect on the next tick, exactly like configuredEndpointIds above.
+         */
+        routeLearningDefaults: (() => {
+          try {
+            return readRouteLearningDefaults({
+              repoRoot: options.repoRoot,
+              channel,
+              stateRoot: resolveLearningPolicyStateRoot({
+                runtimeStateRoot: options.runtimeStateRoot,
+                scopeId: options.scopeId,
+              }),
+            }).routeLearning;
+          } catch {
+            return null;
+          }
+        })(),
+        routeFocusCandidates: async () => {
+          const runtime = extensionRuntimeRef.current;
+          if (!runtime) return null;
+          try {
+            const rows: unknown[] = [];
+            let cursor: string | undefined;
+            const cursors = new Set<string>();
+            for (let page = 0; page < 10; page++) {
+              const index = unwrapCapabilityPayload(
+                await runtime.invoke(
+                  "knowledge-store",
+                  routeLadderEnvelopeFor("knowledge:list-route-ladders", {
+                    scopeId: options.scopeId,
+                    limit: 200,
+                    ...(cursor ? { cursor } : {}),
+                  }),
+                ),
+              );
+              if (!index || typeof index !== "object" || Array.isArray(index))
+                throw new Error("ladder index unavailable");
+              const record = index as Record<string, unknown>;
+              if (!Array.isArray(record.ladders)) throw new Error("ladder index unavailable");
+              rows.push(...record.ladders);
+              const nextCursor = record.nextCursor;
+              // Older knowledge-store lists have no continuation metadata. A full page
+              // cannot prove absence of omitted rollback rows, so refuse that census.
+              if (nextCursor == null) {
+                if (record.ladders.length >= 200) throw new Error("ladder index bounded limit");
+                break;
+              }
+              if (
+                typeof nextCursor !== "string" ||
+                !nextCursor ||
+                cursors.has(nextCursor) ||
+                page === 9
+              )
+                throw new Error("ladder index bounded limit");
+              cursors.add(nextCursor);
+              cursor = nextCursor;
+            }
+            const defaults = readRouteLearningDefaults({
+              repoRoot: options.repoRoot,
+              channel,
+              stateRoot: resolveLearningPolicyStateRoot({
+                runtimeStateRoot: options.runtimeStateRoot,
+                scopeId: options.scopeId,
+              }),
+            }).routeLearning;
+            const census = readRouteLadderCensus({
+              runtimeStateRoot: options.runtimeStateRoot,
+              scopeId: options.scopeId,
+              nowMs: Date.now(),
+              stalenessWindowDays: defaults.stalenessWindowDays,
+              configuredEndpointIds: endpoints(),
+              ladderRows: rows,
+            });
+            if (census.status === "degraded") {
+              console.error(`[run105] route census degraded:${census.reason}`);
+              return null;
+            }
+            return census.candidates;
+          } catch {
+            console.error("[run105] route census degraded:ladder_unavailable");
+            return null;
+          }
+        },
+        readRouteLadder: async ({ roleId, taskTypeId }) => {
+          const runtime = extensionRuntimeRef.current;
+          if (!runtime) return null;
+          try {
+            const read = unwrapCapabilityPayload(
+              await runtime.invoke(
+                "knowledge-store",
+                routeLadderEnvelopeFor("knowledge:read-route-ladder", {
+                  scopeId: options.scopeId,
+                  roleId,
+                  taskTypeId,
+                }),
+              ),
+            );
+            const ladder =
+              read && typeof read === "object" && !Array.isArray(read)
+                ? ((read as Record<string, unknown>).ladder ?? null)
+                : null;
+            return decodeRouteLadderRow(ladder);
+          } catch {
+            return null;
+          }
+        },
+        markRouteLadderEligible: async ({ roleId, taskTypeId, nextEligibleAtMs }) => {
+          const runtime = extensionRuntimeRef.current;
+          if (!runtime) return { marked: false };
+          try {
+            return unwrapCapabilityPayload(
+              await runtime.invoke(
+                "knowledge-store",
+                routeLadderEnvelopeFor("knowledge:mark-ladder-eligible", {
+                  roleId,
+                  taskTypeId,
+                  nextEligibleAtMs,
+                }),
+              ),
+            );
+          } catch {
+            return { marked: false };
+          }
+        },
+        reportUnclassifiedCaptures: ({ count }) => {
+          console.error(
+            `[run105] ${count} capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory`,
+          );
+        },
         // Run 101 R4: the replay plane's queue, whose mode comes from the
         // operator's policy document rather than from this composition.
         dispatchQueue: lateBoundDispatchQueue,
@@ -7164,9 +7560,15 @@ export async function main(): Promise<void> {
         // Run 98 addendum 56 §6: the configured controller is the judge (addendum 45), so it must never be
         // planned as a counterfactual arm; resolved per tick so a controller change takes effect immediately.
         resolveJudgeEndpointId: async () => {
-          // The auto-replay starter is handed the narrow bridge options type, while the object it receives at
-          // runtime is the full server composition (which binds `readControllerAssignment`). Reading it
-          // defensively keeps a runtime without the binding on the previous behaviour instead of failing.
+          if (judgeResolver) {
+            const wiredJudge = await judgeResolver().catch(() => null);
+            if (wiredJudge && wiredJudge.length > 0) return wiredJudge;
+          }
+          // Run 105 bug 3: the auto-replay starter is handed the narrow bridge options type, while the object
+          // it receives at runtime is the full server composition (which binds `readControllerAssignment`). Reading
+          // it defensively keeps a runtime without the binding on the previous behaviour instead of failing. The
+          // wired resolution is passed in explicitly (see the `judgeResolver` argument at the call site) because
+          // that binding is not reachable from this scope.
           const readControllerAssignment = (
             options as { readControllerAssignment?: () => Promise<unknown> }
           ).readControllerAssignment;
@@ -7196,7 +7598,7 @@ export async function main(): Promise<void> {
           }
           return null;
         },
-        executor: async ({ capture, candidates, reservationId, signal }) => {
+        executor: async ({ capture, candidates, reservationId, signal, dispatchRoundId }) => {
           const sourceCapture = (await operations.readLocalRouteCapture({
             requestId: capture.captureRef,
           })) as Record<string, unknown> | null;
@@ -7254,6 +7656,7 @@ export async function main(): Promise<void> {
             idempotencyKey: buildAutoReplayIdempotencyKey({
               captureRef: capture.captureRef,
               policySetDigest: policySet.policySetDigest,
+              ...(dispatchRoundId ? { dispatchRoundId } : {}),
               candidateEndpointIds: candidates,
               // S12: the key covers the job contract its budget mints, so a contract revision cannot collide
               // with a job created under the previous one.
@@ -7455,7 +7858,7 @@ export async function main(): Promise<void> {
         stateRoot: queueStateRoot,
         shippedRoot: options.repoRoot,
         handler: async (job) => {
-          await loop.dispatchCapture(job.captureRef);
+          await loop.dispatchCapture(job.captureRef, job.dispatchRoundId);
         },
         onAttemptFailure: (error, job) => {
           console.error(
@@ -7962,14 +8365,27 @@ export async function main(): Promise<void> {
             // Run 98 addendum 33 S3: rotate the counterfactual per request so the comparison graph gains
             // edges across captures rather than repeating one pair (the live store's 465-of-465 star).
             rotationKey: requestId,
-            // Run 98 addendum 30 S1/S2 (`guidance/11` `judgePolicy.excludeFromLiveEvaluation`): the
-            // judge is a designated client and is never offered as a scored candidate, so a battle
-            // cannot contain the endpoint that judges it.
-            ...(evalJudgeEndpointId ? { excludedEndpointIds: [evalJudgeEndpointId] } : {}),
+            // Run 105 bug 3: the configured judge may also be a candidate endpoint, so it is NOT excluded
+            // here. When a challenger equals the judge, the evaluation de-conflicts (dedupeJudgeAgainstPair
+            // picks an alternative judge), so the controller endpoint can still be admitted as a challenger.
             requirements: replayRequestRequirements,
             endpointProfiles: replayEndpointProfiles,
             onRejected: (rejection) => replayCandidateRejections.push(rejection),
           });
+          if (process.env.ROLE_MODEL_FOCUS_DIAG) {
+            console.error(
+              `[supervised-cand] source=${capturedSourceEndpointId ? capturedSourceEndpointId.split(".").pop() : null} judge=${evalJudgeEndpointId ? evalJudgeEndpointId.split(".").pop() : null} candidates=${candidateEndpointIds.map((c) => c.split(".").pop()).join(",")} reqMod=${JSON.stringify(replayRequestRequirements.requiredModalities)} reqCap=${JSON.stringify(replayRequestRequirements.requiredCapabilities)} profiles=${replayEndpointProfiles
+                .map(
+                  (p) =>
+                    `${p.endpointId.split(".").pop()}:[${(p.modalities || []).join(",")}][${(p.capabilities || []).join(",")}]`,
+                )
+                .join(
+                  "|",
+                )} selected=${distinctReplayCandidates.map((c) => c.split(".").pop()).join(",")} rejected=${replayCandidateRejections
+                .map((r) => `${r.endpointId.split(".").pop()}:${r.code}`)
+                .join(",")}`,
+            );
+          }
           const replayPolicySet = buildReplayPolicySet();
           const replayLedger = createReplayLedger({
             filePath: path.join(
@@ -8090,6 +8506,8 @@ export async function main(): Promise<void> {
             configuredEndpoints: configuredReplayArms,
             sourceModelId: replaySourceModelId,
             sourceReasoningEffort: replaySourceReasoningEffort,
+            sourceEndpointId:
+              typeof sourceCapture.endpointId === "string" ? sourceCapture.endpointId : null,
           });
           const replayArmPlan = planReplayDispatchArms({
             requestedEndpointIds: effortMatchedReplayArms.map((arm) => arm.endpointId),
@@ -8149,12 +8567,16 @@ export async function main(): Promise<void> {
               "supervised replay source capture lacks independently observable output identity",
             );
           }
+          if (process.env.ROLE_MODEL_FOCUS_DIAG) {
+            console.error(
+              `[source-diag] requestId=${requestId.slice(0, 16)} endpointId=${sourceCapture.endpointId || null} sourceEndpointId=${sourceCapture.sourceEndpointId || null} capturedSource=${capturedSourceEndpointId || null} judge=${evalJudgeEndpointId || null} candidates=${candidatePackages.map((c) => c.endpointId.split(".").pop()).join(",")}`,
+            );
+          }
+          // Run 105 bug 3: the configured judge may also be a candidate endpoint, so it is NOT excluded
+          // here. Only the source is filtered; a challenger that equals the judge is de-conflicted at the
+          // evaluation (dedupeJudgeAgainstPair picks an alternative judge).
           const counterfactualPackages = candidatePackages.filter(
-            (candidate) =>
-              candidate.endpointId !== sourceEndpointId &&
-              // Run 98 addendum 30 S2: the designated judge is never a scored candidate, whatever
-              // the dispatch list said.
-              (!evalJudgeEndpointId || candidate.endpointId !== evalJudgeEndpointId),
+            (candidate) => candidate.endpointId !== sourceEndpointId,
           );
           if (counterfactualPackages.length === 0) {
             throw new Error(
@@ -9305,7 +9727,7 @@ export async function main(): Promise<void> {
           };
         }
         const channel = packagedProfile?.channel ?? "development";
-        return resumePendingSupervisedReplayEvaluations({
+        const sweepResult = await resumePendingSupervisedReplayEvaluations({
           store: scope?.onlyReplayJobId
             ? scopeResumeStoreToReplayJob(evaluationResumeStore, scope.onlyReplayJobId)
             : evaluationResumeStore,
@@ -9952,6 +10374,7 @@ export async function main(): Promise<void> {
             }
           },
         });
+        return sweepResult;
       };
       resumeEvaluationsRef.current = resumePendingEvaluations;
       /**
@@ -10293,6 +10716,26 @@ export async function main(): Promise<void> {
                 ? String((endpoint as { reasoningEffort?: unknown }).reasoningEffort)
                 : null,
           })),
+        // Run 105 bug 3: pass the wired judge resolution down so the dispatcher's focus planner excludes the
+        // SAME controller judge the supervised replay endpoint will reject (deepseek-flash), instead of
+        // returning null from the empty durable table and planning the judge as a counterfactual arm.
+        async () => {
+          try {
+            const snapshot = readLearningPolicyFile({
+              repoRoot: options.repoRoot,
+              stateRoot: resolveLearningPolicyStateRoot({
+                runtimeStateRoot: options.runtimeStateRoot,
+                scopeId: options.scopeId,
+              }),
+              channel: packagedProfile?.channel ?? "development",
+              scopeId: options.scopeId,
+            });
+            const judge = await resolveControllerJudge(created, snapshot);
+            return judge.endpointId || null;
+          } catch {
+            return null;
+          }
+        },
       );
       configuredEndpointIdsRef.current = created.effectiveRegistry.endpoints.map(
         (endpoint) => endpoint.identity.endpoint_id,

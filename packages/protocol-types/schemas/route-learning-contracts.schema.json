@@ -23,6 +23,9 @@
     },
     {
       "$ref": "#/$defs/activationReceipt"
+    },
+    {
+      "$ref": "#/$defs/routeLadderPack"
     }
   ],
   "$defs": {
@@ -69,6 +72,9 @@
           "$ref": "#/$defs/id"
         },
         "promptAdapterId": {
+          "$ref": "#/$defs/id"
+        },
+        "taxonomyVersion": {
           "$ref": "#/$defs/id"
         }
       }
@@ -749,6 +755,119 @@
           }
         }
       ]
+    },
+    "routeLadderPack": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "packId",
+        "version",
+        "scopeId",
+        "roleId",
+        "taskTypeId",
+        "rungs",
+        "completeness",
+        "rolledBack",
+        "runtimeChannel",
+        "boundaryProtocolVersion"
+      ],
+      "properties": {
+        "contract": {
+          "const": "RouteLadderPackV1"
+        },
+        "packId": {
+          "$ref": "#/$defs/id"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "scopeId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "roleId": {
+          "$ref": "#/$defs/id"
+        },
+        "taskTypeId": {
+          "$ref": "#/$defs/id"
+        },
+        "taxonomyVersion": {
+          "$ref": "#/$defs/id"
+        },
+        "rungs": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/routeLadderRung"
+          }
+        },
+        "completeness": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["admitted", "configured"],
+          "properties": {
+            "admitted": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "configured": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "nextEligibleAtMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rolledBack": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["on"],
+          "properties": {
+            "on": {
+              "type": "boolean"
+            },
+            "reason": {
+              "type": ["string", "null"],
+              "maxLength": 256
+            },
+            "atMs": {
+              "type": ["integer", "null"],
+              "minimum": 0
+            }
+          }
+        },
+        "lifecycleState": {
+          "enum": ["no_ladder", "partial", "complete", "rolled_back"]
+        },
+        "runtimeChannel": {
+          "enum": ["production", "stage", "development"]
+        },
+        "boundaryProtocolVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+$"
+        }
+      }
+    },
+    "routeLadderRung": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["endpointId", "rank", "status"],
+      "properties": {
+        "endpointId": {
+          "$ref": "#/$defs/id"
+        },
+        "rank": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "status": {
+          "enum": ["available", "unavailable"]
+        }
+      }
     }
   }
 }

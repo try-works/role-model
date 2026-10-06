@@ -1,0 +1,70 @@
+npm warn Unknown env config "manage-package-manager-versions". This will stop working in the next major version of npm.
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/run105-r08-idle-refresh-and-challenge.test.ts (4 tests | 4 failed) 17ms
+   × run105 R8 idle refresh and challenge > the challenge walks the leader first and then the next rung, one comparison per rung 9ms
+     → (0 , planChallenge) is not a function
+   × run105 R8 idle refresh and challenge > challengeBatchSize bounds how many sequential comparisons one dispatch may run 1ms
+     → (0 , planChallenge) is not a function
+   × run105 R8 idle refresh and challenge > a user-removed rung is not challenged (status unavailable is skipped) 1ms
+     → (0 , planChallenge) is not a function
+   × run105 R8 idle refresh and challenge > a ladder holding only the new endpoint has nothing to challenge 1ms
+     → (0 , planChallenge) is not a function
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run105-r08-idle-refresh-and-challenge.test.ts > run105 R8 idle refresh and challenge > the challenge walks the leader first and then the next rung, one comparison per rung
+TypeError: (0 , planChallenge) is not a function
+ ❯ test/run105-r08-idle-refresh-and-challenge.test.ts:16:21
+     14| describe("run105 R8 idle refresh and challenge", () => {
+     15|   test("the challenge walks the leader first and then the next rung, o…
+     16|     const planned = planChallenge({
+       |                     ^
+     17|       newEndpointId: "endpoint:new",
+     18|       rungs: [rung("endpoint:leader", 1), rung("endpoint:second", 2), …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  test/run105-r08-idle-refresh-and-challenge.test.ts > run105 R8 idle refresh and challenge > challengeBatchSize bounds how many sequential comparisons one dispatch may run
+TypeError: (0 , planChallenge) is not a function
+ ❯ test/run105-r08-idle-refresh-and-challenge.test.ts:30:12
+     28|   test("challengeBatchSize bounds how many sequential comparisons one …
+     29|     const input = { newEndpointId: "endpoint:new", rungs: [rung("a", 1…
+     30|     expect(planChallenge({ ...input, challengeBatchSize: 1 })).toHaveL…
+       |            ^
+     31|     expect(planChallenge({ ...input, challengeBatchSize: 2 })).toHaveL…
+     32|     expect(planChallenge({ ...input, challengeBatchSize: 0 })).toEqual…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  test/run105-r08-idle-refresh-and-challenge.test.ts > run105 R8 idle refresh and challenge > a user-removed rung is not challenged (status unavailable is skipped)
+TypeError: (0 , planChallenge) is not a function
+ ❯ test/run105-r08-idle-refresh-and-challenge.test.ts:38:7
+     36|   test("a user-removed rung is not challenged (status unavailable is s…
+     37|     expect(
+     38|       planChallenge({
+       |       ^
+     39|         newEndpointId: "endpoint:new",
+     40|         rungs: [rung("a", 1, "unavailable"), rung("b", 2)],
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  test/run105-r08-idle-refresh-and-challenge.test.ts > run105 R8 idle refresh and challenge > a ladder holding only the new endpoint has nothing to challenge
+TypeError: (0 , planChallenge) is not a function
+ ❯ test/run105-r08-idle-refresh-and-challenge.test.ts:47:12
+     45| 
+     46|   test("a ladder holding only the new endpoint has nothing to challeng…
+     47|     expect(planChallenge({ newEndpointId: "a", rungs: [rung("a", 1)], …
+       |            ^
+     48|   });
+     49| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed (4)
+   Start at  13:43:39
+   Duration  10.33s (transform 5.10s, setup 0ms, collect 9.28s, tests 17ms, environment 1ms, prepare 404ms)
+

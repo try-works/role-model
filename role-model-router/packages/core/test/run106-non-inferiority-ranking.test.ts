@@ -3,7 +3,10 @@ import { describe, expect, test } from "vitest";
 import { routeRequest } from "../src/router.js";
 import type { EndpointCandidate, RouteRequestInput, RoutingRequest } from "../src/types.js";
 
-function candidate(endpointId: string, overrides: Partial<EndpointCandidate> = {}): EndpointCandidate {
+function candidate(
+  endpointId: string,
+  overrides: Partial<EndpointCandidate> = {},
+): EndpointCandidate {
   return {
     identity: {
       endpoint_id: endpointId,

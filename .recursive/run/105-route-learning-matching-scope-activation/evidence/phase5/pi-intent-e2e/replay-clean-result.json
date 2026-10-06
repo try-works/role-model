@@ -1,0 +1,4 @@
+{
+  "status": 200,
+  "body": "{\"schemaVersion\":\"role-model.supervised-replay-command-receipt.v1\",\"requestId\":\"req-07497f2e-bfe2-4faf-9271-5f06cbab19ac\",\"replayJobId\":\"b0ae0a081de3a420eccc4caf7dffe71b4f93eeb6cf87b3a0d2490431c09fa4d3\",\"state\":\"complete\",\"evaluationJobId\":\"evaluation-replay-47c1f9a49f6a108feb15\",\"evaluationOutcome\":\"tie\",\"comparisonGroupId\":\"comparison:supervised-replay:00d78232ec56f8914bf5ced58a8cd764b8796a8f118219c31ed15ba6d0344834\",\"branches\":[{\"candidateEndpointId\":\"deepseek.personal.deepseek-api-key.global.deepseek-v4-pro\",\"outcome\":\"complete\",\"branchRootRef\":\"1fda17d29c6bba47c8c43bb176ceddb5ae055eee46519a548f30becebf077be4\"}],\"dispatches\":[{\"kind\":\"candidate\",\"endpointId\":\"deepseek.personal.deepseek-api-key.global.deepseek-v4-pro\",\"attempt\":1,\"costMicros\":0,\"bytes\":0,\"outcome\":\"complete\"}]}\n"
+}

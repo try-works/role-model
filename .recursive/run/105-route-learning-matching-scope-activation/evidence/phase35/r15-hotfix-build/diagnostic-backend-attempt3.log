@@ -1,0 +1,12 @@
+(node:15024) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+file:///D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/.recursive/run/105-route-learning-matching-scope-activation/evidence/phase35/r15-hotfix-build/diagnostic-backend.mjs:100864
+      throw new Error(`Endpoint effort slot ${expectedEndpointId} is already active.`);
+            ^
+
+Error: Endpoint effort slot deepseek.personal.r15-diagnostic.global.deepseek-v4-pro is already active.
+    at admitRuntimeEndpoint (file:///D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/.recursive/run/105-route-learning-matching-scope-activation/evidence/phase35/r15-hotfix-build/diagnostic-backend.mjs:100864:13)
+    at file:///D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/.recursive/run/105-route-learning-matching-scope-activation/evidence/phase35/r15-hotfix-build/diagnostic-backend.mjs:108284:31
+    at withUnifiedConfigMutationLock (file:///D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/.recursive/run/105-route-learning-matching-scope-activation/evidence/phase35/r15-hotfix-build/diagnostic-backend.mjs:98881:20)
+
+Node.js v24.11.0

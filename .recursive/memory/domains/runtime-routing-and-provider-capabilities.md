@@ -344,3 +344,22 @@ one in the Track B spine.
   `<agent dir>/models.json`; `ROLE_MODEL_ENDPOINT` does not redirect it. Use a run-private
   `PI_CODING_AGENT_DIR` (copy the models store, settings and installed `npm` tree, and rewrite the package paths
   to absolute) to avoid touching the operator's `D:\pi\agent`.
+## Run 105 matching-scope activation and classification alignment
+
+Run `105-route-learning-matching-scope-activation` (2026-10-04) shipped stage-3 matching-scope activation and fixed a
+classification divergence in the routing domain.
+
+- **A pack is a per-(role, task) ranked endpoint ladder** (exact match only), materialized from pairwise comparisons,
+  walked advisory-only top-down, with derived floor-based activation and per-task rollback. Scope-wide packs are not
+  consulted.
+- **The telemetry taxonomy and the capture/advisory classification can diverge if they read different plan fields.**
+  Telemetry = extractTaxonomyFields(deriveTaxonomyClassification(...).normalizedIntent); capture = buildRequestClassificationForPlan(plan).
+  deriveTaxonomyClassification returns taskTypeId and normalizedIntent.task.id as IDENTICAL values, so the divergence
+  is entirely in buildRequestClassificationForPlan reading the wrong field: plan.routingRequest.taskType / requestedRoleId
+  are runtime-policy ids, not taxonomy ids. Fix (public d797a185, tree 5da40073): resolve from the authoritative
+  plan.taxonomyIdentity (declared-wins, else resolved identity) with the role gated on a genuine task so the
+  text.chat/writer defaults do not leak. Behavioural tests replace the source-assertion; full host suite 2250/5-skip;
+  live pi request classifies coder|coder.edit and lastUnclassifiedCaptures drops to 0.
+- **The two classification builders have different contracts:** buildBridgeTaxonomyIdentity is TOTAL (never null,
+  defaults to writer/text.chat); buildRequestClassification is PARTIAL (null when unclassified). Align capture/advisory
+  to the resolved identity, never to the raw runtime-policy plan fields.

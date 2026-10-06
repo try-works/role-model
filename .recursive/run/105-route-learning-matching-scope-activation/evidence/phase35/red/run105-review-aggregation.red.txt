@@ -1,0 +1,89 @@
+(node:40320) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ REV-A1: a genuinely finalized group folds via members[].confidence and winnerTrialId (310.7688ms)
+✔ REV-A2: the WINNING member confidence is used, never the loser's (1.9952ms)
+✔ REV-A3: all-tie endpoints still rank (3.111ms)
+✔ REV-A4: head-to-head net is oriented by the CANONICAL pair, not by arm order (2.0557ms)
+✔ REV-A5: h2h only breaks a PRIMARY-SCORE tie (net is evaluated within tie groups) (3.36ms)
+✔ REV-A6: duplicate group ids are counted once (0.9309ms)
+✔ REV-A7: weightedCount is a confidence-WEIGHTED count, not a plain tally (1.0631ms)
+✔ REV-A8: every permutation folds to the identical ladder (22.4399ms)
+✔ REV-A9: the comparator is transitive and cycle-free (2.4368ms)
+✔ REV-A10: the admission floor reads each endpoint's OWN member confidence (1.8939ms)
+✔ REV-A11: projection keeps the fail-closed exclusions on the authentic shape (0.7027ms)
+✖ REV-A12: a member with NO own confidence is never admitted by borrowing the record's winner confidence (3.2232ms)
+✖ REV-A13: a decisive winner missing its own member confidence cannot borrow the other member's mean (1.9288ms)
+✔ REV-A14: a flat record with NO members keeps its explicit top-level confidence (1.0984ms)
+✖ REV-A15: an effort entry with an unknown comparability value is excluded, not treated as clean (0.9575ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 12
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 932.6355
+
+✖ failing tests:
+
+test at tests\track-b\run105-review-aggregation.test.mjs:388:1
+✖ REV-A12: a member with NO own confidence is never admitted by borrowing the record's winner confidence (3.2232ms)
+  AssertionError [ERR_ASSERTION]: b without own confidence must not borrow the winner's 0.9
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/105-route-learning-matching-scope-activation/tests/track-b/run105-review-aggregation.test.mjs:399:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests\track-b\run105-review-aggregation.test.mjs:403:1
+✖ REV-A13: a decisive winner missing its own member confidence cannot borrow the other member's mean (1.9288ms)
+  AssertionError [ERR_ASSERTION]: no own confidence -> weight 0, not the loser's 0.95
+  
+  0.875 !== 0
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/105-route-learning-matching-scope-activation/tests/track-b/run105-review-aggregation.test.mjs:410:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 0.875,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\track-b\run105-review-aggregation.test.mjs:435:1
+✖ REV-A15: an effort entry with an unknown comparability value is excluded, not treated as clean (0.9575ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + undefined
+  - true
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/105-route-learning-matching-scope-activation/tests/track-b/run105-review-aggregation.test.mjs:439:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

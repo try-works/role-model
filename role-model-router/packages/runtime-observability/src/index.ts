@@ -571,7 +571,10 @@ export interface RuntimeObservationBundle {
   readonly retrievalReceipt: RuntimeRetrievalReceipt;
   readonly contextEnvelope: RuntimeContextEnvelopeSummary;
   readonly trace: RoutedExecutionResult["trace"];
-  readonly usageEvent: Omit<RoutedExecutionResult["usageEvent"], "reasoning_effort" | "effort_source"> & {
+  readonly usageEvent: Omit<
+    RoutedExecutionResult["usageEvent"],
+    "reasoning_effort" | "effort_source"
+  > & {
     readonly reasoning_effort: string | null;
     readonly effort_source: RuntimeEffortSource;
   };

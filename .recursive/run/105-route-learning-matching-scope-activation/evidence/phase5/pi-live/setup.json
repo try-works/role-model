@@ -1,0 +1,56 @@
+{
+  "capturedAt": "2026-10-03T13:40:03.516Z",
+  "base": "http://127.0.0.1:3458",
+  "accountRequest": {
+    "providerAccountId": "run105.mock.pi-live",
+    "providerId": "run105-mock",
+    "providerKind": "provider-openai",
+    "orgScope": "personal",
+    "accountScope": "run105-pi-live",
+    "credentialRef": {
+      "backend": "local-file",
+      "ref": "<redacted-local-credential-ref>"
+    },
+    "authMode": "api-key-static",
+    "baseUrlOverride": "http://127.0.0.1:3465/v1",
+    "regionPolicy": {
+      "mode": "prefer",
+      "regions": [
+        "local"
+      ]
+    },
+    "allowedModels": [
+      "run105-mock/pi-live-marker"
+    ],
+    "modelRoleBindings": [
+      {
+        "modelId": "run105-mock/pi-live-marker",
+        "roleIds": [
+          "coder",
+          "writer"
+        ],
+        "roleAssignmentMode": "include",
+        "enabledRoleIds": [],
+        "disabledRoleIds": []
+      }
+    ],
+    "deniedModels": [],
+    "entitlementTags": [
+      "chat"
+    ],
+    "budgetPolicyRef": "budget.run105-pi-live",
+    "quotaPolicyRef": "quota.run105-pi-live",
+    "status": "active",
+    "healthStatus": "healthy",
+    "rotationState": "stable"
+  },
+  "accountResponse": {
+    "status": 400,
+    "body": {
+      "error": "Provider run105-mock is not present in the normalized catalog."
+    }
+  },
+  "endpointResponse": null,
+  "configResponse": null,
+  "endpointInventory": null
+}

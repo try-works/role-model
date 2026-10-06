@@ -4,7 +4,11 @@ import { computeEffortUnionAndIntersection } from "../src/router.js";
 describe("run106 effort union and portable intersection", () => {
   it("computes union and portable intersection across models", () => {
     const r = computeEffortUnionAndIntersection({
-      modelEfforts: [["low", "high", "max"], ["high", "max"], ["low", "high"]],
+      modelEfforts: [
+        ["low", "high", "max"],
+        ["high", "max"],
+        ["low", "high"],
+      ],
     });
     expect([...r.union].sort()).toEqual(["high", "low", "max"]);
     expect([...r.portableIntersection].sort()).toEqual(["high"]);

@@ -1,0 +1,1385 @@
+# learning-route-extended RED (run 105 package E)
+# command: corepack pnpm --filter @role-model-router/runtime-ui exec vitest run app/routes/learning.test.tsx
+# exit: 1
+
+}`}>
++           {`outcome ${evidence.outcome ?? NOT_REPORTED}`}
++         </p>
++       </td>
++       {receipt ? (
++         <td className="py-3 pr-3">
++           <p className={tableCellMetaClassName} title={evidence.validationRef ?? undefined}>
++             {`validation ${shortLearningRef(evidence.validationRef) ?? NOT_REPORTED}`}
++           </p>
++           <p
++             className={`mt-0.5 ${tableCellMetaClassName}`}
++             title={evidence.comparisonRef ?? undefined}
++           >
++             {`comparison ${shortLearningRef(evidence.comparisonRef) ?? NOT_REPORTED}`}
++           </p>
++           <p className={`mt-0.5 ${tableCellMetaClassName}`}>
++             {`replay ${shortLearningRef(evidence.replayRef) ?? NOT_REPORTED} · capture ${shortLearningRef(evidence.captureRef) ?? NOT_REPORTED}`}
++           </p>
++         </td>
++       ) : null}
++     </tr>
++   );
++ }
++
++ /** One pack row: scope, the replayed models with their scores, the pack's model, evidence, state and action. */
++ export function LearningPackRow({
++   row,
++   activePackageId,
++   busy = false,
++   onActivate,
++ }: {
++   readonly row: Record<string, unknown>;
++   readonly activePackageId: string | null;
++   readonly busy?: boolean;
++   readonly onActivate: (packId: string) => void;
++ }) {
++   const record = asRecord(row.record);
++   const recordScope = asRecord(record.scope);
++   /**
++    * Run 101 addendum 49 `A49-R4`: every pack names the role, task and taxonomy it routes for. The readback's own
++    * resolved `scope` is preferred, and the pack's durable record is what it falls back to - a pack whose scope
++    * the readback does not carry still states what it does record. A pack that is wide by design says `scope-wide`
++    * instead of leaving the cell to read like missing data.
++    */
++   const declaredScope = asRecord(row.scope);
++   const evidence = learningEvidence(row);
++   const packId = show(row.recordId);
++   const active = Boolean(activePackageId) && activePackageId === row.recordId;
++   const roleId = textOrNull(declaredScope.roleId) ?? textOrNull(recordScope.roleId);
++   const taskTypeId = textOrNull(declaredScope.taskTypeId) ?? textOrNull(recordScope.taskTypeId);
++   const taxonomy =
++     textOrNull(declaredScope.taxonomyVersion) ?? textOrNull(recordScope.taxonomyVersion);
++   const scopeWide = declaredScope.scopeWide === true || recordScope.scopeWide === true;
++   const scopeParts = [roleId, taskTypeId, taxonomy ? `taxonomy ${taxonomy}` : null].filter(
++     (part): part is string => part !== null,
++   );
++   const scopeLine = scopeWide
++     ? "scope-wide"
++     : scopeParts.length > 0
++       ? scopeParts.join(" · ")
++       : NOT_REPORTED;
++   /**
++    * Run 101 addendum 48 follow-up (the `Pack model` correction): the pack model is the pack's own routing target
++    * (`record.scope.endpointId`), which the readback carries independently of the comparison evidence - gating this
++    * cell on a winner made a value the readback already carries read as absent. The winner itself stays a
++    * replay-readback mark in the models column, and a readback that disagrees with the pack's own target is shown
++    * as it states it rather than reconciled here (`A48-R3`).
++    */
++   const packModel = textOrNull(recordScope.endpointId) ?? textOrNull(declaredScope.endpointId);
++   /** `A49-R3`: the pack's model cell shows the model, with the endpoint id it routes with in `title`. */
++   const packModelLabel = packModel === null ? null : formatEndpointModelLabel(packModel);
++   const targetLine = scopeWide
++     ? "routing target for a scope-wide pack"
++     : scopeParts.length > 0
++       ? `routing target for ${scopeParts.join(" · ")}`
++       : "routing target of this pack";
++   const recordedWinner = evidence.winnerRef;
++   const recordedWinnerLabel =
++     recordedWinner === null ? null : formatEndpointModelLabel(recordedWinner);
++   const winnerDisagrees =
++     packModel !== null && recordedWinner !== null && recordedWinner !== packModel;
++   return (
++     <tr className={tableRowClassName}>
++       <td className="py-3 pr-3">
++         {/* Long durable ids are abbreviated the way the artboards show them; the full value stays in `title`. */}
++         <p className={tableCellValueClassName} title={packId}>
++           {shortLearningRef(packId) ?? packId}
++         </p>
++         <p className={`mt-0.5 ${tableCellMetaClassName}`}>{scopeLine}</p>
++         <p className={`mt-0.5 ${tableCellNoteClassName}`}>
++           {`scope ${textOrNull(row.scopeId) ?? NOT_REPORTED}`}
++         </p>
++       </td>
++       <td className="py-3 pr-3">
++         <CandidateScoreLanes markWinner members={evidence.members} />
++         {evidence.decisive !== null || evidence.holdout !== null ? (
++           <p className={`mt-1 ${tableCellMetaClassName}`}>
++             {`${evidence.decisive ?? NOT_REPORTED} decisive · holdout ${evidence.holdout ?? NOT_REPORTED}`}
++           </p>
++         ) : null}
++       </td>
++       <td className="py-3 pr-3">
++         {packModel ? (
++           <>
++             {/* A routing target is a full endpoint id, so this lane names the model and wraps at token
++                 boundaries rather than hiding it; the endpoint id stays in `title` (`A49-R3`). */}
++             <p className={`${tableCellStrongClassName} break-words`} title={packModel}>
++               {packModelLabel}
++             </p>
++             <p className={`mt-0.5 ${tableCellNoteClassName}`}>{targetLine}</p>
++             {winnerDisagrees ? (
++               <p
++                 className={`mt-0.5 break-words ${tableCellMetaClassName}`}
++                 title={recordedWinner ?? undefined}
++               >
++                 {`readback winner ${recordedWinnerLabel ?? NOT_REPORTED}`}
++               </p>
++             ) : null}
++           </>
++         ) : (
++           <>
++             <p className={tableCellMetaClassName}>no model recorded</p>
++             <p className={`mt-0.5 ${tableCellNoteClassName}`}>
++               the readback carries no routing target for this pack
++             </p>
++           </>
++         )}
++       </td>
++       <td className="py-3 pr-3">
++         {/* Run 101 addendum 49 `A49-R2`: the pack's claim prose *is* recorded - the knowledge worker's
++             experience-text store holds it and the readback carries it through the candidate's `experienceTextRef`
++             - so the cell renders the claim it was handed. `claim not recorded` is reserved for a pack whose
++             candidate genuinely has no text row rather than asserted unconditionally (`A48-R7`). */}
++         {evidence.claim ? (
++           <p className={tableCellNoteClassName} title={evidence.claimTitle ?? undefined}>
++             {evidence.claim}
++           </p>
++         ) : (
++           <p className={tableCellMetaClassName}>claim not recorded</p>
++         )}
++         {evidence.qualityDelta ? (
++           <p className={`mt-0.5 ${tableCellValueClassName}`}>
++             {`Δ ${evidence.qualityDelta} over baseline`}
++           </p>
++         ) : evidence.countsState === "receipt_carries_none" ? (
++           <p className={`mt-0.5 ${tableCellMetaClassName}`}>{RECEIPT_CARRIES_NO_COUNTS}</p>
++         ) : (
++           <p className={`mt-0.5 ${tableCellMetaClassName}`}>{NOT_REPORTED}</p>
++         )}
++         {/* `A49-R3`: the judge is named by its model, with the endpoint id it was recorded under in `title`. */}
++         <p
++           className={`mt-0.5 break-words ${tableCellMetaClassName}`}
++           title={`judge ${evidence.judgeSource ?? NOT_REPORTED} · ${evidence.judgeEndpointId ?? NOT_REPORTED}`}
++         >
++           {`judge ${evidence.judgeSource ?? NOT_REPORTED} · ${
++             evidence.judgeEndpointId
++               ? formatEndpointModelLabel(evidence.judgeEndpointId)
++               : NOT_REPORTED
++           }`}
++         </p>
++         <p
++           className={`mt-0.5 ${tableCellMetaClassName}`}
++           title={evidence.validationRef ?? undefined}
++         >
++           {`receipt ${shortLearningRef(evidence.validationRef) ?? NOT_REPORTED}`}
++         </p>
++       </td>
++       <td className="py-3 pr-3">
++         <Badge tone={active ? "success" : "neutral"}>{active ? "active" : show(row.state)}</Badge>
++       </td>
++       <td className="py-3 pr-3">
++         <button
++           className={secondaryButtonClassName}
++           disabled={busy || active || row.state !== "validated"}
++           onClick={() => onActivate(packId)}
++           type="button"
++         >
++           Activate
++         </button>
++       </td>
++     </tr>
++   );
++ }
++
++ /** The column header row shared by the three tables (real `th` cells, so the columns are associated). */
++ function LearningTableHead({ columns }: { readonly columns: readonly string[] }) {
++   return (
++     <thead>
++       <tr>
++         {columns.map((column) => (
++           <th className={tableHeaderClassName} key={column} scope="col">
++             {column}
++           </th>
++         ))}
++       </tr>
++     </thead>
++   );
++ }
++
++ /**
++  * Run 98 addendum 25 §1 (operator-reported): the Recent decisions panel asserted a hardcoded
++  * "the selection always remains the baseline in stage S1" while the scope was running S2, which
++  * contradicted the STAGE metric in the same page's header. That sentence is a claim about
++  * safety-relevant behaviour, so it is derived from the live stage readback instead: only S1 keeps
++  * the baseline guarantee, every other reported stage states the eligible-set bound for that stage,
++  * and an unreported stage asserts no stage at all rather than defaulting to S1 copy.
++  */
++ export function selectionNoteForStage(effectiveStage: string): string {
++   if (effectiveStage === "S1") return "the selection always remains the baseline in stage S1";
++   if (effectiveStage) {
++     return `the advisory may only act inside the eligible set (stage ${effectiveStage})`;
++   }
++   return "the selection follows the configured activation stage";
++ }
++
++ /** Overview: stage, policy identity, cohort, advisory counts, guardrails, last rollback. */
++ export function LearningOverviewPage() {
++   const { token, setToken } = useOperatorToken();
++   const policy = useOperatorSurface<LearningPolicyView>(
++     () => fetchLearningPolicy(fetch, token || undefined),
++     [token],
++   );
++   const rollout = useOperatorSurface<Record<string, unknown>>(
++     () => fetchLearningRollout(fetch, token || undefined),
++     [token],
++   );
++   const summary = useOperatorSurface<Record<string, unknown>>(
++     () => fetchLearningSummary(fetch, token || undefined),
++     [token],
++   );
++   const decisions = useOperatorSurface<Record<string, unknown>>(
++     /**
++      * `A49-R8`: this panel used to ask for the newest ten observation rows whatever they were. The newest rows are
++      * often candidate-less shadow judge calls, which carry no role, models, judge or verdict, so the panel rendered
++      * a full grid of `not reported` next to a Decisions page that showed the same data populated. It now reads a
++      * bounded window wide enough to contain replay decisions and selects from it below.
++      */
++     () => fetchLearningDecisions(fetch, token || undefined, { limit: 100 }),
++     [token],
++   );
++   const activity = useOperatorSurface<Record<string, unknown>>(
++     () => fetchLearningActivity(fetch, token || undefined, { windowMinutes: 60, limit: 24 }),
++     [token],
++   );
++   /**
++    * Run 98 addendum 44 `A44-S3` (`AC-R12-01`): the guardrail status and rollback count live in the history
++    * readback, and the profile-inspection capability is reported as a bounded state rather than an error.
++    */
++   const history = useOperatorSurface<Record<string, unknown>>(
++     () => fetchLearningHistory(fetch, token || undefined, { hours: 24 }),
++     [token],
++   );
++   const profile = useOperatorSurface<Awaited<ReturnType<typeof fetchLearningProfileState>>>(
++     () => fetchLearningProfileState(fetch, token || undefined),
++     [token],
++   );
++   const activityView = normalizeLearningActivity(activity.value);
++   const historyView = normalizeLearningHistory(history.value);
++   const profileView = profile.value ?? profileInspectionView(null);
++   const advisory = asRecord(asRecord(summary.value).advisory);
++   const fallbackReasons = fallbackReasonRows(advisory, 3);
++   // Run 98 addendum 31 S5: how much of the scored evidence is actually checkable.
++   const auditability = asRecord(asRecord(summary.value).auditability);
++   const rolloutValue = asRecord(rollout.value);
++   const receipts = Array.isArray(rolloutValue.receipts) ? rolloutValue.receipts : [];
++   const lastRollback = receipts.find((row) => asRecord(row).state === "rolled_back");
++   const decisionsValue = asRecord(decisions.value);
++   const decisionObservationRows = Array.isArray(decisionsValue.decisions)
++     ? (decisionsValue.decisions as readonly Record<string, unknown>[])
++     : [];
++   const decisionRows = learningRecentDecisionRows(decisionObservationRows);
++   const decisionWindowSize = decisionObservationRows.length;
++   // Run 98 addendum 25 §1 (operator-reported): this panel used to assert a hardcoded "stage S1" while
++   // the scope ran S2, contradicting the STAGE metric in its own header. The note now follows the live
++   // stage readback, and the panel says what a row is: one decision with its observation count (§2).
++   const effectiveStage = String(asRecord(asRecord(policy.value).effective).stage ?? "");
++   const selectionNote = selectionNoteForStage(effectiveStage);
++   const fallback =
++     degraded(policy.loading, policy.error) ?? degraded(rollout.loading, rollout.error);
++   return (
++     <div className="grid gap-4">
++       <SectionCard
++         title="Learning overview"
++         description="What the learning loop is doing right now, read from durable state."
++       >
++         <OperatorTokenField onToken={setToken} token={token} />
++         {fallback ?? (
++           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
++             <Metric
++               label="Stage"
++               value={show(
++                 asRecord(asRecord(policy.value).effective).stage ??
++                   policy.value?.fields?.find((f) => f.name === "stage")?.value,
++               )}
++             />
++             <Metric label="Policy version" value={show(asRecord(policy.value).policyVersion)} />
++             <Metric label="Policy digest" value={show(asRecord(policy.value).digest)} />
++             <Metric
++               label="Cohort"
++               value={`step ${show(rolloutValue.cohortStep)} · ${show(rolloutValue.cohortPercent)}%`}
++             />
++             <Metric label="Activation state" value={show(rolloutValue.state)} />
++             <Metric label="Active pack" value={show(rolloutValue.activePackageId)} />
++             <Metric
++               label="Advisory observed"
++               value={`${show(advisory.observed)} · fresh ${show(advisory.fresh)} · stale ${show(advisory.stale)} · unavailable ${show(advisory.unavailable)}`}
++             />
++             <Metric label="Influence rate" value={show(advisory.influenceRate)} />
++             {/* Run 98 addendum 44 A44-S3: the R12 numbers the Overview was missing. */}
++             <Metric label="Applied share" value={formatPercentShare(appliedShareOf(advisory))} />
++             <Metric
++               label="Fallback reasons"
++               value={
++                 fallbackReasons.length > 0
++                   ? fallbackReasons.map((row) => `${row.reason} ×${row.count}`).join(" · ")
++                   : "none recorded"
++               }
++             />
++             <Metric label="Would have changed" value={show(advisory.wouldHaveChanged)} />
++             <Metric
++               label="Guardrails"
++               value={`${show(historyView.guardrailsFiring)} firing · window ${show(asRecord(history.value).guardrailWindowMinutes)} min`}
++             />
++             <Metric
++               label="Rollbacks"
++               value={`${show(historyView.totals.rollbacks)} · ${show(historyView.totals.guardrailBreaches)} breaches`}
++             />
++             <Metric
++               label="Profile inspection"
++               value={
++                 profileView.state === "available"
++                   ? "available"
++                   : `unavailable${profileView.reason ? ` · ${profileView.reason}` : ""}`
++               }
++             />
++             <Metric
++               label="Input auditability"
++               value={`${show(auditability.resolvedInputs)} resolved · ${show(auditability.unresolvedInputs)} unresolved · ${show(auditability.missingInputProof)} no proof`}
++             />
++             <Metric
++               label="Last rollback"
++               value={
++                 lastRollback
++                   ? `${show(asRecord(lastRollback).receiptId)} · ${show(asRecord(lastRollback).rolledBackAt)}`
++                   : "none"
++               }
++             />
++           </div>
++         )}
++       </SectionCard>
++       <LearningLivePanelView
++         view={activityView}
++         loading={activity.loading}
++         error={activity.error}
++         nowMs={Date.now()}
++         scopeLabel={show(rolloutValue.scopeId ?? rolloutValue.scope)}
++       />
++       <SectionCard
++         title="Recent decisions"
++         description={`The newest replay decisions among the last ${decisionWindowSize} observations; ${selectionNote}. Each row is one decision with its observation count.`}
++       >
++         {degraded(decisions.loading, decisions.error) ??
++           (decisionRows.length === 0 ? (
++             <EmptyState
++               label={
++                 decisionWindowSize === 0
++                   ? "No decisions have been observed for this scope yet."
++                   : `The newest ${decisionWindowSize} observations are not replay decisions - they carry no candidate, so there is no role, task, models or verdict to show.`
++               }
++             />
++           ) : (
++             <div className="overflow-x-auto">
++               <table className={`${tableClassName} min-w-[880px]`}>
++                 <colgroup>
++                   <col style={{ width: "210px" }} />
++                   <col style={{ width: "280px" }} />
++                   <col style={{ width: "124px" }} />
++                   <col style={{ width: "112px" }} />
++                   <col />
++                 </colgroup>
++                 <LearningTableHead
++                   columns={["Role · task", "Models · judge score", "Judge", "Evidence", "Decision"]}
++                 />
++                 <tbody>
++                   {decisionRows.map((row, index) => (
++                     <LearningDecisionRow key={`${show(row.decisionId)}-${index}`} row={row} />
++                   ))}
++                 </tbody>
++               </table>
++             </div>
++           ))}
++       </SectionCard>
++     </div>
++   );
++ }
++
++ /** Configuration: schema-driven, bounded editing of every published policy field. */
++ export function LearningConfigurationPage() {
++   const { token, setToken } = useOperatorToken();
++   const policy = useOperatorSurface<LearningPolicyView>(
++     () => fetchLearningPolicy(fetch, token || undefined),
++     [token],
++   );
++   const [draft, setDraft] = useState<Record<string, unknown>>({});
++   const [operator, setOperator] = useState("operator:ui");
++   const [notice, setNotice] = useState<string | null>(null);
++   const [error, setError] = useState<string | null>(null);
++   const [busy, setBusy] = useState(false);
++   const view = policy.value;
++   // Run 98 addendum 44 `A44-S4`: the page renders the stored document *and* the router's own resolution, so a
++   // damaged policy source reads as a degraded state instead of a policy the router is not using.
++   const resolution = summarizePolicyResolution(view);
++   const routerReported = Boolean(view?.routerResolution);
++   const storedDegraded = Boolean(view?.degraded);
++   const validation = useMemo(
++     () => validatePolicyDraft(view?.fields ?? [], draft),
++     [view?.fields, draft],
++   );
++   const update = (field: LearningPolicyField, raw: string) => {
++     const value = field.type === "integer" || field.type === "number" ? Number(raw) : raw;
++     setDraft((current) => ({ ...current, [field.name]: value }));
++   };
++   const save = async () => {
++     if (!view) return;
++     if (Object.keys(validation.errors).length) {
++       setError(`Fix the highlighted fields first: ${Object.values(validation.errors).join("; ")}`);
++       return;
++     }
++     if (Object.keys(validation.changes).length === 0) {
++       setNotice("No changes to save.");
++       return;
++     }
++     const confirmRequired = [
++       "stage",
++       "cohortLadder",
++       "minDecisionsPerStep",
++       "minHoursPerStep",
++     ].some((name) => name in validation.changes);
++     if (
++       confirmRequired &&
++       typeof window !== "undefined" &&
++       !window.confirm(
++         "Apply this learning policy change? Stage and cohort changes affect live routing.",
++       )
++     ) {
++       return;
++     }
++     setBusy(true);
++     setError(null);
++     try {
++       const applied = await saveLearningPolicy(
++         {
++           changes: validation.changes,
++           expectedPolicyVersion: view.policyVersion,
++           operator: operator || "operator:ui",
++         },
++         fetch,
++         token || undefined,
++       );
++       setNotice(
++         `Policy version ${applied.policyVersion} written (${(applied.receipt?.changedFields ?? Object.keys(validation.changes)).join(", ")}). Every later decision receipt cites it.`,
++       );
++       setDraft({});
++       await policy.reload();
++     } catch (saveError) {
++       setError(describeOperatorWriteError(saveError));
++     } finally {
++       setBusy(false);
++     }
++   };
++   const rollback = async () => {
++     if (!view) return;
++     if (
++       typeof window !== "undefined" &&
++       !window.confirm("Roll the learning policy back to the previous version?")
++     ) {
++       return;
++     }
++     setBusy(true);
++     try {
++       const applied = await rollbackLearningPolicy(
++         {
++           toPolicyVersion: Math.max(1, view.policyVersion - 1),
++           expectedPolicyVersion: view.policyVersion,
++           operator: operator || "operator:ui",
++           reason: "operator_ui_rollback",
++         },
++         fetch,
++         token || undefined,
++       );
++       setNotice(`Policy rolled back to version ${applied.policyVersion}.`);
++       await policy.reload();
++     } catch (rollbackError) {
++       setError(describeOperatorWriteError(rollbackError));
++     } finally {
++       setBusy(false);
++     }
++   };
++   return (
++     <SectionCard
++       title="Learning configuration"
++       description="Every activation parameter with its current value, unit, default and allowed range. Bounds are enforced here and again on the server."
++     >
++       <div className="grid gap-3 sm:grid-cols-2">
++         <OperatorTokenField onToken={setToken} token={token} />
++         <label className={fieldLabelClassName}>
++           Operator identity
++           <input
++             className={`${fieldClassName} mt-1`}
++             onChange={(event) => setOperator(event.target.value)}
++             value={operator}
++           />
++         </label>
++       </div>
++       {notice ? <p className={`mt-3 ${supportingTextClassName}`}>{notice}</p> : null}
++       {error ? (
++         <div className="mt-3">
++           <ErrorState label={error} />
++         </div>
++       ) : null}
++       {degraded(policy.loading, policy.error) ??
++         (view ? (
++           <>
++             <div className="mt-4 rounded border border-[var(--rm-border)] p-3">
++               <div className="flex flex-wrap items-center gap-2">
++                 <span className={monoEyebrowClassName}>Router resolution</span>
++                 <Badge tone={resolution.authoritative ? "neutral" : "warning"}>
++                   {resolution.authoritative
++                     ? "policy authoritative"
++                     : routerReported
++                       ? "router degraded"
++                       : "readback degraded"}
++                 </Badge>
++               </div>
++               <div className="mt-2 grid gap-3 sm:grid-cols-3">
++                 <Metric label="Router stage" value={resolution.routerStage ?? "not reported"} />
++                 <Metric
++                   label="Router policy source"
++                   value={resolution.routerSource ?? "not reported"}
++                 />
++                 <Metric
++                   label="Router policy digest"
++                   value={resolution.routerDigest ?? "not reported"}
++                 />
++                 <Metric
++                   label="Stored policy version"
++                   value={
++                     resolution.storedPolicyVersion === null
++                       ? "not reported"
++                       : String(resolution.storedPolicyVersion)
++                   }
++                 />
++                 <Metric
++                   label="Stored policy digest"
++                   value={resolution.storedDigest ?? "not reported"}
++                 />
++               </div>
++               {resolution.warning ? (
++                 <div className="mt-2">
++                   <ErrorState label={resolution.warning} />
++                 </div>
++               ) : null}
++             </div>
++             <div className="mt-4 overflow-x-auto">
++               <table className="min-w-full text-left text-sm">
++                 <thead>
++                   <tr>
++                     {["Field", "Value", "Unit", "Default", "Range", "Notes"].map((header) => (
++                       <th className={`pb-3 pr-3 font-normal ${monoEyebrowClassName}`} key={header}>
++                         {header}
++                       </th>
++                     ))}
++                   </tr>
++                 </thead>
++                 <tbody>
++                   {view.fields.map((field) => (
++                     <tr className="border-t border-[var(--rm-border)] align-top" key={field.name}>
++                       <td className="py-2 pr-3">
++                         <p className={compactTitleClassName}>{field.name}</p>
++                         <p className={`mt-1 ${supportingTextClassName}`}>{field.description}</p>
++                       </td>
++                       <td className="py-2 pr-3">
++                         {field.uiEditable ? (
++                           <input
++                             aria-label={field.name}
++                             className={fieldClassName}
++                             onChange={(event) => update(field, event.target.value)}
++                             value={
++                               field.name in draft
++                                 ? String(draft[field.name])
++                                 : Array.isArray(field.value)
++                                   ? field.value.join(",")
++                                   : String(field.value ?? "")
++                             }
++                           />
++                         ) : (
++                           <span className="font-mono">{show(field.value)}</span>
++                         )}
++                         {validation.errors[field.name] ? (
++                           <p className={`mt-1 ${supportingTextClassName}`}>
++                             {validation.errors[field.name]}
++                           </p>
++                         ) : null}
++                       </td>
++                       <td className="py-2 pr-3">{field.unit}</td>
++                       <td className="py-2 pr-3 font-mono">{show(field.default)}</td>
++                       <td className="py-2 pr-3 font-mono">{formatPolicyRange(field)}</td>
++                       <td className="py-2 pr-3">
++                         <Badge tone={field.uiEditable ? "neutral" : "warning"}>
++                           {field.uiEditable ? "editable" : "read-only"}
++                         </Badge>
++                       </td>
++                     </tr>
++                   ))}
++                 </tbody>
++               </table>
++             </div>
++             <div className="mt-4 flex flex-wrap gap-2">
++               <button
++                 className={primaryButtonClassName}
++                 disabled={busy || storedDegraded || Object.keys(validation.changes).length === 0}
++                 onClick={() => void save()}
++                 type="button"
++               >
++                 Save policy change
++               </button>
++               <button
++                 className={secondaryButtonClassName}
++                 disabled={busy || view.policyVersion <= 1}
++                 onClick={() => void rollback()}
++                 type="button"
++               >
++                 Roll back policy
++               </button>
++             </div>
++             {/* Run 101 R10: the queue planes' own bounded parameters live beside
++                 the learning policy, because both are operator-owned policy. */}
++             <QueuesConfigurationCard />
++             <p className={`mt-2 ${supportingTextClassName}`}>
++               Saving writes a new policy version with a receipt (previous/new digest, operator,
++               effective time) and is rejected if another client changed the policy first
++               {storedDegraded
++                 ? "; it is refused while the stored policy state is degraded, so a damaged file is repaired rather than overwritten."
++                 : "."}
++             </p>
++           </>
++         ) : null)}
++     </SectionCard>
++   );
++ }
++
++ /** Packs: candidate/pack records, activation state and rollback actions. */
++ export function LearningPacksPage() {
++   const { token, setToken } = useOperatorToken();
++   const records = useOperatorSurface<Record<string, unknown>>(
++     () => fetchLearningRecords(fetch, token || undefined, { kind: "pack" }),
++     [token],
++   );
++   const rollout = useOperatorSurface<Record<string, unknown>>(
++     () => fetchLearningRollout(fetch, token || undefined),
++     [token],
++   );
++   const [notice, setNotice] = useState<string | null>(null);
++   const [error, setError] = useState<string | null>(null);
++   const rows = Array.isArray(asRecord(records.value).records)
++     ? (asRecord(records.value).records as readonly Record<string, unknown>[])
++     : [];
++   /** Run 104 R22 (`R22-B3`): how many shown packs cannot name a role or task, and why. */
++   const packScopeNote = learningPackScopeNote(rows);
++   const rolloutValue = asRecord(rollout.value);
++   const act = async (packId: string) => {
++     if (
++       typeof window !== "undefined" &&
++       !window.confirm(`Activate ${packId}? Cohort rollout starts at the first ladder step.`)
++     )
++       return;
++     try {
++       await activateLearningPack(
++         {
++           scopeId: asRecord(records.value).scopeId ?? "standalone-runtime-stage",
++           packId,
++           policyGateId: "operator:ui",
++           validationReceiptId: String(
++             asRecord(asRecord(rows.find((row) => row.recordId === packId)).record)
++               .validationReceiptId ?? "",
++           ),
++         },
++         fetch,
++         token || undefined,
++       );
++       setNotice(`Activation receipt written for ${packId}.`);
++       await rollout.reload();
++     } catch (activationError) {
++       setError(describeOperatorWriteError(activationError));
++     }
++   };
++   const rollback = async () => {
++     if (
++       typeof window !== "undefined" &&
++       !window.confirm("Roll the active pack back to the prior package?")
++     )
++       return;
++     try {
++       await rollbackLearningPack(
++         {
++           scopeId: rolloutValue.scopeId ?? "standalone-runtime-stage",
++           reason: "operator_ui_rollback",
++         },
++         fetch,
++         token || undefined,
++       );
++       setNotice("Rollback receipt written; the prior package is restored.");
++       await rollout.reload();
++     } catch (rollbackError) {
++       setError(describeOperatorWriteError(rollbackError));
++     }
++   };
++   const killSwitch = async () => {
++     if (
++       typeof window !== "undefined" &&
++       !window.confirm("Engage the kill switch? Every activation returns to the base route.")
++     )
++       return;
++     try {
++       await engageLearningKillSwitch(
++         { scopeId: rolloutValue.scopeId ?? "standalone-runtime-stage" },
++         fetch,
++         token || undefined,
++       );
++       setNotice("Kill switch engaged; the scope is back on the base route.");
++       await rollout.reload();
++     } catch (killError) {
++       setError(describeOperatorWriteError(killError));
++     }
++   };
++   // Run 99 R28: the switch is reversible; releasing clears the flag (receipted) and leaves the
++   // scope on the base route until a pack is activated again.
++   const releaseKillSwitch = async () => {
++     if (
++       typeof window !== "undefined" &&
++       !window.confirm(
++         "Release the kill switch? The scope stays on the base route until a pack is activated.",
++       )
++     )
++       return;
++     try {
++       await engageLearningKillSwitch(
++         { scopeId: rolloutValue.scopeId ?? "standalone-runtime-stage", engaged: false },
++         fetch,
++         token || undefined,
++       );
++       setNotice("Kill switch released; activation is allowed again.");
++       await rollout.reload();
++     } catch (releaseError) {
++       setError(describeOperatorWriteError(releaseError));
++     }
++   };
++   return (
++     <SectionCard
++       title="Learned packs"
++       description="Candidate and pack records with their validation receipts, holdout evidence and activation state."
++     >
++       <OperatorTokenField onToken={setToken} token={token} />
++       {notice ? <p className={`mt-3 ${supportingTextClassName}`}>{notice}</p> : null}
++       {error ? (
++         <div className="mt-3">
++           <ErrorState label={error} />
++         </div>
++       ) : null}
++       {packScopeNote ? <p className={`mt-3 ${supportingTextClassName}`}>{packScopeNote}</p> : null}
++       {degraded(records.loading, records.error) ??
++         (rows.length === 0 ? (
++           <EmptyState label="No pack records have been derived for this scope yet." />
++         ) : (
++           <div className="mt-4 overflow-x-auto">
++             <table className={`${tableClassName} min-w-[1060px]`}>
++               <colgroup>
++                 <col style={{ width: "150px" }} />
++                 <col style={{ width: "210px" }} />
++                 <col style={{ width: "280px" }} />
++                 <col style={{ width: "220px" }} />
++                 <col style={{ width: "72px" }} />
++                 <col />
++               </colgroup>
++               <LearningTableHead
++                 columns={[
++                   "Pack · scope",
++                   "Replay models · score",
++                   "Pack model",
++                   "Claim · evidence",
++                   "State",
++                   "Action",
++                 ]}
++               />
++               <tbody>
++                 {rows.map((row) => (
++                   <LearningPackRow
++                     activePackageId={textOrNull(rolloutValue.activePackageId) ?? null}
++                     key={String(row.recordId)}
++                     onActivate={(packId) => void act(packId)}
++                     row={row}
++                   />
++                 ))}
++               </tbody>
++             </table>
++           </div>
++         ))}
++       <div className="mt-4 flex flex-wrap gap-2">
++         <button
++           className={secondaryButtonClassName}
++           disabled={rolloutValue.state !== "active"}
++           onClick={() => void rollback()}
++           type="button"
++         >
++           Roll back active pack
++         </button>
++         <button
++           className={secondaryButtonClassName}
++           disabled={rolloutValue.state === "disabled"}
++           onClick={() => void killSwitch()}
++           type="button"
++         >
++           Engage kill switch
++         </button>
++         <button
++           className={secondaryButtonClassName}
++           disabled={!rolloutValue.killSwitchAtMs}
++           onClick={() => void releaseKillSwitch()}
++           type="button"
++         >
++           Release kill switch
++         </button>
++       </div>
++     </SectionCard>
++   );
++ }
++
++ /** Decisions: the approved six-column table - the five Overview columns plus the receipt chain. */
++ export function LearningDecisionsPage() {
++   const { token, setToken } = useOperatorToken();
++   const [stateFilter, setStateFilter] = useState("all");
++   const [roleFilter, setRoleFilter] = useState("all");
++   const [taskFilter, setTaskFilter] = useState("all");
++   const [outcomeFilter, setOutcomeFilter] = useState("all");
++   /**
++    * Run 113 (addendum 09 R11/S18): the ledger holds live routing decisions and shadow judge/replay calls. The
++    * shadow rows carry no taxonomy and are `unavailable` by construction, and because they are the most recent
++    * they dominated the default view - the operator saw "everything is task mismatch or not eligible". The page
++    * now asks the readback for live routing decisions by default, with the shadow ledger one selection away.
++    */
++   const [originFilter, setOriginFilter] = useState("live");
++   const decisions = useOperatorSurface<Record<string, unknown>>(
++     () => fetchLearningDecisions(fetch, token || undefined, { limit: 100, origin: originFilter }),
++     [token, originFilter],
++   );
++   const rows = Array.isArray(asRecord(decisions.value).decisions)
++     ? (asRecord(decisions.value).decisions as readonly Record<string, unknown>[])
++     : [];
++   const roleOf = (row: Record<string, unknown>): string | null =>
++     textOrNull(asRecord(row.classification).roleId) ?? textOrNull(row.roleId);
++   const taskOf = (row: Record<string, unknown>): string | null => learningTaskCell(row).task;
++   const filtered = rows.filter(
++     (row) =>
++       (stateFilter === "all" || row.advisoryState === stateFilter) &&
++       (roleFilter === "all" || roleOf(row) === roleFilter) &&
++       (taskFilter === "all" || taskOf(row) === taskFilter) &&
++       (outcomeFilter === "all" || learningEvidence(row).verdict === outcomeFilter),
++   );
++   /**
++    * The readback hands the page a bounded window; the table shows it in pages rather than in one wall of rows.
++    * Nothing is fetched that was not already read, and the note below says how much of the window is shown.
++    */
++   /**
++    * Paging resets to the first page whenever the filter identity changes. This is derived rather than reset from
++    * an effect: the effect form listed the filters as dependencies without reading them, which the repo's lint
++    * rejects, and an effect would also render one frame of the previous page's count after a filter change.
++    */
++   const filterKey = `${stateFilter}|${roleFilter}|${taskFilter}|${outcomeFilter}|${originFilter}`;
++   const [paging, setPaging] = useState({ key: filterKey, visible: 50 });
++   const visibleCount = paging.key === filterKey ? paging.visible : 50;
++   const visible = filtered.slice(0, visibleCount);
++   const showMore = () =>
++     setPaging((current) => ({
++       key: filterKey,
++       visible: (current.key === filterKey ? current.visible : 50) + 50,
++     }));
++   const roleOptions = distinctOptions(rows.map(roleOf));
++   const taskOptions = distinctOptions(rows.map(taskOf));
++   const outcomeOptions = distinctOptions(rows.map((row) => learningEvidence(row).verdict));
++   const truncated = asRecord(decisions.value).truncated === true;
++   /**
++    * Run 104 R22 (`R22-A3`): a degraded evidence join is named above the table. Without it a read that
++    * never finished is indistinguishable from a runtime that recorded nothing, which is exactly how the
++    * operator read the table this addendum came from.
++    */
++   const evidenceJoinNote = learningEvidenceJoinNote(asRecord(decisions.value));
++   return (
++     <SectionCard
++       title="Decision receipts"
++       description="Every adjudicated decision with its evidence in columns, and the receipt chain each one produced."
++     >
++       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
++         <OperatorTokenField onToken={setToken} token={token} />
++         <SelectField label="Role" onChange={setRoleFilter} value={roleFilter}>
++           <option value="all">all roles</option>
++           {roleOptions.map((option) => (
++             <option key={option} value={option}>
++               {option}
++             </option>
++           ))}
++         </SelectField>
++         <SelectField label="Task" onChange={setTaskFilter} value={taskFilter}>
++           <option value="all">all tasks</option>
++           {taskOptions.map((option) => (
++             <option key={option} value={option}>
++               {option}
++             </option>
++           ))}
++         </SelectField>
++         <SelectField label="Outcome" onChange={setOutcomeFilter} value={outcomeFilter}>
++           <option value="all">all outcomes</option>
++           {outcomeOptions.map((option) => (
++             <option key={option} value={option}>
++               {option}
++             </option>
++           ))}
++         </SelectField>
++         <label className={fieldLabelClassName}>
++           Advisory state
++           <select
++             className={`${fieldClassName} mt-1`}
++             onChange={(event) => setStateFilter(event.target.value)}
++             value={stateFilter}
++           >
++             {["all", "fresh", "stale", "unavailable"].map((option) => (
++               <option key={option} value={option}>
++                 {option}
++               </option>
++             ))}
++           </select>
++         </label>
++         <label className={fieldLabelClassName}>
++           Observation origin
++           <select
++             className={`${fieldClassName} mt-1`}
++             onChange={(event) => setOriginFilter(event.target.value)}
++             value={originFilter}
++           >
++             {["live", "shadow", "all"].map((option) => (
++               <option key={option} value={option}>
++                 {option}
++               </option>
++             ))}
++           </select>
++         </label>
++       </div>
++       {evidenceJoinNote ? (
++         <p className={`mt-3 ${supportingTextClassName}`}>{evidenceJoinNote}</p>
++       ) : null}
++       {degraded(decisions.loading, decisions.error) ??
++         (filtered.length === 0 ? (
++           <EmptyState label="No decisions match this filter yet." />
++         ) : (
++           <div className="mt-4">
++             <div className="overflow-x-auto">
++               <table className={`${tableClassName} min-w-[900px]`}>
++                 <colgroup>
++                   <col style={{ width: "164px" }} />
++                   <col style={{ width: "244px" }} />
++                   <col style={{ width: "112px" }} />
++                   <col style={{ width: "112px" }} />
++                   <col style={{ width: "144px" }} />
++                   <col />
++                 </colgroup>
++                 <LearningTableHead
++                   columns={[
++                     "Role · task",
++                     "Models · judge score",
++                     "Judge",
++                     "Evidence",
++                     "Decision",
++                     "Receipt",
++                   ]}
++                 />
++                 <tbody>
++                   {visible.map((row, index) => (
++                     <LearningDecisionRow
++                       key={`${show(row.decisionId)}-${index}`}
++                       receipt
++                       row={row}
++                     />
++                   ))}
++                 </tbody>
++               </table>
++             </div>
++             <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
++               {filtered.length > visibleCount ? (
++                 <button className={secondaryButtonClassName} onClick={showMore} type="button">
++                   Show more decisions
++                 </button>
++               ) : null}
++               <p className={supportingTextClassName}>
++                 {`Showing ${visible.length} of ${filtered.length} matching decisions`}
++                 {truncated ? "; the readback is truncated." : "."}
++               </p>
++             </div>
++           </div>
++         ))}
++     </SectionCard>
++   );
++ }
++
++ /** Evidence: the baseline-vs-advisory comparison behind the guardrails. */
++ export function LearningEvidencePage() {
++   const { token, setToken } = useOperatorToken();
++   const measurement = useOperatorSurface<Record<string, unknown>>(
++     () => fetchLearningMeasurement(fetch, token || undefined),
++     [token],
++   );
++   /**
++    * Run 100 R6.1: the learner's own evidence - per family, against the floor, and the exclusions by
++    * reason - comes from the learning summary, so this page can answer "why is evidence missing?"
++    * without the operator opening a store.
++    */
++   const learnerSummary = useOperatorSurface<Record<string, unknown>>(
++     () => fetchLearningSummary(fetch, token || undefined),
++     [token],
++   );
++   /**
++    * Run 104 `R7`: the floor the learner's counts are measured against is published by the activation
++    * policy readback (`effective.minDecisiveComparisons` and its siblings). The durable record's own
++    * `learnerEvidence.floor` is only written when the producer persisted one, so the page composes the
++    * progress from the policy the pass resolved rather than rendering a bare `insufficient`.
++    */
++   const learningPolicy = useOperatorSurface<LearningPolicyView>(
++     () => fetchLearningPolicy(fetch, token || undefined),
++     [token],
++   );
++   const policyFloor = learningEvidenceFloor(asRecord(learningPolicy.value));
++   const learnerEvidence = asRecord(asRecord(learnerSummary.value).learnerEvidence);
++   const exclusionReasons = Object.entries(asRecord(learnerEvidence.excludedByReason))
++     .map(([reason, count]) => ({ reason, count: Number(count) }))
++     .filter((entry) => Number.isFinite(entry.count) && entry.count > 0)
++     .sort((left, right) => right.count - left.count);
++   const evidenceFamilies = Object.entries(asRecord(learnerEvidence.byFamily)).map(
++     ([family, counts]) => ({ family, counts: asRecord(counts) }),
++   );
++   const evidenceFloor = asRecord(learnerEvidence.floor);
++   const newestReceipt = asRecord(learnerEvidence.newest);
++   const newestEvidence = asRecord(newestReceipt.familyEvidence);
++   const report = Array.isArray(asRecord(measurement.value).report)
++     ? (asRecord(measurement.value).report as readonly Record<string, unknown>[])[0]
++     : undefined;
++   const raw = asRecord(measurement.value);
++   // Run 99: three honest shapes - a measurement report, an explicit "nothing recorded yet" answer,
++   // and a bounded degradation receipt. Only the first may render the cohort grid.
++   const noMeasurement = raw.status === "no-measurement";
++   const degradedReceipt = raw.degraded === true;
++   const value = noMeasurement || degradedReceipt ? {} : asRecord(report ?? measurement.value);
++   const cohorts = asRecord(value.cohorts);
++   const deltas = asRecord(value.deltas);
++   const confidence = asRecord(value.confidence);
++   const guardrails = Array.isArray(value.guardrails)
++     ? (value.guardrails as readonly Record<string, unknown>[])
++     : [];
++   // Run 99: cost and latency are inputs this composition does not measure per arm, so the page says
++   // so rather than presenting the placeholder inputs as measured zeros.
++   const costLatencyMeasured = asRecord(raw.measurementInputs).costLatencyAvailable !== false;
++   return (
++     <div className="grid gap-4">
++       <SectionCard
++         title="Evidence"
++         description="Baseline-versus-advisory comparison on the paired holdout distribution with the guardrail verdicts."
++       >
++         <OperatorTokenField onToken={setToken} token={token} />
++         {degraded(measurement.loading, measurement.error) ??
++           (degradedReceipt ? (
++             <ErrorState
++               label={`Cohort measurement unavailable: ${show(raw.reason)}. No value is fabricated.`}
++             />
++           ) : noMeasurement ||
++             (value.schemaVersion === undefined && Object.keys(value).length === 0) ? (
++             <EmptyState label="No cohort measurement has been recorded yet." />
++           ) : (
++             <>
++               <div className="mt-4 flex flex-wrap items-center gap-2">
++                 <Badge
++                   tone={
++                     value.verdict === "pass"
++                       ? "success"
++                       : value.verdict === "fail"
++                         ? "error"
++                         : "warning"
++                   }
++                 >
++                   {show(value.verdict)}
++                 </Badge>
++                 <p className={supportingTextClassName}>{show(value.statement)}</p>
++               </div>
++               <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
++                 <Metric label="Paired holdout tasks" value={show(value.pairedHoldoutTasks)} />
++                 <Metric label="Baseline samples" value={show(asRecord(cohorts.baseline).samples)} />
++                 <Metric label="Advisory samples" value={show(asRecord(cohorts.advisory).samples)} />
++                 <Metric
++                   label="Applied share"
++                   value={show(asRecord(cohorts.advisory).appliedShare)}
++                 />
++                 <Metric label="Quality delta" value={show(deltas.quality)} />
++                 <Metric
++                   label="Cost multiplier"
++                   value={costLatencyMeasured ? show(deltas.costMultiplier) : "not measured here"}
++                 />
++                 <Metric
++                   label="Latency p95 delta (ms)"
++                   value={costLatencyMeasured ? show(deltas.latencyP95DeltaMs) : "not measured here"}
++                 />
++                 <Metric label="Error-rate delta (pp)" value={show(deltas.errorRateDeltaPp)} />
++                 <Metric
++                   label="Quality CI"
++                   value={`${show(confidence.lower)} – ${show(confidence.upper)}`}
++                 />
++               </div>
++               <div className="mt-4 overflow-x-auto">
++                 <table className="min-w-full text-left text-sm">
++                   <thead>
++                     <tr>
++                       {["Guardrail", "Bound", "Observed", "Verdict"].map((header) => (
++                         <th
++                           className={`pb-3 pr-3 font-normal ${monoEyebrowClassName}`}
++                           key={header}
++                         >
++                           {header}
++                         </th>
++                       ))}
++                     </tr>
++                   </thead>
++                   <tbody>
++                     {guardrails.map((guardrail) => (
++                       <tr
++                         className="border-t border-[var(--rm-border)]"
++                         key={String(guardrail.metric)}
++                       >
++                         <td className="py-2 pr-3">{show(guardrail.metric)}</td>
++                         <td className="py-2 pr-3 font-mono">{show(guardrail.bound)}</td>
++                         <td className="py-2 pr-3 font-mono">{show(guardrail.observed)}</td>
++                         <td className="py-2 pr-3">
++                           <Badge tone={guardrail.passed ? "success" : "error"}>
++                             {guardrail.passed ? "passed" : "breached"}
++                           </Badge>
++                         </td>
++                       </tr>
++                     ))}
++                   </tbody>
++                 </table>
++               </div>
++             </>
++           ))}
++       </SectionCard>
++       <SectionCard
++         title="Evidence loss by reason"
++         description="Per-family evidence against the operator's floor and the learner's exclusions, read from the validation receipts the runtime recorded."
++       >
++         <OperatorTokenField onToken={setToken} token={token} />
++         {degraded(learnerSummary.loading, learnerSummary.error) ??
++           (Number(learnerEvidence.receipts ?? 0) === 0 ? (
++             <EmptyState label="No learner validation receipt has been recorded yet." />
++           ) : (
++             <>
++               <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
++                 <Metric label="Receipts read" value={show(learnerEvidence.receipts)} />
++                 <Metric label="Newest decision" value={show(newestReceipt.decision)} />
++                 <Metric
++                   label="Newest decisive comparisons"
++                   value={show(newestEvidence.decisiveComparisons)}
++                 />
++                 <Metric
++                   label="Decisive / floor"
++                   value={
++                     formatLearningFloorProgress(
++                       {
++                         decisive: newestEvidence.decisiveComparisons,
++                         effectiveDecisive: newestEvidence.effectiveDecisiveComparisons,
++                       },
++                       policyFloor,
++                     ) ?? FLOOR_NOT_REPORTED
++                   }
++                 />
++                 <Metric
++                   label="Floor met"
++                   value={
++                     newestEvidence.floorMet === true
++                       ? "yes"
++                       : newestEvidence.floorMet === false
++                         ? "no"
++                         : show(newestEvidence.floorMet)
++                   }
++                 />
++               </div>
++               <div className="mt-4 overflow-x-auto">
++                 <table className="min-w-full text-left text-sm">
++                   <thead>
++                     <tr>
++                       {["Exclusion reason", "Count"].map((header) => (
++                         <th
++                           className={`pb-3 pr-3 font-normal ${monoEyebrowClassName}`}
++                           key={header}
++                         >
++                           {header}
++                         </th>
++                       ))}
++                     </tr>
++                   </thead>
++                   <tbody>
++                     {exclusionReasons.map((entry) => (
++                       <tr className="border-t border-[var(--rm-border)]" key={entry.reason}>
++                         <td className="py-2 pr-3 font-mono">{entry.reason}</td>
++                         <td className="py-2 pr-3 font-mono">{show(entry.count)}</td>
++                       </tr>
++                     ))}
++                     {exclusionReasons.length === 0 ? (
++                       <tr className="border-t border-[var(--rm-border)]">
++                         <td className={`py-2 pr-3 ${supportingTextClassName}`} colSpan={2}>
++                           No exclusion was recorded in the receipts read.
++                         </td>
++                       </tr>
++                     ) : null}
++                   </tbody>
++                 </table>
++               </div>
++               {evidenceFamilies.length > 0 ? (
++                 <div className="mt-4 overflow-x-auto">
++                   <table className="min-w-full text-left text-sm">
++                     <thead>
++                       <tr>
++                         {[
++                           "Family",
++                           "Decisive",
++                           "Holdout",
++                           "Development",
++                           "Distinct captures",
++                           "Floor",
++                         ].map((header) => (
++                           <th
++                             className={`pb-3 pr-3 font-normal ${monoEyebrowClassName}`}
++                             key={header}
++                           >
++                             {header}
++                           </th>
++                         ))}
++                       </tr>
++                     </thead>
++                     <tbody>
++                       {evidenceFamilies.map((entry) => {
++                         const floorMet =
++                           Number(evidenceFloor.minDecisiveComparisons ?? 0) > 0 &&
++                           Number(entry.counts.decisiveComparisons ?? 0) >=
++                             Number(evidenceFloor.minDecisiveComparisons ?? 0) &&
++                           Number(entry.counts.distinctCaptures ?? 0) >=
++                             Number(evidenceFloor.minDistinctCaptures ?? 0);
++                         return (
++                           <tr className="border-t border-[var(--rm-border)]" key={entry.family}>
++                             <td className="py-2 pr-3 font-mono">{entry.family}</td>
++                             <td className="py-2 pr-3 font-mono">
++                               {show(entry.counts.decisiveComparisons)}
++                             </td>
++                             <td className="py-2 pr-3 font-mono">
++                               {show(entry.counts.holdoutComparisons)}
++                             </td>
++                             <td className="py-2 pr-3 font-mono">
++                               {show(entry.counts.developmentComparisons)}
++                             </td>
++                             <td className="py-2 pr-3 font-mono">
++                               {show(entry.counts.distinctCaptures)}
++                             </td>
++                             <td className="py-2 pr-3">
++                               <Badge tone={floorMet ? "success" : "warning"}>
++                                 {floorMet ? "met" : "below"}
++                               </Badge>
++                             </td>
++                           </tr>
++                         );
++                       })}
++                     </tbody>
++                   </table>
++                 </div>
++               ) : null}
++             </>
++           ))}
++       </SectionCard>
++     </div>
++   );
++ }
++
++ /**
++  * Run 99 history page: a windowed summary of the live loop - activity heat grid, the decisive
++  * comparison mix with per-comparison deltas, the activation/rollback timeline and the guardrail
++  * verdicts. Every panel reads the durable projection; nothing is derived in the browser.
++  */
++ export function LearningHistoryPage() {
++   const { token, setToken } = useOperatorToken();
++   const history = useOperatorSurface<Record<string, unknown>>(
++     () => fetchLearningHistory(fetch, token || undefined, { hours: 168, bucketHours: 6 }),
++     [token],
++   );
++   const view = normalizeLearningHistory(history.value);
++   const nowMs = Date.now();
++   return (
++     <div className="grid gap-4">
++       <SectionCard
++         title="Learning history"
++         description="What the replay, evaluation and learning loop did over the window, read from durable state."
++       >
++         <OperatorTokenField onToken={setToken} token={token} />
++         {view.available ? (
++           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
++             <Metric label="Window" value={`${view.windowHours}h · ${view.bucketHours}h buckets`} />
++             <Metric label="Replayed" value={show(view.totals.replays)} />
++             <Metric label="Refused" value={show(view.totals.refusals)} />
++             <Metric label="Deferred" value={show(view.totals.deferred)} />
++             <Metric label="Evaluations" value={show(view.totals.evaluations)} />
++             <Metric label="Comparisons" value={show(view.totals.comparisons)} />
++             <Metric label="Decisive" value={show(view.totals.decisive)} />
++             <Metric label="Validations" value={show(view.totals.validations)} />
++             <Metric label="Activations" value={show(view.totals.activations)} />
++             <Metric label="Rollbacks" value={show(view.totals.rollbacks)} />
++             <Metric label="Advisory observed" value={show(view.totals.advisoryObserved)} />
++             <Metric label="Would have changed" value={show(view.totals.advisoryWouldHaveChanged)} />
++           </div>
++         ) : null}
++       </SectionCard>
++       {degraded(history.loading, history.error) ?? (
++         <>
++           <LearningActivityHeatmapView history={view} nowMs={nowMs} />
++           <LearningComparisonMixView history={view} />
++           <LearningActivationTimelineView history={view} nowMs={nowMs} />
++           <LearningGuardrailListView history={view} />
++         </>
++       )}
++     </div>
++   );
++ }
++
++ const PAGE_FOR_PATH: Readonly<Record<string, () => ReactElement>> = {
++   "/app/learning": LearningOverviewPage,
++   "/app/learning/configuration": LearningConfigurationPage,
++   "/app/learning/packs": LearningPacksPage,
++   "/app/learning/decisions": LearningDecisionsPage,
++   "/app/learning/evidence": LearningEvidencePage,
++   "/app/learning/history": LearningHistoryPage,
++ };
++
++ export function LearningRouteView() {
++   const location = useLocation();
++   const Page = PAGE_FOR_PATH[location.pathname] ?? LearningOverviewPage;
++   return <Page />;
++ }
++
++ export default LearningRouteView;
++
+
+ ❯ app/routes/learning.test.tsx:915:20
+    913|   test("source includes endpoint ladder strings, scope-wide legacy hea…
+    914|     const source = readFileSync(new URL("./learning.tsx", import.meta.…
+    915|     expect(source).toContain("Scope-wide cohort rollout (legacy)");
+       |                    ^
+    916|     expect(source).toContain("endpoint ladder");
+    917|     expect(source).toContain("rollbackLearningLadder");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 25 passed (27)
+   Start at  12:54:30
+   Duration  15.22s (transform 4.74s, setup 0ms, collect 10.43s, tests 417ms, environment 1ms, prepare 1.65s)
+
+undefined
+D:\DEV\role-model\.worktrees\105-route-learning-matching-scope-activation\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run app/routes/learning.test.tsx
+
+

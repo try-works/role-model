@@ -1,0 +1,11 @@
+{
+  "artifact": "03-implementation-summary.md",
+  "artifact_hash": "133d72db6bcab23cc4ea9d64539a786148fab29a4471e33288709586bfa20fa6",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\105-route-learning-matching-scope-activation\\.recursive\\run\\105-route-learning-matching-scope-activation\\03-implementation-summary.md",
+  "locked_at": "2026-10-03T05:57:13.629Z",
+  "prerequisite_hashes": {
+    "02-to-be-plan.md": "52d2457cc56f7001d7b5e6a4a5d515530dc427cb5e73c5881b3255a08f2c5423"
+  },
+  "previous_receipt_hash": "3ddfa66d695a2ecb39aa78d89b68d531512e8cb4309e8627e5c0b3582f0969d2",
+  "receipt_hash": "c94f2d076b47e45707afbce915f01e2cb9df72a09c049a62747845dcdbc1ca72"
+}

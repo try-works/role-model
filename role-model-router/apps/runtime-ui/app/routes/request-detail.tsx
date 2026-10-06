@@ -824,7 +824,10 @@ export default function RequestDetailRoute() {
             {[
               ["Provider", providerKind],
               ["Model", modelDisplayName],
-              ["Effective effort", formatEffectiveEffortDisclosure({ reasoningEffort, effortSource })],
+              [
+                "Effective effort",
+                formatEffectiveEffortDisclosure({ reasoningEffort, effortSource }),
+              ],
               ["Finish reason", finishReason],
               ["Input tokens", inputTokenTruth.text],
               ["Output tokens", outputTokenTruth.text],

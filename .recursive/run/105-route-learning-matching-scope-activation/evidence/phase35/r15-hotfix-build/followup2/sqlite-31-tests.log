@@ -1,0 +1,44 @@
+
+ RUN  v3.2.4 E:/tmp/run105-r15-hotfix2-public/role-model-router/packages/sqlite-memory
+
+(node:40724) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:29572) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:40100) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run105-telemetry-failure-dimensions.test.ts [ test/run105-telemetry-failure-dimensions.test.ts ]
+ FAIL  test/run105-telemetry-failure-size-limit.test.ts [ test/run105-telemetry-failure-size-limit.test.ts ]
+ FAIL  test/run94-compact-stub.test.ts [ test/run94-compact-stub.test.ts ]
+Error: Failed to resolve entry for package "@role-model-router/profile-aggregator". The package may have incorrect main/module/exports specified in its package.json.
+  Plugin: vite:import-analysis
+  File: E:/tmp/run105-r15-hotfix2-public/role-model-router/packages/sqlite-memory/src/index.ts:18:7
+  14 |    aggregateObservedPerformanceSamples,
+  15 |    aggregateOperationalPerformanceSamples
+  16 |  } from "@role-model-router/profile-aggregator";
+     |          ^
+  17 |  import {
+  18 |    PERFORMANCE_HISTORY_POLICY_MAX_ARCHIVES,
+ ❯ packageEntryFailure ../../../node_modules/.pnpm/vite@7.3.2_@types+node@22.1_d71bf8265f9610ce90201e170d5dc2b8/node_modules/vite/dist/node/chunks/config.js:32820:32
+ ❯ resolvePackageEntry ../../../node_modules/.pnpm/vite@7.3.2_@types+node@22.1_d71bf8265f9610ce90201e170d5dc2b8/node_modules/vite/dist/node/chunks/config.js:32817:2
+ ❯ tryNodeResolve ../../../node_modules/.pnpm/vite@7.3.2_@types+node@22.1_d71bf8265f9610ce90201e170d5dc2b8/node_modules/vite/dist/node/chunks/config.js:32720:70
+ ❯ ResolveIdContext.handler ../../../node_modules/.pnpm/vite@7.3.2_@types+node@22.1_d71bf8265f9610ce90201e170d5dc2b8/node_modules/vite/dist/node/chunks/config.js:32559:16
+ ❯ EnvironmentPluginContainer.resolveId ../../../node_modules/.pnpm/vite@7.3.2_@types+node@22.1_d71bf8265f9610ce90201e170d5dc2b8/node_modules/vite/dist/node/chunks/config.js:28721:56
+ ❯ TransformPluginContext.resolve ../../../node_modules/.pnpm/vite@7.3.2_@types+node@22.1_d71bf8265f9610ce90201e170d5dc2b8/node_modules/vite/dist/node/chunks/config.js:28933:13
+ ❯ normalizeUrl ../../../node_modules/.pnpm/vite@7.3.2_@types+node@22.1_d71bf8265f9610ce90201e170d5dc2b8/node_modules/vite/dist/node/chunks/config.js:27115:22
+ ❯ ../../../node_modules/.pnpm/vite@7.3.2_@types+node@22.1_d71bf8265f9610ce90201e170d5dc2b8/node_modules/vite/dist/node/chunks/config.js:27181:32
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+
+ Test Files  3 failed (3)
+      Tests  no tests
+   Start at  18:54:48
+   Duration  2.08s (transform 605ms, setup 0ms, collect 0ms, tests 0ms, environment 2ms, prepare 1.70s)
+
+undefined
+E:\tmp\run105-r15-hotfix2-public\role-model-router\packages\sqlite-memory:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/run105-telemetry-failure-size-limit.test.ts test/run105-telemetry-failure-dimensions.test.ts test/run94-compact-stub.test.ts

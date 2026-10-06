@@ -39,11 +39,7 @@
         "moonshot/kimi-k2.7-code",
         "openai/gpt-5.4"
       ],
-      "providerIds": [
-        "deepseek",
-        "moonshot",
-        "openai"
-      ],
+      "providerIds": ["deepseek", "moonshot", "openai"],
       "limits": {
         "safeContextWindow": 262144,
         "safeMaxOutputTokens": 128000,
@@ -51,51 +47,26 @@
         "maxOutputTokens": 384000
       },
       "modalities": {
-        "guaranteedInput": [
-          "text"
-        ],
-        "availableInput": [
-          "image",
-          "text",
-          "video"
-        ],
+        "guaranteedInput": ["text"],
+        "availableInput": ["image", "text", "video"],
         "conditionalInput": {
           "image": {
-            "targetModelIds": [
-              "chatgpt/gpt-5.4",
-              "moonshot/kimi-k2.7-code"
-            ],
+            "targetModelIds": ["chatgpt/gpt-5.4", "moonshot/kimi-k2.7-code"],
             "endpointIds": [
               "moonshot.personal.kimi-code.global.kimi-k2-7-code",
               "openai.personal.codex.global.gpt-5-4"
             ]
           },
           "video": {
-            "targetModelIds": [
-              "moonshot/kimi-k2.7-code"
-            ],
-            "endpointIds": [
-              "moonshot.personal.kimi-code.global.kimi-k2-7-code"
-            ]
+            "targetModelIds": ["moonshot/kimi-k2.7-code"],
+            "endpointIds": ["moonshot.personal.kimi-code.global.kimi-k2-7-code"]
           }
         },
-        "output": [
-          "text"
-        ]
+        "output": ["text"]
       },
       "capabilities": {
-        "guaranteed": [
-          "reasoning",
-          "structured.output",
-          "text.chat",
-          "tools.function_calling"
-        ],
-        "available": [
-          "reasoning",
-          "structured.output",
-          "text.chat",
-          "tools.function_calling"
-        ],
+        "guaranteed": ["reasoning", "structured.output", "text.chat", "tools.function_calling"],
+        "available": ["reasoning", "structured.output", "text.chat", "tools.function_calling"],
         "conditional": {},
         "tools": {
           "functionCalling": true
@@ -114,11 +85,7 @@
         }
       },
       "declared": {
-        "modelIds": [
-          "chatgpt/gpt-5.4",
-          "deepseek/deepseek-v4-flash",
-          "moonshot/kimi-k2.7-code"
-        ],
+        "modelIds": ["chatgpt/gpt-5.4", "deepseek/deepseek-v4-flash", "moonshot/kimi-k2.7-code"],
         "endpointIds": [
           "deepseek.personal.primary.global.deepseek-v4-flash",
           "moonshot.personal.kimi-code.global.kimi-k2-7-code",
@@ -126,11 +93,7 @@
         ]
       },
       "routable": {
-        "modelIds": [
-          "chatgpt/gpt-5.4",
-          "deepseek/deepseek-v4-flash",
-          "moonshot/kimi-k2.7-code"
-        ],
+        "modelIds": ["chatgpt/gpt-5.4", "deepseek/deepseek-v4-flash", "moonshot/kimi-k2.7-code"],
         "endpointIds": [
           "deepseek.personal.primary.global.deepseek-v4-flash",
           "moonshot.personal.kimi-code.global.kimi-k2-7-code",
@@ -159,15 +122,9 @@
       "endpoint_ids": [],
       "type": "alias",
       "routingMode": "basic",
-      "targetModelIds": [
-        "openai/gpt-5.4"
-      ],
-      "canonicalModelIds": [
-        "openai/gpt-5.4"
-      ],
-      "providerIds": [
-        "openai"
-      ],
+      "targetModelIds": ["openai/gpt-5.4"],
+      "canonicalModelIds": ["openai/gpt-5.4"],
+      "providerIds": ["openai"],
       "limits": {
         "safeContextWindow": 1050000,
         "safeMaxOutputTokens": 128000,
@@ -175,32 +132,14 @@
         "maxOutputTokens": 128000
       },
       "modalities": {
-        "guaranteedInput": [
-          "image",
-          "text"
-        ],
-        "availableInput": [
-          "image",
-          "text"
-        ],
+        "guaranteedInput": ["image", "text"],
+        "availableInput": ["image", "text"],
         "conditionalInput": {},
-        "output": [
-          "text"
-        ]
+        "output": ["text"]
       },
       "capabilities": {
-        "guaranteed": [
-          "reasoning",
-          "structured.output",
-          "text.chat",
-          "tools.function_calling"
-        ],
-        "available": [
-          "reasoning",
-          "structured.output",
-          "text.chat",
-          "tools.function_calling"
-        ],
+        "guaranteed": ["reasoning", "structured.output", "text.chat", "tools.function_calling"],
+        "available": ["reasoning", "structured.output", "text.chat", "tools.function_calling"],
         "conditional": {},
         "tools": {
           "functionCalling": true
@@ -219,9 +158,7 @@
         }
       },
       "declared": {
-        "modelIds": [
-          "openai/gpt-5.4"
-        ],
+        "modelIds": ["openai/gpt-5.4"],
         "endpointIds": []
       },
       "routable": {
@@ -237,9 +174,7 @@
           "supportsLongCacheRetention": true
         }
       },
-      "sources": [
-        "catalog:openai/gpt-5.4"
-      ]
+      "sources": ["catalog:openai/gpt-5.4"]
     }
   ],
   "setup": {
@@ -256,10 +191,7 @@
     "runtimeInventoryRevision": "fixture-revision"
   },
   "effort": {
-    "union": [
-      "low",
-      "high"
-    ],
+    "union": ["low", "high"],
     "portableIntersection": []
   }
 }

@@ -10,7 +10,7 @@ const provenance = {
 };
 
 const baseEndpointId = "deepseek.personal.global.deepseek-v4-pro";
-const expandedEndpointId = baseEndpointId + "-max";
+const expandedEndpointId = `${baseEndpointId}-max`;
 const modelId = "deepseek/deepseek-v4-pro";
 const providerAccountId = "deepseek.personal";
 

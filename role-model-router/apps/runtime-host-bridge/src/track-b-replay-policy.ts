@@ -127,6 +127,14 @@ export const REPLAY_REFUSAL_CODES = [
    * capable arm merely is unavailable (unhealthy or excluded), because the pool can change.
    */
   "candidate_input_unsupported",
+  /**
+   * Run 105 R1/R8: the capture carries no (role, task) classification, so it can never be admitted
+   * to the replay/eval queue. Scope-wide packs do not exist in stage 3, so there is no ladder for an
+   * unclassified request to fill and no advisory it could be served - the class is TERMINAL (no
+   * future tick can classify a capture that never recorded a classification) and is named here so
+   * the disposition plane counts it instead of it arriving as a generic refusal.
+   */
+  "no_route_classification",
 ] as const;
 
 export type ReplayRefusalCode = (typeof REPLAY_REFUSAL_CODES)[number];
@@ -741,6 +749,18 @@ export function selectReplayCandidates(input: {
     selected.push(endpointId);
     if (selected.length === cap) break;
   }
+  if (process.env.ROLE_MODEL_FOCUS_DIAG) {
+    console.error(
+      `[select-diag] cfg=${input.configuredEndpointIds.map((c) => c.split(".").pop()).join(",")} source=${(input.sourceEndpointId || "").split(".").pop() || null} reqMod=${JSON.stringify(input.requirements ? input.requirements.requiredModalities : null)} reqCap=${JSON.stringify(input.requirements ? input.requirements.requiredCapabilities : null)} profiles=${(
+        input.endpointProfiles || []
+      )
+        .map(
+          (p) =>
+            `${p.endpointId.split(".").pop()}:mod[${(p.modalities || []).join(",")}]:cap[${(p.capabilities || []).join(",")}]`,
+        )
+        .join("|")} => selected=${selected.map((c) => c.split(".").pop()).join(",")}`,
+    );
+  }
   return selected;
 }
 
@@ -916,15 +936,21 @@ export function preferEffortMatchedReplayArms(input: {
   readonly configuredEndpoints: readonly ReplayArmDescriptor[];
   readonly sourceModelId: string;
   readonly sourceReasoningEffort: string | null;
+  readonly sourceEndpointId?: string | null;
 }): readonly ReplayArmDescriptor[] {
   const sourceEffort = normalizeEffort(input.sourceReasoningEffort);
   if (sourceEffort === null) return input.arms;
+  const sourceEndpointId =
+    typeof input.sourceEndpointId === "string" ? input.sourceEndpointId.trim() : "";
   return input.arms.map((arm) => {
     if (normalizeEffort(arm.reasoningEffort) === sourceEffort) return arm;
     const variant = input.configuredEndpoints.find(
       (endpoint) =>
         endpoint.modelId === arm.modelId &&
-        normalizeEffort(endpoint.reasoningEffort) === sourceEffort,
+        normalizeEffort(endpoint.reasoningEffort) === sourceEffort &&
+        // Run 105 bug 3: the effort-matched sibling must not be the source endpoint itself, or the
+        // counterfactual collapses back onto the source and the distinct-source gate rejects it.
+        (sourceEndpointId === "" || endpoint.endpointId !== sourceEndpointId),
     );
     return variant ?? arm;
   });

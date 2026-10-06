@@ -1,9 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import {
-  type TraceLineageManifestInput,
-  createTraceLineageManifest,
-} from "../src/index.js";
+import { type TraceLineageManifestInput, createTraceLineageManifest } from "../src/index.js";
 
 const stageNames = [
   "router_ingress",
@@ -33,11 +30,11 @@ function makeInput(effort: {
     source_set: ["request:req-run106-effort"],
     stages: stageNames.map((stage, index) => ({
       ...common,
-      stage_id: "stage-" + stage,
+      stage_id: `stage-${stage}`,
       stage,
-      receipt_id: "receipt-" + stage,
+      receipt_id: `receipt-${stage}`,
       disposition: "recorded" as const,
-      predecessor_stage_id: index ? "stage-" + stageNames[index - 1] : undefined,
+      predecessor_stage_id: index ? `stage-${stageNames[index - 1]}` : undefined,
       ...(stage === "message_graph"
         ? {
             artifact_hash: "sha256:graph",

@@ -1,0 +1,22 @@
+# host-bridge composition incl materializeRouteLadders GREEN
+# workdir: D:\DEV\role-model\.worktrees\105-route-learning-matching-scope-activation\role-model-router
+# command: corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/track-b-runtime-composition.test.ts 2>&1 | Out-String
+# exit: 0
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-host-bridge
+
+(node:38636) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/track-b-runtime-composition.test.ts (20 tests) 31069ms
+   ✓ production Track B composition > allows the packaged sidecar sufficient startup time to recover persisted Track B state  11211ms
+   ✓ production Track B composition > runs all thirteen canonical extensions through the real process host and supervisor  3179ms
+   ✓ production Track B composition > gives production extension workers a bounded startup budget that tolerates host contention  16018ms
+
+ Test Files  1 passed (1)
+      Tests  20 passed (20)
+   Start at  18:17:14
+   Duration  35.70s (transform 2.48s, setup 0ms, collect 4.09s, tests 31.07s, environment 0ms, prepare 186ms)
+
+
+

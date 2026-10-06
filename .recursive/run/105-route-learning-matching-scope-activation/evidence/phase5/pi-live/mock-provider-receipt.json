@@ -1,0 +1,138 @@
+{
+  "schemaVersion": "1.0",
+  "providerKind": "run105-pi-live-loopback-openai-success",
+  "startedAt": "2026-10-03T13:41:40.004Z",
+  "port": 3465,
+  "modelListCount": 2,
+  "admissionProbeCount": 1,
+  "chatCompletionsCount": 7,
+  "responsesCount": 0,
+  "rejectedRequestCount": 0,
+  "requests": [
+    {
+      "at": "2026-10-03T13:41:40.251Z",
+      "kind": "admission-probe",
+      "model": "deepseek-flash",
+      "stream": false,
+      "messageRoles": [
+        "user"
+      ],
+      "userContentPreview": "role-model admission readiness probe",
+      "intentMetadata": null
+    },
+    {
+      "at": "2026-10-03T13:42:25.669Z",
+      "kind": "chat-completion",
+      "model": "deepseek-flash",
+      "stream": true,
+      "messageRoles": [
+        "system",
+        "user"
+      ],
+      "userContentPreview": "[{\"type\":\"text\",\"text\":\"RUN105-PI-LIVE-MARKER: reply with exactly RUN105-PI-LIVE-MARKER\"}]",
+      "intentMetadata": null
+    },
+    {
+      "at": "2026-10-03T13:42:32.762Z",
+      "kind": "chat-completion",
+      "model": "deepseek-flash",
+      "stream": true,
+      "messageRoles": [
+        "system",
+        "user"
+      ],
+      "userContentPreview": "[{\"type\":\"text\",\"text\":\"Writer/coder review task: review the one-line change const\"}]",
+      "intentMetadata": null
+    },
+    {
+      "at": "2026-10-03T13:42:32.948Z",
+      "kind": "chat-completion",
+      "model": "deepseek-flash",
+      "stream": true,
+      "messageRoles": [
+        "system",
+        "user",
+        "assistant",
+        "user"
+      ],
+      "userContentPreview": "[{\"type\":\"text\",\"text\":\"Writer/coder review task: review the one-line change const\"}] | [{\"type\":\"text\",\"text\":\"total\"}]",
+      "intentMetadata": null
+    },
+    {
+      "at": "2026-10-03T13:42:33.159Z",
+      "kind": "chat-completion",
+      "model": "deepseek-flash",
+      "stream": true,
+      "messageRoles": [
+        "system",
+        "user",
+        "assistant",
+        "user",
+        "assistant",
+        "user"
+      ],
+      "userContentPreview": "[{\"type\":\"text\",\"text\":\"Writer/coder review task: review the one-line change const\"}] | [{\"type\":\"text\",\"text\":\"total\"}] | [{\"type\":\"text\",\"text\":\"=\"}]",
+      "intentMetadata": null
+    },
+    {
+      "at": "2026-10-03T13:42:33.338Z",
+      "kind": "chat-completion",
+      "model": "deepseek-flash",
+      "stream": true,
+      "messageRoles": [
+        "system",
+        "user",
+        "assistant",
+        "user",
+        "assistant",
+        "user",
+        "assistant",
+        "user"
+      ],
+      "userContentPreview": "[{\"type\":\"text\",\"text\":\"Writer/coder review task: review the one-line change const\"}] | [{\"type\":\"text\",\"text\":\"total\"}] | [{\"type\":\"text\",\"text\":\"=\"}] | [{\"type\":\"text\",\"text\":\"a\"}]",
+      "intentMetadata": null
+    },
+    {
+      "at": "2026-10-03T13:42:33.529Z",
+      "kind": "chat-completion",
+      "model": "deepseek-flash",
+      "stream": true,
+      "messageRoles": [
+        "system",
+        "user",
+        "assistant",
+        "user",
+        "assistant",
+        "user",
+        "assistant",
+        "user",
+        "assistant",
+        "user"
+      ],
+      "userContentPreview": "[{\"type\":\"text\",\"text\":\"Writer/coder review task: review the one-line change const\"}] | [{\"type\":\"text\",\"text\":\"total\"}] | [{\"type\":\"text\",\"text\":\"=\"}] | [{\"type\":\"text\",\"text\":\"a\"}] | [{\"type\":\"text\",\"text\":\"+\"}]",
+      "intentMetadata": null
+    },
+    {
+      "at": "2026-10-03T13:42:33.693Z",
+      "kind": "chat-completion",
+      "model": "deepseek-flash",
+      "stream": true,
+      "messageRoles": [
+        "system",
+        "user",
+        "assistant",
+        "user",
+        "assistant",
+        "user",
+        "assistant",
+        "user",
+        "assistant",
+        "user",
+        "assistant",
+        "user"
+      ],
+      "userContentPreview": "[{\"type\":\"text\",\"text\":\"Writer/coder review task: review the one-line change const\"}] | [{\"type\":\"text\",\"text\":\"total\"}] | [{\"type\":\"text\",\"text\":\"=\"}] | [{\"type\":\"text\",\"text\":\"a\"}] | [{\"type\":\"text\",\"text\":\"+\"}] | [{\"type\":\"text\",\"text\":\"b; for correctness and reply RUN105-REVIEW-OK\"}]",
+      "intentMetadata": null
+    }
+  ]
+}

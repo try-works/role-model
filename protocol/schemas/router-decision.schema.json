@@ -117,7 +117,15 @@
     "reasoning_effort": { "type": ["string", "null"], "minLength": 1, "maxLength": 128 },
     "effort_source": {
       "type": "string",
-      "enum": ["named", "disabled", "provider_default", "none", "client", "variant", "variant_coerced"]
+      "enum": [
+        "named",
+        "disabled",
+        "provider_default",
+        "none",
+        "client",
+        "variant",
+        "variant_coerced"
+      ]
     },
     "effort_resolution": {
       "type": "string",
@@ -140,7 +148,14 @@
       "description": "Run 106 R8 (F5): records the non-inferiority promotion receipt - which arm outranked the weighted leader, the displaced leader, the rule thresholds, and whether it changed the weighted selection. Present only when the rule promoted a challenger.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["promoted_endpoint_id", "displaced_endpoint_id", "quality_margin", "min_latency_advantage_ms", "min_cost_advantage_fraction", "changed_weighted_selection"],
+      "required": [
+        "promoted_endpoint_id",
+        "displaced_endpoint_id",
+        "quality_margin",
+        "min_latency_advantage_ms",
+        "min_cost_advantage_fraction",
+        "changed_weighted_selection"
+      ],
       "properties": {
         "promoted_endpoint_id": { "type": "string" },
         "displaced_endpoint_id": { "type": "string" },

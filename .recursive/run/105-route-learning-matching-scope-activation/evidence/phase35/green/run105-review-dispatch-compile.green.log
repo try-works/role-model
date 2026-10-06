@@ -1,0 +1,3 @@
+Command: corepack pnpm exec tsc -p tsconfig.json --noEmit
+Exit: 0
+

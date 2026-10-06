@@ -1,0 +1,343 @@
+(node:31648) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `role-model-dev --trace-warnings ...` to show where the warning was created)
+{
+  "status": "listening",
+  "host": "127.0.0.1",
+  "port": 3458
+}
+[track-b-sidecar] (node:26344) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+[track-b-sidecar] (Use `node --trace-warnings ...` to show where the warning was created)
+[run105] durable task advisory refresh: scope=standalone-runtime-dev pairs=0 stage=S4
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-6486293a-009e-4527-8996-3746c755c61d,req-c15446a4-42f8-47e4-aaa1-b2f6330d101a,req-399ddc8f-b9ab-4ad8-b24a-a56e32a5d90e only=none pendingCount=32 captureCount=112
+[run101] replay job scope: learned runtime:e22187fbf8a85949e6e4b00d1c480633
+[run101] recovery page payload shape: value,businessOutput,durableLocator,evidenceRef,readCapability,workerPid
+[run101] recovery page came back empty: scope=runtime:e22187fbf8a85949e6e4b00d1c480633 channel=development cursor=start
+[run98] remote-health recovery: deepseek.personal.deepseek-api-key.global.deepseek-flash, deepseek.personal.deepseek-api-key.global.deepseek-flash-max, deepseek.personal.deepseek-api-key.global.deepseek-v4-pro
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-6486293a-009e-4527-8996-3746c755c61d,req-c15446a4-42f8-47e4-aaa1-b2f6330d101a,req-399ddc8f-b9ab-4ad8-b24a-a56e32a5d90e only=none pendingCount=32 captureCount=112
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-6486293a-009e-4527-8996-3746c755c61d,req-c15446a4-42f8-47e4-aaa1-b2f6330d101a,req-399ddc8f-b9ab-4ad8-b24a-a56e32a5d90e only=none pendingCount=32 captureCount=112
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-6486293a-009e-4527-8996-3746c755c61d,req-c15446a4-42f8-47e4-aaa1-b2f6330d101a,req-399ddc8f-b9ab-4ad8-b24a-a56e32a5d90e only=none pendingCount=32 captureCount=112
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-6486293a-009e-4527-8996-3746c755c61d,req-c15446a4-42f8-47e4-aaa1-b2f6330d101a,req-399ddc8f-b9ab-4ad8-b24a-a56e32a5d90e only=none pendingCount=32 captureCount=112
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-6486293a-009e-4527-8996-3746c755c61d,req-c15446a4-42f8-47e4-aaa1-b2f6330d101a,req-399ddc8f-b9ab-4ad8-b24a-a56e32a5d90e only=none pendingCount=32 captureCount=112
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-6486293a-009e-4527-8996-3746c755c61d,req-c15446a4-42f8-47e4-aaa1-b2f6330d101a,req-399ddc8f-b9ab-4ad8-b24a-a56e32a5d90e only=none pendingCount=32 captureCount=112
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-6486293a-009e-4527-8996-3746c755c61d,req-c15446a4-42f8-47e4-aaa1-b2f6330d101a,req-399ddc8f-b9ab-4ad8-b24a-a56e32a5d90e only=none pendingCount=32 captureCount=112
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-6486293a-009e-4527-8996-3746c755c61d,req-c15446a4-42f8-47e4-aaa1-b2f6330d101a,req-399ddc8f-b9ab-4ad8-b24a-a56e32a5d90e only=none pendingCount=32 captureCount=112
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-6486293a-009e-4527-8996-3746c755c61d,req-c15446a4-42f8-47e4-aaa1-b2f6330d101a,req-399ddc8f-b9ab-4ad8-b24a-a56e32a5d90e only=none pendingCount=32 captureCount=112
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-6486293a-009e-4527-8996-3746c755c61d,req-c15446a4-42f8-47e4-aaa1-b2f6330d101a,req-399ddc8f-b9ab-4ad8-b24a-a56e32a5d90e only=none pendingCount=32 captureCount=112
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-6486293a-009e-4527-8996-3746c755c61d,req-c15446a4-42f8-47e4-aaa1-b2f6330d101a,req-399ddc8f-b9ab-4ad8-b24a-a56e32a5d90e only=none pendingCount=32 captureCount=112
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-6486293a-009e-4527-8996-3746c755c61d,req-c15446a4-42f8-47e4-aaa1-b2f6330d101a,req-399ddc8f-b9ab-4ad8-b24a-a56e32a5d90e only=none pendingCount=32 captureCount=112
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-6486293a-009e-4527-8996-3746c755c61d,req-c15446a4-42f8-47e4-aaa1-b2f6330d101a,req-399ddc8f-b9ab-4ad8-b24a-a56e32a5d90e only=none pendingCount=32 captureCount=112
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-6486293a-009e-4527-8996-3746c755c61d,req-c15446a4-42f8-47e4-aaa1-b2f6330d101a,req-399ddc8f-b9ab-4ad8-b24a-a56e32a5d90e only=none pendingCount=32 captureCount=112
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-6486293a-009e-4527-8996-3746c755c61d,req-c15446a4-42f8-47e4-aaa1-b2f6330d101a,req-399ddc8f-b9ab-4ad8-b24a-a56e32a5d90e only=none pendingCount=32 captureCount=112
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-6486293a-009e-4527-8996-3746c755c61d,req-c15446a4-42f8-47e4-aaa1-b2f6330d101a,req-399ddc8f-b9ab-4ad8-b24a-a56e32a5d90e only=none pendingCount=32 captureCount=112
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-6486293a-009e-4527-8996-3746c755c61d,req-c15446a4-42f8-47e4-aaa1-b2f6330d101a,req-399ddc8f-b9ab-4ad8-b24a-a56e32a5d90e only=none pendingCount=32 captureCount=112
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-6486293a-009e-4527-8996-3746c755c61d,req-c15446a4-42f8-47e4-aaa1-b2f6330d101a,req-399ddc8f-b9ab-4ad8-b24a-a56e32a5d90e only=none pendingCount=32 captureCount=112
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=3 eligible=3 codes=none request=req-07497f2e-bfe2-4faf-9271-5f06cbab19ac alias=baseline.remote-only model=baseline.remote-only effort=high pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[]
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-6486293a-009e-4527-8996-3746c755c61d,req-c15446a4-42f8-47e4-aaa1-b2f6330d101a,req-399ddc8f-b9ab-4ad8-b24a-a56e32a5d90e only=none pendingCount=32 captureCount=112
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-07497f2e-bfe2-4faf-9271-5f06cbab19ac,req-6486293a-009e-4527-8996-3746c755c61d,req-c15446a4-42f8-47e4-aaa1-b2f6330d101a only=none pendingCount=32 captureCount=113
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-07497f2e-bfe2-4faf-9271-5f06cbab19ac,req-6486293a-009e-4527-8996-3746c755c61d,req-c15446a4-42f8-47e4-aaa1-b2f6330d101a only=none pendingCount=32 captureCount=113
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-07497f2e-bfe2-4faf-9271-5f06cbab19ac,req-6486293a-009e-4527-8996-3746c755c61d,req-c15446a4-42f8-47e4-aaa1-b2f6330d101a only=none pendingCount=32 captureCount=113
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-07497f2e-bfe2-4faf-9271-5f06cbab19ac,req-6486293a-009e-4527-8996-3746c755c61d,req-c15446a4-42f8-47e4-aaa1-b2f6330d101a only=none pendingCount=32 captureCount=113
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-07497f2e-bfe2-4faf-9271-5f06cbab19ac,req-6486293a-009e-4527-8996-3746c755c61d,req-c15446a4-42f8-47e4-aaa1-b2f6330d101a only=none pendingCount=32 captureCount=113
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-07497f2e-bfe2-4faf-9271-5f06cbab19ac,req-6486293a-009e-4527-8996-3746c755c61d,req-c15446a4-42f8-47e4-aaa1-b2f6330d101a only=none pendingCount=32 captureCount=113
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-07497f2e-bfe2-4faf-9271-5f06cbab19ac,req-6486293a-009e-4527-8996-3746c755c61d,req-c15446a4-42f8-47e4-aaa1-b2f6330d101a only=none pendingCount=32 captureCount=113
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-07497f2e-bfe2-4faf-9271-5f06cbab19ac,req-6486293a-009e-4527-8996-3746c755c61d,req-c15446a4-42f8-47e4-aaa1-b2f6330d101a only=none pendingCount=32 captureCount=113
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-07497f2e-bfe2-4faf-9271-5f06cbab19ac,req-6486293a-009e-4527-8996-3746c755c61d,req-c15446a4-42f8-47e4-aaa1-b2f6330d101a only=none pendingCount=32 captureCount=113
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-07497f2e-bfe2-4faf-9271-5f06cbab19ac,req-6486293a-009e-4527-8996-3746c755c61d,req-c15446a4-42f8-47e4-aaa1-b2f6330d101a only=none pendingCount=32 captureCount=113
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-07497f2e-bfe2-4faf-9271-5f06cbab19ac,req-6486293a-009e-4527-8996-3746c755c61d,req-c15446a4-42f8-47e4-aaa1-b2f6330d101a only=none pendingCount=32 captureCount=113
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-07497f2e-bfe2-4faf-9271-5f06cbab19ac,req-6486293a-009e-4527-8996-3746c755c61d,req-c15446a4-42f8-47e4-aaa1-b2f6330d101a only=none pendingCount=32 captureCount=113
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=3 eligible=3 codes=none request=req-f93fa856-889d-4660-96b3-700de2ae4771 alias=baseline.remote-only model=baseline.remote-only effort=high pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[]
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-07497f2e-bfe2-4faf-9271-5f06cbab19ac,req-6486293a-009e-4527-8996-3746c755c61d,req-c15446a4-42f8-47e4-aaa1-b2f6330d101a only=none pendingCount=32 captureCount=113
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=3 eligible=3 codes=none request=req-93157239-ef3c-4750-889a-6b6410c384d6 alias=baseline.remote-only model=baseline.remote-only effort=high pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=3 eligible=3 codes=none request=req-2abc1709-d896-4592-8fe2-3745b9a46fb6 alias=baseline.remote-only model=baseline.remote-only effort=high pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[]
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-f93fa856-889d-4660-96b3-700de2ae4771,req-07497f2e-bfe2-4faf-9271-5f06cbab19ac,req-6486293a-009e-4527-8996-3746c755c61d only=none pendingCount=32 captureCount=114
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=116
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=116
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=116
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=116
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=116
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=116
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=116
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=116
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=116
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=116
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=116
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=116
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=116
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=116
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=116
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=116
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=116
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=116
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=116
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=116
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=116
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=116
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=116
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=116
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=116
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=116
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=116
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=116
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=116
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=116
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2 request=replay-req-07497f2e-bfe2-4faf-9271-5f06cbab19ac-97959ad7ed557568 alias=- model=- effort=- pass=replay allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-flash-max]
+[run97] shadow pipeline start supervised-replay:00d78232ec56f8914bf5ced58a8cd764b8796a8f118219c31ed15ba6d0344834
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2 request=replay-judge-cb3b768fc985b768 alias=- model=- effort=- pass=replay allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run97] profile estimate retry:supervised-replay:00d78232ec56f8914bf5ced58a8cd764b8796a8f118219c31ed15ba6d0344834 keys=schemaVersion,degraded,capability,reason,routingContinues,atMs,receiptHash,businessOutput,durableLocator,evidenceRef,readCapability,workerPid reason=finalized decisive evaluation provenance required for profile learning
+[run97] learning degraded profile:supervised-replay:00d78232ec56f8914bf5ced58a8cd764b8796a8f118219c31ed15ba6d0344834 keys=schemaVersion,degraded,capability,reason,routingContinues,atMs,receiptHash,businessOutput,durableLocator,evidenceRef,readCapability,workerPid finalized decisive evaluation provenance required for profile learning
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=116
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=120
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2 request=replay-req-07497f2e-bfe2-4faf-9271-5f06cbab19ac-fbc09d3e04c5a244 alias=- model=- effort=- pass=replay allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-flash-max]
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=120
+[run97] shadow pipeline start supervised-replay:9e86309fd223094a8314cb822146aa28f943410dae495c199db772786ca21313
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2 request=replay-judge-2c7156b36ebc149a alias=- model=- effort=- pass=replay allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run97] shadow pipeline start supervised-replay:9e86309fd223094a8314cb822146aa28f943410dae495c199db772786ca21313
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2 request=replay-judge-2c7156b36ebc149a alias=- model=- effort=- pass=replay allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run97] profile estimate retry:supervised-replay:9e86309fd223094a8314cb822146aa28f943410dae495c199db772786ca21313 keys=schemaVersion,degraded,capability,reason,routingContinues,atMs,receiptHash,businessOutput,durableLocator,evidenceRef,readCapability,workerPid reason=finalized decisive evaluation provenance required for profile learning
+[run97] learning degraded profile:supervised-replay:9e86309fd223094a8314cb822146aa28f943410dae495c199db772786ca21313 keys=schemaVersion,degraded,capability,reason,routingContinues,atMs,receiptHash,businessOutput,durableLocator,evidenceRef,readCapability,workerPid finalized decisive evaluation provenance required for profile learning
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2 request=replay-req-07497f2e-bfe2-4faf-9271-5f06cbab19ac-200db881374e8a80 alias=- model=- effort=- pass=replay allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-flash-max]
+[run97] shadow pipeline start supervised-replay:15f0e7c961de6829b11d7866da25e9626ab790ca079dd1dadaaa579a7e478bbc
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2 request=replay-judge-eb9e11eac0d0e5bc alias=- model=- effort=- pass=replay allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run97] profile estimate retry:supervised-replay:15f0e7c961de6829b11d7866da25e9626ab790ca079dd1dadaaa579a7e478bbc keys=schemaVersion,degraded,capability,reason,routingContinues,atMs,receiptHash,businessOutput,durableLocator,evidenceRef,readCapability,workerPid reason=finalized decisive evaluation provenance required for profile learning
+[run97] learning degraded profile:supervised-replay:15f0e7c961de6829b11d7866da25e9626ab790ca079dd1dadaaa579a7e478bbc keys=schemaVersion,degraded,capability,reason,routingContinues,atMs,receiptHash,businessOutput,durableLocator,evidenceRef,readCapability,workerPid finalized decisive evaluation provenance required for profile learning
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2 request=replay-req-07497f2e-bfe2-4faf-9271-5f06cbab19ac-e3cf71bf9fb06e31 alias=- model=- effort=- pass=replay allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-flash-max]
+[run97] shadow pipeline start supervised-replay:2b543d8e59eec2c8a1d768e8b41d159905c8b44f31cbb4f54ec1db8297b60a62
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2 request=replay-judge-8fd332d210b51c69 alias=- model=- effort=- pass=replay allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2 request=replay-req-07497f2e-bfe2-4faf-9271-5f06cbab19ac-459f60f9add54958 alias=- model=- effort=- pass=replay allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-flash-max]
+[run97] shadow pipeline start supervised-replay:ea583300cb749978d9550069b121ad3b58a46862f0929486ce74b5f73822b40c
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2 request=replay-judge-ce6ffd70a2bba97b alias=- model=- effort=- pass=replay allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run97] profile estimate retry:supervised-replay:ea583300cb749978d9550069b121ad3b58a46862f0929486ce74b5f73822b40c keys=schemaVersion,degraded,capability,reason,routingContinues,atMs,receiptHash,businessOutput,durableLocator,evidenceRef,readCapability,workerPid reason=finalized decisive evaluation provenance required for profile learning
+[run97] learning degraded profile:supervised-replay:ea583300cb749978d9550069b121ad3b58a46862f0929486ce74b5f73822b40c keys=schemaVersion,degraded,capability,reason,routingContinues,atMs,receiptHash,businessOutput,durableLocator,evidenceRef,readCapability,workerPid finalized decisive evaluation provenance required for profile learning
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=136
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=136
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=136
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=136
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=136
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=136
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=136
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=136
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=136
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=136
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=136
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2 request=replay-req-93157239-ef3c-4750-889a-6b6410c384d6-ca1b3832fd81597b alias=- model=- effort=- pass=replay allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-flash-max]
+[run97] shadow pipeline start supervised-replay:25471ecbd9b5b1fd5c5bbd602fa6301b78f1126dad60832021837e949d540356
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2 request=replay-judge-67aeaacacd7aeaf6 alias=- model=- effort=- pass=replay allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run97] shadow pipeline start supervised-replay:25471ecbd9b5b1fd5c5bbd602fa6301b78f1126dad60832021837e949d540356
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=136
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=140
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6,req-f93fa856-889d-4660-96b3-700de2ae4771 only=none pendingCount=32 captureCount=140
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=3 eligible=3 codes=none request=req-972390fb-a414-474b-b4f5-e9f53703f883 alias=baseline.remote-only model=baseline.remote-only effort=high pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=3 eligible=3 codes=none request=req-79b100ea-4e63-4781-9498-657829bb1641 alias=baseline.remote-only model=baseline.remote-only effort=high pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=3 eligible=3 codes=none request=req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39 alias=baseline.remote-only model=baseline.remote-only effort=high pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[]
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-972390fb-a414-474b-b4f5-e9f53703f883,req-2abc1709-d896-4592-8fe2-3745b9a46fb6,req-93157239-ef3c-4750-889a-6b6410c384d6 only=none pendingCount=32 captureCount=141
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39,req-79b100ea-4e63-4781-9498-657829bb1641,req-972390fb-a414-474b-b4f5-e9f53703f883 only=none pendingCount=32 captureCount=143
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2 request=replay-req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39-92ba65d1d62d49d5 alias=- model=- effort=- pass=replay allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-flash-max]
+[run97] shadow pipeline start supervised-replay:9de7e5e55d70e35acefd204613118989b360124faddfe04aaa681ced6554ab11
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2 request=replay-judge-33c0cab493ac1a70 alias=- model=- effort=- pass=replay allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2 request=replay-req-972390fb-a414-474b-b4f5-e9f53703f883-2fda10b9ecbd1fb3 alias=- model=- effort=- pass=replay allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-flash-max]
+[run97] shadow pipeline start supervised-replay:e13e9c99ae845b4a2cd35cf33a5ea418390701f8406f37d5e6973253407f4f31
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2 request=replay-judge-7a769f608f07a514 alias=- model=- effort=- pass=replay allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2 request=replay-replay-judge-67aeaacacd7aeaf6-2608b0a3a5f68c3f alias=- model=- effort=- pass=replay allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-flash-max]
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39,req-79b100ea-4e63-4781-9498-657829bb1641,req-972390fb-a414-474b-b4f5-e9f53703f883 only=none pendingCount=32 captureCount=143
+[run97] shadow pipeline start supervised-replay:61c65a9de1086089e306bf4845c2361a767c251d6e85adbdf6b1586dfdb2985d
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2 request=replay-judge-91779adc82a03399 alias=- model=- effort=- pass=replay allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash-max] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run97] shadow pipeline start supervised-replay:61c65a9de1086089e306bf4845c2361a767c251d6e85adbdf6b1586dfdb2985d
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2 request=replay-judge-91779adc82a03399 alias=- model=- effort=- pass=replay allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash-max] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2 request=replay-req-93157239-ef3c-4750-889a-6b6410c384d6-5b46ef31703db9e3 alias=- model=- effort=- pass=replay allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-flash-max]
+[run97] shadow pipeline start supervised-replay:b72a808e256e68dcaae3f3a07b0d3554b9e65992c11a8dc3165ff6682a6432b9
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2 request=replay-judge-4c2670be06aaeb28 alias=- model=- effort=- pass=replay allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2 request=replay-req-f93fa856-889d-4660-96b3-700de2ae4771-cb6c10a00906cd7b alias=- model=- effort=- pass=replay allow=[deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-flash-max]
+[run97] shadow pipeline start supervised-replay:95528b356477dd729295cb788b40c98e48c94b790819c9680345c1c16540fc1c
+[run99] live advisory miss: stage=S4 channel=development scope=standalone-runtime-dev
+[run115] eligibility candidates=3 eligible=1 codes=POLICY_DENY_ENDPOINT=2 request=replay-judge-5377ff8696cefcc5 alias=- model=- effort=- pass=replay allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash] denied=[deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro]
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39,req-79b100ea-4e63-4781-9498-657829bb1641,req-972390fb-a414-474b-b4f5-e9f53703f883 only=none pendingCount=32 captureCount=158
+[run105] ladder materialization wrote 1 ladder row(s)
+[run105] durable task advisory refresh: scope=standalone-runtime-dev pairs=1 stage=S4
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39,req-79b100ea-4e63-4781-9498-657829bb1641,req-972390fb-a414-474b-b4f5-e9f53703f883 only=none pendingCount=32 captureCount=163
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39,req-79b100ea-4e63-4781-9498-657829bb1641,req-972390fb-a414-474b-b4f5-e9f53703f883 only=none pendingCount=32 captureCount=163
+[run115] eligibility candidates=3 eligible=3 codes=none request=req-4c8385c6-a893-4061-8d06-3ec07d8c482f alias=baseline.remote-only model=baseline.remote-only effort=high pass=live allow=[deepseek.personal.deepseek-api-key.global.deepseek-flash,deepseek.personal.deepseek-api-key.global.deepseek-flash-max,deepseek.personal.deepseek-api-key.global.deepseek-v4-pro] denied=[]
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=40 scoped=1 first=req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39,req-79b100ea-4e63-4781-9498-657829bb1641,req-972390fb-a414-474b-b4f5-e9f53703f883 only=none pendingCount=32 captureCount=163
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39,req-79b100ea-4e63-4781-9498-657829bb1641 only=none pendingCount=32 captureCount=164
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39,req-79b100ea-4e63-4781-9498-657829bb1641 only=none pendingCount=32 captureCount=164
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39,req-79b100ea-4e63-4781-9498-657829bb1641 only=none pendingCount=32 captureCount=164
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39,req-79b100ea-4e63-4781-9498-657829bb1641 only=none pendingCount=32 captureCount=164
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39,req-79b100ea-4e63-4781-9498-657829bb1641 only=none pendingCount=32 captureCount=164
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39,req-79b100ea-4e63-4781-9498-657829bb1641 only=none pendingCount=32 captureCount=164
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39,req-79b100ea-4e63-4781-9498-657829bb1641 only=none pendingCount=32 captureCount=164
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39,req-79b100ea-4e63-4781-9498-657829bb1641 only=none pendingCount=32 captureCount=164
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39,req-79b100ea-4e63-4781-9498-657829bb1641 only=none pendingCount=32 captureCount=164
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39,req-79b100ea-4e63-4781-9498-657829bb1641 only=none pendingCount=32 captureCount=164
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39,req-79b100ea-4e63-4781-9498-657829bb1641 only=none pendingCount=32 captureCount=164
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39,req-79b100ea-4e63-4781-9498-657829bb1641 only=none pendingCount=32 captureCount=164
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39,req-79b100ea-4e63-4781-9498-657829bb1641 only=none pendingCount=32 captureCount=164
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39,req-79b100ea-4e63-4781-9498-657829bb1641 only=none pendingCount=32 captureCount=164
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39,req-79b100ea-4e63-4781-9498-657829bb1641 only=none pendingCount=32 captureCount=164
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39,req-79b100ea-4e63-4781-9498-657829bb1641 only=none pendingCount=32 captureCount=164
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39,req-79b100ea-4e63-4781-9498-657829bb1641 only=none pendingCount=32 captureCount=164
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39,req-79b100ea-4e63-4781-9498-657829bb1641 only=none pendingCount=32 captureCount=164
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39,req-79b100ea-4e63-4781-9498-657829bb1641 only=none pendingCount=32 captureCount=164
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39,req-79b100ea-4e63-4781-9498-657829bb1641 only=none pendingCount=32 captureCount=164
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39,req-79b100ea-4e63-4781-9498-657829bb1641 only=none pendingCount=32 captureCount=164
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39,req-79b100ea-4e63-4781-9498-657829bb1641 only=none pendingCount=32 captureCount=164
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39,req-79b100ea-4e63-4781-9498-657829bb1641 only=none pendingCount=32 captureCount=164
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39,req-79b100ea-4e63-4781-9498-657829bb1641 only=none pendingCount=32 captureCount=164
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39,req-79b100ea-4e63-4781-9498-657829bb1641 only=none pendingCount=32 captureCount=164
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39,req-79b100ea-4e63-4781-9498-657829bb1641 only=none pendingCount=32 captureCount=164
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39,req-79b100ea-4e63-4781-9498-657829bb1641 only=none pendingCount=32 captureCount=164
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39,req-79b100ea-4e63-4781-9498-657829bb1641 only=none pendingCount=32 captureCount=164
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39,req-79b100ea-4e63-4781-9498-657829bb1641 only=none pendingCount=32 captureCount=164
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39,req-79b100ea-4e63-4781-9498-657829bb1641 only=none pendingCount=32 captureCount=164
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39,req-79b100ea-4e63-4781-9498-657829bb1641 only=none pendingCount=32 captureCount=164
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39,req-79b100ea-4e63-4781-9498-657829bb1641 only=none pendingCount=32 captureCount=164
+[run105] 32 capture(s) refused as no_route_classification: no (role, task) classification, so they never enter the replay/eval queue and get no advisory
+[run104-pending] captures=39 scoped=1 first=req-4c8385c6-a893-4061-8d06-3ec07d8c482f,req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39,req-79b100ea-4e63-4781-9498-657829bb1641 only=none pendingCount=32 captureCount=164

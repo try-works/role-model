@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { expandPreferredEndpointIdsToEffortArms } from "../src/index.js";
 import type { EndpointRegistryResult } from "@role-model-router/endpoint-registry";
+import { expandPreferredEndpointIdsToEffortArms } from "../src/index.js";
 
 function endpoint(id: string, reasoningEffort: string | null) {
   return {
@@ -13,7 +13,9 @@ function endpoint(id: string, reasoningEffort: string | null) {
       model_id: "acct.global.model",
       runtime_version: "1",
       region: "global",
-      ...(reasoningEffort === null ? { reasoning_effort: null } : { reasoning_effort: reasoningEffort }),
+      ...(reasoningEffort === null
+        ? { reasoning_effort: null }
+        : { reasoning_effort: reasoningEffort }),
     },
     declared: {
       endpoint_id: id,
@@ -33,8 +35,8 @@ function registry(endpoints: ReturnType<typeof endpoint>[]): EndpointRegistryRes
 
 describe("run106 arm-aware controller/advisory preference expansion (R6)", () => {
   const base = "acct.global.model";
-  const high = base + "-" + encodeURIComponent("high");
-  const max = base + "-" + encodeURIComponent("max");
+  const high = `${base}-${encodeURIComponent("high")}`;
+  const max = `${base}-${encodeURIComponent("max")}`;
 
   it("expands a base-endpoint preference to every eligible effort arm deterministically", () => {
     const result = expandPreferredEndpointIdsToEffortArms({

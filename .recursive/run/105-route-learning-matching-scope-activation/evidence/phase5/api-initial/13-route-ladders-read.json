@@ -1,0 +1,24 @@
+{
+  "probe": "13-route-ladders-read",
+  "note": "ladder index read (Package E surface)",
+  "request": {
+    "method": "POST",
+    "url": "http://127.0.0.1:3458/operator/learning/route-ladders",
+    "headers": {
+      "authorization": "Bearer REDACTED",
+      "content-type": "application/json"
+    },
+    "body": {}
+  },
+  "response": {
+    "status": 404,
+    "statusText": "Not Found",
+    "contentType": "application/json",
+    "ms": 11,
+    "body": {
+      "error": "not found"
+    },
+    "bodyTruncated": 0
+  },
+  "capturedAt": "2026-10-03T13:25:31.396Z"
+}

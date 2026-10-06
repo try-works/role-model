@@ -322,9 +322,7 @@ export function projectRuntimeRouteInput(
       ...(input.advisoryConsideration
         ? { advisoryConsideration: input.advisoryConsideration }
         : {}),
-      ...(input.effortResolution
-        ? { effortResolution: input.effortResolution }
-        : {}),
+      ...(input.effortResolution ? { effortResolution: input.effortResolution } : {}),
     },
     routingDiagnostics: {
       retrievalReceiptId: input.retrievalReceipt.receiptId,

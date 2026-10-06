@@ -358,4 +358,96 @@ describe("Run 96 operator evidence routes", () => {
       );
     }
   });
+
+  test("binds route-ladder materialization to the authenticated operator boundary", async () => {
+    const token = "run105-materialize-boundary-token";
+    const requests: string[] = [];
+    const bodies: unknown[] = [];
+    const sidecar = createServer((request, response) => {
+      const route = request.url ?? "/";
+      requests.push(`${request.method} ${route}`);
+      expect(request.headers.authorization).toBe(`Bearer ${token}`);
+      expect(request.headers["x-role-model-channel"]).toBe("development");
+      expect(request.headers["x-role-model-scope"]).toBe("run105:materialize-boundary");
+      expect(request.headers["x-role-model-authorization-epoch"]).toBe("105");
+      expect(request.headers["x-role-model-capability"]).toBe("learning");
+      const chunks: Buffer[] = [];
+      request.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
+      request.on("end", () => {
+        bodies.push(JSON.parse(Buffer.concat(chunks).toString("utf8") || "{}"));
+        response.writeHead(200, { "content-type": "application/json" });
+        response.end(
+          JSON.stringify({
+            schemaVersion: "role-model.route-ladder-materialization.v1",
+            ladders: [],
+          }),
+        );
+      });
+    });
+    await new Promise<void>((resolve) => sidecar.listen(0, "127.0.0.1", resolve));
+    const address = sidecar.address();
+    if (!address || typeof address === "string") throw new Error("operator sidecar did not bind");
+    try {
+      const operations = createTrackBOperations({
+        statePath: path.join(
+          os.tmpdir(),
+          `run105-materialize-boundary-state-${process.pid}-${Date.now()}.json`,
+        ),
+        catalog: [],
+        operationsEndpoint: `http://127.0.0.1:${address.port}`,
+        operationsToken: token,
+        runtimeChannel: "development",
+        scope: "run105:materialize-boundary",
+        authorizationEpoch: 105,
+      });
+      const body = { configuredEndpointIds: ["endpoint:a", "endpoint:b"] };
+      await expect(operations.materializeRouteLadders(body)).resolves.toMatchObject({
+        schemaVersion: "role-model.route-ladder-materialization.v1",
+        ladders: [],
+      });
+      expect(requests).toEqual(["POST /operator/learning/materialize-route-ladders"]);
+      expect(bodies).toEqual([body]);
+    } finally {
+      await new Promise<void>((resolve, reject) =>
+        sidecar.close((error) => (error ? reject(error) : resolve())),
+      );
+    }
+  });
+
+  test("bridge returns a truthful unavailable response when materialization is not wired", async () => {
+    const server = await startBridgeServer({
+      host: "127.0.0.1",
+      port: 0,
+      operatorAuthToken: "operator-secret",
+      operatorContext,
+      registry,
+      executeChatCompletions: async () => {
+        throw new Error("not used");
+      },
+      executeResponses: async () => {
+        throw new Error("not used");
+      },
+    });
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/operator/learning/materialize-route-ladders`,
+        {
+          method: "POST",
+          headers: {
+            authorization: "Bearer operator-secret",
+            "x-role-model-channel": operatorContext.channel,
+            "x-role-model-scope": operatorContext.scope,
+            "x-role-model-authorization-epoch": String(operatorContext.authorizationEpoch),
+            "x-role-model-capability": "learning",
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({ configuredEndpointIds: ["endpoint:a"] }),
+        },
+      );
+      expect(response.status).toBe(503);
+      expect(await json(response)).toMatchObject({ error: "operator_capability_unavailable" });
+    } finally {
+      await server.close();
+    }
+  });
 });

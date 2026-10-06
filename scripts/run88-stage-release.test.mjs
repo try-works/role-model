@@ -168,17 +168,51 @@ test("production promotion preserves the complete tested stage pair, not only th
     });
     persisted[channel] = JSON.parse(await readFile(manifestPath, "utf8"));
   }
-  assert.deepEqual(module.validateRun88ProductionPromotion(persisted), {
-    ok: true,
-    releaseId,
-    privateSourceCommit,
-    privateDistributionSha256,
-    extensionCount: 13,
+  /**
+   * The private runtime manifest embeds the channel identity it was built for, so a production
+   * package can never carry the stage candidate's manifest digest. Measured live on v0.0.16: every
+   * platform failed "production private distribution does not match the tested stage candidate"
+   * because `manifest_sha256` hashed a file whose only other difference was that context.
+   */
+  const runtimeBody = {
+    schemaVersion: "role-model.track-b-runtime-manifest.v1",
+    privateCommit: privateSourceCommit,
+    sidecar: { modulePath: "runtime-operations-server.mjs", artifactSha256: "d".repeat(64) },
+    extensions: Array.from({ length: 13 }, (_, index) => ({ id: `extension-${index}` })),
+  };
+  const stageRuntime = {
+    ...runtimeBody,
+    runtimeChannelContext: {
+      channel: "stage",
+      scopeId: "standalone-runtime-stage",
+      authorizationEpoch: 1,
+    },
+  };
+  const productionRuntime = {
+    ...runtimeBody,
+    runtimeChannelContext: {
+      channel: "production",
+      scopeId: "standalone-runtime",
+      authorizationEpoch: 1,
+    },
+  };
+  const promoted = module.validateRun88ProductionPromotion({
+    ...persisted,
+    stageRuntime,
+    productionRuntime,
   });
+  assert.equal(promoted.ok, true);
+  assert.equal(promoted.releaseId, releaseId);
+  assert.equal(promoted.privateSourceCommit, privateSourceCommit);
+  assert.equal(promoted.privateDistributionSha256, privateDistributionSha256);
+  assert.equal(promoted.extensionCount, 13);
+  assert.match(promoted.privateRuntimeBodySha256, /^[0-9a-f]{64}$/);
   assert.throws(
     () =>
       module.validateRun88ProductionPromotion({
         ...persisted,
+        stageRuntime,
+        productionRuntime,
         production: {
           ...persisted.production,
           track_b_runtime: {
@@ -188,6 +222,31 @@ test("production promotion preserves the complete tested stage pair, not only th
         },
       }),
     /sidecar|tested stage|promotion/i,
+  );
+  assert.throws(
+    () =>
+      module.validateRun88ProductionPromotion({
+        ...persisted,
+        stageRuntime,
+        productionRuntime: {
+          ...productionRuntime,
+          sidecar: { ...productionRuntime.sidecar, artifactSha256: "1".repeat(64) },
+        },
+      }),
+    /beyond its runtime channel identity/i,
+  );
+  assert.throws(
+    () =>
+      module.validateRun88ProductionPromotion({
+        ...persisted,
+        stageRuntime: productionRuntime,
+        productionRuntime,
+      }),
+    /does not identify as the stage channel/i,
+  );
+  assert.throws(
+    () => module.validateRun88ProductionPromotion({ ...persisted }),
+    /private runtime manifests are required/i,
   );
   await rm(root, { recursive: true, force: true });
 });

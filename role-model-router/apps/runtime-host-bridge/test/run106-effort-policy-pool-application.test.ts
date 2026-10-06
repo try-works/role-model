@@ -108,11 +108,7 @@ describe("run106 R3/R10: effort-policy resolution kind is recorded on the pool a
 
     expect(applied.resolution).toBe("exact_primary");
     expect(applied.effectiveEffort).toBe("high");
-    expect(applied.allowEndpoints).toEqual([
-      flashHigh,
-      proHigh,
-      "moonshot.global.kimi-k3-code",
-    ]);
+    expect(applied.allowEndpoints).toEqual([flashHigh, proHigh, "moonshot.global.kimi-k3-code"]);
     expect(applied.preferredEndpointIds).toEqual([]);
   });
 

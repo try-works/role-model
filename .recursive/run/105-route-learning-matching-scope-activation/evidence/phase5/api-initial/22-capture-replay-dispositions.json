@@ -1,0 +1,24 @@
+{
+  "probe": "22-capture-replay-dispositions",
+  "note": "replay disposition list",
+  "request": {
+    "method": "POST",
+    "url": "http://127.0.0.1:3458/capture/replay-dispositions",
+    "headers": {
+      "authorization": "Bearer REDACTED",
+      "content-type": "application/json"
+    },
+    "body": {}
+  },
+  "response": {
+    "status": 404,
+    "statusText": "Not Found",
+    "contentType": "application/json",
+    "ms": 3,
+    "body": {
+      "error": "not found"
+    },
+    "bodyTruncated": 0
+  },
+  "capturedAt": "2026-10-03T13:25:31.432Z"
+}

@@ -20,15 +20,15 @@ describe("Run 106 effort-source occurrence vocabulary", () => {
       const database = new DatabaseSync(databasePath);
       database.exec(
         "CREATE TABLE runtime_telemetry_records (" +
-        "request_id TEXT PRIMARY KEY, routing_decision_id TEXT NOT NULL, endpoint_id TEXT NOT NULL, " +
-        "reasoning_effort TEXT, effort_source TEXT, conversation_id TEXT NOT NULL, created_at_ms INTEGER NOT NULL" +
-        "); " +
-        "INSERT INTO runtime_telemetry_records (request_id, routing_decision_id, endpoint_id, reasoning_effort, effort_source, conversation_id, created_at_ms) VALUES " +
-        "('req-client', 'd1', 'e1', 'high', 'client', 'c', 1), " +
-        "('req-variant', 'd2', 'e2', 'high', 'variant', 'c', 2), " +
-        "('req-coerced', 'd3', 'e3', 'max', 'variant_coerced', 'c', 3), " +
-        "('req-none', 'd4', 'e4', NULL, 'none', 'c', 4), " +
-        "('req-null-default', 'd6', 'e6', NULL, NULL, 'c', 6);",
+          "request_id TEXT PRIMARY KEY, routing_decision_id TEXT NOT NULL, endpoint_id TEXT NOT NULL, " +
+          "reasoning_effort TEXT, effort_source TEXT, conversation_id TEXT NOT NULL, created_at_ms INTEGER NOT NULL" +
+          "); " +
+          "INSERT INTO runtime_telemetry_records (request_id, routing_decision_id, endpoint_id, reasoning_effort, effort_source, conversation_id, created_at_ms) VALUES " +
+          "('req-client', 'd1', 'e1', 'high', 'client', 'c', 1), " +
+          "('req-variant', 'd2', 'e2', 'high', 'variant', 'c', 2), " +
+          "('req-coerced', 'd3', 'e3', 'max', 'variant_coerced', 'c', 3), " +
+          "('req-none', 'd4', 'e4', NULL, 'none', 'c', 4), " +
+          "('req-null-default', 'd6', 'e6', NULL, NULL, 'c', 6);",
       );
       database.close();
 

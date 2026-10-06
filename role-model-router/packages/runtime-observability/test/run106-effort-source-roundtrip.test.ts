@@ -4,12 +4,12 @@ import { normalizeRuntimeEffortReceipt } from "../src/index.js";
 
 describe("Run 106 runtime effort-source round-trip", () => {
   test("round-trips the occurrence/telemetry effort-source vocabulary", () => {
-    expect(normalizeRuntimeEffortReceipt({ reasoningEffort: "high", effortSource: "client" })).toEqual(
-      { reasoningEffort: "high", effortSource: "client", coerced: false },
-    );
-    expect(normalizeRuntimeEffortReceipt({ reasoningEffort: "high", effortSource: "variant" })).toEqual(
-      { reasoningEffort: "high", effortSource: "variant", coerced: false },
-    );
+    expect(
+      normalizeRuntimeEffortReceipt({ reasoningEffort: "high", effortSource: "client" }),
+    ).toEqual({ reasoningEffort: "high", effortSource: "client", coerced: false });
+    expect(
+      normalizeRuntimeEffortReceipt({ reasoningEffort: "high", effortSource: "variant" }),
+    ).toEqual({ reasoningEffort: "high", effortSource: "variant", coerced: false });
     expect(
       normalizeRuntimeEffortReceipt({ reasoningEffort: "high", effortSource: "variant_coerced" }),
     ).toEqual({ reasoningEffort: "high", effortSource: "variant_coerced", coerced: true });

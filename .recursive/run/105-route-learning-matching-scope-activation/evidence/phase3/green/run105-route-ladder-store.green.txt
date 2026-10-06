@@ -1,0 +1,14 @@
+(node:1736) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ run105 R2/R7: the ladder write/read round trips through one indexed (role, task) read (394.2206ms)
+✔ run105 R1: the ladder is keyed by (role_id, task_type_id); same role or same task alone never collides (126.9708ms)
+✔ run105 R2: a stale lower-version rewrite is discarded (87.9691ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 994.433
+EXIT=0

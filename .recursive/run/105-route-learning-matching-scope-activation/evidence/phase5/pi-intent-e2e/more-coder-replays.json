@@ -1,0 +1,161 @@
+{
+  "chosen": [
+    "req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39",
+    "req-972390fb-a414-474b-b4f5-e9f53703f883",
+    "replay-judge-67aeaacacd7aeaf6",
+    "req-93157239-ef3c-4750-889a-6b6410c384d6",
+    "req-f93fa856-889d-4660-96b3-700de2ae4771"
+  ],
+  "out": [
+    {
+      "id": "req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39",
+      "status": 200,
+      "body": {
+        "schemaVersion": "role-model.supervised-replay-command-receipt.v1",
+        "requestId": "req-a93ae2c1-a14f-49a8-9256-45ab0e2a2e39",
+        "replayJobId": "5bac1b6102b87b290a5d1dc2ef9478da8a3c132067fdd291fc4c9ff150eb47d8",
+        "state": "complete",
+        "evaluationJobId": "evaluation-replay-aa95c0c68d93a4c0ba3e",
+        "evaluationOutcome": "source",
+        "comparisonGroupId": "comparison:supervised-replay:9de7e5e55d70e35acefd204613118989b360124faddfe04aaa681ced6554ab11",
+        "branches": [
+          {
+            "candidateEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+            "outcome": "complete",
+            "branchRootRef": "861cd56dd89b5564b87159d0752937849140a752c8afbfb269629f08d03fc7d5"
+          }
+        ],
+        "dispatches": [
+          {
+            "kind": "candidate",
+            "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+            "attempt": 1,
+            "costMicros": 0,
+            "bytes": 0,
+            "outcome": "complete"
+          }
+        ]
+      }
+    },
+    {
+      "id": "req-972390fb-a414-474b-b4f5-e9f53703f883",
+      "status": 200,
+      "body": {
+        "schemaVersion": "role-model.supervised-replay-command-receipt.v1",
+        "requestId": "req-972390fb-a414-474b-b4f5-e9f53703f883",
+        "replayJobId": "0050236968a7f7fb75eedf07bae155b313462f10b8969b087f55036864233d3e",
+        "state": "complete",
+        "evaluationJobId": "evaluation-replay-8d0ee4427a13b4af33c2",
+        "evaluationOutcome": "source",
+        "comparisonGroupId": "comparison:supervised-replay:e13e9c99ae845b4a2cd35cf33a5ea418390701f8406f37d5e6973253407f4f31",
+        "branches": [
+          {
+            "candidateEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+            "outcome": "complete",
+            "branchRootRef": "63683eeafd10bb5c6caf1b7787b9c5ec5387b97299f97e92d217aadf9b9c350d"
+          }
+        ],
+        "dispatches": [
+          {
+            "kind": "candidate",
+            "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+            "attempt": 1,
+            "costMicros": 0,
+            "bytes": 0,
+            "outcome": "complete"
+          }
+        ]
+      }
+    },
+    {
+      "id": "replay-judge-67aeaacacd7aeaf6",
+      "status": 200,
+      "body": {
+        "schemaVersion": "role-model.supervised-replay-command-receipt.v1",
+        "requestId": "replay-judge-67aeaacacd7aeaf6",
+        "replayJobId": "61e088762850737782d5d9be98cde0939d7d70a5eb24787f3775015e1e01489b",
+        "state": "complete",
+        "evaluationJobId": "evaluation-replay-1c85526bd3aa31a6487c",
+        "evaluationOutcome": "source",
+        "comparisonGroupId": "comparison:supervised-replay:61c65a9de1086089e306bf4845c2361a767c251d6e85adbdf6b1586dfdb2985d",
+        "branches": [
+          {
+            "candidateEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+            "outcome": "complete",
+            "branchRootRef": "b0d9218feb23e71f844b70bb188637c9ab90656802056a0f0911bbeecb54aaea"
+          }
+        ],
+        "dispatches": [
+          {
+            "kind": "candidate",
+            "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+            "attempt": 1,
+            "costMicros": 0,
+            "bytes": 0,
+            "outcome": "complete"
+          }
+        ]
+      }
+    },
+    {
+      "id": "req-93157239-ef3c-4750-889a-6b6410c384d6",
+      "status": 200,
+      "body": {
+        "schemaVersion": "role-model.supervised-replay-command-receipt.v1",
+        "requestId": "req-93157239-ef3c-4750-889a-6b6410c384d6",
+        "replayJobId": "2ac44db3e202ff481dd39fd9cfce4625980ebc39a3f8de4edac1857539a4a5da",
+        "state": "complete",
+        "evaluationJobId": "evaluation-replay-ac99b7ca9940a0635260",
+        "evaluationOutcome": "candidate",
+        "comparisonGroupId": "comparison:supervised-replay:b72a808e256e68dcaae3f3a07b0d3554b9e65992c11a8dc3165ff6682a6432b9",
+        "branches": [
+          {
+            "candidateEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+            "outcome": "complete",
+            "branchRootRef": "33a6a3a11387964e5021536b3fa14f3b2dca4c22dc55a92f73c7c358f1d9e880"
+          }
+        ],
+        "dispatches": [
+          {
+            "kind": "candidate",
+            "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+            "attempt": 1,
+            "costMicros": 0,
+            "bytes": 0,
+            "outcome": "complete"
+          }
+        ]
+      }
+    },
+    {
+      "id": "req-f93fa856-889d-4660-96b3-700de2ae4771",
+      "status": 200,
+      "body": {
+        "schemaVersion": "role-model.supervised-replay-command-receipt.v1",
+        "requestId": "req-f93fa856-889d-4660-96b3-700de2ae4771",
+        "replayJobId": "094ae1b3d970099ccd24d899ecf17122b4262b32eacba9d5afec773888a3d190",
+        "state": "complete",
+        "evaluationJobId": "evaluation-replay-3a1de49c6aceda744a6a",
+        "evaluationOutcome": "candidate",
+        "comparisonGroupId": "comparison:supervised-replay:95528b356477dd729295cb788b40c98e48c94b790819c9680345c1c16540fc1c",
+        "branches": [
+          {
+            "candidateEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+            "outcome": "complete",
+            "branchRootRef": "2b2051203ad7935cdd707868b0ddfa7d8be7f416416b372a2440a00c68c20b35"
+          }
+        ],
+        "dispatches": [
+          {
+            "kind": "candidate",
+            "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+            "attempt": 1,
+            "costMicros": 0,
+            "bytes": 0,
+            "outcome": "complete"
+          }
+        ]
+      }
+    }
+  ]
+}

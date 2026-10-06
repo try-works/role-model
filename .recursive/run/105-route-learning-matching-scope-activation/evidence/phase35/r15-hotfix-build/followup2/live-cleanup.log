@@ -1,0 +1,21 @@
+{
+  "cleanup": [
+    {
+      "url": "/api/role-model/endpoints/deepseek.personal.r15-local-mock.global.deepseek-v4-pro",
+      "status": 200
+    },
+    {
+      "url": "/api/role-model/accounts",
+      "status": 200
+    },
+    {
+      "url": "/api/role-model/runtime/config",
+      "status": 200
+    }
+  ],
+  "accountStatus": "disabled",
+  "health": "healthy",
+  "ready": true,
+  "commit": "2f9db9b501d952710a92c8d26ff67e88d4285593",
+  "hash": "37ee05032400c3adf6e9ce4b3527492a3f5c456154f7be2e159572a583a0cd7b"
+}

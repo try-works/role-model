@@ -1,0 +1,13 @@
+(node:21064) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ run105 R7/C6: a legacy store migrates in place without a SCHEMA_VERSION bump (additive marker) (194.1807ms)
+✔ run105 R7: a fresh store has the ladder table and WAL from the first open (68.0945ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 539.237
+EXIT=0

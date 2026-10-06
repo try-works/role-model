@@ -6,7 +6,7 @@ import type {
 import { resolveAdapterGatedReasoningEfforts } from "@role-model-router/catalog";
 import type { ProviderAccountRecord } from "@role-model-router/provider-account";
 
-import { expandReasoningEffortArms, type ReasoningEffortArm } from "./effort-instance-identity.js";
+import { type ReasoningEffortArm, expandReasoningEffortArms } from "./effort-instance-identity.js";
 
 export * from "./effort-instance-identity.js";
 

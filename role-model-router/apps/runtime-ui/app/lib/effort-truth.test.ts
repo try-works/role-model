@@ -54,9 +54,9 @@ describe("run 106 R11 effort evidence exactness", () => {
 
 describe("run 106 R11 effective reasoning-effort disclosure", () => {
   test("discloses a fixed named effort without hiding the source", () => {
-    expect(formatEffectiveEffortDisclosure({ reasoningEffort: "high", effortSource: "fixed" })).toBe(
-      "High (fixed)",
-    );
+    expect(
+      formatEffectiveEffortDisclosure({ reasoningEffort: "high", effortSource: "fixed" }),
+    ).toBe("High (fixed)");
     expect(
       formatEffectiveEffortDisclosure({ reasoningEffort: "xhigh", effortSource: "fixed" }),
     ).toBe("XHigh (fixed)");

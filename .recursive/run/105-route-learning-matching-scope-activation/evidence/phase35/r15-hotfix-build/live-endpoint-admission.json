@@ -1,0 +1,13 @@
+{
+  "status": 200,
+  "data": {
+    "endpointId": "deepseek.personal.r15-local-mock.global.deepseek-v4-pro",
+    "providerAccountId": "deepseek.personal.r15-local-mock",
+    "providerId": "deepseek",
+    "modelId": "deepseek/deepseek-v4-pro",
+    "roleIds": [
+      "writer"
+    ],
+    "status": "active"
+  }
+}

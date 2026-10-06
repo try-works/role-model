@@ -17,7 +17,9 @@ function candidate(
       model_id: endpointId,
       runtime_version: "1",
       region: "global",
-      ...(reasoningEffort === null ? { reasoning_effort: null } : { reasoning_effort: reasoningEffort }),
+      ...(reasoningEffort === null
+        ? { reasoning_effort: null }
+        : { reasoning_effort: reasoningEffort }),
     },
     declared: {
       endpoint_id: endpointId,
@@ -59,9 +61,7 @@ describe("run106 canonical decision provenance (R10)", () => {
   });
 
   test("a fixed-effort chosen arm records effort_source named", () => {
-    const decision = routeRequest(
-      buildInput({ candidates: [candidate("fixed-high", "high")] }),
-    );
+    const decision = routeRequest(buildInput({ candidates: [candidate("fixed-high", "high")] }));
     expect(decision.reasoning_effort).toBe("high");
     expect(decision.effort_source).toBe("named");
   });
@@ -108,7 +108,11 @@ describe("run106 canonical decision provenance (R10)", () => {
     const decision = routeRequest(
       buildInput({
         candidates: [candidate("provider-default", null)],
-        effortResolution: { resolution: "router_managed", effectiveEffort: null, source: "disabled" },
+        effortResolution: {
+          resolution: "router_managed",
+          effectiveEffort: null,
+          source: "disabled",
+        },
       }),
     );
     expect(decision.effort_source).toBe("disabled");

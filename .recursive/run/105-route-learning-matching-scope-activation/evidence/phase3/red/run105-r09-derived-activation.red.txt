@@ -1,0 +1,75 @@
+npm warn Unknown env config "manage-package-manager-versions". This will stop working in the next major version of npm.
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-host-bridge
+
+stderr | test/run105-r09-derived-activation.test.ts > run105 R9 derived activation > the replay loop's own health never reports a ladder activation it did not derive
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=n/a
+
+ ❯ test/run105-r09-derived-activation.test.ts (5 tests | 4 failed) 41ms
+   × run105 R9 derived activation > activation never invokes knowledge:activate-pack (D7: no promote-then-activate) 11ms
+     → (0 , evaluateRouteLadderActivation) is not a function
+   × run105 R9 derived activation > K finalized comparisons at mean confidence >= 0.7 activates the ladder 1ms
+     → (0 , evaluateRouteLadderActivation) is not a function
+   × run105 R9 derived activation > below the floor there is no ladder and no advisory: routing falls back to baseline 1ms
+     → (0 , evaluateRouteLadderActivation) is not a function
+   × run105 R9 derived activation > per-(role, task) isolation: two families activate simultaneously under different keys 1ms
+     → (0 , evaluateRouteLadderActivation) is not a function
+   ✓ run105 R9 derived activation > the replay loop's own health never reports a ladder activation it did not derive 23ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run105-r09-derived-activation.test.ts > run105 R9 derived activation > activation never invokes knowledge:activate-pack (D7: no promote-then-activate)
+TypeError: (0 , evaluateRouteLadderActivation) is not a function
+ ❯ test/run105-r09-derived-activation.test.ts:37:7
+     35|     const invoke = vi.fn(async () => ({ receipt: { state: "active", pa…
+     36|     const result = await Effect.runPromise(
+     37|       evaluateRouteLadderActivation({
+       |       ^
+     38|         records: records(5),
+     39|         configuredEndpointIds: ["endpoint:a"],
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  test/run105-r09-derived-activation.test.ts > run105 R9 derived activation > K finalized comparisons at mean confidence >= 0.7 activates the ladder
+TypeError: (0 , evaluateRouteLadderActivation) is not a function
+ ❯ test/run105-r09-derived-activation.test.ts:52:7
+     50|   test("K finalized comparisons at mean confidence >= 0.7 activates th…
+     51|     const result = await Effect.runPromise(
+     52|       evaluateRouteLadderActivation({
+       |       ^
+     53|         records: records(5),
+     54|         configuredEndpointIds: ["endpoint:a"],
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  test/run105-r09-derived-activation.test.ts > run105 R9 derived activation > below the floor there is no ladder and no advisory: routing falls back to baseline
+TypeError: (0 , evaluateRouteLadderActivation) is not a function
+ ❯ test/run105-r09-derived-activation.test.ts:65:7
+     63|   test("below the floor there is no ladder and no advisory: routing fa…
+     64|     const result = await Effect.runPromise(
+     65|       evaluateRouteLadderActivation({
+       |       ^
+     66|         records: records(4),
+     67|         configuredEndpointIds: ["endpoint:a"],
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  test/run105-r09-derived-activation.test.ts > run105 R9 derived activation > per-(role, task) isolation: two families activate simultaneously under different keys
+TypeError: (0 , evaluateRouteLadderActivation) is not a function
+ ❯ derive test/run105-r09-derived-activation.test.ts:79:9
+     77|     const derive = (roleId: string) =>
+     78|       Effect.runPromise(
+     79|         evaluateRouteLadderActivation({
+       |         ^
+     80|           records: records(5),
+     81|           configuredEndpointIds: ["endpoint:a"],
+ ❯ test/run105-r09-derived-activation.test.ts:88:46
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 1 passed (5)
+   Start at  13:43:57
+   Duration  9.15s (transform 4.33s, setup 0ms, collect 8.15s, tests 41ms, environment 1ms, prepare 366ms)
+

@@ -1,0 +1,17 @@
+# learning-ladder GREEN
+# workdir: D:\DEV\role-model\.worktrees\105-route-learning-matching-scope-activation\role-model-router
+# command: corepack pnpm --filter @role-model-router/runtime-ui exec vitest run app/lib/learning-ladder.test.ts 2>&1 | Out-String
+# exit: 0
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-ui
+
+ ✓ app/lib/learning-ladder.test.ts (4 tests) 19ms
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  13:43:29
+   Duration  2.38s (transform 266ms, setup 0ms, collect 234ms, tests 19ms, environment 1ms, prepare 986ms)
+
+
+

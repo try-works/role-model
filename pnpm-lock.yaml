@@ -430,6 +430,9 @@ importers:
       '@role-model/protocol-types':
         specifier: workspace:*
         version: link:../../../packages/protocol-types
+      effect:
+        specifier: workspace:*
+        version: link:../effect
 
   role-model-router/packages/effect: {}
 

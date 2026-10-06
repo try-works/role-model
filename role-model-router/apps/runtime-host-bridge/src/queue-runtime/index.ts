@@ -86,6 +86,7 @@ export interface ReplayQueueRuntime {
       readonly captureRef: string;
       readonly endpointIds: readonly string[];
       readonly policySetDigest: string;
+      readonly dispatchRoundId?: string;
     }) => Promise<{ readonly enqueued: boolean; readonly reason?: string }>;
   };
   readonly worker?: ReplayDispatchWorker;
@@ -167,6 +168,9 @@ export function startReplayQueueRuntime(options: ReplayQueueRuntimeOptions): Rep
                 captureRef: job.captureRef,
                 endpointIds: [...job.endpointIds],
                 policySetDigest: job.policySetDigest,
+                ...(job.dispatchRoundId !== undefined
+                  ? { dispatchRoundId: job.dispatchRoundId }
+                  : {}),
               },
             });
           }),

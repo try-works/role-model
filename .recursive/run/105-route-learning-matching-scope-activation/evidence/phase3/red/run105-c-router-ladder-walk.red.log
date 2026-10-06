@@ -1,0 +1,28 @@
+npm warn Unknown env config "manage-package-manager-versions". This will stop working in the next major version of npm.
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/packages/core
+
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run105-c-router-ladder-walk.test.ts [ test/run105-c-router-ladder-walk.test.ts ]
+Error: Cannot find module '../src/route-advisory-ladder.js' imported from 'D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/packages/core/test/run105-c-router-ladder-walk.test.ts'
+ ❯ test/run105-c-router-ladder-walk.test.ts:4:1
+      2| 
+      3| import { evaluateRouteAdvisoryConsideration } from "../src/router.js";
+      4| import { resolveAdvisoryRung } from "../src/route-advisory-ladder.js";
+       | ^
+      5| import type { RouteAdvisoryConsiderationInput } from "../src/types.js";
+      6| 
+
+Caused by: Error: Failed to load url ../src/route-advisory-ladder.js (resolved id: ../src/route-advisory-ladder.js) in D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/packages/core/test/run105-c-router-ladder-walk.test.ts. Does the file exist?
+ ❯ loadAndTransform ../../../node_modules/.pnpm/vite@7.3.2_@types+node@22.1_d71bf8265f9610ce90201e170d5dc2b8/node_modules/vite/dist/node/chunks/config.js:22663:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  12:29:10
+   Duration  6.81s (transform 1.76s, setup 0ms, collect 0ms, tests 0ms, environment 1ms, prepare 718ms)
+

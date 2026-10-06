@@ -836,6 +836,32 @@ export function activationStageAllowsPackActivation(stage: unknown): boolean {
 }
 
 /**
+ * Run 105 R1/R8 (D7): classify a capture's route-ladder serving state. The ladder is keyed by
+ * (roleId, taskTypeId) - exact match only - and scope-wide packs do not exist in stage 3, so a
+ * capture without BOTH ids has NO ladder to serve and NO ladder to fill. The classifier is the
+ * single source of the gate the replay tick and the dispatcher both apply: derived activation is
+ * per (role, task), never per bare scope.
+ *
+ * It only CLASSIFIES - it never invokes a store capability, never touches the rollout and never
+ * consults activePackageId (the advisory source stopped reading it under D7; C owns that change).
+ */
+export function classifyRouteLadderServingState(input: {
+  readonly roleId?: string | null;
+  readonly taskTypeId?: string | null;
+}): {
+  readonly classified: boolean;
+  readonly serving: "active" | "no_route_classification";
+  readonly code: "no_route_classification" | null;
+} {
+  const roleId = typeof input?.roleId === "string" ? input.roleId.trim() : "";
+  const taskTypeId = typeof input?.taskTypeId === "string" ? input.taskTypeId.trim() : "";
+  if (roleId && taskTypeId) {
+    return { classified: true, serving: "active", code: null };
+  }
+  return { classified: false, serving: "no_route_classification", code: "no_route_classification" };
+}
+
+/**
  * Run 107 P11: did the store actually activate the pack?
  *
  * Measured live on `run107e-94cdd4f6`: the sweep logged `activated 2 pack(s)` on every tick while

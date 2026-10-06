@@ -119,8 +119,8 @@ describe("run106 R7 turn-aware difficulty repair", () => {
         DIFFICULTY_CLASSIFIER_VERSION,
       ),
     ).toBe(false);
-    expect(shouldInvalidateDifficultyClassifierVersion(undefined, DIFFICULTY_CLASSIFIER_VERSION)).toBe(
-      true,
-    );
+    expect(
+      shouldInvalidateDifficultyClassifierVersion(undefined, DIFFICULTY_CLASSIFIER_VERSION),
+    ).toBe(true);
   });
 });

@@ -1,0 +1,39 @@
+
+> @role-model/internal@1.1.0 build:run00-runtime E:\tmp\run105-full-private
+> node scripts/track-b/build-runtime-distribution.mjs
+
+▲ [WARNING] Cannot find base config file "../../tsconfig.base.json" [tsconfig.json]
+
+    ../../vendor/effect/packages/effect/tsconfig.json:3:13:
+      3 │   "extends": "../../tsconfig.base.json",
+        ╵              ~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+▲ [WARNING] Use "../../vendor/effect/packages/effect/src/Match.ts" instead of "../../vendor/effect/packages/effect/src/match.ts" to avoid issues with case-sensitive file systems [different-path-case]
+
+▲ [WARNING] Use "../../vendor/effect/packages/effect/src/Schema.ts" instead of "../../vendor/effect/packages/effect/src/schema.ts" to avoid issues with case-sensitive file systems [different-path-case]
+
+{"status":"PASS","package":"effect","entries":["BigDecimal","Brand","ByteSize","Cache","Cause","Clock","Config","ConfigProvider","Console","Context","Crypto","Data","DateTime","Duration","Effect","ErrorReporter","ExecutionPlan","Exit","Fiber","FileSystem","Function","Graph","HashMap","Layer","Logger","Match","Metric","MutableList","Option","Path","PubSub","Queue","Random","Redacted","References","Result","Schedule","Scheduler","Schema","Scope","Semaphore","Stream","Terminal","Tracer","index","match","schema","testing","unstable/ai","unstable/ai/DecisionModel","unstable/ai/EmbeddingModel","unstable/ai/LanguageModel","unstable/ai/McpSchema","unstable/ai/Model","unstable/arbitrary","unstable/cli","unstable/cli/CliConfig","unstable/cli/Prompt","unstable/cluster","unstable/encoding","unstable/eventlog","unstable/eventlog/EventLog","unstable/eventlog/EventLogRemote","unstable/http","unstable/http/Cookies","unstable/http/Headers","unstable/http/Multipart","unstable/http/UrlParams","unstable/httpapi","unstable/net","unstable/observability","unstable/persistence","unstable/process","unstable/reactivity","unstable/reactivity/Reactivity","unstable/rpc","unstable/schema","unstable/schema/SchemaCompiler","unstable/sql","unstable/sql/Migrator","unstable/sql/SqlClient","unstable/sql/SqlConnection","unstable/sql/SqlError","unstable/sql/Statement","unstable/workflow"]}
+▲ [WARNING] Cannot find base config file "../../tsconfig.base.json" [tsconfig.json]
+
+    ../../vendor/effect-mq/packages/effect-mq/tsconfig.json:2:13:
+      2 │   "extends": "../../tsconfig.base.json",
+        ╵              ~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+{"status":"PASS","package":"effect-mq","entries":["index","testing"]}
+▲ [WARNING] Cannot find base config file "../../../tsconfig.base.json" [tsconfig.json]
+
+    ../../vendor/effect/packages/sql/sqlite-node/tsconfig.json:3:13:
+      3 │   "extends": "../../../tsconfig.base.json",
+        ╵              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+{"status":"PASS","package":"@effect/sql-sqlite-node","entries":["index"]}
+[vendored] built wrapper dists: effect, effect-mq, sql-sqlite-node
+file:///E:/tmp/run105-full-private/scripts/track-b/build-runtime-distribution.mjs:209
+    throw new Error(`package runtime contract drift for ${entry.id}`);
+          ^
+
+Error: package runtime contract drift for knowledge-store
+    at file:///E:/tmp/run105-full-private/scripts/track-b/build-runtime-distribution.mjs:209:11
+
+Node.js v24.11.0
+ ELIFECYCLE  Command failed with exit code 1.

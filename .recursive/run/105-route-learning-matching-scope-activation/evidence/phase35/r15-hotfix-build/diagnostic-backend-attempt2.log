@@ -1,0 +1,17 @@
+(node:39680) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+[run115] eligibility candidates=1 eligible=1 codes=none request=r15-diagnostic-actual alias=- model=- effort=- pass=live allow=[deepseek.personal.r15-diagnostic.global.deepseek-v4-pro] denied=[]
+R15 bounded secondary diagnostic: runtime telemetry dimensions_json exceeds 16384 bytes; externalize rich content via artifactRefs
+Runtime failure telemetry persistence failed; original execution error preserved.
+R15 bounded secondary diagnostic: runtime telemetry dimensions_json exceeds 16384 bytes; externalize rich content via artifactRefs
+Runtime failure telemetry persistence failed; original execution error preserved.
+primary=UpstreamExecutionError status=422 class=execution_failed
+file:///D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/.recursive/run/105-route-learning-matching-scope-activation/evidence/phase35/r15-hotfix-build/diagnostic-backend.mjs:109954
+  await backend.close();
+                ^
+
+TypeError: backend.close is not a function
+    at file:///D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/.recursive/run/105-route-learning-matching-scope-activation/evidence/phase35/r15-hotfix-build/diagnostic-backend.mjs:109954:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+Node.js v24.11.0

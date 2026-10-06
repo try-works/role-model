@@ -1,0 +1,22 @@
+{
+  "probe": "s04-learning-records",
+  "note": "",
+  "target": "sidecar http://127.0.0.1:62096 (child of :3458 host, pid 34760)",
+  "request": {
+    "method": "GET",
+    "url": "http://127.0.0.1:62096/operator/learning/records",
+    "headers": {
+      "authorization": "Bearer REDACTED"
+    },
+    "body": null
+  },
+  "response": {
+    "status": 401,
+    "statusText": "Unauthorized",
+    "contentType": null,
+    "ms": 1,
+    "body": "",
+    "bodyTruncated": 0
+  },
+  "capturedAt": "2026-10-03T13:28:36.035Z"
+}

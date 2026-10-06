@@ -408,7 +408,7 @@ function resolveExpandedArmCloudSource(
   if (typeof reasoningEffort !== "string" || reasoningEffort.length === 0) {
     return undefined;
   }
-  const suffix = "-" + encodeURIComponent(reasoningEffort);
+  const suffix = `-${encodeURIComponent(reasoningEffort)}`;
   if (!endpointId.endsWith(suffix)) {
     return undefined;
   }

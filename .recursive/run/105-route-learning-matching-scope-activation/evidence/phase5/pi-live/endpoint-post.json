@@ -1,0 +1,20 @@
+{
+  "request": {
+    "providerAccountId": "deepseek.personal.run105-pi-live-mock",
+    "modelId": "deepseek/deepseek-flash",
+    "region": "global",
+    "reasoningEffort": "high"
+  },
+  "status": 200,
+  "response": {
+    "endpointId": "deepseek.personal.run105-pi-live-mock.global.deepseek-flash-high",
+    "providerAccountId": "deepseek.personal.run105-pi-live-mock",
+    "providerId": "deepseek",
+    "modelId": "deepseek/deepseek-flash",
+    "roleIds": [
+      "coder",
+      "writer"
+    ],
+    "status": "active"
+  }
+}

@@ -140,7 +140,13 @@ export default function RouterDecisionDetailRoute() {
                 <Badge tone="accent">
                   {strategyReceipt ? strategyReceipt.strategyLabel : "no strategy receipt"}
                 </Badge>
-                <Badge tone={effortResolutionKind && isProminentEffortResolution(effortResolutionKind) ? "warning" : "neutral"}>
+                <Badge
+                  tone={
+                    effortResolutionKind && isProminentEffortResolution(effortResolutionKind)
+                      ? "warning"
+                      : "neutral"
+                  }
+                >
                   {effortResolutionKind
                     ? formatEffortResolutionLabel(effortResolutionKind)
                     : "no effort resolution recorded"}
@@ -191,7 +197,9 @@ export default function RouterDecisionDetailRoute() {
                       {benchmarkDecision.runId ?? "profile-derived evidence"}
                       {benchmarkDecision.runMode ? ` · ${benchmarkDecision.runMode}` : ""}
                       {` · ${formatEffortEvidenceLabel(
-                        classifyEffortEvidence({ evidenceSource: benchmarkDecision.evidenceSource }),
+                        classifyEffortEvidence({
+                          evidenceSource: benchmarkDecision.evidenceSource,
+                        }),
                       )}`}
                       {benchmarkDecision.reason ? ` · ${benchmarkDecision.reason}` : ""}
                     </p>

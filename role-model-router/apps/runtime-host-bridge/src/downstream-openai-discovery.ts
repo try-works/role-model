@@ -1,8 +1,8 @@
 import { createHash } from "node:crypto";
 
 import type { NormalizedCatalog } from "@role-model-router/catalog";
-import type { EndpointRegistryResult } from "@role-model-router/endpoint-registry";
 import { computeEffortUnionAndIntersection } from "@role-model-router/core";
+import type { EndpointRegistryResult } from "@role-model-router/endpoint-registry";
 
 import {
   type ModelCapabilityProfile,

@@ -1,0 +1,20 @@
+# Phase 3.5 repair - UI toggle round trip GREEN (real temp KnowledgeStore, 3/3)
+# command: node --test --test-concurrency=1 --test-timeout=120000 tests/track-b/run105-e5-ladder-rollback-roundtrip.test.mjs 2>&1 | Out-String
+# workdir: D:\DEV\role-model-internal\.worktrees\105-route-learning-matching-scope-activation
+# exit: 0
+
+(node:20112) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ Run105 E5 repair: ON -> GET -> OFF -> GET lands the per-task flag, keeps rungs and reason, isolates the other task (157.9328ms)
+✔ Run105 E5 repair: a legacy scope-wide body still reaches the legacy rollback unchanged (63.7922ms)
+✔ Run105 E5 repair: a malformed toggle body is refused instead of coerced (55.8441ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1672.4003
+
+

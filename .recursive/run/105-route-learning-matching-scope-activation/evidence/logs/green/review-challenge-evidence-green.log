@@ -1,0 +1,14 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-host-bridge
+
+(node:27380) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run105-review-challenge-evidence.test.ts (24 tests) 12318ms
+   ✓ history index unavailable and 501 matching ids are null, never a truncated complete corpus  6047ms
+   ✓ execute fourth production callback against actual replay and pre-replay Effect queue records  345ms
+
+ Test Files  1 passed (1)
+      Tests  24 passed (24)
+   Start at  19:43:21
+   Duration  19.73s (transform 5.80s, setup 0ms, collect 6.76s, tests 12.32s, environment 0ms, prepare 188ms)
+

@@ -1,0 +1,34 @@
+
+ RUN  v3.2.4 E:/tmp/run105-r15-hotfix-public/role-model-router/packages/sqlite-memory
+
+(node:2472) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:8032) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | test/run105-telemetry-failure-size-limit.test.ts > R15 ASCII large allowed errorPreview persists primary failure (graph=false)
+R15 measured persisted UTF-8 bytes: 7081
+
+stdout | test/run105-telemetry-failure-size-limit.test.ts > R15 UTF-8 large allowed errorPreview persists primary failure (graph=false)
+R15 measured persisted UTF-8 bytes: 7065
+
+stdout | test/run105-telemetry-failure-size-limit.test.ts > R15 ASCII large allowed errorPreview persists primary failure (graph=true)
+R15 measured persisted UTF-8 bytes: 7313
+
+stdout | test/run105-telemetry-failure-size-limit.test.ts > R15 UTF-8 large allowed errorPreview persists primary failure (graph=true)
+R15 measured persisted UTF-8 bytes: 7297
+
+ ✓ test/run94-compact-stub.test.ts (6 tests) 1741ms
+   ✓ run94 SP36: a long-conversation observation persists a <=16KiB stub with bounded node-id locators  354ms
+   ✓ run94 F1: persistRuntimeObservationBundle writes a <=16KiB compact stub with no journal present when graph content is externalized  322ms
+   ✓ run94 F1: persistRuntimeObservationBundle fails closed instead of writing rich content inline without graph externalization  353ms
+ ✓ test/run105-telemetry-failure-size-limit.test.ts (16 tests) 2587ms
+   ✓ R15 ASCII large allowed errorPreview persists primary failure (graph=false)  335ms
+   ✓ R15 ASCII large allowed errorPreview persists primary failure (graph=true)  327ms
+   ✓ R15 aggregate message eviction preserves every correlation ID  325ms
+   ✓ R15 aggregate pressure evicts optional diagnostics explicitly, retaining attempts and counters  405ms
+
+ Test Files  2 passed (2)
+      Tests  22 passed (22)
+   Start at  16:48:09
+   Duration  7.13s (transform 1.04s, setup 0ms, collect 2.17s, tests 4.33s, environment 2ms, prepare 3.78s)
+

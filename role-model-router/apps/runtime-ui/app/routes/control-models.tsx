@@ -13,8 +13,8 @@ import {
   secondaryButtonClassName,
   supportingTextClassName,
 } from "../lib/design-system";
-import { formatScore, formatScoreWithCoverage } from "../lib/format-score";
 import { classifyEffortEvidence, formatEffortEvidenceLabel } from "../lib/effort-truth";
+import { formatScore, formatScoreWithCoverage } from "../lib/format-score";
 import { ModelRoleBindingTree } from "../lib/role-task-hierarchy";
 import {
   type ModelTelemetryRollup,

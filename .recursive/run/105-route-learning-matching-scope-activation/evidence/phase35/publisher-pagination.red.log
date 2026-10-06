@@ -1,0 +1,607 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-host-bridge
+
+(node:8620) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | test/run105-review-live-advisory-publisher.test.ts > run105 production publisher scope > enumerates actual stored role-task ladders and reads each exact pair, never one scope-only advisory
+[run105] durable task advisory refresh: scope=publisher-test pairs=2 stage=S3
+
+stderr | test/run105-review-live-advisory-publisher.test.ts > run105 production publisher scope > continues scoped keyset pages and publishes pairs beyond the first64
+[run105] durable task advisory refresh: scope=paged-publisher pairs=200 stage=S3
+
+stderr | test/run105-review-live-advisory-publisher.test.ts > run105 production publisher scope > a slow refresh never overlaps another timer pass
+[run105] durable task advisory refresh: scope=slow-refresh pairs=0 stage=S3
+
+ ❯ test/run105-review-live-advisory-publisher.test.ts (3 tests | 1 failed) 70ms
+   ✓ run105 production publisher scope > enumerates actual stored role-task ladders and reads each exact pair, never one scope-only advisory 13ms
+   × run105 production publisher scope > continues scoped keyset pages and publishes pairs beyond the first64 46ms
+     → expected [ { roleId: 'writer', …(1) }, …(63) ] to deeply equal [ { roleId: 'writer', …(1) }, …(201) ]
+   ✓ run105 production publisher scope > a slow refresh never overlaps another timer pass 9ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run105-review-live-advisory-publisher.test.ts > run105 production publisher scope > continues scoped keyset pages and publishes pairs beyond the first64
+AssertionError: expected [ { roleId: 'writer', …(1) }, …(63) ] to deeply equal [ { roleId: 'writer', …(1) }, …(201) ]
+
+- Expected
++ Received
+
+@@ -253,558 +253,6 @@
+    },
+    {
+      "roleId": "writer",
+      "taskTypeId": "task-063",
+    },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-064",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-065",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-066",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-067",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-068",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-069",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-070",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-071",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-072",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-073",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-074",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-075",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-076",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-077",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-078",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-079",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-080",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-081",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-082",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-083",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-084",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-085",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-086",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-087",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-088",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-089",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-090",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-091",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-092",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-093",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-094",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-095",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-096",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-097",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-098",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-099",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-100",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-101",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-102",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-103",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-104",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-105",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-106",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-107",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-108",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-109",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-110",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-111",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-112",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-113",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-114",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-115",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-116",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-117",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-118",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-119",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-120",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-121",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-122",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-123",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-124",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-125",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-126",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-127",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-128",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-129",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-130",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-131",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-132",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-133",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-134",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-135",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-136",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-137",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-138",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-139",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-140",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-141",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-142",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-143",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-144",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-145",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-146",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-147",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-148",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-149",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-150",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-151",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-152",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-153",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-154",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-155",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-156",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-157",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-158",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-159",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-160",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-161",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-162",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-163",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-164",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-165",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-166",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-167",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-168",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-169",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-170",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-171",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-172",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-173",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-174",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-175",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-176",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-177",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-178",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-179",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-180",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-181",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-182",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-183",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-184",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-185",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-186",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-187",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-188",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-189",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-190",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-191",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-192",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-193",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-194",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-195",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-196",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-197",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-198",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-199",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-200",
+-   },
+-   {
+-     "roleId": "writer",
+-     "taskTypeId": "task-201",
+-   },
+  ]
+
+ ❯ test/run105-review-live-advisory-publisher.test.ts:53:25
+     51|     try {
+     52|       await vi.advanceTimersByTimeAsync(0);
+     53|       expect(readPairs).toEqual(pairs);
+       |                         ^
+     54|       expect(pages).toHaveLength(2);
+     55|       expect(pages[1]).toMatchObject({scopeId:"paged-publisher",afterR…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  17:08:33
+   Duration  12.32s (transform 7.35s, setup 0ms, collect 11.05s, tests 70ms, environment 1ms, prepare 461ms)
+
+undefined
+D:\DEV\role-model\.worktrees\105-route-learning-matching-scope-activation\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/run105-review-live-advisory-publisher.test.ts

@@ -1,0 +1,297 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/run105-c-route-advisory-ladder-source.test.ts (6 tests | 4 failed) 44ms
+   × run105 C route advisory ladder source > reads one role-task ladder and returns rank-sorted status-filtered rungs 33ms
+     → expected { preferredRoutePackage: null, …(11) } to match object { advisoryState: 'fresh', …(5) }
+(6 matching properties omitted from actual)
+   × run105 C route advisory ladder source > an all-unavailable ladder is unavailable and never invents a preferred endpoint 3ms
+     → expected 'effective advisory policy unavailable' to match /no admitted rung/i
+   × run105 C route advisory ladder source > an empty or absent ladder is unavailable with the same bounded reason 2ms
+     → expected 'effective advisory policy unavailable' to match /no admitted rung|route ladder unavai…/i
+   × run105 C route advisory ladder source > a rolled-back ladder is refused before any rung is offered 2ms
+     → expected 'effective advisory policy unavailable' to match /rolled back/i
+   ✓ run105 C route advisory ladder source > a store failure degrades to unavailable, never to influence 1ms
+   ✓ run105 C route advisory ladder source > a missing role or task id refuses the read instead of querying the store 1ms
+(node:3116) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/run105-c-durable-advisory-role-key.test.ts (5 tests | 5 failed) 18ms
+   × run105 C durable advisory role key > C11 two roles in one scope keep separate durable entries 10ms
+     → expected undefined to be 'endpoint-a' // Object.is equality
+   × run105 C durable advisory role key > C11 a null roleId keeps the pre-run105 (channel, scope) behaviour 1ms
+     → expected undefined to be 'endpoint-c' // Object.is equality
+   × run105 C durable advisory role key > C11 re-remembering the same (channel, scope, role) refreshes the entry in place 1ms
+     → expected undefined to be 'endpoint-d' // Object.is equality
+   × run105 C durable advisory role key > C11 the recency bound still ages a role-scoped entry 1ms
+     → expected undefined to be 'stale' // Object.is equality
+   × run105 C durable advisory role key > C11 the cache bound is raised to 512 for the per-(role, task) fan-out 2ms
+     → expected undefined to be 'endpoint-519' // Object.is equality
+stderr | test/run105-review-dispatch.test.ts > new endpoint records now and challenges future-idle ladder using the real rung source
+[run104-pending] captures=3 scoped=0 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > new endpoint records now and challenges future-idle ladder using the real rung source
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > focus fill stays depth-first when another task becomes busier and gains a new endpoint
+[run104-pending] captures=2 scoped=1 first=fill-a,idle-a only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > focus fill stays depth-first when another task becomes busier and gains a new endpoint
+[run104-pending] captures=2 scoped=1 first=fill-a-next,idle-a only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > terminal provider branches do not advance; finalized loss advances on next tick
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > terminal provider branches do not advance; finalized loss advances on next tick
+[run104-pending] captures=3 scoped=0 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > terminal provider branches do not advance; finalized loss advances on next tick
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > challengeBatchSize runs sequential finalized comparisons and bounds one dispatch
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > challengeBatchSize runs sequential finalized comparisons and bounds one dispatch
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > finalized challenger win stops descent before ladder publication catches up
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > finalized challenger win stops descent before ladder publication catches up
+[run104-pending] captures=3 scoped=0 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > rollback pauses and roll forward resumes the pending challenge
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > rollback pauses and roll forward resumes the pending challenge
+[run104-pending] captures=3 scoped=0 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > rollback pauses and roll forward resumes the pending challenge
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > request-volume ties use most-unfilled and never dispatch other task captures
+[run104-pending] captures=3 scoped=1 first=few-a,more-a,never-a only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > endpoint arrival marks partial tasks eligible without preempting an in-flight focus fill
+[run104-pending] captures=2 scoped=1 first=fill-a,idle-a only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > endpoint arrival marks partial tasks eligible without preempting an in-flight focus fill
+[run104-pending] captures=2 scoped=1 first=fill-a-next,idle-a only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > concurrent queue claims never execute same task arms concurrently
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=idle-a pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > queue offer holds one rung and claimed worker executes the same narrowed pair
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > queue offer holds one rung and claimed worker executes the same narrowed pair
+[run104-pending] captures=3 scoped=0 first=idle-a,idle-b,idle-c only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run105-review-dispatch.test.ts > queue offer holds one rung and claimed worker executes the same narrowed pair
+[run104-pending] captures=3 scoped=1 first=idle-a,idle-b,idle-c only=idle-a pendingCount=n/a captureCount=n/a
+
+ ✓ test/run105-review-dispatch.test.ts (13 tests) 312ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 9 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run105-c-durable-advisory-role-key.test.ts > run105 C durable advisory role key > C11 two roles in one scope keep separate durable entries
+AssertionError: expected undefined to be 'endpoint-a' // Object.is equality
+
+- Expected: 
+"endpoint-a"
+
++ Received: 
+undefined
+
+ ❯ test/run105-c-durable-advisory-role-key.test.ts:51:7
+     49|       recallTrackBDurableRouteAdvisory({ channel: "stage", scope: "sco…
+     50|         ?.preferredRoutePackage,
+     51|     ).toBe("endpoint-a");
+       |       ^
+     52|     expect(
+     53|       recallTrackBDurableRouteAdvisory({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+ FAIL  test/run105-c-durable-advisory-role-key.test.ts > run105 C durable advisory role key > C11 a null roleId keeps the pre-run105 (channel, scope) behaviour
+AssertionError: expected undefined to be 'endpoint-c' // Object.is equality
+
+- Expected: 
+"endpoint-c"
+
++ Received: 
+undefined
+
+ ❯ test/run105-c-durable-advisory-role-key.test.ts:76:7
+     74|       recallTrackBDurableRouteAdvisory({ channel: "stage", scope: "sco…
+     75|         ?.preferredRoutePackage,
+     76|     ).toBe("endpoint-c");
+       |       ^
+     77|   });
+     78| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+
+ FAIL  test/run105-c-durable-advisory-role-key.test.ts > run105 C durable advisory role key > C11 re-remembering the same (channel, scope, role) refreshes the entry in place
+AssertionError: expected undefined to be 'endpoint-d' // Object.is equality
+
+- Expected: 
+"endpoint-d"
+
++ Received: 
+undefined
+
+ ❯ test/run105-c-durable-advisory-role-key.test.ts:100:42
+     98|       roleId: "role.coder",
+     99|     });
+    100|     expect(entry?.preferredRoutePackage).toBe("endpoint-d");
+       |                                          ^
+    101|     expect(entry?.cachedAtMs).toBe(9_000);
+    102|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯
+
+ FAIL  test/run105-c-durable-advisory-role-key.test.ts > run105 C durable advisory role key > C11 the recency bound still ages a role-scoped entry
+AssertionError: expected undefined to be 'stale' // Object.is equality
+
+- Expected: 
+"stale"
+
++ Received: 
+undefined
+
+ ❯ test/run105-c-durable-advisory-role-key.test.ts:121:7
+    119|         maxAgeMs: 500,
+    120|       })?.advisoryState,
+    121|     ).toBe("stale");
+       |       ^
+    122|   });
+    123| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/9]⎯
+
+ FAIL  test/run105-c-durable-advisory-role-key.test.ts > run105 C durable advisory role key > C11 the cache bound is raised to 512 for the per-(role, task) fan-out
+AssertionError: expected undefined to be 'endpoint-519' // Object.is equality
+
+- Expected: 
+"endpoint-519"
+
++ Received: 
+undefined
+
+ ❯ test/run105-c-durable-advisory-role-key.test.ts:142:7
+    140|         roleId: "role.coder",
+    141|       })?.preferredRoutePackage,
+    142|     ).toBe("endpoint-519");
+       |       ^
+    143|     expect(
+    144|       recallTrackBDurableRouteAdvisory({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/9]⎯
+
+ FAIL  test/run105-c-route-advisory-ladder-source.test.ts > run105 C route advisory ladder source > reads one role-task ladder and returns rank-sorted status-filtered rungs
+AssertionError: expected { preferredRoutePackage: null, …(11) } to match object { advisoryState: 'fresh', …(5) }
+(6 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "advisoryLadder": [
+-     {
+-       "endpointId": "endpoint-b",
+-       "rank": 2,
+-       "status": "available",
+-     },
+-     {
+-       "endpointId": "endpoint-c",
+-       "rank": 3,
+-       "status": "available",
+-     },
+-   ],
+-   "advisoryState": "fresh",
+-   "preferredRoutePackage": "endpoint-b",
++   "advisoryLadder": [],
++   "advisoryState": "unavailable",
++   "preferredRoutePackage": null,
+    "roleId": "role.coder",
+    "taskTypeId": "coder.review",
+-   "taxonomyVersion": "taxonomy-v1-alpha.1",
++   "taxonomyVersion": null,
+  }
+
+ ❯ test/run105-c-route-advisory-ladder-source.test.ts:60:20
+     58|     const ctx = context(ladderRead());
+     59|     const result = await readTrackBRouteAdvisoryFromRollout(ctx as nev…
+     60|     expect(result).toMatchObject({
+       |                    ^
+     61|       advisoryState: "fresh",
+     62|       roleId: "role.coder",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/9]⎯
+
+ FAIL  test/run105-c-route-advisory-ladder-source.test.ts > run105 C route advisory ladder source > an all-unavailable ladder is unavailable and never invents a preferred endpoint
+AssertionError: expected 'effective advisory policy unavailable' to match /no admitted rung/i
+
+- Expected: 
+/no admitted rung/i
+
++ Received: 
+"effective advisory policy unavailable"
+
+ ❯ test/run105-c-route-advisory-ladder-source.test.ts:95:27
+     93|       advisoryLadder: [],
+     94|     });
+     95|     expect(result.reason).toMatch(/no admitted rung/i);
+       |                           ^
+     96|   });
+     97| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/9]⎯
+
+ FAIL  test/run105-c-route-advisory-ladder-source.test.ts > run105 C route advisory ladder source > an empty or absent ladder is unavailable with the same bounded reason
+AssertionError: expected 'effective advisory policy unavailable' to match /no admitted rung|route ladder unavai…/i
+
+- Expected: 
+/no admitted rung|route ladder unavailable/i
+
++ Received: 
+"effective advisory policy unavailable"
+
+ ❯ test/run105-c-route-advisory-ladder-source.test.ts:114:29
+    112|         advisoryLadder: [],
+    113|       });
+    114|       expect(result.reason).toMatch(/no admitted rung|route ladder una…
+       |                             ^
+    115|     }
+    116|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/9]⎯
+
+ FAIL  test/run105-c-route-advisory-ladder-source.test.ts > run105 C route advisory ladder source > a rolled-back ladder is refused before any rung is offered
+AssertionError: expected 'effective advisory policy unavailable' to match /rolled back/i
+
+- Expected: 
+/rolled back/i
+
++ Received: 
+"effective advisory policy unavailable"
+
+ ❯ test/run105-c-route-advisory-ladder-source.test.ts:133:27
+    131|       advisoryLadder: [],
+    132|     });
+    133|     expect(result.reason).toMatch(/rolled back/i);
+       |                           ^
+    134|   });
+    135| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/9]⎯
+
+
+ Test Files  2 failed | 1 passed (3)
+      Tests  9 failed | 15 passed (24)
+   Start at  17:50:58
+   Duration  9.36s (transform 3.09s, setup 0ms, collect 7.00s, tests 374ms, environment 1ms, prepare 711ms)
+
+undefined
+D:\DEV\role-model\.worktrees\105-route-learning-matching-scope-activation\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/run105-c-route-advisory-ladder-source.test.ts test/run105-c-durable-advisory-role-key.test.ts test/run105-review-dispatch.test.ts

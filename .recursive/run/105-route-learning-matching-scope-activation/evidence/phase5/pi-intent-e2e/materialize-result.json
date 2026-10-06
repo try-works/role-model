@@ -1,0 +1,4 @@
+{
+  "status": 503,
+  "body": "{\"schemaVersion\":\"role-model.operator-status.v1\",\"overall\":\"unavailable\",\"observedAtMs\":1791073910193,\"reason\":\"learning route ladder materialization operator control is unavailable.\",\"capabilities\":{\"graph\":\"unavailable\",\"replay\":\"unavailable\",\"evaluation\":\"unavailable\",\"learning\":\"unavailable\",\"extensions\":\"unavailable\",\"storage\":\"unavailable\"},\"error\":\"operator_capability_unavailable\",\"capability\":\"learning route ladder materialization\"}\n"
+}

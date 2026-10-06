@@ -385,7 +385,8 @@ export function resolveRelatedEffortOverallScore(input: {
     .filter((subject) => subject.modelId === input.modelId)
     .filter((subject) => isNamedEffort(subject.reasoningEffort))
     .filter(
-      (subject) => typeof subject.overallScore === "number" && Number.isFinite(subject.overallScore),
+      (subject) =>
+        typeof subject.overallScore === "number" && Number.isFinite(subject.overallScore),
     )
     .filter(sameProvider);
 

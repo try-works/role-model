@@ -1,0 +1,11 @@
+{"at":"2026-10-03T09:54:14.591Z","url":"/v1/chat/completions","mode":"success","requestId":null,"model":"deepseek-v4-pro","messageChars":36}
+{"at":"2026-10-03T09:55:58.040Z","url":"/v1/chat/completions","mode":"ascii","requestId":null,"model":"deepseek-v4-pro","messageChars":57}
+{"at":"2026-10-03T09:56:00.241Z","url":"/v1/chat/completions","mode":"utf8","requestId":null,"model":"deepseek-v4-pro","messageChars":56}
+{"at":"2026-10-03T10:04:44.167Z","url":"/v1/chat/completions","mode":"ascii","requestId":null,"model":"deepseek-v4-pro","messageChars":57}
+{"at":"2026-10-03T10:04:46.378Z","url":"/v1/chat/completions","mode":"utf8","requestId":null,"model":"deepseek-v4-pro","messageChars":56}
+{"at":"2026-10-03T10:14:33.893Z","url":"/v1/models","mode":"utf8","requestId":null,"messageChars":0}
+{"at":"2026-10-03T10:16:21.835Z","url":"/v1/chat/completions","mode":"ascii","requestId":null,"model":"deepseek-v4-pro","messageChars":57}
+{"at":"2026-10-03T10:16:24.223Z","url":"/v1/chat/completions","mode":"utf8","requestId":null,"model":"deepseek-v4-pro","messageChars":56}
+{"at":"2026-10-03T10:21:47.247Z","url":"/v1/chat/completions","mode":"success","requestId":null,"model":"deepseek-v4-pro","messageChars":36}
+{"at":"2026-10-03T10:21:47.777Z","url":"/v1/chat/completions","mode":"ascii","requestId":null,"model":"deepseek-v4-pro","messageChars":26}
+{"at":"2026-10-03T10:25:53.274Z","url":"/v1/chat/completions","mode":"ascii","requestId":null,"model":"deepseek-v4-pro","messageChars":26}

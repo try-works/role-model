@@ -1,0 +1,20 @@
+# Phase 3.5 repair - UI route/API suites on the shared rollback-pack route GREEN
+# command: corepack pnpm --filter @role-model-router/runtime-ui exec vitest run app/lib/learning-api.test.ts app/routes/learning.test.tsx app/routes/learning-ladder-index.test.tsx 2>&1 | Out-String
+# workdir: D:\DEV\role-model\.worktrees\105-route-learning-matching-scope-activation\role-model-router
+# exit: 0
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/105-route-learning-matching-scope-activation/role-model-router/apps/runtime-ui
+
+ ✓ app/lib/learning-api.test.ts (10 tests) 696ms
+   ✓ learning readback start-up retry > retries a warming capability for the policy and activity readbacks too  448ms
+ ✓ app/routes/learning-ladder-index.test.tsx (5 tests) 78ms
+ ✓ app/routes/learning.test.tsx (27 tests) 264ms
+
+ Test Files  3 passed (3)
+      Tests  42 passed (42)
+   Start at  14:43:37
+   Duration  6.62s (transform 2.23s, setup 0ms, collect 9.79s, tests 1.04s, environment 1ms, prepare 2.52s)
+
+
+

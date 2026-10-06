@@ -131,12 +131,11 @@ describe("run99 R24 durable route advisory cache", () => {
   });
 
   /**
-   * Run 99 R33 (S37 live finding): a durable entry scoped to another task family must still reach
-   * the router, so the refusal is reported as `advisory_task_mismatch`. Withholding it in the cache
-   * made the host fall through to the transient pipeline advisory, which the eligibility gate
-   * refuses first — hiding the family verdict from the operator.
+   * Run 105 exact-key correction: task lookup must never borrow another task entry.
+   * Classified live requests no longer fall through to transient scope-wide advisories,
+   * so withholding a mismatched task cannot resurrect unsafe legacy influence.
    */
-  test("a family-mismatched durable advisory is returned so the router can name the refusal", () => {
+  test("a family-mismatched durable lookup refuses borrowing and preserves the matched task", () => {
     const channel = "stage";
     const scope = "run99-r33-family-mismatch-scope";
     rememberTrackBDurableRouteAdvisory({
@@ -161,7 +160,13 @@ describe("run99 R24 durable route advisory cache", () => {
       scope,
       taskTypeId: "coder.test.write",
     });
-    expect(other?.taskTypeId).toBe("coder.review");
-    expect(other?.advisoryState).toBe("fresh");
+    expect(other).toBeNull();
+    const matched = recallTrackBDurableRouteAdvisory({
+      channel,
+      scope,
+      taskTypeId: "coder.review",
+    });
+    expect(matched?.taskTypeId).toBe("coder.review");
+    expect(matched?.advisoryState).toBe("fresh");
   });
 });

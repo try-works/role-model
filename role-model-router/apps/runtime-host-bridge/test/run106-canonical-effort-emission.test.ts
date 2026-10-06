@@ -16,7 +16,11 @@ describe("run106 canonical effort emission (R10)", () => {
       declaredEffortLevels: [],
       executionRequest: executionRequest(),
     });
-    expect(result.receipt).toEqual({ reasoningEffort: "high", effortSource: "variant", coerced: false });
+    expect(result.receipt).toEqual({
+      reasoningEffort: "high",
+      effortSource: "variant",
+      coerced: false,
+    });
   });
 
   it("fixed-effort arm with a different client effort emits variant_coerced with coerced=true", () => {
@@ -25,7 +29,11 @@ describe("run106 canonical effort emission (R10)", () => {
       declaredEffortLevels: [],
       executionRequest: executionRequest("max"),
     });
-    expect(result.receipt).toEqual({ reasoningEffort: "high", effortSource: "variant_coerced", coerced: true });
+    expect(result.receipt).toEqual({
+      reasoningEffort: "high",
+      effortSource: "variant_coerced",
+      coerced: true,
+    });
   });
 
   it("provider-default arm honoring a declared client effort emits client", () => {
@@ -34,7 +42,11 @@ describe("run106 canonical effort emission (R10)", () => {
       declaredEffortLevels: ["low", "high"],
       executionRequest: executionRequest("high"),
     });
-    expect(result.receipt).toEqual({ reasoningEffort: "high", effortSource: "client", coerced: false });
+    expect(result.receipt).toEqual({
+      reasoningEffort: "high",
+      effortSource: "client",
+      coerced: false,
+    });
   });
 
   it("provider-default arm with no client effort emits none (not provider_default)", () => {
