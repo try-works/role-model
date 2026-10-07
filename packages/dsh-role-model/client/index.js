@@ -443,23 +443,54 @@ window.__ModuleLoader__.load({
     }
 
     /**
+     * How long to wait for the host to answer a settings write.
+     *
+     * The host serializes every config write with every plugin reload in one unbounded
+     * queue, so a write issued while another profile mutation is in flight (a plugin
+     * install, a reload) is *queued* rather than refused, and its promise may not settle
+     * for minutes. Without a bound the panel sits on "Applying…" forever.
+     */
+    const WRITE_TIMEOUT_MS = 20_000;
+
+    /**
      * Write a patch to this plugin's settings namespace.
      * @param ctx - the client plugin context.
      * @param patch - the fields to merge.
+     * @param timeoutMs - how long to wait for an answer before reporting that.
      * @returns undefined on success, or the message to show the user.
      */
-    async function writeConfig(ctx, patch) {
+    async function writeConfig(ctx, patch, timeoutMs = WRITE_TIMEOUT_MS) {
       if (Object.keys(patch).length === 0) return undefined;
       const namespace = settingsRemote(ctx);
       if (namespace === undefined) {
         return "the settings service is unavailable, so this change cannot be saved yet";
       }
+      const timedOut = {};
+      let timer;
+      const deadline = new Promise((resolve) => {
+        timer = setTimeout(
+          () => resolve(timedOut),
+          Number.isFinite(timeoutMs) && timeoutMs > 0 ? timeoutMs : WRITE_TIMEOUT_MS,
+        );
+      });
       try {
-        const response = await namespace.update(SETTINGS_NS, patch, undefined);
+        const write = Promise.resolve(namespace.update(SETTINGS_NS, patch, undefined));
+        // The race may settle on the timeout first; mark a late rejection as handled so it
+        // cannot surface as an unhandled rejection.
+        write.catch(() => undefined);
+        const response = await Promise.race([write, deadline]);
+        if (response === timedOut) {
+          return (
+            "the host has not answered this write yet. Another profile change (a plugin " +
+            "install or reload) may be holding the configuration queue — retry in a moment."
+          );
+        }
         if (response !== undefined && response.ok === true) return undefined;
         return response?.error?.message ?? "the settings service refused the write";
       } catch (error) {
         return error instanceof Error ? error.message : String(error);
+      } finally {
+        clearTimeout(timer);
       }
     }
 
@@ -549,7 +580,17 @@ window.__ModuleLoader__.load({
         setSaving(true);
         setMessage(null);
         const patch = buildPatch(current ?? {}, draft);
-        void writeConfig(context, patch).then((failure) => {
+        // `saving` is cleared outside the happy path too: a write that fails, hangs and
+        // times out, or rejects outright must all return the button to a usable state.
+        // Before this, any outcome other than a resolved-then call left it stuck on
+        // "Applying…" with no message and no way back but a page reload.
+        void (async () => {
+          let failure;
+          try {
+            failure = await writeConfig(context, patch);
+          } catch (error) {
+            failure = error instanceof Error ? error.message : String(error);
+          }
           setSaving(false);
           if (failure === undefined) {
             setCurrent({ ...(current ?? {}), ...patch });
@@ -560,7 +601,7 @@ window.__ModuleLoader__.load({
             return;
           }
           setMessage({ kind: "error", text: failure });
-        });
+        })();
       };
 
       const onReset = () => {

@@ -583,11 +583,17 @@ describe("editing configuration from the panel", () => {
       current: Record<string, unknown>,
       draft: Record<string, unknown>,
     ) => Record<string, unknown>;
-    writeConfig: (ctx: unknown, patch: Record<string, unknown>) => Promise<string | undefined>;
+    writeConfig: (
+      ctx: unknown,
+      patch: Record<string, unknown>,
+      timeoutMs?: number,
+    ) => Promise<string | undefined>;
   }
 
   /** A `ctx.remote.settings` double recording writes. */
-  function fakeSettings(options: { updateError?: string; describeError?: string } = {}) {
+  function fakeSettings(
+    options: { updateError?: string; describeError?: string; updateHangs?: boolean } = {},
+  ) {
     const writes: { ns: string; patch: Record<string, unknown>; revision?: number }[] = [];
     const current = {
       endpoint: "http://127.0.0.1:3456",
@@ -612,6 +618,9 @@ describe("editing configuration from the panel", () => {
         ),
       update: (ns: string, patch: Record<string, unknown>, revision?: number): Promise<Answer> => {
         writes.push({ ns, patch, ...(revision === undefined ? {} : { revision }) });
+        // Models a write the host accepts but never answers, which is what happens while
+        // another profile mutation holds the loader's exclusive queue.
+        if (options.updateHangs === true) return new Promise<Answer>(() => {});
         return Promise.resolve(
           options.updateError === undefined
             ? { ok: true, value: {} }
@@ -829,6 +838,24 @@ describe("editing configuration from the panel", () => {
     expect(failure).toBeUndefined();
     expect(writes).toEqual([]);
   });
+
+  /**
+   * A write the host accepts but never answers must not hang the panel forever.
+   *
+   * The settings write runs inside the loader's exclusive queue, which is an unbounded
+   * FIFO: while another profile mutation holds it (a plugin install, a reload), the write
+   * is queued and the Remote call simply never resolves. The panel then sat on
+   * "Applying…" indefinitely with no message and no way back but a page reload.
+   */
+  test("stops waiting when the host never answers a write", async () => {
+    const { settings, writes } = fakeSettings({ updateHangs: true });
+    const { internals, ctx } = applyWith(settings);
+    const failure = await internals.writeConfig(ctx, { port: 3458 }, 20);
+    // The write was attempted, and the panel gets a message it can show.
+    expect(writes.length).toBe(1);
+    expect(typeof failure).toBe("string");
+    expect(failure).toContain("has not answered");
+  }, 1500);
 
   test("a context without the settings Remote degrades instead of throwing", async () => {
     // This is the case that matters: the page must still render when the Remote is
