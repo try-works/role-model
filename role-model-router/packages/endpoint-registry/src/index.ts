@@ -409,7 +409,27 @@ export function buildEndpointRegistry(input: BuildEndpointRegistryInput): Endpoi
     endpoints.push(createLocalEndpoint(source));
   }
 
-  const lifecycleSummary = endpoints.reduce(
+  // Run 108 R8: collapse duplicate sources by identity.endpoint_id (live: the endpoints API returned 15
+  // entries with flash-high/flash-max/v4-pro-max each duplicated, and the sidebar rendered them repeatedly).
+  // Keep the first occurrence and record a named diagnostic instead of silently appending.
+  const dedupedEndpoints: EndpointCandidate[] = [];
+  const seenEndpointIds = new Set<string>();
+  for (const endpoint of endpoints) {
+    const endpointId = endpoint.identity.endpoint_id;
+    if (seenEndpointIds.has(endpointId)) {
+      diagnostics.push({
+        endpointId,
+        severity: "warning",
+        code: "DUPLICATE_ENDPOINT_SOURCE",
+        message: `Duplicate endpoint source collapsed to a single registry entry: ${endpointId}`,
+      });
+      continue;
+    }
+    seenEndpointIds.add(endpointId);
+    dedupedEndpoints.push(endpoint);
+  }
+
+  const lifecycleSummary = dedupedEndpoints.reduce(
     (summary, endpoint) => {
       if (endpoint.status === "active") {
         summary.active += 1;
@@ -424,7 +444,7 @@ export function buildEndpointRegistry(input: BuildEndpointRegistryInput): Endpoi
   );
 
   return {
-    endpoints,
+    endpoints: dedupedEndpoints,
     diagnostics,
     lifecycleSummary,
   };
