@@ -57,8 +57,11 @@ import {
 } from "../lib/learning-ladder";
 import { summarizePolicyResolution } from "../lib/learning-policy-resolution";
 import {
+  advisoryOriginSplit,
+  advisoryReasonBasis,
+  advisoryRefusalView,
   appliedShareOf,
-  fallbackReasonRows,
+  fallbackReasonSummary,
   formatPercentShare,
   normalizeLearningActivity,
   normalizeLearningHistory,
@@ -632,6 +635,7 @@ export function LearningDecisionRow({
 }) {
   const evidence = learningEvidence(row);
   const task = learningTaskCell(row);
+  const refusal = advisoryRefusalView(row);
   return (
     <tr className={tableRowClassName}>
       <td className="py-3 pr-3">
@@ -719,6 +723,20 @@ export function LearningDecisionRow({
         <p className={`mt-0.5 ${tableCellMetaClassName}`}>
           {`outcome ${evidence.outcome ?? NOT_REPORTED}`}
         </p>
+        {/*
+          Run 114 Tier 2: why the advisory did not apply to this decision, with the source's own text when it
+          had one. The LABEL differs by concept, because these answer different questions and must not share
+          a heading: "advisory unavailable" means the source had nothing to say, while "advisory not applied"
+          means advice existed and this decision did not use it (cohort_excluded, advisory_matches_baseline).
+          Calling the latter a refusal would put two populations under one word - the exact defect this panel
+          is being fixed for. `none` renders nothing, and an unknown code renders as itself rather than as a
+          meaning this panel invented for it.
+        */}
+        {refusal.kind !== "none" ? (
+          <p className={`mt-0.5 ${tableCellMetaClassName}`} title={refusal.code ?? undefined}>
+            {`${refusal.label} · ${refusal.phrase}`}
+          </p>
+        ) : null}
       </td>
       {receipt ? (
         <td className="py-3 pr-3">
@@ -1208,6 +1226,71 @@ export function selectionNoteForStage(effectiveStage: string): string {
   return "the selection follows the configured activation stage";
 }
 
+/**
+ * Run 114 Tier 1 (operator screenshot 2026-10-07): the Overview's advisory copy, as one pure function so
+ * the disclosure it owes the operator is testable without a live runtime. Four defects rendered together:
+ *
+ *  - `Fallback reasons` was a bare top-3 list with no denominator, so the 191 it showed read as a
+ *    partition of the 827 observed above it while the true sum was 204;
+ *  - the bound of three was silent and hid the 13-row `advisory_task_unscoped` tail;
+ *  - `Influence rate` and `Applied share` were the same quantity (applied / observed) rendered twice;
+ *  - `Advisory observed` showed no origin split although most of it is machine-generated replay traffic.
+ *
+ * Each number here is read, never invented: a basis that does not reconcile is stated as two numbers, and
+ * an origin split that does not add up to `observed` is dropped in favour of the bare count.
+ */
+export function advisoryOverviewCopy(
+  advisory: unknown,
+  decisionsReadback: unknown,
+): {
+  readonly observedValue: string;
+  readonly fallbackReasonLabel: string;
+  readonly fallbackReasonValue: string;
+} {
+  const fallbackReasons = fallbackReasonSummary(advisory, 3);
+  const reasonBasis = advisoryReasonBasis(advisory);
+  const originSplit = advisoryOriginSplit(advisory, decisionsReadback);
+  const advisoryRecord = asRecord(advisory);
+  /**
+   * `reconciled` is the only case in which the reasons are a partition of the retained live decisions, so
+   * it is the only case that may be labelled `of N`. A known-but-unreconciled basis states both numbers
+   * without claiming one contains the other, and an unknown one states neither.
+   */
+  const fallbackReasonLabel = `Fallback reasons${
+    reasonBasis.reconciled
+      ? ` (of ${show(reasonBasis.retainedLive)} live retained)`
+      : reasonBasis.retainedLive === null
+        ? ""
+        : ` (${show(reasonBasis.counted)} counted vs ${show(reasonBasis.retainedLive)} live retained)`
+  }${fallbackReasons.omitted > 0 ? ` (top ${fallbackReasons.rows.length} of ${fallbackReasons.total})` : ""}`;
+  // The bound is disclosed in the value too: a silent slice is what hid `advisory_task_unscoped`.
+  const fallbackReasonValue =
+    fallbackReasons.rows.length > 0
+      ? `${fallbackReasons.rows.map((row) => `${row.reason} ×${row.count}`).join(" · ")}${
+          fallbackReasons.omitted > 0 ? `, +${fallbackReasons.omitted} more` : ""
+        }`
+      : "none recorded";
+  /**
+   * Most of the observed traffic is machine-generated replay work, so the origin split renders beside the
+   * count - and ONLY when it reconciles with `observed`. The decisions-derived basis counts entries while
+   * `observed` is the cumulative total and entries are capped, so past the cap they diverge: a split that
+   * does not add up is worse than no split, and then the bare count is all that shows.
+   */
+  const observedValue = `${show(advisoryRecord.observed)} observed${
+    originSplit?.consistent
+      ? ` (${show(originSplit.live)} live · ${show(originSplit.shadow)} replay${
+          originSplit.other > 0 ? ` · ${show(originSplit.other)} other` : ""
+        }${
+          // Rows that aged out of the retained window before origins were tallied. Shown only when it is
+          // non-zero, so the common case reads exactly as before - but never silently dropped, because the
+          // split would then appear to account for the whole population when it does not.
+          originSplit.unattributed > 0 ? ` · ${show(originSplit.unattributed)} unattributed` : ""
+        })`
+      : ""
+  } · fresh ${show(advisoryRecord.fresh)} · stale ${show(advisoryRecord.stale)} · unavailable ${show(advisoryRecord.unavailable)}`;
+  return { observedValue, fallbackReasonLabel, fallbackReasonValue };
+}
+
 /** Overview: stage, policy identity, cohort, advisory counts, guardrails, last rollback. */
 export function LearningOverviewPage() {
   const { token, setToken } = useOperatorToken();
@@ -1253,7 +1336,7 @@ export function LearningOverviewPage() {
   const historyView = normalizeLearningHistory(history.value);
   const profileView = profile.value ?? profileInspectionView(null);
   const advisory = asRecord(asRecord(summary.value).advisory);
-  const fallbackReasons = fallbackReasonRows(advisory, 3);
+  const advisoryCopy = advisoryOverviewCopy(advisory, decisions.value);
   // Run 98 addendum 31 S5: how much of the scored evidence is actually checkable.
   const auditability = asRecord(asRecord(summary.value).auditability);
   const rolloutValue = asRecord(rollout.value);
@@ -1296,20 +1379,21 @@ export function LearningOverviewPage() {
             />
             <Metric label="Activation state" value={show(rolloutValue.state)} />
             <Metric label="Active pack" value={show(rolloutValue.activePackageId)} />
-            <Metric
-              label="Advisory observed"
-              value={`${show(advisory.observed)} · fresh ${show(advisory.fresh)} · stale ${show(advisory.stale)} · unavailable ${show(advisory.unavailable)}`}
-            />
-            <Metric label="Influence rate" value={show(advisory.influenceRate)} />
+            <Metric label="Advisory observed" value={advisoryCopy.observedValue} />
+            {/*
+              Run 114 Tier 1: `Influence rate` was deleted rather than relabelled - it rendered
+              `applied / observed` a second time (the raw ratio 0.0048) beside the share that already
+              states it as 0.5%. The reader still publishes `influenceRate`; the panel just stops
+              rendering the same quantity twice.
+            */}
             {/* Run 98 addendum 44 A44-S3: the R12 numbers the Overview was missing. */}
-            <Metric label="Applied share" value={formatPercentShare(appliedShareOf(advisory))} />
             <Metric
-              label="Fallback reasons"
-              value={
-                fallbackReasons.length > 0
-                  ? fallbackReasons.map((row) => `${row.reason} ×${row.count}`).join(" · ")
-                  : "none recorded"
-              }
+              label="Applied share (of observed)"
+              value={formatPercentShare(appliedShareOf(advisory))}
+            />
+            <Metric
+              label={advisoryCopy.fallbackReasonLabel}
+              value={advisoryCopy.fallbackReasonValue}
             />
             <Metric label="Would have changed" value={show(advisory.wouldHaveChanged)} />
             <Metric

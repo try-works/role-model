@@ -1,10 +1,14 @@
 import { describe, expect, test } from "vitest";
 
 import {
+  ADVISORY_REFUSAL_VOCABULARY,
   EMPTY_LEARNING_ACTIVITY,
   EMPTY_LEARNING_HISTORY,
+  advisoryOriginSplit,
+  advisoryReasonBasis,
+  advisoryRefusalView,
   appliedShareOf,
-  fallbackReasonRows,
+  fallbackReasonSummary,
   formatCompact,
   formatPercentShare,
   formatRelativeAge,
@@ -288,20 +292,32 @@ describe("formatters", () => {
     expect(appliedShareOf({ applied: 0, observed: 0 })).toBeNull();
     expect(appliedShareOf(null)).toBeNull();
 
-    const reasons = fallbackReasonRows({
+    /**
+     * Run 114 Tier 1: the row list alone could not say how many reasons it was hiding, so the helper
+     * returns the bound with the rows - `total` is every positive-count reason before the slice and
+     * `omitted` is what the slice left out. The old `fallbackReasonRows` name is deliberately gone:
+     * a caller that still read `.length` on the summary would have compiled silently against the object.
+     */
+    const reasons = fallbackReasonSummary({
       fallbackReasons: {
         advisory_candidate_not_eligible: 4_708,
         outside_score_band: 12,
         advisory_stale: 2,
       },
     });
-    expect(reasons.map((row) => row.reason)).toEqual([
+    expect(reasons.rows.map((row) => row.reason)).toEqual([
       "advisory_candidate_not_eligible",
       "outside_score_band",
       "advisory_stale",
     ]);
-    expect(fallbackReasonRows({ fallbackReasons: {} })).toEqual([]);
-    expect(fallbackReasonRows(null)).toEqual([]);
+    expect(reasons.total).toBe(3);
+    expect(reasons.omitted).toBe(0);
+    expect(fallbackReasonSummary({ fallbackReasons: {} })).toEqual({
+      rows: [],
+      total: 0,
+      omitted: 0,
+    });
+    expect(fallbackReasonSummary(null)).toEqual({ rows: [], total: 0, omitted: 0 });
 
     expect(profileInspectionView({ capability: "profile", state: "ready" })).toEqual({
       state: "available",
@@ -356,5 +372,325 @@ describe("formatters", () => {
     expect(formatCompact(1970)).toBe("1.97k");
     expect(formatCompact(12_480)).toBe("12.5k");
     expect(formatCompact(1_240_000)).toBe("1.2M");
+  });
+});
+
+/**
+ * Run 114 Tier 1 (operator screenshot 2026-10-07): the Overview rendered
+ * `cohort_excluded ×128 · advisory_matches_baseline ×41 · advisory_candidate_not_eligible ×22` under a bare
+ * `Fallback reasons` label. The 191 shown read as a partition of the 827 observed above it, the 13-row
+ * `advisory_task_unscoped` tail was invisible, and the true sum was 204. These helpers carry the
+ * denominator, the bound and the origin split so the panel cannot silently drop them again.
+ */
+describe("advisory disclosure", () => {
+  test("the reason summary keeps the ordering and discloses what the bound hid", () => {
+    const summary = fallbackReasonSummary(
+      {
+        fallbackReasons: {
+          cohort_excluded: 128,
+          advisory_matches_baseline: 41,
+          advisory_candidate_not_eligible: 22,
+          advisory_task_unscoped: 13,
+        },
+      },
+      3,
+    );
+    // The order is the helper's, most frequent first, and the omitted tail stays out of the rows.
+    expect(summary.rows.map((row) => row.reason)).toEqual([
+      "cohort_excluded",
+      "advisory_matches_baseline",
+      "advisory_candidate_not_eligible",
+    ]);
+    expect(summary.rows.map((row) => row.count)).toEqual([128, 41, 22]);
+    expect(summary.total).toBe(4);
+    expect(summary.omitted).toBe(1);
+
+    // A tie falls back to the reason text, so the bound is deterministic across reads.
+    const tied = fallbackReasonSummary({ fallbackReasons: { c: 2, a: 2, b: 2 } }, 2);
+    expect(tied.rows.map((row) => row.reason)).toEqual(["a", "b"]);
+    expect(tied.omitted).toBe(1);
+
+    // Only positive, finite counts are reasons; a limit of zero hides all of them but still totals them.
+    expect(
+      fallbackReasonSummary({ fallbackReasons: { a: 0, b: -3, c: "4", d: 1, e: null } }, 5),
+    ).toEqual({ rows: [{ reason: "d", count: 1 }], total: 1, omitted: 0 });
+    expect(fallbackReasonSummary({ fallbackReasons: { a: 4 } }, 0)).toEqual({
+      rows: [],
+      total: 1,
+      omitted: 1,
+    });
+    // Empty and unreadable inputs are an empty summary, never a fabricated row.
+    expect(fallbackReasonSummary(undefined)).toEqual({ rows: [], total: 0, omitted: 0 });
+    expect(fallbackReasonSummary({ fallbackReasons: [] })).toEqual({
+      rows: [],
+      total: 0,
+      omitted: 0,
+    });
+  });
+
+  test("the reason basis claims a live-retained partition only when the counts reconcile", () => {
+    // The live calibration: sum(reasons) 204 == considered 208 - applied 4.
+    expect(
+      advisoryReasonBasis({
+        observed: 827,
+        considered: 208,
+        applied: 4,
+        fallbackReasons: {
+          cohort_excluded: 128,
+          advisory_matches_baseline: 41,
+          advisory_candidate_not_eligible: 22,
+          advisory_task_unscoped: 13,
+        },
+      }),
+    ).toEqual({ counted: 204, retainedLive: 204, reconciled: true });
+
+    // A drift of even one row is not a partition, and the panel must not print one.
+    expect(
+      advisoryReasonBasis({
+        considered: 210,
+        applied: 4,
+        fallbackReasons: { cohort_excluded: 128, advisory_task_unscoped: 79 },
+      }),
+    ).toEqual({ counted: 207, retainedLive: 206, reconciled: false });
+
+    // Without both numbers there is no denominator to claim.
+    expect(advisoryReasonBasis({ fallbackReasons: { a: 3 } })).toEqual({
+      counted: 3,
+      retainedLive: null,
+      reconciled: false,
+    });
+    expect(advisoryReasonBasis({ considered: 9, fallbackReasons: { a: 3 } })).toEqual({
+      counted: 3,
+      retainedLive: null,
+      reconciled: false,
+    });
+    // A negative remainder is clamped rather than rendered as a negative denominator.
+    expect(advisoryReasonBasis({ considered: 2, applied: 9 })).toEqual({
+      counted: 0,
+      retainedLive: 0,
+      reconciled: true,
+    });
+    expect(advisoryReasonBasis(null)).toEqual({
+      counted: 0,
+      retainedLive: null,
+      reconciled: false,
+    });
+  });
+
+  test("the origin split prefers the reader's tally and falls back to the decisions readback", () => {
+    // Preference: the reader's own `advisory.origins` wins over the decisions readback.
+    expect(
+      advisoryOriginSplit(
+        { observed: 827, origins: { live: 208, shadow: 619, other: 0 } },
+        { origins: { live: 1, shadow: 2, other: 3 } },
+      ),
+    ).toEqual({
+      live: 208,
+      shadow: 619,
+      other: 0,
+      unattributed: 0,
+      basis: "advisory",
+      consistent: true,
+    });
+
+    // Until the reader publishes one, the decisions readback the Overview already fetches is the basis.
+    expect(
+      advisoryOriginSplit(
+        { observed: 827 },
+        { origins: { live: 208, shadow: 619, other: 0 }, total: 827 },
+      ),
+    ).toEqual({
+      live: 208,
+      shadow: 619,
+      other: 0,
+      unattributed: 0,
+      basis: "decisions",
+      consistent: true,
+    });
+    // A bare origins record is accepted as the fallback too.
+    expect(advisoryOriginSplit({ observed: 3 }, { live: 1, shadow: 2, other: 0 })).toEqual({
+      live: 1,
+      shadow: 2,
+      other: 0,
+      unattributed: 0,
+      basis: "decisions",
+      consistent: true,
+    });
+
+    /**
+     * Run 107: the reader publishes origins CUMULATIVELY, matching `observed`, plus `originsUnattributed`
+     * for rows that aged out of the capped window before the tally existed. The remainder is part of the
+     * sum - without it a ledger past the 5000-entry cap would be reported inconsistent and the panel would
+     * silently drop the split exactly when the population grew large enough to need it.
+     */
+    expect(
+      advisoryOriginSplit(
+        { observed: 6000, origins: { live: 3000, shadow: 2990, other: 0 }, originsUnattributed: 10 },
+        null,
+      ),
+    ).toEqual({
+      live: 3000,
+      shadow: 2990,
+      other: 0,
+      unattributed: 10,
+      basis: "advisory",
+      consistent: true,
+    });
+    // ...and a remainder that does NOT close the gap is still caught: the guard is a real invariant check.
+    expect(
+      advisoryOriginSplit(
+        { observed: 6000, origins: { live: 3000, shadow: 2990, other: 0 }, originsUnattributed: 9 },
+        null,
+      )?.consistent,
+    ).toBe(false);
+
+    /**
+     * The guard that matters: the decisions-derived basis counts ENTRIES while `observed` is the
+     * cumulative total, and entries are capped, so past the cap the two diverge. A split that does not
+     * add up is reported inconsistent and the panel shows the bare count instead of the split.
+     */
+    expect(
+      advisoryOriginSplit({ observed: 900 }, { origins: { live: 208, shadow: 619, other: 0 } }),
+    ).toEqual({
+      live: 208,
+      shadow: 619,
+      other: 0,
+      unattributed: 0,
+      basis: "decisions",
+      consistent: false,
+    });
+    // No observed count at all cannot be reconciled either.
+    expect(advisoryOriginSplit({}, { origins: { live: 1, shadow: 2, other: 0 } })?.consistent).toBe(
+      false,
+    );
+
+    // An incomplete, negative or fractional triple is not a source: half a split is worse than none.
+    expect(advisoryOriginSplit({ observed: 3, origins: { live: 1, shadow: 2 } }, null)).toBeNull();
+    expect(
+      advisoryOriginSplit(
+        { observed: 3, origins: { live: 1, shadow: -2, other: 0 } },
+        { live: 1.5, shadow: 1, other: 0 },
+      ),
+    ).toBeNull();
+    expect(advisoryOriginSplit({ observed: 3, origins: "nope" }, { origins: null })).toBeNull();
+    expect(advisoryOriginSplit(null, null)).toBeNull();
+    expect(advisoryOriginSplit(undefined, undefined)).toBeNull();
+  });
+});
+
+/**
+ * Run 114 Tier 2: the per-row refusal. The words below are the advisory source's own refusal and fault
+ * texts (`route-advisory-source.ts` `refuse`/`unavailable`, plus the aged override), forwarded onto the
+ * observation as `reason`. Nothing enforces this vocabulary - the table is the contract - so a code the
+ * table does not know renders as the RAW code rather than an invented meaning.
+ */
+describe("advisoryRefusalView", () => {
+  test("every vocabulary entry resolves to its declared kind", () => {
+    for (const code of ADVISORY_REFUSAL_VOCABULARY.absent) {
+      expect(advisoryRefusalView({ reason: code })).toEqual({
+        code,
+        phrase: "no usable pack",
+        label: "advisory unavailable",
+        kind: "absent",
+        source: "reason",
+      });
+    }
+    for (const code of ADVISORY_REFUSAL_VOCABULARY.fault) {
+      expect(advisoryRefusalView({ reason: code })).toEqual({
+        code,
+        phrase: "the advisory store could not be read",
+        label: "advisory unavailable",
+        kind: "fault",
+        source: "reason",
+      });
+    }
+  });
+
+  test("the two concepts carry different labels - a routing outcome is not a refusal", () => {
+    /**
+     * The defect this guards: `reason` answers "why is there no advice?" while `fallbackReason` answers
+     * "why was the advice not used?". Rendering both as "advisory refusal" would put two populations under
+     * one word - the same shape of defect as the reason row that read as a partition of observed.
+     */
+    const noAdvice = advisoryRefusalView({ reason: "no admitted rung" });
+    const notUsed = advisoryRefusalView({ fallbackReason: "cohort_excluded" });
+    expect(noAdvice.label).toBe("advisory unavailable");
+    expect(notUsed.label).toBe("advisory not applied");
+    expect(noAdvice.label).not.toBe(notUsed.label);
+    // Neither invents a meaning for a code it does not know.
+    expect(notUsed.kind).toBe("other");
+    expect(notUsed.phrase).toBe("cohort_excluded");
+  });
+
+  test("no code is in two buckets, and an unrecognised code renders as itself", () => {
+    const all = [...ADVISORY_REFUSAL_VOCABULARY.absent, ...ADVISORY_REFUSAL_VOCABULARY.fault];
+    expect(new Set(all).size).toBe(all.length);
+
+    // Drift: a code the table does not know is 'other' and its phrase IS the code - never a meaning we
+    // invented for it. Extending the table without extending this test turns it red on purpose.
+    for (const unknown of [
+      "brand_new_refusal",
+      "cohort_excluded",
+      "advisory_task_unscoped",
+      "a code nobody has emitted yet",
+    ]) {
+      expect(advisoryRefusalView({ reason: unknown })).toEqual({
+        code: unknown,
+        phrase: unknown,
+        label: "advisory unavailable",
+        kind: "other",
+        source: "reason",
+      });
+    }
+    // The Tier-2 `reason` is the explanation; the Tier-1 `fallbackReason` is the tally key. The more
+    // specific one wins, and either alone still renders.
+    expect(
+      advisoryRefusalView({ reason: "no admitted rung", fallbackReason: "cohort_excluded" }),
+    ).toEqual({
+      code: "no admitted rung",
+      phrase: "no usable pack",
+      label: "advisory unavailable",
+      kind: "absent",
+      source: "reason",
+    });
+    expect(advisoryRefusalView({ fallbackReason: "cohort_excluded" })).toEqual({
+      code: "cohort_excluded",
+      phrase: "cohort_excluded",
+      label: "advisory not applied",
+      kind: "other",
+      source: "fallback",
+    });
+    // Codes are matched trimmed, so trailing whitespace from a writer cannot silently become 'other'.
+    expect(advisoryRefusalView({ reason: "  evidence clock or window unavailable  " })).toEqual({
+      code: "evidence clock or window unavailable",
+      phrase: "the advisory store could not be read",
+      label: "advisory unavailable",
+      kind: "fault",
+      source: "reason",
+    });
+    // Codes the table DOES know are bucketed, whichever concept carried them.
+    expect(advisoryRefusalView({ reason: "no active pack" }).kind).toBe("absent");
+    expect(advisoryRefusalView({ reason: "effective advisory policy unavailable" }).kind).toBe("fault");
+  });
+
+  test("a row with nothing to refuse reads as none", () => {
+    for (const row of [
+      null,
+      undefined,
+      {},
+      { reason: null },
+      { reason: "" },
+      { reason: "   " },
+      { reason: 7 },
+      { fallbackReason: null },
+    ]) {
+      expect(advisoryRefusalView(row)).toEqual({
+        code: null,
+        phrase: "",
+        label: "",
+        kind: "none",
+        source: "none",
+      });
+    }
   });
 });

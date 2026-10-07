@@ -26931,6 +26931,13 @@ export async function createRuntimeBridgeBackend(
             return {
               candidateId: cached.candidateId,
               preferredEndpointId: cached.preferredRoutePackage,
+              // Run 107 Tier 2: the source's own refusal/staleness text ("role and task scope
+              // required", "advisory source beyond max age", a degradation receipt's reason, ...)
+              // travels with the advisory so the live observation can record WHY a decision saw an
+              // unavailable or stale advisory instead of only that it did. Guarded with `in`
+              // because the transient scope-wide fallback entry below has no reason of its own;
+              // the router ignores this key (it reads the consideration field by field).
+              advisoryReason: "reason" in cached ? (cached.reason ?? null) : null,
               advisoryState: cached.advisoryState,
               confidence: cached.confidence,
               advisoryId: cached.advisoryId,
@@ -27186,6 +27193,10 @@ export async function createRuntimeBridgeBackend(
             // Run 104 R6: the helper resolves the task through the declaration -> resolved identity ->
             // intent chain, so a request that declared no task no longer records `taskTypeId: null`.
             classification: buildRequestClassificationForPlan(plan),
+            // Run 107 Tier 2: the advisory source's refusal/staleness text, forwarded onto the
+            // observation. It belongs to the ADVISORY, not to the router outcome, which is why it
+            // is read off `advisoryConsideration` rather than off `outcome` below.
+            reason: advisoryConsideration.advisoryReason ?? null,
             // Run 99 close-out (D6): a live routed answer is the policy's own deterministic choice.
             outcome: outcome
               ? {
