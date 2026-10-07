@@ -127,8 +127,23 @@ test("run97 rc07 the expiry sweep resolves the capture scope instead of falling 
   expect(sweep, "the sweep must not fall back to a scope known to match no jobs").not.toContain(
     "lastReplayCaptureScope ?? options.scopeId",
   );
+  /**
+   * The scope must be DERIVED, not merely referenced. An earlier version of this guard asserted only that the
+   * sweep mentioned `replayJobScopeRef.current`, and the implementation passed while remaining INERT: that ref
+   * is assigned on a single composition path, so on a launch that does not take it the guard fell through to
+   * `options.scopeId` - the operator scope already known to match no jobs - and the resolver was never called.
+   * Verified live on build 0.0.14-770-gae1864fb: zero expirations, and no scope log line at all.
+   *
+   * So this asserts the DIRECT derivation, the same `resolveDurableReplayJobScope` call every other replay
+   * readback in cli.ts uses. Text assertions cannot distinguish "calls the resolver" from "calls it only when a
+   * flag happens to be set", which is exactly the gap that a live run closed.
+   */
   expect(
     sweep,
-    "the sweep must resolve the capture scope the way every other replay read does",
-  ).toContain("replayJobScopeRef.current");
+    "the sweep must DERIVE the capture scope, not consult an optional ref that may be unset",
+  ).toContain("resolveDurableReplayJobScope(");
+  expect(
+    sweep,
+    "and it must not fall back to a ref that is null on a just-restarted runtime",
+  ).not.toContain("replayJobScopeRef.current");
 });

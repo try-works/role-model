@@ -5657,9 +5657,21 @@ export async function main(): Promise<void> {
              * read; this call site simply never used that resolver. Reusing it means a runtime that has just
              * restarted sweeps the scope its jobs are actually in, instead of one that cannot match.
              */
-            const sweepScope = replayJobScopeRef.current
-              ? await replayJobScopeRef.current()
-              : options.scopeId;
+            /**
+             * The scope is COMPUTABLE, not discoverable, so it is derived directly here - the same
+             * `resolveDurableReplayJobScope` call every other replay readback in this file uses. An earlier
+             * version of this fix read the optional replay-job-scope ref and fell back to the operator scope
+             * when that ref was unset, which meant the sweep stayed inert on exactly the just-restarted
+             * runtime it was written for: the ref is assigned on one composition path only, so a launch that
+             * does not take it sweeps the operator scope - the scope already known to match no jobs. Measured
+             * live on build 0.0.14-770-gae1864fb: zero expirations and no scope log line at all, because the
+             * resolver was never called.
+             */
+            const sweepScope = resolveDurableReplayJobScope({
+              channel,
+              runtimeStateRoot: options.runtimeStateRoot,
+              scopeId: options.scopeId,
+            });
             const result = await runtime.invoke("replay-core", {
               requestId: `replay-expire-stale:${Date.now()}`,
               sessionId: `replay-expire-stale:${options.scopeId}`,
