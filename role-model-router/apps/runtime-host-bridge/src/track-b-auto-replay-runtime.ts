@@ -2148,6 +2148,13 @@ export function startAutoReplayLoop(input: {
     } catch (error) {
       lastOutcome = "degraded";
       lastError = error instanceof Error ? error.message.slice(0, 300) : "auto replay tick failed";
+      /**
+       * The tick's failure was captured only in memory (`health()`/`status()`), so a loop that failed on EVERY
+       * tick produced no line in any log: the dispatcher's own `[route-evidence-binding] failed: ...` warnings
+       * accumulated while the consequence that actually stopped the loop was invisible, and every operator-facing
+       * surface kept reporting healthy. A failure that runs every tick has to say so where logs are read.
+       */
+      console.error(`[track-b-auto-replay] tick failed: ${lastError}`);
       return emptyResult();
     } finally {
       await Promise.all(dispositionWrites);

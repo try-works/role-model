@@ -501,6 +501,35 @@ test("unavailable durable enumeration fails closed and never treats null as empt
   expect(h.calls).toEqual([]);
   expect(loop.health().lastError).toContain("route dispatch evidence unavailable");
 });
+test("run105 a tick that fails on every attempt reports itself in the log, not only in health state", async () => {
+  const h = harness();
+  h.configure(["a", "b", "c", "new"]);
+  h.census([task("idle", 10, 3, 4)]);
+  const loop = startAutoReplayLoop({ ...h.input, readRouteDispatchEvidence: async () => null });
+  cleanups.push(() => loop.stop());
+  const logged: string[] = [];
+  const original = console.error;
+  console.error = ((...args: unknown[]) => {
+    logged.push(args.map((value) => String(value)).join(" "));
+  }) as typeof console.error;
+  try {
+    await loop.tick();
+  } finally {
+    console.error = original;
+  }
+  expect(loop.health().lastError).toContain("route dispatch evidence unavailable");
+  /**
+   * Measured live before this: the loop failed on EVERY tick and the err log held 52 repetitions of the
+   * dispatcher's own "[route-evidence-binding] failed: ..." warning with no line recording the consequence,
+   * because the throw reached only health().lastError. The operator-facing surface reported
+   * "replay":{"state":"ready"} throughout, so a completely stalled loop looked healthy from every angle. A
+   * failure that runs every tick has to be legible in the logs.
+   */
+  expect(
+    logged.join("\n"),
+    "the tick failure must reach the log, not only the in-memory health state",
+  ).toContain("route dispatch evidence unavailable");
+});
 test("historical replayable source seam retains exact task classification and actual source receipt", async () => {
   const h = harness();
   h.configure(["a", "b", "c", "new"]);

@@ -5641,19 +5641,34 @@ export async function main(): Promise<void> {
           const runtime = extensionRuntimeRef.current;
           if (!runtime) return { expiredCount: 0, expired: [] };
           try {
+            /**
+             * The sweep must resolve the CAPTURE scope exactly the way every other replay read does. It
+             * previously used the raw last-capture-scope fallback to the operator scope, and that fallback
+             * is KNOWN to match nothing: a just-restarted runtime has read no capture, so the sweep ran against the
+             * operator scope while every durable job lives under `runtime:<hash>`. The extension then
+             * skipped every job on `job.scope !== scope`, returned `expiredCount: 0`, and so reported
+             * success while doing nothing - no `expirationReceipt` was ever issued, and any job that became
+             * expire-able in that window was stranded for ever behind the claim guard that requires that
+             * receipt (measured live: three jobs overdue by ~3.5 hours past a 30-minute grace, with every
+             * field eligible except their scope).
+             *
+             * Run 100 addendum `handoff-evidence-durability.addendum-06` S27/S28 already solved exactly
+             * this for the listings by deriving the scope from the store itself when no capture has been
+             * read; this call site simply never used that resolver. Reusing it means a runtime that has just
+             * restarted sweeps the scope its jobs are actually in, instead of one that cannot match.
+             */
+            const sweepScope = replayJobScopeRef.current
+              ? await replayJobScopeRef.current()
+              : options.scopeId;
             const result = await runtime.invoke("replay-core", {
               requestId: `replay-expire-stale:${Date.now()}`,
               sessionId: `replay-expire-stale:${options.scopeId}`,
               protocolVersion: "1.1.0",
               channel,
-              // Durable replay jobs are scoped to the *capture* scope, which is not
-              // necessarily the operator scope id (live: `runtime:<hash>`). Sweeping with
-              // the operator scope matched nothing, so the sweep uses the scope of the
-              // capture the producer most recently read.
-              scope: lastReplayCaptureScope ?? options.scopeId,
+              scope: sweepScope,
               authorizationEpoch: 1,
               capability: "replay:expire-stale-jobs",
-              value: { ...input, scope: lastReplayCaptureScope ?? options.scopeId, channel },
+              value: { ...input, scope: sweepScope, channel },
             });
             const record =
               result && typeof result === "object" && !Array.isArray(result)
@@ -6426,10 +6441,24 @@ export async function main(): Promise<void> {
                   console.error(`[run105] ladder materialization wrote ${written} ladder row(s)`);
               }
             } catch (materializationError) {
+              /**
+               * This is a TRANSIENT SKIP, not a lost row, and the message has to say so. The sweep runs
+               * once per auto-replay tick and materialization is a pure function of durable evidence, so
+               * the next tick recomputes and writes whatever this attempt missed. Measured live: the log
+               * held "wrote 1 ladder row(s)" at lines 159 and 169 around a "degraded" at 162, i.e. the
+               * very next tick recovered, and the first-time ladder for that family materialized v1 -> v4
+               * across the same window.
+               *
+               * The bare "degraded: database is locked" invited the opposite reading - that a family
+               * could reach its admission floor and silently get no row - and that misreading is how this
+               * was originally recorded as data loss. Naming the cause and the retry costs nothing and
+               * stops the next reader making the same mistake.
+               */
+              const cause = String(
+                (materializationError as { message?: unknown })?.message ?? materializationError,
+              ).slice(0, 160);
               console.error(
-                `[run105] ladder materialization degraded: ${String(
-                  (materializationError as { message?: unknown })?.message ?? materializationError,
-                ).slice(0, 160)}`,
+                `[run105] ladder materialization skipped this tick (retried next tick, no row is lost): ${cause}`,
               );
             }
           };

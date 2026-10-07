@@ -442,9 +442,7 @@ export async function resolveDurableEvaluationAuthority(input: {
   }
   if (!keyFile) {
     throw new Error(
-      `managed artifact digest key not found for the durable evaluation authority (looked in ${candidates
-        .map((candidate) => path.basename(path.dirname(path.dirname(candidate))))
-        .join(", ")})`,
+      `managed artifact digest key not found for the durable evaluation authority (looked in ${candidates.join(", ")})`,
     );
   }
   await assertManagedArtifactKeyFile(keyFile);
