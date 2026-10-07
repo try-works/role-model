@@ -6125,6 +6125,7 @@ export async function main(): Promise<void> {
                 routePackage,
                 channel,
                 scope: options.scopeId,
+                configuredEndpointCount: configuredEndpointIdsRef.current.length,
                 scorerSetVersion,
                 judgeEndpointId:
                   typeof candidate.judgeEndpointId === "string" ? candidate.judgeEndpointId : null,

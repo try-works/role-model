@@ -116,6 +116,8 @@ export interface DurableLearnerValidationInput {
   readonly taskTypeId?: string | null;
   readonly taxonomyVersion?: string | null;
   readonly holdoutCaseIds?: readonly string[];
+  /** Run 108 R6(b): the configured endpoint pool size, passed to the gate's small-pool receipt. */
+  readonly configuredEndpointCount?: number;
 }
 
 /**
@@ -296,6 +298,11 @@ export function assembleDurableLearnerValidationValue(
       bootstrapSeed: 0,
       resamples: RUN98_LEARNING_DEFAULT_BOOTSTRAP_RESAMPLES,
     },
+    // Run 108 R6(b): the configured endpoint pool size travels to the gate so it can name the
+    // structurally-unsatisfiable development floor at pools <= 3.
+    configuredEndpointCount: Number.isSafeInteger(input.configuredEndpointCount)
+      ? input.configuredEndpointCount
+      : null,
   };
 }
 
