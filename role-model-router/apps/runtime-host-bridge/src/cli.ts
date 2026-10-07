@@ -576,6 +576,9 @@ import {
   verifyTrackBExtensionClosureAfterRestart,
   assessSmallPoolJudgePlacement,
 } from "./track-b-runtime.js";
+import * as Effect from "effect/Effect";
+import * as Metric from "effect/Metric";
+import { evalFinaliseRefusals, replayAdmissions } from "./run108-observability.js";
 import {
   createRouterPairwiseJudge,
   resolveJudgeEndpointFromController,
@@ -2699,6 +2702,17 @@ export function createSupervisedReplayEvaluationCompleter(input: {
       ]
         .filter(Boolean)
         .join(" ");
+      // Run 108 R7: the finalise-refusal metric - the RC-1 observability gap (which guard refused
+      // never reached the disposition). Tagged by the bounded detail so each refusal shape counts once.
+      Effect.runSync(
+        Metric.update(
+          Metric.withAttributes(evalFinaliseRefusals, {
+            guard: "finalise",
+            reason: detail.slice(0, 80),
+          }),
+          1,
+        ),
+      );
       throw new Error(
         `durable replay evaluation did not finalize a valid comparison: ${detail}`.slice(0, 512),
       );
@@ -8544,6 +8558,13 @@ export async function main(): Promise<void> {
              */
             judgeResolved: Boolean(evalJudgeEndpointId),
           });
+          // Run 108 R7: the replay admission counter (module-scope metric, registry-scoped).
+          Effect.runSync(
+            Metric.update(
+              Metric.withAttributes(replayAdmissions, { pass: "replay" }),
+              admission.admitted ? 1 : 0,
+            ),
+          );
           if (!admission.admitted) {
             /**
              * Run 104 R1: arms the router's rule rejected are named in the failure, so a planner that
