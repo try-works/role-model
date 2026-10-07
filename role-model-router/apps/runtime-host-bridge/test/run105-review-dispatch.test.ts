@@ -501,6 +501,37 @@ test("unavailable durable enumeration fails closed and never treats null as empt
   expect(h.calls).toEqual([]);
   expect(loop.health().lastError).toContain("route dispatch evidence unavailable");
 });
+test("run106 the liveness sweep still runs when the evidence read is unavailable", async () => {
+  const h = harness();
+  h.configure(["a", "b", "c", "new"]);
+  h.census([task("idle", 10, 3, 4)]);
+  const sweeps: Record<string, unknown>[] = [];
+  const loop = startAutoReplayLoop({
+    ...h.input,
+    operations: {
+      ...h.input.operations,
+      async expireStaleReplayJobs(sweepInput: Record<string, unknown>) {
+        sweeps.push(sweepInput);
+        return { expiredCount: 1, expired: [{ jobId: "job-1" }] };
+      },
+    },
+    readRouteDispatchEvidence: async () => null,
+  });
+  cleanups.push(() => loop.stop());
+  await loop.tick();
+  /**
+   * BEHAVIOURAL, not a source assertion - deliberately, because a source assertion could not have caught the
+   * defect this pins. The bounded liveness sweep used to run at the END of the tick, after the challenge loop,
+   * so the fail-closed throw on an unavailable evidence read aborted the tick before reaching it. Measured live
+   * on build 0.0.14-771-g09173f51 - with the scope fix already in place AND the computed scope verified to match
+   * the persisted jobs - zero jobs were expired and no expirationReceipt was ever issued, because the sweep was
+   * never called. Two independent causes; fixing only the scope left the sweep uncalled.
+   */
+  expect(sweeps.length, "the sweep must run BEFORE the evidence phase that throws").toBe(1);
+  // ...and fail-closed is untouched: an unavailable enumeration still dispatches nothing.
+  expect(h.calls).toEqual([]);
+  expect(loop.health().lastError).toContain("route dispatch evidence unavailable");
+});
 test("run105 a tick that fails on every attempt reports itself in the log, not only in health state", async () => {
   const h = harness();
   h.configure(["a", "b", "c", "new"]);

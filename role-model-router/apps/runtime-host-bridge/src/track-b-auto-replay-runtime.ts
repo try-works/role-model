@@ -1228,6 +1228,24 @@ export function startAutoReplayLoop(input: {
     running = true;
     const dispositionWrites: Promise<unknown>[] = [];
     try {
+      /**
+       * RC07 (L2) + Run 106: the bounded liveness sweep runs FIRST, before any evidence-dependent work.
+       *
+       * The tick's evidence phase throws `route dispatch evidence unavailable` on a channel that provisions
+       * no managed keys, and that throw aborts the REST of the tick - including the sweep that used to sit at
+       * the end of this function. So the sweep was unreachable in exactly the situation that needs it most.
+       * Measured live on build 0.0.14-771-g09173f51 with the scope fix already in place AND the computed scope
+       * verified to match the jobs (`runtime:1964e40c...`): zero jobs expired, no `expirationReceipt` ever
+       * issued, and every job that became expire-able stayed stranded behind the claim guard that requires
+       * that receipt. Two independent causes, and fixing only the scope left the sweep uncalled.
+       *
+       * The sweeps need no evaluation authority, so they run here unconditionally - the same way the
+       * interval/skip path below already runs them "instead of skipping them, so an overdue job is still
+       * expired on schedule". The evidence-dependent phase keeps its fail-closed throw untouched.
+       */
+      const livenessSweep = await runLivenessSweeps(
+        input.ledger.status().window as unknown as Record<string, unknown>,
+      );
       const stageEnabled = typeof input.routeFocusCandidates === "function";
       let plannedFocus: ReturnType<typeof selectFocusTask> = null;
       let focusCaptureRef: string | null = null;
@@ -2132,7 +2150,9 @@ export function startAutoReplayLoop(input: {
       // reaching a terminal state is expired with a typed receipt instead of living on
       // as an orphan the producer will never drive again. A sweep failure degrades this
       // tick, never the routing path.
-      const sweep = await runLivenessSweeps(window as unknown as Record<string, unknown>);
+      // Run 106: the sweep already ran at the top of this tick, before the evidence phase that can throw.
+      // Reusing its result keeps exactly one bounded sweep per tick while making it unreachable-proof.
+      const sweep = livenessSweep;
       lastExpiredJobs = sweep.expired;
       lastResumedEvaluations = sweep.resumed;
       lastReconciledEvaluations = sweep.reconciled;
