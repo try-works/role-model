@@ -16,6 +16,18 @@ import path from "node:path";
  * The published subpaths are discovered from the vendored Effect family
  * (Effect itself, effect-mq and the SQLite client), so the package exposes
  * exactly the `effect/<subpath>` specifiers the runtime actually imports.
+ *
+ * This package deliberately declares no `sideEffects` field. The built `dist/`
+ * is an esbuild chunk graph whose entry files carry bare
+ * `import "./chunks/chunk-*.js"` edges (`index.js` has 16, `sql/Migrator.js`
+ * has 57). A `sideEffects` list that matches none of those chunks tells every
+ * downstream bundler they may be deleted - a purity claim this wrapper cannot
+ * prove for generated output - and it makes esbuild report an
+ * `ignored-bare-import` warning on every consumer build (405-520 warnings for
+ * a single host bundle). Omitting the field makes downstream bundlers assume
+ * the chunks may have side effects, so the chunk graph is evaluated in full and
+ * no warning is emitted. Do not re-add a path list here: the wrapper re-exports
+ * a vendored tree, so it has no basis for certifying any generated file pure.
  */
 import { build } from "esbuild";
 

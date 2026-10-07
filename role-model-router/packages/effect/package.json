@@ -18,7 +18,6 @@
     }
   },
   "files": ["src", "dist"],
-  "sideEffects": ["./src/index.ts"],
   "scripts": {
     "build": "node build.mjs"
   }
