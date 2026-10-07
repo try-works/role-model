@@ -8114,14 +8114,11 @@ export async function main(): Promise<void> {
           authorizationEpoch: 1,
           // R3: counterfactual candidates come from the running registry, not from
           // the capture's frozen decision snapshot.
-          // Run 98 addendum 34 S1: the arm bound is resolved *here*, in the process that reads the operator's
-          // environment, and travels with the work item. The sidecar that consumes it is a child process with
-          // its own environment, so a bound resolved only there ignored the override (measured on v216: three
-          // arms with the bound set to four).
-          configuredCandidateEndpointIds: configuredEndpointIdsRef.current.slice(
-            0,
-            resolveMaxCounterfactualArms(),
-          ),
+          // Run 108 R2: the pool is NOT sliced here. The arm bound applies inside
+          // selectTrackBCounterfactualArms AFTER the served-route and judge exclusions; a pool-level slice
+          // double-counts those exclusions and made 5 endpoints behave like 3 (measured live: every job
+          // 1-arm / 2-case). The bound itself travels on the work item as maxCounterfactualArms below.
+          configuredCandidateEndpointIds: configuredEndpointIdsRef.current,
           // Run 98 R4: durable advisory observations (state distribution + influence rate).
           advisoryObservationLedgerPath: path.join(
             options.runtimeStateRoot,
@@ -8159,6 +8156,19 @@ export async function main(): Promise<void> {
               channel: packagedProfile?.channel ?? "development",
               scopeId: options.scopeId,
             })?.effective.judgeOrderPolicy ?? null,
+          // Run 108 R2: the counterfactual arm bound is a versioned-policy value (activation-policy
+          // maxCounterfactualArms, 1..8); it travels on the work item so the sidecar consumer
+          // (track-b-runtime.ts:11903-11908) uses the operator's bound instead of the environment default.
+          maxCounterfactualArms:
+            readLearningPolicyFile({
+              repoRoot: options.repoRoot,
+              stateRoot: resolveLearningPolicyStateRoot({
+                runtimeStateRoot: options.runtimeStateRoot,
+                scopeId: options.scopeId,
+              }),
+              channel: packagedProfile?.channel ?? "development",
+              scopeId: options.scopeId,
+            })?.effective.maxCounterfactualArms ?? null,
           /**
            * Run 100 R1 (live finding, clean verification window): the routing-shadow path planned its
            * arms without consulting the judge, so a capture whose configured candidates include the

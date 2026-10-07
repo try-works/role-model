@@ -87,6 +87,8 @@ export interface LearningPolicySnapshot {
      */
     readonly judgeMode: "identified" | "identity_blind";
     readonly judgeOrderPolicy: "source_first" | "dual_order";
+    /** Run 108 R2: the counterfactual arm bound, carried by the versioned activation policy (1..8, default 3). */
+    readonly maxCounterfactualArms: number;
     /** Run 98 addendum 33 S2: how a position-order flip is scored. */
     readonly judgeOrderAggregation: "balanced" | "strict_consistency" | "fails_closed";
     /** Run 98 addendum 33 S2: the position-consistency floor a judge must clear. */
@@ -172,6 +174,7 @@ const DEFAULT_EFFECTIVE: LearningPolicySnapshot["effective"] = Object.freeze({
   evidenceMaxAgeDays: 30,
   judgeMode: "identified",
   judgeOrderPolicy: "source_first",
+  maxCounterfactualArms: 3,
   judgeOrderAggregation: "balanced",
   judgePositionConsistencyFloor: 0.5,
   judgeMeasureAgreement: false,
@@ -499,6 +502,20 @@ function validatePolicyBlock(
       detail: `${label}.judgeOrderPolicy is not a known order policy`,
     };
   }
+  if (
+    "maxCounterfactualArms" in block &&
+    !(
+      typeof block.maxCounterfactualArms === "number" &&
+      Number.isSafeInteger(block.maxCounterfactualArms) &&
+      block.maxCounterfactualArms >= 1 &&
+      block.maxCounterfactualArms <= 8
+    )
+  ) {
+    return {
+      field: "maxCounterfactualArms",
+      detail: `${label}.maxCounterfactualArms must be an integer 1..8`,
+    };
+  }
   if ("cohortLadder" in block) {
     const ladder = block.cohortLadder;
     if (!Array.isArray(ladder) || ladder.length === 0) {
@@ -707,6 +724,10 @@ export function readLearningPolicyFile(input: {
         : "production_only",
     judgeMode: merged.judgeMode === "identity_blind" ? "identity_blind" : "identified",
     judgeOrderPolicy: merged.judgeOrderPolicy === "dual_order" ? "dual_order" : "source_first",
+    maxCounterfactualArms:
+      typeof merged.maxCounterfactualArms === "number" && Number.isSafeInteger(merged.maxCounterfactualArms)
+        ? Math.min(8, Math.max(1, merged.maxCounterfactualArms))
+        : DEFAULT_EFFECTIVE.maxCounterfactualArms,
     judgeOrderAggregation:
       merged.judgeOrderAggregation === "strict_consistency" ||
       merged.judgeOrderAggregation === "fails_closed"
