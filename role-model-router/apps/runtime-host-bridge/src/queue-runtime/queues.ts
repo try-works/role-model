@@ -14,7 +14,7 @@
 import { createHash } from "node:crypto";
 
 import { Duration, Effect, Schedule, Schema } from "effect";
-import { PersistedQueue } from "effect/unstable/persistence";
+import { PersistedQueue } from "effect/persistence";
 
 import type { QueueName } from "./policy.js";
 

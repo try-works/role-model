@@ -72,7 +72,6 @@ import type {
   unassigned
 } from "./Types.ts"
 import type * as Unify from "./Unify.ts"
-import { internalCall } from "./Utils.ts"
 
 /**
  * Type-level identifier for `Effect` values.
@@ -504,13 +503,13 @@ export const all: <
 ) => All.Return<Arg, O> = internal.all
 
 /**
- * Applies an effectful function to each element and partitions failures and
- * successes.
+ * Applies an effectful function to each element and partitions successes and
+ * failures.
  *
  * **Details**
  *
- * The returned tuple is `[excluded, satisfying]`, where `excluded` contains
- * all failures and `satisfying` contains all successes.
+ * The returned tuple is `[passes, fails]`, where `passes` contains all
+ * successes and `fails` contains all failures.
  *
  * This function runs every effect and never fails. Use `concurrency` to control
  * parallelism.
@@ -524,7 +523,7 @@ export const all: <
  *   n % 2 === 0 ? Effect.fail(`${n} is even`) : Effect.succeed(n)
  * )
  *
- * await Effect.runPromise(program) // => [['0 is even', '2 is even'], [1, 3]]
+ * await Effect.runPromise(program) // => [[1, 3], ['0 is even', '2 is even']]
  * ```
  *
  * @category collecting
@@ -534,12 +533,12 @@ export const partition: {
   <A, B, E, R>(
     f: (a: A, i: number) => Effect<B, E, R>,
     options?: { readonly concurrency?: Concurrency | undefined }
-  ): (elements: Iterable<A>) => Effect<[excluded: Array<E>, satisfying: Array<B>], never, R>
+  ): (elements: Iterable<A>) => Effect<[passes: Array<B>, fails: Array<E>], never, R>
   <A, B, E, R>(
     elements: Iterable<A>,
     f: (a: A, i: number) => Effect<B, E, R>,
     options?: { readonly concurrency?: Concurrency | undefined }
-  ): Effect<[excluded: Array<E>, satisfying: Array<B>], never, R>
+  ): Effect<[passes: Array<B>, fails: Array<E>], never, R>
 } = internal.partition
 
 /**
@@ -7085,6 +7084,11 @@ export const onExitFilter: {
  * evaluations of the same effect will return the cached result without
  * re-executing the logic.
  *
+ * Concurrent callers share the pending computation, which is interrupted only
+ * once every caller waiting on it has been interrupted. Interrupted
+ * computations are never cached, so the next evaluation starts a fresh
+ * computation.
+ *
  * **Example** (Memoizing an effect until invalidated)
  *
  * ```ts import.meta.vitest
@@ -7146,11 +7150,12 @@ export const cached: <A, E, R>(self: Effect<A, E, R>) => Effect<Effect<A, E, R>>
  * `Duration.Input`. The function runs once after each fresh computation,
  * including failures, so successes and failures can have different TTLs. It
  * does not run when the cache is created or when a cached result is reused.
- * The callback also receives interruption exits, which are cached for the
- * returned duration.
+ * Interrupted computations are never cached and do not call the function.
  *
  * The TTL starts when the computation completes. Concurrent callers share the
- * pending computation. A zero TTL expires immediately, and an infinite TTL
+ * pending computation, which is interrupted only once every caller waiting on
+ * it has been interrupted. The next evaluation then starts a fresh
+ * computation. A zero TTL expires immediately, and an infinite TTL
  * keeps the result indefinitely.
  *
  * **Example** (Memoizing an effect with TTL)
@@ -7219,8 +7224,8 @@ export const cachedWithTTL: {
 } = internal.cachedWithTTL
 
 /**
- * Creates a cached effect result for a specified duration and allows manual
- * invalidation before expiration.
+ * Creates a cached effect result for a fixed duration or a duration computed
+ * from its `Exit` and allows manual invalidation before expiration.
  *
  * **When to use**
  *
@@ -7277,8 +7282,17 @@ export const cachedWithTTL: {
  * @since 2.0.0
  */
 export const cachedInvalidateWithTTL: {
+  <A, E>(
+    timeToLive: (exit: Exit.Exit<A, E>) => Duration.Input
+  ): <R>(self: Effect<A, E, R>) => Effect<[Effect<A, E, R>, Effect<void>]>
   (timeToLive: Duration.Input): <A, E, R>(self: Effect<A, E, R>) => Effect<[Effect<A, E, R>, Effect<void>]>
-  <A, E, R>(self: Effect<A, E, R>, timeToLive: Duration.Input): Effect<[Effect<A, E, R>, Effect<void>]>
+  <A, E>(
+    timeToLive: Duration.Input | ((exit: Exit.Exit<A, E>) => Duration.Input)
+  ): <R>(self: Effect<A, E, R>) => Effect<[Effect<A, E, R>, Effect<void>]>
+  <A, E, R>(
+    self: Effect<A, E, R>,
+    timeToLive: Duration.Input | ((exit: Exit.Exit<A, E>) => Duration.Input)
+  ): Effect<[Effect<A, E, R>, Effect<void>]>
 } = internal.cachedInvalidateWithTTL
 
 // -----------------------------------------------------------------------------
@@ -7506,9 +7520,12 @@ export declare namespace Repeat {
    * @since 2.0.0
    */
   export type Return<R, E, A, O extends Options<A>> = Effect<
-    O extends { until: Predicate.Refinement<A, infer B> } ? B
+    O extends unknown ? "schedule" extends keyof O ? A
+      : "times" extends keyof O ? A
+      : O extends { until: Predicate.Refinement<A, infer B> } ? B
       : O extends { while: Predicate.Refinement<A, infer B> } ? Exclude<A, B>
-      : A,
+      : A
+      : never,
     | E
     | (O extends { schedule: Schedule<infer _Out, infer _I, infer E, infer _R> } ? E
       : never)
@@ -8731,6 +8748,10 @@ export const forkDetach: <
  *
  * Child fibers that already exist before the wrapped effect starts are not
  * awaited.
+ *
+ * If interrupted while awaiting child fibers after the wrapped effect fails,
+ * both the original failure and the interruption are retained in the cause.
+ * An enclosing uninterruptible region keeps the child wait uninterruptible.
  *
  * @see {@link forkChild} for forking child fibers that are awaited by this operator
  * @see {@link forkDetach} for forking fibers outside the child scope
@@ -14199,7 +14220,7 @@ export const track: {
     f: (exit: Exit.Exit<A, E>) => Input
   ): Effect<A, E, R> =>
     onExit(self, (exit) => {
-      const input = f === undefined ? exit : internalCall(() => f(exit))
+      const input = f === undefined ? exit : f(exit)
       return Metric.update(metric, input as any)
     })
 )
@@ -14351,7 +14372,7 @@ export const trackErrors: {
     f: ((error: E) => Input) | undefined
   ): Effect<A, E, R> =>
     tapError(self, (error) => {
-      const input = f === undefined ? error : internalCall(() => f(error))
+      const input = f === undefined ? error : f(error)
       return Metric.update(metric, input as any)
     })
 )
@@ -14425,7 +14446,7 @@ export const trackDefects: {
   (args) => isEffect(args[0]),
   (self, metric, f) =>
     tapDefect(self, (defect) => {
-      const input = f === undefined ? defect : internalCall(() => f(defect))
+      const input = f === undefined ? defect : f(defect)
       return Metric.update(metric, input)
     })
 )
@@ -14506,7 +14527,7 @@ export const trackDuration: {
           Duration.fromInputUnsafe(endTime),
           Duration.fromInputUnsafe(startTime)
         )
-        const input = f === undefined ? duration : internalCall(() => f(duration))
+        const input = f === undefined ? duration : f(duration)
         return Metric.update(metric, input as any)
       })
     })
@@ -14555,6 +14576,7 @@ export class Transaction extends Context.Service<
       {
         readonly version: number
         value: any
+        written: boolean
       }
     >
   }
@@ -14658,7 +14680,13 @@ const isTransactionConsistent = (state: Transaction["Service"]) => {
 }
 
 const awaitPendingTransaction = (state: Transaction["Service"]) =>
-  suspend(() => {
+  callback<void>((resume) => {
+    // Validate the read set and register the waiter in one synchronous step.
+    // A commit that landed after the reads has already signalled its waiters
+    // and will not signal this one, so a stale read set reruns immediately.
+    if (!isTransactionConsistent(state)) {
+      return resume(void_)
+    }
     const key = {}
     const refs = Array.from(state.journal.keys())
     const clearPending = () => {
@@ -14666,21 +14694,20 @@ const awaitPendingTransaction = (state: Transaction["Service"]) =>
         clear.pending.delete(key)
       }
     }
-    return callback<void>((resume) => {
-      const onCall = () => {
-        clearPending()
-        resume(void_)
-      }
-      for (const ref of refs) {
-        ref.pending.set(key, onCall)
-      }
-      return sync(clearPending)
-    })
+    const onCall = () => {
+      clearPending()
+      resume(void_)
+    }
+    for (const ref of refs) {
+      ref.pending.set(key, onCall)
+    }
+    return sync(clearPending)
   })
 
 function commitTransaction(fiber: Fiber<unknown, unknown>, state: Transaction["Service"]) {
-  for (const [ref, { value }] of state.journal) {
-    if (value !== ref.value) {
+  for (const [ref, { value, written }] of state.journal) {
+    if (!written) continue
+    if (!Object.is(value, ref.value)) {
       ref.version = ref.version + 1
       ref.value = value
     }

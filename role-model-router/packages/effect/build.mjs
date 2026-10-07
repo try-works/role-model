@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
-import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 /**
  * Run 101 / R1: build the vendored Effect v4 tree into this workspace package's
@@ -86,6 +86,13 @@ for (const subpath of subpaths) {
   entries[subpath] = resolved;
 }
 
+/**
+ * The published subpaths are discovered from the vendored tree, so a stale
+ * `dist/` would keep serving subpaths the pinned tree no longer has - after the
+ * effect@4.0.1 move that means a deleted `unstable/*` entry point could still
+ * resolve. Always build the published surface from empty.
+ */
+await rm(path.join(here, "dist"), { recursive: true, force: true });
 await mkdir(path.join(here, "dist"), { recursive: true });
 
 await build({
@@ -116,20 +123,22 @@ const typesDir = path.join(here, "dist", "types");
 await mkdir(typesDir, { recursive: true });
 /**
  * Declaration emit covers the subpaths the queue stack consumes: every core
- * namespace plus `unstable/persistence`, `unstable/sql/*` and
- * `unstable/reactivity/*`. The remaining published subpaths are runtime-only in
- * this run - emitting them would drag optional peers (for example the AI and
- * CLI trees) into the declaration program, which `--noCheck` still has to
- * resolve.
+ * namespace plus `persistence/*`, `sql/*` and `reactivity/*` - the modules
+ * that became top-level in effect@4.0.1 when `unstable/*` was dropped. The
+ * remaining published subpaths are runtime-only in this run - emitting them
+ * would drag optional peers (for example the AI and CLI trees) into the
+ * declaration program, which `--noCheck` still has to resolve.
  */
 const declarationEntries = Object.entries(entries).filter(
   ([subpath]) =>
     !subpath.includes("/") ||
     subpath === "index" ||
-    subpath.startsWith("unstable/persistence") ||
-    subpath.startsWith("unstable/sql/") ||
-    subpath === "unstable/sql" ||
-    subpath.startsWith("unstable/reactivity"),
+    subpath === "persistence" ||
+    subpath.startsWith("persistence/") ||
+    subpath === "sql" ||
+    subpath.startsWith("sql/") ||
+    subpath === "reactivity" ||
+    subpath.startsWith("reactivity/"),
 );
 const declarationEntryFiles = declarationEntries.map(([, file]) => file);
 try {
