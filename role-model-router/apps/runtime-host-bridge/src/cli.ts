@@ -574,6 +574,7 @@ import {
   validateRecoveredReplayCapture,
   validateRun88ProviderResponseObservation,
   verifyTrackBExtensionClosureAfterRestart,
+  assessSmallPoolJudgePlacement,
 } from "./track-b-runtime.js";
 import {
   createRouterPairwiseJudge,
@@ -10840,6 +10841,29 @@ export async function main(): Promise<void> {
       configuredEndpointIdsRef.current = created.effectiveRegistry.endpoints.map(
         (endpoint) => endpoint.identity.endpoint_id,
       );
+      // Run 108 R6: surface the small-pool judge misplacement ONCE at config time instead of per-tick
+      // R14 refusals. The judge resolution is async and re-read per tick, so this fires at creation.
+      void resolveControllerJudge(created, readLearningPolicyFile({
+        repoRoot: options.repoRoot,
+        stateRoot: resolveLearningPolicyStateRoot({
+          runtimeStateRoot: options.runtimeStateRoot,
+          scopeId: options.scopeId,
+        }),
+        channel: packagedProfile?.channel ?? "development",
+        scopeId: options.scopeId,
+      }))
+        .then((judge) => {
+          const signal = assessSmallPoolJudgePlacement({
+            candidateEndpointIds: configuredEndpointIdsRef.current,
+            judgeEndpointId: judge?.endpointId ?? null,
+          });
+          if (signal) {
+            console.error(
+              `[run108] config-time judge placement: ${signal.code}: ${signal.detail}`,
+            );
+          }
+        })
+        .catch(() => {});
       return created;
     };
     if (trackBManifestText && trackBManifestPath) {

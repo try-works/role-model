@@ -106,6 +106,34 @@ export function selectTrackBCounterfactualArms(input: {
 }
 
 /**
+ * Run 108 R6: a pool of exactly two models with the judge among them can never form a comparison
+ * (2 - 1 served - 1 judge = 0 arms), so every capture stalls with a per-tick R14 refusal. That is a
+ * CONFIG-TIME condition: surface it once, by name, instead of failing per tick.
+ */
+export function assessSmallPoolJudgePlacement(input: {
+  readonly candidateEndpointIds: readonly string[];
+  readonly judgeEndpointId?: string | null;
+}): { readonly code: "SMALL_POOL_JUDGE_INSIDE_POOL"; readonly detail: string } | null {
+  const judge = typeof input.judgeEndpointId === "string" ? input.judgeEndpointId.trim() : "";
+  const candidates = [
+    ...new Set(
+      (input.candidateEndpointIds ?? []).filter(
+        (endpointId): endpointId is string =>
+          typeof endpointId === "string" && endpointId.trim().length > 0,
+      ),
+    ),
+  ];
+  if (candidates.length === 2 && judge.length > 0 && candidates.includes(judge)) {
+    return {
+      code: "SMALL_POOL_JUDGE_INSIDE_POOL",
+      detail:
+        "the pool has 2 models and the judge is one of them: the judge must be outside the pool, or the pool needs >= 3 models (2 - 1 served - 1 judge leaves no arm to compare)",
+    };
+  }
+  return null;
+}
+
+/**
  * Run 98 addendum 04 (live finding, stage v180, 2026-09-16).
  *
  * This process builds its own extension host for the replay/evaluation path and never passed
