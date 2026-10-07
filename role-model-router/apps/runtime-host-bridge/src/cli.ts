@@ -6474,6 +6474,24 @@ export async function main(): Promise<void> {
               console.error(
                 `[run105] ladder materialization skipped this tick (retried next tick, no row is lost): ${cause}`,
               );
+              // Run 108 R3: the failure is ALSO a durable, operator-visible receipt in the knowledge
+              // store - best-effort so a busy store (the very failure being reported) cannot break the
+              // tick. Content-keyed, so repeated identical failures keep one row. Materialization itself
+              // runs before the runtime is fully up (host-op only, see above), so the receipt is
+              // recorded only when the extension runtime is available.
+              if (runtime !== null) {
+                try {
+                  await runtime.invoke(
+                    "knowledge-store",
+                    envelopeFor("knowledge-store", "knowledge:record-degradation", {
+                      capability: "ladder-materialization",
+                      reason: cause,
+                    }),
+                  );
+                } catch {
+                  // the console line above remains the fallback surface
+                }
+              }
             }
           };
           await materializeDerivedLadders();
