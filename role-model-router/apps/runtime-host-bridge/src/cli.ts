@@ -509,7 +509,11 @@ function resolveChannelScopedReplayLedgerLimits(input: {
 }
 import { createFinalizedGroupListingCache } from "./finalized-group-listing-cache.js";
 import {
+  ladderRungCountOf,
+  recordArmPlan,
   recordFinaliseRefusal,
+  recordLadderRungs,
+  recordLearnerFamilyEvidence,
   recordReplayAdmission,
   withStageSpan,
 } from "./run108-observability.js";
@@ -6388,6 +6392,9 @@ export async function main(): Promise<void> {
                 evidenceMaxAgeMs: 30 * 24 * 60 * 60 * 1_000,
                 evidenceHalfLifeDays: DEFAULT_EVIDENCE_HALF_LIFE_DAYS,
               });
+              // Run 108 phase-03 F5 (R7 per-family counters): the per-family evidence the summary
+              // already derived, recorded on the ONE bounded-attribute counter (no new readback).
+              recordLearnerFamilyEvidence(evidenceSummary.byFamily);
               const validationValue = assembleDurableLearnerValidationValue({
                 candidateId,
                 routePackage,
@@ -6719,6 +6726,22 @@ export async function main(): Promise<void> {
                     (entry as Record<string, unknown>).status === "written"
                   );
                 }).length;
+                /**
+                 * Run 108 phase-03 F5 (R7 ladder-rung count): the rungs each WRITTEN ladder holds,
+                 * read from the materialization outcome the host already receives. A row that carries
+                 * neither rungs nor admitted completeness measures nothing and is skipped rather than
+                 * recorded as a zero-rung ladder.
+                 */
+                for (const entry of ladders) {
+                  if (
+                    !entry ||
+                    typeof entry !== "object" ||
+                    (entry as Record<string, unknown>).status !== "written"
+                  )
+                    continue;
+                  const rungs = ladderRungCountOf(entry);
+                  if (rungs !== null) recordLadderRungs(rungs);
+                }
                 if (written > 0)
                   console.error(`[run105] ladder materialization wrote ${written} ladder row(s)`);
               }
@@ -8903,6 +8926,12 @@ export async function main(): Promise<void> {
             requirements: replayRequestRequirements,
             endpointProfiles: replayEndpointProfiles,
           });
+          /**
+           * Run 108 phase-03 F5 (R7 arm histogram): the arm-planning result. Recorded on the plan the
+           * capture actually dispatches (`candidatePackages` is built from it below), not on the
+           * pre-effort-match pass, so one capture contributes exactly one observation.
+           */
+          recordArmPlan(replayArmPlan.plannedEndpointIds.length);
           if (replayArmPlan.plannedEndpointIds.length === 0) {
             throw new Error(
               `replay arm cannot serve the capture's request requirements: ${replayArmPlan.rejections

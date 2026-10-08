@@ -278,3 +278,261 @@ export function collectObservabilitySnapshot(): Record<string, ObservabilityMetr
   }
   return out;
 }
+
+/**
+ * Run 108 phase-03 F5 (R7 "Metrics"): the per-family evidence counter.
+ *
+ * CANONICAL SHAPE (effect-grep audit, generation local-e7d9d448): ONE counter id carrying a
+ * BOUNDED `family` attribute and a `dimension` tag. A dynamic metric name per family
+ * (`role-model.learner.family_derivations.<family>`) is the noncanonical form the audit rejects:
+ * the registry would then hold one metric per task family the store has ever reported.
+ *
+ * Value contract: every update is the number of times the learning pass DERIVED evidence for that
+ * (family, dimension) this pass, so the counter is a monotonic sum of derivations - work done, not a
+ * census. Re-deriving the same durable evidence on a later pass counts again, exactly as a byte or
+ * row counter counts a re-read; the per-series total is therefore cumulative and is never a
+ * statement about how much evidence currently exists.
+ */
+export type LearnerFamilyDimension = "decisive" | "holdout" | "development" | "distinct";
+
+/** The ONE attribute value every family id beyond the bound collapses onto. */
+export const UNKNOWN_FAMILY_ATTRIBUTE = "other";
+
+/**
+ * How many distinct family ids keep an attribute value of their own. Small on purpose: the
+ * attribute space is bounded so the registry cannot grow per distinct family id.
+ */
+export const LEARNER_FAMILY_ATTRIBUTE_BOUND = 16;
+
+export interface FamilyAttributeCollapser {
+  /** The attribute value for a family id: the id itself while admitted, otherwise "other". */
+  attributeFor(familyId: string): string;
+  /** How many family ids currently hold a series of their own (never more than the bound). */
+  readonly admittedCount: number;
+}
+
+/**
+ * The explicit family-attribute collapse. The first `bound` distinct ids seen are admitted and keep
+ * their own attribute value; every id after that - and every empty id - maps to the single overflow
+ * value "other". An id already admitted is never re-bucketed, so a series does not move once it
+ * exists. This is what bounds the registry: at most bound + 1 family series, for ever.
+ */
+export function createFamilyAttributeCollapser(
+  bound: number = LEARNER_FAMILY_ATTRIBUTE_BOUND,
+): FamilyAttributeCollapser {
+  const admitted = new Set<string>();
+  return {
+    attributeFor(familyId: string): string {
+      const id =
+        typeof familyId === "string" && familyId.trim().length > 0
+          ? familyId
+          : UNKNOWN_FAMILY_ATTRIBUTE;
+      if (admitted.has(id)) return id;
+      if (admitted.size < bound) {
+        admitted.add(id);
+        return id;
+      }
+      return UNKNOWN_FAMILY_ATTRIBUTE;
+    },
+    get admittedCount(): number {
+      return admitted.size;
+    },
+  };
+}
+
+/** The per-family evidence counter. Tag contract: { family, dimension: decisive|holdout|development|distinct }. */
+export const learnerFamilyDerivations = Metric.counter("role-model.learner.family_derivations", {
+  description: "Learner evidence derivations per task family and evidence dimension.",
+  incremental: true,
+});
+
+/** The four per-family dimensions the learning-pass summary already counts. */
+export interface LearnerFamilyEvidenceCounts {
+  readonly decisiveComparisons?: number;
+  readonly holdoutComparisons?: number;
+  readonly developmentComparisons?: number;
+  readonly distinctCaptures?: number;
+}
+
+const FAMILY_DIMENSION_FIELDS: ReadonlyArray<
+  readonly [LearnerFamilyDimension, keyof LearnerFamilyEvidenceCounts]
+> = [
+  ["decisive", "decisiveComparisons"],
+  ["holdout", "holdoutComparisons"],
+  ["development", "developmentComparisons"],
+  ["distinct", "distinctCaptures"],
+];
+
+/** The ONE collapser the production recordings share, so the bound holds across every call site. */
+const familyAttributes = createFamilyAttributeCollapser();
+
+/**
+ * Record one learning pass's per-family evidence counts. Called where the host already computes
+ * them (`buildTrackBLearningEvidenceSummary(...).byFamily`), so the metric adds no new readback.
+ */
+export function recordLearnerFamilyEvidence(
+  byFamily: Readonly<Record<string, LearnerFamilyEvidenceCounts>>,
+): void {
+  for (const [familyId, counts] of Object.entries(byFamily ?? {})) {
+    const family = familyAttributes.attributeFor(familyId);
+    for (const [dimension, field] of FAMILY_DIMENSION_FIELDS) {
+      const value = counts?.[field];
+      if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) continue;
+      Effect.runSync(
+        Metric.update(
+          Metric.withAttributes(learnerFamilyDerivations, { family, dimension }),
+          value,
+        ),
+      );
+    }
+  }
+}
+
+/**
+ * Run 108 phase-03 F5 (R7 "Metrics"): the queue-state gauges.
+ *
+ * A depth is a LEVEL, so each gauge is declared once at module scope and SET with
+ * `Metric.update(gauge, currentDepth)`; the canonical gauge state is `{ value }` and a second
+ * observation REPLACES the first. `Metric.modify` is the delta form and is deliberately not used -
+ * a queue that drains from 7 to 3 must read 3, not 10.
+ *
+ * Sources are the readbacks the host ALREADY performs per tick; this adds no poller:
+ *   queued             - the `pendingCount` of the tick's own pending-capture readback
+ *                        (`listPendingReplayCaptures`), i.e. captures still owed a replay.
+ *   awaiting_evaluation - the durable replay jobs in the awaiting-evaluation state that the tick's
+ *                        own pending-dispatch readback observed for the tasks it walked
+ *                        (`readPendingRouteDispatches`). The replay plane exposes no whole-census
+ *                        depth per tick, so this is a CENSUS OF WHAT THE TICK READ; a tick that
+ *                        walks no task leaves the gauge at its last observation.
+ *   stranded           - the count the evaluation reconcile pass reported stranded in this sweep
+ *                        (`reconcileEvaluationJobs().stranded`).
+ */
+export const replayQueueQueued = Metric.gauge("role-model.replay.queue.queued", {
+  description: "Captures pending replay, as the tick's own pending-capture readback reports them.",
+});
+
+export const replayQueueAwaitingEvaluation = Metric.gauge(
+  "role-model.replay.queue.awaiting_evaluation",
+  {
+    description:
+      "Durable replay jobs awaiting evaluation, as observed by the tick's pending-dispatch readback.",
+  },
+);
+
+export const replayQueueStranded = Metric.gauge("role-model.replay.queue.stranded", {
+  description: "Evaluation jobs the reconcile pass reported stranded in the current sweep.",
+});
+
+export interface ReplayQueueDepths {
+  readonly queued?: number;
+  readonly awaitingEvaluation?: number;
+  readonly stranded?: number;
+}
+
+/** A depth is a non-negative whole count; anything else is "not observed" and writes nothing. */
+const observedDepth = (value: number | undefined): number | null =>
+  typeof value === "number" && Number.isFinite(value) && value >= 0 ? Math.trunc(value) : null;
+
+/** SET the gauges the caller observed this tick. An omitted depth is left untouched. */
+export function recordQueueDepths(depths: ReplayQueueDepths): void {
+  const queued = observedDepth(depths?.queued);
+  if (queued !== null) Effect.runSync(Metric.update(replayQueueQueued, queued));
+  const awaitingEvaluation = observedDepth(depths?.awaitingEvaluation);
+  if (awaitingEvaluation !== null)
+    Effect.runSync(Metric.update(replayQueueAwaitingEvaluation, awaitingEvaluation));
+  const stranded = observedDepth(depths?.stranded);
+  if (stranded !== null) Effect.runSync(Metric.update(replayQueueStranded, stranded));
+}
+
+/**
+ * Run 108 phase-03 F5 (R7 "Metrics"): the arm-count histogram.
+ *
+ * A total cannot answer "how many arms does a plan usually carry", so the arm-planning result is
+ * recorded as a distribution. The boundaries are EXPLICIT and cover the arm counts this runtime
+ * actually produces: the dispatcher plans one arm per eligible counterfactual endpoint, the dev
+ * runtime configures twelve endpoints, and the shipped challenge batch is one - so unit steps of
+ * two up to twelve, plus Effect's overflow partition, cover the expected range without pretending
+ * to resolve a count the planner never produces.
+ */
+export const REPLAY_ARM_PLAN_BOUNDARIES: ReadonlyArray<number> = Metric.linearBoundaries({
+  start: 0,
+  width: 2,
+  count: 8,
+});
+
+/** Planned arms per arm-planning result (the selector call site). */
+export const replayArmPlanArms = Metric.histogram("role-model.replay.arm_plan_arms", {
+  description: "Arms planned per replay arm-planning result.",
+  boundaries: REPLAY_ARM_PLAN_BOUNDARIES,
+});
+
+/** Record one arm-planning result. A negative or non-finite count is not an observation. */
+export function recordArmPlan(armCount: number): void {
+  if (typeof armCount !== "number" || !Number.isFinite(armCount) || armCount < 0) return;
+  Effect.runSync(Metric.update(replayArmPlanArms, Math.trunc(armCount)));
+}
+
+/**
+ * Run 108 phase-03 F5 (R7 "Metrics"): the ladder admission floor.
+ *
+ * The floor is the rule that decides whether a (role, task) ladder has admitted enough evidence to
+ * go active - K finalized effort-comparable comparisons at a mean confidence at or above the
+ * product-defaults minimum. It is a RATE, so the counter updates by 1 on every evaluation and the
+ * verdict rides the tag: { admitted: "true" | "false" } are the numerator and the denominator of
+ * the same measurement, and a refusal is its own visible series.
+ */
+export const learnerAdmissionFloor = Metric.counter("role-model.learner.admission_floor", {
+  description: "Route-ladder admission-floor evaluations, tagged by whether the floor was met.",
+  incremental: true,
+});
+
+export function recordAdmissionFloor(admitted: boolean): void {
+  Effect.runSync(
+    Metric.update(
+      Metric.withAttributes(learnerAdmissionFloor, { admitted: admitted ? "true" : "false" }),
+      1,
+    ),
+  );
+}
+
+/**
+ * Run 108 phase-03 F5 (R7 "Metrics"): the ladder-rung count at the materialization outcome.
+ *
+ * A ladder is a ranked list of rungs, so an outcome that writes a 3-rung ladder and one that
+ * writes a 12-rung ladder are different events; the count is a histogram over the same explicit
+ * boundaries as the arm plan, because a rung is one admitted endpoint of the same pool.
+ */
+export const LADDER_RUNG_BOUNDARIES: ReadonlyArray<number> = Metric.linearBoundaries({
+  start: 0,
+  width: 2,
+  count: 8,
+});
+
+export const ladderRungs = Metric.histogram("role-model.learner.ladder_rungs", {
+  description: "Rungs a route-ladder materialization outcome wrote.",
+  boundaries: LADDER_RUNG_BOUNDARIES,
+});
+
+/**
+ * The rung count a materialization outcome row carries: its own rung list when the row holds one,
+ * otherwise the admitted count of its completeness summary. A row that carries neither does NOT
+ * mean "zero rungs" - it means the outcome does not measure rungs - so it answers null and the
+ * caller records nothing rather than a fabricated zero.
+ */
+export function ladderRungCountOf(row: unknown): number | null {
+  if (row === null || typeof row !== "object" || Array.isArray(row)) return null;
+  const record = row as Record<string, unknown>;
+  if (Array.isArray(record.rungs)) return record.rungs.length;
+  const completeness = record.completeness;
+  if (completeness === null || typeof completeness !== "object" || Array.isArray(completeness))
+    return null;
+  const admitted = (completeness as Record<string, unknown>).admitted;
+  return typeof admitted === "number" && Number.isFinite(admitted) && admitted >= 0
+    ? Math.trunc(admitted)
+    : null;
+}
+
+export function recordLadderRungs(rungCount: number): void {
+  if (typeof rungCount !== "number" || !Number.isFinite(rungCount) || rungCount < 0) return;
+  Effect.runSync(Metric.update(ladderRungs, Math.trunc(rungCount)));
+}

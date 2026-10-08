@@ -24,6 +24,7 @@
 // one vocabulary.
 import { createHash, createHmac } from "node:crypto";
 
+import { recordLearnerFamilyEvidence } from "./run108-observability.js";
 import {
   buildExperiencePackCandidate,
   buildRouteLearningValidationReceipt,
@@ -1674,6 +1675,9 @@ export async function runTrackBLearningPass(
     // Run 99 R33 D12: `evidenceHalfLifeDays` from the operator policy decays the effective counts.
     evidenceHalfLifeDays: input.evidenceHalfLifeDays ?? DEFAULT_EVIDENCE_HALF_LIFE_DAYS,
   });
+  // Run 108 phase-03 F5 (R7 per-family counters): the same per-family evidence the learning pass
+  // already derived, recorded on the ONE bounded-attribute counter.
+  recordLearnerFamilyEvidence(evidenceSummary.byFamily);
   const holdout = asRecord(input.finalizedComparison.holdout);
   const holdoutCaseIds = Array.isArray(holdout?.caseIds)
     ? holdout.caseIds.filter(

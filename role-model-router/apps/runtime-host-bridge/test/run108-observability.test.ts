@@ -11,14 +11,26 @@ import { describe, expect, test } from "vitest";
 // Run 108 R7 - the observability spine: module-scope metric declarations for the four chains,
 // registry-scoped so tests and per-scope runtimes isolate, per the effect-grep canonical idiom.
 import {
+  LEARNER_FAMILY_ATTRIBUTE_BOUND,
+  REPLAY_ARM_PLAN_BOUNDARIES,
   collectObservabilitySnapshot,
+  createFamilyAttributeCollapser,
   evalFinaliseRefusals,
+  ladderRungCountOf,
   learnerDerivations,
+  recordAdmissionFloor,
+  recordArmPlan,
   recordFinaliseRefusal,
+  recordLadderRungs,
   recordLearnerDerivation,
+  recordLearnerFamilyEvidence,
+  recordQueueDepths,
   recordReplayAdmission,
   recordRouterDecision,
   replayAdmissions,
+  replayQueueAwaitingEvaluation,
+  replayQueueQueued,
+  replayQueueStranded,
   routerDecisions,
   withStageSpan,
 } from "../src/run108-observability.js";
@@ -354,9 +366,253 @@ describe("run108 phase-03 effect-grep canonicalization", () => {
 
     // and the runtime accepts exactly the declared members
     recordLearnerDerivation(2, "idle");
+
     const idle = (snapshotEntry("role-model.learner.derivations")?.series ?? []).filter(
       (entry) => entry.attributes.outcome === "idle",
     );
     expect(idle).toHaveLength(1);
+  });
+});
+
+/**
+ * Run 108 phase-03 F5 (R7 "Metrics" list completion). An effect-grep audit (generation
+ * local-e7d9d448) verified the canonical v4 shapes and F2 readback now carries gauge and
+ * histogram state plus per-attribute series, so the remaining R7 entries are added here WITHOUT
+ * reshaping the spine: one module-scope declaration per metric, one pinned wiring helper, one
+ * series shape.
+ */
+describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
+  /**
+   * F5-a (per-family counters). R7 asks for decisive/holdout/development/distinct per task family.
+   * The canonical shape is ONE counter with a BOUNDED family attribute and a dimension tag - a
+   * dynamic metric name per family would grow the registry with every task family the store ever
+   * reports, which is the noncanonical form the audit rejects.
+   */
+  test("F5-a: ONE per-family counter carries family+dimension tags, never a dynamic metric name", () => {
+    const before = snapshotEntry("role-model.learner.family_derivations");
+    recordLearnerFamilyEvidence({
+      "coder.review": {
+        decisiveComparisons: 3,
+        holdoutComparisons: 2,
+        developmentComparisons: 1,
+        distinctCaptures: 4,
+      },
+    });
+    const snapshot = collectObservabilitySnapshot();
+    // exactly ONE id: the family never becomes part of the metric name
+    expect(Object.keys(snapshot).filter((id) => id.includes("family_derivations"))).toEqual([
+      "role-model.learner.family_derivations",
+    ]);
+
+    const series = snapshotEntry("role-model.learner.family_derivations")?.series ?? [];
+    const dimension = (name: string) =>
+      series.find(
+        (entry) =>
+          entry.attributes.family === "coder.review" && entry.attributes.dimension === name,
+      );
+    const countOf = (name: string): number =>
+      (dimension(name)?.state.count as number | undefined) ?? 0;
+    const beforeCount = (name: string): number =>
+      (before?.series ?? [])
+        .filter(
+          (entry) =>
+            entry.attributes.family === "coder.review" && entry.attributes.dimension === name,
+        )
+        .reduce((total, entry) => total + ((entry.state.count as number | undefined) ?? 0), 0);
+
+    // one series per (family, dimension) pair, each with the counter state
+    expect(dimension("decisive")?.attributes).toEqual({
+      family: "coder.review",
+      dimension: "decisive",
+    });
+    expect(dimension("decisive")?.state).toEqual({
+      kind: "counter",
+      count: beforeCount("decisive") + 3,
+      incremental: true,
+    });
+    expect(countOf("holdout") - beforeCount("holdout")).toBe(2);
+    expect(countOf("development") - beforeCount("development")).toBe(1);
+    expect(countOf("distinct") - beforeCount("distinct")).toBe(4);
+  });
+
+  /**
+   * F5-a (bounded attribute space). The registry cannot grow per distinct id, so family ids beyond
+   * a small bound collapse onto ONE overflow attribute. The collapse is explicit and deterministic:
+   * an id already admitted keeps its own series, and only the overflow shares.
+   */
+  test("F5-a: family ids beyond the bound collapse onto the single other attribute", () => {
+    const collapser = createFamilyAttributeCollapser(2);
+    expect(collapser.attributeFor("coder.review")).toBe("coder.review");
+    expect(collapser.attributeFor("writer.release_notes")).toBe("writer.release_notes");
+    // beyond the bound: the id is NOT admitted, it collapses
+    expect(collapser.attributeFor("planner.dependency.map")).toBe("other");
+    // and the collapse is stable, not a re-bucketing of ids already admitted
+    expect(collapser.attributeFor("coder.review")).toBe("coder.review");
+    expect(collapser.admittedCount).toBe(2);
+
+    // through the metric: many distinct families cannot grow the registry past the bound + "other"
+    for (let index = 0; index < LEARNER_FAMILY_ATTRIBUTE_BOUND + 40; index += 1) {
+      recordLearnerFamilyEvidence({
+        [`f5-overflow-family-${index}`]: { decisiveComparisons: 1 },
+      });
+    }
+    const families = new Set(
+      (snapshotEntry("role-model.learner.family_derivations")?.series ?? []).map(
+        (entry) => entry.attributes.family,
+      ),
+    );
+    expect(families.size).toBeLessThanOrEqual(LEARNER_FAMILY_ATTRIBUTE_BOUND + 1);
+    expect(families.has("other")).toBe(true);
+  });
+
+  /**
+   * F5-b (queue-state gauges). A depth is a level, not a running total, so each gauge is declared
+   * once at module scope and SET with Metric.update(gauge, currentDepth) - the canonical gauge state
+   * is { value }. Metric.modify is for deltas and is deliberately NOT used here.
+   */
+  test("F5-b: queue depths are gauges - SET semantics, read back as { value }", () => {
+    // declaration contract: a fresh registry reads the level 0 before any observation
+    const registry = new Map();
+    expect(readIn(replayQueueQueued, registry)).toEqual({ value: 0 });
+    expect(readIn(replayQueueAwaitingEvaluation, registry)).toEqual({ value: 0 });
+    expect(readIn(replayQueueStranded, registry)).toEqual({ value: 0 });
+
+    recordQueueDepths({ queued: 7, awaitingEvaluation: 2, stranded: 1 });
+    const gaugeValue = (name: string): number | undefined =>
+      (snapshotEntry(name)?.series ?? [])
+        .map((entry) => entry.state.value as number | undefined)
+        .find((value) => typeof value === "number");
+    expect(gaugeValue("role-model.replay.queue.queued")).toBe(7);
+    expect(gaugeValue("role-model.replay.queue.awaiting_evaluation")).toBe(2);
+    expect(gaugeValue("role-model.replay.queue.stranded")).toBe(1);
+
+    // SET semantics: a later observation REPLACES the level rather than adding to it
+    recordQueueDepths({ queued: 3 });
+    expect(gaugeValue("role-model.replay.queue.queued")).toBe(3);
+    // ... and an omitted depth leaves its own gauge untouched
+    expect(gaugeValue("role-model.replay.queue.awaiting_evaluation")).toBe(2);
+    expect(gaugeValue("role-model.replay.queue.stranded")).toBe(1);
+
+    // the canonical gauge series state, one series per gauge
+    const queuedSeries = snapshotEntry("role-model.replay.queue.queued")?.series ?? [];
+    expect(queuedSeries).toHaveLength(1);
+    expect(queuedSeries[0]?.state).toEqual({ kind: "gauge", value: 3 });
+    expect(snapshotEntry("role-model.replay.queue.queued")?.type).toBe("Gauge");
+  });
+
+  /**
+   * F5-c (arm-count histogram). R7 wants the DISTRIBUTION of planned arm counts, which a counter
+   * cannot carry, so the metric is a histogram with explicit boundaries over the expected arm
+   * counts. Effect keeps cumulative buckets whose last entry is [null, total].
+   */
+  test("F5-c: the arm-plan histogram has explicit boundaries and counts every planning result", () => {
+    const histogramState = (name: string) => {
+      const state = (snapshotEntry(name)?.series ?? [])[0]?.state ?? {};
+      return state as {
+        kind?: string;
+        count?: number;
+        sum?: number;
+        buckets?: ReadonlyArray<readonly [number | null, number]>;
+      };
+    };
+    const before = histogramState("role-model.replay.arm_plan_arms");
+    recordArmPlan(2);
+    recordArmPlan(9);
+    const after = histogramState("role-model.replay.arm_plan_arms");
+
+    expect(after.kind).toBe("histogram");
+    expect((after.count ?? 0) - (before.count ?? 0)).toBe(2);
+    expect((after.sum ?? 0) - (before.sum ?? 0)).toBe(11);
+
+    // explicit boundaries: an increasing finite set that reaches the expected arm counts, and a
+    // final overflow partition that carries every observation
+    const finite = REPLAY_ARM_PLAN_BOUNDARIES.filter((bound) => Number.isFinite(bound));
+    expect(finite.length).toBeGreaterThanOrEqual(4);
+    expect([...finite].sort((left, right) => left - right)).toEqual(finite);
+    expect(Math.max(...finite)).toBeGreaterThanOrEqual(6);
+    // the last boundary is the overflow partition (Effect represents it as Infinity)
+    expect(REPLAY_ARM_PLAN_BOUNDARIES[REPLAY_ARM_PLAN_BOUNDARIES.length - 1]).toBe(
+      Number.POSITIVE_INFINITY,
+    );
+
+    // the boundaries DISCRIMINATE: the 2-arm plan lands at or below boundary 2 while the 9-arm plan
+    // does not, so the two plans are separable in the readback
+    const cumulativeAt = (state: ReturnType<typeof histogramState>, boundary: number): number =>
+      (state.buckets ?? []).find((bucket) => bucket[0] === boundary)?.[1] ?? 0;
+    expect(cumulativeAt(after, 2) - cumulativeAt(before, 2)).toBe(1);
+    const buckets = after.buckets ?? [];
+    expect(buckets[buckets.length - 1]?.[0]).toBe(Number.POSITIVE_INFINITY);
+    expect(buckets[buckets.length - 1]?.[1]).toBe(after.count);
+  });
+
+  /**
+   * F5-d (admission-floor admission rate). The ladder admission floor is the K-comparisons-at-mean-
+   * confidence rule the dispatcher already evaluates, so ONE counter tagged admitted true/false
+   * carries the rate: the two series are its numerator and denominator.
+   */
+  test("F5-d: the ladder admission floor counts both verdicts as tagged series", () => {
+    const seriesFor = (admitted: string) =>
+      (snapshotEntry("role-model.learner.admission_floor")?.series ?? []).filter(
+        (entry) => entry.attributes.admitted === admitted,
+      );
+    const countFor = (admitted: string): number =>
+      (seriesFor(admitted)[0]?.state.count as number | undefined) ?? 0;
+    const beforeTrue = countFor("true");
+    const beforeFalse = countFor("false");
+
+    recordAdmissionFloor(true);
+    recordAdmissionFloor(false);
+    recordAdmissionFloor(false);
+
+    expect(countFor("true") - beforeTrue).toBe(1);
+    expect(countFor("false") - beforeFalse).toBe(2);
+    expect(seriesFor("true")[0]?.attributes).toEqual({ admitted: "true" });
+    expect(seriesFor("false")[0]?.state).toEqual({
+      kind: "counter",
+      count: beforeFalse + 2,
+      incremental: true,
+    });
+  });
+
+  /**
+   * F5-d (ladder-rung count at the materialization outcome). The outcome names the rungs it wrote;
+   * a row that names neither rungs nor admitted completeness is NOT a zero-rung ladder - it is an
+   * outcome that does not carry the measurement, and nothing is recorded for it.
+   */
+  test("F5-d: the ladder-rung count reads the materialization outcome and skips an unmeasured row", () => {
+    expect(ladderRungCountOf({ status: "written", rungs: [{}, {}, {}] })).toBe(3);
+    expect(
+      ladderRungCountOf({ status: "written", completeness: { admitted: 5, configured: 12 } }),
+    ).toBe(5);
+    expect(ladderRungCountOf({ status: "written", completeness: { admitted: 0 } })).toBe(0);
+    expect(ladderRungCountOf({ status: "written" })).toBe(null);
+    expect(ladderRungCountOf(null)).toBe(null);
+
+    const stateOf = () =>
+      ((snapshotEntry("role-model.learner.ladder_rungs")?.series ?? [])[0]?.state ?? {}) as {
+        count?: number;
+        sum?: number;
+      };
+    const before = stateOf();
+    recordLadderRungs(3);
+    const after = stateOf();
+    expect((after.count ?? 0) - (before.count ?? 0)).toBe(1);
+    expect((after.sum ?? 0) - (before.sum ?? 0)).toBe(3);
+  });
+
+  /**
+   * F5 wiring. A metric the production seams never write is the M4 defect in a new dress (declared,
+   * read back, and always zero), so each F5 helper is pinned to the seam that owns its measurement.
+   */
+  test("F5: every F5 helper is called from the production seam it measures", () => {
+    const source = (relative: string) => readFileSync(new URL(relative, import.meta.url), "utf8");
+    const autoReplay = source("../src/track-b-auto-replay-runtime.ts");
+    expect(autoReplay).toContain("recordQueueDepths(");
+    expect(autoReplay).toContain("recordAdmissionFloor(");
+    const cli = source("../src/cli.ts");
+    expect(cli).toContain("recordArmPlan(");
+    expect(cli).toContain("recordLadderRungs(");
+    expect(cli).toContain("recordLearnerFamilyEvidence(");
+    expect(source("../src/track-b-learning-pass.ts")).toContain("recordLearnerFamilyEvidence(");
   });
 });

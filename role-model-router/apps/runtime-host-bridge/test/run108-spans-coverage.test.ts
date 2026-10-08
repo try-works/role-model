@@ -49,9 +49,16 @@ describe("run108 A5.1 span coverage", () => {
 
   test("the auto-replay runtime imports the span helper from the observability spine", () => {
     const source = autoReplaySource();
-    expect(source).toMatch(
-      /import \{ recordLearnerDerivation, withStageSpan \} from "\.\/run108-observability\.js";/,
-    );
+    // Run 108 phase-03 F5 added two more symbols to this import, so the formatter wrapped it - and
+    // the same rule the router-decision assertion below follows applies: pin the CONTRACT (both
+    // symbols, imported from the spine) instead of one exact layout that re-wrapping breaks.
+    const importAt = source.indexOf('from "./run108-observability.js"');
+    expect(importAt).toBeGreaterThan(0);
+    const openAt = source.lastIndexOf("import {", importAt);
+    expect(openAt).toBeGreaterThanOrEqual(0);
+    const symbols = source.slice(openAt, importAt);
+    expect(symbols).toContain("recordLearnerDerivation");
+    expect(symbols).toContain("withStageSpan");
   });
 
   test("the router decision record runs under one sync router.decision span", () => {

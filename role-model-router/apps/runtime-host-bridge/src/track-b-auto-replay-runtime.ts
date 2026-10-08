@@ -1,5 +1,10 @@
 import { createHash } from "node:crypto";
-import { recordLearnerDerivation, withStageSpan } from "./run108-observability.js";
+import {
+  recordAdmissionFloor,
+  recordLearnerDerivation,
+  recordQueueDepths,
+  withStageSpan,
+} from "./run108-observability.js";
 
 import {
   NoReplayableRequest,
@@ -985,6 +990,13 @@ export function startAutoReplayLoop(input: {
             reconciled = countOf(sweep.completed);
             stranded = countOf(sweep.stranded);
             reclaimed = countOf(sweep.reclaimed);
+            /**
+             * Run 108 phase-03 F5 (R7 queue gauges): the stranded depth the reconcile pass just
+             * reported, SET on the gauge by the same readback this sweep already performs - no
+             * new poller. Set only when the pass answered, so a plane whose queue owns
+             * reconciliation publishes no observation instead of a fabricated zero.
+             */
+            recordQueueDepths({ stranded });
           }
         } catch (cause) {
           const detail =
@@ -1294,6 +1306,15 @@ export function startAutoReplayLoop(input: {
         limit: maxCapturesPerTick * 4,
       });
       let captures = pendingCaptures(pending);
+      /**
+       * Run 108 phase-03 F5 (R7 queue gauges): the replay queue depth. `pendingCount` is the
+       * readback the tick already consumes for its own scheduling decision, so the gauge is SET
+       * from it directly; an answer that carries no count (a bare array boundary) records nothing.
+       */
+      const observedPendingCount = (pending as { readonly pendingCount?: unknown } | null)
+        ?.pendingCount;
+      if (typeof observedPendingCount === "number")
+        recordQueueDepths({ queued: observedPendingCount });
       if (process.env.ROLE_MODEL_FOCUS_DIAG)
         console.error(
           `[replay-tick] run: captures=${captures.length} pendingCount=${(pending as { pendingCount?: number }).pendingCount ?? "?"}`,
@@ -1312,6 +1333,13 @@ export function startAutoReplayLoop(input: {
         }
         const rows = new Map<string, RouteLadderRow | null>();
         const eligible: RouteFocusCandidate[] = [];
+        /**
+         * Run 108 phase-03 F5 (R7 queue gauges): the awaiting-evaluation depth this walk OBSERVES.
+         * It is accumulated over the tasks the walk reads and SET once below, because the replay
+         * plane exposes no whole-census depth per tick - this is a census of what the tick read.
+         */
+        let awaitingEvaluationObserved = 0;
+        let pendingDispatchReadObserved = false;
         for (const candidate of census) {
           if (!selectFocusTask([candidate])) continue;
           const key = `${candidate.roleId}\u0000${candidate.taskTypeId}`;
@@ -1416,6 +1444,11 @@ export function startAutoReplayLoop(input: {
           ) {
             const jobs = await input.readPendingRouteDispatches(candidate);
             if (jobs === null) throw new Error("route pending dispatches unavailable");
+            // Run 108 phase-03 F5: the durable replay jobs this task is waiting on, by state.
+            pendingDispatchReadObserved = true;
+            awaitingEvaluationObserved += jobs.filter(
+              (job) => job.state === "awaiting_evaluation",
+            ).length;
             const cutoff =
               active?.startedAtMs ?? (alreadyDue ? Number(row?.nextEligibleAtMs) : now());
             const relevant = jobs
@@ -1550,6 +1583,13 @@ export function startAutoReplayLoop(input: {
               groups.length >= floor &&
               groups.reduce((sum, record) => sum + record.endpointConfidence, 0) / groups.length >=
                 confidence;
+            /**
+             * Run 108 phase-03 F5 (R7 admission floor): the ladder admission-floor verdict, counted
+             * where the dispatcher already computes it - K effort-comparable comparisons at a mean
+             * confidence at or above the configured minimum. Both verdicts are recorded, so the
+             * admitted series and the refused series form one rate.
+             */
+            recordAdmissionFloor(met);
             const pendingSatisfied = groups.some(
               (record) => record.captureRef === active?.pendingCaptureRef,
             );
@@ -1631,6 +1671,9 @@ export function startAutoReplayLoop(input: {
             admitted: admitted.length,
           });
         }
+        // Run 108 phase-03 F5: SET once per walk, and only when the walk actually read the plane.
+        if (pendingDispatchReadObserved)
+          recordQueueDepths({ awaitingEvaluation: awaitingEvaluationObserved });
         const held = Ref.getUnsafe(heldFocus);
         let remainingFocusCandidates = [...eligible];
         let skippedReplayableTasks = 0;
