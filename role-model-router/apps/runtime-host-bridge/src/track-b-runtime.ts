@@ -1361,6 +1361,8 @@ export async function stageTrackBRuntimeDistribution(options: {
       };
     };
     readonly sidecar: { readonly modulePath: string; readonly artifactSha256: string };
+    // Run 108 R7: the sidecar imports ./storage-audit.mjs at runtime; the distribution must carry it.
+    readonly storageAudit?: { readonly modulePath: string; readonly artifactSha256: string };
     readonly sourceAuthorityFixtures?: readonly {
       readonly modulePath: string;
       readonly artifactSha256: string;
@@ -1511,8 +1513,17 @@ export async function stageTrackBRuntimeDistribution(options: {
     readonly modulePath: string;
     readonly artifactSha256: string;
   }>;
+  // Run 108 R7: when the distribution declares the storage-audit sibling, it must exist and hash.
+  if (
+    manifest.storageAudit &&
+    (!manifest.storageAudit.modulePath ||
+      !/^[a-f0-9]{64}$/i.test(manifest.storageAudit.artifactSha256))
+  ) {
+    throw new Error("Track B runtime distribution storage-audit artifact is incomplete");
+  }
   const files = [
     manifest.sidecar,
+    ...(manifest.storageAudit ? [manifest.storageAudit] : []),
     ...(manifest.publicRuntimeAdapter
       ? [manifest.publicRuntimeAdapter, ...manifest.publicRuntimeAdapter.routerAssets]
       : []),

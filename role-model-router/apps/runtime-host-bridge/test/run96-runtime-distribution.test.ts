@@ -188,6 +188,9 @@ describe("Run 96 packaged runtime artifact closure", () => {
       ),
     );
     const sidecar = await writeArtifact(sourceRoot, "runtime-operations-server.mjs", "sidecar");
+    // Run 108 R7: the sidecar imports ./storage-audit.mjs at runtime (storage-audit readiness), so the
+    // distribution must carry the sibling module or the operator status degrades to "unobserved".
+    const storageAuditSha256 = await writeArtifact(sourceRoot, "storage-audit.mjs", "storage-audit");
     const sourceAuthorityFixtures = await Promise.all(
       [
         ["capacity-slo-contracts.json", "capacity-fixture"],
@@ -259,6 +262,7 @@ describe("Run 96 packaged runtime artifact closure", () => {
           },
         },
         sidecar: { modulePath: "runtime-operations-server.mjs", artifactSha256: sidecar },
+        storageAudit: { modulePath: "storage-audit.mjs", artifactSha256: storageAuditSha256 },
         sourceAuthorityFixtures,
         publicExtensionHost: {
           modulePath: "public-extension-host.mjs",
@@ -271,6 +275,10 @@ describe("Run 96 packaged runtime artifact closure", () => {
     );
 
     await stageTrackBRuntimeDistribution({ sourceRoot, releaseDir });
+    // Run 108 R7: the sidecar's storage-audit sibling must be staged next to the sidecar.
+    await expect(
+      readFile(path.join(releaseDir, "storage-audit.mjs"), "utf8"),
+    ).resolves.toBe("storage-audit");
     await expect(
       readFile(path.join(releaseDir, "..", "..", "shared", "graph", "registry.json"), "utf8"),
     ).resolves.toBe(JSON.stringify(graphRegistry));
@@ -337,6 +345,9 @@ describe("Run 96 packaged runtime artifact closure", () => {
     );
     await writeArtifact(sourceRoot, "shared/queue-policy.json", queuePolicyFixture());
     const sidecar = await writeArtifact(sourceRoot, "runtime-operations-server.mjs", "sidecar");
+    // Run 108 R7: the sidecar imports ./storage-audit.mjs at runtime (storage-audit readiness), so the
+    // distribution must carry the sibling module or the operator status degrades to "unobserved".
+    const storageAuditSha256 = await writeArtifact(sourceRoot, "storage-audit.mjs", "storage-audit");
     const extensionHostSha256 = await writeArtifact(
       sourceRoot,
       "public-extension-host.mjs",
