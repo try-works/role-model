@@ -15,6 +15,7 @@ import {
   secondaryButtonClassName,
   supportingTextClassName,
 } from "../lib/design-system";
+import { useOperatorToken } from "../lib/learning-api";
 import {
   type StoreDegradationReceiptReadbackState,
   type StoreDegradationReceiptSource,
@@ -50,13 +51,13 @@ const collectSource = (
 ): void => {
   if (!value.available) {
     unavailableSources.push(
-      STORE_DEGRADATION_SOURCE_LABELS[source] + ": " + (value.reason ?? "readback unavailable"),
+      `${STORE_DEGRADATION_SOURCE_LABELS[source]}: ${value.reason ?? "readback unavailable"}`,
     );
     return;
   }
   for (const receipt of value.receipts) {
     rows.push({
-      id: source + ":" + receipt.receiptId,
+      id: `${source}:${receipt.receiptId}`,
       source,
       atMs: receipt.atMs,
       capability: receipt.capability,
@@ -84,17 +85,19 @@ export function buildStoreDegradationReceiptViewModels(
 }
 
 export function StoreDegradationReceiptsRouteView() {
+  // 03.5 review MN-3: this readback rides the operator auth gate, so it must carry the operator
+  // credential. useOperatorToken is the house convention the Learning and Control pages use; with
+  // no token configured the request is the anonymous loopback shape, unchanged.
+  const { token } = useOperatorToken();
   const [state, setState] = useState<StoreDegradationReceiptReadbackState | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const load = useCallback(() => {
     setError(null);
-    return fetchStoreDegradationReceipts()
+    return fetchStoreDegradationReceipts(fetch, token || undefined)
       .then(setState)
-      .catch((value: unknown) =>
-        setError(value instanceof Error ? value.message : String(value)),
-      );
-  }, []);
+      .catch((value: unknown) => setError(value instanceof Error ? value.message : String(value)));
+  }, [token]);
   useEffect(() => {
     void load();
   }, [load]);
@@ -121,7 +124,7 @@ export function StoreDegradationReceiptsRouteView() {
             {state === null
               ? "Reading receipts..."
               : state.available
-                ? models.rows.length + " receipt row(s) across both stores"
+                ? `${models.rows.length} receipt row(s) across both stores`
                 : "Readback unavailable"}
           </p>
           <button
@@ -136,7 +139,7 @@ export function StoreDegradationReceiptsRouteView() {
         {error ? <ErrorState label={error} /> : null}
         {state === null && !error ? <LoadingState label="Loading degradation receipts" /> : null}
         {state !== null && !state.available ? (
-          <div className={mutedPanelClassName + " p-4"}>
+          <div className={`${mutedPanelClassName} p-4`}>
             <p className={compactTitleClassName}>Readback unavailable</p>
             <p className={supportingTextClassName}>{state.reason}</p>
             <p className={supportingTextClassName}>
@@ -145,10 +148,10 @@ export function StoreDegradationReceiptsRouteView() {
             </p>
           </div>
         ) : null}
-        {state !== null && state.available ? (
+        {state?.available ? (
           <div className="space-y-4">
             {models.unavailableSources.length > 0 ? (
-              <div className={mutedPanelClassName + " p-4"}>
+              <div className={`${mutedPanelClassName} p-4`}>
                 <p className={fieldLabelClassName}>Unavailable sources</p>
                 <ul className="list-inside list-disc">
                   {models.unavailableSources.map((reason) => (
@@ -163,12 +166,12 @@ export function StoreDegradationReceiptsRouteView() {
               <EmptyState label="No degradation receipts recorded" />
             ) : null}
             {models.rows.map((row) => (
-              <div key={row.id} className={mutedPanelClassName + " p-4"}>
+              <div key={row.id} className={`${mutedPanelClassName} p-4`}>
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge tone="warning">{STORE_DEGRADATION_SOURCE_LABELS[row.source]}</Badge>
                   <p className={monoEyebrowClassName}>{row.capability}</p>
                 </div>
-                <p className={compactTitleClassName + " mt-2"}>{row.reason}</p>
+                <p className={`${compactTitleClassName} mt-2`}>{row.reason}</p>
                 <p className={supportingTextClassName}>
                   {new Date(row.atMs).toISOString()} · {row.id}
                 </p>

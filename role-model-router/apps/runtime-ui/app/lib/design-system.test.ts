@@ -389,6 +389,8 @@ describe("runtime design system", () => {
           "/app/observe/queues",
           // Run 108 addendum-01 A2: the store/worker degradation receipts ledgers.
           "/app/observe/store-degradation-receipts",
+          // Run 108 addendum-01 A5.2: the live observability snapshot readback.
+          "/app/observe/observability-snapshot",
           "/app/observe/activity",
           "/app/observe/logs",
         ],

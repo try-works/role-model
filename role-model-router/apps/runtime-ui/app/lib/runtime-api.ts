@@ -4126,11 +4126,28 @@ export type StoreDegradationReceiptReadbackState =
   | (StoreDegradationReceiptReadback & { readonly available: true })
   | { readonly available: false; readonly reason: string };
 
+/**
+ * 03.5 review MN-3: the readbacks below serve RAW responses (their 503 payload carries the honest
+ * unavailable reason), so they cannot ride `operatorGet`. They still owe the operator credential:
+ * `withOperatorToken` is the one authorization contract every other operator readback uses, and
+ * without it a non-loopback bind answers 401 and the page renders an error instead of the data.
+ * When no token is configured the request is sent exactly as the anonymous loopback path sends it.
+ */
+function fetchOperatorReadback(
+  path: string,
+  fetcher: RuntimeFetcher,
+  operatorToken?: string,
+): Promise<Response> {
+  const init = withOperatorToken(undefined, operatorToken);
+  return init === undefined ? fetcher(path) : fetcher(path, init);
+}
+
 export async function fetchStoreDegradationReceipts(
   fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
 ): Promise<StoreDegradationReceiptReadbackState> {
   const path = "/api/role-model/operator/store-degradation-receipts";
-  const response = await fetcher(path);
+  const response = await fetchOperatorReadback(path, fetcher, operatorToken);
   if (!response.ok) {
     let reason: string | null = null;
     try {
@@ -4148,4 +4165,78 @@ export async function fetchStoreDegradationReceipts(
   }
   const body = (await response.json()) as StoreDegradationReceiptReadback;
   return { ...body, available: true };
+}
+
+/**
+ * Run 108 addendum-01 A5.2 (R7 readback consumers; 03.5 review MJ-1): the client for the host's
+ * observability snapshot readback - the live projection of the four run-108 metric families the
+ * runtime records (router decisions, replay admissions, finalise refusals, learner derivations).
+ * The host answers from its own metric registry, so a 503 is not expected; it is still mapped to an
+ * honest unavailable state rather than a page error, exactly like the receipt readbacks.
+ */
+export interface ObservabilityMetricSnapshot {
+  readonly count: number;
+  readonly incremental: boolean;
+}
+
+export interface ObservabilitySnapshotReadback {
+  readonly schemaVersion: "role-model.observability-snapshot.v1";
+  readonly metrics: Readonly<Record<string, ObservabilityMetricSnapshot>>;
+}
+
+export type ObservabilitySnapshotReadbackState =
+  | (ObservabilitySnapshotReadback & { readonly available: true })
+  | { readonly available: false; readonly reason: string };
+
+export interface ObservabilitySnapshotRow {
+  readonly id: string;
+  readonly name: string;
+  readonly count: number;
+  readonly incremental: boolean;
+}
+
+export async function fetchObservabilitySnapshot(
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<ObservabilitySnapshotReadbackState> {
+  const path = "/api/role-model/operator/observability-snapshot";
+  const response = await fetchOperatorReadback(path, fetcher, operatorToken);
+  if (!response.ok) {
+    let reason: string | null = null;
+    try {
+      const payload = (await response.clone().json()) as Record<string, unknown>;
+      if (payload && typeof payload === "object" && typeof payload.reason === "string") {
+        reason = payload.reason;
+      }
+    } catch {
+      // Not JSON (e.g. an HTML error page): fall through to the status fallback.
+    }
+    return {
+      available: false,
+      reason: reason ?? `Request to ${path} failed with ${response.status}`,
+    };
+  }
+  const body = (await response.json()) as ObservabilitySnapshotReadback;
+  return { ...body, available: true };
+}
+
+/**
+ * The readback -> table projection. Metrics are listed by name so two reads of the same runtime
+ * render in the same order; an unavailable surface and an empty registry both yield no rows (the
+ * view says which of the two it is, the projection never fabricates a row).
+ */
+export function buildObservabilitySnapshotRows(
+  state: ObservabilitySnapshotReadbackState,
+): readonly ObservabilitySnapshotRow[] {
+  if (!state.available) {
+    return [];
+  }
+  return Object.entries(state.metrics)
+    .map(([name, snapshot]) => ({
+      id: name,
+      name,
+      count: snapshot.count,
+      incremental: snapshot.incremental,
+    }))
+    .sort((left, right) => (left.name < right.name ? -1 : left.name > right.name ? 1 : 0));
 }

@@ -195,6 +195,7 @@ import {
   inferResponsesCapabilityRequirements,
 } from "./request-capability-inference.js";
 import { resolveAdvisoryCohortPercent } from "./route-advisory-source.js";
+import { collectObservabilitySnapshot } from "./run108-observability.js";
 import { readPackagedRuntimeProfile, resolveRuntimeChannelProfile } from "./runtime-channel.js";
 import { type RuntimeVersionInfoRecord, resolveRuntimeVersionInfo } from "./runtime-version.js";
 import {
@@ -17910,6 +17911,28 @@ function createRequestHandler(options: StartBridgeServerOptions) {
           );
           return;
         }
+        /**
+         * Run 108 addendum-01 A5.2 (R7 readback consumers; 03.5 review MJ-1): the operator readback
+         * for the run-108 observability spine. `collectObservabilitySnapshot` shipped with ZERO
+         * production consumers - the four metric families were written by the wiring helpers and
+         * read by nobody, so "the operator can see what the runtime measured" was false.
+         *
+         * This readback is deliberately NOT the options-bound shape the neighbouring routes use:
+         * there is no remote capability behind it. The metrics live in THIS process's Effect metric
+         * registry, the same registry the wiring helpers update, so the route reads them directly
+         * and cannot answer "unavailable". It rides the one operator auth gate above like every
+         * other /api/role-model/operator/* path.
+         */
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/role-model/operator/observability-snapshot"
+        ) {
+          writeOperatorResult(response, {
+            schemaVersion: OBSERVABILITY_SNAPSHOT_SCHEMA_VERSION,
+            metrics: collectObservabilitySnapshot(),
+          } satisfies ObservabilitySnapshotReadback);
+          return;
+        }
         if (url.pathname.startsWith("/api/role-model/operator/queues/")) {
           const segments = url.pathname
             .slice("/api/role-model/operator/queues/".length)
@@ -20368,6 +20391,19 @@ export interface StoreDegradationReceiptReadback {
   readonly worker: StoreDegradationReceiptSource;
 }
 
+/**
+ * Run 108 addendum-01 A5.2 (R7 readback consumers; 03.5 review MJ-1): the canonical host readback
+ * contract for the observability spine. `metrics` is the live registry projection from
+ * run108-observability.ts - metric name -> { count, incremental } - with the per-tag entries the
+ * wiring helpers write aggregated under their metric name.
+ */
+export const OBSERVABILITY_SNAPSHOT_SCHEMA_VERSION = "role-model.observability-snapshot.v1";
+
+export interface ObservabilitySnapshotReadback {
+  readonly schemaVersion: typeof OBSERVABILITY_SNAPSHOT_SCHEMA_VERSION;
+  readonly metrics: Record<string, { readonly count: number; readonly incremental: boolean }>;
+}
+
 export async function createRuntimeBridgeBackend(
   options: CreateRuntimeBridgeBackendOptions,
 ): Promise<RuntimeBridgeBackend> {
@@ -22136,9 +22172,7 @@ export async function createRuntimeBridgeBackend(
         "Endpoint-registry diagnostics:",
         JSON.stringify(currentRegistry.diagnostics, null, 2),
       );
-      const summary = fatalDiagnostics
-        .map((d) => `[${d.severity}] ${d.message}`)
-        .join("; ");
+      const summary = fatalDiagnostics.map((d) => `[${d.severity}] ${d.message}`).join("; ");
       throw new Error(`Endpoint-registry validation failed after runtime state update: ${summary}`);
     }
     if (currentRegistry.diagnostics.length > 0) {

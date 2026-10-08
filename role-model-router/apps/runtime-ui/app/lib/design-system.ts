@@ -495,6 +495,23 @@ const observeStoreDegradationReceiptsRoute = createRoute({
     "Durable materialization degradation receipts from the knowledge store (ladder writes) and the knowledge worker store (development floors), newest first, with each source's honest unavailable state.",
 });
 
+/**
+ * Run 108 addendum-01 A5.2 (R7 readback consumers; 03.5 review MJ-1): the observability snapshot
+ * page. The sidebar entry and the shell's page title resolve from this definition, so the readback
+ * is reachable and labelled rather than only existing as a host route.
+ */
+const observeObservabilitySnapshotRoute = createRoute({
+  id: "observe-observability-snapshot",
+  to: "/app/observe/observability-snapshot",
+  label: "Observability",
+  section: "Observe",
+  icon: Activity,
+  template: "ledger-inspector",
+  title: "Observability snapshot",
+  description:
+    "The live metric registry of the running host: routing decisions, replay admissions, evaluation finalise refusals and learner derivations, newest read on demand.",
+});
+
 const integrationsDownstreamRoute = createRoute({
   id: "connect-downstream",
   to: "/app/connect/downstream",
@@ -700,6 +717,7 @@ const runtimeRouteDefinitions = [
   observeLogsRoute,
   observeQueuesRoute,
   observeStoreDegradationReceiptsRoute,
+  observeObservabilitySnapshotRoute,
   integrationsDownstreamRoute,
   integrationsUpstreamRoute,
   systemRuntimeRoute,
@@ -781,6 +799,8 @@ export const runtimeNavigationSections: readonly RuntimeNavigationSection[] = [
       observeQueuesRoute,
       // Run 108 addendum-01 A2: the degradation receipts page sits with the other Observe ledgers.
       observeStoreDegradationReceiptsRoute,
+      // Run 108 addendum-01 A5.2: the live observability snapshot readback.
+      observeObservabilitySnapshotRoute,
       observeActivityRoute,
       observeLogsRoute,
     ],

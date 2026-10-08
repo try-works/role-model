@@ -61,6 +61,8 @@ export default [
     route("observe/queues", "routes/observe-queues.tsx"),
     // Run 108 addendum-01 A2 (R3/R6b): the store/worker degradation receipts surface.
     route("observe/store-degradation-receipts", "routes/store-degradation-receipts.tsx"),
+    // Run 108 addendum-01 A5.2 (R7 readback consumers): the live observability snapshot surface.
+    route("observe/observability-snapshot", "routes/observability-snapshot.tsx"),
     route("observe/requests/:requestId", "routes/request-detail.tsx"),
     route("observe/logs", "routes/observe-logs.tsx"),
     route("endpoints/downstream", "routes/legacy-redirect.tsx", {

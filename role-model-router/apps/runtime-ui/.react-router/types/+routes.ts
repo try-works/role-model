@@ -172,6 +172,9 @@ type Pages = {
   "/app/observe/store-degradation-receipts": {
     params: {};
   };
+  "/app/observe/observability-snapshot": {
+    params: {};
+  };
   "/app/observe/requests/:requestId": {
     params: {
       "requestId": string;
@@ -241,7 +244,7 @@ type Pages = {
 type RouteFiles = {
   "root.tsx": {
     id: "root";
-    page: "/" | "/app" | "/app/studio/chat" | "/app/studio/images" | "/app/studio/audio" | "/app/studio/rerank" | "/app/studio/advanced" | "/app/local/choose" | "/app/local/models" | "/app/local/peer-models" | "/app/local/llama-swap/models" | "/app/local/llama-swap/swap" | "/app/local/llama-swap/policy" | "/app/local/llama-swap/logs" | "/app/local/llama-swap/matrix" | "/app/local/swap" | "/app/local/policy" | "/app/local/logs" | "/app/local/matrix" | "/app/local/endpoints" | "/app/local/peers" | "/app/remote/providers" | "/app/control/providers" | "/app/router/strategy" | "/app/router/agent-strategy" | "/app/router/workloads" | "/app/control/routing-strategy" | "/app/system/runtime-config" | "/app/control/runtime-config" | "/app/router/controller" | "/app/control/controller" | "/app/connect" | "/app/connect/downstream" | "/app/connect/upstream" | "/app/endpoints" | "/app/control/endpoints" | "/app/models/roles" | "/app/control/roles" | "/app/models" | "/app/models/benchmark" | "/app/control/benchmark" | "/app/control/models" | "/app/router" | "/app/router/config" | "/app/router/candidates" | "/app/router/decisions" | "/app/router/decisions/:requestId" | "/app/observe" | "/app/observe/activity" | "/app/observe/requests" | "/app/observe/routing" | "/app/observe/queues" | "/app/observe/store-degradation-receipts" | "/app/observe/requests/:requestId" | "/app/observe/logs" | "/app/endpoints/downstream" | "/app/integrations/downstream" | "/app/endpoints/upstream" | "/app/integrations/upstream" | "/app/system/runtime" | "/app/learning" | "/app/learning/configuration" | "/app/learning/packs" | "/app/learning/decisions" | "/app/learning/evidence" | "/app/learning/history" | "/app/system/operator" | "/app/system/session-readiness" | "/app/control/session-readiness" | "/app/system/peers" | "/app/system/extensions" | "/app/system/storage-retention" | "/*";
+    page: "/" | "/app" | "/app/studio/chat" | "/app/studio/images" | "/app/studio/audio" | "/app/studio/rerank" | "/app/studio/advanced" | "/app/local/choose" | "/app/local/models" | "/app/local/peer-models" | "/app/local/llama-swap/models" | "/app/local/llama-swap/swap" | "/app/local/llama-swap/policy" | "/app/local/llama-swap/logs" | "/app/local/llama-swap/matrix" | "/app/local/swap" | "/app/local/policy" | "/app/local/logs" | "/app/local/matrix" | "/app/local/endpoints" | "/app/local/peers" | "/app/remote/providers" | "/app/control/providers" | "/app/router/strategy" | "/app/router/agent-strategy" | "/app/router/workloads" | "/app/control/routing-strategy" | "/app/system/runtime-config" | "/app/control/runtime-config" | "/app/router/controller" | "/app/control/controller" | "/app/connect" | "/app/connect/downstream" | "/app/connect/upstream" | "/app/endpoints" | "/app/control/endpoints" | "/app/models/roles" | "/app/control/roles" | "/app/models" | "/app/models/benchmark" | "/app/control/benchmark" | "/app/control/models" | "/app/router" | "/app/router/config" | "/app/router/candidates" | "/app/router/decisions" | "/app/router/decisions/:requestId" | "/app/observe" | "/app/observe/activity" | "/app/observe/requests" | "/app/observe/routing" | "/app/observe/queues" | "/app/observe/store-degradation-receipts" | "/app/observe/observability-snapshot" | "/app/observe/requests/:requestId" | "/app/observe/logs" | "/app/endpoints/downstream" | "/app/integrations/downstream" | "/app/endpoints/upstream" | "/app/integrations/upstream" | "/app/system/runtime" | "/app/learning" | "/app/learning/configuration" | "/app/learning/packs" | "/app/learning/decisions" | "/app/learning/evidence" | "/app/learning/history" | "/app/system/operator" | "/app/system/session-readiness" | "/app/control/session-readiness" | "/app/system/peers" | "/app/system/extensions" | "/app/system/storage-retention" | "/*";
   };
   "routes/index.tsx": {
     id: "routes/index";
@@ -249,7 +252,7 @@ type RouteFiles = {
   };
   "routes/app-layout.tsx": {
     id: "routes/app-layout";
-    page: "/app" | "/app/studio/chat" | "/app/studio/images" | "/app/studio/audio" | "/app/studio/rerank" | "/app/studio/advanced" | "/app/local/choose" | "/app/local/models" | "/app/local/peer-models" | "/app/local/llama-swap/models" | "/app/local/llama-swap/swap" | "/app/local/llama-swap/policy" | "/app/local/llama-swap/logs" | "/app/local/llama-swap/matrix" | "/app/local/swap" | "/app/local/policy" | "/app/local/logs" | "/app/local/matrix" | "/app/local/endpoints" | "/app/local/peers" | "/app/remote/providers" | "/app/control/providers" | "/app/router/strategy" | "/app/router/agent-strategy" | "/app/router/workloads" | "/app/control/routing-strategy" | "/app/system/runtime-config" | "/app/control/runtime-config" | "/app/router/controller" | "/app/control/controller" | "/app/connect" | "/app/connect/downstream" | "/app/connect/upstream" | "/app/endpoints" | "/app/control/endpoints" | "/app/models/roles" | "/app/control/roles" | "/app/models" | "/app/models/benchmark" | "/app/control/benchmark" | "/app/control/models" | "/app/router" | "/app/router/config" | "/app/router/candidates" | "/app/router/decisions" | "/app/router/decisions/:requestId" | "/app/observe" | "/app/observe/activity" | "/app/observe/requests" | "/app/observe/routing" | "/app/observe/queues" | "/app/observe/store-degradation-receipts" | "/app/observe/requests/:requestId" | "/app/observe/logs" | "/app/endpoints/downstream" | "/app/integrations/downstream" | "/app/endpoints/upstream" | "/app/integrations/upstream" | "/app/system/runtime" | "/app/learning" | "/app/learning/configuration" | "/app/learning/packs" | "/app/learning/decisions" | "/app/learning/evidence" | "/app/learning/history" | "/app/system/operator" | "/app/system/session-readiness" | "/app/control/session-readiness" | "/app/system/peers" | "/app/system/extensions" | "/app/system/storage-retention";
+    page: "/app" | "/app/studio/chat" | "/app/studio/images" | "/app/studio/audio" | "/app/studio/rerank" | "/app/studio/advanced" | "/app/local/choose" | "/app/local/models" | "/app/local/peer-models" | "/app/local/llama-swap/models" | "/app/local/llama-swap/swap" | "/app/local/llama-swap/policy" | "/app/local/llama-swap/logs" | "/app/local/llama-swap/matrix" | "/app/local/swap" | "/app/local/policy" | "/app/local/logs" | "/app/local/matrix" | "/app/local/endpoints" | "/app/local/peers" | "/app/remote/providers" | "/app/control/providers" | "/app/router/strategy" | "/app/router/agent-strategy" | "/app/router/workloads" | "/app/control/routing-strategy" | "/app/system/runtime-config" | "/app/control/runtime-config" | "/app/router/controller" | "/app/control/controller" | "/app/connect" | "/app/connect/downstream" | "/app/connect/upstream" | "/app/endpoints" | "/app/control/endpoints" | "/app/models/roles" | "/app/control/roles" | "/app/models" | "/app/models/benchmark" | "/app/control/benchmark" | "/app/control/models" | "/app/router" | "/app/router/config" | "/app/router/candidates" | "/app/router/decisions" | "/app/router/decisions/:requestId" | "/app/observe" | "/app/observe/activity" | "/app/observe/requests" | "/app/observe/routing" | "/app/observe/queues" | "/app/observe/store-degradation-receipts" | "/app/observe/observability-snapshot" | "/app/observe/requests/:requestId" | "/app/observe/logs" | "/app/endpoints/downstream" | "/app/integrations/downstream" | "/app/endpoints/upstream" | "/app/integrations/upstream" | "/app/system/runtime" | "/app/learning" | "/app/learning/configuration" | "/app/learning/packs" | "/app/learning/decisions" | "/app/learning/evidence" | "/app/learning/history" | "/app/system/operator" | "/app/system/session-readiness" | "/app/control/session-readiness" | "/app/system/peers" | "/app/system/extensions" | "/app/system/storage-retention";
   };
   "routes/dashboard.tsx": {
     id: "routes/dashboard";
@@ -460,6 +463,10 @@ type RouteFiles = {
     id: "routes/store-degradation-receipts";
     page: "/app/observe/store-degradation-receipts";
   };
+  "routes/observability-snapshot.tsx": {
+    id: "routes/observability-snapshot";
+    page: "/app/observe/observability-snapshot";
+  };
   "routes/request-detail.tsx": {
     id: "routes/request-detail";
     page: "/app/observe/requests/:requestId";
@@ -573,6 +580,7 @@ type RouteModules = {
   "routes/observe-routing": typeof import("./app/routes/observe-routing.tsx");
   "routes/observe-queues": typeof import("./app/routes/observe-queues.tsx");
   "routes/store-degradation-receipts": typeof import("./app/routes/store-degradation-receipts.tsx");
+  "routes/observability-snapshot": typeof import("./app/routes/observability-snapshot.tsx");
   "routes/request-detail": typeof import("./app/routes/request-detail.tsx");
   "routes/observe-logs": typeof import("./app/routes/observe-logs.tsx");
   "legacy-endpoints-downstream": typeof import("./app/routes/legacy-redirect.tsx");
