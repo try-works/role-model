@@ -8123,9 +8123,13 @@ export function buildLiveRouteAdvisoryObservation(input: {
   // deliberately sync and one statement wide (withStageSpan is sync-only, and the span must not
   // straddle the observation build below - a span that swallowed the builder would time the
   // wrong work).
-  withStageSpan("router.decision", { selection: applied ? "advisory_applied" : "baseline_retained" }, () => {
-    recordRouterDecision(applied ? "advisory_applied" : "baseline_retained");
-  });
+  withStageSpan(
+    "router.decision",
+    { selection: applied ? "advisory_applied" : "baseline_retained" },
+    () => {
+      recordRouterDecision(applied ? "advisory_applied" : "baseline_retained");
+    },
+  );
   return buildTrackBRouteAdvisoryObservation({
     decisionId: input.decisionId,
     routePackage: input.routePackage,

@@ -56,13 +56,17 @@ describe("run108 A5.1 span coverage", () => {
 
   test("the router decision record runs under one sync router.decision span", () => {
     const source = trackBRuntimeSource();
-    const stageAt = source.indexOf('withStageSpan("router.decision"');
+    // The wrap is multi-line once formatted, so pin the stage name and the span helper that owns
+    // it separately instead of pinning one exact call layout (which re-wrapping would break).
+    const stageAt = source.indexOf('"router.decision"');
     expect(stageAt).toBeGreaterThan(0);
+    const spanAt = source.lastIndexOf("withStageSpan(", stageAt);
+    expect(spanAt).toBeGreaterThan(0);
     // ONE sync wrap around the record itself: the metric call sits inside the wrap and no await
     // may appear between the span open and the wrapped stage (the helper is sync-only).
     const recordAt = source.indexOf("recordRouterDecision(", stageAt);
-    expect(recordAt).toBeGreaterThan(stageAt);
-    const block = source.slice(stageAt, recordAt);
+    expect(recordAt).toBeGreaterThan(spanAt);
+    const block = source.slice(spanAt, recordAt);
     expect(block).not.toMatch(/\bawait\b/);
     // The selection attribute names the arm the decision recorded, so a span reader can tell
     // an applied advisory from a retained baseline without joining the metric.

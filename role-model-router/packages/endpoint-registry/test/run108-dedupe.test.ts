@@ -4,7 +4,12 @@ import { buildEndpointRegistry } from "../src/index.js";
 
 const catalog = {
   catalogVersion: "1",
-  source: { vendor: "models.dev", commit: "test-catalog", capturedAt: "2026-05-05T00:00:00Z", schemaVersion: "1" },
+  source: {
+    vendor: "models.dev",
+    commit: "test-catalog",
+    capturedAt: "2026-05-05T00:00:00Z",
+    schemaVersion: "1",
+  },
   providers: [
     {
       providerId: "openai",
@@ -16,7 +21,12 @@ const catalog = {
       envVars: ["OPENAI_API_KEY"],
       controlPlaneRequirements: [],
       localOverrideApplied: false,
-      upstreamProvenance: { vendor: "models.dev", commit: "test-catalog", capturedAt: "2026-05-05T00:00:00Z", schemaVersion: "1" },
+      upstreamProvenance: {
+        vendor: "models.dev",
+        commit: "test-catalog",
+        capturedAt: "2026-05-05T00:00:00Z",
+        schemaVersion: "1",
+      },
     },
   ],
   models: [
@@ -32,12 +42,21 @@ const catalog = {
       contextWindow: 32768,
       maxOutputTokens: 4096,
       pricing: null,
-      requestShapeHints: { providerShape: "openai", bodyKeys: ["messages"], headerKeys: ["authorization"] },
+      requestShapeHints: {
+        providerShape: "openai",
+        bodyKeys: ["messages"],
+        headerKeys: ["authorization"],
+      },
       experimentalModes: [],
       extendsProvenance: { baseModelId: null, chain: [] },
       localOverrideApplied: false,
       localNotes: [],
-      upstreamProvenance: { vendor: "models.dev", commit: "test-catalog", capturedAt: "2026-05-05T00:00:00Z", schemaVersion: "1" },
+      upstreamProvenance: {
+        vendor: "models.dev",
+        commit: "test-catalog",
+        capturedAt: "2026-05-05T00:00:00Z",
+        schemaVersion: "1",
+      },
     },
   ],
 } as const;

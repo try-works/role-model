@@ -4510,9 +4510,13 @@ export function createCliServerOptions(
             worker: unavailable("extension runtime is not available"),
           };
         }
+        // The narrowed method is captured BEFORE the closure: property narrowing (the
+        // `typeof runtime.invoke !== "function"` guard above) does not survive into a callback,
+        // so calling `runtime.invoke` inside the arrow widens it back to optional (TS2722). The
+        // captured function keeps the call typechecking with no non-null assertion.
+        const invoke = runtime.invoke;
         return readStoreDegradationReceiptsFromRuntime({
-          invoke: (extensionId, envelope) =>
-            runtime.invoke!(extensionId, envelope) as Promise<Record<string, unknown>>,
+          invoke,
           envelopeFor,
           stateRoot: options.runtimeStateRoot ?? "",
           scopeId: scope,
