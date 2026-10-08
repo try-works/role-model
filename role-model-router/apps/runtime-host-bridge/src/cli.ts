@@ -1992,6 +1992,37 @@ export function finaliseRefusalDispositionDetail(error: unknown): string | null 
 }
 
 /**
+ * Run 108 addendum-01 A5.3 (03.5 review MJ-2): the disposition row the resume sweep records when it
+ * catches a forced finalise refusal.
+ *
+ * `refused` is TERMINAL in the disposition store (`shared/capture/replay-disposition.mjs`,
+ * TERMINAL_OUTCOMES = {replayed, refused}, and `pending()` skips terminal rows), so writing it on the
+ * FIRST refusal retired the capture before the sweep's attempts and the deferral budget had run, and
+ * nulled that row's counters — the opposite of "the sweep's attempt accounting works exactly as
+ * before". The refusal is therefore recorded on a NON-TERMINAL `deferred` row that still carries the
+ * refusal code and the bounded reason: the capture stays pending for the producer, the reason stays
+ * visible in the Learning live panel (which renders outcome+detail), and the store's own
+ * `applyReplayDeferralBudget` — applied by the operations service to every deferred write — owns the
+ * moment the capture is retired, preserving both the code and the reason when it is.
+ */
+export function finaliseRefusalDispositionWrite(input: {
+  readonly captureRef: string;
+  readonly policySetDigest: string;
+  readonly refusalDetail: string;
+  readonly window: string;
+}): Record<string, unknown> {
+  return {
+    captureRef: input.captureRef,
+    policySetDigest: input.policySetDigest,
+    outcome: "deferred",
+    refusalCode: "evaluation_finalise_refused",
+    detail: input.refusalDetail,
+    branches: null,
+    window: input.window,
+  };
+}
+
+/**
  * Production completion callback shared by the fresh and awaiting-evaluation
  * paths. Keeping the callback as a factory makes the durable join directly
  * testable without bypassing the CLI's actual completion registration.
@@ -10441,12 +10472,17 @@ export async function main(): Promise<void> {
               currentLedgerReservationId: () => null,
             });
             /**
-             * Run 108 addendum-01 A5.3: a forced finalise refusal must show ITS reason in the
-             * disposition the operator surface reads (the replay disposition ledger). At baseline the
-             * refusal detail reached only the metric tag (recordFinaliseRefusal) while the capture's
-             * disposition row stayed "deferred" for ever. The bounded reason is written as a named
-             * terminal disposition row, and the error is rethrown so the sweep's attempt accounting
-             * and the abandoned-entry terminalization keep working exactly as before.
+             * Run 108 addendum-01 A5.3 (03.5 review MJ-2): a forced finalise refusal must show ITS
+             * reason in the disposition the operator surface reads (the replay disposition ledger)
+             * WITHOUT retiring the capture. At baseline the refusal detail reached only the metric tag
+             * (recordFinaliseRefusal) while the capture's disposition row stayed "deferred" for ever.
+             * The first version of this repair wrote the reason as a `refused` row instead — and
+             * `refused` is TERMINAL in the store, so a FIRST refusal retired the capture before the
+             * sweep's attempts and the deferral budget had run and nulled the row's counters. The
+             * bounded reason is written through finaliseRefusalDispositionWrite, which records it on a
+             * NON-TERMINAL row: the reason stays readable, the store's own deferral budget owns the
+             * moment the capture is retired, and the error is rethrown so the sweep's attempt
+             * accounting and the abandoned-entry terminalization keep working exactly as before.
              */
             let completedEntry: Readonly<Record<string, unknown>>;
             try {
@@ -10460,27 +10496,26 @@ export async function main(): Promise<void> {
               const refusalDetail = finaliseRefusalDispositionDetail(error);
               if (refusalDetail !== null) {
                 try {
-                  await operations.recordReplayDisposition({
-                    captureRef: entry.requestId,
-                    policySetDigest: buildReplayPolicySet().policySetDigest,
-                    outcome: "refused",
-                    refusalCode: "evaluation_finalise_refused",
-                    detail: refusalDetail,
-                    branches: null,
-                    window: createReplayLedger({
-                      filePath: path.join(
-                        options.runtimeStateRoot,
-                        options.scopeId,
-                        "track-b-replay-ledger.json",
-                      ),
-                      limits: resolveChannelScopedReplayLedgerLimits({
-                        repoRoot: options.repoRoot,
-                        runtimeStateRoot: options.runtimeStateRoot,
-                        scopeId: options.scopeId,
-                        channel,
-                      }),
-                    }).status().window,
-                  });
+                  await operations.recordReplayDisposition(
+                    finaliseRefusalDispositionWrite({
+                      captureRef: entry.requestId,
+                      policySetDigest: buildReplayPolicySet().policySetDigest,
+                      refusalDetail,
+                      window: createReplayLedger({
+                        filePath: path.join(
+                          options.runtimeStateRoot,
+                          options.scopeId,
+                          "track-b-replay-ledger.json",
+                        ),
+                        limits: resolveChannelScopedReplayLedgerLimits({
+                          repoRoot: options.repoRoot,
+                          runtimeStateRoot: options.runtimeStateRoot,
+                          scopeId: options.scopeId,
+                          channel,
+                        }),
+                      }).status().window,
+                    }),
+                  );
                 } catch (dispositionFailure) {
                   // Best-effort: the sweep below still records the attempt and, past the cap,
                   // terminalizes the replay job carrying the same reason.
