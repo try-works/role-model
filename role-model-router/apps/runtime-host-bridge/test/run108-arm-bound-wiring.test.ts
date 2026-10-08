@@ -10,6 +10,7 @@ import {
 } from "../src/learning-policy-file.js";
 import {
   resolveMaxCounterfactualArms,
+  resolveReplayCandidatePool,
   selectTrackBCounterfactualArms,
 } from "../src/track-b-runtime.js";
 
@@ -42,49 +43,29 @@ describe("run108 R2a the counterfactual pool is not sliced by the arm bound befo
     "endpoint:arm-d",
   ] as const;
 
-  /**
-   * Mirror of the production expression cli.ts:8121-8124: the pool-level slice applied before the
-   * selector runs. It must track that expression — the GREEN step removes the slice from cli.ts and
-   * this mirror then becomes the unsliced pool.
-   */
-  const poolAsPassedToSelectorToday = (ids: readonly string[]): string[] => [...ids];
-
-  test("a 5-endpoint pool with served+judge among them keeps at least 2 arms", () => {
+  test("a 5-endpoint pool with served+judge among them reaches the selector untruncated", () => {
     const defaultBound = resolveMaxCounterfactualArms({});
     expect(defaultBound).toBe(3);
 
+    // The pool the work item hands the selector is produced by resolveReplayCandidatePool (cli.ts
+    // wires it into the work-item producer). It must be the FULL pool: the arm bound is applied by
+    // selectTrackBCounterfactualArms AFTER the served/judge exclusions (track-b-runtime.ts:84-90),
+    // never as a pool-level slice. RED on the parent commit: the helper does not exist (collection
+    // failure) - a re-added slice would not compile against this contract.
+    const poolPassedToSelector = resolveReplayCandidatePool(POOL_OF_FIVE);
+    expect(poolPassedToSelector).toEqual([...POOL_OF_FIVE]);
+    expect(poolPassedToSelector).not.toHaveLength(3);
+
     // The selector itself is correct: given the FULL pool it returns 5-1-1 = 3 arms, so the bound
     // belongs inside the selector, never as a pool-level slice.
-    const fullPoolSelection = selectTrackBCounterfactualArms({
-      candidateEndpointIds: POOL_OF_FIVE,
-      routePackage: SERVED_ROUTE,
-      judgeEndpointId: JUDGE,
-      armBound: defaultBound,
-    });
-    expect(fullPoolSelection.arms).toEqual(["endpoint:arm-b", "endpoint:arm-c", "endpoint:arm-d"]);
-
-    // Reproduce what cli.ts:8121-8124 does today: truncate the pool to the default bound FIRST.
-    const poolPassedToSelector = poolAsPassedToSelectorToday(POOL_OF_FIVE);
-
-    // Pure assertion on the helper: given the 5 ids, the ids remaining after the served/judge
-    // exclusions must number >= 2 when the arm bound is 3.
-    const remainingAfterExclusions = poolPassedToSelector.filter(
-      (id) => id !== SERVED_ROUTE && id !== JUDGE,
-    );
-    expect(remainingAfterExclusions.length).toBeGreaterThanOrEqual(2); // RED today: 3-1-1 = 1
-
-    // The pool passed to the selector must not be truncated to 3 — slicing a 5-endpoint pool by the
-    // default bound 3 makes 5-1-1=3 arms IMPOSSIBLE after the served/judge exclusions.
-    expect(poolPassedToSelector).not.toHaveLength(3); // RED today: the slice forces length 3
-
-    // The concrete replay-path expectation: the selector returns >= 2 arms.
     const selection = selectTrackBCounterfactualArms({
       candidateEndpointIds: poolPassedToSelector,
       routePackage: SERVED_ROUTE,
       judgeEndpointId: JUDGE,
       armBound: defaultBound,
     });
-    expect(selection.arms.length).toBeGreaterThanOrEqual(2); // RED today: 1 arm
+    expect(selection.arms).toEqual(["endpoint:arm-b", "endpoint:arm-c", "endpoint:arm-d"]);
+    expect(selection.arms.length).toBeGreaterThanOrEqual(2);
   });
 });
 

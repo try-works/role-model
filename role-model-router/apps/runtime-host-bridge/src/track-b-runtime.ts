@@ -1,7 +1,5 @@
 import { spawn } from "node:child_process";
-import * as Effect from "effect/Effect";
-import * as Metric from "effect/Metric";
-import { routerDecisions } from "./run108-observability.js";
+import { recordRouterDecision } from "./run108-observability.js";
 import {
   createHash,
   createHmac,
@@ -106,6 +104,18 @@ export function selectTrackBCounterfactualArms(input: {
         }
       : null;
   return { arms, excluded, refusal };
+}
+
+/**
+ * Run 108 R2a: the pool the replay work item hands the selector must be UNTRUNCATED. The arm bound
+ * belongs inside selectTrackBCounterfactualArms (applied AFTER the served/judge exclusions), never as
+ * a pool-level slice - the removed cli.ts:8121-8124 slice truncated a 5-endpoint pool to 3 and made
+ * 5-1-1 = 3 arms structurally impossible. Pinned by run108-arm-bound-wiring.test.ts.
+ */
+export function resolveReplayCandidatePool(
+  configuredEndpointIds: readonly string[],
+): string[] {
+  return [...configuredEndpointIds];
 }
 
 /**
@@ -8108,14 +8118,7 @@ export function buildLiveRouteAdvisoryObservation(input: {
       : (input.selectionProbability ?? 1);
   // Run 108 R7: every route advisory observation is a decision served by the runtime; the metric
   // carries the selection so baseline_retained vs advisory_applied ratios are observable per scope.
-  Effect.runSync(
-    Metric.update(
-      Metric.withAttributes(routerDecisions, {
-        selection: applied ? "advisory_applied" : "baseline_retained",
-      }),
-      1,
-    ),
-  );
+  recordRouterDecision(applied ? "advisory_applied" : "baseline_retained");
   return buildTrackBRouteAdvisoryObservation({
     decisionId: input.decisionId,
     routePackage: input.routePackage,

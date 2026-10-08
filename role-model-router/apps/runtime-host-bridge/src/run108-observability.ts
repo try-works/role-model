@@ -87,3 +87,53 @@ export function withStageSpan<A>(
     throw error;
   }
 }
+
+/**
+ * The production wiring helpers. 03.5 review M2: the phase-3 call sites were inline metric updates
+ * with no pinned contract - these are the one-line contracts the production paths call, each covered
+ * by run108-observability.test.ts.
+ */
+export function recordRouterDecision(selection: "advisory_applied" | "baseline_retained"): void {
+  Effect.runSync(
+    Metric.update(Metric.withAttributes(routerDecisions, { selection }), 1),
+  );
+}
+
+export function recordReplayAdmission(pass: "replay", admitted: number): void {
+  Effect.runSync(
+    Metric.update(Metric.withAttributes(replayAdmissions, { pass }), admitted),
+  );
+}
+
+export function recordFinaliseRefusal(guard: string, reason: string): void {
+  Effect.runSync(
+    Metric.update(Metric.withAttributes(evalFinaliseRefusals, { guard, reason }), 1),
+  );
+}
+
+export function recordLearnerDerivation(count: number, outcome: "derived" | "idle"): void {
+  Effect.runSync(
+    Metric.update(Metric.withAttributes(learnerDerivations, { outcome }), count),
+  );
+}
+
+/** 03.5 review M4: the metrics were write-only - this is the readback the UI/status surfaces. */
+export function collectObservabilitySnapshot(): Record<string, { count: number; incremental: boolean }> {
+  // Metric.snapshot iterates the registry (attributed entries included); aggregate by the metric id
+  // (the name) so the tag-carrying entries the wiring helpers write all count.
+  const snapshots = Effect.runSync(Metric.snapshot) as ReadonlyArray<{
+    id: string;
+    attributes?: unknown;
+    state: { count: number; incremental?: boolean };
+  }>;
+  const out: Record<string, { count: number; incremental: boolean }> = {};
+  for (const snap of snapshots) {
+    const count = typeof snap.state?.count === "number" ? snap.state.count : 0;
+    const existing = out[snap.id];
+    out[snap.id] = {
+      count: (existing?.count ?? 0) + count,
+      incremental: snap.state?.incremental === true || existing?.incremental === true,
+    };
+  }
+  return out;
+}

@@ -564,7 +564,6 @@ import {
   requireReplayRouterDecisionId,
   resolveDurableEvaluationAuthority,
   resolveManagedArtifactKeyFiles,
-  resolveMaxCounterfactualArms,
   runSupervisedReplay,
   runTrackBPostObservation,
   runTrackBPostObservationWithContribution,
@@ -575,10 +574,13 @@ import {
   validateRun88ProviderResponseObservation,
   verifyTrackBExtensionClosureAfterRestart,
   assessSmallPoolJudgePlacement,
+  resolveReplayCandidatePool,
 } from "./track-b-runtime.js";
-import * as Effect from "effect/Effect";
-import * as Metric from "effect/Metric";
-import { evalFinaliseRefusals, replayAdmissions } from "./run108-observability.js";
+import {
+  recordFinaliseRefusal,
+  recordReplayAdmission,
+  withStageSpan,
+} from "./run108-observability.js";
 import {
   createRouterPairwiseJudge,
   resolveJudgeEndpointFromController,
@@ -2702,17 +2704,11 @@ export function createSupervisedReplayEvaluationCompleter(input: {
       ]
         .filter(Boolean)
         .join(" ");
-      // Run 108 R7: the finalise-refusal metric - the RC-1 observability gap (which guard refused
-      // never reached the disposition). Tagged by the bounded detail so each refusal shape counts once.
-      Effect.runSync(
-        Metric.update(
-          Metric.withAttributes(evalFinaliseRefusals, {
-            guard: "finalise",
-            reason: detail.slice(0, 80),
-          }),
-          1,
-        ),
-      );
+      // Run 108 R7: the finalise-refusal span + metric - the RC-1 observability gap (which guard
+      // refused never reached the disposition). Tagged by the bounded detail so each refusal counts once.
+      withStageSpan("eval.finalise_refusal", { guard: "finalise" }, () => {
+        recordFinaliseRefusal("finalise", detail.slice(0, 80));
+      });
       throw new Error(
         `durable replay evaluation did not finalize a valid comparison: ${detail}`.slice(0, 512),
       );
@@ -6492,14 +6488,20 @@ export async function main(): Promise<void> {
               // store - best-effort so a busy store (the very failure being reported) cannot break the
               // tick. Content-keyed, so repeated identical failures keep one row. Materialization itself
               // runs before the runtime is fully up (host-op only, see above), so the receipt is
-              // recorded only when the extension runtime is available.
-              if (runtime !== null) {
+              // recorded only when the extension runtime is available. Review B1 (03.5): the local
+              // `runtime`/`envelopeFor` are declared AFTER this function runs - read the ref and the
+              // enclosing learnerSweepEnvelope directly, or the guard itself throws a TDZ ReferenceError
+              // on the exact busy-store case this receipt exists for.
+              const runtimeAtCatch = extensionRuntimeRef.current;
+              if (runtimeAtCatch !== null) {
                 try {
-                  await runtime.invoke(
+                  await runtimeAtCatch.invoke(
                     "knowledge-store",
-                    envelopeFor("knowledge-store", "knowledge:record-degradation", {
-                      capability: "ladder-materialization",
-                      reason: cause,
+                    learnerSweepEnvelope({
+                      requestPrefix: "learner-derivation",
+                      extensionId: "knowledge-store",
+                      capability: "knowledge:record-degradation",
+                      value: { capability: "ladder-materialization", reason: cause },
                     }),
                   );
                 } catch {
@@ -8152,7 +8154,7 @@ export async function main(): Promise<void> {
           // selectTrackBCounterfactualArms AFTER the served-route and judge exclusions; a pool-level slice
           // double-counts those exclusions and made 5 endpoints behave like 3 (measured live: every job
           // 1-arm / 2-case). The bound itself travels on the work item as maxCounterfactualArms below.
-          configuredCandidateEndpointIds: configuredEndpointIdsRef.current,
+          configuredCandidateEndpointIds: resolveReplayCandidatePool(configuredEndpointIdsRef.current),
           // Run 98 R4: durable advisory observations (state distribution + influence rate).
           advisoryObservationLedgerPath: path.join(
             options.runtimeStateRoot,
@@ -8559,12 +8561,7 @@ export async function main(): Promise<void> {
             judgeResolved: Boolean(evalJudgeEndpointId),
           });
           // Run 108 R7: the replay admission counter (module-scope metric, registry-scoped).
-          Effect.runSync(
-            Metric.update(
-              Metric.withAttributes(replayAdmissions, { pass: "replay" }),
-              admission.admitted ? 1 : 0,
-            ),
-          );
+          recordReplayAdmission("replay", admission.admitted ? 1 : 0);
           if (!admission.admitted) {
             /**
              * Run 104 R1: arms the router's rule rejected are named in the failure, so a planner that
@@ -10898,9 +10895,11 @@ export async function main(): Promise<void> {
             judgeEndpointId: judge?.endpointId ?? null,
           });
           if (signal) {
-            console.error(
-              `[run108] config-time judge placement: ${signal.code}: ${signal.detail}`,
-            );
+            withStageSpan("config.judge_placement", { signal: signal.code }, () => {
+              console.error(
+                `[run108] config-time judge placement: ${signal.code}: ${signal.detail}`,
+              );
+            });
           }
         })
         .catch(() => {});

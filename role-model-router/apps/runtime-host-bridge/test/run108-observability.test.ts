@@ -8,8 +8,13 @@ import * as Tracer from "effect/Tracer";
 // Run 108 R7 - the observability spine: module-scope metric declarations for the four chains,
 // registry-scoped so tests and per-scope runtimes isolate, per the effect-grep canonical idiom.
 import {
+  collectObservabilitySnapshot,
   evalFinaliseRefusals,
   learnerDerivations,
+  recordFinaliseRefusal,
+  recordLearnerDerivation,
+  recordReplayAdmission,
+  recordRouterDecision,
   replayAdmissions,
   routerDecisions,
   withStageSpan,
@@ -97,5 +102,33 @@ describe("run108 R7 the observability spine", () => {
     expect(recorded[0]?.attributes).toEqual({ kind: "live" });
     // completion recorded as effect.exit (canonical convention)
     expect((completedExit as { _tag: string })._tag).toBe("Success");
+  });
+
+  test("the production wiring helpers update the default registry and the snapshot reads them", () => {
+    // RED today: the helpers do not exist (collection failure). 03.5 review M2/M4: the phase-3
+    // call sites were inline (no pinned contract) and the metrics were write-only.
+    const before = collectObservabilitySnapshot();
+    recordRouterDecision("advisory_applied");
+    recordReplayAdmission("replay", 1);
+    recordLearnerDerivation(3, "derived");
+    recordFinaliseRefusal("finalise", "declared_pair");
+    const snapshot = collectObservabilitySnapshot();
+
+    for (const name of [
+      "role-model.router.decisions",
+      "role-model.replay.admissions",
+      "role-model.eval.finalise_refusals",
+      "role-model.learner.derivations",
+    ]) {
+      expect(typeof snapshot[name]?.count).toBe("number");
+    }
+    // The attributed writes aggregate under the metric name: +1 decision, +1 admission, +3 derivations,
+    // +1 refusal over the before snapshot.
+    const delta = (name: string): number =>
+      (snapshot[name]?.count ?? 0) - (before[name]?.count ?? 0);
+    expect(delta("role-model.router.decisions")).toBe(1);
+    expect(delta("role-model.replay.admissions")).toBe(1);
+    expect(delta("role-model.learner.derivations")).toBe(3);
+    expect(delta("role-model.eval.finalise_refusals")).toBe(1);
   });
 });
