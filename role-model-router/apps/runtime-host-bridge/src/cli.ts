@@ -1977,6 +1977,21 @@ export function classifyLearnerPromotionResult(input: {
 }
 
 /**
+ * Run 108 addendum-01 A5.3: the finalise guard's own refusal reason must reach the disposition the
+ * operator surface reads (the replay disposition ledger). The guard throws
+ * `durable replay evaluation did not finalize a valid comparison: <detail>` (the RC-1 observability
+ * gap); this bounds exactly that class so the resume completion can write a named terminal
+ * disposition row while every other failure class keeps its existing handling.
+ */
+export function finaliseRefusalDispositionDetail(error: unknown): string | null {
+  const message = String((error as { message?: unknown })?.message ?? error ?? "");
+  if (!message.startsWith("durable replay evaluation did not finalize a valid comparison:")) {
+    return null;
+  }
+  return message.slice(0, 360);
+}
+
+/**
  * Production completion callback shared by the fresh and awaiting-evaluation
  * paths. Keeping the callback as a factory makes the durable join directly
  * testable without bypassing the CLI's actual completion registration.
@@ -8522,46 +8537,51 @@ export async function main(): Promise<void> {
             }),
           });
           const replayLedgerStatus = replayLedger.status();
-          const admission = decideReplayAdmission({
-            channelReplayEnabled: true,
-            captureAvailable: true,
-            scopeAuthorized: true,
-            authorizationEpochValid: true,
-            retentionReplayable: true,
-            privacyReplayable: true,
-            distinctCandidateCount: distinctReplayCandidates.length,
-            /**
-             * Run 100 addendum `00-requirements.benchmark-traffic-exclusion.addendum-01`: the on-demand
-             * replay path refuses benchmark captures by name for the same reason the producer does.
-             */
-            sourceIsBenchmark: isBenchmarkReplaySourceRef(requestId),
-            /**
-             * Run 100 addendum 16 item 3 / 8a: the recovered capture carries the class its own durable
-             * evidence proved, so the on-demand path refuses a marker-echo probe for the same reason the
-             * automatic producer does rather than re-deriving it from the transcript.
-             */
-            sourceIsSyntheticProbe: isSyntheticProbeSourceClass(
-              (sourceCapture.replayEvidenceClass as Record<string, unknown> | undefined)?.class,
-            ),
-            budgetAvailable: replayBudgetAvailable(replayLedgerStatus),
-            alreadyProcessed: replayLedger.hasTerminalCounterfactual(
-              requestId,
-              replayPolicySet.policySetDigest,
-            ),
-            sourceIsReplayProduced:
-              sourceReplay !== null && sourceReplay.parentTraceId !== undefined,
-            policyIdsResolvable: resolveReplayPolicySet(replayPolicySet).ok,
-            dependenciesAvailable: true,
-            /**
-             * Run 108: this caller is the one that plans arms, so it must say whether the judge it will exclude
-             * is known. `evalJudgeEndpointId` is resolved for this capture above and is `""` when the
-             * controller-assignment read fails; admitting the capture then plans arms that may contain the
-             * judge, and the judge (resolved again at completion) then scores its own comparison.
-             */
-            judgeResolved: Boolean(evalJudgeEndpointId),
+          // Run 108 A5.1: the REPLAY chain's admission stage - the decision and its counter
+          // run under one sync stage span (withStageSpan is sync-only).
+          const admission = withStageSpan("replay.admission", { pass: "replay" }, () => {
+            const decided = decideReplayAdmission({
+              channelReplayEnabled: true,
+              captureAvailable: true,
+              scopeAuthorized: true,
+              authorizationEpochValid: true,
+              retentionReplayable: true,
+              privacyReplayable: true,
+              distinctCandidateCount: distinctReplayCandidates.length,
+              /**
+               * Run 100 addendum `00-requirements.benchmark-traffic-exclusion.addendum-01`: the on-demand
+               * replay path refuses benchmark captures by name for the same reason the producer does.
+               */
+              sourceIsBenchmark: isBenchmarkReplaySourceRef(requestId),
+              /**
+               * Run 100 addendum 16 item 3 / 8a: the recovered capture carries the class its own durable
+               * evidence proved, so the on-demand path refuses a marker-echo probe for the same reason the
+               * automatic producer does rather than re-deriving it from the transcript.
+               */
+              sourceIsSyntheticProbe: isSyntheticProbeSourceClass(
+                (sourceCapture.replayEvidenceClass as Record<string, unknown> | undefined)?.class,
+              ),
+              budgetAvailable: replayBudgetAvailable(replayLedgerStatus),
+              alreadyProcessed: replayLedger.hasTerminalCounterfactual(
+                requestId,
+                replayPolicySet.policySetDigest,
+              ),
+              sourceIsReplayProduced:
+                sourceReplay !== null && sourceReplay.parentTraceId !== undefined,
+              policyIdsResolvable: resolveReplayPolicySet(replayPolicySet).ok,
+              dependenciesAvailable: true,
+              /**
+               * Run 108: this caller is the one that plans arms, so it must say whether the judge it will exclude
+               * is known. `evalJudgeEndpointId` is resolved for this capture above and is `""` when the
+               * controller-assignment read fails; admitting the capture then plans arms that may contain the
+               * judge, and the judge (resolved again at completion) then scores its own comparison.
+               */
+              judgeResolved: Boolean(evalJudgeEndpointId),
+            });
+            // Run 108 R7: the replay admission counter (module-scope metric, registry-scoped).
+            recordReplayAdmission("replay", decided.admitted ? 1 : 0);
+            return decided;
           });
-          // Run 108 R7: the replay admission counter (module-scope metric, registry-scoped).
-          recordReplayAdmission("replay", admission.admitted ? 1 : 0);
           if (!admission.admitted) {
             /**
              * Run 104 R1: arms the router's rule rejected are named in the failure, so a planner that
@@ -10212,12 +10232,59 @@ export async function main(): Promise<void> {
               getDispatched: (endpointId: string) => dispatched.get(endpointId),
               currentLedgerReservationId: () => null,
             });
-            const completedEntry = (await completer({
-              replayJobId: entry.replayJobId,
-              evaluationJobId: entry.evaluationJobId,
-              replayJob: null,
-              resultBranches: [],
-            })) as Readonly<Record<string, unknown>>;
+            /**
+             * Run 108 addendum-01 A5.3: a forced finalise refusal must show ITS reason in the
+             * disposition the operator surface reads (the replay disposition ledger). At baseline the
+             * refusal detail reached only the metric tag (recordFinaliseRefusal) while the capture's
+             * disposition row stayed "deferred" for ever. The bounded reason is written as a named
+             * terminal disposition row, and the error is rethrown so the sweep's attempt accounting
+             * and the abandoned-entry terminalization keep working exactly as before.
+             */
+            let completedEntry: Readonly<Record<string, unknown>>;
+            try {
+              completedEntry = (await completer({
+                replayJobId: entry.replayJobId,
+                evaluationJobId: entry.evaluationJobId,
+                replayJob: null,
+                resultBranches: [],
+              })) as Readonly<Record<string, unknown>>;
+            } catch (error) {
+              const refusalDetail = finaliseRefusalDispositionDetail(error);
+              if (refusalDetail !== null) {
+                try {
+                  await operations.recordReplayDisposition({
+                    captureRef: entry.requestId,
+                    policySetDigest: buildReplayPolicySet().policySetDigest,
+                    outcome: "refused",
+                    refusalCode: "evaluation_finalise_refused",
+                    detail: refusalDetail,
+                    branches: null,
+                    window: createReplayLedger({
+                      filePath: path.join(
+                        options.runtimeStateRoot,
+                        options.scopeId,
+                        "track-b-replay-ledger.json",
+                      ),
+                      limits: resolveChannelScopedReplayLedgerLimits({
+                        repoRoot: options.repoRoot,
+                        runtimeStateRoot: options.runtimeStateRoot,
+                        scopeId: options.scopeId,
+                        channel,
+                      }),
+                    }).status().window,
+                  });
+                } catch (dispositionFailure) {
+                  // Best-effort: the sweep below still records the attempt and, past the cap,
+                  // terminalizes the replay job carrying the same reason.
+                  console.error(
+                    `[run108] finalise refusal disposition write degraded:${entry.requestId} ${String(
+                      (dispositionFailure as { message?: unknown })?.message ?? dispositionFailure,
+                    ).slice(0, 200)}`,
+                  );
+                }
+              }
+              throw error;
+            }
             // Run 98 addendum 34 S1: this sweep is one of the two paths that finalize a comparison, so
             // it must not own its own copy of the extra-pair pass — the completer it just called does that
             // for every caller. The sweep-local copy that used to live here never ran (the coverage ledger

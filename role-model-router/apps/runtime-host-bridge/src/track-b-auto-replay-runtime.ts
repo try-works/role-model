@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { recordLearnerDerivation } from "./run108-observability.js";
+import { recordLearnerDerivation, withStageSpan } from "./run108-observability.js";
 
 import {
   NoReplayableRequest,
@@ -1174,8 +1174,16 @@ export function startAutoReplayLoop(input: {
     } finally {
       sweeping = false;
     }
-    // Run 108 R7: the learner-sweep derivation count (one funnel for both sweep entry points).
-    recordLearnerDerivation(derivedCandidates, derivedCandidates > 0 ? "derived" : "idle");
+    // Run 108 A5.1: the LEARNER chain's sweep-summary stage - the derivation count is the one
+    // funnel for both sweep entry points and runs under one sync stage span.
+    withStageSpan(
+      "learner.sweep_summary",
+      { derived: String(derivedCandidates), backlog: String(derivationBacklog) },
+      () => {
+        // Run 108 R7: the learner-sweep derivation count (one funnel for both sweep entry points).
+        recordLearnerDerivation(derivedCandidates, derivedCandidates > 0 ? "derived" : "idle");
+      },
+    );
     return {
       expired,
       resumed,
