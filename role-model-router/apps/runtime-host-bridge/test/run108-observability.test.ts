@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -309,5 +311,46 @@ describe("run108 phase-03 effect-grep canonicalization", () => {
     expect(admitted).toHaveLength(1);
     expect(((admitted[0]?.state.count as number | undefined) ?? 0) - admittedBefore).toBe(1);
     expect(replaySeries("false")).toHaveLength(1);
+  });
+
+  /**
+   * F4 (contract hygiene). The module JSDoc declared the learner outcome vocabulary
+   * "derived" | "skipped" | "refused" while recordLearnerDerivation accepts "derived" | "idle" and
+   * the sweep passes "idle" - a documented tag contract the code cannot produce. One bounded
+   * vocabulary, declared once (the vocabulary the code actually needs: the sweep has derived/idle),
+   * shared by the JSDoc, the type and the call site.
+   */
+  test("F4: the learner outcome vocabulary is declared once and matches the code", () => {
+    const moduleSource = readFileSync(
+      new URL("../src/run108-observability.ts", import.meta.url),
+      "utf8",
+    );
+    // declared once, as a type the JSDoc contract and the wiring helper share
+    expect(moduleSource).toContain('export type LearnerDerivationOutcome = "derived" | "idle";');
+    const contract = moduleSource
+      .split("\n")
+      .find((line) => line.includes("Tag contract:") && line.includes("outcome"));
+    // the declared contract is THE vocabulary: no member the helper cannot accept
+    expect(contract).toContain('{ outcome: "derived" | "idle" }');
+    expect(contract).not.toContain("skipped");
+    expect(contract).not.toContain("refused");
+    // the helper takes the declared type, so JSDoc, type and call site cannot drift apart again
+    expect(moduleSource).toContain("outcome: LearnerDerivationOutcome");
+
+    // the sweep that writes the metric passes exactly those members
+    const sweepSource = readFileSync(
+      new URL("../src/track-b-auto-replay-runtime.ts", import.meta.url),
+      "utf8",
+    );
+    expect(sweepSource).toContain(
+      'recordLearnerDerivation(derivedCandidates, derivedCandidates > 0 ? "derived" : "idle")',
+    );
+
+    // and the runtime accepts exactly the declared members
+    recordLearnerDerivation(2, "idle");
+    const idle = (snapshotEntry("role-model.learner.derivations")?.series ?? []).filter(
+      (entry) => entry.attributes.outcome === "idle",
+    );
+    expect(idle).toHaveLength(1);
   });
 });

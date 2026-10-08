@@ -38,7 +38,15 @@ export const evalFinaliseRefusals = Metric.counter("role-model.eval.finalise_ref
   incremental: true,
 });
 
-/** Candidates derived per learner sweep. Tag contract: { outcome: "derived" | "skipped" | "refused" }. */
+/**
+ * Run 108 phase-03 F4 (effect-grep canonicalization): the learner outcome vocabulary, declared
+ * once. The metric JSDoc below had drifted to derived | skipped | refused while the wiring helper
+ * accepted derived | idle and the sweep passes idle - a documented tag contract the code cannot
+ * produce. These are the two outcomes the sweep has: it derived candidates, or it was idle.
+ */
+export type LearnerDerivationOutcome = "derived" | "idle";
+
+/** Candidates derived per learner sweep. Tag contract: { outcome: "derived" | "idle" }. */
 export const learnerDerivations = Metric.counter("role-model.learner.derivations", {
   description: "Candidates examined by the learner sweep per tick.",
   incremental: true,
@@ -125,7 +133,7 @@ export function recordFinaliseRefusal(guard: string, reason: string): void {
   Effect.runSync(Metric.update(Metric.withAttributes(evalFinaliseRefusals, { guard, reason }), 1));
 }
 
-export function recordLearnerDerivation(count: number, outcome: "derived" | "idle"): void {
+export function recordLearnerDerivation(count: number, outcome: LearnerDerivationOutcome): void {
   Effect.runSync(Metric.update(Metric.withAttributes(learnerDerivations, { outcome }), count));
 }
 
