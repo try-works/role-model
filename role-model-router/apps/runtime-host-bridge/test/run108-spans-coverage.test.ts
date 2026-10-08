@@ -18,6 +18,8 @@ import { describe, expect, test } from "vitest";
 const cliSource = (): string => readFileSync(new URL("../src/cli.ts", import.meta.url), "utf8");
 const autoReplaySource = (): string =>
   readFileSync(new URL("../src/track-b-auto-replay-runtime.ts", import.meta.url), "utf8");
+const trackBRuntimeSource = (): string =>
+  readFileSync(new URL("../src/track-b-runtime.ts", import.meta.url), "utf8");
 
 describe("run108 A5.1 span coverage", () => {
   test("the replay admission decision runs under one sync replay.admission span", () => {
@@ -49,6 +51,28 @@ describe("run108 A5.1 span coverage", () => {
     const source = autoReplaySource();
     expect(source).toMatch(
       /import \{ recordLearnerDerivation, withStageSpan \} from "\.\/run108-observability\.js";/,
+    );
+  });
+
+  test("the router decision record runs under one sync router.decision span", () => {
+    const source = trackBRuntimeSource();
+    const stageAt = source.indexOf('withStageSpan("router.decision"');
+    expect(stageAt).toBeGreaterThan(0);
+    // ONE sync wrap around the record itself: the metric call sits inside the wrap and no await
+    // may appear between the span open and the wrapped stage (the helper is sync-only).
+    const recordAt = source.indexOf("recordRouterDecision(", stageAt);
+    expect(recordAt).toBeGreaterThan(stageAt);
+    const block = source.slice(stageAt, recordAt);
+    expect(block).not.toMatch(/\bawait\b/);
+    // The selection attribute names the arm the decision recorded, so a span reader can tell
+    // an applied advisory from a retained baseline without joining the metric.
+    expect(block).toContain("selection:");
+  });
+
+  test("the router runtime imports the span helper from the observability spine", () => {
+    const source = trackBRuntimeSource();
+    expect(source).toMatch(
+      /import \{ recordRouterDecision, withStageSpan \} from "\.\/run108-observability\.js";/,
     );
   });
 

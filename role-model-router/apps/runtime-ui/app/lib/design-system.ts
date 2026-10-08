@@ -478,6 +478,23 @@ const observeQueuesRoute = createRoute({
     "Replay, evaluation and learner queues read straight from the shared store: depth, activity, retries, stalls, and per-job attempts with the named failure that stopped them.",
 });
 
+/**
+ * Run 108 addendum-01 A2 (R3 acceptance + R6b): the materialization degradation receipts page.
+ * The Observe sidebar entry and the shell's page title resolve from this definition, so the page
+ * is reachable and labelled rather than only existing as a route file.
+ */
+const observeStoreDegradationReceiptsRoute = createRoute({
+  id: "observe-store-degradation-receipts",
+  to: "/app/observe/store-degradation-receipts",
+  label: "Degradation receipts",
+  section: "Observe",
+  icon: Terminal,
+  template: "ledger-inspector",
+  title: "Store degradation receipts",
+  description:
+    "Durable materialization degradation receipts from the knowledge store (ladder writes) and the knowledge worker store (development floors), newest first, with each source's honest unavailable state.",
+});
+
 const integrationsDownstreamRoute = createRoute({
   id: "connect-downstream",
   to: "/app/connect/downstream",
@@ -682,6 +699,7 @@ const runtimeRouteDefinitions = [
   observeRoutingRoute,
   observeLogsRoute,
   observeQueuesRoute,
+  observeStoreDegradationReceiptsRoute,
   integrationsDownstreamRoute,
   integrationsUpstreamRoute,
   systemRuntimeRoute,
@@ -761,6 +779,8 @@ export const runtimeNavigationSections: readonly RuntimeNavigationSection[] = [
       observeRequestsRoute,
       observeRoutingRoute,
       observeQueuesRoute,
+      // Run 108 addendum-01 A2: the degradation receipts page sits with the other Observe ledgers.
+      observeStoreDegradationReceiptsRoute,
       observeActivityRoute,
       observeLogsRoute,
     ],

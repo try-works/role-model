@@ -3734,6 +3734,154 @@ function isCliBackendResolver(value: CliBackend | CliBackendResolver): value is 
   return typeof (value as CliBackendResolver).getBackend === "function";
 }
 
+/**
+ * Run 108 addendum-01 A2 (R3 acceptance + R6b) - the readback contract the host route
+ * `GET /api/role-model/operator/store-degradation-receipts` publishes (index.ts, a3fe207a).
+ * Pinned with the private capability in
+ * `.recursive/run/108-remaining-dev-runtime-defects-closeout/evidence/a2-contract-pinned.md`.
+ */
+export interface StoreDegradationReceiptRow {
+  readonly receiptId: string;
+  readonly atMs: number;
+  readonly capability: string;
+  readonly reason: string;
+}
+
+export interface StoreDegradationReceiptSource {
+  readonly available: boolean;
+  readonly reason?: string;
+  readonly receipts: readonly StoreDegradationReceiptRow[];
+}
+
+export interface StoreDegradationReceiptReadback {
+  readonly schemaVersion: "role-model.store-degradation-receipts.v1";
+  readonly store: StoreDegradationReceiptSource;
+  readonly worker: StoreDegradationReceiptSource;
+}
+
+/** The schemaVersion both private extensions answer with (02315a6a, store and worker). */
+const STORE_DEGRADATION_RECEIPTS_SCHEMA = "role-model.store-degradation-receipts.v1";
+
+/**
+ * The operator surface's message cap. The reader's own console reason is bounded to 160 chars
+ * (`ladder materialization` catch block); a readback source that throws for the same reason must
+ * not publish more than the surface that is read beside it.
+ */
+function boundedReadbackReason(error: unknown): string {
+  const message =
+    error instanceof Error
+      ? error.message
+      : String((error as { message?: unknown } | null)?.message ?? error ?? "unknown error");
+  return message.slice(0, 160);
+}
+
+/**
+ * One `knowledge:list-degradations` answer -> one source of the pinned readback. An answer that is
+ * not this contract (wrong schemaVersion, no receipts array, a payload that never arrived) is
+ * UNAVAILABLE, never "no receipts": an empty source and an unreadable source read identically on
+ * the operator surface otherwise, and the whole point of this page is that a failure is not silent.
+ * Rows outside the four pinned fields are dropped rather than projected.
+ */
+export function flattenStoreDegradationReadback(input: {
+  readonly extensionId: "knowledge-store" | "knowledge-worker";
+  readonly answer: unknown;
+}): StoreDegradationReceiptSource {
+  const label = input.extensionId === "knowledge-store" ? "knowledge store" : "knowledge worker";
+  if (input.answer === null || input.answer === undefined) {
+    return { available: false, reason: `${label} returned no degradations answer`, receipts: [] };
+  }
+  if (typeof input.answer !== "object" || Array.isArray(input.answer)) {
+    return { available: false, reason: `${label} returned no degradations answer`, receipts: [] };
+  }
+  const record = input.answer as Record<string, unknown>;
+  if (record.schemaVersion !== STORE_DEGRADATION_RECEIPTS_SCHEMA) {
+    return {
+      available: false,
+      reason: `${label} answered an unknown degradations schema`,
+      receipts: [],
+    };
+  }
+  if (!Array.isArray(record.receipts)) {
+    return { available: false, reason: `${label} answered no receipts array`, receipts: [] };
+  }
+  const receipts: StoreDegradationReceiptRow[] = [];
+  for (const row of record.receipts) {
+    if (!row || typeof row !== "object" || Array.isArray(row)) continue;
+    const candidate = row as Record<string, unknown>;
+    if (
+      typeof candidate.receiptId !== "string" ||
+      !Number.isSafeInteger(candidate.atMs) ||
+      typeof candidate.capability !== "string" ||
+      typeof candidate.reason !== "string"
+    )
+      continue;
+    receipts.push({
+      receiptId: candidate.receiptId,
+      atMs: candidate.atMs as number,
+      capability: candidate.capability,
+      reason: candidate.reason,
+    });
+  }
+  // Newest first: both tables answer ordered, but the host owns the order it publishes.
+  receipts.sort((left, right) => right.atMs - left.atMs);
+  return { available: true, receipts };
+}
+
+/**
+ * Run 108 addendum-01 A2: the live binding for the operator route above. It invokes
+ * `knowledge:list-degradations` on BOTH private extensions - the store owns
+ * `knowledge_store_degradation_receipts` (R3 ladder materialization) and the worker owns the R6b
+ * twin `knowledge_worker_degradation_receipts` (development floors) - through the same envelope and
+ * payload-unwrap helpers every other operator readback uses, and flattens the two answers into the
+ * pinned contract.
+ *
+ * The binding NEVER throws: a source that fails is published as `available: false` with its bounded
+ * reason, because the receipts themselves stay durable in both stores and the surface's job is to
+ * say which store went quiet. The invoke and envelope builder are injected so the flattening is
+ * unit-testable without a live extension host.
+ */
+export async function readStoreDegradationReceiptsFromRuntime(input: {
+  readonly invoke: (
+    extensionId: string,
+    envelope: Record<string, unknown>,
+  ) => Promise<Record<string, unknown>>;
+  readonly envelopeFor: (
+    extensionId: string,
+    capability: string,
+    value: Record<string, unknown>,
+  ) => Record<string, unknown>;
+  readonly stateRoot: string;
+  readonly scopeId: string;
+}): Promise<StoreDegradationReceiptReadback> {
+  const readSource = async (
+    extensionId: "knowledge-store" | "knowledge-worker",
+  ): Promise<StoreDegradationReceiptSource> => {
+    try {
+      const capability = "knowledge:list-degradations";
+      const value: Record<string, unknown> = {};
+      const answer = await input.invoke(
+        extensionId,
+        input.envelopeFor(extensionId, capability, value),
+      );
+      return flattenStoreDegradationReadback({
+        extensionId,
+        answer: decodeExternalizedOperatorReadback({
+          stateRoot: input.stateRoot,
+          scopeId: input.scopeId,
+          value: unwrapCapabilityPayload(answer),
+        }),
+      });
+    } catch (error) {
+      return { available: false, reason: boundedReadbackReason(error), receipts: [] };
+    }
+  };
+  return {
+    schemaVersion: STORE_DEGRADATION_RECEIPTS_SCHEMA,
+    store: await readSource("knowledge-store"),
+    worker: await readSource("knowledge-worker"),
+  };
+}
+
 function createPendingHealthStatus(state: CliBootstrapState): unknown {
   const bootstrapStatus = state.status === "failed" ? "blocked" : state.status;
   return {
@@ -4281,6 +4429,66 @@ export function createCliServerOptions(
     ) as StartBridgeServerOptions["readLearningHistory"],
     // Run 101 R9 (Phase 5 repair): the queue surface the UI calls, forwarded to the sidecar that
     // owns the queue store.
+    /**
+     * Run 108 addendum-01 A2 (R3 acceptance + R6b): the LIVE binding behind the operator UI's store
+     * degradation receipts page. No backend capability answers this - the two receipt tables live in
+     * the private extensions, so the host reads them through the extension runtime (the same
+     * `readExtensionRuntime` resolver accessor `readHealthStatus` above uses) with the same envelope
+     * shape and payload unwrap as every other operator readback, and flattens both sources into the
+     * pinned contract. `readStoreDegradationReceiptsFromRuntime` never throws; a source that fails
+     * is published as unavailable WITH its reason, and a host with no extension runtime at all says
+     * exactly that instead of inventing an empty page.
+     */
+    readStoreDegradationReceipts: (() => {
+      const read = async (
+        query: Readonly<Record<string, string>> = {},
+      ): Promise<StoreDegradationReceiptReadback> => {
+        void query;
+        const resolver = isCliBackendResolver(backendOrResolver) ? backendOrResolver : null;
+        const runtime = resolver?.readExtensionRuntime ? resolver.readExtensionRuntime() : null;
+        // The readback is served by the operator host, so the envelope carries the operator
+        // context's scope - the same binding every other operator readback uses (the extensions
+        // enforce channel/scope/epoch from the envelope itself). The fallback keeps a host whose
+        // options were built without an explicit context from sending an EMPTY scope, which the
+        // capability boundary would refuse as an unbound request.
+        const scope = options.operatorContext?.scope ?? "operator";
+        const envelopeFor = (
+          extensionId: string,
+          capability: string,
+          value: Record<string, unknown>,
+        ) => ({
+          requestId: `operator-store-degradation-receipts:${capability}:${Date.now()}`,
+          sessionId: `operator-store-degradation-receipts:${scope}`,
+          protocolVersion: "1.1.0",
+          channel: options.runtimeChannel ?? options.operatorContext?.channel ?? "development",
+          scope,
+          authorizationEpoch: 1,
+          capability,
+          value,
+          ...(extensionId === "knowledge-store" ? { payload: value } : {}),
+        });
+        const unavailable = (reason: string): StoreDegradationReceiptSource => ({
+          available: false,
+          reason,
+          receipts: [],
+        });
+        if (runtime === null || typeof runtime.invoke !== "function") {
+          return {
+            schemaVersion: "role-model.store-degradation-receipts.v1",
+            store: unavailable("extension runtime is not available"),
+            worker: unavailable("extension runtime is not available"),
+          };
+        }
+        return readStoreDegradationReceiptsFromRuntime({
+          invoke: (extensionId, envelope) =>
+            runtime.invoke!(extensionId, envelope) as Promise<Record<string, unknown>>,
+          envelopeFor,
+          stateRoot: options.runtimeStateRoot ?? "",
+          scopeId: scope,
+        });
+      };
+      return read as StartBridgeServerOptions["readStoreDegradationReceipts"];
+    })(),
     readQueues: bindBackendMethod("readQueues") as StartBridgeServerOptions["readQueues"],
     readQueueJobs: bindBackendMethod("readQueueJobs") as StartBridgeServerOptions["readQueueJobs"],
     readQueueJob: bindBackendMethod("readQueueJob") as StartBridgeServerOptions["readQueueJob"],

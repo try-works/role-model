@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { recordRouterDecision } from "./run108-observability.js";
+import { recordRouterDecision, withStageSpan } from "./run108-observability.js";
 import {
   createHash,
   createHmac,
@@ -8118,7 +8118,16 @@ export function buildLiveRouteAdvisoryObservation(input: {
       : (input.selectionProbability ?? 1);
   // Run 108 R7: every route advisory observation is a decision served by the runtime; the metric
   // carries the selection so baseline_retained vs advisory_applied ratios are observable per scope.
-  recordRouterDecision(applied ? "advisory_applied" : "baseline_retained");
+  //
+  // Run 108 addendum-01 A5.1: the ROUTER chain's stage span. The metric alone cannot say WHICH
+  // decision a slow or missing record belonged to, so the record runs under one sync
+  // `router.decision` span carrying the same selection the counter is tagged with. The wrap is
+  // deliberately sync and one statement wide (withStageSpan is sync-only, and the span must not
+  // straddle the observation build below - a span that swallowed the builder would time the
+  // wrong work).
+  withStageSpan("router.decision", { selection: applied ? "advisory_applied" : "baseline_retained" }, () => {
+    recordRouterDecision(applied ? "advisory_applied" : "baseline_retained");
+  });
   return buildTrackBRouteAdvisoryObservation({
     decisionId: input.decisionId,
     routePackage: input.routePackage,
