@@ -83,7 +83,13 @@ export function withStageSpan<A>(
     span.end(BigInt(Math.floor(Date.now() * 1_000_000)), Exit.succeed(result));
     return result;
   } catch (error) {
-    span.end(BigInt(Math.floor(Date.now() * 1_000_000)), Exit.fail(error));
+    /**
+     * Run 108 phase-03 F1 (effect-grep canonicalization): a JS throw is a DEFECT, not a typed
+     * error. The canonical completion is Exit.die - see effect test/Tracer.test.ts "ends the span
+     * when the callback throws", which asserts deepStrictEqual(exit, Exit.die(defect)). Exit.fail
+     * here reported a typed failure for something that never travelled the typed error channel.
+     */
+    span.end(BigInt(Math.floor(Date.now() * 1_000_000)), Exit.die(error));
     throw error;
   }
 }

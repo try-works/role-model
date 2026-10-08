@@ -1,5 +1,6 @@
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Metric from "effect/Metric";
 import * as Option from "effect/Option";
 import * as Tracer from "effect/Tracer";
@@ -133,5 +134,81 @@ describe("run108 R7 the observability spine", () => {
     expect(delta("role-model.replay.admissions")).toBe(1);
     expect(delta("role-model.learner.derivations")).toBe(3);
     expect(delta("role-model.eval.finalise_refusals")).toBe(1);
+  });
+});
+
+/**
+ * Run 108 phase-03 (effect-grep canonicalization F1-F4). One test per defect the audit found in
+ * run108-observability.ts, each pinned to the canonical corpus (Effect-TS/effect @460272d).
+ */
+
+/** A Tracer that records every span it creates and the Exit each span ended with. */
+const recordingTracer = (): {
+  readonly tracer: Tracer.Tracer;
+  readonly spans: Array<{ name: string; attributes: Record<string, unknown> }>;
+  readonly exits: Array<unknown>;
+} => {
+  const spans: Array<{ name: string; attributes: Record<string, unknown> }> = [];
+  const exits: Array<unknown> = [];
+  const tracer = Tracer.make({
+    span(options) {
+      const attributes: Record<string, unknown> = {};
+      spans.push({ name: options.name, attributes });
+      return {
+        _tag: "Span",
+        name: options.name,
+        spanId: "span-1",
+        traceId: "trace-1",
+        parent: Option.none(),
+        annotations: Context.empty(),
+        status: { _tag: "Started", startTime: 0n },
+        attributes: new Map(),
+        links: [],
+        sampled: true,
+        kind: "internal" as Tracer.SpanKind,
+        end(_endTime: bigint, exit: unknown) {
+          exits.push(exit);
+        },
+        attribute(key: string, value: unknown) {
+          attributes[key] = value;
+        },
+        event() {},
+        addLinks() {},
+      } as unknown as Tracer.Span;
+    },
+  });
+  return { tracer, spans, exits };
+};
+
+describe("run108 phase-03 effect-grep canonicalization", () => {
+  /**
+   * F1 (correctness). A JavaScript throw out of the wrapped callback is a DEFECT, not a typed
+   * error: the canonical span completion for it is Exit.die (effect test/Tracer.test.ts, "ends the
+   * span when the callback throws", asserts deepStrictEqual(exit, Exit.die(defect))). The baseline
+   * completed the span with Exit.fail(error), reporting a typed failure for something that never
+   * travelled the typed error channel.
+   */
+  test("F1: a throwing stage ends its span with a Die exit, not a Fail", () => {
+    const { tracer, exits } = recordingTracer();
+    const defect = new Error("boom");
+    expect(() =>
+      withStageSpan(
+        "router.decision",
+        { kind: "live" },
+        () => {
+          throw defect;
+        },
+        { tracer },
+      ),
+    ).toThrow(defect);
+    expect(exits).toHaveLength(1);
+    const ended = exits[0] as {
+      readonly _tag: string;
+      readonly cause?: { readonly reasons: ReadonlyArray<{ readonly _tag: string }> };
+    };
+    expect(ended._tag).toBe("Failure");
+    expect(ended.cause?.reasons.map((reason) => reason._tag)).toEqual(["Die"]);
+    // The canonical statement of the same fact, mirroring the upstream assertion.
+    expect(ended).toEqual(Exit.die(defect));
   });
 });
