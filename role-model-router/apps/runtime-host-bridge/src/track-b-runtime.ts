@@ -1,4 +1,7 @@
 import { spawn } from "node:child_process";
+import * as Effect from "effect/Effect";
+import * as Metric from "effect/Metric";
+import { routerDecisions } from "./run108-observability.js";
 import {
   createHash,
   createHmac,
@@ -8103,6 +8106,16 @@ export function buildLiveRouteAdvisoryObservation(input: {
     selectionMode === "replay_counterfactual"
       ? input.selectionProbability
       : (input.selectionProbability ?? 1);
+  // Run 108 R7: every route advisory observation is a decision served by the runtime; the metric
+  // carries the selection so baseline_retained vs advisory_applied ratios are observable per scope.
+  Effect.runSync(
+    Metric.update(
+      Metric.withAttributes(routerDecisions, {
+        selection: applied ? "advisory_applied" : "baseline_retained",
+      }),
+      1,
+    ),
+  );
   return buildTrackBRouteAdvisoryObservation({
     decisionId: input.decisionId,
     routePackage: input.routePackage,

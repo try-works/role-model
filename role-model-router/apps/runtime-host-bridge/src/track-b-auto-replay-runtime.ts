@@ -1,4 +1,6 @@
 import { createHash } from "node:crypto";
+import * as Metric from "effect/Metric";
+import { learnerDerivations } from "./run108-observability.js";
 
 import {
   NoReplayableRequest,
@@ -1173,6 +1175,15 @@ export function startAutoReplayLoop(input: {
     } finally {
       sweeping = false;
     }
+    // Run 108 R7: the learner-sweep derivation count (one funnel for both sweep entry points).
+    Effect.runSync(
+      Metric.update(
+        Metric.withAttributes(learnerDerivations, {
+          outcome: derivedCandidates > 0 ? "derived" : "idle",
+        }),
+        derivedCandidates,
+      ),
+    );
     return {
       expired,
       resumed,
