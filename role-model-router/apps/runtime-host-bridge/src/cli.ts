@@ -8824,7 +8824,7 @@ export async function main(): Promise<void> {
               judgeResolved: Boolean(evalJudgeEndpointId),
             });
             // Run 108 R7: the replay admission counter (module-scope metric, registry-scoped).
-            recordReplayAdmission("replay", decided.admitted ? 1 : 0);
+            recordReplayAdmission("replay", decided.admitted);
             return decided;
           });
           if (!admission.admitted) {

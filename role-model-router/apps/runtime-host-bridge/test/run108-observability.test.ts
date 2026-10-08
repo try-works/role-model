@@ -113,7 +113,7 @@ describe("run108 R7 the observability spine", () => {
     // call sites were inline (no pinned contract) and the metrics were write-only.
     const before = collectObservabilitySnapshot();
     recordRouterDecision("advisory_applied");
-    recordReplayAdmission("replay", 1);
+    recordReplayAdmission("replay", true);
     recordLearnerDerivation(3, "derived");
     recordFinaliseRefusal("finalise", "declared_pair");
     const snapshot = collectObservabilitySnapshot();
@@ -277,5 +277,37 @@ describe("run108 phase-03 effect-grep canonicalization", () => {
     expect(histogramState.sum).toBe(25);
     expect(histogramState.min).toBe(25);
     expect(histogramState.max).toBe(25);
+  });
+
+  /**
+   * F3 (metric semantics). recordReplayAdmission("replay", admitted ? 1 : 0) made refusals
+   * INVISIBLE: a refusal added +0, so the counter could not tell "no replay attempt" from "every
+   * replay attempt refused". The canonical tagging updates by 1 on every attempt and puts the
+   * outcome in the tag - { pass: "replay", admitted: "true" | "false" } - so successes and errors
+   * are two series of one counter.
+   */
+  test("F3: a refused admission counts 1 and tags admitted=false", () => {
+    const replaySeries = (admitted: string) =>
+      (snapshotEntry("role-model.replay.admissions")?.series ?? []).filter(
+        (entry) => entry.attributes.pass === "replay" && entry.attributes.admitted === admitted,
+      );
+
+    const before = snapshotEntry("role-model.replay.admissions")?.count ?? 0;
+    recordReplayAdmission("replay", false);
+    const after = snapshotEntry("role-model.replay.admissions");
+    // The refusal moves the counter: at baseline this delta was 0 and the refusal vanished.
+    expect((after?.count ?? 0) - before).toBe(1);
+    const refused = replaySeries("false");
+    expect(refused).toHaveLength(1);
+    expect(refused[0]?.attributes).toEqual({ pass: "replay", admitted: "false" });
+    expect(refused[0]?.state).toEqual({ kind: "counter", count: 1, incremental: true });
+
+    // An admitted pass is its own series under the same metric id.
+    const admittedBefore = (replaySeries("true")[0]?.state.count as number | undefined) ?? 0;
+    recordReplayAdmission("replay", true);
+    const admitted = replaySeries("true");
+    expect(admitted).toHaveLength(1);
+    expect(((admitted[0]?.state.count as number | undefined) ?? 0) - admittedBefore).toBe(1);
+    expect(replaySeries("false")).toHaveLength(1);
   });
 });

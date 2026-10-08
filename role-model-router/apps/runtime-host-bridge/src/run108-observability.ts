@@ -23,7 +23,10 @@ export const routerDecisions = Metric.counter("role-model.router.decisions", {
   incremental: true,
 });
 
-/** Captures admitted for replay. Tag contract: { pass: "replay" }. */
+/**
+ * Replay admission attempts. Tag contract: { pass: "replay", admitted: "true" | "false" } - every
+ * attempt counts once and the outcome rides the tag, so refusals are visible as their own series.
+ */
 export const replayAdmissions = Metric.counter("role-model.replay.admissions", {
   description: "Captures admitted for replay.",
   incremental: true,
@@ -103,8 +106,19 @@ export function recordRouterDecision(selection: "advisory_applied" | "baseline_r
   Effect.runSync(Metric.update(Metric.withAttributes(routerDecisions, { selection }), 1));
 }
 
-export function recordReplayAdmission(pass: "replay", admitted: number): void {
-  Effect.runSync(Metric.update(Metric.withAttributes(replayAdmissions, { pass }), admitted));
+/**
+ * Run 108 phase-03 F3 (effect-grep canonicalization): every attempt updates by 1 and the outcome
+ * travels in the tag. The baseline updated by `admitted ? 1 : 0`, so a refusal added +0 and was
+ * indistinguishable from no attempt at all - the counter could not answer "how often was replay
+ * refused".
+ */
+export function recordReplayAdmission(pass: "replay", admitted: boolean): void {
+  Effect.runSync(
+    Metric.update(
+      Metric.withAttributes(replayAdmissions, { pass, admitted: admitted ? "true" : "false" }),
+      1,
+    ),
+  );
 }
 
 export function recordFinaliseRefusal(guard: string, reason: string): void {

@@ -89,7 +89,7 @@ describe("run108 addendum-01 A5.2 observability snapshot readback", () => {
     try {
       const before = collectObservabilitySnapshot();
       recordRouterDecision("baseline_retained");
-      recordReplayAdmission("replay", 1);
+      recordReplayAdmission("replay", true);
       recordLearnerDerivation(3, "derived");
       recordFinaliseRefusal("finalise", "declared_pair");
 
