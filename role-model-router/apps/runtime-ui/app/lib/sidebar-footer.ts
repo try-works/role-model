@@ -160,7 +160,7 @@ export function buildSidebarModels(input: {
   for (const row of rows) {
     const existing = byId.get(row.id);
     if (existing) {
-      existing.requestCount += row.requestCount;
+      byId.set(row.id, { ...row, requestCount: existing.requestCount + row.requestCount });
       continue;
     }
     byId.set(row.id, { ...row });
