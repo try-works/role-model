@@ -13,8 +13,8 @@ import { describe, expect, test } from "vitest";
 import type { EndpointRegistryResult } from "@role-model-router/endpoint-registry";
 import { startBridgeServer } from "../src/index.js";
 import {
-  collectObservabilitySnapshot,
   type ObservabilityMetricReadback,
+  collectObservabilitySnapshot,
   recordFinaliseRefusal,
   recordLearnerDerivation,
   recordReplayAdmission,
@@ -113,8 +113,14 @@ describe("run108 addendum-01 A5.2 observability snapshot readback", () => {
   test("keeps the per-attribute series: two refusals arrive as two tagged series", async () => {
     const server = await startServer();
     try {
-      recordFinaliseRefusal("finalise", "state=declined reason=insufficient refusal=judge_unresolved");
-      recordFinaliseRefusal("finalise", "state=incomplete reason=disagreement refusal=arms_unresolved");
+      recordFinaliseRefusal(
+        "finalise",
+        "state=declined reason=insufficient refusal=judge_unresolved",
+      );
+      recordFinaliseRefusal(
+        "finalise",
+        "state=incomplete reason=disagreement refusal=arms_unresolved",
+      );
 
       const body = await readSnapshot(server);
       const refusals = body.metrics["role-model.eval.finalise_refusals"];
@@ -124,7 +130,9 @@ describe("run108 addendum-01 A5.2 observability snapshot readback", () => {
       expect(reasons).toContain("state=declined reason=insufficient refusal=judge_unresolved");
       expect(reasons).toContain("state=incomplete reason=disagreement refusal=arms_unresolved");
       const insufficient = (refusals?.series ?? []).find(
-        (series) => series.attributes.reason === "state=declined reason=insufficient refusal=judge_unresolved",
+        (series) =>
+          series.attributes.reason ===
+          "state=declined reason=insufficient refusal=judge_unresolved",
       );
       expect(insufficient?.state).toEqual({ kind: "counter", count: 1, incremental: true });
     } finally {

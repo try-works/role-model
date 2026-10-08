@@ -238,8 +238,14 @@ describe("run108 phase-03 effect-grep canonicalization", () => {
    * the counter | gauge | histogram union.
    */
   test("F2: two different guard/reason refusals read back as TWO series, not one total", () => {
-    recordFinaliseRefusal("finalise", "state=declined reason=insufficient refusal=judge_unresolved");
-    recordFinaliseRefusal("finalise", "state=incomplete reason=disagreement refusal=arms_unresolved");
+    recordFinaliseRefusal(
+      "finalise",
+      "state=declined reason=insufficient refusal=judge_unresolved",
+    );
+    recordFinaliseRefusal(
+      "finalise",
+      "state=incomplete reason=disagreement refusal=arms_unresolved",
+    );
     const refusals = snapshotEntry("role-model.eval.finalise_refusals");
     const refused = (reason: string) =>
       (refusals?.series ?? []).filter((entry) => entry.attributes.reason === reason);

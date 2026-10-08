@@ -196,8 +196,8 @@ import {
 } from "./request-capability-inference.js";
 import { resolveAdvisoryCohortPercent } from "./route-advisory-source.js";
 import {
-  collectObservabilitySnapshot,
   type ObservabilityMetricReadback,
+  collectObservabilitySnapshot,
 } from "./run108-observability.js";
 import { readPackagedRuntimeProfile, resolveRuntimeChannelProfile } from "./runtime-channel.js";
 import { type RuntimeVersionInfoRecord, resolveRuntimeVersionInfo } from "./runtime-version.js";

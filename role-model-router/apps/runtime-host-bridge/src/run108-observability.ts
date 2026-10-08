@@ -245,7 +245,10 @@ export function collectObservabilitySnapshot(): Record<string, ObservabilityMetr
     attributes?: unknown;
     state?: unknown;
   }>;
-  const grouped = new Map<string, { type: ObservabilityMetricType; series: ObservabilityMetricSeries[] }>();
+  const grouped = new Map<
+    string,
+    { type: ObservabilityMetricType; series: ObservabilityMetricSeries[] }
+  >();
   for (const snap of snapshots) {
     const series: ObservabilityMetricSeries = {
       id: snap.id,
