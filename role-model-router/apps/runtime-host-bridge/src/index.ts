@@ -195,7 +195,10 @@ import {
   inferResponsesCapabilityRequirements,
 } from "./request-capability-inference.js";
 import { resolveAdvisoryCohortPercent } from "./route-advisory-source.js";
-import { collectObservabilitySnapshot } from "./run108-observability.js";
+import {
+  collectObservabilitySnapshot,
+  type ObservabilityMetricReadback,
+} from "./run108-observability.js";
 import { readPackagedRuntimeProfile, resolveRuntimeChannelProfile } from "./runtime-channel.js";
 import { type RuntimeVersionInfoRecord, resolveRuntimeVersionInfo } from "./runtime-version.js";
 import {
@@ -20394,14 +20397,15 @@ export interface StoreDegradationReceiptReadback {
 /**
  * Run 108 addendum-01 A5.2 (R7 readback consumers; 03.5 review MJ-1): the canonical host readback
  * contract for the observability spine. `metrics` is the live registry projection from
- * run108-observability.ts - metric name -> { count, incremental } - with the per-tag entries the
- * wiring helpers write aggregated under their metric name.
+ * run108-observability.ts - metric name -> { type, count, incremental, series } - where `series`
+ * keeps one (id, attributes, state) entry per tag set the wiring helpers wrote (phase-03 F2: the
+ * guard/reason breakdown is the claim, so it is never aggregated away).
  */
 export const OBSERVABILITY_SNAPSHOT_SCHEMA_VERSION = "role-model.observability-snapshot.v1";
 
 export interface ObservabilitySnapshotReadback {
   readonly schemaVersion: typeof OBSERVABILITY_SNAPSHOT_SCHEMA_VERSION;
-  readonly metrics: Record<string, { readonly count: number; readonly incremental: boolean }>;
+  readonly metrics: Record<string, ObservabilityMetricReadback>;
 }
 
 export async function createRuntimeBridgeBackend(

@@ -14,6 +14,7 @@ import type { EndpointRegistryResult } from "@role-model-router/endpoint-registr
 import { startBridgeServer } from "../src/index.js";
 import {
   collectObservabilitySnapshot,
+  type ObservabilityMetricReadback,
   recordFinaliseRefusal,
   recordLearnerDerivation,
   recordReplayAdmission,
@@ -43,7 +44,7 @@ const authHeaders = {
 
 interface SnapshotPayload {
   readonly schemaVersion: string;
-  readonly metrics: Record<string, { readonly count: number; readonly incremental: boolean }>;
+  readonly metrics: Record<string, ObservabilityMetricReadback>;
 }
 
 const startServer = () =>
@@ -99,6 +100,33 @@ describe("run108 addendum-01 A5.2 observability snapshot readback", () => {
       expect(delta("role-model.replay.admissions")).toBe(1);
       expect(delta("role-model.learner.derivations")).toBe(3);
       expect(delta("role-model.eval.finalise_refusals")).toBe(1);
+    } finally {
+      await server.close();
+    }
+  });
+
+  /**
+   * Run 108 phase-03 F2: the readback keeps the per-series breakdown, so the RC-1 question ("which
+   * guard refused") is answerable from the route payload. Two refusals under the same metric id
+   * arrive as TWO series with their own tags, never as one collapsed total.
+   */
+  test("keeps the per-attribute series: two refusals arrive as two tagged series", async () => {
+    const server = await startServer();
+    try {
+      recordFinaliseRefusal("finalise", "state=declined reason=insufficient refusal=judge_unresolved");
+      recordFinaliseRefusal("finalise", "state=incomplete reason=disagreement refusal=arms_unresolved");
+
+      const body = await readSnapshot(server);
+      const refusals = body.metrics["role-model.eval.finalise_refusals"];
+      const reasons = (refusals?.series ?? [])
+        .filter((series) => series.attributes.guard === "finalise")
+        .map((series) => series.attributes.reason);
+      expect(reasons).toContain("state=declined reason=insufficient refusal=judge_unresolved");
+      expect(reasons).toContain("state=incomplete reason=disagreement refusal=arms_unresolved");
+      const insufficient = (refusals?.series ?? []).find(
+        (series) => series.attributes.reason === "state=declined reason=insufficient refusal=judge_unresolved",
+      );
+      expect(insufficient?.state).toEqual({ kind: "counter", count: 1, incremental: true });
     } finally {
       await server.close();
     }

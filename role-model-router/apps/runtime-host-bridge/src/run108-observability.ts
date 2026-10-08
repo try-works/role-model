@@ -115,25 +115,140 @@ export function recordLearnerDerivation(count: number, outcome: "derived" | "idl
   Effect.runSync(Metric.update(Metric.withAttributes(learnerDerivations, { outcome }), count));
 }
 
+/**
+ * Run 108 phase-03 F2 (effect-grep canonicalization): the readback keeps the registry's own
+ * granularity. Metric.snapshot hands out one entry per (metric, attributes) pair, each with its own
+ * state (Effect-TS/effect @460272d, Metric.ts SnapshotProto); aggregating by metric id alone
+ * DISCARDED the attributes and collapsed the guard/reason tag contract into a single total - the
+ * exact RC-1 gap the refusal counter exists to close ("which guard refused" never reached the
+ * disposition). The claim the counter carries is the breakdown, not the sum.
+ */
+
+/** The metric families the registry can hand back (Effect Metric.Type). */
+export type ObservabilityMetricType = "Counter" | "Gauge" | "Histogram" | "Frequency" | "Summary";
+
+/**
+ * The state of one series, discriminated by the metric family that produced it. The counter-only
+ * cast this replaces silently zeroed every gauge and histogram, so each family reads back through
+ * its own state shape.
+ */
+export type ObservabilityMetricState =
+  | { readonly kind: "counter"; readonly count: number; readonly incremental: boolean }
+  | { readonly kind: "gauge"; readonly value: number }
+  | {
+      readonly kind: "histogram";
+      readonly buckets: ReadonlyArray<readonly [number, number]>;
+      readonly count: number;
+      readonly sum: number;
+      readonly min: number;
+      readonly max: number;
+    };
+
+/** One (id, attributes, state) series - the registry's granularity, never collapsed. */
+export interface ObservabilityMetricSeries {
+  readonly id: string;
+  readonly attributes: Readonly<Record<string, string>>;
+  readonly state: ObservabilityMetricState;
+}
+
+/** One metric id and every series written under it. */
+export interface ObservabilityMetricReadback {
+  /** The family the id was declared as (one id is one family). */
+  readonly type: ObservabilityMetricType;
+  /**
+   * Convenience total: counters sum their counts, histograms their observation counts and gauges
+   * their values across the series. The series breakdown is the authoritative reading.
+   */
+  readonly count: number;
+  /** The counter contract: true only while every series is an incremental counter. */
+  readonly incremental: boolean;
+  readonly series: ReadonlyArray<ObservabilityMetricSeries>;
+}
+
+const asNumber = (value: unknown): number =>
+  typeof value === "number" && Number.isFinite(value) ? value : 0;
+
+const asBuckets = (value: unknown): ReadonlyArray<readonly [number, number]> =>
+  Array.isArray(value)
+    ? value.filter(
+        (bucket): bucket is [number, number] =>
+          Array.isArray(bucket) &&
+          bucket.length === 2 &&
+          typeof bucket[0] === "number" &&
+          typeof bucket[1] === "number",
+      )
+    : [];
+
+const seriesAttributes = (attributes: unknown): Readonly<Record<string, string>> => {
+  const out: Record<string, string> = {};
+  if (attributes !== null && typeof attributes === "object" && !Array.isArray(attributes)) {
+    for (const [key, value] of Object.entries(attributes)) {
+      out[key] = String(value);
+    }
+  }
+  return out;
+};
+
+const toSeriesState = (type: string, state: Record<string, unknown>): ObservabilityMetricState => {
+  if (type === "Gauge") {
+    return { kind: "gauge", value: asNumber(state.value) };
+  }
+  if (type === "Histogram") {
+    return {
+      kind: "histogram",
+      buckets: asBuckets(state.buckets),
+      count: asNumber(state.count),
+      sum: asNumber(state.sum),
+      min: asNumber(state.min),
+      max: asNumber(state.max),
+    };
+  }
+  // The spine declares counters (the four module-scope families above); any other family reads
+  // back as the counter shape its state shares rather than being folded into a zero.
+  return { kind: "counter", count: asNumber(state.count), incremental: state.incremental === true };
+};
+
+const seriesScalar = (state: ObservabilityMetricState): number =>
+  state.kind === "counter" ? state.count : state.kind === "gauge" ? state.value : state.count;
+
+/** A stable key for one attribute set, so the readback order does not depend on write order. */
+const attributeKey = (attributes: Readonly<Record<string, string>>): string =>
+  JSON.stringify(Object.entries(attributes).sort(([left], [right]) => (left < right ? -1 : 1)));
+
 /** 03.5 review M4: the metrics were write-only - this is the readback the UI/status surfaces. */
-export function collectObservabilitySnapshot(): Record<
-  string,
-  { count: number; incremental: boolean }
-> {
-  // Metric.snapshot iterates the registry (attributed entries included); aggregate by the metric id
-  // (the name) so the tag-carrying entries the wiring helpers write all count.
+export function collectObservabilitySnapshot(): Record<string, ObservabilityMetricReadback> {
   const snapshots = Effect.runSync(Metric.snapshot) as ReadonlyArray<{
     id: string;
+    type: string;
     attributes?: unknown;
-    state: { count: number; incremental?: boolean };
+    state?: unknown;
   }>;
-  const out: Record<string, { count: number; incremental: boolean }> = {};
+  const grouped = new Map<string, { type: ObservabilityMetricType; series: ObservabilityMetricSeries[] }>();
   for (const snap of snapshots) {
-    const count = typeof snap.state?.count === "number" ? snap.state.count : 0;
-    const existing = out[snap.id];
-    out[snap.id] = {
-      count: (existing?.count ?? 0) + count,
-      incremental: snap.state?.incremental === true || existing?.incremental === true,
+    const series: ObservabilityMetricSeries = {
+      id: snap.id,
+      attributes: seriesAttributes(snap.attributes),
+      state: toSeriesState(snap.type, (snap.state ?? {}) as Record<string, unknown>),
+    };
+    const group = grouped.get(snap.id);
+    if (group === undefined) {
+      grouped.set(snap.id, { type: snap.type as ObservabilityMetricType, series: [series] });
+      continue;
+    }
+    group.series.push(series);
+  }
+  const out: Record<string, ObservabilityMetricReadback> = {};
+  for (const [id, group] of grouped) {
+    const series = [...group.series].sort((left, right) =>
+      attributeKey(left.attributes).localeCompare(attributeKey(right.attributes)),
+    );
+    out[id] = {
+      type: group.type,
+      count: series.reduce((total, entry) => total + seriesScalar(entry.state), 0),
+      incremental:
+        series.length > 0 &&
+        series.every((entry) => entry.state.kind === "counter" && entry.state.incremental),
+      series,
     };
   }
   return out;

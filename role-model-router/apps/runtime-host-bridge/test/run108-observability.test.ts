@@ -180,6 +180,22 @@ const recordingTracer = (): {
   return { tracer, spans, exits };
 };
 
+/** The F2 readback shape under test: per-series (id, attributes, state) entries. */
+interface SnapshotSeries {
+  readonly id: string;
+  readonly attributes: Record<string, string>;
+  readonly state: Record<string, unknown>;
+}
+
+interface SnapshotEntry {
+  readonly count?: number;
+  readonly incremental?: boolean;
+  readonly series?: ReadonlyArray<SnapshotSeries>;
+}
+
+const snapshotEntry = (name: string): SnapshotEntry | undefined =>
+  (collectObservabilitySnapshot() as unknown as Record<string, SnapshotEntry | undefined>)[name];
+
 describe("run108 phase-03 effect-grep canonicalization", () => {
   /**
    * F1 (correctness). A JavaScript throw out of the wrapped callback is a DEFECT, not a typed
@@ -210,5 +226,56 @@ describe("run108 phase-03 effect-grep canonicalization", () => {
     expect(ended.cause?.reasons.map((reason) => reason._tag)).toEqual(["Die"]);
     // The canonical statement of the same fact, mirroring the upstream assertion.
     expect(ended).toEqual(Exit.die(defect));
+  });
+
+  /**
+   * F2 (readback value). The snapshot aggregated by metric id and DISCARDED the attributes, so the
+   * tag contract the refusal counter exists for - WHICH guard refused, the RC-1 gap - collapsed
+   * into one total. Canonical snapshot consumers keep per-series (id, attributes, state). The
+   * counter-only state cast also zeroed every gauge and histogram, so the state typing widens to
+   * the counter | gauge | histogram union.
+   */
+  test("F2: two different guard/reason refusals read back as TWO series, not one total", () => {
+    recordFinaliseRefusal("finalise", "state=declined reason=insufficient refusal=judge_unresolved");
+    recordFinaliseRefusal("finalise", "state=incomplete reason=disagreement refusal=arms_unresolved");
+    const refusals = snapshotEntry("role-model.eval.finalise_refusals");
+    const refused = (reason: string) =>
+      (refusals?.series ?? []).filter((entry) => entry.attributes.reason === reason);
+    const insufficient = refused("state=declined reason=insufficient refusal=judge_unresolved");
+    expect(insufficient).toHaveLength(1);
+    expect(insufficient[0]?.id).toBe("role-model.eval.finalise_refusals");
+    expect(insufficient[0]?.attributes).toEqual({
+      guard: "finalise",
+      reason: "state=declined reason=insufficient refusal=judge_unresolved",
+    });
+    expect(insufficient[0]?.state).toEqual({ kind: "counter", count: 1, incremental: true });
+    // The other refusal is a DIFFERENT series: the readback keeps the tag breakdown instead of
+    // folding both refusals into the one id total.
+    expect(refused("state=incomplete reason=disagreement refusal=arms_unresolved")).toHaveLength(1);
+    expect(refusals?.count).toBeGreaterThanOrEqual(2);
+  });
+
+  test("F2: a gauge and a histogram read back through their own state, not a zeroed counter", () => {
+    const gauge = Metric.gauge("role-model.test.f2_gauge", { description: "F2 gauge readback." });
+    const histogram = Metric.histogram("role-model.test.f2_histogram", {
+      description: "F2 histogram readback.",
+      boundaries: Metric.linearBoundaries({ start: 0, width: 10, count: 4 }),
+    });
+    Effect.runSync(Metric.update(gauge as never, 7));
+    Effect.runSync(Metric.update(histogram as never, 25));
+
+    const gaugeSeries = snapshotEntry("role-model.test.f2_gauge")?.series ?? [];
+    expect(gaugeSeries).toHaveLength(1);
+    expect(gaugeSeries[0]?.state).toEqual({ kind: "gauge", value: 7 });
+
+    const histogramSeries = snapshotEntry("role-model.test.f2_histogram")?.series ?? [];
+    expect(histogramSeries).toHaveLength(1);
+    const histogramState = histogramSeries[0]?.state ?? {};
+    expect(histogramState.kind).toBe("histogram");
+    expect(Array.isArray(histogramState.buckets)).toBe(true);
+    expect(histogramState.count).toBe(1);
+    expect(histogramState.sum).toBe(25);
+    expect(histogramState.min).toBe(25);
+    expect(histogramState.max).toBe(25);
   });
 });
