@@ -1,4 +1,9 @@
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Metric from "effect/Metric";
+import * as Option from "effect/Option";
+import * as Tracer from "effect/Tracer";
 
 /**
  * Run 108 R7 - the observability spine, phase 1 (metrics).
@@ -35,3 +40,50 @@ export const learnerDerivations = Metric.counter("role-model.learner.derivations
   description: "Candidates examined by the learner sweep per tick.",
   incremental: true,
 });
+
+/**
+ * Run 108 R7 span phase, per the effect-grep canonical convention (memory pro-0081, alchemy-effect
+ * @ef7d3077): spans are created through the active Tracer (Tracer.make), scalar attributes are
+ * forwarded, and completion is recorded as effect.exit.
+ */
+export const withStageSpanEffect = <A, E, R>(
+  stage: string,
+  attributes: Readonly<Record<string, string>>,
+  self: Effect.Effect<A, E, R>,
+): Effect.Effect<A, E, Exclude<R, Tracer.ParentSpan>> =>
+  Effect.withSpan(self, stage, { attributes });
+
+/**
+ * Sync wrapper for the plain-TS host: run a stage under a named span. The tracer is injectable so
+ * tests can record span lifecycle; by default it uses the runtime's active tracer.
+ */
+export function withStageSpan<A>(
+  stage: string,
+  attributes: Readonly<Record<string, string>>,
+  run: () => A,
+  options: { readonly tracer?: Tracer.Tracer } = {},
+): A {
+  const tracer = options.tracer ?? Effect.runSync(Effect.service(Tracer.Tracer));
+  const startTime = BigInt(Math.floor(Date.now() * 1_000_000));
+  const span = tracer.span({
+    name: stage,
+    parent: Option.none(),
+    annotations: Context.empty(),
+    links: [],
+    startTime,
+    kind: "internal",
+    root: true,
+    sampled: true,
+  });
+  for (const [key, value] of Object.entries(attributes)) {
+    span.attribute(key, value);
+  }
+  try {
+    const result = run();
+    span.end(BigInt(Math.floor(Date.now() * 1_000_000)), Exit.succeed(result));
+    return result;
+  } catch (error) {
+    span.end(BigInt(Math.floor(Date.now() * 1_000_000)), Exit.fail(error));
+    throw error;
+  }
+}
