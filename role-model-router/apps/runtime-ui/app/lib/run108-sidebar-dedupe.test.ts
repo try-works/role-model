@@ -44,8 +44,20 @@ describe("run108 R8 the sidebar renders each model exactly once", () => {
       }),
     ];
     const telemetryRows: RuntimeTelemetryComparisonRow[] = [
-      { endpointId: "ep-flash-high-1", modelId: "deepseek/deepseek-flash", sourceType: "remote", requestCount: 7, successCount: 7 },
-      { endpointId: "ep-flash-high-2", modelId: "deepseek/deepseek-flash", sourceType: "remote", requestCount: 5, successCount: 5 },
+      {
+        endpointId: "ep-flash-high-1",
+        modelId: "deepseek/deepseek-flash",
+        sourceType: "remote",
+        requestCount: 7,
+        successCount: 7,
+      },
+      {
+        endpointId: "ep-flash-high-2",
+        modelId: "deepseek/deepseek-flash",
+        sourceType: "remote",
+        requestCount: 5,
+        successCount: 5,
+      },
     ] as unknown as RuntimeTelemetryComparisonRow[];
 
     const rows = buildSidebarModels({ models, endpoints, telemetryRows });

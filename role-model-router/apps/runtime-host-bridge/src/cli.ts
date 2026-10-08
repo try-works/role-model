@@ -509,6 +509,11 @@ function resolveChannelScopedReplayLedgerLimits(input: {
 }
 import { createFinalizedGroupListingCache } from "./finalized-group-listing-cache.js";
 import {
+  recordFinaliseRefusal,
+  recordReplayAdmission,
+  withStageSpan,
+} from "./run108-observability.js";
+import {
   buildExperiencePackCandidate,
   buildRouteLearningValidationReceipt,
   emitRoutePackageAttributionForPromotion,
@@ -540,6 +545,7 @@ import {
   TRACK_B_CANONICAL_EXTENSION_IDS,
   type TrackBExtensionClosure,
   assertProductionExtensionRuntimeReady,
+  assessSmallPoolJudgePlacement,
   buildReplayDispatchMessages,
   classifyReplayTerminalizationFailure,
   createOwnedTrackBSidecarSpec,
@@ -564,6 +570,7 @@ import {
   requireReplayRouterDecisionId,
   resolveDurableEvaluationAuthority,
   resolveManagedArtifactKeyFiles,
+  resolveReplayCandidatePool,
   runSupervisedReplay,
   runTrackBPostObservation,
   runTrackBPostObservationWithContribution,
@@ -573,14 +580,7 @@ import {
   validateRecoveredReplayCapture,
   validateRun88ProviderResponseObservation,
   verifyTrackBExtensionClosureAfterRestart,
-  assessSmallPoolJudgePlacement,
-  resolveReplayCandidatePool,
 } from "./track-b-runtime.js";
-import {
-  recordFinaliseRefusal,
-  recordReplayAdmission,
-  withStageSpan,
-} from "./run108-observability.js";
 import {
   createRouterPairwiseJudge,
   resolveJudgeEndpointFromController,
@@ -8408,7 +8408,9 @@ export async function main(): Promise<void> {
           // selectTrackBCounterfactualArms AFTER the served-route and judge exclusions; a pool-level slice
           // double-counts those exclusions and made 5 endpoints behave like 3 (measured live: every job
           // 1-arm / 2-case). The bound itself travels on the work item as maxCounterfactualArms below.
-          configuredCandidateEndpointIds: resolveReplayCandidatePool(configuredEndpointIdsRef.current),
+          configuredCandidateEndpointIds: resolveReplayCandidatePool(
+            configuredEndpointIdsRef.current,
+          ),
           // Run 98 R4: durable advisory observations (state distribution + influence rate).
           advisoryObservationLedgerPath: path.join(
             options.runtimeStateRoot,
@@ -11190,15 +11192,18 @@ export async function main(): Promise<void> {
       );
       // Run 108 R6: surface the small-pool judge misplacement ONCE at config time instead of per-tick
       // R14 refusals. The judge resolution is async and re-read per tick, so this fires at creation.
-      void resolveControllerJudge(created, readLearningPolicyFile({
-        repoRoot: options.repoRoot,
-        stateRoot: resolveLearningPolicyStateRoot({
-          runtimeStateRoot: options.runtimeStateRoot,
+      void resolveControllerJudge(
+        created,
+        readLearningPolicyFile({
+          repoRoot: options.repoRoot,
+          stateRoot: resolveLearningPolicyStateRoot({
+            runtimeStateRoot: options.runtimeStateRoot,
+            scopeId: options.scopeId,
+          }),
+          channel: packagedProfile?.channel ?? "development",
           scopeId: options.scopeId,
         }),
-        channel: packagedProfile?.channel ?? "development",
-        scopeId: options.scopeId,
-      }))
+      )
         .then((judge) => {
           const signal = assessSmallPoolJudgePlacement({
             candidateEndpointIds: configuredEndpointIdsRef.current,

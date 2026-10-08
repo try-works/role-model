@@ -1,9 +1,9 @@
-import { describe, expect, test } from "vitest";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Metric from "effect/Metric";
 import * as Option from "effect/Option";
 import * as Tracer from "effect/Tracer";
+import { describe, expect, test } from "vitest";
 
 // Run 108 R7 - the observability spine: module-scope metric declarations for the four chains,
 // registry-scoped so tests and per-scope runtimes isolate, per the effect-grep canonical idiom.
@@ -20,7 +20,10 @@ import {
   withStageSpan,
 } from "../src/run108-observability.js";
 
-const readIn = (metric: Metric.Metric<unknown, unknown, unknown>, registry: Metric.MetricRegistry) =>
+const readIn = (
+  metric: Metric.Metric<unknown, unknown, unknown>,
+  registry: Metric.MetricRegistry,
+) =>
   Effect.runSync(
     Metric.value(metric as never).pipe(Effect.provideService(Metric.MetricRegistry, registry)),
   );

@@ -94,31 +94,26 @@ export function withStageSpan<A>(
  * by run108-observability.test.ts.
  */
 export function recordRouterDecision(selection: "advisory_applied" | "baseline_retained"): void {
-  Effect.runSync(
-    Metric.update(Metric.withAttributes(routerDecisions, { selection }), 1),
-  );
+  Effect.runSync(Metric.update(Metric.withAttributes(routerDecisions, { selection }), 1));
 }
 
 export function recordReplayAdmission(pass: "replay", admitted: number): void {
-  Effect.runSync(
-    Metric.update(Metric.withAttributes(replayAdmissions, { pass }), admitted),
-  );
+  Effect.runSync(Metric.update(Metric.withAttributes(replayAdmissions, { pass }), admitted));
 }
 
 export function recordFinaliseRefusal(guard: string, reason: string): void {
-  Effect.runSync(
-    Metric.update(Metric.withAttributes(evalFinaliseRefusals, { guard, reason }), 1),
-  );
+  Effect.runSync(Metric.update(Metric.withAttributes(evalFinaliseRefusals, { guard, reason }), 1));
 }
 
 export function recordLearnerDerivation(count: number, outcome: "derived" | "idle"): void {
-  Effect.runSync(
-    Metric.update(Metric.withAttributes(learnerDerivations, { outcome }), count),
-  );
+  Effect.runSync(Metric.update(Metric.withAttributes(learnerDerivations, { outcome }), count));
 }
 
 /** 03.5 review M4: the metrics were write-only - this is the readback the UI/status surfaces. */
-export function collectObservabilitySnapshot(): Record<string, { count: number; incremental: boolean }> {
+export function collectObservabilitySnapshot(): Record<
+  string,
+  { count: number; incremental: boolean }
+> {
   // Metric.snapshot iterates the registry (attributed entries included); aggregate by the metric id
   // (the name) so the tag-carrying entries the wiring helpers write all count.
   const snapshots = Effect.runSync(Metric.snapshot) as ReadonlyArray<{

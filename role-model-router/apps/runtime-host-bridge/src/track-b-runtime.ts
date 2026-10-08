@@ -1,5 +1,4 @@
 import { spawn } from "node:child_process";
-import { recordRouterDecision, withStageSpan } from "./run108-observability.js";
 import {
   createHash,
   createHmac,
@@ -18,6 +17,7 @@ import {
 } from "node:fs";
 import { copyFile, lstat, mkdir, mkdtemp, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { recordRouterDecision, withStageSpan } from "./run108-observability.js";
 
 import { createInterface } from "node:readline";
 import { DatabaseSync } from "node:sqlite";
@@ -112,9 +112,7 @@ export function selectTrackBCounterfactualArms(input: {
  * a pool-level slice - the removed cli.ts:8121-8124 slice truncated a 5-endpoint pool to 3 and made
  * 5-1-1 = 3 arms structurally impossible. Pinned by run108-arm-bound-wiring.test.ts.
  */
-export function resolveReplayCandidatePool(
-  configuredEndpointIds: readonly string[],
-): string[] {
+export function resolveReplayCandidatePool(configuredEndpointIds: readonly string[]): string[] {
   return [...configuredEndpointIds];
 }
 
@@ -8289,7 +8287,9 @@ function trackBOriginBucket(entry: Readonly<Record<string, unknown>>): keyof Tra
  * the first eviction - and the operator's surface compares those two to decide whether the split is
  * safe to render.
  */
-function tallyTrackBOrigins(entries: readonly Readonly<Record<string, unknown>>[]): TrackBOriginSplit {
+function tallyTrackBOrigins(
+  entries: readonly Readonly<Record<string, unknown>>[],
+): TrackBOriginSplit {
   const origins: TrackBOriginSplit = { live: 0, shadow: 0, other: 0 };
   for (const entry of entries) origins[trackBOriginBucket(entry)] += 1;
   return origins;

@@ -112,9 +112,9 @@ privateTest(
     });
     expect(row.outcome).toBe("refused");
     // Terminal: the capture is gone from the producer's pending set...
-    expect(store.pending({ policySetDigest: POLICY_SET_DIGEST, captureRefs: [CAPTURE_REF] })).toEqual(
-      [],
-    );
+    expect(
+      store.pending({ policySetDigest: POLICY_SET_DIGEST, captureRefs: [CAPTURE_REF] }),
+    ).toEqual([]);
     // ...and the row it left behind carries no counters.
     expect(row.counters).toBeNull();
   },
@@ -154,9 +154,9 @@ privateTest(
     expect(row.detail).toContain("did not finalize a valid comparison");
     expect(row.counters?.deferrals).toBe(1);
     // The capture is still pending, so the budget - not the first refusal - governs it.
-    expect(store.pending({ policySetDigest: POLICY_SET_DIGEST, captureRefs: [CAPTURE_REF] })).toEqual([
-      CAPTURE_REF,
-    ]);
+    expect(
+      store.pending({ policySetDigest: POLICY_SET_DIGEST, captureRefs: [CAPTURE_REF] }),
+    ).toEqual([CAPTURE_REF]);
 
     // Exhausting the budget retires it exactly as applyReplayDeferralBudget decides, keeping the code
     // and appending the exhaustion note to the same reason.
@@ -171,8 +171,8 @@ privateTest(
     expect(row.detail).toContain("did not finalize a valid comparison");
     expect(row.detail).toContain("deferral budget exhausted");
     expect((row.detail as string).length).toBeLessThanOrEqual(512);
-    expect(store.pending({ policySetDigest: POLICY_SET_DIGEST, captureRefs: [CAPTURE_REF] })).toEqual(
-      [],
-    );
+    expect(
+      store.pending({ policySetDigest: POLICY_SET_DIGEST, captureRefs: [CAPTURE_REF] }),
+    ).toEqual([]);
   },
 );

@@ -41,16 +41,17 @@ const TRAIN_SOURCE_CANDIDATE = "deepseek.personal.run103.global.deepseek-v4-flas
 const TRAIN_COUNTERFACTUAL_CANDIDATE =
   "openai.personal.openai-codex-subscription.global.gpt-5.6-sol";
 const TRAIN_FAMILY = "writer.summarize";
-const TRAIN_HOLDOUT_ID =
-  "sha256:b99cab45c7e37165536f07315130ded06087fb8566f49457406d43037d50301f";
+const TRAIN_HOLDOUT_ID = "sha256:b99cab45c7e37165536f07315130ded06087fb8566f49457406d43037d50301f";
 const DEV_CASE_ID = "replay:7e1b67fa2e5aeaa664cceade149c5fe6cea934d487666e9cbde1b9edacac0eb9:2";
 
 /** The comparability block of the live train group (taskTypeId is the family key). */
 function trainComparability() {
   return {
     counterfactualCandidateRef: TRAIN_COUNTERFACTUAL_CANDIDATE,
-    counterfactualEvidenceRef: "artifact:2222222222222222222222222222222222222222222222222222222222222222",
-    counterfactualOutcomeRef: "artifact:3333333333333333333333333333333333333333333333333333333333333333",
+    counterfactualEvidenceRef:
+      "artifact:2222222222222222222222222222222222222222222222222222222222222222",
+    counterfactualOutcomeRef:
+      "artifact:3333333333333333333333333333333333333333333333333333333333333333",
     environmentDigest: "artifact:4444444444444444444444444444444444444444444444444444444444444444",
     forkRef: "artifact:5555555555555555555555555555555555555555555555555555555555555555",
     inputRef: "artifact:6666666666666666666666666666666666666666666666666666666666666666",
@@ -111,9 +112,7 @@ function trainGroupRow(input: { withDevelopmentPartition: boolean }) {
         role: "source",
         score: 0,
         scoreId: "trial-score:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
-        scoreIds: [
-          "trial-score:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
-        ],
+        scoreIds: ["trial-score:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"],
       },
       {
         candidateRef: TRAIN_COUNTERFACTUAL_CANDIDATE,
@@ -125,9 +124,7 @@ function trainGroupRow(input: { withDevelopmentPartition: boolean }) {
         role: "counterfactual",
         score: 1,
         scoreId: "trial-score:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
-        scoreIds: [
-          "trial-score:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
-        ],
+        scoreIds: ["trial-score:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"],
       },
     ],
     outcome: "candidate",
@@ -149,7 +146,8 @@ function trainGroupRow(input: { withDevelopmentPartition: boolean }) {
       ? {
           developmentPartition: {
             caseIds: [DEV_CASE_ID],
-            membershipDigest: "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+            membershipDigest:
+              "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
           },
         }
       : {}),
@@ -239,7 +237,14 @@ describe("run108 A1.1 dev-count re-derivation", () => {
     // intact (the second suspected drop site from the audit).
     const scopeId = "standalone-runtime-dev";
     const root = mkdtempSync(path.join(os.tmpdir(), "run108-dev-reread-"));
-    const workerRoot = path.join(root, scopeId, "track-b", "extensions", "workers", "evaluation-core");
+    const workerRoot = path.join(
+      root,
+      scopeId,
+      "track-b",
+      "extensions",
+      "workers",
+      "evaluation-core",
+    );
     mkdirSync(workerRoot, { recursive: true });
     const page = {
       groups: [trainGroupRow({ withDevelopmentPartition: true })],
