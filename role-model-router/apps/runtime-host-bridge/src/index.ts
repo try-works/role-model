@@ -22051,15 +22051,27 @@ export async function createRuntimeBridgeBackend(
       accounts: currentAccounts,
       sources: getCurrentRegistrySources(),
     });
-    if (currentRegistry.diagnostics.length > 0) {
+    // Run 108 R8: the registry now emits a DUPLICATE_ENDPOINT_SOURCE WARNING when it collapses
+    // duplicates - the desired state, not a boot failure. Only error-severity diagnostics are fatal;
+    // warnings are logged.
+    const fatalDiagnostics = currentRegistry.diagnostics.filter(
+      (diagnostic) => diagnostic.severity !== "warning",
+    );
+    if (fatalDiagnostics.length > 0) {
       console.error(
         "Endpoint-registry diagnostics:",
         JSON.stringify(currentRegistry.diagnostics, null, 2),
       );
-      const summary = currentRegistry.diagnostics
+      const summary = fatalDiagnostics
         .map((d) => `[${d.severity}] ${d.message}`)
         .join("; ");
       throw new Error(`Endpoint-registry validation failed after runtime state update: ${summary}`);
+    }
+    if (currentRegistry.diagnostics.length > 0) {
+      console.error(
+        "Endpoint-registry diagnostics (warnings):",
+        JSON.stringify(currentRegistry.diagnostics, null, 2),
+      );
     }
     currentModelOverrides = readModelOverridesFromDisk(options.runtimeStateRoot);
     syncRoutingModelSelection();
