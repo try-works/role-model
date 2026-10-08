@@ -3565,6 +3565,10 @@ export interface StartBridgeServerOptions {
   ) => Promise<unknown>;
   readonly readQueueJob?: (queueName: string, jobId: string) => Promise<unknown>;
   readonly readQueueReceipts?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  /** Run 108 addendum-01 A2: store + worker degradation receipts (R3/R6b UI surfacing). */
+  readonly readStoreDegradationReceipts?: (
+    query?: Readonly<Record<string, string>>,
+  ) => Promise<unknown> | unknown;
   readonly readQueueConfig?: () => Promise<unknown>;
   readonly setQueueConfig?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly retryQueueJob?: (queueName: string, jobId: string) => Promise<unknown>;
@@ -3886,6 +3890,8 @@ export interface RuntimeBridgeBackend {
   readQueueJobs(queueName: string, query?: Readonly<Record<string, string>>): Promise<unknown>;
   readQueueJob(queueName: string, jobId: string): Promise<unknown>;
   readQueueReceipts(query?: Readonly<Record<string, string>>): Promise<unknown>;
+  /** Run 108 addendum-01 A2: store + worker degradation receipts (R3/R6b UI surfacing). */
+  readStoreDegradationReceipts(query?: Readonly<Record<string, string>>): Promise<unknown>;
   readQueueConfig(): Promise<unknown>;
   setQueueConfig(body: Record<string, unknown>): Promise<unknown>;
   retryQueueJob(queueName: string, jobId: string): Promise<unknown>;
@@ -4320,6 +4326,10 @@ export interface CreateRuntimeBridgeBackendOptions {
   ) => Promise<unknown>;
   readonly readQueueJob?: (queueName: string, jobId: string) => Promise<unknown>;
   readonly readQueueReceipts?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  /** Run 108 addendum-01 A2: store + worker degradation receipts (R3/R6b UI surfacing). */
+  readonly readStoreDegradationReceipts?: (
+    query?: Readonly<Record<string, string>>,
+  ) => Promise<unknown> | unknown;
   readonly readQueueConfig?: () => Promise<unknown>;
   readonly setQueueConfig?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly retryQueueJob?: (queueName: string, jobId: string) => Promise<unknown>;
@@ -17878,6 +17888,28 @@ function createRequestHandler(options: StartBridgeServerOptions) {
           );
           return;
         }
+        /**
+         * Run 108 addendum-01 A2 (R3 acceptance + R6b): the materialization degradation
+         * receipts must surface in the operator UI. This route is the readback for both
+         * receipt tables - knowledge_store_degradation_receipts and the R6b twin
+         * knowledge_worker_degradation_receipts - flattened into one payload. Until the
+         * owning runtime binds the readback it answers operator_capability_unavailable
+         * (honest degradation), exactly like the other operator readbacks.
+         */
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/role-model/operator/store-degradation-receipts"
+        ) {
+          if (!options.readStoreDegradationReceipts) {
+            writeOperatorUnavailable(response, "store degradation receipt readback");
+            return;
+          }
+          writeOperatorResult(
+            response,
+            await options.readStoreDegradationReceipts(Object.fromEntries(url.searchParams)),
+          );
+          return;
+        }
         if (url.pathname.startsWith("/api/role-model/operator/queues/")) {
           const segments = url.pathname
             .slice("/api/role-model/operator/queues/".length)
@@ -20293,6 +20325,49 @@ export function projectPublicProviderAttemptIds(observation: object): readonly s
   return [...new Set(executionSemantics)];
 }
 
+/**
+ * Run 108 addendum-01 A6 (R8 diagnostics gate).
+ *
+ * Commit 2206872d made warning-severity endpoint-registry diagnostics non-fatal in the
+ * post-update validation: a DUPLICATE_ENDPOINT_SOURCE warning is the *desired* state of
+ * R8's dedupe layer, so only non-warning diagnostics may fail the registry validation.
+ * The gate originally lived inline inside the rebuildCurrentState closure and shipped
+ * without a test; this minimal exported-helper extraction makes it unit-testable without
+ * widening any other seam.
+ */
+export function fatalRegistryDiagnostics<
+  TDiagnostic extends { readonly severity: "error" | "warning" },
+>(diagnostics: readonly TDiagnostic[]): readonly TDiagnostic[] {
+  return diagnostics.filter((diagnostic) => diagnostic.severity !== "warning");
+}
+
+/**
+ * Run 108 addendum-01 A2 (R3 + R6b UI surfacing): the canonical host readback contract
+ * for materialization degradation receipts. The route flattens the two extension tables -
+ * knowledge_store_degradation_receipts (store) and knowledge_worker_degradation_receipts
+ * (worker) - into one payload, one source object per table. Until the private side ships
+ * knowledge:list-degradations on both extensions the readback answers
+ * operator_capability_unavailable and the UI renders the honest unavailable state.
+ */
+export interface StoreDegradationReceiptRow {
+  readonly receiptId: string;
+  readonly atMs: number;
+  readonly capability: string;
+  readonly reason: string;
+}
+
+export interface StoreDegradationReceiptSource {
+  readonly available: boolean;
+  readonly reason?: string;
+  readonly receipts: readonly StoreDegradationReceiptRow[];
+}
+
+export interface StoreDegradationReceiptReadback {
+  readonly schemaVersion: "role-model.store-degradation-receipts.v1";
+  readonly store: StoreDegradationReceiptSource;
+  readonly worker: StoreDegradationReceiptSource;
+}
+
 export async function createRuntimeBridgeBackend(
   options: CreateRuntimeBridgeBackendOptions,
 ): Promise<RuntimeBridgeBackend> {
@@ -22053,10 +22128,9 @@ export async function createRuntimeBridgeBackend(
     });
     // Run 108 R8: the registry now emits a DUPLICATE_ENDPOINT_SOURCE WARNING when it collapses
     // duplicates - the desired state, not a boot failure. Only error-severity diagnostics are fatal;
-    // warnings are logged.
-    const fatalDiagnostics = currentRegistry.diagnostics.filter(
-      (diagnostic) => diagnostic.severity !== "warning",
-    );
+    // warnings are logged. Run 108 addendum-01 A6: the filter is the exported
+    // fatalRegistryDiagnostics helper so the severity gate is unit-testable.
+    const fatalDiagnostics = fatalRegistryDiagnostics(currentRegistry.diagnostics);
     if (fatalDiagnostics.length > 0) {
       console.error(
         "Endpoint-registry diagnostics:",
@@ -30960,6 +31034,15 @@ export async function createRuntimeBridgeBackend(
     async readQueueReceipts(query: Readonly<Record<string, string>> = {}): Promise<unknown> {
       return (
         options.readQueueReceipts?.(query) ?? unavailableOperatorPayload("queue receipts readback")
+      );
+    },
+    // Run 108 addendum-01 A2: store + worker degradation receipts (R3/R6b UI surfacing).
+    async readStoreDegradationReceipts(
+      query: Readonly<Record<string, string>> = {},
+    ): Promise<unknown> {
+      return (
+        options.readStoreDegradationReceipts?.(query) ??
+        unavailableOperatorPayload("store degradation receipt readback")
       );
     },
     async readQueueConfig(): Promise<unknown> {

@@ -4093,3 +4093,59 @@ export async function fetchModelTelemetryRollup(
     windowDays,
   };
 }
+
+/**
+ * Run 108 addendum-01 A2 (R3 acceptance + R6b): the materialization degradation
+ * receipts must surface in the operator UI. This is the client for the host's
+ * store-degradation-receipts readback: it reads both receipt tables
+ * (knowledge_store_degradation_receipts and the R6b twin
+ * knowledge_worker_degradation_receipts) flattened into one payload. A 503
+ * operator_capability_unavailable (the host has no readback bound yet) is an
+ * honest unavailable state, not a page error.
+ */
+export interface StoreDegradationReceiptRow {
+  readonly receiptId: string;
+  readonly atMs: number;
+  readonly capability: string;
+  readonly reason: string;
+}
+
+export interface StoreDegradationReceiptSource {
+  readonly available: boolean;
+  readonly reason?: string;
+  readonly receipts: readonly StoreDegradationReceiptRow[];
+}
+
+export interface StoreDegradationReceiptReadback {
+  readonly schemaVersion: "role-model.store-degradation-receipts.v1";
+  readonly store: StoreDegradationReceiptSource;
+  readonly worker: StoreDegradationReceiptSource;
+}
+
+export type StoreDegradationReceiptReadbackState =
+  | (StoreDegradationReceiptReadback & { readonly available: true })
+  | { readonly available: false; readonly reason: string };
+
+export async function fetchStoreDegradationReceipts(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<StoreDegradationReceiptReadbackState> {
+  const path = "/api/role-model/operator/store-degradation-receipts";
+  const response = await fetcher(path);
+  if (!response.ok) {
+    let reason: string | null = null;
+    try {
+      const payload = (await response.clone().json()) as Record<string, unknown>;
+      if (payload && typeof payload === "object" && typeof payload.reason === "string") {
+        reason = payload.reason;
+      }
+    } catch {
+      // Not JSON (e.g. an HTML error page): fall through to the status fallback.
+    }
+    return {
+      available: false,
+      reason: reason ?? `Request to ${path} failed with ${response.status}`,
+    };
+  }
+  const body = (await response.json()) as StoreDegradationReceiptReadback;
+  return { ...body, available: true };
+}
