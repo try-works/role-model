@@ -28,7 +28,10 @@ export const routerDecisions = Metric.counter("role-model.router.decisions", {
  * attempt counts once and the outcome rides the tag, so refusals are visible as their own series.
  */
 export const replayAdmissions = Metric.counter("role-model.replay.admissions", {
-  description: "Captures admitted for replay.",
+  // 03.5 re-review m4: F3 made every ATTEMPT count 1 and moved the outcome into the admitted tag, so
+  // the description must name the attempt - "Captures admitted for replay" was a claim the counter no
+  // longer makes (a refusal is its own visible series under the same id).
+  description: "Replay admission attempts, tagged by whether the capture was admitted.",
   incremental: true,
 });
 

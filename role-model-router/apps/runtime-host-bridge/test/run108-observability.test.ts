@@ -39,6 +39,10 @@ import {
   routerDecisions,
   withStageSpan,
 } from "../src/run108-observability.js";
+// The GENUINE producer of the per-family evidence the recorder reads (F5-a). Importing it is what
+// makes the key pin behavioural instead of self-referential: the F5-a case hand-built `byFamily` with
+// the recorder's OWN key names, so it could only ever agree with itself (03.5 re-review M5).
+import { buildTrackBLearningEvidenceSummary } from "../src/track-b-learning-pass.js";
 
 /**
  * The paired private half owns the GENUINE ladder materializer and the knowledge store it writes
@@ -362,6 +366,20 @@ describe("run108 phase-03 effect-grep canonicalization", () => {
     expect(admitted).toHaveLength(1);
     expect(((admitted[0]?.state.count as number | undefined) ?? 0) - admittedBefore).toBe(1);
     expect(replaySeries("false")).toHaveLength(1);
+
+    // m4 (03.5 re-review): the declaration's DESCRIPTION has to state what the counter now counts. F3
+    // made every attempt count and moved the outcome into the attribute, but the description still read
+    // "Captures admitted for replay." - a claim the counter no longer makes. Read back through
+    // Metric.snapshot, the same readback the operator surface consumes.
+    const declared = (
+      Effect.runSync(Metric.snapshot) as unknown as ReadonlyArray<{
+        id: string;
+        description?: string;
+      }>
+    ).find((entry) => entry.id === "role-model.replay.admissions");
+    expect(declared?.description).toBe(
+      "Replay admission attempts, tagged by whether the capture was admitted.",
+    );
   });
 
   /**
@@ -414,6 +432,65 @@ describe("run108 phase-03 effect-grep canonicalization", () => {
  * reshaping the spine: one module-scope declaration per metric, one pinned wiring helper, one
  * series shape.
  */
+/**
+ * The per-family evidence a learning pass derives, produced by the GENUINE producer
+ * (`buildTrackBLearningEvidenceSummary`, track-b-learning-pass.ts:980) from the comparison shape the
+ * pass consumes (:1107-1270): one finalized decisive outcome whose comparability names the route
+ * package and the task family, with the holdout AND the development partition populated, so all four
+ * per-family dimensions are non-zero. The F5-a cases below drive the recorder with THIS object, so a
+ * renamed producer key records nothing instead of silently agreeing with a hand-built literal.
+ */
+const learnFamilyEvidence = (
+  family: string,
+  routePackage: string,
+): ReturnType<typeof buildTrackBLearningEvidenceSummary>["byFamily"] =>
+  buildTrackBLearningEvidenceSummary({
+    groups: [
+      {
+        groupId: "g1",
+        result: {
+          groupId: "g1",
+          status: "finalized",
+          outcome: "source",
+          validityIssues: [],
+          developmentPartition: { caseIds: ["case-1"] },
+        },
+        comparability: {
+          taskTypeId: family,
+          sourceCandidateRef: routePackage,
+          counterfactualCandidateRef: "endpoint:b",
+          inputRef: "capture-1",
+        },
+        holdout: { caseIds: ["case-1"] },
+      },
+    ],
+    routePackage,
+    nowMs: 1_000_000,
+    evidenceMaxAgeMs: 30 * 24 * 60 * 60 * 1_000,
+  }).byFamily;
+
+/**
+ * The keys the learning pass' `byFamily[family] = { ... }` literal emits, in source order
+ * (track-b-learning-pass.ts:1346-1350). Read from the SOURCE on purpose: the list the recorder
+ * iterates lives in another file (run108-observability.ts FAMILY_DIMENSION_FIELDS), and the point of
+ * the pin is that the two lists cannot drift apart unnoticed - the ladder_rungs failure mode, where a
+ * producer/consumer shape mismatch left a declared metric permanently unobserved.
+ */
+const emittedByFamilyKeys = (source: string): ReadonlyArray<string> => {
+  const marker = /^([ \t]*)byFamily\[family\] = \{$/m.exec(source);
+  if (marker === null) return [];
+  const indent = `${marker[1]}  `;
+  const closing = new RegExp(`^${marker[1]}\\};?\\s*$`);
+  const keys: string[] = [];
+  const body = source.slice((marker.index ?? 0) + marker[0].length).split("\n").slice(1);
+  for (const line of body) {
+    if (closing.test(line)) break;
+    const key = new RegExp(`^${indent}([A-Za-z_$][A-Za-z0-9_$]*)\\s*:`).exec(line);
+    if (key?.[1] !== undefined) keys.push(key[1]);
+  }
+  return keys;
+};
+
 describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
   /**
    * F5-a (per-family counters). R7 asks for decisive/holdout/development/distinct per task family.
@@ -496,6 +573,76 @@ describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
     );
     expect(families.size).toBeLessThanOrEqual(LEARNER_FAMILY_ATTRIBUTE_BOUND + 1);
     expect(families.has("other")).toBe(true);
+  });
+
+  /**
+   * F5-a (producer/consumer KEY match, 03.5 re-review M5). The recorder reads four field names off the
+   * object the learning pass builds; if either side renames one - `decisiveComparisons` becomes
+   * `decisive`, say - the recorder skips that dimension and the series stops advancing. That is the
+   * SAME failure mode as the ladder_rungs shape defect: a metric declared, wired and permanently
+   * unobserved, with nothing red. Nothing pinned the match before: the F5-a case above hand-builds
+   * `byFamily` with the recorder's OWN key names, so it can only ever agree with itself.
+   *
+   * Two independent pins:
+   *   (1) BEHAVIOURAL - the genuine producer's `byFamily` flows into the recorder and all four
+   *       dimensions move, so a rename on either side records nothing and lands here;
+   *   (2) STRUCTURAL - the keys emitted by the object literal at track-b-learning-pass.ts:1346-1350 are
+   *       compared with the declaration at run108-observability.ts FAMILY_DIMENSION_FIELDS, so a rename
+   *       fails here even if the producer's inputs stop reaching that literal.
+   */
+  test("F5-a: the family-evidence KEY SET is the same on the producer and the recorder side", () => {
+    const dimensionCount = (dimension: string): number =>
+      (((snapshotEntry("role-model.learner.family_derivations")?.series ?? []).find(
+        (entry) =>
+          entry.attributes.family === "coder.review" && entry.attributes.dimension === dimension,
+      )?.state.count as number | undefined) ?? 0);
+
+    // (1) behavioural: the GENUINE producer's output, recorded exactly as both call sites do
+    const byFamily = learnFamilyEvidence("coder.review", "endpoint:a");
+    expect(Object.keys(byFamily)).toEqual(["coder.review"]);
+    expect(byFamily["coder.review"]).toMatchObject({
+      decisiveComparisons: 1,
+      holdoutComparisons: 1,
+      developmentComparisons: 1,
+      distinctCaptures: 1,
+    });
+    const before = {
+      decisive: dimensionCount("decisive"),
+      holdout: dimensionCount("holdout"),
+      development: dimensionCount("development"),
+      distinct: dimensionCount("distinct"),
+    };
+    recordLearnerFamilyEvidence(byFamily);
+    expect(dimensionCount("decisive") - before.decisive).toBe(1);
+    expect(dimensionCount("holdout") - before.holdout).toBe(1);
+    expect(dimensionCount("development") - before.development).toBe(1);
+    expect(dimensionCount("distinct") - before.distinct).toBe(1);
+
+    // the key names are LOAD-BEARING, not cosmetic: the same numbers under a renamed key record
+    // NOTHING - which is exactly why a rename has to fail this suite instead of opening a silent hole
+    const renamed = dimensionCount("decisive");
+    recordLearnerFamilyEvidence({
+      "coder.review": { decisive: 1 },
+    } as unknown as Parameters<typeof recordLearnerFamilyEvidence>[0]);
+    expect(dimensionCount("decisive")).toBe(renamed);
+
+    // (2) structural: the emitted keys vs the declared fields, read from the two sources
+    const declaredFields = [
+      ...readFileSync(new URL("../src/run108-observability.ts", import.meta.url), "utf8").matchAll(
+        /\[\s*"(?:decisive|holdout|development|distinct)"\s*,\s*"([A-Za-z][A-Za-z0-9]*)"\s*\]/g,
+      ),
+    ].map((match) => match[1]);
+    expect(declaredFields).toEqual([
+      "decisiveComparisons",
+      "holdoutComparisons",
+      "developmentComparisons",
+      "distinctCaptures",
+    ]);
+
+    const emittedFields = emittedByFamilyKeys(
+      readFileSync(new URL("../src/track-b-learning-pass.ts", import.meta.url), "utf8"),
+    );
+    expect(emittedFields.slice(0, 4)).toEqual(declaredFields);
   });
 
   /**
@@ -608,43 +755,48 @@ describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
   });
 
   /**
-   * F5-d (ladder-rung count at the materialization outcome). The outcome names the rungs it wrote;
-   * a row that names neither rungs nor admitted completeness is NOT a zero-rung ladder - it is an
-   * outcome that does not carry the measurement, and nothing is recorded for it.
+   * F5-d (the committed BARE-ROW contract). A row that measures its rungs at its OWN level is still
+   * answered: `rungs` first, then the admitted count of its own `completeness`. That is the shape the
+   * reader was originally written against and the shape a STORE RECEIPT carries - kept as its own case
+   * so the two shapes stay distinguishable from the materialization-OUTCOME entry the host loop walks
+   * (the case below), which carries neither at its own level.
    */
-  test("F5-d: the ladder-rung count reads the materialization outcome and skips an unmeasured row", () => {
+  test("F5-d: a bare row carrying its own rungs or admitted completeness is still answered", () => {
     expect(ladderRungCountOf({ status: "written", rungs: [{}, {}, {}] })).toBe(3);
     expect(
       ladderRungCountOf({ status: "written", completeness: { admitted: 5, configured: 12 } }),
     ).toBe(5);
     expect(ladderRungCountOf({ status: "written", completeness: { admitted: 0 } })).toBe(0);
+    // carrying NEITHER is not a zero-rung ladder: the row does not carry the measurement at all
     expect(ladderRungCountOf({ status: "written" })).toBe(null);
     expect(ladderRungCountOf(null)).toBe(null);
-
-    const stateOf = () =>
-      ((snapshotEntry("role-model.learner.ladder_rungs")?.series ?? [])[0]?.state ?? {}) as {
-        count?: number;
-        sum?: number;
-      };
-    const before = stateOf();
-    recordLadderRungs(3);
-    const after = stateOf();
-    expect((after.count ?? 0) - (before.count ?? 0)).toBe(1);
-    expect((after.sum ?? 0) - (before.sum ?? 0)).toBe(3);
   });
 
   /**
-   * F5-d REPAIR (run 108 follow-up, the broken emit the compliance audit found). Measured against the
-   * deployed commit: five "[run105] ladder materialization wrote 1 ladder row(s)" lines produced ZERO
-   * live series, because the outcome entry does not carry the measurement at its OWN level. The
-   * genuine materializer (paired private checkout, real SQLite store) answers an entry whose keys are
-   * exactly roleId,taskTypeId,scopeId,status,ladder,metadata - the rungs and the completeness live on
-   * the PERSISTED RouteLadderPackV1 under `ladder`, which is the row the store accepted (the same
-   * rungs re-read from knowledge_route_ladders). The reader must therefore count the persisted row.
+   * F5-d REPAIR (03.5 re-review M2). Measured against the deployed commit: five "[run105] ladder
+   * materialization wrote 1 ladder row(s)" lines produced ZERO live series, because the outcome entry
+   * does not carry the measurement at its OWN level.
+   *
+   * THIS CASE USED TO HAND-BUILD { status: "written", rungs: [{}, {}, {}] } - an entry-level shape the
+   * real producer NEVER emits - so it stayed GREEN with the reader reverted to its broken form: it
+   * certified the very defect the fix removed (proved by revert in the 03.5 re-review). The literal
+   * below is therefore transcribed from the PRODUCER, not from the reader:
+   *
+   *   paired private shared/route-learning/route-ladder-materialization.mjs:87, :147, :151
+   *     identity = { roleId, taskTypeId, scopeId }
+   *     snapshot = { ...identity, contract, packId, rungs, completeness, version, ... }
+   *     ladders.push({ ...identity, status, ladder: { ...snapshot, packId: written?.packId ?? ... }, metadata })
+   *
+   * `rungs` and `completeness` live ONLY under `ladder`; the entry's own keys are exactly roleId,
+   * taskTypeId, scopeId, status, ladder, metadata. The paired case below re-asserts that key set against
+   * a GENUINE materialization over a real SQLite store, so this literal cannot drift back into a shape
+   * production never emits.
    */
   test("F5-d fix: the ladder-rung count reads the PERSISTED ladder row the outcome carries", () => {
-    // Transcribed from a real materialization outcome: 12 configured endpoints, 2 admitted, so the
-    // persisted row holds two rungs and completeness { admitted: 2, configured: 12 }.
+    // A real outcome: 12 configured endpoints, THREE persisted rungs of which two are
+    // admitted-and-configured. The rung list and the admitted count deliberately DIFFER (an unavailable
+    // rung is retained history; completeness counts configured admissions), so the assertion below says
+    // WHICH carrier was read instead of accepting either number.
     const outcomeEntry = {
       roleId: "role:coder",
       taskTypeId: "task:review",
@@ -659,6 +811,7 @@ describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
         rungs: [
           { endpointId: "endpoint:a", rank: 1, status: "available" },
           { endpointId: "endpoint:b", rank: 2, status: "available" },
+          { endpointId: "endpoint:retired", rank: 3, status: "unavailable" },
         ],
         completeness: { admitted: 2, configured: 12 },
         version: 1,
@@ -671,7 +824,20 @@ describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
       },
       metadata: { admissionPolicy: { minComparisons: 1, minConfidence: 0.7 }, confidence: 0.8 },
     };
-    expect(ladderRungCountOf(outcomeEntry)).toBe(2);
+    // (1) THE SHAPE the producer emits: NO rungs and NO completeness at the entry's own level, or the
+    // case has drifted back into a shape production never emits (the M2 failure mode)
+    expect(Object.keys(outcomeEntry).sort()).toEqual([
+      "ladder",
+      "metadata",
+      "roleId",
+      "scopeId",
+      "status",
+      "taskTypeId",
+    ]);
+    expect((outcomeEntry as Record<string, unknown>).rungs).toBeUndefined();
+    expect((outcomeEntry as Record<string, unknown>).completeness).toBeUndefined();
+    // (2) THE MEASUREMENT: the three rungs the PERSISTED row carries
+    expect(ladderRungCountOf(outcomeEntry)).toBe(3);
 
     // a persisted row without a rung list still answers its own admitted completeness
     expect(
@@ -685,9 +851,9 @@ describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
       ladderRungCountOf({ status: "written", rungs: [{}, {}, {}], ladder: { rungs: [{}, {}] } }),
     ).toBe(2);
     // and an outcome that carries no persisted row at all is still NOT a zero-rung ladder
-    expect(ladderRungCountOf({ status: "written" })).toBe(null);
+    expect(ladderRungCountOf({ status: "written", ladder: null })).toBe(null);
 
-    // through the metric, at the CLI's own seam (cli.ts:6797-6798 records when the count is non-null)
+    // (3) THE EMIT, at the CLI's own seam (cli.ts:6799-6800 reads, then records only when non-null)
     const stateOf = () =>
       ((snapshotEntry("role-model.learner.ladder_rungs")?.series ?? [])[0]?.state ?? {}) as {
         count?: number;
@@ -695,11 +861,11 @@ describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
       };
     const before = stateOf();
     const recorded = ladderRungCountOf(outcomeEntry);
-    expect(recorded).toBe(2);
+    expect(recorded).toBe(3);
     if (recorded !== null) recordLadderRungs(recorded);
     const after = stateOf();
     expect((after.count ?? 0) - (before.count ?? 0)).toBe(1);
-    expect((after.sum ?? 0) - (before.sum ?? 0)).toBe(2);
+    expect((after.sum ?? 0) - (before.sum ?? 0)).toBe(3);
   });
 
   /**
@@ -804,6 +970,20 @@ describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
       // the entry does NOT measure rungs at its own level - the exact reason the old reader saw null
       expect(entry.rungs).toBeUndefined();
       expect(entry.completeness).toBeUndefined();
+      // ...and its OWN key set IS the producer's: identity + status + ladder + metadata
+      // (route-ladder-materialization.mjs:87/:151). This is the strongest form of the M2 pin - the
+      // hand-built literal in the non-paired case is only trustworthy while it matches THIS entry.
+      expect(Object.keys(entry).sort()).toEqual([
+        "ladder",
+        "metadata",
+        "roleId",
+        "scopeId",
+        "status",
+        "taskTypeId",
+      ]);
+      // strip the persisted row and the entry measures nothing at all - which is what the pre-fix
+      // reader answered for EVERY written ladder, at any traffic volume
+      expect(ladderRungCountOf({ ...entry, ladder: undefined })).toBeNull();
       const persisted = entry.ladder as {
         rungs: unknown[];
         completeness: { admitted: number; configured: number };
@@ -828,30 +1008,133 @@ describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
   );
 
   /**
-   * F5 wiring. A metric the production seams never write is the M4 defect in a new dress (declared,
-   * read back, and always zero), so each F5 helper is pinned to the seam that owns its measurement.
+   * F5 wiring, BEHAVIOURAL half (03.5 re-review M1). The source-text case below is only a guard that
+   * the call still EXISTS; on its own it cannot see the defect class it claims to prevent - the
+   * reviewer reverted the ladder reader to its broken form and it stayed GREEN, as did the old F5-d
+   * case. So every F5 metric is ALSO driven at the shape its production seam passes and asserted to
+   * MOVE: a helper that is called but reads the wrong shape moves nothing, and that is what fails here.
    */
-  test("F5: every F5 helper is called from the production seam it measures", () => {
+  test("F5: every F5 helper moves its metric when driven at the production seam shape", () => {
+    const histogram = (name: string) =>
+      ((snapshotEntry(name)?.series ?? [])[0]?.state ?? {}) as { count?: number; sum?: number };
+    const gaugeValue = (name: string): number | undefined =>
+      (snapshotEntry(name)?.series ?? [])
+        .map((entry) => entry.state.value as number | undefined)
+        .find((value) => typeof value === "number");
+    const floorCount = (admitted: string): number =>
+      (((snapshotEntry("role-model.learner.admission_floor")?.series ?? []).find(
+        (entry) => entry.attributes.admitted === admitted,
+      )?.state.count as number | undefined) ?? 0);
+
+    // (a) ladder_rungs - cli.ts:6799-6800 walks the materialization outcome and records the count the
+    // reader answers. Driven with the PRODUCER's entry shape (the F5-d fix case above): 4 persisted
+    // rungs, and the rung list deliberately differs from the admitted count.
+    const writtenEntry = {
+      roleId: "role:coder",
+      taskTypeId: "task:review",
+      scopeId: "tenant:run108-ladder",
+      status: "written",
+      ladder: {
+        contract: "RouteLadderPackV1",
+        packId: "ladder:seam",
+        rungs: [
+          { endpointId: "endpoint:a", rank: 1, status: "available" },
+          { endpointId: "endpoint:b", rank: 2, status: "available" },
+          { endpointId: "endpoint:c", rank: 3, status: "available" },
+          { endpointId: "endpoint:retired", rank: 4, status: "unavailable" },
+        ],
+        completeness: { admitted: 3, configured: 12 },
+      },
+      metadata: {},
+    };
+    const ladderBefore = histogram("role-model.learner.ladder_rungs");
+    const seamRungs = ladderRungCountOf(writtenEntry);
+    expect(seamRungs).toBe(4);
+    if (seamRungs !== null) recordLadderRungs(seamRungs);
+    const ladderAfter = histogram("role-model.learner.ladder_rungs");
+    expect((ladderAfter.count ?? 0) - (ladderBefore.count ?? 0)).toBe(1);
+    expect((ladderAfter.sum ?? 0) - (ladderBefore.sum ?? 0)).toBe(4);
+
+    // (b) admission_floor - cli.ts:6809-6810 records the verdict of every entry that carries one. The
+    // refusal and the admission are the two series of the one rate.
+    const refusedBefore = floorCount("false");
+    const refusal = admissionFloorVerdictOf({
+      roleId: "role:coder",
+      taskTypeId: "task:review",
+      scopeId: "tenant:run108-ladder",
+      status: "insufficient_evidence",
+      ladder: null,
+    });
+    expect(refusal).toBe(false);
+    if (refusal !== null) recordAdmissionFloor(refusal);
+    expect(floorCount("false") - refusedBefore).toBe(1);
+
+    const admittedBefore = floorCount("true");
+    const admittedVerdict = admissionFloorVerdictOf(writtenEntry);
+    expect(admittedVerdict).toBe(true);
+    if (admittedVerdict !== null) recordAdmissionFloor(admittedVerdict);
+    expect(floorCount("true") - admittedBefore).toBe(1);
+
+    // a persisted row that admitted NOTHING is a refusal too
+    expect(
+      admissionFloorVerdictOf({ status: "written", ladder: { completeness: { admitted: 0 } } }),
+    ).toBe(false);
+    // ...while a null-ladder status that is NOT a floor verdict records NOTHING at the seam
+    expect(admissionFloorVerdictOf({ status: "capacity_exceeded", ladder: null })).toBeNull();
+
+    // (c) family_derivations - cli.ts:6454 and track-b-learning-pass.ts:1680 both call
+    // recordLearnerFamilyEvidence(evidenceSummary.byFamily). Driven with the GENUINE producer's output;
+    // the rename guard itself lives in the F5-a key-set case above.
+    const familyDimension = (dimension: string): number =>
+      (((snapshotEntry("role-model.learner.family_derivations")?.series ?? []).find(
+        (entry) =>
+          entry.attributes.family === "coder.review" && entry.attributes.dimension === dimension,
+      )?.state.count as number | undefined) ?? 0);
+    const familyBefore = {
+      decisive: familyDimension("decisive"),
+      holdout: familyDimension("holdout"),
+      development: familyDimension("development"),
+      distinct: familyDimension("distinct"),
+    };
+    recordLearnerFamilyEvidence(learnFamilyEvidence("coder.review", "endpoint:a"));
+    expect(familyDimension("decisive") - familyBefore.decisive).toBe(1);
+    expect(familyDimension("holdout") - familyBefore.holdout).toBe(1);
+    expect(familyDimension("development") - familyBefore.development).toBe(1);
+    expect(familyDimension("distinct") - familyBefore.distinct).toBe(1);
+
+    // (d) queue gauges - the sweep calls recordQueueDepths ONCE PER DEPTH, a single key each
+    // (track-b-auto-replay-runtime.ts:1006 stranded, :1324 queued, :1685 awaitingEvaluation).
+    recordQueueDepths({ stranded: 3 });
+    expect(gaugeValue("role-model.replay.queue.stranded")).toBe(3);
+    recordQueueDepths({ queued: 5 });
+    expect(gaugeValue("role-model.replay.queue.queued")).toBe(5);
+    recordQueueDepths({ awaitingEvaluation: 1 });
+    expect(gaugeValue("role-model.replay.queue.awaiting_evaluation")).toBe(1);
+
+    // (e) arm_plan_arms - cli.ts:9008 records the planned arm count of the plan about to be shipped.
+    const armBefore = histogram("role-model.replay.arm_plan_arms");
+    recordArmPlan(4);
+    const armAfter = histogram("role-model.replay.arm_plan_arms");
+    expect((armAfter.count ?? 0) - (armBefore.count ?? 0)).toBe(1);
+    expect((armAfter.sum ?? 0) - (armBefore.sum ?? 0)).toBe(4);
+  });
+
+  /**
+   * F5 wiring, SOURCE half. The behavioural case above proves the helpers read the right shape; this one
+   * proves the production seams still CALL them (a helper nobody calls is the M4 defect - declared, read
+   * back and always zero). Kept as an ADDITIONAL guard, never as the only pin.
+   */
+  test("F5 (source guard): every F5 helper is still called from the production seam it measures", () => {
     const source = (relative: string) => readFileSync(new URL(relative, import.meta.url), "utf8");
     const autoReplay = source("../src/track-b-auto-replay-runtime.ts");
     expect(autoReplay).toContain("recordQueueDepths(");
     expect(autoReplay).not.toContain("recordAdmissionFloor(met)");
-    // Run 108 addendum-04: the emit was re-sited to the materialization outcome in cli.ts, so the
-    // wiring pin follows it there instead of asserting it still lives in the auto-replay sweep.
-    expect(
-      admissionFloorVerdictOf({
-        status: "insufficient_evidence",
-        ladder: { completeness: { admitted: 0 } },
-      }),
-    ).toBe(false);
     const cli = source("../src/cli.ts");
+    expect(cli).toContain("recordArmPlan(");
     // Run 108 addendum-04: the POSITIVE half matters as much as the negative one - without it,
     // deleting the cli.ts loop would leave this suite green (the M4 class: a pin that cannot fail).
-    // These must sit BELOW the declaration above; placing them with the autoReplay assertions put
-    // `cli` in its temporal dead zone and reddened the suite (my own error, caught by a verifier).
     expect(cli).toContain("admissionFloorVerdictOf(");
     expect(cli).toContain("recordAdmissionFloor(");
-    expect(cli).toContain("recordArmPlan(");
     // Run 108 follow-up: the rung count must reach the recorder THROUGH the reader that owns the
     // outcome-entry shape, or the emit silently measures nothing again.
     expect(cli).toContain("ladderRungCountOf(");
