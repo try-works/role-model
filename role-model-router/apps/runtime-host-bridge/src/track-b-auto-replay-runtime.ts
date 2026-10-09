@@ -2310,7 +2310,23 @@ export function startAutoReplayLoop(input: {
       input.setIntervalFn ??
       ((handler: () => void, timeout: number) => setInterval(handler, timeout));
     timer = setIntervalFn(() => {
-      void tick();
+      /**
+       * Run 108 effect audit (P4, the diagnostic build-out): the loop emitted NOTHING at tick start, so a tick
+       * that blocked the event loop - the measured 48-minute freeze on ONE SQLite lock - was invisible for its
+       * whole duration and then visible only as a status-route value. The START line is what makes a freeze
+       * visible WHILE IT HAPPENS: a start with no matching completion, and the elapsed time says how long.
+       * Emitted BEFORE the work deliberately: if the tick blocks synchronously, nothing written inside it
+       * surfaces until the lock releases, which is exactly the case this line exists to catch.
+       */
+      const tickStartedAtMs = Date.now();
+      console.error(`[track-b-auto-replay] tick start (interval ${intervalMs}ms)`);
+      void tick()
+        .catch(() => undefined)
+        .finally(() => {
+          console.error(
+            `[track-b-auto-replay] tick done in ${Date.now() - tickStartedAtMs}ms (outcome ${lastOutcome})`,
+          );
+        });
     }, intervalMs);
     if (timer && typeof (timer as { unref?: () => void }).unref === "function") {
       (timer as { unref: () => void }).unref();
