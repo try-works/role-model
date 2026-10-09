@@ -354,6 +354,14 @@ export interface LearningFloorView {
   readonly decisive: number | null;
   readonly holdout: number | null;
   readonly distinctCaptures: number | null;
+  /**
+   * Run 108 addendum 03 (`A03-E`): the FOURTH clause of the promotion gate. The gate refuses unless
+   * `effectiveDecisive >= minDecisive` AND `effectiveHoldout >= minHoldout` AND
+   * `effectiveDevelopment >= minDevelopment` AND `distinctCaptures >= minDistinct`
+   * (`extensions/knowledge-worker/index.mjs`). This view carried three of the four, which is exactly why
+   * the operator's "8 / 3 decisive" row was refused with no visible cause.
+   */
+  readonly development: number | null;
 }
 
 const finiteNumberOrNull = (value: unknown): number | null => {
@@ -374,6 +382,10 @@ export function learningEvidenceFloor(policy: Record<string, unknown>): Learning
     decisive: finiteNumberOrNull(effective.minDecisiveComparisons),
     holdout: finiteNumberOrNull(effective.minHoldoutComparisons),
     distinctCaptures: finiteNumberOrNull(effective.minDistinctCaptures),
+    // Run 108 addendum 03 (`A03-E`): registered on the same policy document
+    // (`shared/route-learning/activation-policy.mjs`, integer, default 1), so a policy that publishes the
+    // other three publishes this one. Absent still reads `null`, never a zero.
+    development: finiteNumberOrNull(effective.minDevelopmentComparisons),
   };
 }
 
@@ -389,10 +401,26 @@ export function formatLearningFloorProgress(
   const decisive = finiteNumberOrNull(counts.decisive);
   if (decisive === null || floor.decisive === null) return null;
   const nominal = `${decisive} / ${floor.decisive} decisive`;
+  /**
+   * Run 108 addendum 03 (`A03-E`, the operator's actual complaint): the gate refuses on FOUR clauses and
+   * this line rendered two, so a receipt refused on its development partition read as `8 / 3 decisive` - a
+   * dimension that LOOKS met while the row said `insufficient`. Measured live: 43 of the 68
+   * family-carrying receipts have `decisive >= 3` with `floorMet` false and EVERY one has
+   * `developmentComparisons: 0`, while every `validate` has `dev >= 2`.
+   *
+   * The development clause renders only when BOTH its sides are published - a runtime that ships the
+   * three-member floor renders exactly what it rendered before - and neither side is ever invented.
+   */
+  const development = finiteNumberOrNull(counts.development);
+  const developmentFloor = floor.development;
+  const withDevelopment =
+    development !== null && developmentFloor !== null
+      ? `${nominal} · ${development} / ${developmentFloor} development`
+      : nominal;
   const effective = finiteNumberOrNull(counts.effectiveDecisive);
   return effective !== null && effective !== decisive
-    ? `${nominal} · ${effective} effective`
-    : nominal;
+    ? `${withDevelopment} · ${effective} effective`
+    : withDevelopment;
 }
 
 /**
@@ -435,11 +463,15 @@ export function learningEvidence(row: Record<string, unknown>): LearningEvidence
     {
       decisive: counts.decisive ?? family.decisiveComparisons,
       effectiveDecisive: effectiveCounts.decisive ?? family.effectiveDecisiveComparisons,
+      // `A03-E`: the raw count behind the refusing clause, from the readback's projection first and the
+      // joined receipt's own family second - never from a floor, and never a fabricated zero.
+      development: counts.development ?? family.developmentComparisons,
     },
     {
       decisive: finiteNumberOrNull(publishedFloor.minDecisiveComparisons),
       holdout: finiteNumberOrNull(publishedFloor.minHoldoutComparisons),
       distinctCaptures: finiteNumberOrNull(publishedFloor.minDistinctCaptures),
+      development: finiteNumberOrNull(publishedFloor.minDevelopmentComparisons),
     },
   );
   const winnerRef = textOrNull(evidence.winnerCandidateRef);
@@ -2404,13 +2436,22 @@ export function LearningEvidencePage() {
                   label="Newest decisive comparisons"
                   value={show(newestEvidence.decisiveComparisons)}
                 />
+                {/* Run 108 addendum 03 (`A03-E`): the refusing dimension gets its own operator-visible
+                    number, so the family table's "Development" column stops being the only place it appears. */}
                 <Metric
-                  label="Decisive / floor"
+                  label="Newest development comparisons"
+                  value={show(newestEvidence.developmentComparisons)}
+                />
+                <Metric
+                  // `A03-E`: this value now names the development clause as well, so the label says
+                  // "counts vs floor" rather than promising a decisive-only reading it no longer gives.
+                  label="Counts vs floor"
                   value={
                     formatLearningFloorProgress(
                       {
                         decisive: newestEvidence.decisiveComparisons,
                         effectiveDecisive: newestEvidence.effectiveDecisiveComparisons,
+                        development: newestEvidence.developmentComparisons,
                       },
                       policyFloor,
                     ) ?? FLOOR_NOT_REPORTED
