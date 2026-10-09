@@ -1077,10 +1077,16 @@ describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
       // the entry does NOT measure rungs at its own level - the exact reason the old reader saw null
       expect(entry.rungs).toBeUndefined();
       expect(entry.completeness).toBeUndefined();
-      // ...and its OWN key set IS the producer's: identity + status + ladder + metadata
-      // (route-ladder-materialization.mjs:87/:151). This is the strongest form of the M2 pin - the
-      // hand-built literal in the non-paired case is only trustworthy while it matches THIS entry.
+      // ...and its OWN key set IS the producer's: identity + floor + status + ladder + metadata
+      // (route-ladder-materialization.mjs:87/:140/:151). This is the strongest form of the M2 pin -
+      // the hand-built literal in the non-paired case is only trustworthy while it matches THIS entry.
+      // 'floor' is the LIVE admission carrier the M3 fix reads (floor.admitted.size over the CURRENT
+      // group set), pushed at BOTH the unchanged/capacity_limited and the written/stale/refused sites so
+      // the live verdict exists on every outcome shape. Without it the reader must answer null: the
+      // persisted ladder.completeness.admitted is the EFFECTIVE count (live admitted UNION the preserved
+      // prior snapshot) and would report a fabricated green after a regression.
       expect(Object.keys(entry).sort()).toEqual([
+        "floor",
         "ladder",
         "metadata",
         "roleId",
