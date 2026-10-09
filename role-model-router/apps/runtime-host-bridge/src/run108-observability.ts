@@ -397,8 +397,10 @@ export function recordLearnerFamilyEvidence(
  * a queue that drains from 7 to 3 must read 3, not 10.
  *
  * Sources are the readbacks the host ALREADY performs per tick; this adds no poller:
- *   queued             - the `pendingCount` of the tick's own pending-capture readback
- *                        (`listPendingReplayCaptures`), i.e. captures still owed a replay.
+ *   queued             - the `pendingTotal` of the tick's own pending-capture readback
+ *                        (`listPendingReplayCaptures`), i.e. captures still owed a replay. It is the
+ *                        CENSUS, taken by the producer BEFORE the page the tick consumes is bounded by
+ *                        `limit` - never the page length, which saturates at the tick's own limit.
  *   awaiting_evaluation - the durable replay jobs in the awaiting-evaluation state that the tick's
  *                        own pending-dispatch readback observed for the tasks it walked
  *                        (`readPendingRouteDispatches`). The replay plane exposes no whole-census
@@ -408,7 +410,8 @@ export function recordLearnerFamilyEvidence(
  *                        (`reconcileEvaluationJobs().stranded`).
  */
 export const replayQueueQueued = Metric.gauge("role-model.replay.queue.queued", {
-  description: "Captures pending replay, as the tick's own pending-capture readback reports them.",
+  description:
+    "Captures still owed a replay, as the tick's own pending-capture readback counts them before its page is bounded.",
 });
 
 export const replayQueueAwaitingEvaluation = Metric.gauge(
@@ -513,7 +516,19 @@ export function admissionFloorVerdictOf(entry: unknown): boolean | null {
   if (!entry || typeof entry !== "object") return null;
   const persisted = admittedCountOf((entry as { ladder?: unknown }).ladder);
   const value = persisted ?? admittedCountOf(entry);
-  return value === null ? null : value > 0;
+  if (value !== null) return value > 0;
+  /**
+   * Run 108 addendum-04 (review correction): `insufficient_evidence` IS the materializer's own persisted
+   * verdict that the floor admitted NOTHING - it pushes { status: "insufficient_evidence", ladder: null }
+   * (route-ladder-materialization.mjs:94) and that branch is the `!floor.admitted.size && !current` refusal.
+   * Reading that status is not "reconstructing a value beside a persisted row": the F5 lesson forbids
+   * recomputing arithmetic, not reading the outcome's own verdict. Without this the metric under-reports
+   * refusals exactly where no ladder exists yet, which is the case an operator most needs to see.
+   *
+   * The OTHER null-ladder statuses - capacity_exceeded (:108, a CAPACITY refusal, not a floor verdict),
+   * stale, stale_evidence, refused, rolled_back - answer null and record nothing, deliberately.
+   */
+  return (entry as { status?: unknown }).status === "insufficient_evidence" ? false : null;
 }
 
 function admittedCountOf(row: unknown): number | null {
