@@ -643,6 +643,29 @@ export async function deriveLearnerCandidatesFromDurableEvidence(
       profileDiagnostic = `profile keys=${Object.keys(profileRecord ?? {})
         .slice(0, 10)
         .join("|")} digest=${typeof profileRecord?.digest === "string" ? "yes" : "no"}`;
+      /**
+       * Run 108 addendum 03 (D): the task family has to survive the derivation, because the knowledge-worker reads
+       * it from `scope.taskTypeId` (extensions/knowledge-worker/index.mjs:2323-2330 -> `deriveFamilyVerdict`) and a
+       * scope without it is a receipt without `familyEvidence` - the panel's "the receipt carries no comparison
+       * counts" and its "not reported" ROLE/TASK, on a comparison that measured a real family.
+       *
+       * Measured live 2026-10-09 over all 114 `knowledge:eval-consumer` rows of the copied knowledge-worker store:
+       * 25 carry the family and all 25 came from the live request's shadow pipeline (which passes the family it
+       * holds in-process), while 89 came from this pass and none carried it. The split is the producer, not the
+       * traffic: 26 decisions were derived twice, first by the live pipeline with the family and seconds later by
+       * this pass without it. The reason is here - the family was read from the replay-core job alone, and that
+       * record has no family fields at all (477 `replay:job` rows in the copied replay-core store: jobId, replayId,
+       * scope/scopeId/channel, …, and `scope` is a *string*, never a classification), so `text(job.taskTypeId)` was
+       * null for every derivation. 65 of those 89 family-less derivations named a comparison whose own
+       * `comparability` block records the family (`coder.edit`/`coder`/`1.0.0-alpha.1`) - the record this function
+       * already reads for `counterfactualCandidateRef` - so the family was never missing, it was read from the
+       * wrong durable record.
+       *
+       * Resolved per field, the job first (a job that ever declares a family stays authoritative, exactly as the
+       * host readback prefers the declared value), then the comparison's own comparability block. Absent in both
+       * stays absent: an unclassified comparison must not acquire an invented family.
+       */
+      const comparisonComparability = asRecord(normalized.comparability);
       const value = assembleDurableLearnerDerivationValue({
         channel: input.channel,
         scope: input.scope,
@@ -657,9 +680,10 @@ export async function deriveLearnerCandidatesFromDurableEvidence(
         },
         signalsReport: report,
         profileEstimate: asRecord(profile),
-        taskTypeId: text(job.taskTypeId),
-        taxonomyVersion: text(job.taxonomyVersion),
-        roleId: text(job.roleId),
+        taskTypeId: text(job.taskTypeId) ?? text(comparisonComparability?.taskTypeId),
+        taxonomyVersion:
+          text(job.taxonomyVersion) ?? text(comparisonComparability?.taxonomyVersion),
+        roleId: text(job.roleId) ?? text(comparisonComparability?.roleId),
       });
       attempted += 1;
       input.attemptedGroupIds.add(groupId);

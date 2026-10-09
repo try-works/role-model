@@ -29,7 +29,7 @@ Control-plane docs are not memory docs:
 ## Registry
 
 - `domains/remote-effort-instance-identity.md` - effort-variant identity,
-  admission, eligibility, telemetry and packaged Track B boundary (Run 93).
+  admission, eligibility, telemetry and packaged Track B boundary (Runs 93, 106).
 
 - `domains/release-artifact-provenance.md` - exact CI commit identity across
   Stage/production package assembly, runtime startup, and promotion (Run 94).

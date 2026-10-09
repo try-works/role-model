@@ -1,0 +1,3 @@
+run106-canonical-decision-provenance RED
+command: corepack pnpm --filter @role-model-router/core exec vitest run test/run106-canonical-decision-provenance.test.ts
+observed: 4 tests failed - routeRequest still emits legacy effort_source (none/variant) and does not record effort_resolution/effective_effort.

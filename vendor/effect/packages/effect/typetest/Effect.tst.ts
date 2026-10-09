@@ -15,7 +15,7 @@ import {
   type Option,
   pipe,
   Result,
-  type Schedule,
+  Schedule,
   type Scope,
   type Sink,
   type Stream,
@@ -922,7 +922,7 @@ describe("Effect.partition", () => {
       [1, 2, 3],
       (n) => n % 2 === 0 ? Effect.fail(`${n}`) : Effect.succeed(n)
     )
-    expect(result).type.toBe<Effect.Effect<[excluded: Array<string>, satisfying: Array<number>], never, never>>()
+    expect(result).type.toBe<Effect.Effect<[passes: Array<number>, fails: Array<string>], never, never>>()
   })
 
   it("data-last", () => {
@@ -930,7 +930,7 @@ describe("Effect.partition", () => {
       [1, 2, 3],
       Effect.partition((n) => n % 2 === 0 ? Effect.fail(n) : Effect.succeed(`${n}`))
     )
-    expect(result).type.toBe<Effect.Effect<[excluded: Array<number>, satisfying: Array<string>], never, never>>()
+    expect(result).type.toBe<Effect.Effect<[passes: Array<string>, fails: Array<number>], never, never>>()
   })
 })
 
@@ -1202,6 +1202,42 @@ describe("all", () => {
   })
 })
 
+describe("Effect.repeat", () => {
+  type Status = "pending" | "done"
+  const source = null as unknown as Effect.Effect<Status>
+  const schedule = Schedule.recurs(3)
+
+  it("narrows the result with an unbounded while refinement", () => {
+    expect(Effect.repeat(source, {
+      while: (status): status is "pending" => status === "pending"
+    })).type.toBe<Effect.Effect<"done">>()
+  })
+
+  it("narrows the result with an unbounded until refinement", () => {
+    expect(Effect.repeat(source, {
+      until: (status): status is "done" => status === "done"
+    })).type.toBe<Effect.Effect<"done">>()
+  })
+
+  it("preserves the full result with optional times and a while refinement", () => {
+    const options: {
+      times?: number
+      while: (status: Status) => status is "pending"
+    } = {
+      times: 3,
+      while: (status): status is "pending" => status === "pending"
+    }
+    expect(Effect.repeat(source, options)).type.toBe<Effect.Effect<Status>>()
+  })
+
+  it("preserves the full result with a schedule and an until refinement", () => {
+    expect(Effect.repeat(source, {
+      schedule,
+      until: (status): status is "done" => status === "done"
+    })).type.toBe<Effect.Effect<Status>>()
+  })
+})
+
 describe("Effect.repeatOrElse", () => {
   const source = Effect.succeed("input")
   const schedule = null as unknown as Schedule.Schedule<number, string>
@@ -1422,6 +1458,26 @@ describe("Effect.cachedWithTTL", () => {
     }))
 
     expect(cached).type.toBe<Effect.Effect<Effect.Effect<number, "err-2", "dep-2">>>()
+  })
+})
+
+describe("Effect.cachedInvalidateWithTTL", () => {
+  it("data-first", () => {
+    const cached = Effect.cachedInvalidateWithTTL(number, (exit) => {
+      expect(exit).type.toBe<Exit.Exit<number, "err-2">>()
+      return Exit.isSuccess(exit) ? Duration.seconds(exit.value) : 0
+    })
+
+    expect(cached).type.toBe<Effect.Effect<[Effect.Effect<number, "err-2", "dep-2">, Effect.Effect<void>]>>()
+  })
+
+  it("data-last", () => {
+    const cached = number.pipe(Effect.cachedInvalidateWithTTL((exit) => {
+      expect(exit).type.toBe<Exit.Exit<number, "err-2">>()
+      return Exit.isSuccess(exit) ? "1 second" : 0
+    }))
+
+    expect(cached).type.toBe<Effect.Effect<[Effect.Effect<number, "err-2", "dep-2">, Effect.Effect<void>]>>()
   })
 })
 

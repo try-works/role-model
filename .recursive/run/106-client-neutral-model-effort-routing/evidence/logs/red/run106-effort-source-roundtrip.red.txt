@@ -1,0 +1,112 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/106-client-neutral-model-effort-routing/role-model-router/packages/runtime-observability[39m
+
+ [31m❯[39m test/run106-effort-source-roundtrip.test.ts [2m([22m[2m5 tests[22m[2m | [22m[31m4 failed[39m[2m)[22m[32m 40[2mms[22m[39m
+[31m   [31m×[31m Run 106 runtime effort-source round-trip[2m > [22mround-trips all four canonical states[39m[32m 21[2mms[22m[39m
+[31m     → expected { reasoningEffort: 'high', …(1) } to deeply equal { reasoningEffort: 'high', …(2) }[39m
+[31m   [31m×[31m Run 106 runtime effort-source round-trip[2m > [22mnormalizes legacy sources onto the canonical vocabulary[39m[32m 4[2mms[22m[39m
+[31m     → expected { reasoningEffort: 'high', …(1) } to deeply equal { reasoningEffort: 'high', …(2) }[39m
+[31m   [31m×[31m Run 106 runtime effort-source round-trip[2m > [22mdefaults a missing source to provider_default for a null-effort request[39m[32m 3[2mms[22m[39m
+[31m     → expected { reasoningEffort: null, …(1) } to deeply equal { reasoningEffort: null, …(2) }[39m
+   [32m✓[39m Run 106 runtime effort-source round-trip[2m > [22mrejects a named source without a reasoning effort[32m 3[2mms[22m[39m
+[31m   [31m×[31m Run 106 runtime effort-source round-trip[2m > [22mrejects a non-named source carrying a reasoning effort[39m[32m 5[2mms[22m[39m
+[31m     → expected [Function] to throw an error[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 4 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m test/run106-effort-source-roundtrip.test.ts[2m > [22mRun 106 runtime effort-source round-trip[2m > [22mround-trips all four canonical states
+[31m[1mAssertionError[22m: expected { reasoningEffort: 'high', …(1) } to deeply equal { reasoningEffort: 'high', …(2) }[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[32m-   "coerced": false,[39m
+[2m    "effortSource": "named",[22m
+[2m    "reasoningEffort": "high",[22m
+[2m  }[22m
+
+[36m [2m❯[22m test/run106-effort-source-roundtrip.test.ts:[2m7:95[22m[39m
+    [90m  5| [39m[34mdescribe[39m([32m"Run 106 runtime effort-source round-trip"[39m[33m,[39m () [33m=>[39m {
+    [90m  6| [39m  [34mtest[39m([32m"round-trips all four canonical states"[39m[33m,[39m () [33m=>[39m {
+    [90m  7| [39m    expect(normalizeRuntimeEffortReceipt({ reasoningEffort: "high", ef…
+    [90m   | [39m                                                                                              [31m^[39m
+    [90m  8| [39m      { reasoningEffort: "high", effortSource: "named", coerced: false…
+    [90m  9| [39m    )[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/run106-effort-source-roundtrip.test.ts[2m > [22mRun 106 runtime effort-source round-trip[2m > [22mnormalizes legacy sources onto the canonical vocabulary
+[31m[1mAssertionError[22m: expected { reasoningEffort: 'high', …(1) } to deeply equal { reasoningEffort: 'high', …(2) }[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[32m-   "coerced": false,[39m
+[32m-   "effortSource": "named",[39m
+[31m+   "effortSource": "client",[39m
+[2m    "reasoningEffort": "high",[22m
+[2m  }[22m
+
+[36m [2m❯[22m test/run106-effort-source-roundtrip.test.ts:[2m24:96[22m[39m
+    [90m 22| [39m
+    [90m 23| [39m  test("normalizes legacy sources onto the canonical vocabulary", () =…
+    [90m 24| [39m    expect(normalizeRuntimeEffortReceipt({ reasoningEffort: "high", ef…
+    [90m   | [39m                                                                                               [31m^[39m
+    [90m 25| [39m      { reasoningEffort: "high", effortSource: "named", coerced: false…
+    [90m 26| [39m    )[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/run106-effort-source-roundtrip.test.ts[2m > [22mRun 106 runtime effort-source round-trip[2m > [22mdefaults a missing source to provider_default for a null-effort request
+[31m[1mAssertionError[22m: expected { reasoningEffort: null, …(1) } to deeply equal { reasoningEffort: null, …(2) }[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[32m-   "coerced": false,[39m
+[32m-   "effortSource": "provider_default",[39m
+[31m+   "effortSource": "none",[39m
+[2m    "reasoningEffort": null,[22m
+[2m  }[22m
+
+[36m [2m❯[22m test/run106-effort-source-roundtrip.test.ts:[2m36:70[22m[39m
+    [90m 34| [39m
+    [90m 35| [39m  test("defaults a missing source to provider_default for a null-effor…
+    [90m 36| [39m    expect(normalizeRuntimeEffortReceipt({ reasoningEffort: null })).t…
+    [90m   | [39m                                                                     [31m^[39m
+    [90m 37| [39m      reasoningEffort[33m:[39m [35mnull[39m[33m,[39m
+    [90m 38| [39m      effortSource[33m:[39m [32m"provider_default"[39m[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/run106-effort-source-roundtrip.test.ts[2m > [22mRun 106 runtime effort-source round-trip[2m > [22mrejects a non-named source carrying a reasoning effort
+[31m[1mAssertionError[22m: expected [Function] to throw an error[39m
+
+[32m- Expected:[39m 
+null
+
+[31m+ Received:[39m 
+undefined
+
+[36m [2m❯[22m test/run106-effort-source-roundtrip.test.ts:[2m52:7[22m[39m
+    [90m 50| [39m    [34mexpect[39m(() [33m=>[39m
+    [90m 51| [39m      normalizeRuntimeEffortReceipt({ reasoningEffort: "high", effortS…
+    [90m 52| [39m    )[33m.[39m[34mtoThrow[39m([36m/disabled|reasoningEffort|effort/i[39m)[33m;[39m
+    [90m   | [39m      [31m^[39m
+    [90m 53| [39m  })[33m;[39m
+    [90m 54| [39m})[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m4 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (5)[39m
+[2m   Start at [22m 12:44:41
+[2m   Duration [22m 2.31s[2m (transform 370ms, setup 0ms, collect 993ms, tests 40ms, environment 1ms, prepare 438ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\106-client-neutral-model-effort-routing\role-model-router\packages\runtime-observability:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/run106-effort-source-roundtrip.test.ts

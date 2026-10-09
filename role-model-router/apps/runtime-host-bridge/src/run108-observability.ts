@@ -1,0 +1,766 @@
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Metric from "effect/Metric";
+import * as Option from "effect/Option";
+import * as Tracer from "effect/Tracer";
+
+/**
+ * Run 108 R7 - the observability spine, phase 1 (metrics).
+ *
+ * Per the effect-grep canonical idiom (Effect-TS/effect @460272d, packages/effect/test/Metric.test.ts):
+ * declare each metric ONCE at module scope with a description and a documented tag contract, update via
+ * Metric.update, scope to the active Metric.MetricRegistry (tests and per-scope runtimes isolate via
+ * Effect.provideService(Metric.MetricRegistry, registry)), and tag per call with Metric.withAttributes.
+ *
+ * Namespaces: role-model.router.*, role-model.replay.*, role-model.eval.*, role-model.learner.*.
+ * Spans (Tracer.make, per-stage attributes) are phase 2 of this requirement.
+ *
+ * THE REGISTRY CONTRACT (run 108 follow-up, the per-runtime-scope registry fix). The module-scope
+ * DECLARATIONS above are descriptions; the STATE lives in a Metric.MetricRegistry Map and is resolved
+ * at RECORD time - Metric$#hook re-reads it on every update, "because the registry owns the series"
+ * (vendor/effect/packages/effect/src/Metric.ts:1700-1701). MetricRegistry is a Context.Reference whose
+ * defaultValue is `() => new Map()` (:1648-1651), and its own JSDoc states the consequence
+ * (:1636-1640): "Because Context.Reference caches default values, the default Map is shared by contexts
+ * that do not provide an override. Provide MetricRegistry with a fresh Map when isolation matters."
+ *
+ * Every recorder below therefore REQUIRES the runtime scope it belongs to and provides that scope's
+ * registry explicitly, and so does collectObservabilitySnapshot. A recorder called with no registry
+ * resolved the process-global default Map, so every runtime scope in the process shared one registry
+ * and the operator snapshot was a view of every metric in the process rather than this runtime's.
+ *
+ * Scope creation is a RUNTIME-SCOPE decision, taken once by the runtime at its composition root - never
+ * per call: a fresh Map per call would discard the scope's data on every write. A component that is not
+ * itself a scope boundary and is handed no scope observes NOTHING, deliberately: recording nothing is
+ * honest, while recording into the process-global default is the defect this contract removes.
+ */
+
+/**
+ * ONE runtime scope's metric registry, carried WITH the scope it belongs to.
+ *
+ * The registry is created once per scope (see createObservabilityScope) and every recorder and the
+ * readback of that scope provide it with Effect.provideService, so two scopes in one process never
+ * share a series - and neither of them is Effect's process-global default Map.
+ */
+export interface ObservabilityScope {
+  /** The runtime scope this registry belongs to (the host's operator scope id, or a named test scope). */
+  readonly scopeId: string;
+  /** The scope's registry. Owned by the scope for its whole lifetime. */
+  readonly registry: Metric.MetricRegistry;
+}
+
+/**
+ * Create the registry of ONE runtime scope. Call this at a runtime-scope boundary (the host's
+ * composition root, a started bridge server) and hand the result to everything that records or reads
+ * within that scope. Never call it per metric update: a fresh Map per call discards the data written
+ * by the previous one.
+ */
+export function createObservabilityScope(scopeId: string): ObservabilityScope {
+  return { scopeId, registry: new Map() };
+}
+
+/**
+ * Run an Effect against THIS scope's registry rather than Effect's process-global default Map. The
+ * canonical idiom (vendor/effect Metric.ts:100, :182, :242, ... :1648-1651).
+ */
+const inScope = <A>(effect: Effect.Effect<A>, scope: ObservabilityScope): A =>
+  Effect.runSync(Effect.provideService(effect, Metric.MetricRegistry, scope.registry));
+
+/** Routing decisions served by the runtime. Tag contract: none at call time (the decision id travels on the span in phase 2). */
+export const routerDecisions = Metric.counter("role-model.router.decisions", {
+  description: "Routing decisions served by the runtime.",
+  incremental: true,
+});
+
+/**
+ * Replay admission attempts. Tag contract: { pass: "replay", admitted: "true" | "false" } - every
+ * attempt counts once and the outcome rides the tag, so refusals are visible as their own series.
+ */
+export const replayAdmissions = Metric.counter("role-model.replay.admissions", {
+  // 03.5 re-review m4: F3 made every ATTEMPT count 1 and moved the outcome into the admitted tag, so
+  // the description must name the attempt - "Captures admitted for replay" was a claim the counter no
+  // longer makes (a refusal is its own visible series under the same id).
+  description: "Replay admission attempts, tagged by whether the capture was admitted.",
+  incremental: true,
+});
+
+/** Finalise guard refusals. Tag contract: { guard, reason } - the RC-1 observability gap (which guard refused never reached the disposition). */
+export const evalFinaliseRefusals = Metric.counter("role-model.eval.finalise_refusals", {
+  description: "Evaluation finalise guard refusals, tagged by guard and reason.",
+  incremental: true,
+});
+
+/**
+ * Run 108 phase-03 F4 (effect-grep canonicalization): the learner outcome vocabulary, declared
+ * once. The metric JSDoc below had drifted to derived | skipped | refused while the wiring helper
+ * accepted derived | idle and the sweep passes idle - a documented tag contract the code cannot
+ * produce. These are the two outcomes the sweep has: it derived candidates, or it was idle.
+ */
+export type LearnerDerivationOutcome = "derived" | "idle";
+
+/** Candidates derived per learner sweep. Tag contract: { outcome: "derived" | "idle" }. */
+export const learnerDerivations = Metric.counter("role-model.learner.derivations", {
+  description: "Candidates examined by the learner sweep per tick.",
+  incremental: true,
+});
+
+/**
+ * Run 108 R7 span phase, per the effect-grep canonical convention (memory pro-0081, alchemy-effect
+ * @ef7d3077): spans are created through the active Tracer (Tracer.make), scalar attributes are
+ * forwarded, and completion is recorded as effect.exit.
+ */
+export const withStageSpanEffect = <A, E, R>(
+  stage: string,
+  attributes: Readonly<Record<string, string>>,
+  self: Effect.Effect<A, E, R>,
+): Effect.Effect<A, E, Exclude<R, Tracer.ParentSpan>> =>
+  Effect.withSpan(self, stage, { attributes });
+
+/**
+ * Sync wrapper for the plain-TS host: run a stage under a named span. The tracer is injectable so
+ * tests can record span lifecycle; by default it uses the runtime's active tracer.
+ */
+export function withStageSpan<A>(
+  stage: string,
+  attributes: Readonly<Record<string, string>>,
+  run: () => A,
+  options: { readonly tracer?: Tracer.Tracer } = {},
+): A {
+  const tracer = options.tracer ?? Effect.runSync(Effect.service(Tracer.Tracer));
+  const startTime = BigInt(Math.floor(Date.now() * 1_000_000));
+  const span = tracer.span({
+    name: stage,
+    parent: Option.none(),
+    annotations: Context.empty(),
+    links: [],
+    startTime,
+    kind: "internal",
+    root: true,
+    sampled: true,
+  });
+  for (const [key, value] of Object.entries(attributes)) {
+    span.attribute(key, value);
+  }
+  try {
+    const result = run();
+    span.end(BigInt(Math.floor(Date.now() * 1_000_000)), Exit.succeed(result));
+    return result;
+  } catch (error) {
+    /**
+     * Run 108 phase-03 F1 (effect-grep canonicalization): a JS throw is a DEFECT, not a typed
+     * error. The canonical completion is Exit.die - see effect test/Tracer.test.ts "ends the span
+     * when the callback throws", which asserts deepStrictEqual(exit, Exit.die(defect)). Exit.fail
+     * here reported a typed failure for something that never travelled the typed error channel.
+     */
+    span.end(BigInt(Math.floor(Date.now() * 1_000_000)), Exit.die(error));
+    throw error;
+  }
+}
+
+/**
+ * The production wiring helpers. 03.5 review M2: the phase-3 call sites were inline metric updates
+ * with no pinned contract - these are the one-line contracts the production paths call, each covered
+ * by run108-observability.test.ts.
+ */
+export function recordRouterDecision(
+  selection: "advisory_applied" | "baseline_retained",
+  scope: ObservabilityScope,
+): void {
+  inScope(Metric.update(Metric.withAttributes(routerDecisions, { selection }), 1), scope);
+}
+
+/**
+ * Run 108 phase-03 F3 (effect-grep canonicalization): every attempt updates by 1 and the outcome
+ * travels in the tag. The baseline updated by `admitted ? 1 : 0`, so a refusal added +0 and was
+ * indistinguishable from no attempt at all - the counter could not answer "how often was replay
+ * refused".
+ */
+export function recordReplayAdmission(
+  pass: "replay",
+  admitted: boolean,
+  scope: ObservabilityScope,
+): void {
+  inScope(
+    Metric.update(
+      Metric.withAttributes(replayAdmissions, { pass, admitted: admitted ? "true" : "false" }),
+      1,
+    ),
+    scope,
+  );
+}
+
+export function recordFinaliseRefusal(
+  guard: string,
+  reason: string,
+  scope: ObservabilityScope,
+): void {
+  inScope(Metric.update(Metric.withAttributes(evalFinaliseRefusals, { guard, reason }), 1), scope);
+}
+
+export function recordLearnerDerivation(
+  count: number,
+  outcome: LearnerDerivationOutcome,
+  scope: ObservabilityScope,
+): void {
+  inScope(Metric.update(Metric.withAttributes(learnerDerivations, { outcome }), count), scope);
+}
+
+/**
+ * Run 108 phase-03 F2 (effect-grep canonicalization): the readback keeps the registry's own
+ * granularity. Metric.snapshot hands out one entry per (metric, attributes) pair, each with its own
+ * state (Effect-TS/effect @460272d, Metric.ts SnapshotProto); aggregating by metric id alone
+ * DISCARDED the attributes and collapsed the guard/reason tag contract into a single total - the
+ * exact RC-1 gap the refusal counter exists to close ("which guard refused" never reached the
+ * disposition). The claim the counter carries is the breakdown, not the sum.
+ */
+
+/** The metric families the registry can hand back (Effect Metric.Type). */
+export type ObservabilityMetricType = "Counter" | "Gauge" | "Histogram" | "Frequency" | "Summary";
+
+/**
+ * The state of one series, discriminated by the metric family that produced it. The counter-only
+ * cast this replaces silently zeroed every gauge and histogram, so each family reads back through
+ * its own state shape.
+ */
+export type ObservabilityMetricState =
+  | { readonly kind: "counter"; readonly count: number; readonly incremental: boolean }
+  | { readonly kind: "gauge"; readonly value: number }
+  | {
+      readonly kind: "histogram";
+      readonly buckets: ReadonlyArray<readonly [number, number]>;
+      readonly count: number;
+      readonly sum: number;
+      readonly min: number;
+      readonly max: number;
+    };
+
+/** One (id, attributes, state) series - the registry's granularity, never collapsed. */
+export interface ObservabilityMetricSeries {
+  readonly id: string;
+  readonly attributes: Readonly<Record<string, string>>;
+  readonly state: ObservabilityMetricState;
+}
+
+/** One metric id and every series written under it. */
+export interface ObservabilityMetricReadback {
+  /** The family the id was declared as (one id is one family). */
+  readonly type: ObservabilityMetricType;
+  /**
+   * Convenience total: counters sum their counts, histograms their observation counts and gauges
+   * their values across the series. The series breakdown is the authoritative reading.
+   */
+  readonly count: number;
+  /** The counter contract: true only while every series is an incremental counter. */
+  readonly incremental: boolean;
+  readonly series: ReadonlyArray<ObservabilityMetricSeries>;
+}
+
+/**
+ * Run 108 effect audit (P5): canon types counter and gauge state as `number | bigint` (vendor/effect
+ * Metric.ts CounterState/GaugeState), so a bigint series was read as 0 - a FABRICATED value of the same
+ * class as the counter-only cast F2 fixed. Bigints convert faithfully; anything that is not a finite
+ * number still answers 0 rather than inventing one.
+ */
+const asNumber = (value: unknown): number => {
+  if (typeof value === "bigint") return Number(value);
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+};
+
+const asBuckets = (value: unknown): ReadonlyArray<readonly [number, number]> =>
+  Array.isArray(value)
+    ? value.filter(
+        (bucket): bucket is [number, number] =>
+          Array.isArray(bucket) &&
+          bucket.length === 2 &&
+          typeof bucket[0] === "number" &&
+          typeof bucket[1] === "number",
+      )
+    : [];
+
+const seriesAttributes = (attributes: unknown): Readonly<Record<string, string>> => {
+  const out: Record<string, string> = {};
+  if (attributes !== null && typeof attributes === "object" && !Array.isArray(attributes)) {
+    for (const [key, value] of Object.entries(attributes)) {
+      out[key] = String(value);
+    }
+  }
+  return out;
+};
+
+const toSeriesState = (type: string, state: Record<string, unknown>): ObservabilityMetricState => {
+  if (type === "Gauge") {
+    return { kind: "gauge", value: asNumber(state.value) };
+  }
+  if (type === "Histogram") {
+    return {
+      kind: "histogram",
+      buckets: asBuckets(state.buckets),
+      count: asNumber(state.count),
+      sum: asNumber(state.sum),
+      min: asNumber(state.min),
+      max: asNumber(state.max),
+    };
+  }
+  // The spine declares counters (the four module-scope families above); any other family reads
+  // back as the counter shape its state shares rather than being folded into a zero.
+  return { kind: "counter", count: asNumber(state.count), incremental: state.incremental === true };
+};
+
+const seriesScalar = (state: ObservabilityMetricState): number =>
+  state.kind === "counter" ? state.count : state.kind === "gauge" ? state.value : state.count;
+
+/** A stable key for one attribute set, so the readback order does not depend on write order. */
+const attributeKey = (attributes: Readonly<Record<string, string>>): string =>
+  JSON.stringify(Object.entries(attributes).sort(([left], [right]) => (left < right ? -1 : 1)));
+
+/**
+ * 03.5 review M4: the metrics were write-only - this is the readback the UI/status surfaces.
+ *
+ * Run 108 follow-up: the readback takes the SAME scope its recorders were handed, so the operator
+ * route answers what THIS runtime measured rather than every metric in the process.
+ */
+export function collectObservabilitySnapshot(
+  scope: ObservabilityScope,
+): Record<string, ObservabilityMetricReadback> {
+  const snapshots = inScope(Metric.snapshot, scope) as ReadonlyArray<{
+    id: string;
+    type: string;
+    attributes?: unknown;
+    state?: unknown;
+  }>;
+  const grouped = new Map<
+    string,
+    { type: ObservabilityMetricType; series: ObservabilityMetricSeries[] }
+  >();
+  for (const snap of snapshots) {
+    const series: ObservabilityMetricSeries = {
+      id: snap.id,
+      attributes: seriesAttributes(snap.attributes),
+      state: toSeriesState(snap.type, (snap.state ?? {}) as Record<string, unknown>),
+    };
+    const group = grouped.get(snap.id);
+    if (group === undefined) {
+      grouped.set(snap.id, { type: snap.type as ObservabilityMetricType, series: [series] });
+      continue;
+    }
+    group.series.push(series);
+  }
+  const out: Record<string, ObservabilityMetricReadback> = {};
+  for (const [id, group] of grouped) {
+    const series = [...group.series].sort((left, right) =>
+      attributeKey(left.attributes).localeCompare(attributeKey(right.attributes)),
+    );
+    out[id] = {
+      type: group.type,
+      count: series.reduce((total, entry) => total + seriesScalar(entry.state), 0),
+      incremental:
+        series.length > 0 &&
+        series.every((entry) => entry.state.kind === "counter" && entry.state.incremental),
+      series,
+    };
+  }
+  return out;
+}
+
+/**
+ * Run 108 phase-03 F5 (R7 "Metrics"): the per-family evidence counter.
+ *
+ * CANONICAL SHAPE (effect-grep audit, generation local-e7d9d448): ONE counter id carrying a
+ * BOUNDED `family` attribute and a `dimension` tag. A dynamic metric name per family
+ * (`role-model.learner.family_derivations.<family>`) is the noncanonical form the audit rejects:
+ * the registry would then hold one metric per task family the store has ever reported.
+ *
+ * Value contract: every update is the number of times the learning pass DERIVED evidence for that
+ * (family, dimension) this pass, so the counter is a monotonic sum of derivations - work done, not a
+ * census. Re-deriving the same durable evidence on a later pass counts again, exactly as a byte or
+ * row counter counts a re-read; the per-series total is therefore cumulative and is never a
+ * statement about how much evidence currently exists.
+ */
+export type LearnerFamilyDimension = "decisive" | "holdout" | "development" | "distinct";
+
+/** The ONE attribute value every family id beyond the bound collapses onto. */
+export const UNKNOWN_FAMILY_ATTRIBUTE = "other";
+
+/**
+ * How many distinct family ids keep an attribute value of their own. Small on purpose: the
+ * attribute space is bounded so the registry cannot grow per distinct family id.
+ */
+export const LEARNER_FAMILY_ATTRIBUTE_BOUND = 16;
+
+export interface FamilyAttributeCollapser {
+  /** The attribute value for a family id: the id itself while admitted, otherwise "other". */
+  attributeFor(familyId: string): string;
+  /** How many family ids currently hold a series of their own (never more than the bound). */
+  readonly admittedCount: number;
+}
+
+/**
+ * The explicit family-attribute collapse. The first `bound` distinct ids seen are admitted and keep
+ * their own attribute value; every id after that - and every empty id - maps to the single overflow
+ * value "other". An id already admitted is never re-bucketed, so a series does not move once it
+ * exists. This is what bounds the registry: at most bound + 1 family series, for ever.
+ */
+export function createFamilyAttributeCollapser(
+  bound: number = LEARNER_FAMILY_ATTRIBUTE_BOUND,
+): FamilyAttributeCollapser {
+  const admitted = new Set<string>();
+  return {
+    attributeFor(familyId: string): string {
+      const id =
+        typeof familyId === "string" && familyId.trim().length > 0
+          ? familyId
+          : UNKNOWN_FAMILY_ATTRIBUTE;
+      if (admitted.has(id)) return id;
+      if (admitted.size < bound) {
+        admitted.add(id);
+        return id;
+      }
+      return UNKNOWN_FAMILY_ATTRIBUTE;
+    },
+    get admittedCount(): number {
+      return admitted.size;
+    },
+  };
+}
+
+/** The per-family evidence counter. Tag contract: { family, dimension: decisive|holdout|development|distinct }. */
+export const learnerFamilyDerivations = Metric.counter("role-model.learner.family_derivations", {
+  description: "Learner evidence derivations per task family and evidence dimension.",
+  incremental: true,
+});
+
+/** The four per-family dimensions the learning-pass summary already counts. */
+export interface LearnerFamilyEvidenceCounts {
+  readonly decisiveComparisons?: number;
+  readonly holdoutComparisons?: number;
+  readonly developmentComparisons?: number;
+  readonly distinctCaptures?: number;
+}
+
+const FAMILY_DIMENSION_FIELDS: ReadonlyArray<
+  readonly [LearnerFamilyDimension, keyof LearnerFamilyEvidenceCounts]
+> = [
+  ["decisive", "decisiveComparisons"],
+  ["holdout", "holdoutComparisons"],
+  ["development", "developmentComparisons"],
+  ["distinct", "distinctCaptures"],
+];
+
+/** The ONE collapser the production recordings share, so the bound holds across every call site. */
+const familyAttributes = createFamilyAttributeCollapser();
+
+/**
+ * Record one learning pass's per-family evidence counts. Called where the host already computes
+ * them (`buildTrackBLearningEvidenceSummary(...).byFamily`), so the metric adds no new readback.
+ */
+export function recordLearnerFamilyEvidence(
+  byFamily: Readonly<Record<string, LearnerFamilyEvidenceCounts>>,
+  scope: ObservabilityScope,
+): void {
+  for (const [familyId, counts] of Object.entries(byFamily ?? {})) {
+    const family = familyAttributes.attributeFor(familyId);
+    for (const [dimension, field] of FAMILY_DIMENSION_FIELDS) {
+      const value = counts?.[field];
+      if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) continue;
+      inScope(
+        Metric.update(
+          Metric.withAttributes(learnerFamilyDerivations, { family, dimension }),
+          value,
+        ),
+        scope,
+      );
+    }
+  }
+}
+
+/**
+ * Run 108 phase-03 F5 (R7 "Metrics"): the queue-state gauges.
+ *
+ * A depth is a LEVEL, so each gauge is declared once at module scope and SET with
+ * `Metric.update(gauge, currentDepth)`; the canonical gauge state is `{ value }` and a second
+ * observation REPLACES the first. `Metric.modify` is the delta form and is deliberately not used -
+ * a queue that drains from 7 to 3 must read 3, not 10.
+ *
+ * Sources are the readbacks the host ALREADY performs per tick; this adds no poller:
+ *   queued             - the `pendingTotal` of the tick's own pending-capture readback
+ *                        (`listPendingReplayCaptures`), i.e. captures still owed a replay. It is the
+ *                        CENSUS, taken by the producer BEFORE the page the tick consumes is bounded by
+ *                        `limit` - never the page length, which saturates at the tick's own limit.
+ *   awaiting_evaluation - the durable replay jobs in the awaiting-evaluation state that the tick's
+ *                        own pending-dispatch readback observed for the tasks it walked
+ *                        (`readPendingRouteDispatches`). The replay plane exposes no whole-census
+ *                        depth per tick, so this is a CENSUS OF WHAT THE TICK READ; a tick that
+ *                        walks no task leaves the gauge at its last observation.
+ *   stranded           - the count the evaluation reconcile pass reported stranded in this sweep
+ *                        (`reconcileEvaluationJobs().stranded`).
+ */
+export const replayQueueQueued = Metric.gauge("role-model.replay.queue.queued", {
+  description:
+    "Captures still owed a replay, as the tick's own pending-capture readback counts them before its page is bounded.",
+});
+
+export const replayQueueAwaitingEvaluation = Metric.gauge(
+  "role-model.replay.queue.awaiting_evaluation",
+  {
+    description:
+      "Durable replay jobs awaiting evaluation, as observed by the tick's pending-dispatch readback.",
+  },
+);
+
+export const replayQueueStranded = Metric.gauge("role-model.replay.queue.stranded", {
+  description: "Evaluation jobs the reconcile pass reported stranded in the current sweep.",
+});
+
+export interface ReplayQueueDepths {
+  readonly queued?: number;
+  readonly awaitingEvaluation?: number;
+  readonly stranded?: number;
+}
+
+/** A depth is a non-negative whole count; anything else is "not observed" and writes nothing. */
+const observedDepth = (value: number | undefined): number | null =>
+  typeof value === "number" && Number.isFinite(value) && value >= 0 ? Math.trunc(value) : null;
+
+/** SET the gauges the caller observed this tick. An omitted depth is left untouched. */
+export function recordQueueDepths(depths: ReplayQueueDepths, scope: ObservabilityScope): void {
+  const queued = observedDepth(depths?.queued);
+  if (queued !== null) inScope(Metric.update(replayQueueQueued, queued), scope);
+  const awaitingEvaluation = observedDepth(depths?.awaitingEvaluation);
+  if (awaitingEvaluation !== null)
+    inScope(Metric.update(replayQueueAwaitingEvaluation, awaitingEvaluation), scope);
+  const stranded = observedDepth(depths?.stranded);
+  if (stranded !== null) inScope(Metric.update(replayQueueStranded, stranded), scope);
+}
+
+/**
+ * Run 108 phase-03 F5 (R7 "Metrics"): the arm-count histogram.
+ *
+ * A total cannot answer "how many arms does a plan usually carry", so the arm-planning result is
+ * recorded as a distribution. The boundaries are EXPLICIT and cover the arm counts this runtime
+ * actually produces: the dispatcher plans one arm per eligible counterfactual endpoint, the dev
+ * runtime configures twelve endpoints, and the shipped challenge batch is one - so unit steps of
+ * two up to twelve, plus Effect's overflow partition, cover the expected range without pretending
+ * to resolve a count the planner never produces.
+ */
+export const REPLAY_ARM_PLAN_BOUNDARIES: ReadonlyArray<number> = Metric.linearBoundaries({
+  start: 0,
+  width: 2,
+  count: 8,
+});
+
+/** Planned arms per arm-planning result (the selector call site). */
+export const replayArmPlanArms = Metric.histogram("role-model.replay.arm_plan_arms", {
+  description: "Arms planned per replay arm-planning result.",
+  boundaries: REPLAY_ARM_PLAN_BOUNDARIES,
+});
+
+/** Record one arm-planning result. A negative or non-finite count is not an observation. */
+export function recordArmPlan(armCount: number, scope: ObservabilityScope): void {
+  if (typeof armCount !== "number" || !Number.isFinite(armCount) || armCount < 0) return;
+  inScope(Metric.update(replayArmPlanArms, Math.trunc(armCount)), scope);
+}
+
+/**
+ * Run 108 phase-03 F5 (R7 "Metrics"): the ladder admission floor.
+ *
+ * The floor is the rule that decides whether a (role, task) ladder has admitted enough evidence to
+ * go active. Measured at the MATERIALIZATION OUTCOME (cli.ts, beside the rung count), so the verdict
+ * counted is the one of the ladder that was actually persisted - addendum-04 moved it here from the
+ * in-flight-challenge block, which could only ever see a refusal-biased sample - K finalized effort-comparable comparisons at a mean confidence at or above the
+ * product-defaults minimum. It is a RATE, so the counter updates by 1 on every evaluation and the
+ * verdict rides the tag: { admitted: "true" | "false" } are the numerator and the denominator of
+ * the same measurement, and a refusal is its own visible series.
+ */
+export const learnerAdmissionFloor = Metric.counter("role-model.learner.admission_floor", {
+  description:
+    "Route-ladder admission-floor evaluations, tagged by whether the CURRENT evidence met it.",
+  incremental: true,
+});
+
+export function recordAdmissionFloor(admitted: boolean, scope: ObservabilityScope): void {
+  inScope(
+    Metric.update(
+      Metric.withAttributes(learnerAdmissionFloor, { admitted: admitted ? "true" : "false" }),
+      1,
+    ),
+    scope,
+  );
+}
+
+/**
+ * Run 108 follow-up (M3): the LIVE admission-floor verdict of one MATERIALIZATION-OUTCOME entry.
+ *
+ * THE SUBJECT. The floor is the rule that decides whether an endpoint currently holds enough evidence to
+ * become an eligible pack: K finalized effort-comparable comparisons at a mean confidence >= the
+ * minimum. The canonical definition is the promotion gate of the proposal guidance
+ * (proposals/crowdsourced-evals/docs/guidance/13_profile_learner.md:113-134, canPromoteProfile:
+ * semanticEvidenceWeight >= 5 and confidence >= 0.7 - exactly this runtime's floor defaults,
+ * product-defaults-file.ts:42-43), and the operator decision of 2026-10-09 recorded at
+ * evidence/floor-definition-from-guidance.md:42-46 follows from it: the floor is a CURRENT eligibility
+ * verdict, so the metric reports the floor LIVELY.
+ *
+ * WHY THE PERSISTED ROW CANNOT ANSWER IT. The producer preserves the prior snapshot when an append drops
+ * a previously admitted endpoint below the current floor (paired private
+ * shared/route-learning/route-ladder-materialization.mjs:95-100, :116-118) and computes `completeness`
+ * over the EFFECTIVE evidence (live-admitted endpoints UNION the preserved prior ones, :127-129). The
+ * persisted `completeness.admitted` can therefore be > 0 while the live answer of
+ * `admissionFloor(entry.groups, defaults)` (:93) is an EMPTY admitted set. Reading the persisted row
+ * reports a FABRICATED GREEN exactly where the floor currently admits nothing. `persistedAdmissionFloorVerdictOf`
+ * below still answers that historical reading, under its OWN metric id, so the two are never conflated.
+ *
+ * WHAT THIS READS INSTEAD. The live answer's own size, published by the outcome entry as `floor`:
+ *   { floor: { admitted: 3 } }                       // floor.admitted.size (the Set's size)
+ *   { floor: { admitted: ["endpoint:a", ...] } }     // floor.admitted itself (the Set, serialized)
+ * An entry that carries no live answer measures NO current verdict and answers null, so the caller records
+ * NOTHING rather than the preserved value - the same fail-closed rule the stranded gauge follows:
+ * publishing nothing is honest, publishing a preserved value as current is not.
+ *
+ * THE BRANCHES THAT ARE NOT THE FLOOR'S OWN VERDICT are unchanged. `insufficient_evidence` IS the live
+ * refusal: the producer pushes it exactly when `!floor.admitted.size && !current` (:94), i.e. the floor
+ * admitted nothing and no ladder exists yet, which is the case an operator most needs to see. The other
+ * null-ladder statuses - capacity_exceeded (:108, a CAPACITY refusal reached only AFTER the floor admitted
+ * something), stale, stale_evidence, refused, rolled_back - answer null and record nothing, deliberately.
+ */
+export function admissionFloorVerdictOf(entry: unknown): boolean | null {
+  if (!entry || typeof entry !== "object") return null;
+  const live = liveAdmittedCountOf(entry);
+  if (live !== null) return live > 0;
+  return (entry as { status?: unknown }).status === "insufficient_evidence" ? false : null;
+}
+
+/** The live answer's size from the entry's `floor` carrier: the Set's size, or the Set itself. */
+function liveAdmittedCountOf(entry: unknown): number | null {
+  const floor = (entry as { floor?: unknown }).floor;
+  if (!floor || typeof floor !== "object" || Array.isArray(floor)) return null;
+  const admitted = (floor as { admitted?: unknown }).admitted;
+  if (typeof admitted === "number" && Number.isFinite(admitted) && admitted >= 0)
+    return Math.trunc(admitted);
+  return Array.isArray(admitted) ? admitted.length : null;
+}
+
+/**
+ * The PERSISTED route-ladder snapshot's admission verdict, under its OWN metric id.
+ *
+ * This is the reader the addendum-04 re-site introduced and the M3 finding corrected the SUBJECT of: it
+ * answers what the STORE's row says, which for a regressed ladder is the preserved prior snapshot rather
+ * than the current floor. It is kept - an operator still needs to see what the authoritative row carries -
+ * but never as `admission_floor`, so a preserved historical value can no longer be read as a live one.
+ *
+ * Reads the admitted count off the PERSISTED row the outcome carries, so it counts the verdict of the
+ * ladder that was actually written - never a value reconstructed beside it (the F5 lesson). A row with no
+ * numeric admitted count measures nothing and answers null, so the caller skips it rather than inventing a
+ * refusal. Deliberately NOT restricted to status === "written": the steady-state "unchanged" rows and the
+ * "insufficient_evidence" rows - which IS the admitted === false case - are exactly what a rate needs, and
+ * the old emit only ever saw the refusal-biased in-flight-challenge sample.
+ */
+export function persistedAdmissionFloorVerdictOf(entry: unknown): boolean | null {
+  if (!entry || typeof entry !== "object") return null;
+  const persisted = admittedCountOf((entry as { ladder?: unknown }).ladder);
+  const value = persisted ?? admittedCountOf(entry);
+  if (value !== null) return value > 0;
+  // See the live reader above: `insufficient_evidence` IS the producer's own persisted refusal.
+  return (entry as { status?: unknown }).status === "insufficient_evidence" ? false : null;
+}
+
+/**
+ * The PERSISTED row's admission verdict - a SEPARATE, clearly-named series, never the floor's own answer.
+ * Seeing it move while `role-model.learner.admission_floor` stays still is exactly the regression the M3
+ * fix is meant to make visible rather than hide behind one name.
+ */
+export const learnerAdmissionFloorPersisted = Metric.counter(
+  "role-model.learner.admission_floor_persisted",
+  {
+    description:
+      "Persisted route-ladder snapshots, tagged by whether the SNAPSHOT admitted any endpoint (a preserved historic value on regression, never the current floor verdict).",
+    incremental: true,
+  },
+);
+
+export function recordPersistedAdmissionFloor(admitted: boolean, scope: ObservabilityScope): void {
+  inScope(
+    Metric.update(
+      Metric.withAttributes(learnerAdmissionFloorPersisted, {
+        admitted: admitted ? "true" : "false",
+      }),
+      1,
+    ),
+    scope,
+  );
+}
+
+function admittedCountOf(row: unknown): number | null {
+  if (!row || typeof row !== "object") return null;
+  const completeness = (row as { completeness?: unknown }).completeness;
+  if (!completeness || typeof completeness !== "object") return null;
+  const admitted = (completeness as { admitted?: unknown }).admitted;
+  return typeof admitted === "number" && Number.isFinite(admitted) ? admitted : null;
+}
+
+/**
+ * Run 108 phase-03 F5 (R7 "Metrics"): the ladder-rung count at the materialization outcome.
+ *
+ * A ladder is a ranked list of rungs, so an outcome that writes a 3-rung ladder and one that
+ * writes a 12-rung ladder are different events; the count is a histogram over the same explicit
+ * boundaries as the arm plan, because a rung is one admitted endpoint of the same pool.
+ */
+export const LADDER_RUNG_BOUNDARIES: ReadonlyArray<number> = Metric.linearBoundaries({
+  start: 0,
+  width: 2,
+  count: 8,
+});
+
+export const ladderRungs = Metric.histogram("role-model.learner.ladder_rungs", {
+  description: "Rungs a route-ladder materialization outcome wrote.",
+  boundaries: LADDER_RUNG_BOUNDARIES,
+});
+
+/**
+ * The rung count a route-ladder row carries: its own rung list when the row holds one, otherwise the
+ * admitted count of its completeness summary. A row that carries neither does NOT mean "zero rungs" -
+ * it means the row does not measure rungs - so it answers null and the caller records nothing rather
+ * than a fabricated zero.
+ */
+function rungCountIn(row: unknown): number | null {
+  if (row === null || typeof row !== "object" || Array.isArray(row)) return null;
+  const record = row as Record<string, unknown>;
+  if (Array.isArray(record.rungs)) return record.rungs.length;
+  const completeness = record.completeness;
+  if (completeness === null || typeof completeness !== "object" || Array.isArray(completeness))
+    return null;
+  const admitted = (completeness as Record<string, unknown>).admitted;
+  return typeof admitted === "number" && Number.isFinite(admitted) && admitted >= 0
+    ? Math.trunc(admitted)
+    : null;
+}
+
+/**
+ * Run 108 follow-up (the broken emit the compliance audit found): the rung count of a ladder
+ * MATERIALIZATION OUTCOME entry.
+ *
+ * The outcome the host receives from `operations.materializeRouteLadders` carries the row the store
+ * ACCEPTED under `ladder`, stamped with the store's own packId, and does not repeat
+ * `rungs`/`completeness` at the entry's own level: the materializer spreads only the snapshot it
+ * handed over (paired private `shared/route-learning/route-ladder-materialization.mjs:151`) and drops
+ * the store receipt, which itself does carry `rungs`/`completeness`
+ * (`extensions/knowledge-store/index.mjs:557-559`). Measured on the genuine materializer over a real
+ * store, a written entry's OWN keys are exactly roleId, taskTypeId, scopeId, status, ladder, metadata,
+ * so reading only the entry answered null for every written ladder and the metric never had a series
+ * no matter how much traffic materialized.
+ *
+ * That nested row IS the persisted row, so this counts what was WRITTEN rather than a number
+ * reconstructed beside it: the store persists the accepted snapshot verbatim apart from the operator's
+ * own rollback (`extensions/knowledge-store/route-ladder.mjs:129,137`), and its rung normalization
+ * validates by throwing, never by dropping a rung (`route-ladder.mjs:63-90`). The persisted row
+ * therefore WINS over any value carried beside it, and the paired case re-reads
+ * `knowledge:read-route-ladder` to hold this equal to the rungs in `knowledge_route_ladders.ladder_json`.
+ */
+export function ladderRungCountOf(row: unknown): number | null {
+  if (row === null || typeof row !== "object" || Array.isArray(row)) return null;
+  const persisted = rungCountIn((row as Record<string, unknown>).ladder);
+  return persisted ?? rungCountIn(row);
+}
+
+export function recordLadderRungs(rungCount: number, scope: ObservabilityScope): void {
+  if (typeof rungCount !== "number" || !Number.isFinite(rungCount) || rungCount < 0) return;
+  inScope(Metric.update(ladderRungs, Math.trunc(rungCount)), scope);
+}

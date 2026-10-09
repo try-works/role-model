@@ -1,0 +1,7 @@
+SP5 GREEN - turn-aware difficulty repair (R7)
+command: corepack pnpm exec vitest run test/run106-turn-aware-difficulty.test.ts test/run98-a32-difficulty-spread.test.ts test/run106-turn-aware-hard-shortcut.test.ts test/craft-ask-difficulty.test.ts
+result: 4 files passed (4), 23 tests passed (23)
+  run106-turn-aware-difficulty.test.ts: 10 passed
+  run98-a32-difficulty-spread.test.ts: 5 passed (prior regression restored: tool-using schema task => hard)
+  run106-turn-aware-hard-shortcut.test.ts: 4 passed
+  craft-ask-difficulty.test.ts: 4 passed

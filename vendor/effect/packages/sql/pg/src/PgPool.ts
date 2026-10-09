@@ -9,7 +9,7 @@ import * as Duration from "effect/Duration"
 import * as Effect from "effect/Effect"
 import * as Pool from "effect/Pool"
 import type * as Scope from "effect/Scope"
-import type { SqlError } from "effect/unstable/sql/SqlError"
+import type { SqlError } from "effect/sql/SqlError"
 import { connectionInternals } from "./internal/connection.ts"
 import * as PgConnection from "./PgConnection.ts"
 
@@ -36,7 +36,7 @@ export type TypeId = "~@effect/sql-pg/PgPool"
  *
  * **Details**
  *
- * The defaults are 0 to 10 connections and a 10-second idle timeout.
+ * The defaults are 0 to 10 connections and a 60-second idle timeout.
  * `connectionTTL` replaces connections that exceed the configured lifetime.
  * Every connection is used at least once, so a TTL of zero disables reuse.
  *
@@ -160,7 +160,7 @@ export const make = Effect.fnUntraced(function*(options: Config): Effect.fn.Retu
     concurrency: multiplex
       ? Math.max(1, options.multiplexConcurrency ?? defaultMultiplexConcurrency)
       : 1,
-    timeToLive: options.idleTimeout ?? Duration.seconds(10),
+    timeToLive: options.idleTimeout ?? Duration.seconds(60),
     timeToLiveStrategy: "usage"
   })
 

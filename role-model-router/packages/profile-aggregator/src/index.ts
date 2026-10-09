@@ -299,6 +299,7 @@ export {
   applyRoutingBenchmarkQualityToProfile,
   applyRoutingBenchmarkQualityToProfiles,
   normalizeBenchmarkSampleVersions,
+  resolveRelatedEffortOverallScore,
   resolveRoutingBenchmarkQuality,
 } from "./benchmark-routing-quality.js";
 export type {
@@ -306,6 +307,7 @@ export type {
   BenchmarkDifficultyBucket,
   BenchmarkHardBlend,
   BenchmarkRoutingMode,
+  EffortBenchmarkEvidenceSubject,
   RoutingBenchmarkQuality,
 } from "./benchmark-routing-quality.js";
 

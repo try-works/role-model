@@ -117,4 +117,81 @@ export function readLegacyEndpointReasoningEffort(endpointId: string): string | 
   }
 }
 
+export interface ReasoningEffortArm {
+  readonly endpointId: string;
+  readonly providerAccountId: string;
+  readonly region: string;
+  readonly modelId: string;
+  readonly effectiveEffort: string | null;
+  readonly source: "fixed" | "provider-default";
+}
+
+export function expandReasoningEffortArms(input: {
+  readonly providerAccountId: string;
+  readonly region: string;
+  readonly modelId: string;
+  readonly fixedEffort: string | null;
+  readonly declaredLevels?: readonly string[];
+  /** Optional explicit base id; preserves the caller's exact endpoint id (e.g. source.endpointId). */
+  readonly baseEndpointId?: string;
+}): ReasoningEffortArm[] {
+  const fixedEffort = normalizeReasoningEffort(input.fixedEffort);
+  if (fixedEffort !== null) {
+    // A fixed-effort source endpointId already carries its effort suffix; preserve it verbatim.
+    const endpointId =
+      input.baseEndpointId ??
+      `${createLegacyEndpointId(input.providerAccountId, input.region, input.modelId)}-${encodeURIComponent(fixedEffort)}`;
+    return [
+      {
+        endpointId,
+        providerAccountId: input.providerAccountId,
+        region: input.region,
+        modelId: input.modelId,
+        effectiveEffort: fixedEffort,
+        source: "fixed",
+      },
+    ];
+  }
+
+  const baseEndpointId =
+    input.baseEndpointId ??
+    createLegacyEndpointId(input.providerAccountId, input.region, input.modelId);
+  const arms: ReasoningEffortArm[] = [
+    {
+      endpointId: baseEndpointId,
+      providerAccountId: input.providerAccountId,
+      region: input.region,
+      modelId: input.modelId,
+      effectiveEffort: null,
+      source: "provider-default",
+    },
+  ];
+  const seen = new Set<string>([baseEndpointId]);
+  for (const level of new Set(input.declaredLevels ?? [])) {
+    let normalized: string | null;
+    try {
+      normalized = normalizeReasoningEffort(level);
+    } catch {
+      continue;
+    }
+    if (normalized === null) {
+      continue;
+    }
+    const endpointId = `${baseEndpointId}-${encodeURIComponent(normalized)}`;
+    if (seen.has(endpointId)) {
+      continue;
+    }
+    seen.add(endpointId);
+    arms.push({
+      endpointId,
+      providerAccountId: input.providerAccountId,
+      region: input.region,
+      modelId: input.modelId,
+      effectiveEffort: normalized,
+      source: "fixed",
+    });
+  }
+  return arms;
+}
+
 export { EFFORT_PREFIX, MAX_REASONING_EFFORT_BYTES };

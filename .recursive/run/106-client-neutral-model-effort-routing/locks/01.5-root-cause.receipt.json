@@ -1,0 +1,13 @@
+{
+  "artifact": "01.5-root-cause.md",
+  "artifact_hash": "2556019928b11363103a46decbb523eda6290bcff4934f90df908c5419a288c6",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\106-client-neutral-model-effort-routing\\.recursive\\run\\106-client-neutral-model-effort-routing\\01.5-root-cause.md",
+  "locked_at": "2026-10-04T01:35:35Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "9be64e945082f71fd7f93376c739ea49d90f002dfaf6e7d71e45dd16f764928f",
+    "00-worktree.md": "92c639d820bd6cf940ad9effa9b48ce184f361c902ba2e1db6734428f0bee763",
+    "01-as-is.md": "4eb5dd07463e24b05ac886cf5b894980faba13814ec76a55df2f516d26583120"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "8ef94872412b75dcb101e788bbeec2466c0417257acb33bf33dda9dc17a53530"
+}

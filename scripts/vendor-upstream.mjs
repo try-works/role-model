@@ -35,8 +35,8 @@ const REPO_ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const UPSTREAMS = {
   effect: {
     url: "https://github.com/Effect-TS/effect",
-    tag: "effect@4.0.0-rc.117",
-    commit: "14a3f140095fdebbff9162944fe7d4ea83e054e6",
+    tag: "effect@4.0.1",
+    commit: "460272d30457f4697d8b8c52cad41caccbcace08",
     dir: "vendor/effect",
     license: "MIT (Copyright (c) 2023 Effectful Technologies Inc)",
     packageGroups: "`effect`, `platform`, `sql`, `ai`, `atom`, `opentelemetry`, `vitest`, `tools`",
@@ -111,7 +111,7 @@ const walk = (dir, out = []) => {
 };
 
 const digestTree = () => {
-  const files = walk(vendorDir).sort();
+  const files = walk(vendorDir);
   let bytes = 0;
   const lines = [];
   for (const file of files) {
@@ -122,6 +122,18 @@ const digestTree = () => {
     const digest = createHash("sha256").update(readFileSync(file)).digest("hex");
     lines.push(`${relative}\u0000${size}\u0000${digest}`);
   }
+  /**
+   * The digest has to be reproducible on every platform, so the order is fixed on the NORMALISED RELATIVE path
+   * and never on the absolute one. `walk` yields absolute paths, and sorting those puts the host separator into
+   * the comparison: Windows "\\" is 0x5C and POSIX "/" is 0x2F, so any sibling whose next character sorts
+   * between the two code points orders differently per platform and the same tree hashes two ways. Measured on
+   * the rc.117 tree: Windows ordering gave 7f07b826..., POSIX gave 7aa10a46... for identical bytes.
+   *
+   * Each line already begins with the forward-slash relative path followed by a NUL, and NUL sorts below every
+   * character a path can contain, so sorting the finished lines orders by relative path exactly as a POSIX
+   * path sort would - including the "a/b" < "a/bc" and "schema/" < "schemaError" cases.
+   */
+  lines.sort();
   return {
     fileCount: lines.length,
     byteCount: bytes,

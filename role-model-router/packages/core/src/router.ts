@@ -343,7 +343,7 @@ type ScoringMetricName =
   | "reliability"
   | "preference";
 
-type MetricSource = "measured" | "declared" | "default" | "catalog" | "benchmark";
+type MetricSource = "measured" | "declared" | "default" | "catalog" | "benchmark" | "borrowed";
 type MetricEntry = {
   value: number;
   source: MetricSource;
@@ -838,6 +838,140 @@ function applyTelemetryAdvisory(
   };
 }
 
+export function computeEffortUnionAndIntersection(input: {
+  readonly modelEfforts: readonly (readonly (string | null)[])[];
+}): { union: readonly string[]; portableIntersection: readonly string[] } {
+  const union = new Set<string>();
+  const models = input.modelEfforts.map(
+    (efforts) => new Set(efforts.filter((effort): effort is string => effort !== null)),
+  );
+  for (const efforts of models) {
+    for (const effort of efforts) {
+      union.add(effort);
+    }
+  }
+  let intersection: Set<string> | null = null;
+  if (models.length > 0) {
+    intersection = new Set(models[0]);
+    for (let index = 1; index < models.length; index += 1) {
+      intersection = new Set([...intersection].filter((effort) => models[index].has(effort)));
+    }
+  }
+  return {
+    union: [...union].sort(),
+    portableIntersection: [...(intersection ?? [])].sort(),
+  };
+}
+
+export function shouldPreferNonInferiorChallenger(input: {
+  readonly incumbentQuality: number;
+  readonly challengerQuality: number;
+  readonly qualityMargin: number;
+  readonly incumbentLatencyMs: number;
+  readonly challengerLatencyMs: number;
+  readonly incumbentCostUsd: number;
+  readonly challengerCostUsd: number;
+}): boolean {
+  const nonInferior = input.challengerQuality >= input.incumbentQuality - input.qualityMargin;
+  const faster = input.challengerLatencyMs < input.incumbentLatencyMs;
+  const cheaper = input.challengerCostUsd < input.incumbentCostUsd;
+  return nonInferior && faster && cheaper;
+}
+
+/**
+ * Run 106 R8 (F5): non-inferiority preference thresholds. After weighted scoring, a challenger
+ * arm may outrank the weighted leader when it is (1) statistically non-inferior on quality — its
+ * quality is within NON_INFERIORITY_QUALITY_MARGIN of the leader — and (2) materially faster AND
+ * materially cheaper. "Material" is a documented floor so noise-level latency/cost differences
+ * cannot flip a stable ranking. Missing quality never establishes non-inferiority: the rule only
+ * fires when both arms carry a non-default quality metric.
+ */
+const NON_INFERIORITY_QUALITY_MARGIN = 0.05;
+/** A challenger must beat the leader by at least this many milliseconds to count as "faster". */
+const NON_INFERIORITY_MIN_LATENCY_ADVANTAGE_MS = 200;
+/** A challenger must be at least this fraction cheaper than the leader to count as "cheaper". */
+const NON_INFERIORITY_MIN_COST_ADVANTAGE_FRACTION = 0.1;
+
+function getScoredCostUsd(scored: CandidateScoreResult): number {
+  const estimated = scored.metric_breakdown.cost.raw?.estimated_request_usd;
+  if (typeof estimated === "number") {
+    return estimated;
+  }
+  const per1k = scored.metric_breakdown.cost.raw?.cost_per_1k_tokens_est;
+  return typeof per1k === "number" ? per1k : DEFAULT_COST_TARGET;
+}
+
+/**
+ * Run 106 R8 (M-1): only exact benchmark quality can establish non-inferiority. A borrowed
+ * related-effort prior (source "borrowed"), a default, or any non-benchmark signal counts as
+ * missing quality for this gate, so a discounted cross-effort prior can never outrank an arm on
+ * the strength of quality it did not itself measure.
+ */
+function isExactBenchmarkQuality(entry: MetricEntry): boolean {
+  return entry.source === "benchmark" && entry.raw?.benchmark_reason !== "related_effort_prior";
+}
+
+/**
+ * Run 106 R8: return the index of the highest-ranked challenger that is statistically non-inferior
+ * on quality and materially faster and cheaper than the weighted leader, or -1 when none qualifies.
+ */
+function findNonInferiorChallengerIndex(scored: readonly CandidateScoreResult[]): number {
+  const leader = scored[0];
+  if (!leader || !isExactBenchmarkQuality(leader.metric_breakdown.quality)) {
+    return -1;
+  }
+  const incumbentQuality = leader.metric_breakdown.quality.value;
+  const incumbentLatencyMs = leader.tie_break.latency_ms;
+  const incumbentCostUsd = getScoredCostUsd(leader);
+
+  for (let index = 1; index < scored.length; index += 1) {
+    const challenger = scored[index];
+    if (!isExactBenchmarkQuality(challenger.metric_breakdown.quality)) {
+      continue;
+    }
+    const challengerLatencyMs = challenger.tie_break.latency_ms;
+    const challengerCostUsd = getScoredCostUsd(challenger);
+
+    const latencyAdvantageMs = incumbentLatencyMs - challengerLatencyMs;
+    const costAdvantageFraction =
+      incumbentCostUsd > 0 ? (incumbentCostUsd - challengerCostUsd) / incumbentCostUsd : 0;
+    if (latencyAdvantageMs < NON_INFERIORITY_MIN_LATENCY_ADVANTAGE_MS) {
+      continue;
+    }
+    if (costAdvantageFraction < NON_INFERIORITY_MIN_COST_ADVANTAGE_FRACTION) {
+      continue;
+    }
+    if (
+      shouldPreferNonInferiorChallenger({
+        incumbentQuality,
+        challengerQuality: challenger.metric_breakdown.quality.value,
+        qualityMargin: NON_INFERIORITY_QUALITY_MARGIN,
+        incumbentLatencyMs,
+        challengerLatencyMs,
+        incumbentCostUsd,
+        challengerCostUsd,
+      })
+    ) {
+      return index;
+    }
+  }
+  return -1;
+}
+
+export function resolveBorrowedQualityPrior(input: {
+  readonly relatedEffortScore?: number;
+  readonly discountFactor?: number;
+}): { value: number; source: "borrowed" } | null {
+  const score = input.relatedEffortScore;
+  if (typeof score !== "number" || !Number.isFinite(score)) {
+    return null;
+  }
+  const discount = typeof input.discountFactor === "number" ? input.discountFactor : 0.7;
+  // Symmetric shrink toward neutral (0.5): a borrowed sibling-effort score regresses toward the
+  // unknown default rather than collapsing to zero. Documented in R5.
+  return { value: clamp(0.5 + (score - 0.5) * discount), source: "borrowed" };
+}
+
 export function getQualityMetric(
   candidate: EndpointCandidate,
   input: RouteRequestInput,
@@ -992,6 +1126,23 @@ export function getQualityMetric(
           : {}),
         neutral_value: FRESHNESS_NEUTRAL,
         effective_value: value,
+      },
+    });
+  }
+
+  const relatedPrior = resolveBorrowedQualityPrior({
+    relatedEffortScore: candidate.benchmarkCapability?.relatedEffortOverallScore ?? undefined,
+  });
+  if (relatedPrior !== null) {
+    // Run 106 R5 (M-1): a cross-effort prior is a borrowed signal, never exact benchmark evidence.
+    // Keep the returned source ("borrowed") so the R8 non-inferiority gate can refuse it as missing.
+    return applyTelemetryAdvisory(input, candidate, {
+      value: relatedPrior.value,
+      source: relatedPrior.source,
+      raw: {
+        related_effort_prior: true,
+        related_effort_score: candidate.benchmarkCapability?.relatedEffortOverallScore,
+        benchmark_reason: "related_effort_prior",
       },
     });
   }
@@ -1878,6 +2029,29 @@ export function routeRequest(input: RouteRequestInput): RouterDecisionRecord {
     );
   });
 
+  // Run 106 R8 (F5): a statistically non-inferior + materially faster/cheaper arm may outrank a
+  // dominated weighted leader. This runs after weighted scoring and before the advisory, so the
+  // advisory re-ranks on top of the non-inferiority-adjusted order.
+  let nonInferiorityPromotion: RouterDecisionRecord["non_inferiority_promotion"] | undefined;
+  const nonInferiorityIndex = findNonInferiorChallengerIndex(scored);
+  if (nonInferiorityIndex > 0) {
+    const displacedEndpointId = scored[0].endpoint_id;
+    const [promoted] = scored.splice(nonInferiorityIndex, 1);
+    if (promoted) {
+      scored.unshift(promoted);
+      // Run 106 R8 (M-2): receipt the rule's thresholds, the promoted/displaced arms, and the fact
+      // that it changed the weighted selection.
+      nonInferiorityPromotion = {
+        promoted_endpoint_id: promoted.endpoint_id,
+        displaced_endpoint_id: displacedEndpointId,
+        quality_margin: NON_INFERIORITY_QUALITY_MARGIN,
+        min_latency_advantage_ms: NON_INFERIORITY_MIN_LATENCY_ADVANTAGE_MS,
+        min_cost_advantage_fraction: NON_INFERIORITY_MIN_COST_ADVANTAGE_FRACTION,
+        changed_weighted_selection: true,
+      };
+    }
+  }
+
   // Run 98 R5: the advisory is consulted only here, after hard eligibility and scoring,
   // and only within the policy's score band.
   const advisoryOutcome = evaluateRouteAdvisoryConsideration({
@@ -1912,10 +2086,37 @@ export function routeRequest(input: RouteRequestInput): RouterDecisionRecord {
       ? true
       : Math.abs((chosen?.total_score ?? 0) - (runnerUp?.total_score ?? 0)) <=
         ROUTER_SCORE_TIE_EPSILON);
+  const chosenCandidate = chosen
+    ? eligible.find((candidate) => candidate.identity.endpoint_id === chosen.endpoint_id)
+    : undefined;
+  const chosenReasoningEffort = chosenCandidate?.identity.reasoning_effort ?? null;
+  const effortResolution = normalizedInput.effortResolution;
+  const requestedEffort = effortResolution?.requestedEffort ?? null;
+  const effectiveEffort = effortResolution?.effectiveEffort ?? null;
+  const exactEffort = requestedEffort ?? effectiveEffort;
+  const effortExactArmCountBeforeHardEligibility =
+    effortResolution === undefined || exactEffort === null
+      ? undefined
+      : normalizedInput.candidates.filter(
+          (candidate) => candidate.identity.reasoning_effort === exactEffort,
+        ).length;
+  const effortExactArmCountAfterHardEligibility =
+    effortResolution === undefined || exactEffort === null
+      ? undefined
+      : eligible.filter((candidate) => candidate.identity.reasoning_effort === exactEffort).length;
+  // Run 106 R3 (L-4): under exact_fallback_expanded the effective effort is the client's request,
+  // while the chosen arm may be a non-exact fallback. Mark that disagreement explicitly so a
+  // consumer never mistakes a fallback arm's reasoning_effort for the requested effort.
+  const effortFallbackApplied =
+    Boolean(chosen) &&
+    effortResolution?.resolution === "exact_fallback_expanded" &&
+    chosenReasoningEffort !== effectiveEffort;
   const selectionReasons: SelectionReasonCode[] = chosen
     ? unique<SelectionReasonCode>([
         "BEST_TOTAL_SCORE",
         ...(tieBreakApplied ? (["TIE_BREAK_APPLIED"] as const) : []),
+        ...(nonInferiorityPromotion ? (["NON_INFERIOR_PROMOTION"] as const) : []),
+        ...(effortFallbackApplied ? (["EFFORT_FALLBACK_APPLIED"] as const) : []),
         ...chosen.selectionReasons,
         ...(scored.length > 1 ? (["FALLBACK_CHAIN_COMPUTED"] as const) : []),
       ])
@@ -1928,10 +2129,6 @@ export function routeRequest(input: RouteRequestInput): RouterDecisionRecord {
       ...candidate
     }) => candidate,
   );
-  const chosenCandidate = chosen
-    ? eligible.find((candidate) => candidate.identity.endpoint_id === chosen.endpoint_id)
-    : undefined;
-  const chosenReasoningEffort = chosenCandidate?.identity.reasoning_effort ?? null;
 
   return {
     routing_decision_id: `decision-${normalizedInput.request.requestId}`,
@@ -1945,9 +2142,33 @@ export function routeRequest(input: RouteRequestInput): RouterDecisionRecord {
     ...(chosen
       ? {
           reasoning_effort: chosenReasoningEffort,
-          effort_source: chosenReasoningEffort === null ? ("none" as const) : ("variant" as const),
+          effort_source:
+            effortResolution?.source ??
+            (chosenReasoningEffort === null ? ("provider_default" as const) : ("named" as const)),
         }
       : {}),
+    ...(effortResolution
+      ? {
+          effort_resolution: effortResolution.resolution,
+          effective_effort: effortResolution.effectiveEffort,
+          requested_effort: requestedEffort,
+          requested_policy: effortResolution.requestedPolicy ?? null,
+          ...(effortExactArmCountBeforeHardEligibility === undefined
+            ? {}
+            : {
+                effort_exact_arm_count_before_hard_eligibility:
+                  effortExactArmCountBeforeHardEligibility,
+              }),
+          ...(effortExactArmCountAfterHardEligibility === undefined
+            ? {}
+            : {
+                effort_exact_arm_count_after_hard_eligibility:
+                  effortExactArmCountAfterHardEligibility,
+              }),
+          ...(effortFallbackApplied ? { effort_fallback_applied: true } : {}),
+        }
+      : {}),
+    ...(nonInferiorityPromotion ? { non_inferiority_promotion: nonInferiorityPromotion } : {}),
     fallback_endpoint_ids: orderedFallbacks.slice(1).map((candidate) => candidate.endpoint_id),
     selection_reasons: selectionReasons,
     used_measured: chosen?.usedMeasured ?? false,

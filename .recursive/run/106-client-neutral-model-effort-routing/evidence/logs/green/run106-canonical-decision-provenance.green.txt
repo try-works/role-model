@@ -1,0 +1,3 @@
+run106-canonical-decision-provenance GREEN
+command: corepack pnpm --filter @role-model-router/core exec vitest run test/run106-canonical-decision-provenance.test.ts
+result: 4 tests passed (4).

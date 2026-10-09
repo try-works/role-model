@@ -1,0 +1,3 @@
+L-1 RED - shouldShortcutToHard is exported+tested but never called (dead code)
+command: corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/run106-turn-aware-hard-shortcut.test.ts test/run106-turn-aware-difficulty.test.ts
+observed: the classifier classifyDifficultyFromSignals uses inline toolCount>0 && codeOrSchemaBurden (~line 1572), not shouldShortcutToHard; run106-turn-aware-hard-shortcut.test.ts tests a predicate that production never invokes.

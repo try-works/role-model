@@ -13,6 +13,7 @@ import {
   createRuntimeBridgeBackend,
   startBridgeServer,
 } from "./index.js";
+import { createObservabilityScope } from "./run108-observability.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -1516,11 +1517,15 @@ async function startRuntimeForConfig(input: {
   const configPath = path.join(configDir, "runtime-config.yaml");
   await writeFile(configPath, stringify(input.config), "utf8");
 
+  // Run 108 follow-up: this validation run is its own runtime scope, so the backend and the server
+  // below share ONE metric registry instead of Effect's process-global default Map.
+  const observabilityScope = createObservabilityScope(`validate-vendors:${input.scopeId}`);
   const backend = await createRuntimeBridgeBackend({
     fixtureRoot: path.join(input.repoRoot, "testdata", "router-runtime"),
     repoRoot: input.repoRoot,
     runtimeStateRoot: input.runtimeStateRoot,
     scopeId: input.scopeId,
+    observabilityScope,
     unifiedRuntimeConfigPath: configPath,
     providerCredentialEnvironment: input.providerCredentialEnvironment,
     providerChildEnvironment:
@@ -1559,6 +1564,7 @@ async function startRuntimeForConfig(input: {
   const server = await startBridgeServer({
     host: "127.0.0.1",
     port: 0,
+    observabilityScope,
     registry: backend.effectiveRegistry,
     getRegistry: () => backend.effectiveRegistry,
     executeChatCompletions: backend.executeChatCompletions,

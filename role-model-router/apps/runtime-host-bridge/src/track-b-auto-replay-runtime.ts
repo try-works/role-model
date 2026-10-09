@@ -1,4 +1,10 @@
 import { createHash } from "node:crypto";
+import {
+  type ObservabilityScope,
+  recordLearnerDerivation,
+  recordQueueDepths,
+  withStageSpan,
+} from "./run108-observability.js";
 
 import {
   NoReplayableRequest,
@@ -271,8 +277,13 @@ export interface AutoReplayOperations {
    * grace. The extension exposes `evaluation:reconcile-jobs` for exactly this and, until now, nothing in
    * production called it — which is how 18 jobs stayed "in flight" for two days. A runtime whose boundary
    * does not expose the sweep keeps working; the tick simply reports zero reconciled jobs.
+   *
+   * Run 108 phase-03.5: `null` is the NOT-AUTHORITATIVE answer the tick's own guard models - no sweep
+   * ran, so nothing is counted and no queue gauge is published. A boundary that answers the empty sweep
+   * instead (`{scanned:0,stranded:[]}`) claims "nothing is stranded" without having looked, which is
+   * what published a fabricated `replay.queue.stranded` 0 while no extension runtime was bound.
    */
-  reconcileEvaluationJobs?(input: Record<string, unknown>): Promise<unknown>;
+  reconcileEvaluationJobs?(input: Record<string, unknown>): Promise<unknown | null>;
   /**
    * Run 100 addendum `handoff-evidence-durability.addendum-06` S46: finalize a comparison whose trials are all
    * scored and which has no group. Measured live: the newest durable evaluation jobs hold 2-4 **scored** trials
@@ -491,6 +502,12 @@ const emptyResult = (): AutoReplayTickResult => ({
 });
 
 export function startAutoReplayLoop(input: {
+  /**
+   * Run 108 follow-up: the metric registry of the runtime scope this loop belongs to. The loop is a
+   * component of a scope, not a scope boundary, so an input without one records no queue depth or
+   * derivation rather than leaking into Effect's process-global default Map.
+   */
+  readonly observabilityScope?: ObservabilityScope;
   readonly operations: AutoReplayOperations;
   readonly ledger: ReplayLedger;
   readonly policySet: ReplayPolicySet;
@@ -501,6 +518,25 @@ export function startAutoReplayLoop(input: {
    */
   readonly configuredEndpointIds: readonly string[] | (() => readonly string[]);
   /**
+   * Run 106 (live finding on the dev replay queue, 2026-10-07): the configured endpoints' declared model and
+   * reasoning effort. The focus-dispatch walk is otherwise effort-blind, and an arm whose effort differs from
+   * the source capture's is finalized `arm_effort_mismatch` and discarded fail-closed by the learner's
+   * admission floor - it spends a replay and a paid provider call to produce evidence nothing can use. A
+   * provider (not a snapshot) so an endpoint added or reconfigured while the runtime is up takes effect on
+   * the next tick, exactly like `configuredEndpointIds` above. Absent keeps the previous behaviour.
+   */
+  readonly configuredEndpointDescriptors?:
+    | readonly {
+        readonly endpointId: string;
+        readonly modelId: string;
+        readonly reasoningEffort: string | null;
+      }[]
+    | (() => readonly {
+        readonly endpointId: string;
+        readonly modelId: string;
+        readonly reasoningEffort: string | null;
+      }[]);
+  /**
    * Endpoints the runtime can actually dispatch to. A provider may be supplied so a
    * credential-less or degraded endpoint is re-evaluated every tick instead of being
    * frozen at loop construction; resolving to null means "no health filter is
@@ -509,6 +545,14 @@ export function startAutoReplayLoop(input: {
   readonly healthyEndpointIds?:
     | readonly string[]
     | (() => readonly string[] | null | Promise<readonly string[] | null>);
+  /**
+   * Run 108 addendum-02 (I2): the operator's versioned counterfactual arm bound
+   * (`maxCounterfactualArms`, 1..8). The tick is where a live dispatch plans its arms, so the bound has
+   * to reach it or raising it changes nothing (measured live: 3 -> 4 changed nothing). A provider (not a
+   * snapshot) so an operator's policy change takes effect on the next tick, exactly like
+   * `configuredEndpointIds` above; absent keeps the tick's own default (3).
+   */
+  readonly maxCounterfactualArms?: number | (() => number | null | undefined) | null;
   readonly executor: (input: {
     readonly dispatchRoundId?: string;
     readonly capture: AutoReplayCapture;
@@ -648,6 +692,12 @@ export function startAutoReplayLoop(input: {
   health(): AutoReplayLoopHealth;
   status(): AutoReplayLoopStatus;
 } {
+  /**
+   * Run 108 follow-up: the scope resolved ONCE for this loop's whole lifetime, so its metrics live in
+   * one registry rather than Effect's process-global default Map. Undefined means the caller named no
+   * scope: every record below is skipped (see the input field's own contract).
+   */
+  const observabilityScope = input.observabilityScope;
   const now = input.now ?? (() => Date.now());
   const maxCapturesPerTick = input.maxCapturesPerTick ?? 8;
   let running = false;
@@ -965,6 +1015,14 @@ export function startAutoReplayLoop(input: {
             reconciled = countOf(sweep.completed);
             stranded = countOf(sweep.stranded);
             reclaimed = countOf(sweep.reclaimed);
+            /**
+             * Run 108 phase-03 F5 (R7 queue gauges): the stranded depth the reconcile pass just
+             * reported, SET on the gauge by the same readback this sweep already performs - no
+             * new poller. Set only when the pass answered, so a plane whose queue owns
+             * reconciliation publishes no observation instead of a fabricated zero.
+             */
+            if (observabilityScope !== undefined)
+              recordQueueDepths({ stranded }, observabilityScope);
           }
         } catch (cause) {
           const detail =
@@ -1154,6 +1212,22 @@ export function startAutoReplayLoop(input: {
     } finally {
       sweeping = false;
     }
+    // Run 108 A5.1: the LEARNER chain's sweep-summary stage - the derivation count is the one
+    // funnel for both sweep entry points and runs under one sync stage span.
+    withStageSpan(
+      "learner.sweep_summary",
+      { derived: String(derivedCandidates), backlog: String(derivationBacklog) },
+      () => {
+        // Run 108 R7: the learner-sweep derivation count (one funnel for both sweep entry points).
+        if (observabilityScope !== undefined) {
+          recordLearnerDerivation(
+            derivedCandidates,
+            derivedCandidates > 0 ? "derived" : "idle",
+            observabilityScope,
+          );
+        }
+      },
+    );
     return {
       expired,
       resumed,
@@ -1209,6 +1283,24 @@ export function startAutoReplayLoop(input: {
     running = true;
     const dispositionWrites: Promise<unknown>[] = [];
     try {
+      /**
+       * RC07 (L2) + Run 106: the bounded liveness sweep runs FIRST, before any evidence-dependent work.
+       *
+       * The tick's evidence phase throws `route dispatch evidence unavailable` on a channel that provisions
+       * no managed keys, and that throw aborts the REST of the tick - including the sweep that used to sit at
+       * the end of this function. So the sweep was unreachable in exactly the situation that needs it most.
+       * Measured live on build 0.0.14-771-g09173f51 with the scope fix already in place AND the computed scope
+       * verified to match the jobs (`runtime:1964e40c...`): zero jobs expired, no `expirationReceipt` ever
+       * issued, and every job that became expire-able stayed stranded behind the claim guard that requires
+       * that receipt. Two independent causes, and fixing only the scope left the sweep uncalled.
+       *
+       * The sweeps need no evaluation authority, so they run here unconditionally - the same way the
+       * interval/skip path below already runs them "instead of skipping them, so an overdue job is still
+       * expired on schedule". The evidence-dependent phase keeps its fail-closed throw untouched.
+       */
+      const livenessSweep = await runLivenessSweeps(
+        input.ledger.status().window as unknown as Record<string, unknown>,
+      );
       const stageEnabled = typeof input.routeFocusCandidates === "function";
       let plannedFocus: ReturnType<typeof selectFocusTask> = null;
       let focusCaptureRef: string | null = null;
@@ -1219,11 +1311,54 @@ export function startAutoReplayLoop(input: {
         typeof input.configuredEndpointIds === "function"
           ? input.configuredEndpointIds()
           : input.configuredEndpointIds;
+      /**
+       * Run 106: endpointId -> declared reasoning effort, read from the same provider the CLI wires from the
+       * endpoint registry. Empty when the caller supplies none, which leaves the focus-dispatch walk exactly
+       * as it was.
+       */
+      const endpointEffortsByEndpointId: Record<string, string | null> = {};
+      try {
+        const descriptors =
+          typeof input.configuredEndpointDescriptors === "function"
+            ? input.configuredEndpointDescriptors()
+            : (input.configuredEndpointDescriptors ?? []);
+        for (const descriptor of descriptors) {
+          if (typeof descriptor?.endpointId !== "string" || !descriptor.endpointId) continue;
+          endpointEffortsByEndpointId[descriptor.endpointId] =
+            typeof descriptor.reasoningEffort === "string" && descriptor.reasoningEffort.trim()
+              ? descriptor.reasoningEffort.trim()
+              : null;
+        }
+      } catch {
+        // An unreadable registry leaves the map empty: the walk keeps its previous behaviour rather than
+        // refusing to dispatch.
+      }
+      // The limit bounds the PAGE the tick consumes; the depth the gauge publishes comes from the
+      // readback's own pre-slice total (see the queue-gauge comment below).
       const pending = await input.operations.listPendingReplayCaptures({
         policySetDigest: input.policySet.policySetDigest,
         limit: maxCapturesPerTick * 4,
       });
       let captures = pendingCaptures(pending);
+      /**
+       * Run 108 phase-03 F5 (R7 queue gauges) + phase-03.5 repair: the replay queue depth.
+       *
+       * The depth is the number of captures still owed a replay - a CENSUS, not the page the tick
+       * asked for. `pendingCount` used to be `pending.length` taken AFTER `.slice(0, limit)`, so a
+       * backlog of the tick's own limit (maxCapturesPerTick * 4, 32 by default) read exactly 32 for
+       * ever. The producer now answers `pendingTotal`, the depth taken BEFORE the page is bounded, and
+       * that is what the gauge records; `pendingCount` remains the fallback for a readback that
+       * predates the field, and an answer that carries neither (a bare array boundary) records nothing.
+       */
+      const pendingReadback = pending as {
+        readonly pendingCount?: unknown;
+        readonly pendingTotal?: unknown;
+      } | null;
+      const observedPendingCount = pendingReadback?.pendingTotal ?? pendingReadback?.pendingCount;
+      if (typeof observedPendingCount === "number")
+        if (observabilityScope !== undefined) {
+          recordQueueDepths({ queued: observedPendingCount }, observabilityScope);
+        }
       if (process.env.ROLE_MODEL_FOCUS_DIAG)
         console.error(
           `[replay-tick] run: captures=${captures.length} pendingCount=${(pending as { pendingCount?: number }).pendingCount ?? "?"}`,
@@ -1242,6 +1377,13 @@ export function startAutoReplayLoop(input: {
         }
         const rows = new Map<string, RouteLadderRow | null>();
         const eligible: RouteFocusCandidate[] = [];
+        /**
+         * Run 108 phase-03 F5 (R7 queue gauges): the awaiting-evaluation depth this walk OBSERVES.
+         * It is accumulated over the tasks the walk reads and SET once below, because the replay
+         * plane exposes no whole-census depth per tick - this is a census of what the tick read.
+         */
+        let awaitingEvaluationObserved = 0;
+        let pendingDispatchReadObserved = false;
         for (const candidate of census) {
           if (!selectFocusTask([candidate])) continue;
           const key = `${candidate.roleId}\u0000${candidate.taskTypeId}`;
@@ -1346,6 +1488,24 @@ export function startAutoReplayLoop(input: {
           ) {
             const jobs = await input.readPendingRouteDispatches(candidate);
             if (jobs === null) throw new Error("route pending dispatches unavailable");
+            /**
+             * Run 108 phase-03 F5: the durable replay jobs this task is waiting on, by state.
+             *
+             * The readback answers ONE ENTRY PER ARM, not per job -
+             * `for (const arm of job.candidatePackages) answers.push(...)` in
+             * route-challenge-evidence.ts - and the queue branch does the same over
+             * `payload.endpointIds`. The declared subject is JOBS, so the count is de-duplicated by the
+             * job's own durable identity: a job carrying four arms is ONE job awaiting evaluation, and a
+             * job that carries both planes is one job too (the readback suppresses a queue arm once the
+             * durable replay record exists, and every entry carries exactly one of the two ids).
+             * The per-arm entry SHAPE is deliberately untouched - other consumers read each arm.
+             */
+            pendingDispatchReadObserved = true;
+            awaitingEvaluationObserved += new Set(
+              jobs
+                .filter((job) => job.state === "awaiting_evaluation")
+                .map((job) => job.replayJobId ?? job.queueJobId),
+            ).size;
             const cutoff =
               active?.startedAtMs ?? (alreadyDue ? Number(row?.nextEligibleAtMs) : now());
             const relevant = jobs
@@ -1474,6 +1634,15 @@ export function startAutoReplayLoop(input: {
                 break;
               }
             }
+            /**
+             * Run 108 addendum-04: the admission-floor VERDICT measured here (one challenger, in this
+             * challenge window) is used to decide whether the challenge is done - see `done: placed && met`.
+             * The METRIC is deliberately NOT recorded from this value any more: it is emitted at the
+             * materialization outcome in cli.ts from the verdict of the ladder that was actually
+             * persisted. Recording it here measured a time-boxed, single-challenger, refusal-biased
+             * sample of in-flight challenges (seven materializations produced one admitted=false sample
+             * and never an admitted=true), which is not the ladder admission floor the metric declares.
+             */
             const floor = input.routeLearningDefaults?.minComparisons ?? 5;
             const confidence = input.routeLearningDefaults?.minConfidence ?? 0.7;
             const met =
@@ -1561,6 +1730,14 @@ export function startAutoReplayLoop(input: {
             admitted: admitted.length,
           });
         }
+        // Run 108 phase-03 F5: SET once per walk, and only when the walk actually read the plane.
+        if (pendingDispatchReadObserved)
+          if (observabilityScope !== undefined) {
+            recordQueueDepths(
+              { awaitingEvaluation: awaitingEvaluationObserved },
+              observabilityScope,
+            );
+          }
         const held = Ref.getUnsafe(heldFocus);
         let remainingFocusCandidates = [...eligible];
         let skippedReplayableTasks = 0;
@@ -1591,21 +1768,42 @@ export function startAutoReplayLoop(input: {
                     `[replay-tick] after readRouteReplayableCaptures history=${history === null ? "null" : history.length}`,
                   );
                 if (history === null) throw new Error("route replayable corpus unavailable");
-                const existing = new Set(captures.map((item) => item.captureRef));
-                captures = [
-                  ...captures,
-                  ...history.filter(
-                    (item) =>
-                      item.roleId === plannedFocus?.roleId &&
-                      item.taskTypeId === plannedFocus?.taskTypeId &&
-                      !existing.has(item.captureRef) &&
-                      // Run 105: the corpus read stays a faithful projection and still ENUMERATES a capture whose
-                      // replay disposition is terminal. The dispatch planner is the layer that acts on that
-                      // annotation, so the tick advances to a fresh capture instead of re-picking one whose
-                      // dispatch the lane would only refuse as duplicate_already_processed.
-                      item.replayDispositionSettled !== true,
-                  ),
-                ];
+                /**
+                 * Run 106 cold-start repair: the pending view and the corpus read are two projections of the
+                 * SAME captures, and only the corpus read carries the route classification. Deduping by
+                 * capture ref alone therefore discarded the classified row and kept the unclassified one, so
+                 * the ownership filter below matched nothing. Whenever every capture of the focus task also
+                 * fit inside the pending scan window - which is exactly the state of a task that has just
+                 * started being routed, and of any small state root - the tick livelocked on
+                 * `NoReplayableRequest` for ever: no dispatch, no disposition, so the pending row was never
+                 * retired. A capture that is already present is now ENRICHED instead of dropped, so an
+                 * unclassified row can never mask the identity the corpus read proved it has. A capture that
+                 * is already classified keeps the cheap row, because then the two views agree.
+                 */
+                const byCaptureRef = new Map(captures.map((item) => [item.captureRef, item]));
+                for (const item of history) {
+                  if (item.roleId !== plannedFocus?.roleId) continue;
+                  if (item.taskTypeId !== plannedFocus?.taskTypeId) continue;
+                  // Run 105: the corpus read stays a faithful projection and still ENUMERATES a capture whose
+                  // replay disposition is terminal. The dispatch planner is the layer that acts on that
+                  // annotation, so the tick advances to a fresh capture instead of re-picking one whose
+                  // dispatch the lane would only refuse as duplicate_already_processed.
+                  if (item.replayDispositionSettled === true) continue;
+                  const present = byCaptureRef.get(item.captureRef);
+                  if (!present) {
+                    captures = [...captures, item];
+                    byCaptureRef.set(item.captureRef, item);
+                    continue;
+                  }
+                  if (present.roleId != null && present.taskTypeId != null) continue;
+                  const enriched = {
+                    ...present,
+                    roleId: item.roleId ?? present.roleId,
+                    taskTypeId: item.taskTypeId ?? present.taskTypeId,
+                  };
+                  captures = captures.map((entry) => (entry === present ? enriched : entry));
+                  byCaptureRef.set(item.captureRef, enriched);
+                }
               }
               const owned = captures.filter(
                 (item) =>
@@ -1716,6 +1914,14 @@ export function startAutoReplayLoop(input: {
                     .filter((rung) => rung.status === "available")
                     .map((rung) => rung.endpointId),
                   rungs: routeLadder?.rungs,
+                  // Run 106: the arm must run at the source capture's effort, or the comparison is voided.
+                  // The capture records where it came from, and the endpoint registry records the effort
+                  // that endpoint runs at, so no extra capture plumbing is needed.
+                  endpointEfforts: endpointEffortsByEndpointId,
+                  sourceReasoningEffort:
+                    (source?.sourceEndpointId
+                      ? endpointEffortsByEndpointId[source.sourceEndpointId]
+                      : null) ?? null,
                 });
                 if (process.env.ROLE_MODEL_FOCUS_DIAG) {
                   console.error(
@@ -1855,6 +2061,22 @@ export function startAutoReplayLoop(input: {
         typeof input.healthyEndpointIds === "function"
           ? await input.healthyEndpointIds()
           : input.healthyEndpointIds;
+      /**
+       * Run 108 addendum-02: the versioned counterfactual arm bound for THIS tick, so an operator policy
+       * change applies to the next tick without a restart. A provider that throws (or answers nothing
+       * usable) leaves the bound unset, and the tick keeps its own default rather than planning zero arms.
+       */
+      const resolvedArmBound = await (async (): Promise<number | null> => {
+        try {
+          const raw =
+            typeof input.maxCounterfactualArms === "function"
+              ? await input.maxCounterfactualArms()
+              : input.maxCounterfactualArms;
+          return typeof raw === "number" && Number.isSafeInteger(raw) && raw > 0 ? raw : null;
+        } catch {
+          return null;
+        }
+      })();
       const window = input.ledger.status().window;
       /**
        * Run 98 addendum 04 §7 (`L6`), measured live on v171: a tick walks up to eight captures and a
@@ -1897,6 +2119,11 @@ export function startAutoReplayLoop(input: {
         runAutoReplayTick({
           captures: dispatchCaptures,
           configuredEndpointIds,
+          /**
+           * Run 108 addendum-02: the policy bound travels to the planner that caps the plan, so the
+           * operator's `maxCounterfactualArms` is what a live dispatch honours.
+           */
+          ...(resolvedArmBound === null ? {} : { maxCounterfactualArms: resolvedArmBound }),
           // Run 98 addendum 56 §6: the judge is excluded from the planned arms, and a capture whose own endpoint
           // is the judge is deferred with the named code rather than dispatched into a refusal.
           ...(typeof input.resolveJudgeEndpointId === "function"
@@ -2062,7 +2289,9 @@ export function startAutoReplayLoop(input: {
       // reaching a terminal state is expired with a typed receipt instead of living on
       // as an orphan the producer will never drive again. A sweep failure degrades this
       // tick, never the routing path.
-      const sweep = await runLivenessSweeps(window as unknown as Record<string, unknown>);
+      // Run 106: the sweep already ran at the top of this tick, before the evidence phase that can throw.
+      // Reusing its result keeps exactly one bounded sweep per tick while making it unreachable-proof.
+      const sweep = livenessSweep;
       lastExpiredJobs = sweep.expired;
       lastResumedEvaluations = sweep.resumed;
       lastReconciledEvaluations = sweep.reconciled;
@@ -2072,12 +2301,28 @@ export function startAutoReplayLoop(input: {
       const sweepError = sweep.error;
       lastOutcome = sweepError ? "degraded" : "ok";
       lastError = sweepError;
+      /**
+       * Run 108 effect audit (P3): a degraded sweep was recorded IN MEMORY AND NOWHERE ELSE, so a
+       * degradation the status route could show was invisible on disk. Measured consequence: a
+       * "write EPIPE / stream was destroyed" tick degradation appeared on
+       * /api/role-model/track-b/replay/status and in ZERO log lines. The tick must degrade gracefully
+       * AND say so - the loop continues, the reason is durable. This mirrors the fatal tick-level
+       * catch below, which this file already logged while leaving this path silent.
+       */
+      if (sweepError) console.error(`[track-b-auto-replay] sweep degraded: ${sweepError}`);
       lastProcessedAtMs = now();
       lastDispositions = result.dispositions.length;
       return result;
     } catch (error) {
       lastOutcome = "degraded";
       lastError = error instanceof Error ? error.message.slice(0, 300) : "auto replay tick failed";
+      /**
+       * The tick's failure was captured only in memory (`health()`/`status()`), so a loop that failed on EVERY
+       * tick produced no line in any log: the dispatcher's own `[route-evidence-binding] failed: ...` warnings
+       * accumulated while the consequence that actually stopped the loop was invisible, and every operator-facing
+       * surface kept reporting healthy. A failure that runs every tick has to say so where logs are read.
+       */
+      console.error(`[track-b-auto-replay] tick failed: ${lastError}`);
       return emptyResult();
     } finally {
       await Promise.all(dispositionWrites);
@@ -2092,7 +2337,23 @@ export function startAutoReplayLoop(input: {
       input.setIntervalFn ??
       ((handler: () => void, timeout: number) => setInterval(handler, timeout));
     timer = setIntervalFn(() => {
-      void tick();
+      /**
+       * Run 108 effect audit (P4, the diagnostic build-out): the loop emitted NOTHING at tick start, so a tick
+       * that blocked the event loop - the measured 48-minute freeze on ONE SQLite lock - was invisible for its
+       * whole duration and then visible only as a status-route value. The START line is what makes a freeze
+       * visible WHILE IT HAPPENS: a start with no matching completion, and the elapsed time says how long.
+       * Emitted BEFORE the work deliberately: if the tick blocks synchronously, nothing written inside it
+       * surfaces until the lock releases, which is exactly the case this line exists to catch.
+       */
+      const tickStartedAtMs = Date.now();
+      console.error(`[track-b-auto-replay] tick start (interval ${intervalMs}ms)`);
+      void tick()
+        .catch(() => undefined)
+        .finally(() => {
+          console.error(
+            `[track-b-auto-replay] tick done in ${Date.now() - tickStartedAtMs}ms (outcome ${lastOutcome})`,
+          );
+        });
     }, intervalMs);
     if (timer && typeof (timer as { unref?: () => void }).unref === "function") {
       (timer as { unref: () => void }).unref();

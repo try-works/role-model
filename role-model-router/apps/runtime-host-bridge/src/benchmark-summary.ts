@@ -166,6 +166,13 @@ export interface BenchmarkPreferences {
 export interface BenchmarkCapability {
   readonly evidenceSource: "run-artifact" | "profile-derived";
   readonly overallScore: number | null;
+  /**
+   * Run 106 R5 (producer): borrowed cross-effort score from a sibling fixed-effort arm of the same
+   * model/provider. Present only on a provider-default arm that has no exact benchmark evidence of its
+   * own; `overallScore` stays null so the router never treats it as exact benchmark evidence. The
+   * router-side `resolveBorrowedQualityPrior` applies the symmetric regression toward neutral.
+   */
+  readonly relatedEffortOverallScore?: number | null;
   readonly scoresByBucket: Partial<
     Record<"easy" | "medium" | "hard", { readonly score: number; readonly cases?: number }>
   >;

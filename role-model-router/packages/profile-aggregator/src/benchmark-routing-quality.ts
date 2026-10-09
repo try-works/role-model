@@ -325,3 +325,83 @@ export function applyRoutingBenchmarkQualityToProfiles(input: {
     difficultyProfiles,
   };
 }
+
+export interface EffortBenchmarkEvidenceSubject {
+  readonly endpointId: string;
+  readonly modelId?: string | null;
+  readonly providerId?: string | null;
+  readonly reasoningEffort?: string | null;
+  readonly overallScore?: number | null;
+}
+
+function isNamedEffort(value: string | null | undefined): value is string {
+  return typeof value === "string" && value.length > 0;
+}
+
+/**
+ * Run 106 R5 (producer): resolve a borrowed, related-effort benchmark score for a provider-default arm.
+ *
+ * A provider-default arm (`reasoningEffort` null/undefined) serves a dynamic effort and therefore has no
+ * effort-encoded benchmark key of its own. When it also has no exact benchmark evidence, the only defensible
+ * signal is a SIBLING fixed-effort arm of the same model (and provider, when both are known). The borrowed
+ * score is returned raw here; the router-side consumer (`resolveBorrowedQualityPrior`) applies the
+ * documented symmetric regression toward neutral and labels it `borrowed`, so it never appears as exact
+ * benchmark evidence.
+ *
+ * Selection is deterministic: the sibling with the highest exact `overallScore` wins, ties broken by
+ * endpoint id ascending, so the prior is stable across repeated snapshots.
+ */
+export function resolveRelatedEffortOverallScore(input: {
+  readonly endpointId: string;
+  readonly modelId?: string | null;
+  readonly providerId?: string | null;
+  readonly reasoningEffort?: string | null;
+  readonly subjects: readonly EffortBenchmarkEvidenceSubject[];
+}): number | null {
+  // Only a provider-default arm borrows. A fixed-effort arm names its own effort and must never be
+  // credited with another effort's evidence.
+  if (isNamedEffort(input.reasoningEffort)) {
+    return null;
+  }
+  // A sibling lookup needs a model key; without one there is no defensible "same model" match.
+  if (!isNamedEffort(input.modelId)) {
+    return null;
+  }
+  // If this arm already has exact benchmark evidence, borrowing would be a downgrade, not a prior.
+  const own = input.subjects.find((subject) => subject.endpointId === input.endpointId);
+  if (typeof own?.overallScore === "number" && Number.isFinite(own.overallScore)) {
+    return null;
+  }
+
+  const sameProvider = (subject: EffortBenchmarkEvidenceSubject): boolean => {
+    if (isNamedEffort(input.providerId) && isNamedEffort(subject.providerId)) {
+      return input.providerId === subject.providerId;
+    }
+    return true;
+  };
+
+  const siblings = input.subjects
+    .filter((subject) => subject.endpointId !== input.endpointId)
+    .filter((subject) => subject.modelId === input.modelId)
+    .filter((subject) => isNamedEffort(subject.reasoningEffort))
+    .filter(
+      (subject) =>
+        typeof subject.overallScore === "number" && Number.isFinite(subject.overallScore),
+    )
+    .filter(sameProvider);
+
+  if (siblings.length === 0) {
+    return null;
+  }
+
+  const best = siblings.reduce((best, candidate) => {
+    const bestScore = best.overallScore as number;
+    const candidateScore = candidate.overallScore as number;
+    if (candidateScore !== bestScore) {
+      return candidateScore > bestScore ? candidate : best;
+    }
+    return candidate.endpointId.localeCompare(best.endpointId) < 0 ? candidate : best;
+  });
+
+  return best.overallScore as number;
+}

@@ -124,3 +124,44 @@ test("run103 the durable evidence authority finds the key under the scoped Track
     rmSync(root, { recursive: true, force: true });
   }
 });
+
+/**
+ * The refusal has to NAME WHAT IT TRIED. The previous rendering collapsed each candidate with
+ * `basename(dirname(dirname(path)))`, which strips `artifact-digest.key` and `managed-keys` and then takes
+ * the basename - so the scoped candidate and the bare Track B candidate BOTH rendered as `track-b` and the
+ * live message read "looked in qa-run105-dev-state, track-b, track-b". A reader cannot tell which paths were
+ * tried, and a message that cannot distinguish its own candidates manufactures phantom path bugs: it is
+ * exactly what led this issue to be mis-scoped as a resolver-path defect when the resolver was correct all
+ * along and the key was simply absent from every candidate.
+ */
+test("run103 the missing-key refusal names every candidate path it tried", async () => {
+  const root = mkdtempSync(path.join(tmpdir(), "run103-authority-message-"));
+  try {
+    let message = "";
+    try {
+      await resolveDurableEvaluationAuthority({
+        channel: "stage",
+        stateRoot: root,
+        scopeId: "standalone-runtime-stage",
+      });
+    } catch (error) {
+      message = error instanceof Error ? error.message : String(error);
+    }
+    expect(message).toMatch(
+      /managed artifact digest key not found for the durable evaluation authority/,
+    );
+    // Every candidate, in full, so the reader can see exactly where the key was looked for.
+    expect(message).toContain(path.join(root, "managed-keys", "artifact-digest.key"));
+    expect(
+      message,
+      "the scoped Track B layout must be named in full, not collapsed to its last directory",
+    ).toContain(
+      path.join(root, "standalone-runtime-stage", "track-b", "managed-keys", "artifact-digest.key"),
+    );
+    expect(message).toContain(path.join(root, "track-b", "managed-keys", "artifact-digest.key"));
+    // The old rendering emitted the bare directory name twice; it must never come back.
+    expect(message).not.toContain("(looked in track-b, track-b)");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});

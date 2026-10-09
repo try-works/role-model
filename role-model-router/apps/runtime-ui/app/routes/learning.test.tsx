@@ -9,6 +9,7 @@ import {
   LearningLadderRow,
   LearningOverviewPage,
   LearningPackRow,
+  advisoryOverviewCopy,
   formatLearningScore,
   formatPolicyRange,
   learningRecentDecisionRows,
@@ -173,6 +174,107 @@ describe("LearningRoute", () => {
     for (const token of ["row.roleId", "row.taxonomyVersion", "row.toolClassIds"]) {
       expect(routeSource).toContain(token);
     }
+  });
+
+  /**
+   * Run 114 Tier 1 (operator screenshot 2026-10-07): four defects the Overview rendered at once - the
+   * fallback-reason row had no denominator, its bound of three was silent, `Influence rate` and `Applied
+   * share` were the same quantity (applied / observed) rendered twice, and `Advisory observed` showed no
+   * origin split although most of it is machine-generated replay traffic. The render is pinned as source
+   * tokens here so none of the four can be dropped again without turning this test red.
+   */
+  test("run114 tier1: the overview render consumes the reason basis, the bound and the split guard", () => {
+    const routeSource = readFileSync(new URL("./learning.tsx", import.meta.url), "utf8");
+    for (const token of [
+      "fallbackReasonSummary(advisory, 3)",
+      "fallbackReasons.omitted",
+      "advisoryReasonBasis(advisory)",
+      "reasonBasis.reconciled",
+      "advisoryOriginSplit(advisory, decisionsReadback)",
+      "originSplit?.consistent",
+      "advisoryOverviewCopy(advisory, decisions.value)",
+      "advisoryCopy.observedValue",
+      "advisoryCopy.fallbackReasonLabel",
+      "advisoryCopy.fallbackReasonValue",
+      'label="Applied share (of observed)"',
+    ]) {
+      expect(routeSource).toContain(token);
+    }
+    // The duplicate metric is deleted from the render; `influenceRate` stays published by the reader.
+    expect(routeSource).not.toContain('label="Influence rate"');
+    expect(routeSource).not.toContain("advisory.influenceRate");
+    // The per-row refusal reaches the shared decision row's Decision cell.
+    expect(routeSource).toContain("advisoryRefusalView(row)");
+  });
+
+  /**
+   * Run 114 Tier 1: the exact copy the Overview renders for the live readback of 2026-10-07 - observed 827
+   * (530 fresh, 0 stale, 297 unavailable), considered 208, applied 4, and four fallback reasons summing to
+   * 204. The origin split comes from the decisions readback the Overview already fetches (`live 208 · shadow
+   * 619`), which is what makes the 827 legible: most of it is machine-generated replay traffic.
+   */
+  test("run114 tier1: the live readback renders its denominator, its bound and its origin split", () => {
+    const copy = advisoryOverviewCopy(
+      {
+        observed: 827,
+        fresh: 530,
+        stale: 0,
+        unavailable: 297,
+        considered: 208,
+        applied: 4,
+        fallbackReasons: {
+          cohort_excluded: 128,
+          advisory_matches_baseline: 41,
+          advisory_candidate_not_eligible: 22,
+          advisory_task_unscoped: 13,
+        },
+      },
+      { origins: { live: 208, shadow: 619, other: 0 } },
+    );
+    expect(copy.observedValue).toBe(
+      "827 observed (208 live · 619 replay) · fresh 530 · stale 0 · unavailable 297",
+    );
+    // The denominator is claimed only because 204 == 208 - 4, and the bound names what it hid.
+    expect(copy.fallbackReasonLabel).toBe("Fallback reasons (of 204 live retained) (top 3 of 4)");
+    expect(copy.fallbackReasonValue).toBe(
+      "cohort_excluded ×128 · advisory_matches_baseline ×41 · advisory_candidate_not_eligible ×22, +1 more",
+    );
+  });
+
+  /**
+   * Run 114 Tier 1: when the numbers disagree the panel says both of them rather than claiming a partition,
+   * and an origin split that does not add up to `observed` is dropped in favour of the bare count.
+   */
+  test("run114 tier1: an unreconciled basis claims no partition and an unreconciled split is not shown", () => {
+    const copy = advisoryOverviewCopy(
+      { observed: 9_000, considered: 210, applied: 4, fallbackReasons: { cohort_excluded: 100 } },
+      { origins: { live: 208, shadow: 619, other: 0 } },
+    );
+    expect(copy.observedValue).toBe("9000 observed · fresh — · stale — · unavailable —");
+    expect(copy.fallbackReasonLabel).toBe("Fallback reasons (100 counted vs 206 live retained)");
+    expect(copy.fallbackReasonValue).toBe("cohort_excluded ×100");
+  });
+
+  /**
+   * Run 114 Tier 1: the e2e spec pins the applied-share label with a SUBSTRING match
+   * (`toContainText("Applied share")`), so the relabel to `Applied share (of observed)` has to keep that
+   * substring. Both files are read here and the relation is asserted, not assumed - a future relabel that
+   * breaks the spec turns this test red before anyone runs Playwright.
+   */
+  test("run114 tier1: the relabelled applied share still satisfies the e2e substring match", () => {
+    const routeSource = readFileSync(new URL("./learning.tsx", import.meta.url), "utf8");
+    const spec = readFileSync(
+      new URL(
+        "../../e2e/recursive-98-shadow-to-active-routing-graduation.a44-s3.learning-overview.spec.ts",
+        import.meta.url,
+      ),
+      "utf8",
+    );
+    const label = /label="(Applied share[^"]*)"/.exec(routeSource)?.[1] ?? "";
+    expect(label).toBe("Applied share (of observed)");
+    const pinned = /toContainText\("(Applied share[^"]*)"\)/.exec(spec)?.[1] ?? "";
+    expect(pinned).toBe("Applied share");
+    expect(label).toContain(pinned);
   });
 
   test("renders schema-driven configuration with bounds, defaults and confirmations", () => {
@@ -766,6 +868,47 @@ describe("run101 addendum 49", () => {
   });
 
   /**
+   * Run 114 Tier 2 (read side): the advisory source's own refusal or fault text travels with the
+   * observation as `reason`, and the reader spreads the whole entry into each decision row. The shared
+   * row states it in the Decision cell - the vocabulary for the codes it knows, the RAW code for the ones
+   * it does not - with the code itself in `title` so the operator can grep the ledger for it.
+   */
+  test("run114 tier2: a decision row names its refusal and keeps the raw code in the title", () => {
+    // NO ADVICE: the Tier-2 `reason` is the source's own text - "why is there no advice?".
+    const noAdvice = renderToStaticMarkup(
+      <LearningDecisionRow row={{ ...decisionRowFixture(), reason: "no admitted rung" }} />,
+    );
+    expect(noAdvice).toContain("advisory unavailable · no usable pack");
+    expect(noAdvice).toContain('title="no admitted rung"');
+
+    // NOT USED: the Tier-1 `fallbackReason` is a routing outcome, not a refusal, and says so.
+    const unknown = renderToStaticMarkup(
+      <LearningDecisionRow row={{ ...decisionRowFixture(), fallbackReason: "cohort_excluded" }} />,
+    );
+    expect(unknown).toContain("advisory not applied · cohort_excluded");
+    expect(unknown).not.toContain("advisory refusal");
+    expect(unknown).toContain('title="cohort_excluded"');
+
+    // The Tier-2 `reason` is the explanation and wins over the Tier-1 tally key on the same row.
+    const fault = renderToStaticMarkup(
+      <LearningDecisionRow
+        row={{
+          ...decisionRowFixture(),
+          reason: "evidence clock or window unavailable",
+          fallbackReason: "cohort_excluded",
+        }}
+      />,
+    );
+    expect(fault).toContain("advisory unavailable · the advisory store could not be read");
+    expect(fault).toContain('title="evidence clock or window unavailable"');
+
+    // A row with no refusal renders no refusal line at all - the absence is not explained by a guess.
+    const plain = renderToStaticMarkup(<LearningDecisionRow row={decisionRowFixture()} />);
+    expect(plain).not.toContain("advisory unavailable");
+    expect(plain).not.toContain("advisory not applied");
+  });
+
+  /**
    * `A49-R1`: a candidate with a validation receipt reports it - the verdict word mapped from the receipt's
    * `decision`, the receipt id, and its `qualityDelta` - instead of `no verdict recorded` /
    * `validation not reported`.
@@ -867,9 +1010,25 @@ describe("run101 addendum 49", () => {
         countsState: "receipt_carries_none",
       },
     };
-    const absent = renderToStaticMarkup(<LearningDecisionRow receipt row={carriesNone} />);
-    expect(absent).toContain("the receipt carries no comparison counts");
-    expect(absent).not.toContain("dec ·");
+    /*
+     * Run 108 addendum 03 (`A03-C`, the operator's actual complaint): `receipt_carries_none` has two causes
+     * and one sentence used to state both, blaming the receipt for a gap that is often upstream. A row that
+     * knows a family names it, so the operator can see WHAT has no counts; a row that knows none says the
+     * family was never recorded. Neither state invents a zero.
+     */
+    const named = renderToStaticMarkup(<LearningDecisionRow receipt row={carriesNone} />);
+    expect(named).toContain("no comparison counts for coder.review");
+    expect(named).not.toContain("no task family was recorded");
+    expect(named).not.toContain("dec ·");
+
+    const noFamily = renderToStaticMarkup(
+      <LearningDecisionRow
+        receipt
+        row={{ ...carriesNone, requestTaskTypeId: null, classification: null, taskTypeId: null }}
+      />,
+    );
+    expect(noFamily).toContain("no task family was recorded for this comparison");
+    expect(noFamily).not.toContain("no comparison counts for");
 
     // The pack's claim cell states the same reason in place of its Δ line when no delta was recorded either.
     const pack = renderToStaticMarkup(
@@ -882,7 +1041,7 @@ describe("run101 addendum 49", () => {
         }}
       />,
     );
-    expect(pack).toContain("the receipt carries no comparison counts");
+    expect(pack).toContain("no comparison counts for coder.explain");
   });
 });
 

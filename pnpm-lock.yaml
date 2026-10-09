@@ -563,6 +563,9 @@ importers:
       '@role-model-router/adapter-execution':
         specifier: workspace:*
         version: link:../adapter-execution
+      '@role-model-router/core':
+        specifier: workspace:*
+        version: link:../core
       '@role-model-router/profile-aggregator':
         specifier: workspace:*
         version: link:../profile-aggregator
@@ -592,6 +595,9 @@ importers:
       '@role-model-router/catalog':
         specifier: workspace:*
         version: link:../catalog
+      '@role-model-router/core':
+        specifier: workspace:*
+        version: link:../core
       '@role-model-router/profile-aggregator':
         specifier: workspace:*
         version: link:../profile-aggregator
@@ -612,6 +618,9 @@ importers:
 
   role-model-router/packages/trace:
     dependencies:
+      '@role-model-router/core':
+        specifier: workspace:*
+        version: link:../core
       '@role-model/protocol-types':
         specifier: workspace:*
         version: link:../../../packages/protocol-types

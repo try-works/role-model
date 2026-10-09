@@ -239,7 +239,7 @@ in difficulty mode; in controller mode it remains a derived value and that is do
 ### 7.1 Prerequisite: satisfied by the landed Effect wiring
 
 The vendored tree is already consumable. `role-model-router/packages/effect` is a workspace package named
-`effect` (4.0.0-rc.117) that re-exports the vendored sources in place and builds them to `dist/` with
+`effect` (4.0.1) that re-exports the vendored sources in place and builds them to `dist/` with
 `build.mjs`; `role-model-router/packages/effect-mq` and `.../sql-sqlite-node` sit beside it, and
 `runtime-host-bridge/package.json` depends on all three. The bridge already imports the package in
 `src/queue-runtime/*` and `src/track-b-auto-replay-runtime.ts`, and already builds a `ManagedRuntime` in
@@ -255,7 +255,7 @@ Effect is the obvious shape, it is used, and any deviation is recorded per `AGEN
 ### 7.2 Primitive map
 
 Source paths below are the workspace wrapper `role-model-router/packages/effect/src/*`, which re-exports
-`vendor/effect` (the upstream `effect@4.0.0-rc.117` source drop).
+`vendor/effect` (the upstream `effect@4.0.1` source drop).
 
 | Concern | Primitive | Vendored source |
 | --- | --- | --- |
@@ -652,14 +652,14 @@ decision's effective strategy, source, weights digest and winner match the saved
    `/v1/chat/completions` path is a defect.
 8. **Vendored-pin drift.** The API shapes cited here (`Schema.encodeKeys`, `Schema.makeFilter`,
    `Data.taggedEnum.$match`, `ManagedRuntime.make`, `ConfigProvider.fromEnv` / `constantCase`,
-   `Metric.withAttributes`) were verified against `effect@4.0.0-rc.117` - the
+   `Metric.withAttributes`) were verified against `effect@4.0.1` - the
    `role-model-router/packages/effect` wrapper over `vendor/effect`. Re-vendoring, or changing that wrapper's
    build, requires re-verifying them before the routing modules are built on top.
 
 ## 12. Audit notes (verified against the vendored Effect source)
 
 The sketches in section 7 were executed with the repo's `tsx`, importing the vendored source
-(`vendor/effect/packages/effect/src/index.ts`, `effect@4.0.0-rc.117`) directly; shipped modules import the
+(`vendor/effect/packages/effect/src/index.ts`, `effect@4.0.1`) directly; shipped modules import the
 `effect` workspace package instead. What was run and what it proved:
 
 | Sketch | Result |

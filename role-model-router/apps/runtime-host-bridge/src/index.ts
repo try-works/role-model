@@ -24,7 +24,7 @@ import {
   type NormalizedCatalog,
   type NormalizedCatalogModel,
   type PricingHints,
-  resolveReasoningEffortLevels,
+  resolveAdapterGatedReasoningEfforts,
 } from "@role-model-router/catalog";
 import { assembleContextEnvelope } from "@role-model-router/context-envelope";
 import {
@@ -32,6 +32,7 @@ import {
   supportsCapabilityRequirement,
   taxonomyManifest,
 } from "@role-model-router/core";
+import type { EffortResolution } from "@role-model-router/core";
 import type { EndpointRegistryResult } from "@role-model-router/endpoint-registry";
 import {
   type RegistrySources,
@@ -43,6 +44,7 @@ import { ProcessSupervisor } from "@role-model-router/process-supervisor";
 import {
   type ObservedPerformanceSample,
   aggregateOperationalPerformanceSamples,
+  resolveRelatedEffortOverallScore,
   resolveRoutingBenchmarkQuality,
 } from "@role-model-router/profile-aggregator";
 import {
@@ -66,7 +68,8 @@ import { createOpenAIProviderAdapter } from "@role-model-router/provider-openai"
 import { createRetrievalReceipt } from "@role-model-router/retrieval-receipt";
 import {
   type RuntimeCapturePolicy,
-  type RuntimeEffortSource,
+  type RuntimeEffortReceipt,
+  type RuntimeEffortSourceValue,
   type RuntimeExecutionCooldownReceipt,
   type RuntimeExecutionFailedAttemptReceipt,
   type RuntimeObservationBundle,
@@ -192,6 +195,12 @@ import {
   inferResponsesCapabilityRequirements,
 } from "./request-capability-inference.js";
 import { resolveAdvisoryCohortPercent } from "./route-advisory-source.js";
+import {
+  type ObservabilityMetricReadback,
+  type ObservabilityScope,
+  collectObservabilitySnapshot,
+  createObservabilityScope,
+} from "./run108-observability.js";
 import { readPackagedRuntimeProfile, resolveRuntimeChannelProfile } from "./runtime-channel.js";
 import { type RuntimeVersionInfoRecord, resolveRuntimeVersionInfo } from "./runtime-version.js";
 import {
@@ -245,6 +254,7 @@ import {
   evaluateBenchmarkTargetEligibility,
 } from "./benchmark-start-guards.js";
 import {
+  type BenchmarkCapability,
   buildBenchmarkCapabilityForEndpoint,
   listBenchmarkRuns,
   readBenchmarkPreferences,
@@ -366,41 +376,11 @@ import {
   rewriteUnifiedRuntimeConfigController,
 } from "./unified-runtime-config.js";
 
-const REASONING_EFFORT_SERIALIZER_VERSION_BY_ADAPTER = new Map<string, string>([
-  ["ai-sdk-openai-compatible", "run91.openai-compatible.reasoning-effort.v1"],
-  ["litellm-proxy", "run91.openai-compatible.reasoning-effort.v1"],
-  ["codex-subscription-responses", "run91.codex-responses.reasoning-effort.v1"],
-  ["ai-sdk-anthropic", "run93.anthropic.thinking-budget-tokens.v1"],
-]);
-
-export function resolveAdapterGatedReasoningEfforts(input: {
-  readonly providerId: string;
-  readonly modelId: string;
-  readonly capabilities: readonly string[];
-  readonly catalogLevels: readonly string[];
-  readonly adapterFamily: string | null;
-}): readonly string[] {
-  const adapterFamily = input.adapterFamily;
-  const version =
-    adapterFamily === null
-      ? undefined
-      : REASONING_EFFORT_SERIALIZER_VERSION_BY_ADAPTER.get(adapterFamily);
-  return resolveReasoningEffortLevels({
-    providerId: input.providerId,
-    modelId: input.modelId,
-    capabilities: input.capabilities,
-    reasoningEffortLevels: input.catalogLevels,
-    reasoningOptionKinds: ["effort"],
-    adapter:
-      version && adapterFamily
-        ? {
-            family: adapterFamily,
-            version,
-            serializers: input.catalogLevels,
-          }
-        : null,
-  });
-}
+// Run 106 H-1: the adapter-gated reasoning-effort resolver now lives in
+// @role-model-router/catalog (next to resolveReasoningEffortLevels) so both the
+// runtime-host-bridge activation path and the endpoint-registry arm expansion can
+// resolve the executable effort set from one source of truth.
+export { resolveAdapterGatedReasoningEfforts } from "@role-model-router/catalog";
 
 function markPhase(label: string): void {
   if (process.env.ROLE_MODEL_PHASE_TIMING === "1") {
@@ -438,14 +418,27 @@ export function resolveEndpointExecutionEffort(input: {
   readonly executionRequest: RuntimeExecutionRequest;
 }): {
   readonly executionRequest: RuntimeExecutionRequest;
-  readonly receipt: {
-    readonly reasoningEffort: string | null;
-    readonly effortSource: RuntimeEffortSource;
-  };
+  readonly receipt: RuntimeEffortReceipt;
 } {
   const fixedEffort = input.fixedEffort?.trim() || null;
   const clientEffort = input.executionRequest.reasoning?.effort?.trim() || null;
   if (fixedEffort === null) {
+    const clientEffortSource = input.executionRequest.reasoning?.effortSource;
+    if (
+      clientEffortSource === "disabled" ||
+      (clientEffort !== null && isDisabledReasoningEffort(clientEffort))
+    ) {
+      const { reasoning: _clientReasoning, ...executionRequestWithoutReasoning } =
+        input.executionRequest;
+      return {
+        executionRequest: executionRequestWithoutReasoning,
+        receipt: {
+          reasoningEffort: null,
+          effortSource: "none",
+          coerced: false,
+        },
+      };
+    }
     const declaredEffortLevels = new Set(
       (input.declaredEffortLevels ?? [])
         .map((level) => level.trim())
@@ -457,6 +450,7 @@ export function resolveEndpointExecutionEffort(input: {
         receipt: {
           reasoningEffort: clientEffort,
           effortSource: "client",
+          coerced: false,
         },
       };
     }
@@ -472,9 +466,11 @@ export function resolveEndpointExecutionEffort(input: {
       receipt: {
         reasoningEffort: null,
         effortSource: "none",
+        coerced: false,
       },
     };
   }
+  const coerced = clientEffort !== null && clientEffort !== fixedEffort;
   return {
     executionRequest: {
       ...input.executionRequest,
@@ -485,8 +481,8 @@ export function resolveEndpointExecutionEffort(input: {
     },
     receipt: {
       reasoningEffort: fixedEffort,
-      effortSource:
-        clientEffort !== null && clientEffort !== fixedEffort ? "variant_coerced" : "variant",
+      effortSource: coerced ? "variant_coerced" : "variant",
+      coerced,
     },
   };
 }
@@ -967,19 +963,102 @@ function isOpenAIChatCompletionsMessage(
   );
 }
 
+export type NormalizedEffortPolicy = "strict" | "preferred" | "router";
+export type ClientEffortSource = "named" | "disabled" | "none";
+
+function isDisabledReasoningEffort(effort: string | undefined): boolean {
+  const trimmed = effort?.trim().toLowerCase();
+  return trimmed === "none" || trimmed === "off";
+}
+
+export function normalizeReasoningEffortPolicy(
+  effort: string | undefined,
+  explicitPolicy: string | undefined,
+): { effort: string | undefined; policy: NormalizedEffortPolicy; source: ClientEffortSource } {
+  const disabled = isDisabledReasoningEffort(effort);
+  const effectiveEffort = disabled ? undefined : effort;
+  const policy =
+    normalizeEffortPolicyValue(explicitPolicy) ?? (effectiveEffort ? "preferred" : "router");
+  const source: ClientEffortSource = disabled ? "disabled" : effectiveEffort ? "named" : "none";
+  return { effort: effectiveEffort, policy, source };
+}
+
+export type EffortPolicyResolutionKind =
+  | "router_managed"
+  | "exact_primary"
+  | "exact_fallback_expanded"
+  | "unsupported_fallback"
+  | "strict_rejected"
+  | "equivalent_mapped";
+
+export function resolveEffortPolicy(input: {
+  readonly requestedEffort: string | undefined;
+  readonly policy: "strict" | "preferred" | "router";
+  readonly availableEfforts: readonly (string | null)[];
+}): { resolution: EffortPolicyResolutionKind; effectiveEffort: string | null } {
+  if (input.policy === "router") {
+    return { resolution: "router_managed", effectiveEffort: null };
+  }
+  if (input.requestedEffort === undefined) {
+    // strict with no requested effort is a contradiction: refuse rather than silently router-managing.
+    return input.policy === "strict"
+      ? { resolution: "strict_rejected", effectiveEffort: null }
+      : { resolution: "router_managed", effectiveEffort: null };
+  }
+  const hasExact = input.availableEfforts.includes(input.requestedEffort);
+  if (hasExact) {
+    // strict names only the exact arms as the primary pool; preferred keeps the exact arms primary while the rest of
+    // the pool stays eligible as a receipted fallback (R3: exact_primary vs exact_fallback_expanded).
+    return input.policy === "strict"
+      ? { resolution: "exact_primary", effectiveEffort: input.requestedEffort }
+      : { resolution: "exact_fallback_expanded", effectiveEffort: input.requestedEffort };
+  }
+  if (input.policy === "strict") {
+    return { resolution: "strict_rejected", effectiveEffort: null };
+  }
+  return { resolution: "unsupported_fallback", effectiveEffort: null };
+}
+
+function normalizeEffortPolicyValue(value: string | undefined): NormalizedEffortPolicy | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  if (trimmed === "strict" || trimmed === "preferred" || trimmed === "router") {
+    return trimmed;
+  }
+  throw new BridgeHttpError(400, {
+    error: {
+      type: "routing_eligibility_error",
+      code: "invalid_effort_policy",
+      message: `Invalid effort_policy: ${value}`,
+      received: value,
+    },
+  });
+}
+
 function readOpenAIReasoningRequest(
   body: Pick<OpenAIResponsesBody, "reasoning_effort" | "reasoning" | "thinking">,
 ): RuntimeExecutionRequest["reasoning"] | undefined {
   if (typeof body.reasoning_effort === "string") {
+    const normalized = normalizeReasoningEffortPolicy(body.reasoning_effort, undefined);
     return {
-      effort: body.reasoning_effort,
+      ...(normalized.effort !== undefined ? { effort: normalized.effort } : {}),
+      effortPolicy: normalized.policy,
+      effortSource: normalized.source,
     };
   }
 
   const reasoning = asPlainRecord(body.reasoning);
   if (reasoning) {
+    const effort = typeof reasoning.effort === "string" ? reasoning.effort : undefined;
+    const explicitPolicy =
+      typeof reasoning.effort_policy === "string" ? reasoning.effort_policy : undefined;
+    const normalized = normalizeReasoningEffortPolicy(effort, explicitPolicy);
     return {
-      ...(typeof reasoning.effort === "string" ? { effort: reasoning.effort } : {}),
+      ...(normalized.effort !== undefined ? { effort: normalized.effort } : {}),
+      effortPolicy: normalized.policy,
+      effortSource: normalized.source,
       raw: reasoning,
     };
   }
@@ -1199,6 +1278,8 @@ export interface BridgeExecutionPlan {
   readonly routingRequest: Parameters<typeof routeRuntimeRequest>[0]["request"];
   readonly executionRequest: RuntimeExecutionRequest;
   readonly routingModel?: RoutingModelSelection;
+  /** Run 106 R10: the effort policy resolution the host computed before narrowing the pool. */
+  readonly effortResolution?: EffortResolution;
   readonly routingDiagnostics?: Pick<
     RuntimeRoutingDiagnostics,
     | "aliasResolution"
@@ -1240,6 +1321,9 @@ interface BridgeDifficultyRoutingContext {
     readonly cacheInvalidated?: boolean;
     readonly cacheInvalidationReasons?: readonly string[];
     readonly fallbackReason?: string;
+    readonly classifierVersion?: string;
+    readonly decisiveFeatures?: readonly string[];
+    readonly features?: DifficultyFeatureSet;
     readonly rubricSignals: DifficultyRoutingSignals;
   };
 }
@@ -1344,26 +1428,29 @@ function summarizeDifficultySignals(input: {
     declaredToolCount: input.toolCount,
   });
   const userMessages = input.messages.filter((message) => message.role === "user");
-  const combined = combineDifficultyMessageText(input.messages);
-  const askModeBurdenSource = askMode
-    ? combineLastUserDifficultyMessageText(input.messages)
-    : combined;
+  /**
+   * Run 106 R7 (F4): current-turn signals are derived from the newest user turn only, so a trivial
+   * follow-up in a long coding session does not inherit the code/schema or constraint burden of the
+   * whole transcript. Conversation burden (history turn count + context tokens) still reflects the
+   * full session and is handled by the bounded/diminishing feature model in the classifier.
+   */
+  const currentTurnText = combineLastUserDifficultyMessageText(input.messages);
   const instructionConstraintCount = countMatches(
-    askModeBurdenSource.toLowerCase(),
+    currentTurnText.toLowerCase(),
     /\b(must|should|need to|required|preserve|verify|strict|do not|don't|never|without|constraint|compatible|ensure|maintain|avoid|breaking|regression)\b/g,
   );
   const decompositionKeywordCount = countMatches(
-    combined.toLowerCase(),
+    currentTurnText.toLowerCase(),
     /\b(analyze|compare|iterate|plan|step|decompose|refactor|workflow|multi-step|across|identify|explain|investigate|debug|patch|regression)\b/g,
   );
   const codePathSignal =
     /(?:^|[\s"'`])(?:[\w.-]+[\\/])+[\w.-]+\.(?:ts|tsx|js|jsx|py|rs|go|java|c|cc|cpp|cs|json|yaml|yml|md)\b/i.test(
-      askModeBurdenSource,
+      currentTurnText,
     );
   const workspaceFileActionSignal =
     /\b(file|folder|directory|workspace|repo|repository|symbol|exported)\b/i.test(
-      askModeBurdenSource,
-    ) && /\b(read|write|create|patch|edit|inspect|open|grep|search)\b/i.test(askModeBurdenSource);
+      currentTurnText,
+    ) && /\b(read|write|create|patch|edit|inspect|open|grep|search)\b/i.test(currentTurnText);
   const effectiveToolCount = askMode ? 0 : input.toolCount;
   const effectiveHistoryTurnCount = askMode ? userMessages.length : input.messages.length;
   const effectiveContextTokens = askMode
@@ -1376,10 +1463,76 @@ function summarizeDifficultySignals(input: {
     instructionConstraintCount,
     decompositionKeywordCount,
     codeOrSchemaBurden:
-      /\b(code|diff|patch|refactor|schema|contract|validation|test)\b/i.test(askModeBurdenSource) ||
+      /\b(code|diff|patch|refactor|schema|contract|validation|test)\b/i.test(currentTurnText) ||
       codePathSignal ||
       workspaceFileActionSignal,
   };
+}
+
+/**
+ * Run 106 R7 (F4): the heuristic difficulty classifier's version. Receipts and the difficulty
+ * classification cache carry this value so a classification produced by an older classifier is
+ * refused rather than silently reused (see shouldInvalidateDifficultyClassifierVersion).
+ */
+export const DIFFICULTY_CLASSIFIER_VERSION = "run106-turn-aware-v1";
+
+export type DifficultyFeatureName =
+  | "currentTurnBurden"
+  | "conversationBurden"
+  | "operationRisk"
+  | "requiredQuality"
+  | "latencySensitivity";
+
+export interface DifficultyFeatureSet {
+  readonly currentTurnBurden: number;
+  readonly conversationBurden: number;
+  readonly operationRisk: number;
+  readonly requiredQuality: number;
+  readonly latencySensitivity: number;
+}
+
+/**
+ * Run 106 R7 (F4): turn-aware feature separation. Conversation burden (history + context) is
+ * bounded and diminishing - it contributes at most two points and never escalates further, so a
+ * long session cannot force "hard" on its own. Current-turn burden, operation risk and required
+ * quality are the upward forces; latency sensitivity (a short, single-turn interactive ask) pulls
+ * toward the cheap/fast end.
+ */
+export function computeDifficultyFeatures(signals: DifficultyRoutingSignals): DifficultyFeatureSet {
+  const currentTurnBurden =
+    (signals.instructionConstraintCount >= 5
+      ? 2
+      : signals.instructionConstraintCount >= 2
+        ? 1
+        : 0) +
+    (signals.decompositionKeywordCount >= 3 ? 2 : signals.decompositionKeywordCount >= 1 ? 1 : 0);
+  const conversationBurden =
+    (signals.historyTurnCount >= 2 ? 1 : 0) + (signals.contextTokens >= 10_000 ? 1 : 0);
+  const operationRisk =
+    (signals.toolCount >= 5 ? 3 : signals.toolCount >= 2 ? 2 : signals.toolCount === 1 ? 1 : 0) +
+    (signals.codeOrSchemaBurden ? 2 : 0);
+  const requiredQuality =
+    signals.instructionConstraintCount >= 5 ? 2 : signals.instructionConstraintCount >= 2 ? 1 : 0;
+  const latencySensitivity = signals.historyTurnCount <= 1 && signals.contextTokens < 2_000 ? 1 : 0;
+  return {
+    currentTurnBurden,
+    conversationBurden,
+    operationRisk,
+    requiredQuality,
+    latencySensitivity,
+  };
+}
+
+/**
+ * Run 106 R7 (F4): cache invalidation follows the revised features. A cached classification whose
+ * classifier version differs from the current one (including a pre-versioning cache entry, which is
+ * undefined) is materially stale and must be reclassified.
+ */
+export function shouldInvalidateDifficultyClassifierVersion(
+  cachedClassifierVersion: string | undefined,
+  currentClassifierVersion: string,
+): boolean {
+  return cachedClassifierVersion !== currentClassifierVersion;
 }
 
 export function classifyDifficultyFromSignals(input: {
@@ -1389,87 +1542,71 @@ export function classifyDifficultyFromSignals(input: {
   readonly difficulty: UnifiedRuntimeDifficultyBucket;
   readonly fallbackApplied: boolean;
   readonly fallbackReason?: string;
+  readonly features: DifficultyFeatureSet;
+  readonly decisiveFeatures: readonly DifficultyFeatureName[];
 } {
+  const features = computeDifficultyFeatures(input.signals);
   if (input.signals.historyTurnCount === 0) {
     return {
       difficulty: input.classifier?.fallbackDifficulty ?? "hard",
       fallbackApplied: true,
       fallbackReason: "missing-request-content",
+      features,
+      decisiveFeatures: [],
     };
   }
 
+  /**
+   * Run 106 R7 (F4) documented risk rule: a current-turn tool-using code/schema operation is
+   * materially risky and stays hard. This replaces the pre-SP5 unconditional toolCount > 0 &&
+   * codeOrSchemaBurden => hard saturation: codeOrSchemaBurden is now computed from the current
+   * turn only (see summarizeDifficultySignals), so a trivial follow-up in a long coding session has
+   * codeOrSchemaBurden === false and does not reach this branch, while genuinely risky
+   * tool/code/schema work still does.
+   */
   if (input.signals.toolCount > 0 && input.signals.codeOrSchemaBurden) {
     return {
       difficulty: "hard",
       fallbackApplied: false,
+      features,
+      decisiveFeatures: ["operationRisk"],
     };
   }
 
-  let score = 0;
-  // Run 98 addendum 32 S3 (external audit §6): the rubric saturated because `contextTokens >= 2000`,
-  // `toolCount >= 2` and `historyTurnCount >= 4` - worth 8 points together, already "hard" - are true
-  // for essentially every agent session, so a 562K-token tool-heavy session shared a bucket with a
-  // 2K-token one and the gate stopped selecting. The context contribution is graded across the observed
-  // range (live `contextTokens` p50 = 130, p95 = 450,732) and the tool/history steps keep climbing
-  // instead of stopping at the first rung.
-  if (input.signals.contextTokens >= 200_000) {
-    score += 5;
-  } else if (input.signals.contextTokens >= 50_000) {
-    score += 4;
-  } else if (input.signals.contextTokens >= 10_000) {
-    score += 3;
-  } else if (input.signals.contextTokens >= 2_000) {
-    score += 2;
-  } else if (input.signals.contextTokens >= 600) {
-    score += 1;
+  // Turn-aware rubric: conversation burden is bounded/diminishing (max +2 via the feature model), so
+  // it cannot saturate hard on its own; current-turn burden, operation risk and required quality are
+  // the decisive upward forces and latency sensitivity (a short interactive ask) pulls toward easy.
+  const score =
+    features.currentTurnBurden +
+    features.conversationBurden +
+    features.operationRisk +
+    features.requiredQuality -
+    features.latencySensitivity;
+
+  const decisiveFeatures: DifficultyFeatureName[] = [];
+  if (features.currentTurnBurden >= 2) {
+    decisiveFeatures.push("currentTurnBurden");
   }
-  if (input.signals.toolCount >= 5) {
-    score += 3;
-  } else if (input.signals.toolCount >= 2) {
-    score += 2;
-  } else if (input.signals.toolCount === 1) {
-    score += 1;
+  if (features.conversationBurden >= 2) {
+    decisiveFeatures.push("conversationBurden");
   }
-  if (input.signals.historyTurnCount >= 16) {
-    score += 3;
-  } else if (input.signals.historyTurnCount >= 6) {
-    score += 2;
-  } else if (input.signals.historyTurnCount >= 2) {
-    score += 1;
+  if (features.operationRisk >= 2) {
+    decisiveFeatures.push("operationRisk");
   }
-  if (input.signals.instructionConstraintCount >= 5) {
-    score += 2;
-  } else if (input.signals.instructionConstraintCount >= 2) {
-    score += 1;
+  if (features.requiredQuality >= 2) {
+    decisiveFeatures.push("requiredQuality");
   }
-  if (input.signals.decompositionKeywordCount >= 3) {
-    score += 2;
-  } else if (input.signals.decompositionKeywordCount >= 1) {
-    score += 1;
-  }
-  if (input.signals.codeOrSchemaBurden) {
-    score += 2;
-  }
-  if (input.signals.codeOrSchemaBurden && input.signals.instructionConstraintCount >= 3) {
-    score += 1;
+  if (features.latencySensitivity >= 1) {
+    decisiveFeatures.push("latencySensitivity");
   }
 
   if (score >= 7) {
-    return {
-      difficulty: "hard",
-      fallbackApplied: false,
-    };
+    return { difficulty: "hard", fallbackApplied: false, features, decisiveFeatures };
   }
   if (score >= 3) {
-    return {
-      difficulty: "medium",
-      fallbackApplied: false,
-    };
+    return { difficulty: "medium", fallbackApplied: false, features, decisiveFeatures };
   }
-  return {
-    difficulty: "easy",
-    fallbackApplied: false,
-  };
+  return { difficulty: "easy", fallbackApplied: false, features, decisiveFeatures };
 }
 
 function createDifficultyFallbackResult(input: {
@@ -1481,7 +1618,10 @@ function createDifficultyFallbackResult(input: {
     difficulty: input.classifier?.fallbackDifficulty ?? "hard",
     fallbackApplied: true,
     fallbackReason: input.reason,
+    classifierVersion: DIFFICULTY_CLASSIFIER_VERSION,
     rubricSignals: input.signals,
+    features: computeDifficultyFeatures(input.signals),
+    decisiveFeatures: [],
   };
 }
 
@@ -2231,6 +2371,11 @@ function maybeApplyDifficultyRouting(input: {
         difficulty: classified.difficulty,
         strategy,
         fallbackApplied: classified.fallbackApplied,
+        classifierVersion: DIFFICULTY_CLASSIFIER_VERSION,
+        ...(classified.decisiveFeatures?.length
+          ? { decisiveFeatures: classified.decisiveFeatures }
+          : {}),
+        ...(classified.features ? { features: classified.features } : {}),
         ...(classified.cacheHit ? { cacheHit: true } : {}),
         ...(classified.cacheInvalidated ? { cacheInvalidated: true } : {}),
         ...(classified.cacheInvalidationReasons?.length
@@ -2268,21 +2413,93 @@ function mergeCapabilityList(
   return merged;
 }
 
+function baseEndpointIdOfEndpoint(endpoint: {
+  readonly endpoint_id: string;
+  readonly reasoning_effort?: string | null;
+}): string {
+  const effort = endpoint.reasoning_effort?.trim() || null;
+  if (effort === null) {
+    return endpoint.endpoint_id;
+  }
+  const suffix = `-${encodeURIComponent(effort)}`;
+  return endpoint.endpoint_id.endsWith(suffix)
+    ? endpoint.endpoint_id.slice(0, -suffix.length)
+    : endpoint.endpoint_id;
+}
+
+/**
+ * Run 106 R2 (fallback dedup): a provider-default endpoint expands into effort arms that all
+ * resolve to the same downstream source. When one arm fails, falling back to a sibling arm would
+ * re-dispatch to that same source (and fail identically), so a provider-execution failure denies
+ * every endpoint in the arm's physical-source family, not just the failed arm id.
+ */
+function collectSharedSourceEndpointIds(
+  registry: EndpointRegistryResult,
+  endpointId: string,
+): readonly string[] {
+  const target = registry.endpoints.find(
+    (candidate) => candidate.identity.endpoint_id === endpointId,
+  );
+  const baseId = baseEndpointIdOfEndpoint(target?.identity ?? { endpoint_id: endpointId });
+  return registry.endpoints
+    .filter((candidate) => baseEndpointIdOfEndpoint(candidate.identity) === baseId)
+    .map((candidate) => candidate.identity.endpoint_id);
+}
+
+/**
+ * Run 106 R6: a controller/advisory preference for a base model/endpoint expands deterministically
+ * to every already-eligible effort arm of that base endpoint. The expansion is bounded by
+ * `allowEndpoints` (it can never invent an effort arm), and a preference that already names a
+ * specific arm stays exact.
+ */
+export function expandPreferredEndpointIdsToEffortArms(input: {
+  readonly registry: EndpointRegistryResult;
+  readonly allowEndpoints: readonly string[];
+  readonly preferredEndpointIds: readonly string[];
+}): readonly string[] {
+  const allowed = new Set(input.allowEndpoints);
+  const baseIdByEndpointId = new Map<string, string>();
+  for (const endpoint of input.registry.endpoints) {
+    if (!allowed.has(endpoint.identity.endpoint_id)) {
+      continue;
+    }
+    baseIdByEndpointId.set(
+      endpoint.identity.endpoint_id,
+      baseEndpointIdOfEndpoint(endpoint.identity),
+    );
+  }
+  const baseIds = new Set(baseIdByEndpointId.values());
+  const matched = new Set<string>();
+  for (const preferredId of input.preferredEndpointIds) {
+    if (baseIds.has(preferredId)) {
+      for (const [endpointId, baseId] of baseIdByEndpointId) {
+        if (baseId === preferredId) {
+          matched.add(endpointId);
+        }
+      }
+    } else if (allowed.has(preferredId)) {
+      matched.add(preferredId);
+    }
+  }
+  return input.allowEndpoints.filter((endpointId) => matched.has(endpointId));
+}
+
 function collectPreferredEndpointIds(
+  registry: EndpointRegistryResult,
   allowEndpoints: readonly string[] | undefined,
   preferredEndpointIds: readonly string[] | undefined,
 ): readonly string[] {
-  const allowSet = new Set(allowEndpoints ?? []);
-  const filtered: string[] = [];
-  for (const endpointId of preferredEndpointIds ?? []) {
-    if (allowSet.has(endpointId) && !filtered.includes(endpointId)) {
-      filtered.push(endpointId);
-    }
-  }
-  if (allowSet.size > 0 && filtered.length === allowSet.size) {
+  const allow = allowEndpoints ?? [];
+  const expanded = expandPreferredEndpointIdsToEffortArms({
+    registry,
+    allowEndpoints: allow,
+    preferredEndpointIds: preferredEndpointIds ?? [],
+  });
+  // When the preference already covers the whole eligible pool, it carries no selection signal.
+  if (allow.length > 0 && expanded.length === allow.length) {
     return [];
   }
-  return filtered;
+  return expanded;
 }
 
 function isOpenAICodexSubscriptionEndpointId(endpointId: string): boolean {
@@ -2343,6 +2560,7 @@ function maybeApplyControllerRouting(input: {
   readonly effectiveRoutingMode: RuntimeRoutingMode;
   readonly pinWeights?: boolean;
   readonly requestedModel: string;
+  readonly registry: EndpointRegistryResult;
   readonly modelAliases: readonly UnifiedRuntimeModelAliasConfig[];
   readonly routingRequest: Parameters<typeof routeRuntimeRequest>[0]["request"];
   readonly routingDiagnostics?: Pick<
@@ -2423,6 +2641,7 @@ function maybeApplyControllerRouting(input: {
     knownCapabilities,
   );
   const preferredEndpointIds = collectPreferredEndpointIds(
+    input.registry,
     input.routingRequest.allowEndpoints ?? [],
     guidance.preferredEndpointIds,
   );
@@ -3247,6 +3466,17 @@ export interface StartBridgeServerOptions {
   readonly operatorContext?: RuntimeOperatorContext;
   readonly runtimeStateRoot?: string;
   readonly runtimeChannel?: "development" | "stage" | "production";
+  /**
+   * Run 108 follow-up: the metric registry of the runtime scope this server belongs to. The host
+   * creates ONE scope at its composition root and hands it here, so the metrics its own sweeps record
+   * and the metrics this server's request path records land in the SAME registry the operator
+   * readback answers from.
+   *
+   * Omitted: the server IS a runtime-scope boundary, so it creates one scope for itself, named after
+   * the operator scope it was bound to. That keeps every server its own registry instead of Effect's
+   * process-global default Map (the defect this replaced), and it is never one registry per call.
+   */
+  readonly observabilityScope?: ObservabilityScope;
   readonly registry: EndpointRegistryResult;
   readonly getRegistry?: () => EndpointRegistryResult;
   readonly getExecutionCatalog?: () => NormalizedCatalog;
@@ -3352,6 +3582,10 @@ export interface StartBridgeServerOptions {
   ) => Promise<unknown>;
   readonly readQueueJob?: (queueName: string, jobId: string) => Promise<unknown>;
   readonly readQueueReceipts?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  /** Run 108 addendum-01 A2: store + worker degradation receipts (R3/R6b UI surfacing). */
+  readonly readStoreDegradationReceipts?: (
+    query?: Readonly<Record<string, string>>,
+  ) => Promise<unknown> | unknown;
   readonly readQueueConfig?: () => Promise<unknown>;
   readonly setQueueConfig?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly retryQueueJob?: (queueName: string, jobId: string) => Promise<unknown>;
@@ -3673,6 +3907,8 @@ export interface RuntimeBridgeBackend {
   readQueueJobs(queueName: string, query?: Readonly<Record<string, string>>): Promise<unknown>;
   readQueueJob(queueName: string, jobId: string): Promise<unknown>;
   readQueueReceipts(query?: Readonly<Record<string, string>>): Promise<unknown>;
+  /** Run 108 addendum-01 A2: store + worker degradation receipts (R3/R6b UI surfacing). */
+  readStoreDegradationReceipts(query?: Readonly<Record<string, string>>): Promise<unknown>;
   readQueueConfig(): Promise<unknown>;
   setQueueConfig(body: Record<string, unknown>): Promise<unknown>;
   retryQueueJob(queueName: string, jobId: string): Promise<unknown>;
@@ -4021,6 +4257,14 @@ export interface CreateRuntimeBridgeBackendOptions {
   readonly repoRoot: string;
   readonly runtimeStateRoot: string;
   readonly scopeId: string;
+  /**
+   * Run 108 follow-up: the metric registry of the runtime scope this backend serves. The host creates
+   * ONE scope at its composition root and hands the SAME scope to this backend and to the bridge
+   * server, so a decision this backend routes is visible in the operator readback the server answers.
+   * Omitted (a caller that is not a runtime scope), the request path records no decision counter
+   * rather than leaking into Effect's process-global default Map.
+   */
+  readonly observabilityScope?: ObservabilityScope;
   /** Runtime deployment channel used by every durable storage authority check. */
   readonly runtimeChannel?: "development" | "stage" | "production";
   readonly run88StageIdentity?: {
@@ -4107,6 +4351,10 @@ export interface CreateRuntimeBridgeBackendOptions {
   ) => Promise<unknown>;
   readonly readQueueJob?: (queueName: string, jobId: string) => Promise<unknown>;
   readonly readQueueReceipts?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  /** Run 108 addendum-01 A2: store + worker degradation receipts (R3/R6b UI surfacing). */
+  readonly readStoreDegradationReceipts?: (
+    query?: Readonly<Record<string, string>>,
+  ) => Promise<unknown> | unknown;
   readonly readQueueConfig?: () => Promise<unknown>;
   readonly setQueueConfig?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly retryQueueJob?: (queueName: string, jobId: string) => Promise<unknown>;
@@ -4411,17 +4659,22 @@ function normalizeCacheContinuityKeyValue(value: string | undefined): string | u
   return typeof value === "string" && value.trim().length > 0 ? value.trim() : undefined;
 }
 
-function toCacheContinuityScopeDescriptor(executionRequest: RuntimeExecutionRequest): {
+export function toCacheContinuityScopeDescriptor(executionRequest: RuntimeExecutionRequest): {
   readonly scopeSource: CacheContinuityScopeSource;
   readonly scopeKey: string;
   readonly scopeId: string;
 } | null {
+  // Run 106 R6: cache continuity is effort-aware. A prompt-cache key or session id is only a
+  // continuity scope within one effort arm, so the requested reasoning effort is folded into the
+  // scope id. Requests without a requested effort keep the historical effort-free key.
+  const effort = normalizeCacheContinuityKeyValue(executionRequest.reasoning?.effort);
+  const effortSuffix = effort ? `:effort:${effort}` : "";
   const promptCacheKey = normalizeCacheContinuityKeyValue(executionRequest.promptCache?.key);
   if (promptCacheKey) {
     return {
       scopeSource: "prompt_cache_key",
       scopeKey: promptCacheKey,
-      scopeId: `prompt_cache_key:${promptCacheKey}`,
+      scopeId: `prompt_cache_key:${promptCacheKey}${effortSuffix}`,
     };
   }
   const sessionId = normalizeCacheContinuityKeyValue(executionRequest.sessionAffinity?.sessionId);
@@ -4429,7 +4682,7 @@ function toCacheContinuityScopeDescriptor(executionRequest: RuntimeExecutionRequ
     return {
       scopeSource: "session_affinity",
       scopeKey: sessionId,
-      scopeId: `session_affinity:${sessionId}`,
+      scopeId: `session_affinity:${sessionId}${effortSuffix}`,
     };
   }
   return null;
@@ -5364,7 +5617,7 @@ function buildPreExecutionFailureObservation(input: {
   readonly modelId: string;
   readonly sourceType: "local" | "remote";
   readonly reasoningEffort: string | null;
-  readonly effortSource: RuntimeEffortSource;
+  readonly effortSource: RuntimeEffortSourceValue;
   readonly requestOperation?: "chat" | "responses";
   readonly error: unknown;
   readonly latencyMs: number;
@@ -9215,6 +9468,38 @@ function collectConfiguredReasoningEfforts(
   return [...levels].sort(compareText);
 }
 
+/**
+ * The efforts this pool can execute as an exact arm. A fixed-effort endpoint is always an exact arm for its own
+ * level; a provider-default endpoint (no fixed effort) executes its declared levels. A fixed-effort endpoint's own
+ * declared levels are catalog metadata, not executable arms, so they are deliberately excluded - matching
+ * `selectReasoningEffortInstanceIds` (run 116) rather than the broader error-reporting set in
+ * `collectConfiguredReasoningEfforts`.
+ */
+function collectExecutableReasoningEfforts(
+  registry: EndpointRegistryResult,
+  allowEndpoints: readonly string[],
+): readonly string[] {
+  const allowed = new Set(allowEndpoints);
+  const levels = new Set<string>();
+  for (const endpoint of registry.endpoints) {
+    if (!allowed.has(endpoint.identity.endpoint_id)) {
+      continue;
+    }
+    const fixedEffort = endpoint.identity.reasoning_effort?.trim();
+    if (fixedEffort) {
+      levels.add(fixedEffort);
+      continue;
+    }
+    for (const level of endpoint.declared.reasoning_effort_levels ?? []) {
+      const trimmed = level.trim();
+      if (trimmed) {
+        levels.add(trimmed);
+      }
+    }
+  }
+  return [...levels].sort(compareText);
+}
+
 function throwReasoningEffortUnavailable(input: {
   readonly requestedModel: string;
   readonly requestedEffort: string;
@@ -9617,6 +9902,8 @@ export function classifyBridgeRoutePass(input: {
 export interface ReasoningEffortPoolApplication {
   readonly allowEndpoints: readonly string[];
   readonly preferredEndpointIds: readonly string[];
+  readonly resolution: EffortPolicyResolutionKind;
+  readonly effectiveEffort: string | null;
 }
 
 /**
@@ -9643,11 +9930,13 @@ export function applyReasoningEffortToModelPool(input: {
   readonly registry: EndpointRegistryResult;
   readonly requestedModel: string;
   readonly requestedEffort?: string | null;
+  readonly requestedPolicy?: "strict" | "preferred" | "router";
   readonly allowEndpoints: readonly string[];
   readonly preferredEndpointIds: readonly string[];
   readonly requestedEndpointId?: string | null;
 }): ReasoningEffortPoolApplication {
   const requestedEffort = input.requestedEffort?.trim() || null;
+  const policy = input.requestedPolicy ?? (requestedEffort ? "preferred" : "router");
   /**
    * The client named an instance only when it used an endpoint row - as the requested model value or as the
    * explicit `endpointId` request option. Everything else (an alias, a model id) names a pool.
@@ -9660,43 +9949,89 @@ export function applyReasoningEffortToModelPool(input: {
         toLegacyCredentializedEndpointId(endpoint.identity.endpoint_id) === input.requestedModel,
     );
   if (instanceSelected) {
-    return {
-      allowEndpoints: filterRequestedModelPoolByReasoningEffort({
-        registry: input.registry,
-        requestedModel: input.requestedModel,
-        requestedEffort,
-        allowEndpoints: input.allowEndpoints,
-      }),
-      preferredEndpointIds: input.preferredEndpointIds,
-    };
-  }
-  if (requestedEffort === null) {
-    return {
+    const narrowedAllowEndpoints = filterRequestedModelPoolByReasoningEffort({
+      registry: input.registry,
+      requestedModel: input.requestedModel,
+      requestedEffort,
       allowEndpoints: input.allowEndpoints,
-      preferredEndpointIds: input.preferredEndpointIds,
-    };
-  }
-  const effortInstanceIds = selectReasoningEffortInstanceIds({
-    registry: input.registry,
-    allowEndpoints: input.allowEndpoints,
-    requestedEffort,
-  });
-  if (effortInstanceIds.length === 0) {
-    // An effort that names no instance in this pool is not executable at all, and it keeps the bounded
-    // `reasoning_effort_unavailable` refusal the callers already raise on an empty pool (run 98). The pool rule is
-    // about the pool's *membership*: an effort that does name instances may order them, never trim them.
+    });
     return {
-      allowEndpoints: [],
-      preferredEndpointIds: [],
+      allowEndpoints: narrowedAllowEndpoints,
+      preferredEndpointIds: input.preferredEndpointIds,
+      resolution: narrowedAllowEndpoints.length > 0 ? "exact_primary" : "strict_rejected",
+      effectiveEffort: narrowedAllowEndpoints.length > 0 ? requestedEffort : null,
     };
   }
-  return {
-    allowEndpoints: input.allowEndpoints,
-    preferredEndpointIds: [
-      ...effortInstanceIds,
-      ...input.preferredEndpointIds.filter((endpointId) => !effortInstanceIds.includes(endpointId)),
-    ],
-  };
+  const availableEfforts = collectExecutableReasoningEfforts(input.registry, input.allowEndpoints);
+  const resolved = resolveEffortPolicy({
+    requestedEffort: requestedEffort ?? undefined,
+    policy,
+    availableEfforts,
+  });
+  const effortInstanceIds =
+    requestedEffort === null
+      ? []
+      : selectReasoningEffortInstanceIds({
+          registry: input.registry,
+          allowEndpoints: input.allowEndpoints,
+          requestedEffort,
+        });
+  switch (resolved.resolution) {
+    case "router_managed":
+      // Router-managed: the effort hint is ignored and the whole pool is scored jointly.
+      return {
+        allowEndpoints: input.allowEndpoints,
+        preferredEndpointIds: input.preferredEndpointIds,
+        resolution: resolved.resolution,
+        effectiveEffort: resolved.effectiveEffort,
+      };
+    case "exact_primary":
+      // Exact-effort arms only; non-exact arms are ineligible.
+      return {
+        allowEndpoints: effortInstanceIds,
+        preferredEndpointIds: [],
+        resolution: resolved.resolution,
+        effectiveEffort: resolved.effectiveEffort,
+      };
+    case "exact_fallback_expanded":
+      // Preferred keeps the exact arms primary while the rest of the pool stays eligible as a receipted fallback.
+      return {
+        allowEndpoints: input.allowEndpoints,
+        preferredEndpointIds: [
+          ...effortInstanceIds,
+          ...input.preferredEndpointIds.filter(
+            (endpointId) => !effortInstanceIds.includes(endpointId),
+          ),
+        ],
+        resolution: resolved.resolution,
+        effectiveEffort: resolved.effectiveEffort,
+      };
+    case "strict_rejected":
+      // strict requires an exact arm; empty pool lets the caller raise reasoning_effort_unavailable.
+      return {
+        allowEndpoints: [],
+        preferredEndpointIds: [],
+        resolution: resolved.resolution,
+        effectiveEffort: resolved.effectiveEffort,
+      };
+    case "unsupported_fallback":
+      // preferred with zero exact arms -> unsupported_fallback: ignore the hint and router-manage the pool (R3/D5).
+      return {
+        allowEndpoints: input.allowEndpoints,
+        preferredEndpointIds: input.preferredEndpointIds,
+        resolution: resolved.resolution,
+        effectiveEffort: resolved.effectiveEffort,
+      };
+    case "equivalent_mapped":
+      // `resolveEffortPolicy` does not produce this without explicit, versioned provider equivalence (R3/OOS1);
+      // treated defensively as router-managed until an equivalence table exists.
+      return {
+        allowEndpoints: input.allowEndpoints,
+        preferredEndpointIds: input.preferredEndpointIds,
+        resolution: resolved.resolution,
+        effectiveEffort: resolved.effectiveEffort,
+      };
+  }
 }
 
 function applyRequestedEndpointOverride(input: {
@@ -10611,6 +10946,7 @@ export function mapChatCompletionsRequest(
     registry,
     requestedModel: body.model,
     requestedEffort: reasoning?.effort,
+    requestedPolicy: reasoning?.effortPolicy,
     allowEndpoints: applyRequestedEndpointOverride({
       requestedModel: body.model,
       allowEndpoints: modelAllowEndpoints,
@@ -10734,6 +11070,7 @@ export function mapChatCompletionsRequest(
     effectiveRoutingMode,
     pinWeights: routingPosture?.pinWeights === true,
     requestedModel: body.model,
+    registry,
     modelAliases,
     routingRequest: {
       requestId,
@@ -10817,6 +11154,13 @@ export function mapChatCompletionsRequest(
       ...(typeof body.temperature === "number" ? { temperature: body.temperature } : {}),
     },
     ...(effectiveRoutingModel ? { routingModel: effectiveRoutingModel } : {}),
+    effortResolution: {
+      resolution: effortAppliedToModelPool.resolution,
+      effectiveEffort: effortAppliedToModelPool.effectiveEffort,
+      requestedEffort: reasoning?.effort ?? null,
+      requestedPolicy: reasoning?.effortPolicy,
+      source: reasoning?.effortSource ?? (reasoning?.effort ? "named" : "none"),
+    },
     routingDiagnostics: withAliasPostureBinding(
       withStrategyProvenance(
         rolePolicyExecution.routingDiagnostics,
@@ -10915,6 +11259,7 @@ export function mapResponsesRequest(
     registry,
     requestedModel: body.model,
     requestedEffort: reasoning?.effort,
+    requestedPolicy: reasoning?.effortPolicy,
     allowEndpoints: applyRequestedEndpointOverride({
       requestedModel: body.model,
       allowEndpoints: modelAllowEndpoints,
@@ -11014,6 +11359,7 @@ export function mapResponsesRequest(
     effectiveRoutingMode,
     pinWeights: routingPosture?.pinWeights === true,
     requestedModel: body.model,
+    registry,
     modelAliases,
     routingRequest: {
       requestId,
@@ -11093,6 +11439,13 @@ export function mapResponsesRequest(
       ...(typeof body.temperature === "number" ? { temperature: body.temperature } : {}),
     },
     ...(effectiveRoutingModel ? { routingModel: effectiveRoutingModel } : {}),
+    effortResolution: {
+      resolution: effortAppliedToModelPool.resolution,
+      effectiveEffort: effortAppliedToModelPool.effectiveEffort,
+      requestedEffort: reasoning?.effort ?? null,
+      requestedPolicy: reasoning?.effortPolicy,
+      source: reasoning?.effortSource ?? (reasoning?.effort ? "named" : "none"),
+    },
     routingDiagnostics: withAliasPostureBinding(
       withStrategyProvenance(
         rolePolicyExecution.routingDiagnostics,
@@ -16955,6 +17308,13 @@ function writeHealthProjection(response: ServerResponse, value: unknown): void {
 }
 
 function createRequestHandler(options: StartBridgeServerOptions) {
+  /**
+   * ONE registry for this server's runtime scope, resolved once when the handler is built - never per
+   * request and never per metric update, either of which would discard the scope's data.
+   */
+  const observabilityScope =
+    options.observabilityScope ??
+    createObservabilityScope(`bridge:${options.operatorContext?.scope ?? "unscoped"}`);
   return async (request: IncomingMessage, response: ServerResponse): Promise<void> => {
     setCorsHeaders(response);
 
@@ -17558,6 +17918,50 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             response,
             await options.readQueueReceipts(Object.fromEntries(url.searchParams)),
           );
+          return;
+        }
+        /**
+         * Run 108 addendum-01 A2 (R3 acceptance + R6b): the materialization degradation
+         * receipts must surface in the operator UI. This route is the readback for both
+         * receipt tables - knowledge_store_degradation_receipts and the R6b twin
+         * knowledge_worker_degradation_receipts - flattened into one payload. Until the
+         * owning runtime binds the readback it answers operator_capability_unavailable
+         * (honest degradation), exactly like the other operator readbacks.
+         */
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/role-model/operator/store-degradation-receipts"
+        ) {
+          if (!options.readStoreDegradationReceipts) {
+            writeOperatorUnavailable(response, "store degradation receipt readback");
+            return;
+          }
+          writeOperatorResult(
+            response,
+            await options.readStoreDegradationReceipts(Object.fromEntries(url.searchParams)),
+          );
+          return;
+        }
+        /**
+         * Run 108 addendum-01 A5.2 (R7 readback consumers; 03.5 review MJ-1): the operator readback
+         * for the run-108 observability spine. `collectObservabilitySnapshot` shipped with ZERO
+         * production consumers - the four metric families were written by the wiring helpers and
+         * read by nobody, so "the operator can see what the runtime measured" was false.
+         *
+         * This readback is deliberately NOT the options-bound shape the neighbouring routes use:
+         * there is no remote capability behind it. The metrics live in THIS process's Effect metric
+         * registry, the same registry the wiring helpers update, so the route reads them directly
+         * and cannot answer "unavailable". It rides the one operator auth gate above like every
+         * other /api/role-model/operator/* path.
+         */
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/role-model/operator/observability-snapshot"
+        ) {
+          writeOperatorResult(response, {
+            schemaVersion: OBSERVABILITY_SNAPSHOT_SCHEMA_VERSION,
+            metrics: collectObservabilitySnapshot(observabilityScope),
+          } satisfies ObservabilitySnapshotReadback);
           return;
         }
         if (url.pathname.startsWith("/api/role-model/operator/queues/")) {
@@ -19975,9 +20379,71 @@ export function projectPublicProviderAttemptIds(observation: object): readonly s
   return [...new Set(executionSemantics)];
 }
 
+/**
+ * Run 108 addendum-01 A6 (R8 diagnostics gate).
+ *
+ * Commit 2206872d made warning-severity endpoint-registry diagnostics non-fatal in the
+ * post-update validation: a DUPLICATE_ENDPOINT_SOURCE warning is the *desired* state of
+ * R8's dedupe layer, so only non-warning diagnostics may fail the registry validation.
+ * The gate originally lived inline inside the rebuildCurrentState closure and shipped
+ * without a test; this minimal exported-helper extraction makes it unit-testable without
+ * widening any other seam.
+ */
+export function fatalRegistryDiagnostics<
+  TDiagnostic extends { readonly severity: "error" | "warning" },
+>(diagnostics: readonly TDiagnostic[]): readonly TDiagnostic[] {
+  return diagnostics.filter((diagnostic) => diagnostic.severity !== "warning");
+}
+
+/**
+ * Run 108 addendum-01 A2 (R3 + R6b UI surfacing): the canonical host readback contract
+ * for materialization degradation receipts. The route flattens the two extension tables -
+ * knowledge_store_degradation_receipts (store) and knowledge_worker_degradation_receipts
+ * (worker) - into one payload, one source object per table. Until the private side ships
+ * knowledge:list-degradations on both extensions the readback answers
+ * operator_capability_unavailable and the UI renders the honest unavailable state.
+ */
+export interface StoreDegradationReceiptRow {
+  readonly receiptId: string;
+  readonly atMs: number;
+  readonly capability: string;
+  readonly reason: string;
+}
+
+export interface StoreDegradationReceiptSource {
+  readonly available: boolean;
+  readonly reason?: string;
+  readonly receipts: readonly StoreDegradationReceiptRow[];
+}
+
+export interface StoreDegradationReceiptReadback {
+  readonly schemaVersion: "role-model.store-degradation-receipts.v1";
+  readonly store: StoreDegradationReceiptSource;
+  readonly worker: StoreDegradationReceiptSource;
+}
+
+/**
+ * Run 108 addendum-01 A5.2 (R7 readback consumers; 03.5 review MJ-1): the canonical host readback
+ * contract for the observability spine. `metrics` is the live registry projection from
+ * run108-observability.ts - metric name -> { type, count, incremental, series } - where `series`
+ * keeps one (id, attributes, state) entry per tag set the wiring helpers wrote (phase-03 F2: the
+ * guard/reason breakdown is the claim, so it is never aggregated away).
+ */
+export const OBSERVABILITY_SNAPSHOT_SCHEMA_VERSION = "role-model.observability-snapshot.v1";
+
+export interface ObservabilitySnapshotReadback {
+  readonly schemaVersion: typeof OBSERVABILITY_SNAPSHOT_SCHEMA_VERSION;
+  readonly metrics: Record<string, ObservabilityMetricReadback>;
+}
+
 export async function createRuntimeBridgeBackend(
   options: CreateRuntimeBridgeBackendOptions,
 ): Promise<RuntimeBridgeBackend> {
+  /**
+   * Run 108 follow-up: the scope this backend records into, resolved ONCE for the backend's whole
+   * lifetime - never per request and never per metric update.
+   */
+  const observabilityScope = options.observabilityScope;
   const runtimeChannel = options.runtimeChannel ?? "development";
   const createTrackBOperations = (input: Parameters<typeof createTrackBOperationsFromState>[0]) =>
     createTrackBOperationsFromState({
@@ -20228,7 +20694,7 @@ export async function createRuntimeBridgeBackend(
     readonly endpointId: string;
     readonly modelId: string;
     readonly reasoningEffort: string | null;
-    readonly effortSource: RuntimeEffortSource;
+    readonly effortSource: RuntimeEffortSourceValue;
     readonly taskType: string;
     readonly inputTokens: number;
     readonly outputTokens: number;
@@ -20310,13 +20776,16 @@ export async function createRuntimeBridgeBackend(
     );
     const fixedEffort = fallbackEndpoint?.identity.reasoning_effort?.trim() || null;
     const requestedEffort = input.requestedEffort?.trim() || null;
+    const failureCoerced =
+      fixedEffort !== null && requestedEffort !== null && requestedEffort !== fixedEffort;
     const failureEffort = {
       reasoningEffort: fixedEffort,
       effortSource: (fixedEffort === null
         ? "none"
-        : requestedEffort !== null && requestedEffort !== fixedEffort
+        : failureCoerced
           ? "variant_coerced"
-          : "variant") as RuntimeEffortSource,
+          : "variant") as RuntimeEffortSourceValue,
+      coerced: failureCoerced,
     };
     const failureObservation = buildPreExecutionFailureObservation({
       requestId: input.requestId,
@@ -20343,6 +20812,7 @@ export async function createRuntimeBridgeBackend(
         endpointId: input.endpointId,
         reasoningEffort: failureEffort.reasoningEffort,
         effortSource: failureEffort.effortSource,
+        effortCoerced: failureEffort.coerced,
         modelId: input.modelId,
         requestedModelId: input.modelId,
         requestOperation: input.requestOperation,
@@ -21729,15 +22199,24 @@ export async function createRuntimeBridgeBackend(
       accounts: currentAccounts,
       sources: getCurrentRegistrySources(),
     });
-    if (currentRegistry.diagnostics.length > 0) {
+    // Run 108 R8: the registry now emits a DUPLICATE_ENDPOINT_SOURCE WARNING when it collapses
+    // duplicates - the desired state, not a boot failure. Only error-severity diagnostics are fatal;
+    // warnings are logged. Run 108 addendum-01 A6: the filter is the exported
+    // fatalRegistryDiagnostics helper so the severity gate is unit-testable.
+    const fatalDiagnostics = fatalRegistryDiagnostics(currentRegistry.diagnostics);
+    if (fatalDiagnostics.length > 0) {
       console.error(
         "Endpoint-registry diagnostics:",
         JSON.stringify(currentRegistry.diagnostics, null, 2),
       );
-      const summary = currentRegistry.diagnostics
-        .map((d) => `[${d.severity}] ${d.message}`)
-        .join("; ");
+      const summary = fatalDiagnostics.map((d) => `[${d.severity}] ${d.message}`).join("; ");
       throw new Error(`Endpoint-registry validation failed after runtime state update: ${summary}`);
+    }
+    if (currentRegistry.diagnostics.length > 0) {
+      console.error(
+        "Endpoint-registry diagnostics (warnings):",
+        JSON.stringify(currentRegistry.diagnostics, null, 2),
+      );
     }
     currentModelOverrides = readModelOverridesFromDisk(options.runtimeStateRoot);
     syncRoutingModelSelection();
@@ -23945,8 +24424,16 @@ export async function createRuntimeBridgeBackend(
         return record.modelId ? [record.modelId] : [];
       case "reasoningEffort":
         return record.reasoningEffort ? [record.reasoningEffort] : [];
-      case "effortSource":
-        return record.effortSource ? [record.effortSource] : [];
+      case "effortSource": {
+        const raw = record.effortSource;
+        if (!raw) return [];
+        // Query-time projection (run 106 R4 readback): the occurrence/telemetry layer
+        // stores the binary vocabulary (client|variant|variant_coerced|none), while the
+        // analytics effortSource dimension presents the canonical four-state "named"
+        // value. Map the named-like legacy sources to "named"; pass "none" and any
+        // already-canonical value through unchanged.
+        return [raw === "client" || raw === "variant" || raw === "variant_coerced" ? "named" : raw];
+      }
       case "providerId":
         return record.providerId ? [record.providerId] : [];
       case "providerKind":
@@ -24015,8 +24502,13 @@ export async function createRuntimeBridgeBackend(
     }
     if (dimension === "effortSource") {
       const labels: Readonly<Record<string, string>> = {
+        // Canonical four-state vocabulary (run 106 R4/R10).
+        named: "Named effort",
+        disabled: "Reasoning disabled",
+        provider_default: "Provider default",
+        none: "Router managed",
+        // Historical readable values (pre-migration rows).
         client: "Client requested",
-        none: "Provider default",
         variant: "Variant fixed",
         variant_coerced: "Variant coerced",
         fixed: "Endpoint fixed",
@@ -25933,7 +26425,7 @@ export async function createRuntimeBridgeBackend(
     const portfolioByEndpointId = new Map(
       benchmarkPortfolio.entries.map((entry) => [entry.endpointId, entry] as const),
     );
-    return Object.fromEntries(
+    const capabilitiesByEndpointId: Record<string, BenchmarkCapability | null> = Object.fromEntries(
       currentRegistry.endpoints.map((endpoint) => {
         const endpointId = endpoint.identity.endpoint_id;
         const profile = profilesByEndpointId[endpointId];
@@ -25950,6 +26442,61 @@ export async function createRuntimeBridgeBackend(
         ] as const;
       }),
     );
+    /**
+     * Run 106 R5 (producer): a provider-default arm has no effort-encoded benchmark key, so it falls
+     * to the neutral default even though a fixed-effort sibling of the same model/provider holds the
+     * only benchmark evidence. Borrow that sibling's exact score as a labeled related-effort prior:
+     * this arm's own `overallScore` stays null (never exact benchmark evidence) and the router-side
+     * `resolveBorrowedQualityPrior` applies the symmetric regression toward neutral.
+     */
+    const benchmarkEvidenceSubjects = currentRegistry.endpoints.map((endpoint) => {
+      const endpointId = endpoint.identity.endpoint_id;
+      const modelId = endpoint.identity.model_id;
+      return {
+        endpointId,
+        modelId,
+        providerId: currentModelsById.get(modelId)?.providerId ?? null,
+        reasoningEffort: endpoint.identity.reasoning_effort ?? null,
+        overallScore: capabilitiesByEndpointId[endpointId]?.overallScore ?? null,
+      } as const;
+    });
+    for (const endpoint of currentRegistry.endpoints) {
+      const endpointId = endpoint.identity.endpoint_id;
+      const capability = capabilitiesByEndpointId[endpointId];
+      if (typeof capability?.overallScore === "number") {
+        continue;
+      }
+      const relatedEffortOverallScore = resolveRelatedEffortOverallScore({
+        endpointId,
+        modelId: endpoint.identity.model_id,
+        providerId: currentModelsById.get(endpoint.identity.model_id)?.providerId ?? null,
+        reasoningEffort: endpoint.identity.reasoning_effort ?? null,
+        subjects: benchmarkEvidenceSubjects,
+      });
+      if (relatedEffortOverallScore === null) {
+        continue;
+      }
+      capabilitiesByEndpointId[endpointId] = {
+        ...(capability ?? {
+          evidenceSource: "profile-derived",
+          overallScore: null,
+          scoresByBucket: {},
+          benchmarkSamples: 0,
+          sampleCount: 0,
+          measuredAtMs: null,
+          freshnessScore: null,
+          lastRunId: null,
+          lastRunCompletedAtMs: null,
+          lastRunMode: null,
+          lastRunSuiteId: null,
+          judgeEndpointId: null,
+          judgeModelId: null,
+          profileRevision: null,
+        }),
+        relatedEffortOverallScore,
+      };
+    }
+    return capabilitiesByEndpointId;
   };
   const buildEffectiveEligibilitySnapshot = () => {
     // A configured runtime instance is eligible only after its own durable
@@ -26541,6 +27088,13 @@ export async function createRuntimeBridgeBackend(
             return {
               candidateId: cached.candidateId,
               preferredEndpointId: cached.preferredRoutePackage,
+              // Run 107 Tier 2: the source's own refusal/staleness text ("role and task scope
+              // required", "advisory source beyond max age", a degradation receipt's reason, ...)
+              // travels with the advisory so the live observation can record WHY a decision saw an
+              // unavailable or stale advisory instead of only that it did. Guarded with `in`
+              // because the transient scope-wide fallback entry below has no reason of its own;
+              // the router ignores this key (it reads the consideration field by field).
+              advisoryReason: "reason" in cached ? (cached.reason ?? null) : null,
               advisoryState: cached.advisoryState,
               confidence: cached.confidence,
               advisoryId: cached.advisoryId,
@@ -26623,6 +27177,7 @@ export async function createRuntimeBridgeBackend(
           taskDefinitions: executionSnapshot.taskDefinitions,
           roleBindings,
           routingModel: plan.routingModel ?? executionSnapshot.routingModel ?? undefined,
+          ...(plan.effortResolution ? { effortResolution: plan.effortResolution } : {}),
           ...(advisoryConsideration ? { advisoryConsideration } : {}),
           ...(cacheContinuityRouteHints
             ? {
@@ -26767,6 +27322,13 @@ export async function createRuntimeBridgeBackend(
             }
           ).advisory_consideration;
           const observation = buildLiveRouteAdvisoryObservation({
+            /**
+             * Run 108 follow-up: this decision belongs to the runtime scope the host handed this
+             * backend and the bridge server together, so its router.decision counter lands in the
+             * same registry the operator readback answers from - not in Effect's process-global
+             * default Map.
+             */
+            ...(observabilityScope ? { observabilityScope } : {}),
             decisionId: routed.decision.routing_decision_id,
             routePackage: routed.decision.chosen_endpoint_id,
             eligibleRoutePackages: (routed.projected.routeInput.candidates ?? []).map(
@@ -26795,6 +27357,10 @@ export async function createRuntimeBridgeBackend(
             // Run 104 R6: the helper resolves the task through the declaration -> resolved identity ->
             // intent chain, so a request that declared no task no longer records `taskTypeId: null`.
             classification: buildRequestClassificationForPlan(plan),
+            // Run 107 Tier 2: the advisory source's refusal/staleness text, forwarded onto the
+            // observation. It belongs to the ADVISORY, not to the router outcome, which is why it
+            // is read off `advisoryConsideration` rather than off `outcome` below.
+            reason: advisoryConsideration.advisoryReason ?? null,
             // Run 99 close-out (D6): a live routed answer is the policy's own deterministic choice.
             outcome: outcome
               ? {
@@ -28158,7 +28724,14 @@ export async function createRuntimeBridgeBackend(
             await persistRoutedProviderFailure(error);
             throw error;
           }
-          deniedEndpointIds.push(error.endpointId);
+          for (const sharedSourceEndpointId of collectSharedSourceEndpointIds(
+            executionSnapshot.registry,
+            error.endpointId,
+          )) {
+            if (!deniedEndpointIds.includes(sharedSourceEndpointId)) {
+              deniedEndpointIds.push(sharedSourceEndpointId);
+            }
+          }
           let nextRoute: ReturnType<typeof routeExecutionRequest>;
           try {
             nextRoute = routeExecutionRequest(deniedEndpointIds);
@@ -28423,6 +28996,7 @@ export async function createRuntimeBridgeBackend(
         trafficClass: observedTrafficClass,
         reasoningEffort: effectiveEffort.reasoningEffort,
         effortSource: effectiveEffort.effortSource,
+        effortCoerced: effectiveEffort.coerced,
         // Run 98 addendum 40 (L1): record the provider breakdown beside the historical header time,
         // so telemetry can report what the client waited for instead of the provider's first byte.
         latencyBreakdown: {
@@ -28898,6 +29472,12 @@ export async function createRuntimeBridgeBackend(
             currentSignals: signals,
             invalidation: cachePolicy.invalidation,
           }),
+          ...(shouldInvalidateDifficultyClassifierVersion(
+            cachedClassification.classifierVersion,
+            DIFFICULTY_CLASSIFIER_VERSION,
+          )
+            ? (["classifier-version-change"] as const)
+            : []),
         ]
       : [];
     if (cachedClassification && cacheInvalidationReasons.length === 0) {
@@ -28908,6 +29488,11 @@ export async function createRuntimeBridgeBackend(
           ? { fallbackReason: cachedClassification.fallbackReason }
           : {}),
         cacheHit: true,
+        classifierVersion: cachedClassification.classifierVersion ?? DIFFICULTY_CLASSIFIER_VERSION,
+        ...(cachedClassification.decisiveFeatures
+          ? { decisiveFeatures: cachedClassification.decisiveFeatures }
+          : {}),
+        ...(cachedClassification.features ? { features: cachedClassification.features } : {}),
         rubricSignals: signals,
       };
     }
@@ -28923,6 +29508,11 @@ export async function createRuntimeBridgeBackend(
           ...(classification.fallbackReason
             ? { fallbackReason: classification.fallbackReason }
             : {}),
+          classifierVersion: DIFFICULTY_CLASSIFIER_VERSION,
+          ...(classification.decisiveFeatures
+            ? { decisiveFeatures: classification.decisiveFeatures }
+            : {}),
+          ...(classification.features ? { features: classification.features } : {}),
           cachedAtMs: nowMs,
           expiresAtMs: nowMs + cachePolicy.cacheTtlMs,
           rubricSignals: signals,
@@ -30522,6 +31112,15 @@ export async function createRuntimeBridgeBackend(
     async readQueueReceipts(query: Readonly<Record<string, string>> = {}): Promise<unknown> {
       return (
         options.readQueueReceipts?.(query) ?? unavailableOperatorPayload("queue receipts readback")
+      );
+    },
+    // Run 108 addendum-01 A2: store + worker degradation receipts (R3/R6b UI surfacing).
+    async readStoreDegradationReceipts(
+      query: Readonly<Record<string, string>> = {},
+    ): Promise<unknown> {
+      return (
+        options.readStoreDegradationReceipts?.(query) ??
+        unavailableOperatorPayload("store degradation receipt readback")
       );
     },
     async readQueueConfig(): Promise<unknown> {

@@ -14,6 +14,7 @@ import {
   type BridgeToolCall,
   createRuntimeBridgeBackend,
 } from "./index.js";
+import { createObservabilityScope } from "./run108-observability.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -91,8 +92,12 @@ function requireObservation(
 export async function runRuntimeToolsValidation(
   options: RuntimeToolsValidationOptions,
 ): Promise<RuntimeToolsValidationResult> {
+  // Run 108 follow-up: this validation run is its own runtime scope, so its decisions are recorded
+  // into a registry of its own instead of Effect's process-global default Map.
+  const observabilityScope = createObservabilityScope(`validate-tools:${options.scopeId}`);
   const backend = await createRuntimeBridgeBackend({
     ...options,
+    observabilityScope,
     fixtureRoot: path.join(
       options.repoRoot,
       "testdata",

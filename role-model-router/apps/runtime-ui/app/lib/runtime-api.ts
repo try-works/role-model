@@ -1256,6 +1256,12 @@ export interface BenchmarkCapability {
   readonly evidenceSource?: "run-artifact" | "profile-derived";
   readonly overallScore: number | null;
   /**
+   * Run 106 R5 (borrowed): cross-effort score from a sibling fixed-effort arm of the same model/provider,
+   * present only when this arm has no exact benchmark evidence of its own. Borrowed evidence is always
+   * labeled and never styled as exact (R11).
+   */
+  readonly relatedEffortOverallScore?: number | null;
+  /**
    * Run 98 addendum 42 B2: the benchmark run's own latency for this endpoint, derived from its case
    * audits. The model pool's speed axis uses it until telemetry exists for the endpoint.
    */
@@ -4086,4 +4092,151 @@ export async function fetchModelTelemetryRollup(
     totalRequests,
     windowDays,
   };
+}
+
+/**
+ * Run 108 addendum-01 A2 (R3 acceptance + R6b): the materialization degradation
+ * receipts must surface in the operator UI. This is the client for the host's
+ * store-degradation-receipts readback: it reads both receipt tables
+ * (knowledge_store_degradation_receipts and the R6b twin
+ * knowledge_worker_degradation_receipts) flattened into one payload. A 503
+ * operator_capability_unavailable (the host has no readback bound yet) is an
+ * honest unavailable state, not a page error.
+ */
+export interface StoreDegradationReceiptRow {
+  readonly receiptId: string;
+  readonly atMs: number;
+  readonly capability: string;
+  readonly reason: string;
+}
+
+export interface StoreDegradationReceiptSource {
+  readonly available: boolean;
+  readonly reason?: string;
+  readonly receipts: readonly StoreDegradationReceiptRow[];
+}
+
+export interface StoreDegradationReceiptReadback {
+  readonly schemaVersion: "role-model.store-degradation-receipts.v1";
+  readonly store: StoreDegradationReceiptSource;
+  readonly worker: StoreDegradationReceiptSource;
+}
+
+export type StoreDegradationReceiptReadbackState =
+  | (StoreDegradationReceiptReadback & { readonly available: true })
+  | { readonly available: false; readonly reason: string };
+
+/**
+ * 03.5 review MN-3: the readbacks below serve RAW responses (their 503 payload carries the honest
+ * unavailable reason), so they cannot ride `operatorGet`. They still owe the operator credential:
+ * `withOperatorToken` is the one authorization contract every other operator readback uses, and
+ * without it a non-loopback bind answers 401 and the page renders an error instead of the data.
+ * When no token is configured the request is sent exactly as the anonymous loopback path sends it.
+ */
+function fetchOperatorReadback(
+  path: string,
+  fetcher: RuntimeFetcher,
+  operatorToken?: string,
+): Promise<Response> {
+  const init = withOperatorToken(undefined, operatorToken);
+  return init === undefined ? fetcher(path) : fetcher(path, init);
+}
+
+export async function fetchStoreDegradationReceipts(
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<StoreDegradationReceiptReadbackState> {
+  const path = "/api/role-model/operator/store-degradation-receipts";
+  const response = await fetchOperatorReadback(path, fetcher, operatorToken);
+  if (!response.ok) {
+    let reason: string | null = null;
+    try {
+      const payload = (await response.clone().json()) as Record<string, unknown>;
+      if (payload && typeof payload === "object" && typeof payload.reason === "string") {
+        reason = payload.reason;
+      }
+    } catch {
+      // Not JSON (e.g. an HTML error page): fall through to the status fallback.
+    }
+    return {
+      available: false,
+      reason: reason ?? `Request to ${path} failed with ${response.status}`,
+    };
+  }
+  const body = (await response.json()) as StoreDegradationReceiptReadback;
+  return { ...body, available: true };
+}
+
+/**
+ * Run 108 addendum-01 A5.2 (R7 readback consumers; 03.5 review MJ-1): the client for the host's
+ * observability snapshot readback - the live projection of the four run-108 metric families the
+ * runtime records (router decisions, replay admissions, finalise refusals, learner derivations).
+ * The host answers from its own metric registry, so a 503 is not expected; it is still mapped to an
+ * honest unavailable state rather than a page error, exactly like the receipt readbacks.
+ */
+export interface ObservabilityMetricSnapshot {
+  readonly count: number;
+  readonly incremental: boolean;
+}
+
+export interface ObservabilitySnapshotReadback {
+  readonly schemaVersion: "role-model.observability-snapshot.v1";
+  readonly metrics: Readonly<Record<string, ObservabilityMetricSnapshot>>;
+}
+
+export type ObservabilitySnapshotReadbackState =
+  | (ObservabilitySnapshotReadback & { readonly available: true })
+  | { readonly available: false; readonly reason: string };
+
+export interface ObservabilitySnapshotRow {
+  readonly id: string;
+  readonly name: string;
+  readonly count: number;
+  readonly incremental: boolean;
+}
+
+export async function fetchObservabilitySnapshot(
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<ObservabilitySnapshotReadbackState> {
+  const path = "/api/role-model/operator/observability-snapshot";
+  const response = await fetchOperatorReadback(path, fetcher, operatorToken);
+  if (!response.ok) {
+    let reason: string | null = null;
+    try {
+      const payload = (await response.clone().json()) as Record<string, unknown>;
+      if (payload && typeof payload === "object" && typeof payload.reason === "string") {
+        reason = payload.reason;
+      }
+    } catch {
+      // Not JSON (e.g. an HTML error page): fall through to the status fallback.
+    }
+    return {
+      available: false,
+      reason: reason ?? `Request to ${path} failed with ${response.status}`,
+    };
+  }
+  const body = (await response.json()) as ObservabilitySnapshotReadback;
+  return { ...body, available: true };
+}
+
+/**
+ * The readback -> table projection. Metrics are listed by name so two reads of the same runtime
+ * render in the same order; an unavailable surface and an empty registry both yield no rows (the
+ * view says which of the two it is, the projection never fabricates a row).
+ */
+export function buildObservabilitySnapshotRows(
+  state: ObservabilitySnapshotReadbackState,
+): readonly ObservabilitySnapshotRow[] {
+  if (!state.available) {
+    return [];
+  }
+  return Object.entries(state.metrics)
+    .map(([name, snapshot]) => ({
+      id: name,
+      name,
+      count: snapshot.count,
+      incremental: snapshot.incremental,
+    }))
+    .sort((left, right) => (left.name < right.name ? -1 : left.name > right.name ? 1 : 0));
 }

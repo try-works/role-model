@@ -8,7 +8,7 @@
  * derived from it, so queue rows are reconstructible from evidence (R8).
  */
 import { Duration, Effect, Schedule, Schema } from "effect";
-import { PersistedQueue } from "effect/unstable/persistence";
+import { PersistedQueue } from "effect/persistence";
 
 import type { ResolvedQueuePolicy } from "./policy.js";
 

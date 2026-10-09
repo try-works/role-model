@@ -10,7 +10,7 @@ import {
   persistRuntimeTelemetryFailure,
 } from "@role-model-router/sqlite-memory";
 import { Effect, Schema } from "effect";
-import { PersistedQueue } from "effect/unstable/persistence";
+import { PersistedQueue } from "effect/persistence";
 import ts from "typescript";
 import { afterAll, beforeAll, expect, test } from "vitest";
 import { makeQueueStoreLayer, resolveQueueStorePath } from "../src/queue-runtime/store.js";

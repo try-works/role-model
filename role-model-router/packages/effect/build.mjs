@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
-import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 /**
  * Run 101 / R1: build the vendored Effect v4 tree into this workspace package's
@@ -16,76 +16,39 @@ import path from "node:path";
  * The published subpaths are discovered from the vendored Effect family
  * (Effect itself, effect-mq and the SQLite client), so the package exposes
  * exactly the `effect/<subpath>` specifiers the runtime actually imports.
+ *
+ * This package deliberately declares no `sideEffects` field. The built `dist/`
+ * is an esbuild chunk graph whose entry files carry bare
+ * `import "./chunks/chunk-*.js"` edges (`index.js` has 16, `sql/Migrator.js`
+ * has 57). A `sideEffects` list that matches none of those chunks tells every
+ * downstream bundler they may be deleted - a purity claim this wrapper cannot
+ * prove for generated output - and it makes esbuild report an
+ * `ignored-bare-import` warning on every consumer build (405-520 warnings for
+ * a single host bundle). Omitting the field makes downstream bundlers assume
+ * the chunks may have side effects, so the chunk graph is evaluated in full and
+ * no warning is emitted. Do not re-add a path list here: the wrapper re-exports
+ * a vendored tree, so it has no basis for certifying any generated file pure.
  */
 import { build } from "esbuild";
+import { assembleEntries, discoverEffectSubpaths, vendored } from "./entries.mjs";
 
 const here = import.meta.dirname;
 const repoRoot = path.resolve(here, "..", "..", "..");
-const vendored = path.join(repoRoot, "vendor", "effect", "packages", "effect", "src");
 
-async function listSourceFiles(root) {
-  const out = [];
-  for (const entry of await readdir(root, { withFileTypes: true })) {
-    const entryPath = path.join(root, entry.name);
-    if (entry.isDirectory()) {
-      out.push(...(await listSourceFiles(entryPath)));
-    } else if (entry.name.endsWith(".ts")) {
-      out.push(entryPath);
-    }
-  }
-  return out;
-}
+/**
+ * Entry discovery and resolution live in `entries.mjs` so the resolution rule
+ * (notably its case-sensitivity contract) can be pinned by a test that does not
+ * have to run the build.
+ */
+const { entries, published, rekeyed } = await assembleEntries(await discoverEffectSubpaths());
 
-async function discoverEffectSubpaths() {
-  const searchRoots = [
-    vendored,
-    path.join(repoRoot, "vendor", "effect-mq", "packages", "effect-mq", "src"),
-    path.join(repoRoot, "vendor", "effect", "packages", "sql", "sqlite-node", "src"),
-  ];
-  const subpaths = new Set();
-  for (const root of searchRoots) {
-    for (const file of await listSourceFiles(root)) {
-      const source = await readFile(file, "utf8");
-      for (const match of source.matchAll(/["']effect\/([^"']+)["']/g)) {
-        subpaths.add(match[1].replace(/\.ts$/, "").replace(/\/index$/, ""));
-      }
-    }
-  }
-  const withAncestors = new Set(subpaths);
-  for (const subpath of subpaths) {
-    const segments = subpath.split("/");
-    while (segments.length > 1) {
-      segments.pop();
-      withAncestors.add(segments.join("/"));
-    }
-  }
-  return [...withAncestors].sort();
-}
-
-async function resolveEntry(subpath) {
-  const candidate = path.join(vendored, ...subpath.split("/"));
-  for (const file of [`${candidate}.ts`, path.join(candidate, "index.ts")]) {
-    try {
-      await readFile(file);
-      return file;
-    } catch {
-      // keep looking
-    }
-  }
-  // Some `effect/...` strings are internal ids the reachable entries resolve
-  // themselves; skipping them is safe because esbuild fails the build below if
-  // a published entry actually needs one.
-  return undefined;
-}
-
-const subpaths = await discoverEffectSubpaths();
-const entries = { index: path.join(vendored, "index.ts") };
-for (const subpath of subpaths) {
-  const resolved = await resolveEntry(subpath);
-  if (!resolved) continue;
-  entries[subpath] = resolved;
-}
-
+/**
+ * The published subpaths are discovered from the vendored tree, so a stale
+ * `dist/` would keep serving subpaths the pinned tree no longer has - after the
+ * effect@4.0.1 move that means a deleted `unstable/*` entry point could still
+ * resolve. Always build the published surface from empty.
+ */
+await rm(path.join(here, "dist"), { recursive: true, force: true });
 await mkdir(path.join(here, "dist"), { recursive: true });
 
 await build({
@@ -116,21 +79,28 @@ const typesDir = path.join(here, "dist", "types");
 await mkdir(typesDir, { recursive: true });
 /**
  * Declaration emit covers the subpaths the queue stack consumes: every core
- * namespace plus `unstable/persistence`, `unstable/sql/*` and
- * `unstable/reactivity/*`. The remaining published subpaths are runtime-only in
- * this run - emitting them would drag optional peers (for example the AI and
- * CLI trees) into the declaration program, which `--noCheck` still has to
- * resolve.
+ * namespace plus `persistence/*`, `sql/*` and `reactivity/*` - the modules
+ * that became top-level in effect@4.0.1 when `unstable/*` was dropped. The
+ * remaining published subpaths are runtime-only in this run - emitting them
+ * would drag optional peers (for example the AI and CLI trees) into the
+ * declaration program, which `--noCheck` still has to resolve.
  */
-const declarationEntries = Object.entries(entries).filter(
-  ([subpath]) =>
+const declarationEntries = Object.entries(entries).filter(([key]) => {
+  // Filter on the published subpath, not on the output name: a case-insensitive
+  // collision is re-keyed to the entry's vendored-relative path (see entries.mjs),
+  // and that re-keying must not drop the subpath from declaration emit.
+  const subpath = published.get(key) ?? key;
+  return (
     !subpath.includes("/") ||
     subpath === "index" ||
-    subpath.startsWith("unstable/persistence") ||
-    subpath.startsWith("unstable/sql/") ||
-    subpath === "unstable/sql" ||
-    subpath.startsWith("unstable/reactivity"),
-);
+    subpath === "persistence" ||
+    subpath.startsWith("persistence/") ||
+    subpath === "sql" ||
+    subpath.startsWith("sql/") ||
+    subpath === "reactivity" ||
+    subpath.startsWith("reactivity/")
+  );
+});
 const declarationEntryFiles = declarationEntries.map(([, file]) => file);
 try {
   execFileSync(
@@ -209,6 +179,7 @@ console.log(
     status: "PASS",
     package: "effect",
     entries: Object.keys(entries).sort(),
+    rekeyed,
     types: typesDir,
   }),
 );

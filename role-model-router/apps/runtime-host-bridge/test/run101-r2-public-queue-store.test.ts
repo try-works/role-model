@@ -15,7 +15,7 @@ import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { fileURLToPath } from "node:url";
 import { Duration, Effect, Fiber, Schema } from "effect";
-import { PersistedQueue } from "effect/unstable/persistence";
+import { PersistedQueue } from "effect/persistence";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import {

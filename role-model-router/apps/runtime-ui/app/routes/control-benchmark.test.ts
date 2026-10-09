@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+
 import { expect, test, vi } from "vitest";
 
 import * as benchmarkModule from "./control-benchmark";
@@ -41,4 +43,12 @@ test("publishes essential benchmark controls while advisory reads remain pending
   });
   expect(onAdvisory).not.toHaveBeenCalled();
   dispose();
+});
+
+const benchmarkSource = readFileSync(new URL("./control-benchmark.tsx", import.meta.url), "utf8");
+
+test("labels benchmark score evidence as exact/borrowed/prior (R11)", () => {
+  expect(benchmarkSource).toContain("classifyEffortEvidence");
+  expect(benchmarkSource).toContain("formatEffortEvidenceLabel");
+  expect(benchmarkSource).toContain("evidenceLabel");
 });

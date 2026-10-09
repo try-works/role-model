@@ -153,7 +153,21 @@ export function buildSidebarModels(input: {
     });
   }
 
-  return rows
+  // Run 108 R8: duplicate endpoint entries collapse to the same row id (the live registry returned
+  // flash-high/flash-max/v4-pro-max twice); render each model once, MERGING the duplicate's request
+  // count so the model's telemetry is not undercounted (03.5 review m3).
+  const byId = new Map<string, SidebarModel>();
+  for (const row of rows) {
+    const existing = byId.get(row.id);
+    if (existing) {
+      byId.set(row.id, { ...row, requestCount: existing.requestCount + row.requestCount });
+      continue;
+    }
+    byId.set(row.id, { ...row });
+  }
+  const deduped: SidebarModel[] = [...byId.values()];
+
+  return deduped
     .sort(
       (left, right) =>
         right.requestCount - left.requestCount || left.id.localeCompare(right.id, "en"),

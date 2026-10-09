@@ -57,8 +57,11 @@ import {
 } from "../lib/learning-ladder";
 import { summarizePolicyResolution } from "../lib/learning-policy-resolution";
 import {
+  advisoryOriginSplit,
+  advisoryReasonBasis,
+  advisoryRefusalView,
   appliedShareOf,
-  fallbackReasonRows,
+  fallbackReasonSummary,
   formatPercentShare,
   normalizeLearningActivity,
   normalizeLearningHistory,
@@ -198,8 +201,25 @@ const NOT_REPORTED = "not reported";
 /**
  * Run 101 addendum 49 `A49-R5`: a joined validation receipt that carries no `familyEvidence` states that as the
  * reason its counts are absent, so a receipt with no counts stops rendering identically to a value nobody recorded.
+ *
+ * Run 108 addendum 03 (`A03-C`, the operator's actual complaint): that one sentence had two causes and blamed the
+ * receipt for both. Measured live, the family is frequently lost UPSTREAM of the receipt - the comparison's
+ * `comparability` knows it while the receipt never received it - so "the receipt carries no comparison counts"
+ * never said *what* had no counts. The absence now states itself in two honest halves: the family it has no counts
+ * for when the row knows one, and the fact that no family was recorded at all when it does not. Neither half
+ * fabricates a zero, and neither blames the receipt for a gap that is not the receipt's.
  */
-const RECEIPT_CARRIES_NO_COUNTS = "the receipt carries no comparison counts";
+const NO_TASK_FAMILY_RECORDED = "no task family was recorded for this comparison";
+const noCountsForFamily = (family: string) => `no comparison counts for ${family}`;
+
+/**
+ * Run 108 addendum 03 (`A03-C`): which half of the split applies. `family` is the task family the row itself
+ * renders (`learningTaskCell(row).task`), so the Evidence cell and the `Role · task` cell always name the same
+ * family rather than showing one family in one column and a different one in the next.
+ */
+export function learningCountsAbsenceNote(family: string | null): string {
+  return family === null ? NO_TASK_FAMILY_RECORDED : noCountsForFamily(family);
+}
 /** `R7`: said out loud rather than rendering a zero the runtime never published. */
 const FLOOR_NOT_REPORTED = "floor not reported";
 
@@ -334,6 +354,14 @@ export interface LearningFloorView {
   readonly decisive: number | null;
   readonly holdout: number | null;
   readonly distinctCaptures: number | null;
+  /**
+   * Run 108 addendum 03 (`A03-E`): the FOURTH clause of the promotion gate. The gate refuses unless
+   * `effectiveDecisive >= minDecisive` AND `effectiveHoldout >= minHoldout` AND
+   * `effectiveDevelopment >= minDevelopment` AND `distinctCaptures >= minDistinct`
+   * (`extensions/knowledge-worker/index.mjs`). This view carried three of the four, which is exactly why
+   * the operator's "8 / 3 decisive" row was refused with no visible cause.
+   */
+  readonly development: number | null;
 }
 
 const finiteNumberOrNull = (value: unknown): number | null => {
@@ -354,6 +382,10 @@ export function learningEvidenceFloor(policy: Record<string, unknown>): Learning
     decisive: finiteNumberOrNull(effective.minDecisiveComparisons),
     holdout: finiteNumberOrNull(effective.minHoldoutComparisons),
     distinctCaptures: finiteNumberOrNull(effective.minDistinctCaptures),
+    // Run 108 addendum 03 (`A03-E`): registered on the same policy document
+    // (`shared/route-learning/activation-policy.mjs`, integer, default 1), so a policy that publishes the
+    // other three publishes this one. Absent still reads `null`, never a zero.
+    development: finiteNumberOrNull(effective.minDevelopmentComparisons),
   };
 }
 
@@ -369,10 +401,26 @@ export function formatLearningFloorProgress(
   const decisive = finiteNumberOrNull(counts.decisive);
   if (decisive === null || floor.decisive === null) return null;
   const nominal = `${decisive} / ${floor.decisive} decisive`;
+  /**
+   * Run 108 addendum 03 (`A03-E`, the operator's actual complaint): the gate refuses on FOUR clauses and
+   * this line rendered two, so a receipt refused on its development partition read as `8 / 3 decisive` - a
+   * dimension that LOOKS met while the row said `insufficient`. Measured live: 43 of the 68
+   * family-carrying receipts have `decisive >= 3` with `floorMet` false and EVERY one has
+   * `developmentComparisons: 0`, while every `validate` has `dev >= 2`.
+   *
+   * The development clause renders only when BOTH its sides are published - a runtime that ships the
+   * three-member floor renders exactly what it rendered before - and neither side is ever invented.
+   */
+  const development = finiteNumberOrNull(counts.development);
+  const developmentFloor = floor.development;
+  const withDevelopment =
+    development !== null && developmentFloor !== null
+      ? `${nominal} · ${development} / ${developmentFloor} development`
+      : nominal;
   const effective = finiteNumberOrNull(counts.effectiveDecisive);
   return effective !== null && effective !== decisive
-    ? `${nominal} · ${effective} effective`
-    : nominal;
+    ? `${withDevelopment} · ${effective} effective`
+    : withDevelopment;
 }
 
 /**
@@ -388,7 +436,19 @@ export function formatLearningFloorProgress(
 export function learningEvidence(row: Record<string, unknown>): LearningEvidenceView {
   const evidence = asRecord(row.evidence);
   const record = asRecord(row.record);
-  const family = { ...asRecord(record.familyEvidence), ...asRecord(row.familyEvidence) };
+  /**
+   * Run 108 addendum 03 (`A03-B`): the readback republishes the joined receipt's family as
+   * `evidence.family`, and it is a FALLBACK rather than a replacement - a row that already carries its own
+   * `familyEvidence`, on the row or in its `record`, still wins, and a readback that publishes no
+   * `evidence.family` renders exactly what it rendered before. A receipt's family records `taskTypeId` and
+   * `taxonomyVersion` but no `roleId`, so that member stays absent instead of being guessed.
+   */
+  const publishedFamily = asRecord(evidence.family);
+  const family = {
+    ...publishedFamily,
+    ...asRecord(record.familyEvidence),
+    ...asRecord(row.familyEvidence),
+  };
   const judgeConsistency = asRecord(family.judgeConsistency);
   const counts = asRecord(evidence.counts);
   const effectiveCounts = asRecord(evidence.effectiveCounts);
@@ -403,11 +463,15 @@ export function learningEvidence(row: Record<string, unknown>): LearningEvidence
     {
       decisive: counts.decisive ?? family.decisiveComparisons,
       effectiveDecisive: effectiveCounts.decisive ?? family.effectiveDecisiveComparisons,
+      // `A03-E`: the raw count behind the refusing clause, from the readback's projection first and the
+      // joined receipt's own family second - never from a floor, and never a fabricated zero.
+      development: counts.development ?? family.developmentComparisons,
     },
     {
       decisive: finiteNumberOrNull(publishedFloor.minDecisiveComparisons),
       holdout: finiteNumberOrNull(publishedFloor.minHoldoutComparisons),
       distinctCaptures: finiteNumberOrNull(publishedFloor.minDistinctCaptures),
+      development: finiteNumberOrNull(publishedFloor.minDevelopmentComparisons),
     },
   );
   const winnerRef = textOrNull(evidence.winnerCandidateRef);
@@ -470,12 +534,27 @@ export interface LearningTaskCellView {
 /** `Role · task`: the classified task, the role and taxonomy it was classified against, and the request family. */
 export function learningTaskCell(row: Record<string, unknown>): LearningTaskCellView {
   const classification = asRecord(row.classification);
+  /**
+   * Run 108 addendum 03 (`A03-B`, operator-reported): the live panel printed `not reported` in this cell for a
+   * row whose comparison group already carried `comparability.taskTypeId: "coder.edit"`. The readback now
+   * publishes the joined receipt's family as `evidence.family`, and it is the LAST fallback for the task, the
+   * role and the taxonomy: a row that declares its own family keeps it, and a readback that publishes no
+   * `evidence.family` renders exactly what it rendered before.
+   */
+  const publishedFamily = asRecord(asRecord(row.evidence).family);
   const task =
     textOrNull(classification.taskTypeId) ??
     textOrNull(row.requestTaskTypeId) ??
-    textOrNull(row.taskTypeId);
-  const roleId = textOrNull(classification.roleId) ?? textOrNull(row.roleId);
-  const taxonomy = textOrNull(classification.taxonomyVersion) ?? textOrNull(row.taxonomyVersion);
+    textOrNull(row.taskTypeId) ??
+    textOrNull(publishedFamily.taskTypeId);
+  const roleId =
+    textOrNull(classification.roleId) ??
+    textOrNull(row.roleId) ??
+    textOrNull(publishedFamily.roleId);
+  const taxonomy =
+    textOrNull(classification.taxonomyVersion) ??
+    textOrNull(row.taxonomyVersion) ??
+    textOrNull(publishedFamily.taxonomyVersion);
   const toolClasses =
     Array.isArray(row.toolClassIds) && row.toolClassIds.length > 0
       ? row.toolClassIds.map((entry) => textOrNull(entry) ?? NOT_REPORTED).join(", ")
@@ -632,6 +711,7 @@ export function LearningDecisionRow({
 }) {
   const evidence = learningEvidence(row);
   const task = learningTaskCell(row);
+  const refusal = advisoryRefusalView(row);
   return (
     <tr className={tableRowClassName}>
       <td className="py-3 pr-3">
@@ -694,9 +774,9 @@ export function LearningDecisionRow({
             {`${evidence.decisive ?? NOT_REPORTED} dec · ${evidence.holdout ?? NOT_REPORTED} holdout`}
           </p>
         ) : evidence.countsState === "receipt_carries_none" ? (
-          /* `A49-R5`: the joined receipt carries no comparison counts, and the cell says that rather than
-             leaving the absence unexplained. */
-          <p className={tableCellMetaClassName}>{RECEIPT_CARRIES_NO_COUNTS}</p>
+          /* `A03-C`: the joined receipt carries no counts; the cell says which family that is for, or that no
+             family was recorded at all, instead of blaming the receipt for an upstream gap. */
+          <p className={tableCellMetaClassName}>{learningCountsAbsenceNote(task.task)}</p>
         ) : evidence.qualityDelta === null ? (
           <p className={tableCellMetaClassName}>{NOT_REPORTED}</p>
         ) : null}
@@ -719,6 +799,20 @@ export function LearningDecisionRow({
         <p className={`mt-0.5 ${tableCellMetaClassName}`}>
           {`outcome ${evidence.outcome ?? NOT_REPORTED}`}
         </p>
+        {/*
+          Run 114 Tier 2: why the advisory did not apply to this decision, with the source's own text when it
+          had one. The LABEL differs by concept, because these answer different questions and must not share
+          a heading: "advisory unavailable" means the source had nothing to say, while "advisory not applied"
+          means advice existed and this decision did not use it (cohort_excluded, advisory_matches_baseline).
+          Calling the latter a refusal would put two populations under one word - the exact defect this panel
+          is being fixed for. `none` renders nothing, and an unknown code renders as itself rather than as a
+          meaning this panel invented for it.
+        */}
+        {refusal.kind !== "none" ? (
+          <p className={`mt-0.5 ${tableCellMetaClassName}`} title={refusal.code ?? undefined}>
+            {`${refusal.label} · ${refusal.phrase}`}
+          </p>
+        ) : null}
       </td>
       {receipt ? (
         <td className="py-3 pr-3">
@@ -861,7 +955,11 @@ export function LearningPackRow({
             {`Δ ${evidence.qualityDelta} over baseline`}
           </p>
         ) : evidence.countsState === "receipt_carries_none" ? (
-          <p className={`mt-0.5 ${tableCellMetaClassName}`}>{RECEIPT_CARRIES_NO_COUNTS}</p>
+          /* `A03-C`: the same split as the decision row, named from the scope the pack resolves (the readback's
+             own resolved scope first, then the receipt family the readback republished). */
+          <p className={`mt-0.5 ${tableCellMetaClassName}`}>
+            {learningCountsAbsenceNote(taskTypeId ?? learningTaskCell(row).task)}
+          </p>
         ) : (
           <p className={`mt-0.5 ${tableCellMetaClassName}`}>{NOT_REPORTED}</p>
         )}
@@ -1208,6 +1306,71 @@ export function selectionNoteForStage(effectiveStage: string): string {
   return "the selection follows the configured activation stage";
 }
 
+/**
+ * Run 114 Tier 1 (operator screenshot 2026-10-07): the Overview's advisory copy, as one pure function so
+ * the disclosure it owes the operator is testable without a live runtime. Four defects rendered together:
+ *
+ *  - `Fallback reasons` was a bare top-3 list with no denominator, so the 191 it showed read as a
+ *    partition of the 827 observed above it while the true sum was 204;
+ *  - the bound of three was silent and hid the 13-row `advisory_task_unscoped` tail;
+ *  - `Influence rate` and `Applied share` were the same quantity (applied / observed) rendered twice;
+ *  - `Advisory observed` showed no origin split although most of it is machine-generated replay traffic.
+ *
+ * Each number here is read, never invented: a basis that does not reconcile is stated as two numbers, and
+ * an origin split that does not add up to `observed` is dropped in favour of the bare count.
+ */
+export function advisoryOverviewCopy(
+  advisory: unknown,
+  decisionsReadback: unknown,
+): {
+  readonly observedValue: string;
+  readonly fallbackReasonLabel: string;
+  readonly fallbackReasonValue: string;
+} {
+  const fallbackReasons = fallbackReasonSummary(advisory, 3);
+  const reasonBasis = advisoryReasonBasis(advisory);
+  const originSplit = advisoryOriginSplit(advisory, decisionsReadback);
+  const advisoryRecord = asRecord(advisory);
+  /**
+   * `reconciled` is the only case in which the reasons are a partition of the retained live decisions, so
+   * it is the only case that may be labelled `of N`. A known-but-unreconciled basis states both numbers
+   * without claiming one contains the other, and an unknown one states neither.
+   */
+  const fallbackReasonLabel = `Fallback reasons${
+    reasonBasis.reconciled
+      ? ` (of ${show(reasonBasis.retainedLive)} live retained)`
+      : reasonBasis.retainedLive === null
+        ? ""
+        : ` (${show(reasonBasis.counted)} counted vs ${show(reasonBasis.retainedLive)} live retained)`
+  }${fallbackReasons.omitted > 0 ? ` (top ${fallbackReasons.rows.length} of ${fallbackReasons.total})` : ""}`;
+  // The bound is disclosed in the value too: a silent slice is what hid `advisory_task_unscoped`.
+  const fallbackReasonValue =
+    fallbackReasons.rows.length > 0
+      ? `${fallbackReasons.rows.map((row) => `${row.reason} ×${row.count}`).join(" · ")}${
+          fallbackReasons.omitted > 0 ? `, +${fallbackReasons.omitted} more` : ""
+        }`
+      : "none recorded";
+  /**
+   * Most of the observed traffic is machine-generated replay work, so the origin split renders beside the
+   * count - and ONLY when it reconciles with `observed`. The decisions-derived basis counts entries while
+   * `observed` is the cumulative total and entries are capped, so past the cap they diverge: a split that
+   * does not add up is worse than no split, and then the bare count is all that shows.
+   */
+  const observedValue = `${show(advisoryRecord.observed)} observed${
+    originSplit?.consistent
+      ? ` (${show(originSplit.live)} live · ${show(originSplit.shadow)} replay${
+          originSplit.other > 0 ? ` · ${show(originSplit.other)} other` : ""
+        }${
+          // Rows that aged out of the retained window before origins were tallied. Shown only when it is
+          // non-zero, so the common case reads exactly as before - but never silently dropped, because the
+          // split would then appear to account for the whole population when it does not.
+          originSplit.unattributed > 0 ? ` · ${show(originSplit.unattributed)} unattributed` : ""
+        })`
+      : ""
+  } · fresh ${show(advisoryRecord.fresh)} · stale ${show(advisoryRecord.stale)} · unavailable ${show(advisoryRecord.unavailable)}`;
+  return { observedValue, fallbackReasonLabel, fallbackReasonValue };
+}
+
 /** Overview: stage, policy identity, cohort, advisory counts, guardrails, last rollback. */
 export function LearningOverviewPage() {
   const { token, setToken } = useOperatorToken();
@@ -1253,7 +1416,7 @@ export function LearningOverviewPage() {
   const historyView = normalizeLearningHistory(history.value);
   const profileView = profile.value ?? profileInspectionView(null);
   const advisory = asRecord(asRecord(summary.value).advisory);
-  const fallbackReasons = fallbackReasonRows(advisory, 3);
+  const advisoryCopy = advisoryOverviewCopy(advisory, decisions.value);
   // Run 98 addendum 31 S5: how much of the scored evidence is actually checkable.
   const auditability = asRecord(asRecord(summary.value).auditability);
   const rolloutValue = asRecord(rollout.value);
@@ -1296,20 +1459,21 @@ export function LearningOverviewPage() {
             />
             <Metric label="Activation state" value={show(rolloutValue.state)} />
             <Metric label="Active pack" value={show(rolloutValue.activePackageId)} />
-            <Metric
-              label="Advisory observed"
-              value={`${show(advisory.observed)} · fresh ${show(advisory.fresh)} · stale ${show(advisory.stale)} · unavailable ${show(advisory.unavailable)}`}
-            />
-            <Metric label="Influence rate" value={show(advisory.influenceRate)} />
+            <Metric label="Advisory observed" value={advisoryCopy.observedValue} />
+            {/*
+              Run 114 Tier 1: `Influence rate` was deleted rather than relabelled - it rendered
+              `applied / observed` a second time (the raw ratio 0.0048) beside the share that already
+              states it as 0.5%. The reader still publishes `influenceRate`; the panel just stops
+              rendering the same quantity twice.
+            */}
             {/* Run 98 addendum 44 A44-S3: the R12 numbers the Overview was missing. */}
-            <Metric label="Applied share" value={formatPercentShare(appliedShareOf(advisory))} />
             <Metric
-              label="Fallback reasons"
-              value={
-                fallbackReasons.length > 0
-                  ? fallbackReasons.map((row) => `${row.reason} ×${row.count}`).join(" · ")
-                  : "none recorded"
-              }
+              label="Applied share (of observed)"
+              value={formatPercentShare(appliedShareOf(advisory))}
+            />
+            <Metric
+              label={advisoryCopy.fallbackReasonLabel}
+              value={advisoryCopy.fallbackReasonValue}
             />
             <Metric label="Would have changed" value={show(advisory.wouldHaveChanged)} />
             <Metric
@@ -2272,13 +2436,22 @@ export function LearningEvidencePage() {
                   label="Newest decisive comparisons"
                   value={show(newestEvidence.decisiveComparisons)}
                 />
+                {/* Run 108 addendum 03 (`A03-E`): the refusing dimension gets its own operator-visible
+                    number, so the family table's "Development" column stops being the only place it appears. */}
                 <Metric
-                  label="Decisive / floor"
+                  label="Newest development comparisons"
+                  value={show(newestEvidence.developmentComparisons)}
+                />
+                <Metric
+                  // `A03-E`: this value now names the development clause as well, so the label says
+                  // "counts vs floor" rather than promising a decisive-only reading it no longer gives.
+                  label="Counts vs floor"
                   value={
                     formatLearningFloorProgress(
                       {
                         decisive: newestEvidence.decisiveComparisons,
                         effectiveDecisive: newestEvidence.effectiveDecisiveComparisons,
+                        development: newestEvidence.developmentComparisons,
                       },
                       policyFloor,
                     ) ?? FLOOR_NOT_REPORTED

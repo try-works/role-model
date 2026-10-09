@@ -112,6 +112,7 @@ export interface EndpointCandidate {
   readonly benchmarkCapability?: {
     readonly evidenceSource?: "run-artifact" | "profile-derived";
     readonly overallScore?: number | null;
+    readonly relatedEffortOverallScore?: number | null;
     readonly lastRunId?: string | null;
     readonly lastRunCompletedAtMs?: number | null;
     readonly lastRunMode?: "quick" | "full" | null;
@@ -209,6 +210,37 @@ export interface RoutingIntent {
   }[];
 }
 
+export type EffortResolutionKind =
+  | "router_managed"
+  | "exact_primary"
+  | "exact_fallback_expanded"
+  | "unsupported_fallback"
+  | "strict_rejected"
+  | "equivalent_mapped";
+
+export interface EffortResolution {
+  readonly resolution: EffortResolutionKind;
+  readonly effectiveEffort: string | null;
+  /**
+   * Run 106 R10: the client's requested reasoning effort, when one was supplied. Carries the
+   * client request across the router so the decision record can explain what was requested even
+   * when it degrades to unsupported_fallback (effectiveEffort null).
+   */
+  readonly requestedEffort?: string | null;
+  /**
+   * Run 106 R10: the client's requested effort policy (strict | preferred | router). Absent when
+   * the client omitted effort and the host resolved router-managed.
+   */
+  readonly requestedPolicy?: "strict" | "preferred" | "router";
+  /**
+   * Run 106 R4: the client's effort source (named | disabled | none), carried so the decision can
+   * emit the lossless four-state effort_source instead of collapsing no-client-preference onto
+   * provider_default. Absent on legacy paths, where the router falls back to the chosen arm's
+   * identity (provider_default | named).
+   */
+  readonly source?: EffortSource;
+}
+
 export interface RouteRequestInput {
   request: RoutingRequest;
   candidates: readonly EndpointCandidate[];
@@ -226,6 +258,12 @@ export interface RouteRequestInput {
    * exact same decision it produced before.
    */
   advisoryConsideration?: RouteAdvisoryConsiderationInput;
+  /**
+   * Run 106 R10: the effort policy resolution the host computed before narrowing the pool.
+   * Recorded verbatim on the decision so provenance (resolution kind + effective effort)
+   * survives the router's own scoring/selection pass.
+   */
+  effortResolution?: EffortResolution;
 }
 
 /**
@@ -348,4 +386,67 @@ export interface RouteAdvisoryConsiderationOutcome {
   readonly advisoryRoleId?: string | null;
   /** Run 105 C11: present only when the request declared a role (byte-compat when null). */
   readonly requestRoleId?: string | null;
+}
+
+/**
+ * Run 106 / R4: lossless effort-source states.
+ *
+ * Four mutually-exclusive states keep the effort dimension distinct through every layer:
+ * - `named`: a concrete named reasoning-effort level was requested/applied (reasoningEffort is the level).
+ * - `disabled`: reasoning was explicitly disabled (reasoningEffort is null).
+ * - `provider_default`: the provider-default instance applies (reasoningEffort is null).
+ * - `none`: no client preference; the router manages effort (reasoningEffort is null).
+ */
+export type EffortSource = "named" | "disabled" | "provider_default" | "none";
+
+/**
+ * Historical effort-source values that remain readable and migrate deterministically onto the
+ * canonical `EffortSource` vocabulary. `variant_coerced` keeps its coercion attribution through
+ * the `coerced` flag rather than being silently flattened into a plain named effort.
+ */
+export type LegacyEffortSource = "client" | "variant" | "variant_coerced";
+
+/** Any value that may appear in serialized or persisted rows, including legacy values. */
+export type EffortSourceValue = EffortSource | LegacyEffortSource;
+
+export interface NormalizedEffortSource {
+  readonly source: EffortSource;
+  /** True when the named effort was coerced from a variant (historical `variant_coerced`). */
+  readonly coerced: boolean;
+}
+
+/**
+ * Normalize a persisted or wire effort-source value onto the canonical four-state vocabulary.
+ *
+ * - Canonical values pass through unchanged.
+ * - Legacy named sources (`client`, `variant`) collapse onto `named`; their only distinction was
+ *   who named the effort, which the lossless vocabulary does not carry.
+ * - `variant_coerced` stays readable as a coerced `named` effort.
+ * - `null`, `undefined`, and the empty string migrate deterministically to `provider_default`,
+ *   matching the historical "null effort means the provider-default instance" semantics.
+ * - Unrecognized values are rejected rather than silently dropped.
+ */
+export function normalizeEffortSource(
+  value: EffortSourceValue | string | null | undefined,
+): NormalizedEffortSource {
+  if (value === null || value === undefined || value === "") {
+    return { source: "provider_default", coerced: false };
+  }
+  switch (value) {
+    case "named":
+      return { source: "named", coerced: false };
+    case "disabled":
+      return { source: "disabled", coerced: false };
+    case "provider_default":
+      return { source: "provider_default", coerced: false };
+    case "none":
+      return { source: "none", coerced: false };
+    case "client":
+    case "variant":
+      return { source: "named", coerced: false };
+    case "variant_coerced":
+      return { source: "named", coerced: true };
+    default:
+      throw new Error(`Unrecognized effort_source value: ${JSON.stringify(value)}.`);
+  }
 }

@@ -819,6 +819,15 @@ export interface DifficultyClassificationCacheRecord {
   readonly difficulty: "easy" | "medium" | "hard";
   readonly fallbackApplied: boolean;
   readonly fallbackReason?: string;
+  readonly classifierVersion?: string;
+  readonly decisiveFeatures?: readonly string[];
+  readonly features?: {
+    readonly currentTurnBurden: number;
+    readonly conversationBurden: number;
+    readonly operationRisk: number;
+    readonly requiredQuality: number;
+    readonly latencySensitivity: number;
+  };
   readonly cachedAtMs: number;
   readonly expiresAtMs: number;
   readonly rubricSignals: {
@@ -996,12 +1005,17 @@ export interface ListRecentRuntimeRequestIdsInput {
   readonly limit?: number;
 }
 
+/** Occurrence/telemetry effort-source vocabulary; distinct from the decision's four-state vocabulary. */
+type SqliteEffortSource = "none" | "client" | "variant" | "variant_coerced";
+
 export interface RuntimeTelemetryRecord {
   readonly requestId: string;
   readonly routingDecisionId: string;
   readonly endpointId: string;
   readonly reasoningEffort: string | null;
-  readonly effortSource: "none" | "client" | "variant" | "variant_coerced";
+  readonly effortSource: SqliteEffortSource;
+  /** True when the named effort was coerced from a variant (historical variant_coerced). */
+  readonly effortCoerced?: boolean;
   readonly conversationId: string;
   readonly createdAtMs: number;
   readonly clientRequestId: string | null;
@@ -1306,7 +1320,8 @@ export interface PersistedRuntimeObservationBundle {
   readonly routingDecisionId: string;
   readonly endpointId: string;
   readonly reasoningEffort?: string | null;
-  readonly effortSource?: "none" | "client" | "variant" | "variant_coerced";
+  readonly effortSource?: SqliteEffortSource;
+  readonly effortCoerced?: boolean;
   readonly conversationId: string;
   readonly usageEvent: {
     readonly timestamp_ms: number;
@@ -1414,7 +1429,7 @@ export interface PersistedRuntimeObservationBundle {
   };
   readonly telemetrySnapshot?: {
     readonly reasoningEffort?: string | null;
-    readonly effortSource?: "none" | "client" | "variant" | "variant_coerced";
+    readonly effortSource?: SqliteEffortSource;
     readonly providerId: string | null;
     readonly providerAccountId: string | null;
     readonly sourceType: "local" | "remote";
@@ -2948,17 +2963,19 @@ function mapRuntimeTelemetryRecord(row: {
     dimensions?.promptCacheRequestSource === "synthesized"
       ? dimensions.promptCacheRequestSource
       : null;
+  const effortSource =
+    row.effort_source === "client" ||
+    row.effort_source === "variant" ||
+    row.effort_source === "variant_coerced"
+      ? row.effort_source
+      : "none";
   return {
     requestId: row.request_id,
     routingDecisionId: row.routing_decision_id,
     endpointId: row.endpoint_id,
     reasoningEffort: row.reasoning_effort ?? null,
-    effortSource:
-      row.effort_source === "client" ||
-      row.effort_source === "variant" ||
-      row.effort_source === "variant_coerced"
-        ? row.effort_source
-        : "none",
+    effortSource,
+    ...(effortSource === "variant_coerced" ? { effortCoerced: true } : {}),
     conversationId: row.conversation_id,
     createdAtMs: row.created_at_ms,
     clientRequestId: row.client_request_id,
@@ -3154,6 +3171,7 @@ function toRuntimeTelemetryRecord(
     observation.effortSource ??
     telemetrySnapshot?.effortSource ??
     (reasoningEffort === null ? "none" : "client");
+  const effortCoerced = observation.effortCoerced ?? effortSource === "variant_coerced";
   const difficultyBucketCandidate =
     routingDiagnostics?.difficultyRouting?.difficulty ??
     observation.observedPerformance.sample.difficulty_bucket ??
@@ -3225,6 +3243,7 @@ function toRuntimeTelemetryRecord(
     endpointId: observation.endpointId,
     reasoningEffort,
     effortSource,
+    ...(effortCoerced ? { effortCoerced: true } : {}),
     conversationId: observation.conversationId,
     createdAtMs: observation.usageEvent.timestamp_ms,
     clientRequestId: observation.clientRequestId ?? null,
@@ -3383,7 +3402,7 @@ function runtimeTelemetryInsertValues(
     record.routingDecisionId,
     record.endpointId,
     record.reasoningEffort,
-    record.effortSource,
+    record.effortCoerced ? "variant_coerced" : record.effortSource,
     record.conversationId,
     record.createdAtMs,
     record.clientRequestId,
@@ -3501,12 +3520,14 @@ function toFailureRuntimeTelemetryRecord(
     input.observation.capturePolicy !== null
       ? (input.observation.capturePolicy as Record<string, unknown>)
       : null;
+  const effortSource = input.effortSource ?? (input.reasoningEffort ? "client" : "none");
   return {
     requestId: input.requestId,
     routingDecisionId,
     endpointId,
     reasoningEffort: input.reasoningEffort ?? null,
-    effortSource: input.effortSource ?? (input.reasoningEffort ? "client" : "none"),
+    effortSource,
+    ...((input.effortCoerced ?? effortSource === "variant_coerced") ? { effortCoerced: true } : {}),
     conversationId: "conversation-main",
     createdAtMs,
     clientRequestId: input.clientRequestId ?? null,
@@ -5014,7 +5035,9 @@ export interface PersistRuntimeTelemetryFailureInput {
   readonly routingDecisionId?: string;
   readonly endpointId?: string;
   readonly reasoningEffort?: string | null;
-  readonly effortSource?: "none" | "client" | "variant" | "variant_coerced";
+  readonly effortSource?: SqliteEffortSource;
+  /** True when the named effort was coerced from a variant (historical `variant_coerced`). */
+  readonly effortCoerced?: boolean;
   readonly modelId?: string;
   readonly requestedModelId?: string | null;
   readonly selectedModelId?: string | null;

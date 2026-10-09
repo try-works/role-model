@@ -3,7 +3,10 @@ import type {
   NormalizedCatalogModel,
   RequestShapeHints,
 } from "@role-model-router/catalog";
+import { resolveAdapterGatedReasoningEfforts } from "@role-model-router/catalog";
 import type { ProviderAccountRecord } from "@role-model-router/provider-account";
+
+import { type ReasoningEffortArm, expandReasoningEffortArms } from "./effort-instance-identity.js";
 
 export * from "./effort-instance-identity.js";
 
@@ -229,10 +232,14 @@ function createCloudEndpoint(
   model: NormalizedCatalogModel,
   account: ProviderAccountRecord,
   source: CloudRegistrySource,
+  arm?: ReasoningEffortArm,
 ): EndpointCandidate {
+  const endpointId = arm?.endpointId ?? source.endpointId;
+  const reasoningEffort = arm ? arm.effectiveEffort : (source.reasoningEffort ?? null);
+  const isProviderDefault = arm ? arm.source === "provider-default" : true;
   return {
     identity: {
-      endpoint_id: source.endpointId,
+      endpoint_id: endpointId,
       endpoint_kind: normalizeEndpointKind(source.endpointKind),
       provider_kind: normalizeProviderKind(account.providerKind),
       serving_source: source.servingSource,
@@ -246,10 +253,10 @@ function createCloudEndpoint(
       device_class: "server",
       region: source.region,
       org_scope: account.orgScope,
-      ...(source.reasoningEffort !== undefined ? { reasoning_effort: source.reasoningEffort } : {}),
+      ...(reasoningEffort !== null ? { reasoning_effort: reasoningEffort } : {}),
     },
     declared: {
-      endpoint_id: source.endpointId,
+      endpoint_id: endpointId,
       capabilities: toNonEmptyList(
         model.capabilities,
         `Catalog model ${model.modelId} capabilities`,
@@ -262,7 +269,9 @@ function createCloudEndpoint(
       },
       supports_embeddings: model.capabilities.includes("embeddings.text"),
       platform_constraints: [],
-      ...(Array.isArray(model.reasoningEffortLevels) && model.reasoningEffortLevels.length > 0
+      ...(isProviderDefault &&
+      Array.isArray(model.reasoningEffortLevels) &&
+      model.reasoningEffortLevels.length > 0
         ? { reasoning_effort_levels: [...model.reasoningEffortLevels] }
         : {}),
     },
@@ -306,6 +315,19 @@ function createLocalEndpoint(source: LocalRegistrySource): EndpointCandidate {
     },
     status: source.lifecycleState,
   };
+}
+
+function resolveAdapterFamilyForSource(
+  catalog: NormalizedCatalog,
+  account: ProviderAccountRecord,
+): string | null {
+  if (account.providerAccountId.endsWith(".litellm")) {
+    return "litellm-proxy";
+  }
+  return (
+    catalog.providers.find((provider) => provider.providerId === account.providerId)
+      ?.adapterFamily ?? null
+  );
 }
 
 export function buildEndpointRegistry(input: BuildEndpointRegistryInput): EndpointRegistryResult {
@@ -358,14 +380,56 @@ export function buildEndpointRegistry(input: BuildEndpointRegistryInput): Endpoi
       continue;
     }
 
-    endpoints.push(createCloudEndpoint(model, account, source));
+    // Run 106 R2: expansion is gated on actual adapter executability, not the
+    // catalog declaration alone. Only declared levels with a valid adapter
+    // execution mapping (a tested reasoning-effort serializer) become fixed
+    // routing arms; the provider-default arm still advertises the full declared
+    // set on declared.reasoning_effort_levels for discovery (R9).
+    const executableLevels = resolveAdapterGatedReasoningEfforts({
+      providerId: account.providerId,
+      modelId: model.modelId,
+      capabilities: model.capabilities,
+      catalogLevels: model.reasoningEffortLevels ?? [],
+      adapterFamily: resolveAdapterFamilyForSource(input.catalog, account),
+    });
+    const arms = expandReasoningEffortArms({
+      providerAccountId: source.providerAccountId,
+      region: source.region,
+      modelId: source.modelId,
+      fixedEffort: source.reasoningEffort ?? null,
+      declaredLevels: executableLevels,
+      baseEndpointId: source.endpointId,
+    });
+    for (const arm of arms) {
+      endpoints.push(createCloudEndpoint(model, account, source, arm));
+    }
   }
 
   for (const source of input.sources.local) {
     endpoints.push(createLocalEndpoint(source));
   }
 
-  const lifecycleSummary = endpoints.reduce(
+  // Run 108 R8: collapse duplicate sources by identity.endpoint_id (live: the endpoints API returned 15
+  // entries with flash-high/flash-max/v4-pro-max each duplicated, and the sidebar rendered them repeatedly).
+  // Keep the first occurrence and record a named diagnostic instead of silently appending.
+  const dedupedEndpoints: EndpointCandidate[] = [];
+  const seenEndpointIds = new Set<string>();
+  for (const endpoint of endpoints) {
+    const endpointId = endpoint.identity.endpoint_id;
+    if (seenEndpointIds.has(endpointId)) {
+      diagnostics.push({
+        endpointId,
+        severity: "warning",
+        code: "DUPLICATE_ENDPOINT_SOURCE",
+        message: `Duplicate endpoint source collapsed to a single registry entry: ${endpointId}`,
+      });
+      continue;
+    }
+    seenEndpointIds.add(endpointId);
+    dedupedEndpoints.push(endpoint);
+  }
+
+  const lifecycleSummary = dedupedEndpoints.reduce(
     (summary, endpoint) => {
       if (endpoint.status === "active") {
         summary.active += 1;
@@ -380,7 +444,7 @@ export function buildEndpointRegistry(input: BuildEndpointRegistryInput): Endpoi
   );
 
   return {
-    endpoints,
+    endpoints: dedupedEndpoints,
     diagnostics,
     lifecycleSummary,
   };

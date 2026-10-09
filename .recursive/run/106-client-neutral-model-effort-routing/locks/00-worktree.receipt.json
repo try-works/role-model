@@ -1,0 +1,11 @@
+{
+  "artifact": "00-worktree.md",
+  "artifact_hash": "92c639d820bd6cf940ad9effa9b48ce184f361c902ba2e1db6734428f0bee763",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\106-client-neutral-model-effort-routing\\.recursive\\run\\106-client-neutral-model-effort-routing\\00-worktree.md",
+  "locked_at": "2026-10-04T01:15:16Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "9be64e945082f71fd7f93376c739ea49d90f002dfaf6e7d71e45dd16f764928f"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "410b4d209ebf9afd2fe57be2d854334cfa2e8c6c10a87a1713cf037f6b3b104d"
+}

@@ -1,0 +1,11 @@
+{
+  "packagedSea": {
+    "executable": "role-model-router/dist/release/win32-x64/role-model-dev.exe",
+    "sha256": "e181c6011a50a7e9681d6f16314ae7cefcbe7ca26bb21eeac34343b3befc7364",
+    "bytes": 103994880,
+    "launcher": "role-model-router/dist/release/win32-x64/role-model-dev-launcher.exe",
+    "launcherSha256": "63f46d2f2736f17c1ddedfcd59911d60a9554fc9b3442dc13fc0adffdd09ebe7",
+    "builtFrom": "701b8b8..9260a10b",
+    "trackBClosure": "vendored Effect/Effect-MQ closure present"
+  }
+}

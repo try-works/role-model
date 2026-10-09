@@ -17,6 +17,11 @@ import {
 } from "node:fs";
 import { copyFile, lstat, mkdir, mkdtemp, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
+import {
+  type ObservabilityScope,
+  recordRouterDecision,
+  withStageSpan,
+} from "./run108-observability.js";
 
 import { createInterface } from "node:readline";
 import { DatabaseSync } from "node:sqlite";
@@ -106,6 +111,44 @@ export function selectTrackBCounterfactualArms(input: {
 }
 
 /**
+ * Run 108 R2a: the pool the replay work item hands the selector must be UNTRUNCATED. The arm bound
+ * belongs inside selectTrackBCounterfactualArms (applied AFTER the served/judge exclusions), never as
+ * a pool-level slice - the removed cli.ts:8121-8124 slice truncated a 5-endpoint pool to 3 and made
+ * 5-1-1 = 3 arms structurally impossible. Pinned by run108-arm-bound-wiring.test.ts.
+ */
+export function resolveReplayCandidatePool(configuredEndpointIds: readonly string[]): string[] {
+  return [...configuredEndpointIds];
+}
+
+/**
+ * Run 108 R6: a pool of exactly two models with the judge among them can never form a comparison
+ * (2 - 1 served - 1 judge = 0 arms), so every capture stalls with a per-tick R14 refusal. That is a
+ * CONFIG-TIME condition: surface it once, by name, instead of failing per tick.
+ */
+export function assessSmallPoolJudgePlacement(input: {
+  readonly candidateEndpointIds: readonly string[];
+  readonly judgeEndpointId?: string | null;
+}): { readonly code: "SMALL_POOL_JUDGE_INSIDE_POOL"; readonly detail: string } | null {
+  const judge = typeof input.judgeEndpointId === "string" ? input.judgeEndpointId.trim() : "";
+  const candidates = [
+    ...new Set(
+      (input.candidateEndpointIds ?? []).filter(
+        (endpointId): endpointId is string =>
+          typeof endpointId === "string" && endpointId.trim().length > 0,
+      ),
+    ),
+  ];
+  if (candidates.length === 2 && judge.length > 0 && candidates.includes(judge)) {
+    return {
+      code: "SMALL_POOL_JUDGE_INSIDE_POOL",
+      detail:
+        "the pool has 2 models and the judge is one of them: the judge must be outside the pool, or the pool needs >= 3 models (2 - 1 served - 1 judge leaves no arm to compare)",
+    };
+  }
+  return null;
+}
+
+/**
  * Run 98 addendum 04 (live finding, stage v180, 2026-09-16).
  *
  * This process builds its own extension host for the replay/evaluation path and never passed
@@ -140,7 +183,7 @@ export function extensionHostTiming(env: Record<string, string | undefined> = pr
   };
 }
 
-import type { RuntimeEffortSource } from "@role-model-router/runtime-observability";
+import type { RuntimeEffortSourceValue } from "@role-model-router/runtime-observability";
 import {
   type GraphArtifactReference,
   type LegacyArtifactWriteInput,
@@ -442,9 +485,7 @@ export async function resolveDurableEvaluationAuthority(input: {
   }
   if (!keyFile) {
     throw new Error(
-      `managed artifact digest key not found for the durable evaluation authority (looked in ${candidates
-        .map((candidate) => path.basename(path.dirname(path.dirname(candidate))))
-        .join(", ")})`,
+      `managed artifact digest key not found for the durable evaluation authority (looked in ${candidates.join(", ")})`,
     );
   }
   await assertManagedArtifactKeyFile(keyFile);
@@ -1335,6 +1376,8 @@ export async function stageTrackBRuntimeDistribution(options: {
       };
     };
     readonly sidecar: { readonly modulePath: string; readonly artifactSha256: string };
+    // Run 108 R7: the sidecar imports ./storage-audit.mjs at runtime; the distribution must carry it.
+    readonly storageAudit?: { readonly modulePath: string; readonly artifactSha256: string };
     readonly sourceAuthorityFixtures?: readonly {
       readonly modulePath: string;
       readonly artifactSha256: string;
@@ -1485,8 +1528,17 @@ export async function stageTrackBRuntimeDistribution(options: {
     readonly modulePath: string;
     readonly artifactSha256: string;
   }>;
+  // Run 108 R7: when the distribution declares the storage-audit sibling, it must exist and hash.
+  if (
+    manifest.storageAudit &&
+    (!manifest.storageAudit.modulePath ||
+      !/^[a-f0-9]{64}$/i.test(manifest.storageAudit.artifactSha256))
+  ) {
+    throw new Error("Track B runtime distribution storage-audit artifact is incomplete");
+  }
   const files = [
     manifest.sidecar,
+    ...(manifest.storageAudit ? [manifest.storageAudit] : []),
     ...(manifest.publicRuntimeAdapter
       ? [manifest.publicRuntimeAdapter, ...manifest.publicRuntimeAdapter.routerAssets]
       : []),
@@ -4235,7 +4287,7 @@ export interface TrackBPostObservationWorkItem extends Readonly<Record<string, u
   readonly endpointId: string;
   readonly modelId?: string;
   readonly reasoningEffort?: string | null;
-  readonly effortSource?: RuntimeEffortSource;
+  readonly effortSource?: RuntimeEffortSourceValue;
   readonly legacyIdentityMissing?: true;
   readonly run88Correlation?: Readonly<Record<string, unknown>>;
   readonly occurrenceId?: string;
@@ -5236,9 +5288,9 @@ function outboxSchema(database: DatabaseSync): void {
          model_id IS NULL
          OR trim(model_id) = ''
          OR effort_source IS NULL
-         OR effort_source NOT IN ('none', 'client', 'variant', 'variant_coerced')
-         OR (reasoning_effort IS NULL AND effort_source <> 'none')
-         OR (reasoning_effort IS NOT NULL AND effort_source = 'none')
+         OR effort_source NOT IN ('named', 'disabled', 'provider_default', 'none', 'client', 'variant', 'variant_coerced')
+         OR (reasoning_effort IS NULL AND effort_source IN ('named', 'client', 'variant', 'variant_coerced'))
+         OR (reasoning_effort IS NOT NULL AND effort_source IN ('disabled', 'provider_default', 'none'))
        )
   `);
 }
@@ -5639,7 +5691,7 @@ export function createTrackBPostObservationOutbox({
                     endpoint_id: string;
                     model_id: string | null;
                     reasoning_effort: string | null;
-                    effort_source: RuntimeEffortSource | null;
+                    effort_source: RuntimeEffortSourceValue | null;
                     run88_correlation_json: string | null;
                     observation_json: string | null;
                     legacy_identity_missing: number;
@@ -5768,6 +5820,12 @@ export interface TrackBShadowPipelineInput {
   readonly requestId: string;
   readonly channel: string;
   readonly scope: string;
+  /**
+   * Run 108 follow-up: the metric registry of the runtime scope this pipeline runs in. The pipeline
+   * owns no scope of its own - it is handed the one its runtime created - so an input without it
+   * records no observation rather than leaking into Effect's process-global default Map.
+   */
+  readonly observabilityScope?: ObservabilityScope;
   readonly authorizationEpoch: number;
   readonly productionState: Readonly<Record<string, unknown>>;
   readonly routePackage: string;
@@ -7024,7 +7082,7 @@ export interface TrackBVariantIdentity {
   readonly endpointId: string;
   readonly modelId: string;
   readonly reasoningEffort: string | null;
-  readonly effortSource: RuntimeEffortSource;
+  readonly effortSource: RuntimeEffortSourceValue;
 }
 
 export type TrackBRouteAdvisoryState = "fresh" | "stale" | "unavailable";
@@ -8011,6 +8069,12 @@ const advisoryModeForStage = (stage: string): TrackBRouteAdvisoryMode => {
  * of reporting every decision as an S1 shadow.
  */
 export function buildLiveRouteAdvisoryObservation(input: {
+  /**
+   * Run 108 follow-up: the runtime scope this decision was served in. Present, the router.decision
+   * counter is recorded into that scope's registry; absent (a caller that is not a scope boundary)
+   * nothing is recorded - never Effect's process-global default Map.
+   */
+  readonly observabilityScope?: ObservabilityScope;
   readonly decisionId: string;
   readonly routePackage: string;
   readonly eligibleRoutePackages?: readonly string[];
@@ -8046,6 +8110,14 @@ export function buildLiveRouteAdvisoryObservation(input: {
     readonly advisoryRungWalked?: string | null;
     readonly advisoryRungSkipped?: number | null;
   } | null;
+  /**
+   * Run 107 Tier 2: the advisory source's own refusal or staleness text (`unavailable(reason)` in
+   * `route-advisory-source.ts` - "role and task scope required", "effective advisory policy
+   * unavailable", the degradation/fault receipts, or the aged override "advisory source beyond max
+   * age"). It is the only explanation of an `unavailable`/`stale` advisory, so it travels with the
+   * observation; omitted when there is none, which keeps every pre-existing live row byte-identical.
+   */
+  readonly reason?: string | null;
   readonly observedAtMs: number;
 }): Record<string, unknown> {
   const stage = input.advisory.stage;
@@ -8058,6 +8130,28 @@ export function buildLiveRouteAdvisoryObservation(input: {
     selectionMode === "replay_counterfactual"
       ? input.selectionProbability
       : (input.selectionProbability ?? 1);
+  // Run 108 R7: every route advisory observation is a decision served by the runtime; the metric
+  // carries the selection so baseline_retained vs advisory_applied ratios are observable per scope.
+  //
+  // Run 108 addendum-01 A5.1: the ROUTER chain's stage span. The metric alone cannot say WHICH
+  // decision a slow or missing record belonged to, so the record runs under one sync
+  // `router.decision` span carrying the same selection the counter is tagged with. The wrap is
+  // deliberately sync and one statement wide (withStageSpan is sync-only, and the span must not
+  // straddle the observation build below - a span that swallowed the builder would time the
+  // wrong work).
+  const observabilityScope = input.observabilityScope;
+  if (observabilityScope !== undefined) {
+    withStageSpan(
+      "router.decision",
+      { selection: applied ? "advisory_applied" : "baseline_retained" },
+      () => {
+        recordRouterDecision(
+          applied ? "advisory_applied" : "baseline_retained",
+          observabilityScope,
+        );
+      },
+    );
+  }
   return buildTrackBRouteAdvisoryObservation({
     decisionId: input.decisionId,
     routePackage: input.routePackage,
@@ -8068,6 +8162,10 @@ export function buildLiveRouteAdvisoryObservation(input: {
     candidateId: input.advisory.candidateId ?? null,
     advisoryId: input.advisory.advisoryId ?? null,
     observedAtMs: input.observedAtMs,
+    // Run 107 Tier 2: byte safety is structural - the base builder emits `reason` only when the
+    // value is truthy, and this input is `null` for every live decision with no source refusal, so
+    // the key stays absent exactly as it is on the rows already in the ledger.
+    reason: input.reason ?? null,
     mode: advisoryModeForStage(stage),
     selection: applied ? "advisory_applied" : "baseline_retained",
     applied,
@@ -8106,8 +8204,13 @@ export function buildLiveRouteAdvisoryObservation(input: {
 
 /**
  * Durable, bounded advisory-observation ledger (`R4`/`R12`). The runtime appends one
- * observation per decision; the operator readback derives the advisory-state distribution
- * and the counterfactual influence rate from `totals` without replaying the decisions.
+ * observation per observation EVENT, not per decision: a decision that is observed more than once
+ * (a latency re-route, a retry, a supervised replay) appends one row per event, which is why 536
+ * distinct decisions produced 702 rows at a single revision. Both origins write here - the live
+ * routing path (`origin: "live"`) and the shadow pipeline (`origin: "shadow"`) - so a row count
+ * and a decision count are different quantities. The operator readback derives the advisory-state
+ * distribution and the counterfactual influence rate from `totals` without replaying the
+ * decisions.
  */
 export async function appendTrackBRouteAdvisoryObservation(input: {
   readonly filePath: string;
@@ -8152,6 +8255,86 @@ export async function appendTrackBRouteAdvisoryObservation(input: {
 
 const trackBAdvisoryLedgerLocks = new Map<string, Promise<void>>();
 
+/**
+ * Run 107: the ledger's fallback-reason tally and origin split.
+ *
+ * The reason predicate is byte-identical to the private operator reader's, so the number this
+ * writer tallies is the number the reader publishes: a `fallbackReason` counts only when it is a
+ * STRING whose `.trim()` is truthy, and the key is the TRIMMED value.
+ */
+function trackBFallbackReasonKey(entry: Readonly<Record<string, unknown>>): string | null {
+  const reason = entry.fallbackReason;
+  return typeof reason === "string" && reason.trim() ? reason.trim() : null;
+}
+
+function tallyTrackBFallbackReasons(
+  entries: readonly Readonly<Record<string, unknown>>[],
+): Record<string, number> {
+  const tally: Record<string, number> = {};
+  for (const entry of entries) {
+    const key = trackBFallbackReasonKey(entry);
+    if (key === null) continue;
+    tally[key] = (tally[key] ?? 0) + 1;
+  }
+  return tally;
+}
+
+/**
+ * Read-path guard for the old/new discriminator: a tally is a PLAIN OBJECT (never an array, never
+ * null). Counts are coerced so a hand-edited ledger can inject neither `NaN` nor a negative
+ * count into the operator's totals.
+ */
+function readTrackBFallbackReasonTally(value: unknown): Record<string, number> | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const tally: Record<string, number> = {};
+  for (const [key, count] of Object.entries(value as Record<string, unknown>)) {
+    tally[key] = Number.isSafeInteger(count) && Number(count) >= 0 ? Number(count) : 0;
+  }
+  return tally;
+}
+
+type TrackBOriginSplit = { live: number; shadow: number; other: number };
+
+/**
+ * Run 107: the bucket a row belongs to. `other` means "the origin was neither live nor shadow" -
+ * an origin the ledger does not own AND an absent origin key both land there, so a row is never
+ * dropped from the split.
+ */
+function trackBOriginBucket(entry: Readonly<Record<string, unknown>>): keyof TrackBOriginSplit {
+  if (entry.origin === "live") return "live";
+  if (entry.origin === "shadow") return "shadow";
+  return "other";
+}
+
+/**
+ * Run 107 follow-up: the SEED for an old-shape ledger, taken once from the rows it still retains.
+ * It is deliberately not the per-write computation: `observed` is a lifetime monotonic total while
+ * `entries` is capped, so a split recomputed from the window would stop summing to `observed` at
+ * the first eviction - and the operator's surface compares those two to decide whether the split is
+ * safe to render.
+ */
+function tallyTrackBOrigins(
+  entries: readonly Readonly<Record<string, unknown>>[],
+): TrackBOriginSplit {
+  const origins: TrackBOriginSplit = { live: 0, shadow: 0, other: 0 };
+  for (const entry of entries) origins[trackBOriginBucket(entry)] += 1;
+  return origins;
+}
+
+/**
+ * Read-path guard mirroring `readTrackBFallbackReasonTally`: the split is a PLAIN OBJECT (never an
+ * array, never null), and counts are coerced so a hand-edited ledger can inject neither `NaN` nor
+ * a negative count. Absence is the old/new discriminator - a ledger written before the split
+ * existed returns null and is seeded from its retained rows exactly once.
+ */
+function readTrackBOriginSplit(value: unknown): TrackBOriginSplit | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const raw = value as Record<string, unknown>;
+  const count = (key: string): number =>
+    Number.isSafeInteger(raw[key]) && Number(raw[key]) >= 0 ? Number(raw[key]) : 0;
+  return { live: count("live"), shadow: count("shadow"), other: count("other") };
+}
+
 async function appendTrackBRouteAdvisoryObservationExclusive(input: {
   readonly filePath: string;
   readonly observation: Readonly<Record<string, unknown>>;
@@ -8180,13 +8363,48 @@ async function appendTrackBRouteAdvisoryObservationExclusive(input: {
       // measurable only if both are totalled.
       rungWalked: 0,
       rungApplied: 0,
+      // Run 107: the fallback-reason tally and the origin split. These seeds are what the load
+      // path's `{ ...empty.totals, ...parsed.totals }` spread uses to inject the keys into a
+      // ledger written before they existed, so a file this writer touches always carries the new
+      // shape while a file it has not touched is still recognisable as the old one (the
+      // discriminator is read off the RAW parsed totals, before the merge).
+      fallbackReasons: {} as Record<string, number>,
+      // Rows the tally could never account for (appended before the tally existed, or evicted by
+      // the entry cap). Reported as a number instead of being silently absorbed into the tally.
+      fallbackReasonsUnattributed: 0,
+      // The origin split is cumulative-and-sticky like the reason tally above: it is compared
+      // against the lifetime `observed`, never against the retained `entries.length`.
+      origins: { live: 0, shadow: 0, other: 0 },
+      // Rows that aged out before the split existed, on the same honest-remainder footing as
+      // `fallbackReasonsUnattributed`. Never folded into `other`.
+      originsUnattributed: 0,
     },
     entries: [] as Readonly<Record<string, unknown>>[],
   };
   let ledger = empty;
+  // Run 107 old/new discriminator: the presence of `totals.fallbackReasons` as a PLAIN OBJECT.
+  // It is read off the RAW parsed totals, because the merge below injects an empty tally into
+  // every pre-change ledger (that injection is exactly what makes the key always-present in what
+  // this writer emits); key presence on the MERGED object would report "new" for a file that has
+  // no tally at all.
+  let priorReasons: Record<string, number> | null = null;
+  let priorUnattributed: number | null = null;
+  let priorOrigins: TrackBOriginSplit | null = null;
+  let priorOriginsUnattributed: number | null = null;
   try {
     const parsed = JSON.parse(await readFile(input.filePath, "utf8")) as typeof empty;
     if (parsed?.schemaVersion === TRACK_B_ROUTE_ADVISORY_OBSERVATION_LEDGER_SCHEMA) {
+      const parsedTotals = (parsed.totals ?? {}) as Record<string, unknown>;
+      priorReasons = readTrackBFallbackReasonTally(parsedTotals.fallbackReasons);
+      priorUnattributed = Number.isSafeInteger(parsedTotals.fallbackReasonsUnattributed)
+        ? Math.max(0, Number(parsedTotals.fallbackReasonsUnattributed))
+        : null;
+      // Run 107 follow-up: the origin split's own discriminator, read the same way - off the RAW
+      // parsed totals, before the merge injects the seed into every pre-change ledger.
+      priorOrigins = readTrackBOriginSplit(parsedTotals.origins);
+      priorOriginsUnattributed = Number.isSafeInteger(parsedTotals.originsUnattributed)
+        ? Math.max(0, Number(parsedTotals.originsUnattributed))
+        : null;
       ledger = {
         ...empty,
         ...parsed,
@@ -8197,8 +8415,44 @@ async function appendTrackBRouteAdvisoryObservationExclusive(input: {
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
   }
+  // Run 107 P2 - the backfill, which is the half of this fix that keeps the live ledger honest. A
+  // ledger that already carries the tally keeps it verbatim: the tally counts every observation
+  // ever appended, while `entries` is only the capped window, so re-deriving it from the window
+  // would silently drop every evicted row. A ledger written before the key existed is seeded ONCE
+  // from the rows it still retains, and the rows that are already unaccounted for (`observed`
+  // beyond the window) are reported as unattributed rather than attributed to nothing. Without
+  // this seed, the live 827-row ledger would undercount by 204 rows on its very next append.
+  const observedBefore = Number.isSafeInteger(ledger.totals.observed)
+    ? Number(ledger.totals.observed)
+    : 0;
+  const reasonSeed = priorReasons ?? tallyTrackBFallbackReasons(ledger.entries);
+  const unattributed = priorReasons
+    ? (priorUnattributed ?? 0)
+    : Math.max(0, observedBefore - ledger.entries.length);
+  // Run 107 follow-up: origins mirror the reasons exactly, because two fields in one `totals`
+  // object must not have different bases. A published split is CARRIED FORWARD verbatim (it counts
+  // every observation ever appended; re-deriving it from the capped window would silently drop
+  // every evicted row), and a ledger written before the split existed is seeded ONCE from the rows
+  // it still retains, with the already-unaccounted rows reported as an honest remainder.
+  const originSeed = priorOrigins ?? tallyTrackBOrigins(ledger.entries);
+  const originsUnattributed = priorOrigins
+    ? (priorOriginsUnattributed ?? 0)
+    : Math.max(0, observedBefore - ledger.entries.length);
   const observation = input.observation;
   const state = String(observation.advisoryState ?? "unavailable");
+  // Run 107: the appended row joins the tally (it is an event count, so it survives eviction).
+  // Run 107 follow-up: the same is true of the origin split - it counts every row ever appended, so
+  // the `slice(-maxEntries)` bound below no longer feeds it.
+  const appendedReason = trackBFallbackReasonKey(observation);
+  const fallbackReasons = { ...reasonSeed };
+  if (appendedReason !== null) {
+    fallbackReasons[appendedReason] = (fallbackReasons[appendedReason] ?? 0) + 1;
+  }
+  // The appended row joins the split (it is an event count, so it survives eviction), and it
+  // moves exactly one bucket.
+  const origins = { ...originSeed };
+  origins[trackBOriginBucket(observation)] += 1;
+  const entries = [...ledger.entries, observation].slice(-maxEntries);
   const totals = {
     observed: ledger.totals.observed + 1,
     fresh: ledger.totals.fresh + (state === "fresh" ? 1 : 0),
@@ -8221,13 +8475,21 @@ async function appendTrackBRouteAdvisoryObservationExclusive(input: {
     rungApplied:
       ledger.totals.rungApplied +
       (observation.applied === true && typeof observation.advisoryRungWalked === "string" ? 1 : 0),
+    // Run 107: ADDED BY HAND. This literal is explicitly enumerated and never spreads
+    // `ledger.totals`, so a field omitted here is dropped on write no matter what was loaded.
+    fallbackReasons,
+    fallbackReasonsUnattributed: unattributed,
+    origins,
+    originsUnattributed,
   };
   const next = {
+    // The schema is deliberately NOT bumped: both readers drop a ledger whose schemaVersion
+    // differs, so a v2 bump would zero the live 827-row ledger instead of upgrading it.
     schemaVersion: TRACK_B_ROUTE_ADVISORY_OBSERVATION_LEDGER_SCHEMA,
     revision: ledger.revision + 1,
     updatedAtMs: Date.now(),
     totals,
-    entries: [...ledger.entries, observation].slice(-maxEntries),
+    entries,
   };
   await mkdir(path.dirname(input.filePath), { recursive: true });
   const temporary = `${input.filePath}.${process.pid}.${randomBytes(6).toString("hex")}.tmp`;
@@ -8236,7 +8498,9 @@ async function appendTrackBRouteAdvisoryObservationExclusive(input: {
   return next;
 }
 
-const TRACK_B_EFFORT_SOURCES = new Set<RuntimeEffortSource>([
+// The occurrence/telemetry effort-source vocabulary. A persisted observation carries
+// `none` for a null reasoning effort and `client`/`variant`/`variant_coerced` for a named effort.
+const TRACK_B_EFFORT_SOURCES = new Set<RuntimeEffortSourceValue>([
   "none",
   "client",
   "variant",
@@ -8280,13 +8544,15 @@ function normalizeTrackBVariantIdentity(
   const effortSource = observation.effortSource;
   if (
     typeof effortSource !== "string" ||
-    !TRACK_B_EFFORT_SOURCES.has(effortSource as RuntimeEffortSource)
+    !TRACK_B_EFFORT_SOURCES.has(effortSource as RuntimeEffortSourceValue)
   ) {
     throw new Error("persisted observation effort identity effortSource is invalid");
   }
+  const namedLikeSource =
+    effortSource === "client" || effortSource === "variant" || effortSource === "variant_coerced";
   if (
-    (reasoningEffort === null && effortSource !== "none") ||
-    (reasoningEffort !== null && effortSource === "none")
+    (reasoningEffort === null && namedLikeSource) ||
+    (reasoningEffort !== null && !namedLikeSource)
   ) {
     throw new Error("persisted observation effort identity effort/source pair is inconsistent");
   }
@@ -8305,7 +8571,7 @@ function normalizeTrackBVariantIdentity(
     endpointId,
     modelId,
     reasoningEffort: reasoningEffort as string | null,
-    effortSource: effortSource as RuntimeEffortSource,
+    effortSource: effortSource as RuntimeEffortSourceValue,
   };
 }
 
@@ -8885,8 +9151,9 @@ export async function runTrackBShadowPipeline(
       firstCounterfactual.endpointId,
       "counterfactual candidate",
     ),
-    // Run 104 R9 (post-closeout): the arm-effort dimension travels with the comparison identity, so
-    // Evaluation Core's arm_effort_mismatch exclusion can fire on a live comparison.
+    // Run 104 R9 (post-closeout): the arm-effort dimension travels with the comparison identity, so a
+    // receipt can answer "was this comparison effort-confounded?". Run 106: it is recorded, not gating -
+    // an arm at a different effort than the source no longer costs the comparison its eligibility.
     effortComparability: classifyReplayArmEffort({
       arms: counterfactualRollouts.map((arm) => ({
         endpointId: typeof arm.endpointId === "string" ? arm.endpointId : "",
@@ -10774,6 +11041,9 @@ export async function runTrackBShadowPipeline(
           requestId: input.requestId,
           channel: input.channel,
           scope: input.scope,
+          // Run 108 follow-up: the learning pass is a stage of THIS runtime scope, so its
+          // per-family counter is recorded into the registry the runtime created.
+          ...(input.observabilityScope ? { observabilityScope: input.observabilityScope } : {}),
           authorizationEpoch: input.authorizationEpoch,
           ...(typeof input.taskTypeId === "string" && input.taskTypeId.trim()
             ? { taskTypeId: input.taskTypeId.trim() }
@@ -11351,6 +11621,13 @@ export async function runTrackBPostObservation(
     readonly expectedReleaseId?: string;
     readonly run88Correlation?: Record<string, unknown>;
     /**
+     * Run 108 follow-up: the metric registry of the runtime scope this observation belongs to. The
+     * shadow pipeline this post-observation runs is a stage of that scope, so the scope travels here
+     * and on into runTrackBShadowPipeline. Omitted, the pipeline records no router-decision
+     * observation rather than leaking into Effect's process-global default Map.
+     */
+    readonly observabilityScope?: ObservabilityScope;
+    /**
      * R3: the counterfactual candidate set comes from the running registry, not
      * from the capture's frozen decision snapshot (which is provenance only). The
      * host passes the configured endpoint ids so a real request with at least one
@@ -11747,6 +12024,9 @@ export async function runTrackBPostObservation(
           requestId,
           channel: input.channel,
           scope: input.scope,
+          // Run 108 follow-up: this pipeline is a stage of the runtime scope the post-observation
+          // was handed, so its metrics land in that scope's registry.
+          ...(input.observabilityScope ? { observabilityScope: input.observabilityScope } : {}),
           authorizationEpoch: input.authorizationEpoch,
           // Run 99 R33: the capture carries the request's task family (addendum 19 S33), so the
           // comparison, the learned candidate and the promoted pack are all family-scoped.
@@ -11962,6 +12242,8 @@ export async function runTrackBPostObservationWithContribution(
     readonly authorizationEpoch: number;
     readonly expectedReleaseId?: string;
     readonly run88Correlation?: Record<string, unknown>;
+    /** Run 108 follow-up: forwarded verbatim to `runTrackBPostObservation`. */
+    readonly observabilityScope?: ObservabilityScope;
     /** Addendum 58 §18: see `runTrackBPostObservation` — required to resolve externalized business answers. */
     readonly contractStateRoot?: string;
   },
