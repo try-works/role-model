@@ -147,7 +147,9 @@ test("run103 the missing-key refusal names every candidate path it tried", async
     } catch (error) {
       message = error instanceof Error ? error.message : String(error);
     }
-    expect(message).toMatch(/managed artifact digest key not found for the durable evaluation authority/);
+    expect(message).toMatch(
+      /managed artifact digest key not found for the durable evaluation authority/,
+    );
     // Every candidate, in full, so the reader can see exactly where the key was looked for.
     expect(message).toContain(path.join(root, "managed-keys", "artifact-digest.key"));
     expect(

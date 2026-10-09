@@ -525,7 +525,11 @@ describe("advisory disclosure", () => {
      */
     expect(
       advisoryOriginSplit(
-        { observed: 6000, origins: { live: 3000, shadow: 2990, other: 0 }, originsUnattributed: 10 },
+        {
+          observed: 6000,
+          origins: { live: 3000, shadow: 2990, other: 0 },
+          originsUnattributed: 10,
+        },
         null,
       ),
     ).toEqual({
@@ -670,7 +674,9 @@ describe("advisoryRefusalView", () => {
     });
     // Codes the table DOES know are bucketed, whichever concept carried them.
     expect(advisoryRefusalView({ reason: "no active pack" }).kind).toBe("absent");
-    expect(advisoryRefusalView({ reason: "effective advisory policy unavailable" }).kind).toBe("fault");
+    expect(advisoryRefusalView({ reason: "effective advisory policy unavailable" }).kind).toBe(
+      "fault",
+    );
   });
 
   test("a row with nothing to refuse reads as none", () => {

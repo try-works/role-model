@@ -725,7 +725,8 @@ export function readLearningPolicyFile(input: {
     judgeMode: merged.judgeMode === "identity_blind" ? "identity_blind" : "identified",
     judgeOrderPolicy: merged.judgeOrderPolicy === "dual_order" ? "dual_order" : "source_first",
     maxCounterfactualArms:
-      typeof merged.maxCounterfactualArms === "number" && Number.isSafeInteger(merged.maxCounterfactualArms)
+      typeof merged.maxCounterfactualArms === "number" &&
+      Number.isSafeInteger(merged.maxCounterfactualArms)
         ? Math.min(8, Math.max(1, merged.maxCounterfactualArms))
         : DEFAULT_EFFECTIVE.maxCounterfactualArms,
     judgeOrderAggregation:
