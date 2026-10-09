@@ -1164,7 +1164,18 @@ export async function runAutoReplayTick(input: {
                     (endpointId) => endpointId !== focusNarrowingEndpointId,
                   ),
                 ]
-              : input.configuredEndpointIds,
+              : /**
+                 * Run 108 phase-03.5 repair (03.5-B T1-1): an EMPTY pool, not the whole configured
+                 * set. 21db5afe widened this branch, which turned a safe named refusal into a
+                 * DISPATCH: a focus rung absent from the configured set used to yield no candidates
+                 * and fail closed with no_distinct_candidate_configured, but it then planned arms
+                 * from the whole pool EXCLUDING the focus rung - a comparison whose first arm is an
+                 * arbitrary endpoint while the challenge and the round still name the focus rung.
+                 * The un-collapse above is what makes the configured focus case work; when the
+                 * focus rung is NOT configured there is nothing to narrow to, and refusing is the
+                 * only honest answer.
+                 */
+                [],
           }
         : { configuredEndpointIds: input.configuredEndpointIds }),
       ...(input.healthyEndpointIds ? { healthyEndpointIds: input.healthyEndpointIds } : {}),
