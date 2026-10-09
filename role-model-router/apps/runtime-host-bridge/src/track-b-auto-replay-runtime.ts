@@ -2274,6 +2274,15 @@ export function startAutoReplayLoop(input: {
       const sweepError = sweep.error;
       lastOutcome = sweepError ? "degraded" : "ok";
       lastError = sweepError;
+      /**
+       * Run 108 effect audit (P3): a degraded sweep was recorded IN MEMORY AND NOWHERE ELSE, so a
+       * degradation the status route could show was invisible on disk. Measured consequence: a
+       * "write EPIPE / stream was destroyed" tick degradation appeared on
+       * /api/role-model/track-b/replay/status and in ZERO log lines. The tick must degrade gracefully
+       * AND say so - the loop continues, the reason is durable. This mirrors the fatal tick-level
+       * catch below, which this file already logged while leaving this path silent.
+       */
+      if (sweepError) console.error(`[track-b-auto-replay] sweep degraded: ${sweepError}`);
       lastProcessedAtMs = now();
       lastDispositions = result.dispositions.length;
       return result;

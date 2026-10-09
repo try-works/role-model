@@ -190,8 +190,16 @@ export interface ObservabilityMetricReadback {
   readonly series: ReadonlyArray<ObservabilityMetricSeries>;
 }
 
-const asNumber = (value: unknown): number =>
-  typeof value === "number" && Number.isFinite(value) ? value : 0;
+/**
+ * Run 108 effect audit (P5): canon types counter and gauge state as `number | bigint` (vendor/effect
+ * Metric.ts CounterState/GaugeState), so a bigint series was read as 0 - a FABRICATED value of the same
+ * class as the counter-only cast F2 fixed. Bigints convert faithfully; anything that is not a finite
+ * number still answers 0 rather than inventing one.
+ */
+const asNumber = (value: unknown): number => {
+  if (typeof value === "bigint") return Number(value);
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+};
 
 const asBuckets = (value: unknown): ReadonlyArray<readonly [number, number]> =>
   Array.isArray(value)
