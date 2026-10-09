@@ -52,4 +52,33 @@ describe("run104 R6 Recent decisions task family", () => {
     });
     expect(markup).toContain("variant audit");
   });
+
+  /**
+   * Run 108 addendum 03 (`A03-B`, operator-reported): the live panel printed `not reported` for a row whose
+   * comparison group already carried `comparability.taskTypeId: "coder.edit"`, and the host readback now
+   * republishes the joined receipt's family as the additive `evidence.family`. The row below declares no
+   * `classification`, no `requestTaskTypeId` and no `taskTypeId` - the live shape - so the only family it
+   * has is the one the readback published, and that is what must render.
+   */
+  test("renders the family the readback published when the row declares none of its own", () => {
+    const row = {
+      decisionId: "decision-req-108-a03",
+      taskTypeId: null,
+      requestTaskTypeId: null,
+      roleId: null,
+      taxonomyVersion: null,
+      evidence: {
+        counts: null,
+        countsState: "receipt_carries_none",
+        family: { taskTypeId: "coder.edit", roleId: "coder", taxonomyVersion: "1.0.0-alpha.1" },
+      },
+    };
+    const cell = learningTaskCell(row);
+    expect(cell.task).toBe("coder.edit");
+    expect(cell.scope).toBe("coder · taxonomy 1.0.0-alpha.1");
+
+    const markup = markupFor(row);
+    expect(markup).toContain("coder.edit");
+    expect(markup).toContain("coder · taxonomy 1.0.0-alpha.1");
+  });
 });

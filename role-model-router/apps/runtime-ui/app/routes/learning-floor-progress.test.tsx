@@ -20,7 +20,9 @@ import {
  */
 
 const NOT_REPORTED = "not reported";
-const RECEIPT_CARRIES_NO_COUNTS = "the receipt carries no comparison counts";
+/** Run 108 addendum 03 (`A03-C`): the two honest halves of the old single `receipt_carries_none` sentence. */
+const NO_TASK_FAMILY_RECORDED = "no task family was recorded for this comparison";
+const noCountsForFamily = (family: string) => `no comparison counts for ${family}`;
 
 const rowFixture = (evidence: Record<string, unknown>) => ({
   decisionId: "decision-req-sp5",
@@ -70,8 +72,8 @@ describe("run104 sp5 r7: the decision row renders progress against the published
     expect(markup).not.toContain("/ 0");
   });
 
-  test("a receipt that carries no counts keeps saying so", () => {
-    const markup = renderToStaticMarkup(
+  test("a receipt that carries no counts says so, and says which family it has none for", () => {
+    const noFamily = renderToStaticMarkup(
       <LearningDecisionRow
         receipt
         row={rowFixture({
@@ -84,8 +86,30 @@ describe("run104 sp5 r7: the decision row renders progress against the published
         })}
       />,
     );
-    expect(markup).toContain(RECEIPT_CARRIES_NO_COUNTS);
-    expect(markup).not.toContain("decisive /");
+    expect(noFamily).toContain(NO_TASK_FAMILY_RECORDED);
+    expect(noFamily).not.toContain("decisive /");
+
+    /**
+     * Run 108 addendum 03 (`A03-C`): the same row with a family the readback published names it, because
+     * the operator's question is *what* has no counts - and the answer is not the receipt's to give.
+     */
+    const named = renderToStaticMarkup(
+      <LearningDecisionRow
+        receipt
+        row={rowFixture({
+          verdict: "insufficient_evidence",
+          counts: null,
+          effectiveCounts: null,
+          floor: null,
+          floorState: "receipt_carries_none",
+          countsState: "receipt_carries_none",
+          family: { taskTypeId: "coder.edit", roleId: "coder", taxonomyVersion: "1.0.0-alpha.1" },
+        })}
+      />,
+    );
+    expect(named).toContain(noCountsForFamily("coder.edit"));
+    expect(named).not.toContain(NO_TASK_FAMILY_RECORDED);
+    expect(named).not.toContain("decisive /");
   });
 });
 

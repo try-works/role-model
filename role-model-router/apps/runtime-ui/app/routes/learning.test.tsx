@@ -1010,9 +1010,25 @@ describe("run101 addendum 49", () => {
         countsState: "receipt_carries_none",
       },
     };
-    const absent = renderToStaticMarkup(<LearningDecisionRow receipt row={carriesNone} />);
-    expect(absent).toContain("the receipt carries no comparison counts");
-    expect(absent).not.toContain("dec ·");
+    /*
+     * Run 108 addendum 03 (`A03-C`, the operator's actual complaint): `receipt_carries_none` has two causes
+     * and one sentence used to state both, blaming the receipt for a gap that is often upstream. A row that
+     * knows a family names it, so the operator can see WHAT has no counts; a row that knows none says the
+     * family was never recorded. Neither state invents a zero.
+     */
+    const named = renderToStaticMarkup(<LearningDecisionRow receipt row={carriesNone} />);
+    expect(named).toContain("no comparison counts for coder.review");
+    expect(named).not.toContain("no task family was recorded");
+    expect(named).not.toContain("dec ·");
+
+    const noFamily = renderToStaticMarkup(
+      <LearningDecisionRow
+        receipt
+        row={{ ...carriesNone, requestTaskTypeId: null, classification: null, taskTypeId: null }}
+      />,
+    );
+    expect(noFamily).toContain("no task family was recorded for this comparison");
+    expect(noFamily).not.toContain("no comparison counts for");
 
     // The pack's claim cell states the same reason in place of its Δ line when no delta was recorded either.
     const pack = renderToStaticMarkup(
@@ -1025,7 +1041,7 @@ describe("run101 addendum 49", () => {
         }}
       />,
     );
-    expect(pack).toContain("the receipt carries no comparison counts");
+    expect(pack).toContain("no comparison counts for coder.explain");
   });
 });
 

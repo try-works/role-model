@@ -201,8 +201,25 @@ const NOT_REPORTED = "not reported";
 /**
  * Run 101 addendum 49 `A49-R5`: a joined validation receipt that carries no `familyEvidence` states that as the
  * reason its counts are absent, so a receipt with no counts stops rendering identically to a value nobody recorded.
+ *
+ * Run 108 addendum 03 (`A03-C`, the operator's actual complaint): that one sentence had two causes and blamed the
+ * receipt for both. Measured live, the family is frequently lost UPSTREAM of the receipt - the comparison's
+ * `comparability` knows it while the receipt never received it - so "the receipt carries no comparison counts"
+ * never said *what* had no counts. The absence now states itself in two honest halves: the family it has no counts
+ * for when the row knows one, and the fact that no family was recorded at all when it does not. Neither half
+ * fabricates a zero, and neither blames the receipt for a gap that is not the receipt's.
  */
-const RECEIPT_CARRIES_NO_COUNTS = "the receipt carries no comparison counts";
+const NO_TASK_FAMILY_RECORDED = "no task family was recorded for this comparison";
+const noCountsForFamily = (family: string) => `no comparison counts for ${family}`;
+
+/**
+ * Run 108 addendum 03 (`A03-C`): which half of the split applies. `family` is the task family the row itself
+ * renders (`learningTaskCell(row).task`), so the Evidence cell and the `Role · task` cell always name the same
+ * family rather than showing one family in one column and a different one in the next.
+ */
+export function learningCountsAbsenceNote(family: string | null): string {
+  return family === null ? NO_TASK_FAMILY_RECORDED : noCountsForFamily(family);
+}
 /** `R7`: said out loud rather than rendering a zero the runtime never published. */
 const FLOOR_NOT_REPORTED = "floor not reported";
 
@@ -391,7 +408,19 @@ export function formatLearningFloorProgress(
 export function learningEvidence(row: Record<string, unknown>): LearningEvidenceView {
   const evidence = asRecord(row.evidence);
   const record = asRecord(row.record);
-  const family = { ...asRecord(record.familyEvidence), ...asRecord(row.familyEvidence) };
+  /**
+   * Run 108 addendum 03 (`A03-B`): the readback republishes the joined receipt's family as
+   * `evidence.family`, and it is a FALLBACK rather than a replacement - a row that already carries its own
+   * `familyEvidence`, on the row or in its `record`, still wins, and a readback that publishes no
+   * `evidence.family` renders exactly what it rendered before. A receipt's family records `taskTypeId` and
+   * `taxonomyVersion` but no `roleId`, so that member stays absent instead of being guessed.
+   */
+  const publishedFamily = asRecord(evidence.family);
+  const family = {
+    ...publishedFamily,
+    ...asRecord(record.familyEvidence),
+    ...asRecord(row.familyEvidence),
+  };
   const judgeConsistency = asRecord(family.judgeConsistency);
   const counts = asRecord(evidence.counts);
   const effectiveCounts = asRecord(evidence.effectiveCounts);
@@ -473,12 +502,27 @@ export interface LearningTaskCellView {
 /** `Role · task`: the classified task, the role and taxonomy it was classified against, and the request family. */
 export function learningTaskCell(row: Record<string, unknown>): LearningTaskCellView {
   const classification = asRecord(row.classification);
+  /**
+   * Run 108 addendum 03 (`A03-B`, operator-reported): the live panel printed `not reported` in this cell for a
+   * row whose comparison group already carried `comparability.taskTypeId: "coder.edit"`. The readback now
+   * publishes the joined receipt's family as `evidence.family`, and it is the LAST fallback for the task, the
+   * role and the taxonomy: a row that declares its own family keeps it, and a readback that publishes no
+   * `evidence.family` renders exactly what it rendered before.
+   */
+  const publishedFamily = asRecord(asRecord(row.evidence).family);
   const task =
     textOrNull(classification.taskTypeId) ??
     textOrNull(row.requestTaskTypeId) ??
-    textOrNull(row.taskTypeId);
-  const roleId = textOrNull(classification.roleId) ?? textOrNull(row.roleId);
-  const taxonomy = textOrNull(classification.taxonomyVersion) ?? textOrNull(row.taxonomyVersion);
+    textOrNull(row.taskTypeId) ??
+    textOrNull(publishedFamily.taskTypeId);
+  const roleId =
+    textOrNull(classification.roleId) ??
+    textOrNull(row.roleId) ??
+    textOrNull(publishedFamily.roleId);
+  const taxonomy =
+    textOrNull(classification.taxonomyVersion) ??
+    textOrNull(row.taxonomyVersion) ??
+    textOrNull(publishedFamily.taxonomyVersion);
   const toolClasses =
     Array.isArray(row.toolClassIds) && row.toolClassIds.length > 0
       ? row.toolClassIds.map((entry) => textOrNull(entry) ?? NOT_REPORTED).join(", ")
@@ -698,9 +742,9 @@ export function LearningDecisionRow({
             {`${evidence.decisive ?? NOT_REPORTED} dec · ${evidence.holdout ?? NOT_REPORTED} holdout`}
           </p>
         ) : evidence.countsState === "receipt_carries_none" ? (
-          /* `A49-R5`: the joined receipt carries no comparison counts, and the cell says that rather than
-             leaving the absence unexplained. */
-          <p className={tableCellMetaClassName}>{RECEIPT_CARRIES_NO_COUNTS}</p>
+          /* `A03-C`: the joined receipt carries no counts; the cell says which family that is for, or that no
+             family was recorded at all, instead of blaming the receipt for an upstream gap. */
+          <p className={tableCellMetaClassName}>{learningCountsAbsenceNote(task.task)}</p>
         ) : evidence.qualityDelta === null ? (
           <p className={tableCellMetaClassName}>{NOT_REPORTED}</p>
         ) : null}
@@ -879,7 +923,11 @@ export function LearningPackRow({
             {`Δ ${evidence.qualityDelta} over baseline`}
           </p>
         ) : evidence.countsState === "receipt_carries_none" ? (
-          <p className={`mt-0.5 ${tableCellMetaClassName}`}>{RECEIPT_CARRIES_NO_COUNTS}</p>
+          /* `A03-C`: the same split as the decision row, named from the scope the pack resolves (the readback's
+             own resolved scope first, then the receipt family the readback republished). */
+          <p className={`mt-0.5 ${tableCellMetaClassName}`}>
+            {learningCountsAbsenceNote(taskTypeId ?? learningTaskCell(row).task)}
+          </p>
         ) : (
           <p className={`mt-0.5 ${tableCellMetaClassName}`}>{NOT_REPORTED}</p>
         )}
