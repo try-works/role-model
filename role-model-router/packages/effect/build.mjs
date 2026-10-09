@@ -30,73 +30,17 @@ import path from "node:path";
  * a vendored tree, so it has no basis for certifying any generated file pure.
  */
 import { build } from "esbuild";
+import { assembleEntries, discoverEffectSubpaths, vendored } from "./entries.mjs";
 
 const here = import.meta.dirname;
 const repoRoot = path.resolve(here, "..", "..", "..");
-const vendored = path.join(repoRoot, "vendor", "effect", "packages", "effect", "src");
 
-async function listSourceFiles(root) {
-  const out = [];
-  for (const entry of await readdir(root, { withFileTypes: true })) {
-    const entryPath = path.join(root, entry.name);
-    if (entry.isDirectory()) {
-      out.push(...(await listSourceFiles(entryPath)));
-    } else if (entry.name.endsWith(".ts")) {
-      out.push(entryPath);
-    }
-  }
-  return out;
-}
-
-async function discoverEffectSubpaths() {
-  const searchRoots = [
-    vendored,
-    path.join(repoRoot, "vendor", "effect-mq", "packages", "effect-mq", "src"),
-    path.join(repoRoot, "vendor", "effect", "packages", "sql", "sqlite-node", "src"),
-  ];
-  const subpaths = new Set();
-  for (const root of searchRoots) {
-    for (const file of await listSourceFiles(root)) {
-      const source = await readFile(file, "utf8");
-      for (const match of source.matchAll(/["']effect\/([^"']+)["']/g)) {
-        subpaths.add(match[1].replace(/\.ts$/, "").replace(/\/index$/, ""));
-      }
-    }
-  }
-  const withAncestors = new Set(subpaths);
-  for (const subpath of subpaths) {
-    const segments = subpath.split("/");
-    while (segments.length > 1) {
-      segments.pop();
-      withAncestors.add(segments.join("/"));
-    }
-  }
-  return [...withAncestors].sort();
-}
-
-async function resolveEntry(subpath) {
-  const candidate = path.join(vendored, ...subpath.split("/"));
-  for (const file of [`${candidate}.ts`, path.join(candidate, "index.ts")]) {
-    try {
-      await readFile(file);
-      return file;
-    } catch {
-      // keep looking
-    }
-  }
-  // Some `effect/...` strings are internal ids the reachable entries resolve
-  // themselves; skipping them is safe because esbuild fails the build below if
-  // a published entry actually needs one.
-  return undefined;
-}
-
-const subpaths = await discoverEffectSubpaths();
-const entries = { index: path.join(vendored, "index.ts") };
-for (const subpath of subpaths) {
-  const resolved = await resolveEntry(subpath);
-  if (!resolved) continue;
-  entries[subpath] = resolved;
-}
+/**
+ * Entry discovery and resolution live in `entries.mjs` so the resolution rule
+ * (notably its case-sensitivity contract) can be pinned by a test that does not
+ * have to run the build.
+ */
+const { entries, published, rekeyed } = await assembleEntries(await discoverEffectSubpaths());
 
 /**
  * The published subpaths are discovered from the vendored tree, so a stale
@@ -141,8 +85,12 @@ await mkdir(typesDir, { recursive: true });
  * would drag optional peers (for example the AI and CLI trees) into the
  * declaration program, which `--noCheck` still has to resolve.
  */
-const declarationEntries = Object.entries(entries).filter(
-  ([subpath]) =>
+const declarationEntries = Object.entries(entries).filter(([key]) => {
+  // Filter on the published subpath, not on the output name: a case-insensitive
+  // collision is re-keyed to the entry's vendored-relative path (see entries.mjs),
+  // and that re-keying must not drop the subpath from declaration emit.
+  const subpath = published.get(key) ?? key;
+  return (
     !subpath.includes("/") ||
     subpath === "index" ||
     subpath === "persistence" ||
@@ -150,8 +98,9 @@ const declarationEntries = Object.entries(entries).filter(
     subpath === "sql" ||
     subpath.startsWith("sql/") ||
     subpath === "reactivity" ||
-    subpath.startsWith("reactivity/"),
-);
+    subpath.startsWith("reactivity/")
+  );
+});
 const declarationEntryFiles = declarationEntries.map(([, file]) => file);
 try {
   execFileSync(
@@ -230,6 +179,7 @@ console.log(
     status: "PASS",
     package: "effect",
     entries: Object.keys(entries).sort(),
+    rekeyed,
     types: typesDir,
   }),
 );

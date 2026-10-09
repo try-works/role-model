@@ -11,6 +11,11 @@
       "runtime": "./dist/index.js",
       "default": "./dist/index.js"
     },
+    "./schema": {
+      "types": "./dist/types/schema/index.d.ts",
+      "runtime": "./dist/schema/index.js",
+      "default": "./dist/schema/index.js"
+    },
     "./*": {
       "types": "./dist/types/*.d.ts",
       "runtime": "./dist/*.js",
