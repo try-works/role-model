@@ -836,10 +836,6 @@ describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
     const autoReplay = source("../src/track-b-auto-replay-runtime.ts");
     expect(autoReplay).toContain("recordQueueDepths(");
     expect(autoReplay).not.toContain("recordAdmissionFloor(met)");
-    // Run 108 addendum-04: the POSITIVE half matters as much as the negative one - without it,
-    // deleting the cli.ts loop would leave this suite green (the M4 class: a pin that cannot fail).
-    expect(cli).toContain("admissionFloorVerdictOf(");
-    expect(cli).toContain("recordAdmissionFloor(");
     // Run 108 addendum-04: the emit was re-sited to the materialization outcome in cli.ts, so the
     // wiring pin follows it there instead of asserting it still lives in the auto-replay sweep.
     expect(
@@ -849,6 +845,12 @@ describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
       }),
     ).toBe(false);
     const cli = source("../src/cli.ts");
+    // Run 108 addendum-04: the POSITIVE half matters as much as the negative one - without it,
+    // deleting the cli.ts loop would leave this suite green (the M4 class: a pin that cannot fail).
+    // These must sit BELOW the declaration above; placing them with the autoReplay assertions put
+    // `cli` in its temporal dead zone and reddened the suite (my own error, caught by a verifier).
+    expect(cli).toContain("admissionFloorVerdictOf(");
+    expect(cli).toContain("recordAdmissionFloor(");
     expect(cli).toContain("recordArmPlan(");
     // Run 108 follow-up: the rung count must reach the recorder THROUGH the reader that owns the
     // outcome-entry shape, or the emit silently measures nothing again.
