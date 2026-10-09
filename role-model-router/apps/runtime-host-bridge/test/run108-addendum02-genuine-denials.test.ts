@@ -152,12 +152,7 @@ test("Run108 addendum-02: offline, revoked and providerUnavailable arms still de
   const unavailable = candidate("endpoint.unavailable", "remote_openai_compat", {
     runtimeEligibility: { providerUnavailable: true },
   });
-  const decision = route({}, [
-    OPENAI,
-    offline,
-    revoked,
-    unavailable,
-  ]);
+  const decision = route({}, [OPENAI, offline, revoked, unavailable]);
   expect(denialCodes(decision, offline.identity.endpoint_id)).toContain("PROVIDER_OFFLINE");
   expect(denialCodes(decision, revoked.identity.endpoint_id)).toContain("REVOKED");
   expect(denialCodes(decision, unavailable.identity.endpoint_id)).toContain("PROVIDER_OFFLINE");
@@ -200,7 +195,13 @@ test("Run108 addendum-02: the widened focus plan still drops an arm the runtime 
     const unreachable = livePool[1] as string;
     let planned: readonly string[] = [];
     await runAutoReplayTick({
-      captures: [{ captureRef: "req-108-a02-denials", sourceEndpointId: source, hasRecordedToolResults: true }],
+      captures: [
+        {
+          captureRef: "req-108-a02-denials",
+          sourceEndpointId: source,
+          hasRecordedToolResults: true,
+        },
+      ],
       configuredEndpointIds: livePool,
       healthyEndpointIds: livePool.filter((endpointId) => endpointId !== unreachable),
       judgeEndpointId: judge,
