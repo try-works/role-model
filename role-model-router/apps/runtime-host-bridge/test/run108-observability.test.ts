@@ -20,6 +20,7 @@ import {
   collectObservabilitySnapshot,
   createFamilyAttributeCollapser,
   evalFinaliseRefusals,
+  admissionFloorVerdictOf,
   ladderRungCountOf,
   learnerDerivations,
   recordAdmissionFloor,
@@ -834,7 +835,10 @@ describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
     const source = (relative: string) => readFileSync(new URL(relative, import.meta.url), "utf8");
     const autoReplay = source("../src/track-b-auto-replay-runtime.ts");
     expect(autoReplay).toContain("recordQueueDepths(");
-    expect(autoReplay).toContain("recordAdmissionFloor(");
+    expect(autoReplay).not.toContain("recordAdmissionFloor(met)");
+  // Run 108 addendum-04: the emit was re-sited to the materialization outcome in cli.ts, so the
+  // wiring pin follows it there instead of asserting it still lives in the auto-replay sweep.
+  expect(admissionFloorVerdictOf({ status: "insufficient_evidence", ladder: { completeness: { admitted: 0 } } })).toBe(false);
     const cli = source("../src/cli.ts");
     expect(cli).toContain("recordArmPlan(");
     // Run 108 follow-up: the rung count must reach the recorder THROUGH the reader that owns the
@@ -843,5 +847,39 @@ describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
     expect(cli).toContain("recordLadderRungs(");
     expect(cli).toContain("recordLearnerFamilyEvidence(");
     expect(source("../src/track-b-learning-pass.ts")).toContain("recordLearnerFamilyEvidence(");
+  });
+});
+
+describe("run108 addendum-04 - the admission floor is counted at the MATERIALIZATION outcome", () => {
+  test("counts the PERSISTED row verdict, and the refusal case is reachable", () => {
+    // "written" with a full admitted count, and the steady-state "unchanged" row - both passed the floor.
+    expect(
+      admissionFloorVerdictOf({ status: "written", ladder: { completeness: { admitted: 8, configured: 12 } } }),
+    ).toBe(true);
+    expect(admissionFloorVerdictOf({ status: "unchanged", ladder: { completeness: { admitted: 7 } } })).toBe(true);
+    // THE case the old in-flight-challenge emit could never reach: a row the floor REFUSED.
+    expect(
+      admissionFloorVerdictOf({
+        status: "insufficient_evidence",
+        ladder: { completeness: { admitted: 0, configured: 12 } },
+      }),
+    ).toBe(false);
+  });
+
+  test("skips rows that carry no admitted count rather than inventing a refusal", () => {
+    expect(admissionFloorVerdictOf({ status: "written", ladder: { rungs: [{}, {}] } })).toBeNull();
+    expect(admissionFloorVerdictOf({ status: "refused" })).toBeNull();
+    expect(admissionFloorVerdictOf(null)).toBeNull();
+    expect(admissionFloorVerdictOf("nonsense")).toBeNull();
+  });
+
+  test("the persisted row WINS over a value carried beside it", () => {
+    expect(
+      admissionFloorVerdictOf({
+        status: "written",
+        completeness: { admitted: 0 },
+        ladder: { completeness: { admitted: 5 } },
+      }),
+    ).toBe(true);
   });
 });

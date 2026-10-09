@@ -509,9 +509,11 @@ function resolveChannelScopedReplayLedgerLimits(input: {
 }
 import { createFinalizedGroupListingCache } from "./finalized-group-listing-cache.js";
 import {
+  admissionFloorVerdictOf,
   ladderRungCountOf,
   recordArmPlan,
   recordFinaliseRefusal,
+  recordAdmissionFloor,
   recordLadderRungs,
   recordLearnerFamilyEvidence,
   recordReplayAdmission,
@@ -6796,6 +6798,16 @@ export async function main(): Promise<void> {
                     continue;
                   const rungs = ladderRungCountOf(entry);
                   if (rungs !== null) recordLadderRungs(rungs);
+                }
+
+                /**
+                 * Run 108 addendum-04: the admission-floor verdict, at the same materialization-outcome
+                 * seam and for EVERY entry that carries an admitted count - not only the "written" ones,
+                 * because "unchanged" is the steady state and "insufficient_evidence" is the refusal.
+                 */
+                for (const entry of ladders) {
+                  const admitted = admissionFloorVerdictOf(entry);
+                  if (admitted !== null) recordAdmissionFloor(admitted);
                 }
                 if (written > 0)
                   console.error(`[run105] ladder materialization wrote ${written} ladder row(s)`);

@@ -1,6 +1,5 @@
 import { createHash } from "node:crypto";
 import {
-  recordAdmissionFloor,
   recordLearnerDerivation,
   recordQueueDepths,
   withStageSpan,
@@ -1585,19 +1584,21 @@ export function startAutoReplayLoop(input: {
                 break;
               }
             }
+            /**
+             * Run 108 addendum-04: the admission-floor VERDICT measured here (one challenger, in this
+             * challenge window) is used to decide whether the challenge is done - see `done: placed && met`.
+             * The METRIC is deliberately NOT recorded from this value any more: it is emitted at the
+             * materialization outcome in cli.ts from the verdict of the ladder that was actually
+             * persisted. Recording it here measured a time-boxed, single-challenger, refusal-biased
+             * sample of in-flight challenges (seven materializations produced one admitted=false sample
+             * and never an admitted=true), which is not the ladder admission floor the metric declares.
+             */
             const floor = input.routeLearningDefaults?.minComparisons ?? 5;
             const confidence = input.routeLearningDefaults?.minConfidence ?? 0.7;
             const met =
               groups.length >= floor &&
               groups.reduce((sum, record) => sum + record.endpointConfidence, 0) / groups.length >=
                 confidence;
-            /**
-             * Run 108 phase-03 F5 (R7 admission floor): the ladder admission-floor verdict, counted
-             * where the dispatcher already computes it - K effort-comparable comparisons at a mean
-             * confidence at or above the configured minimum. Both verdicts are recorded, so the
-             * admitted series and the refused series form one rate.
-             */
-            recordAdmissionFloor(met);
             const pendingSatisfied = groups.some(
               (record) => record.captureRef === active?.pendingCaptureRef,
             );

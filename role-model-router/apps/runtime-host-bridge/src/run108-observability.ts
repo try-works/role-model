@@ -476,7 +476,9 @@ export function recordArmPlan(armCount: number): void {
  * Run 108 phase-03 F5 (R7 "Metrics"): the ladder admission floor.
  *
  * The floor is the rule that decides whether a (role, task) ladder has admitted enough evidence to
- * go active - K finalized effort-comparable comparisons at a mean confidence at or above the
+ * go active. Measured at the MATERIALIZATION OUTCOME (cli.ts, beside the rung count), so the verdict
+ * counted is the one of the ladder that was actually persisted - addendum-04 moved it here from the
+ * in-flight-challenge block, which could only ever see a refusal-biased sample - K finalized effort-comparable comparisons at a mean confidence at or above the
  * product-defaults minimum. It is a RATE, so the counter updates by 1 on every evaluation and the
  * verdict rides the tag: { admitted: "true" | "false" } are the numerator and the denominator of
  * the same measurement, and a refusal is its own visible series.
@@ -493,6 +495,33 @@ export function recordAdmissionFloor(admitted: boolean): void {
       1,
     ),
   );
+}
+
+/**
+ * Run 108 addendum-04: the admission verdict of a MATERIALIZED ladder row.
+ *
+ * Reads the admitted count off the PERSISTED row the outcome carries, so the metric counts the
+ * verdict of the ladder that was actually written - never a value reconstructed beside it (the F5
+ * lesson). A row with no numeric admitted count measures nothing and answers null, so the caller
+ * skips it rather than inventing a refusal.
+ *
+ * Deliberately NOT restricted to status === "written": the steady-state "unchanged" rows and the
+ * "insufficient_evidence" rows - which IS the admitted === false case - are exactly what a rate
+ * needs, and the old emit only ever saw the refusal-biased in-flight-challenge sample.
+ */
+export function admissionFloorVerdictOf(entry: unknown): boolean | null {
+  if (!entry || typeof entry !== "object") return null;
+  const persisted = admittedCountOf((entry as { ladder?: unknown }).ladder);
+  const value = persisted ?? admittedCountOf(entry);
+  return value === null ? null : value > 0;
+}
+
+function admittedCountOf(row: unknown): number | null {
+  if (!row || typeof row !== "object") return null;
+  const completeness = (row as { completeness?: unknown }).completeness;
+  if (!completeness || typeof completeness !== "object") return null;
+  const admitted = (completeness as { admitted?: unknown }).admitted;
+  return typeof admitted === "number" && Number.isFinite(admitted) ? admitted : null;
 }
 
 /**
