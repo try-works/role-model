@@ -99,7 +99,11 @@ test("run97 auto loop survives executor failure and reports it without throwing"
 test("run97 auto loop never overlaps ticks and stops cleanly", async () => {
   const { ledger, cleanup } = harness();
   try {
-    let release: (() => void) | null = null;
+    let release!: () => void;
+    let entered!: () => void;
+    const started = new Promise<void>((resolve) => {
+      entered = resolve;
+    });
     const operations = fakeOperations(["req-1"]);
     const loop = startAutoReplayLoop({
       operations,
@@ -107,6 +111,7 @@ test("run97 auto loop never overlaps ticks and stops cleanly", async () => {
       policySet: buildReplayPolicySet(),
       configuredEndpointIds: ["endpoint-a", "endpoint-b"],
       executor: async () => {
+        entered();
         await new Promise<void>((resolve) => {
           release = resolve;
         });
@@ -121,7 +126,17 @@ test("run97 auto loop never overlaps ticks and stops cleanly", async () => {
     const first = loop.tick();
     const second = await loop.tick();
     expect(second.skipped).toBe(true);
-    release?.();
+    /**
+     * The release handle is armed INSIDE the executor, so it must be waited for, not assumed. It used to be
+     * read one microtask turn too early: the tick reaches its executor one turn after `loop.tick()` returns
+     * the skip, so `release?.()` ran while the handle was still undefined, did nothing, and the awaited
+     * `first` tick never settled - a 120 s run of this single case still hangs, so no timeout can fix it,
+     * and the loop was never at fault (with the handle armed the tick settles in ~ms). Awaiting the entry
+     * barrier makes the OVERLAP this test is named for deterministic instead of accidental: the second tick
+     * is still issued while the first is provably in flight, so `skipped` has to be a real refusal.
+     */
+    await started;
+    release();
     await first;
     loop.stop();
     expect(loop.health().ticks).toBe(1);

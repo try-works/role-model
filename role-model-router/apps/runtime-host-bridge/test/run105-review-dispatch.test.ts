@@ -131,6 +131,24 @@ function harness(batch = 1) {
       }),
   };
 }
+/**
+ * Run 108 addendum-02 (I2, the promotion floor) changed the shape of a FOCUS-NARROWED dispatch, and the
+ * expectations in this file were written against the shape it replaced.
+ *
+ * Before: the narrowing COLLAPSED the candidate pool to the single focus endpoint
+ * (`configuredEndpointIds: [focusNarrowingEndpointId]`), so every narrowed dispatch planned exactly one
+ * arm. After: the pool is [the focus arm, ...the remaining configured endpoints], and
+ * `selectReplayCandidates` decides the rest - it keeps that order (there is no rotationKey on a focus
+ * plan), drops the capture's own source, the effective judge, unhealthy endpoints and eligibility
+ * rejections, and bounds the plan at the arm bound (`maxCounterfactualArms`, default 3). The focus arm is
+ * therefore still FIRST and still decides; the arms after it are the non-deciding cases the declared
+ * `holdout`/`train` split needs (without them both cases were forced to `holdout`, the shadow pipeline's
+ * train-case rescue never fired, `developmentComparisons` read 0 in every receipt and `floorMet` was
+ * unreachable - the defect this run exists to close).
+ *
+ * The assertions below therefore name the NEW exact calls. They are not relaxed: each one still pins the
+ * full array, in order, so a dropped, reordered or extra arm fails.
+ */
 test("new endpoint records now and challenges future-idle ladder using the real rung source", async () => {
   const h = harness();
   await h.loop.tick();
@@ -139,7 +157,8 @@ test("new endpoint records now and challenges future-idle ladder using the real 
   h.census([task("idle", 10, 3, 4)]);
   await h.loop.tick();
   expect(h.marked).toContainEqual({ roleId: "role", taskTypeId: "idle", nextEligibleAtMs: 1000 });
-  expect(h.calls).toEqual([{ captureRef: "idle-a", source: "a", candidates: ["new"] }]);
+  // run108 addendum-02 (I2): focus arm FIRST and deciding, then the policy-bounded pool (file note above).
+  expect(h.calls).toEqual([{ captureRef: "idle-a", source: "a", candidates: ["new", "b", "c"] }]);
 });
 test("focus fill stays depth-first when another task becomes busier and gains a new endpoint", async () => {
   const h = harness();
@@ -165,7 +184,12 @@ test("terminal provider branches do not advance; finalized loss advances on next
   h.final("idle-a", "a");
   await h.loop.tick();
   expect(h.calls.map((x) => x.source)).toEqual(["a", "b"]);
-  expect(h.calls.every((x) => x.candidates.length === 1 && x.candidates[0] === "new")).toBe(true);
+  // run108 addendum-02 (I2): the focus arm stays first and decides; the appended policy-bounded arms follow
+  // it. Asserted as the exact per-call arrays rather than by length, so a dropped or reordered arm fails.
+  expect(h.calls.map((x) => x.candidates)).toEqual([
+    ["new", "b", "c"],
+    ["new", "a", "c"],
+  ]);
 });
 test("challengeBatchSize runs sequential finalized comparisons and bounds one dispatch", async () => {
   const h = harness(2);
@@ -307,7 +331,8 @@ test("queue offer holds one rung and claimed worker executes the same narrowed p
   expect(offered).toHaveLength(1);
   expect(h.calls).toEqual([]);
   await queueLoop.dispatchCapture("idle-a");
-  expect(h.calls).toEqual([{ captureRef: "idle-a", source: "a", candidates: ["new"] }]);
+  // run108 addendum-02 (I2): focus arm FIRST and deciding, then the policy-bounded pool (file note above).
+  expect(h.calls).toEqual([{ captureRef: "idle-a", source: "a", candidates: ["new", "b", "c"] }]);
 });
 test("finalization failure still settles the actual disposition write before tick returns", async () => {
   const h = harness();
@@ -346,7 +371,8 @@ test("expired complete ladder refreshes one pair and records a new window only a
   const h = harness(3);
   h.rows.set("idle", ladder(["a", "b", "c"], 999));
   await h.loop.tick();
-  expect(h.calls).toEqual([{ captureRef: "idle-a", source: "a", candidates: ["b"] }]);
+  // run108 addendum-02 (I2): focus arm FIRST and deciding, then the policy-bounded pool (file note above).
+  expect(h.calls).toEqual([{ captureRef: "idle-a", source: "a", candidates: ["b", "c"] }]);
   expect(h.marked).toEqual([]); // Terminal provider branches are not finalized evaluation.
   await h.loop.tick();
   expect(h.calls).toHaveLength(1);
@@ -375,7 +401,8 @@ test("removed endpoint stale completeness never fabricates an endpoint arrival c
   await h.loop.tick();
   expect(h.loop.health().challengeInFlight).toBe(false);
   expect(h.marked).toEqual([]);
-  expect(h.calls).toEqual([{ captureRef: "idle-a", source: "a", candidates: ["c"] }]);
+  // run108 addendum-02 (I2): focus arm FIRST and deciding, then the policy-bounded pool (file note above).
+  expect(h.calls).toEqual([{ captureRef: "idle-a", source: "a", candidates: ["c", "b"] }]);
 });
 test("multiple and later endpoint arrivals each start at the top after prior admission readback", async () => {
   const h = harness();
@@ -390,7 +417,13 @@ test("multiple and later endpoint arrivals each start at the top after prior adm
   h.pending([capture("idle", "new", "-later")]);
   h.settle((ref) => h.final(ref, "later"));
   await h.loop.tick();
-  expect(h.calls.map((x) => x.candidates)).toEqual([["new"], ["later"]]);
+  // run108 addendum-02 (I2): each arrival still STARTS AT THE TOP - candidates[0] is the focus arm this
+  // test is named for - and the appended pool follows it. The second plan is the cap binding: the pool
+  // after the source filter is ["later", "a", "b", "c"], and maxCounterfactualArms (3) keeps three.
+  expect(h.calls.map((x) => x.candidates)).toEqual([
+    ["new", "b", "c"],
+    ["later", "a", "b"],
+  ]);
 });
 test("queue refusal clears pending rung for a genuine next-cycle offer retry", async () => {
   const h = harness();
@@ -449,7 +482,10 @@ test("restart rebuilds top-down cursor from distinct durable finalized groups ev
   });
   cleanups.push(() => restored.stop());
   await restored.tick();
-  expect(h.calls).toEqual([{ captureRef: "idle-b-fresh", source: "b", candidates: ["new"] }]);
+  // run108 addendum-02 (I2): focus arm FIRST and deciding, then the policy-bounded pool (file note above).
+  expect(h.calls).toEqual([
+    { captureRef: "idle-b-fresh", source: "b", candidates: ["new", "a", "c"] },
+  ]);
 });
 test("placed below-floor challenger replenishes distinct captures until K groups then waits genuine publication", async () => {
   const h = harness();
@@ -575,7 +611,10 @@ test("historical replayable source seam retains exact task classification and ac
   });
   cleanups.push(() => loop.stop());
   await loop.tick();
-  expect(h.calls).toEqual([{ captureRef: "idle-a-history", source: "a", candidates: ["new"] }]);
+  // run108 addendum-02 (I2): focus arm FIRST and deciding, then the policy-bounded pool (file note above).
+  expect(h.calls).toEqual([
+    { captureRef: "idle-a-history", source: "a", candidates: ["new", "b", "c"] },
+  ]);
 });
 /**
  * Run 106 cold-start regression: the cheap pending view and the rich corpus read are two projections of
@@ -604,7 +643,8 @@ test("cold-start task owns an unclassified pending row once the corpus read prov
   });
   cleanups.push(() => loop.stop());
   await loop.tick();
-  expect(h.calls).toEqual([{ captureRef: "idle-a", source: "a", candidates: ["new"] }]);
+  // run108 addendum-02 (I2): focus arm FIRST and deciding, then the policy-bounded pool (file note above).
+  expect(h.calls).toEqual([{ captureRef: "idle-a", source: "a", candidates: ["new", "b", "c"] }]);
 });
 test("restart preserves recorded challenge cutoff rather than rewriting now and hiding durable groups", async () => {
   const h = harness();
@@ -678,7 +718,10 @@ test("losing challenger's low own confidence cannot borrow high winning judge co
   });
   cleanups.push(() => loop.stop());
   await loop.tick();
-  expect(h.calls).toEqual([{ captureRef: "idle-c-replenish", source: "c", candidates: ["new"] }]);
+  // run108 addendum-02 (I2): focus arm FIRST and deciding, then the policy-bounded pool (file note above).
+  expect(h.calls).toEqual([
+    { captureRef: "idle-c-replenish", source: "c", candidates: ["new", "a", "b"] },
+  ]);
   expect(h.rows.get("idle")?.rungs?.map((rung) => rung.endpointId)).not.toContain("new");
 });
 test("restart recovers finalized complete refresh from durable group without redispatching absent old source", async () => {
@@ -745,7 +788,8 @@ test("restart queued durable pair is not offered again and claimed worker resume
   expect(offers).toBe(0);
   expect(h.calls).toEqual([]);
   await loop.dispatchCapture("idle-a");
-  expect(h.calls).toEqual([{ captureRef: "idle-a", source: "a", candidates: ["new"] }]);
+  // run108 addendum-02 (I2): focus arm FIRST and deciding, then the policy-bounded pool (file note above).
+  expect(h.calls).toEqual([{ captureRef: "idle-a", source: "a", candidates: ["new", "b", "c"] }]);
 });
 test("restart running or awaiting-evaluation durable pair never starts duplicate provider work", async () => {
   for (const state of ["running", "awaiting_evaluation"] as const) {
@@ -1085,7 +1129,8 @@ test("missing high-demand challenged-rung source skips task rather than starving
   h.census([task("busy", 100, 3, 4), task("quiet", 5, 1, 4)]);
   h.pending([capture("busy", "b"), capture("quiet", "a")]);
   await h.loop.tick();
-  expect(h.calls).toEqual([{ captureRef: "quiet-a", source: "a", candidates: ["b"] }]);
+  // run108 addendum-02 (I2): focus arm FIRST and deciding, then the policy-bounded pool (file note above).
+  expect(h.calls).toEqual([{ captureRef: "quiet-a", source: "a", candidates: ["b", "c", "new"] }]);
   expect(h.loop.health().focusTaskKey).toBe("role\u0000quiet");
 });
 test("unknown historical corpus availability fails closed and is not treated as a skippable empty task", async () => {
