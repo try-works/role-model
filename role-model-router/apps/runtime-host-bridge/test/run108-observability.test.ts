@@ -482,7 +482,10 @@ const emittedByFamilyKeys = (source: string): ReadonlyArray<string> => {
   const indent = `${marker[1]}  `;
   const closing = new RegExp(`^${marker[1]}\\};?\\s*$`);
   const keys: string[] = [];
-  const body = source.slice((marker.index ?? 0) + marker[0].length).split("\n").slice(1);
+  const body = source
+    .slice((marker.index ?? 0) + marker[0].length)
+    .split("\n")
+    .slice(1);
   for (const line of body) {
     if (closing.test(line)) break;
     const key = new RegExp(`^${indent}([A-Za-z_$][A-Za-z0-9_$]*)\\s*:`).exec(line);
@@ -592,10 +595,10 @@ describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
    */
   test("F5-a: the family-evidence KEY SET is the same on the producer and the recorder side", () => {
     const dimensionCount = (dimension: string): number =>
-      (((snapshotEntry("role-model.learner.family_derivations")?.series ?? []).find(
+      ((snapshotEntry("role-model.learner.family_derivations")?.series ?? []).find(
         (entry) =>
           entry.attributes.family === "coder.review" && entry.attributes.dimension === dimension,
-      )?.state.count as number | undefined) ?? 0);
+      )?.state.count as number | undefined) ?? 0;
 
     // (1) behavioural: the GENUINE producer's output, recorded exactly as both call sites do
     const byFamily = learnFamilyEvidence("coder.review", "endpoint:a");
@@ -1022,9 +1025,9 @@ describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
         .map((entry) => entry.state.value as number | undefined)
         .find((value) => typeof value === "number");
     const floorCount = (admitted: string): number =>
-      (((snapshotEntry("role-model.learner.admission_floor")?.series ?? []).find(
+      ((snapshotEntry("role-model.learner.admission_floor")?.series ?? []).find(
         (entry) => entry.attributes.admitted === admitted,
-      )?.state.count as number | undefined) ?? 0);
+      )?.state.count as number | undefined) ?? 0;
 
     // (a) ladder_rungs - cli.ts:6799-6800 walks the materialization outcome and records the count the
     // reader answers. Driven with the PRODUCER's entry shape (the F5-d fix case above): 4 persisted
@@ -1086,10 +1089,10 @@ describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
     // recordLearnerFamilyEvidence(evidenceSummary.byFamily). Driven with the GENUINE producer's output;
     // the rename guard itself lives in the F5-a key-set case above.
     const familyDimension = (dimension: string): number =>
-      (((snapshotEntry("role-model.learner.family_derivations")?.series ?? []).find(
+      ((snapshotEntry("role-model.learner.family_derivations")?.series ?? []).find(
         (entry) =>
           entry.attributes.family === "coder.review" && entry.attributes.dimension === dimension,
-      )?.state.count as number | undefined) ?? 0);
+      )?.state.count as number | undefined) ?? 0;
     const familyBefore = {
       decisive: familyDimension("decisive"),
       holdout: familyDimension("holdout"),
