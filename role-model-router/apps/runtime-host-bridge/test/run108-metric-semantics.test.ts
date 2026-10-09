@@ -6,8 +6,8 @@ import { fileURLToPath } from "node:url";
 import { afterEach, expect, test } from "vitest";
 
 import { collectObservabilitySnapshot } from "../src/run108-observability.js";
-import { type AutoReplayCapture } from "../src/track-b-auto-replay.js";
 import { type RouteLadderRow, startAutoReplayLoop } from "../src/track-b-auto-replay-runtime.js";
+import type { AutoReplayCapture } from "../src/track-b-auto-replay.js";
 import { createReplayLedger } from "../src/track-b-replay-ledger.js";
 import { buildReplayPolicySet } from "../src/track-b-replay-policy.js";
 
@@ -42,10 +42,12 @@ afterEach(() => {
 
 /** The gauge reading the operator surface publishes: the series value, or null when unobserved. */
 const gaugeValue = (name: string): number | null => {
-  const entry = (collectObservabilitySnapshot() as unknown as Record<
-    string,
-    { readonly series?: ReadonlyArray<{ readonly state?: Record<string, unknown> }> } | undefined
-  >)[name];
+  const entry = (
+    collectObservabilitySnapshot() as unknown as Record<
+      string,
+      { readonly series?: ReadonlyArray<{ readonly state?: Record<string, unknown> }> } | undefined
+    >
+  )[name];
   for (const series of entry?.series ?? []) {
     const value = series.state?.value;
     if (typeof value === "number") return value;
