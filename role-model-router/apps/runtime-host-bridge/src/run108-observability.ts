@@ -537,14 +537,21 @@ function rungCountIn(row: unknown): number | null {
  * MATERIALIZATION OUTCOME entry.
  *
  * The outcome the host receives from `operations.materializeRouteLadders` carries the row the store
- * ACCEPTED under `ladder` - the persisted RouteLadderPackV1, stamped with the store's own packId -
- * and does not repeat `rungs`/`completeness` at the entry's own level. Measured on the genuine
- * materializer over a real store, a written entry's keys are exactly
- * roleId, taskTypeId, scopeId, status, ladder, metadata, so reading only the entry answered null for
- * every written ladder and the metric never had a series no matter how much traffic materialized.
+ * ACCEPTED under `ladder`, stamped with the store's own packId, and does not repeat
+ * `rungs`/`completeness` at the entry's own level: the materializer spreads only the snapshot it
+ * handed over (paired private `shared/route-learning/route-ladder-materialization.mjs:151`) and drops
+ * the store receipt, which itself does carry `rungs`/`completeness`
+ * (`extensions/knowledge-store/index.mjs:557-559`). Measured on the genuine materializer over a real
+ * store, a written entry's OWN keys are exactly roleId, taskTypeId, scopeId, status, ladder, metadata,
+ * so reading only the entry answered null for every written ladder and the metric never had a series
+ * no matter how much traffic materialized.
  *
- * The persisted row wins over any value carried beside it: this counts the rungs that were WRITTEN,
- * not a number reconstructed next to them.
+ * That nested row IS the persisted row, so this counts what was WRITTEN rather than a number
+ * reconstructed beside it: the store persists the accepted snapshot verbatim apart from the operator's
+ * own rollback (`extensions/knowledge-store/route-ladder.mjs:129,137`), and its rung normalization
+ * validates by throwing, never by dropping a rung (`route-ladder.mjs:63-90`). The persisted row
+ * therefore WINS over any value carried beside it, and the paired case re-reads
+ * `knowledge:read-route-ladder` to hold this equal to the rungs in `knowledge_route_ladders.ladder_json`.
  */
 export function ladderRungCountOf(row: unknown): number | null {
   if (row === null || typeof row !== "object" || Array.isArray(row)) return null;

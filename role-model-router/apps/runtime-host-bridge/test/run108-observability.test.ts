@@ -837,6 +837,9 @@ describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
     expect(autoReplay).toContain("recordAdmissionFloor(");
     const cli = source("../src/cli.ts");
     expect(cli).toContain("recordArmPlan(");
+    // Run 108 follow-up: the rung count must reach the recorder THROUGH the reader that owns the
+    // outcome-entry shape, or the emit silently measures nothing again.
+    expect(cli).toContain("ladderRungCountOf(");
     expect(cli).toContain("recordLadderRungs(");
     expect(cli).toContain("recordLearnerFamilyEvidence(");
     expect(source("../src/track-b-learning-pass.ts")).toContain("recordLearnerFamilyEvidence(");
