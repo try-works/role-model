@@ -17,10 +17,10 @@ import { afterEach, describe, expect, test } from "vitest";
 import {
   LEARNER_FAMILY_ATTRIBUTE_BOUND,
   REPLAY_ARM_PLAN_BOUNDARIES,
+  admissionFloorVerdictOf,
   collectObservabilitySnapshot,
   createFamilyAttributeCollapser,
   evalFinaliseRefusals,
-  admissionFloorVerdictOf,
   ladderRungCountOf,
   learnerDerivations,
   recordAdmissionFloor,
@@ -836,9 +836,14 @@ describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
     const autoReplay = source("../src/track-b-auto-replay-runtime.ts");
     expect(autoReplay).toContain("recordQueueDepths(");
     expect(autoReplay).not.toContain("recordAdmissionFloor(met)");
-  // Run 108 addendum-04: the emit was re-sited to the materialization outcome in cli.ts, so the
-  // wiring pin follows it there instead of asserting it still lives in the auto-replay sweep.
-  expect(admissionFloorVerdictOf({ status: "insufficient_evidence", ladder: { completeness: { admitted: 0 } } })).toBe(false);
+    // Run 108 addendum-04: the emit was re-sited to the materialization outcome in cli.ts, so the
+    // wiring pin follows it there instead of asserting it still lives in the auto-replay sweep.
+    expect(
+      admissionFloorVerdictOf({
+        status: "insufficient_evidence",
+        ladder: { completeness: { admitted: 0 } },
+      }),
+    ).toBe(false);
     const cli = source("../src/cli.ts");
     expect(cli).toContain("recordArmPlan(");
     // Run 108 follow-up: the rung count must reach the recorder THROUGH the reader that owns the
@@ -854,9 +859,14 @@ describe("run108 addendum-04 - the admission floor is counted at the MATERIALIZA
   test("counts the PERSISTED row verdict, and the refusal case is reachable", () => {
     // "written" with a full admitted count, and the steady-state "unchanged" row - both passed the floor.
     expect(
-      admissionFloorVerdictOf({ status: "written", ladder: { completeness: { admitted: 8, configured: 12 } } }),
+      admissionFloorVerdictOf({
+        status: "written",
+        ladder: { completeness: { admitted: 8, configured: 12 } },
+      }),
     ).toBe(true);
-    expect(admissionFloorVerdictOf({ status: "unchanged", ladder: { completeness: { admitted: 7 } } })).toBe(true);
+    expect(
+      admissionFloorVerdictOf({ status: "unchanged", ladder: { completeness: { admitted: 7 } } }),
+    ).toBe(true);
     // THE case the old in-flight-challenge emit could never reach: a row the floor REFUSED.
     expect(
       admissionFloorVerdictOf({
