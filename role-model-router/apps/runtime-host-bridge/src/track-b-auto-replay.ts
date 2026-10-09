@@ -1158,8 +1158,13 @@ export async function runAutoReplayTick(input: {
              * eligibility, and its own cap still bounds the arm count.
              */
             configuredEndpointIds: input.configuredEndpointIds.includes(focusNarrowingEndpointId)
-              ? [focusNarrowingEndpointId]
-              : [],
+              ? [
+                  focusNarrowingEndpointId,
+                  ...input.configuredEndpointIds.filter(
+                    (endpointId) => endpointId !== focusNarrowingEndpointId,
+                  ),
+                ]
+              : input.configuredEndpointIds,
           }
         : { configuredEndpointIds: input.configuredEndpointIds }),
       ...(input.healthyEndpointIds ? { healthyEndpointIds: input.healthyEndpointIds } : {}),
