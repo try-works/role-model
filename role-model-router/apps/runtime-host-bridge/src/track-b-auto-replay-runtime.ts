@@ -276,8 +276,13 @@ export interface AutoReplayOperations {
    * grace. The extension exposes `evaluation:reconcile-jobs` for exactly this and, until now, nothing in
    * production called it — which is how 18 jobs stayed "in flight" for two days. A runtime whose boundary
    * does not expose the sweep keeps working; the tick simply reports zero reconciled jobs.
+   *
+   * Run 108 phase-03.5: `null` is the NOT-AUTHORITATIVE answer the tick's own guard models - no sweep
+   * ran, so nothing is counted and no queue gauge is published. A boundary that answers the empty sweep
+   * instead (`{scanned:0,stranded:[]}`) claims "nothing is stranded" without having looked, which is
+   * what published a fabricated `replay.queue.stranded` 0 while no extension runtime was bound.
    */
-  reconcileEvaluationJobs?(input: Record<string, unknown>): Promise<unknown>;
+  reconcileEvaluationJobs?(input: Record<string, unknown>): Promise<unknown | null>;
   /**
    * Run 100 addendum `handoff-evidence-durability.addendum-06` S46: finalize a comparison whose trials are all
    * scored and which has no group. Measured live: the newest durable evaluation jobs hold 2-4 **scored** trials
@@ -1308,18 +1313,28 @@ export function startAutoReplayLoop(input: {
         // An unreadable registry leaves the map empty: the walk keeps its previous behaviour rather than
         // refusing to dispatch.
       }
+      // The limit bounds the PAGE the tick consumes; the depth the gauge publishes comes from the
+      // readback's own pre-slice total (see the queue-gauge comment below).
       const pending = await input.operations.listPendingReplayCaptures({
         policySetDigest: input.policySet.policySetDigest,
         limit: maxCapturesPerTick * 4,
       });
       let captures = pendingCaptures(pending);
       /**
-       * Run 108 phase-03 F5 (R7 queue gauges): the replay queue depth. `pendingCount` is the
-       * readback the tick already consumes for its own scheduling decision, so the gauge is SET
-       * from it directly; an answer that carries no count (a bare array boundary) records nothing.
+       * Run 108 phase-03 F5 (R7 queue gauges) + phase-03.5 repair: the replay queue depth.
+       *
+       * The depth is the number of captures still owed a replay - a CENSUS, not the page the tick
+       * asked for. `pendingCount` used to be `pending.length` taken AFTER `.slice(0, limit)`, so a
+       * backlog of the tick's own limit (maxCapturesPerTick * 4, 32 by default) read exactly 32 for
+       * ever. The producer now answers `pendingTotal`, the depth taken BEFORE the page is bounded, and
+       * that is what the gauge records; `pendingCount` remains the fallback for a readback that
+       * predates the field, and an answer that carries neither (a bare array boundary) records nothing.
        */
-      const observedPendingCount = (pending as { readonly pendingCount?: unknown } | null)
-        ?.pendingCount;
+      const pendingReadback = pending as {
+        readonly pendingCount?: unknown;
+        readonly pendingTotal?: unknown;
+      } | null;
+      const observedPendingCount = pendingReadback?.pendingTotal ?? pendingReadback?.pendingCount;
       if (typeof observedPendingCount === "number")
         recordQueueDepths({ queued: observedPendingCount });
       if (process.env.ROLE_MODEL_FOCUS_DIAG)
@@ -1451,11 +1466,24 @@ export function startAutoReplayLoop(input: {
           ) {
             const jobs = await input.readPendingRouteDispatches(candidate);
             if (jobs === null) throw new Error("route pending dispatches unavailable");
-            // Run 108 phase-03 F5: the durable replay jobs this task is waiting on, by state.
+            /**
+             * Run 108 phase-03 F5: the durable replay jobs this task is waiting on, by state.
+             *
+             * The readback answers ONE ENTRY PER ARM, not per job -
+             * `for (const arm of job.candidatePackages) answers.push(...)` in
+             * route-challenge-evidence.ts - and the queue branch does the same over
+             * `payload.endpointIds`. The declared subject is JOBS, so the count is de-duplicated by the
+             * job's own durable identity: a job carrying four arms is ONE job awaiting evaluation, and a
+             * job that carries both planes is one job too (the readback suppresses a queue arm once the
+             * durable replay record exists, and every entry carries exactly one of the two ids).
+             * The per-arm entry SHAPE is deliberately untouched - other consumers read each arm.
+             */
             pendingDispatchReadObserved = true;
-            awaitingEvaluationObserved += jobs.filter(
-              (job) => job.state === "awaiting_evaluation",
-            ).length;
+            awaitingEvaluationObserved += new Set(
+              jobs
+                .filter((job) => job.state === "awaiting_evaluation")
+                .map((job) => job.replayJobId ?? job.queueJobId),
+            ).size;
             const cutoff =
               active?.startedAtMs ?? (alreadyDue ? Number(row?.nextEligibleAtMs) : now());
             const relevant = jobs

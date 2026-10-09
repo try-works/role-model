@@ -7204,7 +7204,16 @@ export async function main(): Promise<void> {
         },
         async reconcileEvaluationJobs() {
           const runtime = extensionRuntimeRef.current;
-          if (!runtime) return { scanned: 0, completed: [], stranded: [], reclaimed: [] };
+          /**
+           * Run 108 phase-03.5 repair: NO runtime, NO sweep. This used to answer the empty sweep, which
+           * the tick counted as `stranded: 0` and SET on `role-model.replay.queue.stranded` - a
+           * FABRICATED zero, published although nothing was reconciled and indistinguishable from
+           * "nothing is stranded". That contradicted the emit's own contract ("a plane whose queue owns
+           * reconciliation publishes no observation instead of a fabricated zero"). `null` is the
+           * tick's own "not authoritative" signal: the sweep block is skipped, so no depth is recorded.
+           * The sibling readback at this same runtime seam already fails closed the same way.
+           */
+          if (!runtime) return null;
           const record = (await runtime.invoke("evaluation-core", {
             requestId: `evaluation-reconcile-jobs:${Date.now()}`,
             sessionId: `evaluation-reconcile-jobs:${options.scopeId}`,
