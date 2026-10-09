@@ -514,12 +514,12 @@ export const ladderRungs = Metric.histogram("role-model.learner.ladder_rungs", {
 });
 
 /**
- * The rung count a materialization outcome row carries: its own rung list when the row holds one,
- * otherwise the admitted count of its completeness summary. A row that carries neither does NOT
- * mean "zero rungs" - it means the outcome does not measure rungs - so it answers null and the
- * caller records nothing rather than a fabricated zero.
+ * The rung count a route-ladder row carries: its own rung list when the row holds one, otherwise the
+ * admitted count of its completeness summary. A row that carries neither does NOT mean "zero rungs" -
+ * it means the row does not measure rungs - so it answers null and the caller records nothing rather
+ * than a fabricated zero.
  */
-export function ladderRungCountOf(row: unknown): number | null {
+function rungCountIn(row: unknown): number | null {
   if (row === null || typeof row !== "object" || Array.isArray(row)) return null;
   const record = row as Record<string, unknown>;
   if (Array.isArray(record.rungs)) return record.rungs.length;
@@ -530,6 +530,26 @@ export function ladderRungCountOf(row: unknown): number | null {
   return typeof admitted === "number" && Number.isFinite(admitted) && admitted >= 0
     ? Math.trunc(admitted)
     : null;
+}
+
+/**
+ * Run 108 follow-up (the broken emit the compliance audit found): the rung count of a ladder
+ * MATERIALIZATION OUTCOME entry.
+ *
+ * The outcome the host receives from `operations.materializeRouteLadders` carries the row the store
+ * ACCEPTED under `ladder` - the persisted RouteLadderPackV1, stamped with the store's own packId -
+ * and does not repeat `rungs`/`completeness` at the entry's own level. Measured on the genuine
+ * materializer over a real store, a written entry's keys are exactly
+ * roleId, taskTypeId, scopeId, status, ladder, metadata, so reading only the entry answered null for
+ * every written ladder and the metric never had a series no matter how much traffic materialized.
+ *
+ * The persisted row wins over any value carried beside it: this counts the rungs that were WRITTEN,
+ * not a number reconstructed next to them.
+ */
+export function ladderRungCountOf(row: unknown): number | null {
+  if (row === null || typeof row !== "object" || Array.isArray(row)) return null;
+  const persisted = rungCountIn((row as Record<string, unknown>).ladder);
+  return persisted ?? rungCountIn(row);
 }
 
 export function recordLadderRungs(rungCount: number): void {

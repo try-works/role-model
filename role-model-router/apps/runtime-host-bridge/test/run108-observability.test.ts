@@ -1,4 +1,8 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -6,7 +10,7 @@ import * as Exit from "effect/Exit";
 import * as Metric from "effect/Metric";
 import * as Option from "effect/Option";
 import * as Tracer from "effect/Tracer";
-import { describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test } from "vitest";
 
 // Run 108 R7 - the observability spine: module-scope metric declarations for the four chains,
 // registry-scoped so tests and per-scope runtimes isolate, per the effect-grep canonical idiom.
@@ -34,6 +38,34 @@ import {
   routerDecisions,
   withStageSpan,
 } from "../src/run108-observability.js";
+
+/**
+ * The paired private half owns the GENUINE ladder materializer and the knowledge store it writes
+ * through. The public CI image checks out only this repository, so the paired case below SKIPS when
+ * the private checkout is absent instead of failing on a module that was never fetched (the same
+ * pattern as run105-review-advisory-safety and run108-addendum01-a53-refusal-nonterminal).
+ */
+const ladderPrivateRoot = (() => {
+  const configured = process.env.ROLE_MODEL_INTERNAL_WORKTREE ?? process.env.RUN105_PRIVATE_ROOT;
+  if (configured && configured.trim().length > 0) return configured.trim();
+  const publicRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../..");
+  return path.resolve(
+    publicRoot,
+    "../../../role-model-internal/.worktrees",
+    path.basename(publicRoot),
+  );
+})();
+const ladderMaterializerPath = path.join(
+  ladderPrivateRoot,
+  "shared/route-learning/route-ladder-materialization.mjs",
+);
+const ladderStorePath = path.join(ladderPrivateRoot, "extensions/knowledge-store/index.mjs");
+const pairedLadderTest =
+  existsSync(ladderMaterializerPath) && existsSync(ladderStorePath) ? test : test.skip;
+const ladderRoots: string[] = [];
+afterEach(async () => {
+  for (const root of ladderRoots.splice(0)) await rm(root, { recursive: true, force: true });
+});
 
 const readIn = (
   metric: Metric.Metric<unknown, unknown, unknown>,
@@ -599,6 +631,200 @@ describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
     expect((after.count ?? 0) - (before.count ?? 0)).toBe(1);
     expect((after.sum ?? 0) - (before.sum ?? 0)).toBe(3);
   });
+
+  /**
+   * F5-d REPAIR (run 108 follow-up, the broken emit the compliance audit found). Measured against the
+   * deployed commit: five "[run105] ladder materialization wrote 1 ladder row(s)" lines produced ZERO
+   * live series, because the outcome entry does not carry the measurement at its OWN level. The
+   * genuine materializer (paired private checkout, real SQLite store) answers an entry whose keys are
+   * exactly roleId,taskTypeId,scopeId,status,ladder,metadata - the rungs and the completeness live on
+   * the PERSISTED RouteLadderPackV1 under `ladder`, which is the row the store accepted (the same
+   * rungs re-read from knowledge_route_ladders). The reader must therefore count the persisted row.
+   */
+  test("F5-d fix: the ladder-rung count reads the PERSISTED ladder row the outcome carries", () => {
+    // Transcribed from a real materialization outcome: 12 configured endpoints, 2 admitted, so the
+    // persisted row holds two rungs and completeness { admitted: 2, configured: 12 }.
+    const outcomeEntry = {
+      roleId: "role:coder",
+      taskTypeId: "task:review",
+      scopeId: "tenant:run108-ladder",
+      status: "written",
+      ladder: {
+        roleId: "role:coder",
+        taskTypeId: "task:review",
+        scopeId: "tenant:run108-ladder",
+        contract: "RouteLadderPackV1",
+        packId: "ca4641aeab7ed6b37a36185d6dc6d5738f337c0e49a281d6582288cceaf7862b",
+        rungs: [
+          { endpointId: "endpoint:a", rank: 1, status: "available" },
+          { endpointId: "endpoint:b", rank: 2, status: "available" },
+        ],
+        completeness: { admitted: 2, configured: 12 },
+        version: 1,
+        expectedVersion: 0,
+        preserveRollback: true,
+        nextEligibleAtMs: 2000,
+        taxonomyVersion: "taxonomy:108",
+        rolledBack: { on: false, reason: null, atMs: null },
+        metadata: { admissionPolicy: { minComparisons: 1, minConfidence: 0.7 } },
+      },
+      metadata: { admissionPolicy: { minComparisons: 1, minConfidence: 0.7 }, confidence: 0.8 },
+    };
+    expect(ladderRungCountOf(outcomeEntry)).toBe(2);
+
+    // a persisted row without a rung list still answers its own admitted completeness
+    expect(
+      ladderRungCountOf({
+        status: "written",
+        ladder: { completeness: { admitted: 2, configured: 12 } },
+      }),
+    ).toBe(2);
+    // the PERSISTED row wins over a value carried beside it: the metric counts what the store wrote
+    expect(
+      ladderRungCountOf({ status: "written", rungs: [{}, {}, {}], ladder: { rungs: [{}, {}] } }),
+    ).toBe(2);
+    // and an outcome that carries no persisted row at all is still NOT a zero-rung ladder
+    expect(ladderRungCountOf({ status: "written" })).toBe(null);
+
+    // through the metric, at the CLI's own seam (cli.ts:6797-6798 records when the count is non-null)
+    const stateOf = () =>
+      ((snapshotEntry("role-model.learner.ladder_rungs")?.series ?? [])[0]?.state ?? {}) as {
+        count?: number;
+        sum?: number;
+      };
+    const before = stateOf();
+    const recorded = ladderRungCountOf(outcomeEntry);
+    expect(recorded).toBe(2);
+    if (recorded !== null) recordLadderRungs(recorded);
+    const after = stateOf();
+    expect((after.count ?? 0) - (before.count ?? 0)).toBe(1);
+    expect((after.sum ?? 0) - (before.sum ?? 0)).toBe(2);
+  });
+
+  /**
+   * F5-d REPAIR, anti-drift half. The literal above is only as good as the shape it transcribes, so
+   * this case drives the GENUINE materializer over a real SQLite store and asserts the recorded count
+   * EQUALS the rungs the store persisted - never a value reconstructed beside them.
+   */
+  pairedLadderTest(
+    "F5-d fix (paired): the genuine materializer's written outcome records the PERSISTED rung count",
+    async () => {
+      const scopeId = "tenant:run108-ladder";
+      const roleId = "role:coder";
+      const taskTypeId = "task:review";
+      const { run } = (await import(/* @vite-ignore */ pathToFileURL(ladderStorePath).href)) as {
+        run: (input: Record<string, unknown>) => Promise<unknown>;
+      };
+      const { createRouteLadderStoreAdapter, materializeRouteLadders } = (await import(
+        /* @vite-ignore */ pathToFileURL(ladderMaterializerPath).href
+      )) as {
+        createRouteLadderStoreAdapter: (input: Record<string, unknown>) => Record<string, unknown>;
+        materializeRouteLadders: (
+          input: Record<string, unknown>,
+        ) => Promise<{ ladders: Array<Record<string, unknown>> }>;
+      };
+      const root = await mkdtemp(path.join(tmpdir(), "run108-ladder-rungs-"));
+      ladderRoots.push(root);
+      const filePath = path.join(root, "knowledge.sqlite");
+      const invoke = async (capability: string, value: Record<string, unknown>) =>
+        run({
+          capability,
+          channel: "development",
+          scope: scopeId,
+          authorizationEpoch: 108,
+          payload: { ...value, filePath },
+        });
+      const adapter = createRouteLadderStoreAdapter({
+        invoke: async (_id: string, envelope: { capability: string; payload: unknown }) =>
+          invoke(envelope.capability, envelope.payload as Record<string, unknown>),
+        envelope: {
+          channel: "development",
+          scope: scopeId,
+          authorizationEpoch: 108,
+          payload: { filePath },
+        },
+      });
+      const finalized = (groupId: string, confidence: number) => ({
+        groupId,
+        status: "finalized",
+        outcome: "source",
+        winnerTrialId: `${groupId}:a`,
+        winnerRole: "source",
+        createdAtMs: 1000,
+        comparability: {
+          roleId,
+          taskTypeId,
+          taxonomyVersion: "taxonomy:108",
+          sourceCandidateRef: "endpoint:a",
+          counterfactualCandidateRef: "endpoint:b",
+        },
+        scorerDisagreement: false,
+        scorerOutcomes: [{ scorerKey: "judge", outcome: "source" }],
+        validityIssues: [],
+        effortComparability: [
+          {
+            endpointId: "endpoint:b",
+            modelId: "b",
+            sourceModelId: "a",
+            reasoningEffort: "high",
+            sourceReasoningEffort: "high",
+            comparability: "matched",
+          },
+        ],
+        members: [
+          { trialId: `${groupId}:a`, candidateRef: "endpoint:a", role: "source", confidence },
+          {
+            trialId: `${groupId}:b`,
+            candidateRef: "endpoint:b",
+            role: "counterfactual",
+            confidence: 0.75,
+          },
+        ],
+      });
+      const outcome = await materializeRouteLadders({
+        groups: [finalized("g1", 0.9), finalized("g2", 0.8)],
+        configuredEndpointIds: [
+          "endpoint:a",
+          "endpoint:b",
+          ...Array.from(
+            { length: 10 },
+            (_, index) => `endpoint:pool${String(index + 1).padStart(2, "0")}`,
+          ),
+        ],
+        ...adapter,
+        defaults: { minComparisons: 1, minConfidence: 0.7, stalenessWindowDays: 30 },
+        nowMs: 2000,
+        taxonomyVersion: "taxonomy:108",
+        scopeId,
+      });
+      const entry = outcome.ladders.find((row) => row.status === "written");
+      expect(entry).toBeDefined();
+      if (!entry) return;
+      // the entry does NOT measure rungs at its own level - the exact reason the old reader saw null
+      expect(entry.rungs).toBeUndefined();
+      expect(entry.completeness).toBeUndefined();
+      const persisted = entry.ladder as {
+        rungs: unknown[];
+        completeness: { admitted: number; configured: number };
+      };
+      expect(persisted.completeness).toEqual({ admitted: 2, configured: 12 });
+      expect(persisted.rungs).toHaveLength(2);
+      const stored = (await invoke("knowledge:read-route-ladder", {
+        scopeId,
+        roleId,
+        taskTypeId,
+      })) as {
+        ladder: { rungs: unknown[] };
+      };
+      // the row the outcome carries IS the row the store persisted
+      expect(stored.ladder.rungs).toEqual(persisted.rungs);
+
+      // the count recorded is the PERSISTED count
+      const recorded = ladderRungCountOf(entry);
+      expect(recorded).toBe(2);
+      expect(recorded).toBe(stored.ladder.rungs.length);
+    },
+  );
 
   /**
    * F5 wiring. A metric the production seams never write is the M4 defect in a new dress (declared,
