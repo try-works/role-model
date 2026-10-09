@@ -2131,6 +2131,27 @@ export function createSupervisedReplayEvaluationCompleter(input: {
    * plans the pairs deterministically from an empty snapshot and records nothing.
    */
   readonly pairCoverageLedgerPath?: string;
+  /**
+   * Run 108 addendum 03 (P): the task family of the capture this evaluation BELONGS to, as the caller resolved
+   * it for the request that produced it.
+   *
+   * The extra-pair comparisons replace `sourceCapture` with one SIDE of the planned pair, and for an
+   * arm-vs-arm pair that side is a branch capture. Measured live 2026-10-09 (copied knowledge-worker and
+   * evaluation-core stores): the primary comparison of replay job `16aed63a…` carried
+   * `coder.edit / coder / 1.0.0-alpha.1` while the `:pair1` comparison of the SAME job - same completer,
+   * byte-identical `forkRef` and `inputRef`, 30 s later - carried no family key at all, so the learned
+   * candidate had no scope, the validation produced no `familyEvidence`, the promoted pack kept only
+   * `scope.endpointId` and rendered as scope-wide (`resolvePackScope`), and no endpoint ladder could ever be
+   * keyed to (role, task). Five of the eleven live packs are scope-wide that way.
+   *
+   * The family read from the capture wins per field; this is the fallback that keeps a pair of
+   * classification-less branch captures inside the scope of the request they are evidence about.
+   */
+  readonly taskFamily?: Readonly<{
+    readonly taskTypeId?: string | null;
+    readonly roleId?: string | null;
+    readonly taxonomyVersion?: string | null;
+  }>;
 }) {
   const runPipeline = input.runPipeline ?? runTrackBShadowPipeline;
   return async (request: Readonly<Record<string, unknown>>) => {
@@ -2143,6 +2164,32 @@ export function createSupervisedReplayEvaluationCompleter(input: {
       !Array.isArray(request.replayJob)
         ? (request.replayJob as Record<string, unknown>)
         : null;
+    /**
+     * Run 108 addendum 03 (P): the family of the capture this evaluation belongs to, resolved once from the
+     * capture itself. A field the capture declares always wins - the pair's own side is authoritative for what
+     * it is - and `input.taskFamily` is the caller's family for the request the capture is evidence about, used
+     * only where the capture is silent. It exists because the extra-pair path swaps `sourceCapture` for one
+     * side of the pair (a branch capture for an arm-vs-arm pair), and a branch capture that declares no family
+     * silently produced a family-less comparison.
+     */
+    const familyField = (
+      own: string | undefined,
+      inherited: string | null | undefined,
+    ): string | undefined => {
+      if (typeof own === "string" && own.trim()) return own.trim();
+      return typeof inherited === "string" && inherited.trim() ? inherited.trim() : undefined;
+    };
+    const captureTaskFamily = {
+      taskTypeId: familyField(
+        readCaptureTaskTypeId(input.sourceCapture),
+        input.taskFamily?.taskTypeId,
+      ),
+      roleId: familyField(readCaptureRoleId(input.sourceCapture), input.taskFamily?.roleId),
+      taxonomyVersion: familyField(
+        readCaptureTaxonomyVersion(input.sourceCapture),
+        input.taskFamily?.taxonomyVersion,
+      ),
+    };
     const callbackBranches = Array.isArray(request.resultBranches) ? request.resultBranches : [];
     const replayDispatches =
       replayJob?.dispatches &&
@@ -2512,23 +2559,16 @@ export function createSupervisedReplayEvaluationCompleter(input: {
       // (`addendum 19 S33`), so it travels with the replay - read through the same classification
       // fallback the role and the revision already use (Run 106), because a capture that records the
       // family only on its classification produced a comparison the floor excludes as incomplete_scope.
-      ...(() => {
-        const taskTypeId = readCaptureTaskTypeId(input.sourceCapture);
-        return taskTypeId ? { taskTypeId } : {};
-      })(),
+      ...(captureTaskFamily.taskTypeId ? { taskTypeId: captureTaskFamily.taskTypeId } : {}),
       // Run 98 addendum 58 §22.2.3: the revision the capture was classified under travels with the
       // family, so the comparability key — and the pack scope the learner derives from it — is
       // version-stamped and the advisory's version gate can match it instead of failing closed.
-      ...(() => {
-        const taxonomyVersion = readCaptureTaxonomyVersion(input.sourceCapture);
-        return taxonomyVersion ? { taxonomyVersion } : {};
-      })(),
+      ...(captureTaskFamily.taxonomyVersion
+        ? { taxonomyVersion: captureTaskFamily.taxonomyVersion }
+        : {}),
       // Run 98 addendum 58 §38: the role travels with the family and the revision, so the learner's candidate
       // (and the pack it promotes) carries a role scope the advisory gate can match.
-      ...(() => {
-        const roleId = readCaptureRoleId(input.sourceCapture);
-        return roleId ? { roleId } : {};
-      })(),
+      ...(captureTaskFamily.roleId ? { roleId: captureTaskFamily.roleId } : {}),
       // Run 98 addendum 30 S4 (live finding, stage v190): the pipeline has recorded the judge
       // presentation-order policy in the comparability key since run 99 close-out, but this
       // supervised-replay path never passed it — so `0 of 473` durable evaluation jobs (and the
@@ -2815,6 +2855,13 @@ export function createSupervisedReplayEvaluationCompleter(input: {
             ...input,
             requestId: `${input.requestId}${suffix}`,
             sourceCapture: pair.left.capture as Readonly<Record<string, unknown>>,
+            /**
+             * Run 108 addendum 03 (P): an extra pair is evidence about the SAME request as the primary
+             * comparison, so it stays inside that request's family when the pair's own side declares none.
+             * Without this the arm-vs-arm comparisons - the ones the pair matrix exists to produce - were
+             * family-less, and the pack promoted from one of them was scope-wide.
+             */
+            taskFamily: captureTaskFamily,
             sourceOutput: pair.left.output,
             sourceEndpointId: pair.left.endpointId,
             sourceModelId: pair.left.modelId,
