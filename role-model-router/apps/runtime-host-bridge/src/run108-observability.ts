@@ -572,7 +572,8 @@ export function recordArmPlan(armCount: number, scope: ObservabilityScope): void
  * the same measurement, and a refusal is its own visible series.
  */
 export const learnerAdmissionFloor = Metric.counter("role-model.learner.admission_floor", {
-  description: "Route-ladder admission-floor evaluations, tagged by whether the floor was met.",
+  description:
+    "Route-ladder admission-floor evaluations, tagged by whether the CURRENT evidence met it.",
   incremental: true,
 });
 
@@ -587,34 +588,104 @@ export function recordAdmissionFloor(admitted: boolean, scope: ObservabilityScop
 }
 
 /**
- * Run 108 addendum-04: the admission verdict of a MATERIALIZED ladder row.
+ * Run 108 follow-up (M3): the LIVE admission-floor verdict of one MATERIALIZATION-OUTCOME entry.
  *
- * Reads the admitted count off the PERSISTED row the outcome carries, so the metric counts the
- * verdict of the ladder that was actually written - never a value reconstructed beside it (the F5
- * lesson). A row with no numeric admitted count measures nothing and answers null, so the caller
- * skips it rather than inventing a refusal.
+ * THE SUBJECT. The floor is the rule that decides whether an endpoint currently holds enough evidence to
+ * become an eligible pack: K finalized effort-comparable comparisons at a mean confidence >= the
+ * minimum. The canonical definition is the promotion gate of the proposal guidance
+ * (proposals/crowdsourced-evals/docs/guidance/13_profile_learner.md:113-134, canPromoteProfile:
+ * semanticEvidenceWeight >= 5 and confidence >= 0.7 - exactly this runtime's floor defaults,
+ * product-defaults-file.ts:42-43), and the operator decision of 2026-10-09 recorded at
+ * evidence/floor-definition-from-guidance.md:42-46 follows from it: the floor is a CURRENT eligibility
+ * verdict, so the metric reports the floor LIVELY.
  *
- * Deliberately NOT restricted to status === "written": the steady-state "unchanged" rows and the
- * "insufficient_evidence" rows - which IS the admitted === false case - are exactly what a rate
- * needs, and the old emit only ever saw the refusal-biased in-flight-challenge sample.
+ * WHY THE PERSISTED ROW CANNOT ANSWER IT. The producer preserves the prior snapshot when an append drops
+ * a previously admitted endpoint below the current floor (paired private
+ * shared/route-learning/route-ladder-materialization.mjs:95-100, :116-118) and computes `completeness`
+ * over the EFFECTIVE evidence (live-admitted endpoints UNION the preserved prior ones, :127-129). The
+ * persisted `completeness.admitted` can therefore be > 0 while the live answer of
+ * `admissionFloor(entry.groups, defaults)` (:93) is an EMPTY admitted set. Reading the persisted row
+ * reports a FABRICATED GREEN exactly where the floor currently admits nothing. `persistedAdmissionFloorVerdictOf`
+ * below still answers that historical reading, under its OWN metric id, so the two are never conflated.
+ *
+ * WHAT THIS READS INSTEAD. The live answer's own size, published by the outcome entry as `floor`:
+ *   { floor: { admitted: 3 } }                       // floor.admitted.size (the Set's size)
+ *   { floor: { admitted: ["endpoint:a", ...] } }     // floor.admitted itself (the Set, serialized)
+ * An entry that carries no live answer measures NO current verdict and answers null, so the caller records
+ * NOTHING rather than the preserved value - the same fail-closed rule the stranded gauge follows:
+ * publishing nothing is honest, publishing a preserved value as current is not.
+ *
+ * THE BRANCHES THAT ARE NOT THE FLOOR'S OWN VERDICT are unchanged. `insufficient_evidence` IS the live
+ * refusal: the producer pushes it exactly when `!floor.admitted.size && !current` (:94), i.e. the floor
+ * admitted nothing and no ladder exists yet, which is the case an operator most needs to see. The other
+ * null-ladder statuses - capacity_exceeded (:108, a CAPACITY refusal reached only AFTER the floor admitted
+ * something), stale, stale_evidence, refused, rolled_back - answer null and record nothing, deliberately.
  */
 export function admissionFloorVerdictOf(entry: unknown): boolean | null {
+  if (!entry || typeof entry !== "object") return null;
+  const live = liveAdmittedCountOf(entry);
+  if (live !== null) return live > 0;
+  return (entry as { status?: unknown }).status === "insufficient_evidence" ? false : null;
+}
+
+/** The live answer's size from the entry's `floor` carrier: the Set's size, or the Set itself. */
+function liveAdmittedCountOf(entry: unknown): number | null {
+  const floor = (entry as { floor?: unknown }).floor;
+  if (!floor || typeof floor !== "object" || Array.isArray(floor)) return null;
+  const admitted = (floor as { admitted?: unknown }).admitted;
+  if (typeof admitted === "number" && Number.isFinite(admitted) && admitted >= 0)
+    return Math.trunc(admitted);
+  return Array.isArray(admitted) ? admitted.length : null;
+}
+
+/**
+ * The PERSISTED route-ladder snapshot's admission verdict, under its OWN metric id.
+ *
+ * This is the reader the addendum-04 re-site introduced and the M3 finding corrected the SUBJECT of: it
+ * answers what the STORE's row says, which for a regressed ladder is the preserved prior snapshot rather
+ * than the current floor. It is kept - an operator still needs to see what the authoritative row carries -
+ * but never as `admission_floor`, so a preserved historical value can no longer be read as a live one.
+ *
+ * Reads the admitted count off the PERSISTED row the outcome carries, so it counts the verdict of the
+ * ladder that was actually written - never a value reconstructed beside it (the F5 lesson). A row with no
+ * numeric admitted count measures nothing and answers null, so the caller skips it rather than inventing a
+ * refusal. Deliberately NOT restricted to status === "written": the steady-state "unchanged" rows and the
+ * "insufficient_evidence" rows - which IS the admitted === false case - are exactly what a rate needs, and
+ * the old emit only ever saw the refusal-biased in-flight-challenge sample.
+ */
+export function persistedAdmissionFloorVerdictOf(entry: unknown): boolean | null {
   if (!entry || typeof entry !== "object") return null;
   const persisted = admittedCountOf((entry as { ladder?: unknown }).ladder);
   const value = persisted ?? admittedCountOf(entry);
   if (value !== null) return value > 0;
-  /**
-   * Run 108 addendum-04 (review correction): `insufficient_evidence` IS the materializer's own persisted
-   * verdict that the floor admitted NOTHING - it pushes { status: "insufficient_evidence", ladder: null }
-   * (route-ladder-materialization.mjs:94) and that branch is the `!floor.admitted.size && !current` refusal.
-   * Reading that status is not "reconstructing a value beside a persisted row": the F5 lesson forbids
-   * recomputing arithmetic, not reading the outcome's own verdict. Without this the metric under-reports
-   * refusals exactly where no ladder exists yet, which is the case an operator most needs to see.
-   *
-   * The OTHER null-ladder statuses - capacity_exceeded (:108, a CAPACITY refusal, not a floor verdict),
-   * stale, stale_evidence, refused, rolled_back - answer null and record nothing, deliberately.
-   */
+  // See the live reader above: `insufficient_evidence` IS the producer's own persisted refusal.
   return (entry as { status?: unknown }).status === "insufficient_evidence" ? false : null;
+}
+
+/**
+ * The PERSISTED row's admission verdict - a SEPARATE, clearly-named series, never the floor's own answer.
+ * Seeing it move while `role-model.learner.admission_floor` stays still is exactly the regression the M3
+ * fix is meant to make visible rather than hide behind one name.
+ */
+export const learnerAdmissionFloorPersisted = Metric.counter(
+  "role-model.learner.admission_floor_persisted",
+  {
+    description:
+      "Persisted route-ladder snapshots, tagged by whether the SNAPSHOT admitted any endpoint (a preserved historic value on regression, never the current floor verdict).",
+    incremental: true,
+  },
+);
+
+export function recordPersistedAdmissionFloor(admitted: boolean, scope: ObservabilityScope): void {
+  inScope(
+    Metric.update(
+      Metric.withAttributes(learnerAdmissionFloorPersisted, {
+        admitted: admitted ? "true" : "false",
+      }),
+      1,
+    ),
+    scope,
+  );
 }
 
 function admittedCountOf(row: unknown): number | null {

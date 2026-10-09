@@ -507,17 +507,20 @@ function resolveChannelScopedReplayLedgerLimits(input: {
     ),
   };
 }
+import { reconcileSweepRecordOf } from "./evaluation-reconcile-readback.js";
 import { createFinalizedGroupListingCache } from "./finalized-group-listing-cache.js";
 import {
   type ObservabilityScope,
   admissionFloorVerdictOf,
   createObservabilityScope,
   ladderRungCountOf,
+  persistedAdmissionFloorVerdictOf,
   recordAdmissionFloor,
   recordArmPlan,
   recordFinaliseRefusal,
   recordLadderRungs,
   recordLearnerFamilyEvidence,
+  recordPersistedAdmissionFloor,
   recordReplayAdmission,
   withStageSpan,
 } from "./run108-observability.js";
@@ -6833,13 +6836,25 @@ export async function main(): Promise<void> {
                 }
 
                 /**
-                 * Run 108 addendum-04: the admission-floor verdict, at the same materialization-outcome
-                 * seam and for EVERY entry that carries an admitted count - not only the "written" ones,
-                 * because "unchanged" is the steady state and "insufficient_evidence" is the refusal.
+                 * Run 108 addendum-04, corrected by the follow-up M3 finding: the admission-floor verdict,
+                 * at the same materialization-outcome seam and for EVERY entry that carries one - not only
+                 * the "written" ones, because "unchanged" is the steady state and "insufficient_evidence"
+                 * is the refusal.
+                 *
+                 * The TWO readings are recorded under their own names and never conflated:
+                 *   admission_floor            - the LIVE verdict (`floor.admitted.size`, the current
+                 *                                eligibility answer the producer publishes on the entry);
+                 *   admission_floor_persisted  - the PERSISTED row's own count, which the materializer
+                 *                                deliberately preserves on regression (a historic value).
+                 * An entry that publishes no live answer records NOTHING for the floor rather than the
+                 * preserved value: a fabricated green is worse than an absent observation.
                  */
                 for (const entry of ladders) {
                   const admitted = admissionFloorVerdictOf(entry);
                   if (admitted !== null) recordAdmissionFloor(admitted, observabilityScope);
+                  const persisted = persistedAdmissionFloorVerdictOf(entry);
+                  if (persisted !== null)
+                    recordPersistedAdmissionFloor(persisted, observabilityScope);
                 }
                 if (written > 0)
                   console.error(`[run105] ladder materialization wrote ${written} ladder row(s)`);
@@ -7243,10 +7258,13 @@ export async function main(): Promise<void> {
            * "nothing is stranded". That contradicted the emit's own contract ("a plane whose queue owns
            * reconciliation publishes no observation instead of a fabricated zero"). `null` is the
            * tick's own "not authoritative" signal: the sweep block is skipped, so no depth is recorded.
-           * The sibling readback at this same runtime seam already fails closed the same way.
+           *
+           * Run 108 follow-up: there are TWO ways this method cannot answer a sweep - no runtime, and a
+           * MALFORMED/absent record - and BOTH now answer `null`. The second one used to answer the empty
+           * sweep literal (see the branch below), which is the same fabricated zero by the other door.
            */
           if (!runtime) return null;
-          const record = (await runtime.invoke("evaluation-core", {
+          const record = await runtime.invoke("evaluation-core", {
             requestId: `evaluation-reconcile-jobs:${Date.now()}`,
             sessionId: `evaluation-reconcile-jobs:${options.scopeId}`,
             protocolVersion: "1.1.0",
@@ -7255,10 +7273,20 @@ export async function main(): Promise<void> {
             authorizationEpoch: 1,
             capability: "evaluation:reconcile-jobs",
             value: { limit: 200 },
-          })) as Record<string, unknown> | null;
-          return record && typeof record === "object" && !Array.isArray(record)
-            ? record
-            : { scanned: 0, completed: [], stranded: [], reclaimed: [] };
+          });
+          /**
+           * Run 108 follow-up: a record that is MALFORMED or ABSENT is not an empty sweep either. The
+           * pre-fix fallback answered `{ scanned: 0, completed: [], stranded: [], reclaimed: [] }` for
+           * anything that was not a record, and the tick counts that `stranded` and SETS it on
+           * `role-model.replay.queue.stranded` - the same fabricated zero the no-runtime guard above
+           * removes, on the sibling path, and just as indistinguishable from "nothing is stranded".
+           *
+           * `null` carries the same meaning here as it does there: NOT AUTHORITATIVE. The tick's sweep
+           * block is skipped, so no depth is recorded and the last genuine observation (or none at all)
+           * stands. The rule - and the class of non-record answers it is about - is documented once, beside
+           * the helper.
+           */
+          return reconcileSweepRecordOf(record);
         },
         /**
          * Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S7 (live on `:3457`: 13 replay jobs

@@ -25,12 +25,14 @@ import {
   evalFinaliseRefusals,
   ladderRungCountOf,
   learnerDerivations,
+  persistedAdmissionFloorVerdictOf,
   recordAdmissionFloor,
   recordArmPlan,
   recordFinaliseRefusal,
   recordLadderRungs,
   recordLearnerDerivation,
   recordLearnerFamilyEvidence,
+  recordPersistedAdmissionFloor,
   recordQueueDepths,
   recordReplayAdmission,
   recordRouterDecision,
@@ -1164,8 +1166,15 @@ describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
     expect((ladderAfter.count ?? 0) - (ladderBefore.count ?? 0)).toBe(1);
     expect((ladderAfter.sum ?? 0) - (ladderBefore.sum ?? 0)).toBe(4);
 
-    // (b) admission_floor - cli.ts:6809-6810 records the verdict of every entry that carries one. The
-    // refusal and the admission are the two series of the one rate.
+    // (b) admission_floor - cli.ts:6853-6857 records the LIVE verdict of every entry that carries one, and
+    // the refusal IS one of them: the two series are the numerator and denominator of the one rate. The
+    // live answer rides the entry's own `floor` carrier (floor.admitted.size); the entry written above
+    // carries no live answer, which is why the PERSISTED reading is its own metric below.
+    const persistedFloorCount = (admitted: string): number =>
+      ((snapshotEntry(scope, "role-model.learner.admission_floor_persisted")?.series ?? []).find(
+        (entry) => entry.attributes.admitted === admitted,
+      )?.state.count as number | undefined) ?? 0;
+
     const refusedBefore = floorCount("false");
     const refusal = admissionFloorVerdictOf({
       roleId: "role:coder",
@@ -1179,14 +1188,25 @@ describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
     expect(floorCount("false") - refusedBefore).toBe(1);
 
     const admittedBefore = floorCount("true");
-    const admittedVerdict = admissionFloorVerdictOf(writtenEntry);
+    const admittedVerdict = admissionFloorVerdictOf({ ...writtenEntry, floor: { admitted: 3 } });
     expect(admittedVerdict).toBe(true);
     if (admittedVerdict !== null) recordAdmissionFloor(admittedVerdict, scope);
     expect(floorCount("true") - admittedBefore).toBe(1);
 
-    // a persisted row that admitted NOTHING is a refusal too
+    // the SAME entry, read as the PERSISTED snapshot it carries: the other metric, and never this one
+    expect(admissionFloorVerdictOf(writtenEntry)).toBeNull();
+    const persistedBefore = persistedFloorCount("true");
+    const persistedVerdict = persistedAdmissionFloorVerdictOf(writtenEntry);
+    expect(persistedVerdict).toBe(true);
+    if (persistedVerdict !== null) recordPersistedAdmissionFloor(persistedVerdict, scope);
+    expect(persistedFloorCount("true") - persistedBefore).toBe(1);
+
+    // a persisted row that admitted NOTHING is a refusal too - of the persisted reading
     expect(
-      admissionFloorVerdictOf({ status: "written", ladder: { completeness: { admitted: 0 } } }),
+      persistedAdmissionFloorVerdictOf({
+        status: "written",
+        ladder: { completeness: { admitted: 0 } },
+      }),
     ).toBe(false);
     // ...while a null-ladder status that is NOT a floor verdict records NOTHING at the seam
     expect(admissionFloorVerdictOf({ status: "capacity_exceeded", ladder: null })).toBeNull();
@@ -1244,6 +1264,12 @@ describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
     // deleting the cli.ts loop would leave this suite green (the M4 class: a pin that cannot fail).
     expect(cli).toContain("admissionFloorVerdictOf(");
     expect(cli).toContain("recordAdmissionFloor(");
+    // Run 108 follow-up (M3): the LIVE reading is the floor's; the persisted reading rides its OWN metric
+    // id, and BOTH stay wired at the materialization outcome.
+    expect(cli).toContain("persistedAdmissionFloorVerdictOf(");
+    expect(cli).toContain("recordPersistedAdmissionFloor(");
+    // Run 108 follow-up: the reconcile readback fails closed through the one helper that owns the rule.
+    expect(cli).toContain("reconcileSweepRecordOf(");
     // Run 108 follow-up: the rung count must reach the recorder THROUGH the reader that owns the
     // outcome-entry shape, or the emit silently measures nothing again.
     expect(cli).toContain("ladderRungCountOf(");
@@ -1271,44 +1297,305 @@ describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
   });
 });
 
-describe("run108 addendum-04 - the admission floor is counted at the MATERIALIZATION outcome", () => {
+/**
+ * Run 108 addendum-04, RE-SUBJECTED by the follow-up M3 finding. These are the assertions that used to
+ * live under `admissionFloorVerdictOf`, and every one of them still holds - of the PERSISTED snapshot,
+ * which the M3 finding established is a DIFFERENT SUBJECT from the current floor verdict. They now pin the
+ * separate metric the same reading is published under (`role-model.learner.admission_floor_persisted`),
+ * so a preserved historical value can never be read as the live answer again.
+ */
+describe("run108 addendum-04 - the PERSISTED snapshot verdict has its own metric", () => {
   test("counts the PERSISTED row verdict, and the refusal case is reachable", () => {
     // "written" with a full admitted count, and the steady-state "unchanged" row - both passed the floor.
     expect(
-      admissionFloorVerdictOf({
+      persistedAdmissionFloorVerdictOf({
         status: "written",
         ladder: { completeness: { admitted: 8, configured: 12 } },
       }),
     ).toBe(true);
     expect(
-      admissionFloorVerdictOf({ status: "unchanged", ladder: { completeness: { admitted: 7 } } }),
+      persistedAdmissionFloorVerdictOf({
+        status: "unchanged",
+        ladder: { completeness: { admitted: 7 } },
+      }),
     ).toBe(true);
     // THE case the old in-flight-challenge emit could never reach: the floor REFUSED. This is the REAL
     // shape - the materializer pushes { status: "insufficient_evidence", ladder: null } with NO
     // completeness (route-ladder-materialization.mjs:94); completeness is built only on the write path
     // (:129). The earlier synthetic admitted:0 row is not a shape production ever emits.
-    expect(admissionFloorVerdictOf({ status: "insufficient_evidence", ladder: null })).toBe(false);
-    expect(admissionFloorVerdictOf({ status: "insufficient_evidence" })).toBe(false);
+    expect(
+      persistedAdmissionFloorVerdictOf({ status: "insufficient_evidence", ladder: null }),
+    ).toBe(false);
+    expect(persistedAdmissionFloorVerdictOf({ status: "insufficient_evidence" })).toBe(false);
     // ...but a null-ladder status that is NOT a floor verdict must record NOTHING.
-    expect(admissionFloorVerdictOf({ status: "capacity_exceeded", ladder: null })).toBeNull();
-    expect(admissionFloorVerdictOf({ status: "stale", ladder: null })).toBeNull();
-    expect(admissionFloorVerdictOf({ status: "rolled_back", ladder: null })).toBeNull();
+    expect(
+      persistedAdmissionFloorVerdictOf({ status: "capacity_exceeded", ladder: null }),
+    ).toBeNull();
+    expect(persistedAdmissionFloorVerdictOf({ status: "stale", ladder: null })).toBeNull();
+    expect(persistedAdmissionFloorVerdictOf({ status: "rolled_back", ladder: null })).toBeNull();
   });
 
   test("skips rows that carry no admitted count rather than inventing a refusal", () => {
-    expect(admissionFloorVerdictOf({ status: "written", ladder: { rungs: [{}, {}] } })).toBeNull();
-    expect(admissionFloorVerdictOf({ status: "refused" })).toBeNull();
-    expect(admissionFloorVerdictOf(null)).toBeNull();
-    expect(admissionFloorVerdictOf("nonsense")).toBeNull();
+    expect(
+      persistedAdmissionFloorVerdictOf({ status: "written", ladder: { rungs: [{}, {}] } }),
+    ).toBeNull();
+    expect(persistedAdmissionFloorVerdictOf({ status: "refused" })).toBeNull();
+    expect(persistedAdmissionFloorVerdictOf(null)).toBeNull();
+    expect(persistedAdmissionFloorVerdictOf("nonsense")).toBeNull();
   });
 
   test("the persisted row WINS over a value carried beside it", () => {
     expect(
-      admissionFloorVerdictOf({
+      persistedAdmissionFloorVerdictOf({
         status: "written",
         completeness: { admitted: 0 },
         ladder: { completeness: { admitted: 5 } },
       }),
     ).toBe(true);
   });
+
+  test("the persisted reading is published under its OWN metric id, never as the floor", () => {
+    const scope = createObservabilityScope("run108-observability:m3-persisted-metric");
+    const countFor = (id: string, admitted: string): number =>
+      ((snapshotEntry(scope, id)?.series ?? []).find(
+        (entry) => entry.attributes.admitted === admitted,
+      )?.state.count as number | undefined) ?? 0;
+    recordPersistedAdmissionFloor(true, scope);
+    recordPersistedAdmissionFloor(false, scope);
+    recordPersistedAdmissionFloor(false, scope);
+    expect(countFor("role-model.learner.admission_floor_persisted", "true")).toBe(1);
+    expect(countFor("role-model.learner.admission_floor_persisted", "false")).toBe(2);
+    // the two readings never share a series: a persisted value cannot appear as the floor's own verdict
+    expect(snapshotEntry(scope, "role-model.learner.admission_floor")).toBeUndefined();
+  });
 });
+
+/**
+ * Run 108 follow-up - M3 (RED-first). The admission floor is a CURRENT eligibility verdict (the canonical
+ * promotion gate: 5 comparisons at mean confidence 0.7), so the metric must report the LIVE answer of
+ * `admissionFloor(entry.groups, defaults)` - never the PERSISTED row, which the materializer deliberately
+ * preserves when an append drops a previously admitted endpoint below the floor.
+ */
+describe("run108 follow-up M3 - the admission floor reports the LIVE verdict, not the preserved snapshot", () => {
+  test("M3 RED-first: a preserved snapshot that says admitted while the live floor admits nothing reads false", () => {
+    // The exact regression state the producer reaches: the store's row still carries the prior admitted
+    // count (route-ladder-materialization.mjs:116-129 preserves the prior evidence AND its completeness),
+    // while the live answer of admissionFloor(entry.groups, defaults) is an EMPTY admitted set.
+    expect(
+      admissionFloorVerdictOf({
+        status: "written",
+        ladder: { completeness: { admitted: 2, configured: 12 } },
+        floor: { admitted: 0 },
+      }),
+    ).toBe(false);
+    // ...and the carried row cannot override a live answer that DID admit an endpoint either.
+    expect(
+      admissionFloorVerdictOf({
+        status: "written",
+        ladder: { completeness: { admitted: 0, configured: 12 } },
+        floor: { admitted: 1 },
+      }),
+    ).toBe(true);
+  });
+
+  test("M3: a preserved snapshot with no live carrier measures NO current verdict", () => {
+    // Reading the persisted row here is the fabricated green: nothing in the entry says the floor is met
+    // NOW, so the metric records NOTHING rather than a preserved historical value.
+    expect(
+      admissionFloorVerdictOf({ status: "written", ladder: { completeness: { admitted: 8 } } }),
+    ).toBeNull();
+    expect(
+      admissionFloorVerdictOf({ status: "unchanged", ladder: { completeness: { admitted: 7 } } }),
+    ).toBeNull();
+    expect(
+      admissionFloorVerdictOf({
+        status: "written",
+        completeness: { admitted: 5 },
+        ladder: { completeness: { admitted: 5 } },
+      }),
+    ).toBeNull();
+  });
+
+  test("M3: the live carrier is floor.admitted.size, as the size or as the Set itself", () => {
+    expect(admissionFloorVerdictOf({ status: "written", floor: { admitted: 3 } })).toBe(true);
+    expect(admissionFloorVerdictOf({ status: "written", floor: { admitted: [] } })).toBe(false);
+    expect(
+      admissionFloorVerdictOf({
+        status: "written",
+        floor: { admitted: ["endpoint:a", "endpoint:b"] },
+      }),
+    ).toBe(true);
+    // anything that is not that quantity measures nothing
+    expect(admissionFloorVerdictOf({ status: "written", floor: { admitted: "3" } })).toBeNull();
+    expect(admissionFloorVerdictOf({ status: "written", floor: { admitted: -1 } })).toBeNull();
+    expect(admissionFloorVerdictOf({ status: "written", floor: {} })).toBeNull();
+    expect(admissionFloorVerdictOf({ status: "written", floor: [] })).toBeNull();
+  });
+
+  test("M3: the floor's own non-verdict branches are unchanged", () => {
+    expect(admissionFloorVerdictOf({ status: "insufficient_evidence", ladder: null })).toBe(false);
+    expect(admissionFloorVerdictOf({ status: "insufficient_evidence" })).toBe(false);
+    expect(admissionFloorVerdictOf({ status: "capacity_exceeded", ladder: null })).toBeNull();
+    expect(admissionFloorVerdictOf({ status: "stale", ladder: null })).toBeNull();
+    expect(admissionFloorVerdictOf({ status: "stale_evidence", ladder: null })).toBeNull();
+    expect(admissionFloorVerdictOf({ status: "refused" })).toBeNull();
+    expect(admissionFloorVerdictOf({ status: "rolled_back", ladder: null })).toBeNull();
+    expect(admissionFloorVerdictOf(null)).toBeNull();
+    expect(admissionFloorVerdictOf("nonsense")).toBeNull();
+  });
+});
+
+/**
+ * M3, the ANTI-DRIFT half. The literal above is only as good as the shape it transcribes, so this case
+ * drives the GENUINE materializer over a real SQLite store into the state the fix exists for: an append
+ * that pulls every previously admitted endpoint below the floor. The store's row keeps its prior
+ * completeness (the preservation), and the floor admits NOTHING - the exact entry the old reader called
+ * `admitted: true`.
+ */
+pairedLadderTest(
+  "M3 (paired): a REGRESSED ladder's persisted row still reads admitted while the live floor admits nothing",
+  async () => {
+    const scopeId = "tenant:run108-floor-regression";
+    const roleId = "role:coder";
+    const taskTypeId = "task:review";
+    const { run } = (await import(/* @vite-ignore */ pathToFileURL(ladderStorePath).href)) as {
+      run: (input: Record<string, unknown>) => Promise<unknown>;
+    };
+    const { createRouteLadderStoreAdapter, materializeRouteLadders } = (await import(
+      /* @vite-ignore */ pathToFileURL(ladderMaterializerPath).href
+    )) as {
+      createRouteLadderStoreAdapter: (input: Record<string, unknown>) => Record<string, unknown>;
+      materializeRouteLadders: (
+        input: Record<string, unknown>,
+      ) => Promise<{ ladders: Array<Record<string, unknown>> }>;
+    };
+    const root = await mkdtemp(path.join(tmpdir(), "run108-floor-regression-"));
+    ladderRoots.push(root);
+    const filePath = path.join(root, "knowledge.sqlite");
+    const invoke = async (capability: string, value: Record<string, unknown>) =>
+      run({
+        capability,
+        channel: "development",
+        scope: scopeId,
+        authorizationEpoch: 108,
+        payload: { ...value, filePath },
+      });
+    const adapter = createRouteLadderStoreAdapter({
+      invoke: async (_id: string, envelope: { capability: string; payload: unknown }) =>
+        invoke(envelope.capability, envelope.payload as Record<string, unknown>),
+      envelope: {
+        channel: "development",
+        scope: scopeId,
+        authorizationEpoch: 108,
+        payload: { filePath },
+      },
+    });
+    /**
+     * The producer's own group shape (transcribed from the paired materializer's test above): the SOURCE
+     * arm carries the confidence under test, the counterfactual arm carries its own - the floor takes the
+     * MEAN over each endpoint's OWN member confidences, so a regression needs BOTH arms to fall.
+     */
+    const finalized = (
+      groupId: string,
+      sourceConfidence: number,
+      counterfactualConfidence: number,
+    ) => ({
+      groupId,
+      status: "finalized",
+      outcome: "source",
+      winnerTrialId: `${groupId}:a`,
+      winnerRole: "source",
+      createdAtMs: 1000,
+      comparability: {
+        roleId,
+        taskTypeId,
+        taxonomyVersion: "taxonomy:108",
+        sourceCandidateRef: "endpoint:a",
+        counterfactualCandidateRef: "endpoint:b",
+      },
+      scorerDisagreement: false,
+      scorerOutcomes: [{ scorerKey: "judge", outcome: "source" }],
+      validityIssues: [],
+      effortComparability: [
+        {
+          endpointId: "endpoint:b",
+          modelId: "b",
+          sourceModelId: "a",
+          reasoningEffort: "high",
+          sourceReasoningEffort: "high",
+          comparability: "matched",
+        },
+      ],
+      members: [
+        {
+          trialId: `${groupId}:a`,
+          candidateRef: "endpoint:a",
+          role: "source",
+          confidence: sourceConfidence,
+        },
+        {
+          trialId: `${groupId}:b`,
+          candidateRef: "endpoint:b",
+          role: "counterfactual",
+          confidence: counterfactualConfidence,
+        },
+      ],
+    });
+    const configuredEndpointIds = [
+      "endpoint:a",
+      "endpoint:b",
+      ...Array.from(
+        { length: 10 },
+        (_, index) => `endpoint:pool${String(index + 1).padStart(2, "0")}`,
+      ),
+    ];
+    const materialize = (groups: ReadonlyArray<Record<string, unknown>>) =>
+      materializeRouteLadders({
+        groups,
+        configuredEndpointIds,
+        ...adapter,
+        defaults: { minComparisons: 5, minConfidence: 0.7, stalenessWindowDays: 30 },
+        nowMs: 2000,
+        taxonomyVersion: "taxonomy:108",
+        scopeId,
+      });
+
+    // (1) FIVE matched comparisons per endpoint: the floor admits BOTH (5 >= minComparisons, and the means
+    // 0.9 / 0.75 are >= minConfidence).
+    const firstRun = await materialize(
+      Array.from({ length: 5 }, (_, index) => finalized(`g${index + 1}`, 0.9, 0.75)),
+    );
+    const firstEntry = firstRun.ladders.find((row) => row.status === "written");
+    expect(firstEntry).toBeDefined();
+    if (!firstEntry) return;
+    expect((firstEntry.ladder as { completeness: unknown }).completeness).toEqual({
+      admitted: 2,
+      configured: 12,
+    });
+
+    // (2) TWO appends at confidence 0.1 on BOTH arms: a's mean falls to 4.7/7 = 0.671 and b's to 3.95/7 =
+    // 0.564, both BELOW minConfidence, so the live floor admits NOTHING - and the materializer PRESERVES
+    // the prior snapshot instead of revoking it.
+    const regressedRun = await materialize([
+      ...Array.from({ length: 5 }, (_, index) => finalized(`g${index + 1}`, 0.9, 0.75)),
+      ...Array.from({ length: 2 }, (_, index) => finalized(`g${index + 6}`, 0.1, 0.1)),
+    ]);
+    const entry = regressedRun.ladders.find((row) => row.status === "written");
+    expect(entry).toBeDefined();
+    if (!entry) return;
+
+    // THE PRESERVATION, on the genuine producer: the persisted row still answers 2 admitted endpoints...
+    const persistedRow = entry.ladder as { completeness: { admitted: number; configured: number } };
+    expect(persistedRow.completeness).toEqual({ admitted: 2, configured: 12 });
+
+    // ...so the OLD reader (the persisted snapshot) called this a MET floor - the fabricated green, on the
+    // producer's own output rather than on a hand-built literal. It still does, under its own id.
+    expect(persistedAdmissionFloorVerdictOf(entry)).toBe(true);
+    // The LIVE reader must never answer that: it answers the live refusal once the outcome publishes
+    // floor.admitted.size, and NOTHING (not authoritative) until it does - never the preserved value.
+    const live = admissionFloorVerdictOf(entry);
+    expect(live).not.toBe(true);
+    if ((entry as { floor?: unknown }).floor === undefined) expect(live).toBeNull();
+    else expect(live).toBe(false);
+  },
+);

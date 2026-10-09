@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 
 import { afterEach, expect, test } from "vitest";
 
+import { reconcileSweepRecordOf } from "../src/evaluation-reconcile-readback.js";
 import {
   type ObservabilityScope,
   collectObservabilitySnapshot,
@@ -283,6 +284,47 @@ test("defect 3: the CLI seam answers null when no extension runtime is bound", (
   expect(head).toContain("extensionRuntimeRef.current");
   expect(head).toContain("if (!runtime) return null;");
   expect(head).not.toContain("stranded: []");
+});
+
+test("defect 3 sibling: a malformed reconcile record is NOT AUTHORITATIVE, not an empty sweep", async () => {
+  // The behavioural half: the fail-closed reader the CLI seam routes its answer through. A record is
+  // answered as itself; anything else - an absent answer, a scalar, an array, a transfer marker's shape -
+  // answers null, which the tick reads as "no observation" rather than "nothing stranded".
+  const sweep = { scanned: 2, completed: [], stranded: ["job-1"], reclaimed: [] };
+  expect(reconcileSweepRecordOf(sweep)).toBe(sweep);
+  expect(
+    reconcileSweepRecordOf({ scanned: 0, completed: [], stranded: [], reclaimed: [] }),
+  ).toEqual({
+    scanned: 0,
+    completed: [],
+    stranded: [],
+    reclaimed: [],
+  });
+  expect(reconcileSweepRecordOf(null)).toBeNull();
+  expect(reconcileSweepRecordOf(undefined)).toBeNull();
+  expect(reconcileSweepRecordOf([])).toBeNull();
+  expect(reconcileSweepRecordOf("nonsense")).toBeNull();
+  expect(reconcileSweepRecordOf(7)).toBeNull();
+  // ...and a genuine empty sweep still reaches the gauge as 0: the fix removes the FABRICATION, not the
+  // ability to observe a real zero.
+  const { loop, scope } = harness({ reconcile: async () => reconcileSweepRecordOf(sweep) });
+  await loop.tick();
+  expect(gaugeValue(scope, "role-model.replay.queue.stranded")).toBe(1);
+});
+
+test("defect 3 sibling: the MALFORMED-record fallback must not answer an empty sweep either", () => {
+  // The no-runtime guard above removes the fabricated zero for an absent runtime. The SIBLING fallback in
+  // the same method answered the SAME empty sweep for a record that is malformed or absent, so the tick
+  // counted it as `stranded: 0` and SET it on the gauge - indistinguishable from "nothing is stranded".
+  const source = readFileSync(new URL("../src/cli.ts", import.meta.url), "utf8");
+  const body = source.slice(source.indexOf("async reconcileEvaluationJobs() {"));
+  const method = body.slice(0, body.indexOf("async recoverHandedOffEvaluations"));
+  expect(method).toContain("if (!runtime) return null;");
+  expect(method).toContain("reconcileSweepRecordOf(record)");
+  // The pin is on the CODE, not the prose: the method's own doc comment quotes the pre-fix literal on
+  // purpose (that is the history), so comments are stripped before the shape is asserted.
+  const code = method.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+  expect(code).not.toContain("scanned: 0, completed: [], stranded: [], reclaimed: []");
 });
 
 test("defect 2: the private producer reports the PRE-SLICE depth", () => {
