@@ -5,7 +5,11 @@ import { fileURLToPath } from "node:url";
 
 import { afterEach, expect, test } from "vitest";
 
-import { collectObservabilitySnapshot } from "../src/run108-observability.js";
+import {
+  type ObservabilityScope,
+  collectObservabilitySnapshot,
+  createObservabilityScope,
+} from "../src/run108-observability.js";
 import { type RouteLadderRow, startAutoReplayLoop } from "../src/track-b-auto-replay-runtime.js";
 import type { AutoReplayCapture } from "../src/track-b-auto-replay.js";
 import { createReplayLedger } from "../src/track-b-replay-ledger.js";
@@ -40,10 +44,17 @@ afterEach(() => {
   for (const cleanup of cleanups.splice(0)) cleanup();
 });
 
-/** The gauge reading the operator surface publishes: the series value, or null when unobserved. */
-const gaugeValue = (name: string): number | null => {
+/**
+ * The gauge reading the operator surface publishes, read from ONE runtime scope: the series value, or
+ * null when unobserved.
+ *
+ * Run 108 follow-up: this used to read the process-global default registry. The tick records through
+ * the scope it was STARTED with, so a readback that names no scope would be reading a different
+ * registry from the one under test - the defect, not the contract.
+ */
+const gaugeValue = (scope: ObservabilityScope, name: string): number | null => {
   const entry = (
-    collectObservabilitySnapshot() as unknown as Record<
+    collectObservabilitySnapshot(scope) as unknown as Record<
       string,
       { readonly series?: ReadonlyArray<{ readonly state?: Record<string, unknown> }> } | undefined
     >
@@ -118,12 +129,20 @@ function harness(options: {
   readonly pendingReadback?: () => unknown;
   readonly dispatches?: () => Promise<readonly PendingDispatch[] | null>;
   readonly reconcile?: () => Promise<unknown>;
+  /** Run 108 follow-up: the runtime scope this loop belongs to. Defaults to a fresh one per harness. */
+  readonly scope?: ObservabilityScope;
 }) {
+  /**
+   * ONE registry for this harness's runtime scope - built here, handed to the loop the tick records
+   * through AND returned so the case reads the gauges back from that same registry.
+   */
+  const scope = options.scope ?? createObservabilityScope("run108-metric-semantics");
   const dir = mkdtempSync(path.join(os.tmpdir(), "run108-metric-semantics-"));
   const configured = options.configured ?? ["a", "b", "c", "new"];
   const row = options.row ?? ladder(["a", "b", "c"], 900);
   const pending = [captureRow()];
   const loop = startAutoReplayLoop({
+    observabilityScope: scope,
     operations: {
       async listPendingReplayCaptures() {
         if (options.pendingReadback) return options.pendingReadback();
@@ -160,20 +179,24 @@ function harness(options: {
     loop.stop();
     rmSync(dir, { recursive: true, force: true });
   });
-  return loop;
+  return { loop, scope };
 }
 
 test("defect 1: the awaiting-evaluation gauge counts JOBS, so two arms of ONE job read 1", async () => {
   // Live shape: one durable replay job carrying four arms publishes FOUR readback entries.
-  const loop = harness({ dispatches: async () => [arm("job-1", "new"), arm("job-1", "new")] });
+  const { loop, scope } = harness({
+    dispatches: async () => [arm("job-1", "new"), arm("job-1", "new")],
+  });
   await loop.tick();
-  expect(gaugeValue("role-model.replay.queue.awaiting_evaluation")).toBe(1);
+  expect(gaugeValue(scope, "role-model.replay.queue.awaiting_evaluation")).toBe(1);
 });
 
 test("defect 1: two DIFFERENT durable replay jobs are still TWO", async () => {
-  const loop = harness({ dispatches: async () => [arm("job-1", "new"), arm("job-2", "new")] });
+  const { loop, scope } = harness({
+    dispatches: async () => [arm("job-1", "new"), arm("job-2", "new")],
+  });
   await loop.tick();
-  expect(gaugeValue("role-model.replay.queue.awaiting_evaluation")).toBe(2);
+  expect(gaugeValue(scope, "role-model.replay.queue.awaiting_evaluation")).toBe(2);
 });
 
 test("defect 1: a pre-replay queue job counts by its queue id too", async () => {
@@ -187,58 +210,58 @@ test("defect 1: a pre-replay queue job counts by its queue id too", async () => 
     createdAtMs: 950,
     state: "awaiting_evaluation",
   });
-  const loop = harness({ dispatches: async () => [queueArm("q-1"), queueArm("q-1")] });
+  const { loop, scope } = harness({ dispatches: async () => [queueArm("q-1"), queueArm("q-1")] });
   await loop.tick();
-  expect(gaugeValue("role-model.replay.queue.awaiting_evaluation")).toBe(1);
+  expect(gaugeValue(scope, "role-model.replay.queue.awaiting_evaluation")).toBe(1);
 });
 
 test("defect 2: a page-limited readback still reports the FULL depth, not the page", async () => {
   const page = [captureRow()];
-  const loop = harness({
+  const { loop, scope } = harness({
     // The producer's page is bounded by the tick's own limit (maxCapturesPerTick * 4 = 32); the depth
     // it still owes a replay is not.
     pendingReadback: () => ({ pending: page, pendingCount: page.length, pendingTotal: 40 }),
   });
   await loop.tick();
-  expect(gaugeValue("role-model.replay.queue.queued")).toBe(40);
+  expect(gaugeValue(scope, "role-model.replay.queue.queued")).toBe(40);
 });
 
 test("defect 2: a readback that predates the total still reports what it counts", async () => {
   const page = [captureRow()];
-  const loop = harness({ pendingReadback: () => ({ pending: page, pendingCount: 3 }) });
+  const { loop, scope } = harness({ pendingReadback: () => ({ pending: page, pendingCount: 3 }) });
   await loop.tick();
-  expect(gaugeValue("role-model.replay.queue.queued")).toBe(3);
+  expect(gaugeValue(scope, "role-model.replay.queue.queued")).toBe(3);
 });
 
 test("defect 3: a reconcile pass that answered NOTHING records nothing, never zero", async () => {
   // The tick's liveness sweep runs FIRST every tick, and the production boundary ALWAYS exposes
   // reconcileEvaluationJobs. A pass that answers null (the no-extension-runtime seam, cli.ts) must
   // leave the gauge unobserved rather than SET it to 0 - so nothing is recorded for it at all.
-  const loop = harness({ reconcile: async () => null });
+  const { loop, scope } = harness({ reconcile: async () => null });
   await loop.tick();
-  const entry = (collectObservabilitySnapshot() as unknown as Record<string, unknown>)[
+  const entry = (collectObservabilitySnapshot(scope) as unknown as Record<string, unknown>)[
     "role-model.replay.queue.stranded"
   ] as { readonly series?: ReadonlyArray<unknown> } | undefined;
   // A fabricated zero would appear here as one series with value 0 - the exact reading that cannot be
   // told apart from "nothing stranded".
   expect(entry?.series ?? []).toHaveLength(0);
-  expect(gaugeValue("role-model.replay.queue.stranded")).toBeNull();
+  expect(gaugeValue(scope, "role-model.replay.queue.stranded")).toBeNull();
 });
 
 test("defect 3: the absent pass does not overwrite a genuine earlier observation", async () => {
   // A runtime that reconciles, then loses its extension runtime: the last REAL depth must survive
   // rather than being replaced by the fabricated empty sweep.
   let answer: unknown = { scanned: 1, completed: [], stranded: ["job-1"], reclaimed: [] };
-  const loop = harness({ reconcile: async () => answer });
+  const { loop, scope } = harness({ reconcile: async () => answer });
   await loop.tick();
-  expect(gaugeValue("role-model.replay.queue.stranded")).toBe(1);
+  expect(gaugeValue(scope, "role-model.replay.queue.stranded")).toBe(1);
   answer = null;
   await loop.tick();
-  expect(gaugeValue("role-model.replay.queue.stranded")).toBe(1);
+  expect(gaugeValue(scope, "role-model.replay.queue.stranded")).toBe(1);
 });
 
 test("defect 3: an answering reconcile pass still SETS the gauge", async () => {
-  const loop = harness({
+  const { loop, scope } = harness({
     reconcile: async () => ({
       scanned: 2,
       completed: [],
@@ -247,7 +270,7 @@ test("defect 3: an answering reconcile pass still SETS the gauge", async () => {
     }),
   });
   await loop.tick();
-  expect(gaugeValue("role-model.replay.queue.stranded")).toBe(2);
+  expect(gaugeValue(scope, "role-model.replay.queue.stranded")).toBe(2);
 });
 
 test("defect 3: the CLI seam answers null when no extension runtime is bound", () => {
@@ -286,5 +309,9 @@ test("defect 1/2/3: the recorders are wired at the tick's own readbacks", () => 
   expect(source).toContain("pendingTotal");
   // defect 3: the reconcile outcome is skipped, not fabricated, when the pass is null - the record
   // sits INSIDE the guard on the pass having answered, so a null pass reaches no recorder at all
-  expect(source).toMatch(/if \(sweep\) \{[\s\S]{0,900}recordQueueDepths\(\{ stranded \}\)/);
+  expect(source).toMatch(/if \(sweep\) \{[\s\S]{0,900}recordQueueDepths\(\{ stranded \}/);
+  // Run 108 follow-up: and every one of those records names the runtime scope the loop was STARTED
+  // with, so the tick's gauges land in ONE registry rather than the process-global default Map.
+  expect(source).toContain("const observabilityScope = input.observabilityScope;");
+  expect(source).toMatch(/recordQueueDepths\(\{ stranded \}, observabilityScope\)/);
 });

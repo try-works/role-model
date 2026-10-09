@@ -16,10 +16,12 @@ import { afterEach, describe, expect, test } from "vitest";
 // registry-scoped so tests and per-scope runtimes isolate, per the effect-grep canonical idiom.
 import {
   LEARNER_FAMILY_ATTRIBUTE_BOUND,
+  type ObservabilityScope,
   REPLAY_ARM_PLAN_BOUNDARIES,
   admissionFloorVerdictOf,
   collectObservabilitySnapshot,
   createFamilyAttributeCollapser,
+  createObservabilityScope,
   evalFinaliseRefusals,
   ladderRungCountOf,
   learnerDerivations,
@@ -159,15 +161,22 @@ describe("run108 R7 the observability spine", () => {
     expect((completedExit as { _tag: string })._tag).toBe("Success");
   });
 
-  test("the production wiring helpers update the default registry and the snapshot reads them", () => {
-    // RED today: the helpers do not exist (collection failure). 03.5 review M2/M4: the phase-3
-    // call sites were inline (no pinned contract) and the metrics were write-only.
-    const before = collectObservabilitySnapshot();
-    recordRouterDecision("advisory_applied");
-    recordReplayAdmission("replay", true);
-    recordLearnerDerivation(3, "derived");
-    recordFinaliseRefusal("finalise", "declared_pair");
-    const snapshot = collectObservabilitySnapshot();
+  test("the production wiring helpers update the SCOPE registry and the snapshot reads THAT", () => {
+    // 03.5 review M2/M4: the phase-3 call sites were inline (no pinned contract) and the metrics were
+    // write-only.
+    //
+    // Run 108 follow-up: this case used to read through the DEFAULT registry - it was named "...
+    // update the default registry ..." and passed only because the wiring helpers and the readback
+    // both fell back to Effect's process-global default Map. That is the defect, not the contract: the
+    // scope is now built here and handed to BOTH ends, so the assertion is about THIS scope's
+    // registry and can only be satisfied by the helpers recording into it.
+    const scope = createObservabilityScope("run108-observability:wiring-helpers");
+    const before = collectObservabilitySnapshot(scope);
+    recordRouterDecision("advisory_applied", scope);
+    recordReplayAdmission("replay", true, scope);
+    recordLearnerDerivation(3, "derived", scope);
+    recordFinaliseRefusal("finalise", "declared_pair", scope);
+    const snapshot = collectObservabilitySnapshot(scope);
 
     for (const name of [
       "role-model.router.decisions",
@@ -185,6 +194,56 @@ describe("run108 R7 the observability spine", () => {
     expect(delta("role-model.replay.admissions")).toBe(1);
     expect(delta("role-model.learner.derivations")).toBe(3);
     expect(delta("role-model.eval.finalise_refusals")).toBe(1);
+
+    // ...and a SECOND scope that recorded nothing reads nothing: the same four ids are absent from it,
+    // so the delta above cannot have come from a registry the two scopes share.
+    const other = collectObservabilitySnapshot(createObservabilityScope("no-writes"));
+    for (const name of Object.keys(snapshot)) {
+      expect(other[name]).toBeUndefined();
+    }
+  });
+
+  /**
+   * RED-FIRST CASE (run 108 follow-up, the per-runtime-scope registry fix).
+   *
+   * THE DEFECT: every recorder and the readback call bare Effect.runSync(Metric.update(...)) /
+   * Effect.runSync(Metric.snapshot) with NO registry provided, so all of them resolve to the
+   * PROCESS-GLOBAL default Map. Effect states the contract itself (vendor/effect Metric.ts
+   * :1638-1668): MetricRegistry is a Context.Reference with `defaultValue: () => new Map()` and
+   * "Because Context.Reference caches default values, the default Map is shared by contexts that do
+   * not provide an override. Provide MetricRegistry with a fresh Map when isolation matters."
+   *
+   * THE SCENARIO: ONE runtime scope records through the PRODUCTION recorder; a SECOND scope records
+   * the SAME metric id. The first scope's readback must not move. It moves today, which is the leak.
+   */
+  test("scope isolation: a second scope's write leaves this scope's snapshot untouched", () => {
+    const scope = createObservabilityScope("run108-observability:isolation-a");
+    // THIS SCOPE records through the production wiring helper ...
+    const before = collectObservabilitySnapshot(scope);
+    recordRouterDecision("advisory_applied", scope);
+
+    // ... and a DIFFERENT runtime scope records the SAME metric id by hand. This is the RED that
+    // failed before the fix: with no registry provided, that hand write resolved to the same
+    // process-global default Map the recorder had just written into, so it landed in THIS scope's
+    // readback and the delta below was 6 instead of 1.
+    const other = createObservabilityScope("run108-observability:isolation-b");
+    Effect.runSync(
+      Metric.update(routerDecisions as never, 5).pipe(
+        Effect.provideService(Metric.MetricRegistry, other.registry),
+      ),
+    );
+    // ... and so does a writer that provides NO registry at all - the bare default Map every recorder
+    // in this module used to resolve to.
+    Effect.runSync(Metric.update(routerDecisions as never, 5));
+
+    const after = collectObservabilitySnapshot(scope);
+    const delta =
+      (after["role-model.router.decisions"]?.count ?? 0) -
+      (before["role-model.router.decisions"]?.count ?? 0);
+    expect(delta).toBe(1);
+    // the second scope's own registry holds its five, so the isolation is real and not a dropped write
+    const isolated = collectObservabilitySnapshot(other)["role-model.router.decisions"]?.count ?? 0;
+    expect(isolated).toBe(5);
   });
 });
 
@@ -244,8 +303,16 @@ interface SnapshotEntry {
   readonly series?: ReadonlyArray<SnapshotSeries>;
 }
 
-const snapshotEntry = (name: string): SnapshotEntry | undefined =>
-  (collectObservabilitySnapshot() as unknown as Record<string, SnapshotEntry | undefined>)[name];
+/**
+ * Read ONE metric id back from ONE runtime scope's registry. Every case below builds its own scope
+ * (run 108 follow-up, the per-runtime-scope registry fix) so the readback can only ever see what that
+ * case itself recorded - never a write another case, another runtime, or the process-global default
+ * Map happened to make.
+ */
+const snapshotEntry = (scope: ObservabilityScope, name: string): SnapshotEntry | undefined =>
+  (collectObservabilitySnapshot(scope) as unknown as Record<string, SnapshotEntry | undefined>)[
+    name
+  ];
 
 describe("run108 phase-03 effect-grep canonicalization", () => {
   /**
@@ -287,15 +354,18 @@ describe("run108 phase-03 effect-grep canonicalization", () => {
    * the counter | gauge | histogram union.
    */
   test("F2: two different guard/reason refusals read back as TWO series, not one total", () => {
+    const scope = createObservabilityScope("run108-observability:f2-refusals");
     recordFinaliseRefusal(
       "finalise",
       "state=declined reason=insufficient refusal=judge_unresolved",
+      scope,
     );
     recordFinaliseRefusal(
       "finalise",
       "state=incomplete reason=disagreement refusal=arms_unresolved",
+      scope,
     );
-    const refusals = snapshotEntry("role-model.eval.finalise_refusals");
+    const refusals = snapshotEntry(scope, "role-model.eval.finalise_refusals");
     const refused = (reason: string) =>
       (refusals?.series ?? []).filter((entry) => entry.attributes.reason === reason);
     const insufficient = refused("state=declined reason=insufficient refusal=judge_unresolved");
@@ -318,14 +388,23 @@ describe("run108 phase-03 effect-grep canonicalization", () => {
       description: "F2 histogram readback.",
       boundaries: Metric.linearBoundaries({ start: 0, width: 10, count: 4 }),
     });
-    Effect.runSync(Metric.update(gauge as never, 7));
-    Effect.runSync(Metric.update(histogram as never, 25));
+    // Both ends on ONE registry, as the contract requires: a write with no registry provided lands
+    // in Effect's process-global default Map, which this scope's readback must never show.
+    const scope = createObservabilityScope("run108-observability:f2-families");
+    const writeIn = (metric: unknown, value: number) =>
+      Effect.runSync(
+        Metric.update(metric as never, value).pipe(
+          Effect.provideService(Metric.MetricRegistry, scope.registry),
+        ),
+      );
+    writeIn(gauge, 7);
+    writeIn(histogram, 25);
 
-    const gaugeSeries = snapshotEntry("role-model.test.f2_gauge")?.series ?? [];
+    const gaugeSeries = snapshotEntry(scope, "role-model.test.f2_gauge")?.series ?? [];
     expect(gaugeSeries).toHaveLength(1);
     expect(gaugeSeries[0]?.state).toEqual({ kind: "gauge", value: 7 });
 
-    const histogramSeries = snapshotEntry("role-model.test.f2_histogram")?.series ?? [];
+    const histogramSeries = snapshotEntry(scope, "role-model.test.f2_histogram")?.series ?? [];
     expect(histogramSeries).toHaveLength(1);
     const histogramState = histogramSeries[0]?.state ?? {};
     expect(histogramState.kind).toBe("histogram");
@@ -344,14 +423,15 @@ describe("run108 phase-03 effect-grep canonicalization", () => {
    * are two series of one counter.
    */
   test("F3: a refused admission counts 1 and tags admitted=false", () => {
+    const scope = createObservabilityScope("run108-observability:f3-refusal");
     const replaySeries = (admitted: string) =>
-      (snapshotEntry("role-model.replay.admissions")?.series ?? []).filter(
+      (snapshotEntry(scope, "role-model.replay.admissions")?.series ?? []).filter(
         (entry) => entry.attributes.pass === "replay" && entry.attributes.admitted === admitted,
       );
 
-    const before = snapshotEntry("role-model.replay.admissions")?.count ?? 0;
-    recordReplayAdmission("replay", false);
-    const after = snapshotEntry("role-model.replay.admissions");
+    const before = snapshotEntry(scope, "role-model.replay.admissions")?.count ?? 0;
+    recordReplayAdmission("replay", false, scope);
+    const after = snapshotEntry(scope, "role-model.replay.admissions");
     // The refusal moves the counter: at baseline this delta was 0 and the refusal vanished.
     expect((after?.count ?? 0) - before).toBe(1);
     const refused = replaySeries("false");
@@ -361,7 +441,7 @@ describe("run108 phase-03 effect-grep canonicalization", () => {
 
     // An admitted pass is its own series under the same metric id.
     const admittedBefore = (replaySeries("true")[0]?.state.count as number | undefined) ?? 0;
-    recordReplayAdmission("replay", true);
+    recordReplayAdmission("replay", true, scope);
     const admitted = replaySeries("true");
     expect(admitted).toHaveLength(1);
     expect(((admitted[0]?.state.count as number | undefined) ?? 0) - admittedBefore).toBe(1);
@@ -372,7 +452,9 @@ describe("run108 phase-03 effect-grep canonicalization", () => {
     // "Captures admitted for replay." - a claim the counter no longer makes. Read back through
     // Metric.snapshot, the same readback the operator surface consumes.
     const declared = (
-      Effect.runSync(Metric.snapshot) as unknown as ReadonlyArray<{
+      Effect.runSync(
+        Metric.snapshot.pipe(Effect.provideService(Metric.MetricRegistry, scope.registry)),
+      ) as unknown as ReadonlyArray<{
         id: string;
         description?: string;
       }>
@@ -411,14 +493,18 @@ describe("run108 phase-03 effect-grep canonicalization", () => {
       new URL("../src/track-b-auto-replay-runtime.ts", import.meta.url),
       "utf8",
     );
-    expect(sweepSource).toContain(
-      'recordLearnerDerivation(derivedCandidates, derivedCandidates > 0 ? "derived" : "idle")',
+    // The same pin, now carrying the runtime scope: the sweep still passes EXACTLY the declared
+    // vocabulary, and it passes the scope that vocabulary is recorded into (run 108 follow-up - a
+    // call that dropped the scope would record nothing at all, which is the M4 class this guards).
+    expect(sweepSource).toMatch(
+      /recordLearnerDerivation\(\s*derivedCandidates,\s*derivedCandidates > 0 \? "derived" : "idle",\s*observabilityScope,?\s*\)/,
     );
 
     // and the runtime accepts exactly the declared members
-    recordLearnerDerivation(2, "idle");
+    const scope = createObservabilityScope("run108-observability:f4-vocabulary");
+    recordLearnerDerivation(2, "idle", scope);
 
-    const idle = (snapshotEntry("role-model.learner.derivations")?.series ?? []).filter(
+    const idle = (snapshotEntry(scope, "role-model.learner.derivations")?.series ?? []).filter(
       (entry) => entry.attributes.outcome === "idle",
     );
     expect(idle).toHaveLength(1);
@@ -502,22 +588,26 @@ describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
    * reports, which is the noncanonical form the audit rejects.
    */
   test("F5-a: ONE per-family counter carries family+dimension tags, never a dynamic metric name", () => {
-    const before = snapshotEntry("role-model.learner.family_derivations");
-    recordLearnerFamilyEvidence({
-      "coder.review": {
-        decisiveComparisons: 3,
-        holdoutComparisons: 2,
-        developmentComparisons: 1,
-        distinctCaptures: 4,
+    const scope = createObservabilityScope("run108-observability:f5a-one-counter");
+    const before = snapshotEntry(scope, "role-model.learner.family_derivations");
+    recordLearnerFamilyEvidence(
+      {
+        "coder.review": {
+          decisiveComparisons: 3,
+          holdoutComparisons: 2,
+          developmentComparisons: 1,
+          distinctCaptures: 4,
+        },
       },
-    });
-    const snapshot = collectObservabilitySnapshot();
+      scope,
+    );
+    const snapshot = collectObservabilitySnapshot(scope);
     // exactly ONE id: the family never becomes part of the metric name
     expect(Object.keys(snapshot).filter((id) => id.includes("family_derivations"))).toEqual([
       "role-model.learner.family_derivations",
     ]);
 
-    const series = snapshotEntry("role-model.learner.family_derivations")?.series ?? [];
+    const series = snapshotEntry(scope, "role-model.learner.family_derivations")?.series ?? [];
     const dimension = (name: string) =>
       series.find(
         (entry) =>
@@ -564,13 +654,17 @@ describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
     expect(collapser.admittedCount).toBe(2);
 
     // through the metric: many distinct families cannot grow the registry past the bound + "other"
+    const scope = createObservabilityScope("run108-observability:f5a-collapse");
     for (let index = 0; index < LEARNER_FAMILY_ATTRIBUTE_BOUND + 40; index += 1) {
-      recordLearnerFamilyEvidence({
-        [`f5-overflow-family-${index}`]: { decisiveComparisons: 1 },
-      });
+      recordLearnerFamilyEvidence(
+        {
+          [`f5-overflow-family-${index}`]: { decisiveComparisons: 1 },
+        },
+        scope,
+      );
     }
     const families = new Set(
-      (snapshotEntry("role-model.learner.family_derivations")?.series ?? []).map(
+      (snapshotEntry(scope, "role-model.learner.family_derivations")?.series ?? []).map(
         (entry) => entry.attributes.family,
       ),
     );
@@ -594,8 +688,9 @@ describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
    *       fails here even if the producer's inputs stop reaching that literal.
    */
   test("F5-a: the family-evidence KEY SET is the same on the producer and the recorder side", () => {
+    const scope = createObservabilityScope("run108-observability:f5a-key-set");
     const dimensionCount = (dimension: string): number =>
-      ((snapshotEntry("role-model.learner.family_derivations")?.series ?? []).find(
+      ((snapshotEntry(scope, "role-model.learner.family_derivations")?.series ?? []).find(
         (entry) =>
           entry.attributes.family === "coder.review" && entry.attributes.dimension === dimension,
       )?.state.count as number | undefined) ?? 0;
@@ -615,7 +710,7 @@ describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
       development: dimensionCount("development"),
       distinct: dimensionCount("distinct"),
     };
-    recordLearnerFamilyEvidence(byFamily);
+    recordLearnerFamilyEvidence(byFamily, scope);
     expect(dimensionCount("decisive") - before.decisive).toBe(1);
     expect(dimensionCount("holdout") - before.holdout).toBe(1);
     expect(dimensionCount("development") - before.development).toBe(1);
@@ -624,9 +719,12 @@ describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
     // the key names are LOAD-BEARING, not cosmetic: the same numbers under a renamed key record
     // NOTHING - which is exactly why a rename has to fail this suite instead of opening a silent hole
     const renamed = dimensionCount("decisive");
-    recordLearnerFamilyEvidence({
-      "coder.review": { decisive: 1 },
-    } as unknown as Parameters<typeof recordLearnerFamilyEvidence>[0]);
+    recordLearnerFamilyEvidence(
+      {
+        "coder.review": { decisive: 1 },
+      } as unknown as Parameters<typeof recordLearnerFamilyEvidence>[0],
+      scope,
+    );
     expect(dimensionCount("decisive")).toBe(renamed);
 
     // (2) structural: the emitted keys vs the declared fields, read from the two sources
@@ -660,9 +758,10 @@ describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
     expect(readIn(replayQueueAwaitingEvaluation, registry)).toEqual({ value: 0 });
     expect(readIn(replayQueueStranded, registry)).toEqual({ value: 0 });
 
-    recordQueueDepths({ queued: 7, awaitingEvaluation: 2, stranded: 1 });
+    const scope = createObservabilityScope("run108-observability:f5b-gauges");
+    recordQueueDepths({ queued: 7, awaitingEvaluation: 2, stranded: 1 }, scope);
     const gaugeValue = (name: string): number | undefined =>
-      (snapshotEntry(name)?.series ?? [])
+      (snapshotEntry(scope, name)?.series ?? [])
         .map((entry) => entry.state.value as number | undefined)
         .find((value) => typeof value === "number");
     expect(gaugeValue("role-model.replay.queue.queued")).toBe(7);
@@ -670,17 +769,17 @@ describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
     expect(gaugeValue("role-model.replay.queue.stranded")).toBe(1);
 
     // SET semantics: a later observation REPLACES the level rather than adding to it
-    recordQueueDepths({ queued: 3 });
+    recordQueueDepths({ queued: 3 }, scope);
     expect(gaugeValue("role-model.replay.queue.queued")).toBe(3);
     // ... and an omitted depth leaves its own gauge untouched
     expect(gaugeValue("role-model.replay.queue.awaiting_evaluation")).toBe(2);
     expect(gaugeValue("role-model.replay.queue.stranded")).toBe(1);
 
     // the canonical gauge series state, one series per gauge
-    const queuedSeries = snapshotEntry("role-model.replay.queue.queued")?.series ?? [];
+    const queuedSeries = snapshotEntry(scope, "role-model.replay.queue.queued")?.series ?? [];
     expect(queuedSeries).toHaveLength(1);
     expect(queuedSeries[0]?.state).toEqual({ kind: "gauge", value: 3 });
-    expect(snapshotEntry("role-model.replay.queue.queued")?.type).toBe("Gauge");
+    expect(snapshotEntry(scope, "role-model.replay.queue.queued")?.type).toBe("Gauge");
   });
 
   /**
@@ -689,8 +788,9 @@ describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
    * counts. Effect keeps cumulative buckets whose last entry is [null, total].
    */
   test("F5-c: the arm-plan histogram has explicit boundaries and counts every planning result", () => {
+    const scope = createObservabilityScope("run108-observability:f5c-histogram");
     const histogramState = (name: string) => {
-      const state = (snapshotEntry(name)?.series ?? [])[0]?.state ?? {};
+      const state = (snapshotEntry(scope, name)?.series ?? [])[0]?.state ?? {};
       return state as {
         kind?: string;
         count?: number;
@@ -699,8 +799,8 @@ describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
       };
     };
     const before = histogramState("role-model.replay.arm_plan_arms");
-    recordArmPlan(2);
-    recordArmPlan(9);
+    recordArmPlan(2, scope);
+    recordArmPlan(9, scope);
     const after = histogramState("role-model.replay.arm_plan_arms");
 
     expect(after.kind).toBe("histogram");
@@ -734,8 +834,9 @@ describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
    * carries the rate: the two series are its numerator and denominator.
    */
   test("F5-d: the ladder admission floor counts both verdicts as tagged series", () => {
+    const scope = createObservabilityScope("run108-observability:f5d-admission-floor");
     const seriesFor = (admitted: string) =>
-      (snapshotEntry("role-model.learner.admission_floor")?.series ?? []).filter(
+      (snapshotEntry(scope, "role-model.learner.admission_floor")?.series ?? []).filter(
         (entry) => entry.attributes.admitted === admitted,
       );
     const countFor = (admitted: string): number =>
@@ -743,9 +844,9 @@ describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
     const beforeTrue = countFor("true");
     const beforeFalse = countFor("false");
 
-    recordAdmissionFloor(true);
-    recordAdmissionFloor(false);
-    recordAdmissionFloor(false);
+    recordAdmissionFloor(true, scope);
+    recordAdmissionFloor(false, scope);
+    recordAdmissionFloor(false, scope);
 
     expect(countFor("true") - beforeTrue).toBe(1);
     expect(countFor("false") - beforeFalse).toBe(2);
@@ -857,15 +958,16 @@ describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
     expect(ladderRungCountOf({ status: "written", ladder: null })).toBe(null);
 
     // (3) THE EMIT, at the CLI's own seam (cli.ts:6799-6800 reads, then records only when non-null)
+    const scope = createObservabilityScope("run108-observability:f5d-ladder-rungs");
     const stateOf = () =>
-      ((snapshotEntry("role-model.learner.ladder_rungs")?.series ?? [])[0]?.state ?? {}) as {
+      ((snapshotEntry(scope, "role-model.learner.ladder_rungs")?.series ?? [])[0]?.state ?? {}) as {
         count?: number;
         sum?: number;
       };
     const before = stateOf();
     const recorded = ladderRungCountOf(outcomeEntry);
     expect(recorded).toBe(3);
-    if (recorded !== null) recordLadderRungs(recorded);
+    if (recorded !== null) recordLadderRungs(recorded, scope);
     const after = stateOf();
     expect((after.count ?? 0) - (before.count ?? 0)).toBe(1);
     expect((after.sum ?? 0) - (before.sum ?? 0)).toBe(3);
@@ -1018,14 +1120,18 @@ describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
    * MOVE: a helper that is called but reads the wrong shape moves nothing, and that is what fails here.
    */
   test("F5: every F5 helper moves its metric when driven at the production seam shape", () => {
+    const scope = createObservabilityScope("run108-observability:f5-production-seams");
     const histogram = (name: string) =>
-      ((snapshotEntry(name)?.series ?? [])[0]?.state ?? {}) as { count?: number; sum?: number };
+      ((snapshotEntry(scope, name)?.series ?? [])[0]?.state ?? {}) as {
+        count?: number;
+        sum?: number;
+      };
     const gaugeValue = (name: string): number | undefined =>
-      (snapshotEntry(name)?.series ?? [])
+      (snapshotEntry(scope, name)?.series ?? [])
         .map((entry) => entry.state.value as number | undefined)
         .find((value) => typeof value === "number");
     const floorCount = (admitted: string): number =>
-      ((snapshotEntry("role-model.learner.admission_floor")?.series ?? []).find(
+      ((snapshotEntry(scope, "role-model.learner.admission_floor")?.series ?? []).find(
         (entry) => entry.attributes.admitted === admitted,
       )?.state.count as number | undefined) ?? 0;
 
@@ -1053,7 +1159,7 @@ describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
     const ladderBefore = histogram("role-model.learner.ladder_rungs");
     const seamRungs = ladderRungCountOf(writtenEntry);
     expect(seamRungs).toBe(4);
-    if (seamRungs !== null) recordLadderRungs(seamRungs);
+    if (seamRungs !== null) recordLadderRungs(seamRungs, scope);
     const ladderAfter = histogram("role-model.learner.ladder_rungs");
     expect((ladderAfter.count ?? 0) - (ladderBefore.count ?? 0)).toBe(1);
     expect((ladderAfter.sum ?? 0) - (ladderBefore.sum ?? 0)).toBe(4);
@@ -1069,13 +1175,13 @@ describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
       ladder: null,
     });
     expect(refusal).toBe(false);
-    if (refusal !== null) recordAdmissionFloor(refusal);
+    if (refusal !== null) recordAdmissionFloor(refusal, scope);
     expect(floorCount("false") - refusedBefore).toBe(1);
 
     const admittedBefore = floorCount("true");
     const admittedVerdict = admissionFloorVerdictOf(writtenEntry);
     expect(admittedVerdict).toBe(true);
-    if (admittedVerdict !== null) recordAdmissionFloor(admittedVerdict);
+    if (admittedVerdict !== null) recordAdmissionFloor(admittedVerdict, scope);
     expect(floorCount("true") - admittedBefore).toBe(1);
 
     // a persisted row that admitted NOTHING is a refusal too
@@ -1089,7 +1195,7 @@ describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
     // recordLearnerFamilyEvidence(evidenceSummary.byFamily). Driven with the GENUINE producer's output;
     // the rename guard itself lives in the F5-a key-set case above.
     const familyDimension = (dimension: string): number =>
-      ((snapshotEntry("role-model.learner.family_derivations")?.series ?? []).find(
+      ((snapshotEntry(scope, "role-model.learner.family_derivations")?.series ?? []).find(
         (entry) =>
           entry.attributes.family === "coder.review" && entry.attributes.dimension === dimension,
       )?.state.count as number | undefined) ?? 0;
@@ -1099,7 +1205,7 @@ describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
       development: familyDimension("development"),
       distinct: familyDimension("distinct"),
     };
-    recordLearnerFamilyEvidence(learnFamilyEvidence("coder.review", "endpoint:a"));
+    recordLearnerFamilyEvidence(learnFamilyEvidence("coder.review", "endpoint:a"), scope);
     expect(familyDimension("decisive") - familyBefore.decisive).toBe(1);
     expect(familyDimension("holdout") - familyBefore.holdout).toBe(1);
     expect(familyDimension("development") - familyBefore.development).toBe(1);
@@ -1107,16 +1213,16 @@ describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
 
     // (d) queue gauges - the sweep calls recordQueueDepths ONCE PER DEPTH, a single key each
     // (track-b-auto-replay-runtime.ts:1006 stranded, :1324 queued, :1685 awaitingEvaluation).
-    recordQueueDepths({ stranded: 3 });
+    recordQueueDepths({ stranded: 3 }, scope);
     expect(gaugeValue("role-model.replay.queue.stranded")).toBe(3);
-    recordQueueDepths({ queued: 5 });
+    recordQueueDepths({ queued: 5 }, scope);
     expect(gaugeValue("role-model.replay.queue.queued")).toBe(5);
-    recordQueueDepths({ awaitingEvaluation: 1 });
+    recordQueueDepths({ awaitingEvaluation: 1 }, scope);
     expect(gaugeValue("role-model.replay.queue.awaiting_evaluation")).toBe(1);
 
     // (e) arm_plan_arms - cli.ts:9008 records the planned arm count of the plan about to be shipped.
     const armBefore = histogram("role-model.replay.arm_plan_arms");
-    recordArmPlan(4);
+    recordArmPlan(4, scope);
     const armAfter = histogram("role-model.replay.arm_plan_arms");
     expect((armAfter.count ?? 0) - (armBefore.count ?? 0)).toBe(1);
     expect((armAfter.sum ?? 0) - (armBefore.sum ?? 0)).toBe(4);
@@ -1144,6 +1250,24 @@ describe("run108 phase-03 F5 the R7 metric list in canonical shapes", () => {
     expect(cli).toContain("recordLadderRungs(");
     expect(cli).toContain("recordLearnerFamilyEvidence(");
     expect(source("../src/track-b-learning-pass.ts")).toContain("recordLearnerFamilyEvidence(");
+
+    /**
+     * Run 108 follow-up: the SOURCE half of the registry contract. The recorders REQUIRE a scope, so
+     * tsc already fails a src call site that omits one - but the components that carry a scope through
+     * an optional options field degrade to "records nothing" when a caller forgets it, and THAT is the
+     * quiet hole this case closes: every production seam hands its component the runtime scope.
+     */
+    // the CLI hands the ONE scope it created at its composition root to the backend, the server and
+    // the auto-replay loop it starts.
+    expect(cli).toContain("const observabilityScope = createObservabilityScope(options.scopeId);");
+    expect(cli).toContain("observabilityScope,");
+    expect(source("../src/index.ts")).toContain("collectObservabilitySnapshot(observabilityScope)");
+    expect(source("../src/index.ts")).toContain(
+      "...(observabilityScope ? { observabilityScope } : {})",
+    );
+    expect(source("../src/track-b-auto-replay-runtime.ts")).toContain("input.observabilityScope");
+    expect(source("../src/track-b-runtime.ts")).toContain("...(input.observabilityScope ?");
+    expect(source("../src/track-b-learning-pass.ts")).toContain("input.observabilityScope");
   });
 });
 

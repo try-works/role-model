@@ -24,7 +24,7 @@
 // one vocabulary.
 import { createHash, createHmac } from "node:crypto";
 
-import { recordLearnerFamilyEvidence } from "./run108-observability.js";
+import { type ObservabilityScope, recordLearnerFamilyEvidence } from "./run108-observability.js";
 import {
   buildExperiencePackCandidate,
   buildRouteLearningValidationReceipt,
@@ -1458,6 +1458,12 @@ export interface TrackBLearningPassInput {
   readonly requestId: string;
   readonly channel: string;
   readonly scope: string;
+  /**
+   * Run 108 follow-up: the metric registry of the runtime scope this pass runs in. Omitted (a caller
+   * that is not a scope boundary) the pass records no per-family observation rather than leaking into
+   * Effect's process-global default Map.
+   */
+  readonly observabilityScope?: ObservabilityScope;
   readonly authorizationEpoch: number;
   /** Run 99 R33: the task family of the capture this candidate was derived from. */
   readonly taskTypeId?: string | null;
@@ -1677,7 +1683,12 @@ export async function runTrackBLearningPass(
   });
   // Run 108 phase-03 F5 (R7 per-family counters): the same per-family evidence the learning pass
   // already derived, recorded on the ONE bounded-attribute counter.
-  recordLearnerFamilyEvidence(evidenceSummary.byFamily);
+  //
+  // Run 108 follow-up: scoped - the counter is recorded into THIS runtime scope's registry.
+  const observabilityScope = input.observabilityScope;
+  if (observabilityScope !== undefined) {
+    recordLearnerFamilyEvidence(evidenceSummary.byFamily, observabilityScope);
+  }
   const holdout = asRecord(input.finalizedComparison.holdout);
   const holdoutCaseIds = Array.isArray(holdout?.caseIds)
     ? holdout.caseIds.filter(

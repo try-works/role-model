@@ -7,6 +7,11 @@
  * `GET /api/role-model/operator/observability-snapshot` - behind the same single operator auth gate
  * as every other operator readback, and proves the route answers from the LIVE registry (a decision
  * recorded in this process shows up in the payload, so a route returning a constant cannot pass).
+ *
+ * Run 108 follow-up: "the LIVE registry" now means the ONE runtime scope this suite creates and hands
+ * to both ends - the recorders here and the server whose route reads them. The route and the
+ * recorders used to meet in Effect's process-global default Map, which made this suite pass for a
+ * reason that would also have made it pass with no scope at all.
  */
 import { describe, expect, test } from "vitest";
 
@@ -14,7 +19,9 @@ import type { EndpointRegistryResult } from "@role-model-router/endpoint-registr
 import { startBridgeServer } from "../src/index.js";
 import {
   type ObservabilityMetricReadback,
+  type ObservabilityScope,
   collectObservabilitySnapshot,
+  createObservabilityScope,
   recordFinaliseRefusal,
   recordLearnerDerivation,
   recordReplayAdmission,
@@ -47,6 +54,15 @@ interface SnapshotPayload {
   readonly metrics: Record<string, ObservabilityMetricReadback>;
 }
 
+/**
+ * Run 108 follow-up: the runtime scope under test. This suite used to record through the wiring
+ * helpers and read through the route, both of which resolved to Effect's process-global default Map -
+ * so "the route answers from the LIVE registry" was true only because every writer in the process
+ * shared one registry. The scope is now built here and passed to BOTH ends: the recorders that write
+ * and the server whose route reads.
+ */
+const observabilityScope: ObservabilityScope = createObservabilityScope(operatorContext.scope);
+
 const startServer = () =>
   startBridgeServer({
     host: "127.0.0.1",
@@ -54,6 +70,7 @@ const startServer = () =>
     operatorAuthToken: "operator-secret",
     deviceOwnerTrust: "off",
     operatorContext,
+    observabilityScope,
     registry,
     executeChatCompletions: async () => {
       throw new Error("not used");
@@ -84,14 +101,15 @@ describe("run108 addendum-01 A5.2 observability snapshot readback", () => {
     }
   });
 
-  test("reads the live process registry: recorded metrics appear with their counts", async () => {
+  test("reads the live scope registry: recorded metrics appear with their counts", async () => {
     const server = await startServer();
     try {
-      const before = collectObservabilitySnapshot();
-      recordRouterDecision("baseline_retained");
-      recordReplayAdmission("replay", true);
-      recordLearnerDerivation(3, "derived");
-      recordFinaliseRefusal("finalise", "declared_pair");
+      // BOTH ends on the one scope: the 'before' readback, the recorders, and the route below.
+      const before = collectObservabilitySnapshot(observabilityScope);
+      recordRouterDecision("baseline_retained", observabilityScope);
+      recordReplayAdmission("replay", true, observabilityScope);
+      recordLearnerDerivation(3, "derived", observabilityScope);
+      recordFinaliseRefusal("finalise", "declared_pair", observabilityScope);
 
       const body = await readSnapshot(server);
       const delta = (name: string): number =>
@@ -116,10 +134,12 @@ describe("run108 addendum-01 A5.2 observability snapshot readback", () => {
       recordFinaliseRefusal(
         "finalise",
         "state=declined reason=insufficient refusal=judge_unresolved",
+        observabilityScope,
       );
       recordFinaliseRefusal(
         "finalise",
         "state=incomplete reason=disagreement refusal=arms_unresolved",
+        observabilityScope,
       );
 
       const body = await readSnapshot(server);

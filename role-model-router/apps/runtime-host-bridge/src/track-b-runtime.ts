@@ -17,7 +17,11 @@ import {
 } from "node:fs";
 import { copyFile, lstat, mkdir, mkdtemp, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { recordRouterDecision, withStageSpan } from "./run108-observability.js";
+import {
+  type ObservabilityScope,
+  recordRouterDecision,
+  withStageSpan,
+} from "./run108-observability.js";
 
 import { createInterface } from "node:readline";
 import { DatabaseSync } from "node:sqlite";
@@ -5816,6 +5820,12 @@ export interface TrackBShadowPipelineInput {
   readonly requestId: string;
   readonly channel: string;
   readonly scope: string;
+  /**
+   * Run 108 follow-up: the metric registry of the runtime scope this pipeline runs in. The pipeline
+   * owns no scope of its own - it is handed the one its runtime created - so an input without it
+   * records no observation rather than leaking into Effect's process-global default Map.
+   */
+  readonly observabilityScope?: ObservabilityScope;
   readonly authorizationEpoch: number;
   readonly productionState: Readonly<Record<string, unknown>>;
   readonly routePackage: string;
@@ -8059,6 +8069,12 @@ const advisoryModeForStage = (stage: string): TrackBRouteAdvisoryMode => {
  * of reporting every decision as an S1 shadow.
  */
 export function buildLiveRouteAdvisoryObservation(input: {
+  /**
+   * Run 108 follow-up: the runtime scope this decision was served in. Present, the router.decision
+   * counter is recorded into that scope's registry; absent (a caller that is not a scope boundary)
+   * nothing is recorded - never Effect's process-global default Map.
+   */
+  readonly observabilityScope?: ObservabilityScope;
   readonly decisionId: string;
   readonly routePackage: string;
   readonly eligibleRoutePackages?: readonly string[];
@@ -8123,13 +8139,19 @@ export function buildLiveRouteAdvisoryObservation(input: {
   // deliberately sync and one statement wide (withStageSpan is sync-only, and the span must not
   // straddle the observation build below - a span that swallowed the builder would time the
   // wrong work).
-  withStageSpan(
-    "router.decision",
-    { selection: applied ? "advisory_applied" : "baseline_retained" },
-    () => {
-      recordRouterDecision(applied ? "advisory_applied" : "baseline_retained");
-    },
-  );
+  const observabilityScope = input.observabilityScope;
+  if (observabilityScope !== undefined) {
+    withStageSpan(
+      "router.decision",
+      { selection: applied ? "advisory_applied" : "baseline_retained" },
+      () => {
+        recordRouterDecision(
+          applied ? "advisory_applied" : "baseline_retained",
+          observabilityScope,
+        );
+      },
+    );
+  }
   return buildTrackBRouteAdvisoryObservation({
     decisionId: input.decisionId,
     routePackage: input.routePackage,
@@ -11019,6 +11041,9 @@ export async function runTrackBShadowPipeline(
           requestId: input.requestId,
           channel: input.channel,
           scope: input.scope,
+          // Run 108 follow-up: the learning pass is a stage of THIS runtime scope, so its
+          // per-family counter is recorded into the registry the runtime created.
+          ...(input.observabilityScope ? { observabilityScope: input.observabilityScope } : {}),
           authorizationEpoch: input.authorizationEpoch,
           ...(typeof input.taskTypeId === "string" && input.taskTypeId.trim()
             ? { taskTypeId: input.taskTypeId.trim() }
@@ -11596,6 +11621,13 @@ export async function runTrackBPostObservation(
     readonly expectedReleaseId?: string;
     readonly run88Correlation?: Record<string, unknown>;
     /**
+     * Run 108 follow-up: the metric registry of the runtime scope this observation belongs to. The
+     * shadow pipeline this post-observation runs is a stage of that scope, so the scope travels here
+     * and on into runTrackBShadowPipeline. Omitted, the pipeline records no router-decision
+     * observation rather than leaking into Effect's process-global default Map.
+     */
+    readonly observabilityScope?: ObservabilityScope;
+    /**
      * R3: the counterfactual candidate set comes from the running registry, not
      * from the capture's frozen decision snapshot (which is provenance only). The
      * host passes the configured endpoint ids so a real request with at least one
@@ -11992,6 +12024,9 @@ export async function runTrackBPostObservation(
           requestId,
           channel: input.channel,
           scope: input.scope,
+          // Run 108 follow-up: this pipeline is a stage of the runtime scope the post-observation
+          // was handed, so its metrics land in that scope's registry.
+          ...(input.observabilityScope ? { observabilityScope: input.observabilityScope } : {}),
           authorizationEpoch: input.authorizationEpoch,
           // Run 99 R33: the capture carries the request's task family (addendum 19 S33), so the
           // comparison, the learned candidate and the promoted pack are all family-scoped.
@@ -12207,6 +12242,8 @@ export async function runTrackBPostObservationWithContribution(
     readonly authorizationEpoch: number;
     readonly expectedReleaseId?: string;
     readonly run88Correlation?: Record<string, unknown>;
+    /** Run 108 follow-up: forwarded verbatim to `runTrackBPostObservation`. */
+    readonly observabilityScope?: ObservabilityScope;
     /** Addendum 58 §18: see `runTrackBPostObservation` — required to resolve externalized business answers. */
     readonly contractStateRoot?: string;
   },

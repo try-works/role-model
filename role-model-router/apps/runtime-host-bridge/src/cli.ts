@@ -509,7 +509,9 @@ function resolveChannelScopedReplayLedgerLimits(input: {
 }
 import { createFinalizedGroupListingCache } from "./finalized-group-listing-cache.js";
 import {
+  type ObservabilityScope,
   admissionFloorVerdictOf,
+  createObservabilityScope,
   ladderRungCountOf,
   recordAdmissionFloor,
   recordArmPlan,
@@ -2040,6 +2042,12 @@ export function createSupervisedReplayEvaluationCompleter(input: {
   readonly channel: string;
   readonly scope: string;
   /**
+   * Run 108 follow-up: the metric registry of the runtime scope this evaluation belongs to. The
+   * completer is a component of a scope, not a scope boundary: without one it records no
+   * finalise-refusal observation rather than leaking into the process-global default Map.
+   */
+  readonly observabilityScope?: ObservabilityScope;
+  /**
    * R10/R11: the durable capture carries the private runtime scope, which is not
    * necessarily the host operator scope. Recovered branch validation must compare
    * against the capture's own scope, or a valid replay is rejected as "does not
@@ -2554,6 +2562,8 @@ export function createSupervisedReplayEvaluationCompleter(input: {
       requestId: createSupervisedReplayEvaluationRequestId(input.requestId, replayJobId),
       channel: input.channel,
       scope: input.scope,
+      // Run 108 follow-up: the pipeline is a stage of this completer's runtime scope.
+      ...(input.observabilityScope ? { observabilityScope: input.observabilityScope } : {}),
       authorizationEpoch: 1,
       // Run 99 R33 (S34 live finding): every comparison in the live store carried no task family
       // because this supervised-replay path never passed the capture's family, so the learner's
@@ -2798,9 +2808,12 @@ export function createSupervisedReplayEvaluationCompleter(input: {
         .join(" ");
       // Run 108 R7: the finalise-refusal span + metric - the RC-1 observability gap (which guard
       // refused never reached the disposition). Tagged by the bounded detail so each refusal counts once.
-      withStageSpan("eval.finalise_refusal", { guard: "finalise" }, () => {
-        recordFinaliseRefusal("finalise", detail.slice(0, 80));
-      });
+      const observabilityScope = input.observabilityScope;
+      if (observabilityScope !== undefined) {
+        withStageSpan("eval.finalise_refusal", { guard: "finalise" }, () => {
+          recordFinaliseRefusal("finalise", detail.slice(0, 80), observabilityScope);
+        });
+      }
       throw new Error(
         `durable replay evaluation did not finalize a valid comparison: ${detail}`.slice(0, 512),
       );
@@ -4243,6 +4256,12 @@ export function createCliServerOptions(
     rescoreLearningScores?: StartBridgeServerOptions["rescoreLearningScores"];
     /** Run 98 addendum 44 `A44-S4`: the router's own policy resolution for the readback. */
     resolveLearningPolicySource?: StartBridgeServerOptions["resolveLearningPolicySource"];
+    /**
+     * Run 108 follow-up: the metric registry of the runtime scope this server serves. The CLI creates
+     * ONE scope at its composition root and hands the same one to every recorder it calls and to this
+     * server, so the operator readback answers what this runtime measured.
+     */
+    observabilityScope?: ObservabilityScope;
   },
   backendOrResolver: CliBackend | CliBackendResolver,
   shutdown?: () => Promise<void>,
@@ -4273,6 +4292,7 @@ export function createCliServerOptions(
   return {
     host: options.host,
     port: options.port,
+    ...(options.observabilityScope ? { observabilityScope: options.observabilityScope } : {}),
     staticRoot: options.staticRoot,
     runtimeStateRoot: options.runtimeStateRoot,
     runtimeChannel: options.runtimeChannel,
@@ -5414,6 +5434,15 @@ export async function main(): Promise<void> {
     localAppData: process.env.LOCALAPPDATA,
     unifiedRuntimeConfigPath: args.values["unified-runtime-config"],
   });
+  /**
+   * Run 108 follow-up: the metric registry of THIS runtime scope, created ONCE at the composition
+   * root. Every recorder this process calls - the CLI's own sweeps below and the bridge server's
+   * request path - is handed this same scope, and the operator observability readback answers from
+   * it. Creating it per call would discard each write; letting the recorders fall back to Effect's
+   * process-global default Map (as they did) made one registry shared by every runtime in the
+   * process, so a snapshot was a view of the whole process rather than this runtime's.
+   */
+  const observabilityScope = createObservabilityScope(options.scopeId);
   const packagedProfile = readPackagedRuntimeProfile(process.execPath);
   const packagedManifestRecord = packagedProfile
     ? (JSON.parse(
@@ -5570,6 +5599,9 @@ export async function main(): Promise<void> {
           scope: options.scopeId,
           authorizationEpoch: 1,
         },
+        // Run 108 follow-up: the server serves THIS runtime scope, so its request-path metrics and
+        // the operator readback below share the one registry created at the composition root.
+        observabilityScope,
         ...(operatorAuthToken ? { operatorAuthToken } : {}),
         ...(run88StageIdentity ? { run88StageIdentity } : {}),
       },
@@ -6451,7 +6483,7 @@ export async function main(): Promise<void> {
               });
               // Run 108 phase-03 F5 (R7 per-family counters): the per-family evidence the summary
               // already derived, recorded on the ONE bounded-attribute counter (no new readback).
-              recordLearnerFamilyEvidence(evidenceSummary.byFamily);
+              recordLearnerFamilyEvidence(evidenceSummary.byFamily, observabilityScope);
               const validationValue = assembleDurableLearnerValidationValue({
                 candidateId,
                 routePackage,
@@ -6797,7 +6829,7 @@ export async function main(): Promise<void> {
                   )
                     continue;
                   const rungs = ladderRungCountOf(entry);
-                  if (rungs !== null) recordLadderRungs(rungs);
+                  if (rungs !== null) recordLadderRungs(rungs, observabilityScope);
                 }
 
                 /**
@@ -6807,7 +6839,7 @@ export async function main(): Promise<void> {
                  */
                 for (const entry of ladders) {
                   const admitted = admissionFloorVerdictOf(entry);
-                  if (admitted !== null) recordAdmissionFloor(admitted);
+                  if (admitted !== null) recordAdmissionFloor(admitted, observabilityScope);
                 }
                 if (written > 0)
                   console.error(`[run105] ladder materialization wrote ${written} ladder row(s)`);
@@ -7716,6 +7748,8 @@ export async function main(): Promise<void> {
         payload: value,
       });
       const loop = startAutoReplayLoop({
+        // Run 108 follow-up: the loop's queue gauges and derivation counts belong to this runtime scope.
+        observabilityScope,
         readPendingRouteDispatches: async (request) => {
           const runtime = extensionRuntimeRef.current;
           const operations = currentPostObservationOperations();
@@ -8511,6 +8545,9 @@ export async function main(): Promise<void> {
         const processingInput = {
           scope: options.scopeId,
           channel: packagedProfile?.channel ?? "development",
+          // Run 108 follow-up: the post-observation (and the shadow pipeline it runs) is a stage of
+          // THIS runtime scope, so its metrics land in the scope's one registry.
+          observabilityScope,
           authorizationEpoch: 1,
           // R3: counterfactual candidates come from the running registry, not from
           // the capture's frozen decision snapshot.
@@ -8668,6 +8705,9 @@ export async function main(): Promise<void> {
         repoRoot: options.repoRoot,
         runtimeStateRoot: options.runtimeStateRoot,
         scopeId: options.scopeId,
+        // Run 108 follow-up: the backend routes THIS runtime scope's decisions, so it shares the one
+        // registry created at the composition root.
+        observabilityScope,
         runtimeChannel: packagedProfile?.channel ?? "development",
         ...(operatorAuthToken ? { operatorAuthToken } : {}),
         ...(run88StageIdentity ? { run88StageIdentity } : {}),
@@ -8930,7 +8970,7 @@ export async function main(): Promise<void> {
               judgeResolved: Boolean(evalJudgeEndpointId),
             });
             // Run 108 R7: the replay admission counter (module-scope metric, registry-scoped).
-            recordReplayAdmission("replay", decided.admitted);
+            recordReplayAdmission("replay", decided.admitted, observabilityScope);
             return decided;
           });
           if (!admission.admitted) {
@@ -9014,7 +9054,7 @@ export async function main(): Promise<void> {
            * capture actually dispatches (`candidatePackages` is built from it below), not on the
            * pre-effort-match pass, so one capture contributes exactly one observation.
            */
-          recordArmPlan(replayArmPlan.plannedEndpointIds.length);
+          recordArmPlan(replayArmPlan.plannedEndpointIds.length, observabilityScope);
           if (replayArmPlan.plannedEndpointIds.length === 0) {
             throw new Error(
               `replay arm cannot serve the capture's request requirements: ${replayArmPlan.rejections
@@ -10024,6 +10064,9 @@ export async function main(): Promise<void> {
         })();
         return createSupervisedReplayEvaluationCompleter({
           offerLearnerDerivation,
+          // Run 108 follow-up: the completer (and, through the pair loop's `...input`, every extra
+          // pair completer it builds) records its refusal metric into this runtime scope's registry.
+          observabilityScope,
           ...(judgeConsistency ? { judgeConsistency } : {}),
           ...(input.contractStateRoot ? { contractStateRoot: input.contractStateRoot } : {}),
           runtime: input.runtime,

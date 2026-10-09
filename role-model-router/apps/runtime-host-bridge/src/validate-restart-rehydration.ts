@@ -5,6 +5,7 @@ import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 
 import { createRuntimeBridgeBackend, startBridgeServer } from "./index.js";
+import { createObservabilityScope } from "./run108-observability.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -76,12 +77,17 @@ export async function runRestartRehydrationValidation(
   await mkdir(options.runtimeStateRoot, { recursive: true });
   await writeFile(unifiedRuntimeConfigPath, createRestartValidationRuntimeConfigText(), "utf8");
 
+  // Run 108 follow-up: this validation run is its own runtime scope. ONE registry is created for it
+  // and reused by every backend the restart validation rebuilds, so a restart does not silently
+  // change the registry the server below reads (nor fall back to the process-global default Map).
+  const observabilityScope = createObservabilityScope(`validate-restart:${options.scopeId}`);
   const createBackend = () =>
     createRuntimeBridgeBackend({
       repoRoot: options.repoRoot,
       fixtureRoot,
       runtimeStateRoot: options.runtimeStateRoot,
       scopeId: options.scopeId,
+      observabilityScope,
       unifiedRuntimeConfigPath,
       // Registry rehydration and /v1/models readback do not exercise the
       // local vendor process. Keep this CI validation hermetic instead of
@@ -153,6 +159,7 @@ export async function runRestartRehydrationValidation(
       const server = await startBridgeServer({
         host: "127.0.0.1",
         port: 0,
+        observabilityScope,
         registry: restartedBackend.registry,
         getRegistry: () => restartedBackend.registry,
         executeChatCompletions: restartedBackend.executeChatCompletions,

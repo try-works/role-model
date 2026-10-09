@@ -197,7 +197,9 @@ import {
 import { resolveAdvisoryCohortPercent } from "./route-advisory-source.js";
 import {
   type ObservabilityMetricReadback,
+  type ObservabilityScope,
   collectObservabilitySnapshot,
+  createObservabilityScope,
 } from "./run108-observability.js";
 import { readPackagedRuntimeProfile, resolveRuntimeChannelProfile } from "./runtime-channel.js";
 import { type RuntimeVersionInfoRecord, resolveRuntimeVersionInfo } from "./runtime-version.js";
@@ -3464,6 +3466,17 @@ export interface StartBridgeServerOptions {
   readonly operatorContext?: RuntimeOperatorContext;
   readonly runtimeStateRoot?: string;
   readonly runtimeChannel?: "development" | "stage" | "production";
+  /**
+   * Run 108 follow-up: the metric registry of the runtime scope this server belongs to. The host
+   * creates ONE scope at its composition root and hands it here, so the metrics its own sweeps record
+   * and the metrics this server's request path records land in the SAME registry the operator
+   * readback answers from.
+   *
+   * Omitted: the server IS a runtime-scope boundary, so it creates one scope for itself, named after
+   * the operator scope it was bound to. That keeps every server its own registry instead of Effect's
+   * process-global default Map (the defect this replaced), and it is never one registry per call.
+   */
+  readonly observabilityScope?: ObservabilityScope;
   readonly registry: EndpointRegistryResult;
   readonly getRegistry?: () => EndpointRegistryResult;
   readonly getExecutionCatalog?: () => NormalizedCatalog;
@@ -4244,6 +4257,14 @@ export interface CreateRuntimeBridgeBackendOptions {
   readonly repoRoot: string;
   readonly runtimeStateRoot: string;
   readonly scopeId: string;
+  /**
+   * Run 108 follow-up: the metric registry of the runtime scope this backend serves. The host creates
+   * ONE scope at its composition root and hands the SAME scope to this backend and to the bridge
+   * server, so a decision this backend routes is visible in the operator readback the server answers.
+   * Omitted (a caller that is not a runtime scope), the request path records no decision counter
+   * rather than leaking into Effect's process-global default Map.
+   */
+  readonly observabilityScope?: ObservabilityScope;
   /** Runtime deployment channel used by every durable storage authority check. */
   readonly runtimeChannel?: "development" | "stage" | "production";
   readonly run88StageIdentity?: {
@@ -17287,6 +17308,13 @@ function writeHealthProjection(response: ServerResponse, value: unknown): void {
 }
 
 function createRequestHandler(options: StartBridgeServerOptions) {
+  /**
+   * ONE registry for this server's runtime scope, resolved once when the handler is built - never per
+   * request and never per metric update, either of which would discard the scope's data.
+   */
+  const observabilityScope =
+    options.observabilityScope ??
+    createObservabilityScope(`bridge:${options.operatorContext?.scope ?? "unscoped"}`);
   return async (request: IncomingMessage, response: ServerResponse): Promise<void> => {
     setCorsHeaders(response);
 
@@ -17932,7 +17960,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
         ) {
           writeOperatorResult(response, {
             schemaVersion: OBSERVABILITY_SNAPSHOT_SCHEMA_VERSION,
-            metrics: collectObservabilitySnapshot(),
+            metrics: collectObservabilitySnapshot(observabilityScope),
           } satisfies ObservabilitySnapshotReadback);
           return;
         }
@@ -20411,6 +20439,11 @@ export interface ObservabilitySnapshotReadback {
 export async function createRuntimeBridgeBackend(
   options: CreateRuntimeBridgeBackendOptions,
 ): Promise<RuntimeBridgeBackend> {
+  /**
+   * Run 108 follow-up: the scope this backend records into, resolved ONCE for the backend's whole
+   * lifetime - never per request and never per metric update.
+   */
+  const observabilityScope = options.observabilityScope;
   const runtimeChannel = options.runtimeChannel ?? "development";
   const createTrackBOperations = (input: Parameters<typeof createTrackBOperationsFromState>[0]) =>
     createTrackBOperationsFromState({
@@ -27289,6 +27322,13 @@ export async function createRuntimeBridgeBackend(
             }
           ).advisory_consideration;
           const observation = buildLiveRouteAdvisoryObservation({
+            /**
+             * Run 108 follow-up: this decision belongs to the runtime scope the host handed this
+             * backend and the bridge server together, so its router.decision counter lands in the
+             * same registry the operator readback answers from - not in Effect's process-global
+             * default Map.
+             */
+            ...(observabilityScope ? { observabilityScope } : {}),
             decisionId: routed.decision.routing_decision_id,
             routePackage: routed.decision.chosen_endpoint_id,
             eligibleRoutePackages: (routed.projected.routeInput.candidates ?? []).map(

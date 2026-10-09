@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import {
+  type ObservabilityScope,
   recordLearnerDerivation,
   recordQueueDepths,
   withStageSpan,
@@ -501,6 +502,12 @@ const emptyResult = (): AutoReplayTickResult => ({
 });
 
 export function startAutoReplayLoop(input: {
+  /**
+   * Run 108 follow-up: the metric registry of the runtime scope this loop belongs to. The loop is a
+   * component of a scope, not a scope boundary, so an input without one records no queue depth or
+   * derivation rather than leaking into Effect's process-global default Map.
+   */
+  readonly observabilityScope?: ObservabilityScope;
   readonly operations: AutoReplayOperations;
   readonly ledger: ReplayLedger;
   readonly policySet: ReplayPolicySet;
@@ -685,6 +692,12 @@ export function startAutoReplayLoop(input: {
   health(): AutoReplayLoopHealth;
   status(): AutoReplayLoopStatus;
 } {
+  /**
+   * Run 108 follow-up: the scope resolved ONCE for this loop's whole lifetime, so its metrics live in
+   * one registry rather than Effect's process-global default Map. Undefined means the caller named no
+   * scope: every record below is skipped (see the input field's own contract).
+   */
+  const observabilityScope = input.observabilityScope;
   const now = input.now ?? (() => Date.now());
   const maxCapturesPerTick = input.maxCapturesPerTick ?? 8;
   let running = false;
@@ -1008,7 +1021,8 @@ export function startAutoReplayLoop(input: {
              * new poller. Set only when the pass answered, so a plane whose queue owns
              * reconciliation publishes no observation instead of a fabricated zero.
              */
-            recordQueueDepths({ stranded });
+            if (observabilityScope !== undefined)
+              recordQueueDepths({ stranded }, observabilityScope);
           }
         } catch (cause) {
           const detail =
@@ -1205,7 +1219,13 @@ export function startAutoReplayLoop(input: {
       { derived: String(derivedCandidates), backlog: String(derivationBacklog) },
       () => {
         // Run 108 R7: the learner-sweep derivation count (one funnel for both sweep entry points).
-        recordLearnerDerivation(derivedCandidates, derivedCandidates > 0 ? "derived" : "idle");
+        if (observabilityScope !== undefined) {
+          recordLearnerDerivation(
+            derivedCandidates,
+            derivedCandidates > 0 ? "derived" : "idle",
+            observabilityScope,
+          );
+        }
       },
     );
     return {
@@ -1336,7 +1356,9 @@ export function startAutoReplayLoop(input: {
       } | null;
       const observedPendingCount = pendingReadback?.pendingTotal ?? pendingReadback?.pendingCount;
       if (typeof observedPendingCount === "number")
-        recordQueueDepths({ queued: observedPendingCount });
+        if (observabilityScope !== undefined) {
+          recordQueueDepths({ queued: observedPendingCount }, observabilityScope);
+        }
       if (process.env.ROLE_MODEL_FOCUS_DIAG)
         console.error(
           `[replay-tick] run: captures=${captures.length} pendingCount=${(pending as { pendingCount?: number }).pendingCount ?? "?"}`,
@@ -1710,7 +1732,12 @@ export function startAutoReplayLoop(input: {
         }
         // Run 108 phase-03 F5: SET once per walk, and only when the walk actually read the plane.
         if (pendingDispatchReadObserved)
-          recordQueueDepths({ awaitingEvaluation: awaitingEvaluationObserved });
+          if (observabilityScope !== undefined) {
+            recordQueueDepths(
+              { awaitingEvaluation: awaitingEvaluationObserved },
+              observabilityScope,
+            );
+          }
         const held = Ref.getUnsafe(heldFocus);
         let remainingFocusCandidates = [...eligible];
         let skippedReplayableTasks = 0;

@@ -82,9 +82,17 @@ describe("run108 A5.1 span coverage", () => {
 
   test("the router runtime imports the span helper from the observability spine", () => {
     const source = trackBRuntimeSource();
-    expect(source).toMatch(
-      /import \{ recordRouterDecision, withStageSpan \} from "\.\/run108-observability\.js";/,
-    );
+    // Run 108 follow-up: the import gained `type ObservabilityScope` (the per-runtime-scope registry),
+    // so the formatter wrapped it and the one-line layout this pinned no longer exists. Same rule as
+    // the auto-replay assertion above: pin the CONTRACT - both symbols, imported from the spine -
+    // instead of one exact layout that re-wrapping breaks.
+    const importAt = source.indexOf('from "./run108-observability.js"');
+    expect(importAt).toBeGreaterThan(0);
+    const openAt = source.lastIndexOf("import {", importAt);
+    expect(openAt).toBeGreaterThanOrEqual(0);
+    const symbols = source.slice(openAt, importAt);
+    expect(symbols).toContain("recordRouterDecision");
+    expect(symbols).toContain("withStageSpan");
   });
 
   test("the existing eval.finalise_refusal site stays in place (EVAL chain coverage)", () => {

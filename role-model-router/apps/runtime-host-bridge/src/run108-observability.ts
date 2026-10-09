@@ -15,7 +15,56 @@ import * as Tracer from "effect/Tracer";
  *
  * Namespaces: role-model.router.*, role-model.replay.*, role-model.eval.*, role-model.learner.*.
  * Spans (Tracer.make, per-stage attributes) are phase 2 of this requirement.
+ *
+ * THE REGISTRY CONTRACT (run 108 follow-up, the per-runtime-scope registry fix). The module-scope
+ * DECLARATIONS above are descriptions; the STATE lives in a Metric.MetricRegistry Map and is resolved
+ * at RECORD time - Metric$#hook re-reads it on every update, "because the registry owns the series"
+ * (vendor/effect/packages/effect/src/Metric.ts:1700-1701). MetricRegistry is a Context.Reference whose
+ * defaultValue is `() => new Map()` (:1648-1651), and its own JSDoc states the consequence
+ * (:1636-1640): "Because Context.Reference caches default values, the default Map is shared by contexts
+ * that do not provide an override. Provide MetricRegistry with a fresh Map when isolation matters."
+ *
+ * Every recorder below therefore REQUIRES the runtime scope it belongs to and provides that scope's
+ * registry explicitly, and so does collectObservabilitySnapshot. A recorder called with no registry
+ * resolved the process-global default Map, so every runtime scope in the process shared one registry
+ * and the operator snapshot was a view of every metric in the process rather than this runtime's.
+ *
+ * Scope creation is a RUNTIME-SCOPE decision, taken once by the runtime at its composition root - never
+ * per call: a fresh Map per call would discard the scope's data on every write. A component that is not
+ * itself a scope boundary and is handed no scope observes NOTHING, deliberately: recording nothing is
+ * honest, while recording into the process-global default is the defect this contract removes.
  */
+
+/**
+ * ONE runtime scope's metric registry, carried WITH the scope it belongs to.
+ *
+ * The registry is created once per scope (see createObservabilityScope) and every recorder and the
+ * readback of that scope provide it with Effect.provideService, so two scopes in one process never
+ * share a series - and neither of them is Effect's process-global default Map.
+ */
+export interface ObservabilityScope {
+  /** The runtime scope this registry belongs to (the host's operator scope id, or a named test scope). */
+  readonly scopeId: string;
+  /** The scope's registry. Owned by the scope for its whole lifetime. */
+  readonly registry: Metric.MetricRegistry;
+}
+
+/**
+ * Create the registry of ONE runtime scope. Call this at a runtime-scope boundary (the host's
+ * composition root, a started bridge server) and hand the result to everything that records or reads
+ * within that scope. Never call it per metric update: a fresh Map per call discards the data written
+ * by the previous one.
+ */
+export function createObservabilityScope(scopeId: string): ObservabilityScope {
+  return { scopeId, registry: new Map() };
+}
+
+/**
+ * Run an Effect against THIS scope's registry rather than Effect's process-global default Map. The
+ * canonical idiom (vendor/effect Metric.ts:100, :182, :242, ... :1648-1651).
+ */
+const inScope = <A>(effect: Effect.Effect<A>, scope: ObservabilityScope): A =>
+  Effect.runSync(Effect.provideService(effect, Metric.MetricRegistry, scope.registry));
 
 /** Routing decisions served by the runtime. Tag contract: none at call time (the decision id travels on the span in phase 2). */
 export const routerDecisions = Metric.counter("role-model.router.decisions", {
@@ -113,8 +162,11 @@ export function withStageSpan<A>(
  * with no pinned contract - these are the one-line contracts the production paths call, each covered
  * by run108-observability.test.ts.
  */
-export function recordRouterDecision(selection: "advisory_applied" | "baseline_retained"): void {
-  Effect.runSync(Metric.update(Metric.withAttributes(routerDecisions, { selection }), 1));
+export function recordRouterDecision(
+  selection: "advisory_applied" | "baseline_retained",
+  scope: ObservabilityScope,
+): void {
+  inScope(Metric.update(Metric.withAttributes(routerDecisions, { selection }), 1), scope);
 }
 
 /**
@@ -123,21 +175,34 @@ export function recordRouterDecision(selection: "advisory_applied" | "baseline_r
  * indistinguishable from no attempt at all - the counter could not answer "how often was replay
  * refused".
  */
-export function recordReplayAdmission(pass: "replay", admitted: boolean): void {
-  Effect.runSync(
+export function recordReplayAdmission(
+  pass: "replay",
+  admitted: boolean,
+  scope: ObservabilityScope,
+): void {
+  inScope(
     Metric.update(
       Metric.withAttributes(replayAdmissions, { pass, admitted: admitted ? "true" : "false" }),
       1,
     ),
+    scope,
   );
 }
 
-export function recordFinaliseRefusal(guard: string, reason: string): void {
-  Effect.runSync(Metric.update(Metric.withAttributes(evalFinaliseRefusals, { guard, reason }), 1));
+export function recordFinaliseRefusal(
+  guard: string,
+  reason: string,
+  scope: ObservabilityScope,
+): void {
+  inScope(Metric.update(Metric.withAttributes(evalFinaliseRefusals, { guard, reason }), 1), scope);
 }
 
-export function recordLearnerDerivation(count: number, outcome: LearnerDerivationOutcome): void {
-  Effect.runSync(Metric.update(Metric.withAttributes(learnerDerivations, { outcome }), count));
+export function recordLearnerDerivation(
+  count: number,
+  outcome: LearnerDerivationOutcome,
+  scope: ObservabilityScope,
+): void {
+  inScope(Metric.update(Metric.withAttributes(learnerDerivations, { outcome }), count), scope);
 }
 
 /**
@@ -248,9 +313,16 @@ const seriesScalar = (state: ObservabilityMetricState): number =>
 const attributeKey = (attributes: Readonly<Record<string, string>>): string =>
   JSON.stringify(Object.entries(attributes).sort(([left], [right]) => (left < right ? -1 : 1)));
 
-/** 03.5 review M4: the metrics were write-only - this is the readback the UI/status surfaces. */
-export function collectObservabilitySnapshot(): Record<string, ObservabilityMetricReadback> {
-  const snapshots = Effect.runSync(Metric.snapshot) as ReadonlyArray<{
+/**
+ * 03.5 review M4: the metrics were write-only - this is the readback the UI/status surfaces.
+ *
+ * Run 108 follow-up: the readback takes the SAME scope its recorders were handed, so the operator
+ * route answers what THIS runtime measured rather than every metric in the process.
+ */
+export function collectObservabilitySnapshot(
+  scope: ObservabilityScope,
+): Record<string, ObservabilityMetricReadback> {
+  const snapshots = inScope(Metric.snapshot, scope) as ReadonlyArray<{
     id: string;
     type: string;
     attributes?: unknown;
@@ -383,17 +455,19 @@ const familyAttributes = createFamilyAttributeCollapser();
  */
 export function recordLearnerFamilyEvidence(
   byFamily: Readonly<Record<string, LearnerFamilyEvidenceCounts>>,
+  scope: ObservabilityScope,
 ): void {
   for (const [familyId, counts] of Object.entries(byFamily ?? {})) {
     const family = familyAttributes.attributeFor(familyId);
     for (const [dimension, field] of FAMILY_DIMENSION_FIELDS) {
       const value = counts?.[field];
       if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) continue;
-      Effect.runSync(
+      inScope(
         Metric.update(
           Metric.withAttributes(learnerFamilyDerivations, { family, dimension }),
           value,
         ),
+        scope,
       );
     }
   }
@@ -448,14 +522,14 @@ const observedDepth = (value: number | undefined): number | null =>
   typeof value === "number" && Number.isFinite(value) && value >= 0 ? Math.trunc(value) : null;
 
 /** SET the gauges the caller observed this tick. An omitted depth is left untouched. */
-export function recordQueueDepths(depths: ReplayQueueDepths): void {
+export function recordQueueDepths(depths: ReplayQueueDepths, scope: ObservabilityScope): void {
   const queued = observedDepth(depths?.queued);
-  if (queued !== null) Effect.runSync(Metric.update(replayQueueQueued, queued));
+  if (queued !== null) inScope(Metric.update(replayQueueQueued, queued), scope);
   const awaitingEvaluation = observedDepth(depths?.awaitingEvaluation);
   if (awaitingEvaluation !== null)
-    Effect.runSync(Metric.update(replayQueueAwaitingEvaluation, awaitingEvaluation));
+    inScope(Metric.update(replayQueueAwaitingEvaluation, awaitingEvaluation), scope);
   const stranded = observedDepth(depths?.stranded);
-  if (stranded !== null) Effect.runSync(Metric.update(replayQueueStranded, stranded));
+  if (stranded !== null) inScope(Metric.update(replayQueueStranded, stranded), scope);
 }
 
 /**
@@ -481,9 +555,9 @@ export const replayArmPlanArms = Metric.histogram("role-model.replay.arm_plan_ar
 });
 
 /** Record one arm-planning result. A negative or non-finite count is not an observation. */
-export function recordArmPlan(armCount: number): void {
+export function recordArmPlan(armCount: number, scope: ObservabilityScope): void {
   if (typeof armCount !== "number" || !Number.isFinite(armCount) || armCount < 0) return;
-  Effect.runSync(Metric.update(replayArmPlanArms, Math.trunc(armCount)));
+  inScope(Metric.update(replayArmPlanArms, Math.trunc(armCount)), scope);
 }
 
 /**
@@ -502,12 +576,13 @@ export const learnerAdmissionFloor = Metric.counter("role-model.learner.admissio
   incremental: true,
 });
 
-export function recordAdmissionFloor(admitted: boolean): void {
-  Effect.runSync(
+export function recordAdmissionFloor(admitted: boolean, scope: ObservabilityScope): void {
+  inScope(
     Metric.update(
       Metric.withAttributes(learnerAdmissionFloor, { admitted: admitted ? "true" : "false" }),
       1,
     ),
+    scope,
   );
 }
 
@@ -614,7 +689,7 @@ export function ladderRungCountOf(row: unknown): number | null {
   return persisted ?? rungCountIn(row);
 }
 
-export function recordLadderRungs(rungCount: number): void {
+export function recordLadderRungs(rungCount: number, scope: ObservabilityScope): void {
   if (typeof rungCount !== "number" || !Number.isFinite(rungCount) || rungCount < 0) return;
-  Effect.runSync(Metric.update(ladderRungs, Math.trunc(rungCount)));
+  inScope(Metric.update(ladderRungs, Math.trunc(rungCount)), scope);
 }
