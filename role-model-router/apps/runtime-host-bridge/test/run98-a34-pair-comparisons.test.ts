@@ -711,5 +711,21 @@ describe("run 98 addendum 34 S1 pair comparisons", () => {
       expect(pipelineInput.roleId).toBe("coder");
       expect(pipelineInput.taxonomyVersion).toBe("1.0.0-alpha.1");
     }
+
+    // The precedence is PER FIELD and the capture always wins: a side that declares its own family keeps it, so
+    // this inheritance can never relabel a comparison whose evidence names a different task.
+    const declared = buildScenario(["a", "b", "c"]);
+    const declaredSource = declared.sourceCapture as unknown as Record<string, unknown>;
+    declaredSource.roleId = "coder";
+    declaredSource.taxonomyVersion = "1.0.0-alpha.1";
+    (declared.arms[0] as unknown as { capture: Record<string, unknown> }).capture.taskTypeId =
+      "writer.summarize";
+    await declared.invoke();
+    const armPairIndex = decidedPairs(declared.pipelineInputs).indexOf("endpoint:a|endpoint:b");
+    expect(armPairIndex).toBeGreaterThan(0);
+    expect(declared.pipelineInputs[armPairIndex]?.taskTypeId).toBe("writer.summarize");
+    // ...while the fields that side leaves silent still come from the request it is evidence about.
+    expect(declared.pipelineInputs[armPairIndex]?.roleId).toBe("coder");
+    expect(declared.pipelineInputs[armPairIndex]?.taxonomyVersion).toBe("1.0.0-alpha.1");
   });
 });
