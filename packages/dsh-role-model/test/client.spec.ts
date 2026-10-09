@@ -647,12 +647,16 @@ describe("editing configuration from the panel", () => {
     new Function("window", `${readFileSync(clientEntry, "utf8")}\n`)(stub);
     if (registered === undefined) throw new Error("the client entry registered no module");
     const components: ((props: unknown) => unknown)[] = [];
+    const remoteService = { settings };
     const ctx = {
       effect: (callback: () => unknown) => {
         callback();
         return () => undefined;
       },
-      remote: { settings },
+      // Faithful to Cordis: a service is looked up with `get`, which answers `undefined`
+      // when it is absent. Reading it as a property (`ctx.remote`) is what throws
+      // `cannot get property "remote" without inject` on the real client context.
+      get: (name: string) => (name === "remote" ? remoteService : undefined),
       slots: {
         inject: (_key: string, callback: () => void) => callback(),
         register: (_options: unknown, panel: unknown) => {
@@ -661,6 +665,11 @@ describe("editing configuration from the panel", () => {
         },
       },
     };
+    Object.defineProperty(ctx, "remote", {
+      get() {
+        throw new Error('cannot get property "remote" without inject');
+      },
+    });
     const plugin = registered.factory((name: string) => {
       if (name === "react") return testReact();
       throw new Error(`unexpected module request: ${name}`);
@@ -856,6 +865,34 @@ describe("editing configuration from the panel", () => {
     expect(typeof failure).toBe("string");
     expect(failure).toContain("has not answered");
   }, 1500);
+
+  /**
+   * The Remote must be read through `ctx.get`, never as `ctx.remote`.
+   *
+   * On the real client context an undeclared service property throws
+   * `cannot get property "remote" without inject`, while `get` answers `undefined` when it
+   * is absent. Reading it as a property is what the live panel reported on Apply, because
+   * this half declares only `slots` in `inject` (deliberately: see the mount test above).
+   */
+  test("reads the Remote through ctx.get rather than as a property", () => {
+    const { settings } = fakeSettings();
+    const { internals, ctx } = applyWith(settings);
+    // `applyWith` builds exactly that context: `get` answers, the property throws.
+    expect(() => (ctx as unknown as { remote: unknown }).remote).toThrow(/without inject/u);
+    expect(internals.settingsRemote(ctx)).toBeDefined();
+  });
+
+  test("a context whose Remote property throws still degrades", async () => {
+    const { internals } = applyWith(fakeSettings().settings);
+    const hostile = {
+      get: () => {
+        throw new Error('cannot get property "remote" without inject');
+      },
+    };
+    // A guard that cannot read the Remote must leave the form usable, not throw.
+    expect(internals.settingsRemote(hostile)).toBeUndefined();
+    await expect(internals.writeConfig(hostile, { port: 3458 })).resolves.toContain("unavailable");
+  });
 
   test("a context without the settings Remote degrades instead of throwing", async () => {
     // This is the case that matters: the page must still render when the Remote is

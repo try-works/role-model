@@ -357,18 +357,30 @@ window.__ModuleLoader__.load({
     /**
      * Read the settings Remote, when the context exposes one.
      *
-     * Reached through `ctx.remote` rather than a hard `remote.settings` injection: an
-     * injection edge that cannot resolve means the plugin never mounts, which blanks
-     * the whole settings page — far worse than a form that cannot save. The write path
-     * is guarded the same way, and says so in the UI when the surface is missing.
+     * Reached through `ctx.get("remote")`, never as the property `ctx.remote`. On the real
+     * client context a service property that is not declared in `inject` **throws**
+     * (`cannot get property "remote" without inject`) rather than answering undefined, and
+     * `ctx.get` is the lookup that returns undefined when the service is absent.
+     *
+     * It is deliberately not injected either: this half injects only `slots`, because an
+     * injection edge that cannot resolve means the plugin never mounts, which blanks the
+     * whole settings page — far worse than a form that cannot save. The write path is
+     * guarded the same way, and says so in the UI when the surface is missing.
      * @param ctx - the client plugin context.
      * @returns the namespace's surface, or undefined when it is not available.
      */
     function settingsRemote(ctx) {
-      const namespace = ctx?.remote?.settings;
-      return namespace !== undefined && typeof namespace.update === "function"
-        ? namespace
-        : undefined;
+      try {
+        const remote = typeof ctx?.get === "function" ? ctx.get("remote") : undefined;
+        const namespace = remote?.settings;
+        return namespace !== undefined && typeof namespace.update === "function"
+          ? namespace
+          : undefined;
+      } catch {
+        // A context that cannot answer the lookup leaves the form usable rather than
+        // turning every read and write into a thrown error.
+        return undefined;
+      }
     }
 
     /**
