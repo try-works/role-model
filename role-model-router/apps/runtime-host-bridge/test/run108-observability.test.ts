@@ -867,13 +867,16 @@ describe("run108 addendum-04 - the admission floor is counted at the MATERIALIZA
     expect(
       admissionFloorVerdictOf({ status: "unchanged", ladder: { completeness: { admitted: 7 } } }),
     ).toBe(true);
-    // THE case the old in-flight-challenge emit could never reach: a row the floor REFUSED.
-    expect(
-      admissionFloorVerdictOf({
-        status: "insufficient_evidence",
-        ladder: { completeness: { admitted: 0, configured: 12 } },
-      }),
-    ).toBe(false);
+    // THE case the old in-flight-challenge emit could never reach: the floor REFUSED. This is the REAL
+    // shape - the materializer pushes { status: "insufficient_evidence", ladder: null } with NO
+    // completeness (route-ladder-materialization.mjs:94); completeness is built only on the write path
+    // (:129). The earlier synthetic admitted:0 row is not a shape production ever emits.
+    expect(admissionFloorVerdictOf({ status: "insufficient_evidence", ladder: null })).toBe(false);
+    expect(admissionFloorVerdictOf({ status: "insufficient_evidence" })).toBe(false);
+    // ...but a null-ladder status that is NOT a floor verdict must record NOTHING.
+    expect(admissionFloorVerdictOf({ status: "capacity_exceeded", ladder: null })).toBeNull();
+    expect(admissionFloorVerdictOf({ status: "stale", ladder: null })).toBeNull();
+    expect(admissionFloorVerdictOf({ status: "rolled_back", ladder: null })).toBeNull();
   });
 
   test("skips rows that carry no admitted count rather than inventing a refusal", () => {
