@@ -730,6 +730,196 @@ test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather t
   });
 });
 
+/**
+ * Run 108 addendum-02 (I2, the promotion floor): the OUTCOME the live fix has to reach. The tick plans
+ * the capture's arms under the versioned bound (>= 3, see
+ * `run108-addendum02-live-arm-planning.test.ts`), the supervised-replay completion turns every arm it
+ * paid for into a durable case (`cli.ts` `caseIds = 1 + evaluatedCounterfactuals.length`), and THIS is
+ * where the resulting development partition comes from.
+ *
+ * The test above pins the control: one counterfactual (two rollouts) is holdout-only. Here the same
+ * pipeline is given a third rollout - the shape a bound-respecting live dispatch now produces - and the
+ * existing train-case producer must fire without any pipeline, partition-rule or floor change.
+ */
+const comparableEvidenceWithThirdArm = {
+  ...comparableEvidence,
+  counterfactuals: [
+    ...comparableEvidence.counterfactuals,
+    {
+      rolloutId: "rollout:counterfactual-b-96",
+      routePackage: "candidate:counterfactual-b-96",
+      endpointId: "endpoint:counterfactual-b-96",
+      modelId: "model:counterfactual-b-96",
+      policyId: "routing-shadow",
+      reasoningEffort: "max",
+      effortSource: "variant",
+      evidenceRef: "artifact:counterfactual-b-96",
+      artifactRef: "artifact:counterfactual-b-output-96",
+      evaluationActual: "success",
+      propensity: 0.4,
+      outcome: {
+        outcomeId: "outcome:counterfactual-b-96",
+        outcomeRef: "artifact:outcome-counterfactual-b-96",
+        outcomeDigest: "sha256:counterfactual-b-outcome-96",
+        source: "replay",
+        status: "success",
+      },
+    },
+  ],
+  candidateSet: [
+    ...comparableEvidence.candidateSet,
+    {
+      routePackage: "candidate:counterfactual-b-96",
+      endpointId: "endpoint:counterfactual-b-96",
+      propensity: 0.4,
+    },
+  ],
+};
+
+const durableEvaluationReferencesWithThirdArm = () => ({
+  ...durableEvaluationReferences(),
+  counterfactualEvidenceRef: "artifact:counterfactual-96",
+  perCase: [
+    ...durableEvaluationReferences().perCase,
+    {
+      caseId: "case:request:shadow-96:2",
+      evidenceRef: "evidence:run96-durable-counterfactual-b",
+    },
+  ],
+});
+
+test("Run108 addendum-02: three rollouts make the train-case producer fire, so the comparison carries a development partition", async () => {
+  const durableJobs: Record<string, unknown>[] = [];
+  const trialIds = ["trial:source-96", "trial:counterfactual-96", "trial:counterfactual-b-96"];
+  const claimedTrialIds = [...trialIds];
+  await runTrackBShadowPipeline(
+    {
+      async invoke(id, envelope) {
+        if (id === "evaluation-core" && envelope.capability === "evaluation:register-scorer") {
+          return { key: "run96-exact@1" };
+        }
+        if (id === "evaluation-core" && envelope.capability === "evaluation:attest-references") {
+          return attestReferences(envelope as Record<string, unknown>);
+        }
+        if (id === "evaluation-core" && envelope.capability === "evaluation:create-job") {
+          durableJobs.push(envelope.value as Record<string, unknown>);
+          return { jobId: "evaluation:job-108-a02" };
+        }
+        if (id === "evaluation-core" && envelope.capability === "evaluation:list-trials") {
+          const trialId = trialIds.shift();
+          return trialId ? [{ trialId }] : [];
+        }
+        if (
+          id === "evaluation-runner-local" &&
+          envelope.capability === "evaluation:execute-trial"
+        ) {
+          const actual = (envelope.value as Record<string, unknown>).actual;
+          return {
+            outputRef: "artifact:evaluated-output-96",
+            outputDigest: "sha256:evaluated-output-96",
+            stdoutRef: "artifact:evaluated-stdout-96",
+            stderrRef: "artifact:evaluated-stderr-96",
+            exitCode: 0,
+            measurements: { elapsedMs: 1, outputBytes: 1 },
+            scores: [
+              {
+                scorerId: "run96-semantic-criteria",
+                scorerVersion: routingShadowScorer.version,
+                scorerDigest: routingShadowScorer.digest,
+                scorerDefinition: routingShadowScorer,
+                dimension: "correctness",
+                score: actual === "success" ? 1 : 0,
+                confidence: 1,
+                source: "deterministic_semantic_criteria",
+              },
+            ],
+          };
+        }
+        if (id === "evaluation-core" && envelope.capability === "evaluation:claim-trial") {
+          return { trialId: claimedTrialIds.shift(), leaseId: "lease:96" };
+        }
+        if (
+          id === "evaluation-core" &&
+          ["evaluation:submit-trial-result", "evaluation:record-trial-score-batch"].includes(
+            String(envelope.capability),
+          )
+        ) {
+          return { accepted: true };
+        }
+        if (
+          id === "evaluation-core" &&
+          ["evaluation:finalize-comparison-group", "evaluation:read-comparison-group"].includes(
+            String(envelope.capability),
+          )
+        ) {
+          return { groupId: "comparison:96-a02", status: "finalized", outcome: "candidate" };
+        }
+        if (id === "trajectory-signals") {
+          return {
+            routeDecisionId: "decision:source-96",
+            graphRef: "artifact:source-graph-96",
+            signals: [],
+          };
+        }
+        if (id === "profile-learner") {
+          return { profileId: "profile:96", digest: "sha256:profile-96", effects: {} };
+        }
+        if (id === "knowledge-worker") {
+          return { id: "candidate:96", state: "shadow", productionEffects: {} };
+        }
+        if (id === "replay-core") {
+          return {
+            sourceDecisionId: "decision:source-96",
+            sourceGraphRef: "artifact:source-graph-96",
+            sharedPrefixRef: "artifact:source-graph-96#prefix",
+            branches: [],
+            digest: "sha256:replay-plan-96",
+          };
+        }
+        throw new Error(`unexpected invocation ${id}:${String(envelope.capability)}`);
+      },
+    },
+    {
+      requestId: "request:shadow-96",
+      channel: "development",
+      scope: "tenant:run96",
+      authorizationEpoch: 96,
+      productionState: {},
+      routePackage: "candidate:source-96",
+      sourceDecisionId: "decision:source-96",
+      sourceGraphRef: "artifact:source-graph-96",
+      prefix: [],
+      sourcePrefixRef: "artifact:source-graph-96#prefix",
+      counterfactuals: [
+        { id: "candidate:counterfactual-96", suffix: [] },
+        { id: "candidate:counterfactual-b-96", suffix: [] },
+      ],
+      comparableEvidence: comparableEvidenceWithThirdArm,
+      evaluationCases: [
+        {
+          id: "case:request:shadow-96:0",
+          evaluationCriteria: {
+            schemaVersion: "role-model.semantic-criteria.v1",
+            requiredTerms: ["success"],
+          },
+        },
+      ],
+      evaluationReferences: durableEvaluationReferencesWithThirdArm(),
+      trajectoryEvents: [],
+    },
+  );
+
+  expect(durableJobs).toHaveLength(1);
+  const partitions = (
+    durableJobs[0]?.cases as Array<{ readonly partition?: string }> | undefined
+  )?.map((entry) => entry.partition);
+  // Two rollouts cannot produce this (see the control above): both sides of the primary pair are forced
+  // to `holdout`, so `developmentPartition` is empty and the promotion floor is unreachable. The third
+  // arm is a case this comparison does not decide between, which is exactly the development evidence the
+  // promotion protocol fits on.
+  expect([...(partitions ?? [])].sort()).toEqual(["holdout", "holdout", "train"]);
+});
+
 test("Run96 S4 RED: durable replay evaluation sends the same bounded semantic criteria to source and counterfactual trials", async () => {
   const executionInputs: Record<string, unknown>[] = [];
   const durableCases: Record<string, unknown>[] = [];

@@ -5765,6 +5765,14 @@ export async function main(): Promise<void> {
         modelId: string;
         reasoningEffort: string | null;
       }[],
+      /**
+       * Run 108 addendum-02 (I2, the promotion floor): the operator's versioned counterfactual arm bound
+       * (activation policy `maxCounterfactualArms`, 1..8). The tick is where a live dispatch plans its
+       * arms, so the bound has to reach it: measured live on `:3458` (2026-10-09), raising it 3 -> 4
+       * changed nothing because this planning path never read the policy. A provider (not a snapshot) so
+       * a policy change takes effect on the next tick.
+       */
+      maxCounterfactualArms: () => number | null,
       judgeResolver?: () => Promise<string | null>,
     ): ReturnType<typeof startAutoReplayLoop> | null => {
       const operations = postObservationOperations;
@@ -7792,6 +7800,13 @@ export async function main(): Promise<void> {
         ledger,
         policySet,
         configuredEndpointIds: endpoints,
+        /**
+         * Run 108 addendum-02 (I2): the arm bound the tick plans under. It is re-read per tick, so the
+         * operator's activation policy - not a compiled-in constant - decides how many counterfactual
+         * arms one live dispatch plans (>= 3 by default, which is the floor below which every job is a
+         * two-case, holdout-only comparison and the development partition can never exist).
+         */
+        maxCounterfactualArms,
         /**
          * Run 106: the same descriptors the supervised-replay path already builds from the registry
          * (`configuredReplayArms`), handed to the loop so the focus-dispatch walk can prefer a
@@ -11199,6 +11214,29 @@ export async function main(): Promise<void> {
                   : null,
             };
           }),
+        /**
+         * Run 108 addendum-02 (I2, the promotion floor): the operator's versioned counterfactual arm bound,
+         * read from the same activation policy the post-observation work item already reads it from
+         * (`maxCounterfactualArms`), so one policy field governs both planners. A read that fails leaves the
+         * tick's own default in place rather than planning zero arms.
+         */
+        () => {
+          try {
+            return (
+              readLearningPolicyFile({
+                repoRoot: options.repoRoot,
+                stateRoot: resolveLearningPolicyStateRoot({
+                  runtimeStateRoot: options.runtimeStateRoot,
+                  scopeId: options.scopeId,
+                }),
+                channel: packagedProfile?.channel ?? "development",
+                scopeId: options.scopeId,
+              })?.effective.maxCounterfactualArms ?? null
+            );
+          } catch {
+            return null;
+          }
+        },
         // Run 105 bug 3: pass the wired judge resolution down so the dispatcher's focus planner excludes the
         // SAME controller judge the supervised replay endpoint will reject (deepseek-flash), instead of
         // returning null from the empty durable table and planning the judge as a counterfactual arm.

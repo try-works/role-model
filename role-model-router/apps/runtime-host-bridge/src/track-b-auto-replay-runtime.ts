@@ -534,6 +534,14 @@ export function startAutoReplayLoop(input: {
   readonly healthyEndpointIds?:
     | readonly string[]
     | (() => readonly string[] | null | Promise<readonly string[] | null>);
+  /**
+   * Run 108 addendum-02 (I2): the operator's versioned counterfactual arm bound
+   * (`maxCounterfactualArms`, 1..8). The tick is where a live dispatch plans its arms, so the bound has
+   * to reach it or raising it changes nothing (measured live: 3 -> 4 changed nothing). A provider (not a
+   * snapshot) so an operator's policy change takes effect on the next tick, exactly like
+   * `configuredEndpointIds` above; absent keeps the tick's own default (3).
+   */
+  readonly maxCounterfactualArms?: number | (() => number | null | undefined) | null;
   readonly executor: (input: {
     readonly dispatchRoundId?: string;
     readonly capture: AutoReplayCapture;
@@ -1997,6 +2005,22 @@ export function startAutoReplayLoop(input: {
         typeof input.healthyEndpointIds === "function"
           ? await input.healthyEndpointIds()
           : input.healthyEndpointIds;
+      /**
+       * Run 108 addendum-02: the versioned counterfactual arm bound for THIS tick, so an operator policy
+       * change applies to the next tick without a restart. A provider that throws (or answers nothing
+       * usable) leaves the bound unset, and the tick keeps its own default rather than planning zero arms.
+       */
+      const resolvedArmBound = await (async (): Promise<number | null> => {
+        try {
+          const raw =
+            typeof input.maxCounterfactualArms === "function"
+              ? await input.maxCounterfactualArms()
+              : input.maxCounterfactualArms;
+          return typeof raw === "number" && Number.isSafeInteger(raw) && raw > 0 ? raw : null;
+        } catch {
+          return null;
+        }
+      })();
       const window = input.ledger.status().window;
       /**
        * Run 98 addendum 04 §7 (`L6`), measured live on v171: a tick walks up to eight captures and a
@@ -2039,6 +2063,11 @@ export function startAutoReplayLoop(input: {
         runAutoReplayTick({
           captures: dispatchCaptures,
           configuredEndpointIds,
+          /**
+           * Run 108 addendum-02: the policy bound travels to the planner that caps the plan, so the
+           * operator's `maxCounterfactualArms` is what a live dispatch honours.
+           */
+          ...(resolvedArmBound === null ? {} : { maxCounterfactualArms: resolvedArmBound }),
           // Run 98 addendum 56 §6: the judge is excluded from the planned arms, and a capture whose own endpoint
           // is the judge is deferred with the named code rather than dispatched into a refusal.
           ...(typeof input.resolveJudgeEndpointId === "function"

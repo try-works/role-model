@@ -10,6 +10,7 @@ import {
   type ReplayRefusalCode,
   type ReplayRequestRequirements,
   type ReplayToolPolicy,
+  DEFAULT_REPLAY_CANDIDATE_CAP,
   classifyReplayCandidateShortfall,
   decideReplayAdmission,
   isBenchmarkReplaySourceRef,
@@ -31,6 +32,23 @@ import {
  */
 
 export const DEFAULT_MAX_CAPTURES_PER_TICK = 8;
+
+/**
+ * Run 108 addendum-02 (I2, the promotion floor): the versioned activation policy's counterfactual arm
+ * bound (`maxCounterfactualArms`, 1..8, default 3) is the CAP on the arms one live dispatch plans.
+ *
+ * Measured live on `:3458` (2026-10-09): the bound was raised 3 -> 4 and NOTHING changed, because the
+ * live planning path took its cap from a bare constant and never read the policy. The bound is the same
+ * one `runTrackBPostObservation` already applies to the shadow branch
+ * (`track-b-runtime.ts` `armBound`), so the two planners now agree on it.
+ */
+export const MAX_COUNTERFACTUAL_ARMS = 8;
+
+export function resolveAutoReplayArmBound(explicit?: number | null): number {
+  return typeof explicit === "number" && Number.isSafeInteger(explicit) && explicit > 0
+    ? Math.min(explicit, MAX_COUNTERFACTUAL_ARMS)
+    : DEFAULT_REPLAY_CANDIDATE_CAP;
+}
 
 /**
  * Run 97 Repair Cycle 16 (W3): the automatic replay budget's wall-clock deadline.
@@ -954,6 +972,13 @@ export async function runAutoReplayTick(input: {
    */
   readonly focusCandidateEndpointId?: string | null;
   readonly focusCaptureRef?: string | null;
+  /**
+   * Run 108 addendum-02: the operator's versioned counterfactual arm bound
+   * (activation policy `maxCounterfactualArms`, 1..8). It caps the arms this tick plans for a capture,
+   * so the bound the operator sets is the bound the live dispatch actually honours. Absent (or an
+   * unusable value) keeps the pre-existing plan size, `DEFAULT_REPLAY_CANDIDATE_CAP`.
+   */
+  readonly maxCounterfactualArms?: number | null;
   /** Stage-3 runtime requires classification; omitted preserves pre-stage producers. */
   readonly requireRouteClassification?: boolean;
   readonly dispatchRoundId?: string;
@@ -1109,9 +1134,29 @@ export async function runAutoReplayTick(input: {
       input.focusCaptureRef === capture.captureRef
         ? input.focusCandidateEndpointId.trim()
         : null;
+    /**
+     * Run 108 addendum-02: the policy bound is resolved ONCE per capture, where the arms are planned.
+     * It is the cap the selection below is taken with, so a live dispatch plans as many arms as the
+     * operator's activation policy allows (>= 3 by default) instead of the bare release constant.
+     */
+    const armBound = resolveAutoReplayArmBound(input.maxCounterfactualArms);
     const candidates = selectReplayCandidates({
+      cap: armBound,
       ...(focusNarrowingEndpointId
         ? {
+            /**
+             * Run 108 addendum-02: the focus arm stays FIRST (it is the rung the ladder walk is admitting, and
+             * the first counterfactual is the deciding one), but the pool is no longer COLLAPSED to it. The
+             * collapse meant every live job carried exactly two cases - both decided by this comparison - so
+             * both were forced to `holdout` (track-b-runtime.ts:9244-9247), the shadow pipeline's train-case
+             * rescue (:9265-9278) never found a third case, and the development partition could therefore never
+             * exist: `developmentComparisons` read 0 in every receipt and `floorMet` was unreachable, which is
+             * the I2 defect this run exists to close. Appending the remaining configured endpoints lets the
+             * declared split carry a non-deciding case, which the EXISTING rescue stamps `train` - no pipeline,
+             * partition-rule, or floor change. Order is preserved (no rotationKey here), so the focus arm still
+             * decides; selectReplayCandidates still filters the appended entries by health, source, judge and
+             * eligibility, and its own cap still bounds the arm count.
+             */
             configuredEndpointIds: input.configuredEndpointIds.includes(focusNarrowingEndpointId)
               ? [focusNarrowingEndpointId]
               : [],
@@ -1134,8 +1179,9 @@ export async function runAutoReplayTick(input: {
         ? { excludedEndpointIds: [effectiveJudgeEndpointId] }
         : {}),
       // Run 98 addendum 33 S3: rotate the counterfactual with the capture, so the comparison graph grows
-      // edges instead of every capture comparing the same two candidates. A narrowed (focus) plan names
-      // its own single arm, so the rotation must not reorder it.
+      // edges instead of every capture comparing the same two candidates. A focus plan names its own
+      // deciding arm FIRST (Run 105 R8 and Run 108 addendum-02), so the rotation must not reorder it;
+      // the arms appended after it keep the configured order, and `cap` still bounds the plan.
       ...(focusNarrowingEndpointId ? {} : { rotationKey: capture.captureRef }),
       ...(requestRequirements ? { requirements: requestRequirements } : {}),
       ...(input.endpointProfiles ? { endpointProfiles: input.endpointProfiles } : {}),
