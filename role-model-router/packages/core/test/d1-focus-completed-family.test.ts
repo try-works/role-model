@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
 import { selectFocusTask } from "@role-model-router/core";
+import { describe, expect, it } from "vitest";
 
 /**
  * D1 - a COMPLETED family must not hold the walk focus.
@@ -43,12 +43,18 @@ describe("focus selection: a completed family must not starve an incomplete one"
   });
 
   it("still selects the incomplete family when the complete one has vastly more requests", () => {
-    const picked = selectFocusTask([complete({ requestCount: 100000 }), incomplete({ requestCount: 1 })]);
+    const picked = selectFocusTask([
+      complete({ requestCount: 100000 }),
+      incomplete({ requestCount: 1 }),
+    ]);
     expect(picked?.roleId).toBe("writer");
   });
 
   it("selects a complete family only when nothing is left to fill", () => {
-    const picked = selectFocusTask([complete(), incomplete({ admitted: 7, configured: 7, remaining: 0 })]);
+    const picked = selectFocusTask([
+      complete(),
+      incomplete({ admitted: 7, configured: 7, remaining: 0 }),
+    ]);
     expect(picked?.roleId).toBe("coordinator");
   });
 
