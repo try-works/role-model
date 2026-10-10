@@ -120,3 +120,70 @@ describe("run108: the census honours the eligibility cooldown", () => {
     );
   });
 });
+
+/**
+ * Run 108: THE THRESHOLD CASE, which is the gap that let the previous fix ship green and inert.
+ *
+ * The census adds telemetry-only families (families with traffic but NO ladder row) from its own query, and the value it
+ * computes there - COUNT(DISTINCT request_id) over request_class IN ('live','live_request') - is the SAME measure the
+ * corpus read refuses on (route-challenge-evidence.ts:556: a LIMIT 501 query returning more than 500 rows). A family
+ * above that budget can never be replayed, so offering it as the focus makes the walk fail every tick.
+ *
+ * The earlier eligibility cases exercised the fallback SHAPE but never this threshold, so a green suite proved nothing
+ * about the case that actually mattered. These two cases seed real rows across the boundary.
+ */
+const OVER_BUDGET = 501;
+const seedMany = (databasePath: string, taskTypeId: string, count: number, prefix: string) => {
+  for (let i = 0; i < count; i++) seed(databasePath, `${prefix}-${i}`, taskTypeId);
+};
+
+describe("run108: the census declines to offer a family whose corpus cannot be projected", () => {
+  test(
+    "an OVER-BUDGET family is excluded while a projectable family exists",
+    { timeout: 120_000 },
+    async () => {
+      const seeded = await state();
+      seedMany(seeded.databasePath, "recruiter.candidate.screen", OVER_BUDGET, "cooled");
+      seedMany(seeded.databasePath, "recruiter.screen.ready", 3, "ready");
+      const result = readRouteLadderCensus({
+        runtimeStateRoot: seeded.runtimeStateRoot,
+        scopeId: "elig",
+        nowMs,
+        stalenessWindowDays: 30,
+        configuredEndpointIds: ["current-a"],
+        // NO ladder rows for either family: this is the telemetry-only path that made the eligibility filter inert.
+        ladderRows: [],
+      });
+      expect(result.status).toBe("available");
+      const tasks = (result.candidates ?? []).map((c) => c.taskTypeId);
+      expect(tasks).toContain("recruiter.screen.ready");
+      expect(tasks).not.toContain("recruiter.candidate.screen");
+      // And the over-budget family must have been counted, not silently dropped from the census.
+      const over = (result.candidates ?? []).find(
+        (c) => c.taskTypeId === "recruiter.candidate.screen",
+      );
+      expect(over).toBeUndefined();
+    },
+  );
+
+  test(
+    "FALLBACK: when EVERY family is over budget the full set is still offered, so the walk cannot idle",
+    { timeout: 120_000 },
+    async () => {
+      const seeded = await state();
+      seedMany(seeded.databasePath, "recruiter.candidate.screen", OVER_BUDGET, "all");
+      const result = readRouteLadderCensus({
+        runtimeStateRoot: seeded.runtimeStateRoot,
+        scopeId: "elig",
+        nowMs,
+        stalenessWindowDays: 30,
+        configuredEndpointIds: ["current-a"],
+        ladderRows: [],
+      });
+      expect(result.status).toBe("available");
+      expect((result.candidates ?? []).map((c) => c.taskTypeId)).toContain(
+        "recruiter.candidate.screen",
+      );
+    },
+  );
+});
