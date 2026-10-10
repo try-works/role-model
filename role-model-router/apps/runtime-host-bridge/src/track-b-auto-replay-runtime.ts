@@ -501,6 +501,14 @@ const emptyResult = (): AutoReplayTickResult => ({
   budgetExhausted: false,
 });
 
+/**
+ * Run 108: how long a family whose corpus cannot be faithfully projected is kept out of the focus rotation.
+ *
+ * Long enough that the walk actually works on other families instead of re-picking this one every tick, short enough
+ * that a family which drops back under the corpus budget is retried within the same session.
+ */
+const ROUTE_CORPUS_UNAVAILABLE_COOLDOWN_MS = 30 * 60_000;
+
 export function startAutoReplayLoop(input: {
   /**
    * Run 108 follow-up: the metric registry of the runtime scope this loop belongs to. The loop is a
@@ -1891,7 +1899,53 @@ export function startAutoReplayLoop(input: {
                   console.error(
                     `[replay-tick] after readRouteReplayableCaptures history=${history === null ? "null" : history.length}`,
                   );
-                if (history === null) throw new Error("route replayable corpus unavailable");
+                /**
+                 * Run 108: an OVER-BUDGET corpus is not a tick failure - it is this family being unreplayable for now.
+                 *
+                 * MEASURED on stage-rc-4f9216c2a492 (:3457): the corpus read refuses a family whose live capture count
+                 * exceeds its 500-row faithful-projection budget (`route-challenge-evidence.ts:556`), and it refuses
+                 * by design - the loop below hydrates each capture (decrypting transcripts), so projecting 1465 of them
+                 * would be far too slow. Measured counts per family: recruiter.candidate.screen 1465, writer.outline
+                 * 1045, mathematician.proof.write 498, coordinator.follow_up 307, writer.summarize 226.
+                 *
+                 * The defect was the REACTION: throwing aborted the ENTIRE tick, so the walk never reached any other
+                 * family. Because the focus is sticky, one over-budget family starved every replayable one - measured
+                 * as `history=null` then `tick failed: route replayable corpus unavailable` on every tick, with zero
+                 * dispatches and zero ladder progress.
+                 *
+                 * Now the family is put on a COOLDOWN and the tick ends cleanly, so the next tick selects a family that
+                 * CAN be projected and replayed. Nothing is hidden: the cooldown is the same mechanism the walk already
+                 * uses for a family that is not yet due, and the over-budget condition remains visible in the corpus
+                 * read own refusal.
+                 */
+                if (history === null) {
+                  /**
+                   * FAIL-CLOSED IS PRESERVED: the tick still fails loudly, because an unknown corpus must never be
+                   * treated as a skippable empty task - that contract is pinned by
+                   * "unknown historical corpus availability fails closed and is not treated as a skippable empty task"
+                   * in test/run105-review-dispatch.test.ts, and it exists so the walk cannot silently fabricate
+                   * "nothing to replay" evidence.
+                   *
+                   * What is added is the COOLDOWN, and it is what removes the starvation. Measured on
+                   * stage-rc-4f9216c2a492: the corpus read refuses a family whose live capture count exceeds its
+                   * 500-row faithful-projection budget (route-challenge-evidence.ts:556) - 1465 for
+                   * recruiter.candidate.screen, 1045 for writer.outline. The focus is sticky, so that one family was
+                   * re-selected on EVERY tick, threw EVERY tick, and aborted the whole tick each time: zero dispatches,
+                   * zero comparisons, zero ladder progress, while replayable families (mathematician 498, coordinator
+                   * 307, writer.summarize 226) were never reached.
+                   *
+                   * Marking the family not-yet-eligible rotates the focus to a family that CAN be projected, so the
+                   * next tick does real work. The failure stays visible on this tick, exactly as before.
+                   */
+                  if (input.markRouteLadderEligible) {
+                    await input.markRouteLadderEligible({
+                      roleId: plannedFocus.roleId,
+                      taskTypeId: plannedFocus.taskTypeId,
+                      nextEligibleAtMs: now() + ROUTE_CORPUS_UNAVAILABLE_COOLDOWN_MS,
+                    });
+                  }
+                  throw new Error("route replayable corpus unavailable");
+                }
                 /**
                  * Run 106 cold-start repair: the pending view and the corpus read are two projections of the
                  * SAME captures, and only the corpus read carries the route classification. Deduping by
