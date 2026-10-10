@@ -7968,7 +7968,25 @@ export async function main(): Promise<void> {
         })(),
         routeFocusCandidates: async () => {
           const runtime = extensionRuntimeRef.current;
-          if (!runtime) return null;
+          /**
+           * D7a: this used to be a bare `return null`, and that silence cost an entire investigation.
+           *
+           * The walk treats a falsy census as "missing census" and reports `degraded`, so returning null here never
+           * meant "nothing to do" - it always meant the tick failed. Worse, it was indistinguishable from a REAL
+           * census degradation, because the two paths that legitimately degrade (below) both log while this one did
+           * not. Live on stage-rc-06a09d37eabc the walk failed this way on every tick for 20+ minutes while the
+           * runtime reported healthy, and neither log line ever appeared - which is correct, they were unreachable.
+           *
+           * A refusal to answer is now reported as such and made DISTINGUISHABLE from a degraded census, so the next
+           * occurrence names the real condition (no published extension runtime) instead of "missing census".
+           */
+          if (!runtime) {
+            console.error(
+              "[run105] route census refused: the extension runtime is not published yet - " +
+                "the walk cannot select a focus until it is",
+            );
+            throw new Error("extension runtime not published yet");
+          }
           try {
             const rows: unknown[] = [];
             let cursor: string | undefined;
