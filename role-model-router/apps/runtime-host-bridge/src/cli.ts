@@ -6880,6 +6880,15 @@ export async function main(): Promise<void> {
                * very next tick recovered, and the first-time ladder for that family materialized v1 -> v4
                * across the same window.
                *
+               * Run 108 COUNTER-CASE, measured on the stage RC: that recovery is NOT guaranteed while the lock
+               * contention persists. Over a 21-minute window a run took 40 ticks with skipped=5 and
+               * `wrote=0` for the WHOLE process - no ladder row was written at any point - and one of those ticks
+               * dragged 427083 ms. So "the next tick writes whatever this attempt missed" holds only while the
+               * contention is transient. The contention is a genuine structural conflict (two extension hosts
+               * holding read-write handles on one evaluation store, with a busy_timeout set to the same 5000 ms
+               * constant as the lock hold), and under it this skip repeats indefinitely. Read the reassurance
+               * below as "recoverable in principle", not as "recovered".
+               *
                * The bare "degraded: database is locked" invited the opposite reading - that a family
                * could reach its admission floor and silently get no row - and that misreading is how this
                * was originally recorded as data loss. Naming the cause and the retry costs nothing and
