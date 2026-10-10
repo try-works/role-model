@@ -565,10 +565,15 @@ export function startAutoReplayLoop(input: {
   }) => Promise<AutoReplayExecution>;
   readonly intervalMs?: number;
   /**
-   * D7b: how long an in-flight tick may hold the slot before the next tick RECLAIMS it. Deliberately generous
-   * (default: 30 minutes, or twice the interval) because this walk legitimately runs long ticks - one was
-   * measured at 900 s. The purpose is not to bound normal work but to guarantee the slot is never held
-   * forever by work that will never return.
+   * D7b: how long an in-flight tick may hold the slot before the next tick RECLAIMS it.
+   *
+   * Originally 30 minutes. MEASURED on stage-rc-425a26946d65: a hung tick did exactly what this guard is for, and the
+   * recovery took the full 30 minutes - 49 consecutive skips accumulated while the walk was dead. A 30-minute outage
+   * is not "a wedge cannot disable the walk"; it is a wedge disabling the walk for half an hour.
+   *
+   * Ticks legitimately run long, so the margin still matters: the longest OBSERVED legitimate tick is 283 s (one
+   * earlier measurement reached 900 s). 10 minutes keeps more than 2x headroom over the largest observed value while
+   * cutting the worst-case outage threefold. Callers who know their workload can still override it.
    */
   readonly staleTickDeadlineMs?: number;
   readonly maxCapturesPerTick?: number;
@@ -709,6 +714,19 @@ export function startAutoReplayLoop(input: {
   const maxCapturesPerTick = input.maxCapturesPerTick ?? 8;
   let running = false;
   /**
+   * D7b (second defect): WHO is holding the slot, and since when - per entry, not one shared timestamp.
+   *
+   * The first version kept a single `runningSinceMs` assigned on EVERY entry to the body. There are two entry paths:
+   * the interval walk (gated by `running`) and dispatchCapture() from the replay.dispatch queue worker, which BYPASSES
+   * `running` (:1299, :2414). A worker entering therefore RESTARTED the deadline the guard measures, so a hung
+   * interval tick could be kept permanently "fresh" by worker traffic - measured live as 81 skips over 54+ minutes with
+   * the reclaim never firing, despite the reclaim code being present in the shipped exe.
+   *
+   * The guard must measure the OLDEST in-flight entry, and each entry must clean up only its own.
+   */
+  const inFlightStartedAtMs = new Map<number, number>();
+  let nextEntryToken = 1;
+  /**
    * D7b: WHEN the in-flight tick started, so a tick that never returns cannot disable the walk.
    *
    * Measured live on stage-rc-06a09d37eabc (:3457, 2026-10-10) and reproduced on two processes: one tick
@@ -717,7 +735,6 @@ export function startAutoReplayLoop(input: {
    * later tick (62 skips on one process, 24+ on another) while `ticks` froze. A hung dependency must cost
    * one tick, never the loop.
    */
-  let runningSinceMs: number | null = null;
   let ticks = 0;
   let lastOutcome: AutoReplayLoopHealth["lastOutcome"] = "idle";
   let lastError: string | null = null;
@@ -1282,14 +1299,29 @@ export function startAutoReplayLoop(input: {
      * from stopping the loop.
      */
     const staleTickDeadlineMs =
-      input.staleTickDeadlineMs ?? Math.max(2 * (input.intervalMs ?? 0), 30 * 60_000);
-    if (running && runningSinceMs !== null && now() - runningSinceMs > staleTickDeadlineMs) {
+      input.staleTickDeadlineMs ?? Math.max(2 * (input.intervalMs ?? 0), 10 * 60_000);
+    /**
+     * D7b diagnostic: MEASURED on stage-rc-425a26946d65, the reclaim did NOT fire while the walk skipped for
+     * 54+ minutes against a 30-minute deadline - yet the unit test says it must. The guard's inputs were
+     * invisible, so the reason could not be determined from the log. Under ROLE_MODEL_FOCUS_DIAG each tick now
+     * states exactly what the reclaim decided and why, which turns the next occurrence into a measurement.
+     */
+    const oldestStartedAtMs =
+      inFlightStartedAtMs.size > 0 ? Math.min(...inFlightStartedAtMs.values()) : null;
+    if (process.env.ROLE_MODEL_FOCUS_DIAG && running) {
       console.error(
-        `[track-b-auto-replay] reclaiming stale tick: started ${now() - runningSinceMs}ms ago, ` +
+        `[replay-tick] reclaim check: running=${running} inFlight=${inFlightStartedAtMs.size} ` +
+          `oldestElapsed=${oldestStartedAtMs === null ? "n/a" : String(now() - oldestStartedAtMs)}ms deadline=${staleTickDeadlineMs}ms`,
+      );
+    }
+    if (running && oldestStartedAtMs !== null && now() - oldestStartedAtMs > staleTickDeadlineMs) {
+      console.error(
+        `[track-b-auto-replay] reclaiming stale tick: oldest entry started ${now() - oldestStartedAtMs}ms ago, ` +
           `deadline ${staleTickDeadlineMs}ms - the walk continues`,
       );
+      // Abandon every entry that is holding the slot: they are by definition past the deadline.
+      inFlightStartedAtMs.clear();
       running = false;
-      runningSinceMs = null;
     }
     if (paused || Ref.getUnsafe(stageExecutionBusy) || (running && !options?.onlyCaptureRefs)) {
       if (process.env.ROLE_MODEL_FOCUS_DIAG)
@@ -1316,8 +1348,9 @@ export function startAutoReplayLoop(input: {
       }
       return { ...emptyResult(), skipped: true };
     }
+    const entryToken = nextEntryToken++;
+    inFlightStartedAtMs.set(entryToken, now());
     running = true;
-    runningSinceMs = now();
     const dispositionWrites: Promise<unknown>[] = [];
     try {
       /**
@@ -2364,8 +2397,8 @@ export function startAutoReplayLoop(input: {
     } finally {
       await Promise.all(dispositionWrites);
       ticks += 1;
-      running = false;
-      runningSinceMs = null;
+      inFlightStartedAtMs.delete(entryToken);
+      running = inFlightStartedAtMs.size > 0;
     }
   };
 
@@ -2440,8 +2473,8 @@ export function startAutoReplayLoop(input: {
         clearIntervalFn(timer);
         timer = null;
       }
+      inFlightStartedAtMs.clear();
       running = false;
-      runningSinceMs = null;
     },
     pause() {
       paused = true;
