@@ -7821,8 +7821,23 @@ export async function main(): Promise<void> {
           }
         },
         readRouteReplayableCaptures: async (request) => {
+          /**
+           * D10: this provider had TWO silent nulls - an `!operations` guard and a bare `catch {}` that swallowed
+           * every error - and the walk reports either one as "route replayable corpus unavailable". Exactly the
+           * defect shape as D7a, and just as expensive to diagnose: on stage-rc-425a26946d65 the walk finally got
+           * past the census and died here with `history=null`, and the log said nothing about why.
+           *
+           * Both paths now say what happened. Control flow is deliberately UNCHANGED (still null, so the walk's
+           * behaviour is identical) because the point of this step is to learn which path fires before changing
+           * what it does.
+           */
           const operations = currentPostObservationOperations();
-          if (!operations) return null;
+          if (!operations) {
+            console.error(
+              "[run105] route replayable corpus refused: post-observation operations are not published yet",
+            );
+            return null;
+          }
           try {
             const { readRouteReplayableCaptures } = await import("./route-challenge-evidence.js");
             return await readRouteReplayableCaptures({
@@ -7832,7 +7847,10 @@ export async function main(): Promise<void> {
               request,
               readCapture: async (requestId) => operations.readLocalRouteCapture({ requestId }),
             });
-          } catch {
+          } catch (cause) {
+            console.error(
+              `[run105] route replayable corpus read failed: ${cause instanceof Error ? cause.message : String(cause)}`,
+            );
             return null;
           }
         },
