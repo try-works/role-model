@@ -576,17 +576,24 @@ describe("editing configuration from the panel", () => {
     CONFIG_FIELDS: readonly string[];
     SELECT_FIELDS: ReadonlySet<string>;
     RUNTIME_CHANNELS: readonly { port: number; name: string; runtime: string }[];
+    CHANNEL_OPTIONS: readonly { port: number; label: string }[];
     settingsRemote: (ctx: unknown) => unknown;
     readConfig: (ctx: unknown) => Promise<Record<string, unknown> | undefined>;
     buildPatch: (
       current: Record<string, unknown>,
       draft: Record<string, unknown>,
     ) => Record<string, unknown>;
-    writeConfig: (ctx: unknown, patch: Record<string, unknown>) => Promise<string | undefined>;
+    writeConfig: (
+      ctx: unknown,
+      patch: Record<string, unknown>,
+      timeoutMs?: number,
+    ) => Promise<string | undefined>;
   }
 
   /** A `ctx.remote.settings` double recording writes. */
-  function fakeSettings(options: { updateError?: string; describeError?: string } = {}) {
+  function fakeSettings(
+    options: { updateError?: string; describeError?: string; updateHangs?: boolean } = {},
+  ) {
     const writes: { ns: string; patch: Record<string, unknown>; revision?: number }[] = [];
     const current = {
       endpoint: "http://127.0.0.1:3456",
@@ -611,6 +618,9 @@ describe("editing configuration from the panel", () => {
         ),
       update: (ns: string, patch: Record<string, unknown>, revision?: number): Promise<Answer> => {
         writes.push({ ns, patch, ...(revision === undefined ? {} : { revision }) });
+        // Models a write the host accepts but never answers, which is what happens while
+        // another profile mutation holds the loader's exclusive queue.
+        if (options.updateHangs === true) return new Promise<Answer>(() => {});
         return Promise.resolve(
           options.updateError === undefined
             ? { ok: true, value: {} }
@@ -637,12 +647,17 @@ describe("editing configuration from the panel", () => {
     new Function("window", `${readFileSync(clientEntry, "utf8")}\n`)(stub);
     if (registered === undefined) throw new Error("the client entry registered no module");
     const components: ((props: unknown) => unknown)[] = [];
+    const remoteService = { settings };
     const ctx = {
       effect: (callback: () => unknown) => {
         callback();
         return () => undefined;
       },
-      remote: { settings },
+      // A Remote namespace is gated by `inject`: the boot assembles it for the entries
+      // that declare it, which is why every client plugin that touches `ctx.remote` lists
+      // it. This double therefore mirrors the post-inject context — the property resolves —
+      // and the declaration itself is asserted separately.
+      remote: remoteService,
       slots: {
         inject: (_key: string, callback: () => void) => callback(),
         register: (_options: unknown, panel: unknown) => {
@@ -668,13 +683,9 @@ describe("editing configuration from the panel", () => {
     return { component, inject: plugin.inject ?? [], internals: plugin.__internals, ctx };
   }
 
-  test("mounts on the settings slot alone, so an absent Remote cannot blank the page", () => {
+  test("mounts on the settings slot, which the settings shell provides", () => {
     const { inject } = applyWith(fakeSettings().settings);
     expect(inject).toContain("slots");
-    // A Remote namespace is a Cordis child service, and an injection edge that cannot
-    // resolve stops the plugin mounting — which blanks the whole settings page. The
-    // Remote is read through `ctx.remote` behind a guard instead.
-    expect(inject).not.toContain("remote.settings");
   });
 
   /**
@@ -746,15 +757,31 @@ describe("editing configuration from the panel", () => {
     for (const child of panelChildren()) walk(child);
     expect(select, "no port select").toBeDefined();
     const options = childrenOf(select as ExpandedElement).filter(isElement);
-    // The unset state comes first and names the default it resolves to; production is
-    // not listed twice, because choosing it is the same as leaving the field alone.
+    // The unset sentinel comes first, then every channel as an explicit, selectable port.
     expect(options[0]?.props.value).toBe(0);
-    expect(childrenOf(options[0] as ExpandedElement).join("")).toContain("default");
-    expect(options[0] && childrenOf(options[0]).join("")).toContain("3456");
-    expect(options.map((option) => option.props.value)).toEqual([0, 3457, 3458]);
+    expect(options.map((option) => option.props.value)).toEqual([0, 3456, 3457, 3458]);
     const labels = options.map((option) => childrenOf(option).join(""));
-    expect(labels[1]).toContain("stage");
-    expect(labels[2]).toContain("development");
+    expect(labels[1]).toContain("production");
+    expect(labels[2]).toContain("stage");
+    expect(labels[3]).toContain("development");
+  });
+
+  /**
+   * Every runtime channel must be selectable, including production 3456.
+   *
+   * `port: 3456` is the schema default and a legal stored value. When the option list
+   * omits it the select carries a value no option has, so the channel control shows
+   * nothing selected and reads as broken — the reported "the UI that chooses
+   * dev/stage/prod doesn't work".
+   */
+  test("offers every runtime channel as a selectable option", () => {
+    const { internals } = applyWith(fakeSettings().settings);
+    const offered = internals.CHANNEL_OPTIONS.map((option) => option.port);
+    for (const channel of internals.RUNTIME_CHANNELS) {
+      expect(offered, `channel ${String(channel.port)} is not selectable`).toContain(channel.port);
+    }
+    // The unset sentinel stays distinct from a deliberate choice of production.
+    expect(offered).toContain(0);
   });
 
   test("the port is a closed choice, not free text", () => {
@@ -811,6 +838,55 @@ describe("editing configuration from the panel", () => {
     const failure = await internals.writeConfig(ctx, {});
     expect(failure).toBeUndefined();
     expect(writes).toEqual([]);
+  });
+
+  /**
+   * A write the host accepts but never answers must not hang the panel forever.
+   *
+   * The settings write runs inside the loader's exclusive queue, which is an unbounded
+   * FIFO: while another profile mutation holds it (a plugin install, a reload), the write
+   * is queued and the Remote call simply never resolves. The panel then sat on
+   * "Applying…" indefinitely with no message and no way back but a page reload.
+   */
+  test("stops waiting when the host never answers a write", async () => {
+    const { settings, writes } = fakeSettings({ updateHangs: true });
+    const { internals, ctx } = applyWith(settings);
+    const failure = await internals.writeConfig(ctx, { port: 3458 }, 20);
+    // The write was attempted, and the panel gets a message it can show.
+    expect(writes.length).toBe(1);
+    expect(typeof failure).toBe("string");
+    expect(failure).toContain("has not answered");
+  }, 1500);
+
+  /**
+   * The Remote namespaces must be declared in `inject`.
+   *
+   * A Remote namespace is assembled for the entries that declare it, so an undeclared
+   * `ctx.remote` THROWS (`cannot get property "remote" without inject`) and `ctx.get`
+   * cannot find it either — the service is not there to look up. Declaring only `slots`
+   * is what produced both live symptoms: the raw Cordis error on Apply, and a form whose
+   * every field rendered empty because the read failed silently.
+   *
+   * Every client plugin that touches `ctx.remote` lists it, including the settings mirror
+   * (`ui-settings`: `['remote', 'remote.settings']`).
+   */
+  test("declares the Remote namespaces it reads in inject", () => {
+    const { inject } = applyWith(fakeSettings().settings);
+    expect(inject).toContain("slots");
+    expect(inject, "ctx.remote would throw without this").toContain("remote");
+    expect(inject, "ctx.remote.settings would be absent without this").toContain("remote.settings");
+  });
+
+  test("a context whose Remote cannot be read degrades instead of throwing", async () => {
+    const { internals } = applyWith(fakeSettings().settings);
+    const hostile = {
+      get remote(): unknown {
+        throw new Error('cannot get property "remote" without inject');
+      },
+    };
+    // A guard that cannot read the Remote must leave the form usable, not throw.
+    expect(internals.settingsRemote(hostile)).toBeUndefined();
+    await expect(internals.writeConfig(hostile, { port: 3458 })).resolves.toContain("unavailable");
   });
 
   test("a context without the settings Remote degrades instead of throwing", async () => {
