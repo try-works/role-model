@@ -7968,7 +7968,25 @@ export async function main(): Promise<void> {
         })(),
         routeFocusCandidates: async () => {
           const runtime = extensionRuntimeRef.current;
-          if (!runtime) return null;
+          /**
+           * D7a: this used to be a bare `return null`, and that silence cost an entire investigation.
+           *
+           * The walk treats a falsy census as "missing census" and reports `degraded`, so returning null here never
+           * meant "nothing to do" - it always meant the tick failed. Worse, it was indistinguishable from a REAL
+           * census degradation, because the two paths that legitimately degrade (below) both log while this one did
+           * not. Live on stage-rc-06a09d37eabc the walk failed this way on every tick for 20+ minutes while the
+           * runtime reported healthy, and neither log line ever appeared - which is correct, they were unreachable.
+           *
+           * A refusal to answer is now reported as such and made DISTINGUISHABLE from a degraded census, so the next
+           * occurrence names the real condition (no published extension runtime) instead of "missing census".
+           */
+          if (!runtime) {
+            console.error(
+              "[run105] route census refused: the extension runtime is not published yet - " +
+                "the walk cannot select a focus until it is",
+            );
+            throw new Error("extension runtime not published yet");
+          }
           try {
             const rows: unknown[] = [];
             let cursor: string | undefined;
@@ -11703,6 +11721,20 @@ export async function main(): Promise<void> {
           expectedExtensionIds: TRACK_B_CANONICAL_EXTENSION_IDS,
           closeRuntime: extensionRuntimeOwner.close,
           beforeReady: async (runtime) => {
+            /**
+             * D7a: PUBLISH THE HANDLE FIRST, before the slow work below.
+             *
+             * This assignment used to sit after `drainPostObservationOutbox` and `retryContributionAggregates`, and
+             * those two awaits are not fast: they talk to the packaged Track B sidecar. Meanwhile the replay walk is
+             * started far earlier (cli.ts:11306, before this extension runtime is even constructed), so for the whole
+             * of that drain the walk was ticking, asking routeFocusCandidates for a census, and being refused
+             * because this reference was still null - once per tick, for minutes, with the refusal invisible.
+             *
+             * The runtime is already proven ready by the time beforeReady runs (assertProductionExtensionRuntimeReady
+             * is called before this callback), so publishing here is correct and closes the window to the smallest
+             * interval the design allows. The drain work below is unaffected: it already has `runtime` in hand.
+             */
+            extensionRuntimeRef.current = runtime;
             for (const extension of qaExtensions) {
               const capability = extension.descriptor.capabilities.find(
                 (candidate) => candidate !== "health:probe",
@@ -11727,7 +11759,7 @@ export async function main(): Promise<void> {
             // A prior cloud outage must not require an unrelated new provider request
             // before its already-authorized, durable aggregate is retried.
             await currentPostObservationOperations()?.retryContributionAggregates();
-            extensionRuntimeRef.current = runtime;
+            // D7a: the handle was published at the top of beforeReady; it is deliberately NOT re-assigned here.
             const postObservationDrainInterval = setInterval(() => {
               schedulePostObservationDrain(extensionRuntimeRef.current);
             }, 5_000);
