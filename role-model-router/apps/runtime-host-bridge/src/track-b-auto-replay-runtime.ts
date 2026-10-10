@@ -565,10 +565,15 @@ export function startAutoReplayLoop(input: {
   }) => Promise<AutoReplayExecution>;
   readonly intervalMs?: number;
   /**
-   * D7b: how long an in-flight tick may hold the slot before the next tick RECLAIMS it. Deliberately generous
-   * (default: 30 minutes, or twice the interval) because this walk legitimately runs long ticks - one was
-   * measured at 900 s. The purpose is not to bound normal work but to guarantee the slot is never held
-   * forever by work that will never return.
+   * D7b: how long an in-flight tick may hold the slot before the next tick RECLAIMS it.
+   *
+   * Originally 30 minutes. MEASURED on stage-rc-425a26946d65: a hung tick did exactly what this guard is for, and the
+   * recovery took the full 30 minutes - 49 consecutive skips accumulated while the walk was dead. A 30-minute outage
+   * is not "a wedge cannot disable the walk"; it is a wedge disabling the walk for half an hour.
+   *
+   * Ticks legitimately run long, so the margin still matters: the longest OBSERVED legitimate tick is 283 s (one
+   * earlier measurement reached 900 s). 10 minutes keeps more than 2x headroom over the largest observed value while
+   * cutting the worst-case outage threefold. Callers who know their workload can still override it.
    */
   readonly staleTickDeadlineMs?: number;
   readonly maxCapturesPerTick?: number;
@@ -1282,7 +1287,7 @@ export function startAutoReplayLoop(input: {
      * from stopping the loop.
      */
     const staleTickDeadlineMs =
-      input.staleTickDeadlineMs ?? Math.max(2 * (input.intervalMs ?? 0), 30 * 60_000);
+      input.staleTickDeadlineMs ?? Math.max(2 * (input.intervalMs ?? 0), 10 * 60_000);
     if (running && runningSinceMs !== null && now() - runningSinceMs > staleTickDeadlineMs) {
       console.error(
         `[track-b-auto-replay] reclaiming stale tick: started ${now() - runningSinceMs}ms ago, ` +
