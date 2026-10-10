@@ -11721,6 +11721,20 @@ export async function main(): Promise<void> {
           expectedExtensionIds: TRACK_B_CANONICAL_EXTENSION_IDS,
           closeRuntime: extensionRuntimeOwner.close,
           beforeReady: async (runtime) => {
+            /**
+             * D7a: PUBLISH THE HANDLE FIRST, before the slow work below.
+             *
+             * This assignment used to sit after `drainPostObservationOutbox` and `retryContributionAggregates`, and
+             * those two awaits are not fast: they talk to the packaged Track B sidecar. Meanwhile the replay walk is
+             * started far earlier (cli.ts:11306, before this extension runtime is even constructed), so for the whole
+             * of that drain the walk was ticking, asking routeFocusCandidates for a census, and being refused
+             * because this reference was still null - once per tick, for minutes, with the refusal invisible.
+             *
+             * The runtime is already proven ready by the time beforeReady runs (assertProductionExtensionRuntimeReady
+             * is called before this callback), so publishing here is correct and closes the window to the smallest
+             * interval the design allows. The drain work below is unaffected: it already has `runtime` in hand.
+             */
+            extensionRuntimeRef.current = runtime;
             for (const extension of qaExtensions) {
               const capability = extension.descriptor.capabilities.find(
                 (candidate) => candidate !== "health:probe",
@@ -11745,7 +11759,7 @@ export async function main(): Promise<void> {
             // A prior cloud outage must not require an unrelated new provider request
             // before its already-authorized, durable aggregate is retried.
             await currentPostObservationOperations()?.retryContributionAggregates();
-            extensionRuntimeRef.current = runtime;
+            // D7a: the handle was published at the top of beforeReady; it is deliberately NOT re-assigned here.
             const postObservationDrainInterval = setInterval(() => {
               schedulePostObservationDrain(extensionRuntimeRef.current);
             }, 5_000);
