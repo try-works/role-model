@@ -2395,10 +2395,25 @@ export function startAutoReplayLoop(input: {
       console.error(`[track-b-auto-replay] tick failed: ${lastError}`);
       return emptyResult();
     } finally {
-      await Promise.all(dispositionWrites);
-      ticks += 1;
+      /**
+       * F5, step 1 - RELEASE THE SLOT FIRST, THEN DO THE WRITES.
+       *
+       * This ordering is the original D7b wedge in one line. The slot used to be released AFTER
+       * `await Promise.all(dispositionWrites)`, so a disposition write that never settled held the slot forever: the
+       * guard skipped every later tick and the walk was dead - reproduced on three processes, and the reason the walk
+       * reported `running=true` for 54+ minutes with the reclaim unable to fire.
+       *
+       * Effect's own guidance for this shape (resource-lifetime capability: Effect.acquireRelease, Scope) is that a
+       * finalizer must "also run on failure or interruption". A finalizer whose release sits BEHIND an await cannot
+       * promise that. Releasing first makes the guarantee structural rather than conditional: whatever the writes do,
+       * the slot is already free, and the next tick can run.
+       *
+       * The writes still happen, and a failure is still the worker retry signal; only the ORDER changed.
+       */
       inFlightStartedAtMs.delete(entryToken);
       running = inFlightStartedAtMs.size > 0;
+      await Promise.all(dispositionWrites);
+      ticks += 1;
     }
   };
 
