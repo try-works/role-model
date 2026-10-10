@@ -357,27 +357,21 @@ window.__ModuleLoader__.load({
     /**
      * Read the settings Remote, when the context exposes one.
      *
-     * Reached through `ctx.get("remote")`, never as the property `ctx.remote`. On the real
-     * client context a service property that is not declared in `inject` **throws**
-     * (`cannot get property "remote" without inject`) rather than answering undefined, and
-     * `ctx.get` is the lookup that returns undefined when the service is absent.
-     *
-     * It is deliberately not injected either: this half injects only `slots`, because an
-     * injection edge that cannot resolve means the plugin never mounts, which blanks the
-     * whole settings page — far worse than a form that cannot save. The write path is
-     * guarded the same way, and says so in the UI when the surface is missing.
+     * `remote` and `remote.settings` are declared in `inject` above, which is what makes
+     * them reachable at all — an undeclared namespace throws on property access rather
+     * than answering undefined. The guard stays so that a partially assembled Remote
+     * costs the save button rather than turning every read and write into a thrown error.
      * @param ctx - the client plugin context.
      * @returns the namespace's surface, or undefined when it is not available.
      */
     function settingsRemote(ctx) {
       try {
-        const remote = typeof ctx?.get === "function" ? ctx.get("remote") : undefined;
-        const namespace = remote?.settings;
+        const namespace = ctx?.remote?.settings;
         return namespace !== undefined && typeof namespace.update === "function"
           ? namespace
           : undefined;
       } catch {
-        // A context that cannot answer the lookup leaves the form usable rather than
+        // A context that cannot answer the read leaves the form usable rather than
         // turning every read and write into a thrown error.
         return undefined;
       }
@@ -915,14 +909,17 @@ window.__ModuleLoader__.load({
     }
 
     return {
-      // The settings section slot is provided by the settings shell, so wait for it.
+      // The settings section slot is provided by the settings shell, and the Remote
+      // namespaces this page reads must be declared here.
       //
-      // `remote.settings` is deliberately NOT injected. A namespace is a Cordis child
-      // service (`remote.<namespace>`), and an injection edge that cannot resolve keeps
-      // the plugin from mounting at all — which blanks the entire settings page. The
-      // Remote is instead read through `ctx.remote` behind a guard, so an unavailable
-      // settings surface costs the save button, not the page.
-      inject: ["slots"],
+      // A Remote namespace is assembled for the entries that declare it: without the
+      // entry, `ctx.remote` **throws** `cannot get property "remote" without inject` and
+      // `ctx.get("remote")` cannot find it either, so the service is simply not reachable.
+      // Declaring only `slots` produced both live symptoms — the raw Cordis error on Apply,
+      // and a form whose every field stayed empty because the read failed silently. Every
+      // client plugin that touches the Remote lists it, including the settings mirror
+      // (`ui-settings`: `['remote', 'remote.settings']`).
+      inject: ["slots", "remote", "remote.settings"],
 
       apply(ctx) {
         panelContext = ctx;

@@ -653,10 +653,11 @@ describe("editing configuration from the panel", () => {
         callback();
         return () => undefined;
       },
-      // Faithful to Cordis: a service is looked up with `get`, which answers `undefined`
-      // when it is absent. Reading it as a property (`ctx.remote`) is what throws
-      // `cannot get property "remote" without inject` on the real client context.
-      get: (name: string) => (name === "remote" ? remoteService : undefined),
+      // A Remote namespace is gated by `inject`: the boot assembles it for the entries
+      // that declare it, which is why every client plugin that touches `ctx.remote` lists
+      // it. This double therefore mirrors the post-inject context — the property resolves —
+      // and the declaration itself is asserted separately.
+      remote: remoteService,
       slots: {
         inject: (_key: string, callback: () => void) => callback(),
         register: (_options: unknown, panel: unknown) => {
@@ -665,11 +666,6 @@ describe("editing configuration from the panel", () => {
         },
       },
     };
-    Object.defineProperty(ctx, "remote", {
-      get() {
-        throw new Error('cannot get property "remote" without inject');
-      },
-    });
     const plugin = registered.factory((name: string) => {
       if (name === "react") return testReact();
       throw new Error(`unexpected module request: ${name}`);
@@ -687,13 +683,9 @@ describe("editing configuration from the panel", () => {
     return { component, inject: plugin.inject ?? [], internals: plugin.__internals, ctx };
   }
 
-  test("mounts on the settings slot alone, so an absent Remote cannot blank the page", () => {
+  test("mounts on the settings slot, which the settings shell provides", () => {
     const { inject } = applyWith(fakeSettings().settings);
     expect(inject).toContain("slots");
-    // A Remote namespace is a Cordis child service, and an injection edge that cannot
-    // resolve stops the plugin mounting — which blanks the whole settings page. The
-    // Remote is read through `ctx.remote` behind a guard instead.
-    expect(inject).not.toContain("remote.settings");
   });
 
   /**
@@ -867,25 +859,28 @@ describe("editing configuration from the panel", () => {
   }, 1500);
 
   /**
-   * The Remote must be read through `ctx.get`, never as `ctx.remote`.
+   * The Remote namespaces must be declared in `inject`.
    *
-   * On the real client context an undeclared service property throws
-   * `cannot get property "remote" without inject`, while `get` answers `undefined` when it
-   * is absent. Reading it as a property is what the live panel reported on Apply, because
-   * this half declares only `slots` in `inject` (deliberately: see the mount test above).
+   * A Remote namespace is assembled for the entries that declare it, so an undeclared
+   * `ctx.remote` THROWS (`cannot get property "remote" without inject`) and `ctx.get`
+   * cannot find it either — the service is not there to look up. Declaring only `slots`
+   * is what produced both live symptoms: the raw Cordis error on Apply, and a form whose
+   * every field rendered empty because the read failed silently.
+   *
+   * Every client plugin that touches `ctx.remote` lists it, including the settings mirror
+   * (`ui-settings`: `['remote', 'remote.settings']`).
    */
-  test("reads the Remote through ctx.get rather than as a property", () => {
-    const { settings } = fakeSettings();
-    const { internals, ctx } = applyWith(settings);
-    // `applyWith` builds exactly that context: `get` answers, the property throws.
-    expect(() => (ctx as unknown as { remote: unknown }).remote).toThrow(/without inject/u);
-    expect(internals.settingsRemote(ctx)).toBeDefined();
+  test("declares the Remote namespaces it reads in inject", () => {
+    const { inject } = applyWith(fakeSettings().settings);
+    expect(inject).toContain("slots");
+    expect(inject, "ctx.remote would throw without this").toContain("remote");
+    expect(inject, "ctx.remote.settings would be absent without this").toContain("remote.settings");
   });
 
-  test("a context whose Remote property throws still degrades", async () => {
+  test("a context whose Remote cannot be read degrades instead of throwing", async () => {
     const { internals } = applyWith(fakeSettings().settings);
     const hostile = {
-      get: () => {
+      get remote(): unknown {
         throw new Error('cannot get property "remote" without inject');
       },
     };
