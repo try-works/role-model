@@ -276,7 +276,22 @@ export function selectFocusTask(
       Number(candidate.requestCount) > 0,
   );
   if (eligible.length === 0) return null;
-  const sorted = [...eligible].sort((left, right) => {
+  // D1: a COMPLETED family must not hold the walk while an incomplete one is waiting.
+  //
+  // Measured live on the stage RC (:3457, 2026-10-10): the comparator below ranks requestCount first
+  // and consults the fill gap only as a tie-break, so a family that had finished (gap 0) and was also
+  // the most-requested won every tick. writer.writer.summarize sat at 2/7 for over an hour receiving
+  // ZERO new comparisons although it held evidence in all four partitions, so no second ladder and no
+  // pack could be produced - the walk was starved, not slow. Traffic cannot fix this: traffic feeds
+  // the family that already won.
+  //
+  // So: rank only families that still have something to fill; fall back to the full set when every
+  // eligible family is complete, because then there is nothing left to prefer.
+  const fillable = eligible.filter(
+    (candidate) => Math.max(0, (candidate.configured ?? 0) - (candidate.admitted ?? 0)) > 0,
+  );
+  const pool = fillable.length > 0 ? fillable : eligible;
+  const sorted = [...pool].sort((left, right) => {
     // Most-requested first.
     if (right.requestCount !== left.requestCount) return right.requestCount - left.requestCount;
     // Then most-unfilled (largest gap between configured and admitted).
