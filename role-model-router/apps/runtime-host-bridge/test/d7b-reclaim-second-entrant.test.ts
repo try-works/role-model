@@ -34,7 +34,12 @@ const makeInput = (opts: { now: () => number }) =>
     readRouteLadder: () => null,
     markRouteLadderEligible: () => undefined,
     readFinalizedRouteChallenge: async () => null,
-    routeLearningDefaults: { minComparisons: 5, minConfidence: 0.7, stalenessWindowDays: 30, challengeBatchSize: 1 },
+    routeLearningDefaults: {
+      minComparisons: 5,
+      minConfidence: 0.7,
+      stalenessWindowDays: 30,
+      challengeBatchSize: 1,
+    },
     executor: async () => ({ terminal: true, branches: [] }),
     staleTickDeadlineMs: 50,
     now: opts.now,
