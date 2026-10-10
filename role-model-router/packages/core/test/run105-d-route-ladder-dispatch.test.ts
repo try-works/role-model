@@ -178,20 +178,9 @@ describe("run105 D selectFocusTask (R8 depth-first)", () => {
   });
 
   test("orders by most-requested over the staleness window, then most-unfilled", () => {
-    /**
-     * D9: these two fixtures used to be COMPLETE (admitted 3 / configured 3). That was fine while a
-     * completed family could still be focused, but the operator contract now says a filled ladder must
-     * not be replayed - so a complete family is no longer focusable at all and this case would assert
-     * against null rather than against ORDERING.
-     *
-     * The case is about ordering, not completeness, so the fixtures now leave the same gap on both
-     * sides (2 of 3). That keeps the property under test intact: with the fill gap tied, the
-     * most-requested family still wins. Completeness behaviour has its own cases in
-     * d1-focus-completed-family.test.ts.
-     */
     const selected = selectFocusTask([
-      task({ taskTypeId: "task:low", requestCount: 2, admitted: 2, configured: 3 }),
-      task({ taskTypeId: "task:high", requestCount: 9, admitted: 2, configured: 3 }),
+      task({ taskTypeId: "task:low", requestCount: 2, admitted: 3, configured: 3 }),
+      task({ taskTypeId: "task:high", requestCount: 9, admitted: 3, configured: 3 }),
     ]);
     expect(selected).toMatchObject({ taskTypeId: "task:high" });
 
