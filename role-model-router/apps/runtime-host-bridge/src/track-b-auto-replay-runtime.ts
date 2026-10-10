@@ -564,6 +564,13 @@ export function startAutoReplayLoop(input: {
     readonly signal?: AbortSignal;
   }) => Promise<AutoReplayExecution>;
   readonly intervalMs?: number;
+  /**
+   * D7b: how long an in-flight tick may hold the slot before the next tick RECLAIMS it. Deliberately generous
+   * (default: 30 minutes, or twice the interval) because this walk legitimately runs long ticks - one was
+   * measured at 900 s. The purpose is not to bound normal work but to guarantee the slot is never held
+   * forever by work that will never return.
+   */
+  readonly staleTickDeadlineMs?: number;
   readonly maxCapturesPerTick?: number;
   /**
    * Run 98 addendum 04 §7 (`L4`). Measured live on v170: one capture whose replay never returned
@@ -701,6 +708,16 @@ export function startAutoReplayLoop(input: {
   const now = input.now ?? (() => Date.now());
   const maxCapturesPerTick = input.maxCapturesPerTick ?? 8;
   let running = false;
+  /**
+   * D7b: WHEN the in-flight tick started, so a tick that never returns cannot disable the walk.
+   *
+   * Measured live on stage-rc-06a09d37eabc (:3457, 2026-10-10) and reproduced on two processes: one tick
+   * entered the body and never returned. `running` is cleared only by that body's own `finally` - and at
+   * the SECOND statement of it, after an awaited write - so the flag stayed true and the guard skipped EVERY
+   * later tick (62 skips on one process, 24+ on another) while `ticks` froze. A hung dependency must cost
+   * one tick, never the loop.
+   */
+  let runningSinceMs: number | null = null;
   let ticks = 0;
   let lastOutcome: AutoReplayLoopHealth["lastOutcome"] = "idle";
   let lastError: string | null = null;
@@ -1255,6 +1272,25 @@ export function startAutoReplayLoop(input: {
     readonly onlyCaptureRefs?: readonly string[];
     readonly dispatchRoundId?: string;
   }): Promise<AutoReplayTickResult & { readonly skipped?: boolean }> => {
+    /**
+     * D7b: a tick that exceeded its deadline is RECLAIMED rather than allowed to block the loop forever.
+     *
+     * The deadline is deliberately generous: this walk legitimately runs long ticks (one measured at 900 s), so
+     * the goal is not to bound normal work but to guarantee the flag is FINITE. Note Effect cannot cancel the
+     * underlying capability call - Effect's own guidance is that "a wrapper cannot cancel underlying work that
+     * exposes no cancellation mechanism" - so this does not try to stop the hung work; it stops the hung work
+     * from stopping the loop.
+     */
+    const staleTickDeadlineMs =
+      input.staleTickDeadlineMs ?? Math.max(2 * (input.intervalMs ?? 0), 30 * 60_000);
+    if (running && runningSinceMs !== null && now() - runningSinceMs > staleTickDeadlineMs) {
+      console.error(
+        `[track-b-auto-replay] reclaiming stale tick: started ${now() - runningSinceMs}ms ago, ` +
+          `deadline ${staleTickDeadlineMs}ms - the walk continues`,
+      );
+      running = false;
+      runningSinceMs = null;
+    }
     if (paused || Ref.getUnsafe(stageExecutionBusy) || (running && !options?.onlyCaptureRefs)) {
       if (process.env.ROLE_MODEL_FOCUS_DIAG)
         console.error(
@@ -1281,6 +1317,7 @@ export function startAutoReplayLoop(input: {
       return { ...emptyResult(), skipped: true };
     }
     running = true;
+    runningSinceMs = now();
     const dispositionWrites: Promise<unknown>[] = [];
     try {
       /**
@@ -2328,6 +2365,7 @@ export function startAutoReplayLoop(input: {
       await Promise.all(dispositionWrites);
       ticks += 1;
       running = false;
+      runningSinceMs = null;
     }
   };
 
@@ -2403,6 +2441,7 @@ export function startAutoReplayLoop(input: {
         timer = null;
       }
       running = false;
+      runningSinceMs = null;
     },
     pause() {
       paused = true;
