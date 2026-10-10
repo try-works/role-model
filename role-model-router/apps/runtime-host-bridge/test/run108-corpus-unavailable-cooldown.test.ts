@@ -83,16 +83,16 @@ describe("run108: an over-budget corpus puts the family on cooldown instead of s
   });
 
   it("marks the over-budget family not-yet-eligible so the next tick can pick another one", async () => {
-    const marked: any[] = [];
+    const marked: { roleId?: string; taskTypeId?: string; nextEligibleAtMs?: number }[] = [];
     const loop = startAutoReplayLoop(makeInput(marked));
     try {
       await loop.tick().catch(() => undefined);
       const forFamily = marked.filter(
-        (m) => m?.roleId === "recruiter" && m?.taskTypeId === "recruiter.candidate.screen",
+        (m) => m.roleId === "recruiter" && m.taskTypeId === "recruiter.candidate.screen",
       );
       expect(forFamily.length).toBeGreaterThan(0);
       // The cooldown must push eligibility into the FUTURE, otherwise the same family is re-picked immediately.
-      expect(forFamily[0].nextEligibleAtMs).toBeGreaterThan(1_000_000);
+      expect(forFamily[0]?.nextEligibleAtMs ?? 0).toBeGreaterThan(1_000_000);
     } finally {
       loop.stop();
     }
