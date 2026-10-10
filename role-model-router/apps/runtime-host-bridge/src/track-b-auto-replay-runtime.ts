@@ -1474,6 +1474,16 @@ export function startAutoReplayLoop(input: {
          * fixed burst rather than flooding it.
          */
         const LADDER_READ_CONCURRENCY = 8;
+        /**
+         * Bound to a local const first: the guard above narrows `input.readRouteLadder` to a function, but TypeScript
+         * does not carry that narrowing INTO the async callback below, so calling `input.readRouteLadder(...)` there
+         * fails to compile with TS2722 ("Cannot invoke an object which is possibly 'undefined'").
+         *
+         * Caught by `pnpm build` (tsc) in the build-test lane and NOT by a local vitest run, because vitest
+         * transpiles without full type-checking - so a green test suite is not evidence that this package compiles.
+         * Run the package build before pushing a change here.
+         */
+        const readRouteLadder = input.readRouteLadder;
         const prefetchedLadderRows = new Map<string, RouteLadderRow | null | Error>();
         {
           const ladderReadTargets = census.filter((candidate) => selectFocusTask([candidate]));
@@ -1483,7 +1493,7 @@ export function startAutoReplayLoop(input: {
               batch.map(async (candidate) => {
                 const batchKey = `${candidate.roleId}\u0000${candidate.taskTypeId}`;
                 try {
-                  prefetchedLadderRows.set(batchKey, await input.readRouteLadder(candidate));
+                  prefetchedLadderRows.set(batchKey, await readRouteLadder(candidate));
                 } catch (cause) {
                   // Recorded, not thrown: the sequential loop below rethrows in its original position so the
                   // error ordering and message are unchanged.
