@@ -285,29 +285,12 @@ export function selectFocusTask(
   // pack could be produced - the walk was starved, not slow. Traffic cannot fix this: traffic feeds
   // the family that already won.
   //
-  // So: rank only families that still have something to fill.
-  //
-  // D9 (operator contract, 2026-10-10): "when a ladder has already been filled up for a task, the replay
-  // queue is not supposed to keep replaying requests for that task."
-  //
-  // D1 stopped a completed family from OUTRANKING an incomplete one, but it kept a fallback that
-  // selected the completed family when nothing else was fillable - so on a workload where every
-  // eligible ladder is full the walk kept dispatching anyway, spending a replay and a paid provider
-  // call to produce evidence the admission floor discards. The fallback is REMOVED: no gap anywhere
-  // means no focus at all.
-  //
-  // The empty focus is also the honest signal. The old fallback reported "working" while producing
-  // nothing usable; returning null says "nothing left to learn", which is what the walk's own
-  // lastOutcome and the operator surfaces then report truthfully.
-  const fillable = eligible.filter((candidate) => {
-    // An UNKNOWN configured count is not evidence that a ladder is full - it is absence of evidence.
-    // Excluding it would stop replay work for a family the census simply could not measure, so an
-    // unproven denominator counts as fillable and the walk keeps its previous behaviour.
-    if (!Number.isFinite(candidate.configured)) return true;
-    return Math.max(0, Number(candidate.configured) - Number(candidate.admitted ?? 0)) > 0;
-  });
-  if (fillable.length === 0) return null;
-  const pool = fillable;
+  // So: rank only families that still have something to fill; fall back to the full set when every
+  // eligible family is complete, because then there is nothing left to prefer.
+  const fillable = eligible.filter(
+    (candidate) => Math.max(0, (candidate.configured ?? 0) - (candidate.admitted ?? 0)) > 0,
+  );
+  const pool = fillable.length > 0 ? fillable : eligible;
   const sorted = [...pool].sort((left, right) => {
     // Most-requested first.
     if (right.requestCount !== left.requestCount) return right.requestCount - left.requestCount;
