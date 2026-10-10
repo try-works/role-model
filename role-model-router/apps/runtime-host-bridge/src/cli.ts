@@ -7781,7 +7781,28 @@ export async function main(): Promise<void> {
         readPendingRouteDispatches: async (request) => {
           const runtime = extensionRuntimeRef.current;
           const operations = currentPostObservationOperations();
-          if (!runtime || !operations) return null;
+          /**
+           * D11: THE THIRD INSTANCE OF THE SAME DEFECT - a silent null on a dependency-unavailable path.
+           *
+           * The walk throws "route pending dispatches unavailable" when this returns null (`track-b-auto-replay-runtime.ts`:
+           * 1560) and the log said nothing about which handle was missing. Measured on stage-rc-388e4f2f730c once D7a
+           * let the walk get this far: 2 tick failures with that message and no accompanying explanation.
+           *
+           * The pattern recurs across this file - D7a's census (`:7971`, fixed), D10's corpus read (`:7823`, fixed),
+           * and this provider - and every occurrence has cost a full investigation because the failure is
+           * indistinguishable from a legitimate empty answer. Any NEW provider added here must not repeat it.
+           *
+           * Behaviour is deliberately UNCHANGED (still null): the point is to name the condition before changing what
+           * the provider does with it.
+           */
+          if (!runtime || !operations) {
+            console.error(
+              `[run105] route pending dispatches refused: ${
+                runtime ? "post-observation operations" : "the extension runtime"
+              } is not published yet`,
+            );
+            return null;
+          }
           try {
             // Pending replay/queue inspection is read-only and invokes Replay Core only. Requiring
             // the Evaluation Core authority here made a fresh runtime with no managed evaluation
@@ -7816,7 +7837,13 @@ export async function main(): Promise<void> {
                   ),
                 }),
             });
-          } catch {
+          } catch (cause) {
+            // D11: the swallowed error is the whole reason this provider was opaque; name it.
+            console.error(
+              `[run105] route pending dispatches read failed: ${
+                cause instanceof Error ? cause.message : String(cause)
+              }`,
+            );
             return null;
           }
         },
