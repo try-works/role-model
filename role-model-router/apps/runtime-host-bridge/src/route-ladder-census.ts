@@ -19,6 +19,12 @@ export type RouteLadderCensusResult =
 const degraded = (
   reason: Extract<RouteLadderCensusResult, { status: "degraded" }>["reason"],
 ): RouteLadderCensusResult => ({ status: "degraded", reason, candidates: null });
+/**
+ * Run 108: the faithful-projection budget the corpus read enforces - `route-challenge-evidence.ts:556` refuses when its
+ * LIMIT 501 query returns more than 500 rows. A family above it can never be replayed, so the census must not offer it
+ * while a family that CAN be replayed is waiting.
+ */
+const ROUTE_CORPUS_PROJECTION_BUDGET = 500;
 const exactId = (value: unknown): value is string =>
   typeof value === "string" && value.length > 0 && value.trim().length > 0 && !value.includes("\0");
 const key = (roleId: string, taskTypeId: string) => JSON.stringify([roleId, taskTypeId]);
@@ -161,7 +167,32 @@ export function readRouteLadderCensus(input: {
       (candidate) =>
         (nextEligibleAtMs.get(key(candidate.roleId, candidate.taskTypeId)) ?? 0) <= input.nowMs,
     );
-    return { status: "available", candidates: ready.length > 0 ? ready : candidates };
+    /**
+     * Run 108: a family whose corpus CANNOT be projected must not be offered as the focus either.
+     *
+     * MEASURED on stage-rc-add42fbffd86: the eligibility filter above is INERT for the family that actually starves the
+     * walk, because `recruiter/recruiter.candidate.screen` has NO ladder row at all - the cached
+     * `knowledge:list-route-ladders` projection read back from the live store contains only
+     * `coordinator/coordinator.follow_up` and `writer/writer.summarize` (both carrying nextEligibleAtMs, so the field
+     * itself is present and my earlier suspicion about the projection was WRONG). The census ADDS telemetry-only
+     * families from the query above, and those carry no ladder and therefore no eligibility. So the walk kept selecting a
+     * family whose corpus read refuses (route-challenge-evidence.ts:556 - LIMIT 501 against a 500 budget, 1465 captures
+     * for recruiter) and failed every tick while projectable families sat unused.
+     *
+     * The deciding number is ALREADY HERE: the query above computes COUNT(DISTINCT request_id) over
+     * `request_class IN ('live','live_request')` - the very same measure the corpus gate refuses on. Filtering on it
+     * removes the guesswork: the census declines to offer a family the corpus read is about to refuse.
+     *
+     * Fallback matches D1 and the eligibility filter: if EVERY family is over budget there is nothing to prefer, so the
+     * full set is offered and behaviour matches the previous build.
+     */
+    const projectable = ready.filter(
+      (candidate) => (candidate.requestCount ?? 0) <= ROUTE_CORPUS_PROJECTION_BUDGET,
+    );
+    return {
+      status: "available",
+      candidates: projectable.length > 0 ? projectable : ready.length > 0 ? ready : candidates,
+    };
   } catch {
     return degraded("database_unavailable");
   } finally {
