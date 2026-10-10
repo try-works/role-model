@@ -7764,8 +7764,31 @@ export async function main(): Promise<void> {
        * envelope for the ladder reads, built to the same extension-envelope shape the runtime
        * expects - the sweep helper is left untouched for its own callers.
        */
+      /**
+       * Run 108 (regression fix, measured live): the requestId MUST be unique per call, not merely per millisecond.
+       *
+       * It used to be `route-ladder:<capability>:<Date.now()>`, which is identical for any two calls made in the same
+       * millisecond. The extension host keys its pending-invoke map by requestId with NO duplicate guard
+       * (`packages/extension-host/index.mjs:264 this.pending.set(envelope.requestId, {resolve, reject, cleanup})`), so a
+       * second call with the same id OVERWRITES the first entry and the first caller promise is orphaned - it is never
+       * settled, not even by #rejectPending on exit. Each invoke also arms a per-call timer that TERMINATES the worker
+       * on expiry (index.mjs:815-819 -> registered.worker.terminate()), and `terminate()` sets `stopping = false`
+       * (index.mjs:308) so the host treats its own deliberate kill as an UNEXPECTED exit and counts a restart
+       * (index.mjs:473). Three of those and the extension is gone: "worker restart budget exhausted after 3 restarts
+       * (signal SIGTERM)".
+       *
+       * MEASURED by a delegated investigator on stage-rc-4f9216c2a492: eight rows in the knowledge-store
+       * durable-output journal shared the requestId `route-ladder:knowledge:read-route-ladder:1791638466496`, and the
+       * restart-exhausted latch landed at +60.031 s. The BATCHED ladder reads this file performs
+       * (LADDER_READ_CONCURRENCY = 8) are what turn the collision from a hypothetical into a certainty, and the same
+       * 60-second orphan timeout is why tick durations land on near-multiples of 60 s (854295 = 14.2x60, 751957 =
+       * 12.5x60, 573558 = 9.6x60).
+       *
+       * A monotonic sequence makes every call distinct regardless of clock resolution, so concurrent reads are safe.
+       */
+      let routeLadderRequestSequence = 0;
       const routeLadderEnvelopeFor = (capability: string, value: Record<string, unknown>) => ({
-        requestId: `route-ladder:${capability}:${Date.now()}`,
+        requestId: `route-ladder:${capability}:${Date.now()}:${++routeLadderRequestSequence}`,
         sessionId: `route-ladder:${options.scopeId}`,
         protocolVersion: "1.1.0",
         channel,
