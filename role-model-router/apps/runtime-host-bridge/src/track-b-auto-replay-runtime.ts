@@ -714,6 +714,19 @@ export function startAutoReplayLoop(input: {
   const maxCapturesPerTick = input.maxCapturesPerTick ?? 8;
   let running = false;
   /**
+   * D7b (second defect): WHO is holding the slot, and since when - per entry, not one shared timestamp.
+   *
+   * The first version kept a single `runningSinceMs` assigned on EVERY entry to the body. There are two entry paths:
+   * the interval walk (gated by `running`) and dispatchCapture() from the replay.dispatch queue worker, which BYPASSES
+   * `running` (:1299, :2414). A worker entering therefore RESTARTED the deadline the guard measures, so a hung
+   * interval tick could be kept permanently "fresh" by worker traffic - measured live as 81 skips over 54+ minutes with
+   * the reclaim never firing, despite the reclaim code being present in the shipped exe.
+   *
+   * The guard must measure the OLDEST in-flight entry, and each entry must clean up only its own.
+   */
+  const inFlightStartedAtMs = new Map<number, number>();
+  let nextEntryToken = 1;
+  /**
    * D7b: WHEN the in-flight tick started, so a tick that never returns cannot disable the walk.
    *
    * Measured live on stage-rc-06a09d37eabc (:3457, 2026-10-10) and reproduced on two processes: one tick
@@ -722,7 +735,6 @@ export function startAutoReplayLoop(input: {
    * later tick (62 skips on one process, 24+ on another) while `ticks` froze. A hung dependency must cost
    * one tick, never the loop.
    */
-  let runningSinceMs: number | null = null;
   let ticks = 0;
   let lastOutcome: AutoReplayLoopHealth["lastOutcome"] = "idle";
   let lastError: string | null = null;
@@ -1294,19 +1306,22 @@ export function startAutoReplayLoop(input: {
      * invisible, so the reason could not be determined from the log. Under ROLE_MODEL_FOCUS_DIAG each tick now
      * states exactly what the reclaim decided and why, which turns the next occurrence into a measurement.
      */
+    const oldestStartedAtMs =
+      inFlightStartedAtMs.size > 0 ? Math.min(...inFlightStartedAtMs.values()) : null;
     if (process.env.ROLE_MODEL_FOCUS_DIAG && running) {
       console.error(
-        `[replay-tick] reclaim check: running=${running} since=${runningSinceMs === null ? "null" : String(runningSinceMs)} ` +
-          `elapsed=${runningSinceMs === null ? "n/a" : String(now() - runningSinceMs)}ms deadline=${staleTickDeadlineMs}ms`,
+        `[replay-tick] reclaim check: running=${running} inFlight=${inFlightStartedAtMs.size} ` +
+          `oldestElapsed=${oldestStartedAtMs === null ? "n/a" : String(now() - oldestStartedAtMs)}ms deadline=${staleTickDeadlineMs}ms`,
       );
     }
-    if (running && runningSinceMs !== null && now() - runningSinceMs > staleTickDeadlineMs) {
+    if (running && oldestStartedAtMs !== null && now() - oldestStartedAtMs > staleTickDeadlineMs) {
       console.error(
-        `[track-b-auto-replay] reclaiming stale tick: started ${now() - runningSinceMs}ms ago, ` +
+        `[track-b-auto-replay] reclaiming stale tick: oldest entry started ${now() - oldestStartedAtMs}ms ago, ` +
           `deadline ${staleTickDeadlineMs}ms - the walk continues`,
       );
+      // Abandon every entry that is holding the slot: they are by definition past the deadline.
+      inFlightStartedAtMs.clear();
       running = false;
-      runningSinceMs = null;
     }
     if (paused || Ref.getUnsafe(stageExecutionBusy) || (running && !options?.onlyCaptureRefs)) {
       if (process.env.ROLE_MODEL_FOCUS_DIAG)
@@ -1333,8 +1348,9 @@ export function startAutoReplayLoop(input: {
       }
       return { ...emptyResult(), skipped: true };
     }
+    const entryToken = nextEntryToken++;
+    inFlightStartedAtMs.set(entryToken, now());
     running = true;
-    runningSinceMs = now();
     const dispositionWrites: Promise<unknown>[] = [];
     try {
       /**
@@ -2381,8 +2397,8 @@ export function startAutoReplayLoop(input: {
     } finally {
       await Promise.all(dispositionWrites);
       ticks += 1;
-      running = false;
-      runningSinceMs = null;
+      inFlightStartedAtMs.delete(entryToken);
+      running = inFlightStartedAtMs.size > 0;
     }
   };
 
@@ -2457,8 +2473,8 @@ export function startAutoReplayLoop(input: {
         clearIntervalFn(timer);
         timer = null;
       }
+      inFlightStartedAtMs.clear();
       running = false;
-      runningSinceMs = null;
     },
     pause() {
       paused = true;
