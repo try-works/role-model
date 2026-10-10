@@ -1454,12 +1454,66 @@ export function startAutoReplayLoop(input: {
          */
         let awaitingEvaluationObserved = 0;
         let pendingDispatchReadObserved = false;
+        /**
+         * N+1 ELIMINATION (measured 2026-10-10): the loop below used to `await input.readRouteLadder(candidate)`
+         * one candidate at a time, and `readRouteLadder` is a packaged-sidecar capability invoke. With the ladder
+         * index at 107 rows that is ~107 SEQUENTIAL round trips per tick: measured tick durations of 190-283 s on
+         * stage-rc-425a26946d65 (283 / 107 = ~2.6 s each, an ordinary serial invoke), and 300-600 s on
+         * stage-rc-388e4f2f730c where `focus=` never appeared at all.
+         *
+         * The cost is not the invokes, it is their serialisation. The walk ticks on a 30 s interval, so a
+         * multi-minute tick leaves the interval skipping on `running=true` for its whole duration (19 skips
+         * observed), drives the reclaim stress cycle, and reaches `focus=`/corpus/dispatch rarely or never - which
+         * is why NOTHING downstream of this loop could advance a ladder.
+         *
+         * Only the READS are parallelised here, in bounded batches. The loop body keeps its original sequential
+         * order because it performs order-dependent side effects (`markRouteLadderEligible`, the seenConfigured Ref
+         * update, setChallenge) that must not interleave.
+         *
+         * The bound is deliberately modest: the sidecar also serves routing, so this trades latency for a small,
+         * fixed burst rather than flooding it.
+         */
+        const LADDER_READ_CONCURRENCY = 8;
+        /**
+         * Bound to a local const first: the guard above narrows `input.readRouteLadder` to a function, but TypeScript
+         * does not carry that narrowing INTO the async callback below, so calling `input.readRouteLadder(...)` there
+         * fails to compile with TS2722 ("Cannot invoke an object which is possibly 'undefined'").
+         *
+         * Caught by `pnpm build` (tsc) in the build-test lane and NOT by a local vitest run, because vitest
+         * transpiles without full type-checking - so a green test suite is not evidence that this package compiles.
+         * Run the package build before pushing a change here.
+         */
+        const readRouteLadder = input.readRouteLadder;
+        const prefetchedLadderRows = new Map<string, RouteLadderRow | null | Error>();
+        {
+          const ladderReadTargets = census.filter((candidate) => selectFocusTask([candidate]));
+          for (let index = 0; index < ladderReadTargets.length; index += LADDER_READ_CONCURRENCY) {
+            const batch = ladderReadTargets.slice(index, index + LADDER_READ_CONCURRENCY);
+            await Promise.all(
+              batch.map(async (candidate) => {
+                const batchKey = `${candidate.roleId}\u0000${candidate.taskTypeId}`;
+                try {
+                  prefetchedLadderRows.set(batchKey, await readRouteLadder(candidate));
+                } catch (cause) {
+                  // Recorded, not thrown: the sequential loop below rethrows in its original position so the
+                  // error ordering and message are unchanged.
+                  prefetchedLadderRows.set(
+                    batchKey,
+                    cause instanceof Error ? cause : new Error(String(cause)),
+                  );
+                }
+              }),
+            );
+          }
+        }
         for (const candidate of census) {
           if (!selectFocusTask([candidate])) continue;
           const key = `${candidate.roleId}\u0000${candidate.taskTypeId}`;
           let row: RouteLadderRow | null;
           try {
-            row = await input.readRouteLadder(candidate);
+            const prefetched = prefetchedLadderRows.get(key);
+            if (prefetched instanceof Error) throw prefetched;
+            row = prefetched ?? null;
           } catch (cause) {
             throw new Error(`route ladder context unavailable: ${String(cause)}`);
           }
