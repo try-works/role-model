@@ -43,6 +43,21 @@ export function readRouteLadderCensus(input: {
   if (input.ladderRows.length > ROUTE_CENSUS_MAX_PAIRS) return degraded("pair_limit");
   const configured = new Set(input.configuredEndpointIds.filter(exactId));
   const pairs = new Map<string, RouteFocusCandidate>();
+  /**
+   * Run 108: a family held on an eligibility cooldown must not be offered as a focus.
+   *
+   * MEASURED on stage-rc-0b5dd8fa7899 (:3457): the corpus read refuses a family whose live capture count exceeds its
+   * 500-row faithful-projection budget (route-challenge-evidence.ts:556), and the walk puts that family on a cooldown.
+   * The cooldown was written and then READ BY NOTHING on the focus path: `selectFocusTask` filters on rolledBack,
+   * role/task, requestCount and D1 fillability, and `RouteFocusCandidate` carries no eligibility field at all. So the
+   * census kept offering the starved family, the walk kept choosing it (highest requestCount, non-zero fill gap), and it
+   * threw on every tick - 9 minutes of observation showed focus=recruiter x4 with focusOTHER=0.
+   *
+   * The predicate itself already exists (route-ladder-dispatch.ts:682-683, "R8: a complete task is idle until
+   * nextEligibleAtMs passes"); it was simply never applied here. Kept in a SIDE MAP rather than on the candidate so the
+   * candidate's public shape is unchanged.
+   */
+  const nextEligibleAtMs = new Map<string, number>();
   for (const value of input.ladderRows) {
     if (!value || typeof value !== "object" || Array.isArray(value))
       return degraded("ladder_unavailable");
@@ -62,6 +77,8 @@ export function readRouteLadderCensus(input: {
     }
     const rolledBack = row.rolledBack as { on?: unknown } | undefined;
     const scopeKey = key(row.roleId, row.taskTypeId);
+    if (Number.isFinite(row.nextEligibleAtMs))
+      nextEligibleAtMs.set(scopeKey, Number(row.nextEligibleAtMs));
     if (pairs.has(scopeKey)) return degraded("ladder_unavailable");
     pairs.set(scopeKey, {
       roleId: row.roleId,
@@ -135,7 +152,16 @@ export function readRouteLadderCensus(input: {
               ? 1
               : 0,
     );
-    return { status: "available", candidates };
+    /**
+     * Prefer families that are NOT on an eligibility cooldown. The fallback mirrors D1: if every family is cooled down
+     * there is nothing to prefer, and an empty census would idle the walk while a real family is waiting - so the full
+     * set is offered and the walk behaves exactly as it did before this filter existed.
+     */
+    const ready = candidates.filter(
+      (candidate) =>
+        (nextEligibleAtMs.get(key(candidate.roleId, candidate.taskTypeId)) ?? 0) <= input.nowMs,
+    );
+    return { status: "available", candidates: ready.length > 0 ? ready : candidates };
   } catch {
     return degraded("database_unavailable");
   } finally {
