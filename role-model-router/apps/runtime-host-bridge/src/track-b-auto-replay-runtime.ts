@@ -1288,6 +1288,18 @@ export function startAutoReplayLoop(input: {
      */
     const staleTickDeadlineMs =
       input.staleTickDeadlineMs ?? Math.max(2 * (input.intervalMs ?? 0), 10 * 60_000);
+    /**
+     * D7b diagnostic: MEASURED on stage-rc-425a26946d65, the reclaim did NOT fire while the walk skipped for
+     * 54+ minutes against a 30-minute deadline - yet the unit test says it must. The guard's inputs were
+     * invisible, so the reason could not be determined from the log. Under ROLE_MODEL_FOCUS_DIAG each tick now
+     * states exactly what the reclaim decided and why, which turns the next occurrence into a measurement.
+     */
+    if (process.env.ROLE_MODEL_FOCUS_DIAG && running) {
+      console.error(
+        `[replay-tick] reclaim check: running=${running} since=${runningSinceMs === null ? "null" : String(runningSinceMs)} ` +
+          `elapsed=${runningSinceMs === null ? "n/a" : String(now() - runningSinceMs)}ms deadline=${staleTickDeadlineMs}ms`,
+      );
+    }
     if (running && runningSinceMs !== null && now() - runningSinceMs > staleTickDeadlineMs) {
       console.error(
         `[track-b-auto-replay] reclaiming stale tick: started ${now() - runningSinceMs}ms ago, ` +
