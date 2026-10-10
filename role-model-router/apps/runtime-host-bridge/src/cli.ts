@@ -1262,9 +1262,21 @@ export async function deriveLearnerTrajectoryEvidenceForReplay(input: {
     for (const branchRequestId of branchRequestIds.values()) {
       const branchCapture = await input.readCapture(branchRequestId);
       if (!branchCapture) {
+        /**
+         * Run 108: do NOT claim retention ageing here. This null has exactly ONE producer -
+         * `operations.readLocalRouteCapture` returns null only when the sidecar answers HTTP 409 with
+         * `unknown route capture <id>` (track-b-operations.ts:3045-3048) and rethrows everything else. So the honest
+         * statement is "the capture store does not know this id".
+         *
+         * The old wording ("is outside the retention window") asserted a CAUSE the caller never established, and it cost
+         * real time: during the run-108 replay-walk investigation this line appeared 15 times and was read as captures
+         * ageing out, when the retention window was never consulted at all. Two further defects were misdiagnosed behind
+         * it. A refusal to answer is now distinguishable from a legitimate ageing answer, which is the same repair made
+         * to the census (D7a) and the pending-dispatch read (D11) in this run.
+         */
         return {
           kind: "unavailable",
-          reason: `branch capture ${branchRequestId} is outside the retention window`,
+          reason: `branch capture ${branchRequestId} is unknown to the capture store (the sidecar answered 'unknown route capture'; this is NOT a retention-window decision)`,
         };
       }
       counterfactualCaptures.push(branchCapture);
