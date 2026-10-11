@@ -120,8 +120,9 @@ test("paired Track B packaging builds public runtime dependencies before bundlin
   assert.match(workflow, /Build public runtime adapter dependencies/);
   assert.match(
     workflow,
-    /Build public runtime adapter dependencies[\s\S]*?corepack pnpm --filter @role-model-router\/profile-aggregator\.\.\. build/,
+    /Build public runtime adapter dependencies[\s\S]*?corepack pnpm run runtime:build-test-deps/,
   );
+  assert.match(workflow, /Turbo-backed dependency lane/);
   assert.match(
     workflow,
     /Build public runtime adapter dependencies[\s\S]*?if: env\.ROLE_MODEL_BUILD_CHANNEL == 'stage' \|\| env\.ROLE_MODEL_BUILD_CHANNEL == 'production'/,
