@@ -91,10 +91,32 @@ test("promotion guard encodes dev to stage to main with a hotfix exception", () 
   assert.match(workflow, /Invalid promotion source/);
 });
 
-test("workspace tests serialize the resource-heavy runtime proofs", () => {
+test("workspace tests keep the resource-heavy runtime proofs in a separate lane", () => {
   assert.match(
-    packageManifest.scripts.test,
-    /--filter=\.\/\*\* --filter=!@role-model-router\/runtime-host-bridge --filter=!@try-works\/pi-role-model test.*--filter @role-model-router\/runtime-host-bridge test.*--filter @try-works\/pi-role-model test/,
+    packageManifest.scripts["test:workspace"],
+    /--filter=\.\/\*\* --filter=!@role-model-router\/runtime-host-bridge --filter=!@try-works\/pi-role-model test.*--filter @try-works\/pi-role-model test/,
+  );
+  assert.ok(
+    !packageManifest.scripts["test:workspace"].includes(
+      "@role-model-router/runtime-host-bridge test",
+    ),
+  );
+  assert.ok(
+    packageManifest.scripts["test:runtime-host"].includes("runtime-host-bridge run test:ci"),
+  );
+  assert.match(packageManifest.scripts["ci:runtime"], /runtime:test-critical.*runtime:test-router/);
+});
+
+test("fast CI scripts expose split, reusable lanes", () => {
+  assert.match(packageManifest.scripts["ci:quality"], /lint.*schemas:validate/);
+  assert.match(packageManifest.scripts["ci:build-test"], /ci:build.*test:workspace/);
+  assert.match(
+    packageManifest.scripts["ci:fast"],
+    /ci:quality.*ci:build-test.*runtime:test-critical/,
+  );
+  assert.match(
+    packageManifest.scripts["ci:check"],
+    /ci:fast.*runtime:test-router.*test:rust.*smoke/,
   );
 });
 

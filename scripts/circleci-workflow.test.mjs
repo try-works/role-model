@@ -11,7 +11,10 @@ test("CircleCI runs the maintained public verification contract", () => {
   const source = config();
   assert.match(source, /cimg\/node:24\.4\.1/);
   assert.match(source, /corepack pnpm install --frozen-lockfile/);
-  assert.match(source, /corepack pnpm run ci:check/);
+  assert.match(source, /corepack pnpm run ci:fast/);
+  assert.match(source, /corepack pnpm run test:rust/);
+  assert.match(source, /corepack pnpm run smoke/);
+  assert.doesNotMatch(source, /corepack pnpm run ci:check/);
   assert.match(source, /corepack pnpm run runtime:test-router/);
   assert.doesNotMatch(source, /(?<!p)npm\s+(?:install|test)\b|circleci run release/i);
 });
