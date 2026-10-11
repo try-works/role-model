@@ -43,7 +43,7 @@
     "runtime:test-validators": "corepack pnpm run runtime:validate-ui && corepack pnpm run runtime:validate-observability && corepack pnpm run runtime:validate-tools && corepack pnpm run runtime:validate-catalog-economics",
     "runtime:test-router": "corepack pnpm run runtime:build-test-deps && corepack pnpm --filter @role-model-router/runtime-host-bridge run test:router:ci && corepack pnpm --filter @role-model-router/trace test && corepack pnpm --filter @role-model-router/usage test && corepack pnpm run runtime:validate-routing && corepack pnpm run runtime:validate-observability",
     "runtime:test-full": "corepack pnpm run runtime:test-critical && corepack pnpm run runtime:test-browser",
-    "build": "corepack pnpm run types:generate && pnpm exec turbo run build --filter=./apps/* --filter=./packages/* --filter=./role-model-router/apps/* --filter=./role-model-router/packages/*",
+    "build": "corepack pnpm run types:generate && corepack pnpm run runtime:build-test-deps && pnpm exec turbo run build --concurrency=4 --filter=./apps/* --filter=./packages/* --filter=./role-model-router/apps/* --filter=./role-model-router/packages/*",
     "test": "corepack pnpm run test:workspace && corepack pnpm run test:runtime-host",
     "test:release-workflows": "node --test scripts/ci-workflow.test.mjs scripts/build-binaries-workflow.test.mjs scripts/run88-stage-release.test.mjs scripts/run88-stage-release-workflow.test.mjs scripts/track-b/wait-for-runtime-readiness.test.mjs apps/docs-site/scripts/docs-site-deploy-workflow.test.mjs",
     "test:track-b-product-state": "node scripts/track-b/run-command-test.mjs TB00-CMD-03",

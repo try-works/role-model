@@ -115,7 +115,10 @@ test("workspace tests keep the resource-heavy runtime proofs in a separate lane"
 test("fast CI scripts expose split, reusable lanes", () => {
   assert.match(packageManifest.scripts["ci:quality"], /lint.*schemas:validate/);
   assert.match(packageManifest.scripts["ci:build-test"], /ci:build.*test:workspace/);
-  assert.match(packageManifest.scripts.build, /turbo run build/);
+  assert.match(
+    packageManifest.scripts.build,
+    /runtime:build-test-deps.*turbo run build --concurrency=4/,
+  );
   assert.match(
     packageManifest.scripts["ci:fast"],
     /ci:quality.*ci:build-test.*runtime:test-critical/,
