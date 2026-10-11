@@ -68,7 +68,7 @@
     "smoke": "corepack pnpm --filter @role-model-router/gateway-smoke... run build && corepack pnpm --filter @role-model-router/gateway-smoke exec tsx src/index.ts",
     "ci:check": "corepack pnpm run ci:fast && corepack pnpm run runtime:test-router && corepack pnpm run test:rust && corepack pnpm run smoke",
     "runtime:build-test-deps": "pnpm exec turbo run build --filter=@role-model/protocol-types --filter=@role-model-router/catalog --filter=effect --filter=@role-model-router/profile-aggregator",
-    "test:workspace": "corepack pnpm run test:release-workflows && pnpm exec turbo run test --filter=./apps/* --filter=./packages/* --filter=./role-model-router/apps/* --filter=./role-model-router/packages/* --filter=!@role-model-router/runtime-host-bridge --filter=!@try-works/pi-role-model && corepack pnpm --filter @try-works/pi-role-model test && corepack pnpm --filter @try-works/dsh-role-model test",
+    "test:workspace": "corepack pnpm run test:release-workflows && pnpm exec turbo run test --concurrency=4 --filter=./apps/* --filter=./packages/* --filter=./role-model-router/apps/* --filter=./role-model-router/packages/* --filter=!@role-model-router/runtime-host-bridge --filter=!@try-works/pi-role-model --filter=!@try-works/dsh-role-model && corepack pnpm --filter @try-works/pi-role-model test && corepack pnpm --filter @try-works/dsh-role-model test",
     "test:runtime-host": "corepack pnpm run runtime:build-test-deps && corepack pnpm --filter @role-model-router/runtime-host-bridge run test:ci",
     "ci:quality": "corepack pnpm run lint && corepack pnpm run schemas:validate",
     "ci:build": "corepack pnpm run build",

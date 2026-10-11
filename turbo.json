@@ -4,7 +4,6 @@
   "globalDependencies": ["tsconfig*.json", "role-model-router/tsconfig*.json"],
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
       "outputs": ["dist/**", "build/**", ".react-router/**", "tsconfig.tsbuildinfo"]
     },
     "test": {

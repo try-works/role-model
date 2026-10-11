@@ -92,10 +92,10 @@ test("promotion guard encodes dev to stage to main with a hotfix exception", () 
 });
 
 test("workspace tests keep the resource-heavy runtime proofs in a separate lane", () => {
-  assert.match(packageManifest.scripts["test:workspace"], /turbo run test/);
+  assert.match(packageManifest.scripts["test:workspace"], /turbo run test --concurrency=4/);
   assert.match(
     packageManifest.scripts["test:workspace"],
-    /--filter=!@role-model-router\/runtime-host-bridge.*--filter=!@try-works\/pi-role-model/,
+    /--filter=!@role-model-router\/runtime-host-bridge.*--filter=!@try-works\/pi-role-model.*--filter=!@try-works\/dsh-role-model/,
   );
   assert.match(
     packageManifest.scripts["test:workspace"],

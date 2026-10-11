@@ -83,7 +83,10 @@ copying package-level commands so local evidence matches CI.
 
 Turborepo is used as an incremental local/build accelerator, not as a replacement for the named CI scripts. The root
 `turbo.json` defines cacheable `build` tasks and non-cacheable test tasks. The public scripts that currently route
-through Turbo are `build`, `runtime:build-test-deps`, `test:workspace`, `turbo:build`, and `turbo:test`.
+through Turbo are `build`, `runtime:build-test-deps`, `test:workspace`, `turbo:build`, and `turbo:test`. Cyclic
+build dependencies are intentionally not promoted into Turbo's task graph; package scripts remain responsible for the
+source-level ordering they need. The workspace test lane caps Turbo at four concurrent package tests so slower schema,
+SQLite, and conformance tests do not time out under CI load.
 
 Useful focused commands:
 
