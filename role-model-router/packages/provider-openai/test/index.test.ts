@@ -36,6 +36,54 @@ describe("OpenAI provider adapter", () => {
     expect(adapter.adapterFamily).toBe("ai-sdk-openai-compatible");
   });
 
+  test("Run 108 D9 forwards raw chat JSON object response_format", () => {
+    const target = {
+      endpointId: "openai.personal.primary.us-east-1.fast",
+      modelId: "openai/gpt-4.1-mini-fast",
+      providerId: "openai",
+      providerKind: "provider-openai",
+      providerAccountId: "openai.personal.primary",
+      adapterFamily: "ai-sdk-openai",
+      authFamily: "api-key",
+      apiBase: "https://api.openai.test/v1",
+      requestShapeHints: {
+        providerShape: "openai.chat.completions",
+        bodyKeys: ["temperature", "max_tokens"],
+        headerKeys: [],
+      },
+      candidate: {
+        identity: {
+          endpoint_id: "openai.personal.primary.us-east-1.fast",
+          provider_kind: "remote_openai_compat",
+        },
+      },
+      account: {
+        credentialRef: {
+          backend: "env",
+          ref: "OPENAI_API_KEY",
+        },
+      },
+    };
+
+    const executionRequest = {
+      messages: [{ role: "user", content: "Return a JSON judge verdict." }],
+      temperature: 0,
+      stream: false,
+      responseFormat: { type: "json_object" },
+    };
+
+    const adapter = createOpenAIProviderAdapter();
+    const capabilities = adapter.negotiateCapabilities({ target, executionRequest });
+    const requestCapture = buildOpenAIRequest({ target, executionRequest, capabilities });
+
+    expect(requestCapture.url).toBe("https://api.openai.test/v1/chat/completions");
+    expect(requestCapture.body).toMatchObject({
+      model: "gpt-4.1-mini-fast",
+      temperature: 0,
+      response_format: { type: "json_object" },
+    });
+  });
+
   test("builds an OpenAI responses request and normalizes text, usage, and tool calls", () => {
     const target = {
       endpointId: "openai.personal.primary.us-east-1.fast",

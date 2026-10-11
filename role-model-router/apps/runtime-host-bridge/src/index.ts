@@ -869,6 +869,7 @@ interface OpenAIChatCompletionsBody {
   readonly stream?: boolean;
   readonly max_tokens?: number;
   readonly temperature?: number;
+  readonly response_format?: Record<string, unknown>;
 }
 
 interface OpenAIResponsesBody {
@@ -11152,6 +11153,9 @@ export function mapChatCompletionsRequest(
       ...(typeof body.stream === "boolean" ? { stream: body.stream } : {}),
       ...(typeof body.max_tokens === "number" ? { maxOutputTokens: body.max_tokens } : {}),
       ...(typeof body.temperature === "number" ? { temperature: body.temperature } : {}),
+      ...(body.response_format && typeof body.response_format === "object"
+        ? { responseFormat: body.response_format }
+        : {}),
     },
     ...(effectiveRoutingModel ? { routingModel: effectiveRoutingModel } : {}),
     effortResolution: {

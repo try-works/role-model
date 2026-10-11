@@ -1362,6 +1362,7 @@ export async function runAutoReplayTick(input: {
     const { toolPolicy } = resolveReplayToolPolicy({
       hasRecordedToolResults: capture.hasRecordedToolResults,
     });
+
     // Run 101 R4: the queue is offered the capture the tick just admitted and
     // reserved. In `queue` mode the worker owns the work, so this tick stops
     // here; in `shadow` mode the legacy execution below stays authoritative and

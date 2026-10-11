@@ -254,6 +254,10 @@ export interface AutoReplayOperations {
   listPendingReplayCaptures(input: {
     readonly policySetDigest: string;
     readonly limit?: number;
+    readonly completeLadderPairs?: readonly {
+      readonly roleId: string;
+      readonly taskTypeId: string;
+    }[];
   }): Promise<unknown>;
   recordReplayDisposition(input: Record<string, unknown>): Promise<unknown>;
   /**
@@ -444,6 +448,14 @@ export function decodeRouteLadderRow(value: unknown): RouteLadderRow | null {
       atMs: Number.isFinite(rolledBackRecord.atMs) ? Number(rolledBackRecord.atMs) : null,
     },
   };
+}
+
+function completeLadderPairsFromCensus(census: readonly RouteFocusCandidate[]) {
+  return census.flatMap((candidate) =>
+    candidate.configured > 0 && candidate.admitted >= candidate.configured
+      ? [{ roleId: candidate.roleId, taskTypeId: candidate.taskTypeId }]
+      : [],
+  );
 }
 
 export interface AutoReplayLoopHealth {
@@ -775,6 +787,7 @@ export function startAutoReplayLoop(input: {
     readonly placementComplete?: boolean;
     readonly completedGroupIds?: readonly string[];
     readonly pendingRoundId?: string;
+    readonly roundNonce?: number;
   }
   // Ref holds only scheduling progress. Admission/activation remain derived from the store's floor.
   // Durable pair verdicts stay in Evaluation Core; this process never writes an invented receipt.
@@ -783,8 +796,17 @@ export function startAutoReplayLoop(input: {
   const stageExecutionBusy = Ref.makeUnsafe(false);
   const seenConfigured = Ref.makeUnsafe(new Map<string, readonly string[]>());
   const dispatchedChallenges = new Set<string>();
+  let dispatchRoundNonce = 0;
   const setChallenge = (key: string, value: ChallengeProgress) =>
     Effect.runSync(Ref.update(challenges, (current) => new Map(current).set(key, value)));
+  const clearChallenge = (key: string) =>
+    Effect.runSync(
+      Ref.update(challenges, (current) => {
+        const next = new Map(current);
+        next.delete(key);
+        return next;
+      }),
+    );
   const readFinalized = async (request: RouteChallengeReadRequest) => {
     const binding = input.readFinalizedRouteChallenge;
     if (!binding) throw new Error("route challenge finalization unavailable: CLI binding required");
@@ -1011,20 +1033,21 @@ export function startAutoReplayLoop(input: {
       // a stranded evaluation is never retried, because the producer only drives replay jobs and
       // those are already terminal.
       /**
-       * Run 101 R7: the evaluation queue owns this work once its plane is
-       * authoritative, so the sweep steps aside rather than racing it. `shadow`
-       * keeps the sweep authoritative and lets the queue's job be the recorded
-       * comparison.
+       * Run 101 R7: the evaluation queue owns broad unresolved evaluation resume once its plane is
+       * authoritative, so the sweep steps aside rather than racing it. Run 108 D9 keeps one narrow
+       * exception: resolved handoff finalization. Effect PersistedQueue custom ids are idempotent;
+       * once the scoring queue id is completed, a duplicate offer will not redeliver work. The
+       * resolved-only pass is therefore reconciliation, not scheduling: it only lets an already
+       * resolved handoff record its result back into Replay Core when the replay job is still parked
+       * in awaiting_evaluation/timed_out handoff state.
        */
       const evaluationQueueAuthoritative = input.planeModes?.evaluation === "queue";
-      if (
-        !evaluationQueueAuthoritative &&
-        typeof input.operations.resumePendingEvaluations === "function"
-      ) {
+      if (typeof input.operations.resumePendingEvaluations === "function") {
         try {
           const sweep = (await input.operations.resumePendingEvaluations({
             window,
             policySetDigest: input.policySet.policySetDigest,
+            ...(evaluationQueueAuthoritative ? { resolvedOnly: true } : {}),
           })) as { readonly resumed?: unknown } | null;
           if (sweep && Number.isSafeInteger(sweep.resumed) && Number(sweep.resumed) >= 0) {
             resumed = Number(sweep.resumed);
@@ -1037,9 +1060,6 @@ export function startAutoReplayLoop(input: {
           error = error ? `${error}; ${detail}` : detail;
         }
       }
-      // Run 100 addendum 02 S1: the reconcile pass is what completes a job whose comparison finalized and
-      // reclaims one that is stranded beyond the grace. It had no production caller, so a job that lost its
-      // lease without a terminal trial stayed non-terminal indefinitely and was reported "in flight".
       if (
         !evaluationQueueAuthoritative &&
         typeof input.operations.reconcileEvaluationJobs === "function"
@@ -1380,6 +1400,16 @@ export function startAutoReplayLoop(input: {
         input.ledger.status().window as unknown as Record<string, unknown>,
       );
       const stageEnabled = typeof input.routeFocusCandidates === "function";
+      let focusCensus: readonly RouteFocusCandidate[] | null = null;
+      if (stageEnabled) {
+        try {
+          const answer = await input.routeFocusCandidates?.();
+          if (!answer) throw new Error("missing census");
+          focusCensus = answer;
+        } catch (cause) {
+          throw new Error(`route focus census unavailable: ${String(cause)}`);
+        }
+      }
       let plannedFocus: ReturnType<typeof selectFocusTask> = null;
       let focusCaptureRef: string | null = null;
       let focusEndpointId: string | null = null;
@@ -1416,8 +1446,30 @@ export function startAutoReplayLoop(input: {
       const pending = await input.operations.listPendingReplayCaptures({
         policySetDigest: input.policySet.policySetDigest,
         limit: maxCapturesPerTick * 4,
+        ...(focusCensus ? { completeLadderPairs: completeLadderPairsFromCensus(focusCensus) } : {}),
       });
       let captures = pendingCaptures(pending);
+      const onlyCaptureRefs = options?.onlyCaptureRefs;
+      const initialClaimedStageTaskKeys =
+        stageEnabled && onlyCaptureRefs
+          ? new Set(
+              captures.flatMap((capture) =>
+                typeof capture.roleId === "string" &&
+                capture.roleId.length > 0 &&
+                typeof capture.taskTypeId === "string" &&
+                capture.taskTypeId.length > 0 &&
+                onlyCaptureRefs.includes(capture.captureRef)
+                  ? [`${capture.roleId}\u0000${capture.taskTypeId}`]
+                  : [],
+              ),
+            )
+          : null;
+      const claimedStageTaskKeys =
+        initialClaimedStageTaskKeys && initialClaimedStageTaskKeys.size > 0
+          ? initialClaimedStageTaskKeys
+          : input.readRouteReplayableCaptures
+            ? null
+            : initialClaimedStageTaskKeys;
       /**
        * Run 108 phase-03 F5 (R7 queue gauges) + phase-03.5 repair: the replay queue depth.
        *
@@ -1445,14 +1497,7 @@ export function startAutoReplayLoop(input: {
       if (stageEnabled) {
         if (!input.readRouteLadder)
           throw new Error("route ladder context unavailable: CLI binding required");
-        let census: readonly RouteFocusCandidate[];
-        try {
-          const answer = await input.routeFocusCandidates?.();
-          if (!answer) throw new Error("missing census");
-          census = answer;
-        } catch (cause) {
-          throw new Error(`route focus census unavailable: ${String(cause)}`);
-        }
+        const census = focusCensus ?? [];
         const rows = new Map<string, RouteLadderRow | null>();
         const eligible: RouteFocusCandidate[] = [];
         /**
@@ -1515,8 +1560,9 @@ export function startAutoReplayLoop(input: {
           }
         }
         for (const candidate of census) {
-          if (!selectFocusTask([candidate])) continue;
           const key = `${candidate.roleId}\u0000${candidate.taskTypeId}`;
+          if (claimedStageTaskKeys && !claimedStageTaskKeys.has(key)) continue;
+          if (!selectFocusTask([candidate])) continue;
           let row: RouteLadderRow | null;
           try {
             const prefetched = prefetchedLadderRows.get(key);
@@ -1563,7 +1609,16 @@ export function startAutoReplayLoop(input: {
             Ref.update(seenConfigured, (current) => new Map(current).set(key, [...configuredNow])),
           );
           let progress = Ref.getUnsafe(challenges).get(key);
-          if (progress && !progress.done && progress.kind !== "refresh") {
+          if (
+            progress &&
+            !progress.done &&
+            progress.kind !== "refresh" &&
+            // Queue-mode focus-fill can persist an in-flight pair whose source is configured but not yet
+            // admitted. Do not prune that pending claim as "done" before its worker executes; only prune
+            // idle progress, or a pending pair whose source left the configured pool entirely.
+            ((!progress.pendingCaptureRef && !progress.pendingRoundId) ||
+              !configuredNow.includes(progress.against[progress.cursor] ?? ""))
+          ) {
             const remaining = progress.against
               .slice(progress.cursor)
               .filter((id) => admitted.some((rung) => rung.endpointId === id));
@@ -1583,6 +1638,7 @@ export function startAutoReplayLoop(input: {
           );
           if (
             challenger &&
+            !onlyCaptureRefs &&
             (!progress
               ? wasComplete
               : progress.done && admitted.some((rung) => rung.endpointId === progress?.endpointId))
@@ -1613,6 +1669,7 @@ export function startAutoReplayLoop(input: {
             });
           }
           let active = Ref.getUnsafe(challenges).get(key);
+          let activePendingDurable = false;
           if (
             input.readPendingRouteDispatches &&
             (missing.length > 0 ||
@@ -1663,6 +1720,18 @@ export function startAutoReplayLoop(input: {
                     String(b.replayJobId ?? b.queueJobId),
                   ),
               );
+            activePendingDurable = Boolean(
+              active?.pendingCaptureRef &&
+                relevant.some(
+                  (job) =>
+                    job.captureRef === active?.pendingCaptureRef &&
+                    (active?.pendingRoundId === undefined ||
+                      job.dispatchRoundId === active.pendingRoundId) &&
+                    (job.state === "queued" ||
+                      job.state === "running" ||
+                      job.state === "awaiting_evaluation"),
+                ),
+            );
             const pendingJob = relevant.find(
               (job) =>
                 job.state === "queued" ||
@@ -1692,6 +1761,7 @@ export function startAutoReplayLoop(input: {
                   done: false,
                 };
                 setChallenge(key, active);
+                activePendingDurable = true;
                 const ownsProcessingQueueRound =
                   pendingJob.sourceType === "queue" &&
                   pendingJob.state === "running" &&
@@ -1801,7 +1871,30 @@ export function startAutoReplayLoop(input: {
               setChallenge(key, active);
             }
           }
-          if (active?.kind !== "refresh" && active?.done && missing.length > 0) continue; // Wait for genuine floor/publication.
+          if (
+            input.dispatchQueue?.mode === "queue" &&
+            input.readPendingRouteDispatches &&
+            active?.pendingCaptureRef &&
+            !activePendingDurable &&
+            !options?.onlyCaptureRefs
+          ) {
+            // The authoritative queue/replay read no longer contains the claimed round, and the finalized-evidence
+            // read above did not satisfy it. Clear the stale queue progress so a fresh round id can be offered instead
+            // of idling forever with focusEndpoint=null after the queue row has completed.
+            clearChallenge(key);
+            active = undefined;
+          }
+          if (active?.kind !== "refresh" && active?.done && missing.length > 0) {
+            if (Number(row?.nextEligibleAtMs ?? Number.POSITIVE_INFINITY) < now() - 60_000) {
+              // A completed in-memory challenge is only a wait-for-publication state. If the durable
+              // ladder stays due past a grace window, publication/finalization missed the rung; reopen
+              // the challenge instead of idling forever with a partial configured ladder.
+              clearChallenge(key);
+              active = undefined;
+            } else {
+              continue; // Wait for genuine floor/publication.
+            }
+          }
           if (
             missing.length === 0 &&
             configuredNow.length > 0 &&
@@ -2064,16 +2157,26 @@ export function startAutoReplayLoop(input: {
                   focusEndpointId = current.endpointId;
                 }
               } else {
+                const availableRungIds = new Set(
+                  (routeLadder?.rungs ?? [])
+                    .filter((rung) => rung.status === "available")
+                    .map((rung) => rung.endpointId),
+                );
+                const hasConfiguredGap = (sourceEndpointId: string | null | undefined) =>
+                  configuredNow.some((id) => id !== sourceEndpointId && !availableRungIds.has(id));
+                // A ladder fill is a comparison AGAINST an already admitted configured rung.
+                // Live queue traffic can contain extra provider traffic for the same family; using that
+                // as the source produces completed queue rows with no admissible ladder evidence.
+                // Prefer a capture whose source is an available configured rung, and fall back only when
+                // the corpus has no such source.
                 const source =
-                  owned.find((item) =>
-                    configuredNow.some(
-                      (id) =>
-                        id !== item.sourceEndpointId &&
-                        !(routeLadder?.rungs ?? []).some(
-                          (rung) => rung.endpointId === id && rung.status === "available",
-                        ),
-                    ),
-                  ) ?? owned[0];
+                  owned.find(
+                    (item) =>
+                      availableRungIds.has(item.sourceEndpointId ?? "") &&
+                      hasConfiguredGap(item.sourceEndpointId),
+                  ) ??
+                  owned.find((item) => hasConfiguredGap(item.sourceEndpointId)) ??
+                  owned[0];
                 // Run 105 bug 3: the configured judge may also be a candidate endpoint, so it is NOT excluded
                 // from the challenger set here. When a challenger equals the judge, the evaluation de-conflicts
                 // (dedupeJudgeAgainstPair picks an alternative judge), so the controller endpoint can still be
@@ -2114,6 +2217,29 @@ export function startAutoReplayLoop(input: {
                 if (fill instanceof NoReplayableRequest) throw fill;
                 focusCaptureRef = source?.captureRef ?? null;
                 focusEndpointId = fill?.endpointId ?? null;
+                if (
+                  source?.sourceEndpointId &&
+                  focusEndpointId &&
+                  input.dispatchQueue?.mode === "queue" &&
+                  !onlyCaptureRefs
+                ) {
+                  challengeKey = plannedFocus.scopeKey;
+                  const existing = Ref.getUnsafe(challenges).get(challengeKey);
+                  if (!existing || existing.done) {
+                    setChallenge(challengeKey, {
+                      kind: "challenge",
+                      startedAtMs: now(),
+                      endpointId: focusEndpointId,
+                      against: [source.sourceEndpointId],
+                      cursor: 0,
+                      pendingCaptureRef: null,
+                      done: false,
+                      ...(input.dispatchQueue?.mode === "queue"
+                        ? { roundNonce: ++dispatchRoundNonce }
+                        : {}),
+                    });
+                  }
+                }
                 if (
                   source &&
                   !focusEndpointId &&
@@ -2179,19 +2305,28 @@ export function startAutoReplayLoop(input: {
           // A reporting hook is observability, never a reason to fail the tick.
         }
       }
-      const onlyCaptureRefs = options?.onlyCaptureRefs;
-      if (options?.dispatchRoundId !== undefined) {
+      const claimedCapturePresent = onlyCaptureRefs
+        ? captures.some((capture) => onlyCaptureRefs.includes(capture.captureRef))
+        : true;
+      if (options?.dispatchRoundId !== undefined && claimedCapturePresent) {
         const progress = challengeKey ? Ref.getUnsafe(challenges).get(challengeKey) : undefined;
         if (
           !stageEnabled ||
           !onlyCaptureRefs?.includes(focusCaptureRef ?? "") ||
-          !progress ||
-          progress.pendingCaptureRef !== focusCaptureRef ||
-          progress.pendingRoundId !== options.dispatchRoundId
+          (progress &&
+            (progress.pendingCaptureRef !== focusCaptureRef ||
+              progress.pendingRoundId !== options.dispatchRoundId))
         ) {
           throw new Error(
             "claimed route dispatch round mismatch: no actual matching pending task/capture/pair round",
           );
+        }
+        if (!progress) {
+          // The worker claimed a queue row that no longer has a pending durable pair. Treat it as a stale no-op
+          // rather than replaying the capture under a newly planned round; the queue attempt can ack it.
+          focusCaptureRef = null;
+          focusEndpointId = null;
+          challengeKey = null;
         }
       }
       const dispatchRoundFor = (endpointId: string | null) => {
@@ -2206,6 +2341,7 @@ export function startAutoReplayLoop(input: {
                 scopeKey: plannedFocus.scopeKey,
                 endpointId,
                 startedAtMs: progress.startedAtMs,
+                ...(progress.roundNonce !== undefined ? { roundNonce: progress.roundNonce } : {}),
                 groupIds: [...(progress.completedGroupIds ?? [])].sort(),
               }),
             )

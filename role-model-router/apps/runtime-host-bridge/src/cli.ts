@@ -582,6 +582,7 @@ import {
   resolveDurableEvaluationAuthority,
   resolveManagedArtifactKeyFiles,
   resolveReplayCandidatePool,
+  resolveUserConfiguredEndpointPool,
   runSupervisedReplay,
   runTrackBPostObservation,
   runTrackBPostObservationWithContribution,
@@ -5778,7 +5779,10 @@ export async function main(): Promise<void> {
      */
     const resumeEvaluationsRef: {
       current:
-        | ((scope?: { readonly onlyReplayJobId?: string }) => Promise<{
+        | ((scope?: {
+            readonly onlyReplayJobId?: string;
+            readonly resolvedOnly?: boolean;
+          }) => Promise<{
             resumed: number;
             completed: number;
             failed: number;
@@ -8494,6 +8498,27 @@ export async function main(): Promise<void> {
                 }`,
               );
             }
+            /**
+             * Run 108 D9 live repair: a replay job may be stuck in awaiting_evaluation after its
+             * evaluation queue row already completed. Effect queue duplicate handling can answer as either
+             * a refused duplicate or a successful no-op, so the replay-result reconciliation must not depend
+             * on the offer's boolean. Drive a resolved-only scoped pass: fresh unresolved handoffs remain
+             * owned by the queue worker, while a resolved handoff whose replay job is still awaiting records
+             * replay:record-evaluation-result and clears the split-brain replay.
+             */
+            const resume = resumeEvaluationsRef.current;
+            if (resume) {
+              const replayJobId = String(handoffRequest.replayJobId);
+              void resume({ onlyReplayJobId: replayJobId, resolvedOnly: true }).catch(
+                (error: unknown) => {
+                  console.error(
+                    `[run108] duplicate evaluation handoff reconcile declined:${replayJobId} ${String(
+                      (error as { message?: unknown })?.message ?? error,
+                    ).slice(0, 200)}`,
+                  );
+                },
+              );
+            }
           }
           return autoReplayExecutionFromCommandReceipt(decodedReplayReceipt);
         },
@@ -10390,7 +10415,10 @@ export async function main(): Promise<void> {
        * comparison is finalized once and evidence writing stays in one place.
        * Without it the sweep behaves exactly as before.
        */
-      const resumePendingEvaluations = async (scope?: { readonly onlyReplayJobId?: string }) => {
+      const resumePendingEvaluations = async (scope?: {
+        readonly onlyReplayJobId?: string;
+        readonly resolvedOnly?: boolean;
+      }) => {
         const runtime = extensionRuntimeRef.current;
         const operations = currentPostObservationOperations();
         if (!runtime || !operations) {
@@ -10410,6 +10438,53 @@ export async function main(): Promise<void> {
             ? scopeResumeStoreToReplayJob(evaluationResumeStore, scope.onlyReplayJobId)
             : evaluationResumeStore,
           ...(scope?.onlyReplayJobId ? { limit: 1 } : {}),
+          ...(scope?.resolvedOnly ? { resolvedOnly: true } : {}),
+          shouldReconcileResolved: async (entry) => {
+            const replayScope =
+              typeof entry.scope === "string" && entry.scope.trim()
+                ? entry.scope.trim()
+                : options.scopeId;
+            try {
+              const rawReplayJob = await runtime.invoke("replay-core", {
+                requestId: `replay-result-reconcile:${entry.replayJobId}:${Date.now()}`,
+                sessionId: `replay-result-reconcile:${options.scopeId}`,
+                protocolVersion: "1.1.0",
+                channel,
+                scope: replayScope,
+                authorizationEpoch: 1,
+                capability: "replay:job",
+                value: { jobId: entry.replayJobId },
+              });
+              const replayJob = decodeExternalizedOperatorReadback({
+                stateRoot: options.runtimeStateRoot,
+                scopeId: options.scopeId,
+                value: unwrapCapabilityPayload(rawReplayJob),
+              });
+              const record =
+                replayJob && typeof replayJob === "object" && !Array.isArray(replayJob)
+                  ? (replayJob as Record<string, unknown>)
+                  : null;
+              const state = typeof record?.state === "string" ? record.state : "";
+              const evaluationJobId =
+                typeof record?.evaluationJobId === "string" ? record.evaluationJobId : "";
+              const expirationReceipt =
+                record?.expirationReceipt &&
+                typeof record.expirationReceipt === "object" &&
+                !Array.isArray(record.expirationReceipt)
+                  ? (record.expirationReceipt as Record<string, unknown>)
+                  : null;
+              const expiredAwaitingEvaluation =
+                state === "timed_out" &&
+                typeof expirationReceipt?.evaluationJobId === "string" &&
+                expirationReceipt.evaluationJobId === entry.evaluationJobId;
+              return (
+                (state === "awaiting_evaluation" || expiredAwaitingEvaluation) &&
+                (!evaluationJobId || evaluationJobId === entry.evaluationJobId)
+              );
+            } catch {
+              return false;
+            }
+          },
           isEvaluationComplete: async (entry) => {
             try {
               const rawJob = await runtime.invoke("evaluation-core", {
@@ -10829,6 +10904,43 @@ export async function main(): Promise<void> {
             // for every caller. The sweep-local copy that used to live here never ran (the coverage ledger
             // it would have written was absent for three builds), so it is deleted in the same change that
             // makes the completer the single implementation.
+            try {
+              const outcome =
+                typeof completedEntry.outcome === "string" ? completedEntry.outcome : "";
+              const comparisonGroupId =
+                typeof completedEntry.comparisonGroupId === "string"
+                  ? completedEntry.comparisonGroupId
+                  : "";
+              if (outcome && comparisonGroupId) {
+                await runtime.invoke("replay-core", {
+                  requestId: `replay-result-from-handoff:${entry.replayJobId}:${Date.now()}`,
+                  sessionId: `replay-result-from-handoff:${options.scopeId}`,
+                  protocolVersion: "1.1.0",
+                  channel,
+                  scope: captureScope,
+                  authorizationEpoch: 1,
+                  capability: "replay:record-evaluation-result-from-handoff",
+                  value: {
+                    jobId: entry.replayJobId,
+                    evaluation: {
+                      evaluationJobId: entry.evaluationJobId,
+                      comparisonGroupId,
+                      outcome,
+                      ...(typeof completedEntry.comparisonDigest === "string" &&
+                      completedEntry.comparisonDigest
+                        ? { comparisonDigest: completedEntry.comparisonDigest }
+                        : {}),
+                    },
+                  },
+                });
+              }
+            } catch (replayResultError) {
+              console.error(
+                `[run108] replay result handoff finalization declined:${entry.replayJobId} ${String(
+                  (replayResultError as { message?: unknown })?.message ?? replayResultError,
+                ).slice(0, 200)}`,
+              );
+            }
             return completedEntry;
           },
           /**
@@ -11410,8 +11522,46 @@ export async function main(): Promise<void> {
           throw new Error(`Track B startup SQLite maintenance failed with ${response.status}`);
         }
       }
+      const readUserConfiguredEndpointRows = (): { readonly endpoint_id: string }[] => {
+        const databasePath = path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "memory",
+          "memory.sqlite",
+        );
+        if (!existsSync(databasePath)) return [];
+        let database: DatabaseSync | null = null;
+        try {
+          database = new DatabaseSync(databasePath, { readOnly: true });
+          database.exec("PRAGMA query_only = ON; PRAGMA busy_timeout = 1000;");
+          const columns = new Set(
+            (
+              database.prepare("PRAGMA table_info(runtime_endpoints)").all() as Array<{
+                name: string;
+              }>
+            ).map((row) => row.name),
+          );
+          if (!columns.has("endpoint_id")) return [];
+          return database
+            .prepare(
+              "SELECT endpoint_id FROM runtime_endpoints ORDER BY endpoint_id COLLATE BINARY",
+            )
+            .all() as { readonly endpoint_id: string }[];
+        } catch {
+          return [];
+        } finally {
+          database?.close();
+        }
+      };
+      const userConfiguredEndpointIds = () =>
+        resolveUserConfiguredEndpointPool({
+          configuredEndpointRows: readUserConfiguredEndpointRows(),
+          expandedEndpointIds: created.effectiveRegistry.endpoints.map(
+            (endpoint) => endpoint.identity.endpoint_id,
+          ),
+        });
       activeAutoReplayLoop = startHostAutoReplayLoop(
-        () => created.effectiveRegistry.endpoints.map((endpoint) => endpoint.identity.endpoint_id),
+        userConfiguredEndpointIds,
         // R3/R7: the counterfactual candidate set is the runtime's *dispatchable*
         // configured set. A credential-less or degraded endpoint must never be chosen
         // as a counterfactual: its dispatch can only fail, which would leave the
@@ -11504,9 +11654,7 @@ export async function main(): Promise<void> {
           }
         },
       );
-      configuredEndpointIdsRef.current = created.effectiveRegistry.endpoints.map(
-        (endpoint) => endpoint.identity.endpoint_id,
-      );
+      configuredEndpointIdsRef.current = userConfiguredEndpointIds();
       // Run 108 R6: surface the small-pool judge misplacement ONCE at config time instead of per-tick
       // R14 refusals. The judge resolution is async and re-read per tick, so this fires at creation.
       void resolveControllerJudge(
