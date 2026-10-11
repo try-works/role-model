@@ -637,6 +637,31 @@ export function learningPackScopeNote(rows: readonly Record<string, unknown>[]):
   return `${wide} of ${rows.length} shown packs are scope-wide: they name only a routing target, so no role or task could be resolved for them from the pack, its validation receipt or its comparison. A pack promoted before the capture's declared role reached the learner is scope-wide this way.`;
 }
 
+function packCreatedAtMs(row: Record<string, unknown>): number {
+  const record = asRecord(row.record);
+  const createdAt = textOrNull(record.createdAt);
+  const parsed = createdAt ? Date.parse(createdAt) : Number.NaN;
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+export function learningPackRowsNewestFirst(
+  rows: readonly Record<string, unknown>[],
+): readonly Record<string, unknown>[] {
+  return [...rows].sort((left, right) => {
+    const byCreatedAt = packCreatedAtMs(right) - packCreatedAtMs(left);
+    if (byCreatedAt !== 0) return byCreatedAt;
+    return String(right.recordId ?? "").localeCompare(String(left.recordId ?? ""));
+  });
+}
+
+export function isTaskScopedLearningPack(row: Record<string, unknown>): boolean {
+  const declaredScope = asRecord(row.scope);
+  const recordScope = asRecord(asRecord(row.record).scope);
+  const roleId = textOrNull(declaredScope.roleId) ?? textOrNull(recordScope.roleId);
+  const taskTypeId = textOrNull(declaredScope.taskTypeId) ?? textOrNull(recordScope.taskTypeId);
+  return Boolean(roleId && taskTypeId);
+}
+
 function verdictTone(verdict: string): BadgeTone {
   if (verdict === "promoted") return "success";
   if (verdict === "rejected") return "error";
@@ -1822,7 +1847,9 @@ export function LearningPacksPage() {
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const rows = Array.isArray(asRecord(records.value).records)
-    ? (asRecord(records.value).records as readonly Record<string, unknown>[])
+    ? learningPackRowsNewestFirst(
+        asRecord(records.value).records as readonly Record<string, unknown>[],
+      )
     : [];
   /**
    * Run 105 R12 (package E): the endpoint ladder index rides the EXISTING records readback as a
@@ -1839,7 +1866,9 @@ export function LearningPacksPage() {
   const pendingLadders = useRef(new Set<string>());
   const [ladderErrors, setLadderErrors] = useState<Readonly<Record<string, string>>>({});
   /** Run 104 R22 (`R22-B3`): how many shown packs cannot name a role or task, and why. */
-  const packScopeNote = learningPackScopeNote(rows);
+  const taskScopedRows = rows.filter(isTaskScopedLearningPack);
+  const hiddenScopeWideRows = rows.length - taskScopedRows.length;
+  const packScopeNote = learningPackScopeNote(taskScopedRows);
   const rolloutValue = asRecord(rollout.value);
   const act = async (packId: string) => {
     if (
@@ -2024,11 +2053,19 @@ export function LearningPacksPage() {
         )}
       </div>
       <div className="mt-8">
-        <p className={monoEyebrowClassName}>Scope-wide cohort rollout (legacy)</p>
+        <p className={monoEyebrowClassName}>Task-scoped learned packs</p>
+        <p className={`mt-1 ${supportingTextClassName}`}>
+          {taskScopedRows.length > 0
+            ? `${taskScopedRows.length} task-scoped pack records shown, newest first.`
+            : "No task-scoped pack records returned by the operator readback."}
+          {hiddenScopeWideRows > 0
+            ? ` ${hiddenScopeWideRows} scope-wide record${hiddenScopeWideRows === 1 ? "" : "s"} hidden because replay-derived packs must name a taxonomy role and task.`
+            : ""}
+        </p>
       </div>
       {degraded(records.loading, records.error) ??
-        (rows.length === 0 ? (
-          <EmptyState label="No pack records have been derived for this scope yet." />
+        (taskScopedRows.length === 0 ? (
+          <EmptyState label="No task-scoped pack records have been derived for this scope yet." />
         ) : (
           <div className="mt-4 overflow-x-auto">
             <table className={`${tableClassName} min-w-[1060px]`}>
@@ -2051,7 +2088,7 @@ export function LearningPacksPage() {
                 ]}
               />
               <tbody>
-                {rows.map((row) => (
+                {taskScopedRows.map((row) => (
                   <LearningPackRow
                     activePackageId={textOrNull(rolloutValue.activePackageId) ?? null}
                     key={String(row.recordId)}

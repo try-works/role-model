@@ -112,6 +112,7 @@ export interface RuntimeExecutionRequest {
   readonly parallelToolCalls?: boolean;
   readonly reasoning?: RuntimeExecutionReasoningRequest;
   readonly structuredOutput?: StructuredOutputRequest | null;
+  readonly responseFormat?: Record<string, unknown>;
   readonly promptCache?: PromptCacheRequest;
   readonly sessionAffinity?: RuntimeExecutionSessionAffinity;
   readonly transportPreference?: RuntimeExecutionTransportPreference;

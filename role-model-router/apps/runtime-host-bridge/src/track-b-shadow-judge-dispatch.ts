@@ -242,6 +242,12 @@ export function createRouterPairwiseJudge(
               messages: messages as never,
               temperature: 0,
               stream: false,
+              // Run 108 D9: queue-backed learner production depends on the judge
+              // returning the strict pairwise JSON contract. Request OpenAI-compatible
+              // JSON object mode at the routed-dispatch boundary so the judge does
+              // not produce free-form answer text that finalizes as invalid score
+              // missingness and starves learner packs.
+              response_format: { type: "json_object" },
             } as never,
             judgeRequestId,
             undefined,

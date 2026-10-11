@@ -582,6 +582,7 @@ import {
   resolveDurableEvaluationAuthority,
   resolveManagedArtifactKeyFiles,
   resolveReplayCandidatePool,
+  resolveUserConfiguredEndpointPool,
   runSupervisedReplay,
   runTrackBPostObservation,
   runTrackBPostObservationWithContribution,
@@ -1262,9 +1263,21 @@ export async function deriveLearnerTrajectoryEvidenceForReplay(input: {
     for (const branchRequestId of branchRequestIds.values()) {
       const branchCapture = await input.readCapture(branchRequestId);
       if (!branchCapture) {
+        /**
+         * Run 108: do NOT claim retention ageing here. This null has exactly ONE producer -
+         * `operations.readLocalRouteCapture` returns null only when the sidecar answers HTTP 409 with
+         * `unknown route capture <id>` (track-b-operations.ts:3045-3048) and rethrows everything else. So the honest
+         * statement is "the capture store does not know this id".
+         *
+         * The old wording ("is outside the retention window") asserted a CAUSE the caller never established, and it cost
+         * real time: during the run-108 replay-walk investigation this line appeared 15 times and was read as captures
+         * ageing out, when the retention window was never consulted at all. Two further defects were misdiagnosed behind
+         * it. A refusal to answer is now distinguishable from a legitimate ageing answer, which is the same repair made
+         * to the census (D7a) and the pending-dispatch read (D11) in this run.
+         */
         return {
           kind: "unavailable",
-          reason: `branch capture ${branchRequestId} is outside the retention window`,
+          reason: `branch capture ${branchRequestId} is unknown to the capture store (the sidecar answered 'unknown route capture'; this is NOT a retention-window decision)`,
         };
       }
       counterfactualCaptures.push(branchCapture);
@@ -5766,7 +5779,10 @@ export async function main(): Promise<void> {
      */
     const resumeEvaluationsRef: {
       current:
-        | ((scope?: { readonly onlyReplayJobId?: string }) => Promise<{
+        | ((scope?: {
+            readonly onlyReplayJobId?: string;
+            readonly resolvedOnly?: boolean;
+          }) => Promise<{
             resumed: number;
             completed: number;
             failed: number;
@@ -6867,6 +6883,15 @@ export async function main(): Promise<void> {
                * held "wrote 1 ladder row(s)" at lines 159 and 169 around a "degraded" at 162, i.e. the
                * very next tick recovered, and the first-time ladder for that family materialized v1 -> v4
                * across the same window.
+               *
+               * Run 108 COUNTER-CASE, measured on the stage RC: that recovery is NOT guaranteed while the lock
+               * contention persists. Over a 21-minute window a run took 40 ticks with skipped=5 and
+               * `wrote=0` for the WHOLE process - no ladder row was written at any point - and one of those ticks
+               * dragged 427083 ms. So "the next tick writes whatever this attempt missed" holds only while the
+               * contention is transient. The contention is a genuine structural conflict (two extension hosts
+               * holding read-write handles on one evaluation store, with a busy_timeout set to the same 5000 ms
+               * constant as the lock hold), and under it this skip repeats indefinitely. Read the reassurance
+               * below as "recoverable in principle", not as "recovered".
                *
                * The bare "degraded: database is locked" invited the opposite reading - that a family
                * could reach its admission floor and silently get no row - and that misreading is how this
@@ -8471,6 +8496,27 @@ export async function main(): Promise<void> {
                 `[run101] evaluation queue offer declined:${handoffRequest.replayJobId} ${
                   offered.reason ?? "unknown"
                 }`,
+              );
+            }
+            /**
+             * Run 108 D9 live repair: a replay job may be stuck in awaiting_evaluation after its
+             * evaluation queue row already completed. Effect queue duplicate handling can answer as either
+             * a refused duplicate or a successful no-op, so the replay-result reconciliation must not depend
+             * on the offer's boolean. Drive a resolved-only scoped pass: fresh unresolved handoffs remain
+             * owned by the queue worker, while a resolved handoff whose replay job is still awaiting records
+             * replay:record-evaluation-result and clears the split-brain replay.
+             */
+            const resume = resumeEvaluationsRef.current;
+            if (resume) {
+              const replayJobId = String(handoffRequest.replayJobId);
+              void resume({ onlyReplayJobId: replayJobId, resolvedOnly: true }).catch(
+                (error: unknown) => {
+                  console.error(
+                    `[run108] duplicate evaluation handoff reconcile declined:${replayJobId} ${String(
+                      (error as { message?: unknown })?.message ?? error,
+                    ).slice(0, 200)}`,
+                  );
+                },
               );
             }
           }
@@ -10369,7 +10415,10 @@ export async function main(): Promise<void> {
        * comparison is finalized once and evidence writing stays in one place.
        * Without it the sweep behaves exactly as before.
        */
-      const resumePendingEvaluations = async (scope?: { readonly onlyReplayJobId?: string }) => {
+      const resumePendingEvaluations = async (scope?: {
+        readonly onlyReplayJobId?: string;
+        readonly resolvedOnly?: boolean;
+      }) => {
         const runtime = extensionRuntimeRef.current;
         const operations = currentPostObservationOperations();
         if (!runtime || !operations) {
@@ -10389,6 +10438,53 @@ export async function main(): Promise<void> {
             ? scopeResumeStoreToReplayJob(evaluationResumeStore, scope.onlyReplayJobId)
             : evaluationResumeStore,
           ...(scope?.onlyReplayJobId ? { limit: 1 } : {}),
+          ...(scope?.resolvedOnly ? { resolvedOnly: true } : {}),
+          shouldReconcileResolved: async (entry) => {
+            const replayScope =
+              typeof entry.scope === "string" && entry.scope.trim()
+                ? entry.scope.trim()
+                : options.scopeId;
+            try {
+              const rawReplayJob = await runtime.invoke("replay-core", {
+                requestId: `replay-result-reconcile:${entry.replayJobId}:${Date.now()}`,
+                sessionId: `replay-result-reconcile:${options.scopeId}`,
+                protocolVersion: "1.1.0",
+                channel,
+                scope: replayScope,
+                authorizationEpoch: 1,
+                capability: "replay:job",
+                value: { jobId: entry.replayJobId },
+              });
+              const replayJob = decodeExternalizedOperatorReadback({
+                stateRoot: options.runtimeStateRoot,
+                scopeId: options.scopeId,
+                value: unwrapCapabilityPayload(rawReplayJob),
+              });
+              const record =
+                replayJob && typeof replayJob === "object" && !Array.isArray(replayJob)
+                  ? (replayJob as Record<string, unknown>)
+                  : null;
+              const state = typeof record?.state === "string" ? record.state : "";
+              const evaluationJobId =
+                typeof record?.evaluationJobId === "string" ? record.evaluationJobId : "";
+              const expirationReceipt =
+                record?.expirationReceipt &&
+                typeof record.expirationReceipt === "object" &&
+                !Array.isArray(record.expirationReceipt)
+                  ? (record.expirationReceipt as Record<string, unknown>)
+                  : null;
+              const expiredAwaitingEvaluation =
+                state === "timed_out" &&
+                typeof expirationReceipt?.evaluationJobId === "string" &&
+                expirationReceipt.evaluationJobId === entry.evaluationJobId;
+              return (
+                (state === "awaiting_evaluation" || expiredAwaitingEvaluation) &&
+                (!evaluationJobId || evaluationJobId === entry.evaluationJobId)
+              );
+            } catch {
+              return false;
+            }
+          },
           isEvaluationComplete: async (entry) => {
             try {
               const rawJob = await runtime.invoke("evaluation-core", {
@@ -10808,6 +10904,43 @@ export async function main(): Promise<void> {
             // for every caller. The sweep-local copy that used to live here never ran (the coverage ledger
             // it would have written was absent for three builds), so it is deleted in the same change that
             // makes the completer the single implementation.
+            try {
+              const outcome =
+                typeof completedEntry.outcome === "string" ? completedEntry.outcome : "";
+              const comparisonGroupId =
+                typeof completedEntry.comparisonGroupId === "string"
+                  ? completedEntry.comparisonGroupId
+                  : "";
+              if (outcome && comparisonGroupId) {
+                await runtime.invoke("replay-core", {
+                  requestId: `replay-result-from-handoff:${entry.replayJobId}:${Date.now()}`,
+                  sessionId: `replay-result-from-handoff:${options.scopeId}`,
+                  protocolVersion: "1.1.0",
+                  channel,
+                  scope: captureScope,
+                  authorizationEpoch: 1,
+                  capability: "replay:record-evaluation-result-from-handoff",
+                  value: {
+                    jobId: entry.replayJobId,
+                    evaluation: {
+                      evaluationJobId: entry.evaluationJobId,
+                      comparisonGroupId,
+                      outcome,
+                      ...(typeof completedEntry.comparisonDigest === "string" &&
+                      completedEntry.comparisonDigest
+                        ? { comparisonDigest: completedEntry.comparisonDigest }
+                        : {}),
+                    },
+                  },
+                });
+              }
+            } catch (replayResultError) {
+              console.error(
+                `[run108] replay result handoff finalization declined:${entry.replayJobId} ${String(
+                  (replayResultError as { message?: unknown })?.message ?? replayResultError,
+                ).slice(0, 200)}`,
+              );
+            }
             return completedEntry;
           },
           /**
@@ -11389,8 +11522,46 @@ export async function main(): Promise<void> {
           throw new Error(`Track B startup SQLite maintenance failed with ${response.status}`);
         }
       }
+      const readUserConfiguredEndpointRows = (): { readonly endpoint_id: string }[] => {
+        const databasePath = path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "memory",
+          "memory.sqlite",
+        );
+        if (!existsSync(databasePath)) return [];
+        let database: DatabaseSync | null = null;
+        try {
+          database = new DatabaseSync(databasePath, { readOnly: true });
+          database.exec("PRAGMA query_only = ON; PRAGMA busy_timeout = 1000;");
+          const columns = new Set(
+            (
+              database.prepare("PRAGMA table_info(runtime_endpoints)").all() as Array<{
+                name: string;
+              }>
+            ).map((row) => row.name),
+          );
+          if (!columns.has("endpoint_id")) return [];
+          return database
+            .prepare(
+              "SELECT endpoint_id FROM runtime_endpoints ORDER BY endpoint_id COLLATE BINARY",
+            )
+            .all() as { readonly endpoint_id: string }[];
+        } catch {
+          return [];
+        } finally {
+          database?.close();
+        }
+      };
+      const userConfiguredEndpointIds = () =>
+        resolveUserConfiguredEndpointPool({
+          configuredEndpointRows: readUserConfiguredEndpointRows(),
+          expandedEndpointIds: created.effectiveRegistry.endpoints.map(
+            (endpoint) => endpoint.identity.endpoint_id,
+          ),
+        });
       activeAutoReplayLoop = startHostAutoReplayLoop(
-        () => created.effectiveRegistry.endpoints.map((endpoint) => endpoint.identity.endpoint_id),
+        userConfiguredEndpointIds,
         // R3/R7: the counterfactual candidate set is the runtime's *dispatchable*
         // configured set. A credential-less or degraded endpoint must never be chosen
         // as a counterfactual: its dispatch can only fail, which would leave the
@@ -11483,9 +11654,7 @@ export async function main(): Promise<void> {
           }
         },
       );
-      configuredEndpointIdsRef.current = created.effectiveRegistry.endpoints.map(
-        (endpoint) => endpoint.identity.endpoint_id,
-      );
+      configuredEndpointIdsRef.current = userConfiguredEndpointIds();
       // Run 108 R6: surface the small-pool judge misplacement ONCE at config time instead of per-tick
       // R14 refusals. The judge resolution is async and re-read per tick, so this fires at creation.
       void resolveControllerJudge(

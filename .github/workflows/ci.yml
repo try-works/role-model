@@ -59,8 +59,7 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run lint
-      - run: pnpm run schemas:validate
+      - run: pnpm run ci:quality
 
   build-test:
     name: build-test
@@ -76,10 +75,9 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run build
       - name: Validate Run 88 stage release identity contract
         run: node --test scripts/run88-stage-release.test.mjs scripts/run88-stage-release-workflow.test.mjs
-      - run: pnpm run test
+      - run: pnpm run ci:build-test
 
   runtime-critical:
     name: runtime-critical

@@ -30,9 +30,12 @@ binary release or an independent version tag.
 ## Required CI lanes
 
 CircleCI is the primary source of CI evidence for pull requests and promotions. The public
-`.circleci/config.yml` runs two non-deploying jobs: `ci/circleci: router-contract` for the router contract and
-`ci/circleci: full-contract` for the complete public verification contract. Both use the frozen pnpm lockfile; the
-full contract runs `pnpm run ci:check`.
+`.circleci/config.yml` runs two non-deploying jobs:
+
+- `ci/circleci: full-contract` runs the maintained public contract: `pnpm run ci:fast`, `pnpm run test:rust`, and
+  `pnpm run smoke` from a frozen lockfile checkout with the Rust toolchain installed.
+- `ci/circleci: router-contract` runs `pnpm run runtime:test-router` as the focused router, trace, usage, routing,
+  and observability lane.
 
 The private repository's CircleCI workflow is the companion Track B gate. It records one exact public source revision
 at pipeline start (or accepts the release-provided `public_paired_sha`), checks out that revision, builds the Track B
@@ -42,19 +45,73 @@ successful private `ci/circleci: track-b-conformance` run bound to the same publ
 must never deploy, tag, publish, or alter a release.
 
 `.github/workflows/ci.yml` may remain during the migration as a repository-protection compatibility signal, but it is
-not the release-test authority. Do not accept a green GitHub Actions CI run in place of the required CircleCI
-evidence. Before making CircleCI checks mandatory in branch protection, observe their exact names on a real PR and
-then replace the duplicate GitHub Actions CI requirements one recoverable change at a time. GitHub Actions remains
-the owner of promotion guards and release/build publication workflows.
+not the release-test authority. It is intentionally split into independent lanes: `quality`, `build-test`,
+`runtime-critical`, `runtime-router`, `rust`, `smoke`, `track-b-runtime`, and `promotion-guard`. Do not accept
+a green GitHub Actions CI run in place of the required CircleCI evidence. Before making CircleCI checks mandatory in
+branch protection, observe their exact names on a real PR and then replace the duplicate GitHub Actions CI
+requirements one recoverable change at a time. GitHub Actions remains the owner of promotion guards and release/build
+publication workflows.
 
 The promotion guard accepts ordinary work into `dev`, only `dev` into `stage`, and only `stage` into `main`.
 Reviewed `hotfix/* -> main` is the explicit emergency exception.
+
+## How to use CI locally
+
+Always start from the exact dependency graph CI will use:
+
+```bash
+corepack pnpm install --frozen-lockfile
+```
+
+Then choose the smallest lane that proves the change. The root scripts are the public contract; prefer them over
+copying package-level commands so local evidence matches CI.
+
+| Need | Command | Notes |
+| --- | --- | --- |
+| Format, lint, schemas | `corepack pnpm run ci:quality` | Runs Biome, Rust format/clippy, and schema validation. Use before pushing any broad change. |
+| Build all public apps/packages | `corepack pnpm run ci:build` | Generates protocol types, then uses Turborepo to build the public workspace graph. |
+| Build plus non-runtime-host tests | `corepack pnpm run ci:build-test` | Runs release workflow contract tests and Turbo-backed package/app tests, excluding the heavy runtime-host suite. |
+| Fast public PR proof | `corepack pnpm run ci:fast` | Matches the first part of CircleCI `full-contract`: quality, build/test, and critical runtime coverage. |
+| Full local public proof | `corepack pnpm run ci:check` | Adds router runtime tests, Rust tests, and gateway smoke to `ci:fast`. Use before promotion or risky merges. |
+| Focused runtime critical path | `corepack pnpm run runtime:test-critical` | Builds the runtime test dependencies, then runs curated host/UI/validator coverage. |
+| Focused router path | `corepack pnpm run runtime:test-router` | Builds the runtime test dependencies, then runs router, trace, usage, routing, and observability coverage. |
+| Runtime-host full suite | `corepack pnpm run test:runtime-host` | Runs the full runtime-host Vitest suite after the shared dependency build. |
+| Release workflow contracts | `corepack pnpm run test:release-workflows` | Verifies CI, release, Run 88, Track B readiness, and docs-site workflow invariants. |
+| Release packaging smoke | `ROLE_MODEL_BUILD_CHANNEL=development corepack pnpm run runtime:package-sea` | Builds a development-channel package locally; it does not publish. |
+
+### Turborepo usage
+
+Turborepo is used as an incremental local/build accelerator, not as a replacement for the named CI scripts. The root
+`turbo.json` defines cacheable `build` tasks and non-cacheable test tasks. The public scripts that currently route
+through Turbo are `build`, `runtime:build-test-deps`, `test:workspace`, `turbo:build`, and `turbo:test`. Cyclic
+build dependencies are intentionally not promoted into Turbo's task graph; the root `build` script first runs
+`runtime:build-test-deps` so dist-exporting Effect/catalog/profile packages exist before package-local TypeScript
+builds run in parallel. Build and workspace test lanes both cap Turbo at four concurrent package tasks so slower
+schema, SQLite, and conformance tests do not time out under CI load.
+
+Useful focused commands:
+
+```bash
+corepack pnpm run runtime:build-test-deps
+corepack pnpm exec turbo run build --filter=@role-model-router/profile-aggregator
+corepack pnpm exec turbo run test --filter=@role-model-router/protocol-routing
+corepack pnpm exec turbo run build --filter=./role-model-router/packages/* --dry=json
+```
+
+Do not commit `.turbo/` logs or package-level `.turbo/` directories. Remote Turbo cache is not required yet; if it is
+introduced later, configure `TURBO_TOKEN` and `TURBO_TEAM` in CI and document the cache authority before making cache
+hits part of a release expectation.
 
 ## Runtime build channels
 
 `.github/workflows/build-binaries.yml` builds the full matrix for stage candidates and production tags. Development
 packages are available by explicit manual dispatch. Every successful `stage` push publishes a GitHub prerelease with
 all four stage-channel archives and `SHA256SUMS.txt`; prereleases are never selected by the stable installers.
+
+The release workflow installs with the frozen lockfile, builds the runtime UI, and uses the same Turbo-backed
+`runtime:build-test-deps` lane as the runtime tests before building the paired private distribution. That dependency
+build prepares public packages whose runtime exports resolve from `dist/` without weakening the Run 88 identity,
+private SHA, stage-candidate, or production acceptance gates.
 
 An explicit `workflow_dispatch` build is useful for package diagnostics, but it does not publish or replace a Stage
 prerelease. To create a candidate for acceptance, promote a reviewed public change through `dev -> stage` so that a
@@ -81,8 +138,7 @@ the exact private source commit, Run 88 release identity, private distribution m
 canonical extension count. A production tag must find the matching successful and explicitly accepted stage
 candidate, rebuild its exact private commit, verify that the artifact came from a successful push build of public
 `stage`, verify that the private commit has subsequently passed through private `main`, and prove the complete
-public/private pair is identical.
-Source-tree or core-payload equality alone is insufficient.
+public/private pair is identical. Source-tree or core-payload equality alone is insufficient.
 
 Run 88's `v0.0.8` release-toolchain recovery and the exact stage/production payload diagnosis are recorded in
 [`run88-v0.0.8-release-toolchain.addendum.md`](run88-v0.0.8-release-toolchain.addendum.md).
@@ -97,13 +153,15 @@ If credentials are missing, the deploy step reports a non-fatal skip. After depl
 roll back, use the Cloudflare Pages deployment history for the same project; do not move `role-model.dev` between
 projects during an incident.
 
-## Local verification
+## Local verification checklist
 
 ```bash
 corepack pnpm install --frozen-lockfile
-node --test scripts/circleci-workflow.test.mjs
-node --test scripts/ci-workflow.test.mjs scripts/build-binaries-workflow.test.mjs apps/docs-site/scripts/docs-site-deploy-workflow.test.mjs
-corepack pnpm run ci:check
+corepack pnpm run test:release-workflows
+corepack pnpm run ci:fast
+corepack pnpm run runtime:test-router
+corepack pnpm run test:rust
+corepack pnpm run smoke
 corepack pnpm run docs:build
 ROLE_MODEL_BUILD_CHANNEL=development corepack pnpm run runtime:package-sea
 ```

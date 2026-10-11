@@ -1719,6 +1719,7 @@ describe("runtime-host-bridge", () => {
             tools?: readonly { name: string }[];
             maxOutputTokens?: number;
             temperature?: number;
+            responseFormat?: unknown;
           };
         };
       }
@@ -1826,6 +1827,45 @@ describe("runtime-host-bridge", () => {
       source: "runtime_heuristic",
     });
     expect(result.routingRequest.roleModelIntent?.source).toBe("runtime_heuristic");
+  });
+
+  test("Run 108 D9 forwards chat JSON object response_format into provider execution", () => {
+    const jsonModeRegistry: EndpointRegistryResult = {
+      ...registry,
+      endpoints: [
+        {
+          ...registry.endpoints[0],
+          declared: {
+            ...registry.endpoints[0].declared,
+            capabilities: ["text.chat", "structured.output"],
+          },
+        },
+      ],
+      lifecycleSummary: { active: 1, degraded: 0, offline: 0 },
+    };
+    const result = (
+      bridge as {
+        mapChatCompletionsRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+        ) => {
+          routingRequest: { requiredCapabilities: readonly string[] };
+          executionRequest: { responseFormat?: unknown };
+        };
+      }
+    ).mapChatCompletionsRequest(
+      jsonModeRegistry,
+      {
+        model: "moonshot/kimi-k2.5",
+        messages: [{ role: "user", content: "Return a JSON judge verdict." }],
+        response_format: { type: "json_object" },
+      },
+      "req-run108-json-mode",
+    );
+
+    expect(result.routingRequest.requiredCapabilities).toEqual(["structured.output", "text.chat"]);
+    expect(result.executionRequest.responseFormat).toEqual({ type: "json_object" });
   });
 
   test("maps custom alias endpoint preference into the normal routing-model signal", () => {

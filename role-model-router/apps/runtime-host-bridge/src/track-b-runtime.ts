@@ -120,6 +120,33 @@ export function resolveReplayCandidatePool(configuredEndpointIds: readonly strin
   return [...configuredEndpointIds];
 }
 
+type UserConfiguredEndpointRowLike = {
+  readonly endpointId?: unknown;
+  readonly endpoint_id?: unknown;
+};
+
+export function resolveUserConfiguredEndpointPool(input: {
+  readonly configuredEndpointRows?: readonly UserConfiguredEndpointRowLike[] | null;
+  readonly expandedEndpointIds?: readonly string[] | null;
+}): string[] {
+  const configuredRows = Array.isArray(input.configuredEndpointRows)
+    ? input.configuredEndpointRows
+    : [];
+  const configured = configuredRows.flatMap((row) => {
+    const endpointId = row.endpoint_id ?? row.endpointId;
+    return typeof endpointId === "string" && endpointId.trim() ? [endpointId.trim()] : [];
+  });
+  const source = configured.length > 0 ? configured : (input.expandedEndpointIds ?? []);
+  return [
+    ...new Set(
+      source.filter(
+        (endpointId): endpointId is string =>
+          typeof endpointId === "string" && endpointId.trim().length > 0,
+      ),
+    ),
+  ];
+}
+
 /**
  * Run 108 R6: a pool of exactly two models with the judge among them can never form a comparison
  * (2 - 1 served - 1 judge = 0 arms), so every capture stalls with a per-tick R14 refusal. That is a

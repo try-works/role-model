@@ -98,7 +98,7 @@ describe("run99 R33 supervised replay evaluation resume", () => {
     ).toEqual(["job-old"]);
   });
 
-  it("self-heals an entry whose evaluation job already completed", async () => {
+  it("replays the completion receipt even when the evaluation job already completed", async () => {
     await withRoot(async (root) => {
       const store = createSupervisedReplayEvaluationResumeStore({
         filePath: path.join(root, "resume.json"),
@@ -113,9 +113,12 @@ describe("run99 R33 supervised replay evaluation resume", () => {
           return { outcome: "candidate", comparisonGroupId: "comparison:x" };
         },
       });
-      expect(completions).toBe(0);
+      expect(completions).toBe(1);
       expect(result).toMatchObject({ resumed: 1, completed: 1, failed: 0, remaining: 0 });
-      expect(store.list()[0]?.resolvedAtMs).not.toBeNull();
+      const resolved = store.list()[0];
+      expect(resolved?.resolvedAtMs).not.toBeNull();
+      expect(resolved?.outcome).toBe("candidate");
+      expect(resolved?.comparisonGroupId).toBe("comparison:x");
     });
   });
 
@@ -139,6 +142,32 @@ describe("run99 R33 supervised replay evaluation resume", () => {
       const resolved = store.list()[0];
       expect(resolved?.resolvedAtMs).not.toBeNull();
       expect(resolved?.outcome).toBe("candidate");
+    });
+  });
+
+  it("reconciles a resolved handoff when its replay result is still missing", async () => {
+    await withRoot(async (root) => {
+      const store = createSupervisedReplayEvaluationResumeStore({
+        filePath: path.join(root, "resume.json"),
+      });
+      const recorded = store.record(entry("job-resolved-awaiting-replay", 1));
+      store.resolve(recorded.replayJobId, {
+        outcome: "tie",
+        comparisonGroupId: "comparison:resolved-awaiting-replay",
+        now: 2,
+      });
+      const seen: string[] = [];
+      const result = await resumePendingSupervisedReplayEvaluations({
+        store,
+        isEvaluationComplete: async () => true,
+        shouldReconcileResolved: async (row) => row.replayJobId === recorded.replayJobId,
+        complete: async (row) => {
+          seen.push(row.replayJobId);
+          return { outcome: "tie", comparisonGroupId: "comparison:resolved-awaiting-replay" };
+        },
+      });
+      expect(seen).toEqual(["job-resolved-awaiting-replay"]);
+      expect(result).toMatchObject({ resumed: 1, completed: 1, failed: 0, remaining: 0 });
     });
   });
 

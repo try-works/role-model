@@ -26,8 +26,12 @@ function harness(planeModes?: {
       called.push("expireStaleReplayJobs");
       return { expired: 0 };
     },
-    resumePendingEvaluations: async () => {
-      called.push("resumePendingEvaluations");
+    resumePendingEvaluations: async (input?: Record<string, unknown>) => {
+      called.push(
+        input?.resolvedOnly === true
+          ? "resumePendingEvaluations:resolvedOnly"
+          : "resumePendingEvaluations",
+      );
       return {
         resumed: 0,
         completed: 0,
@@ -103,10 +107,11 @@ describe("@recursive:101-effect-mq-queue-rebuild @sp7 R7 sweeps retired", () => 
     expect(called).toContain("deriveLearnerCandidates");
   });
 
-  it("retires the evaluation sweeps once the evaluation queue is authoritative", async () => {
+  it("retires broad evaluation sweeps but keeps resolved handoff finalization when the evaluation queue is authoritative", async () => {
     const { loop, called } = harness({ evaluation: "queue" });
     await loop.tick();
     loop.stop();
+    expect(called).toContain("resumePendingEvaluations:resolvedOnly");
     expect(called).not.toContain("resumePendingEvaluations");
     expect(called).not.toContain("reconcileEvaluationJobs");
     expect(called).not.toContain("retroFinalizeEvaluations");
