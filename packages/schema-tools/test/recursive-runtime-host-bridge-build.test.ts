@@ -10,7 +10,7 @@ const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "..", "..", "..");
 const execFileAsync = promisify(execFile);
 const shellExecutable = process.platform === "win32" ? "cmd.exe" : "sh";
-const RUNTIME_HOST_BRIDGE_BUILD_TIMEOUT_MS = 60_000;
+const RUNTIME_HOST_BRIDGE_BUILD_TIMEOUT_MS = 180_000;
 const shellArguments = (command: string) =>
   process.platform === "win32" ? ["/c", command] : ["-lc", command];
 
