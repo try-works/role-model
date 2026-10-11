@@ -174,6 +174,18 @@ test("focus fill stays depth-first when another task becomes busier and gains a 
   expect(h.calls.map((x) => x.captureRef)).toEqual(["fill-a", "fill-a-next"]);
   expect(h.marked).toContainEqual({ roleId: "role", taskTypeId: "idle", nextEligibleAtMs: 1000 });
 });
+test("focus fill prefers an admitted configured rung source over non-configured route traffic", async () => {
+  const h = harness();
+  h.configure(["b", "new"]);
+  h.rows.set("idle", { ...ladder(["b"], 0), completeness: { admitted: 1, configured: 2 } });
+  h.census([task("idle", 10, 1, 2)]);
+  h.pending([capture("idle", "external"), capture("idle", "b")]);
+
+  await h.loop.tick();
+
+  expect(h.calls).toEqual([{ captureRef: "idle-b", source: "b", candidates: ["new"] }]);
+});
+
 test("terminal provider branches do not advance; finalized loss advances on next tick", async () => {
   const h = harness();
   h.configure(["a", "b", "c", "new"]);
@@ -210,6 +222,22 @@ test("finalized challenger win stops descent before ladder publication catches u
   await h.loop.tick();
   expect(h.calls.map((x) => x.source)).toEqual(["a"]);
   expect(h.loop.health().challengeInFlight).toBe(false);
+});
+
+test("stale done challenge is reopened when durable ladder still misses the due configured endpoint", async () => {
+  const h = harness(1);
+  h.input.routeLearningDefaults.minComparisons = 1;
+  h.rows.set("idle", {
+    ...ladder(["a", "b", "c"], -61_000),
+    completeness: { admitted: 3, configured: 4 },
+  });
+  h.configure(["a", "b", "c", "new"]);
+  h.census([task("idle", 10, 3, 4)]);
+  h.settle((ref) => h.final(ref, "new"));
+  await h.loop.tick();
+  h.pending([capture("idle", "a", "-retry"), capture("idle", "b"), capture("idle", "c")]);
+  await h.loop.tick();
+  expect(h.calls.map((x) => x.captureRef)).toEqual(["idle-a", "idle-a-retry"]);
 });
 test("rollback pauses and roll forward resumes the pending challenge", async () => {
   const h = harness();
@@ -882,6 +910,38 @@ test("real pre-replay queue identity recovers without inventing a replay job id"
   await loop.dispatchCapture("idle-a");
   expect(h.calls).toHaveLength(1);
 });
+
+test("queue-mode focus fill offers an explicit dispatch round for a partial ladder", async () => {
+  const h = harness();
+  h.configure(["a", "b", "new"]);
+  h.census([task("idle", 10, 1, 3)]);
+  h.rows.set("idle", { ...ladder(["a"], 0), completeness: { admitted: 1, configured: 3 } });
+  h.pending([capture("idle", "a")]);
+  const offers: Array<{
+    dispatchRoundId?: string;
+    captureRef: string;
+    endpointIds: readonly string[];
+  }> = [];
+  const loop = startAutoReplayLoop({
+    ...h.input,
+    dispatchQueue: {
+      mode: "queue" as const,
+      offer: async (job) => {
+        offers.push(job);
+        return { enqueued: true as const };
+      },
+    },
+    planeModes: { replay: "queue", evaluation: "legacy", learner: "legacy" },
+  });
+  cleanups.push(() => loop.stop());
+  const tick = await loop.tick();
+  expect(tick.queued).toBe(1);
+  expect(h.calls).toEqual([]);
+  expect(offers).toHaveLength(1);
+  expect(offers[0]?.captureRef).toBe("idle-a");
+  expect(offers[0]?.dispatchRoundId).toEqual(expect.any(String));
+});
+
 test("same immutable historical capsule and pair create fresh bounded replay jobs for distinct finalized rounds", async () => {
   const h = harness();
   h.configure(["a", "b", "c", "new"]);
@@ -1057,6 +1117,64 @@ test("claimed queue round resumes only its matching actual durable pair round", 
   await loop.dispatchCapture("idle-a", "actual-persisted-round");
   expect(observed).toEqual(["actual-persisted-round"]);
 });
+test("stale claimed queue round with absent pending capture is a no-op", async () => {
+  const h = harness();
+  h.configure(["a", "b", "c", "new"]);
+  h.census([task("idle", 10, 3, 4)]);
+  h.rows.set("idle", ladder(["a", "b", "c"], 900));
+  h.pending([]);
+  const loop = startAutoReplayLoop({ ...h.input });
+  cleanups.push(() => loop.stop());
+  await expect(loop.dispatchCapture("idle-a", "stale-round")).resolves.toMatchObject({ queued: 0 });
+  expect(h.calls).toEqual([]);
+  expect(loop.health().lastError).toBe(null);
+});
+
+test("stale claimed queue round with no pending durable pair is a no-op", async () => {
+  const h = harness();
+  h.configure(["a", "b", "c", "new"]);
+  h.census([task("idle", 10, 3, 4)]);
+  h.rows.set("idle", ladder(["a", "b", "c"], 900));
+  h.pending([capture("idle", "a")]);
+  const loop = startAutoReplayLoop({ ...h.input, readPendingRouteDispatches: async () => [] });
+  cleanups.push(() => loop.stop());
+  await expect(loop.dispatchCapture("idle-a", "stale-round")).resolves.toMatchObject({ queued: 0 });
+  expect(h.calls).toEqual([]);
+  expect(loop.health().lastError).toBe(null);
+});
+
+test("claimed queue round constrains focus to the claimed capture task", async () => {
+  const h = harness();
+  h.configure(["a", "b", "c", "new"]);
+  h.census([task("busy", 100, 1, 4), task("idle", 10, 3, 4)]);
+  h.rows.set("busy", { ...ladder(["a"], 0), completeness: { admitted: 1, configured: 4 } });
+  h.rows.set("idle", ladder(["a", "b", "c"], 900));
+  h.pending([capture("busy", "a"), capture("idle", "a")]);
+  const loop = startAutoReplayLoop({
+    ...h.input,
+    readPendingRouteDispatches: async ({ taskTypeId }) =>
+      taskTypeId === "idle"
+        ? [
+            {
+              sourceType: "queue" as const,
+              replayJobId: null,
+              queueJobId: "queue-real",
+              captureRef: "idle-a",
+              newEndpointId: "new",
+              againstEndpointId: "a",
+              createdAtMs: 950,
+              state: "running" as const,
+              dispatchRoundId: "actual-persisted-round",
+            },
+          ]
+        : [],
+  });
+  cleanups.push(() => loop.stop());
+  await loop.dispatchCapture("idle-a", "actual-persisted-round");
+  expect(h.calls.map((item) => item.captureRef)).toEqual(["idle-a"]);
+  expect(loop.health().focusTaskKey).toBe("role\u0000idle");
+});
+
 test("foreign claimed round cannot relabel matching capsule or task to new provider work", async () => {
   const h = harness();
   h.configure(["a", "b", "c", "new"]);
@@ -1107,6 +1225,198 @@ test("actual queue processing claim executes own persisted round while real repl
   cleanups.push(() => loop.stop());
   await loop.dispatchCapture("idle-a", "own-processing-round");
   expect(h.calls).toHaveLength(1);
+});
+
+test("claimed queue round keeps its non-admitted source pending until the worker executes it", async () => {
+  const h = harness();
+  h.loop.stop();
+  h.configure(["a", "b", "c", "new"]);
+  h.census([task("idle", 10, 1, 4)]);
+  h.rows.set("idle", { ...ladder(["a"], 900), completeness: { admitted: 1, configured: 4 } });
+  h.pending([capture("idle", "b")]);
+  const offered: {
+    captureRef: string;
+    endpointIds: readonly string[];
+    policySetDigest: string;
+    dispatchRoundId?: string;
+  }[] = [];
+  let pendingDispatches: Awaited<
+    ReturnType<NonNullable<typeof h.input.readPendingRouteDispatches>>
+  > = [];
+  const loop = startAutoReplayLoop({
+    ...h.input,
+    dispatchQueue: {
+      mode: "queue" as const,
+      offer: async (job) => {
+        offered.push(job);
+        return { enqueued: true as const };
+      },
+    },
+    readPendingRouteDispatches: async () => pendingDispatches,
+  });
+  cleanups.push(() => loop.stop());
+
+  await loop.tick();
+  expect(offered).toHaveLength(1);
+  expect(h.calls).toEqual([]);
+  const dispatchRoundId = offered[0]?.dispatchRoundId;
+  expect(dispatchRoundId).toBeTruthy();
+  const claimedEndpointId = offered[0]?.endpointIds[0] as string;
+  pendingDispatches = [
+    {
+      sourceType: "queue" as const,
+      replayJobId: null,
+      queueJobId: "claimed-processing-queue",
+      captureRef: "idle-b",
+      newEndpointId: claimedEndpointId,
+      againstEndpointId: "b",
+      createdAtMs: 950,
+      state: "running" as const,
+      dispatchRoundId,
+    },
+  ];
+
+  await loop.dispatchCapture("idle-b", dispatchRoundId);
+  expect(h.calls).toEqual([
+    { captureRef: "idle-b", source: "b", candidates: offered[0]?.endpointIds ?? [] },
+  ]);
+});
+
+test("claimed queue round executes when the claimed capture is only in replayable history", async () => {
+  const h = harness();
+  h.loop.stop();
+  h.configure(["a", "b", "c", "new"]);
+  h.census([task("idle", 10, 1, 4)]);
+  h.rows.set("idle", { ...ladder(["a"], 900), completeness: { admitted: 1, configured: 4 } });
+  h.pending([capture("idle", "b")]);
+  const offered: {
+    captureRef: string;
+    endpointIds: readonly string[];
+    policySetDigest: string;
+    dispatchRoundId?: string;
+  }[] = [];
+  let pendingDispatches: Awaited<
+    ReturnType<NonNullable<typeof h.input.readPendingRouteDispatches>>
+  > = [];
+  const loop = startAutoReplayLoop({
+    ...h.input,
+    dispatchQueue: {
+      mode: "queue" as const,
+      offer: async (job) => {
+        offered.push(job);
+        return { enqueued: true as const };
+      },
+    },
+    readRouteReplayableCaptures: async () => [capture("idle", "b")],
+    readPendingRouteDispatches: async () => pendingDispatches,
+  });
+  cleanups.push(() => loop.stop());
+
+  await loop.tick();
+  expect(offered).toHaveLength(1);
+  const dispatchRoundId = offered[0]?.dispatchRoundId;
+  expect(dispatchRoundId).toBeTruthy();
+  const claimedEndpointId = offered[0]?.endpointIds[0] as string;
+  h.pending([]);
+  pendingDispatches = [
+    {
+      sourceType: "queue" as const,
+      replayJobId: null,
+      queueJobId: "claimed-history-only-queue",
+      captureRef: "idle-b",
+      newEndpointId: claimedEndpointId,
+      againstEndpointId: "b",
+      createdAtMs: 950,
+      state: "running" as const,
+      dispatchRoundId,
+    },
+  ];
+
+  await loop.dispatchCapture("idle-b", dispatchRoundId);
+  expect(h.calls).toEqual([
+    { captureRef: "idle-b", source: "b", candidates: offered[0]?.endpointIds ?? [] },
+  ]);
+});
+
+test("completed queue round without comparable finalization clears pending capture for a retry", async () => {
+  const h = harness();
+  h.loop.stop();
+  h.configure(["a", "b", "new"]);
+  h.census([task("idle", 10, 2, 3)]);
+  h.rows.set("idle", { ...ladder(["a", "b"], 900), completeness: { admitted: 2, configured: 3 } });
+  h.pending([capture("idle", "a")]);
+  const offered: {
+    captureRef: string;
+    endpointIds: readonly string[];
+    policySetDigest: string;
+    dispatchRoundId?: string;
+  }[] = [];
+  const loop = startAutoReplayLoop({
+    ...h.input,
+    dispatchQueue: {
+      mode: "queue" as const,
+      offer: async (job) => {
+        offered.push(job);
+        return { enqueued: true as const };
+      },
+    },
+    readPendingRouteDispatches: async () => [],
+  });
+  cleanups.push(() => loop.stop());
+
+  await loop.tick();
+  expect(offered).toHaveLength(1);
+  await loop.tick();
+  expect(offered).toHaveLength(2);
+  expect(offered[1]?.captureRef).toBe("idle-a");
+  expect(offered[1]?.dispatchRoundId).not.toBe(offered[0]?.dispatchRoundId);
+});
+
+test("legacy queue progress without a dispatch round clears when the durable row disappears", async () => {
+  const h = harness();
+  h.loop.stop();
+  h.configure(["a", "b", "new"]);
+  h.census([task("idle", 10, 2, 3)]);
+  h.rows.set("idle", { ...ladder(["a", "b"], 900), completeness: { admitted: 2, configured: 3 } });
+  h.pending([capture("idle", "a")]);
+  const offered: {
+    captureRef: string;
+    endpointIds: readonly string[];
+    policySetDigest: string;
+    dispatchRoundId?: string;
+  }[] = [];
+  let pendingDispatches = [
+    {
+      sourceType: "queue" as const,
+      replayJobId: null,
+      queueJobId: "legacy-queue-row",
+      captureRef: "idle-a",
+      newEndpointId: "new",
+      againstEndpointId: "a",
+      createdAtMs: 950,
+      state: "queued" as const,
+    },
+  ];
+  const loop = startAutoReplayLoop({
+    ...h.input,
+    dispatchQueue: {
+      mode: "queue" as const,
+      offer: async (job) => {
+        offered.push(job);
+        return { enqueued: true as const };
+      },
+    },
+    readPendingRouteDispatches: async () => pendingDispatches,
+  });
+  cleanups.push(() => loop.stop());
+
+  await loop.tick();
+  expect(offered).toHaveLength(0);
+  pendingDispatches = [];
+  await loop.tick();
+  expect(offered).toHaveLength(1);
+  expect(offered[0]?.captureRef).toBe("idle-a");
+  expect(offered[0]?.dispatchRoundId).toBeTruthy();
 });
 test("high-demand task with no replayable request is skipped so lower-demand task fills in same tick", async () => {
   const h = harness();

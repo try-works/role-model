@@ -12,6 +12,8 @@ import {
   advisoryOverviewCopy,
   formatLearningScore,
   formatPolicyRange,
+  isTaskScopedLearningPack,
+  learningPackRowsNewestFirst,
   learningRecentDecisionRows,
   learningVerdictWord,
   selectionNoteForStage,
@@ -497,6 +499,37 @@ describe("LearningRoute", () => {
    * Run 101 addendum 48 `A48-R2`/`A48-R3`: the pack table lists the models that were replayed with their judge
    * scores, marks exactly one winner, and names the model the pack routes with (`record.scope.endpointId`).
    */
+  test("run108 d9 learner pack table treats scope-wide records as invalid for replay-derived packs", () => {
+    expect(
+      isTaskScopedLearningPack({
+        recordId: "pack-task",
+        scope: { roleId: "mathematician", taskTypeId: "mathematician.proof.write" },
+        record: {
+          scope: { endpointId: "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro" },
+        },
+      }),
+    ).toBe(true);
+    expect(
+      isTaskScopedLearningPack({
+        recordId: "pack-wide",
+        scope: { scopeWide: true },
+        record: {
+          scope: { endpointId: "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro" },
+        },
+      }),
+    ).toBe(false);
+  });
+
+  test("run108 d9 packs are ordered newest first for operator visibility", () => {
+    const rows = learningPackRowsNewestFirst([
+      { recordId: "pack-old", record: { createdAt: "2026-10-11T02:16:40.000Z" } },
+      { recordId: "pack-new", record: { createdAt: "2026-10-11T06:58:15.000Z" } },
+      { recordId: "pack-mid", record: { createdAt: "2026-10-11T06:55:52.000Z" } },
+    ]);
+
+    expect(rows.map((row) => row.recordId)).toEqual(["pack-new", "pack-mid", "pack-old"]);
+  });
+
   test("run101 a48: a pack row names its replay models, the winner and the pack model", () => {
     const markup = renderToStaticMarkup(
       <LearningPackRow activePackageId={null} onActivate={() => {}} row={packRowFixture()} />,
@@ -1085,7 +1118,7 @@ describe("run105 R12 endpoint ladder row", () => {
 
   test("source includes endpoint ladder strings, scope-wide legacy heading and row toggle handler", () => {
     const source = readFileSync(new URL("./learning.tsx", import.meta.url), "utf8");
-    expect(source).toContain("Scope-wide cohort rollout (legacy)");
+    expect(source).toContain("Task-scoped learned packs");
     expect(source).toContain("endpoint ladder");
     expect(source).toContain("rollbackLearningLadder");
     expect(source).toContain("onToggle");

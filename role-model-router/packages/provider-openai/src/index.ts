@@ -981,7 +981,9 @@ export function buildOpenAIRequest(
                 },
               },
             }
-          : {}),
+          : input.executionRequest.responseFormat
+            ? { response_format: input.executionRequest.responseFormat }
+            : {}),
       },
     };
   }

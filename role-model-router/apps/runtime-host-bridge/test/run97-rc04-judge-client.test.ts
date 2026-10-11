@@ -164,6 +164,38 @@ const judgeBranches = () => ({
   },
 });
 
+test("run108 d9 judge dispatch requests a JSON object response", async () => {
+  let requestedBody: unknown;
+  const judge = createRouterPairwiseJudge({
+    executeChatCompletions: async (body) => {
+      requestedBody = body;
+      return {
+        contentText: '{"winner":"A","confidence":0.9,"rationale":"deterministic mock judge"}',
+        routingDecisionId: "decision:judge-json",
+      };
+    },
+    endpoints: [{ endpointId: "endpoint:judge", modelId: "model:judge" }],
+    taskText: "Prove the alias route can evaluate the two answers.",
+  });
+  const { source, counterfactual } = judgeBranches();
+  await judge?.dispatch({
+    requestId: "run108-d9-json-contract",
+    channel: "development",
+    scope: "standalone-runtime-dev",
+    authorizationEpoch: 1,
+    evaluationJobId: "job:json-contract",
+    judgeEndpointId: "endpoint:judge",
+    source,
+    counterfactual,
+  });
+  expect(requestedBody).toMatchObject({
+    model: "model:judge",
+    temperature: 0,
+    stream: false,
+    response_format: { type: "json_object" },
+  });
+});
+
 test("run98 a30 the designated judge endpoint is used even when it is not first in the registry", async () => {
   const used: string[] = [];
   const judge = createRouterPairwiseJudge({

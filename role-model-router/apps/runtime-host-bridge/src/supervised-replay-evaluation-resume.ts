@@ -695,6 +695,16 @@ export async function resumePendingSupervisedReplayEvaluations(input: {
     entry: SupervisedReplayEvaluationResumeEntry,
     error: unknown,
   ) => Promise<void> | void;
+  /**
+   * Run 108 D9: optionally re-enters a handoff that the resume store already marked resolved when the
+   * parent replay job still lacks its durable evaluation-result receipt. This keeps the normal selector
+   * cheap and unresolved-only unless the host proves this resolved entry is still split-brain.
+   */
+  readonly shouldReconcileResolved?: (
+    entry: SupervisedReplayEvaluationResumeEntry,
+  ) => Promise<boolean> | boolean;
+  /** When true, only the resolved split-brain reconciliation path runs; unresolved handoffs are left to the queue worker. */
+  readonly resolvedOnly?: boolean;
   readonly limit?: number;
   readonly now?: () => number;
 }): Promise<{
@@ -780,20 +790,44 @@ export async function resumePendingSupervisedReplayEvaluations(input: {
       // The caller reports its own failure; the entry stays resolved either way.
     }
   }
-  const selected = selectResumableSupervisedReplayEvaluations({
-    entries: input.store.list(),
-    ...(input.limit === undefined ? {} : { limit: input.limit }),
-  });
+  const unresolvedSelected =
+    input.resolvedOnly === true
+      ? []
+      : selectResumableSupervisedReplayEvaluations({
+          entries: input.store.list(),
+          ...(input.limit === undefined ? {} : { limit: input.limit }),
+        });
+  const selected: SupervisedReplayEvaluationResumeEntry[] = [...unresolvedSelected];
+  if (typeof input.shouldReconcileResolved === "function") {
+    const selectedIds = new Set(selected.map((entry) => entry.replayJobId));
+    for (const entry of input.store.list()) {
+      if ((entry.resolvedAtMs ?? null) === null || selectedIds.has(entry.replayJobId)) continue;
+      if (selected.length >= (input.limit ?? MAX_RESUME_BATCH)) break;
+      try {
+        if (await input.shouldReconcileResolved(entry)) {
+          selected.push(entry);
+          selectedIds.add(entry.replayJobId);
+        }
+      } catch {
+        // A probe that cannot prove split-brain leaves the resolved handoff untouched.
+      }
+    }
+  }
   let completed = 0;
   let failed = 0;
   let outsideRetentionWindow = 0;
   for (const entry of selected) {
     try {
-      if (await input.isEvaluationComplete(entry)) {
-        input.store.resolve(entry.replayJobId, { outcome: "already_complete", now: now() });
-        completed += 1;
-        continue;
-      }
+      /**
+       * Run 108 D9 live repair: an Evaluation Core job that is already `completed` does not prove
+       * its parent Replay Core job recorded `replay:record-evaluation-result`. The :3458 queue hit
+       * exactly that split-brain state: the evaluation row finalized and learner derivation ran, but
+       * the durable replay job stayed `awaiting_evaluation`, so auto replay kept re-offering the same
+       * capture and never advanced the configured ladder. Always replay the completion receipt through
+       * the shared completer; it is idempotent for finalized comparisons and is the only path that can
+       * return the comparison group needed to close the replay handoff.
+       */
+      await input.isEvaluationComplete(entry);
       const result = await input.complete(entry);
       const outcome =
         result && typeof result.outcome === "string" && result.outcome.trim()
