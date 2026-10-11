@@ -5,6 +5,8 @@ dist/
 coverage/
 *.tsbuildinfo
 role-model-router/rust/target/
+.turbo/
+**/.turbo/
 runtime-output/
 .cache/
 .tmp/

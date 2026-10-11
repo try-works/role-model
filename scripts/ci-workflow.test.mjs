@@ -92,9 +92,14 @@ test("promotion guard encodes dev to stage to main with a hotfix exception", () 
 });
 
 test("workspace tests keep the resource-heavy runtime proofs in a separate lane", () => {
+  assert.match(packageManifest.scripts["test:workspace"], /turbo run test/);
   assert.match(
     packageManifest.scripts["test:workspace"],
-    /--filter=\.\/\*\* --filter=!@role-model-router\/runtime-host-bridge --filter=!@try-works\/pi-role-model test.*--filter @try-works\/pi-role-model test/,
+    /--filter=!@role-model-router\/runtime-host-bridge.*--filter=!@try-works\/pi-role-model/,
+  );
+  assert.match(
+    packageManifest.scripts["test:workspace"],
+    /--filter @try-works\/pi-role-model test/,
   );
   assert.ok(
     !packageManifest.scripts["test:workspace"].includes(
@@ -110,6 +115,7 @@ test("workspace tests keep the resource-heavy runtime proofs in a separate lane"
 test("fast CI scripts expose split, reusable lanes", () => {
   assert.match(packageManifest.scripts["ci:quality"], /lint.*schemas:validate/);
   assert.match(packageManifest.scripts["ci:build-test"], /ci:build.*test:workspace/);
+  assert.match(packageManifest.scripts.build, /turbo run build/);
   assert.match(
     packageManifest.scripts["ci:fast"],
     /ci:quality.*ci:build-test.*runtime:test-critical/,
@@ -129,4 +135,10 @@ test("smoke prepares its dist-exporting workspace dependencies in a clean checko
 
 test("runtime-host integration tests do not contend for worker-owned state", () => {
   assert.match(runtimeHostVitestConfig, /fileParallelism:\s*false/);
+});
+
+test("Turbo cache and package logs are ignored", () => {
+  const ignore = readFileSync(new URL("../.gitignore", import.meta.url), "utf8");
+  assert.match(ignore, /^\.turbo\/$/m);
+  assert.match(ignore, /^\*\*\/\.turbo\/$/m);
 });
