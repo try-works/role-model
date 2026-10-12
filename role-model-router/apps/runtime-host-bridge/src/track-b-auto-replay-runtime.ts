@@ -2310,20 +2310,17 @@ export function startAutoReplayLoop(input: {
         : true;
       if (options?.dispatchRoundId !== undefined && claimedCapturePresent) {
         const progress = challengeKey ? Ref.getUnsafe(challenges).get(challengeKey) : undefined;
-        if (
-          !stageEnabled ||
-          !onlyCaptureRefs?.includes(focusCaptureRef ?? "") ||
-          (progress &&
-            (progress.pendingCaptureRef !== focusCaptureRef ||
-              progress.pendingRoundId !== options.dispatchRoundId))
-        ) {
-          throw new Error(
-            "claimed route dispatch round mismatch: no actual matching pending task/capture/pair round",
-          );
-        }
-        if (!progress) {
-          // The worker claimed a queue row that no longer has a pending durable pair. Treat it as a stale no-op
-          // rather than replaying the capture under a newly planned round; the queue attempt can ack it.
+        const matchingProgress =
+          progress &&
+          stageEnabled &&
+          onlyCaptureRefs?.includes(focusCaptureRef ?? "") &&
+          progress.pendingCaptureRef === focusCaptureRef &&
+          progress.pendingRoundId === options.dispatchRoundId;
+        if (!matchingProgress) {
+          // Queue delivery is at-least-once and dispatch rows are idempotent. A claimed row can become stale after
+          // another tick/worker advances the same capture to a newer round (or clears the pending pair). Treat that
+          // as an ackable no-op instead of degrading the scheduler; critically, never relabel the stale round onto
+          // whatever focus the planner just selected.
           focusCaptureRef = null;
           focusEndpointId = null;
           challengeKey = null;
