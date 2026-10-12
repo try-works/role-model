@@ -10930,7 +10930,7 @@ export async function main(): Promise<void> {
                   channel,
                   scope: captureScope,
                   authorizationEpoch: 1,
-                  capability: "replay:record-evaluation-result-from-handoff",
+                  capability: "replay:record-evaluation-result",
                   value: {
                     jobId: entry.replayJobId,
                     evaluation: {
