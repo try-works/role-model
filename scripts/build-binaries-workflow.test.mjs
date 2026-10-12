@@ -69,6 +69,14 @@ test("the public release orchestrator enforces paired private promotion", () => 
   assert.doesNotMatch(workflow, /\[\[ "\$RELEASE_PRIVATE_SHA" != "\$required_private_head" \]\]/);
 });
 
+test("production stage artifact resolver tolerates transient GitHub run API failures", () => {
+  assert.match(workflow, /Invoke-WithGitHubRetry/);
+  assert.match(workflow, /GitHub API request failed on attempt \$attempt/);
+  assert.match(workflow, /Start-Sleep -Seconds \(\[Math\]::Min\(30, \$attempt \* 3\)\)/);
+  assert.match(workflow, /\$run = Invoke-WithGitHubRetry -Uri \$runUrl/);
+  assert.doesNotMatch(workflow, /\$run = Invoke-RestMethod -Headers \$headers -Uri \$runUrl/);
+});
+
 test("paired private checkout never dirties the public package provenance worktree", () => {
   assert.match(workflow, /path:\s*\.cache\/paired-private/);
   assert.match(workflow, /working-directory:\s*\.cache\/paired-private/);
