@@ -297,6 +297,7 @@ export interface PackagedRuntimeArtifactClosure {
     readonly public_extension_host: PackagedArtifactBinding;
     readonly worker: PackagedArtifactBinding;
     readonly router_assets: readonly PackagedArtifactBinding[];
+    readonly source_authority_fixtures?: readonly PackagedArtifactBinding[];
     readonly extensions: readonly PackagedExtensionArtifactBinding[];
   };
 }
@@ -317,6 +318,7 @@ interface TrackBDistributionManifestForClosure {
     readonly workerModulePath?: string;
     readonly workerArtifactSha256?: string;
   };
+  readonly sourceAuthorityFixtures?: readonly TrackBManifestArtifact[];
   readonly extensions?: readonly {
     readonly descriptor?: { readonly id?: string };
     readonly modulePath: string;
@@ -489,6 +491,16 @@ export async function createPackagedRuntimeArtifactClosure({
       ),
     ),
   );
+  const sourceAuthorityFixtures = await Promise.all(
+    (manifest.sourceAuthorityFixtures ?? []).map(async (fixture, index) =>
+      createFileArtifactBinding(
+        releaseDir,
+        fixture.modulePath,
+        `source-authority fixture ${index + 1}`,
+        assertDigest(fixture.artifactSha256, `source-authority fixture ${index + 1}`),
+      ),
+    ),
+  );
 
   const manifestRelativePath = assertSafeReleaseRelativePath(
     normalizeReleasePath(path.relative(releaseDir, trackBRuntimeManifestPath)),
@@ -529,6 +541,7 @@ export async function createPackagedRuntimeArtifactClosure({
         assertDigest(extensionHost.workerArtifactSha256, "worker runtime"),
       ),
       router_assets: routerAssets,
+      source_authority_fixtures: sourceAuthorityFixtures,
       extensions,
     },
   };
@@ -577,6 +590,9 @@ export async function verifyPackagedRuntimeArtifactClosure({
     verifyPackagedArtifactBinding(releaseDir, trackB.worker, "worker runtime"),
     ...trackB.router_assets.map((asset, index) =>
       verifyPackagedArtifactBinding(releaseDir, asset, `router asset ${index + 1}`),
+    ),
+    ...(trackB.source_authority_fixtures ?? []).map((fixture, index) =>
+      verifyPackagedArtifactBinding(releaseDir, fixture, `source-authority fixture ${index + 1}`),
     ),
     ...trackB.extensions.map((extension) =>
       verifyPackagedArtifactBinding(releaseDir, extension, `extension ${extension.id}`),

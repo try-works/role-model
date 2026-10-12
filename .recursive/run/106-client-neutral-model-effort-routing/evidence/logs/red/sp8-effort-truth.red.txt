@@ -1,0 +1,39 @@
+SP8 RED - R11 UI truthfulness (effort-truth projection)
+command: corepack pnpm --filter @role-model-router/runtime-ui exec vitest run app/lib/effort-truth.test.ts
+observed: module ./effort-truth not implemented yet (failing RED).
+exitCode: 1
+
+--- vitest stdout ---
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/106-client-neutral-model-effort-routing/role-model-router/apps/runtime-ui[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [2mno tests[22m
+[2m   Start at [22m 12:27:21
+[2m   Duration [22m 1.83s[2m (transform 85ms, setup 0ms, collect 0ms, tests 0ms, environment 0ms, prepare 624ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\106-client-neutral-model-effort-routing\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run app/lib/effort-truth.test.ts
+
+--- vitest stderr ---
+
+[31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Suites 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m app/lib/effort-truth.test.ts[2m [ app/lib/effort-truth.test.ts ][22m
+[31m[1mError[22m: Cannot find module './effort-truth' imported from 'D:/DEV/role-model/.worktrees/106-client-neutral-model-effort-routing/role-model-router/apps/runtime-ui/app/lib/effort-truth.test.ts'[39m
+[36m [2m❯[22m app/lib/effort-truth.test.ts:[2m3:1[22m[39m
+    [90m  1| [39m[35mimport[39m { describe[33m,[39m expect[33m,[39m test } [35mfrom[39m [32m"vitest"[39m[33m;[39m
+    [90m  2| [39m
+    [90m  3| [39m[35mimport[39m {
+    [90m   | [39m[31m^[39m
+    [90m  4| [39m  [33mEFFORT_EVIDENCE_LABELS[39m[33m,[39m
+    [90m  5| [39m  [33mEFFORT_RESOLUTION_LABELS[39m[33m,[39m
+
+[31m[1mCaused by: Error[22m: Failed to load url ./effort-truth (resolved id: ./effort-truth) in D:/DEV/role-model/.worktrees/106-client-neutral-model-effort-routing/role-model-router/apps/runtime-ui/app/lib/effort-truth.test.ts. Does the file exist?[39m
+[90m [2m❯[22m loadAndTransform ../../../node_modules/.pnpm/vite@7.3.2_@types+node@22.1_d71bf8265f9610ce90201e170d5dc2b8/node_modules/vite/dist/node/chunks/config.js:[2m22663:33[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+

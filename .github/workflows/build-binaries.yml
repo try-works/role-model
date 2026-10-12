@@ -293,13 +293,12 @@ jobs:
         run: pnpm --filter @role-model-router/runtime-ui run build
 
       # The Track B adapter bundles sqlite-memory directly from TypeScript.
-      # That package resolves profile-aggregator through its runtime export,
-      # which intentionally targets dist/.  A fresh CI checkout therefore
-      # needs this focused public build before the paired private distribution
-      # can be assembled.
+      # Some imported public packages intentionally resolve runtime exports
+      # from dist/. Use the same Turbo-backed dependency lane as runtime tests
+      # before assembling the paired private distribution.
       - name: Build public runtime adapter dependencies
         if: env.ROLE_MODEL_BUILD_CHANNEL == 'stage' || env.ROLE_MODEL_BUILD_CHANNEL == 'production'
-        run: corepack pnpm --filter @role-model-router/profile-aggregator... build
+        run: corepack pnpm run runtime:build-test-deps
 
       - name: Validate exact private release revision
         if: env.ROLE_MODEL_BUILD_CHANNEL == 'stage' || env.ROLE_MODEL_BUILD_CHANNEL == 'production'

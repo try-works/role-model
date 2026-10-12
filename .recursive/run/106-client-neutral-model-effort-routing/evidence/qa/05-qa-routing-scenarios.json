@@ -1,0 +1,54 @@
+{
+  "scenarios": [
+    {
+      "id": "S1-strict-effort-routing",
+      "request": {
+        "model": "deepseek/deepseek-v4-flash",
+        "reasoning": {
+          "effort": "max",
+          "effort_policy": "strict"
+        }
+      },
+      "result": {
+        "status": 200,
+        "routeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash-max",
+        "decisionId": "decision-req-0fb33bd6-691e-4b62-b812-2c490455fe71",
+        "verdict": "PASS - strict policy routed to the exact-effort arm"
+      }
+    },
+    {
+      "id": "S2-router-contrast",
+      "request": {
+        "model": "deepseek/deepseek-v4-flash",
+        "reasoning": {
+          "effort": "max",
+          "effort_policy": "router"
+        }
+      },
+      "result": {
+        "status": "timeout(30s)",
+        "verdict": "secondary - router policy exercised the multi-candidate measured-latency selector (separate concern from effort routing)"
+      }
+    },
+    {
+      "id": "S3-preferred-contrast",
+      "request": {
+        "model": "deepseek/deepseek-v4-flash",
+        "reasoning": {
+          "effort": "max",
+          "effort_policy": "preferred"
+        }
+      },
+      "result": {
+        "status": 503,
+        "code": "endpoint_temporarily_unavailable",
+        "verdict": "secondary - cooldown after S2 failure"
+      }
+    }
+  ],
+  "health": {
+    "version": "0.0.14-734-gb1d9344e",
+    "status": "healthy",
+    "executionMode": "remote_only"
+  }
+}

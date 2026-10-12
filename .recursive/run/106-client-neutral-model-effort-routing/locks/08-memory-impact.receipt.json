@@ -1,0 +1,21 @@
+{
+  "artifact": "08-memory-impact.md",
+  "artifact_hash": "be069bbf7708d19783d5c2bd22e8ee32b894a2c7601eb22625c696093d4fb38e",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\106-client-neutral-model-effort-routing\\.recursive\\run\\106-client-neutral-model-effort-routing\\08-memory-impact.md",
+  "locked_at": "2026-10-04T22:07:42Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "9be64e945082f71fd7f93376c739ea49d90f002dfaf6e7d71e45dd16f764928f",
+    "00-worktree.md": "92c639d820bd6cf940ad9effa9b48ce184f361c902ba2e1db6734428f0bee763",
+    "01-as-is.md": "4eb5dd07463e24b05ac886cf5b894980faba13814ec76a55df2f516d26583120",
+    "01.5-root-cause.md": "2556019928b11363103a46decbb523eda6290bcff4934f90df908c5419a288c6",
+    "02-to-be-plan.md": "1d080de4ee4b8e630516ad9c89c15d87c95ba58176e2765af0b86935e7b90afc",
+    "03-implementation-summary.md": "1deae17f72a4810aaeeb49e4170690403b24ac81993157734a6f20915464e636",
+    "03.5-code-review.md": "13272ca4ec0347f6af302bc1f70218095510b7d68fef24f6a602fb621becf40f",
+    "04-test-summary.md": "389d370ed147c18878fd47dd8bd53deeeda17bfa090ded20c3587de88fcbd0e1",
+    "05-manual-qa.md": "0944426b518e6df96e3c70e09cd503bbda66791ac3a7b41a37d01b7ea1aa8482",
+    "06-decisions-update.md": "aff99b0e29e34210a0f28bca0b78241d7dc29f988a96d63d77919af491475197",
+    "07-state-update.md": "843b62ca995091ac3750771e4af1010f05bb99e809406f726db3dcdfae333604"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "b81170761c1da02a27538f7c7f02aedb6c34fe67831d475ea625c8614acbda48"
+}

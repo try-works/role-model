@@ -1,0 +1,93 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/106-client-neutral-model-effort-routing/role-model-router/packages/core[39m
+
+ [31m❯[39m test/run106-effort-source-vocabulary.test.ts [2m([22m[2m5 tests[22m[2m | [22m[31m5 failed[39m[2m)[22m[32m 25[2mms[22m[39m
+[31m   [31m×[31m Run 106 effort-source vocabulary[2m > [22mround-trips all four canonical states losslessly[39m[32m 9[2mms[22m[39m
+[31m     → (0 , normalizeEffortSource) is not a function[39m
+[31m   [31m×[31m Run 106 effort-source vocabulary[2m > [22mmaps historical named sources onto the named state[39m[32m 1[2mms[22m[39m
+[31m     → (0 , normalizeEffortSource) is not a function[39m
+[31m   [31m×[31m Run 106 effort-source vocabulary[2m > [22mkeeps historical variant_coerced readable as a coerced named effort[39m[32m 1[2mms[22m[39m
+[31m     → (0 , normalizeEffortSource) is not a function[39m
+[31m   [31m×[31m Run 106 effort-source vocabulary[2m > [22mmigrates null, undefined, and empty deterministically to provider_default[39m[32m 1[2mms[22m[39m
+[31m     → (0 , normalizeEffortSource) is not a function[39m
+[31m   [31m×[31m Run 106 effort-source vocabulary[2m > [22mrejects unrecognized states instead of silently dropping them[39m[32m 9[2mms[22m[39m
+[31m     → expected [Function] to throw error matching /effort_source/i but got '(0 , normalizeE…'[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 5 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m test/run106-effort-source-vocabulary.test.ts[2m > [22mRun 106 effort-source vocabulary[2m > [22mround-trips all four canonical states losslessly
+[31m[1mTypeError[22m: (0 , normalizeEffortSource) is not a function[39m
+[36m [2m❯[22m test/run106-effort-source-vocabulary.test.ts:[2m7:12[22m[39m
+    [90m  5| [39m[34mdescribe[39m([32m"Run 106 effort-source vocabulary"[39m[33m,[39m () [33m=>[39m {
+    [90m  6| [39m  [34mtest[39m([32m"round-trips all four canonical states losslessly"[39m[33m,[39m () [33m=>[39m {
+    [90m  7| [39m    expect(normalizeEffortSource("named")).toEqual({ source: "named", …
+    [90m   | [39m           [31m^[39m
+    [90m  8| [39m    expect(normalizeEffortSource("disabled")).toEqual({ source: "disab…
+    [90m  9| [39m    [34mexpect[39m([34mnormalizeEffortSource[39m([32m"provider_default"[39m))[33m.[39m[34mtoEqual[39m({
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/run106-effort-source-vocabulary.test.ts[2m > [22mRun 106 effort-source vocabulary[2m > [22mmaps historical named sources onto the named state
+[31m[1mTypeError[22m: (0 , normalizeEffortSource) is not a function[39m
+[36m [2m❯[22m test/run106-effort-source-vocabulary.test.ts:[2m17:12[22m[39m
+    [90m 15| [39m
+    [90m 16| [39m  [34mtest[39m([32m"maps historical named sources onto the named state"[39m[33m,[39m () [33m=>[39m {
+    [90m 17| [39m    expect(normalizeEffortSource("client")).toEqual({ source: "named",…
+    [90m   | [39m           [31m^[39m
+    [90m 18| [39m    expect(normalizeEffortSource("variant")).toEqual({ source: "named"…
+    [90m 19| [39m  })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/run106-effort-source-vocabulary.test.ts[2m > [22mRun 106 effort-source vocabulary[2m > [22mkeeps historical variant_coerced readable as a coerced named effort
+[31m[1mTypeError[22m: (0 , normalizeEffortSource) is not a function[39m
+[36m [2m❯[22m test/run106-effort-source-vocabulary.test.ts:[2m22:12[22m[39m
+    [90m 20| [39m
+    [90m 21| [39m  test("keeps historical variant_coerced readable as a coerced named e…
+    [90m 22| [39m    expect(normalizeEffortSource("variant_coerced")).toEqual({ source:…
+    [90m   | [39m           [31m^[39m
+    [90m 23| [39m  })[33m;[39m
+    [90m 24| [39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/run106-effort-source-vocabulary.test.ts[2m > [22mRun 106 effort-source vocabulary[2m > [22mmigrates null, undefined, and empty deterministically to provider_default
+[31m[1mTypeError[22m: (0 , normalizeEffortSource) is not a function[39m
+[36m [2m❯[22m test/run106-effort-source-vocabulary.test.ts:[2m26:12[22m[39m
+    [90m 24| [39m
+    [90m 25| [39m  test("migrates null, undefined, and empty deterministically to provi…
+    [90m 26| [39m    expect(normalizeEffortSource(null)).toEqual({ source: "provider_de…
+    [90m   | [39m           [31m^[39m
+    [90m 27| [39m    [34mexpect[39m([34mnormalizeEffortSource[39m(undefined))[33m.[39m[34mtoEqual[39m({
+    [90m 28| [39m      source[33m:[39m [32m"provider_default"[39m[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/run106-effort-source-vocabulary.test.ts[2m > [22mRun 106 effort-source vocabulary[2m > [22mrejects unrecognized states instead of silently dropping them
+[31m[1mAssertionError[22m: expected [Function] to throw error matching /effort_source/i but got '(0 , normalizeE…'[39m
+
+[32m- Expected:[39m 
+/effort_source/i
+
+[31m+ Received:[39m 
+"(0 , __vite_ssr_import_1__.normalizeEffortSource) is not a function"
+
+[36m [2m❯[22m test/run106-effort-source-vocabulary.test.ts:[2m35:50[22m[39m
+    [90m 33| [39m
+    [90m 34| [39m  test("rejects unrecognized states instead of silently dropping them"…
+    [90m 35| [39m    expect(() => normalizeEffortSource("bogus")).toThrow(/effort_sourc…
+    [90m   | [39m                                                 [31m^[39m
+    [90m 36| [39m  })[33m;[39m
+    [90m 37| [39m})[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m5 failed[39m[22m[90m (5)[39m
+[2m   Start at [22m 12:44:37
+[2m   Duration [22m 1.39s[2m (transform 111ms, setup 0ms, collect 103ms, tests 25ms, environment 0ms, prepare 418ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\106-client-neutral-model-effort-routing\role-model-router\packages\core:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/run106-effort-source-vocabulary.test.ts

@@ -1,7 +1,7 @@
 # Rebuilding The Replay, Evaluation And Learner Queues On Effect PersistedQueue And effect-mq
 
 This document answers a concrete question: given the vendored Effect v4 tree (`vendor/effect`, tag
-`effect@4.0.0-rc.117`) and the vendored effect-mq tree (`vendor/effect-mq`, tag `v0.7.0`), how would the runtime's
+`effect@4.0.1`) and the vendored effect-mq tree (`vendor/effect-mq`, tag `v0.7.0`), how would the runtime's
 replay, evaluation and learner queues be rebuilt on `PersistedQueue` and `effect-mq` - and what has to be true
 before that is a safe change to the packaged runtime.
 
@@ -63,7 +63,7 @@ Each of these was measured live during run 100 and maps to a queue primitive:
 
 ## 2. The two building blocks, as vendored
 
-### 2.1 Effect `PersistedQueue` (`vendor/effect/packages/effect/src/unstable/persistence/PersistedQueue.ts`)
+### 2.1 Effect `PersistedQueue` (`vendor/effect/packages/effect/src/persistence/PersistedQueue.ts`)
 
 - `PersistedQueue.make({ name, schema, maxAttempts?, retrySchedule? })` returns a queue service; `offer(job, { id })`
   enqueues with a **stable id** (the blog's dedupe lever), `take(handler)` claims one job, runs the handler, and
@@ -293,7 +293,7 @@ their data becomes queue truth.
    `effect-mq` sources, or (b) path-mapped bundling. Prove it by bundling the runtime with the new imports and
    running the packaged exe against `:3457` state.
 2. **Align the Effect version.** effect-mq's catalog pins `effect@4.0.0-rc.111`; the vendored tree is
-   `4.0.0-rc.117`. Either move effect-mq's pin or vendor the version it expects - a digest-recorded, reviewed change.
+   `4.0.1`. Either move effect-mq's pin or vendor the version it expects - a digest-recorded, reviewed change.
 3. **SQLite store.** Start with `PersistedQueue.layerStoreSql()` + `@effect/sql-sqlite-node`; if the queues need
    effect-mq's richer contract (priorities, schedules, flows, history), write the SQLite `JobStore` driver and pass
    `jobStoreConformance`.
@@ -317,7 +317,7 @@ so a cutover lands as a paired change with a paired rebuild, a stage candidate a
 
 1. **Bundling risk.** Effect v4 + effect-mq inside a SEA exe is the largest unknown; it must be proven in phase 0
    before any queue code is written.
-2. **Version alignment** (rc.111 vs rc.117) - operator decision, recorded as a pin move.
+2. **Version alignment** (rc.111 vs 4.0.1) - operator decision, recorded as a pin move.
 3. **Two hosts, one store.** Lock semantics must hold across processes; the conformance suite must be run against the
    real state-root layout (two openers), not just in-memory.
 4. **Observability.** The Learning/Observe pages read purpose-built tables today. Either project the queue's job
@@ -464,7 +464,7 @@ with no restart.
   regardless of `backoffBaseMs`. The policy's 100 ms floor is honest at the store level but effectively 1 s at the
   retry level.
 
-- Vendored Effect: `vendor/effect/PROVENANCE.md`, `vendor/effect/packages/effect/src/unstable/persistence/PersistedQueue.ts`,
+- Vendored Effect: `vendor/effect/PROVENANCE.md`, `vendor/effect/packages/effect/src/persistence/PersistedQueue.ts`,
   `vendor/effect/packages/sql/sqlite-node/src/SqliteClient.ts`.
 - Vendored effect-mq: `vendor/effect-mq/PROVENANCE.md`, `packages/effect-mq/src/{Job,Worker,JobStore,Flow,JobSchedules}.ts`,
   `docs/guide/{defining-jobs,workers,flows,retries-and-timeouts,deduplication,retention,testing}.md`,

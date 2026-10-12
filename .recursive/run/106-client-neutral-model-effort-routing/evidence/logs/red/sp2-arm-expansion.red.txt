@@ -1,0 +1,3 @@
+SP2 RED - reasoning-effort arm expansion
+command: corepack pnpm --filter @role-model-router/endpoint-registry exec vitest run test/run106-arm-expansion.test.ts
+observed: 4 tests failed - expandReasoningEffortArms not exported yet.

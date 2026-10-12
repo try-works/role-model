@@ -1,0 +1,3 @@
+M-3 RED - disabled/none EffortSource states are not emitted
+command: corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/run106-effort-policy-normalization.test.ts test/run106-canonical-effort-emission.test.ts
+observed: 9 tests failed - normalizeReasoningEffortPolicy has no source field and maps none/off to scalar preferred; resolveEndpointExecutionEffort emits provider_default instead of disabled for reasoning.effort none/off.

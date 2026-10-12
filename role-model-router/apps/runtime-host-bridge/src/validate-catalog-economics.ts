@@ -6,6 +6,7 @@ import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 
 import { createRuntimeBridgeBackend, startBridgeServer } from "./index.js";
+import { createObservabilityScope } from "./run108-observability.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -223,11 +224,17 @@ export async function runCatalogEconomicsValidation(
   await writeFile(unifiedRuntimeConfigPath, createCatalogEconomicsRuntimeConfigText(), "utf8");
 
   try {
+    // Run 108 follow-up: this validation run is its own runtime scope, so the backend and the
+    // server below share ONE metric registry instead of Effect's process-global default Map.
+    const observabilityScope = createObservabilityScope(
+      `validate-catalog-economics:${options.scopeId}`,
+    );
     const backend = await createRuntimeBridgeBackend({
       repoRoot: options.repoRoot,
       fixtureRoot,
       runtimeStateRoot: options.runtimeStateRoot,
       scopeId: options.scopeId,
+      observabilityScope,
       unifiedRuntimeConfigPath,
     });
 
@@ -294,6 +301,7 @@ export async function runCatalogEconomicsValidation(
       const server = await startBridgeServer({
         host: "127.0.0.1",
         port: 0,
+        observabilityScope,
         registry: backend.effectiveRegistry,
         getRegistry: () => backend.effectiveRegistry,
         executeChatCompletions: backend.executeChatCompletions,

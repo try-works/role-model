@@ -1,0 +1,27 @@
+{
+  "runtimeLaunch": {
+    "host": "127.0.0.1",
+    "port": 3461,
+    "isolated": true,
+    "notIn": [
+      3456,
+      3457,
+      3458
+    ],
+    "status": "listening",
+    "repoRoot": "D:/DEV/role-model/.worktrees/106-client-neutral-model-effort-routing",
+    "scopeId": "runtime",
+    "stateRoot": "C:/Users/erikb/AppData/Local/role-model-runtime-dev",
+    "launchCmd": "corepack pnpm --filter @role-model-router/runtime-host-bridge exec tsx src/cli-entry.ts --repo-root <worktree-root> --runtime-state-root C:/Users/erikb/AppData/Local/role-model-runtime-dev --scope-id runtime --unified-runtime-config C:/Users/erikb/AppData/Local/role-model-runtime-dev/runtime-config.yaml --host 127.0.0.1 --port 3461"
+  },
+  "discovery": {
+    "contractVersion": "role-model.downstream.openai.v1",
+    "providerId": "role-model-runtime",
+    "baseUrl": "http://127.0.0.1:3461",
+    "modelsCount": 23,
+    "effortVariants": [
+      "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash-max",
+      "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-max"
+    ]
+  }
+}

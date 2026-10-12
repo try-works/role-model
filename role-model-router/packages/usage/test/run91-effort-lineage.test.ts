@@ -105,7 +105,6 @@ describe("Run 91 usage effort lineage", () => {
         request_id: "req-001",
         routing_decision_id: "dec-001",
         reasoning_effort: "low",
-        effort_source: "variant",
       }),
     ).toThrow(/reasoning_effort medium does not match low/);
   });

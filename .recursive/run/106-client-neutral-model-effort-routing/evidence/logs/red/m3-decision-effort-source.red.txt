@@ -1,0 +1,3 @@
+M-3 RED - decision effort_source does not record client none/disabled source
+command: corepack pnpm --filter @role-model-router/core exec vitest run test/run106-canonical-decision-provenance.test.ts
+observed: 2 tests failed - effortResolution.source is ignored; decision effort_source stays provider_default for source none/disabled.

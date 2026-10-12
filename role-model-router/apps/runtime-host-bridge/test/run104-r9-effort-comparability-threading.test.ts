@@ -16,8 +16,10 @@ import { classifyReplayArmEffort } from "../src/track-b-replay-policy.js";
  *     sourceReasoningEffort: ...,
  *   })
  *
- * This locks in the record shape the consumer (evaluation-core normalizeArmEffortComparability) expects,
- * so the arm_effort_mismatch exclusion can fire on a live comparison.
+ * This locks in the record shape the consumer (evaluation-core normalizeArmEffortComparability) expects.
+ * Run 106 (operator decision, 2026-10-07): the record is a comparability DIMENSION, not a validity issue -
+ * an arm at a different effort than the source no longer costs the comparison its place in the learner's
+ * admission floor, so the shape matters for the audit trail and for reporting, not for eligibility.
  */
 
 // Mirrors the builder's type-narrowing glue over Record<string, unknown> rollouts.

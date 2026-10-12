@@ -2,7 +2,9 @@
 
 ## Stage candidate
 
-1. Confirm the intended work is merged into both repositories' `dev` branches with all available CI lanes green.
+1. Confirm the intended work is merged into both repositories' `dev` branches with all available CI lanes green. For
+   broad public changes, local evidence should include `corepack pnpm run ci:fast` plus the focused lane for the
+   changed subsystem; use `corepack pnpm run ci:check` before risky promotions.
 2. Promote the exact paired private commit through reviewed `role-model-internal` `dev -> stage`, then set the public
    `ROLE_MODEL_PAIRED_PRIVATE_SHA` variable to that private stage commit.
 3. Open and review public `dev -> stage`; use a merge commit and do not rewrite stage history.

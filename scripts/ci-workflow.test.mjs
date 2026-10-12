@@ -10,6 +10,13 @@ const runtimeHostVitestConfig = readFileSync(
   new URL("../role-model-router/apps/runtime-host-bridge/vitest.config.ts", import.meta.url),
   "utf8",
 );
+const runtimeHostBuildRegression = readFileSync(
+  new URL(
+    "../packages/schema-tools/test/recursive-runtime-host-bridge-build.test.ts",
+    import.meta.url,
+  ),
+  "utf8",
+);
 
 test("CI is scoped to long-lived branches with stable cancellable lanes", () => {
   assert.match(workflow, /push:\s*\n\s*branches:\s*\n\s*- dev\s*\n\s*- stage\s*\n\s*- main/);
@@ -91,10 +98,49 @@ test("promotion guard encodes dev to stage to main with a hotfix exception", () 
   assert.match(workflow, /Invalid promotion source/);
 });
 
-test("workspace tests serialize the resource-heavy runtime proofs", () => {
+test("workspace tests keep the resource-heavy runtime proofs in a separate lane", () => {
+  assert.match(packageManifest.scripts["test:workspace"], /turbo run test --concurrency=4/);
   assert.match(
-    packageManifest.scripts.test,
-    /--filter=\.\/\*\* --filter=!@role-model-router\/runtime-host-bridge --filter=!@try-works\/pi-role-model test.*--filter @role-model-router\/runtime-host-bridge test.*--filter @try-works\/pi-role-model test/,
+    packageManifest.scripts["test:workspace"],
+    /--filter=!@role-model-router\/runtime-host-bridge.*--filter=!@role-model-router\/sqlite-memory.*--filter=!@try-works\/pi-role-model.*--filter=!@try-works\/dsh-role-model/,
+  );
+  assert.match(
+    packageManifest.scripts["test:workspace"],
+    /--filter @role-model-router\/sqlite-memory test/,
+  );
+  assert.match(
+    packageManifest.scripts["test:workspace"],
+    /--filter @try-works\/pi-role-model test/,
+  );
+  assert.ok(
+    !packageManifest.scripts["test:workspace"].includes(
+      "@role-model-router/runtime-host-bridge test",
+    ),
+  );
+  assert.ok(
+    packageManifest.scripts["test:runtime-host"].includes("runtime-host-bridge run test:ci"),
+  );
+  assert.match(packageManifest.scripts["ci:runtime"], /runtime:test-critical.*runtime:test-router/);
+});
+
+test("fast CI scripts expose split, reusable lanes", () => {
+  assert.match(packageManifest.scripts["ci:quality"], /lint.*schemas:validate/);
+  assert.match(packageManifest.scripts["ci:build-test"], /ci:build.*test:workspace/);
+  assert.match(
+    packageManifest.scripts["runtime:build-test-deps"],
+    /--filter=@effect\/sql-sqlite-node/,
+  );
+  assert.match(
+    packageManifest.scripts.build,
+    /runtime:build-test-deps.*turbo run build --concurrency=4/,
+  );
+  assert.match(
+    packageManifest.scripts["ci:fast"],
+    /ci:quality.*ci:build-test.*runtime:test-critical/,
+  );
+  assert.match(
+    packageManifest.scripts["ci:check"],
+    /ci:fast.*runtime:test-router.*test:rust.*smoke/,
   );
 });
 
@@ -107,4 +153,17 @@ test("smoke prepares its dist-exporting workspace dependencies in a clean checko
 
 test("runtime-host integration tests do not contend for worker-owned state", () => {
   assert.match(runtimeHostVitestConfig, /fileParallelism:\s*false/);
+});
+
+test("runtime-host build regression has enough CI headroom for Turbo contention", () => {
+  assert.match(runtimeHostBuildRegression, /RUNTIME_HOST_BRIDGE_BUILD_TIMEOUT_MS = 180_000/);
+});
+
+test("Turbo cache and package logs are ignored", () => {
+  const ignore = readFileSync(new URL("../.gitignore", import.meta.url), "utf8");
+  const biomeConfig = JSON.parse(readFileSync(new URL("../biome.json", import.meta.url), "utf8"));
+  assert.match(ignore, /^\.turbo\/$/m);
+  assert.match(ignore, /^\*\*\/\.turbo\/$/m);
+  assert.ok(biomeConfig.files.ignore.includes(".turbo/**"));
+  assert.ok(biomeConfig.files.ignore.includes("**/.turbo/**"));
 });

@@ -1,0 +1,13 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/106-client-neutral-model-effort-routing/role-model-router/packages/sqlite-memory[39m
+
+(node:37852) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32m✓[39m test/run106-effort-source-migration.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 370[2mms[22m[39m
+   [33m[2m✓[22m[39m Run 106 effort-source migration[2m > [22mmigrates legacy and nullable effort_source rows deterministically to the four-state vocabulary [33m 367[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m   Start at [22m 12:49:45
+[2m   Duration [22m 3.21s[2m (transform 696ms, setup 0ms, collect 1.40s, tests 370ms, environment 0ms, prepare 636ms)[22m
+

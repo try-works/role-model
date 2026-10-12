@@ -2,6 +2,8 @@
 
 ## Current State
 
+Run `106-client-neutral-model-effort-routing` is the current increment: reasoning effort is now a first-class, client-neutral routing dimension. The normalized input separates `requested_effort` from `effort_policy` (`strict` | `preferred` | `router`); the router selects over executable model-endpoint-effort arms; `strict` considers exact-effort arms only (else `reasoning_effort_unavailable`), `preferred` falls back through named receipts, and `preferred` with zero exact arms records `unsupported_fallback`. Four lossless effort states (`named` | `disabled` | `provider-default` | `no-client-preference`) are preserved end to end (decision four-state, occurrence binary). Benchmark/operational evidence is keyed by the effort arm with borrowed/related-effort priors; arm-aware lifecycle, turn-aware difficulty, non-inferiority ranking, and arm-level discovery are wired; decision/telemetry/trace provenance is canonical; and operator surfaces co-display model + effective effort + exact/borrowed evidence. Phases 0-8 are locked. Phase 5 ran the packaged SEA (`role-model-dev.exe`, sha256 `e181c6011a50a7e9681d6f16314ae7cefcbe7ca26bb21eeac34343b3befc7364`) on its own isolated port `:3462` driven by a real Pi CLI (requestId `req-9d68e76b`, routingDecisionId `decision-req-9d68e76b` -> deepseek-v4-pro; strict+max -> v4-flash-max, router+max -> v4-flash). Promotion remains a separate release operation.
+
 Run `105-route-learning-matching-scope-activation` is the current increment: stage-3 matching-scope activation is shipped — a pack is a per-(role,task) ranked endpoint ladder (exact match only), materialized and aggregated pairwise, walked advisory-only, with derived floor-based activation and per-task rollback, and the Packs page renders the ladder index. The Phase 3.5 review found and the controller repaired a R1/R8 classification divergence: buildRequestClassificationForPlan read runtime-policy ids instead of the authoritative taxonomy identity, so capture/advisory classification was null while telemetry showed coder|coder.edit. Fixed at public d797a185 (tree 5da40073) + private da40a115; full host suite 2250/5-skip; live pi request classifies coder|coder.edit with lastUnclassifiedCaptures 0 on :3458 (dev channel only). Promotion remains a separate release operation.
 
 **Run 105 closeout — bug 3 verified, four operational caveats carried forward** (not defects in the shipped fix). Verified live on `:3458`: both `coder/coder.edit` and `coder/coder.config` built **4/4 ladders** through counterfactual replays (all configured endpoints admitted, including `kimi-k3` — the configured controller and therefore the judge — admitted as a *challenger*, with `evaluation_judge_switches` recording `kimi-k3 -> deepseek-flash` from `dedupeJudgeAgainstPair`), and the route advisory reached live routing (`selection=advisory_applied`; `deepseek-flash-max` x3, `deepseek-flash` x1). Queue at closeout: 28 dispositions (24 `replayed`), 36/39 replay jobs `complete`, 0 deferred-pending, 0 capture-WAL rows, 0 stuck ledger reservations. Four caveats for the next replay-lane increment:
@@ -70,6 +72,9 @@ Run `92-configured-model-pool-benchmark-convergence` is the **current closed-out
 
 ### Product truths
 
+- **Client-neutral model-effort routing (run 106):** `requested_effort` + `effort_policy` (`strict`|`preferred`|`router`); executable model-endpoint-effort arms; `unsupported_fallback` for zero-exact-arm preferred; four lossless effort states (decision four-state, occurrence binary); effort-scoped evidence with borrowed/related priors; arm-aware lifecycle + turn-aware difficulty + non-inferiority + arm-level discovery; canonical decision/telemetry/trace provenance; UI model+effort+evidence co-display.
+- **Run 106 worktree:** `D:\DEV\role-model\.worktrees\106-client-neutral-model-effort-routing` on branch `recursive/106-client-neutral-model-effort-routing` (diff basis `701b8b8fc0b0eeebdfe818b757f5702f50021488`; HEAD `9260a10b`).
+- **Run 106 verification floor:** Tier A 23 files green · Tier B 2063/2068 (3 conditional skips) · schemas:validate 37+30 · conformance 53/53 · core 113 · packaged SEA sha256 `e181c6011a50a7e9681d6f16314ae7cefcbe7ca26bb21eeac34343b3befc7364` · Pi QA `:3462`.
 - **Configured model pool (run 92):** `computeConfiguredMembershipRevision` (order-stable SHA-256 over endpoint-variant-exact tuples) stamped on router candidates, routing decisions, benchmark manifests/samples, and clear receipts; runtime-ui `fetchRuntimeModels` no longer falls back to `/v1/models`; candidate-space scorers nullable with `—`/`n/a` presentation; `readLatestBenchmarkProfilesByEndpointIds` skips membership-mismatch and `completion_state: "stale"` samples; controller eject is destructive-confirmed; benchmark clear is transactional.
 - **Run 92 worktree:** `D:\DEV\role-model\.worktrees\92-configured-model-pool-benchmark-convergence` on branch `recursive/92-configured-model-pool-benchmark-convergence` (diff basis `d59f07b91e7b23c25e7297860a0f9c967b342b7a`; HEAD `01537fb8b402c6808e7a6b69c3a03227acceb17c`).
 - **Run 92 verification floor:** host-bridge 756 passed/3 skipped · runtime-ui 454 passed · sqlite-memory 67 passed · profile-aggregator 8 passed · builds green · agent-operated QA on `:3501`.
@@ -90,6 +95,8 @@ Run `92-configured-model-pool-benchmark-convergence` is the **current closed-out
 
 ### Known limitations
 
+- Run 106 residual: non-blocking LOW documentation follow-ups (materiality, threshold documentation, strict-with-no-effort docs).
+
 - Feature-branch merge to origin `dev` remains operator-requested (runs 92, 89, 86, 85, …).
 - Run 92 residual: `profileRevision` is membership-keyed (diagnostic-only) until a distinct profile receipt is warranted; no decision-time membership snapshot is persisted (the field reflects current membership at read time).
 - Run 89 residual: land `.agents/plugins/marketplace.json` on published `dev` for GitHub marketplace one-liner; optional Desktop UI glance; optional Codex Stop-hook auto-continue (not adapter regex).
@@ -102,6 +109,8 @@ Run `92-configured-model-pool-benchmark-convergence` is the **current closed-out
 - Run-84 deferred full live-router inject residual is soft-closed for gated inject only (training unlock still open).
 
 ### Operational notes
+
+- Prefer run-106 evidence under `.recursive/run/106-client-neutral-model-effort-routing/evidence/` for client-neutral effort routing, four-state effort-source vocabulary, borrowed/related-effort priors, and Phase 5 packaged-SEA + Pi QA.
 
 - Prefer run-92 evidence under `.recursive/run/92-configured-model-pool-benchmark-convergence/evidence/` for membership-revision convergence, honest null candidate-space, benchmark quarantine, controller eject, and Phase 5 `:3501` QA.
 - Prefer run-89 evidence under `.recursive/run/89-codex-role-model-package/evidence/` for Codex adapter, tool-bridge, npm/marketplace, and Phase 5 live routing proofs.

@@ -56,6 +56,9 @@ async function census(
   rows: unknown[],
   configuredEndpointIds = ["current-a", "current-b"],
   days = 30,
+  invokeResult: unknown = { ladders: rows, nextCursor: null },
+  decodeExternalizedOperatorReadback: (input: { value: unknown }) => unknown = (input) =>
+    input.value,
 ) {
   const source = await readFile(path.join(hostRoot, "src/cli.ts"), "utf8");
   const begin = source.indexOf("        routeFocusCandidates: async () => {");
@@ -82,12 +85,13 @@ async function census(
     "readRouteLearningDefaults",
     "resolveLearningPolicyStateRoot",
     "readRouteLadderCensus",
+    "decodeExternalizedOperatorReadback",
     `${js}return provider.routeFocusCandidates();`,
   );
   const clock = vi.spyOn(Date, "now").mockReturnValue(nowMs);
   try {
     const candidates = await run(
-      { current: { invoke: async () => ({ ladders: rows, nextCursor: null }) } },
+      { current: { invoke: async () => invokeResult } },
       (x: unknown) => x,
       (_cap: string, value: unknown) => value,
       { ...input, repoRoot: "." },
@@ -96,6 +100,7 @@ async function census(
       () => ({ routeLearning: { stalenessWindowDays: days } }),
       () => input.runtimeStateRoot,
       readRouteLadderCensus,
+      decodeExternalizedOperatorReadback,
     );
     return { candidates, logs };
   } finally {
@@ -126,6 +131,29 @@ describe("run105 R8 production census", () => {
     expect(result.candidates).toBeNull();
     expect(result.logs.length).toBeGreaterThan(0);
   });
+  test("decodes externalized route ladder index readback before deciding census availability", async () => {
+    const a = await state();
+    seed(a.databasePath, "externalized-1", "writer", "coder.review");
+    const marker = { transferState: "externalized", resultHash: "sha256:ladder-index" };
+    const decoded: unknown[] = [];
+    const result = await census(a, [], ["current-a"], 30, marker, (input) => {
+      decoded.push(input.value);
+      return { ladders: [ladder("coder.review")], nextCursor: null };
+    });
+    expect(decoded).toEqual([marker]);
+    expect(result.logs).toEqual([]);
+    expect(result.candidates).toEqual([
+      {
+        roleId: "writer",
+        taskTypeId: "coder.review",
+        requestCount: 1,
+        admitted: 1,
+        configured: 1,
+        rolledBack: false,
+      },
+    ]);
+  });
+
   test("counts distinct classified live requests inside the window and unions no-ladder tasks", async () => {
     const a = await state();
     seed(a.databasePath, "a-1", "writer", "coder.review");

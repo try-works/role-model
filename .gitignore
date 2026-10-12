@@ -5,6 +5,8 @@ dist/
 coverage/
 *.tsbuildinfo
 role-model-router/rust/target/
+.turbo/
+**/.turbo/
 runtime-output/
 .cache/
 .tmp/
@@ -18,3 +20,4 @@ role-model-router/apps/runtime-ui/test-results/
 /.recursive/config/recursive-router-discovered.json
 # CI paired-checkout directory (checkout of try-works/role-model-internal nested by the track-b lane)
 _private/
+/.recursive/run/106-client-neutral-model-effort-routing/qa-state-sea//

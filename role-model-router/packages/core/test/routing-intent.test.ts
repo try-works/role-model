@@ -374,7 +374,7 @@ describe("routing intent metadata", () => {
     expect(decision).toMatchObject({
       chosen_endpoint_id: "deepseek.flash-high",
       reasoning_effort: "high",
-      effort_source: "variant",
+      effort_source: "named",
     });
     expect(decision.scored_candidates[0]).toMatchObject({
       endpoint_id: "deepseek.flash-high",

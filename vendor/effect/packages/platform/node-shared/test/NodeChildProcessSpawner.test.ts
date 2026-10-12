@@ -3,16 +3,16 @@ import * as NodeChildProcessSpawner from "@effect/platform-node-shared/NodeChild
 import * as NodeFileSystem from "@effect/platform-node-shared/NodeFileSystem"
 import * as NodePath from "@effect/platform-node-shared/NodePath"
 import { assert, describe, it } from "@effect/vitest"
-import * as ChildProcessSpawnerTest from "effect-test/unstable/process/ChildProcessSpawnerTest"
+import * as ChildProcessSpawnerTest from "effect-test/process/ChildProcessSpawnerTest"
 import * as ByteSize from "effect/ByteSize"
 import * as Deferred from "effect/Deferred"
 import * as Effect from "effect/Effect"
 import * as Exit from "effect/Exit"
 import * as FileSystem from "effect/FileSystem"
 import * as Layer from "effect/Layer"
+import * as ChildProcess from "effect/process/ChildProcess"
 import * as Scope from "effect/Scope"
 import * as Stream from "effect/Stream"
-import * as ChildProcess from "effect/unstable/process/ChildProcess"
 import { join } from "node:path"
 
 const NodeServices = NodeChildProcessSpawner.layer.pipe(
@@ -187,6 +187,22 @@ describe.skipIf(process.platform === "win32")("process group cleanup", () => {
       yield* Scope.close(scope, Exit.void)
 
       assert.strictEqual(yield* fs.readFileString(marker), "exited")
+    }).pipe(Effect.scoped, Effect.provide(NodeServices)))
+
+  it.live("scope release force kills descendants after the leader exits with a non-zero code", () =>
+    Effect.gen(function*() {
+      const { descendantPid, handle, marker, scope } = yield* startProcessGroup("ignore-signal", {
+        stdin: "pipe",
+        forceKillAfter: "200 millis"
+      })
+      yield* Effect.addFinalizer(() => killDescendant(descendantPid))
+
+      yield* Stream.run(Stream.make(new TextEncoder().encode("exit 1\n")), handle.stdin)
+      assert.strictEqual(yield* handle.exitCode, 1)
+
+      yield* Scope.close(scope, Exit.void).pipe(liveTimeout(2_000))
+
+      yield* assertHeartbeatStopped(marker)
     }).pipe(Effect.scoped, Effect.provide(NodeServices)))
 
   it.live("scope release cleans descendants after the leader is killed externally", () =>

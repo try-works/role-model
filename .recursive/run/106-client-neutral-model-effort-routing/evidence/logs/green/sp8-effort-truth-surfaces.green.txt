@@ -1,0 +1,21 @@
+SP8 GREEN - R11 remaining surfaces (model pool / benchmark / request / endpoints)
+command: corepack pnpm --filter @role-model-router/runtime-ui exec vitest run app/routes/endpoints.test.tsx app/routes/requests.test.tsx app/routes/control-benchmark.test.ts app/routes/control-models.test.ts app/routes/request-detail.test.tsx
+observed: PASS
+exitCode: 0
+
+--- vitest output ---
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/106-client-neutral-model-effort-routing/role-model-router/apps/runtime-ui[39m
+
+ [32m✓[39m app/routes/requests.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m app/routes/request-detail.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m app/routes/endpoints.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 39[2mms[22m[39m
+ [32m✓[39m app/routes/control-benchmark.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 80[2mms[22m[39m
+ [32m✓[39m app/routes/control-models.test.ts [2m([22m[2m33 tests[22m[2m)[22m[32m 181[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m5 passed[39m[22m[90m (5)[39m
+[2m      Tests [22m [1m[32m45 passed[39m[22m[90m (45)[39m
+[2m   Start at [22m 12:46:06
+[2m   Duration [22m 5.55s[2m (transform 4.31s, setup 0ms, collect 15.49s, tests 318ms, environment 3ms, prepare 3.12s)[22m
+
+

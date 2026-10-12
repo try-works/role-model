@@ -114,7 +114,7 @@ describe("telemetry chart config", () => {
     }
     expect(requestsRoute).toContain('label: "Selected model"');
     expect(requestsRoute).toContain('label: "Endpoint effort"');
-    expect(requestsRoute).toContain('?? "Default"');
+    expect(requestsRoute).toContain("formatEffectiveEffortDisclosure");
     expect(requestsRoute).not.toContain('label: "Request effort"');
   });
 });

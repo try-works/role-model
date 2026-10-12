@@ -1565,6 +1565,7 @@ export function buildEndpointCatalogRows(endpoints: readonly RuntimeEndpoint[]):
   benchmarkEligible?: boolean;
   displayName?: string;
   reasoningEffort?: string | null;
+  effortSource?: string | null;
   upstreamModelId?: string | null;
 }> {
   return [...endpoints]
@@ -1597,6 +1598,7 @@ export function buildEndpointCatalogRows(endpoints: readonly RuntimeEndpoint[]):
         ...(typeof endpoint.benchmarkEligible === "boolean"
           ? { benchmarkEligible: endpoint.benchmarkEligible }
           : {}),
+        ...(endpoint.effortSource ? { effortSource: endpoint.effortSource } : {}),
         ...(reasoningEffort || endpoint.displayName || upstreamModelId
           ? {
               displayName: formatEndpointDisplayName({ base, reasoningEffort }),

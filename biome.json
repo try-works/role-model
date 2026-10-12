@@ -25,6 +25,8 @@
       "**/.recursive/**",
       "**/.react-router/**",
       "**/.source/**",
+      ".turbo/**",
+      "**/.turbo/**",
       ".tmp/**",
       ".tmp-req-*.json",
       "tmp-req-*.json",

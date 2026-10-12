@@ -19,7 +19,8 @@ import {
   mutedPanelClassName,
   supportingTextClassName,
 } from "../lib/design-system";
-import { formatEndpointDisplayPath, formatReasoningEffortLabel } from "../lib/effort-identity";
+import { formatEndpointDisplayPath } from "../lib/effort-identity";
+import { formatEffectiveEffortDisclosure } from "../lib/effort-truth";
 import { startDeferredLiveRefresh } from "../lib/live-refresh";
 import { adaptObserveChartBlock } from "../lib/observe-chart-adapter";
 import type {
@@ -635,7 +636,10 @@ export default function RequestsRoute() {
                       {
                         id: "effort",
                         label: "Endpoint effort",
-                        value: formatReasoningEffortLabel(request.reasoningEffort) ?? "Default",
+                        value: formatEffectiveEffortDisclosure({
+                          reasoningEffort: request.reasoningEffort,
+                          effortSource: request.effortSource,
+                        }),
                       },
                       {
                         id: "status",

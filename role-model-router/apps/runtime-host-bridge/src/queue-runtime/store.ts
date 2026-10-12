@@ -17,7 +17,7 @@ import path from "node:path";
 
 import { SqliteClient } from "@effect/sql-sqlite-node";
 import { Duration, Layer } from "effect";
-import { PersistedQueue } from "effect/unstable/persistence";
+import { PersistedQueue } from "effect/persistence";
 
 import type { ResolvedQueuePolicy } from "./policy.js";
 

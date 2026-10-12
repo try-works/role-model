@@ -1,0 +1,14 @@
+R8 RED - non-inferiority ranking integration (routeRequest)
+command: corepack pnpm --filter @role-model-router/core exec vitest run test/run106-non-inferiority-ranking.test.ts
+
+--- vitest stdout ---
+ RUN  v3.2.4
+
+ FAIL  test/run106-non-inferiority-ranking.test.ts > run106 non-inferiority ranking (R8 integration) > a non-inferior, materially faster and cheaper arm outranks a dominated weighted leader
+AssertionError: expected 'incumbent-dominated' to be 'challenger-non-inferior' // Object.is equality
+
+Expected: "challenger-non-inferior"
+Received: "incumbent-dominated"
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)

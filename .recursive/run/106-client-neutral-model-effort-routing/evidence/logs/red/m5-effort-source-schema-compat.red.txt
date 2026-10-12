@@ -1,0 +1,3 @@
+M-5 RED - router-decision effort_source backward compatibility
+command: corepack pnpm --filter @role-model/conformance exec vitest run src/run106-effort-source-schema-compat.test.ts
+observed: 1 test failed - effort_source enum is [named, disabled, provider_default, none]; legacy client/variant/variant_coerced missing.

@@ -1,0 +1,49 @@
+command: corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/run106-discovery-effort-projection.test.ts
+exit code: 1
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/106-client-neutral-model-effort-routing/role-model-router/apps/runtime-host-bridge[39m
+
+ [31m❯[39m test/run106-discovery-effort-projection.test.ts [2m([22m[2m2 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 71[2mms[22m[39m
+   [32m✓[39m run106 discovery effort projection (R9 integration)[2m > [22mpublishes the pool-wide effort union and portable intersection[32m 45[2mms[22m[39m
+[31m   [31m×[31m run106 discovery effort projection (R9 integration)[2m > [22mincludes provider-default declared levels in the union/intersection[39m[32m 23[2mms[22m[39m
+[31m     → expected { …(2) } to deeply equal { Object (union, portableIntersection) }[39m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (2)[39m
+[2m   Start at [22m 18:45:03
+[2m   Duration [22m 2.50s[2m (transform 594ms, setup 0ms, collect 1.62s, tests 71ms, environment 1ms, prepare 323ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\106-client-neutral-model-effort-routing\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/run106-discovery-effort-projection.test.ts
+
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m test/run106-discovery-effort-projection.test.ts[2m > [22mrun106 discovery effort projection (R9 integration)[2m > [22mincludes provider-default declared levels in the union/intersection
+[31m[1mAssertionError[22m: expected { …(2) } to deeply equal { Object (union, portableIntersection) }[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[33m@@ -4,8 +4,7 @@[39m
+[2m    ],[22m
+[2m    "union": [[22m
+[2m      "high",[22m
+[2m      "low",[22m
+[2m      "max",[22m
+[32m-     "medium",[39m
+[2m    ],[22m
+[2m  }[22m
+
+[36m [2m❯[22m test/run106-discovery-effort-projection.test.ts:[2m128:30[22m[39m
+    [90m126| [39m    })[33m;[39m
+    [90m127| [39m
+    [90m128| [39m    [34mexpect[39m(discovery[33m.[39meffort)[33m.[39m[34mtoEqual[39m({
+    [90m   | [39m                             [31m^[39m
+    [90m129| [39m      union[33m:[39m [[32m"high"[39m[33m,[39m [32m"low"[39m[33m,[39m [32m"max"[39m[33m,[39m [32m"medium"[39m][33m,[39m
+    [90m130| [39m      portableIntersection[33m:[39m [[32m"low"[39m][33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+

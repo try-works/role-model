@@ -7,14 +7,17 @@ export * from "./projections/index.js";
 export * from "./lineage.js";
 
 export type TraceEffortSource = "none" | "client" | "variant" | "variant_coerced";
+export type TraceEffortSourceValue = TraceEffortSource;
 
 export interface TraceEffortFields {
   readonly reasoning_effort?: string | null;
   readonly effort_source?: TraceEffortSource;
 }
 
-export type TraceSpanRecord = TraceSpan & TraceEffortFields;
-export type TraceEventRecord = TraceEvent & TraceEffortFields;
+export type TraceSpanRecord = Omit<TraceSpan, "effort_source" | "reasoning_effort"> &
+  TraceEffortFields;
+export type TraceEventRecord = Omit<TraceEvent, "effort_source" | "reasoning_effort"> &
+  TraceEffortFields;
 
 export async function writeTraceArtifacts(
   outputDir: string,

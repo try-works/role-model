@@ -1,0 +1,3 @@
+SP4 GREEN - effort policy resolution
+command: corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/run106-effort-policy-resolution.test.ts
+result: 5 tests passed (5).

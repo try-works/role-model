@@ -59,7 +59,9 @@ jobs:
           name: Run the maintained public CI contract
           command: |
             source "$HOME/.cargo/env"
-            corepack pnpm run ci:check
+            corepack pnpm run ci:fast
+            corepack pnpm run test:rust
+            corepack pnpm run smoke
   router-contract:
     executor: node24
     steps:

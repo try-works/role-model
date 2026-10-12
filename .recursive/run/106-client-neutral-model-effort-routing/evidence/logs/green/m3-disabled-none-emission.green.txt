@@ -1,0 +1,3 @@
+M-3 GREEN - disabled/none EffortSource emission
+command: corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/run106-effort-policy-normalization.test.ts test/run106-canonical-effort-emission.test.ts
+result: 15 tests passed (normalizeReasoningEffortPolicy returns source; reasoning.effort none/off -> disabled; resolveEndpointExecutionEffort emits disabled).

@@ -69,9 +69,24 @@ async function createReleaseFixture(): Promise<{ releaseDir: string }> {
     });
   }
 
+  const productDefaults =
+    "fixtures/source-authority/crowdsourced-evals-docs/guidance/product-defaults.json";
+  const productDefaultsSha256 = await writeArtifact(
+    releaseDir,
+    productDefaults,
+    "product-defaults",
+  );
+
   const manifest = {
     schemaVersion: "role-model.track-b-runtime-distribution.v2",
     publicSourceTree: "0123456789abcdef0123456789abcdef01234567",
+    sourceAuthorityFixtures: [
+      {
+        modulePath:
+          "fixtures/source-authority/crowdsourced-evals-docs/guidance/product-defaults.json",
+        artifactSha256: productDefaultsSha256,
+      },
+    ],
     sidecar: { modulePath: "sidecar.mjs", artifactSha256: sidecarSha256 },
     publicRuntimeAdapter: {
       modulePath: "public-runtime-adapter.mjs",
@@ -117,6 +132,12 @@ describe("Run 96 packaged runtime artifact closure", () => {
       "track-b-runtime/public-extension-host.mjs",
     );
     expect(closure.track_b_runtime.worker.path).toBe("track-b-runtime/worker-runtime.mjs");
+    expect(closure.track_b_runtime.source_authority_fixtures).toEqual([
+      expect.objectContaining({
+        path: "fixtures/source-authority/crowdsourced-evals-docs/guidance/product-defaults.json",
+        sha256: sha256("product-defaults"),
+      }),
+    ]);
     expect(closure.track_b_runtime.extensions).toHaveLength(13);
 
     await expect(
@@ -188,6 +209,13 @@ describe("Run 96 packaged runtime artifact closure", () => {
       ),
     );
     const sidecar = await writeArtifact(sourceRoot, "runtime-operations-server.mjs", "sidecar");
+    // Run 108 R7: the sidecar imports ./storage-audit.mjs at runtime (storage-audit readiness), so the
+    // distribution must carry the sibling module or the operator status degrades to "unobserved".
+    const storageAuditSha256 = await writeArtifact(
+      sourceRoot,
+      "storage-audit.mjs",
+      "storage-audit",
+    );
     const sourceAuthorityFixtures = await Promise.all(
       [
         ["capacity-slo-contracts.json", "capacity-fixture"],
@@ -259,6 +287,7 @@ describe("Run 96 packaged runtime artifact closure", () => {
           },
         },
         sidecar: { modulePath: "runtime-operations-server.mjs", artifactSha256: sidecar },
+        storageAudit: { modulePath: "storage-audit.mjs", artifactSha256: storageAuditSha256 },
         sourceAuthorityFixtures,
         publicExtensionHost: {
           modulePath: "public-extension-host.mjs",
@@ -271,6 +300,10 @@ describe("Run 96 packaged runtime artifact closure", () => {
     );
 
     await stageTrackBRuntimeDistribution({ sourceRoot, releaseDir });
+    // Run 108 R7: the sidecar's storage-audit sibling must be staged next to the sidecar.
+    await expect(readFile(path.join(releaseDir, "storage-audit.mjs"), "utf8")).resolves.toBe(
+      "storage-audit",
+    );
     await expect(
       readFile(path.join(releaseDir, "..", "..", "shared", "graph", "registry.json"), "utf8"),
     ).resolves.toBe(JSON.stringify(graphRegistry));
@@ -292,6 +325,9 @@ describe("Run 96 packaged runtime artifact closure", () => {
     for (const fixture of sourceAuthorityFixtures) {
       await expect(
         readFile(path.join(releaseDir, "..", "..", fixture.modulePath), "utf8"),
+      ).resolves.toBeTypeOf("string");
+      await expect(
+        readFile(path.join(releaseDir, "..", fixture.modulePath), "utf8"),
       ).resolves.toBeTypeOf("string");
     }
     await expect(
@@ -337,6 +373,13 @@ describe("Run 96 packaged runtime artifact closure", () => {
     );
     await writeArtifact(sourceRoot, "shared/queue-policy.json", queuePolicyFixture());
     const sidecar = await writeArtifact(sourceRoot, "runtime-operations-server.mjs", "sidecar");
+    // Run 108 R7: the sidecar imports ./storage-audit.mjs at runtime (storage-audit readiness), so the
+    // distribution must carry the sibling module or the operator status degrades to "unobserved".
+    const storageAuditSha256 = await writeArtifact(
+      sourceRoot,
+      "storage-audit.mjs",
+      "storage-audit",
+    );
     const extensionHostSha256 = await writeArtifact(
       sourceRoot,
       "public-extension-host.mjs",
@@ -414,6 +457,9 @@ describe("Run 96 packaged runtime artifact closure", () => {
     ).resolves.toMatchObject({ compatibilityGeneration: "N" });
     await expect(
       readFile(path.join(declaredRelease, "..", "..", declaredFixturePath), "utf8"),
+    ).resolves.toBe("retention-policies");
+    await expect(
+      readFile(path.join(declaredRelease, "..", declaredFixturePath), "utf8"),
     ).resolves.toBe("retention-policies");
 
     declaredManifest.sourceAuthorityFixtures = [

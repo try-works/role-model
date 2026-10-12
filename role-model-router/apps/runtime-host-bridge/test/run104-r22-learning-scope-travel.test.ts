@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 
-import { readCaptureRoleId } from "../src/cli.js";
+import { readCaptureRoleId, readCaptureTaskTypeId } from "../src/cli.js";
 
 /**
  * Run 104 R22 (R22-B), TDD strict - the replay path's declared taxonomy must reach the comparison.
@@ -51,4 +51,47 @@ test("R22-B: a capture that classified no role reports absence rather than inven
   ).toBeUndefined();
   expect(readCaptureRoleId({} as never)).toBeUndefined();
   expect(readCaptureRoleId({ classification: { roleId: "   " } } as never)).toBeUndefined();
+});
+
+/**
+ * Run 106 (live finding on the dev replay queue, 2026-10-07): the family travels with the role, and it
+ * needs the SAME classification fallback. Every fixture above declares a flat \`taskTypeId\`, which is why
+ * the gap was invisible: the reader used for the family read only that flat copy, so a capture that
+ * records the family where the contract actually puts it - \`classification.taskTypeId\` - produced a
+ * comparison whose comparability block named the role and not the task. The knowledge worker scopes a
+ * comparison by \`(comparability.roleId, comparability.taskTypeId)\` and excludes anything incomplete
+ * fail-closed (\`incomplete_scope\`), so those comparisons were finalized, never counted by the admission
+ * floor, and no pack could ever be written for the task.
+ *
+ * Measured: two of eight finalized groups on the dev root carried \`taskTypeId: null\` while their captures'
+ * durable classification named \`writer.summarize\`.
+ */
+const captureWithClassifiedFamily = () => ({
+  classification: {
+    taskTypeId: "writer.summarize",
+    roleId: "writer",
+    taxonomyVersion: "1.0.0-alpha.1",
+    toolClassIds: [],
+  },
+});
+
+test("R22-B follow-up: a family declared only inside the capture's classification is returned", () => {
+  expect(readCaptureTaskTypeId(captureWithClassifiedFamily() as never)).toBe("writer.summarize");
+});
+
+test("R22-B follow-up: a family declared on the capture itself is still preferred", () => {
+  expect(
+    readCaptureTaskTypeId({
+      taskTypeId: " coder.review ",
+      ...captureWithClassifiedFamily(),
+    } as never),
+  ).toBe("coder.review");
+});
+
+test("R22-B follow-up: a capture that classified no family reports absence rather than inventing one", () => {
+  expect(readCaptureTaskTypeId({} as never)).toBeUndefined();
+  expect(readCaptureTaskTypeId({ taskTypeId: "   " } as never)).toBeUndefined();
+  expect(
+    readCaptureTaskTypeId({ classification: { roleId: "writer", taskTypeId: "  " } } as never),
+  ).toBeUndefined();
 });

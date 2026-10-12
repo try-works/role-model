@@ -490,10 +490,35 @@ export function appliedShareOf(advisory: unknown): number | null {
   return applied / observed;
 }
 
+/**
+ * Run 114 Tier 1: the fallback-reason rows plus the two numbers a bare row list cannot state - how many
+ * reasons existed before the bound (`total`) and how many the bound hid (`omitted`).
+ *
+ * This replaces `fallbackReasonRows` as a RENAME, not an overload: the return type changed shape, and a
+ * caller still reading `.length` on it would otherwise have compiled silently against an object. There is
+ * exactly one production call site, and the compiler is the safety net for it.
+ */
+export interface FallbackReasonSummary {
+  readonly rows: readonly { readonly reason: string; readonly count: number }[];
+  /** Every positive-count reason, before the slice. */
+  readonly total: number;
+  /** `total - rows.length`: the reasons the bound left out. */
+  readonly omitted: number;
+}
+
 /** Fallback reasons, most frequent first, bounded so one long tail cannot grow the panel without limit. */
-export function fallbackReasonRows(
+export function fallbackReasonSummary(advisory: unknown, limit = 4): FallbackReasonSummary {
+  const parsed = parsedFallbackReasons(advisory);
+  const rows = parsed.slice(0, Math.max(0, limit));
+  return { rows, total: parsed.length, omitted: parsed.length - rows.length };
+}
+
+/**
+ * The one parse and sort of `advisory.fallbackReasons`, shared by the summary and the basis so the order
+ * and the counts can never be derived twice and disagree.
+ */
+function parsedFallbackReasons(
   advisory: unknown,
-  limit = 4,
 ): readonly { readonly reason: string; readonly count: number }[] {
   const reasons = asRecordValue(asRecordValue(advisory)?.fallbackReasons);
   if (!reasons) return [];
@@ -504,8 +529,206 @@ export function fallbackReasonRows(
     })
     .sort(
       (left, right) => right.count - left.count || left.reason.localeCompare(right.reason, "en"),
-    )
-    .slice(0, Math.max(0, limit));
+    );
+}
+
+/**
+ * Run 114 Tier 1: the denominator the reason row never had. `counted` is the sum of the positive reason
+ * counts; `retainedLive` is what the reader's own totals say stayed live (considered minus applied, floored
+ * at zero). `reconciled` is true only when the two agree - the one case in which the reasons are a
+ * partition of the retained live decisions and may be labelled as one.
+ */
+export function advisoryReasonBasis(advisory: unknown): {
+  readonly counted: number;
+  readonly retainedLive: number | null;
+  readonly reconciled: boolean;
+} {
+  const counted = parsedFallbackReasons(advisory).reduce((sum, row) => sum + row.count, 0);
+  const record = asRecordValue(advisory);
+  const considered = numberOrNull(record?.considered);
+  const applied = numberOrNull(record?.applied);
+  const retainedLive =
+    considered === null || applied === null ? null : Math.max(0, considered - applied);
+  return { counted, retainedLive, reconciled: retainedLive !== null && counted === retainedLive };
+}
+
+/**
+ * Run 114 Tier 1: where the observed decisions came from. Most of the observed traffic is machine-generated
+ * replay (shadow) work, so `applied / observed` only reads honestly beside the split.
+ *
+ * Preference order: the reader's own `advisory.origins` when it holds three finite non-negative integers,
+ * else the `origins` object the decisions readback already carries (basis `decisions`). `consistent`
+ * compares the sum against `advisory.observed`. The decisions-derived basis counts ENTRIES while `observed`
+ * is the cumulative total and entries are capped, so past the cap the two diverge - the guard catches that
+ * instead of printing a split that does not add up.
+ */
+export function advisoryOriginSplit(
+  advisory: unknown,
+  fallback: unknown,
+): {
+  readonly live: number;
+  readonly shadow: number;
+  readonly other: number;
+  /** Rows that aged out of the retained window before the producer tallied origins. 0 on older ledgers. */
+  readonly unattributed: number;
+  readonly basis: "advisory" | "decisions";
+  readonly consistent: boolean;
+} | null {
+  const own = originTripleOrNull(asRecordValue(asRecordValue(advisory)?.origins));
+  const readback = asRecordValue(fallback);
+  const fromDecisions =
+    originTripleOrNull(asRecordValue(readback?.origins)) ?? originTripleOrNull(readback);
+  const source = own
+    ? { basis: "advisory" as const, origins: own }
+    : fromDecisions
+      ? { basis: "decisions" as const, origins: fromDecisions }
+      : null;
+  if (!source) return null;
+  const observed = numberOrNull(asRecordValue(advisory)?.observed);
+  // originsUnattributed is the part of the population that aged out of the retained window before the
+  // producer began tallying (writer contract: live + shadow + other + unattributed === observed). It is
+  // absent on the decisions-derived basis and on ledgers written before the tally existed, so it defaults
+  // to 0 - which is exactly today's arithmetic, where nothing has aged out yet.
+  const unattributed = numberOrNull(asRecordValue(advisory)?.originsUnattributed) ?? 0;
+  const sum = source.origins.live + source.origins.shadow + source.origins.other + unattributed;
+  return {
+    ...source.origins,
+    unattributed,
+    basis: source.basis,
+    consistent: observed !== null && observed === sum,
+  };
+}
+
+function originTripleOrNull(
+  value: Record<string, unknown> | null,
+): { readonly live: number; readonly shadow: number; readonly other: number } | null {
+  if (!value) return null;
+  const live = numberOrNull(value.live);
+  const shadow = numberOrNull(value.shadow);
+  const other = numberOrNull(value.other);
+  if (live === null || shadow === null || other === null) return null;
+  if (![live, shadow, other].every((count) => Number.isInteger(count) && count >= 0)) return null;
+  return { live, shadow, other };
+}
+
+/**
+ * Run 114 Tier 2: the advisory source's own refusal and fault texts, in ONE easily-edited table.
+ *
+ * These strings are a de-facto contract that NOTHING enforces: they are the `refuse(...)`/`unavailable(...)`
+ * texts `route-advisory-source.ts` writes, plus the aged override (`advisory source beyond max age`)
+ * `track-b-runtime.ts` stamps on a recalled entry. The observation carries the one that applies as `reason`
+ * (Tier 2, omitted when there is none); the ledger entry carries `fallbackReason` beside it as the Tier 1
+ * tally key. A code that is not in this table is NOT guessed at - `advisoryRefusalView` returns it verbatim
+ * with kind `other`, so drift shows up as a raw code on the panel instead of a meaning we invented.
+ */
+export const ADVISORY_REFUSAL_VOCABULARY: {
+  readonly absent: readonly string[];
+  readonly fault: readonly string[];
+} = {
+  /**
+   * Nothing to advise with, and that is a NORMAL state: the role/task has no admitted pack, the request
+   * cannot be scoped, an operator rolled the ladder back, or the kill switch is engaged. Nothing is broken.
+   */
+  absent: [
+    "scope id required",
+    "role and task scope required",
+    "no admitted rung",
+    "no active pack",
+    "active pack carries no route package",
+    "route ladder unavailable or scope mismatch",
+    "route ladder scope or version mismatch",
+    "rolled back",
+    "rolled_back",
+    "kill switch engaged",
+  ],
+  /**
+   * The durable state could not be read, parsed, or TRUSTED: a missing/unvalidated pack receipt, malformed
+   * ladder evidence, an unavailable clock or policy, a guardrail breach, or an aged-out recall. These are the
+   * ones an operator should chase.
+   *
+   * Taken verbatim from every `refuse(...)`/`unavailable(...)` call site in route-advisory-source.ts, plus the
+   * aged override track-b-runtime.ts stamps on a recalled entry. A code NOT listed here is deliberately left to
+   * `other`, which shows the raw code and invents no meaning - the table is allowed to be incomplete, and drift
+   * must surface as a visible code rather than a wrong gloss.
+   */
+  fault: [
+    "effective advisory policy unavailable",
+    "evidence clock or window unavailable",
+    "rollout state unavailable",
+    "active pack record unavailable",
+    "active pack has no validation receipt",
+    "validation receipt unavailable",
+    "validation receipt does not validate",
+    "validation receipt carries no confidence",
+    "route ladder evidence or rollout unavailable",
+    "route ladder rollback unavailable",
+    "route ladder rungs malformed",
+    "route ladder completeness malformed",
+    "route ladder provenance unavailable",
+    "route ladder evidence scope or provenance mismatch",
+    "route ladder accepted ranking evidence unavailable",
+    "route ladder effective endpoint evidence unavailable",
+    "route ladder accepted admission policy unavailable",
+    "route ladder accepted endpoint proof malformed",
+    "route ladder evidence time unavailable",
+    "route ladder evidence time mismatch",
+    "route ladder evidence taxonomy mismatch",
+    "route ladder confidence mismatch",
+    "route rollout safety unavailable",
+    "guardrail evidence malformed",
+    "guardrail duration unavailable",
+    "guardrail rollback engaged",
+    "guardrail or scope rollback engaged",
+    "sustained guardrail rollback engaged",
+    "advisory source beyond max age",
+  ],
+};
+
+const ADVISORY_REFUSAL_PHRASE = {
+  absent: "no usable pack",
+  fault: "the advisory store could not be read",
+} as const;
+
+/**
+ * Run 114 Tier 2 (read side): why this decision's advisory did not apply, in words an operator can act on,
+ * with the raw code kept for the title attribute. The Tier-2 `reason` is the explanation and wins over the
+ * Tier-1 `fallbackReason` tally key on the same row; either alone still renders.
+ */
+export function advisoryRefusalView(row: unknown): {
+  readonly code: string | null;
+  readonly phrase: string;
+  readonly label: string;
+  readonly kind: "absent" | "fault" | "other" | "none";
+  /**
+   * WHICH QUESTION THIS CODE ANSWERS. These are two different concepts and must never share a label:
+   *   "reason"   - the advisory SOURCE had nothing to say (absent or fault): why is there no advice?
+   *   "fallback" - an advisory EXISTED and this decision still did not apply it (cohort_excluded,
+   *                advisory_matches_baseline, ...): why was the advice not used? That is a routing outcome,
+   *                NOT a refusal, and calling it one would repeat the defect this panel is being fixed for -
+   *                two populations rendered under a single heading.
+   */
+  readonly source: "reason" | "fallback" | "none";
+} {
+  const record = asRecordValue(row);
+  const reason = reasonTextOrNull(record?.reason);
+  const fallback = reasonTextOrNull(record?.fallbackReason);
+  const code = reason ?? fallback;
+  if (code === null) return { code: null, phrase: "", label: "", kind: "none", source: "none" };
+  const source = reason !== null ? ("reason" as const) : ("fallback" as const);
+  const label = source === "reason" ? "advisory unavailable" : "advisory not applied";
+  if (ADVISORY_REFUSAL_VOCABULARY.absent.includes(code)) {
+    return { code, phrase: ADVISORY_REFUSAL_PHRASE.absent, label, kind: "absent", source };
+  }
+  if (ADVISORY_REFUSAL_VOCABULARY.fault.includes(code)) {
+    return { code, phrase: ADVISORY_REFUSAL_PHRASE.fault, label, kind: "fault", source };
+  }
+  // Never an invented meaning: an unknown code speaks for itself.
+  return { code, phrase: code, label, kind: "other", source };
+}
+
+/** The reason predicate the ledger contract shares with this reader: a non-blank string, matched trimmed. */
+function reasonTextOrNull(value: unknown): string | null {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 
 /**

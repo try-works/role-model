@@ -1,0 +1,4 @@
+SP1 GREEN - effort policy normalization
+command: corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/run106-effort-policy-normalization.test.ts
+result: 6 tests passed (6)
+behavior: omitted->router, scalar->preferred, explicit strict/preferred authoritative, router ignores hint, invalid policy throws.

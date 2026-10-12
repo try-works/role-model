@@ -276,7 +276,22 @@ export function selectFocusTask(
       Number(candidate.requestCount) > 0,
   );
   if (eligible.length === 0) return null;
-  const sorted = [...eligible].sort((left, right) => {
+  // D1: a COMPLETED family must not hold the walk while an incomplete one is waiting.
+  //
+  // Measured live on the stage RC (:3457, 2026-10-10): the comparator below ranks requestCount first
+  // and consults the fill gap only as a tie-break, so a family that had finished (gap 0) and was also
+  // the most-requested won every tick. writer.writer.summarize sat at 2/7 for over an hour receiving
+  // ZERO new comparisons although it held evidence in all four partitions, so no second ladder and no
+  // pack could be produced - the walk was starved, not slow. Traffic cannot fix this: traffic feeds
+  // the family that already won.
+  //
+  // So: rank only families that still have something to fill; fall back to the full set when every
+  // eligible family is complete, because then there is nothing left to prefer.
+  const fillable = eligible.filter(
+    (candidate) => Math.max(0, (candidate.configured ?? 0) - (candidate.admitted ?? 0)) > 0,
+  );
+  const pool = fillable.length > 0 ? fillable : eligible;
+  const sorted = [...pool].sort((left, right) => {
     // Most-requested first.
     if (right.requestCount !== left.requestCount) return right.requestCount - left.requestCount;
     // Then most-unfilled (largest gap between configured and admitted).
@@ -317,7 +332,27 @@ export interface RouteFocusDispatchInput {
    */
   readonly excludedEndpointIds?: readonly string[];
   readonly rungs?: readonly RouteLadderRung[] | null;
+  /**
+   * Run 106 (live finding on the dev replay queue, 2026-10-07): endpointId -> the reasoning effort that
+   * endpoint is configured to run at. A counterfactual arm whose effort differs from the source capture's
+   * is finalized `arm_effort_mismatch` and then discarded fail-closed by the learner's admission floor, so
+   * the arm is chosen effort-matched when the configuration offers one. Absent keeps the previous
+   * first-survivor behaviour exactly, so a caller with no effort view is unaffected.
+   */
+  readonly endpointEfforts?: Readonly<Record<string, string | null>> | null;
+  /** The effort the source capture actually ran at, resolved from its own endpoint. */
+  readonly sourceReasoningEffort?: string | null;
 }
+
+/**
+ * Run 106: effort identity is compared the way the host compares it when it records the comparability
+ * dimension - trimmed and case-insensitive - so the arm this chooses and the record that grades it agree.
+ */
+const normalizeDispatchEffort = (value: unknown): string | null => {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim().toLowerCase();
+  return trimmed.length > 0 ? trimmed : null;
+};
 
 export interface PlannedFocusDispatch {
   readonly roleId: string;
@@ -373,21 +408,44 @@ export function planFocusDispatch(
       .map((rung) => rung.endpointId)
       .filter((value): value is string => typeof value === "string" && value.length > 0),
   );
+  const survivors: string[] = [];
   for (const endpointId of input.configuredEndpointIds ?? []) {
     if (typeof endpointId !== "string" || endpointId.length === 0) continue;
     if (admitted.has(endpointId)) continue;
     if (unavailable.has(endpointId)) continue;
     if (ranked.has(endpointId)) continue;
     if (excluded.has(endpointId)) continue;
-    return {
-      roleId: focus.roleId,
-      taskTypeId: focus.taskTypeId,
-      scopeKey: scopeKeyFor(focus.roleId, focus.taskTypeId),
-      captureRef: input.replayableCapture.captureRef,
-      endpointId,
-    };
+    survivors.push(endpointId);
   }
-  return null;
+  const captureRef = input.replayableCapture.captureRef;
+  const plan = (endpointId: string): PlannedFocusDispatch => ({
+    roleId: focus.roleId,
+    taskTypeId: focus.taskTypeId,
+    scopeKey: scopeKeyFor(focus.roleId, focus.taskTypeId),
+    captureRef,
+    endpointId,
+  });
+  /**
+   * Run 106: prefer an arm that runs at the source capture's effort. The walk above is otherwise
+   * effort-blind, and the downstream same-model repair cannot rescue it when the arm's model IS the
+   * source's model - the only same-model endpoint at the source effort is then the source itself, which
+   * the distinct-source rule excludes. Measured on the dev root: every comparison sourced from the
+   * max-effort variant of the source's model was finalized `arm_effort_mismatch` and discarded, and that
+   * endpoint could never contribute a single eligible comparison.
+   *
+   * This never refuses: when no configured survivor runs at the source effort - or the caller supplied no
+   * effort view at all - the first survivor is returned exactly as before, so nothing that used to
+   * dispatch stops dispatching.
+   */
+  const sourceEffort = normalizeDispatchEffort(input.sourceReasoningEffort);
+  const efforts = input.endpointEfforts ?? null;
+  if (sourceEffort !== null && efforts !== null) {
+    const matched = survivors.find(
+      (endpointId) => normalizeDispatchEffort(efforts[endpointId]) === sourceEffort,
+    );
+    if (matched) return plan(matched);
+  }
+  return survivors.length > 0 ? plan(survivors[0] as string) : null;
 }
 
 /* --------------------------- derived activation (R9/D7) --------------------------- */

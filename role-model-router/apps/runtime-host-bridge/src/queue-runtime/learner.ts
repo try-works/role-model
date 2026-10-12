@@ -19,7 +19,7 @@
  * driver workstream, recorded as an addendum candidate.
  */
 import { Duration, Effect, Schedule, Schema } from "effect";
-import { PersistedQueue } from "effect/unstable/persistence";
+import { PersistedQueue } from "effect/persistence";
 
 import type { ResolvedQueuePolicy } from "./policy.js";
 

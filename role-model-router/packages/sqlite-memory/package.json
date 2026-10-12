@@ -14,6 +14,7 @@
   "dependencies": {
     "@role-model/protocol-types": "workspace:*",
     "@role-model-router/catalog": "workspace:*",
+    "@role-model-router/core": "workspace:*",
     "@role-model-router/profile-aggregator": "workspace:*",
     "@role-model-router/provider-account": "workspace:*"
   },

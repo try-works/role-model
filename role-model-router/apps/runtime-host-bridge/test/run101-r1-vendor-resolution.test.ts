@@ -52,8 +52,21 @@ async function importSpecifier<T = Record<string, unknown>>(specifier: string): 
 describe("@recursive:101-effect-mq-queue-rebuild @sp1 R1 vendored Effect resolution", () => {
   it("resolves both vendored wrappers from the host bridge", () => {
     expect(() => require.resolve(EFFECT_WRAPPER)).not.toThrow();
-    expect(() => require.resolve(`${EFFECT_WRAPPER}/unstable/persistence`)).not.toThrow();
+    expect(() => require.resolve(`${EFFECT_WRAPPER}/persistence`)).not.toThrow();
     expect(() => require.resolve(EFFECT_MQ_WRAPPER)).not.toThrow();
+  });
+
+  it("publishes `persistence` and leaves no trace of the removed unstable path", () => {
+    // effect@4.0.1 moved `unstable/persistence` to `persistence` and removed the
+    // old export paths (MIGRATION.md: "There are no compatibility exports for
+    // the old paths"). The wrapper discovers its published subpaths from the
+    // vendored tree, so this asserts the built `dist/` moved too: an aliased or
+    // stale `dist/unstable/persistence.js` would silently keep the deleted
+    // layout resolvable and hide a real import-site regression.
+    expect(() => require.resolve(`${EFFECT_WRAPPER}/unstable/persistence`)).toThrow();
+    const wrapperDir = path.join(repoRoot, "role-model-router", "packages", "effect");
+    expect(existsSync(path.join(wrapperDir, "dist", "persistence.js"))).toBe(true);
+    expect(existsSync(path.join(wrapperDir, "dist", "unstable", "persistence.js"))).toBe(false);
   });
 
   it("loads the Effect runtime and PersistedQueue through the wrapper", async () => {
@@ -63,7 +76,7 @@ describe("@recursive:101-effect-mq-queue-rebuild @sp1 R1 vendored Effect resolut
 
     const persistence = await importSpecifier<{
       PersistedQueue?: { make?: unknown };
-    }>(`${EFFECT_WRAPPER}/unstable/persistence`);
+    }>(`${EFFECT_WRAPPER}/persistence`);
     expect(typeof persistence.PersistedQueue?.make).toBe("function");
   });
 
@@ -85,7 +98,7 @@ describe("@recursive:101-effect-mq-queue-rebuild @sp1 R1 vendored Effect resolut
       stdin: {
         contents: [
           `import * as Effect from "${EFFECT_WRAPPER}";`,
-          `import * as PersistedQueue from "${EFFECT_WRAPPER}/unstable/persistence";`,
+          `import * as PersistedQueue from "${EFFECT_WRAPPER}/persistence";`,
           `import * as Mq from "${EFFECT_MQ_WRAPPER}";`,
           "export const probe = [Effect.Effect, PersistedQueue.PersistedQueue, Mq.Job];",
         ].join("\n"),

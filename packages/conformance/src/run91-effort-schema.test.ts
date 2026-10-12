@@ -93,6 +93,7 @@ describe("Run 91 effort-instance protocol fields", () => {
         catalogCapturedAt: null,
         runtimeInventoryRevision: "run91",
       },
+      effort: { union: ["medium"], portableIntersection: [] },
     });
     assertValid(routerDecision, {
       routing_decision_id: "decision-1",

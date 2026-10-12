@@ -138,6 +138,25 @@ describe("run99 R25 live advisory outcome observation", () => {
       scoreGapBefore: 0.031,
     });
   });
+
+  // Run 107 Tier 2: the advisory source's own refusal/staleness text was in hand - the durable
+  // entry carries it (`TrackBDurableRouteAdvisoryEntry.reason`) - but the live observation never
+  // recorded it, so an operator could read "unavailable" without ever reading *why*.
+  test("run107 carries the advisory source refusal text, and omits the key when there is none", () => {
+    const withReason = buildLiveRouteAdvisoryObservation(
+      decision({ reason: "role and task scope required" }) as never,
+    );
+    expect(withReason).toMatchObject({ reason: "role and task scope required" });
+
+    // Byte safety: every live row written before this slice omits the key, and a fresh live
+    // decision has no refusal text, so the key must stay ABSENT rather than become an
+    // explicit null (the base builder omits it when the value is falsy).
+    const omitted = buildLiveRouteAdvisoryObservation(decision() as never);
+    expect("reason" in omitted).toBe(false);
+
+    const explicitNull = buildLiveRouteAdvisoryObservation(decision({ reason: null }) as never);
+    expect("reason" in explicitNull).toBe(false);
+  });
 });
 
 describe("run99 R25 advisory ledger totals", () => {

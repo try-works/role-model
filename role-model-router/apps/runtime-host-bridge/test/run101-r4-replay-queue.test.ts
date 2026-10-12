@@ -17,7 +17,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { Duration, Effect, Fiber, Schedule, Schema } from "effect";
-import { PersistedQueue } from "effect/unstable/persistence";
+import { PersistedQueue } from "effect/persistence";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { resolveQueuePolicy, validateQueuePolicy } from "../src/queue-runtime/policy.js";

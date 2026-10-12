@@ -1,0 +1,3 @@
+L-2 GREEN - formatEffortArmTruthDisclosure wired into the candidate surface
+command: corepack pnpm --filter @role-model-router/runtime-ui exec vitest run app/routes/router-candidates.test.tsx
+result: 3 tests passed (router-candidates.tsx now co-displays effort + evidence via formatEffortArmTruthDisclosure).

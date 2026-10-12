@@ -21,6 +21,7 @@ import {
   supportingTextClassName,
 } from "../lib/design-system";
 import { formatEndpointDisplayPath, formatModelIdentity } from "../lib/effort-identity";
+import { formatEffectiveEffortDisclosure } from "../lib/effort-truth";
 import { formatRoutingModeLabel } from "../lib/routing-mode";
 import { fetchRequestDetail } from "../lib/runtime-api";
 import { useShellHeaderOverride } from "../lib/shell-header-context";
@@ -326,6 +327,10 @@ export default function RequestDetailRoute() {
   const reasoningEffort =
     pickString(usageEvent, "reasoning_effort", "reasoningEffort") ??
     pickString(endpointIdentity, "reasoning_effort", "reasoningEffort");
+  const effortSource =
+    pickString(usageEvent, "effort_source", "effortSource") ??
+    pickString(endpointIdentity, "effort_source", "effortSource") ??
+    null;
   const modelDisplayName = formatModelIdentity({
     modelId: modelId ?? endpointId,
     endpointId,
@@ -819,6 +824,10 @@ export default function RequestDetailRoute() {
             {[
               ["Provider", providerKind],
               ["Model", modelDisplayName],
+              [
+                "Effective effort",
+                formatEffectiveEffortDisclosure({ reasoningEffort, effortSource }),
+              ],
               ["Finish reason", finishReason],
               ["Input tokens", inputTokenTruth.text],
               ["Output tokens", outputTokenTruth.text],

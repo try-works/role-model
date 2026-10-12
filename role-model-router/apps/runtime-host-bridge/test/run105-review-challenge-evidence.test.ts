@@ -10,7 +10,7 @@ import {
   persistRuntimeTelemetryFailure,
 } from "@role-model-router/sqlite-memory";
 import { Effect, Schema } from "effect";
-import { PersistedQueue } from "effect/unstable/persistence";
+import { PersistedQueue } from "effect/persistence";
 import ts from "typescript";
 import { afterAll, beforeAll, expect, test } from "vitest";
 import { makeQueueStoreLayer, resolveQueueStorePath } from "../src/queue-runtime/store.js";
@@ -887,6 +887,85 @@ privateTest(
     expect(value).toEqual([]);
   },
 );
+privateTest("terminal replay jobs do not poison pending-dispatch projection", async () => {
+  expect(pendingReader).toBeTypeOf("function");
+  const seenCapabilities: string[] = [];
+  const value = await pendingReader?.({
+    ...pendingInput(),
+    invoke: async (_id, capability, _value) => {
+      seenCapabilities.push(capability);
+      if (capability === "replay:list-jobs") {
+        return {
+          value: [
+            {
+              jobId: "terminal-001-failed-job",
+              state: "failed",
+              createdAtMs: time - 2,
+            },
+            {
+              jobId: "terminal-002-timed-out-job",
+              state: "timed_out",
+              createdAtMs: time - 1,
+            },
+            {
+              jobId: "terminal-003-cancelled-job",
+              state: "cancelled",
+              createdAtMs: time,
+            },
+          ],
+        };
+      }
+      throw new Error(`terminal replay job should not be hydrated through ${capability}`);
+    },
+    readQueueJobs: async () => ({
+      schemaVersion: "role-model.operator-queue-jobs.v1",
+      queue: "replay.dispatch",
+      available: true,
+      jobs: [],
+    }),
+    readQueueJob: async () => ({ available: false, reason: "queue job not found" }),
+  });
+  expect(value).toEqual([]);
+  expect(seenCapabilities).toEqual(["replay:list-jobs"]);
+});
+privateTest("malformed active replay jobs still fail closed", async () => {
+  expect(pendingReader).toBeTypeOf("function");
+  const value = await pendingReader?.({
+    ...pendingInput(),
+    invoke: async (_id, capability, value) => {
+      if (capability === "replay:list-jobs") {
+        return {
+          value: [
+            {
+              jobId: "active-malformed-job",
+              state: "queued",
+              createdAtMs: time,
+            },
+          ],
+        };
+      }
+      if (capability === "replay:job") {
+        return {
+          jobId: value.jobId,
+          state: "queued",
+          createdAtMs: time,
+          scope: "wrong-scope",
+          baselineEndpointId: request.againstEndpointId,
+          candidatePackages: [{ endpointId: request.newEndpointId }],
+        };
+      }
+      return invoke(_id, capability, value);
+    },
+    readQueueJobs: async () => ({
+      schemaVersion: "role-model.operator-queue-jobs.v1",
+      queue: "replay.dispatch",
+      available: true,
+      jobs: [],
+    }),
+    readQueueJob: async () => ({ available: false, reason: "queue job not found" }),
+  });
+  expect(value).toBeNull();
+});
 
 privateTest(
   "genuine pre-replay queue row preserves actual queue ID and never invents a replayJobId",

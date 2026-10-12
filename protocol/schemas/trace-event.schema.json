@@ -22,7 +22,15 @@
     "reasoning_effort": { "type": ["string", "null"], "minLength": 1, "maxLength": 128 },
     "effort_source": {
       "type": "string",
-      "enum": ["none", "client", "variant", "variant_coerced"]
+      "enum": [
+        "named",
+        "disabled",
+        "provider_default",
+        "none",
+        "client",
+        "variant",
+        "variant_coerced"
+      ]
     },
     "timestamp_ms": { "type": "integer", "minimum": 0 },
     "event_type": {

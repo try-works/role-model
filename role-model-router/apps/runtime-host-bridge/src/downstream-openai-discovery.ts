@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 
 import type { NormalizedCatalog } from "@role-model-router/catalog";
+import { computeEffortUnionAndIntersection } from "@role-model-router/core";
 import type { EndpointRegistryResult } from "@role-model-router/endpoint-registry";
 
 import {
@@ -118,6 +119,15 @@ export interface DownstreamOpenAIDiscoveryResponse {
     readonly recommendedModel: string | null;
     readonly notes: readonly string[];
   };
+  /**
+   * Run 106 R9: the pool-wide effort union (every named effort advertised by an executable arm)
+   * and the portable intersection (named efforts every model can execute). An empty intersection is
+   * valid and does not hide usable union levels.
+   */
+  readonly effort: {
+    readonly union: readonly string[];
+    readonly portableIntersection: readonly string[];
+  };
   readonly freshness: {
     readonly generatedAt: string;
     readonly catalogVersion: string;
@@ -223,6 +233,36 @@ function buildEndpointIdsByModelId(registry: EndpointRegistryResult): Map<string
     );
   }
   return endpointIdsByModelId;
+}
+
+/**
+ * Run 106 R9: group executable arms by model and collect each model's named effort values. A
+ * fixed-effort arm contributes its own level; a provider-default slot (reasoning_effort
+ * null/undefined) contributes its declared reasoning_effort_levels plus a null placeholder so
+ * computeEffortUnionAndIntersection ignores the placeholder without hiding a model that has no
+ * fixed-effort arm. This mirrors collectExecutableReasoningEfforts.
+ */
+function buildModelEffortLists(
+  registry: EndpointRegistryResult,
+): readonly (readonly (string | null)[])[] {
+  const byModelId = new Map<string, (string | null)[]>();
+  for (const endpoint of registry.endpoints) {
+    const modelId = endpoint.identity.model_id;
+    const list = byModelId.get(modelId) ?? [];
+    const effort = endpoint.identity.reasoning_effort;
+    const fixedEffort = typeof effort === "string" && effort.length > 0 ? effort : null;
+    list.push(fixedEffort);
+    if (fixedEffort === null) {
+      for (const level of endpoint.declared.reasoning_effort_levels ?? []) {
+        const trimmed = level.trim();
+        if (trimmed) {
+          list.push(trimmed);
+        }
+      }
+    }
+    byModelId.set(modelId, list);
+  }
+  return [...byModelId.values()].map((list) => [...new Set(list)]);
 }
 
 /**
@@ -610,6 +650,9 @@ export function createDownstreamOpenAIDiscovery(
   }
 
   const models = modelRecords.sort((left, right) => compareText(left.id, right.id));
+  const effortProjection = computeEffortUnionAndIntersection({
+    modelEfforts: buildModelEffortLists(input.registry),
+  });
   const recommendedModel =
     (input.recommendedModelId && models.some((model) => model.id === input.recommendedModelId)
       ? input.recommendedModelId
@@ -638,6 +681,10 @@ export function createDownstreamOpenAIDiscovery(
       note: "Inbound bearer validation is not enforced yet. If a downstream client requires a token field, use this placeholder value.",
     },
     models,
+    effort: {
+      union: effortProjection.union,
+      portableIntersection: effortProjection.portableIntersection,
+    },
     setup: {
       recommendedModel,
       notes: [

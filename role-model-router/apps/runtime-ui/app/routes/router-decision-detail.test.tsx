@@ -44,3 +44,24 @@ describe("run 103 decision surfaces", () => {
     expect(listSource).not.toContain("formatRoutingModeLabel");
   });
 });
+
+describe("run 106 R11 decision surface truthfulness", () => {
+  test("surfaces effective effort, evidence exactness, and effort resolution", () => {
+    expect(detailSource).toContain("formatEffectiveEffortDisclosure");
+    expect(detailSource).toContain("classifyEffortEvidence");
+    expect(detailSource).toContain("formatEffortEvidenceLabel");
+    expect(detailSource).toContain("readEffortResolutionKind");
+    expect(detailSource).toContain("formatEffortResolutionLabel");
+    expect(detailSource).toContain("isProminentEffortResolution");
+    expect(detailSource).toContain("no effort resolution recorded");
+  });
+
+  test("labels benchmark provenance instead of echoing a raw source string", () => {
+    expect(detailSource).not.toContain("· ${benchmarkDecision.evidenceSource}");
+  });
+
+  test("the decision list rows co-display effective effort", () => {
+    expect(listSource).toContain("formatEffectiveEffortDisclosure");
+    expect(listSource).toContain('label: "Effort"');
+  });
+});

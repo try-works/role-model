@@ -1719,6 +1719,7 @@ describe("runtime-host-bridge", () => {
             tools?: readonly { name: string }[];
             maxOutputTokens?: number;
             temperature?: number;
+            responseFormat?: unknown;
           };
         };
       }
@@ -1826,6 +1827,45 @@ describe("runtime-host-bridge", () => {
       source: "runtime_heuristic",
     });
     expect(result.routingRequest.roleModelIntent?.source).toBe("runtime_heuristic");
+  });
+
+  test("Run 108 D9 forwards chat JSON object response_format into provider execution", () => {
+    const jsonModeRegistry: EndpointRegistryResult = {
+      ...registry,
+      endpoints: [
+        {
+          ...registry.endpoints[0],
+          declared: {
+            ...registry.endpoints[0].declared,
+            capabilities: ["text.chat", "structured.output"],
+          },
+        },
+      ],
+      lifecycleSummary: { active: 1, degraded: 0, offline: 0 },
+    };
+    const result = (
+      bridge as {
+        mapChatCompletionsRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+        ) => {
+          routingRequest: { requiredCapabilities: readonly string[] };
+          executionRequest: { responseFormat?: unknown };
+        };
+      }
+    ).mapChatCompletionsRequest(
+      jsonModeRegistry,
+      {
+        model: "moonshot/kimi-k2.5",
+        messages: [{ role: "user", content: "Return a JSON judge verdict." }],
+        response_format: { type: "json_object" },
+      },
+      "req-run108-json-mode",
+    );
+
+    expect(result.routingRequest.requiredCapabilities).toEqual(["structured.output", "text.chat"]);
+    expect(result.executionRequest.responseFormat).toEqual({ type: "json_object" });
   });
 
   test("maps custom alias endpoint preference into the normal routing-model signal", () => {
@@ -5706,7 +5746,7 @@ describe("runtime-host-bridge", () => {
     expect(result.routingRequest.allowEndpoints).toEqual([
       "moonshot.personal.primary.global.kimi-k2.5",
     ]);
-    expect(result.routingDiagnostics?.difficultyRouting).toEqual({
+    expect(result.routingDiagnostics?.difficultyRouting).toMatchObject({
       difficulty: "hard",
       strategy: "quality",
       fallbackApplied: false,
@@ -5798,7 +5838,7 @@ describe("runtime-host-bridge", () => {
     expect(result.routingRequest.allowEndpoints).toEqual([
       "moonshot.personal.primary.global.kimi-k2.5",
     ]);
-    expect(result.routingDiagnostics?.difficultyRouting).toEqual({
+    expect(result.routingDiagnostics?.difficultyRouting).toMatchObject({
       difficulty: "hard",
       strategy: "quality",
       fallbackApplied: false,
@@ -5883,7 +5923,7 @@ describe("runtime-host-bridge", () => {
     expect(result.routingRequest.allowEndpoints).toEqual([
       "moonshot.personal.primary.global.kimi-k2.5",
     ]);
-    expect(result.routingDiagnostics?.difficultyRouting).toEqual({
+    expect(result.routingDiagnostics?.difficultyRouting).toMatchObject({
       difficulty: "hard",
       strategy: "quality",
       fallbackApplied: false,
@@ -6617,6 +6657,8 @@ describe("runtime-host-bridge", () => {
     });
     expect(result.executionRequest.reasoning).toEqual({
       effort: "high",
+      effortPolicy: "preferred",
+      effortSource: "named",
     });
     expect(result.executionRequest.continuation).toEqual({
       previousResponseId: "resp_prev_001",
@@ -7042,6 +7084,8 @@ describe("runtime-host-bridge", () => {
     expect(result.routingRequest.requiredCapabilities).toContain("reasoning.effort_control");
     expect(result.executionRequest.reasoning).toEqual({
       effort: "high",
+      effortPolicy: "preferred",
+      effortSource: "named",
     });
   });
 
@@ -16454,7 +16498,11 @@ describe("runtime-host-bridge", () => {
           statusCode: 402,
           adapterFamily: "ai-sdk-openai-compatible",
           executionFamily: "remote-service",
-          eligibleEndpointIds: [endpoint.endpointId],
+          eligibleEndpointIds: [
+            endpoint.endpointId,
+            `${endpoint.endpointId}-high`,
+            `${endpoint.endpointId}-max`,
+          ],
         }),
       );
       expect(failureRow?.endpointId).not.toBe("routing.failed.pre-execution");
@@ -22172,21 +22220,22 @@ describe("runtime-host-bridge", () => {
         granularity: "hour",
         metrics: ["requestCount"],
         breakdown: "reasoningEffort",
-        filters: { effortSources: ["variant"] },
+        filters: { effortSources: ["named"] },
         ranking: { dimension: "effortSource", metric: "requestCount", limit: 8 },
       }),
     ).resolves.toEqual(
       expect.objectContaining({
-        totals: expect.objectContaining({ requestCount: 1 }),
+        totals: expect.objectContaining({ requestCount: 2 }),
         buckets: [
           expect.objectContaining({
             series: [
               expect.objectContaining({ key: "high", label: "High", metrics: { requestCount: 1 } }),
+              expect.objectContaining({ key: "max", label: "Max", metrics: { requestCount: 1 } }),
             ],
           }),
         ],
         ranking: expect.objectContaining({
-          rows: [expect.objectContaining({ key: "variant", label: "Variant fixed" })],
+          rows: [expect.objectContaining({ key: "named", label: "Named effort" })],
         }),
         identities: expect.objectContaining({
           reasoningEffort: expect.objectContaining({

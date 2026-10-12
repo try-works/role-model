@@ -1,0 +1,3 @@
+SP5 GREEN - turn-aware hard shortcut
+command: corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/run106-turn-aware-hard-shortcut.test.ts
+result: 4 tests passed (4).

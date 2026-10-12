@@ -1,4 +1,5 @@
 import { mkdtempSync, rmSync } from "node:fs";
+import { readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
@@ -104,4 +105,45 @@ test("run97 rc07 a failing sweep degrades the tick without losing dispositions",
   } finally {
     cleanup();
   }
+});
+test("run97 rc07 the expiry sweep resolves the capture scope instead of falling back to the operator scope", async () => {
+  const source = await readFile(new URL("../src/cli.ts", import.meta.url), "utf8");
+  const start = source.indexOf("async expireStaleReplayJobs(");
+  expect(start, "the expiry sweep must exist in the CLI composition").toBeGreaterThan(-1);
+  const end = source.indexOf('capability: "replay:expire-stale-jobs"', start);
+  expect(end).toBeGreaterThan(start);
+  const sweep = source.slice(start, end);
+  /**
+   * Measured live on a just-restarted runtime (PID 22876): no capture had been read, so
+   * `lastReplayCaptureScope` was null and the sweep fell back to the operator scope
+   * (`standalone-runtime-dev`) while all 160 durable jobs lived under `runtime:1964e40c...`. The
+   * extension skipped EVERY job on `job.scope !== scope` and returned `expiredCount: 0`, so the sweep
+   * reported success while expiring nothing. No `expirationReceipt` was ever issued, and any job that
+   * became expire-able in that window was stranded for ever behind the claim guard that requires that
+   * receipt - three jobs sat overdue by ~3.5 hours past a 30-minute grace with every field eligible
+   * except their scope. Run 100 addendum-06 S27/S28 already derived the scope from the store for the
+   * listings; this call site simply never used that resolver.
+   */
+  expect(sweep, "the sweep must not fall back to a scope known to match no jobs").not.toContain(
+    "lastReplayCaptureScope ?? options.scopeId",
+  );
+  /**
+   * The scope must be DERIVED, not merely referenced. An earlier version of this guard asserted only that the
+   * sweep mentioned `replayJobScopeRef.current`, and the implementation passed while remaining INERT: that ref
+   * is assigned on a single composition path, so on a launch that does not take it the guard fell through to
+   * `options.scopeId` - the operator scope already known to match no jobs - and the resolver was never called.
+   * Verified live on build 0.0.14-770-gae1864fb: zero expirations, and no scope log line at all.
+   *
+   * So this asserts the DIRECT derivation, the same `resolveDurableReplayJobScope` call every other replay
+   * readback in cli.ts uses. Text assertions cannot distinguish "calls the resolver" from "calls it only when a
+   * flag happens to be set", which is exactly the gap that a live run closed.
+   */
+  expect(
+    sweep,
+    "the sweep must DERIVE the capture scope, not consult an optional ref that may be unset",
+  ).toContain("resolveDurableReplayJobScope(");
+  expect(
+    sweep,
+    "and it must not fall back to a ref that is null on a just-restarted runtime",
+  ).not.toContain("replayJobScopeRef.current");
 });

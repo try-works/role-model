@@ -80,13 +80,14 @@ describe("Run 91 runtime effort receipts", () => {
     }
   });
 
-  test("normalizes missing historical effort receipt to provider-default null", async () => {
+  test("normalizes missing historical effort receipt to none null", async () => {
     const runtimeModuleImport = await import(
       pathToFileURL(path.join(__dirname, "..", "src", "index.js")).href
     );
     expect(runtimeModuleImport.normalizeRuntimeEffortReceipt({})).toEqual({
       reasoningEffort: null,
       effortSource: "none",
+      coerced: false,
     });
   });
 });

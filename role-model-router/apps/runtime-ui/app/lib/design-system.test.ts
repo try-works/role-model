@@ -387,6 +387,10 @@ describe("runtime design system", () => {
           // Run 101 R10: queue truth has its own Observe page (depth per queue
           // plus a job drill-in with attempts and the named failure).
           "/app/observe/queues",
+          // Run 108 addendum-01 A2: the store/worker degradation receipts ledgers.
+          "/app/observe/store-degradation-receipts",
+          // Run 108 addendum-01 A5.2: the live observability snapshot readback.
+          "/app/observe/observability-snapshot",
           "/app/observe/activity",
           "/app/observe/logs",
         ],

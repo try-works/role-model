@@ -2,7 +2,7 @@
  * Run 101 addendum 04 - two findings from the pinned Effect v4 guidance audit.
  *
  * `effect_core_guidance` (installed `Effect-TS/skills` @ `2309e6f2`, read against
- * `vendor/effect` @ `effect@4.0.0-rc.117`) reports six deviations; two are in scope
+ * `vendor/effect` @ `effect@4.0.1`) reports six deviations; two are in scope
  * for this run's queue rebuild and are fixed here:
  *
  * - D2: the claim loop swallowed **every** cause (`Effect.catchCause(() => Effect.void)`),
@@ -25,7 +25,7 @@ import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { fileURLToPath } from "node:url";
 import { Duration, Effect, Fiber, Layer, Schema } from "effect";
-import { PersistedQueue } from "effect/unstable/persistence";
+import { PersistedQueue } from "effect/persistence";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { resolveQueuePolicy } from "../src/queue-runtime/policy.js";

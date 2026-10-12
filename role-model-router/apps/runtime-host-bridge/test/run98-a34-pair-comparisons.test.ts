@@ -671,4 +671,61 @@ describe("run 98 addendum 34 S1 pair comparisons", () => {
     );
     expect(externalizedOutputs.has(ATTESTATION_OUTPUT_KEY)).toBe(true);
   });
+
+  /**
+   * Run 108 addendum 03 (P): every comparison a capture produces must carry that capture's OWN task family -
+   * including the extra pairs.
+   *
+   * Measured live on the dev runtime 2026-10-09 (copied knowledge-worker / evaluation-core stores): the primary
+   * comparison of replay job `16aed63a…` carries `coder.edit / coder / 1.0.0-alpha.1`, and the `:pair1`
+   * comparison of the SAME job - produced 30 s later by the same completer, with byte-identical `forkRef` and
+   * `inputRef` - carries NO family key at all. Five of the eleven promoted packs are scope-wide and every one
+   * of them descends from such an extra pair: the knowledge worker derives no `familyEvidence`
+   * (`extensions/knowledge-worker/index.mjs:780-782`), the promoted pack keeps only `scope.endpointId`, and no
+   * endpoint ladder can ever be keyed to (role, task) - the operator's reported defect.
+   *
+   * The cause is here: the family spread below reads `readCaptureTaskTypeId(input.sourceCapture)`, and the
+   * extra-pair branch REPLACES `sourceCapture` with `pair.left.capture`, which for an arm-vs-arm pair is a
+   * BRANCH capture. A capture that declares no family of its own therefore silently produces a family-less
+   * comparison, even though the request whose evidence it is was classified.
+   *
+   * The fixture is the live shape: the request's capture declares the family, the branch captures the pair
+   * planner is handed declare none of their own.
+   */
+  test("run108 a03 P: an extra pair carries the request's task family, never a family-less comparison", async () => {
+    const scenario = buildScenario(["a", "b", "c"]);
+    const source = scenario.sourceCapture as unknown as Record<string, unknown>;
+    source.roleId = "coder";
+    source.taxonomyVersion = "1.0.0-alpha.1";
+    for (const arm of scenario.arms) {
+      const branch = arm.capture as unknown as Record<string, unknown>;
+      delete branch.taskTypeId;
+      delete branch.roleId;
+      delete branch.taxonomyVersion;
+    }
+    await scenario.invoke();
+    // The primary pair plus the arm-vs-arm pairs the graph is missing.
+    expect(scenario.pipelineInputs.length).toBeGreaterThan(1);
+    for (const pipelineInput of scenario.pipelineInputs) {
+      expect(pipelineInput.taskTypeId).toBe("coder.review");
+      expect(pipelineInput.roleId).toBe("coder");
+      expect(pipelineInput.taxonomyVersion).toBe("1.0.0-alpha.1");
+    }
+
+    // The precedence is PER FIELD and the capture always wins: a side that declares its own family keeps it, so
+    // this inheritance can never relabel a comparison whose evidence names a different task.
+    const declared = buildScenario(["a", "b", "c"]);
+    const declaredSource = declared.sourceCapture as unknown as Record<string, unknown>;
+    declaredSource.roleId = "coder";
+    declaredSource.taxonomyVersion = "1.0.0-alpha.1";
+    (declared.arms[0] as unknown as { capture: Record<string, unknown> }).capture.taskTypeId =
+      "writer.summarize";
+    await declared.invoke();
+    const armPairIndex = decidedPairs(declared.pipelineInputs).indexOf("endpoint:a|endpoint:b");
+    expect(armPairIndex).toBeGreaterThan(0);
+    expect(declared.pipelineInputs[armPairIndex]?.taskTypeId).toBe("writer.summarize");
+    // ...while the fields that side leaves silent still come from the request it is evidence about.
+    expect(declared.pipelineInputs[armPairIndex]?.roleId).toBe("coder");
+    expect(declared.pipelineInputs[armPairIndex]?.taxonomyVersion).toBe("1.0.0-alpha.1");
+  });
 });

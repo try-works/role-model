@@ -3051,9 +3051,13 @@ export function createTrackBOperations({
     },
     async listPendingReplayCaptures(input: Record<string, unknown>): Promise<unknown> {
       if (!operationsEndpoint) {
+        // Run 108 phase-03.5: the degraded answer carries the DEPTH (pendingTotal) as well as the page
+        // count, because the queue gauge reads the depth. An unconfigured boundary owes no replay, so
+        // the depth is a measured zero rather than a page the caller mistook for a census.
         return {
           policySetDigest: String(input.policySetDigest ?? ""),
           captureCount: 0,
+          pendingTotal: 0,
           pendingCount: 0,
           pending: [],
         };

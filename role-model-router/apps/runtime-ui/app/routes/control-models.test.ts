@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+
 import { describe, expect, test, vi } from "vitest";
 
 import type { RouterCandidate, RuntimeAccount } from "../lib/runtime-api";
@@ -771,4 +773,24 @@ describe("describeConfiguredModelRequestEvidence", () => {
       )(7, "ready"),
     ).toBe("7 requests");
   });
+});
+
+const controlModelsSource = readFileSync(new URL("./control-models.tsx", import.meta.url), "utf8");
+
+test("labels model-pool benchmark evidence as exact/borrowed/prior (R11)", () => {
+  expect(
+    buildConfiguredModelInventoryPills({
+      toolCallingSupported: true,
+      endpointCount: 1,
+      capabilityScore: null,
+      evidenceLabel: "Borrowed (sibling effort)",
+      evidenceTone: "warning",
+    }),
+  ).toContainEqual({ label: "Borrowed (sibling effort)", tone: "warning" });
+});
+
+test("computes model-pool evidence from the candidate's benchmark capability (R11)", () => {
+  expect(controlModelsSource).toContain("classifyEffortEvidence");
+  expect(controlModelsSource).toContain("formatEffortEvidenceLabel");
+  expect(controlModelsSource).toContain("relatedEffortOverallScore");
 });

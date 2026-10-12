@@ -13,6 +13,7 @@
     "endpoints",
     "authentication",
     "models",
+    "effort",
     "setup",
     "freshness"
   ],
@@ -52,6 +53,15 @@
       "type": "array",
       "minItems": 1,
       "items": { "$ref": "#/$defs/DownstreamOpenAIModelRecord" }
+    },
+    "effort": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["union", "portableIntersection"],
+      "properties": {
+        "union": { "$ref": "#/$defs/StringList" },
+        "portableIntersection": { "$ref": "#/$defs/StringList" }
+      }
     },
     "setup": {
       "type": "object",

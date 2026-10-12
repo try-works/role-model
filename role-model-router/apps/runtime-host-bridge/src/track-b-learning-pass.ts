@@ -24,6 +24,7 @@
 // one vocabulary.
 import { createHash, createHmac } from "node:crypto";
 
+import { type ObservabilityScope, recordLearnerFamilyEvidence } from "./run108-observability.js";
 import {
   buildExperiencePackCandidate,
   buildRouteLearningValidationReceipt,
@@ -116,6 +117,8 @@ export interface DurableLearnerValidationInput {
   readonly taskTypeId?: string | null;
   readonly taxonomyVersion?: string | null;
   readonly holdoutCaseIds?: readonly string[];
+  /** Run 108 R6(b): the configured endpoint pool size, passed to the gate's small-pool receipt. */
+  readonly configuredEndpointCount?: number;
 }
 
 /**
@@ -296,6 +299,11 @@ export function assembleDurableLearnerValidationValue(
       bootstrapSeed: 0,
       resamples: RUN98_LEARNING_DEFAULT_BOOTSTRAP_RESAMPLES,
     },
+    // Run 108 R6(b): the configured endpoint pool size travels to the gate so it can name the
+    // structurally-unsatisfiable development floor at pools <= 3.
+    configuredEndpointCount: Number.isSafeInteger(input.configuredEndpointCount)
+      ? input.configuredEndpointCount
+      : null,
   };
 }
 
@@ -1112,10 +1120,19 @@ export function buildTrackBLearningEvidenceSummary(input: {
     // Run 99 R33 (addendum 21 D10, `guidance/11` "incomparable ... groups are ineligible for
     // promotion evidence"): a comparison that reports validity issues — including the judge's
     // own position-order disagreement — is excluded and counted by code, never averaged in.
+    /**
+     * Run 106 (operator decision, 2026-10-07): `arm_effort_mismatch` is a recorded comparability
+     * dimension, not a validity issue - see the durable writer in Evaluation Core. Groups finalized
+     * before that decision still carry the name in their durable `validityIssues`, so it is filtered
+     * here too and the comparison is learned from like any other. Every other issue keeps its meaning:
+     * a comparison reporting one is excluded and counted by code, never averaged in.
+     */
+    const COMPARABILITY_ONLY_VALIDITY_ISSUES = new Set(["arm_effort_mismatch"]);
     const validityIssues = Array.isArray(result.validityIssues)
       ? result.validityIssues
           .map((issue) => boundedText(issue))
           .filter((issue): issue is string => issue !== null)
+          .filter((issue) => !COMPARABILITY_ONLY_VALIDITY_ISSUES.has(issue))
       : [];
     if (
       result.orderDisagreement === true ||
@@ -1441,6 +1458,12 @@ export interface TrackBLearningPassInput {
   readonly requestId: string;
   readonly channel: string;
   readonly scope: string;
+  /**
+   * Run 108 follow-up: the metric registry of the runtime scope this pass runs in. Omitted (a caller
+   * that is not a scope boundary) the pass records no per-family observation rather than leaking into
+   * Effect's process-global default Map.
+   */
+  readonly observabilityScope?: ObservabilityScope;
   readonly authorizationEpoch: number;
   /** Run 99 R33: the task family of the capture this candidate was derived from. */
   readonly taskTypeId?: string | null;
@@ -1658,6 +1681,14 @@ export async function runTrackBLearningPass(
     // Run 99 R33 D12: `evidenceHalfLifeDays` from the operator policy decays the effective counts.
     evidenceHalfLifeDays: input.evidenceHalfLifeDays ?? DEFAULT_EVIDENCE_HALF_LIFE_DAYS,
   });
+  // Run 108 phase-03 F5 (R7 per-family counters): the same per-family evidence the learning pass
+  // already derived, recorded on the ONE bounded-attribute counter.
+  //
+  // Run 108 follow-up: scoped - the counter is recorded into THIS runtime scope's registry.
+  const observabilityScope = input.observabilityScope;
+  if (observabilityScope !== undefined) {
+    recordLearnerFamilyEvidence(evidenceSummary.byFamily, observabilityScope);
+  }
   const holdout = asRecord(input.finalizedComparison.holdout);
   const holdoutCaseIds = Array.isArray(holdout?.caseIds)
     ? holdout.caseIds.filter(

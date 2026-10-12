@@ -27,6 +27,7 @@ import {
   supportingTextClassName,
 } from "../lib/design-system";
 import { formatEndpointDisplayPath, formatModelIdentity } from "../lib/effort-identity";
+import { classifyEffortEvidence, formatEffortEvidenceLabel } from "../lib/effort-truth";
 import { formatScore, formatScoreWithCoverage } from "../lib/format-score";
 import {
   type BenchmarkCaseAuditEntry,
@@ -191,6 +192,7 @@ interface ModelScoreRow {
   readonly latencyP95: number | null;
   readonly lastRunId: string | null;
   readonly lastRunMode: "quick" | "full" | null;
+  readonly evidenceLabel: string;
 }
 
 function buildModelScoreRows(
@@ -254,6 +256,17 @@ function buildModelScoreRows(
       continue;
     }
 
+    const evidenceLabel = grade
+      ? formatEffortEvidenceLabel("exact")
+      : capability
+        ? formatEffortEvidenceLabel(
+            classifyEffortEvidence({
+              evidenceSource: capability.evidenceSource,
+              relatedEffortOverallScore: capability.relatedEffortOverallScore,
+            }),
+          )
+        : formatEffortEvidenceLabel(profileQualityScore !== null ? "prior" : "none");
+
     rows.push({
       endpointId: candidate.endpointId,
       modelId: candidate.modelId,
@@ -284,6 +297,7 @@ function buildModelScoreRows(
       latencyP95,
       lastRunId: grade?.runId ?? capability?.lastRunId ?? null,
       lastRunMode: grade?.mode ?? capability?.lastRunMode ?? null,
+      evidenceLabel,
     });
   }
 
@@ -1049,6 +1063,9 @@ export default function ControlBenchmarkRoute() {
                             {row.lastRunId
                               ? `${row.lastRunId}${row.lastRunMode ? ` · ${row.lastRunMode}` : ""}`
                               : "profile-derived"}
+                          </p>
+                          <p className="mt-0.5 font-mono text-[11px] font-normal text-[var(--rm-muted)]">
+                            {row.evidenceLabel}
                           </p>
                         </td>
                         <td className={`${benchmarkDenseCellClassName} px-1 py-3`}>

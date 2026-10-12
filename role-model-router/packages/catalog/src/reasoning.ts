@@ -60,3 +60,49 @@ export function resolveReasoningEffortLevels(input: ReasoningEffortResolutionInp
   const supported = new Set(input.adapter.serializers);
   return candidates.filter((candidate) => supported.has(candidate));
 }
+
+/**
+ * Tested reasoning-effort serializer contracts keyed by provider adapter family.
+ * Only these families can turn a catalog-declared effort level into an
+ * executable arm; any other family yields no executable effort set.
+ */
+export const REASONING_EFFORT_SERIALIZER_VERSION_BY_ADAPTER = new Map<string, string>([
+  ["ai-sdk-openai-compatible", "run91.openai-compatible.reasoning-effort.v1"],
+  ["litellm-proxy", "run91.openai-compatible.reasoning-effort.v1"],
+  ["codex-subscription-responses", "run91.codex-responses.reasoning-effort.v1"],
+  ["ai-sdk-anthropic", "run93.anthropic.thinking-budget-tokens.v1"],
+]);
+
+/**
+ * The adapter-executable subset of a model's catalog-declared reasoning-effort
+ * levels. A catalog declaration alone is never routable: the level must also
+ * pass through a versioned, tested serializer for the resolved adapter family.
+ */
+export function resolveAdapterGatedReasoningEfforts(input: {
+  readonly providerId: string;
+  readonly modelId: string;
+  readonly capabilities: readonly string[];
+  readonly catalogLevels: readonly string[];
+  readonly adapterFamily: string | null;
+}): readonly string[] {
+  const adapterFamily = input.adapterFamily;
+  const version =
+    adapterFamily === null
+      ? undefined
+      : REASONING_EFFORT_SERIALIZER_VERSION_BY_ADAPTER.get(adapterFamily);
+  return resolveReasoningEffortLevels({
+    providerId: input.providerId,
+    modelId: input.modelId,
+    capabilities: input.capabilities,
+    reasoningEffortLevels: input.catalogLevels,
+    reasoningOptionKinds: ["effort"],
+    adapter:
+      version && adapterFamily
+        ? {
+            family: adapterFamily,
+            version,
+            serializers: input.catalogLevels,
+          }
+        : null,
+  });
+}

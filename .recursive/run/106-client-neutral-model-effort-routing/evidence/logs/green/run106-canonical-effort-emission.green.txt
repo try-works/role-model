@@ -1,0 +1,3 @@
+run106-canonical-effort-emission GREEN
+command: corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/run106-canonical-effort-emission.test.ts
+result: 5 tests passed (5).

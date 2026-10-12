@@ -245,6 +245,78 @@ describe("run105 D planFocusDispatch (R8 depth-first fill)", () => {
     expect(planned).toBeNull();
   });
 
+  /**
+   * Run 106 (live finding on the dev replay queue, 2026-10-07): the walk was effort-blind, and the
+   * downstream same-model repair cannot rescue it when the arm's model is the source's model - the only
+   * same-model endpoint at the source effort is then the source itself, which the distinct-source rule
+   * excludes. The arm kept its own effort, the comparison was finalized \`arm_effort_mismatch\`, and the
+   * learner's admission floor discarded it fail-closed: a replay and a paid provider call spent on evidence
+   * nothing can use. Measured: 3 of 8 finalized groups on the dev root, and a whole source endpoint could
+   * never contribute a single eligible comparison.
+   */
+  test("prefers a survivor that runs at the source capture's effort", () => {
+    const planned = planFocusDispatch({
+      focus,
+      replayableCapture: { captureRef: "capture:1" },
+      configuredEndpointIds: ["endpoint:low", "endpoint:max", "endpoint:other"],
+      admittedEndpointIds: [],
+      rungs: [],
+      endpointEfforts: { "endpoint:low": "low", "endpoint:max": "max", "endpoint:other": "max" },
+      sourceReasoningEffort: "max",
+    });
+    expect(planned).toMatchObject({ endpointId: "endpoint:max" });
+  });
+
+  test("falls back to the first survivor when no survivor matches the source effort", () => {
+    const planned = planFocusDispatch({
+      focus,
+      replayableCapture: { captureRef: "capture:1" },
+      configuredEndpointIds: ["endpoint:low", "endpoint:max"],
+      admittedEndpointIds: [],
+      rungs: [],
+      endpointEfforts: { "endpoint:low": "low", "endpoint:max": "max" },
+      sourceReasoningEffort: "minimal",
+    });
+    expect(planned).toMatchObject({ endpointId: "endpoint:low" });
+  });
+
+  test("keeps configured order when the caller supplies no effort view", () => {
+    const planned = planFocusDispatch({
+      focus,
+      replayableCapture: { captureRef: "capture:1" },
+      configuredEndpointIds: ["endpoint:low", "endpoint:max"],
+      admittedEndpointIds: [],
+      rungs: [],
+    });
+    expect(planned).toMatchObject({ endpointId: "endpoint:low" });
+  });
+
+  test("compares effort trimmed and case-insensitively, exactly as the comparability record does", () => {
+    const planned = planFocusDispatch({
+      focus,
+      replayableCapture: { captureRef: "capture:1" },
+      configuredEndpointIds: ["endpoint:low", "endpoint:max"],
+      admittedEndpointIds: [],
+      rungs: [],
+      endpointEfforts: { "endpoint:low": "low", "endpoint:max": " MAX " },
+      sourceReasoningEffort: "max",
+    });
+    expect(planned).toMatchObject({ endpointId: "endpoint:max" });
+  });
+
+  test("an admitted or ranked effort-matched endpoint is still skipped", () => {
+    const planned = planFocusDispatch({
+      focus,
+      replayableCapture: { captureRef: "capture:1" },
+      configuredEndpointIds: ["endpoint:max", "endpoint:other"],
+      admittedEndpointIds: ["endpoint:max"],
+      rungs: [],
+      endpointEfforts: { "endpoint:max": "max", "endpoint:other": "max" },
+      sourceReasoningEffort: "max",
+    });
+    expect(planned).toMatchObject({ endpointId: "endpoint:other" });
+  });
+
   test("a task with no replayable capture is skipped as NoReplayableRequest", () => {
     const result = planFocusDispatch({
       focus,

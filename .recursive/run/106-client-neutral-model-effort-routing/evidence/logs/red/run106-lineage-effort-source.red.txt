@@ -1,0 +1,55 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/106-client-neutral-model-effort-routing/role-model-router/packages/trace[39m
+
+ [31m❯[39m test/run106-lineage-effort-source.test.ts [2m([22m[2m3 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[32m 34[2mms[22m[39m
+[31m   [31m×[31m Run 106 trace lineage effort-source[2m > [22mround-trips all four canonical effort states[39m[32m 19[2mms[22m[39m
+[31m     → effort_source must be none when reasoning_effort is null.[39m
+   [32m✓[39m Run 106 trace lineage effort-source[2m > [22mrejects a named source without an effort level[32m 3[2mms[22m[39m
+[31m   [31m×[31m Run 106 trace lineage effort-source[2m > [22mrejects a non-named source carrying an effort level[39m[32m 9[2mms[22m[39m
+[31m     → expected [Function] to throw an error[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 2 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m test/run106-lineage-effort-source.test.ts[2m > [22mRun 106 trace lineage effort-source[2m > [22mround-trips all four canonical effort states
+[31m[1mError[22m: effort_source must be none when reasoning_effort is null.[39m
+[36m [2m❯[22m assertEffort src/lineage.ts:[2m84:11[22m[39m
+    [90m 82| [39m  }
+    [90m 83| [39m  [35mif[39m (reasoningEffort [33m===[39m [35mnull[39m [33m&&[39m effortSource [33m!==[39m [32m"none"[39m) {
+    [90m 84| [39m    throw new Error("effort_source must be none when reasoning_effort …
+    [90m   | [39m          [31m^[39m
+    [90m 85| [39m  }
+    [90m 86| [39m  [35mif[39m (reasoningEffort [33m!==[39m [35mnull[39m [33m&&[39m effortSource [33m===[39m [32m"none"[39m) {
+[90m [2m❯[22m validateTraceLineageManifest src/lineage.ts:[2m168:3[22m[39m
+[90m [2m❯[22m createTraceLineageManifest src/lineage.ts:[2m208:3[22m[39m
+[90m [2m❯[22m test/run106-lineage-effort-source.test.ts:[2m60:7[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/run106-lineage-effort-source.test.ts[2m > [22mRun 106 trace lineage effort-source[2m > [22mrejects a non-named source carrying an effort level
+[31m[1mAssertionError[22m: expected [Function] to throw an error[39m
+
+[32m- Expected:[39m 
+null
+
+[31m+ Received:[39m 
+undefined
+
+[36m [2m❯[22m test/run106-lineage-effort-source.test.ts:[2m83:7[22m[39m
+    [90m 81| [39m    [34mexpect[39m(() [33m=>[39m
+    [90m 82| [39m      createTraceLineageManifest(makeInput({ reasoning_effort: "high",…
+    [90m 83| [39m    )[33m.[39m[34mtoThrow[39m([36m/effort|disabled/i[39m)[33m;[39m
+    [90m   | [39m      [31m^[39m
+    [90m 84| [39m  })[33m;[39m
+    [90m 85| [39m})[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (3)[39m
+[2m   Start at [22m 12:44:50
+[2m   Duration [22m 1.41s[2m (transform 179ms, setup 0ms, collect 212ms, tests 34ms, environment 1ms, prepare 461ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\106-client-neutral-model-effort-routing\role-model-router\packages\trace:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/run106-lineage-effort-source.test.ts

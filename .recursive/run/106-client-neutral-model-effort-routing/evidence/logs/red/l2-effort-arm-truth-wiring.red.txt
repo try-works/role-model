@@ -1,0 +1,3 @@
+L-2 RED - formatEffortArmTruthDisclosure is unused in any surface
+command: corepack pnpm --filter @role-model-router/runtime-ui exec vitest run app/routes/router-candidates.test.tsx
+observed: 1 test failed - router-candidates.tsx does not reference formatEffortArmTruthDisclosure (uses separate formatEffectiveEffortDisclosure + classifyEffortEvidence/formatEffortEvidenceLabel).
