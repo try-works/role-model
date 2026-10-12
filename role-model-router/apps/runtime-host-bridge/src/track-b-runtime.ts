@@ -1743,9 +1743,13 @@ export async function stageTrackBRuntimeDistribution(options: {
         if (fixtureDigest !== fixture.artifactSha256.toLowerCase()) {
           throw new Error("Track B runtime distribution source-authority fixture integrity failed");
         }
-        const fixtureDestination = path.join(options.releaseDir, "..", "..", fixture.modulePath);
-        await mkdir(path.dirname(fixtureDestination), { recursive: true });
-        await copyFile(fixtureSource, fixtureDestination);
+        for (const fixtureDestination of [
+          path.join(options.releaseDir, "..", "..", fixture.modulePath),
+          path.join(options.releaseDir, "..", fixture.modulePath),
+        ]) {
+          await mkdir(path.dirname(fixtureDestination), { recursive: true });
+          await copyFile(fixtureSource, fixtureDestination);
+        }
       }
     }
     const capacity = manifest.registryBindings?.capacitySlo;

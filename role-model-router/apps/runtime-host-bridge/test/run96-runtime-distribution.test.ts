@@ -69,9 +69,24 @@ async function createReleaseFixture(): Promise<{ releaseDir: string }> {
     });
   }
 
+  const productDefaults =
+    "fixtures/source-authority/crowdsourced-evals-docs/guidance/product-defaults.json";
+  const productDefaultsSha256 = await writeArtifact(
+    releaseDir,
+    productDefaults,
+    "product-defaults",
+  );
+
   const manifest = {
     schemaVersion: "role-model.track-b-runtime-distribution.v2",
     publicSourceTree: "0123456789abcdef0123456789abcdef01234567",
+    sourceAuthorityFixtures: [
+      {
+        modulePath:
+          "fixtures/source-authority/crowdsourced-evals-docs/guidance/product-defaults.json",
+        artifactSha256: productDefaultsSha256,
+      },
+    ],
     sidecar: { modulePath: "sidecar.mjs", artifactSha256: sidecarSha256 },
     publicRuntimeAdapter: {
       modulePath: "public-runtime-adapter.mjs",
@@ -117,6 +132,12 @@ describe("Run 96 packaged runtime artifact closure", () => {
       "track-b-runtime/public-extension-host.mjs",
     );
     expect(closure.track_b_runtime.worker.path).toBe("track-b-runtime/worker-runtime.mjs");
+    expect(closure.track_b_runtime.source_authority_fixtures).toEqual([
+      expect.objectContaining({
+        path: "fixtures/source-authority/crowdsourced-evals-docs/guidance/product-defaults.json",
+        sha256: sha256("product-defaults"),
+      }),
+    ]);
     expect(closure.track_b_runtime.extensions).toHaveLength(13);
 
     await expect(
@@ -305,6 +326,9 @@ describe("Run 96 packaged runtime artifact closure", () => {
       await expect(
         readFile(path.join(releaseDir, "..", "..", fixture.modulePath), "utf8"),
       ).resolves.toBeTypeOf("string");
+      await expect(
+        readFile(path.join(releaseDir, "..", fixture.modulePath), "utf8"),
+      ).resolves.toBeTypeOf("string");
     }
     await expect(
       readFile(path.join(releaseDir, "capacity-slo-contracts.v3.json"), "utf8"),
@@ -433,6 +457,9 @@ describe("Run 96 packaged runtime artifact closure", () => {
     ).resolves.toMatchObject({ compatibilityGeneration: "N" });
     await expect(
       readFile(path.join(declaredRelease, "..", "..", declaredFixturePath), "utf8"),
+    ).resolves.toBe("retention-policies");
+    await expect(
+      readFile(path.join(declaredRelease, "..", declaredFixturePath), "utf8"),
     ).resolves.toBe("retention-policies");
 
     declaredManifest.sourceAuthorityFixtures = [
