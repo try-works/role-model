@@ -1175,7 +1175,7 @@ test("claimed queue round constrains focus to the claimed capture task", async (
   expect(loop.health().focusTaskKey).toBe("role\u0000idle");
 });
 
-test("foreign claimed round cannot relabel matching capsule or task to new provider work", async () => {
+test("foreign claimed round is an ackable no-op and cannot relabel matching capsule", async () => {
   const h = harness();
   h.configure(["a", "b", "c", "new"]);
   h.census([task("idle", 10, 3, 4)]);
@@ -1197,9 +1197,11 @@ test("foreign claimed round cannot relabel matching capsule or task to new provi
     ],
   });
   cleanups.push(() => loop.stop());
-  await loop.dispatchCapture("idle-a", "foreign-round");
+  await expect(loop.dispatchCapture("idle-a", "foreign-round")).resolves.toMatchObject({
+    queued: 0,
+  });
   expect(h.calls).toEqual([]);
-  expect(loop.health().lastError).toContain("claimed route dispatch round mismatch");
+  expect(loop.health().lastError).toBe(null);
 });
 test("actual queue processing claim executes own persisted round while real replay running remains blocked", async () => {
   const h = harness();

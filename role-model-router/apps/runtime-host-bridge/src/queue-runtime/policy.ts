@@ -101,13 +101,13 @@ export const QUEUE_PARAMETER_BOUNDS = Object.freeze({
 export const QUEUE_PARAMETER_DEFAULTS: Readonly<Record<string, Readonly<Record<string, number>>>> =
   Object.freeze({
     "replay.dispatch": Object.freeze({
-      concurrency: 1,
+      concurrency: 5,
       attempts: 5,
-      attemptTimeoutMs: 270_000,
+      attemptTimeoutMs: 600_000,
       backoffBaseMs: 1_000,
       backoffCapMs: 300_000,
       lockRefreshMs: 30_000,
-      lockExpirationMs: 300_000,
+      lockExpirationMs: 900_000,
       retentionDays: 30,
     }),
     "evaluation.score": Object.freeze({

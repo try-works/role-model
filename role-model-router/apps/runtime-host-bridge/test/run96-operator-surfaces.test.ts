@@ -245,10 +245,15 @@ describe("Run 96 operator evidence routes", () => {
 
   test("wires the same authenticated evidence routes through the CLI server composition", async () => {
     const listOperatorTraceRoots = vi.fn(async () => ({ roots: [], completeness: "unobserved" }));
+    const materializeRouteLadders = vi.fn(async () => ({
+      schemaVersion: "role-model.route-ladder-materialization.v1",
+      ladders: [],
+    }));
     const backend = {
       operatorAuthToken: "operator-secret",
       effectiveRegistry: registry,
       listOperatorTraceRoots,
+      materializeRouteLadders,
     } as unknown as Parameters<typeof createCliServerOptions>[1];
     const options = createCliServerOptions(
       {
@@ -285,6 +290,29 @@ describe("Run 96 operator evidence routes", () => {
       expect(response.status).toBe(200);
       expect(await json(response)).toEqual({ roots: [], completeness: "unobserved" });
       expect(listOperatorTraceRoots).toHaveBeenCalledWith({});
+      const materialize = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/operator/learning/materialize-route-ladders`,
+        {
+          method: "POST",
+          headers: {
+            authorization: "Bearer operator-secret",
+            "content-type": "application/json",
+            "x-role-model-channel": operatorContext.channel,
+            "x-role-model-scope": operatorContext.scope,
+            "x-role-model-authorization-epoch": String(operatorContext.authorizationEpoch),
+            "x-role-model-capability": "learning",
+          },
+          body: JSON.stringify({ configuredEndpointIds: ["endpoint:a"] }),
+        },
+      );
+      expect(materialize.status).toBe(200);
+      expect(await json(materialize)).toMatchObject({
+        schemaVersion: "role-model.route-ladder-materialization.v1",
+        ladders: [],
+      });
+      expect(materializeRouteLadders).toHaveBeenCalledWith({
+        configuredEndpointIds: ["endpoint:a"],
+      });
     } finally {
       await server.close();
     }
@@ -405,8 +433,16 @@ describe("Run 96 operator evidence routes", () => {
         schemaVersion: "role-model.route-ladder-materialization.v1",
         ladders: [],
       });
-      expect(requests).toEqual(["POST /operator/learning/materialize-route-ladders"]);
-      expect(bodies).toEqual([body]);
+      const callbacks = createRuntimeOperatorCallbacks(operations);
+      await expect(callbacks.materializeRouteLadders?.(body)).resolves.toMatchObject({
+        schemaVersion: "role-model.route-ladder-materialization.v1",
+        ladders: [],
+      });
+      expect(requests).toEqual([
+        "POST /operator/learning/materialize-route-ladders",
+        "POST /operator/learning/materialize-route-ladders",
+      ]);
+      expect(bodies).toEqual([body, body]);
     } finally {
       await new Promise<void>((resolve, reject) =>
         sidecar.close((error) => (error ? reject(error) : resolve())),
