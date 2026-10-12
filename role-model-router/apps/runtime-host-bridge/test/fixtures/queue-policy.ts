@@ -14,9 +14,10 @@ export const QUEUE_NAMES = [
 
 export function queuePolicyFixture(): string {
   const parameters = {
-    mode: "legacy",
+    mode: "queue",
     concurrency: 1,
     attempts: 3,
+    attemptTimeoutMs: 270_000,
     backoffBaseMs: 1_000,
     backoffCapMs: 60_000,
     lockRefreshMs: 30_000,

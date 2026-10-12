@@ -19,8 +19,11 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import {
+  QUEUE_NAMES,
   QUEUE_POLICY_SCHEMA_VERSION,
   QUEUE_POLICY_SHIPPED_RELATIVE_PATH,
+  resolveQueuePolicy,
+  validateQueuePolicy,
 } from "../src/queue-runtime/policy.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -58,6 +61,45 @@ describe("run 101 R3 packaged queue policy", () => {
       1,
       "the sibling destination appears once",
     );
+  });
+
+  it("ships queue mode as the production default for v0.0.18", () => {
+    const fixtureSource = readFileSync(path.join(here, "fixtures", "queue-policy.ts"), "utf8");
+    const shippedModeDefaults = [...fixtureSource.matchAll(/mode:\s*"([^"]+)"/g)].map(
+      (match) => match[1],
+    );
+    assert.ok(shippedModeDefaults.length > 0, "fixture declares a shipped queue mode");
+    assert.ok(
+      shippedModeDefaults.every((mode) => mode === "queue"),
+      `every shipped queue mode default must be queue (saw ${shippedModeDefaults.join(", ")})`,
+    );
+
+    const document = {
+      schemaVersion: QUEUE_POLICY_SCHEMA_VERSION,
+      policyVersion: 1,
+      global: { killSwitch: false },
+      queues: Object.fromEntries(
+        QUEUE_NAMES.map((queue) => [
+          queue,
+          {
+            mode: shippedModeDefaults[0],
+            concurrency: 1,
+            attempts: 3,
+            backoffBaseMs: 1_000,
+            backoffCapMs: 60_000,
+            lockRefreshMs: 30_000,
+            lockExpirationMs: 900_000,
+            retentionDays: 30,
+          },
+        ]),
+      ),
+      updatedAt: null,
+      receipts: [],
+    };
+    assert.doesNotThrow(() => validateQueuePolicy(document));
+    for (const queue of QUEUE_NAMES) {
+      assert.equal(resolveQueuePolicy(document, { queue }).mode, "queue");
+    }
   });
 
   it(
