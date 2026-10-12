@@ -56,9 +56,17 @@ test("the public release orchestrator enforces paired private promotion", () => 
   assert.match(workflow, /REQUIRED_PRIVATE_BRANCH:[\s\S]*?'main'[\s\S]*?'stage'/);
   assert.match(
     workflow,
+    /git merge-base --is-ancestor "\$RELEASE_PRIVATE_SHA" "origin\/\$REQUIRED_PRIVATE_BRANCH"/,
+  );
+  assert.match(
+    workflow,
+    /Paired private revision must be reachable from role-model-internal\/\$REQUIRED_PRIVATE_BRANCH/,
+  );
+  assert.doesNotMatch(
+    workflow,
     /required_private_head="\$\(git rev-parse "origin\/\$REQUIRED_PRIVATE_BRANCH"\)"/,
   );
-  assert.match(workflow, /\[\[ "\$RELEASE_PRIVATE_SHA" != "\$required_private_head" \]\]/);
+  assert.doesNotMatch(workflow, /\[\[ "\$RELEASE_PRIVATE_SHA" != "\$required_private_head" \]\]/);
 });
 
 test("paired private checkout never dirties the public package provenance worktree", () => {
