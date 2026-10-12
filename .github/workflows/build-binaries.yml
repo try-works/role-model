@@ -120,15 +120,30 @@ jobs:
             Accept = "application/vnd.github+json"
             "X-GitHub-Api-Version" = "2022-11-28"
           }
+          function Invoke-WithGitHubRetry {
+            param(
+              [Parameter(Mandatory = $true)][string] $Uri,
+              [int] $MaxAttempts = 5
+            )
+            for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
+              try {
+                return Invoke-RestMethod -Headers $headers -Uri $Uri
+              } catch {
+                if ($attempt -ge $MaxAttempts) { throw }
+                Write-Warning "GitHub API request failed on attempt $attempt for $Uri; retrying. $($_.Exception.Message)"
+                Start-Sleep -Seconds ([Math]::Min(30, $attempt * 3))
+              }
+            }
+          }
           $listUrl = "https://api.github.com/repos/$env:GITHUB_REPOSITORY/actions/artifacts?name=$artifactName&per_page=20"
           $artifact = $null
-          $candidates = (Invoke-RestMethod -Headers $headers -Uri $listUrl).artifacts |
+          $candidates = (Invoke-WithGitHubRetry -Uri $listUrl).artifacts |
             Where-Object { -not $_.expired } |
             Sort-Object created_at -Descending
           foreach ($candidate in $candidates) {
             if ($candidate.workflow_run.head_branch -ne "stage") { continue }
             $runUrl = "https://api.github.com/repos/$env:GITHUB_REPOSITORY/actions/runs/$($candidate.workflow_run.id)"
-            $run = Invoke-RestMethod -Headers $headers -Uri $runUrl
+            $run = Invoke-WithGitHubRetry -Uri $runUrl
             if (
               $run.status -eq "completed" -and
               $run.conclusion -eq "success" -and
@@ -146,7 +161,7 @@ jobs:
           $candidateTag = "stage-rc-$($stageSha.Substring(0, 12))"
           $approvalRefUrl = "https://api.github.com/repos/$env:GITHUB_REPOSITORY/git/ref/tags/rc-approved/$stageSha"
           try {
-            $approval = Invoke-RestMethod -Headers $headers -Uri $approvalRefUrl
+            $approval = Invoke-WithGitHubRetry -Uri $approvalRefUrl
           } catch {
             throw "Tested stage candidate $stageSha has no explicit rc-approved acceptance receipt"
           }
@@ -155,7 +170,7 @@ jobs:
           }
           $candidateReleaseUrl = "https://api.github.com/repos/$env:GITHUB_REPOSITORY/releases/tags/$candidateTag"
           try {
-            $candidateRelease = Invoke-RestMethod -Headers $headers -Uri $candidateReleaseUrl
+            $candidateRelease = Invoke-WithGitHubRetry -Uri $candidateReleaseUrl
           } catch {
             throw "Accepted stage candidate has no published prerelease: $candidateTag"
           }
@@ -164,7 +179,7 @@ jobs:
           }
           $candidateRefUrl = "https://api.github.com/repos/$env:GITHUB_REPOSITORY/git/ref/tags/$candidateTag"
           try {
-            $candidateRef = Invoke-RestMethod -Headers $headers -Uri $candidateRefUrl
+            $candidateRef = Invoke-WithGitHubRetry -Uri $candidateRefUrl
           } catch {
             throw "Published stage prerelease tag cannot be resolved: $candidateTag"
           }
