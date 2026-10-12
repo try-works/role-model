@@ -2996,6 +2996,7 @@ type RuntimeOperatorCallbacks = Pick<
   | "rollbackLearningPolicy"
   | "activateLearningPack"
   | "rollbackLearningPack"
+  | "materializeRouteLadders"
   | "recordLearningGuardrailBreach"
   | "restoreLearningScenarioActivation"
   | "engageLearningKillSwitch"
@@ -3107,6 +3108,8 @@ export function createRuntimeOperatorCallbacks(
       operations.rollbackLearningPolicy(body),
     activateLearningPack: (body: Record<string, unknown>) => operations.activateLearningPack(body),
     rollbackLearningPack: (body: Record<string, unknown>) => operations.rollbackLearningPack(body),
+    materializeRouteLadders: (body: Record<string, unknown>) =>
+      operations.materializeRouteLadders(body),
     recordLearningGuardrailBreach: (body: Record<string, unknown>) =>
       operations.recordLearningGuardrailBreach(body),
     restoreLearningScenarioActivation: (body: Record<string, unknown>) =>
@@ -3180,6 +3183,7 @@ type CliBackend = Pick<
   | "rollbackLearningPolicy"
   | "activateLearningPack"
   | "rollbackLearningPack"
+  | "materializeRouteLadders"
   | "recordLearningGuardrailBreach"
   | "restoreLearningScenarioActivation"
   | "engageLearningKillSwitch"
@@ -4645,6 +4649,9 @@ export function createCliServerOptions(
     rollbackLearningPack: bindBackendMethod(
       "rollbackLearningPack",
     ) as StartBridgeServerOptions["rollbackLearningPack"],
+    materializeRouteLadders: bindBackendMethod(
+      "materializeRouteLadders",
+    ) as StartBridgeServerOptions["materializeRouteLadders"],
     recordLearningGuardrailBreach: bindBackendMethod(
       "recordLearningGuardrailBreach",
     ) as StartBridgeServerOptions["recordLearningGuardrailBreach"],
@@ -8085,16 +8092,20 @@ export async function main(): Promise<void> {
             let cursor: string | undefined;
             const cursors = new Set<string>();
             for (let page = 0; page < 10; page++) {
-              const index = unwrapCapabilityPayload(
-                await runtime.invoke(
-                  "knowledge-store",
-                  routeLadderEnvelopeFor("knowledge:list-route-ladders", {
-                    scopeId: options.scopeId,
-                    limit: 200,
-                    ...(cursor ? { cursor } : {}),
-                  }),
+              const index = decodeExternalizedOperatorReadback({
+                stateRoot: options.runtimeStateRoot,
+                scopeId: options.scopeId,
+                value: unwrapCapabilityPayload(
+                  await runtime.invoke(
+                    "knowledge-store",
+                    routeLadderEnvelopeFor("knowledge:list-route-ladders", {
+                      scopeId: options.scopeId,
+                      limit: 200,
+                      ...(cursor ? { cursor } : {}),
+                    }),
+                  ),
                 ),
-              );
+              });
               if (!index || typeof index !== "object" || Array.isArray(index))
                 throw new Error("ladder index unavailable");
               const record = index as Record<string, unknown>;

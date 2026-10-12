@@ -387,9 +387,19 @@ export async function readPendingRouteDispatches(input: {
           return null;
         seen.add(jobId);
         afterJobId = jobId;
+        /**
+         * Terminal replay-core jobs are history, not pending-dispatch authority. The live queue-mode RC
+         * had pages of old failed/timed-out jobs; hydrating and validating those as if they were active
+         * work made this reader return null, which aborted the replay scheduler before replay.dispatch
+         * could be offered. Active/malformed jobs still fail closed below.
+         */
+        const terminalReplayStates = new Set(["complete", "failed", "cancelled", "timed_out"]);
+        const summaryState = text(summary?.state);
+        if (summaryState && terminalReplayStates.has(summaryState)) continue;
         const job = row(await input.invoke("replay-core", "replay:job", { jobId }));
         if (!job || job.jobId !== jobId || !time(job.createdAtMs)) return null;
-        if (job.state === "complete") continue;
+        const jobState = text(job.state);
+        if (jobState && terminalReplayStates.has(jobState)) continue;
         // Actual producer vocabulary: leased is executing; evaluating has already handed off.
         const states: Record<string, PendingRouteDispatch["state"]> = {
           queued: "queued",
@@ -397,9 +407,6 @@ export async function readPendingRouteDispatches(input: {
           running: "running",
           awaiting_evaluation: "awaiting_evaluation",
           evaluating: "awaiting_evaluation",
-          failed: "failed",
-          cancelled: "cancelled",
-          timed_out: "timed_out",
         };
         const state = typeof job.state === "string" ? states[job.state] : undefined;
         if (!state) return null;
