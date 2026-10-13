@@ -551,35 +551,64 @@ export async function readPendingRouteDispatches(input: {
 }
 
 /** Read-only live classification index -> authenticated exact capsule read. No disposition resets, capture mutations, or synthetic source ids. */
+/**
+ * A queue-driven tick names the capture it was claimed for, so its projection must not walk the family.
+ *
+ * MEASURED live on production `:3456` (2026-10-14, v0.0.18): the `replay.dispatch` plane interrupted every
+ * attempt at its 600 s `attemptTimeoutMs` (`TimeoutError: Operation timed out after '10m'`, 5 attempts per
+ * job) and `replay_dispositions` stayed empty for the lifetime of the host. The cause is the projection
+ * below: it enumerated the live telemetry index (32 captures, 200 pending) and then performed ONE EXACT
+ * CAPSULE READ PER REQUEST ID through the private boundary, once per candidate task - measured at 90+ s in
+ * the pre-projection walk alone, with a single `knowledge:list-route-ladders` costing 3.5-73 s. The tick
+ * therefore never reached `replay:plan-graph` inside its budget, no durable replay job was ever created,
+ * and the job was retried into the same wall until it terminalised. A bounded, named restriction keeps the
+ * same gates and the same fail-closed answers while making the queue-driven read O(claimed captures).
+ */
+export const MAX_RESTRICTED_REPLAYABLE_CAPTURES = 8;
+
 export async function readRouteReplayableCaptures(input: {
   readonly runtimeStateRoot: string;
   readonly scopeId: string;
   readonly channel: string;
-  readonly request: { readonly roleId: string; readonly taskTypeId: string };
+  readonly request: {
+    readonly roleId: string;
+    readonly taskTypeId: string;
+    /** Run 101 addendum 45: queue-driven ticks project exactly the captures they were claimed for. */
+    readonly onlyCaptureRefs?: readonly string[];
+  };
   /** The capsule read resolves the transcript out of the encrypted artifact store itself. */
   readonly readCapture: (requestId: string) => Promise<unknown>;
 }): Promise<readonly AutoReplayCapture[] | null> {
   if (!text(input.request.roleId) || !text(input.request.taskTypeId) || !text(input.scopeId))
     return null;
+  const restricted = Array.from(
+    new Set((input.request.onlyCaptureRefs ?? []).filter((ref) => text(ref) !== null)),
+  );
+  if ((input.request.onlyCaptureRefs?.length ?? 0) > 0 && restricted.length === 0) return null;
+  if (restricted.length > MAX_RESTRICTED_REPLAYABLE_CAPTURES) return null;
   let database: DatabaseSync | undefined;
   let ids: string[];
-  try {
-    const databasePath = resolveSqliteMemoryLocation(input);
-    if (!existsSync(databasePath)) return null;
-    database = new DatabaseSync(databasePath, { readOnly: true });
-    database.exec("PRAGMA query_only=ON; PRAGMA busy_timeout=1000;");
-    const entries = database
-      .prepare(
-        "SELECT DISTINCT request_id FROM runtime_telemetry_records WHERE taxonomy_role_id=? AND taxonomy_task_type=? AND request_class IN ('live','live_request') ORDER BY request_id LIMIT 501",
-      )
-      .all(input.request.roleId, input.request.taskTypeId);
-    if (entries.length > 500 || entries.some((entry) => !text(entry.request_id))) return null;
-    ids = entries.map((entry) => entry.request_id as string);
-  } catch {
-    return null;
-  } finally {
-    database?.close();
-  }
+  if (restricted.length > 0) {
+    // The claim is the authority: no telemetry enumeration, no family walk, one exact read per claimed ref.
+    ids = restricted;
+  } else
+    try {
+      const databasePath = resolveSqliteMemoryLocation(input);
+      if (!existsSync(databasePath)) return null;
+      database = new DatabaseSync(databasePath, { readOnly: true });
+      database.exec("PRAGMA query_only=ON; PRAGMA busy_timeout=1000;");
+      const entries = database
+        .prepare(
+          "SELECT DISTINCT request_id FROM runtime_telemetry_records WHERE taxonomy_role_id=? AND taxonomy_task_type=? AND request_class IN ('live','live_request') ORDER BY request_id LIMIT 501",
+        )
+        .all(input.request.roleId, input.request.taskTypeId);
+      if (entries.length > 500 || entries.some((entry) => !text(entry.request_id))) return null;
+      ids = entries.map((entry) => entry.request_id as string);
+    } catch {
+      return null;
+    } finally {
+      database?.close();
+    }
   const scope = resolveDurableReplayJobScope(input);
   // Run 105: a capture that already holds a terminal durable replay disposition is ANNOTATED, never dropped.
   // `listPendingReplayCaptures` owns the dispatch-eligibility view and excludes such a capture; this corpus read

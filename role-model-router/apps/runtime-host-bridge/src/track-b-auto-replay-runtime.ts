@@ -521,6 +521,19 @@ const emptyResult = (): AutoReplayTickResult => ({
  */
 const ROUTE_CORPUS_UNAVAILABLE_COOLDOWN_MS = 30 * 60_000;
 
+/**
+ * Run 101 addendum 45: the SKIP path's sweep cadence (see `skipPathSweepIntervalMs`).
+ *
+ * MEASURED live on production `:3456` (2026-10-14, v0.0.18): one sweep suite cost 15 s
+ * (`replay:expire-stale-jobs`) + 13 s (`replay:list-jobs`) + evaluation reconciliation against a 60 s
+ * sidecar timeout, while the interval is 30 s - so the skip path ran the sweeps back to back and
+ * saturated the private boundary the queue worker's own walk needed. Five minutes still expires an
+ * overdue job far inside every documented grace (the replay lock expiration and the evaluation plane's
+ * stranded-job grace are both 15 minutes), and it leaves the boundary to the work tick that is actually
+ * trying to finish a dispatch.
+ */
+const DEFAULT_SKIP_PATH_SWEEP_INTERVAL_MS = 5 * 60_000;
+
 export function startAutoReplayLoop(input: {
   /**
    * Run 108 follow-up: the metric registry of the runtime scope this loop belongs to. The loop is a
@@ -596,6 +609,21 @@ export function startAutoReplayLoop(input: {
    * cutting the worst-case outage threefold. Callers who know their workload can still override it.
    */
   readonly staleTickDeadlineMs?: number;
+  /**
+   * Run 101 addendum 45: how often the SKIP path may run the liveness sweeps while a work tick holds the
+   * slot. Defaults to `DEFAULT_SKIP_PATH_SWEEP_INTERVAL_MS`.
+   *
+   * MEASURED live on production `:3456` (2026-10-14, v0.0.18): the skip path ran the WHOLE sweep suite on
+   * every 30 s interval tick while the queue worker's `dispatchCapture` was in flight. On this host one
+   * suite costs 15 s (`replay:expire-stale-jobs`) + 13 s (`replay:list-jobs`) + evaluation reconciliation
+   * against a 60 s sidecar timeout - more than the interval itself, so the sweeps ran back to back and
+   * saturated the private boundary the worker's own walk needed. Every `replay.dispatch` attempt then
+   * exceeded its 600 s `attemptTimeoutMs`, was interrupted mid-walk and retried into the same wall until
+   * it terminalised, with `replay_dispositions` empty for the lifetime of the host. Pacing the skip path
+   * keeps L7's promise (an overdue job is still expired on schedule, inside every documented grace) and
+   * gives the boundary back to the work tick.
+   */
+  readonly skipPathSweepIntervalMs?: number;
   readonly maxCapturesPerTick?: number;
   /**
    * Run 98 addendum 04 §7 (`L4`). Measured live on v170: one capture whose replay never returned
@@ -691,6 +719,13 @@ export function startAutoReplayLoop(input: {
   readonly readRouteReplayableCaptures?: (request: {
     readonly roleId: string;
     readonly taskTypeId: string;
+    /**
+     * Run 101 addendum 45: a queue-driven tick names the captures it was claimed for, so the projection
+     * reads exactly those instead of walking the family's whole telemetry corpus. Measured live on
+     * production `:3456`: the unbounded projection made one attempt outlive its 600 s
+     * `attemptTimeoutMs`, so every `replay.dispatch` job terminalised without dispatching anything.
+     */
+    readonly onlyCaptureRefs?: readonly string[];
   }) => Promise<readonly AutoReplayCapture[] | null> | readonly AutoReplayCapture[] | null;
   /** CLI must bind to finalized, effort-comparable groups for this exact task/capture/pair.
    * Never synthesize a verdict from replay terminal state, branches, or a ladder version change. */
@@ -946,6 +981,13 @@ export function startAutoReplayLoop(input: {
    */
   let sweeping = false;
   /**
+   * Run 101 addendum 45: when the sweeps last STARTED, from either entry path. The work tick runs them
+   * unconditionally at its top, so the skip path only needs to cover the case the work tick is still
+   * inside its own walk - and it must do that at a cadence, not on every interval (see
+   * `skipPathSweepIntervalMs`).
+   */
+  let lastSweepAtMs: number | null = null;
+  /**
    * The reconcile pass answers with three job-id lists (`completed`, `stranded`, `reclaimed`) plus the
    * scanned total. Counts are derived from the lists so a boundary that returns only the arrays - the
    * shipped extension shape - is read correctly, and a boundary that returns numbers keeps working.
@@ -990,6 +1032,7 @@ export function startAutoReplayLoop(input: {
       };
     }
     sweeping = true;
+    lastSweepAtMs = now();
     let expired = 0;
     let resumed = 0;
     let reconciled = 0;
@@ -1328,6 +1371,8 @@ export function startAutoReplayLoop(input: {
      */
     const staleTickDeadlineMs =
       input.staleTickDeadlineMs ?? Math.max(2 * (input.intervalMs ?? 0), 10 * 60_000);
+    const skipPathSweepIntervalMs =
+      input.skipPathSweepIntervalMs ?? DEFAULT_SKIP_PATH_SWEEP_INTERVAL_MS;
     /**
      * D7b diagnostic: MEASURED on stage-rc-425a26946d65, the reclaim did NOT fire while the walk skipped for
      * 54+ minutes against a 30-minute deadline - yet the unit test says it must. The guard's inputs were
@@ -1361,18 +1406,33 @@ export function startAutoReplayLoop(input: {
       // Run 104 post-closeout (addendum 15): the queue worker's restricted tick (`onlyCaptureRefs`)
       // is the execution authority and must NOT be skipped while the regular tick is still offering;
       // skipping it made every dispatched capture a no-op (queued===0) and no disposition was written.
-      const sweep = await runLivenessSweeps(
-        input.ledger.status().window as unknown as Record<string, unknown>,
-      );
-      if (sweep.expired > 0) lastExpiredJobs = sweep.expired;
-      if (sweep.resumed > 0) lastResumedEvaluations = sweep.resumed;
-      if (sweep.reconciled > 0) lastReconciledEvaluations = sweep.reconciled;
-      if (sweep.stranded > 0) lastStrandedEvaluations = sweep.stranded;
-      if (sweep.reclaimed > 0) lastReclaimedEvaluations = sweep.reclaimed;
-      if (sweep.recovered > 0) lastRecoveredHandoffs = sweep.recovered;
-      if (sweep.error) {
-        lastOutcome = "degraded";
-        lastError = sweep.error;
+      /**
+       * Run 101 addendum 45: the skip path paces its sweeps. It used to run the whole suite on EVERY
+       * interval tick, which on the live production host cost more than the interval itself
+       * (15 s expire + 13 s list-jobs + evaluation reconciliation against a 60 s sidecar timeout) and
+       * therefore ran back to back, saturating the private boundary. The work tick's own 600 s attempt
+       * could then never finish its walk, so every `replay.dispatch` job terminalised without a
+       * disposition. L7's intent - an overdue job is still expired on schedule rather than waiting for a
+       * long tick - is preserved: the sweeps still run while the work tick holds the slot, at the
+       * configured cadence instead of continuously.
+       */
+      const sweep =
+        lastSweepAtMs !== null && now() - lastSweepAtMs < skipPathSweepIntervalMs
+          ? null
+          : await runLivenessSweeps(
+              input.ledger.status().window as unknown as Record<string, unknown>,
+            );
+      if (sweep) {
+        if (sweep.expired > 0) lastExpiredJobs = sweep.expired;
+        if (sweep.resumed > 0) lastResumedEvaluations = sweep.resumed;
+        if (sweep.reconciled > 0) lastReconciledEvaluations = sweep.reconciled;
+        if (sweep.stranded > 0) lastStrandedEvaluations = sweep.stranded;
+        if (sweep.reclaimed > 0) lastReclaimedEvaluations = sweep.reclaimed;
+        if (sweep.recovered > 0) lastRecoveredHandoffs = sweep.recovered;
+        if (sweep.error) {
+          lastOutcome = "degraded";
+          lastError = sweep.error;
+        }
       }
       return { ...emptyResult(), skipped: true };
     }
@@ -1987,7 +2047,17 @@ export function startAutoReplayLoop(input: {
                   `[replay-tick] before readRouteReplayableCaptures focus=${plannedFocus.roleId}/${plannedFocus.taskTypeId}`,
                 );
               if (input.readRouteReplayableCaptures) {
-                const history = await input.readRouteReplayableCaptures(plannedFocus);
+                /**
+                 * Run 101 addendum 45: a queue-driven tick executes the capture its job named, so its
+                 * projection is restricted to that claim. The walk still visits every candidate task
+                 * (the claim's task is only discoverable by asking), but each visit is now one exact
+                 * capsule read instead of the family's whole telemetry corpus.
+                 */
+                const history = await input.readRouteReplayableCaptures(
+                  onlyCaptureRefs && onlyCaptureRefs.length > 0
+                    ? { ...plannedFocus, onlyCaptureRefs: [...onlyCaptureRefs] }
+                    : plannedFocus,
+                );
                 if (process.env.ROLE_MODEL_FOCUS_DIAG)
                   console.error(
                     `[replay-tick] after readRouteReplayableCaptures history=${history === null ? "null" : history.length}`,
