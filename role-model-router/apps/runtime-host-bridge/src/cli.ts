@@ -7880,8 +7880,69 @@ export async function main(): Promise<void> {
             return await readPendingRouteDispatches({
               request,
               readCapture: async (requestId) => operations.readLocalRouteCapture({ requestId }),
-              readQueueJobs: async () =>
-                operations.readQueueJobs("replay.dispatch", { limit: "500" }),
+              readQueueJobs: async () => {
+                /**
+                 * Run 101 addendum 44: pending-route reconciliation must not go through the sidecar's
+                 * per-job queue readback. Measured live on production :3456, two replay.dispatch rows
+                 * made the sidecar job-detail endpoint exceed 120s; five worker attempts then died at
+                 * the 10m Effect timeout without ever producing downstream evaluation rows. The host
+                 * owns the same SQLite queue store, so this read is a bounded local projection that
+                 * includes the payload the planner needs and lets route-challenge-evidence skip
+                 * per-row hydration.
+                 */
+                const { resolveQueueStorePath } = await import("./queue-runtime/store.js");
+                const filePath = resolveQueueStorePath({ stateRoot: queueStateRoot });
+                const empty = {
+                  schemaVersion: "role-model.operator-queue-jobs.v1",
+                  queue: "replay.dispatch",
+                  available: false,
+                  jobs: [],
+                };
+                if (!existsSync(filePath)) return empty;
+                let database: DatabaseSync | undefined;
+                try {
+                  database = new DatabaseSync(filePath, { readOnly: true });
+                  database.exec("PRAGMA query_only=ON; PRAGMA busy_timeout=1000;");
+                  const rows = database
+                    .prepare(
+                      `SELECT id, queue_name, element, state, attempts, visible_at, acquired_at,
+                              acquired_by, created_at, updated_at, last_failure
+                         FROM effect_queue WHERE queue_name = ?
+                         ORDER BY updated_at DESC LIMIT 500`,
+                    )
+                    .all("replay.dispatch");
+                  return {
+                    schemaVersion: "role-model.operator-queue-jobs.v1",
+                    queue: "replay.dispatch",
+                    available: true,
+                    jobs: rows.map((row) => {
+                      let payload: unknown = null;
+                      try {
+                        payload = JSON.parse(String(row.element));
+                      } catch {
+                        payload = String(row.element);
+                      }
+                      const state = String(row.state);
+                      return {
+                        id: String(row.id),
+                        queue: String(row.queue_name),
+                        state,
+                        attempts: Number(row.attempts ?? 0),
+                        payload,
+                        visibleAt: row.visible_at ?? null,
+                        acquiredAt: row.acquired_at ?? null,
+                        acquiredBy: row.acquired_by ?? null,
+                        createdAt: row.created_at ?? null,
+                        updatedAt: row.updated_at ?? null,
+                        lastError: row.last_failure ?? null,
+                        terminal: state === "completed" || state === "failed",
+                      };
+                    }),
+                  };
+                } finally {
+                  database?.close();
+                }
+              },
               readQueueJob: async (jobId) => operations.readQueueJob("replay.dispatch", jobId),
               invoke: async (extensionId, capability, value) =>
                 decodeExternalizedOperatorReadback({

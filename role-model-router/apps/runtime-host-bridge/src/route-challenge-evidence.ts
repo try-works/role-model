@@ -466,16 +466,29 @@ export async function readPendingRouteDispatches(input: {
       const queueJobId = text(summary?.id);
       if (!summary || !queueJobId || queueIds.has(queueJobId)) return null;
       queueIds.add(queueJobId);
-      const read = row(await input.readQueueJob(queueJobId));
-      const job = row(read?.job);
-      if (
-        !read ||
-        read.available !== true ||
-        !job ||
-        job.id !== queueJobId ||
-        job.queue !== "replay.dispatch"
-      )
-        return null;
+      /**
+       * Run 101 addendum 44: use a complete queue summary directly. The production sidecar's per-job
+       * readback can take longer than the replay worker's whole 10 minute attempt budget; the list row
+       * already carries the queue id, payload and timestamps when the host reads the local queue store.
+       * Hydrate only older/incomplete projections.
+       */
+      const summaryPayload = row(summary.payload);
+      let job: Row | null =
+        summary.id === queueJobId && summary.queue === "replay.dispatch" && summaryPayload
+          ? summary
+          : null;
+      if (!job) {
+        const read = row(await input.readQueueJob(queueJobId));
+        job = row(read?.job);
+        if (
+          !read ||
+          read.available !== true ||
+          !job ||
+          job.id !== queueJobId ||
+          job.queue !== "replay.dispatch"
+        )
+          return null;
+      }
       if (job.state === "completed") continue;
       // PersistedQueue owns these names, not ReplayCore. No cancelled/time-out inference from error text.
       const states: Record<string, PendingRouteDispatch["state"]> = {
