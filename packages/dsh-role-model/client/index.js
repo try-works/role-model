@@ -312,10 +312,14 @@ window.__ModuleLoader__.load({
      */
     const CHANNEL_DEFAULT = 0;
 
-    /** The select's options, the unset state first. */
+    /** The select's options, the unset sentinel first. */
     const CHANNEL_OPTIONS = [
-      { port: CHANNEL_DEFAULT, label: "default — production (:3456)" },
-      ...RUNTIME_CHANNELS.filter((channel) => channel.port !== 3456).map((channel) => ({
+      { port: CHANNEL_DEFAULT, label: "unset — keep the endpoint field (defaults to :3456)" },
+      // Production is listed explicitly rather than folded into the sentinel. `port: 3456`
+      // is the schema default and a legal stored value, so omitting it left the select
+      // carrying a value no option had: the control showed nothing selected and read as
+      // broken. Every channel must be representable AND selectable.
+      ...RUNTIME_CHANNELS.map((channel) => ({
         port: channel.port,
         label: `${channel.name} — ${channel.runtime} (:${channel.port})`,
       })),
@@ -353,18 +357,24 @@ window.__ModuleLoader__.load({
     /**
      * Read the settings Remote, when the context exposes one.
      *
-     * Reached through `ctx.remote` rather than a hard `remote.settings` injection: an
-     * injection edge that cannot resolve means the plugin never mounts, which blanks
-     * the whole settings page — far worse than a form that cannot save. The write path
-     * is guarded the same way, and says so in the UI when the surface is missing.
+     * `remote` and `remote.settings` are declared in `inject` above, which is what makes
+     * them reachable at all — an undeclared namespace throws on property access rather
+     * than answering undefined. The guard stays so that a partially assembled Remote
+     * costs the save button rather than turning every read and write into a thrown error.
      * @param ctx - the client plugin context.
      * @returns the namespace's surface, or undefined when it is not available.
      */
     function settingsRemote(ctx) {
-      const namespace = ctx?.remote?.settings;
-      return namespace !== undefined && typeof namespace.update === "function"
-        ? namespace
-        : undefined;
+      try {
+        const namespace = ctx?.remote?.settings;
+        return namespace !== undefined && typeof namespace.update === "function"
+          ? namespace
+          : undefined;
+      } catch {
+        // A context that cannot answer the read leaves the form usable rather than
+        // turning every read and write into a thrown error.
+        return undefined;
+      }
     }
 
     /**
@@ -439,23 +449,54 @@ window.__ModuleLoader__.load({
     }
 
     /**
+     * How long to wait for the host to answer a settings write.
+     *
+     * The host serializes every config write with every plugin reload in one unbounded
+     * queue, so a write issued while another profile mutation is in flight (a plugin
+     * install, a reload) is *queued* rather than refused, and its promise may not settle
+     * for minutes. Without a bound the panel sits on "Applying…" forever.
+     */
+    const WRITE_TIMEOUT_MS = 20_000;
+
+    /**
      * Write a patch to this plugin's settings namespace.
      * @param ctx - the client plugin context.
      * @param patch - the fields to merge.
+     * @param timeoutMs - how long to wait for an answer before reporting that.
      * @returns undefined on success, or the message to show the user.
      */
-    async function writeConfig(ctx, patch) {
+    async function writeConfig(ctx, patch, timeoutMs = WRITE_TIMEOUT_MS) {
       if (Object.keys(patch).length === 0) return undefined;
       const namespace = settingsRemote(ctx);
       if (namespace === undefined) {
         return "the settings service is unavailable, so this change cannot be saved yet";
       }
+      const timedOut = {};
+      let timer;
+      const deadline = new Promise((resolve) => {
+        timer = setTimeout(
+          () => resolve(timedOut),
+          Number.isFinite(timeoutMs) && timeoutMs > 0 ? timeoutMs : WRITE_TIMEOUT_MS,
+        );
+      });
       try {
-        const response = await namespace.update(SETTINGS_NS, patch, undefined);
+        const write = Promise.resolve(namespace.update(SETTINGS_NS, patch, undefined));
+        // The race may settle on the timeout first; mark a late rejection as handled so it
+        // cannot surface as an unhandled rejection.
+        write.catch(() => undefined);
+        const response = await Promise.race([write, deadline]);
+        if (response === timedOut) {
+          return (
+            "the host has not answered this write yet. Another profile change (a plugin " +
+            "install or reload) may be holding the configuration queue — retry in a moment."
+          );
+        }
         if (response !== undefined && response.ok === true) return undefined;
         return response?.error?.message ?? "the settings service refused the write";
       } catch (error) {
         return error instanceof Error ? error.message : String(error);
+      } finally {
+        clearTimeout(timer);
       }
     }
 
@@ -545,7 +586,17 @@ window.__ModuleLoader__.load({
         setSaving(true);
         setMessage(null);
         const patch = buildPatch(current ?? {}, draft);
-        void writeConfig(context, patch).then((failure) => {
+        // `saving` is cleared outside the happy path too: a write that fails, hangs and
+        // times out, or rejects outright must all return the button to a usable state.
+        // Before this, any outcome other than a resolved-then call left it stuck on
+        // "Applying…" with no message and no way back but a page reload.
+        void (async () => {
+          let failure;
+          try {
+            failure = await writeConfig(context, patch);
+          } catch (error) {
+            failure = error instanceof Error ? error.message : String(error);
+          }
           setSaving(false);
           if (failure === undefined) {
             setCurrent({ ...(current ?? {}), ...patch });
@@ -556,7 +607,7 @@ window.__ModuleLoader__.load({
             return;
           }
           setMessage({ kind: "error", text: failure });
-        });
+        })();
       };
 
       const onReset = () => {
@@ -858,14 +909,17 @@ window.__ModuleLoader__.load({
     }
 
     return {
-      // The settings section slot is provided by the settings shell, so wait for it.
+      // The settings section slot is provided by the settings shell, and the Remote
+      // namespaces this page reads must be declared here.
       //
-      // `remote.settings` is deliberately NOT injected. A namespace is a Cordis child
-      // service (`remote.<namespace>`), and an injection edge that cannot resolve keeps
-      // the plugin from mounting at all — which blanks the entire settings page. The
-      // Remote is instead read through `ctx.remote` behind a guard, so an unavailable
-      // settings surface costs the save button, not the page.
-      inject: ["slots"],
+      // A Remote namespace is assembled for the entries that declare it: without the
+      // entry, `ctx.remote` **throws** `cannot get property "remote" without inject` and
+      // `ctx.get("remote")` cannot find it either, so the service is simply not reachable.
+      // Declaring only `slots` produced both live symptoms — the raw Cordis error on Apply,
+      // and a form whose every field stayed empty because the read failed silently. Every
+      // client plugin that touches the Remote lists it, including the settings mirror
+      // (`ui-settings`: `['remote', 'remote.settings']`).
+      inject: ["slots", "remote", "remote.settings"],
 
       apply(ctx) {
         panelContext = ctx;
@@ -901,6 +955,7 @@ window.__ModuleLoader__.load({
         CONFIG_FIELDS,
         SELECT_FIELDS,
         RUNTIME_CHANNELS,
+        CHANNEL_OPTIONS,
         settingsRemote,
         readConfig,
         buildPatch,
