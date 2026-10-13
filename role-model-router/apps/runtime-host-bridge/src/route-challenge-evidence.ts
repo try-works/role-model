@@ -440,7 +440,13 @@ export async function readPendingRouteDispatches(input: {
         break;
       }
     }
-    if (!complete) return null;
+    if (!complete) {
+      if (process.env.ROLE_MODEL_FOCUS_DIAG)
+        console.error(
+          "[route-dispatch-pending] refused: the replay-core listing did not complete inside its page budget",
+        );
+      return null;
+    }
     const page = row(await input.readQueueJobs());
     // The operator queue projection intentionally reports an uncreated fresh store as
     // `available:false` with an empty list. That is a complete empty queue, not an authority
@@ -460,6 +466,10 @@ export async function readPendingRouteDispatches(input: {
       page.jobs.length >= 500
     )
       return null;
+    if (process.env.ROLE_MODEL_FOCUS_DIAG)
+      console.error(
+        `[route-dispatch-pending] queue page available=${String(page.available)} jobs=${page.jobs.length} freshEmpty=${String(freshEmptyQueue)}`,
+      );
     const queueIds = new Set<string>();
     for (const entry of page.jobs) {
       const summary = row(entry);
@@ -512,7 +522,13 @@ export async function readPendingRouteDispatches(input: {
       )
         return null;
       const capture = await scopeCapture(captureRef);
-      if (!capture) continue;
+      if (!capture) {
+        if (process.env.ROLE_MODEL_FOCUS_DIAG)
+          console.error(
+            `[route-dispatch-pending] dropped ${queueJobId}: capture ${captureRef} is not scoped to this task`,
+          );
+        continue;
+      }
       const date =
         typeof job.createdAt === "string" &&
         /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d+)?$/.test(job.createdAt)
@@ -521,7 +537,13 @@ export async function readPendingRouteDispatches(input: {
       if (!time(date)) return null;
       for (const id of payload.endpointIds) {
         const endpointId = text(id);
-        if (!endpointId || endpointId === capture.endpointId) return null;
+        if (!endpointId || endpointId === capture.endpointId) {
+          if (process.env.ROLE_MODEL_FOCUS_DIAG)
+            console.error(
+              `[route-dispatch-pending] refused ${queueJobId}: arm ${String(endpointId)} is the capture's own endpoint ${String(capture.endpointId)}`,
+            );
+          return null;
+        }
         // A live queue row may already have produced a replay. That durable replay record is the stronger state.
         if (
           answers.some(
@@ -545,7 +567,17 @@ export async function readPendingRouteDispatches(input: {
       }
     }
     return answers;
-  } catch {
+  } catch (error) {
+    /**
+     * Run 101 addendum 45: this read answers `null` for BOTH "the plane is unavailable" and "a shape gate
+     * refused", and the walk reports either one as `route pending dispatches unavailable`. Measured live on
+     * production `:3456` (2026-10-14): the tick failed with that message while the replay-core listing and
+     * the local queue projection were both healthy, and nothing in the log said which gate refused. Name it.
+     */
+    if (process.env.ROLE_MODEL_FOCUS_DIAG)
+      console.error(
+        `[route-dispatch-pending] threw: ${error instanceof Error ? error.message : String(error)}`,
+      );
     return null;
   }
 }
