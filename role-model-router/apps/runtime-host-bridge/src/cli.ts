@@ -5888,7 +5888,16 @@ export async function main(): Promise<void> {
         console.error(
           `[replay-loop] start check: operations=${operations ? "wired" : "null"} channel=${channel} port=${options.port}`,
         );
-      if (!operations || channel === "production") return null;
+      /**
+       * Run 101 production queue hotfix: the queue plane is now the production
+       * default, so production must run the same replay producer that offers
+       * admitted captures into `replay.dispatch`. The previous hard channel
+       * gate left :3456 with mode=queue but activeAutoReplayLoop=null, so no
+       * Effect queue store could ever be created. Missing operations still fail
+       * closed; production scheduling is controlled by the activation/queue
+       * policies instead of a channel veto.
+       */
+      if (!operations) return null;
       const port = options.port;
       if (!Number.isInteger(port) || port <= 0) return null;
       const ledger = createReplayLedger({
