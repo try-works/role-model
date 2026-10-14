@@ -2628,7 +2628,10 @@ export function startAutoReplayLoop(input: {
             challengeInFlight = false;
             break;
           }
-          const progress = Ref.getUnsafe(challenges).get(challengeKey) as ChallengeProgress;
+          const progress = Ref.getUnsafe(challenges).get(challengeKey);
+          // An awaited read/offer can outlive this challenge after a newer tick reclaims the slot.
+          // Never recreate it by spreading undefined into a partial ChallengeProgress.
+          if (!progress) break;
           setChallenge(challengeKey, {
             ...progress,
             pendingCaptureRef: focusCaptureRef,
@@ -2663,13 +2666,17 @@ export function startAutoReplayLoop(input: {
               (row.outcome === "deferred" && !(Number(row.branches) > 0)),
           )
         ) {
-          const progress = Ref.getUnsafe(challenges).get(challengeKey) as ChallengeProgress;
+          const progress = Ref.getUnsafe(challenges).get(challengeKey);
+          // An awaited read/offer can outlive this challenge after a newer tick reclaims the slot.
+          // Never recreate it by spreading undefined into a partial ChallengeProgress.
+          if (!progress) break;
           setChallenge(challengeKey, { ...progress, pendingCaptureRef: null });
           dispatchedChallenges.delete(focusCaptureRef);
           break;
         }
         if (part.replayed > 0 || part.deferred > 0) dispatchedChallenges.add(focusCaptureRef);
-        const progress = Ref.getUnsafe(challenges).get(challengeKey) as ChallengeProgress;
+        const progress = Ref.getUnsafe(challenges).get(challengeKey);
+        if (!progress) break;
         if (
           !(await applyFinalized(
             challengeKey,
