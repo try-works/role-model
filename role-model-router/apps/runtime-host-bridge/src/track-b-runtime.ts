@@ -5850,6 +5850,8 @@ export function createTrackBPostObservationOutbox({
 export interface TrackBShadowPipelineInput {
   readonly requestId: string;
   readonly channel: string;
+  /** Finalize replay evaluation evidence only; never issue advice or mutate learned profiles. */
+  readonly evidenceOnly?: boolean;
   readonly scope: string;
   /**
    * Run 108 follow-up: the metric registry of the runtime scope this pipeline runs in. The pipeline
@@ -8903,7 +8905,7 @@ export async function runTrackBShadowPipeline(
   runtime: TrackBShadowPipelineRuntime,
   input: TrackBShadowPipelineInput,
 ) {
-  if (input.channel === "production") {
+  if (input.channel === "production" && input.evidenceOnly !== true) {
     throw new Error("route learning is shadow-only; production channel is prohibited");
   }
   if (!input.requestId || !input.scope || !input.routePackage) {
@@ -10122,6 +10124,25 @@ export async function runTrackBShadowPipeline(
     );
   }
   const durableComparison = persistedEvaluationDecoded as Record<string, unknown>;
+  if (input.evidenceOnly === true) {
+    // Production supervised replay needs durable scored comparisons, not a shadow advisory.
+    // Keep the channel identity for attestation/scoring and stop before all learning/advisory writes.
+    return {
+      replay,
+      evaluation: persistedEvaluationDecoded,
+      comparison: durableComparison,
+      signals: { state: "not_run", reason: "evaluation_evidence_only" },
+      profile: { state: "not_run", reason: "evaluation_evidence_only" },
+      candidate: { id: null, state: "insufficient_trajectory_evidence", reason: "evaluation_evidence_only" },
+      advisory: null,
+      productionState: structuredClone(input.productionState),
+      receipt: {
+        schemaVersion: "role-model.track-b-shadow-pipeline-receipt.v1",
+        mode: "evidence_only", requestId: input.requestId,
+        productionMutation: false, candidateId: null,
+      },
+    };
+  }
   // Run 97 RC06: a decisive comparison is evidence about the winning package, and both
   // directions are learnable (`guidance/07`: the worker compares winners and losers;
   // `guidance/13`: signed observational evidence, `keep` for a holding incumbent). The

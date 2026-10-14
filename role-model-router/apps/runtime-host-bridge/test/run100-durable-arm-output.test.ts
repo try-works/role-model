@@ -324,6 +324,7 @@ function buildScenario(
   ledgerPath?: string,
   options: {
     readonly judgeEndpointId?: string;
+    readonly channel?: string;
     readonly wrapReadback?: boolean;
     readonly transportEnvelope?: boolean;
     readonly externalizedAttestation?: boolean;
@@ -343,6 +344,7 @@ function buildScenario(
     readonly armOutput?: Readonly<Record<string, "text" | "tool_calls" | "missing">>;
   } = {},
 ) {
+  const pipelineResults: Record<string, unknown>[] = [];
   const sourceCapture = capture("1");
   const arms: Arm[] = armMarks.map((mark) => ({
     endpointId: `endpoint:${mark}`,
@@ -396,7 +398,7 @@ function buildScenario(
       },
     },
     requestId: "request:run98:a34",
-    channel: "development",
+    channel: options.channel ?? "development",
     scope: options.scope ?? "tenant:run98",
     ...(options.contractStateRoot ? { contractStateRoot: options.contractStateRoot } : {}),
     sourceCapture: sourceCapture as unknown as Record<string, unknown>,
@@ -452,7 +454,9 @@ function buildScenario(
     runPipeline: async (pipelineRuntime, pipelineInput) => {
       pipelineInputs.push(pipelineInput);
       pipelineCalls.push(String(pipelineInput.requestId));
-      return runTrackBShadowPipeline(pipelineRuntime, pipelineInput);
+      const result = await runTrackBShadowPipeline(pipelineRuntime, pipelineInput);
+      pipelineResults.push(result as unknown as Record<string, unknown>);
+      return result;
     },
   });
   const invoke = () =>
@@ -473,6 +477,7 @@ function buildScenario(
     invoke,
     /** Run 98 addendum 56 §6.2: the inputs the pipeline actually ran with (their scope locates the store). */
     pipelineInputs,
+    pipelineResults,
   };
 }
 
@@ -529,6 +534,20 @@ function durableMultiArmJob({
 }
 
 describe("run 100 R2 durable arm output", () => {
+  test("production supervised replay finalizes evidence without issuing a route advisory", async () => {
+    const scenario = buildScenario(["b"], undefined, { channel: "production" });
+    const result = (await scenario.invoke()) as Record<string, unknown>;
+    expect(scenario.capturedFinalizers.length).toBeGreaterThan(0);
+    expect(result).toMatchObject({ outcome: "candidate" });
+    expect(scenario.pipelineInputs[0]).toMatchObject({ channel: "production", evidenceOnly: true });
+    expect(scenario.pipelineResults[0]).toMatchObject({
+      advisory: null,
+      profile: { state: "not_run" },
+      signals: { state: "not_run" },
+      receipt: { mode: "evidence_only", productionMutation: false },
+    });
+    expect(scenario.pipelineResults[0]?.productionState).toEqual(scenario.pipelineInputs[0]?.productionState);
+  });
   test("an arm whose branch capture is missing is excluded by name and the capture still evaluates", async () => {
     const scenario = buildScenario(["b", "c"], undefined, {
       armOutput: { b: "missing" },
