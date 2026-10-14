@@ -7879,7 +7879,8 @@ export async function main(): Promise<void> {
             const { readPendingRouteDispatches } = await import("./route-challenge-evidence.js");
             return await readPendingRouteDispatches({
               request,
-              readCapture: async (requestId) => operations.readLocalRouteCapture({ requestId }),
+              // Pending state needs authenticated root metadata, not thousands of transcript artifacts.
+              readCapture: async (requestId) => operations.readLocalRouteCapture({ requestId, metadataOnly: true }),
               readQueueJobs: async () => {
                 /**
                  * Run 101 addendum 44: pending-route reconciliation must not go through the sidecar's
