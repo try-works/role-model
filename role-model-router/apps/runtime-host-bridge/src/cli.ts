@@ -2577,7 +2577,6 @@ export function createSupervisedReplayEvaluationCompleter(input: {
     const evaluated = await runPipeline(input.runtime, {
       requestId: createSupervisedReplayEvaluationRequestId(input.requestId, replayJobId),
       channel: input.channel,
-      ...(input.channel === "production" ? { evidenceOnly: true } : {}),
       scope: input.scope,
       // Run 108 follow-up: the pipeline is a stage of this completer's runtime scope.
       ...(input.observabilityScope ? { observabilityScope: input.observabilityScope } : {}),

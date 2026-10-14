@@ -534,18 +534,17 @@ function durableMultiArmJob({
 }
 
 describe("run 100 R2 durable arm output", () => {
-  test("production supervised replay finalizes evidence without issuing a route advisory", async () => {
+  test("production supervised replay runs learning under the same evidence gates as development", async () => {
     const scenario = buildScenario(["b"], undefined, { channel: "production" });
     const result = (await scenario.invoke()) as Record<string, unknown>;
     expect(scenario.capturedFinalizers.length).toBeGreaterThan(0);
     expect(result).toMatchObject({ outcome: "candidate" });
-    expect(scenario.pipelineInputs[0]).toMatchObject({ channel: "production", evidenceOnly: true });
-    expect(scenario.pipelineResults[0]).toMatchObject({
-      advisory: null,
-      profile: { state: "not_run" },
-      signals: { state: "not_run" },
-      receipt: { mode: "evidence_only", productionMutation: false },
+    expect(scenario.pipelineInputs[0]?.channel).toBe("production");
+    expect(scenario.pipelineInputs[0]?.evidenceOnly).not.toBe(true);
+    expect(scenario.pipelineResults[0]?.advisory).toMatchObject({
+      authorization: { claims: { channel: "production" } },
     });
+    expect(scenario.pipelineResults[0]?.receipt).toMatchObject({ productionMutation: false });
     expect(scenario.pipelineResults[0]?.productionState).toEqual(scenario.pipelineInputs[0]?.productionState);
   });
   test("an arm whose branch capture is missing is excluded by name and the capture still evaluates", async () => {

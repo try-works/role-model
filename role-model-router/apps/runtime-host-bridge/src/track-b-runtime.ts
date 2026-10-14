@@ -7443,9 +7443,6 @@ export function resolveTrackBRouteAdvisory(input: {
     advisoryState,
     confidence: input.confidence ?? 0,
   });
-  if (expectedClaims.channel === "production") {
-    throw new Error("route-learning advisories are shadow-only; production channel is prohibited");
-  }
   if (!input.authorization || typeof input.authorizationValidator !== "function") {
     throw new Error("signed route-learning advisory authorization is required");
   }
@@ -8905,9 +8902,6 @@ export async function runTrackBShadowPipeline(
   runtime: TrackBShadowPipelineRuntime,
   input: TrackBShadowPipelineInput,
 ) {
-  if (input.channel === "production" && input.evidenceOnly !== true) {
-    throw new Error("route learning is shadow-only; production channel is prohibited");
-  }
   if (!input.requestId || !input.scope || !input.routePackage) {
     throw new Error("complete shadow pipeline identity is required");
   }
