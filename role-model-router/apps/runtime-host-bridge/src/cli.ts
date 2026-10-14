@@ -12074,7 +12074,9 @@ export async function main(): Promise<void> {
               });
               qaStartupReceipts.set(extension.descriptor.id, { ...receipt, requestId });
             }
-            await drainPostObservationOutbox(runtime);
+            // D7a: do not gate readiness on the whole durable backlog. The outbox has bounded,
+            // independent retry ownership, so start it here and let readiness proceed while delivery continues.
+            schedulePostObservationDrain(runtime);
             // A prior cloud outage must not require an unrelated new provider request
             // before its already-authorized, durable aggregate is retried.
             await currentPostObservationOperations()?.retryContributionAggregates();
