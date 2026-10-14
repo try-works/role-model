@@ -251,6 +251,7 @@ import type { ReplayPolicySet, ReplayToolPolicy } from "./track-b-replay-policy.
  */
 
 export interface AutoReplayOperations {
+  readLocalRouteCapture?(input: Record<string, unknown>): Promise<unknown>;
   listPendingReplayCaptures(input: {
     readonly policySetDigest: string;
     readonly limit?: number;
@@ -1510,6 +1511,41 @@ export function startAutoReplayLoop(input: {
       });
       let captures = pendingCaptures(pending);
       const onlyCaptureRefs = options?.onlyCaptureRefs;
+      if (onlyCaptureRefs && onlyCaptureRefs.length > 0 && input.operations.readLocalRouteCapture) {
+        // A bounded pending page need not include the claimed capture. Read its durable root instead of
+        // dropping the claim, so the tick still has the role/task identity needed to focus and execute it.
+        for (const captureRef of onlyCaptureRefs) {
+          if (captures.some((capture) => capture.captureRef === captureRef) || !captureRef) continue;
+          const raw = (await input.operations.readLocalRouteCapture({
+            requestId: captureRef,
+            metadataOnly: true,
+          })) as Record<string, unknown>;
+          if (!raw || typeof raw !== "object" || Array.isArray(raw)) continue;
+          const classification = (raw as Record<string, unknown>).classification as Record<string, unknown> | undefined;
+          captures = [
+            ...captures,
+            {
+              captureRef,
+              sourceEndpointId: typeof raw.endpointId === "string" ? raw.endpointId : null,
+              roleId:
+                typeof raw.roleId === "string"
+                  ? raw.roleId
+                  : typeof classification?.roleId === "string"
+                    ? classification.roleId
+                    : null,
+              taskTypeId:
+                typeof raw.taskTypeId === "string"
+                  ? raw.taskTypeId
+                  : typeof classification?.taskTypeId === "string"
+                    ? classification.taskTypeId
+                    : null,
+              hasRecordedToolResults:
+                Array.isArray(raw.toolArtifactIds) && raw.toolArtifactIds.length > 0,
+              sourceClass: (raw.replayEvidenceClass as { readonly class?: unknown } | undefined)?.class as string | null,
+            },
+          ];
+        }
+      }
       const initialClaimedStageTaskKeys =
         stageEnabled && onlyCaptureRefs
           ? new Set(
