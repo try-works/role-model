@@ -315,6 +315,12 @@ export interface AutoReplayOperations {
   /** Queue producer only: it never validates candidates alongside the authoritative queue worker. */
   revalidateStrandedLearnerCandidates?(input: Record<string, unknown>): Promise<unknown>;
   /**
+   * Evidence producer, independent of every queue plane. Ladder materialization is a pure function of durable
+   * comparisons, so it must keep running when the learner queue is authoritative - it was previously reachable
+   * only through the retired derivation sweep, which froze the ladder.
+   */
+  materializeRouteLadders?(): Promise<unknown>;
+  /**
    * Run 100 addendum 10 S13: the learner's durable derivation half. The sweep above consumes candidates that exist;
    * nothing in the runtime *creates* one outside `runTrackBShadowPipeline`, so a finalized comparison the pipeline
    * never carried is evidence no learner can reach (measured 2026-09-25: 281 learnable groups with no candidate,
@@ -1217,6 +1223,22 @@ export function startAutoReplayLoop(input: {
        * leaving one of them running would race the queue for the same work.
        */
       const learnerQueueAuthoritative = input.planeModes?.learner === "queue";
+      /**
+       * Live finding (isolated production-learning verification, 2026-10-15): ladder materialization was only
+       * ever called from inside `deriveLearnerCandidates`, which queue mode retires - so the durable route ladder
+       * FROZE (measured: "ladder materialization" appeared 0 times in the log; the ladder stayed at version 23
+       * with 23 evidence documents while 9 further comparison groups were finalized). Materialization is EVIDENCE,
+       * not scheduling, exactly like the finalization-signals producer that deliberately keeps running in queue
+       * mode, so it runs here in every plane mode.
+       */
+      if (typeof input.operations.materializeRouteLadders === "function") {
+        try {
+          await input.operations.materializeRouteLadders();
+        } catch (cause) {
+          const detail = `ladder materialization failed: ${String(cause).slice(0, 200)}`;
+          error = error ? `${error}; ${detail}` : detail;
+        }
+      }
       if (learnerQueueAuthoritative && input.operations.revalidateStrandedLearnerCandidates) {
         try {
           const produced = (await input.operations.revalidateStrandedLearnerCandidates({ limit: 5 })) as

@@ -6042,8 +6042,152 @@ export async function main(): Promise<void> {
       // replay domain does not expose the sweep in the packaged composition
       // (live: `operator_capability_unavailable`). Binding is still enforced by the
       // capability itself from the envelope's channel/scope/epoch.
+          /**
+           * Live finding (isolated production-learning verification, 2026-10-15): this materialization used to be
+           * reachable ONLY through `deriveLearnerCandidates`, and queue mode retires that sweep - so the durable
+           * route ladder FROZE at version 23 with 23 evidence documents while 9 further comparison groups were
+           * created (measured: the string "ladder materialization" appeared 0 times in the runtime log). A frozen
+           * ladder is why the plan's `admitted === configured` criterion could never be reached.
+           *
+           * Materialization is EVIDENCE, not scheduling. It composes the operator's authenticated host op directly
+           * (no runtime.invoke, no authority secret, no queue worker), exactly like the finalization-signals
+           * producer that deliberately keeps running in queue mode, so it is exposed as its own operation for the
+           * loop to call whichever plane owns the learner queue.
+           */
+          const materializeDerivedLadders = async () => {
+            try {
+              const defaultsSnapshot = readRouteLearningDefaults({
+                repoRoot: options.repoRoot,
+                channel,
+                stateRoot: resolveLearningPolicyStateRoot({
+                  runtimeStateRoot: options.runtimeStateRoot,
+                  scopeId: options.scopeId,
+                }),
+              }).routeLearning;
+              const materialized = await operations.materializeRouteLadders({
+                configuredEndpointIds: endpoints(),
+                defaults: defaultsSnapshot,
+              });
+              if (
+                materialized &&
+                typeof materialized === "object" &&
+                !Array.isArray(materialized)
+              ) {
+                const record = materialized as Record<string, unknown>;
+                const ladders = Array.isArray(record.ladders) ? record.ladders : [];
+                const written = ladders.filter((entry) => {
+                  return (
+                    Boolean(entry) &&
+                    typeof entry === "object" &&
+                    (entry as Record<string, unknown>).status === "written"
+                  );
+                }).length;
+                /**
+                 * Run 108 phase-03 F5 (R7 ladder-rung count): the rungs each WRITTEN ladder holds,
+                 * read from the materialization outcome the host already receives. A row that carries
+                 * neither rungs nor admitted completeness measures nothing and is skipped rather than
+                 * recorded as a zero-rung ladder.
+                 */
+                for (const entry of ladders) {
+                  if (
+                    !entry ||
+                    typeof entry !== "object" ||
+                    (entry as Record<string, unknown>).status !== "written"
+                  )
+                    continue;
+                  const rungs = ladderRungCountOf(entry);
+                  if (rungs !== null) recordLadderRungs(rungs, observabilityScope);
+                }
+
+                /**
+                 * Run 108 addendum-04, corrected by the follow-up M3 finding: the admission-floor verdict,
+                 * at the same materialization-outcome seam and for EVERY entry that carries one - not only
+                 * the "written" ones, because "unchanged" is the steady state and "insufficient_evidence"
+                 * is the refusal.
+                 *
+                 * The TWO readings are recorded under their own names and never conflated:
+                 *   admission_floor            - the LIVE verdict (`floor.admitted.size`, the current
+                 *                                eligibility answer the producer publishes on the entry);
+                 *   admission_floor_persisted  - the PERSISTED row's own count, which the materializer
+                 *                                deliberately preserves on regression (a historic value).
+                 * An entry that publishes no live answer records NOTHING for the floor rather than the
+                 * preserved value: a fabricated green is worse than an absent observation.
+                 */
+                for (const entry of ladders) {
+                  const admitted = admissionFloorVerdictOf(entry);
+                  if (admitted !== null) recordAdmissionFloor(admitted, observabilityScope);
+                  const persisted = persistedAdmissionFloorVerdictOf(entry);
+                  if (persisted !== null)
+                    recordPersistedAdmissionFloor(persisted, observabilityScope);
+                }
+                if (written > 0)
+                  console.error(`[run105] ladder materialization wrote ${written} ladder row(s)`);
+              }
+            } catch (materializationError) {
+              /**
+               * This is a TRANSIENT SKIP, not a lost row, and the message has to say so. The sweep runs
+               * once per auto-replay tick and materialization is a pure function of durable evidence, so
+               * the next tick recomputes and writes whatever this attempt missed. Measured live: the log
+               * held "wrote 1 ladder row(s)" at lines 159 and 169 around a "degraded" at 162, i.e. the
+               * very next tick recovered, and the first-time ladder for that family materialized v1 -> v4
+               * across the same window.
+               *
+               * Run 108 COUNTER-CASE, measured on the stage RC: that recovery is NOT guaranteed while the lock
+               * contention persists. Over a 21-minute window a run took 40 ticks with skipped=5 and
+               * `wrote=0` for the WHOLE process - no ladder row was written at any point - and one of those ticks
+               * dragged 427083 ms. So "the next tick writes whatever this attempt missed" holds only while the
+               * contention is transient. The contention is a genuine structural conflict (two extension hosts
+               * holding read-write handles on one evaluation store, with a busy_timeout set to the same 5000 ms
+               * constant as the lock hold), and under it this skip repeats indefinitely. Read the reassurance
+               * below as "recoverable in principle", not as "recovered".
+               *
+               * The bare "degraded: database is locked" invited the opposite reading - that a family
+               * could reach its admission floor and silently get no row - and that misreading is how this
+               * was originally recorded as data loss. Naming the cause and the retry costs nothing and
+               * stops the next reader making the same mistake.
+               */
+              const cause = String(
+                (materializationError as { message?: unknown })?.message ?? materializationError,
+              ).slice(0, 160);
+              console.error(
+                `[run105] ladder materialization skipped this tick (retried next tick, no row is lost): ${cause}`,
+              );
+              // Run 108 R3: the failure is ALSO a durable, operator-visible receipt in the knowledge
+              // store - best-effort so a busy store (the very failure being reported) cannot break the
+              // tick. Content-keyed, so repeated identical failures keep one row. Materialization itself
+              // runs before the runtime is fully up (host-op only, see above), so the receipt is
+              // recorded only when the extension runtime is available. Review B1 (03.5): the local
+              // `runtime`/`envelopeFor` are declared AFTER this function runs - read the ref and the
+              // enclosing learnerSweepEnvelope directly, or the guard itself throws a TDZ ReferenceError
+              // on the exact busy-store case this receipt exists for.
+              const runtimeAtCatch = extensionRuntimeRef.current;
+              if (runtimeAtCatch !== null) {
+                try {
+                  await runtimeAtCatch.invoke(
+                    "knowledge-store",
+                    learnerSweepEnvelope({
+                      requestPrefix: "learner-derivation",
+                      extensionId: "knowledge-store",
+                      capability: "knowledge:record-degradation",
+                      value: { capability: "ladder-materialization", reason: cause },
+                    }),
+                  );
+                } catch {
+                  // the console line above remains the fallback surface
+                }
+              }
+            }
+          };
       const sweepOperations = {
         ...operations,
+        /**
+         * Evidence producer, reachable in EVERY plane mode. Materialization composes the operator's
+         * authenticated host op directly (no queue worker, no authority secret), so retiring the learner
+         * sweeps must not retire it - a frozen ladder is exactly what a queue-mode runtime produced before this
+         * existed (durable ladder stuck at version 23 while new comparison groups finalized). It deliberately
+         * overrides the spread operation of the same name, whose body argument this caller never uses.
+         */
+        materializeRouteLadders: async (): Promise<unknown> => await materializeDerivedLadders(),
         async expireStaleReplayJobs(input: Record<string, unknown>) {
           const runtime = extensionRuntimeRef.current;
           if (!runtime) return { expiredCount: 0, expired: [] };
@@ -7127,131 +7271,6 @@ export async function main(): Promise<void> {
            * authenticated host op only (no runtime.invoke, no authority secret), so it proceeds even
            * when every legacy derivation precondition below fails.
            */
-          const materializeDerivedLadders = async () => {
-            try {
-              const defaultsSnapshot = readRouteLearningDefaults({
-                repoRoot: options.repoRoot,
-                channel,
-                stateRoot: resolveLearningPolicyStateRoot({
-                  runtimeStateRoot: options.runtimeStateRoot,
-                  scopeId: options.scopeId,
-                }),
-              }).routeLearning;
-              const materialized = await operations.materializeRouteLadders({
-                configuredEndpointIds: endpoints(),
-                defaults: defaultsSnapshot,
-              });
-              if (
-                materialized &&
-                typeof materialized === "object" &&
-                !Array.isArray(materialized)
-              ) {
-                const record = materialized as Record<string, unknown>;
-                const ladders = Array.isArray(record.ladders) ? record.ladders : [];
-                const written = ladders.filter((entry) => {
-                  return (
-                    Boolean(entry) &&
-                    typeof entry === "object" &&
-                    (entry as Record<string, unknown>).status === "written"
-                  );
-                }).length;
-                /**
-                 * Run 108 phase-03 F5 (R7 ladder-rung count): the rungs each WRITTEN ladder holds,
-                 * read from the materialization outcome the host already receives. A row that carries
-                 * neither rungs nor admitted completeness measures nothing and is skipped rather than
-                 * recorded as a zero-rung ladder.
-                 */
-                for (const entry of ladders) {
-                  if (
-                    !entry ||
-                    typeof entry !== "object" ||
-                    (entry as Record<string, unknown>).status !== "written"
-                  )
-                    continue;
-                  const rungs = ladderRungCountOf(entry);
-                  if (rungs !== null) recordLadderRungs(rungs, observabilityScope);
-                }
-
-                /**
-                 * Run 108 addendum-04, corrected by the follow-up M3 finding: the admission-floor verdict,
-                 * at the same materialization-outcome seam and for EVERY entry that carries one - not only
-                 * the "written" ones, because "unchanged" is the steady state and "insufficient_evidence"
-                 * is the refusal.
-                 *
-                 * The TWO readings are recorded under their own names and never conflated:
-                 *   admission_floor            - the LIVE verdict (`floor.admitted.size`, the current
-                 *                                eligibility answer the producer publishes on the entry);
-                 *   admission_floor_persisted  - the PERSISTED row's own count, which the materializer
-                 *                                deliberately preserves on regression (a historic value).
-                 * An entry that publishes no live answer records NOTHING for the floor rather than the
-                 * preserved value: a fabricated green is worse than an absent observation.
-                 */
-                for (const entry of ladders) {
-                  const admitted = admissionFloorVerdictOf(entry);
-                  if (admitted !== null) recordAdmissionFloor(admitted, observabilityScope);
-                  const persisted = persistedAdmissionFloorVerdictOf(entry);
-                  if (persisted !== null)
-                    recordPersistedAdmissionFloor(persisted, observabilityScope);
-                }
-                if (written > 0)
-                  console.error(`[run105] ladder materialization wrote ${written} ladder row(s)`);
-              }
-            } catch (materializationError) {
-              /**
-               * This is a TRANSIENT SKIP, not a lost row, and the message has to say so. The sweep runs
-               * once per auto-replay tick and materialization is a pure function of durable evidence, so
-               * the next tick recomputes and writes whatever this attempt missed. Measured live: the log
-               * held "wrote 1 ladder row(s)" at lines 159 and 169 around a "degraded" at 162, i.e. the
-               * very next tick recovered, and the first-time ladder for that family materialized v1 -> v4
-               * across the same window.
-               *
-               * Run 108 COUNTER-CASE, measured on the stage RC: that recovery is NOT guaranteed while the lock
-               * contention persists. Over a 21-minute window a run took 40 ticks with skipped=5 and
-               * `wrote=0` for the WHOLE process - no ladder row was written at any point - and one of those ticks
-               * dragged 427083 ms. So "the next tick writes whatever this attempt missed" holds only while the
-               * contention is transient. The contention is a genuine structural conflict (two extension hosts
-               * holding read-write handles on one evaluation store, with a busy_timeout set to the same 5000 ms
-               * constant as the lock hold), and under it this skip repeats indefinitely. Read the reassurance
-               * below as "recoverable in principle", not as "recovered".
-               *
-               * The bare "degraded: database is locked" invited the opposite reading - that a family
-               * could reach its admission floor and silently get no row - and that misreading is how this
-               * was originally recorded as data loss. Naming the cause and the retry costs nothing and
-               * stops the next reader making the same mistake.
-               */
-              const cause = String(
-                (materializationError as { message?: unknown })?.message ?? materializationError,
-              ).slice(0, 160);
-              console.error(
-                `[run105] ladder materialization skipped this tick (retried next tick, no row is lost): ${cause}`,
-              );
-              // Run 108 R3: the failure is ALSO a durable, operator-visible receipt in the knowledge
-              // store - best-effort so a busy store (the very failure being reported) cannot break the
-              // tick. Content-keyed, so repeated identical failures keep one row. Materialization itself
-              // runs before the runtime is fully up (host-op only, see above), so the receipt is
-              // recorded only when the extension runtime is available. Review B1 (03.5): the local
-              // `runtime`/`envelopeFor` are declared AFTER this function runs - read the ref and the
-              // enclosing learnerSweepEnvelope directly, or the guard itself throws a TDZ ReferenceError
-              // on the exact busy-store case this receipt exists for.
-              const runtimeAtCatch = extensionRuntimeRef.current;
-              if (runtimeAtCatch !== null) {
-                try {
-                  await runtimeAtCatch.invoke(
-                    "knowledge-store",
-                    learnerSweepEnvelope({
-                      requestPrefix: "learner-derivation",
-                      extensionId: "knowledge-store",
-                      capability: "knowledge:record-degradation",
-                      value: { capability: "ladder-materialization", reason: cause },
-                    }),
-                  );
-                } catch {
-                  // the console line above remains the fallback surface
-                }
-              }
-            }
-          };
-          await materializeDerivedLadders();
           const runtime = extensionRuntimeRef.current;
           if (!runtime) return { examined: 0, derived: 0, pending: 0 };
           const authority = await (async () => {
