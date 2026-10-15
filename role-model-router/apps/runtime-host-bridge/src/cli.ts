@@ -153,6 +153,7 @@ import {
   replayBudgetEnforcedForChannel,
   resolveReplayPolicySet,
   resolveReplayToolPolicy,
+  isReplaySourceModelSelfReplay,
   selectReplayCandidates,
 } from "./track-b-replay-policy.js";
 
@@ -9126,11 +9127,23 @@ export async function main(): Promise<void> {
             endpointId: endpoint.identity.endpoint_id,
             capabilities: endpoint.declared.capabilities,
             modalities: endpoint.declared.modalities,
+            // The model identity the arm-selector needs to refuse a self-replay.
+            modelId: endpoint.identity.model_id,
+            reasoningEffort: endpoint.identity.reasoning_effort ?? null,
           }));
           const replayCandidateRejections: ReplayCandidateRejection[] = [];
           const distinctReplayCandidates = selectReplayCandidates({
             configuredEndpointIds: candidateEndpointIds,
             sourceEndpointId: capturedSourceEndpointId,
+            // Live finding (isolated production-learning verification, 2026-10-15): excluding only the
+            // source ENDPOINT admitted a second endpoint serving the SAME model at the SAME effort, so a
+            // served route was replayed against itself. The source model identity is what has to be excluded.
+            sourceModelId:
+              typeof sourceCapture.modelId === "string" ? sourceCapture.modelId : null,
+            sourceReasoningEffort:
+              typeof sourceCapture.reasoningEffort === "string"
+                ? sourceCapture.reasoningEffort
+                : null,
             // Run 98 addendum 33 S3: rotate the counterfactual per request so the comparison graph gains
             // edges across captures rather than repeating one pair (the live store's 465-of-465 star).
             rotationKey: requestId,
@@ -9357,12 +9370,27 @@ export async function main(): Promise<void> {
           // Run 105 bug 3: the configured judge may also be a candidate endpoint, so it is NOT excluded
           // here. Only the source is filtered; a challenger that equals the judge is de-conflicted at the
           // evaluation (dedupeJudgeAgainstPair picks an alternative judge).
+          /**
+           * Live finding (isolated production-learning verification, 2026-10-15): excluding only the
+           * source ENDPOINT let a second endpoint serving the SAME model at the SAME reasoning effort
+           * through, so the served route was replayed against itself, the judge scored one model against
+           * itself (0.50/0.00) and the group finalized with the same model on both sides. The selection
+           * layer now rejects that by model identity; this filter re-checks it AFTER effort matching, which
+           * can repoint an arm onto a same-model variant and reintroduce the self-replay.
+           */
           const counterfactualPackages = candidatePackages.filter(
-            (candidate) => candidate.endpointId !== sourceEndpointId,
+            (candidate) =>
+              candidate.endpointId !== sourceEndpointId &&
+              !isReplaySourceModelSelfReplay({
+                modelId: candidate.modelId,
+                reasoningEffort: candidate.reasoningEffort ?? null,
+                sourceModelId,
+                sourceReasoningEffort: replaySourceReasoningEffort,
+              }),
           );
           if (counterfactualPackages.length === 0) {
             throw new Error(
-              "supervised replay requires an eligible counterfactual distinct from the source endpoint",
+              "supervised replay requires an eligible counterfactual distinct from the source endpoint and source model",
             );
           }
           /**

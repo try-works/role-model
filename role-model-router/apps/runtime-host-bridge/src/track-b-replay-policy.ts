@@ -333,6 +333,13 @@ export interface ReplayCandidateEligibilityProfile {
   readonly endpointId: string;
   readonly capabilities: readonly string[];
   readonly modalities: readonly string[];
+  /**
+   * The model this endpoint serves, when the caller declares it. Together with `reasoningEffort` it is
+   * what makes an arm a real counterfactual: an arm serving the source's own model at the source's own
+   * effort is the source, whichever endpoint id carries it.
+   */
+  readonly modelId?: string;
+  readonly reasoningEffort?: string | null;
 }
 
 /**
@@ -340,7 +347,14 @@ export interface ReplayCandidateEligibilityProfile {
  * The vocabulary is the router's own (`toCandidateExclusion`, `packages/core/src/router.ts`), not a
  * replay-local restatement, so an operator sees the same names on both paths.
  */
-export type ReplayEligibilityRejectionCode = "MODALITY_UNSUPPORTED" | "CAPABILITY_MISSING";
+export type ReplayEligibilityRejectionCode =
+  | "MODALITY_UNSUPPORTED"
+  | "CAPABILITY_MISSING"
+  /**
+   * The arm serves the source model at the source reasoning effort: replaying it would compare the
+   * model with itself. Distinct endpoint id, identical treatment - still not a counterfactual.
+   */
+  | "SOURCE_MODEL_SELF_REPLAY";
 
 export interface ReplayCandidateRejection {
   readonly endpointId: string;
@@ -353,6 +367,8 @@ export interface ReplayCandidateRejection {
    */
   readonly blockedModality?: string;
   readonly blockedCapability?: string;
+  /** The model identity that made the arm a self-replay, for the rejection detail. */
+  readonly blockedModelId?: string;
 }
 
 /**
@@ -659,10 +675,42 @@ export function classifyReplayCandidateShortfall(input: {
   };
 }
 
+/**
+ * Live finding (isolated production-learning verification, 2026-10-15): the arm rule excluded only the
+ * source ENDPOINT, so a second endpoint serving the source's own model at the same reasoning effort was
+ * admitted as a "counterfactual". The judge then scored the model against itself, the comparison
+ * finalized with one model on both sides, and unusable evidence reached the learner's floor. A
+ * counterfactual has to differ in treatment, so the source MODEL at the source EFFORT is excluded by
+ * identity - not merely the endpoint that happened to serve it.
+ */
+export function isReplaySourceModelSelfReplay(input: {
+  readonly modelId?: string | null;
+  readonly reasoningEffort?: string | null;
+  readonly sourceModelId?: string | null;
+  readonly sourceReasoningEffort?: string | null;
+}): boolean {
+  const normalize = (value: string | null | undefined): string | null => {
+    const text = typeof value === "string" ? value.trim().toLowerCase().replace(/\s+/g, "") : "";
+    return text.length > 0 ? text : null;
+  };
+  const sourceModelId = normalize(input.sourceModelId);
+  const modelId = normalize(input.modelId);
+  if (sourceModelId === null || modelId === null) return false;
+  if (modelId !== sourceModelId) return false;
+  // Undeclared effort on either side is "unknown", not "equal": the pre-existing filters own that case.
+  const sourceEffort = normalize(input.sourceReasoningEffort);
+  const effort = normalize(input.reasoningEffort);
+  if (sourceEffort === null || effort === null) return false;
+  return effort === sourceEffort;
+}
+
 export function selectReplayCandidates(input: {
   readonly configuredEndpointIds: readonly string[];
   readonly healthyEndpointIds?: readonly string[];
   readonly sourceEndpointId?: string | null;
+  /** The model that served the capture, so a same-model arm is recognised as a self-replay. */
+  readonly sourceModelId?: string | null;
+  readonly sourceReasoningEffort?: string | null;
   /**
    * Run 98 addendum 30 S2 (`guidance/11` `judgePolicy.excludeFromLiveEvaluation`): endpoints that may
    * never be *scored* candidates — in practice the designated judge. A battle must not contain the
@@ -720,6 +768,27 @@ export function selectReplayCandidates(input: {
      * silently dropped.
      */
     const profile = profiles.get(normalized);
+    if (
+      profile &&
+      isReplaySourceModelSelfReplay({
+        modelId: profile.modelId,
+        reasoningEffort: profile.reasoningEffort,
+        sourceModelId: input.sourceModelId,
+        sourceReasoningEffort: input.sourceReasoningEffort,
+      })
+    ) {
+      input.onRejected?.({
+        endpointId: normalized,
+        code: "SOURCE_MODEL_SELF_REPLAY",
+        blockedModelId: profile.modelId,
+        detail:
+          `Endpoint serves the source model ${profile.modelId} at the source reasoning effort: replaying it would compare the model with itself.`.slice(
+            0,
+            512,
+          ),
+      });
+      continue;
+    }
     if (profile && input.requirements) {
       const rejection = evaluateReplayCandidateEligibility({
         endpointId: normalized,
