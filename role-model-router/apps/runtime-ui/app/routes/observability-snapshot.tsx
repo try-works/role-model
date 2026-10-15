@@ -108,16 +108,22 @@ export function ObservabilitySnapshotRouteView() {
                   </div>
                   {row.breakdown.length > 0 ? (
                     <ul className="mt-2 space-y-1">
-                      {row.breakdown.map((entry, index) => (
-                        <li key={index} className="flex flex-wrap items-center gap-2 text-xs">
-                          <Badge tone="neutral">{entry.count}</Badge>
-                          <span className={monoEyebrowClassName}>
-                            {Object.entries(entry.attributes)
-                              .map(([key, value]) => `${key}=${value}`)
-                              .join(" ")}
-                          </span>
-                        </li>
-                      ))}
+                      {row.breakdown.map((entry) => {
+                        // The attribute set IS the breakdown entry's identity (one entry per series), so it
+                        // is a stable, content-derived key - not an array index that would shift on reorder.
+                        const label = Object.entries(entry.attributes)
+                          .map(([key, value]) => `${key}=${value}`)
+                          .join(" ");
+                        return (
+                          <li
+                            key={label || `${row.name}:total`}
+                            className="flex flex-wrap items-center gap-2 text-xs"
+                          >
+                            <Badge tone="neutral">{entry.count}</Badge>
+                            <span className={monoEyebrowClassName}>{label}</span>
+                          </li>
+                        );
+                      })}
                     </ul>
                   ) : null}
                 </div>

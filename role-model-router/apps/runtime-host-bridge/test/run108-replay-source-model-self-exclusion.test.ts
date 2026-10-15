@@ -1,9 +1,9 @@
 import { describe, expect, test } from "vitest";
 
 import {
-  selectReplayCandidates,
   type ReplayCandidateEligibilityProfile,
   type ReplayCandidateRejection,
+  selectReplayCandidates,
 } from "../src/track-b-replay-policy.js";
 
 /**
@@ -85,9 +85,7 @@ describe("run 108 replay source-model self-exclusion", () => {
     });
 
     expect(selected).toEqual([]);
-    expect(rejections.map((rejection) => rejection.code)).toEqual([
-      "SOURCE_MODEL_SELF_REPLAY",
-    ]);
+    expect(rejections.map((rejection) => rejection.code)).toEqual(["SOURCE_MODEL_SELF_REPLAY"]);
   });
 
   test("a caller that declares no source model keeps the previous behaviour", () => {

@@ -1433,17 +1433,20 @@ test("a superseded challenge during an offer never writes partial challenge stat
     ...h.input,
     now: () => clock,
     staleTickDeadlineMs: 1,
-    dispatchQueue: { mode: "queue", offer: async () => {
-      nested = true;
-      clock += 2;
-      h.pending([]);
-      await loop.tick();
-      h.pending([capture("idle", "a")]);
-      nested = false;
-      return { enqueued: false, reason: "test offer refusal" };
-    } },
+    dispatchQueue: {
+      mode: "queue",
+      offer: async () => {
+        nested = true;
+        clock += 2;
+        h.pending([]);
+        await loop.tick();
+        h.pending([capture("idle", "a")]);
+        nested = false;
+        return { enqueued: false, reason: "test offer refusal" };
+      },
+    },
     readPendingRouteDispatches: async () => [],
-    readRouteReplayableCaptures: async () => nested ? [] : [capture("idle", "a")],
+    readRouteReplayableCaptures: async () => (nested ? [] : [capture("idle", "a")]),
   });
   cleanups.push(() => loop.stop());
   await loop.tick();

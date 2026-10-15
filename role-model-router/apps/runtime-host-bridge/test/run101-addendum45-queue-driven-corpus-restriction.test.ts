@@ -1,3 +1,4 @@
+import { mkdtemp, rm } from "node:fs/promises";
 /**
  * Run 101 addendum 45 - the queue-driven replay projection must not walk the family corpus.
  *
@@ -14,7 +15,6 @@
  */
 import os from "node:os";
 import path from "node:path";
-import { mkdtemp, rm } from "node:fs/promises";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {

@@ -88,6 +88,13 @@ import {
 const MAX_HANDOFF_RECOVERIES_PER_SWEEP = 3;
 /** How often the handed-off-replay recovery pass may list the durable jobs (measured on the live root). */
 const HANDOFF_RECOVERY_INTERVAL_MS = 120_000;
+import {
+  collectStrandedCandidates,
+  ladderMaterializationRefusals,
+  learnerFamilyEvidenceKey,
+  learnerReceiptTimeMs,
+  runLearnerRevalidationPass,
+} from "./learner-revalidation.js";
 import { evaluationAttemptOutcome } from "./queue-runtime/evaluation.js";
 // Run 101 R4: the replay plane's queue runtime (policy-driven mode, offer and
 // worker). Imported here so the auto-replay loop's composition can start it.
@@ -96,6 +103,7 @@ import {
   startLearnerQueueRuntime,
   startReplayQueueRuntime,
 } from "./queue-runtime/index.js";
+import { resolveQueueStorePath } from "./queue-runtime/store.js";
 import {
   autoReplayExecutionFromCommandReceipt,
   decodeRouteLadderRow,
@@ -139,14 +147,6 @@ import {
   resolveReplayLedgerLimits,
 } from "./track-b-replay-ledger.js";
 import {
-  collectStrandedCandidates,
-  ladderMaterializationRefusals,
-  learnerFamilyEvidenceKey,
-  learnerReceiptTimeMs,
-  runLearnerRevalidationPass,
-} from "./learner-revalidation.js";
-import { resolveQueueStorePath } from "./queue-runtime/store.js";
-import {
   type ReplayCandidateRejection,
   buildReplayPolicySet,
   classifyReplayArmEffort,
@@ -154,6 +154,7 @@ import {
   hasRecordedToolResults,
   hasToolCalls,
   isBenchmarkReplaySourceRef,
+  isReplaySourceModelSelfReplay,
   isSyntheticProbeSourceClass,
   planReplayDispatchArms,
   preferEffortMatchedReplayArms,
@@ -161,7 +162,6 @@ import {
   replayBudgetEnforcedForChannel,
   resolveReplayPolicySet,
   resolveReplayToolPolicy,
-  isReplaySourceModelSelfReplay,
   selectReplayCandidates,
 } from "./track-b-replay-policy.js";
 
@@ -6044,157 +6044,152 @@ export async function main(): Promise<void> {
       // replay domain does not expose the sweep in the packaged composition
       // (live: `operator_capability_unavailable`). Binding is still enforced by the
       // capability itself from the envelope's channel/scope/epoch.
-          /**
-           * Live finding (isolated production-learning verification, 2026-10-15): this materialization used to be
-           * reachable ONLY through `deriveLearnerCandidates`, and queue mode retires that sweep - so the durable
-           * route ladder FROZE at version 23 with 23 evidence documents while 9 further comparison groups were
-           * created (measured: the string "ladder materialization" appeared 0 times in the runtime log). A frozen
-           * ladder is why the plan's `admitted === configured` criterion could never be reached.
-           *
-           * Materialization is EVIDENCE, not scheduling. It composes the operator's authenticated host op directly
-           * (no runtime.invoke, no authority secret, no queue worker), exactly like the finalization-signals
-           * producer that deliberately keeps running in queue mode, so it is exposed as its own operation for the
-           * loop to call whichever plane owns the learner queue.
-           */
-          const materializeDerivedLadders = async () => {
-            try {
-              const defaultsSnapshot = readRouteLearningDefaults({
-                repoRoot: options.repoRoot,
-                channel,
-                stateRoot: resolveLearningPolicyStateRoot({
-                  runtimeStateRoot: options.runtimeStateRoot,
-                  scopeId: options.scopeId,
-                }),
-              }).routeLearning;
-              const materialized = await operations.materializeRouteLadders({
-                configuredEndpointIds: endpoints(),
-                defaults: defaultsSnapshot,
-              });
-              if (
-                materialized &&
-                typeof materialized === "object" &&
-                !Array.isArray(materialized)
-              ) {
-                const record = materialized as Record<string, unknown>;
-                const ladders = Array.isArray(record.ladders) ? record.ladders : [];
-                const written = ladders.filter((entry) => {
-                  return (
-                    Boolean(entry) &&
-                    typeof entry === "object" &&
-                    (entry as Record<string, unknown>).status === "written"
-                  );
-                }).length;
-                /**
-                 * Run 108 phase-03 F5 (R7 ladder-rung count): the rungs each WRITTEN ladder holds,
-                 * read from the materialization outcome the host already receives. A row that carries
-                 * neither rungs nor admitted completeness measures nothing and is skipped rather than
-                 * recorded as a zero-rung ladder.
-                 */
-                for (const entry of ladders) {
-                  if (
-                    !entry ||
-                    typeof entry !== "object" ||
-                    (entry as Record<string, unknown>).status !== "written"
-                  )
-                    continue;
-                  const rungs = ladderRungCountOf(entry);
-                  if (rungs !== null) recordLadderRungs(rungs, observabilityScope);
-                }
-
-                /**
-                 * Run 108 addendum-04, corrected by the follow-up M3 finding: the admission-floor verdict,
-                 * at the same materialization-outcome seam and for EVERY entry that carries one - not only
-                 * the "written" ones, because "unchanged" is the steady state and "insufficient_evidence"
-                 * is the refusal.
-                 *
-                 * The TWO readings are recorded under their own names and never conflated:
-                 *   admission_floor            - the LIVE verdict (`floor.admitted.size`, the current
-                 *                                eligibility answer the producer publishes on the entry);
-                 *   admission_floor_persisted  - the PERSISTED row's own count, which the materializer
-                 *                                deliberately preserves on regression (a historic value).
-                 * An entry that publishes no live answer records NOTHING for the floor rather than the
-                 * preserved value: a fabricated green is worse than an absent observation.
-                 */
-                for (const entry of ladders) {
-                  const admitted = admissionFloorVerdictOf(entry);
-                  if (admitted !== null) recordAdmissionFloor(admitted, observabilityScope);
-                  const persisted = persistedAdmissionFloorVerdictOf(entry);
-                  if (persisted !== null)
-                    recordPersistedAdmissionFloor(persisted, observabilityScope);
-                }
-                if (written > 0)
-                  console.error(`[run105] ladder materialization wrote ${written} ladder row(s)`);
-                /**
-                 * Live finding (isolated production-learning verification, 2026-10-15): a DETERMINISTIC refusal was
-                 * completely silent. Only "written" entries logged anything, so an entry refused with
-                 * `evidence_metadata_capacity_exceeded` (measured: floor admitted 5 / configured 6 / met=true, yet the
-                 * ladder stayed frozen at its previous value) was indistinguishable from "nothing changed yet". The
-                 * refusal is not transient and no later tick will fix it: the evidence metadata only grows, so once
-                 * a family's provenance exceeds the writer's 16 KiB document cap EVERY subsequent attempt is refused
-                 * and the durable row keeps its old value forever. A deterministic refusal has to say so, by name,
-                 * with the reason the writer returned - otherwise an operator reads a stalled ladder as slow progress.
-                 */
-                for (const refusal of ladderMaterializationRefusals(ladders)) {
-                  console.error(
-                    `[run105] ladder materialization ${refusal.status}:${refusal.roleId}/${refusal.taskTypeId} reason=${refusal.reason} floor=${JSON.stringify(refusal.floor)}`,
-                  );
-                }
-              }
-            } catch (materializationError) {
-              /**
-               * This is a TRANSIENT SKIP, not a lost row, and the message has to say so. The sweep runs
-               * once per auto-replay tick and materialization is a pure function of durable evidence, so
-               * the next tick recomputes and writes whatever this attempt missed. Measured live: the log
-               * held "wrote 1 ladder row(s)" at lines 159 and 169 around a "degraded" at 162, i.e. the
-               * very next tick recovered, and the first-time ladder for that family materialized v1 -> v4
-               * across the same window.
-               *
-               * Run 108 COUNTER-CASE, measured on the stage RC: that recovery is NOT guaranteed while the lock
-               * contention persists. Over a 21-minute window a run took 40 ticks with skipped=5 and
-               * `wrote=0` for the WHOLE process - no ladder row was written at any point - and one of those ticks
-               * dragged 427083 ms. So "the next tick writes whatever this attempt missed" holds only while the
-               * contention is transient. The contention is a genuine structural conflict (two extension hosts
-               * holding read-write handles on one evaluation store, with a busy_timeout set to the same 5000 ms
-               * constant as the lock hold), and under it this skip repeats indefinitely. Read the reassurance
-               * below as "recoverable in principle", not as "recovered".
-               *
-               * The bare "degraded: database is locked" invited the opposite reading - that a family
-               * could reach its admission floor and silently get no row - and that misreading is how this
-               * was originally recorded as data loss. Naming the cause and the retry costs nothing and
-               * stops the next reader making the same mistake.
-               */
-              const cause = String(
-                (materializationError as { message?: unknown })?.message ?? materializationError,
-              ).slice(0, 160);
-              console.error(
-                `[run105] ladder materialization skipped this tick (retried next tick, no row is lost): ${cause}`,
+      /**
+       * Live finding (isolated production-learning verification, 2026-10-15): this materialization used to be
+       * reachable ONLY through `deriveLearnerCandidates`, and queue mode retires that sweep - so the durable
+       * route ladder FROZE at version 23 with 23 evidence documents while 9 further comparison groups were
+       * created (measured: the string "ladder materialization" appeared 0 times in the runtime log). A frozen
+       * ladder is why the plan's `admitted === configured` criterion could never be reached.
+       *
+       * Materialization is EVIDENCE, not scheduling. It composes the operator's authenticated host op directly
+       * (no runtime.invoke, no authority secret, no queue worker), exactly like the finalization-signals
+       * producer that deliberately keeps running in queue mode, so it is exposed as its own operation for the
+       * loop to call whichever plane owns the learner queue.
+       */
+      const materializeDerivedLadders = async () => {
+        try {
+          const defaultsSnapshot = readRouteLearningDefaults({
+            repoRoot: options.repoRoot,
+            channel,
+            stateRoot: resolveLearningPolicyStateRoot({
+              runtimeStateRoot: options.runtimeStateRoot,
+              scopeId: options.scopeId,
+            }),
+          }).routeLearning;
+          const materialized = await operations.materializeRouteLadders({
+            configuredEndpointIds: endpoints(),
+            defaults: defaultsSnapshot,
+          });
+          if (materialized && typeof materialized === "object" && !Array.isArray(materialized)) {
+            const record = materialized as Record<string, unknown>;
+            const ladders = Array.isArray(record.ladders) ? record.ladders : [];
+            const written = ladders.filter((entry) => {
+              return (
+                Boolean(entry) &&
+                typeof entry === "object" &&
+                (entry as Record<string, unknown>).status === "written"
               );
-              // Run 108 R3: the failure is ALSO a durable, operator-visible receipt in the knowledge
-              // store - best-effort so a busy store (the very failure being reported) cannot break the
-              // tick. Content-keyed, so repeated identical failures keep one row. Materialization itself
-              // runs before the runtime is fully up (host-op only, see above), so the receipt is
-              // recorded only when the extension runtime is available. Review B1 (03.5): the local
-              // `runtime`/`envelopeFor` are declared AFTER this function runs - read the ref and the
-              // enclosing learnerSweepEnvelope directly, or the guard itself throws a TDZ ReferenceError
-              // on the exact busy-store case this receipt exists for.
-              const runtimeAtCatch = extensionRuntimeRef.current;
-              if (runtimeAtCatch !== null) {
-                try {
-                  await runtimeAtCatch.invoke(
-                    "knowledge-store",
-                    learnerSweepEnvelope({
-                      requestPrefix: "learner-derivation",
-                      extensionId: "knowledge-store",
-                      capability: "knowledge:record-degradation",
-                      value: { capability: "ladder-materialization", reason: cause },
-                    }),
-                  );
-                } catch {
-                  // the console line above remains the fallback surface
-                }
-              }
+            }).length;
+            /**
+             * Run 108 phase-03 F5 (R7 ladder-rung count): the rungs each WRITTEN ladder holds,
+             * read from the materialization outcome the host already receives. A row that carries
+             * neither rungs nor admitted completeness measures nothing and is skipped rather than
+             * recorded as a zero-rung ladder.
+             */
+            for (const entry of ladders) {
+              if (
+                !entry ||
+                typeof entry !== "object" ||
+                (entry as Record<string, unknown>).status !== "written"
+              )
+                continue;
+              const rungs = ladderRungCountOf(entry);
+              if (rungs !== null) recordLadderRungs(rungs, observabilityScope);
             }
-          };
+
+            /**
+             * Run 108 addendum-04, corrected by the follow-up M3 finding: the admission-floor verdict,
+             * at the same materialization-outcome seam and for EVERY entry that carries one - not only
+             * the "written" ones, because "unchanged" is the steady state and "insufficient_evidence"
+             * is the refusal.
+             *
+             * The TWO readings are recorded under their own names and never conflated:
+             *   admission_floor            - the LIVE verdict (`floor.admitted.size`, the current
+             *                                eligibility answer the producer publishes on the entry);
+             *   admission_floor_persisted  - the PERSISTED row's own count, which the materializer
+             *                                deliberately preserves on regression (a historic value).
+             * An entry that publishes no live answer records NOTHING for the floor rather than the
+             * preserved value: a fabricated green is worse than an absent observation.
+             */
+            for (const entry of ladders) {
+              const admitted = admissionFloorVerdictOf(entry);
+              if (admitted !== null) recordAdmissionFloor(admitted, observabilityScope);
+              const persisted = persistedAdmissionFloorVerdictOf(entry);
+              if (persisted !== null) recordPersistedAdmissionFloor(persisted, observabilityScope);
+            }
+            if (written > 0)
+              console.error(`[run105] ladder materialization wrote ${written} ladder row(s)`);
+            /**
+             * Live finding (isolated production-learning verification, 2026-10-15): a DETERMINISTIC refusal was
+             * completely silent. Only "written" entries logged anything, so an entry refused with
+             * `evidence_metadata_capacity_exceeded` (measured: floor admitted 5 / configured 6 / met=true, yet the
+             * ladder stayed frozen at its previous value) was indistinguishable from "nothing changed yet". The
+             * refusal is not transient and no later tick will fix it: the evidence metadata only grows, so once
+             * a family's provenance exceeds the writer's 16 KiB document cap EVERY subsequent attempt is refused
+             * and the durable row keeps its old value forever. A deterministic refusal has to say so, by name,
+             * with the reason the writer returned - otherwise an operator reads a stalled ladder as slow progress.
+             */
+            for (const refusal of ladderMaterializationRefusals(ladders)) {
+              console.error(
+                `[run105] ladder materialization ${refusal.status}:${refusal.roleId}/${refusal.taskTypeId} reason=${refusal.reason} floor=${JSON.stringify(refusal.floor)}`,
+              );
+            }
+          }
+        } catch (materializationError) {
+          /**
+           * This is a TRANSIENT SKIP, not a lost row, and the message has to say so. The sweep runs
+           * once per auto-replay tick and materialization is a pure function of durable evidence, so
+           * the next tick recomputes and writes whatever this attempt missed. Measured live: the log
+           * held "wrote 1 ladder row(s)" at lines 159 and 169 around a "degraded" at 162, i.e. the
+           * very next tick recovered, and the first-time ladder for that family materialized v1 -> v4
+           * across the same window.
+           *
+           * Run 108 COUNTER-CASE, measured on the stage RC: that recovery is NOT guaranteed while the lock
+           * contention persists. Over a 21-minute window a run took 40 ticks with skipped=5 and
+           * `wrote=0` for the WHOLE process - no ladder row was written at any point - and one of those ticks
+           * dragged 427083 ms. So "the next tick writes whatever this attempt missed" holds only while the
+           * contention is transient. The contention is a genuine structural conflict (two extension hosts
+           * holding read-write handles on one evaluation store, with a busy_timeout set to the same 5000 ms
+           * constant as the lock hold), and under it this skip repeats indefinitely. Read the reassurance
+           * below as "recoverable in principle", not as "recovered".
+           *
+           * The bare "degraded: database is locked" invited the opposite reading - that a family
+           * could reach its admission floor and silently get no row - and that misreading is how this
+           * was originally recorded as data loss. Naming the cause and the retry costs nothing and
+           * stops the next reader making the same mistake.
+           */
+          const cause = String(
+            (materializationError as { message?: unknown })?.message ?? materializationError,
+          ).slice(0, 160);
+          console.error(
+            `[run105] ladder materialization skipped this tick (retried next tick, no row is lost): ${cause}`,
+          );
+          // Run 108 R3: the failure is ALSO a durable, operator-visible receipt in the knowledge
+          // store - best-effort so a busy store (the very failure being reported) cannot break the
+          // tick. Content-keyed, so repeated identical failures keep one row. Materialization itself
+          // runs before the runtime is fully up (host-op only, see above), so the receipt is
+          // recorded only when the extension runtime is available. Review B1 (03.5): the local
+          // `runtime`/`envelopeFor` are declared AFTER this function runs - read the ref and the
+          // enclosing learnerSweepEnvelope directly, or the guard itself throws a TDZ ReferenceError
+          // on the exact busy-store case this receipt exists for.
+          const runtimeAtCatch = extensionRuntimeRef.current;
+          if (runtimeAtCatch !== null) {
+            try {
+              await runtimeAtCatch.invoke(
+                "knowledge-store",
+                learnerSweepEnvelope({
+                  requestPrefix: "learner-derivation",
+                  extensionId: "knowledge-store",
+                  capability: "knowledge:record-degradation",
+                  value: { capability: "ladder-materialization", reason: cause },
+                }),
+              );
+            } catch {
+              // the console line above remains the fallback surface
+            }
+          }
+        }
+      };
       const sweepOperations = {
         ...operations,
         /**
@@ -7041,7 +7036,11 @@ export async function main(): Promise<void> {
             }
           })();
           if (!authority) return { examined: 0, offered: 0, revived: 0, refused: 0 };
-          const sweepEnvelope = (extensionId: string, capability: string, value: Record<string, unknown>) => ({
+          const sweepEnvelope = (
+            extensionId: string,
+            capability: string,
+            value: Record<string, unknown>,
+          ) => ({
             requestId: `learner-revalidation:${capability}:${Date.now()}`,
             sessionId: `learner-revalidation:${options.scopeId}`,
             protocolVersion: "1.1.0",
@@ -7145,7 +7144,10 @@ export async function main(): Promise<void> {
               });
               const previous = receipts.get(candidateId);
               // Keep the LATEST receipt: it is the verdict a re-drive would supersede.
-              if (!previous || (when !== null && (previous.atMs === null || when > previous.atMs))) {
+              if (
+                !previous ||
+                (when !== null && (previous.atMs === null || when > previous.atMs))
+              ) {
                 receipts.set(candidateId, { decision, atMs: when });
               }
             }
@@ -8221,7 +8223,8 @@ export async function main(): Promise<void> {
             return await readPendingRouteDispatches({
               request,
               // Pending state needs authenticated root metadata, not thousands of transcript artifacts.
-              readCapture: async (requestId) => operations.readLocalRouteCapture({ requestId, metadataOnly: true }),
+              readCapture: async (requestId) =>
+                operations.readLocalRouteCapture({ requestId, metadataOnly: true }),
               readQueueJobs: async () => {
                 /**
                  * Run 101 addendum 44: pending-route reconciliation must not go through the sidecar's
@@ -9487,8 +9490,7 @@ export async function main(): Promise<void> {
             // Live finding (isolated production-learning verification, 2026-10-15): excluding only the
             // source ENDPOINT admitted a second endpoint serving the SAME model at the SAME effort, so a
             // served route was replayed against itself. The source model identity is what has to be excluded.
-            sourceModelId:
-              typeof sourceCapture.modelId === "string" ? sourceCapture.modelId : null,
+            sourceModelId: typeof sourceCapture.modelId === "string" ? sourceCapture.modelId : null,
             sourceReasoningEffort:
               typeof sourceCapture.reasoningEffort === "string"
                 ? sourceCapture.reasoningEffort

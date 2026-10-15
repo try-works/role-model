@@ -80,10 +80,12 @@ export function learnerFamilyEvidenceKey(routePackage: string, taskTypeId: strin
  * never visits the same candidate twice.
  */
 export async function collectStrandedCandidates(input: {
-  readonly readPage: (cursor: {
-    readonly afterCreatedAtMs: number;
-    readonly afterCandidateId: string;
-  } | null) => Promise<readonly Record<string, unknown>[]>;
+  readonly readPage: (
+    cursor: {
+      readonly afterCreatedAtMs: number;
+      readonly afterCandidateId: string;
+    } | null,
+  ) => Promise<readonly Record<string, unknown>[]>;
   readonly pageSize: number;
   readonly maxPages?: number;
 }): Promise<readonly Record<string, unknown>[]> {
@@ -105,8 +107,7 @@ export async function collectStrandedCandidates(input: {
     // A short page means the listing is exhausted; anything else could walk forever.
     if (rows.length < input.pageSize) break;
     const last = rows[rows.length - 1];
-    const afterCandidateId =
-      last && typeof last.candidateId === "string" ? last.candidateId : "";
+    const afterCandidateId = last && typeof last.candidateId === "string" ? last.candidateId : "";
     const afterCreatedAtMs =
       last && Number.isSafeInteger(last.createdAtMs) ? Number(last.createdAtMs) : null;
     if (!afterCandidateId || afterCreatedAtMs === null) break;
@@ -126,9 +127,7 @@ export async function collectStrandedCandidates(input: {
  * keeps its old value indefinitely. "unchanged" is the genuine steady state and stays quiet; every other status is
  * a refusal the operator must be able to see by name.
  */
-export function ladderMaterializationRefusals(
-  ladders: readonly unknown[],
-): readonly {
+export function ladderMaterializationRefusals(ladders: readonly unknown[]): readonly {
   readonly status: string;
   readonly roleId: string;
   readonly taskTypeId: string;
@@ -186,7 +185,9 @@ export async function runLearnerRevalidationPass(input: {
     readonly enqueued: boolean;
     readonly reason?: string;
   }>;
-  readonly revive: (candidateId: string) => Promise<{ readonly ok: boolean; readonly reason?: string }>;
+  readonly revive: (
+    candidateId: string,
+  ) => Promise<{ readonly ok: boolean; readonly reason?: string }>;
   readonly limit?: number;
 }): Promise<LearnerRevalidationSummary> {
   const selected = selectRevalidatableRefusals({

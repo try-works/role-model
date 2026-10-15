@@ -10127,13 +10127,19 @@ export async function runTrackBShadowPipeline(
       comparison: durableComparison,
       signals: { state: "not_run", reason: "evaluation_evidence_only" },
       profile: { state: "not_run", reason: "evaluation_evidence_only" },
-      candidate: { id: null, state: "insufficient_trajectory_evidence", reason: "evaluation_evidence_only" },
+      candidate: {
+        id: null,
+        state: "insufficient_trajectory_evidence",
+        reason: "evaluation_evidence_only",
+      },
       advisory: null,
       productionState: structuredClone(input.productionState),
       receipt: {
         schemaVersion: "role-model.track-b-shadow-pipeline-receipt.v1",
-        mode: "evidence_only", requestId: input.requestId,
-        productionMutation: false, candidateId: null,
+        mode: "evidence_only",
+        requestId: input.requestId,
+        productionMutation: false,
+        candidateId: null,
       },
     };
   }

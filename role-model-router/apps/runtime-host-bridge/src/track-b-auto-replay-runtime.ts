@@ -1241,8 +1241,9 @@ export function startAutoReplayLoop(input: {
       }
       if (learnerQueueAuthoritative && input.operations.revalidateStrandedLearnerCandidates) {
         try {
-          const produced = (await input.operations.revalidateStrandedLearnerCandidates({ limit: 5 })) as
-            { lastError?: string } | null;
+          const produced = (await input.operations.revalidateStrandedLearnerCandidates({
+            limit: 5,
+          })) as { lastError?: string } | null;
           if (produced?.lastError) {
             error = error ? `${error}; ${produced.lastError}` : produced.lastError;
           }
@@ -1568,13 +1569,16 @@ export function startAutoReplayLoop(input: {
         // A bounded pending page need not include the claimed capture. Read its durable root instead of
         // dropping the claim, so the tick still has the role/task identity needed to focus and execute it.
         for (const captureRef of onlyCaptureRefs) {
-          if (captures.some((capture) => capture.captureRef === captureRef) || !captureRef) continue;
+          if (captures.some((capture) => capture.captureRef === captureRef) || !captureRef)
+            continue;
           const raw = (await input.operations.readLocalRouteCapture({
             requestId: captureRef,
             metadataOnly: true,
           })) as Record<string, unknown>;
           if (!raw || typeof raw !== "object" || Array.isArray(raw)) continue;
-          const classification = (raw as Record<string, unknown>).classification as Record<string, unknown> | undefined;
+          const classification = (raw as Record<string, unknown>).classification as
+            | Record<string, unknown>
+            | undefined;
           captures = [
             ...captures,
             {
@@ -1599,7 +1603,8 @@ export function startAutoReplayLoop(input: {
                     : null,
               hasRecordedToolResults:
                 Array.isArray(raw.toolArtifactIds) && raw.toolArtifactIds.length > 0,
-              sourceClass: (raw.replayEvidenceClass as { readonly class?: unknown } | undefined)?.class as string | null,
+              sourceClass: (raw.replayEvidenceClass as { readonly class?: unknown } | undefined)
+                ?.class as string | null,
             },
           ];
         }

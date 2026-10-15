@@ -545,7 +545,9 @@ describe("run 100 R2 durable arm output", () => {
       authorization: { claims: { channel: "production" } },
     });
     expect(scenario.pipelineResults[0]?.receipt).toMatchObject({ productionMutation: false });
-    expect(scenario.pipelineResults[0]?.productionState).toEqual(scenario.pipelineInputs[0]?.productionState);
+    expect(scenario.pipelineResults[0]?.productionState).toEqual(
+      scenario.pipelineInputs[0]?.productionState,
+    );
   });
   test("an arm whose branch capture is missing is excluded by name and the capture still evaluates", async () => {
     const scenario = buildScenario(["b", "c"], undefined, {

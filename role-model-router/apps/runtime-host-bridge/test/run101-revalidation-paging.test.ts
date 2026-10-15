@@ -23,13 +23,23 @@ test("the walk pages past the first page instead of missing older stranded candi
   const readPage = async () => pages.shift() ?? [];
 
   const collected = await collectStrandedCandidates({ readPage, pageSize: 4, maxPages: 5 });
-  expect(collected.map((row) => row.candidateId)).toEqual(["c-0", "c-1", "c-2", "c-3", "old-0", "old-1"]);
+  expect(collected.map((row) => row.candidateId)).toEqual([
+    "c-0",
+    "c-1",
+    "c-2",
+    "c-3",
+    "old-0",
+    "old-1",
+  ]);
 });
 
 test("a full page advances the cursor; a short page ends the walk", async () => {
   const cursors: unknown[] = [];
   const pages = [
-    page([{ candidateId: "a", createdAtMs: 10 }, { candidateId: "b", createdAtMs: 9 }]),
+    page([
+      { candidateId: "a", createdAtMs: 10 },
+      { candidateId: "b", createdAtMs: 9 },
+    ]),
     page([{ candidateId: "c", createdAtMs: 8 }]),
   ];
   const collected = await collectStrandedCandidates({

@@ -2,10 +2,10 @@ import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { expect, test } from "vitest";
-import { createReplayLedger } from "../src/track-b-replay-ledger.js";
-import { buildReplayPolicySet } from "../src/track-b-replay-policy.js";
 import { startAutoReplayLoop } from "../src/track-b-auto-replay-runtime.js";
 import type { AutoReplayCapture } from "../src/track-b-auto-replay.js";
+import { createReplayLedger } from "../src/track-b-replay-ledger.js";
+import { buildReplayPolicySet } from "../src/track-b-replay-policy.js";
 
 test("a claimed capture is replayed from its root metadata when the pending page omits it", async () => {
   const directory = await mkdtemp(path.join(os.tmpdir(), "claimed-capture-smoke-"));
@@ -29,7 +29,7 @@ test("a claimed capture is replayed from its root metadata when the pending page
         return metadataCapture;
       },
     },
-    ledger: createReplayLedger({ filePath: directory + "/ledger.json", now: () => 1_000 }),
+    ledger: createReplayLedger({ filePath: `${directory}/ledger.json`, now: () => 1_000 }),
     policySet: buildReplayPolicySet(),
     configuredEndpointIds: () => ["endpoint-a", "endpoint-b", "endpoint-c"],
     routeFocusCandidates: () => [
@@ -93,7 +93,7 @@ test("the claimed capture fallback carries the source model identity to the plan
         };
       },
     },
-    ledger: createReplayLedger({ filePath: directory + "/ledger.json", now: () => 1_000 }),
+    ledger: createReplayLedger({ filePath: `${directory}/ledger.json`, now: () => 1_000 }),
     policySet: buildReplayPolicySet(),
     configuredEndpointIds: () => [
       "endpoint-src-flash-high",

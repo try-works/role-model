@@ -20,7 +20,12 @@ const capture = {
   scope: "standalone-runtime",
   rootArtifactId: "artifact-1",
   replaySource: { kind: "live" },
-  trace: { scopeId: "standalone-runtime", channel: "production", readiness: "ready", completeness: "complete" },
+  trace: {
+    scopeId: "standalone-runtime",
+    channel: "production",
+    readiness: "ready",
+    completeness: "complete",
+  },
 };
 
 describe("@recursive:101-effect-mq-queue-rebuild addendum44 pending queue readback", () => {
@@ -31,7 +36,9 @@ describe("@recursive:101-effect-mq-queue-rebuild addendum44 pending queue readba
       readCapture: async () => capture,
       invoke: async (_extensionId, capability, value) => {
         if (capability === "replay:list-jobs") return [];
-        throw new Error("unexpected replay hydrate " + String((value as { jobId?: unknown }).jobId));
+        throw new Error(
+          `unexpected replay hydrate ${String((value as { jobId?: unknown }).jobId)}`,
+        );
       },
       readQueueJobs: async () => ({
         schemaVersion: "role-model.operator-queue-jobs.v1",

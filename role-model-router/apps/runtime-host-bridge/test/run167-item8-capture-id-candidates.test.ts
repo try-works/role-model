@@ -99,7 +99,9 @@ test("run167 item 8 an arm is recovered from the dispatch capture when the branc
 test("an outputless branch never masks readable output in its recorded provider candidate", async () => {
   const asked: string[] = [];
   const result = await resolveResumedArmEvidence({
-    counterfactualPackages: [{ endpointId: ARM, modelId: "deepseek/deepseek-flash", reasoningEffort: "low" }],
+    counterfactualPackages: [
+      { endpointId: ARM, modelId: "deepseek/deepseek-flash", reasoningEffort: "low" },
+    ],
     branchCaptureRequestIds: new Map([[ARM, ["recorded-branch", "recorded-provider"]]]),
     readCapture: async (requestId) => {
       asked.push(requestId);
@@ -115,9 +117,12 @@ test("an outputless branch never masks readable output in its recorded provider 
 
 test("outputless recorded candidates remain outputless rather than being mislabeled missing", async () => {
   const result = await resolveResumedArmEvidence({
-    counterfactualPackages: [{ endpointId: ARM, modelId: "deepseek/deepseek-flash", reasoningEffort: "low" }],
+    counterfactualPackages: [
+      { endpointId: ARM, modelId: "deepseek/deepseek-flash", reasoningEffort: "low" },
+    ],
     branchCaptureRequestIds: new Map([[ARM, ["outputless", "absent"]]]),
-    readCapture: async (id) => id === "outputless" ? { requestId: id, response: { content: "" } } : null,
+    readCapture: async (id) =>
+      id === "outputless" ? { requestId: id, response: { content: "" } } : null,
   });
   expect(result.arms).toEqual([]);
   expect(result.unreadable[0]?.reason).toBe("capture_has_no_output");

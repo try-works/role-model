@@ -360,7 +360,8 @@ export async function readPendingRouteDispatches(input: {
       console.error(`[route-dispatch-pending] degraded: ${reason}${detail ? ` ${detail}` : ""}`);
     return null;
   };
-  if (!text(input.request.roleId) || !text(input.request.taskTypeId)) return refuse("request_invalid");
+  if (!text(input.request.roleId) || !text(input.request.taskTypeId))
+    return refuse("request_invalid");
   let terminalSkipped = 0;
   const answers: PendingRouteDispatch[] = [];
   const captures = new Map<string, Row | null>();
@@ -398,7 +399,10 @@ export async function readPendingRouteDispatches(input: {
       });
       const entries = Array.isArray(value) ? value : row(value)?.value;
       if (!Array.isArray(entries) || entries.length > 24)
-        return refuse("list_jobs_malformed", `page=${page} entries=${Array.isArray(entries) ? entries.length : typeof value}`);
+        return refuse(
+          "list_jobs_malformed",
+          `page=${page} entries=${Array.isArray(entries) ? entries.length : typeof value}`,
+        );
       for (const entry of entries) {
         const summary = row(entry);
         const jobId = text(summary?.jobId);
@@ -435,7 +439,11 @@ export async function readPendingRouteDispatches(input: {
           evaluating: "awaiting_evaluation",
         };
         const state = typeof job.state === "string" ? states[job.state] : undefined;
-        if (!state) return refuse("active_replay_job_unknown_state", `jobId=${jobId} state=${String(job.state)}`);
+        if (!state)
+          return refuse(
+            "active_replay_job_unknown_state",
+            `jobId=${jobId} state=${String(job.state)}`,
+          );
         const captureRef = captureRefFromReplayJob(job);
         if (!captureRef) return refuse("active_replay_job_missing_capture", `jobId=${jobId}`);
         const capture = await scopeCapture(captureRef);
@@ -467,8 +475,10 @@ export async function readPendingRouteDispatches(input: {
         break;
       }
     }
-    if (!complete) return refuse("list_jobs_page_budget_exhausted", `terminalSkipped=${terminalSkipped}`);
-    if (terminalSkipped > 0) input.onDiagnostic?.("terminal_replay_jobs_skipped", String(terminalSkipped));
+    if (!complete)
+      return refuse("list_jobs_page_budget_exhausted", `terminalSkipped=${terminalSkipped}`);
+    if (terminalSkipped > 0)
+      input.onDiagnostic?.("terminal_replay_jobs_skipped", String(terminalSkipped));
     const page = row(await input.readQueueJobs());
     // The operator queue projection intentionally reports an uncreated fresh store as
     // `available:false` with an empty list. That is a complete empty queue, not an authority
@@ -487,7 +497,10 @@ export async function readPendingRouteDispatches(input: {
       !Array.isArray(page.jobs) ||
       page.jobs.length >= 500
     )
-      return refuse("queue_jobs_unavailable", `available=${String(page?.available)} jobs=${Array.isArray(page?.jobs) ? page.jobs.length : "missing"}`);
+      return refuse(
+        "queue_jobs_unavailable",
+        `available=${String(page?.available)} jobs=${Array.isArray(page?.jobs) ? page.jobs.length : "missing"}`,
+      );
     if (process.env.ROLE_MODEL_FOCUS_DIAG)
       console.error(
         `[route-dispatch-pending] queue page available=${String(page.available)} jobs=${page.jobs.length} freshEmpty=${String(freshEmptyQueue)}`,
@@ -546,7 +559,10 @@ export async function readPendingRouteDispatches(input: {
         return refuse("queue_job_payload_malformed", `id=${queueJobId} dispatchRoundId`);
       const capture = await scopeCapture(captureRef);
       if (!capture) {
-        input.onDiagnostic?.("queue_job_capture_out_of_scope", `id=${queueJobId} capture=${captureRef}`);
+        input.onDiagnostic?.(
+          "queue_job_capture_out_of_scope",
+          `id=${queueJobId} capture=${captureRef}`,
+        );
         continue;
       }
       const date =
@@ -555,7 +571,10 @@ export async function readPendingRouteDispatches(input: {
           ? Date.parse(`${job.createdAt.replace(" ", "T")}Z`)
           : Number.NaN;
       if (!time(date))
-        return refuse("queue_job_timestamp_invalid", `id=${queueJobId} createdAt=${String(job.createdAt)}`);
+        return refuse(
+          "queue_job_timestamp_invalid",
+          `id=${queueJobId} createdAt=${String(job.createdAt)}`,
+        );
       for (const id of payload.endpointIds) {
         const endpointId = text(id);
         if (!endpointId || endpointId === capture.endpointId)
@@ -590,7 +609,10 @@ export async function readPendingRouteDispatches(input: {
      * production `:3456` (2026-10-14): the tick failed with that message while the replay-core listing and
      * the local queue projection were both healthy, and nothing in the log said which gate refused. Name it.
      */
-    return refuse("pending_read_threw", error instanceof Error ? error.message.slice(0, 160) : String(error));
+    return refuse(
+      "pending_read_threw",
+      error instanceof Error ? error.message.slice(0, 160) : String(error),
+    );
   }
 }
 

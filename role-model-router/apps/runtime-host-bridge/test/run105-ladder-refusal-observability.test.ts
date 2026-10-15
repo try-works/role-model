@@ -48,7 +48,12 @@ test("every other status is surfaced, including stale and insufficient_evidence"
   const refusals = ladderMaterializationRefusals([
     { status: "stale", roleId: "r", taskTypeId: "t", reason: "snapshot_changed" },
     { status: "insufficient_evidence", roleId: "r", taskTypeId: "t" },
-    { status: "capacity_limited", roleId: "r", taskTypeId: "t", reason: "retained_rung_capacity_exceeded" },
+    {
+      status: "capacity_limited",
+      roleId: "r",
+      taskTypeId: "t",
+      reason: "retained_rung_capacity_exceeded",
+    },
   ]);
 
   expect(refusals.map((entry) => entry.status)).toEqual([

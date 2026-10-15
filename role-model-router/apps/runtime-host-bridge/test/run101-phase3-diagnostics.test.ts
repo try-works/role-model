@@ -18,7 +18,12 @@ const capture = {
   scope: "standalone-runtime",
   rootArtifactId: "artifact-1",
   replaySource: { kind: "live" },
-  trace: { scopeId: "standalone-runtime", channel: "production", readiness: "ready", completeness: "complete" },
+  trace: {
+    scopeId: "standalone-runtime",
+    channel: "production",
+    readiness: "ready",
+    completeness: "complete",
+  },
 };
 
 describe("phase-3 diagnostics: pending-dispatch refusals are named", () => {
@@ -29,7 +34,7 @@ describe("phase-3 diagnostics: pending-dispatch refusals are named", () => {
       readCapture: async () => capture,
       invoke: async (_e, capability) => {
         if (capability === "replay:list-jobs") return { value: "not-an-array" };
-        throw new Error("unexpected invoke " + capability);
+        throw new Error(`unexpected invoke ${capability}`);
       },
       readQueueJobs: async () => null,
       readQueueJob: async () => null,
@@ -49,12 +54,12 @@ describe("phase-3 diagnostics: pending-dispatch refusals are named", () => {
       readCapture: async () => capture,
       invoke: async (_e, capability) => {
         if (capability === "replay:list-jobs") {
-          return Array.from({ length: 24 }, () => ({
-            jobId: "job-" + String((counter += 1)).padStart(10, "0"),
-            state: "complete",
-          }));
+          return Array.from({ length: 24 }, () => {
+            counter += 1;
+            return { jobId: `job-${String(counter).padStart(10, "0")}`, state: "complete" };
+          });
         }
-        throw new Error("unexpected invoke " + capability);
+        throw new Error(`unexpected invoke ${capability}`);
       },
       readQueueJobs: async () => null,
       readQueueJob: async () => null,
@@ -82,7 +87,7 @@ describe("phase-3 diagnostics: pending-dispatch refusals are named", () => {
           if (jobId === "job-0001-terminal") throw new Error("terminal jobs must not be hydrated");
           return { jobId: "job-0002-active", state: "queued", createdAtMs: 1000 };
         }
-        throw new Error("unexpected invoke " + capability);
+        throw new Error(`unexpected invoke ${capability}`);
       },
       readQueueJobs: async () => ({
         schemaVersion: "role-model.operator-queue-jobs.v1",
@@ -105,13 +110,20 @@ describe("phase-3 diagnostics: pending-dispatch refusals are named", () => {
       readCapture: async () => capture,
       invoke: async (_e, capability) => {
         if (capability === "replay:list-jobs") return [];
-        throw new Error("unexpected invoke " + capability);
+        throw new Error(`unexpected invoke ${capability}`);
       },
       readQueueJobs: async () => ({
         schemaVersion: "role-model.operator-queue-jobs.v1",
         queue: "replay.dispatch",
         available: true,
-        jobs: [{ id: "q1", queue: "replay.dispatch", state: "pending", payload: { captureRef: "req-diag-1" } }],
+        jobs: [
+          {
+            id: "q1",
+            queue: "replay.dispatch",
+            state: "pending",
+            payload: { captureRef: "req-diag-1" },
+          },
+        ],
       }),
       readQueueJob: async () => null,
       onDiagnostic: (reason) => diagnostics.push(reason),

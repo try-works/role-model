@@ -1,9 +1,9 @@
 import { describe, expect, test } from "vitest";
 
 import {
+  type ReplayCandidateEligibilityProfile,
   planReplayDispatchArms,
   preferEffortMatchedReplayArms,
-  type ReplayCandidateEligibilityProfile,
 } from "../src/track-b-replay-policy.js";
 
 /**
@@ -52,9 +52,17 @@ describe("run 108 effort repointing must not recreate the source self-replay", (
       arms,
       configuredEndpoints: [
         { endpointId: SOURCE, modelId: "deepseek/deepseek-flash", reasoningEffort: "high" },
-        { endpointId: SAME_MODEL_TWIN, modelId: "deepseek/deepseek-flash", reasoningEffort: "high" },
+        {
+          endpointId: SAME_MODEL_TWIN,
+          modelId: "deepseek/deepseek-flash",
+          reasoningEffort: "high",
+        },
         { endpointId: SAME_MODEL_LOW, modelId: "deepseek/deepseek-flash", reasoningEffort: "low" },
-        { endpointId: OTHER_MODEL_MAX, modelId: "deepseek/deepseek-v4-pro", reasoningEffort: "max" },
+        {
+          endpointId: OTHER_MODEL_MAX,
+          modelId: "deepseek/deepseek-v4-pro",
+          reasoningEffort: "max",
+        },
       ],
       sourceModelId: "deepseek/deepseek-flash",
       sourceReasoningEffort: "high",

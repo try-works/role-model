@@ -10,15 +10,37 @@ import { buildObservabilitySnapshotRows } from "./runtime-api";
  * carry the series breakdown so the page can show WHICH gate refused, matching the queue pages
  * that show per-job causes. Backward compatible: a metric without series keeps the bare row shape.
  */
-const withSeries: { schemaVersion: "role-model.observability-snapshot.v1"; metrics: Record<string, { count: number; incremental: boolean; series?: { id: string; attributes: Record<string, string>; state: { kind: string; count: number; incremental: boolean } }[] }> } = {
+const withSeries: {
+  schemaVersion: "role-model.observability-snapshot.v1";
+  metrics: Record<
+    string,
+    {
+      count: number;
+      incremental: boolean;
+      series?: {
+        id: string;
+        attributes: Record<string, string>;
+        state: { kind: string; count: number; incremental: boolean };
+      }[];
+    }
+  >;
+} = {
   schemaVersion: "role-model.observability-snapshot.v1",
   metrics: {
     "role-model.replay.dispatch.refusals": {
       count: 5,
       incremental: true,
       series: [
-        { id: "role-model.replay.dispatch.refusals", attributes: { reason: "list_jobs_malformed" }, state: { kind: "counter", count: 3, incremental: true } },
-        { id: "role-model.replay.dispatch.refusals", attributes: { reason: "queue_job_payload_malformed" }, state: { kind: "counter", count: 2, incremental: true } },
+        {
+          id: "role-model.replay.dispatch.refusals",
+          attributes: { reason: "list_jobs_malformed" },
+          state: { kind: "counter", count: 3, incremental: true },
+        },
+        {
+          id: "role-model.replay.dispatch.refusals",
+          attributes: { reason: "queue_job_payload_malformed" },
+          state: { kind: "counter", count: 2, incremental: true },
+        },
       ],
     },
   },

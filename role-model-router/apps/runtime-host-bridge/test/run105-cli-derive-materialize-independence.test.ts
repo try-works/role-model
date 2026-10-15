@@ -65,9 +65,14 @@ describe("run105 cli derive materialize independence", () => {
       new URL("../src/track-b-auto-replay-runtime.ts", import.meta.url),
       "utf8",
     );
-    const callStart = loopSource.indexOf('if (typeof input.operations.materializeRouteLadders === "function")');
+    const callStart = loopSource.indexOf(
+      'if (typeof input.operations.materializeRouteLadders === "function")',
+    );
     expect(callStart).toBeGreaterThan(-1);
-    const callEnd = loopSource.indexOf("if (learnerQueueAuthoritative && input.operations.revalidateStrandedLearnerCandidates)", callStart);
+    const callEnd = loopSource.indexOf(
+      "if (learnerQueueAuthoritative && input.operations.revalidateStrandedLearnerCandidates)",
+      callStart,
+    );
     expect(callEnd).toBeGreaterThan(callStart);
     const callBlock = loopSource.slice(callStart, callEnd);
     expect(callBlock).toContain("await input.operations.materializeRouteLadders();");
