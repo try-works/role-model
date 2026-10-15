@@ -963,6 +963,19 @@ export function startAutoReplayLoop(input: {
           typeof row.taskTypeId === "string" && row.taskTypeId.trim()
             ? row.taskTypeId.trim()
             : null,
+        /**
+         * The source MODEL identity, so the planner can refuse a counterfactual that is the served
+         * model itself (2026-10-15). This projection is the only way the durable pending row reaches
+         * the tick, so a field dropped here is a rule that never fires on the live path.
+         */
+        sourceModelId:
+          typeof row.sourceModelId === "string" && row.sourceModelId.trim()
+            ? row.sourceModelId.trim()
+            : null,
+        sourceReasoningEffort:
+          typeof row.sourceReasoningEffort === "string" && row.sourceReasoningEffort.trim()
+            ? row.sourceReasoningEffort.trim()
+            : null,
       });
     }
     return captures;
@@ -1531,6 +1544,11 @@ export function startAutoReplayLoop(input: {
             {
               captureRef,
               sourceEndpointId: typeof raw.endpointId === "string" ? raw.endpointId : null,
+              // The same source-model identity the projection carries, so a claimed capture read from
+              // its durable root cannot bypass the self-replay exclusion.
+              sourceModelId: typeof raw.modelId === "string" ? raw.modelId : null,
+              sourceReasoningEffort:
+                typeof raw.reasoningEffort === "string" ? raw.reasoningEffort : null,
               roleId:
                 typeof raw.roleId === "string"
                   ? raw.roleId
