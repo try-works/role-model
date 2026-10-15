@@ -529,6 +529,7 @@ import {
   recordFinaliseRefusal,
   recordLadderRungs,
   recordLearnerFamilyEvidence,
+  recordPendingDispatchRefusal,
   recordPersistedAdmissionFloor,
   recordReplayAdmission,
   withStageSpan,
@@ -8302,6 +8303,15 @@ export async function main(): Promise<void> {
                     ),
                   ),
                 }),
+              // Plan phase 3: every refusal reason is named HERE (unconditional log) and recorded as an
+              // observability metric so the Observe -> Observability page shows which gate refused. This is the
+              // same seam the D11 comment above forbids new silent-null providers from repeating.
+              onDiagnostic: (reason, detail) => {
+                console.error(
+                  `[route-dispatch-pending] degraded: ${reason}${detail ? ` ${detail}` : ""}`,
+                );
+                recordPendingDispatchRefusal(reason, observabilityScope);
+              },
             });
           } catch (cause) {
             // D11: the swallowed error is the whole reason this provider was opaque; name it.
