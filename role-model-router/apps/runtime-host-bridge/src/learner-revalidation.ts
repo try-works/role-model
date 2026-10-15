@@ -115,6 +115,52 @@ export async function collectStrandedCandidates(input: {
   return collected;
 }
 
+/**
+ * Live finding (isolated production-learning verification, 2026-10-15): a DETERMINISTIC ladder-materialization
+ * refusal was completely silent. Only "written" entries logged anything, so an entry refused with
+ * `evidence_metadata_capacity_exceeded` - measured with floor admitted 5 / configured 6 / met=true, yet the
+ * durable ladder frozen at its previous value - was indistinguishable from "nothing changed yet".
+ *
+ * That refusal is NOT transient and no later tick resolves it: the ladder evidence metadata only grows, so once a
+ * family's provenance exceeds the writer's 16 KiB document cap every subsequent attempt is refused and the row
+ * keeps its old value indefinitely. "unchanged" is the genuine steady state and stays quiet; every other status is
+ * a refusal the operator must be able to see by name.
+ */
+export function ladderMaterializationRefusals(
+  ladders: readonly unknown[],
+): readonly {
+  readonly status: string;
+  readonly roleId: string;
+  readonly taskTypeId: string;
+  readonly reason: string;
+  readonly floor: unknown;
+}[] {
+  const refusals: {
+    status: string;
+    roleId: string;
+    taskTypeId: string;
+    reason: string;
+    floor: unknown;
+  }[] = [];
+  for (const entry of ladders) {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) continue;
+    const record = entry as Record<string, unknown>;
+    const status = typeof record.status === "string" ? record.status : "";
+    // The two non-refusals: a write that happened, and the steady state where nothing changed.
+    if (status === "written" || status === "unchanged") continue;
+    // An entry with no status at all carries no outcome to report.
+    if (!status) continue;
+    refusals.push({
+      status,
+      roleId: typeof record.roleId === "string" ? record.roleId : "?",
+      taskTypeId: typeof record.taskTypeId === "string" ? record.taskTypeId : "?",
+      reason: typeof record.reason === "string" ? record.reason : "unspecified",
+      floor: record.floor ?? null,
+    });
+  }
+  return refusals;
+}
+
 export interface LearnerRevalidationSummary {
   readonly examined: number;
   readonly offered: number;

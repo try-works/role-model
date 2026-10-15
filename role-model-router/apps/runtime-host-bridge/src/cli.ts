@@ -140,6 +140,7 @@ import {
 } from "./track-b-replay-ledger.js";
 import {
   collectStrandedCandidates,
+  ladderMaterializationRefusals,
   learnerFamilyEvidenceKey,
   learnerReceiptTimeMs,
   runLearnerRevalidationPass,
@@ -6122,6 +6123,21 @@ export async function main(): Promise<void> {
                 }
                 if (written > 0)
                   console.error(`[run105] ladder materialization wrote ${written} ladder row(s)`);
+                /**
+                 * Live finding (isolated production-learning verification, 2026-10-15): a DETERMINISTIC refusal was
+                 * completely silent. Only "written" entries logged anything, so an entry refused with
+                 * `evidence_metadata_capacity_exceeded` (measured: floor admitted 5 / configured 6 / met=true, yet the
+                 * ladder stayed frozen at its previous value) was indistinguishable from "nothing changed yet". The
+                 * refusal is not transient and no later tick will fix it: the evidence metadata only grows, so once
+                 * a family's provenance exceeds the writer's 16 KiB document cap EVERY subsequent attempt is refused
+                 * and the durable row keeps its old value forever. A deterministic refusal has to say so, by name,
+                 * with the reason the writer returned - otherwise an operator reads a stalled ladder as slow progress.
+                 */
+                for (const refusal of ladderMaterializationRefusals(ladders)) {
+                  console.error(
+                    `[run105] ladder materialization ${refusal.status}:${refusal.roleId}/${refusal.taskTypeId} reason=${refusal.reason} floor=${JSON.stringify(refusal.floor)}`,
+                  );
+                }
               }
             } catch (materializationError) {
               /**
