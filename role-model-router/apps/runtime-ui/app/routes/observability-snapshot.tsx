@@ -106,6 +106,20 @@ export function ObservabilitySnapshotRouteView() {
                       <p className={supportingTextClassName}>incremental counter</p>
                     ) : null}
                   </div>
+                  {row.breakdown.length > 0 ? (
+                    <ul className="mt-2 space-y-1">
+                      {row.breakdown.map((entry, index) => (
+                        <li key={index} className="flex flex-wrap items-center gap-2 text-xs">
+                          <Badge tone="neutral">{entry.count}</Badge>
+                          <span className={monoEyebrowClassName}>
+                            {Object.entries(entry.attributes)
+                              .map(([key, value]) => `${key}=${value}`)
+                              .join(" ")}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
                 </div>
               ))
             )}
