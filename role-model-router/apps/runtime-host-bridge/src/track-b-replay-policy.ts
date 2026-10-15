@@ -1020,6 +1020,16 @@ export function preferEffortMatchedReplayArms(input: {
     typeof input.sourceEndpointId === "string" ? input.sourceEndpointId.trim() : "";
   return input.arms.map((arm) => {
     if (normalizeEffort(arm.reasoningEffort) === sourceEffort) return arm;
+    /**
+     * Live finding (isolated production-learning verification, 2026-10-15): repointing a SAME-MODEL arm to
+     * the source effort turns it into the source model at the source effort - the self-replay the selector
+     * now refuses. Measured: the only surviving arm (flash-low) was repointed onto the rejected same-model
+     * twin, the pre-dispatch re-check dropped it, and the capture was refused
+     * `replay arm cannot serve the capture's request requirements: ... (SOURCE_MODEL_SELF_REPLAY)` even
+     * though a legitimate effort counterfactual was available. Keeping the arm at its own effort preserves
+     * a real comparison; repointing would manufacture the self-replay the rule exists to prevent.
+     */
+    if (arm.modelId === input.sourceModelId) return arm;
     const variant = input.configuredEndpoints.find(
       (endpoint) =>
         endpoint.modelId === arm.modelId &&
