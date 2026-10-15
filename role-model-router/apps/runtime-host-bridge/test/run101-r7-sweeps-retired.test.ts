@@ -53,6 +53,10 @@ function harness(planeModes?: {
       called.push("sweepFinalizationSignals");
       return { written: 0 };
     },
+    revalidateStrandedLearnerCandidates: async () => {
+      called.push("revalidateStrandedLearnerCandidates");
+      return { offered: 0, revived: 0 };
+    },
     learnFromUnconsumedCandidates: async () => {
       called.push("learnFromUnconsumedCandidates");
       return { consumed: 0, remaining: 0 };
@@ -95,6 +99,7 @@ describe("@recursive:101-effect-mq-queue-rebuild @sp7 R7 sweeps retired", () => 
     loop.stop();
     expect(called).toContain("resumePendingEvaluations");
     expect(called).toContain("reconcileEvaluationJobs");
+    expect(called).not.toContain("revalidateStrandedLearnerCandidates");
     expect(called).toContain("learnFromUnconsumedCandidates");
     expect(called).toContain("deriveLearnerCandidates");
   });
@@ -123,6 +128,7 @@ describe("@recursive:101-effect-mq-queue-rebuild @sp7 R7 sweeps retired", () => 
     const { loop, called } = harness({ learner: "queue" });
     await loop.tick();
     loop.stop();
+    expect(called).toContain("revalidateStrandedLearnerCandidates");
     expect(called).not.toContain("learnFromUnconsumedCandidates");
     expect(called).not.toContain("deriveLearnerCandidates");
     expect(called).toContain("resumePendingEvaluations");

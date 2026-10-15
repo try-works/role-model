@@ -41,6 +41,115 @@ export function learnerFamilyEvidenceKey(routePackage: string, taskTypeId: strin
 }
 
 /**
+ * Live finding (isolated production-learning verification, 2026-10-15): a producer that reads only the newest
+ * page repeats the very defect class this run has already fixed twice. Measured on the isolated store: of 51
+ * stranded shadow candidates, only 21 sit inside the newest 64 - a single no-cursor listing would silently
+ * MISS 30 of them, and the pass would report success while most stranded work was never seen.
+ *
+ * The walk therefore pages with the listing's own cursor until a page runs short or a bound is reached, and it
+ * never visits the same candidate twice.
+ */
+export async function collectStrandedCandidates(input: {
+  readonly readPage: (cursor: {
+    readonly afterCreatedAtMs: number;
+    readonly afterCandidateId: string;
+  } | null) => Promise<readonly Record<string, unknown>[]>;
+  readonly pageSize: number;
+  readonly maxPages?: number;
+}): Promise<readonly Record<string, unknown>[]> {
+  const maxPages =
+    Number.isSafeInteger(input.maxPages) && (input.maxPages ?? 0) > 0 ? Number(input.maxPages) : 5;
+  const collected: Record<string, unknown>[] = [];
+  const seen = new Set<string>();
+  let cursor: { afterCreatedAtMs: number; afterCandidateId: string } | null = null;
+  for (let page = 0; page < maxPages; page += 1) {
+    const rows = await input.readPage(cursor);
+    if (!Array.isArray(rows) || rows.length === 0) break;
+    for (const row of rows) {
+      if (!row || typeof row !== "object") continue;
+      const candidateId = typeof row.candidateId === "string" ? row.candidateId : "";
+      if (!candidateId || seen.has(candidateId)) continue;
+      seen.add(candidateId);
+      collected.push(row);
+    }
+    // A short page means the listing is exhausted; anything else could walk forever.
+    if (rows.length < input.pageSize) break;
+    const last = rows[rows.length - 1];
+    const afterCandidateId =
+      last && typeof last.candidateId === "string" ? last.candidateId : "";
+    const afterCreatedAtMs =
+      last && Number.isSafeInteger(last.createdAtMs) ? Number(last.createdAtMs) : null;
+    if (!afterCandidateId || afterCreatedAtMs === null) break;
+    cursor = { afterCreatedAtMs, afterCandidateId };
+  }
+  return collected;
+}
+
+export interface LearnerRevalidationSummary {
+  readonly examined: number;
+  readonly offered: number;
+  readonly revived: number;
+  readonly refused: number;
+  readonly lastError?: string;
+}
+
+/**
+ * The missing driver for queue mode: take the candidates the selector marks, and route each to the action its
+ * own job state calls for. An `offer` is a no-op for a candidate that already holds a terminal job (the queue
+ * inserts with ON CONFLICT DO NOTHING), so those must be revived instead - the two actions are not
+ * interchangeable, which is exactly why the selector names one.
+ *
+ * Bounded and never fatal: a refused or throwing action is counted and reported so the tick continues, and the
+ * pass fabricates no verdict - it only re-drives validation, whose gates then decide for themselves.
+ */
+export async function runLearnerRevalidationPass(input: {
+  readonly candidates: readonly RevalidatableRefusal[];
+  readonly newestEvidenceAtMs: ReadonlyMap<string, number>;
+  readonly promotionJobState: (candidateId: string) => string | null;
+  readonly offer: (job: { readonly candidateId: string }) => Promise<{
+    readonly enqueued: boolean;
+    readonly reason?: string;
+  }>;
+  readonly revive: (candidateId: string) => Promise<{ readonly ok: boolean; readonly reason?: string }>;
+  readonly limit?: number;
+}): Promise<LearnerRevalidationSummary> {
+  const selected = selectRevalidatableRefusals({
+    candidates: input.candidates,
+    newestEvidenceAtMs: input.newestEvidenceAtMs,
+    promotionJobState: input.promotionJobState,
+    ...(input.limit === undefined ? {} : { limit: input.limit }),
+  });
+  let offered = 0;
+  let revived = 0;
+  let refused = 0;
+  let lastError: string | undefined;
+  for (const entry of selected) {
+    try {
+      if (entry.action === "offer") {
+        const result = await input.offer({ candidateId: entry.candidateId });
+        if (result?.enqueued) offered += 1;
+        else refused += 1;
+      } else {
+        const result = await input.revive(entry.candidateId);
+        if (result?.ok) revived += 1;
+        else refused += 1;
+      }
+    } catch (error) {
+      // A refused action is a fact about the queue, not a reason to fail the whole tick.
+      refused += 1;
+      lastError = String((error as { message?: unknown })?.message ?? error).slice(0, 200);
+    }
+  }
+  return {
+    examined: input.candidates.length,
+    offered,
+    revived,
+    refused,
+    ...(lastError ? { lastError } : {}),
+  };
+}
+
+/**
  * The candidates whose promotion is worth a fresh attempt: a previous NOT-YET refusal, a terminal
  * promotion job to revive, and finalized evidence for the candidate's own family newer than that refusal.
  *

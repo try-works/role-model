@@ -139,6 +139,12 @@ import {
   resolveReplayLedgerLimits,
 } from "./track-b-replay-ledger.js";
 import {
+  collectStrandedCandidates,
+  learnerFamilyEvidenceKey,
+  runLearnerRevalidationPass,
+} from "./learner-revalidation.js";
+import { resolveQueueStorePath } from "./queue-runtime/store.js";
+import {
   type ReplayCandidateRejection,
   buildReplayPolicySet,
   classifyReplayArmEffort,
@@ -6840,6 +6846,259 @@ export async function main(): Promise<void> {
             activated,
             remaining: Math.max(0, pending.length - consumed),
           };
+        },
+        /**
+         * Live finding (isolated production-learning verification, 2026-10-15): the missing driver for QUEUE mode.
+         *
+         * Once the learner plane is authoritative, the sweep above steps aside, and a candidate whose family
+         * evidence was too thin when it was derived has no path back to validation:
+         *  - `learner.promote` is offered exactly once, from the derivation callback;
+         *  - the durable job id is `learner.promote:<candidateId>` (one candidate = one job forever);
+         *  - the queue's `offer` is INSERT OR IGNORE, so re-offering an existing terminal job is a NO-OP;
+         *  - and a completed queue job is never re-enqueued.
+         *
+         * Measured on the isolated store: 51 stranded shadow candidates - 31 with no promotion job at all
+         * (nothing was ever enqueued) and 20 with a terminal failure. This pass re-drives them, and it is
+         * EVIDENCE-CHANGE gated: a candidate is only revisited when a finalized comparison for its own
+         * (routePackage x taskType) is strictly newer than the receipt that refused it, so unchanged evidence
+         * cannot loop the same doomed attempt every tick. It re-drives validation only - the worker's own
+         * floors and guardrails still decide the verdict, and no receipt is ever fabricated.
+         */
+        async revalidateStrandedLearnerCandidates(input: Record<string, unknown> = {}) {
+          const runtime = extensionRuntimeRef.current;
+          if (!runtime) return { examined: 0, offered: 0, revived: 0, refused: 0 };
+          const authority = await (async () => {
+            try {
+              return await resolveDurableEvaluationAuthority({
+                channel,
+                stateRoot: options.runtimeStateRoot,
+                scopeId: options.scopeId,
+              });
+            } catch {
+              return null;
+            }
+          })();
+          if (!authority) return { examined: 0, offered: 0, revived: 0, refused: 0 };
+          const sweepEnvelope = (extensionId: string, capability: string, value: Record<string, unknown>) => ({
+            requestId: `learner-revalidation:${capability}:${Date.now()}`,
+            sessionId: `learner-revalidation:${options.scopeId}`,
+            protocolVersion: "1.1.0",
+            channel,
+            scope: options.scopeId,
+            authorizationEpoch: 1,
+            capability,
+            value,
+            ...(extensionId === "knowledge-store" ? { payload: value } : {}),
+            evaluationAuthoritySecret: authority.authoritySecret,
+          });
+          const decode = (value: unknown) =>
+            decodeExternalizedOperatorReadback({
+              stateRoot: options.runtimeStateRoot,
+              scopeId: options.scopeId,
+              value: unwrapCapabilityPayload(value),
+            });
+          try {
+            /**
+             * PAGE the listing, never one newest page: measured on the isolated store, only 21 of 51 stranded
+             * candidates sat inside the newest 64, so a single no-cursor read would silently miss 30 of them
+             * and still report a clean pass - the same page-bounded defect this run has already fixed twice.
+             */
+            const candidates = await collectStrandedCandidates({
+              pageSize: 64,
+              maxPages: 6,
+              readPage: async (cursor) => {
+                const decoded = decode(
+                  await runtime.invoke(
+                    "knowledge-worker",
+                    sweepEnvelope("knowledge-worker", "knowledge:list-candidates", {
+                      limit: 64,
+                      ...(cursor
+                        ? {
+                            afterCreatedAtMs: cursor.afterCreatedAtMs,
+                            afterCandidateId: cursor.afterCandidateId,
+                          }
+                        : {}),
+                    }),
+                  ),
+                );
+                const rows = Array.isArray(decoded)
+                  ? decoded
+                  : Array.isArray((decoded as { candidates?: unknown[] })?.candidates)
+                    ? (decoded as { candidates: unknown[] }).candidates
+                    : [];
+                return rows.filter(
+                  (row): row is Record<string, unknown> => Boolean(row) && typeof row === "object",
+                );
+              },
+            });
+            if (candidates.length === 0) return { examined: 0, offered: 0, revived: 0, refused: 0 };
+
+            // The receipt that refused each candidate, with the time it was written.
+            const receiptListing = decode(
+              await runtime.invoke(
+                "knowledge-store",
+                sweepEnvelope("knowledge-store", "knowledge:list-learning", {
+                  scopeId: options.scopeId,
+                  kind: "validation_receipt",
+                  limit: 512,
+                }),
+              ),
+            );
+            const receiptRows = Array.isArray(receiptListing)
+              ? receiptListing
+              : Array.isArray((receiptListing as { records?: unknown[] })?.records)
+                ? (receiptListing as { records: unknown[] }).records
+                : [];
+            const receipts = new Map<string, { decision: string; atMs: number | null }>();
+            for (const row of receiptRows) {
+              if (!row || typeof row !== "object" || Array.isArray(row)) continue;
+              const record = row as Record<string, unknown>;
+              const parsed = (() => {
+                if (record.record && typeof record.record === "object") {
+                  return record.record as Record<string, unknown>;
+                }
+                if (typeof record.record_json === "string") {
+                  try {
+                    return JSON.parse(record.record_json) as Record<string, unknown>;
+                  } catch {
+                    return {};
+                  }
+                }
+                return record;
+              })();
+              const candidateId = parsed.candidateId ?? record.candidateId;
+              if (typeof candidateId !== "string" || !candidateId) continue;
+              const decision =
+                typeof parsed.decision === "string"
+                  ? parsed.decision
+                  : typeof record.state === "string"
+                    ? record.state
+                    : "";
+              const atMs = Number(record.atMs ?? record.at_ms);
+              const previous = receipts.get(candidateId);
+              const when = Number.isFinite(atMs) ? atMs : null;
+              // Keep the LATEST receipt: it is the verdict a re-drive would supersede.
+              if (!previous || (when !== null && (previous.atMs === null || when > previous.atMs))) {
+                receipts.set(candidateId, { decision, atMs: when });
+              }
+            }
+
+            // Newest finalized evidence per (routePackage x taskType).
+            const groups = (
+              await collectPagedComparisonGroups({
+                readPage: async (cursor) => {
+                  const decoded = decode(
+                    await runtime.invoke(
+                      "evaluation-core",
+                      sweepEnvelope("evaluation-core", "evaluation:list-groups", {
+                        page: true,
+                        limit: LEARNING_GROUP_PAGE_LIMIT,
+                        ...(cursor ? { cursor } : {}),
+                      }),
+                    ),
+                  );
+                  return decoded;
+                },
+              }).catch(() => [])
+            ).filter(
+              (group): group is Record<string, unknown> =>
+                Boolean(group) && typeof group === "object" && !Array.isArray(group),
+            );
+            const newestEvidenceAtMs = new Map<string, number>();
+            for (const group of groups) {
+              const result =
+                group.result && typeof group.result === "object"
+                  ? (group.result as Record<string, unknown>)
+                  : group;
+              if (String(result.status ?? group.status ?? "") !== "finalized") continue;
+              const comparability =
+                (group.comparability as Record<string, unknown> | undefined) ??
+                (result.comparability as Record<string, unknown> | undefined) ??
+                {};
+              const taskTypeId =
+                typeof comparability.taskTypeId === "string" ? comparability.taskTypeId.trim() : "";
+              if (!taskTypeId) continue;
+              const atMs = Number(group.createdAtMs ?? group.created_at_ms);
+              if (!Number.isFinite(atMs)) continue;
+              for (const field of ["sourceCandidateRef", "counterfactualCandidateRef"] as const) {
+                const routePackage =
+                  typeof comparability[field] === "string"
+                    ? String(comparability[field]).trim()
+                    : "";
+                if (!routePackage) continue;
+                const key = learnerFamilyEvidenceKey(routePackage, taskTypeId);
+                const previous = newestEvidenceAtMs.get(key);
+                if (previous === undefined || atMs > previous) newestEvidenceAtMs.set(key, atMs);
+              }
+            }
+
+            // Promotion job state, read from the local queue store the host already owns.
+            const promotionJobState = (candidateId: string): string | null => {
+              try {
+                const filePath = resolveQueueStorePath({ stateRoot: queueStateRoot });
+                if (!existsSync(filePath)) return null;
+                const database = new DatabaseSync(filePath, { readOnly: true });
+                try {
+                  const row = database
+                    .prepare("SELECT state FROM effect_queue WHERE queue_name = ? AND id = ?")
+                    .get("learner.promote", `learner.promote:${candidateId}`) as
+                    | { state?: unknown }
+                    | undefined;
+                  return typeof row?.state === "string" ? row.state : null;
+                } finally {
+                  database.close();
+                }
+              } catch {
+                return null;
+              }
+            };
+
+            return await runLearnerRevalidationPass({
+              candidates: candidates.map((candidate) => {
+                const scope =
+                  candidate.scope && typeof candidate.scope === "object"
+                    ? (candidate.scope as Record<string, unknown>)
+                    : {};
+                const record = receipts.get(String(candidate.candidateId));
+                return {
+                  candidateId: String(candidate.candidateId),
+                  routePackage:
+                    typeof scope.routePackage === "string"
+                      ? scope.routePackage
+                      : typeof candidate.routePackage === "string"
+                        ? candidate.routePackage
+                        : null,
+                  taskTypeId: typeof scope.taskTypeId === "string" ? scope.taskTypeId : null,
+                  receiptDecision: record?.decision ?? "insufficient_evidence",
+                  receiptCreatedAtMs: record?.atMs ?? null,
+                };
+              }),
+              newestEvidenceAtMs,
+              promotionJobState,
+              offer: async (job: { readonly candidateId: string }) => {
+                if (lateBoundLearnerQueues.promote.mode === "legacy") {
+                  return { enqueued: false, reason: "learner_queue_not_authoritative" };
+                }
+                return await lateBoundLearnerQueues.promote.offer({ candidateId: job.candidateId });
+              },
+              revive: async (candidateId: string) =>
+                (await operations.retryQueueJob(
+                  "learner.promote",
+                  `learner.promote:${candidateId}`,
+                )) as { ok: boolean; reason?: string },
+              ...(Number.isSafeInteger(input.limit) && Number(input.limit) > 0
+                ? { limit: Number(input.limit) }
+                : { limit: 5 }),
+            });
+          } catch (error) {
+            return {
+              examined: 0,
+              offered: 0,
+              revived: 0,
+              refused: 0,
+              lastError: String((error as { message?: unknown })?.message ?? error).slice(0, 200),
+            };
+          }
         },
         /**
          * Run 100 addendum 10, S13: the learner's durable derivation half.

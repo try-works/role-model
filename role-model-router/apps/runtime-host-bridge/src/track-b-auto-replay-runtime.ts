@@ -312,6 +312,8 @@ export interface AutoReplayOperations {
    * that happened to derive it. Returns the number consumed and how many remain.
    */
   learnFromUnconsumedCandidates?(input: Record<string, unknown>): Promise<unknown>;
+  /** Queue producer only: it never validates candidates alongside the authoritative queue worker. */
+  revalidateStrandedLearnerCandidates?(input: Record<string, unknown>): Promise<unknown>;
   /**
    * Run 100 addendum 10 S13: the learner's durable derivation half. The sweep above consumes candidates that exist;
    * nothing in the runtime *creates* one outside `runTrackBShadowPipeline`, so a finalized comparison the pipeline
@@ -1215,6 +1217,18 @@ export function startAutoReplayLoop(input: {
        * leaving one of them running would race the queue for the same work.
        */
       const learnerQueueAuthoritative = input.planeModes?.learner === "queue";
+      if (learnerQueueAuthoritative && input.operations.revalidateStrandedLearnerCandidates) {
+        try {
+          const produced = (await input.operations.revalidateStrandedLearnerCandidates({ limit: 5 })) as
+            { lastError?: string } | null;
+          if (produced?.lastError) {
+            error = error ? `${error}; ${produced.lastError}` : produced.lastError;
+          }
+        } catch (cause) {
+          const detail = `learner revalidation producer failed: ${String(cause).slice(0, 200)}`;
+          error = error ? `${error}; ${detail}` : detail;
+        }
+      }
       if (
         !learnerQueueAuthoritative &&
         typeof input.operations.learnFromUnconsumedCandidates === "function"
