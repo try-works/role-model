@@ -14,11 +14,16 @@
  * (decisive 50-59 / development 23 / distinctCaptures 10, against floors of 3/1/3) held no promote job at
  * all, and 20 more held a terminal failure that predated the evidence it needed.
  *
- * The revival rule is deliberately EVIDENCE-CHANGE gated. Reviving every refusal would re-run the same
- * doomed comparison every tick forever, which is worse than doing nothing: it spends the worker's bounded
- * attempts on evidence that has not changed. A refusal is only worth a fresh attempt when a finalized
- * comparison for the candidate's OWN (routePackage x taskType) is NEWER than the receipt that refused it -
- * the one thing that can actually change the verdict.
+ * Measured split of the 51 stranded candidates: 20 held a TERMINAL promotion job (a plain `offer` cannot
+ * reopen those, because the queue inserts with ON CONFLICT DO NOTHING - they need a revive) and 31 held NO
+ * job at all (nothing was ever offered, so they need a fresh offer). The two populations need different
+ * actions, so the selector names which one applies.
+ *
+ * Both are deliberately EVIDENCE-CHANGE gated. Re-driving every refusal would re-run the same doomed
+ * comparison every tick forever, which is worse than doing nothing: it spends the worker's bounded attempts
+ * on evidence that has not changed. A refusal is only worth a fresh attempt when a finalized comparison for
+ * the candidate's OWN (routePackage x taskType) is NEWER than the receipt that refused it - the one thing
+ * that can actually change the verdict.
  */
 
 export interface RevalidatableRefusal {
@@ -46,13 +51,17 @@ export function selectRevalidatableRefusals(input: {
   readonly candidates: readonly RevalidatableRefusal[];
   /** Newest finalized-comparison time per (routePackage x taskType), from the durable group set. */
   readonly newestEvidenceAtMs: ReadonlyMap<string, number>;
-  /** True when this candidate already holds a terminal promotion job that a revive would reopen. */
-  readonly hasTerminalPromotionJob: (candidateId: string) => boolean;
+  /**
+   * The candidate's current promotion job state, or null when it has no job.
+   * "pending"/"processing" is work already in flight and must be left alone; a terminal
+   * state ("completed"/"failed") is what a revive can reopen; null means nothing was ever offered.
+   */
+  readonly promotionJobState: (candidateId: string) => string | null;
   readonly limit?: number;
-}): readonly string[] {
+}): readonly { readonly candidateId: string; readonly action: "offer" | "revive" }[] {
   const limit =
     Number.isSafeInteger(input.limit) && (input.limit ?? 0) > 0 ? Number(input.limit) : 5;
-  const selected: string[] = [];
+  const selected: { candidateId: string; action: "offer" | "revive" }[] = [];
   for (const candidate of input.candidates) {
     if (selected.length >= limit) break;
     if (!candidate || typeof candidate.candidateId !== "string" || !candidate.candidateId) continue;
@@ -73,8 +82,13 @@ export function selectRevalidatableRefusals(input: {
         : null;
     // Strictly newer: evidence that is already covered by the refusal cannot change its verdict.
     if (receiptAt === null || !(Number(newest) > receiptAt)) continue;
-    if (!input.hasTerminalPromotionJob(candidate.candidateId)) continue;
-    selected.push(candidate.candidateId);
+    const jobState = input.promotionJobState(candidate.candidateId);
+    // Work already in flight is left alone; it will produce its own verdict.
+    if (jobState === "pending" || jobState === "processing") continue;
+    selected.push({
+      candidateId: candidate.candidateId,
+      action: jobState === null ? "offer" : "revive",
+    });
   }
   return selected;
 }
