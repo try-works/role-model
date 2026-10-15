@@ -564,11 +564,15 @@ export function startAutoReplayLoop(input: {
         readonly endpointId: string;
         readonly modelId: string;
         readonly reasoningEffort: string | null;
+        readonly capabilities?: readonly string[];
+        readonly modalities?: readonly string[];
       }[]
     | (() => readonly {
         readonly endpointId: string;
         readonly modelId: string;
         readonly reasoningEffort: string | null;
+        readonly capabilities?: readonly string[];
+        readonly modalities?: readonly string[];
       }[]);
   /**
    * Endpoints the runtime can actually dispatch to. A provider may be supplied so a
@@ -2479,6 +2483,21 @@ export function startAutoReplayLoop(input: {
           ? await input.healthyEndpointIds()
           : input.healthyEndpointIds;
       /**
+       * Live finding (isolated production-learning verification, 2026-10-15): the tick never passed endpoint
+       * profiles to `runAutoReplayTick`, so EVERY arm eligibility rule was inert on the live path - including
+       * the Run 104 R1 capability/modality rule and the source-model self-replay exclusion. The declarations
+       * come from the same descriptors the effort walk already reads.
+       */
+      const tickEndpointDescriptors = (() => {
+        try {
+          return typeof input.configuredEndpointDescriptors === "function"
+            ? input.configuredEndpointDescriptors()
+            : (input.configuredEndpointDescriptors ?? []);
+        } catch {
+          return [];
+        }
+      })();
+      /**
        * Run 108 addendum-02: the versioned counterfactual arm bound for THIS tick, so an operator policy
        * change applies to the next tick without a restart. A provider that throws (or answers nothing
        * usable) leaves the bound unset, and the tick keeps its own default rather than planning zero arms.
@@ -2536,6 +2555,22 @@ export function startAutoReplayLoop(input: {
         runAutoReplayTick({
           captures: dispatchCaptures,
           configuredEndpointIds,
+          /**
+           * Run 104 R1 profiles were never wired here, so every arm eligibility rule - including the
+           * 2026-10-15 source-model self-replay exclusion - was inert on the LIVE tick even though the
+           * on-demand path applied it. Declarations come from the same registry descriptors the walk uses.
+           */
+          ...(tickEndpointDescriptors.length > 0
+            ? {
+                endpointProfiles: tickEndpointDescriptors.map((descriptor) => ({
+                  endpointId: descriptor.endpointId,
+                  modelId: descriptor.modelId,
+                  reasoningEffort: descriptor.reasoningEffort ?? null,
+                  capabilities: [...(descriptor.capabilities ?? [])],
+                  modalities: [...(descriptor.modalities ?? [])],
+                })),
+              }
+            : {}),
           /**
            * Run 108 addendum-02: the policy bound travels to the planner that caps the plan, so the
            * operator's `maxCounterfactualArms` is what a live dispatch honours.

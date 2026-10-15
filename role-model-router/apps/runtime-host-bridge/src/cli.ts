@@ -5872,6 +5872,8 @@ export async function main(): Promise<void> {
         endpointId: string;
         modelId: string;
         reasoningEffort: string | null;
+        capabilities: readonly string[];
+        modalities: readonly string[];
       }[],
       /**
        * Run 108 addendum-02 (I2, the promotion floor): the operator's versioned counterfactual arm bound
@@ -11718,6 +11720,10 @@ export async function main(): Promise<void> {
                 typeof reasoningEffort === "string" && reasoningEffort.trim()
                   ? reasoningEffort
                   : null,
+              // The declared capability/modality sets the arm eligibility rule reads. They were never
+              // carried here, so the live tick could not apply R1 at all (2026-10-15).
+              capabilities: [...(endpoint.declared?.capabilities ?? [])],
+              modalities: [...(endpoint.declared?.modalities ?? [])],
             };
           }),
         /**

@@ -743,6 +743,11 @@ export async function readRouteReplayableCaptures(input: {
       captures.push({
         captureRef: requestId,
         sourceEndpointId: capture.endpointId as string,
+        // Live finding (isolated production-learning verification, 2026-10-15): the source MODEL identity
+        // travels with the pending capture so the tick can refuse a same-model (self) counterfactual.
+        sourceModelId: typeof capture.modelId === "string" ? capture.modelId : null,
+        sourceReasoningEffort:
+          typeof capture.reasoningEffort === "string" ? capture.reasoningEffort : null,
         roleId,
         taskTypeId,
         hasRecordedToolResults: hasRecordedToolResults(capture),
