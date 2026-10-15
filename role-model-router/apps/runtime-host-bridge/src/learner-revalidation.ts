@@ -36,6 +36,36 @@ export interface RevalidatableRefusal {
   readonly receiptCreatedAtMs?: number | null;
 }
 
+/**
+ * Live finding (isolated production-learning verification, 2026-10-15): the validation-receipt listing does not
+ * project the row's `at_ms` column - it returns {recordId, kind, state, scopeId, record, identity} - and the
+ * record body carries `createdAt` as an ISO string, not `atMs`. A producer that reads only `atMs` therefore
+ * gets `undefined` for every receipt, the strict "evidence is newer than the refusal" gate rejects everything,
+ * and the pass silently reports a clean sweep while driving nothing (measured: zero candidates selected and no
+ * queue movement after two ticks).
+ *
+ * The time is read from every shape the receipt can actually carry, and an unreadable time is null - which the
+ * selector treats as "cannot prove newer evidence", never as "newer".
+ */
+export function learnerReceiptTimeMs(record: {
+  readonly atMs?: unknown;
+  readonly at_ms?: unknown;
+  readonly createdAt?: unknown;
+  readonly createdAtMs?: unknown;
+  readonly recordedAtMs?: unknown;
+}): number | null {
+  for (const value of [record.atMs, record.at_ms, record.createdAtMs, record.recordedAtMs]) {
+    const n = Number(value);
+    if (Number.isFinite(n) && n > 0) return n;
+  }
+  const iso = record.createdAt;
+  if (typeof iso === "string") {
+    const parsed = Date.parse(iso);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return null;
+}
+
 export function learnerFamilyEvidenceKey(routePackage: string, taskTypeId: string): string {
   return `${routePackage}\u0000${taskTypeId}`;
 }

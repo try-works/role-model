@@ -141,6 +141,7 @@ import {
 import {
   collectStrandedCandidates,
   learnerFamilyEvidenceKey,
+  learnerReceiptTimeMs,
   runLearnerRevalidationPass,
 } from "./learner-revalidation.js";
 import { resolveQueueStorePath } from "./queue-runtime/store.js";
@@ -6974,9 +6975,14 @@ export async function main(): Promise<void> {
                   : typeof record.state === "string"
                     ? record.state
                     : "";
-              const atMs = Number(record.atMs ?? record.at_ms);
+              // Lean finding: the listing projects no timestamp column, so the time is read from the
+              // record body (createdAt ISO) with the row fields used when a caller supplies them.
+              const when = learnerReceiptTimeMs({
+                ...(parsed as Record<string, unknown>),
+                ...(typeof record.atMs === "number" ? { atMs: record.atMs } : {}),
+                ...(typeof record.at_ms === "number" ? { at_ms: record.at_ms } : {}),
+              });
               const previous = receipts.get(candidateId);
-              const when = Number.isFinite(atMs) ? atMs : null;
               // Keep the LATEST receipt: it is the verdict a re-drive would supersede.
               if (!previous || (when !== null && (previous.atMs === null || when > previous.atMs))) {
                 receipts.set(candidateId, { decision, atMs: when });
