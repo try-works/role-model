@@ -6294,7 +6294,24 @@ export async function main(): Promise<void> {
                     return record;
                   })();
                   const candidateId = parsed.candidateId ?? record.candidateId;
-                  return typeof candidateId === "string" ? candidateId : null;
+                  if (typeof candidateId !== "string" || !candidateId) return null;
+                  /**
+                   * Live finding (isolated production-learning verification, 2026-10-15): a receipt with
+                   * decision `insufficient_evidence` records a NOT-YET verdict, not validation work. Counting
+                   * it here retired the candidate permanently, because this predicate is what excludes work:
+                   * a candidate declined while its family evidence was thin was never revisited even after the
+                   * aggregate far exceeded the floor (measured: 62 candidates at decisive 50-59 / development
+                   * 23 / distinctCaptures 9-10 against floors of 3/1/3, all still `insufficient_evidence`).
+                   * The receipt id is content-keyed on the decision, so re-validating a refusal mints a
+                   * DIFFERENT receipt when the evidence finally clears the floor and overwrites nothing.
+                   */
+                  const decision =
+                    typeof parsed.decision === "string"
+                      ? parsed.decision
+                      : typeof record.state === "string"
+                        ? record.state
+                        : "";
+                  return decision === "insufficient_evidence" ? null : candidateId;
                 })
                 .filter((value): value is string => value !== null);
             })(),
@@ -6418,6 +6435,15 @@ export async function main(): Promise<void> {
           };
           const groups = await readComparisonGroups();
           let consumed = 0;
+          /**
+           * Live finding (isolated production-learning verification, 2026-10-15): a receipt with decision
+           * `insufficient_evidence` is a NOT-YET verdict. It must not count as a promotion - otherwise a
+           * per-candidate `learner.promote` job whose candidate is still refused would be classified
+           * "promoted" (classifyLearnerPromotionResult reads `consumed > 0` that way), the job would
+           * complete, and the candidate would be dropped permanently because a completed queue job is never
+           * re-enqueued. Counted separately so a refusal is visible without being mistaken for success.
+           */
+          let refused = 0;
           /**
            * Run 105 R9/D7: derived activation has no per-sweep activation step, so the counter stays
            * at zero and is only kept because the sweep's answer shape (consumed/activated/remaining)
@@ -6608,7 +6634,8 @@ export async function main(): Promise<void> {
                   },
                 }),
               );
-              consumed += 1;
+              if (receipt.decision === "validate") consumed += 1;
+              else refused += 1;
               /**
                * Run 107 P13: the durable record is the runtime's own shape and keeps the family evidence; the
                * *contract* artifact is the documented vocabulary, and until this slice nothing emitted one -
