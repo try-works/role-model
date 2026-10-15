@@ -6185,6 +6185,10 @@ export async function main(): Promise<void> {
             ...(extensionId === "knowledge-store" ? { payload: value } : {}),
             evaluationAuthoritySecret: authority.authoritySecret,
           });
+          const onlyCandidateId =
+            typeof input.candidateId === "string" && input.candidateId.trim()
+              ? input.candidateId.trim()
+              : null;
           const listing = await runtime.invoke(
             "knowledge-worker",
             envelopeFor("knowledge-worker", "knowledge:list-candidates", {
@@ -6194,6 +6198,16 @@ export async function main(): Promise<void> {
                * only a page that advances can reach a candidate nothing ever validated.
                */
               limit: 32,
+              /**
+               * Live finding (isolated production-learning verification, 2026-10-15): a per-candidate
+               * `learner.promote` job scoped the sweep to its candidate id, but the listing could only answer
+               * the NEWEST page - so a candidate past that page was never examined and the job failed
+               * terminally after its attempts with "no finalized comparison was available to validate",
+               * even though its comparison HAD finalized. Measured on the isolated store: 41 such failures,
+               * 30 of them outside the newest 32 candidates. A named candidate is a direct lookup and must
+               * not depend on page position.
+               */
+              ...(onlyCandidateId ? { candidateId: onlyCandidateId } : {}),
               ...(learnerCandidateCursor === null
                 ? {}
                 : {
@@ -6353,10 +6367,6 @@ export async function main(): Promise<void> {
            * `learner.promote` job is per candidate (`jobIdRule: candidateId`), so a job-scoped consume
            * must not be satisfied by - or blocked behind - another candidate's work.
            */
-          const onlyCandidateId =
-            typeof input.candidateId === "string" && input.candidateId.trim()
-              ? input.candidateId.trim()
-              : null;
           const pending = candidates.filter((candidate) => {
             const candidateId =
               typeof candidate.candidateId === "string" ? candidate.candidateId : null;
