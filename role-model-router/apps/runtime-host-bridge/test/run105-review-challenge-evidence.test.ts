@@ -1057,9 +1057,13 @@ privateTest(
     const helper = await import(
       /* @vite-ignore */ new URL("../src/route-challenge-evidence.js", import.meta.url).href
     );
+    // The callback also lazily imports the queue store for its local projection; replace that
+    // dynamic import with the already-imported module the same way as the evidence helper.
+    const queueStoreHelper = { resolveQueueStorePath };
     const body = source
       .slice(start, end)
-      .replaceAll('import("./route-challenge-evidence.js")', "Promise.resolve(helper)");
+      .replaceAll('import("./route-challenge-evidence.js")', "Promise.resolve(helper)")
+      .replaceAll('import("./queue-runtime/store.js")', "Promise.resolve(queueStoreHelper)");
     const js = ts.transpileModule(`const callbacks = {${body}};`, {
       compilerOptions: { target: ts.ScriptTarget.ES2022 },
     }).outputText;
@@ -1082,6 +1086,12 @@ privateTest(
       "options",
       "channel",
       "helper",
+      "queueStoreHelper",
+      "queueStateRoot",
+      "existsSync",
+      "DatabaseSync",
+      "observabilityScope",
+      "recordPendingDispatchRefusal",
       `${js}return callbacks.readPendingRouteDispatches;`,
     );
     const callback = run(
@@ -1116,9 +1126,18 @@ privateTest(
       { runtimeStateRoot: root, scopeId: "operator-history" },
       "development",
       helper,
+      { resolveQueueStorePath },
+      root,
+      existsSync,
+      DatabaseSync,
+      undefined,
+      () => undefined,
     ) as (req: typeof request) => Promise<unknown>;
     expect(await callback(request)).toHaveLength(2);
-    expect(ids).toEqual([historicalId]);
+    // Run 101 addendum 44: the host reads the LOCAL queue store, whose list rows already carry the
+    // payload, so the per-job sidecar hydration this test once expected is never needed. The reader
+    // must NOT call readQueueJob for complete summaries (pinned separately by the addendum-44 test).
+    expect(ids).toEqual([]);
     expect(
       envelopes.every(
         (envelope) =>

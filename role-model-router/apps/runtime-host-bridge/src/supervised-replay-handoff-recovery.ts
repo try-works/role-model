@@ -631,6 +631,7 @@ export async function resolveResumedArmEvidence(input: {
     let capture: Record<string, unknown> | null = null;
     let readFailure: string | null = null;
     let resolvedRequestId: string | null = null;
+    let outputlessCapture: Record<string, unknown> | null = null;
     /**
      * The audit measured the failure mode precisely: the derived `…-branch` name has no producer, while the
      * arm's capture is present under the provider-result id. Try every candidate before giving up, and keep the
@@ -647,10 +648,19 @@ export async function resolveResumedArmEvidence(input: {
         continue;
       }
       if (capture) {
+        // Existence alone is not usable evaluation evidence. A recorded branch can precede
+        // its output-bearing provider capture; keep trying the bounded, job-supported candidates.
+        if (!extractCaptureOutputText(capture)) {
+          outputlessCapture = capture;
+          capture = null;
+          continue;
+        }
         resolvedRequestId = requestId;
         break;
       }
     }
+    // Preserve the named no-output failure if later candidates are absent or unreadable.
+    capture ??= outputlessCapture;
     if (!capture && readFailure !== null) {
       unreadable.push({
         endpointId: candidate.endpointId,

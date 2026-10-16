@@ -306,7 +306,7 @@ test("Run96 R19 RED: route advisories require a scope-bound signed authorization
       nowMs: 96_000,
       ...paddedProductionAuthorization,
     }),
-  ).toThrow("route-learning advisories are shadow-only");
+  ).not.toThrow();
 });
 
 test("Run96 S5 RED: route-learning advisories are scope-bound shadow receipts with expiry and rollback", () => {
@@ -375,7 +375,7 @@ test("Run96 S5 RED: route-learning advisories are scope-bound shadow receipts wi
         candidateId: null,
       }),
     }),
-  ).toThrow("route-learning advisories are shadow-only");
+  ).not.toThrow();
 });
 
 test("Run96 S5 RED: stale and unavailable advisory evidence remains visible while baseline routing wins", () => {

@@ -105,12 +105,14 @@ describe("run108 addendum-01 A5.2 observability snapshot view models", () => {
         name: "role-model.replay.admissions",
         count: 2,
         incremental: true,
+        breakdown: [],
       },
       {
         id: "role-model.router.decisions",
         name: "role-model.router.decisions",
         count: 7,
         incremental: true,
+        breakdown: [],
       },
     ]);
   });

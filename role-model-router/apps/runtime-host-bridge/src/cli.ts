@@ -88,6 +88,13 @@ import {
 const MAX_HANDOFF_RECOVERIES_PER_SWEEP = 3;
 /** How often the handed-off-replay recovery pass may list the durable jobs (measured on the live root). */
 const HANDOFF_RECOVERY_INTERVAL_MS = 120_000;
+import {
+  collectStrandedCandidates,
+  ladderMaterializationRefusals,
+  learnerFamilyEvidenceKey,
+  learnerReceiptTimeMs,
+  runLearnerRevalidationPass,
+} from "./learner-revalidation.js";
 import { evaluationAttemptOutcome } from "./queue-runtime/evaluation.js";
 // Run 101 R4: the replay plane's queue runtime (policy-driven mode, offer and
 // worker). Imported here so the auto-replay loop's composition can start it.
@@ -96,6 +103,7 @@ import {
   startLearnerQueueRuntime,
   startReplayQueueRuntime,
 } from "./queue-runtime/index.js";
+import { resolveQueueStorePath } from "./queue-runtime/store.js";
 import {
   autoReplayExecutionFromCommandReceipt,
   decodeRouteLadderRow,
@@ -146,6 +154,7 @@ import {
   hasRecordedToolResults,
   hasToolCalls,
   isBenchmarkReplaySourceRef,
+  isReplaySourceModelSelfReplay,
   isSyntheticProbeSourceClass,
   planReplayDispatchArms,
   preferEffortMatchedReplayArms,
@@ -520,6 +529,7 @@ import {
   recordFinaliseRefusal,
   recordLadderRungs,
   recordLearnerFamilyEvidence,
+  recordPendingDispatchRefusal,
   recordPersistedAdmissionFloor,
   recordReplayAdmission,
   withStageSpan,
@@ -5871,6 +5881,8 @@ export async function main(): Promise<void> {
         endpointId: string;
         modelId: string;
         reasoningEffort: string | null;
+        capabilities: readonly string[];
+        modalities: readonly string[];
       }[],
       /**
        * Run 108 addendum-02 (I2, the promotion floor): the operator's versioned counterfactual arm bound
@@ -5888,7 +5900,16 @@ export async function main(): Promise<void> {
         console.error(
           `[replay-loop] start check: operations=${operations ? "wired" : "null"} channel=${channel} port=${options.port}`,
         );
-      if (!operations || channel === "production") return null;
+      /**
+       * Run 101 production queue hotfix: the queue plane is now the production
+       * default, so production must run the same replay producer that offers
+       * admitted captures into `replay.dispatch`. The previous hard channel
+       * gate left :3456 with mode=queue but activeAutoReplayLoop=null, so no
+       * Effect queue store could ever be created. Missing operations still fail
+       * closed; production scheduling is controlled by the activation/queue
+       * policies instead of a channel veto.
+       */
+      if (!operations) return null;
       const port = options.port;
       if (!Number.isInteger(port) || port <= 0) return null;
       const ledger = createReplayLedger({
@@ -6023,8 +6044,162 @@ export async function main(): Promise<void> {
       // replay domain does not expose the sweep in the packaged composition
       // (live: `operator_capability_unavailable`). Binding is still enforced by the
       // capability itself from the envelope's channel/scope/epoch.
+      /**
+       * Live finding (isolated production-learning verification, 2026-10-15): this materialization used to be
+       * reachable ONLY through `deriveLearnerCandidates`, and queue mode retires that sweep - so the durable
+       * route ladder FROZE at version 23 with 23 evidence documents while 9 further comparison groups were
+       * created (measured: the string "ladder materialization" appeared 0 times in the runtime log). A frozen
+       * ladder is why the plan's `admitted === configured` criterion could never be reached.
+       *
+       * Materialization is EVIDENCE, not scheduling. It composes the operator's authenticated host op directly
+       * (no runtime.invoke, no authority secret, no queue worker), exactly like the finalization-signals
+       * producer that deliberately keeps running in queue mode, so it is exposed as its own operation for the
+       * loop to call whichever plane owns the learner queue.
+       */
+      const materializeDerivedLadders = async () => {
+        try {
+          const defaultsSnapshot = readRouteLearningDefaults({
+            repoRoot: options.repoRoot,
+            channel,
+            stateRoot: resolveLearningPolicyStateRoot({
+              runtimeStateRoot: options.runtimeStateRoot,
+              scopeId: options.scopeId,
+            }),
+          }).routeLearning;
+          const materialized = await operations.materializeRouteLadders({
+            configuredEndpointIds: endpoints(),
+            defaults: defaultsSnapshot,
+          });
+          if (materialized && typeof materialized === "object" && !Array.isArray(materialized)) {
+            const record = materialized as Record<string, unknown>;
+            const ladders = Array.isArray(record.ladders) ? record.ladders : [];
+            const written = ladders.filter((entry) => {
+              return (
+                Boolean(entry) &&
+                typeof entry === "object" &&
+                (entry as Record<string, unknown>).status === "written"
+              );
+            }).length;
+            /**
+             * Run 108 phase-03 F5 (R7 ladder-rung count): the rungs each WRITTEN ladder holds,
+             * read from the materialization outcome the host already receives. A row that carries
+             * neither rungs nor admitted completeness measures nothing and is skipped rather than
+             * recorded as a zero-rung ladder.
+             */
+            for (const entry of ladders) {
+              if (
+                !entry ||
+                typeof entry !== "object" ||
+                (entry as Record<string, unknown>).status !== "written"
+              )
+                continue;
+              const rungs = ladderRungCountOf(entry);
+              if (rungs !== null) recordLadderRungs(rungs, observabilityScope);
+            }
+
+            /**
+             * Run 108 addendum-04, corrected by the follow-up M3 finding: the admission-floor verdict,
+             * at the same materialization-outcome seam and for EVERY entry that carries one - not only
+             * the "written" ones, because "unchanged" is the steady state and "insufficient_evidence"
+             * is the refusal.
+             *
+             * The TWO readings are recorded under their own names and never conflated:
+             *   admission_floor            - the LIVE verdict (`floor.admitted.size`, the current
+             *                                eligibility answer the producer publishes on the entry);
+             *   admission_floor_persisted  - the PERSISTED row's own count, which the materializer
+             *                                deliberately preserves on regression (a historic value).
+             * An entry that publishes no live answer records NOTHING for the floor rather than the
+             * preserved value: a fabricated green is worse than an absent observation.
+             */
+            for (const entry of ladders) {
+              const admitted = admissionFloorVerdictOf(entry);
+              if (admitted !== null) recordAdmissionFloor(admitted, observabilityScope);
+              const persisted = persistedAdmissionFloorVerdictOf(entry);
+              if (persisted !== null) recordPersistedAdmissionFloor(persisted, observabilityScope);
+            }
+            if (written > 0)
+              console.error(`[run105] ladder materialization wrote ${written} ladder row(s)`);
+            /**
+             * Live finding (isolated production-learning verification, 2026-10-15): a DETERMINISTIC refusal was
+             * completely silent. Only "written" entries logged anything, so an entry refused with
+             * `evidence_metadata_capacity_exceeded` (measured: floor admitted 5 / configured 6 / met=true, yet the
+             * ladder stayed frozen at its previous value) was indistinguishable from "nothing changed yet". The
+             * refusal is not transient and no later tick will fix it: the evidence metadata only grows, so once
+             * a family's provenance exceeds the writer's 16 KiB document cap EVERY subsequent attempt is refused
+             * and the durable row keeps its old value forever. A deterministic refusal has to say so, by name,
+             * with the reason the writer returned - otherwise an operator reads a stalled ladder as slow progress.
+             */
+            for (const refusal of ladderMaterializationRefusals(ladders)) {
+              console.error(
+                `[run105] ladder materialization ${refusal.status}:${refusal.roleId}/${refusal.taskTypeId} reason=${refusal.reason} floor=${JSON.stringify(refusal.floor)}`,
+              );
+            }
+          }
+        } catch (materializationError) {
+          /**
+           * This is a TRANSIENT SKIP, not a lost row, and the message has to say so. The sweep runs
+           * once per auto-replay tick and materialization is a pure function of durable evidence, so
+           * the next tick recomputes and writes whatever this attempt missed. Measured live: the log
+           * held "wrote 1 ladder row(s)" at lines 159 and 169 around a "degraded" at 162, i.e. the
+           * very next tick recovered, and the first-time ladder for that family materialized v1 -> v4
+           * across the same window.
+           *
+           * Run 108 COUNTER-CASE, measured on the stage RC: that recovery is NOT guaranteed while the lock
+           * contention persists. Over a 21-minute window a run took 40 ticks with skipped=5 and
+           * `wrote=0` for the WHOLE process - no ladder row was written at any point - and one of those ticks
+           * dragged 427083 ms. So "the next tick writes whatever this attempt missed" holds only while the
+           * contention is transient. The contention is a genuine structural conflict (two extension hosts
+           * holding read-write handles on one evaluation store, with a busy_timeout set to the same 5000 ms
+           * constant as the lock hold), and under it this skip repeats indefinitely. Read the reassurance
+           * below as "recoverable in principle", not as "recovered".
+           *
+           * The bare "degraded: database is locked" invited the opposite reading - that a family
+           * could reach its admission floor and silently get no row - and that misreading is how this
+           * was originally recorded as data loss. Naming the cause and the retry costs nothing and
+           * stops the next reader making the same mistake.
+           */
+          const cause = String(
+            (materializationError as { message?: unknown })?.message ?? materializationError,
+          ).slice(0, 160);
+          console.error(
+            `[run105] ladder materialization skipped this tick (retried next tick, no row is lost): ${cause}`,
+          );
+          // Run 108 R3: the failure is ALSO a durable, operator-visible receipt in the knowledge
+          // store - best-effort so a busy store (the very failure being reported) cannot break the
+          // tick. Content-keyed, so repeated identical failures keep one row. Materialization itself
+          // runs before the runtime is fully up (host-op only, see above), so the receipt is
+          // recorded only when the extension runtime is available. Review B1 (03.5): the local
+          // `runtime`/`envelopeFor` are declared AFTER this function runs - read the ref and the
+          // enclosing learnerSweepEnvelope directly, or the guard itself throws a TDZ ReferenceError
+          // on the exact busy-store case this receipt exists for.
+          const runtimeAtCatch = extensionRuntimeRef.current;
+          if (runtimeAtCatch !== null) {
+            try {
+              await runtimeAtCatch.invoke(
+                "knowledge-store",
+                learnerSweepEnvelope({
+                  requestPrefix: "learner-derivation",
+                  extensionId: "knowledge-store",
+                  capability: "knowledge:record-degradation",
+                  value: { capability: "ladder-materialization", reason: cause },
+                }),
+              );
+            } catch {
+              // the console line above remains the fallback surface
+            }
+          }
+        }
+      };
       const sweepOperations = {
         ...operations,
+        /**
+         * Evidence producer, reachable in EVERY plane mode. Materialization composes the operator's
+         * authenticated host op directly (no queue worker, no authority secret), so retiring the learner
+         * sweeps must not retire it - a frozen ladder is exactly what a queue-mode runtime produced before this
+         * existed (durable ladder stuck at version 23 while new comparison groups finalized). It deliberately
+         * overrides the spread operation of the same name, whose body argument this caller never uses.
+         */
+        materializeRouteLadders: async (): Promise<unknown> => await materializeDerivedLadders(),
         async expireStaleReplayJobs(input: Record<string, unknown>) {
           const runtime = extensionRuntimeRef.current;
           if (!runtime) return { expiredCount: 0, expired: [] };
@@ -6173,6 +6348,10 @@ export async function main(): Promise<void> {
             ...(extensionId === "knowledge-store" ? { payload: value } : {}),
             evaluationAuthoritySecret: authority.authoritySecret,
           });
+          const onlyCandidateId =
+            typeof input.candidateId === "string" && input.candidateId.trim()
+              ? input.candidateId.trim()
+              : null;
           const listing = await runtime.invoke(
             "knowledge-worker",
             envelopeFor("knowledge-worker", "knowledge:list-candidates", {
@@ -6182,6 +6361,16 @@ export async function main(): Promise<void> {
                * only a page that advances can reach a candidate nothing ever validated.
                */
               limit: 32,
+              /**
+               * Live finding (isolated production-learning verification, 2026-10-15): a per-candidate
+               * `learner.promote` job scoped the sweep to its candidate id, but the listing could only answer
+               * the NEWEST page - so a candidate past that page was never examined and the job failed
+               * terminally after its attempts with "no finalized comparison was available to validate",
+               * even though its comparison HAD finalized. Measured on the isolated store: 41 such failures,
+               * 30 of them outside the newest 32 candidates. A named candidate is a direct lookup and must
+               * not depend on page position.
+               */
+              ...(onlyCandidateId ? { candidateId: onlyCandidateId } : {}),
               ...(learnerCandidateCursor === null
                 ? {}
                 : {
@@ -6268,7 +6457,24 @@ export async function main(): Promise<void> {
                     return record;
                   })();
                   const candidateId = parsed.candidateId ?? record.candidateId;
-                  return typeof candidateId === "string" ? candidateId : null;
+                  if (typeof candidateId !== "string" || !candidateId) return null;
+                  /**
+                   * Live finding (isolated production-learning verification, 2026-10-15): a receipt with
+                   * decision `insufficient_evidence` records a NOT-YET verdict, not validation work. Counting
+                   * it here retired the candidate permanently, because this predicate is what excludes work:
+                   * a candidate declined while its family evidence was thin was never revisited even after the
+                   * aggregate far exceeded the floor (measured: 62 candidates at decisive 50-59 / development
+                   * 23 / distinctCaptures 9-10 against floors of 3/1/3, all still `insufficient_evidence`).
+                   * The receipt id is content-keyed on the decision, so re-validating a refusal mints a
+                   * DIFFERENT receipt when the evidence finally clears the floor and overwrites nothing.
+                   */
+                  const decision =
+                    typeof parsed.decision === "string"
+                      ? parsed.decision
+                      : typeof record.state === "string"
+                        ? record.state
+                        : "";
+                  return decision === "insufficient_evidence" ? null : candidateId;
                 })
                 .filter((value): value is string => value !== null);
             })(),
@@ -6341,10 +6547,6 @@ export async function main(): Promise<void> {
            * `learner.promote` job is per candidate (`jobIdRule: candidateId`), so a job-scoped consume
            * must not be satisfied by - or blocked behind - another candidate's work.
            */
-          const onlyCandidateId =
-            typeof input.candidateId === "string" && input.candidateId.trim()
-              ? input.candidateId.trim()
-              : null;
           const pending = candidates.filter((candidate) => {
             const candidateId =
               typeof candidate.candidateId === "string" ? candidate.candidateId : null;
@@ -6396,6 +6598,15 @@ export async function main(): Promise<void> {
           };
           const groups = await readComparisonGroups();
           let consumed = 0;
+          /**
+           * Live finding (isolated production-learning verification, 2026-10-15): a receipt with decision
+           * `insufficient_evidence` is a NOT-YET verdict. It must not count as a promotion - otherwise a
+           * per-candidate `learner.promote` job whose candidate is still refused would be classified
+           * "promoted" (classifyLearnerPromotionResult reads `consumed > 0` that way), the job would
+           * complete, and the candidate would be dropped permanently because a completed queue job is never
+           * re-enqueued. Counted separately so a refusal is visible without being mistaken for success.
+           */
+          let refused = 0;
           /**
            * Run 105 R9/D7: derived activation has no per-sweep activation step, so the counter stays
            * at zero and is only kept because the sweep's answer shape (consumed/activated/remaining)
@@ -6586,7 +6797,8 @@ export async function main(): Promise<void> {
                   },
                 }),
               );
-              consumed += 1;
+              if (receipt.decision === "validate") consumed += 1;
+              else refused += 1;
               /**
                * Run 107 P13: the durable record is the runtime's own shape and keeps the family evidence; the
                * *contract* artifact is the documented vocabulary, and until this slice nothing emitted one -
@@ -6793,6 +7005,271 @@ export async function main(): Promise<void> {
           };
         },
         /**
+         * Live finding (isolated production-learning verification, 2026-10-15): the missing driver for QUEUE mode.
+         *
+         * Once the learner plane is authoritative, the sweep above steps aside, and a candidate whose family
+         * evidence was too thin when it was derived has no path back to validation:
+         *  - `learner.promote` is offered exactly once, from the derivation callback;
+         *  - the durable job id is `learner.promote:<candidateId>` (one candidate = one job forever);
+         *  - the queue's `offer` is INSERT OR IGNORE, so re-offering an existing terminal job is a NO-OP;
+         *  - and a completed queue job is never re-enqueued.
+         *
+         * Measured on the isolated store: 51 stranded shadow candidates - 31 with no promotion job at all
+         * (nothing was ever enqueued) and 20 with a terminal failure. This pass re-drives them, and it is
+         * EVIDENCE-CHANGE gated: a candidate is only revisited when a finalized comparison for its own
+         * (routePackage x taskType) is strictly newer than the receipt that refused it, so unchanged evidence
+         * cannot loop the same doomed attempt every tick. It re-drives validation only - the worker's own
+         * floors and guardrails still decide the verdict, and no receipt is ever fabricated.
+         */
+        async revalidateStrandedLearnerCandidates(input: Record<string, unknown> = {}) {
+          const runtime = extensionRuntimeRef.current;
+          if (!runtime) return { examined: 0, offered: 0, revived: 0, refused: 0 };
+          const authority = await (async () => {
+            try {
+              return await resolveDurableEvaluationAuthority({
+                channel,
+                stateRoot: options.runtimeStateRoot,
+                scopeId: options.scopeId,
+              });
+            } catch {
+              return null;
+            }
+          })();
+          if (!authority) return { examined: 0, offered: 0, revived: 0, refused: 0 };
+          const sweepEnvelope = (
+            extensionId: string,
+            capability: string,
+            value: Record<string, unknown>,
+          ) => ({
+            requestId: `learner-revalidation:${capability}:${Date.now()}`,
+            sessionId: `learner-revalidation:${options.scopeId}`,
+            protocolVersion: "1.1.0",
+            channel,
+            scope: options.scopeId,
+            authorizationEpoch: 1,
+            capability,
+            value,
+            ...(extensionId === "knowledge-store" ? { payload: value } : {}),
+            evaluationAuthoritySecret: authority.authoritySecret,
+          });
+          const decode = (value: unknown) =>
+            decodeExternalizedOperatorReadback({
+              stateRoot: options.runtimeStateRoot,
+              scopeId: options.scopeId,
+              value: unwrapCapabilityPayload(value),
+            });
+          try {
+            /**
+             * PAGE the listing, never one newest page: measured on the isolated store, only 21 of 51 stranded
+             * candidates sat inside the newest 64, so a single no-cursor read would silently miss 30 of them
+             * and still report a clean pass - the same page-bounded defect this run has already fixed twice.
+             */
+            const candidates = await collectStrandedCandidates({
+              pageSize: 64,
+              maxPages: 6,
+              readPage: async (cursor) => {
+                const decoded = decode(
+                  await runtime.invoke(
+                    "knowledge-worker",
+                    sweepEnvelope("knowledge-worker", "knowledge:list-candidates", {
+                      limit: 64,
+                      ...(cursor
+                        ? {
+                            afterCreatedAtMs: cursor.afterCreatedAtMs,
+                            afterCandidateId: cursor.afterCandidateId,
+                          }
+                        : {}),
+                    }),
+                  ),
+                );
+                const rows = Array.isArray(decoded)
+                  ? decoded
+                  : Array.isArray((decoded as { candidates?: unknown[] })?.candidates)
+                    ? (decoded as { candidates: unknown[] }).candidates
+                    : [];
+                return rows.filter(
+                  (row): row is Record<string, unknown> => Boolean(row) && typeof row === "object",
+                );
+              },
+            });
+            if (candidates.length === 0) return { examined: 0, offered: 0, revived: 0, refused: 0 };
+
+            // The receipt that refused each candidate, with the time it was written.
+            const receiptListing = decode(
+              await runtime.invoke(
+                "knowledge-store",
+                sweepEnvelope("knowledge-store", "knowledge:list-learning", {
+                  scopeId: options.scopeId,
+                  kind: "validation_receipt",
+                  limit: 512,
+                }),
+              ),
+            );
+            const receiptRows = Array.isArray(receiptListing)
+              ? receiptListing
+              : Array.isArray((receiptListing as { records?: unknown[] })?.records)
+                ? (receiptListing as { records: unknown[] }).records
+                : [];
+            const receipts = new Map<string, { decision: string; atMs: number | null }>();
+            for (const row of receiptRows) {
+              if (!row || typeof row !== "object" || Array.isArray(row)) continue;
+              const record = row as Record<string, unknown>;
+              const parsed = (() => {
+                if (record.record && typeof record.record === "object") {
+                  return record.record as Record<string, unknown>;
+                }
+                if (typeof record.record_json === "string") {
+                  try {
+                    return JSON.parse(record.record_json) as Record<string, unknown>;
+                  } catch {
+                    return {};
+                  }
+                }
+                return record;
+              })();
+              const candidateId = parsed.candidateId ?? record.candidateId;
+              if (typeof candidateId !== "string" || !candidateId) continue;
+              const decision =
+                typeof parsed.decision === "string"
+                  ? parsed.decision
+                  : typeof record.state === "string"
+                    ? record.state
+                    : "";
+              // Lean finding: the listing projects no timestamp column, so the time is read from the
+              // record body (createdAt ISO) with the row fields used when a caller supplies them.
+              const when = learnerReceiptTimeMs({
+                ...(parsed as Record<string, unknown>),
+                ...(typeof record.atMs === "number" ? { atMs: record.atMs } : {}),
+                ...(typeof record.at_ms === "number" ? { at_ms: record.at_ms } : {}),
+              });
+              const previous = receipts.get(candidateId);
+              // Keep the LATEST receipt: it is the verdict a re-drive would supersede.
+              if (
+                !previous ||
+                (when !== null && (previous.atMs === null || when > previous.atMs))
+              ) {
+                receipts.set(candidateId, { decision, atMs: when });
+              }
+            }
+
+            // Newest finalized evidence per (routePackage x taskType).
+            const groups = (
+              await collectPagedComparisonGroups({
+                readPage: async (cursor) => {
+                  const decoded = decode(
+                    await runtime.invoke(
+                      "evaluation-core",
+                      sweepEnvelope("evaluation-core", "evaluation:list-groups", {
+                        page: true,
+                        limit: LEARNING_GROUP_PAGE_LIMIT,
+                        ...(cursor ? { cursor } : {}),
+                      }),
+                    ),
+                  );
+                  return decoded;
+                },
+              }).catch(() => [])
+            ).filter(
+              (group): group is Record<string, unknown> =>
+                Boolean(group) && typeof group === "object" && !Array.isArray(group),
+            );
+            const newestEvidenceAtMs = new Map<string, number>();
+            for (const group of groups) {
+              const result =
+                group.result && typeof group.result === "object"
+                  ? (group.result as Record<string, unknown>)
+                  : group;
+              if (String(result.status ?? group.status ?? "") !== "finalized") continue;
+              const comparability =
+                (group.comparability as Record<string, unknown> | undefined) ??
+                (result.comparability as Record<string, unknown> | undefined) ??
+                {};
+              const taskTypeId =
+                typeof comparability.taskTypeId === "string" ? comparability.taskTypeId.trim() : "";
+              if (!taskTypeId) continue;
+              const atMs = Number(group.createdAtMs ?? group.created_at_ms);
+              if (!Number.isFinite(atMs)) continue;
+              for (const field of ["sourceCandidateRef", "counterfactualCandidateRef"] as const) {
+                const routePackage =
+                  typeof comparability[field] === "string"
+                    ? String(comparability[field]).trim()
+                    : "";
+                if (!routePackage) continue;
+                const key = learnerFamilyEvidenceKey(routePackage, taskTypeId);
+                const previous = newestEvidenceAtMs.get(key);
+                if (previous === undefined || atMs > previous) newestEvidenceAtMs.set(key, atMs);
+              }
+            }
+
+            // Promotion job state, read from the local queue store the host already owns.
+            const promotionJobState = (candidateId: string): string | null => {
+              try {
+                const filePath = resolveQueueStorePath({ stateRoot: queueStateRoot });
+                if (!existsSync(filePath)) return null;
+                const database = new DatabaseSync(filePath, { readOnly: true });
+                try {
+                  const row = database
+                    .prepare("SELECT state FROM effect_queue WHERE queue_name = ? AND id = ?")
+                    .get("learner.promote", `learner.promote:${candidateId}`) as
+                    | { state?: unknown }
+                    | undefined;
+                  return typeof row?.state === "string" ? row.state : null;
+                } finally {
+                  database.close();
+                }
+              } catch {
+                return null;
+              }
+            };
+
+            return await runLearnerRevalidationPass({
+              candidates: candidates.map((candidate) => {
+                const scope =
+                  candidate.scope && typeof candidate.scope === "object"
+                    ? (candidate.scope as Record<string, unknown>)
+                    : {};
+                const record = receipts.get(String(candidate.candidateId));
+                return {
+                  candidateId: String(candidate.candidateId),
+                  routePackage:
+                    typeof scope.routePackage === "string"
+                      ? scope.routePackage
+                      : typeof candidate.routePackage === "string"
+                        ? candidate.routePackage
+                        : null,
+                  taskTypeId: typeof scope.taskTypeId === "string" ? scope.taskTypeId : null,
+                  receiptDecision: record?.decision ?? "insufficient_evidence",
+                  receiptCreatedAtMs: record?.atMs ?? null,
+                };
+              }),
+              newestEvidenceAtMs,
+              promotionJobState,
+              offer: async (job: { readonly candidateId: string }) => {
+                if (lateBoundLearnerQueues.promote.mode === "legacy") {
+                  return { enqueued: false, reason: "learner_queue_not_authoritative" };
+                }
+                return await lateBoundLearnerQueues.promote.offer({ candidateId: job.candidateId });
+              },
+              revive: async (candidateId: string) =>
+                (await operations.retryQueueJob(
+                  "learner.promote",
+                  `learner.promote:${candidateId}`,
+                )) as { ok: boolean; reason?: string },
+              ...(Number.isSafeInteger(input.limit) && Number(input.limit) > 0
+                ? { limit: Number(input.limit) }
+                : { limit: 5 }),
+            });
+          } catch (error) {
+            return {
+              examined: 0,
+              offered: 0,
+              revived: 0,
+              refused: 0,
+              lastError: String((error as { message?: unknown })?.message ?? error).slice(0, 200),
+            };
+          }
+        },
+        /**
          * Run 100 addendum 10, S13: the learner's durable derivation half.
          *
          * Measured 2026-09-25 on the live root: 483 learnable finalized comparisons, 202 candidates and **281
@@ -6813,131 +7290,6 @@ export async function main(): Promise<void> {
            * authenticated host op only (no runtime.invoke, no authority secret), so it proceeds even
            * when every legacy derivation precondition below fails.
            */
-          const materializeDerivedLadders = async () => {
-            try {
-              const defaultsSnapshot = readRouteLearningDefaults({
-                repoRoot: options.repoRoot,
-                channel,
-                stateRoot: resolveLearningPolicyStateRoot({
-                  runtimeStateRoot: options.runtimeStateRoot,
-                  scopeId: options.scopeId,
-                }),
-              }).routeLearning;
-              const materialized = await operations.materializeRouteLadders({
-                configuredEndpointIds: endpoints(),
-                defaults: defaultsSnapshot,
-              });
-              if (
-                materialized &&
-                typeof materialized === "object" &&
-                !Array.isArray(materialized)
-              ) {
-                const record = materialized as Record<string, unknown>;
-                const ladders = Array.isArray(record.ladders) ? record.ladders : [];
-                const written = ladders.filter((entry) => {
-                  return (
-                    Boolean(entry) &&
-                    typeof entry === "object" &&
-                    (entry as Record<string, unknown>).status === "written"
-                  );
-                }).length;
-                /**
-                 * Run 108 phase-03 F5 (R7 ladder-rung count): the rungs each WRITTEN ladder holds,
-                 * read from the materialization outcome the host already receives. A row that carries
-                 * neither rungs nor admitted completeness measures nothing and is skipped rather than
-                 * recorded as a zero-rung ladder.
-                 */
-                for (const entry of ladders) {
-                  if (
-                    !entry ||
-                    typeof entry !== "object" ||
-                    (entry as Record<string, unknown>).status !== "written"
-                  )
-                    continue;
-                  const rungs = ladderRungCountOf(entry);
-                  if (rungs !== null) recordLadderRungs(rungs, observabilityScope);
-                }
-
-                /**
-                 * Run 108 addendum-04, corrected by the follow-up M3 finding: the admission-floor verdict,
-                 * at the same materialization-outcome seam and for EVERY entry that carries one - not only
-                 * the "written" ones, because "unchanged" is the steady state and "insufficient_evidence"
-                 * is the refusal.
-                 *
-                 * The TWO readings are recorded under their own names and never conflated:
-                 *   admission_floor            - the LIVE verdict (`floor.admitted.size`, the current
-                 *                                eligibility answer the producer publishes on the entry);
-                 *   admission_floor_persisted  - the PERSISTED row's own count, which the materializer
-                 *                                deliberately preserves on regression (a historic value).
-                 * An entry that publishes no live answer records NOTHING for the floor rather than the
-                 * preserved value: a fabricated green is worse than an absent observation.
-                 */
-                for (const entry of ladders) {
-                  const admitted = admissionFloorVerdictOf(entry);
-                  if (admitted !== null) recordAdmissionFloor(admitted, observabilityScope);
-                  const persisted = persistedAdmissionFloorVerdictOf(entry);
-                  if (persisted !== null)
-                    recordPersistedAdmissionFloor(persisted, observabilityScope);
-                }
-                if (written > 0)
-                  console.error(`[run105] ladder materialization wrote ${written} ladder row(s)`);
-              }
-            } catch (materializationError) {
-              /**
-               * This is a TRANSIENT SKIP, not a lost row, and the message has to say so. The sweep runs
-               * once per auto-replay tick and materialization is a pure function of durable evidence, so
-               * the next tick recomputes and writes whatever this attempt missed. Measured live: the log
-               * held "wrote 1 ladder row(s)" at lines 159 and 169 around a "degraded" at 162, i.e. the
-               * very next tick recovered, and the first-time ladder for that family materialized v1 -> v4
-               * across the same window.
-               *
-               * Run 108 COUNTER-CASE, measured on the stage RC: that recovery is NOT guaranteed while the lock
-               * contention persists. Over a 21-minute window a run took 40 ticks with skipped=5 and
-               * `wrote=0` for the WHOLE process - no ladder row was written at any point - and one of those ticks
-               * dragged 427083 ms. So "the next tick writes whatever this attempt missed" holds only while the
-               * contention is transient. The contention is a genuine structural conflict (two extension hosts
-               * holding read-write handles on one evaluation store, with a busy_timeout set to the same 5000 ms
-               * constant as the lock hold), and under it this skip repeats indefinitely. Read the reassurance
-               * below as "recoverable in principle", not as "recovered".
-               *
-               * The bare "degraded: database is locked" invited the opposite reading - that a family
-               * could reach its admission floor and silently get no row - and that misreading is how this
-               * was originally recorded as data loss. Naming the cause and the retry costs nothing and
-               * stops the next reader making the same mistake.
-               */
-              const cause = String(
-                (materializationError as { message?: unknown })?.message ?? materializationError,
-              ).slice(0, 160);
-              console.error(
-                `[run105] ladder materialization skipped this tick (retried next tick, no row is lost): ${cause}`,
-              );
-              // Run 108 R3: the failure is ALSO a durable, operator-visible receipt in the knowledge
-              // store - best-effort so a busy store (the very failure being reported) cannot break the
-              // tick. Content-keyed, so repeated identical failures keep one row. Materialization itself
-              // runs before the runtime is fully up (host-op only, see above), so the receipt is
-              // recorded only when the extension runtime is available. Review B1 (03.5): the local
-              // `runtime`/`envelopeFor` are declared AFTER this function runs - read the ref and the
-              // enclosing learnerSweepEnvelope directly, or the guard itself throws a TDZ ReferenceError
-              // on the exact busy-store case this receipt exists for.
-              const runtimeAtCatch = extensionRuntimeRef.current;
-              if (runtimeAtCatch !== null) {
-                try {
-                  await runtimeAtCatch.invoke(
-                    "knowledge-store",
-                    learnerSweepEnvelope({
-                      requestPrefix: "learner-derivation",
-                      extensionId: "knowledge-store",
-                      capability: "knowledge:record-degradation",
-                      value: { capability: "ladder-materialization", reason: cause },
-                    }),
-                  );
-                } catch {
-                  // the console line above remains the fallback surface
-                }
-              }
-            }
-          };
-          await materializeDerivedLadders();
           const runtime = extensionRuntimeRef.current;
           if (!runtime) return { examined: 0, derived: 0, pending: 0 };
           const authority = await (async () => {
@@ -7870,9 +8222,72 @@ export async function main(): Promise<void> {
             const { readPendingRouteDispatches } = await import("./route-challenge-evidence.js");
             return await readPendingRouteDispatches({
               request,
-              readCapture: async (requestId) => operations.readLocalRouteCapture({ requestId }),
-              readQueueJobs: async () =>
-                operations.readQueueJobs("replay.dispatch", { limit: "500" }),
+              // Pending state needs authenticated root metadata, not thousands of transcript artifacts.
+              readCapture: async (requestId) =>
+                operations.readLocalRouteCapture({ requestId, metadataOnly: true }),
+              readQueueJobs: async () => {
+                /**
+                 * Run 101 addendum 44: pending-route reconciliation must not go through the sidecar's
+                 * per-job queue readback. Measured live on production :3456, two replay.dispatch rows
+                 * made the sidecar job-detail endpoint exceed 120s; five worker attempts then died at
+                 * the 10m Effect timeout without ever producing downstream evaluation rows. The host
+                 * owns the same SQLite queue store, so this read is a bounded local projection that
+                 * includes the payload the planner needs and lets route-challenge-evidence skip
+                 * per-row hydration.
+                 */
+                const { resolveQueueStorePath } = await import("./queue-runtime/store.js");
+                const filePath = resolveQueueStorePath({ stateRoot: queueStateRoot });
+                const empty = {
+                  schemaVersion: "role-model.operator-queue-jobs.v1",
+                  queue: "replay.dispatch",
+                  available: false,
+                  jobs: [],
+                };
+                if (!existsSync(filePath)) return empty;
+                let database: DatabaseSync | undefined;
+                try {
+                  database = new DatabaseSync(filePath, { readOnly: true });
+                  database.exec("PRAGMA query_only=ON; PRAGMA busy_timeout=1000;");
+                  const rows = database
+                    .prepare(
+                      `SELECT id, queue_name, element, state, attempts, visible_at, acquired_at,
+                              acquired_by, created_at, updated_at, last_failure
+                         FROM effect_queue WHERE queue_name = ?
+                         ORDER BY updated_at DESC LIMIT 500`,
+                    )
+                    .all("replay.dispatch");
+                  return {
+                    schemaVersion: "role-model.operator-queue-jobs.v1",
+                    queue: "replay.dispatch",
+                    available: true,
+                    jobs: rows.map((row) => {
+                      let payload: unknown = null;
+                      try {
+                        payload = JSON.parse(String(row.element));
+                      } catch {
+                        payload = String(row.element);
+                      }
+                      const state = String(row.state);
+                      return {
+                        id: String(row.id),
+                        queue: String(row.queue_name),
+                        state,
+                        attempts: Number(row.attempts ?? 0),
+                        payload,
+                        visibleAt: row.visible_at ?? null,
+                        acquiredAt: row.acquired_at ?? null,
+                        acquiredBy: row.acquired_by ?? null,
+                        createdAt: row.created_at ?? null,
+                        updatedAt: row.updated_at ?? null,
+                        lastError: row.last_failure ?? null,
+                        terminal: state === "completed" || state === "failed",
+                      };
+                    }),
+                  };
+                } finally {
+                  database?.close();
+                }
+              },
               readQueueJob: async (jobId) => operations.readQueueJob("replay.dispatch", jobId),
               invoke: async (extensionId, capability, value) =>
                 decodeExternalizedOperatorReadback({
@@ -7891,6 +8306,15 @@ export async function main(): Promise<void> {
                     ),
                   ),
                 }),
+              // Plan phase 3: every refusal reason is named HERE (unconditional log) and recorded as an
+              // observability metric so the Observe -> Observability page shows which gate refused. This is the
+              // same seam the D11 comment above forbids new silent-null providers from repeating.
+              onDiagnostic: (reason, detail) => {
+                console.error(
+                  `[route-dispatch-pending] degraded: ${reason}${detail ? ` ${detail}` : ""}`,
+                );
+                recordPendingDispatchRefusal(reason, observabilityScope);
+              },
             });
           } catch (cause) {
             // D11: the swallowed error is the whole reason this provider was opaque; name it.
@@ -9055,11 +9479,22 @@ export async function main(): Promise<void> {
             endpointId: endpoint.identity.endpoint_id,
             capabilities: endpoint.declared.capabilities,
             modalities: endpoint.declared.modalities,
+            // The model identity the arm-selector needs to refuse a self-replay.
+            modelId: endpoint.identity.model_id,
+            reasoningEffort: endpoint.identity.reasoning_effort ?? null,
           }));
           const replayCandidateRejections: ReplayCandidateRejection[] = [];
           const distinctReplayCandidates = selectReplayCandidates({
             configuredEndpointIds: candidateEndpointIds,
             sourceEndpointId: capturedSourceEndpointId,
+            // Live finding (isolated production-learning verification, 2026-10-15): excluding only the
+            // source ENDPOINT admitted a second endpoint serving the SAME model at the SAME effort, so a
+            // served route was replayed against itself. The source model identity is what has to be excluded.
+            sourceModelId: typeof sourceCapture.modelId === "string" ? sourceCapture.modelId : null,
+            sourceReasoningEffort:
+              typeof sourceCapture.reasoningEffort === "string"
+                ? sourceCapture.reasoningEffort
+                : null,
             // Run 98 addendum 33 S3: rotate the counterfactual per request so the comparison graph gains
             // edges across captures rather than repeating one pair (the live store's 465-of-465 star).
             rotationKey: requestId,
@@ -9286,12 +9721,27 @@ export async function main(): Promise<void> {
           // Run 105 bug 3: the configured judge may also be a candidate endpoint, so it is NOT excluded
           // here. Only the source is filtered; a challenger that equals the judge is de-conflicted at the
           // evaluation (dedupeJudgeAgainstPair picks an alternative judge).
+          /**
+           * Live finding (isolated production-learning verification, 2026-10-15): excluding only the
+           * source ENDPOINT let a second endpoint serving the SAME model at the SAME reasoning effort
+           * through, so the served route was replayed against itself, the judge scored one model against
+           * itself (0.50/0.00) and the group finalized with the same model on both sides. The selection
+           * layer now rejects that by model identity; this filter re-checks it AFTER effort matching, which
+           * can repoint an arm onto a same-model variant and reintroduce the self-replay.
+           */
           const counterfactualPackages = candidatePackages.filter(
-            (candidate) => candidate.endpointId !== sourceEndpointId,
+            (candidate) =>
+              candidate.endpointId !== sourceEndpointId &&
+              !isReplaySourceModelSelfReplay({
+                modelId: candidate.modelId,
+                reasoningEffort: candidate.reasoningEffort ?? null,
+                sourceModelId,
+                sourceReasoningEffort: replaySourceReasoningEffort,
+              }),
           );
           if (counterfactualPackages.length === 0) {
             throw new Error(
-              "supervised replay requires an eligible counterfactual distinct from the source endpoint",
+              "supervised replay requires an eligible counterfactual distinct from the source endpoint and source model",
             );
           }
           /**
@@ -11619,6 +12069,10 @@ export async function main(): Promise<void> {
                 typeof reasoningEffort === "string" && reasoningEffort.trim()
                   ? reasoningEffort
                   : null,
+              // The declared capability/modality sets the arm eligibility rule reads. They were never
+              // carried here, so the live tick could not apply R1 at all (2026-10-15).
+              capabilities: [...(endpoint.declared?.capabilities ?? [])],
+              modalities: [...(endpoint.declared?.modalities ?? [])],
             };
           }),
         /**
@@ -12003,7 +12457,9 @@ export async function main(): Promise<void> {
               });
               qaStartupReceipts.set(extension.descriptor.id, { ...receipt, requestId });
             }
-            await drainPostObservationOutbox(runtime);
+            // D7a: do not gate readiness on the whole durable backlog. The outbox has bounded,
+            // independent retry ownership, so start it here and let readiness proceed while delivery continues.
+            schedulePostObservationDrain(runtime);
             // A prior cloud outage must not require an unrelated new provider request
             // before its already-authorized, durable aggregate is retried.
             await currentPostObservationOperations()?.retryContributionAggregates();
