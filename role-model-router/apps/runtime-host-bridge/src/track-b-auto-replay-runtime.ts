@@ -19,6 +19,10 @@ import {
 } from "@role-model-router/core";
 import { Effect, Ref, Schedule } from "effect";
 
+// Shared with the readback (route-challenge-evidence.ts): a restricted projection over more
+// refs than this is refused, so the queue producer must slice its pending page to the same bound.
+import { MAX_RESTRICTED_REPLAYABLE_CAPTURES } from "./route-challenge-evidence.js";
+
 import {
   type AutoReplayCapture,
   type AutoReplayExecution,
@@ -2175,6 +2179,7 @@ export function startAutoReplayLoop(input: {
                             Boolean(capture.captureRef),
                         )
                         .map((capture) => capture.captureRef)
+                        .slice(0, MAX_RESTRICTED_REPLAYABLE_CAPTURES)
                     : undefined;
                 if (queueProducerPageRefs !== undefined && queueProducerPageRefs.length === 0) {
                   // Addendum 46: the queue's producer only feeds what the bounded pending page already

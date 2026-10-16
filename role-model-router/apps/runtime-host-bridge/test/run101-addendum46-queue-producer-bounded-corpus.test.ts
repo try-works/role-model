@@ -178,3 +178,29 @@ test("addendum46: a focus family with nothing on the pending page is skipped, no
     h.cleanup();
   }
 });
+test("addendum46: the queue producer slices the pending page refs to the readback cap", async () => {
+  const h = harness();
+  currentLedger = h.ledger;
+  try {
+    const pending = Array.from({ length: 12 }, (_, i) => ({
+      captureRef: `req-page-${i}`,
+      roleId: "coder",
+      taskTypeId: "coder.debug.root_cause",
+      sourceEndpointId: "endpoint-a",
+      sourceModelId: "model-a",
+      sourceClass: "live",
+      hasRecordedToolResults: false,
+    }));
+    const corpusRequests: Array<{ roleId?: string; taskTypeId?: string; onlyCaptureRefs?: readonly string[] }> = [];
+    const offers: Array<Record<string, unknown>> = [];
+    const { loop } = startLoop({ pending, corpusRequests, offers });
+    await loop.tick().catch(() => undefined);
+    loop.stop();
+    for (const request of corpusRequests) {
+      expect(request.onlyCaptureRefs?.length ?? 0).toBeLessThanOrEqual(8);
+    }
+  } finally {
+    h.cleanup();
+  }
+});
+
