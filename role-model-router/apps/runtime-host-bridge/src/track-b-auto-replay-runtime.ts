@@ -2151,11 +2151,47 @@ export function startAutoReplayLoop(input: {
                  * projection is restricted to that claim. The walk still visits every candidate task
                  * (the claim's task is only discoverable by asking), but each visit is now one exact
                  * capsule read instead of the family's whole telemetry corpus.
+                 *
+                 * Run 101 addendum 46 (measured live on production :3456, 2026-10-16): the INTERVAL tick
+                 * is the queue's producer, and it held the same unbounded family projection the worker
+                 * path just escaped - 398 live captures for one focus family, one 10-50 s exact capsule
+                 * read per id, so the walk never finished inside the stale-tick deadline and the parallel
+                 * queue workers starved (zero offered rows). In queue mode the producer only ever
+                 * dispatches captures that are ALREADY on the bounded pending page it just read, so the
+                 * focus corpus read is restricted to exactly those refs. A focus family with nothing on
+                 * the page is skipped by NoReplayableRequest below - never projected as its whole
+                 * historical corpus.
                  */
+                const focusRoleId = plannedFocus.roleId;
+                const focusTaskTypeId = plannedFocus.taskTypeId;
+                const queueProducerPageRefs =
+                  input.dispatchQueue?.mode === "queue" &&
+                  !(onlyCaptureRefs && onlyCaptureRefs.length > 0)
+                    ? captures
+                        .filter(
+                          (capture) =>
+                            capture.roleId === focusRoleId &&
+                            capture.taskTypeId === focusTaskTypeId &&
+                            Boolean(capture.captureRef),
+                        )
+                        .map((capture) => capture.captureRef)
+                    : undefined;
+                if (queueProducerPageRefs !== undefined && queueProducerPageRefs.length === 0) {
+                  // Addendum 46: the queue's producer only feeds what the bounded pending page already
+                  // holds. An empty page for the focus family is a skippable task, NOT a license to
+                  // project the family's whole historical corpus through the private boundary.
+                  throw new NoReplayableRequest({
+                    detail: "queue producer pending page has no focus-family capture",
+                    roleId: plannedFocus.roleId,
+                    taskTypeId: plannedFocus.taskTypeId,
+                  });
+                }
                 const history = await input.readRouteReplayableCaptures(
                   onlyCaptureRefs && onlyCaptureRefs.length > 0
                     ? { ...plannedFocus, onlyCaptureRefs: [...onlyCaptureRefs] }
-                    : plannedFocus,
+                    : queueProducerPageRefs !== undefined
+                      ? { ...plannedFocus, onlyCaptureRefs: [...queueProducerPageRefs] }
+                      : plannedFocus,
                 );
                 if (process.env.ROLE_MODEL_FOCUS_DIAG)
                   console.error(
