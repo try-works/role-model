@@ -230,3 +230,22 @@ test("run101-a46 the inline completion defers to the queue plane, and the offer 
   expect(source.split('reason: "comparison-finalized"').length - 1).toBe(1);
   expect(source).toContain("offerLearnerDerivation,");
 });
+
+/**
+ * v0.0.18 production queue hotfix: production queue mode needs the host auto-replay
+ * producer alive. If the producer is channel-gated off, the queue policy can read
+ * `mode: queue` forever while `activeAutoReplayLoop` is null and
+ * `track-b/queues/queues.sqlite` is never created.
+ */
+test("run101 production no longer disables the auto-replay producer", () => {
+  const source = readFileSync(new URL("../src/cli.ts", import.meta.url), "utf8");
+  const start = source.indexOf("const startHostAutoReplayLoop = (");
+  const end = source.indexOf("const ledger = createReplayLedger({", start);
+  expect(start).toBeGreaterThan(0);
+  expect(end).toBeGreaterThan(start);
+  const startupGate = source.slice(start, end);
+
+  expect(startupGate).toContain("if (!operations) return null;");
+  expect(startupGate).not.toContain('channel === "production"');
+  expect(startupGate).toContain("production scheduling is controlled by the activation/queue");
+});

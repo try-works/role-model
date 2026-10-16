@@ -53,6 +53,14 @@ function harness(planeModes?: {
       called.push("sweepFinalizationSignals");
       return { written: 0 };
     },
+    revalidateStrandedLearnerCandidates: async () => {
+      called.push("revalidateStrandedLearnerCandidates");
+      return { offered: 0, revived: 0 };
+    },
+    materializeRouteLadders: async () => {
+      called.push("materializeRouteLadders");
+      return { ladders: [] };
+    },
     learnFromUnconsumedCandidates: async () => {
       called.push("learnFromUnconsumedCandidates");
       return { consumed: 0, remaining: 0 };
@@ -95,6 +103,7 @@ describe("@recursive:101-effect-mq-queue-rebuild @sp7 R7 sweeps retired", () => 
     loop.stop();
     expect(called).toContain("resumePendingEvaluations");
     expect(called).toContain("reconcileEvaluationJobs");
+    expect(called).not.toContain("revalidateStrandedLearnerCandidates");
     expect(called).toContain("learnFromUnconsumedCandidates");
     expect(called).toContain("deriveLearnerCandidates");
   });
@@ -123,7 +132,17 @@ describe("@recursive:101-effect-mq-queue-rebuild @sp7 R7 sweeps retired", () => 
     const { loop, called } = harness({ learner: "queue" });
     await loop.tick();
     loop.stop();
+    expect(called).toContain("revalidateStrandedLearnerCandidates");
     expect(called).not.toContain("learnFromUnconsumedCandidates");
+    /**
+     * Live finding (isolated production-learning verification, 2026-10-15): route-ladder materialization was
+     * only ever called from inside `deriveLearnerCandidates`, which queue mode retires - so the ladder FROZE.
+     * Measured on the isolated runtime: `ladder materialization` appeared 0 times in the log and the durable
+     * ladder stayed at version 23 with 23 evidence documents while 9 further comparison groups were created.
+     * Materialization is EVIDENCE, not scheduling (like the finalization-signals producer that already keeps
+     * running), so it must survive the learner queue becoming authoritative.
+     */
+    expect(called).toContain("materializeRouteLadders");
     expect(called).not.toContain("deriveLearnerCandidates");
     expect(called).toContain("resumePendingEvaluations");
   });

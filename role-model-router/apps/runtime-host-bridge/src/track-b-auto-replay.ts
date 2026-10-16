@@ -430,6 +430,13 @@ export function retryableReplayRefusalCodes(): ReadonlySet<string> {
 export interface AutoReplayCapture {
   readonly captureRef: string;
   readonly sourceEndpointId: string | null;
+  /**
+   * Live finding (isolated production-learning verification, 2026-10-15): the served route was replayed
+   * against its own MODEL, because a second endpoint id served the same model at the same effort. The
+   * planner needs the source model identity to refuse that self-replay, not just the source endpoint.
+   */
+  readonly sourceModelId?: string | null;
+  readonly sourceReasoningEffort?: string | null;
   readonly hasRecordedToolResults: boolean;
   readonly replayProduced?: boolean;
   /**
@@ -1180,6 +1187,13 @@ export async function runAutoReplayTick(input: {
         : { configuredEndpointIds: input.configuredEndpointIds }),
       ...(input.healthyEndpointIds ? { healthyEndpointIds: input.healthyEndpointIds } : {}),
       sourceEndpointId: capture.sourceEndpointId,
+      // Live finding (isolated production-learning verification, 2026-10-15): a second endpoint serving the
+      // SAME model at the SAME effort was admitted as a counterfactual, so the served route was replayed
+      // against itself. The planner needs the source model identity to refuse that, not just the endpoint.
+      ...(capture.sourceModelId ? { sourceModelId: capture.sourceModelId } : {}),
+      ...(capture.sourceReasoningEffort
+        ? { sourceReasoningEffort: capture.sourceReasoningEffort }
+        : {}),
       // Run 98 addendum 30 S1/S2 with run 100 addendum 22: a comparison must not be scored by one of its own
       // arms, so the EFFECTIVE judge (the configured judge, or the deterministic alternative when the configured
       // judge is the capture's own source) is excluded from the planned arms.

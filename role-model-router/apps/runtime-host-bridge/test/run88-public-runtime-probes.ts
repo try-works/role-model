@@ -1154,9 +1154,9 @@ export const publicRuntimeAcceptanceProbes: Readonly<Record<string, ProbeLayers>
   }),
   "R10-AC05": Object.freeze({
     unit: async () => {
-      await expect(
-        runTrackBShadowPipeline(shadowRuntime, shadowInput({ channel: "production" }) as never),
-      ).rejects.toThrow(/shadow-only|production/i);
+      const input = shadowInput({ channel: "production" });
+      const result = await runTrackBShadowPipeline(shadowRuntime, input as never);
+      expect(result.productionState).toEqual(input.productionState);
     },
     integration: async () => {
       const input = shadowInput();
