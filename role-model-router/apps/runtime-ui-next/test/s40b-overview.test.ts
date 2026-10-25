@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { mountShell } from "../src/mount";
@@ -32,12 +34,14 @@ afterEach(() => {
 });
 
 describe("S40b overview charts and windows", () => {
+  const fixture = JSON.parse(readFileSync(path.join(import.meta.dirname, "fixtures", "s26o", "dashboard-latency-split.json"), "utf8"));
+
   it("renders latency and success/failure charts with the Day window", async () => {
     const calls: string[] = [];
     mountAt("s40b-success", async (input) => {
       const url = new URL(String(input), "http://localhost");
       calls.push(url.pathname + url.search);
-      if (url.pathname === "/api/role-model/telemetry/summary") return json(summary(4, 12, 30));
+      if (url.pathname === "/api/role-model/telemetry/summary") return json(fixture);
       return json({});
     });
     await waitFor(() => document.querySelector("[data-overview-state='success']") ?? undefined, "success");
@@ -46,8 +50,13 @@ describe("S40b overview charts and windows", () => {
     expect(document.querySelector("[data-window='Day']")?.getAttribute("aria-pressed")).toBe("true");
     expect(document.querySelector("[data-overview-period]")?.textContent).toBe("Last Day");
     expect(calls.some((call) => call.includes("windowMs=86400000"))).toBe(true);
-    expect(document.body.textContent).toContain("12");
-    expect(document.body.textContent).toContain("30");
+    const table = document.querySelector("[data-chart-part='table']");
+    const rows = Array.from(table?.querySelectorAll("tbody tr") ?? []).map((row) => Array.from(row.querySelectorAll("th,td")).map((cell) => cell.textContent));
+    expect(rows).toContainEqual(["Average", "10"]);
+    expect(rows).toContainEqual(["p95", "90"]);
+    expect(document.querySelector("[data-chart-point-label='Average']")).not.toBeNull();
+    expect(document.querySelector("[data-chart-point-label='p95']")).not.toBeNull();
+    expect(table?.textContent).not.toContain("—");
   });
 
   it("switches to Week and ignores a late Day response", async () => {

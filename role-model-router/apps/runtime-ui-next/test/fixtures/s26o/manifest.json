@@ -422,6 +422,19 @@
         "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
       },
       "bodyBytes": 1760
+    },
+    "dashboard-latency-split.json": {
+      "url": "synthetic-regression:/api/role-model/telemetry/summary",
+      "status": 200,
+      "capturedAt": "2026-10-25T08:34:21.062Z",
+      "sha256": "b4a46764195e3baf55c78bcc91c0fd8dbf469c6ff823ee3e5003590a8817928d",
+      "artifact": {
+        "version": "0.0.20-18-g6c9aeba1",
+        "commit": "6c9aeba15acd09be4fc6776cef66a1041394b65a",
+        "sourceTree": "e79ccfc7ee4c1d9a8eeee07f7e3aee115f2d106e",
+        "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
+      },
+      "bodyBytes": 392
     }
   }
 }

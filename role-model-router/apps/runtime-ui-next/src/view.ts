@@ -528,12 +528,10 @@ const overviewPage = (
   const failure = Number(requests?.meta.match(/(\d+) failed/)?.[1] ?? 0);
   const charts = h.div([h.Class("mt-4 grid gap-4"), h.DataAttribute("overview-charts", "")], [
     chartView({ title: "Latency (ms)", description: `Average and p95 for the last ${period.toLowerCase()}.`, series: [
-      { id: "average", label: "Average", points: [{ label: "Avg", value: avg }] },
-      { id: "p95", label: "p95", points: [{ label: "p95", value: p95 }] },
+      { id: "latency", label: "Latency", points: [{ label: "Average", value: avg }, { label: "p95", value: p95 }] },
     ], state: { status: "ready" }, yUnit: "ms" }, h),
     chartView({ title: "Success vs failure", description: `Request outcomes for the last ${period.toLowerCase()}.`, series: [
-      { id: "success", label: "Success", points: [{ label: "Success", value: success }] },
-      { id: "failure", label: "Failure", points: [{ label: "Failure", value: failure }] },
+      { id: "outcomes", label: "Requests", points: [{ label: "Success", value: success }, { label: "Failure", value: failure }] },
     ], state: { status: "ready" }, yUnit: "requests" }, h),
   ]);
   return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "index"), h.DataAttribute("readback-route", "dashboard"), h.DataAttribute("overview-state", "success"), h.DataAttribute("readback-state", "ok"), h.DataAttribute("state", "success")], [header, charts]);

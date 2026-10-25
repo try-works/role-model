@@ -1,0 +1,17 @@
+{
+  "requestCount": 2,
+  "successCount": 2,
+  "failureCount": 0,
+  "totalInputTokens": 20,
+  "totalOutputTokens": 8,
+  "totalTokens": 28,
+  "averageLatencyMs": 10,
+  "p95LatencyMs": 90,
+  "averageRequestLatencyMs": 15,
+  "p95RequestLatencyMs": 95,
+  "cachedRequestCount": 0,
+  "excludedRequestCount": 0,
+  "totalActualCostUsd": 0,
+  "totalEstimatedCostUsd": 0,
+  "totalEffectiveCostUsd": 0
+}
