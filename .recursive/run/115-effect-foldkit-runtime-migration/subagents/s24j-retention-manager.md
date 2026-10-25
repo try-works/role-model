@@ -10,8 +10,8 @@
 - Action Record Path: `/.recursive/run/115-effect-foldkit-runtime-migration/subagents/s24j-retention-manager.md`
 
 ## Inputs Provided
-- Current Artifact: `/.recursive/run/115-effect-foldkit-runtime-migration/evidence/other/s24j-retention-manager-tdd.json`
-- Artifact Content Hash: `UNKNOWN`
+- Current Artifact: `/.recursive/run/115-effect-foldkit-runtime-migration/evidence/other/private-slices.md`
+- Artifact Content Hash: `3a2f98febc9e7e56f05a2264e1d2d0484bddee73670acda1b510073907bb0c88`
 - Upstream Artifacts:
 - `/.recursive/run/115-effect-foldkit-runtime-migration/evidence/other/s24i-diagnostics-boundary-tdd.json`
 - Addenda:
@@ -60,14 +60,14 @@
 ### Updated
 - none
 ### Evidence Used
-- none
+- `/.recursive/run/115-effect-foldkit-runtime-migration/evidence/other/private-slices.md`
 
 ## Claimed Findings
 - Four mutations fail their rows: dropping the registry requirement, ignoring the injected authority, sharing one manager and dropping the store path; accepted retention suites pass 144 of 144 with one parallel-load flake named and reconfirmed green alone
 
 ## Verification Handoff
 - Inspect first:
-- `/.recursive/run/115-effect-foldkit-runtime-migration/evidence/other/s24j-retention-manager-tdd.json`
+- `/.recursive/run/115-effect-foldkit-runtime-migration/evidence/other/private-slices.md`
 - `D:/DEV/role-model-internal/.worktrees/115-effect-foldkit-runtime-migration/tests/track-b/run115-r32-retention-manager.test.mjs`
 - Notes:
 - Controller re-ran the new suite (4/4) and the retention scope suite (6/6)

@@ -93,3 +93,10 @@ File: scripts/track-b/runtime-operations-server.mjs. New test: tests/track-b/run
 - Four mutations fail their rows: dropped registry requirement, ignored authority, shared manager, dropped store path.
 - Accepted retention suites: 144/144, with one parallel-load flake in an S24a child-release timing test named and reconfirmed green alone.
 
+
+## S24j retention manager boundary (private, R32)
+
+- Factory `createRetentionManager({ registry, filePath, inMemory })` requires an explicit non-empty registry with no module-registry fallback and injects the write authority so the store check and add are gated by it.
+- Four mutations fail their rows: dropped registry requirement, ignored authority, shared manager, dropped store path.
+- Accepted retention suites: 144/144, with one parallel-load flake in an S24a child-release timing test named and reconfirmed green alone.
+
