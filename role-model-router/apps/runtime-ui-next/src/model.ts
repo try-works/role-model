@@ -12,6 +12,7 @@ const modelFields = {
   controls: ControlsState,
   diagnostics: DiagnosticsSnapshot,
   observability: ObservabilityState,
+  overviewWindowMs: Schema.optional(Schema.Number),
   readbacks: ReadbacksState,
   refresh: RuntimeRefreshState,
   route: AppRoute,

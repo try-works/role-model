@@ -659,6 +659,7 @@ export const READBACK_SPECS: Readonly<Record<ReadbackKey, ReadbackRouteSpec>> = 
     label: "Dashboard",
     parse: parseDashboard,
     path: READBACK_PATHS.dashboard,
+    pathFor: (windowMs) => `${READBACK_PATHS.dashboard}?windowMs=${encodeURIComponent(windowMs)}`,
   },
   localSwap: {
     emptyText: "No local swap events recorded yet.",

@@ -1,0 +1,27 @@
+{
+  "slice": "s40b-overview",
+  "charts": {
+    "latency": "dashboard row Latency value average + meta p95 ms; series Avg/p95",
+    "outcomes": "dashboard row Requests meta success/failure counts"
+  },
+  "filters": {
+    "options": "Day 86400000, Week 604800000, Month 2592000000, 90d 7776000000",
+    "mechanism": "button dispatches SelectedOverviewWindow; update increments dashboard token, sets overviewWindowMs, reads /telemetry/summary?windowMs=N; ReadbackLoaded ignores stale token"
+  },
+  "stale": "test s40b switches to Week, resolves late Day, asserts Week values remain; RED s40b-red-stale when token check removed",
+  "fixtures": {
+    "realWindowDay": "dashboard-window-day.json from packaged 5786 (?windowMs=86400000)",
+    "nonEmpty": "dashboard.json + observeActivity from S26p temp capture",
+    "rail": "models/runtimeSummary/health/router"
+  },
+  "reds": {
+    "stale": "s40b-red-stale.log",
+    "fabricated": "s40b-red-fabricated.log"
+  },
+  "counts": {
+    "fullSuite": 190,
+    "files": 18,
+    "typecheck": "exit 0"
+  },
+  "limits": "single-window aggregate charts, not per-bucket time series; source/status/bucket filters omitted because host summary does not accept them"
+}

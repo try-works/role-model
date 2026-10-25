@@ -14,6 +14,8 @@ import {
 import { Message } from "./message";
 import type { Model } from "./model";
 import type { ObservabilityState } from "./observability";
+import { view as chartView } from "@role-model/ui/foldkit-chart";
+
 import { READBACK_SPECS, type ReadbacksState, renderReadbackPage } from "./readback";
 import { AppRoute } from "./route";
 
@@ -472,12 +474,78 @@ const observabilityPage = (state: ObservabilityState, h: HtmlBuilder<Message>): 
   );
 };
 
+const WINDOW_OPTIONS = [
+  { label: "Day", windowMs: 86_400_000 },
+  { label: "Week", windowMs: 604_800_000 },
+  { label: "Month", windowMs: 2_592_000_000 },
+  { label: "90 days", windowMs: 7_776_000_000 },
+] as const;
+const windowLabel = (windowMs: number): string =>
+  WINDOW_OPTIONS.find((option) => option.windowMs === windowMs)?.label ?? "Day";
+const overviewPage = (
+  state: ReadbacksState["dashboard"],
+  windowMs: number,
+  h: HtmlBuilder<Message>,
+): Html => {
+  const period = windowLabel(windowMs);
+  const filters = h.div(
+    [h.Class("mt-3 flex flex-wrap gap-1"), h.DataAttribute("overview-filters", "")],
+    WINDOW_OPTIONS.map((option) =>
+      h.button(
+        [
+          h.Type("button"),
+          h.AriaPressed(String(option.windowMs === windowMs)),
+          h.DataAttribute("window", option.label),
+          h.Class(
+            `min-h-8 rounded-[var(--rm-radius-field)] border px-2.5 text-[12px] ${option.windowMs === windowMs ? "border-[var(--rm-border)] bg-[var(--rm-panel)] text-[var(--rm-fg)]" : "border-transparent text-[var(--rm-secondary)]"}`,
+          ),
+          h.OnClick(Message.SelectedOverviewWindow({ windowMs: option.windowMs })),
+        ],
+        [option.label],
+      ),
+    ),
+  );
+  const header = h.div([], [
+    h.p([h.Class("text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--rm-muted)]")], ["Runtime overview"]),
+    h.h1([h.Class("rm3-next-route-title")], ["Index page"]),
+    h.p([h.Class("text-[12px] text-[var(--rm-secondary)]"), h.DataAttribute("overview-period", period)], [`Last ${period}`]),
+    filters,
+  ]);
+  if (state.status === "loading") {
+    return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "index"), h.DataAttribute("readback-route", "dashboard")], [header, h.p([h.AriaBusy(true), h.DataAttribute("overview-state", "loading"), h.DataAttribute("readback-state", "loading")], ["Loading telemetry…"])]);
+  }
+  if (state.status === "error") {
+    return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "index"), h.DataAttribute("readback-route", "dashboard")], [header, h.p([h.Role("alert"), h.DataAttribute("overview-state", "error"), h.DataAttribute("readback-state", "error")], [state.message ?? "Telemetry read failed"])]);
+  }
+  if (state.status === "empty") {
+    return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "index"), h.DataAttribute("readback-route", "dashboard")], [header, h.p([h.DataAttribute("overview-state", "empty"), h.DataAttribute("readback-state", "empty")], [`No telemetry requests in the last ${period.toLowerCase()}.`])]);
+  }
+  const latency = state.rows.find((entry) => entry.label === "Latency");
+  const requests = state.rows.find((entry) => entry.label === "Requests");
+  const avg = Number(latency?.value);
+  const p95 = Number(latency?.meta.match(/p95 ([\d.]+) ms/)?.[1]);
+  const success = Number(requests?.meta.match(/(\d+) success/ )?.[1] ?? 0);
+  const failure = Number(requests?.meta.match(/(\d+) failed/)?.[1] ?? 0);
+  const charts = h.div([h.Class("mt-4 grid gap-4"), h.DataAttribute("overview-charts", "")], [
+    chartView({ title: "Latency (ms)", description: `Average and p95 for the last ${period.toLowerCase()}.`, series: [
+      { id: "average", label: "Average", points: [{ label: "Avg", value: avg }] },
+      { id: "p95", label: "p95", points: [{ label: "p95", value: p95 }] },
+    ], state: { status: "ready" }, yUnit: "ms" }, h),
+    chartView({ title: "Success vs failure", description: `Request outcomes for the last ${period.toLowerCase()}.`, series: [
+      { id: "success", label: "Success", points: [{ label: "Success", value: success }] },
+      { id: "failure", label: "Failure", points: [{ label: "Failure", value: failure }] },
+    ], state: { status: "ready" }, yUnit: "requests" }, h),
+  ]);
+  return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "index"), h.DataAttribute("readback-route", "dashboard"), h.DataAttribute("overview-state", "success"), h.DataAttribute("readback-state", "ok"), h.DataAttribute("state", "success")], [header, charts]);
+};
+
 const routeContent = (
   route: Model["route"],
   diagnostics: DiagnosticsSnapshot,
   observability: ObservabilityState,
   readbacks: ReadbacksState,
   controls: ControlsState,
+  overviewWindowMs: number,
   h: HtmlBuilder<Message>,
 ) =>
   AppRoute.match(route, {
@@ -526,73 +594,7 @@ const routeContent = (
     Endpoints: () => renderControlPage(CONTROL_SPECS.endpoints, controls.endpoints, h),
     ControlController: () =>
       renderControlPage(CONTROL_SPECS.controlController, controls.controlController, h),
-    Index: () =>
-      h.section(
-        [
-          h.Class("rm3-next-route mt-4"),
-          h.DataAttribute("route", "index"),
-          h.DataAttribute("state", "success"),
-        ],
-        [
-          h.p(
-            [
-              h.Class(
-                "text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--rm-muted)]",
-              ),
-            ],
-            ["Runtime overview"],
-          ),
-          h.h1([h.Class("rm3-next-route-title")], ["Index page"]),
-          h.p(
-            [h.Class("mt-2 max-w-[60ch] text-[14px] leading-[21px] text-[var(--rm-secondary)]")],
-            [
-              "The Foldkit shell is running. Start with the runtime overview or open the verified diagnostics surface.",
-            ],
-          ),
-          h.div(
-            [h.Class("mt-4 grid gap-3 sm:grid-cols-2")],
-            [
-              h.div(
-                [
-                  h.Class(
-                    "rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-3",
-                  ),
-                ],
-                [
-                  h.h2([h.Class("text-[14px] font-medium")], ["Runtime overview"]),
-                  h.p(
-                    [h.Class("mt-1 text-[12px] leading-4 text-[var(--rm-secondary)]")],
-                    ["This is the shell landing surface; no runtime data is loaded here yet."],
-                  ),
-                ],
-              ),
-              h.div(
-                [
-                  h.Class(
-                    "rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-3",
-                  ),
-                ],
-                [
-                  h.h2([h.Class("text-[14px] font-medium")], ["Diagnostics"]),
-                  h.p(
-                    [h.Class("mt-1 text-[12px] leading-4 text-[var(--rm-secondary)]")],
-                    ["Read the authorized local diagnostics surface."],
-                  ),
-                  h.a(
-                    [
-                      h.Href("/diagnostics/42"),
-                      h.Class(
-                        `mt-2 inline-flex text-[12px] font-semibold text-[var(--rm-accent)] ${focusRingClass}`,
-                      ),
-                    ],
-                    ["Open diagnostics"],
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ],
-      ),
+    Index: () => overviewPage(readbacks.dashboard, overviewWindowMs, h),
     NotFound: ({ path }) =>
       h.section(
         [
@@ -877,6 +879,7 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
                 model.observability,
                 model.readbacks,
                 model.controls,
+                model.overviewWindowMs ?? 86400000,
                 h,
               ),
               h.div(

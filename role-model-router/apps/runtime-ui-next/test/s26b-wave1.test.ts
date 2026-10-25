@@ -29,13 +29,13 @@ const waitFor = async <Value>(
 const mounted: Array<{ readonly container: HTMLElement; readonly handle: { dispose(): void } }> =
   [];
 
-const mountAt = (id: string, pathname: string) => {
+const mountAt = (id: string, pathname: string, readbackFetchImpl?: typeof fetch) => {
   window.history.replaceState({}, "", pathname);
   localStorage.clear();
   const container = document.createElement("div");
   container.id = id;
   document.body.append(container);
-  const handle = mountShell(container);
+  const handle = mountShell(container, readbackFetchImpl === undefined ? {} : { readbackFetchImpl });
   mounted.push({ container, handle });
   return { container, handle };
 };
@@ -85,17 +85,23 @@ describe("S26b wave 1 shell entries", () => {
   });
 
   it("index is a real success landing with working onward navigation", async () => {
-    mountAt("s26b-index", "/");
+    mountAt("s26b-index", "/", async (input) => {
+      const url = new URL(String(input), "http://localhost");
+      if (url.pathname === "/api/role-model/telemetry/summary") {
+        return new Response(JSON.stringify({ requestCount: 2, successCount: 2, failureCount: 0, averageLatencyMs: 10, p95LatencyMs: 20, cachedRequestCount: 0, totalTokens: 5 }), { status: 200 });
+      }
+      return new Response("{}", { status: 200 });
+    });
     const page = await waitFor(
-      () => document.querySelector("[data-route='index']") ?? undefined,
+      () => document.querySelector("[data-route='index'][data-state='success']") ?? undefined,
       "index route",
     );
     expect(page.getAttribute("data-state")).toBe("success");
     expect(page.querySelector("h1")?.textContent).toBe("Index page");
     expect(page.textContent).toContain("Runtime overview");
-    expect(page.querySelector<HTMLAnchorElement>("a[href='/diagnostics/42']")?.textContent).toBe(
-      "Open diagnostics",
-    );
+    expect(page.textContent).toContain("Latency (ms)");
+    expect(page.textContent).toContain("Success vs failure");
+    expect(page.querySelectorAll("[data-window]")).toHaveLength(4);
     expect(document.title).toBe("Overview | RM3 Foldkit shell");
     // Static route: no data source exists, so no empty/loading/error state is rendered.
     expect(page.querySelector("[data-state='empty']")).toBeNull();

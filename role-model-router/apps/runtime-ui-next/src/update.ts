@@ -330,7 +330,19 @@ export const createUpdate =
           },
         };
       },
-      RefreshResynced: ({ routeId, snapshot, token }) => {
+      SelectedOverviewWindow: ({ windowMs }) => {
+    const current = model.readbacks.dashboard;
+    const token = current.token + 1;
+    return {
+      commands: [readReadback({ id: String(windowMs), key: "dashboard", token })],
+      model: {
+        ...model,
+        overviewWindowMs: windowMs,
+        readbacks: { ...model.readbacks, dashboard: loadingReadback(token) },
+      },
+    };
+  },
+  RefreshResynced: ({ routeId, snapshot, token }) => {
         if (token !== model.refresh.resyncToken) {
           // An older resync resolving last must not win.
           return { model };

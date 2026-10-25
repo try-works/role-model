@@ -66,6 +66,9 @@ export const Message: MessageUnion<{
     readonly snapshot: typeof ReadbackState;
     readonly token: typeof Schema.Number;
   };
+  readonly SelectedOverviewWindow: {
+    readonly windowMs: typeof Schema.Number;
+  };
   readonly RefreshResynced: {
     readonly routeId: typeof Schema.String;
     readonly snapshot: typeof DiagnosticsSnapshot;
@@ -96,6 +99,7 @@ export const Message: MessageUnion<{
   ObservabilityLoaded: { snapshot: ObservabilityState, token: Schema.Number },
   ReadbackFailed: { key: ReadbackKeySchema, message: Schema.String, token: Schema.Number },
   ReadbackLoaded: { key: ReadbackKeySchema, snapshot: ReadbackState, token: Schema.Number },
+  SelectedOverviewWindow: { windowMs: Schema.Number },
   RefreshResynced: { routeId: Schema.String, snapshot: DiagnosticsSnapshot, token: Schema.Number },
   RefreshResyncFailed: { message: Schema.String, routeId: Schema.String, token: Schema.Number },
   RuntimeRevisionReceived: { revision: Schema.Number },

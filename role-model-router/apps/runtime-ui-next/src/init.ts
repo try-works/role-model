@@ -88,7 +88,7 @@ const initRoute =
       const token = 1;
       const readbacks = { ...emptyReadbacks(), [readbackKey]: loadingReadback(token) };
       return {
-        commands: [readReadback({ id: route._tag === "RequestDetail" || route._tag === "RouterDecisionDetail" ? route.requestId : undefined, key: readbackKey as ReadbackKey, token })],
+        commands: [readReadback({ id: route._tag === "RequestDetail" || route._tag === "RouterDecisionDetail" ? route.requestId : route._tag === "Index" || route._tag === "Dashboard" ? "86400000" : undefined, key: readbackKey as ReadbackKey, token })],
         model: {
           clicks: 0,
           controls: emptyControls(),
@@ -132,7 +132,11 @@ export const createInit =
     for (const key of railKeys) {
       if (readbacks[key].status !== "idle") continue;
       readbacks[key] = loadingReadback(token);
-      commands.push(readReadback({ key, token }));
+      const id =
+        key === "dashboard" && (result.model.route._tag === "Index" || result.model.route._tag === "Dashboard")
+          ? "86400000"
+          : undefined;
+      commands.push(readReadback({ ...(id === undefined ? {} : { id }), key, token }));
     }
     return { ...result, commands, model: { ...result.model, readbacks } };
   };
