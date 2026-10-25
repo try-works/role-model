@@ -1,0 +1,35 @@
+[
+  {
+    "route": "/local/swap",
+    "status": 200,
+    "png": "_local_swap.png",
+    "title": "Local swap | RM3 Foldkit shell",
+    "main": "oints Controller Readiness Dashboard Swap Activity Observe logs Observe routing Router Studio Local Remote Models Router Observe Connect System Learning Clicks: 0 Dark shell Runtime Local swap Toggle theme Overview Diagnostics Observability Receipts Queues Local logs Ca",
+    "states": [
+      "empty"
+    ],
+    "alerts": []
+  },
+  {
+    "route": "/observe/activity",
+    "status": 200,
+    "png": "_observe_activity.png",
+    "title": "Activity | RM3 Foldkit shell",
+    "main": "oints Controller Readiness Dashboard Swap Activity Observe logs Observe routing Router Studio Local Remote Models Router Observe Connect System Learning Clicks: 0 Dark shell Runtime Activity Toggle theme Overview Diagnostics Observability Receipts Queues Local logs Cand",
+    "states": [
+      "empty"
+    ],
+    "alerts": []
+  },
+  {
+    "route": "/observe/logs",
+    "status": 200,
+    "png": "_observe_logs.png",
+    "title": "Observe logs | RM3 Foldkit shell",
+    "main": "oints Controller Readiness Dashboard Swap Activity Observe logs Observe routing Router Studio Local Remote Models Router Observe Connect System Learning Clicks: 0 Dark shell Runtime Observe logs Toggle theme Overview Diagnostics Observability Receipts Queues Local logs ",
+    "states": [
+      "empty"
+    ],
+    "alerts": []
+  }
+]

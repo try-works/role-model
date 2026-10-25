@@ -50,11 +50,9 @@ export const resolveExistingPackagedArtifact = async (): Promise<{
   readonly releaseDir: string;
   readonly manifest: PackagedValidationManifest;
 } | null> => {
+  const overrideRoot = process.env.ROLE_MODEL_RELEASE_OUTPUT_ROOT?.trim();
   const releaseDir = path.join(
-    repoRoot,
-    "role-model-router",
-    "dist",
-    "release",
+    overrideRoot ? path.resolve(overrideRoot) : path.join(repoRoot, "role-model-router", "dist", "release"),
     `${process.platform}-${process.arch}`,
   );
   try {
