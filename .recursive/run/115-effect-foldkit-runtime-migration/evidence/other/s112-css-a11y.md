@@ -28,4 +28,4 @@ The reduced-motion block covers the two design-system animations, not the 35 tra
 
 ## Client suite
 
-**290 / 290 across 28 files**, `tsc` **0**.
+**289 / 289 across 28 files**, `tsc` **0**.
