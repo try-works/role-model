@@ -1,0 +1,32 @@
+{
+  "slice": "s73a-controller-edit",
+  "contract": {
+    "read": "GET /api/role-model/controller",
+    "write": "PATCH /api/role-model/controller body {endpointId}",
+    "readback": "success re-reads GET; displayed current is server answer",
+    "failure": "4xx alert with host message, last readback kept",
+    "double": "pending disables and guards Save"
+  },
+  "tests": {
+    "file": "test/s73a-controller.test.ts",
+    "count": 3,
+    "reds": {
+      "wrongBody": "s73a-red-wrong-body.log",
+      "optimistic": "s73a-red-optimistic.log"
+    }
+  },
+  "tempHost": {
+    "script": "s73a-controller-temp.mjs",
+    "log": "s73a-controller-temp.log",
+    "port": 55795,
+    "endpoints": 5,
+    "initial": "openai.personal.primary.us-east-1.fast",
+    "patched": "anthropic.team.shared.us-east-1.default",
+    "patchedBack": "openai.personal.primary.us-east-1.fast"
+  },
+  "counts": {
+    "clientFull": 242,
+    "files": 24,
+    "typecheck": 0
+  }
+}

@@ -758,7 +758,7 @@ const routeContent = (
     Providers: () => renderControlPage(CONTROL_SPECS.providers, controls.providers, h),
     Endpoints: () => renderControlPage(CONTROL_SPECS.endpoints, controls.endpoints, h),
     ControlController: () =>
-      renderControlPage(CONTROL_SPECS.controlController, controls.controlController, h),
+      renderControlPage(CONTROL_SPECS.controlController, controls.controlController, h, controls.endpoints.rows.map((row) => row.id)),
     Index: () => overviewPage(readbacks.overviewMetrics, readbacks.routerCandidates, overviewWindowMs, h),
     NotFound: ({ path }) =>
       h.section(

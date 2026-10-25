@@ -95,9 +95,10 @@ const initRoute =
     const controlKey = controlKeyForRouteTag(route._tag);
     if (controlKey !== null) {
       const token = 1;
-      const controls = { ...emptyControls(), [controlKey]: loadingControl(token) };
+      const controls = { ...emptyControls(), [controlKey]: loadingControl(token), ...(controlKey === "controlController" ? { endpoints: loadingControl(token) } : {}) };
+    const controlCommands = controlKey === "controlController" ? [readControl({ key: controlKey, token }), readControl({ key: "endpoints", token })] : [readControl({ key: controlKey, token })];
       return {
-        commands: [readControl({ key: controlKey as ControlKey, token })],
+        commands: controlCommands,
         model: {
           clicks: 0,
           controls,

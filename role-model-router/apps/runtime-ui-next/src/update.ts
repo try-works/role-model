@@ -226,15 +226,41 @@ export const createUpdate =
             model,
           }),
         }),
-      ControlActionCompleted: ({ key, message, token }) => {
-        const current = model.controls[key];
-        if (token !== current.token) return { model };
+      ControllerEndpointSelected: ({ endpointId }) => {
+        const current = model.controls.controlController;
+        return { model: { ...model, controls: { ...model.controls, controlController: { ...current, selectedEndpointId: endpointId } } } };
+      },
+      ControllerSaveRequested: ({ endpointId }) => {
+        const current = model.controls.controlController;
+        if (current.actionStatus === "pending") return { model };
+        const token = current.token + 1;
         return {
+          commands: [dispatchControl({ endpointId, key: "controlController", token })],
           model: {
             ...model,
             controls: {
               ...model.controls,
-              [key]: { ...current, actionMessage: message, actionStatus: "ok" },
+              controlController: { ...current, actionMessage: undefined, actionStatus: "pending", notice: undefined, selectedEndpointId: endpointId, token },
+            },
+          },
+        };
+      },
+      ControlActionCompleted: ({ key, message, serverEndpointId, token }) => {
+        const current = model.controls[key];
+        if (token !== current.token) return { model };
+        return {
+          commands: key === "controlController" ? [readControl({ key, token })] : [],
+          model: {
+            ...model,
+            controls: {
+              ...model.controls,
+              [key]: {
+                ...current,
+                actionMessage: message,
+                actionStatus: "ok",
+                notice: key === "controlController" && serverEndpointId !== undefined ? "Server assigned " + serverEndpointId : current.notice,
+                selectedEndpointId: key === "controlController" && serverEndpointId !== undefined ? serverEndpointId : current.selectedEndpointId,
+              },
             },
           },
         };
@@ -278,8 +304,9 @@ export const createUpdate =
       },
       ControlLoaded: ({ key, snapshot, token }) => {
         if (token !== model.controls[key].token) return { model };
+        const previous = model.controls[key];
         return {
-          model: { ...model, controls: { ...model.controls, [key]: { ...snapshot, token } } },
+          model: { ...model, controls: { ...model.controls, [key]: { ...snapshot, notice: previous.notice, selectedEndpointId: previous.selectedEndpointId ?? snapshot.selectedEndpointId, token } } },
         };
       },
       DiagnosticsFailed: ({ id, message }) =>

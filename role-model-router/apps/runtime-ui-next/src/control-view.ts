@@ -7,6 +7,7 @@ export const renderControlPage = (
   spec: ControlSpec,
   state: ControlState,
   h: HtmlBuilder<Message>,
+  endpointOptions: readonly string[] = [],
 ): Html => {
   const statusText = (() => {
     switch (state.status) {
@@ -46,6 +47,25 @@ export const renderControlPage = (
         ],
         [statusText],
       ),
+      ...(spec.key === "controlController"
+        ? [
+            h.div([h.Class("mt-3 grid gap-2")], [
+              h.label([h.Class("text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--rm-muted)]")], ["Controller endpoint"]),
+              h.select(
+                [h.Class("w-full max-w-[560px] rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-2 py-1.5 text-[12px] text-[var(--rm-fg)]"), h.DataAttribute("controller-endpoint-select", ""), h.OnChange((value) => Message.ControllerEndpointSelected({ endpointId: value }))],
+                (endpointOptions.length > 0 ? endpointOptions : state.selectedEndpointId === undefined ? [] : [state.selectedEndpointId]).map((id) =>
+                  h.option([h.Value(id), ...(id === (state.selectedEndpointId ?? endpointOptions[0] ?? state.rows[0]?.value) ? [h.Selected(true)] : [])], [id]),
+                ),
+              ),
+              h.p([h.DataAttribute("controller-current", ""), h.Class("text-[12px] text-[var(--rm-secondary)]")], ["Current: " + (state.rows.find((row) => row.id.toLowerCase().includes("endpoint"))?.value ?? state.rows[0]?.value ?? "—")]),
+              h.button(
+                [h.Type("button"), h.DataAttribute("controller-save", ""), h.AriaDisabled(state.actionStatus === "pending"), h.OnClick(Message.ControllerSaveRequested({ endpointId: state.selectedEndpointId ?? endpointOptions[0] ?? "" })), h.Class("justify-self-start rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-3 py-1.5 text-[12px] font-medium text-[var(--rm-fg)] disabled:opacity-50")],
+                [state.actionStatus === "pending" ? "Saving…" : "Save controller"],
+              ),
+              ...(state.notice === undefined ? [] : [h.p([h.Role("status"), h.AriaLive("polite"), h.DataAttribute("controller-notice", "")], [state.notice])]),
+            ]),
+          ]
+        : []),
       ...(state.status === "ok"
         ? [
             h.ul(
@@ -84,7 +104,7 @@ export const renderControlPage = (
         : [
             h.p(
               [
-                h.Role("status"),
+                ...(state.actionStatus === "error" ? [h.Role("alert")] : [h.Role("status")]),
                 h.AriaLive("polite"),
                 h.DataAttribute("control-action-message", state.actionStatus),
               ],

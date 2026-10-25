@@ -15,10 +15,13 @@ export const Message: MessageUnion<{
   readonly ChangedUrl: { readonly url: typeof Url.Url };
   readonly Clicked: EmptyFields;
   readonly ClickedLink: { readonly request: typeof Navigation.UrlRequest };
+  readonly ControllerEndpointSelected: { readonly endpointId: typeof Schema.String };
+  readonly ControllerSaveRequested: { readonly endpointId: typeof Schema.String };
   readonly ControlActionCompleted: {
     readonly key: typeof ControlKeySchema;
     readonly message: typeof Schema.String;
     readonly token: typeof Schema.Number;
+    readonly serverEndpointId: Schema.optional<typeof Schema.String>;
   };
   readonly ControlActionFailed: {
     readonly key: typeof ControlKeySchema;
@@ -98,7 +101,9 @@ export const Message: MessageUnion<{
   ChangedUrl: { url: Url.Url },
   Clicked: {},
   ClickedLink: { request: Navigation.UrlRequest },
-  ControlActionCompleted: { key: ControlKeySchema, message: Schema.String, token: Schema.Number },
+  ControllerEndpointSelected: { endpointId: Schema.String },
+  ControllerSaveRequested: { endpointId: Schema.String },
+  ControlActionCompleted: { key: ControlKeySchema, message: Schema.String, token: Schema.Number, serverEndpointId: Schema.optional(Schema.String) },
   ControlActionFailed: { key: ControlKeySchema, message: Schema.String, token: Schema.Number },
   ControlActionRequested: { key: ControlKeySchema, token: Schema.Number },
   ControlFailed: { key: ControlKeySchema, message: Schema.String, token: Schema.Number },

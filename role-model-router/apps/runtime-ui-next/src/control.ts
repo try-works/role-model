@@ -24,6 +24,8 @@ export type ControlRow = typeof ControlRow.Type;
 export const ControlState = Schema.Struct({
   actionMessage: Schema.optional(Schema.String),
   actionStatus: Schema.Literals(["idle", "pending", "ok", "error"]),
+  notice: Schema.optional(Schema.String),
+  selectedEndpointId: Schema.optional(Schema.String),
   error: Schema.optional(Schema.String),
   rows: Schema.Array(ControlRow),
   status: Schema.Literals(["idle", "loading", "ok", "empty", "error"]),
@@ -248,7 +250,7 @@ export interface ControlResult {
 }
 export interface ControlClient {
   readonly read: (key: ControlKey) => Promise<ControlResult>;
-  readonly dispatch: (key: ControlKey) => Promise<ControlResult>;
+  readonly dispatch: (key: ControlKey, endpointId?: string) => Promise<ControlResult>;
 }
 const headers = (options: ControlClientOptions): HeadersInit => ({
   ...(options.token === undefined ? {} : { authorization: `Bearer ${options.token}` }),
@@ -258,10 +260,10 @@ export const createControlClients = (options: ControlClientOptions = {}): Contro
   const fetchImpl = options.fetchImpl ?? fetch;
   const url = (path: string) => `${options.baseUrl ?? ""}${path}`;
   return {
-    dispatch: async (key) => {
+    dispatch: async (key, endpointId) => {
       const spec = CONTROL_SPECS[key];
       const response = await fetchImpl(url(spec.action.path), {
-        body: JSON.stringify(spec.action.body),
+        body: JSON.stringify(endpointId === undefined ? spec.action.body : { ...spec.action.body, endpointId }),
         headers: headers(options),
         method: spec.action.method,
       });

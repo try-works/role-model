@@ -237,14 +237,14 @@ export type ReadControlCommand = ReturnType<typeof defineReadControl>;
 /** S26k: one explicit non-destructive dispatch per control action. */
 export const defineDispatchControl = (client: ControlClient) =>
   Command.define("DispatchControl", {
-    args: { key: ControlKeySchema, token: Schema.Number },
+    args: { endpointId: Schema.optional(Schema.String), key: ControlKeySchema, token: Schema.Number },
     messages: [Message.ControlActionCompleted, Message.ControlActionFailed],
-    execute: ({ key, token }) =>
+    execute: ({ endpointId, key, token }) =>
       Effect.flatMap(
         Effect.exit(
           Effect.tryPromise({
             catch: (cause) => new Error(describeCause(cause)),
-            try: () => client.dispatch(key),
+            try: () => client.dispatch(key, endpointId),
           }),
         ),
         (exit) =>
@@ -253,6 +253,7 @@ export const defineDispatchControl = (client: ControlClient) =>
               ? exit.value.status >= 200 && exit.value.status < 300
                 ? Message.ControlActionCompleted({
                     key,
+                    serverEndpointId: (() => { const record = exit.value.body; return record !== null && typeof record === "object" && "endpointId" in record && typeof record.endpointId === "string" ? record.endpointId : endpointId; })(),
                     message:
                       key === "providers"
                         ? "Providers action completed."
@@ -268,7 +269,7 @@ export const defineDispatchControl = (client: ControlClient) =>
                         ? `Providers action failed: HTTP ${String(exit.value.status)}`
                         : key === "endpoints"
                           ? `Endpoints action failed: HTTP ${String(exit.value.status)}`
-                          : `Controller action failed: HTTP ${String(exit.value.status)}`,
+                          : `Controller action failed: HTTP ${String(exit.value.status)}${(() => { const record = exit.value.body; const reason = record !== null && typeof record === "object" && "message" in record && typeof record.message === "string" ? record.message : undefined; return reason === undefined ? "" : ` (${reason})`; })()}`, 
                     token,
                   })
               : Message.ControlActionFailed({
