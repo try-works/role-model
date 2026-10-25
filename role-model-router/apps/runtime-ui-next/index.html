@@ -1,10 +1,36 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#0a0a0a" />
     <title>role-model runtime</title>
+    <link rel="preload" href="/assets/fonts/geist-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
+    <link rel="preload" href="/assets/fonts/geist-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
+    <link rel="preload" href="/assets/fonts/geist-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
+    <link rel="stylesheet" href="/assets/main.css" />
+    <script>
+      (() => {
+        try {
+          const key = "role-model-runtime-theme";
+          const stored = window.localStorage.getItem(key);
+          const theme = stored === "light" || stored === "dark" ? stored : "dark";
+          const palettes = {"dark":{"accent":"#ffffff","bg":"#0a0a0a","border":"#1f1f1f","fg":"#ededed","secondary":"#9a9a9a","surface":"#0f0f0f"},"light":{"accent":"#0a0a0a","bg":"#ffffff","border":"#eaeaea","fg":"#111111","secondary":"#666666","surface":"#ffffff"}};
+          const palette = palettes[theme] ?? palettes.dark;
+          const root = document.documentElement;
+          root.dataset.theme = theme;
+          root.classList.toggle("dark", theme === "dark");
+          root.classList.toggle("light", theme === "light");
+          root.style.colorScheme = theme;
+          root.style.backgroundColor = palette.bg;
+          root.style.color = palette.fg;
+          for (const [token, value] of Object.entries(palette)) {
+            root.style.setProperty("--rm-" + token, value);
+          }
+        } catch {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

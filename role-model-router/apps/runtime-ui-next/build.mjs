@@ -2,6 +2,7 @@
 // serve via --static-root. Uses the repository's esbuild; adds no dependency.
 import { build } from "esbuild";
 import { cp, mkdir, rm } from "node:fs/promises";
+import { existsSync, statSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -25,5 +26,12 @@ await build({
   },
 });
 
+const cssSource = path.join(here, "../runtime-ui/build/client/assets/root-DB32G0ZY.css");
+const cssTarget = path.join(outDir, "assets", "main.css");
+if (!existsSync(cssSource)) throw new Error("design-system stylesheet missing: " + cssSource);
+await cp(cssSource, cssTarget);
+const cssBytes = statSync(cssTarget).size;
+if (cssBytes < 10_000) throw new Error("design-system stylesheet is empty or truncated: " + String(cssBytes));
+await cp(path.join(here, "../runtime-ui/build/client/assets/fonts"), path.join(outDir, "assets", "fonts"), { recursive: true });
 await cp(path.join(here, "index.html"), path.join(outDir, "index.html"));
 console.log(JSON.stringify({ status: "PASS", outDir }));

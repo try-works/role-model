@@ -251,6 +251,8 @@ import { createVendorNotConfiguredError } from "@role-model-router/vendor-abstra
 import { startLiteLLMVendor } from "@role-model-router/vendor-litellm";
 import { startLlamaSwapVendor } from "@role-model-router/vendor-llama-swap";
 
+let llamaSwapProxyBaseUrl: string | null = null;
+
 import {
   readActiveBenchmarkRun as readActiveBenchmarkRunProgress,
   readBenchmarkRunProgress,
@@ -20292,6 +20294,43 @@ function createRequestHandler(options: StartBridgeServerOptions) {
         return;
       }
       writeJson(response, 200, await options.checkPeerHealth(peerUrl));
+      return;
+    }
+
+    const llamaSwapProxyPath =
+      (request.method === "POST" &&
+        (url.pathname === "/v1/images/generations" ||
+          url.pathname === "/v1/audio/speech" ||
+          url.pathname === "/v1/rerank" ||
+          url.pathname === "/v1/reranking")) ||
+      (request.method === "GET" && url.pathname === "/v1/audio/voices");
+    if (llamaSwapProxyPath) {
+      const vendorBaseUrl = llamaSwapProxyBaseUrl;
+      if (vendorBaseUrl === null) {
+        writeJson(response, 503, {
+          error: "Llama-swap is not running. Start it from Local > llama-swap.",
+        });
+        return;
+      }
+      const suffix = url.pathname.slice("/v1".length);
+      let rawBody = "";
+      for await (const chunk of request) {
+        rawBody += String(chunk);
+      }
+      const upstream = await fetch(vendorBaseUrl + suffix + url.search, {
+        body: request.method === "GET" ? undefined : rawBody,
+        headers:
+          request.method === "GET"
+            ? {}
+            : { "content-type": request.headers["content-type"] ?? "application/json" },
+        method: request.method,
+      });
+      const upstreamBody = await upstream.text();
+      response.writeHead(upstream.status, {
+        "cache-control": "no-store",
+        "content-type": upstream.headers.get("content-type") ?? "application/json",
+      });
+      response.end(upstreamBody);
       return;
     }
 

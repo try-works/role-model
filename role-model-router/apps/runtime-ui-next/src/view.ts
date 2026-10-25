@@ -170,15 +170,7 @@ const shellNavItems = (route: Model["route"]): ReadonlyArray<ShellNavItem> => [
     label: "Observe routing",
   },
   { active: route._tag === "Router", dataNav: "router", href: "/router", label: "Router" },
-  { active: false, href: null, label: "Studio" },
-  { active: false, href: null, label: "Local" },
-  { active: false, href: null, label: "Remote" },
-  { active: false, href: null, label: "Models" },
-  { active: false, href: null, label: "Router" },
-  { active: false, href: null, label: "Observe" },
-  { active: false, href: null, label: "Connect" },
-  { active: false, href: null, label: "System" },
-  { active: false, href: null, label: "Learning" },
+  { active: route._tag === "Studio", dataNav: "studio", href: "/studio", label: "Studio" },
 ];
 
 const shellNav = (route: Model["route"], label: string, h: HtmlBuilder<Message>): Html =>
@@ -539,7 +531,11 @@ const overviewPage = (
 ): Html => {
   const period = windowLabel(windowMs);
   const filters = h.div(
-    [h.Class("mt-3 flex flex-wrap gap-1"), h.DataAttribute("overview-filters", "")],
+    [h.Class("mt-4 flex flex-wrap items-center gap-2"), h.DataAttribute("overview-filters", "")],
+  );
+  const filterRow = h.div([h.Class("flex flex-col gap-1")], [h.span([h.Class("text-[11px] uppercase tracking-[0.12em] text-[var(--rm-muted)]")], ["Time range"]), filters]);
+  const unusedFilters = h.div(
+    [h.Class("mt-3 flex flex-wrap gap-1")],
     WINDOW_OPTIONS.map((option) =>
       h.button(
         [
@@ -556,10 +552,10 @@ const overviewPage = (
     ),
   );
   const header = h.div([], [
-    h.p([h.Class("text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--rm-muted)]")], ["Runtime overview"]),
-    h.h1([h.Class("rm3-next-route-title")], ["Index page"]),
+    h.p([h.Class("text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--rm-muted)]")], ["Observability"]),
+    h.h1([h.Class("text-[22px] font-semibold")], ["Runtime overview"]),
     h.p([h.Class("text-[12px] text-[var(--rm-secondary)]"), h.DataAttribute("overview-period", period)], ["Last " + period]),
-    filters,
+    filterRow,
   ]);
   if (state.status === "loading") {
     return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "index"), h.DataAttribute("readback-route", "dashboard")], [header, h.p([h.AriaBusy(true), h.DataAttribute("overview-state", "loading"), h.DataAttribute("readback-state", "loading")], ["Loading telemetry…"])]);
@@ -572,15 +568,16 @@ const overviewPage = (
   }
   const { buckets } = bucketsFor(state, windowMs);
   const labels = buckets.map((bucket) => bucket.label);
-  const charts = h.div([h.Class("mt-4 grid gap-4"), h.DataAttribute("overview-charts", ""), h.DataAttribute("overview-window", period), h.DataAttribute("overview-buckets", String(buckets.length))], [
-    chartView({ title: "Latency (ms)", description: "Average and p95 per bucket for the last " + period.toLowerCase() + ".", series: [
+  const card = (title: string, description: string, chart: Html) => h.section([h.Class("rounded-[8px] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-4"), h.DataAttribute("overview-card", title)], [h.h2([h.Class("text-[15px] font-semibold")], [title]), h.p([h.Class("mt-1 text-[12px] text-[var(--rm-secondary)]")], [description]), h.div([h.Class("mt-3")], [chart])]);
+  const charts = h.div([h.Class("mt-6 grid gap-4"), h.DataAttribute("overview-charts", ""), h.DataAttribute("overview-window", period), h.DataAttribute("overview-buckets", String(buckets.length))], [
+    card("Latency (ms)", "Average and p95 per bucket for the last " + period.toLowerCase() + ".", chartView({ title: "Latency (ms)", description: "Average and p95 per bucket for the last " + period.toLowerCase() + ".", series: [
       { id: "average", label: "Average", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.avg })) },
       { id: "p95", label: "p95", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.p95 })) },
-    ], state: { status: "ready" }, yUnit: "ms" }, h),
-    chartView({ title: "Success vs failure", description: "Request outcomes per bucket for the last " + period.toLowerCase() + ".", series: [
+    ], state: { status: "ready" }, yUnit: "ms" }, h)),
+    card("Success vs failure", "Request outcomes per bucket for the last " + period.toLowerCase() + ".", chartView({ title: "Success vs failure", description: "Request outcomes per bucket for the last " + period.toLowerCase() + ".", series: [
       { id: "success", label: "Success", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.success })) },
       { id: "failure", label: "Failure", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.failure })) },
-    ], state: { status: "ready" }, yUnit: "requests" }, h),
+    ], state: { status: "ready" }, yUnit: "requests" }, h)),
   ]);
   return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "index"), h.DataAttribute("readback-route", "dashboard"), h.DataAttribute("overview-state", "success"), h.DataAttribute("readback-state", "ok"), h.DataAttribute("state", "success")], [header, charts]);
 };
@@ -589,8 +586,18 @@ const studioField = (label: string, field: StudioField, value: string, h: HtmlBu
   h.label([h.Class("grid gap-1 text-[12px] text-[var(--rm-secondary)]")], [
     h.span([], [label]),
     multiline
-      ? h.input([h.DataAttribute("studio-field", field), h.Class("min-h-8 rounded border border-[var(--rm-border)] bg-[var(--rm-bg)] px-2 font-mono text-[12px]")])
-      : h.input([h.DataAttribute("studio-field", field), h.Class("min-h-8 rounded border border-[var(--rm-border)] bg-[var(--rm-bg)] px-2 text-[12px]")]),
+      ? h.textarea([
+          h.DataAttribute("studio-field", field),
+          h.Class("min-h-24 rounded border border-[var(--rm-border)] bg-[var(--rm-bg)] p-2 font-mono text-[12px]"),
+          h.Value(value),
+          h.OnInput((next) => Message.StudioFieldChanged({ field, value: next })),
+        ])
+      : h.input([
+          h.DataAttribute("studio-field", field),
+          h.Class("min-h-8 rounded border border-[var(--rm-border)] bg-[var(--rm-bg)] px-2 text-[12px]"),
+          h.Value(value),
+          h.OnInput((next) => Message.StudioFieldChanged({ field, value: next })),
+        ]),
   ]);
 const studioPage = (state: StudioState, h: HtmlBuilder<Message>): Html => {
   const tabs = StudioTabSchema.literals.map((tab) =>
@@ -788,7 +795,7 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
       h.aside(
         [
           h.Class(
-            "hidden w-56 shrink-0 border-r border-[var(--rm-border)] bg-[var(--rm-surface)] p-3 md:flex md:flex-col",
+            "hidden w-60 shrink-0 flex-col border-r border-[var(--rm-border)] bg-[var(--rm-surface)] p-3 md:flex",
           ),
           h.DataAttribute("shell-sidebar", ""),
         ],
@@ -796,7 +803,7 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
           h.p(
             [
               h.Class(
-                "px-2.5 pb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--rm-muted)]",
+                "whitespace-nowrap px-2.5 pb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--rm-muted)]",
               ),
             ],
             ["Runtime UI"],
@@ -810,7 +817,6 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
               ),
             ],
             [
-              h.p([h.DataAttribute("clicks", String(model.clicks))], [`Clicks: ${model.clicks}`]),
               h.p([], [model.theme === "dark" ? "Dark shell" : "Light shell"]),
             ],
           ),
@@ -979,19 +985,6 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
                 model.overviewWindowMs ?? 86400000,
                 model.studio ?? studioIdle(),
                 h,
-              ),
-              h.div(
-                [h.Class("mt-6 flex flex-wrap items-center gap-3")],
-                [
-                  rm3ButtonView(
-                    {
-                      children: [`Clicked ${model.clicks} time(s)`],
-                      onClick: Message.Clicked(),
-                      variant: "primary",
-                    },
-                    h,
-                  ),
-                ],
               ),
             ],
           ),

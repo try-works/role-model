@@ -61,6 +61,27 @@ describe("S46a Studio", () => {
     expect(paths).toEqual(["/v1/chat/completions", "/v1/images/generations", "/v1/audio/speech", "/v1/rerank", "/v1/messages"]);
   });
 
+  it("dispatches typed values, including a custom model and prompt", async () => {
+    let body: Record<string, unknown> | undefined;
+    mountStudio("s46a-typed", async (_input, init) => {
+      body = JSON.parse(String(init?.body)) as Record<string, unknown>;
+      return new Response(JSON.stringify({ error: "no_eligible_target", requestedModel: body.model }), { status: 400, headers: { "content-type": "application/json" } });
+    });
+    await waitFor(() => document.querySelector("[data-studio-field='model']") ?? undefined, "model field");
+    const model = document.querySelector("[data-studio-field='model']") as HTMLInputElement;
+    model.value = "custom-model-xyz";
+    model.dispatchEvent(new Event("input", { bubbles: true }));
+    const prompt = document.querySelector("[data-studio-field='prompt']") as HTMLInputElement;
+    prompt.value = "typed prompt";
+    prompt.dispatchEvent(new Event("input", { bubbles: true }));
+    (document.querySelector("[data-studio-run]") as HTMLButtonElement).click();
+    const alert = await waitFor(() => document.querySelector("[role='alert']") ?? undefined, "typed 400");
+    expect(body?.model).toBe("custom-model-xyz");
+    expect((body?.messages as Array<{ content: string }>)[0]?.content).toBe("typed prompt");
+    expect(alert.textContent).toContain("HTTP 400");
+    expect(alert.textContent).toContain("custom-model-xyz");
+  });
+
   it("shows 404 raw body with role=alert and no fabricated success", async () => {
     mountStudio("s46a-404", async () => new Response('{"error":"not found"}', { status: 404, headers: { "content-type": "application/json" } }));
     await waitFor(() => document.querySelector("[data-route='studio']") ?? undefined, "studio");

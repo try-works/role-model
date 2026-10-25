@@ -1,0 +1,36 @@
+{
+  "slice": "s48a-styling",
+  "generation": "Fallback: Tailwind CLI is not installed in this worktree. build.mjs copies the repo-built design-system stylesheet apps/runtime-ui/build/client/assets/root-DB32G0ZY.css verbatim to dist/client/assets/main.css, fails if missing or <10KB, copies the 15 Geist font files, and links /assets/main.css plus font preloads from index.html.",
+  "css": {
+    "bytes": 83315,
+    "sha256": "53b66b696774182d50042938911060082494139b60bcc78e08518daff0596bf1"
+  },
+  "fonts": "geist-latin-400/600 + geist-mono-latin-400 preloaded; 15 font files copied",
+  "buildTest": "test/s48a-build.test.ts runs build.mjs, asserts CSS >80KB, .text-[11px], --rm-bg, stylesheet link, font preload",
+  "computed": {
+    "newClient": {
+      "bg": "rgb(10,10,10)",
+      "fg": "rgb(237,237,237)",
+      "font": "Geist, ui-sans-serif, system-ui, sans-serif",
+      "size": "16px",
+      "border": "#1f1f1f"
+    },
+    "ref3456": {
+      "bg": "rgb(10,10,10)",
+      "fg": "rgb(237,237,237)",
+      "font": "Geist, ui-sans-serif, system-ui, sans-serif",
+      "size": "16px",
+      "border": "#1f1f1f"
+    }
+  },
+  "screenshots": {
+    "new": "E:/rm-tmp/s48a/new-client.png",
+    "reference": "E:/rm-tmp/s48a/reference-app.png"
+  },
+  "counts": {
+    "fullSuite": 197,
+    "files": 20,
+    "typecheck": "exit 0"
+  },
+  "note": "reference screenshot shows its own model-pool overview; new client shows styled charts/rail. Colors/fonts/border match; layout differs intentionally."
+}
