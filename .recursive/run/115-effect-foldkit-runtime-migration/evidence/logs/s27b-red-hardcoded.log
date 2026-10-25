@@ -1,0 +1,12 @@
+(node:57304) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\apps\runtime-host-bridge\src\validate-packaging.ts:110
+  throw new Error(`Timed out waiting for ${url}`);
+        ^
+
+Error: Timed out waiting for http://127.0.0.1:52787/healthz
+    at waitForOk (D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\apps\runtime-host-bridge\src\validate-packaging.ts:110:9)
+    at async runRuntimePackagingValidation (D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\apps\runtime-host-bridge\src\validate-packaging.ts:664:20)
+    at async <anonymous> (D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\apps\runtime-host-bridge\src\validate-packaging.ts:721:16)
+
+Node.js v24.11.0
