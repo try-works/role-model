@@ -1,0 +1,343 @@
+{
+  "R:overview": {
+    "url": "http://127.0.0.1:3456/app",
+    "status": 200,
+    "finalUrl": "http://127.0.0.1:3456/app",
+    "info": {
+      "title": "",
+      "path": "/app",
+      "h1": [
+        "Runtime overview"
+      ],
+      "h2": [],
+      "text": "role-model\nOverview\nStudio\nLocal\nRemote\nModels\nRouter\nObserve\nConnect\nSystem\nLearning\nMODELS\nREQUESTS\nDeepSeek V4.1 Flash (High)\nDeepSeek V4.1 Flash (High)\n88\nDeepSeek V4.1 Flash (Max)\nDeepSeek V4.1 Flash (Max)\n87\nchatgpt/gpt-6.1-sol\nchatgpt/gpt-6.1-sol\n25\nCACHE\n0%\nROUTER ENDPOINT\n127.0.0.1:3456/v1\nbaseline.decision-only\nRuntime overview\nTime range\nDay\nWeek\nMonth\n90 days\nBreakdown\nBy endpoint variant\nSource filter\nAll sources\nStatus\nAll statuses\nDifficulty\nAll buckets\nModel pool\nRoute candidates by quality, cost, and speed. Marker size is proportional to route score. Cost axis is inverted: higher is cheaper.\n← Cost\n↑ Quality\nSpeed →\n\nCANDIDATES · ROUTE SCORE (0–1)\n\ndeepseek-flash (High)\n0.660\n\nC100 · Q— · S100 · Live telemetry · Selected\n\ndeepseek-flash (Max)\n0.489\n\nC100 · Q— · S48 · Live telemetry\n\ngpt-6.1-sol\n0.081\n\nC8 · Q— · S17 · Live telemetry\n\nToken usage over time\nInput, output, and total token flow across the selected telemetry window.\n00:00\n04:00\n08:00\n12:00\n16:00\n20:00\n24:00\n0\n4000k\n8000k\n15693k\nInput tokens\nOutput tokens\nTotal tokens\nCache efficiency trend\nCache-hit token volume and cache-hit rate.\n00:00\n04:00\n08:00\n12:00\n16:00\n20:00\n24:00\n0\n4000k\n8000k\n15618k\n0%\n25%\n50%\n75%\n100%\nCache hit tokens\nCache hit token rate\nEffective cost over time\nAuthoritative effective cost based on stored request-time pricing facts.\nNo rows in this slice expose cost telemetry support.\nCost avoided over time\nRouting-avoided cost, cache-avoided cost, and total avoided spend.\n00:00\n04:00\n08:00\n12:00\n16:00\n20:00\n24:00\n$0.00\n$0.60\n$1.20\n$2.34\nRouting avoided cost\nCache avoided cost\nTotal",
+      "notFound": false
+    }
+  },
+  "R:studio": {
+    "url": "http://127.0.0.1:3456/app/studio/chat",
+    "status": 200,
+    "finalUrl": "http://127.0.0.1:3456/app/studio/chat",
+    "info": {
+      "title": "",
+      "path": "/app/studio/chat",
+      "h1": [
+        "Chat workspace"
+      ],
+      "h2": [
+        "Request",
+        "Result workspace"
+      ],
+      "text": "role-model\nOverview\nStudio\nLocal\nRemote\nModels\nRouter\nObserve\nConnect\nSystem\nLearning\nMODELS\nREQUESTS\nDeepSeek V4.1 Flash (High)\nDeepSeek V4.1 Flash (High)\n88\nDeepSeek V4.1 Flash (Max)\nDeepSeek V4.1 Flash (Max)\n87\nchatgpt/gpt-6.1-sol\nchatgpt/gpt-6.1-sol\n25\nCACHE\n0%\nROUTER ENDPOINT\n127.0.0.1:3456/v1\nbaseline.decision-only\nChat workspace\nChat\nImages\nAudio\nRerank\nAdvanced APIs\nRequest\nModel\nDeepSeek V4.1 Flash (High)\nPrompt\nRun request\nResult workspace\n\nNo result yet.",
+      "notFound": false
+    }
+  },
+  "R:local": {
+    "url": "http://127.0.0.1:3456/app/local/choose",
+    "status": 200,
+    "finalUrl": "http://127.0.0.1:3456/app/local/choose",
+    "info": {
+      "title": "",
+      "path": "/app/local/choose",
+      "h1": [
+        "Choose local backend"
+      ],
+      "h2": [
+        "Peer-backed models",
+        "Llama-swap models"
+      ],
+      "text": "role-model\nOverview\nStudio\nLocal\nRemote\nModels\nRouter\nObserve\nConnect\nSystem\nLearning\nMODELS\nREQUESTS\nDeepSeek V4.1 Flash (High)\nDeepSeek V4.1 Flash (High)\n88\nDeepSeek V4.1 Flash (Max)\nDeepSeek V4.1 Flash (Max)\n87\nchatgpt/gpt-6.1-sol\nchatgpt/gpt-6.1-sol\n25\nCACHE\n0%\nROUTER ENDPOINT\n127.0.0.1:3456/v1\nbaseline.decision-only\nChoose local backend\n\nEXTERNAL SERVER\n\nPeer-backed models\n\nUse this when you already run an OpenAI-compatible server (LM Studio, llama.cpp, vLLM, or similar). Register the server under Endpoints, then register models and roles here. role-model routes to your server; it does not load GGUF files for you.\n\nOpen peer models\nConfigure endpoints\n\nMANAGED BY ROLE-MODEL\n\nLlama-swap models\n\nUse this when role-model runs the local llama-swap process, swaps models on one GPU, and applies TTL auto-unload. Models are declared in Runtime config; load and role assignment happen here.\n\nOpen llama-swap models\nEdit runtime config",
+      "notFound": false
+    }
+  },
+  "R:remote": {
+    "url": "http://127.0.0.1:3456/app/remote/providers",
+    "status": 200,
+    "finalUrl": "http://127.0.0.1:3456/app/remote/providers",
+    "info": {
+      "title": "",
+      "path": "/app/remote/providers",
+      "h1": [
+        "Remote providers"
+      ],
+      "h2": [
+        "Choose provider and models",
+        "Configured provider connections"
+      ],
+      "text": "role-model\nOverview\nStudio\nLocal\nRemote\nModels\nRouter\nObserve\nConnect\nSystem\nLearning\nMODELS\nREQUESTS\nCACHE\n0%\nROUTER ENDPOINT\n127.0.0.1:3456/v1\n—\nRemote providers\nChoose provider and models\n\nSelect the provider, connection method, and model. New models start with all roles selected — edit roles on the configured connection.\n\nProvider\n302.AI\nConnection method\n302.AI API Key\nProvider connection id\nCredential reference\nModel\nSelect a model…\nSave configuration\nConfigured provider connections\n\nEndpoints stay grouped by account. Expand a model’s roles count to edit which routing roles it can serve.\n\ndeepseek.personal.deepseek-api-key\n\ndeepseek\n2 endpoints\nDeepSeek V4.1 Flash (High)\nhealthy\n28 roles\nDeepSeek V4.1 Flash (Max)\nhealthy\n28 roles\n\nopenai.personal.openai-codex-subscription\n\nopenai\n1 endpoint\nGPT-6.1 Sol\nhealthy\n28 roles",
+      "notFound": false
+    }
+  },
+  "R:models": {
+    "url": "http://127.0.0.1:3456/app/models",
+    "status": 200,
+    "finalUrl": "http://127.0.0.1:3456/app/models",
+    "info": {
+      "title": "",
+      "path": "/app/models",
+      "h1": [
+        "Configured models"
+      ],
+      "h2": [
+        "Model inventory"
+      ],
+      "text": "role-model\nOverview\nStudio\nLocal\nRemote\nModels\nRouter\nObserve\nConnect\nSystem\nLearning\nMODELS\nREQUESTS\nDeepSeek V4.1 Flash (High)\nDeepSeek V4.1 Flash (High)\n88\nDeepSeek V4.1 Flash (Max)\nDeepSeek V4.1 Flash (Max)\n87\nchatgpt/gpt-6.1-sol\nchatgpt/gpt-6.1-sol\n25\nCACHE\n0%\nROUTER ENDPOINT\n127.0.0.1:3456/v1\nbaseline.decision-only\nConfigured models\nModels\nRoles\nBenchmark\nModel inventory\n\nSelect a model to inspect and configure. Controller is the badge — change it from the footer.\n\nMODELS\n\nDeepSeek V4.1 Flash (High)\ncontroller\n\nremote · tools · 1 endpoint\n\nDeepSeek V4.1 Flash (Max)\nhealthy\n\nremote · tools · 1 endpoint\n\nGPT-6.1 Sol\nhealthy\n\nremote · tools · 1 endpoint\n\nRUNTIME · DEEPSEEK V4.1 FLASH (HIGH)\n\nSource\nRemote\nStatus\nHealthy · controller\nEndpoints\n1 healthy\nTool use\nEnabled · none\nContext\n1000k tokens\nMode\ntext, image\n\nCOST\n\nInput\n$0.15 / 1M\nOutput\n$0.60 / 1M\n\nBENCHMARK\n\nOverall\nNo evidence yet\nLive latency p50\n1.39 s\nLive latency p95\n1.39 s\nLive mean latency\n—\nLive failure rate\n0%\nLive samples\n1\nDifficulty mix\nNo difficulty mix yet\nRouting\nNo benchmark evidence yet\n\nROLES\n\nDeepSeek V4.1 Flash (High) · tasks under each role\n\nSaved immediately for deepseek.personal.deepseek-api-key. Task and group eligibility is derived from these roles for this exact endpoint instance. A legacy model default is inherited only until this instance is edited.\n\nanalyst\n47 tasks\narchitect\n36 tasks\ncoder\n49 tasks\ncoordinator\n24 tasks\ncreative\n14 tasks\ndata\n22 tasks\ndesigner\n19 tasks\neducator\n22 tasks\nfinance\n27 tasks\nhealth\n11 tasks\nknowledge\n16 tasks\nlegal\n22 tasks\nmarketer\n28 tasks\nmathematician\n",
+      "notFound": false
+    }
+  },
+  "R:router": {
+    "url": "http://127.0.0.1:3456/app/router/strategy",
+    "status": 200,
+    "finalUrl": "http://127.0.0.1:3456/app/router/strategy",
+    "info": {
+      "title": "",
+      "path": "/app/router/strategy",
+      "h1": [
+        "Routing strategy"
+      ],
+      "h2": [],
+      "text": "role-model\nOverview\nStudio\nLocal\nRemote\nModels\nRouter\nObserve\nConnect\nSystem\nLearning\nMODELS\nREQUESTS\nDeepSeek V4.1 Flash (High)\nDeepSeek V4.1 Flash (High)\n88\nDeepSeek V4.1 Flash (Max)\nDeepSeek V4.1 Flash (Max)\n87\nchatgpt/gpt-6.1-sol\nchatgpt/gpt-6.1-sol\n25\nCACHE\n0%\nROUTER ENDPOINT\n127.0.0.1:3456/v1\nbaseline.decision-only\nRouting strategy\nOverview\nRouting strategy\nAgent strategy\nWorkloads\nController\nCandidates\nDecisions\n\nLoading routing strategy posture…",
+      "notFound": false
+    }
+  },
+  "R:observe": {
+    "url": "http://127.0.0.1:3456/app/observe/requests",
+    "status": 200,
+    "finalUrl": "http://127.0.0.1:3456/app/observe/requests",
+    "info": {
+      "title": "",
+      "path": "/app/observe/requests",
+      "h1": [
+        "Telemetry request ledger"
+      ],
+      "h2": [
+        "Recent telemetry requests"
+      ],
+      "text": "role-model\nOverview\nStudio\nLocal\nRemote\nModels\nRouter\nObserve\nConnect\nSystem\nLearning\nMODELS\nREQUESTS\nCACHE\n0%\nROUTER ENDPOINT\n127.0.0.1:3456/v1\n—\nTelemetry request ledger\nRequests\nRouting\nQueues\nDegradation receipts\nObservability\nActivity\nLogs\nTime range\nDay\nWeek\nMonth\n90 days\nBreakdown\nTotal\nSource\nAll sources\nRanking metric\nAverage latency\nRanking target\nEndpoint variants\nAdvanced controls\nExpand\nRecent telemetry requests\n\nExplainable request ledger with endpoint, model, status, and direct Observe/Router drill-in.\n\nLoading the canonical telemetry ledger…",
+      "notFound": false
+    }
+  },
+  "R:connect": {
+    "url": "http://127.0.0.1:3456/app/connect",
+    "status": 200,
+    "finalUrl": "http://127.0.0.1:3456/app/connect",
+    "info": {
+      "title": "",
+      "path": "/app/connect",
+      "h1": [
+        "Available models & endpoints"
+      ],
+      "h2": [
+        "Runtime connections"
+      ],
+      "text": "role-model\nOverview\nStudio\nLocal\nRemote\nModels\nRouter\nObserve\nConnect\nSystem\nLearning\nMODELS\nREQUESTS\nDeepSeek V4.1 Flash (High)\nDeepSeek V4.1 Flash (High)\n88\nDeepSeek V4.1 Flash (Max)\nDeepSeek V4.1 Flash (Max)\n87\nchatgpt/gpt-6.1-sol\nchatgpt/gpt-6.1-sol\n25\nCACHE\n0%\nROUTER ENDPOINT\n127.0.0.1:3456/v1\nbaseline.decision-only\nAvailable models & endpoints\nRegistry\nDownstream\nUpstream\nRuntime connections\n\nProvider, model, and endpoint state merged into one registry view.\n\nPROVIDER\tCONNECTION\tMODEL\tENDPOINT\tEFFORT\tSOURCE\tHEALTH\tREADINESS\ndeepseek\tdeepseek.personal.deepseek-api-key\tDeepSeek V4.1 Flash (High)\tdeepseek.personal.deepseek-api-key.global.deepseek-flash-high\tHigh (fixed)\tDirect provider / remote_api\thealthy\tactive\ndeepseek\tdeepseek.personal.deepseek-api-key\tDeepSeek V4.1 Flash (Max)\tdeepseek.personal.deepseek-api-key.global.deepseek-flash-max\tMax (fixed)\tDirect provider / remote_api\thealthy\tactive\nopenai\topenai.personal.openai-codex-subscription\tGPT-6.1 Sol\topenai.personal.openai-codex-subscription.global.gpt-6.1-sol\tProvider default\tDirect provider / remote_api\thealthy\tactive",
+      "notFound": false
+    }
+  },
+  "R:system": {
+    "url": "http://127.0.0.1:3456/app/system/runtime-config",
+    "status": 200,
+    "finalUrl": "http://127.0.0.1:3456/app/system/runtime-config",
+    "info": {
+      "title": "",
+      "path": "/app/system/runtime-config",
+      "h1": [
+        "Runtime config"
+      ],
+      "h2": [
+        "Config editor",
+        "Applied snapshot",
+        "Page actions"
+      ],
+      "text": "role-model\nOverview\nStudio\nLocal\nRemote\nModels\nRouter\nObserve\nConnect\nSystem\nLearning\nMODELS\nREQUESTS\nDeepSeek V4.1 Flash (High)\nDeepSeek V4.1 Flash (High)\n88\nDeepSeek V4.1 Flash (Max)\nDeepSeek V4.1 Flash (Max)\n87\nchatgpt/gpt-6.1-sol\nchatgpt/gpt-6.1-sol\n25\nCACHE\n0%\nROUTER ENDPOINT\n127.0.0.1:3456/v1\nbaseline.decision-only\nRuntime config\nReadiness\nRuntime\nConfig\nPeers\nExtensions\nStorage\nEXECUTION\npending\nSTRATEGY\npending\nLOCAL MODELS\n0\nREMOTE MAPS\n0\nConfig editor\n\nEdit the canonical JSON payload, then save and apply through the role-model runtime control plane.\n\nSave and apply\nInsert llama-swap scaffold\nReset editor\nApplied snapshot\n\nActive config file and local-plus-remote payload in force.\n\nPATH\n\nC:\\Users\\erikb\\AppData\\Local\\role-model-runtime\\state\\runtime-config.yaml\n\nEXECUTION\n\npending\n\nSTRATEGY\n\npending\n\nLOCAL MODELS\n\n0\n\nREMOTE MAPS\n\n0\n\nPage actions\n\nRelated control-plane surfaces for this config.\n\nRouting strategy\nInspect models\nRuntime config JSON",
+      "notFound": false
+    }
+  },
+  "R:learning": {
+    "url": "http://127.0.0.1:3456/app/learning",
+    "status": 200,
+    "finalUrl": "http://127.0.0.1:3456/app/learning",
+    "info": {
+      "title": "",
+      "path": "/app/learning",
+      "h1": [
+        "Learning overview"
+      ],
+      "h2": [
+        "Learning overview",
+        "Live replay & evaluation",
+        "Recent decisions"
+      ],
+      "text": "role-model\nOverview\nStudio\nLocal\nRemote\nModels\nRouter\nObserve\nConnect\nSystem\nLearning\nMODELS\nREQUESTS\nCACHE\n0%\nROUTER ENDPOINT\n127.0.0.1:3456/v1\n—\nLearning overview\nOverview\nConfiguration\nPacks\nDecisions\nEvidence\nHistory\nLearning overview\n\nWhat the learning loop is doing right now, read from durable state.\n\nOperator token\nThis machine's owner is trusted: readbacks, policy changes, pack activation/rollback and the kill switch all work here without a token. Set one only for clients that are not the device owner — the value is the runtime's --operator-auth-token, and a runtime exposed beyond loopback still requires it.\n\nLoading learning state…\n\nLive replay & evaluation\n\nscope not set · last 60m · reading\n\nloading\n\nReading live replay and evaluation state\n\nRecent decisions\n\nThe newest replay decisions among the last 0 observations; the selection follows the configured activation stage. Each row is one decision with its observation count.\n\nLoading learning state…",
+      "notFound": false
+    }
+  },
+  "C:overview": {
+    "url": "http://127.0.0.1:5802/",
+    "status": 200,
+    "finalUrl": "http://127.0.0.1:5802/",
+    "info": {
+      "title": "Overview | RM3 Foldkit shell",
+      "path": "/",
+      "h1": [
+        "Runtime overview"
+      ],
+      "h2": [
+        "No telemetry yet"
+      ],
+      "text": "RUNTIME UI\n\nRUNTIME\n\nMODELS\n3\nREQUESTS\n0\nCACHE\n—\nCache percentage unavailable: no requests in the window or telemetry is loading\nROUTER\nhttp://127.0.0.1:5802/v1\nMODE\ndecision_only\n\nOVERVIEW\n\nOverview\nDiagnostics\nObservability\n\nOBSERVE\n\nReceipts\nQueues\nLocal logs\nRequests\nActivity\nObserve logs\nObserve routing\n\nROUTER\n\nCandidates\nDecisions\nProviders\nEndpoints\nController\nRouter\n\nSYSTEM\n\nSystem peers\nLocal peers\nRuntime\nReadiness\nDashboard\nSwap\n\nSTUDIO\n\nStudio\n\nLEARNING\n\nLearning\n\nDark shell\n\nRUNTIME\n\nRuntime overview\nToggle theme\n\nLast Day\n\nTIME RANGE\nDay\nWeek\nMonth\n90 days\nNo telemetry yet\n\nNo telemetry requests in the last day. Run a request or widen the time range.",
+      "notFound": false
+    }
+  },
+  "C:studio": {
+    "url": "http://127.0.0.1:5802/studio",
+    "status": 200,
+    "finalUrl": "http://127.0.0.1:5802/studio",
+    "info": {
+      "title": "Studio | RM3 Foldkit shell",
+      "path": "/studio",
+      "h1": [
+        "Studio",
+        "Studio"
+      ],
+      "h2": [
+        "RAW RESPONSE"
+      ],
+      "text": "RUNTIME UI\n\nRUNTIME\n\nMODELS\n3\nREQUESTS\n0\nCACHE\n—\nCache percentage unavailable: no requests in the window or telemetry is loading\nROUTER\nhttp://127.0.0.1:5802/v1\nMODE\ndecision_only\n\nOVERVIEW\n\nOverview\nDiagnostics\nObservability\n\nOBSERVE\n\nReceipts\nQueues\nLocal logs\nRequests\nActivity\nObserve logs\nObserve routing\n\nROUTER\n\nCandidates\nDecisions\nProviders\nEndpoints\nController\nRouter\n\nSYSTEM\n\nSystem peers\nLocal peers\nRuntime\nReadiness\nDashboard\nSwap\n\nSTUDIO\n\nStudio\n\nLEARNING\n\nLearning\n\nDark shell\n\nRUNTIME\n\nStudio\nToggle theme\nStudio\nChat\nImages\nAudio\nRerank\nAdvanced APIs\nModel\nPrompt\nRun\nRAW RESPONSE\nRun a Studio request to see the raw response.",
+      "notFound": false
+    }
+  },
+  "C:local": {
+    "url": "http://127.0.0.1:5802/local/choose",
+    "status": 200,
+    "finalUrl": "http://127.0.0.1:5802/local/choose",
+    "info": {
+      "title": "Local choose | RM3 Foldkit shell",
+      "path": "/local/choose",
+      "h1": [
+        "Local choose",
+        "Local choose"
+      ],
+      "h2": [],
+      "text": "RUNTIME UI\n\nRUNTIME\n\nMODELS\n3\nREQUESTS\n0\nCACHE\n—\nCache percentage unavailable: no requests in the window or telemetry is loading\nROUTER\nhttp://127.0.0.1:5802/v1\nMODE\ndecision_only\n\nOVERVIEW\n\nOverview\nDiagnostics\nObservability\n\nOBSERVE\n\nReceipts\nQueues\nLocal logs\nRequests\nActivity\nObserve logs\nObserve routing\n\nROUTER\n\nCandidates\nDecisions\nProviders\nEndpoints\nController\nRouter\n\nSYSTEM\n\nSystem peers\nLocal peers\nRuntime\nReadiness\nDashboard\nSwap\n\nSTUDIO\n\nStudio\n\nLEARNING\n\nLearning\n\nDark shell\n\nRUNTIME\n\nLocal choose\nToggle theme\nLocal choose\n\nChoose peer-backed models or llama-swap models.",
+      "notFound": false
+    }
+  },
+  "C:remote": {
+    "url": "http://127.0.0.1:5802/control/providers",
+    "status": 200,
+    "finalUrl": "http://127.0.0.1:5802/control/providers",
+    "info": {
+      "title": "Providers | RM3 Foldkit shell",
+      "path": "/control/providers",
+      "h1": [
+        "Providers",
+        "Providers"
+      ],
+      "h2": [],
+      "text": "RUNTIME UI\n\nRUNTIME\n\nMODELS\n3\nREQUESTS\n0\nCACHE\n—\nCache percentage unavailable: no requests in the window or telemetry is loading\nROUTER\nhttp://127.0.0.1:5802/v1\nMODE\ndecision_only\n\nOVERVIEW\n\nOverview\nDiagnostics\nObservability\n\nOBSERVE\n\nReceipts\nQueues\nLocal logs\nRequests\nActivity\nObserve logs\nObserve routing\n\nROUTER\n\nCandidates\nDecisions\nProviders\nEndpoints\nController\nRouter\n\nSYSTEM\n\nSystem peers\nLocal peers\nRuntime\nReadiness\nDashboard\nSwap\n\nSTUDIO\n\nStudio\n\nLEARNING\n\nLearning\n\nDark shell\n\nRUNTIME\n\nProviders\nToggle theme\n\nRUNTIME CONTROL\n\nProviders\n\n2 row(s) from the live host read\n\nanthropic\nactive\napi-key-rotating-ref\nopenai\nactive\napi-key-static\nReconnect provider",
+      "notFound": false
+    }
+  },
+  "C:models": {
+    "url": "http://127.0.0.1:5802/models",
+    "status": 200,
+    "finalUrl": "http://127.0.0.1:5802/models",
+    "info": {
+      "title": "Not found: /models | RM3 Foldkit shell",
+      "path": "/models",
+      "h1": [
+        "Not found: /models",
+        "Not found: /models"
+      ],
+      "h2": [],
+      "text": "RUNTIME UI\n\nRUNTIME\n\nMODELS\n3\nREQUESTS\n0\nCACHE\n—\nCache percentage unavailable: no requests in the window or telemetry is loading\nROUTER\nhttp://127.0.0.1:5802/v1\nMODE\ndecision_only\n\nOVERVIEW\n\nOverview\nDiagnostics\nObservability\n\nOBSERVE\n\nReceipts\nQueues\nLocal logs\nRequests\nActivity\nObserve logs\nObserve routing\n\nROUTER\n\nCandidates\nDecisions\nProviders\nEndpoints\nController\nRouter\n\nSYSTEM\n\nSystem peers\nLocal peers\nRuntime\nReadiness\nDashboard\nSwap\n\nSTUDIO\n\nStudio\n\nLEARNING\n\nLearning\n\nDark shell\n\nRUNTIME\n\nNot found: /models\nToggle theme\n\nNOT FOUND\n\nNot found: /models\n\nThis runtime route does not exist. Return to the operator shell to continue.\n\nBack to overview",
+      "notFound": true
+    }
+  },
+  "C:router": {
+    "url": "http://127.0.0.1:5802/router",
+    "status": 200,
+    "finalUrl": "http://127.0.0.1:5802/router",
+    "info": {
+      "title": "Router | RM3 Foldkit shell",
+      "path": "/router",
+      "h1": [
+        "Router"
+      ],
+      "h2": [
+        "Router"
+      ],
+      "text": "RUNTIME UI\n\nRUNTIME\n\nMODELS\n3\nREQUESTS\n0\nCACHE\n—\nCache percentage unavailable: no requests in the window or telemetry is loading\nROUTER\nhttp://127.0.0.1:5802/v1\nMODE\ndecision_only\n\nOVERVIEW\n\nOverview\nDiagnostics\nObservability\n\nOBSERVE\n\nReceipts\nQueues\nLocal logs\nRequests\nActivity\nObserve logs\nObserve routing\n\nROUTER\n\nCandidates\nDecisions\nProviders\nEndpoints\nController\nRouter\n\nSYSTEM\n\nSystem peers\nLocal peers\nRuntime\nReadiness\nDashboard\nSwap\n\nSTUDIO\n\nStudio\n\nLEARNING\n\nLearning\n\nDark shell\n\nRUNTIME\n\nRouter\nToggle theme\n\nRUNTIME READBACK\n\nRouter\n\n3 row(s) from the live host read\n\nexecutionMode\ndecision_only\nsummary\nconfiguredCandidateCount\n3\nsummary\nrecentDecisionCount\n0\nsummary\n\nRefresh follows the shell's single runtime subscription; this page does not open its own.",
+      "notFound": false
+    }
+  },
+  "C:observe": {
+    "url": "http://127.0.0.1:5802/requests",
+    "status": 200,
+    "info": {
+      "title": "Requests | RM3 Foldkit shell",
+      "path": "/requests",
+      "h1": [
+        "Requests"
+      ],
+      "h2": [
+        "Requests"
+      ],
+      "text": "RUNTIME UI\n\nRUNTIME\n\nMODELS\n3\nREQUESTS\n0\nCACHE\n—\nCache percentage unavailable: no requests in the window or telemetry is loading\nROUTER\nhttp://127.0.0.1:5802/v1\nMODE\ndecision_only\n\nOVERVIEW\n\nOverview\nDiagnostics\nObservability\n\nOBSERVE\n\nReceipts\nQueues\nLocal logs\nRequests\nActivity\nObserve logs\nObserve routing\n\nROUTER\n\nCandidates\nDecisions\nProviders\nEndpoints\nController\nRouter\n\nSYSTEM\n\nSystem peers\nLocal peers\nRuntime\nReadiness\nDashboard\nSwap\n\nSTUDIO\n\nStudio\n\nLEARNING\n\nLearning\n\nDark shell\n\nRUNTIME\n\nRequests\nToggle theme\n\nRUNTIME READBACK\n\nRequests\n\nNo telemetry requests recorded yet.\n\nRefresh follows the shell's single runtime subscription; this page does not open its own.",
+      "notFound": false
+    }
+  },
+  "C:connect": {
+    "url": "http://127.0.0.1:5802/control/endpoints",
+    "status": 200,
+    "finalUrl": "http://127.0.0.1:5802/control/endpoints",
+    "info": {
+      "title": "Endpoints | RM3 Foldkit shell",
+      "path": "/control/endpoints",
+      "h1": [
+        "Endpoints",
+        "Endpoints"
+      ],
+      "h2": [],
+      "text": "RUNTIME UI\n\nRUNTIME\n\nMODELS\n3\nREQUESTS\n0\nCACHE\n—\nCache percentage unavailable: no requests in the window or telemetry is loading\nROUTER\nhttp://127.0.0.1:5802/v1\nMODE\ndecision_only\n\nOVERVIEW\n\nOverview\nDiagnostics\nObservability\n\nOBSERVE\n\nReceipts\nQueues\nLocal logs\nRequests\nActivity\nObserve logs\nObserve routing\n\nROUTER\n\nCandidates\nDecisions\nProviders\nEndpoints\nController\nRouter\n\nSYSTEM\n\nSystem peers\nLocal peers\nRuntime\nReadiness\nDashboard\nSwap\n\nSTUDIO\n\nStudio\n\nLEARNING\n\nLearning\n\nDark shell\n\nRUNTIME\n\nEndpoints\nToggle theme\n\nRUNTIME CONTROL\n\nEndpoints\n\n3 row(s) from the live host read\n\nopenai/gpt-4.1-mini-fast\nactive\nopenai\nclaude-3.7-sonnet\ndegraded\nanthropic\ngpt-5.4\nactive\nlocal-cli\nActivate endpoint",
+      "notFound": false
+    }
+  },
+  "C:system": {
+    "url": "http://127.0.0.1:5802/runtime",
+    "status": 200,
+    "finalUrl": "http://127.0.0.1:5802/runtime",
+    "info": {
+      "title": "Runtime | RM3 Foldkit shell",
+      "path": "/runtime",
+      "h1": [
+        "Runtime"
+      ],
+      "h2": [
+        "Runtime"
+      ],
+      "text": "RUNTIME UI\n\nRUNTIME\n\nMODELS\n3\nREQUESTS\n0\nCACHE\n—\nCache percentage unavailable: no requests in the window or telemetry is loading\nROUTER\nhttp://127.0.0.1:5802/v1\nMODE\ndecision_only\n\nOVERVIEW\n\nOverview\nDiagnostics\nObservability\n\nOBSERVE\n\nReceipts\nQueues\nLocal logs\nRequests\nActivity\nObserve logs\nObserve routing\n\nROUTER\n\nCandidates\nDecisions\nProviders\nEndpoints\nController\nRouter\n\nSYSTEM\n\nSystem peers\nLocal peers\nRuntime\nReadiness\nDashboard\nSwap\n\nSTUDIO\n\nStudio\n\nLEARNING\n\nLearning\n\nDark shell\n\nRUNTIME\n\nRuntime\nToggle theme\n\nRUNTIME READBACK\n\nRuntime\n\n2 row(s) from the live host read\n\napplied\nfalse\nconfig\npath\nE:\\rm-tmp\\learn2-state\\state\\runtime-config.yaml\nconfig\n\nRefresh follows the shell's single runtime subscription; this page does not open its own.",
+      "notFound": false
+    }
+  },
+  "C:learning": {
+    "url": "http://127.0.0.1:5802/learning",
+    "status": 200,
+    "finalUrl": "http://127.0.0.1:5802/learning",
+    "info": {
+      "title": "Learning | RM3 Foldkit shell",
+      "path": "/learning",
+      "h1": [
+        "Learning"
+      ],
+      "h2": [
+        "Knowledge worker",
+        "Replay jobs",
+        "Evaluation jobs"
+      ],
+      "text": "RUNTIME UI\n\nRUNTIME\n\nMODELS\n3\nREQUESTS\n0\nCACHE\n—\nCache percentage unavailable: no requests in the window or telemetry is loading\nROUTER\nhttp://127.0.0.1:5802/v1\nMODE\ndecision_only\n\nOVERVIEW\n\nOverview\nDiagnostics\nObservability\n\nOBSERVE\n\nReceipts\nQueues\nLocal logs\nRequests\nActivity\nObserve logs\nObserve routing\n\nROUTER\n\nCandidates\nDecisions\nProviders\nEndpoints\nController\nRouter\n\nSYSTEM\n\nSystem peers\nLocal peers\nRuntime\nReadiness\nDashboard\nSwap\n\nSTUDIO\n\nStudio\n\nLEARNING\n\nLearning\n\nDark shell\n\nRUNTIME\n\nLearning\nToggle theme\n\nKnowledge worker, replay jobs and evaluation jobs. Empty means the capability is available but no work exists.\n\nRUNTIME READBACK\n\nKnowledge worker\n\n7 row(s) from the live host read\n\nAvailable\ntrue\nknowledge\nSchema\nrole-model.knowledge-worker.v1\nsqlite_fts5_bm25\nCandidates\n0\nknowledge\nIndexed documents\n0\nknowledge\nProduction activation\ndisabled\nknowledge\nReceipts\n0 retrieval / 0 rollback / 0 recovery\nknowledge\nDegradation count\n0\nknowledge\n\nRefresh follows the shell's single runtime subscription; this page does not open its own.\n\nRUNTIME READBACK\n\nReplay jobs\n\nNo replay jobs.\n\nRefresh follows the shell's single runtime subscription; this page does not open its own.\n\nRUNTIME READBACK\n\nEvaluation jobs\n\nNo evaluation jobs.\n\nRefresh follows the shell's single runtime subscription; this page does not open its own.",
+      "notFound": false
+    }
+  }
+}
