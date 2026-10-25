@@ -1,0 +1,30 @@
+{
+  "slice": "s26p-contract-strength",
+  "manifest": "test/fixtures/s26o/manifest.json: schemaVersion, artifact{version,commit,sourceTree,sha}, entries{url,status,capturedAt,sha256,artifact,bodyBytes}; test recomputes each file sha256 and asserts identity",
+  "rowExpectations": "expected status per route; ok routes require non-empty rows; first label/value pinned for dashboard, observeActivity, runtime, sessionReadiness, queueConfig, downstreamOpenAI",
+  "nonEmpty": "dashboard requestCount=1 (Requests/1), observeActivity items[1] (request id), diagnostics disabled 0 records",
+  "invalid": "control endpoints [{}] -> error, asserted",
+  "parserReds": {
+    "dashboard": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26p-red-dashboard.log",
+    "activity": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26p-red-activity.log",
+    "runtime": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26p-red-runtime.log",
+    "session": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26p-red-session.log"
+  },
+  "diagnostics": {
+    "outcome": "INCONCLUSIVE",
+    "captured": "/api/role-model/operator/diagnostics returns schema v1, state=disabled, records=[], recordCount=0",
+    "reason": "writer is R20 scope; no test-only switch found in the packaged host/CLI for this slice. The current enabled path has no records.",
+    "command": "Once R20 writer exists: start the packaged runtime with its diagnostics writer/collector enabled, POST one request, GET /api/role-model/operator/diagnostics, capture into test/fixtures/s26o/diagnostics.json and update manifest sha256."
+  },
+  "aliases": {
+    "localModels": "/local/models -> LocalChoose, test asserts target view",
+    "localMatrix": "refused: legacy target llama-swap/models?view=grid unported; source route removed -> NotFound",
+    "routerConfig": "refused: legacy target router/strategy unported; source route removed -> NotFound",
+    "browserCaveat": "5783 serves a pre-change bundle, so the packaged browser still shows the old aliases; source-level intended state is NotFound. Rebuild required to confirm visually."
+  },
+  "counts": {
+    "fullSuite": 173,
+    "files": 16,
+    "typecheck": "exit 0"
+  }
+}

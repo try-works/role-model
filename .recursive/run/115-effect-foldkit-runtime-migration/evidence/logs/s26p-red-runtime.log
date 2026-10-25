@@ -1,0 +1,51 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s26o-contract.test.ts (25 tests | 1 failed | 24 skipped) 28ms
+   ↓ S26o captured-host parser contracts > asserts the fixture manifest hashes and capture identity
+   ↓ S26o captured-host parser contracts > rejects an invalid endpoints body instead of indexing a row
+   ↓ S26o captured-host parser contracts > readback storeReceipts accepts its captured packaged-host fixture
+   ↓ S26o captured-host parser contracts > readback queues accepts its captured packaged-host fixture
+   ↓ S26o captured-host parser contracts > readback localLogs accepts its captured packaged-host fixture
+   ↓ S26o captured-host parser contracts > readback routerCandidates accepts its captured packaged-host fixture
+   ↓ S26o captured-host parser contracts > readback requests accepts its captured packaged-host fixture
+   ↓ S26o captured-host parser contracts > readback routerDecisions accepts its captured packaged-host fixture
+   ↓ S26o captured-host parser contracts > readback localPeers accepts its captured packaged-host fixture
+   ↓ S26o captured-host parser contracts > readback systemPeers accepts its captured packaged-host fixture
+   × S26o captured-host parser contracts > readback runtime accepts its captured packaged-host fixture 24ms
+     → expected 'error' not to be 'error' // Object.is equality
+   ↓ S26o captured-host parser contracts > readback sessionReadiness accepts its captured packaged-host fixture
+   ↓ S26o captured-host parser contracts > readback dashboard accepts its captured packaged-host fixture
+   ↓ S26o captured-host parser contracts > readback localSwap accepts its captured packaged-host fixture
+   ↓ S26o captured-host parser contracts > readback observeActivity accepts its captured packaged-host fixture
+   ↓ S26o captured-host parser contracts > readback observeLogs accepts its captured packaged-host fixture
+   ↓ S26o captured-host parser contracts > readback observeRouting accepts its captured packaged-host fixture
+   ↓ S26o captured-host parser contracts > readback router accepts its captured packaged-host fixture
+   ↓ S26o captured-host parser contracts > readback localPeerModels accepts its captured packaged-host fixture
+   ↓ S26o captured-host parser contracts > readback queueConfig accepts its captured packaged-host fixture
+   ↓ S26o captured-host parser contracts > readback downstreamOpenAI accepts its captured packaged-host fixture
+   ↓ S26o captured-host parser contracts > readback integrationProviders accepts its captured packaged-host fixture
+   ↓ S26o captured-host parser contracts > control providers accepts its captured packaged-host fixture
+   ↓ S26o captured-host parser contracts > control endpoints accepts its captured packaged-host fixture
+   ↓ S26o captured-host parser contracts > control controlController accepts its captured packaged-host fixture
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s26o-contract.test.ts > S26o captured-host parser contracts > readback runtime accepts its captured packaged-host fixture
+AssertionError: expected 'error' not to be 'error' // Object.is equality
+ ❯ test/s26o-contract.test.ts:52:32
+     50|     it(`readback ${key} accepts its captured packaged-host fixture`, (…
+     51|       const state = parseReadbackFixture(key, read(key));
+     52|       expect(state.status).not.toBe("error");
+       |                                ^
+     53|       expect(state.message).toBeUndefined();
+     54|       if (expectedStatus[key] !== undefined) expect(state.status).toBe…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 24 skipped (25)
+   Start at  14:47:11
+   Duration  5.83s (transform 2.22s, setup 0ms, collect 3.57s, tests 28ms, environment 1.01s, prepare 376ms)
+

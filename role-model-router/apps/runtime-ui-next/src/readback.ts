@@ -293,7 +293,7 @@ const parseDashboard = (body: unknown, token: number): ReadbackState => {
     const field = record[key];
     return typeof field === "number" ? String(field) : typeof field === "string" ? field : "—";
   };
-  return { rows: [], status: "empty", token };
+  if (record.requestCount === 0) return { rows: [], status: "empty", token };
   const rows = [
     row("requestCount", "Requests", value("requestCount"), `${value("successCount")} success / ${value("failureCount")} failed`),
     row("tokens", "Tokens", value("totalTokens"), `${value("totalInputTokens")} in / ${value("totalOutputTokens")} out`),
