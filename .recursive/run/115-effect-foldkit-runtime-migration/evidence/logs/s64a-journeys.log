@@ -1,0 +1,40 @@
+{
+  "J3": {
+    "classification": "PARTIAL",
+    "defect": "cancel path NOT RUN: endpoint circuit-breaker 503 before cancellation; no abort observed",
+    "before": 0,
+    "afterOk": 1,
+    "afterBad": 2,
+    "afterCancel": 3,
+    "success": {
+      "requestId": "req-38981158-5b5a-42b1-aac9-9f7d635b35a7",
+      "decisionId": "decision-req-38981158-5b5a-42b1-aac9-9f7d635b35a7",
+      "capture": false
+    },
+    "failure": {
+      "requestId": "req-72e09529-4026-40c1-958d-4271a8cfa4f2",
+      "decisionId": "decision-req-72e09529-4026-40c1-958d-4271a8cfa4f2",
+      "endpoint": "moonshot.personal.primary.global.kimi-k2.5"
+    },
+    "cancel": {
+      "classification": "NOT RUN",
+      "reason": "endpoint temporarily unavailable 503 from prior failure; cancellation not exercised",
+      "aborted": false,
+      "status": 503,
+      "body": "{\"error\":{\"type\":\"routing_error\",\"code\":\"endpoint_temporarily_unavailable\",\"message\":\"All eligible endpoints for model moonshot/kimi-k2.5 are temporarily unavailable after recent execution failures.\",",
+      "ms": 83,
+      "counted": 1
+    }
+  },
+  "J4": {
+    "classification": "FAIL",
+    "defect": "reasoning_effort request rejected",
+    "status": 400,
+    "body": "{\"error\":{\"type\":\"capability_eligibility_error\",\"code\":\"no_eligible_target\",\"message\":\"no_eligible_target: no targets for model moonshot/kimi-k2.5 satisfy the inferred request capabilities.\",\"requestedModel\":\"moonshot/kimi-k2.5\",\"requiredInputModalities\":[\"text\"],\"requiredOutputModalities\":[\"text\"],",
+    "countDelta": 1
+  },
+  "J6": {
+    "classification": "NOT RUN",
+    "reason": "replay/eval/learning need configured extension runtime; not seeded by this harness"
+  }
+}

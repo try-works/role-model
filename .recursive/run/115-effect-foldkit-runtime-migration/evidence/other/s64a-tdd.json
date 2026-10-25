@@ -1,0 +1,34 @@
+{
+  "slice": "s64a-r17-journeys",
+  "artifact": "E:/rm-tmp/s38b/release/win32-x64 packaged exe, ephemeral port, temp state E:/rm-tmp/s64a/jstate, mock upstream",
+  "J3": {
+    "classification": "PARTIAL",
+    "drove": "success chat, upstream-500 chat, abort attempt; counts 0->1->2->3 exact +1 each",
+    "ids": {
+      "requestId": "req-38981158-5b5a-42b1-aac9-9f7d635b35a7",
+      "decisionId": "decision-req-38981158-5b5a-42b1-aac9-9f7d635b35a7",
+      "capture": false
+    },
+    "evidence": "s64a-journeys.log",
+    "defect": "abort path not exercised: endpoint circuit breaker returned 503 immediately after the prior failure (NO false success; no double accounting observed)"
+  },
+  "J4": {
+    "classification": "FAIL",
+    "drove": "chat with reasoning_effort:high",
+    "observed": "400 capability_eligibility_error no_eligible_target; count +1",
+    "metadatareadback": "success request decision has selectedModelId moonshot/kimi-k2.5, reasoningEffort null, effortSource none (no fabrication), but effort request rejected",
+    "evidence": "s64a-journeys.log"
+  },
+  "J6": {
+    "classification": "NOT RUN",
+    "reason": "/api/role-model/replay/jobs, /evaluation/jobs, /learning/status return 404 on packaged 5796; learning operator endpoint has no ids/jobs. Not seeded; no fixtures",
+    "evidence": "s64a-j6-probe.log"
+  },
+  "assertionCount": 15,
+  "script": "evidence/logs/s64a-journeys.mjs",
+  "logs": "evidence/logs/s64a-journeys.log",
+  "defects": [
+    "J4 reasoning_effort rejected as capability no_eligible_target",
+    "J3 cancel not runnable after circuit breaker; no cancellation assertion"
+  ]
+}

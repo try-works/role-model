@@ -1,0 +1,6 @@
+S64a J6 read-only probe against packaged 5796 (temp seeded state)
+GET /api/role-model/replay/jobs -> 404 {"error":"not found"}
+GET /api/role-model/evaluation/jobs -> 404 {"error":"not found"}
+GET /api/role-model/learning/status -> 404 {"error":"not found"}
+GET /api/role-model/operator/learning -> 200 knowledge {available:true,candidates:0,indexedDocuments:0} - no job/run ids
+Classification: NOT RUN - no configured replay/eval/learning jobs; no seeded success rows.
