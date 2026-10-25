@@ -173,49 +173,53 @@ const shellNavItems = (route: Model["route"]): ReadonlyArray<ShellNavItem> => [
   { active: route._tag === "Studio", dataNav: "studio", href: "/studio", label: "Studio" },
 ];
 
-const shellNav = (route: Model["route"], label: string, h: HtmlBuilder<Message>): Html =>
-  h.nav(
+const navGroup = (item: ShellNavItem): string => {
+  const nav = item.dataNav ?? "";
+  if (["index", "diagnostics", "observability"].includes(nav)) return "Overview";
+  if (["requests", "store-receipts", "queues", "observe-activity", "observe-logs", "observe-routing", "local-logs"].includes(nav)) return "Observe";
+  if (["router", "router-candidates", "router-decisions", "providers", "endpoints", "control-controller"].includes(nav)) return "Router";
+  if (["local-peers", "local-swap", "system-peers", "runtime", "session-readiness", "dashboard"].includes(nav)) return "System";
+  if (["studio"].includes(nav)) return "Studio";
+  return "Other";
+};
+const shellNav = (route: Model["route"], label: string, h: HtmlBuilder<Message>): Html => {
+  const groups = new Map<string, ShellNavItem[]>();
+  for (const item of shellNavItems(route)) {
+    const group = navGroup(item);
+    groups.set(group, [...(groups.get(group) ?? []), item]);
+  }
+  return h.nav(
     [h.AriaLabel(label), h.DataAttribute("shell-nav", "")],
-    [
-      h.ul(
-        [h.Class("flex flex-wrap gap-1 md:flex-col md:gap-0.5")],
-        shellNavItems(route).map((item) =>
-          h.li(
-            [],
-            [
-              item.href === null
-                ? h.span(
-                    [
-                      h.AriaDisabled(true),
-                      h.DataAttribute("nav-state", "pending"),
-                      h.Class(
-                        "flex min-h-9 items-center rounded-[var(--rm-radius-field)] px-2.5 text-[13px] text-[var(--rm-muted)]",
-                      ),
-                    ],
-                    [item.label],
-                  )
-                : h.a(
-                    [
-                      h.Href(item.href),
-                      ...(item.dataNav === undefined ? [] : [h.DataAttribute("nav", item.dataNav)]),
-                      ...(item.active ? [h.AriaCurrent("page")] : []),
-                      h.DataAttribute("nav-state", item.active ? "active" : "available"),
-                      h.Class(
-                        `flex min-h-9 items-center rounded-[var(--rm-radius-field)] px-2.5 text-[13px] ${focusRingClass} ${
-                          item.active
-                            ? "bg-[var(--rm-panel)] font-medium text-[var(--rm-fg)]"
-                            : "text-[var(--rm-secondary)] hover:text-[var(--rm-fg)]"
-                        }`,
-                      ),
-                    ],
-                    [item.label],
+    [...groups.entries()].map(([group, items]) =>
+      h.section([h.DataAttribute("nav-group", group), h.Class("pb-2")], [
+        h.p([h.Class("px-2.5 pb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--rm-muted)]")], [group]),
+        h.ul(
+          [h.Class("flex flex-col gap-0.5")],
+          items.map((item) =>
+            h.li([], [
+              h.a(
+                [
+                  h.Href(item.href ?? "/"),
+                  ...(item.dataNav === undefined ? [] : [h.DataAttribute("nav", item.dataNav)]),
+                  ...(item.active ? [h.AriaCurrent("page")] : []),
+                  h.DataAttribute("nav-state", item.active ? "active" : "available"),
+                  h.Class(
+                    `flex min-h-8 items-center rounded-[8px] px-2.5 text-[13px] ${focusRingClass} ${
+                      item.active
+                        ? "bg-[var(--rm-panel)] font-medium text-[var(--rm-fg)]"
+                        : "text-[var(--rm-secondary)] hover:text-[var(--rm-fg)]"
+                    }`,
                   ),
-            ],
+                ],
+                [item.label],
+              ),
+            ]),
           ),
         ),
-      ),
-    ],
+      ]),
+    ),
   );
+};
 
 const diagnosticsToneClass = (snapshot: DiagnosticsSnapshot): string => {
   switch (snapshot.status) {
@@ -532,10 +536,6 @@ const overviewPage = (
   const period = windowLabel(windowMs);
   const filters = h.div(
     [h.Class("mt-4 flex flex-wrap items-center gap-2"), h.DataAttribute("overview-filters", "")],
-  );
-  const filterRow = h.div([h.Class("flex flex-col gap-1")], [h.span([h.Class("text-[11px] uppercase tracking-[0.12em] text-[var(--rm-muted)]")], ["Time range"]), filters]);
-  const unusedFilters = h.div(
-    [h.Class("mt-3 flex flex-wrap gap-1")],
     WINDOW_OPTIONS.map((option) =>
       h.button(
         [
@@ -551,9 +551,8 @@ const overviewPage = (
       ),
     ),
   );
+  const filterRow = h.div([h.Class("flex flex-col gap-1")], [h.span([h.Class("text-[11px] uppercase tracking-[0.12em] text-[var(--rm-muted)]")], ["Time range"]), filters]);
   const header = h.div([], [
-    h.p([h.Class("text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--rm-muted)]")], ["Observability"]),
-    h.h1([h.Class("text-[22px] font-semibold")], ["Runtime overview"]),
     h.p([h.Class("text-[12px] text-[var(--rm-secondary)]"), h.DataAttribute("overview-period", period)], ["Last " + period]),
     filterRow,
   ]);
@@ -564,11 +563,11 @@ const overviewPage = (
     return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "index"), h.DataAttribute("readback-route", "dashboard")], [header, h.p([h.Role("alert"), h.DataAttribute("overview-state", "error"), h.DataAttribute("readback-state", "error")], [state.message ?? "Telemetry read failed"])]);
   }
   if (state.status === "empty") {
-    return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "index"), h.DataAttribute("readback-route", "dashboard")], [header, h.p([h.DataAttribute("overview-state", "empty"), h.DataAttribute("readback-state", "empty")], ["No telemetry requests in the last " + period.toLowerCase() + "."])]);
+    return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "index"), h.DataAttribute("readback-route", "dashboard")], [header, h.section([h.Class("rounded-[8px] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-4"), h.DataAttribute("overview-card", "empty")], [h.h2([h.Class("text-[15px] font-semibold")], ["No telemetry yet"]), h.p([h.Class("mt-1 text-[12px] text-[var(--rm-secondary)]"), h.DataAttribute("overview-state", "empty"), h.DataAttribute("readback-state", "empty")], ["No telemetry requests in the last " + period.toLowerCase() + ". Run a request or widen the time range."])])]);
   }
   const { buckets } = bucketsFor(state, windowMs);
   const labels = buckets.map((bucket) => bucket.label);
-  const card = (title: string, description: string, chart: Html) => h.section([h.Class("rounded-[8px] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-4"), h.DataAttribute("overview-card", title)], [h.h2([h.Class("text-[15px] font-semibold")], [title]), h.p([h.Class("mt-1 text-[12px] text-[var(--rm-secondary)]")], [description]), h.div([h.Class("mt-3")], [chart])]);
+  const card = (title: string, description: string, chart: Html) => h.section([h.Class("rounded-[8px] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-4"), h.DataAttribute("overview-card", title), h.AriaLabel(title + ": " + description)], [chart]);
   const charts = h.div([h.Class("mt-6 grid gap-4"), h.DataAttribute("overview-charts", ""), h.DataAttribute("overview-window", period), h.DataAttribute("overview-buckets", String(buckets.length))], [
     card("Latency (ms)", "Average and p95 per bucket for the last " + period.toLowerCase() + ".", chartView({ title: "Latency (ms)", description: "Average and p95 per bucket for the last " + period.toLowerCase() + ".", series: [
       { id: "average", label: "Average", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.avg })) },
@@ -808,8 +807,8 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
             ],
             ["Runtime UI"],
           ),
-          shellNav(model.route, "Primary navigation", h),
           shellRail(model, h),
+          shellNav(model.route, "Primary navigation", h),
           h.div(
             [
               h.Class(
@@ -835,56 +834,10 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
               h.div(
                 [h.Class("min-w-0")],
                 [
-                  h.p(
-                    [
-                      h.Class(
-                        "text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--rm-muted)]",
-                      ),
-                    ],
-                    ["Runtime"],
-                  ),
-                  h.p(
-                    [
-                      h.Class("truncate text-[14px] font-medium text-[var(--rm-fg)]"),
-                      h.DataAttribute("shell-route", model.route._tag),
-                    ],
-                    [
-                      AppRoute.match(model.route, {
-                        Diagnostics: ({ id }) => `Diagnostics ${id}`,
-                        Index: () => "Overview",
-                        Observability: () => "Observability",
-                        StoreReceipts: () => "Store receipts",
-                        Queues: () => "Queues",
-                        LocalLogs: () => "Local logs",
-                        RouterCandidates: () => "Router candidates",
-                        Requests: () => "Requests",
-    RequestDetail: () => "Request detail",
-                        RouterDecisions: () => "Router decisions",
-    RouterDecisionDetail: () => "Router decision detail",
-                        LocalPeers: () => "Local peers",
-                        SystemPeers: () => "System peers",
-    LocalPeerModels: () => "Peer models",
-    QueuesConfiguration: () => "Queue configuration",
-    IntegrationsDownstream: () => "Downstream integration",
-    IntegrationsUpstream: () => "Upstream integration",
-    LocalChoose: () => "Local choose",
-    Benchmark: () => "Benchmark",
-    StorageRetention: () => "Storage retention",
-    Studio: () => "Studio",
-                        Runtime: () => "Runtime",
-                        SessionReadiness: () => "Session readiness",
-                        Dashboard: () => "Dashboard",
-                        LocalSwap: () => "Local swap",
-                        ObserveActivity: () => "Activity",
-                        ObserveLogs: () => "Observe logs",
-                        ObserveRouting: () => "Observe routing",
-                        Router: () => "Router",
-                        Providers: () => "Providers",
-                        Endpoints: () => "Endpoints",
-                        ControlController: () => "Controller",
-                        NotFound: () => "Not found",
-                      }),
-                    ],
+                  h.p([h.Class("text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--rm-muted)]")], ["Runtime"]),
+                  h.h1(
+                    [h.Class("truncate text-[15px] font-medium text-[var(--rm-fg)]"), h.DataAttribute("shell-route", model.route._tag)],
+                    [model.route._tag === "Index" ? "Runtime overview" : routeTitle(model.route).split(" | ")[0] ?? ""],
                   ),
                 ],
               ),
@@ -951,7 +904,7 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
           ),
           h.main(
             [
-              h.Class("rm3-next-shell mx-auto w-full max-w-3xl flex-1 p-4 sm:p-6"),
+              h.Class("rm3-next-shell ml-3 w-full max-w-[1138px] flex-1 py-4"),
               h.DataAttribute("shell-main", ""),
               h.DataAttribute("refresh-revision", String(model.refresh.lastAppliedRevision)),
               h.DataAttribute("refresh-state", model.refresh.status),

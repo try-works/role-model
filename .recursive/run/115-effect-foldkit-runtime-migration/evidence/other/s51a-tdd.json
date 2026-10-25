@@ -1,0 +1,38 @@
+{
+  "slice": "s51a-fonts-topbar",
+  "fonts": {
+    "count": 14,
+    "paths": [
+      "geist-latin-400/500/600/700",
+      "geist-mono-latin-400/500/600/700",
+      "ibm-plex-mono-latin-400/500/600",
+      "inter-latin-400/600/700"
+    ]
+  },
+  "guard": "build.mjs parses every url(...) in emitted CSS, resolves /assets/... to dist/client, and throws if any file is missing; build test repeats the URL resolution and requires >=14 woff2",
+  "css": {
+    "bytes": 57236,
+    "sha256": "d6020faae12145f6e9ee17299318506183f72b9236992b79eca2d5dba956772"
+  },
+  "fontProof": {
+    "request": "/assets/fonts/geist-latin-400-normal.woff2",
+    "status": 200,
+    "contentType": "font/woff2",
+    "documentFontsCheck": true,
+    "fontFamily": "Geist, ui-sans-serif, system-ui, sans-serif",
+    "h1Font": "Geist, ui-sans-serif, system-ui, sans-serif"
+  },
+  "topbar": "header now shows Runtime eyebrow + current page title (h1) with theme toggle; content no longer repeats Runtime overview, so exactly one page title.",
+  "empty": "No telemetry yet card retained",
+  "screenshot": "E:/rm-tmp/s51a/fonts-final.png",
+  "counts": {
+    "clientFull": 197,
+    "files": 20,
+    "typecheck": "exit 0",
+    "hostSuite": "not completed; no summary"
+  },
+  "remaining": [
+    "aggregate charts not reference model-pool",
+    "sidebar groups differ from reference labels"
+  ]
+}

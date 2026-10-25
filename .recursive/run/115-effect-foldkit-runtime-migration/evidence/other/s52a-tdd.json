@@ -1,0 +1,25 @@
+{
+  "slice": "s52a-alignment",
+  "before": {
+    "h1x": 252,
+    "mainx": 688,
+    "mainw": 768
+  },
+  "after": {
+    "h1x": 252,
+    "mainx": 252,
+    "mainw": 1138,
+    "cardx": 252,
+    "cardw": 1138
+  },
+  "change": "removed mx-auto max-w-3xl; main is ml-3 max-w-[1138px] with no horizontal padding, so the page chrome and content share x=252 at 1920",
+  "eyebrow": "removed OBSERVABILITY; top bar h1 is the only page title; content begins with Last Day + Time range",
+  "empty": "No telemetry yet card spans the content column (1138px) instead of a 768px centered column and no extra empty sections",
+  "screenshot": "E:/rm-tmp/s51a/align-final.png",
+  "counts": {
+    "fiveFiles": 15,
+    "clientFull": 197,
+    "files": 20,
+    "typecheck": "exit 0"
+  }
+}

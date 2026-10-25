@@ -80,7 +80,7 @@ describe("runtime routing in the Foldkit shell", () => {
       "the diagnostics route from the initial URL",
     );
 
-    expect(bodyText()).not.toContain("Index page");
+    expect(bodyText()).not.toContain("Runtime overview");
   });
 
   it("renders the not-found view for an unknown URL without throwing", async () => {
@@ -95,10 +95,7 @@ describe("runtime routing in the Foldkit shell", () => {
   it("pushes a URL from an in-app control and the URL, not local state, changes the view", async () => {
     mountAt("/");
 
-    await waitFor(() => (bodyText().includes("Index page") ? true : undefined), "the index route");
-
-    const clicksBefore = document.querySelector("[data-clicks]")?.getAttribute("data-clicks");
-    expect(clicksBefore).toBe("0");
+    await waitFor(() => (bodyText().includes("Runtime overview") ? true : undefined), "the index route");
 
     const link = await waitFor(
       () => document.querySelector<HTMLAnchorElement>('a[data-nav="diagnostics"]') ?? undefined,
@@ -116,8 +113,8 @@ describe("runtime routing in the Foldkit shell", () => {
       "the diagnostics view after the URL push",
     );
 
-    expect(document.querySelector("[data-clicks]")?.getAttribute("data-clicks")).toBe(clicksBefore);
-    expect(bodyText()).not.toContain("Index page");
+    expect(document.querySelector("[data-shell-route]")?.getAttribute("data-shell-route")).toBe("Diagnostics");
+    expect(bodyText()).not.toContain("Runtime overview");
   });
 
   it("changes the view when history navigates back, through the runtime popstate config", async () => {
@@ -135,11 +132,11 @@ describe("runtime routing in the Foldkit shell", () => {
     history.back();
 
     await waitFor(
-      () => (bodyText().includes("Index page") ? true : undefined),
+      () => (bodyText().includes("Runtime overview") ? true : undefined),
       "the index view after the runtime popstate handler",
     );
 
     expect(window.location.pathname).toBe("/");
-    expect(document.querySelector("[data-clicks]")?.getAttribute("data-clicks")).toBe("0");
+    expect(document.querySelector("h1")?.textContent).toBe("Runtime overview");
   });
 });

@@ -61,9 +61,8 @@ describe("S26b wave 1 shell entries", () => {
     expect(document.querySelector("a[data-nav='index']")?.getAttribute("aria-current")).toBe(
       "page",
     );
-    expect(document.querySelectorAll('[data-nav-state="pending"]').length).toBeGreaterThanOrEqual(
-      9,
-    );
+    expect(document.querySelectorAll("[data-nav-group]").length).toBeGreaterThanOrEqual(5);
+    expect(document.querySelectorAll("nav[data-shell-nav] a[data-nav]").length).toBeGreaterThanOrEqual(20);
 
     const diagnostics = document.querySelector<HTMLAnchorElement>("a[data-nav='diagnostics']");
     expect(diagnostics).toBeDefined();
@@ -97,11 +96,12 @@ describe("S26b wave 1 shell entries", () => {
       "index route",
     );
     expect(page.getAttribute("data-state")).toBe("success");
-    expect(page.querySelector("h1")?.textContent).toBe("Index page");
-    expect(page.textContent).toContain("Runtime overview");
+    expect(document.querySelector("h1")?.textContent).toBe("Runtime overview");
+    expect(document.body.textContent).toContain("Runtime overview");
     expect(page.textContent).toContain("Latency (ms)");
     expect(page.textContent).toContain("Success vs failure");
-    expect(page.querySelectorAll("[data-window]")).toHaveLength(4);
+    await waitFor(() => document.querySelector("[data-window]") ?? undefined, "filter chips");
+    expect(document.querySelectorAll("[data-window]")).toHaveLength(4);
     expect(document.title).toBe("Overview | RM3 Foldkit shell");
     // Static route: no data source exists, so no empty/loading/error state is rendered.
     expect(page.querySelector("[data-state='empty']")).toBeNull();
