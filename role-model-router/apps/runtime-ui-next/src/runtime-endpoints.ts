@@ -12,13 +12,29 @@ export const READBACK_PATHS = {
   localSwap: "/api/role-model/local/swap",
   queues: "/api/role-model/operator/queues",
   requests: "/api/role-model/telemetry/requests",
-  observeActivity: "/api/role-model/operator/status",
+  requestDetail: "/api/role-model/requests/",
+  observeActivity: "/api/metrics/page",
   observeLogs: "/api/role-model/local/logs",
   observeRouting: "/api/role-model/telemetry/rows",
   router: "/api/role-model/router/summary",
   routerCandidates: "/api/role-model/router/candidates",
   routerDecisions: "/api/role-model/router/decisions",
+  routerDecisionDetail: "/api/role-model/router/decisions/",
   runtime: "/api/role-model/runtime/config",
   sessionReadiness: "/api/role-model/operator/status",
   storeReceipts: "/api/role-model/operator/store-degradation-receipts",
 } as const;
+export type ControlMethod = "GET" | "PATCH" | "POST";
+export interface ControlEndpoint {
+  readonly method: ControlMethod;
+  readonly path: string;
+}
+/** S26k: control reads and their non-destructive action; the tie asserts method and path. */
+export const CONTROL_ENDPOINTS = {
+  controllerRead: { method: "GET", path: "/api/role-model/controller" },
+  controllerUpdate: { method: "PATCH", path: "/api/role-model/controller" },
+  endpointsActivate: { method: "POST", path: "/api/role-model/endpoints" },
+  endpointsRead: { method: "GET", path: "/api/role-model/endpoints" },
+  providersRead: { method: "GET", path: "/api/role-model/accounts" },
+  providersReconnect: { method: "POST", path: "/api/role-model/accounts/repair/reconnect" },
+} as const satisfies Record<string, ControlEndpoint>;

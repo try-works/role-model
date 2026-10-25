@@ -1,0 +1,47 @@
+{
+  "slice": "s26k-wave3-control",
+  "ported": [
+    {
+      "row": "route:providers",
+      "path": "/control/providers",
+      "read": "GET /api/role-model/accounts",
+      "action": "POST /api/role-model/accounts/repair/reconnect"
+    },
+    {
+      "row": "route:endpoints",
+      "path": "/control/endpoints",
+      "read": "GET /api/role-model/endpoints",
+      "action": "POST /api/role-model/endpoints"
+    },
+    {
+      "row": "route:control-controller",
+      "path": "/control/controller",
+      "read": "GET /api/role-model/controller",
+      "action": "PATCH /api/role-model/controller"
+    }
+  ],
+  "refused": "24 wave3 rows left absent: writes/destructive config, rows needing confirmation/payload/identity, and presentational components; each has absenceReason in the inventory.",
+  "methodTie": "CONTROL_ENDPOINTS carries {method,path}; tests parse host request.method && url.pathname and assert GET/POST/PATCH exactly.",
+  "redGreen": {
+    "guard": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26k-red-guard.log",
+    "method": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26k-red-method.log",
+    "success": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26k-red-success.log",
+    "green": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26k-green.log"
+  },
+  "counts": {
+    "overall": {
+      "absent": 52,
+      "verified": 22,
+      "wired": 1,
+      "total": 75
+    },
+    "wave3": {
+      "total": 27,
+      "verified": 4,
+      "absent": 23
+    },
+    "tests": 132,
+    "typecheck": "exit 0",
+    "biome": "exit 0"
+  }
+}

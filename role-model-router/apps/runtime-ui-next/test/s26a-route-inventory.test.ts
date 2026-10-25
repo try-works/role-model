@@ -84,7 +84,7 @@ const hostRoutePaths = (): ReadonlySet<string> => {
   const paths = new Set<string>();
   for (const source of sources) {
     for (const match of source.matchAll(
-      /["\`](\/api\/role-model\/[^"'\`$ ]+|\/v1\/[^"'\`$ ]+)["\`]/g,
+      /["\`](\/api\/role-model\/[^"'\`$ ]+|\/api\/metrics[^"'\`$ ]*|\/v1\/[^"'\`$ ]+)["\`]/g,
     )) {
       paths.add(match[1]);
     }

@@ -1,10 +1,13 @@
 import {
   type RefreshSnapshotReader,
+  defineDispatchControl,
+  defineReadControl,
   defineReadDiagnostics,
   defineReadObservability,
   defineReadReadback,
   defineRefreshSnapshot,
 } from "./commands";
+import { type ControlClient, createControlClients } from "./control";
 import type { DiagnosticsReader } from "./diagnostics";
 import { createInit } from "./init";
 import { Model } from "./model";
@@ -36,6 +39,11 @@ export interface ShellOptions {
   readonly readbackBaseUrl?: string;
   readonly readbackFetchImpl?: typeof fetch;
   readonly readbackToken?: string;
+  /** S26k: injected control client; tests never touch operator state. */
+  readonly controlClient?: ControlClient;
+  readonly controlBaseUrl?: string;
+  readonly controlFetchImpl?: typeof fetch;
+  readonly controlToken?: string;
 }
 
 const readerNotConfigured: DiagnosticsReader = async () => {
@@ -81,14 +89,31 @@ export const createShellApp = (options: ShellOptions = {}) => {
       ...(options.readbackFetchImpl === undefined ? {} : { fetchImpl: options.readbackFetchImpl }),
       ...(readbackToken === undefined ? {} : { token: readbackToken }),
     });
+  const controlToken = options.controlToken ?? storedToken;
+  const controlClient =
+    options.controlClient ??
+    createControlClients({
+      ...(options.controlBaseUrl === undefined ? {} : { baseUrl: options.controlBaseUrl }),
+      ...(options.controlFetchImpl === undefined ? {} : { fetchImpl: options.controlFetchImpl }),
+      ...(controlToken === undefined ? {} : { token: controlToken }),
+    });
+  const readControl = defineReadControl(controlClient);
+  const dispatchControl = defineDispatchControl(controlClient);
   const readReadback = defineReadReadback(readbackReaders);
   return {
     Model,
-    init: createInit(readDiagnostics, readObservability, readReadback),
+    init: createInit(readDiagnostics, readObservability, readReadback, readControl),
     subscriptions: makeRefreshSubscriptions(
       options.runtimeEventSourceFactory ?? defaultRuntimeEventSourceFactory,
     ),
-    update: createUpdate(readDiagnostics, refreshSnapshot, readObservability, readReadback),
+    update: createUpdate(
+      readDiagnostics,
+      refreshSnapshot,
+      readObservability,
+      readReadback,
+      readControl,
+      dispatchControl,
+    ),
     view,
   };
 };

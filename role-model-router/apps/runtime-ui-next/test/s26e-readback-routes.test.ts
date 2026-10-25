@@ -149,14 +149,14 @@ const routes: readonly RouteCase[] = [
     successText: "ready",
   },
   {
-    emptyBody: { requests: [] },
+    emptyBody: { requestCount: 0, successCount: 0, failureCount: 0, totalTokens: 0 },
     emptyText: "No dashboard requests recorded yet.",
     key: "dashboard",
     label: "Dashboard",
     path: "/dashboard",
     stateTestName: "Dashboard renders success, empty, loading and error on the DOM",
-    successBody: { requests: [{ modelId: "dash-model", requestId: "r", status: 200 }] },
-    successText: "dash-model",
+    successBody: { requestCount: 1, successCount: 1, failureCount: 0, totalInputTokens: 10, totalOutputTokens: 4, totalTokens: 14, averageLatencyMs: 12, p95LatencyMs: 18, totalActualCostUsd: 0.1, totalEstimatedCostUsd: 0.1, totalEffectiveCostUsd: 0.1, cachedRequestCount: 0, excludedRequestCount: 0 },
+    successText: "1",
   },
   {
     emptyBody: { events: [] },
@@ -169,13 +169,13 @@ const routes: readonly RouteCase[] = [
     successText: "swap-model",
   },
   {
-    emptyBody: { activity: [] },
+    emptyBody: { items: [] },
     emptyText: "No host activity recorded yet.",
     key: "observeActivity",
     label: "Observe activity",
     path: "/observe/activity",
     stateTestName: "Observe activity renders success, empty, loading and error on the DOM",
-    successBody: { activity: [{ detail: "x", id: "a", kind: "activity-kind" }] },
+    successBody: { items: [{ request_id: "activity-kind", status: "success" }] },
     successText: "activity-kind",
   },
   {

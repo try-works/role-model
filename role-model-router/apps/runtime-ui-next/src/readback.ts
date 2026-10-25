@@ -21,7 +21,9 @@ export type ReadbackKey =
   | "observeActivity"
   | "observeLogs"
   | "observeRouting"
-  | "router";
+  | "router"
+  | "requestDetail"
+  | "routerDecisionDetail";
 
 export const ReadbackKeySchema = Schema.Literals([
   "storeReceipts",
@@ -40,6 +42,8 @@ export const ReadbackKeySchema = Schema.Literals([
   "observeLogs",
   "observeRouting",
   "router",
+  "requestDetail",
+  "routerDecisionDetail",
 ]);
 
 export interface ReadbackRow {
@@ -57,6 +61,7 @@ export const ReadbackRowSchema = Schema.Struct({
 });
 
 export const ReadbackState = Schema.Struct({
+  detailId: Schema.optional(Schema.String),
   message: Schema.optional(Schema.String),
   rows: Schema.Array(ReadbackRowSchema),
   status: Schema.Literals(["idle", "loading", "ok", "empty", "error"]),
@@ -78,6 +83,8 @@ export const ReadbacksState = Schema.Struct({
   routerCandidates: ReadbackState,
   routerDecisions: ReadbackState,
   router: ReadbackState,
+  requestDetail: ReadbackState,
+  routerDecisionDetail: ReadbackState,
   runtime: ReadbackState,
   sessionReadiness: ReadbackState,
   storeReceipts: ReadbackState,
@@ -111,6 +118,8 @@ export const emptyReadbacks = (): ReadbacksState => ({
   routerCandidates: idleReadback(),
   routerDecisions: idleReadback(),
   router: idleReadback(),
+  requestDetail: idleReadback(),
+  routerDecisionDetail: idleReadback(),
   runtime: idleReadback(),
   sessionReadiness: idleReadback(),
   storeReceipts: idleReadback(),
@@ -130,7 +139,7 @@ export interface ReadbackResult {
   readonly status: number;
 }
 
-export type ReadbackReader = (input: { readonly signal: AbortSignal }) => Promise<ReadbackResult>;
+export type ReadbackReader = (input: { readonly signal: AbortSignal; readonly id?: string }) => Promise<ReadbackResult>;
 
 const asRecord = (value: unknown): Readonly<Record<string, unknown>> | undefined =>
   typeof value === "object" && value !== null && !Array.isArray(value)
@@ -155,6 +164,7 @@ export interface ReadbackRouteSpec {
   readonly key: ReadbackKey;
   readonly label: string;
   readonly path: string;
+  readonly pathFor?: (id: string) => string;
   readonly emptyText: string;
   readonly parse: (body: unknown, token: number) => ReadbackState;
 }
@@ -266,19 +276,22 @@ const parseSessionReadiness = (body: unknown, token: number): ReadbackState => {
 
 const parseDashboard = (body: unknown, token: number): ReadbackState => {
   const record = asRecord(body);
-  const list = Array.isArray(body) ? body : asArray(record?.requests);
-  const rows = list.flatMap((value, index) => {
-    const request = asRecord(value);
-    if (request === undefined) return [];
-    return [
-      row(
-        String(request.requestId ?? request.id ?? index),
-        String(request.modelId ?? request.model ?? "request"),
-        String(request.status ?? request.statusCode ?? ""),
-        String(request.endpointId ?? ""),
-      ),
-    ];
-  });
+  if (record === undefined || typeof record.requestCount !== "number") {
+    return failedReadback("Dashboard read failed: invalid response", token);
+  }
+  const value = (key: string): string => {
+    const field = record[key];
+    return typeof field === "number" ? String(field) : typeof field === "string" ? field : "—";
+  };
+  if (record.requestCount === 0) return { rows: [], status: "empty", token };
+  const rows = [
+    row("requestCount", "Requests", value("requestCount"), `${value("successCount")} success / ${value("failureCount")} failed`),
+    row("tokens", "Tokens", value("totalTokens"), `${value("totalInputTokens")} in / ${value("totalOutputTokens")} out`),
+    row("latency", "Latency", value("averageLatencyMs"), `p95 ${value("p95LatencyMs")} ms`),
+    row("cost", "Cost", value("totalEffectiveCostUsd"), `actual ${value("totalActualCostUsd")} / estimated ${value("totalEstimatedCostUsd")}`),
+    row("cached", "Cached requests", value("cachedRequestCount"), "prompt cache"),
+    row("excluded", "Excluded", value("excludedRequestCount"), "traffic-class exclusion"),
+  ];
   return okRows(rows, token);
 };
 
@@ -302,17 +315,15 @@ const parseLocalSwap = (body: unknown, token: number): ReadbackState => {
 
 const parseObserveActivity = (body: unknown, token: number): ReadbackState => {
   const record = asRecord(body);
-  const list = Array.isArray(body)
-    ? body
-    : asArray(record?.activity ?? record?.entries ?? record?.requests);
+  const list = Array.isArray(body) ? body : asArray(record?.items);
   const rows = list.flatMap((value, index) => {
     const entry = asRecord(value);
     if (entry === undefined) return [];
     return [
       row(
         String(entry.id ?? entry.requestId ?? index),
-        String(entry.kind ?? entry.modelId ?? "activity"),
-        String(entry.detail ?? entry.status ?? ""),
+        String(entry.request_id ?? entry.id ?? entry.kind ?? "activity"),
+        String(entry.status ?? entry.model_id ?? entry.request_operation ?? ""),
         String(entry.atMs ?? ""),
       ),
     ];
@@ -478,6 +489,18 @@ const parseRouterCandidates = (body: unknown, token: number): ReadbackState => {
   return okRows(rows, token);
 };
 
+const parseObservationDetail = (body: unknown, token: number): ReadbackState => {
+  const record = asRecord(body);
+  if (record === undefined) return failedReadback("Detail read failed: invalid response", token);
+  const rows = [
+    row("request", "Request", String(record.requestId ?? "—"), "requestId"),
+    row("decision", "Decision", String(record.routingDecisionId ?? "—"), "routingDecisionId"),
+    row("endpoint", "Endpoint", String(record.endpointId ?? record.selectedEndpointId ?? "—"), "endpoint"),
+    row("status", "Status", String(record.statusFamily ?? record.status ?? "—"), "status"),
+  ];
+  return okRows(rows, token);
+};
+
 export const READBACK_SPECS: Readonly<Record<ReadbackKey, ReadbackRouteSpec>> = {
   localLogs: {
     emptyText: "No local logs recorded yet.",
@@ -549,6 +572,22 @@ export const READBACK_SPECS: Readonly<Record<ReadbackKey, ReadbackRouteSpec>> = 
     parse: parseRouter,
     path: READBACK_PATHS.router,
   },
+  requestDetail: {
+    emptyText: "No request detail available.",
+    key: "requestDetail",
+    label: "Request detail",
+    parse: parseObservationDetail,
+    path: READBACK_PATHS.requestDetail,
+    pathFor: (id) => READBACK_PATHS.requestDetail + encodeURIComponent(id),
+  },
+  routerDecisionDetail: {
+    emptyText: "No router decision detail available.",
+    key: "routerDecisionDetail",
+    label: "Router decision detail",
+    parse: parseObservationDetail,
+    path: READBACK_PATHS.routerDecisionDetail,
+    pathFor: (id) => READBACK_PATHS.routerDecisionDetail + encodeURIComponent(id),
+  },
   requests: {
     emptyText: "No telemetry requests recorded yet.",
     key: "requests",
@@ -605,8 +644,8 @@ export const createReadbackClient = (
 ): ReadbackReader => {
   const fetchImpl = options.fetchImpl ?? fetch;
   const base = new URL(options.baseUrl ?? globalThis.location?.origin ?? "http://127.0.0.1");
-  const url = new URL(spec.path, base);
   return async (input) => {
+    const url = new URL(spec.pathFor?.(input.id ?? "") ?? spec.path, base);
     const headers: Record<string, string> = { accept: "application/json" };
     if (options.token !== undefined && options.token.length > 0) {
       headers.authorization = `Bearer ${options.token}`;
@@ -649,12 +688,15 @@ export const createReadbackClients = (
   runtime: createReadbackClient(READBACK_SPECS.runtime, options),
   sessionReadiness: createReadbackClient(READBACK_SPECS.sessionReadiness, options),
   storeReceipts: createReadbackClient(READBACK_SPECS.storeReceipts, options),
+  requestDetail: createReadbackClient(READBACK_SPECS.requestDetail, options),
+  routerDecisionDetail: createReadbackClient(READBACK_SPECS.routerDecisionDetail, options),
 });
 
 export const readbackFromResult = (
   spec: ReadbackRouteSpec,
   result: ReadbackResult,
   token: number,
+  id?: string,
 ): ReadbackState => {
   if (result.status !== 200) {
     return failedReadback(
@@ -662,7 +704,8 @@ export const readbackFromResult = (
       token,
     );
   }
-  return spec.parse(result.body, token);
+  const parsed = spec.parse(result.body, token);
+  return id === undefined ? parsed : { ...parsed, detailId: id };
 };
 export const renderReadbackPage = (
   spec: ReadbackRouteSpec,

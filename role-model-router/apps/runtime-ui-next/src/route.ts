@@ -25,7 +25,9 @@ const routeCases = {
   LocalLogs: {},
   RouterCandidates: {},
   Requests: {},
+  RequestDetail: { requestId: Schema.String },
   RouterDecisions: {},
+  RouterDecisionDetail: { requestId: Schema.String },
   LocalPeers: {},
   SystemPeers: {},
   Runtime: {},
@@ -36,6 +38,9 @@ const routeCases = {
   ObserveLogs: {},
   ObserveRouting: {},
   Router: {},
+  Providers: {},
+  Endpoints: {},
+  ControlController: {},
   NotFound: { path: Schema.String },
 };
 
@@ -61,7 +66,9 @@ const localLogsRouter = Route.mapTo(AppRoute.LocalLogs)(
 const routerCandidatesRouter = Route.mapTo(AppRoute.RouterCandidates)(
   pipe(Route.literal("router"), Route.slash(Route.literal("candidates"))),
 );
+const requestDetailRouter = Route.mapTo(AppRoute.RequestDetail)(pipe(Route.literal("requests"), Route.slash(Route.string("requestId"))));
 const requestsRouter = Route.mapTo(AppRoute.Requests)(Route.literal("requests"));
+const routerDecisionDetailRouter = Route.mapTo(AppRoute.RouterDecisionDetail)(pipe(Route.literal("router"), Route.slash(Route.literal("decisions")), Route.slash(Route.string("requestId"))));
 const routerDecisionsRouter = Route.mapTo(AppRoute.RouterDecisions)(
   pipe(Route.literal("router"), Route.slash(Route.literal("decisions"))),
 );
@@ -89,6 +96,15 @@ const observeRoutingRouter = Route.mapTo(AppRoute.ObserveRouting)(
   pipe(Route.literal("observe"), Route.slash(Route.literal("routing"))),
 );
 const routerRouter = Route.mapTo(AppRoute.Router)(Route.literal("router"));
+const providersRouter = Route.mapTo(AppRoute.Providers)(
+  pipe(Route.literal("control"), Route.slash(Route.literal("providers"))),
+);
+const endpointsRouter = Route.mapTo(AppRoute.Endpoints)(
+  pipe(Route.literal("control"), Route.slash(Route.literal("endpoints"))),
+);
+const controlControllerRouter = Route.mapTo(AppRoute.ControlController)(
+  pipe(Route.literal("control"), Route.slash(Route.literal("controller"))),
+);
 
 export const appRouter = Route.oneOf(
   diagnosticsRouter,
@@ -97,7 +113,9 @@ export const appRouter = Route.oneOf(
   queuesRouter,
   localLogsRouter,
   routerCandidatesRouter,
+  requestDetailRouter,
   requestsRouter,
+  routerDecisionDetailRouter,
   routerDecisionsRouter,
   localPeersRouter,
   systemPeersRouter,
@@ -109,6 +127,9 @@ export const appRouter = Route.oneOf(
   observeLogsRouter,
   observeRoutingRouter,
   routerRouter,
+  providersRouter,
+  endpointsRouter,
+  controlControllerRouter,
   indexRouter,
 );
 

@@ -1,5 +1,6 @@
 import { Schema } from "effect";
 
+import { ControlsState } from "./control";
 import { DiagnosticsSnapshot } from "./diagnostics";
 import { ObservabilityState } from "./observability";
 import { ReadbacksState } from "./readback";
@@ -8,6 +9,7 @@ import { AppRoute } from "./route";
 
 const modelFields = {
   clicks: Schema.Number,
+  controls: ControlsState,
   diagnostics: DiagnosticsSnapshot,
   observability: ObservabilityState,
   readbacks: ReadbacksState,

@@ -2,10 +2,12 @@ import type { Return as UpdateReturn } from "@role-model-router/foldkit/update";
 import type { Url } from "@role-model-router/foldkit/url";
 
 import type {
+  ReadControlCommand,
   ReadDiagnosticsCommand,
   ReadObservabilityCommand,
   ReadReadbackCommand,
 } from "./commands";
+import { type ControlKey, controlKeyForRouteTag, emptyControls, loadingControl } from "./control";
 import { idleDiagnostics, loadingDiagnostics } from "./diagnostics";
 import type { Message } from "./message";
 import type { Model } from "./model";
@@ -26,6 +28,7 @@ export const createInit =
     readDiagnostics: ReadDiagnosticsCommand,
     readObservability: ReadObservabilityCommand,
     readReadback: ReadReadbackCommand,
+    readControl: ReadControlCommand,
   ) =>
   (url: Url): UpdateReturn<Model, Message> => {
     const theme = readInitialTheme();
@@ -36,6 +39,7 @@ export const createInit =
         commands: [readDiagnostics({ id: route.id })],
         model: {
           clicks: 0,
+          controls: emptyControls(),
           diagnostics: loadingDiagnostics(route.id),
           observability: idleObservability(),
           readbacks: emptyReadbacks(),
@@ -51,8 +55,27 @@ export const createInit =
         commands: [readObservability({ token })],
         model: {
           clicks: 0,
+          controls: emptyControls(),
           diagnostics: idleDiagnostics(),
           observability: loadingObservability(token),
+          readbacks: emptyReadbacks(),
+          refresh: initialRuntimeRefreshState(),
+          route,
+          theme,
+        },
+      };
+    }
+    const controlKey = controlKeyForRouteTag(route._tag);
+    if (controlKey !== null) {
+      const token = 1;
+      const controls = { ...emptyControls(), [controlKey]: loadingControl(token) };
+      return {
+        commands: [readControl({ key: controlKey as ControlKey, token })],
+        model: {
+          clicks: 0,
+          controls,
+          diagnostics: idleDiagnostics(),
+          observability: idleObservability(),
           readbacks: emptyReadbacks(),
           refresh: initialRuntimeRefreshState(),
           route,
@@ -68,6 +91,7 @@ export const createInit =
         commands: [readReadback({ key: readbackKey as ReadbackKey, token })],
         model: {
           clicks: 0,
+          controls: emptyControls(),
           diagnostics: idleDiagnostics(),
           observability: idleObservability(),
           readbacks,
@@ -80,6 +104,7 @@ export const createInit =
     return {
       model: {
         clicks: 0,
+        controls: emptyControls(),
         diagnostics: idleDiagnostics(),
         observability: idleObservability(),
         readbacks: emptyReadbacks(),

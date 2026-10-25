@@ -4,14 +4,26 @@ import type { Return as UpdateReturn } from "@role-model-router/foldkit/update";
 import { Effect, Schema } from "effect";
 
 import {
+  type DispatchControlCommand,
+  type ReadControlCommand,
   type ReadDiagnosticsCommand,
   type ReadObservabilityCommand,
   type ReadReadbackCommand,
   type RefreshSnapshotCommand,
+  defineDispatchControl,
+  defineReadControl,
   defineReadObservability,
   defineReadReadback,
   defineRefreshSnapshot,
 } from "./commands";
+import {
+  CONTROL_SPECS,
+  type ControlKey,
+  controlKeyForRouteTag,
+  emptyControls,
+  failedControl,
+  loadingControl,
+} from "./control";
 import { failedDiagnostics, idleDiagnostics, loadingDiagnostics } from "./diagnostics";
 import { Message } from "./message";
 import type { Model } from "./model";
@@ -46,6 +58,14 @@ const emptyBody = {
   store: { receipts: [] },
   worker: { receipts: [] },
 };
+const noopControl = defineReadControl({
+  dispatch: async () => ({ body: {}, status: 200 }),
+  read: async () => ({ body: {}, status: 200 }),
+});
+const noopDispatchControl = defineDispatchControl({
+  dispatch: async () => ({ body: {}, status: 200 }),
+  read: async () => ({ body: {}, status: 200 }),
+});
 const noopReadback = defineReadReadback({
   dashboard: async () => ({ body: emptyBody, status: 200 }),
   localLogs: async () => ({ body: emptyBody, status: 200 }),
@@ -71,6 +91,8 @@ export const createUpdate =
     refreshSnapshot: RefreshSnapshotCommand = noopRefreshSnapshot,
     readObservability: ReadObservabilityCommand = noopObservability,
     readReadback: ReadReadbackCommand = noopReadback,
+    readControl: ReadControlCommand = noopControl,
+    dispatchControl: DispatchControlCommand = noopDispatchControl,
   ) =>
   (model: Model, message: Message): UpdateReturn<Model, Message> =>
     Message.match<UpdateReturn<Model, Message>>(message, {
@@ -113,6 +135,27 @@ export const createUpdate =
             },
           };
         }
+        const controlKey = controlKeyForRouteTag(route._tag);
+        if (controlKey !== null) {
+          const token = model.controls[controlKey].token + 1;
+          return {
+            commands: [readControl({ key: controlKey, token }), scrollShellToTopCommand()],
+            model: {
+              ...model,
+              controls: { ...model.controls, [controlKey]: loadingControl(token) },
+              diagnostics: idleDiagnostics(),
+              observability: idleObservability(),
+              readbacks: emptyReadbacks(),
+              refresh: {
+                ...model.refresh,
+                message: undefined,
+                resyncToken: model.refresh.resyncToken + 1,
+                status: "idle",
+              },
+              route,
+            },
+          };
+        }
         const readbackKey = readbackKeyForRouteTag(route._tag);
         if (readbackKey !== null) {
           const token = model.readbacks[readbackKey].token + 1;
@@ -138,6 +181,7 @@ export const createUpdate =
           commands: [scrollShellToTopCommand()],
           model: {
             ...model,
+            controls: emptyControls(),
             diagnostics: idleDiagnostics(),
             observability: idleObservability(),
             readbacks: emptyReadbacks(),
@@ -160,6 +204,62 @@ export const createUpdate =
             model,
           }),
         }),
+      ControlActionCompleted: ({ key, message, token }) => {
+        const current = model.controls[key];
+        if (token !== current.token) return { model };
+        return {
+          model: {
+            ...model,
+            controls: {
+              ...model.controls,
+              [key]: { ...current, actionMessage: message, actionStatus: "ok" },
+            },
+          },
+        };
+      },
+      ControlActionFailed: ({ key, message, token }) => {
+        const current = model.controls[key];
+        if (token !== current.token) return { model };
+        return {
+          model: {
+            ...model,
+            controls: {
+              ...model.controls,
+              [key]: { ...current, actionMessage: message, actionStatus: "error" },
+            },
+          },
+        };
+      },
+      ControlActionRequested: ({ key }) => {
+        const current = model.controls[key];
+        if (current.actionStatus === "pending") return { model };
+        const token = current.token + 1;
+        return {
+          commands: [dispatchControl({ key, token })],
+          model: {
+            ...model,
+            controls: {
+              ...model.controls,
+              [key]: { ...current, actionMessage: undefined, actionStatus: "pending", token },
+            },
+          },
+        };
+      },
+      ControlFailed: ({ key, message, token }) => {
+        if (token !== model.controls[key].token) return { model };
+        return {
+          model: {
+            ...model,
+            controls: { ...model.controls, [key]: failedControl(message, token) },
+          },
+        };
+      },
+      ControlLoaded: ({ key, snapshot, token }) => {
+        if (token !== model.controls[key].token) return { model };
+        return {
+          model: { ...model, controls: { ...model.controls, [key]: { ...snapshot, token } } },
+        };
+      },
       DiagnosticsFailed: ({ id, message }) =>
         model.route._tag === "Diagnostics" && model.route.id === id
           ? { model: { ...model, diagnostics: failedDiagnostics(id, message) } }

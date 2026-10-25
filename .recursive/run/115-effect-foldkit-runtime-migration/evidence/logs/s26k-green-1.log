@@ -1,0 +1,155 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+stdout | test/s26k-control.test.ts > S26k control surface > Providers renders success, empty, loading and error on the DOM
+[12:43:42.893] ERROR (#2): Error: [foldkit] Runtime container must have an `id` for Model preservation across reloads. Set `container.id = "app"` (or any unique string) before passing it to makeApplication or makeElement. On a server-rendered page the id comes from the `data-foldkit-app` root stamp instead.
+    at D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\foldkit\dist\chunks\chunk-W4IY6AYV.js:4248:13
+
+stderr | test/s26k-control.test.ts > S26k control surface > Providers renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stdout | test/s26k-control.test.ts > S26k control surface > Endpoints renders success, empty, loading and error on the DOM
+[12:43:45.911] ERROR (#7): Error: [foldkit] Runtime container must have an `id` for Model preservation across reloads. Set `container.id = "app"` (or any unique string) before passing it to makeApplication or makeElement. On a server-rendered page the id comes from the `data-foldkit-app` root stamp instead.
+    at D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\foldkit\dist\chunks\chunk-W4IY6AYV.js:4248:13
+
+stderr | test/s26k-control.test.ts > S26k control surface > Endpoints renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stdout | test/s26k-control.test.ts > S26k control surface > Controller renders success, empty, loading and error on the DOM
+[12:43:48.911] ERROR (#12): Error: [foldkit] Runtime container must have an `id` for Model preservation across reloads. Set `container.id = "app"` (or any unique string) before passing it to makeApplication or makeElement. On a server-rendered page the id comes from the `data-foldkit-app` root stamp instead.
+    at D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\foldkit\dist\chunks\chunk-W4IY6AYV.js:4248:13
+
+stderr | test/s26k-control.test.ts > S26k control surface > Controller renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stdout | test/s26k-control.test.ts > S26k control surface > dispatches one action and refuses a second dispatch while pending
+[12:43:51.920] ERROR (#17): Error: [foldkit] Runtime container must have an `id` for Model preservation across reloads. Set `container.id = "app"` (or any unique string) before passing it to makeApplication or makeElement. On a server-rendered page the id comes from the `data-foldkit-app` root stamp instead.
+    at D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\foldkit\dist\chunks\chunk-W4IY6AYV.js:4248:13
+
+stderr | test/s26k-control.test.ts > S26k control surface > dispatches one action and refuses a second dispatch while pending
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stdout | test/s26k-control.test.ts > S26k control surface > renders the exact action failure phrase
+[12:43:54.933] ERROR (#22): Error: [foldkit] Runtime container must have an `id` for Model preservation across reloads. Set `container.id = "app"` (or any unique string) before passing it to makeApplication or makeElement. On a server-rendered page the id comes from the `data-foldkit-app` root stamp instead.
+    at D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\foldkit\dist\chunks\chunk-W4IY6AYV.js:4248:13
+
+stderr | test/s26k-control.test.ts > S26k control surface > renders the exact action failure phrase
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+ ❯ test/s26k-control.test.ts (7 tests | 5 failed) 15141ms
+   × S26k control surface > Providers renders success, empty, loading and error on the DOM 3046ms
+     → Timed out waiting for providers success
+   × S26k control surface > Endpoints renders success, empty, loading and error on the DOM 3019ms
+     → Timed out waiting for endpoints success
+   × S26k control surface > Controller renders success, empty, loading and error on the DOM 3010ms
+     → Timed out waiting for controlController success
+   × S26k control surface > dispatches one action and refuses a second dispatch while pending 3014ms
+     → Timed out waiting for dispatch button
+   × S26k control surface > renders the exact action failure phrase 3008ms
+     → Timed out waiting for controller action
+   ✓ S26k control surface > ties every control endpoint to the parsed host route table including method 40ms
+   ✓ S26k control surface > keeps action bodies and read methods on the shared specs 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s26k-control.test.ts > S26k control surface > Providers renders success, empty, loading and error on the DOM
+Error: Timed out waiting for providers success
+ ❯ waitFor test/s26k-control.test.ts:32:9
+     30|     await new Promise((resolve) => setTimeout(resolve, 10));
+     31|   }
+     32|   throw new Error(`Timed out waiting for ${label}`);
+       |         ^
+     33| };
+     34| afterEach(() => {
+ ❯ test/s26k-control.test.ts:53:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  test/s26k-control.test.ts > S26k control surface > Endpoints renders success, empty, loading and error on the DOM
+Error: Timed out waiting for endpoints success
+ ❯ waitFor test/s26k-control.test.ts:32:9
+     30|     await new Promise((resolve) => setTimeout(resolve, 10));
+     31|   }
+     32|   throw new Error(`Timed out waiting for ${label}`);
+       |         ^
+     33| };
+     34| afterEach(() => {
+ ❯ test/s26k-control.test.ts:53:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  test/s26k-control.test.ts > S26k control surface > Controller renders success, empty, loading and error on the DOM
+Error: Timed out waiting for controlController success
+ ❯ waitFor test/s26k-control.test.ts:32:9
+     30|     await new Promise((resolve) => setTimeout(resolve, 10));
+     31|   }
+     32|   throw new Error(`Timed out waiting for ${label}`);
+       |         ^
+     33| };
+     34| afterEach(() => {
+ ❯ test/s26k-control.test.ts:53:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  test/s26k-control.test.ts > S26k control surface > dispatches one action and refuses a second dispatch while pending
+Error: Timed out waiting for dispatch button
+ ❯ waitFor test/s26k-control.test.ts:32:9
+     30|     await new Promise((resolve) => setTimeout(resolve, 10));
+     31|   }
+     32|   throw new Error(`Timed out waiting for ${label}`);
+       |         ^
+     33| };
+     34| afterEach(() => {
+ ❯ test/s26k-control.test.ts:102:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  test/s26k-control.test.ts > S26k control surface > renders the exact action failure phrase
+Error: Timed out waiting for controller action
+ ❯ waitFor test/s26k-control.test.ts:32:9
+     30|     await new Promise((resolve) => setTimeout(resolve, 10));
+     31|   }
+     32|   throw new Error(`Timed out waiting for ${label}`);
+       |         ^
+     33| };
+     34| afterEach(() => {
+ ❯ test/s26k-control.test.ts:130:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 2 passed (7)
+   Start at  12:43:27
+   Duration  29.64s (transform 7.03s, setup 0ms, collect 11.15s, tests 15.14s, environment 1.83s, prepare 620ms)
+

@@ -3,6 +3,7 @@ import type { MessageUnion } from "@role-model-router/foldkit/message";
 import { defineMessageUnion } from "@role-model-router/foldkit/message";
 import { Schema } from "effect";
 
+import { ControlKeySchema, ControlState } from "./control";
 import { DiagnosticsSnapshot } from "./diagnostics";
 import { ObservabilityState } from "./observability";
 import { ReadbackKeySchema, ReadbackState } from "./readback";
@@ -13,6 +14,30 @@ export const Message: MessageUnion<{
   readonly ChangedUrl: { readonly url: typeof Url.Url };
   readonly Clicked: EmptyFields;
   readonly ClickedLink: { readonly request: typeof Navigation.UrlRequest };
+  readonly ControlActionCompleted: {
+    readonly key: typeof ControlKeySchema;
+    readonly message: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
+  readonly ControlActionFailed: {
+    readonly key: typeof ControlKeySchema;
+    readonly message: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
+  readonly ControlActionRequested: {
+    readonly key: typeof ControlKeySchema;
+    readonly token: typeof Schema.Number;
+  };
+  readonly ControlFailed: {
+    readonly key: typeof ControlKeySchema;
+    readonly message: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
+  readonly ControlLoaded: {
+    readonly key: typeof ControlKeySchema;
+    readonly snapshot: typeof ControlState;
+    readonly token: typeof Schema.Number;
+  };
   readonly DiagnosticsFailed: {
     readonly id: typeof Schema.String;
     readonly message: typeof Schema.String;
@@ -58,6 +83,11 @@ export const Message: MessageUnion<{
   ChangedUrl: { url: Url.Url },
   Clicked: {},
   ClickedLink: { request: Navigation.UrlRequest },
+  ControlActionCompleted: { key: ControlKeySchema, message: Schema.String, token: Schema.Number },
+  ControlActionFailed: { key: ControlKeySchema, message: Schema.String, token: Schema.Number },
+  ControlActionRequested: { key: ControlKeySchema, token: Schema.Number },
+  ControlFailed: { key: ControlKeySchema, message: Schema.String, token: Schema.Number },
+  ControlLoaded: { key: ControlKeySchema, snapshot: ControlState, token: Schema.Number },
   DiagnosticsFailed: { id: Schema.String, message: Schema.String },
   DiagnosticsLoaded: { id: Schema.String, snapshot: DiagnosticsSnapshot },
   DiagnosticsRefreshRequested: {},

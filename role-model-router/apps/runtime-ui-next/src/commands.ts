@@ -2,6 +2,13 @@ import { Command } from "@role-model-router/foldkit";
 import { Effect, Exit, Option, Schema } from "effect";
 
 import {
+  type ControlClient,
+  type ControlKey,
+  ControlKeySchema,
+  controlErrorMessage,
+  controlFromResult,
+} from "./control";
+import {
   type DiagnosticsReadResult,
   type DiagnosticsReader,
   describeCause,
@@ -152,14 +159,14 @@ export type ReadObservabilityCommand = ReturnType<typeof defineReadObservability
 /** S26e: one Command for the four shared readback routes, with per-route readers. */
 export const defineReadReadback = (readers: Readonly<Record<ReadbackKey, ReadbackReader>>) =>
   Command.define("ReadReadback", {
-    args: { key: ReadbackKeySchema, token: Schema.Number },
+    args: { id: Schema.optional(Schema.String), key: ReadbackKeySchema, token: Schema.Number },
     messages: [Message.ReadbackLoaded, Message.ReadbackFailed],
-    execute: ({ key, token }) =>
+    execute: ({ id, key, token }) =>
       Effect.flatMap(
         Effect.exit(
           Effect.tryPromise({
             catch: (cause) => new Error(describeCause(cause)),
-            try: (signal) => readers[key]({ signal }),
+            try: (signal) => readers[key]({ id, signal }),
           }),
         ),
         (exit) =>
@@ -167,7 +174,7 @@ export const defineReadReadback = (readers: Readonly<Record<ReadbackKey, Readbac
             Exit.isSuccess(exit)
               ? Message.ReadbackLoaded({
                   key,
-                  snapshot: readbackFromResult(READBACK_SPECS[key], exit.value, token),
+                  snapshot: readbackFromResult(READBACK_SPECS[key], exit.value, token, id),
                   token,
                 })
               : Message.ReadbackFailed({
@@ -182,3 +189,93 @@ export const defineReadReadback = (readers: Readonly<Record<ReadbackKey, Readbac
   });
 
 export type ReadReadbackCommand = ReturnType<typeof defineReadReadback>;
+/** S26k: one GET read per control page. */
+export const defineReadControl = (client: ControlClient) =>
+  Command.define("ReadControl", {
+    args: { key: ControlKeySchema, token: Schema.Number },
+    messages: [Message.ControlLoaded, Message.ControlFailed],
+    execute: ({ key, token }) =>
+      Effect.flatMap(
+        Effect.exit(
+          Effect.tryPromise({
+            catch: (cause) => new Error(describeCause(cause)),
+            try: () => client.read(key),
+          }),
+        ),
+        (exit) =>
+          Effect.succeed(
+            Exit.isSuccess(exit)
+              ? Message.ControlLoaded({
+                  key,
+                  snapshot: controlFromResult(key, exit.value, token),
+                  token,
+                })
+              : Message.ControlFailed({
+                  key,
+                  message: controlErrorMessage(
+                    key === "controlController"
+                      ? "Controller"
+                      : key === "providers"
+                        ? "Providers"
+                        : "Endpoints",
+                    0,
+                    describeCause(
+                      Option.getOrElse(
+                        Exit.findErrorOption(exit),
+                        () => new Error("control read failed"),
+                      ),
+                    ),
+                  ),
+                  token,
+                }),
+          ),
+      ),
+  });
+export type ReadControlCommand = ReturnType<typeof defineReadControl>;
+
+/** S26k: one explicit non-destructive dispatch per control action. */
+export const defineDispatchControl = (client: ControlClient) =>
+  Command.define("DispatchControl", {
+    args: { key: ControlKeySchema, token: Schema.Number },
+    messages: [Message.ControlActionCompleted, Message.ControlActionFailed],
+    execute: ({ key, token }) =>
+      Effect.flatMap(
+        Effect.exit(
+          Effect.tryPromise({
+            catch: (cause) => new Error(describeCause(cause)),
+            try: () => client.dispatch(key),
+          }),
+        ),
+        (exit) =>
+          Effect.succeed(
+            Exit.isSuccess(exit)
+              ? exit.value.status >= 200 && exit.value.status < 300
+                ? Message.ControlActionCompleted({
+                    key,
+                    message:
+                      key === "providers"
+                        ? "Providers action completed."
+                        : key === "endpoints"
+                          ? "Endpoints action completed."
+                          : "Controller action completed.",
+                    token,
+                  })
+                : Message.ControlActionFailed({
+                    key,
+                    message:
+                      key === "providers"
+                        ? `Providers action failed: HTTP ${String(exit.value.status)}`
+                        : key === "endpoints"
+                          ? `Endpoints action failed: HTTP ${String(exit.value.status)}`
+                          : `Controller action failed: HTTP ${String(exit.value.status)}`,
+                    token,
+                  })
+              : Message.ControlActionFailed({
+                  key,
+                  message: `${key === "controlController" ? "Controller" : key === "providers" ? "Providers" : "Endpoints"} action failed: ${describeCause(Option.getOrElse(Exit.findErrorOption(exit), () => new Error("control action failed")))})`,
+                  token,
+                }),
+          ),
+      ),
+  });
+export type DispatchControlCommand = ReturnType<typeof defineDispatchControl>;

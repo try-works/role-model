@@ -2,6 +2,8 @@ import { view as uiButtonView } from "@role-model-router/foldkit-ui/button";
 import type { Document, Html, HtmlBuilder } from "@role-model-router/foldkit/html";
 import { rm3ButtonClassName, view as rm3ButtonView } from "@role-model/ui/foldkit-button";
 
+import { CONTROL_SPECS, type ControlsState } from "./control";
+import { renderControlPage } from "./control-view";
 import {
   type DiagnosticsSnapshot,
   diagnosticsBuildLabel,
@@ -28,7 +30,9 @@ const routeTitle = (route: Model["route"]): string =>
     LocalLogs: () => "Local logs | RM3 Foldkit shell",
     RouterCandidates: () => "Router candidates | RM3 Foldkit shell",
     Requests: () => "Requests | RM3 Foldkit shell",
+    RequestDetail: ({ requestId }) => `Request ${requestId} | RM3 Foldkit shell`,
     RouterDecisions: () => "Router decisions | RM3 Foldkit shell",
+    RouterDecisionDetail: ({ requestId }) => `Decision ${requestId} | RM3 Foldkit shell`,
     LocalPeers: () => "Local peers | RM3 Foldkit shell",
     SystemPeers: () => "System peers | RM3 Foldkit shell",
     Runtime: () => "Runtime | RM3 Foldkit shell",
@@ -39,6 +43,9 @@ const routeTitle = (route: Model["route"]): string =>
     ObserveLogs: () => "Observe logs | RM3 Foldkit shell",
     ObserveRouting: () => "Observe routing | RM3 Foldkit shell",
     Router: () => "Router | RM3 Foldkit shell",
+    Providers: () => "Providers | RM3 Foldkit shell",
+    Endpoints: () => "Endpoints | RM3 Foldkit shell",
+    ControlController: () => "Controller | RM3 Foldkit shell",
     NotFound: ({ path }) => `Not found: ${path} | RM3 Foldkit shell`,
   });
 
@@ -102,6 +109,24 @@ const shellNavItems = (route: Model["route"]): ReadonlyArray<ShellNavItem> => [
     label: "Local peers",
   },
   { active: route._tag === "Runtime", dataNav: "runtime", href: "/runtime", label: "Runtime" },
+  {
+    active: route._tag === "Providers",
+    dataNav: "providers",
+    href: "/control/providers",
+    label: "Providers",
+  },
+  {
+    active: route._tag === "Endpoints",
+    dataNav: "endpoints",
+    href: "/control/endpoints",
+    label: "Endpoints",
+  },
+  {
+    active: route._tag === "ControlController",
+    dataNav: "control-controller",
+    href: "/control/controller",
+    label: "Controller",
+  },
   {
     active: route._tag === "SessionReadiness",
     dataNav: "session-readiness",
@@ -445,6 +470,7 @@ const routeContent = (
   diagnostics: DiagnosticsSnapshot,
   observability: ObservabilityState,
   readbacks: ReadbacksState,
+  controls: ControlsState,
   h: HtmlBuilder<Message>,
 ) =>
   AppRoute.match(route, {
@@ -464,8 +490,11 @@ const routeContent = (
     RouterCandidates: () =>
       renderReadbackPage(READBACK_SPECS.routerCandidates, readbacks.routerCandidates, h),
     Requests: () => renderReadbackPage(READBACK_SPECS.requests, readbacks.requests, h),
+    RequestDetail: () => renderReadbackPage(READBACK_SPECS.requestDetail, readbacks.requestDetail, h),
     RouterDecisions: () =>
       renderReadbackPage(READBACK_SPECS.routerDecisions, readbacks.routerDecisions, h),
+    RouterDecisionDetail: () =>
+      renderReadbackPage(READBACK_SPECS.routerDecisionDetail, readbacks.routerDecisionDetail, h),
     LocalPeers: () => renderReadbackPage(READBACK_SPECS.localPeers, readbacks.localPeers, h),
     SystemPeers: () => renderReadbackPage(READBACK_SPECS.systemPeers, readbacks.systemPeers, h),
     Runtime: () => renderReadbackPage(READBACK_SPECS.runtime, readbacks.runtime, h),
@@ -479,6 +508,10 @@ const routeContent = (
     ObserveRouting: () =>
       renderReadbackPage(READBACK_SPECS.observeRouting, readbacks.observeRouting, h),
     Router: () => renderReadbackPage(READBACK_SPECS.router, readbacks.router, h),
+    Providers: () => renderControlPage(CONTROL_SPECS.providers, controls.providers, h),
+    Endpoints: () => renderControlPage(CONTROL_SPECS.endpoints, controls.endpoints, h),
+    ControlController: () =>
+      renderControlPage(CONTROL_SPECS.controlController, controls.controlController, h),
     Index: () =>
       h.section(
         [
@@ -658,7 +691,9 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
                         LocalLogs: () => "Local logs",
                         RouterCandidates: () => "Router candidates",
                         Requests: () => "Requests",
+    RequestDetail: () => "Request detail",
                         RouterDecisions: () => "Router decisions",
+    RouterDecisionDetail: () => "Router decision detail",
                         LocalPeers: () => "Local peers",
                         SystemPeers: () => "System peers",
                         Runtime: () => "Runtime",
@@ -669,6 +704,9 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
                         ObserveLogs: () => "Observe logs",
                         ObserveRouting: () => "Observe routing",
                         Router: () => "Router",
+                        Providers: () => "Providers",
+                        Endpoints: () => "Endpoints",
+                        ControlController: () => "Controller",
                         NotFound: () => "Not found",
                       }),
                     ],
@@ -763,7 +801,14 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
                     ),
                   ]
                 : []),
-              routeContent(model.route, model.diagnostics, model.observability, model.readbacks, h),
+              routeContent(
+                model.route,
+                model.diagnostics,
+                model.observability,
+                model.readbacks,
+                model.controls,
+                h,
+              ),
               h.div(
                 [h.Class("mt-6 flex flex-wrap items-center gap-3")],
                 [

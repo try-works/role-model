@@ -45,8 +45,8 @@
       "modal": 2
     },
     "byStatus": {
-      "absent": 55,
-      "verified": 19,
+      "absent": 52,
+      "verified": 22,
       "wired": 1
     },
     "newOnly": 1
@@ -62,7 +62,8 @@
       "source": "role-model-router/apps/runtime-ui/app/routes/agent-strategy.tsx",
       "status": "absent",
       "hostEndpoints": [],
-      "requiresHostEndpoint": false
+      "requiresHostEndpoint": false,
+      "absenceReason": "Needs an action payload, identity, or confirmation flow not covered by this non-destructive slice; left absent rather than wiring a guessed command."
     },
     {
       "category": "control",
@@ -96,9 +97,13 @@
         "/app/router/controller"
       ],
       "source": "role-model-router/apps/runtime-ui/app/routes/control-controller.tsx",
-      "status": "absent",
-      "hostEndpoints": [],
-      "requiresHostEndpoint": false
+      "status": "verified",
+      "hostEndpoints": [
+        "/api/role-model/controller"
+      ],
+      "requiresHostEndpoint": false,
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s26k-control.test.ts",
+      "proofTestName": "Controller renders success, empty, loading and error on the DOM"
     },
     {
       "category": "control",
@@ -110,7 +115,8 @@
       "source": "role-model-router/apps/runtime-ui/app/routes/control-models.tsx",
       "status": "absent",
       "hostEndpoints": [],
-      "requiresHostEndpoint": false
+      "requiresHostEndpoint": false,
+      "absenceReason": "Needs an action payload, identity, or confirmation flow not covered by this non-destructive slice; left absent rather than wiring a guessed command."
     },
     {
       "category": "control",
@@ -122,7 +128,8 @@
       "source": "role-model-router/apps/runtime-ui/app/routes/control-roles.tsx",
       "status": "absent",
       "hostEndpoints": [],
-      "requiresHostEndpoint": false
+      "requiresHostEndpoint": false,
+      "absenceReason": "Needs an action payload, identity, or confirmation flow not covered by this non-destructive slice; left absent rather than wiring a guessed command."
     },
     {
       "category": "control",
@@ -134,7 +141,8 @@
       "source": "role-model-router/apps/runtime-ui/app/routes/control-routing-strategy.tsx",
       "status": "absent",
       "hostEndpoints": [],
-      "requiresHostEndpoint": false
+      "requiresHostEndpoint": false,
+      "absenceReason": "Needs an action payload, identity, or confirmation flow not covered by this non-destructive slice; left absent rather than wiring a guessed command."
     },
     {
       "category": "write",
@@ -146,7 +154,8 @@
       "source": "role-model-router/apps/runtime-ui/app/routes/control-runtime-config.tsx",
       "status": "absent",
       "hostEndpoints": [],
-      "requiresHostEndpoint": false
+      "requiresHostEndpoint": false,
+      "absenceReason": "Destructive configuration write; no confirmation flow in this slice."
     },
     {
       "category": "read",
@@ -173,9 +182,13 @@
         "/app/connect"
       ],
       "source": "role-model-router/apps/runtime-ui/app/routes/endpoints.tsx",
-      "status": "absent",
-      "hostEndpoints": [],
-      "requiresHostEndpoint": false
+      "status": "verified",
+      "hostEndpoints": [
+        "/api/role-model/endpoints"
+      ],
+      "requiresHostEndpoint": false,
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s26k-control.test.ts",
+      "proofTestName": "Endpoints renders success, empty, loading and error on the DOM"
     },
     {
       "category": "control",
@@ -187,7 +200,8 @@
       "source": "role-model-router/apps/runtime-ui/app/routes/extensions.tsx",
       "status": "absent",
       "hostEndpoints": [],
-      "requiresHostEndpoint": false
+      "requiresHostEndpoint": false,
+      "absenceReason": "Needs an action payload, identity, or confirmation flow not covered by this non-destructive slice; left absent rather than wiring a guessed command."
     },
     {
       "category": "control",
@@ -213,7 +227,8 @@
       "source": "role-model-router/apps/runtime-ui/app/routes/integrations-downstream.tsx",
       "status": "absent",
       "hostEndpoints": [],
-      "requiresHostEndpoint": false
+      "requiresHostEndpoint": false,
+      "absenceReason": "Needs an action payload, identity, or confirmation flow not covered by this non-destructive slice; left absent rather than wiring a guessed command."
     },
     {
       "category": "control",
@@ -225,7 +240,8 @@
       "source": "role-model-router/apps/runtime-ui/app/routes/integrations-upstream.tsx",
       "status": "absent",
       "hostEndpoints": [],
-      "requiresHostEndpoint": false
+      "requiresHostEndpoint": false,
+      "absenceReason": "Needs an action payload, identity, or confirmation flow not covered by this non-destructive slice; left absent rather than wiring a guessed command."
     },
     {
       "category": "learning",
@@ -273,7 +289,8 @@
       "source": "role-model-router/apps/runtime-ui/app/routes/legacy-redirect.tsx",
       "status": "absent",
       "hostEndpoints": [],
-      "requiresHostEndpoint": false
+      "requiresHostEndpoint": false,
+      "absenceReason": "Needs an action payload, identity, or confirmation flow not covered by this non-destructive slice; left absent rather than wiring a guessed command."
     },
     {
       "category": "control",
@@ -285,7 +302,8 @@
       "source": "role-model-router/apps/runtime-ui/app/routes/local-choose.tsx",
       "status": "absent",
       "hostEndpoints": [],
-      "requiresHostEndpoint": false
+      "requiresHostEndpoint": false,
+      "absenceReason": "Needs an action payload, identity, or confirmation flow not covered by this non-destructive slice; left absent rather than wiring a guessed command."
     },
     {
       "category": "control",
@@ -297,7 +315,8 @@
       "source": "role-model-router/apps/runtime-ui/app/routes/local-llama-swap-models.tsx",
       "status": "absent",
       "hostEndpoints": [],
-      "requiresHostEndpoint": false
+      "requiresHostEndpoint": false,
+      "absenceReason": "Needs an action payload, identity, or confirmation flow not covered by this non-destructive slice; left absent rather than wiring a guessed command."
     },
     {
       "category": "read",
@@ -325,7 +344,8 @@
       "source": "role-model-router/apps/runtime-ui/app/routes/local-matrix.tsx",
       "status": "absent",
       "hostEndpoints": [],
-      "requiresHostEndpoint": false
+      "requiresHostEndpoint": false,
+      "absenceReason": "Needs an action payload, identity, or confirmation flow not covered by this non-destructive slice; left absent rather than wiring a guessed command."
     },
     {
       "category": "control",
@@ -337,7 +357,8 @@
       "source": "role-model-router/apps/runtime-ui/app/routes/local-models.tsx",
       "status": "absent",
       "hostEndpoints": [],
-      "requiresHostEndpoint": false
+      "requiresHostEndpoint": false,
+      "absenceReason": "Needs an action payload, identity, or confirmation flow not covered by this non-destructive slice; left absent rather than wiring a guessed command."
     },
     {
       "category": "control",
@@ -349,7 +370,8 @@
       "source": "role-model-router/apps/runtime-ui/app/routes/local-peer-models.tsx",
       "status": "absent",
       "hostEndpoints": [],
-      "requiresHostEndpoint": false
+      "requiresHostEndpoint": false,
+      "absenceReason": "Needs an action payload, identity, or confirmation flow not covered by this non-destructive slice; left absent rather than wiring a guessed command."
     },
     {
       "category": "read",
@@ -377,7 +399,8 @@
       "source": "role-model-router/apps/runtime-ui/app/routes/local-policy.tsx",
       "status": "absent",
       "hostEndpoints": [],
-      "requiresHostEndpoint": false
+      "requiresHostEndpoint": false,
+      "absenceReason": "Destructive configuration write; no confirmation flow in this slice."
     },
     {
       "category": "read",
@@ -435,7 +458,8 @@
       "source": "role-model-router/apps/runtime-ui/app/routes/observe-activity.tsx",
       "status": "verified",
       "hostEndpoints": [
-        "/api/role-model/operator/status"
+        "/api/metrics/page",
+        "/api/role-model/telemetry/summary"
       ],
       "requiresHostEndpoint": false,
       "proofTest": "role-model-router/apps/runtime-ui-next/test/s26e-readback-routes.test.ts",
@@ -499,7 +523,8 @@
       "source": "role-model-router/apps/runtime-ui/app/routes/operator-controls.tsx",
       "status": "absent",
       "hostEndpoints": [],
-      "requiresHostEndpoint": false
+      "requiresHostEndpoint": false,
+      "absenceReason": "Needs an action payload, identity, or confirmation flow not covered by this non-destructive slice; left absent rather than wiring a guessed command."
     },
     {
       "category": "control",
@@ -509,9 +534,14 @@
         "/app/remote/providers"
       ],
       "source": "role-model-router/apps/runtime-ui/app/routes/providers.tsx",
-      "status": "absent",
-      "hostEndpoints": [],
-      "requiresHostEndpoint": false
+      "status": "verified",
+      "hostEndpoints": [
+        "/api/role-model/accounts",
+        "/api/role-model/accounts/repair/reconnect"
+      ],
+      "requiresHostEndpoint": false,
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s26k-control.test.ts",
+      "proofTestName": "Providers renders success, empty, loading and error on the DOM"
     },
     {
       "category": "read",
@@ -570,7 +600,8 @@
       "source": "role-model-router/apps/runtime-ui/app/routes/router-config.tsx",
       "status": "absent",
       "hostEndpoints": [],
-      "requiresHostEndpoint": false
+      "requiresHostEndpoint": false,
+      "absenceReason": "Needs an action payload, identity, or confirmation flow not covered by this non-destructive slice; left absent rather than wiring a guessed command."
     },
     {
       "category": "read",
@@ -781,7 +812,8 @@
       "source": "role-model-router/apps/runtime-ui/app/routes/workloads.tsx",
       "status": "absent",
       "hostEndpoints": [],
-      "requiresHostEndpoint": false
+      "requiresHostEndpoint": false,
+      "absenceReason": "Needs an action payload, identity, or confirmation flow not covered by this non-destructive slice; left absent rather than wiring a guessed command."
     }
   ],
   "components": [
@@ -868,7 +900,8 @@
       "source": "role-model-router/apps/runtime-ui/app/components/llama-swap-setup-hint.tsx",
       "status": "absent",
       "hostEndpoints": [],
-      "requiresHostEndpoint": false
+      "requiresHostEndpoint": false,
+      "absenceReason": "Presentational/control component, not a route; not ported in this slice."
     },
     {
       "category": "modal",
@@ -886,7 +919,8 @@
       "source": "role-model-router/apps/runtime-ui/app/components/local-model-role-picker.tsx",
       "status": "absent",
       "hostEndpoints": [],
-      "requiresHostEndpoint": false
+      "requiresHostEndpoint": false,
+      "absenceReason": "Presentational/control component, not a route; not ported in this slice."
     },
     {
       "category": "read",
@@ -924,7 +958,8 @@
       "source": "role-model-router/apps/runtime-ui/app/components/posture-entries-page.tsx",
       "status": "absent",
       "hostEndpoints": [],
-      "requiresHostEndpoint": false
+      "requiresHostEndpoint": false,
+      "absenceReason": "Presentational/control component, not a route; not ported in this slice."
     },
     {
       "category": "control",
@@ -933,7 +968,8 @@
       "source": "role-model-router/apps/runtime-ui/app/components/queues-configuration-card.tsx",
       "status": "absent",
       "hostEndpoints": [],
-      "requiresHostEndpoint": false
+      "requiresHostEndpoint": false,
+      "absenceReason": "Presentational/control component, not a route; not ported in this slice."
     },
     {
       "category": "control",
@@ -942,7 +978,8 @@
       "source": "role-model-router/apps/runtime-ui/app/components/replay-automation-panel.tsx",
       "status": "absent",
       "hostEndpoints": [],
-      "requiresHostEndpoint": false
+      "requiresHostEndpoint": false,
+      "absenceReason": "Presentational/control component, not a route; not ported in this slice."
     },
     {
       "category": "read",

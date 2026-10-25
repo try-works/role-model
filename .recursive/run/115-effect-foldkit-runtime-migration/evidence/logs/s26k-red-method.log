@@ -1,0 +1,33 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s26k-control.test.ts (7 tests | 1 failed | 6 skipped) 37ms
+   ↓ S26k control surface > Providers renders success, empty, loading and error on the DOM
+   ↓ S26k control surface > Endpoints renders success, empty, loading and error on the DOM
+   ↓ S26k control surface > Controller renders success, empty, loading and error on the DOM
+   ↓ S26k control surface > dispatches one action and refuses a second dispatch while pending
+   ↓ S26k control surface > renders the exact action failure phrase
+   × S26k control surface > ties every control endpoint to the parsed host route table including method 35ms
+     → POST /api/role-model/controller: expected [ 'GET', 'PATCH' ] to include 'POST'
+   ↓ S26k control surface > keeps action bodies and read methods on the shared specs
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s26k-control.test.ts > S26k control surface > ties every control endpoint to the parsed host route table including method
+AssertionError: POST /api/role-model/controller: expected [ 'GET', 'PATCH' ] to include 'POST'
+ ❯ test/s26k-control.test.ts:162:81
+    160|     }
+    161|     for (const endpoint of Object.values(CONTROL_ENDPOINTS)) {
+    162|       expect(methods.get(endpoint.path), `${endpoint.method} ${endpoin…
+       |                                                                                 ^
+    163|     }
+    164|     expect(CONTROL_SPECS.providers.action.method).toBe("POST");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 6 skipped (7)
+   Start at  12:51:08
+   Duration  7.78s (transform 3.57s, setup 0ms, collect 5.74s, tests 37ms, environment 927ms, prepare 382ms)
+
