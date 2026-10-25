@@ -46,6 +46,7 @@ const routeTitle = (route: Model["route"]): string =>
     Benchmark: () => "Benchmark | RM3 Foldkit shell",
     StorageRetention: () => "Storage retention | RM3 Foldkit shell",
     Studio: () => "Studio | RM3 Foldkit shell",
+    Learning: () => "Learning | RM3 Foldkit shell",
     Runtime: () => "Runtime | RM3 Foldkit shell",
     SessionReadiness: () => "Session readiness | RM3 Foldkit shell",
     Dashboard: () => "Dashboard | RM3 Foldkit shell",
@@ -171,6 +172,7 @@ const shellNavItems = (route: Model["route"]): ReadonlyArray<ShellNavItem> => [
   },
   { active: route._tag === "Router", dataNav: "router", href: "/router", label: "Router" },
   { active: route._tag === "Studio", dataNav: "studio", href: "/studio", label: "Studio" },
+  { active: route._tag === "Learning", dataNav: "learning", href: "/learning", label: "Learning" },
 ];
 
 const navGroup = (item: ShellNavItem): string => {
@@ -180,6 +182,7 @@ const navGroup = (item: ShellNavItem): string => {
   if (["router", "router-candidates", "router-decisions", "providers", "endpoints", "control-controller"].includes(nav)) return "Router";
   if (["local-peers", "local-swap", "system-peers", "runtime", "session-readiness", "dashboard"].includes(nav)) return "System";
   if (["studio"].includes(nav)) return "Studio";
+  if (["learning"].includes(nav)) return "Learning";
   return "Other";
 };
 const shellNav = (route: Model["route"], label: string, h: HtmlBuilder<Message>): Html => {
@@ -659,6 +662,15 @@ const studioPage = (state: StudioState, h: HtmlBuilder<Message>): Html => {
   ]);
 };
 
+const learningPage = (readbacks: ReadbacksState, h: HtmlBuilder<Message>): Html =>
+  h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "learning")], [
+    h.h1([h.Class("text-[22px] font-semibold")], ["Learning"]),
+    h.p([h.Class("mt-1 text-[12px] text-[var(--rm-secondary)]")], ["Knowledge worker, replay jobs and evaluation jobs. Empty means the capability is available but no work exists."]),
+    renderReadbackPage(READBACK_SPECS.learning, readbacks.learning, h),
+    renderReadbackPage(READBACK_SPECS.replayJobs, readbacks.replayJobs, h),
+    renderReadbackPage(READBACK_SPECS.evaluationJobs, readbacks.evaluationJobs, h),
+  ]);
+
 const routeContent = (
   route: Model["route"],
   diagnostics: DiagnosticsSnapshot,
@@ -700,6 +712,7 @@ const routeContent = (
     Benchmark: () => renderReadbackPage(READBACK_SPECS.benchmarkSuite, readbacks.benchmarkSuite, h),
     StorageRetention: () => renderReadbackPage(READBACK_SPECS.storageRetention, readbacks.storageRetention, h),
     Studio: () => studioPage(studio, h),
+    Learning: () => learningPage(readbacks, h),
     LocalChoose: () => h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route","local-choose")], [h.h1([h.Class("rm3-next-route-title")], ["Local choose"]), h.p([], ["Choose peer-backed models or llama-swap models."])]),
     Runtime: () => renderReadbackPage(READBACK_SPECS.runtime, readbacks.runtime, h),
     SessionReadiness: () =>

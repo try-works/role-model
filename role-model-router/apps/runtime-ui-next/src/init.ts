@@ -65,6 +65,26 @@ const initRoute =
         },
       };
     }
+    if (route._tag === "Learning") {
+      const token = 1;
+      return {
+        commands: [
+          readReadback({ key: "learning", token }),
+          readReadback({ key: "replayJobs", token }),
+          readReadback({ key: "evaluationJobs", token }),
+        ],
+        model: {
+          clicks: 0,
+          controls: emptyControls(),
+          diagnostics: idleDiagnostics(),
+          observability: idleObservability(),
+          readbacks: { ...emptyReadbacks(), learning: loadingReadback(token), replayJobs: loadingReadback(token), evaluationJobs: loadingReadback(token) },
+          refresh: initialRuntimeRefreshState(),
+          route,
+          theme,
+        },
+      };
+    }
     const controlKey = controlKeyForRouteTag(route._tag);
     if (controlKey !== null) {
       const token = 1;

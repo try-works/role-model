@@ -474,6 +474,58 @@
         "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
       },
       "bodyBytes": 929
+    },
+    "learning-real.json": {
+      "url": "fixture:learning-real",
+      "status": 200,
+      "capturedAt": "2026-10-25T15:23:44.136Z",
+      "sha256": "22a1ea990dd0a901913a77af433bd17462ca86378fa13283c65f0965e4a5f227",
+      "artifact": {
+        "version": "0.0.20-18-g6c9aeba1",
+        "commit": "6c9aeba15acd09be4fc6776cef66a1041394b65a",
+        "sourceTree": "e79ccfc7ee4c1d9a8eeee07f7e3aee115f2d106e",
+        "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
+      },
+      "bodyBytes": 421
+    },
+    "replay-jobs-real.json": {
+      "url": "fixture:replay-jobs-real",
+      "status": 200,
+      "capturedAt": "2026-10-25T15:23:44.139Z",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "artifact": {
+        "version": "0.0.20-18-g6c9aeba1",
+        "commit": "6c9aeba15acd09be4fc6776cef66a1041394b65a",
+        "sourceTree": "e79ccfc7ee4c1d9a8eeee07f7e3aee115f2d106e",
+        "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
+      },
+      "bodyBytes": 3
+    },
+    "evaluation-jobs-real.json": {
+      "url": "fixture:evaluation-jobs-real",
+      "status": 200,
+      "capturedAt": "2026-10-25T15:23:44.139Z",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "artifact": {
+        "version": "0.0.20-18-g6c9aeba1",
+        "commit": "6c9aeba15acd09be4fc6776cef66a1041394b65a",
+        "sourceTree": "e79ccfc7ee4c1d9a8eeee07f7e3aee115f2d106e",
+        "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
+      },
+      "bodyBytes": 3
+    },
+    "replay-jobs-row.json": {
+      "url": "fixture:replay-jobs-row",
+      "status": 200,
+      "capturedAt": "2026-10-25T15:23:44.141Z",
+      "sha256": "7a8af63d19d61045b000db6f0faa0fae172ed9ea4aa6de448b96c03b51816e9e",
+      "artifact": {
+        "version": "0.0.20-18-g6c9aeba1",
+        "commit": "6c9aeba15acd09be4fc6776cef66a1041394b65a",
+        "sourceTree": "e79ccfc7ee4c1d9a8eeee07f7e3aee115f2d106e",
+        "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
+      },
+      "bodyBytes": 105
     }
   }
 }

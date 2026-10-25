@@ -1,0 +1,22 @@
+{
+  "slice": "s67a-learning",
+  "route": "/learning",
+  "sections": {
+    "knowledge": "/api/role-model/operator/learning -> knowledge.available,schemaVersion,backend,candidates,indexedDocuments,productionActivation,receipt counters,degradationCount",
+    "replay": "/api/role-model/operator/replay/jobs -> job id/status/createdAt",
+    "evaluation": "/api/role-model/operator/evaluation/jobs -> same"
+  },
+  "nav": "grouped nav group 'Learning' separate from Observe/System because the reference lists Learning as a first-class top-level section and these are capability/job surfaces, not telemetry",
+  "states": "loading/empty/error/ok per section; learning empty when available:false; jobs empty on []",
+  "fixtures": {
+    "real": "learning-real.json, replay-jobs-real.json, evaluation-jobs-real.json captured from packaged 5796",
+    "row": "replay-jobs-row.json synthetic schema-constrained row for rendering proof"
+  },
+  "red": "s67a-red-fabricated-job.log",
+  "screenshot": "E:/rm-tmp/s64a/learning.png",
+  "counts": {
+    "clientFull": 202,
+    "files": 21,
+    "typecheck": "exit 0"
+  }
+}

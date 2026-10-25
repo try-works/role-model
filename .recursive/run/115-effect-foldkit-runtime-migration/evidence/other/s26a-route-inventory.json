@@ -45,8 +45,8 @@
       "modal": 2
     },
     "byStatus": {
-      "absent": 40,
-      "verified": 34,
+      "absent": 39,
+      "verified": 35,
       "wired": 1
     },
     "newOnly": 1
@@ -271,9 +271,15 @@
         "/app/learning/history"
       ],
       "source": "role-model-router/apps/runtime-ui/app/routes/learning.tsx",
-      "status": "absent",
-      "hostEndpoints": [],
-      "requiresHostEndpoint": false
+      "status": "verified",
+      "hostEndpoints": [
+        "/api/role-model/operator/learning",
+        "/api/role-model/operator/replay/jobs",
+        "/api/role-model/operator/evaluation/jobs"
+      ],
+      "requiresHostEndpoint": false,
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s67a-learning.test.ts",
+      "proofTestName": "renders three sections with honest empty job lists and the knowledge worker fields"
     },
     {
       "category": "control",

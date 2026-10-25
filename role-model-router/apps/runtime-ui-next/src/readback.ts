@@ -33,7 +33,10 @@ export type ReadbackKey =
   | "models"
   | "runtimeSummary"
   | "health"
-  | "overviewMetrics";
+  | "overviewMetrics"
+  | "learning"
+  | "replayJobs"
+  | "evaluationJobs";
 
 export const ReadbackKeySchema = Schema.Literals([
   "storeReceipts",
@@ -64,6 +67,9 @@ export const ReadbackKeySchema = Schema.Literals([
   "runtimeSummary",
   "health",
   "overviewMetrics",
+  "learning",
+  "replayJobs",
+  "evaluationJobs",
 ]);
 
 export interface ReadbackRow {
@@ -115,6 +121,9 @@ export const ReadbacksState = Schema.Struct({
   runtimeSummary: ReadbackState,
   health: ReadbackState,
   overviewMetrics: ReadbackState,
+  learning: ReadbackState,
+  replayJobs: ReadbackState,
+  evaluationJobs: ReadbackState,
   runtime: ReadbackState,
   sessionReadiness: ReadbackState,
   storeReceipts: ReadbackState,
@@ -160,6 +169,9 @@ export const emptyReadbacks = (): ReadbacksState => ({
   runtimeSummary: idleReadback(),
   health: idleReadback(),
   overviewMetrics: idleReadback(),
+  learning: idleReadback(),
+  replayJobs: idleReadback(),
+  evaluationJobs: idleReadback(),
   runtime: idleReadback(),
   sessionReadiness: idleReadback(),
   storeReceipts: idleReadback(),
@@ -555,6 +567,37 @@ const parseIntegrationProviders = (body: unknown, token: number): ReadbackState 
   return okRows(rows, token);
 };
 
+const parseLearning = (body: unknown, token: number): ReadbackState => {
+  const record = asRecord(body);
+  const knowledge = asRecord(record?.knowledge);
+  if (knowledge === undefined) return failedReadback("Learning read failed: invalid response", token);
+  if (knowledge.available === false) return { rows: [], status: "empty", token };
+  const rows = [
+    row("available", "Available", String(knowledge.available ?? "—"), "knowledge"),
+    row("schema", "Schema", String(knowledge.schemaVersion ?? "—"), String(knowledge.backend ?? "")),
+    row("candidates", "Candidates", String(knowledge.candidates ?? "—"), "knowledge"),
+    row("documents", "Indexed documents", String(knowledge.indexedDocuments ?? "—"), "knowledge"),
+    row("production", "Production activation", String(knowledge.productionActivation === true ? "active" : "disabled"), "knowledge"),
+    row("receipts", "Receipts", String(knowledge.retrievalReceipts ?? 0) + " retrieval / " + String(knowledge.rollbackReceipts ?? 0) + " rollback / " + String(knowledge.recoveryReceipts ?? 0) + " recovery", "knowledge"),
+    row("degradation", "Degradation count", String(knowledge.degradationCount ?? 0), "knowledge"),
+  ];
+  return okRows(rows, token);
+};
+const parseJobList = (label: string) => (body: unknown, token: number): ReadbackState => {
+  const list = Array.isArray(body) ? body : asArray(asRecord(body)?.jobs);
+  const rows = list.flatMap((value, index) => {
+    const job = asRecord(value);
+    if (job === undefined) return [];
+    const id = typeof job.id === "string" ? job.id : typeof job.jobId === "string" ? job.jobId : undefined;
+    const status = typeof job.status === "string" ? job.status : typeof job.state === "string" ? job.state : undefined;
+    if (id === undefined || (status === undefined && job.createdAt === undefined)) return [];
+    return [row(id, id, status ?? "recorded", String(job.createdAt ?? ""))];
+  });
+  if (list.length > 0 && rows.length === 0) return failedReadback(label + " read failed: invalid response", token);
+  return okRows(rows, token);
+};
+const parseReplayJobs = parseJobList("Replay jobs");
+const parseEvaluationJobs = parseJobList("Evaluation jobs");
 const parseOverviewMetrics = (body: unknown, token: number): ReadbackState => {
   const record = asRecord(body);
   if (record === undefined || !Array.isArray(record.items) || asRecord(record.window) === undefined) {
@@ -787,6 +830,27 @@ export const READBACK_SPECS: Readonly<Record<ReadbackKey, ReadbackRouteSpec>> = 
     parse: parseHealth,
     path: READBACK_PATHS.health,
   },
+  learning: {
+    emptyText: "No knowledge worker state available.",
+    key: "learning",
+    label: "Knowledge worker",
+    parse: parseLearning,
+    path: READBACK_PATHS.learning,
+  },
+  replayJobs: {
+    emptyText: "No replay jobs.",
+    key: "replayJobs",
+    label: "Replay jobs",
+    parse: parseReplayJobs,
+    path: READBACK_PATHS.replayJobs,
+  },
+  evaluationJobs: {
+    emptyText: "No evaluation jobs.",
+    key: "evaluationJobs",
+    label: "Evaluation jobs",
+    parse: parseEvaluationJobs,
+    path: READBACK_PATHS.evaluationJobs,
+  },
   overviewMetrics: {
     emptyText: "No telemetry requests in this window.",
     key: "overviewMetrics",
@@ -906,6 +970,9 @@ export const createReadbackClients = (
   models: createReadbackClient(READBACK_SPECS.models, options),
   runtimeSummary: createReadbackClient(READBACK_SPECS.runtimeSummary, options),
   health: createReadbackClient(READBACK_SPECS.health, options),
+  learning: createReadbackClient(READBACK_SPECS.learning, options),
+  replayJobs: createReadbackClient(READBACK_SPECS.replayJobs, options),
+  evaluationJobs: createReadbackClient(READBACK_SPECS.evaluationJobs, options),
   overviewMetrics: createReadbackClient(READBACK_SPECS.overviewMetrics, options),
 });
 
@@ -1020,6 +1087,8 @@ export const readbackKeyForRouteTag = (tag: string): ReadbackKey | null =>
                       ? "sessionReadiness"
                       : tag === "Index"
                         ? "overviewMetrics"
+                        : tag === "Learning"
+                        ? "learning"
                         : tag === "Dashboard"
                           ? "dashboard"
                         : tag === "LocalSwap"

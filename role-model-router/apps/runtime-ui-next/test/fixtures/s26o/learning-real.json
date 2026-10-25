@@ -1,0 +1,17 @@
+{
+  "knowledge": {
+    "available": true,
+    "schemaVersion": "role-model.knowledge-worker.v1",
+    "candidates": 0,
+    "indexedDocuments": 0,
+    "backend": "sqlite_fts5_bm25",
+    "productionActivation": false,
+    "retrievalReceipts": 0,
+    "rollbackReceipts": 0,
+    "recoveryReceipts": 0,
+    "degradationCount": 0,
+    "fenceGeneration": 0,
+    "probe": "knowledge_shadow_safety",
+    "processSessions": 0
+  }
+}
