@@ -15,6 +15,7 @@ import {
   parseDiagnosticsSnapshot,
 } from "./diagnostics";
 import { Message } from "./message";
+import { type StudioClient, StudioState, studioRequestFor } from "./studio";
 import { type ObservabilityReader, parseObservabilitySnapshot } from "./observability";
 import { ReadbackKeySchema } from "./readback";
 import {
@@ -279,3 +280,29 @@ export const defineDispatchControl = (client: ControlClient) =>
       ),
   });
 export type DispatchControlCommand = ReturnType<typeof defineDispatchControl>;
+export const defineDispatchStudio = (client: StudioClient) =>
+  Command.define("DispatchStudio", {
+    args: { state: StudioState, token: Schema.Number },
+    messages: [Message.StudioLoaded, Message.StudioFailed],
+    execute: ({ state, token }) => {
+      const request = studioRequestFor(state);
+      if ("error" in request) {
+        return Effect.succeed(Message.StudioFailed({ message: request.error, statusCode: 0, responseText: "", token }));
+      }
+      return Effect.flatMap(
+        Effect.exit(
+          Effect.tryPromise({
+            catch: (cause) => new Error(cause instanceof Error ? cause.message : "Studio request failed"),
+            try: (signal) => client(request, signal),
+          }),
+        ),
+        (exit) =>
+          Effect.succeed(
+            Exit.isSuccess(exit)
+              ? Message.StudioLoaded({ responseText: exit.value.text, statusCode: exit.value.status, tab: request.tab, token })
+              : Message.StudioFailed({ message: "Studio request failed", statusCode: 0, responseText: "", token }),
+          ),
+      );
+    },
+  });
+export type DispatchStudioCommand = ReturnType<typeof defineDispatchStudio>;

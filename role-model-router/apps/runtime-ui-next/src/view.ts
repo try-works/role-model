@@ -17,6 +17,7 @@ import type { ObservabilityState } from "./observability";
 import { view as chartView } from "@role-model/ui/foldkit-chart";
 
 import { READBACK_SPECS, type ReadbacksState, renderReadbackPage } from "./readback";
+import { type StudioField, type StudioState, StudioTabSchema, studioIdle } from "./studio";
 import { AppRoute } from "./route";
 
 const focusRingClass =
@@ -44,6 +45,7 @@ const routeTitle = (route: Model["route"]): string =>
     LocalChoose: () => "Local choose | RM3 Foldkit shell",
     Benchmark: () => "Benchmark | RM3 Foldkit shell",
     StorageRetention: () => "Storage retention | RM3 Foldkit shell",
+    Studio: () => "Studio | RM3 Foldkit shell",
     Runtime: () => "Runtime | RM3 Foldkit shell",
     SessionReadiness: () => "Session readiness | RM3 Foldkit shell",
     Dashboard: () => "Dashboard | RM3 Foldkit shell",
@@ -583,6 +585,38 @@ const overviewPage = (
   return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "index"), h.DataAttribute("readback-route", "dashboard"), h.DataAttribute("overview-state", "success"), h.DataAttribute("readback-state", "ok"), h.DataAttribute("state", "success")], [header, charts]);
 };
 
+const studioField = (label: string, field: StudioField, value: string, h: HtmlBuilder<Message>, multiline = false) =>
+  h.label([h.Class("grid gap-1 text-[12px] text-[var(--rm-secondary)]")], [
+    h.span([], [label]),
+    multiline
+      ? h.input([h.DataAttribute("studio-field", field), h.Class("min-h-8 rounded border border-[var(--rm-border)] bg-[var(--rm-bg)] px-2 font-mono text-[12px]")])
+      : h.input([h.DataAttribute("studio-field", field), h.Class("min-h-8 rounded border border-[var(--rm-border)] bg-[var(--rm-bg)] px-2 text-[12px]")]),
+  ]);
+const studioPage = (state: StudioState, h: HtmlBuilder<Message>): Html => {
+  const tabs = StudioTabSchema.literals.map((tab) =>
+    h.button([h.Type("button"), h.DataAttribute("studio-tab", tab), h.AriaPressed(String(state.tab === tab)), h.OnClick(Message.StudioTabSelected({ tab })), h.Class("min-h-8 rounded px-2 text-[12px] " + (state.tab === tab ? "bg-[var(--rm-panel)] text-[var(--rm-fg)]" : "text-[var(--rm-secondary)]"))], [tab === "advanced" ? "Advanced APIs" : tab[0]?.toUpperCase() + tab.slice(1)]),
+  );
+  const fields = state.tab === "advanced"
+    ? [studioField("JSON body", "advancedBody", state.advancedBody, h, true)]
+    : state.tab === "rerank"
+      ? [studioField("Model", "model", state.model, h), studioField("Query", "query", state.query, h), studioField("Documents (one per line)", "documents", state.documents, h, true)]
+      : state.tab === "images"
+        ? [studioField("Mode", "mode", state.mode, h), studioField("Model", "model", state.model, h), studioField("Prompt", "prompt", state.prompt, h), studioField("Size", "size", state.size, h)]
+        : [studioField("Model", "model", state.model, h), studioField("Prompt", "prompt", state.prompt, h)];
+  return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "studio"), h.DataAttribute("studio-state", state.status)], [
+    h.h1([h.Class("rm3-next-route-title")], ["Studio"]),
+    h.div([h.Class("mt-2 flex flex-wrap gap-1"), h.DataAttribute("studio-tabs", "")], tabs),
+    h.div([h.Class("mt-4 grid gap-2"), h.DataAttribute("studio-form", state.tab)], fields),
+    h.button([h.Type("button"), h.DataAttribute("studio-run", ""), ...(state.status === "loading" ? [h.AriaBusy(true), h.Disabled(true)] : []), h.OnClick(Message.StudioRunRequested({ token: state.token + 1 })), h.Class("mt-3 min-h-8 rounded bg-[var(--rm-accent)] px-3 text-[12px] text-white")], ["Run"]),
+    h.div([h.Class("mt-4"), h.DataAttribute("studio-response", "")], [
+      h.h2([h.Class("text-[12px] font-semibold uppercase tracking-[0.12em]")], ["RAW RESPONSE"]),
+      state.status === "error"
+        ? h.pre([h.Role("alert"), h.DataAttribute("studio-error", ""), h.Class("mt-2 whitespace-pre-wrap text-[12px] text-[var(--rm-error)]")], [state.message ?? "Request failed", "\n", state.responseText])
+        : h.pre([h.DataAttribute("studio-raw", state.status), h.Class("mt-2 whitespace-pre-wrap text-[12px]")], [state.responseText]),
+    ]),
+  ]);
+};
+
 const routeContent = (
   route: Model["route"],
   diagnostics: DiagnosticsSnapshot,
@@ -590,6 +624,7 @@ const routeContent = (
   readbacks: ReadbacksState,
   controls: ControlsState,
   overviewWindowMs: number,
+  studio: StudioState,
   h: HtmlBuilder<Message>,
 ) =>
   AppRoute.match(route, {
@@ -622,6 +657,7 @@ const routeContent = (
     IntegrationsUpstream: () => renderReadbackPage(READBACK_SPECS.integrationProviders, readbacks.integrationProviders, h),
     Benchmark: () => renderReadbackPage(READBACK_SPECS.benchmarkSuite, readbacks.benchmarkSuite, h),
     StorageRetention: () => renderReadbackPage(READBACK_SPECS.storageRetention, readbacks.storageRetention, h),
+    Studio: () => studioPage(studio, h),
     LocalChoose: () => h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route","local-choose")], [h.h1([h.Class("rm3-next-route-title")], ["Local choose"]), h.p([], ["Choose peer-backed models or llama-swap models."])]),
     Runtime: () => renderReadbackPage(READBACK_SPECS.runtime, readbacks.runtime, h),
     SessionReadiness: () =>
@@ -828,6 +864,7 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
     LocalChoose: () => "Local choose",
     Benchmark: () => "Benchmark",
     StorageRetention: () => "Storage retention",
+    Studio: () => "Studio",
                         Runtime: () => "Runtime",
                         SessionReadiness: () => "Session readiness",
                         Dashboard: () => "Dashboard",
@@ -940,6 +977,7 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
                 model.readbacks,
                 model.controls,
                 model.overviewWindowMs ?? 86400000,
+                model.studio ?? studioIdle(),
                 h,
               ),
               h.div(

@@ -5,12 +5,14 @@ import { Effect, Schema } from "effect";
 
 import {
   type DispatchControlCommand,
+  type DispatchStudioCommand,
   type ReadControlCommand,
   type ReadDiagnosticsCommand,
   type ReadObservabilityCommand,
   type ReadReadbackCommand,
   type RefreshSnapshotCommand,
   defineDispatchControl,
+  defineDispatchStudio,
   defineReadControl,
   defineReadObservability,
   defineReadReadback,
@@ -36,6 +38,7 @@ import {
   readbackKeyForRouteTag,
 } from "./readback";
 import { routeFromUrl } from "./route";
+import { studioIdle, studioLoading } from "./studio";
 import { applyThemeCommand, scrollShellToTopCommand } from "./shell-commands";
 
 /** In-app navigation is a Command, not a history call inside update. */
@@ -62,6 +65,7 @@ const noopControl = defineReadControl({
   dispatch: async () => ({ body: {}, status: 200 }),
   read: async () => ({ body: {}, status: 200 }),
 });
+const noopDispatchStudio = defineDispatchStudio(async () => ({ contentType: "", status: 500, text: "" }));
 const noopDispatchControl = defineDispatchControl({
   dispatch: async () => ({ body: {}, status: 200 }),
   read: async () => ({ body: {}, status: 200 }),
@@ -105,6 +109,7 @@ export const createUpdate =
     readReadback: ReadReadbackCommand = noopReadback,
     readControl: ReadControlCommand = noopControl,
     dispatchControl: DispatchControlCommand = noopDispatchControl,
+    dispatchStudio: DispatchStudioCommand = noopDispatchStudio,
   ) =>
   (model: Model, message: Message): UpdateReturn<Model, Message> =>
     Message.match<UpdateReturn<Model, Message>>(message, {
@@ -342,6 +347,37 @@ export const createUpdate =
         readbacks: { ...model.readbacks, overviewMetrics: loadingReadback(token) },
       },
     };
+  },
+  StudioTabSelected: ({ tab }) => {
+    const current = model.studio ?? studioIdle();
+    return { model: { ...model, studio: studioIdle(tab) } };
+  },
+  StudioFieldChanged: ({ field, value }) => {
+    const current = model.studio ?? studioIdle();
+    return { model: { ...model, studio: { ...current, [field]: value } } };
+  },
+  StudioRunRequested: ({ token }) => {
+    const current = model.studio ?? studioIdle();
+    if (current.status === "loading") return { model };
+    const next = { ...studioLoading(token), ...current, message: undefined, responseText: "Waiting for the runtime…", status: "loading" as const, statusCode: 0, token };
+    return { commands: [dispatchStudio({ state: next, token })], model: { ...model, studio: next } };
+  },
+  StudioLoaded: ({ responseText, statusCode, tab, token }) => {
+    const current = model.studio;
+    if (current === undefined || token !== current.token) return { model };
+    return {
+      model: {
+        ...model,
+        studio: statusCode >= 400
+          ? { ...current, message: "HTTP " + String(statusCode), responseText, status: "error", statusCode, tab }
+          : { ...current, message: undefined, responseText, status: "success", statusCode, tab },
+      },
+    };
+  },
+  StudioFailed: ({ message, responseText, statusCode, token }) => {
+    const current = model.studio;
+    if (current === undefined || token !== current.token) return { model };
+    return { model: { ...model, studio: { ...current, message, responseText, status: "error", statusCode } } };
   },
   RefreshResynced: ({ routeId, snapshot, token }) => {
         if (token !== model.refresh.resyncToken) {

@@ -1,5 +1,6 @@
 import {
   type RefreshSnapshotReader,
+  defineDispatchStudio,
   defineDispatchControl,
   defineReadControl,
   defineReadDiagnostics,
@@ -19,6 +20,7 @@ import {
   defaultRuntimeEventSourceFactory,
   makeRefreshSubscriptions,
 } from "./refresh";
+import { createStudioClient } from "./studio";
 import { createUpdate } from "./update";
 import { view } from "./view";
 
@@ -41,6 +43,9 @@ export interface ShellOptions {
   readonly readbackToken?: string;
   /** S26k: injected control client; tests never touch operator state. */
   readonly controlClient?: ControlClient;
+  readonly studioClient?: import("./studio").StudioClient;
+  readonly studioBaseUrl?: string;
+  readonly studioFetchImpl?: typeof fetch;
   readonly controlBaseUrl?: string;
   readonly controlFetchImpl?: typeof fetch;
   readonly controlToken?: string;
@@ -100,6 +105,8 @@ export const createShellApp = (options: ShellOptions = {}) => {
   const readControl = defineReadControl(controlClient);
   const dispatchControl = defineDispatchControl(controlClient);
   const readReadback = defineReadReadback(readbackReaders);
+  const studioClient = options.studioClient ?? createStudioClient({ ...(options.studioBaseUrl === undefined ? {} : { baseUrl: options.studioBaseUrl }), ...(options.studioFetchImpl === undefined ? {} : { fetchImpl: options.studioFetchImpl }) });
+  const dispatchStudio = defineDispatchStudio(studioClient);
   return {
     Model,
     init: createInit(readDiagnostics, readObservability, readReadback, readControl, options.readbackReaders === undefined),
@@ -113,6 +120,7 @@ export const createShellApp = (options: ShellOptions = {}) => {
       readReadback,
       readControl,
       dispatchControl,
+      dispatchStudio,
     ),
     view,
   };

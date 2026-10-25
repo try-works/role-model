@@ -45,8 +45,8 @@
       "modal": 2
     },
     "byStatus": {
-      "absent": 44,
-      "verified": 30,
+      "absent": 40,
+      "verified": 35,
       "wired": 1
     },
     "newOnly": 1
@@ -754,14 +754,17 @@
         "/app/studio/advanced"
       ],
       "source": "role-model-router/apps/runtime-ui/app/routes/studio-advanced.tsx",
-      "status": "absent",
+      "status": "verified",
       "hostEndpoints": [
         "/v1/responses",
         "/v1/messages",
         "/v1/messages/count_tokens",
         "/v1/embeddings"
       ],
-      "requiresHostEndpoint": true
+      "requiresHostEndpoint": true,
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s46a-studio.test.ts",
+      "proofTestName": "dispatches each tab with the exact method, path and body",
+      "note": "endpoint absent in reference 0.0.20 too; packaged returns 404 JSON honestly"
     },
     {
       "category": "media",
@@ -771,13 +774,16 @@
         "/app/studio/audio"
       ],
       "source": "role-model-router/apps/runtime-ui/app/routes/studio-audio.tsx",
-      "status": "absent",
+      "status": "verified",
       "hostEndpoints": [
         "/v1/audio/voices",
         "/v1/audio/speech",
         "/v1/audio/transcriptions"
       ],
-      "requiresHostEndpoint": true
+      "requiresHostEndpoint": true,
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s46a-studio.test.ts",
+      "proofTestName": "dispatches each tab with the exact method, path and body",
+      "note": "endpoint absent in reference 0.0.20 too; packaged returns 404 JSON honestly"
     },
     {
       "category": "media",
@@ -787,11 +793,14 @@
         "/app/studio/images"
       ],
       "source": "role-model-router/apps/runtime-ui/app/routes/studio-images.tsx",
-      "status": "absent",
+      "status": "verified",
       "hostEndpoints": [
         "/v1/images/generations"
       ],
-      "requiresHostEndpoint": true
+      "requiresHostEndpoint": true,
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s46a-studio.test.ts",
+      "proofTestName": "dispatches each tab with the exact method, path and body",
+      "note": "endpoint absent in reference 0.0.20 too; packaged returns 404 JSON honestly"
     },
     {
       "category": "studio",
@@ -801,12 +810,15 @@
         "/app/studio/rerank"
       ],
       "source": "role-model-router/apps/runtime-ui/app/routes/studio-rerank.tsx",
-      "status": "absent",
+      "status": "verified",
       "hostEndpoints": [
         "/v1/rerank",
         "/v1/reranking"
       ],
-      "requiresHostEndpoint": true
+      "requiresHostEndpoint": true,
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s46a-studio.test.ts",
+      "proofTestName": "dispatches each tab with the exact method, path and body",
+      "note": "endpoint absent in reference 0.0.20 too; packaged returns 404 JSON honestly"
     },
     {
       "category": "read",
@@ -850,6 +862,17 @@
       "hostEndpoints": [],
       "requiresHostEndpoint": false,
       "absenceReason": "Needs an action payload, identity, or confirmation flow not covered by this non-destructive slice; left absent rather than wiring a guessed command."
+    },
+    {
+      "id": "route:studio",
+      "route": "/studio",
+      "status": "verified",
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s46a-studio.test.ts",
+      "proofTestName": "renders five tabs with per-tab idle raw text and fields",
+      "hostEndpoints": [
+        "/v1/chat/completions"
+      ],
+      "owner": "runtime-ui-next"
     }
   ],
   "components": [

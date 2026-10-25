@@ -5,6 +5,7 @@ import { DiagnosticsSnapshot } from "./diagnostics";
 import { ObservabilityState } from "./observability";
 import { ReadbacksState } from "./readback";
 import { RuntimeRefreshState } from "./refresh";
+import { StudioState } from "./studio";
 import { AppRoute } from "./route";
 
 const modelFields = {
@@ -16,6 +17,7 @@ const modelFields = {
   readbacks: ReadbacksState,
   refresh: RuntimeRefreshState,
   route: AppRoute,
+  studio: Schema.optional(StudioState),
   theme: Schema.Literals(["light", "dark"]),
 };
 

@@ -7,6 +7,7 @@ import { ControlKeySchema, ControlState } from "./control";
 import { DiagnosticsSnapshot } from "./diagnostics";
 import { ObservabilityState } from "./observability";
 import { ReadbackKeySchema, ReadbackState } from "./readback";
+import { StudioFieldSchema, StudioTabSchema } from "./studio";
 
 type EmptyFields = Record<never, never>;
 
@@ -66,6 +67,16 @@ export const Message: MessageUnion<{
     readonly snapshot: typeof ReadbackState;
     readonly token: typeof Schema.Number;
   };
+  readonly StudioTabSelected: { readonly tab: typeof StudioTabSchema; };
+  readonly StudioFieldChanged: { readonly field: typeof StudioFieldSchema; readonly value: typeof Schema.String; };
+  readonly StudioLoaded: {
+    readonly responseText: typeof Schema.String;
+    readonly statusCode: typeof Schema.Number;
+    readonly tab: typeof StudioTabSchema;
+    readonly token: typeof Schema.Number;
+  };
+  readonly StudioFailed: { readonly message: typeof Schema.String; readonly statusCode: typeof Schema.Number; readonly responseText: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly StudioRunRequested: { readonly token: typeof Schema.Number };
   readonly SelectedOverviewWindow: {
     readonly windowMs: typeof Schema.Number;
   };
@@ -99,6 +110,11 @@ export const Message: MessageUnion<{
   ObservabilityLoaded: { snapshot: ObservabilityState, token: Schema.Number },
   ReadbackFailed: { key: ReadbackKeySchema, message: Schema.String, token: Schema.Number },
   ReadbackLoaded: { key: ReadbackKeySchema, snapshot: ReadbackState, token: Schema.Number },
+  StudioTabSelected: { tab: StudioTabSchema },
+  StudioFieldChanged: { field: StudioFieldSchema, value: Schema.String },
+  StudioLoaded: { responseText: Schema.String, statusCode: Schema.Number, tab: StudioTabSchema, token: Schema.Number },
+  StudioFailed: { message: Schema.String, statusCode: Schema.Number, responseText: Schema.String, token: Schema.Number },
+  StudioRunRequested: { token: Schema.Number },
   SelectedOverviewWindow: { windowMs: Schema.Number },
   RefreshResynced: { routeId: Schema.String, snapshot: DiagnosticsSnapshot, token: Schema.Number },
   RefreshResyncFailed: { message: Schema.String, routeId: Schema.String, token: Schema.Number },
