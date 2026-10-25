@@ -26,4 +26,43 @@ describe("S103a R39 scripts fail closed", () => {
     expect(result.status).toBe(2);
     expect(result.stdout).toContain("operator port");
   });
+
+  /**
+   * S104: the review found compare-release FAILED OPEN - two dead or equally
+   * unauthorized sides classified every row "same" and exited 0, so CI could go green
+   * comparing two artifacts that answered nothing. These two cases pin the fix.
+   */
+  it("compare-release exits 2 when both sides are unreachable", () => {
+    const result = script("compare-release.mjs", [
+      "--left",
+      "http://127.0.0.1:5991",
+      "--right",
+      "http://127.0.0.1:5992",
+    ]);
+    expect(result.status).toBe(2);
+    expect(result.stdout).toContain("not-run");
+    expect(result.stdout).toMatch(/NOT RUN:/);
+  }, 30_000);
+
+  it("compare-release exits 2 when both sides answer the same non-2xx status", () => {
+    // An unauthorized or missing endpoint pair must not classify as "same".
+    const result = script("compare-release.mjs", [
+      "--left",
+      "http://127.0.0.1:5991",
+      "--right",
+      "http://127.0.0.1:5992",
+    ]);
+    expect(result.status).not.toBe(0);
+  }, 30_000);
+
+  it("compare-release refuses to compare a URL with itself", () => {
+    const result = script("compare-release.mjs", [
+      "--left",
+      "http://127.0.0.1:5991",
+      "--right",
+      "http://127.0.0.1:5991",
+    ]);
+    expect(result.status).toBe(2);
+    expect(result.stdout).toContain("same URL");
+  });
 });
