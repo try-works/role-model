@@ -1,0 +1,58 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:60236) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/write-origin-gate.test.ts (3 tests | 2 failed) 158ms
+   × S83a write origin gate > rejects foreign-origin writes with 403 and no state change 113ms
+     → expected 200 to be 403 // Object.is equality
+   ✓ S83a write origin gate > allows same-origin and no-Origin writes, and leaves GET CORS unchanged 30ms
+   × S83a write origin gate > requires the operator credential on writes when one is configured 11ms
+     → expected 200 to be 401 // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/write-origin-gate.test.ts > S83a write origin gate > rejects foreign-origin writes with 403 and no state change
+AssertionError: expected 200 to be 403 // Object.is equality
+
+- Expected
++ Received
+
+- 403
++ 200
+
+ ❯ test/write-origin-gate.test.ts:31:24
+     29|     const patch = await send(base, "/api/role-model/controller", "PATC…
+     30|     const post = await send(base, "/api/role-model/endpoints", "POST",…
+     31|     expect(put.status).toBe(403);
+       |                        ^
+     32|     expect(patch.status).toBe(403);
+     33|     expect(post.status).toBe(403);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/write-origin-gate.test.ts > S83a write origin gate > requires the operator credential on writes when one is configured
+AssertionError: expected 200 to be 401 // Object.is equality
+
+- Expected
++ Received
+
+- 401
++ 200
+
+ ❯ test/write-origin-gate.test.ts:57:27
+     55|     const { base } = await start(state, "secret", { deviceOwnerTrust: …
+     56|     const denied = await send(base, "/api/role-model/runtime/config", …
+     57|     expect(denied.status).toBe(401);
+       |                           ^
+     58|     const allowed = await send(base, "/api/role-model/runtime/config",…
+     59|     expect(allowed.status).toBe(200);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 1 passed (3)
+   Start at  01:54:40
+   Duration  11.47s (transform 7.10s, setup 0ms, collect 10.63s, tests 158ms, environment 0ms, prepare 242ms)
+

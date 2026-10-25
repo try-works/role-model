@@ -107,7 +107,7 @@ export const createShellApp = (options: ShellOptions = {}) => {
     });
   const readControl = defineReadControl(controlClient);
   const dispatchControl = defineDispatchControl(controlClient);
-  const saveRuntimeConfig = defineSaveRuntimeConfig(createRuntimeConfigClient({ ...(options.runtimeConfigFetchImpl === undefined ? {} : { fetchImpl: options.runtimeConfigFetchImpl }) }));
+  const saveRuntimeConfig = defineSaveRuntimeConfig(createRuntimeConfigClient({ ...(options.runtimeConfigFetchImpl === undefined ? {} : { fetchImpl: options.runtimeConfigFetchImpl }), ...(controlToken === undefined ? {} : { token: controlToken }) }));
   const readReadback = defineReadReadback(readbackReaders);
   const studioClient = options.studioClient ?? createStudioClient({ ...(options.studioBaseUrl === undefined ? {} : { baseUrl: options.studioBaseUrl }), ...(options.studioFetchImpl === undefined ? {} : { fetchImpl: options.studioFetchImpl }) });
   const dispatchStudio = defineDispatchStudio(studioClient);

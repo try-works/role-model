@@ -1,0 +1,18 @@
+{
+  "slice": "s83a-write-origin-gate",
+  "rule": {
+    "accept": "Sec-Fetch-Site same-origin|none, OR Origin host===Host, OR no Origin",
+    "reject": "foreign Origin or cross-site Sec-Fetch-Site -> 403 JSON",
+    "credential": "when operatorAuthToken configured, mutating /api/role-model/* requires Authorization Bearer matching token",
+    "cors": "mutating /api/role-model/* responses no ACAO; GET unchanged *; OPTIONS mutating 204 no ACAO"
+  },
+  "tests": {
+    "file": "test/write-origin-gate.test.ts",
+    "count": 3,
+    "red": "s83a-red-origin-gate.log",
+    "green": "s83a-green-origin-gate.log",
+    "hostIndex": "218/218"
+  },
+  "clientImpact": "runtime-config client now sends stored operator token; same-origin UI unaffected; foreign-origin writes now 403; reverse proxy must preserve Host/Origin",
+  "hostTsc": 0
+}

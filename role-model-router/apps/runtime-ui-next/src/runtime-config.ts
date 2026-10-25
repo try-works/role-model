@@ -48,6 +48,7 @@ export const runtimeConfigDiff = (
 export interface RuntimeConfigClientOptions {
   readonly baseUrl?: string;
   readonly fetchImpl?: typeof fetch;
+  readonly token?: string;
 }
 export interface RuntimeConfigClient {
   readonly read: () => Promise<{ readonly body: unknown; readonly status: number }>;
@@ -56,13 +57,14 @@ export interface RuntimeConfigClient {
 export const createRuntimeConfigClient = (options: RuntimeConfigClientOptions = {}): RuntimeConfigClient => {
   const fetchImpl = options.fetchImpl ?? fetch;
   const url = (options.baseUrl ?? "") + "/api/role-model/runtime/config";
+  const headers = (base: Record<string, string>): Record<string, string> => ({ ...base, ...(options.token === undefined ? {} : { authorization: `Bearer ${options.token}` }) });
   return {
     read: async () => {
-      const response = await fetchImpl(url, { cache: "no-store", headers: { accept: "application/json" } });
+      const response = await fetchImpl(url, { cache: "no-store", headers: headers({ accept: "application/json" }) });
       return { body: await response.json(), status: response.status };
     },
     save: async (config) => {
-      const response = await fetchImpl(url, { body: JSON.stringify(config), headers: { "content-type": "application/json" }, method: "PUT" });
+      const response = await fetchImpl(url, { body: JSON.stringify(config), headers: headers({ "content-type": "application/json" }), method: "PUT" });
       return { body: await response.json(), status: response.status };
     },
   };

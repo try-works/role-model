@@ -16777,6 +16777,29 @@ function extractResponseId(responseBody: unknown): string | undefined {
   return undefined;
 }
 
+const isMutatingMethod = (method: string | undefined): boolean =>
+  method === "POST" || method === "PUT" || method === "PATCH" || method === "DELETE";
+
+function isMutatingRuntimeApiRequest(request: IncomingMessage, url: URL): boolean {
+  return url.pathname.startsWith("/api/role-model/") && isMutatingMethod(request.method);
+}
+
+function isSameOriginWrite(request: IncomingMessage): boolean {
+  const fetchSite = request.headers["sec-fetch-site"];
+  const site = Array.isArray(fetchSite) ? fetchSite[0] : fetchSite;
+  if (site !== undefined && site !== "same-origin" && site !== "none") return false;
+  const rawOrigin = request.headers.origin;
+  const origin = Array.isArray(rawOrigin) ? rawOrigin[0] : rawOrigin;
+  if (origin === undefined || origin.length === 0) return true;
+  try {
+    const originHost = new URL(origin).host.toLowerCase();
+    const requestHost = (request.headers.host ?? "").toLowerCase();
+    return requestHost.length > 0 && originHost === requestHost;
+  } catch {
+    return false;
+  }
+}
+
 function setCorsHeaders(response: ServerResponse): void {
   response.setHeader("Access-Control-Allow-Origin", "*");
   response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
@@ -17423,7 +17446,9 @@ function createRequestHandler(options: StartBridgeServerOptions) {
     // Run 115 S15a (R21): the local diagnostics read path must not inherit the wildcard CORS layer.
     // Its response carries no CORS headers at all, so no origin is ever allowed or reflected.
     const isLocalDiagnosticsRequest = (request.url ?? "").startsWith(LOCAL_DIAGNOSTICS_PATH);
-    if (!isLocalDiagnosticsRequest) setCorsHeaders(response);
+    const earlyPath = new URL(request.url ?? "/", "http://127.0.0.1").pathname;
+    const mutatingApiRequest = earlyPath.startsWith("/api/role-model/") && isMutatingMethod(request.method);
+    if (!isLocalDiagnosticsRequest && !mutatingApiRequest) setCorsHeaders(response);
 
     if (request.method === "OPTIONS") {
       response.statusCode = 204;
@@ -17525,6 +17550,17 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       response.removeHeader("Access-Control-Allow-Headers");
       writeJson(response, result.status, result.body, { ...result.headers });
       return;
+    }
+
+    if (url.pathname.startsWith("/api/role-model/") && (mutatingApiRequest || request.method === "OPTIONS")) {
+      if (!isSameOriginWrite(request)) {
+        writeJson(response, 403, { error: "cross-origin write rejected", code: "cross_origin_write_rejected" });
+        return;
+      }
+      if (mutatingApiRequest && options.operatorAuthToken !== undefined && options.operatorAuthToken.length > 0 && !operatorTokenMatches(request, options.operatorAuthToken)) {
+        writeJson(response, 401, { error: "operator credential required", code: "operator_credential_required" });
+        return;
+      }
     }
 
     if (url.pathname.startsWith("/api/role-model/operator/")) {
