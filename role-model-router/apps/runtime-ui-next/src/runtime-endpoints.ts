@@ -21,6 +21,7 @@ export const READBACK_PATHS = {
   learning: "/api/role-model/operator/learning",
   configuredModels: "/api/role-model/models",
   modelEndpoints: "/api/role-model/endpoints",
+  runtimeConfig: "/api/role-model/runtime/config",
   replayJobs: "/api/role-model/operator/replay/jobs",
   evaluationJobs: "/api/role-model/operator/evaluation/jobs",
   systemPeers: "/api/role-model/local/peers",

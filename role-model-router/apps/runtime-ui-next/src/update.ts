@@ -4,6 +4,7 @@ import type { Return as UpdateReturn } from "@role-model-router/foldkit/update";
 import { Effect, Schema } from "effect";
 
 import { DEFAULT_OVERVIEW_FILTERS, overviewQuery, type OverviewFilters } from "./overview-filters";
+import { parseRuntimeConfigRecord, parseRuntimeConfigText, runtimeConfigDiff, runtimeConfigText } from "./runtime-config";
 
 import {
   type DispatchControlCommand,
@@ -19,6 +20,7 @@ import {
   defineReadObservability,
   defineReadReadback,
   defineRefreshSnapshot,
+  type SaveRuntimeConfigCommand,
 } from "./commands";
 import {
   CONTROL_SPECS,
@@ -97,6 +99,7 @@ const noopReadback = defineReadReadback({
   learning: async () => ({ body: { knowledge: {} }, status: 200 }),
   configuredModels: async () => ({ body: [], status: 200 }),
   modelEndpoints: async () => ({ body: [], status: 200 }),
+  runtimeConfig: async () => ({ body: { config: {} }, status: 200 }),
   replayJobs: async () => ({ body: [], status: 200 }),
   evaluationJobs: async () => ({ body: [], status: 200 }),
   queues: async () => ({ body: emptyBody, status: 200 }),
@@ -108,6 +111,11 @@ const noopReadback = defineReadReadback({
   storeReceipts: async () => ({ body: emptyBody, status: 200 }),
 });
 
+const runtimeConfigSnapshot = (model: Model): { config: Readonly<Record<string, unknown>>; text: string } => {
+  const meta = model.readbacks.runtimeConfig.rows[0]?.meta;
+  if (meta !== undefined) { try { const parsed = JSON.parse(meta) as { config?: unknown }; const config = parsed.config; if (config !== null && typeof config === "object" && !Array.isArray(config)) return { config: config as Readonly<Record<string, unknown>>, text: JSON.stringify(config, null, 2) }; } catch {} }
+  return { config: {}, text: "{}" };
+};
 export const createUpdate =
   (
     readDiagnostics: ReadDiagnosticsCommand,
@@ -117,6 +125,7 @@ export const createUpdate =
     readControl: ReadControlCommand = noopControl,
     dispatchControl: DispatchControlCommand = noopDispatchControl,
     dispatchStudio: DispatchStudioCommand = noopDispatchStudio,
+    saveRuntimeConfig: SaveRuntimeConfigCommand | undefined = undefined,
   ) =>
   (model: Model, message: Message): UpdateReturn<Model, Message> =>
     Message.match<UpdateReturn<Model, Message>>(message, {
@@ -389,6 +398,43 @@ export const createUpdate =
           model: { ...model, overviewFilters: filters, readbacks: { ...model.readbacks, overviewMetrics: loadingReadback(token) } },
         };
       },
+  RuntimeConfigLoadRequested: () => {
+    const token = model.readbacks.runtimeConfig.token + 1;
+    return { commands: [readReadback({ key: "runtimeConfig", token })], model: { ...model, readbacks: { ...model.readbacks, runtimeConfig: loadingReadback(token) } } };
+  },
+  RuntimeConfigTextChanged: ({ text }) => {
+    const snapshot = runtimeConfigSnapshot(model);
+    const current = model.runtimeConfigEditor ?? { diff: [], originalText: snapshot.text, status: "editing" as const, text: snapshot.text, token: 0 };
+    return { model: { ...model, runtimeConfigEditor: { ...current, diff: [], message: undefined, notice: undefined, status: "editing", text } } };
+  },
+  RuntimeConfigSaveRequested: () => {
+    const snapshot = runtimeConfigSnapshot(model);
+    const current = model.runtimeConfigEditor ?? { diff: [], originalText: snapshot.text, status: "editing" as const, text: snapshot.text, token: 0 };
+    const parsed = parseRuntimeConfigText(current.text);
+    if ("error" in parsed) return { model: { ...model, runtimeConfigEditor: { ...current, message: parsed.error, status: "invalid" } } };
+    const diff = runtimeConfigDiff(snapshot.config, parsed.config);
+    if (diff.length === 0) return { model: { ...model, runtimeConfigEditor: { ...current, diff, message: "No top-level changes.", status: "editing" } } };
+    return { model: { ...model, runtimeConfigEditor: { ...current, diff, message: undefined, notice: undefined, status: "confirming" } } };
+  },
+  RuntimeConfigConfirmRequested: ({ token }) => {
+    const current = model.runtimeConfigEditor;
+    if (current === undefined || current.status !== "confirming" || saveRuntimeConfig === undefined) return { model };
+    return { commands: [saveRuntimeConfig({ configText: current.text, token })], model: { ...model, runtimeConfigEditor: { ...current, message: undefined, status: "pending", token } } };
+  },
+  RuntimeConfigSaved: ({ recordJson, token }) => {
+    const current = model.runtimeConfigEditor;
+    if (current === undefined || token !== current.token) return { model };
+    let parsedRecord: unknown; try { parsedRecord = JSON.parse(recordJson); } catch { parsedRecord = undefined; }
+    const record = parseRuntimeConfigRecord(parsedRecord);
+    if (record === undefined) return { model: { ...model, runtimeConfigEditor: { ...current, message: "Runtime config read failed: invalid response", status: "error" } } };
+    const text = runtimeConfigText(record);
+    return { model: { ...model, runtimeConfigEditor: { ...current, diff: [], notice: "Applied snapshot from server", originalText: text, status: "saved", text } } };
+  },
+  RuntimeConfigSaveFailed: ({ message, token }) => {
+    const current = model.runtimeConfigEditor;
+    if (current === undefined || token !== current.token) return { model };
+    return { model: { ...model, runtimeConfigEditor: { ...current, message, status: "error" } } };
+  },
   StudioTabSelected: ({ tab }) => {
     const current = model.studio ?? studioIdle();
     return { model: { ...model, studio: studioIdle(tab) } };

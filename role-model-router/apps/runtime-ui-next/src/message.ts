@@ -98,6 +98,12 @@ export const Message: MessageUnion<{
     readonly routeId: typeof Schema.String;
     readonly token: typeof Schema.Number;
   };
+  readonly RuntimeConfigLoadRequested: EmptyFields;
+  readonly RuntimeConfigTextChanged: { readonly text: typeof Schema.String };
+  readonly RuntimeConfigSaveRequested: EmptyFields;
+  readonly RuntimeConfigConfirmRequested: { readonly token: typeof Schema.Number };
+  readonly RuntimeConfigSaved: { readonly recordJson: typeof Schema.String; readonly status: typeof Schema.Number; readonly token: typeof Schema.Number };
+  readonly RuntimeConfigSaveFailed: { readonly message: typeof Schema.String; readonly status: typeof Schema.Number; readonly token: typeof Schema.Number };
   readonly RuntimeRevisionReceived: { readonly revision: typeof Schema.Number };
   readonly ThemeApplied: EmptyFields;
   readonly ToggledTheme: EmptyFields;
@@ -130,6 +136,12 @@ export const Message: MessageUnion<{
   OverviewFilterChanged: { filter: Schema.String, value: Schema.String },
   RefreshResynced: { routeId: Schema.String, snapshot: DiagnosticsSnapshot, token: Schema.Number },
   RefreshResyncFailed: { message: Schema.String, routeId: Schema.String, token: Schema.Number },
+  RuntimeConfigLoadRequested: {},
+  RuntimeConfigTextChanged: { text: Schema.String },
+  RuntimeConfigSaveRequested: {},
+  RuntimeConfigConfirmRequested: { token: Schema.Number },
+  RuntimeConfigSaved: { recordJson: Schema.String, status: Schema.Number, token: Schema.Number },
+  RuntimeConfigSaveFailed: { message: Schema.String, status: Schema.Number, token: Schema.Number },
   RuntimeRevisionReceived: { revision: Schema.Number },
   ThemeApplied: {},
   ToggledTheme: {},

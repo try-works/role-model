@@ -715,6 +715,24 @@ const learningPage = (readbacks: ReadbacksState, h: HtmlBuilder<Message>): Html 
     renderReadbackPage(READBACK_SPECS.evaluationJobs, readbacks.evaluationJobs, h),
   ]);
 
+const runtimeConfigPage = (state: Model["runtimeConfigEditor"], configReadback: ReadbacksState["runtimeConfig"], runtimeReadback: ReadbacksState["runtime"], h: HtmlBuilder<Message>): Html => {
+  let snapshotText = "{}";
+  const meta = configReadback.rows[0]?.meta;
+  if (meta !== undefined) { try { const parsed = JSON.parse(meta) as { config?: unknown }; if (parsed.config !== null && typeof parsed.config === "object") snapshotText = JSON.stringify(parsed.config, null, 2); } catch { snapshotText = "{}"; } }
+  const editor = state ?? { diff: [], originalText: snapshotText, status: "editing" as const, text: snapshotText, token: 0 };
+  return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "runtime-config")], [
+    renderReadbackPage(READBACK_SPECS.runtime, runtimeReadback, h),
+    h.h2([h.Class("mt-6 text-[16px] font-semibold")], ["Runtime config"]),
+    h.p([h.Class("mt-1 text-[12px] text-[var(--rm-secondary)]")], ["Edit the JSON config, review the changed top-level keys, then confirm. Save sends PUT and re-reads the applied snapshot."]),
+    h.button([h.Type("button"), h.DataAttribute("runtime-config-load", ""), h.OnClick(Message.RuntimeConfigLoadRequested()), h.Class("mt-2 min-h-8 rounded border border-[var(--rm-border)] px-3 text-[12px]")], ["Load runtime config"]),
+    h.textarea([h.Class("mt-3 min-h-[220px] w-full rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-bg)] p-2 font-mono text-[12px] text-[var(--rm-fg)]"), h.DataAttribute("runtime-config-editor", ""), h.Value(editor.text), h.OnInput((text) => Message.RuntimeConfigTextChanged({ text }))]),
+    h.button([h.Type("button"), h.DataAttribute("runtime-config-save", ""), h.AriaDisabled(editor.status === "pending"), h.OnClick(Message.RuntimeConfigSaveRequested()), h.Class("mt-2 min-h-8 rounded bg-[var(--rm-accent)] px-3 text-[12px] text-white disabled:opacity-50")], [editor.status === "pending" ? "Saving…" : "Review changes"]),
+    ...(editor.status === "invalid" || editor.status === "error" ? [h.p([h.Role("alert"), h.DataAttribute("runtime-config-error", editor.status), h.Class("mt-2 text-[12px] text-[var(--rm-error)]")], [editor.message ?? "Invalid config"])] : []),
+    ...(editor.status === "confirming" ? [h.div([h.DataAttribute("runtime-config-confirm", ""), h.Class("mt-3 rounded border border-[var(--rm-border)] p-3")], [h.p([h.Class("text-[12px] font-semibold")], ["Changed top-level keys"]), h.ul([h.Class("mt-1 list-disc pl-5 text-[12px]")], editor.diff.map((entry) => h.li([], [entry]))), ...(editor.message === undefined ? [] : [h.p([h.Class("mt-1 text-[12px]")], [editor.message])]), h.button([h.Type("button"), h.DataAttribute("runtime-config-confirm-save", ""), h.OnClick(Message.RuntimeConfigConfirmRequested({ token: editor.token + 1 })), h.Class("mt-2 min-h-8 rounded bg-[var(--rm-accent)] px-3 text-[12px] text-white")], ["Confirm save"])])] : []),
+    ...(editor.notice === undefined ? [] : [h.p([h.Role("status"), h.DataAttribute("runtime-config-notice", ""), h.Class("mt-2 text-[12px] text-[var(--rm-secondary)]")], [editor.notice])]),
+  ]);
+};
+
 const routeContent = (
   route: Model["route"],
   diagnostics: DiagnosticsSnapshot,
@@ -723,8 +741,9 @@ const routeContent = (
   controls: ControlsState,
   overviewWindowMs: number,
   studio: StudioState,
+  overviewFilters: OverviewFilters | undefined,
+  runtimeConfigEditor: Model["runtimeConfigEditor"],
   h: HtmlBuilder<Message>,
-  overviewFilters?: OverviewFilters,
 ) =>
   AppRoute.match(route, {
     Diagnostics: ({ id }) =>
@@ -760,7 +779,7 @@ const routeContent = (
     Learning: () => learningPage(readbacks, h),
     Models: () => modelsPage(readbacks, h),
     LocalChoose: () => h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route","local-choose")], [h.h2([h.Class("rm3-next-route-title")], ["Local choose"]), h.p([], ["Choose peer-backed models or llama-swap models."])]),
-    Runtime: () => renderReadbackPage(READBACK_SPECS.runtime, readbacks.runtime, h),
+    Runtime: () => runtimeConfigPage(runtimeConfigEditor, readbacks.runtimeConfig, readbacks.runtime, h),
     SessionReadiness: () =>
       renderReadbackPage(READBACK_SPECS.sessionReadiness, readbacks.sessionReadiness, h),
     Dashboard: () => renderReadbackPage(READBACK_SPECS.dashboard, readbacks.dashboard, h),
@@ -1032,8 +1051,9 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
                 model.controls,
                 model.overviewWindowMs ?? 86400000,
                 model.studio ?? studioIdle(),
-                h,
                 model.overviewFilters ?? DEFAULT_OVERVIEW_FILTERS,
+                model.runtimeConfigEditor,
+                h,
               ),
             ],
           ),

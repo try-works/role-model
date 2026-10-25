@@ -38,7 +38,8 @@ export type ReadbackKey =
   | "replayJobs"
   | "evaluationJobs"
   | "configuredModels"
-  | "modelEndpoints";
+  | "modelEndpoints"
+  | "runtimeConfig";
 
 export const ReadbackKeySchema = Schema.Literals([
   "storeReceipts",
@@ -74,6 +75,7 @@ export const ReadbackKeySchema = Schema.Literals([
   "evaluationJobs",
   "configuredModels",
   "modelEndpoints",
+  "runtimeConfig",
 ]);
 
 export interface ReadbackRow {
@@ -130,6 +132,7 @@ export const ReadbacksState = Schema.Struct({
   evaluationJobs: ReadbackState,
   configuredModels: ReadbackState,
   modelEndpoints: ReadbackState,
+  runtimeConfig: ReadbackState,
   runtime: ReadbackState,
   sessionReadiness: ReadbackState,
   storeReceipts: ReadbackState,
@@ -180,6 +183,7 @@ export const emptyReadbacks = (): ReadbacksState => ({
   evaluationJobs: idleReadback(),
   configuredModels: idleReadback(),
   modelEndpoints: idleReadback(),
+  runtimeConfig: idleReadback(),
   runtime: idleReadback(),
   sessionReadiness: idleReadback(),
   storeReceipts: idleReadback(),
@@ -650,6 +654,13 @@ const parseModelList = (body: unknown, token: number): ReadbackState => {
   if (list.length > 0 && rows.length === 0) return failedReadback("Models read failed: invalid response", token);
   return okRows(rows, token);
 };
+const parseRuntimeConfig = (body: unknown, token: number): ReadbackState => {
+  const record = asRecord(body);
+  if (record === undefined || !("config" in record)) return failedReadback("Runtime config read failed: invalid response", token);
+  const config = record.config === null ? {} : asRecord(record.config);
+  if (config === undefined) return failedReadback("Runtime config read failed: invalid response", token);
+  return okRows([row("runtimeConfig", "Runtime config", JSON.stringify(config, null, 2), JSON.stringify({ applied: record.applied === true, config, path: typeof record.path === "string" ? record.path : null }))], token);
+};
 const parseRuntimeSummary = (body: unknown, token: number): ReadbackState => {
   const record = asRecord(body);
   if (record === undefined) return failedReadback("Runtime summary read failed: invalid response", token);
@@ -935,6 +946,13 @@ export const READBACK_SPECS: Readonly<Record<ReadbackKey, ReadbackRouteSpec>> = 
     parse: parseLocalPeers,
     path: READBACK_PATHS.localPeers,
   },
+  runtimeConfig: {
+    emptyText: "No runtime config available.",
+    key: "runtimeConfig",
+    label: "Runtime config",
+    parse: parseRuntimeConfig,
+    path: READBACK_PATHS.runtimeConfig,
+  },
   runtime: {
     emptyText: "No runtime configuration available.",
     key: "runtime",
@@ -1006,6 +1024,7 @@ export const createReadbackClients = (
   routerCandidates: createReadbackClient(READBACK_SPECS.routerCandidates, options),
   routerDecisions: createReadbackClient(READBACK_SPECS.routerDecisions, options),
   runtime: createReadbackClient(READBACK_SPECS.runtime, options),
+  runtimeConfig: createReadbackClient(READBACK_SPECS.runtimeConfig, options),
   sessionReadiness: createReadbackClient(READBACK_SPECS.sessionReadiness, options),
   storeReceipts: createReadbackClient(READBACK_SPECS.storeReceipts, options),
   requestDetail: createReadbackClient(READBACK_SPECS.requestDetail, options),

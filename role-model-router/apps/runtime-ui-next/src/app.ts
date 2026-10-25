@@ -7,6 +7,7 @@ import {
   defineReadObservability,
   defineReadReadback,
   defineRefreshSnapshot,
+  defineSaveRuntimeConfig,
 } from "./commands";
 import { type ControlClient, createControlClients } from "./control";
 import type { DiagnosticsReader } from "./diagnostics";
@@ -15,6 +16,7 @@ import { Model } from "./model";
 import { type ObservabilityReader, createObservabilityClient } from "./observability";
 import { readStoredOperatorToken } from "./operator-token";
 import { type ReadbackKey, type ReadbackReader, createReadbackClients } from "./readback";
+import { createRuntimeConfigClient } from "./runtime-config";
 import {
   type RuntimeEventSourceFactory,
   defaultRuntimeEventSourceFactory,
@@ -48,6 +50,7 @@ export interface ShellOptions {
   readonly studioFetchImpl?: typeof fetch;
   readonly controlBaseUrl?: string;
   readonly controlFetchImpl?: typeof fetch;
+  readonly runtimeConfigFetchImpl?: typeof fetch;
   readonly controlToken?: string;
 }
 
@@ -104,6 +107,7 @@ export const createShellApp = (options: ShellOptions = {}) => {
     });
   const readControl = defineReadControl(controlClient);
   const dispatchControl = defineDispatchControl(controlClient);
+  const saveRuntimeConfig = defineSaveRuntimeConfig(createRuntimeConfigClient({ ...(options.runtimeConfigFetchImpl === undefined ? {} : { fetchImpl: options.runtimeConfigFetchImpl }) }));
   const readReadback = defineReadReadback(readbackReaders);
   const studioClient = options.studioClient ?? createStudioClient({ ...(options.studioBaseUrl === undefined ? {} : { baseUrl: options.studioBaseUrl }), ...(options.studioFetchImpl === undefined ? {} : { fetchImpl: options.studioFetchImpl }) });
   const dispatchStudio = defineDispatchStudio(studioClient);
@@ -121,6 +125,7 @@ export const createShellApp = (options: ShellOptions = {}) => {
       readControl,
       dispatchControl,
       dispatchStudio,
+      saveRuntimeConfig,
     ),
     view,
   };
