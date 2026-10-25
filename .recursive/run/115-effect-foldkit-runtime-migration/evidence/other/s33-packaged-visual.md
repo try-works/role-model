@@ -24,9 +24,9 @@ Artifact: `E:/rm-tmp/s31a/release/win32-x64`, version `0.0.20-18-g6c9aeba1`, com
 | `/observe/routing` | Observe routing | RM3 Foldkit shell | empty | 0 |
 | `/router` | Router | RM3 Foldkit shell | ok | 0 |
 | `/nonexistent-route` | Not found: /nonexistent-route | RM3 Foldkit shell | error | 1 |
-| `/runtime` | Runtime | (captured) | 0 |
-| `/control/providers` | Providers | (captured) | 0 |
-| `/control/endpoints` | Endpoints | (captured) | 0 |
+| `/runtime` | Runtime | RM3 Foldkit shell | error | 1 |
+| `/control/providers` | Providers | RM3 Foldkit shell | ok | 0 |
+| `/control/endpoints` | Endpoints | RM3 Foldkit shell | ok | 0 |
 
 ## What this proves and what it does not
 
@@ -34,4 +34,4 @@ Artifact: `E:/rm-tmp/s31a/release/win32-x64`, version `0.0.20-18-g6c9aeba1`, com
 - The not-found route renders `Not found: /nonexistent-route` with an error state, so unknown paths are a real state, not a blank page.
 - Read routes that hit the host show `ok` or `empty` states from the packaged backend; the router page shows `ok`; observe-routing shows `empty`.
 - It does NOT prove pixel design quality: there is no design source to diff against, and no interaction script (clicks, keyboard, focus order) was run in this pass.
-- Three routes (`/runtime`, `/control/providers`, `/control/endpoints`) were captured before a browser-tool timeout interrupted the batch; their titles were observed and screenshots saved, but their state attributes were not re-recorded in this pass.
+- A browser-tool timeout interrupted one batch; the three routes it held were re-captured afterwards and are included above.
