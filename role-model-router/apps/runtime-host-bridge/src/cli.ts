@@ -46,6 +46,7 @@ import {
   negotiateRuntimeChannelStartup,
   readPackagedRuntimeProfile,
 } from "./runtime-channel.js";
+import { releaseHostResources } from "./release-host-resources.js";
 import { migrateLegacyProductionState } from "./runtime-state-migration.js";
 import { resolveRun88StageRuntimeIdentity } from "./runtime-version.js";
 import {
@@ -5580,10 +5581,16 @@ export async function main(): Promise<void> {
       extensionRuntimeOwner = null;
       extensionRuntime = null;
       packagedRuntime = null;
-      if (activeExtensionRuntimeOwner) await activeExtensionRuntimeOwner.close();
-      else if (activeExtensionRuntime?.close)
-        await activeExtensionRuntime.close().catch(() => undefined);
-      if (activePackagedRuntime) await activePackagedRuntime.close().catch(() => undefined);
+      await releaseHostResources(
+        {
+          ...(activePackagedRuntime === null ? {} : { packagedRuntime: () => activePackagedRuntime.close() }),
+          ...(activeExtensionRuntimeOwner === null ? {} : { extensionRuntimeOwner: () => activeExtensionRuntimeOwner.close() }),
+          ...(activeExtensionRuntimeOwner !== null || activeExtensionRuntime?.close === undefined ? {} : { extensionRuntime: () => activeExtensionRuntime.close() }),
+        },
+        (failure: { readonly error: unknown; readonly step: string }) => {
+          bootstrapState.message = "Release failed at " + failure.step + ": " + (failure.error instanceof Error ? failure.error.message : String(failure.error));
+        },
+      );
     })();
     return extensionRuntimeFailurePromise;
   };
@@ -5597,16 +5604,28 @@ export async function main(): Promise<void> {
       activeAutoReplayLoop = null;
       stopExtensionRuntimeWatchdog?.();
       stopExtensionRuntimeWatchdog = null;
-      await server?.close();
+      const activeServer = server;
       const activeExtensionRuntimeOwner = extensionRuntimeOwner;
       const activeExtensionRuntime = extensionRuntime;
+      const activePackagedRuntime = packagedRuntime;
+      const activeBackend = backend;
+      server = null;
       extensionRuntimeOwner = null;
       extensionRuntime = null;
-      if (packagedRuntime) await packagedRuntime.close();
-      else await backend?.shutdown();
-      if (activeExtensionRuntimeOwner) await activeExtensionRuntimeOwner.close();
-      else await activeExtensionRuntime?.close();
-      process.exit(0);
+      packagedRuntime = null;
+      backend = null;
+      const releaseResult = await releaseHostResources({
+        ...(activeServer === null ? {} : { server: () => activeServer.close() }),
+        ...(activePackagedRuntime === null ? { ...(activeBackend === null ? {} : { backend: () => activeBackend.shutdown() }) } : { packagedRuntime: () => activePackagedRuntime.close() }),
+        ...(activeExtensionRuntimeOwner === null ? { ...(activeExtensionRuntime?.close === undefined ? {} : { extensionRuntime: () => activeExtensionRuntime.close() }) } : { extensionRuntimeOwner: () => activeExtensionRuntimeOwner.close() }),
+      });
+      if (releaseResult.errors.length > 0) {
+        process.exitCode = 1;
+        for (const failure of releaseResult.errors) {
+          console.error("release failed at " + failure.step + ": " + (failure.error instanceof Error ? failure.error.message : String(failure.error)));
+        }
+      }
+      process.exit(releaseResult.errors.length > 0 ? 1 : 0);
     })();
 
     return shutdownPromise;

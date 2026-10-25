@@ -1,0 +1,26 @@
+{
+  "slice": "s87a-release-order",
+  "module": "src/release-host-resources.ts",
+  "order": [
+    "server",
+    "packagedRuntime|backend",
+    "extensionRuntimeOwner|extensionRuntime"
+  ],
+  "api": "releaseHostResources(resources,onError?) -> {released,errors}",
+  "idempotence": "WeakSet per release function",
+  "callSites": [
+    "cli.ts shutdown :5590+ uses result; process.exit(1) when errors",
+    "cli.ts failExtensionRuntime :5567+ uses result; records error in bootstrapState instead of .catch swallow"
+  ],
+  "reds": {
+    "early": "s87a-red-early-return.log",
+    "swallowed": "s87a-red-swallowed.log"
+  },
+  "tests": {
+    "module": "test/release-host-resources.test.ts",
+    "count": 5,
+    "index": 218
+  },
+  "hostTsc": 0,
+  "remaining": "real Layer DAG still needs scoped acquisition and ownership by the composition root; release now unified but acquisition remains imperative"
+}
