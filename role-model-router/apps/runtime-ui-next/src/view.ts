@@ -664,7 +664,6 @@ const studioPage = (state: StudioState, h: HtmlBuilder<Message>): Html => {
 
 const learningPage = (readbacks: ReadbacksState, h: HtmlBuilder<Message>): Html =>
   h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "learning")], [
-    h.h1([h.Class("text-[22px] font-semibold")], ["Learning"]),
     h.p([h.Class("mt-1 text-[12px] text-[var(--rm-secondary)]")], ["Knowledge worker, replay jobs and evaluation jobs. Empty means the capability is available but no work exists."]),
     renderReadbackPage(READBACK_SPECS.learning, readbacks.learning, h),
     renderReadbackPage(READBACK_SPECS.replayJobs, readbacks.replayJobs, h),

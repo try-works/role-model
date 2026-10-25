@@ -27,7 +27,9 @@ describe("S67a learning surfaces", () => {
   it("renders three sections with honest empty job lists and the knowledge worker fields", async () => {
     mountAt("s67a-empty", async (input) => { const path = new URL(String(input), "http://localhost").pathname; return response(baseBodies[path] ?? {}); });
     const page = await waitFor(() => document.querySelector("[data-route='learning']") ?? undefined, "learning route");
-    expect(page.querySelector("h1")?.textContent).toBe("Learning");
+    expect(document.querySelectorAll("h1")).toHaveLength(1);
+    expect(document.querySelector("h1")?.textContent).toBe("Learning");
+    expect([...page.querySelectorAll("h2")].map((node) => node.textContent)).toEqual(["Knowledge worker", "Replay jobs", "Evaluation jobs"]);
     await waitFor(() => document.querySelector("[data-readback-route='learning'][data-readback-state='ok']") ?? undefined, "knowledge ok");
     expect(page.textContent).toContain("sqlite_fts5_bm25");
     expect(page.textContent).toContain("disabled");

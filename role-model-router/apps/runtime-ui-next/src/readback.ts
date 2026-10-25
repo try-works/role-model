@@ -1024,7 +1024,7 @@ export const renderReadbackPage = (
         [h.Class("text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--rm-muted)]")],
         ["Runtime readback"],
       ),
-      h.h1([h.Class("rm3-next-route-title")], [spec.label]),
+      h.h2([h.Class("rm3-next-route-title text-[16px] font-semibold")], [spec.label]),
       h.p(
         [
           h.Role("status"),
@@ -1047,8 +1047,8 @@ export const renderReadbackPage = (
                   ],
                   [
                     h.span([h.Class("break-all font-mono text-[var(--rm-fg)]")], [item.label]),
-                    h.span([h.Class("ml-auto font-medium text-[var(--rm-fg)]")], [item.value]),
-                    h.span([h.Class("text-[11px] text-[var(--rm-secondary)]")], [item.meta]),
+                    h.span([h.Class("ml-auto min-w-0 max-w-full break-words text-right font-medium text-[var(--rm-fg)]"), h.Title(item.value)], [item.value]),
+                    h.span([h.Class("min-w-0 max-w-full break-words text-[11px] text-[var(--rm-secondary)]"), h.Title(item.meta)], [item.meta]),
                   ],
                 ),
               ),

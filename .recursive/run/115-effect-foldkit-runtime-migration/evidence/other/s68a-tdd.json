@@ -1,0 +1,32 @@
+{
+  "slice": "s68a-learning-title-overflow",
+  "h1": "content h1 removed; readback headings h2; /learning h1 count 1; test asserts one h1 and h2 order",
+  "overflow": {
+    "decision": "no DOM overflow; scaled preview artifact",
+    "image": "1920x1080",
+    "innerWidth": 1920,
+    "dpr": 1.00000003,
+    "preview": "1708x961 scale 0.8896",
+    "li1920": [
+      252,
+      1390
+    ],
+    "value1920": [
+      1100.4,
+      1283.1
+    ],
+    "worstValueRight": 1318.2,
+    "li1280Right": 1292,
+    "value1280Right": 1220.2,
+    "li1024Right": 1036,
+    "value1024Right": 964.2,
+    "badRows": 0
+  },
+  "fix": "value/meta min-w-0 max-w-full break-words text-right + title full text",
+  "screenshot": "E:/rm-tmp/s64a/learning-fixed.png",
+  "counts": {
+    "clientFull": 202,
+    "files": 21,
+    "typecheck": 0
+  }
+}
