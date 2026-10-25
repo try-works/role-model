@@ -6,16 +6,16 @@ package, is not imported by any build, and is excluded from linting by the repos
 | field | value |
 | --- | --- |
 | upstream | https://github.com/Effect-TS/effect |
-| tag | `effect@4.0.1` |
-| commit | `460272d30457f4697d8b8c52cad41caccbcace08` |
-| commit date | 2026-10-04T21:47:48Z |
+| tag | `effect@4.0.6` |
+| commit | `3b28bf686bf26e9700edd39c025aff2744dc5303` |
+| commit date | 2026-10-22T02:35:18Z |
 | vendored into | role-model |
-| vendored at | 2026-10-06T23:06:08.534Z |
+| vendored at | 2026-10-24T13:22:39.983Z |
 | license | MIT (Copyright (c) 2023 Effectful Technologies Inc) — see `LICENSE` |
 | payload | `packages`, `LICENSE`, `README.md`, `MIGRATION.md` |
-| file count | 1878 |
-| size | 38.5 MB |
-| content digest | `sha256:0d0028aa7de72ff9e6a8e39f4bc4232640bd1111b30aaa3440d0c53116a49749` |
+| file count | 2155 |
+| size | 45.8 MB |
+| content digest | `sha256:7c7256252cf0b9b8aa25c1698ca1f5af171def4eb42048aedfeae9f2ee524702` |
 
 ## Why it is here
 

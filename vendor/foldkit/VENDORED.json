@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "role-model.vendored-upstream.v1",
+  "upstream": {
+    "name": "foldkit",
+    "url": "https://github.com/foldkit/foldkit",
+    "tag": "foldkit@0.169.0",
+    "commit": "7ee214268c602967937b80f6f20d1e831f2e8ab6",
+    "commitDate": "2026-10-20T23:38:00Z",
+    "license": "MIT (Copyright (c) 2025 Devin Jameson)"
+  },
+  "vendoredInto": "role-model",
+  "vendoredAt": "2026-10-24T13:53:19.868Z",
+  "payload": {
+    "root": "vendor/foldkit",
+    "includes": [
+      "packages/**",
+      "LICENSE/**",
+      "README.md"
+    ],
+    "excludes": [
+      ".git",
+      "node_modules",
+      "*.tsbuildinfo",
+      "**/dist/**",
+      "**/coverage/**",
+      ".github/**",
+      "examples/**",
+      "scripts/**"
+    ]
+  },
+  "fileCount": 2020,
+  "byteCount": 12486059,
+  "contentDigest": "14a19d180fd43784b1c11073d9c7c6efa3a599c43b2fb8e5bcbd64136ed8322d",
+  "wiring": "not a workspace package and not imported by any build; a lint-ignored source drop only"
+}

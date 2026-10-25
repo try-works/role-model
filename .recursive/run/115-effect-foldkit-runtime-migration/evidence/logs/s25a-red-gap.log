@@ -1,0 +1,40 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui
+
+ ❯ app/lib/s25a-refresh-ownership.test.ts (4 tests | 1 failed | 3 skipped) 17ms
+   ↓ S25a refresh ownership and event-source characterization > uses an injected RuntimeEventSourceFactory and closes it on dispose
+   ↓ S25a refresh ownership and event-source characterization > owns exactly one active subscription per start and leaks none across two start/stop cycles
+   × S25a refresh ownership and event-source characterization > a later revision after a gap reaches the refresh handler (no silent continuation); no explicit gap marker exists 15ms
+     → expected [] to deeply equal [ 1, 3 ]
+   ↓ S25a refresh ownership and event-source characterization > a reused stale chart is visible as stale in the returned titles and diagnostic field
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/lib/s25a-refresh-ownership.test.ts > S25a refresh ownership and event-source characterization > a later revision after a gap reaches the refresh handler (no silent continuation); no explicit gap marker exists
+AssertionError: expected [] to deeply equal [ 1, 3 ]
+
+- Expected
++ Received
+
+- [
+-   1,
+-   3,
+- ]
++ []
+
+ ❯ app/lib/s25a-refresh-ownership.test.ts:134:18
+    132|       emittedAtMs: 3,
+    133|     });
+    134|     expect(seen).toEqual([1, 3]);
+       |                  ^
+    135|     unsubscribe();
+    136|     bus.publishRevisionUpdate({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 skipped (4)
+   Start at  06:13:01
+   Duration  1.01s (transform 134ms, setup 0ms, collect 214ms, tests 17ms, environment 0ms, prepare 216ms)
+

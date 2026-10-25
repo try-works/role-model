@@ -1,0 +1,45 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:27756) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/s21c-bootstrap-owner-wiring.test.ts (2 tests | 1 failed | 1 skipped) 1017ms
+   × S21c bootstrap owner wiring > the host receives the exact Bootstrap instance built by the DAG 1015ms
+     → expected { artifactStore: { …(2) }, …(3) } to be { artifactStore: { …(2) }, …(3) } // Object.is equality
+
+If it should pass with deep equality, replace "toBe" with "toStrictEqual"
+
+Expected: { artifactStore: { …(2) }, …(3) }
+Received: serializes to the same string
+
+   ↓ S21c bootstrap owner wiring > a second DAG construction is a different instance, so per-call fallback cannot pass identity
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s21c-bootstrap-owner-wiring.test.ts > S21c bootstrap owner wiring > the host receives the exact Bootstrap instance built by the DAG
+AssertionError: expected { artifactStore: { …(2) }, …(3) } to be { artifactStore: { …(2) }, …(3) } // Object.is equality
+
+If it should pass with deep equality, replace "toBe" with "toStrictEqual"
+
+Expected: { artifactStore: { …(2) }, …(3) }
+Received: serializes to the same string
+
+
+Compared values have no visual difference.
+
+ ❯ test/s21c-bootstrap-owner-wiring.test.ts:53:27
+     51|     try {
+     52|       expect(captured).toHaveLength(1);
+     53|       expect(captured[0]).toBe(bootstrapOwner);
+       |                           ^
+     54|       expect(captured[0]?.id).toMatch(/^bootstrap:/);
+     55|       expect(typeof captured[0]?.pending).toBe("function");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 skipped (2)
+   Start at  05:34:22
+   Duration  8.26s (transform 4.30s, setup 0ms, collect 6.78s, tests 1.02s, environment 0ms, prepare 167ms)
+

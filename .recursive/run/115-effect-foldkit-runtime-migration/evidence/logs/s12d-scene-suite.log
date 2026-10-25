@@ -1,0 +1,14 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit
+
+ ✓ test/s12c-foldkit-input.scene.test.ts (3 tests) 26ms
+ ✓ test/s12b-rm3-button.scene.test.ts (7 tests) 27ms
+ ✓ test/s12c-foldkit-textarea.scene.test.ts (3 tests) 25ms
+ ✓ test/s12c-foldkit-checkbox.scene.test.ts (6 tests) 41ms
+
+ Test Files  4 passed (4)
+      Tests  19 passed (19)
+   Start at  00:22:36
+   Duration  4.46s (transform 2.08s, setup 0ms, collect 11.91s, tests 118ms, environment 2.96s, prepare 942ms)
+
+EXIT_CODE: 0

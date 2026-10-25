@@ -1,0 +1,14 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:46956) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s21c-bootstrap-owner-wiring.test.ts (2 tests) 1058ms
+   ✓ S21c bootstrap owner wiring > the host calls the exact Bootstrap instance it received from the DAG  1052ms
+ ✓ test/s21a-composition-dag.test.ts (6 tests) 136ms
+
+ Test Files  2 passed (2)
+      Tests  8 passed (8)
+   Start at  06:57:16
+   Duration  12.02s (transform 5.82s, setup 0ms, collect 9.65s, tests 1.19s, environment 1ms, prepare 506ms)
+

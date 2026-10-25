@@ -1,0 +1,30 @@
+# Run115 one-shot worker overlay; no shared profile edits or inline secrets.
+- id: agent-default-model
+  config:
+    provider: deepseek-official
+    model: deepseek-flash
+- id: credentials
+  disabled: false
+- id: authorization
+  disabled: false
+- id: tool-subagent
+  disabled: true
+- id: tool-subagent-fork
+  disabled: true
+- id: config-editor
+  disabled: true
+- id: settings
+  disabled: true
+- id: session-title-llm
+  disabled: true
+- id: session-log-deepseek
+  disabled: true
+- id: sandbox-policy
+  config:
+    mode: danger-full-access
+- id: approval
+  config:
+    policy: never
+- id: session-persistence-jsonl
+  config:
+    root: E:/role-model-run115/dsh-worker-sessions

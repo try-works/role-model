@@ -15,7 +15,11 @@ const vendored = path.join(repoRoot, "vendor", "effect", "packages", "sql", "sql
 
 await mkdir(path.join(here, "dist"), { recursive: true });
 await build({
-  entryPoints: { index: path.join(vendored, "index.ts") },
+  // Run 115 S6a: the first-party Effect service layer built beside the vendored client.
+  entryPoints: {
+    index: path.join(vendored, "index.ts"),
+    service: path.join(here, "src", "service.ts"),
+  },
   outdir: path.join(here, "dist"),
   bundle: true,
   splitting: true,

@@ -1,0 +1,591 @@
+timestamp_utc: 2026-10-24T10:17:03.3232908Z
+phase: RED (typed empty/no-op skeleton, behavior not implemented)
+cwd: role-model-router/packages/ui-parity
+command: node ../../../node_modules/vitest/vitest.mjs run test/compare.test.ts
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui-parity
+
+ ❯ test/compare.test.ts (28 tests | 21 failed) 111ms
+   ✓ compareRequestTraces > returns no differences for identical captures 7ms
+   ✓ compareRequestTraces > returns no differences for two empty captures 1ms
+   ✓ compareRequestTraces > ignores volatile request ids and matches on stable step labels 1ms
+   ✓ compareRequestTraces > canonicalizes method case, header name case/order, and query key order 1ms
+   × compareRequestTraces > preserves repeated query value order 31ms
+     → expected [] to deeply equal [ { code: 'query_mismatch', …(2) } ]
+   × compareRequestTraces > preserves repeated header value order 6ms
+     → expected [] to deeply equal [ { code: 'header_mismatch', …(2) } ]
+   × compareRequestTraces > reports a changed method 3ms
+     → expected [] to deeply equal [ { code: 'method_mismatch', …(2) } ]
+   × compareRequestTraces > reports a changed path 3ms
+     → expected [] to deeply equal [ { code: 'path_mismatch', …(2) } ]
+   × compareRequestTraces > reports a changed query value 3ms
+     → expected [] to deeply equal [ { code: 'query_mismatch', …(2) } ]
+   × compareRequestTraces > distinguishes a missing body from an empty body 3ms
+     → expected [] to deeply equal [ { code: 'body_mismatch', …(2) } ]
+   × compareRequestTraces > reports a changed body without leaking its bytes 3ms
+     → expected [] to deeply equal [ { code: 'body_mismatch', …(2) } ]
+   × compareRequestTraces > reports a changed status 2ms
+     → expected [] to deeply equal [ { code: 'status_mismatch', …(2) } ]
+   × compareRequestTraces > reports a changed terminal stream 3ms
+     → expected [] to deeply equal [ { …(3) } ]
+   × compareRequestTraces > reports a changed terminal error 3ms
+     → expected [] to deeply equal [ { code: 'error_mismatch', …(2) } ]
+   × compareRequestTraces > reports a changed non-auth header without leaking its value 3ms
+     → expected [] to deeply equal [ { code: 'header_mismatch', …(2) } ]
+   ✓ compareRequestTraces > compares an authorization scheme case-insensitively 1ms
+   × compareRequestTraces > reports a changed authorization scheme 2ms
+     → expected [] to deeply equal [ { …(3) } ]
+   × compareRequestTraces > reports a changed authorization credential without leaking it 2ms
+     → expected [] to deeply equal [ { …(3) } ]
+   × compareRequestTraces > reports a changed api key as an auth-sensitive header 2ms
+     → expected [] to deeply equal [ { …(3) } ]
+   × compareRequestTraces > reports a changed causal dependency 2ms
+     → expected [] to deeply equal [ { …(3) } ]
+   × compareRequestTraces > requires an explicit dependency label for mutations 6ms
+     → expected [] to deeply equal [ { …(3) } ]
+   ✓ compareRequestTraces > ignores independent read order and keeps duplicate reads 1ms
+   × compareRequestTraces > reports a missing duplicate read 2ms
+     → expected [] to deeply equal [ { code: 'missing_event', …(2) } ]
+   × compareRequestTraces > reports an extra independent read 2ms
+     → expected [] to deeply equal [ { code: 'extra_event', …(2) } ]
+   ✓ compareRequestTraces > matches tool and turn dependencies by stable causal labels 0ms
+   × compareRequestTraces > preserves causal write order instead of sorting writes by endpoint 2ms
+     → expected [] to deeply equal [ { …(3) } ]
+   × compareRequestTraces > bounds findings to one per mismatched field 9ms
+     → expected [] to deeply equal [ 'body_mismatch', …(3) ]
+   × compareRequestTraces > reports a changed event kind 2ms
+     → expected [] to deeply equal [ { code: 'kind_mismatch', …(2) } ]
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 21 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/compare.test.ts > compareRequestTraces > preserves repeated query value order
+AssertionError: expected [] to deeply equal [ { code: 'query_mismatch', …(2) } ]
+
+- Expected
++ Received
+
+- [
+-   {
+-     "code": "query_mismatch",
+-     "index": 0,
+-     "step": "read-config",
+-   },
+- ]
++ []
+
+ ❯ test/compare.test.ts:117:52
+    115|     ];
+    116| 
+    117|     expect(compareRequestTraces(expected, actual)).toEqual([
+       |                                                    ^
+    118|       { code: "query_mismatch", index: 0, step: "read-config" },
+    119|     ]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/21]⎯
+
+ FAIL  test/compare.test.ts > compareRequestTraces > preserves repeated header value order
+AssertionError: expected [] to deeply equal [ { code: 'header_mismatch', …(2) } ]
+
+- Expected
++ Received
+
+- [
+-   {
+-     "code": "header_mismatch",
+-     "index": 0,
+-     "step": "read-config",
+-   },
+- ]
++ []
+
+ ❯ test/compare.test.ts:140:52
+    138|     ];
+    139| 
+    140|     expect(compareRequestTraces(expected, actual)).toEqual([
+       |                                                    ^
+    141|       { code: "header_mismatch", index: 0, step: "read-config" },
+    142|     ]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/21]⎯
+
+ FAIL  test/compare.test.ts > compareRequestTraces > reports a changed method
+AssertionError: expected [] to deeply equal [ { code: 'method_mismatch', …(2) } ]
+
+- Expected
++ Received
+
+- [
+-   {
+-     "code": "method_mismatch",
+-     "index": 0,
+-     "step": "read-config",
+-   },
+- ]
++ []
+
+ ❯ test/compare.test.ts:149:52
+    147|     const actual = [trace({ method: "POST" })];
+    148| 
+    149|     expect(compareRequestTraces(expected, actual)).toEqual([
+       |                                                    ^
+    150|       { code: "method_mismatch", index: 0, step: "read-config" },
+    151|     ]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/21]⎯
+
+ FAIL  test/compare.test.ts > compareRequestTraces > reports a changed path
+AssertionError: expected [] to deeply equal [ { code: 'path_mismatch', …(2) } ]
+
+- Expected
++ Received
+
+- [
+-   {
+-     "code": "path_mismatch",
+-     "index": 0,
+-     "step": "read-config",
+-   },
+- ]
++ []
+
+ ❯ test/compare.test.ts:158:52
+    156|     const actual = [trace({ path: "/api/config/next" })];
+    157| 
+    158|     expect(compareRequestTraces(expected, actual)).toEqual([
+       |                                                    ^
+    159|       { code: "path_mismatch", index: 0, step: "read-config" },
+    160|     ]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/21]⎯
+
+ FAIL  test/compare.test.ts > compareRequestTraces > reports a changed query value
+AssertionError: expected [] to deeply equal [ { code: 'query_mismatch', …(2) } ]
+
+- Expected
++ Received
+
+- [
+-   {
+-     "code": "query_mismatch",
+-     "index": 0,
+-     "step": "read-config",
+-   },
+- ]
++ []
+
+ ❯ test/compare.test.ts:167:52
+    165|     const actual = [trace({ query: [["limit", "20"]] })];
+    166| 
+    167|     expect(compareRequestTraces(expected, actual)).toEqual([
+       |                                                    ^
+    168|       { code: "query_mismatch", index: 0, step: "read-config" },
+    169|     ]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/21]⎯
+
+ FAIL  test/compare.test.ts > compareRequestTraces > distinguishes a missing body from an empty body
+AssertionError: expected [] to deeply equal [ { code: 'body_mismatch', …(2) } ]
+
+- Expected
++ Received
+
+- [
+-   {
+-     "code": "body_mismatch",
+-     "index": 0,
+-     "step": "read-config",
+-   },
+- ]
++ []
+
+ ❯ test/compare.test.ts:176:52
+    174|     const actual = [trace({ body: "" })];
+    175| 
+    176|     expect(compareRequestTraces(expected, actual)).toEqual([
+       |                                                    ^
+    177|       { code: "body_mismatch", index: 0, step: "read-config" },
+    178|     ]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/21]⎯
+
+ FAIL  test/compare.test.ts > compareRequestTraces > reports a changed body without leaking its bytes
+AssertionError: expected [] to deeply equal [ { code: 'body_mismatch', …(2) } ]
+
+- Expected
++ Received
+
+- [
+-   {
+-     "code": "body_mismatch",
+-     "index": 0,
+-     "step": "write-setting",
+-   },
+- ]
++ []
+
+ ❯ test/compare.test.ts:202:25
+    200|     const differences = compareRequestTraces(expected, actual);
+    201| 
+    202|     expect(differences).toEqual([
+       |                         ^
+    203|       { code: "body_mismatch", index: 0, step: "write-setting" },
+    204|     ]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/21]⎯
+
+ FAIL  test/compare.test.ts > compareRequestTraces > reports a changed status
+AssertionError: expected [] to deeply equal [ { code: 'status_mismatch', …(2) } ]
+
+- Expected
++ Received
+
+- [
+-   {
+-     "code": "status_mismatch",
+-     "index": 0,
+-     "step": "read-config",
+-   },
+- ]
++ []
+
+ ❯ test/compare.test.ts:214:52
+    212|     const actual = [trace({ status: 503 })];
+    213| 
+    214|     expect(compareRequestTraces(expected, actual)).toEqual([
+       |                                                    ^
+    215|       { code: "status_mismatch", index: 0, step: "read-config" },
+    216|     ]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/21]⎯
+
+ FAIL  test/compare.test.ts > compareRequestTraces > reports a changed terminal stream
+AssertionError: expected [] to deeply equal [ { …(3) } ]
+
+- Expected
++ Received
+
+- [
+-   {
+-     "code": "terminal_stream_mismatch",
+-     "index": 0,
+-     "step": "read-config",
+-   },
+- ]
++ []
+
+ ❯ test/compare.test.ts:223:52
+    221|     const actual = [trace({ terminalStream: "error" })];
+    222| 
+    223|     expect(compareRequestTraces(expected, actual)).toEqual([
+       |                                                    ^
+    224|       { code: "terminal_stream_mismatch", index: 0, step: "read-config…
+    225|     ]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/21]⎯
+
+ FAIL  test/compare.test.ts > compareRequestTraces > reports a changed terminal error
+AssertionError: expected [] to deeply equal [ { code: 'error_mismatch', …(2) } ]
+
+- Expected
++ Received
+
+- [
+-   {
+-     "code": "error_mismatch",
+-     "index": 0,
+-     "step": "read-config",
+-   },
+- ]
++ []
+
+ ❯ test/compare.test.ts:236:52
+    234|     ];
+    235| 
+    236|     expect(compareRequestTraces(expected, actual)).toEqual([
+       |                                                    ^
+    237|       { code: "error_mismatch", index: 0, step: "read-config" },
+    238|     ]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/21]⎯
+
+ FAIL  test/compare.test.ts > compareRequestTraces > reports a changed non-auth header without leaking its value
+AssertionError: expected [] to deeply equal [ { code: 'header_mismatch', …(2) } ]
+
+- Expected
++ Received
+
+- [
+-   {
+-     "code": "header_mismatch",
+-     "index": 0,
+-     "step": "read-config",
+-   },
+- ]
++ []
+
+ ❯ test/compare.test.ts:250:25
+    248|     const differences = compareRequestTraces(expected, actual);
+    249| 
+    250|     expect(differences).toEqual([
+       |                         ^
+    251|       { code: "header_mismatch", index: 0, step: "read-config" },
+    252|     ]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/21]⎯
+
+ FAIL  test/compare.test.ts > compareRequestTraces > reports a changed authorization scheme
+AssertionError: expected [] to deeply equal [ { …(3) } ]
+
+- Expected
++ Received
+
+- [
+-   {
+-     "code": "auth_header_mismatch",
+-     "index": 0,
+-     "step": "read-config",
+-   },
+- ]
++ []
+
+ ❯ test/compare.test.ts:285:52
+    283|     ];
+    284| 
+    285|     expect(compareRequestTraces(expected, actual)).toEqual([
+       |                                                    ^
+    286|       { code: "auth_header_mismatch", index: 0, step: "read-config" },
+    287|     ]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/21]⎯
+
+ FAIL  test/compare.test.ts > compareRequestTraces > reports a changed authorization credential without leaking it
+AssertionError: expected [] to deeply equal [ { …(3) } ]
+
+- Expected
++ Received
+
+- [
+-   {
+-     "code": "auth_header_mismatch",
+-     "index": 0,
+-     "step": "read-config",
+-   },
+- ]
++ []
+
+ ❯ test/compare.test.ts:305:25
+    303|     const differences = compareRequestTraces(expected, actual);
+    304| 
+    305|     expect(differences).toEqual([
+       |                         ^
+    306|       { code: "auth_header_mismatch", index: 0, step: "read-config" },
+    307|     ]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/21]⎯
+
+ FAIL  test/compare.test.ts > compareRequestTraces > reports a changed api key as an auth-sensitive header
+AssertionError: expected [] to deeply equal [ { …(3) } ]
+
+- Expected
++ Received
+
+- [
+-   {
+-     "code": "auth_header_mismatch",
+-     "index": 0,
+-     "step": "read-config",
+-   },
+- ]
++ []
+
+ ❯ test/compare.test.ts:322:25
+    320|     const differences = compareRequestTraces(expected, actual);
+    321| 
+    322|     expect(differences).toEqual([
+       |                         ^
+    323|       { code: "auth_header_mismatch", index: 0, step: "read-config" },
+    324|     ]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/21]⎯
+
+ FAIL  test/compare.test.ts > compareRequestTraces > reports a changed causal dependency
+AssertionError: expected [] to deeply equal [ { …(3) } ]
+
+- Expected
++ Received
+
+- [
+-   {
+-     "code": "dependency_mismatch",
+-     "index": 0,
+-     "step": "write-setting",
+-   },
+- ]
++ []
+
+ ❯ test/compare.test.ts:348:52
+    346|     ];
+    347| 
+    348|     expect(compareRequestTraces(expected, actual)).toEqual([
+       |                                                    ^
+    349|       { code: "dependency_mismatch", index: 0, step: "write-setting" },
+    350|     ]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/21]⎯
+
+ FAIL  test/compare.test.ts > compareRequestTraces > requires an explicit dependency label for mutations
+AssertionError: expected [] to deeply equal [ { …(3) } ]
+
+- Expected
++ Received
+
+- [
+-   {
+-     "code": "dependency_mismatch",
+-     "index": 0,
+-     "step": "write-setting",
+-   },
+- ]
++ []
+
+ ❯ test/compare.test.ts:371:52
+    369|     ];
+    370| 
+    371|     expect(compareRequestTraces(expected, actual)).toEqual([
+       |                                                    ^
+    372|       { code: "dependency_mismatch", index: 0, step: "write-setting" },
+    373|     ]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/21]⎯
+
+ FAIL  test/compare.test.ts > compareRequestTraces > reports a missing duplicate read
+AssertionError: expected [] to deeply equal [ { code: 'missing_event', …(2) } ]
+
+- Expected
++ Received
+
+- [
+-   {
+-     "code": "missing_event",
+-     "index": 1,
+-     "step": "read-beta",
+-   },
+- ]
++ []
+
+ ❯ test/compare.test.ts:396:52
+    394|     const actual = [trace({ requestId: "actual-1", step: "read-alpha" …
+    395| 
+    396|     expect(compareRequestTraces(expected, actual)).toEqual([
+       |                                                    ^
+    397|       { code: "missing_event", index: 1, step: "read-beta" },
+    398|     ]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/21]⎯
+
+ FAIL  test/compare.test.ts > compareRequestTraces > reports an extra independent read
+AssertionError: expected [] to deeply equal [ { code: 'extra_event', …(2) } ]
+
+- Expected
++ Received
+
+- [
+-   {
+-     "code": "extra_event",
+-     "index": 1,
+-     "step": "read-beta",
+-   },
+- ]
++ []
+
+ ❯ test/compare.test.ts:408:52
+    406|     ];
+    407| 
+    408|     expect(compareRequestTraces(expected, actual)).toEqual([
+       |                                                    ^
+    409|       { code: "extra_event", index: 1, step: "read-beta" },
+    410|     ]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/21]⎯
+
+ FAIL  test/compare.test.ts > compareRequestTraces > preserves causal write order instead of sorting writes by endpoint
+AssertionError: expected [] to deeply equal [ { …(3) } ]
+
+- Expected
++ Received
+
+- [
+-   {
+-     "code": "causal_order_mismatch",
+-     "index": 1,
+-     "step": "write-a",
+-   },
+- ]
++ []
+
+ ❯ test/compare.test.ts:488:52
+    486|     ];
+    487| 
+    488|     expect(compareRequestTraces(expected, actual)).toEqual([
+       |                                                    ^
+    489|       { code: "causal_order_mismatch", index: 1, step: "write-a" },
+    490|     ]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[19/21]⎯
+
+ FAIL  test/compare.test.ts > compareRequestTraces > bounds findings to one per mismatched field
+AssertionError: expected [] to deeply equal [ 'body_mismatch', …(3) ]
+
+- Expected
++ Received
+
+- [
+-   "body_mismatch",
+-   "status_mismatch",
+-   "terminal_stream_mismatch",
+-   "error_mismatch",
+- ]
++ []
+
+ ❯ test/compare.test.ts:522:62
+    520|     const differences = compareRequestTraces(expected, actual);
+    521| 
+    522|     expect(differences.map((difference) => difference.code)).toEqual([
+       |                                                              ^
+    523|       "body_mismatch",
+    524|       "status_mismatch",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[20/21]⎯
+
+ FAIL  test/compare.test.ts > compareRequestTraces > reports a changed event kind
+AssertionError: expected [] to deeply equal [ { code: 'kind_mismatch', …(2) } ]
+
+- Expected
++ Received
+
+- [
+-   {
+-     "code": "kind_mismatch",
+-     "index": 0,
+-     "step": "read-config",
+-   },
+- ]
++ []
+
+ ❯ test/compare.test.ts:545:52
+    543|     ];
+    544| 
+    545|     expect(compareRequestTraces(expected, actual)).toEqual([
+       |                                                    ^
+    546|       { code: "kind_mismatch", index: 0, step: "read-config" },
+    547|     ]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[21/21]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  21 failed | 7 passed (28)
+   Start at  18:17:08
+   Duration  4.68s (transform 660ms, setup 0ms, collect 690ms, tests 111ms, environment 1ms, prepare 2.16s)
+
+exit_code: 1

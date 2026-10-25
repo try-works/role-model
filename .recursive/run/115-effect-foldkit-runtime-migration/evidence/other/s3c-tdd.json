@@ -1,0 +1,141 @@
+{
+  "slice": "s3c-platform-browser-wrapper",
+  "requirement": "R5",
+  "worktree": "D:\\DEV\\role-model\\.worktrees\\115-effect-foldkit-runtime-migration",
+  "status": "complete",
+  "tddMode": "strict (setup RED + behavioural RED, then GREEN)",
+  "newPackage": {
+    "name": "@role-model-router/effect-platform-browser",
+    "version": "4.0.6",
+    "dir": "role-model-router/packages/effect-platform-browser",
+    "vendoredPackage": "vendor/effect/packages/platform/browser",
+    "vendoredVersion": "4.0.6",
+    "entryDerivation": "Reads the vendored exports map, which publishes source: the root maps to ./src/index.ts and a one-segment wildcard maps to ./src/<name>.ts; null targets block ./internal/<x>, ./index and the per-directory index pattern; ./package.json is metadata re-exported by the wrapper manifest, not an entry. The wildcard is expanded against the vendored src directory, existence is checked by exact readdir name, and a missing mapped source file throws.",
+    "entryCount": 18,
+    "subpathCount": 18,
+    "exportsKeys": 19,
+    "entries": [
+      "index",
+      "BrowserCrypto",
+      "BrowserHttpClient",
+      "BrowserKeyValueStore",
+      "BrowserPersistence",
+      "BrowserRuntime",
+      "BrowserSocket",
+      "BrowserStream",
+      "BrowserWorker",
+      "BrowserWorkerRunner",
+      "Clipboard",
+      "Geolocation",
+      "IndexedDb",
+      "IndexedDbDatabase",
+      "IndexedDbQueryBuilder",
+      "IndexedDbTable",
+      "IndexedDbVersion",
+      "Permissions"
+    ],
+    "externals": [
+      "effect",
+      "effect/*"
+    ],
+    "peerDependencies": {
+      "effect": "workspace:*"
+    },
+    "declarations": "tsc --noCheck declaration emit into dist/types with generated per-subpath shims, same as the Foldkit wrappers; the per-entry existence check is the gate."
+  },
+  "peerChange": {
+    "file": "role-model-router/packages/foldkit/package.json",
+    "before": {
+      "@effect/platform-browser": "4.0.6"
+    },
+    "after": {
+      "@role-model-router/effect-platform-browser": "workspace:*"
+    },
+    "codeChange": "role-model-router/packages/foldkit/build.mjs now rewrites the vendored `@effect/platform-browser` specifier to `@role-model-router/effect-platform-browser` (esbuild onResolve, external) and lists the workspace specifier in `external` instead of the bare vendored one. Without this the peer repoint would only be metadata: the built dist would keep importing an unbuilt external package. Disclosed deviation: build.mjs was not in the task's writable list ('package.json (peer specifier only) and its graph-closure test'); the change is required for the repoint to be real and is reversible.",
+    "verifiedBy": "graph test 'the foldkit browser-platform peer resolves to the workspace wrapper' asserts the peer metadata, the platform package name/version/effect peer, that foldkit dist no longer names @effect/platform-browser, and that foldkit dist imports @role-model-router/effect-platform-browser."
+  },
+  "red": [
+    {
+      "name": "setup RED",
+      "command": "node --test test/graph-closure.test.mjs (cwd role-model-router/packages/foldkit, before the platform package existed)",
+      "exit": 1,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s3c-red-setup.log",
+      "observed": "ERR_MODULE_NOT_FOUND: Cannot find module '.../role-model-router/packages/effect-platform-browser/entries.mjs' imported from test/graph-closure.test.mjs",
+      "classification": "setup failure, as permitted by the task."
+    },
+    {
+      "name": "behavioural RED",
+      "command": "node --test test/graph-closure.test.mjs (platform package built; foldkit peer not yet repointed)",
+      "exit": 1,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s3c-red-peer.log",
+      "observed": "13 passed / 1 failed: 'the foldkit browser-platform peer resolves to the workspace wrapper' -> AssertionError: the foldkit peer must point at the first-party browser platform wrapper.",
+      "classification": "behavioural: the platform wrapper itself passed every generic graph/subpath assertion; only the foldkit wiring failed."
+    }
+  ],
+  "green": {
+    "command": "node --test test/graph-closure.test.mjs (cwd role-model-router/packages/foldkit)",
+    "exit": 0,
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s3c-green.log",
+    "result": {
+      "tests": 14,
+      "passed": 14,
+      "failed": 0
+    },
+    "proofs": [
+      "the browser platform wrapper's built graph has no node: builtin, no @effect/platform-node and no @effect/platform-node-shared, in entries or chunks",
+      "every effect import in all three wrappers is the shared bare `effect` / `effect/<subpath>` specifier",
+      "all 18 platform subpaths (root + 17 wildcard-expanded files) have wrapper exports backed by non-empty built files",
+      "foldkit-ui still resolves its framework peer as @role-model-router/foldkit(/subpath)",
+      "foldkit's browser-platform peer is @role-model-router/effect-platform-browser and the built foldkit dist imports that specifier, never the bare @effect/platform-browser"
+    ]
+  },
+  "build": {
+    "commands": [
+      "node build.mjs (cwd role-model-router/packages/effect-platform-browser)",
+      "node build.mjs (cwd role-model-router/packages/foldkit)"
+    ],
+    "exits": [
+      0,
+      0
+    ],
+    "logs": [
+      ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s3c-build-platform-browser.log",
+      ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s3c-build-foldkit.log"
+    ],
+    "warnings": {
+      "countPerBuild": 1,
+      "texts": [
+        "platform wrapper: Cannot find base config file \"../../../tsconfig.base.json\" (the vendored browser package tsconfig extends the missing effect repo-root base config)",
+        "foldkit wrapper: Cannot find base config file \"../../tsconfig.base.json\" (same vendored source-only cause; unchanged from S3b)"
+      ],
+      "classification": "benign/expected; esbuild falls back to default compiler options."
+    },
+    "platformOutputs": "dist/index.js + 17 subpath entries + shared chunks, plus dist/types declarations"
+  },
+  "styleChecks": {
+    "biome": {
+      "command": "node node_modules/@biomejs/biome/bin/biome check role-model-router/packages/effect-platform-browser role-model-router/packages/foldkit role-model-router/packages/foldkit-ui",
+      "exit": 0,
+      "observed": "'Checked 23 files. No fixes applied.' after one --write --unsafe pass on the new package."
+    }
+  },
+  "rootWiring": {
+    "workspace": "pnpm-workspace.yaml already enumerates `role-model-router/packages/*`; no root/workspace file changed.",
+    "lockfileGap": "pnpm-lock.yaml has no importer for `role-model-router/packages/effect-platform-browser` yet (grep returns nothing). The controller owns lockfile wiring; a frozen install would fail until it lands."
+  },
+  "files": {
+    "role-model-router/packages/effect-platform-browser/package.json": "d89ebe868876aefc1216b954e6002b1765d5085948530f25c88e679a572668b5",
+    "role-model-router/packages/effect-platform-browser/tsconfig.json": "f8bfb559210c4028e1390559be148e5c8031304d0a6adeaa959c51ac45c23587",
+    "role-model-router/packages/effect-platform-browser/entries.mjs": "d70886294532d6e3e7bd558bef0ebd35588072e488ce9308e14176800ab576c7",
+    "role-model-router/packages/effect-platform-browser/build.mjs": "8a7ee94ee204d9471c25138492403981c378290c400064e6a5b38ff42fbe4456",
+    "role-model-router/packages/foldkit/package.json": "f0b892456d1cc461082bb0a956fad5860c6a7d7bcfabbad6b2b25fa4084f0737",
+    "role-model-router/packages/foldkit/build.mjs": "2118aca817386f19a2bffff42dce00e706f97cbc9ecb6536eb50b25290bab9b8",
+    "role-model-router/packages/foldkit/test/graph-closure.test.mjs": "962b3f6be8f62c5141a15b0e66fafdc97359f20d661ac229937ba9a4465f647b"
+  },
+  "unverified": [
+    "No install was run; the new workspace package has no pnpm-lock importer or node_modules link yet (controller-owned).",
+    "Graph closure is proven statically on the built JavaScript; no browser runtime smoke test imports the dist entries.",
+    "Declarations are emitted with tsc --noCheck and gated per entry, but no consumer type-checks against them yet.",
+    "The foldkit build.mjs rewrite is a disclosed deviation from the task's writable-file list (required for the peer repoint to affect the built graph)."
+  ]
+}

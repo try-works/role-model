@@ -1,0 +1,123 @@
+{
+  "slice": "s6d-second-cluster",
+  "requirement": "R23 second caller-migration batch",
+  "status": "8 single-statement read-only/delete sites migrated; transaction-owned sites left",
+  "migrated": [
+    {
+      "site": "route-ladder-census.ts:98-203",
+      "function": "readRouteLadderCensus",
+      "service": "makeSync read-only + setup query_only=ON,busy_timeout=1000; querySync for table_info and census query",
+      "tests": "run105-review-census (7), run108-census-eligibility (5)"
+    },
+    {
+      "site": "route-challenge-evidence.ts:553-571",
+      "function": "readRouteReplayableCaptures telemetry ids",
+      "service": "makeSync read-only + query_only/busy1000; querySync",
+      "tests": "run105-review-challenge-evidence (27)"
+    },
+    {
+      "site": "route-challenge-evidence.ts:578-597",
+      "function": "readRouteReplayableCaptures dispositions",
+      "service": "makeSync read-only + busy_timeout=0; querySync",
+      "tests": "run105-review-challenge-evidence"
+    },
+    {
+      "site": "queue-runtime/admin.ts:36-105",
+      "function": "openReadOnly, isQueueDraining, readQueueJobState",
+      "service": "makeSync read-only + busy_timeout=0; querySync + closeSync",
+      "tests": "run101-r5-cancel-drain (5)"
+    },
+    {
+      "site": "track-b-runtime.ts:6218-6257",
+      "function": "readExternalizedExtensionOutput",
+      "service": "makeSync read-only + busy_timeout=0; querySync",
+      "tests": "run105-e5-ladder-index-readback, run100-durable-arm-output"
+    },
+    {
+      "site": "track-b-runtime.ts:6319-6360",
+      "function": "readExternalizedExtensionOutputByHash",
+      "service": "makeSync read-only per candidate store; querySync; closeSync",
+      "tests": "run105-e5-ladder-index-readback"
+    },
+    {
+      "site": "track-b-runtime.ts:6428-6465",
+      "function": "decodeExternalizedOperatorReadback worker scan",
+      "service": "makeSync read-only per worker store; querySync; closeSync",
+      "tests": "run105-e5-ladder-index-readback"
+    },
+    {
+      "site": "index.ts:21236-21259",
+      "function": "runRetentionCleanup DELETE",
+      "service": "makeSync read-write (default open) + setup busy_timeout=0; execSync single DELETE with numeric Date.now(), then querySync('SELECT changes()') for deletedCount",
+      "tests": "new s6d retention row-gone test (expired row gone, live row remains)"
+    }
+  ],
+  "deleteProof": "New test seeds one expired and one live runtime_observations row, starts the real backend, reads the table back: expired row is gone, live row remains. RED mutation changed the DELETE predicate to <0 and the test failed with both rows present.",
+  "serviceRationale": "Read-only sites use makeSync with openDatabase readOnly and the site's original busy_timeout/query_only setup (busy0 where none existed). The DELETE uses makeSync default read-write, execSync for the single DELETE, and querySync('SELECT changes()') for the count; no transaction wrapper or second connection. Date.now() is the only interpolated value and is a safe integer.",
+  "redGreen": {
+    "reds": [
+      ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s6d-red-census.log (requestCount +1: census count mismatch)",
+      ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s6d-red-challenge.log (501-row bound raised: truncated corpus returned)",
+      ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s6d-red-queue.log (draining ignored: queue claimed while drained)",
+      ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s6d-red-durable.log (durable-output hash query LIMIT 0: externalized readback lost)",
+      ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s6d-red-retention.log (DELETE predicate <0: expired row remained)"
+    ],
+    "green": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s6d-green.log"
+  },
+  "testRuns": [
+    {
+      "command": "vitest s6d retention (1) + census 7+5 + challenge 27 + queue 5 + durable 2 + externalized 1",
+      "total": 48,
+      "passed": 48,
+      "failed": 0,
+      "exit": 0,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s6d-green.log"
+    },
+    {
+      "typecheck": "tsc -p apps/runtime-host-bridge/tsconfig.json --noEmit",
+      "exit": 0,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s6d-typecheck.log"
+    },
+    {
+      "biome": "biome check 6 touched files",
+      "exit": 0,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s6d-biome-check.log"
+    }
+  ],
+  "remainingSites": [
+    {
+      "site": "cli.ts:11566",
+      "reason": "startup multi-row endpoint pool + PRAGMA table_info; not single-statement"
+    },
+    {
+      "site": "index.ts:6981,7010,7025,7045,7066,7080,7095",
+      "reason": "transaction-owned multi-statement cleanup; deferred"
+    },
+    {
+      "site": "track-b-capture-queue.ts:166",
+      "reason": "queue DDL/writer; transaction-owned"
+    },
+    {
+      "site": "track-b-runtime.ts:5388,5439,5626",
+      "reason": "outbox schema/import/write; transaction-owned"
+    },
+    {
+      "site": "scripts/start-for-qa.ts:1111",
+      "reason": "QA script outside runtime host"
+    },
+    {
+      "site": "packages/sqlite-memory/src (27 sites), sql-sqlite-node/src/service.ts:158",
+      "reason": "store/service implementation owners, not callers"
+    }
+  ],
+  "files": {
+    "src/route-ladder-census.ts": "cb9f5268135981740400865aa0725cf777c97a76f0b05059b4906b0fbbd38448",
+    "src/route-challenge-evidence.ts": "22365405efc65b06dbc3b2e276a27f9b6d8855874c14fedf39f31916dd0f001f",
+    "src/queue-runtime/admin.ts": "3bda0b454e64a51506e6413dfd8fd599d0d2199cc7035a06a26e08d6477d6eaf",
+    "src/track-b-runtime.ts": "99ff82bffc9da4d714c96a2855db75243268f520387e9ccc5fa0eeffaf751ee4",
+    "src/index.ts": "9dc69e7ccd4092574c0a4feeaf354485ac0f48caef91f785d8d703197976fe09",
+    "test/s6d-second-batch-migration.test.ts": "730834ec294e3b899713eb56bd737b3c4eaa2dee61fa230be68d7681372d9025"
+  },
+  "contractRisk": "None hit; all signatures/results/errors preserved. Read queries use querySync with the same SQL/params; the DELETE's error propagation remains a throw.",
+  "unproven": "Transaction-owned sites remain deliberately unmigrated; the read-only sites still open a short-lived service per call rather than a long-lived owner."
+}

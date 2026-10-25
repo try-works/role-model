@@ -1,0 +1,42 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:51808) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/s15h-live-socket-diagnostics.test.ts (5 tests | 1 failed | 4 skipped) 105ms
+   ↓ S15h diagnostics over a real loopback socket > binds an ephemeral 127.0.0.1 port, never an operator port
+   × S15h diagnostics over a real loopback socket > token-less loopback read answers the explicit disabled state with no writer enabled 103ms
+     → expected [ 'access-control-allow-origin' ] to deeply equal []
+   ↓ S15h diagnostics over a real loopback socket > loopback owner trust is explicit: with trust off, missing and wrong credentials are 401 and the configured token is accepted
+   ↓ S15h diagnostics over a real loopback socket > a spoofed owner-claim header is rejected before authorization and carries no CORS header
+   ↓ S15h diagnostics over a real loopback socket > error responses from a real socket never carry access-control headers either
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s15h-live-socket-diagnostics.test.ts > S15h diagnostics over a real loopback socket > token-less loopback read answers the explicit disabled state with no writer enabled
+AssertionError: expected [ 'access-control-allow-origin' ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "access-control-allow-origin",
++ ]
+
+ ❯ test/s15h-live-socket-diagnostics.test.ts:92:44
+     90|     });
+     91|     expect(body.records).toEqual([]);
+     92|     expect(accessControlHeaders(response)).toEqual([]);
+       |                                            ^
+     93|   });
+     94| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 skipped (5)
+   Start at  05:22:30
+   Duration  7.23s (transform 4.28s, setup 0ms, collect 6.65s, tests 105ms, environment 0ms, prepare 162ms)
+

@@ -1,0 +1,42 @@
+✖ request parity contracts run in the maintained runtime-critical lane (3.2835ms)
+✔ CI is scoped to long-lived branches with stable cancellable lanes (1.0675ms)
+✔ Track B CI is always-on, explicit, and runs the tagged browser contract (0.8107ms)
+✔ Track B browser gate waits for semantic readiness without weakening exact private pairing (0.4051ms)
+✔ promotion guard encodes dev to stage to main with a hotfix exception (0.3842ms)
+✔ workspace tests keep the resource-heavy runtime proofs in a separate lane (0.5694ms)
+✔ fast CI scripts expose split, reusable lanes (0.7932ms)
+✔ smoke prepares its dist-exporting workspace dependencies in a clean checkout (0.2668ms)
+✔ runtime-host integration tests do not contend for worker-owned state (0.4001ms)
+✔ runtime-host build regression has enough CI headroom for Turbo contention (0.3845ms)
+✔ Turbo cache and package logs are ignored (1.9337ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 10
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 184.1259
+
+✖ failing tests:
+
+test at scripts\ci-workflow.test.mjs:21:1
+✖ request parity contracts run in the maintained runtime-critical lane (3.2835ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + undefined
+  - 'corepack pnpm --filter @role-model-router/ui-parity test'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/ci-workflow.test.mjs:22:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.start (node:internal/test_runner/test:1003:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: 'corepack pnpm --filter @role-model-router/ui-parity test',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

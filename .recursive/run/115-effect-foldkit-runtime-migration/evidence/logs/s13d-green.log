@@ -1,0 +1,11 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration
+
+ ✓ role-model-router/packages/foldkit/test/s13b-foldkit-chart.test.ts (13 tests) 105ms
+
+ Test Files  1 passed (1)
+      Tests  13 passed (13)
+   Start at  01:46:55
+   Duration  5.21s (transform 2.05s, setup 0ms, collect 3.44s, tests 105ms, environment 692ms, prepare 300ms)
+
+EXIT_CODE: 0

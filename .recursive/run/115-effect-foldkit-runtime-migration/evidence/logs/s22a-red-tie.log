@@ -1,0 +1,50 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/run98-r03-learning-pass.test.ts (17 tests | 1 failed | 16 skipped) 15ms
+   × run98 R3 the evidence summary counts only decisive, in-package, in-window holdout evidence 13ms
+     → expected 4 to be 3 // Object.is equality
+   ↓ run99 R33 the evidence summary is keyed by task family and reports exclusions
+   ↓ run99 R33 the evidence summary decays old comparisons by the half-life
+   ↓ run98 A33 S3 the summary reports its comparison graph and the pairs it never covered
+   ↓ run99 R33 an incomparable comparison is excluded and counted by code
+   ↓ run98 A30 a judge-self-evaluated comparison is excluded and counted by code
+   ↓ run99 R33 the family carries concentration and a temporal drift dimension
+   ↓ run99 R33 the effective counts weight each comparison by its evidence class
+   ↓ run98 R3 a validated candidate is promoted and both receipts are recorded
+   ↓ run99 R33 the recorded validation receipt keeps the family evidence
+   ↓ run98 R3 an insufficient-evidence decision is recorded without promoting
+   ↓ run98 R3 the pass fails closed without a scoring identity or durable receipt
+   ↓ run98 R3 an externalized comparison-group list is decoded before the evidence floor runs
+   ↓ run99 R33 D4 a thin family shrinks toward the package prior and discloses the fallback level
+   ↓ run99 R33 D6 the family states its propensity coverage and qualifies the causal claim
+   ↓ run113 the pass emits the documented pack and validation-receipt artifacts when the caller names a contract state root
+   ↓ run113 a caller that does not name a contract state root emits nothing (a unit test or a fixture)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run98-r03-learning-pass.test.ts > run98 R3 the evidence summary counts only decisive, in-package, in-window holdout evidence
+AssertionError: expected 4 to be 3 // Object.is equality
+
+- Expected
++ Received
+
+- 3
++ 4
+
+ ❯ test/run98-r03-learning-pass.test.ts:188:39
+    186|     evidenceMaxAgeMs: 30 * 24 * 60 * 60 * 1_000,
+    187|   });
+    188|   expect(summary.decisiveComparisons).toBe(3);
+       |                                       ^
+    189|   expect(summary.holdoutComparisons).toBe(3);
+    190|   expect(summary.distinctCaptures).toBe(3);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 16 skipped (17)
+   Start at  04:21:43
+   Duration  1.99s (transform 745ms, setup 0ms, collect 1.53s, tests 15ms, environment 0ms, prepare 162ms)
+

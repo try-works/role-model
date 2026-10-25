@@ -1,0 +1,76 @@
+timestamp_utc: 2026-10-24T10:17:42.2055553Z
+phase: GREEN (minimal behavior implementation)
+cwd: role-model-router/packages/ui-parity
+command: node ../../../node_modules/vitest/vitest.mjs run test/compare.test.ts
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui-parity
+
+ ❯ test/compare.test.ts (28 tests | 1 failed) 46ms
+   ✓ compareRequestTraces > returns no differences for identical captures 5ms
+   ✓ compareRequestTraces > returns no differences for two empty captures 0ms
+   ✓ compareRequestTraces > ignores volatile request ids and matches on stable step labels 1ms
+   ✓ compareRequestTraces > canonicalizes method case, header name case/order, and query key order 1ms
+   ✓ compareRequestTraces > preserves repeated query value order 1ms
+   ✓ compareRequestTraces > preserves repeated header value order 1ms
+   ✓ compareRequestTraces > reports a changed method 0ms
+   ✓ compareRequestTraces > reports a changed path 0ms
+   ✓ compareRequestTraces > reports a changed query value 0ms
+   ✓ compareRequestTraces > distinguishes a missing body from an empty body 1ms
+   ✓ compareRequestTraces > reports a changed body without leaking its bytes 1ms
+   ✓ compareRequestTraces > reports a changed status 0ms
+   ✓ compareRequestTraces > reports a changed terminal stream 0ms
+   ✓ compareRequestTraces > reports a changed terminal error 0ms
+   ✓ compareRequestTraces > reports a changed non-auth header without leaking its value 1ms
+   ✓ compareRequestTraces > compares an authorization scheme case-insensitively 0ms
+   ✓ compareRequestTraces > reports a changed authorization scheme 0ms
+   ✓ compareRequestTraces > reports a changed authorization credential without leaking it 1ms
+   ✓ compareRequestTraces > reports a changed api key as an auth-sensitive header 1ms
+   ✓ compareRequestTraces > reports a changed causal dependency 1ms
+   ✓ compareRequestTraces > requires an explicit dependency label for mutations 0ms
+   ✓ compareRequestTraces > ignores independent read order and keeps duplicate reads 0ms
+   ✓ compareRequestTraces > reports a missing duplicate read 0ms
+   ✓ compareRequestTraces > reports an extra independent read 0ms
+   ✓ compareRequestTraces > matches tool and turn dependencies by stable causal labels 0ms
+   ✓ compareRequestTraces > preserves causal write order instead of sorting writes by endpoint 0ms
+   ✓ compareRequestTraces > bounds findings to one per mismatched field 1ms
+   × compareRequestTraces > reports a changed event kind 22ms
+     → expected [ …(2) ] to deeply equal [ { code: 'kind_mismatch', …(2) } ]
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/compare.test.ts > compareRequestTraces > reports a changed event kind
+AssertionError: expected [ …(2) ] to deeply equal [ { code: 'kind_mismatch', …(2) } ]
+
+- Expected
++ Received
+
+@@ -2,6 +2,11 @@
+    {
+      "code": "kind_mismatch",
+      "index": 0,
+      "step": "read-config",
+    },
++   {
++     "code": "method_mismatch",
++     "index": 0,
++     "step": "read-config",
++   },
+  ]
+
+ ❯ test/compare.test.ts:545:52
+    543|     ];
+    544| 
+    545|     expect(compareRequestTraces(expected, actual)).toEqual([
+       |                                                    ^
+    546|       { code: "kind_mismatch", index: 0, step: "read-config" },
+    547|     ]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 27 passed (28)
+   Start at  18:17:43
+   Duration  1.90s (transform 367ms, setup 0ms, collect 315ms, tests 46ms, environment 1ms, prepare 614ms)
+
+exit_code: 1

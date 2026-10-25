@@ -35,13 +35,27 @@ import {
 } from "./queues.js";
 import { storeLayerForQueuePolicy } from "./store.js";
 
+/**
+ * Run 115 S8a: the attempt context handed to a queue handler. `signal` is the AbortSignal the
+ * vendored `Effect.tryPromise` supplies to a thunk that declares a parameter
+ * (`vendor/effect/packages/effect/src/internal/effect.ts:1166` sets `withSignal` from the thunk
+ * arity, `:1193` creates the controller and `:1213-1216` aborts it in the async finalizer). It
+ * fires when the attempt fiber is interrupted, which is how `Effect.timeout` and `raceFirst`
+ * cancel real I/O. Handlers with cancellable work must forward it; handlers whose work is not
+ * signal-capable must say so at their call site instead of accepting it and ignoring it.
+ */
+export interface QueueAttemptContext {
+  readonly attempt: number;
+  readonly signal?: AbortSignal;
+}
+
 export interface ReplayDispatchWorkerOptions {
   readonly stateRoot: string;
   readonly policy: ResolvedQueuePolicy;
   /** Runs one attempt for one job; throwing makes the attempt retryable. */
   readonly handler: (
     job: ReplayDispatchJob,
-    context: { readonly attempt: number },
+    context: QueueAttemptContext,
   ) => Promise<void>;
   /** Called after a failed attempt, before the store's backoff elapses. */
   readonly onAttemptFailure?: (error: unknown, job: ReplayDispatchJob) => void;
@@ -76,7 +90,7 @@ export interface EvaluationScoreWorkerOptions {
    */
   readonly handler: (
     job: EvaluationScoreJob,
-    context: { readonly attempt: number },
+    context: QueueAttemptContext,
   ) => Promise<void>;
   readonly onAttemptFailure?: (error: unknown, job: EvaluationScoreJob) => void;
   /** Run 101 addendum 08: the attempt outcome (attempt, budget, willRetry) the guide's onJobFailure carries. */
@@ -101,7 +115,7 @@ export interface LearnerDeriveWorkerOptions {
    * being consumed by a process-local set, and an operator sees the named
    * reason in the queue's history.
    */
-  readonly handler: (job: LearnerDeriveJob, context: { readonly attempt: number }) => Promise<void>;
+  readonly handler: (job: LearnerDeriveJob, context: QueueAttemptContext) => Promise<void>;
   readonly onAttemptFailure?: (error: unknown, job: LearnerDeriveJob) => void;
   /** Run 101 addendum 08: the attempt outcome (attempt, budget, willRetry) the guide's onJobFailure carries. */
   readonly onAttemptOutcome?: (outcome: {
@@ -122,7 +136,7 @@ export interface LearnerPromoteWorkerOptions {
   /** Promotes one candidate; serialized by the queue's concurrency. */
   readonly handler: (
     job: LearnerPromoteJob,
-    context: { readonly attempt: number },
+    context: QueueAttemptContext,
   ) => Promise<void>;
   readonly onAttemptFailure?: (error: unknown, job: LearnerPromoteJob) => void;
   /** Run 101 addendum 08: the attempt outcome (attempt, budget, willRetry) the guide's onJobFailure carries. */
@@ -173,7 +187,7 @@ function runClaimLoopWorker<Job>({
     never,
     never
   >;
-  readonly handler: (job: Job, context: { readonly attempt: number }) => Promise<void>;
+  readonly handler: (job: Job, context: QueueAttemptContext) => Promise<void>;
   readonly onAttemptFailure?: (error: unknown, job: Job) => void;
   /**
    * Run 101 addendum 08 (effect-mq guidance #5, `workers.md#failure-reporting`): the attempt callback the
@@ -241,10 +255,19 @@ function runClaimLoopWorker<Job>({
         yield* Effect.sleep(Duration.millis(pollMs));
         continue;
       }
-      yield* queue
-        .take((job, info) => {
-          const attempt = Effect.tryPromise({
-            try: () => handler(job, { attempt: info.attempts }),
+      /**
+       * Run 115 S8a: the handler-invoking function is an `Effect.fnUntraced` body whose timeout and
+       * cancel race are attached as combinators (`Effect.ts:13917`, per the LLMS.md guidance checked
+       * against the pin). Declaring the `signal` parameter is what makes the vendored
+       * `Effect.tryPromise` allocate an AbortController and abort it when the attempt fiber is
+       * interrupted (`vendor/effect/packages/effect/src/internal/effect.ts:1166`, `:1193`,
+       * `:1213-1216`); forwarding that signal into the handler is what lets `Effect.timeout` and
+       * `raceFirst` cancel the handler's real I/O instead of only the fiber.
+       */
+      const runAttempt = Effect.fnUntraced(
+        function* (job: Job, info: { readonly id: string; readonly attempts: number }) {
+          return yield* Effect.tryPromise({
+            try: (signal) => handler(job, { attempt: info.attempts, signal }),
             catch: (error) => {
               onAttemptFailure?.(error, job);
               const outcome = {
@@ -272,6 +295,8 @@ function runClaimLoopWorker<Job>({
               return error;
             },
           });
+        },
+        (attempt, _job, info) => {
           /**
            * R5/§3.6: a cancel of a live job reaches `cancelled` and interrupts the handler at the
            * next lock boundary. The store has no cancellation signal of its own, so the watch
@@ -302,7 +327,10 @@ function runClaimLoopWorker<Job>({
             Effect.timeout(attempt, Duration.millis(policy.attemptTimeoutMs)),
             watch,
           );
-        })
+        },
+      );
+      yield* queue
+        .take(runAttempt)
         /**
          * Run 101 addendum 04 (Effect guidance D2): the vendored store re-raises
          * interrupt-only causes before turning anything else into a failed job

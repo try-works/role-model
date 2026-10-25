@@ -1,0 +1,124 @@
+{
+  "slice": "s13c-chart-states",
+  "requirement": "R10 partial (render policy + surrounding states); the ECharts mount lifecycle is explicitly out until the owner decides",
+  "files": {
+    "role-model-router/packages/ui/src/foldkit-chart.ts": "extended with ChartState, bounded reasons, distinct loading/error/stale/truncated/empty/ready rendering and the deterministic render policy",
+    "role-model-router/packages/foldkit/test/s13b-foldkit-chart.test.ts": "existing Scene suite extended (3 original + 7 state/policy tests = 10)"
+  },
+  "policy": {
+    "statement": "view(config, h) is a pure function of (series, state). No clock read, no Math.random/crypto.randomUUID, no ids, no config mutation. Staleness is displayed only from caller-supplied ageMs/ruleMs; truncation only from caller-supplied droppedPoints. The same config produces the same VNode tree twice (test serializes two renders and compares).",
+    "stateModel": "config.state?: ChartState = ready | loading | empty | error{reason} | stale{ageMs,ruleMs} | truncated{droppedPoints}; default ready. A ready render with no usable series is normalized to the explicit empty state.",
+    "statuses": {
+      "loading": "figure[data-chart-status=loading] + role=status aria-live=polite aria-busy=true text 'Loading chart data…'; no svg/table",
+      "error": "figure[data-chart-status=error] + role=alert text 'Chart unavailable: <bounded single-line reason>'; no svg/table; boundedChartReason caps at 160 chars and replaces control chars/whitespace",
+      "empty": "figure[data-chart-status=empty] + role=status [data-chart-empty] 'No chart data available.'; no svg/table; distinct from loading",
+      "stale": "figure[data-chart-status=stale] + chart stays + visible [data-chart-notice=stale] 'Stale: data is <age> old (rule <rule>).'; age/rule formatted purely from caller inputs",
+      "truncated": "figure[data-chart-status=truncated] + chart and table stay + visible [data-chart-notice=truncated] 'Truncated: showing N of N+M points (M dropped).'; table caption repeats the shown/total/dropped numbers, so points are never silently lost",
+      "ready": "figure[data-chart-status=ready] + svg + table"
+    }
+  },
+  "redGreen": {
+    "initialRed": {
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13c-initial-red.log",
+      "note": "state tests added before the implementation: 6 failed (loading/error/stale/truncated/empty/ready status assertions; determinism passed on the old deterministic renderer)."
+    },
+    "perStateRed": [
+      {
+        "state": "loading",
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13c-red-loading.log",
+        "mutation": "loading branch removed",
+        "message": "Expected element matching status to have attribute aria-busy=\"true\" but the element does not exist."
+      },
+      {
+        "state": "error",
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13c-red-error.log",
+        "mutation": "error branch removed",
+        "message": "Expected element matching alert to contain text \"Chart unavailable\" but the element does not exist."
+      },
+      {
+        "state": "stale",
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13c-red-stale.log",
+        "mutation": "stale notice removed",
+        "message": "Expected element matching \"[data-chart-notice=\\\"stale\\\"]\" to contain text \"Stale\" but the element does not exist."
+      },
+      {
+        "state": "truncated",
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13c-red-truncated.log",
+        "mutation": "truncated notice removed (silent drop)",
+        "message": "Expected element matching \"[data-chart-notice=\\\"truncated\\\"]\" to contain text \"3\" but the element does not exist."
+      },
+      {
+        "state": "empty",
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13c-red-empty.log",
+        "mutation": "explicit empty branch removed",
+        "message": "Expected element matching \"[data-chart-empty]\" to contain text \"No chart data available.\" but the element does not exist."
+      },
+      {
+        "state": "determinism",
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13c-red-determinism.log",
+        "mutation": "random id injected into the svg",
+        "message": "two renders of the same config produced different serialized VNode trees (JSON strings differ)."
+      }
+    ],
+    "green": {
+      "command": "cd role-model-router/packages/foldkit && vitest run test/s13b-foldkit-chart.test.ts --environment happy-dom",
+      "exit": 0,
+      "tests": 10,
+      "passed": 10,
+      "failed": 0,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13c-green.log",
+      "cases": [
+        "existing structure/token test",
+        "existing numeric HTML alternative test",
+        "existing empty-state test",
+        "loading: status/aria-busy, no svg/table",
+        "error: role=alert, bounded single-line reason (helper directly checked for no newline and <=160), no svg/table",
+        "stale: chart stays, notice carries 12s and 5m from caller inputs",
+        "truncated: chart/table stay, notice carries '2 of 5' and '3 dropped'",
+        "empty: explicit empty status, no svg/table, not loading",
+        "ready: explicit status with chart/table",
+        "determinism: all seven state configs render identical JSON twice, no id attribute and no clock/random calls"
+      ]
+    }
+  },
+  "truncationVisibility": "The truncated test asserts the chart still exists, the table still exists, and the visible notice contains the dropped count (3) and the shown-of-total (2 of 5). Removing the notice makes that test fail (s13c-red-truncated.log), so a silent drop cannot pass.",
+  "verification": {
+    "tests": 10,
+    "typecheck": {
+      "command": "cd role-model-router/packages/ui && tsc --noEmit --strict --target ES2022 --module ESNext --moduleResolution Bundler --lib ES2022,DOM --skipLibCheck --types node src/foldkit-chart.ts",
+      "exit": 0,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13c-typecheck.log",
+      "note": "Targeted at the module; the ui project tsconfig has a pre-existing TS6059 rootDir/vitest.config mismatch and this slice may not edit it; the Scene test is transformed by Vitest. Biome on the module and test: exit 0 (s13c-biome-check.log)."
+    },
+    "determinismGrep": {
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13c-determinism-grep.log",
+      "result": "no code matches for Date.now/performance.now/Math.random/randomUUID/h.Id/h.Key (the only source matches are the policy comment)."
+    },
+    "pinTest": "scripts/crease-vendored.test.mjs unchanged and still 6/6 (accepted by the controller); before starting this slice the chart was 3/3."
+  },
+  "r10StillNeeds": "The owner's decision on the ECharts dependency and then the mount lifecycle: Mount/acquireRelease lazy import, resize/theme observers and cleanup, tooltip/legend interaction, live range/filter updates with obsolete-work suppression, stable variant on theme updates, multi-instance collision-free host ids (this primitive deliberately has no ids), hidden/zero-size container resize, repeated mount/unmount heap bounds, font readiness, canvas animation completion at fixed DPR/timezone, bounded diagnostic timeout, browser fixtures and bounded captures. No claim is made that the SVG helper module's dependency closure costs zero.",
+  "doesNotDo": [
+    "No ECharts import or dependency, no canvas, no Mount; vendor/crease/src/lib/echarts.ts remains untouched.",
+    "No data fetching, automatic staleness computation, or truncation accounting: these are caller inputs (the renderer only displays them), which is what makes the markup deterministic.",
+    "No tooltip/legend interaction, no animation/transitions, no live updates, no theme/resize handling.",
+    "No ids anywhere, so multi-instance host ids remain an R10 concern rather than an accidental collision here."
+  ],
+  "hashes": {
+    "role-model-router/packages/ui/src/foldkit-chart.ts": "96677eb1d140eb5eea3bb19dbfc9bd76a4e336198acddfff6f249275a9a81898",
+    "role-model-router/packages/foldkit/test/s13b-foldkit-chart.test.ts": "78bcc7d7b66848336bf7641572ffaddaa458621b67a2932f38a2edf1c7e11212"
+  },
+  "evidenceLogs": [
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13c-initial-red.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13c-red-loading.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13c-red-error.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13c-red-stale.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13c-red-truncated.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13c-red-empty.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13c-red-determinism.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13c-green.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13c-typecheck.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13c-biome-check.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13c-determinism-grep.log"
+  ],
+  "scope": "Only foldkit-chart.ts, its Scene test and evidence were written. No dependency, vendor, root, lockfile, other package, existing test or private repo change."
+}

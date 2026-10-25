@@ -1,0 +1,2057 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s26a-route-inventory.test.ts (4 tests) 151ms
+ ✓ test/s25d-request-parity.test.ts (10 tests) 78ms
+ ✓ test/diagnostics-client.test.ts (8 tests) 60ms
+stderr | test/s26e-readback-routes.test.ts > S26e shared readback routes > Store receipts renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 47.4ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'StoreReceipts' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 47.43660000000091,
+  thresholdMs: 8
+}
+
+stderr | test/s26d-observability.test.ts > S26d observability page > renders the success state from the real client
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 53.1ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'loading', token: 1 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Observability' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 53.14500000000044,
+  thresholdMs: 8
+}
+
+stderr | test/s25b-refresh-owner-gap.test.ts > S25b shell refresh owner and gap resync > the real shell entry starts exactly one subscription and leaks none across two starts
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 59.0ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Index' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 58.98040000000037,
+  thresholdMs: 8
+}
+
+stderr | test/mount.test.ts > Foldkit app shell on the wrapper stack > mounts the app into a DOM container, dispatches a click through the runtime, and unmounts without throwing
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 59.2ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Index' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 59.22949999999946,
+  thresholdMs: 8
+}
+
+stderr | test/s26e-readback-routes.test.ts > S26e shared readback routes > Store receipts renders success, empty, loading and error on the DOM
+[foldkit] Slow patch: 8.9ms (budget: 8ms), triggered by ReadbackLoaded. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'StoreReceipts' },
+    theme: 'dark'
+  },
+  message: {
+    _id: 'Option',
+    _tag: 'Some',
+    value: {
+      _tag: 'ReadbackLoaded',
+      key: 'storeReceipts',
+      snapshot: [Object],
+      token: 1
+    }
+  },
+  durationMs: 8.878199999999197,
+  thresholdMs: 8
+} {
+  _tag: 'ReadbackLoaded',
+  key: 'storeReceipts',
+  snapshot: { rows: [ [Object] ], status: 'ok', token: 1 },
+  token: 1
+}
+
+stderr | test/s26b-wave1.test.ts > S26b wave 1 shell entries > layout is a persistent primary navigation and carries the active route
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 71.9ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Index' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 71.94100000000071,
+  thresholdMs: 8
+}
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > renders the ok state and its records, and requests the operator diagnostics URL
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 72.2ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: 's15f-ok', status: 'loading' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Diagnostics', id: 's15f-ok' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 72.17220000000088,
+  thresholdMs: 8
+}
+
+stderr | test/diagnostics.test.ts > diagnostics page states > renders the ok state with records and identity
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 73.7ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: 'inst-1', status: 'loading' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Diagnostics', id: 'inst-1' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 73.71299999999974,
+  thresholdMs: 8
+}
+
+stderr | test/s26d-observability.test.ts > S26d observability page > renders the success state from the real client
+[foldkit] Slow patch: 9.6ms (budget: 8ms), triggered by ObservabilityLoaded. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [Array], token: 1, status: 'ok' },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Observability' },
+    theme: 'dark'
+  },
+  message: {
+    _id: 'Option',
+    _tag: 'Some',
+    value: { _tag: 'ObservabilityLoaded', snapshot: [Object], token: 1 }
+  },
+  durationMs: 9.622799999999188,
+  thresholdMs: 8
+} {
+  _tag: 'ObservabilityLoaded',
+  snapshot: { rows: [ [Object] ], token: 0, status: 'ok' },
+  token: 1
+}
+
+stderr | test/routes.test.ts > runtime routing in the Foldkit shell > renders the route from the initial URL, including the diagnostics path parameter
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow view: 17.4ms (budget: 16ms), triggered by init. Keep render-only work in the view path and memoize expensive subtrees with createLazy or createKeyedLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'View',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: 'abc', status: 'loading' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Diagnostics', id: 'abc' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 17.440099999999802,
+  thresholdMs: 16
+}
+[foldkit] Slow patch: 75.5ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: 'abc', status: 'loading' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Diagnostics', id: 'abc' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 75.5,
+  thresholdMs: 8
+}
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > renders the ok state and its records, and requests the operator diagnostics URL
+[foldkit] Slow patch: 11.6ms (budget: 8ms), triggered by DiagnosticsLoaded. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: {
+      build: 'build-s15f',
+      buildMissing: false,
+      conditionDropped: false,
+      conditionStale: false,
+      dropped: 0,
+      droppedWindowMs: 0,
+      instance: 'inst-s15f',
+      limit: 20,
+      maxCodeBytes: 512,
+      maxIdentityBytes: 256,
+      maxRecords: 50,
+      maxResponseBytes: 16384,
+      message: undefined,
+      recordCount: 1,
+      records: [Array],
+      routeId: 's15f-ok',
+      staleAgeMs: 5000,
+      staleRuleMs: 300000,
+      status: 'ok',
+      totalAvailable: 1,
+      truncated: false
+    },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Diagnostics', id: 's15f-ok' },
+    theme: 'dark'
+  },
+  message: {
+    _id: 'Option',
+    _tag: 'Some',
+    value: { _tag: 'DiagnosticsLoaded', id: 's15f-ok', snapshot: [Object] }
+  },
+  durationMs: 11.64770000000135,
+  thresholdMs: 8
+} {
+  _tag: 'DiagnosticsLoaded',
+  id: 's15f-ok',
+  snapshot: {
+    build: 'build-s15f',
+    buildMissing: false,
+    conditionDropped: false,
+    conditionStale: false,
+    dropped: 0,
+    droppedWindowMs: 0,
+    instance: 'inst-s15f',
+    limit: 20,
+    maxCodeBytes: 512,
+    maxIdentityBytes: 256,
+    maxRecords: 50,
+    maxResponseBytes: 16384,
+    message: undefined,
+    recordCount: 1,
+    records: [ [Object] ],
+    routeId: 's15f-ok',
+    staleAgeMs: 5000,
+    staleRuleMs: 300000,
+    status: 'ok',
+    totalAvailable: 1,
+    truncated: false
+  }
+}
+
+stderr | test/diagnostics.test.ts > diagnostics page states > renders the ok state with records and identity
+[foldkit] Slow patch: 10.0ms (budget: 8ms), triggered by DiagnosticsLoaded. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: {
+      build: 'build-9',
+      buildMissing: false,
+      conditionDropped: false,
+      conditionStale: false,
+      dropped: 0,
+      droppedWindowMs: 0,
+      instance: 'inst-1',
+      limit: 20,
+      maxCodeBytes: 512,
+      maxIdentityBytes: 256,
+      maxRecords: 50,
+      maxResponseBytes: 16384,
+      message: undefined,
+      recordCount: 1,
+      records: [Array],
+      routeId: 'inst-1',
+      staleAgeMs: 5000,
+      staleRuleMs: 300000,
+      status: 'ok',
+      totalAvailable: 1,
+      truncated: false
+    },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Diagnostics', id: 'inst-1' },
+    theme: 'dark'
+  },
+  message: {
+    _id: 'Option',
+    _tag: 'Some',
+    value: { _tag: 'DiagnosticsLoaded', id: 'inst-1', snapshot: [Object] }
+  },
+  durationMs: 9.978900000000067,
+  thresholdMs: 8
+} {
+  _tag: 'DiagnosticsLoaded',
+  id: 'inst-1',
+  snapshot: {
+    build: 'build-9',
+    buildMissing: false,
+    conditionDropped: false,
+    conditionStale: false,
+    dropped: 0,
+    droppedWindowMs: 0,
+    instance: 'inst-1',
+    limit: 20,
+    maxCodeBytes: 512,
+    maxIdentityBytes: 256,
+    maxRecords: 50,
+    maxResponseBytes: 16384,
+    message: undefined,
+    recordCount: 1,
+    records: [ [Object] ],
+    routeId: 'inst-1',
+    staleAgeMs: 5000,
+    staleRuleMs: 300000,
+    status: 'ok',
+    totalAvailable: 1,
+    truncated: false
+  }
+}
+
+ ✓ test/mount.test.ts (1 test) 835ms
+   ✓ Foldkit app shell on the wrapper stack > mounts the app into a DOM container, dispatches a click through the runtime, and unmounts without throwing  830ms
+stderr | test/s26b-wave1.test.ts > S26b wave 1 shell entries > layout is a persistent primary navigation and carries the active route
+[foldkit] Slow patch: 14.2ms (budget: 8ms), triggered by DiagnosticsFailed. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: {
+      message: 'diagnostics reader is not configured',
+      records: [],
+      routeId: '42',
+      status: 'error'
+    },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 1,
+      status: 'idle',
+      message: undefined
+    },
+    route: { _tag: 'Diagnostics', id: '42' },
+    theme: 'dark'
+  },
+  message: {
+    _id: 'Option',
+    _tag: 'Some',
+    value: {
+      _tag: 'DiagnosticsFailed',
+      id: '42',
+      message: 'diagnostics reader is not configured'
+    }
+  },
+  durationMs: 14.248599999998987,
+  thresholdMs: 8
+} {
+  _tag: 'DiagnosticsFailed',
+  id: '42',
+  message: 'diagnostics reader is not configured'
+}
+
+stderr | test/s25b-refresh-owner-gap.test.ts > S25b shell refresh owner and gap resync > the real shell entry starts exactly one subscription and leaks none across two starts
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 13.3ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Index' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 13.329999999999927,
+  thresholdMs: 8
+}
+
+stderr | test/s26e-readback-routes.test.ts > S26e shared readback routes > Store receipts renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 21.3ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'StoreReceipts' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 21.264400000000023,
+  thresholdMs: 8
+}
+
+stderr | test/s26d-observability.test.ts > S26d observability page > renders the empty state for an empty metric registry
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 24.8ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'loading', token: 1 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Observability' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 24.756199999999808,
+  thresholdMs: 8
+}
+
+stderr | test/s25b-refresh-owner-gap.test.ts > S25b shell refresh owner and gap resync > the real shell entry starts exactly one subscription and leaks none across two starts
+[foldkit] Slow patch: 12.4ms (budget: 8ms), triggered by DiagnosticsFailed. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: {
+      message: 'diagnostics reader is not configured',
+      records: [],
+      routeId: '42',
+      status: 'error'
+    },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 1,
+      status: 'idle',
+      message: undefined
+    },
+    route: { _tag: 'Diagnostics', id: '42' },
+    theme: 'dark'
+  },
+  message: {
+    _id: 'Option',
+    _tag: 'Some',
+    value: {
+      _tag: 'DiagnosticsFailed',
+      id: '42',
+      message: 'diagnostics reader is not configured'
+    }
+  },
+  durationMs: 12.350800000000163,
+  thresholdMs: 8
+} {
+  _tag: 'DiagnosticsFailed',
+  id: '42',
+  message: 'diagnostics reader is not configured'
+}
+
+stderr | test/diagnostics.test.ts > diagnostics page states > renders the empty state distinctly
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 30.0ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: 'inst-1', status: 'loading' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Diagnostics', id: 'inst-1' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 29.968700000001263,
+  thresholdMs: 8
+}
+
+stderr | test/routes.test.ts > runtime routing in the Foldkit shell > renders the not-found view for an unknown URL without throwing
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 32.4ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'NotFound', path: '/does/not/exist' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 32.43760000000111,
+  thresholdMs: 8
+}
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > renders the empty state
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 36.3ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: 's15f-empty', status: 'loading' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Diagnostics', id: 's15f-empty' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 36.28869999999915,
+  thresholdMs: 8
+}
+
+stderr | test/s26b-wave1.test.ts > S26b wave 1 shell entries > index is a real success landing with working onward navigation
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 31.7ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Index' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 31.7463000000007,
+  thresholdMs: 8
+}
+
+stderr | test/s26e-readback-routes.test.ts > S26e shared readback routes > Store receipts renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 10.2ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'StoreReceipts' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 10.166999999999462,
+  thresholdMs: 8
+}
+
+stderr | test/s26d-observability.test.ts > S26d observability page > renders loading while the injected read is in flight
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 9.4ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'loading', token: 1 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Observability' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 9.383900000000722,
+  thresholdMs: 8
+}
+
+stderr | test/routes.test.ts > runtime routing in the Foldkit shell > pushes a URL from an in-app control and the URL, not local state, changes the view
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 9.5ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Index' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 9.485199999999168,
+  thresholdMs: 8
+}
+
+stderr | test/s25b-refresh-owner-gap.test.ts > S25b shell refresh owner and gap resync > a revision gap 1 -> 3 with NO later event resyncs immediately, shows stale, and ignores the old revision
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 9.7ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: 'abc', status: 'loading' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Diagnostics', id: 'abc' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 9.667999999999665,
+  thresholdMs: 8
+}
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > renders the disabled state
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 12.1ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: 's15f-disabled', status: 'loading' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Diagnostics', id: 's15f-disabled' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 12.058599999998478,
+  thresholdMs: 8
+}
+
+stderr | test/diagnostics.test.ts > diagnostics page states > renders disabled as a state, not an error
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 14.5ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: 'inst-1', status: 'loading' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Diagnostics', id: 'inst-1' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 14.483900000001086,
+  thresholdMs: 8
+}
+
+stderr | test/s26b-wave1.test.ts > S26b wave 1 shell entries > not-found is a terminal error state with recovery navigation
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 13.9ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'NotFound', path: '/does/not/exist' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 13.930700000000797,
+  thresholdMs: 8
+}
+
+stderr | test/s26e-readback-routes.test.ts > S26e shared readback routes > Store receipts renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 8.4ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'StoreReceipts' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 8.38169999999991,
+  thresholdMs: 8
+}
+
+stderr | test/s26d-observability.test.ts > S26d observability page > renders the error state with the exact host failure phrase
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 9.2ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'loading', token: 1 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Observability' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 9.202500000001237,
+  thresholdMs: 8
+}
+
+stderr | test/routes.test.ts > runtime routing in the Foldkit shell > changes the view when history navigates back, through the runtime popstate config
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 14.9ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '7', status: 'loading' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Diagnostics', id: '7' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 14.884600000001228,
+  thresholdMs: 8
+}
+
+stderr | test/diagnostics.test.ts > diagnostics page states > renders stale with the rule and the age
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 13.7ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: 'inst-1', status: 'loading' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Diagnostics', id: 'inst-1' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 13.65309999999954,
+  thresholdMs: 8
+}
+
+stderr | test/s26b-wave1.test.ts > S26b wave 1 shell entries > shell preserves theme, title, focus and scroll facts across navigation
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 15.2ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Index' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 15.174200000001292,
+  thresholdMs: 8
+}
+
+ ✓ test/routes.test.ts (4 tests) 2516ms
+   ✓ runtime routing in the Foldkit shell > renders the route from the initial URL, including the diagnostics path parameter  830ms
+   ✓ runtime routing in the Foldkit shell > renders the not-found view for an unknown URL without throwing  569ms
+   ✓ runtime routing in the Foldkit shell > pushes a URL from an in-app control and the URL, not local state, changes the view  551ms
+   ✓ runtime routing in the Foldkit shell > changes the view when history navigates back, through the runtime popstate config  554ms
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > renders the stale state with the server's exact age and rule
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 15.0ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: 's15f-stale', status: 'loading' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Diagnostics', id: 's15f-stale' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 14.964500000000044,
+  thresholdMs: 8
+}
+
+ ✓ test/s26b-wave1.test.ts (4 tests) 2545ms
+   ✓ S26b wave 1 shell entries > layout is a persistent primary navigation and carries the active route  868ms
+   ✓ S26b wave 1 shell entries > index is a real success landing with working onward navigation  566ms
+   ✓ S26b wave 1 shell entries > not-found is a terminal error state with recovery navigation  538ms
+   ✓ S26b wave 1 shell entries > shell preserves theme, title, focus and scroll facts across navigation  568ms
+stderr | test/s25b-refresh-owner-gap.test.ts > S25b shell refresh owner and gap resync > a failed snapshot resync leaves the page visibly stale
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 10.6ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: 'failed', status: 'loading' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Diagnostics', id: 'failed' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 10.635699999998906,
+  thresholdMs: 8
+}
+
+stderr | test/s26e-readback-routes.test.ts > S26e shared readback routes > storeReceipts refreshes through the existing single subscription
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 8.8ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'StoreReceipts' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 8.750099999999293,
+  thresholdMs: 8
+}
+
+stderr | test/s26d-observability.test.ts > S26d observability page > refreshes through the existing single subscription, not a second owner
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 8.3ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'loading', token: 1 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Observability' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 8.281399999999849,
+  thresholdMs: 8
+}
+
+ ✓ test/s26d-observability.test.ts (7 tests) 3010ms
+   ✓ S26d observability page > renders the success state from the real client  767ms
+   ✓ S26d observability page > renders the empty state for an empty metric registry  586ms
+   ✓ S26d observability page > renders loading while the injected read is in flight  552ms
+   ✓ S26d observability page > renders the error state with the exact host failure phrase  544ms
+   ✓ S26d observability page > refreshes through the existing single subscription, not a second owner  539ms
+stderr | test/diagnostics.test.ts > diagnostics page states > renders dropped with the loss counts
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 9.4ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: 'inst-1', status: 'loading' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Diagnostics', id: 'inst-1' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 9.371100000000297,
+  thresholdMs: 8
+}
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > renders the dropped state with the server's exact loss counts
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 10.3ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: 's15f-dropped', status: 'loading' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Diagnostics', id: 's15f-dropped' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 10.290899999999965,
+  thresholdMs: 8
+}
+
+stderr | test/s25b-refresh-owner-gap.test.ts > S25b shell refresh owner and gap resync > navigation fences a pending resync: round-trip old payload cannot overwrite fresh data
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 12.2ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: 'a', status: 'loading' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Diagnostics', id: 'a' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 12.150499999999738,
+  thresholdMs: 8
+}
+
+stderr | test/s26e-readback-routes.test.ts > S26e shared readback routes > Queues renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 9.0ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Queues' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 9.005400000000009,
+  thresholdMs: 8
+}
+
+stderr | test/diagnostics.test.ts > diagnostics page states > shows independent conditions together instead of hiding one behind the other
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 8.5ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: 'inst-1', status: 'loading' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Diagnostics', id: 'inst-1' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 8.468500000000859,
+  thresholdMs: 8
+}
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > renders a 401 denial
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 10.1ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: 's15f-401', status: 'loading' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Diagnostics', id: 's15f-401' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 10.064500000000407,
+  thresholdMs: 8
+}
+
+stderr | test/s25b-refresh-owner-gap.test.ts > S25b shell refresh owner and gap resync > a failure for route A resolving after navigation to B does not mark B stale
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 8.6ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: 'a', status: 'loading' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Diagnostics', id: 'a' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 8.583599999999933,
+  thresholdMs: 8
+}
+
+stderr | test/s26e-readback-routes.test.ts > S26e shared readback routes > Queues renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 8.3ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Queues' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 8.301100000000588,
+  thresholdMs: 8
+}
+
+stderr | test/diagnostics.test.ts > diagnostics page states > shows independent conditions together instead of hiding one behind the other
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > renders a 403 rejection distinctly from a 401 denial
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/s26e-readback-routes.test.ts > S26e shared readback routes > Queues renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > renders a denied response as access denied
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/s25b-refresh-owner-gap.test.ts > S25b shell refresh owner and gap resync > a fresh route read without a following gap does not leave the page stale
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > renders a transport failure as the error state
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 8.2ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: 's15f-error', status: 'loading' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Diagnostics', id: 's15f-error' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 8.247800000001007,
+  thresholdMs: 8
+}
+
+stderr | test/s26e-readback-routes.test.ts > S26e shared readback routes > Queues renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 10.6ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Queues' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 10.645100000001548,
+  thresholdMs: 8
+}
+
+stderr | test/diagnostics.test.ts > diagnostics page states > renders denied rather than an empty list for a denied response
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 9.1ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: 'inst-1', status: 'loading' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Diagnostics', id: 'inst-1' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 9.071300000001429,
+  thresholdMs: 8
+}
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > constructs the REAL client with the injected fetchImpl/baseUrl/token and mounts its reader
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/s25b-refresh-owner-gap.test.ts > S25b shell refresh owner and gap resync > two resyncs in flight: the older response resolving last cannot win
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/s26e-readback-routes.test.ts > S26e shared readback routes > queues refreshes through the existing single subscription
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > renders a transport error distinctly from a denied state
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > mounts the reader instance returned by the client factory
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/s25b-refresh-owner-gap.test.ts > S25b shell refresh owner and gap resync > an older FAILED resync resolving last cannot make the newer success stale
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 12.4ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: 'race-failure', status: 'loading' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Diagnostics', id: 'race-failure' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 12.379700000001321,
+  thresholdMs: 8
+}
+
+ ✓ test/s25b-refresh-owner-gap.test.ts (9 tests) 6174ms
+   ✓ S25b shell refresh owner and gap resync > the real shell entry starts exactly one subscription and leaks none across two starts  1413ms
+   ✓ S25b shell refresh owner and gap resync > a revision gap 1 -> 3 with NO later event resyncs immediately, shows stale, and ignores the old revision  732ms
+   ✓ S25b shell refresh owner and gap resync > a failed snapshot resync leaves the page visibly stale  590ms
+   ✓ S25b shell refresh owner and gap resync > navigation fences a pending resync: round-trip old payload cannot overwrite fresh data  727ms
+   ✓ S25b shell refresh owner and gap resync > a failure for route A resolving after navigation to B does not mark B stale  697ms
+   ✓ S25b shell refresh owner and gap resync > a fresh route read without a following gap does not leave the page stale  699ms
+   ✓ S25b shell refresh owner and gap resync > two resyncs in flight: the older response resolving last cannot win  645ms
+   ✓ S25b shell refresh owner and gap resync > an older FAILED resync resolving last cannot make the newer success stale  665ms
+stderr | test/s26e-readback-routes.test.ts > S26e shared readback routes > Local logs renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > labels a missing or unknown build identity as missing, never blank
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > turns a token-less same-origin 401 into the explicit trust-precondition error
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+ ✓ test/diagnostics-e2e.test.ts (11 tests) 6309ms
+   ✓ S15f diagnostics page over the real client > renders the ok state and its records, and requests the operator diagnostics URL  860ms
+   ✓ S15f diagnostics page over the real client > renders the empty state  576ms
+   ✓ S15f diagnostics page over the real client > renders the disabled state  565ms
+   ✓ S15f diagnostics page over the real client > renders the stale state with the server's exact age and rule  559ms
+   ✓ S15f diagnostics page over the real client > renders the dropped state with the server's exact loss counts  532ms
+   ✓ S15f diagnostics page over the real client > renders a 401 denial  548ms
+   ✓ S15f diagnostics page over the real client > renders a 403 rejection distinctly from a 401 denial  546ms
+   ✓ S15f diagnostics page over the real client > renders a transport failure as the error state  542ms
+   ✓ S15f diagnostics page over the real client > constructs the REAL client with the injected fetchImpl/baseUrl/token and mounts its reader  529ms
+   ✓ S15f diagnostics page over the real client > mounts the reader instance returned by the client factory  523ms
+   ✓ S15f diagnostics page over the real client > turns a token-less same-origin 401 into the explicit trust-precondition error  524ms
+stderr | test/s26e-readback-routes.test.ts > S26e shared readback routes > Local logs renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 18.9ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'LocalLogs' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 18.853699999999662,
+  thresholdMs: 8
+}
+
+stderr | test/diagnostics.test.ts > diagnostics page states > labels a missing or unknown build identity as missing, never blank
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 10.8ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: 'inst-1', status: 'loading' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Diagnostics', id: 'inst-1' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 10.772400000001653,
+  thresholdMs: 8
+}
+
+stderr | test/s26e-readback-routes.test.ts > S26e shared readback routes > Local logs renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 11.9ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'LocalLogs' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 11.947199999998702,
+  thresholdMs: 8
+}
+
+stderr | test/diagnostics.test.ts > diagnostics page states > shows loading while the reader is in flight, then the command result message
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/s26e-readback-routes.test.ts > S26e shared readback routes > Local logs renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 10.0ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'LocalLogs' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 10.014299999998912,
+  thresholdMs: 8
+}
+
+stderr | test/diagnostics.test.ts > diagnostics page states > re-reads through a Command when the refresh control is used
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/s26e-readback-routes.test.ts > S26e shared readback routes > localLogs refreshes through the existing single subscription
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 8.8ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'LocalLogs' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 8.780500000000757,
+  thresholdMs: 8
+}
+
+stderr | test/diagnostics.test.ts > diagnostics page states > renders the refresh control and nav links with visible focus styles and the narrow layout classes
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/s26e-readback-routes.test.ts > S26e shared readback routes > Router candidates renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > does not apply a resolved read for a previous route id after navigating away
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/s26e-readback-routes.test.ts > S26e shared readback routes > Router candidates renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 8.2ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'RouterCandidates' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 8.204299999997602,
+  thresholdMs: 8
+}
+
+stderr | test/diagnostics.test.ts > diagnostics page states > aborts the Effect-forwarded signal when the shell disposes mid-flight
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/s26e-readback-routes.test.ts > S26e shared readback routes > Router candidates renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > labels a 403 rejection by its HTTP status instead of a generic authorization failure
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/s26e-readback-routes.test.ts > S26e shared readback routes > Router candidates renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > exposes role=status live-region semantics while loading and after settling
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+ ✓ test/diagnostics.test.ts (17 tests) 10690ms
+   ✓ diagnostics page states > renders the ok state with records and identity  830ms
+   ✓ diagnostics page states > renders the empty state distinctly  593ms
+   ✓ diagnostics page states > renders disabled as a state, not an error  533ms
+   ✓ diagnostics page states > renders stale with the rule and the age  563ms
+   ✓ diagnostics page states > renders dropped with the loss counts  533ms
+   ✓ diagnostics page states > shows independent conditions together instead of hiding one behind the other  1062ms
+   ✓ diagnostics page states > renders a denied response as access denied  543ms
+   ✓ diagnostics page states > renders denied rather than an empty list for a denied response  540ms
+   ✓ diagnostics page states > renders a transport error distinctly from a denied state  524ms
+   ✓ diagnostics page states > labels a missing or unknown build identity as missing, never blank  1084ms
+   ✓ diagnostics page states > shows loading while the reader is in flight, then the command result message  539ms
+   ✓ diagnostics page states > re-reads through a Command when the refresh control is used  556ms
+   ✓ diagnostics page states > renders the refresh control and nav links with visible focus styles and the narrow layout classes  546ms
+   ✓ diagnostics page states > does not apply a resolved read for a previous route id after navigating away  619ms
+   ✓ diagnostics page states > aborts the Effect-forwarded signal when the shell disposes mid-flight  524ms
+   ✓ diagnostics page states > labels a 403 rejection by its HTTP status instead of a generic authorization failure  547ms
+   ✓ diagnostics page states > exposes role=status live-region semantics while loading and after settling  541ms
+stderr | test/s26e-readback-routes.test.ts > S26e shared readback routes > routerCandidates refreshes through the existing single subscription
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 15.6ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'RouterCandidates' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 15.595400000001973,
+  thresholdMs: 8
+}
+
+ ✓ test/s26e-readback-routes.test.ts (9 tests) 11155ms
+   ✓ S26e shared readback routes > Store receipts renders success, empty, loading and error on the DOM  2409ms
+   ✓ S26e shared readback routes > storeReceipts refreshes through the existing single subscription  556ms
+   ✓ S26e shared readback routes > Queues renders success, empty, loading and error on the DOM  2172ms
+   ✓ S26e shared readback routes > queues refreshes through the existing single subscription  539ms
+   ✓ S26e shared readback routes > Local logs renders success, empty, loading and error on the DOM  2178ms
+   ✓ S26e shared readback routes > localLogs refreshes through the existing single subscription  544ms
+   ✓ S26e shared readback routes > Router candidates renders success, empty, loading and error on the DOM  2171ms
+   ✓ S26e shared readback routes > routerCandidates refreshes through the existing single subscription  552ms
+
+ Test Files  11 passed (11)
+      Tests  84 passed (84)
+   Start at  07:54:32
+   Duration  21.28s (transform 7.44s, setup 0ms, collect 65.56s, tests 43.52s, environment 17.44s, prepare 4.46s)
+

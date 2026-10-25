@@ -1,0 +1,7 @@
+▲ [WARNING] Cannot find base config file "../../tsconfig.base.json" [tsconfig.json]
+
+    ../../../vendor/foldkit/packages/ui/tsconfig.base.json:2:13:
+      2 │   "extends": "../../tsconfig.base.json",
+        ╵              ~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+{"status":"PASS","package":"@role-model-router/foldkit-ui","entries":["anchor","animation","button","calendar","checkbox","combobox","datePicker","dialog","disclosure","dragAndDrop","fieldset","fileDrop","hoverIntent","index","input","listbox","menu","meter","nav","popover","progress","radioGroup","select","slider","switch","tabs","textarea","toast","tooltip","virtualList"],"subpaths":[".","./anchor","./animation","./button","./calendar","./checkbox","./combobox","./datePicker","./dialog","./disclosure","./dragAndDrop","./fieldset","./fileDrop","./hoverIntent","./input","./listbox","./menu","./meter","./nav","./popover","./progress","./radioGroup","./select","./slider","./switch","./tabs","./textarea","./toast","./tooltip","./virtualList"],"warnings":1,"warningDetails":["Cannot find base config file \"../../tsconfig.base.json\""]}

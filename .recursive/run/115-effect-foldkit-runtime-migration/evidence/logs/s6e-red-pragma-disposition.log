@@ -1,0 +1,41 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge[39m
+
+ [31m❯[39m test/s6d-second-batch-migration.test.ts [2m([22m[2m3 tests[22m[2m | [22m[31m1 failed[39m[2m | [22m[33m2 skipped[39m[2m)[22m[32m 27[2mms[22m[39m
+[31m   [31m×[31m S6d/S6e second batch migration[2m > [22mpins the effective PRAGMAs of every migrated site[39m[32m 25[2mms[22m[39m
+[31m     → expected 5000 to be +0 // Object.is equality[39m
+   [2m[90m↓[39m[22m S6d/S6e second batch migration[2m > [22mDELETE keeps the boundary, NULL-retain and live rows, removes two expired rows and returns the count
+   [2m[90m↓[39m[22m S6d/S6e second batch migration[2m > [22mremoves the expired row and leaves the live row in the real backend startup
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[33m2 skipped[39m[90m (3)[39m
+[2m   Start at [22m 06:03:52
+[2m   Duration [22m 8.01s[2m (transform 4.91s, setup 0ms, collect 7.46s, tests 27ms, environment 0ms, prepare 162ms)[22m
+
+(node:48228) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m test/s6d-second-batch-migration.test.ts[2m > [22mS6d/S6e second batch migration[2m > [22mpins the effective PRAGMAs of every migrated site
+[31m[1mAssertionError[22m: expected 5000 to be +0 // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 0[39m
+[31m+ 5000[39m
+
+[36m [2m❯[22m expectPragmas test/s6d-second-batch-migration.test.ts:[2m65:62[22m[39m
+    [90m 63| [39m  expected: { readonly busyTimeout: number; readonly queryOnly: 0 | 1 …
+    [90m 64| [39m)[33m:[39m [35mvoid[39m {
+    [90m 65| [39m  expect(Number(pragmaOf(database, "busy_timeout").timeout)).toBe(expe…
+    [90m   | [39m                                                             [31m^[39m
+    [90m 66| [39m  expect(Number(pragmaOf(database, "query_only").query_only)).toBe(exp…
+    [90m 67| [39m}
+[90m [2m❯[22m test/s6d-second-batch-migration.test.ts:[2m98:7[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+EXIT_CODE: 1

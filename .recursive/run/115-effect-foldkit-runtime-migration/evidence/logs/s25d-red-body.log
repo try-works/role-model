@@ -1,0 +1,52 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s25d-request-parity.test.ts (10 tests | 1 failed | 9 skipped) 25ms
+   × S25d diagnostics request-inventory parity > captures the new client's method/path/query/body/headers/multiplicity/status and matches the contract 23ms
+     → expected { body: 'unexpected', …(11) } to match object { body: null, …(6) }
+(5 matching properties omitted from actual)
+   ↓ S25d diagnostics request-inventory parity > captures the optional authorization header and compares it semantically
+   ↓ S25d diagnostics request-inventory parity > captures a non-200 response status and compares it
+   ↓ S25d diagnostics request-inventory parity > names method when the new request method changes
+   ↓ S25d diagnostics request-inventory parity > names path when the new request path changes
+   ↓ S25d diagnostics request-inventory parity > names headers when the new request drops Accept
+   ↓ S25d diagnostics request-inventory parity > names multiplicity when the new client issues a second read
+   ↓ S25d diagnostics request-inventory parity > names query, body and status mutations too
+   ↓ S25d two-sided observability capture > captures the real legacy observability request and detects its missing Accept header
+   ↓ S25d two-sided observability capture > keeps the legacy bearer header while still reporting the Accept divergence
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s25d-request-parity.test.ts > S25d diagnostics request-inventory parity > captures the new client's method/path/query/body/headers/multiplicity/status and matches the contract
+AssertionError: expected { body: 'unexpected', …(11) } to match object { body: null, …(6) }
+(5 matching properties omitted from actual)
+
+- Expected
++ Received
+
+@@ -1,7 +1,7 @@
+  {
+-   "body": null,
++   "body": "unexpected",
+    "headers": [
+      {
+        "name": "accept",
+        "value": "application/json",
+      },
+
+ ❯ test/s25d-request-parity.test.ts:29:30
+     27|     const next = await captureNextDiagnostics({ fetchImpl: fetchOk });
+     28|     expect(next.requests).toHaveLength(1);
+     29|     expect(next.requests[0]).toMatchObject({
+       |                              ^
+     30|       body: null,
+     31|       headers: [{ name: "accept", value: "application/json" }],
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 9 skipped (10)
+   Start at  06:49:28
+   Duration  1.75s (transform 189ms, setup 0ms, collect 223ms, tests 25ms, environment 748ms, prepare 265ms)
+

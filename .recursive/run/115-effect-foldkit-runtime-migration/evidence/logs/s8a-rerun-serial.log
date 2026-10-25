@@ -1,0 +1,28 @@
+# S8a follow-up re-run (serial --no-file-parallelism)
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:10568) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run101-addendum06-attempt-timeout.test.ts (3 tests) 5108ms
+   ✓ @recursive:101-effect-mq-queue-rebuild addendum06 per-attempt timeout > a handler that never returns is interrupted by the timeout and consumes the attempt  5096ms
+(node:11892) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run101-r5-cancel-drain.test.ts (5 tests) 3566ms
+   ✓ run 101 R5/R9 queue admin runtime side > claims nothing while the queue is draining, and claims again once it is cleared  1531ms
+   ✓ run 101 R5/R9 queue admin runtime side > interrupts a running handler whose row is cancelled, without completing it  1952ms
+(node:35248) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run101-addendum08-attempt-outcome.test.ts (1 test) 2628ms
+   ✓ @recursive:101-effect-mq-queue-rebuild addendum08 attempt outcome reporting > reports the attempt, the budget and whether the job will be retried  2623ms
+(node:53328) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run115-s8a-worker-abort-signal.test.ts (3 tests) 2039ms
+   ✓ Run 115 S8a: queue worker forwards the Effect AbortSignal > an attempt timeout aborts a handler that settles only on its signal  1850ms
+
+ Test Files  4 passed (4)
+      Tests  12 passed (12)
+   Start at  23:04:59
+   Duration  24.83s (transform 3.42s, setup 0ms, collect 8.82s, tests 13.34s, environment 1ms, prepare 928ms)
+
+EXIT_CODE: 0

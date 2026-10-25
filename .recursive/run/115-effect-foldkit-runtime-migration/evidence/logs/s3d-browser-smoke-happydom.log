@@ -1,0 +1,13 @@
+# S3d browser smoke under happy-dom
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit
+
+ ✓ test/browser-runtime-smoke.test.mjs (9 tests | 5 skipped) 5999ms
+   ✓ s3d browser runtime smoke > imports every built browser entry and every namespace exposes an export  5984ms
+
+ Test Files  1 passed (1)
+      Tests  4 passed | 5 skipped (9)
+   Start at  23:28:28
+   Duration  7.44s (transform 3.50s, setup 0ms, collect 62ms, tests 6.00s, environment 687ms, prepare 214ms)
+
+EXIT_CODE: 0

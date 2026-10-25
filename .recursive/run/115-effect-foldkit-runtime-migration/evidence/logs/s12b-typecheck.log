@@ -1,0 +1,7 @@
+# ui tsc -p --noEmit (devDependency not installed yet)
+# exit: 2
+error TS6059: File 'D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/vitest.config.ts' is not under 'rootDir' 'D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src'. 'rootDir' is expected to contain all source files.
+  The file is in the program because:
+    Matched by include pattern 'vitest.config.ts' in 'role-model-router/packages/ui/tsconfig.json'
+  File is ECMAScript module because 'D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/package.json' has field "type" with value "module"
+

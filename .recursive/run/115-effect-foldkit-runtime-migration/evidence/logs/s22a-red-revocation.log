@@ -1,0 +1,38 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/development-verification.test.ts (5 tests | 1 failed | 4 skipped) 18ms
+   ↓ development verification capability > requires an independently identified trust key rather than trusting the lease signer
+   ↓ development verification capability > keeps development uploads disabled when no explicit authorization is supplied
+   ↓ development verification capability > negotiates only a valid signed development-only aggregate lease
+   × development verification capability > rejects a signed lease after the independently supplied revocation epoch advances 16ms
+     → expected [Function] to throw an error
+   ↓ development verification capability > fails closed rather than enabling a stage runtime from a development lease
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/development-verification.test.ts > development verification capability > rejects a signed lease after the independently supplied revocation epoch advances
+AssertionError: expected [Function] to throw an error
+
+- Expected: 
+null
+
++ Received: 
+undefined
+
+ ❯ test/development-verification.test.ts:116:7
+    114|         destinationDeploymentIds: ["run96-dev-ingest"],
+    115|       }),
+    116|     ).toThrow(/revoked|epoch/i);
+       |       ^
+    117|   });
+    118| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 skipped (5)
+   Start at  04:21:56
+   Duration  534ms (transform 70ms, setup 0ms, collect 74ms, tests 18ms, environment 0ms, prepare 163ms)
+

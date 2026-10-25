@@ -1,0 +1,68 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/protocol-routing
+
+(node:40312) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | test/observed-data-decay-policy.test.ts > protocol routing observed-data decay policy (run-64 RED) > lets a fresh local endpoint beat a faster remote endpoint when the remote latency evidence is a week old
+[run115] eligibility candidates=2 eligible=2 codes=none request=req-runtime-latency-decay-local-vs-remote alias=- model=- effort=- pass=- allow=[] denied=[]
+
+stdout | test/observed-data-decay-policy.test.ts > protocol routing observed-data decay policy (run-64 RED) > keeps benchmark-only quality routing stable even when profile freshness metadata is low
+[run115] eligibility candidates=2 eligible=2 codes=none request=req-runtime-benchmark-quality-no-time-decay alias=- model=- effort=- pass=- allow=[] denied=[]
+
+stdout | test/index.test.ts > routeRuntimeRequest > treats generic reasoning capability as satisfying reasoning effort control requests
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-reasoning-effort-capability-1 alias=- model=- effort=- pass=- allow=[remote.reasoning] denied=[]
+
+ ✓ test/observed-data-decay-policy.test.ts (2 tests) 66ms
+stdout | test/index.test.ts > routeRuntimeRequest > treats active role-binding effective capabilities as satisfying required task capabilities
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-runtime-role-binding-capabilities-1 alias=- model=- effort=- pass=- allow=[] denied=[]
+
+stdout | test/run115-s7b-route-decision-wiring.test.ts > run115 S7b route decision producer wiring > routeRuntimeRequest obtains its decision through the producer Layer
+[run115] eligibility candidates=1 eligible=1 codes=none request=run115-s7b-wiring alias=- model=- effort=- pass=- allow=[remote.producer] denied=[]
+
+stdout | test/run115-s7b-route-decision-wiring.test.ts > run115 S7b route decision producer wiring > the empty pool stays a success with an empty chosen endpoint id
+[run115] eligibility candidates=0 eligible=0 codes=none request=run115-s7b-wiring alias=- model=- effort=- pass=- allow=[remote.producer] denied=[]
+
+stdout | test/run115-s7b-route-decision-wiring.test.ts > run115 S7b route decision producer wiring > one-arg callers keep the default producer Layer decision
+[run115] eligibility candidates=1 eligible=1 codes=none request=run115-s7b-wiring alias=- model=- effort=- pass=- allow=[remote.producer] denied=[]
+
+ ✓ test/run115-s7b-route-decision-wiring.test.ts (3 tests) 77ms
+stdout | test/index.test.ts > routeRuntimeRequest > emits canonical runtime eligibility exclusions from registry/provider-account state
+[run115] eligibility candidates=5 eligible=1 codes=ACCOUNT_DISABLED=1,AUTH_UNAVAILABLE=1,QUOTA_EXHAUSTED=1,REGION_DISALLOWED=1 request=req-runtime-eligibility-1 alias=- model=- effort=- pass=- allow=[] denied=[openai.disabled.us-east-1,openai.auth-missing.us-east-1,openai.quota-exhausted.us-east-1,openai.region-denied.eu-west-1]
+
+stdout | test/index.test.ts > routeRuntimeRequest > keeps explicit policy denial ahead of routing-model guidance
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=req-runtime-2 alias=- model=- effort=- pass=- allow=[] denied=[openai.personal.primary.us-east-1.fast]
+
+stdout | test/index.test.ts > routeRuntimeRequest > does not over-penalize a remote latency sample that is only minutes old
+[run115] eligibility candidates=2 eligible=2 codes=none request=req-runtime-adaptive-latency-1 alias=- model=- effort=- pass=- allow=[] denied=[]
+
+stdout | test/index.test.ts > routeRuntimeRequest > preserves benchmark-only quality freshness for quality routing even when benchmark samples are old
+[run115] eligibility candidates=2 eligible=2 codes=none request=req-runtime-benchmark-quality-freshness-1 alias=- model=- effort=- pass=- allow=[] denied=[]
+
+stdout | test/index.test.ts > routeRuntimeRequest > excludes endpoints under an active throughput penalty when the penalty factor is zero
+[run115] eligibility candidates=2 eligible=1 codes=POLICY_DENY_ENDPOINT=1 request=req-runtime-throughput-penalty-1 alias=- model=- effort=- pass=- allow=[] denied=[remote.penalized.fast]
+
+stdout | test/catalog-economics-routing.test.ts > catalog economics routing > prefers local-free endpoint over Kimi on cost strategy when both are eligible
+[run115] eligibility candidates=2 eligible=2 codes=none request=req-cost-local-vs-kimi alias=- model=- effort=- pass=- allow=[] denied=[]
+
+stdout | test/catalog-economics-routing.test.ts > catalog economics routing > ignores telemetry cost_per_1k when catalog economics are available
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-ignore-telemetry-cost alias=- model=- effort=- pass=- allow=[] denied=[]
+
+stdout | test/catalog-economics-routing.test.ts > catalog economics routing > does not decay catalog local-free cost toward neutral when local telemetry is stale
+[run115] eligibility candidates=2 eligible=2 codes=none request=req-stale-local-catalog-cost alias=- model=- effort=- pass=- allow=[] denied=[]
+
+stdout | test/index.test.ts > runRuntimeRoutingValidation > loads pinned fixtures and emits deterministic routing diagnostics
+[run115] eligibility candidates=3 eligible=1 codes=CAPABILITY_MISSING=2,BUDGET_EXCEEDED=1 request=req-routing-validation alias=- model=- effort=- pass=- allow=[] denied=[openai.personal.primary.us-east-1.fast,anthropic.team.shared.us-east-1.default]
+
+ ✓ test/index.test.ts (12 tests) 753ms
+   ✓ runRuntimeRoutingValidation > loads pinned fixtures and emits deterministic routing diagnostics  558ms
+stdout | test/catalog-economics-routing.test.ts > catalog economics routing > projects models.dev context tiers into routing cost signals for long-context requests
+[run115] eligibility candidates=1 eligible=1 codes=none request=req-tiered-context alias=- model=- effort=- pass=- allow=[] denied=[]
+
+ ✓ test/catalog-economics-routing.test.ts (4 tests) 831ms
+   ✓ catalog economics routing > prefers local-free endpoint over Kimi on cost strategy when both are eligible  320ms
+
+ Test Files  4 passed (4)
+      Tests  21 passed (21)
+   Start at  22:10:26
+   Duration  10.59s (transform 5.62s, setup 0ms, collect 32.06s, tests 1.73s, environment 3ms, prepare 2.40s)
+

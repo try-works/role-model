@@ -1,9 +1,9 @@
 {
   "name": "effect",
-  "version": "4.0.1",
+  "version": "4.0.6",
   "private": true,
   "type": "module",
-  "description": "Workspace entry point for the vendored Effect v4 tree (vendor/effect, effect@4.0.1). The sources are re-exported in place so a single copy of the runtime is bundled.",
+  "description": "Workspace entry point for the vendored Effect v4 tree (vendor/effect, effect@4.0.6). The sources are re-exported in place so a single copy of the runtime is bundled.",
   "exports": {
     "./package.json": "./package.json",
     ".": {

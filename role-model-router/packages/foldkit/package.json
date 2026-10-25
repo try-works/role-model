@@ -1,0 +1,212 @@
+{
+  "name": "@role-model-router/foldkit",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "First-party workspace build of vendored foldkit@0.169.0 (vendor/foldkit, commit 7ee21426). Entries are derived from the vendored exports map and bundled from the vendored src tree; dist is not vendored.",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./asyncData": {
+      "types": "./dist/types/asyncData.d.ts",
+      "import": "./dist/asyncData.js",
+      "default": "./dist/asyncData.js"
+    },
+    "./brand": {
+      "types": "./dist/types/brand.d.ts",
+      "import": "./dist/brand.js",
+      "default": "./dist/brand.js"
+    },
+    "./calendar": {
+      "types": "./dist/types/calendar.d.ts",
+      "import": "./dist/calendar.js",
+      "default": "./dist/calendar.js"
+    },
+    "./canvas": {
+      "types": "./dist/types/canvas.d.ts",
+      "import": "./dist/canvas.js",
+      "default": "./dist/canvas.js"
+    },
+    "./command": {
+      "types": "./dist/types/command.d.ts",
+      "import": "./dist/command.js",
+      "default": "./dist/command.js"
+    },
+    "./customElement": {
+      "types": "./dist/types/customElement.d.ts",
+      "import": "./dist/customElement.js",
+      "default": "./dist/customElement.js"
+    },
+    "./devtools-host": {
+      "types": "./dist/types/devtools-host.d.ts",
+      "import": "./dist/devtools-host.js",
+      "default": "./dist/devtools-host.js"
+    },
+    "./devtools-protocol": {
+      "types": "./dist/types/devtools-protocol.d.ts",
+      "import": "./dist/devtools-protocol.js",
+      "default": "./dist/devtools-protocol.js"
+    },
+    "./dom": {
+      "types": "./dist/types/dom.d.ts",
+      "import": "./dist/dom.js",
+      "default": "./dist/dom.js"
+    },
+    "./experimental": {
+      "types": "./dist/types/experimental.d.ts",
+      "import": "./dist/experimental.js",
+      "default": "./dist/experimental.js"
+    },
+    "./experimental/machine": {
+      "types": "./dist/types/experimental/machine.d.ts",
+      "import": "./dist/experimental/machine.js",
+      "default": "./dist/experimental/machine.js"
+    },
+    "./experimental/query": {
+      "types": "./dist/types/experimental/query.d.ts",
+      "import": "./dist/experimental/query.js",
+      "default": "./dist/experimental/query.js"
+    },
+    "./experimental/server": {
+      "types": "./dist/types/experimental/server.d.ts",
+      "import": "./dist/experimental/server.js",
+      "default": "./dist/experimental/server.js"
+    },
+    "./fieldValidation": {
+      "types": "./dist/types/fieldValidation.d.ts",
+      "import": "./dist/fieldValidation.js",
+      "default": "./dist/fieldValidation.js"
+    },
+    "./file": {
+      "types": "./dist/types/file.d.ts",
+      "import": "./dist/file.js",
+      "default": "./dist/file.js"
+    },
+    "./html": {
+      "types": "./dist/types/html.d.ts",
+      "import": "./dist/html.js",
+      "default": "./dist/html.js"
+    },
+    "./http": {
+      "types": "./dist/types/http.d.ts",
+      "import": "./dist/http.js",
+      "default": "./dist/http.js"
+    },
+    "./managedResource": {
+      "types": "./dist/types/managedResource.d.ts",
+      "import": "./dist/managedResource.js",
+      "default": "./dist/managedResource.js"
+    },
+    "./message": {
+      "types": "./dist/types/message.d.ts",
+      "import": "./dist/message.js",
+      "default": "./dist/message.js"
+    },
+    "./model-preservation": {
+      "types": "./dist/types/model-preservation.d.ts",
+      "import": "./dist/model-preservation.js",
+      "default": "./dist/model-preservation.js"
+    },
+    "./mount": {
+      "types": "./dist/types/mount.d.ts",
+      "import": "./dist/mount.js",
+      "default": "./dist/mount.js"
+    },
+    "./navigation": {
+      "types": "./dist/types/navigation.d.ts",
+      "import": "./dist/navigation.js",
+      "default": "./dist/navigation.js"
+    },
+    "./port": {
+      "types": "./dist/types/port.d.ts",
+      "import": "./dist/port.js",
+      "default": "./dist/port.js"
+    },
+    "./render": {
+      "types": "./dist/types/render.d.ts",
+      "import": "./dist/render.js",
+      "default": "./dist/render.js"
+    },
+    "./route": {
+      "types": "./dist/types/route.d.ts",
+      "import": "./dist/route.js",
+      "default": "./dist/route.js"
+    },
+    "./runtime": {
+      "types": "./dist/types/runtime.d.ts",
+      "import": "./dist/runtime.js",
+      "default": "./dist/runtime.js"
+    },
+    "./scene": {
+      "types": "./dist/types/scene.d.ts",
+      "import": "./dist/scene.js",
+      "default": "./dist/scene.js"
+    },
+    "./schema": {
+      "types": "./dist/types/schema.d.ts",
+      "import": "./dist/schema.js",
+      "default": "./dist/schema.js"
+    },
+    "./story": {
+      "types": "./dist/types/story.d.ts",
+      "import": "./dist/story.js",
+      "default": "./dist/story.js"
+    },
+    "./struct": {
+      "types": "./dist/types/struct.d.ts",
+      "import": "./dist/struct.js",
+      "default": "./dist/struct.js"
+    },
+    "./submodel": {
+      "types": "./dist/types/submodel.d.ts",
+      "import": "./dist/submodel.js",
+      "default": "./dist/submodel.js"
+    },
+    "./subscription": {
+      "types": "./dist/types/subscription.d.ts",
+      "import": "./dist/subscription.js",
+      "default": "./dist/subscription.js"
+    },
+    "./test": {
+      "types": "./dist/types/test.d.ts",
+      "import": "./dist/test.js",
+      "default": "./dist/test.js"
+    },
+    "./test/vitest": {
+      "types": "./dist/types/test/vitest.d.ts",
+      "import": "./dist/test/vitest.js",
+      "default": "./dist/test/vitest.js"
+    },
+    "./update": {
+      "types": "./dist/types/update.d.ts",
+      "import": "./dist/update.js",
+      "default": "./dist/update.js"
+    },
+    "./url": {
+      "types": "./dist/types/url.d.ts",
+      "import": "./dist/url.js",
+      "default": "./dist/url.js"
+    }
+  },
+  "files": ["dist"],
+  "sideEffects": false,
+  "peerDependencies": {
+    "@role-model-router/effect-platform-browser": "workspace:*",
+    "effect": "workspace:*"
+  },
+  "dependencies": {
+    "parse5": "^8.0.1"
+  },
+  "devDependencies": {
+    "happy-dom": "^20.0.0",
+    "vitest": "^3.2.4"
+  },
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node --test test/graph-closure.test.mjs"
+  }
+}

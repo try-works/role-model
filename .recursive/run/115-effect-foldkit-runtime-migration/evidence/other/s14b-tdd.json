@@ -1,0 +1,110 @@
+{
+  "slice": "s14b-routes",
+  "requirement": [
+    "R11",
+    "R21 (route placeholder only; diagnostics API/UI not claimed)"
+  ],
+  "requirementSource": ".recursive/run/115-effect-foldkit-runtime-migration/00-requirements.md:199-205 (R21), R11 shell",
+  "files": [
+    "src/route.ts (new): AppRoute union, routers, urlToRoute/routeFromUrl",
+    "src/model.ts: Model gains route: AppRoute",
+    "src/message.ts: ChangedUrl, ClickedLink, NavigationCompleted messages; portable MessageUnion annotation",
+    "src/init.ts: routing init receives the runtime-derived Url and computes the initial route",
+    "src/update.ts: ChangedUrl sets model.route; ClickedLink returns the pushUrl Command; NavigationCompleted no-op",
+    "src/view.ts: route-dependent content/title + nav anchors, keeping the S14a shell controls",
+    "src/mount.ts: routing config supplied to makeApplication (runtime-owned listeners)",
+    "src/index.ts: exports route helpers",
+    "test/routes.test.ts (new): 4 routing tests"
+  ],
+  "routingApi": {
+    "citations": [
+      "makeApplication derives the initial Url from window.location when routing is configured: vendor/foldkit/packages/foldkit/src/runtime/makeApplication.ts:307-309, and the routing init receives it at :370-383.",
+      "RoutingConfig.onUrlRequest/onUrlChange: src/runtime/browserListeners.ts:7-11; installed by the runtime as an acquireRelease: src/runtime/runtime.ts:601-609.",
+      "popstate listener: src/runtime/browserListeners.ts:29-41; same-origin link interception: :43-102; programmatic 'foldkit:urlchange': :104-116.",
+      "pushUrl writes history and dispatches 'foldkit:urlchange': src/navigation/index.ts:5-10 (replaceUrl :12-17); load/openUrl :27-36.",
+      "Route union declaration: src/schema/index.ts:629-635 (digest section 4.2).",
+      "Route constructors/combinators: src/route/parser.ts literal :105-134, string :181-189, slash :586-614, root :323, oneOf :514-532, mapTo :546-572, parseUrlWithFallback :723-736.",
+      "Url schema: src/url/index.ts:13-21; Url.toString :112-114.",
+      "Document view contract: src/html/index.ts:295-302.",
+      "Command batch runs after update returns: src/update/update.ts:124-127 (digest section 3.2)."
+    ],
+    "design": "The shell has no addEventListener/history call of its own (grep over src/*.ts matched only a comment in mount.ts). The runtime dispatches the link click through onUrlRequest; update returns a Command whose execute is Navigation.pushUrl; pushUrl's 'foldkit:urlchange' is received by the runtime's programmatic listener and routed back through onUrlChange; the runtime's popstate listener does the same for back/forward. External URL requests are deliberately a no-op (model unchanged) so the shell never triggers a page load in tests."
+  },
+  "redGreen": {
+    "setupRed": {
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s14b-red-routing.log",
+      "note": "Routing tests written first against the unrouted S14a shell: 4 failed / 4, all behavioural (the harness URL was /diagnostics/abc but the rendered body was still the local-state shell 'Light shellClicks: 0...'). Not a missing-module failure."
+    },
+    "behaviouralRed1": {
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s14b-red-init-ignores-url.log",
+      "mutation": "routing init ignored the Url and always returned Index",
+      "message": "Timed out waiting for the diagnostics route from the initial URL ... url: /diagnostics/abc | body: ...Index page...",
+      "proves": "the task's example: the route renders Index while the URL says diagnostics"
+    },
+    "behaviouralRed2": {
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s14b-red-urlchange-ignored.log",
+      "mutation": "update ignored ChangedUrl (kept model.route)",
+      "message": "Timed out waiting for the index view after the runtime popstate handler ... url: /diagnostics/7 | body: ...Index page...",
+      "proves": "a URL/history change alone cannot move the view without the runtime's onUrlChange message reaching update"
+    },
+    "green": {
+      "command": "cd role-model-router/apps/runtime-ui-next && node node_modules/vitest/vitest.mjs run",
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s14b-green.log",
+      "testFiles": 2,
+      "tests": [
+        "mount/dispose regression from S14a still passes (1/1).",
+        "initial URL /diagnostics/abc renders 'Diagnostics: abc' and not the index view.",
+        "unknown URL /does/not/exist renders 'Not found: /does/not/exist' and does not throw.",
+        "in-app anchor click pushes /diagnostics/42 and the view becomes 'Diagnostics: 42'; the clicks counter is unchanged at 0, so the view change came from the URL, not local state.",
+        "two pre-seeded history entries + history.back() emits happy-dom's own popstate; the runtime handler changes the view back to 'Index page' and window.location.pathname is '/'."
+      ],
+      "passed": 5,
+      "failed": 0,
+      "exit": 0
+    }
+  },
+  "typecheck": {
+    "command": "cd role-model-router/apps/runtime-ui-next && node ../../../node_modules/typescript/bin/tsc -p tsconfig.json --noEmit",
+    "exit": 0,
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s14b-typecheck.log",
+    "note": "The first run failed with TS2742 (inferred Message/Model types named a non-portable foldkit dist path). Fixed inside src/ by annotating the exported schemas through public types (MessageUnion from @role-model-router/foldkit/message, RouteUnion from .../route, Schema.Struct) and an EmptyFields alias; tsconfig was not edited (outside this slice's writable files). Intermediate failures: s14b-typecheck-1.log, s14b-typecheck-2.log, s14b-typecheck-3.log."
+  },
+  "happyDomBehaviourMeasured": {
+    "probe": "node --input-type=module with happy-dom Window (run from apps/runtime-ui-next; 2026-10-25)",
+    "findings": [
+      "history.replaceState/pushState update window.location synchronously (pathname/length) and do not emit popstate, matching browser behaviour.",
+      "history.back() restores the previous entry synchronously and emits popstate asynchronously (observed within 50ms); the popstate test uses a real back() over two pre-seeded entries.",
+      "A manually constructed PopStateEvent also reaches window listeners, but is not used by the tests.",
+      "MouseEvent/CustomEvent are available; the runtime's document click listener intercepts the anchor, preventDefault, and dispatches the Internal UrlRequest.",
+      "History entries are same-origin only; tests use relative paths under http://localhost:3000."
+    ],
+    "caution": "This is not a real browser: bfcache, scroll restoration, cross-document navigation, and the actual History API limits are not exercised."
+  },
+  "registers": {
+    "biome": {
+      "exit": 0,
+      "files": 9,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s14b-biome-check.log",
+      "note": "one biome --write formatting pass first (s14b-biome.log)"
+    }
+  },
+  "unverified": [
+    "Real-browser behaviour is unverified; all routing assertions run under happy-dom. No cross-document navigation, bfcache, scroll restoration, or history state payload is tested.",
+    "External URL requests are a deliberate no-op; no load/openUrl path is tested (avoids network/browser navigation in the shell). Same-origin link clicks are covered.",
+    "Route coverage is exactly the three required routes (index, /diagnostics/:id, not-found); query strings, hashes and nested route families are not routed/asserted.",
+    "The Document title is set per route but the tests assert rendered body content only.",
+    "R21's diagnostics API/UI acceptance (authorized bounded query, redaction, headers/CORS, etc.) is not implemented here; this slice gives the diagnostics page a route to live at. That work belongs to its own slice."
+  ],
+  "scope": "Only apps/runtime-ui-next/src/**, test/routes.test.ts and evidence were written. The S14a mount test was left unchanged and still passes; no wrapper, package, root, lockfile, vendor or private file was touched.",
+  "hashes": {
+    "src/route.ts": "3881ba000d2a371792bb56a4e9c40a33d4935ea0c3ce9361b477b03f10807679",
+    "src/model.ts": "421199fe8a7fba1529c1d957ad4937f2b4ea10344318a0973c1dd7e569011035",
+    "src/message.ts": "daa4c1b4a7b07ecc9272739251d0aeefaee4ba9e96d7fbb982690a57ceb59279",
+    "src/init.ts": "0753af891fcde8473267b35c9e256067ae4417d0b2e3d1491b02f3e2f083668e",
+    "src/update.ts": "75a2e5b2c074115606c152f309953b9c266a0d7522acd35f276d0669b082667a",
+    "src/view.ts": "91f0f657ae68224c9c0e94181fb7dea9c633e5d4da15348e2669b8a946f82237",
+    "src/mount.ts": "c3ba47565f0359867822615ac2c3aec0c7ce22e1f3f9058e2cccd293efa91768",
+    "src/index.ts": "a994dd3ba101a80064c1af3f3aee5b51c95c163cf3837974f7c6448777e2cf8d",
+    "test/routes.test.ts": "8a82fb653e06a755b97a638eb033aa0555b23c05826ac16e800f427d55766c86"
+  }
+}

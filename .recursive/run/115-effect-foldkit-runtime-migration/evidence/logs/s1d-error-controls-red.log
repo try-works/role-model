@@ -1,0 +1,51 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui-parity
+
+ ❯ test/selfcheck.test.ts (2 tests | 1 failed) 42ms
+   × request parity selfcheck > checks identical repeated captures and every required negative control 35ms
+     → expected { status: 'PASSED', …(2) } to deeply equal { status: 'PASSED', …(2) }
+   ✓ request parity selfcheck > is deterministic and does not mutate or expose fixture request payloads 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/selfcheck.test.ts > request parity selfcheck > checks identical repeated captures and every required negative control
+AssertionError: expected { status: 'PASSED', …(2) } to deeply equal { status: 'PASSED', …(2) }
+
+- Expected
++ Received
+
+@@ -30,17 +30,9 @@
+      },
+      {
+        "name": "changed-status",
+        "passed": true,
+      },
+-     {
+-       "name": "changed-error",
+-       "passed": true,
+-     },
+-     {
+-       "name": "changed-stream-terminal",
+-       "passed": true,
+-     },
+    ],
+    "scope": "request-comparator-only",
+    "status": "PASSED",
+  }
+
+ ❯ test/selfcheck.test.ts:6:41
+      4| describe("request parity selfcheck", () => {
+      5|   it("checks identical repeated captures and every required negative c…
+      6|     expect(runRequestParitySelfcheck()).toEqual({
+       |                                         ^
+      7|       status: "PASSED",
+      8|       scope: "request-comparator-only",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  19:30:08
+   Duration  2.28s (transform 273ms, setup 0ms, collect 274ms, tests 42ms, environment 1ms, prepare 583ms)
+

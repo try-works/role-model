@@ -1,0 +1,41 @@
+{
+  "slice": "S1b",
+  "task": ".recursive/run/115-effect-foldkit-runtime-migration/tasks/s1b-target-contract.md",
+  "tddMode": "strict",
+  "historicalReceiptNotice": "red.log is a post-GREEN scaffold replay; contemporaneous assertion REDs before first implementation exist in raw s1b-implementer.jsonl. Current controller repairs supersede source/test hashes; see s1b-controller-repair.md.",
+  "red": {
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s1b-red.log",
+    "exit": 1,
+    "result": "45 failed (45)",
+    "testSha256": "1eb479857d371f94e6911a3f7bcdd562ce580192900f99fc119e640470fe3519",
+    "scaffoldSha256": "b8f8c9a8fafc8c8c942a93a5199c0e1ccc2bc8d6bbb5fdc87ae9add852bccfe2"
+  },
+  "green": {
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s1b-green.log",
+    "exit": 0,
+    "result": "45 passed",
+    "testSha256": "1eb479857d371f94e6911a3f7bcdd562ce580192900f99fc119e640470fe3519",
+    "sourceSha256": "7ce0aff34c713d06a67649eb1fac22d2d522a70384a85a01884a07e283265103"
+  },
+  "tsc": {
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s1b-tsc.log",
+    "command": "node ../../../node_modules/typescript/bin/tsc -p tsconfig.json --noEmit",
+    "exit": 0,
+    "output": ""
+  },
+  "changedFiles": [
+    "role-model-router/packages/ui-parity/src/target-contract.ts",
+    "role-model-router/packages/ui-parity/test/target-contract.test.ts"
+  ],
+  "antiSlopLint": {
+    "tool": "anti_slop_lint",
+    "available": true,
+    "detail": "Worker PATH probe was not a valid tool availability check. Controller used anti_slop_lint actual tool: absolute ui-parity target, effect true, clean5files16rules before controller repairs; current rerun/addendum supersedes this historical field."
+  },
+  "adapterLimitation": "Pure guard only. The adapter must resolve real paths and verify the actual process, files, and served artifacts; no realpath or process claim is made here.",
+  "notes": [
+    "No I/O, filesystem, process, network, or realpath checks in target-contract.ts.",
+    "VERIFIED means only that the pure contract passed; it always carries the adapter limitation code.",
+    "No commits, installs, root/lock/private/runtime writes, children, goals, or provider calls."
+  ]
+}

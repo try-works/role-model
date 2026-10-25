@@ -1,0 +1,71 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "items": [
+    {
+      "name": "dashboard-01",
+      "type": "registry:block",
+      "title": "Dashboard, users and settings",
+      "description": "Complete Foldkit + Tailwind dashboard: responsive sidebar and breadcrumbs, ECharts analytics, filterable users with validated dialogs, and persisted settings.",
+      "registryDependencies": [
+        "Potti1234/creaseui/alert",
+        "Potti1234/creaseui/avatar",
+        "Potti1234/creaseui/badge",
+        "Potti1234/creaseui/breadcrumb",
+        "Potti1234/creaseui/button",
+        "Potti1234/creaseui/card",
+        "Potti1234/creaseui/chart",
+        "Potti1234/creaseui/crease-theme",
+        "Potti1234/creaseui/data-table",
+        "Potti1234/creaseui/dialog",
+        "Potti1234/creaseui/field",
+        "Potti1234/creaseui/icons",
+        "Potti1234/creaseui/input",
+        "Potti1234/creaseui/native-select",
+        "Potti1234/creaseui/separator",
+        "Potti1234/creaseui/sidebar",
+        "Potti1234/creaseui/switch",
+        "Potti1234/creaseui/tabs",
+        "Potti1234/creaseui/textarea",
+        "Potti1234/creaseui/toggle-group",
+        "Potti1234/creaseui/utils"
+      ],
+      "files": [
+        {
+          "path": "charts.ts",
+          "type": "registry:component",
+          "target": "@components/crease-dashboard/charts.ts"
+        },
+        {
+          "path": "dashboard.css",
+          "type": "registry:component",
+          "target": "@components/crease-dashboard/dashboard.css"
+        },
+        {
+          "path": "data.ts",
+          "type": "registry:component",
+          "target": "@components/crease-dashboard/data.ts"
+        },
+        {
+          "path": "entry.ts",
+          "type": "registry:component",
+          "target": "@components/crease-dashboard/entry.ts"
+        },
+        {
+          "path": "icons.ts",
+          "type": "registry:component",
+          "target": "@components/crease-dashboard/icons.ts"
+        },
+        {
+          "path": "main.ts",
+          "type": "registry:component",
+          "target": "@components/crease-dashboard/main.ts"
+        },
+        {
+          "path": "view.ts",
+          "type": "registry:component",
+          "target": "@components/crease-dashboard/view.ts"
+        }
+      ]
+    }
+  ]
+}

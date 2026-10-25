@@ -1,0 +1,101 @@
+{
+  "slice": "s15c-diagnostics-repairs",
+  "requirement": "R21 server half (review HOLD repairs)",
+  "status": "complete",
+  "task": ".recursive/run/115-effect-foldkit-runtime-migration/tasks/s15c-diagnostics-repairs.md",
+  "defects": [
+    {
+      "id": "A",
+      "failingInput": "readLocalDiagnostics/handler with 512-char CJK instanceId+buildId and 14 records of 1000-char codes",
+      "red": "serialized body was 18176 bytes against the stated 16384-byte cap (the review measured 18119; identity was not in the budget and codes were sliced by UTF-16 units)",
+      "fix": "the WHOLE body (identity + envelope + records + cursor reserve) is serialized and measured in UTF-8 BYTES; records shrink/pop until the body fits; identity is byte-capped at 256 bytes each and code labels at 512 bytes via code-point-safe truncation; bounds.maxIdentityBytes/maxCodeBytes are published",
+      "test": "S15c Defect A (asserts Buffer.byteLength(body) <= MAX_DIAGNOSTICS_RESPONSE_BYTES, recordCount > 0, identity <= 256 bytes)"
+    },
+    {
+      "id": "B",
+      "failingInput": "handler with no source plus cursor=zzz",
+      "red": "400 diagnostics_cursor_invalid instead of the disabled state",
+      "fix": "disabled is answered BEFORE any limit/cursor validation; an invalid cursor with a source still answers 400",
+      "test": "S15c Defect B (disabled 200 + invalid-cursor-with-source 400 in one case)"
+    },
+    {
+      "id": "C",
+      "failingInput": "oldest-first records without lastRecordAtMs, newest 1 s old",
+      "red": "state stale with ageMs 400000 (fallback used all[0])",
+      "fix": "lastRecordAtMs is authoritative when supplied; otherwise the newest record is max(atMs); order-independent",
+      "test": "S15c Defect C (staleness {stale:false, ageMs:1000}, state ok)"
+    },
+    {
+      "id": "D",
+      "failingInput": "stale record + loss.dropped=7",
+      "red": "conditions was undefined, so loss was only reachable behind the stale state",
+      "fix": "body.conditions {stale, dropped} always reports both independently; state precedence (disabled > stale > dropped > empty > ok) and the LocalDiagnosticsSource ordering contract are documented in the module",
+      "test": "S15c Defect D (state stale, loss {dropped:7}, conditions {stale:true,dropped:true})"
+    },
+    {
+      "id": "E",
+      "failingInput": "production composition root never passes readDiagnosticsSource",
+      "red": "not a test failure - a review finding: the route always answers disabled outside tests",
+      "fix": "recorded explicitly as a DEFERRED WIRE in the module doc and in evidence/other/s15a-tdd.json: the writer (what is recorded, retention, loss accounting) is R20's module-health/Cause boundary; no writer is fabricated here",
+      "test": "none by design - documentation/evidence only"
+    }
+  ],
+  "minors": [
+    {
+      "item": "cursor past the end",
+      "red": "state ok with zero records",
+      "fix": "state empty",
+      "test": "S15c 'a cursor past the end reads as empty, not ok' (API-produced cursor reused against a shrunk source)"
+    },
+    {
+      "item": "diagnostics 401 headers",
+      "red": "the generic operator gate's 401 lacked no-store/nosniff on the diagnostics path",
+      "fix": "the diagnostics route is dispatched BEFORE the generic operator gate, so the handler owns every status (200/400/401/403) and all carry cache-control: no-store + x-content-type-options: nosniff and no CORS headers; the handler authorizes through the same authorizeOperatorRequest",
+      "test": "S15c 'the diagnostics 401 carries the path headers' (handler-level; route wiring is typechecked and code-reviewed, not socket-tested by design)"
+    }
+  ],
+  "red": {
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15c-red.log",
+    "exit": 1,
+    "files": 1,
+    "tests": 20,
+    "failed": 5,
+    "messages": [
+      "expected 18176 to be less than or equal to 16384",
+      "expected 400 to be 200",
+      "expected { ruleMs: 300000, ageMs: 400000 } to match { stale: false, ageMs: 1000 }",
+      "expected undefined to deeply equal { stale: true, dropped: true }",
+      "expected 'ok' to be 'empty'"
+    ]
+  },
+  "green": {
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15c-green.log",
+    "exit": 0,
+    "files": 1,
+    "tests": 20,
+    "passed": 20
+  },
+  "regression": {
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15c-regression.log",
+    "exit": 0,
+    "files": 7,
+    "tests": 47,
+    "passed": 47,
+    "note": "includes the 6 pre-existing operator auth/readback suites after the gate extraction and the diagnostics route move"
+  },
+  "typecheck": {
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15c-tsc.log",
+    "exit": 0
+  },
+  "lint": {
+    "module": "clean (0)",
+    "test": "clean (0)",
+    "tool": "anti_slop_lint with absolute paths"
+  },
+  "designLimits": [
+    "The record WRITER stays deferred to R20: this module reads an injected source and reports disabled otherwise. Fabricating a writer here would invent retention/loss semantics R20 owns.",
+    "The byte caps for identity (256 bytes) and code labels (512 bytes) are formatting limits chosen in this slice and published in body.bounds; calibrating them against real collectors is R20's enablement decision.",
+    "The cursor is opaque (base64url decimal offset); the past-end test reuses an API-produced cursor against a shrunk source rather than forging the encoding.",
+    "No live socket proof by instruction: the route is typechecked and handler-tested directly; the route's CORS skip and 401 header behaviour are code-reviewed."
+  ]
+}

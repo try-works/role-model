@@ -1,0 +1,40 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:28156) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/s15h-live-socket-diagnostics.test.ts (5 tests | 1 failed | 4 skipped) 87ms
+   ↓ S15h diagnostics over a real loopback socket > binds an ephemeral 127.0.0.1 port, never an operator port
+   ↓ S15h diagnostics over a real loopback socket > token-less loopback read answers the explicit disabled state with no writer enabled
+   ↓ S15h diagnostics over a real loopback socket > loopback owner trust is explicit: with trust off, missing and wrong credentials are 401 and the configured token is accepted
+   × S15h diagnostics over a real loopback socket > a spoofed owner-claim header is rejected before authorization and carries no CORS header 85ms
+     → expected 200 to be 403 // Object.is equality
+   ↓ S15h diagnostics over a real loopback socket > error responses from a real socket never carry access-control headers either
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s15h-live-socket-diagnostics.test.ts > S15h diagnostics over a real loopback socket > a spoofed owner-claim header is rejected before authorization and carries no CORS header
+AssertionError: expected 200 to be 403 // Object.is equality
+
+- Expected
++ Received
+
+- 403
++ 200
+
+ ❯ test/s15h-live-socket-diagnostics.test.ts:123:29
+    121|       headers: { "x-role-model-owner": "owner" },
+    122|     });
+    123|     expect(response.status).toBe(403);
+       |                             ^
+    124|     expect(await readJson(response)).toMatchObject({
+    125|       schemaVersion: "role-model.local-diagnostics-read.v1",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 skipped (5)
+   Start at  05:22:04
+   Duration  7.32s (transform 4.37s, setup 0ms, collect 6.77s, tests 87ms, environment 0ms, prepare 163ms)
+

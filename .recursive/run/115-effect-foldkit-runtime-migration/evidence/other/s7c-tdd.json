@@ -1,0 +1,84 @@
+{
+  "slice": "s7c-routing-parity",
+  "requirement": "R25 routing/schema B4 parity (00-requirements.md:230-236)",
+  "status": "four-case matrix passes; no kernel change needed",
+  "matrix": [
+    {
+      "case": "empty candidate pool",
+      "input": "runtime registry endpoints=[]; projected RouteRequestInput.candidates=[]",
+      "kernel": "chosen='' fallback=[] selection_reasons=[] eligibility=[] scored=[]",
+      "producer": "byte-identical to kernel",
+      "wired": "byte-identical to kernel",
+      "result": "PASS"
+    },
+    {
+      "case": "tie between candidates",
+      "input": "tie.alpha + tie.beta, identical model/capabilities/effort",
+      "kernel": "chosen='tie.alpha', selection_reasons includes TIE_BREAK_APPLIED",
+      "producer": "byte-identical to kernel",
+      "wired": "byte-identical to kernel",
+      "result": "PASS"
+    },
+    {
+      "case": "role/task/effort arm",
+      "input": "hard role=coder, task=code.edit, coder.high effort=high + effortResolution exact_primary/high, text.low excluded",
+      "kernel": "chosen='coder.high', reasoning_effort='high', effort_source='named', effort_resolution='exact_primary'; text.low ineligible",
+      "producer": "byte-identical to kernel",
+      "wired": "byte-identical to kernel",
+      "result": "PASS"
+    },
+    {
+      "case": "golden fixture",
+      "input": "golden.only tools-supported vs golden.no-tools; request needsTools=true",
+      "kernel": "chosen='golden.only', TOOLS_UNSUPPORTED for golden.no-tools, digest sha256:869e4c7f06b0a5839292bfe64bbeede186a13c8eb22d3b55544e8d2d5b4c7756",
+      "producer": "byte-identical to kernel",
+      "wired": "byte-identical to kernel",
+      "fixture": "role-model-router/packages/protocol-routing/test/fixtures/run115-s7c-routing-golden.json (created; selected fields + full-decision digest derived from the kernel)",
+      "result": "PASS"
+    }
+  ],
+  "parityMethod": "For each case: projectRuntimeRouteInput(runtime).routeInput is the single kernel input; kernel=routeRequest(projected); producer=RouteDecisionProducer service via live Layer; wired=routeRuntimeRequest(runtime).decision. Assertions compare object equality AND JSON.stringify byte equality (key order included).",
+  "fixtures": {
+    "created": "test/fixtures/run115-s7c-routing-golden.json - minimal deterministic golden with kernel-derived full-decision digest, chosen endpoint, selection reasons and eligibility codes.",
+    "inline": "empty, tie and role/task/effort cases are deterministic inline fixtures; no pre-existing kernel golden existed. The pinned router-runtime fixture is a wired CLI validation fixture, not a kernel decision golden."
+  },
+  "mutation": {
+    "description": "the producer returned the kernel decision with top-level keys sorted (a reordered producer result); kernel unchanged",
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s7c-red-producer-reorder.log",
+    "result": "all 4 matrix cases RED on JSON byte equality; producer/wired failed, kernel unaffected"
+  },
+  "testRuns": [
+    {
+      "command": "protocol-routing s7c (4) + s7b wiring (3)",
+      "total": 7,
+      "passed": 7,
+      "failed": 0,
+      "exit": 0,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s7c-green.log"
+    },
+    {
+      "command": "core s7 producer (6)",
+      "total": 6,
+      "passed": 6,
+      "failed": 0,
+      "exit": 0,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s7c-core-green.log"
+    },
+    {
+      "typecheck": "protocol-routing tsc",
+      "exit": 0,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s7c-typecheck.log"
+    },
+    {
+      "typecheck": "core tsc",
+      "exit": 0,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s7c-core-typecheck.log"
+    }
+  ],
+  "files": {
+    "role-model-router/packages/protocol-routing/test/run115-s7c-routing-parity.test.ts": "030f01bb2552a079b237727a18948477d2053627bbc381479a6e1fdfb408b5ff",
+    "role-model-router/packages/protocol-routing/test/fixtures/run115-s7c-routing-golden.json": "7db8d7d0b2739fa8ca97012236eb38c5553dbdf1162f5e93c3add13767839fe3"
+  },
+  "productChanges": "none. No kernel, producer or boundary source changed; the producer mutation was applied only for the RED and restored (verified `return routeRequest(input)`).",
+  "contractRisk": "none; no kernel change was needed to express any case."
+}

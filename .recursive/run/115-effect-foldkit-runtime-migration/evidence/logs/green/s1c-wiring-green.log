@@ -1,0 +1,19 @@
+✔ request parity contracts run in the maintained runtime-critical lane (3.9399ms)
+✔ CI is scoped to long-lived branches with stable cancellable lanes (0.9085ms)
+✔ Track B CI is always-on, explicit, and runs the tagged browser contract (0.6459ms)
+✔ Track B browser gate waits for semantic readiness without weakening exact private pairing (0.5603ms)
+✔ promotion guard encodes dev to stage to main with a hotfix exception (0.5165ms)
+✔ workspace tests keep the resource-heavy runtime proofs in a separate lane (0.6624ms)
+✔ fast CI scripts expose split, reusable lanes (0.7049ms)
+✔ smoke prepares its dist-exporting workspace dependencies in a clean checkout (0.3191ms)
+✔ runtime-host integration tests do not contend for worker-owned state (0.4375ms)
+✔ runtime-host build regression has enough CI headroom for Turbo contention (0.5149ms)
+✔ Turbo cache and package logs are ignored (2.1517ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 174.5265

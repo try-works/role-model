@@ -1,0 +1,45 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge[39m
+
+ [31m❯[39m test/s15h-live-socket-diagnostics.test.ts [2m([22m[2m8 tests[22m[2m | [22m[31m1 failed[39m[2m | [22m[33m7 skipped[39m[2m)[22m[32m 109[2mms[22m[39m
+   [2m[90m↓[39m[22m S15h/S15i diagnostics over a real loopback socket[2m > [22mstarts with port option 0, so an ephemeral operator-free port is by construction
+   [2m[90m↓[39m[22m S15h/S15i diagnostics over a real loopback socket[2m > [22mtoken-less loopback read answers the explicit disabled state with no writer enabled
+   [2m[90m↓[39m[22m S15h/S15i diagnostics over a real loopback socket[2m > [22mloopback owner trust is explicit: with trust off, missing and wrong credentials are 401 and the configured token is accepted
+   [2m[90m↓[39m[22m S15h/S15i diagnostics over a real loopback socket[2m > [22ma wrong token of the SAME length is still rejected (not a length-only comparison)
+[31m   [31m×[31m S15h/S15i diagnostics over a real loopback socket[2m > [22mevery owner-claim header is rejected by the diagnostics handler (generic gate already authorized) with no CORS[39m[32m 107[2mms[22m[39m
+[31m     → expected 200 to be 403 // Object.is equality[39m
+   [2m[90m↓[39m[22m S15h/S15i diagnostics over a real loopback socket[2m > [22m500, OPTIONS, context-mismatch 403 and 404 responses carry no access-control headers
+   [2m[90m↓[39m[22m S15h/S15i diagnostics over a real loopback socket[2m > [22mclose() releases the listener: a fetch to the closed port refuses
+   [2m[90m↓[39m[22m S15h/S15i diagnostics over a real loopback socket[2m > [22merror responses from a real socket never carry access-control headers either
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[33m7 skipped[39m[90m (8)[39m
+[2m   Start at [22m 05:37:29
+[2m   Duration [22m 7.54s[2m (transform 4.50s, setup 0ms, collect 6.93s, tests 109ms, environment 0ms, prepare 177ms)[22m
+
+(node:28552) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m test/s15h-live-socket-diagnostics.test.ts[2m > [22mS15h/S15i diagnostics over a real loopback socket[2m > [22mevery owner-claim header is rejected by the diagnostics handler (generic gate already authorized) with no CORS
+[31m[1mAssertionError[22m: expected 200 to be 403 // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 403[39m
+[31m+ 200[39m
+
+[36m [2m❯[22m test/s15h-live-socket-diagnostics.test.ts:[2m175:31[22m[39m
+    [90m173| [39m    [35mfor[39m ([35mconst[39m [header[33m,[39m value] [35mof[39m claims) {
+    [90m174| [39m      const response = await fetch(url, { headers: { [header]: value }…
+    [90m175| [39m      [34mexpect[39m(response[33m.[39mstatus)[33m.[39m[34mtoBe[39m([34m403[39m)[33m;[39m
+    [90m   | [39m                              [31m^[39m
+    [90m176| [39m      [34mexpect[39m([35mawait[39m [34mreadJson[39m(response))[33m.[39m[34mtoMatchObject[39m({
+    [90m177| [39m        schemaVersion[33m:[39m [32m"role-model.local-diagnostics-read.v1"[39m[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+EXIT_CODE: 1

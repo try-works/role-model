@@ -1,0 +1,44 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/s17a-transport-signal.test.ts (10 tests | 1 failed | 9 skipped) 24ms
+   ↓ private operations transport signal > cancels the underlying fetch when the enclosing fiber times out (request does not keep running)
+   × private operations transport signal > releases the real reader and abort listener (body unlocked) on success 21ms
+     → expected true to be false // Object.is equality
+   ↓ private operations transport signal > counts scoped releases on the status-failure path and does not retry a stated status
+   ↓ private operations transport signal > counts scoped releases on the caller-abort path and does not retry
+   ↓ private operations transport signal > pins the exact connection-retry schedule 250/1000/2500/5000ms
+   ↓ private operations transport signal > pins the retry schedule through the Effect path as well
+   ↓ private operations transport signal > pins status and timeout as one call and no sleep on both paths
+   ↓ private operations transport signal > does not retry a caller abort
+   ↓ private operations transport signal > keeps timeout, status, protocol and abort failures distinct and non-retried
+   ↓ private operations transport signal > carries the caller signal through the REAL operation boundary into fetch
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s17a-transport-signal.test.ts > private operations transport signal > releases the real reader and abort listener (body unlocked) on success
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ test/s17a-transport-signal.test.ts:127:35
+    125| 
+    126|     expect(result).toEqual({ ok: true });
+    127|     expect(response.body?.locked).toBe(false);
+       |                                   ^
+    128|     expect(releases.sort()).toEqual(["abort-listener", "reader"]);
+    129|     expect(counted.added).toContain("abort");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 9 skipped (10)
+   Start at  02:57:28
+   Duration  3.90s (transform 1.83s, setup 0ms, collect 3.36s, tests 24ms, environment 0ms, prepare 172ms)
+
+EXIT_CODE: 1

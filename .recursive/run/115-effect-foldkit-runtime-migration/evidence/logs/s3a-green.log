@@ -1,0 +1,17 @@
+✔ VENDORED.json records the reviewed upstream tag, commit and licence (3.1705ms)
+✔ VENDORED.json records the reviewed payload root and includes (2.3726ms)
+✔ the vendored packages report the reviewed release line (4.2887ms)
+✔ the content digest recomputed from the vendored bytes matches the manifest and is stable (3805.4574ms)
+✔ the vendored tree carries no node_modules or .git directory (32.5666ms)
+✔ vendor-upstream.mjs defaults Foldkit to the reviewed tag and commit (1.7267ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3994.062
+COMMAND: node --test scripts/foldkit-vendored.test.mjs
+TIMESTAMP: 2026-10-24T13:53:59.514Z
+EXIT_CODE: 0

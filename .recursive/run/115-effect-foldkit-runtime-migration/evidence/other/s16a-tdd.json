@@ -1,0 +1,51 @@
+{
+  "slice": "s16a-sea-build",
+  "status": "blocked",
+  "blockedAt": "packaged SEA build gate: the packaging script requires a clean public worktree and this worktree has 5430 uncommitted entries",
+  "command": {
+    "ran": "cd role-model-router/apps/runtime-host-bridge && corepack pnpm run package-sea",
+    "why": "narrowest equivalent of root runtime:package-sea: the root script additionally builds runtime-ui, while package-sea is the packaging step and its first gate is the worktree check. No product code was changed.",
+    "exitCode": 1,
+    "wallSeconds": 3.18,
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s16a-package-sea-attempt.log"
+  },
+  "exactError": "Error: Packaged runtime requires a clean public worktree; commit or discard source changes before packaging\n    at resolvePackagedRuntimeSourceTree (.../src/package-sea.ts:79:11)\n    at packageSeaRuntime (.../src/package-sea.ts:967:22)",
+  "treeState": {
+    "headCommit": "f0d50fab083e3fe8daf2474cd9fb08b51066c8e1",
+    "headTree": "be6e4f12375299ecba5a366a9dd353b119d3354a",
+    "worktreeContentTree": "eaaa9003c4e906953f1186cfeb886b8946191cc5",
+    "whyTheyDiffer": "the uncommitted run changes are the product; the worktree content tree differs from HEAD tree, which is exactly what the clean-worktree gate refuses to package",
+    "describe": "v0.0.17-8-gf0d50fab-dirty",
+    "statusEntries": 5430
+  },
+  "artifact": {
+    "produced": false,
+    "path": null,
+    "sizeBytes": null,
+    "sha256": null,
+    "note": "No artifact was produced, so there is no size/hash to report and no start/identity proof to make. I did not substitute an artifact built from HEAD or a copy: that would repeat the SEA incident's failure mode of claiming packaged behaviour from the wrong source."
+  },
+  "startExitProof": {
+    "artifactStarted": false,
+    "reason": "no artifact",
+    "portsTouched": "none (3456/3457/3458 were never bound)",
+    "stateRoot": "none created; E:/role-model-run115 not used because there was nothing to start",
+    "processExit": "the build process itself exited with code 1 after 3.18s; no runtime process was started"
+  },
+  "identity": {
+    "reportedByArtifact": null,
+    "expectedIfBuiltCleanly": "version from git describe would be 0.0.17-8-gf0d50fab and commit f0d50fab...; however the content tree eaaa9003... would not match HEAD tree be6e4f12..., so a HEAD-only artifact would not report this tree's identity"
+  },
+  "warning": "Node 24 ExperimentalWarning: SQLite is an experimental feature and might change at any time (printed before the gate failure).",
+  "gaps": [
+    "no packaged artifact, no start, no readiness wait, no identity endpoint read, no clean stop",
+    "no real client request and no parity comparison (R16/R33 parity is still the next slice)",
+    "no negative control artifact (could not build a second artifact either)",
+    "no build wall time for a successful compile/package (fails before compile)"
+  ],
+  "unblock": "Provide a clean reviewed snapshot of this tree (a commit containing the run changes, or an explicitly authorized clean-snapshot procedure). Packaging then needs no code change and can be rerun; commits are forbidden in this slice, so I stopped rather than fabricating a clean tree or stashing shared-worktree changes while the team is active.",
+  "scope": "Only evidence logs and this JSON were written. No product code, no installs, no commits, no subagents, no operator state root or port touched.",
+  "evidenceLogs": [
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s16a-package-sea-attempt.log"
+  ]
+}

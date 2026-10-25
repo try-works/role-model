@@ -1,0 +1,77 @@
+{
+  "slice": "s15h-live-socket",
+  "requirement": "R21 diagnostics over a real loopback socket (token-less disabled, credential, CORS, owner-claim)",
+  "bind": "startBridgeServer({ host: '127.0.0.1', port: 0 }); every actual port > 0 and asserted not 3456/3457/3458; no operator runtime or operator state touched",
+  "proofs": [
+    {
+      "id": "tokenless-disabled",
+      "test": "token-less GET /api/role-model/operator/diagnostics",
+      "result": "PASS: HTTP 200, schema role-model.local-diagnostics-read.v1, state='disabled', records=[]; no readDiagnosticsSource and diagnostics.enabled=false"
+    },
+    {
+      "id": "credential",
+      "test": "loopback bind with deviceOwnerTrust='off' + operatorAuthToken",
+      "result": "PASS: missing -> 401 operator_authentication_required; wrong bearer -> 401; correct bearer -> 200 disabled",
+      "limitation": "A non-loopback peer cannot be produced while binding 127.0.0.1, so this proves the credential gate on a real socket, not remote-peer rejection or forwarded-header behavior."
+    },
+    {
+      "id": "no-cors",
+      "test": "response header scan for access-control-* on 200, 401, 403 and 400",
+      "result": "PASS: no access-control-* on the disabled 200, unauthorized 401s, owner-claim 403, or the enabled-source invalid-query 400"
+    },
+    {
+      "id": "owner-claim",
+      "test": "GET with x-role-model-owner on a token-less trusted-loopback server",
+      "result": "PASS: 403 diagnostics_owner_header_forbidden and no access-control-*"
+    }
+  ],
+  "mutations": [
+    {
+      "mutation": "diagnostics branch explicitly set Access-Control-Allow-Origin: *",
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15h-red-cors.log",
+      "red": "expected ['access-control-allow-origin'] to deeply equal []"
+    },
+    {
+      "mutation": "owner-claim rejection bypassed",
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15h-red-owner-claim.log",
+      "red": "expected 200 to be 403"
+    },
+    {
+      "mutation": "authorizeOperatorRequest forced authorized=true",
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15h-red-credential.log",
+      "red": "expected 200 to be 401"
+    }
+  ],
+  "testRuns": [
+    {
+      "command": "vitest s15h live socket (5) + existing run115-s15a diagnostics read (20)",
+      "total": 25,
+      "passed": 25,
+      "failed": 0,
+      "exit": 0,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15h-green.log"
+    },
+    {
+      "typecheck": "tsc -p apps/runtime-host-bridge/tsconfig.json --noEmit",
+      "exit": 0,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15h-typecheck.log"
+    },
+    {
+      "biome": "biome check test/s15h-live-socket-diagnostics.test.ts",
+      "exit": 0,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15h-biome-check.log"
+    }
+  ],
+  "cleanup": "Every started BridgeServer is closed in afterEach; temp state roots are under E:\\role-model-run115\\s15h-* and removed in afterEach. Post-run check found 0 s15h dirs.",
+  "residualLimits": [
+    "CORS behavior in a real browser (preflight/Origin semantics) is not proven by fetch/Node.",
+    "Non-loopback peer and spoofed Host/Origin/forwarded-header refusal cannot be exercised while binding 127.0.0.1; the credential path and owner-claim rejection are proven instead.",
+    "Writer-enabled diagnostics content/retention/loss semantics are not this slice; only disabled state and an enabled empty-source 400 query are exercised.",
+    "TLS and deployed/static assets are out of scope and unproven."
+  ],
+  "file": {
+    "path": "role-model-router/apps/runtime-host-bridge/test/s15h-live-socket-diagnostics.test.ts",
+    "sha256": "3051c361fe9d2cb0e8ed5190646aa5a81e527539e9780585ad66f3bfae6928c1"
+  },
+  "productChanges": "none; all three mutations were temporary and restored. Source typecheck is 0 and the final suite is green."
+}

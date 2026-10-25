@@ -1,0 +1,52 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+stderr | test/s25b-refresh-owner-gap.test.ts > S25b shell refresh owner and gap resync > a revision gap 1 -> 3 with NO later event resyncs immediately, shows stale, and ignores the old revision
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 12.6ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: 'abc', status: 'loading' },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Diagnostics', id: 'abc' },
+    theme: 'light'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 12.569000000000415,
+  thresholdMs: 8
+}
+
+ ❯ test/s25b-refresh-owner-gap.test.ts (3 tests | 1 failed | 2 skipped) 4634ms
+   ↓ S25b shell refresh owner and gap resync > the real shell entry starts exactly one subscription and leaks none across two starts
+   × S25b shell refresh owner and gap resync > a revision gap 1 -> 3 with NO later event resyncs immediately, shows stale, and ignores the old revision 4632ms
+     → Timed out waiting for the stale state after the gap (last: undefined) | body: IndexDiagnostics 42Diagnostics: abcDiagnostics are disabled. This is a state, not an error.instance: instance-s25b · build: build-s25bRefresh diagnosticsLight shellClicks: 0Clicked 0 time(s)Toggle theme
+   ↓ S25b shell refresh owner and gap resync > a failed snapshot resync leaves the page visibly stale
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s25b-refresh-owner-gap.test.ts > S25b shell refresh owner and gap resync > a revision gap 1 -> 3 with NO later event resyncs immediately, shows stale, and ignores the old revision
+Error: Timed out waiting for the stale state after the gap (last: undefined) | body: IndexDiagnostics 42Diagnostics: abcDiagnostics are disabled. This is a state, not an error.instance: instance-s25b · build: build-s25bRefresh diagnosticsLight shellClicks: 0Clicked 0 time(s)Toggle theme
+ ❯ waitFor test/s25b-refresh-owner-gap.test.ts:24:9
+     22|     await new Promise<void>((resolve) => setTimeout(resolve, 10));
+     23|   }
+     24|   throw new Error(
+       |         ^
+     25|     `Timed out waiting for ${label} (last: ${String(last)}) | body: ${…
+     26|   );
+ ❯ test/s25b-refresh-owner-gap.test.ts:133:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 skipped (3)
+   Start at  06:23:11
+   Duration  10.97s (transform 3.12s, setup 0ms, collect 4.98s, tests 4.63s, environment 696ms, prepare 210ms)
+

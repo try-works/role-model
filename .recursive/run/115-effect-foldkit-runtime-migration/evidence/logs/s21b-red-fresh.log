@@ -1,0 +1,36 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/s21a-composition-dag.test.ts (6 tests | 1 failed | 5 skipped) 19ms
+   ↓ S21a composition DAG shape > builds the whole closed graph with no ambient service and exposes every owner
+   ↓ S21a composition DAG shape > gives every consumer of one shared leaf the same instance
+   × S21a composition DAG shape > negative control: Layer.fresh rebuilds inside one shared memo map (deleting fresh fails) 17ms
+     → expected { …(2) } not to be { …(2) } // Object.is equality
+   ↓ S21a composition DAG shape > rejects callers beyond permit + waiter capacity instead of parking them unboundedly
+   ↓ S21a composition DAG shape > returns the permit to the pool after a failing user
+   ↓ S21a composition DAG shape > returns the permit to the pool after an interrupted user
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s21a-composition-dag.test.ts > S21a composition DAG shape > negative control: Layer.fresh rebuilds inside one shared memo map (deleting fresh fails)
+AssertionError: expected { …(2) } not to be { …(2) } // Object.is equality
+
+Compared values have no visual difference.
+
+ ❯ test/s21a-composition-dag.test.ts:139:27
+    137|     // One memo map: the shared layer is memoised, Layer.fresh forces …
+    138|     expect(result[0]).toBe(result[1]);
+    139|     expect(result[2]).not.toBe(result[3]);
+       |                           ^
+    140|   });
+    141| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 skipped (6)
+   Start at  03:52:47
+   Duration  3.06s (transform 1.57s, setup 0ms, collect 2.58s, tests 19ms, environment 0ms, prepare 165ms)
+
+EXIT_CODE: 1

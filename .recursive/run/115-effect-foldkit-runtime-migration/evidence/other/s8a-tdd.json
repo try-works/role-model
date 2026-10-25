@@ -1,0 +1,221 @@
+{
+  "task": ".recursive/run/115-effect-foldkit-runtime-migration/tasks/s8a-worker-signal.md",
+  "run": "115-effect-foldkit-runtime-migration",
+  "slice": "S8a",
+  "requirement": "R26 / B8 cancellation gate (public)",
+  "model": "deepseek-flash",
+  "tdd_mode": "strict",
+  "status": "COMPLETE",
+  "finished_utc": "2026-10-24T15:05:44.508Z",
+  "vendored_lines_relied_on": [
+    "vendor/effect/packages/effect/src/Effect.ts:1008-1013 - tryPromise: `{ try: (signal: AbortSignal) => PromiseLike<A>; catch }`",
+    "vendor/effect/packages/effect/src/Effect.ts:925-927 - promise(evaluate: (signal: AbortSignal) => PromiseLike<A>)",
+    "vendor/effect/packages/effect/src/internal/effect.ts:1148-1166 - tryPromise passes `signal` to the thunk and sets withSignal from `f.length !== 0`",
+    "vendor/effect/packages/effect/src/internal/effect.ts:1187-1218 - AbortController created when withSignal; asyncFinalizer aborts it on interruption",
+    "vendor/effect/packages/effect/src/Effect.ts:13917 - fnUntraced (used for the handler-invoking function)",
+    "vendor/effect/packages/effect/src/Effect.ts:14042 - fn (present; not used, no span needed)",
+    "vendor/effect/packages/effect/src/Effect.ts:4777 - timeout (the existing attempt bound)"
+  ],
+  "llms_guidance": {
+    "source": "https://github.com/Effect-TS/effect/blob/main/LLMS.md, cross-checked in evidence/other/effect-4.0.6-api-notes.md",
+    "applied": [
+      "handler-invoking function is Effect.fnUntraced(function* (job, info) {...}) with the timeout/race attached as a combinator transform, instead of a thin function returning a race expression",
+      "no .pipe inside the Effect.fnUntraced body; the outer queue.take(...).pipe(Effect.catchCause(...)) stays outside it",
+      "signal forwarded from the tryPromise thunk into the handler context"
+    ],
+    "platform_node": "No @effect/platform-node or any Node platform package introduced; the change is confined to the app's queue-runtime sources and the new test.",
+    "conflicts": "None: every adopted line is present in the pinned 4.0.6 tree."
+  },
+  "defect_fix": {
+    "before": "try: () => handler(job, { attempt: info.attempts }) - thunk arity 0, so Effect.tryPromise allocated no AbortController; Effect.timeout interrupted the fiber and left the handler's Promise running.",
+    "after": "try: (signal) => handler(job, { attempt: info.attempts, signal }) - thunk arity 1, so the vendored tryPromise supplies the AbortSignal and aborts it on interruption; the handler receives it as context.signal.",
+    "contract": "QueueAttemptContext { attempt: number; signal?: AbortSignal } exported from workers.ts and used by all four worker option types and the queue-runtime option types."
+  },
+  "red": {
+    "message": "the handler must receive the Effect AbortSignal, but context.signal was undefined: expected true to be false",
+    "test": "run115-s8a-worker-abort-signal.test.ts (handler settles only when its signal aborts, under a 250 ms attempt bound)",
+    "log": "evidence/logs/s8a-red.log",
+    "exit_code": 1,
+    "capture_note": "Observed against the pre-fix thunk before the change; the stored log was produced by reverting only the signal-forward line, running the test, then restoring workers.ts from a byte-verified backup (sha256 7F610CC8... identical before and after)."
+  },
+  "green": {
+    "log": "evidence/logs/s8a-cancel-watch.log",
+    "exit_code": 0,
+    "files": 1,
+    "tests": 3,
+    "pass": 3,
+    "fail": 0,
+    "cases": [
+      "an attempt timeout aborts a handler that settles only on its signal (original S8a proof)",
+      "the cancel watch aborts a running handler's own signal when the operator cancels its row (F3 abort proof)",
+      "a cancelled attempt ends with the named QueueJobCancelledError, not only a fiber interrupt (F3 named-error proof at the queue-take boundary)"
+    ],
+    "earlier_green": "evidence/logs/s8a-green.log (the original single-test run)"
+  },
+  "rerun_suites": {
+    "requested": [
+      "run115-s8a-worker-abort-signal.test.ts",
+      "run101-addendum06-attempt-timeout.test.ts",
+      "run101-addendum08-attempt-outcome.test.ts",
+      "run101-r5-cancel-drain.test.ts"
+    ],
+    "serial": {
+      "command": "vitest run --no-file-parallelism <4 files>",
+      "log": "evidence/logs/s8a-rerun-serial.log",
+      "exit_code": 0,
+      "files": 4,
+      "tests": 12,
+      "pass": 12,
+      "fail": 0
+    },
+    "parallel": {
+      "command": "vitest run <4 files> (vitest default file parallelism)",
+      "log": "evidence/logs/s8a-rerun.log",
+      "exit_code": 1,
+      "files": 4,
+      "tests": 12,
+      "pass": 11,
+      "fail": 1,
+      "failure": "run101-r5-cancel-drain 'claims nothing while the queue is draining' - a timing-sensitive 500 ms/900 ms wait under parallel load; passes alone (5/5) and in the serial run (12/12), and passed in the earlier 13-file/43-test run.",
+      "note": "not attributable to S8a; recorded rather than hidden."
+    },
+    "r5_alone": {
+      "command": "vitest run test/run101-r5-cancel-drain.test.ts",
+      "exit_code": 0,
+      "tests": 5,
+      "pass": 5
+    },
+    "earlier_broad_rerun": {
+      "log": "evidence/logs/s8a-suites.log",
+      "exit_code": 0,
+      "files": 13,
+      "tests": 43,
+      "pass": 43,
+      "fail": 0,
+      "files_list": [
+        "run101-addendum02-queue-worker-dispatch.test.ts",
+        "run101-addendum03-evaluation-worker-noop.test.ts",
+        "run101-addendum06-attempt-timeout.test.ts",
+        "run101-addendum07-managed-runtime.test.ts",
+        "run101-addendum08-attempt-outcome.test.ts",
+        "run101-addendum19-stream-commit-point.test.ts",
+        "run101-addendum20-substantive-stream-gate.test.ts",
+        "run101-r2-public-queue-store.test.ts",
+        "run101-r4-replay-queue.test.ts",
+        "run101-r4-replay-worker.test.ts",
+        "run101-r5-cancel-drain.test.ts",
+        "run101-r5-public-evaluation-queue.test.ts",
+        "run101-r6-learner-queue.test.ts"
+      ]
+    }
+  },
+  "typecheck": {
+    "log": "evidence/logs/s8a-tsc.log",
+    "command": "node ../../../node_modules/typescript/bin/tsc -p tsconfig.json --noEmit",
+    "exit_code": 0
+  },
+  "lint": {
+    "tool": "anti_slop_lint (vendored 15 generic rules, error severity)",
+    "invocation_note": "From the linked worktree, a RELATIVE target resolves against the main checkout's project root (the worktree has a .git file, not a directory), so the tool scanned 0 files and reported 'clean'. The measured numbers below use ABSOLUTE paths under the worktree (filesScanned=1 per file).",
+    "corrected_claim": "The earlier 'clean on all four files' was wrong: it was a zero-file scan artifact.",
+    "measured": {
+      "workers.ts": {
+        "findings": 11,
+        "rules": [
+          "no-unknown-parameters",
+          "require-safety-comment-for-type-assertion"
+        ],
+        "head": 11,
+        "same_findings_as_head": true
+      },
+      "index.ts": {
+        "findings": 15,
+        "rules": [
+          "no-conditional-empty-object-spread",
+          "no-known-value-widening",
+          "no-unknown-parameters",
+          "require-safety-comment-for-type-assertion"
+        ],
+        "head": 15,
+        "same_findings_as_head": true
+      },
+      "cli.ts": {
+        "findings": 1137,
+        "rules": [
+          "no-chained-type-assertions",
+          "no-conditional-empty-object-spread",
+          "no-known-value-widening",
+          "no-runtime-typeof",
+          "no-shape-in-symbol-names",
+          "no-unknown-parameters",
+          "no-unknown-returns",
+          "no-unsafe-dictionary-type",
+          "require-safety-comment-for-type-assertion"
+        ],
+        "head": 1137,
+        "same_findings_as_head": true,
+        "note": "large pre-existing pattern debt, not introduced"
+      },
+      "run115-s8a-worker-abort-signal.test.ts": {
+        "findings": 0,
+        "note": "clean after SAFETY justifications; the two added cancel-watch assertions initially produced 2 require-safety-comment-for-type-assertion findings and were justified."
+      }
+    },
+    "comparison_method": "Compared the multiset of (rule, message) pairs for the worktree file and its `git show HEAD:` copy; zero findings appeared only on one side for all three sources (onlyCurrent=[] and onlyHead=[])."
+  },
+  "call_sites_updated": [
+    "src/queue-runtime/workers.ts: claim-loop attempt is Effect.fnUntraced; thunk declares (signal) and forwards it; QueueAttemptContext added; 4 worker option handler types updated; generic claim-loop handler type updated",
+    "src/queue-runtime/index.ts: QueueAttemptContext imported and used by ReplayQueueRuntimeOptions, EvaluationQueueRuntimeOptions and LearnerQueueRuntimeOptions (derive/promote)",
+    "src/cli.ts: all four in-repo handlers now declare (job, _context) with an explicit note that the delegated sweep does not accept an AbortSignal yet (dispatchCapture, resumeEvaluationsRef sweep, deriveLearnerCandidates sweep, learnFromUnconsumedCandidates sweep)"
+  ],
+  "layer_runtime_unaffected": "storeLayerForQueuePolicy, ManagedRuntime.make, Effect.runPromise/Effect.forkChild, Fiber.interrupt and Effect.provide(layer)/Effect.scoped are unchanged (diff touches only the take callback, the context types and the four cli handlers); the Layer composition and runtime lifecycle are untouched, so stop()/interrupt semantics are preserved.",
+  "unchanged_behaviour": "attempt accounting and the retry/exhaustion callbacks (onAttemptFailure/onAttemptOutcome and the terminal console.error), the cancel watch and its named QueueJobCancelledError, store lock/fence semantics and the store's interrupt-only cause handling all keep their previous structure; only the handler invocation gained the signal parameter.",
+  "still_not_cancellable": [
+    "replay handler -> loop.dispatchCapture(captureRef, dispatchRoundId): the dispatch sweep accepts no AbortSignal; a timed-out attempt is not cancelled inside its in-flight dispatch I/O (stated at the call site).",
+    "evaluation handler -> resumeEvaluationsRef.current(scope): the resume sweep accepts no AbortSignal (stated at the call site).",
+    "learner derive handler -> sweepOperations.deriveLearnerCandidates(input): accepts no AbortSignal (stated at the call site).",
+    "learner promote handler -> sweepOperations.learnFromUnconsumedCandidates(input): accepts no AbortSignal (stated at the call site).",
+    "These are the four remaining non-cancellable boundaries; plumbing a signal through each sweep is a separate change and is not claimed here."
+  ],
+  "changed_files": [
+    {
+      "path": "role-model-router/apps/runtime-host-bridge/src/queue-runtime/workers.ts",
+      "sha256": "7f610cc828f74354446206db73eace9f7fe00fc1e58e6a47a56b5dd597915fb2",
+      "change": "Effect.fnUntraced handler-invoking function; signal-forwarding thunk; QueueAttemptContext and handler types"
+    },
+    {
+      "path": "role-model-router/apps/runtime-host-bridge/src/queue-runtime/index.ts",
+      "sha256": "f5e31da2c7f10af80d889786f644709b600ee52e296d5edeac06fbe07841a764",
+      "change": "queue-runtime option handler contexts use QueueAttemptContext"
+    },
+    {
+      "path": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+      "sha256": "65d0cc6bc93bb092a5a3b2b4522f90da95a8408c67787565aa62d8a75e7141d5",
+      "change": "four in-repo handlers declare the context and state the non-cancellable boundaries"
+    },
+    {
+      "path": "role-model-router/apps/runtime-host-bridge/test/run115-s8a-worker-abort-signal.test.ts",
+      "sha256": "9f84a18d3a1a13bf36c9f29efc9589f7571e15ffe361f87a0f349ea161969757",
+      "change": "new abort-observation proof test"
+    }
+  ],
+  "evidence_logs": [
+    "evidence/logs/s8a-red.log",
+    "evidence/logs/s8a-green.log",
+    "evidence/logs/s8a-cancel-watch.log",
+    "evidence/logs/s8a-rerun.log",
+    "evidence/logs/s8a-rerun-serial.log",
+    "evidence/logs/s8a-suites.log",
+    "evidence/logs/s8a-tsc.log"
+  ],
+  "no_installs": true,
+  "no_commits": true,
+  "no_platform_node": true,
+  "cancellation_watch_f3": {
+    "status": "CLOSED with an explicitly stated observability limit",
+    "abort_half": "proved through the worker: the operator cancel (UPDATE effect_queue SET state='cancelled', acquired_at=NULL, acquired_by=NULL; the same statement as run101-r5-cancel-drain) makes the watch fail with QueueJobCancelledError, raceFirst interrupts the attempt, and the forwarded Effect AbortSignal fires inside the handler (asserted, not merely 'the fiber stopped').",
+    "named_error_half": "proved at the queue-take boundary the worker uses: the test composes the same attempt/watch raceFirst+timeout and asserts Exit.isFailure, Cause.hasInterruptsOnly === false, the failure is an instance of QueueJobCancelledError and its message names the job.",
+    "why_not_through_the_worker": "The claim loop deliberately swallows a non-interrupt cause (workers.ts catchCause -> Effect.sleep(250)) so the named error has no worker-level surface; and the operator cancel nulls acquired_by, so the store's failed/retry UPDATE (WHERE sequence=? AND acquired_by=<lock>) matches no row, leaving last_failure unset. Asserting a row readback or a worker callback for the class name would have been inventing a surface that does not exist.",
+    "precedent": "run101-r5-cancel-drain asserted only 'the cancelled handler did not run to completion' + row state; this follows the same operator mechanism and adds the signal/abort observation."
+  }
+}

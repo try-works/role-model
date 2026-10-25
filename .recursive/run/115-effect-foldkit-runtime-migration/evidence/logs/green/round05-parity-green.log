@@ -1,0 +1,21 @@
+
+> role-model@0.0.0 runtime:test-parity D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration
+> corepack pnpm --filter @role-model-router/ui-parity test
+
+
+> @role-model-router/ui-parity@0.0.0 test D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\ui-parity
+> vitest run
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui-parity
+
+ ✓ test/structure.test.ts (33 tests) 56ms
+ ✓ test/selfcheck.test.ts (2 tests) 32ms
+ ✓ test/compare.test.ts (35 tests) 49ms
+ ✓ test/target-contract.test.ts (58 tests) 112ms
+
+ Test Files  4 passed (4)
+      Tests  128 passed (128)
+   Start at  19:48:36
+   Duration  2.56s (transform 1.30s, setup 0ms, collect 1.79s, tests 250ms, environment 4ms, prepare 2.96s)
+

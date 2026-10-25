@@ -1,0 +1,12 @@
+# S3d browser smoke (vitest): jsdom absent -> explicit skip
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit
+
+ ↓ test/browser-runtime-smoke.test.mjs (3 tests | 3 skipped)
+
+ Test Files  1 skipped (1)
+      Tests  3 skipped (3)
+   Start at  23:24:30
+   Duration  777ms (transform 77ms, setup 0ms, collect 75ms, tests 0ms, environment 0ms, prepare 301ms)
+
+EXIT_CODE: 0

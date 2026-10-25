@@ -1,0 +1,37 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:30188) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/s21c-bootstrap-owner-wiring.test.ts (2 tests | 1 failed | 1 skipped) 1094ms
+   × S21c bootstrap owner wiring > the host calls the exact Bootstrap instance it received from the DAG 1092ms
+     → expected +0 to be 1 // Object.is equality
+   ↓ S21c bootstrap owner wiring > a second DAG construction is a different instance, so per-call fallback cannot pass identity
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s21c-bootstrap-owner-wiring.test.ts > S21c bootstrap owner wiring > the host calls the exact Bootstrap instance it received from the DAG
+AssertionError: expected +0 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ test/s21c-bootstrap-owner-wiring.test.ts:69:28
+     67|       expect(captured[0]).toBe(observedOwner);
+     68|       expect(observedOwner.id).toMatch(/^bootstrap:/);
+     69|       expect(pendingCalls).toBe(1);
+       |                            ^
+     70|       const deadline = Date.now() + 5000;
+     71|       while (runCalls === 0 && Date.now() < deadline) {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 skipped (2)
+   Start at  05:35:31
+   Duration  8.45s (transform 4.45s, setup 0ms, collect 6.84s, tests 1.09s, environment 0ms, prepare 177ms)
+

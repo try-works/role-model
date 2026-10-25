@@ -1,0 +1,89 @@
+{
+  "recordedAt": "2026-10-24",
+  "phase": "00",
+  "baselinePublic": "f0d50fab083e3fe8daf2474cd9fb08b51066c8e1",
+  "baselinePrivate": "16021cc5f87f60f2d01338a29adf0002da5e8327",
+  "results": [
+    {
+      "command": "corepack pnpm install --frozen-lockfile --ignore-scripts --store-dir E:/role-model-run115/pnpm-store --virtual-store-dir E:/role-model-run115/public-virtual-store --reporter append-only",
+      "repo": "public",
+      "exit": 0,
+      "packages": 681,
+      "job": "pwsh-b77e69eaa2944b0a",
+      "warning": "workspace cycle; no lifecycle scripts executed"
+    },
+    {
+      "command": "corepack pnpm install --frozen-lockfile --ignore-scripts --store-dir E:/role-model-run115/pnpm-store --virtual-store-dir E:/role-model-run115/private-virtual-store --reporter append-only",
+      "repo": "private",
+      "exit": 0,
+      "packages": 6
+    },
+    {
+      "command": "node build.mjs",
+      "cwd": "public/role-model-router/packages/effect",
+      "exit": 0,
+      "job": "pwsh-220e5e7191934115",
+      "warning": "source-only vendor missing base tsconfig warning; declarations completed; no new target API proof"
+    },
+    {
+      "command": "node shared/effect/build.mjs && node shared/sql-sqlite-node/build.mjs && node shared/effect-mq/build.mjs",
+      "repo": "private",
+      "exit": 0,
+      "warning": "source-only vendor base tsconfig warnings"
+    },
+    {
+      "command": "node node_modules/vitest/vitest.mjs run --root role-model-router/packages/process-supervisor",
+      "repo": "public",
+      "exit": 0,
+      "passed": 6
+    },
+    {
+      "command": "node --test --test-concurrency=1 tests/track-b/run101-r2-queue-store.test.mjs tests/track-b/run101-r8-queue-identity.test.mjs",
+      "repo": "private",
+      "exit": 0,
+      "passed": 8
+    },
+    {
+      "command": "node node_modules/vitest/vitest.mjs run --root role-model-router/packages/sqlite-memory",
+      "repo": "public root cwd",
+      "exit": 1,
+      "passed": 139,
+      "failed": 1,
+      "job": "pwsh-51c616f952a94ba5",
+      "failure": "legacy-migration.test.ts:126 uses process.cwd ../..; running from repository root points registry at D:/DEV/role-model/migrations/registry.json. Invocation failure, not behavioral RED or product defect claim."
+    },
+    {
+      "command": "node ../../../node_modules/vitest/vitest.mjs run test/legacy-migration.test.ts",
+      "cwd": "public/role-model-router/packages/sqlite-memory",
+      "exit": 0,
+      "passed": 11
+    },
+    {
+      "command": "node ../../../node_modules/vitest/vitest.mjs run",
+      "cwd": "public/role-model-router/packages/sqlite-memory",
+      "environment": {
+        "RUN00_TEMP_ROOT": "E:/role-model-run115/test-temp"
+      },
+      "exit": 0,
+      "passed": 140,
+      "files": 25,
+      "job": "pwsh-f53f6c6f59e843ec",
+      "purpose": "Correct cwd re-run of complete unchanged SQLite suite; supersedes failed root-cwd invocation, not failed implementation test."
+    },
+    {
+      "command": "node ../../../node_modules/vitest/vitest.mjs run app/lib/runtime-api.test.ts app/lib/view-models.test.ts app/lib/telemetry-analytics.test.ts app/lib/telemetry-chart-config.test.ts app/lib/theme.test.ts app/components/page-primitives.test.tsx",
+      "cwd": "public/role-model-router/apps/runtime-ui",
+      "exit": 0,
+      "passed": 150,
+      "files": 6,
+      "job": "pwsh-c77a0a682a624681"
+    }
+  ],
+  "limits": [
+    "Full workspace/host/full UI/private/package/browser/live suites not run; focused baseline checks passed.",
+    "Root runtime:build-test-deps returned0 but nested ambient pnpm11 and no-TTY modules purge warning,5 shared cache hits. Treat as cached evidence only; direct wrapper build separately verified.",
+    "Tool paths pnpm resolves DSH pnpm shim; future package commands should use pinned runner or direct installed Node entry with explicit cwd.",
+    "No product implementation, dependency manifest/lockfile/config changes, inference or operator runtime launches.",
+    "Exact DeepSeek worker route and E1/E2 scope decisions unresolved; Phase0 not lockable."
+  ]
+}

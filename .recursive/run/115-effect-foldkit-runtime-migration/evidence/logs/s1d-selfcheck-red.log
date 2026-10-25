@@ -1,0 +1,73 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui-parity
+
+ ❯ test/selfcheck.test.ts (2 tests | 1 failed) 20ms
+   × request parity selfcheck > checks identical repeated captures and every required negative control 17ms
+     → expected { status: 'FAILED', …(2) } to deeply equal { status: 'PASSED', …(2) }
+   ✓ request parity selfcheck > is deterministic and does not mutate or expose fixture request payloads 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/selfcheck.test.ts > request parity selfcheck > checks identical repeated captures and every required negative control
+AssertionError: expected { status: 'FAILED', …(2) } to deeply equal { status: 'PASSED', …(2) }
+
+- Expected
++ Received
+
+  {
+-   "checks": [
+-     {
+-       "name": "identical-repeat",
+-       "passed": true,
+-     },
+-     {
+-       "name": "independent-read-permutation",
+-       "passed": true,
+-     },
+-     {
+-       "name": "changed-body",
+-       "passed": true,
+-     },
+-     {
+-       "name": "extra-fetch",
+-       "passed": true,
+-     },
+-     {
+-       "name": "missing-fetch",
+-       "passed": true,
+-     },
+-     {
+-       "name": "changed-method",
+-       "passed": true,
+-     },
+-     {
+-       "name": "write-read-causality",
+-       "passed": true,
+-     },
+-     {
+-       "name": "changed-status",
+-       "passed": true,
+-     },
+-   ],
++   "checks": [],
+    "scope": "request-comparator-only",
+-   "status": "PASSED",
++   "status": "FAILED",
+  }
+
+ ❯ test/selfcheck.test.ts:6:41
+      4| describe("request parity selfcheck", () => {
+      5|   it("checks identical repeated captures and every required negative c…
+      6|     expect(runRequestParitySelfcheck()).toEqual({
+       |                                         ^
+      7|       status: "PASSED",
+      8|       scope: "request-comparator-only",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  19:21:57
+   Duration  980ms (transform 112ms, setup 0ms, collect 92ms, tests 20ms, environment 0ms, prepare 329ms)
+

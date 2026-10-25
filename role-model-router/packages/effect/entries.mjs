@@ -65,6 +65,12 @@ export async function discoverEffectSubpaths() {
     vendored,
     path.join(repoRoot, "vendor", "effect-mq", "packages", "effect-mq", "src"),
     path.join(repoRoot, "vendor", "effect", "packages", "sql", "sqlite-node", "src"),
+    // Run 115 S3d: the first-party browser platform wrapper externalises
+    // `effect/<subpath>`, so the subpaths ITS sources import must be built too.
+    // Without this the wrapper resolved against `dist` files that did not exist
+    // (Pipeable, Runtime, Deferred, Effectable, PlatformError, http/HttpClientError),
+    // which only showed up at runtime, not in the static graph scan.
+    path.join(repoRoot, "vendor", "effect", "packages", "platform", "browser", "src"),
   ];
   const subpaths = new Set();
   for (const root of searchRoots) {

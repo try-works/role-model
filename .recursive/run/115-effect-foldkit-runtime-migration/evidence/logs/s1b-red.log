@@ -1,0 +1,1291 @@
+PHASE: S1b assertion RED
+TIMESTAMP: 2026-10-24T10:49:49.0826581Z
+CWD: D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\ui-parity
+COMMAND: node ../../../node_modules/vitest/vitest.mjs run test/target-contract.test.ts
+EXIT: 1
+TEST_SHA256: 1eb479857d371f94e6911a3f7bcdd562ce580192900f99fc119e640470fe3519
+SCAFFOLD_SHA256: b8f8c9a8fafc8c8c942a93a5199c0e1ccc2bc8d6bbb5fdc87ae9add852bccfe2
+ANTI_SLOP_LINT: not-found
+
+OUTPUT:
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui-parity
+
+ ❯ test/target-contract.test.ts (45 tests | 45 failed) 148ms
+   × validateVerificationTarget > accepts an exact loopback packaged target 39ms
+     → expected { ok: false, findings: [] } to deeply equal { ok: true, findings: [] }
+   × validateVerificationTarget > canonicalizes Windows slash and case for roots 4ms
+     → expected { ok: false, findings: [] } to deeply equal { ok: true, findings: [] }
+   × validateVerificationTarget > keeps POSIX root comparison case-sensitive 11ms
+     → expected { ok: false, findings: [] } to deeply equal { ok: false, …(1) }
+   × validateVerificationTarget > accepts source-qa provenance when packaged is not required 3ms
+     → expected { ok: false, findings: [] } to deeply equal { ok: true, findings: [] }
+   × validateVerificationTarget > rejects protected operator ports on the intent 3ms
+     → expected [] to deep equally contain { code: 'protected_port', …(1) }
+   × validateVerificationTarget > rejects a protected operator port on a non-loopback observation 4ms
+     → expected [] to include 'protected_port'
+   × validateVerificationTarget > rejects a non-loopback client host 2ms
+     → expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+   × validateVerificationTarget > rejects a non-loopback expected client host 2ms
+     → expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+   × validateVerificationTarget > rejects a loopback host that does not match the intent 2ms
+     → expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+   × validateVerificationTarget > rejects a port that does not match the intent 3ms
+     → expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+   × validateVerificationTarget > rejects userinfo in the client URL 3ms
+     → expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+   × validateVerificationTarget > rejects a path in the client URL 2ms
+     → expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+   × validateVerificationTarget > rejects a query in the client URL 2ms
+     → expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+   × validateVerificationTarget > rejects a fragment in the client URL 2ms
+     → expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+   × validateVerificationTarget > rejects a malformed client URL 2ms
+     → expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+   × validateVerificationTarget > rejects a nonpositive expected port 2ms
+     → expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+   × validateVerificationTarget > rejects an out-of-range observed port 2ms
+     → expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+   × validateVerificationTarget > rejects an empty source tree identifier 2ms
+     → expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+   × validateVerificationTarget > rejects a nonpositive expected PID 2ms
+     → expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+   × validateVerificationTarget > rejects a noninteger observed PID 1ms
+     → expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+   × validateVerificationTarget > rejects a nonhex expected artifact SHA 1ms
+     → expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+   × validateVerificationTarget > rejects a nonhex observed artifact SHA 1ms
+     → expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+   × validateVerificationTarget > rejects a relative state root 7ms
+     → expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+   × validateVerificationTarget > rejects a wrong PID 4ms
+     → expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+   × validateVerificationTarget > rejects a wrong state root 3ms
+     → expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+   × validateVerificationTarget > rejects a wrong config root 2ms
+     → expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+   × validateVerificationTarget > rejects a wrong source tree 3ms
+     → expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+   × validateVerificationTarget > rejects a wrong private distribution 3ms
+     → expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+   × validateVerificationTarget > rejects a wrong UI tree 3ms
+     → expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+   × validateVerificationTarget > rejects a wrong artifact SHA 2ms
+     → expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+   × validateVerificationTarget > rejects provisional, not-ready, and unavailable health 2ms
+     → expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+   × validateVerificationTarget > rejects source-qa provenance when packaged is required 1ms
+     → expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+   × validateVerificationTarget > rejects source-qa build mode when packaged is required 1ms
+     → expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+   × validateVerificationTarget > rejects an intended state root listed in the explicit forbidden roots 2ms
+     → expected { ok: false, findings: [] } to deeply equal { ok: false, …(1) }
+   × validateVerificationTarget > rejects an intended config root listed in the explicit forbidden roots 1ms
+     → expected { ok: false, findings: [] } to deeply equal { ok: false, …(1) }
+   × validateVerificationTarget > does not echo a malicious client URL or its secrets 1ms
+     → expected [] to deep equally contain { code: 'invalid_value', …(1) }
+   × evaluateVerificationOutcome > marks a pure guard pass as VERIFIED with an honest adapter limitation 2ms
+     → expected { status: 'FAILED', findings: [] } to deeply equal { status: 'VERIFIED', …(1) }
+   × evaluateVerificationOutcome > does not mark a NOT_RUN execution as VERIFIED 1ms
+     → expected { status: 'FAILED', findings: [] } to deeply equal { status: 'NOT_RUN', …(1) }
+   × evaluateVerificationOutcome > does not mark a missing provider as VERIFIED 2ms
+     → expected { status: 'FAILED', findings: [] } to deeply equal { status: 'NOT_RUN', …(1) }
+   × evaluateVerificationOutcome > does not mark an executed run with a missing provider as VERIFIED 1ms
+     → expected { status: 'FAILED', findings: [] } to deeply equal { status: 'NOT_RUN', …(1) }
+   × evaluateVerificationOutcome > does not mark missing correlated evidence as VERIFIED 1ms
+     → expected { status: 'FAILED', findings: [] } to deeply equal { status: 'NOT_RUN', …(1) }
+   × evaluateVerificationOutcome > marks invalid correlated evidence as FAILED 1ms
+     → expected { status: 'FAILED', findings: [] } to deeply equal { status: 'FAILED', …(1) }
+   × evaluateVerificationOutcome > marks target findings as FAILED 1ms
+     → expected { status: 'FAILED', findings: [] } to deeply equal { status: 'FAILED', …(1) }
+   × evaluateVerificationOutcome > marks a failed execution as FAILED 2ms
+     → expected { status: 'FAILED', findings: [] } to deeply equal { status: 'FAILED', …(1) }
+   × evaluateVerificationOutcome > returns only bounded static codes and no environment values 1ms
+     → expected 0 to be greater than 0
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 45 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > accepts an exact loopback packaged target
+AssertionError: expected { ok: false, findings: [] } to deeply equal { ok: true, findings: [] }
+
+- Expected
++ Received
+
+  {
+    "findings": [],
+-   "ok": true,
++   "ok": false,
+  }
+
+ ❯ test/target-contract.test.ts:62:65
+     60| describe("validateVerificationTarget", () => {
+     61|   it("accepts an exact loopback packaged target", () => {
+     62|     expect(validateVerificationTarget(intent(), observation())).toEqua…
+       |                                                                 ^
+     63|       ok: true,
+     64|       findings: [],
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/45]⎯
+
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > canonicalizes Windows slash and case for roots
+AssertionError: expected { ok: false, findings: [] } to deeply equal { ok: true, findings: [] }
+
+- Expected
++ Received
+
+  {
+    "findings": [],
+-   "ok": true,
++   "ok": false,
+  }
+
+ ❯ test/target-contract.test.ts:77:20
+     75|     );
+     76| 
+     77|     expect(result).toEqual({ ok: true, findings: [] });
+       |                    ^
+     78|   });
+     79| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/45]⎯
+
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > keeps POSIX root comparison case-sensitive
+AssertionError: expected { ok: false, findings: [] } to deeply equal { ok: false, …(1) }
+
+- Expected
++ Received
+
+  {
+-   "findings": [
+-     {
+-       "code": "state_root_mismatch",
+-       "field": "observation.stateRoot",
+-     },
+-     {
+-       "code": "config_root_mismatch",
+-       "field": "observation.configRoot",
+-     },
+-   ],
++   "findings": [],
+    "ok": false,
+  }
+
+ ❯ test/target-contract.test.ts:94:20
+     92|     );
+     93| 
+     94|     expect(result).toEqual({
+       |                    ^
+     95|       ok: false,
+     96|       findings: [
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/45]⎯
+
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > accepts source-qa provenance when packaged is not required
+AssertionError: expected { ok: false, findings: [] } to deeply equal { ok: true, findings: [] }
+
+- Expected
++ Received
+
+  {
+    "findings": [],
+-   "ok": true,
++   "ok": false,
+  }
+
+ ❯ test/target-contract.test.ts:109:20
+    107|     );
+    108| 
+    109|     expect(result).toEqual({ ok: true, findings: [] });
+       |                    ^
+    110|   });
+    111| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/45]⎯
+
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > rejects protected operator ports on the intent
+AssertionError: expected [] to deep equally contain { code: 'protected_port', …(1) }
+
+- Expected: 
+{
+  "code": "protected_port",
+  "field": "intent.expectedClientPort",
+}
+
++ Received: 
+[]
+
+ ❯ test/target-contract.test.ts:119:31
+    117|       );
+    118| 
+    119|       expect(result.findings).toContainEqual({
+       |                               ^
+    120|         code: "protected_port",
+    121|         field: "intent.expectedClientPort",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/45]⎯
+
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > rejects a protected operator port on a non-loopback observation
+AssertionError: expected [] to include 'protected_port'
+ ❯ test/target-contract.test.ts:136:36
+    134|     );
+    135| 
+    136|     expect(codes(result.findings)).toContain("protected_port");
+       |                                    ^
+    137|     expect(codes(result.findings)).toContain("non_loopback_host");
+    138|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/45]⎯
+
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > rejects a non-loopback client host
+AssertionError: expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+
+- Expected
++ Received
+
+  {
+-   "findings": [
+-     {
+-       "code": "non_loopback_host",
+-       "field": "observation.clientUrl",
+-     },
+-   ],
++   "findings": [],
+    "ok": false,
+  }
+
+ ❯ test/target-contract.test.ts:146:7
+    144|         observation({ clientUrl: "http://example.com:4310" }),
+    145|       ),
+    146|     ).toEqual({
+       |       ^
+    147|       ok: false,
+    148|       findings: [{ code: "non_loopback_host", field: "observation.clie…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/45]⎯
+
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > rejects a non-loopback expected client host
+AssertionError: expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+
+- Expected
++ Received
+
+  {
+-   "findings": [
+-     {
+-       "code": "non_loopback_host",
+-       "field": "intent.expectedClientHost",
+-     },
+-   ],
++   "findings": [],
+    "ok": false,
+  }
+
+ ❯ test/target-contract.test.ts:158:7
+    156|         observation(),
+    157|       ),
+    158|     ).toEqual({
+       |       ^
+    159|       ok: false,
+    160|       findings: [{ code: "non_loopback_host", field: "intent.expectedC…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/45]⎯
+
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > rejects a loopback host that does not match the intent
+AssertionError: expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+
+- Expected
++ Received
+
+  {
+-   "findings": [
+-     {
+-       "code": "client_host_mismatch",
+-       "field": "observation.clientUrl.host",
+-     },
+-   ],
++   "findings": [],
+    "ok": false,
+  }
+
+ ❯ test/target-contract.test.ts:170:7
+    168|         observation({ clientUrl: "http://127.0.0.2:4310" }),
+    169|       ),
+    170|     ).toEqual({
+       |       ^
+    171|       ok: false,
+    172|       findings: [{ code: "client_host_mismatch", field: "observation.c…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/45]⎯
+
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > rejects a port that does not match the intent
+AssertionError: expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+
+- Expected
++ Received
+
+  {
+-   "findings": [
+-     {
+-       "code": "client_port_mismatch",
+-       "field": "observation.clientUrl.port",
+-     },
+-   ],
++   "findings": [],
+    "ok": false,
+  }
+
+ ❯ test/target-contract.test.ts:182:7
+    180|         observation({ clientUrl: "http://127.0.0.1:4311" }),
+    181|       ),
+    182|     ).toEqual({
+       |       ^
+    183|       ok: false,
+    184|       findings: [{ code: "client_port_mismatch", field: "observation.c…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/45]⎯
+
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > rejects userinfo in the client URL
+AssertionError: expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+
+- Expected
++ Received
+
+  {
+-   "findings": [
+-     {
+-       "code": "invalid_value",
+-       "field": "observation.clientUrl",
+-     },
+-   ],
++   "findings": [],
+    "ok": false,
+  }
+
+ ❯ test/target-contract.test.ts:194:7
+    192|         observation({ clientUrl: "http://user:secret@127.0.0.1:4310" }…
+    193|       ),
+    194|     ).toEqual({
+       |       ^
+    195|       ok: false,
+    196|       findings: [{ code: "invalid_value", field: "observation.clientUr…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/45]⎯
+
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > rejects a path in the client URL
+AssertionError: expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+
+- Expected
++ Received
+
+  {
+-   "findings": [
+-     {
+-       "code": "invalid_value",
+-       "field": "observation.clientUrl",
+-     },
+-   ],
++   "findings": [],
+    "ok": false,
+  }
+
+ ❯ test/target-contract.test.ts:206:7
+    204|         observation({ clientUrl: "http://127.0.0.1:4310/admin" }),
+    205|       ),
+    206|     ).toEqual({
+       |       ^
+    207|       ok: false,
+    208|       findings: [{ code: "invalid_value", field: "observation.clientUr…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/45]⎯
+
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > rejects a query in the client URL
+AssertionError: expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+
+- Expected
++ Received
+
+  {
+-   "findings": [
+-     {
+-       "code": "invalid_value",
+-       "field": "observation.clientUrl",
+-     },
+-   ],
++   "findings": [],
+    "ok": false,
+  }
+
+ ❯ test/target-contract.test.ts:218:7
+    216|         observation({ clientUrl: "http://127.0.0.1:4310?token=secret" …
+    217|       ),
+    218|     ).toEqual({
+       |       ^
+    219|       ok: false,
+    220|       findings: [{ code: "invalid_value", field: "observation.clientUr…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/45]⎯
+
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > rejects a fragment in the client URL
+AssertionError: expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+
+- Expected
++ Received
+
+  {
+-   "findings": [
+-     {
+-       "code": "invalid_value",
+-       "field": "observation.clientUrl",
+-     },
+-   ],
++   "findings": [],
+    "ok": false,
+  }
+
+ ❯ test/target-contract.test.ts:230:7
+    228|         observation({ clientUrl: "http://127.0.0.1:4310#fragment" }),
+    229|       ),
+    230|     ).toEqual({
+       |       ^
+    231|       ok: false,
+    232|       findings: [{ code: "invalid_value", field: "observation.clientUr…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/45]⎯
+
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > rejects a malformed client URL
+AssertionError: expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+
+- Expected
++ Received
+
+  {
+-   "findings": [
+-     {
+-       "code": "invalid_value",
+-       "field": "observation.clientUrl",
+-     },
+-   ],
++   "findings": [],
+    "ok": false,
+  }
+
+ ❯ test/target-contract.test.ts:242:7
+    240|         observation({ clientUrl: "not-a-url" }),
+    241|       ),
+    242|     ).toEqual({
+       |       ^
+    243|       ok: false,
+    244|       findings: [{ code: "invalid_value", field: "observation.clientUr…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/45]⎯
+
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > rejects a nonpositive expected port
+AssertionError: expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+
+- Expected
++ Received
+
+  {
+-   "findings": [
+-     {
+-       "code": "invalid_value",
+-       "field": "intent.expectedClientPort",
+-     },
+-   ],
++   "findings": [],
+    "ok": false,
+  }
+
+ ❯ test/target-contract.test.ts:254:7
+    252|         observation(),
+    253|       ),
+    254|     ).toEqual({
+       |       ^
+    255|       ok: false,
+    256|       findings: [{ code: "invalid_value", field: "intent.expectedClien…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/45]⎯
+
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > rejects an out-of-range observed port
+AssertionError: expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+
+- Expected
++ Received
+
+  {
+-   "findings": [
+-     {
+-       "code": "invalid_value",
+-       "field": "observation.clientUrl",
+-     },
+-   ],
++   "findings": [],
+    "ok": false,
+  }
+
+ ❯ test/target-contract.test.ts:266:7
+    264|         observation({ clientUrl: "http://127.0.0.1:70000" }),
+    265|       ),
+    266|     ).toEqual({
+       |       ^
+    267|       ok: false,
+    268|       findings: [{ code: "invalid_value", field: "observation.clientUr…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/45]⎯
+
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > rejects an empty source tree identifier
+AssertionError: expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+
+- Expected
++ Received
+
+  {
+-   "findings": [
+-     {
+-       "code": "invalid_value",
+-       "field": "intent.expectedSourceTree",
+-     },
+-   ],
++   "findings": [],
+    "ok": false,
+  }
+
+ ❯ test/target-contract.test.ts:278:7
+    276|         observation(),
+    277|       ),
+    278|     ).toEqual({
+       |       ^
+    279|       ok: false,
+    280|       findings: [{ code: "invalid_value", field: "intent.expectedSourc…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/45]⎯
+
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > rejects a nonpositive expected PID
+AssertionError: expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+
+- Expected
++ Received
+
+  {
+-   "findings": [
+-     {
+-       "code": "invalid_value",
+-       "field": "intent.expectedPid",
+-     },
+-   ],
++   "findings": [],
+    "ok": false,
+  }
+
+ ❯ test/target-contract.test.ts:290:7
+    288|         observation(),
+    289|       ),
+    290|     ).toEqual({
+       |       ^
+    291|       ok: false,
+    292|       findings: [{ code: "invalid_value", field: "intent.expectedPid" …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[19/45]⎯
+
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > rejects a noninteger observed PID
+AssertionError: expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+
+- Expected
++ Received
+
+  {
+-   "findings": [
+-     {
+-       "code": "invalid_value",
+-       "field": "observation.pid",
+-     },
+-   ],
++   "findings": [],
+    "ok": false,
+  }
+
+ ❯ test/target-contract.test.ts:302:7
+    300|         observation({ pid: 1.5 }),
+    301|       ),
+    302|     ).toEqual({
+       |       ^
+    303|       ok: false,
+    304|       findings: [{ code: "invalid_value", field: "observation.pid" }],
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[20/45]⎯
+
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > rejects a nonhex expected artifact SHA
+AssertionError: expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+
+- Expected
++ Received
+
+  {
+-   "findings": [
+-     {
+-       "code": "invalid_value",
+-       "field": "intent.expectedArtifactSha256",
+-     },
+-   ],
++   "findings": [],
+    "ok": false,
+  }
+
+ ❯ test/target-contract.test.ts:314:7
+    312|         observation(),
+    313|       ),
+    314|     ).toEqual({
+       |       ^
+    315|       ok: false,
+    316|       findings: [{ code: "invalid_value", field: "intent.expectedArtif…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[21/45]⎯
+
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > rejects a nonhex observed artifact SHA
+AssertionError: expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+
+- Expected
++ Received
+
+  {
+-   "findings": [
+-     {
+-       "code": "invalid_value",
+-       "field": "observation.artifactSha256",
+-     },
+-   ],
++   "findings": [],
+    "ok": false,
+  }
+
+ ❯ test/target-contract.test.ts:326:7
+    324|         observation({ artifactSha256: "zz".repeat(32) }),
+    325|       ),
+    326|     ).toEqual({
+       |       ^
+    327|       ok: false,
+    328|       findings: [{ code: "invalid_value", field: "observation.artifact…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22/45]⎯
+
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > rejects a relative state root
+AssertionError: expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+
+- Expected
++ Received
+
+  {
+-   "findings": [
+-     {
+-       "code": "invalid_value",
+-       "field": "intent.expectedStateRoot",
+-     },
+-   ],
++   "findings": [],
+    "ok": false,
+  }
+
+ ❯ test/target-contract.test.ts:338:7
+    336|         observation(),
+    337|       ),
+    338|     ).toEqual({
+       |       ^
+    339|       ok: false,
+    340|       findings: [{ code: "invalid_value", field: "intent.expectedState…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[23/45]⎯
+
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > rejects a wrong PID
+AssertionError: expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+
+- Expected
++ Received
+
+  {
+-   "findings": [
+-     {
+-       "code": "pid_mismatch",
+-       "field": "observation.pid",
+-     },
+-   ],
++   "findings": [],
+    "ok": false,
+  }
+
+ ❯ test/target-contract.test.ts:347:7
+    345|     expect(
+    346|       validateVerificationTarget(intent(), observation({ pid: 9999 })),
+    347|     ).toEqual({
+       |       ^
+    348|       ok: false,
+    349|       findings: [{ code: "pid_mismatch", field: "observation.pid" }],
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[24/45]⎯
+
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > rejects a wrong state root
+AssertionError: expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+
+- Expected
++ Received
+
+  {
+-   "findings": [
+-     {
+-       "code": "state_root_mismatch",
+-       "field": "observation.stateRoot",
+-     },
+-   ],
++   "findings": [],
+    "ok": false,
+  }
+
+ ❯ test/target-contract.test.ts:359:7
+    357|         observation({ stateRoot: "C:\\RoleModel\\run115\\other-state" …
+    358|       ),
+    359|     ).toEqual({
+       |       ^
+    360|       ok: false,
+    361|       findings: [{ code: "state_root_mismatch", field: "observation.st…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[25/45]⎯
+
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > rejects a wrong config root
+AssertionError: expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+
+- Expected
++ Received
+
+  {
+-   "findings": [
+-     {
+-       "code": "config_root_mismatch",
+-       "field": "observation.configRoot",
+-     },
+-   ],
++   "findings": [],
+    "ok": false,
+  }
+
+ ❯ test/target-contract.test.ts:371:7
+    369|         observation({ configRoot: "C:\\RoleModel\\run115\\other-config…
+    370|       ),
+    371|     ).toEqual({
+       |       ^
+    372|       ok: false,
+    373|       findings: [{ code: "config_root_mismatch", field: "observation.c…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[26/45]⎯
+
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > rejects a wrong source tree
+AssertionError: expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+
+- Expected
++ Received
+
+  {
+-   "findings": [
+-     {
+-       "code": "source_tree_mismatch",
+-       "field": "observation.sourceTree",
+-     },
+-   ],
++   "findings": [],
+    "ok": false,
+  }
+
+ ❯ test/target-contract.test.ts:383:7
+    381|         observation({ sourceTree: "source-tree-b" }),
+    382|       ),
+    383|     ).toEqual({
+       |       ^
+    384|       ok: false,
+    385|       findings: [{ code: "source_tree_mismatch", field: "observation.s…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[27/45]⎯
+
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > rejects a wrong private distribution
+AssertionError: expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+
+- Expected
++ Received
+
+  {
+-   "findings": [
+-     {
+-       "code": "private_distribution_mismatch",
+-       "field": "observation.privateDistribution",
+-     },
+-   ],
++   "findings": [],
+    "ok": false,
+  }
+
+ ❯ test/target-contract.test.ts:395:7
+    393|         observation({ privateDistribution: "private-dist-b" }),
+    394|       ),
+    395|     ).toEqual({
+       |       ^
+    396|       ok: false,
+    397|       findings: [
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[28/45]⎯
+
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > rejects a wrong UI tree
+AssertionError: expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+
+- Expected
++ Received
+
+  {
+-   "findings": [
+-     {
+-       "code": "ui_tree_mismatch",
+-       "field": "observation.uiTree",
+-     },
+-   ],
++   "findings": [],
+    "ok": false,
+  }
+
+ ❯ test/target-contract.test.ts:412:7
+    410|         observation({ uiTree: "ui-tree-b" }),
+    411|       ),
+    412|     ).toEqual({
+       |       ^
+    413|       ok: false,
+    414|       findings: [{ code: "ui_tree_mismatch", field: "observation.uiTre…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[29/45]⎯
+
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > rejects a wrong artifact SHA
+AssertionError: expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+
+- Expected
++ Received
+
+  {
+-   "findings": [
+-     {
+-       "code": "artifact_sha_mismatch",
+-       "field": "observation.artifactSha256",
+-     },
+-   ],
++   "findings": [],
+    "ok": false,
+  }
+
+ ❯ test/target-contract.test.ts:424:7
+    422|         observation({ artifactSha256: SHA_B }),
+    423|       ),
+    424|     ).toEqual({
+       |       ^
+    425|       ok: false,
+    426|       findings: [
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[30/45]⎯
+
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > rejects provisional, not-ready, and unavailable health
+AssertionError: expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+
+- Expected
++ Received
+
+  {
+-   "findings": [
+-     {
+-       "code": "health_not_ready",
+-       "field": "observation.health",
+-     },
+-   ],
++   "findings": [],
+    "ok": false,
+  }
+
+ ❯ test/target-contract.test.ts:436:9
+    434|       expect(
+    435|         validateVerificationTarget(intent(), observation({ health })),
+    436|       ).toEqual({
+       |         ^
+    437|         ok: false,
+    438|         findings: [{ code: "health_not_ready", field: "observation.hea…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[31/45]⎯
+
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > rejects source-qa provenance when packaged is required
+AssertionError: expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+
+- Expected
++ Received
+
+  {
+-   "findings": [
+-     {
+-       "code": "packaged_artifact_required",
+-       "field": "observation.provenance",
+-     },
+-   ],
++   "findings": [],
+    "ok": false,
+  }
+
+ ❯ test/target-contract.test.ts:449:7
+    447|         observation({ provenance: "source_qa" }),
+    448|       ),
+    449|     ).toEqual({
+       |       ^
+    450|       ok: false,
+    451|       findings: [
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[32/45]⎯
+
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > rejects source-qa build mode when packaged is required
+AssertionError: expected { ok: false, findings: [] } to deeply equal { ok: false, findings: [ { …(2) } ] }
+
+- Expected
++ Received
+
+  {
+-   "findings": [
+-     {
+-       "code": "build_mode_not_packaged",
+-       "field": "observation.buildMode",
+-     },
+-   ],
++   "findings": [],
+    "ok": false,
+  }
+
+ ❯ test/target-contract.test.ts:463:7
+    461|         observation({ buildMode: "source_qa" }),
+    462|       ),
+    463|     ).toEqual({
+       |       ^
+    464|       ok: false,
+    465|       findings: [
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[33/45]⎯
+
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > rejects an intended state root listed in the explicit forbidden roots
+AssertionError: expected { ok: false, findings: [] } to deeply equal { ok: false, …(1) }
+
+- Expected
++ Received
+
+  {
+-   "findings": [
+-     {
+-       "code": "forbidden_root",
+-       "field": "intent.expectedStateRoot",
+-     },
+-     {
+-       "code": "forbidden_root",
+-       "field": "observation.stateRoot",
+-     },
+-   ],
++   "findings": [],
+    "ok": false,
+  }
+
+ ❯ test/target-contract.test.ts:481:7
+    479|         }),
+    480|       ),
+    481|     ).toEqual({
+       |       ^
+    482|       ok: false,
+    483|       findings: [
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[34/45]⎯
+
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > rejects an intended config root listed in the explicit forbidden roots
+AssertionError: expected { ok: false, findings: [] } to deeply equal { ok: false, …(1) }
+
+- Expected
++ Received
+
+  {
+-   "findings": [
+-     {
+-       "code": "forbidden_root",
+-       "field": "intent.expectedConfigRoot",
+-     },
+-     {
+-       "code": "forbidden_root",
+-       "field": "observation.configRoot",
+-     },
+-   ],
++   "findings": [],
+    "ok": false,
+  }
+
+ ❯ test/target-contract.test.ts:500:7
+    498|         }),
+    499|       ),
+    500|     ).toEqual({
+       |       ^
+    501|       ok: false,
+    502|       findings: [
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[35/45]⎯
+
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > does not echo a malicious client URL or its secrets
+AssertionError: expected [] to deep equally contain { code: 'invalid_value', …(1) }
+
+- Expected: 
+{
+  "code": "invalid_value",
+  "field": "observation.clientUrl",
+}
+
++ Received: 
+[]
+
+ ❯ test/target-contract.test.ts:514:29
+    512|       observation({ clientUrl: "http://user:secret@127.0.0.1:4310" }),
+    513|     );
+    514|     expect(result.findings).toContainEqual({ code: "invalid_value", fi…
+       |                             ^
+    515|     const serialized = JSON.stringify(result);
+    516| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[36/45]⎯
+
+ FAIL  test/target-contract.test.ts > evaluateVerificationOutcome > marks a pure guard pass as VERIFIED with an honest adapter limitation
+AssertionError: expected { status: 'FAILED', findings: [] } to deeply equal { status: 'VERIFIED', …(1) }
+
+- Expected
++ Received
+
+  {
+-   "findings": [
+-     {
+-       "code": "pure_guard_pass_not_environment_verification",
+-     },
+-     {
+-       "code": "adapter_must_resolve_realpath_and_check_processes",
+-     },
+-   ],
+-   "status": "VERIFIED",
++   "findings": [],
++   "status": "FAILED",
+  }
+
+ ❯ test/target-contract.test.ts:536:7
+    534|         "complete",
+    535|       ),
+    536|     ).toEqual({
+       |       ^
+    537|       status: "VERIFIED",
+    538|       findings: [
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[37/45]⎯
+
+ FAIL  test/target-contract.test.ts > evaluateVerificationOutcome > does not mark a NOT_RUN execution as VERIFIED
+AssertionError: expected { status: 'FAILED', findings: [] } to deeply equal { status: 'NOT_RUN', …(1) }
+
+- Expected
++ Received
+
+  {
+-   "findings": [
+-     {
+-       "code": "execution_not_run",
+-     },
+-   ],
+-   "status": "NOT_RUN",
++   "findings": [],
++   "status": "FAILED",
+  }
+
+ ❯ test/target-contract.test.ts:552:7
+    550|         "complete",
+    551|       ),
+    552|     ).toEqual({
+       |       ^
+    553|       status: "NOT_RUN",
+    554|       findings: [{ code: "execution_not_run" }],
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[38/45]⎯
+
+ FAIL  test/target-contract.test.ts > evaluateVerificationOutcome > does not mark a missing provider as VERIFIED
+AssertionError: expected { status: 'FAILED', findings: [] } to deeply equal { status: 'NOT_RUN', …(1) }
+
+- Expected
++ Received
+
+  {
+-   "findings": [
+-     {
+-       "code": "execution_not_run",
+-     },
+-     {
+-       "code": "provider_missing",
+-     },
+-   ],
+-   "status": "NOT_RUN",
++   "findings": [],
++   "status": "FAILED",
+  }
+
+ ❯ test/target-contract.test.ts:565:7
+    563|         "complete",
+    564|       ),
+    565|     ).toEqual({
+       |       ^
+    566|       status: "NOT_RUN",
+    567|       findings: [
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[39/45]⎯
+
+ FAIL  test/target-contract.test.ts > evaluateVerificationOutcome > does not mark an executed run with a missing provider as VERIFIED
+AssertionError: expected { status: 'FAILED', findings: [] } to deeply equal { status: 'NOT_RUN', …(1) }
+
+- Expected
++ Received
+
+  {
+-   "findings": [
+-     {
+-       "code": "execution_not_run",
+-     },
+-     {
+-       "code": "provider_missing",
+-     },
+-   ],
+-   "status": "NOT_RUN",
++   "findings": [],
++   "status": "FAILED",
+  }
+
+ ❯ test/target-contract.test.ts:581:7
+    579|         "complete",
+    580|       ),
+    581|     ).toEqual({
+       |       ^
+    582|       status: "NOT_RUN",
+    583|       findings: [
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[40/45]⎯
+
+ FAIL  test/target-contract.test.ts > evaluateVerificationOutcome > does not mark missing correlated evidence as VERIFIED
+AssertionError: expected { status: 'FAILED', findings: [] } to deeply equal { status: 'NOT_RUN', …(1) }
+
+- Expected
++ Received
+
+  {
+-   "findings": [
+-     {
+-       "code": "correlated_evidence_missing",
+-     },
+-   ],
+-   "status": "NOT_RUN",
++   "findings": [],
++   "status": "FAILED",
+  }
+
+ ❯ test/target-contract.test.ts:597:7
+    595|         "missing",
+    596|       ),
+    597|     ).toEqual({
+       |       ^
+    598|       status: "NOT_RUN",
+    599|       findings: [{ code: "correlated_evidence_missing" }],
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[41/45]⎯
+
+ FAIL  test/target-contract.test.ts > evaluateVerificationOutcome > marks invalid correlated evidence as FAILED
+AssertionError: expected { status: 'FAILED', findings: [] } to deeply equal { status: 'FAILED', …(1) }
+
+- Expected
++ Received
+
+  {
+-   "findings": [
+-     {
+-       "code": "correlated_evidence_invalid",
+-     },
+-   ],
++   "findings": [],
+    "status": "FAILED",
+  }
+
+ ❯ test/target-contract.test.ts:610:7
+    608|         "invalid",
+    609|       ),
+    610|     ).toEqual({
+       |       ^
+    611|       status: "FAILED",
+    612|       findings: [{ code: "correlated_evidence_invalid" }],
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[42/45]⎯
+
+ FAIL  test/target-contract.test.ts > evaluateVerificationOutcome > marks target findings as FAILED
+AssertionError: expected { status: 'FAILED', findings: [] } to deeply equal { status: 'FAILED', …(1) }
+
+- Expected
++ Received
+
+  {
+-   "findings": [
+-     {
+-       "code": "target_contract_failed",
+-     },
+-   ],
++   "findings": [],
+    "status": "FAILED",
+  }
+
+ ❯ test/target-contract.test.ts:623:7
+    621|         "complete",
+    622|       ),
+    623|     ).toEqual({
+       |       ^
+    624|       status: "FAILED",
+    625|       findings: [{ code: "target_contract_failed" }],
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[43/45]⎯
+
+ FAIL  test/target-contract.test.ts > evaluateVerificationOutcome > marks a failed execution as FAILED
+AssertionError: expected { status: 'FAILED', findings: [] } to deeply equal { status: 'FAILED', …(1) }
+
+- Expected
++ Received
+
+  {
+-   "findings": [
+-     {
+-       "code": "execution_failed",
+-     },
+-   ],
++   "findings": [],
+    "status": "FAILED",
+  }
+
+ ❯ test/target-contract.test.ts:636:7
+    634|         "complete",
+    635|       ),
+    636|     ).toEqual({
+       |       ^
+    637|       status: "FAILED",
+    638|       findings: [{ code: "execution_failed" }],
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[44/45]⎯
+
+ FAIL  test/target-contract.test.ts > evaluateVerificationOutcome > returns only bounded static codes and no environment values
+AssertionError: expected 0 to be greater than 0
+ ❯ test/target-contract.test.ts:648:37
+    646|     };
+    647|     const outcome = evaluateVerificationOutcome(targetPass, state, "co…
+    648|     expect(outcome.findings.length).toBeGreaterThan(0);
+       |                                     ^
+    649|     const serialized = JSON.stringify(outcome);
+    650| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[45/45]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  45 failed (45)
+   Start at  18:49:46
+   Duration  2.09s (transform 248ms, setup 0ms, collect 239ms, tests 148ms, environment 1ms, prepare 514ms)
+

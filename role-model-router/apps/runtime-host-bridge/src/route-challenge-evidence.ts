@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
+import { type SqliteService, makeSync } from "@effect/sql-sqlite-node/service";
 import { resolveSqliteMemoryLocation } from "@role-model-router/sqlite-memory";
 import {
   captureRefFromReplayJob,
@@ -538,6 +539,25 @@ export async function readPendingRouteDispatches(input: {
 }
 
 /** Read-only live classification index -> authenticated exact capsule read. No disposition resets, capture mutations, or synthetic source ids. */
+/**
+ * S6e test seam: the challenge telemetry connection with query_only=ON + busy_timeout=1000.
+ * Exported so the batch can assert the effective pragmas without a write path.
+ */
+export const openChallengeTelemetryDatabase = (databasePath: string): SqliteService =>
+  makeSync({
+    databasePath,
+    openDatabase: (file) => new DatabaseSync(file, { readOnly: true }),
+    setup: (db) => db.exec("PRAGMA query_only=ON; PRAGMA busy_timeout=1000"),
+  });
+
+/** S6e test seam: the disposition connection with busy_timeout=0. */
+export const openChallengeDispositionDatabase = (databasePath: string): SqliteService =>
+  makeSync({
+    databasePath,
+    openDatabase: (file) => new DatabaseSync(file, { readOnly: true }),
+    setup: (db) => db.exec("PRAGMA busy_timeout = 0"),
+  });
+
 export async function readRouteReplayableCaptures(input: {
   readonly runtimeStateRoot: string;
   readonly scopeId: string;
@@ -548,24 +568,22 @@ export async function readRouteReplayableCaptures(input: {
 }): Promise<readonly AutoReplayCapture[] | null> {
   if (!text(input.request.roleId) || !text(input.request.taskTypeId) || !text(input.scopeId))
     return null;
-  let database: DatabaseSync | undefined;
+  let database: SqliteService | undefined;
   let ids: string[];
   try {
     const databasePath = resolveSqliteMemoryLocation(input);
     if (!existsSync(databasePath)) return null;
-    database = new DatabaseSync(databasePath, { readOnly: true });
-    database.exec("PRAGMA query_only=ON; PRAGMA busy_timeout=1000;");
-    const entries = database
-      .prepare(
-        "SELECT DISTINCT request_id FROM runtime_telemetry_records WHERE taxonomy_role_id=? AND taxonomy_task_type=? AND request_class IN ('live','live_request') ORDER BY request_id LIMIT 501",
-      )
-      .all(input.request.roleId, input.request.taskTypeId);
+    database = openChallengeTelemetryDatabase(databasePath);
+    const entries = database.querySync(
+      "SELECT DISTINCT request_id FROM runtime_telemetry_records WHERE taxonomy_role_id=? AND taxonomy_task_type=? AND request_class IN ('live','live_request') ORDER BY request_id LIMIT 501",
+      [input.request.roleId, input.request.taskTypeId],
+    );
     if (entries.length > 500 || entries.some((entry) => !text(entry.request_id))) return null;
     ids = entries.map((entry) => entry.request_id as string);
   } catch {
     return null;
   } finally {
-    database?.close();
+    database?.closeSync();
   }
   const scope = resolveDurableReplayJobScope(input);
   // Run 105: a capture that already holds a terminal durable replay disposition is ANNOTATED, never dropped.
@@ -575,21 +593,19 @@ export async function readRouteReplayableCaptures(input: {
   const settledRefs = (() => {
     const dispositionPath = `${input.runtimeStateRoot}/${input.scopeId}/track-b/replay-disposition.sqlite`;
     if (!existsSync(dispositionPath)) return new Set<string>();
-    let disposition: DatabaseSync | undefined;
+    let disposition: SqliteService | undefined;
     try {
-      disposition = new DatabaseSync(dispositionPath, { readOnly: true });
-      const rows = disposition
-        .prepare(
-          "SELECT capture_ref FROM replay_dispositions WHERE outcome IN ('replayed','refused')",
-        )
-        .all() as { capture_ref?: unknown }[];
+      disposition = openChallengeDispositionDatabase(dispositionPath);
+      const rows = disposition.querySync(
+        "SELECT capture_ref FROM replay_dispositions WHERE outcome IN ('replayed','refused')",
+      ) as { capture_ref?: unknown }[];
       return new Set(
         rows.map((r) => (typeof r.capture_ref === "string" ? r.capture_ref : "")).filter(Boolean),
       );
     } catch {
       return new Set<string>();
     } finally {
-      disposition?.close();
+      disposition?.closeSync();
     }
   })();
   const captures: AutoReplayCapture[] = [];

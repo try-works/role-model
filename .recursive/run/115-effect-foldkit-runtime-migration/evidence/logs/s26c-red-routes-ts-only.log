@@ -1,0 +1,61 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s26a-route-inventory.test.ts (4 tests | 2 failed) 63ms
+   × S26a route inventory drift > validates every row, scans app/** recursively and correlates host endpoints 41ms
+     → expected [ '/app/__s26a_fake_routes_only__' ] to deeply equal []
+   ✓ S26a route inventory drift > detects a nested route file that has no inventory row 4ms
+   × S26a route inventory drift > detects a routes.ts-only path that has no inventory row 5ms
+     → expected [ …(2) ] to deeply equal [ '/app/__s26a_fake_routes_only__' ]
+   ✓ S26a route inventory drift > detects a declared endpoint that is absent from the host route table 10ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s26a-route-inventory.test.ts > S26a route inventory drift > validates every row, scans app/** recursively and correlates host endpoints
+AssertionError: expected [ '/app/__s26a_fake_routes_only__' ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "/app/__s26a_fake_routes_only__",
++ ]
+
+ ❯ test/s26a-route-inventory.test.ts:160:78
+    158|       inventory.routes.flatMap((entry) => entry.routePaths ?? []),
+    159|     );
+    160|     expect(registered.filter((routePath) => !inventoryPaths.has(routeP…
+       |                                                                              ^
+    161| 
+    162|     const routeIds = new Set(inventory.routes.map((entry) => entry.id)…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/s26a-route-inventory.test.ts > S26a route inventory drift > detects a routes.ts-only path that has no inventory row
+AssertionError: expected [ …(2) ] to deeply equal [ '/app/__s26a_fake_routes_only__' ]
+
+- Expected
++ Received
+
+  [
+    "/app/__s26a_fake_routes_only__",
++   "/app/__s26a_fake_routes_only__",
+  ]
+
+ ❯ test/s26a-route-inventory.test.ts:191:86
+    189|     // The same predicate used for registered paths catches the fake p…
+    190|     const registeredWithFake = [...registeredRoutePaths(), "/app/__s26…
+    191|     expect(registeredWithFake.filter((routePath) => !inventoryPaths.ha…
+       |                                                                                      ^
+    192|       "/app/__s26a_fake_routes_only__",
+    193|     ]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 2 passed (4)
+   Start at  07:27:17
+   Duration  1.57s (transform 86ms, setup 0ms, collect 74ms, tests 63ms, environment 692ms, prepare 260ms)
+

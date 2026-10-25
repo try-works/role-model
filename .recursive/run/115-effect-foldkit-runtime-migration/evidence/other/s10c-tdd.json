@@ -1,0 +1,98 @@
+{
+  "slice": "s10c-wiring-proofs",
+  "requirement": "R20 (wiring proof; calibration and edge coverage remain open)",
+  "status": "complete",
+  "worktree": "D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration",
+  "chosenApproach": "extraction - no server and no operator port were started",
+  "extraction": {
+    "wireModuleHealth": "role-model-router/apps/runtime-host-bridge/src/index.ts:20575 - constructs the composition exactly once through an injectable composer and returns { handlerOptions, reportRequestFailure }; enabled injects composition.source by identity, disabled passes the options through unchanged and no-ops the report",
+    "createBridgeRequestListener": "index.ts:20608 - builds the wiring once per listener (host lifetime), then reports each rejected handler promise exactly once before the unhandled sink",
+    "startBridgeServer": "index.ts:20627 - calls createBridgeRequestListener(options, createRequestHandler) once before createServer; the trace block and lifecycle are unchanged"
+  },
+  "mutations": [
+    {
+      "id": "a",
+      "mutation": "wireModuleHealth enabled branch returned handlerOptions: options (no readDiagnosticsSource injection)",
+      "log": "evidence/logs/s10c-red-a.log",
+      "exit": 1,
+      "failed": 2,
+      "observed": "expected undefined to be [Function source] - wire source identity and the listener's captured handler options both went undefined"
+    },
+    {
+      "id": "b",
+      "mutation": "removed wiring.reportRequestFailure(error) from the listener transport catch",
+      "log": "evidence/logs/s10c-red-b.log",
+      "exit": 1,
+      "failed": 1,
+      "observed": "expected spy to be called 1 times, but got 0 times"
+    },
+    {
+      "id": "c",
+      "mutation": "moved wireModuleHealth inside the per-request listener body",
+      "log": "evidence/logs/s10c-red-c.log",
+      "exit": 1,
+      "failed": 1,
+      "observed": "expected +0 to be 1 - no construction at listener creation; the two-request test also observed per-request construction"
+    }
+  ],
+  "restore": {
+    "algorithm": "sha256",
+    "baseline": "39a1e43df1ed8f74c6456f1e832cc43cd0d601a89a6901ba43e7a3065bf134a3",
+    "afterEachMutation": "39a1e43df1ed8f74c6456f1e832cc43cd0d601a89a6901ba43e7a3065bf134a3",
+    "byteIdentical": true,
+    "file": "role-model-router/apps/runtime-host-bridge/src/index.ts"
+  },
+  "green": {
+    "log": "evidence/logs/s10c-green.log",
+    "files": 2,
+    "tests": 7,
+    "passed": 7,
+    "failed": 0,
+    "exit": 0,
+    "breakdown": "s10b 2/2 + s10c 5/5 (wire identity, disabled passthrough/no-op report, listener constructs once and reports each rejection once, resolved handler reports nothing, disabled listener sees unchanged options)"
+  },
+  "regression": {
+    "s15aReadPath": {
+      "command": "vitest run --root role-model-router/apps/runtime-host-bridge test/run115-s15a-local-diagnostics-read.test.ts",
+      "tests": 20,
+      "passed": 20,
+      "exit": 0
+    },
+    "note": "the diagnostics read path still passes after startBridgeServer switched to the extracted listener"
+  },
+  "tsc": {
+    "log": "evidence/logs/s10c-tsc.log",
+    "command": "node node_modules/typescript/bin/tsc -p role-model-router/apps/runtime-host-bridge/tsconfig.json --noEmit",
+    "exit": 0
+  },
+  "r20Gap": {
+    "recordedIn": "index.ts composition doc (:20492-20515) and this evidence",
+    "escapingOnly": "the transport edge observes only failures that ESCAPE the route handlers; handled failures are translated per route before the request promise settles and never reach it",
+    "coarseClassification": "the edge calls recordError, which records every escape as the coarse code \"error\" at level error; the Fail/Die/Interrupt classification lives in observe/recordCause and is not wired to this edge (the transport boundary is async/Promise, not an Effect)",
+    "clientEscapes": "a client-caused escape (a 4xx-ish BridgeHttpError that escapes a route) is counted as a module failure; there is no client-vs-module classification at the edge",
+    "whatR20StillNeeds": [
+      "an Effect boundary at the request entry (or per-route hooks with ONE report owner) so handled failures are observable without approximating",
+      "classification of Fail/Die/Interrupt at the report edge instead of the coarse error code",
+      "separation of client-caused escapes from module failures (or a status/class field on the edge)",
+      "calibrated and approved record/byte/ingress/formatting/TTL/query limits before enablement (capacity and code-byte defaults remain PLACEHOLDERS)",
+      "the R21 page/read contract currently has no outages field, so writer-internal outages are invisible end to end"
+    ]
+  },
+  "outagesDecision": {
+    "decision": "named follow-up - not exposed through the diagnostics source in this slice",
+    "rationale": "the diagnostics read body is the R21 contract (local-diagnostics-read.ts) and the Foldkit page parser consumes it; adding a writer-outage field is a cross-slice contract change plus calibration and approval, not a wiring detail. Exposing it only in writer.outages() (test seam) would leave it invisible to the page.",
+    "followUp": "R20/R21 follow-up: add a bounded outages counter/field to the read body and the page parser, or a dedicated module-health surface; calibrate with the other limits before enablement"
+  },
+  "files": {
+    "role-model-router/apps/runtime-host-bridge/src/index.ts": "39a1e43df1ed8f74c6456f1e832cc43cd0d601a89a6901ba43e7a3065bf134a3",
+    "role-model-router/apps/runtime-host-bridge/test/run115-s10c-wiring-proofs.test.ts": "a2a541dd4de3cef385c8be5fe4c3f4b34b96ffef49bcbcdd446f2e6fd7dc85b5"
+  },
+  "notes": [
+    "the existing s10b test was left unchanged (2/2) and is the factory/end-to-end read test; s10c is the wiring proof",
+    "a concurrent worker was rewriting src/track-b-operations.ts during the first run; the final RED/GREEN runs are after that file settled, and no file outside the allowed scope was written by S10c"
+  ],
+  "noInstalls": true,
+  "noCommits": true,
+  "noSubagents": true,
+  "noOperatorPorts": true
+}

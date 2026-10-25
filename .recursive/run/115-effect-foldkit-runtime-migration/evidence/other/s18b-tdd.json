@@ -1,0 +1,84 @@
+{
+  "slice": "s18b-measurement",
+  "requirement": "R24 (measurement strengthened; no product behaviour change)",
+  "status": "complete",
+  "worktree": "D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration",
+  "files": {
+    "role-model-router/packages/sql-sqlite-node/test/s18a-sql-truth.test.ts": "094b9187a181c4f2f2ad84f032008dddedde3e3048d74acf9358f13139bb54d0"
+  },
+  "unchangedProductHashes": {
+    "role-model-router/packages/sql-sqlite-node/src/service.ts": "7c591597551a7e413de0c7b01da5e0ddf4473f990ab7dca2640d4bc033fcef8e",
+    "role-model-router/packages/sqlite-memory/src/index.ts": "3177041413ab0696ef4af5d3b005e04b8444405457ef80510612d28191c905df"
+  },
+  "strengthenedAssertions": {
+    "blockingStatement": "CREATE TABLE work AS WITH RECURSIVE ... 800000 rows; after execSync the test asserts SELECT COUNT(*) = 800001 (the work persisted), ranDuringStatement=false, statementMs >= 3x the measured idle-timer baseline, and timerDelay >= statementMs - baselineMs",
+    "blockingTransaction": "transactionSync inserts 20000 rows; inside the transaction tx.querySync asserts 20000, after commit querySync asserts 20000, ranDuring=false, transactionMs >= baselineMs, timerDelay >= transactionMs - baselineMs",
+    "toleranceFormula": "baselineMs = min of 5 idle setTimeout(0) hops after one warm-up hop (floor 0.5 ms); statement/tx sample validity: duration >= 3x baselineMs (statement) or >= baselineMs (transaction); timer ordering: timerDelay >= duration - baselineMs. No absolute millisecond floor remains; a host whose timer floor exceeds the sample fails closed as 'cannot measure' instead of false-passing."
+  },
+  "pragmaSplit": {
+    "fileLevel": "journal_mode = wal and auto_vacuum = 2 are read on a NEW connection after initializeSqliteMemory; these are stored in the database header and survive re-open",
+    "connectionLevel": "synchronous=2, foreign_keys=1, busy_timeout=0 are read from the initializer's OWN connection at close by instrumenting DatabaseSync.prototype.close in the test (restored in finally); the test then proves non-transfer: a probe connection sets synchronous=OFF/foreign_keys=OFF/busy_timeout=5000, and a fresh connection reads 2/1/0",
+    "mutationProof": "mutation 3 adds PRAGMA synchronous=OFF + foreign_keys=OFF on the initializer's own connection and the snapshot assertion fails"
+  },
+  "behaviouralNoSubstitute": {
+    "commit": "transactionSync inserts a row, tx.querySync sees it INSIDE the transaction, and querySync still sees it after COMMIT; the Effect transaction inserts a second row, returns the inside count, and the committed count is 2",
+    "rollback": "the Effect transaction inserts then fails; after the failure querySync count is 0",
+    "staticGuard": "BEGIN IMMEDIATE/COMMIT/ROLLBACK presence and no TxRef is now a SECONDARY source guard only; the commit/rollback/inside-visibility behaviour is the proof"
+  },
+  "mutations": [
+    {
+      "id": "work-busy-wait",
+      "mutation": "service.execSync replaced by a 25 ms busy-wait that never touches SQLite",
+      "log": "evidence/logs/s18b-red-work.log",
+      "exit": 1,
+      "failed": 4,
+      "observed": "no such table: work / no such table: t - the persisted-work assertions fail; the busy-wait no longer passes on duration alone",
+      "restoredHash": "7c591597551a7e413de0c7b01da5e0ddf4473f990ab7dca2640d4bc033fcef8e"
+    },
+    {
+      "id": "no-op-transactionSync",
+      "mutation": "transactionSync replaced by a no-op that never runs its callback",
+      "log": "evidence/logs/s18b-red-transaction.log",
+      "exit": 1,
+      "failed": 2,
+      "observed": "expected undefined to deeply equal [{ c: 20000 }] and [{ c: 1 }]",
+      "restoredHash": "7c591597551a7e413de0c7b01da5e0ddf4473f990ab7dca2640d4bc033fcef8e"
+    },
+    {
+      "id": "initializer-pragmas-off",
+      "mutation": "initializeSqliteMemory sets PRAGMA synchronous=OFF and foreign_keys=OFF on its own connection",
+      "log": "evidence/logs/s18b-red-pragma.log",
+      "exit": 1,
+      "failed": 1,
+      "observed": "the initializer-own-connection snapshot no longer equals { synchronous: 2, foreign_keys: 1, busy_timeout: 0 }",
+      "restoredHash": "3177041413ab0696ef4af5d3b005e04b8444405457ef80510612d28191c905df"
+    },
+    {
+      "id": "ref-buffer-no-sql",
+      "mutation": "the Effect transaction never runs work(buildTransaction(database)) (equivalent to a Ref buffer that never issues SQL)",
+      "log": "evidence/logs/s18b-red-substitute.log",
+      "exit": 1,
+      "failed": 2,
+      "observed": "expected [{ c: 1 }] to deeply equal [{ c: 2 }] (commit test) and expected false to be true (rollback test saw a success exit)",
+      "restoredHash": "7c591597551a7e413de0c7b01da5e0ddf4473f990ab7dca2640d4bc033fcef8e"
+    }
+  ],
+  "green": {
+    "log": "evidence/logs/s18b-green.log",
+    "files": 1,
+    "tests": 10,
+    "passed": 10,
+    "failed": 0,
+    "exit": 0
+  },
+  "typecheck": {
+    "command": "tsc -p role-model-router/packages/sql-sqlite-node/tsconfig.service.json --noEmit",
+    "exit": 0
+  },
+  "restore": "each product mutation was reversed by exact-string edit; sha256 equal before/after (service 7c5915..., sqlite-memory 3177...)",
+  "notes": [
+    "no product behaviour change: the only written test artifact is s18a-sql-truth.test.ts; the product hashes match their pre-slice values",
+    "no installs, no commits, no subagents",
+    "the sqlite-memory PRAGMA claims are now split by persistence scope; the initializer's own connection is observed at close via a test-only prototype instrumentation that is restored in finally"
+  ]
+}

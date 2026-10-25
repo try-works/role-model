@@ -1,0 +1,35 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:18480) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s15h-live-socket-diagnostics.test.ts > S15h/S15i diagnostics over a real loopback socket > starts with port option 0, so an ephemeral operator-free port is by construction 33ms
+ ✓ test/s15h-live-socket-diagnostics.test.ts > S15h/S15i diagnostics over a real loopback socket > token-less loopback read answers the explicit disabled state with no writer enabled 60ms
+ ✓ test/s15h-live-socket-diagnostics.test.ts > S15h/S15i diagnostics over a real loopback socket > loopback owner trust is explicit: with trust off, missing and wrong credentials are 401 and the configured token is accepted 19ms
+ ✓ test/s15h-live-socket-diagnostics.test.ts > S15h/S15i diagnostics over a real loopback socket > a wrong token of the SAME length is still rejected (not a length-only comparison) 9ms
+ ✓ test/s15h-live-socket-diagnostics.test.ts > S15h/S15i diagnostics over a real loopback socket > every owner-claim header is rejected by the diagnostics handler (generic gate already authorized) with no CORS 16ms
+ × test/s15h-live-socket-diagnostics.test.ts > S15h/S15i diagnostics over a real loopback socket > 500, OPTIONS, context-mismatch 403 and 404 responses carry no access-control headers 20ms
+   → expected [ 404, 405 ] to include 204
+ ✓ test/s15h-live-socket-diagnostics.test.ts > S15h/S15i diagnostics over a real loopback socket > close() releases the listener: a fetch to the closed port refuses 6ms
+ ✓ test/s15h-live-socket-diagnostics.test.ts > S15h/S15i diagnostics over a real loopback socket > error responses from a real socket never carry access-control headers either 19ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s15h-live-socket-diagnostics.test.ts > S15h/S15i diagnostics over a real loopback socket > 500, OPTIONS, context-mismatch 403 and 404 responses carry no access-control headers
+AssertionError: expected [ 404, 405 ] to include 204
+ ❯ test/s15h-live-socket-diagnostics.test.ts:212:24
+    210|       },
+    211|     });
+    212|     expect([404, 405]).toContain(options.status);
+       |                        ^
+    213|     expect(accessControlHeaders(options)).toEqual([]);
+    214| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 7 passed (8)
+   Start at  05:33:30
+   Duration  7.63s (transform 4.49s, setup 0ms, collect 6.95s, tests 186ms, environment 0ms, prepare 173ms)
+

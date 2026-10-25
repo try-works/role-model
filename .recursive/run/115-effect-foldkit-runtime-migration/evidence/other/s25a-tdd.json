@@ -1,0 +1,58 @@
+{
+  "slice": "s25a-refresh-ownership",
+  "requirement": "R12 refresh ownership, injectable event source, gap/snapshot resync, stale diagnostics",
+  "whatExists": {
+    "injectableFactory": "YES in the legacy React client: apps/runtime-ui/app/lib/runtime-api.ts:899-904 defines RuntimeEventSourceLike/RuntimeEventSourceFactory; :2983, :2996, :3016 (subscribeTelemetryStream, subscribeRevisionStream, subscribeRuntimeRefreshStream) accept it and default to new EventSource(url). The new runtime-ui-next Foldkit client has NO event source/subscription: it exposes a manual DiagnosticsRefreshRequested message (apps/runtime-ui-next/src/message.ts:22) and fetches on demand.",
+    "subscriptionOwner": "startDeferredLiveRefresh (apps/runtime-ui/app/lib/live-refresh.ts:6-30) owns exactly one subscription per start and defers connecting until the first load settles. There is NO page-global/process-global owner: app-shell.tsx:214 and route pages (dashboard.tsx:190, observe-activity:86, observe-routing:245, requests:402, router-decisions:51) each call it with subscribeRuntimeRefreshStream, so independent starts are independent owners/sources.",
+    "gapResync": "runtime-refresh-bus.ts:50-61 dedupes revisions <= last per surface and delivers a later revision even when intermediate revisions were missed. The app-shell/dashboard handlers perform a full page reload/route remount on a revision event (app-shell setContentRevision + onEvent()->load; dashboard load(true)), so a later revision after a gap causes a snapshot reload. There is NO explicit gap detector, lastEventId, or resync command; a gap with no later event is invisible.",
+    "staleDiagnostics": "stale-refresh-diagnostics.ts exposes staleChartTitles and StaleChartDiagnostic.staleDataReused; dashboard/observe/requests render a stale-chart notice. The Foldkit diagnostics panel also has a distinct status='stale' rendering (runtime-ui-next diagnostics.ts), already covered by its tests."
+  },
+  "whatAdded": "Only a 5-test characterization suite (apps/runtime-ui/app/lib/s25a-refresh-ownership.test.ts). No product changes: the event source was already injectable, so no fallback was invented.",
+  "proofs": [
+    {
+      "id": "injectable",
+      "test": "fake RuntimeEventSourceFactory is used for subscribeRuntimeRefreshStream; URL asserted; revision event delivered; dispose closes once",
+      "red": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s25a-red-injectable.log (factory ignored; zero sources created)"
+    },
+    {
+      "id": "ownership",
+      "test": "two sequential start/stop cycles: exactly one active subscription during each, peak=1, zero after each dispose; dispose twice idempotent",
+      "red": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s25a-red-ownership.log (dispose stopped unsubscribing; active stayed 1)"
+    },
+    {
+      "id": "no-global-owner",
+      "test": "two independent startDeferredLiveRefresh owners open two sources; disposing one leaves the other active (characterizes why there is no single page-global owner today)",
+      "red": "intentionally a characterization, not a failing requirement: it records the absence of a global owner"
+    },
+    {
+      "id": "gap",
+      "test": "bus delivers revision 1 then 3 (2 missed) to the refresh handler; duplicate 3 is deduped; unsubscribe stops delivery",
+      "red": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s25a-red-gap.log (only consecutive revisions accepted; jump dropped)"
+    },
+    {
+      "id": "stale",
+      "test": "background chart failure reuses previous response, returns staleChartTitles ['Chart A'], diagnostic has staleDataReused=true",
+      "red": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s25a-red-stale.log (staleDataReused false)"
+    }
+  ],
+  "absences": [
+    "No page/process-global single Refresh subscription; multiple independent owners are possible and tested.",
+    "No explicit gap marker, lastEventId, or gap-triggered resync command; the reload-on-later-revision is a handler behavior, not gap detection.",
+    "The new Foldkit client (runtime-ui-next) has no injectable event source or refresh subscription at all; only manual diagnostics refresh."
+  ],
+  "testRuns": {
+    "command": "vitest s25a + live-refresh + runtime-refresh-bus + stale-refresh-diagnostics + runtime-api",
+    "total": 94,
+    "passed": 94,
+    "failed": 0,
+    "exit": 0,
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s25a-green.log",
+    "typecheck": "tsc -p apps/runtime-ui/tsconfig.json --noEmit: exit 0",
+    "biome": "biome check new test: exit 0"
+  },
+  "file": {
+    "path": "role-model-router/apps/runtime-ui/app/lib/s25a-refresh-ownership.test.ts",
+    "sha256": "4c699362efd85d03ea07439462dd8599732a4a3f72917243605a8de589e9a749"
+  },
+  "unproven": "A real EventSource/SSE reconnect and a browser gap with no subsequent event; no product change was made to add gap detection or a global owner."
+}

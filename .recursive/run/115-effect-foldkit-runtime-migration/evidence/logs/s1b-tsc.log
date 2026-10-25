@@ -1,0 +1,7 @@
+PHASE: S1b typecheck
+TIMESTAMP: 2026-10-24T10:50:39.8441324Z
+CWD: D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\ui-parity
+COMMAND: node ../../../node_modules/typescript/bin/tsc -p tsconfig.json --noEmit
+EXIT: 0
+
+OUTPUT:

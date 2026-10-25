@@ -1,0 +1,199 @@
+{
+  "task": ".recursive/run/115-effect-foldkit-runtime-migration/tasks/s2-paired-effect-acquisition.md",
+  "run": "115-effect-foldkit-runtime-migration",
+  "slice": "S2",
+  "model": "deepseek-flash",
+  "tdd_mode": "strict",
+  "status": "COMPLETE",
+  "finished_utc": "2026-10-24T13:35:03.807Z",
+  "source_ids": {
+    "locked_plan": ".recursive/run/115-effect-foldkit-runtime-migration/02-to-be-plan.md",
+    "locked_plan_lock_hash": "f79220f73c04a8a8c97c8ef7c4c3d1a3e6b1ddd058d9bc151ecdf4e2fe9bfcc1",
+    "plan_prefix": "locked02planf79220f",
+    "baseline_receipt": "run115baselinef0d50fab",
+    "public_baseline_head": "f0d50fab083e",
+    "private_baseline_head": "16021cc5f87f",
+    "node_version": "v24.11.0"
+  },
+  "disk_preflight": {
+    "checked_utc": "2026-10-24T13:16:52Z",
+    "c_free_bytes": 1000808448,
+    "c_threshold_bytes": 268435456,
+    "c_gate": "PASS",
+    "d_free_bytes": 1281925120,
+    "d_threshold_bytes": 1073741824,
+    "d_gate": "PASS",
+    "gate_result": "PASS",
+    "temp_root": "E:/dsh-tmp/run115-s2",
+    "temp_verified_tmpdir": "E:\\dsh-tmp\\run115-s2",
+    "final_c_free_bytes": 988094464,
+    "final_d_free_bytes": 1900113920
+  },
+  "target_pin": {
+    "upstream": "Effect-TS/effect",
+    "tag": "effect@4.0.6",
+    "commit": "3b28bf686bf26e9700edd39c025aff2744dc5303",
+    "commit_date": "2026-10-22T02:35:18Z",
+    "wrapper_version": "4.0.6"
+  },
+  "acquisition": {
+    "command": "TMP=TEMP=E:\\dsh-tmp\\run115-s2 node scripts/vendor-upstream.mjs --name effect --sync --tag effect@4.0.6 --commit 3b28bf686bf26e9700edd39c025aff2744dc5303",
+    "exit_code": 0,
+    "clone_resolution_verified": "the script aborts if the tag's resolved HEAD differs from the pinned commit; sync succeeded",
+    "before": {
+      "file_count": 1878,
+      "byte_count": 40357638,
+      "content_digest": "0d0028aa7de72ff9e6a8e39f4bc4232640bd1111b30aaa3440d0c53116a49749",
+      "tag": "effect@4.0.1",
+      "commit": "460272d30457f4697d8b8c52cad41caccbcace08",
+      "commit_date": "2026-10-04T21:47:48Z"
+    },
+    "after": {
+      "file_count": 2155,
+      "byte_count": 48043592,
+      "content_digest": "7c7256252cf0b9b8aa25c1698ca1f5af171def4eb42048aedfeae9f2ee524702",
+      "vendored_package_version": "4.0.6"
+    },
+    "vendor_tree_status_entries_before_commit": {
+      "modified": 955,
+      "untracked_new": 162,
+      "deleted": 1
+    },
+    "verify_before": {
+      "exit_code": 0,
+      "log": "evidence/logs/s2-verify-before-public.log"
+    },
+    "verify_after": {
+      "exit_code": 0,
+      "log": "evidence/logs/s2-verify-after-public.log"
+    }
+  },
+  "pin_tests": {
+    "path": "scripts/vendor-upstream.test.mjs",
+    "framework": "node:test",
+    "red_before": {
+      "exit_code": 1,
+      "tests": 5,
+      "pass": 0,
+      "fail": 5,
+      "log": "evidence/logs/s2-pin-red-public.log"
+    },
+    "green_after": {
+      "exit_code": 0,
+      "tests": 5,
+      "pass": 5,
+      "fail": 0,
+      "log": "evidence/logs/s2-pin-green-public.log"
+    },
+    "sha256": "374c86aaa0badccefd9305c963b93c15fa0404b88e542ce59370ba4385157d8d"
+  },
+  "wrapper_build": {
+    "result": "PASS",
+    "warning_count": 1,
+    "warning": "▲ [WARNING] Cannot find base config file \"../../tsconfig.base.json\" [tsconfig.json] from vendor/effect/packages/effect/tsconfig.json:3 - pre-existing source-only vendored tsconfig warning, not a full-target typecheck claim",
+    "entry_count": 167,
+    "log": "evidence/logs/s2-build-public.log"
+  },
+  "consumer_suites": {
+    "public": {
+      "suite": "host isolated queue cancel/timeout, stream commit, Effect entry case and paired observability",
+      "files": 5,
+      "tests": 46,
+      "pass": 46,
+      "exit_code": 0,
+      "log": "evidence/logs/s2-consumer-public.log"
+    },
+    "private": {
+      "suite": "durable queue + evaluation score queue + Effect entry case + observability + run115 capture/event-log",
+      "files": 7,
+      "tests": 53,
+      "pass": 53,
+      "exit_code": 0,
+      "log": "evidence/logs/s2-consumer-private.log"
+    }
+  },
+  "sql_wrapper_manifests": {
+    "status": "COMPLETED",
+    "vendored_upstream_version": "4.0.6 (vendor/effect/packages/sql/sqlite-node/package.json)",
+    "wrapper_path": "role-model-router/packages/sql-sqlite-node/package.json",
+    "wrapper_version_before": "4.0.1",
+    "wrapper_version_after": "4.0.6",
+    "wrapper_description_after": "Workspace entry point for the vendored @effect/sql-sqlite-node client (vendor/effect, 4.0.6). `effect` stays external so the runtime stays single-instance.",
+    "wrapper_sha256": "2E1AF24353A590299BCE98493B50A8A017387520ED4EC0B4C561A59FA9CA76B1",
+    "build": {
+      "command": "node role-model-router/packages/sql-sqlite-node/build.mjs",
+      "exit_code": 0,
+      "status": "PASS",
+      "entries": [
+        "index"
+      ],
+      "warning_count": 1,
+      "warning": "▲ [WARNING] Cannot find base config file \"../../../tsconfig.base.json\" from vendor/effect/packages/sql/sqlite-node/tsconfig.json:3 (pre-existing source-only vendored warning)",
+      "log": "evidence/logs/s2-sql-build-public.log"
+    },
+    "consumer_suite": {
+      "suite": "public queue store SQL consumer",
+      "files": 1,
+      "tests": 4,
+      "pass": 4,
+      "exit_code": 0,
+      "log": "evidence/logs/s2-sql-suite-public.log"
+    }
+  },
+  "not_performed": [
+    "root/lockfile edits",
+    "SQL wrapper version edits (deferred)",
+    "full consumer certification",
+    "commits",
+    "installs",
+    "providers",
+    "operator ports"
+  ],
+  "notes": [
+    "Both repos' after-digest is identical: 7c7256252cf0b9b8aa25c1698ca1f5af171def4eb42048aedfeae9f2ee524702 (paired consistency).",
+    "Public wrapper build publishes 167 entry keys vs 166 in private: the extra public key is http-api/HttpApiGroup/ from a prose reference. The same prose exists in the 4.0.1 HEAD tree, so it is pre-existing public entries.mjs behaviour (it does not strip trailing slashes; the private discovery does) and was not touched.",
+    "Concurrent sibling-slice writes appeared in both worktrees during this session (public: role-model-router/packages/core/src/index.ts modified, src/route-decision-producer.ts + test added, process-supervisor slice; private: shared/effect/src/** untracked files added). None were created or modified by this slice; only the four files listed in changed_files were edited by S2.",
+    "dist/ is gitignored in both wrappers (public .gitignore:4, private .gitignore:20), so builds added no tracked files."
+  ],
+  "repository": "public",
+  "repository_root": "D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration",
+  "changed_files": [
+    {
+      "path": "scripts/vendor-upstream.mjs",
+      "sha256": "d9ae8df85a7fa21d5a89361131d2f13cdc38c5c956c371ec4729dabdb9bb5aa5",
+      "change": "UPSTREAMS.effect default tag/commit only"
+    },
+    {
+      "path": "role-model-router/packages/effect/package.json",
+      "sha256": "2c1fa07555dd96166b86ae38d39362c76da46405ce5f878296ff3cf9d9de4af4",
+      "change": "version 4.0.1 -> 4.0.6; description effect@4.0.1 -> effect@4.0.6"
+    },
+    {
+      "path": "vendor/effect/VENDORED.json",
+      "sha256": "c6efdd3e1481cb177b31b4f66b729984e4146f815449e6cbfc8de0297c57a5d6",
+      "change": "generated by sync"
+    },
+    {
+      "path": "vendor/effect/PROVENANCE.md",
+      "sha256": "ac6edbf2257743d51003703a2fc538457b7cfb2e6cbbf63d73702682183cc8a0",
+      "change": "generated by sync"
+    },
+    {
+      "path": "vendor/effect/** (payload)",
+      "sha256": "tree digest 7c7256252cf0b9b8aa25c1698ca1f5af171def4eb42048aedfeae9f2ee524702",
+      "change": "2155 files / 48043592 bytes verbatim upstream bytes (LF), no edits"
+    },
+    {
+      "path": "role-model-router/packages/sql-sqlite-node/package.json",
+      "sha256": "2e1af24353a590299bce98493b50a8a017387520ed4ec0b4c561a59fa9ca76b1",
+      "change": "version 4.0.1 -> 4.0.6; description effect/a-effect payload reference 4.0.1 -> 4.0.6"
+    }
+  ],
+  "disagreement_scan": {
+    "checked": "all first-party package.json manifests (public 55, private 17), package.json dependency/peerDependency fields plus a text scan for stale 4.0.x literals; pnpm-workspace.yaml",
+    "result": "NO DISAGREEMENTS",
+    "detail": "Every first-party effect/@effect dependency is 'workspace:*' (public: runtime-host-bridge @effect/sql-sqlite-node + effect, core effect, effect-mq peer effect, sql-sqlite-node peer effect; private: root @effect/sql-sqlite-node + effect devDeps, effect-mq peer effect, sql-sqlite-node peer effect). No manifest pins an @effect/* or effect literal version, and no first-party package.json now contains any 4.0.0-4.0.5 literal.",
+    "not_edited": []
+  },
+  "history": "2026-10-24: follow-up on controller approval bumped the public SQL wrapper 4.0.1 -> 4.0.6 (manifest, existing build.mjs, run101-r2-public-queue-store SQL consumer suite 4/4)."
+}

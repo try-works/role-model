@@ -1,0 +1,60 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+stderr | test/s26d-observability.test.ts > S26d observability page > renders the error state with the exact host failure phrase
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 24.3ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'loading', token: 1 },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Observability' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 24.26130000000012,
+  thresholdMs: 8
+}
+
+ ❯ test/s26d-observability.test.ts (7 tests | 1 failed | 6 skipped) 680ms
+   ↓ S26d observability client > uses the real host path with accept, token only when provisioned, and the forwarded abort signal
+   ↓ S26d observability client > omits authorization without a provisioned token and maps a non-200 to the exact error phrase
+   ↓ S26d observability page > renders the success state from the real client
+   ↓ S26d observability page > renders the empty state for an empty metric registry
+   ↓ S26d observability page > renders loading while the injected read is in flight
+   × S26d observability page > renders the error state with the exact host failure phrase 676ms
+     → expected 'Runtime readbackObservability snapsho…' to contain 'Observability read failed: HTTP 503 (…'
+   ↓ S26d observability page > refreshes through the existing single subscription, not a second owner
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s26d-observability.test.ts > S26d observability page > renders the error state with the exact host failure phrase
+AssertionError: expected 'Runtime readbackObservability snapsho…' to contain 'Observability read failed: HTTP 503 (…'
+
+Expected: "Observability read failed: HTTP 503 (unavailable)"
+Received: "Runtime readbackObservability snapshotObservability failed: HTTP 503 (unavailable)Refresh follows the shell's single runtime subscription; this page does not open its own."
+
+ ❯ test/s26d-observability.test.ts:170:30
+    168|     );
+    169|     expect(page.getAttribute("role")).toBe("alert");
+    170|     expect(page.textContent).toContain("Observability read failed: HTT…
+       |                              ^
+    171|   });
+    172| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 6 skipped (7)
+   Start at  07:39:29
+   Duration  11.95s (transform 5.42s, setup 0ms, collect 8.58s, tests 680ms, environment 1.16s, prepare 661ms)
+

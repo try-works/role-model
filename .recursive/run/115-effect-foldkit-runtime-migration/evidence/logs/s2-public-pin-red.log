@@ -1,0 +1,126 @@
+✖ VENDORED.json records the reviewed upstream tag (13.3281ms)
+✖ VENDORED.json records the reviewed upstream commit (4.025ms)
+✖ the vendored upstream effect package reports the pinned version (2.1102ms)
+✖ the workspace Effect wrapper reports the pinned version (1.5372ms)
+✖ vendor-upstream.mjs defaults Effect to the reviewed tag and commit (2.1757ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 0
+ℹ fail 5
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 385.8569
+
+✖ failing tests:
+
+test at scripts\vendor-upstream.test.mjs:29:1
+✖ VENDORED.json records the reviewed upstream tag (13.3281ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'effect@4.0.1'
+  - 'effect@4.0.6'
+                ^
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/vendor-upstream.test.mjs:30:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.start (node:internal/test_runner/test:1003:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'effect@4.0.1',
+    expected: 'effect@4.0.6',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts\vendor-upstream.test.mjs:33:1
+✖ VENDORED.json records the reviewed upstream commit (4.025ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + '460272d30457f4697d8b8c52cad41caccbcace08'
+  - '3b28bf686bf26e9700edd39c025aff2744dc5303'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/vendor-upstream.test.mjs:34:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '460272d30457f4697d8b8c52cad41caccbcace08',
+    expected: '3b28bf686bf26e9700edd39c025aff2744dc5303',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts\vendor-upstream.test.mjs:37:1
+✖ the vendored upstream effect package reports the pinned version (2.1102ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  '4.0.1' !== '4.0.6'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/vendor-upstream.test.mjs:38:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '4.0.1',
+    expected: '4.0.6',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts\vendor-upstream.test.mjs:41:1
+✖ the workspace Effect wrapper reports the pinned version (1.5372ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  '4.0.1' !== '4.0.6'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/vendor-upstream.test.mjs:42:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '4.0.1',
+    expected: '4.0.6',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts\vendor-upstream.test.mjs:45:1
+✖ vendor-upstream.mjs defaults Effect to the reviewed tag and commit (2.1757ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'effect@4.0.1'
+  - 'effect@4.0.6'
+                ^
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/vendor-upstream.test.mjs:51:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'effect@4.0.1',
+    expected: 'effect@4.0.6',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

@@ -1,0 +1,50 @@
+{
+  "slice": "s13a-chart-acquisition",
+  "status": "blocked",
+  "blockedAt": "acquisition step (required work 1) - the sanctioned vendoring tool cannot express this repository's pin",
+  "requirementCorrection": {
+    "claimInTask": "R16 is the chart surface.",
+    "actual": "00-requirements.md:100-114 defines the chart surface as R9 (React-free chart pilot) and R10 (chart lifecycle/render policy). R16 at :156-163 is 'Release/dev/candidate comparison' and has no chart clause. This report answers R9's acquisition + pure-SVG/HTML-alternative first slice; R10's mount/lifecycle work is a later slice."
+  },
+  "resolvedUpstream": {
+    "name": "Crease UI",
+    "url": "https://github.com/Potti1234/creaseui",
+    "pinnedCommit": "bb447e363e9c717bf11ebb10b2259f053bff6f71",
+    "proof": "git fetch --depth 1 origin bb447e363e9c717bf11ebb10b2259f053bff6f71 succeeded from the repo; commit metadata: 2026-10-22T00:20:36+02:00, subject 'Merge pull request #39 from Potti1234/devin/1792611576-chart-transform'. Tree contains src/ui/chart.ts, src/lib/echarts.ts, LICENSE, compatibility.json.",
+    "licence": "MIT License, Copyright (c) 2026 Potti1234 (read from the commit's LICENSE blob).",
+    "refs": "git ls-remote over the repo returns no branch and no tag pointing at the pinned commit (REF_MATCHES=0); the repository currently advertises zero tags (TAG_LINES=0). The commit is reachable by SHA only.",
+    "logs": [
+      ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13a-resolve-commit.log",
+      ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13a-refs.log"
+    ]
+  },
+  "toolLimitation": {
+    "tool": "scripts/vendor-upstream.mjs",
+    "why": "sync clones with `git clone --depth 1 --branch <tag>` (:265) and then requires HEAD === the pinned commit (:270, :273). UPSTREAMS entries can name a tag but the tool has no commit-only checkout mode, so a pin whose SHA is not a branch/tag tip cannot be expressed.",
+    "proof": "A temporary UPSTREAMS entry for crease with tag 'main' and commit bb447e... was added, the tool run, and the entry reverted. The tool exited 1: 'vendor-upstream: tag main resolves to fc059a6e86bed6d01816f8f11d645acb426636bd, expected bb447e363e9c717bf11ebb10b2259f053bff6f71' and created no vendor/crease directory.",
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13a-tool-refusal.log",
+    "citations": [
+      "scripts/vendor-upstream.mjs:265",
+      "scripts/vendor-upstream.mjs:270",
+      "scripts/vendor-upstream.mjs:273"
+    ]
+  },
+  "followedHardRule": "No hand copy, no new vendoring path. The tool was used as-is; when it refused the commit-only pin, acquisition stopped. The temporary probe entry was removed and no vendor/crease tree exists.",
+  "notDelivered": [
+    "vendor/crease/** (blocked; no hand copy)",
+    "scripts/crease-vendored.test.mjs (a pin test cannot be maintained green against a vendor the sanctioned tool cannot produce; it was not left red in the tree)",
+    "the first chart primitive and its Scene test (stopped with the acquisition per the task's hard rule)",
+    "digest/payload manifest for Crease (nothing was vendored, so there is no content digest to record; the commit proof above is the only pin evidence)"
+  ],
+  "unblockOptions": [
+    "Authorise extending scripts/vendor-upstream.mjs with a commit-only mode (fetch the SHA, check HEAD, archive from the object database) - this changes the tool beyond the allowed 'UPSTREAMS entry only' edit, so it needs explicit approval.",
+    "Or have the upstream expose a tag/branch whose tip is exactly bb447e363e9c717bf11ebb10b2259f053bff6f71; then the existing tool can sync it unchanged.",
+    "Or supply a different reviewed commit that is a tag/branch tip, with the same 40-hex verification."
+  ],
+  "filesChanged": "none in source or vendor. The worktree's pre-existing dirty state (including the already-modified scripts/vendor-upstream.mjs with the effect 4.0.6 pin and foldkit entry, unchanged by this probe) is as it was; only evidence logs were added.",
+  "evidence": [
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13a-resolve-commit.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13a-refs.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13a-tool-refusal.log"
+  ]
+}

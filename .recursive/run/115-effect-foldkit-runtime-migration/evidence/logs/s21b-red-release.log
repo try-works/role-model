@@ -1,0 +1,35 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/s21a-composition-dag.test.ts (6 tests | 1 failed | 5 skipped) 30024ms
+   ↓ S21a composition DAG shape > builds the whole closed graph with no ambient service and exposes every owner
+   ↓ S21a composition DAG shape > gives every consumer of one shared leaf the same instance
+   ↓ S21a composition DAG shape > negative control: Layer.fresh rebuilds inside one shared memo map (deleting fresh fails)
+   ↓ S21a composition DAG shape > rejects callers beyond permit + waiter capacity instead of parking them unboundedly
+   × S21a composition DAG shape > returns the permit to the pool after a failing user 30022ms
+     → Test timed out in 30000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+   ↓ S21a composition DAG shape > returns the permit to the pool after an interrupted user
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s21a-composition-dag.test.ts > S21a composition DAG shape > returns the permit to the pool after a failing user
+Error: Test timed out in 30000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ test/s21a-composition-dag.test.ts:189:3
+    187|   });
+    188| 
+    189|   it("returns the permit to the pool after a failing user", async () =…
+       |   ^
+    190|     const config = {
+    191|       ...DEFAULT_COMPOSITION_CONFIG,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 skipped (6)
+   Start at  03:53:06
+   Duration  33.00s (transform 1.54s, setup 0ms, collect 2.50s, tests 30.02s, environment 0ms, prepare 166ms)
+
+EXIT_CODE: 1

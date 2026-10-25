@@ -1,0 +1,7 @@
+▲ [WARNING] Cannot find base config file "../../tsconfig.base.json" [tsconfig.json]
+
+    ../../../vendor/foldkit/packages/foldkit/tsconfig.base.json:2:13:
+      2 │   "extends": "../../tsconfig.base.json",
+        ╵              ~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+{"status":"PASS","package":"@role-model-router/foldkit","entries":["asyncData","brand","calendar","canvas","command","customElement","devtools-host","devtools-protocol","dom","experimental","experimental/machine","experimental/query","experimental/server","fieldValidation","file","html","http","index","managedResource","message","model-preservation","mount","navigation","port","render","route","runtime","scene","schema","story","struct","submodel","subscription","test","test/vitest","update","url"],"subpaths":[".","./asyncData","./brand","./calendar","./canvas","./command","./customElement","./devtools-host","./devtools-protocol","./dom","./experimental","./experimental/machine","./experimental/query","./experimental/server","./fieldValidation","./file","./html","./http","./managedResource","./message","./model-preservation","./mount","./navigation","./port","./render","./route","./runtime","./scene","./schema","./story","./struct","./submodel","./subscription","./test","./test/vitest","./update","./url"],"warnings":1,"warningDetails":["Cannot find base config file \"../../tsconfig.base.json\""]}

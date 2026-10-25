@@ -1,0 +1,124 @@
+{
+  "slice": "s15b-diagnostics-page",
+  "requirement": [
+    "R21 (UI half; the read/authorization server half is S15a/S15c)"
+  ],
+  "requirementSource": ".recursive/run/115-effect-foldkit-runtime-migration/00-requirements.md:199-205",
+  "files": [
+    "src/diagnostics.ts (new): wire/reader types, DiagnosticsSnapshot schema, defensive parser, state text/age formatting",
+    "src/commands.ts (new): ReadDiagnostics Command bound to the injected reader",
+    "src/app.ts (new): createShellApp({ readDiagnostics }) binds the reader to the Command and builds init/update/view",
+    "src/model.ts: diagnostics: DiagnosticsSnapshot added to the Schema model",
+    "src/message.ts: DiagnosticsRefreshRequested / DiagnosticsLoaded / DiagnosticsFailed messages",
+    "src/init.ts: routing init starts a load when the first route is Diagnostics",
+    "src/update.ts: URL/refresh produce the read Command; Loaded/Failed update the model only for the current route id",
+    "src/view.ts: diagnostics page states, identity/build labels, refresh control, focus/responsive classes",
+    "src/mount.ts: optional ShellOptions { readDiagnostics } injected through makeShell/mountShell",
+    "src/index.ts: exports the app factory and diagnostics types",
+    "test/diagnostics.test.ts (new): 13 tests, injected reader only"
+  ],
+  "asyncPattern": {
+    "shape": "The fetch is a Foldkit Command (ReadDiagnostics) whose execute is an Effect.tryPromise over the injected reader. init/update return the Command; the runtime runs the batch after update returns and dispatches the resulting Message (DiagnosticsLoaded or DiagnosticsFailed), which is the only way the view changes. The view never runs an effect.",
+    "citations": [
+      "Command type and named Effect carrying args: vendor/foldkit/packages/foldkit/src/command/index.ts:12-24.",
+      "Command.define semantics (args Schema, declared result Messages, execute suspended until runtime execution): src/command/index.ts:130-166; args overload :220-245.",
+      "The runtime runs the Command batch after update returns and dispatch happens outside the reducer: src/update/update.ts:124-127.",
+      "Effect.tryPromise options: vendor/effect/packages/effect/src/Effect.ts:1008-1013; the AbortSignal reaches the thunk only when it declares a parameter (internal/effect.ts:1166). commands.ts declares `try: (signal) => reader({ id, signal })`, and the loading test asserts the reader received an AbortSignal.",
+      "Effect.exit: Effect.ts:2455; Exit.findErrorOption: Exit.ts:1072; Option.getOrElse: Option.ts:602; Effect.succeed: Effect.ts:1041; Effect.flatMap: Effect.ts:2105.",
+      "makeApplication Model/update/view/routing containers: makeApplication.ts:26-54; initial Url from window.location and routing init: :307-309, :370-383."
+    ],
+    "injection": "mountShell(container, { readDiagnostics }) — missing reader resolves to a reader that rejects with 'diagnostics reader is not configured', so no server or network is used by any test."
+  },
+  "readContract": {
+    "source": "role-model-router/apps/runtime-host-bridge/src/local-diagnostics-read.ts (re-read during the slice: now 325 lines; the earlier shape lacked `conditions` and the identity/code caps, so the page was aligned to the current contract).",
+    "citations": [
+      "Schema id: :25. Bounds constants: :26-33 (records 50, response 16_384 bytes, identity 256 B, code 512 B).",
+      "State union ok/empty/stale/dropped/disabled: :75. Independent conditions { stale, dropped }: :96-100. Read body (state/error/identity/records/loss/staleness/conditions/bounds): :102-124.",
+      "Disabled is answered before any query validation and is an explicit 200 state, never an error: :208-230 (state 'disabled' :214, identity may be null :216-217).",
+      "State precedence stale > dropped > empty > ok with an empty page also for a cursor past the end: :272-279; independent conditions emitted alongside: :279, :295.",
+      "Dropped/stale computed from loss.dropped and the newest-record age (rule 300_000 ms): :253, :267.",
+      "Rows are four scalar fields ({ atMs, level, code, count }): :35-41.",
+      "Deferred wire: the production read source is not wired yet, so outside tests the route answers the disabled state: :20-24. This page therefore takes a reader; it does not fake a production data source."
+    ]
+  },
+  "redGreen": {
+    "initialRed": {
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15b-red-states.log",
+      "result": "12/12 diagnostics tests failed against the routed S14b shell; every body was the route placeholder ('Diagnostics: inst-1 …') with no diagnostics state node, so each state's own assertion was red."
+    },
+    "targetedRedForEmphasisedHazards": [
+      {
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15b-red-disabled-as-error.log",
+        "mutation": "view labelled the disabled state as the error state",
+        "message": "Timed out waiting for the disabled diagnostics state; body showed the error-labelled state with the disabled wording"
+      },
+      {
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15b-red-denied-as-empty.log",
+        "mutation": "parser mapped a 401 denied read to the empty state",
+        "message": "denied-not-empty test failed; body showed 'No diagnostics records yet.' for a denied read"
+      },
+      {
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15b-red-conditions-masked.log",
+        "mutation": "view dropped the independent-condition lines",
+        "message": "conditions test failed: expected 'also dropped' — stale masked the concurrent dropped condition"
+      }
+    ],
+    "green": {
+      "command": "cd role-model-router/apps/runtime-ui-next && node node_modules/vitest/vitest.mjs run",
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15b-green.log",
+      "testFiles": 3,
+      "tests": 18,
+      "passed": 18,
+      "failed": 0,
+      "exit": 0,
+      "diagnosticsTests": [
+        "ok: data-state ok, records render code/level/count, identity instance/build shown",
+        "empty: data-state empty, 'No diagnostics records' text, distinct from denied",
+        "disabled: data-state disabled, wording 'state, not an error', no error state node, build: missing with a null identity",
+        "stale: data-state stale with the rule (5m) and age (15m)",
+        "dropped: data-state dropped with loss count (12) and window (10m)",
+        "independent conditions: stale+dropped and dropped+stale show both, neither masks the other",
+        "denied: 401 renders 'Access denied' at data-state denied",
+        "denied rather than an empty list: no empty state node and no empty-list text for a 401",
+        "transport error: rejected reader renders data-state error with the rejection message, no denied state",
+        "identity honesty: null identity and buildId 'unknown' both label 'build: missing'",
+        "async: loading state while the reader promise is pending, reader called once, signal is an AbortSignal, result Message then renders empty",
+        "refresh: clicking [data-action=refresh-diagnostics] runs the Command again (2 calls) and the second result Message renders",
+        "a11y/responsive contract: panel w-full + sm:p-6, layout md:grid-cols-2, refresh is a native button with focus-visible:ring-2 and w-full, nav anchors have hrefs and focus-visible:ring-2"
+      ],
+      "regressions": "S14a mount/dispose (1/1) and S14b routing (4/4) still pass in the same 18-test run."
+    }
+  },
+  "typecheck": {
+    "command": "cd role-model-router/apps/runtime-ui-next && node ../../../node_modules/typescript/bin/tsc -p tsconfig.json --noEmit",
+    "exit": 0,
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15b-typecheck.log",
+    "note": "No errors on the first full run; test files are included in tsconfig and the injected reader type is shared with the test. Biome on the 11 changed files: exit 0 (s15b-biome-check.log)."
+  },
+  "domSimulationLimits": [
+    "happy-dom has no CSS layout engine: the narrow layout is proven as a class contract (w-full, max-w-3xl, p-4/sm:p-6, md:grid-cols-2, flex-wrap), not measured at 390px. Visual focus rings are likewise asserted as classes plus native button/anchor semantics; happy-dom does not implement sequential Tab traversal, so actual keyboard order and focus visibility are not measured.",
+    "aria-live/role=status announcements are attributes only; no screen reader consumes them in this harness.",
+    "The reader is injected, so the real HTTP path, credential/loopback authorization, CORS/header behavior and the 401 gate are not exercised. The read module says the production source is deferred and currently answers disabled outside tests (:20-24).",
+    "AbortSignal presence is asserted (Effect.tryPromise forwards it), but disposal/cancellation behavior (a late response being ignored) is not tested; the update does ignore messages whose id no longer matches the current route, and that guard is not directly tested.",
+    "Staleness/ages come from injected numbers, not the wall clock."
+  ],
+  "unverifiedOrBlocked": [
+    "Host-bridge HTTP wiring for the page reader is out of scope (files may only be written under apps/runtime-ui-next/src and tests). Binding a fetch reader to LOCAL_DIAGNOSTICS_PATH + the operator auth gate is a follow-up; the read module currently has no composition root (its own DEFERRED WIRE note).",
+    "Pagination: truncated/cursor are displayed as text only; there is no 'load more' control and no next-page Command.",
+    "Denied is modelled from a reader status 401/403 (as the read module says denied is the handler's 401 and never reaches it); the actual handler gate is untested here.",
+    "Build identity honesty is heuristic: null, empty and 'unknown' buildId are labelled missing; other unknown sentinels are not known to this page."
+  ],
+  "hashes": {
+    "src/diagnostics.ts": "4e5d7cbe4fea0f34393d21440112c8bef606ee80e3fe0138cce89eaacf01b1aa",
+    "src/commands.ts": "e84421e5c3baa9adacfb7d9b99f1c8322d43353266e0a9d7121e7cfab654a41e",
+    "src/model.ts": "2138c3b4db2b0300d2cb4e1e4b962e2fa1a9f25a610c388fe5dab32c24750dc1",
+    "src/message.ts": "e85750107f932f0bf156fee6c93d0596fea4e6030b5e57e369e1dfc21bb782e8",
+    "src/init.ts": "9e27302470bdc76066e774e4b6bb4a774b421a69c9a6ebb93a4455e2f2fce9a0",
+    "src/update.ts": "08f6a8694742b5050dc00bb4ddb5c9e07377c9722b024ed6a7025beeb2f70080",
+    "src/app.ts": "554d99389fc52b5ec196df7da65c1bd98aac1ec3caa0fd86e0ea90cc6d6fef55",
+    "src/mount.ts": "edc485c0afbb24c2478ccdd11e3c6a30e58eb9d69900a6c16e1742cb561ef707",
+    "src/index.ts": "0f0f011423e084da268ea244871262f752885342a3716fba74af7a95fa75eff4",
+    "src/view.ts": "d0312634b93189b78916989ebc86abc0748239e39a426ebf8bf26237a22b002b",
+    "test/diagnostics.test.ts": "8dcc45e73e14f3771927f42183e8892d4d623c5599f3f0b9bc337328d6d6367c"
+  }
+}

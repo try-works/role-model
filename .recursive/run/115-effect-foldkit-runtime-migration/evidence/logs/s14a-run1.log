@@ -1,0 +1,41 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+stdout | test/mount.test.ts > Foldkit app shell on the wrapper stack > mounts the app into a DOM container, dispatches a click through the runtime, and unmounts without throwing
+[23:42:20.956] ERROR (#1): Error: [foldkit] Runtime container must have an `id` for Model preservation across reloads. Set `container.id = "app"` (or any unique string) before passing it to makeApplication or makeElement. On a server-rendered page the id comes from the `data-foldkit-app` root stamp instead.
+    at D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\foldkit\dist\chunks\chunk-W4IY6AYV.js:4248:13
+
+stderr | test/mount.test.ts > Foldkit app shell on the wrapper stack > mounts the app into a DOM container, dispatches a click through the runtime, and unmounts without throwing
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+ ❯ test/mount.test.ts (1 test | 1 failed) 4028ms
+   × Foldkit app shell on the wrapper stack > mounts the app into a DOM container, dispatches a click through the runtime, and unmounts without throwing 4026ms
+     → Timed out waiting for the RM3 primary button to render (last value: undefined)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/mount.test.ts > Foldkit app shell on the wrapper stack > mounts the app into a DOM container, dispatches a click through the runtime, and unmounts without throwing
+Error: Timed out waiting for the RM3 primary button to render (last value: undefined)
+ ❯ waitFor test/mount.test.ts:30:9
+     28|     await new Promise<void>((resolve) => setTimeout(resolve, 10));
+     29|   }
+     30|   throw new Error(`Timed out waiting for ${label} (last value: ${Strin…
+       |         ^
+     31| };
+     32| 
+ ❯ test/mount.test.ts:50:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  23:42:14
+   Duration  9.77s (transform 2.75s, setup 0ms, collect 4.37s, tests 4.03s, environment 681ms, prepare 253ms)
+

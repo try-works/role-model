@@ -1,0 +1,31 @@
+{
+  "name": "@typing-game/client",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "format": "oxfmt",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@effect/platform-browser": "4.0.0",
+    "@typing-game/shared": "workspace:*",
+    "clsx": "^2.1.1",
+    "effect": "4.0.0",
+    "foldkit": "workspace:*"
+  },
+  "devDependencies": {
+    "@foldkit/devtools": "workspace:*",
+    "@foldkit/vite-plugin": "workspace:*",
+    "@tailwindcss/vite": "^4.3.3",
+    "happy-dom": "^20.14.5",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.1",
+    "vitest": "^4.1.11"
+  }
+}

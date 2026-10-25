@@ -1,0 +1,56 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:51768) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/run101-r5-cancel-drain.test.ts (5 tests | 1 failed | 4 skipped) 593ms
+   ↓ run 101 R5/R9 queue admin runtime side > reads the drain flag and answers false for an absent store
+   ↓ run 101 R5/R9 queue admin runtime side > reads one job's state, and answers null when the row or store is absent
+   × run 101 R5/R9 queue admin runtime side > claims nothing while the queue is draining, and claims again once it is cleared 592ms
+     → a draining queue claims nothing
++ actual - expected
+
++ [
++   'job-drained'
++ ]
+- []
+
+   ↓ run 101 R5/R9 queue admin runtime side > interrupts a running handler whose row is cancelled, without completing it
+   ↓ run 101 R5/R9 queue admin runtime side > names the cancellation it performed, so a caller can tell it from a failure
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run101-r5-cancel-drain.test.ts > run 101 R5/R9 queue admin runtime side > claims nothing while the queue is draining, and claims again once it is cleared
+AssertionError: a draining queue claims nothing
++ actual - expected
+
++ [
++   'job-drained'
++ ]
+- []
+
+
+- Expected
++ Received
+
+- []
++ [
++   "job-drained",
++ ]
+
+ ❯ test/run101-r5-cancel-drain.test.ts:213:14
+    211|       );
+    212|       await new Promise((resolve) => setTimeout(resolve, 500));
+    213|       assert.deepEqual(attempts, [], "a draining queue claims nothing"…
+       |              ^
+    214| 
+    215|       // Clear the flag: the same job is claimed, so the gate is a gat…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 skipped (5)
+   Start at  05:49:29
+   Duration  4.33s (transform 2.09s, setup 0ms, collect 3.26s, tests 593ms, environment 0ms, prepare 176ms)
+

@@ -1,0 +1,59 @@
+const exampleBase = 'https://github.com/foldkit/foldkit/tree/main/examples'
+
+export const exampleSourceHref = (slug: string): string =>
+  `${exampleBase}/${slug}/src`
+
+export const uiShowcaseViewSourceHref = (slug: string): string =>
+  `https://github.com/foldkit/foldkit/blob/main/examples/ui-showcase/src/ui/view/${slug}.ts`
+
+export const Link = {
+  elm: 'https://elm-lang.org',
+  elmArchitecture: 'https://guide.elm-lang.org/architecture/',
+  effect: 'https://effect.website',
+  effectSchema: 'https://effect.website/docs/schema/introduction/',
+  effectMatch: 'https://effect.website/docs/code-style/pattern-matching/',
+  effectService:
+    'https://effect.website/docs/requirements-management/services/',
+  react: 'https://react.dev',
+  vue: 'https://vuejs.org',
+  angular: 'https://angular.dev',
+  svelte: 'https://svelte.dev',
+  solid: 'https://solidjs.com',
+  snabbdom: 'https://github.com/snabbdom/snabbdom',
+  foldkitVdom:
+    'https://github.com/foldkit/foldkit/blob/main/packages/foldkit/src/vdom.ts',
+  foldkitExamples: exampleBase,
+  exampleAuthLogin: `${exampleBase}/auth/src/page/loggedOut/page/login.ts`,
+  exampleSnakeRequestPattern:
+    'https://github.com/foldkit/foldkit/blob/main/examples/snake/src/main.ts#L220-L234',
+  exampleWeatherFetch:
+    'https://github.com/foldkit/foldkit/blob/main/examples/weather/src/main.ts#L153-L232',
+  typingTerminal: 'https://typingterminal.com',
+  typingTerminalSource:
+    'https://github.com/foldkit/foldkit/tree/main/packages/typing-game',
+  typingTerminalRoomSource:
+    'https://github.com/foldkit/foldkit/tree/main/packages/typing-game/client/src/page/room',
+  createFoldkitApp:
+    'https://github.com/foldkit/foldkit/tree/main/packages/create-foldkit-app',
+  msw: 'https://mswjs.io',
+  lustreBenchmark: 'https://github.com/lustre-labs/benchmark',
+  foldkitLustreBenchmark:
+    'https://github.com/foldkit/foldkit/tree/main/internal/lustre-benchmark',
+  github: 'https://github.com/foldkit/foldkit',
+  githubIssues: 'https://github.com/foldkit/foldkit/issues',
+  discord: 'https://discord.gg/kav8VNxqGm',
+  xSocial: 'https://x.com/devinjameson',
+  foldkitSource:
+    'https://github.com/foldkit/foldkit/tree/main/packages/foldkit',
+  npm: 'https://www.npmjs.com/package/foldkit',
+  websiteSource:
+    'https://github.com/foldkit/foldkit/tree/main/packages/website',
+  prerenderScript:
+    'https://github.com/foldkit/foldkit/blob/main/packages/website/scripts/prerender.ts',
+  changelog:
+    'https://github.com/foldkit/foldkit/blob/main/packages/foldkit/CHANGELOG.md',
+  dragAndDropDocumentStyles:
+    'https://github.com/foldkit/foldkit/blob/main/packages/ui/src/dragAndDrop/index.ts#L663-L689',
+  chatgptSkills: 'https://learn.chatgpt.com/docs/build-skills',
+  opencodeSkills: 'https://opencode.ai/docs/skills/',
+}

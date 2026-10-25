@@ -1,0 +1,47 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/sql-sqlite-node
+
+(node:6424) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/s18a-sql-truth.test.ts (8 tests | 1 failed | 7 skipped) 20ms
+   ↓ S18a blocking measurement > blocks the event loop for the whole synchronous DatabaseSync statement (with tolerance)
+   ↓ S18a blocking measurement > does not let other JavaScript run between the start and end of a synchronous transaction
+   × S18a per-store PRAGMAs > pins the sql-sqlite-node service defaults (busy_timeout 5000, journal delete, synchronous FULL, FK on, auto_vacuum off) 19ms
+     → expected [ { timeout: +0 } ] to deeply equal [ { timeout: 5000 } ]
+   ↓ S18a per-store PRAGMAs > preserves a per-store setup() PRAGMA (WAL + synchronous NORMAL)
+   ↓ S18a per-store PRAGMAs > pins the sqlite-memory initialization PRAGMAs (WAL, synchronous FULL, FK on, auto_vacuum INCREMENTAL)
+   ↓ S18a backup/restore owner fence > characterizes restore while an owner connection is active: no logical fence, only OS file locking
+   ↓ S18a real SQL transactions, no substitute > rolls back real SQL work and exposes no Effect Ref/TxRef memory transaction
+   ↓ S18a real SQL transactions, no substitute > pins BEGIN IMMEDIATE/COMMIT/ROLLBACK and excludes a scheduled-runSync or TxRef substitute
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s18a-sql-truth.test.ts > S18a per-store PRAGMAs > pins the sql-sqlite-node service defaults (busy_timeout 5000, journal delete, synchronous FULL, FK on, auto_vacuum off)
+AssertionError: expected [ { timeout: +0 } ] to deeply equal [ { timeout: 5000 } ]
+
+- Expected
++ Received
+
+  [
+    {
+-     "timeout": 5000,
++     "timeout": 0,
+    },
+  ]
+
+ ❯ test/s18a-sql-truth.test.ts:115:56
+    113|     const service = makeSync({ databasePath: path.join(tempDir(), "pra…
+    114|     try {
+    115|       expect(service.querySync("PRAGMA busy_timeout")).toEqual([{ time…
+       |                                                        ^
+    116|       expect(service.querySync("PRAGMA journal_mode")).toEqual([{ jour…
+    117|       expect(service.querySync("PRAGMA synchronous")).toEqual([{ synch…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 7 skipped (8)
+   Start at  02:54:16
+   Duration  3.57s (transform 1.78s, setup 0ms, collect 2.79s, tests 20ms, environment 0ms, prepare 274ms)
+

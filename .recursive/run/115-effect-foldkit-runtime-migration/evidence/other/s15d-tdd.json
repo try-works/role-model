@@ -1,0 +1,84 @@
+{
+  "slice": "s15d-page-proof-gaps",
+  "requirement": "R21 UI half (review mutation gaps)",
+  "status": "complete",
+  "task": ".recursive/run/115-effect-foldkit-runtime-migration/tasks/s15d-page-proof-gaps.md",
+  "gaps": [
+    {
+      "id": "A",
+      "mutation": "delete the route-id equality from update.ts DiagnosticsLoaded (reviewer's mutation)",
+      "redLog": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15d-red-a.log",
+      "red": "expected <section …> to be undefined - the old route's resolved read was applied while /diagnostics/b was current",
+      "test": "'does not apply a resolved read for a previous route id after navigating away': mounts /diagnostics/a with a deferred reader, navigates (pushState+popstate) to /diagnostics/b, resolves a first, asserts no ok/record appears and b's loading holds, then resolves b and asserts b's empty state",
+      "green": "passes with the guard in place"
+    },
+    {
+      "id": "B",
+      "mutation": "swap stale age/rule and dropped count/window in diagnostics.ts + view.ts, and give the disabled state a danger border",
+      "redLog": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15d-red-b.log",
+      "red": "expected 'mt-4 w-full rounded-lg border border-…' to contain 'border-dashed'; expected body text to contain 'Stale: the newest record is 15m old (rule 5m).'; expected body text to contain 'Dropped: 12 record(s) lost in the last 10m.' (the log's 403 line is the separate label defect, fixed below)",
+      "test": "exact-phrase assertions: 'Stale: the newest record is 15m old (rule 5m).' + 'rule 5m · age 15m'; 'Dropped: 12 record(s) lost in the last 10m.' + 'loss window 10m · 12 dropped'; disabled panel class 'border-dashed' and NOT border-[var(--rm-danger)] / border-[var(--rm-warning)]",
+      "green": "passes after restoring the render functions"
+    },
+    {
+      "id": "C",
+      "mutation": "fabricate an AbortSignal in commands.ts: try: () => reader({ id, signal: new AbortController().signal })",
+      "redLog": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15d-red-c.log",
+      "red": "Timed out waiting for the forwarded signal abort (last value: undefined)",
+      "test": "'aborts the Effect-forwarded signal when the shell disposes mid-flight': a reader stores the forwarded signal and blocks on its abort event; the shell is disposed while loading, and the test asserts signal.aborted becomes true and the reader observed the abort",
+      "green": "passes with the Effect-supplied signal"
+    }
+  ],
+  "alsoFixed": [
+    {
+      "item": "403 label accuracy",
+      "redLog": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15d-first-pass.log",
+      "red": "expected body text to contain 'Access denied: the server rejected this diagnostics read (HTTP 403).'",
+      "fix": "parseDiagnosticsSnapshot keeps httpStatus for 401/403; diagnosticsRenderText now says 'this diagnostics read is not authorized (HTTP 401)' for 401 and 'the server rejected this diagnostics read (HTTP 403)' for 403 - status-accurate, no invented cause",
+      "test": "'labels a 403 rejection by its HTTP status instead of a generic authorization failure'"
+    },
+    {
+      "item": "overclaiming title",
+      "fix": "renamed 'keeps controls reachable with visible focus styles and a narrow layout' to 'renders the refresh control and nav links with visible focus styles and the narrow layout classes' (the test asserts classes/roles/hrefs, not reachability)"
+    },
+    {
+      "item": "ARIA assertions",
+      "fix": "asserts role=status, aria-live=polite and aria-busy true while loading / false after settling",
+      "test": "'exposes role=status live-region semantics while loading and after settling'"
+    }
+  ],
+  "followUp": [
+    {
+      "id": "same-id-refresh-race",
+      "statement": "Two refreshes for the same route id can resolve out of order; the older response is not ignored because Message.DiagnosticsLoaded carries only the route id.",
+      "whyNotFixed": "Closing it needs a per-request token carried through the Command args/message (a Command/message-architecture change), which this task explicitly excludes. Recorded here as a named follow-up rather than prose in the module.",
+      "suggestedShape": "ReadDiagnostics args add a monotonically increasing request token; DiagnosticsLoaded carries it; update ignores a snapshot whose token is older than the model's current token for the route."
+    }
+  ],
+  "red": {
+    "natural": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15d-first-pass.log (403 label)",
+    "mutations": [
+      "s15d-red-a.log",
+      "s15d-red-b.log",
+      "s15d-red-c.log"
+    ],
+    "note": "every mutation file was byte-restored after its run; the GREEN suite is what proves the restore"
+  },
+  "green": {
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15d-green.log",
+    "exit": 0,
+    "files": 1,
+    "tests": 17,
+    "passed": 17
+  },
+  "typecheck": {
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15d-tsc.log",
+    "command": "node node_modules/typescript/bin/tsc -p role-model-router/apps/runtime-ui-next/tsconfig.json --noEmit",
+    "exit": 0
+  },
+  "files": {
+    "role-model-router/apps/runtime-ui-next/src/diagnostics.ts": "httpStatus on 401/403 snapshots + status-accurate denied label",
+    "role-model-router/apps/runtime-ui-next/test/diagnostics.test.ts": "4 new tests + exact-phrase/tone/ARIA assertions + renamed title"
+  },
+  "noProductArchitectureChange": "mapping, Commands and Messages unchanged; the only source edits are the denied-label status and the snapshot field it needs"
+}

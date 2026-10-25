@@ -1,0 +1,32 @@
+[
+  {
+    "name": "s1a-implementer",
+    "sessionId": "session-24eed9b9-7b13-44d2-b485-5892de81b99b",
+    "config": {
+      "provider": "deepseek-official",
+      "model": "deepseek-flash",
+      "maxTokens": 256000,
+      "reasoningEffort": "high"
+    }
+  },
+  {
+    "name": "s1a-independent-review01",
+    "sessionId": "session-786e61da-849a-45ac-9f84-39ed7c5469a5",
+    "config": {
+      "provider": "deepseek-official",
+      "model": "deepseek-flash",
+      "maxTokens": 256000,
+      "reasoningEffort": "high"
+    }
+  },
+  {
+    "name": "s1a-review-repair02",
+    "sessionId": "session-d500e185-cc32-45ca-a746-53ee82423054",
+    "config": {
+      "provider": "deepseek-official",
+      "model": "deepseek-flash",
+      "maxTokens": 256000,
+      "reasoningEffort": "high"
+    }
+  }
+]

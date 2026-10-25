@@ -1,0 +1,179 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+stderr | test/diagnostics.test.ts > diagnostics page states > renders the ok state with records and identity
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 15.3ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: 'inst-1', status: 'loading' },
+    route: { _tag: 'Diagnostics', id: 'inst-1' },
+    theme: 'light'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 15.322000000000116,
+  thresholdMs: 8
+}
+
+stderr | test/diagnostics.test.ts > diagnostics page states > renders the empty state distinctly
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > renders disabled as a state, not an error
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > renders stale with the rule and the age
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > renders dropped with the loss counts
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > renders a denied response as access denied
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > renders denied rather than an empty list for a denied response
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > renders a transport error distinctly from a denied state
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > labels a missing or unknown build identity as missing, never blank
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > shows loading while the reader is in flight, then the command result message
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > re-reads through a Command when the refresh control is used
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > keeps controls reachable with visible focus styles and a narrow layout
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+ ❯ test/diagnostics.test.ts (12 tests | 2 failed) 6588ms
+   ✓ diagnostics page states > renders the ok state with records and identity  636ms
+   ✓ diagnostics page states > renders the empty state distinctly  519ms
+   × diagnostics page states > renders disabled as a state, not an error 549ms
+     → expected 'indexdiagnostics 42diagnostics: inst-…' not to contain 'error'
+   ✓ diagnostics page states > renders stale with the rule and the age  514ms
+   ✓ diagnostics page states > renders dropped with the loss counts  550ms
+   ✓ diagnostics page states > renders a denied response as access denied  543ms
+   ✓ diagnostics page states > renders denied rather than an empty list for a denied response  540ms
+   ✓ diagnostics page states > renders a transport error distinctly from a denied state  543ms
+   × diagnostics page states > labels a missing or unknown build identity as missing, never blank 543ms
+     → expected 'IndexDiagnostics 42Diagnostics: inst-…' to contain 'build: missing'
+   ✓ diagnostics page states > shows loading while the reader is in flight, then the command result message  545ms
+   ✓ diagnostics page states > re-reads through a Command when the refresh control is used  562ms
+   ✓ diagnostics page states > keeps controls reachable with visible focus styles and a narrow layout  544ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/diagnostics.test.ts > diagnostics page states > renders disabled as a state, not an error
+AssertionError: expected 'indexdiagnostics 42diagnostics: inst-…' not to contain 'error'
+
+Expected: "error"
+Received: "indexdiagnostics 42diagnostics: inst-1diagnostics are disabled. this is a state, not an error.instance: missing · build: missingbounded read: 50 records / 16384 bytesrefresh diagnosticslight shellclicks: 0clicked 0 time(s)toggle theme"
+
+ ❯ test/diagnostics.test.ts:150:42
+    148|     await waitFor(() => stateNode("disabled"), "the disabled diagnosti…
+    149|     expect(bodyText().toLowerCase()).toContain("disabled");
+    150|     expect(bodyText().toLowerCase()).not.toContain("error");
+       |                                          ^
+    151|     expect(bodyText()).toContain("build: missing");
+    152|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/diagnostics.test.ts > diagnostics page states > labels a missing or unknown build identity as missing, never blank
+AssertionError: expected 'IndexDiagnostics 42Diagnostics: inst-…' to contain 'build: missing'
+
+Expected: "build: missing"
+Received: "IndexDiagnostics 42Diagnostics: inst-1No diagnostics records yet.instance: inst-1 · build: build-9bounded read: 50 records / 16384 bytesRefresh diagnosticsLight shellClicks: 0Clicked 0 time(s)Toggle theme"
+
+ ❯ test/diagnostics.test.ts:229:24
+    227|     mountAt("/diagnostics/inst-1", readerOf({ body: bodyOf({ state: "e…
+    228|     await waitFor(() => stateNode("empty"), "the empty state with a nu…
+    229|     expect(bodyText()).toContain("build: missing");
+       |                        ^
+    230|   });
+    231| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 10 passed (12)
+   Start at  00:53:44
+   Duration  12.93s (transform 3.09s, setup 0ms, collect 4.94s, tests 6.59s, environment 684ms, prepare 239ms)
+

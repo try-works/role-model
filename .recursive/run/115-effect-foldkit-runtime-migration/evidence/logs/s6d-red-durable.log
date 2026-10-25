@@ -1,0 +1,43 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:41260) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/run105-e5-ladder-index-readback.test.ts (1 test | 1 failed) 38ms
+   × run105 E5 ladder index readback > recovers a records payload carrying the ladder index from the externalized store 36ms
+     → expected { transferState: 'externalized', …(2) } to match object { …(2) }
+(3 matching properties omitted from actual)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run105-e5-ladder-index-readback.test.ts > run105 E5 ladder index readback > recovers a records payload carrying the ladder index from the externalized store
+AssertionError: expected { transferState: 'externalized', …(2) } to match object { …(2) }
+(3 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "schemaVersion": "role-model.knowledge-learning-records.v1",
+-   "scopeId": "standalone-runtime-stage",
++   "byteLength": 28149,
++   "resultHash": "sha256:7b227363",
++   "transferState": "externalized",
+  }
+
+ ❯ test/run105-e5-ladder-index-readback.test.ts:85:23
+     83|         value: { transferState: "externalized", resultHash: space.hash…
+     84|       });
+     85|       expect(decoded).toMatchObject({
+       |                       ^
+     86|         schemaVersion: "role-model.knowledge-learning-records.v1",
+     87|         scopeId,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  05:52:14
+   Duration  4.84s (transform 2.53s, setup 0ms, collect 4.31s, tests 38ms, environment 0ms, prepare 177ms)
+

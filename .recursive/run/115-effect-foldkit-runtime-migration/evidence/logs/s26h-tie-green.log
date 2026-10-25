@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s26f-client-host-tie.test.ts (4 tests | 3 skipped) 37ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 3 skipped (4)
+   Start at  08:22:34
+   Duration  7.02s (transform 3.35s, setup 0ms, collect 5.24s, tests 37ms, environment 790ms, prepare 384ms)
+

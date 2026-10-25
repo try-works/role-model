@@ -1,0 +1,27 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+stderr | test/mount.test.ts > Foldkit app shell on the wrapper stack > mounts the app into a DOM container, dispatches a click through the runtime, and unmounts without throwing
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 8.8ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: { theme: 'light', clicks: 0 },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 8.76049999999941,
+  thresholdMs: 8
+}
+
+ ✓ test/mount.test.ts (1 test) 622ms
+   ✓ Foldkit app shell on the wrapper stack > mounts the app into a DOM container, dispatches a click through the runtime, and unmounts without throwing  620ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  23:46:15
+   Duration  6.36s (transform 2.72s, setup 0ms, collect 4.34s, tests 622ms, environment 701ms, prepare 227ms)
+

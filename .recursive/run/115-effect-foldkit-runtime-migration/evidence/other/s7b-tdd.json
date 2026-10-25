@@ -1,0 +1,159 @@
+{
+  "slice": "s7b-wire-route-producer",
+  "requirement": "R25",
+  "worktree": "D:\\DEV\\role-model\\.worktrees\\115-effect-foldkit-runtime-migration",
+  "status": "complete",
+  "tddMode": "strict",
+  "blockerResolution": {
+    "blockedOn": "protocol-routing could not import `effect` (no dependency, no workspace link, no lockfile importer); reported to lead with evidence in the earlier s7b-tdd blocker record.",
+    "leadAuthoredUnblock": "Lead applied Option A: role-model-router/packages/protocol-routing/package.json now declares \"effect\": \"workspace:*\", pnpm-lock.yaml has the matching importer entry, the workspace link exists, and a frozen pnpm 10.6.5 install reported 'Lockfile is up to date, resolution step is skipped'.",
+    "verifiedHere": "node ESM resolution from role-model-router/packages/protocol-routing now returns RESOLVED object object (Effect, Layer), and node_modules/effect is a junction to role-model-router/packages/effect."
+  },
+  "vendoredApi_4_0_6": {
+    "version": "vendor/effect/packages/effect/package.json -> 4.0.6",
+    "used": [
+      {
+        "symbol": "Context.Key / Service / ServiceClass / Service constructor (class-style, producer's service)",
+        "path": "vendor/effect/packages/effect/src/Context.ts",
+        "lines": "68, 103, 129, 209"
+      },
+      {
+        "symbol": "Service.use(f) (the producer program)",
+        "path": "vendor/effect/packages/effect/src/Context.ts",
+        "lines": "103 (`use<A, E, R>(f: (service: Shape) => Effect<A, E, R>): Effect<A, E, R | Identifier>`)"
+      },
+      {
+        "symbol": "Layer.Layer<ROut, E = never, RIn = never> and Layer.succeed(service, resource): Layer<I>",
+        "path": "vendor/effect/packages/effect/src/Layer.ts",
+        "lines": "56, 827-835"
+      },
+      {
+        "symbol": "Effect.provide(effect, layer) (direct overload)",
+        "path": "vendor/effect/packages/effect/src/Effect.ts",
+        "lines": "6142; direct overload 6177-6183"
+      },
+      {
+        "symbol": "Effect.runSync(effect)",
+        "path": "vendor/effect/packages/effect/src/Effect.ts",
+        "lines": "9587"
+      },
+      {
+        "symbol": "Effect interface (lazy; requires a Runtime)",
+        "path": "vendor/effect/packages/effect/src/Effect.ts",
+        "lines": "122"
+      },
+      {
+        "symbol": "Effect.sync (instrumented Layer's decide)",
+        "path": "vendor/effect/packages/effect/src/Effect.ts",
+        "lines": "1215"
+      }
+    ]
+  },
+  "boundary": {
+    "file": "role-model-router/packages/protocol-routing/src/route-decision-boundary.ts",
+    "design": "Single documented synchronous boundary: `runRouteDecisionThroughProducer(input, layer = DefaultRouteDecisionLayer)` builds `RouteDecisionProducer.use((producer) => producer.decide(input))` and returns `Effect.runSync(Effect.provide(program, layer))`. `DefaultRouteDecisionLayer` is the core producer's live Layer created once at module scope, so no per-call Layer allocation; there is no ambient provider and no global mutable state. `routeRuntimeRequest(input, options?: RouteRuntimeRequestOptions)` delegates through it; `options.routeDecisionLayer` is the only injectable seam (used by the wiring test).",
+    "publicApi": "routeRuntimeRequest keeps its return type and all existing one-arg callers (cli.ts and the 18 pre-existing tests) unchanged; it gained an optional second parameter only."
+  },
+  "red": {
+    "command": "node ../../../node_modules/vitest/vitest.mjs run test/run115-s7b-route-decision-wiring.test.ts (cwd role-model-router/packages/protocol-routing)",
+    "exit": 1,
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s7b-red.log",
+    "result": {
+      "testFiles": 1,
+      "failed": 1,
+      "tests": 3,
+      "passed": 1,
+      "failedTests": 2
+    },
+    "observed": [
+      "routeRuntimeRequest obtains its decision through the producer Layer -> AssertionError: expected +0 to be 1 // Object.is equality (counter.decisions was 0: the caller still bypassed the producer and called the kernel directly).",
+      "the empty pool stays a success with an empty chosen endpoint id -> AssertionError: expected +0 to be 1 (same bypass).",
+      "The third test (one-arg default) passed in RED because the kernel's own output is unchanged; it is a regression guard, not the wiring proof."
+    ],
+    "note": "RED is the bypass (observably 0 producer invocations), not a missing module or missing dependency."
+  },
+  "green": {
+    "command": "node ../../../node_modules/vitest/vitest.mjs run test/run115-s7b-route-decision-wiring.test.ts (cwd role-model-router/packages/protocol-routing)",
+    "exit": 0,
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s7b-green.log",
+    "result": {
+      "testFiles": 1,
+      "tests": 3,
+      "passed": 3,
+      "failed": 0
+    },
+    "assertions": [
+      "instrumented Layer decide count === 1 for a real routeRuntimeRequest call",
+      "result.decision toEqual and JSON.stringify-equals routeRequest(projectRuntimeRouteInput(fixture).routeInput)",
+      "empty pool: count === 1, chosen_endpoint_id === \"\", selection_reasons [], decision toEqual kernel",
+      "one-arg default Layer path returns the kernel-equal decision"
+    ]
+  },
+  "existingSuite": {
+    "command": "node ../../../node_modules/vitest/vitest.mjs run test (cwd role-model-router/packages/protocol-routing)",
+    "exit": 0,
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s7b-existing-suite.log",
+    "result": {
+      "testFiles": 4,
+      "tests": 21,
+      "passed": 21,
+      "failed": 0
+    },
+    "note": "3 pre-existing files (18 tests) unchanged plus the new wiring file (3 tests)."
+  },
+  "typecheck": {
+    "project": {
+      "command": "node node_modules/typescript/bin/tsc -p role-model-router/packages/protocol-routing/tsconfig.json --noEmit",
+      "exit": 0,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s7b-typecheck.log"
+    },
+    "testFiles": {
+      "command": "targeted tsc --noEmit ... test/run115-s7b-route-decision-wiring.test.ts",
+      "exit": 2,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s7b-typecheck-test.log",
+      "explanation": "The only errors are the PRE-EXISTING type drift in the untouched test/test-catalog-fixture.ts (missing reasoningEffortLevels/reasoningOptionKinds on NormalizedCatalogModel). The same invocation on the pre-existing test/index.test.ts exits 2 with 18 errors including the same two fixture errors (log s7b-typecheck-test-baseline.log). Test files are excluded from the package tsconfig by design, so the authoritative package typecheck is the exit-0 project run above; my new files contribute no errors."
+    }
+  },
+  "styleChecks": {
+    "biome": {
+      "command": "node node_modules/@biomejs/biome/bin/biome check <3 changed files>",
+      "exit": 0,
+      "observed": "after one format-only fix to the boundary module import line: 'Checked 3 files. No fixes applied.'"
+    },
+    "antiSlopLint": {
+      "boundary": "clean (15 rules)",
+      "wiringTest": "clean (15 rules)",
+      "indexChangedRegion": "clean under the safety rules subset (no-chained-type-assertions, no-module-mocking, no-unknown-parameters, no-unknown-returns, no-widen-then-assert)"
+    }
+  },
+  "files": {
+    "role-model-router/packages/protocol-routing/src/route-decision-boundary.ts": {
+      "sha256": "a2f1c5b50be853127c21d99563bf99e74b20488fcfe70d0cd19480c0f67c1e6b",
+      "kind": "new module (boundary + default Layer + options type)"
+    },
+    "role-model-router/packages/protocol-routing/src/index.ts": {
+      "sha256": "55c52d84a1a0af4a0f92debfad6109644646045c4a38591dcb9df11c3b31c627",
+      "kind": "modified: removed the direct routeRequest import/call, added the boundary delegation and the optional options parameter"
+    },
+    "role-model-router/packages/protocol-routing/test/run115-s7b-route-decision-wiring.test.ts": {
+      "sha256": "5681ff87cacf4afd9178671c85aeab8bb64436e5f16d6c41ce1e2d829eaa12f6",
+      "kind": "new wiring test (instrumented Layer; 3 tests)"
+    }
+  },
+  "leadAuthoredFiles": {
+    "role-model-router/packages/protocol-routing/package.json": {
+      "sha256": "44c2009b17a2e62ad34d9f00a3d1df44b0b30e2112be1fd0848645a07bc6ca7b",
+      "note": "added \"effect\": \"workspace:*\" (lead)"
+    },
+    "pnpm-lock.yaml": {
+      "sha256": "2b2280f0f94308c4d257557727f8018a62eb9f9b8ad690b62340d594de4e4d0b",
+      "note": "matching importer entry (lead)"
+    }
+  },
+  "unverified": [
+    "No build/turbo/full-workspace test run; only the protocol-routing package suite, its typecheck, and the targeted wiring check.",
+    "The package tsconfig excludes test files, so the repo's pre-existing test type drift (test/test-catalog-fixture.ts and test/index.test.ts) is not fixed here (out of scope).",
+    "No frozen-install or lockfile check re-run in this session; the lead verified the frozen install.",
+    "No Effect runtime features beyond Effect.sync/provide/runSync + Layer.succeed are exercised."
+  ]
+}

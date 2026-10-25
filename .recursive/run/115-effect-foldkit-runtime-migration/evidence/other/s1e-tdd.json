@@ -1,0 +1,104 @@
+{
+  "slice": "S1e",
+  "task": ".recursive/run/115-effect-foldkit-runtime-migration/tasks/s1e-structure-contract.md",
+  "tddMode": "strict",
+  "phase3Approval": "02f79220f",
+  "sourceContract": {
+    "path": ".recursive/run/115-effect-foldkit-runtime-migration/source-proposal.md",
+    "section": "6.3 Comparators",
+    "lines": "540-547",
+    "rule": "Every text node and control with position and computed styles, matched by text or accessible role+name. Repeated identical diffs are reported once, grouped by pattern."
+  },
+  "baseline": {
+    "public": "f0d50fab083e3fe8daf2474cd9fb08b51066c8e1",
+    "private": "16021cc5"
+  },
+  "redFirstChronology": [
+    "test/structure.test.ts was written before src/structure.ts.",
+    "The typed scaffold exported the final capture/difference types and returned [] so every failing test was an assertion failure, not a missing-module/setup error.",
+    "The original RED log was produced before any behavior existed and was not regenerated or reconstructed.",
+    "Behavior was added only after the RED log and hashes below were recorded."
+  ],
+  "red": {
+    "timestampUtc": "2026-10-24T11:34:38.6876814Z",
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s1e-red.log",
+    "logSha256": "D9E4C025E3D4951DB1727BD5D6C9411A731BE3CC085E0C10227A7A92AD6601CE",
+    "command": "node ../../../node_modules/vitest/vitest.mjs run test/structure.test.ts",
+    "exit": 1,
+    "result": "18 failed | 7 passed (25)",
+    "testSha256": "349A2143F5239A998C94BB6904C5432A75D6AA82966EC0513CFD366FC4045A26",
+    "scaffoldSha256": "36309AC7965C155C94401C56CB2162C6478538CB9E11DA47B66BBAD7F8E287C6",
+    "failureClass": "assertion failures only; no module-resolution or setup failures"
+  },
+  "green": {
+    "timestampUtc": "2026-10-24T11:35:38.7137352Z",
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s1e-green.log",
+    "logSha256": "196B9DB781E9033006576A4C8A0F5B7A8E0D47BDCE60ACCE7943267E20AE78A5",
+    "command": "node ../../../node_modules/vitest/vitest.mjs run test/structure.test.ts",
+    "exit": 0,
+    "result": "25 passed (25)",
+    "testSha256": "349A2143F5239A998C94BB6904C5432A75D6AA82966EC0513CFD366FC4045A26",
+    "sourceSha256": "246A86349777B50B1CFE1F625F779A318D1D84FB9C11EEFAA6B43499B6AF523F"
+  },
+  "refactor": {
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s1e-refactor.log",
+    "logSha256": "A199BF8D2C08560B634B7A4DA65C9DEBD4CF308E313984F2A983EFE09248ABDD",
+    "exit": 0,
+    "result": "25 passed (25)",
+    "sourceSha256": "ED442CD24BFE8961DE1ABA06CF731F956DF3BC47149E852E07D45D8640C1403F",
+    "note": "Compaction-only refactor; test file hash unchanged."
+  },
+  "final": {
+    "timestampUtc": "2026-10-24T11:37:03.4525755Z",
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s1e-compact.log",
+    "logSha256": "8C88A7A2FF5B39F1EAFB75B94A7AACC672D9F8E61A4DF46520B7EA989F43C635",
+    "command": "node ../../../node_modules/vitest/vitest.mjs run test/structure.test.ts",
+    "exit": 0,
+    "result": "25 passed (25)",
+    "testSha256": "349A2143F5239A998C94BB6904C5432A75D6AA82966EC0513CFD366FC4045A26",
+    "sourceSha256": "8A8FE883C3F80156A594CFBEE37C2603405B3429612687ED18F0E48BF6629EC4",
+    "sourceLines": 139
+  },
+  "typecheck": {
+    "timestampUtc": "2026-10-24T11:37:08.0527390Z",
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s1e-tsc.log",
+    "logSha256": "76BD20847592B4C512DB7D7DA9D08D2F6C1B82FB9DC769315E63132D34076A80",
+    "command": "node ../../../node_modules/typescript/bin/tsc -p tsconfig.json --noEmit",
+    "exit": 0,
+    "output": "EXIT_CODE=0"
+  },
+  "antiSlopLint": {
+    "tool": "anti_slop_lint",
+    "available": false,
+    "detail": "Not exposed as a callable tool to this worker. No PATH probe was used as an availability check."
+  },
+  "coverage": {
+    "identicalCapture": "25-test suite includes identical text/control captures and empty/empty.",
+    "repeatedIdentityAndCounts": "Repeated text and control occurrences, order-only changes, geometry pairing, missing/extra repeated counts.",
+    "controlLoss": "Accessible name, role, text/control kind, geometry, and style-loss findings.",
+    "emptySnapshots": "Empty expected and empty actual snapshots.",
+    "orderOnly": "Node-array order is ignored when identity and geometry agree; reversed repeated style changes produce the same grouped output.",
+    "grouping": "Repeated identical style patterns are reported once with count and expected/actual indexes.",
+    "tolerance": "Default zero rejects 0.01px and 5px changes; only an explicit tolerance is applied.",
+    "styles": "Style key order is canonicalized; repeated style keys produce invalid_capture.",
+    "payload": "Findings never contain captured text or style values."
+  },
+  "changedFiles": [
+    "role-model-router/packages/ui-parity/src/structure.ts",
+    "role-model-router/packages/ui-parity/test/structure.test.ts",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s1e-red.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s1e-green.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s1e-refactor.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s1e-compact.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s1e-tsc.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/other/s1e-tdd.json"
+  ],
+  "scopeGuard": {
+    "newSourceAndTestOnly": true,
+    "noOtherProductEdits": true,
+    "noIndexOrExportEdits": true,
+    "noRootLockVendorOrPrivateEdits": true,
+    "noChildrenGoalsCommitsNetworkOrProviderCalls": true
+  },
+  "adapterLimitation": "Pure typed comparator only. A later adapter owns the actual DOM/text/control walk and computed-style property list. No browser, React self-check, pixel comparison, or full-parity claim is made here."
+}

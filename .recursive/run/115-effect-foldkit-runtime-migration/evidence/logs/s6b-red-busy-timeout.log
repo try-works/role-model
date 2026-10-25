@@ -1,0 +1,32 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:15312) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/s6b-cli-sqlite-service-migration.test.ts (4 tests | 1 failed | 3 skipped) 7415ms
+   ↓ S6b cli SQLite service migration > endpoint model lookup preserves result, null fallbacks and read-only open
+   × S6b cli SQLite service migration > preserves busy_timeout=0: an exclusive writer yields null immediately 7413ms
+     → expected 7388 to be less than 1000
+   ↓ S6b cli SQLite service migration > controller lookup preserves scope precedence and latest-row ordering
+   ↓ S6b cli SQLite service migration > capture receipt lookup preserves envelope/bare shapes and malformed fallbacks
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s6b-cli-sqlite-service-migration.test.ts > S6b cli SQLite service migration > preserves busy_timeout=0: an exclusive writer yields null immediately
+AssertionError: expected 7388 to be less than 1000
+ ❯ test/s6b-cli-sqlite-service-migration.test.ts:123:38
+    121|         }),
+    122|       ).toBeNull();
+    123|       expect(Date.now() - startedAt).toBeLessThan(1000);
+       |                                      ^
+    124|     } finally {
+    125|       blocker.exec("ROLLBACK");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 skipped (4)
+   Start at  05:01:10
+   Duration  16.23s (transform 5.55s, setup 0ms, collect 8.29s, tests 7.42s, environment 0ms, prepare 173ms)
+

@@ -1,0 +1,53 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+stderr | test/s26b-wave1.test.ts > S26b wave 1 shell entries > shell preserves theme, title, focus and scroll facts across navigation
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 22.4ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Index' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 22.38500000000022,
+  thresholdMs: 8
+}
+
+ ❯ test/s26b-wave1.test.ts (4 tests | 1 failed | 3 skipped) 4690ms
+   ↓ S26b wave 1 shell entries > layout is a persistent primary navigation and carries the active route
+   ↓ S26b wave 1 shell entries > index is a real success landing with working onward navigation
+   ↓ S26b wave 1 shell entries > not-found is a terminal error state with recovery navigation
+   × S26b wave 1 shell entries > shell preserves theme, title, focus and scroll facts across navigation 4688ms
+     → Timed out waiting for scroll-to-top command (last: undefined) | body: Runtime UIOverviewDiagnosticsStudioLocalRemoteModelsRouterObserveConnectSystemLearningClicks: 0Light shellRuntimeDiagnostics 42Toggle themeOverviewDiagnosticsStudioLocalRemoteModelsRouterObserveConnectSystemLearningDiagnostics: 42Diagnostics read failed: diagnostics reader is not configuredinstance: missing · build: missingRefresh diagnosticsClicked 0 time(s)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s26b-wave1.test.ts > S26b wave 1 shell entries > shell preserves theme, title, focus and scroll facts across navigation
+Error: Timed out waiting for scroll-to-top command (last: undefined) | body: Runtime UIOverviewDiagnosticsStudioLocalRemoteModelsRouterObserveConnectSystemLearningClicks: 0Light shellRuntimeDiagnostics 42Toggle themeOverviewDiagnosticsStudioLocalRemoteModelsRouterObserveConnectSystemLearningDiagnostics: 42Diagnostics read failed: diagnostics reader is not configuredinstance: missing · build: missingRefresh diagnosticsClicked 0 time(s)
+ ❯ waitFor test/s26b-wave1.test.ts:24:9
+     22|     await new Promise<void>((resolve) => setTimeout(resolve, 10));
+     23|   }
+     24|   throw new Error(
+       |         ^
+     25|     `Timed out waiting for ${label} (last: ${String(last)}) | body: ${…
+     26|   );
+ ❯ test/s26b-wave1.test.ts:144:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 skipped (4)
+   Start at  07:19:50
+   Duration  11.70s (transform 3.40s, setup 0ms, collect 5.45s, tests 4.69s, environment 690ms, prepare 357ms)
+

@@ -1,0 +1,133 @@
+{
+  "slice": "s14a-app-shell",
+  "requirement": [
+    "R11"
+  ],
+  "status": "complete",
+  "newPackage": "role-model-router/apps/runtime-ui-next",
+  "questionAnswered": "Yes: the built first-party wrapper stack can host and run a real Foldkit app under happy-dom. `embed` from @role-model-router/foldkit/runtime mounts the app into a real DOM container, a DOM click dispatches the Message through the runtime and re-renders, a second control rendered through @role-model-router/foldkit-ui works, and dispose removes the DOM and restores the container without throwing.",
+  "mountApi": {
+    "used": "Runtime.embed(makeApplication({ Model, init, update, view, container })) from @role-model-router/foldkit/runtime",
+    "handle": "EmbedHandle { ports, dispose }; dispose is idempotent and restores the container (vendor/foldkit/packages/foldkit/src/runtime/hostConnector.ts:61-74, src/runtime/start.ts:186-286).",
+    "whyNotRun": "`run` returns void (src/runtime/start.ts:106-130) and has no host-controlled unmount, so it cannot express the required 'unmount does not throw' assertion.",
+    "whyNotHydrate": "`hydrate` adopts a server-rendered root stamped by renderToString and terminates startup when that root is absent (src/runtime/start.ts:150-184); this slice has no server render, so hydration is not the honest entry here.",
+    "whyNotHandRolledUpdateLoop": "No update loop is hand-rolled. The test only drives the real runtime through a DOM click; the click path is DOM event -> h.OnClick -> Message -> update -> patch.",
+    "lifecycleFinding": "While mounted, the runtime replaces the configured container element with the rendered root in the DOM and, on interrupt/dispose, removes the rendered tree and puts the original container back empty (src/runtime/renderer.ts:273-298). The test therefore asserts against document.body while mounted and against document.getElementById('s14a-app-shell') === container with 0 children after dispose.",
+    "preconditionFinding": "makeApplication/makeElement require the container to carry an id for Model preservation across reloads and refuse to start otherwise (src/runtime/runtime.ts:371, :392-393). The test sets container.id before mount; the first RED after implementing the app was exactly this refusal."
+  },
+  "appShape": {
+    "files": [
+      "package.json",
+      "tsconfig.json",
+      "vitest.config.ts",
+      "src/model.ts",
+      "src/message.ts",
+      "src/init.ts",
+      "src/update.ts",
+      "src/view.ts",
+      "src/mount.ts",
+      "src/index.ts",
+      "test/mount.test.ts"
+    ],
+    "shape": [
+      "Model is an Effect Schema.Struct of { theme: 'light' | 'dark' (Schema.Literals), clicks: Schema.Number } - BaseApplicationConfig requires Model: Schema.Codec (src/runtime/makeApplication.ts:33).",
+      "Message is defineMessageUnion({ Clicked, ToggledTheme }) - a { _tag: string } union (makeApplication.ts:180-182; typing-game/client/src/message.ts:7-16).",
+      "init is () => Update.Return<Model, Message> (typing-game/client/src/init.ts:11-40; makeApplication.ts:137-143).",
+      "update is a pure (model, message) => { model } with no Commands (src/update/update.ts:37-44; typing-game/client/src/update.ts:95-113).",
+      "view is (model, h: HtmlBuilder<Message>) => Document and threads the runtime-supplied h as a parameter; it is never stored (src/html/index.ts:5520-5545; typing-game/client/src/view/view.ts:15-60). The Document body mounts the accepted RM3 primitive (@role-model/ui/foldkit-button) plus a second control rendered through @role-model-router/foldkit-ui/button.",
+      "mount.ts keeps makeApplication and embed separate so the program and the host handle are both inspectable; no React import anywhere in the package."
+    ],
+    "dependencies": [
+      "@role-model-router/foldkit workspace:*",
+      "@role-model-router/foldkit-ui workspace:* (used: view from the ./button subpath)",
+      "@role-model-router/effect-platform-browser workspace:* (the built foldkit runtime resolves it from its own package; declared here for the app's stack coherence)",
+      "@role-model/ui workspace:* (extra beyond the three named wrappers; required to mount the accepted RM3 primitive)",
+      "effect workspace:*"
+    ],
+    "tsconfigDeviation": "module/moduleResolution are ESNext/Bundler instead of the base NodeNext. Reason: the app imports @role-model/ui/foldkit-button source, whose relative import style is bundler-style (no .js extension); NodeNext rejects it, and the ui package's own project typecheck is already blocked by a pre-existing TS6059. Bundler resolution is also what a Vite-hosted app uses. NoEmit is on; include is src only.",
+    "tsconfigPathsShim": "compilerOptions.paths maps `foldkit` and `foldkit/*` to ../../packages/foldkit/dist/types/*. This works around a wrapper defect: @role-model-router/foldkit-ui's emitted .d.ts files still import the upstream bare name `foldkit/...` (57 occurrences; e.g. dist/types/button/index.d.ts) even though its JS imports were rewritten to @role-model-router/foldkit. Reported as a follow-up; the JS/runtime graph is unaffected."
+  },
+  "red": [
+    {
+      "name": "setup RED",
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s14a-red-missing.log",
+      "exit": 1,
+      "observed": "Failed to resolve import \"../src/mount\" from \"test/mount.test.ts\". Does the file exist? (app entry did not exist yet)."
+    },
+    {
+      "name": "mount precondition RED",
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s14a-run1.log",
+      "exit": 1,
+      "observed": "[foldkit] Runtime container must have an `id` for Model preservation across reloads... then the test timed out waiting for the button. Fix: container.id = 's14a-app-shell'."
+    },
+    {
+      "name": "render RED (wrong foldkit-ui import)",
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s14a-run2.log",
+      "exit": 1,
+      "observed": "[foldkit] Application crash: TypeError: Cannot read properties of undefined (reading 'view') at view.ts:23 - the ./button subpath exports `view`, not a `Button` namespace. Fix: import { view as uiButtonView }."
+    },
+    {
+      "name": "behavioural RED (required form)",
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s14a-red-behavioural.log",
+      "exit": 1,
+      "observed": "Deliberately removed the primary button's onClick: 1 failed -> 'Timed out waiting for the counter to update after the primary click' with the rendered body still showing 'Clicks: 0'. Restored afterwards."
+    }
+  ],
+  "green": {
+    "command": "cd role-model-router/apps/runtime-ui-next && vitest run (package vitest.config.ts sets environment: happy-dom, include test/**/*.test.ts)",
+    "exit": 0,
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s14a-green.log",
+    "result": {
+      "testFiles": 1,
+      "tests": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "assertions": [
+      "RM3 primary button rendered into the DOM with the RM3 classes (h-[36px], rounded-[var(--rm-radius-field)]) and the accessible text 'Clicked 0 time(s)'",
+      "container/body shows 'Clicks: 0' and 'Light shell'",
+      "primary.click() dispatches Message.Clicked through the runtime: after the patch the body shows 'Clicks: 1' and the button text 'Clicked 1 time(s)'",
+      "the foldkit-ui theme toggle renders and dispatches Message.ToggledTheme: body switches to 'Dark shell'",
+      "handle.dispose() does not throw, a second dispose() does not throw (idempotent), the container is restored in the DOM with 0 children, and the rendered text is gone"
+    ]
+  },
+  "typecheck": {
+    "command": "cd role-model-router/apps/runtime-ui-next && node ../../../node_modules/typescript/bin/tsc -p tsconfig.json --noEmit",
+    "exit": 0,
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s14a-typecheck.log",
+    "note": "Passes with the paths shim described above. This is a clean typecheck of the new package; it does not typecheck the app's test file (tsconfig include is src/**/*.ts)."
+  },
+  "registers": {
+    "biome": {
+      "command": "node node_modules/@biomejs/biome/bin/biome check role-model-router/apps/runtime-ui-next",
+      "exit": 0,
+      "files": 11
+    },
+    "git": "The package is a new untracked directory (no commit). Its node_modules is gitignored (.gitignore:2)."
+  },
+  "workspaceWiringDoneForVerification": {
+    "why": "The new package needs workspace links, and the controller said it wires them; this session may not install. To run the required RED/GREEN/typecheck now, app-local node_modules junctions were created by hand: @role-model-router/foldkit, @role-model-router/foldkit-ui, @role-model-router/effect-platform-browser, @role-model/ui, effect (workspace packages) and vitest + happy-dom (from role-model-router/packages/foldkit/node_modules). No packages were fetched and no lockfile was changed.",
+    "controllerActionNeeded": "Run the workspace install for the new importer (frozen lockfile needs the role-model-router/apps/runtime-ui-next importer entry), then delete/replace these junctions. The app's vitest/happy-dom and typescript are not declared as devDependencies (external deps are reported, not added, per the task); CI needs a decision on whether the app declares them or reuses a workspace test setup."
+  },
+  "files": {
+    "package.json": "a6ac2c391a9ee4264200d3b34439f1c436f88d1fca2dd32abbbbdb701d24a3c3",
+    "tsconfig.json": "54c548b935060f5f040ee97700d74476f90e215bf3e2730c2883669236bafe9b",
+    "vitest.config.ts": "47879bd9e40990903577e3e39c0303e73761696db8effe20641a89957fadf686",
+    "src/index.ts": "819c07053b73c490e563f3c062852d7670a85c2994aa48513f32423e8d3e67cb",
+    "src/init.ts": "8b311912039f1f204ca5954b7a4a0e2f7e662d621bd4e8d2a1e6bf2d3d63e2fb",
+    "src/message.ts": "1fec31a616e2d0447aa29db2f0a77c2de5654fc826a908682e1b269fc8583bb0",
+    "src/model.ts": "697914c503944314b2217d3eda6d4c8024e9495bbded0f85c83b509d93505485",
+    "src/mount.ts": "5c1fc171e1e5437cada342f1d2d5ed533589fba5477043a7b54575666255f164",
+    "src/update.ts": "4738e46a92abc8bbf6d197612943491b0c59a05f61a70010fbe039b213744dd0",
+    "src/view.ts": "e126b1cb33e494f5219a26268bc58e796529248c511fae62893e07fe64be3544",
+    "test/mount.test.ts": "29b30ceb3606ea6c3f582d72602ad6401b00f969fd43faac777fac8d123f861a"
+  },
+  "unverified": [
+    "hydrate and run were not exercised: hydrate needs a server-rendered root stamp and run has no host-controlled unmount; embed is the documented host lifecycle and is what the test uses.",
+    "No browser-side verification: happy-dom proves the runtime API and DOM dispatch path, not real-browser rendering, rAF pacing, or CSS token resolution.",
+    "Model preservation across reloads was not exercised; the @foldkit/vite-plugin is absent, so the runtime logged 'No response from @foldkit/vite-plugin... Starting without Model preservation.' This is a warning, not a failure.",
+    "The @role-model-router/foldkit-ui type declaration defect (bare `foldkit/...` imports in .d.ts) is worked around in the app tsconfig; the wrapper's own typecheck and d.ts rewrite are not fixed by this slice.",
+    "The app has no declared vitest/happy-dom/typescript devDependencies, and the workspace install/lockfile entry for the new importer is controller-owned, so `npm test` is only reproducible after that install.",
+    "The mount test is not wired into CI/turbo scripts; the new package has a `test` script but the controller must include the package in the workspace pipeline."
+  ]
+}

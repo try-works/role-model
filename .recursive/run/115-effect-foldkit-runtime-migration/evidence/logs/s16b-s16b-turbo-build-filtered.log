@@ -1,0 +1,551 @@
+ WARNING  Circular package dependency detected: @role-model-router/provider-openai, @role-model-router/adapter-execution, @role-model-router/provider-anthropic
+
+   • turbo 2.11.7
+   • Packages in scope: @effect/sql-sqlite-node, @role-model-router/adapter-execution, @role-model-router/bench-judge, @role-model-router/bench-routing, @role-model-router/catalog, @role-model-router/context-envelope, @role-model-router/core, @role-model-router/endpoint-registry, @role-model-router/foldkit, @role-model-router/process-supervisor, @role-model-router/profile-aggregator, @role-model-router/protocol-routing, @role-model-router/provider-account, @role-model-router/provider-anthropic, @role-model-router/provider-litellm, @role-model-router/provider-mcp, @role-model-router/provider-openai, @role-model-router/retrieval-receipt, @role-model-router/runtime-host-bridge, @role-model-router/runtime-observability, @role-model-router/runtime-ui, @role-model-router/sqlite-memory, @role-model-router/tool-registry, @role-model-router/trace, @role-model-router/usage, @role-model-router/vendor-abstraction, @role-model-router/vendor-litellm, @role-model-router/vendor-llama-swap, @role-model/protocol-types, @role-model/ui, effect, effect-mq
+   • Running build in 32 packages
+   • Remote caching disabled
+
+@role-model-router/bench-judge:build: cache miss, executing ea1f5b36eb3501a0
+@role-model-router/vendor-litellm:build: cache miss, executing 83a867c78b1a48a5
+@role-model-router/provider-openai:build: cache miss, executing 5c04ae3a12a9ff10
+@effect/sql-sqlite-node:build: cache hit, replaying logs 7a5aafc348106410
+@effect/sql-sqlite-node:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@effect/sql-sqlite-node:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@effect/sql-sqlite-node:build: $ node build.mjs && tsc -p tsconfig.service.json
+@effect/sql-sqlite-node:build: ▲ [WARNING] Cannot find base config file "../../../tsconfig.base.json" [tsconfig.json]
+@effect/sql-sqlite-node:build: 
+@effect/sql-sqlite-node:build:     ../../../vendor/effect/packages/sql/sqlite-node/tsconfig.json:3:13:
+@effect/sql-sqlite-node:build:       3 │   "extends": "../../../tsconfig.base.json",
+@effect/sql-sqlite-node:build:         ╵              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@effect/sql-sqlite-node:build: 
+@effect/sql-sqlite-node:build: {"status":"PASS","package":"@effect/sql-sqlite-node","entries":["index"]}
+@role-model-router/tool-registry:build: cache miss, executing 4c5b2b90d1a41975
+@role-model-router/bench-judge:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/bench-judge:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/vendor-litellm:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/vendor-litellm:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/provider-openai:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/provider-openai:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/tool-registry:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/tool-registry:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/bench-judge:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/bench-judge:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/bench-judge:build: Scope: all 55 workspace projects
+@role-model-router/bench-judge:build: [WARN] The store at C:\Users\erikb\AppData\Local\pnpm\store\v11 is not used because packages cannot be hard linked from it into this project. Using the store at E:\.pnpm-store\v11 instead. Set storeDir to choose the store.
+@role-model-router/bench-judge:build: ../../..                                 | [WARN] There are cyclic workspace dependencies: E:\role-model-run115\s16-scratch\role-model-router\packages\adapter-execution, E:\role-model-run115\s16-scratch\role-model-router\packages\provider-anthropic
+@role-model-router/bench-judge:build: ../../..                                 | [WARN] The settings in packages/dsh-role-model/pnpm-workspace.yaml do not apply, because packages/dsh-role-model is a project of this workspace. pnpm reads settings only from the pnpm-workspace.yaml at the workspace root. Move the settings there, or add "!packages/dsh-role-model" to the root's "packages" to keep that project a separate workspace.
+@role-model-router/bench-judge:build: [ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY] Aborted removal of modules directory due to no TTY
+@role-model-router/bench-judge:build: 
+@role-model-router/bench-judge:build: If you are running pnpm in CI, set the CI environment variable to "true", or set "confirmModulesPurge" to "false".
+@role-model-router/bench-judge:build: [WARN] The install that runs before scripts failed, so your node_modules may be out of sync with your lockfile. Set "verifyDepsBeforeRun: false" to skip this install.
+@role-model-router/bench-judge:build: $ tsc -p tsconfig.json
+@role-model-router/provider-openai:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/provider-openai:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/provider-openai:build: Scope: all 55 workspace projects
+@role-model-router/provider-openai:build: [WARN] The store at C:\Users\erikb\AppData\Local\pnpm\store\v11 is not used because packages cannot be hard linked from it into this project. Using the store at E:\.pnpm-store\v11 instead. Set storeDir to choose the store.
+@role-model-router/provider-openai:build: ../../..                                 | [WARN] There are cyclic workspace dependencies: E:\role-model-run115\s16-scratch\role-model-router\packages\adapter-execution, E:\role-model-run115\s16-scratch\role-model-router\packages\provider-anthropic
+@role-model-router/provider-openai:build: ../../..                                 | [WARN] The settings in packages/dsh-role-model/pnpm-workspace.yaml do not apply, because packages/dsh-role-model is a project of this workspace. pnpm reads settings only from the pnpm-workspace.yaml at the workspace root. Move the settings there, or add "!packages/dsh-role-model" to the root's "packages" to keep that project a separate workspace.
+@role-model-router/provider-openai:build: [ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY] Aborted removal of modules directory due to no TTY
+@role-model-router/provider-openai:build: 
+@role-model-router/provider-openai:build: If you are running pnpm in CI, set the CI environment variable to "true", or set "confirmModulesPurge" to "false".
+@role-model-router/provider-openai:build: [WARN] The install that runs before scripts failed, so your node_modules may be out of sync with your lockfile. Set "verifyDepsBeforeRun: false" to skip this install.
+@role-model-router/provider-openai:build: $ tsc -p tsconfig.json
+@role-model-router/provider-mcp:build: cache miss, executing 2627509a98c6047f
+@role-model-router/tool-registry:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/tool-registry:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/tool-registry:build: Scope: all 55 workspace projects
+@role-model-router/tool-registry:build: [WARN] The store at C:\Users\erikb\AppData\Local\pnpm\store\v11 is not used because packages cannot be hard linked from it into this project. Using the store at E:\.pnpm-store\v11 instead. Set storeDir to choose the store.
+@role-model-router/tool-registry:build: ../../..                                 | [WARN] There are cyclic workspace dependencies: E:\role-model-run115\s16-scratch\role-model-router\packages\adapter-execution, E:\role-model-run115\s16-scratch\role-model-router\packages\provider-anthropic
+@role-model-router/tool-registry:build: ../../..                                 | [WARN] The settings in packages/dsh-role-model/pnpm-workspace.yaml do not apply, because packages/dsh-role-model is a project of this workspace. pnpm reads settings only from the pnpm-workspace.yaml at the workspace root. Move the settings there, or add "!packages/dsh-role-model" to the root's "packages" to keep that project a separate workspace.
+@role-model-router/provider-mcp:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/provider-mcp:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/tool-registry:build: [ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY] Aborted removal of modules directory due to no TTY
+@role-model-router/tool-registry:build: 
+@role-model-router/tool-registry:build: If you are running pnpm in CI, set the CI environment variable to "true", or set "confirmModulesPurge" to "false".
+@role-model-router/tool-registry:build: [WARN] The install that runs before scripts failed, so your node_modules may be out of sync with your lockfile. Set "verifyDepsBeforeRun: false" to skip this install.
+@role-model-router/tool-registry:build: $ tsc -p tsconfig.json
+@role-model-router/vendor-litellm:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/vendor-litellm:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/vendor-litellm:build: Scope: all 55 workspace projects
+@role-model-router/vendor-litellm:build: [WARN] The store at C:\Users\erikb\AppData\Local\pnpm\store\v11 is not used because packages cannot be hard linked from it into this project. Using the store at E:\.pnpm-store\v11 instead. Set storeDir to choose the store.
+@role-model-router/vendor-litellm:build: ../../..                                 | [WARN] There are cyclic workspace dependencies: E:\role-model-run115\s16-scratch\role-model-router\packages\adapter-execution, E:\role-model-run115\s16-scratch\role-model-router\packages\provider-anthropic
+@role-model-router/vendor-litellm:build: ../../..                                 | [WARN] The settings in packages/dsh-role-model/pnpm-workspace.yaml do not apply, because packages/dsh-role-model is a project of this workspace. pnpm reads settings only from the pnpm-workspace.yaml at the workspace root. Move the settings there, or add "!packages/dsh-role-model" to the root's "packages" to keep that project a separate workspace.
+@role-model-router/vendor-litellm:build: [ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY] Aborted removal of modules directory due to no TTY
+@role-model-router/vendor-litellm:build: 
+@role-model-router/vendor-litellm:build: If you are running pnpm in CI, set the CI environment variable to "true", or set "confirmModulesPurge" to "false".
+@role-model-router/vendor-litellm:build: [WARN] The install that runs before scripts failed, so your node_modules may be out of sync with your lockfile. Set "verifyDepsBeforeRun: false" to skip this install.
+@role-model-router/vendor-litellm:build: $ tsc -p tsconfig.json
+@role-model-router/profile-aggregator:build: cache hit, replaying logs 50f7d31308f73189
+@role-model-router/profile-aggregator:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/profile-aggregator:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/profile-aggregator:build: $ tsc -p tsconfig.json
+@role-model-router/endpoint-registry:build: cache miss, executing 041507fb8135a3bb
+@role-model-router/provider-mcp:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/provider-mcp:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/endpoint-registry:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/endpoint-registry:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/provider-mcp:build: Scope: all 55 workspace projects
+@role-model-router/provider-mcp:build: [WARN] The store at C:\Users\erikb\AppData\Local\pnpm\store\v11 is not used because packages cannot be hard linked from it into this project. Using the store at E:\.pnpm-store\v11 instead. Set storeDir to choose the store.
+@role-model-router/provider-mcp:build: ../../..                                 | [WARN] There are cyclic workspace dependencies: E:\role-model-run115\s16-scratch\role-model-router\packages\adapter-execution, E:\role-model-run115\s16-scratch\role-model-router\packages\provider-anthropic
+@role-model-router/provider-mcp:build: ../../..                                 | [WARN] The settings in packages/dsh-role-model/pnpm-workspace.yaml do not apply, because packages/dsh-role-model is a project of this workspace. pnpm reads settings only from the pnpm-workspace.yaml at the workspace root. Move the settings there, or add "!packages/dsh-role-model" to the root's "packages" to keep that project a separate workspace.
+@role-model-router/provider-mcp:build: [ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY] Aborted removal of modules directory due to no TTY
+@role-model-router/provider-mcp:build: 
+@role-model-router/provider-mcp:build: If you are running pnpm in CI, set the CI environment variable to "true", or set "confirmModulesPurge" to "false".
+@role-model-router/provider-mcp:build: [WARN] The install that runs before scripts failed, so your node_modules may be out of sync with your lockfile. Set "verifyDepsBeforeRun: false" to skip this install.
+@role-model-router/provider-mcp:build: $ tsc -p tsconfig.json
+@role-model-router/runtime-ui:build: cache miss, executing a32ca0df0d195b61
+@role-model-router/process-supervisor:build: cache miss, executing 9c87ac4ba055b92f
+@role-model-router/endpoint-registry:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/endpoint-registry:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/endpoint-registry:build: Scope: all 55 workspace projects
+@role-model-router/endpoint-registry:build: [WARN] The store at C:\Users\erikb\AppData\Local\pnpm\store\v11 is not used because packages cannot be hard linked from it into this project. Using the store at E:\.pnpm-store\v11 instead. Set storeDir to choose the store.
+@role-model-router/endpoint-registry:build: ../../..                                 | [WARN] There are cyclic workspace dependencies: E:\role-model-run115\s16-scratch\role-model-router\packages\adapter-execution, E:\role-model-run115\s16-scratch\role-model-router\packages\provider-anthropic
+@role-model-router/endpoint-registry:build: ../../..                                 | [WARN] The settings in packages/dsh-role-model/pnpm-workspace.yaml do not apply, because packages/dsh-role-model is a project of this workspace. pnpm reads settings only from the pnpm-workspace.yaml at the workspace root. Move the settings there, or add "!packages/dsh-role-model" to the root's "packages" to keep that project a separate workspace.
+@role-model-router/endpoint-registry:build: [ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY] Aborted removal of modules directory due to no TTY
+@role-model-router/endpoint-registry:build: 
+@role-model-router/endpoint-registry:build: If you are running pnpm in CI, set the CI environment variable to "true", or set "confirmModulesPurge" to "false".
+@role-model-router/endpoint-registry:build: [WARN] The install that runs before scripts failed, so your node_modules may be out of sync with your lockfile. Set "verifyDepsBeforeRun: false" to skip this install.
+@role-model-router/endpoint-registry:build: $ tsc -p tsconfig.json
+@role-model-router/runtime-ui:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/runtime-ui:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/process-supervisor:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/process-supervisor:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/runtime-ui:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/runtime-ui:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/runtime-ui:build: Scope: all 55 workspace projects
+@role-model-router/runtime-ui:build: [WARN] The store at C:\Users\erikb\AppData\Local\pnpm\store\v11 is not used because packages cannot be hard linked from it into this project. Using the store at E:\.pnpm-store\v11 instead. Set storeDir to choose the store.
+@role-model-router/runtime-ui:build: ../../..                                 | [WARN] There are cyclic workspace dependencies: E:\role-model-run115\s16-scratch\role-model-router\packages\adapter-execution, E:\role-model-run115\s16-scratch\role-model-router\packages\provider-anthropic
+@role-model-router/runtime-ui:build: ../../..                                 | [WARN] The settings in packages/dsh-role-model/pnpm-workspace.yaml do not apply, because packages/dsh-role-model is a project of this workspace. pnpm reads settings only from the pnpm-workspace.yaml at the workspace root. Move the settings there, or add "!packages/dsh-role-model" to the root's "packages" to keep that project a separate workspace.
+@role-model-router/runtime-ui:build: [ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY] Aborted removal of modules directory due to no TTY
+@role-model-router/runtime-ui:build: 
+@role-model-router/runtime-ui:build: If you are running pnpm in CI, set the CI environment variable to "true", or set "confirmModulesPurge" to "false".
+@role-model-router/runtime-ui:build: [WARN] The install that runs before scripts failed, so your node_modules may be out of sync with your lockfile. Set "verifyDepsBeforeRun: false" to skip this install.
+@role-model-router/runtime-ui:build: $ react-router build && tsc --noEmit
+@role-model-router/provider-litellm:build: cache miss, executing 474d426f5175cac0
+@role-model-router/process-supervisor:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/process-supervisor:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/process-supervisor:build: Scope: all 55 workspace projects
+@role-model-router/process-supervisor:build: [WARN] The store at C:\Users\erikb\AppData\Local\pnpm\store\v11 is not used because packages cannot be hard linked from it into this project. Using the store at E:\.pnpm-store\v11 instead. Set storeDir to choose the store.
+@role-model-router/process-supervisor:build: ../../..                                 | [WARN] There are cyclic workspace dependencies: E:\role-model-run115\s16-scratch\role-model-router\packages\adapter-execution, E:\role-model-run115\s16-scratch\role-model-router\packages\provider-anthropic
+@role-model-router/process-supervisor:build: ../../..                                 | [WARN] The settings in packages/dsh-role-model/pnpm-workspace.yaml do not apply, because packages/dsh-role-model is a project of this workspace. pnpm reads settings only from the pnpm-workspace.yaml at the workspace root. Move the settings there, or add "!packages/dsh-role-model" to the root's "packages" to keep that project a separate workspace.
+@role-model-router/process-supervisor:build: [ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY] Aborted removal of modules directory due to no TTY
+@role-model-router/process-supervisor:build: 
+@role-model-router/process-supervisor:build: If you are running pnpm in CI, set the CI environment variable to "true", or set "confirmModulesPurge" to "false".
+@role-model-router/process-supervisor:build: [WARN] The install that runs before scripts failed, so your node_modules may be out of sync with your lockfile. Set "verifyDepsBeforeRun: false" to skip this install.
+@role-model-router/process-supervisor:build: $ tsc -p tsconfig.json
+@role-model-router/adapter-execution:build: cache miss, executing a640c92db8126693
+@role-model-router/provider-litellm:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/provider-litellm:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/adapter-execution:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/adapter-execution:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/provider-litellm:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/provider-litellm:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/provider-litellm:build: Scope: all 55 workspace projects
+@role-model-router/provider-litellm:build: [WARN] The store at C:\Users\erikb\AppData\Local\pnpm\store\v11 is not used because packages cannot be hard linked from it into this project. Using the store at E:\.pnpm-store\v11 instead. Set storeDir to choose the store.
+@role-model-router/provider-litellm:build: ../../..                                 | [WARN] There are cyclic workspace dependencies: E:\role-model-run115\s16-scratch\role-model-router\packages\adapter-execution, E:\role-model-run115\s16-scratch\role-model-router\packages\provider-anthropic
+@role-model-router/provider-litellm:build: ../../..                                 | [WARN] The settings in packages/dsh-role-model/pnpm-workspace.yaml do not apply, because packages/dsh-role-model is a project of this workspace. pnpm reads settings only from the pnpm-workspace.yaml at the workspace root. Move the settings there, or add "!packages/dsh-role-model" to the root's "packages" to keep that project a separate workspace.
+@role-model-router/runtime-ui:build: vite v7.3.2 building client environment for production...
+@role-model-router/runtime-ui:build: transforming...
+@role-model-router/provider-litellm:build: [ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY] Aborted removal of modules directory due to no TTY
+@role-model-router/provider-litellm:build: 
+@role-model-router/provider-litellm:build: If you are running pnpm in CI, set the CI environment variable to "true", or set "confirmModulesPurge" to "false".
+@role-model-router/retrieval-receipt:build: cache miss, executing f840084bb9404749
+@role-model-router/provider-litellm:build: [WARN] The install that runs before scripts failed, so your node_modules may be out of sync with your lockfile. Set "verifyDepsBeforeRun: false" to skip this install.
+@role-model-router/provider-litellm:build: $ tsc -p tsconfig.json
+@role-model-router/adapter-execution:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/adapter-execution:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/retrieval-receipt:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/retrieval-receipt:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/adapter-execution:build: Scope: all 55 workspace projects
+@role-model-router/adapter-execution:build: [WARN] The store at C:\Users\erikb\AppData\Local\pnpm\store\v11 is not used because packages cannot be hard linked from it into this project. Using the store at E:\.pnpm-store\v11 instead. Set storeDir to choose the store.
+@role-model-router/adapter-execution:build: ../../..                                 | [WARN] There are cyclic workspace dependencies: E:\role-model-run115\s16-scratch\role-model-router\packages\adapter-execution, E:\role-model-run115\s16-scratch\role-model-router\packages\provider-anthropic
+@role-model-router/adapter-execution:build: ../../..                                 | [WARN] The settings in packages/dsh-role-model/pnpm-workspace.yaml do not apply, because packages/dsh-role-model is a project of this workspace. pnpm reads settings only from the pnpm-workspace.yaml at the workspace root. Move the settings there, or add "!packages/dsh-role-model" to the root's "packages" to keep that project a separate workspace.
+@role-model-router/adapter-execution:build: [ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY] Aborted removal of modules directory due to no TTY
+@role-model-router/adapter-execution:build: 
+@role-model-router/adapter-execution:build: If you are running pnpm in CI, set the CI environment variable to "true", or set "confirmModulesPurge" to "false".
+@role-model-router/adapter-execution:build: [WARN] The install that runs before scripts failed, so your node_modules may be out of sync with your lockfile. Set "verifyDepsBeforeRun: false" to skip this install.
+@role-model-router/adapter-execution:build: $ tsc -p tsconfig.json
+@role-model-router/retrieval-receipt:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/retrieval-receipt:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/retrieval-receipt:build: Scope: all 55 workspace projects
+@role-model-router/retrieval-receipt:build: [WARN] The store at C:\Users\erikb\AppData\Local\pnpm\store\v11 is not used because packages cannot be hard linked from it into this project. Using the store at E:\.pnpm-store\v11 instead. Set storeDir to choose the store.
+@role-model-router/retrieval-receipt:build: ../../..                                 | [WARN] There are cyclic workspace dependencies: E:\role-model-run115\s16-scratch\role-model-router\packages\adapter-execution, E:\role-model-run115\s16-scratch\role-model-router\packages\provider-anthropic
+@role-model-router/retrieval-receipt:build: ../../..                                 | [WARN] The settings in packages/dsh-role-model/pnpm-workspace.yaml do not apply, because packages/dsh-role-model is a project of this workspace. pnpm reads settings only from the pnpm-workspace.yaml at the workspace root. Move the settings there, or add "!packages/dsh-role-model" to the root's "packages" to keep that project a separate workspace.
+@role-model-router/retrieval-receipt:build: [ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY] Aborted removal of modules directory due to no TTY
+@role-model-router/retrieval-receipt:build: 
+@role-model-router/retrieval-receipt:build: If you are running pnpm in CI, set the CI environment variable to "true", or set "confirmModulesPurge" to "false".
+@role-model-router/retrieval-receipt:build: [WARN] The install that runs before scripts failed, so your node_modules may be out of sync with your lockfile. Set "verifyDepsBeforeRun: false" to skip this install.
+@role-model-router/retrieval-receipt:build: $ tsc -p tsconfig.json
+@role-model-router/provider-anthropic:build: cache miss, executing 2c2abca5a4e6e201
+@role-model-router/runtime-host-bridge:build: cache miss, executing c7fc5b7b2420a3e3
+@role-model-router/provider-anthropic:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/provider-anthropic:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/protocol-routing:build: cache miss, executing ef52503305936881
+@role-model-router/runtime-host-bridge:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/runtime-host-bridge:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/provider-anthropic:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/provider-anthropic:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/provider-anthropic:build: Scope: all 55 workspace projects
+@role-model-router/provider-anthropic:build: [WARN] The store at C:\Users\erikb\AppData\Local\pnpm\store\v11 is not used because packages cannot be hard linked from it into this project. Using the store at E:\.pnpm-store\v11 instead. Set storeDir to choose the store.
+@role-model-router/provider-anthropic:build: ../../..                                 | [WARN] There are cyclic workspace dependencies: E:\role-model-run115\s16-scratch\role-model-router\packages\adapter-execution, E:\role-model-run115\s16-scratch\role-model-router\packages\provider-anthropic
+@role-model-router/provider-anthropic:build: ../../..                                 | [WARN] The settings in packages/dsh-role-model/pnpm-workspace.yaml do not apply, because packages/dsh-role-model is a project of this workspace. pnpm reads settings only from the pnpm-workspace.yaml at the workspace root. Move the settings there, or add "!packages/dsh-role-model" to the root's "packages" to keep that project a separate workspace.
+@role-model-router/provider-anthropic:build: [ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY] Aborted removal of modules directory due to no TTY
+@role-model-router/provider-anthropic:build: 
+@role-model-router/provider-anthropic:build: If you are running pnpm in CI, set the CI environment variable to "true", or set "confirmModulesPurge" to "false".
+@role-model-router/provider-anthropic:build: [WARN] The install that runs before scripts failed, so your node_modules may be out of sync with your lockfile. Set "verifyDepsBeforeRun: false" to skip this install.
+@role-model-router/provider-anthropic:build: $ tsc -p tsconfig.json
+@role-model-router/protocol-routing:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/protocol-routing:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/runtime-ui:build: ../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/sidebar.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+@role-model-router/runtime-ui:build: ../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/segmented-control.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+@role-model-router/runtime-ui:build: ../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/page-shell.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+@role-model-router/runtime-ui:build: ../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/observe-shared.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+@role-model-router/runtime-ui:build: ../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/observe-logs.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+@role-model-router/runtime-ui:build: ../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/observe-activity.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+@role-model-router/runtime-ui:build: ../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/metric-strip.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+@role-model-router/runtime-ui:build: ../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/runtime-overview.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+@role-model-router/runtime-ui:build: ../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/chart-ranking.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+@role-model-router/runtime-ui:build: ../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/chart-composition.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+@role-model-router/runtime-ui:build: ../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/observe-routing.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+@role-model-router/runtime-ui:build: ../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/page-filters.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+@role-model-router/runtime-ui:build: ../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/observe-requests.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+@role-model-router/runtime-host-bridge:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/runtime-host-bridge:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/runtime-host-bridge:build: Scope: all 55 workspace projects
+@role-model-router/runtime-host-bridge:build: [WARN] The store at C:\Users\erikb\AppData\Local\pnpm\store\v11 is not used because packages cannot be hard linked from it into this project. Using the store at E:\.pnpm-store\v11 instead. Set storeDir to choose the store.
+@role-model-router/runtime-host-bridge:build: ../../..                                 | [WARN] There are cyclic workspace dependencies: E:\role-model-run115\s16-scratch\role-model-router\packages\adapter-execution, E:\role-model-run115\s16-scratch\role-model-router\packages\provider-anthropic
+@role-model-router/runtime-host-bridge:build: ../../..                                 | [WARN] The settings in packages/dsh-role-model/pnpm-workspace.yaml do not apply, because packages/dsh-role-model is a project of this workspace. pnpm reads settings only from the pnpm-workspace.yaml at the workspace root. Move the settings there, or add "!packages/dsh-role-model" to the root's "packages" to keep that project a separate workspace.
+@role-model-router/runtime-host-bridge:build: [ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY] Aborted removal of modules directory due to no TTY
+@role-model-router/runtime-host-bridge:build: 
+@role-model-router/runtime-host-bridge:build: If you are running pnpm in CI, set the CI environment variable to "true", or set "confirmModulesPurge" to "false".
+@role-model-router/runtime-host-bridge:build: [WARN] The install that runs before scripts failed, so your node_modules may be out of sync with your lockfile. Set "verifyDepsBeforeRun: false" to skip this install.
+@role-model-router/runtime-host-bridge:build: $ tsc -p tsconfig.json
+@role-model-router/protocol-routing:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/protocol-routing:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/protocol-routing:build: Scope: all 55 workspace projects
+@role-model-router/protocol-routing:build: [WARN] The store at C:\Users\erikb\AppData\Local\pnpm\store\v11 is not used because packages cannot be hard linked from it into this project. Using the store at E:\.pnpm-store\v11 instead. Set storeDir to choose the store.
+@role-model-router/protocol-routing:build: ../../..                                 | [WARN] There are cyclic workspace dependencies: E:\role-model-run115\s16-scratch\role-model-router\packages\adapter-execution, E:\role-model-run115\s16-scratch\role-model-router\packages\provider-anthropic
+@role-model-router/protocol-routing:build: ../../..                                 | [WARN] The settings in packages/dsh-role-model/pnpm-workspace.yaml do not apply, because packages/dsh-role-model is a project of this workspace. pnpm reads settings only from the pnpm-workspace.yaml at the workspace root. Move the settings there, or add "!packages/dsh-role-model" to the root's "packages" to keep that project a separate workspace.
+@role-model-router/protocol-routing:build: [ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY] Aborted removal of modules directory due to no TTY
+@role-model-router/protocol-routing:build: 
+@role-model-router/protocol-routing:build: If you are running pnpm in CI, set the CI environment variable to "true", or set "confirmModulesPurge" to "false".
+@role-model-router/protocol-routing:build: [WARN] The install that runs before scripts failed, so your node_modules may be out of sync with your lockfile. Set "verifyDepsBeforeRun: false" to skip this install.
+@role-model-router/protocol-routing:build: $ tsc -p tsconfig.json
+@role-model-router/context-envelope:build: cache miss, executing 1dd61afb877955e7
+@role-model-router/context-envelope:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/context-envelope:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/runtime-ui:build: ✓ 2440 modules transformed.
+@role-model-router/runtime-ui:build: rendering chunks...
+@role-model-router/context-envelope:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/context-envelope:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/context-envelope:build: Scope: all 55 workspace projects
+@role-model-router/context-envelope:build: [WARN] The store at C:\Users\erikb\AppData\Local\pnpm\store\v11 is not used because packages cannot be hard linked from it into this project. Using the store at E:\.pnpm-store\v11 instead. Set storeDir to choose the store.
+@role-model-router/context-envelope:build: ../../..                                 | [WARN] There are cyclic workspace dependencies: E:\role-model-run115\s16-scratch\role-model-router\packages\adapter-execution, E:\role-model-run115\s16-scratch\role-model-router\packages\provider-anthropic
+@role-model-router/context-envelope:build: ../../..                                 | [WARN] The settings in packages/dsh-role-model/pnpm-workspace.yaml do not apply, because packages/dsh-role-model is a project of this workspace. pnpm reads settings only from the pnpm-workspace.yaml at the workspace root. Move the settings there, or add "!packages/dsh-role-model" to the root's "packages" to keep that project a separate workspace.
+@role-model-router/runtime-ui:build: computing gzip size...
+@role-model-router/runtime-ui:build: build/client/.vite/manifest.json                             33.56 kB │ gzip:   3.08 kB
+@role-model-router/runtime-ui:build: build/client/assets/root-DB32G0ZY.css                        83.32 kB │ gzip:  14.94 kB
+@role-model-router/runtime-ui:build: build/client/assets/index-CKLjkIRh.js                         0.15 kB │ gzip:   0.15 kB
+@role-model-router/runtime-ui:build: build/client/assets/live-refresh-DcaagJbF.js                  0.16 kB │ gzip:   0.14 kB
+@role-model-router/runtime-ui:build: build/client/assets/local-models-B4n-mSaY.js                  0.16 kB │ gzip:   0.16 kB
+@role-model-router/runtime-ui:build: build/client/assets/router-config-6C-g6hXx.js                 0.16 kB │ gzip:   0.16 kB
+@role-model-router/runtime-ui:build: build/client/assets/local-matrix-CdXZR64P.js                  0.18 kB │ gzip:   0.18 kB
+@role-model-router/runtime-ui:build: build/client/assets/format-score-CvKL6Nty.js                  0.27 kB │ gzip:   0.21 kB
+@role-model-router/runtime-ui:build: build/client/assets/agent-strategy-BTdj-B8t.js                0.36 kB │ gzip:   0.27 kB
+@role-model-router/runtime-ui:build: build/client/assets/workloads--X6tvSeN.js                     0.37 kB │ gzip:   0.27 kB
+@role-model-router/runtime-ui:build: build/client/assets/shell-header-context-DojSALrV.js          0.65 kB │ gzip:   0.39 kB
+@role-model-router/runtime-ui:build: build/client/assets/llama-swap-setup-zJl1O37-.js              0.82 kB │ gzip:   0.40 kB
+@role-model-router/runtime-ui:build: build/client/assets/segmented-control-OFrtyx20.js             0.86 kB │ gzip:   0.52 kB
+@role-model-router/runtime-ui:build: build/client/assets/not-found-CR-rHBlt.js                     1.04 kB │ gzip:   0.55 kB
+@role-model-router/runtime-ui:build: build/client/assets/checkbox-control-6q5rTQPB.js              1.06 kB │ gzip:   0.55 kB
+@role-model-router/runtime-ui:build: build/client/assets/theme-rIEsxy66.js                         1.14 kB │ gzip:   0.52 kB
+@role-model-router/runtime-ui:build: build/client/assets/legacy-redirect-BuGSblma.js               1.24 kB │ gzip:   0.44 kB
+@role-model-router/runtime-ui:build: build/client/assets/effort-truth-CTiR_V_w.js                  1.65 kB │ gzip:   0.78 kB
+@role-model-router/runtime-ui:build: build/client/assets/local-choose-ixZ13VHx.js                  1.67 kB │ gzip:   0.71 kB
+@role-model-router/runtime-ui:build: build/client/assets/queue-api-BbMu7_hu.js                     1.68 kB │ gzip:   0.67 kB
+@role-model-router/runtime-ui:build: build/client/assets/observability-snapshot-HGS1EhMX.js        2.23 kB │ gzip:   1.09 kB
+@role-model-router/runtime-ui:build: build/client/assets/metric-strip-BbsrEd3y.js                  2.72 kB │ gzip:   0.86 kB
+@role-model-router/runtime-ui:build: build/client/assets/decision-receipt-jk1p1UMS.js              2.74 kB │ gzip:   1.21 kB
+@role-model-router/runtime-ui:build: build/client/assets/integrations-downstream-CINi9j7k.js       2.76 kB │ gzip:   1.14 kB
+@role-model-router/runtime-ui:build: build/client/assets/router-decisions-DbuW-nhD.js              2.99 kB │ gzip:   1.37 kB
+@role-model-router/runtime-ui:build: build/client/assets/store-degradation-receipts-C55XSZ5a.js    3.12 kB │ gzip:   1.37 kB
+@role-model-router/runtime-ui:build: build/client/assets/effort-identity-DTM8zi6R.js               3.19 kB │ gzip:   1.33 kB
+@role-model-router/runtime-ui:build: build/client/assets/local-swap-CSd188hb.js                    3.30 kB │ gzip:   1.35 kB
+@role-model-router/runtime-ui:build: build/client/assets/control-controller-DacJFSrK.js            3.43 kB │ gzip:   1.60 kB
+@role-model-router/runtime-ui:build: build/client/assets/router-candidates-BT6sQKWR.js             3.46 kB │ gzip:   1.67 kB
+@role-model-router/runtime-ui:build: build/client/assets/observe-logs-C3EetLrS.js                  3.51 kB │ gzip:   1.48 kB
+@role-model-router/runtime-ui:build: build/client/assets/local-policy-BbBqEZHB.js                  3.59 kB │ gzip:   1.54 kB
+@role-model-router/runtime-ui:build: build/client/assets/studio-advanced-BPxWNyub.js               3.76 kB │ gzip:   1.61 kB
+@role-model-router/runtime-ui:build: build/client/assets/studio-rerank-DHAKNVDD.js                 3.80 kB │ gzip:   1.67 kB
+@role-model-router/runtime-ui:build: build/client/assets/learning-api-CQDlwvhm.js                  3.83 kB │ gzip:   1.35 kB
+@role-model-router/runtime-ui:build: build/client/assets/studio-images-WcjGd-Kc.js                 4.10 kB │ gzip:   1.66 kB
+@role-model-router/runtime-ui:build: build/client/assets/local-peers-B5EGDhur.js                   4.10 kB │ gzip:   1.68 kB
+@role-model-router/runtime-ui:build: build/client/assets/workbench-Dk0kQJz5.js                     4.15 kB │ gzip:   1.91 kB
+@role-model-router/runtime-ui:build: build/client/assets/root-BOOH-8Ev.js                          4.16 kB │ gzip:   1.74 kB
+@role-model-router/runtime-ui:build: build/client/assets/control-runtime-config-CYhOy15Y.js        4.16 kB │ gzip:   1.82 kB
+@role-model-router/runtime-ui:build: build/client/assets/local-logs-eWAUcf1j.js                    4.19 kB │ gzip:   1.67 kB
+@role-model-router/runtime-ui:build: build/client/assets/runtime-DDB1czrd.js                       4.21 kB │ gzip:   1.76 kB
+@role-model-router/runtime-ui:build: build/client/assets/integrations-upstream-DJcOHib_.js         4.36 kB │ gzip:   1.65 kB
+@role-model-router/runtime-ui:build: build/client/assets/page-filters-DWW_Up4G.js                  4.39 kB │ gzip:   1.82 kB
+@role-model-router/runtime-ui:build: build/client/assets/observe-activity-Dywqk-23.js              4.69 kB │ gzip:   2.04 kB
+@role-model-router/runtime-ui:build: build/client/assets/system-peers-kmidSU-N.js                  4.71 kB │ gzip:   1.85 kB
+@role-model-router/runtime-ui:build: build/client/assets/role-task-hierarchy-z7Q5mAG5.js           5.29 kB │ gzip:   1.85 kB
+@role-model-router/runtime-ui:build: build/client/assets/session-readiness-Ce1WCsZI.js             5.37 kB │ gzip:   2.00 kB
+@role-model-router/runtime-ui:build: build/client/assets/endpoints-DG7bPtEV.js                     5.51 kB │ gzip:   2.01 kB
+@role-model-router/runtime-ui:build: build/client/assets/local-peer-models-4_xONxrs.js             5.79 kB │ gzip:   2.10 kB
+@role-model-router/runtime-ui:build: build/client/assets/observe-routing-DQSu814J.js               6.33 kB │ gzip:   2.50 kB
+@role-model-router/runtime-ui:build: build/client/assets/observe-queues-Ds2BQloc.js                6.53 kB │ gzip:   1.89 kB
+@role-model-router/runtime-ui:build: build/client/assets/routing-mode-D7cw-oRu.js                  7.07 kB │ gzip:   2.70 kB
+@role-model-router/runtime-ui:build: build/client/assets/local-llama-swap-models-BEYM7x7E.js       7.09 kB │ gzip:   2.43 kB
+@role-model-router/runtime-ui:build: build/client/assets/studio-audio-C---Khr-.js                  7.12 kB │ gzip:   2.90 kB
+@role-model-router/runtime-ui:build: build/client/assets/page-primitives-CqNOtYSL.js               7.73 kB │ gzip:   2.90 kB
+@role-model-router/runtime-ui:build: build/client/assets/router-CdbS9Ij3.js                        8.78 kB │ gzip:   2.73 kB
+@role-model-router/runtime-ui:build: build/client/assets/local-model-role-picker-DBHEuxZL.js       8.97 kB │ gzip:   2.95 kB
+@role-model-router/runtime-ui:build: build/client/assets/telemetry-page-filters-B6nsAL1c.js        9.41 kB │ gzip:   3.09 kB
+@role-model-router/runtime-ui:build: build/client/assets/requests-CUeu04xH.js                     10.79 kB │ gzip:   3.97 kB
+@role-model-router/runtime-ui:build: build/client/assets/control-routing-strategy-B2KGmQ9j.js     10.94 kB │ gzip:   3.78 kB
+@role-model-router/runtime-ui:build: build/client/assets/router-decision-detail-lA1rRjWt.js       11.55 kB │ gzip:   3.20 kB
+@role-model-router/runtime-ui:build: build/client/assets/storage-retention-BDTp2jBi.js            12.57 kB │ gzip:   3.78 kB
+@role-model-router/runtime-ui:build: build/client/assets/control-roles-CDwBwr59.js                12.60 kB │ gzip:   3.52 kB
+@role-model-router/runtime-ui:build: build/client/assets/operator-controls-oSAU-Db_.js            12.78 kB │ gzip:   4.16 kB
+@role-model-router/runtime-ui:build: build/client/assets/app-layout-CbtzYVIB.js                   14.96 kB │ gzip:   5.29 kB
+@role-model-router/runtime-ui:build: build/client/assets/dashboard-BR-RVWrc.js                    19.49 kB │ gzip:   6.69 kB
+@role-model-router/runtime-ui:build: build/client/assets/posture-entries-page-DKv21BPH.js         19.64 kB │ gzip:   6.38 kB
+@role-model-router/runtime-ui:build: build/client/assets/extensions-BfBAAfL1.js                   19.79 kB │ gzip:   6.48 kB
+@role-model-router/runtime-ui:build: build/client/assets/control-models-D_eUQawA.js               20.48 kB │ gzip:   6.75 kB
+@role-model-router/runtime-ui:build: build/client/assets/request-detail-r3ZuxdTC.js               21.36 kB │ gzip:   6.40 kB
+@role-model-router/runtime-ui:build: build/client/assets/control-benchmark-B_57jL-7.js            22.14 kB │ gzip:   6.72 kB
+@role-model-router/runtime-ui:build: build/client/assets/runtime-api-BQHq-LMd.js                  22.99 kB │ gzip:   5.57 kB
+@role-model-router/runtime-ui:build: build/client/assets/view-models-BlRcK42G.js                  26.03 kB │ gzip:   8.28 kB
+@role-model-router/runtime-ui:build: build/client/assets/providers-BB8QH4DB.js                    27.08 kB │ gzip:   8.42 kB
+@role-model-router/runtime-ui:build: build/client/assets/design-system-BAfLqOiX.js                30.14 kB │ gzip:   9.26 kB
+@role-model-router/runtime-ui:build: build/client/assets/chart-grid-CqXjTUqn.js                   78.21 kB │ gzip:  26.08 kB
+@role-model-router/runtime-ui:build: build/client/assets/learning-A4iljC9r.js                     80.99 kB │ gzip:  22.51 kB
+@role-model-router/runtime-ui:build: build/client/assets/chunk-EVOBXE3Y-g5m91DvX.js              128.07 kB │ gzip:  43.13 kB
+@role-model-router/runtime-ui:build: build/client/assets/entry.client-B4czBmcP.js                190.57 kB │ gzip:  60.05 kB
+@role-model-router/runtime-ui:build: build/client/assets/telemetry-route-models-CkvZ_3me.js      389.85 kB │ gzip: 103.88 kB
+@role-model-router/runtime-ui:build: ✓ built in 19.93s
+@role-model-router/context-envelope:build: [ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY] Aborted removal of modules directory due to no TTY
+@role-model-router/context-envelope:build: 
+@role-model-router/context-envelope:build: If you are running pnpm in CI, set the CI environment variable to "true", or set "confirmModulesPurge" to "false".
+@role-model-router/context-envelope:build: [WARN] The install that runs before scripts failed, so your node_modules may be out of sync with your lockfile. Set "verifyDepsBeforeRun: false" to skip this install.
+@role-model-router/context-envelope:build: $ tsc -p tsconfig.json
+@role-model-router/runtime-ui:build: vite v7.3.2 building ssr environment for production...
+@role-model-router/runtime-ui:build: transforming...
+@role-model-router/catalog:build: cache hit, replaying logs ee6203750f3aabf1
+@role-model-router/catalog:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/catalog:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/catalog:build: $ tsc -p tsconfig.json
+@role-model-router/runtime-observability:build: cache miss, executing a0a4f69b676eba30
+@role-model-router/runtime-ui:build: ../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/sidebar.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+@role-model-router/runtime-ui:build: ../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/page-shell.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+@role-model-router/runtime-ui:build: ../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/chart-composition.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+@role-model-router/runtime-ui:build: ../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/page-filters.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+@role-model-router/runtime-ui:build: ../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/observe-activity.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+@role-model-router/runtime-ui:build: ../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/runtime-overview.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+@role-model-router/runtime-ui:build: ../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/chart-ranking.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+@role-model-router/runtime-ui:build: ../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/observe-logs.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+@role-model-router/runtime-ui:build: ../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/observe-routing.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+@role-model-router/runtime-ui:build: ../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/observe-requests.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+@role-model-router/runtime-ui:build: ../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/observe-shared.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+@role-model-router/runtime-ui:build: ../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/segmented-control.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+@role-model-router/runtime-ui:build: ../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/metric-strip.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+@role-model-router/runtime-ui:build: ✓ 32 modules transformed.
+@role-model-router/runtime-ui:build: rendering chunks...
+@role-model-router/runtime-ui:build: build/server/.vite/manifest.json                0.23 kB
+@role-model-router/runtime-ui:build: build/server/assets/server-build-DB32G0ZY.css  83.32 kB
+@role-model-router/runtime-ui:build: build/server/index.js                          87.13 kB
+@role-model-router/runtime-ui:build: 
+@role-model-router/runtime-ui:build: ✓ 1 asset cleaned from React Router server build.
+@role-model-router/runtime-ui:build: build\server\assets\server-build-DB32G0ZY.css
+@role-model-router/runtime-ui:build: 
+@role-model-router/runtime-ui:build: SPA Mode: Generated build\client\index.html
+@role-model-router/runtime-ui:build: Removing the server build in E:\role-model-run115\s16-scratch\role-model-router\apps\runtime-ui\build\server due to ssr:false
+@role-model-router/runtime-ui:build: ✓ built in 1.63s
+@role-model-router/runtime-observability:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/runtime-observability:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/runtime-observability:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/runtime-observability:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/runtime-observability:build: Scope: all 55 workspace projects
+@role-model-router/runtime-observability:build: [WARN] The store at C:\Users\erikb\AppData\Local\pnpm\store\v11 is not used because packages cannot be hard linked from it into this project. Using the store at E:\.pnpm-store\v11 instead. Set storeDir to choose the store.
+@role-model-router/runtime-observability:build: ../../..                                 | [WARN] There are cyclic workspace dependencies: E:\role-model-run115\s16-scratch\role-model-router\packages\adapter-execution, E:\role-model-run115\s16-scratch\role-model-router\packages\provider-anthropic
+@role-model-router/runtime-observability:build: ../../..                                 | [WARN] The settings in packages/dsh-role-model/pnpm-workspace.yaml do not apply, because packages/dsh-role-model is a project of this workspace. pnpm reads settings only from the pnpm-workspace.yaml at the workspace root. Move the settings there, or add "!packages/dsh-role-model" to the root's "packages" to keep that project a separate workspace.
+@role-model-router/runtime-observability:build: [ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY] Aborted removal of modules directory due to no TTY
+@role-model-router/runtime-observability:build: 
+@role-model-router/runtime-observability:build: If you are running pnpm in CI, set the CI environment variable to "true", or set "confirmModulesPurge" to "false".
+@role-model-router/runtime-observability:build: [WARN] The install that runs before scripts failed, so your node_modules may be out of sync with your lockfile. Set "verifyDepsBeforeRun: false" to skip this install.
+@role-model-router/runtime-observability:build: $ tsc -p tsconfig.json
+@role-model-router/core:build: cache miss, executing a1fdd460dbf1d867
+@role-model-router/core:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/core:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/core:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/core:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/core:build: Scope: all 55 workspace projects
+@role-model-router/core:build: [WARN] The store at C:\Users\erikb\AppData\Local\pnpm\store\v11 is not used because packages cannot be hard linked from it into this project. Using the store at E:\.pnpm-store\v11 instead. Set storeDir to choose the store.
+@role-model-router/core:build: ../../..                                 | [WARN] There are cyclic workspace dependencies: E:\role-model-run115\s16-scratch\role-model-router\packages\adapter-execution, E:\role-model-run115\s16-scratch\role-model-router\packages\provider-anthropic
+@role-model-router/core:build: ../../..                                 | [WARN] The settings in packages/dsh-role-model/pnpm-workspace.yaml do not apply, because packages/dsh-role-model is a project of this workspace. pnpm reads settings only from the pnpm-workspace.yaml at the workspace root. Move the settings there, or add "!packages/dsh-role-model" to the root's "packages" to keep that project a separate workspace.
+@role-model-router/core:build: [ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY] Aborted removal of modules directory due to no TTY
+@role-model-router/core:build: 
+@role-model-router/core:build: If you are running pnpm in CI, set the CI environment variable to "true", or set "confirmModulesPurge" to "false".
+@role-model-router/core:build: [WARN] The install that runs before scripts failed, so your node_modules may be out of sync with your lockfile. Set "verifyDepsBeforeRun: false" to skip this install.
+@role-model-router/core:build: $ tsc -p tsconfig.json
+@role-model-router/vendor-llama-swap:build: cache miss, executing 96cd388c534c85f7
+@role-model-router/vendor-llama-swap:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/vendor-llama-swap:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/vendor-llama-swap:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/vendor-llama-swap:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/vendor-llama-swap:build: Scope: all 55 workspace projects
+@role-model-router/vendor-llama-swap:build: [WARN] The store at C:\Users\erikb\AppData\Local\pnpm\store\v11 is not used because packages cannot be hard linked from it into this project. Using the store at E:\.pnpm-store\v11 instead. Set storeDir to choose the store.
+@role-model-router/vendor-llama-swap:build: ../../..                                 | [WARN] There are cyclic workspace dependencies: E:\role-model-run115\s16-scratch\role-model-router\packages\adapter-execution, E:\role-model-run115\s16-scratch\role-model-router\packages\provider-anthropic
+@role-model-router/vendor-llama-swap:build: ../../..                                 | [WARN] The settings in packages/dsh-role-model/pnpm-workspace.yaml do not apply, because packages/dsh-role-model is a project of this workspace. pnpm reads settings only from the pnpm-workspace.yaml at the workspace root. Move the settings there, or add "!packages/dsh-role-model" to the root's "packages" to keep that project a separate workspace.
+@role-model-router/vendor-llama-swap:build: [ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY] Aborted removal of modules directory due to no TTY
+@role-model-router/vendor-llama-swap:build: 
+@role-model-router/vendor-llama-swap:build: If you are running pnpm in CI, set the CI environment variable to "true", or set "confirmModulesPurge" to "false".
+@role-model-router/vendor-llama-swap:build: [WARN] The install that runs before scripts failed, so your node_modules may be out of sync with your lockfile. Set "verifyDepsBeforeRun: false" to skip this install.
+@role-model-router/vendor-llama-swap:build: $ tsc -p tsconfig.json
+@role-model-router/vendor-abstraction:build: cache miss, executing 38ec8c7c5c85e4e0
+@role-model/protocol-types:build: cache hit, replaying logs f87da6cbe6894d11
+@role-model/protocol-types:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model/protocol-types:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model/protocol-types:build: $ tsc -p tsconfig.json
+effect-mq:build: cache miss, executing 12b38ed50f4ebd01
+@role-model-router/vendor-abstraction:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/vendor-abstraction:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/foldkit:build: cache miss, executing 209c4f5b85f0be33
+effect-mq:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+effect-mq:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/vendor-abstraction:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/vendor-abstraction:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/vendor-abstraction:build: Scope: all 55 workspace projects
+@role-model-router/vendor-abstraction:build: [WARN] The store at C:\Users\erikb\AppData\Local\pnpm\store\v11 is not used because packages cannot be hard linked from it into this project. Using the store at E:\.pnpm-store\v11 instead. Set storeDir to choose the store.
+@role-model-router/vendor-abstraction:build: ../../..                                 | [WARN] There are cyclic workspace dependencies: E:\role-model-run115\s16-scratch\role-model-router\packages\adapter-execution, E:\role-model-run115\s16-scratch\role-model-router\packages\provider-anthropic
+@role-model-router/vendor-abstraction:build: ../../..                                 | [WARN] The settings in packages/dsh-role-model/pnpm-workspace.yaml do not apply, because packages/dsh-role-model is a project of this workspace. pnpm reads settings only from the pnpm-workspace.yaml at the workspace root. Move the settings there, or add "!packages/dsh-role-model" to the root's "packages" to keep that project a separate workspace.
+@role-model-router/foldkit:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/foldkit:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/vendor-abstraction:build: [ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY] Aborted removal of modules directory due to no TTY
+@role-model-router/vendor-abstraction:build: 
+@role-model-router/vendor-abstraction:build: If you are running pnpm in CI, set the CI environment variable to "true", or set "confirmModulesPurge" to "false".
+@role-model-router/vendor-abstraction:build: [WARN] The install that runs before scripts failed, so your node_modules may be out of sync with your lockfile. Set "verifyDepsBeforeRun: false" to skip this install.
+@role-model-router/vendor-abstraction:build: $ tsc -p tsconfig.json
+effect-mq:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+effect-mq:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+effect-mq:build: Scope: all 55 workspace projects
+effect-mq:build: [WARN] The store at C:\Users\erikb\AppData\Local\pnpm\store\v11 is not used because packages cannot be hard linked from it into this project. Using the store at E:\.pnpm-store\v11 instead. Set storeDir to choose the store.
+effect-mq:build: ../../..                                 | [WARN] There are cyclic workspace dependencies: E:\role-model-run115\s16-scratch\role-model-router\packages\adapter-execution, E:\role-model-run115\s16-scratch\role-model-router\packages\provider-anthropic
+effect-mq:build: ../../..                                 | [WARN] The settings in packages/dsh-role-model/pnpm-workspace.yaml do not apply, because packages/dsh-role-model is a project of this workspace. pnpm reads settings only from the pnpm-workspace.yaml at the workspace root. Move the settings there, or add "!packages/dsh-role-model" to the root's "packages" to keep that project a separate workspace.
+effect-mq:build: [ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY] Aborted removal of modules directory due to no TTY
+effect-mq:build: 
+effect-mq:build: If you are running pnpm in CI, set the CI environment variable to "true", or set "confirmModulesPurge" to "false".
+effect-mq:build: [WARN] The install that runs before scripts failed, so your node_modules may be out of sync with your lockfile. Set "verifyDepsBeforeRun: false" to skip this install.
+effect-mq:build: $ node build.mjs
+@role-model-router/provider-account:build: cache miss, executing 27bfa6c15f87b7d2
+effect-mq:build: ▲ [WARNING] Cannot find base config file "../../tsconfig.base.json" [tsconfig.json]
+effect-mq:build: 
+effect-mq:build:     ../../../vendor/effect-mq/packages/effect-mq/tsconfig.json:2:13:
+effect-mq:build:       2 │   "extends": "../../tsconfig.base.json",
+effect-mq:build:         ╵              ~~~~~~~~~~~~~~~~~~~~~~~~~~
+effect-mq:build: 
+effect-mq:build: {"status":"PASS","package":"effect-mq","entries":["index","testing"]}
+@role-model-router/foldkit:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/foldkit:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/foldkit:build: Scope: all 55 workspace projects
+@role-model-router/foldkit:build: [WARN] The store at C:\Users\erikb\AppData\Local\pnpm\store\v11 is not used because packages cannot be hard linked from it into this project. Using the store at E:\.pnpm-store\v11 instead. Set storeDir to choose the store.
+@role-model-router/foldkit:build: ../../..                                 | [WARN] There are cyclic workspace dependencies: E:\role-model-run115\s16-scratch\role-model-router\packages\adapter-execution, E:\role-model-run115\s16-scratch\role-model-router\packages\provider-anthropic
+@role-model-router/foldkit:build: ../../..                                 | [WARN] The settings in packages/dsh-role-model/pnpm-workspace.yaml do not apply, because packages/dsh-role-model is a project of this workspace. pnpm reads settings only from the pnpm-workspace.yaml at the workspace root. Move the settings there, or add "!packages/dsh-role-model" to the root's "packages" to keep that project a separate workspace.
+@role-model-router/provider-account:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/provider-account:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/foldkit:build: [ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY] Aborted removal of modules directory due to no TTY
+@role-model-router/foldkit:build: 
+@role-model-router/foldkit:build: If you are running pnpm in CI, set the CI environment variable to "true", or set "confirmModulesPurge" to "false".
+@role-model-router/foldkit:build: [WARN] The install that runs before scripts failed, so your node_modules may be out of sync with your lockfile. Set "verifyDepsBeforeRun: false" to skip this install.
+@role-model-router/foldkit:build: $ node build.mjs
+@role-model-router/foldkit:build: ▲ [WARNING] Cannot find base config file "../../tsconfig.base.json" [tsconfig.json]
+@role-model-router/foldkit:build: 
+@role-model-router/foldkit:build:     ../../../vendor/foldkit/packages/foldkit/tsconfig.base.json:2:13:
+@role-model-router/foldkit:build:       2 │   "extends": "../../tsconfig.base.json",
+@role-model-router/foldkit:build:         ╵              ~~~~~~~~~~~~~~~~~~~~~~~~~~
+@role-model-router/foldkit:build: 
+@role-model-router/trace:build: cache miss, executing b1865224ea013e44
+@role-model-router/provider-account:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/provider-account:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/provider-account:build: Scope: all 55 workspace projects
+@role-model-router/provider-account:build: [WARN] The store at C:\Users\erikb\AppData\Local\pnpm\store\v11 is not used because packages cannot be hard linked from it into this project. Using the store at E:\.pnpm-store\v11 instead. Set storeDir to choose the store.
+@role-model-router/provider-account:build: ../../..                                 | [WARN] There are cyclic workspace dependencies: E:\role-model-run115\s16-scratch\role-model-router\packages\adapter-execution, E:\role-model-run115\s16-scratch\role-model-router\packages\provider-anthropic
+@role-model-router/provider-account:build: ../../..                                 | [WARN] The settings in packages/dsh-role-model/pnpm-workspace.yaml do not apply, because packages/dsh-role-model is a project of this workspace. pnpm reads settings only from the pnpm-workspace.yaml at the workspace root. Move the settings there, or add "!packages/dsh-role-model" to the root's "packages" to keep that project a separate workspace.
+@role-model-router/provider-account:build: [ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY] Aborted removal of modules directory due to no TTY
+@role-model-router/provider-account:build: 
+@role-model-router/provider-account:build: If you are running pnpm in CI, set the CI environment variable to "true", or set "confirmModulesPurge" to "false".
+@role-model-router/provider-account:build: [WARN] The install that runs before scripts failed, so your node_modules may be out of sync with your lockfile. Set "verifyDepsBeforeRun: false" to skip this install.
+@role-model-router/provider-account:build: $ tsc -p tsconfig.json
+@role-model-router/trace:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/trace:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/trace:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/trace:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/usage:build: cache miss, executing 2a39162408a92847
+@role-model-router/trace:build: Scope: all 55 workspace projects
+@role-model-router/trace:build: [WARN] The store at C:\Users\erikb\AppData\Local\pnpm\store\v11 is not used because packages cannot be hard linked from it into this project. Using the store at E:\.pnpm-store\v11 instead. Set storeDir to choose the store.
+@role-model-router/trace:build: ../../..                                 | [WARN] There are cyclic workspace dependencies: E:\role-model-run115\s16-scratch\role-model-router\packages\adapter-execution, E:\role-model-run115\s16-scratch\role-model-router\packages\provider-anthropic
+@role-model-router/trace:build: ../../..                                 | [WARN] The settings in packages/dsh-role-model/pnpm-workspace.yaml do not apply, because packages/dsh-role-model is a project of this workspace. pnpm reads settings only from the pnpm-workspace.yaml at the workspace root. Move the settings there, or add "!packages/dsh-role-model" to the root's "packages" to keep that project a separate workspace.
+@role-model-router/sqlite-memory:build: cache miss, executing 6a9d51bc9f130f7f
+@role-model-router/trace:build: [ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY] Aborted removal of modules directory due to no TTY
+@role-model-router/trace:build: 
+@role-model-router/trace:build: If you are running pnpm in CI, set the CI environment variable to "true", or set "confirmModulesPurge" to "false".
+@role-model-router/trace:build: [WARN] The install that runs before scripts failed, so your node_modules may be out of sync with your lockfile. Set "verifyDepsBeforeRun: false" to skip this install.
+@role-model-router/trace:build: $ tsc -p tsconfig.json
+@role-model-router/usage:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/usage:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/sqlite-memory:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/sqlite-memory:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/usage:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/usage:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/usage:build: Scope: all 55 workspace projects
+@role-model-router/usage:build: [WARN] The store at C:\Users\erikb\AppData\Local\pnpm\store\v11 is not used because packages cannot be hard linked from it into this project. Using the store at E:\.pnpm-store\v11 instead. Set storeDir to choose the store.
+@role-model-router/usage:build: ../../..                                 | [WARN] There are cyclic workspace dependencies: E:\role-model-run115\s16-scratch\role-model-router\packages\adapter-execution, E:\role-model-run115\s16-scratch\role-model-router\packages\provider-anthropic
+@role-model-router/usage:build: ../../..                                 | [WARN] The settings in packages/dsh-role-model/pnpm-workspace.yaml do not apply, because packages/dsh-role-model is a project of this workspace. pnpm reads settings only from the pnpm-workspace.yaml at the workspace root. Move the settings there, or add "!packages/dsh-role-model" to the root's "packages" to keep that project a separate workspace.
+effect:build: cache hit, replaying logs 8e89b749a923949f
+effect:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+effect:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+effect:build: $ node build.mjs
+effect:build: ▲ [WARNING] Cannot find base config file "../../tsconfig.base.json" [tsconfig.json]
+effect:build: 
+effect:build:     ../../../vendor/effect/packages/effect/tsconfig.json:3:13:
+effect:build:       3 │   "extends": "../../tsconfig.base.json",
+effect:build:         ╵              ~~~~~~~~~~~~~~~~~~~~~~~~~~
+effect:build: 
+effect:build: {"status":"PASS","package":"effect","entries":["Array","BigDecimal","ByteSize","Cache","Cause","Clock","Config","ConfigProvider","Console","Context","Crypto","Data","DateTime","Deferred","Duration","Effect","Effectable","ErrorReporter","ExecutionPlan","Exit","Fiber","FileSystem","Function","Graph","HashMap","Inspectable","Layer","Logger","ManagedRuntime","Match","Metric","MutableList","MutableRef","Option","Path","Pipeable","PlatformError","PubSub","Queue","Random","Record","Redacted","References","Result","Runtime","Schedule","Scheduler","Schema","SchemaIssue","SchemaParser","Scope","SemVer","SemVerRange","Semaphore","Stream","Struct","Terminal","Tracer","Types","Utils","ai","ai/AiError","ai/Chat","ai/DecisionModel","ai/EmbeddingModel","ai/LanguageModel","ai/McpClient","ai/McpClientError","ai/McpSchema","ai/McpServer","ai/Model","ai/ResponseIdTracker","ai/Telemetry","ai/Tokenizer","ai/Tool","ai/Toolkit","cli","cli/CliConfig","cli/CliOutput","cli/Prompt","cli/TerminalCapabilities","cluster","cluster/ClusterCron","cluster/ClusterSchema","cluster/Entity","cluster/EntityResource","cluster/Envelope","cluster/K8sHttpClient","cluster/MessageStorage","cluster/RunnerHealth","cluster/RunnerStorage","cluster/Runners","cluster/Sharding","cluster/ShardingConfig","cluster/Snowflake","devtools","devtools/DevToolsClient","encoding","encoding/Tar","encoding/Zip","eventlog","eventlog/EventJournal","eventlog/EventLog","eventlog/EventLogEncryption","eventlog/EventLogMessage","eventlog/EventLogRemote","eventlog/EventLogServer","eventlog/EventLogServerUnencrypted","graphql","graphql/GraphQLClientError","graphql/GraphQLProtocol","graphql/GraphQLResolver","http","http-api","http-api/HttpApi","http-api/HttpApiGroup","http-api/HttpApiGroup/","http-api/OpenApi","http/Cookies","http/Etag","http/FetchHttpClient","http/Headers","http/HttpClient","http/HttpClientError","http/HttpClientRequest","http/HttpClientResponse","http/HttpEffect","http/HttpIncomingMessage","http/HttpMiddleware","http/HttpPlatform","http/HttpRouter","http/HttpServer","http/HttpServerError","http/HttpServerRequest","http/Multipart","http/MultipartParser","http/MultipartParser/HeadersParser","http/UrlParams","index","net","net/AddressResolver","net/Dns","observability","observability/OtlpExporter","observability/OtlpSerialization","persistence","persistence/KeyValueStore","persistence/PersistedQueue","persistence/Persistence","persistence/RateLimiter","persistence/Redis","process","process/ChildProcessSpawner","reactivity","reactivity/Hydration","reactivity/Reactivity","rpc","rpc/Rpc","rpc/RpcClient","rpc/RpcClientError","rpc/RpcSchema","rpc/RpcSerialization","rpc/RpcServer","rpc/RpcWorker","schema/SchemaCompiler","schema/index","socket","socket/DatagramSocket","socket/Socket","sql","sql/Migrator","sql/SqlClient","sql/SqlConnection","sql/SqlError","sql/Statement","testing","workers","workers/Transferable","workers/Worker","workers/WorkerError","workers/WorkerRunner","workflow","workflow/Activity","workflow/DurableDeferred","workflow/Workflow","workflow/WorkflowEngine"],"rekeyed":[{"subpath":"schema","key":"schema/index","shadows":"Schema"}],"types":"E:\\role-model-run115\\s16-scratch\\role-model-router\\packages\\effect\\dist\\types"}
+@role-model-router/bench-routing:build: cache miss, executing 85309f0a8d2d021b
+@role-model-router/foldkit:build: {"status":"PASS","package":"@role-model-router/foldkit","entries":["asyncData","brand","calendar","canvas","command","customElement","devtools-host","devtools-protocol","dom","experimental","experimental/machine","experimental/query","experimental/server","fieldValidation","file","html","http","index","managedResource","message","model-preservation","mount","navigation","port","render","route","runtime","scene","schema","story","struct","submodel","subscription","test","test/vitest","update","url"],"subpaths":[".","./asyncData","./brand","./calendar","./canvas","./command","./customElement","./devtools-host","./devtools-protocol","./dom","./experimental","./experimental/machine","./experimental/query","./experimental/server","./fieldValidation","./file","./html","./http","./managedResource","./message","./model-preservation","./mount","./navigation","./port","./render","./route","./runtime","./scene","./schema","./story","./struct","./submodel","./subscription","./test","./test/vitest","./update","./url"],"warnings":1,"warningDetails":["Cannot find base config file \"../../tsconfig.base.json\""]}
+@role-model-router/usage:build: [ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY] Aborted removal of modules directory due to no TTY
+@role-model-router/usage:build: 
+@role-model-router/usage:build: If you are running pnpm in CI, set the CI environment variable to "true", or set "confirmModulesPurge" to "false".
+@role-model-router/usage:build: [WARN] The install that runs before scripts failed, so your node_modules may be out of sync with your lockfile. Set "verifyDepsBeforeRun: false" to skip this install.
+@role-model-router/usage:build: $ tsc -p tsconfig.json
+@role-model-router/bench-routing:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/bench-routing:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/sqlite-memory:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/sqlite-memory:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/sqlite-memory:build: Scope: all 55 workspace projects
+@role-model-router/sqlite-memory:build: [WARN] The store at C:\Users\erikb\AppData\Local\pnpm\store\v11 is not used because packages cannot be hard linked from it into this project. Using the store at E:\.pnpm-store\v11 instead. Set storeDir to choose the store.
+@role-model-router/sqlite-memory:build: ../../..                                 | [WARN] There are cyclic workspace dependencies: E:\role-model-run115\s16-scratch\role-model-router\packages\adapter-execution, E:\role-model-run115\s16-scratch\role-model-router\packages\provider-anthropic
+@role-model-router/sqlite-memory:build: ../../..                                 | [WARN] The settings in packages/dsh-role-model/pnpm-workspace.yaml do not apply, because packages/dsh-role-model is a project of this workspace. pnpm reads settings only from the pnpm-workspace.yaml at the workspace root. Move the settings there, or add "!packages/dsh-role-model" to the root's "packages" to keep that project a separate workspace.
+@role-model-router/sqlite-memory:build: [ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY] Aborted removal of modules directory due to no TTY
+@role-model-router/sqlite-memory:build: 
+@role-model-router/sqlite-memory:build: If you are running pnpm in CI, set the CI environment variable to "true", or set "confirmModulesPurge" to "false".
+@role-model-router/sqlite-memory:build: [WARN] The install that runs before scripts failed, so your node_modules may be out of sync with your lockfile. Set "verifyDepsBeforeRun: false" to skip this install.
+@role-model-router/sqlite-memory:build: $ tsc -p tsconfig.json
+@role-model-router/bench-routing:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/bench-routing:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/bench-routing:build: Scope: all 55 workspace projects
+@role-model-router/bench-routing:build: [WARN] The store at C:\Users\erikb\AppData\Local\pnpm\store\v11 is not used because packages cannot be hard linked from it into this project. Using the store at E:\.pnpm-store\v11 instead. Set storeDir to choose the store.
+@role-model-router/bench-routing:build: ../../..                                 | [WARN] There are cyclic workspace dependencies: E:\role-model-run115\s16-scratch\role-model-router\packages\adapter-execution, E:\role-model-run115\s16-scratch\role-model-router\packages\provider-anthropic
+@role-model-router/bench-routing:build: ../../..                                 | [WARN] The settings in packages/dsh-role-model/pnpm-workspace.yaml do not apply, because packages/dsh-role-model is a project of this workspace. pnpm reads settings only from the pnpm-workspace.yaml at the workspace root. Move the settings there, or add "!packages/dsh-role-model" to the root's "packages" to keep that project a separate workspace.
+@role-model-router/bench-routing:build: [ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY] Aborted removal of modules directory due to no TTY
+@role-model-router/bench-routing:build: 
+@role-model-router/bench-routing:build: If you are running pnpm in CI, set the CI environment variable to "true", or set "confirmModulesPurge" to "false".
+@role-model-router/bench-routing:build: [WARN] The install that runs before scripts failed, so your node_modules may be out of sync with your lockfile. Set "verifyDepsBeforeRun: false" to skip this install.
+@role-model-router/bench-routing:build: $ tsc -p tsconfig.json
+
+ Tasks:    31 successful, 31 total
+Cached:    5 cached, 31 total
+  Time:    1m13.246s 
+

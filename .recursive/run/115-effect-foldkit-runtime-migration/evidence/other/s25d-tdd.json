@@ -1,0 +1,84 @@
+{
+  "slice": "s25d-request-parity",
+  "requirement": "R12/R14 diagnostics and observability request inventory parity",
+  "captureSurface": "RequestTrace fields captured from injected fetch: method, URL path, query pairs, body, headers (lower-cased), multiplicity (one trace per fetch call), response status; kind=read, terminalStream=completed, no retries. Legacy diagnostics capture is explicitly empty because apps/runtime-ui has no diagnostics route/reference (git grep/history checked; endpoint/page introduced in run115). The new diagnostics client is compared to an independent declared contract (`DIAGNOSTICS_CONTRACT_PATH` literal, not the client constant). The observability read is captured by calling the real legacy `fetchObservabilitySnapshot` with an injected fetch and compared to a declared contract; the new client has no observability equivalent.",
+  "differenceTable": [
+    {
+      "route": "diagnostics",
+      "legacy": "no request",
+      "next": "GET /api/role-model/operator/diagnostics, query [], body null, headers [accept: application/json], status 200, one request",
+      "difference": "extra_event (multiplicity)",
+      "classification": "intended",
+      "reason": "new run115 diagnostics route; no legacy baseline exists"
+    },
+    {
+      "route": "observability-snapshot",
+      "legacy": "GET /api/role-model/operator/observability-snapshot, query [], body null, headers [] (tokenless) or [authorization: Bearer ...] (token), status 200, one request",
+      "new": "no new-client equivalent",
+      "difference": "header_mismatch: declared contract requires accept: application/json; legacy sends no Accept header",
+      "classification": "intended",
+      "reason": "legacy request predates the explicit Accept convention; the host returns JSON regardless. Comparator reports strict `passed:false` and `accepted:true`; the row is not normalized away."
+    }
+  ],
+  "realDivergence": "The two-sided observability pair is a genuine capture from the legacy client against the declared contract: it fails strict equality on the missing Accept header and names `headers`. This is not a synthetic trace mutation.",
+  "mutations": [
+    {
+      "field": "method",
+      "red": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s25d-red-method.log",
+      "input": "diagnostics-client method GET -> POST"
+    },
+    {
+      "field": "path",
+      "red": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s25d-red-path.log",
+      "input": "client path constant mutated; expected contract uses independent literal"
+    },
+    {
+      "field": "headers",
+      "red": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s25d-red-header.log",
+      "input": "accept header removed from client"
+    },
+    {
+      "field": "multiplicity",
+      "red": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s25d-red-multiplicity.log",
+      "input": "client issues a second fetch"
+    },
+    {
+      "field": "query",
+      "red": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s25d-red-query.log",
+      "input": "client URL gains limit=1"
+    },
+    {
+      "field": "body",
+      "red": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s25d-red-body.log",
+      "input": "client GET gains a body"
+    },
+    {
+      "field": "status",
+      "red": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s25d-red-status.log",
+      "input": "injected/fixture response becomes 500 against expected 200"
+    }
+  ],
+  "selfValidation": "Tests mutate the captured new-client inventory and assert contractDiff codes method_mismatch/path_mismatch/header_mismatch/extra_event/query_mismatch/body_mismatch/status_mismatch and the named field; source mutations above independently fail the real capture test.",
+  "testRuns": {
+    "command": "vitest s25d + s25b(refresh) + mount + routes + diagnostics + diagnostics-client + diagnostics-e2e",
+    "total": 56,
+    "passed": 56,
+    "failed": 0,
+    "exit": 0,
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s25d-green.log",
+    "typecheck": "tsc -p apps/runtime-ui-next/tsconfig.json --noEmit: exit 0",
+    "biome": "biome check comparator + test: exit 0"
+  },
+  "notCovered": [
+    "streams/SSE and terminal stream states",
+    "redirect following and final URL",
+    "retries/backoff",
+    "cookies and CORS/preflight",
+    "TLS/socket peer trust",
+    "response body parsing/authorization internals"
+  ],
+  "files": {
+    "role-model-router/apps/runtime-ui-next/test/s25d-diagnostics-request-parity.ts": "a2730cfab8b38c9123d04133bc5cfe2b78b6235fb982553a84e486a30fd575e2",
+    "role-model-router/apps/runtime-ui-next/test/s25d-request-parity.test.ts": "e8004e0223106c9a1f099f86a7cc36a26bc382ccad2d9d2b213feacaa40da8a0"
+  }
+}

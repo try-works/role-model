@@ -449,6 +449,44 @@ describe("toCodeDocument", () => {
   })
 
   describe("Number", () => {
+    it("Finite", () => {
+      assertSchema({ schema: Schema.Finite }, {
+        codes: makeCode("Schema.Finite", "number")
+      })
+      assertSchema({ schema: Schema.Number.check(Schema.isFinite(), Schema.isGreaterThan(0)) }, {
+        codes: makeCode("Schema.Finite.check(Schema.isGreaterThan(0))", "number")
+      })
+    })
+
+    it("Int", () => {
+      assertSchema({ schema: Schema.Int }, {
+        codes: makeCode("Schema.Int", "number")
+      })
+    })
+
+    it("Number & non-canonical finite check", () => {
+      const expectRuntime = (schema: Schema.Constraint, runtime: string) =>
+        assertSchema({ schema }, { codes: makeCode(runtime, "number") })
+      const finite = `Schema.isFinite().annotate({ "expected": "a finite number" })`
+      expectRuntime(
+        Schema.Number.annotate({ description: "a" }).check(Schema.isFinite()),
+        `Schema.Number.annotate({ "description": "a" }).check(${finite})`
+      )
+      expectRuntime(
+        Schema.Number.check(Schema.isGreaterThan(0), Schema.isFinite()),
+        `Schema.Number.check(Schema.isGreaterThan(0)).check(${finite})`
+      )
+      expectRuntime(
+        Schema.Number.check(Schema.isFinite({ expected: "a real number" })),
+        `Schema.Number.check(Schema.isFinite().annotate({ "expected": "a real number" }))`
+      )
+      expectRuntime(Schema.Number.check(Schema.isFinite().abort()), `Schema.Number.check(Schema.isFinite().abort())`)
+      expectRuntime(
+        Schema.Number.check(Schema.makeFilterGroup([Schema.isFinite(), Schema.isGreaterThan(0)])),
+        `Schema.Number.check(Schema.makeFilterGroup([Schema.isFinite(), Schema.isGreaterThan(0)]))`
+      )
+    })
+
     it("Number", () => {
       assertSchema({ schema: Schema.Number }, {
         codes: makeCode("Schema.Number", "number")
@@ -1140,7 +1178,7 @@ describe("toCodeDocument", () => {
         }
       }, {
         codes: makeCode(
-          `Schema.Tuple([Schema.optionalKey(Schema.Union([Schema.String, Schema.Number.check(Schema.isFinite())]))])`,
+          `Schema.Tuple([Schema.optionalKey(Schema.Union([Schema.String, Schema.Finite]))])`,
           `readonly [(string | number)?]`
         )
       })
@@ -1726,7 +1764,7 @@ describe("toCodeDocument", () => {
         },
         {
           codes: makeCode(
-            `Schema.Number.check(Schema.isInt().annotate({ "expected": "an integer" })).check(Schema.isGreaterThan(0).annotate({ "expected": "a value greater than 0" }))`,
+            `Schema.Int.check(Schema.isGreaterThan(0).annotate({ "expected": "a value greater than 0" }))`,
             `number`
           )
         }
@@ -1919,7 +1957,7 @@ describe("toCodeDocument", () => {
             {
               $ref: "A",
               code: makeCode(
-                `Schema.Struct({ "b": Schema.Number.check(Schema.isFinite()), "a": Schema.String }).annotate({ "identifier": "A" })`,
+                `Schema.Struct({ "b": Schema.Finite, "a": Schema.String }).annotate({ "identifier": "A" })`,
                 `{ readonly "b": number, readonly "a": string }`
               )
             }

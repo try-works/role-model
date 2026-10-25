@@ -1,0 +1,34 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/process-supervisor
+
+ ↓ test/s5b-process-lifecycle.test.ts (5 tests | 5 skipped)
+ ❯ test/index.test.ts (6 tests | 1 failed | 5 skipped) 1875ms
+   ↓ process-supervisor > starts a vendor process, waits for health, and reports it as healthy
+   ↓ process-supervisor > can run supervised vendors without inheriting provider credential variables
+   ↓ process-supervisor > tracks crash callbacks when a managed vendor exits unexpectedly
+   ↓ process-supervisor > captures child logs and restarts an unexpectedly crashed vendor with backoff
+   ↓ process-supervisor > forces bounded shutdown when a vendor ignores the initial termination signal
+   × process-supervisor > stops spawned child processes when a managed vendor shuts down on Windows 1873ms
+     → Timed out waiting for http://127.0.0.1:63696/healthz to stop responding.
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/index.test.ts > process-supervisor > stops spawned child processes when a managed vendor shuts down on Windows
+Error: Timed out waiting for http://127.0.0.1:63696/healthz to stop responding.
+ ❯ waitForHttpDown test/index.test.ts:88:9
+     86|     await new Promise((resolve) => setTimeout(resolve, 25));
+     87|   }
+     88|   throw new Error(`Timed out waiting for ${url} to stop responding.`);
+       |         ^
+     89| }
+     90| 
+ ❯ test/index.test.ts:295:9
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 skipped (2)
+      Tests  1 failed | 10 skipped (11)
+   Start at  03:51:58
+   Duration  2.66s (transform 149ms, setup 0ms, collect 212ms, tests 1.88s, environment 1ms, prepare 523ms)
+

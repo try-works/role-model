@@ -1,0 +1,39 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:57624) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | test/run96-f160-contribution-outcome.test.ts > run 96 F160 contribution outcome > a transport failure on the contribution upload does not discard the completed post-observation
+[run98] contribution upload degraded:contribution-reset ECONNRESET fetch failed
+
+stdout | test/run96-f160-contribution-outcome.test.ts > run 96 F160 contribution outcome > integration: the real bridge records a successful direct-path contribution once
+[run115] eligibility candidates=2 eligible=1 codes=CAPABILITY_MISSING=1,POLICY_DENY_ENDPOINT=1 request=req-run96-f160-direct alias=- model=- effort=- pass=live allow=[test.capture.chat-v1] denied=[cli.local.coder]
+
+ ✓ test/run96-f160-contribution-outcome.test.ts (12 tests) 2603ms
+   ✓ run 96 F160 contribution outcome > integration: the real bridge records a pre-execution no-eligible-target outcome once  1074ms
+   ✓ run 96 F160 contribution outcome > integration: the real bridge records a successful direct-path contribution once  1367ms
+(node:41556) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run96-replay-router-adapter.test.ts (24 tests) 81ms
+ ✓ test/run105-c-route-advisory-ladder-source.test.ts (6 tests) 12ms
+stderr | test/run98-r03-learning-pass.test.ts > run113 the pass emits the documented pack and validation-receipt artifacts when the caller names a contract state root
+[run150] learning pass: attribution for pack:1 was not emitted: the caller did not resolve the promoted package's endpoint and model
+
+ ✓ test/run98-r03-learning-pass.test.ts (17 tests) 46ms
+ ✓ test/run104-learner-sweep-evidence.test.ts (3 tests) 12ms
+ ✓ test/run107-learning-pass-paging.test.ts (5 tests) 16ms
+ ✓ test/development-verification.test.ts (5 tests) 14ms
+ ✓ test/run99-r33-holdout-split.test.ts (6 tests) 16ms
+stderr | test/run105-r10-per-task-rollback.test.ts > run105 R10/R1 classification gate in the replay tick > a capture without BOTH roleId and taskTypeId is never admitted and is reported once as no_route_classification
+[run104-pending] captures=2 scoped=2 first=capture:unclassified,capture:classified only=none pendingCount=2 captureCount=n/a
+
+ ✓ test/run105-r10-per-task-rollback.test.ts (4 tests) 33ms
+(node:47492) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run104-r22-learning-scope-travel.test.ts (6 tests) 5ms
+
+ Test Files  10 passed (10)
+      Tests  88 passed (88)
+   Start at  04:25:18
+   Duration  21.22s (transform 5.24s, setup 0ms, collect 14.10s, tests 2.84s, environment 3ms, prepare 1.66s)
+

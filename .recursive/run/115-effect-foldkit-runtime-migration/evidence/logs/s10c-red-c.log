@@ -1,0 +1,42 @@
+# S10c mutation (c): wireModuleHealth moved inside the per-request listener body
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:52632) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/run115-s10c-wiring-proofs.test.ts (5 tests | 1 failed) 22ms
+   ✓ S10c module-health wiring proofs > constructs the composition once and injects its source by identity 7ms
+   ✓ S10c module-health wiring proofs > passes options through unchanged and no-ops the report when disabled 2ms
+   × S10c module-health wiring proofs > builds the wiring once per listener and reports each rejected handler exactly once 8ms
+     → expected +0 to be 1 // Object.is equality
+   ✓ S10c module-health wiring proofs > does not report a handler that resolves 1ms
+   ✓ S10c module-health wiring proofs > disabled listener: the handler sees the unchanged options and a rejection is not reported 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run115-s10c-wiring-proofs.test.ts > S10c module-health wiring proofs > builds the wiring once per listener and reports each rejected handler exactly once
+AssertionError: expected +0 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ test/run115-s10c-wiring-proofs.test.ts:92:26
+     90|     );
+     91| 
+     92|     expect(composeCalls).toBe(1);
+       |                          ^
+     93|     listener(request, response);
+     94|     await flush();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 passed (5)
+   Start at  01:52:16
+   Duration  8.03s (transform 4.87s, setup 0ms, collect 7.54s, tests 22ms, environment 0ms, prepare 166ms)
+
+EXIT_CODE: 1

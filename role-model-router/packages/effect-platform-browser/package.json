@@ -1,0 +1,108 @@
+{
+  "name": "@role-model-router/effect-platform-browser",
+  "version": "4.0.6",
+  "private": true,
+  "type": "module",
+  "description": "First-party workspace build of vendored @effect/platform-browser 4.0.6 (vendor/effect/packages/platform/browser, source drop). Entries are derived from the vendored exports map; effect stays an external peer and no Node builtin enters the browser graph.",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./BrowserCrypto": {
+      "types": "./dist/types/BrowserCrypto.d.ts",
+      "import": "./dist/BrowserCrypto.js",
+      "default": "./dist/BrowserCrypto.js"
+    },
+    "./BrowserHttpClient": {
+      "types": "./dist/types/BrowserHttpClient.d.ts",
+      "import": "./dist/BrowserHttpClient.js",
+      "default": "./dist/BrowserHttpClient.js"
+    },
+    "./BrowserKeyValueStore": {
+      "types": "./dist/types/BrowserKeyValueStore.d.ts",
+      "import": "./dist/BrowserKeyValueStore.js",
+      "default": "./dist/BrowserKeyValueStore.js"
+    },
+    "./BrowserPersistence": {
+      "types": "./dist/types/BrowserPersistence.d.ts",
+      "import": "./dist/BrowserPersistence.js",
+      "default": "./dist/BrowserPersistence.js"
+    },
+    "./BrowserRuntime": {
+      "types": "./dist/types/BrowserRuntime.d.ts",
+      "import": "./dist/BrowserRuntime.js",
+      "default": "./dist/BrowserRuntime.js"
+    },
+    "./BrowserSocket": {
+      "types": "./dist/types/BrowserSocket.d.ts",
+      "import": "./dist/BrowserSocket.js",
+      "default": "./dist/BrowserSocket.js"
+    },
+    "./BrowserStream": {
+      "types": "./dist/types/BrowserStream.d.ts",
+      "import": "./dist/BrowserStream.js",
+      "default": "./dist/BrowserStream.js"
+    },
+    "./BrowserWorker": {
+      "types": "./dist/types/BrowserWorker.d.ts",
+      "import": "./dist/BrowserWorker.js",
+      "default": "./dist/BrowserWorker.js"
+    },
+    "./BrowserWorkerRunner": {
+      "types": "./dist/types/BrowserWorkerRunner.d.ts",
+      "import": "./dist/BrowserWorkerRunner.js",
+      "default": "./dist/BrowserWorkerRunner.js"
+    },
+    "./Clipboard": {
+      "types": "./dist/types/Clipboard.d.ts",
+      "import": "./dist/Clipboard.js",
+      "default": "./dist/Clipboard.js"
+    },
+    "./Geolocation": {
+      "types": "./dist/types/Geolocation.d.ts",
+      "import": "./dist/Geolocation.js",
+      "default": "./dist/Geolocation.js"
+    },
+    "./IndexedDb": {
+      "types": "./dist/types/IndexedDb.d.ts",
+      "import": "./dist/IndexedDb.js",
+      "default": "./dist/IndexedDb.js"
+    },
+    "./IndexedDbDatabase": {
+      "types": "./dist/types/IndexedDbDatabase.d.ts",
+      "import": "./dist/IndexedDbDatabase.js",
+      "default": "./dist/IndexedDbDatabase.js"
+    },
+    "./IndexedDbQueryBuilder": {
+      "types": "./dist/types/IndexedDbQueryBuilder.d.ts",
+      "import": "./dist/IndexedDbQueryBuilder.js",
+      "default": "./dist/IndexedDbQueryBuilder.js"
+    },
+    "./IndexedDbTable": {
+      "types": "./dist/types/IndexedDbTable.d.ts",
+      "import": "./dist/IndexedDbTable.js",
+      "default": "./dist/IndexedDbTable.js"
+    },
+    "./IndexedDbVersion": {
+      "types": "./dist/types/IndexedDbVersion.d.ts",
+      "import": "./dist/IndexedDbVersion.js",
+      "default": "./dist/IndexedDbVersion.js"
+    },
+    "./Permissions": {
+      "types": "./dist/types/Permissions.d.ts",
+      "import": "./dist/Permissions.js",
+      "default": "./dist/Permissions.js"
+    }
+  },
+  "files": ["dist"],
+  "sideEffects": false,
+  "peerDependencies": {
+    "effect": "workspace:*"
+  },
+  "scripts": {
+    "build": "node build.mjs"
+  }
+}

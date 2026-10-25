@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui
+
+ ✓ app/lib/s25a-refresh-ownership.test.ts (4 tests) 67ms
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  06:12:38
+   Duration  1.01s (transform 133ms, setup 0ms, collect 204ms, tests 67ms, environment 0ms, prepare 233ms)
+

@@ -1,0 +1,61 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s26a-route-inventory.test.ts (4 tests | 2 failed) 69ms
+   × S26a route inventory drift > validates every row, scans app/** recursively and correlates host endpoints 49ms
+     → expected [ Array(1) ] to deeply equal []
+   ✓ S26a route inventory drift > detects a nested route file that has no inventory row 4ms
+   ✓ S26a route inventory drift > detects a routes.ts-only path that has no inventory row 3ms
+   × S26a route inventory drift > detects a declared endpoint that is absent from the host route table 12ms
+     → expected [ …(2) ] to deeply equal [ Array(1) ]
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s26a-route-inventory.test.ts > S26a route inventory drift > validates every row, scans app/** recursively and correlates host endpoints
+AssertionError: expected [ Array(1) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "route:workbench:/api/role-model/__s26c_missing__",
++ ]
+
+ ❯ test/s26a-route-inventory.test.ts:168:60
+    166| 
+    167|     const hostPaths = hostRoutePaths();
+    168|     expect(missingDeclaredEndpoints(inventory, hostPaths)).toEqual([]);
+       |                                                            ^
+    169| 
+    170|     const waveIds = inventory.waves.flatMap((wave) => wave.routeIds);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/s26a-route-inventory.test.ts > S26a route inventory drift > detects a declared endpoint that is absent from the host route table
+AssertionError: expected [ …(2) ] to deeply equal [ Array(1) ]
+
+- Expected
++ Received
+
+  [
++   "route:workbench:/api/role-model/__s26c_missing__",
+    "fake:endpoint:/api/role-model/__s26a_fake_endpoint__",
+  ]
+
+ ❯ test/s26a-route-inventory.test.ts:213:71
+    211|       ],
+    212|     };
+    213|     expect(missingDeclaredEndpoints(fakeInventory, hostRoutePaths())).…
+       |                                                                       ^
+    214|       "fake:endpoint:/api/role-model/__s26a_fake_endpoint__",
+    215|     ]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 2 passed (4)
+   Start at  07:26:59
+   Duration  1.68s (transform 87ms, setup 0ms, collect 65ms, tests 69ms, environment 707ms, prepare 291ms)
+

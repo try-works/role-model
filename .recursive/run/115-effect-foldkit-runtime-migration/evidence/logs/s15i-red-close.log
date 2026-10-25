@@ -1,0 +1,38 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge[39m
+
+ [31m❯[39m test/s15h-live-socket-diagnostics.test.ts [2m([22m[2m8 tests[22m[2m | [22m[31m1 failed[39m[2m | [22m[33m7 skipped[39m[2m)[22m[32m 82[2mms[22m[39m
+   [2m[90m↓[39m[22m S15h/S15i diagnostics over a real loopback socket[2m > [22mstarts with port option 0, so an ephemeral operator-free port is by construction
+   [2m[90m↓[39m[22m S15h/S15i diagnostics over a real loopback socket[2m > [22mtoken-less loopback read answers the explicit disabled state with no writer enabled
+   [2m[90m↓[39m[22m S15h/S15i diagnostics over a real loopback socket[2m > [22mloopback owner trust is explicit: with trust off, missing and wrong credentials are 401 and the configured token is accepted
+   [2m[90m↓[39m[22m S15h/S15i diagnostics over a real loopback socket[2m > [22ma wrong token of the SAME length is still rejected (not a length-only comparison)
+   [2m[90m↓[39m[22m S15h/S15i diagnostics over a real loopback socket[2m > [22mevery owner-claim header is rejected by the diagnostics handler (generic gate already authorized) with no CORS
+   [2m[90m↓[39m[22m S15h/S15i diagnostics over a real loopback socket[2m > [22m500, OPTIONS, context-mismatch 403 and 404 responses carry no access-control headers
+[31m   [31m×[31m S15h/S15i diagnostics over a real loopback socket[2m > [22mclose() releases the listener: a fetch to the closed port refuses[39m[32m 79[2mms[22m[39m
+[31m     → expected Response { status: 200, statusText: 'OK', headers: Headers { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', date: 'Sat, 24 Oct 2026 21:38:51 GMT', connection: 'keep-alive', 'keep-alive': 'timeout=5', 'content-length': '323' }, body: ReadableStream { locked: false, state: 'readable', supportsBYOB: true }, bodyUsed: false, ok: true, redirected: false, type: 'basic', url: 'http://127.0.0.1:57539/api/role-model/operator/diagnostics' } to be an instance of Error[39m
+   [2m[90m↓[39m[22m S15h/S15i diagnostics over a real loopback socket[2m > [22merror responses from a real socket never carry access-control headers either
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[33m7 skipped[39m[90m (8)[39m
+[2m   Start at [22m 05:38:44
+[2m   Duration [22m 7.24s[2m (transform 4.32s, setup 0ms, collect 6.69s, tests 82ms, environment 0ms, prepare 160ms)[22m
+
+(node:39340) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m test/s15h-live-socket-diagnostics.test.ts[2m > [22mS15h/S15i diagnostics over a real loopback socket[2m > [22mclose() releases the listener: a fetch to the closed port refuses
+[31m[1mAssertionError[22m: expected Response { status: 200, statusText: 'OK', headers: Headers { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', date: 'Sat, 24 Oct 2026 21:38:51 GMT', connection: 'keep-alive', 'keep-alive': 'timeout=5', 'content-length': '323' }, body: ReadableStream { locked: false, state: 'readable', supportsBYOB: true }, bodyUsed: false, ok: true, redirected: false, type: 'basic', url: 'http://127.0.0.1:57539/api/role-model/operator/diagnostics' } to be an instance of Error[39m
+[36m [2m❯[22m test/s15h-live-socket-diagnostics.test.ts:[2m244:21[22m[39m
+    [90m242| [39m      (error[33m:[39m unknown) [33m=>[39m error[33m,[39m
+    [90m243| [39m    )[33m;[39m
+    [90m244| [39m    [34mexpect[39m(failure)[33m.[39m[34mtoBeInstanceOf[39m([33mError[39m)[33m;[39m
+    [90m   | [39m                    [31m^[39m
+    [90m245| [39m  })[33m;[39m
+    [90m246| [39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+EXIT_CODE: 1

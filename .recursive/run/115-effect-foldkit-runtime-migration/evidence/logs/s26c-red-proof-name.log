@@ -1,0 +1,37 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s26a-route-inventory.test.ts (4 tests | 1 failed) 42ms
+   × S26a route inventory drift > validates every row, scans app/** recursively and correlates host endpoints 21ms
+     → named test: route:index: expected false to be true // Object.is equality
+   ✓ S26a route inventory drift > detects a nested route file that has no inventory row 5ms
+   ✓ S26a route inventory drift > detects a routes.ts-only path that has no inventory row 3ms
+   ✓ S26a route inventory drift > detects a declared endpoint that is absent from the host route table 10ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s26a-route-inventory.test.ts > S26a route inventory drift > validates every row, scans app/** recursively and correlates host endpoints
+AssertionError: named test: route:index: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ test/s26a-route-inventory.test.ts:148:11
+    146|           proofSource.includes(`it("${entry.proofTestName ?? ""}"`),
+    147|           `named test: ${entry.id}`,
+    148|         ).toBe(true);
+       |           ^
+    149|       }
+    150|     }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 passed (4)
+   Start at  07:26:55
+   Duration  1.57s (transform 88ms, setup 0ms, collect 66ms, tests 42ms, environment 717ms, prepare 297ms)
+

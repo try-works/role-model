@@ -1,0 +1,109 @@
+{
+  "slice": "s13b-chart-primitive",
+  "requirements": [
+    "R9 (React-free chart pilot; first slice)",
+    "R10 is the lifecycle/mount slice and is not claimed here"
+  ],
+  "files": {
+    "scripts/crease-vendored.test.mjs": "maintained pin proof for vendor/crease (node:test)",
+    "role-model-router/packages/ui/src/foldkit-chart.ts": "React-free pure-SVG chart primitive",
+    "role-model-router/packages/foldkit/test/s13b-foldkit-chart.test.ts": "Scene tests (structure/token, text alternative, empty state)"
+  },
+  "acquisition": {
+    "vendoredBy": "controller, using scripts/vendor-upstream.mjs refMode: \"commit\"",
+    "manifest": "vendor/crease/VENDORED.json: commit bb447e363e9c717bf11ebb10b2259f053bff6f71, commitDate 2026-10-22T00:20:36+02:00, tag marker '(commit-only pin: the repository advertises no tag or branch at this commit)', MIT (Copyright (c) 2026 Potti1234), payload root vendor/crease, includes src/**, LICENSE/**, compatibility.json, fileCount 1512, byteCount 13981911, contentDigest e37e001fd8ba4a9f2f4e530ea391ca288472251d3a0b6b4450e55e6b666c6bed",
+    "verify": {
+      "command": "node scripts/vendor-upstream.mjs --name crease --verify",
+      "exit": 0,
+      "output": "verified 1512 files, 13.3 MB, sha256:e37e...6bed",
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13b-vendor-verify.log"
+    },
+    "noHandCopy": "The vendor tree was produced by the tool's commit-only mode (init + fetch SHA + checkout FETCH_HEAD + HEAD===commit check); this slice only added the pin test."
+  },
+  "pinAssertions": {
+    "test": "scripts/crease-vendored.test.mjs (6 tests)",
+    "asserts": [
+      "VENDORED.json schemaVersion/name/url/commit/commitDate/tag marker/licence (MIT fragment)",
+      "payload root vendor/crease and includes [src/**, LICENSE/**, compatibility.json]",
+      "payload files exist: src/ui/chart.ts, src/lib/echarts.ts, LICENSE (MIT License text), compatibility.json parses with string creaseui/effect",
+      "content digest recomputed with the tool's exact algorithm twice (stable) and equals manifest fileCount 1512, byteCount 13981911, digest e37e...6bed",
+      "no node_modules/.git directories in the vendored tree",
+      "UPSTREAMS.crease in scripts/vendor-upstream.mjs: url + 40-hex commit + refMode: \"commit\" (explicit assertion so a future tag pin that silently loses commit-only mode fails)"
+    ],
+    "command": "node --test scripts/crease-vendored.test.mjs",
+    "exit": 0,
+    "tests": 6,
+    "passed": 6,
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13b-pin-test.log"
+  },
+  "chartPrimitive": {
+    "api": "view<Message>(config, h: HtmlBuilder<Message>): Html; config = { title, description?, ariaLabel?, series: readonly { id, label, points: readonly { label, value }[], color? }[], yUnit?, height? }; exports CHART_WIDTH=640, CHART_HEIGHT=220, CHART_SERIES_COLORS (--color-chart-1..8), chartSeriesColor(index).",
+    "structure": "figure > figcaption(title)+description, svg role=img/aria-label/viewBox with 3 dashed grid lines + y labels, x axis, sampled x labels (<=8), one path + point circles per series, visible legend, and an sr-only HTML table alternative with caption, scoped column headers (series labels + unit) and one row per x label carrying every numeric value (missing point => em dash).",
+    "tokens": "axes/grid stroke var(--rm-border); labels fill var(--rm-secondary); series colors var(--color-chart-1..8) (the app.css aliases of --rm-chart-*, e.g. --color-chart-1: var(--rm-chart-local)). Token classes asserted (e.g. stroke-[var(--color-chart-1)]).",
+    "rendererAgnostic": "Pure Foldkit Html: no React import, no ECharts import, no canvas, no Mount, no ids (so multi-instance use has no id collisions). No ECharts dependency added.",
+    "vendoredApproachCitations": [
+      "SVG shape/role=img/aria-label and per-datum rects/labels: vendor/crease/src/ui/chart.ts:193-253 (barChart).",
+      "chart container role=img/aria-label and layout contract: vendor/crease/src/ui/chart.ts:52-73.",
+      "Accessible HTML alternative beside the chart renderer: vendor/crease/src/lib/echarts.ts:604-610 (sr-only when ready) and ChartProps.accessibleAlternative :535-545."
+    ]
+  },
+  "redGreen": {
+    "setupRed": {
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13b-red-setup.log",
+      "note": "chart tests written before the module: Failed to resolve import ../../ui/src/foldkit-chart (setup RED, not counted as behavioural)."
+    },
+    "behaviouralRed": [
+      {
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13b-red-01-wrong-token.log",
+        "mutation": "default series colour changed to var(--rm-accent)",
+        "message": "Expected element matching \"path.rm3-chart-series\" to have class \"stroke-[var(--color-chart-1)]\" but it does not."
+      },
+      {
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13b-red-02-no-alternative.log",
+        "mutation": "text-alternative table removed",
+        "message": "Expected element matching \"table\" to exist but it does not."
+      },
+      {
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13b-red-03-empty-chart.log",
+        "mutation": "empty series branch disabled, rendering an empty chart",
+        "message": "Expected element matching \"svg\" to be absent but it exists."
+      }
+    ],
+    "green": {
+      "command": "cd role-model-router/packages/foldkit && vitest run test/s13b-foldkit-chart.test.ts --environment happy-dom",
+      "exit": 0,
+      "tests": 3,
+      "passed": 3,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13b-green.log",
+      "cases": [
+        "structure: role=img accessible name, viewBox 0 0 640 220, axis/grid lines, 2 series paths, token class stroke-[var(--color-chart-1)], points, unit-bearing axis label",
+        "text alternative: table exists, sr-only, caption, labels, series names, value 18 and unit",
+        "empty series: svg and table absent, explicit [data-chart-empty] status text"
+      ]
+    },
+    "counts": {
+      "pinTests": 6,
+      "chartTests": 3,
+      "total": 9
+    }
+  },
+  "typecheck": {
+    "command": "cd role-model-router/packages/ui && node ../../../node_modules/typescript/bin/tsc --noEmit --strict --target ES2022 --module ESNext --moduleResolution Bundler --lib ES2022,DOM --skipLibCheck --types node src/foldkit-chart.ts",
+    "exit": 0,
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13b-typecheck.log",
+    "scope": "Targeted typecheck of the new module (the ui package's project tsconfig has a pre-existing TS6059 rootDir/vitest.config mismatch, and this slice may not edit tsconfig; the Scene test file is transformed by Vitest, not by this command). Biome on the module, its Scene test and the pin test: exit 0."
+  },
+  "doesNotDo": [
+    "No ECharts import or dependency and no canvas: vendor/crease/src/lib/echarts.ts is deliberately untouched (grep shows only comment mentions in the module/test).",
+    "No mount/lifecycle renderer: Mount/acquireRelease, lazy import, resize/theme observers, cleanup and multi-instance host ids are R10.",
+    "No tooltip/legend interaction, no live updates/range/theme switching, no loading/error/stale/truncated variants; this slice renders ready data and the explicit empty state only.",
+    "No theme/resize adaptation, no data fetching; input values are the caller's (no coercion beyond finite/rounding for display)."
+  ],
+  "r10Remaining": "Lazy ECharts mount renderer + acquireRelease/Mount, ResizeObserver/theme observer with cleanup, loading/empty/error/stale/truncated states, tooltip/legend interactions, rapid range/filter suppression, stable variant on theme updates, multi-instance host IDs, hidden/zero-size resize, repeated mount/unmount, font readiness, canvas animation completion at fixed DPR/timezone, bounded captures and browser fixtures.",
+  "hashes": {
+    "role-model-router/packages/ui/src/foldkit-chart.ts": "669fcb13b50fd115fcdd4b8526602e11a18a7d37c8a02b4c06d82d93aef7412e",
+    "role-model-router/packages/foldkit/test/s13b-foldkit-chart.test.ts": "fc345ad1694e2f201260131bdd8670ffa61c39e63b40bacd6726b65971de29ae",
+    "scripts/crease-vendored.test.mjs": "996261231ca74af2458c448325fadd6ce541d2b6eaf493e6a6c459bfe495b722"
+  },
+  "scope": "Only the pin test, the chart module, its Scene test and evidence were written. vendor/**, the vendoring tool, root, lockfile, other packages and existing tests were not modified."
+}

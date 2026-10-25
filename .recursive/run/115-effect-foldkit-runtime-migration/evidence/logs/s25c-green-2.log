@@ -1,0 +1,43 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+stderr | test/s25b-refresh-owner-gap.test.ts > S25b shell refresh owner and gap resync > two resyncs in flight: the older response resolving last cannot win
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 12.6ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: 'race', status: 'loading' },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Diagnostics', id: 'race' },
+    theme: 'light'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 12.637700000000223,
+  thresholdMs: 8
+}
+
+stderr | test/s25b-refresh-owner-gap.test.ts > S25b shell refresh owner and gap resync > an older FAILED resync resolving last cannot make the newer success stale
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+ ✓ test/s25b-refresh-owner-gap.test.ts (5 tests | 3 skipped) 1382ms
+   ✓ S25b shell refresh owner and gap resync > two resyncs in flight: the older response resolving last cannot win  737ms
+   ✓ S25b shell refresh owner and gap resync > an older FAILED resync resolving last cannot make the newer success stale  643ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed | 3 skipped (5)
+   Start at  06:38:20
+   Duration  9.08s (transform 3.79s, setup 0ms, collect 6.01s, tests 1.38s, environment 782ms, prepare 325ms)
+

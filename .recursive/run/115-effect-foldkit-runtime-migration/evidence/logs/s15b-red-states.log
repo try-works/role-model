@@ -1,0 +1,312 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+stderr | test/diagnostics.test.ts > diagnostics page states > renders the ok state with records and identity
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 11.8ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    route: { _tag: 'Diagnostics', id: 'inst-1' },
+    theme: 'light'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 11.75709999999981,
+  thresholdMs: 8
+}
+
+stderr | test/diagnostics.test.ts > diagnostics page states > renders the empty state distinctly
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > renders disabled as a state, not an error
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > renders stale with the rule and the age
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > renders dropped with the loss counts
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > renders a denied response as access denied
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > renders denied rather than an empty list for a denied response
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > renders a transport error distinctly from a denied state
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > labels a missing or unknown build identity as missing, never blank
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > shows loading while the reader is in flight, then the command result message
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > re-reads through a Command when the refresh control is used
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > keeps controls reachable with visible focus styles and a narrow layout
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+ ❯ test/diagnostics.test.ts (12 tests | 12 failed) 36175ms
+   × diagnostics page states > renders the ok state with records and identity 3046ms
+     → Timed out waiting for the ok diagnostics state (last value: undefined) | url: /diagnostics/inst-1 | body: IndexDiagnostics 42Diagnostics: inst-1Diagnostics route for the required :id path parameter.Light shellClicks: 0Clicked 0 time(s)Toggle theme
+   × diagnostics page states > renders the empty state distinctly 3017ms
+     → Timed out waiting for the empty diagnostics state (last value: undefined) | url: /diagnostics/inst-1 | body: IndexDiagnostics 42Diagnostics: inst-1Diagnostics route for the required :id path parameter.Light shellClicks: 0Clicked 0 time(s)Toggle theme
+   × diagnostics page states > renders disabled as a state, not an error 3005ms
+     → Timed out waiting for the disabled diagnostics state (last value: undefined) | url: /diagnostics/inst-1 | body: IndexDiagnostics 42Diagnostics: inst-1Diagnostics route for the required :id path parameter.Light shellClicks: 0Clicked 0 time(s)Toggle theme
+   × diagnostics page states > renders stale with the rule and the age 3011ms
+     → Timed out waiting for the stale diagnostics state (last value: undefined) | url: /diagnostics/inst-1 | body: IndexDiagnostics 42Diagnostics: inst-1Diagnostics route for the required :id path parameter.Light shellClicks: 0Clicked 0 time(s)Toggle theme
+   × diagnostics page states > renders dropped with the loss counts 3012ms
+     → Timed out waiting for the dropped diagnostics state (last value: undefined) | url: /diagnostics/inst-1 | body: IndexDiagnostics 42Diagnostics: inst-1Diagnostics route for the required :id path parameter.Light shellClicks: 0Clicked 0 time(s)Toggle theme
+   × diagnostics page states > renders a denied response as access denied 3018ms
+     → Timed out waiting for the denied diagnostics state (last value: undefined) | url: /diagnostics/inst-1 | body: IndexDiagnostics 42Diagnostics: inst-1Diagnostics route for the required :id path parameter.Light shellClicks: 0Clicked 0 time(s)Toggle theme
+   × diagnostics page states > renders denied rather than an empty list for a denied response 3014ms
+     → Timed out waiting for the denied diagnostics state (last value: undefined) | url: /diagnostics/inst-1 | body: IndexDiagnostics 42Diagnostics: inst-1Diagnostics route for the required :id path parameter.Light shellClicks: 0Clicked 0 time(s)Toggle theme
+   × diagnostics page states > renders a transport error distinctly from a denied state 3017ms
+     → Timed out waiting for the transport-error diagnostics state (last value: undefined) | url: /diagnostics/inst-1 | body: IndexDiagnostics 42Diagnostics: inst-1Diagnostics route for the required :id path parameter.Light shellClicks: 0Clicked 0 time(s)Toggle theme
+   × diagnostics page states > labels a missing or unknown build identity as missing, never blank 3010ms
+     → Timed out waiting for the empty state with a null identity (last value: undefined) | url: /diagnostics/inst-1 | body: IndexDiagnostics 42Diagnostics: inst-1Diagnostics route for the required :id path parameter.Light shellClicks: 0Clicked 0 time(s)Toggle theme
+   × diagnostics page states > shows loading while the reader is in flight, then the command result message 3007ms
+     → Timed out waiting for the loading diagnostics state (last value: undefined) | url: /diagnostics/inst-1 | body: IndexDiagnostics 42Diagnostics: inst-1Diagnostics route for the required :id path parameter.Light shellClicks: 0Clicked 0 time(s)Toggle theme
+   × diagnostics page states > re-reads through a Command when the refresh control is used 3011ms
+     → Timed out waiting for the first ok state (last value: undefined) | url: /diagnostics/inst-1 | body: IndexDiagnostics 42Diagnostics: inst-1Diagnostics route for the required :id path parameter.Light shellClicks: 0Clicked 0 time(s)Toggle theme
+   × diagnostics page states > keeps controls reachable with visible focus styles and a narrow layout 3003ms
+     → Timed out waiting for the empty state (last value: undefined) | url: /diagnostics/inst-1 | body: IndexDiagnostics 42Diagnostics: inst-1Diagnostics route for the required :id path parameter.Light shellClicks: 0Clicked 0 time(s)Toggle theme
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 12 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/diagnostics.test.ts > diagnostics page states > renders the ok state with records and identity
+Error: Timed out waiting for the ok diagnostics state (last value: undefined) | url: /diagnostics/inst-1 | body: IndexDiagnostics 42Diagnostics: inst-1Diagnostics route for the required :id path parameter.Light shellClicks: 0Clicked 0 time(s)Toggle theme
+ ❯ waitFor test/diagnostics.test.ts:75:9
+     73|     await new Promise<void>((resolve) => setTimeout(resolve, 10));
+     74|   }
+     75|   throw new Error(
+       |         ^
+     76|     `Timed out waiting for ${label} (last value: ${String(last)}) | ur…
+     77|   );
+ ❯ test/diagnostics.test.ts:121:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/12]⎯
+
+ FAIL  test/diagnostics.test.ts > diagnostics page states > renders the empty state distinctly
+Error: Timed out waiting for the empty diagnostics state (last value: undefined) | url: /diagnostics/inst-1 | body: IndexDiagnostics 42Diagnostics: inst-1Diagnostics route for the required :id path parameter.Light shellClicks: 0Clicked 0 time(s)Toggle theme
+ ❯ waitFor test/diagnostics.test.ts:75:9
+     73|     await new Promise<void>((resolve) => setTimeout(resolve, 10));
+     74|   }
+     75|   throw new Error(
+       |         ^
+     76|     `Timed out waiting for ${label} (last value: ${String(last)}) | ur…
+     77|   );
+ ❯ test/diagnostics.test.ts:134:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/12]⎯
+
+ FAIL  test/diagnostics.test.ts > diagnostics page states > renders disabled as a state, not an error
+Error: Timed out waiting for the disabled diagnostics state (last value: undefined) | url: /diagnostics/inst-1 | body: IndexDiagnostics 42Diagnostics: inst-1Diagnostics route for the required :id path parameter.Light shellClicks: 0Clicked 0 time(s)Toggle theme
+ ❯ waitFor test/diagnostics.test.ts:75:9
+     73|     await new Promise<void>((resolve) => setTimeout(resolve, 10));
+     74|   }
+     75|   throw new Error(
+       |         ^
+     76|     `Timed out waiting for ${label} (last value: ${String(last)}) | ur…
+     77|   );
+ ❯ test/diagnostics.test.ts:148:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/12]⎯
+
+ FAIL  test/diagnostics.test.ts > diagnostics page states > renders stale with the rule and the age
+Error: Timed out waiting for the stale diagnostics state (last value: undefined) | url: /diagnostics/inst-1 | body: IndexDiagnostics 42Diagnostics: inst-1Diagnostics route for the required :id path parameter.Light shellClicks: 0Clicked 0 time(s)Toggle theme
+ ❯ waitFor test/diagnostics.test.ts:75:9
+     73|     await new Promise<void>((resolve) => setTimeout(resolve, 10));
+     74|   }
+     75|   throw new Error(
+       |         ^
+     76|     `Timed out waiting for ${label} (last value: ${String(last)}) | ur…
+     77|   );
+ ❯ test/diagnostics.test.ts:169:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/12]⎯
+
+ FAIL  test/diagnostics.test.ts > diagnostics page states > renders dropped with the loss counts
+Error: Timed out waiting for the dropped diagnostics state (last value: undefined) | url: /diagnostics/inst-1 | body: IndexDiagnostics 42Diagnostics: inst-1Diagnostics route for the required :id path parameter.Light shellClicks: 0Clicked 0 time(s)Toggle theme
+ ❯ waitFor test/diagnostics.test.ts:75:9
+     73|     await new Promise<void>((resolve) => setTimeout(resolve, 10));
+     74|   }
+     75|   throw new Error(
+       |         ^
+     76|     `Timed out waiting for ${label} (last value: ${String(last)}) | ur…
+     77|   );
+ ❯ test/diagnostics.test.ts:189:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/12]⎯
+
+ FAIL  test/diagnostics.test.ts > diagnostics page states > renders a denied response as access denied
+Error: Timed out waiting for the denied diagnostics state (last value: undefined) | url: /diagnostics/inst-1 | body: IndexDiagnostics 42Diagnostics: inst-1Diagnostics route for the required :id path parameter.Light shellClicks: 0Clicked 0 time(s)Toggle theme
+ ❯ waitFor test/diagnostics.test.ts:75:9
+     73|     await new Promise<void>((resolve) => setTimeout(resolve, 10));
+     74|   }
+     75|   throw new Error(
+       |         ^
+     76|     `Timed out waiting for ${label} (last value: ${String(last)}) | ur…
+     77|   );
+ ❯ test/diagnostics.test.ts:203:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/12]⎯
+
+ FAIL  test/diagnostics.test.ts > diagnostics page states > renders denied rather than an empty list for a denied response
+Error: Timed out waiting for the denied diagnostics state (last value: undefined) | url: /diagnostics/inst-1 | body: IndexDiagnostics 42Diagnostics: inst-1Diagnostics route for the required :id path parameter.Light shellClicks: 0Clicked 0 time(s)Toggle theme
+ ❯ waitFor test/diagnostics.test.ts:75:9
+     73|     await new Promise<void>((resolve) => setTimeout(resolve, 10));
+     74|   }
+     75|   throw new Error(
+       |         ^
+     76|     `Timed out waiting for ${label} (last value: ${String(last)}) | ur…
+     77|   );
+ ❯ test/diagnostics.test.ts:213:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/12]⎯
+
+ FAIL  test/diagnostics.test.ts > diagnostics page states > renders a transport error distinctly from a denied state
+Error: Timed out waiting for the transport-error diagnostics state (last value: undefined) | url: /diagnostics/inst-1 | body: IndexDiagnostics 42Diagnostics: inst-1Diagnostics route for the required :id path parameter.Light shellClicks: 0Clicked 0 time(s)Toggle theme
+ ❯ waitFor test/diagnostics.test.ts:75:9
+     73|     await new Promise<void>((resolve) => setTimeout(resolve, 10));
+     74|   }
+     75|   throw new Error(
+       |         ^
+     76|     `Timed out waiting for ${label} (last value: ${String(last)}) | ur…
+     77|   );
+ ❯ test/diagnostics.test.ts:221:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/12]⎯
+
+ FAIL  test/diagnostics.test.ts > diagnostics page states > labels a missing or unknown build identity as missing, never blank
+Error: Timed out waiting for the empty state with a null identity (last value: undefined) | url: /diagnostics/inst-1 | body: IndexDiagnostics 42Diagnostics: inst-1Diagnostics route for the required :id path parameter.Light shellClicks: 0Clicked 0 time(s)Toggle theme
+ ❯ waitFor test/diagnostics.test.ts:75:9
+     73|     await new Promise<void>((resolve) => setTimeout(resolve, 10));
+     74|   }
+     75|   throw new Error(
+       |         ^
+     76|     `Timed out waiting for ${label} (last value: ${String(last)}) | ur…
+     77|   );
+ ❯ test/diagnostics.test.ts:228:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/12]⎯
+
+ FAIL  test/diagnostics.test.ts > diagnostics page states > shows loading while the reader is in flight, then the command result message
+Error: Timed out waiting for the loading diagnostics state (last value: undefined) | url: /diagnostics/inst-1 | body: IndexDiagnostics 42Diagnostics: inst-1Diagnostics route for the required :id path parameter.Light shellClicks: 0Clicked 0 time(s)Toggle theme
+ ❯ waitFor test/diagnostics.test.ts:75:9
+     73|     await new Promise<void>((resolve) => setTimeout(resolve, 10));
+     74|   }
+     75|   throw new Error(
+       |         ^
+     76|     `Timed out waiting for ${label} (last value: ${String(last)}) | ur…
+     77|   );
+ ❯ test/diagnostics.test.ts:243:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/12]⎯
+
+ FAIL  test/diagnostics.test.ts > diagnostics page states > re-reads through a Command when the refresh control is used
+Error: Timed out waiting for the first ok state (last value: undefined) | url: /diagnostics/inst-1 | body: IndexDiagnostics 42Diagnostics: inst-1Diagnostics route for the required :id path parameter.Light shellClicks: 0Clicked 0 time(s)Toggle theme
+ ❯ waitFor test/diagnostics.test.ts:75:9
+     73|     await new Promise<void>((resolve) => setTimeout(resolve, 10));
+     74|   }
+     75|   throw new Error(
+       |         ^
+     76|     `Timed out waiting for ${label} (last value: ${String(last)}) | ur…
+     77|   );
+ ❯ test/diagnostics.test.ts:261:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/12]⎯
+
+ FAIL  test/diagnostics.test.ts > diagnostics page states > keeps controls reachable with visible focus styles and a narrow layout
+Error: Timed out waiting for the empty state (last value: undefined) | url: /diagnostics/inst-1 | body: IndexDiagnostics 42Diagnostics: inst-1Diagnostics route for the required :id path parameter.Light shellClicks: 0Clicked 0 time(s)Toggle theme
+ ❯ waitFor test/diagnostics.test.ts:75:9
+     73|     await new Promise<void>((resolve) => setTimeout(resolve, 10));
+     74|   }
+     75|   throw new Error(
+       |         ^
+     76|     `Timed out waiting for ${label} (last value: ${String(last)}) | ur…
+     77|   );
+ ❯ test/diagnostics.test.ts:280:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/12]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  12 failed (12)
+   Start at  00:51:03
+   Duration  42.66s (transform 3.17s, setup 0ms, collect 5.11s, tests 36.17s, environment 683ms, prepare 247ms)
+

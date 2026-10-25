@@ -1,0 +1,32 @@
+COMMAND: node --input-type=module -e <inline measurement: health wait rejection with the child terminated before the deadline (same design as test 1), real hanging node:net peer>
+CWD: role-model-router/packages/process-supervisor
+EXIT_CODE=0
+
+[
+  {
+    "startupTimeoutMs": 800,
+    "rejectionAtMs": 917,
+    "overshootMs": 117,
+    "message": "Managed vendor measured did not become healthy before startup timed out."
+  },
+  {
+    "startupTimeoutMs": 800,
+    "rejectionAtMs": 842,
+    "overshootMs": 42,
+    "message": "Managed vendor measured did not become healthy before startup timed out."
+  },
+  {
+    "startupTimeoutMs": 800,
+    "rejectionAtMs": 828,
+    "overshootMs": 28,
+    "message": "Managed vendor measured did not become healthy before startup timed out."
+  },
+  {
+    "startupTimeoutMs": 3000,
+    "rejectionAtMs": 3038,
+    "overshootMs": 38,
+    "message": "Managed vendor measured did not become healthy before startup timed out."
+  }
+]
+all_within_bound=true
+

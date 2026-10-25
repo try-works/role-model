@@ -1,0 +1,151 @@
+{
+  "slice": "s22a-learning-retention",
+  "requirement": "R31 Trial/learning/contribution retention (00-requirements.md:278-284)",
+  "status": "public characterization complete; core evaluation/learner/sandbox/publication/contribution code is private and cannot be proven here",
+  "privateFinding": {
+    "summary": "The public tree has host-side learning orchestration, holdout, receipts, contribution outcome/no-raw checks and dev-verification lease fences. The actual trial/scoring, durable lease/sandbox, profile publication, aggregate consent and late-ack outbox live in the private repository extensions.",
+    "searches": [
+      "extensions/ directory: absent in public worktree",
+      "grep role-model-router for evaluation-core/index.mjs: 12 references, all comments/tests/docs; no implementation source",
+      "grep submittedOutput|scoreFailure|score_failed: 0",
+      "grep no-egress-sandbox|DockerNoEgress: 0",
+      "grep DestinationAuthorizationAuthority: 0",
+      "grep lateAck|late_ack: 0",
+      "grep fsync: 0"
+    ],
+    "privateOwnerCitations": [
+      "evidence/other/as-is-private-analysis.md:64 evaluation-core:1159/run:4176, learning-integrity.mjs:304/527/657/730, no-egress-sandbox.mjs:271",
+      "evidence/other/as-is-private-analysis.md:65 evaluation-runner-local:169/287/550",
+      "evidence/other/as-is-private-analysis.md:67 profile-learner:260/963; crowdsourced-learning:225 ContributionClient, :177 DestinationAuthorizationAuthority, :44 floors, :86 materializeAggregate, outbox lease/fence :252-263"
+    ]
+  },
+  "retentionTable": [
+    {
+      "clause": "submitted output reusable after score failure",
+      "publicCode": "NOT PRESENT. No `extensions/` directory in this worktree; grep for submittedOutput/scoreFailure/score_failed returns 0 in role-model-router. Public evidence names the private owner: extensions/evaluation-core/index.mjs:1159 (run :4176) and evaluation-runner-local/index.mjs:287 DurableTrialRunner, :550 retryScoreOnce (evidence/other/as-is-private-analysis.md:64-65).",
+      "test": "No public test. A private-suite log name exists in public evidence: 'a scorer failure preserves a submitted output and its original failure' (run104 private-trackb logs), not executable here.",
+      "mutation": "NONE - code/test not in public tree. Finding, not gap to fill."
+    },
+    {
+      "clause": "provider receipts / no redispatch",
+      "publicCode": "role-model-router/apps/runtime-host-bridge/src/track-b-runtime.ts:3734-3745 returns the durable complete/awaiting-evaluation receipt before any claim/dispatch; record-provider-receipt envelope at :4169.",
+      "test": "test/run96-replay-router-adapter.test.ts:1375-1477 - only one replay:create-job invocation, dispatch throws if called.",
+      "mutation": "changed complete early-return to a never-matching state; test RED: 'a completed replay must not be reclaimed' (s22a-red-provider-receipt.log). This is replay orchestration, not the private evaluation-score receipt."
+    },
+    {
+      "clause": "holdout deterministic/provenance",
+      "publicCode": "track-b-holdout-split.ts:101-139 partition/holdoutId/membershipDigest; track-b-learning-pass.ts:163-205 and :237-255 signed comparison/safety receipts including holdoutPassed.",
+      "test": "test/run99-r33-holdout-split.test.ts:20,38,60,90; test/run104-learner-sweep-evidence.test.ts:114.",
+      "mutation": "holdoutId digest dropped stratum, RED at 'two task families never share a holdout identity' (s22a-red-holdout-identity.log); holdoutPassed true->false, RED at durable receipt test (s22a-red-provenance-receipt.log)."
+    },
+    {
+      "clause": "tie / floor / rollback",
+      "publicCode": "track-b-learning-pass.ts:810 DECISIVE_OUTCOMES excludes tie; :1175 filters non-decisive; :1752,1862-1866 promotes only decision=validate + promotionEligible; route-advisory-source.ts:214-217 refuses rolled_back ladders.",
+      "test": "test/run98-r03-learning-pass.test.ts:181 (decisive evidence only), :659 (insufficient evidence recorded, no promotion); test/run105-c-route-advisory-ladder-source.test.ts:224 (rollback).",
+      "mutation": "add tie to DECISIVE_OUTCOMES -> RED 4 vs 3 (s22a-red-tie.log); promote below-floor validation -> RED (s22a-red-floor-promotion.log); ignore rollback.on -> RED (s22a-red-rollback.log).",
+      "limitation": "The real numeric floors and validation gate live in the private knowledge-worker (learning-integrity.mjs:641-657, evaluateLearningGates :657); public tests use fake worker answers, so they prove orchestration, not the gate."
+    },
+    {
+      "clause": "sandbox / lease",
+      "publicCode": "Public track-b-runtime.ts:2445-2470 validates a declared sandbox policy shape only. No sandbox enforcement or evaluation lease code in public tree; grep no-egress-sandbox/DockerNoEgress = 0; public evidence names private no-egress-sandbox.mjs:271 and evaluation-core/evaluation-runner-local leases (as-is-private-analysis.md:52-55,64).",
+      "test": "No public enforcement/lease test; no mutation.",
+      "mutation": "NONE - private."
+    },
+    {
+      "clause": "no raw export / aggregate consent/destination",
+      "publicCode": "track-b-runtime.ts:12311-12323 sends bounded outcome fields to recordContributionAggregate; test/run96-f160-contribution-outcome.test.ts:402-461 asserts the aggregate request body does not contain request content. development-verification.ts:110-213 enforces signed development aggregate lease, destination deployment binding, revocation epoch.",
+      "test": "run96-f160 no-raw integration; development-verification.test.ts:83,103.",
+      "mutation": "changed direct-path taskType to the raw marker, RED 'real bridge ... aggregate' (s22a-red-raw-export.log). Revocation epoch check forced true, RED (s22a-red-revocation.log).",
+      "limitation": "Independent aggregate consent/destination authority and the outbox late-ack fence are private crowdsourced-learning (as-is-private-analysis.md:54,67); public dev-verification is a different upload authorization."
+    },
+    {
+      "clause": "versioned profile fsync/rename publication",
+      "publicCode": "NOT PRESENT. Public profile-aggregator computes profiles only; grep fsync = 0, profile-publication = 0, no rename-based profile store in public src. Public evidence names private profile-learner/index.mjs:260,963.",
+      "test": "No public test; no mutation.",
+      "mutation": "NONE - private."
+    },
+    {
+      "clause": "late-ack / revocation fence",
+      "publicCode": "Public development-verification.ts:165-176 rejects a lease when the independently supplied revocation epoch advances. Public campaign/contribution outbox late-ack fence is absent; grep lateAck/late_ack = 0; private crowdsourced-learning outbox lease/fence (as-is-private-analysis.md:54).",
+      "test": "development-verification.test.ts:103-117 (revocation). No public late-ack test.",
+      "mutation": "forced epoch comparison true -> RED 'rejects a signed lease after ... epoch advances' (s22a-red-revocation.log)."
+    },
+    {
+      "clause": "existing Effect folds / one learner",
+      "publicCode": "Public host learning pass/derivation orchestrates; no second public learner found. The learner core is private profile-learner; Effect folds not located publicly (as-is-private-analysis.md:67).",
+      "test": "No public fold test.",
+      "mutation": "NONE - private."
+    }
+  ],
+  "mutations": [
+    {
+      "clause": "provider receipts/no redispatch",
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s22a-red-provider-receipt.log",
+      "result": "RED - completed replay reclaimed/dispatched"
+    },
+    {
+      "clause": "holdout identity",
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s22a-red-holdout-identity.log",
+      "result": "RED - two task families shared an identity"
+    },
+    {
+      "clause": "receipt provenance",
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s22a-red-provenance-receipt.log",
+      "result": "RED - holdoutPassed false"
+    },
+    {
+      "clause": "tie",
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s22a-red-tie.log",
+      "result": "RED - tie counted as decisive (4 vs 3)"
+    },
+    {
+      "clause": "floor/promotion orchestration",
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s22a-red-floor-promotion.log",
+      "result": "RED - below-floor validation promoted"
+    },
+    {
+      "clause": "rollback",
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s22a-red-rollback.log",
+      "result": "RED - rolled-back ladder offered"
+    },
+    {
+      "clause": "no raw aggregate export",
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s22a-red-raw-export.log",
+      "result": "RED - aggregate contained request marker"
+    },
+    {
+      "clause": "revocation fence",
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s22a-red-revocation.log",
+      "result": "RED - advanced epoch accepted"
+    }
+  ],
+  "testRuns": [
+    {
+      "command": "vitest 10 public R31-related suites",
+      "total": 88,
+      "passed": 88,
+      "failed": 0,
+      "exit": 0,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s22a-green.log",
+      "suites": [
+        "run96-replay-router-adapter 24",
+        "run98-r03-learning-pass 17",
+        "run104-learner-sweep-evidence 3",
+        "run99-r33-holdout-split 6",
+        "run105-c-route-advisory-ladder-source 6",
+        "development-verification 5",
+        "run96-f160-contribution-outcome 12",
+        "run107-learning-pass-paging 5",
+        "run105-r10-per-task-rollback 4",
+        "run104-r22-learning-scope-travel 6"
+      ]
+    },
+    {
+      "typecheck": "tsc -p role-model-router/apps/runtime-host-bridge/tsconfig.json --noEmit",
+      "exit": 0,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s22a-typecheck.log"
+    }
+  ],
+  "whatIWrote": "No new tests: every public clause already had a real test, so this slice mutated the implementation and used those tests as the retention bar. No product changes remain; all mutations were restored and the final suite is green.",
+  "unproven": "Submitted-output reuse after score failure, real floor gate, lease/sandbox enforcement, profile fsync/rename publication, aggregate consent/destination authority and late-ack outbox are private and not verified in this worktree. No private repo was edited or read for implementation."
+}

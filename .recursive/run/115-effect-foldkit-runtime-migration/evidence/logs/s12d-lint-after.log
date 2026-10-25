@@ -1,0 +1,11 @@
+anti_slop_lint AFTER (absolute paths, anti_slop_lint tool):
+role-model-router/packages/ui/src/foldkit-input.ts -> clean (0)
+role-model-router/packages/ui/src/foldkit-textarea.ts -> clean (0)
+role-model-router/packages/ui/src/foldkit-checkbox.ts -> clean (0)
+role-model-router/packages/ui/src/foldkit-button.ts -> 3 pre-existing S12b findings (no-known-value-widening, 2x no-runtime-typeof); not part of the accepted S12d list
+role-model-router/packages/foldkit/test/s12c-foldkit-checkbox.scene.test.ts -> clean (0)
+role-model-router/packages/foldkit/test/s12c-foldkit-input.scene.test.ts -> clean (0)
+role-model-router/packages/foldkit/test/s12c-foldkit-textarea.scene.test.ts -> clean (0)
+role-model-router/packages/foldkit/test/s12b-rm3-button.scene.test.ts -> clean (0)
+BEFORE: input 3 / textarea 3 / checkbox 5 findings
+EXIT_CODE: 0

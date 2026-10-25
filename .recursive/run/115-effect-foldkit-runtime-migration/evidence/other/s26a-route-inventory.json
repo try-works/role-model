@@ -1,0 +1,1164 @@
+{
+  "schemaVersion": "role-model.route-inventory.v1",
+  "generatedFrom": "role-model-router/apps/runtime-ui/app/routes.ts + app/routes/*.tsx + app/components/*.tsx",
+  "vocabulary": {
+    "categories": [
+      "read",
+      "control",
+      "write",
+      "heavy",
+      "learning",
+      "studio",
+      "modal",
+      "palette",
+      "media",
+      "device-auth"
+    ],
+    "statuses": [
+      "absent",
+      "scaffolded",
+      "wired",
+      "verified"
+    ]
+  },
+  "scan": {
+    "appDir": "role-model-router/apps/runtime-ui/app",
+    "recursive": true,
+    "exclude": [
+      "*.test.tsx",
+      "*.test.ts"
+    ]
+  },
+  "counts": {
+    "total": 75,
+    "routes": 51,
+    "components": 24,
+    "byCategory": {
+      "control": 36,
+      "heavy": 2,
+      "write": 2,
+      "read": 24,
+      "learning": 3,
+      "studio": 3,
+      "media": 2,
+      "device-auth": 1,
+      "modal": 2
+    },
+    "byStatus": {
+      "absent": 56,
+      "verified": 18,
+      "wired": 1
+    },
+    "newOnly": 1
+  },
+  "routes": [
+    {
+      "category": "control",
+      "id": "route:agent-strategy",
+      "kind": "route",
+      "routePaths": [
+        "/app/router/agent-strategy"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/agent-strategy.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "control",
+      "id": "route:app-layout",
+      "kind": "route",
+      "routePaths": [
+        "/app"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/app-layout.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "heavy",
+      "id": "route:control-benchmark",
+      "kind": "route",
+      "routePaths": [
+        "/app/models/benchmark"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/control-benchmark.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "control",
+      "id": "route:control-controller",
+      "kind": "route",
+      "routePaths": [
+        "/app/router/controller"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/control-controller.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "control",
+      "id": "route:control-models",
+      "kind": "route",
+      "routePaths": [
+        "/app/models"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/control-models.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "control",
+      "id": "route:control-roles",
+      "kind": "route",
+      "routePaths": [
+        "/app/models/roles"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/control-roles.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "control",
+      "id": "route:control-routing-strategy",
+      "kind": "route",
+      "routePaths": [
+        "/app/router/strategy"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/control-routing-strategy.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "write",
+      "id": "route:control-runtime-config",
+      "kind": "route",
+      "routePaths": [
+        "/app/system/runtime-config"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/control-runtime-config.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "read",
+      "id": "route:dashboard",
+      "kind": "route",
+      "routePaths": [
+        "/app"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/dashboard.tsx",
+      "status": "verified",
+      "hostEndpoints": [
+        "/api/role-model/telemetry/requests",
+        "/api/role-model/telemetry/summary"
+      ],
+      "requiresHostEndpoint": false,
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s26e-readback-routes.test.ts",
+      "proofTestName": "Dashboard renders success, empty, loading and error on the DOM"
+    },
+    {
+      "category": "control",
+      "id": "route:endpoints",
+      "kind": "route",
+      "routePaths": [
+        "/app/connect"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/endpoints.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "control",
+      "id": "route:extensions",
+      "kind": "route",
+      "routePaths": [
+        "/app/system/extensions"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/extensions.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "control",
+      "id": "route:index",
+      "kind": "route",
+      "routePaths": [
+        "/"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/index.tsx",
+      "status": "verified",
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s26b-wave1.test.ts",
+      "proofTestName": "index is a real success landing with working onward navigation",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "control",
+      "id": "route:integrations-downstream",
+      "kind": "route",
+      "routePaths": [
+        "/app/connect/downstream"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/integrations-downstream.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "control",
+      "id": "route:integrations-upstream",
+      "kind": "route",
+      "routePaths": [
+        "/app/connect/upstream"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/integrations-upstream.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "learning",
+      "id": "route:learning",
+      "kind": "route",
+      "routePaths": [
+        "/app/learning",
+        "/app/learning/configuration",
+        "/app/learning/packs",
+        "/app/learning/decisions",
+        "/app/learning/evidence",
+        "/app/learning/history"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/learning.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "control",
+      "id": "route:legacy-redirect",
+      "kind": "route",
+      "routePaths": [
+        "/app/local/swap",
+        "/app/local/policy",
+        "/app/local/logs",
+        "/app/local/matrix",
+        "/app/local/peers",
+        "/app/control/providers",
+        "/app/control/routing-strategy",
+        "/app/control/runtime-config",
+        "/app/control/controller",
+        "/app/endpoints",
+        "/app/control/endpoints",
+        "/app/control/roles",
+        "/app/control/benchmark",
+        "/app/control/models",
+        "/app/observe",
+        "/app/endpoints/downstream",
+        "/app/integrations/downstream",
+        "/app/endpoints/upstream",
+        "/app/integrations/upstream",
+        "/app/control/session-readiness"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/legacy-redirect.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "control",
+      "id": "route:local-choose",
+      "kind": "route",
+      "routePaths": [
+        "/app/local/choose"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/local-choose.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "control",
+      "id": "route:local-llama-swap-models",
+      "kind": "route",
+      "routePaths": [
+        "/app/local/llama-swap/models"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/local-llama-swap-models.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "read",
+      "id": "route:local-logs",
+      "kind": "route",
+      "routePaths": [
+        "/app/local/llama-swap/logs"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/local-logs.tsx",
+      "status": "verified",
+      "hostEndpoints": [
+        "/api/role-model/local/logs"
+      ],
+      "requiresHostEndpoint": false,
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s26e-readback-routes.test.ts",
+      "proofTestName": "Local logs renders success, empty, loading and error on the DOM"
+    },
+    {
+      "category": "control",
+      "id": "route:local-matrix",
+      "kind": "route",
+      "routePaths": [
+        "/app/local/llama-swap/matrix"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/local-matrix.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "control",
+      "id": "route:local-models",
+      "kind": "route",
+      "routePaths": [
+        "/app/local/models"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/local-models.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "control",
+      "id": "route:local-peer-models",
+      "kind": "route",
+      "routePaths": [
+        "/app/local/peer-models"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/local-peer-models.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "read",
+      "id": "route:local-peers",
+      "kind": "route",
+      "routePaths": [
+        "/app/local/endpoints"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/local-peers.tsx",
+      "status": "verified",
+      "hostEndpoints": [
+        "/api/role-model/local/peers"
+      ],
+      "requiresHostEndpoint": false,
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s26e-readback-routes.test.ts",
+      "proofTestName": "Local peers renders success, empty, loading and error on the DOM"
+    },
+    {
+      "category": "write",
+      "id": "route:local-policy",
+      "kind": "route",
+      "routePaths": [
+        "/app/local/llama-swap/policy"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/local-policy.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "read",
+      "id": "route:local-swap",
+      "kind": "route",
+      "routePaths": [
+        "/app/local/llama-swap/swap"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/local-swap.tsx",
+      "status": "verified",
+      "hostEndpoints": [
+        "/api/role-model/local/swap"
+      ],
+      "requiresHostEndpoint": false,
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s26e-readback-routes.test.ts",
+      "proofTestName": "Local swap renders success, empty, loading and error on the DOM"
+    },
+    {
+      "category": "control",
+      "id": "route:not-found",
+      "kind": "route",
+      "routePaths": [
+        "*"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/not-found.tsx",
+      "status": "verified",
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s26b-wave1.test.ts",
+      "proofTestName": "not-found is a terminal error state with recovery navigation",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "read",
+      "id": "route:observability-snapshot",
+      "kind": "route",
+      "routePaths": [
+        "/app/observe/observability-snapshot"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/observability-snapshot.tsx",
+      "status": "verified",
+      "hostEndpoints": [
+        "/api/role-model/operator/observability-snapshot"
+      ],
+      "requiresHostEndpoint": false,
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s26d-observability.test.ts",
+      "proofTestName": "renders the success state from the real client"
+    },
+    {
+      "category": "read",
+      "id": "route:observe-activity",
+      "kind": "route",
+      "routePaths": [
+        "/app/observe/activity"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/observe-activity.tsx",
+      "status": "verified",
+      "hostEndpoints": [
+        "/api/role-model/operator/status"
+      ],
+      "requiresHostEndpoint": false,
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s26e-readback-routes.test.ts",
+      "proofTestName": "Observe activity renders success, empty, loading and error on the DOM"
+    },
+    {
+      "category": "read",
+      "id": "route:observe-logs",
+      "kind": "route",
+      "routePaths": [
+        "/app/observe/logs"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/observe-logs.tsx",
+      "status": "verified",
+      "hostEndpoints": [
+        "/api/role-model/local/logs"
+      ],
+      "requiresHostEndpoint": false,
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s26e-readback-routes.test.ts",
+      "proofTestName": "Observe logs renders success, empty, loading and error on the DOM"
+    },
+    {
+      "category": "read",
+      "id": "route:observe-queues",
+      "kind": "route",
+      "routePaths": [
+        "/app/observe/queues"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/observe-queues.tsx",
+      "status": "verified",
+      "hostEndpoints": [
+        "/api/role-model/operator/queues"
+      ],
+      "requiresHostEndpoint": false,
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s26e-readback-routes.test.ts",
+      "proofTestName": "Queues renders success, empty, loading and error on the DOM"
+    },
+    {
+      "category": "read",
+      "id": "route:observe-routing",
+      "kind": "route",
+      "routePaths": [
+        "/app/observe/routing"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/observe-routing.tsx",
+      "status": "verified",
+      "hostEndpoints": [
+        "/api/role-model/telemetry/rows"
+      ],
+      "requiresHostEndpoint": false,
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s26e-readback-routes.test.ts",
+      "proofTestName": "Observe routing renders success, empty, loading and error on the DOM"
+    },
+    {
+      "category": "control",
+      "id": "route:operator-controls",
+      "kind": "route",
+      "routePaths": [
+        "/app/system/operator"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/operator-controls.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "control",
+      "id": "route:providers",
+      "kind": "route",
+      "routePaths": [
+        "/app/remote/providers"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/providers.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "read",
+      "id": "route:request-detail",
+      "kind": "route",
+      "routePaths": [
+        "/app/observe/requests/:requestId"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/request-detail.tsx",
+      "status": "absent",
+      "hostEndpoints": [
+        "/api/role-model/requests/"
+      ],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "read",
+      "id": "route:requests",
+      "kind": "route",
+      "routePaths": [
+        "/app/observe/requests"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/requests.tsx",
+      "status": "verified",
+      "hostEndpoints": [
+        "/api/role-model/telemetry/requests"
+      ],
+      "requiresHostEndpoint": false,
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s26e-readback-routes.test.ts",
+      "proofTestName": "Requests renders success, empty, loading and error on the DOM"
+    },
+    {
+      "category": "read",
+      "id": "route:router-candidates",
+      "kind": "route",
+      "routePaths": [
+        "/app/router/candidates"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/router-candidates.tsx",
+      "status": "verified",
+      "hostEndpoints": [
+        "/api/role-model/router/candidates"
+      ],
+      "requiresHostEndpoint": false,
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s26e-readback-routes.test.ts",
+      "proofTestName": "Router candidates renders success, empty, loading and error on the DOM"
+    },
+    {
+      "category": "control",
+      "id": "route:router-config",
+      "kind": "route",
+      "routePaths": [
+        "/app/router/config"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/router-config.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "read",
+      "id": "route:router-decision-detail",
+      "kind": "route",
+      "routePaths": [
+        "/app/router/decisions/:requestId"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/router-decision-detail.tsx",
+      "status": "absent",
+      "hostEndpoints": [
+        "/api/role-model/router/decisions/"
+      ],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "read",
+      "id": "route:router-decisions",
+      "kind": "route",
+      "routePaths": [
+        "/app/router/decisions"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/router-decisions.tsx",
+      "status": "verified",
+      "hostEndpoints": [
+        "/api/role-model/router/decisions"
+      ],
+      "requiresHostEndpoint": false,
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s26e-readback-routes.test.ts",
+      "proofTestName": "Router decisions renders success, empty, loading and error on the DOM"
+    },
+    {
+      "category": "read",
+      "id": "route:router",
+      "kind": "route",
+      "routePaths": [
+        "/app/router"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/router.tsx",
+      "status": "verified",
+      "hostEndpoints": [
+        "/api/role-model/router/summary"
+      ],
+      "requiresHostEndpoint": false,
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s26e-readback-routes.test.ts",
+      "proofTestName": "Router renders success, empty, loading and error on the DOM"
+    },
+    {
+      "category": "read",
+      "id": "route:runtime",
+      "kind": "route",
+      "routePaths": [
+        "/app/system/runtime"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/runtime.tsx",
+      "status": "verified",
+      "hostEndpoints": [
+        "/api/role-model/runtime/config"
+      ],
+      "requiresHostEndpoint": false,
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s26e-readback-routes.test.ts",
+      "proofTestName": "Runtime renders success, empty, loading and error on the DOM"
+    },
+    {
+      "category": "read",
+      "id": "route:session-readiness",
+      "kind": "route",
+      "routePaths": [
+        "/app/system/session-readiness"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/session-readiness.tsx",
+      "status": "verified",
+      "hostEndpoints": [
+        "/api/role-model/operator/status"
+      ],
+      "requiresHostEndpoint": false,
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s26e-readback-routes.test.ts",
+      "proofTestName": "Session readiness renders success, empty, loading and error on the DOM"
+    },
+    {
+      "category": "heavy",
+      "id": "route:storage-retention",
+      "kind": "route",
+      "routePaths": [
+        "/app/system/storage-retention"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/storage-retention.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "read",
+      "id": "route:store-degradation-receipts",
+      "kind": "route",
+      "routePaths": [
+        "/app/observe/store-degradation-receipts"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/store-degradation-receipts.tsx",
+      "status": "verified",
+      "hostEndpoints": [
+        "/api/role-model/operator/store-degradation-receipts"
+      ],
+      "requiresHostEndpoint": false,
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s26e-readback-routes.test.ts",
+      "proofTestName": "Store receipts renders success, empty, loading and error on the DOM"
+    },
+    {
+      "category": "studio",
+      "id": "route:studio-advanced",
+      "kind": "route",
+      "routePaths": [
+        "/app/studio/advanced"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/studio-advanced.tsx",
+      "status": "absent",
+      "hostEndpoints": [
+        "/v1/responses",
+        "/v1/messages",
+        "/v1/messages/count_tokens",
+        "/v1/embeddings"
+      ],
+      "requiresHostEndpoint": true
+    },
+    {
+      "category": "media",
+      "id": "route:studio-audio",
+      "kind": "route",
+      "routePaths": [
+        "/app/studio/audio"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/studio-audio.tsx",
+      "status": "absent",
+      "hostEndpoints": [
+        "/v1/audio/voices",
+        "/v1/audio/speech",
+        "/v1/audio/transcriptions"
+      ],
+      "requiresHostEndpoint": true
+    },
+    {
+      "category": "media",
+      "id": "route:studio-images",
+      "kind": "route",
+      "routePaths": [
+        "/app/studio/images"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/studio-images.tsx",
+      "status": "absent",
+      "hostEndpoints": [
+        "/v1/images/generations"
+      ],
+      "requiresHostEndpoint": true
+    },
+    {
+      "category": "studio",
+      "id": "route:studio-rerank",
+      "kind": "route",
+      "routePaths": [
+        "/app/studio/rerank"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/studio-rerank.tsx",
+      "status": "absent",
+      "hostEndpoints": [
+        "/v1/rerank",
+        "/v1/reranking"
+      ],
+      "requiresHostEndpoint": true
+    },
+    {
+      "category": "read",
+      "id": "route:system-peers",
+      "kind": "route",
+      "routePaths": [
+        "/app/system/peers"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/system-peers.tsx",
+      "status": "absent",
+      "hostEndpoints": [
+        "/api/role-model/local/peers"
+      ],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "studio",
+      "id": "route:workbench",
+      "kind": "route",
+      "routePaths": [
+        "/app/studio/chat"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/workbench.tsx",
+      "status": "absent",
+      "hostEndpoints": [
+        "/v1/chat/completions"
+      ],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "control",
+      "id": "route:workloads",
+      "kind": "route",
+      "routePaths": [
+        "/app/router/workloads"
+      ],
+      "source": "role-model-router/apps/runtime-ui/app/routes/workloads.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    }
+  ],
+  "components": [
+    {
+      "category": "control",
+      "id": "component:app-shell",
+      "kind": "component",
+      "source": "role-model-router/apps/runtime-ui/app/components/app-shell.tsx",
+      "status": "wired",
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s26b-wave1.test.ts",
+      "proofTestName": "shell preserves theme, title, focus and scroll facts across navigation",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "read",
+      "id": "component:candidate-space-chart",
+      "kind": "component",
+      "source": "role-model-router/apps/runtime-ui/app/components/candidate-space-chart.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "read",
+      "id": "component:chart-kit-state-panel",
+      "kind": "component",
+      "source": "role-model-router/apps/runtime-ui/app/components/chart-kit-state-panel.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "control",
+      "id": "component:checkbox-control",
+      "kind": "component",
+      "source": "role-model-router/apps/runtime-ui/app/components/checkbox-control.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "device-auth",
+      "id": "component:device-authorization-card",
+      "kind": "component",
+      "source": "role-model-router/apps/runtime-ui/app/components/device-authorization-card.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "modal",
+      "id": "component:device-authorization-modal",
+      "kind": "component",
+      "source": "role-model-router/apps/runtime-ui/app/components/device-authorization-modal.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "learning",
+      "id": "component:learning-history-panels",
+      "kind": "component",
+      "source": "role-model-router/apps/runtime-ui/app/components/learning-history-panels.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "learning",
+      "id": "component:learning-live-panel",
+      "kind": "component",
+      "source": "role-model-router/apps/runtime-ui/app/components/learning-live-panel.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "control",
+      "id": "component:llama-swap-setup-hint",
+      "kind": "component",
+      "source": "role-model-router/apps/runtime-ui/app/components/llama-swap-setup-hint.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "modal",
+      "id": "component:llama-swap-setup-modal",
+      "kind": "component",
+      "source": "role-model-router/apps/runtime-ui/app/components/llama-swap-setup-modal.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "control",
+      "id": "component:local-model-role-picker",
+      "kind": "component",
+      "source": "role-model-router/apps/runtime-ui/app/components/local-model-role-picker.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "read",
+      "id": "component:observe-chart-block",
+      "kind": "component",
+      "source": "role-model-router/apps/runtime-ui/app/components/observe-chart-block.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "read",
+      "id": "component:overview-chart-block",
+      "kind": "component",
+      "source": "role-model-router/apps/runtime-ui/app/components/overview-chart-block.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "control",
+      "id": "component:page-primitives",
+      "kind": "component",
+      "source": "role-model-router/apps/runtime-ui/app/components/page-primitives.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "control",
+      "id": "component:posture-entries-page",
+      "kind": "component",
+      "source": "role-model-router/apps/runtime-ui/app/components/posture-entries-page.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "control",
+      "id": "component:queues-configuration-card",
+      "kind": "component",
+      "source": "role-model-router/apps/runtime-ui/app/components/queues-configuration-card.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "control",
+      "id": "component:replay-automation-panel",
+      "kind": "component",
+      "source": "role-model-router/apps/runtime-ui/app/components/replay-automation-panel.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "read",
+      "id": "component:telemetry-charts",
+      "kind": "component",
+      "source": "role-model-router/apps/runtime-ui/app/components/telemetry-charts.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "control",
+      "id": "component:telemetry-controls",
+      "kind": "component",
+      "source": "role-model-router/apps/runtime-ui/app/components/telemetry-controls.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "control",
+      "id": "component:theme-toggle",
+      "kind": "component",
+      "source": "role-model-router/apps/runtime-ui/app/components/theme-toggle.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "control",
+      "id": "component:themed-select",
+      "kind": "component",
+      "source": "role-model-router/apps/runtime-ui/app/components/themed-select.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "control",
+      "id": "component:root-layout",
+      "kind": "component",
+      "source": "role-model-router/apps/runtime-ui/app/root.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "control",
+      "id": "component:role-task-hierarchy",
+      "kind": "component",
+      "source": "role-model-router/apps/runtime-ui/app/lib/role-task-hierarchy.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    },
+    {
+      "category": "control",
+      "id": "component:shell-header-context",
+      "kind": "component",
+      "source": "role-model-router/apps/runtime-ui/app/lib/shell-header-context.tsx",
+      "status": "absent",
+      "hostEndpoints": [],
+      "requiresHostEndpoint": false
+    }
+  ],
+  "newOnly": [
+    {
+      "id": "new-only:diagnostics",
+      "kind": "route",
+      "routePaths": [
+        "/diagnostics/:id"
+      ],
+      "category": "read",
+      "status": "verified",
+      "source": "role-model-router/apps/runtime-ui-next/src/view.ts",
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/diagnostics.test.ts",
+      "hostEndpoint": "/api/role-model/operator/diagnostics",
+      "note": "Run115 S15 route; no legacy diagnostics route exists. Verified by the diagnostics page state suite.",
+      "proofTestName": "renders the ok state with records and identity",
+      "hostEndpoints": [
+        "/api/role-model/operator/diagnostics"
+      ],
+      "requiresHostEndpoint": false
+    }
+  ],
+  "waves": [
+    {
+      "id": 1,
+      "name": "Shell, layout and shared primitives",
+      "routeIds": [
+        "route:app-layout",
+        "component:app-shell",
+        "component:page-primitives",
+        "component:theme-toggle",
+        "component:themed-select",
+        "component:checkbox-control",
+        "route:index",
+        "route:not-found",
+        "component:root-layout",
+        "component:shell-header-context",
+        "component:role-task-hierarchy"
+      ],
+      "newHostEndpoints": [],
+      "rationale": "Shell, root, layout and shared UI primitives; hostEndpoints is empty for these rows."
+    },
+    {
+      "id": 2,
+      "name": "Read-only telemetry and observability",
+      "routeIds": [
+        "route:dashboard",
+        "route:observe-activity",
+        "route:requests",
+        "route:request-detail",
+        "route:observe-routing",
+        "route:observe-queues",
+        "route:observe-logs",
+        "route:router",
+        "route:router-candidates",
+        "route:router-decisions",
+        "route:router-decision-detail",
+        "route:runtime",
+        "route:session-readiness",
+        "route:observability-snapshot",
+        "route:store-degradation-receipts",
+        "route:local-logs",
+        "route:local-peers",
+        "route:system-peers",
+        "component:telemetry-charts",
+        "component:observe-chart-block",
+        "component:overview-chart-block",
+        "component:candidate-space-chart",
+        "component:chart-kit-state-panel",
+        "component:telemetry-controls"
+      ],
+      "newHostEndpoints": [],
+      "rationale": "Read-only rows; each row's hostEndpoints are the correlation source. No row is marked requiresHostEndpoint in this wave."
+    },
+    {
+      "id": 3,
+      "name": "Configuration, control and writes",
+      "routeIds": [
+        "route:providers",
+        "route:endpoints",
+        "route:integrations-downstream",
+        "route:integrations-upstream",
+        "route:control-models",
+        "route:control-roles",
+        "route:control-controller",
+        "route:control-routing-strategy",
+        "route:control-runtime-config",
+        "route:agent-strategy",
+        "route:workloads",
+        "route:local-choose",
+        "route:local-llama-swap-models",
+        "route:local-peer-models",
+        "route:local-policy",
+        "route:local-swap",
+        "route:operator-controls",
+        "route:extensions",
+        "route:router-config",
+        "component:local-model-role-picker",
+        "component:posture-entries-page",
+        "component:queues-configuration-card",
+        "component:replay-automation-panel",
+        "component:llama-swap-setup-hint",
+        "route:legacy-redirect",
+        "route:local-matrix",
+        "route:local-models"
+      ],
+      "newHostEndpoints": [],
+      "rationale": "Configuration/control/write rows; use each row's hostEndpoints. No row is marked requiresHostEndpoint in this wave."
+    },
+    {
+      "id": 4,
+      "name": "Learning and studio/media",
+      "routeIds": [
+        "route:learning",
+        "route:workbench",
+        "route:studio-images",
+        "route:studio-audio",
+        "route:studio-rerank",
+        "route:studio-advanced",
+        "component:learning-history-panels",
+        "component:learning-live-panel"
+      ],
+      "newHostEndpoints": [
+        "/v1/images/generations",
+        "/v1/audio/voices",
+        "/v1/audio/speech",
+        "/v1/audio/transcriptions",
+        "/v1/rerank",
+        "/v1/reranking",
+        "/v1/messages",
+        "/v1/messages/count_tokens",
+        "/v1/embeddings"
+      ],
+      "rationale": "Existing chat/responses endpoints plus FOUR rows that declare missing host endpoints (see hostEndpoints/requiresHostEndpoint): studio-images, studio-audio, studio-rerank, studio-advanced. Those endpoints must be added to the host before wiring these rows; wave 4 therefore splits into existing-endpoint and new-endpoint work."
+    },
+    {
+      "id": 5,
+      "name": "Heavy and device-auth",
+      "routeIds": [
+        "route:control-benchmark",
+        "route:storage-retention",
+        "component:device-authorization-card",
+        "component:device-authorization-modal",
+        "component:llama-swap-setup-modal"
+      ],
+      "newHostEndpoints": [],
+      "rationale": "Heavy/device-auth; use each row's hostEndpoints. No new endpoint is declared missing for these rows."
+    }
+  ],
+  "hostEndpoints": {
+    "correlation": "Every row declares hostEndpoints and requiresHostEndpoint. The drift test parses the host index.ts route literals and fails if a row declares an absent endpoint while requiresHostEndpoint=false.",
+    "correctedClaim": "S26a's 'no legacy route needs a new host endpoint' was wrong. studio-images, studio-audio, studio-rerank and studio-advanced use /v1/* endpoints absent from the host route table and are marked requiresHostEndpoint=true.",
+    "present": "All other declared row endpoints are present in the host route table."
+  },
+  "notes": [
+    "Route rows are source modules; routePaths lists every registered path sharing that module (learning has six, legacy-redirect backs twenty aliases).",
+    "Redirect-only modules (index, local-models, local-matrix, router-config, legacy-redirect) are inventories because they are route files; their category is control as navigation/aliases.",
+    "New-only diagnostics is listed separately and excluded from the legacy counts.",
+    "No command palette exists in the legacy client; palette is zero.",
+    "Coverage scans every .tsx under app/** recursively, including root.tsx and lib/*.tsx.",
+    "Status rule: verified requires a named proof test; app-layout is absent because the new client has no /app route (it renders NotFound), even though a shell layout exists.",
+    "Category rule: modal widgets are modal; device-authorization-card remains device-auth for its domain-specific non-modal card; static navigation/fallback/layout is control; read requires a data read."
+  ]
+}

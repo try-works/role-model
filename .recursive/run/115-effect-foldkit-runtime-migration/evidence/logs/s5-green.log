@@ -1,0 +1,18 @@
+COMMAND: node ../../../node_modules/vitest/vitest.mjs run test/health-wait-timeout.test.ts
+CWD: role-model-router/packages/process-supervisor
+EXIT_CODE=0
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/process-supervisor
+
+ ✓ test/health-wait-timeout.test.ts (3 tests) 4464ms
+   ✓ process-supervisor bounded health wait > rejects within startupTimeoutMs when the health peer accepts and never responds  992ms
+   ✓ process-supervisor bounded health wait > becomes healthy when a responsive endpoint replies after about 200ms  1224ms
+   ✓ process-supervisor bounded health wait > stops polling after a health timeout and shuts down cleanly  2243ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  20:34:33
+   Duration  6.42s (transform 318ms, setup 0ms, collect 274ms, tests 4.46s, environment 1ms, prepare 659ms)
+
+

@@ -1,0 +1,5 @@
+COMMAND: node ../../../node_modules/typescript/bin/tsc -p tsconfig.json --noEmit
+CWD: role-model-router/packages/process-supervisor
+EXIT_CODE=0
+
+

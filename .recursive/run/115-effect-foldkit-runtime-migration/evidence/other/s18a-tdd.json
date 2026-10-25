@@ -1,0 +1,113 @@
+{
+  "slice": "s18a-sql-truth",
+  "status": "complete (measurement + characterization); product behaviour unchanged",
+  "measurement": {
+    "test": "blocks the event loop for the whole synchronous DatabaseSync statement (with tolerance)",
+    "workload": "800000-row recursive CTE through sql-sqlite-node service.execSync (the accepted blocking facade)",
+    "measured": {
+      "statementMs": 246,
+      "timerDelayMs": 247,
+      "timerRanDuringStatement": false,
+      "toleranceMs": 123.2
+    },
+    "runVariance": "236-246ms across two runs; the assertion is relative (timer must not have run during the statement, delay >= max(10ms, 50% of the statement)), not an absolute wall-time promise",
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s18a-measure.log",
+    "red": {
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s18a-red-blocking.log",
+      "mutation": "service.execSync made a no-op",
+      "observed": "statementMs ~3.1ms < the 10ms floor / timer requirement",
+      "conclusion": "the guard fails if the path is no longer blocking"
+    }
+  },
+  "pragmas": {
+    "sqlSqliteNodeServiceDefaults": {
+      "busy_timeout": "5000 (explicit PRAGMA in openOnce, service.ts:163)",
+      "journal_mode": "delete (SQLite default; service does not set it)",
+      "synchronous": "2 / FULL (SQLite default)",
+      "foreign_keys": "1 (node:sqlite DatabaseSync default; service does not set it)",
+      "auto_vacuum": "0 (SQLite default)",
+      "page_size": "4096 (SQLite default on a new database)",
+      "setupPreserved": "a per-store setup() setting WAL + synchronous NORMAL reads back wal/1"
+    },
+    "sqliteMemoryInitialization": {
+      "busy_timeout": "0 on initializeSqliteMemory's own raw DatabaseSync connection (it does not call openSqliteDatabase)",
+      "journal_mode": "wal (explicit PRAGMA journal_mode = WAL, sqlite-memory/src/index.ts:2061)",
+      "synchronous": "2 / FULL (SQLite default; not set)",
+      "foreign_keys": "1 (node:sqlite default)",
+      "auto_vacuum": "2 / INCREMENTAL (explicit only for a new database, sqlite-memory/src/index.ts:2059)",
+      "page_size": "4096 (SQLite default)",
+      "regularStoreOpen": "openSqliteDatabase sets only busy_timeout=5000 (sqlite-memory/src/index.ts:179); journal_mode/synchronous/foreign_keys come from the file header and SQLite/node defaults",
+      "restoreGap": "VACUUM INTO backup: a backup is a delete-journal database; restore copies those bytes over the live store, so the restored journal_mode reads back delete, not the live store's WAL mode (pinned in the fence test)"
+    },
+    "red": {
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s18a-red-pragma.log",
+      "mutation": "removed the service busy_timeout PRAGMA",
+      "observed": "expected [{timeout:5000}] got [{timeout:0}]"
+    }
+  },
+  "drainFence": {
+    "outcome": "NO logical owner drain/fence exists",
+    "exactSites": [
+      "role-model-router/packages/sqlite-memory/src/index.ts:6497-6509 backupRuntimeState (VACUUM INTO)",
+      "role-model-router/packages/sqlite-memory/src/index.ts:6511-6515 deleteRuntimeState (rmSync database/-wal/-shm)",
+      "role-model-router/packages/sqlite-memory/src/index.ts:6517-6523 restoreRuntimeState (deleteRuntimeState + copyFileSync)"
+    ],
+    "evidence": "With an owner DatabaseSync handle open, restoreRuntimeState has no registry to consult: on Windows it fails only because the OS refuses the file replace (EPERM), not because of an owner fence; after closing the owner it succeeds. On POSIX the same call would be expected to replace the file while the owner is open. No test can prove a logical refusal because the code has none.",
+    "wouldLive": "a shared owner registry/lock at the sqlite-memory maintenance layer (around backupRuntimeState/deleteRuntimeState/restoreRuntimeState), because sql-sqlite-node's service owns per-connection handles and exposes no global owner registry; adding it is a product change and out of this slice."
+  },
+  "noSubstitute": {
+    "behavioral": "an Effect transaction inserts a row and fails; the row count after the failed run is 0 (real SQL rollback)",
+    "static": "service.ts contains BEGIN IMMEDIATE/COMMIT/ROLLBACK, no TxRef, no setTimeout; every Effect.runSync line only manages Ref open/owner state, never a pretend transaction",
+    "red": {
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s18a-red-transaction.log",
+      "mutation": "replaced BEGIN IMMEDIATE with SELECT 1 in the Effect transaction",
+      "observed": "rollback test failed (SQLite service is closed / no real transaction)",
+      "conclusion": "the test fails if the SQL transaction is replaced by non-transactional work"
+    },
+    "memorySourcePinned": "sqlite-memory/src/index.ts:167-179 pins SQLITE_BUSY_TIMEOUT_MS = 5000 and PRAGMA busy_timeout; the retry waits are Atomics.wait, not a scheduled async substitute"
+  },
+  "redGreen": {
+    "tests": {
+      "file": "role-model-router/packages/sql-sqlite-node/test/s18a-sql-truth.test.ts",
+      "count": 8,
+      "passed": 8,
+      "exit": 0,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s18a-green.log"
+    },
+    "reds": [
+      ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s18a-red-blocking.log",
+      ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s18a-red-pragma.log",
+      ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s18a-red-transaction.log"
+    ],
+    "fenceNote": "item 3 has no RED/GREEN pair because no logical owner fence exists; the characterization test in the same suite records the OS-only refusal and exact sites instead of inventing behaviour.",
+    "s6aRegression": {
+      "command": "vitest run test/sqlite-service.test.ts",
+      "tests": 11,
+      "passed": 11,
+      "exit": 0,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s18a-s6a-regression.log"
+    }
+  },
+  "typecheck": {
+    "command": "tsc -p tsconfig.service.json --noEmit",
+    "exit": 0,
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s18a-typecheck.log",
+    "note": "project tsconfig includes src/service.ts only; the new test is transformed by Vitest. Biome module+test: exit 0."
+  },
+  "productChange": "none intended. service.ts is untracked (created in S6a); after temporary mutation/restore its sha256 is 7c591597551a7e413de0c7b01da5e0ddf4473f990ab7dca2640d4bc033fcef8e, which differs from the hash recorded in s6a-tdd.json (1048058971...). Git cannot reconstruct the pre-slice untracked bytes; the S6a 11/11 suite and tsc/biome pass, but this byte difference is called out for review. Only exact-string mutations were applied and restored.",
+  "hashes": {
+    "role-model-router/packages/sql-sqlite-node/test/s18a-sql-truth.test.ts": "5a0c5319ebe8fbb611b903dbbf6e3c0a9452619a39f111ba748808052c13473b",
+    "role-model-router/packages/sql-sqlite-node/src/service.ts": "7c591597551a7e413de0c7b01da5e0ddf4473f990ab7dca2640d4bc033fcef8e"
+  },
+  "evidenceLogs": [
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s18a-measure.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s18a-red-blocking.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s18a-red-pragma.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s18a-red-transaction.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s18a-green.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s18a-s6a-regression.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s18a-typecheck.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s18a-biome-check.log"
+  ],
+  "scope": "Only the new S18a test file and evidence were written. No product behaviour change, no root/lockfile/vendor/client/private changes."
+}

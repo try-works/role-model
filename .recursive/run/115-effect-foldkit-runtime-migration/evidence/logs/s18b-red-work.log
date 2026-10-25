@@ -1,0 +1,91 @@
+# S18b mutation 1: execSync busy-waits 25ms and never executes SQL
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/sql-sqlite-node
+
+(node:48280) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/s18a-sql-truth.test.ts (10 tests | 4 failed) 531ms
+   × S18a blocking measurement > blocks the event loop for a whole synchronous statement whose work persists, relative to the idle timer baseline 89ms
+     → no such table: work
+   × S18a blocking measurement > blocks through a whole synchronous transaction whose rows commit, relative to the idle timer baseline 90ms
+     → no such table: t
+   ✓ S18a per-store PRAGMAs > pins the sql-sqlite-node service defaults on the service's own connection (busy_timeout 5000, journal delete, synchronous FULL, FK on, auto_vacuum off) 6ms
+   ✓ S18a per-store PRAGMAs > preserves a per-store setup() PRAGMA (WAL + synchronous NORMAL) 11ms
+   ✓ S18a sqlite-memory PRAGMAs split by persistence scope > file-level initialization settings (WAL, auto_vacuum) survive on a new connection 90ms
+   ✓ S18a sqlite-memory PRAGMAs split by persistence scope > connection-level settings are read from the initializer's OWN connection and do not transfer to a fresh one 84ms
+   ✓ S18a backup/restore owner fence > characterizes restore while an owner connection is active: no logical fence, only OS file locking 97ms
+   × S18a real SQL transactions, no substitute > behaviourally commits real SQL and exposes it inside the transaction (a no-op or Ref buffer fails) 28ms
+     → no such table: t
+   × S18a real SQL transactions, no substitute > behaviourally rolls back real SQL work (the failed insert is gone) 32ms
+     → no such table: t
+   ✓ S18a real SQL transactions, no substitute > secondary static guard (not the proof): the real transaction statements are present 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s18a-sql-truth.test.ts > S18a blocking measurement > blocks the event loop for a whole synchronous statement whose work persists, relative to the idle timer baseline
+Error: no such table: work
+ ❯ readRows src/service.ts:231:12
+    229|   // the package and its tests bind only these shapes, and the driver …
+    230|   // prepare time with its own error.
+    231|   database.prepare(sql).all(...(params as ReadonlyArray<SqlBindValue>)…
+       |            ^
+    232| 
+    233| const runExec = (database: DatabaseSync, sql: string): void => {
+ ❯ Object.querySync src/service.ts:386:12
+ ❯ test/s18a-sql-truth.test.ts:148:22
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  test/s18a-sql-truth.test.ts > S18a blocking measurement > blocks through a whole synchronous transaction whose rows commit, relative to the idle timer baseline
+Error: no such table: t
+ ❯ runExec src/service.ts:234:12
+    232| 
+    233| const runExec = (database: DatabaseSync, sql: string): void => {
+    234|   database.exec(sql);
+       |            ^
+    235| };
+    236| 
+ ❯ Object.execSync src/service.ts:243:22
+ ❯ test/s18a-sql-truth.test.ts:181:14
+ ❯ Object.transactionSync src/service.ts:401:22
+ ❯ test/s18a-sql-truth.test.ts:179:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  test/s18a-sql-truth.test.ts > S18a real SQL transactions, no substitute > behaviourally commits real SQL and exposes it inside the transaction (a no-op or Ref buffer fails)
+Error: no such table: t
+ ❯ runExec src/service.ts:234:12
+    232| 
+    233| const runExec = (database: DatabaseSync, sql: string): void => {
+    234|   database.exec(sql);
+       |            ^
+    235| };
+    236| 
+ ❯ Object.execSync src/service.ts:243:22
+ ❯ test/s18a-sql-truth.test.ts:344:12
+ ❯ Object.transactionSync src/service.ts:401:22
+ ❯ test/s18a-sql-truth.test.ts:343:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  test/s18a-sql-truth.test.ts > S18a real SQL transactions, no substitute > behaviourally rolls back real SQL work (the failed insert is gone)
+Error: no such table: t
+ ❯ readRows src/service.ts:231:12
+    229|   // the package and its tests bind only these shapes, and the driver …
+    230|   // prepare time with its own error.
+    231|   database.prepare(sql).all(...(params as ReadonlyArray<SqlBindValue>)…
+       |            ^
+    232| 
+    233| const runExec = (database: DatabaseSync, sql: string): void => {
+ ❯ Object.querySync src/service.ts:386:12
+ ❯ test/s18a-sql-truth.test.ts:378:22
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 6 passed (10)
+   Start at  03:24:09
+   Duration  6.60s (transform 3.18s, setup 0ms, collect 4.84s, tests 531ms, environment 1ms, prepare 543ms)
+
+EXIT_CODE: 1

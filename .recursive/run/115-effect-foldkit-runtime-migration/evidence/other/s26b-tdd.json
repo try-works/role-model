@@ -1,0 +1,111 @@
+{
+  "slice": "s26b-wave1",
+  "requirement": "R13 wave 1 shell entries with maintained states and verified inventory statuses",
+  "entries": [
+    {
+      "id": "route:app-layout",
+      "status": "verified",
+      "proof": {
+        "test": "apps/runtime-ui-next/test/s26b-wave1.test.ts",
+        "name": "layout is a persistent primary navigation and carries the active route"
+      },
+      "states": {
+        "success": "persistent desktop sidebar + mobile primary nav; active route aria-current; 9 future sections marked pending; navigation keeps one shell instance",
+        "empty": "not applicable: layout has no data source/view model",
+        "loading": "not applicable: layout has no async work",
+        "error": "not applicable: layout has no data source; route-level diagnostics has its own states"
+      }
+    },
+    {
+      "id": "route:index",
+      "status": "verified",
+      "proof": {
+        "test": "apps/runtime-ui-next/test/s26b-wave1.test.ts",
+        "name": "index is a real success landing with working onward navigation"
+      },
+      "states": {
+        "success": "runtime overview landing, two surface cards, Open diagnostics link, data-state=success, document title Overview | RM3 Foldkit shell",
+        "empty": "not applicable: static landing has no data source and no empty variant",
+        "loading": "not applicable: no async work",
+        "error": "not applicable: static content cannot fail independently of the shell"
+      }
+    },
+    {
+      "id": "route:not-found",
+      "status": "verified",
+      "proof": {
+        "test": "apps/runtime-ui-next/test/s26b-wave1.test.ts",
+        "name": "not-found is a terminal error state with recovery navigation"
+      },
+      "states": {
+        "error": "role=alert, data-state=error, exact path, Back to overview link, path-specific document title",
+        "success": "not applicable: a not-found route is terminal",
+        "empty": "not applicable: the error is the state",
+        "loading": "not applicable: no async lookup; route parsing is synchronous"
+      }
+    },
+    {
+      "id": "component:app-shell",
+      "status": "wired",
+      "proof": {
+        "test": "apps/runtime-ui-next/test/s26b-wave1.test.ts",
+        "name": "shell preserves theme, title, focus and scroll facts across navigation"
+      },
+      "states": {
+        "success": "desktop sidebar + mobile nav, theme toggle, shell title/route label, clicks/theme readout",
+        "empty": "not applicable: shell frame has no data source",
+        "loading": "not applicable: no async shell work",
+        "error": "not applicable: no shell data source; route states own errors"
+      },
+      "caveat": "wired, not verified: the legacy sidebar footer inventory/live-refresh stack is not in wave 1."
+    }
+  ],
+  "shellFacts": {
+    "title": "Document title is route-derived (Overview, Diagnostics id, Not found path) and asserted across navigation.",
+    "theme": "THEME_STORAGE_KEY=role-model-runtime-theme; initial dark unless stored light/dark; toggle writes document dataset/class/color-scheme/meta and localStorage through ApplyTheme Command; test asserts dark -> light.",
+    "focus": "No forced focus restoration, matching the legacy shell: the activated navigation link keeps document focus; active route is communicated by aria-current.",
+    "scroll": "ChangedUrl dispatches ScrollShellToTop (window.scrollTo({top:0,behavior:'auto'})); test spies the call. The legacy content-container scroll becomes the page scroll because the Foldkit shell uses the document scroller.",
+    "navigation": "Persistent primary navigation is one sidebar + one mobile nav; 9 legacy sections are explicit pending entries, not fabricated links."
+  },
+  "inventory": {
+    "path": "evidence/other/s26a-route-inventory.json",
+    "before": {
+      "absent": 68,
+      "scaffolded": 4,
+      "wired": 0,
+      "verified": 0
+    },
+    "after": {
+      "absent": 68,
+      "scaffolded": 0,
+      "wired": 1,
+      "verified": 3
+    },
+    "newOnlyVerified": 1,
+    "driftExtension": "Verified rows now require proofTest + proofTestName; the drift test asserts the proof file exists and contains it(\"<name>\"). Wired app-shell names its test but is not claimed verified."
+  },
+  "redGreen": {
+    "layout": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26b-red-layout.log",
+    "index": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26b-red-index.log",
+    "notFound": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26b-red-notfound.log",
+    "scrollFact": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26b-red-scroll.log",
+    "green": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26b-green.log"
+  },
+  "counts": {
+    "tests": 66,
+    "passed": 66,
+    "failed": 0,
+    "typecheck": "tsc -p apps/runtime-ui-next/tsconfig.json --noEmit: exit 0",
+    "biome": "biome check 8 changed files: exit 0"
+  },
+  "files": [
+    "src/view.ts",
+    "src/update.ts",
+    "src/init.ts",
+    "src/message.ts",
+    "src/shell-commands.ts",
+    "src/theme.ts",
+    "test/s26b-wave1.test.ts",
+    "test/s26a-route-inventory.test.ts"
+  ]
+}

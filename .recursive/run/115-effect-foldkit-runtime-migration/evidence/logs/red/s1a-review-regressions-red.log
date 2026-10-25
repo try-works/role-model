@@ -1,0 +1,125 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui-parity
+
+ ❯ test/compare.test.ts (31 tests | 3 failed) 48ms
+   × compareRequestTraces > matches repeated same-step independent read variants as a multiset 28ms
+     → expected [ …(4) ] to deeply equal []
+   × compareRequestTraces > rejects a dependent read moved before its mutation predecessor 3ms
+     → expected false to be true // Object.is equality
+   × compareRequestTraces > rejects a write moved before the read that authorizes it 2ms
+     → expected false to be true // Object.is equality
+   ✓ compareRequestTraces > returns no differences for identical captures 1ms
+   ✓ compareRequestTraces > returns no differences for two empty captures 1ms
+   ✓ compareRequestTraces > ignores volatile request ids and matches on stable step labels 0ms
+   ✓ compareRequestTraces > canonicalizes method case, header name case/order, and query key order 1ms
+   ✓ compareRequestTraces > preserves repeated query value order 1ms
+   ✓ compareRequestTraces > preserves repeated header value order 0ms
+   ✓ compareRequestTraces > reports a changed method 0ms
+   ✓ compareRequestTraces > reports a changed path 0ms
+   ✓ compareRequestTraces > reports a changed query value 0ms
+   ✓ compareRequestTraces > distinguishes a missing body from an empty body 0ms
+   ✓ compareRequestTraces > reports a changed body without leaking its bytes 1ms
+   ✓ compareRequestTraces > reports a changed status 0ms
+   ✓ compareRequestTraces > reports a changed terminal stream 0ms
+   ✓ compareRequestTraces > reports a changed terminal error 0ms
+   ✓ compareRequestTraces > reports a changed non-auth header without leaking its value 0ms
+   ✓ compareRequestTraces > compares an authorization scheme case-insensitively 0ms
+   ✓ compareRequestTraces > reports a changed authorization scheme 0ms
+   ✓ compareRequestTraces > reports a changed authorization credential without leaking it 0ms
+   ✓ compareRequestTraces > reports a changed api key as an auth-sensitive header 0ms
+   ✓ compareRequestTraces > reports a changed causal dependency 0ms
+   ✓ compareRequestTraces > requires an explicit dependency label for mutations 0ms
+   ✓ compareRequestTraces > ignores independent read order and keeps duplicate reads 0ms
+   ✓ compareRequestTraces > reports a missing duplicate read 0ms
+   ✓ compareRequestTraces > reports an extra independent read 0ms
+   ✓ compareRequestTraces > matches tool and turn dependencies by stable causal labels 0ms
+   ✓ compareRequestTraces > preserves causal write order instead of sorting writes by endpoint 0ms
+   ✓ compareRequestTraces > bounds findings to one per mismatched field 1ms
+   ✓ compareRequestTraces > reports a changed event kind 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/compare.test.ts > compareRequestTraces > matches repeated same-step independent read variants as a multiset
+AssertionError: expected [ …(4) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   {
++     "code": "query_mismatch",
++     "index": 0,
++     "step": "poll",
++   },
++   {
++     "code": "body_mismatch",
++     "index": 0,
++     "step": "poll",
++   },
++   {
++     "code": "query_mismatch",
++     "index": 1,
++     "step": "poll",
++   },
++   {
++     "code": "body_mismatch",
++     "index": 1,
++     "step": "poll",
++   },
++ ]
+
+ ❯ test/compare.test.ts:27:82
+     25|     const first = trace({ step: "poll", query: [["page", "1"]], body: …
+     26|     const second = trace({ step: "poll", query: [["page", "2"]], body:…
+     27|     expect(compareRequestTraces([first, second, first], [second, first…
+       |                                                                                  ^
+     28|   });
+     29| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  test/compare.test.ts > compareRequestTraces > rejects a dependent read moved before its mutation predecessor
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ test/compare.test.ts:35:91
+     33|     const read = trace({ step: "readback", dependency: "write" });
+     34|     const differences = compareRequestTraces([initial, write, read], […
+     35|     expect(differences.some((difference) => difference.code === "causa…
+       |                                                                                           ^
+     36|   });
+     37| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  test/compare.test.ts > compareRequestTraces > rejects a write moved before the read that authorizes it
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ test/compare.test.ts:42:91
+     40|     const write = trace({ step: "write", kind: "mutation", method: "PO…
+     41|     const differences = compareRequestTraces([initial, write], [write,…
+     42|     expect(differences.some((difference) => difference.code === "causa…
+       |                                                                                           ^
+     43|   });
+     44|   it("returns no differences for identical captures", () => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 28 passed (31)
+   Start at  18:26:11
+   Duration  1.57s (transform 236ms, setup 0ms, collect 247ms, tests 48ms, environment 1ms, prepare 434ms)
+

@@ -7,6 +7,8 @@ import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { parseArgs } from "node:util";
 
+import { type SqliteService, makeSync } from "@effect/sql-sqlite-node/service";
+
 import type { NormalizedCatalog } from "@role-model-router/catalog";
 import type { EndpointRegistryResult } from "@role-model-router/endpoint-registry";
 
@@ -178,7 +180,43 @@ import {
  * reads it and answers `null` when the endpoint is unknown (the emitter then refuses the artifact by name
  * rather than attributing the evidence to a model nobody recorded).
  */
-function readEndpointModelIdForRoutePackage(input: {
+/** Opens the state database read-only; exported so a test can prove a write through it fails. */
+export const openReadOnlyStateDatabase = (file: string): DatabaseSync =>
+  new DatabaseSync(file, { readOnly: true });
+
+/**
+ * Run 115 S6c test seam: a counting/failing factory for the lookup connection, so the migration's
+ * one-connection and always-close claims are observable. Production keeps the real makeSync; tests
+ * reset it with undefined. (The setup/read-only options stay owned by this module.)
+ */
+let stateDatabaseServiceFactory: typeof makeSync = makeSync;
+export function setStateDatabaseServiceFactoryForTests(
+  factory: typeof makeSync | undefined,
+): void {
+  stateDatabaseServiceFactory = factory ?? makeSync;
+}
+
+function withReadOnlyStateDatabase<T>(
+  databasePath: string,
+  work: (service: SqliteService) => T,
+): T | null {
+  let service: SqliteService | null = null;
+  try {
+    service = stateDatabaseServiceFactory({
+      databasePath,
+      openDatabase: openReadOnlyStateDatabase,
+      // Keep the call sites' historical PRAGMA: no busy wait on these lookups.
+      setup: (database) => database.exec("PRAGMA busy_timeout = 0"),
+    });
+    return work(service);
+  } catch {
+    return null;
+  } finally {
+    service?.closeSync();
+  }
+}
+
+export function readEndpointModelIdForRoutePackage(input: {
   readonly runtimeStateRoot: string;
   readonly scopeId: string;
   readonly routePackage: string;
@@ -187,18 +225,12 @@ function readEndpointModelIdForRoutePackage(input: {
   if (!routePackage) return null;
   const databasePath = path.join(input.runtimeStateRoot, input.scopeId, "memory", "memory.sqlite");
   if (!existsSync(databasePath)) return null;
-  let database: DatabaseSync | null = null;
-  try {
-    database = new DatabaseSync(databasePath, { readOnly: true });
-    const row = database
-      .prepare("SELECT model_id FROM runtime_endpoints WHERE endpoint_id = ?")
-      .get(routePackage) as { model_id?: unknown } | undefined;
+  return withReadOnlyStateDatabase(databasePath, (service) => {
+    const row = service.querySync("SELECT model_id FROM runtime_endpoints WHERE endpoint_id = ?", [
+      routePackage,
+    ])[0] as { model_id?: unknown } | undefined;
     return typeof row?.model_id === "string" && row.model_id.trim() ? row.model_id.trim() : null;
-  } catch {
-    return null;
-  } finally {
-    database?.close();
-  }
+  });
 }
 
 /**
@@ -283,12 +315,11 @@ export function readRouteCaptureFromQueueReceipt(input: {
     "deferred-route-captures.sqlite",
   );
   if (!existsSync(databasePath)) return null;
-  let database: DatabaseSync | null = null;
-  try {
-    database = new DatabaseSync(databasePath, { readOnly: true });
-    const row = database
-      .prepare("SELECT result_json FROM track_b_route_capture_receipts WHERE request_id = ?")
-      .get(requestId) as { result_json?: unknown } | undefined;
+  return withReadOnlyStateDatabase(databasePath, (service) => {
+    const row = service.querySync(
+      "SELECT result_json FROM track_b_route_capture_receipts WHERE request_id = ?",
+      [requestId],
+    )[0] as { result_json?: unknown } | undefined;
     const text = typeof row?.result_json === "string" ? row.result_json : "";
     if (!text) return null;
     const parsed = JSON.parse(text) as unknown;
@@ -304,11 +335,7 @@ export function readRouteCaptureFromQueueReceipt(input: {
         ? (record.result as Record<string, unknown>)
         : record;
     return typeof inner.requestId === "string" && inner.requestId.trim().length > 0 ? inner : null;
-  } catch {
-    return null;
-  } finally {
-    database?.close();
-  }
+  });
 }
 
 /**
@@ -463,22 +490,15 @@ export function readPersistedControllerEndpointId(input: {
 }): string | null {
   const databasePath = path.join(input.runtimeStateRoot, input.scopeId, "memory", "memory.sqlite");
   if (!existsSync(databasePath)) return null;
-  let database: DatabaseSync | null = null;
-  try {
-    database = new DatabaseSync(databasePath, { readOnly: true });
-    const row = database
-      .prepare(
-        "SELECT endpoint_id FROM runtime_controller_assignments WHERE scope = ? OR scope = 'global' ORDER BY CASE WHEN scope = ? THEN 0 ELSE 1 END, updated_at_ms DESC LIMIT 1",
-      )
-      .get(input.scopeId, input.scopeId) as { endpoint_id?: unknown } | undefined;
+  return withReadOnlyStateDatabase(databasePath, (service) => {
+    const row = service.querySync(
+      "SELECT endpoint_id FROM runtime_controller_assignments WHERE scope = ? OR scope = 'global' ORDER BY CASE WHEN scope = ? THEN 0 ELSE 1 END, updated_at_ms DESC LIMIT 1",
+      [input.scopeId, input.scopeId],
+    )[0] as { endpoint_id?: unknown } | undefined;
     return typeof row?.endpoint_id === "string" && row.endpoint_id.trim()
       ? row.endpoint_id.trim()
       : null;
-  } catch {
-    return null;
-  } finally {
-    database?.close();
-  }
+  });
 }
 
 function resolveChannelScopedReplayLedgerLimits(input: {

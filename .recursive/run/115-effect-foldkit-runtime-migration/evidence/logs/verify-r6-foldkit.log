@@ -1,0 +1,16 @@
+vendor-upstream: foldkit verified 2020 files, 11.9 MB, sha256:14a19d180fd43784b1c11073d9c7c6efa3a599c43b2fb8e5bcbd64136ed8322d
+✔ VENDORED.json records the reviewed upstream tag, commit and licence (3.0543ms)
+✔ VENDORED.json records the reviewed payload root and includes (1.495ms)
+✔ the vendored packages report the reviewed release line (8.3297ms)
+✔ the content digest recomputed from the vendored bytes matches the manifest and is stable (3471.4655ms)
+✔ the vendored tree carries no node_modules or .git directory (34.9216ms)
+✔ vendor-upstream.mjs defaults Foldkit to the reviewed tag and commit (0.9005ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3681.2609
+r6_vendor_exit=0 r6_pintest_exit=0

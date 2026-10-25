@@ -1,0 +1,42 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s25d-request-parity.test.ts (9 tests | 1 failed | 8 skipped) 21ms
+   × S25d diagnostics request-inventory parity > captures the new client's method/path/query/body/headers/multiplicity/status and matches the contract 19ms
+     → expected [ { body: null, …(11) }, …(1) ] to have a length of 1 but got 2
+   ↓ S25d diagnostics request-inventory parity > captures the optional authorization header and compares it semantically
+   ↓ S25d diagnostics request-inventory parity > names method when the new request method changes
+   ↓ S25d diagnostics request-inventory parity > names path when the new request path changes
+   ↓ S25d diagnostics request-inventory parity > names headers when the new request drops Accept
+   ↓ S25d diagnostics request-inventory parity > names multiplicity when the new client issues a second read
+   ↓ S25d diagnostics request-inventory parity > names query, body and status mutations too
+   ↓ S25d two-sided observability capture > captures the real legacy observability request and detects its missing Accept header
+   ↓ S25d two-sided observability capture > keeps the legacy bearer header while still reporting the Accept divergence
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s25d-request-parity.test.ts > S25d diagnostics request-inventory parity > captures the new client's method/path/query/body/headers/multiplicity/status and matches the contract
+AssertionError: expected [ { body: null, …(11) }, …(1) ] to have a length of 1 but got 2
+
+- Expected
++ Received
+
+- 1
++ 2
+
+ ❯ test/s25d-request-parity.test.ts:28:27
+     26|     const legacy = captureLegacyDiagnostics();
+     27|     const next = await captureNextDiagnostics({ fetchImpl: fetchOk });
+     28|     expect(next.requests).toHaveLength(1);
+       |                           ^
+     29|     expect(next.requests[0]).toMatchObject({
+     30|       body: null,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 8 skipped (9)
+   Start at  06:48:02
+   Duration  2.41s (transform 205ms, setup 0ms, collect 222ms, tests 21ms, environment 879ms, prepare 352ms)
+

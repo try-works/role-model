@@ -1,0 +1,57 @@
+[
+  {
+    "root": "D:\\DEV\\role-model\\.worktrees\\115-effect-foldkit-runtime-migration",
+    "head": "f0d50fab083e3fe8daf2474cd9fb08b51066c8e1",
+    "tree": "b3d5cf91435faad39d11a0dc1d65f54d8668cc2e",
+    "originDev": "f0d50fab083e3fe8daf2474cd9fb08b51066c8e1",
+    "status": [
+      "?? .recursive/run/115-effect-foldkit-runtime-migration/00-requirements.md",
+      "?? .recursive/run/115-effect-foldkit-runtime-migration/CONTROLLER-HANDOFF.md",
+      "?? .recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/round02-core-baseline.log",
+      "?? .recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/round02-endpoint-registry-baseline.log",
+      "?? .recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/round02-host-isolated-baseline.log",
+      "?? .recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/round02-protocol-routing-baseline.log",
+      "?? .recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/round02-run-lint.log",
+      "?? .recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/round02-ui-baseline.log",
+      "?? .recursive/run/115-effect-foldkit-runtime-migration/evidence/other/phase00-baseline-round01.json",
+      "?? .recursive/run/115-effect-foldkit-runtime-migration/evidence/other/phase00-baseline-round02.json",
+      "?? .recursive/run/115-effect-foldkit-runtime-migration/evidence/other/phase00-sequencing-repair.md",
+      "?? .recursive/run/115-effect-foldkit-runtime-migration/evidence/other/phase00-source-reconciliation.md",
+      "?? .recursive/run/115-effect-foldkit-runtime-migration/evidence/other/phase00-worktree-prework.md",
+      "?? .recursive/run/115-effect-foldkit-runtime-migration/evidence/other/round03-team-model-blocker.md",
+      "?? .recursive/run/115-effect-foldkit-runtime-migration/evidence/other/team-model-routing/verified-official-route.md",
+      "?? .recursive/run/115-effect-foldkit-runtime-migration/evidence/review-bundles/phase00-baseline-bundle.md",
+      "?? .recursive/run/115-effect-foldkit-runtime-migration/evidence/review-bundles/phase00-baseline-review-attempt01.md",
+      "?? .recursive/run/115-effect-foldkit-runtime-migration/evidence/review-bundles/phase00-requirements-bundle.md",
+      "?? .recursive/run/115-effect-foldkit-runtime-migration/evidence/review-bundles/phase00-requirements-review-attempt01.md",
+      "?? .recursive/run/115-effect-foldkit-runtime-migration/evidence/router/baseline-review-attempt01.jsonl",
+      "?? .recursive/run/115-effect-foldkit-runtime-migration/evidence/router/baseline-review-attempt01.stderr.log",
+      "?? .recursive/run/115-effect-foldkit-runtime-migration/evidence/router/deepseek-flash-worker.patch.yml",
+      "?? .recursive/run/115-effect-foldkit-runtime-migration/evidence/router/requirements-review-attempt01.jsonl",
+      "?? .recursive/run/115-effect-foldkit-runtime-migration/evidence/router/requirements-review-attempt01.stderr.log",
+      "?? .recursive/run/115-effect-foldkit-runtime-migration/evidence/router/worker-preflight.jsonl",
+      "?? .recursive/run/115-effect-foldkit-runtime-migration/evidence/router/worker-preflight.stderr.log",
+      "?? .recursive/run/115-effect-foldkit-runtime-migration/phase00-dispatch-policy.md",
+      "?? .recursive/run/115-effect-foldkit-runtime-migration/source-proposal.md"
+    ],
+    "trackedDiff": [],
+    "sourceHash": "870fa27fbc2ebe277c633ba539073037a2b330ac411c61b661804e7779be534c"
+  },
+  {
+    "root": "D:/DEV/role-model-internal/.worktrees/115-effect-foldkit-runtime-migration",
+    "head": "16021cc5f87f60f2d01338a29adf0002da5e8327",
+    "tree": "18a0e994ed3330293c8bb61931dbf44834172f41",
+    "originDev": "16021cc5f87f60f2d01338a29adf0002da5e8327",
+    "status": [
+      "?? .recursive/run/115-effect-foldkit-runtime-migration/00-requirements.md",
+      "?? .recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/round02-private-capture-eval-baseline.log",
+      "?? .recursive/run/115-effect-foldkit-runtime-migration/evidence/other/phase00-baseline-round01.json",
+      "?? .recursive/run/115-effect-foldkit-runtime-migration/evidence/other/phase00-baseline-round02.json",
+      "?? .recursive/run/115-effect-foldkit-runtime-migration/evidence/other/phase00-source-reconciliation.md",
+      "?? .recursive/run/115-effect-foldkit-runtime-migration/evidence/other/phase00-worktree-prework.md",
+      "?? .recursive/run/115-effect-foldkit-runtime-migration/source-proposal.md"
+    ],
+    "trackedDiff": [],
+    "sourceHash": "870fa27fbc2ebe277c633ba539073037a2b330ac411c61b661804e7779be534c"
+  }
+]

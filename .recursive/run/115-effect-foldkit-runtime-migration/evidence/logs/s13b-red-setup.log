@@ -1,0 +1,32 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit
+
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s13b-foldkit-chart.test.ts [ test/s13b-foldkit-chart.test.ts ]
+Error: Failed to resolve import "../../ui/src/foldkit-chart" from "test/s13b-foldkit-chart.test.ts". Does the file exist?
+  Plugin: vite:import-analysis
+  File: D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit/test/s13b-foldkit-chart.test.ts:10:34
+  4  |  import * as Scene from "../dist/scene.js";
+  5  |  import { setup } from "../dist/test/vitest.js";
+  6  |  import { view as chartView } from "../../ui/src/foldkit-chart";
+     |                                     ^
+  7  |  setup();
+  8  |  const Message = defineMessageUnion({ Noop: {} });
+ ❯ TransformPluginContext._formatLog E:/role-model-run115/public-virtual-store/vite@7.3.2_@types+node@25.6_2bbfacb116eb5c43fa200902981dfa09/node_modules/vite/dist/node/chunks/config.js:29003:43
+ ❯ TransformPluginContext.error E:/role-model-run115/public-virtual-store/vite@7.3.2_@types+node@25.6_2bbfacb116eb5c43fa200902981dfa09/node_modules/vite/dist/node/chunks/config.js:29000:14
+ ❯ normalizeUrl E:/role-model-run115/public-virtual-store/vite@7.3.2_@types+node@25.6_2bbfacb116eb5c43fa200902981dfa09/node_modules/vite/dist/node/chunks/config.js:27123:18
+ ❯ E:/role-model-run115/public-virtual-store/vite@7.3.2_@types+node@25.6_2bbfacb116eb5c43fa200902981dfa09/node_modules/vite/dist/node/chunks/config.js:27181:32
+ ❯ TransformPluginContext.transform E:/role-model-run115/public-virtual-store/vite@7.3.2_@types+node@25.6_2bbfacb116eb5c43fa200902981dfa09/node_modules/vite/dist/node/chunks/config.js:27149:4
+ ❯ EnvironmentPluginContainer.transform E:/role-model-run115/public-virtual-store/vite@7.3.2_@types+node@25.6_2bbfacb116eb5c43fa200902981dfa09/node_modules/vite/dist/node/chunks/config.js:28801:14
+ ❯ loadAndTransform E:/role-model-run115/public-virtual-store/vite@7.3.2_@types+node@25.6_2bbfacb116eb5c43fa200902981dfa09/node_modules/vite/dist/node/chunks/config.js:22670:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  01:22:56
+   Duration  1.61s (transform 36ms, setup 0ms, collect 0ms, tests 0ms, environment 721ms, prepare 322ms)
+

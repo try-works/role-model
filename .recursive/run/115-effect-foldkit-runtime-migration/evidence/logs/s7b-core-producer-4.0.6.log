@@ -1,0 +1,14 @@
+# core typecheck (project, --noEmit): exit 0
+
+# core S7 producer test under vendored 4.0.6: exit 0
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/core
+
+ ✓ test/run115-s7-route-decision-producer.test.ts (6 tests) 44ms
+
+ Test Files  1 passed (1)
+      Tests  6 passed (6)
+   Start at  21:56:24
+   Duration  3.96s (transform 1.71s, setup 0ms, collect 3.23s, tests 44ms, environment 0ms, prepare 247ms)
+
+

@@ -1,0 +1,55 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s25d-request-parity.test.ts (9 tests | 1 failed | 8 skipped) 24ms
+   × S25d diagnostics request-inventory parity > captures the new client's method/path/query/body/headers/multiplicity/status and matches the contract 22ms
+     → expected { body: null, dependency: null, …(10) } to match object { body: null, …(6) }
+(5 matching properties omitted from actual)
+   ↓ S25d diagnostics request-inventory parity > captures the optional authorization header and compares it semantically
+   ↓ S25d diagnostics request-inventory parity > names method when the new request method changes
+   ↓ S25d diagnostics request-inventory parity > names path when the new request path changes
+   ↓ S25d diagnostics request-inventory parity > names headers when the new request drops Accept
+   ↓ S25d diagnostics request-inventory parity > names multiplicity when the new client issues a second read
+   ↓ S25d diagnostics request-inventory parity > names query, body and status mutations too
+   ↓ S25d two-sided observability capture > captures the real legacy observability request and detects its missing Accept header
+   ↓ S25d two-sided observability capture > keeps the legacy bearer header while still reporting the Accept divergence
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s25d-request-parity.test.ts > S25d diagnostics request-inventory parity > captures the new client's method/path/query/body/headers/multiplicity/status and matches the contract
+AssertionError: expected { body: null, dependency: null, …(10) } to match object { body: null, …(6) }
+(5 matching properties omitted from actual)
+
+- Expected
++ Received
+
+@@ -4,11 +4,11 @@
+      {
+        "name": "accept",
+        "value": "application/json",
+      },
+    ],
+-   "method": "GET",
++   "method": "POST",
+    "path": "/api/role-model/operator/diagnostics",
+    "query": [],
+    "status": 200,
+    "step": "diagnostics-read",
+  }
+
+ ❯ test/s25d-request-parity.test.ts:29:30
+     27|     const next = await captureNextDiagnostics({ fetchImpl: fetchOk });
+     28|     expect(next.requests).toHaveLength(1);
+     29|     expect(next.requests[0]).toMatchObject({
+       |                              ^
+     30|       body: null,
+     31|       headers: [{ name: "accept", value: "application/json" }],
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 8 skipped (9)
+   Start at  06:47:48
+   Duration  1.80s (transform 197ms, setup 0ms, collect 203ms, tests 24ms, environment 696ms, prepare 337ms)
+

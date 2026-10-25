@@ -1,0 +1,22 @@
+# S2 pin test GREEN (public)
+COMMAND: node --test scripts/vendor-upstream.test.mjs
+CWD: D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration
+TIMESTAMP: 2026-10-24T13:24:25.674Z
+EXIT_CODE: 0
+
+✔ VENDORED.json records the reviewed upstream tag (5.5581ms)
+✔ VENDORED.json records the reviewed upstream commit (0.8819ms)
+✔ the vendored upstream effect package reports the pinned version (0.9383ms)
+✔ the workspace Effect wrapper reports the pinned version (38.5922ms)
+✔ vendor-upstream.mjs defaults Effect to the reviewed tag and commit (2.9652ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 299.9086
+
+
+[post-build verify+pin 2026-10-24T13:35:27.563Z] exit=0/0 vendor-upstream: effect verified 2155 files, 45.8 MB, sha256:7c7256252cf0b9b8aa25c1698ca1f5af171def4eb42048aedfeae9f2ee524702 | ℹ pass 5 | ℹ fail 0

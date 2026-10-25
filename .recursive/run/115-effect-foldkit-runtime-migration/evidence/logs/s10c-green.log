@@ -1,0 +1,17 @@
+# S10c final GREEN: s10b + s10c wiring proofs
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:50988) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run115-s10c-wiring-proofs.test.ts (5 tests) 15ms
+(node:13732) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run115-s10b-module-health-wiring.test.ts (2 tests) 14ms
+
+ Test Files  2 passed (2)
+      Tests  7 passed (7)
+   Start at  01:52:35
+   Duration  9.74s (transform 4.32s, setup 0ms, collect 8.60s, tests 29ms, environment 1ms, prepare 438ms)
+
+EXIT_CODE: 0

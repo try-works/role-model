@@ -1,0 +1,197 @@
+{
+  "slice": "s3b-foldkit-wrappers",
+  "requirement": [
+    "R6",
+    "R5"
+  ],
+  "worktree": "D:\\DEV\\role-model\\.worktrees\\115-effect-foldkit-runtime-migration",
+  "status": "complete",
+  "tddMode": "strict (setup RED + behavioural RED + graph-level RED, then GREEN)",
+  "vendoredPin": {
+    "name": "foldkit",
+    "tag": "foldkit@0.169.0",
+    "commit": "7ee214268c602967937b80f6f20d1e831f2e8ab6",
+    "contentDigest": "14a19d180fd43784b1c11073d9c7c6efa3a599c43b2fb8e5bcbd64136ed8322d",
+    "source": "vendor/foldkit/VENDORED.json",
+    "payloadNote": "dist/ and scripts/ are excluded from the vendoring payload, which is why entries.mjs derives every entry from the vendored src tree."
+  },
+  "packages": [
+    {
+      "name": "@role-model-router/foldkit",
+      "dir": "role-model-router/packages/foldkit",
+      "vendoredPackage": "vendor/foldkit/packages/foldkit",
+      "entries": 37,
+      "subpaths": 37,
+      "exportsKeys": 38,
+      "mapping": "published `./dist/<rel>.js` import target -> `src/<rel>.ts`; root `.` -> `src/index.ts`; every mapped file is checked for existence by exact name (readdir, no case folding) and a missing one throws.",
+      "nonRootTypesShims": "tsc emits dist/types/<source-rel>.d.ts; build.mjs writes dist/types/<key>.d.ts re-export shims for subpath exports that do not already match a source-relative path (e.g. model-preservation, devtools-protocol, experimental/machine).",
+      "externals": [
+        "effect",
+        "effect/*",
+        "@effect/platform-browser",
+        "@effect/platform-browser/*",
+        "parse5",
+        "vitest",
+        "@effect/vitest",
+        "@effect/vitest/*"
+      ]
+    },
+    {
+      "name": "@role-model-router/foldkit-ui",
+      "dir": "role-model-router/packages/foldkit-ui",
+      "vendoredPackage": "vendor/foldkit/packages/ui",
+      "entries": 30,
+      "subpaths": 30,
+      "exportsKeys": 31,
+      "mapping": "same derivation as the foldkit wrapper (published ./dist/<rel>.js -> src/<rel>.ts).",
+      "peerRewrite": "esbuild onResolve rewrites `foldkit` and `foldkit/<subpath>` to `@role-model-router/foldkit` / `@role-model-router/foldkit/<subpath>` and keeps them external, so the UI graph has one shared framework instance and never bundles foldkit.",
+      "externals": [
+        "effect",
+        "effect/*",
+        "@floating-ui/dom",
+        "vitest",
+        "@effect/vitest",
+        "@effect/vitest/*"
+      ]
+    }
+  ],
+  "subpathCoverage": {
+    "foldkit": "37/37",
+    "ui": "30/30",
+    "total": "67/67 mapped from the vendored manifests; the test deep-equals each wrapper package.json exports map against the map rendered from the vendored manifest, so a hand-typed drift or a dropped subpath fails."
+  },
+  "build": {
+    "commands": [
+      "node build.mjs (cwd role-model-router/packages/foldkit)",
+      "node build.mjs (cwd role-model-router/packages/foldkit-ui)"
+    ],
+    "exits": [
+      0,
+      0
+    ],
+    "logs": [
+      ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s3b-build-foldkit.log",
+      ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s3b-build-foldkit-ui.log"
+    ],
+    "warnings": {
+      "countPerPackage": 1,
+      "text": "Cannot find base config file \"../../tsconfig.base.json\" [tsconfig.json] — the vendored foldkit tsconfig.base.json extends the upstream repo-root base config, which is not part of the source-only payload. esbuild falls back to default options; the warning is expected and benign, and it is the only warning each build emits."
+    },
+    "outputs": {
+      "foldkit": "dist/index.js + 36 subpath entries + shared chunks (73 built .js files total: 94 including chunks)",
+      "ui": "dist/index.js + 29 subpath entries + shared chunks (72 built .js files total)"
+    }
+  },
+  "red": [
+    {
+      "name": "setup RED",
+      "command": "node --test test/graph-closure.test.mjs (cwd role-model-router/packages/foldkit, before any package existed)",
+      "exit": 1,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s3b-red-setup.log",
+      "observed": "ERR_MODULE_NOT_FOUND: Cannot find module '.../packages/foldkit/entries.mjs' imported from test/graph-closure.test.mjs",
+      "classification": "setup failure (packages did not exist yet), exactly as the task predicted; not behavioural."
+    },
+    {
+      "name": "behavioural RED",
+      "command": "node --test test/graph-closure.test.mjs (packages built, missing-source guard deliberately absent from entries.mjs)",
+      "exit": 1,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s3b-red-behavioural.log",
+      "observed": "8 passed / 1 failed: 'a published subpath whose source file is missing fails entry generation loudly' -> AssertionError: Missing expected rejection. Entry generation silently skipped the unmapped published subpath instead of failing.",
+      "classification": "behavioural: the loud-failure contract was missing; fixed by the missing[] throw, after which the same test passes."
+    },
+    {
+      "name": "graph-level RED",
+      "command": "inject `import \"node:fs\";` at the top of role-model-router/packages/foldkit/dist/index.js, then node --test test/graph-closure.test.mjs; dist restored afterwards",
+      "exit": 1,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s3b-red-graph.log",
+      "observed": "1 failed: '@role-model-router/foldkit: built graph has no Node builtin or Node platform-package import' -> AssertionError ... actual: [ 'dist\\\\index.js -> node:fs' ]",
+      "classification": "graph-level: the maintained test actually catches a Node builtin leaking into the built browser graph."
+    }
+  ],
+  "green": {
+    "command": "node --test test/graph-closure.test.mjs (cwd role-model-router/packages/foldkit)",
+    "exit": 0,
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s3b-green.log",
+    "result": {
+      "tests": 10,
+      "passed": 10,
+      "failed": 0
+    },
+    "proofs": [
+      "no node: builtin and no @effect/platform-node (nor any non-browser @effect/platform-*) specifier in any built .js of either package, chunks included",
+      "no vite-plugin-foldkit specifier in the built graph",
+      "every effect import is a bare `effect` / `effect/<subpath>` specifier; the wrapper declares effect as a peer/workspace dependency",
+      "every vendored subpath has a wrapper export whose built file exists and is non-empty",
+      "wrapper package.json exports deep-equal the map derived from the vendored manifest (no hand-typed drift)",
+      "foldkit-ui imports its framework peer only as @role-model-router/foldkit(/subpath) (>=5 distinct subpaths observed) and never the bare `foldkit` name; the foldkit wrapper never imports `foldkit` either",
+      "a published subpath whose mapped source file is missing rejects entry generation (and an export target outside dist/ is refused)"
+    ]
+  },
+  "graphEvidence": {
+    "builtJavaScriptFiles": {
+      "foldkit": 94,
+      "ui": 72
+    },
+    "externalBareSpecifiersInBuiltGraph": {
+      "foldkit": [
+        "@effect/platform-browser",
+        "effect",
+        "effect/Function",
+        "effect/http",
+        "parse5",
+        "vitest (test/vitest entry only)"
+      ],
+      "ui": [
+        "@floating-ui/dom",
+        "effect",
+        "@role-model-router/foldkit",
+        "@role-model-router/foldkit/calendar",
+        ".../command",
+        ".../devtools-host",
+        ".../dom",
+        ".../file",
+        ".../html",
+        ".../message",
+        ".../mount",
+        ".../render",
+        ".../schema",
+        ".../story",
+        ".../struct",
+        ".../submodel",
+        ".../subscription",
+        ".../update"
+      ]
+    },
+    "scannerNote": "The test masks strings, templates and comments before extracting import statements. This matters: the built foldkit runtime embeds warning text containing `import { foldkit } from '@foldkit/vite-plugin'`, which a naive raw scan reports as a false-positive import. The masked scanner reports no vite-plugin specifier; a temporary raw-scan run flagged that string, which is how the masking was found to be necessary."
+  },
+  "styleChecks": {
+    "biome": {
+      "command": "node node_modules/@biomejs/biome/bin/biome check role-model-router/packages/foldkit role-model-router/packages/foldkit-ui",
+      "exit": 0,
+      "observed": "'Checked 9 files. No fixes applied.'"
+    }
+  },
+  "rootWiring": {
+    "workspaceEnumeration": "pnpm-workspace.yaml enumerates `role-model-router/packages/*` (glob), so both new package directories are already workspace members; no root or workspace file was changed for this slice.",
+    "lockfileGap": "pnpm-lock.yaml has no importers entry for either new package yet (grep for 'packages/foldkit' returns nothing), so a frozen install would fail until an install adds them. I could not run an install (task rule). This needs a lead/install step, like the S7b manifest+lockfile change.",
+    "preExistingChanges": "git status also shows M package.json and M pnpm-lock.yaml from other run-115 slices (runtime-parity script wiring, S7b effect importer); I did not touch them."
+  },
+  "files": {
+    "role-model-router/packages/foldkit/package.json": "08171a8123426b9dcaaa1dfcdd118471eb0313ed03557b23fd4285cb173bdfd6",
+    "role-model-router/packages/foldkit/tsconfig.json": "4d6b9e9c365818aa7b8e9fa8c79b69fb4068b670569752db625bb63f55daef1a",
+    "role-model-router/packages/foldkit/entries.mjs": "56d82cb901cfe77af798464def5f2ba6bdcc69e999d2aae2a9c8bbf819b86adf",
+    "role-model-router/packages/foldkit/build.mjs": "75706fc837769021be3c3350cbc63bfa0580d83df42541e7bc836dc4af3eb972",
+    "role-model-router/packages/foldkit/test/graph-closure.test.mjs": "d0dd348a9ce9c9945660441fc0159b1b13e6f9f3254a6666570728531916a943",
+    "role-model-router/packages/foldkit-ui/package.json": "0a9d29d11b13732dfbd67a41b46a2d5256d05c4f224b8264041a7a37c6f8e3a8",
+    "role-model-router/packages/foldkit-ui/tsconfig.json": "7c7e3b23ff4ad86075ae9bfd383d1f8d52b65f7869d27b724ad7c5b1e1dddd72",
+    "role-model-router/packages/foldkit-ui/entries.mjs": "bd85d176c760530df4c2e9788d140dc7a4a0400a22812d35e0d44f0d9bead8f6",
+    "role-model-router/packages/foldkit-ui/build.mjs": "25b4a9fdd3a14933d1fac7c82bf15f8bb411fd741e6a93757feda94da09f738a"
+  },
+  "unverified": [
+    "No install was run, so the two new workspace packages are not present in pnpm-lock.yaml and have no node_modules links; a frozen install would currently fail until the lockfile gains their importers entries.",
+    "Declarations are emitted from the vendored sources with tsc --noCheck and a per-entry existence gate, but no consumer type-checks against the emitted .d.ts (the wrapper packages are not yet imported by any app).",
+    "Graph closure is proven statically on the built JavaScript; no browser smoke test imports the dist entries at runtime.",
+    "esbuild reports one expected warning per build: the vendored foldkit tsconfig.base.json extends an upstream base config not present in the source-only payload.",
+    "The root package.json and pnpm-lock.yaml diffs in the worktree belong to other slices; not reviewed here."
+  ]
+}

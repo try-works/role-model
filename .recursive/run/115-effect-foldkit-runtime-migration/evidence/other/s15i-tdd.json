@@ -1,0 +1,91 @@
+{
+  "slice": "s15i-socket-proofs",
+  "requirement": "R21 live-socket diagnostics proofs made mutation-proof",
+  "status": "complete",
+  "correctedWording": {
+    "title": "every owner-claim header is rejected by the diagnostics handler (generic gate already authorized) with no CORS",
+    "why": "the old title 'rejected before authorization' was false end to end: the generic loopback gate authorizes the request, then the diagnostics handler checks owner-claim headers before its own authorization check and answers 403."
+  },
+  "fixes": [
+    {
+      "property": "all three owner-claim headers + untrusted-peer value",
+      "test": "sends x-role-model-device-owner, x-role-model-owner, and x-role-model-trusted-peer (once with value '1', once with 'untrusted'); each answers 403 diagnostics_owner_header_forbidden with no CORS",
+      "mutations": [
+        {
+          "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15i-red-owner-device.log",
+          "mutation": "device-owner removed from FORBIDDEN_OWNER_HEADERS",
+          "result": "expected 200 to be 403"
+        },
+        {
+          "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15i-red-owner-owner.log",
+          "mutation": "owner removed",
+          "result": "expected 200 to be 403"
+        },
+        {
+          "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15i-red-owner-peer.log",
+          "mutation": "trusted-peer removed",
+          "result": "expected 200 to be 403"
+        }
+      ]
+    },
+    {
+      "property": "same-length wrong token",
+      "test": "wrong token of the same length as the configured token is 401 operator_authentication_required",
+      "mutation": {
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15i-red-token.log",
+        "mutation": "timing-safe digest compare replaced by a length-only compare",
+        "result": "expected 200 to be 401"
+      }
+    },
+    {
+      "property": "CORS scan on 500 / OPTIONS / context-403 / 404",
+      "test": "on the diagnostics-prefixed path: 500 (source throws), OPTIONS 204, 403 operator_context_mismatch, 404 unknown suffix - all with no access-control header",
+      "mutation": {
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15i-red-cors.log",
+        "mutation": "writeJson adds Access-Control-Allow-Origin: *",
+        "result": "expected [ 'access-control-allow-origin' ] to deeply equal []"
+      },
+      "scope": "the claim is scoped to diagnostics-prefixed paths (the request handler skips setCorsHeaders for them). The generic operator surface deliberately sends wildcard CORS; a context-403 there DOES carry CORS, so it is excluded from the claim rather than asserted."
+    },
+    {
+      "property": "close releases the listener + no temp dirs",
+      "test": "after server.close(), a fetch to the closed port rejects; afterAll asserts every created temp root is gone",
+      "mutations": [
+        {
+          "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15i-red-close.log",
+          "mutation": "close() resolves without closing the listener",
+          "result": "fetch returned a 200 Response instead of an Error"
+        },
+        {
+          "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15i-red-tempdir.log",
+          "mutation": "temp-dir cleanup removed",
+          "result": "8 tests passed but afterAll failed (suite exit 1): a created root still exists"
+        }
+      ]
+    },
+    {
+      "property": "port option 0",
+      "test": "the options object passed to startBridgeServer is recorded; the test asserts port === 0 and the bound port is not 3456/3457/3458",
+      "mutation": {
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15i-red-port.log",
+        "mutation": "port option set to 8080",
+        "result": "expected 8080 to be +0"
+      }
+    }
+  ],
+  "portability": "baseTemp now honours ROLE_MODEL_TEST_TEMP_ROOT or os.tmpdir(); no hardcoded E: (test-only change).",
+  "green": {
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15i-green.log",
+    "tests": 8,
+    "passed": 8,
+    "exit": 0
+  },
+  "typecheck": {
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15i-tsc.log",
+    "exit": 0
+  },
+  "remainsUnprovable": "browser-enforced CORS/preflight (fetch in Node does not enforce it), the generic operator surface's wildcard CORS posture (intentional, excluded), proxy/TLS/host variations, and a real operator port (never bound by design).",
+  "files": {
+    "role-model-router/apps/runtime-host-bridge/test/s15h-live-socket-diagnostics.test.ts": "owner-claim matrix, same-length token, CORS status scan (diagnostics-prefixed), close/temp-dir, port-0 assertion, corrected title/wording, temp-root override"
+  }
+}

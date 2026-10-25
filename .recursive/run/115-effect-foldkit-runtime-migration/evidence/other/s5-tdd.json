@@ -1,0 +1,153 @@
+{
+  "slice": "S5",
+  "requirement": "R22 (source §7.1 / §17 B5)",
+  "task": ".recursive/run/115-effect-foldkit-runtime-migration/tasks/s5-health-wait-bound.md",
+  "tddMode": "strict",
+  "baselineCommit": "f0d50fab083e3fe8daf2474cd9fb08b51066c8e1",
+  "worktree": "D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration",
+  "package": "role-model-router/packages/process-supervisor",
+  "change": {
+    "sourceFile": "role-model-router/packages/process-supervisor/src/index.ts",
+    "summary": "waitForHealth now awaits a bounded probeHealth(): one fetch per poll, raced against a deadline timer derived from the supervisor deadline AND given an AbortController signal, with the timer cleared and the controller aborted in a finally block and an unread response body cancelled. A redundant post-deadline 50ms sleep is skipped so the timeout error is thrown as soon as the bound expires. Public ProcessSupervisor API and StartVendorOptions are unchanged; no options added.",
+    "publicApiChanged": false,
+    "diffstat": "1 file changed, 66 insertions(+), 12 deletions(-)"
+  },
+  "red": {
+    "logPath": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s5-red.log",
+    "command": "node ../../../node_modules/vitest/vitest.mjs run test/health-wait-timeout.test.ts",
+    "cwd": "role-model-router/packages/process-supervisor",
+    "exitCode": 1,
+    "sourceUnderTest": "git HEAD:role-model-router/packages/process-supervisor/src/index.ts (pre-fix; materialized file sha256 FFC623F2DCF4DE55070E6D6D5197A5FBAD311572C6496B919BC289930132C8B9)",
+    "testFileSha256UnderTest": "87F81D8A036A4A29D050B89428596A8016408D4004027A218FF842BA7793E946 (the final test file)",
+    "counts": "Tests 2 failed | 1 passed (3)",
+    "failureMessage": "AssertionError: waitForHealth must reject instead of hanging when the health peer accepts and never responds: expected 'hung' to be 'rejected' // Object.is equality. Both hanging-peer tests reached the 15000 ms test-level guard instead of rejecting at the 800 ms startup timeout (the real defect: an unbounded await). The ~200 ms delayed-ok endpoint test already passed pre-fix.",
+    "durationMs": 33820,
+    "note": "RED was captured with the FINAL test file (sha256 87F81D8A036A4A29D050B89428596A8016408D4004027A218FF842BA7793E946). The fixed source was set aside, the HEAD version materialized, the run executed, and the fixed source restored; the restore was verified by sha256 (RESTORE_OK=true, 2DF36593910A45C706C0F269A23A883BBADB37B6F32894EA1BBA3995BC5FE7F6)."
+  },
+  "green": {
+    "logPath": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s5-green.log",
+    "command": "node ../../../node_modules/vitest/vitest.mjs run test/health-wait-timeout.test.ts",
+    "exitCode": 0,
+    "counts": "Test Files 1 passed (1) / Tests 3 passed (3)"
+  },
+  "stability": {
+    "newTestFile3Runs": {
+      "logPath": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s5-stability.log",
+      "command": "node ../../../node_modules/vitest/vitest.mjs run test/health-wait-timeout.test.ts  (x3)",
+      "exitCodes": [
+        0,
+        0,
+        0
+      ]
+    },
+    "fullSuite3Runs": {
+      "logPath": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s5-fullsuite-stability.log",
+      "command": "node ../../../node_modules/vitest/vitest.mjs run  (x3, parallel test files)",
+      "exitCodes": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "typecheck": {
+    "logPath": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s5-tsc.log",
+    "command": "node ../../../node_modules/typescript/bin/tsc -p tsconfig.json --noEmit",
+    "exitCode": 0,
+    "output": "empty",
+    "note": "package tsconfig.json excludes test/**/*.ts, so this covers src only."
+  },
+  "existingSuite": {
+    "logPath": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s5-existing.log",
+    "command": "node ../../../node_modules/vitest/vitest.mjs run",
+    "exitCode": 0,
+    "counts": {
+      "testFiles": "2 passed (2)",
+      "tests": "9 passed (9)",
+      "newFile": 3,
+      "preExisting": 6
+    }
+  },
+  "repoChecks": {
+    "biome": {
+      "logPath": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s5-biome.log",
+      "command": "node node_modules/@biomejs/biome/bin/biome check role-model-router/packages/process-supervisor/src/index.ts role-model-router/packages/process-supervisor/test/health-wait-timeout.test.ts",
+      "exitCode": 0,
+      "note": "Repo formatter/linter (biome.json, lineWidth 100). Both changed files clean after formatting; no other files were formatted."
+    }
+  },
+  "measuredBound": {
+    "logPath": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s5-bounded-duration.log",
+    "method": "Inline node --input-type=module script (no repo files written) using the real ProcessSupervisor, a real node:net peer that accepts and never writes a response, and a real child process (process.execPath -e setInterval). The child is terminated ~400 ms before the deadline (same measurement window as test 1) so that pre-existing Windows force-stop teardown is excluded from the number.",
+    "trials": [
+      {
+        "startupTimeoutMs": 800,
+        "rejectionAtMs": 917,
+        "overshootMs": 117
+      },
+      {
+        "startupTimeoutMs": 800,
+        "rejectionAtMs": 842,
+        "overshootMs": 42
+      },
+      {
+        "startupTimeoutMs": 800,
+        "rejectionAtMs": 828,
+        "overshootMs": 28
+      },
+      {
+        "startupTimeoutMs": 3000,
+        "rejectionAtMs": 3038,
+        "overshootMs": 38
+      }
+    ],
+    "allWithinBound": true,
+    "bound": "startupTimeoutMs + 250 ms",
+    "interpretation": "Against a peer that accepts the TCP connection and never responds, waitForHealth rejects with the existing timeout message 28-117 ms after the startup deadline (and 38 ms after a 3000 ms deadline), inside the required ~250 ms of slack. The end-to-end startVendor rejection without terminating the child additionally contains pre-existing Windows force-stop teardown (taskkill /T /F plus the child exit event; ~1-1.5 s on this machine, more under parallel test-file load), which is outside this change.",
+    "excludedTeardownObserved": {
+      "note": "Measured during development, no dedicated log: the same test with the force-stop teardown inside the measured window produced elapsedMs=2363 against the mandated 2300 ms bound once the whole suite ran (parallel test files) - it is pre-existing teardown variance, not the health wait.",
+      "elapsedMs": 2363,
+      "mandatedBoundMs": 2300
+    }
+  },
+  "testDesignDecisions": [
+    "Both timeout tests use a real node:net server that accepts and never writes a response (no vi.mock, no monkeypatched global fetch) plus a real child process (process.execPath, args ['-e','setInterval(()=>{},1000)']).",
+    "A 15000 ms test-level guard races startVendor so a regression is reported as a readable assertion instead of a hung test file; the start promise carries its own rejection handler so teardown cannot cause an unhandled rejection.",
+    "Test 1 terminates the supervised child with process.kill(pid,'SIGKILL') ~400 ms before the deadline: the pre-existing Windows force-stop teardown (taskkill /T /F, ~1-1.5 s under load) is thereby outside the measured window and the mandated assertion (elapsed < startupTimeoutMs + 1500 ms) measures the health wait. Without this, the mandated bound was exceeded once by teardown alone under parallel suite load.",
+    "Test 3 keeps the untouched timeout path (no child termination) and additionally asserts that shutdown() completes and that no health request is issued after the timeout; it allows at most one dataless teardown socket, because an aborted fetch in Node 24.11/undici opens exactly one such socket, delayed until the blocking taskkill returns.",
+    "Cleanup runs in afterEach: peers release/destroy their sockets and close their servers, supervisors shut down, and temp state roots are removed with retries."
+  ],
+  "changedFiles": [
+    "role-model-router/packages/process-supervisor/src/index.ts (modified)",
+    "role-model-router/packages/process-supervisor/test/health-wait-timeout.test.ts (new)",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s5-red.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s5-green.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s5-tsc.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s5-existing.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s5-stability.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s5-fullsuite-stability.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s5-bounded-duration.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s5-biome.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/other/s5-tdd.json"
+  ],
+  "finalSha256": {
+    "role-model-router/packages/process-supervisor/src/index.ts": "2DF36593910A45C706C0F269A23A883BBADB37B6F32894EA1BBA3995BC5FE7F6",
+    "role-model-router/packages/process-supervisor/test/health-wait-timeout.test.ts": "87F81D8A036A4A29D050B89428596A8016408D4004027A218FF842BA7793E946"
+  },
+  "limitations": [
+    "Scope: this bounds waitForHealth only. It claims nothing about R22 beyond that bounding contract and nothing about backend/B0-B10 or the rest of the Effect/Foldkit migration.",
+    "Measured end-to-end rejection (startVendor) still includes pre-existing Windows child force-stop teardown (~1-1.5 s), which is unchanged by this slice and is why test 1 removes the child before the deadline for its timing assertion. The teardown path itself is still exercised by test 3 and by the pre-existing suite.",
+    "Platform coverage: Windows only in this worktree. The POSIX branch of requestGracefulStop/requestForceStop (SIGTERM/SIGKILL) was not exercised.",
+    "The test file is not typechecked by tsc because the package tsconfig excludes test/**/*.ts; it is only transpiled by vitest/esbuild.",
+    "Node 24.11/undici behavior measured, not assumed: aborting a fetch opens exactly one additional dataless TCP socket on teardown, deferred by the blocking taskkill. Test 3 treats 'polling' as 'an HTTP request line was written' (load-bearing assertion) and allows at most one teardown-artifact connection in the settled count. A future fetch implementation that opens more than one such socket would need the test revisited.",
+    "Behavioral nuance: if the child exits while a hanging probe is in flight, the bounded loop now reports the startup-timeout error at the deadline instead of never returning; with any peer that answers (ok or non-ok) the child-exit check still runs at the top of the next iteration and reports 'exited before becoming healthy'. All other semantics (no healthCheckUrl => healthy immediately, non-ok => keep polling, ok => healthy with exitCode undefined, startupPending/stop-deferral) are unchanged and covered by the existing suite plus the new regression test.",
+    "anti_slop_lint (vendored oxlint rules) is clean on src/index.ts; the new test file reports 2 expected findings: no-runtime-typeof for the node:net Server.address() narrowing (AddressInfo | string | null - the same pattern already used in test/index.test.ts) and no-unknown-parameters for the Promise.then rejection reason, which cannot be typed more precisely without an unsafe cast.",
+    "No commit, no push, no provider/network calls beyond 127.0.0.1 test peers, and no files written outside the task's allowed list (a temporary fixed-source backup under %TEMP% was created for the RED re-run and deleted; the restored source was sha256-verified)."
+  ],
+  "finalVerification": {
+    "command": "node ../../../node_modules/vitest/vitest.mjs run",
+    "exitCode": 0,
+    "counts": "Test Files 2 passed (2) / Tests 9 passed (9)",
+    "note": "Ran after the final RED regeneration and source restore, on the exact bytes whose sha256 values are recorded above."
+  }
+}

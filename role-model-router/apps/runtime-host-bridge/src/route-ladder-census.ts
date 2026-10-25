@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
+import { type SqliteService, makeSync } from "@effect/sql-sqlite-node/service";
 import type { RouteFocusCandidate } from "@role-model-router/core";
 import { resolveSqliteMemoryLocation } from "@role-model-router/sqlite-memory";
 
@@ -30,6 +31,17 @@ const exactId = (value: unknown): value is string =>
 const key = (roleId: string, taskTypeId: string) => JSON.stringify([roleId, taskTypeId]);
 
 /** Read only classification columns; never initialize/migrate storage or load request bodies. */
+/**
+ * S6e test seam: the read-only census connection with its effective PRAGMAs. Exported so the
+ * batch can assert query_only=ON + busy_timeout=1000 without a write path to observe them.
+ */
+export const openCensusDatabase = (databasePath: string): SqliteService =>
+  makeSync({
+    databasePath,
+    openDatabase: (file) => new DatabaseSync(file, { readOnly: true }),
+    setup: (db) => db.exec("PRAGMA query_only = ON; PRAGMA busy_timeout = 1000"),
+  });
+
 export function readRouteLadderCensus(input: {
   readonly runtimeStateRoot: string;
   readonly scopeId: string;
@@ -95,13 +107,12 @@ export function readRouteLadderCensus(input: {
       rolledBack: rolledBack?.on === true,
     });
   }
-  let database: DatabaseSync | undefined;
+  let database: SqliteService | undefined;
   try {
     const databasePath = resolveSqliteMemoryLocation(input);
     if (!existsSync(databasePath)) return degraded("database_unavailable");
-    database = new DatabaseSync(databasePath, { readOnly: true });
-    database.exec("PRAGMA query_only = ON; PRAGMA busy_timeout = 1000;");
-    const columns = database.prepare("PRAGMA table_info(runtime_telemetry_records)").all() as {
+    database = openCensusDatabase(databasePath);
+    const columns = database.querySync("PRAGMA table_info(runtime_telemetry_records)") as {
       name: string;
     }[];
     const names = new Set(columns.map((column) => column.name));
@@ -115,9 +126,8 @@ export function readRouteLadderCensus(input: {
       ].every((name) => names.has(name))
     )
       return degraded("schema_unavailable");
-    const rows = database
-      .prepare(
-        `SELECT taxonomy_role_id AS roleId, taxonomy_task_type AS taskTypeId, COUNT(DISTINCT request_id) AS requestCount
+    const rows = database.querySync(
+      `SELECT taxonomy_role_id AS roleId, taxonomy_task_type AS taskTypeId, COUNT(DISTINCT request_id) AS requestCount
        FROM runtime_telemetry_records
        WHERE created_at_ms >= ? AND created_at_ms <= ?
          AND request_class IN ('live', 'live_request')
@@ -126,12 +136,8 @@ export function readRouteLadderCensus(input: {
        GROUP BY taxonomy_role_id COLLATE BINARY, taxonomy_task_type COLLATE BINARY
        ORDER BY taxonomy_role_id COLLATE BINARY, taxonomy_task_type COLLATE BINARY
        LIMIT ?`,
-      )
-      .all(
-        input.nowMs - input.stalenessWindowDays * 86400000,
-        input.nowMs,
-        ROUTE_CENSUS_MAX_PAIRS + 1,
-      ) as { roleId: string; taskTypeId: string; requestCount: number }[];
+      [input.nowMs - input.stalenessWindowDays * 86400000, input.nowMs, ROUTE_CENSUS_MAX_PAIRS + 1],
+    ) as { roleId: string; taskTypeId: string; requestCount: number }[];
     if (rows.length > ROUTE_CENSUS_MAX_PAIRS) return degraded("pair_limit");
     for (const row of rows) {
       if (!exactId(row.roleId) || !exactId(row.taskTypeId)) continue;
@@ -196,6 +202,6 @@ export function readRouteLadderCensus(input: {
   } catch {
     return degraded("database_unavailable");
   } finally {
-    database?.close();
+    database?.closeSync();
   }
 }

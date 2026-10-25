@@ -1,0 +1,62 @@
+{
+  "slice": "s15f-page-e2e",
+  "requirement": "R21 (page mounted over the real diagnostics client)",
+  "status": "complete",
+  "entry": {
+    "name": "mountWithDiagnostics",
+    "location": "role-model-router/apps/runtime-ui-next/src/mount.ts",
+    "shape": "mountWithDiagnostics(container, { fetchImpl?, baseUrl?, token?, readDiagnostics? }) - same shell/routing as mountShell, but the reader defaults to createDiagnosticsClient (real fetch client). An explicit readDiagnostics still wins.",
+    "differenceFromMountShell": "mountShell(container) keeps the existing no-host default (readerNotConfigured): mount.test.ts and routes.test.ts mount without a host and must not perform network I/O. Only mountWithDiagnostics injects the real client.",
+    "exportedFrom": "src/index.ts"
+  },
+  "fetchInjection": "DiagnosticsMountOptions.fetchImpl is passed straight through to createDiagnosticsClient; the e2e test supplies a stub fetch and asserts the rendered DOM, never the network.",
+  "states": {
+    "covered": [
+      "ok",
+      "empty",
+      "disabled",
+      "stale",
+      "dropped",
+      "401 denied",
+      "403 rejected",
+      "transport failure"
+    ],
+    "assertions": "each state asserts the rendered [data-diagnostics-state] plus its exact visible text (records, empty/disabled copy, exact stale phrase, exact dropped phrase, 401 vs 403 labels, 'Diagnostics read failed: Failed to fetch'); ok also asserts one fetch to /api/role-model/operator/diagnostics with accept: application/json"
+  },
+  "red": {
+    "stub": {
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15f-red.log",
+      "result": "stub entry without client injection: 4/4 groups time out / render the not-configured error"
+    },
+    "mutations": [
+      {
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15f-red-noinject.log",
+        "mutation": "client injection removed (mountShell(container, options))",
+        "result": "8/8 e2e tests fail"
+      },
+      {
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15f-red-fabricated.log",
+        "mutation": "entry returns a fabricated {state:'disabled'} body ignoring fetch",
+        "result": "7/8 fail (only the disabled state could match the fabrication)"
+      }
+    ]
+  },
+  "green": {
+    "e2e": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15f-green.log",
+    "e2eTests": 8,
+    "app": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15f-green-all.log",
+    "appFiles": 5,
+    "appTests": 36,
+    "exit": 0
+  },
+  "typecheck": {
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15f-tsc.log",
+    "exit": 0
+  },
+  "notRealHttp": "This is NOT a real HTTP test: fetch is stubbed in-process, so no socket, no host, no credential gate, no origin/CORS enforcement, no TLS and no deployment asset serving are exercised. A live server is still needed to prove the host's authorizeOperatorRequest path over a socket, same-origin serving of the app, CORS refusal when served elsewhere, timeouts, and the deployed entry actually passing the client.",
+  "files": {
+    "role-model-router/apps/runtime-ui-next/src/mount.ts": "mountWithDiagnostics entry (client injection via fetchImpl)",
+    "role-model-router/apps/runtime-ui-next/src/index.ts": "public export",
+    "role-model-router/apps/runtime-ui-next/test/diagnostics-e2e.test.ts": "8 state-level e2e mounts over the real client with a stub fetch"
+  }
+}

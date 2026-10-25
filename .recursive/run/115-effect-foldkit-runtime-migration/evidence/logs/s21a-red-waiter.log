@@ -1,0 +1,30 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/s21a-composition-dag.test.ts (4 tests | 1 failed | 3 skipped) 282ms
+   ↓ S21a composition DAG shape > builds the whole closed graph with no ambient service and exposes every owner
+   ↓ S21a composition DAG shape > gives every consumer of one shared leaf the same instance
+   ↓ S21a composition DAG shape > negative control: rebuilding the leaf per consumer produces different instances
+   × S21a composition DAG shape > bounds provider permits and the explicit waiter queue instead of growing without limit 280ms
+     → expected 0 to be greater than 0
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s21a-composition-dag.test.ts > S21a composition DAG shape > bounds provider permits and the explicit waiter queue instead of growing without limit
+AssertionError: expected 0 to be greater than 0
+ ❯ test/s21a-composition-dag.test.ts:170:30
+    168|     expect(result.maxActive).toBeLessThanOrEqual(2);
+    169|     expect(result.maxQueued).toBeLessThanOrEqual(2);
+    170|     expect(result.maxQueued).toBeGreaterThan(0);
+       |                              ^
+    171|     expect(result.during.started).toBe(2);
+    172|     expect(result.after.active).toBe(0);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 skipped (4)
+   Start at  03:36:22
+   Duration  3.33s (transform 1.59s, setup 0ms, collect 2.57s, tests 282ms, environment 0ms, prepare 167ms)
+

@@ -1,0 +1,28 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit
+
+ ❯ test/s13b-foldkit-chart.test.ts (10 tests | 1 failed | 9 skipped) 41ms
+   ↓ RM3 chart primitive > renders a pure SVG with axes, one token-coloured path per series, points and an accessible name
+   ↓ RM3 chart primitive > renders a numeric HTML text alternative with a caption, headers and every value
+   ↓ RM3 chart primitive > renders an explicit empty state instead of an empty chart
+   × RM3 chart states and render policy > loading is its own state: a live status message, no chart and no table 39ms
+     → Expected element matching status to have attribute aria-busy="true" but the element does not exist.
+   ↓ RM3 chart states and render policy > error is its own state with a bounded, single-line reason
+   ↓ RM3 chart states and render policy > stale is its own state: data stays, with the caller-supplied age and rule
+   ↓ RM3 chart states and render policy > truncated is its own state: the chart stays and the dropped point count is visible
+   ↓ RM3 chart states and render policy > no-data is its own explicit state, not a loading spinner or an empty chart
+   ↓ RM3 chart states and render policy > ready is explicit and still renders the chart
+   ↓ RM3 chart states and render policy > is deterministic: the same (series, state) renders the same markup twice, with no ids
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s13b-foldkit-chart.test.ts > RM3 chart states and render policy > loading is its own state: a live status message, no chart and no table
+Error: Expected element matching status to have attribute aria-busy="true" but the element does not exist.
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 9 skipped (10)
+   Start at  01:34:08
+   Duration  4.63s (transform 1.88s, setup 0ms, collect 3.04s, tests 41ms, environment 770ms, prepare 301ms)
+

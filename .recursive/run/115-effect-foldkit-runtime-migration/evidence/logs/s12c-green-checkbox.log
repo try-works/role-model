@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit
+
+ ✓ test/s12c-foldkit-checkbox.scene.test.ts (5 tests) 31ms
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  23:59:41
+   Duration  5.58s (transform 2.28s, setup 0ms, collect 3.61s, tests 31ms, environment 899ms, prepare 438ms)
+

@@ -1,0 +1,61 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:50232) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | test/run105-review-challenge-evidence.test.ts > provider completion alone is not finalized evidence
+[route-evidence] readRouteDispatchEvidence failed: comparison page unavailable
+
+stderr | test/run105-review-challenge-evidence.test.ts > cyclic or malformed pages are unavailable rather than claimed complete
+[route-evidence] readRouteDispatchEvidence failed: comparison cursor unavailable
+
+stderr | test/run105-review-challenge-evidence.test.ts > enumerable durable evidence carries winning-member confidence and exact capture; cutoff refuses old evidence
+[route-evidence] readRouteDispatchEvidence failed: auth refused
+
+stderr | test/run105-review-challenge-evidence.test.ts > CLI history callback must actually bind supported exact read operation
+[run105] route replayable corpus refused: post-observation operations are not published yet
+
+ ✓ test/run105-review-challenge-evidence.test.ts (27 tests) 8380ms
+   ✓ history index unavailable and 501 matching ids are null, never a truncated complete corpus  3592ms
+(node:46880) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s6d-second-batch-migration.test.ts (1 test) 1119ms
+   ✓ S6d retention DELETE through the SQLite service > removes the expired row and leaves the live row in the real backend startup  1118ms
+(node:38616) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run101-r5-cancel-drain.test.ts (5 tests) 3466ms
+   ✓ run 101 R5/R9 queue admin runtime side > claims nothing while the queue is draining, and claims again once it is cleared  1489ms
+   ✓ run 101 R5/R9 queue admin runtime side > interrupts a running handler whose row is cancelled, without completing it  1942ms
+(node:28016) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run105-review-census.test.ts (7 tests) 2214ms
+   ✓ run105 R8 production census > missing database is explicit and a successful census leaves the database bytes unchanged  1133ms
+(node:44504) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run105-e5-ladder-index-readback.test.ts (1 test) 30ms
+(node:23704) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run108-census-eligibility.test.ts (5 tests) 7642ms
+   ✓ run108: the census declines to offer a family whose corpus cannot be projected > an OVER-BUDGET family is excluded while a projectable family exists  3711ms
+   ✓ run108: the census declines to offer a family whose corpus cannot be projected > FALLBACK: when EVERY family is over budget the full set is still offered, so the walk cannot idle  3648ms
+(node:20120) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | test/run100-durable-arm-output.test.ts > run 100 R2 durable arm output > an arm whose branch capture is missing is excluded by name and the capture still evaluates
+[run97] shadow pipeline start supervised-replay:74ea72a663cddb89aed11cf9fe4e71b6bcac0ba9d7acf7898102fd060ce5fccb
+
+stderr | test/run100-durable-arm-output.test.ts > run 100 R2 durable arm output > an arm whose branch capture is missing is excluded by name and the capture still evaluates
+[run97] learning degraded signals:supervised-replay:74ea72a663cddb89aed11cf9fe4e71b6bcac0ba9d7acf7898102fd060ce5fccb omit_signals 
+
+stderr | test/run100-durable-arm-output.test.ts > run 100 R2 durable arm output > a tool-call-only arm is comparable evidence, not a missing-output refusal
+[run97] shadow pipeline start supervised-replay:74ea72a663cddb89aed11cf9fe4e71b6bcac0ba9d7acf7898102fd060ce5fccb
+
+stderr | test/run100-durable-arm-output.test.ts > run 100 R2 durable arm output > a tool-call-only arm is comparable evidence, not a missing-output refusal
+[run97] learning degraded signals:supervised-replay:74ea72a663cddb89aed11cf9fe4e71b6bcac0ba9d7acf7898102fd060ce5fccb omit_signals 
+
+ ✓ test/run100-durable-arm-output.test.ts (2 tests) 41ms
+
+ Test Files  7 passed (7)
+      Tests  48 passed (48)
+   Start at  05:52:29
+   Duration  42.57s (transform 7.54s, setup 0ms, collect 16.55s, tests 22.89s, environment 2ms, prepare 1.19s)
+

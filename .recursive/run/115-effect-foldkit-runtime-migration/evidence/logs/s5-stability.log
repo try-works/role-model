@@ -1,0 +1,50 @@
+COMMAND: node ../../../node_modules/vitest/vitest.mjs run test/health-wait-timeout.test.ts  (x3)
+CWD: role-model-router/packages/process-supervisor
+EXIT_CODE=0,0,0
+
+RUN 1 EXIT_CODE=0
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/process-supervisor
+
+ ✓ test/health-wait-timeout.test.ts (3 tests) 4973ms
+   ✓ process-supervisor bounded health wait > rejects within startupTimeoutMs when the health peer accepts and never responds  950ms
+   ✓ process-supervisor bounded health wait > becomes healthy when a responsive endpoint replies after about 200ms  1443ms
+   ✓ process-supervisor bounded health wait > stops polling after a health timeout and shuts down cleanly  2573ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  20:34:42
+   Duration  6.91s (transform 235ms, setup 0ms, collect 225ms, tests 4.97s, environment 1ms, prepare 510ms)
+
+
+RUN 2 EXIT_CODE=0
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/process-supervisor
+
+ ✓ test/health-wait-timeout.test.ts (3 tests) 5023ms
+   ✓ process-supervisor bounded health wait > rejects within startupTimeoutMs when the health peer accepts and never responds  1033ms
+   ✓ process-supervisor bounded health wait > becomes healthy when a responsive endpoint replies after about 200ms  1343ms
+   ✓ process-supervisor bounded health wait > stops polling after a health timeout and shuts down cleanly  2640ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  20:34:53
+   Duration  8.11s (transform 576ms, setup 0ms, collect 582ms, tests 5.02s, environment 1ms, prepare 853ms)
+
+
+RUN 3 EXIT_CODE=0
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/process-supervisor
+
+ ✓ test/health-wait-timeout.test.ts (3 tests) 4206ms
+   ✓ process-supervisor bounded health wait > rejects within startupTimeoutMs when the health peer accepts and never responds  927ms
+   ✓ process-supervisor bounded health wait > becomes healthy when a responsive endpoint replies after about 200ms  1193ms
+   ✓ process-supervisor bounded health wait > stops polling after a health timeout and shuts down cleanly  2082ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  20:35:04
+   Duration  6.15s (transform 302ms, setup 0ms, collect 228ms, tests 4.21s, environment 1ms, prepare 616ms)
+
+
+

@@ -1,0 +1,43 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:46380) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/s6b-cli-sqlite-service-migration.test.ts (7 tests | 1 failed | 6 skipped) 38ms
+   ↓ S6b/S6c cli SQLite service migration > endpoint model lookup preserves result, null fallbacks and read-only open
+   ↓ S6b/S6c cli SQLite service migration > opens exactly one connection per lookup
+   ↓ S6b/S6c cli SQLite service migration > closes the connection on success, on a thrown query and on a failing open
+   × S6b/S6c cli SQLite service migration > opens the state database genuinely read-only: a write through the handle fails 35ms
+     → expected [Function] to throw an error
+   ↓ S6b/S6c cli SQLite service migration > preserves busy_timeout=0: an exclusive writer yields null immediately
+   ↓ S6b/S6c cli SQLite service migration > controller lookup preserves scope precedence and latest-row ordering
+   ↓ S6b/S6c cli SQLite service migration > capture receipt lookup preserves envelope/bare shapes and malformed fallbacks
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s6b-cli-sqlite-service-migration.test.ts > S6b/S6c cli SQLite service migration > opens the state database genuinely read-only: a write through the handle fails
+AssertionError: expected [Function] to throw an error
+
+- Expected: 
+null
+
++ Received: 
+undefined
+
+ ❯ test/s6b-cli-sqlite-service-migration.test.ts:225:77
+    223|       expect(row?.model_id).toBe("provider/model-known");
+    224|       // ...and refuses any write: a read-write open would let this su…
+    225|       expect(() => database.exec("CREATE TABLE s6c_write_probe (id TEX…
+       |                                                                             ^
+    226|         /readonly|read-only|readonly database/iu,
+    227|       );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 6 skipped (7)
+   Start at  05:13:44
+   Duration  8.54s (transform 5.28s, setup 0ms, collect 8.00s, tests 38ms, environment 0ms, prepare 180ms)
+
+EXIT_CODE: 1

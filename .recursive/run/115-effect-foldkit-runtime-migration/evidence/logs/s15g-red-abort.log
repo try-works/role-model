@@ -1,0 +1,54 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/diagnostics-client.test.ts (8 tests | 1 failed | 7 skipped) 14ms
+   ↓ S15e diagnostics fetch client > builds the operator diagnostics URL and sends the expected bearer credential
+   ↓ S15e diagnostics fetch client > sends no credential header and no spoofable owner/operator-context headers
+   ↓ S15e diagnostics fetch client > passes every 200 state through unchanged
+   ↓ S15e diagnostics fetch client > distinguishes a 401 denial from a 403 rejection
+   ↓ S15e diagnostics fetch client > turns a token-less 401 into an explicit trust precondition failure
+   ↓ S15e diagnostics fetch client > refuses a token-less read for a non-loopback or non-same-origin base URL
+   ↓ S15e diagnostics fetch client > surfaces a transport rejection and a non-JSON 200 body as failures
+   × S15e diagnostics fetch client > forwards the caller AbortSignal into the fetch call and aborts an IN-FLIGHT fetch 12ms
+     → expected undefined to be AbortSignal{ onabort: null, …(4) } // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/diagnostics-client.test.ts > S15e diagnostics fetch client > forwards the caller AbortSignal into the fetch call and aborts an IN-FLIGHT fetch
+AssertionError: expected undefined to be AbortSignal{ onabort: null, …(4) } // Object.is equality
+
+- Expected: 
+AbortSignal {
+  "onabort": null,
+  Symbol(listeners): {
+    "bubbling": Map {},
+    "capturing": Map {},
+  },
+  Symbol(listenerOptions): {
+    "bubbling": Map {},
+    "capturing": Map {},
+  },
+  Symbol(aborted): false,
+  Symbol(reason): undefined,
+}
+
++ Received: 
+undefined
+
+ ❯ test/diagnostics-client.test.ts:178:22
+    176|     await readerFor(resolvedStub.fetchImpl)({ id: "route-s15e", signal…
+    177|     const observed = resolvedStub.calls[0]?.init?.signal;
+    178|     expect(observed).toBe(controller.signal);
+       |                      ^
+    179|     controller.abort();
+    180|     expect(observed?.aborted).toBe(true);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 7 skipped (8)
+   Start at  04:49:21
+   Duration  4.13s (transform 1.69s, setup 0ms, collect 2.68s, tests 14ms, environment 698ms, prepare 215ms)
+
+EXIT_CODE: 1

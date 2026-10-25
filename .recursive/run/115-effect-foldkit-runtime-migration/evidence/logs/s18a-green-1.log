@@ -1,0 +1,26 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/sql-sqlite-node
+
+(node:42640) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s18a-sql-truth.test.ts [ test/s18a-sql-truth.test.ts ]
+ReferenceError: afterEach is not defined
+ ❯ test/s18a-sql-truth.test.ts:39:1
+     37| };
+     38| 
+     39| afterEach(cleanup);
+       | ^
+     40| 
+     41| const pragma = (database: DatabaseSync, name: string): unknown =>
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  02:51:51
+   Duration  3.65s (transform 1.88s, setup 0ms, collect 0ms, tests 0ms, environment 0ms, prepare 296ms)
+

@@ -1,0 +1,32 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/protocol-routing
+
+stdout | test/run115-s7c-routing-parity.test.ts > run115 S7c kernel/producer/wired parity > empty candidate pool: all three paths are byte-identical
+[run115] eligibility candidates=0 eligible=0 codes=none request=run115-s7c-matrix alias=- model=- effort=- pass=- allow=[] denied=[]
+
+stdout | test/run115-s7b-route-decision-wiring.test.ts > run115 S7b route decision producer wiring > routeRuntimeRequest obtains its decision through the producer Layer
+[run115] eligibility candidates=1 eligible=1 codes=none request=run115-s7b-wiring alias=- model=- effort=- pass=- allow=[remote.producer] denied=[]
+
+stdout | test/run115-s7b-route-decision-wiring.test.ts > run115 S7b route decision producer wiring > the empty pool stays a success with an empty chosen endpoint id
+[run115] eligibility candidates=0 eligible=0 codes=none request=run115-s7b-wiring alias=- model=- effort=- pass=- allow=[remote.producer] denied=[]
+
+stdout | test/run115-s7b-route-decision-wiring.test.ts > run115 S7b route decision producer wiring > one-arg callers keep the default producer Layer decision
+[run115] eligibility candidates=1 eligible=1 codes=none request=run115-s7b-wiring alias=- model=- effort=- pass=- allow=[remote.producer] denied=[]
+
+ ✓ test/run115-s7b-route-decision-wiring.test.ts (3 tests) 23ms
+stdout | test/run115-s7c-routing-parity.test.ts > run115 S7c kernel/producer/wired parity > tie between candidates: all three paths are byte-identical
+[run115] eligibility candidates=2 eligible=2 codes=none request=run115-s7c-tie alias=- model=- effort=- pass=- allow=[] denied=[]
+
+stdout | test/run115-s7c-routing-parity.test.ts > run115 S7c kernel/producer/wired parity > role/task/effort arm: all three paths are byte-identical
+[run115] eligibility candidates=2 eligible=1 codes=CAPABILITY_MISSING=1 request=run115-s7c-role-task-effort alias=- model=- effort=- pass=- allow=[] denied=[text.low]
+
+stdout | test/run115-s7c-routing-parity.test.ts > run115 S7c kernel/producer/wired parity > golden fixture: all three paths are byte-identical
+[run115] eligibility candidates=2 eligible=1 codes=TOOLS_UNSUPPORTED=1 request=run115-s7c-golden alias=- model=- effort=- pass=- allow=[] denied=[golden.no-tools]
+
+ ✓ test/run115-s7c-routing-parity.test.ts (4 tests) 52ms
+
+ Test Files  2 passed (2)
+      Tests  7 passed (7)
+   Start at  05:11:04
+   Duration  4.12s (transform 1.92s, setup 0ms, collect 6.77s, tests 75ms, environment 1ms, prepare 466ms)
+

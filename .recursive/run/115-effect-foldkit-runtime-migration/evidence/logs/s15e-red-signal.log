@@ -1,0 +1,33 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/diagnostics-client.test.ts (6 tests | 1 failed | 5 skipped) 10ms
+   ↓ S15e diagnostics fetch client > builds the operator diagnostics URL and sends the expected bearer credential
+   ↓ S15e diagnostics fetch client > sends no credential header and no spoofable owner/operator-context headers
+   ↓ S15e diagnostics fetch client > passes every 200 state through unchanged
+   ↓ S15e diagnostics fetch client > distinguishes a 401 denial from a 403 rejection
+   ↓ S15e diagnostics fetch client > surfaces a transport rejection and a non-JSON 200 body as failures
+   × S15e diagnostics fetch client > forwards the caller AbortSignal into the fetch call 8ms
+     → expected undefined to be an instance of AbortSignal
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/diagnostics-client.test.ts > S15e diagnostics fetch client > forwards the caller AbortSignal into the fetch call
+AssertionError: expected undefined to be an instance of AbortSignal
+ ❯ test/diagnostics-client.test.ts:150:22
+    148|     await pending;
+    149|     const observed = stub.calls[0]?.init?.signal;
+    150|     expect(observed).toBeInstanceOf(AbortSignal);
+       |                      ^
+    151|     expect(observed).toBe(controller.signal);
+    152|     expect(observed?.aborted).toBe(false);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 skipped (6)
+   Start at  04:16:31
+   Duration  3.85s (transform 1.58s, setup 0ms, collect 2.51s, tests 10ms, environment 685ms, prepare 223ms)
+
+EXIT_CODE: 1

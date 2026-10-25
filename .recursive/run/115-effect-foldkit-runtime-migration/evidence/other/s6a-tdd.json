@@ -1,0 +1,159 @@
+{
+  "slice": "s6a-sql-service",
+  "requirement": [
+    "R23",
+    "B3"
+  ],
+  "status": "complete",
+  "requirementSource": ".recursive/run/115-effect-foldkit-runtime-migration/00-requirements.md:214-220",
+  "module": "role-model-router/packages/sql-sqlite-node/src/service.ts",
+  "test": "role-model-router/packages/sql-sqlite-node/test/sqlite-service.test.ts (package-local harness; root vitest binary; imports ../src/service directly; no new devDependencies)",
+  "contract": {
+    "1 async Effect callers + compatible sync facade on the same connection owner": {
+      "implemented": "make(config): Effect<SqliteService, SqliteOpenError> exposes query/exec/transaction as Effects; makeSync(config) returns the same service shape with querySync/execSync/transactionSync over the single DatabaseSync (never a second pool).",
+      "test": "item 1 (async effect callers + sync facade share one owner)",
+      "red": {
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s6a-red-item-1.log",
+        "mutation": "query returned rows synchronously instead of an Effect",
+        "message": "Cannot convert object to primitive value"
+      },
+      "green": "viaEffect and viaSync read the same rows; sync-written row is visible to Effect callers and vice versa; transactionSync writes are visible; isOpen true.",
+      "citations": [
+        "00-requirements.md:218 (explicit async + compatible facade)",
+        "sqlite-memory precedent for the sync side: packages/sqlite-memory/src/index.ts:177-181"
+      ]
+    },
+    "2 fallible partial open (open/PRAGMA/setup failure closes what it opened)": {
+      "implemented": "openOnce() applies PRAGMA busy_timeout + config.setup inside try; any throw closes the just-opened DatabaseSync, reports a close failure through onCleanupFailure without replacing the primary cause, and rethrows the original cause.",
+      "test": "item 2 (a failed open closes the database)",
+      "red": {
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s6a-red-item-2.log",
+        "mutation": "removed the cleanup close",
+        "message": "expected [Function] to throw an error (captured handle was still open)"
+      },
+      "green": "captured handle throws 'database is not open'; the reported cause is the original setup error by identity.",
+      "citations": [
+        "00-requirements.md:218 (fallible partial open/PRAGMA cleanup)",
+        "sqlite-memory retry closes each failed attempt: src/index.ts:199-205"
+      ]
+    },
+    "3 busy retry: initial attempt + 2 retries at 100ms/200ms + 5s timeout": {
+      "implemented": "BUSY_RETRY_DELAYS_MS = [100, 200]; every open attempt is followed by Effect.sleep(100) then Effect.sleep(200) on SQLITE_BUSY/LOCKED; busy_timeout PRAGMA is 5000 (BUSY_TIMEOUT_MS). Sync facade uses the same schedule with a synchronous sleep. Non-busy errors are not retried.",
+      "test": "item 3, item 3b (exhausted), item 3c (non-busy), item 3d (sync facade schedule)",
+      "red": {
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s6a-red-item-3.log",
+        "mutation": "invented delays [50,50]",
+        "message": "expected [ 50, 50 ] to deeply equal [ 100, 200 ]"
+      },
+      "green": "opens=3, sleeps [100,200], PRAGMA busy_timeout={timeout:5000}; exhausted case stops at 3 attempts with SqliteOpenError.attempts=3 and busy=true; non-busy cause is preserved without retry; makeSync records [100,200].",
+      "citations": [
+        "00-requirements.md:218 (initial+2busy retries100/200ms plus5s timeout)",
+        "sqlite-memory constants/retry: src/index.ts:167-169, :183-185, :193-209"
+      ],
+      "note": "The 5s bound is SQLite's busy_timeout PRAGMA (the blocking wait), not an Effect.timeout: node:sqlite is synchronous/blocking (R24), so an Effect timeout cannot interrupt a blocked call."
+    },
+    "4 same-connection SQL transactions; primary error preserved across rollback/close failures": {
+      "implemented": "transaction() runs BEGIN IMMEDIATE/COMMIT/ROLLBACK on the service's single DatabaseSync while holding the ownership semaphore; on failure it rolls back, and only if rollback fails does it try to close; cleanup failures are reported through onCleanupFailure and the primary cause is re-failed with Effect.failCause (exact object). Success+failed COMMIT treats the commit cause as primary.",
+      "test": "item 4 (same connection + primary survives rollback/close failure)",
+      "red": {
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s6a-red-item-4.log",
+        "mutation": "cleanup failure wrapped and replaced the primary error",
+        "message": "expected SqliteServiceError ... to be Error: primary transaction failure"
+      },
+      "green": "sync facade inside the transaction observes the uncommitted row (same owner); after commit the row is visible; with the connection closed inside the work, ROLLBACK and the cleanup close both fail, both cleanup operations are recorded, and the rejection is the primary Error by identity.",
+      "citations": [
+        "00-requirements.md:218,220 (same-connection transactions, primary preserved across rollback/close)",
+        "sqlite-memory close-failure preservation: src/index.ts:199-207"
+      ]
+    },
+    "5 never retry provider/network side effects inside a transaction": {
+      "implemented": "retry exists only in the open path (attemptOpenAsync/openWithRetrySync). transaction() accepts an arbitrary Effect and never wraps it in a retry; a busy failure in the work propagates immediately.",
+      "test": "item 5 (no retry inside a transaction)",
+      "red": {
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s6a-red-item-5.log",
+        "mutation": "transaction ran the work twice on failure (invented retry)",
+        "message": "expected 2 to be 1"
+      },
+      "green": "work runs once, no sleep calls, busy error rejected by identity; rollback still runs.",
+      "citations": [
+        "00-requirements.md:220 (never retry provider/network side effects inside SQL transaction)"
+      ]
+    },
+    "6 connection/fiber ownership serialized explicitly, not a depth counter; Effect Ref/Tx memory is not SQL": {
+      "implemented": "Semaphore.makeUnsafe(1) serializes Effect callers/transactions; Ref.makeUnsafe(boolean) tracks open/closed state; Ref.makeUnsafe(fiberId | null) records the active transaction owner so a nested service Effect fails fast instead of deadlocking. SQL transaction state lives only in SQLite's BEGIN/COMMIT/ROLLBACK on the DatabaseSync; no Ref/Tx memory is used as SQL.",
+      "test": "item 6 (concurrent transactions serialize; non-overlapping events) and item 6b (nested service call fails fast)",
+      "red": {
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s6a-red-item-6.log",
+        "mutation": "serialize became identity (no semaphore)",
+        "message": "SQLite begin-transaction failed: cannot start a transaction within a transaction"
+      },
+      "green": "two concurrent transactions (one sleeping 50ms) run without interleaving (one begins/ends before the other begins); both rows persist; a nested service.query inside a transaction rejects with 'nested SQLite service call inside a transaction' instead of hanging.",
+      "citations": [
+        "00-requirements.md:220 (serialize connection/fiber ownership; Effect Ref/Tx memory is not SQL)",
+        "vendor/effect/packages/effect/src/Semaphore.ts:215, :84",
+        "vendor/effect/packages/effect/src/Ref.ts:146, :765"
+      ]
+    }
+  },
+  "behaviouralRedMode": "Each RED was produced after the implementation existed: one targeted naive mutation per contract item, the corresponding test run in isolation, then the file restored exactly (sha256 of the restored file matches the reported hash). A missing-module setup RED was captured first but is not counted: .recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s6a-red-setup.log",
+  "green": {
+    "command": "node node_modules/vitest/vitest.mjs run role-model-router/packages/sql-sqlite-node/test/sqlite-service.test.ts",
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s6a-green.log",
+    "testFiles": 1,
+    "tests": 11,
+    "passed": 11,
+    "failed": 0,
+    "exit": 0
+  },
+  "suitesReRun": [
+    {
+      "suite": "@role-model-router/sqlite-memory",
+      "command": "node ../../../node_modules/vitest/vitest.mjs run test (cwd role-model-router/packages/sqlite-memory)",
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s6a-sqlite-memory-suite.log",
+      "testFiles": 25,
+      "tests": 140,
+      "passed": 140,
+      "failed": 0,
+      "exit": 0
+    },
+    {
+      "suite": "biome on the two new files",
+      "command": "node node_modules/@biomejs/biome/bin/biome check <files>",
+      "exit": 0,
+      "note": "one --write --unsafe formatting pass first"
+    }
+  ],
+  "vendoredApisUsed": [
+    "Effect.gen: vendor/effect/packages/effect/src/Effect.ts:1497",
+    "Effect.try ({try, catch}) exported as try: Effect.ts:1709-1715, :1782",
+    "Effect.suspend: Effect.ts:1171",
+    "Effect.exit: Effect.ts:2455",
+    "Effect.failCause: Effect.ts:1635",
+    "Effect.ensuring: Effect.ts:7092",
+    "Effect.flatMap: Effect.ts:2105",
+    "Effect.fiberId: Effect.ts:9149",
+    "Effect.sleep: Effect.ts:4924 with Duration.millis: Duration.ts:764",
+    "Effect.catchIf: Effect.ts:3519",
+    "Effect.runPromise: Effect.ts:9402; Effect.all with concurrency (tests): Effect.ts:507",
+    "Effect.tryPromise and its AbortSignal: Effect.ts:1008-1013; the signal is forwarded only when the thunk declares a parameter (internal/effect.ts:1166). Not used here because node:sqlite is synchronous and blocking (R24), so there is no cancellable I/O to signal.",
+    "Ref.makeUnsafe: Ref.ts:146; Ref.getUnsafe: Ref.ts:765; Ref.get: Ref.ts:206; Ref.set: Ref.ts:243",
+    "Semaphore.makeUnsafe: Semaphore.ts:215; Semaphore.withPermits: Semaphore.ts:84",
+    "Exit.findErrorOption: Exit.ts:1072; Option.getOrThrow: Option.ts:1048 (test helpers)",
+    "node:sqlite DatabaseSync observed behaviour (Node 24.11): synchronous/blocking; closed handle errors with 'database is not open'; nested BEGIN errors with 'cannot start a transaction within a transaction'; PRAGMA busy_timeout reads back { timeout: 5000 }."
+  ],
+  "blockedOrNotCovered": [
+    "Packaging wiring is out of this slice's writable scope: build.mjs:17-19 bundles only the vendored entry (entryPoints: { index: vendor/... }), and package.json exports point at dist/index.js + dist/types/index.d.ts. src/service.ts is therefore not importable through the built package yet. Follow-up (controller/owner): add a service entry to build.mjs entryPoints and an exports subpath, then rebuild. No build/package file was edited here.",
+    "Caller migration is out of scope and not claimed: the current host paths still use node:sqlite directly (apps/runtime-host-bridge/src/cli.ts:7,190-192,286-288,466-468,11553-11556; apps/runtime-host-bridge/scripts/start-for-qa.ts:1108-1111; apps/runtime-host-bridge/src/index.ts:6939-7053,20955) and sqlite-memory keeps its own sync open/retry (packages/sqlite-memory/src/index.ts:177-213). The service proves the target contract; swapping those callers would edit out-of-scope files.",
+    "R23 clauses not in the task's six required behaviours are not implemented/tested here: 'rich graph hydration', backup/reset/restore owner draining/fencing, and arbitrary per-store PRAGMA preservation beyond a caller-supplied setup(db) hook plus the enforced busy_timeout=5000. No backup/reset/restore API exists in this slice; journal_mode/WAL is deliberately not changed by the service (R24: no global WAL switch).",
+    "The 5s 'timeout' is implemented as SQLite's busy_timeout PRAGMA, matching the existing sqlite-memory contract. An Effect.timeout wrapper would be cosmetic because the blocked DatabaseSync call cannot be interrupted.",
+    "Open-cleanup close failure (onCleanupFailure operation 'open-cleanup') is reported but not separately asserted; the rollback+close failure path is asserted in item 4.",
+    "Sync-facade concurrency: sync methods deliberately bypass the Semaphore (they cannot yield). They are safe only on the single JS thread outside an active Effect transaction; nested sync use inside a transaction is the same owner and is asserted in item 4."
+  ],
+  "files": {
+    "role-model-router/packages/sql-sqlite-node/src/service.ts": "1048058971dda4bc4c7508c7ed17aa85c9e6b321c1f5834dd599d5d84e8848a9",
+    "role-model-router/packages/sql-sqlite-node/test/sqlite-service.test.ts": "685583a232f1f482a33832854391dcda3e6692e9145544964be27dfd86032d98"
+  },
+  "scope": "Only role-model-router/packages/sql-sqlite-node/src/service.ts, its test, and evidence were written. The pre-existing package.json modification (4.0.1 -> 4.0.6 description) and the other dirty worktree files are not mine.",
+  "controllerByteNote": "Controller repair after this record was written: the file was edited to restate node:sqlite unexported bind shape and add a SAFETY justification, and later mutated-and-restored by the S18a characterization slice. Current sha256 is 7c591597551a7e413de0c7b01da5e0ddf4473f990ab7dca2640d4bc033fcef8e. The bytes therefore differ from the hash recorded here at slice close; no semantic change was intended or observed (S6a suite 11/11 and service typecheck 0 re-verified after the edits).",
+  "currentServiceSha256": "7c591597551a7e413de0c7b01da5e0ddf4473f990ab7dca2640d4bc033fcef8e"
+}

@@ -1,0 +1,22 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration
+
+ ❯ role-model-router/packages/foldkit/test/s13e-chart-interaction.scene.test.ts (4 tests | 1 failed | 3 skipped) 49ms
+   × S13e chart interaction > legend toggles series visibility and the accessible table follows it; a point exposes exact value and unit 47ms
+     → Expected element matching "table" not to contain text "Local" but it does.
+   ↓ S13e chart interaction > range switching issues monotonic tokens and a stale response resolved last cannot win
+   ↓ S13e chart interaction > a theme change keeps series identity and point count; only the theme class differs
+   ↓ S13e chart interaction > two charts on one page render independently with no ids or shared interaction state
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  role-model-router/packages/foldkit/test/s13e-chart-interaction.scene.test.ts > S13e chart interaction > legend toggles series visibility and the accessible table follows it; a point exposes exact value and unit
+Error: Expected element matching "table" not to contain text "Local" but it does.
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 skipped (4)
+   Start at  06:02:46
+   Duration  3.90s (transform 1.71s, setup 0ms, collect 2.94s, tests 49ms, environment 0ms, prepare 265ms)
+

@@ -1,0 +1,24 @@
+S6c timing measurement (2026-10-25, this worktree, Windows, node:sqlite via @effect/sql-sqlite-node dist service.js)
+
+Method: seed a temp memory.sqlite (table runtime_endpoints + one row); hold BEGIN EXCLUSIVE on a second DatabaseSync;
+measure phases around ONE read-only makeSync/querySync/closeSync cycle.
+
+setup = PRAGMA busy_timeout = 0 (migration's current setup):
+  openMs 2 | queryMs 31 | closeMs 3 | totalMs 36
+setup = none (service default PRAGMA busy_timeout = 5000, i.e. the mutation that made the RED):
+  openMs 1 | queryMs 7384 | closeMs 0 | totalMs 7386
+
+Direct node:sqlite read-only connection under the same exclusive blocker, busy_timeout value -> SELECT wall time:
+  0 -> 19ms | 250 -> 753ms | 1000 -> 1785ms | 5000 -> 7423ms | default (no PRAGMA) -> 31ms
+
+Explanation of the ~7.4s RED number (7388ms in s6b-red-busy-timeout.log):
+  - 7388ms = ~1ms open + ~7384ms single-SELECT busy wait + ~0ms close (measured above).
+  - It is NOT 5000 + 100 + 200 open-retry sleeps: the open phase measured 1ms, so openWithRetrySync never
+    entered its 100/200ms retry path; the whole cost is inside the one query's busy wait.
+  - It is NOT multiple statements or a leaked second connection: one query, one connection.
+  - node:sqlite's 5000ms busy timeout overshoots on Windows (measured 7423ms for 5000ms; 1785ms for 1000ms;
+    753ms for 250ms). The exact internal sleep schedule is not exposed by the driver, so we do NOT claim
+    5000+fixed overhead arithmetic; the honest statement is: measured single-query busy wait, ~1.5x the
+    configured 5000ms on this host.
+  - The test's assertion (<1000ms with busy0) is the policy claim; the 7.4s is cited only as the measured
+    RED magnitude, not as a predicted sum.

@@ -1,0 +1,137 @@
+{
+  "slice": "s17a-transport-signal",
+  "requirement": "R26 Transport/SSE B5 first slice (AbortSignal to I/O, scoped cleanup, typed failures, exact per-operation retry). SSE frame semantics untouched.",
+  "changedFiles": {
+    "role-model-router/apps/runtime-host-bridge/src/track-b-operations.ts": "privateRetentionRequest now accepts/forwards an AbortSignal, has scoped response-reader/listener cleanup, adds typed abort/protocol failures, and exposes an Effect.tryPromise wrapper; retry schedule preserved",
+    "role-model-router/apps/runtime-host-bridge/test/s17a-transport-signal.test.ts": "new 6-test transport suite"
+  },
+  "callSites": {
+    "changed": [
+      "track-b-operations.ts privateRetentionRequest fetch call: (options.fetchImpl ?? fetch)(url, { ...requestInit, signal: requestSignal }), where requestSignal = AbortSignal.any([callerSignal, AbortSignal.timeout(timeoutMs)]) (caller signal omitted only when absent).",
+      "track-b-operations.ts requestPrivate wrapper now accepts an optional AbortSignal (4th argument) and passes it into privateRetentionRequest.",
+      "track-b-operations.ts new privateRetentionRequestEffect: Effect.tryPromise with a (signal) thunk (arity rule: internal/effect.ts:1166; notes line 27) forwarding the fiber signal into privateRetentionRequest."
+    ],
+    "verifiedUnchanged": [
+      "index.ts:28084-28106 provider HTTP call already forwards executionOptions?.requestOptions?.abortSignal to networkFetcher; this slice did not need to change it.",
+      "SSE frame semantics untouched: readCodexResponsesSseTranscript (index.ts:13503-13568), readProviderStreamTranscript, chunk/DONE/error handling were not modified. The new reader is the private-operation JSON body reader, not the SSE parser."
+    ]
+  },
+  "abortProof": {
+    "test": "cancels the underlying fetch when the enclosing fiber times out (request does not keep running)",
+    "setup": "fetchImpl returns a promise that settles only on the AbortSignal it receives; privateRetentionRequestEffect is run under Effect.timeout(..., '30 millis').",
+    "assertions": [
+      "Exit.isFailure(exit)",
+      "fetch was called once",
+      "the fetch stub observed abort (state.aborted true) - the request did not keep running after the fiber was interrupted"
+    ],
+    "red": {
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s17a-red-01-no-signal-forwarding.log",
+      "mutation": "fetch called without signal: requestSignal",
+      "message": "expected false to be true (state.aborted)"
+    }
+  },
+  "scopedCleanup": {
+    "implementation": "one AbortSignal listener on the caller signal removed in finally; one response.body reader acquired per response, cancelled on read failure/abort and lock-released in finally; both releases reported through the injectable onRelease hook.",
+    "counts": {
+      "statusFailurePath": "onRelease = ['abort-listener', 'reader'] (status 500 after a successful fetch body read)",
+      "callerAbortPath": "onRelease = ['abort-listener', 'reader'] (abort during body read cancels the reader, then releases the lock/listener)"
+    },
+    "test": "counts scoped releases on the status-failure path; counts scoped releases on the caller-abort path and does not retry",
+    "red": {
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s17a-red-02-reader-release-missing.log",
+      "mutation": "reader release not reported",
+      "message": "expected ['abort-listener'] to deeply equal ['abort-listener','reader']"
+    }
+  },
+  "typedFailures": {
+    "new": [
+      {
+        "name": "TrackBPrivateOperationAbortError",
+        "code": "track_b_private_operation_aborted",
+        "when": "caller signal already aborted, or aborted during fetch/body read; terminal, never retried"
+      },
+      {
+        "name": "TrackBPrivateOperationProtocolError",
+        "code": "track_b_private_operation_protocol",
+        "when": "2xx response body is not valid JSON; terminal, never retried"
+      }
+    ],
+    "preserved": [
+      {
+        "name": "TrackBPrivateOperationTimeoutError",
+        "code": "track_b_private_operation_timeout",
+        "note": "still the timeout identity; status 504/message unchanged"
+      },
+      {
+        "name": "TrackBPrivateOperationError",
+        "note": "stated status failures keep their class/status/message (504 or the HTTP status)"
+      }
+    ],
+    "nuance": "A non-2xx body that is not JSON keeps the old lenient {} fallback so a stated status still surfaces as TrackBPrivateOperationError with its status (no new protocol class for status failures).",
+    "red": {
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s17a-red-03-abort-generic.log",
+      "mutation": "pre-aborted caller signal throws a generic Error",
+      "message": "expected Error: aborted to be an instance of TrackBPrivateOperationAbortError"
+    }
+  },
+  "retrySchedule": {
+    "constant": "PRIVATE_OPERATIONS_TRANSPORT_RETRY_DELAYS_MS = [250, 1_000, 2_500, 5_000]",
+    "behaviour": "5 fetch attempts on a retryable connection-level failure, sleeps exactly 250/1000/2500/5000ms (existing schedule preserved, now pinned in the new suite as well as the existing run100m test).",
+    "noRetry": [
+      "caller abort (pre-aborted or during I/O): zero fetch retries",
+      "protocol violation: one fetch, no retry",
+      "status failure: one fetch, no retry",
+      "timeout: no retry (existing behaviour)"
+    ],
+    "red": {
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s17a-red-04-shortened-retry-schedule.log",
+      "mutation": "schedule shortened to [250,1000]",
+      "message": "expected [250,1000,1000,1000] to deeply equal [250,1000,2500,5000]"
+    }
+  },
+  "sseUntouched": "This slice does not change tool/reasoning/fragmentation/drain/first-substantive/DONE/error frame semantics or any SSE parser/reader; it only handles the private-operation JSON response. No queue changes either.",
+  "verification": {
+    "transportTests": {
+      "command": "cd role-model-router/apps/runtime-host-bridge && vitest run test/s17a-transport-signal.test.ts",
+      "tests": 6,
+      "passed": 6,
+      "exit": 0,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s17a-green.log"
+    },
+    "regressions": {
+      "command": "vitest run test/run100m-operations-transport-retry.test.ts test/run104-sp7-contribution-budget.test.ts test/track-b-operations-api.test.ts test/run99-r33-operations-timeout.test.ts test/run100i-capture-writeback-bounds.test.ts",
+      "tests": 46,
+      "passed": 46,
+      "exit": 0,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s17a-regression.log"
+    },
+    "typecheck": {
+      "command": "cd role-model-router/apps/runtime-host-bridge && tsc -p tsconfig.json --noEmit",
+      "exit": 0,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s17a-typecheck.log",
+      "note": "host tsconfig excludes test/**, so it typechecks the source change; the new test is transformed by Vitest."
+    },
+    "biome": {
+      "exit": 0,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s17a-biome-check.log"
+    },
+    "setupRed": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s17a-red-setup.log (missing exports before implementation)"
+  },
+  "incident": "During RED capture an intermediate full-file read was limited to 2000 lines and truncated track-b-operations.ts. The file was restored from HEAD and every transport edit was re-applied with targeted edits; the final diff against HEAD is 10 hunks (216 insertions/51 deletions) confined to the transport regions, the file is 3370 lines, and all tests/typecheck pass. No other file was affected; the R26 plan entry shows this file had no prior run-115 implementation at this slice.",
+  "hashes": {
+    "role-model-router/apps/runtime-host-bridge/src/track-b-operations.ts": "66a354c45738a21491e5df363ffc100f5a2fb2269bb3346a65bbc8bcc8ba5e95",
+    "role-model-router/apps/runtime-host-bridge/test/s17a-transport-signal.test.ts": "3a308832010c76267c40e16a54754ee640cd140d6e57b97fc10c8ccd2a047be1"
+  },
+  "evidenceLogs": [
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s17a-red-setup.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s17a-red-01-no-signal-forwarding.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s17a-red-02-reader-release-missing.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s17a-red-03-abort-generic.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s17a-red-04-shortened-retry-schedule.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s17a-green.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s17a-regression.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s17a-typecheck.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s17a-biome-check.log"
+  ],
+  "scope": "Only track-b-operations.ts, the new transport test and evidence were written. Queue runtime, diagnostics, client app, wrappers, packages/ui, root, lockfile, vendor and private repo untouched."
+}

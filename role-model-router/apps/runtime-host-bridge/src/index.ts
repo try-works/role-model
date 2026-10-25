@@ -16,9 +16,20 @@ import os from "node:os";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { setTimeout as delay } from "node:timers/promises";
+import { makeSync } from "@effect/sql-sqlite-node/service";
 import { parse } from "yaml";
 import { evaluateDispatchContextGuard } from "./dispatch-context-guard.js";
 import { persistFailureTelemetrySafely } from "./failure-telemetry-persistence.js";
+import {
+  LOCAL_DIAGNOSTICS_PATH,
+  LOCAL_DIAGNOSTICS_SCHEMA,
+  type LocalDiagnosticsReadRequest,
+  type LocalDiagnosticsReadResult,
+  type LocalDiagnosticsSource,
+  readLocalDiagnostics,
+} from "./local-diagnostics-read.js";
+import { type ModuleHealthWriter, makeModuleHealthWriter } from "./module-health-writer.js";
+import { readSseTranscript } from "./sse-transcript.js";
 
 import {
   type NormalizedCatalog,
@@ -264,6 +275,10 @@ import {
   writeBenchmarkPreferences,
 } from "./benchmark-summary.js";
 import {
+  type BootstrapShape,
+  bootstrapOwner as composedBootstrapOwner,
+} from "./composition-dag.js";
+import {
   computeConfiguredMembershipRevision,
   findConfiguredModelBlockingReferences,
   findConfiguredModelReferencesByPolicy,
@@ -325,12 +340,7 @@ import {
   toCoreRoutingStrategyName,
   withStrategyProvenance,
 } from "./scoring-strategy.js";
-import {
-  type BootstrapStageResult,
-  type SessionBootstrapState,
-  createPendingBootstrapState,
-  runSessionBootstrapStages,
-} from "./session-bootstrap.js";
+import type { BootstrapStageResult, SessionBootstrapState } from "./session-bootstrap.js";
 
 import {
   type LiteLLMProviderInfo,
@@ -3478,6 +3488,29 @@ export interface StartBridgeServerOptions {
    * process-global default Map (the defect this replaced), and it is never one registry per call.
    */
   readonly observabilityScope?: ObservabilityScope;
+  /**
+   * Run 115 S15a (R21): the bounded diagnostics source. Omitted means the authorized local read path
+   * answers the explicit `disabled` state - never an error and never a fabricated empty read.
+   */
+  readonly readDiagnosticsSource?: () => LocalDiagnosticsSource;
+  /**
+   * Run 115 S10b (R20): explicit, DEFAULT-OFF module-health enablement.
+   *
+   * R20 requires calibrated and approved record/byte/ingress/formatting/TTL/query limits BEFORE
+   * enablement. The defaults in src/module-health-writer.ts are PLACEHOLDERS; passing
+   * `{ enabled: true }` is the calibration decision and it must be taken deliberately. Absent or
+   * `{ enabled: false }` leaves the diagnostics endpoint answering the honest disabled state.
+   */
+  readonly diagnostics?: {
+    /** Default false. This is where R20 calibration approval lands. */
+    readonly enabled?: boolean;
+    /** PLACEHOLDER capacity (writer clamps 1..256, default 64) - calibrate before enablement. */
+    readonly capacity?: number;
+    /** PLACEHOLDER record code byte cap (writer clamps 1..512, default 96) - calibrate. */
+    readonly maxCodeBytes?: number;
+    readonly instanceId?: string;
+    readonly buildId?: string;
+  };
   readonly registry: EndpointRegistryResult;
   readonly getRegistry?: () => EndpointRegistryResult;
   readonly getExecutionCatalog?: () => NormalizedCatalog;
@@ -4283,6 +4316,13 @@ export interface CreateRuntimeBridgeBackendOptions {
   /** Base environment inherited by supervised vendor children. */
   readonly providerChildEnvironment?: Readonly<Record<string, string | undefined>>;
   readonly fixtureRoot?: string;
+  /**
+   * S21c temporary composition seams: observe/inject the Bootstrap owner the host uses.
+   * Both are inert unless supplied; removed when the backend returns its composition owners as a
+   * public value. Production always uses the DAG singleton below.
+   */
+  readonly onBootstrapOwner?: (owner: BootstrapShape) => void;
+  readonly bootstrapOwner?: BootstrapShape;
   readonly runtimeVendorStartup?: "enabled" | "disabled";
   readonly trackBOperationsEndpoint?: string;
   readonly trackBOperationsToken?: string;
@@ -4420,6 +4460,8 @@ export interface CodexExecutionAdapter {
     readonly modelId: string;
     readonly requestCapture: ProviderRequestCapture;
     readonly authPayload: CodexAuthCacheSnapshot;
+    /** R26: the caller's AbortSignal reaches the SSE fetch and the scoped reader. */
+    readonly abortSignal?: AbortSignal;
     readonly streamChunkWriter?: (chunk: string) => Promise<void> | void;
     readonly executeDynamicToolCall?: (input: {
       readonly toolCallId: string;
@@ -13457,82 +13499,15 @@ function readSsePayloadTexts(transcript: string): readonly string[] {
   );
 }
 
-function readSsePayloadTextFromBlock(block: string): string | null {
-  const payloadText = block
-    .split(/\n/u)
-    .map((line) => line.trimEnd())
-    .filter((line) => line.startsWith("data:"))
-    .map((line) => line.slice("data:".length).trimStart())
-    .join("\n")
-    .trim();
-  return payloadText.length > 0 && payloadText !== "[DONE]" ? payloadText : null;
-}
-
 async function readCodexResponsesSseTranscript(
   response: Response,
   onPayloadText?: (payloadText: string) => Promise<void> | void,
+  signal?: AbortSignal,
 ): Promise<string> {
-  if (!response.body) {
-    const transcript = await response.text();
-    if (onPayloadText) {
-      for (const payloadText of readSsePayloadTexts(transcript)) {
-        await onPayloadText(payloadText);
-      }
-    }
-    return transcript;
-  }
-
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let rawTranscript = "";
-  let normalizedBuffer = "";
-
-  const processCompleteBlocks = async (flush = false): Promise<void> => {
-    while (true) {
-      const separatorIndex = normalizedBuffer.indexOf("\n\n");
-      if (separatorIndex < 0) {
-        break;
-      }
-      const block = normalizedBuffer.slice(0, separatorIndex);
-      normalizedBuffer = normalizedBuffer.slice(separatorIndex + 2);
-      const payloadText = readSsePayloadTextFromBlock(block);
-      if (payloadText) {
-        await onPayloadText?.(payloadText);
-      }
-    }
-    if (flush && normalizedBuffer.trim().length > 0) {
-      const payloadText = readSsePayloadTextFromBlock(normalizedBuffer);
-      normalizedBuffer = "";
-      if (payloadText) {
-        await onPayloadText?.(payloadText);
-      }
-    }
-  };
-
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) {
-        break;
-      }
-      const chunkText = decoder.decode(value, { stream: true });
-      rawTranscript += chunkText;
-      normalizedBuffer += chunkText.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
-      await processCompleteBlocks();
-    }
-    const finalText = decoder.decode();
-    if (finalText.length > 0) {
-      rawTranscript += finalText;
-      normalizedBuffer += finalText.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
-    }
-    await processCompleteBlocks(true);
-    return rawTranscript;
-  } catch (error) {
-    await reader.cancel(error).catch(() => undefined);
-    throw error;
-  } finally {
-    reader.releaseLock();
-  }
+  return await readSseTranscript(response, {
+    ...(signal === undefined ? {} : { signal }),
+    ...(onPayloadText === undefined ? {} : { onPayload: onPayloadText }),
+  });
 }
 
 function normalizeCodexResponsesTranscript(
@@ -14507,6 +14482,7 @@ export function createCodexSubscriptionResponsesExecutionAdapter(options?: {
       const response = await networkFetcher(resolveCodexResponsesUrl(), {
         method: "POST",
         headers: buildCodexResponsesHeaders(input.authPayload),
+        ...(input.abortSignal === undefined ? {} : { signal: input.abortSignal }),
         body: JSON.stringify(requestBody),
       });
       if (!response.ok) {
@@ -14537,25 +14513,29 @@ export function createCodexSubscriptionResponsesExecutionAdapter(options?: {
               requestedModel,
             })
           : null;
-      const rawBody = await readCodexResponsesSseTranscript(response, async (payloadText) => {
-        if (chatStreamMapper && input.streamChunkWriter) {
-          const chunks = chatStreamMapper(payloadText);
-          for (const chunk of chunks) {
+      const rawBody = await readCodexResponsesSseTranscript(
+        response,
+        async (payloadText) => {
+          if (chatStreamMapper && input.streamChunkWriter) {
+            const chunks = chatStreamMapper(payloadText);
+            for (const chunk of chunks) {
+              streamedDownstreamChunks.push(chunk);
+              await input.streamChunkWriter(chunk);
+            }
+            return;
+          }
+          if (
+            requestShape === "responses" &&
+            input.requestCapture.body.stream === true &&
+            input.streamChunkWriter
+          ) {
+            const chunk = `data: ${payloadText}\n\n`;
             streamedDownstreamChunks.push(chunk);
             await input.streamChunkWriter(chunk);
           }
-          return;
-        }
-        if (
-          requestShape === "responses" &&
-          input.requestCapture.body.stream === true &&
-          input.streamChunkWriter
-        ) {
-          const chunk = `data: ${payloadText}\n\n`;
-          streamedDownstreamChunks.push(chunk);
-          await input.streamChunkWriter(chunk);
-        }
-      });
+        },
+        input.abortSignal,
+      );
       const transcript = normalizeCodexResponsesTranscript(rawBody, input.requestId);
       const body =
         streamedDownstreamChunks.length > 0
@@ -15432,76 +15412,32 @@ function hasForwardedReasoningControl(body: Record<string, unknown>): boolean {
   );
 }
 
-async function readProviderStreamTranscript(
+export async function readProviderStreamTranscript(
   response: Response,
   streamWriter: BridgeStreamWriter,
   metadata: BridgeStreamMetadata,
+  signal?: AbortSignal,
 ): Promise<string> {
-  const reader = response.body?.getReader();
-  if (!reader) {
+  if (!response.body) {
     return await response.text();
   }
 
-  const decoder = new TextDecoder();
-  let transcript = "";
-  let pending = "";
   let hasForwardedDownstreamSafeChunk = false;
-
-  const flushBlocks = async (flushAll: boolean): Promise<void> => {
-    const parts = pending.split(/\r?\n\r?\n/);
-    const completeBlocks = flushAll ? parts : parts.slice(0, -1);
-    pending = flushAll ? "" : (parts.at(-1) ?? "");
-
-    for (const block of completeBlocks) {
-      const dataLines = block
-        .split(/\r?\n/)
-        .map((line) => line.trim())
-        .filter((line) => line.startsWith("data:"))
-        .map((line) => line.slice("data:".length).trim())
-        .filter((line) => line.length > 0);
-      if (dataLines.length === 0) {
-        continue;
-      }
-
-      const payloadText = dataLines.join("\n");
-      if (payloadText === "[DONE]") {
-        continue;
-      }
-
-      let payload: Record<string, unknown>;
-      try {
-        payload = JSON.parse(payloadText) as Record<string, unknown>;
-      } catch {
-        continue;
-      }
+  return await readSseTranscript(response, {
+    ...(signal === undefined ? {} : { signal }),
+    onPayload: async (payloadText) => {
+      const payload = JSON.parse(payloadText) as Record<string, unknown>;
       if (
         !metadata.reasoningRequested &&
         !hasForwardedDownstreamSafeChunk &&
         isReasoningOnlyChatCompletionsChunk(payload)
       ) {
-        continue;
+        return;
       }
       hasForwardedDownstreamSafeChunk = true;
       await streamWriter(payload, metadata);
-    }
-  };
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) {
-      const finalChunk = decoder.decode();
-      transcript += finalChunk;
-      pending += finalChunk;
-      await flushBlocks(true);
-      break;
-    }
-    const chunkText = decoder.decode(value, { stream: true });
-    transcript += chunkText;
-    pending += chunkText;
-    await flushBlocks(false);
-  }
-
-  return transcript;
+    },
+  });
 }
 
 async function replayProviderStreamTranscript(
@@ -16864,7 +16800,12 @@ function unavailableOperatorStatus(reason: string): RuntimeOperatorStatus {
   } as RuntimeOperatorStatus;
 }
 
-function readOperatorBearerToken(request: IncomingMessage): string | null {
+type OperatorHeaderRequest = {
+  readonly headers: Readonly<Record<string, string | string[] | undefined>>;
+};
+type OperatorPeerRequest = { readonly socket?: { readonly remoteAddress?: string } };
+
+function readOperatorBearerToken(request: OperatorHeaderRequest): string | null {
   const header = request.headers.authorization;
   if (typeof header !== "string") {
     return null;
@@ -16874,7 +16815,7 @@ function readOperatorBearerToken(request: IncomingMessage): string | null {
 }
 
 function operatorTokenMatches(
-  request: IncomingMessage,
+  request: OperatorHeaderRequest,
   expectedToken: string | undefined,
 ): boolean {
   if (!expectedToken || expectedToken.trim().length === 0) {
@@ -16891,7 +16832,7 @@ function operatorTokenMatches(
 
 type RuntimeOperatorContextField = "channel" | "scope" | "authorizationEpoch";
 
-function readOperatorHeader(request: IncomingMessage, name: string): string | undefined {
+function readOperatorHeader(request: OperatorHeaderRequest, name: string): string | undefined {
   const value = request.headers[name];
   if (Array.isArray(value)) {
     if (value.length !== 1) {
@@ -16940,7 +16881,7 @@ function operatorCapabilityForPath(pathname: string): string {
 }
 
 function validateOperatorRequestContext(input: {
-  readonly request: IncomingMessage;
+  readonly request: OperatorHeaderRequest;
   readonly url: URL;
   readonly body: Record<string, unknown>;
   readonly context: RuntimeOperatorContext | undefined;
@@ -17030,6 +16971,111 @@ function writeOperatorUnauthorized(response: ServerResponse): void {
   });
 }
 
+/**
+ * Run 115 S15a (R21 server half): direct-call seam for the authorized local diagnostics read.
+ * The operator route delegates here; tests call it directly - no server, no port. It reuses the one
+ * operator gate (authorizeOperatorRequest) and the operator context validation, and it never emits
+ * CORS headers, so wildcard/reflected CORS is impossible on this path.
+ */
+export interface LocalDiagnosticsReadHandlerOptions {
+  readonly host?: string;
+  readonly deviceOwnerTrust?: "on" | "off" | boolean;
+  readonly operatorAuthToken?: string;
+  readonly operatorContext?: RuntimeOperatorContext;
+  readonly source?: LocalDiagnosticsSource;
+  readonly now?: () => number;
+}
+
+const LOCAL_DIAGNOSTICS_HEADERS: Readonly<Record<string, string>> = Object.freeze({
+  "cache-control": "no-store",
+  "x-content-type-options": "nosniff",
+});
+
+/**
+ * Headers that CLAIM a trust decision. None of them is ever authoritative (device owner is decided by
+ * the configured bind host + socket peer), so a request presenting one is rejected rather than read.
+ */
+const FORBIDDEN_OWNER_HEADERS = [
+  "x-role-model-device-owner",
+  "x-role-model-owner",
+  "x-role-model-trusted-peer",
+] as const;
+
+export function handleLocalDiagnosticsRead(
+  request: LocalDiagnosticsReadRequest,
+  options: LocalDiagnosticsReadHandlerOptions,
+): LocalDiagnosticsReadResult {
+  for (const header of FORBIDDEN_OWNER_HEADERS) {
+    if (request.headers[header] !== undefined) {
+      return {
+        status: 403,
+        headers: LOCAL_DIAGNOSTICS_HEADERS,
+        body: {
+          schemaVersion: LOCAL_DIAGNOSTICS_SCHEMA,
+          error: "diagnostics_owner_header_forbidden",
+        },
+      };
+    }
+  }
+
+  let authorization: OperatorAuthorization;
+  try {
+    authorization = authorizeOperatorRequest(request, options);
+  } catch (error) {
+    if (error instanceof BridgeHttpError) {
+      return {
+        status: error.statusCode,
+        headers: LOCAL_DIAGNOSTICS_HEADERS,
+        body: {
+          schemaVersion: LOCAL_DIAGNOSTICS_SCHEMA,
+          error: String(error.body.error ?? "operator_context_mismatch"),
+          ...(error.body.field === undefined ? {} : { field: String(error.body.field) }),
+        },
+      };
+    }
+    throw error;
+  }
+  if (!authorization.authorized) {
+    return {
+      status: 401,
+      headers: { ...LOCAL_DIAGNOSTICS_HEADERS, "www-authenticate": "Bearer" },
+      body: {
+        schemaVersion: LOCAL_DIAGNOSTICS_SCHEMA,
+        error: "operator_authentication_required",
+        message: "A valid operator bearer token is required.",
+      },
+    };
+  }
+
+  const url = new URL(request.url ?? LOCAL_DIAGNOSTICS_PATH, "http://127.0.0.1");
+  try {
+    validateOperatorRequestContext({ request, url, body: {}, context: options.operatorContext });
+  } catch (error) {
+    if (error instanceof BridgeHttpError) {
+      return {
+        status: error.statusCode,
+        headers: LOCAL_DIAGNOSTICS_HEADERS,
+        body: {
+          schemaVersion: LOCAL_DIAGNOSTICS_SCHEMA,
+          error: String(error.body.error ?? "operator_context_mismatch"),
+          ...(error.body.field === undefined ? {} : { field: String(error.body.field) }),
+        },
+      };
+    }
+    throw error;
+  }
+
+  const limitParam = url.searchParams.get("limit");
+  return readLocalDiagnostics({
+    source: options.source,
+    query: {
+      limit: limitParam === null ? undefined : Number(limitParam),
+      cursor: url.searchParams.get("cursor"),
+    },
+    nowMs: (options.now ?? Date.now)(),
+  });
+}
+
 const LOOPBACK_OPERATOR_CLIENTS = new Set(["127.0.0.1", "::1", "::ffff:127.0.0.1"]);
 const LEARNING_READBACK_PREFIX = "/api/role-model/operator/learning/";
 
@@ -17093,8 +17139,41 @@ export function resolveDeviceOwnerTrust(
 }
 
 /** The request itself comes from the device: the peer address is loopback, whatever the bind host is. */
-function isLoopbackOperatorClient(request: IncomingMessage): boolean {
+function isLoopbackOperatorClient(request: OperatorPeerRequest): boolean {
   return LOOPBACK_OPERATOR_CLIENTS.has(String(request.socket?.remoteAddress ?? ""));
+}
+
+interface OperatorAuthorization {
+  readonly authorized: boolean;
+  readonly deviceOwner: boolean;
+  readonly presentsCredential: boolean;
+}
+
+/**
+ * Run 115 S15a: THE operator read gate, extracted unchanged from the /api/role-model/operator/*
+ * dispatch so the local diagnostics read path reuses it instead of inventing a second auth path.
+ * Trust = loopback device owner (bind host + socket peer) OR the configured local read credential
+ * (bearer, timing-safe digest compare). It never trusts Host/Origin/forwarded headers.
+ */
+function authorizeOperatorRequest(
+  request: OperatorHeaderRequest & OperatorPeerRequest,
+  options: {
+    readonly host?: string;
+    readonly deviceOwnerTrust?: "on" | "off" | boolean;
+    readonly operatorAuthToken?: string;
+  },
+): OperatorAuthorization {
+  const suppliedAuthorization = readOperatorHeader(request, "authorization");
+  const presentsCredential =
+    typeof suppliedAuthorization === "string" && suppliedAuthorization.length > 0;
+  const deviceOwner =
+    resolveDeviceOwnerTrust(options.host, options.deviceOwnerTrust) === "on" &&
+    isLoopbackOperatorClient(request);
+  return {
+    authorized: deviceOwner || operatorTokenMatches(request, options.operatorAuthToken),
+    deviceOwner,
+    presentsCredential,
+  };
 }
 
 function isAnonymousLearningReadback(
@@ -17320,7 +17399,10 @@ function createRequestHandler(options: StartBridgeServerOptions) {
     options.observabilityScope ??
     createObservabilityScope(`bridge:${options.operatorContext?.scope ?? "unscoped"}`);
   return async (request: IncomingMessage, response: ServerResponse): Promise<void> => {
-    setCorsHeaders(response);
+    // Run 115 S15a (R21): the local diagnostics read path must not inherit the wildcard CORS layer.
+    // Its response carries no CORS headers at all, so no origin is ever allowed or reflected.
+    const isLocalDiagnosticsRequest = (request.url ?? "").startsWith(LOCAL_DIAGNOSTICS_PATH);
+    if (!isLocalDiagnosticsRequest) setCorsHeaders(response);
 
     if (request.method === "OPTIONS") {
       response.statusCode = 204;
@@ -17401,15 +17483,33 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       return;
     }
 
+    /**
+     * Run 115 S15a/S15c (R21 server half): the authorized, bounded local diagnostics read.
+     *
+     * Dispatched BEFORE the generic operator gate so the diagnostics path owns EVERY response
+     * (200/400/401/403) and can attach its no-store/nosniff headers while emitting no CORS headers.
+     * It authorizes through the SAME authorizeOperatorRequest the generic gate uses and rejects
+     * owner-claim headers before anything else.
+     */
+    if (request.method === "GET" && url.pathname === LOCAL_DIAGNOSTICS_PATH) {
+      const result = handleLocalDiagnosticsRead(request, {
+        host: options.host,
+        deviceOwnerTrust: options.deviceOwnerTrust,
+        operatorAuthToken: options.operatorAuthToken,
+        operatorContext: options.operatorContext,
+        source: options.readDiagnosticsSource?.(),
+      });
+      response.removeHeader("Access-Control-Allow-Origin");
+      response.removeHeader("Access-Control-Allow-Methods");
+      response.removeHeader("Access-Control-Allow-Headers");
+      writeJson(response, result.status, result.body, { ...result.headers });
+      return;
+    }
+
     if (url.pathname.startsWith("/api/role-model/operator/")) {
-      const suppliedAuthorization = readOperatorHeader(request, "authorization");
-      const presentsCredential =
-        typeof suppliedAuthorization === "string" && suppliedAuthorization.length > 0;
-      // Run 98 addendum 46: the device owner is trusted for every operator path — reads and mutations alike.
-      const deviceOwner =
-        resolveDeviceOwnerTrust(options.host, options.deviceOwnerTrust) === "on" &&
-        isLoopbackOperatorClient(request);
-      const authorized = deviceOwner || operatorTokenMatches(request, options.operatorAuthToken);
+      // Run 98 addendum 46 (device owner) + the configured read credential: ONE gate. The local
+      // diagnostics read path calls the same authorizeOperatorRequest below.
+      const { authorized, presentsCredential } = authorizeOperatorRequest(request, options);
       const anonymousLearningRead =
         !presentsCredential &&
         !authorized &&
@@ -20294,7 +20394,233 @@ function appendRuntimeHttpTrace(
   }
 }
 
+/**
+ * Run 115 S10b (R20): the ONE module-health composition edge.
+ *
+ * The writer is constructed ONCE here (never per request) and its `source()` is handed to the
+ * existing `readDiagnosticsSource` seam (index.ts:3493), which the authorized diagnostics read path
+ * already consumes. Enablement is explicit and OFF by default: absent or `{ enabled: false }`
+ * returns undefined, so the endpoint keeps answering the honest disabled state.
+ *
+ * PLACEHOLDER limits: the writer's defaults (capacity 64, code 96 bytes) are placeholders. R20
+ * requires calibrated/approved record/byte/ingress/formatting/TTL/query limits BEFORE enablement;
+ * `diagnostics.enabled: true` is that calibration decision, not this composition.
+ *
+ * REPORTING EDGE: createBridgeRequestListener's transport catch - the request program has settled
+ * (its finalizers have run) and the unhandled-failure sink has not yet translated the failure to the
+ * wire. That catch is the single request-lifecycle edge available in this async handler.
+ *
+ * R20 GAP (recorded, not approximated): the edge observes ONLY failures that ESCAPE the route
+ * handlers; handled failures are translated per route and never reach it. The edge calls
+ * recordError, which records every escape as the coarse code "error" - the Fail/Die/Interrupt
+ * classification in observe/recordCause is not wired to this edge - and a client-caused escape
+ * (a 4xx-ish BridgeHttpError that escapes a route) is still counted as a module failure. Closing
+ * this needs an Effect boundary at the request entry or per-route hooks with ONE report owner,
+ * plus classification and calibration; R20 remains open on those points.
+ */
+export interface ModuleHealthComposition {
+  readonly reportRequestFailure: (error: unknown) => void;
+  readonly source: () => LocalDiagnosticsSource;
+  readonly writer: ModuleHealthWriter;
+}
+
+export function createModuleHealthComposition(
+  options: Pick<StartBridgeServerOptions, "diagnostics">,
+): ModuleHealthComposition | undefined {
+  const config = options.diagnostics ?? {};
+  // DEFAULT OFF. Enablement is the R20 calibration decision; absent/false must not construct a writer.
+  if (config?.enabled !== true) return undefined;
+  const writer = makeModuleHealthWriter({
+    ...(config.buildId === undefined ? {} : { buildId: config.buildId }),
+    ...(config.capacity === undefined ? {} : { capacity: config.capacity }),
+    ...(config.instanceId === undefined ? {} : { instanceId: config.instanceId }),
+    ...(config.maxCodeBytes === undefined ? {} : { maxCodeBytes: config.maxCodeBytes }),
+  });
+  return {
+    reportRequestFailure: (error: unknown) => {
+      writer.recordError(error);
+    },
+    source: () => writer.source(),
+    writer,
+  };
+}
+
+/** Test seam: the module-health composition factory the wiring edge uses (defaults to the real one). */
+export type ModuleHealthComposer = (
+  options: Pick<StartBridgeServerOptions, "diagnostics">,
+) => ModuleHealthComposition | undefined;
+
+/** The narrow option surface the wiring reads; the full server options pass through unchanged. */
+export type ModuleHealthWiringOptions = Pick<
+  StartBridgeServerOptions,
+  "diagnostics" | "readDiagnosticsSource"
+>;
+
+export interface ModuleHealthWiring<
+  Options extends ModuleHealthWiringOptions = StartBridgeServerOptions,
+> {
+  /** The handler options; readDiagnosticsSource is the writer's source BY IDENTITY when enabled. */
+  readonly handlerOptions: Options & {
+    readonly readDiagnosticsSource?: () => LocalDiagnosticsSource;
+  };
+  /** The transport edge's report wrapper; a no-op when the writer is disabled. */
+  readonly reportRequestFailure: (error: unknown) => void;
+}
+
+/**
+ * Run 115 S10b/S10c (R20): the ONE module-health wiring edge.
+ *
+ * Constructs the composition exactly once per call and returns (a) the handler options with
+ * `readDiagnosticsSource` injected by identity and (b) the single report wrapper the transport catch
+ * calls. When `diagnostics.enabled` is not literally `true` the options pass through unchanged and
+ * the report wrapper is a no-op, so the diagnostics route keeps answering the explicit disabled
+ * state. See the composition doc above for the recorded R20 gap (escaping failures only, coarse
+ * `error` classification, client-caused escapes counted as module failures).
+ */
+export function wireModuleHealth<Options extends ModuleHealthWiringOptions>(
+  options: Options,
+  compose: ModuleHealthComposer = createModuleHealthComposition,
+): ModuleHealthWiring<Options> {
+  // Exactly one construction per wiring call. Never per request.
+  const composition = compose(options);
+  if (composition === undefined) {
+    return { handlerOptions: options, reportRequestFailure: () => {} };
+  }
+  return {
+    handlerOptions: { ...options, readDiagnosticsSource: composition.source },
+    reportRequestFailure: composition.reportRequestFailure,
+  };
+}
+
+/** The request listener createBridgeRequestListener returns. */
+export type BridgeRequestListener = (request: IncomingMessage, response: ServerResponse) => void;
+
+type BridgeRequestHandler = (request: IncomingMessage, response: ServerResponse) => Promise<void>;
+
+type BridgeUnhandledFailureSink = (response: ServerResponse, error: unknown) => boolean;
+
+/**
+ * The one request-lifecycle edge: the wiring (and therefore at most one writer) is built ONCE when
+ * the listener is created, never per request. A rejected handler promise is reported exactly once,
+ * then translated to the wire by the unhandled-failure sink.
+ */
+export function createBridgeRequestListener<Options extends ModuleHealthWiringOptions>(
+  options: Options,
+  handlerFactory: (options: ModuleHealthWiring<Options>["handlerOptions"]) => BridgeRequestHandler,
+  compose: ModuleHealthComposer = createModuleHealthComposition,
+  onUnhandled: BridgeUnhandledFailureSink = writeUnhandledBridgeError,
+): BridgeRequestListener {
+  const wiring = wireModuleHealth(options, compose);
+  return (request, response) => {
+    void handlerFactory(wiring.handlerOptions)(request, response).catch((error: unknown) => {
+      wiring.reportRequestFailure(error);
+      if (!onUnhandled(response, error)) {
+        console.error("runtime host bridge request failed after response commit", error);
+      }
+    });
+  };
+}
+
+/**
+ * Run 115 S17c (R26 follow-up): the direct contribution write edge, extracted so the reachable
+ * request abort signal can be tested without booting the host. `operations` is the real Track B
+ * operations object in production and a recorder stub in the test.
+ */
+export interface DirectContributionRecorder {
+  readonly recordContributionAggregate: (
+    input: Record<string, unknown>,
+    options?: { readonly signal?: AbortSignal },
+  ) => Promise<unknown>;
+}
+
+export interface DirectContributionInput {
+  readonly requestId: string;
+  readonly routingDecisionId: string;
+  readonly endpointId: string;
+  readonly modelId: string;
+  readonly reasoningEffort: string | null;
+  readonly effortSource: RuntimeEffortSourceValue;
+  readonly taskType: string;
+  readonly inputTokens: number;
+  readonly outputTokens: number;
+  readonly responseStatusCode?: unknown;
+  readonly usageErrorClass?: unknown;
+  readonly normalizedErrorClass?: unknown;
+  readonly executionFailure?: unknown;
+  readonly cancelled?: unknown;
+  /** The reachable request abort signal (requestOptions.abortSignal at both call sites). */
+  readonly abortSignal?: AbortSignal;
+}
+
+export const recordDirectContributionWith = async (
+  operations: DirectContributionRecorder,
+  input: DirectContributionInput,
+  context: { readonly scopeId: string; readonly trackBPostObservation: boolean },
+): Promise<void> => {
+  // When the post-observation wrapper is configured it owns the contribution write. Skipping the
+  // direct write here keeps one request from producing two aggregate deliveries.
+  if (context.trackBPostObservation) return;
+  const contributionOutcome = deriveRuntimeContributionOutcome({
+    responseStatusCode: input.responseStatusCode,
+    usageErrorClass: input.usageErrorClass,
+    normalizedErrorClass: input.normalizedErrorClass,
+    executionFailure: input.executionFailure,
+    cancelled: input.cancelled,
+  });
+  if (!contributionOutcome) return;
+  try {
+    await operations.recordContributionAggregate(
+      {
+        requestId: input.requestId,
+        correlationId: createRuntimeRequestCorrelationId({
+          scope: context.scopeId,
+          requestId: input.requestId,
+          routingDecisionId: input.routingDecisionId,
+        }),
+        routingDecisionId: input.routingDecisionId,
+        endpointId: input.endpointId,
+        modelId: input.modelId,
+        reasoningEffort: input.reasoningEffort,
+        effortSource: input.effortSource,
+        taskType: input.taskType,
+        inputTokens: input.inputTokens,
+        outputTokens: input.outputTokens,
+        ...contributionOutcome,
+      },
+      input.abortSignal === undefined ? {} : { signal: input.abortSignal },
+    );
+  } catch {
+    // Contribution is non-routing-critical; its bounded outbox owns retry.
+  }
+};
+
+/**
+ * Run 115 S17d (R26): the host-level route-capture edge shared by both capture call sites.
+ *
+ * The request abort signal is read from the execution request options here, once, so the host
+ * sites cannot silently drop it (the third argument is required) and a test can drive the exact
+ * host edge through the real operations object into fetch.
+ */
+export interface RouteCaptureRecorder {
+  readonly recordLocalRouteCapture: (
+    input: Record<string, unknown>,
+    options?: { readonly signal?: AbortSignal },
+  ) => Promise<unknown>;
+}
+
+export const recordRouteCaptureAtHostEdge = async (
+  operations: RouteCaptureRecorder,
+  input: Record<string, unknown>,
+  executionOptions: { readonly requestOptions?: BridgeExecutionRequestOptions } | undefined,
+): Promise<unknown> => {
+  const signal = executionOptions?.requestOptions?.abortSignal;
+  return await operations.recordLocalRouteCapture(input, signal === undefined ? {} : { signal });
+};
+
 export async function startBridgeServer(options: StartBridgeServerOptions): Promise<BridgeServer> {
+  // ONE composition edge: the listener builds the writer once for the host's lifetime and injects
+  // its source into the existing diagnostics read seam (see wireModuleHealth).
+  const requestListener = createBridgeRequestListener(options, createRequestHandler);
   const server = createServer((request, response) => {
     const requestStart = Date.now();
     const requestPath = new URL(request.url ?? "/", "http://127.0.0.1").pathname;
@@ -20331,11 +20657,9 @@ export async function startBridgeServer(options: StartBridgeServerOptions): Prom
         }
       });
     }
-    void createRequestHandler(options)(request, response).catch((error: unknown) => {
-      if (!writeUnhandledBridgeError(response, error)) {
-        console.error("runtime host bridge request failed after response commit", error);
-      }
-    });
+    // S10b reporting edge: the request program has settled (finalizers ran) and the failure has not
+    // yet been translated to the wire. One place, not per route.
+    requestListener(request, response);
   });
   const port = await listen(server, options.host, options.port);
 
@@ -20440,6 +20764,35 @@ export interface ObservabilitySnapshotReadback {
   readonly metrics: Record<string, ObservabilityMetricReadback>;
 }
 
+/**
+ * S6e test seam: the read-write retention-cleanup connection and the exact single-statement
+ * DELETE. Exported so the batch can pin busy_timeout=0, the predicate boundary and the deleted
+ * count without booting the whole backend. nowMs is a safe integer literal (no external input).
+ */
+export const openRetentionCleanupDatabase = (databasePath: string) =>
+  makeSync({
+    databasePath,
+    setup: (db) => db.exec("PRAGMA busy_timeout = 0"),
+  });
+
+export const runRetentionCleanupAt = (
+  databasePath: string,
+  nowMs: number = Date.now(),
+): { deletedCount: number } => {
+  const database = openRetentionCleanupDatabase(databasePath);
+  try {
+    database.execSync(
+      `DELETE FROM runtime_observations WHERE retain_until_ms IS NOT NULL AND retain_until_ms < ${nowMs}`,
+    );
+    const changed = database.querySync("SELECT changes() AS changes")[0] as
+      | { changes?: unknown }
+      | undefined;
+    return { deletedCount: Number(changed?.changes ?? 0) };
+  } finally {
+    database.closeSync();
+  }
+};
+
 export async function createRuntimeBridgeBackend(
   options: CreateRuntimeBridgeBackendOptions,
 ): Promise<RuntimeBridgeBackend> {
@@ -20449,6 +20802,10 @@ export async function createRuntimeBridgeBackend(
    */
   const observabilityScope = options.observabilityScope;
   const runtimeChannel = options.runtimeChannel ?? "development";
+  // S21c: the DAG singleton is the only construction site for the Bootstrap owner. The optional
+  // test-only injection exists so the identity proof can observe the host calling its methods.
+  const bootstrapOwner = options.bootstrapOwner ?? composedBootstrapOwner;
+  options.onBootstrapOwner?.(bootstrapOwner);
   const createTrackBOperations = (input: Parameters<typeof createTrackBOperationsFromState>[0]) =>
     createTrackBOperationsFromState({
       ...input,
@@ -20692,56 +21049,11 @@ export async function createRuntimeBridgeBackend(
   // starve request handling). `ROLE_MODEL_ROUTING_PREP_CACHE_TTL_MS=0` disables the snapshot.
   const routingPrepCacheTtlMs = resolveRoutingPrepCacheTtlMs(process.env);
   const routingPrepCache = createRoutingPrepCache({ ttlMs: routingPrepCacheTtlMs });
-  const recordDirectContribution = async (input: {
-    readonly requestId: string;
-    readonly routingDecisionId: string;
-    readonly endpointId: string;
-    readonly modelId: string;
-    readonly reasoningEffort: string | null;
-    readonly effortSource: RuntimeEffortSourceValue;
-    readonly taskType: string;
-    readonly inputTokens: number;
-    readonly outputTokens: number;
-    readonly responseStatusCode?: unknown;
-    readonly usageErrorClass?: unknown;
-    readonly normalizedErrorClass?: unknown;
-    readonly executionFailure?: unknown;
-    readonly cancelled?: unknown;
-  }): Promise<void> => {
-    // When the post-observation wrapper is configured it owns the contribution
-    // write. Skipping the direct write here keeps one request from producing
-    // two aggregate deliveries while the wrapper performs Track B processing.
-    if (options.trackBPostObservation) return;
-    const contributionOutcome = deriveRuntimeContributionOutcome({
-      responseStatusCode: input.responseStatusCode,
-      usageErrorClass: input.usageErrorClass,
-      normalizedErrorClass: input.normalizedErrorClass,
-      executionFailure: input.executionFailure,
-      cancelled: input.cancelled,
+  const recordDirectContribution = (input: DirectContributionInput): Promise<void> =>
+    recordDirectContributionWith(runtimeTrackBOperations, input, {
+      scopeId: options.scopeId,
+      trackBPostObservation: Boolean(options.trackBPostObservation),
     });
-    if (!contributionOutcome) return;
-    try {
-      await runtimeTrackBOperations.recordContributionAggregate({
-        requestId: input.requestId,
-        correlationId: createRuntimeRequestCorrelationId({
-          scope: options.scopeId,
-          requestId: input.requestId,
-          routingDecisionId: input.routingDecisionId,
-        }),
-        routingDecisionId: input.routingDecisionId,
-        endpointId: input.endpointId,
-        modelId: input.modelId,
-        reasoningEffort: input.reasoningEffort,
-        effortSource: input.effortSource,
-        taskType: input.taskType,
-        inputTokens: input.inputTokens,
-        outputTokens: input.outputTokens,
-        ...contributionOutcome,
-      });
-    } catch {
-      // Contribution is non-routing-critical; its bounded outbox owns retry.
-    }
-  };
   const readExactRouteCapture = async (
     requestId: string,
   ): Promise<Record<string, unknown> | null> => {
@@ -20951,21 +21263,8 @@ export async function createRuntimeBridgeBackend(
   const deviceId = randomUUID();
 
   // ── Retention cleanup: delete telemetry records past their retainUntil timestamp ──
-  const runRetentionCleanup = (): { deletedCount: number } => {
-    const database = new DatabaseSync(initialization.databasePath);
-    let deletedCount = 0;
-    try {
-      const result = database
-        .prepare(
-          "DELETE FROM runtime_observations WHERE retain_until_ms IS NOT NULL AND retain_until_ms < ?",
-        )
-        .run(Date.now());
-      deletedCount = Number(result.changes);
-    } finally {
-      database.close();
-    }
-    return { deletedCount };
-  };
+  const runRetentionCleanup = (): { deletedCount: number } =>
+    runRetentionCleanupAt(initialization.databasePath);
   runRetentionCleanup();
 
   if (continuityFixture) {
@@ -27945,12 +28244,17 @@ export async function createRuntimeBridgeBackend(
         });
       }
       if (trackedStreamWriter && requestCapture.body.stream === true) {
-        const rawBody = await readProviderStreamTranscript(response, trackedStreamWriter, {
-          endpointId: target.endpointId,
-          adapterFamily: target.adapterFamily,
-          routingDecisionId,
-          reasoningRequested: streamReasoningRequested,
-        });
+        const rawBody = await readProviderStreamTranscript(
+          response,
+          trackedStreamWriter,
+          {
+            endpointId: target.endpointId,
+            adapterFamily: target.adapterFamily,
+            routingDecisionId,
+            reasoningRequested: streamReasoningRequested,
+          },
+          executionOptions?.requestOptions?.abortSignal,
+        );
         if (!rawBody.includes("data:")) {
           return {
             providerFamily: requestCapture.providerFamily,
@@ -28354,34 +28658,38 @@ export async function createRuntimeBridgeBackend(
           : Array.isArray(requestBody.input)
             ? requestBody.input
             : [];
-        routeCapture = (await runtimeTrackBOperations.recordLocalRouteCapture({
-          requestId,
-          routingDecisionId,
-          endpointId: selectedEndpointId,
-          modelId: selectedModelId ?? selectedEndpointId,
-          reasoningEffort: selectedReasoningEffort,
-          effortSource: selectedEffortSource,
-          // Run 99 close-out (addendas 19-21 S33): a failed request is still evidence, so its
-          // capture records the same classification the routed path would have.
-          // Run 104 R6: the same fallback chain as the routed capture, resolved in one place.
-          classification: buildRequestClassificationForPlan(plan),
-          comparability: { scorerSetVersion: RUN96_ROUTING_SHADOW_SCORER_SET_VERSION },
-          messages: captureInput,
-          failure: {
-            errorClass: error.errorClass,
-            statusCode: error.statusCode,
-            message: error.message,
-          },
-          providerExecutions: [
-            {
-              attemptId: `attempt:${requestId}:failure`,
-              providerId: error.providerId,
-              adapterFamily: error.adapterFamily,
+        routeCapture = (await recordRouteCaptureAtHostEdge(
+          runtimeTrackBOperations,
+          {
+            requestId,
+            routingDecisionId,
+            endpointId: selectedEndpointId,
+            modelId: selectedModelId ?? selectedEndpointId,
+            reasoningEffort: selectedReasoningEffort,
+            effortSource: selectedEffortSource,
+            // Run 99 close-out (addendas 19-21 S33): a failed request is still evidence, so its
+            // capture records the same classification the routed path would have.
+            // Run 104 R6: the same fallback chain as the routed capture, resolved in one place.
+            classification: buildRequestClassificationForPlan(plan),
+            comparability: { scorerSetVersion: RUN96_ROUTING_SHADOW_SCORER_SET_VERSION },
+            messages: captureInput,
+            failure: {
+              errorClass: error.errorClass,
               statusCode: error.statusCode,
+              message: error.message,
             },
-          ],
-          toolExecutions: [],
-        })) as Record<string, unknown>;
+            providerExecutions: [
+              {
+                attemptId: `attempt:${requestId}:failure`,
+                providerId: error.providerId,
+                adapterFamily: error.adapterFamily,
+                statusCode: error.statusCode,
+              },
+            ],
+            toolExecutions: [],
+          },
+          executionOptions,
+        )) as Record<string, unknown>;
       } catch {
         // Rich failure capture remains non-routing-critical and degrades to compact telemetry.
       }
@@ -29290,8 +29598,10 @@ export async function createRuntimeBridgeBackend(
             routeCaptureDegradationReason = "track-b-capture-deferred";
             scheduleDeferredRouteCaptureDrain();
           } else {
-            const capture = (await runtimeTrackBOperations.recordLocalRouteCapture(
+            const capture = (await recordRouteCaptureAtHostEdge(
+              runtimeTrackBOperations,
               routeCapturePayload,
+              executionOptions,
             )) as Record<string, unknown>;
             routeCapture = capture;
             if (
@@ -29860,7 +30170,7 @@ export async function createRuntimeBridgeBackend(
    * directly - the previous closure-local version answered "ready" for its first two branches and "blocked" for its
    * last two, which reported a degraded-but-serving runtime as a fifty-three.
    */
-  let sessionBootstrapState: SessionBootstrapState = createPendingBootstrapState();
+  let sessionBootstrapState: SessionBootstrapState = bootstrapOwner.pending();
   const backend = {
     operatorAuthToken: options.operatorAuthToken,
     get registry(): EndpointRegistryResult {
@@ -30152,6 +30462,7 @@ export async function createRuntimeBridgeBackend(
             (diagnostic) => diagnostic.code === execution.normalized.errorClass,
           ),
           cancelled: requestOptions?.abortSignal?.aborted,
+          abortSignal: requestOptions?.abortSignal,
         });
         markPhase("response-ready");
         return bridgeResult;
@@ -30323,6 +30634,7 @@ export async function createRuntimeBridgeBackend(
             (diagnostic) => diagnostic.code === execution.normalized.errorClass,
           ),
           cancelled: requestOptions?.abortSignal?.aborted,
+          abortSignal: requestOptions?.abortSignal,
         });
         return bridgeResult;
       } catch (error) {
@@ -34290,7 +34602,7 @@ export async function createRuntimeBridgeBackend(
       finishedAt: null,
       stages: [],
     };
-    sessionBootstrapState = await runSessionBootstrapStages({
+    sessionBootstrapState = await bootstrapOwner.run({
       credentials: async () => {
         const operatorIntentRead = readOperatorIntentResult(operatorIntentLocation);
         operatorIntentDiagnostic = operatorIntentRead.diagnostic;

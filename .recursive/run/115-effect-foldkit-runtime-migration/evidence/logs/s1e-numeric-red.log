@@ -1,0 +1,86 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui-parity
+
+ ❯ test/structure.test.ts (29 tests | 4 failed) 82ms
+   × compareStructureSnapshots > rejects non-finite captured geometry NaN 38ms
+     → expected false to be true // Object.is equality
+   × compareStructureSnapshots > rejects non-finite captured geometry Infinity 3ms
+     → expected false to be true // Object.is equality
+   × compareStructureSnapshots > rejects non-finite captured geometry -Infinity 4ms
+     → expected false to be true // Object.is equality
+   × compareStructureSnapshots > rejects a negative rectangle size 3ms
+     → expected false to be true // Object.is equality
+   ✓ compareStructureSnapshots > returns no findings for identical text and control captures 3ms
+   ✓ compareStructureSnapshots > returns no findings for two empty snapshots 0ms
+   ✓ compareStructureSnapshots > reports an extra node against an empty expected snapshot 1ms
+   ✓ compareStructureSnapshots > reports a missing node against an empty actual snapshot 1ms
+   ✓ compareStructureSnapshots > ignores node array order when identity and geometry agree 1ms
+   ✓ compareStructureSnapshots > matches repeated text occurrences independently of order 1ms
+   ✓ compareStructureSnapshots > matches repeated control occurrences independently of order 1ms
+   ✓ compareStructureSnapshots > pairs repeated identities by geometry and reports one geometry change 1ms
+   ✓ compareStructureSnapshots > reports a missing repeated occurrence instead of a silent drop 1ms
+   ✓ compareStructureSnapshots > reports an extra repeated occurrence 0ms
+   ✓ compareStructureSnapshots > reports a changed text identity 1ms
+   ✓ compareStructureSnapshots > reports a changed control accessible name 1ms
+   ✓ compareStructureSnapshots > reports a changed control role 0ms
+   ✓ compareStructureSnapshots > reports a text/control kind change at the same position 0ms
+   ✓ compareStructureSnapshots > reports a geometry change without missing or extra findings 2ms
+   ✓ compareStructureSnapshots > reports a lost computed style property 1ms
+   ✓ compareStructureSnapshots > separates different changed style properties into groups 1ms
+   ✓ compareStructureSnapshots > groups identical repeated style differences once with count and indices 6ms
+   ✓ compareStructureSnapshots > rejects sub-pixel and 5px geometry changes at the default zero tolerance 1ms
+   ✓ compareStructureSnapshots > applies only the explicit geometry tolerance 1ms
+   ✓ compareStructureSnapshots > canonicalizes style key order without reporting a difference 0ms
+   ✓ compareStructureSnapshots > rejects repeated style keys as an invalid capture 0ms
+   ✓ compareStructureSnapshots > does not copy text or style values into findings 0ms
+   ✓ compareStructureSnapshots > produces the same grouped result when input arrays are reversed 1ms
+   ✓ compareStructureSnapshots > does not mutate either capture 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/structure.test.ts > compareStructureSnapshots > rejects non-finite captured geometry NaN
+ FAIL  test/structure.test.ts > compareStructureSnapshots > rejects non-finite captured geometry Infinity
+ FAIL  test/structure.test.ts > compareStructureSnapshots > rejects non-finite captured geometry -Infinity
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ test/structure.test.ts:61:121
+     59|   it.each([Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFIN…
+     60|     const invalid = text("A", { rect: rect(x, 0) });
+     61|     expect(compareStructureSnapshots([invalid], [invalid]).some((diffe…
+       |                                                                                                                         ^
+     62|   });
+     63|   it("rejects a negative rectangle size", () => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  test/structure.test.ts > compareStructureSnapshots > rejects a negative rectangle size
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ test/structure.test.ts:65:121
+     63|   it("rejects a negative rectangle size", () => {
+     64|     const invalid = text("A", { rect: rect(0, 0, -1, 20) });
+     65|     expect(compareStructureSnapshots([invalid], [invalid]).some((diffe…
+       |                                                                                                                         ^
+     66|   });
+     67|   it("returns no findings for identical text and control captures", ()…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 25 passed (29)
+   Start at  19:43:53
+   Duration  1.87s (transform 317ms, setup 0ms, collect 287ms, tests 82ms, environment 1ms, prepare 594ms)
+

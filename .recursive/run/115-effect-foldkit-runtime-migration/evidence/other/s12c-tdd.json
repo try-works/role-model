@@ -1,0 +1,139 @@
+{
+  "slice": "s12c-more-primitives",
+  "requirement": [
+    "R7",
+    "R8"
+  ],
+  "status": "complete",
+  "modules": {
+    "role-model-router/packages/ui/src/foldkit-input.ts": "RM3 input: label association, value/onInput, placeholder, name, type, inputMode, autoComplete, ariaLabel, disabled/autofocus; live fieldClassName + fieldLabelClassName verbatim (s12d: inputMode/autoComplete pass-through added)",
+    "role-model-router/packages/ui/src/foldkit-textarea.ts": "RM3 textarea: same shape plus rows and inputMode/autoComplete; live fieldClassName base with caller-appended height/mono classes",
+    "role-model-router/packages/ui/src/foldkit-checkbox.ts": "RM3 checkbox: live button role=checkbox, 16x16 radius-4 primary-fill control with check/dash SVG; model-owned isChecked; aria-label (live) or explicit label; mixed state; caller-owned onClick/onPointerDown event attributes; no data-disabled (live emits none)"
+  },
+  "liveHelpersCopied": {
+    "fieldClassName": "w-full min-h-[34px] rounded-md border border-input bg-background px-3 py-1.5 font-sans !text-[13px] !font-normal !leading-[18px] !tracking-[0em] text-foreground shadow-xs outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 (apps/runtime-ui/app/lib/design-system.ts:1233-1234)",
+    "fieldLabelClassName": "font-sans text-xs leading-4 text-foreground (design-system.ts:1177)",
+    "checkboxClasses": "flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] border + on: border-primary bg-primary text-primary-foreground / off: border-[var(--rm-border-strong)] bg-[var(--rm-panel)] text-transparent (apps/runtime-ui/app/components/checkbox-control.tsx:38-42; the only live checkbox definition - design-system.ts has no checkbox helper)",
+    "checkboxPaths": "check M2 5.2L4.1 7.3L8 2.8; dash M2.5 5h5; svg width/height 10, viewBox 0 0 10 10, aria-hidden, stroke currentColor, strokeWidth 1.5 (checkbox-control.tsx:51-71)",
+    "textareaComposition": "no live textarea helper exists; live calls compose `${fieldClassName} <layout>` (apps/runtime-ui/app/routes/extensions.tsx:818, routes/studio-advanced.tsx:189, routes/control-runtime-config.tsx:171). The primitive keeps fieldClassName verbatim and appends className with plain concatenation (same as the live template literals), deliberately not tailwind-merge, so a caller's min-h-24 overrides visually as in the live app instead of twMerge deleting the base class."
+  },
+  "docVersusCodeDisagreements": [
+    "DESIGN_SYSTEM.md:388 says shared fields target 44px; the live fieldClassName is min-h-[34px] with 13px/18px text. Code wins; the primitives use 34px.",
+    "DESIGN_SYSTEM.md has no checkbox geometry at all (only prose about grouped checkbox rows at :405-407); the 16x16/radius-4/primary-fill/check-dash contract exists only in checkbox-control.tsx:4-5,38-71. Code is the only source."
+  ],
+  "redGreen": {
+    "input": {
+      "red": {
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s12c-red-input.log",
+        "observed": "Failed to resolve import \"../../ui/src/foldkit-input\" (module absent; test written first)"
+      },
+      "green": {
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s12c-green-input.log",
+        "tests": 3,
+        "passed": 3,
+        "failures": 0
+      },
+      "covers": "typed value dispatches Message.Changed and the rendered value follows the model; label->input association with accessible name 'Email'; FULL class attribute equals the exported fieldClassName constant plus the caller class; inputMode/autoComplete pass-through; disabled = native disabled + data-disabled + no input handler + Scene throws 'no input handler'; aria-label fallback; nameless field throws."
+    },
+    "textarea": {
+      "red": {
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s12c-red-textarea.log",
+        "observed": "Failed to resolve import \"../../ui/src/foldkit-textarea\""
+      },
+      "green": {
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s12c-green-input-textarea.log",
+        "tests": 6,
+        "passed": 6,
+        "failures": 0,
+        "note": "covers both input and textarea; the first textarea run failed only because an earlier version used tailwind-merge and dropped the base min-h-[34px]; the class composition was changed to the live template-literal concat and both pass"
+      },
+      "covers": "same contract plus rows, inputMode/autoComplete, and the FULL class attribute equal to the exported fieldClassName constant plus the caller min-h-24/font-mono classes."
+    },
+    "checkbox": {
+      "red": {
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s12c-red-checkbox.log",
+        "observed": "Failed to resolve import \"../../ui/src/foldkit-checkbox\""
+      },
+      "green": {
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s12c-green-checkbox.log",
+        "tests": 5,
+        "passed": 5,
+        "failures": 0
+      },
+      "covers": "aria-checked reflects the Model, click dispatches next state payload (data-last-toggle marker), FULL class attribute equals the exported base+state constants, checked-from-model render, disabled = native disabled + no data-disabled + no handler + Scene click refuses, mixed = aria-checked 'mixed', explicit label association and nameless guard, caller-supplied click/pointerdown attributes run and suppress the default toggle."
+    },
+    "combined": {
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s12c-green.log",
+      "testFiles": 3,
+      "tests": 11,
+      "passed": 11,
+      "failed": 0,
+      "exit": 0,
+      "command": "cd role-model-router/packages/foldkit && vitest run test/s12c-foldkit-input.scene.test.ts test/s12c-foldkit-textarea.scene.test.ts test/s12c-foldkit-checkbox.scene.test.ts --environment happy-dom"
+    }
+  },
+  "registers": {
+    "biome": {
+      "exit": 0,
+      "files": 7,
+      "note": "biome check --write --unsafe then check"
+    },
+    "reactSuite": {
+      "command": "cd role-model-router/packages/ui && vitest run",
+      "exit": 0,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s12c-ui-suite.log",
+      "testFiles": 7,
+      "tests": 33,
+      "passed": 33,
+      "note": "existing React suite unaffected; no existing React export changed"
+    },
+    "exports": "packages/ui/package.json gained additive subpath exports ./foldkit-input, ./foldkit-textarea, ./foldkit-checkbox (the ./... wildcard maps to .tsx, so .ts modules need an explicit entry); React exports untouched."
+  },
+  "findings": [
+    "CORRECTED in s12d: the earlier note claiming test/s12b-rm3-button.scene.test.ts can never pass was wrong. The full-class assertion uses toHaveAttr('class', rm3ButtonClassName(variant)) (not toHaveClass), and the test passes 7/7 (node node_modules/vitest/vitest.mjs run test/s12b-rm3-button.scene.test.ts --environment happy-dom, exit 0). No test change was needed; s12d only removed tailwind-merge from the primitive."
+  ],
+  "s12dRepairs": {
+    "source": ".recursive/run/115-effect-foldkit-runtime-migration/tasks/s12d-primitive-repairs.md (accepted independent-review findings)",
+    "changes": {
+      "checkboxHooks": "Added optional caller-owned Foldkit event attributes onClick/onPointerDown. A supplied onClick replaces the primitive's default toggle, so the caller owns the message and its ClickOptions (defaultAction: Prevent, propagation: Stop) and can preventDefault/stopPropagation; onPointerDown is attached as-is. Proven by the new Scene test: caller message handled, ancestor handler not reached (propagation stopped), no default toggle.",
+      "checkboxDataDisabled": "Removed the invented data-disabled marker (live checkbox-control.tsx emits none); the disabled test now asserts the attribute is absent.",
+      "inputTextarea": "Added inputMode and autoComplete pass-through, rendered as h.InputMode/h.Autocomplete (live: storage-retention.tsx:461, studio-images.tsx:169/178, operator-controls.tsx:378).",
+      "classAssertions": "Input/textarea/checkbox tests now assert the FULL class attribute equals the exported constants (fieldClassName + caller class; checkbox base+state) instead of 2-3 tokens, and the input/checkbox tests freeze those constants against their live literals, so deleting focus-visible:ring-[3px], placeholder:* or shadow-xs now fails.",
+      "buttonComposition": "Dropped tailwind-merge (cn) for live plain concatenation: block form is base + ' w-full' (design-system.ts:1252) and the view joins base+className with a space. Rendered classes change only when a caller className conflicts with a base utility: both are kept instead of twMerge deleting the loser. No scene test passes className; button suite stays 7/7.",
+      "antiSlop": "Removed the runtime typeof narrowing ((x ?? \"\").trim() instead) and the uncommented id/label type assertions in the checkbox label path."
+    },
+    "evidence": {
+      "red": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s12d-red.log",
+      "green": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s12d-green-focus.log",
+      "sceneSuite": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s12d-scene-suite.log",
+      "nodeTestGraphs": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s12d-node-test-graphs.log",
+      "typecheck": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s12d-tsc.log",
+      "lintAfter": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s12d-lint-after.log",
+      "uiSuite": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s12d-ui-suite.log"
+    },
+    "results": {
+      "tests": "RED 4 failed for the intended reasons; GREEN focused 4 files / 19 tests; scene suite 4 files / 19 tests; UI suite 7 files / 33 tests; node --test graph suites 16/16; tsc -p tsconfig.foldkit.json exit 0.",
+      "lint": "Before (absolute paths): input 3 / textarea 3 / checkbox 5 findings. After: input, textarea and checkbox clean (0). The button keeps 3 pre-existing S12b findings (no-known-value-widening + 2 no-runtime-typeof), outside the accepted repair list.",
+      "runnerNote": "vitest run test also collects the two node:test .mjs graph suites and reports 'No test suite found'; they are run with node --test and pass (16/16). Not a regression."
+    },
+    "files": {
+      "role-model-router/packages/ui/src/foldkit-button.ts": "c88322f1a401ca16a87637721bd7acdf2cedbce9567dcba6d7c51e7b58153fb7",
+      "role-model-router/packages/foldkit/test/s12b-rm3-button.scene.test.ts": "ab4f2cdf67414d778efdc9b29f3282e2c557f1f1486debdb19cf9797b520a51f"
+    }
+  },
+  "files": {
+    "role-model-router/packages/ui/src/foldkit-input.ts": "f9c17d98eb97ec0e6479e65abaad0a8f9dc5e365b6c6bd21d5a74c8a3d555f57",
+    "role-model-router/packages/ui/src/foldkit-textarea.ts": "7887aee311d75eb231083a4fda845217fc77fcde6745b785ca33eb1a13a578a5",
+    "role-model-router/packages/ui/src/foldkit-checkbox.ts": "8a03aef5049e0dc4a61e2bd491ca377bc45e2e175c9581e94e1904331a29bd8a",
+    "role-model-router/packages/foldkit/test/s12c-foldkit-input.scene.test.ts": "21764d1857e18c2c86c0637b4f3183c367bb617fb5d1bbdc6485bd525500cf2f",
+    "role-model-router/packages/foldkit/test/s12c-foldkit-textarea.scene.test.ts": "c7ce1b2fc42fb210fefc0230d05a175d6aa35c29494035d01cf48922aa290f0c",
+    "role-model-router/packages/foldkit/test/s12c-foldkit-checkbox.scene.test.ts": "5cde8dbdb8be15e5cb2bcbec014f9856854adf7c8f93a66b09c32b4d2a1391ee",
+    "role-model-router/packages/ui/package.json": "0fcbd73f678bbe57e9d4eab5f4ee4c3e711fd2c1952eaf31eb4a468c2587329b"
+  },
+  "notPreserved": [
+    "input: no isReadOnly/isInvalid/hasDescription/onBlur (the vendored input has them; the live RM3 field contract does not use them in the copied helpers). Label is rendered as an explicit <label for> rather than the live implicit <label> nesting, because Scene's accessibleName does not resolve ancestor labels; semantic association is equivalent.",
+    "textarea: same omissions as input; no default height or mono styling (live call sites decide these); className is appended verbatim.",
+    "checkbox: no hidden input/name (the live RM3 button-based checkbox contributes no form value; only the vendored checkbox has a hidden input). aria-label remains the primary live naming path; the explicit id+label path is an additive form-style option. Space-key activation relies on native button semantics and cannot be simulated by Scene (no default-action simulation), so the Space-key default action is not simulated; the click path and caller-supplied click/pointerdown attributes are proven. No data-checked marker (live does not emit one).",
+    "No select primitive (not requested). No real-browser/CSS verification; assertions are Scene VNode-level. CORRECTED in s12d: packages/ui DOES provide typecheck:foldkit (tsc -p tsconfig.foldkit.json) and tsconfig.foldkit.json includes src/foldkit-*.ts; node ../../../node_modules/typescript/bin/tsc -p tsconfig.foldkit.json exits 0 for the four primitives (evidence/logs/s12d-tsc.log)."
+  ]
+}

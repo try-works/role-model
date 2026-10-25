@@ -1,0 +1,291 @@
+@import 'tailwindcss';
+
+/* shadcn/ui default theme (new-york, neutral base), Tailwind v4 format —
+   copied verbatim from shadcn's Tailwind v4 globals.css. Nothing here is
+   React-specific: the whole shadcn token system transfers unchanged. */
+
+/* The nearest scope wins: a .light scope inside .dark (and a .dark scope
+   inside that) re-resolve the variant. */
+@custom-variant dark (&:is(:is(.dark *):not(.dark .light, .dark .light *), .dark .light .dark *));
+
+@import './theme.css';
+
+@theme inline {
+  --font-sans: 'Inter', 'Inter Fallback', ui-sans-serif, system-ui, sans-serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+    outline-color: color-mix(in oklab, var(--color-ring) 50%, transparent);
+  }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-toggle-icon {
+    transition-duration: 0ms;
+  }
+}
+
+.theme-toggle-icon {
+  color: var(--color-foreground);
+}
+
+/* Foldkit UI marks transition phases with data-enter / data-leave /
+   data-transition / data-closed (Headless-UI style) instead of Radix's
+   data-[state=open]. Component class strings target them with Tailwind's
+   built-in arbitrary data variants: data-[closed]:opacity-0 etc. */
+
+/* The /create preview board renders charts with the neutral grayscale ramp the
+   live builder uses by default (probed from ui.shadcn.com/preview/base/
+   preview-02). Scoped here so the rest of the app keeps the classic colored
+   shadcn chart tokens. */
+.create-board-theme {
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+}
+
+.crease-preview-icon > svg {
+  display: none;
+}
+
+.create-board-theme[data-icon-library='lucide'] .crease-preview-icon-lucide,
+.create-board-theme[data-icon-library='hugeicons']
+  .crease-preview-icon-hugeicons,
+.create-board-theme[data-icon-library='tabler'] .crease-preview-icon-tabler,
+.create-board-theme[data-icon-library='phosphor'] .crease-preview-icon-phosphor,
+.create-board-theme[data-icon-library='remixicon']
+  .crease-preview-icon-remixicon,
+[data-crease-board-theme][data-icon-library='lucide']
+  .crease-preview-icon-lucide,
+[data-crease-board-theme][data-icon-library='hugeicons']
+  .crease-preview-icon-hugeicons,
+[data-crease-board-theme][data-icon-library='tabler']
+  .crease-preview-icon-tabler,
+[data-crease-board-theme][data-icon-library='phosphor']
+  .crease-preview-icon-phosphor,
+[data-crease-board-theme][data-icon-library='remixicon']
+  .crease-preview-icon-remixicon {
+  display: block;
+}
+
+/* StyleX cannot express ancestor data-state selectors. Keep icon-collapse
+   visibility structural and scoped to the renderer boundary. */
+[data-slot='sidebar-wrapper'][data-renderer='stylex'][data-state='collapsed']
+  [data-collapsible='icon']
+  :is(
+    [data-sidebar='group-label'],
+    [data-sidebar='group-action'],
+    [data-sidebar='input'],
+    [data-sidebar='menu-action'],
+    [data-sidebar='menu-badge'],
+    [data-sidebar='menu-sub']
+  ) {
+  display: none;
+}
+
+[data-slot='sidebar-wrapper'][data-renderer='stylex'][data-state='collapsed']
+  [data-collapsible='icon']
+  [data-sidebar='brand'] {
+  padding-inline: 0.125rem;
+}
+
+[data-slot='sidebar-wrapper'][data-renderer='stylex']
+  :is(
+    [data-sidebar='menu-button'],
+    [data-sidebar='menu-action'],
+    [data-sidebar='trigger']
+  )
+  > svg {
+  flex-shrink: 0;
+  height: 1rem;
+  width: 1rem;
+}
+
+[data-slot='sidebar-wrapper'][data-renderer='stylex'][data-state='collapsed']
+  [data-collapsible='icon']
+  [data-sidebar='menu-button'] {
+  height: 2rem;
+  padding: 0.5rem;
+  width: 2rem;
+}
+
+[data-slot='sidebar-wrapper'][data-renderer='stylex'][data-state='collapsed']
+  [data-collapsible='icon']
+  [data-sidebar='menu-button'][data-size='lg'] {
+  padding: 0;
+}
+
+[data-slot='sidebar-wrapper'][data-renderer='stylex']
+  [data-sidebar='menu-item']:is(:hover, :focus-within)
+  [data-sidebar='menu-action'][data-show-on-hover] {
+  opacity: 1;
+}
+
+/* shadcn `shimmer` text utility: a clipped gradient sweep across inline text
+   (marker "thinking" states, attachment processing rows). */
+@utility shimmer {
+  --_spread: var(--shimmer-spread, calc(3ch + 40px));
+  --_base: currentColor;
+  --_highlight: var(
+    --shimmer-color,
+    oklch(from currentColor l c h / calc(alpha * 0.2))
+  );
+  background-image: var(
+    --shimmer-image,
+    linear-gradient(
+      calc(90deg + var(--shimmer-angle, 20deg)),
+      var(--_base) calc(50% - var(--_spread)),
+      color-mix(in oklch, var(--_highlight), var(--_base) 50%)
+        calc(50% - var(--_spread) * 0.5),
+      var(--_highlight) 50%,
+      color-mix(in oklch, var(--_highlight), var(--_base) 50%)
+        calc(50% + var(--_spread) * 0.5),
+      var(--_base) calc(50% + var(--_spread))
+    )
+  );
+  background-repeat: no-repeat;
+  background-size: calc(200% + var(--_spread) * 2) 100%;
+  -webkit-text-fill-color: var(--shimmer-text-fill, transparent);
+  animation: tw-shimmer var(--shimmer-duration, 2s) linear infinite;
+  background-position: 0 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.dark .shimmer {
+  --_highlight: var(
+    --shimmer-color,
+    oklch(from currentColor max(0.8, calc(l + 0.4)) c h / calc(alpha + 0.4))
+  );
+}
+
+[dir='rtl'] .shimmer,
+[dir='rtl'].shimmer {
+  animation-direction: reverse;
+}
+
+@keyframes tw-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+
+/* Astryx CircularProgress port — indeterminate ring rotation + fill dash
+   shimmy (packages/lab/src/CircularProgress/CircularProgress.tsx). Tailwind
+   utilities animate-[circular-progress-rotate_*] /
+   animate-[circular-progress-dash_*] reference these names. */
+@keyframes circular-progress-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes circular-progress-dash {
+  0% {
+    stroke-dasharray: 2% 300%;
+    stroke-dashoffset: 0%;
+  }
+  50% {
+    stroke-dasharray: 175% 300%;
+    stroke-dashoffset: -68%;
+  }
+  100% {
+    stroke-dasharray: 2% 300%;
+    stroke-dashoffset: -302%;
+  }
+}
+
+/* The foldkit runtime creates #foldkit-portal-root at app boot as the
+   body's first child. Portaled popups (select listbox, date pickers) are
+   z-50 — the same as sheets/dialogs in the app root — so they lose on DOM
+   order and render underneath those overlays, unclickable. Portal content
+   is floating UI: keep the whole portal root above the app's overlay
+   layers, matching Radix's body-end portals. */
+#foldkit-portal-root {
+  position: relative;
+  z-index: 60;
+}
+
+/* diceui ActionBar entrance — animate-in fade-in-0 zoom-in-95 +
+   slide-in-from-{top,bottom}-4 250ms cubic-bezier(0.16,1,0.3,1). */
+.crease-action-bar-in {
+  animation: crease-action-bar-in 250ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes crease-action-bar-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.crease-action-bar-in[data-side='top'] {
+  animation-name: crease-action-bar-in-top;
+}
+
+@keyframes crease-action-bar-in-top {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}

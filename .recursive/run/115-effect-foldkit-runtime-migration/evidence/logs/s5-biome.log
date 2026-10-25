@@ -1,0 +1,9 @@
+COMMAND: node node_modules/@biomejs/biome/bin/biome check role-model-router/packages/process-supervisor/src/index.ts role-model-router/packages/process-supervisor/test/health-wait-timeout.test.ts
+CWD: role-model-router/packages/process-supervisor
+EXIT_CODE=0
+
+Checked 2 files in 112ms. No fixes applied.
+
+--- recheck ---
+Checked 2 files in 77ms. No fixes applied.
+

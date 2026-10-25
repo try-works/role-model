@@ -1,0 +1,429 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui-parity
+
+ ❯ test/structure.test.ts (25 tests | 18 failed) 42ms
+   ✓ compareStructureSnapshots > returns no findings for identical text and control captures 3ms
+   ✓ compareStructureSnapshots > returns no findings for two empty snapshots 0ms
+   × compareStructureSnapshots > reports an extra node against an empty expected snapshot 14ms
+     → expected [] to deeply equal [ 'extra_node|text|1||0' ]
+   × compareStructureSnapshots > reports a missing node against an empty actual snapshot 2ms
+     → expected [] to deeply equal [ 'missing_node|text|1|0|' ]
+   ✓ compareStructureSnapshots > ignores node array order when identity and geometry agree 0ms
+   ✓ compareStructureSnapshots > matches repeated text occurrences independently of order 0ms
+   ✓ compareStructureSnapshots > matches repeated control occurrences independently of order 0ms
+   × compareStructureSnapshots > pairs repeated identities by geometry and reports one geometry change 1ms
+     → expected [] to deeply equal [ 'geometry_changed|y|1|0|1' ]
+   × compareStructureSnapshots > reports a missing repeated occurrence instead of a silent drop 1ms
+     → expected [] to deeply equal [ 'missing_node|text|1|1|' ]
+   × compareStructureSnapshots > reports an extra repeated occurrence 1ms
+     → expected [] to deeply equal [ 'extra_node|text|1||1' ]
+   × compareStructureSnapshots > reports a changed text identity 1ms
+     → expected [] to deeply equal [ 'text_changed||1|0|0' ]
+   × compareStructureSnapshots > reports a changed control accessible name 1ms
+     → expected [] to deeply equal [ 'name_changed||1|0|0' ]
+   × compareStructureSnapshots > reports a changed control role 1ms
+     → expected [] to deeply equal [ 'role_changed||1|0|0' ]
+   × compareStructureSnapshots > reports a text/control kind change at the same position 1ms
+     → expected [] to deeply equal [ 'kind_changed||1|0|0' ]
+   × compareStructureSnapshots > reports a geometry change without missing or extra findings 1ms
+     → expected [] to deeply equal [ 'geometry_changed|x|1|0|0' ]
+   × compareStructureSnapshots > reports a lost computed style property 1ms
+     → expected [] to deeply equal [ 'style_changed|color|1|0|0' ]
+   × compareStructureSnapshots > separates different changed style properties into groups 1ms
+     → expected [] to deeply equal [ 'style_changed|color|1|0|0', …(1) ]
+   × compareStructureSnapshots > groups identical repeated style differences once with count and indices 3ms
+     → expected [] to have a length of 1 but got +0
+   × compareStructureSnapshots > rejects sub-pixel and 5px geometry changes at the default zero tolerance 1ms
+     → expected [] to deeply equal [ 'geometry_changed|x|1|0|0' ]
+   × compareStructureSnapshots > applies only the explicit geometry tolerance 1ms
+     → expected [] to deeply equal [ 'geometry_changed|x|1|0|0' ]
+   ✓ compareStructureSnapshots > canonicalizes style key order without reporting a difference 0ms
+   × compareStructureSnapshots > rejects repeated style keys as an invalid capture 1ms
+     → expected [] to deeply equal [ Array(1) ]
+   × compareStructureSnapshots > does not copy text or style values into findings 2ms
+     → expected '[]' to contain 'color'
+   × compareStructureSnapshots > produces the same grouped result when input arrays are reversed 1ms
+     → expected [] to deeply equal [ 'style_changed|color|2|0,1|0,1' ]
+   ✓ compareStructureSnapshots > does not mutate either capture 0ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 18 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/structure.test.ts > compareStructureSnapshots > reports an extra node against an empty expected snapshot
+AssertionError: expected [] to deeply equal [ 'extra_node|text|1||0' ]
+
+- Expected
++ Received
+
+- [
+-   "extra_node|text|1||0",
+- ]
++ []
+
+ ❯ test/structure.test.ts:78:67
+     76| 
+     77|   it("reports an extra node against an empty expected snapshot", () =>…
+     78|     expect(groups(compareStructureSnapshots([], [text("Only")]))).toEq…
+       |                                                                   ^
+     79|       "extra_node|text|1||0",
+     80|     ]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/18]⎯
+
+ FAIL  test/structure.test.ts > compareStructureSnapshots > reports a missing node against an empty actual snapshot
+AssertionError: expected [] to deeply equal [ 'missing_node|text|1|0|' ]
+
+- Expected
++ Received
+
+- [
+-   "missing_node|text|1|0|",
+- ]
++ []
+
+ ❯ test/structure.test.ts:84:67
+     82| 
+     83|   it("reports a missing node against an empty actual snapshot", () => {
+     84|     expect(groups(compareStructureSnapshots([text("Only")], []))).toEq…
+       |                                                                   ^
+     85|       "missing_node|text|1|0|",
+     86|     ]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/18]⎯
+
+ FAIL  test/structure.test.ts > compareStructureSnapshots > pairs repeated identities by geometry and reports one geometry change
+AssertionError: expected [] to deeply equal [ 'geometry_changed|y|1|0|1' ]
+
+- Expected
++ Received
+
+- [
+-   "geometry_changed|y|1|0|1",
+- ]
++ []
+
+ ❯ test/structure.test.ts:116:65
+    114|       text("Row", { rect: rect(0, 20, 10, 10) }),
+    115|     ];
+    116|     expect(groups(compareStructureSnapshots(expected, actual))).toEqua…
+       |                                                                 ^
+    117|       "geometry_changed|y|1|0|1",
+    118|     ]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/18]⎯
+
+ FAIL  test/structure.test.ts > compareStructureSnapshots > reports a missing repeated occurrence instead of a silent drop
+AssertionError: expected [] to deeply equal [ 'missing_node|text|1|1|' ]
+
+- Expected
++ Received
+
+- [
+-   "missing_node|text|1|1|",
+- ]
++ []
+
+ ❯ test/structure.test.ts:123:66
+    121|   it("reports a missing repeated occurrence instead of a silent drop",…
+    122|     const row = text("Row", { rect: rect(0, 0, 10, 10) });
+    123|     expect(groups(compareStructureSnapshots([row, row], [row]))).toEqu…
+       |                                                                  ^
+    124|       "missing_node|text|1|1|",
+    125|     ]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/18]⎯
+
+ FAIL  test/structure.test.ts > compareStructureSnapshots > reports an extra repeated occurrence
+AssertionError: expected [] to deeply equal [ 'extra_node|text|1||1' ]
+
+- Expected
++ Received
+
+- [
+-   "extra_node|text|1||1",
+- ]
++ []
+
+ ❯ test/structure.test.ts:130:66
+    128|   it("reports an extra repeated occurrence", () => {
+    129|     const row = text("Row", { rect: rect(0, 0, 10, 10) });
+    130|     expect(groups(compareStructureSnapshots([row], [row, row]))).toEqu…
+       |                                                                  ^
+    131|       "extra_node|text|1||1",
+    132|     ]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/18]⎯
+
+ FAIL  test/structure.test.ts > compareStructureSnapshots > reports a changed text identity
+AssertionError: expected [] to deeply equal [ 'text_changed||1|0|0' ]
+
+- Expected
++ Received
+
+- [
+-   "text_changed||1|0|0",
+- ]
++ []
+
+ ❯ test/structure.test.ts:136:84
+    134| 
+    135|   it("reports a changed text identity", () => {
+    136|     expect(groups(compareStructureSnapshots([text("Total")], [text("Su…
+       |                                                                                    ^
+    137|       "text_changed||1|0|0",
+    138|     ]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/18]⎯
+
+ FAIL  test/structure.test.ts > compareStructureSnapshots > reports a changed control accessible name
+AssertionError: expected [] to deeply equal [ 'name_changed||1|0|0' ]
+
+- Expected
++ Received
+
+- [
+-   "name_changed||1|0|0",
+- ]
++ []
+
+ ❯ test/structure.test.ts:149:7
+    147|         ),
+    148|       ),
+    149|     ).toEqual(["name_changed||1|0|0"]);
+       |       ^
+    150|   });
+    151| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/18]⎯
+
+ FAIL  test/structure.test.ts > compareStructureSnapshots > reports a changed control role
+AssertionError: expected [] to deeply equal [ 'role_changed||1|0|0' ]
+
+- Expected
++ Received
+
+- [
+-   "role_changed||1|0|0",
+- ]
++ []
+
+ ❯ test/structure.test.ts:157:7
+    155|         compareStructureSnapshots([control("button", "Save")], [contro…
+    156|       ),
+    157|     ).toEqual(["role_changed||1|0|0"]);
+       |       ^
+    158|   });
+    159| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/18]⎯
+
+ FAIL  test/structure.test.ts > compareStructureSnapshots > reports a text/control kind change at the same position
+AssertionError: expected [] to deeply equal [ 'kind_changed||1|0|0' ]
+
+- Expected
++ Received
+
+- [
+-   "kind_changed||1|0|0",
+- ]
++ []
+
+ ❯ test/structure.test.ts:163:7
+    161|     expect(
+    162|       groups(compareStructureSnapshots([text("Save")], [control("butto…
+    163|     ).toEqual(["kind_changed||1|0|0"]);
+       |       ^
+    164|   });
+    165| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/18]⎯
+
+ FAIL  test/structure.test.ts > compareStructureSnapshots > reports a geometry change without missing or extra findings
+AssertionError: expected [] to deeply equal [ 'geometry_changed|x|1|0|0' ]
+
+- Expected
++ Received
+
+- [
+-   "geometry_changed|x|1|0|0",
+- ]
++ []
+
+ ❯ test/structure.test.ts:171:33
+    169|       [text("Total", { rect: rect(6, 0) })],
+    170|     );
+    171|     expect(groups(differences)).toEqual(["geometry_changed|x|1|0|0"]);
+       |                                 ^
+    172|     expect(codes(differences)).not.toContain("missing_node");
+    173|     expect(codes(differences)).not.toContain("extra_node");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/18]⎯
+
+ FAIL  test/structure.test.ts > compareStructureSnapshots > reports a lost computed style property
+AssertionError: expected [] to deeply equal [ 'style_changed|color|1|0|0' ]
+
+- Expected
++ Received
+
+- [
+-   "style_changed|color|1|0|0",
+- ]
++ []
+
+ ❯ test/structure.test.ts:181:65
+    179|     ];
+    180|     const actual = [text("Total", { styles: styles({ display: "block" …
+    181|     expect(groups(compareStructureSnapshots(expected, actual))).toEqua…
+       |                                                                 ^
+    182|       "style_changed|color|1|0|0",
+    183|     ]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/18]⎯
+
+ FAIL  test/structure.test.ts > compareStructureSnapshots > separates different changed style properties into groups
+AssertionError: expected [] to deeply equal [ 'style_changed|color|1|0|0', …(1) ]
+
+- Expected
++ Received
+
+- [
+-   "style_changed|color|1|0|0",
+-   "style_changed|display|1|0|0",
+- ]
++ []
+
+ ❯ test/structure.test.ts:193:65
+    191|       text("Total", { styles: styles({ color: "blue", display: "none" …
+    192|     ];
+    193|     expect(groups(compareStructureSnapshots(expected, actual))).toEqua…
+       |                                                                 ^
+    194|       "style_changed|color|1|0|0",
+    195|       "style_changed|display|1|0|0",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/18]⎯
+
+ FAIL  test/structure.test.ts > compareStructureSnapshots > groups identical repeated style differences once with count and indices
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ test/structure.test.ts:209:25
+    207| 
+    208|     const differences = compareStructureSnapshots(expected, actual);
+    209|     expect(differences).toHaveLength(1);
+       |                         ^
+    210|     expect(differences[0]).toMatchObject({
+    211|       code: "style_changed",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/18]⎯
+
+ FAIL  test/structure.test.ts > compareStructureSnapshots > rejects sub-pixel and 5px geometry changes at the default zero tolerance
+AssertionError: expected [] to deeply equal [ 'geometry_changed|x|1|0|0' ]
+
+- Expected
++ Received
+
+- [
+-   "geometry_changed|x|1|0|0",
+- ]
++ []
+
+ ❯ test/structure.test.ts:223:7
+    221|     expect(
+    222|       groups(compareStructureSnapshots(expected, [text("A", { rect: re…
+    223|     ).toEqual(["geometry_changed|x|1|0|0"]);
+       |       ^
+    224|     expect(
+    225|       groups(compareStructureSnapshots(expected, [text("A", { rect: re…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/18]⎯
+
+ FAIL  test/structure.test.ts > compareStructureSnapshots > applies only the explicit geometry tolerance
+AssertionError: expected [] to deeply equal [ 'geometry_changed|x|1|0|0' ]
+
+- Expected
++ Received
+
+- [
+-   "geometry_changed|x|1|0|0",
+- ]
++ []
+
+ ❯ test/structure.test.ts:236:7
+    234|     expect(
+    235|       groups(compareStructureSnapshots(expected, outside, { tolerance:…
+    236|     ).toEqual(["geometry_changed|x|1|0|0"]);
+       |       ^
+    237|   });
+    238| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/18]⎯
+
+ FAIL  test/structure.test.ts > compareStructureSnapshots > rejects repeated style keys as an invalid capture
+AssertionError: expected [] to deeply equal [ Array(1) ]
+
+- Expected
++ Received
+
+- [
+-   "invalid_capture|expected.styles|1|0|",
+- ]
++ []
+
+ ❯ test/structure.test.ts:257:7
+    255|     expect(
+    256|       groups(compareStructureSnapshots([text("A", { styles: repeated }…
+    257|     ).toEqual(["invalid_capture|expected.styles|1|0|"]);
+       |       ^
+    258|   });
+    259| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/18]⎯
+
+ FAIL  test/structure.test.ts > compareStructureSnapshots > does not copy text or style values into findings
+AssertionError: expected '[]' to contain 'color'
+
+Expected: "color"
+Received: "[]"
+
+ ❯ test/structure.test.ts:266:21
+    264|     const actual = [text("secret text", { styles: styles({ color: "#ab…
+    265|     const summary = JSON.stringify(compareStructureSnapshots(expected,…
+    266|     expect(summary).toContain("color");
+       |                     ^
+    267|     expect(summary).not.toContain("secret text");
+    268|     expect(summary).not.toContain("#123456");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/18]⎯
+
+ FAIL  test/structure.test.ts > compareStructureSnapshots > produces the same grouped result when input arrays are reversed
+AssertionError: expected [] to deeply equal [ 'style_changed|color|2|0,1|0,1' ]
+
+- Expected
++ Received
+
+- [
+-   "style_changed|color|2|0,1|0,1",
+- ]
++ []
+
+ ❯ test/structure.test.ts:286:29
+
+ Test Files  1 failed (1)
+      Tests  18 failed | 7 passed (25)
+   Start at  19:34:36
+   Duration  1.48s (transform 181ms, setup 0ms, collect 137ms, tests 42ms, environment 0ms, prepare 444ms)
+
+    284|       [...actual].reverse(),
+    285|     );
+    286|     expect(groups(forward)).toEqual(["style_changed|color|2|0,1|0,1"]);
+       |                             ^
+    287|     expect(groups(reversed)).toEqual(groups(forward));
+    288|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/18]⎯
+
+EXIT_CODE=1

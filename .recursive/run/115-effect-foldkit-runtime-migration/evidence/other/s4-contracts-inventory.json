@@ -1,0 +1,346 @@
+{
+  "schemaVersion": "role-model.s4-contracts-inventory.v1",
+  "requirement": "R19 (current contracts/extraction B0)",
+  "scope": {
+    "included": [
+      "role-model-router/packages/** (first-party workspace packages)",
+      "role-model-router/apps/runtime-host-bridge/src/** (host application)"
+    ],
+    "excluded": [
+      {
+        "area": "private repository",
+        "reason": "Public artifact only; the private runtime is explicitly out of scope for this inventory and is not cited."
+      },
+      {
+        "area": "vendor/effect, vendor/effect-mq, vendor/foldkit",
+        "reason": "Vendored upstream payload, not a first-party surface; the workspace wrappers are inventoried instead."
+      },
+      {
+        "area": "role-model-router/packages/effect/src/sql.ts and packages/effect-mq/src/index.ts",
+        "reason": "Exported wrappers with no in-repo runtime caller found (no effect/sql or effect-mq imports); not counted as live surfaces."
+      },
+      {
+        "area": "role-model-router/packages/effect-platform-browser",
+        "reason": "Dist-only package (no workspace src definition); a built artifact wrapper, not inventoried as a code surface."
+      },
+      {
+        "area": "role-model-router/packages/sql-sqlite-node/src/service.ts",
+        "reason": "Effect SQLite service has no product caller in the public host today (its callers are package tests only), so it is not counted as a live product surface; R23 wiring is tracked elsewhere."
+      },
+      {
+        "area": "role-model-router/apps/runtime-ui (legacy React) and app pages",
+        "reason": "Client surfaces belong to R7/R8; only wrapper call sites in runtime-ui-next are cited."
+      },
+      {
+        "area": "generated dist/ and test files",
+        "reason": "Build output is not a source contract; tests are cited only as callers where a surface has no product caller yet (none here)."
+      }
+    ]
+  },
+  "entries": [
+    {
+      "id": "effect-root-wrapper",
+      "kind": "resource",
+      "disposition": "adapter",
+      "definition": {
+        "file": "role-model-router/packages/effect/src/index.ts",
+        "line": 10
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/core/src/route-advisory-ladder.ts",
+          "line": 1
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/run108-observability.ts",
+          "line": 1
+        }
+      ],
+      "reason": "Workspace entry re-exports vendor/effect in place, so every Effect import caller resolves one runtime graph."
+    },
+    {
+      "id": "foldkit-wrapper",
+      "kind": "resource",
+      "disposition": "adapter",
+      "definition": {
+        "file": "role-model-router/packages/foldkit/package.json",
+        "line": 7
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-ui-next/src/message.ts",
+          "line": 1
+        },
+        {
+          "file": "role-model-router/apps/runtime-ui-next/src/update.ts",
+          "line": 1
+        }
+      ],
+      "reason": "First-party workspace build of vendored foldkit@0.169.0; the shell imports @role-model-router/foldkit."
+    },
+    {
+      "id": "foldkit-ui-wrapper",
+      "kind": "resource",
+      "disposition": "adapter",
+      "definition": {
+        "file": "role-model-router/packages/foldkit-ui/package.json",
+        "line": 7
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-ui-next/src/view.ts",
+          "line": 1
+        }
+      ],
+      "reason": "Workspace entry for the vendored Foldkit UI primitives; the shell imports /button through it."
+    },
+    {
+      "id": "protocol-route-decision",
+      "kind": "operation",
+      "disposition": "existing-effect",
+      "definition": {
+        "file": "role-model-router/packages/protocol-routing/src/route-decision-boundary.ts",
+        "line": 45
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/protocol-routing/src/index.ts",
+          "line": 360
+        }
+      ],
+      "reason": "Already imports Effect at line 24 and exposes the Effect-facing runner used by the routing index."
+    },
+    {
+      "id": "core-advisory-rung",
+      "kind": "operation",
+      "disposition": "existing-effect",
+      "definition": {
+        "file": "role-model-router/packages/core/src/route-advisory-ladder.ts",
+        "line": 66
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/core/src/router.ts",
+          "line": 200
+        },
+        {
+          "file": "role-model-router/packages/core/src/route-advisory-ladder.ts",
+          "line": 100
+        }
+      ],
+      "reason": "Imports effect at line 1 (Data.TaggedEnum/TaggedError); resolveAdvisoryRung is called by the router walk."
+    },
+    {
+      "id": "observability-scope",
+      "kind": "operation",
+      "disposition": "existing-effect",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/run108-observability.ts",
+        "line": 58
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 17495
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 5468
+        }
+      ],
+      "reason": "Metric.MetricRegistry scope created from vendored Effect (Context/Metric imports at 1-6); host and CLI create one at their roots."
+    },
+    {
+      "id": "observability-snapshot",
+      "kind": "operation",
+      "disposition": "existing-effect",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/run108-observability.ts",
+        "line": 322
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 18162
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/test/run108-addendum01-a52-observability-snapshot-readback.test.ts",
+          "line": 108
+        }
+      ],
+      "reason": "Metric.snapshot readback over the same scope registry; consumed by the operator snapshot route."
+    },
+    {
+      "id": "module-health-writer",
+      "kind": "operation",
+      "disposition": "existing-effect",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/module-health-writer.ts",
+        "line": 94
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 20522
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/test/module-health-writer.test.ts",
+          "line": 34
+        }
+      ],
+      "reason": "Cause.reasons classification and Effect.onExit at the writer observe edge; constructed once by the S10b composition."
+    },
+    {
+      "id": "diagnostics-read",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/local-diagnostics-read.ts",
+        "line": 198
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 17163
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/test/module-health-writer.test.ts",
+          "line": 307
+        }
+      ],
+      "reason": "No effect import; the bounded query is a pure function over the injected source."
+    },
+    {
+      "id": "diagnostics-handler",
+      "kind": "operation",
+      "disposition": "adapter",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 17098
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 17590
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/test/run115-s15a-local-diagnostics-read.test.ts",
+          "line": 78
+        }
+      ],
+      "reason": "Adapts the operator auth decision to the pure read; reuses authorizeOperatorRequest, no second auth path."
+    },
+    {
+      "id": "host-request-handler",
+      "kind": "caller",
+      "disposition": "convert",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 17488
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 20583
+        }
+      ],
+      "reason": "Async HTTP dispatcher, not an Effect program at its boundary; conversion is bounded-leaf work with no monolith split claim (R19 clause 3)."
+    },
+    {
+      "id": "host-bridge-server",
+      "kind": "caller",
+      "disposition": "adapter",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 20537
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 5591
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/scripts/start.ts",
+          "line": 38
+        }
+      ],
+      "reason": "Node http server composition; owns transport and lifecycle, not an Effect service."
+    },
+    {
+      "id": "host-chat-execution",
+      "kind": "caller",
+      "disposition": "convert",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 30214
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 18469
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/benchmark-runner.ts",
+          "line": 711
+        }
+      ],
+      "reason": "Provider execution is async/Promise at this boundary (Effect is used inside vendors, not here); a conversion candidate leaf, not claimed converted."
+    },
+    {
+      "id": "host-cli",
+      "kind": "caller",
+      "disposition": "convert",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 5347
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli-entry.ts",
+          "line": 3
+        }
+      ],
+      "reason": "Large async orchestration; candidate for bounded conversion, explicitly not converted by this inventory."
+    },
+    {
+      "id": "traffic-class",
+      "kind": "operation",
+      "disposition": "existing-effect",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/traffic-class.ts",
+        "line": 34
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 21063
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 28675
+        }
+      ],
+      "reason": "Imports effect at line 1; the persisted traffic-class mapping is used on the request path."
+    },
+    {
+      "id": "unified-runtime-config",
+      "kind": "operation",
+      "disposition": "existing-effect",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/unified-runtime-config.ts",
+        "line": 2016
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 20772
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 30742
+        }
+      ],
+      "reason": "Imports effect at line 3; parseUnifiedRuntimeConfigText is the runtime config boundary used by the host."
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "slice": "s15e-diagnostics-client",
+  "requirement": "R21 (client half: real request path)",
+  "status": "complete",
+  "module": "role-model-router/apps/runtime-ui-next/src/diagnostics-client.ts",
+  "headerShape": {
+    "url": "GET {same-origin}/api/role-model/operator/diagnostics",
+    "credential": "Authorization: Bearer <operator read credential> ONLY when the embedder supplies a token; otherwise no authorization header, relying on the host's loopback device-owner trust",
+    "matchedFrom": "host authorizeOperatorRequest: loopback device-owner trust (bind host + socket peer) OR bearer with timing-safe sha256 compare (index.ts:17146-17165, :16795-16818)",
+    "neverSent": [
+      "x-role-model-device-owner",
+      "x-role-model-owner",
+      "x-role-model-trusted-peer",
+      "x-role-model-channel",
+      "x-role-model-scope",
+      "x-role-model-authorization-epoch",
+      "x-role-model-capability"
+    ],
+    "whyNoContextHeaders": "the host applies its configured RuntimeOperatorContext to a header-less request (index.ts:16887-16898); capability is derived from the path (:16859-16868)",
+    "otherHeaders": "accept: application/json; cache: no-store"
+  },
+  "statusMapping": {
+    "401": "status 401 kept -> page denied/httpStatus 401 -> 'not authorized (HTTP 401)'",
+    "403": "status 403 kept -> page denied/httpStatus 403 -> 'the server rejected this diagnostics read (HTTP 403)'",
+    "200 ok/empty/disabled/stale/dropped": "passed through unchanged to parseDiagnosticsSnapshot (the page keeps the view-model mapping)",
+    "other non-200": "passed through; parseDiagnosticsSnapshot maps to error",
+    "transport rejection": "propagates (Command turns it into the error state)",
+    "non-JSON 2xx body": "throws Error('diagnostics read returned a non-JSON body') instead of being shown as empty"
+  },
+  "originAssumption": "Same-origin deployment: the page is served by the runtime host bridge on the same origin as the diagnostics API, so this is a plain same-origin GET (no CORS preflight, no credentials mode). If the page were served elsewhere: an absolute API base URL would be required, the host would need CORS for GET + the authorization header from that origin, and the trust model would change because device-owner trust is socket-peer based, not Origin based - a cross-origin page could never inherit it and would need an explicitly provisioned bearer read credential (never in public assets).",
+  "red": {
+    "stub": {
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15e-red.log",
+      "result": "6/6 failed: diagnostics client is not implemented"
+    },
+    "mutations": [
+      {
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15e-red-signal.log",
+        "mutation": "signal removed from fetch init",
+        "result": "expected undefined to be an instance of AbortSignal"
+      },
+      {
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15e-red-headers.log",
+        "mutation": "forbidden x-role-model-device-owner header sent",
+        "result": "expected true to be false"
+      },
+      {
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15e-red-status.log",
+        "mutation": "403 coerced to 401",
+        "result": "expected 401 to be 403"
+      }
+    ]
+  },
+  "green": {
+    "client": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15e-green.log",
+    "clientTests": 6,
+    "app": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15e-green-all.log",
+    "appFiles": 4,
+    "appTests": 28,
+    "exit": 0
+  },
+  "typecheck": {
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15e-tsc.log",
+    "exit": 0
+  },
+  "wiring": "exported from src/index.ts (createDiagnosticsClient/diagnosticsClient/DIAGNOSTICS_CLIENT_PATH/forbidden header list/options). The shell's default reader is NOT switched: mount.test.ts and routes.test.ts mount the shell without a host, so a default fetch reader would perform network I/O in those tests; the embedding entry passes createDiagnosticsClient() when it wants the real path.",
+  "files": {
+    "role-model-router/apps/runtime-ui-next/src/diagnostics-client.ts": "fetch reader, credential shape, status pass-through, abort forwarding, origin doc",
+    "role-model-router/apps/runtime-ui-next/src/index.ts": "public exports",
+    "role-model-router/apps/runtime-ui-next/test/diagnostics-client.test.ts": "6 fetch-stub tests"
+  }
+}

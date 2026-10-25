@@ -1,0 +1,14 @@
+✔ VENDORED.json records the reviewed commit, date, licence and commit-only marker (1.9489ms)
+✔ VENDORED.json records the reviewed payload root and includes (1.3237ms)
+✔ the vendored payload carries the reviewed chart sources, licence and compatibility file (3.005ms)
+✔ the content digest recomputed from the vendored bytes matches the manifest and is stable (2828.9779ms)
+✔ the vendored tree carries no node_modules or .git directory (15.8346ms)
+✔ vendor-upstream.mjs declares the reviewed commit and the commit-only acquisition mode (0.6845ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2998.1448

@@ -1,0 +1,37 @@
+{
+  "slice": "s26h-stale-clear",
+  "requirement": "Review fixes: stale clear, parsed host tie, token discovery, readback auth/error bodies",
+  "staleClear": {
+    "behaviour": "A successful gap refetch clears gap-stale only when the parsed snapshot is not an error; an HTTP-error snapshot (503) keeps stale. Tests cover observability and all nine readback routes, plus a failed local-logs gap keeps the banner.",
+    "implementation": "ObservabilityLoaded/ReadbackLoaded now set refresh live only for non-error snapshots.",
+    "reds": [
+      ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26h-red-stale.log"
+    ]
+  },
+  "parsedTie": {
+    "behaviour": "S26f test strips block/line comments and parses url.pathname ===/startsWith plus LOCAL_DIAGNOSTICS_PATH assignments; source.includes is no longer used.",
+    "proof": "Commenting the observability registration makes the tie test fail; restored.",
+    "red": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26h-red-tie.log"
+  },
+  "tokenDecision": {
+    "decision": "Implement legacy discovery: default shell reads role-model.learning.operator-token from localStorage; explicit observabilityToken/readbackToken override it. Empty storage sends no bearer.",
+    "proof": "S26h stored-token mount sends Bearer stored-token; readbackToken sends its own bearer.",
+    "red": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26h-red-token.log"
+  },
+  "authAndBodies": {
+    "auth": "Readback 401 -> '<Label> read failed: HTTP 401 (not authorized)'; 403 -> '(forbidden)'.",
+    "invalid": "Malformed 200 bodies for requests/decisions/peers/queues/logs/runtime/session/candidates/receipts now render error, not empty.",
+    "reds": [
+      ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26h-red-401-readback.log",
+      ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26h-red-invalid.log"
+    ]
+  },
+  "counts": {
+    "tests": 111,
+    "passed": 111,
+    "failed": 0,
+    "typecheck": "exit 0",
+    "biome": "exit 0",
+    "green": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26h-green.log"
+  }
+}

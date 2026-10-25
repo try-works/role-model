@@ -1,0 +1,40 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/s21a-composition-dag.test.ts (4 tests | 1 failed | 3 skipped) 26ms
+   ↓ S21a composition DAG shape > builds the whole closed graph with no ambient service and exposes every owner
+   × S21a composition DAG shape > gives every consumer of one shared leaf the same instance 24ms
+     → expected { …(2) } to be { …(2) } // Object.is equality
+   ↓ S21a composition DAG shape > negative control: rebuilding the leaf per consumer produces different instances
+   ↓ S21a composition DAG shape > bounds provider permits and the explicit waiter queue instead of growing without limit
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s21a-composition-dag.test.ts > S21a composition DAG shape > gives every consumer of one shared leaf the same instance
+AssertionError: expected { …(2) } to be { …(2) } // Object.is equality
+
+- Expected
++ Received
+
+  {
+    "authority": "graph_content_addressed",
+-   "id": "artifact-store:run115-s21a",
++   "id": "rebuilt-bootstrap:run115-s21a",
+  }
+
+ ❯ test/s21a-composition-dag.test.ts:103:30
+    101| 
+    102|     expect(result.backend).toBe(result.leaf);
+    103|     expect(result.bootstrap).toBe(result.leaf);
+       |                              ^
+    104|     expect(result.server).toBe(result.leaf);
+    105|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 skipped (4)
+   Start at  03:36:16
+   Duration  3.03s (transform 1.55s, setup 0ms, collect 2.51s, tests 26ms, environment 0ms, prepare 194ms)
+

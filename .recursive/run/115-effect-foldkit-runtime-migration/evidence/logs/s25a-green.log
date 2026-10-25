@@ -1,0 +1,102 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui
+
+ ✓ app/lib/runtime-refresh-bus.test.ts (5 tests) 14ms
+stderr | app/lib/stale-refresh-diagnostics.test.ts > stale-refresh-diagnostics > emit and flush diagnostics > batches diagnostics until flushed
+[telemetry] Background analytics refresh reused stale data {
+  routeId: 'dashboard',
+  staleChartCount: 2,
+  charts: [
+    {
+      title: 'Chart A',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    },
+    {
+      title: 'Chart B',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    }
+  ]
+}
+
+stderr | app/lib/stale-refresh-diagnostics.test.ts > stale-refresh-diagnostics > emit and flush diagnostics > auto-flushes at max batch size
+[telemetry] Background analytics refresh reused stale data {
+  routeId: 'dashboard',
+  staleChartCount: 10,
+  charts: [
+    {
+      title: 'Chart 0',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    },
+    {
+      title: 'Chart 1',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    },
+    {
+      title: 'Chart 2',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    },
+    {
+      title: 'Chart 3',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    },
+    {
+      title: 'Chart 4',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    },
+    {
+      title: 'Chart 5',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    },
+    {
+      title: 'Chart 6',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    },
+    {
+      title: 'Chart 7',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    },
+    {
+      title: 'Chart 8',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    },
+    {
+      title: 'Chart 9',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    }
+  ]
+}
+
+ ✓ app/lib/stale-refresh-diagnostics.test.ts (14 tests) 25ms
+ ✓ app/lib/live-refresh.test.ts (2 tests) 73ms
+ ✓ app/lib/s25a-refresh-ownership.test.ts (5 tests) 101ms
+ ✓ app/lib/runtime-api.test.ts (68 tests) 146ms
+
+ Test Files  5 passed (5)
+      Tests  94 passed (94)
+   Start at  06:14:11
+   Duration  1.33s (transform 554ms, setup 0ms, collect 1.12s, tests 358ms, environment 2ms, prepare 1.53s)
+

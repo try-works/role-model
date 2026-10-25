@@ -1,0 +1,57 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+stderr | test/s25b-refresh-owner-gap.test.ts > S25b shell refresh owner and gap resync > navigation fences a pending resync: round-trip old payload cannot overwrite fresh data
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 14.4ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: 'a', status: 'loading' },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Diagnostics', id: 'a' },
+    theme: 'light'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 14.400899999999638,
+  thresholdMs: 8
+}
+
+ ❯ test/s25b-refresh-owner-gap.test.ts (9 tests | 1 failed | 8 skipped) 700ms
+   ↓ S25b shell refresh owner and gap resync > the real shell entry starts exactly one subscription and leaks none across two starts
+   ↓ S25b shell refresh owner and gap resync > a revision gap 1 -> 3 with NO later event resyncs immediately, shows stale, and ignores the old revision
+   ↓ S25b shell refresh owner and gap resync > a failed snapshot resync leaves the page visibly stale
+   × S25b shell refresh owner and gap resync > navigation fences a pending resync: round-trip old payload cannot overwrite fresh data 696ms
+     → expected 'stale' not to be 'stale' // Object.is equality
+   ↓ S25b shell refresh owner and gap resync > a failure for route A resolving after navigation to B does not mark B stale
+   ↓ S25b shell refresh owner and gap resync > a fresh route read without a following gap does not leave the page stale
+   ↓ S25b shell refresh owner and gap resync > failure attribution requires both the current token and the current route id
+   ↓ S25b shell refresh owner and gap resync > two resyncs in flight: the older response resolving last cannot win
+   ↓ S25b shell refresh owner and gap resync > an older FAILED resync resolving last cannot make the newer success stale
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s25b-refresh-owner-gap.test.ts > S25b shell refresh owner and gap resync > navigation fences a pending resync: round-trip old payload cannot overwrite fresh data
+AssertionError: expected 'stale' not to be 'stale' // Object.is equality
+ ❯ test/s25b-refresh-owner-gap.test.ts:281:61
+    279|       "fresh route a",
+    280|     );
+    281|     expect(shell()?.getAttribute("data-refresh-state")).not.toBe("stal…
+       |                                                             ^
+    282| 
+    283|     // The OLD pending resync resolves last; navigation advanced the t…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 8 skipped (9)
+   Start at  07:00:35
+   Duration  8.44s (transform 3.91s, setup 0ms, collect 6.28s, tests 700ms, environment 692ms, prepare 275ms)
+

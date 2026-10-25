@@ -1,0 +1,216 @@
+export const EXAMPLE_VALUES = [
+  'counter',
+  'counters',
+  'todo',
+  'stopwatch',
+  'crash-view',
+  'slow-warnings',
+  'form',
+  'job-application',
+  'weather',
+  'api-cache',
+  'api-cache-query',
+  'charting',
+  'routing',
+  'route-transitions',
+  'view-transitions',
+  'interrupting-commands',
+  'query-sync',
+  'snake',
+  'canvas-art',
+  'generative-art',
+  'auth',
+  'shopping-cart',
+  'state-machine',
+  'pixel-art',
+  'websocket-chat',
+  'managed-resource-layer',
+  'kanban',
+  'map',
+  'web-components',
+  'embedding',
+  'ui-showcase',
+] as const
+
+export type Example = (typeof EXAMPLE_VALUES)[number]
+
+export const examples: ReadonlyArray<{
+  value: Example
+  title: string
+  description: string
+}> = [
+  {
+    value: 'counter',
+    title: 'counter',
+    description: 'Simple increment/decrement with reset',
+  },
+  {
+    value: 'counters',
+    title: 'counters',
+    description:
+      'A dynamic list of Counter Submodels with per-instance routing via a wrapper Message',
+  },
+  {
+    value: 'todo',
+    title: 'todo',
+    description: 'CRUD operations with localStorage persistence',
+  },
+  {
+    value: 'stopwatch',
+    title: 'stopwatch',
+    description: 'Timer with start/stop/reset functionality',
+  },
+  {
+    value: 'crash-view',
+    title: 'crash-view',
+    description: 'Custom crash fallback UI with crash.view and crash.report',
+  },
+  {
+    value: 'slow-warnings',
+    title: 'slow-warnings',
+    description:
+      'Interactive lab for slow update, view, patch, and Subscription dependency warnings',
+  },
+  {
+    value: 'form',
+    title: 'form',
+    description: 'Form validation with async email checking',
+  },
+  {
+    value: 'job-application',
+    title: 'job-application',
+    description:
+      'Multi-step form with async validation, file uploads, and per-step error indicators',
+  },
+  {
+    value: 'weather',
+    title: 'weather',
+    description: 'HTTP requests with async state handling',
+  },
+  {
+    value: 'api-cache',
+    title: 'api-cache',
+    description:
+      'Query caching in the Model with stale-while-revalidate, request deduplication, invalidation, and interval refetching',
+  },
+  {
+    value: 'api-cache-query',
+    title: 'api-cache-query',
+    description:
+      'The API Cache app rewritten with experimental Query.define. Fetching and retained entries live in Query Submodels',
+  },
+  {
+    value: 'charting',
+    title: 'charting',
+    description:
+      'Live GitHub and npm telemetry rendered through an ECharts Mount adapter with chart events flowing back as Messages',
+  },
+  {
+    value: 'routing',
+    title: 'routing',
+    description: 'URL routing with parser combinators and route parameters',
+  },
+  {
+    value: 'route-transitions',
+    title: 'route-transitions',
+    description:
+      'Live transition log with entry, exit, and stayed navigation policies',
+  },
+  {
+    value: 'view-transitions',
+    title: 'view-transitions',
+    description:
+      'Shared-element morphs and direction-aware route animations via the View Transitions API',
+  },
+  {
+    value: 'interrupting-commands',
+    title: 'interrupting-commands',
+    description:
+      'Simulated file uploads with cancellable, restartable interruptible Commands',
+  },
+  {
+    value: 'query-sync',
+    title: 'query-sync',
+    description:
+      'URL-driven filtering, sorting, and search with query parameters',
+  },
+  {
+    value: 'snake',
+    title: 'snake',
+    description: 'Classic game built with subscriptions',
+  },
+  {
+    value: 'canvas-art',
+    title: 'canvas-art',
+    description:
+      'Declarative 2D canvas with shapes, animation-frame Subscriptions, and pointer events',
+  },
+  {
+    value: 'generative-art',
+    title: 'generative-art',
+    description:
+      'Perlin-noise flow field with hundreds of evolving particle trails, mouse vortex, and DevTools history exclusion for high-frequency Messages',
+  },
+  {
+    value: 'auth',
+    title: 'auth',
+    description:
+      'Authentication with Submodels, OutMessage, and protected routes',
+  },
+  {
+    value: 'shopping-cart',
+    title: 'shopping-cart',
+    description: 'Complex state management with nested models and routing',
+  },
+  {
+    value: 'state-machine',
+    title: 'state-machine',
+    description:
+      'Checkout workflow powered by the experimental state machine module with guarded branches and edge Commands',
+  },
+  {
+    value: 'pixel-art',
+    title: 'pixel-art',
+    description:
+      'Pixel editor with undo/redo, time-travel history, UI components, and localStorage persistence',
+  },
+  {
+    value: 'websocket-chat',
+    title: 'websocket-chat',
+    description: 'Managed resources with WebSocket integration',
+  },
+  {
+    value: 'managed-resource-layer',
+    title: 'managed-resource-layer',
+    description:
+      'Layer-backed ManagedResource lifecycle with an Effect service',
+  },
+  {
+    value: 'kanban',
+    title: 'kanban',
+    description:
+      'Drag-and-drop board with fractional indexing, keyboard navigation, and screen reader announcements',
+  },
+  {
+    value: 'map',
+    title: 'map',
+    description: 'Interactive MapLibre GL map with Mount and Subscriptions',
+  },
+  {
+    value: 'web-components',
+    title: 'web-components',
+    description:
+      'QR code designer wiring two real third-party web components into Foldkit with CustomElement.define (vanilla-colorful and Shoelace)',
+  },
+  {
+    value: 'embedding',
+    title: 'embedding',
+    description:
+      'A Foldkit widget embedded in a plain TypeScript host page via Runtime.embed, with Flags in, typed Ports in both directions, and dispose on unmount',
+  },
+  {
+    value: 'ui-showcase',
+    title: 'ui-showcase',
+    description: 'Every Foldkit UI component with routing and Submodels',
+  },
+]

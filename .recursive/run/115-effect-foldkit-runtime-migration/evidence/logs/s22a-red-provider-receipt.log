@@ -1,0 +1,56 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:34436) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/run96-replay-router-adapter.test.ts (24 tests | 1 failed | 23 skipped) 37ms
+   ↓ Run96 regression: a supervised replay never dispatches the observed source endpoint as a counterfactual
+   ↓ Run96 regression: replay evaluation groups are stable per replay job and never collide across retries for one source
+   ↓ Run96 regression: recovery binds provider capture identity without confusing it for the appended replay branch root
+   ↓ Run96 S3 RED: the public host uses authenticated scheduler intents that contain only replay references
+   ↓ Run96 Phase5 RED: scheduler claims only the replay intent just enqueued by this supervised run
+   ↓ Run96 S3 RED: the public host derives a bounded replay source attestation from a durable graph receipt
+   ↓ Run96 S3 RED: the host refuses to invent replay provenance when the durable capture does not expose it
+   ↓ Run96 S3 RED: the host exposes a versioned scope-bound router replay adapter without provider credentials
+   ↓ Run96 S3 RED: replay branch capture refuses a missing normal-router decision instead of inventing one
+   ↓ Run96 S3 RED: the host adapter returns only bounded numeric usage for Replay Core budget accounting
+   ↓ Run96 S3 RED: the host replay adapter fails closed for cross-boundary or credential-bearing dispatches
+   ↓ Run96 S3 RED: host orchestration persists router, graph, and evaluation receipts without giving Replay Core a transcript or credential
+   ↓ Run96 S3 RED: host orchestration preserves a bounded rate-limit failure before replay retry
+   ↓ AC-R10-02: production supervised replay falls back after a retryable provider failure with a distinct RouterDecision receipt
+   ↓ Run96 S3 regression: timeout retries while a partial provider result is terminal
+   × Run96 S3 RED: a completed idempotent replay returns its durable receipt without reclaiming or redispatching 35ms
+     → promise rejected "Error: a completed replay must not be rec…" instead of resolving
+   ↓ Run96 Phase5 RED: an idempotent replay awaiting evaluation returns its durable receipt without reclaiming
+   ↓ Run96 S3 regression: a retry resumes durable evaluation without redispatching the provider
+   ↓ Run96 S3 RED: a late-cancelled replay never hands incomplete branches to Evaluation Core
+   ↓ Run96 Phase5 RED: an expired scheduler receipt does not erase an already-durable replay completion
+   ↓ Run96 R10/R11: the public adapter authenticates the private ReplayCore contract and preserves sandbox receipts before append/evaluation
+   ↓ Run96 F36 RED: supervised replay authenticates a sandboxed candidate before dispatch and carries the nonce and receipt
+   ↓ Run96 F36 RED: source attestation includes the complete traversal closure and rejects mismatched duplicate traversal fields
+   ↓ Run96 F36 RED: sandbox receipt digests interoperate and authorization nonce state is isolated per adapter
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run96-replay-router-adapter.test.ts > Run96 S3 RED: a completed idempotent replay returns its durable receipt without reclaiming or redispatching
+AssertionError: promise rejected "Error: a completed replay must not be rec…" instead of resolving
+ ❯ test/run96-replay-router-adapter.test.ts:1471:3
+    1469|       handoffEvaluation: async () => ({ evaluationJobId: "must-not-run…
+    1470|     }),
+    1471|   ).resolves.toMatchObject({
+       |   ^
+    1472|     jobId: "replay:already-complete",
+    1473|     state: "complete",
+
+Caused by: Error: a completed replay must not be reclaimed
+ ❯ Object.invoke test/run96-replay-router-adapter.test.ts:1393:13
+ ❯ runSupervisedReplay src/track-b-runtime.ts:3864:39
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 23 skipped (24)
+   Start at  04:21:14
+   Duration  4.69s (transform 2.48s, setup 0ms, collect 4.19s, tests 37ms, environment 0ms, prepare 161ms)
+

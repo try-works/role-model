@@ -1,0 +1,40 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/s21a-composition-dag.test.ts (6 tests | 1 failed | 5 skipped) 7892ms
+   ↓ S21a composition DAG shape > builds the whole closed graph with no ambient service and exposes every owner
+   ↓ S21a composition DAG shape > gives every consumer of one shared leaf the same instance
+   ↓ S21a composition DAG shape > negative control: Layer.fresh rebuilds inside one shared memo map (deleting fresh fails)
+   × S21a composition DAG shape > rejects callers beyond permit + waiter capacity instead of parking them unboundedly 7889ms
+     → expected +0 to be 1996 // Object.is equality
+   ↓ S21a composition DAG shape > returns the permit to the pool after a failing user
+   ↓ S21a composition DAG shape > returns the permit to the pool after an interrupted user
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s21a-composition-dag.test.ts > S21a composition DAG shape > rejects callers beyond permit + waiter capacity instead of parking them unboundedly
+AssertionError: expected +0 to be 1996 // Object.is equality
+
+- Expected
++ Received
+
+- 1996
++ 0
+
+ ❯ test/s21a-composition-dag.test.ts:182:36
+    180|     expect(result.during.active).toBe(2);
+    181|     expect(result.during.queued).toBeLessThanOrEqual(2);
+    182|     expect(result.during.rejected).toBe(totalCallers - 4);
+       |                                    ^
+    183|     expect(result.failures).toBe(totalCallers - 4);
+    184|     expect(result.after.active).toBe(0);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 skipped (6)
+   Start at  03:52:53
+   Duration  10.85s (transform 1.53s, setup 0ms, collect 2.49s, tests 7.89s, environment 0ms, prepare 164ms)
+
+EXIT_CODE: 1

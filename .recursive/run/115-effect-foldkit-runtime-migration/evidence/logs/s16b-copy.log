@@ -1,0 +1,34 @@
+
+-------------------------------------------------------------------------------
+   ROBOCOPY     ::     Robust File Copy for Windows                              
+-------------------------------------------------------------------------------
+
+  Started : Sunday, October 25, 2026 02:02:59
+   Source : D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\
+     Dest : E:\role-model-run115\s16-scratch\
+
+    Files : *.*
+	    
+ Exc Dirs : .git
+	    node_modules
+	    dist
+	    .turbo
+	    
+  Options : *.* /NDL /NFL /S /E /DCOPY:DA /COPY:DAT /NP /MT:16 /R:1 /W:1 
+
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+
+               Total    Copied   Skipped  Mismatch    FAILED    Extras
+    Dirs :      2865      2807        59         0         0         0
+   Files :     18441     18441         0         0         0         0
+   Bytes :  466.25 m  466.25 m         0         0         0         0
+   Times :   0:02:22   0:00:08                       0:00:00   0:00:00
+
+
+   Speed :           56,638,821 Bytes/sec.
+   Speed :            3,240.899 MegaBytes/min.
+   Ended : Sunday, October 25, 2026 02:03:08
+

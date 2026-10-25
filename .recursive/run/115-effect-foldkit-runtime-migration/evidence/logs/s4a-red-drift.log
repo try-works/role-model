@@ -1,0 +1,42 @@
+✔ the hand-written sample inventory validates (28.6837ms)
+✖ the real inventory validates against the code (192.3707ms)
+✔ the inventory covers every kind and every disposition (1.7661ms)
+✔ a deliberately wrong citation fails (356.7976ms)
+✔ duplicate ids, unknown dispositions and unknown kinds are rejected (535.2707ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 4
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1266.0163
+
+✖ failing tests:
+
+test at scripts\s4-contracts-inventory.test.mjs:177:1
+✖ the real inventory validates against the code (192.3707ms)
+  AssertionError [ERR_ASSERTION]: diagnostics-read: definition line 9999 is out of range for role-model-router/apps/runtime-host-bridge/src/local-diagnostics-read.ts (325 lines)
+  + actual - expected
+  
+  + [
+  +   'diagnostics-read: definition line 9999 is out of range for role-model-router/apps/runtime-host-bridge/src/local-diagnostics-read.ts (325 lines)'
+  + ]
+  - []
+  
+      at assertValid (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/s4-contracts-inventory.test.mjs:126:10)
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/s4-contracts-inventory.test.mjs:178:3)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ 'diagnostics-read: definition line 9999 is out of range for role-model-router/apps/runtime-host-bridge/src/local-diagnostics-read.ts (325 lines)' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+EXIT_CODE: 1

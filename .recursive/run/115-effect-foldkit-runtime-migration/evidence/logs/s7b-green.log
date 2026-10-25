@@ -1,0 +1,19 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/protocol-routing
+
+stdout | test/run115-s7b-route-decision-wiring.test.ts > run115 S7b route decision producer wiring > routeRuntimeRequest obtains its decision through the producer Layer
+[run115] eligibility candidates=1 eligible=1 codes=none request=run115-s7b-wiring alias=- model=- effort=- pass=- allow=[remote.producer] denied=[]
+
+stdout | test/run115-s7b-route-decision-wiring.test.ts > run115 S7b route decision producer wiring > the empty pool stays a success with an empty chosen endpoint id
+[run115] eligibility candidates=0 eligible=0 codes=none request=run115-s7b-wiring alias=- model=- effort=- pass=- allow=[remote.producer] denied=[]
+
+stdout | test/run115-s7b-route-decision-wiring.test.ts > run115 S7b route decision producer wiring > one-arg callers keep the default producer Layer decision
+[run115] eligibility candidates=1 eligible=1 codes=none request=run115-s7b-wiring alias=- model=- effort=- pass=- allow=[remote.producer] denied=[]
+
+ ✓ test/run115-s7b-route-decision-wiring.test.ts (3 tests) 39ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  22:10:15
+   Duration  7.91s (transform 3.29s, setup 0ms, collect 6.05s, tests 39ms, environment 1ms, prepare 522ms)
+

@@ -1,0 +1,743 @@
+
+> role-model@0.0.0 runtime:package-sea E:\role-model-run115\s16-scratch
+> corepack pnpm --filter @role-model-router/runtime-ui build && corepack pnpm --filter @role-model-router/runtime-host-bridge... build && corepack pnpm --filter @role-model-router/runtime-host-bridge run package-sea
+
+
+> @role-model-router/runtime-ui@ build E:\role-model-run115\s16-scratch\role-model-router\apps\runtime-ui
+> react-router build && tsc --noEmit
+
+vite v7.3.2 building client environment for production...
+transforming...
+../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/page-shell.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/metric-strip.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/observe-activity.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/segmented-control.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/chart-composition.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/chart-ranking.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/observe-routing.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/runtime-overview.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/observe-logs.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/observe-shared.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/page-filters.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/observe-requests.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/sidebar.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+✓ 2440 modules transformed.
+rendering chunks...
+computing gzip size...
+build/client/.vite/manifest.json                             33.56 kB │ gzip:   3.08 kB
+build/client/assets/root-DB32G0ZY.css                        83.32 kB │ gzip:  14.94 kB
+build/client/assets/index-CKLjkIRh.js                         0.15 kB │ gzip:   0.15 kB
+build/client/assets/live-refresh-DcaagJbF.js                  0.16 kB │ gzip:   0.14 kB
+build/client/assets/local-models-B4n-mSaY.js                  0.16 kB │ gzip:   0.16 kB
+build/client/assets/router-config-6C-g6hXx.js                 0.16 kB │ gzip:   0.16 kB
+build/client/assets/local-matrix-CdXZR64P.js                  0.18 kB │ gzip:   0.18 kB
+build/client/assets/format-score-CvKL6Nty.js                  0.27 kB │ gzip:   0.21 kB
+build/client/assets/agent-strategy-BTdj-B8t.js                0.36 kB │ gzip:   0.27 kB
+build/client/assets/workloads--X6tvSeN.js                     0.37 kB │ gzip:   0.27 kB
+build/client/assets/shell-header-context-DojSALrV.js          0.65 kB │ gzip:   0.39 kB
+build/client/assets/llama-swap-setup-zJl1O37-.js              0.82 kB │ gzip:   0.40 kB
+build/client/assets/segmented-control-OFrtyx20.js             0.86 kB │ gzip:   0.52 kB
+build/client/assets/not-found-CR-rHBlt.js                     1.04 kB │ gzip:   0.55 kB
+build/client/assets/checkbox-control-6q5rTQPB.js              1.06 kB │ gzip:   0.55 kB
+build/client/assets/theme-rIEsxy66.js                         1.14 kB │ gzip:   0.52 kB
+build/client/assets/legacy-redirect-BuGSblma.js               1.24 kB │ gzip:   0.44 kB
+build/client/assets/effort-truth-CTiR_V_w.js                  1.65 kB │ gzip:   0.78 kB
+build/client/assets/local-choose-ixZ13VHx.js                  1.67 kB │ gzip:   0.71 kB
+build/client/assets/queue-api-BbMu7_hu.js                     1.68 kB │ gzip:   0.67 kB
+build/client/assets/observability-snapshot-HGS1EhMX.js        2.23 kB │ gzip:   1.09 kB
+build/client/assets/metric-strip-BbsrEd3y.js                  2.72 kB │ gzip:   0.86 kB
+build/client/assets/decision-receipt-jk1p1UMS.js              2.74 kB │ gzip:   1.21 kB
+build/client/assets/integrations-downstream-CINi9j7k.js       2.76 kB │ gzip:   1.14 kB
+build/client/assets/router-decisions-DbuW-nhD.js              2.99 kB │ gzip:   1.37 kB
+build/client/assets/store-degradation-receipts-C55XSZ5a.js    3.12 kB │ gzip:   1.37 kB
+build/client/assets/effort-identity-DTM8zi6R.js               3.19 kB │ gzip:   1.33 kB
+build/client/assets/local-swap-CSd188hb.js                    3.30 kB │ gzip:   1.35 kB
+build/client/assets/control-controller-DacJFSrK.js            3.43 kB │ gzip:   1.60 kB
+build/client/assets/router-candidates-BT6sQKWR.js             3.46 kB │ gzip:   1.67 kB
+build/client/assets/observe-logs-C3EetLrS.js                  3.51 kB │ gzip:   1.48 kB
+build/client/assets/local-policy-BbBqEZHB.js                  3.59 kB │ gzip:   1.54 kB
+build/client/assets/studio-advanced-BPxWNyub.js               3.76 kB │ gzip:   1.61 kB
+build/client/assets/studio-rerank-DHAKNVDD.js                 3.80 kB │ gzip:   1.67 kB
+build/client/assets/learning-api-CQDlwvhm.js                  3.83 kB │ gzip:   1.35 kB
+build/client/assets/studio-images-WcjGd-Kc.js                 4.10 kB │ gzip:   1.66 kB
+build/client/assets/local-peers-B5EGDhur.js                   4.10 kB │ gzip:   1.68 kB
+build/client/assets/workbench-Dk0kQJz5.js                     4.15 kB │ gzip:   1.91 kB
+build/client/assets/root-BOOH-8Ev.js                          4.16 kB │ gzip:   1.74 kB
+build/client/assets/control-runtime-config-CYhOy15Y.js        4.16 kB │ gzip:   1.82 kB
+build/client/assets/local-logs-eWAUcf1j.js                    4.19 kB │ gzip:   1.67 kB
+build/client/assets/runtime-DDB1czrd.js                       4.21 kB │ gzip:   1.76 kB
+build/client/assets/integrations-upstream-DJcOHib_.js         4.36 kB │ gzip:   1.65 kB
+build/client/assets/page-filters-DWW_Up4G.js                  4.39 kB │ gzip:   1.82 kB
+build/client/assets/observe-activity-Dywqk-23.js              4.69 kB │ gzip:   2.04 kB
+build/client/assets/system-peers-kmidSU-N.js                  4.71 kB │ gzip:   1.85 kB
+build/client/assets/role-task-hierarchy-z7Q5mAG5.js           5.29 kB │ gzip:   1.85 kB
+build/client/assets/session-readiness-Ce1WCsZI.js             5.37 kB │ gzip:   2.00 kB
+build/client/assets/endpoints-DG7bPtEV.js                     5.51 kB │ gzip:   2.01 kB
+build/client/assets/local-peer-models-4_xONxrs.js             5.79 kB │ gzip:   2.10 kB
+build/client/assets/observe-routing-DQSu814J.js               6.33 kB │ gzip:   2.50 kB
+build/client/assets/observe-queues-Ds2BQloc.js                6.53 kB │ gzip:   1.89 kB
+build/client/assets/routing-mode-D7cw-oRu.js                  7.07 kB │ gzip:   2.70 kB
+build/client/assets/local-llama-swap-models-BEYM7x7E.js       7.09 kB │ gzip:   2.43 kB
+build/client/assets/studio-audio-C---Khr-.js                  7.12 kB │ gzip:   2.90 kB
+build/client/assets/page-primitives-CqNOtYSL.js               7.73 kB │ gzip:   2.90 kB
+build/client/assets/router-CdbS9Ij3.js                        8.78 kB │ gzip:   2.73 kB
+build/client/assets/local-model-role-picker-DBHEuxZL.js       8.97 kB │ gzip:   2.95 kB
+build/client/assets/telemetry-page-filters-B6nsAL1c.js        9.41 kB │ gzip:   3.09 kB
+build/client/assets/requests-CUeu04xH.js                     10.79 kB │ gzip:   3.97 kB
+build/client/assets/control-routing-strategy-B2KGmQ9j.js     10.94 kB │ gzip:   3.78 kB
+build/client/assets/router-decision-detail-lA1rRjWt.js       11.55 kB │ gzip:   3.20 kB
+build/client/assets/storage-retention-BDTp2jBi.js            12.57 kB │ gzip:   3.78 kB
+build/client/assets/control-roles-CDwBwr59.js                12.60 kB │ gzip:   3.52 kB
+build/client/assets/operator-controls-oSAU-Db_.js            12.78 kB │ gzip:   4.16 kB
+build/client/assets/app-layout-CbtzYVIB.js                   14.96 kB │ gzip:   5.29 kB
+build/client/assets/dashboard-BR-RVWrc.js                    19.49 kB │ gzip:   6.69 kB
+build/client/assets/posture-entries-page-DKv21BPH.js         19.64 kB │ gzip:   6.38 kB
+build/client/assets/extensions-BfBAAfL1.js                   19.79 kB │ gzip:   6.48 kB
+build/client/assets/control-models-D_eUQawA.js               20.48 kB │ gzip:   6.75 kB
+build/client/assets/request-detail-r3ZuxdTC.js               21.36 kB │ gzip:   6.40 kB
+build/client/assets/control-benchmark-B_57jL-7.js            22.14 kB │ gzip:   6.72 kB
+build/client/assets/runtime-api-BQHq-LMd.js                  22.99 kB │ gzip:   5.57 kB
+build/client/assets/view-models-BlRcK42G.js                  26.03 kB │ gzip:   8.28 kB
+build/client/assets/providers-BB8QH4DB.js                    27.08 kB │ gzip:   8.42 kB
+build/client/assets/design-system-BAfLqOiX.js                30.14 kB │ gzip:   9.26 kB
+build/client/assets/chart-grid-CqXjTUqn.js                   78.21 kB │ gzip:  26.08 kB
+build/client/assets/learning-A4iljC9r.js                     80.99 kB │ gzip:  22.51 kB
+build/client/assets/chunk-EVOBXE3Y-g5m91DvX.js              128.07 kB │ gzip:  43.13 kB
+build/client/assets/entry.client-B4czBmcP.js                190.57 kB │ gzip:  60.05 kB
+build/client/assets/telemetry-route-models-CkvZ_3me.js      389.85 kB │ gzip: 103.88 kB
+✓ built in 19.45s
+vite v7.3.2 building ssr environment for production...
+transforming...
+../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/segmented-control.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/observe-shared.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/metric-strip.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/chart-ranking.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/observe-logs.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/page-filters.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/chart-composition.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/page-shell.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/observe-routing.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/observe-activity.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/sidebar.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/observe-requests.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../../../../../D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui/src/runtime-overview.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+✓ 32 modules transformed.
+rendering chunks...
+build/server/.vite/manifest.json                0.23 kB
+build/server/assets/server-build-DB32G0ZY.css  83.32 kB
+build/server/index.js                          87.13 kB
+
+✓ 1 asset cleaned from React Router server build.
+build\server\assets\server-build-DB32G0ZY.css
+
+SPA Mode: Generated build\client\index.html
+Removing the server build in E:\role-model-run115\s16-scratch\role-model-router\apps\runtime-ui\build\server due to ssr:false
+✓ built in 1.13s
+Scope: 29 of 55 workspace projects
+role-model-router/packages/catalog build$ tsc -p tsconfig.json
+packages/protocol-types build$ tsc -p tsconfig.json
+role-model-router/packages/effect build$ node build.mjs
+role-model-router/packages/bench-judge build$ tsc -p tsconfig.json
+role-model-router/packages/effect build: ▲ [WARNING] Cannot find base config file "../../tsconfig.base.json" [tsconfig.json]
+role-model-router/packages/effect build:     ../../../vendor/effect/packages/effect/tsconfig.json:3:13:
+role-model-router/packages/effect build:       3 │   "extends": "../../tsconfig.base.json",
+role-model-router/packages/effect build:         ╵              ~~~~~~~~~~~~~~~~~~~~~~~~~~
+role-model-router/packages/bench-judge build: Done
+.../packages/process-supervisor build$ tsc -p tsconfig.json
+role-model-router/packages/catalog build: Done
+role-model-router/packages/tool-registry build$ tsc -p tsconfig.json
+packages/protocol-types build: Done
+.../packages/vendor-abstraction build$ tsc -p tsconfig.json
+role-model-router/packages/tool-registry build: Done
+.../packages/vendor-abstraction build: Done
+.../packages/process-supervisor build: Done
+role-model-router/packages/effect build: {"status":"PASS","package":"effect","entries":["Array","BigDecimal","ByteSize","Cache","Cause","Clock","Config","ConfigProvider","Console","Context","Crypto","Data","DateTime","Deferred","Duration","Effect","Effectable","ErrorReporter","ExecutionPlan","Exit","Fiber","FileSystem","Function","Graph","HashMap","Inspectable","Layer","Logger","ManagedRuntime","Match","Metric","MutableList","MutableRef","Option","Path","Pipeable","PlatformError","PubSub","Queue","Random","Record","Redacted","References","Result","Runtime","Schedule","Scheduler","Schema","SchemaIssue","SchemaParser","Scope","SemVer","SemVerRange","Semaphore","Stream","Struct","Terminal","Tracer","Types","Utils","ai","ai/AiError","ai/Chat","ai/DecisionModel","ai/EmbeddingModel","ai/LanguageModel","ai/McpClient","ai/McpClientError","ai/McpSchema","ai/McpServer","ai/Model","ai/ResponseIdTracker","ai/Telemetry","ai/Tokenizer","ai/Tool","ai/Toolkit","cli","cli/CliConfig","cli/CliOutput","cli/Prompt","cli/TerminalCapabilities","cluster","cluster/ClusterCron","cluster/ClusterSchema","cluster/Entity","cluster/EntityResource","cluster/Envelope","cluster/K8sHttpClient","cluster/MessageStorage","cluster/RunnerHealth","cluster/RunnerStorage","cluster/Runners","cluster/Sharding","cluster/ShardingConfig","cluster/Snowflake","devtools","devtools/DevToolsClient","encoding","encoding/Tar","encoding/Zip","eventlog","eventlog/EventJournal","eventlog/EventLog","eventlog/EventLogEncryption","eventlog/EventLogMessage","eventlog/EventLogRemote","eventlog/EventLogServer","eventlog/EventLogServerUnencrypted","graphql","graphql/GraphQLClientError","graphql/GraphQLProtocol","graphql/GraphQLResolver","http","http-api","http-api/HttpApi","http-api/HttpApiGroup","http-api/HttpApiGroup/","http-api/OpenApi","http/Cookies","http/Etag","http/FetchHttpClient","http/Headers","http/HttpClient","http/HttpClientError","http/HttpClientRequest","http/HttpClientResponse","http/HttpEffect","http/HttpIncomingMessage","http/HttpMiddleware","http/HttpPlatform","http/HttpRouter","http/HttpServer","http/HttpServerError","http/HttpServerRequest","http/Multipart","http/MultipartParser","http/MultipartParser/HeadersParser","http/UrlParams","index","net","net/AddressResolver","net/Dns","observability","observability/OtlpExporter","observability/OtlpSerialization","persistence","persistence/KeyValueStore","persistence/PersistedQueue","persistence/Persistence","persistence/RateLimiter","persistence/Redis","process","process/ChildProcessSpawner","reactivity","reactivity/Hydration","reactivity/Reactivity","rpc","rpc/Rpc","rpc/RpcClient","rpc/RpcClientError","rpc/RpcSchema","rpc/RpcSerialization","rpc/RpcServer","rpc/RpcWorker","schema/SchemaCompiler","schema/index","socket","socket/DatagramSocket","socket/Socket","sql","sql/Migrator","sql/SqlClient","sql/SqlConnection","sql/SqlError","sql/Statement","testing","workers","workers/Transferable","workers/Worker","workers/WorkerError","workers/WorkerRunner","workflow","workflow/Activity","workflow/DurableDeferred","workflow/Workflow","workflow/WorkflowEngine"],"rekeyed":[{"subpath":"schema","key":"schema/index","shadows":"Schema"}],"types":"E:\\role-model-run115\\s16-scratch\\role-model-router\\packages\\effect\\dist\\types"}
+role-model-router/packages/effect build: Done
+role-model-router/packages/core build$ tsc -p tsconfig.json
+.../packages/provider-account build$ tsc -p tsconfig.json
+.../packages/profile-aggregator build$ tsc -p tsconfig.json
+role-model-router/packages/usage build$ tsc -p tsconfig.json
+.../packages/provider-account build: Done
+role-model-router/packages/bench-routing build$ tsc -p tsconfig.json
+role-model-router/packages/usage build: Done
+.../packages/vendor-llama-swap build$ tsc -p tsconfig.json
+.../packages/profile-aggregator build: Done
+.../packages/vendor-litellm build$ tsc -p tsconfig.json
+.../packages/vendor-llama-swap build: Done
+.../packages/sql-sqlite-node build$ node build.mjs && tsc -p tsconfig.service.json
+role-model-router/packages/bench-routing build: Done
+role-model-router/packages/effect-mq build$ node build.mjs
+.../packages/vendor-litellm build: Done
+.../packages/sql-sqlite-node build: ▲ [WARNING] Cannot find base config file "../../../tsconfig.base.json" [tsconfig.json]
+.../packages/sql-sqlite-node build:     ../../../vendor/effect/packages/sql/sqlite-node/tsconfig.json:3:13:
+.../packages/sql-sqlite-node build:       3 │   "extends": "../../../tsconfig.base.json",
+.../packages/sql-sqlite-node build:         ╵              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.../packages/sql-sqlite-node build: {"status":"PASS","package":"@effect/sql-sqlite-node","entries":["index"]}
+role-model-router/packages/effect-mq build: ▲ [WARNING] Cannot find base config file "../../tsconfig.base.json" [tsconfig.json]
+role-model-router/packages/effect-mq build:     ../../../vendor/effect-mq/packages/effect-mq/tsconfig.json:2:13:
+role-model-router/packages/effect-mq build:       2 │   "extends": "../../tsconfig.base.json",
+role-model-router/packages/effect-mq build:         ╵              ~~~~~~~~~~~~~~~~~~~~~~~~~~
+role-model-router/packages/effect-mq build: {"status":"PASS","package":"effect-mq","entries":["index","testing"]}
+role-model-router/packages/core build: Done
+role-model-router/packages/effect-mq build: Done
+.../packages/sql-sqlite-node build: Done
+role-model-router/packages/sqlite-memory build$ tsc -p tsconfig.json
+role-model-router/packages/provider-mcp build$ tsc -p tsconfig.json
+role-model-router/packages/trace build$ tsc -p tsconfig.json
+role-model-router/packages/trace build: Done
+role-model-router/packages/sqlite-memory build: Done
+role-model-router/packages/provider-mcp build: Done
+.../packages/context-envelope build$ tsc -p tsconfig.json
+.../packages/context-envelope build: Done
+.../packages/retrieval-receipt build$ tsc -p tsconfig.json
+.../packages/retrieval-receipt build: Done
+.../packages/endpoint-registry build$ tsc -p tsconfig.json
+.../packages/endpoint-registry build: Done
+.../packages/protocol-routing build$ tsc -p tsconfig.json
+.../packages/protocol-routing build: Done
+.../packages/adapter-execution build$ tsc -p tsconfig.json
+.../packages/provider-anthropic build$ tsc -p tsconfig.json
+.../packages/provider-anthropic build: Done
+.../packages/adapter-execution build: Done
+.../packages/runtime-observability build$ tsc -p tsconfig.json
+.../packages/provider-openai build$ tsc -p tsconfig.json
+.../packages/provider-openai build: Done
+.../packages/runtime-observability build: Done
+.../packages/provider-litellm build$ tsc -p tsconfig.json
+.../packages/provider-litellm build: Done
+.../apps/runtime-host-bridge build$ tsc -p tsconfig.json
+.../apps/runtime-host-bridge build: Done
+
+> @role-model-router/runtime-host-bridge@0.0.0 package-sea E:\role-model-run115\s16-scratch\role-model-router\apps\runtime-host-bridge
+> tsx src/package-sea.ts
+
+(node:16308) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✘ [ERROR] Could not resolve "@role-model-router/sqlite-memory"
+
+    dist/route-ladder-census.js:3:44:
+      3 │ ...olveSqliteMemoryLocation } from "@role-model-router/sqlite-memory";
+        ╵                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/sqlite-memory/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/sqlite-memory" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+✘ [ERROR] Could not resolve "@role-model-router/core"
+
+    dist/track-b-replay-policy.js:2:46:
+      2 │ ...t { supportsCapabilityRequirement } from "@role-model-router/core";
+        ╵                                             ~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/core/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/core" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+✘ [ERROR] Could not resolve "@role-model-router/core"
+
+    dist/track-b-auto-replay-runtime.js:3:107:
+      3 │ ...lectFocusTask, stalenessWindowMs, } from "@role-model-router/core";
+        ╵                                             ~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/core/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/core" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+✘ [ERROR] Could not resolve "@role-model-router/core"
+
+    dist/track-b-auto-replay.js:2:48:
+      2 │ ...{ classifyRouteLadderServingState } from "@role-model-router/core";
+        ╵                                             ~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/core/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/core" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+✘ [ERROR] Could not resolve "@role-model-router/sqlite-memory"
+
+    dist/route-challenge-evidence.js:3:44:
+      3 │ ...olveSqliteMemoryLocation } from "@role-model-router/sqlite-memory";
+        ╵                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/sqlite-memory/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/sqlite-memory" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+
+    D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/effect/dist/chunks/chunk-Y2MUQ5DM.js:194:7:
+      194 │     ...import.meta?.env
+          ╵        ~~~~~~~~~~~
+
+  You need to set the output format to "esm" for "import.meta" to work correctly.
+
+✘ [ERROR] Could not resolve "@role-model-router/sqlite-memory"
+
+    dist/track-b-runtime.js:128:107:
+      128 │ ...timeObservationBundle, } from "@role-model-router/sqlite-memory";
+          ╵                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/sqlite-memory/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/sqlite-memory" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+✘ [ERROR] Could not resolve "@role-model-router/trace"
+
+    dist/track-b-runtime.js:129:35:
+      129 │ import { createProjectionV2 } from "@role-model-router/trace";
+          ╵                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/trace/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/trace" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+✘ [ERROR] Could not resolve "@role-model-router/trace"
+
+    dist/track-b-projections.js:1:37:
+      1 │ import { validateProjectionV2 } from "@role-model-router/trace";
+        ╵                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/trace/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/trace" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+✘ [ERROR] Could not resolve "@role-model-router/context-envelope"
+
+    dist/index.js:16:40:
+      16 │ ...embleContextEnvelope } from "@role-model-router/context-envelope";
+         ╵                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/context-envelope/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/context-envelope" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+✘ [ERROR] Could not resolve "@role-model-router/core"
+
+    dist/index.js:17:84:
+      17 │ ...tyRequirement, taxonomyManifest, } from "@role-model-router/core";
+         ╵                                            ~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/core/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/core" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+✘ [ERROR] Could not resolve "@role-model-router/endpoint-registry"
+
+    dist/index.js:18:106:
+      18 │ ...intReasoningEffort, } from "@role-model-router/endpoint-registry";
+         ╵                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/endpoint-registry/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/endpoint-registry" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+✘ [ERROR] Could not resolve "@role-model-router/process-supervisor"
+
+    dist/index.js:19:34:
+      19 │ ... ProcessSupervisor } from "@role-model-router/process-supervisor";
+         ╵                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/process-supervisor/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/process-supervisor" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+✘ [ERROR] Could not resolve "@role-model-router/protocol-routing"
+
+    dist/index.js:21:37:
+      21 │ ...routeRuntimeRequest, } from "@role-model-router/protocol-routing";
+         ╵                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/protocol-routing/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/protocol-routing" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+✘ [ERROR] Could not resolve "@role-model-router/provider-account"
+
+    dist/index.js:22:42:
+      22 │ ...ateProviderAccounts, } from "@role-model-router/provider-account";
+         ╵                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/provider-account/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/provider-account" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+✘ [ERROR] Could not resolve "@role-model-router/provider-anthropic"
+
+    dist/index.js:23:47:
+      23 │ ...picProviderAdapter } from "@role-model-router/provider-anthropic";
+         ╵                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/provider-anthropic/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/provider-anthropic" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+✘ [ERROR] Could not resolve "@role-model-router/provider-litellm"
+
+    dist/index.js:24:45:
+      24 │ ...teLLMProviderAdapter } from "@role-model-router/provider-litellm";
+         ╵                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/provider-litellm/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/provider-litellm" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+✘ [ERROR] Could not resolve "@role-model-router/provider-mcp"
+
+    dist/index.js:25:47:
+      25 │ ...McpConnectorDefinitions, } from "@role-model-router/provider-mcp";
+         ╵                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/provider-mcp/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/provider-mcp" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+✘ [ERROR] Could not resolve "@role-model-router/provider-openai"
+
+    dist/index.js:26:44:
+      26 │ ...OpenAIProviderAdapter } from "@role-model-router/provider-openai";
+         ╵                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/provider-openai/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/provider-openai" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+✘ [ERROR] Could not resolve "@role-model-router/retrieval-receipt"
+
+    dist/index.js:27:39:
+      27 │ ...ateRetrievalReceipt } from "@role-model-router/retrieval-receipt";
+         ╵                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/retrieval-receipt/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/retrieval-receipt" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+✘ [ERROR] Could not resolve "@role-model-router/runtime-observability"
+
+    dist/index.js:28:48:
+      28 │ ...ervationBundle, } from "@role-model-router/runtime-observability";
+         ╵                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/runtime-observability/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/runtime-observability" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+✘ [ERROR] Could not resolve "@role-model-router/sqlite-memory"
+
+    dist/index.js:29:1661:
+      29 │ ...imeEndpointsAtomically, } from "@role-model-router/sqlite-memory";
+         ╵                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/sqlite-memory/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/sqlite-memory" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+✘ [ERROR] Could not resolve "@role-model-router/tool-registry"
+
+    dist/index.js:31:54:
+      31 │ ...stry, executeToolCalls, } from "@role-model-router/tool-registry";
+         ╵                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/tool-registry/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/tool-registry" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+✘ [ERROR] Could not resolve "@role-model-router/adapter-execution"
+
+    dist/index.js:53:42:
+      53 │ ...eLiveRoutedRequest, } from "@role-model-router/adapter-execution";
+         ╵                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/adapter-execution/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/adapter-execution" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+✘ [ERROR] Could not resolve "@role-model-router/vendor-abstraction"
+
+    dist/index.js:54:47:
+      54 │ ...NotConfiguredError } from "@role-model-router/vendor-abstraction";
+         ╵                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/vendor-abstraction/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/vendor-abstraction" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+✘ [ERROR] Could not resolve "@role-model-router/vendor-litellm"
+
+    dist/index.js:55:35:
+      55 │ ...t { startLiteLLMVendor } from "@role-model-router/vendor-litellm";
+         ╵                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/vendor-litellm/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/vendor-litellm" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+✘ [ERROR] Could not resolve "@role-model-router/vendor-llama-swap"
+
+    dist/index.js:56:37:
+      56 │ ...tartLlamaSwapVendor } from "@role-model-router/vendor-llama-swap";
+         ╵                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/vendor-llama-swap/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/vendor-llama-swap" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+✘ [ERROR] Could not resolve "@role-model-router/vendor-llama-swap"
+
+    dist/runtime-assets.js:5:46:
+      5 │ ...SwapAssetDefinition, } from "@role-model-router/vendor-llama-swap";
+        ╵                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/vendor-llama-swap/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/vendor-llama-swap" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+✘ [ERROR] Could not resolve "@role-model-router/core"
+
+    dist/agent-strategy.js:5:46:
+      5 │ ...t { supportsCapabilityRequirement } from "@role-model-router/core";
+        ╵                                             ~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/core/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/core" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+✘ [ERROR] Could not resolve "@role-model-router/core"
+
+    dist/scoring-strategy.js:12:33:
+      12 │ import { STRATEGY_WEIGHTS } from "@role-model-router/core";
+         ╵                                  ~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/core/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/core" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+✘ [ERROR] Could not resolve "@role-model-router/endpoint-registry"
+
+    dist/operator-intent.js:3:41:
+      3 │ ...alizeReasoningEffort } from "@role-model-router/endpoint-registry";
+        ╵                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/endpoint-registry/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/endpoint-registry" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+✘ [ERROR] Could not resolve "@role-model-router/core"
+
+    dist/taxonomy-derivation.js:1:34:
+      1 │ import { canonicalTaxonomy } from "@role-model-router/core";
+        ╵                                   ~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/core/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/core" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+✘ [ERROR] Could not resolve "@role-model-router/provider-openai"
+
+    dist/remote-health-probe.js:2:53:
+      2 │ ...roviderUpstreamModelId } from "@role-model-router/provider-openai";
+        ╵                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/provider-openai/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/provider-openai" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+✘ [ERROR] Could not resolve "@role-model-router/core"
+
+    dist/downstream-openai-discovery.js:2:50:
+      2 │ ...computeEffortUnionAndIntersection } from "@role-model-router/core";
+        ╵                                             ~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/core/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/core" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+✘ [ERROR] Could not resolve "@role-model-router/core"
+
+    dist/benchmark-summary.js:3:34:
+      3 │ import { canonicalTaxonomy } from "@role-model-router/core";
+        ╵                                   ~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/core/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/core" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+✘ [ERROR] Could not resolve "@role-model-router/sqlite-memory"
+
+    dist/benchmark-runner.js:5:47:
+      5 │ ...tObservedBenchmarkSample } from "@role-model-router/sqlite-memory";
+        ╵                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/sqlite-memory/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/sqlite-memory" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+E:\role-model-run115\public-virtual-store\esbuild@0.25.12\node_modules\esbuild\lib\main.js:1467
+  let error = new Error(text);
+              ^
+
+Error: Build failed with 35 errors:
+dist/agent-strategy.js:5:46: ERROR: Could not resolve "@role-model-router/core"
+dist/benchmark-runner.js:5:47: ERROR: Could not resolve "@role-model-router/sqlite-memory"
+dist/benchmark-summary.js:3:34: ERROR: Could not resolve "@role-model-router/core"
+dist/downstream-openai-discovery.js:2:50: ERROR: Could not resolve "@role-model-router/core"
+dist/index.js:16:40: ERROR: Could not resolve "@role-model-router/context-envelope"
+...
+    at failureErrorWithLog (E:\role-model-run115\public-virtual-store\esbuild@0.25.12\node_modules\esbuild\lib\main.js:1467:15)
+    at E:\role-model-run115\public-virtual-store\esbuild@0.25.12\node_modules\esbuild\lib\main.js:926:25
+    at E:\role-model-run115\public-virtual-store\esbuild@0.25.12\node_modules\esbuild\lib\main.js:878:52
+    at buildResponseToResult (E:\role-model-run115\public-virtual-store\esbuild@0.25.12\node_modules\esbuild\lib\main.js:924:7)
+    at E:\role-model-run115\public-virtual-store\esbuild@0.25.12\node_modules\esbuild\lib\main.js:951:16
+    at responseCallbacks.<computed> (E:\role-model-run115\public-virtual-store\esbuild@0.25.12\node_modules\esbuild\lib\main.js:603:9)
+    at handleIncomingPacket (E:\role-model-run115\public-virtual-store\esbuild@0.25.12\node_modules\esbuild\lib\main.js:658:12)
+    at Socket.readFromStdout (E:\role-model-run115\public-virtual-store\esbuild@0.25.12\node_modules\esbuild\lib\main.js:581:7)
+    at Socket.emit (node:events:508:28)
+    at addChunk (node:internal/streams/readable:559:12) {
+  errors: [Getter/Setter],
+  warnings: [Getter/Setter]
+}
+
+Node.js v24.11.0
+E:\role-model-run115\s16-scratch\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @role-model-router/runtime-host-bridge@0.0.0 package-sea: `tsx src/package-sea.ts`
+Exit status 1
+ ELIFECYCLE  Command failed with exit code 1.

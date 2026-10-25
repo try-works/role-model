@@ -1,0 +1,74 @@
+{
+  "slice": "s25c-resync-defects",
+  "requirement": "R12 apply resync payload, sticky failed resync, close test gaps",
+  "defectA": {
+    "fix": "RefreshSnapshot now returns DiagnosticsReadResult|undefined; the Command parses it with parseDiagnosticsSnapshot(routeId,result) and RefreshResynced carries {token, routeId, snapshot}. update.ts applies the snapshot to model.diagnostics only when the current route is the same Diagnostics route, then marks refresh live. If the route differs or the payload is undefined, the page stays stale with 'snapshot payload is not applicable to this route' (never live with pre-gap data).",
+    "proof": "Gap test initial read build-A; 1->3 gap; resync returns build-B; after resolve the page shows build: build-B and no build-A, state live, no banner. payload-discard mutation times out waiting for build-B."
+  },
+  "defectB": {
+    "fix": "A contiguous revision preserves refresh.status='stale' and its message. Only RefreshResynced applies the payload and sets live; RefreshResyncFailed keeps stale. A successful resync is the only transition out of failure.",
+    "proof": "Failure test emits 1,3 (reject) -> stale; emits contiguous 4 -> revision advances to 4 while state remains stale and the 'snapshot unavailable' message remains."
+  },
+  "testGaps": {
+    "ownerAfterNavigation": "After mounting once and clicking the diagnostics nav link, the route changes while fakeSources stays length 2/active 1 from the two sequential starts; no route-owned source appears. RED: duplicate subscription entry -> expected 1 source, got 2.",
+    "bannerAbsence": "While live (after revision 1 and after the resync) expect [data-refresh-state=\"stale\"] to be null, and expect it present while stale. RED: banner rendered for non-idle -> stale element exists while live.",
+    "tokenRace": "Two gaps 1->3->5 with deferred readers. New resync resolves build-new first, then the OLD success resolves build-old -> build-new remains, live, revision 5. Separate test resolves new first then rejects old -> remains live/build-new. REDs: remove Resynced token fence -> old overwrites; remove Failed token fence -> old failure makes page stale.",
+    "failedThenContiguous": "Exact defect-B sequence; stale sticks through revision 4."
+  },
+  "mutations": [
+    {
+      "id": "payload",
+      "red": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s25c-red-payload.log",
+      "green": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s25c-green.log",
+      "input": "diagnostics: model.diagnostics instead of snapshot"
+    },
+    {
+      "id": "sticky",
+      "red": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s25c-red-sticky.log",
+      "green": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s25c-green.log",
+      "input": "contiguous revision resets status live/message undefined"
+    },
+    {
+      "id": "banner",
+      "red": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s25c-red-banner.log",
+      "green": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s25c-green.log",
+      "input": "banner renders whenever status !== idle"
+    },
+    {
+      "id": "race",
+      "red": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s25c-red-race.log",
+      "green": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s25c-green.log",
+      "input": "RefreshResynced token fence removed"
+    },
+    {
+      "id": "race-failure",
+      "red": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s25c-red-race-failure.log",
+      "green": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s25c-green.log",
+      "input": "RefreshResyncFailed token fence removed"
+    },
+    {
+      "id": "owner",
+      "red": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s25c-red-owner.log",
+      "green": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s25c-green.log",
+      "input": "second persistent subscription entry"
+    }
+  ],
+  "testRuns": {
+    "command": "vitest s25b(refresh) + mount + routes + diagnostics + diagnostics-client + diagnostics-e2e",
+    "total": 46,
+    "passed": 46,
+    "failed": 0,
+    "exit": 0,
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s25c-green.log",
+    "typecheck": "tsc -p apps/runtime-ui-next/tsconfig.json --noEmit: exit 0",
+    "biome": "biome check src + test: exit 0"
+  },
+  "files": {
+    "role-model-router/apps/runtime-ui-next/src/commands.ts": "3af75968676fc5706c17ac39450ece87b05ae86d86a6649bb106609f4abc3341",
+    "role-model-router/apps/runtime-ui-next/src/message.ts": "21f7e3ec8fabf3e5d178d2282265431186018286ad0a7ff186ec2eefabbf00f4",
+    "role-model-router/apps/runtime-ui-next/src/update.ts": "1e2e56465ffafaf64872538a19a755b024327201016daa6ad80cb4214a9d54a5",
+    "role-model-router/apps/runtime-ui-next/src/app.ts": "c13fc25945d3d4cf450a3ac53325d4cc61eec624bcd21bb249b28052baf3b35d",
+    "role-model-router/apps/runtime-ui-next/test/s25b-refresh-owner-gap.test.ts": "5babb5672472ea2d76fc420da5dc79ce1f910c8557dbf28d71b83245e1f8a728"
+  },
+  "unproven": "Real EventSource reconnect; non-diagnostics routes have no default payload (they stay stale by design); no generic snapshot endpoint."
+}

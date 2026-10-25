@@ -1,0 +1,45 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/s17a-transport-signal.test.ts (6 tests | 1 failed | 5 skipped) 25ms
+   ↓ private operations transport signal > cancels the underlying fetch when the enclosing fiber times out (request does not keep running)
+   ↓ private operations transport signal > counts scoped releases on the status-failure path
+   ↓ private operations transport signal > counts scoped releases on the caller-abort path and does not retry
+   × private operations transport signal > pins the exact connection-retry schedule 250/1000/2500/5000ms 22ms
+     → expected [ 250, 1000, 1000, 1000 ] to deeply equal [ 250, 1000, 2500, 5000 ]
+   ↓ private operations transport signal > does not retry a caller abort
+   ↓ private operations transport signal > keeps timeout, status, protocol and abort failures distinct and non-retried
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s17a-transport-signal.test.ts > private operations transport signal > pins the exact connection-retry schedule 250/1000/2500/5000ms
+AssertionError: expected [ 250, 1000, 1000, 1000 ] to deeply equal [ 250, 1000, 2500, 5000 ]
+
+- Expected
++ Received
+
+  [
+    250,
+    1000,
+-   2500,
+-   5000,
++   1000,
++   1000,
+  ]
+
+ ❯ test/s17a-transport-signal.test.ts:115:20
+    113| 
+    114|     expect(calls).toBe(5);
+    115|     expect(sleeps).toEqual([250, 1_000, 2_500, 5_000]);
+       |                    ^
+    116|     expect(failure).toBeInstanceOf(Error);
+    117|     expect((failure as Error).message).toBe("fetch failed");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 skipped (6)
+   Start at  01:48:04
+   Duration  4.54s (transform 1.90s, setup 0ms, collect 3.97s, tests 25ms, environment 0ms, prepare 184ms)
+

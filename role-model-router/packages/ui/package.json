@@ -6,10 +6,15 @@
   "description": "Role-model RM3 design system — React UI kit (shell, filters, charts, pages).",
   "exports": {
     ".": "./src/index.ts",
+    "./foldkit-button": "./src/foldkit-button.ts",
+    "./foldkit-checkbox": "./src/foldkit-checkbox.ts",
+    "./foldkit-input": "./src/foldkit-input.ts",
+    "./foldkit-textarea": "./src/foldkit-textarea.ts",
     "./*": "./src/*.tsx",
     "./use-prefers-reduced-motion": "./src/use-prefers-reduced-motion.ts"
   },
   "scripts": {
+    "typecheck:foldkit": "tsc -p tsconfig.foldkit.json",
     "test": "vitest run"
   },
   "dependencies": {
@@ -18,6 +23,7 @@
     "tailwind-merge": "^3.3.1"
   },
   "devDependencies": {
+    "@role-model-router/foldkit": "workspace:*",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
     "react": "^19.2.0",

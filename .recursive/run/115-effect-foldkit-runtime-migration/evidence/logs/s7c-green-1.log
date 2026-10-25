@@ -1,0 +1,22 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/protocol-routing
+
+stdout | test/run115-s7c-routing-parity.test.ts > run115 S7c kernel/producer/wired parity > empty candidate pool: all three paths are byte-identical
+[run115] eligibility candidates=0 eligible=0 codes=none request=run115-s7c-matrix alias=- model=- effort=- pass=- allow=[] denied=[]
+
+stdout | test/run115-s7c-routing-parity.test.ts > run115 S7c kernel/producer/wired parity > tie between candidates: all three paths are byte-identical
+[run115] eligibility candidates=2 eligible=2 codes=none request=run115-s7c-tie alias=- model=- effort=- pass=- allow=[] denied=[]
+
+stdout | test/run115-s7c-routing-parity.test.ts > run115 S7c kernel/producer/wired parity > role/task/effort arm: all three paths are byte-identical
+[run115] eligibility candidates=2 eligible=1 codes=CAPABILITY_MISSING=1 request=run115-s7c-role-task-effort alias=- model=- effort=- pass=- allow=[] denied=[text.low]
+
+stdout | test/run115-s7c-routing-parity.test.ts > run115 S7c kernel/producer/wired parity > golden fixture: all three paths are byte-identical
+[run115] eligibility candidates=2 eligible=1 codes=TOOLS_UNSUPPORTED=1 request=run115-s7c-golden alias=- model=- effort=- pass=- allow=[] denied=[golden.no-tools]
+
+ ✓ test/run115-s7c-routing-parity.test.ts (4 tests) 56ms
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  05:10:20
+   Duration  4.37s (transform 1.98s, setup 0ms, collect 3.56s, tests 56ms, environment 0ms, prepare 275ms)
+

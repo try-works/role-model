@@ -1,0 +1,51 @@
+{
+  "slice": "s17d-host-guards",
+  "requirement": "R26 - host-level capture signal guard + protocol no-retry counts",
+  "status": "complete",
+  "seam": {
+    "name": "recordRouteCaptureAtHostEdge",
+    "location": "role-model-router/apps/runtime-host-bridge/src/index.ts:20607",
+    "why": "both capture call sites now route through one exported host-edge function; it reads requestOptions.abortSignal once and its third argument is REQUIRED, so a host site cannot silently drop the wiring",
+    "hostSites": [
+      "index.ts:28632 (routed-capture fallback) calls recordRouteCaptureAtHostEdge(runtimeTrackBOperations, payload, executionOptions)",
+      "index.ts:29568 (direct capture) calls the same seam with executionOptions"
+    ],
+    "test": "'carries the request signal from the HOST capture edge into fetch': real createTrackBOperations + stalled fetch stub; aborting the signal rejects TrackBPrivateOperationAbortError, fetch observed calls=1 and the signal's abort"
+  },
+  "protocol": {
+    "assertions": "direct: TrackBPrivateOperationProtocolError, fetch calls 1, sleeps []; Effect: Exit failure, fetch calls 1, sleeps []",
+    "mutation": {
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s17d-red-protocol.log",
+      "change": "sleep(250) inserted before the protocol throw",
+      "result": "expected [ 250 ] to deeply equal []"
+    }
+  },
+  "mutations": [
+    {
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s17d-red-host.log",
+      "change": "seam stops forwarding { signal }",
+      "result": "Test timed out in 30000ms (fetch never saw the abort)"
+    },
+    {
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s17d-red-hostarg-tsc.log",
+      "change": "third argument deleted at host line 28659 (literal reviewer mutation)",
+      "result": "tsc TS2554: Expected 3 arguments, but got 2 - the literal deletion at the host line is now a compile failure because the argument is required"
+    }
+  ],
+  "green": {
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s17d-green.log",
+    "files": 8,
+    "tests": 278,
+    "passed": 278,
+    "exit": 0,
+    "s17a": 12
+  },
+  "typecheck": {
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s17d-tsc.log",
+    "exit": 0
+  },
+  "files": {
+    "role-model-router/apps/runtime-host-bridge/src/index.ts": "recordRouteCaptureAtHostEdge seam + two host call sites",
+    "role-model-router/apps/runtime-host-bridge/test/s17a-transport-signal.test.ts": "host-edge signal test + protocol call/sleep counts (12 tests)"
+  }
+}

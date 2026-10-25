@@ -1,0 +1,65 @@
+# create-foldkit-app
+
+Scaffolding CLI for new Foldkit applications. Creates a ready-to-run project with Vite, Tailwind CSS, TypeScript, [`@foldkit/vite-plugin`](https://www.npmjs.com/package/@foldkit/vite-plugin) for state-preserving live reload, your choice of rendering mode, and a starter example for SPA scaffolds.
+
+## Usage
+
+```bash
+npx create-foldkit-app
+# or
+pnpm create foldkit-app
+# or
+yarn create foldkit-app
+# or
+bun create foldkit-app
+```
+
+The CLI prompts you for a project name, rendering mode, starter example, and package manager. Pass `--name`, `--rendering`, `--example`, and/or `--package-manager` to skip the matching prompts.
+
+## Rendering
+
+| Mode  | Description                                                                                                                                                                                  |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `spa` | Render entirely in the browser. Starts from your choice of starter example below.                                                                                                            |
+| `ssg` | Prerender routes to static HTML at build time, then hydrate in the browser. Scaffolds a small routed app with a server entry. One `vite build` writes every route.                           |
+| `ssr` | Render each request, then hydrate in the browser. Scaffolds a counter whose Flags come from the request. One `vite build` emits a Web `fetch` handler; `start` runs `node scripts/serve.ts`. |
+
+The starter examples apply to `spa` rendering. The `ssg` and `ssr` modes scaffold their own starter apps.
+
+## Examples
+
+| Example                  | Description                                                                                            |
+| ------------------------ | ------------------------------------------------------------------------------------------------------ |
+| `counter`                | Simple increment/decrement with reset                                                                  |
+| `counters`               | A dynamic list of Counter Submodels with per-instance routing via a wrapper Message                    |
+| `todo`                   | CRUD operations with localStorage persistence                                                          |
+| `stopwatch`              | Timer with start/stop/reset                                                                            |
+| `crash-view`             | Custom crash fallback UI with crash.view and crash.report                                              |
+| `slow-warnings`          | Interactive lab for slow update, view, patch, and Subscription dependency warnings                     |
+| `form`                   | Form validation with async email checking                                                              |
+| `job-application`        | Multi-step form with async validation, file uploads, and per-step error indicators                     |
+| `weather`                | HTTP requests with async state handling                                                                |
+| `api-cache`              | Query caching in the Model with stale-while-revalidate, request deduplication, and interval refetching |
+| `api-cache-query`        | The API Cache app rewritten with experimental Query.define                                             |
+| `charting`               | Live GitHub and npm telemetry rendered through an ECharts Mount adapter                                |
+| `routing`                | URL routing with parser combinators and route parameters                                               |
+| `upload`                 | Simulated file uploads with cancellable, restartable interruptible Commands                            |
+| `query-sync`             | URL-driven filtering, sorting, and search with query parameters                                        |
+| `snake`                  | Classic game built with Subscriptions                                                                  |
+| `canvas-art`             | Declarative 2D canvas with shapes, animation-frame Subscriptions, and pointer events                   |
+| `generative-art`         | Perlin-noise flow field with evolving particle trails, mouse vortex, and high-frequency Messages       |
+| `auth`                   | Authentication with Submodels, OutMessage, and protected routes                                        |
+| `shopping-cart`          | Complex state management with nested Models and routing                                                |
+| `state-machine`          | Experimental state machine checkout with guarded branches and edge Commands                            |
+| `pixel-art`              | Pixel editor with undo/redo, UI components, and localStorage persistence                               |
+| `websocket-chat`         | Managed resources with WebSocket integration                                                           |
+| `managed-resource-layer` | Layer-backed ManagedResource lifecycle with an Effect service                                          |
+| `kanban`                 | Drag-and-drop board with fractional indexing, keyboard navigation, and screen reader announcements     |
+| `map`                    | Interactive MapLibre GL map with Mount and Subscriptions                                               |
+| `web-components`         | QR code designer wiring third-party web components into Foldkit with CustomElement.define              |
+| `embedding`              | A Foldkit widget embedded in a plain TypeScript host page with Ports and dispose                       |
+| `ui-showcase`            | Every Foldkit UI component with routing and Submodels                                                  |
+
+## License
+
+MIT

@@ -1,0 +1,70 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:38272) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/run105-review-census.test.ts (7 tests | 1 failed | 6 skipped) 465ms
+   ↓ run105 R8 production census > a saturated non-paginated ladder index degrades instead of treating omitted rollbacks as new tasks
+   ↓ run105 R8 production census > decodes externalized route ladder index readback before deciding census availability
+   × run105 R8 production census > counts distinct classified live requests inside the window and unions no-ladder tasks 463ms
+     → expected [ { roleId: 'Writer', …(5) }, …(3) ] to deeply equal [ { roleId: 'Writer', …(5) }, …(3) ]
+   ↓ run105 R8 production census > state roots and scopes isolate counts and honor a custom window
+   ↓ run105 R8 production census > rollback is excluded and volume precedes unfilled-gap tie breaks
+   ↓ run105 R8 production census > missing schema fails closed with explicit degradation and no fabricated zero counts
+   ↓ run105 R8 production census > missing database is explicit and a successful census leaves the database bytes unchanged
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run105-review-census.test.ts > run105 R8 production census > counts distinct classified live requests inside the window and unions no-ladder tasks
+AssertionError: expected [ { roleId: 'Writer', …(5) }, …(3) ] to deeply equal [ { roleId: 'Writer', …(5) }, …(3) ]
+
+- Expected
++ Received
+
+@@ -1,26 +1,26 @@
+  [
+    {
+      "admitted": 0,
+      "configured": 2,
+-     "requestCount": 1,
++     "requestCount": 2,
+      "roleId": "Writer",
+      "rolledBack": false,
+      "taskTypeId": "coder.Review",
+    },
+    {
+      "admitted": 0,
+      "configured": 2,
+-     "requestCount": 1,
++     "requestCount": 2,
+      "roleId": "writer",
+      "rolledBack": false,
+      "taskTypeId": "coder.explain",
+    },
+    {
+      "admitted": 1,
+      "configured": 2,
+-     "requestCount": 2,
++     "requestCount": 3,
+      "roleId": "writer",
+      "rolledBack": false,
+      "taskTypeId": "coder.review",
+    },
+    {
+
+ ❯ test/run105-review-census.test.ts:179:31
+    177|     seed(a.databasePath, "exact", "Writer", "coder.Review");
+    178|     const result = await census(a, [ladder("coder.review"), ladder("ne…
+    179|     expect(result.candidates).toEqual([
+       |                               ^
+    180|       {
+    181|         roleId: "Writer",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 6 skipped (7)
+   Start at  05:48:54
+   Duration  12.22s (transform 5.38s, setup 0ms, collect 10.06s, tests 465ms, environment 0ms, prepare 1.06s)
+

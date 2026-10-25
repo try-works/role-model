@@ -1,0 +1,85 @@
+import * as stylex from '@stylexjs/stylex'
+
+import { tokens } from './tokens.stylex'
+
+/** Element defaults, applied before component recipes. No global reset needed. */
+export const reset = stylex.create({
+  button: {
+    margin: 0,
+    padding: 0,
+    borderRadius: '0px',
+    borderStyle: 'solid',
+    borderWidth: 0,
+    backgroundColor: tokens.transparent,
+    color: 'inherit',
+    fontFamily: 'inherit',
+    fontFeatureSettings: 'inherit',
+    fontSize: 'inherit',
+    fontVariationSettings: 'inherit',
+    fontWeight: 'inherit',
+    letterSpacing: 'inherit',
+    lineHeight: 'inherit',
+    textDecorationLine: 'none',
+    textTransform: 'none',
+  },
+  input: {
+    margin: 0,
+    padding: 0,
+    borderRadius: '0px',
+    borderStyle: 'solid',
+    borderWidth: 0,
+    backgroundColor: tokens.transparent,
+    color: 'inherit',
+    fontFamily: 'inherit',
+    fontFeatureSettings: 'inherit',
+    fontSize: 'inherit',
+    fontVariationSettings: 'inherit',
+    fontWeight: 'inherit',
+    letterSpacing: 'inherit',
+    lineHeight: 'inherit',
+    '::placeholder': {
+      color: tokens.controlPlaceholder,
+      opacity: 1,
+    },
+  },
+  list: { margin: 0, padding: 0, listStyleType: 'none' },
+  link: { color: 'inherit', textDecorationLine: 'none' },
+  text: {
+    margin: 0,
+    padding: 0,
+    fontFamily: 'inherit',
+    fontSize: 'inherit',
+    fontWeight: 'inherit',
+    lineHeight: 'inherit',
+  },
+  fieldset: { margin: 0, padding: 0, borderWidth: 0, minWidth: 0 },
+  media: {
+    display: 'block',
+    verticalAlign: 'middle',
+    height: 'auto',
+    maxWidth: '100%',
+  },
+  svg: { display: 'block', verticalAlign: 'middle' },
+  table: {
+    borderColor: 'inherit',
+    borderCollapse: 'collapse',
+    borderSpacing: 0,
+    textIndent: 0,
+  },
+  tableHeading: { padding: 0, textAlign: 'inherit' },
+  rule: {
+    margin: 0,
+    borderStyle: 'solid',
+    borderWidth: 0,
+    color: 'inherit',
+    borderTopWidth: 1,
+    height: 0,
+  },
+  code: {
+    fontFamily:
+      'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+    fontFeatureSettings: 'normal',
+    fontSize: '1em',
+    fontVariationSettings: 'normal',
+  },
+})

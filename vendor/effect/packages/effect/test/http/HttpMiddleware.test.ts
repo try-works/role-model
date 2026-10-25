@@ -11,6 +11,8 @@ import * as HttpServerError from "effect/http/HttpServerError"
 import * as HttpServerRequest from "effect/http/HttpServerRequest"
 import * as HttpServerResponse from "effect/http/HttpServerResponse"
 import * as Logger from "effect/Logger"
+import * as IpNetwork from "effect/net/IpNetwork"
+import * as Option from "effect/Option"
 import * as References from "effect/References"
 import * as Scheduler from "effect/Scheduler"
 import * as Tracer from "effect/Tracer"
@@ -350,11 +352,40 @@ describe("HttpMiddleware", () => {
         assert.strictEqual(serverSpan.attributes.get("url.path"), "/todos/1")
         assert.strictEqual(serverSpan.attributes.get("url.query"), "foo=bar")
         assert.strictEqual(serverSpan.attributes.get("user_agent.original"), "test-agent")
-        assert.strictEqual(serverSpan.attributes.get("http.request.header.x-request"), "request")
-        assert.strictEqual(serverSpan.attributes.get("http.request.header.x-request-secret"), "<redacted>")
+        assert.strictEqual(serverSpan.attributes.get("http.request.header.x-request"), undefined)
+        assert.strictEqual(serverSpan.attributes.get("http.request.header.x-request-secret"), undefined)
         assert.strictEqual(serverSpan.attributes.get("http.response.status_code"), 201)
-        assert.strictEqual(serverSpan.attributes.get("http.response.header.x-response"), "response")
-        assert.strictEqual(serverSpan.attributes.get("http.response.header.x-response-secret"), "<redacted>")
+        assert.strictEqual(serverSpan.attributes.get("http.response.header.x-response"), undefined)
+        assert.strictEqual(serverSpan.attributes.get("http.response.header.x-response-secret"), undefined)
+      }))
+
+    it.effect("redacts sensitive query params in url attributes", () =>
+      Effect.gen(function*() {
+        let serverSpan: Tracer.NativeSpan | undefined
+        let handlerUrl: string | undefined
+        const tracer = Tracer.make({
+          span(options) {
+            serverSpan = new Tracer.NativeSpan(options)
+            return serverSpan
+          }
+        })
+        const request = HttpServerRequest.fromWeb(
+          new Request("http://localhost/todos?sig=sig-secret&foo=bar")
+        )
+
+        yield* HttpMiddleware.tracer(Effect.gen(function*() {
+          handlerUrl = (yield* HttpServerRequest.HttpServerRequest).url
+          return HttpServerResponse.empty()
+        })).pipe(
+          Effect.provideService(HttpServerRequest.HttpServerRequest, request),
+          Effect.provideService(Tracer.Tracer, tracer)
+        )
+        yield* Effect.yieldNow
+
+        assert(serverSpan !== undefined)
+        assert.strictEqual(serverSpan.attributes.get("url.full"), "http://localhost/todos?sig=REDACTED&foo=bar")
+        assert.strictEqual(serverSpan.attributes.get("url.query"), "sig=REDACTED&foo=bar")
+        assert.strictEqual(handlerUrl, "/todos?sig=sig-secret&foo=bar")
       }))
 
     it.effect("skips attributes for unsampled spans", () =>
@@ -414,7 +445,68 @@ describe("HttpMiddleware", () => {
         assert.strictEqual(parentInFinalizer, undefined)
       }))
 
-    it.effect("excludes the sent response from a failed stream span", () =>
+    it.effect("fails the span for a rendered 599 without changing the response", () =>
+      Effect.gen(function*() {
+        let serverSpan: Tracer.Span | undefined
+        const request = HttpServerRequest.fromWeb(new Request("http://localhost:3000/error"))
+        const response = HttpServerResponse.empty({ status: 599 })
+        const app = Effect.gen(function*() {
+          serverSpan = yield* Effect.currentSpan
+          return yield* Effect.fail("handler failed")
+        }).pipe(Effect.catch(() => Effect.succeed(response)))
+
+        const result = yield* HttpMiddleware.tracer(app).pipe(
+          Effect.provideService(HttpServerRequest.HttpServerRequest, request),
+          Effect.provideService(Tracer.Tracer, Tracer.make({ span: (options) => new Tracer.NativeSpan(options) }))
+        )
+        yield* Effect.yieldNow
+
+        assert.strictEqual(result, response)
+        assert(serverSpan !== undefined && serverSpan.status._tag === "Ended")
+        assert.deepStrictEqual(
+          serverSpan.status.exit,
+          Exit.fail(
+            new HttpServerError.HttpServerError({
+              reason: new HttpServerError.ResponseError({ request, response })
+            })
+          )
+        )
+      }))
+
+    it("fails a native span without changing a returned 500 response", async () => {
+      const stackTraceLimit = Error.stackTraceLimit
+      try {
+        Error.stackTraceLimit = 37
+        await Effect.runPromise(Effect.gen(function*() {
+          let serverSpan: Tracer.Span | undefined
+          const request = HttpServerRequest.fromWeb(new Request("http://localhost:3000/native"))
+          const response = HttpServerResponse.empty({ status: 500 })
+
+          const exit = yield* Effect.exit(
+            HttpMiddleware.tracer(Effect.gen(function*() {
+              serverSpan = yield* Effect.currentSpan
+              return response
+            })).pipe(Effect.provideService(HttpServerRequest.HttpServerRequest, request))
+          )
+          assert.deepStrictEqual(exit, Exit.succeed(response))
+          assert(serverSpan !== undefined)
+          assert(serverSpan.status._tag === "Ended")
+          assert.deepStrictEqual(
+            serverSpan.status.exit,
+            Exit.fail(
+              new HttpServerError.HttpServerError({
+                reason: new HttpServerError.ResponseError({ request, response })
+              })
+            )
+          )
+        }))
+        assert.strictEqual(Error.stackTraceLimit, 37)
+      } finally {
+        Error.stackTraceLimit = stackTraceLimit
+      }
+    })
+
+    it.effect("preserves the stream failure when the sent response is 500", () =>
       Effect.gen(function*() {
         let serverSpan: Tracer.NativeSpan | undefined
         const tracer = Tracer.make({
@@ -425,7 +517,7 @@ describe("HttpMiddleware", () => {
         })
         const request = HttpServerRequest.fromWeb(new Request("http://localhost:3000/stream"))
         const response = HttpServerResponse.empty({
-          status: 200,
+          status: 500,
           headers: { "content-type": "text/event-stream" }
         })
         const streamError = new Error("stream failed")
@@ -434,7 +526,7 @@ describe("HttpMiddleware", () => {
         // the stream failure so the server can finish the request correctly.
         const app = Effect.failCause(Cause.combine(Cause.fail(streamError), Cause.die(response)))
 
-        yield* Effect.exit(
+        const exit = yield* Effect.exit(
           HttpMiddleware.tracer(app).pipe(
             Effect.provideService(HttpServerRequest.HttpServerRequest, request),
             Effect.provideService(Tracer.Tracer, tracer)
@@ -442,12 +534,88 @@ describe("HttpMiddleware", () => {
         )
         yield* Effect.yieldNow
 
+        assert.deepStrictEqual(exit, Exit.failCause(Cause.combine(Cause.fail(streamError), Cause.die(response))))
         assert(serverSpan !== undefined)
-        assert.strictEqual(serverSpan.attributes.get("http.response.status_code"), 200)
+        assert.strictEqual(serverSpan.attributes.get("http.response.status_code"), 500)
         assert.strictEqual(serverSpan.status._tag, "Ended")
         if (serverSpan.status._tag === "Ended") {
           assert.deepStrictEqual(serverSpan.status.exit, Exit.fail(streamError))
         }
+      }))
+  })
+
+  describe("forwarded headers", () => {
+    const trustedProxies = [IpNetwork.fromStringUnsafe("10.0.0.0/8")]
+    const observe = Effect.fnUntraced(
+      function*(middleware: HttpMiddleware.HttpMiddleware, peer: string, headers: Record<string, string>) {
+        const app = middleware(
+          HttpServerRequest.HttpServerRequest.use((request) =>
+            Effect.succeed(HttpServerResponse.jsonUnsafe({
+              remoteAddress: Option.getOrUndefined(request.remoteAddress),
+              host: request.headers.host,
+              url: Option.getOrUndefined(HttpServerRequest.toURL(request))?.href
+            }))
+          )
+        )
+        const request = HttpServerRequest.fromWeb(
+          new Request("http://app.test/a", { headers: { host: "app.test", ...headers } })
+        ).modify({ remoteAddress: Option.some(peer) })
+        const response = yield* app.pipe(Effect.provideService(HttpServerRequest.HttpServerRequest, request))
+        return yield* Effect.promise(() => HttpServerResponse.toWeb(response).json())
+      }
+    )
+
+    it.effect.each([
+      {
+        name: "ignores forwarded metadata from an untrusted peer",
+        peer: "203.0.113.9",
+        headers: { "x-forwarded-for": "6.6.6.6", "x-forwarded-host": "evil.test", "x-forwarded-proto": "https" },
+        expected: { remoteAddress: "203.0.113.9", host: "app.test", url: "http://app.test/a" }
+      },
+      {
+        name: "selects the rightmost untrusted hop and its aligned host and proto",
+        peer: "10.0.0.1",
+        headers: {
+          "x-forwarded-for": "6.6.6.6, 198.51.100.7, 10.0.0.2",
+          "x-forwarded-host": "evil.test, b.test, internal.test",
+          "x-forwarded-proto": "http, https, http"
+        },
+        expected: { remoteAddress: "198.51.100.7", host: "b.test", url: "https://b.test/a" }
+      },
+      {
+        name: "keeps the transport host when X-Forwarded-Host does not align with X-Forwarded-For",
+        peer: "10.0.0.1",
+        headers: { "x-forwarded-for": "198.51.100.7", "x-forwarded-host": "a.test, b.test" },
+        expected: { remoteAddress: "198.51.100.7", host: "app.test", url: "http://app.test/a" }
+      },
+      {
+        name: "stops at an invalid entry instead of skipping to attacker-controlled entries",
+        peer: "10.0.0.1",
+        headers: { "x-forwarded-for": "6.6.6.6, unknown, 10.0.0.2", "x-forwarded-host": "a.test, b.test, c.test" },
+        expected: { remoteAddress: "10.0.0.1", host: "app.test", url: "http://app.test/a" }
+      }
+    ])("xForwardedHeaders $name", ({ expected, headers, peer }) =>
+      Effect.gen(function*() {
+        assert.deepStrictEqual(
+          yield* observe(HttpMiddleware.xForwardedHeaders({ trustedProxies }), peer, headers),
+          expected
+        )
+      }))
+
+    it.effect("authorizes against the transport peer, not an address resolved by earlier middleware", () =>
+      Effect.gen(function*() {
+        const outer = HttpMiddleware.xForwardedHeaders({ trustedProxies })
+        const inner = HttpMiddleware.xForwardedHeaders({
+          trustedProxies: [IpNetwork.fromStringUnsafe("198.51.100.0/24")]
+        })
+        assert.deepStrictEqual(
+          yield* observe((app) => outer(inner(app)), "10.0.0.1", {
+            "x-forwarded-for": "6.6.6.6, 198.51.100.7",
+            "x-forwarded-host": "evil.test, b.test",
+            "x-forwarded-proto": "https, http"
+          }),
+          { remoteAddress: "198.51.100.7", host: "b.test", url: "http://b.test/a" }
+        )
       }))
   })
 })

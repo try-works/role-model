@@ -1,0 +1,97 @@
+{
+  "slice": "s16b-scratch-sea",
+  "status": "blocked at the private-distribution pairing gate after the SEA executable was assembled; no valid packaged release and no start proof",
+  "authorizedProcedure": {
+    "scratchPath": "E:/role-model-run115/s16-scratch",
+    "syntheticCommit": "d797b7e3aa88b9382b1953afc90b3e8e5504d675",
+    "syntheticCommitTree": "3a2b46aef60672cfee47d3f585310d0a833a24e7",
+    "sourceContentTreeSnapshot": "3a2b46aef60672cfee47d3f585310d0a833a24e7",
+    "hashEquality": true,
+    "remotes": 0,
+    "scratchStatusClean": true,
+    "method": "The first two literal robocopy snapshots could not achieve equality because the shared worktree was being written concurrently (one s16b-copy.log written by this slice, one s17b-green.log written by another worker appeared between the before/copy/after checks). I stopped treating those as valid and instead materialized the exact source temp-index content tree (git read-tree HEAD + git add -A + git write-tree, then git checkout-index -a --prefix=scratch) into the scratch. This is content-identical by construction: scratch tree equals the source snapshot tree 3a2b46ae..., verified before build. The artifact therefore represents that content tree, not a reviewable commit."
+  },
+  "treeProof": {
+    "sourceContentTreeBeforeMaterialization": "3a2b46aef60672cfee47d3f585310d0a833a24e7",
+    "scratchTreeAfterCommit": "3a2b46aef60672cfee47d3f585310d0a833a24e7",
+    "equal": true,
+    "sourceHead": "f0d50fab083e3fe8daf2474cd9fb08b51066c8e1",
+    "sourceHeadTree": "b3d5cf91435faad39d11a0dc1d65f54d8668cc2e",
+    "note": "The source worktree is still being edited by other workers; the snapshot tree is the immutable content the artifact represents. Scratch has one local commit and no remote."
+  },
+  "build": {
+    "command": "cd E:/role-model-run115/s16-scratch && corepack pnpm run runtime:package-sea",
+    "exitCode": 1,
+    "wallSeconds": 155.4,
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s16b-s16b-build3.log",
+    "prerequisiteBuilds": [
+      {
+        "command": "corepack pnpm run runtime:build-test-deps",
+        "exit": 0,
+        "seconds": 43.3,
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s16b-s16b-build-deps.log"
+      },
+      {
+        "command": "corepack pnpm exec turbo run build --concurrency=4 --filter=@role-model-router/runtime-host-bridge... --filter=@role-model-router/runtime-ui...",
+        "exit": 0,
+        "seconds": 74.2,
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s16b-s16b-turbo-build-filtered.log"
+      }
+    ],
+    "earlierAttempts": [
+      {
+        "note": "first package-sea attempt failed: workspace dependencies had no dist (I had excluded dist from the scratch content per the procedure); 202.4s",
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s16b-s16b-build.log"
+      },
+      {
+        "note": "second attempt after filtered dependency build failed for the same reason before the workspace node_modules links were remapped from source paths to scratch paths; 130.3s",
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s16b-s16b-build2.log"
+      }
+    ],
+    "exactError": "Error: development packaging requires the exact private distribution\n    at validatePairedReleasePackagingInputs (.../src/package-sea.ts:61:3)\n    at packageSeaRuntime (.../src/package-sea.ts:1035:3)",
+    "why": "packageSeaRuntime validates a paired track-B private distribution for every channel (development included). ROLE_MODEL_TRACK_B_DISTRIBUTION_ROOT was not supplied. The only local distribution (D:/DEV/role-model-internal/dist/run00-dev) declares publicSourceTree 6cf4df64b273c25e7f5736bf65273e35f841800f, which does not match this snapshot tree 3a2b46ae..., so it cannot be paired honestly.",
+    "warnings": [
+      "esbuild: '\"import.meta\" is not available with the \"cjs\" output format and will be empty' from ../../packages/effect/dist/chunks/chunk-Y2MUQ5DM.js:194",
+      "Node 24: ExperimentalWarning SQLite is an experimental feature",
+      "pnpm warns it is v11.28.5 while some packages configure 10.6.5, and pnpm aborted an implicit install (no TTY) but continued with existing node_modules"
+    ]
+  },
+  "artifact": {
+    "validPackagedArtifact": false,
+    "partialExePath": "E:/role-model-run115/s16-scratch/role-model-router/dist/release/win32-x64/role-model-dev.exe",
+    "partialExeBytes": 104797184,
+    "partialExeSha256": "1d54c9ef09907a4f76d4c9d494c1239b42418db1d1bb04b79e467ff3ed955640",
+    "manifestPresent": false,
+    "trackBRuntimePresent": false,
+    "note": "The SEA executable and launcher were assembled before the validation failure, but the release has no manifest.json and no track-b-runtime/. It is not a valid packaged release and I do not claim its hash as a deliverable artifact."
+  },
+  "startExitProof": {
+    "attempted": false,
+    "reason": "no valid packaged release (manifest/track-B/closure missing)",
+    "portsTouched": "none (3456/3457/3458 never bound)",
+    "stateRoot": "none created; no runtime process started",
+    "identityReported": null
+  },
+  "identity": {
+    "artifactReported": null,
+    "expectedIfCompleted": "commit would be the synthetic scratch commit d797b7e3... and source_tree 3a2b46ae...; version would be repo-relative/unknown because the scratch repo has no tags",
+    "reasonNoIdentity": "the release was never finalized or started"
+  },
+  "gaps": [
+    "no valid packaged release, no start, no /api/version identity, no clean stop",
+    "no private track-B distribution paired to this content tree; the only local one matches a different public source tree",
+    "no real client request and no parity comparison (next slice)",
+    "no negative control"
+  ],
+  "sourceWorktreeSafety": "No commit, stash, reset or checkout was performed in the shared worktree. Only evidence/logs/s16b-* files were added there. The scratch repo has one local commit and no remotes; nothing was pushed.",
+  "evidenceLogs": [
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s16b-s16b-build3.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s16b-s16b-build2.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s16b-s16b-build.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s16b-s16b-build-deps.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s16b-s16b-turbo-build-filtered.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s16b-s16b-turbo-build.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s16b-s16b-tree-add2.log",
+    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s16b-s16b-copy.log"
+  ]
+}

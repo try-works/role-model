@@ -1,0 +1,62 @@
+# S10c mutation (a): handlerOptions omits the injected readDiagnosticsSource
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:43352) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/run115-s10c-wiring-proofs.test.ts (5 tests | 2 failed) 21ms
+   × S10c module-health wiring proofs > constructs the composition once and injects its source by identity 11ms
+     → expected undefined to be [Function source] // Object.is equality
+   ✓ S10c module-health wiring proofs > passes options through unchanged and no-ops the report when disabled 2ms
+   × S10c module-health wiring proofs > builds the wiring once per listener and reports each rejected handler exactly once 4ms
+     → expected undefined to be [Function source] // Object.is equality
+   ✓ S10c module-health wiring proofs > does not report a handler that resolves 1ms
+   ✓ S10c module-health wiring proofs > disabled listener: the handler sees the unchanged options and a rejection is not reported 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run115-s10c-wiring-proofs.test.ts > S10c module-health wiring proofs > constructs the composition once and injects its source by identity
+AssertionError: expected undefined to be [Function source] // Object.is equality
+
+- Expected: 
+[Function source]
+
++ Received: 
+undefined
+
+ ❯ test/run115-s10c-wiring-proofs.test.ts:53:57
+     51| 
+     52|     expect(composeCalls).toBe(1);
+     53|     expect(wiring.handlerOptions.readDiagnosticsSource).toBe(compositi…
+       |                                                         ^
+     54|     expect(wiring.handlerOptions.diagnostics).toEqual(options.diagnost…
+     55| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/run115-s10c-wiring-proofs.test.ts > S10c module-health wiring proofs > builds the wiring once per listener and reports each rejected handler exactly once
+AssertionError: expected undefined to be [Function source] // Object.is equality
+
+- Expected: 
+[Function source]
+
++ Received: 
+undefined
+
+ ❯ test/run115-s10c-wiring-proofs.test.ts:98:48
+
+     96|     expect(report).toHaveBeenCalledWith(fail);
+     97|     expect(captured).toHaveLength(1);
+     98|     expect(captured[0]?.readDiagnosticsSource).toBe(composition.source…
+       |                                                ^
+     99| 
+    100|     listener(request, response);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 3 passed (5)
+   Start at  01:51:39
+   Duration  7.40s (transform 4.48s, setup 0ms, collect 6.88s, tests 21ms, environment 0ms, prepare 164ms)
+
+EXIT_CODE: 1

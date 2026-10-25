@@ -1,0 +1,9 @@
+# Run115 Phase1 current-source analysis
+
+Requirements and paired worktree are lock-valid (public reqeaf8d6fa..., worktree142096f8...; private worktree7b45790b...). Read00-requirements.md, owner-scope-decision.md and own00-worktree.md first. Current phase01 ASIS; controller owns01-as-is.md. Workers output analysis only, no code/config/test edits, no children/goals/runtime/provider requests, no E1/E2 redesign. Source baseline publicf0d50fab/private16021cc5, same exact run worktrees as bundle location; inspect actual source not old reports alone. No full baseline rerun. Use read/glob/grep and read-only git/count/hash where needed. Bounded20toolcalls, final<=2500words. Concrete file/line/export/owner/caller and current tests; distinguish source observation from reproduced bug, no phantom API signatures. Raw output controller stores under evidence/router and verifies. No writes by worker.
+
+E1/E2 explicitly deferred per owner; required Effect B0-B10 and full frontend remain. Latest target Effect4.0.6 and vendored Foldkit0.169.0 source compatibility must be proven later. Need smallest dependency-ordered strict-TDD slices with clear red test seams, keep existing contracts and already-good queues, no server DB/broker introduction. Include concrete gaps/risks and unknowns for reproduction/QA. Think actual caller -> owner -> storage/transport -> readback, not directory-only list.
+
+## Task
+
+Read private D:/DEV/role-model-internal/.worktrees/115-effect-foldkit-runtime-migration current graph/artifact/event/capture/queue/replay/eval/learning and sidecar composition. Verify anchors from proposal§15 and actual production consumer wiring. Report services/leases/graph/privacy/cancel/shutdown caller chain and existing tests, first bounded no-schema-change conversion seams. No confidential payload dump, credentials, DB reads or broad cloud rewrite.

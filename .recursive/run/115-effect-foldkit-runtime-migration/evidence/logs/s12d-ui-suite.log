@@ -1,0 +1,17 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui
+
+ ✓ src/chart-grid.test.ts (1 test) 8ms
+ ✓ src/badge.test.ts (2 tests) 44ms
+ ✓ src/sidebar.test.ts (6 tests) 90ms
+ ✓ src/chart.test.ts (13 tests) 15ms
+ ✓ src/chart-composition.test.ts (3 tests) 7ms
+ ✓ src/runtime-overview.test.ts (3 tests) 8ms
+ ✓ src/observe.test.ts (5 tests) 11ms
+
+ Test Files  7 passed (7)
+      Tests  33 passed (33)
+   Start at  00:22:14
+   Duration  2.22s (transform 887ms, setup 0ms, collect 5.84s, tests 182ms, environment 4ms, prepare 2.18s)
+
+EXIT_CODE: 0

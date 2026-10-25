@@ -1,0 +1,9 @@
+src/message.ts(21,14): error TS2322: Type 'MessageUnion<Record<string, Fields>>' is not assignable to type 'MessageUnion<MessageCases>'.
+  Type 'MessageUnion<Record<string, Fields>>' is not assignable to type 'UnionSchema<MessageCases>'.
+    Types of property 'Type' are incompatible.
+      Type '{ readonly [x: string]: unknown; readonly [x: number]: unknown; readonly [x: symbol]: unknown; readonly _tag: string; }' is not assignable to type '{ readonly _tag: "ChangedUrl"; url?: any; } | { readonly _tag: "Clicked"; } | { readonly _tag: "ClickedLink"; readonly request: { readonly _tag: "Internal"; url?: any; } | { readonly _tag: "External"; href?: any; }; } | { ...; } | { ...; }'.
+        Property 'request' is missing in type '{ readonly [x: string]: unknown; readonly [x: number]: unknown; readonly [x: symbol]: unknown; readonly _tag: string; }' but required in type '{ readonly _tag: "ClickedLink"; readonly request: { readonly _tag: "Internal"; url?: any; } | { readonly _tag: "External"; href?: any; }; }'.
+src/message.ts(21,36): error TS2344: Type 'MessageCases' does not satisfy the constraint 'Record<string, Fields>'.
+  Index signature for type 'string' is missing in type 'MessageCases'.
+src/message.ts(21,78): error TS2345: Argument of type 'MessageCases' is not assignable to parameter of type 'Record<string, Fields>'.
+  Index signature for type 'string' is missing in type 'MessageCases'.

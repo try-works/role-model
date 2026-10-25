@@ -1,0 +1,125 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > renders the ok state, its records and the request URL through the embedding entry
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 13.6ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: 's15f-ok', status: 'loading' },
+    route: { _tag: 'Diagnostics', id: 's15f-ok' },
+    theme: 'light'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 13.61030000000028,
+  thresholdMs: 8
+}
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > renders empty, disabled, stale and dropped as the server declared them
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > renders a 401 denial and a 403 rejection with different labels
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > renders a transport failure as the error state
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+ ❯ test/diagnostics-e2e.test.ts (4 tests | 4 failed) 9647ms
+   × S15f diagnostics page over the real client > renders the ok state, its records and the request URL through the embedding entry 3068ms
+     → Timed out waiting for the ok state (last value: undefined) | body: IndexDiagnostics 42Diagnostics: s15f-okDiagnostics read failed: diagnostics reader is not configuredinstance: missing · build: missingRefresh diagnosticsLight shellClicks: 0Clicked 0 time(s)Toggle theme
+   × S15f diagnostics page over the real client > renders empty, disabled, stale and dropped as the server declared them 3016ms
+     → Timed out waiting for the empty state (last value: undefined) | body: IndexDiagnostics 42Diagnostics: s15f-emptyDiagnostics read failed: diagnostics reader is not configuredinstance: missing · build: missingRefresh diagnosticsLight shellClicks: 0Clicked 0 time(s)Toggle theme
+   × S15f diagnostics page over the real client > renders a 401 denial and a 403 rejection with different labels 3010ms
+     → Timed out waiting for the 401 denied state (last value: undefined) | body: IndexDiagnostics 42Diagnostics: s15f-401Diagnostics read failed: diagnostics reader is not configuredinstance: missing · build: missingRefresh diagnosticsLight shellClicks: 0Clicked 0 time(s)Toggle theme
+   × S15f diagnostics page over the real client > renders a transport failure as the error state 549ms
+     → expected 'IndexDiagnostics 42Diagnostics: s15f-…' to contain 'Failed to fetch'
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > renders the ok state, its records and the request URL through the embedding entry
+Error: Timed out waiting for the ok state (last value: undefined) | body: IndexDiagnostics 42Diagnostics: s15f-okDiagnostics read failed: diagnostics reader is not configuredinstance: missing · build: missingRefresh diagnosticsLight shellClicks: 0Clicked 0 time(s)Toggle theme
+ ❯ waitFor test/diagnostics-e2e.test.ts:99:9
+     97|     await new Promise<void>((resolve) => setTimeout(resolve, 10));
+     98|   }
+     99|   throw new Error(
+       |         ^
+    100|     `Timed out waiting for ${label} (last value: ${String(last)}) | bo…
+    101|   );
+ ❯ test/diagnostics-e2e.test.ts:117:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > renders empty, disabled, stale and dropped as the server declared them
+Error: Timed out waiting for the empty state (last value: undefined) | body: IndexDiagnostics 42Diagnostics: s15f-emptyDiagnostics read failed: diagnostics reader is not configuredinstance: missing · build: missingRefresh diagnosticsLight shellClicks: 0Clicked 0 time(s)Toggle theme
+ ❯ waitFor test/diagnostics-e2e.test.ts:99:9
+     97|     await new Promise<void>((resolve) => setTimeout(resolve, 10));
+     98|   }
+     99|   throw new Error(
+       |         ^
+    100|     `Timed out waiting for ${label} (last value: ${String(last)}) | bo…
+    101|   );
+ ❯ test/diagnostics-e2e.test.ts:126:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > renders a 401 denial and a 403 rejection with different labels
+Error: Timed out waiting for the 401 denied state (last value: undefined) | body: IndexDiagnostics 42Diagnostics: s15f-401Diagnostics read failed: diagnostics reader is not configuredinstance: missing · build: missingRefresh diagnosticsLight shellClicks: 0Clicked 0 time(s)Toggle theme
+ ❯ waitFor test/diagnostics-e2e.test.ts:99:9
+     97|     await new Promise<void>((resolve) => setTimeout(resolve, 10));
+     98|   }
+     99|   throw new Error(
+       |         ^
+    100|     `Timed out waiting for ${label} (last value: ${String(last)}) | bo…
+    101|   );
+ ❯ test/diagnostics-e2e.test.ts:167:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > renders a transport failure as the error state
+AssertionError: expected 'IndexDiagnostics 42Diagnostics: s15f-…' to contain 'Failed to fetch'
+
+Expected: "Failed to fetch"
+Received: "IndexDiagnostics 42Diagnostics: s15f-errorDiagnostics read failed: diagnostics reader is not configuredinstance: missing · build: missingRefresh diagnosticsLight shellClicks: 0Clicked 0 time(s)Toggle theme"
+
+ ❯ test/diagnostics-e2e.test.ts:186:24
+    184|     await waitFor(() => stateNode("error"), "the transport error state…
+    185|     expect(bodyText()).toContain("Diagnostics read failed");
+    186|     expect(bodyText()).toContain("Failed to fetch");
+       |                        ^
+    187|   });
+    188| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed (4)
+   Start at  04:38:20
+   Duration  16.13s (transform 3.20s, setup 0ms, collect 5.12s, tests 9.65s, environment 686ms, prepare 203ms)
+
+EXIT_CODE: 1

@@ -48,6 +48,13 @@ function renderEmittableAnnotation(input: unknown): string | undefined {
   return entries.length === 0 ? "{}" : `{ ${entries.join(", ")} }`
 }
 
+// Leading checks that turn a bare `Schema.Number` into a built-in schema.
+const canonicalNumberChecks: Record<string, string> = {
+  [`Schema.isFinite().annotate({ "expected": "a finite number" })`]: "Schema.Finite",
+  ["Schema.isInt()"]: "Schema.Int",
+  [`Schema.isInt().annotate({ "expected": "an integer" })`]: "Schema.Int"
+}
+
 function renderAnnotations(
   annotations: Schema.Annotations.Annotations | undefined
 ): string | undefined {
@@ -341,7 +348,11 @@ export function toCodeDocument(
     let runtime = base.runtime + runtimeAnnotate(representation.annotations)
     for (let index = 0; index < representation.checks.length; index++) {
       const check = representation.checks[index]
-      runtime += `.check(${compileCheck(check, [...path, "checks", index])})`
+      const compiledCheck = compileCheck(check, [...path, "checks", index])
+      // Only collapse a bare number's leading canonical check.
+      runtime = runtime === "Schema.Number" && Object.hasOwn(canonicalNumberChecks, compiledCheck)
+        ? canonicalNumberChecks[compiledCheck]
+        : `${runtime}.check(${compiledCheck})`
     }
     return makeCode(runtime, base.Type)
   }

@@ -27,6 +27,7 @@ import { createInterface } from "node:readline";
 import { DatabaseSync } from "node:sqlite";
 import { pathToFileURL } from "node:url";
 import { gunzipSync, gzipSync } from "node:zlib";
+import { type SqliteService, makeSync } from "@effect/sql-sqlite-node/service";
 // Run 99 R33 D7: the declared, family-stratified holdout split.
 import {
   RUN99_HOLDOUT_SPLIT_SEED,
@@ -6214,6 +6215,14 @@ function validateTrackBReferenceAttestation(
  * instead of treating the transfer marker as the business result. Returning the
  * marker as-is made every large profile estimate look degraded.
  */
+/** S6e test seam: the durable-output read-only connection with busy_timeout=0. */
+export const openDurableOutputDatabase = (databasePath: string): SqliteService =>
+  makeSync({
+    databasePath,
+    openDatabase: (file) => new DatabaseSync(file, { readOnly: true }),
+    setup: (db) => db.exec("PRAGMA busy_timeout = 0"),
+  });
+
 function readExternalizedExtensionOutput(input: {
   readonly stateRoot: string;
   readonly scopeId: string;
@@ -6232,15 +6241,12 @@ function readExternalizedExtensionOutput(input: {
     "durable-output.sqlite",
   );
   if (!existsSync(databasePath)) return null;
-  const database = new DatabaseSync(databasePath, { readOnly: true });
+  const database = openDurableOutputDatabase(databasePath);
   try {
-    const row = database
-      .prepare(
-        "SELECT result_json, result_hash, byte_length FROM durable_extension_outputs WHERE output_key = ?",
-      )
-      .get(outputKey) as
-      | { result_json?: string; result_hash?: string; byte_length?: number }
-      | undefined;
+    const row = database.querySync(
+      "SELECT result_json, result_hash, byte_length FROM durable_extension_outputs WHERE output_key = ?",
+      [outputKey],
+    )[0] as { result_json?: string; result_hash?: string; byte_length?: number } | undefined;
     if (!row?.result_json) return null;
     const expectedHash = input.locator.resultHash;
     if (typeof expectedHash === "string" && row.result_hash !== expectedHash) {
@@ -6248,7 +6254,7 @@ function readExternalizedExtensionOutput(input: {
     }
     return JSON.parse(row.result_json) as Record<string, unknown>;
   } finally {
-    database.close();
+    database.closeSync();
   }
 }
 
@@ -6319,21 +6325,19 @@ function readExternalizedExtensionOutputByHash(input: {
   }
   for (const databasePath of storePaths) {
     if (!existsSync(databasePath)) continue;
-    let database: DatabaseSync | null = null;
+    let database: SqliteService | null = null;
     try {
-      database = new DatabaseSync(databasePath, { readOnly: true });
+      database = openDurableOutputDatabase(databasePath);
       const row =
-        (database
-          .prepare(
-            "SELECT result_json, byte_length FROM durable_extension_outputs WHERE result_hash = ? ORDER BY rowid DESC LIMIT 1",
-          )
-          .get(input.resultHash) as { result_json?: string; byte_length?: number } | undefined) ??
+        (database.querySync(
+          "SELECT result_json, byte_length FROM durable_extension_outputs WHERE result_hash = ? ORDER BY rowid DESC LIMIT 1",
+          [input.resultHash],
+        )[0] as { result_json?: string; byte_length?: number } | undefined) ??
         (locatorKey
-          ? (database
-              .prepare(
-                "SELECT result_json, byte_length FROM durable_extension_outputs WHERE output_key = ?",
-              )
-              .get(locatorKey) as { result_json?: string; byte_length?: number } | undefined)
+          ? (database.querySync(
+              "SELECT result_json, byte_length FROM durable_extension_outputs WHERE output_key = ?",
+              [locatorKey],
+            )[0] as { result_json?: string; byte_length?: number } | undefined)
           : undefined);
       if (
         row?.result_json &&
@@ -6348,7 +6352,7 @@ function readExternalizedExtensionOutputByHash(input: {
     } catch {
       // Keep looking; never invent a value.
     } finally {
-      database?.close();
+      database?.closeSync();
     }
   }
   return null;
@@ -6429,25 +6433,25 @@ export function decodeExternalizedOperatorReadback(input: {
     for (const workerId of workerIds) {
       const databasePath = path.join(workersRoot, workerId, "durable-output.sqlite");
       if (!existsSync(databasePath)) continue;
-      let database: DatabaseSync | null = null;
+      let database: SqliteService | null = null;
       try {
-        database = new DatabaseSync(databasePath, { readOnly: true });
+        database = openDurableOutputDatabase(databasePath);
         const row = (
           outputKey
-            ? database
-                .prepare("SELECT result_json FROM durable_extension_outputs WHERE output_key = ?")
-                .get(outputKey)
-            : database
-                .prepare(
-                  "SELECT result_json FROM durable_extension_outputs WHERE result_hash = ? ORDER BY rowid DESC LIMIT 1",
-                )
-                .get(resultHash)
+            ? database.querySync(
+                "SELECT result_json FROM durable_extension_outputs WHERE output_key = ?",
+                [outputKey],
+              )[0]
+            : database.querySync(
+                "SELECT result_json FROM durable_extension_outputs WHERE result_hash = ? ORDER BY rowid DESC LIMIT 1",
+                [resultHash],
+              )[0]
         ) as { result_json?: string } | undefined;
         if (row?.result_json) return JSON.parse(row.result_json) as unknown;
       } catch {
         // Keep looking; never invent a value.
       } finally {
-        database?.close();
+        database?.closeSync();
       }
     }
   }

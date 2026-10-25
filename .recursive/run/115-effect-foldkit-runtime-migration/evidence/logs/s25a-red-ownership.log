@@ -1,0 +1,37 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui
+
+ ❯ app/lib/s25a-refresh-ownership.test.ts (4 tests | 1 failed | 3 skipped) 52ms
+   ↓ S25a refresh ownership and event-source characterization > uses an injected RuntimeEventSourceFactory and closes it on dispose
+   × S25a refresh ownership and event-source characterization > owns exactly one active subscription per start and leaks none across two start/stop cycles 50ms
+     → expected 1 to be +0 // Object.is equality
+   ↓ S25a refresh ownership and event-source characterization > a later revision after a gap reaches the refresh handler (no silent continuation); no explicit gap marker exists
+   ↓ S25a refresh ownership and event-source characterization > a reused stale chart is visible as stale in the returned titles and diagnostic field
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/lib/s25a-refresh-ownership.test.ts > S25a refresh ownership and event-source characterization > owns exactly one active subscription per start and leaks none across two start/stop cycles
+AssertionError: expected 1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ app/lib/s25a-refresh-ownership.test.ts:97:20
+     95|     first();
+     96|     first();
+     97|     expect(active).toBe(0);
+       |                    ^
+     98| 
+     99|     const second = start();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 skipped (4)
+   Start at  06:12:56
+   Duration  1.00s (transform 122ms, setup 0ms, collect 194ms, tests 52ms, environment 0ms, prepare 253ms)
+

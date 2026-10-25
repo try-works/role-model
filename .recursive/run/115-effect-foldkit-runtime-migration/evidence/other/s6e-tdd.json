@@ -1,0 +1,93 @@
+{
+  "slice": "s6e-batch-pins",
+  "requirement": "R23 second batch: pin pragmas, DELETE predicate, deleted count, portability",
+  "status": "complete",
+  "seams": {
+    "why": "pragmas and the deleted count are not observable through the public lookups (connections are closed inside each call; the backend ignores the cleanup return). Additive exported seams were genuinely needed; no behaviour changed.",
+    "added": [
+      "route-ladder-census.ts: openCensusDatabase(databasePath) - query_only=ON + busy_timeout=1000",
+      "route-challenge-evidence.ts: openChallengeTelemetryDatabase (query_only=ON + busy_timeout=1000) and openChallengeDispositionDatabase (busy_timeout=0)",
+      "queue-runtime/admin.ts: openReadOnly exported (busy_timeout=0)",
+      "track-b-runtime.ts: openDurableOutputDatabase (busy_timeout=0), used by all three durable reads",
+      "index.ts: openRetentionCleanupDatabase (busy_timeout=0) and runRetentionCleanupAt(databasePath, nowMs) - same single DELETE + changes() count, now with an injectable clock; the backend closure delegates to it"
+    ]
+  },
+  "pragmaPins": {
+    "test": "pins the effective PRAGMAs of every migrated site: reads PRAGMA busy_timeout/query_only on each opened connection",
+    "expected": "census + challenge telemetry: busy_timeout=1000, query_only=1; disposition/admin/durable/retention: busy_timeout=0, query_only=0",
+    "mutations": [
+      {
+        "log": "s6e-red-pragma-census.log",
+        "removed": "census setup",
+        "result": "expected 5000 to be 1000"
+      },
+      {
+        "log": "s6e-red-pragma-telemetry.log",
+        "removed": "challenge telemetry setup",
+        "result": "expected 5000 to be 1000"
+      },
+      {
+        "log": "s6e-red-pragma-disposition.log",
+        "removed": "disposition setup",
+        "result": "expected 5000 to be +0"
+      },
+      {
+        "log": "s6e-red-pragma-admin.log",
+        "removed": "admin setup",
+        "result": "expected 5000 to be +0"
+      },
+      {
+        "log": "s6e-red-pragma-durable.log",
+        "removed": "durable setup",
+        "result": "expected 5000 to be +0"
+      },
+      {
+        "log": "s6e-red-pragma-retention.log",
+        "removed": "retention setup",
+        "result": "expected 5000 to be +0"
+      }
+    ]
+  },
+  "deletePins": {
+    "dataset": "2 expired rows (now-5000, now-1), boundary row exactly at now, NULL-retain row, live row (now+1h); runRetentionCleanupAt(db, now)",
+    "expected": "deletedCount 2; remaining rows: req:boundary, req:live, req:null-retain",
+    "mutations": [
+      {
+        "log": "s6e-red-delete-constant.log",
+        "change": "WHERE request_id = 'req:expired-a'",
+        "result": "expected 1 to be 2 (expired-b remained)"
+      },
+      {
+        "log": "s6e-red-delete-boundary.log",
+        "change": "< -> <=",
+        "result": "expected 3 to be 2 (boundary row deleted)"
+      },
+      {
+        "log": "s6e-red-delete-null.log",
+        "change": "OR retain_until_ms IS NULL (delete NULL-retain)",
+        "result": "expected 3 to be 2 (NULL row deleted)"
+      },
+      {
+        "log": "s6e-red-count.log",
+        "change": "return deletedCount 0",
+        "result": "expected +0 to be 2"
+      }
+    ]
+  },
+  "portability": "baseTemp = ROLE_MODEL_TEST_TEMP_ROOT?.trim() || path.join(os.tmpdir(), 'role-model-run115'); a run with the override set passed and created its root there (s6e-override.log).",
+  "green": {
+    "log": "s6e-green.log",
+    "tests": 3,
+    "passed": 3,
+    "exit": 0,
+    "backendIntegrationRetained": true
+  },
+  "typecheck": {
+    "log": "s6e-tsc.log",
+    "exit": 0
+  },
+  "files": {
+    "role-model-router/apps/runtime-host-bridge/test/s6d-second-batch-migration.test.ts": "pragma matrix, deterministic DELETE boundary/count test, temp-root override; existing real-backend test retained",
+    "src": "five migrated sites: additive exported openers + runRetentionCleanupAt; no SQL/pragma/result behaviour changed"
+  }
+}

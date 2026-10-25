@@ -1,0 +1,103 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/diagnostics-client.test.ts (6 tests | 6 failed) 49ms
+   × S15e diagnostics fetch client > builds the operator diagnostics URL and sends the expected bearer credential 20ms
+     → diagnostics client is not implemented
+   × S15e diagnostics fetch client > sends no credential header and no spoofable owner/operator-context headers 3ms
+     → diagnostics client is not implemented
+   × S15e diagnostics fetch client > passes every 200 state through unchanged 2ms
+     → diagnostics client is not implemented
+   × S15e diagnostics fetch client > distinguishes a 401 denial from a 403 rejection 3ms
+     → diagnostics client is not implemented
+   × S15e diagnostics fetch client > surfaces a transport rejection and a non-JSON 200 body as failures 13ms
+     → expected Error: diagnostics client is not implemen… to be an instance of TypeError
+   × S15e diagnostics fetch client > forwards the caller AbortSignal into the fetch call 3ms
+     → diagnostics client is not implemented
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/diagnostics-client.test.ts > S15e diagnostics fetch client > builds the operator diagnostics URL and sends the expected bearer credential
+Error: diagnostics client is not implemented
+ ❯ src/diagnostics-client.ts:5:9
+      3| /** STUB (RED): the fetch-based diagnostics reader is not implemented …
+      4| export const createDiagnosticsClient = (): DiagnosticsReader => async …
+      5|   throw new Error("diagnostics client is not implemented");
+       |         ^
+      6| };
+      7| 
+ ❯ test/diagnostics-client.test.ts:60:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  test/diagnostics-client.test.ts > S15e diagnostics fetch client > sends no credential header and no spoofable owner/operator-context headers
+Error: diagnostics client is not implemented
+ ❯ src/diagnostics-client.ts:5:9
+      3| /** STUB (RED): the fetch-based diagnostics reader is not implemented …
+      4| export const createDiagnosticsClient = (): DiagnosticsReader => async …
+      5|   throw new Error("diagnostics client is not implemented");
+       |         ^
+      6| };
+      7| 
+ ❯ test/diagnostics-client.test.ts:78:11
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  test/diagnostics-client.test.ts > S15e diagnostics fetch client > passes every 200 state through unchanged
+Error: diagnostics client is not implemented
+ ❯ src/diagnostics-client.ts:5:9
+      3| /** STUB (RED): the fetch-based diagnostics reader is not implemented …
+      4| export const createDiagnosticsClient = (): DiagnosticsReader => async …
+      5|   throw new Error("diagnostics client is not implemented");
+       |         ^
+      6| };
+      7| 
+ ❯ test/diagnostics-client.test.ts:99:52
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  test/diagnostics-client.test.ts > S15e diagnostics fetch client > distinguishes a 401 denial from a 403 rejection
+Error: diagnostics client is not implemented
+ ❯ src/diagnostics-client.ts:5:9
+      3| /** STUB (RED): the fetch-based diagnostics reader is not implemented …
+      4| export const createDiagnosticsClient = (): DiagnosticsReader => async …
+      5|   throw new Error("diagnostics client is not implemented");
+       |         ^
+      6| };
+      7| 
+ ❯ test/diagnostics-client.test.ts:110:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  test/diagnostics-client.test.ts > S15e diagnostics fetch client > surfaces a transport rejection and a non-JSON 200 body as failures
+AssertionError: expected Error: diagnostics client is not implemen… to be an instance of TypeError
+ ❯ test/diagnostics-client.test.ts:133:23
+    131|       throw new TypeError("Failed to fetch");
+    132|     })(input).catch((error: unknown) => error);
+    133|     expect(transport).toBeInstanceOf(TypeError);
+       |                       ^
+    134|     expect((transport as TypeError).message).toBe("Failed to fetch");
+    135| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  test/diagnostics-client.test.ts > S15e diagnostics fetch client > forwards the caller AbortSignal into the fetch call
+Error: diagnostics client is not implemented
+ ❯ src/diagnostics-client.ts:5:9
+      3| /** STUB (RED): the fetch-based diagnostics reader is not implemented …
+      4| export const createDiagnosticsClient = (): DiagnosticsReader => async …
+      5|   throw new Error("diagnostics client is not implemented");
+       |         ^
+      6| };
+      7| 
+ ❯ test/diagnostics-client.test.ts:147:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  6 failed (6)
+   Start at  04:15:49
+   Duration  8.12s (transform 3.56s, setup 0ms, collect 5.26s, tests 49ms, environment 1.09s, prepare 282ms)
+
+EXIT_CODE: 1

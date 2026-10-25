@@ -1,0 +1,39 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s26a-route-inventory.test.ts (4 tests | 1 failed) 67ms
+   × S26a route inventory drift > validates every row, scans app/** recursively and correlates host endpoints 49ms
+     → every read route declares its host endpoints: expected [ 'route:dashboard' ] to deeply equal []
+   ✓ S26a route inventory drift > detects a nested route file that has no inventory row 4ms
+   ✓ S26a route inventory drift > detects a routes.ts-only path that has no inventory row 3ms
+   ✓ S26a route inventory drift > detects a declared endpoint that is absent from the host route table 9ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s26a-route-inventory.test.ts > S26a route inventory drift > validates every row, scans app/** recursively and correlates host endpoints
+AssertionError: every read route declares its host endpoints: expected [ 'route:dashboard' ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "route:dashboard",
++ ]
+
+ ❯ test/s26a-route-inventory.test.ts:172:7
+    170|       readRoutes.filter((entry) => (entry.hostEndpoints?.length ?? 0) …
+    171|       "every read route declares its host endpoints",
+    172|     ).toEqual([]);
+       |       ^
+    173| 
+    174|     const waveIds = inventory.waves.flatMap((wave) => wave.routeIds);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 passed (4)
+   Start at  07:59:31
+   Duration  2.02s (transform 94ms, setup 0ms, collect 70ms, tests 67ms, environment 803ms, prepare 334ms)
+

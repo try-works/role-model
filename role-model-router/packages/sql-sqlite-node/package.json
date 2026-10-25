@@ -1,15 +1,20 @@
 {
   "name": "@effect/sql-sqlite-node",
-  "version": "4.0.1",
+  "version": "4.0.6",
   "private": true,
   "type": "module",
-  "description": "Workspace entry point for the vendored @effect/sql-sqlite-node client (vendor/effect, 4.0.1). `effect` stays external so the runtime stays single-instance.",
+  "description": "Workspace entry point for the vendored @effect/sql-sqlite-node client (vendor/effect, 4.0.6). `effect` stays external so the runtime stays single-instance.",
   "exports": {
     "./package.json": "./package.json",
     ".": {
       "types": "./dist/types/index.d.ts",
       "runtime": "./dist/index.js",
       "default": "./dist/index.js"
+    },
+    "./service": {
+      "types": "./dist/types/service.d.ts",
+      "runtime": "./dist/service.js",
+      "default": "./dist/service.js"
     }
   },
   "files": ["src", "dist"],
@@ -17,6 +22,6 @@
     "effect": "workspace:*"
   },
   "scripts": {
-    "build": "node build.mjs"
+    "build": "node build.mjs && tsc -p tsconfig.service.json"
   }
 }

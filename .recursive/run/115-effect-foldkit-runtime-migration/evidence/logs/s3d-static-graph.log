@@ -1,0 +1,24 @@
+# S3d static graph-closure re-run (post effect-wrapper fix)
+✔ @role-model-router/foldkit: built graph has no Node builtin or Node platform-package import (127.533ms)
+✔ @role-model-router/foldkit: effect is one shared external specifier (92.688ms)
+✔ @role-model-router/foldkit: every vendored subpath has a wrapper export backed by a built file (17.3332ms)
+✔ @role-model-router/foldkit-ui: built graph has no Node builtin or Node platform-package import (57.2794ms)
+✔ @role-model-router/foldkit-ui: effect is one shared external specifier (55.3637ms)
+✔ @role-model-router/foldkit-ui: every vendored subpath has a wrapper export backed by a built file (12.5847ms)
+✔ @role-model-router/effect-platform-browser: built graph has no Node builtin or Node platform-package import (25.6196ms)
+✔ @role-model-router/effect-platform-browser: effect is one shared external specifier (24.15ms)
+✔ @role-model-router/effect-platform-browser: every vendored subpath has a wrapper export backed by a built file (11.2264ms)
+✔ foldkit-ui reaches its framework peer through the first-party wrapper specifier (150.0646ms)
+✔ the foldkit browser-platform peer resolves to the workspace wrapper (85.5717ms)
+✔ wrapper subpath coverage is total and stable for every wrapper package (19.731ms)
+✔ a published subpath whose source file is missing fails entry generation loudly (2.5588ms)
+✔ an export target outside dist/ is refused instead of guessed (0.3273ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 824.1318
+EXIT_CODE: 0

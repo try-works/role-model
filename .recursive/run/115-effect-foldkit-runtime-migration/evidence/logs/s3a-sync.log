@@ -1,0 +1,5 @@
+vendor-upstream: foldkit synced foldkit@0.169.0 (7ee214268c602967937b80f6f20d1e831f2e8ab6) into vendor/foldkit (LF bytes)
+COMMAND: node scripts/vendor-upstream.mjs --name foldkit --sync --tag foldkit@0.169.0 --commit 7ee214268c602967937b80f6f20d1e831f2e8ab6
+TMP_TEMP: E:\dsh-tmp\run115-s3a
+TIMESTAMP: 2026-10-24T13:52:34.895Z
+EXIT_CODE: 0

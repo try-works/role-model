@@ -1,0 +1,136 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+stderr | test/diagnostics.test.ts > diagnostics page states > does not apply a resolved read for a previous route id after navigating away
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 16.3ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: 'a', status: 'loading' },
+    route: { _tag: 'Diagnostics', id: 'a' },
+    theme: 'light'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 16.33600000000024,
+  thresholdMs: 8
+}
+
+ ❯ test/diagnostics.test.ts (17 tests | 1 failed | 16 skipped) 683ms
+   ↓ diagnostics page states > renders the ok state with records and identity
+   ↓ diagnostics page states > renders the empty state distinctly
+   ↓ diagnostics page states > renders disabled as a state, not an error
+   ↓ diagnostics page states > renders stale with the rule and the age
+   ↓ diagnostics page states > renders dropped with the loss counts
+   ↓ diagnostics page states > shows independent conditions together instead of hiding one behind the other
+   ↓ diagnostics page states > renders a denied response as access denied
+   ↓ diagnostics page states > renders denied rather than an empty list for a denied response
+   ↓ diagnostics page states > renders a transport error distinctly from a denied state
+   ↓ diagnostics page states > labels a missing or unknown build identity as missing, never blank
+   ↓ diagnostics page states > shows loading while the reader is in flight, then the command result message
+   ↓ diagnostics page states > re-reads through a Command when the refresh control is used
+   ↓ diagnostics page states > renders the refresh control and nav links with visible focus styles and the narrow layout classes
+   × diagnostics page states > does not apply a resolved read for a previous route id after navigating away 681ms
+     → expected <section …(3)>…(1)</section> to be undefined
+   ↓ diagnostics page states > aborts the Effect-forwarded signal when the shell disposes mid-flight
+   ↓ diagnostics page states > labels a 403 rejection by its HTTP status instead of a generic authorization failure
+   ↓ diagnostics page states > exposes role=status live-region semantics while loading and after settling
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/diagnostics.test.ts > diagnostics page states > does not apply a resolved read for a previous route id after navigating away
+AssertionError: expected <section …(3)>…(1)</section> to be undefined
+
+- Expected: 
+undefined
+
++ Received: 
+<section
+  class="mt-4 w-full rounded-lg border border-[var(--rm-border)] bg-[var(--rm-panel)] p-4 sm:p-6"
+  data-diagnostics-state="ok"
+  data-testid="diagnostics-panel"
+>
+  <div
+    class="grid gap-4 md:grid-cols-2"
+    data-diagnostics-layout=""
+  >
+    <div>
+      <p
+        aria-busy="false"
+        aria-live="polite"
+        class="text-[14px] leading-[21px] text-[var(--rm-fg)]"
+        role="status"
+      >
+        ok — 1 of 1 record(s)
+      </p>
+      <ul
+        class="mt-3 space-y-1.5"
+        data-testid="diagnostics-records"
+      >
+        <li
+          class="flex flex-wrap items-baseline gap-2 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-2 py-1.5 text-[12px] leading-4"
+        >
+          <span
+            class="font-mono text-[11px] uppercase tracking-[0.08em] text-[var(--rm-muted)]"
+          >
+            warn
+          </span>
+          <span
+            class="break-all font-mono text-[var(--rm-fg)]"
+          >
+            queue.retry
+          </span>
+          <span
+            class="ml-auto text-[var(--rm-secondary)]"
+          >
+            ×3
+          </span>
+        </li>
+      </ul>
+    </div>
+    <div>
+      <p
+        class="text-[12px] leading-4 text-[var(--rm-secondary)]"
+        data-testid="diagnostics-identity"
+      >
+        instance: inst-1 · build: build-9
+      </p>
+      <p
+        class="mt-1 text-[12px] leading-4 text-[var(--rm-secondary)]"
+      >
+        bounded read: 50 records / 16384 bytes / identity ≤256 B / code ≤512 B
+      </p>
+      <button
+        class="inline-flex h-[36px] min-h-[36px] items-center justify-center rounded-[var(--rm-radius-field)] border border-[var(--rm-border-strong)] bg-[var(--rm-surface)] px-4 text-[13px] font-semibold leading-[18px] tracking-[-0.01em] text-[var(--rm-fg)] transition hover:border-[var(--rm-accent)] hover:bg-[var(--rm-accent-ghost)] hover:text-[var(--rm-fg)] active:scale-95 disabled:opacity-60 mt-3 w-full rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--rm-accent-subtle)] sm:w-auto"
+        data-action="refresh-diagnostics"
+        type="button"
+      >
+        Refresh diagnostics
+      </button>
+    </div>
+  </div>
+</section>
+
+ ❯ test/diagnostics.test.ts:434:29
+    432|     });
+    433|     await new Promise<void>((resolve) => setTimeout(resolve, 50));
+    434|     expect(stateNode("ok")).toBeUndefined();
+       |                             ^
+    435|     expect(bodyText()).not.toContain("queue.retry");
+    436|     expect(stateNode("loading")).toBeDefined();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 16 skipped (17)
+   Start at  01:07:08
+   Duration  7.20s (transform 3.14s, setup 0ms, collect 5.03s, tests 683ms, environment 813ms, prepare 223ms)
+
+EXIT_CODE: 1

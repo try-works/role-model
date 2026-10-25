@@ -1,0 +1,61 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:53104) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/s6b-cli-sqlite-service-migration.test.ts (7 tests | 1 failed | 6 skipped) 10058ms
+   ↓ S6b/S6c cli SQLite service migration > endpoint model lookup preserves result, null fallbacks and read-only open
+   ↓ S6b/S6c cli SQLite service migration > opens exactly one connection per lookup
+   × S6b/S6c cli SQLite service migration > closes the connection on success, on a thrown query and on a failing open 10054ms
+     → expected { closes: +0, opens: 1 } to deeply equal { closes: 1, opens: 1 }
+     → Hook timed out in 10000ms.
+If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".
+   ↓ S6b/S6c cli SQLite service migration > opens the state database genuinely read-only: a write through the handle fails
+   ↓ S6b/S6c cli SQLite service migration > preserves busy_timeout=0: an exclusive writer yields null immediately
+   ↓ S6b/S6c cli SQLite service migration > controller lookup preserves scope precedence and latest-row ordering
+   ↓ S6b/S6c cli SQLite service migration > capture receipt lookup preserves envelope/bare shapes and malformed fallbacks
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s6b-cli-sqlite-service-migration.test.ts > S6b/S6c cli SQLite service migration > closes the connection on success, on a thrown query and on a failing open
+AssertionError: expected { closes: +0, opens: 1 } to deeply equal { closes: 1, opens: 1 }
+
+- Expected
++ Received
+
+  {
+-   "closes": 1,
++   "closes": 0,
+    "opens": 1,
+  }
+
+ ❯ test/s6b-cli-sqlite-service-migration.test.ts:180:20
+    178|       }),
+    179|     ).toBe("provider/model-known");
+    180|     expect(counts).toEqual({ closes: 1, opens: 1 });
+       |                    ^
+    181| 
+    182|     // thrown query: the table is missing, work throws inside the help…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/s6b-cli-sqlite-service-migration.test.ts > S6b/S6c cli SQLite service migration > closes the connection on success, on a thrown query and on a failing open
+Error: Hook timed out in 10000ms.
+If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".
+ ❯ test/s6b-cli-sqlite-service-migration.test.ts:36:1
+     34|   process.env.ROLE_MODEL_TEST_TEMP_ROOT?.trim() || path.join(tmpdir(),…
+     35| 
+     36| afterEach(async () => {
+       | ^
+     37|   setStateDatabaseServiceFactoryForTests(undefined);
+     38|   await Promise.all(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 6 skipped (7)
+   Start at  05:13:23
+   Duration  18.47s (transform 5.18s, setup 0ms, collect 7.89s, tests 10.06s, environment 0ms, prepare 181ms)
+
+EXIT_CODE: 1

@@ -1,0 +1,7 @@
+▲ [WARNING] Cannot find base config file "../../../tsconfig.base.json" [tsconfig.json]
+
+    ../../../vendor/effect/packages/platform/browser/tsconfig.json:3:13:
+      3 │   "extends": "../../../tsconfig.base.json",
+        ╵              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+{"status":"PASS","package":"@role-model-router/effect-platform-browser","entries":["BrowserCrypto","BrowserHttpClient","BrowserKeyValueStore","BrowserPersistence","BrowserRuntime","BrowserSocket","BrowserStream","BrowserWorker","BrowserWorkerRunner","Clipboard","Geolocation","IndexedDb","IndexedDbDatabase","IndexedDbQueryBuilder","IndexedDbTable","IndexedDbVersion","Permissions","index"],"subpaths":[".","./BrowserCrypto","./BrowserHttpClient","./BrowserKeyValueStore","./BrowserPersistence","./BrowserRuntime","./BrowserSocket","./BrowserStream","./BrowserWorker","./BrowserWorkerRunner","./Clipboard","./Geolocation","./IndexedDb","./IndexedDbDatabase","./IndexedDbQueryBuilder","./IndexedDbTable","./IndexedDbVersion","./Permissions"],"warnings":1,"warningDetails":["Cannot find base config file \"../../../tsconfig.base.json\""]}

@@ -1,0 +1,32 @@
+[
+  {
+    "role": "as-is-independent-audit",
+    "sessionId": "session-83152b60-7136-4a7a-b9c8-fa49b937a4a9",
+    "config": {
+      "provider": "deepseek-official",
+      "model": "deepseek-flash",
+      "maxTokens": 256000,
+      "reasoningEffort": "high"
+    }
+  },
+  {
+    "role": "as-is-repair-recheck02",
+    "sessionId": "session-cdc743c9-70c1-44d2-91ab-933d72bcf181",
+    "config": {
+      "provider": "deepseek-official",
+      "model": "deepseek-flash",
+      "maxTokens": 256000,
+      "reasoningEffort": "high"
+    }
+  },
+  {
+    "role": "worktree-ready05",
+    "sessionId": "session-1d5eaa24-836d-4d7e-a160-10f5cfa1cb01",
+    "config": {
+      "provider": "deepseek-official",
+      "model": "deepseek-flash",
+      "maxTokens": 256000,
+      "reasoningEffort": "high"
+    }
+  }
+]

@@ -1,0 +1,11 @@
+✔ request-only selfcheck executes controls without claiming browser parity (520.882ms)
+✔ full React selfcheck is NOT RUN until actual captures are available (612.4515ms)
+✔ unknown or combined modes fail without silently selecting fixture success (1820.9063ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3101.9649

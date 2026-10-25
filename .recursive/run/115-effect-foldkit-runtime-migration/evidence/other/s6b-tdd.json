@@ -1,0 +1,208 @@
+{
+  "slice": "s6b-caller-migration",
+  "requirement": "R23 SQL service B3 caller migration (00-requirements.md:214-220)",
+  "status": "one coherent cli.ts read-only lookup cluster migrated; all other direct sites listed",
+  "migrated": [
+    {
+      "function": "readEndpointModelIdForRoutePackage",
+      "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts:203-218",
+      "before": "one read-only DatabaseSync + prepare(...).get(routePackage)",
+      "after": "service makeSync({ openDatabase readOnly, setup busy_timeout=0 }) + querySync same SQL/param + first row",
+      "tests": "test/s6b-cli-sqlite-service-migration.test.ts: known model, unknown null, missing db null, corrupt db null, exclusive-lock null quickly"
+    },
+    {
+      "function": "readRouteCaptureFromQueueReceipt",
+      "file": "src/cli.ts:288-323",
+      "before": "one read-only DatabaseSync + prepare(...).get(requestId)",
+      "after": "same service helper + querySync same SQL/param; envelope/bare/malformed parsing unchanged",
+      "tests": "S6b capture test + existing test/run166-item8-capture-receipt-fallback.test.ts (3)"
+    },
+    {
+      "function": "readPersistedControllerEndpointId",
+      "file": "src/cli.ts:471-486",
+      "before": "one read-only DatabaseSync + prepare(...).get(scopeId, scopeId)",
+      "after": "same service helper + querySync same SQL/params; scope precedence/order unchanged",
+      "tests": "S6b controller test + existing test/run153-item8c-controller-fallback.test.ts (3)"
+    }
+  ],
+  "serviceHelper": "src/cli.ts:183-201: one makeSync per lookup, openDatabase readOnly, setup PRAGMA busy_timeout=0, work(service), closeSync in finally. No second connection; no transaction opened; errors still collapse to null.",
+  "behaviorProof": {
+    "results": "known/unknown endpoint, envelope/bare/malformed receipt, scope precedence/latest controller",
+    "errors": "missing db and corrupt db return null; no throw. Mutation changing catch to throw was RED.",
+    "pragmas": "readOnly open + busy_timeout=0. Exclusive writer test returns null <1000ms; removing setup busy0 made it 7.4s RED.",
+    "transaction": "these lookups are single SELECTs; the service transaction API is not used. No boundary was added or moved.",
+    "redLogs": [
+      ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s6b-red-endpoint-sql.log (NULL projection: expected model, got null)",
+      ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s6b-red-controller-order.log (ASC: tenant-old instead of tenant-new)",
+      ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s6b-red-receipt-shape.log (raw envelope: expected inner capture, got null)",
+      ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s6b-red-error-surface.log (catch changed to throw: corrupt db escaped)",
+      ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s6b-red-busy-timeout.log (setup busy0 removed: 7388ms instead of <1000ms)",
+      ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s6b-red-readonly-open.log (NOT a RED: the missing-file precheck returns before open, so the test cannot distinguish readOnly open; readOnly is source-reviewed)"
+    ]
+  },
+  "testRuns": [
+    {
+      "command": "vitest s6b + run153 + run166",
+      "total": 10,
+      "passed": 10,
+      "failed": 0,
+      "exit": 0,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s6b-green.log"
+    },
+    {
+      "typecheck": "tsc -p apps/runtime-host-bridge/tsconfig.json --noEmit",
+      "exit": 0,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s6b-typecheck.log"
+    },
+    {
+      "biome": "biome check src/cli.ts test/s6b-cli-sqlite-service-migration.test.ts",
+      "exit": 0,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s6b-biome-check.log"
+    }
+  ],
+  "remainingSites": [
+    {
+      "file": "apps/runtime-host-bridge/src/cli.ts",
+      "line": 11550,
+      "reason": "startup endpoint-pool read: multi-row + PRAGMA table_info; left outside the single-row read-only cluster"
+    },
+    {
+      "file": "apps/runtime-host-bridge/src/index.ts",
+      "line": 6974,
+      "reason": "multi-statement sync provider-account cleanup: needs one transactionSync owner"
+    },
+    {
+      "file": "apps/runtime-host-bridge/src/index.ts",
+      "line": 7003,
+      "reason": "sync DELETE-all endpoint cleanup: mechanical next"
+    },
+    {
+      "file": "apps/runtime-host-bridge/src/index.ts",
+      "line": 7018,
+      "reason": "sync prepared DELETE loop by account id: mechanical next"
+    },
+    {
+      "file": "apps/runtime-host-bridge/src/index.ts",
+      "line": 7038,
+      "reason": "sync prepared DELETE loop by provider account id: mechanical next"
+    },
+    {
+      "file": "apps/runtime-host-bridge/src/index.ts",
+      "line": 7059,
+      "reason": "sync prepared DELETE loop by model id: mechanical next"
+    },
+    {
+      "file": "apps/runtime-host-bridge/src/index.ts",
+      "line": 7073,
+      "reason": "sync single-row DELETE by endpoint id: mechanical next"
+    },
+    {
+      "file": "apps/runtime-host-bridge/src/index.ts",
+      "line": 7088,
+      "reason": "sync prepared DELETE loop for device authorizations: mechanical next"
+    },
+    {
+      "file": "apps/runtime-host-bridge/src/index.ts",
+      "line": 21230,
+      "reason": "periodic retention DELETE: sync hot path; needs bounded service facade and transaction decision"
+    },
+    {
+      "file": "apps/runtime-host-bridge/src/route-ladder-census.ts",
+      "line": 102,
+      "reason": "read-only census lookup: same shape as the migrated cluster, next mechanical"
+    },
+    {
+      "file": "apps/runtime-host-bridge/src/route-challenge-evidence.ts",
+      "line": 556,
+      "reason": "read-only challenge-evidence lookup: next mechanical"
+    },
+    {
+      "file": "apps/runtime-host-bridge/src/route-challenge-evidence.ts",
+      "line": 580,
+      "reason": "read-only disposition lookup: next mechanical"
+    },
+    {
+      "file": "apps/runtime-host-bridge/src/queue-runtime/admin.ts",
+      "line": 42,
+      "reason": "read-only admin connection bootstrap: next mechanical"
+    },
+    {
+      "file": "apps/runtime-host-bridge/src/track-b-capture-queue.ts",
+      "line": 166,
+      "reason": "queue writer owns DDL/PRAGMA/transactions: migrate only with the service transaction API"
+    },
+    {
+      "file": "apps/runtime-host-bridge/src/track-b-runtime.ts",
+      "line": 5387,
+      "reason": "post-observation outbox schema migration/writer: DDL + transaction ownership"
+    },
+    {
+      "file": "apps/runtime-host-bridge/src/track-b-runtime.ts",
+      "line": 5438,
+      "reason": "post-observation legacy JSON import: multi-statement BEGIN IMMEDIATE transaction"
+    },
+    {
+      "file": "apps/runtime-host-bridge/src/track-b-runtime.ts",
+      "line": 5625,
+      "reason": "post-observation outbox write path: transaction boundary must be designed, not moved"
+    },
+    {
+      "file": "apps/runtime-host-bridge/src/track-b-runtime.ts",
+      "line": 6235,
+      "reason": "read-only durable-output lookup: next mechanical"
+    },
+    {
+      "file": "apps/runtime-host-bridge/src/track-b-runtime.ts",
+      "line": 6324,
+      "reason": "read-only durable-output hash lookup: next mechanical"
+    },
+    {
+      "file": "apps/runtime-host-bridge/src/track-b-runtime.ts",
+      "line": 6434,
+      "reason": "read-only durable-output worker lookup: next mechanical"
+    },
+    {
+      "file": "apps/runtime-host-bridge/scripts/start-for-qa.ts",
+      "line": 1111,
+      "reason": "QA script outside the runtime host: needs its own fixture and is not on the runtime path"
+    }
+  ],
+  "remainingPackageOwners": {
+    "packages/sqlite-memory/src": [
+      "legacy-migration.ts:422",
+      "index.ts:178",
+      "index.ts:734",
+      "index.ts:2055",
+      "index.ts:2143",
+      "index.ts:2209",
+      "index.ts:2262",
+      "index.ts:2299",
+      "index.ts:2345",
+      "index.ts:2380",
+      "index.ts:2398",
+      "index.ts:2420",
+      "index.ts:2426",
+      "index.ts:2475",
+      "index.ts:2524",
+      "index.ts:2569",
+      "index.ts:2648",
+      "index.ts:2778",
+      "index.ts:2790",
+      "index.ts:3796",
+      "index.ts:3827",
+      "index.ts:4470",
+      "index.ts:4519",
+      "index.ts:6426",
+      "index.ts:6501",
+      "index.ts:6542",
+      "index.ts:6555"
+    ],
+    "packages/sql-sqlite-node/src": [
+      "service.ts:158"
+    ],
+    "reason": "Store/service implementation owners, not host callers; R23 caller migration does not rewrite the retained SQLite store/service. Keep for the separately approved owner conversion."
+  },
+  "contractRisk": "None hit. The only API-shape change is exporting the previously private readEndpointModelIdForRoutePackage (additive, needed for the characterization test); no existing signature/result/error contract changed. Service sync facade keeps call sites synchronous.",
+  "processNote": "An intermediate full-file write truncated cli.ts; it was restored from HEAD and the migration re-applied with targeted edits. Final diff is +40/-36 only: import, helper, three migrated bodies, additive export.",
+  "unproven": "Read-only open mode is not behaviorally distinguishable through these functions because every caller prechecks existsSync; source uses openDatabase readOnly. Queue/write/transaction sites are intentionally not migrated."
+}
