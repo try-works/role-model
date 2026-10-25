@@ -490,6 +490,44 @@ jobs:
             }
           }
 
+      # R39: run the maintained client-journey verifier against the package this job just built.
+      # Advisory by default: continue-on-error is driven by vars.R39_VERIFY_BLOCKING, so the step
+      # reports without blocking a release until a dispatch run has been green and the variable is
+      # set to "true". Exit 1 and exit 2 both fail the job once blocking is on, because a typed
+      # NOT RUN is not evidence of parity.
+      - name: Verify packaged client journeys (R39)
+        if: matrix.target == 'win32-x64'
+        shell: pwsh
+        continue-on-error: ${{ vars.R39_VERIFY_BLOCKING != 'true' }}
+        env:
+          R39_HEALTH_TIMEOUT_MS: "120000"
+        run: |
+          $packageDir = "role-model-router/dist/release/${{ matrix.target }}"
+          $stateRoot = Join-Path $env:RUNNER_TEMP "r39-state"
+          if (Test-Path $stateRoot) { Remove-Item -Recurse -Force $stateRoot }
+          node scripts/runtime/verify-client-journeys.mjs `
+            --manifest "$packageDir/manifest.json" `
+            --executable "$packageDir/role-model-dev.exe" `
+            --repo-root "$packageDir" `
+            --static-root "role-model-router/apps/runtime-ui-next/dist/client" `
+            --port 5940 `
+            --state-root $stateRoot `
+            --fixture-root "testdata/router-runtime/fixtures"
+          if ($LASTEXITCODE -eq 2) {
+            # One clean retry for an environmental NOT RUN (fresh state, different port).
+            Remove-Item -Recurse -Force $stateRoot -ErrorAction SilentlyContinue
+            Start-Sleep -Seconds 5
+            node scripts/runtime/verify-client-journeys.mjs `
+              --manifest "$packageDir/manifest.json" `
+              --executable "$packageDir/role-model-dev.exe" `
+              --repo-root "$packageDir" `
+              --static-root "role-model-router/apps/runtime-ui-next/dist/client" `
+              --port 5941 `
+              --state-root $stateRoot `
+              --fixture-root "testdata/router-runtime/fixtures"
+          }
+          if ($LASTEXITCODE -ne 0) { throw "R39 client journeys did not pass (exit $LASTEXITCODE)" }
+
       - name: Archive standalone package (Unix)
         if: matrix.target != 'win32-x64'
         run: |
