@@ -12477,7 +12477,12 @@ export async function main(): Promise<void> {
             // S123: this registration used to sit INSIDE the qaExtensions loop below, so it ran
             // zero times on a host with no QA extensions and would throw "already registered" on a
             // host with two. Register once, before the loop.
-            hostScope.register("extensionRuntime", async () => { if (extensionRuntime !== null && extensionRuntime.close) await extensionRuntime.close(); });
+            // S124: the owner ALREADY closes this runtime (createCliExtensionRuntimeOwner.close calls
+            // runtime.close, memoized). Registering a second closer that calls runtime.close directly
+            // would close it twice at shutdown - so this registration delegates to the owner's memoized
+            // close. It still exists so the five-kind ownership contract stays complete and a
+            // registration cannot be silently dropped.
+            hostScope.register("extensionRuntime", async () => { if (extensionRuntimeOwner !== null) await extensionRuntimeOwner.close(); });
             for (const extension of qaExtensions) {
               const capability = extension.descriptor.capabilities.find(
                 (candidate) => candidate !== "health:probe",
