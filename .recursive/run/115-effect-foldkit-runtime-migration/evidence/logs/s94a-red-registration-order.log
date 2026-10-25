@@ -1,0 +1,43 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/host-runtime-scope.test.ts (5 tests | 1 failed | 4 skipped) 18ms
+   × S94a host runtime scope > uses release order, not registration order 16ms
+     → expected [ 'extension', 'backend', 'server' ] to deeply equal [ 'server', 'backend', 'extension' ]
+   ↓ S94a host runtime scope > throws on duplicate live registration and does not overwrite
+   ↓ S94a host runtime scope > closes idempotently
+   ↓ S94a host runtime scope > releases the rest and reports a throwing closer
+   ↓ S94a host runtime scope > skips unregistered resources
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/host-runtime-scope.test.ts > S94a host runtime scope > uses release order, not registration order
+AssertionError: expected [ 'extension', 'backend', 'server' ] to deeply equal [ 'server', 'backend', 'extension' ]
+
+- Expected
++ Received
+
+  [
+-   "server",
+-   "backend",
+    "extension",
++   "backend",
++   "server",
+  ]
+
+ ❯ test/host-runtime-scope.test.ts:12:20
+     10|     scope.register("backend", async () => { events.push("backend"); });
+     11|     const result = await scope.close();
+     12|     expect(events).toEqual(["server", "backend", "extension"]);
+       |                    ^
+     13|     expect(result.released).toEqual(["server", "backend", "extension"]…
+     14|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 skipped (5)
+   Start at  03:51:09
+   Duration  613ms (transform 74ms, setup 0ms, collect 78ms, tests 18ms, environment 0ms, prepare 187ms)
+

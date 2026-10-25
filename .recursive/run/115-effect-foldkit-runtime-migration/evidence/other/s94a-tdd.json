@@ -1,0 +1,20 @@
+{
+  "slice": "s94a-acquisition-scope",
+  "module": "src/host-runtime-scope.ts",
+  "contract": {
+    "register": "kind+close; duplicate live kind throws; closed scope throws",
+    "close": "releaseHostResources fixed order, idempotent, {released,errors}",
+    "registered": "registration order kinds"
+  },
+  "tests": {
+    "file": "test/host-runtime-scope.test.ts",
+    "count": 5,
+    "reds": {
+      "order": "s94a-red-registration-order.log",
+      "duplicate": "s94a-red-duplicate.log"
+    }
+  },
+  "wiring": "NOT WIRED into cli.ts; acquisition sites are spread across outer startup and nested runtime functions; wiring without restructuring closure ownership would be dual ownership. index.test.ts not run because no CLI behavior changed.",
+  "hostTsc": 0,
+  "remaining": "one scope per process needs the acquisition sites to receive the scope (server 5644, backend 9341, packaged 126xx, extension), then shutdown/fail call scope.close; true Layer DAG still needs scoped acquisition, not just registration"
+}

@@ -1,0 +1,38 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/host-runtime-scope.test.ts (5 tests | 1 failed | 4 skipped) 17ms
+   ↓ S94a host runtime scope > uses release order, not registration order
+   × S94a host runtime scope > throws on duplicate live registration and does not overwrite 15ms
+     → expected [Function] to throw an error
+   ↓ S94a host runtime scope > closes idempotently
+   ↓ S94a host runtime scope > releases the rest and reports a throwing closer
+   ↓ S94a host runtime scope > skips unregistered resources
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/host-runtime-scope.test.ts > S94a host runtime scope > throws on duplicate live registration and does not overwrite
+AssertionError: expected [Function] to throw an error
+
+- Expected: 
+null
+
++ Received: 
+undefined
+
+ ❯ test/host-runtime-scope.test.ts:20:84
+     18|     const scope = createHostRuntimeScope();
+     19|     scope.register("server", async () => { events.push("first"); });
+     20|     expect(() => scope.register("server", async () => { events.push("s…
+       |                                                                                    ^
+     21|     await scope.close();
+     22|     expect(events).toEqual(["first"]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 skipped (5)
+   Start at  03:51:12
+   Duration  621ms (transform 89ms, setup 0ms, collect 96ms, tests 17ms, environment 0ms, prepare 200ms)
+
