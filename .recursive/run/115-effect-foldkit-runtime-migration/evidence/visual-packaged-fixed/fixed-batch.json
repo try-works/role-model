@@ -1,0 +1,79 @@
+[
+  {
+    "route": "/runtime",
+    "status": 200,
+    "png": "_runtime.png",
+    "title": "Runtime | RM3 Foldkit shell",
+    "main": "oints Controller Readiness Dashboard Swap Activity Observe logs Observe routing Router Studio Local Remote Models Router Observe Connect System Learning Clicks: 0 Dark shell Runtime Runtime Toggle theme Overview Diagnostics Observability Receipts Queues Local logs Candi",
+    "states": [
+      "ok"
+    ],
+    "alerts": []
+  },
+  {
+    "route": "/session-readiness",
+    "status": 200,
+    "png": "_session_readiness.png",
+    "title": "Session readiness | RM3 Foldkit shell",
+    "main": "oints Controller Readiness Dashboard Swap Activity Observe logs Observe routing Router Studio Local Remote Models Router Observe Connect System Learning Clicks: 0 Dark shell Runtime Session readiness Toggle theme Overview Diagnostics Observability Receipts Queues Local ",
+    "states": [
+      "loading"
+    ],
+    "alerts": []
+  },
+  {
+    "route": "/observe/activity",
+    "status": 200,
+    "png": "_observe_activity.png",
+    "title": "Activity | RM3 Foldkit shell",
+    "main": "oints Controller Readiness Dashboard Swap Activity Observe logs Observe routing Router Studio Local Remote Models Router Observe Connect System Learning Clicks: 0 Dark shell Runtime Activity Toggle theme Overview Diagnostics Observability Receipts Queues Local logs Cand",
+    "states": [
+      "empty"
+    ],
+    "alerts": []
+  },
+  {
+    "route": "/dashboard",
+    "status": 200,
+    "png": "_dashboard.png",
+    "title": "Dashboard | RM3 Foldkit shell",
+    "main": "oints Controller Readiness Dashboard Swap Activity Observe logs Observe routing Router Studio Local Remote Models Router Observe Connect System Learning Clicks: 0 Dark shell Runtime Dashboard Toggle theme Overview Diagnostics Observability Receipts Queues Local logs Can",
+    "states": [
+      "empty"
+    ],
+    "alerts": []
+  },
+  {
+    "route": "/observe/observability-snapshot",
+    "status": 200,
+    "png": "_observe_observability_snapshot.png",
+    "title": "Observability | RM3 Foldkit shell",
+    "main": "oints Controller Readiness Dashboard Swap Activity Observe logs Observe routing Router Studio Local Remote Models Router Observe Connect System Learning Clicks: 0 Dark shell Runtime Observability Toggle theme Overview Diagnostics Observability Receipts Queues Local logs",
+    "states": [
+      "ok"
+    ],
+    "alerts": []
+  },
+  {
+    "route": "/observe/queues",
+    "status": 200,
+    "png": "_observe_queues.png",
+    "title": "Queues | RM3 Foldkit shell",
+    "main": "oints Controller Readiness Dashboard Swap Activity Observe logs Observe routing Router Studio Local Remote Models Router Observe Connect System Learning Clicks: 0 Dark shell Runtime Queues Toggle theme Overview Diagnostics Observability Receipts Queues Local logs Candid",
+    "states": [
+      "ok"
+    ],
+    "alerts": []
+  },
+  {
+    "route": "/router",
+    "status": 200,
+    "png": "_router.png",
+    "title": "Router | RM3 Foldkit shell",
+    "main": "oints Controller Readiness Dashboard Swap Activity Observe logs Observe routing Router Studio Local Remote Models Router Observe Connect System Learning Clicks: 0 Dark shell Runtime Router Toggle theme Overview Diagnostics Observability Receipts Queues Local logs Candid",
+    "states": [
+      "ok"
+    ],
+    "alerts": []
+  }
+]
