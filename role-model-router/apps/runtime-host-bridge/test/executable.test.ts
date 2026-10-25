@@ -304,7 +304,7 @@ describe("runtime-host-bridge executable packaging", () => {
     expect(copies).toEqual(
       expect.arrayContaining([
         {
-          sourceRelativePath: "role-model-router/apps/runtime-ui/build/client",
+          sourceRelativePath: "role-model-router/apps/runtime-ui-next/dist/client",
           destinationRelativePath: "build/client",
         },
         {

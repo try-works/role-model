@@ -1,0 +1,29 @@
+{
+  "slice": "s53a-host-failures",
+  "executable": {
+    "failure": "stale copy source runtime-ui/build/client",
+    "fix": "asserts runtime-ui-next/dist/client and root runtime:package-sea declares runtime-ui-next build",
+    "result": "24/24 file pass"
+  },
+  "run105": {
+    "test": "refused larger admission leaves bounded prior real snapshot routable",
+    "current": "failed: expected written, got written? actual written vs refused (1 failed /79 passed)",
+    "baseline": "commit 24678a66 worktree E:/rm-tmp/s53a-baseline with ROLE_MODEL_INTERNAL_WORKTREE set to the same private worktree: identical failure",
+    "classification": "PRE-EXISTING, not a regression from host fallback/proxy changes; test materializer/private knowledge-store state; no public file in that path changed since baseline",
+    "logs": {
+      "current": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s53a-run105-current.log",
+      "baseline": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s53a-run105-baseline.log"
+    }
+  },
+  "hostFull": {
+    "files": 420,
+    "testFiles": "416 passed / 1 failed / 3 skipped",
+    "tests": "2598 passed / 1 failed / 5 skipped",
+    "durationSeconds": 2208,
+    "onlyFailure": "run105-review-advisory-safety refused larger admission"
+  },
+  "clientFull": {
+    "files": 20,
+    "tests": 197
+  }
+}

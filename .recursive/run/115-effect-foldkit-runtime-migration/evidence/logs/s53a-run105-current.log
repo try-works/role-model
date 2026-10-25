@@ -1,0 +1,112 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:72864) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/run105-review-advisory-safety.test.ts (80 tests | 1 failed) 11208ms
+   ✓ real-store admitted confidence, explicit cohort and exact scoped reads without promotion  4270ms
+   ✓ real-store rewrite/cache time cannot refresh evidence 83ms
+   ✓ revalidation uses evidence age 71ms
+   ✓ unknown evidence time never becomes fresh 61ms
+   ✓ real scope kill switch suppresses derived ladder 165ms
+   ✓ real pending guardrail stays fresh but sustained breach suppresses without activePackageId 149ms
+   ✓ real per-task rollback reversible with exact unavailable identity 116ms
+   ✓ invalid policy undefined never widens exposure 75ms
+   ✓ invalid policy null never widens exposure 71ms
+   ✓ invalid policy -1 never widens exposure 75ms
+   ✓ invalid policy 101 never widens exposure 81ms
+   ✓ invalid policy NaN never widens exposure 84ms
+   ✓ stage S2 uses configured policy when no rollout promotion 108ms
+   ✓ stage S3 uses configured policy when no rollout promotion 103ms
+   ✓ stage S4 uses configured policy when no rollout promotion 80ms
+   ✓ rejects mismatched ladder scopeId 77ms
+   ✓ rejects mismatched ladder roleId 76ms
+   ✓ rejects mismatched ladder taskTypeId 82ms
+   ✓ unknown/mismatched evidence id fails closed 84ms
+   ✓ unknown/mismatched evidence type fails closed 85ms
+   ✓ unknown/mismatched evidence version fails closed 76ms
+   ✓ unknown/mismatched evidence scope fails closed 80ms
+   ✓ unknown/mismatched evidence confidence fails closed 91ms
+   ✓ unknown/mismatched evidence evidenceAtMs fails closed 88ms
+   ✓ unknown/mismatched evidence roleId fails closed 81ms
+   ✓ unknown/mismatched evidence taskTypeId fails closed 72ms
+   ✓ unknown/mismatched evidence scopeId fails closed 66ms
+   ✓ unknown/mismatched evidence taxonomyVersion fails closed 63ms
+   ✓ unknown/mismatched evidence groupIds fails closed 62ms
+   ✓ unknown/mismatched evidence endpointEvidence fails closed 61ms
+   ✓ corrupt rung rank 0 returns unavailable not throw 57ms
+   ✓ corrupt rung rank -1 returns unavailable not throw 55ms
+   ✓ corrupt rung rank 1.5 returns unavailable not throw 58ms
+   ✓ corrupt rung rank NaN returns unavailable not throw 59ms
+   ✓ corrupt rung rank 1 returns unavailable not throw 61ms
+   ✓ bounded corruption duplicateRank fails closed 66ms
+   ✓ bounded corruption duplicateEndpoint fails closed 65ms
+   ✓ bounded corruption badStatus fails closed 60ms
+   ✓ bounded corruption overBound fails closed 60ms
+   ✓ unreadable knowledge:read-route-ladder is bounded unavailable 53ms
+   ✓ unreadable knowledge:read is bounded unavailable 57ms
+   ✓ unreadable knowledge:rollout-state is bounded unavailable 64ms
+   ✓ authentic stored metadata corruption scopeId refuses 106ms
+   ✓ authentic stored metadata corruption roleId refuses 121ms
+   ✓ authentic stored metadata corruption taskTypeId refuses 101ms
+   ✓ authentic stored metadata corruption taxonomyVersion refuses 89ms
+   ✓ authentic stored metadata corruption confidence refuses 90ms
+   ✓ authentic stored metadata corruption groupIds refuses 87ms
+   ✓ authentic stored metadata corruption endpointEvidence refuses 91ms
+   ✓ authentic stored metadata corruption evidenceAtMs refuses 100ms
+   ✓ corrupt/suppressed rollout rolled_back refuses 63ms
+   ✓ corrupt/suppressed rollout degraded refuses 61ms
+   ✓ corrupt/suppressed rollout wrongScope refuses 66ms
+   ✓ corrupt/suppressed rollout badCohort refuses 62ms
+   ✓ corrupt/suppressed rollout missingKillState refuses 67ms
+   ✓ explicit unclassified/partial null never borrows legacy scope 60ms
+   ✓ explicit unclassified/partial roleOnly never borrows legacy scope 56ms
+   ✓ explicit unclassified/partial taskOnly never borrows legacy scope 57ms
+   ✓ retained removed endpoint proof does not disable legitimate remaining rung 102ms
+   ✓ all-empty new floor preserves old admission and applies user removal 97ms
+   ✓ new regression evidence preserves accepted confidence/time/rank while current removal still applies 124ms
+   × refused larger admission leaves bounded prior real snapshot routable 300ms
+     → expected 'written' to be 'refused' // Object.is equality
+   ✓ real stored accepted evidence missingPolicy fails closed 85ms
+   ✓ real stored accepted evidence badK fails closed 84ms
+   ✓ real stored accepted evidence shortOwnProof fails closed 102ms
+   ✓ real stored accepted evidence belowOwnMean fails closed 103ms
+   ✓ real stored accepted evidence missingEffective fails closed 112ms
+   ✓ real stored accepted evidence extraEffective fails closed 118ms
+   ✓ real stored accepted evidence missingOwnGroups fails closed 99ms
+   ✓ real stored accepted evidence duplicateOwnGroups fails closed 91ms
+   ✓ real stored accepted evidence unknownOwnGroup fails closed 111ms
+   ✓ real stored accepted evidence badOwnTime fails closed 111ms
+   ✓ real stored accepted evidence badOwnTaxonomy fails closed 95ms
+   ✓ real stored accepted evidence missingRankEvidence fails closed 99ms
+   ✓ all historical endpoints removed under empty new floor yields no advisory but retains proof 139ms
+   ✓ unknown measured taxonomy never receives caller taxonomy relabel 125ms
+   ✓ accepted metadata relationship countMismatch refuses 99ms
+   ✓ accepted metadata relationship badPolicyMean refuses 86ms
+   ✓ accepted metadata relationship badRankDigest refuses 94ms
+   ✓ accepted metadata relationship rankOutsideWatermark refuses 96ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run105-review-advisory-safety.test.ts > refused larger admission leaves bounded prior real snapshot routable
+AssertionError: expected 'written' to be 'refused' // Object.is equality
+
+Expected: "refused"
+Received: "written"
+
+ ❯ test/run105-review-advisory-safety.test.ts:488:36
+    486|     ],
+    487|   });
+    488|   expect(result.ladders[0].status).toBe("refused");
+       |                                    ^
+    489|   expect(
+    490|     (await s.invoke("knowledge:read-route-ladder", { scopeId, roleId, …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 79 passed (80)
+   Start at  19:44:39
+   Duration  12.14s (transform 2.64s, setup 0ms, collect 173ms, tests 11.21s, environment 0ms, prepare 244ms)
+

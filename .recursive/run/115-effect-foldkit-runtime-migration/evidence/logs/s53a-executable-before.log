@@ -1,0 +1,103 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:45424) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/executable.test.ts (24 tests | 1 failed) 165ms
+   ✓ runtime-host-bridge executable packaging > resolves an explicit external release root so dev and stage package trees cannot overwrite each other 7ms
+   ✓ runtime-host-bridge executable packaging > does not treat imported package-sea modules as direct CLI execution 1ms
+   ✓ runtime-host-bridge executable packaging > resolves Go through PATH unless GO_BINARY overrides it 1ms
+   ✓ runtime-host-bridge executable packaging > builds bundled llama-swap without commit or checkout-path identity 2ms
+   ✓ runtime-host-bridge executable packaging > declares a runtime export condition for the built runtime dependency graph 41ms
+   × runtime-host-bridge executable packaging > declares target-scoped SEA config and standalone release inputs for Windows packaging 20ms
+     → expected [ { …(2) }, { …(2) }, { …(2) }, …(8) ] to deeply equal ArrayContaining{…}
+   ✓ runtime-host-bridge executable packaging > generates a direct Windows batch launcher without the PowerShell wrapper sidecar 1ms
+   ✓ runtime-host-bridge executable packaging > builds the Windows launcher package so build-tag helper files are included 1ms
+   ✓ runtime-host-bridge executable packaging > ships install and compose artifacts for packaged runtime distribution 6ms
+   ✓ runtime-host-bridge executable packaging > wires device-authorization readback into the packaged runtime cli server 6ms
+   ✓ runtime-host-bridge executable packaging > RUN88-I-PUB-R8-AC04 wires packaged candidate identity into the runtime backend 5ms
+   ✓ runtime-host-bridge executable packaging > wires latest-request-id startup parity into every non-QA runtime launch path 6ms
+   ✓ runtime-host-bridge executable packaging > packaged runtime validation exercises account activation and routed request flows 2ms
+   ✓ runtime-host-bridge executable packaging > packaged runtime validation exercises taxonomy manifest and compact task parity 3ms
+   ✓ runtime-host-bridge executable packaging > packaged runtime validation exercises the extension catalog from packaged contracts 2ms
+   ✓ runtime-host-bridge executable packaging > packaged runtime validation tears down the packaged process tree before cleaning release artifacts 2ms
+   ✓ runtime-host-bridge executable packaging > packaged runtime validation rebuilds the bridge before creating the SEA executable 1ms
+   ✓ runtime-host-bridge executable packaging > packaged runtime recreates the release directory to avoid stale fixture artifacts 2ms
+   ✓ runtime-host-bridge executable packaging > release timestamp stamping refreshes nested copied assets with stale upstream mtimes 15ms
+   ✓ runtime-host-bridge executable packaging > production release guard accepts clean runtime artifacts 10ms
+   ✓ runtime-host-bridge executable packaging > production release guard rejects router fixtures and mock markers 8ms
+   ✓ runtime-host-bridge executable packaging > packaging rules still forbid testdata/router-runtime path fragment including mcp-connectors.json 6ms
+   ✓ runtime-host-bridge executable packaging > production release guard rejects persisted LiteLLM fixture endpoint markers 6ms
+   ✓ runtime-host-bridge executable packaging > production release guard rejects the synthetic packaging credential sentinel (R7) 10ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/executable.test.ts > runtime-host-bridge executable packaging > declares target-scoped SEA config and standalone release inputs for Windows packaging
+AssertionError: expected [ { …(2) }, { …(2) }, { …(2) }, …(8) ] to deeply equal ArrayContaining{…}
+
+- Expected
++ Received
+
+@@ -1,9 +1,9 @@
+- ArrayContaining [
++ [
+    {
+      "destinationRelativePath": "build/client",
+-     "sourceRelativePath": "role-model-router/apps/runtime-ui/build/client",
++     "sourceRelativePath": "role-model-router/apps/runtime-ui-next/dist/client",
+    },
+    {
+      "destinationRelativePath": "role-model-router/packages/vendor-litellm/data/model-prices.json",
+      "sourceRelativePath": "testdata/catalog/litellm-model-prices.json",
+    },
+@@ -12,10 +12,14 @@
+      "sourceRelativePath": "role-model-router/packages/catalog/data/normalized-catalog.json",
+    },
+    {
+      "destinationRelativePath": "packages/protocol-types/generated/product-contracts.json",
+      "sourceRelativePath": "packages/protocol-types/generated/product-contracts.json",
++   },
++   {
++     "destinationRelativePath": "role-model-router/packages/core/data/taxonomy",
++     "sourceRelativePath": "role-model-router/packages/core/data/taxonomy",
+    },
+    {
+      "destinationRelativePath": "role-model-router/packages/extension-host/index.mjs",
+      "sourceRelativePath": "role-model-router/packages/extension-host/index.mjs",
+    },
+@@ -24,10 +28,18 @@
+      "sourceRelativePath": "packages/extension-host/index.mjs",
+    },
+    {
+      "destinationRelativePath": "packages/extension-host/worker-runtime.mjs",
+      "sourceRelativePath": "packages/extension-host/worker-runtime.mjs",
++   },
++   {
++     "destinationRelativePath": "packages/extension-host/transfer-artifact.mjs",
++     "sourceRelativePath": "packages/extension-host/transfer-artifact.mjs",
++   },
++   {
++     "destinationRelativePath": "packages/extension-host/retained-response-store.mjs",
++     "sourceRelativePath": "packages/extension-host/retained-response-store.mjs",
+    },
+    {
+      "destinationRelativePath": "packages/extension-sdk/index.mjs",
+      "sourceRelativePath": "packages/extension-sdk/index.mjs",
+    },
+
+ ❯ test/executable.test.ts:304:20
+    302|     ).listStandaloneReleaseCopies();
+    303| 
+    304|     expect(copies).toEqual(
+       |                    ^
+    305|       expect.arrayContaining([
+    306|         {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 23 passed (24)
+   Start at  19:44:29
+   Duration  7.90s (transform 4.15s, setup 0ms, collect 7.10s, tests 165ms, environment 0ms, prepare 225ms)
+
