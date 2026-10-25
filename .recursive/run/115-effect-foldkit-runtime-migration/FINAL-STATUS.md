@@ -39,10 +39,13 @@ I am not claiming completion. Five of thirty-nine requirements are verified, and
 **B. Owner decision required:**
 - **R16** - the like-for-like seeding clause needs an equivalent authorised config; using the operator's real config would put credentials on disk, so it needs explicit permission (`s93-owner-questions.md`). The R/D/C comparison and the isolated-R staging are already done.
 
-**C. Network action forbidden in this run:**
+**C. External event required (not a missing capability):**
+- **R39** - both scripts exist, fail closed, are exercised against packaged artifacts, and are now **called from CI as advisory steps** in `.github/workflows/build-binaries.yml`: "Verify packaged client journeys (R39)" before archive/attest, and "Compare accepted stage package against the production candidate (R39)" in the production channel. Both are gated by `vars.R39_VERIFY_BLOCKING` and fail on exit 1 **and** 2 once blocking. Remaining: **one dispatch run** to validate the steps and discover the stage-package extraction path (the compare step is fail-closed `NOT RUN` until then), and the toggle flip.
+
+**D. Network action forbidden in this run:**
 - **Packaging self-containment** - declaring the CSS toolchain needs `pnpm install` to regenerate the lockfile; the offline attempt failed and was reverted cleanly (`s92-lockfile-blocked.md`).
 
-**D. Engineering still available to me:**
+**E. Engineering still available to me:**
 - **R27** - ownership is done (one scope, ordered release, failures visible); the closed **Effect Layer DAG** is not, and acquisition remains imperative.
 - **R7/R8 and similar rows** carry generic rationales ("part of this requirement has landed... not satisfied in full"). Those rows need a per-requirement audit before their status means anything; I am flagging that rather than pretending the boilerplate is evidence.
 
