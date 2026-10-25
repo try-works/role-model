@@ -193,8 +193,8 @@ describe("S26a route inventory drift", () => {
       const absent = rows.filter((row) => row?.status === "absent").length;
       const missingReason = rows.filter((row) => row?.status === "absent" && !row.absenceReason);
       expect(rows).toHaveLength(id === 2 ? 24 : 27);
-      expect(verified).toBe(id === 2 ? 16 : 10);
-      expect(absent).toBe(id === 2 ? 8 : 17);
+      expect(verified).toBe(id === 2 ? 16 : 11);
+      expect(absent).toBe(id === 2 ? 8 : 16);
       expect(missingReason).toEqual([]);
     }
   });

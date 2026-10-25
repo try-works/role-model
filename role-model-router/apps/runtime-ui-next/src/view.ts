@@ -47,6 +47,7 @@ const routeTitle = (route: Model["route"]): string =>
     StorageRetention: () => "Storage retention | RM3 Foldkit shell",
     Studio: () => "Studio | RM3 Foldkit shell",
     Learning: () => "Learning | RM3 Foldkit shell",
+    Models: () => "Models | RM3 Foldkit shell",
     Runtime: () => "Runtime | RM3 Foldkit shell",
     SessionReadiness: () => "Session readiness | RM3 Foldkit shell",
     Dashboard: () => "Dashboard | RM3 Foldkit shell",
@@ -173,6 +174,7 @@ const shellNavItems = (route: Model["route"]): ReadonlyArray<ShellNavItem> => [
   { active: route._tag === "Router", dataNav: "router", href: "/router", label: "Router" },
   { active: route._tag === "Studio", dataNav: "studio", href: "/studio", label: "Studio" },
   { active: route._tag === "Learning", dataNav: "learning", href: "/learning", label: "Learning" },
+  { active: route._tag === "Models", dataNav: "models", href: "/models", label: "Models" },
 ];
 
 const navGroup = (item: ShellNavItem): string => {
@@ -183,6 +185,7 @@ const navGroup = (item: ShellNavItem): string => {
   if (["local-peers", "local-swap", "system-peers", "runtime", "session-readiness", "dashboard"].includes(nav)) return "System";
   if (["studio"].includes(nav)) return "Studio";
   if (["learning"].includes(nav)) return "Learning";
+  if (["models"].includes(nav)) return "Models";
   return "Other";
 };
 const shellNav = (route: Model["route"], label: string, h: HtmlBuilder<Message>): Html => {
@@ -454,7 +457,7 @@ const observabilityPage = (state: ObservabilityState, h: HtmlBuilder<Message>): 
         [h.Class("text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--rm-muted)]")],
         ["Runtime readback"],
       ),
-      h.h1([h.Class("rm3-next-route-title")], ["Observability snapshot"]),
+      h.h2([h.Class("rm3-next-route-title")], ["Observability snapshot"]),
       h.p(
         [
           h.Role("status"),
@@ -649,7 +652,7 @@ const studioPage = (state: StudioState, h: HtmlBuilder<Message>): Html => {
         ? [studioField("Mode", "mode", state.mode, h), studioField("Model", "model", state.model, h), studioField("Prompt", "prompt", state.prompt, h), studioField("Size", "size", state.size, h)]
         : [studioField("Model", "model", state.model, h), studioField("Prompt", "prompt", state.prompt, h)];
   return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "studio"), h.DataAttribute("studio-state", state.status)], [
-    h.h1([h.Class("rm3-next-route-title")], ["Studio"]),
+    h.h2([h.Class("rm3-next-route-title")], ["Studio"]),
     h.div([h.Class("mt-2 flex flex-wrap gap-1"), h.DataAttribute("studio-tabs", ""), h.Role("tablist"), h.AriaLabel("Studio tabs")], tabs),
     h.div([h.Class("mt-4 grid gap-2"), h.Id("studio-panel"), h.Role("tabpanel"), h.AriaLabel(state.tab), h.DataAttribute("studio-form", state.tab)], fields),
     h.button([h.Type("button"), h.DataAttribute("studio-run", ""), ...(state.status === "loading" ? [h.AriaBusy(true), h.Disabled(true)] : []), h.OnClick(Message.StudioRunRequested({ token: state.token + 1 })), h.Class("mt-3 min-h-8 rounded bg-[var(--rm-accent)] px-3 text-[12px] text-white")], ["Run"]),
@@ -660,6 +663,33 @@ const studioPage = (state: StudioState, h: HtmlBuilder<Message>): Html => {
         : h.pre([h.DataAttribute("studio-raw", state.status), h.Class("mt-2 whitespace-pre-wrap text-[12px]")], [state.responseText]),
     ]),
   ]);
+};
+
+const modelsPage = (readbacks: ReadbacksState, h: HtmlBuilder<Message>): Html => {
+  const models = readbacks.configuredModels;
+  const endpoints = readbacks.modelEndpoints;
+  if (models.status === "loading" || endpoints.status === "loading") return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "models"), h.DataAttribute("models-state", "loading")], [h.h2([h.Class("rm3-next-route-title text-[16px] font-semibold")], ["Configured models"]), h.p([h.AriaBusy(true)], ["Loading configured models…"])]);
+  if (models.status === "error" || endpoints.status === "error") return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "models"), h.DataAttribute("models-state", "error")], [h.h2([h.Class("rm3-next-route-title text-[16px] font-semibold")], ["Configured models"]), h.p([h.Role("alert")], [models.message ?? endpoints.message ?? "Configured models read failed"])]);
+  if (models.status === "empty" || models.rows.length === 0) return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "models"), h.DataAttribute("models-state", "empty")], [h.h2([h.Class("rm3-next-route-title text-[16px] font-semibold")], ["Configured models"]), h.p([], ["No configured models."])]);
+  const endpointRows = endpoints.rows.flatMap((entry) => { try { return [JSON.parse(entry.meta) as { endpointId?: string; healthStatus?: string; modelId?: string; providerAccountId?: string; reasoningEffort?: string | null; reasoningEffortLevels?: string[]; roleIds?: string[]; status?: string }]; } catch { return []; } });
+  const rows = models.rows.flatMap((entry) => {
+    let meta: { endpointIds?: string[]; contextWindow?: number | null; id?: string; providerId?: string } = {};
+    try { meta = JSON.parse(entry.meta) as typeof meta; } catch { meta = {}; }
+    const endpointsForModel = endpointRows.filter((endpoint) => endpoint.modelId === entry.id || (meta.endpointIds ?? []).includes(endpoint.endpointId ?? ""));
+    const endpointIds = endpointsForModel.map((endpoint) => endpoint.endpointId).filter(Boolean).join(", ") || "—";
+    const health = endpointsForModel.map((endpoint) => endpoint.healthStatus ?? endpoint.status ?? "—").join(", ") || "—";
+    const effort = endpointsForModel.map((endpoint) => endpoint.reasoningEffort ?? (endpoint.reasoningEffortLevels?.length ? endpoint.reasoningEffortLevels.join("/") : "unavailable")).join(", ") || "unavailable";
+    const roles = endpointsForModel.flatMap((endpoint) => endpoint.roleIds ?? []);
+    return [h.li([h.Class("grid gap-1 rounded-[8px] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-3 text-[12px]"), h.DataAttribute("model-row", entry.id)], [
+      h.p([h.Class("font-mono text-[var(--rm-fg)]")], [entry.label]),
+      h.p([h.Class("text-[var(--rm-secondary)]")], ["Provider: " + (meta.providerId ?? "—")]),
+      h.p([h.Class("text-[var(--rm-secondary)]")], ["Endpoint: " + endpointIds]),
+      h.p([h.Class("text-[var(--rm-secondary)]")], ["Status: " + health]),
+      h.p([h.Class("text-[var(--rm-secondary)]")], ["Effort: " + effort]),
+      h.p([h.Class("text-[var(--rm-secondary)]")], ["Roles: " + (roles.length > 0 ? roles.join(", ") : "—")]),
+    ])];
+  });
+  return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "models"), h.DataAttribute("models-state", "success")], [h.h2([h.Class("rm3-next-route-title text-[16px] font-semibold")], ["Configured models"]), h.ul([h.Class("mt-3 grid gap-2")], rows)]);
 };
 
 const learningPage = (readbacks: ReadbacksState, h: HtmlBuilder<Message>): Html =>
@@ -685,7 +715,7 @@ const routeContent = (
       h.section(
         [h.Class("rm3-next-route"), h.DataAttribute("route", "diagnostics")],
         [
-          h.h1([h.Class("rm3-next-route-title")], [`Diagnostics: ${id}`]),
+          h.h2([h.Class("rm3-next-route-title")], [`Diagnostics: ${id}`]),
           diagnosticsPage(diagnostics, h),
         ],
       ),
@@ -712,7 +742,8 @@ const routeContent = (
     StorageRetention: () => renderReadbackPage(READBACK_SPECS.storageRetention, readbacks.storageRetention, h),
     Studio: () => studioPage(studio, h),
     Learning: () => learningPage(readbacks, h),
-    LocalChoose: () => h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route","local-choose")], [h.h1([h.Class("rm3-next-route-title")], ["Local choose"]), h.p([], ["Choose peer-backed models or llama-swap models."])]),
+    Models: () => modelsPage(readbacks, h),
+    LocalChoose: () => h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route","local-choose")], [h.h2([h.Class("rm3-next-route-title")], ["Local choose"]), h.p([], ["Choose peer-backed models or llama-swap models."])]),
     Runtime: () => renderReadbackPage(READBACK_SPECS.runtime, readbacks.runtime, h),
     SessionReadiness: () =>
       renderReadbackPage(READBACK_SPECS.sessionReadiness, readbacks.sessionReadiness, h),
@@ -746,7 +777,7 @@ const routeContent = (
             ],
             ["Not found"],
           ),
-          h.h1([h.Class("rm3-next-route-title")], [`Not found: ${path}`]),
+          h.h2([h.Class("rm3-next-route-title")], [`Not found: ${path}`]),
           h.p(
             [h.Class("mt-2 max-w-[60ch] text-[14px] leading-[21px] text-[var(--rm-secondary)]")],
             ["This runtime route does not exist. Return to the operator shell to continue."],

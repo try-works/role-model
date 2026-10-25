@@ -65,6 +65,13 @@ const initRoute =
         },
       };
     }
+    if (route._tag === "Models") {
+      const token = 1;
+      return {
+        commands: [readReadback({ key: "configuredModels", token }), readReadback({ key: "modelEndpoints", token })],
+        model: { clicks: 0, controls: emptyControls(), diagnostics: idleDiagnostics(), observability: idleObservability(), readbacks: { ...emptyReadbacks(), configuredModels: loadingReadback(token), modelEndpoints: loadingReadback(token) }, refresh: initialRuntimeRefreshState(), route, theme },
+      };
+    }
     if (route._tag === "Learning") {
       const token = 1;
       return {

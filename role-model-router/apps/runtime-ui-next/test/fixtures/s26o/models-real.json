@@ -1,0 +1,95 @@
+[
+  {
+    "id": "claude-3.7-sonnet",
+    "object": "model",
+    "owned_by": "role-model",
+    "providerId": "anthropic",
+    "displayName": "Claude 3.7 Sonnet",
+    "endpoint_ids": [
+      "anthropic.team.shared.us-east-1.default"
+    ],
+    "capabilities": [
+      "text.chat",
+      "tools.function_calling"
+    ],
+    "modalities": [
+      "text"
+    ],
+    "contextWindow": 200000,
+    "maxOutputTokens": 8192,
+    "pricing": {
+      "inputPer1M": 3,
+      "outputPer1M": 15,
+      "currency": "USD"
+    },
+    "reasoningEffortLevels": [],
+    "reasoningOptionKinds": [],
+    "reasoning": {
+      "supported": false,
+      "effortControl": false,
+      "effortLevels": [],
+      "optionKinds": []
+    }
+  },
+  {
+    "id": "gpt-5.4",
+    "object": "model",
+    "owned_by": "role-model",
+    "providerId": "unknown",
+    "displayName": "gpt-5.4",
+    "endpoint_ids": [
+      "cli.local.coder"
+    ],
+    "capabilities": [],
+    "modalities": [],
+    "contextWindow": null,
+    "maxOutputTokens": null,
+    "pricing": {
+      "inputPer1M": 2.5,
+      "outputPer1M": 15,
+      "currency": "USD"
+    },
+    "reasoningEffortLevels": [],
+    "reasoningOptionKinds": [],
+    "reasoning": {
+      "supported": false,
+      "effortControl": false,
+      "effortLevels": [],
+      "optionKinds": []
+    }
+  },
+  {
+    "id": "openai/gpt-4.1-mini-fast",
+    "object": "model",
+    "owned_by": "role-model",
+    "providerId": "openai",
+    "displayName": "GPT-4.1 Mini Fast",
+    "endpoint_ids": [
+      "openai.personal.primary.us-east-1.fast"
+    ],
+    "capabilities": [
+      "latency.optimized",
+      "structured.output",
+      "text.chat",
+      "tools.function_calling"
+    ],
+    "modalities": [
+      "text"
+    ],
+    "contextWindow": 1047576,
+    "maxOutputTokens": 32768,
+    "pricing": {
+      "inputPer1M": 0.4,
+      "outputPer1M": 1.6,
+      "currency": "USD"
+    },
+    "reasoningEffortLevels": [],
+    "reasoningOptionKinds": [],
+    "reasoning": {
+      "supported": false,
+      "effortControl": false,
+      "effortLevels": [],
+      "optionKinds": []
+    }
+  }
+]

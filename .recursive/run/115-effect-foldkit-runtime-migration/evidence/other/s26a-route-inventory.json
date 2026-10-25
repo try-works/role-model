@@ -45,8 +45,8 @@
       "modal": 2
     },
     "byStatus": {
-      "absent": 39,
-      "verified": 35,
+      "absent": 38,
+      "verified": 36,
       "wired": 1
     },
     "newOnly": 1
@@ -118,12 +118,14 @@
         "/app/models"
       ],
       "source": "role-model-router/apps/runtime-ui/app/routes/control-models.tsx",
-      "status": "absent",
+      "status": "verified",
       "hostEndpoints": [
-        "/api/role-model/models"
+        "/api/role-model/models",
+        "/api/role-model/endpoints"
       ],
       "requiresHostEndpoint": false,
-      "absenceReason": "Needs an action payload, identity, or confirmation flow not covered by this non-destructive slice; left absent rather than wiring a guessed command."
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s71b-models.test.ts",
+      "proofTestName": "renders configured models with endpoint, status, effort and roles from real captures"
     },
     {
       "category": "control",

@@ -36,7 +36,9 @@ export type ReadbackKey =
   | "overviewMetrics"
   | "learning"
   | "replayJobs"
-  | "evaluationJobs";
+  | "evaluationJobs"
+  | "configuredModels"
+  | "modelEndpoints";
 
 export const ReadbackKeySchema = Schema.Literals([
   "storeReceipts",
@@ -70,6 +72,8 @@ export const ReadbackKeySchema = Schema.Literals([
   "learning",
   "replayJobs",
   "evaluationJobs",
+  "configuredModels",
+  "modelEndpoints",
 ]);
 
 export interface ReadbackRow {
@@ -124,6 +128,8 @@ export const ReadbacksState = Schema.Struct({
   learning: ReadbackState,
   replayJobs: ReadbackState,
   evaluationJobs: ReadbackState,
+  configuredModels: ReadbackState,
+  modelEndpoints: ReadbackState,
   runtime: ReadbackState,
   sessionReadiness: ReadbackState,
   storeReceipts: ReadbackState,
@@ -172,6 +178,8 @@ export const emptyReadbacks = (): ReadbacksState => ({
   learning: idleReadback(),
   replayJobs: idleReadback(),
   evaluationJobs: idleReadback(),
+  configuredModels: idleReadback(),
+  modelEndpoints: idleReadback(),
   runtime: idleReadback(),
   sessionReadiness: idleReadback(),
   storeReceipts: idleReadback(),
@@ -567,6 +575,32 @@ const parseIntegrationProviders = (body: unknown, token: number): ReadbackState 
   return okRows(rows, token);
 };
 
+const parseConfiguredModels = (body: unknown, token: number): ReadbackState => {
+  const list = Array.isArray(body) ? body : asRecord(body)?.data;
+  if (!Array.isArray(list)) return failedReadback("Configured models read failed: invalid response", token);
+  const rows = list.flatMap((value, index) => {
+    const model = asRecord(value);
+    if (model === undefined) return [];
+    const id = typeof model.id === "string" ? model.id : typeof model.modelId === "string" ? model.modelId : undefined;
+    if (id === undefined) return [];
+    return [row(id, String(model.displayName ?? id), String(model.providerId ?? "—"), JSON.stringify({ endpointIds: model.endpoint_ids ?? model.endpointIds ?? [], capabilities: model.capabilities ?? [], contextWindow: model.contextWindow ?? null, id, providerId: model.providerId ?? null }))];
+  });
+  if (list.length > 0 && rows.length === 0) return failedReadback("Configured models read failed: invalid response", token);
+  return okRows(rows, token);
+};
+const parseModelEndpoints = (body: unknown, token: number): ReadbackState => {
+  const list = Array.isArray(body) ? body : asRecord(body)?.endpoints;
+  if (!Array.isArray(list)) return failedReadback("Model endpoints read failed: invalid response", token);
+  const rows = list.flatMap((value, index) => {
+    const endpoint = asRecord(value);
+    if (endpoint === undefined) return [];
+    const id = typeof endpoint.endpointId === "string" ? endpoint.endpointId : typeof endpoint.id === "string" ? endpoint.id : undefined;
+    if (id === undefined) return [];
+    return [row(id, id, String(endpoint.modelId ?? "—"), JSON.stringify({ endpointId: id, healthStatus: endpoint.healthStatus ?? null, modelId: endpoint.modelId ?? null, providerAccountId: endpoint.providerAccountId ?? null, reasoningEffort: endpoint.reasoningEffort ?? null, reasoningEffortLevels: endpoint.reasoningEffortLevels ?? [], roleIds: endpoint.roleIds ?? [], status: endpoint.status ?? null }))];
+  });
+  if (list.length > 0 && rows.length === 0) return failedReadback("Model endpoints read failed: invalid response", token);
+  return okRows(rows, token);
+};
 const parseLearning = (body: unknown, token: number): ReadbackState => {
   const record = asRecord(body);
   const knowledge = asRecord(record?.knowledge);
@@ -830,6 +864,20 @@ export const READBACK_SPECS: Readonly<Record<ReadbackKey, ReadbackRouteSpec>> = 
     parse: parseHealth,
     path: READBACK_PATHS.health,
   },
+  configuredModels: {
+    emptyText: "No configured models.",
+    key: "configuredModels",
+    label: "Configured models",
+    parse: parseConfiguredModels,
+    path: READBACK_PATHS.configuredModels,
+  },
+  modelEndpoints: {
+    emptyText: "No configured endpoints.",
+    key: "modelEndpoints",
+    label: "Model endpoints",
+    parse: parseModelEndpoints,
+    path: READBACK_PATHS.modelEndpoints,
+  },
   learning: {
     emptyText: "No knowledge worker state available.",
     key: "learning",
@@ -971,6 +1019,8 @@ export const createReadbackClients = (
   runtimeSummary: createReadbackClient(READBACK_SPECS.runtimeSummary, options),
   health: createReadbackClient(READBACK_SPECS.health, options),
   learning: createReadbackClient(READBACK_SPECS.learning, options),
+  configuredModels: createReadbackClient(READBACK_SPECS.configuredModels, options),
+  modelEndpoints: createReadbackClient(READBACK_SPECS.modelEndpoints, options),
   replayJobs: createReadbackClient(READBACK_SPECS.replayJobs, options),
   evaluationJobs: createReadbackClient(READBACK_SPECS.evaluationJobs, options),
   overviewMetrics: createReadbackClient(READBACK_SPECS.overviewMetrics, options),
@@ -1087,6 +1137,8 @@ export const readbackKeyForRouteTag = (tag: string): ReadbackKey | null =>
                       ? "sessionReadiness"
                       : tag === "Index"
                         ? "overviewMetrics"
+                        : tag === "Models"
+                        ? "configuredModels"
                         : tag === "Learning"
                         ? "learning"
                         : tag === "Dashboard"

@@ -36,7 +36,7 @@ export const renderControlPage = (
         [h.Class("text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--rm-muted)]")],
         ["Runtime control"],
       ),
-      h.h1([h.Class("rm3-next-route-title")], [spec.label]),
+      h.h2([h.Class("rm3-next-route-title")], [spec.label]),
       h.p(
         [
           h.Role("status"),
