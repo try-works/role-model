@@ -325,7 +325,14 @@ const parseObserveLogs = (body: unknown, token: number): ReadbackState => {
   return logs.length === 0
     ? { rows: [], status: "empty", token }
     : okRows(
-        [row("logs", "Observe logs", String(logs.split("\n").length), `${String(logs.length)} chars`)],
+        [
+          row(
+            "logs",
+            "Observe logs",
+            String(logs.split("\n").length),
+            `${String(logs.length)} chars`,
+          ),
+        ],
         token,
       );
 };
@@ -352,7 +359,10 @@ const parseRouter = (body: unknown, token: number): ReadbackState => {
   const record = asRecord(body);
   if (record === undefined) return failedReadback("Router read failed: invalid response", token);
   const rows = Object.entries(record)
-    .filter(([, value]) => typeof value === "string" || typeof value === "number" || typeof value === "boolean")
+    .filter(
+      ([, value]) =>
+        typeof value === "string" || typeof value === "number" || typeof value === "boolean",
+    )
     .slice(0, 40)
     .map(([key, value]) => row(key, key, String(value), "summary"));
   return okRows(rows, token);

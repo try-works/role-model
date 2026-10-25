@@ -378,4 +378,9 @@ describe("S26e shared readback routes", () => {
       listeners.get("revision.update")?.({
         data: JSON.stringify({ revision: 1 }),
       } as MessageEvent<string>);
-      await waitFor(() => (fetchCalls === 2 ? true : undefi
+      await waitFor(() => (fetchCalls === 2 ? true : undefined), `${route.key} refresh`);
+      expect(active).toBe(1);
+      dispose(entry);
+    });
+  }
+});

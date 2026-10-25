@@ -101,7 +101,12 @@ const shellNavItems = (route: Model["route"]): ReadonlyArray<ShellNavItem> => [
     href: "/session-readiness",
     label: "Readiness",
   },
-  { active: route._tag === "Dashboard", dataNav: "dashboard", href: "/dashboard", label: "Dashboard" },
+  {
+    active: route._tag === "Dashboard",
+    dataNav: "dashboard",
+    href: "/dashboard",
+    label: "Dashboard",
+  },
   { active: route._tag === "LocalSwap", dataNav: "local-swap", href: "/local/swap", label: "Swap" },
   {
     active: route._tag === "ObserveActivity",
