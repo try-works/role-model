@@ -54,3 +54,12 @@ Started directly with its own packaged scope on an ephemeral loopback port and a
 - The packaged artifact was NOT produced by the failing validator path; it was produced by the packaging step and then started directly. The validator incompatibility is documented above with its release reproduction.
 - Packaged real-client R/D/C parity (R15/R16) is still not run: no real provider inference, no release-vs-dev-vs-candidate comparison.
 - Nothing was pushed; the commits are local to the run branch.
+
+## Baseline correction (owner direction, round 42)
+
+- `origin/dev` trailed `origin/main` by 35 commits with none of its own, so a dev-based candidate described itself as `0.0.17-10-…`.
+- The run branch now CONTAINS `v0.0.20`: public merge `9fb59b67` (parents `5c8e69df` + `945a8906`), private merge `db504b89` (parents `c70889b2` + `266ccf76`).
+- Rebuilt candidate: development channel, `0.0.20-7-gfd2a5f55`, commit `fd2a5f55`, source tree `d4095825`, executable sha256 `468bdc50…`, 13 extensions, packaging validation exit 0 (healthy, 8 models, 28 roles, packaged chat and responses replies).
+- Baselines built from `origin/main` for like-channel comparison: D-prod (production, `0.0.20`, sha `20e7e894…`, source tree `d29e2a3c`) and D-dev (development, same commit/source tree).
+- Remediation prepared but NOT pushed: a `chore/sync-dev-with-main-020` branch in a scratch worktree merges `origin/main` into `origin/dev` with ZERO conflicts, so dev can be brought forward by a reviewed pull request rather than a direct push.
+
