@@ -64,11 +64,21 @@ the tested stage candidate" (line 425), add:
             --right-state (Join-Path $env:RUNNER_TEMP "r39-compare-state")
 ```
 
-> The `--left` form above still needs the stage side started as a URL; the accepted-stage package
-> is already extracted at `$RUNNER_TEMP/stage-package`, so the step must start it the same way
-> `compare-release --right-exe` does. **This asymmetry is why the patch is not applied:** it needs
-> a real run to settle the argument shapes, and guessing them in a release workflow is exactly the
-> failure mode this run exists to avoid.
+**Resolved since this patch was first written:** `compare-release` is now symmetric - `--left-exe/--left-port/--left-state/--fixture-root` start the left side exactly like the right. Verified against two packaged candidates (D and C) started by the script itself: `{"same":8,"environment-state":1}`, exit 0. The production step is therefore exact:
+
+```yaml
+      - name: Compare accepted stage package against the production candidate (R39)
+        if: env.ROLE_MODEL_BUILD_CHANNEL == 'production'
+        shell: pwsh
+        continue-on-error: ${{ vars.R39_VERIFY_BLOCKING != 'true' }}
+        run: |
+          node scripts/runtime/compare-release.mjs `
+            --fixture-root "testdata/router-runtime/fixtures" `
+            --left-exe  "\$env:RUNNER_TEMP\stage-package\role-model-dev.exe" --left-port 5942 --left-state "\$env:RUNNER_TEMP\r39-left" `
+            --right-exe "role-model-router/dist/release/${{ matrix.target }}/role-model-dev.exe" --right-port 5943 --right-state "\$env:RUNNER_TEMP\r39-right"
+```
+
+What remains unproven is only whether the stage package extracts to that path with that file name - a single fact a dispatch run settles.
 
 ## Gating
 
