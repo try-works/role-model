@@ -239,7 +239,7 @@ const parseRuntime = (body: unknown, token: number): ReadbackState => {
   const record = asRecord(body);
   if (
     record === undefined ||
-    (record.config !== undefined && asRecord(record.config) === undefined)
+    (record.config !== undefined && record.config !== null && asRecord(record.config) === undefined)
   ) {
     return failedReadback("Runtime read failed: invalid response", token);
   }
@@ -256,22 +256,16 @@ const parseRuntime = (body: unknown, token: number): ReadbackState => {
 
 const parseSessionReadiness = (body: unknown, token: number): ReadbackState => {
   const record = asRecord(body);
-  const status = asRecord(record?.status) ?? record;
-  if (status === undefined)
-    return failedReadback("Session readiness read failed: invalid response", token);
-  const state = typeof status.status === "string" ? status.status : undefined;
-  if (state === undefined) return { rows: [], status: "empty", token };
-  return okRows(
-    [
-      row(
-        "status",
-        state,
-        status.ready === true ? "ready" : "not ready",
-        typeof status.message === "string" ? status.message : "",
-      ),
-    ],
-    token,
-  );
+  if (record === undefined) return failedReadback("Session readiness read failed: invalid response", token);
+  const overall = typeof record.overall === "string" ? record.overall : undefined;
+  if (overall === undefined) return { rows: [], status: "empty", token };
+  const context = asRecord(record.context);
+  const rows = [
+    row("overall", "Overall", overall, typeof record.observationSource === "string" ? record.observationSource : ""),
+    row("channel", "Channel", String(context?.channel ?? "—"), String(context?.scope ?? "")),
+    row("observedAt", "Observed", String(record.observedAt ?? "—"), "timestamp"),
+  ];
+  return okRows(rows, token);
 };
 
 const parseDashboard = (body: unknown, token: number): ReadbackState => {
@@ -821,3 +815,5 @@ export const readbackKeyForRouteTag = (tag: string): ReadbackKey | null =>
                                     : tag === "RouterDecisionDetail"
                                       ? "routerDecisionDetail"
                                       : null;
+export const parseReadbackFixture = (key: ReadbackKey, body: unknown, token = 1): ReadbackState =>
+  READBACK_SPECS[key].parse(body, token);

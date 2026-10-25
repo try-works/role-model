@@ -1,0 +1,161 @@
+{
+  "slice": "s26o-route-audit",
+  "artifact": {
+    "version": "0.0.20-18-g6c9aeba1",
+    "commit": "6c9aeba15acd09be4fc6776cef66a1041394b65a",
+    "sourceTree": "e79ccfc7ee4c1d9a8eeee07f7e3aee115f2d106e",
+    "port": 5783
+  },
+  "fixes": [
+    {
+      "route": "/runtime",
+      "endpoint": "GET /api/role-model/runtime/config",
+      "real": "{applied:false,path:'…/runtime-config.yaml',config:null}",
+      "bug": "parser rejected config:null as invalid",
+      "fix": "allow null config; fall back to top-level applied/path rows"
+    },
+    {
+      "route": "/session-readiness",
+      "endpoint": "GET /api/role-model/operator/status",
+      "real": "{overall,context,observedAt,capabilities,storage}",
+      "bug": "parser looked for status/ready and rendered empty",
+      "fix": "parse overall/context/observedAt"
+    },
+    {
+      "route": "/observe/activity",
+      "endpoint": "GET /api/metrics/page",
+      "real": "{items,totalMatching,…}",
+      "bug": "path and parser expected activity/entries from operator/status",
+      "fix": "read items from /api/metrics/page"
+    },
+    {
+      "route": "/dashboard",
+      "endpoint": "GET /api/role-model/telemetry/summary",
+      "real": "RuntimeTelemetrySummary requestCount/tokens/cost/latency",
+      "bug": "parser expected record.requests",
+      "fix": "summary rows, empty when requestCount=0"
+    }
+  ],
+  "table": [
+    [
+      "store-receipts",
+      "GET /api/role-model/operator/store-degradation-receipts",
+      "store/worker.available+receipts",
+      "ok/empty"
+    ],
+    [
+      "queues",
+      "GET /api/role-model/operator/queues",
+      "queues[]",
+      "ok"
+    ],
+    [
+      "local-logs",
+      "GET /api/role-model/local/logs",
+      "logs string",
+      "empty"
+    ],
+    [
+      "router-candidates",
+      "GET /api/role-model/router/candidates",
+      "array",
+      "ok"
+    ],
+    [
+      "requests",
+      "GET /api/role-model/telemetry/requests",
+      "array",
+      "empty"
+    ],
+    [
+      "router-decisions",
+      "GET /api/role-model/router/decisions",
+      "array",
+      "empty"
+    ],
+    [
+      "local-peers/system-peers",
+      "GET /api/role-model/local/peers",
+      "array",
+      "empty"
+    ],
+    [
+      "runtime",
+      "GET /api/role-model/runtime/config",
+      "applied/path/config:null",
+      "ok after fix"
+    ],
+    [
+      "session-readiness",
+      "GET /api/role-model/operator/status",
+      "overall/context/observedAt",
+      "ok after fix"
+    ],
+    [
+      "dashboard",
+      "GET /api/role-model/telemetry/summary",
+      "requestCount…",
+      "empty after fix"
+    ],
+    [
+      "local-swap",
+      "GET /api/role-model/local/swap",
+      "array",
+      "empty"
+    ],
+    [
+      "observe-activity",
+      "GET /api/metrics/page",
+      "items[]",
+      "empty after fix"
+    ],
+    [
+      "observe-logs",
+      "GET /api/role-model/local/logs",
+      "logs",
+      "empty"
+    ],
+    [
+      "observe-routing",
+      "GET /api/role-model/telemetry/rows",
+      "array",
+      "empty"
+    ],
+    [
+      "router",
+      "GET /api/role-model/router/summary",
+      "strategy/controller/guidance",
+      "ok"
+    ],
+    [
+      "providers",
+      "GET /api/role-model/accounts",
+      "array",
+      "ok"
+    ],
+    [
+      "endpoints",
+      "GET /api/role-model/endpoints",
+      "array",
+      "ok"
+    ],
+    [
+      "controller",
+      "GET /api/role-model/controller",
+      "object",
+      "ok"
+    ]
+  ],
+  "fixtures": "role-model-router/apps/runtime-ui-next/test/fixtures/s26o/*.json captured from packaged port 5783",
+  "contract": "test/s26o-contract.test.ts: 16 readback + 3 control fixtures; expected status per route; parser rejection fails",
+  "uncertain": [
+    "requestDetail/routerDecisionDetail: packaged state had no request/decision IDs (empty arrays); their real detail bodies remain unverified against this artifact.",
+    "Control action side effects were only asserted through injected client method/path/body; no real operator action was dispatched.",
+    "Port 5783 package predates these parser changes; the browser bundle must be rebuilt before visual re-verification."
+  ],
+  "counts": {
+    "relevantTests": 64,
+    "typecheck": "exit 0",
+    "fullSuiteBeforeAudit": 157
+  }
+}

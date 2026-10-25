@@ -129,14 +129,14 @@ const routes: readonly RouteCase[] = [
     successText: "http://system-peer",
   },
   {
-    emptyBody: { config: {} },
+    emptyBody: {},
     emptyText: "No runtime configuration available.",
     key: "runtime",
     label: "Runtime",
     path: "/runtime",
     stateTestName: "Runtime renders success, empty, loading and error on the DOM",
-    successBody: { config: { channel: "development", mode: "local" } },
-    successText: "channel",
+    successBody: { applied: false, config: null, path: "runtime-config.yaml" },
+    successText: "applied",
   },
   {
     emptyBody: {},
@@ -145,8 +145,8 @@ const routes: readonly RouteCase[] = [
     label: "Session readiness",
     path: "/session-readiness",
     stateTestName: "Session readiness renders success, empty, loading and error on the DOM",
-    successBody: { ready: true, status: "ready" },
-    successText: "ready",
+    successBody: { observedAt: "2026-10-25T05:46:08.202Z", overall: "unobserved", context: { channel: "development", scope: "standalone-runtime-dev" }, capabilities: {}, storage: {} },
+    successText: "unobserved",
   },
   {
     emptyBody: { requestCount: 0, successCount: 0, failureCount: 0, totalTokens: 0 },

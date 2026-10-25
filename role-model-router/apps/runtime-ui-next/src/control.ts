@@ -293,3 +293,5 @@ export const controlFromResult = (
   }
   return spec.parse(result.body, token);
 };
+export const parseControlFixture = (key: ControlKey, body: unknown, token = 1): ControlState =>
+  CONTROL_SPECS[key].parse(body, token);

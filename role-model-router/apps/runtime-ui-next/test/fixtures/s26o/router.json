@@ -1,0 +1,23 @@
+{
+  "strategy": null,
+  "executionMode": "decision_only",
+  "controller": {
+    "scope": "global",
+    "endpointId": "openai.personal.primary.us-east-1.fast",
+    "modelId": "openai/gpt-4.1-mini-fast",
+    "displayName": "Gpt 4.1 Mini Fast",
+    "upstreamModelId": "openai/gpt-4.1-mini-fast",
+    "reasoningEffort": null,
+    "sourceType": "remote"
+  },
+  "guidance": {
+    "endpointId": "openai.personal.primary.us-east-1.fast",
+    "preferredEndpointIds": [
+      "openai.personal.primary.us-east-1.fast"
+    ],
+    "ignoredEndpointIds": []
+  },
+  "configuredCandidateCount": 3,
+  "recentDecisionCount": 0,
+  "aliasInventory": []
+}

@@ -1,0 +1,344 @@
+[
+  {
+    "endpointId": "openai.personal.primary.us-east-1.fast",
+    "modelId": "openai/gpt-4.1-mini-fast",
+    "upstreamModelId": "openai/gpt-4.1-mini-fast",
+    "reasoningEffort": null,
+    "effortSource": "provider-default",
+    "membershipRevision": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "providerId": "openai",
+    "sourceType": "remote",
+    "endpointKind": "remote_api",
+    "servingSource": "remote-service",
+    "region": "us-east-1",
+    "status": "active",
+    "healthStatus": "healthy",
+    "roleBindings": [
+      "analyst",
+      "architect",
+      "coder",
+      "coordinator",
+      "creative",
+      "data",
+      "designer",
+      "educator",
+      "finance",
+      "health",
+      "knowledge",
+      "legal",
+      "marketer",
+      "mathematician",
+      "operator",
+      "planner",
+      "procurement",
+      "product",
+      "recruiter",
+      "researcher",
+      "scientist",
+      "security",
+      "seller",
+      "strategist",
+      "support",
+      "tester",
+      "translator",
+      "writer"
+    ],
+    "capabilities": [
+      "structured.output",
+      "text.chat",
+      "tools.function_calling",
+      "latency.optimized"
+    ],
+    "toolCallingSupported": true,
+    "toolCallingStyle": "openai",
+    "webSearchSupport": {
+      "mode": "runtime-fallback",
+      "currentRuntimeContract": null,
+      "documentedProviderContract": null
+    },
+    "executionModeEligible": true,
+    "routingEligible": true,
+    "benchmarkEligible": true,
+    "controllerEligible": true,
+    "preferred": true,
+    "ignored": false,
+    "operationalProfile": null,
+    "latestProfile": null,
+    "profileSemantics": {
+      "version": "role-model.performance-evidence.v1",
+      "operational": "live-request-only",
+      "benchmark": "run-artifact-only",
+      "legacyLatestProfile": "alias-of-operational-profile"
+    },
+    "pricing": {
+      "inputPer1M": 0.4,
+      "outputPer1M": 1.6,
+      "currency": "USD"
+    },
+    "recentSamples": [],
+    "difficultyProfiles": {
+      "easy": null,
+      "medium": null,
+      "hard": null
+    },
+    "advisoryMaxDifficultyRecommendation": {
+      "recommendedMaxDifficulty": null,
+      "thresholds": {
+        "minSamples": 4,
+        "maxFailureRate": 0.2,
+        "minQualityScore": 0.8,
+        "minTokensPerSec": 22
+      },
+      "evaluations": {
+        "easy": {
+          "eligible": false,
+          "rejectionReasons": [
+            "no-profile"
+          ],
+          "profile": null
+        },
+        "medium": {
+          "eligible": false,
+          "rejectionReasons": [
+            "no-profile"
+          ],
+          "profile": null
+        },
+        "hard": {
+          "eligible": false,
+          "rejectionReasons": [
+            "no-profile"
+          ],
+          "profile": null
+        }
+      }
+    }
+  },
+  {
+    "endpointId": "anthropic.team.shared.us-east-1.default",
+    "modelId": "claude-3.7-sonnet",
+    "upstreamModelId": "claude-3.7-sonnet",
+    "reasoningEffort": null,
+    "effortSource": "provider-default",
+    "membershipRevision": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "providerId": "anthropic",
+    "sourceType": "remote",
+    "endpointKind": "remote_api",
+    "servingSource": "remote-service",
+    "region": "us-east-1",
+    "status": "degraded",
+    "healthStatus": "healthy",
+    "roleBindings": [
+      "analyst",
+      "architect",
+      "coder",
+      "coordinator",
+      "creative",
+      "data",
+      "designer",
+      "educator",
+      "finance",
+      "health",
+      "knowledge",
+      "legal",
+      "marketer",
+      "mathematician",
+      "operator",
+      "planner",
+      "procurement",
+      "product",
+      "recruiter",
+      "researcher",
+      "scientist",
+      "security",
+      "seller",
+      "strategist",
+      "support",
+      "tester",
+      "translator",
+      "writer"
+    ],
+    "capabilities": [
+      "text.chat",
+      "tools.function_calling"
+    ],
+    "toolCallingSupported": true,
+    "toolCallingStyle": "openai",
+    "webSearchSupport": {
+      "mode": "runtime-fallback",
+      "currentRuntimeContract": null,
+      "documentedProviderContract": null
+    },
+    "executionModeEligible": true,
+    "routingEligible": true,
+    "benchmarkEligible": true,
+    "controllerEligible": false,
+    "preferred": false,
+    "ignored": false,
+    "operationalProfile": null,
+    "latestProfile": null,
+    "profileSemantics": {
+      "version": "role-model.performance-evidence.v1",
+      "operational": "live-request-only",
+      "benchmark": "run-artifact-only",
+      "legacyLatestProfile": "alias-of-operational-profile"
+    },
+    "pricing": {
+      "inputPer1M": 3,
+      "outputPer1M": 15,
+      "currency": "USD"
+    },
+    "recentSamples": [],
+    "difficultyProfiles": {
+      "easy": null,
+      "medium": null,
+      "hard": null
+    },
+    "advisoryMaxDifficultyRecommendation": {
+      "recommendedMaxDifficulty": null,
+      "thresholds": {
+        "minSamples": 4,
+        "maxFailureRate": 0.2,
+        "minQualityScore": 0.8,
+        "minTokensPerSec": 22
+      },
+      "evaluations": {
+        "easy": {
+          "eligible": false,
+          "rejectionReasons": [
+            "no-profile"
+          ],
+          "profile": null
+        },
+        "medium": {
+          "eligible": false,
+          "rejectionReasons": [
+            "no-profile"
+          ],
+          "profile": null
+        },
+        "hard": {
+          "eligible": false,
+          "rejectionReasons": [
+            "no-profile"
+          ],
+          "profile": null
+        }
+      }
+    }
+  },
+  {
+    "endpointId": "cli.local.coder",
+    "modelId": "gpt-5.4",
+    "upstreamModelId": "gpt-5.4",
+    "reasoningEffort": null,
+    "effortSource": "provider-default",
+    "membershipRevision": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "providerId": null,
+    "sourceType": "local",
+    "endpointKind": "local_engine",
+    "servingSource": "local-process",
+    "region": "local",
+    "status": "active",
+    "healthStatus": "healthy",
+    "roleBindings": [
+      "analyst",
+      "architect",
+      "coder",
+      "coordinator",
+      "creative",
+      "data",
+      "designer",
+      "educator",
+      "finance",
+      "health",
+      "knowledge",
+      "legal",
+      "marketer",
+      "mathematician",
+      "operator",
+      "planner",
+      "procurement",
+      "product",
+      "recruiter",
+      "researcher",
+      "scientist",
+      "security",
+      "seller",
+      "strategist",
+      "support",
+      "tester",
+      "translator",
+      "writer"
+    ],
+    "capabilities": [
+      "code.edit",
+      "reasoning.multi_step",
+      "tools.function_calling"
+    ],
+    "toolCallingSupported": true,
+    "toolCallingStyle": "openai",
+    "webSearchSupport": {
+      "mode": "runtime-fallback",
+      "currentRuntimeContract": null,
+      "documentedProviderContract": null
+    },
+    "executionModeEligible": true,
+    "routingEligible": true,
+    "benchmarkEligible": true,
+    "controllerEligible": false,
+    "preferred": false,
+    "ignored": false,
+    "operationalProfile": null,
+    "latestProfile": null,
+    "profileSemantics": {
+      "version": "role-model.performance-evidence.v1",
+      "operational": "live-request-only",
+      "benchmark": "run-artifact-only",
+      "legacyLatestProfile": "alias-of-operational-profile"
+    },
+    "pricing": {
+      "inputPer1M": 2.5,
+      "outputPer1M": 15,
+      "currency": "USD"
+    },
+    "recentSamples": [],
+    "difficultyProfiles": {
+      "easy": null,
+      "medium": null,
+      "hard": null
+    },
+    "advisoryMaxDifficultyRecommendation": {
+      "recommendedMaxDifficulty": null,
+      "thresholds": {
+        "minSamples": 4,
+        "maxFailureRate": 0.2,
+        "minQualityScore": 0.8,
+        "minTokensPerSec": 22
+      },
+      "evaluations": {
+        "easy": {
+          "eligible": false,
+          "rejectionReasons": [
+            "no-profile"
+          ],
+          "profile": null
+        },
+        "medium": {
+          "eligible": false,
+          "rejectionReasons": [
+            "no-profile"
+          ],
+          "profile": null
+        },
+        "hard": {
+          "eligible": false,
+          "rejectionReasons": [
+            "no-profile"
+          ],
+          "profile": null
+        }
+      }
+    }
+  }
+]
