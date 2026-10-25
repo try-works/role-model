@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { mountShell } from "../src/mount";
 
 const fixture = JSON.parse(readFileSync(path.join(import.meta.dirname, "fixtures", "s26o", "overview-boundary-items.json"), "utf8"));
+const candidates = JSON.parse(readFileSync(path.join(import.meta.dirname, "fixtures", "s26o", "routerCandidates.json"), "utf8"));
 const mounted: Array<{ container: HTMLElement; handle: { dispose(): void } }> = [];
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
 const waitFor = async <T>(read: () => T | undefined, label: string): Promise<T> => {
@@ -28,8 +29,8 @@ afterEach(() => {
   for (const entry of mounted.splice(0)) { entry.handle.dispose(); entry.container.remove(); }
   window.history.replaceState({}, "", "/");
 });
-const tableRows = (): string[][] => {
-  const table = document.querySelector("[data-chart-part='table']");
+const tableRows = (title = "Latency (ms)"): string[][] => {
+  const table = [...document.querySelectorAll("[data-chart-part='table']")].find((entry) => entry.textContent?.includes(title));
   return Array.from(table?.querySelectorAll("tbody tr") ?? []).map((row) => Array.from(row.querySelectorAll("th,td")).map((cell) => cell.textContent ?? ""));
 };
 
@@ -38,6 +39,7 @@ describe("S40b bucketed overview", () => {
     mountAt("s40b-buckets", async (input) => {
       const url = new URL(String(input), "http://localhost");
       if (url.pathname === "/api/metrics/page") return json(fixture);
+      if (url.pathname === "/api/role-model/router/candidates") return json(candidates);
       return json({});
     });
     await waitFor(() => document.querySelector("[data-overview-state='success']") ?? undefined, "success");
@@ -50,6 +52,16 @@ describe("S40b bucketed overview", () => {
     expect(rows.some((row) => row[0] === "02:00")).toBe(false);
     expect(document.querySelectorAll("[data-chart-point-label]").length).toBeGreaterThanOrEqual(6);
     expect(document.body.textContent).not.toContain("02:00");
+    expect(document.querySelectorAll("[data-model-point]")).toHaveLength(candidates.length);
+    expect(document.querySelector("[data-overview-card='Model pool']")).not.toBeNull();
+    expect(document.querySelector("[data-overview-card='Token usage over time']")).not.toBeNull();
+    const modelTable = [...document.querySelectorAll("table")].find((entry) => entry.textContent?.includes("Model pool data"));
+    expect(modelTable?.textContent).toContain("openai/gpt-4.1-mini-fast");
+    expect(modelTable?.textContent).toContain("0.4");
+    expect(modelTable?.textContent).toContain("3");
+    expect(tableRows("Token usage over time")).toContainEqual(["00:00", "10"]);
+    expect(tableRows("Token usage over time")).toContainEqual(["01:00", "50"]);
+    expect(tableRows("Token usage over time")).toContainEqual(["23:00", "40"]);
   });
 
   it("shows per-model rail counts from the same items", async () => {
@@ -67,6 +79,7 @@ describe("S40b bucketed overview", () => {
     let resolveDay: ((value: Response) => void) | undefined;
     mountAt("s40b-stale", async (input) => {
       const url = new URL(String(input), "http://localhost");
+      if (url.pathname === "/api/role-model/router/candidates") return json(candidates);
       if (url.pathname !== "/api/metrics/page") return json({});
       if (url.searchParams.get("windowMs") === "86400000") return await new Promise<Response>((resolve) => { resolveDay = resolve; });
       return json(fixture);

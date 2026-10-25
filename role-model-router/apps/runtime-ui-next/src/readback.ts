@@ -516,7 +516,7 @@ const parseRouterCandidates = (body: unknown, token: number): ReadbackState => {
         id,
         String(candidate.modelId ?? candidate.id ?? "candidate"),
         String(candidate.score ?? candidate.totalScore ?? ""),
-        String(candidate.endpointId ?? candidate.providerId ?? ""),
+        JSON.stringify({ endpointId: candidate.endpointId ?? null, healthStatus: candidate.healthStatus ?? null, pricing: candidate.pricing ?? null, providerId: candidate.providerId ?? null, routingEligible: candidate.routingEligible ?? null, speed: candidate.recentSamples ?? null }),
       ),
     ];
   });

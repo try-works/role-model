@@ -440,14 +440,14 @@
       "url": "synthetic-boundary:/api/metrics/page?windowMs=86400000",
       "status": 200,
       "capturedAt": "2026-10-25T08:48:28.448Z",
-      "sha256": "feaf9eb27d04d962826ec61bdcf1c6527fc4a8c92c2f0aa1f3f706f0daee6d76",
+      "sha256": "0231670e45c4529f9e4f8ca7ec5a5b282ee0feaa6819307a67110348d87299a7",
       "artifact": {
         "version": "0.0.20-18-g6c9aeba1",
         "commit": "6c9aeba15acd09be4fc6776cef66a1041394b65a",
         "sourceTree": "e79ccfc7ee4c1d9a8eeee07f7e3aee115f2d106e",
         "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
       },
-      "bodyBytes": 1082
+      "bodyBytes": 1162
     },
     "overview-real-items.json": {
       "url": "/api/metrics/page (real S26p temp capture)",

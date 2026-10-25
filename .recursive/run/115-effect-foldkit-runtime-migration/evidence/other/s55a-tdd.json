@@ -1,0 +1,32 @@
+{
+  "slice": "s55a-model-pool",
+  "fields": {
+    "modelPool": "router/candidates[].pricing.inputPer1M (x), modelId/endpointId (labels); quality and speed omitted - candidates have no quality/speed score; marker size fixed because no route score",
+    "tokens": "metrics page items[].tokens summed per bucket"
+  },
+  "cards": [
+    "Model pool",
+    "Token usage over time",
+    "Latency (ms)",
+    "Success vs failure"
+  ],
+  "fixtures": {
+    "candidates": "fixtures/s26o/routerCandidates.json real packaged capture",
+    "boundary": "fixtures/s26o/overview-boundary-items.json with tokens 10/20/30/40 added"
+  },
+  "reds": {
+    "costAxis": "s55a-red-cost-axis.log",
+    "tokenSum": "s55a-red-token-sum.log"
+  },
+  "screenshot": "E:/rm-tmp/s55a/overview-final.png",
+  "counts": {
+    "tests": 14,
+    "clientFull": 197,
+    "files": 20,
+    "typecheck": "exit 0"
+  },
+  "limits": [
+    "cost-only scatter; quality/speed axes dropped, not invented",
+    "one seeded bucket in screenshot; boundary fixture covers empty hour and same-bucket merge"
+  ]
+}

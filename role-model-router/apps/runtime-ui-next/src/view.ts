@@ -481,7 +481,7 @@ const WINDOW_OPTIONS = [
 const windowLabel = (windowMs: number): string =>
   WINDOW_OPTIONS.find((option) => option.windowMs === windowMs)?.label ?? "Day";
 interface OverviewItem { readonly timestamp?: unknown; readonly duration_ms?: unknown; readonly resp_status_code?: unknown; readonly modelId?: unknown; }
-interface Bucket { readonly label: string; readonly avg: number; readonly p95: number; readonly success: number; readonly failure: number; }
+interface Bucket { readonly label: string; readonly avg: number; readonly p95: number; readonly success: number; readonly failure: number; readonly tokens: number; }
 const percentile = (values: readonly number[], p: number): number => {
   if (values.length === 0) return 0;
   const sorted = [...values].sort((a, b) => a - b);
@@ -501,14 +501,16 @@ const bucketsFor = (state: ReadbacksState["overviewMetrics"], windowMs: number):
   const start = parsed.window.startAtMs;
   const end = parsed.window.endAtMs;
   const count = Math.max(1, Math.ceil((end - start) / rule.bucketMs));
-  const grouped = new Map<number, { durations: number[]; success: number; failure: number }>();
+  const grouped = new Map<number, { durations: number[]; success: number; failure: number; tokens: number }>();
   const models = new Map<string, number>();
   for (const item of parsed.items) {
     const raw = typeof item.timestamp === "string" ? Date.parse(item.timestamp) : Number.NaN;
     if (!Number.isFinite(raw)) continue;
     const index = Math.min(count - 1, Math.max(0, Math.floor((raw - start) / rule.bucketMs)));
-    const bucket = grouped.get(index) ?? { durations: [], success: 0, failure: 0 };
+    const bucket = grouped.get(index) ?? { durations: [], success: 0, failure: 0, tokens: 0 };
     const duration = Number(item.duration_ms);
+    const tokens = Number((item as { tokens?: unknown }).tokens);
+    if (Number.isFinite(tokens)) bucket.tokens += tokens;
     if (Number.isFinite(duration)) bucket.durations.push(duration);
     const status = Number(item.resp_status_code);
     if (status >= 200 && status < 400) bucket.success += 1;
@@ -525,11 +527,13 @@ const bucketsFor = (state: ReadbacksState["overviewMetrics"], windowMs: number):
       p95: percentile(bucket.durations, 95),
       success: bucket.success,
       failure: bucket.failure,
+      tokens: bucket.tokens,
     }));
   return { buckets, models, period: count };
 };
 const overviewPage = (
   state: ReadbacksState["overviewMetrics"],
+  candidates: ReadbacksState["routerCandidates"],
   windowMs: number,
   h: HtmlBuilder<Message>,
 ): Html => {
@@ -566,18 +570,43 @@ const overviewPage = (
     return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "index"), h.DataAttribute("readback-route", "dashboard")], [header, h.section([h.Class("rounded-[8px] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-4"), h.DataAttribute("overview-card", "empty")], [h.h2([h.Class("text-[15px] font-semibold")], ["No telemetry yet"]), h.p([h.Class("mt-1 text-[12px] text-[var(--rm-secondary)]"), h.DataAttribute("overview-state", "empty"), h.DataAttribute("readback-state", "empty")], ["No telemetry requests in the last " + period.toLowerCase() + ". Run a request or widen the time range."])])]);
   }
   const { buckets } = bucketsFor(state, windowMs);
-  const labels = buckets.map((bucket) => bucket.label);
   const card = (title: string, description: string, chart: Html) => h.section([h.Class("rounded-[8px] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-4"), h.DataAttribute("overview-card", title), h.AriaLabel(title + ": " + description)], [chart]);
-  const charts = h.div([h.Class("mt-6 grid gap-4"), h.DataAttribute("overview-charts", ""), h.DataAttribute("overview-window", period), h.DataAttribute("overview-buckets", String(buckets.length))], [
-    card("Latency (ms)", "Average and p95 per bucket for the last " + period.toLowerCase() + ".", chartView({ title: "Latency (ms)", description: "Average and p95 per bucket for the last " + period.toLowerCase() + ".", series: [
-      { id: "average", label: "Average", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.avg })) },
-      { id: "p95", label: "p95", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.p95 })) },
-    ], state: { status: "ready" }, yUnit: "ms" }, h)),
-    card("Success vs failure", "Request outcomes per bucket for the last " + period.toLowerCase() + ".", chartView({ title: "Success vs failure", description: "Request outcomes per bucket for the last " + period.toLowerCase() + ".", series: [
-      { id: "success", label: "Success", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.success })) },
-      { id: "failure", label: "Failure", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.failure })) },
-    ], state: { status: "ready" }, yUnit: "requests" }, h)),
+  const modelRows = candidates.rows.flatMap((entry) => {
+    try {
+      const meta = JSON.parse(entry.meta) as { pricing?: { inputPer1M?: unknown } | null; endpointId?: unknown; providerId?: unknown };
+      const cost = Number(meta.pricing?.inputPer1M);
+      if (!Number.isFinite(cost)) return [];
+      return [{ cost, endpoint: String(meta.endpointId ?? ""), id: entry.id, label: entry.label }];
+    } catch { return []; }
+  });
+  const costs = modelRows.map((entry) => entry.cost);
+  const minCost = costs.length === 0 ? 0 : Math.min(...costs);
+  const maxCost = costs.length === 0 ? 0 : Math.max(...costs);
+  const scaleCost = (cost: number): number => 40 + ((cost - minCost) / (maxCost === minCost ? 1 : maxCost - minCost)) * 540;
+  const modelPool = h.section([h.Class("rounded-[8px] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-4"), h.DataAttribute("overview-card", "Model pool")], [
+    h.h2([h.Class("text-[15px] font-semibold")], ["Model pool"]),
+    h.p([h.Class("mt-1 text-[12px] text-[var(--rm-secondary)]")], ["Input cost per 1M tokens. Quality and speed axes are omitted: the host candidate body has no quality or speed score."]),
+    modelRows.length === 0
+      ? h.p([h.DataAttribute("model-pool-state", candidates.status === "error" ? "error" : candidates.status === "loading" ? "loading" : "empty"), ...(candidates.status === "error" ? [h.Role("alert")] : [])], [candidates.status === "error" ? candidates.message ?? "Model pool read failed" : candidates.status === "loading" ? "Loading model pool…" : "No candidates with pricing."])
+      : h.div([], [
+          h.svg([h.Class("mt-2 w-full"), h.DataAttribute("model-pool", ""), h.AriaLabel("Model pool by input cost")], [
+            h.line([h.Attribute("x1", "40"), h.Attribute("y1", "70"), h.Attribute("x2", "580"), h.Attribute("y2", "70"), h.Attribute("stroke", "var(--rm-border)")]),
+            ...modelRows.map((entry, index) => h.circle([h.Attribute("cx", String(scaleCost(entry.cost))), h.Attribute("cy", String(70 + (index % 2 === 0 ? 0 : 24))), h.Attribute("r", "6"), h.Fill("var(--rm-accent)"), h.DataAttribute("model-point", entry.id)])),
+          ]),
+          h.table([h.Class("sr-only")], [h.caption([], ["Model pool data"]), h.thead([], [h.tr([], [h.th([], ["Model"]), h.th([], ["Input cost per 1M"]), h.th([], ["Endpoint"])])]), h.tbody([], modelRows.map((entry) => h.tr([], [h.td([], [entry.label]), h.td([], [String(entry.cost)]), h.td([], [entry.endpoint])])))]),
+        ]),
   ]);
+  const tokenChart = chartView({ title: "Token usage over time", description: "Total tokens per bucket for the last " + period.toLowerCase() + ".", series: [{ id: "tokens", label: "Tokens", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.tokens })) }], state: { status: "ready" }, yUnit: "tokens" }, h);
+  const tokenCard = card("Token usage over time", "Total tokens per bucket for the last " + period.toLowerCase() + ".", tokenChart);
+  const latencyCard = card("Latency (ms)", "Average and p95 per bucket for the last " + period.toLowerCase() + ".", chartView({ title: "Latency (ms)", description: "Average and p95 per bucket for the last " + period.toLowerCase() + ".", series: [
+    { id: "average", label: "Average", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.avg })) },
+    { id: "p95", label: "p95", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.p95 })) },
+  ], state: { status: "ready" }, yUnit: "ms" }, h));
+  const outcomeCard = card("Success vs failure", "Request outcomes per bucket for the last " + period.toLowerCase() + ".", chartView({ title: "Success vs failure", description: "Request outcomes per bucket for the last " + period.toLowerCase() + ".", series: [
+    { id: "success", label: "Success", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.success })) },
+    { id: "failure", label: "Failure", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.failure })) },
+  ], state: { status: "ready" }, yUnit: "requests" }, h));
+  const charts = h.div([h.Class("mt-6 grid gap-4"), h.DataAttribute("overview-charts", ""), h.DataAttribute("overview-window", period), h.DataAttribute("overview-buckets", String(buckets.length))], [modelPool, tokenCard, latencyCard, outcomeCard]);
   return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "index"), h.DataAttribute("readback-route", "dashboard"), h.DataAttribute("overview-state", "success"), h.DataAttribute("readback-state", "ok"), h.DataAttribute("state", "success")], [header, charts]);
 };
 
@@ -680,7 +709,7 @@ const routeContent = (
     Endpoints: () => renderControlPage(CONTROL_SPECS.endpoints, controls.endpoints, h),
     ControlController: () =>
       renderControlPage(CONTROL_SPECS.controlController, controls.controlController, h),
-    Index: () => overviewPage(readbacks.overviewMetrics, overviewWindowMs, h),
+    Index: () => overviewPage(readbacks.overviewMetrics, readbacks.routerCandidates, overviewWindowMs, h),
     NotFound: ({ path }) =>
       h.section(
         [

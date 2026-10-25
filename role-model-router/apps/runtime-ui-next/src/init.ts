@@ -125,7 +125,7 @@ export const createInit =
   (url: Url): UpdateReturn<Model, Message> => {
     const result = initRoute(readDiagnostics, readObservability, readReadback, readControl)(url);
     if (!loadRail) return result;
-    const railKeys = ["models", "runtimeSummary", "health", "dashboard", "router", "overviewMetrics"] as const;
+    const railKeys = ["models", "runtimeSummary", "health", "dashboard", "router", "overviewMetrics", "routerCandidates"] as const;
     const token = 1;
     const readbacks = { ...result.model.readbacks };
     const commands = [...(result.commands ?? [])];
