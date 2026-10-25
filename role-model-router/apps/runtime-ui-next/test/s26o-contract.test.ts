@@ -12,7 +12,7 @@ const read = (key: string): unknown => JSON.parse(readFileSync(path.join(fixture
 const readbackKeys: readonly ReadbackKey[] = [
   "storeReceipts","queues","localLogs","routerCandidates","requests","routerDecisions",
   "localPeers","systemPeers","runtime","sessionReadiness","dashboard","localSwap",
-  "observeActivity","observeLogs","observeRouting","router","localPeerModels","queueConfig","downstreamOpenAI","integrationProviders","benchmarkSuite","storageRetention",
+  "observeActivity","observeLogs","observeRouting","router","localPeerModels","queueConfig","downstreamOpenAI","integrationProviders","benchmarkSuite","storageRetention","models","runtimeSummary","health",
 ];
 const controlKeys: readonly ControlKey[] = ["providers", "endpoints", "controlController"];
 const expectedStatus: Partial<Record<ReadbackKey, string>> = {
@@ -20,7 +20,7 @@ const expectedStatus: Partial<Record<ReadbackKey, string>> = {
   observeActivity: "ok", observeLogs: "empty", observeRouting: "empty",
   requests: "empty", routerDecisions: "empty", storeReceipts: "empty", systemPeers: "empty",
   queues: "ok", router: "ok", routerCandidates: "ok", runtime: "ok", sessionReadiness: "ok",
-  localPeerModels: "empty", queueConfig: "ok", downstreamOpenAI: "ok", integrationProviders: "ok", benchmarkSuite: "ok", storageRetention: "ok",
+  localPeerModels: "empty", queueConfig: "ok", downstreamOpenAI: "ok", integrationProviders: "ok", benchmarkSuite: "ok", storageRetention: "ok", models: "ok", runtimeSummary: "ok", health: "ok",
 };
 
 describe("S26o captured-host parser contracts", () => {
@@ -56,6 +56,8 @@ describe("S26o captured-host parser contracts", () => {
       const first: Partial<Record<ReadbackKey, [string, string]>> = {
         dashboard: ["Requests", "1"],
         downstreamOpenAI: ["contractVersion", "role-model.downstream.openai.v1"],
+        health: ["Status", "—"],
+        runtimeSummary: ["Endpoint", "http://127.0.0.1:3458"],
         observeActivity: ["req-20961d29-1dc6-40e3-b8e1-902493528b90", ""],
         queueConfig: ["schemaVersion", "role-model.queue-policy.v1"],
         runtime: ["applied", "false"],

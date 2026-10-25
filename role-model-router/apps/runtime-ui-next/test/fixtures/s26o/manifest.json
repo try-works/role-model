@@ -370,6 +370,45 @@
         "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
       },
       "bodyBytes": 219144
+    },
+    "runtimeSummary.json": {
+      "url": "/api/role-model/runtime/summary",
+      "status": 200,
+      "capturedAt": "2026-10-25T07:37:25.768Z",
+      "sha256": "0e6f963a75df0b241b4c3eaa11e8491d939d0af0e3b89d723049215d43d25bdf",
+      "artifact": {
+        "version": "0.0.20-18-g6c9aeba1",
+        "commit": "6c9aeba15acd09be4fc6776cef66a1041394b65a",
+        "sourceTree": "e79ccfc7ee4c1d9a8eeee07f7e3aee115f2d106e",
+        "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
+      },
+      "bodyBytes": 7079
+    },
+    "health.json": {
+      "url": "/api/role-model/runtime/summary",
+      "status": 200,
+      "capturedAt": "2026-10-25T07:49:20.924Z",
+      "sha256": "0e6f963a75df0b241b4c3eaa11e8491d939d0af0e3b89d723049215d43d25bdf",
+      "artifact": {
+        "version": "0.0.20-18-g6c9aeba1",
+        "commit": "6c9aeba15acd09be4fc6776cef66a1041394b65a",
+        "sourceTree": "e79ccfc7ee4c1d9a8eeee07f7e3aee115f2d106e",
+        "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
+      },
+      "bodyBytes": 7079
+    },
+    "models.json": {
+      "url": "/api/role-model/models",
+      "status": 200,
+      "capturedAt": "2026-10-25T07:37:25.777Z",
+      "sha256": "5a3859cd84d91c7372499d6de84849d5f27b19db76b6704f17fd633ed95268bf",
+      "artifact": {
+        "version": "0.0.20-18-g6c9aeba1",
+        "commit": "6c9aeba15acd09be4fc6776cef66a1041394b65a",
+        "sourceTree": "e79ccfc7ee4c1d9a8eeee07f7e3aee115f2d106e",
+        "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
+      },
+      "bodyBytes": 2076
     }
   }
 }

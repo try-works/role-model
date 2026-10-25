@@ -1,0 +1,251 @@
+{
+  "runtime": {
+    "version": "0.0.20-29-gd45ba6ff",
+    "release_version": "0.0.20-29-gd45ba6ff",
+    "commit": "d45ba6ff0114865bf2fc7204d022ee43d28b7454",
+    "build_date": "2026-10-25T07:14:45.414Z",
+    "channel": "development",
+    "name": "role-model-dev",
+    "endpoint": "http://127.0.0.1:3458",
+    "source_tree": "3c6d0865a6efbd6ddb99f4b1e1a0b763ac1a5461",
+    "executable_sha256": "087b1e754ddbe080365761bf4956b7719cf0401967b6c2f827f45316a6e24f30",
+    "core_payload_sha256": "087b1e754ddbe080365761bf4956b7719cf0401967b6c2f827f45316a6e24f30"
+  },
+  "lifecycleSummary": {
+    "active": 2,
+    "degraded": 1,
+    "offline": 0
+  },
+  "providerCount": 270,
+  "accountCount": 2,
+  "endpointCount": 3,
+  "scopeId": "standalone-runtime-dev",
+  "runtimeStateRoot": "E:/rm-tmp/s38b/state",
+  "processMetrics": {
+    "pid": 33556,
+    "rssBytes": 171843584
+  },
+  "readinessSummary": {
+    "pendingDeviceAuthorizationCount": 0,
+    "credentialsMissingAccountCount": 0,
+    "connectedWithoutEndpointCount": 1,
+    "readyAccountCount": 0
+  },
+  "credentialLifecycle": {
+    "version": 1,
+    "authority": {
+      "state": "authoritative",
+      "bootstrapStatus": "ready"
+    },
+    "counts": {
+      "executionReady": 0,
+      "connectedNoEndpoint": 1,
+      "pendingAuthorization": 0,
+      "expiredAuth": 0,
+      "credentialsMissing": 0,
+      "envUnresolved": 1,
+      "archivedStale": 0
+    },
+    "accounts": [
+      {
+        "logicalAccountId": "anthropic.team.shared",
+        "providerAccountId": "anthropic.team.shared",
+        "providerId": "anthropic",
+        "sourceProvenance": [
+          "manual"
+        ],
+        "authMode": "api-key-rotating-ref",
+        "credentialStorageMode": "unknown",
+        "credentialBackendCanonical": "local-keychain",
+        "lifecycleState": "connected-no-endpoint",
+        "reasonCode": "active-without-endpoint",
+        "blocking": true,
+        "activeEndpointIds": [],
+        "configuredModelIds": [
+          "anthropic/claude-3.7-sonnet"
+        ],
+        "availableActions": [
+          "activate-endpoint"
+        ]
+      },
+      {
+        "logicalAccountId": "openai.personal.primary",
+        "providerAccountId": "openai.personal.primary",
+        "providerId": "openai",
+        "sourceProvenance": [
+          "manual"
+        ],
+        "authMode": "api-key-static",
+        "credentialStorageMode": "env-ref",
+        "credentialBackendCanonical": "env",
+        "lifecycleState": "env-unresolved",
+        "reasonCode": "env-var-missing",
+        "blocking": true,
+        "activeEndpointIds": [],
+        "configuredModelIds": [
+          "openai/gpt-4.1-mini-fast"
+        ],
+        "availableActions": [
+          "set-env"
+        ]
+      }
+    ],
+    "providerRollups": [
+      {
+        "providerId": "anthropic",
+        "accountIds": [
+          "anthropic.team.shared"
+        ],
+        "countsByLifecycle": {
+          "executionReady": 0,
+          "connectedNoEndpoint": 1,
+          "pendingAuthorization": 0,
+          "expiredAuth": 0,
+          "credentialsMissing": 0,
+          "envUnresolved": 0,
+          "archivedStale": 0
+        },
+        "readyAccountIds": [],
+        "attentionAccountIds": [
+          "anthropic.team.shared"
+        ],
+        "hasArchivedArtifacts": false
+      },
+      {
+        "providerId": "openai",
+        "accountIds": [
+          "openai.personal.primary"
+        ],
+        "countsByLifecycle": {
+          "executionReady": 0,
+          "connectedNoEndpoint": 0,
+          "pendingAuthorization": 0,
+          "expiredAuth": 0,
+          "credentialsMissing": 0,
+          "envUnresolved": 1,
+          "archivedStale": 0
+        },
+        "readyAccountIds": [],
+        "attentionAccountIds": [
+          "openai.personal.primary"
+        ],
+        "hasArchivedArtifacts": false
+      }
+    ],
+    "archivedArtifacts": []
+  },
+  "executionMode": "decision_only",
+  "unifiedConfig": {
+    "enabled": false,
+    "path": "E:\\rm-tmp\\s38b\\state\\state\\runtime-config.yaml"
+  },
+  "sessionBootstrap": {
+    "status": "ready",
+    "startedAt": "2026-10-25T07:16:49.131Z",
+    "finishedAt": "2026-10-25T07:16:49.204Z",
+    "stages": [
+      {
+        "stageId": "credentials",
+        "status": "ready",
+        "startedAt": "2026-10-25T07:16:49.131Z",
+        "finishedAt": "2026-10-25T07:16:49.149Z",
+        "details": {
+          "pendingAttempted": 0,
+          "pendingSucceeded": 0,
+          "pendingConnected": 0,
+          "pendingFailed": 0,
+          "pendingDeferred": 0,
+          "refreshAttempted": 0,
+          "refreshSucceeded": 0,
+          "refreshFailed": 0
+        }
+      },
+      {
+        "stageId": "endpoints",
+        "status": "ready",
+        "startedAt": "2026-10-25T07:16:49.186Z",
+        "finishedAt": "2026-10-25T07:16:49.202Z",
+        "details": {
+          "source": "manifest",
+          "count": 0,
+          "reconciled": 0,
+          "failed": 0,
+          "skipped": 0
+        }
+      },
+      {
+        "stageId": "peers",
+        "status": "skipped",
+        "startedAt": "2026-10-25T07:16:49.202Z",
+        "finishedAt": "2026-10-25T07:16:49.203Z",
+        "message": "no peer loads in manifest",
+        "details": {
+          "reloaded": 0,
+          "failed": 0
+        }
+      },
+      {
+        "stageId": "vendors",
+        "status": "skipped",
+        "startedAt": "2026-10-25T07:16:49.203Z",
+        "finishedAt": "2026-10-25T07:16:49.203Z",
+        "message": "unified runtime config disabled"
+      },
+      {
+        "stageId": "local-reload",
+        "status": "skipped",
+        "startedAt": "2026-10-25T07:16:49.203Z",
+        "finishedAt": "2026-10-25T07:16:49.203Z",
+        "message": "no llama-swap loads in manifest"
+      },
+      {
+        "stageId": "remote-health",
+        "status": "skipped",
+        "startedAt": "2026-10-25T07:16:49.203Z",
+        "finishedAt": "2026-10-25T07:16:49.203Z",
+        "message": "execution probes skipped in decision_only mode"
+      },
+      {
+        "stageId": "inventory",
+        "status": "ready",
+        "startedAt": "2026-10-25T07:16:49.203Z",
+        "finishedAt": "2026-10-25T07:16:49.203Z",
+        "details": {
+          "modelIdCount": 3,
+          "endpointIdCount": 3,
+          "localEndpointCount": 1,
+          "remoteEndpointCount": 2,
+          "emptyAliasIds": [],
+          "driftWarningCount": 0,
+          "driftWarnings": []
+        }
+      }
+    ]
+  },
+  "inventorySummary": {
+    "modelIdCount": 3,
+    "endpointIdCount": 3,
+    "localEndpointCount": 1,
+    "remoteEndpointCount": 2,
+    "emptyAliasIds": []
+  },
+  "aliasDrift": [],
+  "operatorIntent": {
+    "path": "E:\\rm-tmp\\s38b\\state\\standalone-runtime-dev\\operator-intent.json",
+    "status": "missing"
+  },
+  "configuredMembershipReconciliation": {
+    "reconciledAt": "2026-10-25T07:16:49.076Z",
+    "authorityVersion": 1,
+    "inspected": {
+      "runtimeEndpoints": 0,
+      "remoteActivations": 0
+    },
+    "pruned": {
+      "runtimeEndpoints": 0,
+      "remoteActivations": 0,
+      "modelRoleBindings": 0
+    },
+    "reasonCodes": []
+  }
+}

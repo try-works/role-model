@@ -29,7 +29,10 @@ export type ReadbackKey =
   | "downstreamOpenAI"
   | "integrationProviders"
   | "benchmarkSuite"
-  | "storageRetention";
+  | "storageRetention"
+  | "models"
+  | "runtimeSummary"
+  | "health";
 
 export const ReadbackKeySchema = Schema.Literals([
   "storeReceipts",
@@ -56,6 +59,9 @@ export const ReadbackKeySchema = Schema.Literals([
   "integrationProviders",
   "benchmarkSuite",
   "storageRetention",
+  "models",
+  "runtimeSummary",
+  "health",
 ]);
 
 export interface ReadbackRow {
@@ -103,6 +109,9 @@ export const ReadbacksState = Schema.Struct({
   integrationProviders: ReadbackState,
   benchmarkSuite: ReadbackState,
   storageRetention: ReadbackState,
+  models: ReadbackState,
+  runtimeSummary: ReadbackState,
+  health: ReadbackState,
   runtime: ReadbackState,
   sessionReadiness: ReadbackState,
   storeReceipts: ReadbackState,
@@ -144,6 +153,9 @@ export const emptyReadbacks = (): ReadbacksState => ({
   integrationProviders: idleReadback(),
   benchmarkSuite: idleReadback(),
   storageRetention: idleReadback(),
+  models: idleReadback(),
+  runtimeSummary: idleReadback(),
+  health: idleReadback(),
   runtime: idleReadback(),
   sessionReadiness: idleReadback(),
   storeReceipts: idleReadback(),
@@ -539,6 +551,41 @@ const parseIntegrationProviders = (body: unknown, token: number): ReadbackState 
   return okRows(rows, token);
 };
 
+const parseModelList = (body: unknown, token: number): ReadbackState => {
+  const list = Array.isArray(body) ? body : asArray(asRecord(body)?.data);
+  const rows = list.flatMap((value, index) => {
+    const model = asRecord(value);
+    if (model === undefined || (model.id === undefined && model.modelId === undefined)) return [];
+    return [row(String(model.id ?? model.modelId ?? index), String(model.displayName ?? model.id ?? index), String(model.providerId ?? ""), "model")];
+  });
+  if (list.length > 0 && rows.length === 0) return failedReadback("Models read failed: invalid response", token);
+  return okRows(rows, token);
+};
+const parseRuntimeSummary = (body: unknown, token: number): ReadbackState => {
+  const record = asRecord(body);
+  if (record === undefined) return failedReadback("Runtime summary read failed: invalid response", token);
+  const runtime = asRecord(record.runtime);
+  if (runtime === undefined || typeof record.endpointCount !== "number") return failedReadback("Runtime summary read failed: invalid response", token);
+  const rows = [
+    row("endpoint", "Endpoint", String(runtime?.endpoint ?? "—"), String(runtime?.channel ?? "")),
+    row("endpointCount", "Endpoints", String(record.endpointCount ?? "—"), "runtime"),
+    row("providerCount", "Providers", String(record.providerCount ?? "—"), "runtime"),
+    row("accountCount", "Accounts", String(record.accountCount ?? "—"), "runtime"),
+    row("executionMode", "Execution mode", String(record.executionMode ?? "—"), "runtime"),
+  ];
+  return okRows(rows, token);
+};
+const parseHealth = (body: unknown, token: number): ReadbackState => {
+  const record = asRecord(body);
+  if (record === undefined) return failedReadback("Health read failed: invalid response", token);
+  const runtime = asRecord(record.runtime);
+  const rows = [
+    row("status", "Status", String(record.status ?? "—"), "health"),
+    row("endpoint", "Endpoint", String(runtime?.endpoint ?? "—"), String(runtime?.version ?? "")),
+    row("executionMode", "Execution mode", String(record.executionMode ?? "—"), "health"),
+  ];
+  return okRows(rows, token);
+};
 const parseBenchmarkSuite = (body: unknown, token: number): ReadbackState => {
   const record = asRecord(body);
   const list = asArray(record?.cases);
@@ -706,6 +753,27 @@ export const READBACK_SPECS: Readonly<Record<ReadbackKey, ReadbackRouteSpec>> = 
     parse: parseStorageRetention,
     path: READBACK_PATHS.storageRetention,
   },
+  models: {
+    emptyText: "No models configured.",
+    key: "models",
+    label: "Models",
+    parse: parseModelList,
+    path: READBACK_PATHS.models,
+  },
+  runtimeSummary: {
+    emptyText: "No runtime summary available.",
+    key: "runtimeSummary",
+    label: "Runtime summary",
+    parse: parseRuntimeSummary,
+    path: READBACK_PATHS.runtimeSummary,
+  },
+  health: {
+    emptyText: "No health state available.",
+    key: "health",
+    label: "Health",
+    parse: parseHealth,
+    path: READBACK_PATHS.health,
+  },
   requests: {
     emptyText: "No telemetry requests recorded yet.",
     key: "requests",
@@ -814,6 +882,9 @@ export const createReadbackClients = (
   integrationProviders: createReadbackClient(READBACK_SPECS.integrationProviders, options),
   benchmarkSuite: createReadbackClient(READBACK_SPECS.benchmarkSuite, options),
   storageRetention: createReadbackClient(READBACK_SPECS.storageRetention, options),
+  models: createReadbackClient(READBACK_SPECS.models, options),
+  runtimeSummary: createReadbackClient(READBACK_SPECS.runtimeSummary, options),
+  health: createReadbackClient(READBACK_SPECS.health, options),
 });
 
 export const readbackFromResult = (

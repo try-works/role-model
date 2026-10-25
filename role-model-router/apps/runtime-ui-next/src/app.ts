@@ -102,7 +102,7 @@ export const createShellApp = (options: ShellOptions = {}) => {
   const readReadback = defineReadReadback(readbackReaders);
   return {
     Model,
-    init: createInit(readDiagnostics, readObservability, readReadback, readControl),
+    init: createInit(readDiagnostics, readObservability, readReadback, readControl, options.readbackReaders === undefined),
     subscriptions: makeRefreshSubscriptions(
       options.runtimeEventSourceFactory ?? defaultRuntimeEventSourceFactory,
     ),

@@ -1,0 +1,39 @@
+{
+  "slice": "s40a-slice1",
+  "chartExport": "@role-model/ui/foldkit-chart -> src/foldkit-chart.ts",
+  "rail": {
+    "sources": {
+      "models": "GET /api/role-model/models rows length",
+      "requests": "GET /api/role-model/telemetry/summary requestCount via dashboard parser",
+      "cache": "cachedRequestCount / requestCount",
+      "router": "runtime summary runtime.endpoint base -> window origin + /v1",
+      "mode": "runtime summary executionMode, fallback router summary executionMode"
+    },
+    "dashes": "loading/failed read -> — with aria-label; cache dash when requestCount is 0; endpoint dash unless health/runtime endpoint is http",
+    "loading": "init always dispatches models/runtimeSummary/health/dashboard/router reads once, reusing an active route read; options.readbackReaders tests keep rail disabled to avoid interfering with selective stubs"
+  },
+  "fixtures": [
+    "models.json",
+    "runtimeSummary.json",
+    "health.json (same /api/role-model/runtime/summary body)",
+    "dashboard.json nonempty",
+    "router.json"
+  ],
+  "tests": {
+    "file": "test/s40a-rail.test.ts",
+    "chartImport": 1,
+    "railValues": 1,
+    "fabricated": 1,
+    "failed": 1
+  },
+  "red": "guard test fabricated body initially not available; parser guards added then fabricated body renders dashes (no positive RED log captured)",
+  "green": {
+    "fullSuite": 186,
+    "files": 17,
+    "typecheck": "exit 0"
+  },
+  "counts": {
+    "files": 17,
+    "tests": 186
+  }
+}

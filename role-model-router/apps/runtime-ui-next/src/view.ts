@@ -628,6 +628,54 @@ const routeContent = (
       ),
   });
 
+const railRow = (label: string, value: string | null, reason: string, h: HtmlBuilder<Message>) =>
+  h.div(
+    [h.Class("flex items-baseline justify-between gap-2 py-0.5"), h.DataAttribute("rail-row", label.toLowerCase())],
+    [
+      h.span([h.Class("text-[10px] uppercase tracking-[0.12em] text-[var(--rm-muted)]")], [label]),
+      value === null
+        ? h.span([h.AriaLabel(reason), h.DataAttribute("rail-value", "dash")], ["—"])
+        : h.span([h.Class("truncate text-[11px] text-[var(--rm-fg)]"), h.DataAttribute("rail-value", label.toLowerCase())], [value]),
+    ],
+  );
+const railValue = (state: Model["readbacks"]["dashboard"], label: string): string | null =>
+  state.rows.find((entry) => entry.label === label)?.value ?? null;
+const shellRail = (model: Model, h: HtmlBuilder<Message>): Html => {
+  const models = model.readbacks.models;
+  const dashboard = model.readbacks.dashboard;
+  const health = model.readbacks.health;
+  const router = model.readbacks.router;
+  const modelsValue = models.status === "ok" ? String(models.rows.length) : models.status === "empty" ? "0" : null;
+  const requestsValue = dashboard.status === "empty" ? "0" : railValue(dashboard, "Requests");
+  const cached = railValue(dashboard, "Cached requests");
+  const cacheValue =
+    requestsValue !== null && cached !== null && Number(requestsValue) > 0
+      ? `${String(Math.round((Number(cached) / Number(requestsValue)) * 100))}%`
+      : null;
+  const endpointRow = health.rows.find((entry) => entry.label === "Endpoint")?.value;
+  const endpointValue =
+    typeof window === "undefined"
+      ? endpointRow ?? null
+      : endpointRow !== undefined && endpointRow.startsWith("http")
+        ? `${new URL(window.location.origin).origin}/v1`
+        : null;
+  const modeValue =
+    health.rows.find((entry) => entry.label === "Execution mode")?.value ??
+    router.rows.find((entry) => entry.label === "executionMode")?.value ??
+    null;
+  return h.div(
+    [h.Class("mt-3 border-t border-[var(--rm-border)] px-2.5 pt-3"), h.DataAttribute("shell-rail", "")],
+    [
+      h.p([h.Class("pb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--rm-muted)]")], ["Runtime"]),
+      railRow("Models", modelsValue, "Model count unavailable: models read is loading or failed", h),
+      railRow("Requests", requestsValue, "Request count unavailable: telemetry summary is loading or failed", h),
+      railRow("Cache", cacheValue, "Cache percentage unavailable: no requests in the window or telemetry is loading", h),
+      railRow("Router", endpointValue, "Router endpoint unavailable: health read is loading or failed", h),
+      railRow("Mode", modeValue, "Execution mode unavailable: health/router read is loading or failed", h),
+    ],
+  );
+};
+
 export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
   title: routeTitle(model.route),
   body: h.div(
@@ -656,6 +704,7 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
             ["Runtime UI"],
           ),
           shellNav(model.route, "Primary navigation", h),
+          shellRail(model, h),
           h.div(
             [
               h.Class(

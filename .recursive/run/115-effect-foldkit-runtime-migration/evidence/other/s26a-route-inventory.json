@@ -119,7 +119,9 @@
       ],
       "source": "role-model-router/apps/runtime-ui/app/routes/control-models.tsx",
       "status": "absent",
-      "hostEndpoints": [],
+      "hostEndpoints": [
+        "/api/role-model/models"
+      ],
       "requiresHostEndpoint": false,
       "absenceReason": "Needs an action payload, identity, or confirmation flow not covered by this non-destructive slice; left absent rather than wiring a guessed command."
     },
@@ -689,7 +691,8 @@
       "source": "role-model-router/apps/runtime-ui/app/routes/runtime.tsx",
       "status": "verified",
       "hostEndpoints": [
-        "/api/role-model/runtime/config"
+        "/api/role-model/runtime/config",
+        "/api/role-model/runtime/summary"
       ],
       "requiresHostEndpoint": false,
       "proofTest": "role-model-router/apps/runtime-ui-next/test/s26e-readback-routes.test.ts",

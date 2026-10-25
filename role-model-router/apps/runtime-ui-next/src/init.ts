@@ -23,7 +23,7 @@ import { routeFromUrl } from "./route";
 import { applyDocumentTheme, readInitialTheme } from "./theme";
 
 /** Routing init: the runtime passes the Url derived from window.location at startup. */
-export const createInit =
+const initRoute =
   (
     readDiagnostics: ReadDiagnosticsCommand,
     readObservability: ReadObservabilityCommand,
@@ -113,4 +113,26 @@ export const createInit =
         theme,
       },
     };
+  };
+export const createInit =
+  (
+    readDiagnostics: ReadDiagnosticsCommand,
+    readObservability: ReadObservabilityCommand,
+    readReadback: ReadReadbackCommand,
+    readControl: ReadControlCommand,
+    loadRail = true,
+  ) =>
+  (url: Url): UpdateReturn<Model, Message> => {
+    const result = initRoute(readDiagnostics, readObservability, readReadback, readControl)(url);
+    if (!loadRail) return result;
+    const railKeys = ["models", "runtimeSummary", "health", "dashboard", "router"] as const;
+    const token = 1;
+    const readbacks = { ...result.model.readbacks };
+    const commands = [...(result.commands ?? [])];
+    for (const key of railKeys) {
+      if (readbacks[key].status !== "idle") continue;
+      readbacks[key] = loadingReadback(token);
+      commands.push(readReadback({ key, token }));
+    }
+    return { ...result, commands, model: { ...result.model, readbacks } };
   };

@@ -208,7 +208,8 @@ describe("S26h stale clears on successful gap refetch", () => {
       () => document.querySelector("[data-readback-state='empty']") ?? undefined,
       "readback token read",
     );
-    expect(explicit).toEqual(["Bearer explicit-readback-token"]);
+    expect(explicit.length).toBeGreaterThan(0);
+    expect(explicit.every((value) => value === "Bearer explicit-readback-token")).toBe(true);
   });
 
   it("distinguishes 401/403 and rejects invalid 200 readback bodies", async () => {
