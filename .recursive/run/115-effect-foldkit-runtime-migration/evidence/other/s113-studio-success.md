@@ -7,6 +7,14 @@ R13's standing caveat has been "Studio success generation needs real model weigh
 - Packaged `0.0.20-81-g17cbdd21` on ephemeral 5961, fresh `E:` state, static root attached.
 - Fixture copy whose `openai.personal.primary` account carries `baseUrlOverride`, so the chat path is exercised through the host rather than only its error branch.
 
+## Correction: the provider response came from the fixture adapter, not live HTTP
+
+After writing this I checked the mock upstream's log: it received **no requests**. The body's `content: "OpenAI summary"` and its `tool_calls` match `testdata/router-runtime/fixtures/adapter-openai-response.json` exactly. So the 200 came from the **fixture adapter** that `--fixture-root` installs for provider calls, not from my mock at 5970.
+
+I tried twice to force a real HTTP provider call - omitting `adapter-*` files, and then omitting only the OpenAI response - and the host **refused to start** in both cases (`ENOENT ... adapter-captures.json`), which is itself the finding: **fixture-root mode implies adapter-served provider responses**.
+
+So the accurate claim is: the Studio **success rendering path** is verified against a real host round trip with a **fixture-backed** provider response. A live provider call needs a configuration without fixture adapters, which this environment does not have - the same precondition that keeps R15 open.
+
 ## What happened
 
 1. `/studio` rendered the chat form: model input `moonshot/kimi-k2.5`, prompt input, **Run**.
@@ -19,7 +27,7 @@ RAW RESPONSE {"id":"chatcmpl-role-model","object":"chat.completion","created":17
   "function":{"name":"lookupRegistry","arguments":"{\"endpointId\":\"openai.personal.primary.us-east-1.fast\"}"}}]}}]
 ```
 
-- **No `role=alert`**: this is a success render, not an error surfaced politely.
+- **No `role=alert`**: this is a success render, not an error surfaced politely (the body is fixture-backed, see the correction above).
 - The raw pane shows the full body including tool calls, which is what an operator needs to debug a route.
 
 ![Studio success](.recursive/run/115-effect-foldkit-runtime-migration/evidence/visual-final/studio-success.png)
