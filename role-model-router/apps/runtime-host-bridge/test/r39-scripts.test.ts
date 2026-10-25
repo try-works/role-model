@@ -55,6 +55,40 @@ describe("S103a R39 scripts fail closed", () => {
     expect(result.status).not.toBe(0);
   }, 30_000);
 
+  it("verify-client-journeys refuses a manifest whose sha does not match the executable", async () => {
+    const { writeFileSync, mkdtempSync } = await import("node:fs");
+    const dir = mkdtempSync(path.join(process.env.TEMP ?? "/tmp", "r39-manifest-"));
+    const manifest = path.join(dir, "manifest.json");
+    writeFileSync(manifest, JSON.stringify({ executable_sha256: "deadbeef" }));
+    const result = script("verify-client-journeys.mjs", [
+      "--manifest", manifest,
+      "--executable", process.execPath,
+      "--repo-root", root,
+      "--static-root", root,
+      "--port", "5939",
+      "--state-root", path.join(dir, "state"),
+      "--fixture-root", path.join(root, "testdata", "router-runtime", "fixtures"),
+    ]);
+    expect(result.status).toBe(2);
+    expect(result.stdout).toContain("does not match manifest");
+  }, 30_000);
+
+  it("verify-client-journeys refuses a dirty state root without --allow-dirty-state", async () => {
+    const { mkdtempSync, writeFileSync } = await import("node:fs");
+    const dir = mkdtempSync(path.join(process.env.TEMP ?? "/tmp", "r39-dirty-"));
+    writeFileSync(path.join(dir, "leftover.txt"), "x");
+    const result = script("verify-client-journeys.mjs", [
+      "--executable", process.execPath,
+      "--repo-root", root,
+      "--static-root", root,
+      "--port", "5942",
+      "--state-root", dir,
+      "--fixture-root", path.join(root, "testdata", "router-runtime", "fixtures"),
+    ]);
+    expect(result.status).toBe(2);
+    expect(result.stdout).toContain("state root is not empty");
+  }, 30_000);
+
   it("compare-release refuses to compare a URL with itself", () => {
     const result = script("compare-release.mjs", [
       "--left",
