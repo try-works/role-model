@@ -195,6 +195,81 @@ const configLayer = (
 ): Layer.Layer<CompositionConfig, never, never> =>
   Layer.succeed(CompositionConfig, CompositionConfig.of(config));
 
+
+/**
+ * Run 115 S115 (R27): the metadata cache is a DAG-owned service with explicit identity.
+ *
+ * R27 requires cache identity to include the authority, the configuration generation and the
+ * model, a bounded size, a TTL, and invalidation on configuration change. Without the generation
+ * in the key, a router decision could be served from an entry produced under a superseded config.
+ */
+export interface MetadataCacheKeyInput {
+  readonly authorityId: string;
+  readonly configGeneration: number;
+  readonly modelId: string;
+}
+
+/** Composite key: authority NUL generation NUL model. NUL cannot appear in an authority id. */
+export const metadataCacheKey = (input: MetadataCacheKeyInput): string =>
+  input.authorityId + "\u0000" + String(input.configGeneration) + "\u0000" + input.modelId;
+
+export interface MetadataCacheShape {
+  readonly get: (key: string, now: number) => Effect.Effect<unknown>;
+  readonly set: (key: string, value: unknown, now: number) => Effect.Effect<void>;
+  readonly invalidateGeneration: (generation: number) => Effect.Effect<void>;
+  readonly size: () => Effect.Effect<number>;
+}
+
+interface MetadataCacheEntry {
+  readonly generation: number;
+  readonly storedAt: number;
+  readonly value: unknown;
+}
+
+export const makeMetadataCache = (options: {
+  readonly capacity: number;
+  readonly ttlMs: number;
+}): MetadataCacheShape => {
+  if (!Number.isInteger(options.capacity) || options.capacity < 1) {
+    throw new Error("metadata cache capacity must be a positive integer");
+  }
+  if (!Number.isFinite(options.ttlMs) || options.ttlMs < 0) {
+    throw new Error("metadata cache ttlMs must be a non-negative number");
+  }
+  const entries = new Map<string, MetadataCacheEntry>();
+  const generationOf = (key: string): number => Number(key.split("\u0000")[1]);
+  return {
+    get: (key, now) =>
+      Effect.suspend(() => {
+        const entry = entries.get(key);
+        if (entry === undefined) return Effect.succeed(undefined);
+        if (now - entry.storedAt > options.ttlMs) {
+          entries.delete(key);
+          return Effect.succeed(undefined);
+        }
+        return Effect.succeed(entry.value);
+      }),
+    invalidateGeneration: (generation) =>
+      Effect.suspend(() => {
+        for (const [key, entry] of [...entries]) {
+          if (entry.generation === generation) entries.delete(key);
+        }
+        return Effect.void;
+      }),
+    set: (key, value, now) =>
+      Effect.suspend(() => {
+        entries.delete(key);
+        entries.set(key, { generation: generationOf(key), storedAt: now, value });
+        while (entries.size > options.capacity) {
+          const oldest = entries.keys().next();
+          if (oldest.done === true) break;
+          entries.delete(oldest.value);
+        }
+        return Effect.void;
+      }),
+    size: () => Effect.suspend(() => Effect.succeed(entries.size)),
+  };
+};
 export const artifactAuthorityLayer: Layer.Layer<ArtifactStoreAuthority, never, CompositionConfig> =
   Layer.effect(
     ArtifactStoreAuthority,
