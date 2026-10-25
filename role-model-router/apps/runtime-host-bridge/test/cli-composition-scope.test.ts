@@ -2,7 +2,7 @@ import { createServer, type Server as NodeServer } from "node:http";
 import { Effect } from "effect";
 import { describe, expect, test } from "vitest";
 
-import { makeHostRuntime, type HostRuntimeFactories } from "../src/host-runtime-resource.js";
+import { makeHostRuntime, makeHostRuntimeServerFirst, type HostRuntimeFactories } from "../src/host-runtime-resource.js";
 
 interface Backend { readonly id: "backend" }
 interface Server { readonly node: NodeServer; readonly port: number }
@@ -68,6 +68,30 @@ const factories = (
 });
 
 describe("s63a HostRuntimeResource (backend+server pair)", () => {
+  test("server-first variant acquires server before backend and releases it last", async () => {
+    const events: string[] = [];
+    const backendFirst = factories(events);
+    const host = await Effect.runPromise(
+      makeHostRuntimeServerFirst({
+        acquireBackend: backendFirst.acquireBackend,
+        acquirePackagedRuntime: backendFirst.acquirePackagedRuntime,
+        acquireServer: backendFirst.acquireServer({ id: "backend" }),
+        releaseBackend: backendFirst.releaseBackend,
+        releasePackagedRuntime: backendFirst.releasePackagedRuntime,
+        releaseServer: backendFirst.releaseServer,
+      }),
+    );
+    await Effect.runPromise(host.close);
+    expect(events).toEqual([
+      "acquire:server",
+      "acquire:backend",
+      "acquire:packaged",
+      "release:packaged",
+      "release:backend",
+      "release:server",
+    ]);
+  });
+
   test("binds a real ephemeral port and closes packaged -> server -> backend", async () => {
     const events: string[] = [];
     const host = await Effect.runPromise(makeHostRuntime(factories(events)));

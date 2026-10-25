@@ -27,6 +27,43 @@ export interface HostRuntime<Backend, Server, PackagedRuntime> {
   readonly close: Effect.Effect<void, unknown>;
 }
 
+export interface ServerFirstFactories<Backend, Server, PackagedRuntime> {
+  readonly acquireServer: Effect.Effect<Server>;
+  readonly acquireBackend: Effect.Effect<Backend>;
+  readonly acquirePackagedRuntime: (server: Server, backend: Backend) => Effect.Effect<PackagedRuntime>;
+  readonly releaseServer: (server: Server) => Effect.Effect<void>;
+  readonly releaseBackend: (backend: Backend) => Effect.Effect<void>;
+  readonly releasePackagedRuntime: (runtime: PackagedRuntime) => Effect.Effect<void>;
+}
+
+export const makeHostRuntimeServerFirst = <Backend, Server, PackagedRuntime>(
+  factories: ServerFirstFactories<Backend, Server, PackagedRuntime>,
+): Effect.Effect<HostRuntime<Backend, Server, PackagedRuntime>, unknown> =>
+  Effect.gen(function* () {
+    const scope = yield* Scope.make();
+    const closed = yield* Ref.make(false);
+    const stack = Effect.gen(function* () {
+      const server = yield* Effect.acquireRelease(factories.acquireServer, factories.releaseServer);
+      const backend = yield* Effect.acquireRelease(factories.acquireBackend, factories.releaseBackend);
+      const packagedRuntime = yield* Effect.acquireRelease(
+        factories.acquirePackagedRuntime(server, backend),
+        factories.releasePackagedRuntime,
+      );
+      return { backend, packagedRuntime, server };
+    });
+    const resources = yield* Scope.provide(stack, scope).pipe(
+      Effect.onError(() => Scope.close(scope, Exit.void)),
+    );
+    return {
+      ...resources,
+      close: Effect.gen(function* () {
+        const alreadyClosed = yield* Ref.getAndSet(closed, true);
+        if (alreadyClosed) return;
+        yield* Scope.close(scope, Exit.void);
+      }),
+    };
+  });
+
 export const makeHostRuntime = <Backend, Server, PackagedRuntime>(
   factories: HostRuntimeFactories<Backend, Server, PackagedRuntime>,
 ): Effect.Effect<HostRuntime<Backend, Server, PackagedRuntime>, unknown> =>
