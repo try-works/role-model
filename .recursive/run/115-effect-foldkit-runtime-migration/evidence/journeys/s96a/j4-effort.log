@@ -1,0 +1,83 @@
+{
+  "port": 49373,
+  "endpoint": {
+    "endpointId": "chatgpt.personal.primary.global.sol",
+    "modelId": "chatgpt/gpt-6.1-sol",
+    "providerId": "chatgpt",
+    "providerAccountId": "chatgpt.personal.primary",
+    "roleIds": [
+      "analyst",
+      "architect",
+      "coder",
+      "coordinator",
+      "creative",
+      "data",
+      "designer",
+      "educator",
+      "finance",
+      "health",
+      "knowledge",
+      "legal",
+      "marketer",
+      "mathematician",
+      "operator",
+      "planner",
+      "procurement",
+      "product",
+      "recruiter",
+      "researcher",
+      "scientist",
+      "security",
+      "seller",
+      "strategist",
+      "support",
+      "tester",
+      "translator",
+      "writer"
+    ],
+    "endpointKind": "remote_api",
+    "servingSource": "remote-service",
+    "sourceType": "remote",
+    "healthStatus": "healthy",
+    "routingEligible": true,
+    "benchmarkEligible": true,
+    "capabilities": [
+      "text.chat",
+      "tools.function_calling"
+    ],
+    "toolCallingSupported": true,
+    "toolCallingStyle": "none",
+    "displayName": "Gpt 6.1 Sol",
+    "upstreamModelId": "chatgpt/gpt-6.1-sol",
+    "reasoningEffort": "medium",
+    "reasoningEffortLevels": [],
+    "effortSource": "fixed",
+    "webSearchSupport": {
+      "mode": "native",
+      "currentRuntimeContract": "openai.responses.web_search",
+      "documentedProviderContract": "openai.responses.web_search"
+    },
+    "status": "active"
+  },
+  "high": {
+    "status": 400,
+    "body": "{\"error\":{\"type\":\"capability_eligibility_error\",\"code\":\"no_eligible_target\",\"message\":\"no_eligible_target: no targets for model chatgpt/gpt-6.1-sol satisfy the inferred request capabilities.\",\"requestedModel\":\"chatgpt/gpt-6.1-sol\",\"requiredInputModalities\":[\"text\"],\"requiredOutputModalities\":[\"text\"],\"requiredCapabilities\":[\"reasoning.effort_control\",\"text.chat\"],\"excludedTargets\":[{\"endpointId\":\"",
+    "mockCalls": [],
+    "decision": {
+      "requestId": "req-f40f8511-4414-4ed8-847a-e7fd47b2b038",
+      "reasoningEffort": null,
+      "effortSource": "none",
+      "selectedEndpointId": "routing.failed.pre-execution"
+    }
+  },
+  "invalid": {
+    "status": 400,
+    "body": "{\"error\":{\"type\":\"capability_eligibility_error\",\"code\":\"no_eligible_target\",\"message\":\"no_eligible_target: no targets for model chatgpt/gpt-6.1-sol satisfy the inferred request capabilities.\",\"requestedModel\":\"chatgpt/gpt-6.1-sol\",\"requiredInputModalities\":[\"text\"],\"requiredOutputModalities\":[\"text\"],\"requiredCapabilities\":[\"reasoning.effort_control\",\"text.chat\"],\"excludedTargets\":[{\"endpointId\":\"chatgpt.personal.primary.global.sol\",\"modelId\":\"chatgpt/gpt-6.1-sol\",\"reasons\":[\"missing_capability.",
+    "newMockCalls": 0
+  },
+  "calls": {
+    "before": 0,
+    "afterHigh": 0,
+    "afterInvalid": 0
+  }
+}

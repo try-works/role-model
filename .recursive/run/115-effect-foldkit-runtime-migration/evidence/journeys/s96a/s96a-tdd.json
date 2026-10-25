@@ -1,0 +1,42 @@
+{
+  "slice": "s96a-j4-effort",
+  "classification": "NOT RUN",
+  "reason": "fixture endpoint can be created for chatgpt/gpt-6.1-sol but the host publishes reasoningEffortLevels [] and effortSource fixed; the request then fails capability eligibility before dispatch",
+  "fixtureDiff": "temp copy provider-accounts.json adds chatgpt.personal.primary (baseUrlOverride mock); registry-sources.json adds chatgpt.personal.primary.global.sol with capabilities text.chat + reasoning.effort_control, reasoningEffort medium, reasoningEffortLevels low/medium/high/xhigh/max, reasoning object",
+  "published": {
+    "endpointId": "chatgpt.personal.primary.global.sol",
+    "reasoningEffort": "medium",
+    "reasoningEffortLevels": [],
+    "effortSource": "fixed",
+    "capabilities": [
+      "text.chat",
+      "tools.function_calling"
+    ]
+  },
+  "forwardedPayload": null,
+  "high": {
+    "status": 400,
+    "error": "capability_eligibility_error no_eligible_target",
+    "requiredCapabilities": [
+      "reasoning.effort_control",
+      "text.chat"
+    ],
+    "mockCalls": 0
+  },
+  "invalidUltra": {
+    "status": 400,
+    "error": "capability_eligibility_error no_eligible_target",
+    "mockCalls": 0
+  },
+  "readback": {
+    "reasoningEffort": null,
+    "effortSource": "none",
+    "selectedEndpointId": "routing.failed.pre-execution"
+  },
+  "contract": "endpoint profile effort levels come from the catalog/model profile, not from fields declared on the fixture registry endpoint; without a catalog row carrying reasoning.effort_control + levels the endpoint stays non-effort-capable",
+  "artifacts": {
+    "script": "evidence/journeys/s96a/j4-effort.mjs",
+    "log": "evidence/journeys/s96a/j4-effort.log",
+    "result": "evidence/journeys/s96a/j4-result.json"
+  }
+}
