@@ -30,6 +30,11 @@ const routeCases = {
   RouterDecisionDetail: { requestId: Schema.String },
   LocalPeers: {},
   SystemPeers: {},
+  LocalPeerModels: {},
+  QueuesConfiguration: {},
+  IntegrationsDownstream: {},
+  IntegrationsUpstream: {},
+  LocalChoose: {},
   Runtime: {},
   SessionReadiness: {},
   Dashboard: {},
@@ -75,6 +80,14 @@ const routerDecisionsRouter = Route.mapTo(AppRoute.RouterDecisions)(
 const localPeersRouter = Route.mapTo(AppRoute.LocalPeers)(
   pipe(Route.literal("local"), Route.slash(Route.literal("peers"))),
 );
+const localPeerModelsRouter = Route.mapTo(AppRoute.LocalPeerModels)(pipe(Route.literal("local"), Route.slash(Route.literal("peer-models"))));
+const queuesConfigurationRouter = Route.mapTo(AppRoute.QueuesConfiguration)(pipe(Route.literal("control"), Route.slash(Route.literal("queues-config"))));
+const integrationsDownstreamRouter = Route.mapTo(AppRoute.IntegrationsDownstream)(pipe(Route.literal("integrations"), Route.slash(Route.literal("downstream"))));
+const integrationsUpstreamRouter = Route.mapTo(AppRoute.IntegrationsUpstream)(pipe(Route.literal("integrations"), Route.slash(Route.literal("upstream"))));
+const localChooseRouter = Route.mapTo(AppRoute.LocalChoose)(pipe(Route.literal("local"), Route.slash(Route.literal("choose"))));
+const localModelsRedirectRouter = Route.mapTo(AppRoute.LocalChoose)(pipe(Route.literal("local"), Route.slash(Route.literal("models"))));
+const localMatrixRedirectRouter = Route.mapTo(AppRoute.LocalSwap)(pipe(Route.literal("local"), Route.slash(Route.literal("matrix"))));
+const routerConfigRedirectRouter = Route.mapTo(AppRoute.Router)(pipe(Route.literal("router"), Route.slash(Route.literal("config"))));
 const systemPeersRouter = Route.mapTo(AppRoute.SystemPeers)(
   pipe(Route.literal("system"), Route.slash(Route.literal("peers"))),
 );
@@ -119,6 +132,14 @@ export const appRouter = Route.oneOf(
   routerDecisionsRouter,
   localPeersRouter,
   systemPeersRouter,
+  localPeerModelsRouter,
+  queuesConfigurationRouter,
+  integrationsDownstreamRouter,
+  integrationsUpstreamRouter,
+  localChooseRouter,
+  localModelsRedirectRouter,
+  localMatrixRedirectRouter,
+  routerConfigRedirectRouter,
   runtimeRouter,
   sessionReadinessRouter,
   dashboardRouter,

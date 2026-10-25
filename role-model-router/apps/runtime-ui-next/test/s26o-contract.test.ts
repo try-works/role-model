@@ -11,7 +11,7 @@ const read = (key: string): unknown => JSON.parse(readFileSync(path.join(fixture
 const readbackKeys: readonly ReadbackKey[] = [
   "storeReceipts","queues","localLogs","routerCandidates","requests","routerDecisions",
   "localPeers","systemPeers","runtime","sessionReadiness","dashboard","localSwap",
-  "observeActivity","observeLogs","observeRouting","router",
+  "observeActivity","observeLogs","observeRouting","router","localPeerModels","queueConfig","downstreamOpenAI","integrationProviders",
 ];
 const controlKeys: readonly ControlKey[] = ["providers", "endpoints", "controlController"];
 const expectedStatus: Partial<Record<ReadbackKey, string>> = {
@@ -19,6 +19,7 @@ const expectedStatus: Partial<Record<ReadbackKey, string>> = {
   observeActivity: "empty", observeLogs: "empty", observeRouting: "empty",
   requests: "empty", routerDecisions: "empty", storeReceipts: "empty", systemPeers: "empty",
   queues: "ok", router: "ok", routerCandidates: "ok", runtime: "ok", sessionReadiness: "ok",
+  localPeerModels: "empty", queueConfig: "ok", downstreamOpenAI: "ok", integrationProviders: "ok",
 };
 
 describe("S26o captured-host parser contracts", () => {

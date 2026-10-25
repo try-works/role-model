@@ -1,0 +1,478 @@
+{
+  "schemaVersion": "role-model.queue-policy.v1",
+  "policyVersion": 1,
+  "updatedAt": null,
+  "path": "E:\\rm-tmp\\s31a\\visual-state\\standalone-runtime-dev\\queues\\queue-policy.json",
+  "global": {
+    "killSwitch": false
+  },
+  "catalogue": [
+    {
+      "name": "replay.dispatch",
+      "owner": "runtime-host",
+      "jobIdRule": "captureRef",
+      "fields": [
+        {
+          "name": "mode",
+          "type": "enum",
+          "values": [
+            "legacy",
+            "shadow",
+            "queue"
+          ],
+          "unit": "mode",
+          "default": "queue",
+          "uiEditable": true,
+          "description": "How this stage is scheduled: `legacy` keeps the hand-rolled path authoritative, `shadow` runs the queue beside it and records what it would have done, `queue` makes the queue authoritative. Rollback is a write back to `legacy`."
+        },
+        {
+          "name": "concurrency",
+          "type": "integer",
+          "unit": "jobs",
+          "min": 1,
+          "max": 16,
+          "uiEditable": true,
+          "description": "How many jobs of this queue may run at once, across every host that shares the store.",
+          "default": 5
+        },
+        {
+          "name": "attempts",
+          "type": "integer",
+          "unit": "attempts",
+          "min": 1,
+          "max": 10,
+          "uiEditable": true,
+          "description": "Total attempts before a job becomes terminal `failed` carrying its named error - this replaces the replay deferral budget.",
+          "default": 5
+        },
+        {
+          "name": "attemptTimeoutMs",
+          "type": "integer",
+          "unit": "ms",
+          "min": 5000,
+          "max": 3600000,
+          "uiEditable": true,
+          "description": "Wall clock one attempt may take. A handler that exceeds it is interrupted, the attempt is consumed and the job is retried with the usual backoff. It must stay at or below `lockExpirationMs`, and it should sit above the handler's observed p99.",
+          "default": 600000
+        },
+        {
+          "name": "backoffBaseMs",
+          "type": "integer",
+          "unit": "ms",
+          "min": 100,
+          "max": 60000,
+          "uiEditable": true,
+          "description": "First retry delay; the schedule grows exponentially from here.",
+          "default": 1000
+        },
+        {
+          "name": "backoffCapMs",
+          "type": "integer",
+          "unit": "ms",
+          "min": 1000,
+          "max": 900000,
+          "uiEditable": true,
+          "description": "Upper bound on a retry delay.",
+          "default": 300000
+        },
+        {
+          "name": "lockRefreshMs",
+          "type": "integer",
+          "unit": "ms",
+          "min": 1000,
+          "max": 300000,
+          "uiEditable": true,
+          "description": "How often a running handler renews its claim; a crashed worker stops renewing here.",
+          "default": 30000
+        },
+        {
+          "name": "lockExpirationMs",
+          "type": "integer",
+          "unit": "ms",
+          "min": 5000,
+          "max": 3600000,
+          "uiEditable": true,
+          "description": "When an unrenewed claim expires and the job becomes claimable again by any host. The evaluation plane keeps 15 minutes to match its documented stranded-job grace.",
+          "default": 900000
+        },
+        {
+          "name": "retentionDays",
+          "type": "integer",
+          "unit": "days",
+          "min": 1,
+          "max": 730,
+          "uiEditable": true,
+          "description": "How long completed and failed job rows are kept for operator readback. Evidence stores are never governed by this value.",
+          "default": 30
+        }
+      ]
+    },
+    {
+      "name": "evaluation.score",
+      "owner": "runtime-operations",
+      "jobIdRule": "evaluation:<origin>:<groupId>",
+      "fields": [
+        {
+          "name": "mode",
+          "type": "enum",
+          "values": [
+            "legacy",
+            "shadow",
+            "queue"
+          ],
+          "unit": "mode",
+          "default": "queue",
+          "uiEditable": true,
+          "description": "How this stage is scheduled: `legacy` keeps the hand-rolled path authoritative, `shadow` runs the queue beside it and records what it would have done, `queue` makes the queue authoritative. Rollback is a write back to `legacy`."
+        },
+        {
+          "name": "concurrency",
+          "type": "integer",
+          "unit": "jobs",
+          "min": 1,
+          "max": 16,
+          "uiEditable": true,
+          "description": "How many jobs of this queue may run at once, across every host that shares the store.",
+          "default": 4
+        },
+        {
+          "name": "attempts",
+          "type": "integer",
+          "unit": "attempts",
+          "min": 1,
+          "max": 10,
+          "uiEditable": true,
+          "description": "Total attempts before a job becomes terminal `failed` carrying its named error - this replaces the replay deferral budget.",
+          "default": 4
+        },
+        {
+          "name": "attemptTimeoutMs",
+          "type": "integer",
+          "unit": "ms",
+          "min": 5000,
+          "max": 3600000,
+          "uiEditable": true,
+          "description": "Wall clock one attempt may take. A handler that exceeds it is interrupted, the attempt is consumed and the job is retried with the usual backoff. It must stay at or below `lockExpirationMs`, and it should sit above the handler's observed p99.",
+          "default": 870000
+        },
+        {
+          "name": "backoffBaseMs",
+          "type": "integer",
+          "unit": "ms",
+          "min": 100,
+          "max": 60000,
+          "uiEditable": true,
+          "description": "First retry delay; the schedule grows exponentially from here.",
+          "default": 2000
+        },
+        {
+          "name": "backoffCapMs",
+          "type": "integer",
+          "unit": "ms",
+          "min": 1000,
+          "max": 900000,
+          "uiEditable": true,
+          "description": "Upper bound on a retry delay.",
+          "default": 60000
+        },
+        {
+          "name": "lockRefreshMs",
+          "type": "integer",
+          "unit": "ms",
+          "min": 1000,
+          "max": 300000,
+          "uiEditable": true,
+          "description": "How often a running handler renews its claim; a crashed worker stops renewing here.",
+          "default": 30000
+        },
+        {
+          "name": "lockExpirationMs",
+          "type": "integer",
+          "unit": "ms",
+          "min": 5000,
+          "max": 3600000,
+          "uiEditable": true,
+          "description": "When an unrenewed claim expires and the job becomes claimable again by any host. The evaluation plane keeps 15 minutes to match its documented stranded-job grace.",
+          "default": 900000
+        },
+        {
+          "name": "retentionDays",
+          "type": "integer",
+          "unit": "days",
+          "min": 1,
+          "max": 730,
+          "uiEditable": true,
+          "description": "How long completed and failed job rows are kept for operator readback. Evidence stores are never governed by this value.",
+          "default": 30
+        }
+      ]
+    },
+    {
+      "name": "learner.derive",
+      "owner": "runtime-host",
+      "jobIdRule": "groupId",
+      "fields": [
+        {
+          "name": "mode",
+          "type": "enum",
+          "values": [
+            "legacy",
+            "shadow",
+            "queue"
+          ],
+          "unit": "mode",
+          "default": "queue",
+          "uiEditable": true,
+          "description": "How this stage is scheduled: `legacy` keeps the hand-rolled path authoritative, `shadow` runs the queue beside it and records what it would have done, `queue` makes the queue authoritative. Rollback is a write back to `legacy`."
+        },
+        {
+          "name": "concurrency",
+          "type": "integer",
+          "unit": "jobs",
+          "min": 1,
+          "max": 16,
+          "uiEditable": true,
+          "description": "How many jobs of this queue may run at once, across every host that shares the store.",
+          "default": 2
+        },
+        {
+          "name": "attempts",
+          "type": "integer",
+          "unit": "attempts",
+          "min": 1,
+          "max": 10,
+          "uiEditable": true,
+          "description": "Total attempts before a job becomes terminal `failed` carrying its named error - this replaces the replay deferral budget.",
+          "default": 3
+        },
+        {
+          "name": "attemptTimeoutMs",
+          "type": "integer",
+          "unit": "ms",
+          "min": 5000,
+          "max": 3600000,
+          "uiEditable": true,
+          "description": "Wall clock one attempt may take. A handler that exceeds it is interrupted, the attempt is consumed and the job is retried with the usual backoff. It must stay at or below `lockExpirationMs`, and it should sit above the handler's observed p99.",
+          "default": 270000
+        },
+        {
+          "name": "backoffBaseMs",
+          "type": "integer",
+          "unit": "ms",
+          "min": 100,
+          "max": 60000,
+          "uiEditable": true,
+          "description": "First retry delay; the schedule grows exponentially from here.",
+          "default": 2000
+        },
+        {
+          "name": "backoffCapMs",
+          "type": "integer",
+          "unit": "ms",
+          "min": 1000,
+          "max": 900000,
+          "uiEditable": true,
+          "description": "Upper bound on a retry delay.",
+          "default": 60000
+        },
+        {
+          "name": "lockRefreshMs",
+          "type": "integer",
+          "unit": "ms",
+          "min": 1000,
+          "max": 300000,
+          "uiEditable": true,
+          "description": "How often a running handler renews its claim; a crashed worker stops renewing here.",
+          "default": 30000
+        },
+        {
+          "name": "lockExpirationMs",
+          "type": "integer",
+          "unit": "ms",
+          "min": 5000,
+          "max": 3600000,
+          "uiEditable": true,
+          "description": "When an unrenewed claim expires and the job becomes claimable again by any host. The evaluation plane keeps 15 minutes to match its documented stranded-job grace.",
+          "default": 300000
+        },
+        {
+          "name": "retentionDays",
+          "type": "integer",
+          "unit": "days",
+          "min": 1,
+          "max": 730,
+          "uiEditable": true,
+          "description": "How long completed and failed job rows are kept for operator readback. Evidence stores are never governed by this value.",
+          "default": 30
+        }
+      ]
+    },
+    {
+      "name": "learner.promote",
+      "owner": "runtime-host",
+      "jobIdRule": "candidateId",
+      "fields": [
+        {
+          "name": "mode",
+          "type": "enum",
+          "values": [
+            "legacy",
+            "shadow",
+            "queue"
+          ],
+          "unit": "mode",
+          "default": "queue",
+          "uiEditable": true,
+          "description": "How this stage is scheduled: `legacy` keeps the hand-rolled path authoritative, `shadow` runs the queue beside it and records what it would have done, `queue` makes the queue authoritative. Rollback is a write back to `legacy`."
+        },
+        {
+          "name": "concurrency",
+          "type": "integer",
+          "unit": "jobs",
+          "min": 1,
+          "max": 16,
+          "uiEditable": true,
+          "description": "How many jobs of this queue may run at once, across every host that shares the store.",
+          "default": 1
+        },
+        {
+          "name": "attempts",
+          "type": "integer",
+          "unit": "attempts",
+          "min": 1,
+          "max": 10,
+          "uiEditable": true,
+          "description": "Total attempts before a job becomes terminal `failed` carrying its named error - this replaces the replay deferral budget.",
+          "default": 3
+        },
+        {
+          "name": "attemptTimeoutMs",
+          "type": "integer",
+          "unit": "ms",
+          "min": 5000,
+          "max": 3600000,
+          "uiEditable": true,
+          "description": "Wall clock one attempt may take. A handler that exceeds it is interrupted, the attempt is consumed and the job is retried with the usual backoff. It must stay at or below `lockExpirationMs`, and it should sit above the handler's observed p99.",
+          "default": 270000
+        },
+        {
+          "name": "backoffBaseMs",
+          "type": "integer",
+          "unit": "ms",
+          "min": 100,
+          "max": 60000,
+          "uiEditable": true,
+          "description": "First retry delay; the schedule grows exponentially from here.",
+          "default": 5000
+        },
+        {
+          "name": "backoffCapMs",
+          "type": "integer",
+          "unit": "ms",
+          "min": 1000,
+          "max": 900000,
+          "uiEditable": true,
+          "description": "Upper bound on a retry delay.",
+          "default": 300000
+        },
+        {
+          "name": "lockRefreshMs",
+          "type": "integer",
+          "unit": "ms",
+          "min": 1000,
+          "max": 300000,
+          "uiEditable": true,
+          "description": "How often a running handler renews its claim; a crashed worker stops renewing here.",
+          "default": 30000
+        },
+        {
+          "name": "lockExpirationMs",
+          "type": "integer",
+          "unit": "ms",
+          "min": 5000,
+          "max": 3600000,
+          "uiEditable": true,
+          "description": "When an unrenewed claim expires and the job becomes claimable again by any host. The evaluation plane keeps 15 minutes to match its documented stranded-job grace.",
+          "default": 300000
+        },
+        {
+          "name": "retentionDays",
+          "type": "integer",
+          "unit": "days",
+          "min": 1,
+          "max": 730,
+          "uiEditable": true,
+          "description": "How long completed and failed job rows are kept for operator readback. Evidence stores are never governed by this value.",
+          "default": 30
+        }
+      ]
+    }
+  ],
+  "effective": [
+    {
+      "queue": "replay.dispatch",
+      "mode": "queue",
+      "concurrency": 5,
+      "attempts": 5,
+      "attemptTimeoutMs": 600000,
+      "backoffBaseMs": 1000,
+      "backoffCapMs": 300000,
+      "lockRefreshMs": 30000,
+      "lockExpirationMs": 900000,
+      "retentionDays": 30,
+      "killSwitch": false,
+      "policyVersion": 1,
+      "schemaVersion": "role-model.queue-policy.v1",
+      "policyDigest": "sha256:a284898aa1a58485906e1b9f18b8daf8afbb02401d4e651a475da9764301a570"
+    },
+    {
+      "queue": "evaluation.score",
+      "mode": "queue",
+      "concurrency": 4,
+      "attempts": 4,
+      "attemptTimeoutMs": 870000,
+      "backoffBaseMs": 2000,
+      "backoffCapMs": 60000,
+      "lockRefreshMs": 30000,
+      "lockExpirationMs": 900000,
+      "retentionDays": 30,
+      "killSwitch": false,
+      "policyVersion": 1,
+      "schemaVersion": "role-model.queue-policy.v1",
+      "policyDigest": "sha256:a284898aa1a58485906e1b9f18b8daf8afbb02401d4e651a475da9764301a570"
+    },
+    {
+      "queue": "learner.derive",
+      "mode": "queue",
+      "concurrency": 2,
+      "attempts": 3,
+      "attemptTimeoutMs": 270000,
+      "backoffBaseMs": 2000,
+      "backoffCapMs": 60000,
+      "lockRefreshMs": 30000,
+      "lockExpirationMs": 300000,
+      "retentionDays": 30,
+      "killSwitch": false,
+      "policyVersion": 1,
+      "schemaVersion": "role-model.queue-policy.v1",
+      "policyDigest": "sha256:a284898aa1a58485906e1b9f18b8daf8afbb02401d4e651a475da9764301a570"
+    },
+    {
+      "queue": "learner.promote",
+      "mode": "queue",
+      "concurrency": 1,
+      "attempts": 3,
+      "attemptTimeoutMs": 270000,
+      "backoffBaseMs": 5000,
+      "backoffCapMs": 300000,
+      "lockRefreshMs": 30000,
+      "lockExpirationMs": 300000,
+      "retentionDays": 30,
+      "killSwitch": false,
+      "policyVersion": 1,
+      "schemaVersion": "role-model.queue-policy.v1",
+      "policyDigest": "sha256:a284898aa1a58485906e1b9f18b8daf8afbb02401d4e651a475da9764301a570"
+    }
+  ],
+  "receipts": []
+}

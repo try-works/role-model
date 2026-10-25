@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { mountShell } from "../src/mount";
@@ -40,6 +42,11 @@ interface RouteCase {
   readonly emptyBody: unknown;
   readonly successText: string;
 }
+
+const fixture = (key: string): unknown =>
+  JSON.parse(
+    readFileSync(path.join(import.meta.dirname, "fixtures", "s26o", key + ".json"), "utf8"),
+  );
 
 const routes: readonly RouteCase[] = [
   {
@@ -227,6 +234,36 @@ const routes: readonly RouteCase[] = [
     stateTestName: "Router decision detail renders success, empty, loading and error on the DOM",
     successBody: { endpointId: "ep-1", requestId: "req-1", routingDecisionId: "decision-1", statusFamily: "success" },
     successText: "req-1",
+  },
+  {
+    emptyBody: {},
+    emptyText: "No queue configuration available.",
+    key: "queueConfig",
+    label: "Queue configuration",
+    path: "/control/queues-config",
+    stateTestName: "Queue configuration renders success, empty, loading and error on the DOM",
+    successBody: fixture("queueConfig"),
+    successText: "policyVersion",
+  },
+  {
+    emptyBody: {},
+    emptyText: "No downstream OpenAI configuration available.",
+    key: "downstreamOpenAI",
+    label: "Downstream OpenAI",
+    path: "/integrations/downstream",
+    stateTestName: "Downstream OpenAI renders success, empty, loading and error on the DOM",
+    successBody: fixture("downstreamOpenAI"),
+    successText: "role-model-dev",
+  },
+  {
+    emptyBody: [],
+    emptyText: "No integration providers configured yet.",
+    key: "integrationProviders",
+    label: "Integration providers",
+    path: "/integrations/upstream",
+    stateTestName: "Integration providers renders success, empty, loading and error on the DOM",
+    successBody: fixture("integrationProviders"),
+    successText: "302ai",
   },
 ];
 

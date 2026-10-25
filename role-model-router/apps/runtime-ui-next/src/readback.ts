@@ -23,7 +23,11 @@ export type ReadbackKey =
   | "observeRouting"
   | "router"
   | "requestDetail"
-  | "routerDecisionDetail";
+  | "routerDecisionDetail"
+  | "localPeerModels"
+  | "queueConfig"
+  | "downstreamOpenAI"
+  | "integrationProviders";
 
 export const ReadbackKeySchema = Schema.Literals([
   "storeReceipts",
@@ -44,6 +48,10 @@ export const ReadbackKeySchema = Schema.Literals([
   "router",
   "requestDetail",
   "routerDecisionDetail",
+  "localPeerModels",
+  "queueConfig",
+  "downstreamOpenAI",
+  "integrationProviders",
 ]);
 
 export interface ReadbackRow {
@@ -85,6 +93,10 @@ export const ReadbacksState = Schema.Struct({
   router: ReadbackState,
   requestDetail: ReadbackState,
   routerDecisionDetail: ReadbackState,
+  localPeerModels: ReadbackState,
+  queueConfig: ReadbackState,
+  downstreamOpenAI: ReadbackState,
+  integrationProviders: ReadbackState,
   runtime: ReadbackState,
   sessionReadiness: ReadbackState,
   storeReceipts: ReadbackState,
@@ -120,6 +132,10 @@ export const emptyReadbacks = (): ReadbacksState => ({
   router: idleReadback(),
   requestDetail: idleReadback(),
   routerDecisionDetail: idleReadback(),
+  localPeerModels: idleReadback(),
+  queueConfig: idleReadback(),
+  downstreamOpenAI: idleReadback(),
+  integrationProviders: idleReadback(),
   runtime: idleReadback(),
   sessionReadiness: idleReadback(),
   storeReceipts: idleReadback(),
@@ -483,6 +499,38 @@ const parseRouterCandidates = (body: unknown, token: number): ReadbackState => {
   return okRows(rows, token);
 };
 
+const parseScalarRows = (label: string) => (body: unknown, token: number): ReadbackState => {
+  const record = asRecord(body);
+  if (record === undefined) return failedReadback(label + " read failed: invalid response", token);
+  const rows = Object.entries(record)
+    .filter(([, value]) => typeof value === "string" || typeof value === "number" || typeof value === "boolean")
+    .slice(0, 40)
+    .map(([key, value]) => row(key, key, String(value), label));
+  return okRows(rows, token);
+};
+const parseLocalPeerModels = (body: unknown, token: number): ReadbackState => {
+  const list = Array.isArray(body) ? body : asArray(asRecord(body)?.models);
+  const rows = list.flatMap((value, index) => {
+    const model = asRecord(value);
+    if (model === undefined) return [];
+    const id = String(model.modelId ?? model.id ?? index);
+    return [row(id, String(model.modelId ?? model.id ?? id), String(model.status ?? model.provider ?? ""), String(model.peerId ?? model.endpointId ?? ""))];
+  });
+  return okRows(rows, token);
+};
+const parseQueueConfig = parseScalarRows("Queue config");
+const parseDownstreamOpenAI = parseScalarRows("Downstream OpenAI");
+const parseIntegrationProviders = (body: unknown, token: number): ReadbackState => {
+  const list = Array.isArray(body) ? body : asArray(asRecord(body)?.providers);
+  const rows = list.flatMap((value, index) => {
+    const provider = asRecord(value);
+    if (provider === undefined) return [];
+    const id = String(provider.providerId ?? provider.id ?? index);
+    return [row(id, String(provider.providerId ?? provider.id ?? id), String(provider.providerKind ?? provider.kind ?? ""), String(provider.status ?? ""))];
+  });
+  return okRows(rows, token);
+};
+
 const parseObservationDetail = (body: unknown, token: number): ReadbackState => {
   const record = asRecord(body);
   if (record === undefined) return failedReadback("Detail read failed: invalid response", token);
@@ -584,6 +632,34 @@ export const READBACK_SPECS: Readonly<Record<ReadbackKey, ReadbackRouteSpec>> = 
     parse: parseObservationDetail,
     path: READBACK_PATHS.routerDecisionDetail,
     pathFor: (id) => READBACK_PATHS.routerDecisionDetail + encodeURIComponent(id),
+  },
+  localPeerModels: {
+    emptyText: "No peer models configured yet.",
+    key: "localPeerModels",
+    label: "Peer models",
+    parse: parseLocalPeerModels,
+    path: READBACK_PATHS.localPeerModels,
+  },
+  queueConfig: {
+    emptyText: "No queue configuration available.",
+    key: "queueConfig",
+    label: "Queue configuration",
+    parse: parseQueueConfig,
+    path: READBACK_PATHS.queueConfig,
+  },
+  downstreamOpenAI: {
+    emptyText: "No downstream OpenAI configuration available.",
+    key: "downstreamOpenAI",
+    label: "Downstream OpenAI",
+    parse: parseDownstreamOpenAI,
+    path: READBACK_PATHS.downstreamOpenAI,
+  },
+  integrationProviders: {
+    emptyText: "No integration providers configured yet.",
+    key: "integrationProviders",
+    label: "Integration providers",
+    parse: parseIntegrationProviders,
+    path: READBACK_PATHS.integrationProviders,
   },
   requests: {
     emptyText: "No telemetry requests recorded yet.",
@@ -687,6 +763,10 @@ export const createReadbackClients = (
   storeReceipts: createReadbackClient(READBACK_SPECS.storeReceipts, options),
   requestDetail: createReadbackClient(READBACK_SPECS.requestDetail, options),
   routerDecisionDetail: createReadbackClient(READBACK_SPECS.routerDecisionDetail, options),
+  localPeerModels: createReadbackClient(READBACK_SPECS.localPeerModels, options),
+  queueConfig: createReadbackClient(READBACK_SPECS.queueConfig, options),
+  downstreamOpenAI: createReadbackClient(READBACK_SPECS.downstreamOpenAI, options),
+  integrationProviders: createReadbackClient(READBACK_SPECS.integrationProviders, options),
 });
 
 export const readbackFromResult = (
@@ -814,6 +894,14 @@ export const readbackKeyForRouteTag = (tag: string): ReadbackKey | null =>
                                     ? "requestDetail"
                                     : tag === "RouterDecisionDetail"
                                       ? "routerDecisionDetail"
-                                      : null;
+                                      : tag === "LocalPeerModels"
+                                        ? "localPeerModels"
+                                        : tag === "QueuesConfiguration"
+                                          ? "queueConfig"
+                                          : tag === "IntegrationsDownstream"
+                                            ? "downstreamOpenAI"
+                                            : tag === "IntegrationsUpstream"
+                                              ? "integrationProviders"
+                                              : null;
 export const parseReadbackFixture = (key: ReadbackKey, body: unknown, token = 1): ReadbackState =>
   READBACK_SPECS[key].parse(body, token);

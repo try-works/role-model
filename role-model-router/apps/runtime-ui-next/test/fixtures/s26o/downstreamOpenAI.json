@@ -1,0 +1,569 @@
+{
+  "contractVersion": "role-model.downstream.openai.v1",
+  "kind": "openai-compatible",
+  "providerId": "role-model-runtime",
+  "displayName": "role-model-dev",
+  "baseUrl": "http://127.0.0.1:5783",
+  "endpoints": {
+    "health": "http://127.0.0.1:5783/healthz",
+    "models": "http://127.0.0.1:5783/v1/models",
+    "chatCompletions": "http://127.0.0.1:5783/v1/chat/completions",
+    "responses": "http://127.0.0.1:5783/v1/responses"
+  },
+  "authentication": {
+    "type": "bearer",
+    "headerName": "Authorization",
+    "required": false,
+    "placeholderToken": "role-model-local",
+    "note": "Inbound bearer validation is not enforced yet. If a downstream client requires a token field, use this placeholder value."
+  },
+  "models": [
+    {
+      "id": "anthropic.team.shared.us-east-1.default",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "anthropic.team.shared.us-east-1.default"
+      ],
+      "type": "endpoint",
+      "targetModelIds": [
+        "claude-3.7-sonnet"
+      ],
+      "canonicalModelIds": [
+        "claude-3.7-sonnet"
+      ],
+      "providerIds": [
+        "anthropic"
+      ],
+      "limits": {
+        "safeContextWindow": 200000,
+        "safeMaxOutputTokens": 8192,
+        "maxContextWindow": 200000,
+        "maxOutputTokens": 8192
+      },
+      "modalities": {
+        "guaranteedInput": [
+          "text"
+        ],
+        "availableInput": [
+          "text"
+        ],
+        "conditionalInput": {},
+        "output": [
+          "text"
+        ]
+      },
+      "capabilities": {
+        "guaranteed": [
+          "text.chat",
+          "tools.function_calling"
+        ],
+        "available": [
+          "text.chat",
+          "tools.function_calling"
+        ],
+        "conditional": {},
+        "tools": {
+          "functionCalling": true
+        },
+        "reasoning": {
+          "supported": false,
+          "effortControl": false,
+          "effortLevels": []
+        },
+        "structuredOutput": {
+          "supported": false
+        },
+        "caching": {
+          "promptRead": false,
+          "promptWrite": false,
+          "source": "catalog"
+        }
+      },
+      "declared": {
+        "modelIds": [
+          "claude-3.7-sonnet"
+        ],
+        "endpointIds": [
+          "anthropic.team.shared.us-east-1.default"
+        ]
+      },
+      "routable": {
+        "modelIds": [
+          "claude-3.7-sonnet"
+        ],
+        "endpointIds": [
+          "anthropic.team.shared.us-east-1.default"
+        ]
+      },
+      "piMapping": {
+        "contextWindow": 200000,
+        "maxTokens": 8192,
+        "compat": {
+          "supportsDeveloperRole": false,
+          "sendSessionAffinityHeaders": false,
+          "supportsLongCacheRetention": false
+        }
+      },
+      "sources": [
+        "catalog:claude-3.7-sonnet"
+      ],
+      "upstream_model_id": "claude-3.7-sonnet",
+      "fixed_effort": null
+    },
+    {
+      "id": "claude-3.7-sonnet",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "anthropic.team.shared.us-east-1.default"
+      ],
+      "type": "model",
+      "targetModelIds": [
+        "claude-3.7-sonnet"
+      ],
+      "canonicalModelIds": [
+        "claude-3.7-sonnet"
+      ],
+      "providerIds": [
+        "anthropic"
+      ],
+      "limits": {
+        "safeContextWindow": 200000,
+        "safeMaxOutputTokens": 8192,
+        "maxContextWindow": 200000,
+        "maxOutputTokens": 8192
+      },
+      "modalities": {
+        "guaranteedInput": [
+          "text"
+        ],
+        "availableInput": [
+          "text"
+        ],
+        "conditionalInput": {},
+        "output": [
+          "text"
+        ]
+      },
+      "capabilities": {
+        "guaranteed": [
+          "text.chat",
+          "tools.function_calling"
+        ],
+        "available": [
+          "text.chat",
+          "tools.function_calling"
+        ],
+        "conditional": {},
+        "tools": {
+          "functionCalling": true
+        },
+        "reasoning": {
+          "supported": false,
+          "effortControl": false,
+          "effortLevels": []
+        },
+        "structuredOutput": {
+          "supported": false
+        },
+        "caching": {
+          "promptRead": false,
+          "promptWrite": false,
+          "source": "catalog"
+        }
+      },
+      "declared": {
+        "modelIds": [
+          "claude-3.7-sonnet"
+        ],
+        "endpointIds": [
+          "anthropic.team.shared.us-east-1.default"
+        ]
+      },
+      "routable": {
+        "modelIds": [
+          "claude-3.7-sonnet"
+        ],
+        "endpointIds": [
+          "anthropic.team.shared.us-east-1.default"
+        ]
+      },
+      "piMapping": {
+        "contextWindow": 200000,
+        "maxTokens": 8192,
+        "compat": {
+          "supportsDeveloperRole": false,
+          "sendSessionAffinityHeaders": false,
+          "supportsLongCacheRetention": false
+        }
+      },
+      "sources": [
+        "catalog:claude-3.7-sonnet"
+      ]
+    },
+    {
+      "id": "cli.local.coder",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "cli.local.coder"
+      ],
+      "type": "endpoint",
+      "targetModelIds": [
+        "gpt-5.4"
+      ],
+      "canonicalModelIds": [],
+      "providerIds": [
+        "unknown"
+      ],
+      "limits": {
+        "safeContextWindow": null,
+        "safeMaxOutputTokens": null,
+        "maxContextWindow": null,
+        "maxOutputTokens": null
+      },
+      "modalities": {
+        "guaranteedInput": [],
+        "availableInput": [],
+        "conditionalInput": {},
+        "output": []
+      },
+      "capabilities": {
+        "guaranteed": [],
+        "available": [],
+        "conditional": {},
+        "tools": {
+          "functionCalling": false
+        },
+        "reasoning": {
+          "supported": false,
+          "effortControl": false,
+          "effortLevels": []
+        },
+        "structuredOutput": {
+          "supported": false
+        },
+        "caching": {
+          "promptRead": null,
+          "promptWrite": null,
+          "source": "unknown"
+        }
+      },
+      "declared": {
+        "modelIds": [
+          "gpt-5.4"
+        ],
+        "endpointIds": [
+          "cli.local.coder"
+        ]
+      },
+      "routable": {
+        "modelIds": [
+          "gpt-5.4"
+        ],
+        "endpointIds": [
+          "cli.local.coder"
+        ]
+      },
+      "piMapping": {
+        "contextWindow": null,
+        "maxTokens": null,
+        "compat": {
+          "supportsDeveloperRole": false,
+          "sendSessionAffinityHeaders": false,
+          "supportsLongCacheRetention": false
+        }
+      },
+      "sources": [],
+      "upstream_model_id": "gpt-5.4",
+      "fixed_effort": null
+    },
+    {
+      "id": "gpt-5.4",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "cli.local.coder"
+      ],
+      "type": "model",
+      "targetModelIds": [
+        "gpt-5.4"
+      ],
+      "canonicalModelIds": [],
+      "providerIds": [
+        "unknown"
+      ],
+      "limits": {
+        "safeContextWindow": null,
+        "safeMaxOutputTokens": null,
+        "maxContextWindow": null,
+        "maxOutputTokens": null
+      },
+      "modalities": {
+        "guaranteedInput": [],
+        "availableInput": [],
+        "conditionalInput": {},
+        "output": []
+      },
+      "capabilities": {
+        "guaranteed": [],
+        "available": [],
+        "conditional": {},
+        "tools": {
+          "functionCalling": false
+        },
+        "reasoning": {
+          "supported": false,
+          "effortControl": false,
+          "effortLevels": []
+        },
+        "structuredOutput": {
+          "supported": false
+        },
+        "caching": {
+          "promptRead": null,
+          "promptWrite": null,
+          "source": "unknown"
+        }
+      },
+      "declared": {
+        "modelIds": [
+          "gpt-5.4"
+        ],
+        "endpointIds": [
+          "cli.local.coder"
+        ]
+      },
+      "routable": {
+        "modelIds": [
+          "gpt-5.4"
+        ],
+        "endpointIds": [
+          "cli.local.coder"
+        ]
+      },
+      "piMapping": {
+        "contextWindow": null,
+        "maxTokens": null,
+        "compat": {
+          "supportsDeveloperRole": false,
+          "sendSessionAffinityHeaders": false,
+          "supportsLongCacheRetention": false
+        }
+      },
+      "sources": []
+    },
+    {
+      "id": "openai.personal.primary.us-east-1.fast",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "openai.personal.primary.us-east-1.fast"
+      ],
+      "type": "endpoint",
+      "targetModelIds": [
+        "openai/gpt-4.1-mini-fast"
+      ],
+      "canonicalModelIds": [
+        "openai/gpt-4.1-mini-fast"
+      ],
+      "providerIds": [
+        "openai"
+      ],
+      "limits": {
+        "safeContextWindow": 1047576,
+        "safeMaxOutputTokens": 32768,
+        "maxContextWindow": 1047576,
+        "maxOutputTokens": 32768
+      },
+      "modalities": {
+        "guaranteedInput": [
+          "text"
+        ],
+        "availableInput": [
+          "text"
+        ],
+        "conditionalInput": {},
+        "output": [
+          "text"
+        ]
+      },
+      "capabilities": {
+        "guaranteed": [
+          "latency.optimized",
+          "structured.output",
+          "text.chat",
+          "tools.function_calling"
+        ],
+        "available": [
+          "latency.optimized",
+          "structured.output",
+          "text.chat",
+          "tools.function_calling"
+        ],
+        "conditional": {},
+        "tools": {
+          "functionCalling": true
+        },
+        "reasoning": {
+          "supported": false,
+          "effortControl": false,
+          "effortLevels": []
+        },
+        "structuredOutput": {
+          "supported": true
+        },
+        "caching": {
+          "promptRead": false,
+          "promptWrite": false,
+          "source": "catalog"
+        }
+      },
+      "declared": {
+        "modelIds": [
+          "openai/gpt-4.1-mini-fast"
+        ],
+        "endpointIds": [
+          "openai.personal.primary.us-east-1.fast"
+        ]
+      },
+      "routable": {
+        "modelIds": [
+          "openai/gpt-4.1-mini-fast"
+        ],
+        "endpointIds": [
+          "openai.personal.primary.us-east-1.fast"
+        ]
+      },
+      "piMapping": {
+        "contextWindow": 1047576,
+        "maxTokens": 32768,
+        "compat": {
+          "supportsDeveloperRole": false,
+          "sendSessionAffinityHeaders": true,
+          "supportsLongCacheRetention": true
+        }
+      },
+      "sources": [
+        "catalog:openai/gpt-4.1-mini-fast"
+      ],
+      "upstream_model_id": "openai/gpt-4.1-mini-fast",
+      "fixed_effort": null
+    },
+    {
+      "id": "openai/gpt-4.1-mini-fast",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "openai.personal.primary.us-east-1.fast"
+      ],
+      "type": "model",
+      "targetModelIds": [
+        "openai/gpt-4.1-mini-fast"
+      ],
+      "canonicalModelIds": [
+        "openai/gpt-4.1-mini-fast"
+      ],
+      "providerIds": [
+        "openai"
+      ],
+      "limits": {
+        "safeContextWindow": 1047576,
+        "safeMaxOutputTokens": 32768,
+        "maxContextWindow": 1047576,
+        "maxOutputTokens": 32768
+      },
+      "modalities": {
+        "guaranteedInput": [
+          "text"
+        ],
+        "availableInput": [
+          "text"
+        ],
+        "conditionalInput": {},
+        "output": [
+          "text"
+        ]
+      },
+      "capabilities": {
+        "guaranteed": [
+          "latency.optimized",
+          "structured.output",
+          "text.chat",
+          "tools.function_calling"
+        ],
+        "available": [
+          "latency.optimized",
+          "structured.output",
+          "text.chat",
+          "tools.function_calling"
+        ],
+        "conditional": {},
+        "tools": {
+          "functionCalling": true
+        },
+        "reasoning": {
+          "supported": false,
+          "effortControl": false,
+          "effortLevels": []
+        },
+        "structuredOutput": {
+          "supported": true
+        },
+        "caching": {
+          "promptRead": false,
+          "promptWrite": false,
+          "source": "catalog"
+        }
+      },
+      "declared": {
+        "modelIds": [
+          "openai/gpt-4.1-mini-fast"
+        ],
+        "endpointIds": [
+          "openai.personal.primary.us-east-1.fast"
+        ]
+      },
+      "routable": {
+        "modelIds": [
+          "openai/gpt-4.1-mini-fast"
+        ],
+        "endpointIds": [
+          "openai.personal.primary.us-east-1.fast"
+        ]
+      },
+      "piMapping": {
+        "contextWindow": 1047576,
+        "maxTokens": 32768,
+        "compat": {
+          "supportsDeveloperRole": false,
+          "sendSessionAffinityHeaders": true,
+          "supportsLongCacheRetention": true
+        }
+      },
+      "sources": [
+        "catalog:openai/gpt-4.1-mini-fast"
+      ]
+    }
+  ],
+  "effort": {
+    "union": [],
+    "portableIntersection": []
+  },
+  "setup": {
+    "recommendedModel": "anthropic.team.shared.us-east-1.default",
+    "notes": [
+      "Configure downstream tooling as an OpenAI-compatible provider.",
+      "Use /api/role-model/downstream/openai for alias capability metadata.",
+      "Use GET /v1/models for the compact OpenAI-compatible model list.",
+      "Use conservative piMapping limits unless the request is routed with explicit conditional capability support."
+    ]
+  },
+  "freshness": {
+    "generatedAt": "2026-10-25T06:09:20.884Z",
+    "catalogVersion": "1",
+    "catalogCapturedAt": "2026-08-15T04:06:41.477Z",
+    "runtimeInventoryRevision": "896463c5b571ab16"
+  }
+}
