@@ -52,7 +52,7 @@ export const renderControlPage = (
             h.div([h.Class("mt-3 grid gap-2")], [
               h.label([h.Class("text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--rm-muted)]")], ["Controller endpoint"]),
               h.select(
-                [h.Class("w-full max-w-[560px] rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-2 py-1.5 text-[12px] text-[var(--rm-fg)]"), h.DataAttribute("controller-endpoint-select", ""), h.OnChange((value) => Message.ControllerEndpointSelected({ endpointId: value }))],
+                [h.AriaLabel("Controller endpoint"), h.Class("w-full max-w-[560px] rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-2 py-1.5 text-[12px] text-[var(--rm-fg)]"), h.DataAttribute("controller-endpoint-select", ""), h.OnChange((value) => Message.ControllerEndpointSelected({ endpointId: value }))],
                 (endpointOptions.length > 0 ? endpointOptions : state.selectedEndpointId === undefined ? [] : [state.selectedEndpointId]).map((id) =>
                   h.option([h.Value(id), ...(id === (state.selectedEndpointId ?? endpointOptions[0] ?? state.rows[0]?.value) ? [h.Selected(true)] : [])], [id]),
                 ),
