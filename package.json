@@ -80,7 +80,8 @@
     "turbo:build": "pnpm exec turbo run build --filter=./apps/* --filter=./packages/* --filter=./role-model-router/apps/* --filter=./role-model-router/packages/*",
     "turbo:test": "pnpm exec turbo run test --filter=./apps/* --filter=./packages/* --filter=./role-model-router/apps/* --filter=./role-model-router/packages/*",
     "runtime:verify-client-journeys": "node scripts/runtime/verify-client-journeys.mjs",
-    "runtime:compare-release": "node scripts/runtime/compare-release.mjs"
+    "runtime:compare-release": "node scripts/runtime/compare-release.mjs",
+    "runtime:verify-packaged-candidate": "node scripts/runtime/verify-packaged-candidate.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",

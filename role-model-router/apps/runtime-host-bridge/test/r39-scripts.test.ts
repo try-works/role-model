@@ -55,6 +55,30 @@ describe("S103a R39 scripts fail closed", () => {
     expect(result.status).not.toBe(0);
   }, 30_000);
 
+  it("verify-packaged-candidate exits 2 and prints NOT RUN when the package directory is missing", () => {
+    const result = script("verify-packaged-candidate.mjs", [
+      "--package-dir", path.join(root, "definitely-not-a-package"),
+    ]);
+    expect(result.status).toBe(2);
+    expect(result.stdout).toMatch(/NOT RUN:/);
+  });
+
+  it("verify-packaged-candidate refuses a package whose manifest names no present executable", async () => {
+    const { mkdtempSync, writeFileSync } = await import("node:fs");
+    const dir = mkdtempSync(path.join(process.env.TEMP ?? "/tmp", "r39-package-"));
+    writeFileSync(
+      path.join(dir, "manifest.json"),
+      JSON.stringify({ executable: "missing-runtime.exe", executable_sha256: "deadbeef" }),
+    );
+    const result = script("verify-packaged-candidate.mjs", [
+      "--package-dir", dir,
+      "--static-root", root,
+      "--fixture-root", path.join(root, "testdata", "router-runtime", "fixtures"),
+    ]);
+    expect(result.status).toBe(2);
+    expect(result.stdout).toContain("manifest does not name an executable present");
+  }, 30_000);
+
   it("verify-client-journeys refuses a manifest whose sha does not match the executable", async () => {
     const { writeFileSync, mkdtempSync } = await import("node:fs");
     const dir = mkdtempSync(path.join(process.env.TEMP ?? "/tmp", "r39-manifest-"));
