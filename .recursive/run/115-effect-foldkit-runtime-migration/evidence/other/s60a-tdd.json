@@ -1,0 +1,74 @@
+{
+  "slice": "s60a-r27-layer1",
+  "inventory": [
+    {
+      "resource": "HTTP listener",
+      "site": "index.ts:20697 createServer; :20737 listen; :20741 close",
+      "owner": "startBridgeServer",
+      "acquire": "synchronous createServer + listen",
+      "release": "Promise server.close",
+      "gap": "not a Layer; close bypasses reverse-order DAG; failed listen cannot run a cleanup"
+    },
+    {
+      "resource": "request listener / telemetry writer edge",
+      "site": "index.ts:20696 createBridgeRequestListener",
+      "owner": "startBridgeServer",
+      "acquire": "synchronous factory",
+      "release": "none",
+      "gap": "no release contract"
+    },
+    {
+      "resource": "Runtime bridge backend",
+      "site": "index.ts:20869 createRuntimeBridgeBackend",
+      "owner": "caller (cli/backend)",
+      "acquire": "async factory",
+      "release": "none exposed",
+      "gap": "caller-owned with no close; resource leaks on partial startup"
+    },
+    {
+      "resource": "ProcessSupervisor",
+      "site": "index.ts:20971; shutdown :34684",
+      "owner": "createRuntimeBridgeBackend",
+      "acquire": "constructor",
+      "release": "shutdown at final path",
+      "gap": "not scoped; restart path relies on manual shutdown :24304"
+    },
+    {
+      "resource": "llama-swap vendor",
+      "site": "index.ts:24308 startLlamaSwapVendor; shutdown :24304/:34683",
+      "owner": "config reloader/backend",
+      "acquire": "async start under supervisor",
+      "release": "manual shutdown",
+      "gap": "no single acquire/release point; proxy status is module state"
+    },
+    {
+      "resource": "LiteLLM vendor",
+      "site": "index.ts:24325 startLiteLLMVendor",
+      "owner": "config reloader/backend",
+      "acquire": "async start",
+      "release": "manual shutdown",
+      "gap": "same as llama-swap"
+    },
+    {
+      "resource": "SQLite stores",
+      "site": "index.ts:7002-7116 open per operation; closeSync finally",
+      "owner": "operation",
+      "acquire": "open",
+      "release": "finally",
+      "gap": "not long-lived; no DAG needed"
+    }
+  ],
+  "graph": "new src/r27-composition.ts: managedLayer(tag,{acquire,release}) via Layer.fromBuild -> Scope.provide(Effect.acquireRelease(...)); two-resource graph Backend <- Server uses Layer.provideMerge; one acquire/release point; reverse order by scope; failed acquisition and dying finalizer covered by Effect scope semantics",
+  "tests": {
+    "file": "test/r27-composition.test.ts",
+    "count": 3,
+    "reds": {
+      "order": "s60a-red-order.log",
+      "cleanup": "s60a-red-cleanup.log"
+    },
+    "throwRed": "NOT CAPTURED - green test only; no mutation reproduced a skipped backend release"
+  },
+  "behavior": "not wired into startBridgeServer/backend; no runtime behavior change",
+  "hostTsc": "exit 0",
+  "fullSuite": "not run (change not reached)"
+}
