@@ -1,0 +1,80 @@
+[
+  {
+    "route": "/",
+    "status": 200,
+    "png": "f_.png",
+    "title": "Overview | RM3 Foldkit shell",
+    "states": [
+      "success"
+    ],
+    "alerts": []
+  },
+  {
+    "route": "/diagnostics/42",
+    "status": 200,
+    "png": "f_diagnostics_42.png",
+    "title": "Diagnostics 42 | RM3 Foldkit shell",
+    "states": [],
+    "alerts": []
+  },
+  {
+    "route": "/observe/observability-snapshot",
+    "status": 200,
+    "png": "f_observe_observability_snapshot.png",
+    "title": "Observability | RM3 Foldkit shell",
+    "states": [
+      "ok"
+    ],
+    "alerts": []
+  },
+  {
+    "route": "/observe/store-degradation-receipts",
+    "status": 200,
+    "png": "f_observe_store_degradation_receipts.png",
+    "title": "Store receipts | RM3 Foldkit shell",
+    "states": [
+      "empty"
+    ],
+    "alerts": []
+  },
+  {
+    "route": "/observe/queues",
+    "status": 200,
+    "png": "f_observe_queues.png",
+    "title": "Queues | RM3 Foldkit shell",
+    "states": [
+      "ok"
+    ],
+    "alerts": []
+  },
+  {
+    "route": "/local/logs",
+    "status": 200,
+    "png": "f_local_logs.png",
+    "title": "Local logs | RM3 Foldkit shell",
+    "states": [
+      "empty"
+    ],
+    "alerts": []
+  },
+  {
+    "route": "/router/candidates",
+    "status": 200,
+    "png": "f_router_candidates.png",
+    "title": "Router candidates | RM3 Foldkit shell",
+    "states": [
+      "ok"
+    ],
+    "alerts": []
+  },
+  {
+    "route": "/requests",
+    "status": null,
+    "png": "f_requests.png",
+    "title": "Requests | RM3 Foldkit shell",
+    "states": [
+      "empty"
+    ],
+    "alerts": []
+  }
+]
