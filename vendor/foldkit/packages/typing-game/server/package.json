@@ -1,0 +1,21 @@
+{
+  "name": "@typing-game/server",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/index.ts",
+    "start": "node dist/index.js",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@effect/platform-node": "4.0.0",
+    "@typing-game/shared": "workspace:*",
+    "effect": "4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "26.4.0",
+    "typescript": "^7.0.2"
+  }
+}

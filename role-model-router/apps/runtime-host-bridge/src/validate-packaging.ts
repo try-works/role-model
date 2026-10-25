@@ -1,5 +1,5 @@
 import { type ChildProcess, spawn, spawnSync } from "node:child_process";
-import { mkdtemp, rm } from "node:fs/promises";
+import { access, mkdtemp, readFile, rm } from "node:fs/promises";
 import { createServer as createHttpServer } from "node:http";
 import { createServer } from "node:net";
 import os from "node:os";
@@ -18,6 +18,59 @@ const packagingValidationCredentialRef = "SP7_MOONSHOT_API_KEY";
 const packagingValidationCredentialValue = "packaging-validation-key";
 const packagingValidationModelId = "moonshot/kimi-k2.5";
 const packagingValidationAccountId = "moonshot.personal.primary";
+
+export interface PackagedValidationManifest {
+  readonly channel?: unknown;
+  readonly executable?: unknown;
+  readonly scope_id?: unknown;
+}
+
+/**
+ * S27b: the validator must use the channel scope the artifact was built with. The manifest
+ * carries the resolved profile (package-sea.ts spreads ...profile); a caller may request a scope,
+ * but a foreign value is a hard error rather than being passed to the packaged runtime.
+ */
+export const resolvePackagedValidationScope = (
+  manifest: PackagedValidationManifest,
+  requestedScopeId?: string,
+): string => {
+  if (typeof manifest.scope_id !== "string" || manifest.scope_id.length === 0) {
+    throw new Error("packaged manifest is missing scope_id");
+  }
+  if (requestedScopeId !== undefined && requestedScopeId !== manifest.scope_id) {
+    throw new Error(
+      `packaged validation scope mismatch: requested ${requestedScopeId}, manifest declares ${manifest.scope_id}`,
+    );
+  }
+  return manifest.scope_id;
+};
+
+export const resolveExistingPackagedArtifact = async (): Promise<{
+  readonly outputPath: string;
+  readonly releaseDir: string;
+  readonly manifest: PackagedValidationManifest;
+} | null> => {
+  const releaseDir = path.join(
+    repoRoot,
+    "role-model-router",
+    "dist",
+    "release",
+    `${process.platform}-${process.arch}`,
+  );
+  try {
+    const manifest = JSON.parse(
+      await readFile(path.join(releaseDir, "manifest.json"), "utf8"),
+    ) as PackagedValidationManifest;
+    if (typeof manifest.executable !== "string" || manifest.executable.length === 0) {
+      return null;
+    }
+    const outputPath = path.join(releaseDir, manifest.executable);
+    await access(outputPath);
+    return { manifest, outputPath, releaseDir };
+  } catch {
+    return null;
+  }
+};
 
 async function allocateLocalPort(): Promise<number> {
   return await new Promise<number>((resolve, reject) => {
@@ -529,14 +582,24 @@ export async function runRuntimePackagingValidation(): Promise<{
   readonly contentRevision: string;
   readonly securityTaskCount: number;
   readonly extensionCount: number;
+  readonly scopeId: string;
   readonly endpointId: string;
   readonly chatOutputText: string;
   readonly responsesOutputText: string;
 }> {
   const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-sea-"));
   const port = await allocateLocalPort();
-  const packaged = await packageSeaRuntime();
-  const packagedRepoRoot = path.dirname(packaged.outputPath);
+  const existing = await resolveExistingPackagedArtifact();
+  const packaged = existing
+    ? { outputPath: existing.outputPath, target: `${process.platform}-${process.arch}`, sha256: "" }
+    : await packageSeaRuntime();
+  const packagedRepoRoot = existing?.releaseDir ?? path.dirname(packaged.outputPath);
+  const manifest = existing
+    ? existing.manifest
+    : (JSON.parse(
+        await readFile(path.join(packagedRepoRoot, "manifest.json"), "utf8"),
+      ) as PackagedValidationManifest);
+  const scopeId = resolvePackagedValidationScope(manifest);
   const mockUpstream = await startMockOpenAICompatibleServer();
 
   const child = spawn(
@@ -547,7 +610,7 @@ export async function runRuntimePackagingValidation(): Promise<{
       "--runtime-state-root",
       runtimeStateRoot,
       "--scope-id",
-      "runtime-sea-validation",
+      scopeId,
       "--host",
       "127.0.0.1",
       "--port",
@@ -589,6 +652,7 @@ export async function runRuntimePackagingValidation(): Promise<{
         readonly contentRevision: string;
         readonly securityTaskCount: number;
         readonly extensionCount: number;
+        readonly scopeId: string;
         readonly endpointId: string;
         readonly chatOutputText: string;
         readonly responsesOutputText: string;
@@ -621,6 +685,7 @@ export async function runRuntimePackagingValidation(): Promise<{
       contentRevision: packagedTaxonomy.contentRevision,
       securityTaskCount: packagedTaxonomy.securityTaskCount,
       extensionCount: packagedExtensions.extensionCount,
+      scopeId,
       endpointId: packagedExecution.endpointId,
       chatOutputText: packagedExecution.chatOutputText,
       responsesOutputText: packagedExecution.responsesOutputText,

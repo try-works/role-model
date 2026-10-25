@@ -1,0 +1,45 @@
+@layer base {
+  body {
+    -webkit-font-smoothing: antialiased;
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  button,
+  a,
+  select {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+.seat-progress {
+  appearance: none;
+  background: var(--muted);
+}
+.seat-progress::-webkit-progress-bar {
+  background: var(--muted);
+  border-radius: 99px;
+}
+.seat-progress::-webkit-progress-value {
+  background: var(--primary);
+  border-radius: 99px;
+}
+.seat-progress::-moz-progress-bar {
+  background: var(--primary);
+  border-radius: 99px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-slot='button'] {
+    transition-property:
+      background-color, color, border-color, box-shadow, transform;
+  }
+  [data-slot='button']:active {
+    transform: scale(0.96);
+  }
+}

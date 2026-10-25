@@ -1,0 +1,172 @@
+{
+  "name": "@role-model-router/foldkit-ui",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "First-party workspace build of vendored @foldkit/ui@0.169.0 (vendor/foldkit, commit 7ee21426). Entries are derived from the vendored exports map and bundled from the vendored src tree; the foldkit peer is the first-party @role-model-router/foldkit wrapper.",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./anchor": {
+      "types": "./dist/types/anchor.d.ts",
+      "import": "./dist/anchor.js",
+      "default": "./dist/anchor.js"
+    },
+    "./animation": {
+      "types": "./dist/types/animation.d.ts",
+      "import": "./dist/animation.js",
+      "default": "./dist/animation.js"
+    },
+    "./button": {
+      "types": "./dist/types/button.d.ts",
+      "import": "./dist/button.js",
+      "default": "./dist/button.js"
+    },
+    "./calendar": {
+      "types": "./dist/types/calendar.d.ts",
+      "import": "./dist/calendar.js",
+      "default": "./dist/calendar.js"
+    },
+    "./checkbox": {
+      "types": "./dist/types/checkbox.d.ts",
+      "import": "./dist/checkbox.js",
+      "default": "./dist/checkbox.js"
+    },
+    "./combobox": {
+      "types": "./dist/types/combobox.d.ts",
+      "import": "./dist/combobox.js",
+      "default": "./dist/combobox.js"
+    },
+    "./datePicker": {
+      "types": "./dist/types/datePicker.d.ts",
+      "import": "./dist/datePicker.js",
+      "default": "./dist/datePicker.js"
+    },
+    "./dialog": {
+      "types": "./dist/types/dialog.d.ts",
+      "import": "./dist/dialog.js",
+      "default": "./dist/dialog.js"
+    },
+    "./disclosure": {
+      "types": "./dist/types/disclosure.d.ts",
+      "import": "./dist/disclosure.js",
+      "default": "./dist/disclosure.js"
+    },
+    "./dragAndDrop": {
+      "types": "./dist/types/dragAndDrop.d.ts",
+      "import": "./dist/dragAndDrop.js",
+      "default": "./dist/dragAndDrop.js"
+    },
+    "./fieldset": {
+      "types": "./dist/types/fieldset.d.ts",
+      "import": "./dist/fieldset.js",
+      "default": "./dist/fieldset.js"
+    },
+    "./fileDrop": {
+      "types": "./dist/types/fileDrop.d.ts",
+      "import": "./dist/fileDrop.js",
+      "default": "./dist/fileDrop.js"
+    },
+    "./hoverIntent": {
+      "types": "./dist/types/hoverIntent.d.ts",
+      "import": "./dist/hoverIntent.js",
+      "default": "./dist/hoverIntent.js"
+    },
+    "./input": {
+      "types": "./dist/types/input.d.ts",
+      "import": "./dist/input.js",
+      "default": "./dist/input.js"
+    },
+    "./listbox": {
+      "types": "./dist/types/listbox.d.ts",
+      "import": "./dist/listbox.js",
+      "default": "./dist/listbox.js"
+    },
+    "./menu": {
+      "types": "./dist/types/menu.d.ts",
+      "import": "./dist/menu.js",
+      "default": "./dist/menu.js"
+    },
+    "./meter": {
+      "types": "./dist/types/meter.d.ts",
+      "import": "./dist/meter.js",
+      "default": "./dist/meter.js"
+    },
+    "./nav": {
+      "types": "./dist/types/nav.d.ts",
+      "import": "./dist/nav.js",
+      "default": "./dist/nav.js"
+    },
+    "./popover": {
+      "types": "./dist/types/popover.d.ts",
+      "import": "./dist/popover.js",
+      "default": "./dist/popover.js"
+    },
+    "./progress": {
+      "types": "./dist/types/progress.d.ts",
+      "import": "./dist/progress.js",
+      "default": "./dist/progress.js"
+    },
+    "./radioGroup": {
+      "types": "./dist/types/radioGroup.d.ts",
+      "import": "./dist/radioGroup.js",
+      "default": "./dist/radioGroup.js"
+    },
+    "./select": {
+      "types": "./dist/types/select.d.ts",
+      "import": "./dist/select.js",
+      "default": "./dist/select.js"
+    },
+    "./slider": {
+      "types": "./dist/types/slider.d.ts",
+      "import": "./dist/slider.js",
+      "default": "./dist/slider.js"
+    },
+    "./switch": {
+      "types": "./dist/types/switch.d.ts",
+      "import": "./dist/switch.js",
+      "default": "./dist/switch.js"
+    },
+    "./tabs": {
+      "types": "./dist/types/tabs.d.ts",
+      "import": "./dist/tabs.js",
+      "default": "./dist/tabs.js"
+    },
+    "./textarea": {
+      "types": "./dist/types/textarea.d.ts",
+      "import": "./dist/textarea.js",
+      "default": "./dist/textarea.js"
+    },
+    "./toast": {
+      "types": "./dist/types/toast.d.ts",
+      "import": "./dist/toast.js",
+      "default": "./dist/toast.js"
+    },
+    "./tooltip": {
+      "types": "./dist/types/tooltip.d.ts",
+      "import": "./dist/tooltip.js",
+      "default": "./dist/tooltip.js"
+    },
+    "./virtualList": {
+      "types": "./dist/types/virtualList.d.ts",
+      "import": "./dist/virtualList.js",
+      "default": "./dist/virtualList.js"
+    }
+  },
+  "files": ["dist"],
+  "sideEffects": false,
+  "peerDependencies": {
+    "@role-model-router/foldkit": "workspace:*",
+    "effect": "workspace:*"
+  },
+  "dependencies": {
+    "@floating-ui/dom": "^1.8.0"
+  },
+  "scripts": {
+    "build": "node build.mjs"
+  }
+}

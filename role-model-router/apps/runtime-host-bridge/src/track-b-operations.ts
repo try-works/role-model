@@ -1,6 +1,7 @@
 import { createHash, createHmac, createPublicKey, timingSafeEqual, verify } from "node:crypto";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { Effect } from "effect";
 import {
   EXTENSION_MODE_VALUES,
   type ExtensionMode,
@@ -832,6 +833,38 @@ export class TrackBPrivateOperationTimeoutError extends TrackBPrivateOperationEr
   }
 }
 
+/**
+ * Run 115 S17a (R26): caller abort is a distinct terminal failure. The private-operation path
+ * already distinguishes a timeout, a stated status and a transport throw; a caller abort must not
+ * look like any of them, and it must never be retried.
+ */
+export class TrackBPrivateOperationAbortError extends Error {
+  readonly code = "track_b_private_operation_aborted";
+
+  constructor(options: { readonly cause?: unknown } = {}) {
+    super("private Track B operation was aborted by the caller");
+    this.name = "TrackBPrivateOperationAbortError";
+    if (options.cause !== undefined) (this as { cause?: unknown }).cause = options.cause;
+  }
+}
+
+/**
+ * Run 115 S17a (R26): a 2xx response whose body is not valid JSON is a protocol failure, not an
+ * empty result. Non-2xx bodies keep the existing lenient fallback so a stated status still
+ * surfaces as TrackBPrivateOperationError with its status intact.
+ */
+export class TrackBPrivateOperationProtocolError extends Error {
+  readonly code = "track_b_private_operation_protocol";
+  readonly detail: string;
+
+  constructor(detail: string, options: { readonly cause?: unknown } = {}) {
+    super(`private Track B operation protocol failure: ${detail}`);
+    this.name = "TrackBPrivateOperationProtocolError";
+    this.detail = detail;
+    if (options.cause !== undefined) (this as { cause?: unknown }).cause = options.cause;
+  }
+}
+
 // Aggregate delivery commits a durable object, queue message, and workflow at
 // the configured cloud boundary. It is not a dashboard read, so it needs a
 // bounded completion window that covers that acknowledged write path.
@@ -1048,7 +1081,66 @@ const isRetryablePrivateOperationTransportFailure = (error: unknown): boolean =>
   return message === "fetch failed" || /socket hang up|other side closed/i.test(message);
 };
 
-const privateRetentionRequest = async (
+export interface PrivateRetentionRequestOptions {
+  readonly signal?: AbortSignal;
+  readonly fetchImpl?: typeof fetch;
+  readonly sleep?: (delayMs: number) => Promise<void>;
+  readonly onRelease?: (resource: "abort-listener" | "reader") => void;
+}
+
+const defaultTransportSleep = (delayMs: number): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, delayMs));
+
+const decodeChunks = (chunks: ReadonlyArray<Uint8Array>): string => {
+  const total = chunks.reduce((sum, chunk) => sum + chunk.byteLength, 0);
+  const merged = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    merged.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return new TextDecoder().decode(merged);
+};
+
+/**
+ * Scoped response reader: one reader per response, cancelled on failure and always lock-released
+ * in `finally` (which is also the abort path, because an aborted fetch errors the body stream).
+ */
+const readResponseJson = async (
+  response: Response,
+  onRelease?: (resource: "abort-listener" | "reader") => void,
+  onReader?: (reader: ReadableStreamDefaultReader<Uint8Array> | undefined) => void,
+): Promise<unknown> => {
+  if (response.body === null) {
+    const text = await response.text();
+    return text.trim().length === 0 ? {} : JSON.parse(text);
+  }
+  const reader = response.body.getReader();
+  onReader?.(reader);
+  const chunks: Uint8Array[] = [];
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (value !== undefined) chunks.push(value);
+    }
+  } catch (error) {
+    await reader.cancel(error).catch(() => undefined);
+    throw error;
+  } finally {
+    onReader?.(undefined);
+    try {
+      reader.releaseLock();
+    } catch {
+      // cancel() may already have released the lock
+    }
+    onRelease?.("reader");
+  }
+  const text = decodeChunks(chunks);
+  return text.trim().length === 0 ? {} : JSON.parse(text);
+};
+
+export const privateRetentionRequest = async (
   endpoint: string | undefined,
   token: string | undefined,
   route: string,
@@ -1061,6 +1153,7 @@ const privateRetentionRequest = async (
   // provider response. A shorter bound aborts healthy local captures (and the replay producer's
   // pending read) on mature runtimes; retain a finite budget while allowing that proven path.
   timeoutMs = DEFAULT_TRACK_B_OPERATIONS_TIMEOUT_MS,
+  options: PrivateRetentionRequestOptions = {},
 ): Promise<unknown | null> => {
   if (!endpoint) return null;
   if (!token || token.trim().length < 24) {
@@ -1068,61 +1161,135 @@ const privateRetentionRequest = async (
       "Track B private operations boundary requires a launcher-issued authentication token",
     );
   }
-  const url = new URL(route, endpoint.endsWith("/") ? endpoint : `${endpoint}/`);
-  const requestInit = {
-    method: init.method ?? "GET",
-    headers: {
-      ...init.headers,
-      ...(init.body ? { "content-type": "application/json" } : {}),
-      authorization: `Bearer ${token}`,
-    },
-    ...(init.body ? { body: JSON.stringify(init.body) } : {}),
-  } as const;
-  /**
-   * Run 98 addendum 04 §7 (`L1`), measured on real dsh traffic: this boundary did a single `fetch`
-   * with no retry, so one transient connection reset surfaced as `fetch failed` / `read ECONNRESET`
-   * and the caller recorded a terminal `refused replay_failed` for a capture that was perfectly
-   * replayable. Every operation here is idempotency-keyed (capture ids, replay/job ids, request
-   * correlation ids), so retrying a *connection-level* failure is safe; a timeout is not retried
-   * because the work may still be running on the far side.
-   */
-  let response: Response | null = null;
-  let lastTransportError: unknown = null;
-  for (let attempt = 0; attempt <= PRIVATE_OPERATIONS_TRANSPORT_RETRIES; attempt += 1) {
+  const callerSignal = options.signal;
+  if (callerSignal?.aborted) throw new TrackBPrivateOperationAbortError();
+  const timeoutSignal = AbortSignal.timeout(timeoutMs);
+  const requestSignal =
+    callerSignal === undefined ? timeoutSignal : AbortSignal.any([callerSignal, timeoutSignal]);
+  let listenerAttached = false;
+  let activeReader: ReadableStreamDefaultReader<Uint8Array> | undefined;
+  const onCallerAbort = (): void => {
+    // AbortSignal.any propagates the caller signal to fetch; once a body reader exists, cancel it
+    // directly as well so a stalled body read stops (it resolves done, and the post-read abort
+    // check below turns that into the typed caller-abort failure).
+    void activeReader?.cancel(new TrackBPrivateOperationAbortError()).catch(() => undefined);
+  };
+  if (callerSignal !== undefined) {
+    callerSignal.addEventListener("abort", onCallerAbort, { once: true });
+    listenerAttached = true;
+  }
+  const releaseAbortListener = (): void => {
+    if (!listenerAttached) return;
+    listenerAttached = false;
+    callerSignal?.removeEventListener("abort", onCallerAbort);
+    options.onRelease?.("abort-listener");
+  };
+  const callerAborted = (): boolean => callerSignal?.aborted === true;
+  const abortFailure = (cause?: unknown): TrackBPrivateOperationAbortError =>
+    new TrackBPrivateOperationAbortError(cause === undefined ? {} : { cause });
+  const timeoutFailure = (cause?: unknown): TrackBPrivateOperationTimeoutError =>
+    new TrackBPrivateOperationTimeoutError(timeoutMs, cause === undefined ? {} : { cause });
+  const protocolFailure = (detail: string, cause?: unknown): TrackBPrivateOperationProtocolError =>
+    new TrackBPrivateOperationProtocolError(detail, cause === undefined ? {} : { cause });
+  try {
+    const url = new URL(route, endpoint.endsWith("/") ? endpoint : `${endpoint}/`);
+    const requestInit = {
+      method: init.method ?? "GET",
+      headers: {
+        ...init.headers,
+        ...(init.body ? { "content-type": "application/json" } : {}),
+        authorization: `Bearer ${token}`,
+      },
+      ...(init.body ? { body: JSON.stringify(init.body) } : {}),
+    } as const;
+    /**
+     * Run 98 addendum 04 §7 (`L1`), measured on real dsh traffic: this boundary did a single `fetch`
+     * with no retry, so one transient connection reset surfaced as `fetch failed` / `read ECONNRESET`
+     * and the caller recorded a terminal `refused replay_failed` for a capture that was perfectly
+     * replayable. Every operation here is idempotency-keyed (capture ids, replay/job ids, request
+     * correlation ids), so retrying a *connection-level* failure is safe; a timeout is not retried
+     * because the work may still be running on the far side.
+     */
+    let response: Response | null = null;
+    let lastTransportError: unknown = null;
+    for (let attempt = 0; attempt <= PRIVATE_OPERATIONS_TRANSPORT_RETRIES; attempt += 1) {
+      if (callerAborted()) throw abortFailure();
+      try {
+        response = await (options.fetchImpl ?? fetch)(url, {
+          ...requestInit,
+          signal: requestSignal,
+        });
+        lastTransportError = null;
+        break;
+      } catch (error) {
+        if (callerAborted()) throw abortFailure(error);
+        if (timeoutSignal.aborted || (error instanceof Error && error.name === "TimeoutError")) {
+          throw timeoutFailure(error);
+        }
+        lastTransportError = error;
+        if (
+          attempt >= PRIVATE_OPERATIONS_TRANSPORT_RETRIES ||
+          !isRetryablePrivateOperationTransportFailure(error)
+        ) {
+          throw error;
+        }
+        await (options.sleep ?? defaultTransportSleep)(
+          PRIVATE_OPERATIONS_TRANSPORT_RETRY_DELAYS_MS[attempt] ?? 1_000,
+        );
+      }
+    }
+    if (!response) throw lastTransportError ?? new Error("private Track B operation failed");
+    let parsed: unknown = {};
+    let bodyError: unknown = null;
     try {
-      response = await fetch(url, {
-        ...requestInit,
-        signal: AbortSignal.timeout(timeoutMs),
+      parsed = await readResponseJson(response, options.onRelease, (reader) => {
+        activeReader = reader;
       });
-      lastTransportError = null;
-      break;
     } catch (error) {
-      if (error instanceof Error && error.name === "TimeoutError") {
-        throw new TrackBPrivateOperationTimeoutError(timeoutMs, { cause: error });
-      }
-      lastTransportError = error;
-      if (
-        attempt >= PRIVATE_OPERATIONS_TRANSPORT_RETRIES ||
-        !isRetryablePrivateOperationTransportFailure(error)
-      ) {
-        throw error;
-      }
-      await new Promise((resolve) =>
-        setTimeout(resolve, PRIVATE_OPERATIONS_TRANSPORT_RETRY_DELAYS_MS[attempt] ?? 1_000),
+      if (callerAborted()) throw abortFailure(error);
+      if (timeoutSignal.aborted) throw timeoutFailure(error);
+      bodyError = error;
+    }
+    // The abort listener cancels the reader, which makes read() resolve done instead of throw;
+    // without this check an aborted body could look like a successful empty response.
+    if (callerAborted()) throw abortFailure();
+    if (bodyError !== null && response.ok) {
+      throw protocolFailure(
+        bodyError instanceof Error ? bodyError.message : "response body is not valid JSON",
+        bodyError,
       );
     }
+    const result = (parsed ?? {}) as { readonly error?: unknown };
+    if (!response.ok)
+      throw new TrackBPrivateOperationError(
+        response.status,
+        typeof result.error === "string"
+          ? result.error
+          : `private Track B operation failed with ${response.status}`,
+      );
+    return result;
+  } finally {
+    releaseAbortListener();
   }
-  if (!response) throw lastTransportError ?? new Error("private Track B operation failed");
-  const result = (await response.json().catch(() => ({}))) as { readonly error?: unknown };
-  if (!response.ok)
-    throw new TrackBPrivateOperationError(
-      response.status,
-      typeof result.error === "string"
-        ? result.error
-        : `private Track B operation failed with ${response.status}`,
-    );
-  return result;
 };
+
+export const privateRetentionRequestEffect = (
+  endpoint: string | undefined,
+  token: string | undefined,
+  route: string,
+  init: {
+    readonly method?: string;
+    readonly body?: Record<string, unknown>;
+    readonly headers?: Readonly<Record<string, string>>;
+  } = {},
+  timeoutMs = DEFAULT_TRACK_B_OPERATIONS_TIMEOUT_MS,
+  options: Omit<PrivateRetentionRequestOptions, "signal"> = {},
+): Effect.Effect<unknown, unknown> =>
+  Effect.tryPromise({
+    try: (signal) =>
+      privateRetentionRequest(endpoint, token, route, init, timeoutMs, { ...options, signal }),
+    catch: (error) => error,
+  });
 
 const normalizeStorageAuditReadiness = (value: unknown) => {
   const raw = recordValue(value);
@@ -1501,6 +1668,21 @@ export function redactOperatorSensitiveValue(value: string): string {
     : value;
 }
 
+/**
+ * Residual (S17c, R26): the operation boundary accepts a caller AbortSignal, but three in-tree
+ * recorder call sites still have no signal in scope and are deliberately NOT given a fake one:
+ *
+ * - index.ts:20961 (deferred route-capture drain): runs from the 15 s background timer after the
+ *   request that enqueued it has ended, so there is no caller/request context to abort.
+ * - index.ts:31190 (track-b contribution aggregate HTTP route): the route handler contract is
+ *   `(body) => Promise<unknown>`; no AbortSignal is in scope at the recorder call.
+ * - index.ts:33839 (legacy terminal-failure recovery HTTP route): the same handler contract, and
+ *   the operation is a durable admin recovery that should commit rather than be truncated by a
+ *   caller abort.
+ *
+ * Wiring any of these requires threading an abort signal through the route/queue contracts. Until
+ * then they are explicitly non-interruptible instead of receiving an unconnected signal.
+ */
 export function createTrackBOperations({
   statePath,
   catalog,
@@ -1517,6 +1699,7 @@ export function createTrackBOperations({
   contributionAggregateRetry = {},
   extensionRuntime,
   contractStateRoot,
+  fetchImpl,
 }: {
   readonly statePath: string;
   readonly catalog: readonly Record<string, unknown>[];
@@ -1546,6 +1729,8 @@ export function createTrackBOperations({
    * documented v1.1 graph contracts (nodes and edges) for its recorded artifacts.
    */
   readonly contractStateRoot?: string;
+  /** Test seam: exercises the real operation boundary without a network listener. */
+  readonly fetchImpl?: typeof fetch;
 }) {
   const boundedContributionDeliveryTimeoutMs = Math.max(
     operationsTimeoutMs,
@@ -1598,7 +1783,12 @@ export function createTrackBOperations({
       readonly headers?: Readonly<Record<string, string>>;
     },
     timeoutMs = operationsTimeoutMs,
-  ) => privateRetentionRequest(operationsEndpoint, operationsToken, route, init, timeoutMs);
+    signal?: AbortSignal,
+  ) =>
+    privateRetentionRequest(operationsEndpoint, operationsToken, route, init, timeoutMs, {
+      ...(signal === undefined ? {} : { signal }),
+      ...(fetchImpl === undefined ? {} : { fetchImpl }),
+    });
   const operatorScope = typeof scope === "string" && scope.trim() ? scope.trim() : null;
   const operatorAuthorizationEpoch =
     typeof authorizationEpoch === "number" &&
@@ -2857,7 +3047,10 @@ export function createTrackBOperations({
       });
       return next;
     },
-    async recordContributionAggregate(input: Record<string, unknown>): Promise<unknown> {
+    async recordContributionAggregate(
+      input: Record<string, unknown>,
+      options?: { readonly signal?: AbortSignal },
+    ): Promise<unknown> {
       /**
        * Run 104 SP7 (`R10`): one typed timeout used to surface as `contribution upload degraded:
        * … timed out after 5000ms` even though the private boundary was still finishing the same
@@ -2874,6 +3067,7 @@ export function createTrackBOperations({
               body: sanitizeOperatorBody(input),
             },
             boundedContributionAggregateTimeoutMs,
+            options?.signal,
           ),
         {
           attempts: contributionAggregateTimeoutAttempts,
@@ -2902,7 +3096,10 @@ export function createTrackBOperations({
       );
       return remote ?? { status: "operations_boundary_unconfigured" };
     },
-    async recordLocalRouteCapture(input: Record<string, unknown>): Promise<unknown> {
+    async recordLocalRouteCapture(
+      input: Record<string, unknown>,
+      options?: { readonly signal?: AbortSignal },
+    ): Promise<unknown> {
       if (!operationsEndpoint) return { status: "operations_boundary_unconfigured" };
       const url = new URL(operationsEndpoint);
       if (!["127.0.0.1", "localhost", "::1", "[::1]"].includes(url.hostname))
@@ -2929,6 +3126,7 @@ export function createTrackBOperations({
           "capture/route",
           { method: "POST", body: input },
           boundedRouteCaptureTimeoutMs,
+          options?.signal,
         );
       } catch (error) {
         routeCaptureCooldownMs =

@@ -99,6 +99,12 @@ export function evaluationHandoffRequestFromCommandReceipt(
  * retry; the latter is a value the caller already handles (`!claimed` → refusal). Modelling it as an Effect program
  * keeps that distinction in the type of the failure rather than in a try/catch ladder: a transient fault is retried
  * with a spaced schedule, and the bound resolves as `null` so the caller's existing no-claim path runs unchanged.
+ *
+ * Run 115 S8a: the `try` thunk is deliberately zero-arity, so Effect creates no AbortController for
+ * it (`vendor/effect/packages/effect/src/internal/effect.ts:1166` keys `withSignal` off the thunk
+ * arity). A durable claim must not be aborted halfway: an interrupted claim can leave lease state
+ * ambiguous, so cancellation belongs to the caller's bound plus the retry schedule, not to a
+ * half-finished claim.
  */
 export function claimEvaluationTrial<T>(input: {
   readonly trialId: string;

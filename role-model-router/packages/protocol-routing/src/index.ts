@@ -14,12 +14,18 @@ import type {
   TaskDefinitionRecord,
   ThroughputPenaltyStateRecord,
 } from "@role-model-router/core";
-import { routeRequest } from "@role-model-router/core";
 import type {
   EndpointRegistryResult,
   EndpointCandidate as RegistryEndpointCandidate,
 } from "@role-model-router/endpoint-registry";
 import type { RetrievalReceipt } from "@role-model-router/retrieval-receipt";
+
+import {
+  type RouteRuntimeRequestOptions,
+  runRouteDecisionThroughProducer,
+} from "./route-decision-boundary.js";
+
+export type { RouteDecisionLayer, RouteRuntimeRequestOptions } from "./route-decision-boundary.js";
 
 export interface RoutingModelSelection {
   endpointId: string;
@@ -346,9 +352,15 @@ export function projectRuntimeRouteInput(
 
 export function routeRuntimeRequest(
   input: ProjectRuntimeRouteInputInput,
+  options?: RouteRuntimeRequestOptions,
 ): RouteRuntimeRequestResult {
   const projected = projectRuntimeRouteInput(input);
-  const decision = routeRequest(projected.routeInput);
+  // R25/S7b: the decision comes from the producer's Effect service through the single
+  // synchronous boundary in ./route-decision-boundary.ts; this function never calls the kernel.
+  const decision = runRouteDecisionThroughProducer(
+    projected.routeInput,
+    options?.routeDecisionLayer,
+  );
   /**
    * Run 115 (addendum 10, E0). The eligibility verdict - which candidates were excluded and by which code - lived
    * only in memory: `RouterDecisionRecord.eligibility` is consumed by nothing but the gateway-smoke app, so a live

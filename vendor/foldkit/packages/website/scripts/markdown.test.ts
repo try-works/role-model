@@ -1,0 +1,385 @@
+import { beforeEach, describe, expect, it } from 'vitest'
+
+import { SITE_URL } from '../src/route'
+import {
+  type LlmsFullEntry,
+  type LlmsIndexEntry,
+  buildLlmsFull,
+  buildLlmsIndex,
+  extractMarkdownFromRenderedDocument,
+  shouldExportMarkdown,
+  urlPathToMarkdownPath,
+} from './markdown'
+
+const setBody = (html: string): void => {
+  document.body.innerHTML = `<div data-pagefind-body>${html}</div>`
+}
+
+describe('extractMarkdownFromRenderedDocument', () => {
+  beforeEach(() => {
+    document.body.innerHTML = ''
+  })
+
+  it('returns the empty string when no pagefind body is present', () => {
+    document.body.innerHTML = '<div>orphaned content</div>'
+    expect(extractMarkdownFromRenderedDocument(document, SITE_URL)).toBe('')
+  })
+
+  it('converts headings, paragraphs, and links', () => {
+    setBody(`
+      <h1>Getting Started</h1>
+      <p>Welcome to <a href="/manifesto">Foldkit</a>.</p>
+      <h2>Install</h2>
+      <p>Run <code>pnpm create foldkit-app</code>.</p>
+    `)
+
+    expect(extractMarkdownFromRenderedDocument(document, SITE_URL)).toBe(
+      `# Getting Started
+
+Welcome to [Foldkit](https://foldkit.dev/manifesto).
+
+## Install
+
+Run \`pnpm create foldkit-app\`.`,
+    )
+  })
+
+  it('preserves external link hrefs verbatim', () => {
+    setBody(`<p>See <a href="https://example.com/x">the docs</a>.</p>`)
+    expect(extractMarkdownFromRenderedDocument(document, SITE_URL)).toBe(
+      'See [the docs](https://example.com/x).',
+    )
+  })
+
+  it('emits fenced code blocks with the detected language', () => {
+    setBody(`
+      <pre><code class="language-typescript">const x = 1
+const y = 2</code></pre>
+    `)
+    const markdown = extractMarkdownFromRenderedDocument(document, SITE_URL)
+    expect(markdown).toContain('```typescript')
+    expect(markdown).toContain('const x = 1\nconst y = 2')
+    expect(markdown).toContain('```')
+  })
+
+  it('renders unordered lists with hyphen bullets', () => {
+    setBody(`<ul><li>first</li><li>second</li><li>third</li></ul>`)
+    expect(extractMarkdownFromRenderedDocument(document, SITE_URL)).toBe(
+      '- first\n- second\n- third',
+    )
+  })
+
+  it('renders ordered lists with numeric markers', () => {
+    setBody(`<ol><li>one</li><li>two</li></ol>`)
+    expect(extractMarkdownFromRenderedDocument(document, SITE_URL)).toBe(
+      '1. one\n2. two',
+    )
+  })
+
+  it('prefixes labeled code blocks with a bold label line', () => {
+    setBody(`
+      <div data-llm-label="pnpm">
+        <pre><code class="language-bash">pnpm dev</code></pre>
+      </div>
+    `)
+    expect(extractMarkdownFromRenderedDocument(document, SITE_URL)).toBe(
+      '**pnpm**\n\n```bash\npnpm dev\n```',
+    )
+  })
+
+  it('extracts captioned code from a collapsed snippet disclosure', () => {
+    setBody(`
+      <figure data-llm-label="HTTP Command">
+        <figcaption>HTTP Command</figcaption>
+        <div>
+          <div aria-hidden="true">
+            <div>
+              <pre data-language="typescript"><code>const FetchCount = Command.define()</code></pre>
+            </div>
+          </div>
+        </div>
+        <button>Show code</button>
+      </figure>
+    `)
+
+    expect(extractMarkdownFromRenderedDocument(document, SITE_URL)).toBe(
+      '**HTTP Command**\n\n```typescript\nconst FetchCount = Command.define()\n```',
+    )
+  })
+
+  it('rejects a captioned code block omitted from the Markdown export', () => {
+    setBody(`
+      <figure>
+        <figcaption>HTTP Command</figcaption>
+        <div aria-hidden="true">
+          <pre data-language="typescript"><code>const FetchCount = Command.define()</code></pre>
+        </div>
+      </figure>
+    `)
+
+    expect(() =>
+      extractMarkdownFromRenderedDocument(document, SITE_URL),
+    ).toThrow(
+      'Captioned code block "HTTP Command" was not followed by a fenced source block in exported Markdown.',
+    )
+  })
+
+  it('skips elements marked data-llm-ignore', () => {
+    setBody(`
+      <p>kept paragraph</p>
+      <div data-llm-ignore>
+        <p>nav junk</p>
+      </div>
+    `)
+    expect(extractMarkdownFromRenderedDocument(document, SITE_URL)).toBe(
+      'kept paragraph',
+    )
+  })
+
+  it('does not skip elements marked only data-pagefind-ignore', () => {
+    setBody(`
+      <div data-pagefind-ignore>
+        <pre><code class="language-typescript">const x = 1</code></pre>
+      </div>
+    `)
+    expect(extractMarkdownFromRenderedDocument(document, SITE_URL)).toBe(
+      '```typescript\nconst x = 1\n```',
+    )
+  })
+
+  it('extracts source from shiki-tokenized code blocks', () => {
+    setBody(
+      `<pre class="shiki" data-language="typescript"><code><span class="line"><span style="color:#569cd6">const</span><span style="color:#9cdcfe"> x</span><span style="color:#d4d4d4"> =</span><span style="color:#b5cea8"> 1</span></span>\n<span class="line"><span style="color:#569cd6">const</span><span style="color:#9cdcfe"> y</span><span style="color:#d4d4d4"> =</span><span style="color:#b5cea8"> 2</span></span></code></pre>`,
+    )
+    expect(extractMarkdownFromRenderedDocument(document, SITE_URL)).toBe(
+      '```typescript\nconst x = 1\nconst y = 2\n```',
+    )
+  })
+
+  it('skips decorative svgs and buttons', () => {
+    setBody(`
+      <p>visible <svg><path d="M0,0"/></svg> text</p>
+      <button>Copy</button>
+    `)
+    expect(extractMarkdownFromRenderedDocument(document, SITE_URL)).toBe(
+      'visible text',
+    )
+  })
+
+  it('collapses excess blank lines between blocks', () => {
+    setBody(`
+      <h2>A</h2>
+      <p>one</p>
+      <p>two</p>
+      <h2>B</h2>
+      <p>three</p>
+    `)
+    const markdown = extractMarkdownFromRenderedDocument(document, SITE_URL)
+    expect(markdown).not.toMatch(/\n\n\n/)
+  })
+})
+
+describe('urlPathToMarkdownPath', () => {
+  it('maps root to index.md', () => {
+    expect(urlPathToMarkdownPath('/')).toBe('index.md')
+  })
+
+  it('maps a top-level path to a sibling .md file', () => {
+    expect(urlPathToMarkdownPath('/getting-started')).toBe('getting-started.md')
+  })
+
+  it('preserves nested paths', () => {
+    expect(urlPathToMarkdownPath('/core/model')).toBe('core/model.md')
+    expect(urlPathToMarkdownPath('/api/foldkit/html')).toBe(
+      'api/foldkit/html.md',
+    )
+  })
+})
+
+describe('shouldExportMarkdown', () => {
+  it('skips Playground, NotFound, and Newsletter routes', () => {
+    expect(
+      shouldExportMarkdown({ _tag: 'Playground', exampleSlug: 'counter' }),
+    ).toBe(false)
+    expect(shouldExportMarkdown({ _tag: 'NotFound', path: '/missing' })).toBe(
+      false,
+    )
+    expect(shouldExportMarkdown({ _tag: 'Newsletter' })).toBe(false)
+  })
+
+  it('exports docs and api routes', () => {
+    expect(shouldExportMarkdown({ _tag: 'GetStarted' })).toBe(true)
+    expect(shouldExportMarkdown({ _tag: 'CoreModel' })).toBe(true)
+    expect(
+      shouldExportMarkdown({ _tag: 'ApiModule', moduleSlug: 'html' }),
+    ).toBe(true)
+  })
+})
+
+const indexEntry = (
+  urlPath: string,
+  title: string,
+  description: string,
+  section: string,
+): LlmsIndexEntry => ({
+  urlPath,
+  metadata: { title, description, section },
+})
+
+describe('buildLlmsIndex', () => {
+  it('renders the site header and skips entries without a section', () => {
+    const output = buildLlmsIndex([
+      indexEntry('/', 'Foldkit', 'The home page.', ''),
+      indexEntry(
+        '/getting-started',
+        'Getting Started',
+        'Set up your first app.',
+        'Docs',
+      ),
+    ])
+
+    expect(output).toContain('# Foldkit')
+    expect(output).toMatch(/^# Foldkit\n\n> .+/)
+    expect(output).toContain('## Docs')
+    expect(output).toContain(
+      '- [Getting Started](https://foldkit.dev/getting-started): Set up your first app.',
+    )
+    expect(output).not.toContain('The home page.')
+  })
+
+  it('orders sections by canonical rank and titles alphabetically', () => {
+    const output = buildLlmsIndex([
+      indexEntry('/ui/dialog', 'Dialog', 'Modal dialog.', 'Foldkit UI'),
+      indexEntry('/ui/tabs', 'Tabs', 'Tab interface.', 'Foldkit UI'),
+      indexEntry('/core/model', 'Model', 'Single state tree.', 'Core'),
+      indexEntry('/manifesto', 'Manifesto', 'Why Foldkit exists.', 'Docs'),
+    ])
+
+    const docsIndex = output.indexOf('## Docs')
+    const coreIndex = output.indexOf('## Core')
+    const uiIndex = output.indexOf('## Foldkit UI')
+    expect(docsIndex).toBeGreaterThan(-1)
+    expect(coreIndex).toBeGreaterThan(docsIndex)
+    expect(uiIndex).toBeGreaterThan(coreIndex)
+
+    const dialogIndex = output.indexOf('[Dialog]')
+    const tabsIndex = output.indexOf('[Tabs]')
+    expect(dialogIndex).toBeLessThan(tabsIndex)
+  })
+
+  it('tells agents when to use Foldkit and how to work with the site', () => {
+    const output = buildLlmsIndex([
+      indexEntry('/manifesto', 'Manifesto', 'Why Foldkit exists.', 'Docs'),
+    ])
+
+    expect(output).toContain('When to use Foldkit:')
+    expect(output).toContain('Not a fit for:')
+    expect(output).toContain('npm create foldkit-app@latest')
+    expect(output).toContain('Accept: text/markdown')
+  })
+
+  it('lists the developer resources before the page sections', () => {
+    const output = buildLlmsIndex([
+      indexEntry('/manifesto', 'Manifesto', 'Why Foldkit exists.', 'Docs'),
+    ])
+
+    const resourcesIndex = output.indexOf('## Developer Resources')
+    const docsIndex = output.indexOf('## Docs')
+    expect(resourcesIndex).toBeGreaterThan(-1)
+    expect(resourcesIndex).toBeLessThan(docsIndex)
+
+    expect(output).toContain('https://foldkit.dev/openapi.json')
+    expect(output).toContain('https://foldkit.dev/llms-full.txt')
+    expect(output).toContain('https://foldkit.dev/sitemap.xml')
+    expect(output).toContain('@foldkit/devtools-mcp')
+    expect(output).toContain('https://github.com/foldkit/foldkit')
+  })
+})
+
+const fullEntry = (
+  urlPath: string,
+  title: string,
+  description: string,
+  section: string,
+  markdown: string,
+  orderIndex: number,
+): LlmsFullEntry => ({
+  urlPath,
+  metadata: { title, description, section },
+  markdown,
+  orderIndex,
+})
+
+describe('buildLlmsFull', () => {
+  it('concatenates pages with source headers and separators', () => {
+    const output = buildLlmsFull(
+      [
+        fullEntry(
+          '/getting-started',
+          'Getting Started',
+          'Set up your first app.',
+          'Docs',
+          '# Getting Started\n\nWelcome.',
+          0,
+        ),
+        fullEntry(
+          '/core/model',
+          'Model',
+          'Single state tree.',
+          'Core',
+          '# Model\n\nOne tree.',
+          1,
+        ),
+      ],
+      '2026-05-16',
+    )
+
+    expect(output).toContain('# Foldkit Documentation')
+    expect(output).toContain('Generated 2026-05-16 from https://foldkit.dev')
+    expect(output).toContain('Source: https://foldkit.dev/getting-started')
+    expect(output).toContain('Source: https://foldkit.dev/core/model')
+    expect(output).toContain('Section: Docs')
+    expect(output).toContain('Section: Core')
+    expect(output).toContain('# Getting Started')
+    expect(output).toContain('# Model')
+    expect(output.split('\n---\n').length).toBeGreaterThan(1)
+  })
+
+  it('preserves orderIndex within a section instead of sorting alphabetically', () => {
+    const output = buildLlmsFull(
+      [
+        fullEntry(
+          '/core/update',
+          'Update',
+          'Pure transitions.',
+          'Core',
+          '# Update\n\nUpdate body.',
+          2,
+        ),
+        fullEntry(
+          '/core/architecture',
+          'Architecture',
+          'The shape of a Foldkit app.',
+          'Core',
+          '# Architecture\n\nArchitecture body.',
+          0,
+        ),
+        fullEntry(
+          '/core/model',
+          'Model',
+          'Single state tree.',
+          'Core',
+          '# Model\n\nModel body.',
+          1,
+        ),
+      ],
+      '2026-05-16',
+    )
+
+    const architectureAt = output.indexOf('# Architecture')
+    const modelAt = output.indexOf('# Model')
+    const updateAt = output.indexOf('# Update')
+    expect(architectureAt).toBeLessThan(modelAt)
+    expect(modelAt).toBeLessThan(updateAt)
+  })
+})

@@ -18,6 +18,15 @@ const runtimeHostBuildRegression = readFileSync(
   "utf8",
 );
 
+test("request parity contracts run in the maintained runtime-critical lane", () => {
+  assert.equal(packageManifest.scripts["runtime:test-parity"], "corepack pnpm --filter @role-model-router/ui-parity test");
+  assert.ok(packageManifest.scripts["runtime:test-critical"].includes("corepack pnpm run runtime:test-parity"));
+  const lock = readFileSync(new URL("../pnpm-lock.yaml", import.meta.url), "utf8");
+  assert.ok(lock.includes("  role-model-router/packages/ui-parity:\n"));
+  assert.equal(packageManifest.scripts["runtime:parity"], "node --import tsx scripts/runtime-parity.mjs");
+  assert.ok(packageManifest.scripts["test:release-workflows"].includes("scripts/runtime-parity.test.mjs"));
+});
+
 test("CI is scoped to long-lived branches with stable cancellable lanes", () => {
   assert.match(workflow, /push:\s*\n\s*branches:\s*\n\s*- dev\s*\n\s*- stage\s*\n\s*- main/);
   assert.match(

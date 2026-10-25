@@ -1,0 +1,391 @@
+import { Array, Option } from 'effect'
+import { readFile, readdir } from 'node:fs/promises'
+import { dirname, extname, join, relative, resolve, sep } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import type { Plugin } from 'vite'
+
+import { canaryVersion } from '../../../scripts/lib/package-version.mjs'
+import {
+  publicWorkspacePackages,
+  readWorkspacePackages,
+} from '../../../scripts/lib/workspace-packages.mjs'
+import { runnableExampleSlugs } from '../src/page/example/meta.ts'
+
+const SCRIPT_DIRECTORY = dirname(fileURLToPath(import.meta.url))
+const WEBSITE_ROOT = resolve(SCRIPT_DIRECTORY, '..')
+const REPO_ROOT = resolve(WEBSITE_ROOT, '../..')
+const EXAMPLES_DIRECTORY = resolve(WEBSITE_ROOT, '../../examples')
+const TS_CONFIG_BASE_PATH = resolve(WEBSITE_ROOT, '../../tsconfig.base.json')
+
+const VIRTUAL_MODULE_ID = 'virtual:playground-files'
+const RESOLVED_VIRTUAL_MODULE_ID = '\0' + VIRTUAL_MODULE_ID
+
+export const INCLUDED_EXTENSIONS: ReadonlySet<string> = new Set([
+  '.ts',
+  '.tsx',
+  '.css',
+  '.html',
+  '.json',
+  '.md',
+  // No example ships one today, and an example is free to add one: a
+  // playground that skipped it would offer a project whose files are not all
+  // there.
+  '.mjs',
+])
+const EXPECTED_SKIP_EXTENSIONS = new Set([
+  '.gif',
+  '.ico',
+  '.jpeg',
+  '.jpg',
+  '.log',
+  '.map',
+  '.png',
+  '.svg',
+  '.tsbuildinfo',
+  '.txt',
+  '.webp',
+])
+const EXCLUDED_DIRECTORIES = new Set(['node_modules', 'dist'])
+
+// NOTE: The playground keeps only the development dependencies its shipped
+// commands execute: `vite`, the Foldkit plugins its Vite config loads, and
+// `@tailwindcss/vite`. Omitting one produces a manifest whose own scripts
+// cannot run in a clean WebContainer or disposable npm project.
+const PLAYGROUND_DEV_DEPENDENCIES = new Set([
+  '@foldkit/devtools',
+  '@foldkit/vite-plugin',
+  '@tailwindcss/vite',
+  'tailwindcss',
+  'vite',
+])
+
+const STANDALONE_VITE_CONFIG = `import { foldkit } from '@foldkit/vite-plugin'
+import tailwindcss from '@tailwindcss/vite'
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  plugins: [tailwindcss(), foldkit({ devToolsMcpPort: false })],
+})
+`
+
+// NOTE: An example's vite.config.ts imports the monorepo alias helper, which
+// does not exist inside the WebContainer, so the playground replaces it with
+// STANDALONE_VITE_CONFIG. An example that needs extra plugins in the
+// playground (e.g. personal-blog's markdown compiler) ships a
+// vite.config.playground.ts written against published packages; when present,
+// its contents become the WebContainer's vite.config.ts instead.
+const PLAYGROUND_VITE_CONFIG_FILENAME = 'vite.config.playground.ts'
+
+// An example that ships this server entry is server-rendered, so its root is
+// filled at request time and must not receive the client-only Loading
+// placeholder. Built with `join` so the comparison uses the OS separator that
+// `relative` produced for the collected paths.
+const SERVER_ENTRY_PATH = join('src', 'entry.server.ts')
+
+const ROOT_LOADING_MARKUP = `<div id="root"><div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:system-ui,-apple-system,sans-serif;font-size:14px;color:#9ca3af">Loading\u2026</div></div>`
+
+type DependencySpec = Readonly<Record<string, string>>
+
+type PackageJson = Readonly<{
+  dependencies?: DependencySpec
+  devDependencies?: DependencySpec
+  optionalDependencies?: DependencySpec
+  peerDependencies?: DependencySpec
+  overrides?: DependencySpec
+  [key: string]: unknown
+}>
+
+type TsConfig = Readonly<{
+  extends?: string
+  compilerOptions?: Readonly<Record<string, unknown>>
+  include?: ReadonlyArray<string>
+  exclude?: ReadonlyArray<string>
+  [key: string]: unknown
+}>
+
+// NOTE: pinned exactly rather than as a caret range. A playground manifest is
+// deployed with the site and installs from npm long afterward, so a range can
+// resolve a future plugin release whose Foldkit peer floor is newer than the
+// deployed site's package. An exact version installs what the site was built
+// against, and a site rebuilt from the version commit is what moves it.
+const rewriteWorkspaceSpec =
+  (versions: Readonly<Record<string, string>>) =>
+  (name: string, specifier: string): string => {
+    if (!specifier.startsWith('workspace:')) {
+      return specifier
+    }
+
+    const version = versions[name]
+
+    if (version === undefined) {
+      throw new Error(
+        `[playground-files] ${name} uses ${specifier} but is not a public workspace package`,
+      )
+    }
+
+    return version
+  }
+
+// NOTE: Rolldown 1.2.9's generated loader rejects its WASI binding because
+// both export `__napiBindingTarget`. WebContainers must use the last compatible
+// release until Rolldown publishes a matching loader and binding pair.
+export const PLAYGROUND_DEPENDENCY_OVERRIDES: DependencySpec = {
+  rolldown: '1.2.6',
+}
+
+const versionForDeployment = (
+  version: string,
+  canaryCommit: string | undefined,
+): string => {
+  if (canaryCommit === undefined) {
+    return version
+  } else {
+    return canaryVersion(version, canaryCommit)
+  }
+}
+
+const rewriteDependencyMap = (
+  dependencies: DependencySpec | undefined,
+  rewrite: (name: string, specifier: string) => string,
+): DependencySpec | undefined => {
+  if (dependencies === undefined) {
+    return undefined
+  }
+  return Object.fromEntries(
+    Object.entries(dependencies).map(([name, specifier]) => [
+      name,
+      rewrite(name, specifier),
+    ]),
+  )
+}
+
+const filterToRuntimeDevDependencies = (
+  devDependencies: DependencySpec | undefined,
+): DependencySpec | undefined => {
+  if (devDependencies === undefined) {
+    return undefined
+  }
+  const entries = Object.entries(devDependencies).filter(([name]) =>
+    PLAYGROUND_DEV_DEPENDENCIES.has(name),
+  )
+  return entries.length === 0 ? undefined : Object.fromEntries(entries)
+}
+
+const transformPackageJson = (
+  raw: string,
+  versions: Readonly<Record<string, string>>,
+): string => {
+  const packageJson: PackageJson = JSON.parse(raw)
+  const rewrite = rewriteWorkspaceSpec(versions)
+  const transformed = {
+    ...packageJson,
+    overrides: {
+      ...(packageJson.overrides ?? {}),
+      ...PLAYGROUND_DEPENDENCY_OVERRIDES,
+    },
+    dependencies: rewriteDependencyMap(packageJson.dependencies, rewrite),
+    devDependencies: rewriteDependencyMap(
+      filterToRuntimeDevDependencies(packageJson.devDependencies),
+      rewrite,
+    ),
+    optionalDependencies: rewriteDependencyMap(
+      packageJson.optionalDependencies,
+      rewrite,
+    ),
+    peerDependencies: rewriteDependencyMap(
+      packageJson.peerDependencies,
+      rewrite,
+    ),
+  }
+  return JSON.stringify(transformed, null, 2) + '\n'
+}
+
+const transformTsConfig = (
+  raw: string,
+  baseCompilerOptions: Readonly<Record<string, unknown>>,
+  baseExclude: ReadonlyArray<string>,
+): string => {
+  const tsConfig: TsConfig = JSON.parse(raw)
+  const merged = {
+    compilerOptions: {
+      ...baseCompilerOptions,
+      ...(tsConfig.compilerOptions ?? {}),
+    },
+    ...(tsConfig.include ? { include: tsConfig.include } : {}),
+    exclude: Array.dedupe([...baseExclude, ...(tsConfig.exclude ?? [])]),
+  }
+  return JSON.stringify(merged, null, 2) + '\n'
+}
+
+const ROOT_ELEMENT_PATTERN = /<div\b[^>]*\bid="root"[^>]*>\s*<\/div>/
+
+const injectLoadingPlaceholder = (indexHtml: string, slug: string): string => {
+  if (!ROOT_ELEMENT_PATTERN.test(indexHtml)) {
+    throw new Error(
+      `[playground-files] Could not find <div id="root"></div> in ${slug}/index.html to inject the playground loading placeholder. ` +
+        `Ensure the example's index.html contains an empty root div.`,
+    )
+  }
+  return indexHtml.replace(ROOT_ELEMENT_PATTERN, ROOT_LOADING_MARKUP)
+}
+
+const collectFiles = async (
+  directory: string,
+  baseDirectory: string,
+): Promise<ReadonlyArray<readonly [string, string]>> => {
+  const entries = await readdir(directory, { withFileTypes: true })
+  const results: Array<readonly [string, string]> = []
+  for (const entry of entries) {
+    if (entry.isDirectory()) {
+      if (EXCLUDED_DIRECTORIES.has(entry.name)) {
+        continue
+      }
+      const nested = await collectFiles(
+        join(entry.parentPath, entry.name),
+        baseDirectory,
+      )
+      results.push(...nested)
+      continue
+    }
+    const extension = extname(entry.name)
+    if (!INCLUDED_EXTENSIONS.has(extension)) {
+      if (!EXPECTED_SKIP_EXTENSIONS.has(extension)) {
+        const relativePath = relative(
+          baseDirectory,
+          join(entry.parentPath, entry.name),
+        )
+        console.warn(
+          `[playground-files] Skipping ${relativePath}: extension "${extension}" is not in the playground allowlist. ` +
+            `If this file is needed at runtime, add the extension to INCLUDED_EXTENSIONS in playgroundFilesPlugin.ts. ` +
+            `If it is intentionally not bundled, add the extension to EXPECTED_SKIP_EXTENSIONS to silence this warning.`,
+        )
+      }
+      continue
+    }
+    const absolutePath = join(entry.parentPath, entry.name)
+    const relativePath = relative(baseDirectory, absolutePath)
+    const contents = await readFile(absolutePath, 'utf-8')
+    results.push([relativePath, contents] as const)
+  }
+  return results
+}
+
+const buildExampleFileMap = async (
+  slug: string,
+  versions: Readonly<Record<string, string>>,
+  baseCompilerOptions: Readonly<Record<string, unknown>>,
+  baseExclude: ReadonlyArray<string>,
+): Promise<Record<string, string>> => {
+  const exampleDirectory = resolve(EXAMPLES_DIRECTORY, slug)
+  const rawFiles = await collectFiles(exampleDirectory, exampleDirectory)
+
+  const standaloneViteConfig = Option.getOrElse(
+    Option.map(
+      Array.findFirst(
+        rawFiles,
+        ([path]) => path === PLAYGROUND_VITE_CONFIG_FILENAME,
+      ),
+      ([, contents]) => contents,
+    ),
+    () => STANDALONE_VITE_CONFIG,
+  )
+
+  // A server-rendered example (one that ships src/entry.server.ts) fills its
+  // root at request time through the SSR dev middleware, which requires the
+  // template's `<div id="root"></div>` to stay exactly empty. Injecting the
+  // client-only Loading placeholder into it would make every render throw, so
+  // the placeholder is only added to SPA examples.
+  const isServerRendered = rawFiles.some(([path]) => path === SERVER_ENTRY_PATH)
+
+  // NOTE: Markdown is bundled only from src/, where it is app content compiled
+  // by @foldkit/markdown. Root-level markdown (README, CHANGELOG) is
+  // documentation and stays out of the WebContainer.
+  const transformedEntries = rawFiles
+    .filter(([path]) => path !== PLAYGROUND_VITE_CONFIG_FILENAME)
+    .filter(
+      ([path]) =>
+        extname(path) !== '.md' || path.split(sep).join('/').startsWith('src/'),
+    )
+    .map(([path, contents]) => {
+      if (path === 'package.json') {
+        return [path, transformPackageJson(contents, versions)] as const
+      }
+      if (path === 'tsconfig.json') {
+        return [
+          path,
+          transformTsConfig(contents, baseCompilerOptions, baseExclude),
+        ] as const
+      }
+      if (path === 'vite.config.ts') {
+        return [path, standaloneViteConfig] as const
+      }
+      if (path === 'index.html') {
+        return [
+          path,
+          isServerRendered
+            ? contents
+            : injectLoadingPlaceholder(contents, slug),
+        ] as const
+      }
+      return [path, contents] as const
+    })
+
+  return Object.fromEntries(transformedEntries)
+}
+
+export const playgroundFilesPlugin = (): Plugin => ({
+  name: 'playground-files',
+  resolveId(id) {
+    if (id === VIRTUAL_MODULE_ID) {
+      return RESOLVED_VIRTUAL_MODULE_ID
+    }
+    return undefined
+  },
+  async load(id) {
+    if (id !== RESOLVED_VIRTUAL_MODULE_ID) {
+      return undefined
+    }
+
+    return `export default ${JSON.stringify(await loadPlaygroundFiles())}`
+  },
+})
+
+export const loadPlaygroundWorkspacePackageVersions = async (): Promise<
+  Readonly<Record<string, string>>
+> => {
+  const canaryCommit = process.env['VITE_FOLDKIT_CANARY_COMMIT']
+  const packages = publicWorkspacePackages(readWorkspacePackages(REPO_ROOT))
+  const entries = packages.map<readonly [string, string]>(({ packageJson }) => [
+    packageJson.name,
+    versionForDeployment(packageJson.version, canaryCommit),
+  ])
+  return Object.fromEntries(entries)
+}
+
+export const loadPlaygroundFiles = async (): Promise<
+  Readonly<
+    Record<string, Readonly<{ files: Readonly<Record<string, string>> }>>
+  >
+> => {
+  const versions = await loadPlaygroundWorkspacePackageVersions()
+  const tsConfigBase: TsConfig = JSON.parse(
+    await readFile(TS_CONFIG_BASE_PATH, 'utf-8'),
+  )
+
+  const baseCompilerOptions = tsConfigBase.compilerOptions ?? {}
+  const baseExclude = tsConfigBase.exclude ?? []
+
+  const entries = await Promise.all(
+    runnableExampleSlugs.map(async slug => {
+      const files = await buildExampleFileMap(
+        slug,
+        versions,
+        baseCompilerOptions,
+        baseExclude,
+      )
+      return [slug, { files }] as const
+    }),
+  )
+
+  return Object.fromEntries(entries)
+}

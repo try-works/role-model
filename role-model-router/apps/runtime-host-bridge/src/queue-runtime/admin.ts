@@ -16,6 +16,7 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
+import { type SqliteService, makeSync } from "@effect/sql-sqlite-node/service";
 
 import { QUEUE_STORE_TABLE, resolveQueueStorePath } from "./store.js";
 
@@ -33,13 +34,18 @@ export class QueueJobCancelledError extends Error {
   }
 }
 
-function openReadOnly(stateRoot: string): DatabaseSync | null {
+/** S6e test seam: the read-only queue-admin connection with busy_timeout=0. */
+export function openReadOnly(stateRoot: string): SqliteService | null {
   // Run 101 addendum 01: the fold keeps a `track-b` root (the sidecar's form)
   // and a scope root (the host's form) on the same file.
   const filePath = resolveQueueStorePath({ stateRoot });
   if (!existsSync(filePath)) return null;
   try {
-    return new DatabaseSync(filePath, { readOnly: true });
+    return makeSync({
+      databasePath: filePath,
+      openDatabase: (databasePath) => new DatabaseSync(databasePath, { readOnly: true }),
+      setup: (db) => db.exec("PRAGMA busy_timeout = 0"),
+    });
   } catch {
     return null;
   }
@@ -59,15 +65,16 @@ export function isQueueDraining({
   const database = openReadOnly(stateRoot);
   if (!database) return false;
   try {
-    const row = database
-      .prepare(`SELECT draining FROM ${QUEUE_CONTROL_TABLE} WHERE queue_name = ?`)
-      .get(queue) as { draining?: number } | undefined;
+    const row = database.querySync(
+      `SELECT draining FROM ${QUEUE_CONTROL_TABLE} WHERE queue_name = ?`,
+      [queue],
+    )[0] as { draining?: number } | undefined;
     return Number(row?.draining ?? 0) === 1;
   } catch {
     // No control table yet: the queue has never been drained.
     return false;
   } finally {
-    database.close();
+    database.closeSync();
   }
 }
 
@@ -90,14 +97,15 @@ export function readQueueJobState({
   const database = openReadOnly(stateRoot);
   if (!database) return null;
   try {
-    const row = database
-      .prepare(`SELECT state, acquired_by FROM ${tableName} WHERE queue_name = ? AND id = ?`)
-      .get(queue, jobId) as { state?: string; acquired_by?: string | null } | undefined;
+    const row = database.querySync(
+      `SELECT state, acquired_by FROM ${tableName} WHERE queue_name = ? AND id = ?`,
+      [queue, jobId],
+    )[0] as { state?: string; acquired_by?: string | null } | undefined;
     if (!row || typeof row.state !== "string") return null;
     return { state: row.state, acquiredBy: row.acquired_by ?? null };
   } catch {
     return null;
   } finally {
-    database.close();
+    database.closeSync();
   }
 }

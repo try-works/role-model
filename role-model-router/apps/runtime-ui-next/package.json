@@ -1,0 +1,30 @@
+{
+  "name": "@role-model-router/runtime-ui-next",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Run 115 S14a: minimal Foldkit app shell hosted on the first-party wrapper stack (RM3 button primitive, real runtime mount under happy-dom).",
+  "exports": {
+    ".": "./src/index.ts",
+    "./init": "./src/init.ts",
+    "./message": "./src/message.ts",
+    "./model": "./src/model.ts",
+    "./mount": "./src/mount.ts",
+    "./update": "./src/update.ts",
+    "./view": "./src/view.ts"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "happy-dom": "^20.0.0",
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "@role-model-router/effect-platform-browser": "workspace:*",
+    "@role-model-router/foldkit": "workspace:*",
+    "@role-model-router/foldkit-ui": "workspace:*",
+    "@role-model/ui": "workspace:*",
+    "effect": "workspace:*"
+  }
+}

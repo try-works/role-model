@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "role-model.vendored-upstream.v1",
+  "upstream": {
+    "name": "crease",
+    "url": "https://github.com/Potti1234/creaseui",
+    "tag": "(commit-only pin: the repository advertises no tag or branch at this commit)",
+    "commit": "bb447e363e9c717bf11ebb10b2259f053bff6f71",
+    "commitDate": "2026-10-22T00:20:36+02:00",
+    "license": "MIT (Copyright (c) 2026 Potti1234)"
+  },
+  "vendoredInto": "role-model",
+  "vendoredAt": "2026-10-24T17:19:37.224Z",
+  "payload": {
+    "root": "vendor/crease",
+    "includes": [
+      "src/**",
+      "LICENSE/**",
+      "compatibility.json"
+    ],
+    "excludes": [
+      ".git",
+      "node_modules",
+      "**/dist/**",
+      "**/coverage/**",
+      ".github/**"
+    ]
+  },
+  "fileCount": 1512,
+  "byteCount": 13981911,
+  "contentDigest": "e37e001fd8ba4a9f2f4e530ea391ca288472251d3a0b6b4450e55e6b666c6bed",
+  "wiring": "not a workspace package and not imported by any build; a lint-ignored source drop only"
+}

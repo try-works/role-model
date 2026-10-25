@@ -35,8 +35,8 @@ const REPO_ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const UPSTREAMS = {
   effect: {
     url: "https://github.com/Effect-TS/effect",
-    tag: "effect@4.0.1",
-    commit: "460272d30457f4697d8b8c52cad41caccbcace08",
+    tag: "effect@4.0.6",
+    commit: "3b28bf686bf26e9700edd39c025aff2744dc5303",
     dir: "vendor/effect",
     license: "MIT (Copyright (c) 2023 Effectful Technologies Inc)",
     packageGroups: "`effect`, `platform`, `sql`, `ai`, `atom`, `opentelemetry`, `vitest`, `tools`",
@@ -76,6 +76,50 @@ const UPSTREAMS = {
       "effect-mq is the Effect-native background-jobs library (schema-first job definitions, storage-agnostic queue " +
       "core, worker runtime and a drizzle/Postgres store) the durable-work lane is being aligned to. It targets the " +
       "same Effect v4 line vendored under `vendor/effect`.",
+  },
+  /**
+   * Run 115 S13a: the chart surface donor. The upstream advertises no tags at all and no branch or
+   * tag at this commit, so it is pinned by SHA and acquired with refMode "commit" (the acquisition
+   * fetches the object, then requires HEAD to equal it - the same double check a tag pin gets).
+   */
+  crease: {
+    url: "https://github.com/Potti1234/creaseui",
+    tag: "(commit-only pin: the repository advertises no tag or branch at this commit)",
+    commit: "bb447e363e9c717bf11ebb10b2259f053bff6f71",
+    refMode: "commit",
+    dir: "vendor/crease",
+    license: "MIT (Copyright (c) 2026 Potti1234)",
+    packageGroups: "none: this is a component source registry rather than a published package",
+    payload: ["src", "LICENSE", "compatibility.json"],
+    excludes: [".git", "node_modules", "**/dist/**", "**/coverage/**", ".github/**"],
+    reason:
+      "Crease UI carries the React-free pure-SVG chart helpers and the lazily imported ECharts renderer " +
+      "the R9 chart surface is modelled on; only its source is vendored, no dependency is added.",
+  },
+  foldkit: {
+    url: "https://github.com/foldkit/foldkit",
+    tag: "foldkit@0.169.0",
+    commit: "7ee214268c602967937b80f6f20d1e831f2e8ab6",
+    dir: "vendor/foldkit",
+    license: "MIT (Copyright (c) 2025 Devin Jameson)",
+    packageGroups:
+      "`foldkit`, `@foldkit/ui`, `@foldkit/devtools`, `@foldkit/vite-plugin`, `@foldkit/markdown`, " +
+      "`@foldkit/oxlint-plugin`, `create-foldkit-app`, `@foldkit/devtools-mcp`, `@foldkit/node`, `website`",
+    payload: ["packages", "LICENSE", "README.md"],
+    excludes: [
+      ".git",
+      "node_modules",
+      "*.tsbuildinfo",
+      "**/dist/**",
+      "**/coverage/**",
+      ".github/**",
+      "examples/**",
+      "scripts/**",
+    ],
+    reason:
+      "Foldkit is the UI and application-architecture library the client port is being aligned to. Vendoring keeps " +
+      "the exact reviewed source in-repo (offline builds, no network resolution, an auditable pin) instead of a " +
+      "floating semver range.",
   },
 };
 
@@ -237,15 +281,47 @@ if (has("--sync")) {
     fail(`--commit must be a 40-character commit, saw "${commit}"`);
   const temp = mkdtempSync(path.join(tmpdir(), `vendor-${name}-`));
   try {
-    const clone = spawnSync("git", ["clone", "--depth", "1", "--branch", tag, upstream.url, temp], {
-      stdio: "pipe",
-      encoding: "utf8",
-    });
-    if (clone.status !== 0) fail(`git clone failed: ${clone.stderr?.trim() ?? clone.status}`);
+    /**
+     * Run 115 S13a: some reviewed pins are reachable by SHA only - the upstream advertises no tag or
+     * branch at that commit (Crease UI advertises none at all). An entry can therefore declare
+     * refMode: "commit", and the acquisition fetches that exact object instead of cloning a ref.
+     * The SHA is verified twice: the fetch names it, and HEAD must equal it afterwards.
+     */
+    const commitOnly = (flag("--ref-mode") ?? upstream.refMode) === "commit";
+    const clone = commitOnly
+      ? (() => {
+        spawnSync("git", ["init", "--quiet", temp], { stdio: "pipe", encoding: "utf8" });
+        spawnSync("git", ["-C", temp, "remote", "add", "origin", upstream.url], {
+          stdio: "pipe",
+          encoding: "utf8",
+        });
+        const fetched = spawnSync("git", ["-C", temp, "fetch", "--depth", "1", "origin", commit], {
+          stdio: "pipe",
+          encoding: "utf8",
+        });
+        if (fetched.status !== 0) return fetched;
+        return spawnSync("git", ["-C", temp, "checkout", "--quiet", "FETCH_HEAD"], {
+          stdio: "pipe",
+          encoding: "utf8",
+        });
+      })()
+      : spawnSync("git", ["clone", "--depth", "1", "--branch", tag, upstream.url, temp], {
+        stdio: "pipe",
+        encoding: "utf8",
+      });
+    if (clone.status !== 0)
+      fail(
+        "git " + (commitOnly ? "fetch" : "clone") + " failed: " +
+          (clone.stderr?.trim() ?? clone.status),
+      );
     const head = spawnSync("git", ["-C", temp, "rev-parse", "HEAD"], {
       encoding: "utf8",
     }).stdout.trim();
-    if (head !== commit) fail(`tag ${tag} resolves to ${head}, expected ${commit}`);
+    if (head !== commit)
+      fail(
+        (commitOnly ? "fetched commit " + commit : "tag " + tag) +
+          " resolves to " + head + ", expected " + commit,
+      );
     const commitDate = spawnSync("git", ["-C", temp, "log", "-1", "--format=%cI"], {
       encoding: "utf8",
     }).stdout.trim();

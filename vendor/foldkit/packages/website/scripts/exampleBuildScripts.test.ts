@@ -1,0 +1,201 @@
+import { existsSync, readFileSync } from 'node:fs'
+import { dirname, extname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { beforeAll, describe, expect, it } from 'vitest'
+
+import { canaryVersion } from '../../../scripts/lib/package-version.mjs'
+import { EXAMPLE_FILE_EXTENSIONS, EXAMPLE_ROOT_FILES } from '../vite.config'
+import {
+  INCLUDED_EXTENSIONS,
+  PLAYGROUND_DEPENDENCY_OVERRIDES,
+  loadPlaygroundFiles,
+  loadPlaygroundWorkspacePackageVersions,
+} from './playgroundFilesPlugin'
+
+const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../..')
+
+const SERVER_RENDERED_EXAMPLES = ['ssr', 'ssg']
+const CANARY_COMMIT = '0123456789abcdef0123456789abcdef01234567'
+
+type PlaygroundFiles = Awaited<ReturnType<typeof loadPlaygroundFiles>>
+type WorkspacePackageVersions = Awaited<
+  ReturnType<typeof loadPlaygroundWorkspacePackageVersions>
+>
+
+let stablePlaygroundFiles: PlaygroundFiles
+let stableWorkspacePackageVersions: WorkspacePackageVersions
+
+const buildScriptOf = (slug: string): string => {
+  const manifest: Readonly<{ scripts: Readonly<Record<string, string>> }> =
+    JSON.parse(
+      readFileSync(
+        resolve(REPO_ROOT, 'examples', slug, 'package.json'),
+        'utf8',
+      ),
+    )
+  return manifest.scripts['build'] ?? ''
+}
+
+// The playground and the example source tabs both publish what an example is
+// made of. `vite build` reads the config rather than a script, so the config is
+// the file that has to reach both.
+describe('server-rendered example build scripts', () => {
+  beforeAll(async () => {
+    const previousCanaryCommit = process.env['VITE_FOLDKIT_CANARY_COMMIT']
+    delete process.env['VITE_FOLDKIT_CANARY_COMMIT']
+
+    try {
+      const [playgroundFiles, workspacePackageVersions] = await Promise.all([
+        loadPlaygroundFiles(),
+        loadPlaygroundWorkspacePackageVersions(),
+      ])
+
+      stablePlaygroundFiles = playgroundFiles
+      stableWorkspacePackageVersions = workspacePackageVersions
+    } finally {
+      if (previousCanaryCommit === undefined) {
+        delete process.env['VITE_FOLDKIT_CANARY_COMMIT']
+      } else {
+        process.env['VITE_FOLDKIT_CANARY_COMMIT'] = previousCanaryCommit
+      }
+    }
+  })
+
+  for (const slug of SERVER_RENDERED_EXAMPLES) {
+    it(`ships the config the ${slug} build command reads`, () => {
+      expect(buildScriptOf(slug)).toBe('vite build')
+
+      const configFileName = 'vite.config.ts'
+      expect(
+        existsSync(resolve(REPO_ROOT, 'examples', slug, configFileName)),
+      ).toBe(true)
+      expect(EXAMPLE_ROOT_FILES).toContain(configFileName)
+      expect(EXAMPLE_FILE_EXTENSIONS.has(extname(configFileName))).toBe(true)
+      expect(INCLUDED_EXTENSIONS.has(extname(configFileName))).toBe(true)
+    })
+  }
+
+  it('retains the executable the transformed SSG build invokes', () => {
+    const ssgEntry = Object.entries(stablePlaygroundFiles).find(
+      ([slug]) => slug === 'ssg',
+    )
+    if (ssgEntry === undefined) {
+      throw new Error('the transformed playground files omit ssg')
+    }
+    const [, ssg] = ssgEntry
+
+    const packageJsonFile = Object.entries(ssg.files).find(
+      ([path]) => path === 'package.json',
+    )
+    if (packageJsonFile === undefined) {
+      throw new Error('the transformed SSG playground omits package.json')
+    }
+    const [, packageJson] = packageJsonFile
+
+    const manifest: Readonly<{
+      devDependencies?: Readonly<Record<string, string>>
+    }> = JSON.parse(packageJson)
+    expect(manifest.devDependencies).toHaveProperty('vite')
+  })
+
+  it('disables the MCP relay in every runnable playground', () => {
+    expect(Object.keys(stablePlaygroundFiles)).not.toHaveLength(0)
+
+    for (const [slug, { files }] of Object.entries(stablePlaygroundFiles)) {
+      expect(files['vite.config.ts'], slug).toContain('devToolsMcpPort: false')
+    }
+  })
+
+  it('pins every transformed workspace dependency to its exact version', () => {
+    for (const [slug, { files }] of Object.entries(stablePlaygroundFiles)) {
+      const source = files['package.json']
+      if (source === undefined) {
+        throw new Error(`the ${slug} playground omits package.json`)
+      }
+      const manifest: Readonly<{
+        dependencies?: Readonly<Record<string, string>>
+        devDependencies?: Readonly<Record<string, string>>
+        optionalDependencies?: Readonly<Record<string, string>>
+        peerDependencies?: Readonly<Record<string, string>>
+      }> = JSON.parse(source)
+      const dependencies = {
+        ...(manifest.dependencies ?? {}),
+        ...(manifest.devDependencies ?? {}),
+        ...(manifest.optionalDependencies ?? {}),
+        ...(manifest.peerDependencies ?? {}),
+      }
+      for (const [name, specifier] of Object.entries(dependencies)) {
+        expect(specifier, `${slug}: ${name}`).not.toMatch(/^workspace:/)
+      }
+      for (const [name, version] of Object.entries(
+        stableWorkspacePackageVersions,
+      )) {
+        if (dependencies[name] !== undefined) {
+          expect(dependencies[name], `${slug}: ${name}`).toBe(version)
+        }
+      }
+    }
+  })
+
+  it('pins WebContainer dependency overrides', () => {
+    for (const [slug, { files }] of Object.entries(stablePlaygroundFiles)) {
+      const source = files['package.json']
+      if (source === undefined) {
+        throw new Error(`the ${slug} playground omits package.json`)
+      }
+      const manifest: Readonly<{
+        overrides?: Readonly<Record<string, string>>
+      }> = JSON.parse(source)
+      expect(manifest.overrides, slug).toEqual(PLAYGROUND_DEPENDENCY_OVERRIDES)
+    }
+  })
+
+  it('pins canary playground dependencies to the commit-addressed snapshot', async () => {
+    const previousCanaryCommit = process.env['VITE_FOLDKIT_CANARY_COMMIT']
+    process.env['VITE_FOLDKIT_CANARY_COMMIT'] = CANARY_COMMIT
+
+    try {
+      const bySlug = await loadPlaygroundFiles()
+
+      for (const [slug, { files }] of Object.entries(bySlug)) {
+        const source = files['package.json']
+        if (source === undefined) {
+          throw new Error(`the ${slug} playground omits package.json`)
+        }
+
+        const manifest: Readonly<{
+          dependencies?: Readonly<Record<string, string>>
+          devDependencies?: Readonly<Record<string, string>>
+          optionalDependencies?: Readonly<Record<string, string>>
+          peerDependencies?: Readonly<Record<string, string>>
+        }> = JSON.parse(source)
+        const dependencies = {
+          ...(manifest.dependencies ?? {}),
+          ...(manifest.devDependencies ?? {}),
+          ...(manifest.optionalDependencies ?? {}),
+          ...(manifest.peerDependencies ?? {}),
+        }
+
+        for (const [name, specifier] of Object.entries(dependencies)) {
+          expect(specifier, `${slug}: ${name}`).not.toMatch(/^workspace:/)
+        }
+
+        for (const [name, stableVersion] of Object.entries(
+          stableWorkspacePackageVersions,
+        )) {
+          if (dependencies[name] !== undefined) {
+            expect(dependencies[name], `${slug}: ${name}`).toBe(
+              canaryVersion(stableVersion, CANARY_COMMIT),
+            )
+          }
+        }
+      }
+    } finally {
+      if (previousCanaryCommit === undefined) {
+        delete process.env['VITE_FOLDKIT_CANARY_COMMIT']
+      } else {
+        process.env['VITE_FOLDKIT_CANARY_COMMIT'] = previousCanaryCommit
+      }
+    }
+  })
+})

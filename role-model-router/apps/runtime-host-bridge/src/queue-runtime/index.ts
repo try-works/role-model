@@ -38,7 +38,11 @@ import {
   makeReplayDispatchQueue,
 } from "./queues.js";
 import { makeQueueStoreCleanupLayer, storeLayerForQueuePolicy } from "./store.js";
-import { type ReplayDispatchWorker, runReplayDispatchWorker } from "./workers.js";
+import {
+  type QueueAttemptContext,
+  type ReplayDispatchWorker,
+  runReplayDispatchWorker,
+} from "./workers.js";
 import { runEvaluationScoreWorker } from "./workers.js";
 import { runLearnerDeriveWorker, runLearnerPromoteWorker } from "./workers.js";
 
@@ -49,7 +53,7 @@ export interface ReplayQueueRuntimeOptions {
   /** What a claimed replay job should do. Omitted means "shadow only": nothing claims. */
   readonly handler?: (
     job: ReplayDispatchJob,
-    context: { readonly attempt: number },
+    context: QueueAttemptContext,
   ) => Promise<void>;
   readonly onAttemptFailure?: (error: unknown, job: ReplayDispatchJob) => void;
 }
@@ -227,7 +231,7 @@ export interface EvaluationQueueRuntimeOptions {
    */
   readonly handler?: (
     job: EvaluationScoreJob,
-    context: { readonly attempt: number },
+    context: QueueAttemptContext,
   ) => Promise<void>;
   readonly onAttemptFailure?: (error: unknown, job: EvaluationScoreJob) => void;
 }
@@ -328,12 +332,12 @@ export interface LearnerQueueRuntimeOptions {
    */
   readonly deriveHandler?: (
     job: LearnerDeriveJob,
-    context: { readonly attempt: number },
+    context: QueueAttemptContext,
   ) => Promise<void>;
   /** Promotes one candidate; serialized by the queue's concurrency. */
   readonly promoteHandler?: (
     job: LearnerPromoteJob,
-    context: { readonly attempt: number },
+    context: QueueAttemptContext,
   ) => Promise<void>;
   readonly onDeriveFailure?: (error: unknown, job: LearnerDeriveJob) => void;
   readonly onPromoteFailure?: (error: unknown, job: LearnerPromoteJob) => void;
