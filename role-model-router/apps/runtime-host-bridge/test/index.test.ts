@@ -8229,10 +8229,20 @@ describe("runtime-host-bridge", () => {
 
     try {
       for (const route of ["/", "/app", "/app/router/strategy"]) {
-        const response = await fetch(`http://127.0.0.1:${server.port}${route}`);
+        const response = await fetch(`http://127.0.0.1:${server.port}${route}`, {
+          headers: { accept: "text/html" },
+        });
         expect(response.status).toBe(200);
         expect(response.headers.get("content-type")).toContain("text/html");
         expect(await response.text()).toContain("runtime ui shell");
+      }
+      for (const route of ["/api/role-model/does-not-exist", "/v1/messages", "/api/role-model/router/strategy"]) {
+        const response = await fetch(`http://127.0.0.1:${server.port}${route}`, {
+          headers: { accept: "text/html" },
+        });
+        expect(response.status).toBe(404);
+        expect(response.headers.get("content-type")).toContain("application/json");
+        expect(await response.json()).toEqual({ error: "not found" });
       }
     } finally {
       await server.close();

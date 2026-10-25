@@ -20300,6 +20300,15 @@ function createRequestHandler(options: StartBridgeServerOptions) {
         options.staticRoot,
         url.pathname === "/" ? "index.html" : url.pathname,
       );
+      const isApiPath = url.pathname.startsWith("/api/") || url.pathname.startsWith("/v1/");
+      const wantsHtml = (request.headers.accept ?? "").includes("text/html");
+      if (!existsSync(filePath) && (isApiPath || !wantsHtml)) {
+        // S38a: API paths never fall back to the SPA index; a mistyped GET must be a
+        // typed 404 instead of a 200 text/html false success. Non-API navigation still
+        // gets index.html for deep links.
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
       const resolvedPath = existsSync(filePath)
         ? filePath
         : path.join(options.staticRoot, "index.html");
