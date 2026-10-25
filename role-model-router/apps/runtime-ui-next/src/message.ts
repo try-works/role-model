@@ -84,6 +84,10 @@ export const Message: MessageUnion<{
   readonly SelectedOverviewWindow: {
     readonly windowMs: typeof Schema.Number;
   };
+  readonly OverviewFilterChanged: {
+    readonly filter: typeof Schema.String;
+    readonly value: typeof Schema.String;
+  };
   readonly RefreshResynced: {
     readonly routeId: typeof Schema.String;
     readonly snapshot: typeof DiagnosticsSnapshot;
@@ -123,6 +127,7 @@ export const Message: MessageUnion<{
   StudioFailed: { message: Schema.String, statusCode: Schema.Number, responseText: Schema.String, token: Schema.Number },
   StudioRunRequested: { token: Schema.Number },
   SelectedOverviewWindow: { windowMs: Schema.Number },
+  OverviewFilterChanged: { filter: Schema.String, value: Schema.String },
   RefreshResynced: { routeId: Schema.String, snapshot: DiagnosticsSnapshot, token: Schema.Number },
   RefreshResyncFailed: { message: Schema.String, routeId: Schema.String, token: Schema.Number },
   RuntimeRevisionReceived: { revision: Schema.Number },

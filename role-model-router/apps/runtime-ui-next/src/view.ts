@@ -12,6 +12,7 @@ import {
   formatAge,
 } from "./diagnostics";
 import { Message } from "./message";
+import { DEFAULT_OVERVIEW_FILTERS, OVERVIEW_BREAKDOWNS, OVERVIEW_DIFFICULTIES, OVERVIEW_SOURCES, OVERVIEW_STATUSES, overviewSummary, type OverviewFilters } from "./overview-filters";
 import type { Model } from "./model";
 import type { ObservabilityState } from "./observability";
 import { view as chartView } from "@role-model/ui/foldkit-chart";
@@ -549,6 +550,7 @@ const overviewPage = (
   candidates: ReadbacksState["routerCandidates"],
   windowMs: number,
   h: HtmlBuilder<Message>,
+  appliedFilters: OverviewFilters = DEFAULT_OVERVIEW_FILTERS,
 ): Html => {
   const period = windowLabel(windowMs);
   const filters = h.div(
@@ -568,10 +570,22 @@ const overviewPage = (
       ),
     ),
   );
+  const filterSelect = (label: string, filter: "source" | "status" | "difficulty" | "breakdown", value: string, options: readonly string[]) => h.label([h.Class("flex flex-col gap-1 text-[11px] text-[var(--rm-secondary)]")], [h.span([h.Class("uppercase tracking-[0.12em] text-[var(--rm-muted)]")], [label]), h.select([h.Class("min-h-8 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-panel)] px-2 text-[12px] text-[var(--rm-fg)]"), h.DataAttribute("overview-filter", filter), h.OnChange((next) => Message.OverviewFilterChanged({ filter, value: next }))], options.map((option) => h.option([h.Value(option), ...(option === value ? [h.Selected(true)] : [])], [option === "all" ? "All" : option[0]?.toUpperCase() + option.slice(1)])))]);
+  const breakdownValues = appliedFilters.breakdown === "all" ? [] : candidates.rows.flatMap((entry) => { try { const meta = JSON.parse(entry.meta) as { endpointId?: unknown; modelId?: unknown; providerId?: unknown }; const raw = appliedFilters.breakdown === "endpoint" ? meta.endpointId : appliedFilters.breakdown === "provider" ? meta.providerId : meta.modelId; return typeof raw === "string" && raw.length > 0 ? [raw] : []; } catch { return []; } });
   const filterRow = h.div([h.Class("flex flex-col gap-1")], [h.span([h.Class("text-[11px] uppercase tracking-[0.12em] text-[var(--rm-muted)]")], ["Time range"]), filters]);
+  const advancedFilters = h.div([h.Class("mt-2 flex flex-wrap items-end gap-2"), h.DataAttribute("overview-filter-row", "")], [
+    filterSelect("Breakdown", "breakdown", appliedFilters.breakdown, [...OVERVIEW_BREAKDOWNS]),
+    ...(appliedFilters.breakdown === "all" ? [] : [h.label([h.Class("flex flex-col gap-1 text-[11px] text-[var(--rm-secondary)]")], [h.span([h.Class("uppercase tracking-[0.12em] text-[var(--rm-muted)]")], [appliedFilters.breakdown]), h.select([h.Class("min-h-8 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-panel)] px-2 text-[12px] text-[var(--rm-fg)]"), h.DataAttribute("overview-filter-value", ""), h.OnChange((next) => Message.OverviewFilterChanged({ filter: "breakdownValue", value: next }))], breakdownValues.map((option) => h.option([h.Value(option), ...(option === appliedFilters.breakdownValue ? [h.Selected(true)] : [])], [option])))]),]),
+    filterSelect("Source", "source", appliedFilters.source, [...OVERVIEW_SOURCES]),
+    filterSelect("Status", "status", appliedFilters.status, [...OVERVIEW_STATUSES]),
+    filterSelect("Difficulty", "difficulty", appliedFilters.difficulty, [...OVERVIEW_DIFFICULTIES]),
+  ]);
+  const summary = h.p([h.Class("mt-2 text-[11px] text-[var(--rm-secondary)]"), h.DataAttribute("overview-summary", "")], [overviewSummary(appliedFilters)]);
   const header = h.div([], [
     h.p([h.Class("text-[12px] text-[var(--rm-secondary)]"), h.DataAttribute("overview-period", period)], ["Last " + period]),
     filterRow,
+    advancedFilters,
+    summary,
   ]);
   if (state.status === "loading") {
     return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "index"), h.DataAttribute("readback-route", "dashboard")], [header, h.p([h.AriaBusy(true), h.DataAttribute("overview-state", "loading"), h.DataAttribute("readback-state", "loading")], ["Loading telemetry…"])]);
@@ -583,6 +597,7 @@ const overviewPage = (
     return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "index"), h.DataAttribute("readback-route", "dashboard")], [header, h.section([h.Class("rounded-[8px] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-4"), h.DataAttribute("overview-card", "empty")], [h.h2([h.Class("text-[15px] font-semibold")], ["No telemetry yet"]), h.p([h.Class("mt-1 text-[12px] text-[var(--rm-secondary)]"), h.DataAttribute("overview-state", "empty"), h.DataAttribute("readback-state", "empty")], ["No telemetry requests in the last " + period.toLowerCase() + ". Run a request or widen the time range."])])]);
   }
   const { buckets } = bucketsFor(state, windowMs);
+  const itemCount = state.rows.reduce((sum, entry) => { try { const meta = JSON.parse(entry.meta) as { items?: unknown }; return sum + (Array.isArray(meta.items) ? meta.items.length : 0); } catch { return sum; } }, 0);
   const card = (title: string, description: string, chart: Html) => h.section([h.Class("min-h-[300px] rounded-[8px] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-4"), h.DataAttribute("overview-card", title), h.AriaLabel(title + ": " + description)], [chart]);
   const modelRows = candidates.rows.flatMap((entry) => {
     try {
@@ -619,7 +634,7 @@ const overviewPage = (
     { id: "success", label: "Success", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.empty ? null : bucket.success })) },
     { id: "failure", label: "Failure", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.empty ? null : bucket.failure })) },
   ], state: { status: "ready" }, yUnit: "requests" }, h));
-  const charts = h.div([h.Class("mt-6 grid gap-4"), h.DataAttribute("overview-charts", ""), h.DataAttribute("overview-window", period), h.DataAttribute("overview-buckets", String(buckets.filter((bucket) => !bucket.empty).length)), h.DataAttribute("overview-labels", String(buckets.length))], [modelPool, tokenCard, latencyCard, outcomeCard]);
+  const charts = h.div([h.Class("mt-6 grid gap-4"), h.DataAttribute("overview-charts", ""), h.DataAttribute("overview-window", period), h.DataAttribute("overview-buckets", String(buckets.filter((bucket) => !bucket.empty).length)), h.DataAttribute("overview-items", String(itemCount)), h.DataAttribute("overview-labels", String(buckets.length))], [modelPool, tokenCard, latencyCard, outcomeCard]);
   return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "index"), h.DataAttribute("readback-route", "dashboard"), h.DataAttribute("overview-state", "success"), h.DataAttribute("readback-state", "ok"), h.DataAttribute("state", "success")], [header, charts]);
 };
 
@@ -709,6 +724,7 @@ const routeContent = (
   overviewWindowMs: number,
   studio: StudioState,
   h: HtmlBuilder<Message>,
+  overviewFilters?: OverviewFilters,
 ) =>
   AppRoute.match(route, {
     Diagnostics: ({ id }) =>
@@ -759,7 +775,7 @@ const routeContent = (
     Endpoints: () => renderControlPage(CONTROL_SPECS.endpoints, controls.endpoints, h),
     ControlController: () =>
       renderControlPage(CONTROL_SPECS.controlController, controls.controlController, h, controls.endpoints.rows.map((row) => row.id)),
-    Index: () => overviewPage(readbacks.overviewMetrics, readbacks.routerCandidates, overviewWindowMs, h),
+    Index: () => overviewPage(readbacks.overviewMetrics, readbacks.routerCandidates, overviewWindowMs, h, overviewFilters),
     NotFound: ({ path }) =>
       h.section(
         [
@@ -1017,6 +1033,7 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
                 model.overviewWindowMs ?? 86400000,
                 model.studio ?? studioIdle(),
                 h,
+                model.overviewFilters ?? DEFAULT_OVERVIEW_FILTERS,
               ),
             ],
           ),

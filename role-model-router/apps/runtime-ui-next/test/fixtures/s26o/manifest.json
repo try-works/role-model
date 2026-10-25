@@ -552,6 +552,45 @@
         "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
       },
       "bodyBytes": 4215
+    },
+    "overview-filtered-all.json": {
+      "url": "captured:temp-state-54434",
+      "status": 200,
+      "capturedAt": "2026-10-25T16:50:50.360Z",
+      "sha256": "a2a8371a85afca023911b73d078e6de80cd75d1bd3d6333aec99f970e73e2ad8",
+      "artifact": {
+        "version": "0.0.20-18-g6c9aeba1",
+        "commit": "6c9aeba15acd09be4fc6776cef66a1041394b65a",
+        "sourceTree": "e79ccfc7ee4c1d9a8eeee07f7e3aee115f2d106e",
+        "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
+      },
+      "bodyBytes": 3054
+    },
+    "overview-filtered-success.json": {
+      "url": "captured:temp-state-54434",
+      "status": 200,
+      "capturedAt": "2026-10-25T16:50:50.365Z",
+      "sha256": "979d803ba99cc04af79ea1e6dfaa41584c1901f6cf2f5edd42f7b50953365508",
+      "artifact": {
+        "version": "0.0.20-18-g6c9aeba1",
+        "commit": "6c9aeba15acd09be4fc6776cef66a1041394b65a",
+        "sourceTree": "e79ccfc7ee4c1d9a8eeee07f7e3aee115f2d106e",
+        "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
+      },
+      "bodyBytes": 2351
+    },
+    "overview-filtered-failure.json": {
+      "url": "captured:temp-state-54434",
+      "status": 200,
+      "capturedAt": "2026-10-25T16:50:50.367Z",
+      "sha256": "7e004262aaa586ab09939b0ef65dc7e8c6a2112c2bb8a6817453d4b6b7e82a96",
+      "artifact": {
+        "version": "0.0.20-18-g6c9aeba1",
+        "commit": "6c9aeba15acd09be4fc6776cef66a1041394b65a",
+        "sourceTree": "e79ccfc7ee4c1d9a8eeee07f7e3aee115f2d106e",
+        "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
+      },
+      "bodyBytes": 933
     }
   }
 }

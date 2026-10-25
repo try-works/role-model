@@ -1,0 +1,38 @@
+{
+  "slice": "s75a-overview-filters",
+  "mapping": {
+    "breakdown": "endpointIds|modelIds|providerIds (dimension + value)",
+    "source": "sourceTypes=local|remote",
+    "status": "statusFamilies=success|failure|unknown",
+    "difficulty": "difficultyBuckets=easy|medium|hard",
+    "window": "windowMs"
+  },
+  "breakdownComputation": "dimension select + value options from routerCandidates meta; one value narrows the query; charts/cost strip aggregate only returned rows",
+  "summary": "data-overview-summary exact applied labels",
+  "stale": "token guard in ReadbackLoaded; RED s75a-red-stale-token.log",
+  "fixtures": [
+    "overview-filtered-all.json (4)",
+    "overview-filtered-success.json (3)",
+    "overview-filtered-failure.json (1)"
+  ],
+  "captures": {
+    "port": 54434,
+    "all": 4,
+    "success": 3,
+    "failure": 1,
+    "remote": 4,
+    "local": 0,
+    "model": 4,
+    "difficulty": "not captured with real rows"
+  },
+  "tests": {
+    "file": "test/s75a-overview-filters.test.ts",
+    "count": 3
+  },
+  "counts": {
+    "clientFull": 245,
+    "files": 25,
+    "typecheck": 0
+  },
+  "screenshot": "E:/rm-tmp/s64a/overview-filters.png"
+}

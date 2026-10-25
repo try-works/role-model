@@ -3,6 +3,8 @@ import { UrlRequest } from "@role-model-router/foldkit/navigation";
 import type { Return as UpdateReturn } from "@role-model-router/foldkit/update";
 import { Effect, Schema } from "effect";
 
+import { DEFAULT_OVERVIEW_FILTERS, overviewQuery, type OverviewFilters } from "./overview-filters";
+
 import {
   type DispatchControlCommand,
   type DispatchStudioCommand,
@@ -369,17 +371,24 @@ export const createUpdate =
         };
       },
       SelectedOverviewWindow: ({ windowMs }) => {
-    const current = model.readbacks.overviewMetrics;
-    const token = current.token + 1;
-    return {
-      commands: [readReadback({ id: String(windowMs), key: "overviewMetrics", token })],
-      model: {
-        ...model,
-        overviewWindowMs: windowMs,
-        readbacks: { ...model.readbacks, overviewMetrics: loadingReadback(token) },
+        const current = model.readbacks.overviewMetrics;
+        const token = current.token + 1;
+        const filters = model.overviewFilters ?? DEFAULT_OVERVIEW_FILTERS;
+        return {
+          commands: [readReadback({ key: "overviewMetrics", query: overviewQuery(filters, windowMs), token })],
+          model: { ...model, overviewWindowMs: windowMs, readbacks: { ...model.readbacks, overviewMetrics: loadingReadback(token) } },
+        };
       },
-    };
-  },
+      OverviewFilterChanged: ({ filter, value }) => {
+        const current = model.readbacks.overviewMetrics;
+        const token = current.token + 1;
+        const previous = model.overviewFilters ?? DEFAULT_OVERVIEW_FILTERS;
+        const filters: OverviewFilters = { ...previous, [filter]: value } as OverviewFilters;
+        return {
+          commands: [readReadback({ key: "overviewMetrics", query: overviewQuery(filters, model.overviewWindowMs ?? 86400000), token })],
+          model: { ...model, overviewFilters: filters, readbacks: { ...model.readbacks, overviewMetrics: loadingReadback(token) } },
+        };
+      },
   StudioTabSelected: ({ tab }) => {
     const current = model.studio ?? studioIdle();
     return { model: { ...model, studio: studioIdle(tab) } };

@@ -160,14 +160,14 @@ export type ReadObservabilityCommand = ReturnType<typeof defineReadObservability
 /** S26e: one Command for the four shared readback routes, with per-route readers. */
 export const defineReadReadback = (readers: Readonly<Record<ReadbackKey, ReadbackReader>>) =>
   Command.define("ReadReadback", {
-    args: { id: Schema.optional(Schema.String), key: ReadbackKeySchema, token: Schema.Number },
+    args: { id: Schema.optional(Schema.String), key: ReadbackKeySchema, query: Schema.optional(Schema.String), token: Schema.Number },
     messages: [Message.ReadbackLoaded, Message.ReadbackFailed],
-    execute: ({ id, key, token }) =>
+    execute: ({ id, key, query, token }) =>
       Effect.flatMap(
         Effect.exit(
           Effect.tryPromise({
             catch: (cause) => new Error(describeCause(cause)),
-            try: (signal) => readers[key]({ id, signal }),
+            try: (signal) => readers[key]({ id, query, signal }),
           }),
         ),
         (exit) =>

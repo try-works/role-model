@@ -13,6 +13,7 @@ const modelFields = {
   controls: ControlsState,
   diagnostics: DiagnosticsSnapshot,
   observability: ObservabilityState,
+  overviewFilters: Schema.optional(Schema.Struct({ breakdown: Schema.Literals(["all", "endpoint", "model", "provider"]), breakdownValue: Schema.String, difficulty: Schema.Literals(["all", "easy", "medium", "hard"]), source: Schema.Literals(["all", "local", "remote"]), status: Schema.Literals(["all", "success", "failure", "unknown"]) })),
   overviewWindowMs: Schema.optional(Schema.Number),
   readbacks: ReadbacksState,
   refresh: RuntimeRefreshState,

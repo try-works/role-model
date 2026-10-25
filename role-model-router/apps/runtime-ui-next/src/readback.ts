@@ -199,7 +199,7 @@ export interface ReadbackResult {
   readonly status: number;
 }
 
-export type ReadbackReader = (input: { readonly signal: AbortSignal; readonly id?: string }) => Promise<ReadbackResult>;
+export type ReadbackReader = (input: { readonly signal: AbortSignal; readonly id?: string; readonly query?: string }) => Promise<ReadbackResult>;
 
 const asRecord = (value: unknown): Readonly<Record<string, unknown>> | undefined =>
   typeof value === "object" && value !== null && !Array.isArray(value)
@@ -965,6 +965,7 @@ export const createReadbackClient = (
   const base = new URL(options.baseUrl ?? globalThis.location?.origin ?? "http://127.0.0.1");
   return async (input) => {
     const url = new URL(spec.pathFor?.(input.id ?? "") ?? spec.path, base);
+    if (input.query !== undefined) url.search = input.query;
     const headers: Record<string, string> = { accept: "application/json" };
     if (options.token !== undefined && options.token.length > 0) {
       headers.authorization = `Bearer ${options.token}`;
