@@ -424,6 +424,33 @@ jobs:
         shell: pwsh
         run: node scripts/run88-stage-release.mjs --stage-manifest "${{ steps.stage_candidate.outputs.stage_manifest_path }}" --verify-production-manifest "${{ github.workspace }}/role-model-router/dist/release/${{ matrix.target }}/manifest.json"
 
+      # R39: compare the accepted stage package against the production candidate, advisory under the
+      # same toggle. Fail-closed: if the stage package cannot be located the step reports NOT RUN and
+      # exits 2 (advisory), which is how the exact extraction path gets discovered by a dispatch run
+      # instead of being guessed here.
+      - name: Compare accepted stage package against the production candidate (R39)
+        if: env.ROLE_MODEL_BUILD_CHANNEL == 'production'
+        shell: pwsh
+        continue-on-error: ${{ vars.R39_VERIFY_BLOCKING != 'true' }}
+        env:
+          R39_HEALTH_TIMEOUT_MS: "120000"
+        run: |
+          $stageRoot = Join-Path $env:RUNNER_TEMP "stage-package"
+          $stageExe = Get-ChildItem -Path $stageRoot -Recurse -Filter "*.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $stageExe) {
+            Write-Output "NOT RUN: no staged package executable found under $stageRoot"
+            exit 2
+          }
+          $leftState = Join-Path $env:RUNNER_TEMP "r39-left"
+          $rightState = Join-Path $env:RUNNER_TEMP "r39-right"
+          Remove-Item -Recurse -Force $leftState, $rightState -ErrorAction SilentlyContinue
+          node scripts/runtime/compare-release.mjs `
+            --fixture-root "testdata/router-runtime/fixtures" `
+            --left-exe "$($stageExe.FullName)" --left-port 5942 --left-state $leftState `
+            --right-exe "role-model-router/dist/release/${{ matrix.target }}/role-model-dev.exe" --right-port 5943 --right-state $rightState
+          if ($LASTEXITCODE -ne 0) { throw "R39 release comparison did not pass (exit $LASTEXITCODE)" }
+
+
       - name: Verify Windows standalone package
         if: matrix.target == 'win32-x64'
         shell: pwsh
