@@ -19,6 +19,19 @@ afterEach(() => {
 });
 
 describe("S71a one h1 per route", () => {
+  for (const [route, title] of [["/", "Runtime overview"], ["/models", "Models"], ["/studio", "Studio"], ["/does/not/exist", "Not found: /does/not/exist"]] as const) {
+    it(`settles the single title text on ${route}`, async () => {
+      window.history.replaceState({}, "", route);
+      const container = document.createElement("div"); container.id = "s71a-title-" + route.replaceAll(/[^a-zA-Z0-9]/g, "-"); document.body.append(container);
+      const handle = mountShell(container); mounted.push({ container, handle });
+      const deadline = Date.now() + 2000; let heading: Element | null = null;
+      while (Date.now() < deadline) { const headings = document.querySelectorAll("h1"); if (headings.length === 1 && headings[0]?.textContent === title) { heading = headings[0]; break; } await new Promise((resolve) => setTimeout(resolve, 10)); }
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      expect(document.querySelectorAll("h1"), route).toHaveLength(1);
+      expect(heading?.textContent, route).toBe(title);
+    });
+  }
+
   for (const route of routes) {
     it(`renders exactly one h1 on ${route}`, async () => {
       window.history.replaceState({}, "", route);

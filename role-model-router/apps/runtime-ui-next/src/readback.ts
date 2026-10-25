@@ -615,7 +615,7 @@ const parseLearning = (body: unknown, token: number): ReadbackState => {
     row("schema", "Schema", String(knowledge.schemaVersion ?? "—"), String(knowledge.backend ?? "")),
     row("candidates", "Candidates", String(knowledge.candidates ?? "—"), "knowledge"),
     row("documents", "Indexed documents", String(knowledge.indexedDocuments ?? "—"), "knowledge"),
-    row("production", "Production activation", String(knowledge.productionActivation === true ? "active" : "disabled"), "knowledge"),
+    row("production", "Production activation", knowledge.productionActivation === true ? "active" : knowledge.productionActivation === false ? "disabled" : "unknown (field absent)", "knowledge"),
     row("receipts", "Receipts", String(knowledge.retrievalReceipts ?? 0) + " retrieval / " + String(knowledge.rollbackReceipts ?? 0) + " rollback / " + String(knowledge.recoveryReceipts ?? 0) + " recovery", "knowledge"),
     row("degradation", "Degradation count", String(knowledge.degradationCount ?? 0), "knowledge"),
   ];

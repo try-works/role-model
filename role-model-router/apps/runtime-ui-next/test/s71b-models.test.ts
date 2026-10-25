@@ -24,6 +24,16 @@ describe("S71b configured models", () => {
     expect(document.body.textContent).toContain("unavailable");
   });
 
+  it("joins the real fixture to exact endpoint, health, effort and roles", async () => {
+    mountAt("s71b-exact", async (input) => { const path = new URL(String(input), "http://localhost").pathname; if (path === "/api/role-model/models") return response(fixture("models-real")); if (path === "/api/role-model/endpoints") return response(fixture("model-endpoints-real")); return response({}); });
+    await waitFor(() => document.querySelector("[data-model-row=\"claude-3.7-sonnet\"]") ?? undefined, "claude row");
+    const text = document.querySelector("[data-model-row=\"claude-3.7-sonnet\"]")?.textContent ?? "";
+    expect(text).toContain("Endpoint: anthropic.team.shared.us-east-1.default");
+    expect(text).toContain("Status: healthy");
+    expect(text).toContain("Effort: unavailable");
+    expect(text).toContain("Roles: analyst");
+  });
+
   it("renders loading, empty and error states", async () => {
     mountAt("s71b-loading", async (input) => { const path = new URL(String(input), "http://localhost").pathname; if (path === "/api/role-model/models") return await new Promise<Response>(() => undefined); return response([]); });
     await waitFor(() => document.querySelector("[data-models-state='loading']") ?? undefined, "loading");

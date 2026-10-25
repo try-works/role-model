@@ -1,0 +1,175 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+stderr | test/s76a-runtime-config.test.ts > S76a runtime config editor > refuses to PUT when the server changed between Load and Confirm
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 44.2ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Runtime' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 44.22490000000107,
+  thresholdMs: 8
+}
+
+stderr | test/s76a-runtime-config.test.ts > S76a runtime config editor > refuses to PUT when the server changed between Load and Confirm
+[foldkit] Slow patch: 11.4ms (budget: 8ms), triggered by ReadbackLoaded. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 0,
+      status: 'live',
+      message: undefined
+    },
+    route: { _tag: 'Runtime' },
+    theme: 'dark',
+    runtimeConfigEditor: {
+      diff: [],
+      originalText: '{\n  "a": 1,\n  "b": 2\n}',
+      status: 'editing',
+      text: '{\n  "a": 1,\n  "b": 2\n}',
+      token: 1
+    }
+  },
+  message: {
+    _id: 'Option',
+    _tag: 'Some',
+    value: {
+      _tag: 'ReadbackLoaded',
+      key: 'runtimeConfig',
+      snapshot: [Object],
+      token: 1
+    }
+  },
+  durationMs: 11.438099999999395,
+  thresholdMs: 8
+} {
+  _tag: 'ReadbackLoaded',
+  key: 'runtimeConfig',
+  snapshot: { rows: [ [Object] ], status: 'ok', token: 1 },
+  token: 1
+}
+
+ ❯ test/s76a-runtime-config.test.ts (6 tests | 1 failed | 5 skipped) 3800ms
+   ↓ S76a runtime config editor > validates JSON and lists changed top-level keys without sending
+   ↓ S76a runtime config editor > does not offer Review before Load
+   × S76a runtime config editor > refuses to PUT when the server changed between Load and Confirm 3796ms
+     → Timed out waiting for stale error
+   ↓ S76a runtime config editor > blocks invalid JSON with no request
+   ↓ S76a runtime config editor > shows the diff, PUTs exact body, and displays the server's applied snapshot
+   ↓ S76a runtime config editor > keeps the previous snapshot and text on 4xx
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s76a-runtime-config.test.ts > S76a runtime config editor > refuses to PUT when the server changed between Load and Confirm
+Error: Timed out waiting for stale error
+ ❯ waitFor test/s76a-runtime-config.test.ts:7:258
+
+ ❯ test/s76a-runtime-config.test.ts:42:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 skipped (6)
+   Start at  02:12:47
+   Duration  18.06s (transform 7.06s, setup 0ms, collect 11.10s, tests 3.80s, environment 1.32s, prepare 492ms)
+

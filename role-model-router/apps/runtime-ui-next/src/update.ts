@@ -368,6 +368,11 @@ export const createUpdate =
       },
       ReadbackLoaded: ({ key, snapshot, token }) => {
         if (token !== model.readbacks[key].token) return { model };
+        if (key === "runtimeConfig") {
+          let text = "{}"; let originalText = "{}";
+          try { const meta = snapshot.rows[0]?.meta; const parsed = meta === undefined ? undefined : JSON.parse(meta) as { config?: unknown }; if (parsed?.config !== undefined) { text = JSON.stringify(parsed.config, null, 2); originalText = text; } } catch {}
+          return { model: { ...model, readbacks: { ...model.readbacks, runtimeConfig: { ...snapshot, token } }, runtimeConfigEditor: { diff: [], originalText, status: "editing", text, token } } };
+        }
         return {
           model: {
             ...model,
@@ -400,7 +405,8 @@ export const createUpdate =
       },
   RuntimeConfigLoadRequested: () => {
     const token = model.readbacks.runtimeConfig.token + 1;
-    return { commands: [readReadback({ key: "runtimeConfig", token })], model: { ...model, readbacks: { ...model.readbacks, runtimeConfig: loadingReadback(token) } } };
+    const previous = model.runtimeConfigEditor;
+    return { commands: [readReadback({ key: "runtimeConfig", token })], model: { ...model, ...(previous === undefined ? {} : { runtimeConfigEditor: { ...previous, status: "loading" } }), readbacks: { ...model.readbacks, runtimeConfig: loadingReadback(token) } } };
   },
   RuntimeConfigTextChanged: ({ text }) => {
     const snapshot = runtimeConfigSnapshot(model);
@@ -419,7 +425,7 @@ export const createUpdate =
   RuntimeConfigConfirmRequested: ({ token }) => {
     const current = model.runtimeConfigEditor;
     if (current === undefined || current.status !== "confirming" || saveRuntimeConfig === undefined) return { model };
-    return { commands: [saveRuntimeConfig({ configText: current.text, token })], model: { ...model, runtimeConfigEditor: { ...current, message: undefined, status: "pending", token } } };
+    return { commands: [saveRuntimeConfig({ configText: current.text, originalText: current.originalText, token })], model: { ...model, runtimeConfigEditor: { ...current, message: undefined, status: "pending", token } } };
   },
   RuntimeConfigSaved: ({ recordJson, token }) => {
     const current = model.runtimeConfigEditor;

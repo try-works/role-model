@@ -284,16 +284,22 @@ export const defineDispatchControl = (client: ControlClient) =>
 export type DispatchControlCommand = ReturnType<typeof defineDispatchControl>;
 export const defineSaveRuntimeConfig = (client: RuntimeConfigClient) =>
   Command.define("SaveRuntimeConfig", {
-    args: { configText: Schema.String, token: Schema.Number },
+    args: { configText: Schema.String, originalText: Schema.String, token: Schema.Number },
     messages: [Message.RuntimeConfigSaved, Message.RuntimeConfigSaveFailed],
-    execute: ({ configText, token }) => {
+    execute: ({ configText, originalText, token }): Effect.Effect<ReturnType<typeof Message.RuntimeConfigSaved> | ReturnType<typeof Message.RuntimeConfigSaveFailed>> => {
       let config: Readonly<Record<string, unknown>>;
       try { const parsed: unknown = JSON.parse(configText); if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("Config must be a JSON object."); config = parsed as Readonly<Record<string, unknown>>; } catch (error) { return Effect.succeed(Message.RuntimeConfigSaveFailed({ message: error instanceof Error ? error.message : "Invalid JSON.", status: 0, token })); }
-      return Effect.flatMap(Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.save(config) })), (saveExit) =>
+      return Effect.flatMap(Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.read() })), (checkExit) => {
+        if (!Exit.isSuccess(checkExit)) return Effect.succeed(Message.RuntimeConfigSaveFailed({ message: "Runtime config re-read failed before save", status: 0, token }));
+        let currentText = "{}";
+        try { const record = checkExit.value.body as { config?: unknown }; if (record.config !== null && typeof record.config === "object") currentText = JSON.stringify(record.config, null, 2); } catch {}
+        if (currentText !== originalText) return Effect.succeed(Message.RuntimeConfigSaveFailed({ message: "Server config changed since Load; review the new snapshot before saving.", status: 0, token }));
+        return Effect.flatMap(Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.save(config) })), (saveExit) =>
         Exit.isSuccess(saveExit) && saveExit.value.status >= 200 && saveExit.value.status < 300
           ? Effect.flatMap(Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.read() })), (readExit) => Effect.succeed(Exit.isSuccess(readExit) ? Message.RuntimeConfigSaved({ recordJson: JSON.stringify(readExit.value.body), status: readExit.value.status, token }) : Message.RuntimeConfigSaveFailed({ message: "Runtime config re-read failed: " + describeCause(Option.getOrElse(Exit.findErrorOption(readExit), () => new Error("read failed"))), status: 0, token })))
           : Effect.succeed(Message.RuntimeConfigSaveFailed({ message: "Runtime config save failed: HTTP " + String(Exit.isSuccess(saveExit) ? saveExit.value.status : 0) + (Exit.isSuccess(saveExit) ? (() => { const record = saveExit.value.body; const reason = record !== null && typeof record === "object" && "message" in record && typeof record.message === "string" ? record.message : undefined; return reason === undefined ? "" : " (" + reason + ")"; })() : ""), status: Exit.isSuccess(saveExit) ? saveExit.value.status : 0, token })),
       );
+      });
     },
   });
 export type SaveRuntimeConfigCommand = ReturnType<typeof defineSaveRuntimeConfig>;

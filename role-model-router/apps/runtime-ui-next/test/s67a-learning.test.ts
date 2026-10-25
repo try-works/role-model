@@ -66,6 +66,13 @@ describe("S67a learning surfaces", () => {
     }
   });
 
+  it("renders unknown, not disabled, when productionActivation is absent", async () => {
+    mountAt("s67a-missing-production", async (input) => { const path = new URL(String(input), "http://localhost").pathname; if (path === "/api/role-model/operator/learning") return response(fixture("learning-missing-production")); return response(baseBodies[path] ?? {}); });
+    await waitFor(() => document.querySelector("[data-readback-route='learning'][data-readback-state='ok']") ?? undefined, "missing production");
+    expect(document.body.textContent).toContain("unknown (field absent)");
+    expect(document.body.textContent).not.toContain("Production activationdisabled");
+  });
+
   it("renders a real-shaped job row but never a fabricated id as success", async () => {
     mountAt("s67a-row", async (input) => {
       const path = new URL(String(input), "http://localhost").pathname;

@@ -15,6 +15,33 @@ describe("S76a runtime config editor", () => {
     expect("error" in parseRuntimeConfigText("{bad")).toBe(true);
     expect("error" in parseRuntimeConfigText("[]")).toBe(true);
     expect(runtimeConfigDiff({ a: 1, b: 2 }, { a: 1, b: 3, c: 4 })).toEqual(["changed: b", "added: c"]);
+    expect(runtimeConfigDiff({ a: 1, b: 2 }, { a: 1 })).toEqual(["removed: b"]);
+  });
+
+  it("does not offer Review before Load", async () => {
+    const calls: string[] = [];
+    mount(async (input, init) => { calls.push((init?.method ?? "GET") + " " + String(input)); return json({ applied: false, config: { a: 1 } }); });
+    await waitFor(() => document.querySelector("[data-runtime-config-load]") ? true : undefined, "load button");
+    expect(document.querySelector("[data-runtime-config-editor]")).toBeNull();
+    expect(document.querySelector("[data-runtime-config-save]")).toBeNull();
+    expect(calls.filter((call) => call.startsWith("PUT"))).toHaveLength(0);
+  });
+
+  it("refuses to PUT when the server changed between Load and Confirm", async () => {
+    let config = { a: 1, b: 2 };
+    const puts: string[] = [];
+    mount(async (_input, init) => { if (init?.method === "PUT") { puts.push("PUT"); return json(config); } return json({ applied: false, config }); });
+    await waitFor(() => document.querySelector("[data-runtime-config-load]") ? true : undefined, "load");
+    (document.querySelector("[data-runtime-config-load]") as HTMLButtonElement).click();
+    await waitFor(() => editor()?.value.includes('"b": 2') ? true : undefined, "editor");
+    setText(JSON.stringify({ a: 1, b: 3 }, null, 2));
+    (document.querySelector("[data-runtime-config-save]") as HTMLButtonElement).click();
+    await waitFor(() => document.querySelector("[data-runtime-config-confirm-save]") ? true : undefined, "confirm");
+    config = { a: 1, b: 5 };
+    (document.querySelector("[data-runtime-config-confirm-save]") as HTMLButtonElement).click();
+    await waitFor(() => document.querySelector("[data-runtime-config-error]") ? true : undefined, "stale error");
+    expect(puts).toHaveLength(0);
+    expect(document.querySelector("[data-runtime-config-error]")?.textContent).toContain("changed since Load");
   });
 
   it("blocks invalid JSON with no request", async () => {
