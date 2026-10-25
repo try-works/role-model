@@ -125,7 +125,7 @@ export const createInit =
   (url: Url): UpdateReturn<Model, Message> => {
     const result = initRoute(readDiagnostics, readObservability, readReadback, readControl)(url);
     if (!loadRail) return result;
-    const railKeys = ["models", "runtimeSummary", "health", "dashboard", "router"] as const;
+    const railKeys = ["models", "runtimeSummary", "health", "dashboard", "router", "overviewMetrics"] as const;
     const token = 1;
     const readbacks = { ...result.model.readbacks };
     const commands = [...(result.commands ?? [])];
@@ -133,7 +133,7 @@ export const createInit =
       if (readbacks[key].status !== "idle") continue;
       readbacks[key] = loadingReadback(token);
       const id =
-        key === "dashboard" && (result.model.route._tag === "Index" || result.model.route._tag === "Dashboard")
+        (key === "dashboard" && result.model.route._tag === "Dashboard") || key === "overviewMetrics"
           ? "86400000"
           : undefined;
       commands.push(readReadback({ ...(id === undefined ? {} : { id }), key, token }));

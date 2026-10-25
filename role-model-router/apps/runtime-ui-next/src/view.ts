@@ -482,8 +482,56 @@ const WINDOW_OPTIONS = [
 ] as const;
 const windowLabel = (windowMs: number): string =>
   WINDOW_OPTIONS.find((option) => option.windowMs === windowMs)?.label ?? "Day";
+interface OverviewItem { readonly timestamp?: unknown; readonly duration_ms?: unknown; readonly resp_status_code?: unknown; readonly modelId?: unknown; }
+interface Bucket { readonly label: string; readonly avg: number; readonly p95: number; readonly success: number; readonly failure: number; }
+const percentile = (values: readonly number[], p: number): number => {
+  if (values.length === 0) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  return sorted[Math.min(sorted.length - 1, Math.floor((p / 100) * sorted.length))] ?? 0;
+};
+const bucketRule = (windowMs: number): { bucketMs: number; label: (ms: number) => string } => {
+  if (windowMs <= 86_400_000) return { bucketMs: 3_600_000, label: (ms) => new Date(ms).toISOString().slice(11, 13) + ":00" };
+  if (windowMs <= 604_800_000) return { bucketMs: 86_400_000, label: (ms) => new Date(ms).toISOString().slice(5, 10) };
+  if (windowMs <= 2_592_000_000) return { bucketMs: 86_400_000, label: (ms) => new Date(ms).toISOString().slice(5, 10) };
+  return { bucketMs: 604_800_000, label: (ms) => new Date(ms).toISOString().slice(5, 10) };
+};
+const bucketsFor = (state: ReadbacksState["overviewMetrics"], windowMs: number): { buckets: readonly Bucket[]; models: ReadonlyMap<string, number>; period: number } => {
+  const rowData = state.rows[0];
+  if (rowData === undefined) return { buckets: [], models: new Map(), period: windowMs };
+  const parsed = JSON.parse(rowData.meta) as { items: readonly OverviewItem[]; window: { startAtMs: number; endAtMs: number } };
+  const rule = bucketRule(windowMs);
+  const start = parsed.window.startAtMs;
+  const end = parsed.window.endAtMs;
+  const count = Math.max(1, Math.ceil((end - start) / rule.bucketMs));
+  const grouped = new Map<number, { durations: number[]; success: number; failure: number }>();
+  const models = new Map<string, number>();
+  for (const item of parsed.items) {
+    const raw = typeof item.timestamp === "string" ? Date.parse(item.timestamp) : Number.NaN;
+    if (!Number.isFinite(raw)) continue;
+    const index = Math.min(count - 1, Math.max(0, Math.floor((raw - start) / rule.bucketMs)));
+    const bucket = grouped.get(index) ?? { durations: [], success: 0, failure: 0 };
+    const duration = Number(item.duration_ms);
+    if (Number.isFinite(duration)) bucket.durations.push(duration);
+    const status = Number(item.resp_status_code);
+    if (status >= 200 && status < 400) bucket.success += 1;
+    else bucket.failure += 1;
+    grouped.set(index, bucket);
+    const model = typeof item.modelId === "string" && item.modelId.length > 0 ? item.modelId : "unknown";
+    models.set(model, (models.get(model) ?? 0) + 1);
+  }
+  const buckets = [...grouped.entries()]
+    .sort(([a], [b]) => a - b)
+    .map(([index, bucket]) => ({
+      label: rule.label(start + index * rule.bucketMs),
+      avg: bucket.durations.length === 0 ? 0 : bucket.durations.reduce((sum, value) => sum + value, 0) / bucket.durations.length,
+      p95: percentile(bucket.durations, 95),
+      success: bucket.success,
+      failure: bucket.failure,
+    }));
+  return { buckets, models, period: count };
+};
 const overviewPage = (
-  state: ReadbacksState["dashboard"],
+  state: ReadbacksState["overviewMetrics"],
   windowMs: number,
   h: HtmlBuilder<Message>,
 ): Html => {
@@ -508,7 +556,7 @@ const overviewPage = (
   const header = h.div([], [
     h.p([h.Class("text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--rm-muted)]")], ["Runtime overview"]),
     h.h1([h.Class("rm3-next-route-title")], ["Index page"]),
-    h.p([h.Class("text-[12px] text-[var(--rm-secondary)]"), h.DataAttribute("overview-period", period)], [`Last ${period}`]),
+    h.p([h.Class("text-[12px] text-[var(--rm-secondary)]"), h.DataAttribute("overview-period", period)], ["Last " + period]),
     filters,
   ]);
   if (state.status === "loading") {
@@ -518,20 +566,18 @@ const overviewPage = (
     return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "index"), h.DataAttribute("readback-route", "dashboard")], [header, h.p([h.Role("alert"), h.DataAttribute("overview-state", "error"), h.DataAttribute("readback-state", "error")], [state.message ?? "Telemetry read failed"])]);
   }
   if (state.status === "empty") {
-    return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "index"), h.DataAttribute("readback-route", "dashboard")], [header, h.p([h.DataAttribute("overview-state", "empty"), h.DataAttribute("readback-state", "empty")], [`No telemetry requests in the last ${period.toLowerCase()}.`])]);
+    return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "index"), h.DataAttribute("readback-route", "dashboard")], [header, h.p([h.DataAttribute("overview-state", "empty"), h.DataAttribute("readback-state", "empty")], ["No telemetry requests in the last " + period.toLowerCase() + "."])]);
   }
-  const latency = state.rows.find((entry) => entry.label === "Latency");
-  const requests = state.rows.find((entry) => entry.label === "Requests");
-  const avg = Number(latency?.value);
-  const p95 = Number(latency?.meta.match(/p95 ([\d.]+) ms/)?.[1]);
-  const success = Number(requests?.meta.match(/(\d+) success/ )?.[1] ?? 0);
-  const failure = Number(requests?.meta.match(/(\d+) failed/)?.[1] ?? 0);
-  const charts = h.div([h.Class("mt-4 grid gap-4"), h.DataAttribute("overview-charts", "")], [
-    chartView({ title: "Latency (ms)", description: `Average and p95 for the last ${period.toLowerCase()}.`, series: [
-      { id: "latency", label: "Latency", points: [{ label: "Average", value: avg }, { label: "p95", value: p95 }] },
+  const { buckets } = bucketsFor(state, windowMs);
+  const labels = buckets.map((bucket) => bucket.label);
+  const charts = h.div([h.Class("mt-4 grid gap-4"), h.DataAttribute("overview-charts", ""), h.DataAttribute("overview-window", period), h.DataAttribute("overview-buckets", String(buckets.length))], [
+    chartView({ title: "Latency (ms)", description: "Average and p95 per bucket for the last " + period.toLowerCase() + ".", series: [
+      { id: "average", label: "Average", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.avg })) },
+      { id: "p95", label: "p95", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.p95 })) },
     ], state: { status: "ready" }, yUnit: "ms" }, h),
-    chartView({ title: "Success vs failure", description: `Request outcomes for the last ${period.toLowerCase()}.`, series: [
-      { id: "outcomes", label: "Requests", points: [{ label: "Success", value: success }, { label: "Failure", value: failure }] },
+    chartView({ title: "Success vs failure", description: "Request outcomes per bucket for the last " + period.toLowerCase() + ".", series: [
+      { id: "success", label: "Success", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.success })) },
+      { id: "failure", label: "Failure", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.failure })) },
     ], state: { status: "ready" }, yUnit: "requests" }, h),
   ]);
   return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "index"), h.DataAttribute("readback-route", "dashboard"), h.DataAttribute("overview-state", "success"), h.DataAttribute("readback-state", "ok"), h.DataAttribute("state", "success")], [header, charts]);
@@ -592,7 +638,7 @@ const routeContent = (
     Endpoints: () => renderControlPage(CONTROL_SPECS.endpoints, controls.endpoints, h),
     ControlController: () =>
       renderControlPage(CONTROL_SPECS.controlController, controls.controlController, h),
-    Index: () => overviewPage(readbacks.dashboard, overviewWindowMs, h),
+    Index: () => overviewPage(readbacks.overviewMetrics, overviewWindowMs, h),
     NotFound: ({ path }) =>
       h.section(
         [
@@ -663,6 +709,19 @@ const shellRail = (model: Model, h: HtmlBuilder<Message>): Html => {
     health.rows.find((entry) => entry.label === "Execution mode")?.value ??
     router.rows.find((entry) => entry.label === "executionMode")?.value ??
     null;
+  let perModel: ReadonlyArray<[string, number]> = [];
+  const metricsRow = model.readbacks.overviewMetrics.rows[0];
+  if (metricsRow !== undefined) {
+    try {
+      const parsed = JSON.parse(metricsRow.meta) as { items?: ReadonlyArray<{ modelId?: unknown }> };
+      const counts = new Map<string, number>();
+      for (const item of parsed.items ?? []) {
+        const id = typeof item.modelId === "string" && item.modelId.length > 0 ? item.modelId : "unknown";
+        counts.set(id, (counts.get(id) ?? 0) + 1);
+      }
+      perModel = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3);
+    } catch { perModel = []; }
+  }
   return h.div(
     [h.Class("mt-3 border-t border-[var(--rm-border)] px-2.5 pt-3"), h.DataAttribute("shell-rail", "")],
     [
@@ -672,6 +731,9 @@ const shellRail = (model: Model, h: HtmlBuilder<Message>): Html => {
       railRow("Cache", cacheValue, "Cache percentage unavailable: no requests in the window or telemetry is loading", h),
       railRow("Router", endpointValue, "Router endpoint unavailable: health read is loading or failed", h),
       railRow("Mode", modeValue, "Execution mode unavailable: health/router read is loading or failed", h),
+      ...perModel.map(([id, count]) =>
+        h.div([h.DataAttribute("rail-model", id), h.Class("flex justify-between gap-2 py-0.5 text-[10px] text-[var(--rm-secondary)]")], [h.span([], [id]), h.span([h.DataAttribute("rail-model-count", String(count))], [String(count)])]),
+      ),
     ],
   );
 };

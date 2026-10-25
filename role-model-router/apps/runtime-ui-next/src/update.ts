@@ -87,6 +87,7 @@ const noopReadback = defineReadReadback({
   models: async () => ({ body: emptyBody, status: 200 }),
   runtimeSummary: async () => ({ body: emptyBody, status: 200 }),
   health: async () => ({ body: emptyBody, status: 200 }),
+  overviewMetrics: async () => ({ body: { items: [], window: { startAtMs: 0, endAtMs: 0, asOfMs: 0 } }, status: 200 }),
   queues: async () => ({ body: emptyBody, status: 200 }),
   requests: async () => ({ body: emptyBody, status: 200 }),
   routerCandidates: async () => ({ body: emptyBody, status: 200 }),
@@ -331,14 +332,14 @@ export const createUpdate =
         };
       },
       SelectedOverviewWindow: ({ windowMs }) => {
-    const current = model.readbacks.dashboard;
+    const current = model.readbacks.overviewMetrics;
     const token = current.token + 1;
     return {
-      commands: [readReadback({ id: String(windowMs), key: "dashboard", token })],
+      commands: [readReadback({ id: String(windowMs), key: "overviewMetrics", token })],
       model: {
         ...model,
         overviewWindowMs: windowMs,
-        readbacks: { ...model.readbacks, dashboard: loadingReadback(token) },
+        readbacks: { ...model.readbacks, overviewMetrics: loadingReadback(token) },
       },
     };
   },

@@ -32,7 +32,8 @@ export type ReadbackKey =
   | "storageRetention"
   | "models"
   | "runtimeSummary"
-  | "health";
+  | "health"
+  | "overviewMetrics";
 
 export const ReadbackKeySchema = Schema.Literals([
   "storeReceipts",
@@ -62,6 +63,7 @@ export const ReadbackKeySchema = Schema.Literals([
   "models",
   "runtimeSummary",
   "health",
+  "overviewMetrics",
 ]);
 
 export interface ReadbackRow {
@@ -112,6 +114,7 @@ export const ReadbacksState = Schema.Struct({
   models: ReadbackState,
   runtimeSummary: ReadbackState,
   health: ReadbackState,
+  overviewMetrics: ReadbackState,
   runtime: ReadbackState,
   sessionReadiness: ReadbackState,
   storeReceipts: ReadbackState,
@@ -156,6 +159,7 @@ export const emptyReadbacks = (): ReadbacksState => ({
   models: idleReadback(),
   runtimeSummary: idleReadback(),
   health: idleReadback(),
+  overviewMetrics: idleReadback(),
   runtime: idleReadback(),
   sessionReadiness: idleReadback(),
   storeReceipts: idleReadback(),
@@ -551,6 +555,14 @@ const parseIntegrationProviders = (body: unknown, token: number): ReadbackState 
   return okRows(rows, token);
 };
 
+const parseOverviewMetrics = (body: unknown, token: number): ReadbackState => {
+  const record = asRecord(body);
+  if (record === undefined || !Array.isArray(record.items) || asRecord(record.window) === undefined) {
+    return failedReadback("Overview metrics read failed: invalid response", token);
+  }
+  if (record.items.length === 0) return { rows: [], status: "empty", token };
+  return okRows([row("overview", "Items", String(record.items.length), JSON.stringify({ items: record.items, window: record.window }))], token);
+};
 const parseModelList = (body: unknown, token: number): ReadbackState => {
   const list = Array.isArray(body) ? body : asArray(asRecord(body)?.data);
   const rows = list.flatMap((value, index) => {
@@ -775,6 +787,14 @@ export const READBACK_SPECS: Readonly<Record<ReadbackKey, ReadbackRouteSpec>> = 
     parse: parseHealth,
     path: READBACK_PATHS.health,
   },
+  overviewMetrics: {
+    emptyText: "No telemetry requests in this window.",
+    key: "overviewMetrics",
+    label: "Overview metrics",
+    parse: parseOverviewMetrics,
+    path: READBACK_PATHS.overviewMetrics,
+    pathFor: (windowMs) => `${READBACK_PATHS.overviewMetrics}?windowMs=${encodeURIComponent(windowMs)}`,
+  },
   requests: {
     emptyText: "No telemetry requests recorded yet.",
     key: "requests",
@@ -886,6 +906,7 @@ export const createReadbackClients = (
   models: createReadbackClient(READBACK_SPECS.models, options),
   runtimeSummary: createReadbackClient(READBACK_SPECS.runtimeSummary, options),
   health: createReadbackClient(READBACK_SPECS.health, options),
+  overviewMetrics: createReadbackClient(READBACK_SPECS.overviewMetrics, options),
 });
 
 export const readbackFromResult = (
@@ -997,8 +1018,10 @@ export const readbackKeyForRouteTag = (tag: string): ReadbackKey | null =>
                     ? "runtime"
                     : tag === "SessionReadiness"
                       ? "sessionReadiness"
-                      : tag === "Dashboard"
-                        ? "dashboard"
+                      : tag === "Index"
+                        ? "overviewMetrics"
+                        : tag === "Dashboard"
+                          ? "dashboard"
                         : tag === "LocalSwap"
                           ? "localSwap"
                           : tag === "ObserveActivity"

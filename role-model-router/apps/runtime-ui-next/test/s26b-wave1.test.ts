@@ -87,8 +87,8 @@ describe("S26b wave 1 shell entries", () => {
   it("index is a real success landing with working onward navigation", async () => {
     mountAt("s26b-index", "/", async (input) => {
       const url = new URL(String(input), "http://localhost");
-      if (url.pathname === "/api/role-model/telemetry/summary") {
-        return new Response(JSON.stringify({ requestCount: 2, successCount: 2, failureCount: 0, averageLatencyMs: 10, p95LatencyMs: 20, cachedRequestCount: 0, totalTokens: 5 }), { status: 200 });
+      if (url.pathname === "/api/metrics/page") {
+        return new Response(JSON.stringify({ items: [{ id: 1, timestamp: "2026-01-01T00:00:00.000Z", duration_ms: 10, resp_status_code: 200, modelId: "model-a" }], window: { startAtMs: Date.parse("2026-01-01T00:00:00.000Z"), endAtMs: Date.parse("2026-01-02T00:00:00.000Z"), asOfMs: 0 } }), { status: 200 });
       }
       return new Response("{}", { status: 200 });
     });

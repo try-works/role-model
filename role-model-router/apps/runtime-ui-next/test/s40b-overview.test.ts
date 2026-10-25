@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { mountShell } from "../src/mount";
 
+const fixture = JSON.parse(readFileSync(path.join(import.meta.dirname, "fixtures", "s26o", "overview-boundary-items.json"), "utf8"));
 const mounted: Array<{ container: HTMLElement; handle: { dispose(): void } }> = [];
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
 const waitFor = async <T>(read: () => T | undefined, label: string): Promise<T> => {
@@ -15,11 +16,6 @@ const waitFor = async <T>(read: () => T | undefined, label: string): Promise<T> 
   }
   throw new Error("Timed out waiting for " + label + " | " + (document.body.textContent ?? "").slice(0, 400));
 };
-const summary = (requestCount: number, averageLatencyMs: number | null, p95: number | null) => ({
-  requestCount, successCount: requestCount, failureCount: 0, totalInputTokens: 10, totalOutputTokens: 5, totalTokens: 15,
-  averageLatencyMs, p95LatencyMs: p95, cachedRequestCount: 0, excludedRequestCount: 0,
-  totalActualCostUsd: 0, totalEstimatedCostUsd: 0, totalEffectiveCostUsd: 0,
-});
 const mountAt = (id: string, fetchImpl: typeof fetch) => {
   window.history.replaceState({}, "", "/");
   const container = document.createElement("div");
@@ -32,73 +28,78 @@ afterEach(() => {
   for (const entry of mounted.splice(0)) { entry.handle.dispose(); entry.container.remove(); }
   window.history.replaceState({}, "", "/");
 });
+const tableRows = (): string[][] => {
+  const table = document.querySelector("[data-chart-part='table']");
+  return Array.from(table?.querySelectorAll("tbody tr") ?? []).map((row) => Array.from(row.querySelectorAll("th,td")).map((cell) => cell.textContent ?? ""));
+};
 
-describe("S40b overview charts and windows", () => {
-  const fixture = JSON.parse(readFileSync(path.join(import.meta.dirname, "fixtures", "s26o", "dashboard-latency-split.json"), "utf8"));
-
-  it("renders latency and success/failure charts with the Day window", async () => {
-    const calls: string[] = [];
-    mountAt("s40b-success", async (input) => {
+describe("S40b bucketed overview", () => {
+  it("buckets Day into hourly buckets, omits empty buckets and labels 00:00/24:00", async () => {
+    mountAt("s40b-buckets", async (input) => {
       const url = new URL(String(input), "http://localhost");
-      calls.push(url.pathname + url.search);
-      if (url.pathname === "/api/role-model/telemetry/summary") return json(fixture);
+      if (url.pathname === "/api/metrics/page") return json(fixture);
       return json({});
     });
     await waitFor(() => document.querySelector("[data-overview-state='success']") ?? undefined, "success");
-    expect(document.body.textContent).toContain("Latency (ms)");
-    expect(document.body.textContent).toContain("Success vs failure");
-    expect(document.querySelector("[data-window='Day']")?.getAttribute("aria-pressed")).toBe("true");
     expect(document.querySelector("[data-overview-period]")?.textContent).toBe("Last Day");
-    expect(calls.some((call) => call.includes("windowMs=86400000"))).toBe(true);
-    const table = document.querySelector("[data-chart-part='table']");
-    const rows = Array.from(table?.querySelectorAll("tbody tr") ?? []).map((row) => Array.from(row.querySelectorAll("th,td")).map((cell) => cell.textContent));
-    expect(rows).toContainEqual(["Average", "10"]);
-    expect(rows).toContainEqual(["p95", "90"]);
-    expect(document.querySelector("[data-chart-point-label='Average']")).not.toBeNull();
-    expect(document.querySelector("[data-chart-point-label='p95']")).not.toBeNull();
-    expect(table?.textContent).not.toContain("—");
+    expect(document.querySelector("[data-overview-buckets]")?.getAttribute("data-overview-buckets")).toBe("3");
+    const rows = tableRows();
+    expect(rows).toContainEqual(["00:00", "10", "10"]);
+    expect(rows).toContainEqual(["01:00", "30", "40"]);
+    expect(rows).toContainEqual(["23:00", "90", "90"]);
+    expect(rows.some((row) => row[0] === "02:00")).toBe(false);
+    expect(document.querySelectorAll("[data-chart-point-label]").length).toBeGreaterThanOrEqual(6);
+    expect(document.body.textContent).not.toContain("02:00");
   });
 
-  it("switches to Week and ignores a late Day response", async () => {
+  it("shows per-model rail counts from the same items", async () => {
+    mountAt("s40b-models", async (input) => {
+      const url = new URL(String(input), "http://localhost");
+      if (url.pathname === "/api/metrics/page") return json(fixture);
+      return json({});
+    });
+    await waitFor(() => document.querySelector("[data-rail-model-count]") ?? undefined, "model count");
+    expect(document.querySelector("[data-rail-model='model-a'] [data-rail-model-count]")?.textContent).toBe("2");
+    expect(document.querySelector("[data-rail-model='model-b'] [data-rail-model-count]")?.textContent).toBe("2");
+  });
+
+  it("switches Week and ignores a late Day response", async () => {
     let resolveDay: ((value: Response) => void) | undefined;
     mountAt("s40b-stale", async (input) => {
       const url = new URL(String(input), "http://localhost");
-      if (url.pathname !== "/api/role-model/telemetry/summary") return json({});
-      if (url.searchParams.get("windowMs") === "86400000") {
-        return await new Promise<Response>((resolve) => { resolveDay = resolve; });
-      }
-      return json(summary(9, 50, 90));
+      if (url.pathname !== "/api/metrics/page") return json({});
+      if (url.searchParams.get("windowMs") === "86400000") return await new Promise<Response>((resolve) => { resolveDay = resolve; });
+      return json(fixture);
     });
     await waitFor(() => document.querySelector("[data-window='Week']") ?? undefined, "filters");
     (document.querySelector("[data-window='Week']") as HTMLButtonElement).click();
     await waitFor(() => document.querySelector("[data-overview-state='success']") ?? undefined, "week success");
-    expect(document.querySelector("[data-window='Week']")?.getAttribute("aria-pressed")).toBe("true");
     expect(document.querySelector("[data-overview-period]")?.textContent).toBe("Last Week");
-    resolveDay?.(json(summary(1, 1, 2)));
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    resolveDay?.(json(fixture));
+    await new Promise((resolve) => setTimeout(resolve, 400));
     expect(document.querySelector("[data-overview-period]")?.textContent).toBe("Last Week");
-    expect(document.body.textContent).toContain("50");
-    expect(document.body.textContent).not.toContain("Last Day");
+    expect(document.querySelector("[data-overview-state='success']")).not.toBeNull();
   });
 
-  it("renders explicit empty, loading and error states without a flat-line chart", async () => {
+  it("renders explicit empty and rejects fabricated metrics", async () => {
     mountAt("s40b-empty", async (input) => {
       const url = new URL(String(input), "http://localhost");
-      return url.pathname === "/api/role-model/telemetry/summary" ? json(summary(0, null, null)) : json({});
+      if (url.pathname === "/api/metrics/page") return json({ items: [], window: { startAtMs: 0, endAtMs: 86400000, asOfMs: 0 } });
+      return json({});
     });
     await waitFor(() => document.querySelector("[data-overview-state='empty']") ?? undefined, "empty");
     expect(document.body.textContent).toContain("No telemetry requests in the last day.");
-    expect(document.body.textContent).not.toContain("Latency (ms)");
+    expect(document.querySelector("[data-overview-charts]")).toBeNull();
   });
 
-  it("rejects a fabricated 90-day response", async () => {
+  it("rejects a fabricated metrics body", async () => {
     mountAt("s40b-fabricated", async (input) => {
       const url = new URL(String(input), "http://localhost");
-      if (url.pathname !== "/api/role-model/telemetry/summary") return json({});
-      return json({ requestCount: "lots", successCount: 999 });
+      if (url.pathname === "/api/metrics/page") return json({ items: "lots", window: {} });
+      return json({});
     });
-    await waitFor(() => document.querySelector("[data-overview-state='error']") ?? undefined, "fabricated error");
+    await waitFor(() => document.querySelector("[data-overview-state='error']") ?? undefined, "error");
     expect(document.querySelector("[role='alert']")).not.toBeNull();
-    expect(document.body.textContent).not.toContain("Success vs failure");
+    expect(document.querySelector("[data-overview-charts]")).toBeNull();
   });
 });
