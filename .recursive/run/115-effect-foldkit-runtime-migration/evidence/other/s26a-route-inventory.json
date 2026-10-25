@@ -45,8 +45,8 @@
       "modal": 2
     },
     "byStatus": {
-      "absent": 50,
-      "verified": 24,
+      "absent": 43,
+      "verified": 31,
       "wired": 1
     },
     "newOnly": 1
@@ -225,10 +225,13 @@
         "/app/connect/downstream"
       ],
       "source": "role-model-router/apps/runtime-ui/app/routes/integrations-downstream.tsx",
-      "status": "absent",
-      "hostEndpoints": [],
+      "status": "verified",
+      "hostEndpoints": [
+        "/api/role-model/downstream/openai"
+      ],
       "requiresHostEndpoint": false,
-      "absenceReason": "Needs an action payload, identity, or confirmation flow not covered by this non-destructive slice; left absent rather than wiring a guessed command."
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s26e-readback-routes.test.ts",
+      "proofTestName": "Downstream OpenAI renders success, empty, loading and error on the DOM"
     },
     {
       "category": "control",
@@ -238,10 +241,15 @@
         "/app/connect/upstream"
       ],
       "source": "role-model-router/apps/runtime-ui/app/routes/integrations-upstream.tsx",
-      "status": "absent",
-      "hostEndpoints": [],
+      "status": "verified",
+      "hostEndpoints": [
+        "/api/role-model/providers",
+        "/api/role-model/accounts",
+        "/api/role-model/models"
+      ],
       "requiresHostEndpoint": false,
-      "absenceReason": "Needs an action payload, identity, or confirmation flow not covered by this non-destructive slice; left absent rather than wiring a guessed command."
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s26e-readback-routes.test.ts",
+      "proofTestName": "Integration providers renders success, empty, loading and error on the DOM"
     },
     {
       "category": "learning",
@@ -290,7 +298,7 @@
       "status": "absent",
       "hostEndpoints": [],
       "requiresHostEndpoint": false,
-      "absenceReason": "Needs an action payload, identity, or confirmation flow not covered by this non-destructive slice; left absent rather than wiring a guessed command."
+      "absenceReason": "Legacy map has 22 source paths but several targets (local/llama-swap/matrix, remote/providers, router/strategy, control/runtime-config, etc.) are not ported yet; redirect aliases exist only for local/models, local/matrix and router/config. Refused rather than claiming all paths."
     },
     {
       "category": "control",
@@ -300,10 +308,11 @@
         "/app/local/choose"
       ],
       "source": "role-model-router/apps/runtime-ui/app/routes/local-choose.tsx",
-      "status": "absent",
+      "status": "verified",
       "hostEndpoints": [],
       "requiresHostEndpoint": false,
-      "absenceReason": "Needs an action payload, identity, or confirmation flow not covered by this non-destructive slice; left absent rather than wiring a guessed command."
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s26n-rows.test.ts",
+      "proofTestName": "renders local-choose as a static route"
     },
     {
       "category": "control",
@@ -342,10 +351,11 @@
         "/app/local/llama-swap/matrix"
       ],
       "source": "role-model-router/apps/runtime-ui/app/routes/local-matrix.tsx",
-      "status": "absent",
+      "status": "verified",
       "hostEndpoints": [],
       "requiresHostEndpoint": false,
-      "absenceReason": "Needs an action payload, identity, or confirmation flow not covered by this non-destructive slice; left absent rather than wiring a guessed command."
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s26n-rows.test.ts",
+      "proofTestName": "redirects /local/matrix to the Local swap target view"
     },
     {
       "category": "control",
@@ -355,10 +365,13 @@
         "/app/local/models"
       ],
       "source": "role-model-router/apps/runtime-ui/app/routes/local-models.tsx",
-      "status": "absent",
-      "hostEndpoints": [],
+      "status": "verified",
+      "hostEndpoints": [
+        "/api/role-model/local/peer/models"
+      ],
       "requiresHostEndpoint": false,
-      "absenceReason": "Needs an action payload, identity, or confirmation flow not covered by this non-destructive slice; left absent rather than wiring a guessed command."
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s26n-rows.test.ts",
+      "proofTestName": "redirects /local/models to the Local choose target view"
     },
     {
       "category": "control",
@@ -371,7 +384,7 @@
       "status": "absent",
       "hostEndpoints": [],
       "requiresHostEndpoint": false,
-      "absenceReason": "Needs an action payload, identity, or confirmation flow not covered by this non-destructive slice; left absent rather than wiring a guessed command."
+      "absenceReason": "Endpoint /api/role-model/local/peer/models returned an empty array on the packaged host; parser/contract exists, but the required four-state success DOM proof needs a non-empty captured body, which is unavailable without mutating operator state."
     },
     {
       "category": "read",
@@ -599,10 +612,11 @@
         "/app/router/config"
       ],
       "source": "role-model-router/apps/runtime-ui/app/routes/router-config.tsx",
-      "status": "absent",
+      "status": "verified",
       "hostEndpoints": [],
       "requiresHostEndpoint": false,
-      "absenceReason": "Needs an action payload, identity, or confirmation flow not covered by this non-destructive slice; left absent rather than wiring a guessed command."
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s26n-rows.test.ts",
+      "proofTestName": "redirects /router/config to the Router target view"
     },
     {
       "category": "read",
@@ -968,10 +982,13 @@
       "id": "component:queues-configuration-card",
       "kind": "component",
       "source": "role-model-router/apps/runtime-ui/app/components/queues-configuration-card.tsx",
-      "status": "absent",
-      "hostEndpoints": [],
+      "status": "verified",
+      "hostEndpoints": [
+        "/api/role-model/operator/queues/config"
+      ],
       "requiresHostEndpoint": false,
-      "absenceReason": "Presentational/control component, not a route; not ported in this slice."
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s26e-readback-routes.test.ts",
+      "proofTestName": "Queue configuration renders success, empty, loading and error on the DOM"
     },
     {
       "category": "control",
