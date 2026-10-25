@@ -68,6 +68,7 @@ export const Message: MessageUnion<{
     readonly token: typeof Schema.Number;
   };
   readonly StudioTabSelected: { readonly tab: typeof StudioTabSchema; };
+  readonly StudioTabKey: { readonly key: typeof Schema.String };
   readonly StudioFieldChanged: { readonly field: typeof StudioFieldSchema; readonly value: typeof Schema.String; };
   readonly StudioLoaded: {
     readonly responseText: typeof Schema.String;
@@ -111,6 +112,7 @@ export const Message: MessageUnion<{
   ReadbackFailed: { key: ReadbackKeySchema, message: Schema.String, token: Schema.Number },
   ReadbackLoaded: { key: ReadbackKeySchema, snapshot: ReadbackState, token: Schema.Number },
   StudioTabSelected: { tab: StudioTabSchema },
+  StudioTabKey: { key: Schema.String },
   StudioFieldChanged: { field: StudioFieldSchema, value: Schema.String },
   StudioLoaded: { responseText: Schema.String, statusCode: Schema.Number, tab: StudioTabSchema, token: Schema.Number },
   StudioFailed: { message: Schema.String, statusCode: Schema.Number, responseText: Schema.String, token: Schema.Number },

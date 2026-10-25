@@ -1,0 +1,358 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+stderr | test/s40b-overview.test.ts > S40b bucketed overview > buckets Day hourly, omits empty buckets, and clamps an end-boundary item to 23:00
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 38.8ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Index' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 38.762000000000626,
+  thresholdMs: 8
+}
+
+stderr | test/s40b-overview.test.ts > S40b bucketed overview > buckets Day hourly, omits empty buckets, and clamps an end-boundary item to 23:00
+[foldkit] Slow view: 25.7ms (budget: 16ms), triggered by ReadbackLoaded. Keep render-only work in the view path and memoize expensive subtrees with createLazy or createKeyedLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'View',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 0,
+      status: 'live',
+      message: undefined
+    },
+    route: { _tag: 'Index' },
+    theme: 'dark'
+  },
+  message: {
+    _id: 'Option',
+    _tag: 'Some',
+    value: {
+      _tag: 'ReadbackLoaded',
+      key: 'routerCandidates',
+      snapshot: [Object],
+      token: 1
+    }
+  },
+  durationMs: 25.714599999999336,
+  thresholdMs: 16
+} {
+  _tag: 'ReadbackLoaded',
+  key: 'routerCandidates',
+  snapshot: { rows: [ [Object], [Object], [Object] ], status: 'ok', token: 1 },
+  token: 1
+}
+[foldkit] Slow patch: 83.8ms (budget: 8ms), triggered by ReadbackLoaded. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 0,
+      status: 'live',
+      message: undefined
+    },
+    route: { _tag: 'Index' },
+    theme: 'dark'
+  },
+  message: {
+    _id: 'Option',
+    _tag: 'Some',
+    value: {
+      _tag: 'ReadbackLoaded',
+      key: 'routerCandidates',
+      snapshot: [Object],
+      token: 1
+    }
+  },
+  durationMs: 83.78189999999995,
+  thresholdMs: 8
+} {
+  _tag: 'ReadbackLoaded',
+  key: 'routerCandidates',
+  snapshot: { rows: [ [Object], [Object], [Object] ], status: 'ok', token: 1 },
+  token: 1
+}
+
+ ❯ test/s40b-overview.test.ts (7 tests | 1 failed | 6 skipped) 847ms
+   ↓ S40b bucketed overview > uses the nearest-rank p95 index for n=20 and n=21
+   × S40b bucketed overview > buckets Day hourly, omits empty buckets, and clamps an end-boundary item to 23:00 839ms
+     → expected [ [ '00:00', '10', '10' ], …(23) ] to deep equally contain [ '02:00', '—', '—' ]
+   ↓ S40b bucketed overview > accepts the real metrics body with object-valued tokens
+   ↓ S40b bucketed overview > shows per-model rail counts from the same items
+   ↓ S40b bucketed overview > switches Week and ignores a late Day response
+   ↓ S40b bucketed overview > renders explicit empty and rejects fabricated metrics
+   ↓ S40b bucketed overview > rejects a fabricated metrics body
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s40b-overview.test.ts > S40b bucketed overview > buckets Day hourly, omits empty buckets, and clamps an end-boundary item to 23:00
+AssertionError: expected [ [ '00:00', '10', '10' ], …(23) ] to deep equally contain [ '02:00', '—', '—' ]
+
+- Expected
++ Received
+
+  [
++   [
++     "00:00",
++     "10",
++     "10",
++   ],
++   [
++     "01:00",
++     "30",
++     "40",
++   ],
++   [
+      "02:00",
+-   "—",
+-   "—",
++     "0",
++     "0",
++   ],
++   [
++     "03:00",
++     "0",
++     "0",
++   ],
++   [
++     "04:00",
++     "0",
++     "0",
++   ],
++   [
++     "05:00",
++     "0",
++     "0",
++   ],
++   [
++     "06:00",
++     "0",
++     "0",
++   ],
++   [
++     "07:00",
++     "0",
++     "0",
++   ],
++   [
++     "08:00",
++     "0",
++     "0",
++   ],
++   [
++     "09:00",
++     "0",
++     "0",
++   ],
++   [
++     "10:00",
++     "0",
++     "0",
++   ],
++   [
++     "11:00",
++     "0",
++     "0",
++   ],
++   [
++     "12:00",
++     "0",
++     "0",
++   ],
++   [
++     "13:00",
++     "0",
++     "0",
++   ],
++   [
++     "14:00",
++     "0",
++     "0",
++   ],
++   [
++     "15:00",
++     "0",
++     "0",
++   ],
++   [
++     "16:00",
++     "0",
++     "0",
++   ],
++   [
++     "17:00",
++     "0",
++     "0",
++   ],
++   [
++     "18:00",
++     "0",
++     "0",
++   ],
++   [
++     "19:00",
++     "0",
++     "0",
++   ],
++   [
++     "20:00",
++     "0",
++     "0",
++   ],
++   [
++     "21:00",
++     "0",
++     "0",
++   ],
++   [
++     "22:00",
++     "0",
++     "0",
++   ],
++   [
++     "23:00",
++     "90",
++     "90",
++   ],
+  ]
+
+ ❯ test/s40b-overview.test.ts:62:18
+     60|     expect(rows).toContainEqual(["01:00", "30", "40"]);
+     61|     expect(rows).toContainEqual(["23:00", "90", "90"]);
+     62|     expect(rows).toContainEqual(["02:00", "—", "—"]);
+       |                  ^
+     63|     expect(document.querySelectorAll("[data-chart-point-label]").lengt…
+     64|     expect(document.body.textContent).toContain("02:00");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 6 skipped (7)
+   Start at  21:48:49
+   Duration  9.86s (transform 4.21s, setup 0ms, collect 6.78s, tests 847ms, environment 867ms, prepare 387ms)
+

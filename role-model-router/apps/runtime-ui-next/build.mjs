@@ -32,7 +32,7 @@ await cp(path.join(here, "dist", "css", "main.css"), cssTarget);
 const cssBytes = statSync(cssTarget).size;
 if (cssBytes < 10_000) throw new Error("generated stylesheet is empty or truncated: " + String(cssBytes));
 await cp(
-  path.join(here, "../runtime-ui/build/client/assets/fonts"),
+  path.join(here, "../runtime-ui/public/assets/fonts"),
   path.join(outDir, "assets", "fonts"),
   { recursive: true },
 );

@@ -1,27 +1,23 @@
 {
-  "slice": "s56a-repairs",
-  "proxy": {
-    "assignment": "llamaSwapProxyBaseUrl assigned from nextLlamaSwapVendor.readStatus().baseUrl after vendor start; not yet nulled at every shutdown path",
-    "advancedPath": "Advanced tab now POSTs /v1/responses (host-served) instead of /v1/messages",
-    "testStatus": "NO host active/inactive proxy tests added; NO host-to-vendor end-to-end proof yet",
-    "claimCorrection": "s50a claim that the host proxies to llama-swap was false at report time; assignment added now but host hop still unproven"
+  "slice": "s56a-gap-packaging-a11y",
+  "gitDiff": "build.mjs, message.ts, update.ts, view.ts, style-build.mjs, s40b, s46a, s48a, foldkit-chart.ts",
+  "gap": "ChartPoint.value now number|null; null breaks path segment and omits circle; bucketsFor emits all window buckets, empty ones null, table shows dash; test asserts 02:00 row dashes, no 02:00 circle, >=2 M segments",
+  "packaging": {
+    "fonts": "copied from runtime-ui/public/assets/fonts, no legacy build/client dependency",
+    "buildGuard": "style-build.mjs fails with actionable message if runtime-ui vite/tailwind deps missing; build test asserts public font path and absent legacy build font path",
+    "remaining": "CSS generation still resolves Vite/Tailwind from runtime-ui/node_modules; not fully self-contained, no clean-without-node_modules proof"
   },
-  "tokens": {
-    "shape": "items[].tokens {input_tokens,output_tokens}; sum input+output",
-    "fixture": "overview-real-tokens.json captured from packaged 5796 real body (zero-valued tokens)",
-    "boundary": "boundary fixture now nested token objects, sums 10/50/40",
-    "red": "scalar revert fails boundary sums (s55a-red-token-sum.log pre-dates nested shape; needs rerun)",
-    "claimCorrection": "s55a claim that tokens was scalar was wrong"
+  "a11y": {
+    "tabs": "role=tablist/tab/tabpanel, aria-selected, aria-controls, tabindex, ArrowLeft/Right/Home/End",
+    "points": "model cost circles tabindex=0 + aria-label value",
+    "rail": "dash includes sr-only reason text plus aria-label"
   },
-  "p95": "ceil(0.95*n)-1; n=20 ->19, n=21 ->20 tested",
-  "boundary": "end-boundary item clamps to 23:00; test title corrected",
-  "gaps": "NOT FIXED - empty buckets are still omitted and the line can bridge; no gap-aware primitive",
-  "cards": {
-    "before": "token/latency/success h=490 svg 1105x380 viewBox 640x220",
-    "after": "token/latency/success h=330.3 svg 640x220 exact ratio; model cost strip h=300",
-    "tokenRender": "point circles are rendered; token card has 1-series point marker"
+  "studioE2E": "not newly run against mock upstream; packaged chat 400 path previously observed",
+  "reds": {
+    "gap": "s56a-red-gap-bridge.log",
+    "tokens": "s55a-red-token-sum.log",
+    "cost": "s55a-red-cost-axis.log"
   },
-  "screenshot": "E:/rm-tmp/s55a/cards-final2.png",
   "counts": {
     "clientFull": 199,
     "files": 20,

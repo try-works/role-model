@@ -21,6 +21,9 @@ describe("S48a styled client build", () => {
       expect(existsSync(path.join(here, "dist/client", url.slice(1))), url).toBe(true);
     }
     expect(readdirSync(path.join(here, "dist/client/assets/fonts")).filter((file) => file.endsWith(".woff2")).length).toBeGreaterThanOrEqual(14);
+    const buildSource = readFileSync(path.join(here, "build.mjs"), "utf8");
+    expect(buildSource).toContain("runtime-ui/public/assets/fonts");
+    expect(buildSource).not.toContain("runtime-ui/build/client/assets/fonts");
     const index = readFileSync(path.join(here, "dist/client/index.html"), "utf8");
     expect(index).toContain('href="/assets/main.css"');
     expect(index).toContain("geist-latin-400-normal.woff2");

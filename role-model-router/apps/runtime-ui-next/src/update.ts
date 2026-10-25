@@ -352,6 +352,13 @@ export const createUpdate =
     const current = model.studio ?? studioIdle();
     return { model: { ...model, studio: studioIdle(tab) } };
   },
+  StudioTabKey: ({ key }) => {
+    const current = model.studio ?? studioIdle();
+    const tabs = ["chat", "images", "audio", "rerank", "advanced"] as const;
+    const index = tabs.indexOf(current.tab);
+    const next = key === "Home" ? 0 : key === "End" ? tabs.length - 1 : key === "ArrowRight" ? (index + 1) % tabs.length : key === "ArrowLeft" ? (index - 1 + tabs.length) % tabs.length : index;
+    return { model: { ...model, studio: studioIdle(tabs[next] ?? current.tab) } };
+  },
   StudioFieldChanged: ({ field, value }) => {
     const current = model.studio ?? studioIdle();
     return { model: { ...model, studio: { ...current, [field]: value } } };

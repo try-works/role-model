@@ -67,7 +67,7 @@ export const chartSeriesColor = (index: number): string =>
 
 export interface ChartPoint {
   readonly label: string;
-  readonly value: number;
+  readonly value: number | null;
 }
 
 export interface ChartSeries {
@@ -179,6 +179,7 @@ const seriesValueLookup = (
   series.map((item) => {
     const lookup = new Map<string, number>();
     for (const point of item.points) {
+      if (point.value === null) continue;
       if (!lookup.has(point.label)) {
         lookup.set(point.label, finite(point.value));
       }
@@ -357,7 +358,7 @@ export const view = <Message>(config: Rm3ChartConfig<Message>, h: HtmlBuilder<Me
   const height = config.height ?? CHART_HEIGHT;
   const plotWidth = CHART_WIDTH - CHART_LEFT - CHART_RIGHT;
   const plotHeight = Math.max(1, height - CHART_TOP - CHART_BOTTOM);
-  const values = series.flatMap((item) => item.points.map((point) => finite(point.value)));
+  const values = series.flatMap((item) => item.points.flatMap((point) => (point.value === null ? [] : [finite(point.value)])));
   const minimum = Math.min(0, ...values);
   const maximum = Math.max(...values, minimum + 1);
   const range = Math.max(1, maximum - minimum);
@@ -442,17 +443,24 @@ export const view = <Message>(config: Rm3ChartConfig<Message>, h: HtmlBuilder<Me
   const seriesIndexById = new Map(usableSeries.map((item, index) => [item.id, index] as const));
   const unit = config.yUnit === undefined ? "" : ` ${config.yUnit}`;
   const pointValueText = (seriesLabel: string, point: ChartPoint): string =>
-    `${seriesLabel}: ${point.label} = ${formatValue(finite(point.value))}${unit}`;
+    `${seriesLabel}: ${point.label} = ${formatValue(finite(point.value ?? 0))}${unit}`;
   const seriesNodes = series.flatMap((item) => {
     const color = item.color ?? chartSeriesColor(seriesIndexById.get(item.id) ?? 0);
-    const path = item.points
-      .map((point, index) => {
-        const unionIndex = labelIndex.get(point.label) ?? 0;
-        const x = xFor(unionIndex, labels.length);
-        const y = yFor(finite(point.value));
-        return `${index === 0 ? "M" : "L"} ${formatValue(x)} ${formatValue(y)}`;
-      })
-      .join(" ");
+    const pathSegments: string[] = [];
+    let openSegment = false;
+    for (const point of item.points) {
+      const value = point.value;
+      if (value === null) {
+        openSegment = false;
+        continue;
+      }
+      const unionIndex = labelIndex.get(point.label) ?? 0;
+      const x = xFor(unionIndex, labels.length);
+      const y = yFor(finite(value));
+      pathSegments.push(`${openSegment ? "L" : "M"} ${formatValue(x)} ${formatValue(y)}`);
+      openSegment = true;
+    }
+    const path = pathSegments.join(" ");
     const lineClass = ["rm3-chart-series", colorClass("stroke", color)]
       .filter((value) => value.length > 0)
       .join(" ");
@@ -473,12 +481,13 @@ export const view = <Message>(config: Rm3ChartConfig<Message>, h: HtmlBuilder<Me
         ],
         [],
       ),
-      ...item.points.map((point) => {
+      ...item.points.flatMap((point) => {
+        if (point.value === null) return [];
         const showPoint = config.interaction?.onShowPoint;
-        return h.circle(
+        return [h.circle(
           [
             h.Cx(String(xFor(labelIndex.get(point.label) ?? 0, labels.length))),
-            h.Cy(String(yFor(finite(point.value)))),
+            h.Cy(String(yFor(finite(point.value ?? 0)))),
             h.R("2.5"),
             h.Fill(color),
             h.Class(pointClass),
@@ -494,7 +503,7 @@ export const view = <Message>(config: Rm3ChartConfig<Message>, h: HtmlBuilder<Me
                 ]),
           ],
           [h.title([], [pointValueText(item.label, point)])],
-        );
+        )];
       }),
     ];
   });
@@ -511,7 +520,7 @@ export const view = <Message>(config: Rm3ChartConfig<Message>, h: HtmlBuilder<Me
       ? null
       : (() => {
           const cx = xFor(labelIndex.get(tooltipPoint.label) ?? 0, labels.length);
-          const cy = yFor(finite(tooltipPoint.value));
+          const cy = yFor(finite(tooltipPoint.value ?? 0));
           const text = pointValueText(tooltipSeries.label, tooltipPoint);
           return h.g(
             [

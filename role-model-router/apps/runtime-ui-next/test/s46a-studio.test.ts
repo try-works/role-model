@@ -30,6 +30,11 @@ describe("S46a Studio", () => {
     mountStudio("s46a-tabs", async () => new Response("{}", { status: 200 }));
     await waitFor(() => document.querySelector("[data-route='studio']") ?? undefined, "studio");
     expect(document.querySelectorAll("[data-studio-tab]")).toHaveLength(5);
+    expect(document.querySelector("[role='tablist']")).not.toBeNull();
+    expect(document.querySelector("[role='tab'][aria-selected='true']")?.getAttribute("data-studio-tab")).toBe("chat");
+    const selected = document.querySelector("[role='tab'][aria-selected='true']") as HTMLButtonElement;
+    selected.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, key: "ArrowRight" }));
+    await waitFor(() => document.querySelector("[role='tab'][aria-selected='true']")?.getAttribute("data-studio-tab") === "images" ? true : undefined, "arrow tab");
     expect(document.body.textContent).toContain("RAW RESPONSE");
     expect(document.body.textContent).toContain("Run a Studio request to see the raw response.");
     for (const tab of ["images", "audio", "rerank", "advanced"]) {

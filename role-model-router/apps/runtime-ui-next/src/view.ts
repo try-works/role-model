@@ -481,7 +481,7 @@ const WINDOW_OPTIONS = [
 const windowLabel = (windowMs: number): string =>
   WINDOW_OPTIONS.find((option) => option.windowMs === windowMs)?.label ?? "Day";
 interface OverviewItem { readonly timestamp?: unknown; readonly duration_ms?: unknown; readonly resp_status_code?: unknown; readonly modelId?: unknown; readonly tokens?: unknown; }
-interface Bucket { readonly label: string; readonly avg: number; readonly p95: number; readonly success: number; readonly failure: number; readonly tokens: number; }
+interface Bucket { readonly label: string; readonly avg: number; readonly p95: number; readonly success: number; readonly failure: number; readonly tokens: number; readonly empty: boolean; }
 export const percentile = (values: readonly number[], p: number): number => {
   if (values.length === 0) return 0;
   const sorted = [...values].sort((a, b) => a - b);
@@ -524,16 +524,18 @@ const bucketsFor = (state: ReadbacksState["overviewMetrics"], windowMs: number):
     const model = typeof item.modelId === "string" && item.modelId.length > 0 ? item.modelId : "unknown";
     models.set(model, (models.get(model) ?? 0) + 1);
   }
-  const buckets = [...grouped.entries()]
-    .sort(([a], [b]) => a - b)
-    .map(([index, bucket]) => ({
+  const buckets = Array.from({ length: count }, (_, index) => {
+    const bucket = grouped.get(index);
+    return {
+      empty: bucket === undefined,
       label: rule.label(start + index * rule.bucketMs),
-      avg: bucket.durations.length === 0 ? 0 : bucket.durations.reduce((sum, value) => sum + value, 0) / bucket.durations.length,
-      p95: percentile(bucket.durations, 95),
-      success: bucket.success,
-      failure: bucket.failure,
-      tokens: bucket.tokens,
-    }));
+      avg: bucket === undefined || bucket.durations.length === 0 ? 0 : bucket.durations.reduce((sum, value) => sum + value, 0) / bucket.durations.length,
+      p95: bucket === undefined ? 0 : percentile(bucket.durations, 95),
+      success: bucket?.success ?? 0,
+      failure: bucket?.failure ?? 0,
+      tokens: bucket?.tokens ?? 0,
+    };
+  });
   return { buckets, models, period: count };
 };
 const overviewPage = (
@@ -596,22 +598,22 @@ const overviewPage = (
       : h.div([], [
           h.svg([h.Class("mt-2 w-full"), h.DataAttribute("model-pool", ""), h.AriaLabel("Model pool by input cost")], [
             h.line([h.Attribute("x1", "40"), h.Attribute("y1", "70"), h.Attribute("x2", "580"), h.Attribute("y2", "70"), h.Attribute("stroke", "var(--rm-border)")]),
-            ...modelRows.map((entry, index) => h.circle([h.Attribute("cx", String(scaleCost(entry.cost))), h.Attribute("cy", String(70 + (index % 2 === 0 ? 0 : 24))), h.Attribute("r", "6"), h.Fill("var(--rm-accent)"), h.DataAttribute("model-point", entry.id)])),
+            ...modelRows.map((entry, index) => h.circle([h.Attribute("cx", String(scaleCost(entry.cost))), h.Attribute("cy", String(70 + (index % 2 === 0 ? 0 : 24))), h.Attribute("r", "6"), h.Fill("var(--rm-accent)"), h.Tabindex(0), h.AriaLabel(`${entry.label}: ${String(entry.cost)} per 1M input tokens`), h.DataAttribute("model-point", entry.id)])),
           ]),
           h.table([h.Class("sr-only")], [h.caption([], ["Model cost strip data"]), h.thead([], [h.tr([], [h.th([], ["Model"]), h.th([], ["Input cost per 1M"]), h.th([], ["Endpoint"])])]), h.tbody([], modelRows.map((entry) => h.tr([], [h.td([], [entry.label]), h.td([], [String(entry.cost)]), h.td([], [entry.endpoint])])))]),
         ]),
   ]);
-  const tokenChart = chartView({ title: "Token usage over time", description: "Total tokens per bucket for the last " + period.toLowerCase() + ".", series: [{ id: "tokens", label: "Tokens", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.tokens })) }], state: { status: "ready" }, yUnit: "tokens" }, h);
+  const tokenChart = chartView({ title: "Token usage over time", description: "Total tokens per bucket for the last " + period.toLowerCase() + ".", series: [{ id: "tokens", label: "Tokens", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.empty ? null : bucket.tokens })) }], state: { status: "ready" }, yUnit: "tokens" }, h);
   const tokenCard = card("Token usage over time", "Total tokens per bucket for the last " + period.toLowerCase() + ".", tokenChart);
   const latencyCard = card("Latency (ms)", "Average and p95 per bucket for the last " + period.toLowerCase() + ".", chartView({ title: "Latency (ms)", description: "Average and p95 per bucket for the last " + period.toLowerCase() + ".", series: [
-    { id: "average", label: "Average", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.avg })) },
-    { id: "p95", label: "p95", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.p95 })) },
+    { id: "average", label: "Average", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.empty ? null : bucket.avg })) },
+    { id: "p95", label: "p95", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.empty ? null : bucket.p95 })) },
   ], state: { status: "ready" }, yUnit: "ms" }, h));
   const outcomeCard = card("Success vs failure", "Request outcomes per bucket for the last " + period.toLowerCase() + ".", chartView({ title: "Success vs failure", description: "Request outcomes per bucket for the last " + period.toLowerCase() + ".", series: [
-    { id: "success", label: "Success", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.success })) },
-    { id: "failure", label: "Failure", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.failure })) },
+    { id: "success", label: "Success", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.empty ? null : bucket.success })) },
+    { id: "failure", label: "Failure", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.empty ? null : bucket.failure })) },
   ], state: { status: "ready" }, yUnit: "requests" }, h));
-  const charts = h.div([h.Class("mt-6 grid gap-4"), h.DataAttribute("overview-charts", ""), h.DataAttribute("overview-window", period), h.DataAttribute("overview-buckets", String(buckets.length))], [modelPool, tokenCard, latencyCard, outcomeCard]);
+  const charts = h.div([h.Class("mt-6 grid gap-4"), h.DataAttribute("overview-charts", ""), h.DataAttribute("overview-window", period), h.DataAttribute("overview-buckets", String(buckets.filter((bucket) => !bucket.empty).length)), h.DataAttribute("overview-labels", String(buckets.length))], [modelPool, tokenCard, latencyCard, outcomeCard]);
   return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "index"), h.DataAttribute("readback-route", "dashboard"), h.DataAttribute("overview-state", "success"), h.DataAttribute("readback-state", "ok"), h.DataAttribute("state", "success")], [header, charts]);
 };
 
@@ -634,7 +636,7 @@ const studioField = (label: string, field: StudioField, value: string, h: HtmlBu
   ]);
 const studioPage = (state: StudioState, h: HtmlBuilder<Message>): Html => {
   const tabs = StudioTabSchema.literals.map((tab) =>
-    h.button([h.Type("button"), h.DataAttribute("studio-tab", tab), h.AriaPressed(String(state.tab === tab)), h.OnClick(Message.StudioTabSelected({ tab })), h.Class("min-h-8 rounded px-2 text-[12px] " + (state.tab === tab ? "bg-[var(--rm-panel)] text-[var(--rm-fg)]" : "text-[var(--rm-secondary)]"))], [tab === "advanced" ? "Advanced APIs" : tab[0]?.toUpperCase() + tab.slice(1)]),
+    h.button([h.Type("button"), h.Role("tab"), h.AriaSelected(state.tab === tab), h.AriaControls("studio-panel"), h.Tabindex(state.tab === tab ? 0 : -1), h.OnKeyDown((key) => Message.StudioTabKey({ key })), h.DataAttribute("studio-tab", tab), h.AriaPressed(String(state.tab === tab)), h.OnClick(Message.StudioTabSelected({ tab })), h.Class("min-h-8 rounded px-2 text-[12px] " + (state.tab === tab ? "bg-[var(--rm-panel)] text-[var(--rm-fg)]" : "text-[var(--rm-secondary)]"))], [tab === "advanced" ? "Advanced APIs" : tab[0]?.toUpperCase() + tab.slice(1)]),
   );
   const fields = state.tab === "advanced"
     ? [studioField("JSON body", "advancedBody", state.advancedBody, h, true)]
@@ -645,8 +647,8 @@ const studioPage = (state: StudioState, h: HtmlBuilder<Message>): Html => {
         : [studioField("Model", "model", state.model, h), studioField("Prompt", "prompt", state.prompt, h)];
   return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "studio"), h.DataAttribute("studio-state", state.status)], [
     h.h1([h.Class("rm3-next-route-title")], ["Studio"]),
-    h.div([h.Class("mt-2 flex flex-wrap gap-1"), h.DataAttribute("studio-tabs", "")], tabs),
-    h.div([h.Class("mt-4 grid gap-2"), h.DataAttribute("studio-form", state.tab)], fields),
+    h.div([h.Class("mt-2 flex flex-wrap gap-1"), h.DataAttribute("studio-tabs", ""), h.Role("tablist"), h.AriaLabel("Studio tabs")], tabs),
+    h.div([h.Class("mt-4 grid gap-2"), h.Id("studio-panel"), h.Role("tabpanel"), h.AriaLabel(state.tab), h.DataAttribute("studio-form", state.tab)], fields),
     h.button([h.Type("button"), h.DataAttribute("studio-run", ""), ...(state.status === "loading" ? [h.AriaBusy(true), h.Disabled(true)] : []), h.OnClick(Message.StudioRunRequested({ token: state.token + 1 })), h.Class("mt-3 min-h-8 rounded bg-[var(--rm-accent)] px-3 text-[12px] text-white")], ["Run"]),
     h.div([h.Class("mt-4"), h.DataAttribute("studio-response", "")], [
       h.h2([h.Class("text-[12px] font-semibold uppercase tracking-[0.12em]")], ["RAW RESPONSE"]),
@@ -756,7 +758,7 @@ const railRow = (label: string, value: string | null, reason: string, h: HtmlBui
     [
       h.span([h.Class("text-[10px] uppercase tracking-[0.12em] text-[var(--rm-muted)]")], [label]),
       value === null
-        ? h.span([h.AriaLabel(reason), h.DataAttribute("rail-value", "dash")], ["—"])
+        ? h.span([h.AriaLabel(reason), h.DataAttribute("rail-value", "dash")], ["—", h.span([h.Class("sr-only")], [reason])])
         : h.span([h.Class("truncate text-[11px] text-[var(--rm-fg)]"), h.DataAttribute("rail-value", label.toLowerCase())], [value]),
     ],
   );
