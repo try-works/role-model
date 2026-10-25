@@ -127,6 +127,64 @@ describe("s63a HostRuntimeResource (backend+server pair)", () => {
     expect(events.indexOf("release:server")).toBeLessThan(events.indexOf("release:backend"));
   });
 
+  test("a failed backend acquisition releases nothing, because nothing was acquired", async () => {
+    const events: string[] = [];
+    const failing: HostRuntimeFactories<Backend, Server, Packaged> = {
+      acquireBackend: Effect.suspend(() => {
+        events.push("acquire:backend");
+        return Effect.fail(new Error("backend failed"));
+      }),
+      acquirePackagedRuntime: (_server, _backend) => Effect.sync(() => ({ id: "packaged" as const })),
+      acquireServer: (_backend) =>
+        Effect.sync(() => {
+          events.push("acquire:server");
+          return { node: createServer(), port: 0 };
+        }),
+      releaseBackend: (_backend) => Effect.sync(() => { events.push("release:backend"); }),
+      releasePackagedRuntime: (_packaged) => Effect.sync(() => { events.push("release:packaged"); }),
+      releaseServer: (_server) => Effect.sync(() => { events.push("release:server"); }),
+    };
+    await expect(Effect.runPromise(makeHostRuntime(failing))).rejects.toThrow();
+    expect(events).toEqual(["acquire:backend"]);
+  });
+
+  test("a server that cannot bind releases the backend it already acquired", async () => {
+    const events: string[] = [];
+    const blocker = createServer();
+    await new Promise<void>((resolve) => blocker.listen(0, "127.0.0.1", resolve));
+    const address = blocker.address();
+    const taken = typeof address === "object" && address !== null ? address.port : 0;
+    const failing: HostRuntimeFactories<Backend, Server, Packaged> = {
+      acquireBackend: Effect.sync(() => {
+        events.push("acquire:backend");
+        return { id: "backend" as const };
+      }),
+      acquirePackagedRuntime: (_server, _backend) => Effect.sync(() => ({ id: "packaged" as const })),
+      acquireServer: (_backend) =>
+        Effect.tryPromise({
+          catch: (error) => error,
+          try: () =>
+            new Promise<Server>((resolve, reject) => {
+              const node = createServer((_request, response) => response.end("ok"));
+              node.once("error", reject);
+              node.listen(taken, "127.0.0.1", () => {
+                events.push("acquire:server");
+                resolve({ node, port: taken });
+              });
+            }),
+        }),
+      releaseBackend: (_backend) => Effect.sync(() => { events.push("release:backend"); }),
+      releasePackagedRuntime: (_packaged) => Effect.sync(() => { events.push("release:packaged"); }),
+      releaseServer: (_server) => Effect.sync(() => { events.push("release:server"); }),
+    };
+    try {
+      await expect(Effect.runPromise(makeHostRuntime(failing))).rejects.toThrow();
+      expect(events).toEqual(["acquire:backend", "release:backend"]);
+    } finally {
+      await new Promise<void>((resolve) => blocker.close(() => resolve()));
+    }
+  });
+
   test("double close is a no-op", async () => {
     const events: string[] = [];
     const host = await Effect.runPromise(makeHostRuntime(factories(events)));
