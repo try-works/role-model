@@ -611,7 +611,7 @@ export const view = <Message>(config: Rm3ChartConfig<Message>, h: HtmlBuilder<Me
         h.ViewBox(`0 0 ${String(CHART_WIDTH)} ${String(height)}`),
         h.Role("img"),
         h.AriaLabel(config.ariaLabel ?? `${config.title} chart`),
-        h.Class("rm3-chart-svg h-auto w-full"),
+        h.Class("rm3-chart-svg h-auto w-[640px] max-w-full"),
       ],
       [...grid, xAxis, ...xLabels, ...seriesNodes, ...(tooltipNode === null ? [] : [tooltipNode])],
     ),

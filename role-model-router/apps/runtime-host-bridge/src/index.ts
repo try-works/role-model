@@ -251,7 +251,9 @@ import { createVendorNotConfiguredError } from "@role-model-router/vendor-abstra
 import { startLiteLLMVendor } from "@role-model-router/vendor-litellm";
 import { startLlamaSwapVendor } from "@role-model-router/vendor-llama-swap";
 
-let llamaSwapProxyBaseUrl: string | null = null;
+// Run 115 S57: the llama-swap proxy target is resolved LIVE from the vendor status in the
+// request handler. The former module-level cache was never assigned anywhere, so every
+// Studio vendor call took the "not running" branch even with the vendor healthy.
 
 import {
   readActiveBenchmarkRun as readActiveBenchmarkRunProgress,
@@ -3521,6 +3523,16 @@ export interface StartBridgeServerOptions {
     readonly status: "pending" | "ready" | "degraded" | "failed";
     readonly message?: string;
   };
+  /**
+   * Run 115 S57: the live llama-swap vendor status, used by the Studio vendor proxy to
+   * resolve its target per request. Resolving it live (instead of caching a base URL that
+   * nothing ever assigned) is what makes the proxy reach the vendor when it is healthy and
+   * answer 503 when it is not.
+   */
+  readonly readLlamaSwapVendorStatus?: () => {
+    readonly healthStatus: "healthy" | "inactive" | "starting" | "stopped" | "crashed";
+    readonly baseUrl?: string;
+  } | null;
   readonly executeChatCompletions: (
     body: OpenAIChatCompletionsBody,
     requestId: string,
@@ -4099,6 +4111,13 @@ export interface RuntimeBridgeBackend {
       useModelName?: string | null;
     }[]
   >;
+  /**
+   * Run 115 S57: live llama-swap vendor status, consumed by the Studio vendor proxy.
+   */
+  readLlamaSwapVendorStatus(): {
+    healthStatus: "healthy" | "inactive" | "starting" | "stopped" | "crashed";
+    baseUrl?: string;
+  } | null;
   listLlamaSwapLocalModels(): Promise<
     readonly {
       modelId: string;
@@ -20305,7 +20324,13 @@ function createRequestHandler(options: StartBridgeServerOptions) {
           url.pathname === "/v1/reranking")) ||
       (request.method === "GET" && url.pathname === "/v1/audio/voices");
     if (llamaSwapProxyPath) {
-      const vendorBaseUrl = llamaSwapProxyBaseUrl;
+      const llamaSwapStatus = options.readLlamaSwapVendorStatus?.() ?? null;
+      const vendorBaseUrl =
+        llamaSwapStatus !== null &&
+        llamaSwapStatus.healthStatus === "healthy" &&
+        typeof llamaSwapStatus.baseUrl === "string"
+          ? llamaSwapStatus.baseUrl
+          : null;
       if (vendorBaseUrl === null) {
         writeJson(response, 503, {
           error: "Llama-swap is not running. Start it from Local > llama-swap.",
@@ -34284,6 +34309,23 @@ export async function createRuntimeBridgeBackend(
       }[]
     > {
       return collectLocalModels("peer-backed");
+    },
+    /**
+     * Run 115 S57: live llama-swap vendor status for the Studio vendor proxy. The proxy must
+     * know whether the vendor is actually healthy RIGHT NOW, not a start-time snapshot.
+     */
+    readLlamaSwapVendorStatus(): {
+      healthStatus: "healthy" | "inactive" | "starting" | "stopped" | "crashed";
+      baseUrl?: string;
+    } | null {
+      const status = currentLlamaSwapVendor?.readStatus() ?? null;
+      if (status === null) {
+        return null;
+      }
+      return {
+        healthStatus: status.healthStatus,
+        ...(typeof status.baseUrl === "string" ? { baseUrl: status.baseUrl } : {}),
+      };
     },
     async listLlamaSwapLocalModels(): Promise<
       readonly {

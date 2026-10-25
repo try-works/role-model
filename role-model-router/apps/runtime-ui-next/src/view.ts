@@ -480,12 +480,12 @@ const WINDOW_OPTIONS = [
 ] as const;
 const windowLabel = (windowMs: number): string =>
   WINDOW_OPTIONS.find((option) => option.windowMs === windowMs)?.label ?? "Day";
-interface OverviewItem { readonly timestamp?: unknown; readonly duration_ms?: unknown; readonly resp_status_code?: unknown; readonly modelId?: unknown; }
+interface OverviewItem { readonly timestamp?: unknown; readonly duration_ms?: unknown; readonly resp_status_code?: unknown; readonly modelId?: unknown; readonly tokens?: unknown; }
 interface Bucket { readonly label: string; readonly avg: number; readonly p95: number; readonly success: number; readonly failure: number; readonly tokens: number; }
-const percentile = (values: readonly number[], p: number): number => {
+export const percentile = (values: readonly number[], p: number): number => {
   if (values.length === 0) return 0;
   const sorted = [...values].sort((a, b) => a - b);
-  return sorted[Math.min(sorted.length - 1, Math.floor((p / 100) * sorted.length))] ?? 0;
+  return sorted[Math.max(0, Math.ceil((p / 100) * sorted.length) - 1)] ?? 0;
 };
 const bucketRule = (windowMs: number): { bucketMs: number; label: (ms: number) => string } => {
   if (windowMs <= 86_400_000) return { bucketMs: 3_600_000, label: (ms) => new Date(ms).toISOString().slice(11, 13) + ":00" };
@@ -509,8 +509,13 @@ const bucketsFor = (state: ReadbacksState["overviewMetrics"], windowMs: number):
     const index = Math.min(count - 1, Math.max(0, Math.floor((raw - start) / rule.bucketMs)));
     const bucket = grouped.get(index) ?? { durations: [], success: 0, failure: 0, tokens: 0 };
     const duration = Number(item.duration_ms);
-    const tokens = Number((item as { tokens?: unknown }).tokens);
-    if (Number.isFinite(tokens)) bucket.tokens += tokens;
+    const tokenShape = item.tokens as { input_tokens?: unknown; output_tokens?: unknown } | undefined;
+    if (typeof tokenShape === "object" && tokenShape !== null) {
+      const inputTokens = Number(tokenShape.input_tokens);
+      const outputTokens = Number(tokenShape.output_tokens);
+      if (Number.isFinite(inputTokens)) bucket.tokens += inputTokens;
+      if (Number.isFinite(outputTokens)) bucket.tokens += outputTokens;
+    }
     if (Number.isFinite(duration)) bucket.durations.push(duration);
     const status = Number(item.resp_status_code);
     if (status >= 200 && status < 400) bucket.success += 1;
@@ -570,7 +575,7 @@ const overviewPage = (
     return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "index"), h.DataAttribute("readback-route", "dashboard")], [header, h.section([h.Class("rounded-[8px] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-4"), h.DataAttribute("overview-card", "empty")], [h.h2([h.Class("text-[15px] font-semibold")], ["No telemetry yet"]), h.p([h.Class("mt-1 text-[12px] text-[var(--rm-secondary)]"), h.DataAttribute("overview-state", "empty"), h.DataAttribute("readback-state", "empty")], ["No telemetry requests in the last " + period.toLowerCase() + ". Run a request or widen the time range."])])]);
   }
   const { buckets } = bucketsFor(state, windowMs);
-  const card = (title: string, description: string, chart: Html) => h.section([h.Class("rounded-[8px] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-4"), h.DataAttribute("overview-card", title), h.AriaLabel(title + ": " + description)], [chart]);
+  const card = (title: string, description: string, chart: Html) => h.section([h.Class("min-h-[300px] rounded-[8px] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-4"), h.DataAttribute("overview-card", title), h.AriaLabel(title + ": " + description)], [chart]);
   const modelRows = candidates.rows.flatMap((entry) => {
     try {
       const meta = JSON.parse(entry.meta) as { pricing?: { inputPer1M?: unknown } | null; endpointId?: unknown; providerId?: unknown };
@@ -583,8 +588,8 @@ const overviewPage = (
   const minCost = costs.length === 0 ? 0 : Math.min(...costs);
   const maxCost = costs.length === 0 ? 0 : Math.max(...costs);
   const scaleCost = (cost: number): number => 40 + ((cost - minCost) / (maxCost === minCost ? 1 : maxCost - minCost)) * 540;
-  const modelPool = h.section([h.Class("rounded-[8px] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-4"), h.DataAttribute("overview-card", "Model pool")], [
-    h.h2([h.Class("text-[15px] font-semibold")], ["Model pool"]),
+  const modelPool = h.section([h.Class("min-h-[300px] rounded-[8px] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-4"), h.DataAttribute("overview-card", "Model cost strip")], [
+    h.h2([h.Class("text-[15px] font-semibold")], ["Model cost strip"]),
     h.p([h.Class("mt-1 text-[12px] text-[var(--rm-secondary)]")], ["Input cost per 1M tokens. Quality and speed axes are omitted: the host candidate body has no quality or speed score."]),
     modelRows.length === 0
       ? h.p([h.DataAttribute("model-pool-state", candidates.status === "error" ? "error" : candidates.status === "loading" ? "loading" : "empty"), ...(candidates.status === "error" ? [h.Role("alert")] : [])], [candidates.status === "error" ? candidates.message ?? "Model pool read failed" : candidates.status === "loading" ? "Loading model pool…" : "No candidates with pricing."])
@@ -593,7 +598,7 @@ const overviewPage = (
             h.line([h.Attribute("x1", "40"), h.Attribute("y1", "70"), h.Attribute("x2", "580"), h.Attribute("y2", "70"), h.Attribute("stroke", "var(--rm-border)")]),
             ...modelRows.map((entry, index) => h.circle([h.Attribute("cx", String(scaleCost(entry.cost))), h.Attribute("cy", String(70 + (index % 2 === 0 ? 0 : 24))), h.Attribute("r", "6"), h.Fill("var(--rm-accent)"), h.DataAttribute("model-point", entry.id)])),
           ]),
-          h.table([h.Class("sr-only")], [h.caption([], ["Model pool data"]), h.thead([], [h.tr([], [h.th([], ["Model"]), h.th([], ["Input cost per 1M"]), h.th([], ["Endpoint"])])]), h.tbody([], modelRows.map((entry) => h.tr([], [h.td([], [entry.label]), h.td([], [String(entry.cost)]), h.td([], [entry.endpoint])])))]),
+          h.table([h.Class("sr-only")], [h.caption([], ["Model cost strip data"]), h.thead([], [h.tr([], [h.th([], ["Model"]), h.th([], ["Input cost per 1M"]), h.th([], ["Endpoint"])])]), h.tbody([], modelRows.map((entry) => h.tr([], [h.td([], [entry.label]), h.td([], [String(entry.cost)]), h.td([], [entry.endpoint])])))]),
         ]),
   ]);
   const tokenChart = chartView({ title: "Token usage over time", description: "Total tokens per bucket for the last " + period.toLowerCase() + ".", series: [{ id: "tokens", label: "Tokens", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.tokens })) }], state: { status: "ready" }, yUnit: "tokens" }, h);

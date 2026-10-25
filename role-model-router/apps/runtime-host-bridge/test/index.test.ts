@@ -8250,6 +8250,115 @@ describe("runtime-host-bridge", () => {
     }
   });
 
+
+  test("proxies the Studio vendor paths to a healthy llama-swap and 503s when it is not running", async () => {
+    // S57: the proxy used to read a base URL that nothing ever assigned, so every call took
+    // the 503 branch. This proves BOTH directions against a real upstream: a healthy vendor
+    // is forwarded (method, body, status, content-type) and a stopped vendor answers 503.
+    const upstream = createServer((request, response) => {
+      let body = "";
+      request.on("data", (chunk) => {
+        body += String(chunk);
+      });
+      request.on("end", () => {
+        response.writeHead(200, { "content-type": "application/json" });
+        response.end(
+          JSON.stringify({
+            vendor: "llama-swap",
+            path: request.url,
+            method: request.method,
+            body,
+          }),
+        );
+      });
+    });
+    await new Promise<void>((resolve) => upstream.listen(0, "127.0.0.1", () => resolve()));
+    const upstreamAddress = upstream.address();
+    if (upstreamAddress === null || typeof upstreamAddress === "string") {
+      throw new Error("upstream did not bind a port");
+    }
+    const vendorBaseUrl = `http://127.0.0.1:${upstreamAddress.port}/v1`;
+    let vendorStatus: { healthStatus: "healthy" | "stopped"; baseUrl?: string } | null = {
+      healthStatus: "healthy",
+      baseUrl: vendorBaseUrl,
+    };
+
+    type VendorProxyOptions = {
+      host: string;
+      port: number;
+      registry: EndpointRegistryResult;
+      executeChatCompletions: (body: Record<string, unknown>, requestId: string) => Promise<unknown>;
+      readLlamaSwapVendorStatus: () =>
+        | { healthStatus: "healthy" | "stopped"; baseUrl?: string }
+        | null;
+    };
+    const server = await (
+      bridge as {
+        startBridgeServer: (options: VendorProxyOptions) => Promise<{
+          port: number;
+          close(): Promise<void>;
+        }>;
+      }
+    ).startBridgeServer({
+      host: "127.0.0.1",
+      port: 0,
+      registry,
+      executeChatCompletions: async () => {
+        throw new Error("not used");
+      },
+      readLlamaSwapVendorStatus: () => vendorStatus,
+    });
+
+    try {
+      const proxied = await fetch(
+        `http://127.0.0.1:${server.port}/v1/images/generations`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ model: "local/image", prompt: "a cat" }),
+        },
+      );
+      expect(proxied.status).toBe(200);
+      expect(proxied.headers.get("content-type")).toContain("application/json");
+      const forwarded = (await proxied.json()) as {
+        vendor?: string;
+        path?: string;
+        method?: string;
+        body?: string;
+      };
+      expect(forwarded.vendor).toBe("llama-swap");
+      expect(forwarded.path).toBe("/v1/images/generations");
+      expect(forwarded.method).toBe("POST");
+      // The request BODY reaches the vendor unchanged - a proxy that swallowed it would
+      // "succeed" while sending nothing.
+      expect(forwarded.body).toContain("local/image");
+
+      vendorStatus = { healthStatus: "stopped" };
+      for (const path of [
+        "/v1/images/generations",
+        "/v1/audio/speech",
+        "/v1/rerank",
+        "/v1/reranking",
+      ]) {
+        const unavailable = await fetch(`http://127.0.0.1:${server.port}${path}`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: "{}",
+        });
+        expect(unavailable.status).toBe(503);
+        const body = (await unavailable.json()) as { error?: string };
+        expect(body.error).toContain("Llama-swap is not running");
+      }
+      const voices = await fetch(
+        `http://127.0.0.1:${server.port}/v1/audio/voices?model=local/tts`,
+      );
+      expect(voices.status).toBe(503);
+    } finally {
+      await server.close();
+      await new Promise<void>((resolve) => upstream.close(() => resolve()));
+    }
+  });
+
   test("preserves x-role-model-request-id as client correlation metadata while generating a canonical request id", async () => {
     let capturedRequestId = "";
     let capturedClientRequestId: string | undefined;

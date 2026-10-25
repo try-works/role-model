@@ -3,9 +3,11 @@ import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { mountShell } from "../src/mount";
+import { percentile } from "../src/view";
 
 const fixture = JSON.parse(readFileSync(path.join(import.meta.dirname, "fixtures", "s26o", "overview-boundary-items.json"), "utf8"));
 const candidates = JSON.parse(readFileSync(path.join(import.meta.dirname, "fixtures", "s26o", "routerCandidates.json"), "utf8"));
+const realTokens = JSON.parse(readFileSync(path.join(import.meta.dirname, "fixtures", "s26o", "overview-real-tokens.json"), "utf8"));
 const mounted: Array<{ container: HTMLElement; handle: { dispose(): void } }> = [];
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
 const waitFor = async <T>(read: () => T | undefined, label: string): Promise<T> => {
@@ -35,7 +37,14 @@ const tableRows = (title = "Latency (ms)"): string[][] => {
 };
 
 describe("S40b bucketed overview", () => {
-  it("buckets Day into hourly buckets, omits empty buckets and labels 00:00/24:00", async () => {
+  it("uses the nearest-rank p95 index for n=20 and n=21", () => {
+    const twenty = Array.from({ length: 20 }, (_, index) => index + 1);
+    const twentyOne = Array.from({ length: 21 }, (_, index) => index + 1);
+    expect(percentile(twenty, 95)).toBe(19);
+    expect(percentile(twentyOne, 95)).toBe(20);
+  });
+
+  it("buckets Day hourly, omits empty buckets, and clamps an end-boundary item to 23:00", async () => {
     mountAt("s40b-buckets", async (input) => {
       const url = new URL(String(input), "http://localhost");
       if (url.pathname === "/api/metrics/page") return json(fixture);
@@ -53,15 +62,27 @@ describe("S40b bucketed overview", () => {
     expect(document.querySelectorAll("[data-chart-point-label]").length).toBeGreaterThanOrEqual(6);
     expect(document.body.textContent).not.toContain("02:00");
     expect(document.querySelectorAll("[data-model-point]")).toHaveLength(candidates.length);
-    expect(document.querySelector("[data-overview-card='Model pool']")).not.toBeNull();
+    expect(document.querySelector("[data-overview-card='Model cost strip']")).not.toBeNull();
     expect(document.querySelector("[data-overview-card='Token usage over time']")).not.toBeNull();
-    const modelTable = [...document.querySelectorAll("table")].find((entry) => entry.textContent?.includes("Model pool data"));
+    const modelTable = [...document.querySelectorAll("table")].find((entry) => entry.textContent?.includes("Model cost strip data"));
     expect(modelTable?.textContent).toContain("openai/gpt-4.1-mini-fast");
     expect(modelTable?.textContent).toContain("0.4");
     expect(modelTable?.textContent).toContain("3");
     expect(tableRows("Token usage over time")).toContainEqual(["00:00", "10"]);
     expect(tableRows("Token usage over time")).toContainEqual(["01:00", "50"]);
     expect(tableRows("Token usage over time")).toContainEqual(["23:00", "40"]);
+  });
+
+  it("accepts the real metrics body with object-valued tokens", async () => {
+    mountAt("s40b-real", async (input) => {
+      const url = new URL(String(input), "http://localhost");
+      if (url.pathname === "/api/metrics/page") return json(realTokens);
+      if (url.pathname === "/api/role-model/router/candidates") return json(candidates);
+      return json({});
+    });
+    await waitFor(() => document.querySelector("[data-overview-state='success']") ?? undefined, "real success");
+    expect(tableRows("Token usage over time").length).toBeGreaterThan(0);
+    expect(document.body.textContent).not.toContain("NaN");
   });
 
   it("shows per-model rail counts from the same items", async () => {

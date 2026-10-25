@@ -81,7 +81,7 @@ export const studioRequestFor = (state: StudioState): StudioRequest | { readonly
   try {
     const parsed = JSON.parse(state.advancedBody) as unknown;
     if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return { error: "Advanced body must be a JSON object." };
-    return { body: parsed as Record<string, unknown>, method: "POST", path: "/v1/messages", tab: state.tab };
+    return { body: parsed as Record<string, unknown>, method: "POST", path: "/v1/responses", tab: state.tab };
   } catch {
     return { error: "Advanced body is not valid JSON." };
   }

@@ -57,8 +57,14 @@ describe("S46a Studio", () => {
       const body = JSON.parse(String(call?.init.body)) as Record<string, unknown>;
       expect(Object.keys(body).length).toBeGreaterThan(0);
     }
+    const bodies = calls.filter((entry) => entry.path.startsWith("/v1/")).map((entry) => JSON.parse(String(entry.init.body)) as Record<string, unknown>);
+    expect(bodies[0]).toEqual({ messages: [{ content: "A quiet harbour at dawn", role: "user" }], model: "moonshot/kimi-k2.5", stream: false });
+    expect(bodies[1]).toEqual({ mode: "generate", model: "moonshot/kimi-k2.5", prompt: "A quiet harbour at dawn", size: "1024x1024" });
+    expect(bodies[2]).toEqual({ input: "A quiet harbour at dawn", model: "moonshot/kimi-k2.5", response_format: "mp3", voice: "alloy" });
+    expect(bodies[3]).toEqual({ documents: ["first document", "second document"], model: "moonshot/kimi-k2.5", query: "Which document is first?", top_n: 5 });
+    expect(bodies[4]).toMatchObject({ max_tokens: 64, model: "moonshot/kimi-k2.5" });
     const paths = calls.filter((entry) => entry.path.startsWith("/v1/")).map((entry) => entry.path);
-    expect(paths).toEqual(["/v1/chat/completions", "/v1/images/generations", "/v1/audio/speech", "/v1/rerank", "/v1/messages"]);
+    expect(paths).toEqual(["/v1/chat/completions", "/v1/images/generations", "/v1/audio/speech", "/v1/rerank", "/v1/responses"]);
   });
 
   it("dispatches typed values, including a custom model and prompt", async () => {

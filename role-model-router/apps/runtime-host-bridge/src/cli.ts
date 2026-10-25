@@ -3293,6 +3293,7 @@ type CliBackend = Pick<
   | "loadLlamaSwapModel"
   | "setPeerModelRoles"
   | "setLlamaSwapModelRoles"
+  | "readLlamaSwapVendorStatus"
   | "unloadPeerModel"
   | "unloadLocalModel"
   | "readLocalPolicy"
@@ -4361,6 +4362,9 @@ export function createCliServerOptions(
     readStartupReadiness: () => {
       return projectCliStartupReadiness(readBootstrapState());
     },
+    readLlamaSwapVendorStatus: bindBackendMethod(
+      "readLlamaSwapVendorStatus",
+    ) as StartBridgeServerOptions["readLlamaSwapVendorStatus"],
     executeChatCompletions: bindBackendMethod(
       "executeChatCompletions",
     ) as StartBridgeServerOptions["executeChatCompletions"],
