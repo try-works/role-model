@@ -45,8 +45,8 @@
       "modal": 2
     },
     "byStatus": {
-      "absent": 56,
-      "verified": 18,
+      "absent": 55,
+      "verified": 19,
       "wired": 1
     },
     "newOnly": 1
@@ -525,7 +525,8 @@
       "hostEndpoints": [
         "/api/role-model/requests/"
       ],
-      "requiresHostEndpoint": false
+      "requiresHostEndpoint": false,
+      "absenceReason": "Dynamic detail route requires a requestId path parameter; the shared ReadbackSpec/ReadReadback surface is keyed by static routes and has no per-record identity. Adding one would fork the readback surface, so the row remains absent rather than wiring a fake static path."
     },
     {
       "category": "read",
@@ -583,7 +584,8 @@
       "hostEndpoints": [
         "/api/role-model/router/decisions/"
       ],
-      "requiresHostEndpoint": false
+      "requiresHostEndpoint": false,
+      "absenceReason": "Dynamic detail route requires a requestId path parameter; the shared ReadbackSpec/ReadReadback surface is keyed by static routes and has no per-record identity. Adding one would fork the readback surface, so the row remains absent rather than wiring a fake static path."
     },
     {
       "category": "read",
@@ -747,11 +749,13 @@
         "/app/system/peers"
       ],
       "source": "role-model-router/apps/runtime-ui/app/routes/system-peers.tsx",
-      "status": "absent",
+      "status": "verified",
       "hostEndpoints": [
         "/api/role-model/local/peers"
       ],
-      "requiresHostEndpoint": false
+      "requiresHostEndpoint": false,
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s26e-readback-routes.test.ts",
+      "proofTestName": "System peers renders success, empty, loading and error on the DOM"
     },
     {
       "category": "studio",
@@ -799,7 +803,8 @@
       "source": "role-model-router/apps/runtime-ui/app/components/candidate-space-chart.tsx",
       "status": "absent",
       "hostEndpoints": [],
-      "requiresHostEndpoint": false
+      "requiresHostEndpoint": false,
+      "absenceReason": "Presentational chart component, not a read route; chart rendering is out of this wave-port scope and ECharts is excluded."
     },
     {
       "category": "read",
@@ -808,7 +813,8 @@
       "source": "role-model-router/apps/runtime-ui/app/components/chart-kit-state-panel.tsx",
       "status": "absent",
       "hostEndpoints": [],
-      "requiresHostEndpoint": false
+      "requiresHostEndpoint": false,
+      "absenceReason": "Presentational chart component, not a read route; chart rendering is out of this wave-port scope and ECharts is excluded."
     },
     {
       "category": "control",
@@ -889,7 +895,8 @@
       "source": "role-model-router/apps/runtime-ui/app/components/observe-chart-block.tsx",
       "status": "absent",
       "hostEndpoints": [],
-      "requiresHostEndpoint": false
+      "requiresHostEndpoint": false,
+      "absenceReason": "Presentational chart component, not a read route; chart rendering is out of this wave-port scope and ECharts is excluded."
     },
     {
       "category": "read",
@@ -898,7 +905,8 @@
       "source": "role-model-router/apps/runtime-ui/app/components/overview-chart-block.tsx",
       "status": "absent",
       "hostEndpoints": [],
-      "requiresHostEndpoint": false
+      "requiresHostEndpoint": false,
+      "absenceReason": "Presentational chart component, not a read route; chart rendering is out of this wave-port scope and ECharts is excluded."
     },
     {
       "category": "control",
@@ -943,7 +951,8 @@
       "source": "role-model-router/apps/runtime-ui/app/components/telemetry-charts.tsx",
       "status": "absent",
       "hostEndpoints": [],
-      "requiresHostEndpoint": false
+      "requiresHostEndpoint": false,
+      "absenceReason": "Presentational chart component, not a read route; chart rendering is out of this wave-port scope and ECharts is excluded."
     },
     {
       "category": "control",

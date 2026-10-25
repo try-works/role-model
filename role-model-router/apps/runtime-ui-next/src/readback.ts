@@ -13,6 +13,7 @@ export type ReadbackKey =
   | "requests"
   | "routerDecisions"
   | "localPeers"
+  | "systemPeers"
   | "runtime"
   | "sessionReadiness"
   | "dashboard"
@@ -30,6 +31,7 @@ export const ReadbackKeySchema = Schema.Literals([
   "requests",
   "routerDecisions",
   "localPeers",
+  "systemPeers",
   "runtime",
   "sessionReadiness",
   "dashboard",
@@ -66,6 +68,7 @@ export const ReadbacksState = Schema.Struct({
   dashboard: ReadbackState,
   localLogs: ReadbackState,
   localPeers: ReadbackState,
+  systemPeers: ReadbackState,
   localSwap: ReadbackState,
   observeActivity: ReadbackState,
   observeLogs: ReadbackState,
@@ -98,6 +101,7 @@ export const emptyReadbacks = (): ReadbacksState => ({
   dashboard: idleReadback(),
   localLogs: idleReadback(),
   localPeers: idleReadback(),
+  systemPeers: idleReadback(),
   localSwap: idleReadback(),
   observeActivity: idleReadback(),
   observeLogs: idleReadback(),
@@ -559,6 +563,13 @@ export const READBACK_SPECS: Readonly<Record<ReadbackKey, ReadbackRouteSpec>> = 
     parse: parseRouterDecisions,
     path: READBACK_PATHS.routerDecisions,
   },
+  systemPeers: {
+    emptyText: "No system peers configured yet.",
+    key: "systemPeers",
+    label: "System peers",
+    parse: parseLocalPeers,
+    path: READBACK_PATHS.systemPeers,
+  },
   localPeers: {
     emptyText: "No local peers configured yet.",
     key: "localPeers",
@@ -625,6 +636,7 @@ export const createReadbackClients = (
   dashboard: createReadbackClient(READBACK_SPECS.dashboard, options),
   localLogs: createReadbackClient(READBACK_SPECS.localLogs, options),
   localPeers: createReadbackClient(READBACK_SPECS.localPeers, options),
+  systemPeers: createReadbackClient(READBACK_SPECS.systemPeers, options),
   localSwap: createReadbackClient(READBACK_SPECS.localSwap, options),
   observeActivity: createReadbackClient(READBACK_SPECS.observeActivity, options),
   observeLogs: createReadbackClient(READBACK_SPECS.observeLogs, options),
@@ -740,20 +752,22 @@ export const readbackKeyForRouteTag = (tag: string): ReadbackKey | null =>
               ? "routerDecisions"
               : tag === "LocalPeers"
                 ? "localPeers"
-                : tag === "Runtime"
-                  ? "runtime"
-                  : tag === "SessionReadiness"
-                    ? "sessionReadiness"
-                    : tag === "Dashboard"
-                      ? "dashboard"
-                      : tag === "LocalSwap"
-                        ? "localSwap"
-                        : tag === "ObserveActivity"
-                          ? "observeActivity"
-                          : tag === "ObserveLogs"
-                            ? "observeLogs"
-                            : tag === "ObserveRouting"
-                              ? "observeRouting"
-                              : tag === "Router"
-                                ? "router"
-                                : null;
+                : tag === "SystemPeers"
+                  ? "systemPeers"
+                  : tag === "Runtime"
+                    ? "runtime"
+                    : tag === "SessionReadiness"
+                      ? "sessionReadiness"
+                      : tag === "Dashboard"
+                        ? "dashboard"
+                        : tag === "LocalSwap"
+                          ? "localSwap"
+                          : tag === "ObserveActivity"
+                            ? "observeActivity"
+                            : tag === "ObserveLogs"
+                              ? "observeLogs"
+                              : tag === "ObserveRouting"
+                                ? "observeRouting"
+                                : tag === "Router"
+                                  ? "router"
+                                  : null;

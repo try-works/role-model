@@ -30,6 +30,7 @@ const routeTitle = (route: Model["route"]): string =>
     Requests: () => "Requests | RM3 Foldkit shell",
     RouterDecisions: () => "Router decisions | RM3 Foldkit shell",
     LocalPeers: () => "Local peers | RM3 Foldkit shell",
+    SystemPeers: () => "System peers | RM3 Foldkit shell",
     Runtime: () => "Runtime | RM3 Foldkit shell",
     SessionReadiness: () => "Session readiness | RM3 Foldkit shell",
     Dashboard: () => "Dashboard | RM3 Foldkit shell",
@@ -87,6 +88,12 @@ const shellNavItems = (route: Model["route"]): ReadonlyArray<ShellNavItem> => [
     dataNav: "router-decisions",
     href: "/router/decisions",
     label: "Decisions",
+  },
+  {
+    active: route._tag === "SystemPeers",
+    dataNav: "system-peers",
+    href: "/system/peers",
+    label: "System peers",
   },
   {
     active: route._tag === "LocalPeers",
@@ -460,6 +467,7 @@ const routeContent = (
     RouterDecisions: () =>
       renderReadbackPage(READBACK_SPECS.routerDecisions, readbacks.routerDecisions, h),
     LocalPeers: () => renderReadbackPage(READBACK_SPECS.localPeers, readbacks.localPeers, h),
+    SystemPeers: () => renderReadbackPage(READBACK_SPECS.systemPeers, readbacks.systemPeers, h),
     Runtime: () => renderReadbackPage(READBACK_SPECS.runtime, readbacks.runtime, h),
     SessionReadiness: () =>
       renderReadbackPage(READBACK_SPECS.sessionReadiness, readbacks.sessionReadiness, h),
@@ -652,6 +660,7 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
                         Requests: () => "Requests",
                         RouterDecisions: () => "Router decisions",
                         LocalPeers: () => "Local peers",
+                        SystemPeers: () => "System peers",
                         Runtime: () => "Runtime",
                         SessionReadiness: () => "Session readiness",
                         Dashboard: () => "Dashboard",

@@ -55,6 +55,7 @@ const noopReadback = defineReadReadback({
   observeRouting: async () => ({ body: emptyBody, status: 200 }),
   router: async () => ({ body: emptyBody, status: 200 }),
   localPeers: async () => ({ body: emptyBody, status: 200 }),
+  systemPeers: async () => ({ body: emptyBody, status: 200 }),
   queues: async () => ({ body: emptyBody, status: 200 }),
   requests: async () => ({ body: emptyBody, status: 200 }),
   routerCandidates: async () => ({ body: emptyBody, status: 200 }),

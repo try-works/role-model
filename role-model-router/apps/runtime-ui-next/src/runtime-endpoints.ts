@@ -8,6 +8,7 @@ export const READBACK_PATHS = {
   dashboard: "/api/role-model/telemetry/summary",
   localLogs: "/api/role-model/local/logs",
   localPeers: "/api/role-model/local/peers",
+  systemPeers: "/api/role-model/local/peers",
   localSwap: "/api/role-model/local/swap",
   queues: "/api/role-model/operator/queues",
   requests: "/api/role-model/telemetry/requests",

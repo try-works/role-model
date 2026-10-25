@@ -119,6 +119,16 @@ const routes: readonly RouteCase[] = [
     successText: "http://peer",
   },
   {
+    emptyBody: { peers: [] },
+    emptyText: "No system peers configured yet.",
+    key: "systemPeers",
+    label: "System peers",
+    path: "/system/peers",
+    stateTestName: "System peers renders success, empty, loading and error on the DOM",
+    successBody: { peers: [{ id: "sp1", url: "http://system-peer" }] },
+    successText: "http://system-peer",
+  },
+  {
     emptyBody: { config: {} },
     emptyText: "No runtime configuration available.",
     key: "runtime",

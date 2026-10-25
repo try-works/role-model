@@ -27,6 +27,7 @@ const routeCases = {
   Requests: {},
   RouterDecisions: {},
   LocalPeers: {},
+  SystemPeers: {},
   Runtime: {},
   SessionReadiness: {},
   Dashboard: {},
@@ -67,6 +68,9 @@ const routerDecisionsRouter = Route.mapTo(AppRoute.RouterDecisions)(
 const localPeersRouter = Route.mapTo(AppRoute.LocalPeers)(
   pipe(Route.literal("local"), Route.slash(Route.literal("peers"))),
 );
+const systemPeersRouter = Route.mapTo(AppRoute.SystemPeers)(
+  pipe(Route.literal("system"), Route.slash(Route.literal("peers"))),
+);
 const runtimeRouter = Route.mapTo(AppRoute.Runtime)(Route.literal("runtime"));
 const sessionReadinessRouter = Route.mapTo(AppRoute.SessionReadiness)(
   Route.literal("session-readiness"),
@@ -96,6 +100,7 @@ export const appRouter = Route.oneOf(
   requestsRouter,
   routerDecisionsRouter,
   localPeersRouter,
+  systemPeersRouter,
   runtimeRouter,
   sessionReadinessRouter,
   dashboardRouter,
