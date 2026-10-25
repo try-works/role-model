@@ -16,6 +16,13 @@ describe("S48a styled client build", () => {
     }
     expect(css).toContain(".text-\\[11px\\]");
     expect(css).toContain("--rm-bg");
+    /**
+     * S112: the generated stylesheet must keep the accessibility affordances the design system
+     * provides. Regenerating the CSS without them would silently strip keyboard focus indication
+     * and reduced-motion handling, which no component test would notice.
+     */
+    expect(css).toContain("focus-visible");
+    expect(css).toContain("prefers-reduced-motion");
     const urls = [...css.matchAll(/url\(([^)]+)\)/g)].map((match) => (match[1] ?? "").replace(/^["\']|["\']$/g, "")).filter((ref) => ref.startsWith("/"));
     for (const url of urls) {
       expect(existsSync(path.join(here, "dist/client", url.slice(1))), url).toBe(true);
