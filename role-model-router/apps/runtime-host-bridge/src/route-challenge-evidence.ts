@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
-import { DatabaseSync } from "node:sqlite";
 import { type SqliteService, makeSync } from "@effect/sql-sqlite-node/service";
+import { DatabaseSync } from "node:sqlite";
 import { resolveSqliteMemoryLocation } from "@role-model-router/sqlite-memory";
 import {
   captureRefFromReplayJob,
@@ -337,14 +337,33 @@ export async function readFinalizedRouteChallengeEvidence(input: {
 }
 
 /** Authenticated ReplayCore and queue operator projections; never manufacture a replay id for a pre-replay queue row. */
+/**
+ * Plan phase 3 (FIX DIAGNOSTICS, 2026-10-15): every refusal below used to be a silent `null`, so the
+ * replay walk could only say "route pending dispatches unavailable" and no log named which gate
+ * refused - measured live on production :3456 where the listing and the queue projection were both
+ * healthy yet the tick kept failing. The diagnostic names travel through an optional callback so the
+ * HOST decides where they go (its log, its observability metric registry, or both) without this pure
+ * reader depending on a logger. The return contract is unchanged: `null` for fail-closed refusals,
+ * answers otherwise - only the reasons are now named.
+ */
 export async function readPendingRouteDispatches(input: {
   readonly request: PendingRouteDispatchReadRequest;
   readonly invoke: RouteChallengeEvidenceInvoke;
   readonly readCapture: (requestId: string) => Promise<unknown>;
   readonly readQueueJobs: () => Promise<unknown>;
   readonly readQueueJob: (jobId: string) => Promise<unknown>;
+  /** Named refusal diagnostic; the default writes nothing so existing silent callers keep their contract. */
+  readonly onDiagnostic?: (reason: string, detail?: string) => void;
 }): Promise<readonly PendingRouteDispatch[] | null> {
-  if (!text(input.request.roleId) || !text(input.request.taskTypeId)) return null;
+  const refuse = (reason: string, detail?: string): null => {
+    input.onDiagnostic?.(reason, detail);
+    if (process.env.ROLE_MODEL_FOCUS_DIAG)
+      console.error(`[route-dispatch-pending] degraded: ${reason}${detail ? ` ${detail}` : ""}`);
+    return null;
+  };
+  if (!text(input.request.roleId) || !text(input.request.taskTypeId))
+    return refuse("request_invalid");
+  let terminalSkipped = 0;
   const answers: PendingRouteDispatch[] = [];
   const captures = new Map<string, Row | null>();
   const scopeCapture = async (id: string): Promise<Row | null> => {
@@ -380,12 +399,16 @@ export async function readPendingRouteDispatches(input: {
         ...(afterJobId ? { afterJobId } : {}),
       });
       const entries = Array.isArray(value) ? value : row(value)?.value;
-      if (!Array.isArray(entries) || entries.length > 24) return null;
+      if (!Array.isArray(entries) || entries.length > 24)
+        return refuse(
+          "list_jobs_malformed",
+          `page=${page} entries=${Array.isArray(entries) ? entries.length : typeof value}`,
+        );
       for (const entry of entries) {
         const summary = row(entry);
         const jobId = text(summary?.jobId);
         if (!summary || !jobId || seen.has(jobId) || (afterJobId && jobId <= afterJobId))
-          return null;
+          return refuse("list_jobs_cursor_failure", `page=${page} jobId=${jobId ?? "missing"}`);
         seen.add(jobId);
         afterJobId = jobId;
         /**
@@ -396,11 +419,18 @@ export async function readPendingRouteDispatches(input: {
          */
         const terminalReplayStates = new Set(["complete", "failed", "cancelled", "timed_out"]);
         const summaryState = text(summary?.state);
-        if (summaryState && terminalReplayStates.has(summaryState)) continue;
+        if (summaryState && terminalReplayStates.has(summaryState)) {
+          terminalSkipped += 1;
+          continue;
+        }
         const job = row(await input.invoke("replay-core", "replay:job", { jobId }));
-        if (!job || job.jobId !== jobId || !time(job.createdAtMs)) return null;
+        if (!job || job.jobId !== jobId || !time(job.createdAtMs))
+          return refuse("active_replay_job_malformed", `jobId=${jobId}`);
         const jobState = text(job.state);
-        if (jobState && terminalReplayStates.has(jobState)) continue;
+        if (jobState && terminalReplayStates.has(jobState)) {
+          terminalSkipped += 1;
+          continue;
+        }
         // Actual producer vocabulary: leased is executing; evaluating has already handed off.
         const states: Record<string, PendingRouteDispatch["state"]> = {
           queued: "queued",
@@ -410,9 +440,13 @@ export async function readPendingRouteDispatches(input: {
           evaluating: "awaiting_evaluation",
         };
         const state = typeof job.state === "string" ? states[job.state] : undefined;
-        if (!state) return null;
+        if (!state)
+          return refuse(
+            "active_replay_job_unknown_state",
+            `jobId=${jobId} state=${String(job.state)}`,
+          );
         const captureRef = captureRefFromReplayJob(job);
-        if (!captureRef) return null;
+        if (!captureRef) return refuse("active_replay_job_missing_capture", `jobId=${jobId}`);
         const capture = await scopeCapture(captureRef);
         if (!capture) continue;
         if (
@@ -420,10 +454,11 @@ export async function readPendingRouteDispatches(input: {
           job.baselineEndpointId !== capture.endpointId ||
           !Array.isArray(job.candidatePackages)
         )
-          return null;
+          return refuse("active_replay_job_scope_mismatch", `jobId=${jobId} capture=${captureRef}`);
         for (const arm of job.candidatePackages) {
           const endpointId = text(row(arm)?.endpointId);
-          if (!endpointId || endpointId === job.baselineEndpointId) return null;
+          if (!endpointId || endpointId === job.baselineEndpointId)
+            return refuse("active_replay_job_arm_malformed", `jobId=${jobId}`);
           answers.push({
             sourceType: "replay",
             replayJobId: jobId,
@@ -441,7 +476,10 @@ export async function readPendingRouteDispatches(input: {
         break;
       }
     }
-    if (!complete) return null;
+    if (!complete)
+      return refuse("list_jobs_page_budget_exhausted", `terminalSkipped=${terminalSkipped}`);
+    if (terminalSkipped > 0)
+      input.onDiagnostic?.("terminal_replay_jobs_skipped", String(terminalSkipped));
     const page = row(await input.readQueueJobs());
     // The operator queue projection intentionally reports an uncreated fresh store as
     // `available:false` with an empty list. That is a complete empty queue, not an authority
@@ -460,23 +498,44 @@ export async function readPendingRouteDispatches(input: {
       !Array.isArray(page.jobs) ||
       page.jobs.length >= 500
     )
-      return null;
+      return refuse(
+        "queue_jobs_unavailable",
+        `available=${String(page?.available)} jobs=${Array.isArray(page?.jobs) ? page.jobs.length : "missing"}`,
+      );
+    if (process.env.ROLE_MODEL_FOCUS_DIAG)
+      console.error(
+        `[route-dispatch-pending] queue page available=${String(page.available)} jobs=${page.jobs.length} freshEmpty=${String(freshEmptyQueue)}`,
+      );
     const queueIds = new Set<string>();
     for (const entry of page.jobs) {
       const summary = row(entry);
       const queueJobId = text(summary?.id);
-      if (!summary || !queueJobId || queueIds.has(queueJobId)) return null;
+      if (!summary || !queueJobId || queueIds.has(queueJobId))
+        return refuse("queue_job_summary_malformed", `id=${queueJobId ?? "missing"}`);
       queueIds.add(queueJobId);
-      const read = row(await input.readQueueJob(queueJobId));
-      const job = row(read?.job);
-      if (
-        !read ||
-        read.available !== true ||
-        !job ||
-        job.id !== queueJobId ||
-        job.queue !== "replay.dispatch"
-      )
-        return null;
+      /**
+       * Run 101 addendum 44: use a complete queue summary directly. The production sidecar's per-job
+       * readback can take longer than the replay worker's whole 10 minute attempt budget; the list row
+       * already carries the queue id, payload and timestamps when the host reads the local queue store.
+       * Hydrate only older/incomplete projections.
+       */
+      const summaryPayload = row(summary.payload);
+      let job: Row | null =
+        summary.id === queueJobId && summary.queue === "replay.dispatch" && summaryPayload
+          ? summary
+          : null;
+      if (!job) {
+        const read = row(await input.readQueueJob(queueJobId));
+        job = row(read?.job);
+        if (
+          !read ||
+          read.available !== true ||
+          !job ||
+          job.id !== queueJobId ||
+          job.queue !== "replay.dispatch"
+        )
+          return refuse("queue_job_detail_mismatch", `id=${queueJobId}`);
+      }
       if (job.state === "completed") continue;
       // PersistedQueue owns these names, not ReplayCore. No cancelled/time-out inference from error text.
       const states: Record<string, PendingRouteDispatch["state"]> = {
@@ -493,23 +552,34 @@ export async function readPendingRouteDispatches(input: {
         !Array.isArray(payload?.endpointIds) ||
         !text(payload.policySetDigest)
       )
-        return null;
+        return refuse("queue_job_payload_malformed", `id=${queueJobId} state=${String(job.state)}`);
       if (
         payload.dispatchRoundId !== undefined &&
         (!text(payload.dispatchRoundId) || String(payload.dispatchRoundId).length > 256)
       )
-        return null;
+        return refuse("queue_job_payload_malformed", `id=${queueJobId} dispatchRoundId`);
       const capture = await scopeCapture(captureRef);
-      if (!capture) continue;
+      if (!capture) {
+        input.onDiagnostic?.(
+          "queue_job_capture_out_of_scope",
+          `id=${queueJobId} capture=${captureRef}`,
+        );
+        continue;
+      }
       const date =
         typeof job.createdAt === "string" &&
         /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d+)?$/.test(job.createdAt)
           ? Date.parse(`${job.createdAt.replace(" ", "T")}Z`)
           : Number.NaN;
-      if (!time(date)) return null;
+      if (!time(date))
+        return refuse(
+          "queue_job_timestamp_invalid",
+          `id=${queueJobId} createdAt=${String(job.createdAt)}`,
+        );
       for (const id of payload.endpointIds) {
         const endpointId = text(id);
-        if (!endpointId || endpointId === capture.endpointId) return null;
+        if (!endpointId || endpointId === capture.endpointId)
+          return refuse("queue_job_arm_malformed", `id=${queueJobId} arm=${String(endpointId)}`);
         // A live queue row may already have produced a replay. That durable replay record is the stronger state.
         if (
           answers.some(
@@ -533,12 +603,36 @@ export async function readPendingRouteDispatches(input: {
       }
     }
     return answers;
-  } catch {
-    return null;
+  } catch (error) {
+    /**
+     * Run 101 addendum 45: this read answers `null` for BOTH "the plane is unavailable" and "a shape gate
+     * refused", and the walk reports either one as `route pending dispatches unavailable`. Measured live on
+     * production `:3456` (2026-10-14): the tick failed with that message while the replay-core listing and
+     * the local queue projection were both healthy, and nothing in the log said which gate refused. Name it.
+     */
+    return refuse(
+      "pending_read_threw",
+      error instanceof Error ? error.message.slice(0, 160) : String(error),
+    );
   }
 }
 
 /** Read-only live classification index -> authenticated exact capsule read. No disposition resets, capture mutations, or synthetic source ids. */
+/**
+ * A queue-driven tick names the capture it was claimed for, so its projection must not walk the family.
+ *
+ * MEASURED live on production `:3456` (2026-10-14, v0.0.18): the `replay.dispatch` plane interrupted every
+ * attempt at its 600 s `attemptTimeoutMs` (`TimeoutError: Operation timed out after '10m'`, 5 attempts per
+ * job) and `replay_dispositions` stayed empty for the lifetime of the host. The cause is the projection
+ * below: it enumerated the live telemetry index (32 captures, 200 pending) and then performed ONE EXACT
+ * CAPSULE READ PER REQUEST ID through the private boundary, once per candidate task - measured at 90+ s in
+ * the pre-projection walk alone, with a single `knowledge:list-route-ladders` costing 3.5-73 s. The tick
+ * therefore never reached `replay:plan-graph` inside its budget, no durable replay job was ever created,
+ * and the job was retried into the same wall until it terminalised. A bounded, named restriction keeps the
+ * same gates and the same fail-closed answers while making the queue-driven read O(claimed captures).
+ */
+export const MAX_RESTRICTED_REPLAYABLE_CAPTURES = 8;
+
 /**
  * S6e test seam: the challenge telemetry connection with query_only=ON + busy_timeout=1000.
  * Exported so the batch can assert the effective pragmas without a write path.
@@ -562,29 +656,43 @@ export async function readRouteReplayableCaptures(input: {
   readonly runtimeStateRoot: string;
   readonly scopeId: string;
   readonly channel: string;
-  readonly request: { readonly roleId: string; readonly taskTypeId: string };
+  readonly request: {
+    readonly roleId: string;
+    readonly taskTypeId: string;
+    /** Run 101 addendum 45: queue-driven ticks project exactly the captures they were claimed for. */
+    readonly onlyCaptureRefs?: readonly string[];
+  };
   /** The capsule read resolves the transcript out of the encrypted artifact store itself. */
   readonly readCapture: (requestId: string) => Promise<unknown>;
 }): Promise<readonly AutoReplayCapture[] | null> {
   if (!text(input.request.roleId) || !text(input.request.taskTypeId) || !text(input.scopeId))
     return null;
+  const restricted = Array.from(
+    new Set((input.request.onlyCaptureRefs ?? []).filter((ref) => text(ref) !== null)),
+  );
+  if ((input.request.onlyCaptureRefs?.length ?? 0) > 0 && restricted.length === 0) return null;
+  if (restricted.length > MAX_RESTRICTED_REPLAYABLE_CAPTURES) return null;
   let database: SqliteService | undefined;
   let ids: string[];
-  try {
-    const databasePath = resolveSqliteMemoryLocation(input);
-    if (!existsSync(databasePath)) return null;
-    database = openChallengeTelemetryDatabase(databasePath);
-    const entries = database.querySync(
-      "SELECT DISTINCT request_id FROM runtime_telemetry_records WHERE taxonomy_role_id=? AND taxonomy_task_type=? AND request_class IN ('live','live_request') ORDER BY request_id LIMIT 501",
-      [input.request.roleId, input.request.taskTypeId],
-    );
-    if (entries.length > 500 || entries.some((entry) => !text(entry.request_id))) return null;
-    ids = entries.map((entry) => entry.request_id as string);
-  } catch {
-    return null;
-  } finally {
-    database?.closeSync();
-  }
+  if (restricted.length > 0) {
+    // The claim is the authority: no telemetry enumeration, no family walk, one exact read per claimed ref.
+    ids = restricted;
+  } else
+    try {
+      const databasePath = resolveSqliteMemoryLocation(input);
+      if (!existsSync(databasePath)) return null;
+      database = openChallengeTelemetryDatabase(databasePath);
+      const entries = database.querySync(
+        "SELECT DISTINCT request_id FROM runtime_telemetry_records WHERE taxonomy_role_id=? AND taxonomy_task_type=? AND request_class IN ('live','live_request') ORDER BY request_id LIMIT 501",
+        [input.request.roleId, input.request.taskTypeId],
+      );
+      if (entries.length > 500 || entries.some((entry) => !text(entry.request_id))) return null;
+      ids = entries.map((entry) => entry.request_id as string);
+    } catch {
+      return null;
+    } finally {
+      database?.closeSync();
+    }
   const scope = resolveDurableReplayJobScope(input);
   // Run 105: a capture that already holds a terminal durable replay disposition is ANNOTATED, never dropped.
   // `listPendingReplayCaptures` owns the dispatch-eligibility view and excludes such a capture; this corpus read
@@ -685,6 +793,11 @@ export async function readRouteReplayableCaptures(input: {
       captures.push({
         captureRef: requestId,
         sourceEndpointId: capture.endpointId as string,
+        // Live finding (isolated production-learning verification, 2026-10-15): the source MODEL identity
+        // travels with the pending capture so the tick can refuse a same-model (self) counterfactual.
+        sourceModelId: typeof capture.modelId === "string" ? capture.modelId : null,
+        sourceReasoningEffort:
+          typeof capture.reasoningEffort === "string" ? capture.reasoningEffort : null,
         roleId,
         taskTypeId,
         hasRecordedToolResults: hasRecordedToolResults(capture),

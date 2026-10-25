@@ -19,6 +19,10 @@ import {
 } from "@role-model-router/core";
 import { Effect, Ref, Schedule } from "effect";
 
+// Shared with the readback (route-challenge-evidence.ts): a restricted projection over more
+// refs than this is refused, so the queue producer must slice its pending page to the same bound.
+import { MAX_RESTRICTED_REPLAYABLE_CAPTURES } from "./route-challenge-evidence.js";
+
 import {
   type AutoReplayCapture,
   type AutoReplayExecution,
@@ -257,6 +261,7 @@ import type { ReplayPolicySet, ReplayToolPolicy } from "./track-b-replay-policy.
  */
 
 export interface AutoReplayOperations {
+  readLocalRouteCapture?(input: Record<string, unknown>): Promise<unknown>;
   listPendingReplayCaptures(input: {
     readonly policySetDigest: string;
     readonly limit?: number;
@@ -317,6 +322,14 @@ export interface AutoReplayOperations {
    * that happened to derive it. Returns the number consumed and how many remain.
    */
   learnFromUnconsumedCandidates?(input: Record<string, unknown>): Promise<unknown>;
+  /** Queue producer only: it never validates candidates alongside the authoritative queue worker. */
+  revalidateStrandedLearnerCandidates?(input: Record<string, unknown>): Promise<unknown>;
+  /**
+   * Evidence producer, independent of every queue plane. Ladder materialization is a pure function of durable
+   * comparisons, so it must keep running when the learner queue is authoritative - it was previously reachable
+   * only through the retired derivation sweep, which froze the ladder.
+   */
+  materializeRouteLadders?(): Promise<unknown>;
   /**
    * Run 100 addendum 10 S13: the learner's durable derivation half. The sweep above consumes candidates that exist;
    * nothing in the runtime *creates* one outside `runTrackBShadowPipeline`, so a finalized comparison the pipeline
@@ -527,6 +540,19 @@ const emptyResult = (): AutoReplayTickResult => ({
  */
 const ROUTE_CORPUS_UNAVAILABLE_COOLDOWN_MS = 30 * 60_000;
 
+/**
+ * Run 101 addendum 45: the SKIP path's sweep cadence (see `skipPathSweepIntervalMs`).
+ *
+ * MEASURED live on production `:3456` (2026-10-14, v0.0.18): one sweep suite cost 15 s
+ * (`replay:expire-stale-jobs`) + 13 s (`replay:list-jobs`) + evaluation reconciliation against a 60 s
+ * sidecar timeout, while the interval is 30 s - so the skip path ran the sweeps back to back and
+ * saturated the private boundary the queue worker's own walk needed. Five minutes still expires an
+ * overdue job far inside every documented grace (the replay lock expiration and the evaluation plane's
+ * stranded-job grace are both 15 minutes), and it leaves the boundary to the work tick that is actually
+ * trying to finish a dispatch.
+ */
+const DEFAULT_SKIP_PATH_SWEEP_INTERVAL_MS = 5 * 60_000;
+
 export function startAutoReplayLoop(input: {
   /**
    * Run 108 follow-up: the metric registry of the runtime scope this loop belongs to. The loop is a
@@ -556,11 +582,15 @@ export function startAutoReplayLoop(input: {
         readonly endpointId: string;
         readonly modelId: string;
         readonly reasoningEffort: string | null;
+        readonly capabilities?: readonly string[];
+        readonly modalities?: readonly string[];
       }[]
     | (() => readonly {
         readonly endpointId: string;
         readonly modelId: string;
         readonly reasoningEffort: string | null;
+        readonly capabilities?: readonly string[];
+        readonly modalities?: readonly string[];
       }[]);
   /**
    * Endpoints the runtime can actually dispatch to. A provider may be supplied so a
@@ -602,6 +632,21 @@ export function startAutoReplayLoop(input: {
    * cutting the worst-case outage threefold. Callers who know their workload can still override it.
    */
   readonly staleTickDeadlineMs?: number;
+  /**
+   * Run 101 addendum 45: how often the SKIP path may run the liveness sweeps while a work tick holds the
+   * slot. Defaults to `DEFAULT_SKIP_PATH_SWEEP_INTERVAL_MS`.
+   *
+   * MEASURED live on production `:3456` (2026-10-14, v0.0.18): the skip path ran the WHOLE sweep suite on
+   * every 30 s interval tick while the queue worker's `dispatchCapture` was in flight. On this host one
+   * suite costs 15 s (`replay:expire-stale-jobs`) + 13 s (`replay:list-jobs`) + evaluation reconciliation
+   * against a 60 s sidecar timeout - more than the interval itself, so the sweeps ran back to back and
+   * saturated the private boundary the worker's own walk needed. Every `replay.dispatch` attempt then
+   * exceeded its 600 s `attemptTimeoutMs`, was interrupted mid-walk and retried into the same wall until
+   * it terminalised, with `replay_dispositions` empty for the lifetime of the host. Pacing the skip path
+   * keeps L7's promise (an overdue job is still expired on schedule, inside every documented grace) and
+   * gives the boundary back to the work tick.
+   */
+  readonly skipPathSweepIntervalMs?: number;
   readonly maxCapturesPerTick?: number;
   /**
    * Run 98 addendum 04 §7 (`L4`). Measured live on v170: one capture whose replay never returned
@@ -697,6 +742,13 @@ export function startAutoReplayLoop(input: {
   readonly readRouteReplayableCaptures?: (request: {
     readonly roleId: string;
     readonly taskTypeId: string;
+    /**
+     * Run 101 addendum 45: a queue-driven tick names the captures it was claimed for, so the projection
+     * reads exactly those instead of walking the family's whole telemetry corpus. Measured live on
+     * production `:3456`: the unbounded projection made one attempt outlive its 600 s
+     * `attemptTimeoutMs`, so every `replay.dispatch` job terminalised without dispatching anything.
+     */
+    readonly onlyCaptureRefs?: readonly string[];
   }) => Promise<readonly AutoReplayCapture[] | null> | readonly AutoReplayCapture[] | null;
   /** CLI must bind to finalized, effort-comparable groups for this exact task/capture/pair.
    * Never synthesize a verdict from replay terminal state, branches, or a ladder version change. */
@@ -929,6 +981,19 @@ export function startAutoReplayLoop(input: {
           typeof row.taskTypeId === "string" && row.taskTypeId.trim()
             ? row.taskTypeId.trim()
             : null,
+        /**
+         * The source MODEL identity, so the planner can refuse a counterfactual that is the served
+         * model itself (2026-10-15). This projection is the only way the durable pending row reaches
+         * the tick, so a field dropped here is a rule that never fires on the live path.
+         */
+        sourceModelId:
+          typeof row.sourceModelId === "string" && row.sourceModelId.trim()
+            ? row.sourceModelId.trim()
+            : null,
+        sourceReasoningEffort:
+          typeof row.sourceReasoningEffort === "string" && row.sourceReasoningEffort.trim()
+            ? row.sourceReasoningEffort.trim()
+            : null,
       });
     }
     return captures;
@@ -951,6 +1016,13 @@ export function startAutoReplayLoop(input: {
    * to replay throughput, so it is now runnable on its own with a re-entrancy guard.
    */
   let sweeping = false;
+  /**
+   * Run 101 addendum 45: when the sweeps last STARTED, from either entry path. The work tick runs them
+   * unconditionally at its top, so the skip path only needs to cover the case the work tick is still
+   * inside its own walk - and it must do that at a cadence, not on every interval (see
+   * `skipPathSweepIntervalMs`).
+   */
+  let lastSweepAtMs: number | null = null;
   /**
    * The reconcile pass answers with three job-id lists (`completed`, `stranded`, `reclaimed`) plus the
    * scanned total. Counts are derived from the lists so a boundary that returns only the arrays - the
@@ -996,6 +1068,7 @@ export function startAutoReplayLoop(input: {
       };
     }
     sweeping = true;
+    lastSweepAtMs = now();
     let expired = 0;
     let resumed = 0;
     let reconciled = 0;
@@ -1160,6 +1233,35 @@ export function startAutoReplayLoop(input: {
        * leaving one of them running would race the queue for the same work.
        */
       const learnerQueueAuthoritative = input.planeModes?.learner === "queue";
+      /**
+       * Live finding (isolated production-learning verification, 2026-10-15): ladder materialization was only
+       * ever called from inside `deriveLearnerCandidates`, which queue mode retires - so the durable route ladder
+       * FROZE (measured: "ladder materialization" appeared 0 times in the log; the ladder stayed at version 23
+       * with 23 evidence documents while 9 further comparison groups were finalized). Materialization is EVIDENCE,
+       * not scheduling, exactly like the finalization-signals producer that deliberately keeps running in queue
+       * mode, so it runs here in every plane mode.
+       */
+      if (typeof input.operations.materializeRouteLadders === "function") {
+        try {
+          await input.operations.materializeRouteLadders();
+        } catch (cause) {
+          const detail = `ladder materialization failed: ${String(cause).slice(0, 200)}`;
+          error = error ? `${error}; ${detail}` : detail;
+        }
+      }
+      if (learnerQueueAuthoritative && input.operations.revalidateStrandedLearnerCandidates) {
+        try {
+          const produced = (await input.operations.revalidateStrandedLearnerCandidates({
+            limit: 5,
+          })) as { lastError?: string } | null;
+          if (produced?.lastError) {
+            error = error ? `${error}; ${produced.lastError}` : produced.lastError;
+          }
+        } catch (cause) {
+          const detail = `learner revalidation producer failed: ${String(cause).slice(0, 200)}`;
+          error = error ? `${error}; ${detail}` : detail;
+        }
+      }
       if (
         !learnerQueueAuthoritative &&
         typeof input.operations.learnFromUnconsumedCandidates === "function"
@@ -1334,6 +1436,8 @@ export function startAutoReplayLoop(input: {
      */
     const staleTickDeadlineMs =
       input.staleTickDeadlineMs ?? Math.max(2 * (input.intervalMs ?? 0), 10 * 60_000);
+    const skipPathSweepIntervalMs =
+      input.skipPathSweepIntervalMs ?? DEFAULT_SKIP_PATH_SWEEP_INTERVAL_MS;
     /**
      * D7b diagnostic: MEASURED on stage-rc-425a26946d65, the reclaim did NOT fire while the walk skipped for
      * 54+ minutes against a 30-minute deadline - yet the unit test says it must. The guard's inputs were
@@ -1367,18 +1471,33 @@ export function startAutoReplayLoop(input: {
       // Run 104 post-closeout (addendum 15): the queue worker's restricted tick (`onlyCaptureRefs`)
       // is the execution authority and must NOT be skipped while the regular tick is still offering;
       // skipping it made every dispatched capture a no-op (queued===0) and no disposition was written.
-      const sweep = await runLivenessSweeps(
-        input.ledger.status().window as unknown as Record<string, unknown>,
-      );
-      if (sweep.expired > 0) lastExpiredJobs = sweep.expired;
-      if (sweep.resumed > 0) lastResumedEvaluations = sweep.resumed;
-      if (sweep.reconciled > 0) lastReconciledEvaluations = sweep.reconciled;
-      if (sweep.stranded > 0) lastStrandedEvaluations = sweep.stranded;
-      if (sweep.reclaimed > 0) lastReclaimedEvaluations = sweep.reclaimed;
-      if (sweep.recovered > 0) lastRecoveredHandoffs = sweep.recovered;
-      if (sweep.error) {
-        lastOutcome = "degraded";
-        lastError = sweep.error;
+      /**
+       * Run 101 addendum 45: the skip path paces its sweeps. It used to run the whole suite on EVERY
+       * interval tick, which on the live production host cost more than the interval itself
+       * (15 s expire + 13 s list-jobs + evaluation reconciliation against a 60 s sidecar timeout) and
+       * therefore ran back to back, saturating the private boundary. The work tick's own 600 s attempt
+       * could then never finish its walk, so every `replay.dispatch` job terminalised without a
+       * disposition. L7's intent - an overdue job is still expired on schedule rather than waiting for a
+       * long tick - is preserved: the sweeps still run while the work tick holds the slot, at the
+       * configured cadence instead of continuously.
+       */
+      const sweep =
+        lastSweepAtMs !== null && now() - lastSweepAtMs < skipPathSweepIntervalMs
+          ? null
+          : await runLivenessSweeps(
+              input.ledger.status().window as unknown as Record<string, unknown>,
+            );
+      if (sweep) {
+        if (sweep.expired > 0) lastExpiredJobs = sweep.expired;
+        if (sweep.resumed > 0) lastResumedEvaluations = sweep.resumed;
+        if (sweep.reconciled > 0) lastReconciledEvaluations = sweep.reconciled;
+        if (sweep.stranded > 0) lastStrandedEvaluations = sweep.stranded;
+        if (sweep.reclaimed > 0) lastReclaimedEvaluations = sweep.reclaimed;
+        if (sweep.recovered > 0) lastRecoveredHandoffs = sweep.recovered;
+        if (sweep.error) {
+          lastOutcome = "degraded";
+          lastError = sweep.error;
+        }
       }
       return { ...emptyResult(), skipped: true };
     }
@@ -1456,6 +1575,50 @@ export function startAutoReplayLoop(input: {
       });
       let captures = pendingCaptures(pending);
       const onlyCaptureRefs = options?.onlyCaptureRefs;
+      if (onlyCaptureRefs && onlyCaptureRefs.length > 0 && input.operations.readLocalRouteCapture) {
+        // A bounded pending page need not include the claimed capture. Read its durable root instead of
+        // dropping the claim, so the tick still has the role/task identity needed to focus and execute it.
+        for (const captureRef of onlyCaptureRefs) {
+          if (captures.some((capture) => capture.captureRef === captureRef) || !captureRef)
+            continue;
+          const raw = (await input.operations.readLocalRouteCapture({
+            requestId: captureRef,
+            metadataOnly: true,
+          })) as Record<string, unknown>;
+          if (!raw || typeof raw !== "object" || Array.isArray(raw)) continue;
+          const classification = (raw as Record<string, unknown>).classification as
+            | Record<string, unknown>
+            | undefined;
+          captures = [
+            ...captures,
+            {
+              captureRef,
+              sourceEndpointId: typeof raw.endpointId === "string" ? raw.endpointId : null,
+              // The same source-model identity the projection carries, so a claimed capture read from
+              // its durable root cannot bypass the self-replay exclusion.
+              sourceModelId: typeof raw.modelId === "string" ? raw.modelId : null,
+              sourceReasoningEffort:
+                typeof raw.reasoningEffort === "string" ? raw.reasoningEffort : null,
+              roleId:
+                typeof raw.roleId === "string"
+                  ? raw.roleId
+                  : typeof classification?.roleId === "string"
+                    ? classification.roleId
+                    : null,
+              taskTypeId:
+                typeof raw.taskTypeId === "string"
+                  ? raw.taskTypeId
+                  : typeof classification?.taskTypeId === "string"
+                    ? classification.taskTypeId
+                    : null,
+              hasRecordedToolResults:
+                Array.isArray(raw.toolArtifactIds) && raw.toolArtifactIds.length > 0,
+              sourceClass: (raw.replayEvidenceClass as { readonly class?: unknown } | undefined)
+                ?.class as string | null,
+            },
+          ];
+        }
+      }
       const initialClaimedStageTaskKeys =
         stageEnabled && onlyCaptureRefs
           ? new Set(
@@ -1993,7 +2156,54 @@ export function startAutoReplayLoop(input: {
                   `[replay-tick] before readRouteReplayableCaptures focus=${plannedFocus.roleId}/${plannedFocus.taskTypeId}`,
                 );
               if (input.readRouteReplayableCaptures) {
-                const history = await input.readRouteReplayableCaptures(plannedFocus);
+                /**
+                 * Run 101 addendum 45: a queue-driven tick executes the capture its job named, so its
+                 * projection is restricted to that claim. The walk still visits every candidate task
+                 * (the claim's task is only discoverable by asking), but each visit is now one exact
+                 * capsule read instead of the family's whole telemetry corpus.
+                 *
+                 * Run 101 addendum 46 (measured live on production :3456, 2026-10-16): the INTERVAL tick
+                 * is the queue's producer, and it held the same unbounded family projection the worker
+                 * path just escaped - 398 live captures for one focus family, one 10-50 s exact capsule
+                 * read per id, so the walk never finished inside the stale-tick deadline and the parallel
+                 * queue workers starved (zero offered rows). In queue mode the producer only ever
+                 * dispatches captures that are ALREADY on the bounded pending page it just read, so the
+                 * focus corpus read is restricted to exactly those refs. A focus family with nothing on
+                 * the page is skipped by NoReplayableRequest below - never projected as its whole
+                 * historical corpus.
+                 */
+                const focusRoleId = plannedFocus.roleId;
+                const focusTaskTypeId = plannedFocus.taskTypeId;
+                const queueProducerPageRefs =
+                  input.dispatchQueue?.mode === "queue" &&
+                  !(onlyCaptureRefs && onlyCaptureRefs.length > 0)
+                    ? captures
+                        .filter(
+                          (capture) =>
+                            capture.roleId === focusRoleId &&
+                            capture.taskTypeId === focusTaskTypeId &&
+                            Boolean(capture.captureRef),
+                        )
+                        .map((capture) => capture.captureRef)
+                        .slice(0, MAX_RESTRICTED_REPLAYABLE_CAPTURES)
+                    : undefined;
+                if (queueProducerPageRefs !== undefined && queueProducerPageRefs.length === 0) {
+                  // Addendum 46: the queue's producer only feeds what the bounded pending page already
+                  // holds. An empty page for the focus family is a skippable task, NOT a license to
+                  // project the family's whole historical corpus through the private boundary.
+                  throw new NoReplayableRequest({
+                    detail: "queue producer pending page has no focus-family capture",
+                    roleId: plannedFocus.roleId,
+                    taskTypeId: plannedFocus.taskTypeId,
+                  });
+                }
+                const history = await input.readRouteReplayableCaptures(
+                  onlyCaptureRefs && onlyCaptureRefs.length > 0
+                    ? { ...plannedFocus, onlyCaptureRefs: [...onlyCaptureRefs] }
+                    : queueProducerPageRefs !== undefined
+                      ? { ...plannedFocus, onlyCaptureRefs: [...queueProducerPageRefs] }
+                      : plannedFocus,
+                );
                 if (process.env.ROLE_MODEL_FOCUS_DIAG)
                   console.error(
                     `[replay-tick] after readRouteReplayableCaptures history=${history === null ? "null" : history.length}`,
@@ -2379,6 +2589,21 @@ export function startAutoReplayLoop(input: {
           ? await input.healthyEndpointIds()
           : input.healthyEndpointIds;
       /**
+       * Live finding (isolated production-learning verification, 2026-10-15): the tick never passed endpoint
+       * profiles to `runAutoReplayTick`, so EVERY arm eligibility rule was inert on the live path - including
+       * the Run 104 R1 capability/modality rule and the source-model self-replay exclusion. The declarations
+       * come from the same descriptors the effort walk already reads.
+       */
+      const tickEndpointDescriptors = (() => {
+        try {
+          return typeof input.configuredEndpointDescriptors === "function"
+            ? input.configuredEndpointDescriptors()
+            : (input.configuredEndpointDescriptors ?? []);
+        } catch {
+          return [];
+        }
+      })();
+      /**
        * Run 108 addendum-02: the versioned counterfactual arm bound for THIS tick, so an operator policy
        * change applies to the next tick without a restart. A provider that throws (or answers nothing
        * usable) leaves the bound unset, and the tick keeps its own default rather than planning zero arms.
@@ -2436,6 +2661,22 @@ export function startAutoReplayLoop(input: {
         runAutoReplayTick({
           captures: dispatchCaptures,
           configuredEndpointIds,
+          /**
+           * Run 104 R1 profiles were never wired here, so every arm eligibility rule - including the
+           * 2026-10-15 source-model self-replay exclusion - was inert on the LIVE tick even though the
+           * on-demand path applied it. Declarations come from the same registry descriptors the walk uses.
+           */
+          ...(tickEndpointDescriptors.length > 0
+            ? {
+                endpointProfiles: tickEndpointDescriptors.map((descriptor) => ({
+                  endpointId: descriptor.endpointId,
+                  modelId: descriptor.modelId,
+                  reasoningEffort: descriptor.reasoningEffort ?? null,
+                  capabilities: [...(descriptor.capabilities ?? [])],
+                  modalities: [...(descriptor.modalities ?? [])],
+                })),
+              }
+            : {}),
           /**
            * Run 108 addendum-02: the policy bound travels to the planner that caps the plan, so the
            * operator's `maxCounterfactualArms` is what a live dispatch honours.
@@ -2528,7 +2769,10 @@ export function startAutoReplayLoop(input: {
             challengeInFlight = false;
             break;
           }
-          const progress = Ref.getUnsafe(challenges).get(challengeKey) as ChallengeProgress;
+          const progress = Ref.getUnsafe(challenges).get(challengeKey);
+          // An awaited read/offer can outlive this challenge after a newer tick reclaims the slot.
+          // Never recreate it by spreading undefined into a partial ChallengeProgress.
+          if (!progress) break;
           setChallenge(challengeKey, {
             ...progress,
             pendingCaptureRef: focusCaptureRef,
@@ -2563,13 +2807,17 @@ export function startAutoReplayLoop(input: {
               (row.outcome === "deferred" && !(Number(row.branches) > 0)),
           )
         ) {
-          const progress = Ref.getUnsafe(challenges).get(challengeKey) as ChallengeProgress;
+          const progress = Ref.getUnsafe(challenges).get(challengeKey);
+          // An awaited read/offer can outlive this challenge after a newer tick reclaims the slot.
+          // Never recreate it by spreading undefined into a partial ChallengeProgress.
+          if (!progress) break;
           setChallenge(challengeKey, { ...progress, pendingCaptureRef: null });
           dispatchedChallenges.delete(focusCaptureRef);
           break;
         }
         if (part.replayed > 0 || part.deferred > 0) dispatchedChallenges.add(focusCaptureRef);
-        const progress = Ref.getUnsafe(challenges).get(challengeKey) as ChallengeProgress;
+        const progress = Ref.getUnsafe(challenges).get(challengeKey);
+        if (!progress) break;
         if (
           !(await applyFinalized(
             challengeKey,

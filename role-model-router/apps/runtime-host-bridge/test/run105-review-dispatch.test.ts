@@ -1420,6 +1420,40 @@ test("legacy queue progress without a dispatch round clears when the durable row
   expect(offered[0]?.captureRef).toBe("idle-a");
   expect(offered[0]?.dispatchRoundId).toBeTruthy();
 });
+test("a superseded challenge during an offer never writes partial challenge state", async () => {
+  const h = harness();
+  h.loop.stop();
+  h.configure(["a", "b", "new"]);
+  h.census([task("idle", 10, 2, 3)]);
+  h.rows.set("idle", { ...ladder(["a", "b"], 900), completeness: { admitted: 2, configured: 3 } });
+  h.pending([capture("idle", "a")]);
+  let nested = false;
+  let clock = 1000;
+  const loop = startAutoReplayLoop({
+    ...h.input,
+    now: () => clock,
+    staleTickDeadlineMs: 1,
+    dispatchQueue: {
+      mode: "queue",
+      offer: async () => {
+        nested = true;
+        clock += 2;
+        h.pending([]);
+        await loop.tick();
+        h.pending([capture("idle", "a")]);
+        nested = false;
+        return { enqueued: false, reason: "test offer refusal" };
+      },
+    },
+    readPendingRouteDispatches: async () => [],
+    readRouteReplayableCaptures: async () => (nested ? [] : [capture("idle", "a")]),
+  });
+  cleanups.push(() => loop.stop());
+  await loop.tick();
+  await loop.tick();
+  expect(loop.health().lastError ?? "").not.toContain("Cannot read properties");
+});
+
 test("high-demand task with no replayable request is skipped so lower-demand task fills in same tick", async () => {
   const h = harness();
   h.rows.set("busy", { ...ladder(["a"], 0), completeness: { admitted: 1, configured: 3 } });

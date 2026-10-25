@@ -52,6 +52,33 @@ test("run101 a promotion with nothing to validate names the condition, scoped to
   );
 });
 
+/**
+ * Live finding (isolated production-learning verification, 2026-10-15): a candidate refused while its family
+ * evidence was thin was never revisited. The refusal was recorded as a receipt, and the sweep treats any
+ * recorded receipt as finished validation - so 62 candidates sat at decisive 50-59 / development 23 /
+ * distinctCaptures 9-10 against floors of 3/1/3 and were never re-examined.
+ *
+ * The fix has two halves that must hold together:
+ *  - a refusal must stay CLAIMABLE (selection), and
+ *  - a refusal must NOT count as a promotion (accounting), or a completed queue job would drop the
+ *    candidate permanently while reporting success.
+ */
+test("run101 a refusal the sweep re-examined is not reported as a promotion", () => {
+  // The sweep saw the candidate and recorded a refusal: nothing was promoted, so the per-candidate job
+  // must stay claimable rather than complete on a false success.
+  const outcome = classifyLearnerPromotionResult({
+    candidateId: "shadow-refused",
+    result: { consumed: 0 },
+  });
+  expect(outcome.kind).toBe("not_validatable");
+});
+
+test("run101 a validated-and-promoted candidate is still reported as a promotion", () => {
+  expect(
+    classifyLearnerPromotionResult({ candidateId: "shadow-promoted", result: { consumed: 1 } }),
+  ).toEqual({ kind: "promoted" });
+});
+
 test("run101 a missing sweep result is the same named condition, not a crash", () => {
   expect(classifyLearnerPromotionResult({ candidateId: "shadow-abc", result: null }).kind).toBe(
     "not_validatable",

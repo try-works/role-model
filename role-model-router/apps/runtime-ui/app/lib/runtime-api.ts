@@ -4177,6 +4177,18 @@ export async function fetchStoreDegradationReceipts(
 export interface ObservabilityMetricSnapshot {
   readonly count: number;
   readonly incremental: boolean;
+  /**
+   * Plan phase 3 + Observe wiring: the host returns one series per (metric, attributes) pair - e.g.
+   * role-model.replay.dispatch.refusals tagged with the named gate that refused. The old client type
+   * dropped this and the page rendered only the bare total, so the breakdown the queue pages show for
+   * jobs had no metric equivalent. Carrying it here lets the Observability page render WHICH gate
+   * refused instead of just that some gate did.
+   */
+  readonly series?: ReadonlyArray<{
+    readonly id?: string;
+    readonly attributes?: Readonly<Record<string, string>>;
+    readonly state?: { readonly kind?: string; readonly count?: number; readonly value?: number };
+  }>;
 }
 
 export interface ObservabilitySnapshotReadback {
@@ -4188,11 +4200,18 @@ export type ObservabilitySnapshotReadbackState =
   | (ObservabilitySnapshotReadback & { readonly available: true })
   | { readonly available: false; readonly reason: string };
 
+export interface ObservabilitySnapshotBreakdownEntry {
+  readonly attributes: Readonly<Record<string, string>>;
+  readonly count: number;
+}
+
 export interface ObservabilitySnapshotRow {
   readonly id: string;
   readonly name: string;
   readonly count: number;
   readonly incremental: boolean;
+  /** Per-attribute-set breakdown, present as [] when the metric carries no series. */
+  readonly breakdown: readonly ObservabilitySnapshotBreakdownEntry[];
 }
 
 export async function fetchObservabilitySnapshot(
@@ -4237,6 +4256,20 @@ export function buildObservabilitySnapshotRows(
       name,
       count: snapshot.count,
       incremental: snapshot.incremental,
+      breakdown: (snapshot.series ?? [])
+        .filter((series) => series.state && typeof series.state.kind === "string")
+        .map((series) => {
+          const kind = String(series.state?.kind);
+          const value =
+            kind === "gauge" ? Number(series.state?.value ?? 0) : Number(series.state?.count ?? 0);
+          return {
+            attributes: series.attributes ?? {},
+            count: Number.isFinite(value) ? value : 0,
+          };
+        })
+        .sort((left, right) =>
+          JSON.stringify(left.attributes) < JSON.stringify(right.attributes) ? -1 : 1,
+        ),
     }))
     .sort((left, right) => (left.name < right.name ? -1 : left.name > right.name ? 1 : 0));
 }

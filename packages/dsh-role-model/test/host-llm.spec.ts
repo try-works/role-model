@@ -301,7 +301,14 @@ describe("loadHostLlmClasses", () => {
     mkdirSync(moduleDirectory, { recursive: true });
     writeFileSync(join(moduleDirectory, "index.js"), "export const unrelated = true\n");
     expect(
-      await loadHostLlmClasses({ env: { DSH_HARNESS_ROOT: root }, cwd: root }),
+      await loadHostLlmClasses({
+        env: { DSH_HARNESS_ROOT: root },
+        cwd: root,
+        // Pin the last-resort import to a specifier that cannot resolve, so a host
+        // checkout reachable through an ancestor node_modules (a linked local
+        // harness) cannot satisfy the undefined path and hide the assertion.
+        fallbackSpecifier: "@deepseek-ai/dsh-llm--host-llm-test-unresolvable",
+      }),
     ).toBeUndefined();
   });
 

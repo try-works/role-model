@@ -197,6 +197,17 @@ export function recordFinaliseRefusal(
   inScope(Metric.update(Metric.withAttributes(evalFinaliseRefusals, { guard, reason }), 1), scope);
 }
 
+/** Plan phase 3 (FIX DIAGNOSTICS): the pending-dispatch reader now names every refusal, and the host records the
+ * reason as a counter so the Observe -> Observability page shows WHICH gate refused instead of a bare
+ * "route pending dispatches unavailable". The reader stays pure: it emits reasons, the host persists them. */
+export const pendingDispatchRefusals = Metric.counter("role-model.replay.dispatch.refusals", {
+  description: "Pending-dispatch readback refusals, tagged with the named gate that refused.",
+});
+
+export function recordPendingDispatchRefusal(reason: string, scope: ObservabilityScope): void {
+  inScope(Metric.update(Metric.withAttributes(pendingDispatchRefusals, { reason }), 1), scope);
+}
+
 export function recordLearnerDerivation(
   count: number,
   outcome: LearnerDerivationOutcome,
