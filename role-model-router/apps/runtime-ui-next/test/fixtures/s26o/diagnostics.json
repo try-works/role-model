@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "role-model.local-diagnostics-read.v1",
+  "state": "disabled",
+  "identity": null,
+  "records": [],
+  "recordCount": 0,
+  "totalAvailable": 0,
+  "truncated": false,
+  "cursor": null,
+  "loss": null,
+  "staleness": null,
+  "conditions": null,
+  "bounds": {
+    "maxRecords": 50,
+    "maxResponseBytes": 16384,
+    "maxIdentityBytes": 256,
+    "maxCodeBytes": 512,
+    "limit": 0
+  }
+}

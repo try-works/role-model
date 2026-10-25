@@ -1,0 +1,60 @@
+{
+  "slice": "s26n-s26r-alias-repairs",
+  "aliases": [
+    {
+      "source": "/local/models",
+      "target": "local-choose",
+      "decision": "ported"
+    },
+    {
+      "source": "/local/matrix",
+      "target": "llama-swap/models?view=grid (unported)",
+      "decision": "refused"
+    },
+    {
+      "source": "/router/config",
+      "target": "router/strategy (unported)",
+      "decision": "refused"
+    }
+  ],
+  "legacyRedirect": "honest subset /local/models only; rest absent with reason",
+  "details": "both absent unproven; no packaged IDs",
+  "peerModels": "verified with injected success and captured empty fixture",
+  "actions": {
+    "providers": "POST accounts/repair/reconnect {providerAccountId}",
+    "endpoints": "POST endpoints {modelId,providerAccountId,region}",
+    "controller": "PATCH controller {endpointId}"
+  },
+  "tie": "anchored method+path; exact bodies through createControlClients",
+  "reds": {
+    "method": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26k-red-method.log",
+    "body": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26r-red-body.log"
+  },
+  "counts": {
+    "fullSuite": 173,
+    "files": 16,
+    "relevant": 85,
+    "typecheck": 0,
+    "overall": {
+      "absent": 46,
+      "verified": 28,
+      "wired": 1
+    },
+    "wave2": {
+      "verified": 16,
+      "absent": 8
+    },
+    "wave3": {
+      "verified": 10,
+      "absent": 17
+    }
+  },
+  "s26p": {
+    "manifest": "test/fixtures/s26o/manifest.json",
+    "rowExpectations": true,
+    "nonEmpty": true,
+    "invalid": true,
+    "diagnosticsWriter": false,
+    "revertReds": false
+  }
+}

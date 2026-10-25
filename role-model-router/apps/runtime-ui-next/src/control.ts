@@ -125,6 +125,7 @@ const parseEndpoints = (body: unknown, token: number): ControlState => {
   const rows = list.flatMap((value, index) => {
     const endpoint = asRecord(value);
     if (endpoint === undefined) return [];
+    if (endpoint.endpointId === undefined && endpoint.id === undefined && endpoint.modelId === undefined) return [];
     const id = String(endpoint.endpointId ?? endpoint.id ?? index);
     return [
       row(
@@ -135,6 +136,7 @@ const parseEndpoints = (body: unknown, token: number): ControlState => {
       ),
     ];
   });
+  if (list.length > 0 && rows.length === 0) return { actionStatus: "idle", error: "Endpoints read failed: invalid response", rows: [], status: "error", token };
   return rowsOrEmpty(rows, token);
 };
 const parseController = (body: unknown, token: number): ControlState => {
@@ -193,8 +195,8 @@ export const CONTROL_SPECS: Readonly<Record<ControlKey, ControlSpec>> = {
   endpoints: {
     action: {
       body: {
-        modelId: "synthetic-model",
-        providerAccountId: "synthetic-provider-account",
+        modelId: "moonshot/kimi-k2.5",
+        providerAccountId: "moonshot.personal.primary",
         region: "global",
       },
       id: "activate",

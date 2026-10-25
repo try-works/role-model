@@ -45,8 +45,8 @@
       "modal": 2
     },
     "byStatus": {
-      "absent": 43,
-      "verified": 31,
+      "absent": 46,
+      "verified": 28,
       "wired": 1
     },
     "newOnly": 1
@@ -298,7 +298,7 @@
       "status": "absent",
       "hostEndpoints": [],
       "requiresHostEndpoint": false,
-      "absenceReason": "Legacy map has 22 source paths but several targets (local/llama-swap/matrix, remote/providers, router/strategy, control/runtime-config, etc.) are not ported yet; redirect aliases exist only for local/models, local/matrix and router/config. Refused rather than claiming all paths."
+      "absenceReason": "Honest subset today is /local/models only. The remaining legacy sources target unported routes (llama-swap models/matrix, remote providers, router strategy, runtime config, etc.); targets are recorded in the task evidence but the row is not claimed."
     },
     {
       "category": "control",
@@ -351,11 +351,12 @@
         "/app/local/llama-swap/matrix"
       ],
       "source": "role-model-router/apps/runtime-ui/app/routes/local-matrix.tsx",
-      "status": "verified",
+      "status": "absent",
       "hostEndpoints": [],
       "requiresHostEndpoint": false,
       "proofTest": "role-model-router/apps/runtime-ui-next/test/s26n-rows.test.ts",
-      "proofTestName": "redirects /local/matrix to the Local swap target view"
+      "proofTestName": "redirects /local/matrix to the Local swap target view",
+      "absenceReason": "Wrong target would be required: legacy maps /local/matrix to llama-swap/models?view=grid, which is not ported; mapping to Local swap was wrong. Refused rather than redirecting to a different route."
     },
     {
       "category": "control",
@@ -381,12 +382,13 @@
         "/app/local/peer-models"
       ],
       "source": "role-model-router/apps/runtime-ui/app/routes/local-peer-models.tsx",
-      "status": "absent",
+      "status": "verified",
       "hostEndpoints": [
         "/api/role-model/local/peer/models"
       ],
       "requiresHostEndpoint": false,
-      "absenceReason": "Endpoint /api/role-model/local/peer/models returned an empty array on the packaged host; parser/contract exists, but the required four-state success DOM proof needs a non-empty captured body, which is unavailable without mutating operator state."
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s26e-readback-routes.test.ts",
+      "proofTestName": "Peer models renders success, empty, loading and error on the DOM"
     },
     {
       "category": "read",
@@ -567,13 +569,14 @@
         "/app/observe/requests/:requestId"
       ],
       "source": "role-model-router/apps/runtime-ui/app/routes/request-detail.tsx",
-      "status": "verified",
+      "status": "absent",
       "hostEndpoints": [
         "/api/role-model/requests/"
       ],
       "requiresHostEndpoint": false,
       "proofTest": "role-model-router/apps/runtime-ui-next/test/s26e-readback-routes.test.ts",
-      "proofTestName": "Request detail renders success, empty, loading and error on the DOM"
+      "proofTestName": "Request detail renders success, empty, loading and error on the DOM",
+      "absenceReason": "Flipped on hand-written detail bodies; no packaged request ID existed to capture a real detail response. Unproven."
     },
     {
       "category": "read",
@@ -615,11 +618,12 @@
         "/app/router/config"
       ],
       "source": "role-model-router/apps/runtime-ui/app/routes/router-config.tsx",
-      "status": "verified",
+      "status": "absent",
       "hostEndpoints": [],
       "requiresHostEndpoint": false,
       "proofTest": "role-model-router/apps/runtime-ui-next/test/s26n-rows.test.ts",
-      "proofTestName": "redirects /router/config to the Router target view"
+      "proofTestName": "redirects /router/config to the Router target view",
+      "absenceReason": "Legacy target is router/strategy, which is not ported; mapping to Router was wrong. Refused rather than redirecting to a different route."
     },
     {
       "category": "read",
@@ -629,13 +633,14 @@
         "/app/router/decisions/:requestId"
       ],
       "source": "role-model-router/apps/runtime-ui/app/routes/router-decision-detail.tsx",
-      "status": "verified",
+      "status": "absent",
       "hostEndpoints": [
         "/api/role-model/router/decisions/"
       ],
       "requiresHostEndpoint": false,
       "proofTest": "role-model-router/apps/runtime-ui-next/test/s26e-readback-routes.test.ts",
-      "proofTestName": "Router decision detail renders success, empty, loading and error on the DOM"
+      "proofTestName": "Router decision detail renders success, empty, loading and error on the DOM",
+      "absenceReason": "Flipped on hand-written detail bodies; no packaged decision ID existed to capture a real detail response. Unproven."
     },
     {
       "category": "read",

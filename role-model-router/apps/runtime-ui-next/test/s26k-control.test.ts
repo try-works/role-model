@@ -244,6 +244,8 @@ describe("S26k control surface", () => {
       ["POST", CONTROL_SPECS.endpoints.action.path],
       ["PATCH", CONTROL_SPECS.controlController.action.path],
     ]);
+    expect(JSON.parse(calls[0].body ?? "{}")).toEqual({ providerAccountId: "moonshot.personal.primary" });
+    expect(JSON.parse(calls[1].body ?? "{}")).toEqual({ modelId: "moonshot/kimi-k2.5", providerAccountId: "moonshot.personal.primary", region: "global" });
     expect(JSON.parse(calls[2].body ?? "{}")).toEqual({ endpointId: "moonshot.personal.primary.global.kimi-k2.5" });
   });
 

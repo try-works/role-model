@@ -32,18 +32,9 @@ describe("S26n redirects and static rows", () => {
     expect(text).toContain("Choose peer-backed models or llama-swap models.");
   });
 
-  for (const [source, target, stateTestName] of [
-    ["/local/models", "Local choose", "redirects /local/models to the Local choose target view"],
-    ["/local/matrix", "Local swap", "redirects /local/matrix to the Local swap target view"],
-    ["/router/config", "Router", "redirects /router/config to the Router target view"],
-  ] as const) {
-    it(stateTestName, async () => {
-      mountAt(source, "s26n-" + source.replaceAll("/", "-"));
-      const title = await waitFor(
-        () => document.querySelector(".rm3-next-route-title")?.textContent ?? undefined,
-        source,
-      );
-      expect(title).toContain(target);
-    });
-  }
+  it("redirects /local/models to the Local choose target view", async () => {
+    mountAt("/local/models", "s26n-local-models");
+    const title = await waitFor(() => document.querySelector(".rm3-next-route-title")?.textContent ?? undefined, "local-models");
+    expect(title).toContain("Local choose");
+  });
 });

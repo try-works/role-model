@@ -236,6 +236,16 @@ const routes: readonly RouteCase[] = [
     successText: "req-1",
   },
   {
+    emptyBody: [],
+    emptyText: "No peer models configured yet.",
+    key: "localPeerModels",
+    label: "Peer models",
+    path: "/local/peer-models",
+    stateTestName: "Peer models renders success, empty, loading and error on the DOM",
+    successBody: [{ modelId: "peer-model", status: "ready" }],
+    successText: "peer-model",
+  },
+  {
     emptyBody: {},
     emptyText: "No queue configuration available.",
     key: "queueConfig",

@@ -1,0 +1,349 @@
+{
+  "schemaVersion": "role-model.s26o-fixtures.v1",
+  "artifact": {
+    "version": "0.0.20-18-g6c9aeba1",
+    "commit": "6c9aeba15acd09be4fc6776cef66a1041394b65a",
+    "sourceTree": "e79ccfc7ee4c1d9a8eeee07f7e3aee115f2d106e",
+    "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
+  },
+  "entries": {
+    "controlController.json": {
+      "url": "captured-fixture:controlController",
+      "status": 200,
+      "capturedAt": "2026-10-25T06:30:50.311Z",
+      "sha256": "3e42136f09d746913424b12b7e306f090c23780630662e8f13167e4dae98864e",
+      "artifact": {
+        "version": "0.0.20-18-g6c9aeba1",
+        "commit": "6c9aeba15acd09be4fc6776cef66a1041394b65a",
+        "sourceTree": "e79ccfc7ee4c1d9a8eeee07f7e3aee115f2d106e",
+        "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
+      },
+      "bodyBytes": 263
+    },
+    "controllerPatch.json": {
+      "url": "/api/role-model/controller PATCH",
+      "status": 200,
+      "capturedAt": "2026-10-25T06:30:50.318Z",
+      "sha256": "5e0b55bfefd2e4c656bbab708e8e7e6c5b1cbfceff9dad5feb347d6610956b6c",
+      "artifact": {
+        "version": "0.0.20-18-g6c9aeba1",
+        "commit": "6c9aeba15acd09be4fc6776cef66a1041394b65a",
+        "sourceTree": "e79ccfc7ee4c1d9a8eeee07f7e3aee115f2d106e",
+        "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
+      },
+      "bodyBytes": 279
+    },
+    "dashboard.json": {
+      "url": "/api/role-model/telemetry/summary",
+      "status": 200,
+      "capturedAt": "2026-10-25T06:30:50.320Z",
+      "sha256": "a959c9075e791d3ebb6d937efeb8dd1345f8d5e8cb9984913786d6354e0fc647",
+      "artifact": {
+        "version": "0.0.20-18-g6c9aeba1",
+        "commit": "6c9aeba15acd09be4fc6776cef66a1041394b65a",
+        "sourceTree": "e79ccfc7ee4c1d9a8eeee07f7e3aee115f2d106e",
+        "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
+      },
+      "bodyBytes": 1794
+    },
+    "diagnostics.json": {
+      "url": "/api/role-model/operator/diagnostics",
+      "status": 200,
+      "capturedAt": "2026-10-25T06:30:50.321Z",
+      "sha256": "047829d8a20927cb54d9ab8ea483d2a3664d7cb92aec0dcc1b8dfad324d0d081",
+      "artifact": {
+        "version": "0.0.20-18-g6c9aeba1",
+        "commit": "6c9aeba15acd09be4fc6776cef66a1041394b65a",
+        "sourceTree": "e79ccfc7ee4c1d9a8eeee07f7e3aee115f2d106e",
+        "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
+      },
+      "bodyBytes": 405
+    },
+    "downstreamOpenAI.json": {
+      "url": "captured-fixture:downstreamOpenAI",
+      "status": 200,
+      "capturedAt": "2026-10-25T06:30:50.323Z",
+      "sha256": "12e684ecaeb8c62057c7ba4726b5b6a77f9d9e5cbd140d3c315547623be985fc",
+      "artifact": {
+        "version": "0.0.20-18-g6c9aeba1",
+        "commit": "6c9aeba15acd09be4fc6776cef66a1041394b65a",
+        "sourceTree": "e79ccfc7ee4c1d9a8eeee07f7e3aee115f2d106e",
+        "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
+      },
+      "bodyBytes": 13770
+    },
+    "endpoints.json": {
+      "url": "captured-fixture:endpoints",
+      "status": 200,
+      "capturedAt": "2026-10-25T06:30:50.325Z",
+      "sha256": "2b8fab0c13e18b34248ed20f8afe975af22c78d5163f7dd397bfe8b1994a36af",
+      "artifact": {
+        "version": "0.0.20-18-g6c9aeba1",
+        "commit": "6c9aeba15acd09be4fc6776cef66a1041394b65a",
+        "sourceTree": "e79ccfc7ee4c1d9a8eeee07f7e3aee115f2d106e",
+        "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
+      },
+      "bodyBytes": 4215
+    },
+    "integrationProviders.json": {
+      "url": "captured-fixture:integrationProviders",
+      "status": 200,
+      "capturedAt": "2026-10-25T06:30:50.327Z",
+      "sha256": "5d0f0af8e6c40eb82a72d9de01543299577852f89863fdcc63404c80936cd178",
+      "artifact": {
+        "version": "0.0.20-18-g6c9aeba1",
+        "commit": "6c9aeba15acd09be4fc6776cef66a1041394b65a",
+        "sourceTree": "e79ccfc7ee4c1d9a8eeee07f7e3aee115f2d106e",
+        "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
+      },
+      "bodyBytes": 961496
+    },
+    "localLogs.json": {
+      "url": "captured-fixture:localLogs",
+      "status": 200,
+      "capturedAt": "2026-10-25T06:30:50.333Z",
+      "sha256": "08fb9bdd1f012aaf36233878586263c4ca237f880f3c2d87bfd821234934b0cb",
+      "artifact": {
+        "version": "0.0.20-18-g6c9aeba1",
+        "commit": "6c9aeba15acd09be4fc6776cef66a1041394b65a",
+        "sourceTree": "e79ccfc7ee4c1d9a8eeee07f7e3aee115f2d106e",
+        "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
+      },
+      "bodyBytes": 17
+    },
+    "localPeerModels.json": {
+      "url": "captured-fixture:localPeerModels",
+      "status": 200,
+      "capturedAt": "2026-10-25T06:30:50.333Z",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "artifact": {
+        "version": "0.0.20-18-g6c9aeba1",
+        "commit": "6c9aeba15acd09be4fc6776cef66a1041394b65a",
+        "sourceTree": "e79ccfc7ee4c1d9a8eeee07f7e3aee115f2d106e",
+        "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
+      },
+      "bodyBytes": 3
+    },
+    "localPeers.json": {
+      "url": "captured-fixture:localPeers",
+      "status": 200,
+      "capturedAt": "2026-10-25T06:30:50.333Z",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "artifact": {
+        "version": "0.0.20-18-g6c9aeba1",
+        "commit": "6c9aeba15acd09be4fc6776cef66a1041394b65a",
+        "sourceTree": "e79ccfc7ee4c1d9a8eeee07f7e3aee115f2d106e",
+        "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
+      },
+      "bodyBytes": 3
+    },
+    "localSwap.json": {
+      "url": "captured-fixture:localSwap",
+      "status": 200,
+      "capturedAt": "2026-10-25T06:30:50.334Z",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "artifact": {
+        "version": "0.0.20-18-g6c9aeba1",
+        "commit": "6c9aeba15acd09be4fc6776cef66a1041394b65a",
+        "sourceTree": "e79ccfc7ee4c1d9a8eeee07f7e3aee115f2d106e",
+        "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
+      },
+      "bodyBytes": 3
+    },
+    "observabilitySnapshot.json": {
+      "url": "/api/role-model/operator/observability-snapshot",
+      "status": 200,
+      "capturedAt": "2026-10-25T06:30:50.335Z",
+      "sha256": "7ac6c5624f14ff97e2397bf0583b3ec9f71f276580d9a1d702ca242a1787d79b",
+      "artifact": {
+        "version": "0.0.20-18-g6c9aeba1",
+        "commit": "6c9aeba15acd09be4fc6776cef66a1041394b65a",
+        "sourceTree": "e79ccfc7ee4c1d9a8eeee07f7e3aee115f2d106e",
+        "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
+      },
+      "bodyBytes": 79
+    },
+    "observeActivity.json": {
+      "url": "/api/metrics/page",
+      "status": 200,
+      "capturedAt": "2026-10-25T06:30:50.336Z",
+      "sha256": "85c19239e7f29e40c2bf087ef79ff89ae20aef1ffa91dcffc277316e65fdb81e",
+      "artifact": {
+        "version": "0.0.20-18-g6c9aeba1",
+        "commit": "6c9aeba15acd09be4fc6776cef66a1041394b65a",
+        "sourceTree": "e79ccfc7ee4c1d9a8eeee07f7e3aee115f2d106e",
+        "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
+      },
+      "bodyBytes": 940
+    },
+    "observeLogs.json": {
+      "url": "captured-fixture:observeLogs",
+      "status": 200,
+      "capturedAt": "2026-10-25T06:30:50.338Z",
+      "sha256": "08fb9bdd1f012aaf36233878586263c4ca237f880f3c2d87bfd821234934b0cb",
+      "artifact": {
+        "version": "0.0.20-18-g6c9aeba1",
+        "commit": "6c9aeba15acd09be4fc6776cef66a1041394b65a",
+        "sourceTree": "e79ccfc7ee4c1d9a8eeee07f7e3aee115f2d106e",
+        "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
+      },
+      "bodyBytes": 17
+    },
+    "observeRouting.json": {
+      "url": "captured-fixture:observeRouting",
+      "status": 200,
+      "capturedAt": "2026-10-25T06:30:50.338Z",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "artifact": {
+        "version": "0.0.20-18-g6c9aeba1",
+        "commit": "6c9aeba15acd09be4fc6776cef66a1041394b65a",
+        "sourceTree": "e79ccfc7ee4c1d9a8eeee07f7e3aee115f2d106e",
+        "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
+      },
+      "bodyBytes": 3
+    },
+    "providers.json": {
+      "url": "captured-fixture:providers",
+      "status": 200,
+      "capturedAt": "2026-10-25T06:30:50.340Z",
+      "sha256": "4ac4636f282b308a394b2b9d321a77d101c36fada9416f71942a4980df4296f3",
+      "artifact": {
+        "version": "0.0.20-18-g6c9aeba1",
+        "commit": "6c9aeba15acd09be4fc6776cef66a1041394b65a",
+        "sourceTree": "e79ccfc7ee4c1d9a8eeee07f7e3aee115f2d106e",
+        "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
+      },
+      "bodyBytes": 1599
+    },
+    "queueConfig.json": {
+      "url": "captured-fixture:queueConfig",
+      "status": 200,
+      "capturedAt": "2026-10-25T06:30:50.341Z",
+      "sha256": "eb26ac4d3d35302b44f39148270c54ab401543442bc2dd3921dc1d7059626236",
+      "artifact": {
+        "version": "0.0.20-18-g6c9aeba1",
+        "commit": "6c9aeba15acd09be4fc6776cef66a1041394b65a",
+        "sourceTree": "e79ccfc7ee4c1d9a8eeee07f7e3aee115f2d106e",
+        "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
+      },
+      "bodyBytes": 16220
+    },
+    "queues.json": {
+      "url": "captured-fixture:queues",
+      "status": 200,
+      "capturedAt": "2026-10-25T06:30:50.343Z",
+      "sha256": "22e57acc4829e5e9e08c23237ca7d3f35f53e0cfbf1419d4aa8ba137cb466a8a",
+      "artifact": {
+        "version": "0.0.20-18-g6c9aeba1",
+        "commit": "6c9aeba15acd09be4fc6776cef66a1041394b65a",
+        "sourceTree": "e79ccfc7ee4c1d9a8eeee07f7e3aee115f2d106e",
+        "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
+      },
+      "bodyBytes": 2722
+    },
+    "requests.json": {
+      "url": "captured-fixture:requests",
+      "status": 200,
+      "capturedAt": "2026-10-25T06:30:50.343Z",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "artifact": {
+        "version": "0.0.20-18-g6c9aeba1",
+        "commit": "6c9aeba15acd09be4fc6776cef66a1041394b65a",
+        "sourceTree": "e79ccfc7ee4c1d9a8eeee07f7e3aee115f2d106e",
+        "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
+      },
+      "bodyBytes": 3
+    },
+    "router.json": {
+      "url": "captured-fixture:router",
+      "status": 200,
+      "capturedAt": "2026-10-25T06:30:50.344Z",
+      "sha256": "f98a7167465137512c5b091519292160ef54df2179fe77c0a6043be1f740c5a5",
+      "artifact": {
+        "version": "0.0.20-18-g6c9aeba1",
+        "commit": "6c9aeba15acd09be4fc6776cef66a1041394b65a",
+        "sourceTree": "e79ccfc7ee4c1d9a8eeee07f7e3aee115f2d106e",
+        "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
+      },
+      "bodyBytes": 634
+    },
+    "routerCandidates.json": {
+      "url": "captured-fixture:routerCandidates",
+      "status": 200,
+      "capturedAt": "2026-10-25T06:30:50.346Z",
+      "sha256": "e27cff3fea72422be8f855b4564565e3adfac029e3b5bf10377f51dd7f1c3de0",
+      "artifact": {
+        "version": "0.0.20-18-g6c9aeba1",
+        "commit": "6c9aeba15acd09be4fc6776cef66a1041394b65a",
+        "sourceTree": "e79ccfc7ee4c1d9a8eeee07f7e3aee115f2d106e",
+        "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
+      },
+      "bodyBytes": 8339
+    },
+    "routerDecisions.json": {
+      "url": "captured-fixture:routerDecisions",
+      "status": 200,
+      "capturedAt": "2026-10-25T06:30:50.346Z",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "artifact": {
+        "version": "0.0.20-18-g6c9aeba1",
+        "commit": "6c9aeba15acd09be4fc6776cef66a1041394b65a",
+        "sourceTree": "e79ccfc7ee4c1d9a8eeee07f7e3aee115f2d106e",
+        "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
+      },
+      "bodyBytes": 3
+    },
+    "runtime.json": {
+      "url": "captured-fixture:runtime",
+      "status": 200,
+      "capturedAt": "2026-10-25T06:30:50.347Z",
+      "sha256": "d31d7c8d9418c579a6c10f626f0c0cd2bd3e288c51cbaeebb3eb837ca07f5324",
+      "artifact": {
+        "version": "0.0.20-18-g6c9aeba1",
+        "commit": "6c9aeba15acd09be4fc6776cef66a1041394b65a",
+        "sourceTree": "e79ccfc7ee4c1d9a8eeee07f7e3aee115f2d106e",
+        "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
+      },
+      "bodyBytes": 113
+    },
+    "sessionReadiness.json": {
+      "url": "captured-fixture:sessionReadiness",
+      "status": 200,
+      "capturedAt": "2026-10-25T06:30:50.349Z",
+      "sha256": "625edca744bdd1fe7ccad8e7a10db13db770f2dc1f8c1bcf50891940a2262e9c",
+      "artifact": {
+        "version": "0.0.20-18-g6c9aeba1",
+        "commit": "6c9aeba15acd09be4fc6776cef66a1041394b65a",
+        "sourceTree": "e79ccfc7ee4c1d9a8eeee07f7e3aee115f2d106e",
+        "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
+      },
+      "bodyBytes": 63163
+    },
+    "storeReceipts.json": {
+      "url": "captured-fixture:storeReceipts",
+      "status": 200,
+      "capturedAt": "2026-10-25T06:30:50.351Z",
+      "sha256": "f9a144b5ee6b57934ebc1dcb2e0379fb0b764481d99c44278d94ff33e3655ee1",
+      "artifact": {
+        "version": "0.0.20-18-g6c9aeba1",
+        "commit": "6c9aeba15acd09be4fc6776cef66a1041394b65a",
+        "sourceTree": "e79ccfc7ee4c1d9a8eeee07f7e3aee115f2d106e",
+        "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
+      },
+      "bodyBytes": 187
+    },
+    "systemPeers.json": {
+      "url": "captured-fixture:systemPeers",
+      "status": 200,
+      "capturedAt": "2026-10-25T06:30:50.352Z",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "artifact": {
+        "version": "0.0.20-18-g6c9aeba1",
+        "commit": "6c9aeba15acd09be4fc6776cef66a1041394b65a",
+        "sourceTree": "e79ccfc7ee4c1d9a8eeee07f7e3aee115f2d106e",
+        "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
+      },
+      "bodyBytes": 3
+    }
+  }
+}

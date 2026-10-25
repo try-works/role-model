@@ -86,8 +86,6 @@ const integrationsDownstreamRouter = Route.mapTo(AppRoute.IntegrationsDownstream
 const integrationsUpstreamRouter = Route.mapTo(AppRoute.IntegrationsUpstream)(pipe(Route.literal("integrations"), Route.slash(Route.literal("upstream"))));
 const localChooseRouter = Route.mapTo(AppRoute.LocalChoose)(pipe(Route.literal("local"), Route.slash(Route.literal("choose"))));
 const localModelsRedirectRouter = Route.mapTo(AppRoute.LocalChoose)(pipe(Route.literal("local"), Route.slash(Route.literal("models"))));
-const localMatrixRedirectRouter = Route.mapTo(AppRoute.LocalSwap)(pipe(Route.literal("local"), Route.slash(Route.literal("matrix"))));
-const routerConfigRedirectRouter = Route.mapTo(AppRoute.Router)(pipe(Route.literal("router"), Route.slash(Route.literal("config"))));
 const systemPeersRouter = Route.mapTo(AppRoute.SystemPeers)(
   pipe(Route.literal("system"), Route.slash(Route.literal("peers"))),
 );
@@ -138,8 +136,6 @@ export const appRouter = Route.oneOf(
   integrationsUpstreamRouter,
   localChooseRouter,
   localModelsRedirectRouter,
-  localMatrixRedirectRouter,
-  routerConfigRedirectRouter,
   runtimeRouter,
   sessionReadinessRouter,
   dashboardRouter,
