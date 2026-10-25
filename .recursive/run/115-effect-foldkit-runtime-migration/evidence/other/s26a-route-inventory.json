@@ -382,7 +382,9 @@
       ],
       "source": "role-model-router/apps/runtime-ui/app/routes/local-peer-models.tsx",
       "status": "absent",
-      "hostEndpoints": [],
+      "hostEndpoints": [
+        "/api/role-model/local/peer/models"
+      ],
       "requiresHostEndpoint": false,
       "absenceReason": "Endpoint /api/role-model/local/peer/models returned an empty array on the packaged host; parser/contract exists, but the required four-state success DOM proof needs a non-empty captured body, which is unavailable without mutating operator state."
     },
@@ -504,7 +506,8 @@
       "source": "role-model-router/apps/runtime-ui/app/routes/observe-queues.tsx",
       "status": "verified",
       "hostEndpoints": [
-        "/api/role-model/operator/queues"
+        "/api/role-model/operator/queues",
+        "/api/role-model/operator/queues/config"
       ],
       "requiresHostEndpoint": false,
       "proofTest": "role-model-router/apps/runtime-ui-next/test/s26e-readback-routes.test.ts",

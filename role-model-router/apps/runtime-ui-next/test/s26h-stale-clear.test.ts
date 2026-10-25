@@ -56,7 +56,7 @@ const bodies: Record<string, unknown> = {
   routerCandidates: [{ id: "c", modelId: "m" }],
   routerDecisions: { decisions: [{ modelId: "m", requestId: "r" }] },
   runtime: { config: { channel: "development" } },
-  sessionReadiness: { ready: true, status: "ready" },
+  sessionReadiness: { observedAt: "2026-10-25T05:46:08.202Z", overall: "unobserved", context: { channel: "development", scope: "standalone-runtime-dev" } },
   storeReceipts: { store: { receipts: [{ code: "x", id: "r" }] }, worker: { receipts: [] } },
 };
 const paths: Record<string, string> = {
