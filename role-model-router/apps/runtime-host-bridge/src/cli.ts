@@ -47,6 +47,7 @@ import {
   readPackagedRuntimeProfile,
 } from "./runtime-channel.js";
 import { releaseHostResources } from "./release-host-resources.js";
+import { createHostRuntimeScope } from "./host-runtime-scope.js";
 import { migrateLegacyProductionState } from "./runtime-state-migration.js";
 import { resolveRun88StageRuntimeIdentity } from "./runtime-version.js";
 import {
@@ -5557,6 +5558,11 @@ export async function main(): Promise<void> {
   const extensionRuntimeRef: {
     current: Awaited<ReturnType<typeof createProductionExtensionRuntime>> | null;
   } = { current: null };
+  /**
+   * R27 (s94): ONE owner for every acquired host resource. Each acquisition registers
+   * itself here, and shutdown/failure release through this scope instead of hand-picking.
+   */
+  const hostScope = createHostRuntimeScope();
   // R3: the post-observation handler needs the running registry's configured
   // endpoints, but it is defined before the backend exists. The reference is filled
   // in once the runtime is created and read on every observation.
@@ -5575,22 +5581,17 @@ export async function main(): Promise<void> {
     stopExtensionRuntimeWatchdog?.();
     stopExtensionRuntimeWatchdog = null;
     extensionRuntimeFailurePromise = (async () => {
-      const activeExtensionRuntimeOwner = extensionRuntimeOwner;
-      const activeExtensionRuntime = extensionRuntime;
-      const activePackagedRuntime = packagedRuntime;
+      const failureRelease = await hostScope.close();
+      backend = null;
       extensionRuntimeOwner = null;
       extensionRuntime = null;
       packagedRuntime = null;
-      await releaseHostResources(
-        {
-          ...(activePackagedRuntime === null ? {} : { packagedRuntime: () => activePackagedRuntime.close() }),
-          ...(activeExtensionRuntimeOwner === null ? {} : { extensionRuntimeOwner: () => activeExtensionRuntimeOwner.close() }),
-          ...(activeExtensionRuntimeOwner !== null || activeExtensionRuntime?.close === undefined ? {} : { extensionRuntime: () => activeExtensionRuntime.close() }),
-        },
-        (failure: { readonly error: unknown; readonly step: string }) => {
-          bootstrapState.message = "Release failed at " + failure.step + ": " + (failure.error instanceof Error ? failure.error.message : String(failure.error));
-        },
-      );
+      const firstFailure = failureRelease.errors[0];
+      if (firstFailure !== undefined) {
+        bootstrapState.message =
+          "Release failed at " + firstFailure.step + ": " +
+          (firstFailure.error instanceof Error ? firstFailure.error.message : String(firstFailure.error));
+      }
     })();
     return extensionRuntimeFailurePromise;
   };
@@ -5604,21 +5605,12 @@ export async function main(): Promise<void> {
       activeAutoReplayLoop = null;
       stopExtensionRuntimeWatchdog?.();
       stopExtensionRuntimeWatchdog = null;
-      const activeServer = server;
-      const activeExtensionRuntimeOwner = extensionRuntimeOwner;
-      const activeExtensionRuntime = extensionRuntime;
-      const activePackagedRuntime = packagedRuntime;
-      const activeBackend = backend;
+      const releaseResult = await hostScope.close();
       server = null;
       extensionRuntimeOwner = null;
       extensionRuntime = null;
       packagedRuntime = null;
       backend = null;
-      const releaseResult = await releaseHostResources({
-        ...(activeServer === null ? {} : { server: () => activeServer.close() }),
-        ...(activePackagedRuntime === null ? { ...(activeBackend === null ? {} : { backend: () => activeBackend.shutdown() }) } : { packagedRuntime: () => activePackagedRuntime.close() }),
-        ...(activeExtensionRuntimeOwner === null ? { ...(activeExtensionRuntime?.close === undefined ? {} : { extensionRuntime: () => activeExtensionRuntime.close() }) } : { extensionRuntimeOwner: () => activeExtensionRuntimeOwner.close() }),
-      });
       if (releaseResult.errors.length > 0) {
         process.exitCode = 1;
         for (const failure of releaseResult.errors) {
@@ -5690,6 +5682,7 @@ export async function main(): Promise<void> {
       shutdown,
     ),
   );
+  hostScope.register("server", () => (server === null ? Promise.resolve() : server.close()));
 
   console.log(
     JSON.stringify(
@@ -12403,6 +12396,7 @@ export async function main(): Promise<void> {
           qaExtensions,
         }),
       );
+      hostScope.register("extensionRuntimeOwner", async () => { if (extensionRuntimeOwner !== null) await extensionRuntimeOwner.close(); });
       packagedRuntime = await createPackagedProductionRuntime({
         stateRoot: trackBStateRoot,
         sidecar: createOwnedTrackBSidecarSpec({
@@ -12484,6 +12478,7 @@ export async function main(): Promise<void> {
               const capability = extension.descriptor.capabilities.find(
                 (candidate) => candidate !== "health:probe",
               );
+      hostScope.register("extensionRuntime", async () => { if (extensionRuntime !== null && extensionRuntime.close) await extensionRuntime.close(); });
               if (!capability)
                 throw new Error(
                   `QA extension has no business capability: ${extension.descriptor.id}`,
@@ -12525,6 +12520,7 @@ export async function main(): Promise<void> {
         },
       );
       backend = packagedRuntime.backend;
+      hostScope.register("packagedRuntime", async () => { if (packagedRuntime !== null) await packagedRuntime.close(); });
       stopExtensionRuntimeWatchdog = startCliExtensionRuntimeWatchdog({
         getRuntime: () => extensionRuntimeRef.current,
         bootstrapState,
@@ -12533,6 +12529,7 @@ export async function main(): Promise<void> {
       });
     } else {
       backend = await createBackend();
+      hostScope.register("backend", async () => { if (backend !== null) await backend.shutdown(); });
       bootstrapState.status = "ready";
       delete bootstrapState.message;
     }
