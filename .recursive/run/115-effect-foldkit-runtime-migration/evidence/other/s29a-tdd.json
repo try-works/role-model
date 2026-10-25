@@ -1,274 +1,135 @@
 {
-  "slice": "s29a-journeys",
-  "requirement": "R17 packaged persistence journeys J1 stream, J2 tool turns, J5 restart",
-  "artifact": {
-    "executable": "role-model-router/dist/release/win32-x64/role-model-dev.exe",
-    "version": "0.0.20-7-gfd2a5f55",
-    "commit": "fd2a5f5581b2427832df8c49fe35803fc0cae132",
-    "sourceTree": "d4095825ab0294d3b3fe7ab7d6f2954687c35508",
-    "channel": "development",
-    "scope": "standalone-runtime-dev"
-  },
-  "method": "Packaged candidate launched on an ephemeral loopback port with E: temp state root and a local OpenAI-compatible mock; account/endpoint configured; no operator port bound; state root removed.",
-  "markers": {
-    "j1": "S29A-J1-STREAM-MVN9VMPI",
-    "j2": "S29A-J2-TOOL-MVN9VMPI",
-    "toolResult": "S29A-TOOLRESULT-MVN9VMPI",
-    "toolCallId": "call_s29a_mvn9vmpi"
-  },
-  "counters": {
-    "before": {
-      "latestIds": [],
-      "captures": 0
-    },
-    "after": {
-      "latestIds": [
-        "req-e60b6476-7611-4de7-8a75-da5ccf5dcb3b",
-        "req-fc5d99c0-ad65-4510-8e9b-2ba654a8fca1",
-        "req-e41604ed-3c73-4754-b9f7-f5dfdd0cc5bf"
-      ],
-      "captures": 3
-    },
-    "persisted": {
-      "observationRows": 3,
-      "telemetryRows": 3,
-      "captures": 3,
-      "turns": 4
-    },
-    "watermark": "polled /requests/latest-ids until 3 and retention capture count until 3 (bounded 30s)"
-  },
-  "journeys": {
-    "J1": {
-      "marker": "S29A-J1-STREAM-MVN9VMPI",
-      "http": {
-        "aliases": [
-          "anthropic.team.shared.us-east-1.default",
-          "claude-3.7-sonnet",
-          "cli.local.coder",
-          "gpt-5.4",
-          "moonshot.personal.primary.global.kimi-k2.5",
-          "moonshot/kimi-k2.5",
-          "openai.personal.primary.us-east-1.fast",
-          "openai/gpt-4.1-mini-fast"
-        ],
-        "httpStatus": 200,
-        "streamTerminal": true,
-        "streamMarker": true,
-        "streamStop": true,
-        "requestId": "req-e41604ed-3c73-4754-b9f7-f5dfdd0cc5bf",
-        "streamRequested": true,
-        "finishReason": "stop",
-        "selectedModel": "moonshot/kimi-k2.5",
-        "tokens": {
-          "input": 11,
-          "output": 4
-        }
-      },
-      "chain": {
-        "requestId": "req-e41604ed-3c73-4754-b9f7-f5dfdd0cc5bf",
-        "routingDecisionId": "decision-req-e41604ed-3c73-4754-b9f7-f5dfdd0cc5bf",
-        "endpointId": "moonshot.personal.primary.global.kimi-k2.5",
-        "providerAttemptIds": [
-          "req-e41604ed-3c73-4754-b9f7-f5dfdd0cc5bf:attempt:1"
-        ],
-        "correlationId": "corr-bc133764c28da4c0a1f612df"
-      },
-      "capture": {
-        "captureId": "capture-73eb410ba319ecf61ecaada3",
-        "requestId": "req-e41604ed-3c73-4754-b9f7-f5dfdd0cc5bf",
-        "routingDecisionId": "decision-req-e41604ed-3c73-4754-b9f7-f5dfdd0cc5bf",
-        "artifactHash": "815d994f0ac0f6d190d4b70ce82b07dfea99921ed10a0351f416bb3ec43541c1",
-        "contentHash": "08b11569b800d4b82e9a815af6f3a640a5d12831d988908bd5bceea51437e18f"
-      },
-      "passed": [
-        "aliases",
-        "stream terminal/marker",
-        "selected model/effort/path",
-        "telemetry correlation",
-        "capture id/artifact hash"
-      ],
-      "inconclusive": [
-        "dashboard numerics/UI",
-        "marker in persisted payload (encrypted/redacted)"
-      ]
-    },
-    "J2": {
-      "marker": "S29A-J2-TOOL-MVN9VMPI",
-      "toolResultMarker": "S29A-TOOLRESULT-MVN9VMPI",
-      "toolCallId": "call_s29a_mvn9vmpi",
-      "initial": {
-        "requestId": "req-fc5d99c0-ad65-4510-8e9b-2ba654a8fca1",
-        "routingDecisionId": "decision-req-fc5d99c0-ad65-4510-8e9b-2ba654a8fca1",
-        "endpointId": "moonshot.personal.primary.global.kimi-k2.5",
-        "providerAttemptIds": [
-          "req-fc5d99c0-ad65-4510-8e9b-2ba654a8fca1:attempt:1"
-        ]
-      },
-      "followUp": {
-        "requestId": "req-e60b6476-7611-4de7-8a75-da5ccf5dcb3b",
-        "routingDecisionId": "decision-req-e60b6476-7611-4de7-8a75-da5ccf5dcb3b",
-        "endpointId": "moonshot.personal.primary.global.kimi-k2.5",
-        "providerAttemptIds": [
-          "req-e60b6476-7611-4de7-8a75-da5ccf5dcb3b:attempt:1"
-        ]
-      },
-      "initialCapture": {
-        "captureId": "capture-257ea8bec055fe24377adba9",
-        "requestId": "req-fc5d99c0-ad65-4510-8e9b-2ba654a8fca1",
-        "routingDecisionId": "decision-req-fc5d99c0-ad65-4510-8e9b-2ba654a8fca1",
-        "artifactHash": "a11e21cb2f5b154d78660e7b49bc535ba57dd32f9619f2f1aca473e3a636c81c",
-        "contentHash": "a4f8bed8b6ffbae104bb5a095a4f3bfb9e1c8ea48b1666c70a9ed8f9c7661de0"
-      },
-      "followUpCapture": {
-        "captureId": "capture-9f1a95e198b35b360ea0ced1",
-        "requestId": "req-e60b6476-7611-4de7-8a75-da5ccf5dcb3b",
-        "routingDecisionId": "decision-req-e60b6476-7611-4de7-8a75-da5ccf5dcb3b",
-        "artifactHash": "9ed5910c0c2d825dc94637e08f8f8d3091396f888f9552dda56a2e398e533fbc",
-        "contentHash": "43f2fb56c825fb4e3b3f6a5132814b249a310b837c8f034ae61561757dd4c20f"
-      },
-      "tokens": {
-        "initial": {
-          "input": 12,
-          "output": 3
-        },
-        "followUp": {
-          "input": 13,
-          "output": 5
-        }
-      },
-      "persistedToolBoundaries": [
-        {
-          "boundary": "result",
-          "index": 1,
-          "toolCallId": "call_s29a_mvn9vmpi"
-        }
-      ],
-      "followUpSeenByUpstream": true,
-      "passed": [
-        "matching tool_call_id/result",
-        "follow-up turn",
-        "per-call accounting",
-        "matching tool_call_id/result (client/upstream + persisted result boundary)"
-      ],
-      "inconclusive": [
-        "ordered call→result boundary in persisted artifact store (only result boundary found; call ID proven at client/upstream)",
-        "stream boundaries/refresh detail UI",
-        "marker in persisted payload"
-      ]
-    },
-    "J5": {
-      "restarted": true,
-      "sameLatestIds": true,
-      "capturesSurvive": true,
-      "captureIds": [
-        {
-          "requestId": "req-e41604ed-3c73-4754-b9f7-f5dfdd0cc5bf",
-          "captureId": "capture-73eb410ba319ecf61ecaada3"
-        },
-        {
-          "requestId": "req-fc5d99c0-ad65-4510-8e9b-2ba654a8fca1",
-          "captureId": "capture-257ea8bec055fe24377adba9"
-        },
-        {
-          "requestId": "req-e60b6476-7611-4de7-8a75-da5ccf5dcb3b",
-          "captureId": "capture-9f1a95e198b35b360ea0ced1"
-        }
-      ],
-      "persistedRowsSame": {
-        "observations": 3,
-        "telemetry": 3,
-        "captures": 3
-      },
-      "sameChains": {
-        "j1": {
-          "before": {
-            "requestId": "req-e41604ed-3c73-4754-b9f7-f5dfdd0cc5bf",
-            "routingDecisionId": "decision-req-e41604ed-3c73-4754-b9f7-f5dfdd0cc5bf",
-            "endpointId": "moonshot.personal.primary.global.kimi-k2.5",
-            "providerAttemptIds": [
-              "req-e41604ed-3c73-4754-b9f7-f5dfdd0cc5bf:attempt:1"
-            ],
-            "correlationId": "corr-bc133764c28da4c0a1f612df"
-          },
-          "after": {
-            "routingDecisionId": "decision-req-e41604ed-3c73-4754-b9f7-f5dfdd0cc5bf",
-            "endpointId": "moonshot.personal.primary.global.kimi-k2.5",
-            "providerAttemptIds": [
-              "req-e41604ed-3c73-4754-b9f7-f5dfdd0cc5bf:attempt:1"
-            ]
-          }
-        },
-        "j2initial": {
-          "before": {
-            "requestId": "req-fc5d99c0-ad65-4510-8e9b-2ba654a8fca1",
-            "routingDecisionId": "decision-req-fc5d99c0-ad65-4510-8e9b-2ba654a8fca1",
-            "endpointId": "moonshot.personal.primary.global.kimi-k2.5",
-            "providerAttemptIds": [
-              "req-fc5d99c0-ad65-4510-8e9b-2ba654a8fca1:attempt:1"
-            ]
-          },
-          "after": {
-            "routingDecisionId": "decision-req-fc5d99c0-ad65-4510-8e9b-2ba654a8fca1",
-            "endpointId": "moonshot.personal.primary.global.kimi-k2.5",
-            "providerAttemptIds": [
-              "req-fc5d99c0-ad65-4510-8e9b-2ba654a8fca1:attempt:1"
-            ]
-          }
-        },
-        "j2followup": {
-          "before": {
-            "requestId": "req-e60b6476-7611-4de7-8a75-da5ccf5dcb3b",
-            "routingDecisionId": "decision-req-e60b6476-7611-4de7-8a75-da5ccf5dcb3b",
-            "endpointId": "moonshot.personal.primary.global.kimi-k2.5",
-            "providerAttemptIds": [
-              "req-e60b6476-7611-4de7-8a75-da5ccf5dcb3b:attempt:1"
-            ]
-          },
-          "after": {
-            "routingDecisionId": "decision-req-e60b6476-7611-4de7-8a75-da5ccf5dcb3b",
-            "endpointId": "moonshot.personal.primary.global.kimi-k2.5",
-            "providerAttemptIds": [
-              "req-e60b6476-7611-4de7-8a75-da5ccf5dcb3b:attempt:1"
-            ]
-          }
-        }
-      },
-      "passed": [
-        "same request/decision/provider/capture IDs after restart",
-        "history/decisions queryable",
-        "capture rows survive"
-      ],
-      "inconclusive": [
-        "UI/SSE resync"
-      ]
+  "slice": "s29b-journey-assertions",
+  "requirement": "Rewrite S29a journey script into an assertion harness that fails on broken runtime",
+  "identity": {
+    "manifestVersion": "0.0.20-7-gfd2a5f55",
+    "manifestCommit": "fd2a5f5581b2427832df8c49fe35803fc0cae132",
+    "manifestSourceTree": "d4095825ab0294d3b3fe7ab7d6f2954687c35508",
+    "manifestSha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87",
+    "computedExeSha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87",
+    "expected": {
+      "version": "0.0.20-7-gfd2a5f55",
+      "commit": "fd2a5f5581b2427832df8c49fe35803fc0cae132",
+      "sourceTree": "d4095825ab0294d3b3fe7ab7d6f2954687c35508",
+      "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
     }
+  },
+  "assertionSet": [
+    "manifest version/commit/source_tree equal expected candidate; computed exe sha256 equals manifest.sha256 and expected sha",
+    "J1 aliases include configured model; HTTP 200; SSE DONE; marker present; finish stop; stream.requested true",
+    "J2 tool_calls present; exact tool_call_id; follow-up HTTP 200; final marker; upstream saw tool_call_id+tool result",
+    "exactly three request ids; every HTTP id exists in runtime_observations and runtime_telemetry_records",
+    "every persisted observation has matching request/decision/endpoint and provider attempt id; HTTP attempt ids equal DB",
+    "three retention capture rows; every capture row joins a capture-* id from retention_records",
+    "artifact-store JSON parsed for tool:call index 0 and tool:result index 1 with the same tool_call_id",
+    "capture API called for every request; real statuses recorded (all 404 in this run)",
+    "state files actually searched for both markers; markerInPersisted true (capture queue WAL + deferred capture SQLite)",
+    "kill taskkill, wait for child exit and assert pid gone",
+    "restart same state root, new pid, same request ids, observations 200, capture API statuses recorded",
+    "stop/read DB again; observation, telemetry and capture id row identity unchanged",
+    "47 assertions total; any false throws"
+  ],
+  "stateQueries": [
+    "memory.sqlite: runtime_observations, runtime_telemetry_records",
+    "retention-state.sqlite: retention_captures joined to retention_records by json.r -> capture id",
+    "artifact-store.json: parsed tool call/result boundary JSON objects",
+    "state file walk: marker presence in capture-queue.sqlite-wal and deferred-route-captures.sqlite"
+  ],
+  "restartProof": {
+    "startPid": 43772,
+    "restartPid": 50480,
+    "pidChanged": true,
+    "dbRowsBefore": 3,
+    "dbRowsAfter": 3,
+    "sameLatestIds": true,
+    "captureIds": [
+      "capture-13107b608954e0893b1a4694",
+      "capture-35185778201c91f15b1de6b0",
+      "capture-b8e6abd2d0809ece12618891"
+    ],
+    "captureApiStatuses": {
+      "req-fc70af1f-75a7-4d90-9a05-898abff4e745": 404,
+      "req-0185e8cb-2967-41f3-8402-cfb6ebb7b494": 404,
+      "req-31053c27-1e3f-4051-87ab-e5a76def167f": 404
+    }
+  },
+  "markers": {
+    "j1": "S29B-J1-MVNBE5L7",
+    "j2": "S29B-J2-MVNBE5L7",
+    "toolResult": "S29B-TOOLRESULT-MVNBE5L7",
+    "toolCallId": "call_s29b_mvnbe5l7"
+  },
+  "chain": {
+    "j1": "req-31053c27-1e3f-4051-87ab-e5a76def167f",
+    "j2initial": "req-0185e8cb-2967-41f3-8402-cfb6ebb7b494",
+    "j2followup": "req-fc70af1f-75a7-4d90-9a05-898abff4e745",
+    "toolCallId": "call_s29b_mvnbe5l7",
+    "boundaries": [
+      {
+        "boundary": "tool:result",
+        "index": 1,
+        "status": "completed",
+        "toolCallId": "call_s29b_mvnbe5l7",
+        "toolId": "workspace_read",
+        "toolName": "workspace_read"
+      },
+      {
+        "boundary": "tool:call",
+        "index": 0,
+        "toolCallId": "call_s29b_mvnbe5l7",
+        "toolId": "workspace_read",
+        "toolName": "workspace_read"
+      }
+    ]
+  },
+  "mutations": [
+    {
+      "name": "replace-exe",
+      "mutation": "S29B_EXE points at the production role-model.exe (sha 20e7e894) instead of the candidate",
+      "assertion": "executable hash matches manifest sha256",
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s29b-red-replace-exe.log"
+    },
+    {
+      "name": "fake-ids",
+      "mutation": "S29B_MUTATE=fake-ids replaces the J1 request id before SQLite join",
+      "assertion": "persisted provider attempt ids match request ids",
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s29b-red-fake-ids.log"
+    },
+    {
+      "name": "skip-kill",
+      "mutation": "S29B_MUTATE=skip-kill skips the restart kill/wait",
+      "assertion": "skip-kill mutation must fail: previous pid still running",
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s29b-red-skip-kill.log"
+    },
+    {
+      "name": "disable-captures",
+      "mutation": "S29B_MUTATE=disable-captures suppresses captured rows in the state snapshot (runtime env max-bytes did not disable writes; this is a state-level capture-write failure simulation)",
+      "assertion": "timed out waiting for three persisted captures",
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s29b-red-disable-captures.log"
+    }
+  ],
+  "captureApi": {
+    "statuses": {
+      "req-fc70af1f-75a7-4d90-9a05-898abff4e745": 404,
+      "req-0185e8cb-2967-41f3-8402-cfb6ebb7b494": 404,
+      "req-31053c27-1e3f-4051-87ab-e5a76def167f": 404
+    },
+    "note": "exercised, not fabricated; all 404, so capture IDs come from retention-state.sqlite"
   },
   "inconclusive": [
     {
-      "item": "marker in persisted request/response body",
-      "reason": "retention capture archive blobs are encrypted/redacted (RMAS1); marker is proven in the client response and mock upstream request, but not plaintext in state."
+      "item": "dashboard/frontend/DOM/SSE resync",
+      "reason": "not exercised; this harness covers packaged HTTP plus persisted SQLite/retention state only"
     },
     {
-      "item": "J2 ordered call→result boundary in persisted artifact store",
-      "reason": "final artifact-store text exposed the tool:result boundary index 1 with the same toolCallId; no tool:call boundary was found in that final capture. Client and mock upstream prove the call/result pair and follow-up."
-    },
-    {
-      "item": "/api/captures/<requestId>",
-      "reason": "returned 404 for all three requests; capture identity and content hashes were read from retention-state.sqlite. Route-capture API is not a usable readback for this run."
-    },
-    {
-      "item": "dashboard/frontend numeric and SSE resync",
-      "reason": "no browser/frontend run in this slice."
+      "item": "J3/J4/J6",
+      "reason": "deferred: no cancellation/error path, endpoint/effort variant, or configured replay/evaluation/learning arms in this slice"
     }
   ],
-  "deferred": {
-    "J3": "requires actual streaming client cancellation and a controlled provider error/timeout through the real adapter.",
-    "J4": "requires an endpoint/effort variant beyond the single configured moonshot endpoint.",
-    "J6": "requires configured replay/evaluation/learning arms and eligible configured providers."
-  },
-  "reproducer": "node .recursive/run/115-effect-foldkit-runtime-migration/evidence/other/s29a-journeys.mjs",
   "evidence": {
     "script": "evidence/other/s29a-journeys.mjs",
-    "raw": "evidence/logs/s29a-journeys.json"
-  }
+    "normalJson": "evidence/logs/s29a-journeys.json",
+    "normalLog": "evidence/logs/s29b-normal.log"
+  },
+  "reproducer": "node .recursive/run/115-effect-foldkit-runtime-migration/evidence/other/s29a-journeys.mjs"
 }

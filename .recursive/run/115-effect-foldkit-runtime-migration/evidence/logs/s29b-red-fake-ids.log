@@ -1,0 +1,11 @@
+(node:50376) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+file:///E:/rm-tmp/s29b/journeys.mjs:20
+const assert=(condition,message)=>{results.assertions.push({message,ok:Boolean(condition)});if(!condition)throw new Error("ASSERT: "+message);};
+                                                                                                                ^
+
+Error: ASSERT: persisted provider attempt ids match request ids
+    at assert (file:///E:/rm-tmp/s29b/journeys.mjs:20:113)
+    at file:///E:/rm-tmp/s29b/journeys.mjs:69:161
+
+Node.js v24.11.0

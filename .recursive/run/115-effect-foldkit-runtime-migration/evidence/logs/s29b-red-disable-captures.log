@@ -1,0 +1,11 @@
+(node:46356) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+file:///E:/rm-tmp/s29b/journeys.mjs:45
+const waitFor=async(fn,label,timeout=30000)=>{const end=Date.now()+timeout;while(Date.now()<end){const v=await fn();if(v)return v;await delay(300);}throw new Error("ASSERT: timed out waiting for "+label);};
+                                                                                                                                                          ^
+
+Error: ASSERT: timed out waiting for three persisted captures
+    at waitFor (file:///E:/rm-tmp/s29b/journeys.mjs:45:155)
+    at async file:///E:/rm-tmp/s29b/journeys.mjs:61:2
+
+Node.js v24.11.0
