@@ -492,6 +492,9 @@ const parseRouterCandidates = (body: unknown, token: number): ReadbackState => {
 const parseObservationDetail = (body: unknown, token: number): ReadbackState => {
   const record = asRecord(body);
   if (record === undefined) return failedReadback("Detail read failed: invalid response", token);
+  if (record.requestId === undefined && record.routingDecisionId === undefined) {
+    return { rows: [], status: "empty", token };
+  }
   const rows = [
     row("request", "Request", String(record.requestId ?? "—"), "requestId"),
     row("decision", "Decision", String(record.routingDecisionId ?? "—"), "routingDecisionId"),
@@ -813,4 +816,8 @@ export const readbackKeyForRouteTag = (tag: string): ReadbackKey | null =>
                                 ? "observeRouting"
                                 : tag === "Router"
                                   ? "router"
-                                  : null;
+                                  : tag === "RequestDetail"
+                                    ? "requestDetail"
+                                    : tag === "RouterDecisionDetail"
+                                      ? "routerDecisionDetail"
+                                      : null;

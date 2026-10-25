@@ -1,0 +1,749 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+stderr | test/s26k-control.test.ts > S26k control surface > Providers renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow view: 22.5ms (budget: 16ms), triggered by init. Keep render-only work in the view path and memoize expensive subtrees with createLazy or createKeyedLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'View',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Providers' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 22.451099999998405,
+  thresholdMs: 16
+}
+[foldkit] Slow patch: 88.1ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Providers' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 88.1214,
+  thresholdMs: 8
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Providers renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 44.9ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Providers' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 44.89249999999993,
+  thresholdMs: 8
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Providers renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 53.3ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Providers' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 53.289199999999255,
+  thresholdMs: 8
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Providers renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 35.8ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Providers' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 35.768200000000434,
+  thresholdMs: 8
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Endpoints renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 39.1ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Endpoints' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 39.05760000000009,
+  thresholdMs: 8
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Endpoints renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 44.0ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Endpoints' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 43.97149999999965,
+  thresholdMs: 8
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Endpoints renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 35.9ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Endpoints' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 35.8621000000021,
+  thresholdMs: 8
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Endpoints renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 72.8ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Endpoints' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 72.78700000000026,
+  thresholdMs: 8
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Controller renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 25.5ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'ControlController' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 25.455200000000332,
+  thresholdMs: 8
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Controller renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 29.7ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'ControlController' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 29.655399999999645,
+  thresholdMs: 8
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Controller renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 34.7ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'ControlController' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 34.693200000001525,
+  thresholdMs: 8
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Controller renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 43.5ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'ControlController' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 43.45590000000084,
+  thresholdMs: 8
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > dispatches one action and refuses a second dispatch while pending
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 24.5ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Providers' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 24.511099999999715,
+  thresholdMs: 8
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > renders the exact action failure phrase
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 16.3ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'ControlController' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 16.27299999999741,
+  thresholdMs: 8
+}
+
+ ❯ test/s26k-control.test.ts (8 tests | 1 failed) 8731ms
+   ✓ S26k control surface > Providers renders success, empty, loading and error on the DOM  2642ms
+   ✓ S26k control surface > Endpoints renders success, empty, loading and error on the DOM  2504ms
+   ✓ S26k control surface > Controller renders success, empty, loading and error on the DOM  2368ms
+   ✓ S26k control surface > dispatches one action and refuses a second dispatch while pending  607ms
+   ✓ S26k control surface > renders the exact action failure phrase  557ms
+   ✓ S26k control surface > ties every control endpoint to the parsed host route table including method 39ms
+   × S26k control surface > sends the real method, path and body through createControlClients 9ms
+     → Invalid URL
+   ✓ S26k control surface > keeps action bodies and read methods on the shared specs 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s26k-control.test.ts > S26k control surface > sends the real method, path and body through createControlClients
+TypeError: Invalid URL
+ ❯ new URL E:/role-model-run115/public-virtual-store/happy-dom@20.14.6/node_modules/happy-dom/lib/url/URL.js:22:23
+ ❯ new URL E:/role-model-run115/public-virtual-store/happy-dom@20.14.6/node_modules/happy-dom/lib/window/WindowContextClassExtender.js:233:9
+ ❯ fetchImpl test/s26k-control.test.ts:236:114
+    234|     const clients = createControlClients({
+    235|       fetchImpl: async (input, init) => {
+    236|         calls.push({ body: init?.body === undefined ? undefined : Stri…
+       |                                                                                                                  ^
+    237|         return new Response(JSON.stringify({ ok: true }), { status: 20…
+    238|       },
+ ❯ Object.dispatch src/control.ts:261:30
+ ❯ test/s26k-control.test.ts:240:95
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 7 passed (8)
+   Start at  13:16:53
+   Duration  21.67s (transform 6.67s, setup 0ms, collect 10.66s, tests 8.73s, environment 696ms, prepare 277ms)
+

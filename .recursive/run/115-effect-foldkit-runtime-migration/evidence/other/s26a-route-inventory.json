@@ -45,8 +45,8 @@
       "modal": 2
     },
     "byStatus": {
-      "absent": 52,
-      "verified": 22,
+      "absent": 50,
+      "verified": 24,
       "wired": 1
     },
     "newOnly": 1
@@ -551,12 +551,13 @@
         "/app/observe/requests/:requestId"
       ],
       "source": "role-model-router/apps/runtime-ui/app/routes/request-detail.tsx",
-      "status": "absent",
+      "status": "verified",
       "hostEndpoints": [
         "/api/role-model/requests/"
       ],
       "requiresHostEndpoint": false,
-      "absenceReason": "Dynamic detail route requires a requestId path parameter; the shared ReadbackSpec/ReadReadback surface is keyed by static routes and has no per-record identity. Adding one would fork the readback surface, so the row remains absent rather than wiring a fake static path."
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s26e-readback-routes.test.ts",
+      "proofTestName": "Request detail renders success, empty, loading and error on the DOM"
     },
     {
       "category": "read",
@@ -611,12 +612,13 @@
         "/app/router/decisions/:requestId"
       ],
       "source": "role-model-router/apps/runtime-ui/app/routes/router-decision-detail.tsx",
-      "status": "absent",
+      "status": "verified",
       "hostEndpoints": [
         "/api/role-model/router/decisions/"
       ],
       "requiresHostEndpoint": false,
-      "absenceReason": "Dynamic detail route requires a requestId path parameter; the shared ReadbackSpec/ReadReadback surface is keyed by static routes and has no per-record identity. Adding one would fork the readback surface, so the row remains absent rather than wiring a fake static path."
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s26e-readback-routes.test.ts",
+      "proofTestName": "Router decision detail renders success, empty, loading and error on the DOM"
     },
     {
       "category": "read",
@@ -836,7 +838,7 @@
       "status": "absent",
       "hostEndpoints": [],
       "requiresHostEndpoint": false,
-      "absenceReason": "Presentational chart component, not a read route; chart rendering is out of this wave-port scope and ECharts is excluded."
+      "absenceReason": "Presentational chart component, not a route; chart rendering is outside this route-port wave. ECharts is not the constraint."
     },
     {
       "category": "read",
@@ -846,7 +848,7 @@
       "status": "absent",
       "hostEndpoints": [],
       "requiresHostEndpoint": false,
-      "absenceReason": "Presentational chart component, not a read route; chart rendering is out of this wave-port scope and ECharts is excluded."
+      "absenceReason": "Presentational chart component, not a route; chart rendering is outside this route-port wave. ECharts is not the constraint."
     },
     {
       "category": "control",
@@ -930,7 +932,7 @@
       "status": "absent",
       "hostEndpoints": [],
       "requiresHostEndpoint": false,
-      "absenceReason": "Presentational chart component, not a read route; chart rendering is out of this wave-port scope and ECharts is excluded."
+      "absenceReason": "Presentational chart component, not a route; chart rendering is outside this route-port wave. ECharts is not the constraint."
     },
     {
       "category": "read",
@@ -940,7 +942,7 @@
       "status": "absent",
       "hostEndpoints": [],
       "requiresHostEndpoint": false,
-      "absenceReason": "Presentational chart component, not a read route; chart rendering is out of this wave-port scope and ECharts is excluded."
+      "absenceReason": "Presentational chart component, not a route; chart rendering is outside this route-port wave. ECharts is not the constraint."
     },
     {
       "category": "control",
@@ -989,7 +991,7 @@
       "status": "absent",
       "hostEndpoints": [],
       "requiresHostEndpoint": false,
-      "absenceReason": "Presentational chart component, not a read route; chart rendering is out of this wave-port scope and ECharts is excluded."
+      "absenceReason": "Presentational chart component, not a route; chart rendering is outside this route-port wave. ECharts is not the constraint."
     },
     {
       "category": "control",
@@ -998,7 +1000,8 @@
       "source": "role-model-router/apps/runtime-ui/app/components/telemetry-controls.tsx",
       "status": "absent",
       "hostEndpoints": [],
-      "requiresHostEndpoint": false
+      "requiresHostEndpoint": false,
+      "absenceReason": "Control component, not a read route; deferred to the wave-3 control surface/readback scope."
     },
     {
       "category": "control",

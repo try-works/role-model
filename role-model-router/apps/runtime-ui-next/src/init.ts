@@ -88,7 +88,7 @@ export const createInit =
       const token = 1;
       const readbacks = { ...emptyReadbacks(), [readbackKey]: loadingReadback(token) };
       return {
-        commands: [readReadback({ key: readbackKey as ReadbackKey, token })],
+        commands: [readReadback({ id: route._tag === "RequestDetail" || route._tag === "RouterDecisionDetail" ? route.requestId : undefined, key: readbackKey as ReadbackKey, token })],
         model: {
           clicks: 0,
           controls: emptyControls(),

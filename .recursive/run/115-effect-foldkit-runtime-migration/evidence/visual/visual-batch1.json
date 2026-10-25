@@ -1,0 +1,102 @@
+[
+  {
+    "route": "/",
+    "png": "_.png",
+    "title": "Overview | RM3 Foldkit shell",
+    "text": "Runtime UI Overview Diagnostics Observability Receipts Queues Local logs Candidates Requests Decisions System peers Local peers Runtime Providers Endpoints Controller Readiness Dashboard Swap Activity Observe logs Observe routing Router Stu",
+    "states": [
+      "idle",
+      "idle",
+      "success"
+    ],
+    "alerts": [],
+    "anchors": 45
+  },
+  {
+    "route": "/diagnostics/abc123",
+    "png": "_diagnostics_abc123.png",
+    "title": "Diagnostics abc123 | RM3 Foldkit shell",
+    "text": "Runtime UI Overview Diagnostics Observability Receipts Queues Local logs Candidates Requests Decisions System peers Local peers Runtime Providers Endpoints Controller Readiness Dashboard Swap Activity Observe logs Observe routing Router Stu",
+    "states": [
+      "idle",
+      "idle"
+    ],
+    "alerts": [],
+    "anchors": 44
+  },
+  {
+    "route": "/observe/observability-snapshot",
+    "png": "_observe_observability_snapshot.png",
+    "title": "Observability | RM3 Foldkit shell",
+    "text": "Runtime UI Overview Diagnostics Observability Receipts Queues Local logs Candidates Requests Decisions System peers Local peers Runtime Providers Endpoints Controller Readiness Dashboard Swap Activity Observe logs Observe routing Router Stu",
+    "states": [
+      "live",
+      "live",
+      "ok"
+    ],
+    "alerts": [],
+    "anchors": 44
+  },
+  {
+    "route": "/observe/queues",
+    "png": "_observe_queues.png",
+    "title": "Queues | RM3 Foldkit shell",
+    "text": "Runtime UI Overview Diagnostics Observability Receipts Queues Local logs Candidates Requests Decisions System peers Local peers Runtime Providers Endpoints Controller Readiness Dashboard Swap Activity Observe logs Observe routing Router Stu",
+    "states": [
+      "live",
+      "live",
+      "ok"
+    ],
+    "alerts": [],
+    "anchors": 44
+  },
+  {
+    "route": "/requests",
+    "png": "_requests.png",
+    "title": "Requests | RM3 Foldkit shell",
+    "text": "Runtime UI Overview Diagnostics Observability Receipts Queues Local logs Candidates Requests Decisions System peers Local peers Runtime Providers Endpoints Controller Readiness Dashboard Swap Activity Observe logs Observe routing Router Stu",
+    "states": [
+      "live",
+      "live",
+      "empty"
+    ],
+    "alerts": [],
+    "anchors": 44
+  },
+  {
+    "route": "/control/providers",
+    "png": "_control_providers.png",
+    "title": "Providers | RM3 Foldkit shell",
+    "text": "Runtime UI Overview Diagnostics Observability Receipts Queues Local logs Candidates Requests Decisions System peers Local peers Runtime Providers Endpoints Controller Readiness Dashboard Swap Activity Observe logs Observe routing Router Stu",
+    "states": [
+      "idle",
+      "idle"
+    ],
+    "alerts": [],
+    "anchors": 44
+  },
+  {
+    "route": "/control/endpoints",
+    "png": "_control_endpoints.png",
+    "title": "Endpoints | RM3 Foldkit shell",
+    "text": "Runtime UI Overview Diagnostics Observability Receipts Queues Local logs Candidates Requests Decisions System peers Local peers Runtime Providers Endpoints Controller Readiness Dashboard Swap Activity Observe logs Observe routing Router Stu",
+    "states": [
+      "idle",
+      "idle"
+    ],
+    "alerts": [],
+    "anchors": 44
+  },
+  {
+    "route": "/control/controller",
+    "png": "_control_controller.png",
+    "title": "Controller | RM3 Foldkit shell",
+    "text": "Runtime UI Overview Diagnostics Observability Receipts Queues Local logs Candidates Requests Decisions System peers Local peers Runtime Providers Endpoints Controller Readiness Dashboard Swap Activity Observe logs Observe routing Router Stu",
+    "states": [
+      "idle",
+      "idle"
+    ],
+    "alerts": [],
+    "anchors": 44
+  }
+]

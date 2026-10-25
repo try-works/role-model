@@ -21,6 +21,7 @@ interface InventoryEntry {
   readonly proofTestName?: string;
   readonly hostEndpoints?: readonly string[];
   readonly requiresHostEndpoint?: boolean;
+  readonly absenceReason?: string;
 }
 
 interface Inventory {
@@ -34,7 +35,7 @@ interface Inventory {
   readonly routes: readonly InventoryEntry[];
   readonly components: readonly InventoryEntry[];
   readonly newOnly: readonly InventoryEntry[];
-  readonly waves: readonly { readonly routeIds: readonly string[] }[];
+  readonly waves: readonly { readonly id: number; readonly routeIds: readonly string[] }[];
 }
 
 const repoRoot = path.resolve(import.meta.dirname, "../../../..");
@@ -176,6 +177,26 @@ describe("S26a route inventory drift", () => {
     expect([...waveIds].sort(), "every inventory row in a wave").toEqual(
       [...inventory.routes, ...inventory.components].map((entry) => entry.id).sort(),
     );
+  });
+
+  it("records totals and reasons that match the wave rows", () => {
+    const inventory = JSON.parse(readFileSync(inventoryPath, "utf8")) as Inventory;
+    const all = [...inventory.routes, ...inventory.components, ...inventory.newOnly];
+    const waveRows = (id: number) =>
+      (inventory.waves.find((wave) => wave.id === id)?.routeIds ?? []).map((rowId) =>
+        all.find((entry) => entry.id === rowId),
+      );
+    for (const id of [2, 3]) {
+      const rows = waveRows(id);
+      expect(rows.every((row) => row !== undefined)).toBe(true);
+      const verified = rows.filter((row) => row?.status === "verified").length;
+      const absent = rows.filter((row) => row?.status === "absent").length;
+      const missingReason = rows.filter((row) => row?.status === "absent" && !row.absenceReason);
+      expect(rows).toHaveLength(id === 2 ? 24 : 27);
+      expect(verified).toBe(id === 2 ? 18 : 4);
+      expect(absent).toBe(id === 2 ? 6 : 23);
+      expect(missingReason).toEqual([]);
+    }
   });
 
   it("detects a nested route file that has no inventory row", () => {

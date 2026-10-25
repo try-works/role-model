@@ -151,7 +151,7 @@ const buildTargets: readonly BuildTarget[] = [
 
 const standaloneReleaseCopies = [
   {
-    sourceRelativePath: "role-model-router/apps/runtime-ui/build/client",
+    sourceRelativePath: "role-model-router/apps/runtime-ui-next/dist/client",
     destinationRelativePath: "build/client",
   },
   {

@@ -177,7 +177,7 @@ export interface ControlSpec {
 export const CONTROL_SPECS: Readonly<Record<ControlKey, ControlSpec>> = {
   providers: {
     action: {
-      body: { providerAccountId: "synthetic-provider-account" },
+      body: { providerAccountId: "moonshot.personal.primary" },
       id: "reconnect",
       label: "Reconnect provider",
       method: "POST",
@@ -211,7 +211,7 @@ export const CONTROL_SPECS: Readonly<Record<ControlKey, ControlSpec>> = {
   },
   controlController: {
     action: {
-      body: { mode: "best-total-score" },
+      body: { endpointId: "moonshot.personal.primary.global.kimi-k2.5" },
       id: "update-assignment",
       label: "Update controller",
       method: "PATCH",

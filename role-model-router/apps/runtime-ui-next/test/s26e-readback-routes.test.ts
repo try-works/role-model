@@ -208,6 +208,26 @@ const routes: readonly RouteCase[] = [
     successBody: { alias: "router-alias", mode: "local" },
     successText: "router-alias",
   },
+  {
+    emptyBody: {},
+    emptyText: "No request detail available.",
+    key: "requestDetail",
+    label: "Request detail",
+    path: "/requests/req-1",
+    stateTestName: "Request detail renders success, empty, loading and error on the DOM",
+    successBody: { endpointId: "ep-1", requestId: "req-1", routingDecisionId: "decision-1", statusFamily: "success" },
+    successText: "req-1",
+  },
+  {
+    emptyBody: {},
+    emptyText: "No router decision detail available.",
+    key: "routerDecisionDetail",
+    label: "Router decision detail",
+    path: "/router/decisions/req-1",
+    stateTestName: "Router decision detail renders success, empty, loading and error on the DOM",
+    successBody: { endpointId: "ep-1", requestId: "req-1", routingDecisionId: "decision-1", statusFamily: "success" },
+    successText: "req-1",
+  },
 ];
 
 const mounted: Array<{ readonly container: HTMLElement; readonly handle: { dispose(): void } }> =

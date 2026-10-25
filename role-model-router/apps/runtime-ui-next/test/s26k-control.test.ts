@@ -211,7 +211,7 @@ describe("S26k control surface", () => {
         .filter((line) => !line.trim().startsWith("//"))
         .join("\n");
       for (const match of source.matchAll(
-        /request\.method\s*===\s*"(GET|POST|PATCH|PUT|DELETE)"\s*&&\s*url\.pathname\s*===\s*"([^"]+)"/g,
+        /if\s*\(\s*request\.method\s*===\s*"(GET|POST|PATCH|PUT|DELETE)"\s*&&\s*url\.pathname\s*===\s*"([^"]+)"\s*\)/g,
       )) {
         const set = methods.get(match[2]) ?? new Set<string>();
         set.add(match[1]);
@@ -226,6 +226,25 @@ describe("S26k control surface", () => {
     expect(CONTROL_SPECS.providers.action.method).toBe("POST");
     expect(CONTROL_SPECS.endpoints.action.method).toBe("POST");
     expect(CONTROL_SPECS.controlController.action.method).toBe("PATCH");
+  });
+
+  it("sends the real method, path and body through createControlClients", async () => {
+    const calls: Array<{ body?: string; method?: string; path: string }> = [];
+    const { createControlClients } = await import("../src/control");
+    const clients = createControlClients({
+      baseUrl: "http://localhost",
+      fetchImpl: async (input, init) => {
+        calls.push({ body: init?.body === undefined ? undefined : String(init.body), method: init?.method, path: new URL(String(input)).pathname });
+        return new Response(JSON.stringify({ ok: true }), { status: 200 });
+      },
+    });
+    for (const key of ["providers", "endpoints", "controlController"] as const) await clients.dispatch(key);
+    expect(calls.map((call) => [call.method, call.path])).toEqual([
+      ["POST", CONTROL_SPECS.providers.action.path],
+      ["POST", CONTROL_SPECS.endpoints.action.path],
+      ["PATCH", CONTROL_SPECS.controlController.action.path],
+    ]);
+    expect(JSON.parse(calls[2].body ?? "{}")).toEqual({ endpointId: "moonshot.personal.primary.global.kimi-k2.5" });
   });
 
   it("keeps action bodies and read methods on the shared specs", () => {

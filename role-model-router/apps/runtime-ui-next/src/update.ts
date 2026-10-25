@@ -74,6 +74,8 @@ const noopReadback = defineReadReadback({
   observeLogs: async () => ({ body: emptyBody, status: 200 }),
   observeRouting: async () => ({ body: emptyBody, status: 200 }),
   router: async () => ({ body: emptyBody, status: 200 }),
+  requestDetail: async () => ({ body: emptyBody, status: 200 }),
+  routerDecisionDetail: async () => ({ body: emptyBody, status: 200 }),
   localPeers: async () => ({ body: emptyBody, status: 200 }),
   systemPeers: async () => ({ body: emptyBody, status: 200 }),
   queues: async () => ({ body: emptyBody, status: 200 }),
@@ -161,7 +163,7 @@ export const createUpdate =
           const token = model.readbacks[readbackKey].token + 1;
           const readbacks = { ...model.readbacks, [readbackKey]: loadingReadback(token) };
           return {
-            commands: [readReadback({ key: readbackKey, token }), scrollShellToTopCommand()],
+            commands: [readReadback({ id: route._tag === "RequestDetail" || route._tag === "RouterDecisionDetail" ? route.requestId : undefined, key: readbackKey, token }), scrollShellToTopCommand()],
             model: {
               ...model,
               diagnostics: idleDiagnostics(),
@@ -368,7 +370,7 @@ export const createUpdate =
           if (readbackKey !== null) {
             const token = model.readbacks[readbackKey].token + 1;
             return {
-              commands: [readReadback({ key: readbackKey, token })],
+              commands: [readReadback({ id: model.route._tag === "RequestDetail" || model.route._tag === "RouterDecisionDetail" ? model.route.requestId : undefined, key: readbackKey, token })],
               model: {
                 ...model,
                 readbacks: { ...model.readbacks, [readbackKey]: loadingReadback(token) },
@@ -414,7 +416,7 @@ export const createUpdate =
         if (readbackKey !== null) {
           const token = model.readbacks[readbackKey].token + 1;
           return {
-            commands: [readReadback({ key: readbackKey, token })],
+            commands: [readReadback({ id: model.route._tag === "RequestDetail" || model.route._tag === "RouterDecisionDetail" ? model.route.requestId : undefined, key: readbackKey, token })],
             model: {
               ...model,
               readbacks: { ...model.readbacks, [readbackKey]: loadingReadback(token) },
