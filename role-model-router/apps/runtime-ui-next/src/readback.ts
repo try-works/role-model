@@ -27,7 +27,9 @@ export type ReadbackKey =
   | "localPeerModels"
   | "queueConfig"
   | "downstreamOpenAI"
-  | "integrationProviders";
+  | "integrationProviders"
+  | "benchmarkSuite"
+  | "storageRetention";
 
 export const ReadbackKeySchema = Schema.Literals([
   "storeReceipts",
@@ -52,6 +54,8 @@ export const ReadbackKeySchema = Schema.Literals([
   "queueConfig",
   "downstreamOpenAI",
   "integrationProviders",
+  "benchmarkSuite",
+  "storageRetention",
 ]);
 
 export interface ReadbackRow {
@@ -97,6 +101,8 @@ export const ReadbacksState = Schema.Struct({
   queueConfig: ReadbackState,
   downstreamOpenAI: ReadbackState,
   integrationProviders: ReadbackState,
+  benchmarkSuite: ReadbackState,
+  storageRetention: ReadbackState,
   runtime: ReadbackState,
   sessionReadiness: ReadbackState,
   storeReceipts: ReadbackState,
@@ -136,6 +142,8 @@ export const emptyReadbacks = (): ReadbacksState => ({
   queueConfig: idleReadback(),
   downstreamOpenAI: idleReadback(),
   integrationProviders: idleReadback(),
+  benchmarkSuite: idleReadback(),
+  storageRetention: idleReadback(),
   runtime: idleReadback(),
   sessionReadiness: idleReadback(),
   storeReceipts: idleReadback(),
@@ -531,6 +539,29 @@ const parseIntegrationProviders = (body: unknown, token: number): ReadbackState 
   return okRows(rows, token);
 };
 
+const parseBenchmarkSuite = (body: unknown, token: number): ReadbackState => {
+  const record = asRecord(body);
+  const list = asArray(record?.cases);
+  const rows = list.flatMap((value, index) => {
+    const item = asRecord(value);
+    if (item === undefined) return [];
+    return [row(String(item.case_id ?? index), String(item.case_id ?? index), String(item.difficulty_bucket ?? ""), String(item.category ?? ""))];
+  });
+  return okRows(rows, token);
+};
+const parseStorageRetention = (body: unknown, token: number): ReadbackState => {
+  const record = asRecord(body);
+  if (record === undefined) return failedReadback("Storage retention read failed: invalid response", token);
+  if (record.totalCount === 0 && asArray(record.categories).length === 0 && asArray(record.receipts).length === 0) return { rows: [], status: "empty", token };
+  const rows = [
+    row("totalBytes", "Total bytes", String(record.totalBytes ?? "—"), "retention"),
+    row("totalCount", "Total rows", String(record.totalCount ?? "—"), "retention"),
+    row("categories", "Categories", String(asArray(record.categories).length), "retention"),
+    row("receipts", "Receipts", String(asArray(record.receipts).length), "retention"),
+  ];
+  return okRows(rows, token);
+};
+
 const parseObservationDetail = (body: unknown, token: number): ReadbackState => {
   const record = asRecord(body);
   if (record === undefined) return failedReadback("Detail read failed: invalid response", token);
@@ -661,6 +692,20 @@ export const READBACK_SPECS: Readonly<Record<ReadbackKey, ReadbackRouteSpec>> = 
     parse: parseIntegrationProviders,
     path: READBACK_PATHS.integrationProviders,
   },
+  benchmarkSuite: {
+    emptyText: "No benchmark suite available.",
+    key: "benchmarkSuite",
+    label: "Benchmark suite",
+    parse: parseBenchmarkSuite,
+    path: READBACK_PATHS.benchmarkSuite,
+  },
+  storageRetention: {
+    emptyText: "No storage retention records available.",
+    key: "storageRetention",
+    label: "Storage retention",
+    parse: parseStorageRetention,
+    path: READBACK_PATHS.storageRetention,
+  },
   requests: {
     emptyText: "No telemetry requests recorded yet.",
     key: "requests",
@@ -767,6 +812,8 @@ export const createReadbackClients = (
   queueConfig: createReadbackClient(READBACK_SPECS.queueConfig, options),
   downstreamOpenAI: createReadbackClient(READBACK_SPECS.downstreamOpenAI, options),
   integrationProviders: createReadbackClient(READBACK_SPECS.integrationProviders, options),
+  benchmarkSuite: createReadbackClient(READBACK_SPECS.benchmarkSuite, options),
+  storageRetention: createReadbackClient(READBACK_SPECS.storageRetention, options),
 });
 
 export const readbackFromResult = (
@@ -902,6 +949,10 @@ export const readbackKeyForRouteTag = (tag: string): ReadbackKey | null =>
                                             ? "downstreamOpenAI"
                                             : tag === "IntegrationsUpstream"
                                               ? "integrationProviders"
+                                              : tag === "Benchmark"
+                                                ? "benchmarkSuite"
+                                                : tag === "StorageRetention"
+                                                  ? "storageRetention"
                                               : null;
 export const parseReadbackFixture = (key: ReadbackKey, body: unknown, token = 1): ReadbackState =>
   READBACK_SPECS[key].parse(body, token);

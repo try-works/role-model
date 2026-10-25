@@ -35,6 +35,8 @@ const routeCases = {
   IntegrationsDownstream: {},
   IntegrationsUpstream: {},
   LocalChoose: {},
+  Benchmark: {},
+  StorageRetention: {},
   Runtime: {},
   SessionReadiness: {},
   Dashboard: {},
@@ -84,6 +86,8 @@ const localPeerModelsRouter = Route.mapTo(AppRoute.LocalPeerModels)(pipe(Route.l
 const queuesConfigurationRouter = Route.mapTo(AppRoute.QueuesConfiguration)(pipe(Route.literal("control"), Route.slash(Route.literal("queues-config"))));
 const integrationsDownstreamRouter = Route.mapTo(AppRoute.IntegrationsDownstream)(pipe(Route.literal("integrations"), Route.slash(Route.literal("downstream"))));
 const integrationsUpstreamRouter = Route.mapTo(AppRoute.IntegrationsUpstream)(pipe(Route.literal("integrations"), Route.slash(Route.literal("upstream"))));
+const benchmarkRouter = Route.mapTo(AppRoute.Benchmark)(pipe(Route.literal("system"), Route.slash(Route.literal("benchmark"))));
+const storageRetentionRouter = Route.mapTo(AppRoute.StorageRetention)(pipe(Route.literal("system"), Route.slash(Route.literal("storage-retention"))));
 const localChooseRouter = Route.mapTo(AppRoute.LocalChoose)(pipe(Route.literal("local"), Route.slash(Route.literal("choose"))));
 const localModelsRedirectRouter = Route.mapTo(AppRoute.LocalChoose)(pipe(Route.literal("local"), Route.slash(Route.literal("models"))));
 const systemPeersRouter = Route.mapTo(AppRoute.SystemPeers)(
@@ -135,6 +139,8 @@ export const appRouter = Route.oneOf(
   integrationsDownstreamRouter,
   integrationsUpstreamRouter,
   localChooseRouter,
+  benchmarkRouter,
+  storageRetentionRouter,
   localModelsRedirectRouter,
   runtimeRouter,
   sessionReadinessRouter,

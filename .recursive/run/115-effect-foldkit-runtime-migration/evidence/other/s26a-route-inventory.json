@@ -45,8 +45,8 @@
       "modal": 2
     },
     "byStatus": {
-      "absent": 46,
-      "verified": 28,
+      "absent": 44,
+      "verified": 30,
       "wired": 1
     },
     "newOnly": 1
@@ -85,9 +85,14 @@
         "/app/models/benchmark"
       ],
       "source": "role-model-router/apps/runtime-ui/app/routes/control-benchmark.tsx",
-      "status": "absent",
-      "hostEndpoints": [],
-      "requiresHostEndpoint": false
+      "status": "verified",
+      "hostEndpoints": [
+        "/api/role-model/benchmark/suite",
+        "/api/role-model/benchmark/runs"
+      ],
+      "requiresHostEndpoint": false,
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s26e-readback-routes.test.ts",
+      "proofTestName": "Benchmark suite renders success, empty, loading and error on the DOM"
     },
     {
       "category": "control",
@@ -714,9 +719,13 @@
         "/app/system/storage-retention"
       ],
       "source": "role-model-router/apps/runtime-ui/app/routes/storage-retention.tsx",
-      "status": "absent",
-      "hostEndpoints": [],
-      "requiresHostEndpoint": false
+      "status": "verified",
+      "hostEndpoints": [
+        "/api/role-model/storage-retention"
+      ],
+      "requiresHostEndpoint": false,
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s26e-readback-routes.test.ts",
+      "proofTestName": "Storage retention renders success, empty, loading and error on the DOM"
     },
     {
       "category": "read",
@@ -888,7 +897,8 @@
       "source": "role-model-router/apps/runtime-ui/app/components/device-authorization-card.tsx",
       "status": "absent",
       "hostEndpoints": [],
-      "requiresHostEndpoint": false
+      "requiresHostEndpoint": false,
+      "absenceReason": "Endpoint GET /api/role-model/accounts/device returns []; the real start/poll actions are POST /api/role-model/accounts/device/start and /poll, but dispatching them would create device-auth operator state. Client-boundary method/path/body assertion not implemented, so no verified claim."
     },
     {
       "category": "modal",
@@ -897,7 +907,8 @@
       "source": "role-model-router/apps/runtime-ui/app/components/device-authorization-modal.tsx",
       "status": "absent",
       "hostEndpoints": [],
-      "requiresHostEndpoint": false
+      "requiresHostEndpoint": false,
+      "absenceReason": "Same device-auth boundary as the card: GET /api/role-model/accounts/device is empty; POST start/poll are not dispatched (no operator state)."
     },
     {
       "category": "learning",
@@ -934,7 +945,8 @@
       "source": "role-model-router/apps/runtime-ui/app/components/llama-swap-setup-modal.tsx",
       "status": "absent",
       "hostEndpoints": [],
-      "requiresHostEndpoint": false
+      "requiresHostEndpoint": false,
+      "absenceReason": "No dedicated host endpoint; setup guidance reads /api/role-model/runtime/config and /api/role-model/local/llama-swap/models, both already covered by other routes. Modal itself is presentation with no separate read contract."
     },
     {
       "category": "control",

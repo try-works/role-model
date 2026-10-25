@@ -344,6 +344,32 @@
         "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
       },
       "bodyBytes": 3
+    },
+    "benchmarkSuite.json": {
+      "url": "/api/role-model/benchmark/suite",
+      "status": 200,
+      "capturedAt": "2026-10-25T06:51:13.330Z",
+      "sha256": "5f1777a788cd19770e2294167bad320324124e41251b3be04dd4de142a7ad636",
+      "artifact": {
+        "version": "0.0.20-18-g6c9aeba1",
+        "commit": "6c9aeba15acd09be4fc6776cef66a1041394b65a",
+        "sourceTree": "e79ccfc7ee4c1d9a8eeee07f7e3aee115f2d106e",
+        "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
+      },
+      "bodyBytes": 112987
+    },
+    "storageRetention.json": {
+      "url": "/api/role-model/storage-retention",
+      "status": 200,
+      "capturedAt": "2026-10-25T06:51:13.334Z",
+      "sha256": "80abaeae2e30273d475f310331712288d9449cf7b11d2651ee988aad41316663",
+      "artifact": {
+        "version": "0.0.20-18-g6c9aeba1",
+        "commit": "6c9aeba15acd09be4fc6776cef66a1041394b65a",
+        "sourceTree": "e79ccfc7ee4c1d9a8eeee07f7e3aee115f2d106e",
+        "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
+      },
+      "bodyBytes": 219144
     }
   }
 }
