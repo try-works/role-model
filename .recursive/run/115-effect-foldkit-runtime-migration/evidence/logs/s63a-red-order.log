@@ -1,0 +1,43 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/cli-composition-scope.test.ts (4 tests | 1 failed | 3 skipped) 115ms
+   × s63a HostRuntimeResource (backend+server pair) > binds a real ephemeral port and closes packaged -> server -> backend 109ms
+     → expected [ 'acquire:backend', …(4) ] to deeply equal [ 'acquire:backend', …(5) ]
+   ↓ s63a HostRuntimeResource (backend+server pair) > a failed packaged acquisition after bind closes the server once and the backend
+   ↓ s63a HostRuntimeResource (backend+server pair) > a throwing packaged finalizer still releases server and backend and surfaces the failure
+   ↓ s63a HostRuntimeResource (backend+server pair) > double close is a no-op
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/cli-composition-scope.test.ts > s63a HostRuntimeResource (backend+server pair) > binds a real ephemeral port and closes packaged -> server -> backend
+AssertionError: expected [ 'acquire:backend', …(4) ] to deeply equal [ 'acquire:backend', …(5) ]
+
+- Expected
++ Received
+
+  [
+    "acquire:backend",
+    "acquire:server",
+    "acquire:packaged",
+    "release:packaged",
+-   "release:server",
+    "release:backend",
+  ]
+
+ ❯ test/cli-composition-scope.test.ts:78:20
+     76|     expect(events).toEqual(["acquire:backend", "acquire:server", "acqu…
+     77|     await Effect.runPromise(host.close);
+     78|     expect(events).toEqual([
+       |                    ^
+     79|       "acquire:backend",
+     80|       "acquire:server",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 skipped (4)
+   Start at  22:57:02
+   Duration  6.93s (transform 3.70s, setup 0ms, collect 5.89s, tests 115ms, environment 0ms, prepare 374ms)
+
