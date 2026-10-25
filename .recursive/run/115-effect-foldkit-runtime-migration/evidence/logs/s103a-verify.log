@@ -1,0 +1,11 @@
+version=healthy 0.0.20-90-gf25f13bd-dirty
+sha256=4898f865c06c1e7364748641cff4889d8901bf8d3f70c5109de296e748f044c7
+port=5930 state=E:\rm-tmp\s103a\vstate
+PASS health: healthy 0.0.20-90-gf25f13bd-dirty
+PASS models: 3 models
+PASS telemetry: requestCount 0
+PASS controller: openai.personal.primary.us-east-1.fast
+PASS learning: role-model.knowledge-worker.v1
+PASS replay jobs: 0 jobs
+PASS evaluation jobs: 0 jobs
+PASS ui shell: 4945 bytes

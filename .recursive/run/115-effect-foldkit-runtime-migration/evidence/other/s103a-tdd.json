@@ -1,0 +1,48 @@
+{
+  "slice": "s103a-r39-scripts",
+  "verify": {
+    "script": "scripts/runtime/verify-client-journeys.mjs",
+    "inputs": [
+      "executable",
+      "repo-root",
+      "static-root",
+      "port",
+      "state-root"
+    ],
+    "exit": {
+      "0": "all assertions pass",
+      "1": "any fail",
+      "2": "invalid/incomplete/all NOT RUN"
+    },
+    "real": {
+      "exe": "E:/rm-tmp/s97a/release/win32-x64/role-model-dev.exe",
+      "sha256": "4898f865c06c1e7364748641cff4889d8901bf8d3f70c5109de296e748f044c7",
+      "port": 5930,
+      "state": "E:/rm-tmp/s103a/vstate",
+      "result": "PASS 8/8, exit 0"
+    }
+  },
+  "compare": {
+    "script": "scripts/runtime/compare-release.mjs",
+    "exit": {
+      "0": "no different",
+      "1": "any different",
+      "2": "invalid"
+    },
+    "real": {
+      "left": "D 5931",
+      "right": "C 5932",
+      "counts": {
+        "same": 8,
+        "environment-state": 1,
+        "different": 0
+      },
+      "exit": 0
+    }
+  },
+  "failClosedTest": {
+    "file": "test/r39-scripts.test.ts",
+    "count": 4
+  },
+  "ci": "root scripts runtime:verify-client-journeys and runtime:compare-release; CI should call verify per packaged candidate after validate-packaging, and compare-release between baseline/candidate before promotion (workflows not edited)"
+}

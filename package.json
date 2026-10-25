@@ -78,7 +78,9 @@
     "ci:runtime": "corepack pnpm run runtime:test-critical && corepack pnpm run runtime:test-router",
     "ci:fast": "corepack pnpm run ci:quality && corepack pnpm run ci:build-test && corepack pnpm run runtime:test-critical",
     "turbo:build": "pnpm exec turbo run build --filter=./apps/* --filter=./packages/* --filter=./role-model-router/apps/* --filter=./role-model-router/packages/*",
-    "turbo:test": "pnpm exec turbo run test --filter=./apps/* --filter=./packages/* --filter=./role-model-router/apps/* --filter=./role-model-router/packages/*"
+    "turbo:test": "pnpm exec turbo run test --filter=./apps/* --filter=./packages/* --filter=./role-model-router/apps/* --filter=./role-model-router/packages/*",
+    "runtime:verify-client-journeys": "node scripts/runtime/verify-client-journeys.mjs",
+    "runtime:compare-release": "node scripts/runtime/compare-release.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
