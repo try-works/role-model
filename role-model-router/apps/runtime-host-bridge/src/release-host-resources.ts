@@ -49,9 +49,12 @@ export const releaseHostResources = async (
     if (result.errors.length > before) onError?.(result.errors[result.errors.length - 1] as HostReleaseError);
   };
   await attempt("server", resources.server);
-  if (resources.packagedRuntime !== undefined) await attempt("packaged", resources.packagedRuntime);
-  else await attempt("backend", resources.backend);
-  if (resources.extensionRuntimeOwner !== undefined) await attempt("extensionRuntimeOwner", resources.extensionRuntimeOwner);
-  else await attempt("extension", resources.extensionRuntime);
+  // S123: these used to be else-branches, so a caller that registered BOTH resources had one of
+  // them silently skipped - a registered resource that never releases is a leak with a green
+  // suite. Release every registered step, in a fixed order.
+  await attempt("packaged", resources.packagedRuntime);
+  await attempt("backend", resources.backend);
+  await attempt("extensionRuntimeOwner", resources.extensionRuntimeOwner);
+  await attempt("extension", resources.extensionRuntime);
   return result;
 };

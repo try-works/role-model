@@ -12474,11 +12474,14 @@ export async function main(): Promise<void> {
              * interval the design allows. The drain work below is unaffected: it already has `runtime` in hand.
              */
             extensionRuntimeRef.current = runtime;
+            // S123: this registration used to sit INSIDE the qaExtensions loop below, so it ran
+            // zero times on a host with no QA extensions and would throw "already registered" on a
+            // host with two. Register once, before the loop.
+            hostScope.register("extensionRuntime", async () => { if (extensionRuntime !== null && extensionRuntime.close) await extensionRuntime.close(); });
             for (const extension of qaExtensions) {
               const capability = extension.descriptor.capabilities.find(
                 (candidate) => candidate !== "health:probe",
               );
-      hostScope.register("extensionRuntime", async () => { if (extensionRuntime !== null && extensionRuntime.close) await extensionRuntime.close(); });
               if (!capability)
                 throw new Error(
                   `QA extension has no business capability: ${extension.descriptor.id}`,

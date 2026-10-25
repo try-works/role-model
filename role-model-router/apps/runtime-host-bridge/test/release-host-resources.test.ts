@@ -49,4 +49,30 @@ describe("S87a releaseHostResources", () => {
     expect(result.released).toEqual(["backend"]);
     expect(result.errors).toEqual([]);
   });
+
+  /**
+   * S123: the CLI can register BOTH the extension runtime owner and the extension runtime (the
+   * owner registration at cli.ts:12399 and the runtime registration inside beforeReady). The
+   * release path used an `else`, so the runtime's close was silently skipped whenever the owner
+   * was present. A registered resource that never gets released is a leak with a green suite.
+   */
+  it("releases both the extension runtime owner and the extension runtime when both are present", async () => {
+    const released: string[] = [];
+    const result = await releaseHostResources({
+      extensionRuntimeOwner: async () => { released.push("owner"); },
+      extensionRuntime: async () => { released.push("runtime"); },
+    });
+    expect(released).toEqual(["owner", "runtime"]);
+    expect(result.errors).toEqual([]);
+  });
+
+  it("releases both packaged runtime and backend when both are present", async () => {
+    const released: string[] = [];
+    const result = await releaseHostResources({
+      packagedRuntime: async () => { released.push("packaged"); },
+      backend: async () => { released.push("backend"); },
+    });
+    expect(released).toEqual(["packaged", "backend"]);
+    expect(result.errors).toEqual([]);
+  });
 });
