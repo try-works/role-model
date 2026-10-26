@@ -226,7 +226,20 @@ const failures = [];
 const report = [];
 for (const route of routes) {
   events.length = 0;
-  await send("Page.navigate", { url: base + route }, sessionId);
+  // S202: wait for the navigation to actually land on the requested route. Auditing 20 routes in
+  // quick succession raced the SPA router and produced "audited / instead of /dashboard" failures
+  // that did not reproduce in isolation.
+  let landed = false;
+  for (let attempt = 0; attempt < 2 && !landed; attempt += 1) {
+    await send("Page.navigate", { url: base + route }, sessionId);
+    const deadline = Date.now() + Number(process.env.AUDIT_NAV_TIMEOUT_MS ?? 8000);
+    while (Date.now() < deadline) {
+      const state = await send("Runtime.evaluate", { expression: "document.readyState + '|' + location.pathname", returnByValue: true }, sessionId);
+      const value = String(state.result?.value ?? "");
+      if (value === "complete|" + route) { landed = true; break; }
+      await new Promise((resolve) => setTimeout(resolve, 150));
+    }
+  }
   await new Promise((resolve) => setTimeout(resolve, Number(process.env.AUDIT_SETTLE_MS ?? 1200)));
   const settleDeadline = Date.now() + Number(process.env.AUDIT_READYSTATE_TIMEOUT_MS ?? 8000);
   while (Date.now() < settleDeadline) {
