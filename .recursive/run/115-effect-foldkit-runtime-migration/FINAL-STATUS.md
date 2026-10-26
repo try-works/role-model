@@ -7,9 +7,9 @@
 > | requirement ledger | **5 verified (R4, R6, R19, R25, R26), 2 implemented (R22, R33), 32 blocked** | `03-implementation-summary.md` |
 > | public host suite | **2,687 / 2,693**, one classified pre-existing failure (`run105-review-advisory-safety`), reproduces at baseline `24678a66` | `evidence/other/s186-full-suite-after-ui.md` |
 > | private track-b suite | **2,886 / 2,931**, 39 failures: 5 diagnosed today as concurrency contention in `run108` (26/26 pass in isolation), the rest the same set as before, none individually proven | `evidence/other/s187-private-suite-after-backend.md` |
-> | packaged candidate | `0.0.20-188-gd362b404`, exe sha `e3181d50…`, private sidecar `5c09f4ef…`, **10 gate checks PASS** | `evidence/other/s188-pair-rebuilt.md` |
+> | packaged candidate | `0.0.20-231-gd61c32dc`, exe sha `e3181d50…`, private sidecar `5c09f4ef…`, **10 gate checks PASS** | `evidence/other/s188-pair-rebuilt.md` |
 > | rendered UI | 20 routes x 2 viewports x keyboard focus, **0 failures**; 5 defect classes automated (invisible control, control naming, contrast, overflow, focus) | `evidence/other/s182-rendered-ui-audit.md`, `s184-focus-visibility-check.md` |
-> | parity | **D (0.0.20-1) vs C (0.0.20-188): 7 same, 2 environment-state, 0 different**; **R measured against the released 0.0.20 production package vs C (0.0.20-214): 6 same, 2 additive-shape, 1 environment-state, 0 different**; Run 88 package identity is still a separate, unmanufacturable datum | `evidence/other/s189-parity-at-188.md`, `s234-r-side-parity-0020.md`, `s235-additive-shape.md` |
+> | parity | **D (0.0.20-1) vs C (0.0.20-188): 7 same, 2 environment-state, 0 different**; **R measured against the released 0.0.20 production package vs C (0.0.20-231): 6 same, 2 additive-shape, 1 environment-state, 0 different**; Run 88 package identity is still a separate, unmanufacturable datum | `evidence/other/s189-parity-at-188.md`, `s234-r-side-parity-0020.md`, `s235-additive-shape.md` |
 > | R23 burndown | **44** transaction sites and **4** schema sites remain, each reason-bearing, both inventories enforced by tests that fail on any unlisted site | `addenda/01-transaction-ownership-semantics.md` |
 > | trees | public and private both **clean**; private distribution builds without the dirty allowance | `evidence/other/s163-private-tree-clean.md` |
 >

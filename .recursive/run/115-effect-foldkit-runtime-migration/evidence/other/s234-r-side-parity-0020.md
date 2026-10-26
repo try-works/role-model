@@ -36,7 +36,7 @@ differ on channel-carrying surfaces, and the tool must not hide that behind a cl
 
 | Claim | Status |
 |---|---|
-| released 0.0.20 production API vs dev candidate 0.0.20-214: no behaviour differences | **verified for these 9 surfaces** |
+| released 0.0.20 production API vs dev candidate 0.0.20-231: no behaviour differences | **verified for these 9 surfaces** |
 | R leg fully closed | **no** - Run 88 package identity is a separate requirement; this package is a real 0.0.20 production build, not the Run 88 artefact |
 | D-vs-C at 188 (7 same, 2 environment-state) | unchanged, still valid for its build |
 
