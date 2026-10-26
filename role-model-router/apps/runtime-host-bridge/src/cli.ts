@@ -12427,7 +12427,12 @@ export async function main(): Promise<void> {
         }),
       );
       hostScope.register("extensionRuntimeOwner", async () => { if (extensionRuntimeOwner !== null) await extensionRuntimeOwner.close(); });
-      packagedRuntime = await createPackagedProductionRuntime({
+      const packagedScope = Effect.runSync(Scope.make());
+      try {
+        packagedRuntime = await Effect.runPromise(
+          Scope.provide(
+            Effect.acquireRelease(
+              Effect.promise(() => createPackagedProductionRuntime({
         stateRoot: trackBStateRoot,
         sidecar: createOwnedTrackBSidecarSpec({
           artifactPath: path.resolve(distributionRoot, manifest.sidecar.modulePath),
@@ -12482,7 +12487,17 @@ export async function main(): Promise<void> {
             trackBOperationsToken,
             trackBDistributionRequiresSQLiteMaintenance(manifest),
           ),
-      });
+      })),
+              (value) => Effect.promise(() => value.close()),
+            ),
+            packagedScope,
+          ),
+        );
+      } catch (error) {
+        await Effect.runPromise(Scope.close(packagedScope, Exit.void)).catch(() => undefined);
+        throw error;
+      }
+;
       extensionRuntime = await awaitCliExtensionRuntime(
         extensionRuntimeOwner.promise,
         bootstrapState,
@@ -12558,7 +12573,9 @@ export async function main(): Promise<void> {
         },
       );
       backend = packagedRuntime.backend;
-      hostScope.register("packagedRuntime", async () => { if (packagedRuntime !== null) await packagedRuntime.close(); });
+      hostScope.register("packagedRuntime", async () => {
+        await Effect.runPromise(Scope.close(packagedScope, Exit.void));
+      });
       stopExtensionRuntimeWatchdog = startCliExtensionRuntimeWatchdog({
         getRuntime: () => extensionRuntimeRef.current,
         bootstrapState,
