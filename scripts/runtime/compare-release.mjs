@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { spawn } from "node:child_process";
-import { existsSync, mkdirSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import os from "node:os";
 
@@ -27,6 +27,19 @@ for (const [name, raw] of [["--left", left], ["--right", right]]) if (raw) { try
 if (rightPort && (!Number.isInteger(Number(rightPort)) || OPERATOR_PORTS.has(Number(rightPort)))) problems.push("--right-port is invalid or an operator port");
 if (rightExe && !existsSync(rightExe)) problems.push("--right-exe does not exist");
 if (left && right && left.replace(/\/$/, "") === right.replace(/\/$/, "")) problems.push("--left and --right are the same URL");
+// S167: comparing a production package against a development package measures the channel
+// difference, not migration parity. Refuse unless the caller says it is deliberate (S167).
+const channelOf = (exe) => {
+  if (exe === undefined) return undefined;
+  const manifestPath = path.join(path.dirname(exe), "manifest.json");
+  if (!existsSync(manifestPath)) return undefined;
+  try { return JSON.parse(readFileSync(manifestPath, "utf8")).channel; } catch { return undefined; }
+};
+const leftChannel = channelOf(leftExe);
+const rightChannel = channelOf(rightExe);
+if (leftChannel !== undefined && rightChannel !== undefined && leftChannel !== rightChannel && !args.includes("--allow-cross-channel")) {
+  problems.push("channels differ (" + leftChannel + " vs " + rightChannel + "); pass --allow-cross-channel if that is deliberate");
+}
 if (problems.length > 0) { console.log("NOT RUN: " + problems.join("; ")); process.exit(2); }
 
 
@@ -38,7 +51,21 @@ const fetchWithTimeout = async (url) => {
   }
 };
 
-const waitReady = async (base) => { for (let i = 0; i < 120; i += 1) { const r = await fetchWithTimeout(base + "/healthz"); if (r && r.ok) return true; await new Promise((resolve) => setTimeout(resolve, 250)); } return false; };
+// S167: the scope id is NOT forced. Hardcoding "standalone-runtime-dev" made a
+// production-channel package refuse to start (its profile carries a different scope), and the
+// comparison then reported NOT RUN against a binary that runs fine by hand.
+const READY_TIMEOUT_MS = Number(process.env.R39_READY_TIMEOUT_MS ?? 120_000);
+const waitReady = async (base) => {
+  // A production-channel package starts its sidecar and thirteen extensions before /healthz
+  // answers; 30 s was too short for a cold start (observed with a staged operator build).
+  const deadline = Date.now() + READY_TIMEOUT_MS;
+  while (Date.now() < deadline) {
+    const response = await fetchWithTimeout(base + "/healthz");
+    if (response && response.ok) return true;
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+  return false;
+};
 
 let child;
 let leftChild;
@@ -46,7 +73,7 @@ let leftBase = left;
 if (leftExe) {
   const leftStateResolved = path.resolve(leftState ?? path.join(os.tmpdir(), "compare-release-left-state"));
   mkdirSync(leftStateResolved, { recursive: true });
-  leftChild = spawn(leftExe, ["--repo-root", path.dirname(leftExe), "--runtime-state-root", leftStateResolved, "--scope-id", "standalone-runtime-dev", "--host", "127.0.0.1", "--port", String(Number(leftPort)), "--fixture-root", fixtureRoot], { stdio: ["ignore", "pipe", "pipe"] });
+  leftChild = spawn(leftExe, ["--repo-root", path.dirname(leftExe), "--runtime-state-root", leftStateResolved, "--host", "127.0.0.1", "--port", String(Number(leftPort)), "--fixture-root", fixtureRoot], { stdio: ["ignore", "pipe", "pipe"] });
   leftBase = "http://127.0.0.1:" + String(Number(leftPort));
 }
 let rightBase = right;
@@ -60,7 +87,6 @@ if (rightExe) {
     [
       "--repo-root", path.dirname(rightExe),
       "--runtime-state-root", rightStateResolved,
-      "--scope-id", "standalone-runtime-dev",
       "--host", "127.0.0.1",
       "--port", String(Number(rightPort)),
       "--fixture-root", fixtureRoot,

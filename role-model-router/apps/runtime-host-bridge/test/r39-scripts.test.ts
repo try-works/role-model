@@ -113,6 +113,33 @@ describe("S103a R39 scripts fail closed", () => {
     expect(result.stdout).toContain("state root is not empty");
   }, 30_000);
 
+  it("compare-release refuses a cross-channel comparison unless it is deliberate", async () => {
+    const { mkdtempSync, writeFileSync } = await import("node:fs");
+    const left = mkdtempSync(path.join(process.env.TEMP ?? "/tmp", "r39-ch-left-"));
+    const right = mkdtempSync(path.join(process.env.TEMP ?? "/tmp", "r39-ch-right-"));
+    writeFileSync(path.join(left, "manifest.json"), JSON.stringify({ channel: "production" }));
+    writeFileSync(path.join(right, "manifest.json"), JSON.stringify({ channel: "development" }));
+    writeFileSync(path.join(left, "role-model.exe"), "not a real binary");
+    writeFileSync(path.join(right, "role-model-dev.exe"), "not a real binary");
+    const result = script("compare-release.mjs", [
+      "--left-exe", path.join(left, "role-model.exe"),
+      "--left-port", "6041",
+      "--left-state", path.join(left, "state"),
+      "--right-exe", path.join(right, "role-model-dev.exe"),
+      "--right-port", "6042",
+      "--right-state", path.join(right, "state"),
+    ]);
+    expect(result.status).toBe(2);
+    expect(result.stdout).toContain("channels differ");
+    expect(result.stdout).toContain("--allow-cross-channel");
+  }, 30_000);
+
+  it("compare-release no longer forces a scope id on the child", async () => {
+    const { readFileSync } = await import("node:fs");
+    const source = readFileSync(path.join(root, "scripts", "runtime", "compare-release.mjs"), "utf8");
+    expect(source).not.toContain('"--scope-id"');
+  });
+
   it("compare-release refuses to compare a URL with itself", () => {
     const result = script("compare-release.mjs", [
       "--left",
