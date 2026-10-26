@@ -7,7 +7,7 @@
  * maintained flow (validate-packaging) can call one command instead of remembering five
  * arguments - and so the arguments cannot drift between callers.
  */
-import { existsSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import net from "node:net";
 import os from "node:os";
@@ -89,8 +89,10 @@ if (port === undefined) {
   process.exit(2);
 }
 
-const stateRoot = path.join(os.tmpdir(), "r39-candidate-state");
-rmSync(stateRoot, { force: true, recursive: true });
+// S174: a fixed state directory collides between concurrent runs (the review flagged the same
+// shape in compare-release). A per-run directory cannot collide and is removed on exit.
+const stateRoot = mkdtempSync(path.join(os.tmpdir(), "r39-candidate-state-"));
+process.on("exit", () => { try { rmSync(stateRoot, { force: true, recursive: true }); } catch {} });
 
 const result = spawnSync(
   process.execPath,
