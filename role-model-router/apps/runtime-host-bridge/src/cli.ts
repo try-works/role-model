@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { Effect, Exit, Scope } from "effect";
 import { createHash, createPublicKey, randomUUID } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
@@ -24,6 +25,7 @@ import {
   type CreateRuntimeBridgeBackendOptions,
   type RuntimeBridgeBackend,
   type RuntimeOperatorContext,
+  type BridgeServer,
   type StartBridgeServerOptions,
   createRuntimeBridgeBackend,
   resolveBridgeServerOptions,
@@ -48,6 +50,7 @@ import {
 } from "./runtime-channel.js";
 import { releaseHostResources } from "./release-host-resources.js";
 import { createHostRuntimeScope } from "./host-runtime-scope.js";
+
 import { migrateLegacyProductionState } from "./runtime-state-migration.js";
 import { resolveRun88StageRuntimeIdentity } from "./runtime-version.js";
 import {
@@ -5633,7 +5636,8 @@ export async function main(): Promise<void> {
     current: ((body: Record<string, unknown>) => Promise<unknown>) | null;
   } = { current: null };
 
-  server = await startBridgeServer(
+  const startServer = () =>
+    startBridgeServer(
     createCliServerOptions(
       {
         host: options.host,
@@ -5682,14 +5686,40 @@ export async function main(): Promise<void> {
       shutdown,
     ),
   );
-  hostScope.register("server", () => (server === null ? Promise.resolve() : server.close()));
+
+  /**
+   * S128 (R27 first rewiring slice): the server is the first host resource owned by an Effect
+   * Scope instead of a hand-registered closer. The value is unchanged and every later reader still
+   * sees `server`; only the ownership moved. Scope.close runs the acquireRelease finalizer exactly
+   * once, and its failure surfaces to releaseHostResources like any other release error.
+   */
+  let startedServer: BridgeServer | null = null;
+  const serverScope = Effect.runSync(Scope.make());
+  try {
+    startedServer = await Effect.runPromise(
+      Scope.provide(
+        Effect.acquireRelease(
+          Effect.promise(() => startServer()),
+          (value) => Effect.promise(() => value.close()),
+        ),
+        serverScope,
+      ),
+    );
+    server = startedServer;
+  } catch (error) {
+    await Effect.runPromise(Scope.close(serverScope, Exit.void)).catch(() => undefined);
+    throw error;
+  }
+  hostScope.register("server", async () => {
+    await Effect.runPromise(Scope.close(serverScope, Exit.void));
+  });
 
   console.log(
     JSON.stringify(
       {
         status: "listening",
         host: options.host,
-        port: server.port,
+        port: startedServer?.port ?? 0,
       },
       null,
       2,
@@ -5697,7 +5727,7 @@ export async function main(): Promise<void> {
   );
 
   if (launchedWithoutRuntimeArgs) {
-    openBrowser(`http://${options.host}:${server.port}/`);
+    openBrowser(`http://${options.host}:${startedServer?.port ?? 0}/`);
   }
 
   process.on("SIGINT", () => {
