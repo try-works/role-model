@@ -325,6 +325,25 @@ for (const route of routes) {
   report.push((problems.length === 0 ? "PASS " : "FAIL ") + route + " (" + String(audit.chars) + " chars)" + (problems.length ? " - " + problems.join("; ") : ""));
 }
 
+// S207: a rendered page is not a working page. Drive one real Studio request and require the
+// response element to report success - the defect this caught was a 400 on the very first click.
+if (args.includes("--studio-run")) {
+  await send("Page.navigate", { url: base + "/studio" }, sessionId);
+  await new Promise((resolve) => setTimeout(resolve, 1500));
+  const click = await send("Runtime.evaluate", { expression: '(() => { const b = document.querySelector("[data-studio-run]"); if (!b) return "no-button"; b.click(); return "clicked"; })()', returnByValue: true }, sessionId);
+  const clicked = String(click.result?.value ?? "");
+  let studioOutcome = null;
+  const studioDeadline = Date.now() + Number(process.env.AUDIT_STUDIO_TIMEOUT_MS ?? 15000);
+  while (Date.now() < studioDeadline) {
+    const state = await send("Runtime.evaluate", { expression: '(() => { const raw = document.querySelector("[data-studio-raw]"); const err = document.querySelector("[data-studio-error]"); return (raw ? "raw:" + raw.getAttribute("data-studio-raw") : err ? "error:" + (err.innerText || "").slice(0, 90) : "pending"); })()', returnByValue: true }, sessionId);
+    studioOutcome = String(state.result?.value ?? "");
+    if (studioOutcome === "raw:success" || studioOutcome.startsWith("error:")) break;
+    await new Promise((resolve) => setTimeout(resolve, 300));
+  }
+  const studioLine = "studio run: " + clicked + " -> " + String(studioOutcome);
+  report.push((studioOutcome === "raw:success" ? "PASS " : "FAIL ") + studioLine);
+  if (studioOutcome !== "raw:success") failures.push(studioLine);
+}
 for (const line of report) console.log(line);
 console.log(JSON.stringify({ routes: routes.length, failures: failures.length, focus: args.includes("--focus") }));
 cleanup();

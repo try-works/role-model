@@ -72,6 +72,25 @@ const initRoute =
         model: { clicks: 0, controls: emptyControls(), diagnostics: idleDiagnostics(), observability: idleObservability(), readbacks: { ...emptyReadbacks(), configuredModels: loadingReadback(token), modelEndpoints: loadingReadback(token) }, refresh: initialRuntimeRefreshState(), route, theme },
       };
     }
+    if (route._tag === "Studio") {
+      // S207: Studio needs the configured catalogue so its model field can default to a model this
+      // host actually serves. The readback is route-scoped, so it has to be requested here - the
+      // sidebar count comes from a different readback and does not fill this one.
+      const token = 1;
+      return {
+        commands: [readReadback({ key: "configuredModels", token })],
+        model: {
+          clicks: 0,
+          controls: emptyControls(),
+          diagnostics: idleDiagnostics(),
+          observability: idleObservability(),
+          readbacks: { ...emptyReadbacks(), configuredModels: loadingReadback(token) },
+          refresh: initialRuntimeRefreshState(),
+          route,
+          theme,
+        },
+      };
+    }
     if (route._tag === "Learning") {
       const token = 1;
       return {

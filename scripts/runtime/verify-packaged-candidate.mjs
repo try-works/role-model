@@ -152,6 +152,7 @@ if (args.includes("--rendered")) {
       "--focus",
       "--seed-chat",
       "--expect-overview-cards", "3",
+      "--studio-run",
     ],
     { encoding: "utf8", stdio: "inherit" },
   );

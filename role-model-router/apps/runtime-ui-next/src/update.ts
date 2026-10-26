@@ -459,7 +459,12 @@ export const createUpdate =
   StudioRunRequested: ({ token }) => {
     const current = model.studio ?? studioIdle();
     if (current.status === "loading") return { model };
-    const next = { ...studioLoading(token), ...current, message: undefined, responseText: "Waiting for the runtime…", status: "loading" as const, statusCode: 0, token };
+    // S207: send a model this host serves. The Studio default is a fixed id; when the catalogue does
+    // not contain it the request fails with no_eligible_target.
+    const catalogueState = model.readbacks.configuredModels;
+    const catalogue = catalogueState.status === "ok" ? catalogueState.rows.map((entry) => entry.id).filter((id) => id.length > 0) : [];
+    const modelForRequest = catalogue.length > 0 && !catalogue.includes(current.model) ? catalogue[0]! : current.model;
+    const next = { ...studioLoading(token), ...current, model: modelForRequest, message: undefined, responseText: "Waiting for the runtime…", status: "loading" as const, statusCode: 0, token };
     return { commands: [dispatchStudio({ state: next, token })], model: { ...model, studio: next } };
   },
   StudioLoaded: ({ responseText, statusCode, tab, token }) => {

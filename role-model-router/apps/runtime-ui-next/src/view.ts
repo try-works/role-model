@@ -655,17 +655,18 @@ const studioField = (label: string, field: StudioField, value: string, h: HtmlBu
           h.OnInput((next) => Message.StudioFieldChanged({ field, value: next })),
         ]),
   ]);
-const studioPage = (state: StudioState, h: HtmlBuilder<Message>): Html => {
+const studioPage = (state: StudioState, h: HtmlBuilder<Message>, configuredModels: readonly string[] = []): Html => {
   const tabs = StudioTabSchema.literals.map((tab) =>
     h.button([h.Type("button"), h.Role("tab"), h.AriaSelected(state.tab === tab), h.AriaControls("studio-panel"), h.Tabindex(state.tab === tab ? 0 : -1), h.OnKeyDown((key) => Message.StudioTabKey({ key })), h.DataAttribute("studio-tab", tab), h.AriaPressed(String(state.tab === tab)), h.OnClick(Message.StudioTabSelected({ tab })), h.Class("min-h-8 rounded px-2 text-[12px] " + (state.tab === tab ? "bg-[var(--rm-panel)] text-[var(--rm-fg)]" : "text-[var(--rm-secondary)]"))], [tab === "advanced" ? "Advanced APIs" : tab[0]?.toUpperCase() + tab.slice(1)]),
   );
+  const modelValue = configuredModels.includes(state.model) ? state.model : (configuredModels[0] ?? state.model);
   const fields = state.tab === "advanced"
     ? [studioField("JSON body", "advancedBody", state.advancedBody, h, true)]
     : state.tab === "rerank"
-      ? [studioField("Model", "model", state.model, h), studioField("Query", "query", state.query, h), studioField("Documents (one per line)", "documents", state.documents, h, true)]
+      ? [studioField("Model", "model", modelValue, h), studioField("Query", "query", state.query, h), studioField("Documents (one per line)", "documents", state.documents, h, true)]
       : state.tab === "images"
-        ? [studioField("Mode", "mode", state.mode, h), studioField("Model", "model", state.model, h), studioField("Prompt", "prompt", state.prompt, h), studioField("Size", "size", state.size, h)]
-        : [studioField("Model", "model", state.model, h), studioField("Prompt", "prompt", state.prompt, h)];
+        ? [studioField("Mode", "mode", state.mode, h), studioField("Model", "model", modelValue, h), studioField("Prompt", "prompt", state.prompt, h), studioField("Size", "size", state.size, h)]
+        : [studioField("Model", "model", modelValue, h), studioField("Prompt", "prompt", state.prompt, h)];
   return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "studio"), h.DataAttribute("studio-state", state.status)], [
     h.h2([h.Class("rm3-next-route-title")], ["Studio"]),
     h.div([h.Class("mt-2 flex flex-wrap gap-1"), h.DataAttribute("studio-tabs", ""), h.Role("tablist"), h.AriaLabel("Studio tabs")], tabs),
@@ -777,7 +778,13 @@ const routeContent = (
     IntegrationsUpstream: () => renderReadbackPage(READBACK_SPECS.integrationProviders, readbacks.integrationProviders, h),
     Benchmark: () => renderReadbackPage(READBACK_SPECS.benchmarkSuite, readbacks.benchmarkSuite, h),
     StorageRetention: () => renderReadbackPage(READBACK_SPECS.storageRetention, readbacks.storageRetention, h),
-    Studio: () => studioPage(studio, h),
+    Studio: () => studioPage(
+      studio,
+      h,
+      readbacks.configuredModels.status === "ok"
+        ? readbacks.configuredModels.rows.map((entry) => entry.id).filter((id) => id.length > 0)
+        : [],
+    ),
     Learning: () => learningPage(readbacks, h),
     Models: () => modelsPage(readbacks, h),
     LocalChoose: () => h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route","local-choose")], [h.h2([h.Class("rm3-next-route-title")], ["Local choose"]), h.p([], ["Choose peer-backed models or llama-swap models."])]),
