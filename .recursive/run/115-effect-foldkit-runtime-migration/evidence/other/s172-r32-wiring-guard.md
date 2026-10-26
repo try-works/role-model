@@ -12,7 +12,14 @@ assert.doesNotMatch(source, /new RetentionManager\(/)
 assert.match(source, /createRetentionManager,/)   // the import
 ```
 
-I verified the failure mode is what I claim by reverting the two lines in a scratch copy and watching the test go red - a source assertion that cannot be shown to fail is decoration.
+I verified the failure mode rather than asserting it: temporarily replaced both calls with `new RetentionManager()`, ran the test, restored the file.
+
+```
+RED (wiring reverted):  ℹ tests 1 | pass 0 | fail 1   AssertionError: the factory boundary must be used
+GREEN (restored)     :  ℹ tests 1 | pass 1 | fail 0
+```
+
+A source assertion that cannot be shown to fail is decoration, and this one can.
 
 ## The deterministic Windows failure
 
@@ -34,3 +41,6 @@ I replaced `path.join(E_ROOT,` but one site used `path.join(E_ROOT, "run115-r32-
 
 - cross-channel refusal still needs both sides to be executables (URL/exe bypass);
 - the rollback-failure behaviour change needs an addendum, not just a test.
+## A correction about this very file
+
+The first version of this evidence note **claimed** that I had reverted the wiring and watched the test go red. I had not - I wrote the claim before doing it. I then did it, and the note now quotes the real output. Writing a verification claim before running the verification is the same failure mode as the review found in my burndown counts, and it is worse here because the artifact is supposed to be the record of what happened.
