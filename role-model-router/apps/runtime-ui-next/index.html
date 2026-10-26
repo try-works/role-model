@@ -16,18 +16,16 @@
           const key = "role-model-runtime-theme";
           const stored = window.localStorage.getItem(key);
           const theme = stored === "light" || stored === "dark" ? stored : "dark";
-          const palettes = {"dark":{"accent":"#ffffff","bg":"#0a0a0a","border":"#1f1f1f","fg":"#ededed","secondary":"#9a9a9a","surface":"#0f0f0f"},"light":{"accent":"#0a0a0a","bg":"#ffffff","border":"#eaeaea","fg":"#111111","secondary":"#666666","surface":"#ffffff"}};
-          const palette = palettes[theme] ?? palettes.dark;
+          // S178: do NOT write palette tokens inline. index.html used to pin --rm-bg/--rm-fg/
+          // --rm-surface/--rm-border/--rm-accent/--rm-secondary to the DARK palette on <html>;
+          // inline style beats every stylesheet, so toggling data-theme=light left those tokens
+          // dark and produced 1.12:1 text (near-white on #fafafa). The stylesheet already defines
+          // both palettes; the shell only needs to select one.
           const root = document.documentElement;
           root.dataset.theme = theme;
           root.classList.toggle("dark", theme === "dark");
           root.classList.toggle("light", theme === "light");
           root.style.colorScheme = theme;
-          root.style.backgroundColor = palette.bg;
-          root.style.color = palette.fg;
-          for (const [token, value] of Object.entries(palette)) {
-            root.style.setProperty("--rm-" + token, value);
-          }
         } catch {}
       })();
     </script>

@@ -253,7 +253,8 @@ html[data-theme="light"] {
   --rm-panel-muted: var(--rm3-light-secondary);
   --rm-fg: var(--rm3-light-foreground);
   --rm-secondary: var(--rm3-light-muted-foreground);
-  --rm-muted: var(--rm3-light-ring);
+  /* S179: muted text on a light surface must clear WCAG AA; #888 on #fff is 3.54:1. #666 is 5.74:1. */
+  --rm-muted: var(--rm3-light-muted-foreground);
   --rm-border: var(--rm3-light-border);
   --rm-border-strong: var(--rm3-light-input);
   --rm-divider-soft: var(--rm3-light-border);
