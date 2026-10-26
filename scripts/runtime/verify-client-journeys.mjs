@@ -29,6 +29,10 @@ if (resolvedFixtureRoot !== undefined && !existsSync(resolvedFixtureRoot)) {
   );
 }
 const allowDirtyState = args.includes("--allow-dirty-state");
+// S192: a fixture catalogue can name a specific worker; assert it is actually served, so the
+// configuration path is checked instead of assumed. Repeatable: --expect-model a --expect-model b.
+const expectModels = [];
+for (let i = 0; i < args.length; i += 1) if (args[i] === "--expect-model" && args[i + 1]) expectModels.push(args[i + 1]);
 if (inputs.stateRoot !== undefined) {
   const resolvedState = path.resolve(inputs.stateRoot);
   if (allowDirtyState === false && existsSync(resolvedState)) {
@@ -155,6 +159,15 @@ try {
     if (/setProperty\(\s*"--rm-/.test(html)) throw new Error("index writes palette tokens inline; the light theme breaks");
     return "theme selected in CSS, no inline palette";
   });
+  for (const expected of expectModels) {
+    await check("expected model " + expected, async () => {
+      const response = await getJson("/api/role-model/models");
+      if (response.status !== 200 || !Array.isArray(response.body)) throw new Error("models status " + String(response.status));
+      const ids = response.body.map((entry) => entry?.id).filter((id) => typeof id === "string");
+      if (!ids.includes(expected)) throw new Error("model not served: " + expected + " (saw " + ids.join(", ") + ")");
+      return expected;
+    });
+  }
   await check("ui shell", async () => { const response = await fetch(base + "/"); const text = await response.text(); if (response.status !== 200 || !/Runtime UI|role-model/i.test(text)) throw new Error("UI shell HTTP " + String(response.status)); return String(text.length) + " bytes"; });
 } finally {
   // S106: kill and WAIT. A bare kill() can leave the child alive while the script exits.

@@ -110,6 +110,31 @@ const result = spawnSync(
 );
 if (result.status !== 0) process.exit(result.status ?? 2);
 
+// S192: with --worker-fixtures, run the same journeys against a catalogue that names a specific
+// worker and require that worker to be served. This is how the deepseek-official/deepseek-flash
+// configuration path gets checked on every run instead of being demonstrated once by hand.
+const workerFixtures = value("--worker-fixtures");
+const workerModel = value("--expect-model");
+if (workerFixtures !== undefined && workerModel !== undefined) {
+  console.log("worker fixtures: " + workerFixtures + " (expecting " + workerModel + ")");
+  const workerResult = spawnSync(
+    process.execPath,
+    [
+      path.join("scripts", "runtime", "verify-client-journeys.mjs"),
+      "--manifest", manifest,
+      "--executable", executable,
+      "--repo-root", packageDir,
+      "--static-root", staticRoot,
+      "--port", String(port + 2),
+      "--state-root", stateRoot + "-workers",
+      "--fixture-root", path.resolve(workerFixtures),
+      "--expect-model", workerModel,
+    ],
+    { encoding: "utf8", stdio: "inherit" },
+  );
+  if (workerResult.status !== 0) process.exit(workerResult.status ?? 2);
+}
+
 // S183: optional rendered audit. HTTP checks cannot see an invisible control, a mislabelled one,
 // low contrast, or a crash banner - all of which have shipped in this run (S175-S182).
 // A missing browser is NOT a failure: the audit reports 2 (not run) and this gate says so.

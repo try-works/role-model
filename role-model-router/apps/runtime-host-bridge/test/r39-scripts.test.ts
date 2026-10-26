@@ -289,6 +289,25 @@ describe("S103a R39 scripts fail closed", () => {
     expect(workflow).toContain("Audit rendered UI (R39)");
     expect(workflow).toContain("audit-rendered-ui.mjs");
   });
+  it("verify-client-journeys accepts a repeated --expect-model without failing argument validation", () => {
+    const result = script("verify-client-journeys.mjs", [
+      "--expect-model", "deepseek-official/deepseek-flash",
+      "--expect-model", "second/model",
+    ]);
+    // No --executable, so this still NOT RUNs on inputs - but the expectation flags must not be
+    // treated as missing required arguments.
+    expect(result.status).toBe(2);
+    expect(result.stdout).toContain("NOT RUN");
+  });
+
+  it("the worker-fixture flags exist on the gate and the journeys script", async () => {
+    const { readFileSync } = await import("node:fs");
+    const gate = readFileSync(path.join(root, "scripts", "runtime", "verify-packaged-candidate.mjs"), "utf8");
+    const journeys = readFileSync(path.join(root, "scripts", "runtime", "verify-client-journeys.mjs"), "utf8");
+    expect(gate).toContain("--worker-fixtures");
+    expect(gate).toContain("--expect-model");
+    expect(journeys).toContain("--expect-model");
+  });
   it("compare-release refuses to compare a URL with itself", () => {
     const result = script("compare-release.mjs", [
       "--left",
