@@ -39,6 +39,17 @@ test("S199: light muted text clears WCAG AA against the light background", () =>
   assert.ok(ratio >= 4.5, "light muted contrast is " + ratio.toFixed(2) + ":1, below WCAG AA 4.5:1");
 });
 
+test("S199: the accent fill and its ink clear WCAG AA (the S175 invisible-Run defect)", () => {
+  // The Run button was white-on-white because the fill used --rm-accent with text-white. The pair
+  // that must be used is accent/on-primary, and it must actually contrast.
+  const fill = hexFor("--rm3-primary");
+  const ink = hexFor("--rm3-primary-foreground");
+  assert.ok(fill, "the accent fill resolves to a hex value");
+  assert.ok(ink, "the accent ink resolves to a hex value");
+  const ratio = contrast(parseHex(fill), parseHex(ink));
+  assert.ok(ratio >= 4.5, "accent fill vs ink is " + ratio.toFixed(2) + ":1, below WCAG AA 4.5:1");
+});
+
 test("S199: the ring colour would NOT have cleared it (the old mapping was a real defect)", () => {
   const ring = hexFor("--rm3-light-ring");
   const background = hexFor("--rm3-light-background");

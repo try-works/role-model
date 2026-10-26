@@ -138,10 +138,11 @@ const AUDIT = `(() => {
   const backgroundOf = (el) => { let node = el; while (node) { const bg = parse(getComputedStyle(node).backgroundColor); if (bg && bg.a > 0.5) return bg; node = node.parentElement; } return { r: 10, g: 10, b: 10, a: 1 }; };
   const text = (document.querySelector("main") || document.body).innerText.replace(/\\s+/g, " ").trim();
   const crash = /Application Crash|unrecoverable error/i.test(document.body.innerText || "");
-  const controls = [...document.querySelectorAll("button, a[href], [role=button], select")];
+  const controls = [...document.querySelectorAll("button, a[href], [role=button], select, input:not([type=hidden]), textarea")];
   const invisible = controls.filter((el) => { const cs = getComputedStyle(el); const bg = cs.backgroundColor; if (!bg || bg === "rgba(0, 0, 0, 0)" || bg === "transparent") return false; return cs.color === bg; }).map((el) => (el.innerText || el.tagName).trim().slice(0, 30));
   const unnamed = controls.filter((el) => { const name = (el.getAttribute("aria-label") || el.innerText || (el.labels && el.labels[0] ? el.labels[0].innerText : "") || "").trim(); return name.length === 0; }).length;
   const tooLongName = controls.filter((el) => { const name = (el.getAttribute("aria-label") || el.innerText || "").trim(); return name.length > 60 || name.includes("\\n"); }).map((el) => (el.getAttribute("aria-label") || el.innerText).trim().slice(0, 30));
+  let uncheckedContrast = 0;
   const lowContrast = [];
   for (const el of document.querySelectorAll("p,span,h1,h2,h3,label,td,th,li,a,code,pre")) {
     const value = (el.innerText || "").trim();
@@ -152,6 +153,12 @@ const AUDIT = `(() => {
     if (cs.visibility === "hidden" || cs.display === "none") continue;
     const fg = parse(cs.color);
     if (!fg || fg.a < 0.5) continue;
+    let onImage = false;
+    for (let node = el; node; node = node.parentElement) {
+      const image = getComputedStyle(node).backgroundImage;
+      if (image && image !== "none") { onImage = true; break; }
+    }
+    if (onImage) { uncheckedContrast += 1; continue; }
     const bg = backgroundOf(el);
     const contrast = ratio(fg, bg);
     if (contrast < 4.5) lowContrast.push({ text: value.slice(0, 30), ratio: Number(contrast.toFixed(2)) });
@@ -199,7 +206,7 @@ const AUDIT = `(() => {
     if (Number(cs.opacity) < 0.1) return true;
     return rect.width === 0 && rect.height === 0;
   }).map((el) => (el.innerText || el.getAttribute("aria-label") || el.tagName).trim().slice(0, 24));
-  return { title: document.title, pathname: location.pathname, readyState: document.readyState, routeMarker: routeMarker ? routeMarker.getAttribute("data-route") : null, hiddenControls: hiddenControls.slice(0, 4), hiddenControlCount: hiddenControls.length, chars: text.length, head: text.slice(0, 70), crash, invisible, unnamed, tooLongName, lowContrast: lowContrast.slice(0, 5), lowContrastCount: lowContrast.length, skip, overflow, wide, skipLinkFocus, smallTargets: smallTargets.slice(0, 4), smallTargetCount: smallTargets.length, viewport: document.documentElement.clientWidth };
+  return { title: document.title, pathname: location.pathname, readyState: document.readyState, routeMarker: routeMarker ? routeMarker.getAttribute("data-route") : null, hiddenControls: hiddenControls.slice(0, 4), hiddenControlCount: hiddenControls.length, chars: text.length, head: text.slice(0, 70), crash, invisible, unnamed, tooLongName, lowContrast: lowContrast.slice(0, 5), lowContrastCount: lowContrast.length, skip, overflow, wide, skipLinkFocus, uncheckedContrast, smallTargets: smallTargets.slice(0, 4), smallTargetCount: smallTargets.length, viewport: document.documentElement.clientWidth };
 })()`;
 
 // S197: the Overview cards only render when telemetry rows exist, and every earlier capture of the
@@ -307,6 +314,7 @@ for (const route of routes) {
   if (audit.lowContrastCount > 0) problems.push("low contrast: " + audit.lowContrast.map((entry) => entry.text + " " + String(entry.ratio) + ":1").join(", "));
   if (audit.smallTargetCount > 0) problems.push("controls under 24x24: " + audit.smallTargets.join(", "));
   if (route === "/" && audit.skip !== true) problems.push("no skip-to-content link");
+  if (audit.uncheckedContrast > 0) console.log("note: " + route + " has " + String(audit.uncheckedContrast) + " text elements over an image/gradient; contrast NOT judged there");
   if (audit.overflow) problems.push("horizontal overflow at " + String(audit.viewport) + "px: " + (audit.wide || []).join(", "));
   for (const entry of focusReport) problems.push(entry);
   if (args.includes("--focus") && focusStops < 3) problems.push("focus check saw only " + String(focusStops) + " focusable stops");
