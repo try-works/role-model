@@ -221,7 +221,13 @@ try { for (const endpoint of endpoints) { let leftResult, rightResult; leftResul
           const delta = shapeDelta(strippedLeft, strippedRight);
           // A key-set change is reported separately from a value change: it is version skew
           // unless a shared key also changed value.
-          classification = delta.length > 0 ? "shape-delta" : "different";
+          //
+          // S235: distinguish additions from other shape changes. A key that only one side carries and
+          // the other side never contradicts is compatible skew; a removal or a mixed change is not.
+          // Reporting both as "shape-delta" hid that difference in the S234 production comparison.
+          const onlyAdditions = delta.length > 0 && delta.every((entry) => entry.trim().startsWith("+"));
+          const onlyRemovals = delta.length > 0 && delta.every((entry) => entry.trim().startsWith("-"));
+          classification = delta.length > 0 ? (onlyAdditions || onlyRemovals ? "additive-shape" : "shape-delta") : "different";
           if (delta.length > 0) shapeDeltas[endpoint] = delta;
           else {
             const diffs = valueDiff(strippedLeft, strippedRight, leftStateForDiff, rightStateForDiff);
