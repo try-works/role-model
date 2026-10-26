@@ -150,6 +150,8 @@ if (args.includes("--rendered")) {
       "--width", "1440",
       "--height", "900",
       "--focus",
+      "--seed-chat",
+      "--expect-overview-cards", "3",
     ],
     { encoding: "utf8", stdio: "inherit" },
   );

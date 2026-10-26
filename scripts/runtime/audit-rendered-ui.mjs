@@ -194,6 +194,26 @@ const AUDIT = `(() => {
   return { title: document.title, chars: text.length, head: text.slice(0, 70), crash, invisible, unnamed, tooLongName, lowContrast: lowContrast.slice(0, 5), lowContrastCount: lowContrast.length, skip, overflow, wide, skipLinkFocus, smallTargets: smallTargets.slice(0, 4), smallTargetCount: smallTargets.length, viewport: document.documentElement.clientWidth };
 })()`;
 
+// S197: the Overview cards only render when telemetry rows exist, and every earlier capture of the
+// port was on a host with zero traffic (S196). --seed-chat makes exactly one OpenAI-compatible
+// request first, so the populated state is what gets audited.
+if (has("--seed-chat")) {
+  const model = value("--seed-model") ?? "openai/gpt-4.1-mini-fast";
+  try {
+    const response = await fetch(base + "/v1/chat/completions", {
+      method: "POST",
+      headers: { "content-type": "application/json", connection: "close" },
+      body: JSON.stringify({ model, messages: [{ role: "user", content: "seed" }], max_tokens: 16 }),
+    });
+    console.log("seeded chat: status " + String(response.status));
+  } catch (error) {
+    console.log("NOT RUN: could not seed a chat request (" + String(error) + ")");
+    cleanup();
+    process.exit(2);
+  }
+}
+
+const expectedCards = value("--expect-overview-cards");
 const failures = [];
 const report = [];
 for (const route of routes) {
@@ -225,6 +245,19 @@ for (const route of routes) {
     }
   }
   const problems = [];
+  if (expectedCards !== undefined && route === "/") {
+    // The shell fetches telemetry rows after hydration, so the cards appear a moment after load.
+    // Poll instead of judging the first frame - that produced a false failure on the first run.
+    let count = 0;
+    const cardsDeadline = Date.now() + Number(process.env.AUDIT_CARDS_TIMEOUT_MS ?? 8000);
+    while (Date.now() < cardsDeadline) {
+      const cards = await send("Runtime.evaluate", { expression: 'document.querySelectorAll("[data-overview-card]").length', returnByValue: true }, sessionId);
+      count = Number(cards.result?.value ?? 0);
+      if (count >= Number(expectedCards)) break;
+      await new Promise((resolve) => setTimeout(resolve, 250));
+    }
+    if (count < Number(expectedCards)) problems.push("expected at least " + expectedCards + " Overview cards, saw " + String(count));
+  }
   if (audit.crash) problems.push("application crash banner");
   if (audit.chars < 40) problems.push("page has almost no text (" + String(audit.chars) + " chars)");
   if (audit.invisible.length > 0) problems.push("invisible controls: " + audit.invisible.join(", "));
