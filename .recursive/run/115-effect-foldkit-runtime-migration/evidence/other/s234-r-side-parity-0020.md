@@ -10,7 +10,8 @@ R side could be measured today without a Run 88 dispatch.
     node scripts/runtime/compare-release.mjs \
       --left-exe role-model-router/dist/release/win32-x64/role-model-dev.exe --left-port 6271 \
       --right-exe E:/rm-tmp/r-stage/role-model.exe                              --right-port 6272 \
-      --fixture-root testdata/router-runtime/fixtures --allow-cross-channel
+      --fixture-root testdata/router-runtime/fixtures --allow-cross-channel `
+      --expect-left-version 0.0.20-231-gd61c32dc --expect-right-version 0.0.20
 
 `--allow-cross-channel` was passed **explicitly**: a dev candidate and a production package legitimately
 differ on channel-carrying surfaces, and the tool must not hide that behind a classification.

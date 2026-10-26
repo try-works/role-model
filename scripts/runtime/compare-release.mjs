@@ -9,6 +9,7 @@ const args = process.argv.slice(2);
 const value = (name) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : undefined; };
 const fixtureRootInput = value("--fixture-root");
 const left = value("--left"), right = value("--right"), rightExe = value("--right-exe"), rightPort = value("--right-port"), rightState = value("--right-state"), leftExe = value("--left-exe"), leftPort = value("--left-port"), leftState = value("--left-state");
+const expectLeftVersion = value("--expect-left-version"), expectRightVersion = value("--expect-right-version");
 const problems = [];
 if (!left && !leftExe) problems.push("--left or --left-exe is required");
 if (!right && !rightExe) problems.push("--right or --right-exe is required");
@@ -194,6 +195,24 @@ if (!args.includes("--allow-cross-channel")) {
 }
 if (leftChild) { const ok = await waitReady(leftBase); if (!ok) { leftChild.kill(); child?.kill(); console.log("NOT RUN: --left-exe did not become healthy on " + leftBase); process.exit(2); } }
 
+// S237: a parity record must name the build it compared. These flags make the record self-verifying:
+// pass the expected version for each side and the run fails when the binary is not what was recorded.
+const healthVersionOf = async (base) => {
+  const result = await readJson(base + "/healthz");
+  const runtime = result.body !== null && typeof result.body === "object" ? result.body.runtime : undefined;
+  return runtime !== null && typeof runtime === "object" && typeof runtime.version === "string" ? runtime.version : undefined;
+};
+const leftVersion = await healthVersionOf(leftBase);
+const rightVersion = await healthVersionOf(rightBase);
+const versionMismatches = [];
+if (expectLeftVersion !== undefined && leftVersion !== expectLeftVersion) versionMismatches.push("left is " + String(leftVersion) + ", expected " + expectLeftVersion);
+if (expectRightVersion !== undefined && rightVersion !== expectRightVersion) versionMismatches.push("right is " + String(rightVersion) + ", expected " + expectRightVersion);
+if (versionMismatches.length > 0) {
+  console.log("FAIL identity: " + versionMismatches.join("; "));
+  child?.kill();
+  process.exit(2);
+}
+console.log("identity left=" + String(leftVersion) + " right=" + String(rightVersion));
 const rows = [];
 const shapeDeltas = {};
 const valueDeltas = {};
