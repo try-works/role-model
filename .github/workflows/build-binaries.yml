@@ -446,8 +446,8 @@ jobs:
           Remove-Item -Recurse -Force $leftState, $rightState -ErrorAction SilentlyContinue
           node scripts/runtime/compare-release.mjs `
             --fixture-root "testdata/router-runtime/fixtures" `
-            --left-exe "$($stageExe.FullName)" --left-port 5942 --left-state $leftState `
-            --right-exe "role-model-router/dist/release/${{ matrix.target }}/role-model-dev.exe" --right-port 5943 --right-state $rightState
+            --left-exe "$($stageExe.FullName)" --left-port 5930 --left-state $leftState `
+            --right-exe "role-model-router/dist/release/${{ matrix.target }}/role-model-dev.exe" --right-port 5931 --right-state $rightState
           if ($LASTEXITCODE -ne 0) { throw "R39 release comparison did not pass (exit $LASTEXITCODE)" }
 
 
@@ -581,16 +581,22 @@ jobs:
         run: |
           $packageDir = "role-model-router/dist/release/win32-x64"
           if (-not (Test-Path $packageDir)) { throw "no package directory at $packageDir" }
+          # S199: audit the static root the PACKAGE ships when it has one, on a port no other step uses.
+          $staticRoot = if (Test-Path "$packageDir/build/client") { "$packageDir/build/client" } else { "role-model-router/apps/runtime-ui-next/dist/client" }
           node scripts/runtime/audit-rendered-ui.mjs `
             --exe "$packageDir/role-model-dev.exe" `
-            --static-root "role-model-router/apps/runtime-ui-next/dist/client" `
+            --static-root $staticRoot `
             --fixture-root "testdata/router-runtime/fixtures" `
-            --port 5942 `
+            --port 5950 `
             --width 1440 --height 900 `
             --focus `
             --seed-chat `
             --expect-overview-cards 3
           if ($LASTEXITCODE -eq 2) {
+            if ("${{ vars.R39_VERIFY_BLOCKING }}" -eq "true") {
+              # A skip is not evidence. Once blocking is on, "no browser" fails the job.
+              throw "R39 rendered UI audit did NOT RUN while R39_VERIFY_BLOCKING=true"
+            }
             Write-Output "NOT RUN: no Chromium-family browser on this runner (set CHROME_PATH to enable)"
             exit 0
           }

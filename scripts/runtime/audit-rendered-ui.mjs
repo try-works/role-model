@@ -191,7 +191,15 @@ const AUDIT = `(() => {
   const skip = [...document.querySelectorAll('a[href^="#"]')].some((a) => /skip to/i.test(a.innerText || ""));
   const overflow = document.documentElement.scrollWidth > document.documentElement.clientWidth + 2;
   const wide = overflow ? [...document.querySelectorAll("*")].filter((el) => { const r = el.getBoundingClientRect(); return r.width > 0 && r.right > document.documentElement.clientWidth + 2; }).slice(0, 4).map((el) => el.tagName + "." + String(el.className || "").slice(0, 30)) : [];
-  return { title: document.title, chars: text.length, head: text.slice(0, 70), crash, invisible, unnamed, tooLongName, lowContrast: lowContrast.slice(0, 5), lowContrastCount: lowContrast.length, skip, overflow, wide, skipLinkFocus, smallTargets: smallTargets.slice(0, 4), smallTargetCount: smallTargets.length, viewport: document.documentElement.clientWidth };
+  const routeMarker = document.querySelector("[data-route]");
+  const hiddenControls = controls.filter((el) => {
+    const cs = getComputedStyle(el);
+    const rect = el.getBoundingClientRect();
+    if (cs.visibility === "hidden" || cs.display === "none") return true;
+    if (Number(cs.opacity) < 0.1) return true;
+    return rect.width === 0 && rect.height === 0;
+  }).map((el) => (el.innerText || el.getAttribute("aria-label") || el.tagName).trim().slice(0, 24));
+  return { title: document.title, pathname: location.pathname, readyState: document.readyState, routeMarker: routeMarker ? routeMarker.getAttribute("data-route") : null, hiddenControls: hiddenControls.slice(0, 4), hiddenControlCount: hiddenControls.length, chars: text.length, head: text.slice(0, 70), crash, invisible, unnamed, tooLongName, lowContrast: lowContrast.slice(0, 5), lowContrastCount: lowContrast.length, skip, overflow, wide, skipLinkFocus, smallTargets: smallTargets.slice(0, 4), smallTargetCount: smallTargets.length, viewport: document.documentElement.clientWidth };
 })()`;
 
 // S197: the Overview cards only render when telemetry rows exist, and every earlier capture of the
@@ -220,6 +228,12 @@ for (const route of routes) {
   events.length = 0;
   await send("Page.navigate", { url: base + route }, sessionId);
   await new Promise((resolve) => setTimeout(resolve, Number(process.env.AUDIT_SETTLE_MS ?? 1200)));
+  const settleDeadline = Date.now() + Number(process.env.AUDIT_READYSTATE_TIMEOUT_MS ?? 8000);
+  while (Date.now() < settleDeadline) {
+    const state = await send("Runtime.evaluate", { expression: "document.readyState", returnByValue: true }, sessionId);
+    if (state.result?.value === "complete") break;
+    await new Promise((resolve) => setTimeout(resolve, 200));
+  }
   let audit;
   try {
     const result = await send("Runtime.evaluate", { expression: AUDIT, returnByValue: true, awaitPromise: true }, sessionId);
@@ -232,6 +246,7 @@ for (const route of routes) {
   // a box-shadow on whatever receives focus. S175-S183 found four render-only defects; a focus ring
   // that never appears is the same class of "valid code, invisible result".
   const focusReport = [];
+  let focusStops = 0;
   if (args.includes("--focus")) {
     await send("Runtime.evaluate", { expression: "if (document.activeElement) document.activeElement.blur();" }, sessionId);
     for (let step = 0; step < Number(process.env.AUDIT_FOCUS_STEPS ?? 6); step += 1) {
@@ -240,6 +255,7 @@ for (const route of routes) {
       const focused = await send("Runtime.evaluate", { expression: "(() => { const el = document.activeElement; if (!el || el === document.body) return { none: true }; const cs = getComputedStyle(el); return { tag: el.tagName, label: (el.getAttribute(\"aria-label\") || el.innerText || \"\").trim().slice(0, 24), outline: cs.outlineWidth + \" \" + cs.outlineStyle, shadow: cs.boxShadow, }; })()", returnByValue: true }, sessionId);
       const value = focused.result?.value;
       if (value?.none) continue;
+      focusStops += 1;
       const hasRing = (value.outline && !value.outline.startsWith("0px") && !value.outline.includes("none")) || (value.shadow && value.shadow !== "none");
       if (!hasRing) focusReport.push(value.tag + " has no focus indicator: " + value.label);
     }
@@ -258,6 +274,9 @@ for (const route of routes) {
     }
     if (count < Number(expectedCards)) problems.push("expected at least " + expectedCards + " Overview cards, saw " + String(count));
   }
+  if (audit.readyState !== "complete") problems.push("page not settled (readyState " + String(audit.readyState) + ")");
+  if (audit.pathname !== route) problems.push("audited " + String(audit.pathname) + " instead of " + route);
+  if (audit.routeMarker === null) problems.push("no [data-route] section rendered");
   if (audit.crash) problems.push("application crash banner");
   if (audit.chars < 40) problems.push("page has almost no text (" + String(audit.chars) + " chars)");
   if (audit.invisible.length > 0) problems.push("invisible controls: " + audit.invisible.join(", "));
@@ -265,8 +284,10 @@ for (const route of routes) {
   if (audit.tooLongName.length > 0) problems.push("control name repeats its content: " + audit.tooLongName.join(", "));
   if (audit.lowContrastCount > 0) problems.push("low contrast: " + audit.lowContrast.map((entry) => entry.text + " " + String(entry.ratio) + ":1").join(", "));
   if (audit.smallTargetCount > 0) problems.push("controls under 24x24: " + audit.smallTargets.join(", "));
+  if (route === "/" && audit.skip !== true) problems.push("no skip-to-content link");
   if (audit.overflow) problems.push("horizontal overflow at " + String(audit.viewport) + "px: " + (audit.wide || []).join(", "));
   for (const entry of focusReport) problems.push(entry);
+  if (args.includes("--focus") && focusStops < 3) problems.push("focus check saw only " + String(focusStops) + " focusable stops");
   if (problems.length > 0) failures.push(route + ": " + problems.join("; "));
   report.push((problems.length === 0 ? "PASS " : "FAIL ") + route + " (" + String(audit.chars) + " chars)" + (problems.length ? " - " + problems.join("; ") : ""));
 }

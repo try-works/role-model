@@ -19,6 +19,8 @@ test("S177: the filter select carries an aria-label", () => {
     .find((line) => line.includes('h.DataAttribute("overview-filter", filter)'));
   assert.ok(selectLine, "the filter select is still built in one place");
   assert.match(selectLine, /h\.AriaLabel\(label\)/, "the select must be named by its field label");
+  // S199: presence alone is vacuous - an empty label would pass it.
+  assert.equal(selectLine.includes('h.AriaLabel("")'), false, "an empty aria-label is not a name");
 });
 
 test("S177: no select is added without a name in the port", () => {
