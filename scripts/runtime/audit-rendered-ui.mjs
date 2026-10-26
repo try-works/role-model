@@ -335,6 +335,35 @@ for (const route of routes) {
   report.push((problems.length === 0 ? "PASS " : "FAIL ") + route + " (" + String(audit.chars) + " chars)" + (problems.length ? " - " + problems.join("; ") : ""));
 }
 
+// S218: a crash only appears when something is clicked. Sweep every enabled button on every route
+// and fail on the crash banner - the cheapest way to find the next "targetId is not defined".
+if (args.includes("--click-sweep")) {
+  for (const route of routes) {
+    await send("Page.navigate", { url: base + route }, sessionId);
+    await new Promise((resolve) => setTimeout(resolve, Number(process.env.AUDIT_SWEEP_SETTLE_MS ?? 1200)));
+    const outcome = await send("Runtime.evaluate", {
+      expression: `(async () => {
+        const buttons = [...document.querySelectorAll("button")].filter((b) => !b.disabled && b.offsetParent !== null);
+        const clicked = [];
+        for (const button of buttons.slice(0, 12)) {
+          button.click();
+          clicked.push((button.innerText || button.getAttribute("aria-label") || "?").trim().slice(0, 24));
+          await new Promise((resolve) => setTimeout(resolve, 250));
+          if (document.body.innerText.includes("Application Crash")) {
+            return "crash after: " + clicked.join(" | ") + " :: " + (document.body.innerText.match(/Application Crash[\s\S]{0,160}/) || [""])[0].replace(/\s+/g, " ").slice(0, 140);
+          }
+        }
+        return "clicked " + String(clicked.length);
+      })()`,
+      awaitPromise: true,
+      returnByValue: true,
+    }, sessionId);
+    const value = String(outcome.result?.value ?? "");
+    const okSweep = value.startsWith("clicked");
+    report.push((okSweep ? "PASS " : "FAIL ") + "click sweep " + route + ": " + value);
+    if (!okSweep) failures.push("click sweep " + route + ": " + value);
+  }
+}
 // S217: clicking a control action crashed the packaged UI with "targetId is not defined" while every
 // rendered route passed. Drive one control action and require an outcome message instead of a crash.
 if (args.includes("--control-action")) {

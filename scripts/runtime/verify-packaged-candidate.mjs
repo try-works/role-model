@@ -194,6 +194,7 @@ if (args.includes("--rendered")) {
       "--studio-run",
       "--theme", "light",
       "--control-action",
+      "--click-sweep",
     ],
     { encoding: "utf8", stdio: "inherit" },
   );
