@@ -9,6 +9,8 @@
  */
 import { existsSync, mkdtempSync, readFileSync, rmSync, readdirSync } from "node:fs";
 import { spawnSync } from "node:child_process";
+
+import { staticRootIdentity } from "./ui-identity.mjs";
 import net from "node:net";
 import os from "node:os";
 import path from "node:path";
@@ -99,32 +101,7 @@ process.on("exit", () => { try { rmSync(stateRoot, { force: true, recursive: tru
 // When the package has build/client, the static root must BE that directory, byte for byte.
 const packageClient = path.join(packageDir, "build", "client");
 if (existsSync(packageClient) && path.resolve(staticRoot) !== path.resolve(packageClient)) {
-  const listFiles = (root) => {
-    const out = [];
-    const walk = (dir) => {
-      for (const entry of readdirSync(dir, { withFileTypes: true })) {
-        const full = path.join(dir, entry.name);
-        if (entry.isDirectory()) walk(full);
-        else if (entry.isFile()) out.push(path.relative(root, full).replaceAll(path.sep, "/"));
-      }
-    };
-    walk(root);
-    return out.sort();
-  };
-  const differences = [];
-  try {
-    const left = listFiles(path.resolve(staticRoot));
-    const right = listFiles(packageClient);
-    if (left.join("|") !== right.join("|")) differences.push("file lists differ");
-    for (const file of right) {
-      if (!left.includes(file)) continue;
-      const a = readFileSync(path.join(staticRoot, file));
-      const b = readFileSync(path.join(packageClient, file));
-      if (Buffer.compare(a, b) !== 0) differences.push(file + " differs");
-    }
-  } catch (error) {
-    differences.push(String(error));
-  }
+  const { differences } = staticRootIdentity({ packageClient, staticRoot });
   if (differences.length > 0) {
     console.log("FAIL ui identity: the static root is not the bytes this package ships (" + differences.slice(0, 4).join("; ") + ")");
     console.log("  static:  " + path.resolve(staticRoot));
