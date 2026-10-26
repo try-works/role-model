@@ -12566,8 +12566,29 @@ export async function main(): Promise<void> {
         onFailure: failExtensionRuntime,
       });
     } else {
-      backend = await createBackend();
-      hostScope.register("backend", async () => { if (backend !== null) await backend.shutdown(); });
+      /**
+       * S129 (R27 second rewiring slice): the non-packaged backend is owned by an Effect scope, the
+       * same shape the server took in S128. The shutdown chain is unchanged - releaseHostResources
+       * calls this closer, the closer closes the scope, the finalizer runs backend.shutdown() once.
+       */
+      const backendScope = Effect.runSync(Scope.make());
+      try {
+        backend = await Effect.runPromise(
+          Scope.provide(
+            Effect.acquireRelease(
+              Effect.promise(() => createBackend()),
+              (value) => Effect.promise(() => value.shutdown()),
+            ),
+            backendScope,
+          ),
+        );
+      } catch (error) {
+        await Effect.runPromise(Scope.close(backendScope, Exit.void)).catch(() => undefined);
+        throw error;
+      }
+      hostScope.register("backend", async () => {
+        await Effect.runPromise(Scope.close(backendScope, Exit.void));
+      });
       bootstrapState.status = "ready";
       delete bootstrapState.message;
     }
