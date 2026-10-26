@@ -36,6 +36,12 @@ describe("S130 scope-owned resources stay scope-owned", () => {
     expect(body).not.toContain("extensionRuntimeOwner.close(); }");
   });
 
+  it("the extension runtime registration closes the owner scope instead of calling close directly", () => {
+    const body = registrationBody("extensionRuntime");
+    expect(body).toContain("Scope.close(extensionOwnerScope");
+    expect(body).not.toContain("await extensionRuntimeOwner.close()");
+  });
+
   it("both resources are acquired through acquireRelease, not bare awaits", () => {
     const acquireReleaseCount = (cli.match(/Effect\.acquireRelease\(/g) ?? []).length;
     expect(acquireReleaseCount).toBeGreaterThanOrEqual(2);

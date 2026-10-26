@@ -12545,7 +12545,12 @@ export async function main(): Promise<void> {
             // would close it twice at shutdown - so this registration delegates to the owner's memoized
             // close. It still exists so the five-kind ownership contract stays complete and a
             // registration cannot be silently dropped.
-            hostScope.register("extensionRuntime", async () => { if (extensionRuntimeOwner !== null) await extensionRuntimeOwner.close(); });
+            // S134 (R27 fifth slice): closes the SAME owner scope, so every host resource is now
+            // released by a scope close. Scope.close is idempotent, so the owner's memoized close
+            // still runs exactly once even though both registrations target it.
+            hostScope.register("extensionRuntime", async () => {
+              await Effect.runPromise(Scope.close(extensionOwnerScope, Exit.void));
+            });
             for (const extension of qaExtensions) {
               const capability = extension.descriptor.capabilities.find(
                 (candidate) => candidate !== "health:probe",
