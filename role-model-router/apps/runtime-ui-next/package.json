@@ -14,7 +14,8 @@
     "./view": "./src/view.ts"
   },
   "scripts": {
-    "test": "vitest run && node --test test/*.test.mjs",
+    "test": "tsc --noEmit -p tsconfig.json && vitest run && node --test test/*.test.mjs",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
     "test:invariants": "node --test test/*.test.mjs",
     "build": "node build.mjs"
   },

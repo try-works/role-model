@@ -30,7 +30,7 @@ export const Message: MessageUnion<{
   };
   readonly ControlActionRequested: {
     readonly key: typeof ControlKeySchema;
-    readonly targetId?: typeof Schema.String;
+    readonly targetId: Schema.optional<typeof Schema.String>;
     readonly token: typeof Schema.Number;
   };
   readonly ControlFailed: {
