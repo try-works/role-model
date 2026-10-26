@@ -7,7 +7,7 @@
  * maintained flow (validate-packaging) can call one command instead of remembering five
  * arguments - and so the arguments cannot drift between callers.
  */
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, readdirSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import net from "node:net";
 import os from "node:os";
@@ -94,6 +94,45 @@ if (port === undefined) {
 const stateRoot = mkdtempSync(path.join(os.tmpdir(), "r39-candidate-state-"));
 process.on("exit", () => { try { rmSync(stateRoot, { force: true, recursive: true }); } catch {} });
 
+// S213: the package ships the UI copied at distribution-build time. A gate pointed at the worktree
+// build can pass while the package carries older UI - which happened for several rounds (S212).
+// When the package has build/client, the static root must BE that directory, byte for byte.
+const packageClient = path.join(packageDir, "build", "client");
+if (existsSync(packageClient) && path.resolve(staticRoot) !== path.resolve(packageClient)) {
+  const listFiles = (root) => {
+    const out = [];
+    const walk = (dir) => {
+      for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) walk(full);
+        else if (entry.isFile()) out.push(path.relative(root, full).replaceAll(path.sep, "/"));
+      }
+    };
+    walk(root);
+    return out.sort();
+  };
+  const differences = [];
+  try {
+    const left = listFiles(path.resolve(staticRoot));
+    const right = listFiles(packageClient);
+    if (left.join("|") !== right.join("|")) differences.push("file lists differ");
+    for (const file of right) {
+      if (!left.includes(file)) continue;
+      const a = readFileSync(path.join(staticRoot, file));
+      const b = readFileSync(path.join(packageClient, file));
+      if (Buffer.compare(a, b) !== 0) differences.push(file + " differs");
+    }
+  } catch (error) {
+    differences.push(String(error));
+  }
+  if (differences.length > 0) {
+    console.log("FAIL ui identity: the static root is not the bytes this package ships (" + differences.slice(0, 4).join("; ") + ")");
+    console.log("  static:  " + path.resolve(staticRoot));
+    console.log("  package: " + path.resolve(packageClient));
+    console.log("Pass --static-root " + path.resolve(packageClient) + ", or rebuild the distribution.");
+    process.exit(2);
+  }
+}
 const result = spawnSync(
   process.execPath,
   [
