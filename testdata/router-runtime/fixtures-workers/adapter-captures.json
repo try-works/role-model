@@ -1,0 +1,19 @@
+{
+  "byEndpointId": {
+    "ai21.personal.ai21-api-key.global.j2-light": {
+      "responseFixture": "adapter-openai-response.json"
+    },
+    "openai.personal.primary.us-east-1.fast": {
+      "responseFixture": "adapter-openai-response.json"
+    },
+    "moonshot.personal.primary.global.kimi-k2.5": {
+      "responseFixture": "adapter-kimi-response.json"
+    },
+    "moonshot.personal.kimi-code.global.kimi-k2.5": {
+      "responseFixture": "adapter-kimi-response.json"
+    },
+    "anthropic.team.shared.us-east-1.default": {
+      "responseFixture": "adapter-anthropic-response.json"
+    }
+  }
+}
