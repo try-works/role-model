@@ -115,7 +115,7 @@ export const Message: MessageUnion<{
   ControllerSaveRequested: { endpointId: Schema.String },
   ControlActionCompleted: { key: ControlKeySchema, message: Schema.String, token: Schema.Number, serverEndpointId: Schema.optional(Schema.String) },
   ControlActionFailed: { key: ControlKeySchema, message: Schema.String, token: Schema.Number },
-  ControlActionRequested: { key: ControlKeySchema, token: Schema.Number },
+  ControlActionRequested: { key: ControlKeySchema, targetId: Schema.optional(Schema.String), token: Schema.Number },
   ControlFailed: { key: ControlKeySchema, message: Schema.String, token: Schema.Number },
   ControlLoaded: { key: ControlKeySchema, snapshot: ControlState, token: Schema.Number },
   DiagnosticsFailed: { id: Schema.String, message: Schema.String },

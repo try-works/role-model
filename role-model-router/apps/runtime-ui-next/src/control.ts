@@ -162,7 +162,13 @@ const parseController = (body: unknown, token: number): ControlState => {
 };
 
 export interface ControlActionSpec {
+  /** Static fields; the acting row's id is merged into `targetField` at dispatch. */
   readonly body: Readonly<Record<string, unknown>>;
+  /** Which body field receives the acting row id. Without it the action cannot target a row. */
+  readonly targetField?: "endpointId" | "providerAccountId";
+  /** When set, the control is disabled and this explains why. An action that cannot succeed is */
+  /** not offered as if it could. */
+  readonly disabledReason?: string;
   readonly id: string;
   readonly label: string;
   readonly method: "POST" | "PATCH";
@@ -181,8 +187,9 @@ export interface ControlSpec {
 export const CONTROL_SPECS: Readonly<Record<ControlKey, ControlSpec>> = {
   providers: {
     action: {
-      body: { providerAccountId: "moonshot.personal.primary" },
+      body: {},
       id: "reconnect",
+      targetField: "providerAccountId",
       label: "Reconnect provider",
       method: "POST",
       path: CONTROL_ENDPOINTS.providersReconnect.path,
@@ -196,11 +203,8 @@ export const CONTROL_SPECS: Readonly<Record<ControlKey, ControlSpec>> = {
   },
   endpoints: {
     action: {
-      body: {
-        modelId: "moonshot/kimi-k2.5",
-        providerAccountId: "moonshot.personal.primary",
-        region: "global",
-      },
+      body: {},
+      disabledReason: "Admission needs a provider account, a model and a region; the form is not ported yet (S208).",
       id: "activate",
       label: "Activate endpoint",
       method: "POST",
@@ -215,7 +219,8 @@ export const CONTROL_SPECS: Readonly<Record<ControlKey, ControlSpec>> = {
   },
   controlController: {
     action: {
-      body: { endpointId: "moonshot.personal.primary.global.kimi-k2.5" },
+      body: {},
+      disabledReason: "Use the controller endpoint select and Save controller; this row-action has no endpoint target.",
       id: "update-assignment",
       label: "Update controller",
       method: "PATCH",
@@ -263,7 +268,11 @@ export const createControlClients = (options: ControlClientOptions = {}): Contro
     dispatch: async (key, endpointId) => {
       const spec = CONTROL_SPECS[key];
       const response = await fetchImpl(url(spec.action.path), {
-        body: JSON.stringify(endpointId === undefined ? spec.action.body : { ...spec.action.body, endpointId }),
+        body: JSON.stringify(
+          endpointId === undefined || spec.action.targetField === undefined
+            ? spec.action.body
+            : { ...spec.action.body, [spec.action.targetField]: endpointId },
+        ),
         headers: headers(options),
         method: spec.action.method,
       });

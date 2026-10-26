@@ -95,7 +95,9 @@ export const renderControlPage = (
           ),
           h.DataAttribute("control-action", spec.action.id),
           h.AriaDisabled(state.actionStatus === "pending" || state.status === "loading"),
-          h.OnClick(Message.ControlActionRequested({ key: spec.key, token: state.token })),
+          ...(spec.action.disabledReason === undefined
+  ? [h.OnClick(Message.ControlActionRequested({ key: spec.key, targetId: state.rows[0]?.id, token: state.token }))]
+  : [h.Disabled(true), h.AriaDisabled(true), h.Title(spec.action.disabledReason)]),
         ],
         [state.actionStatus === "pending" ? "Dispatching…" : spec.action.label],
       ),

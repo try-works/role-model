@@ -294,7 +294,7 @@ export const createUpdate =
         if (current.actionStatus === "pending") return { model };
         const token = current.token + 1;
         return {
-          commands: [dispatchControl({ key, token })],
+          commands: [dispatchControl({ endpointId: targetId, key, token })],
           model: {
             ...model,
             controls: {
