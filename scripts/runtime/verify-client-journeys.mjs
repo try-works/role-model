@@ -125,6 +125,36 @@ try {
   await check("learning", async () => { const r = await getJson("/api/role-model/operator/learning"); if (r.status !== 200 || r.body?.knowledge === undefined) throw new Error("learning HTTP " + String(r.status)); return String(r.body.knowledge.schemaVersion); });
   await check("replay jobs", async () => { const r = await getJson("/api/role-model/operator/replay/jobs"); if (r.status !== 200 || !Array.isArray(r.body)) throw new Error("replay HTTP " + String(r.status)); return String(r.body.length) + " jobs"; });
   await check("evaluation jobs", async () => { const r = await getJson("/api/role-model/operator/evaluation/jobs"); if (r.status !== 200 || !Array.isArray(r.body)) throw new Error("evaluation HTTP " + String(r.status)); return String(r.body.length) + " jobs"; });
+  // S180: the shell is more than index bytes. Three defects found by eye in S175-S179 are
+  // checkable here, so a package cannot ship them again: a missing stylesheet, a missing bundle,
+  // and the inline dark palette that made the light theme unreadable (1.12:1).
+  await check("ui css", async () => {
+    const response = await fetch(base + "/assets/main.css");
+    if (response.status !== 200) throw new Error("main.css status " + String(response.status));
+    const css = await response.text();
+    if (css.length < 10_000) throw new Error("main.css is only " + String(css.length) + " bytes");
+    if (!css.includes("html[data-theme=light]")) throw new Error("main.css has no light theme block");
+    if (!css.includes("html[data-theme=dark]")) throw new Error("main.css has no dark theme block");
+    return String(css.length) + " bytes, both theme blocks";
+  });
+  await check("ui bundle", async () => {
+    const response = await fetch(base + "/assets/main.js");
+    if (response.status !== 200) throw new Error("main.js status " + String(response.status));
+    const type = response.headers.get("content-type") ?? "";
+    if (!/javascript/i.test(type)) throw new Error("main.js content-type " + type);
+    const body = await response.text();
+    if (body.length < 50_000) throw new Error("main.js is only " + String(body.length) + " bytes");
+    if (!body.includes('"studio-run"')) throw new Error("main.js does not contain the Studio control");
+    if (!body.includes('"overview-filter"')) throw new Error("main.js does not contain the Overview filters");
+    return String(body.length) + " bytes";
+  });
+  await check("ui theme boot", async () => {
+    const response = await fetch(base + "/");
+    const html = await response.text();
+    if (!html.includes("dataset.theme")) throw new Error("index does not select a theme");
+    if (/setProperty\(\s*"--rm-/.test(html)) throw new Error("index writes palette tokens inline; the light theme breaks");
+    return "theme selected in CSS, no inline palette";
+  });
   await check("ui shell", async () => { const response = await fetch(base + "/"); const text = await response.text(); if (response.status !== 200 || !/Runtime UI|role-model/i.test(text)) throw new Error("UI shell HTTP " + String(response.status)); return String(text.length) + " bytes"; });
 } finally {
   // S106: kill and WAIT. A bare kill() can leave the child alive while the script exits.
