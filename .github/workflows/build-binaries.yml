@@ -602,6 +602,26 @@ jobs:
           }
           if ($LASTEXITCODE -ne 0) { throw "R39 rendered UI audit failed (exit $LASTEXITCODE)" }
 
+          # S201: the same audit at a phone viewport. Horizontal overflow and touch-target defects
+          # only appear when the layout is allowed to reflow.
+          node scripts/runtime/audit-rendered-ui.mjs `
+            --exe "$packageDir/role-model-dev.exe" `
+            --static-root $staticRoot `
+            --fixture-root "testdata/router-runtime/fixtures" `
+            --port 5951 `
+            --width 390 --height 844 `
+            --focus `
+            --seed-chat `
+            --expect-overview-cards 1
+          if ($LASTEXITCODE -eq 2) {
+            if ("${{ vars.R39_VERIFY_BLOCKING }}" -eq "true") {
+              throw "R39 rendered UI audit (390x844) did NOT RUN while R39_VERIFY_BLOCKING=true"
+            }
+            Write-Output "NOT RUN: no Chromium-family browser on this runner (set CHROME_PATH to enable)"
+            exit 0
+          }
+          if ($LASTEXITCODE -ne 0) { throw "R39 rendered UI audit at 390x844 failed (exit $LASTEXITCODE)" }
+
       - name: Archive standalone package (Unix)
         if: matrix.target != 'win32-x64'
         run: |

@@ -260,6 +260,7 @@ for (const route of routes) {
       if (!hasRing) focusReport.push(value.tag + " has no focus indicator: " + value.label);
     }
   }
+  if (process.env.AUDIT_DEBUG === "1") console.log("debug " + route + " " + JSON.stringify(audit).slice(0, 600));
   const problems = [];
   if (expectedCards !== undefined && route === "/") {
     // The shell fetches telemetry rows after hydration, so the cards appear a moment after load.

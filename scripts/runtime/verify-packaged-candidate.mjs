@@ -157,8 +157,12 @@ if (args.includes("--rendered")) {
   );
   if (audit.status === 2) {
     console.log("SKIP rendered: no browser available (set CHROME_PATH to enable)");
-    if (args.includes("--require-rendered")) {
-      console.log("FAIL rendered: --require-rendered was passed and no browser is available");
+    // S201: a skip must not pass when the caller asked for a blocking gate. --require-rendered is
+    // the explicit ask; R39_VERIFY_BLOCKING=true is the same ask from CI, and forgetting the flag
+    // there was the asymmetry review #2 flagged.
+    const blocking = process.env.R39_VERIFY_BLOCKING === "true";
+    if (args.includes("--require-rendered") || blocking) {
+      console.log("FAIL rendered: a rendered audit was required (--require-rendered or R39_VERIFY_BLOCKING=true) and no browser is available");
       process.exit(2);
     }
   } else if (audit.status !== 0) {

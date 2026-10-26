@@ -598,7 +598,7 @@ const overviewPage = (
   }
   const { buckets } = bucketsFor(state, windowMs);
   const itemCount = state.rows.reduce((sum, entry) => { try { const meta = JSON.parse(entry.meta) as { items?: unknown }; return sum + (Array.isArray(meta.items) ? meta.items.length : 0); } catch { return sum; } }, 0);
-  const card = (title: string, description: string, chart: Html) => h.section([h.Class("min-h-[300px] rounded-[8px] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-4"), h.DataAttribute("overview-card", title), h.AriaLabel(title + ": " + description)], [chart]);
+  const card = (title: string, description: string, chart: Html) => h.section([h.Class("min-h-[300px] min-w-0 overflow-hidden rounded-[8px] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-4"), h.DataAttribute("overview-card", title), h.AriaLabel(title + ": " + description)], [chart]);
   const modelRows = candidates.rows.flatMap((entry) => {
     try {
       const meta = JSON.parse(entry.meta) as { pricing?: { inputPer1M?: unknown } | null; endpointId?: unknown; providerId?: unknown };
@@ -621,7 +621,7 @@ const overviewPage = (
             h.line([h.Attribute("x1", "40"), h.Attribute("y1", "70"), h.Attribute("x2", "580"), h.Attribute("y2", "70"), h.Attribute("stroke", "var(--rm-border)")]),
             ...modelRows.map((entry, index) => h.circle([h.Attribute("cx", String(scaleCost(entry.cost))), h.Attribute("cy", String(70 + (index % 2 === 0 ? 0 : 24))), h.Attribute("r", "6"), h.Fill("var(--rm-accent)"), h.Tabindex(0), h.AriaLabel(`${entry.label}: ${String(entry.cost)} per 1M input tokens`), h.DataAttribute("model-point", entry.id)])),
           ]),
-          h.table([h.Class("sr-only")], [h.caption([], ["Model cost strip data"]), h.thead([], [h.tr([], [h.th([], ["Model"]), h.th([], ["Input cost per 1M"]), h.th([], ["Endpoint"])])]), h.tbody([], modelRows.map((entry) => h.tr([], [h.td([], [entry.label]), h.td([], [String(entry.cost)]), h.td([], [entry.endpoint])])))]),
+          h.div([h.Style({ position: "absolute", width: "1px", height: "1px", overflow: "hidden", clipPath: "inset(50%)" })], [h.table([h.Class("sr-only")], [h.caption([], ["Model cost strip data"]), h.thead([], [h.tr([], [h.th([], ["Model"]), h.th([], ["Input cost per 1M"]), h.th([], ["Endpoint"])])]), h.tbody([], modelRows.map((entry) => h.tr([], [h.td([], [entry.label]), h.td([], [String(entry.cost)]), h.td([], [entry.endpoint])])))])]),
         ]),
   ]);
   const tokenChart = chartView({ title: "Token usage over time", description: "Total tokens per bucket for the last " + period.toLowerCase() + ".", series: [{ id: "tokens", label: "Tokens", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.empty ? null : bucket.tokens })) }], state: { status: "ready" }, yUnit: "tokens" }, h);

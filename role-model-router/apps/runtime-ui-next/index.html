@@ -26,6 +26,10 @@
           root.classList.toggle("dark", theme === "dark");
           root.classList.toggle("light", theme === "light");
           root.style.colorScheme = theme;
+          // S201: the static meta said #0a0a0a (dark) even in light mode. Keep it in step with the
+          // theme so the browser chrome does not contradict the page.
+          const themeColor = theme === "light" ? "#ffffff" : "#0a0a0a";
+          document.querySelector('meta[name="theme-color"]')?.setAttribute("content", themeColor);
         } catch {}
       })();
     </script>
