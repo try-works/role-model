@@ -24,4 +24,4 @@ That is not a repository defect, but it is an operating rule for every future ru
 | Item | Converted | Remainder |
 |---|---|---|
 | `table_info` sites | 3 | **13** |
-| transaction sites | 5 | **49** |
+| transaction sites | 5 | **~55** (accurate count, S150a: 66 `BEGIN IMMEDIATE` occurrences tree-wide minus helper/tests/scripts; my earlier 54 came from a non-recursive glob) |

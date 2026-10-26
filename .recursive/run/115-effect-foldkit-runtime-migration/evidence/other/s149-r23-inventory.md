@@ -1,10 +1,14 @@
 # S149 R23 inventory is bigger than the working list - 54 hand-rolled transactions, not 21
 
-After committing the knowledge-store schema slice I counted what remains rather than trusting the enumeration:
+After committing the knowledge-store schema slice I counted what remains rather than trusting the enumeration. **Correction (S150a):** my first count used a PowerShell glob (`shared/**/*.mjs`) that does not recurse, so it under-reported. Recounted with ripgrep across the whole private tree:
 
 ```
-PRAGMA table_info sites left       : 13   (extensions/*/index.mjs)
-hand-rolled BEGIN IMMEDIATE left   : 54   (extensions/*/index.mjs + shared/**/*.mjs)
+PRAGMA table_info occurrences      : 13   (whole private tree, extension + shared)
+exec("BEGIN IMMEDIATE") occurrences: 66   (whole private tree)
+  of which product sites           : ~60
+  the transaction helper itself    : 1
+  test fixtures                    : 2
+  scripts/track-b                  : 3
 ```
 
 ## Why 54 and not 21
