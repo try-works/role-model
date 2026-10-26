@@ -289,7 +289,7 @@ export const createUpdate =
           },
         };
       },
-      ControlActionRequested: ({ key }) => {
+      ControlActionRequested: ({ key, targetId }) => {
         const current = model.controls[key];
         if (current.actionStatus === "pending") return { model };
         const token = current.token + 1;

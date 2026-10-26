@@ -593,7 +593,8 @@ jobs:
             --seed-chat `
             --expect-overview-cards 3 `
             --studio-run `
-            --theme light
+            --theme light `
+            --control-action
           if ($LASTEXITCODE -eq 2) {
             if ("${{ vars.R39_VERIFY_BLOCKING }}" -eq "true") {
               # A skip is not evidence. Once blocking is on, "no browser" fails the job.

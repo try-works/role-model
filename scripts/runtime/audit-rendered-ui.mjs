@@ -335,6 +335,25 @@ for (const route of routes) {
   report.push((problems.length === 0 ? "PASS " : "FAIL ") + route + " (" + String(audit.chars) + " chars)" + (problems.length ? " - " + problems.join("; ") : ""));
 }
 
+// S217: clicking a control action crashed the packaged UI with "targetId is not defined" while every
+// rendered route passed. Drive one control action and require an outcome message instead of a crash.
+if (args.includes("--control-action")) {
+  await send("Page.navigate", { url: base + "/control/providers" }, sessionId);
+  await new Promise((resolve) => setTimeout(resolve, 1500));
+  await send("Runtime.evaluate", { expression: '(() => { const b = document.querySelector("[data-control-action]"); if (!b) return "no-button"; b.click(); return "clicked"; })()', returnByValue: true }, sessionId);
+  let controlOutcome = null;
+  const controlDeadline = Date.now() + Number(process.env.AUDIT_CONTROL_TIMEOUT_MS ?? 15000);
+  while (Date.now() < controlDeadline) {
+    const state = await send("Runtime.evaluate", { expression: '(() => { if (document.body.innerText.includes("Application Crash")) return "crash"; const m = document.querySelector("[data-control-action-message]"); if (m) return "message:" + (m.innerText || "").slice(0, 80); return "pending"; })()', returnByValue: true }, sessionId);
+    controlOutcome = String(state.result?.value ?? "");
+    if (controlOutcome !== "pending") break;
+    await new Promise((resolve) => setTimeout(resolve, 300));
+  }
+  const controlLine = "control action: " + String(controlOutcome);
+  const okControl = controlOutcome !== null && controlOutcome.startsWith("message:");
+  report.push((okControl ? "PASS " : "FAIL ") + controlLine);
+  if (!okControl) failures.push(controlLine);
+}
 // S207: a rendered page is not a working page. Drive one real Studio request and require the
 // response element to report success - the defect this caught was a 400 on the very first click.
 if (args.includes("--studio-run")) {

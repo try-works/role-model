@@ -193,6 +193,7 @@ if (args.includes("--rendered")) {
       "--expect-overview-cards", "3",
       "--studio-run",
       "--theme", "light",
+      "--control-action",
     ],
     { encoding: "utf8", stdio: "inherit" },
   );
