@@ -168,6 +168,25 @@ try {
       return expected;
     });
   }
+  // S195: a real OpenAI-compatible client request through the packaged router. The fixture catalogue
+  // serves canned provider responses, so this asserts the CONTRACT (shape, model echo, usage), not
+  // any particular text - and it is the only journey here that exercises /v1/chat/completions.
+  await check("chat completion", async () => {
+    const requested = process.env.R39_CHAT_MODEL ?? "openai/gpt-4.1-mini-fast";
+    const response = await fetch(base + "/v1/chat/completions", {
+      method: "POST",
+      headers: { "content-type": "application/json", connection: "close" },
+      body: JSON.stringify({ model: requested, messages: [{ role: "user", content: "Say hello in five words." }], max_tokens: 32 }),
+    });
+    if (response.status !== 200) throw new Error("chat status " + String(response.status));
+    const body = await response.json();
+    if (body?.object !== "chat.completion") throw new Error("object " + String(body?.object));
+    if (body?.model !== requested) throw new Error("model echo " + String(body?.model) + " != " + requested);
+    const choice = body?.choices?.[0];
+    if (choice?.message?.role !== "assistant") throw new Error("no assistant message");
+    if (typeof body?.usage?.total_tokens !== "number") throw new Error("no usage.total_tokens");
+    return requested + " total_tokens=" + String(body.usage.total_tokens);
+  });
   await check("ui shell", async () => { const response = await fetch(base + "/"); const text = await response.text(); if (response.status !== 200 || !/Runtime UI|role-model/i.test(text)) throw new Error("UI shell HTTP " + String(response.status)); return String(text.length) + " bytes"; });
 } finally {
   // S106: kill and WAIT. A bare kill() can leave the child alive while the script exits.

@@ -308,6 +308,13 @@ describe("S103a R39 scripts fail closed", () => {
     expect(gate).toContain("--expect-model");
     expect(journeys).toContain("--expect-model");
   });
+  it("the journeys script exercises a real chat completion through the router", async () => {
+    const { readFileSync } = await import("node:fs");
+    const source = readFileSync(path.join(root, "scripts", "runtime", "verify-client-journeys.mjs"), "utf8");
+    expect(source).toContain("/v1/chat/completions");
+    expect(source).toContain("chat completion");
+    expect(source).toContain("total_tokens");
+  });
   it("compare-release refuses to compare a URL with itself", () => {
     const result = script("compare-release.mjs", [
       "--left",

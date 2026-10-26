@@ -163,6 +163,11 @@ const AUDIT = `(() => {
   const smallTargets = [];
   for (const el of controls) {
     if (typeof el.focus !== "function") continue;
+    const cs = getComputedStyle(el);
+    // sr-only controls are 1x1 BY DESIGN until focused; measuring them in their resting state
+    // produced 20 false failures (S194). They are checked separately below.
+    if (cs.clipPath && cs.clipPath.includes("inset(50%)")) continue;
+    if (cs.clip && cs.clip !== "auto") continue;
     const active = document.activeElement;
     el.focus();
     const rect = el.getBoundingClientRect();
@@ -173,10 +178,20 @@ const AUDIT = `(() => {
       smallTargets.push((el.innerText || el.getAttribute("aria-label") || el.tagName).trim().slice(0, 24) + " " + Math.round(rect.width) + "x" + Math.round(rect.height));
     }
   }
+  // The bypass block must actually become a usable target when focused.
+  const skipLink = [...document.querySelectorAll('a[href^="#"]')].find((el) => /skip to/i.test(el.innerText || ""));
+  let skipLinkFocus = null;
+  if (skipLink) {
+    skipLink.focus();
+    const rect = skipLink.getBoundingClientRect();
+    skipLink.blur?.();
+    skipLinkFocus = Math.round(rect.width) + "x" + Math.round(rect.height);
+    if (rect.width < 24 || rect.height < 24) smallTargets.push("skip link does not become visible on focus " + skipLinkFocus);
+  }
   const skip = [...document.querySelectorAll('a[href^="#"]')].some((a) => /skip to/i.test(a.innerText || ""));
   const overflow = document.documentElement.scrollWidth > document.documentElement.clientWidth + 2;
   const wide = overflow ? [...document.querySelectorAll("*")].filter((el) => { const r = el.getBoundingClientRect(); return r.width > 0 && r.right > document.documentElement.clientWidth + 2; }).slice(0, 4).map((el) => el.tagName + "." + String(el.className || "").slice(0, 30)) : [];
-  return { title: document.title, chars: text.length, head: text.slice(0, 70), crash, invisible, unnamed, tooLongName, lowContrast: lowContrast.slice(0, 5), lowContrastCount: lowContrast.length, skip, overflow, wide, smallTargets: smallTargets.slice(0, 4), smallTargetCount: smallTargets.length, viewport: document.documentElement.clientWidth };
+  return { title: document.title, chars: text.length, head: text.slice(0, 70), crash, invisible, unnamed, tooLongName, lowContrast: lowContrast.slice(0, 5), lowContrastCount: lowContrast.length, skip, overflow, wide, skipLinkFocus, smallTargets: smallTargets.slice(0, 4), smallTargetCount: smallTargets.length, viewport: document.documentElement.clientWidth };
 })()`;
 
 const failures = [];
