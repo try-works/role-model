@@ -22,9 +22,19 @@ The release path changed, so the question is whether a real host shuts down any 
 
 So the only behavioural change is one extra **no-op** call. The resource that was genuinely skipped before - `extensionRuntime` - is now covered, and S124 proves it closes exactly once.
 
-## Verification running
+## Verification: full host suite after the change
 
-The full host suite is running in the background (`E:/rm-tmp/host-suite-r104.log`); the last full run was 2,620/2,626 with one classified pre-existing failure. I will report the new numbers rather than assume them.
+The full host suite ran to completion after the S123/S124 changes:
+
+```
+Test Files  1 failed | 430 passed | 3 skipped (434)
+     Tests  1 failed | 2663 passed | 5 skipped (2669)
+  Duration  1668.33s
+```
+
+The single failure is `test/run105-review-advisory-safety.test.ts > refused larger admission leaves bounded prior real snapshot routable` - the **same pre-existing failure** classified earlier, which reproduces at baseline `24678a66` and is unrelated to this session's changes.
+
+Compared with the last full run (2,620/2,626 with the same one failure), the count is up by 43 passing tests: the R27 behaviour slices and the ownership guards added since.
 
 ## Why this matters more than the code change
 
