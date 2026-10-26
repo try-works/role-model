@@ -279,7 +279,7 @@ import {
   writeBenchmarkPreferences,
 } from "./benchmark-summary.js";
 import {
-  type BootstrapShape,
+  type BootstrapContract,
   bootstrapOwner as composedBootstrapOwner,
 } from "./composition-dag.js";
 import {
@@ -4342,8 +4342,8 @@ export interface CreateRuntimeBridgeBackendOptions {
    * Both are inert unless supplied; removed when the backend returns its composition owners as a
    * public value. Production always uses the DAG singleton below.
    */
-  readonly onBootstrapOwner?: (owner: BootstrapShape) => void;
-  readonly bootstrapOwner?: BootstrapShape;
+  readonly onBootstrapOwner?: (owner: BootstrapContract) => void;
+  readonly bootstrapOwner?: BootstrapContract;
   readonly runtimeVendorStartup?: "enabled" | "disabled";
   readonly trackBOperationsEndpoint?: string;
   readonly trackBOperationsToken?: string;

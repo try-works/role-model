@@ -30,7 +30,7 @@ export interface ReadinessOutcome {
   readonly stages: readonly ReadinessStageId[];
 }
 
-export interface ReadinessGateShape {
+export interface ReadinessGate {
   readonly awaitReady: Effect.Effect<ReadinessOutcome>;
   readonly mark: (stage: ReadinessStageId, status: ReadinessStageStatus) => Effect.Effect<void>;
   readonly snapshot: Effect.Effect<ReadinessOutcome>;
@@ -38,7 +38,7 @@ export interface ReadinessGateShape {
 
 export const makeReadinessGate = (options: {
   readonly required: readonly ReadinessStageId[];
-}): Effect.Effect<ReadinessGateShape> =>
+}): Effect.Effect<ReadinessGate> =>
   Effect.gen(function* () {
     const statuses = yield* Ref.make(new Map<ReadinessStageId, ReadinessStageStatus>());
     const settled = yield* Deferred.make<ReadinessOutcome>();

@@ -14,7 +14,7 @@ export interface RunThrottleSnapshot {
   readonly waiting: number;
 }
 
-export interface RunThrottleShape {
+export interface RunThrottle {
   readonly finish: (runId: string) => Effect.Effect<void>;
   readonly give: (runId: string) => Effect.Effect<void>;
   readonly snapshot: (runId: string) => Effect.Effect<RunThrottleSnapshot>;
@@ -28,7 +28,7 @@ interface RunState {
 
 export const makeRunThrottle = (options: {
   readonly maxConcurrentPerRun: number;
-}): Effect.Effect<RunThrottleShape, Error> =>
+}): Effect.Effect<RunThrottle, Error> =>
   Effect.gen(function* () {
     if (!Number.isInteger(options.maxConcurrentPerRun) || options.maxConcurrentPerRun < 1) {
       return yield* Effect.fail(new Error("maxConcurrentPerRun must be a positive integer"));

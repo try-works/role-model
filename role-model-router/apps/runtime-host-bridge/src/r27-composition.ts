@@ -18,6 +18,8 @@ export const managedLayer = <A>(
   Layer.fromBuild((_memo, scope: Scope.Scope) =>
     Effect.map(
       Scope.provide(Effect.acquireRelease(resource.acquire, resource.release), scope),
+      // SAFETY: managedLayer's parameter is a tag whose key Context.make uses to store the value;
+      // the cast only bridges the caller's structural tag type to Context's nominal Key type.
       (value) => Context.make(tag as never, value),
     ),
   );

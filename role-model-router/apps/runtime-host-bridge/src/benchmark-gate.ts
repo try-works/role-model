@@ -15,7 +15,7 @@ export type BenchmarkBeginResult =
   | { readonly ok: true; readonly runId: string }
   | { readonly ok: false; readonly reason: "busy"; readonly activeRunId: string };
 
-export interface BenchmarkGateShape {
+export interface BenchmarkGate {
   readonly active: Effect.Effect<string | undefined>;
   readonly begin: (runId: string) => Effect.Effect<BenchmarkBeginResult>;
   readonly end: (runId: string) => Effect.Effect<void>;
@@ -29,7 +29,7 @@ interface GateState {
 
 export const makeBenchmarkGate = (options: {
   readonly mode: BenchmarkOverlapMode;
-}): Effect.Effect<BenchmarkGateShape> =>
+}): Effect.Effect<BenchmarkGate> =>
   Effect.gen(function* () {
     const state = yield* Ref.make<GateState>({ active: undefined, cancelled: new Set() });
 

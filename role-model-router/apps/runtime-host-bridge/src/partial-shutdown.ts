@@ -34,9 +34,6 @@ export interface PartialShutdownFailure {
   readonly rollbackErrors: readonly RollbackError[];
 }
 
-const asError = (value: unknown): Error =>
-  value instanceof Error ? value : new Error(String(value));
-
 export const acquireWithPartialShutdown = async <T = unknown>(
   owners: readonly ShutdownOwner<T>[],
 ): Promise<PartialShutdownSuccess<T> | PartialShutdownFailure> => {
@@ -51,7 +48,7 @@ export const acquireWithPartialShutdown = async <T = unknown>(
         await entry.release(entry.resource);
         released.push(entry.kind);
       } catch (error) {
-        errors.push({ error: asError(error), kind: entry.kind });
+        errors.push({ error: error instanceof Error ? error : new Error(String(error)), kind: entry.kind });
       }
     }
     acquired.length = 0;
@@ -65,7 +62,7 @@ export const acquireWithPartialShutdown = async <T = unknown>(
     } catch (error) {
       const rolled = await rollback();
       return {
-        error: asError(error),
+        error: error instanceof Error ? error : new Error(String(error)),
         failedAt: owner.kind,
         ok: false,
         released: rolled.released,

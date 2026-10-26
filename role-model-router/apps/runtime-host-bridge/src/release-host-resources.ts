@@ -42,11 +42,17 @@ export const releaseHostResources = async (
   resources: HostReleaseResources,
   onError?: (failure: HostReleaseError) => void,
 ): Promise<HostReleaseResult> => {
-  const result: { errors: HostReleaseError[]; released: string[] } = { errors: [], released: [] };
+  const errors: HostReleaseError[] = [];
+  const released: string[] = [];
+  const result = { errors, released };
   const attempt = async (step: string, release: (() => Promise<void>) | undefined): Promise<void> => {
     const before = result.errors.length;
     await releaseStep(step, release, result);
-    if (result.errors.length > before) onError?.(result.errors[result.errors.length - 1] as HostReleaseError);
+    if (result.errors.length > before) {
+      // SAFETY: the length grew by an attempt() call that only ever pushes a HostReleaseError; the
+      // index is in range because the length just increased.
+      onError?.(result.errors[result.errors.length - 1] as HostReleaseError);
+    }
   };
   await attempt("server", resources.server);
   // S123: these used to be else-branches, so a caller that registered BOTH resources had one of

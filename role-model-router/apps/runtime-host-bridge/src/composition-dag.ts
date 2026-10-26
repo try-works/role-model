@@ -35,50 +35,50 @@ import {
  * - Ref.make/get/update: Ref.ts:178, :206, :587.
  */
 
-export interface CompositionConfigShape {
+export interface CompositionConfigContract {
   readonly instanceId: string;
   readonly channel: "development";
   readonly providerMaxConcurrent: number;
   readonly providerMaxWaiters: number;
 }
 
-export class CompositionConfig extends Context.Service<CompositionConfig, CompositionConfigShape>()(
+export class CompositionConfig extends Context.Service<CompositionConfig, CompositionConfigContract>()(
   "CompositionConfig",
 ) {}
 
-export interface ArtifactStoreAuthorityShape {
+export interface ArtifactStoreAuthorityContract {
   readonly id: string;
   readonly authority: "graph_content_addressed";
 }
 export class ArtifactStoreAuthority extends Context.Service<
   ArtifactStoreAuthority,
-  ArtifactStoreAuthorityShape
+  ArtifactStoreAuthorityContract
 >()("ArtifactStoreAuthority") {}
 
-export interface EventLogAuthorityShape {
+export interface EventLogAuthorityContract {
   readonly id: string;
   readonly boundedMetadata: true;
 }
-export class EventLogAuthority extends Context.Service<EventLogAuthority, EventLogAuthorityShape>()(
+export class EventLogAuthority extends Context.Service<EventLogAuthority, EventLogAuthorityContract>()(
   "EventLogAuthority",
 ) {}
 
-export interface CaptureWalAuthorityShape {
+export interface CaptureWalAuthorityContract {
   readonly id: string;
   readonly owner: "capture_queue";
 }
 export class CaptureWalAuthority extends Context.Service<
   CaptureWalAuthority,
-  CaptureWalAuthorityShape
+  CaptureWalAuthorityContract
 >()("CaptureWalAuthority") {}
 
-export interface RetentionAuthorityShape {
+export interface RetentionAuthorityContract {
   readonly id: string;
   readonly scope: "retention";
 }
 export class RetentionAuthority extends Context.Service<
   RetentionAuthority,
-  RetentionAuthorityShape
+  RetentionAuthorityContract
 >()("RetentionAuthority") {}
 
 export interface ProviderPermitStats {
@@ -91,7 +91,7 @@ export interface ProviderPermitStats {
   readonly maxWaiters: number;
 }
 
-export interface ProviderPermitsShape {
+export interface ProviderPermitsContract {
   /**
    * Runs the effect under one process-owned provider permit. At most `providerMaxWaiters` callers
    * may be parked; callers beyond permit + waiter capacity fail with ProviderPermitOverflowError
@@ -115,58 +115,58 @@ export class ProviderPermitOverflowError extends Error {
     this.limit = limit;
   }
 }
-export class ProviderPermits extends Context.Service<ProviderPermits, ProviderPermitsShape>()(
+export class ProviderPermits extends Context.Service<ProviderPermits, ProviderPermitsContract>()(
   "ProviderPermits",
 ) {}
 
-export interface BackendShape {
+export interface BackendContract {
   readonly id: string;
-  readonly artifactStore: ArtifactStoreAuthorityShape;
-  readonly eventLog: EventLogAuthorityShape;
+  readonly artifactStore: ArtifactStoreAuthorityContract;
+  readonly eventLog: EventLogAuthorityContract;
 }
-export class Backend extends Context.Service<Backend, BackendShape>()("Backend") {}
+export class Backend extends Context.Service<Backend, BackendContract>()("Backend") {}
 
-export interface ServerShape {
+export interface ServerContract {
   readonly id: string;
-  readonly backend: BackendShape;
-  readonly providerPermits: ProviderPermitsShape;
+  readonly backend: BackendContract;
+  readonly providerPermits: ProviderPermitsContract;
 }
-export class Server extends Context.Service<Server, ServerShape>()("Server") {}
+export class Server extends Context.Service<Server, ServerContract>()("Server") {}
 
-export interface BootstrapShape {
+export interface BootstrapContract {
   readonly id: string;
-  readonly artifactStore: ArtifactStoreAuthorityShape;
+  readonly artifactStore: ArtifactStoreAuthorityContract;
   /** The session bootstrap owner's initial state (the same function the host used before). */
   readonly pending: () => SessionBootstrapState;
   /** Runs the ordered bootstrap stages through the existing pure runner. */
   readonly run: (handlers: SessionBootstrapHandlers) => Promise<SessionBootstrapState>;
 }
-export class Bootstrap extends Context.Service<Bootstrap, BootstrapShape>()("Bootstrap") {}
+export class Bootstrap extends Context.Service<Bootstrap, BootstrapContract>()("Bootstrap") {}
 
-export interface RefreshShape {
+export interface RefreshContract {
   readonly id: string;
-  readonly eventLog: EventLogAuthorityShape;
+  readonly eventLog: EventLogAuthorityContract;
 }
-export class Refresh extends Context.Service<Refresh, RefreshShape>()("Refresh") {}
+export class Refresh extends Context.Service<Refresh, RefreshContract>()("Refresh") {}
 
-export interface DrainShape {
+export interface DrainContract {
   readonly id: string;
-  readonly captureWal: CaptureWalAuthorityShape;
-  readonly retention: RetentionAuthorityShape;
+  readonly captureWal: CaptureWalAuthorityContract;
+  readonly retention: RetentionAuthorityContract;
 }
-export class Drain extends Context.Service<Drain, DrainShape>()("Drain") {}
+export class Drain extends Context.Service<Drain, DrainContract>()("Drain") {}
 
-export interface BenchmarkShape {
+export interface BenchmarkContract {
   readonly id: string;
-  readonly providerPermits: ProviderPermitsShape;
+  readonly providerPermits: ProviderPermitsContract;
 }
-export class Benchmark extends Context.Service<Benchmark, BenchmarkShape>()("Benchmark") {}
+export class Benchmark extends Context.Service<Benchmark, BenchmarkContract>()("Benchmark") {}
 
-export interface CliShape {
+export interface CliContract {
   readonly id: string;
-  readonly server: ServerShape;
+  readonly server: ServerContract;
 }
-export class Cli extends Context.Service<Cli, CliShape>()("Cli") {}
+export class Cli extends Context.Service<Cli, CliContract>()("Cli") {}
 
 export type CompositionServices =
   | CompositionConfig
@@ -183,7 +183,7 @@ export type CompositionServices =
   | Benchmark
   | Cli;
 
-export const DEFAULT_COMPOSITION_CONFIG: CompositionConfigShape = Object.freeze({
+export const DEFAULT_COMPOSITION_CONFIG: CompositionConfigContract = Object.freeze({
   channel: "development",
   instanceId: "run115-s21a",
   providerMaxConcurrent: 4,
@@ -191,7 +191,7 @@ export const DEFAULT_COMPOSITION_CONFIG: CompositionConfigShape = Object.freeze(
 });
 
 const configLayer = (
-  config: CompositionConfigShape,
+  config: CompositionConfigContract,
 ): Layer.Layer<CompositionConfig, never, never> =>
   Layer.succeed(CompositionConfig, CompositionConfig.of(config));
 
@@ -213,9 +213,11 @@ export interface MetadataCacheKeyInput {
 export const metadataCacheKey = (input: MetadataCacheKeyInput): string =>
   input.authorityId + "\u0000" + String(input.configGeneration) + "\u0000" + input.modelId;
 
-export interface MetadataCacheShape {
-  readonly get: (key: string, now: number) => Effect.Effect<unknown>;
-  readonly set: (key: string, value: unknown, now: number) => Effect.Effect<void>;
+export type MetadataCacheValue = string | number | boolean | readonly MetadataCacheValue[] | { readonly [key: string]: MetadataCacheValue };
+
+export interface MetadataCacheContract {
+  readonly get: (key: string, now: number) => Effect.Effect<MetadataCacheValue | undefined>;
+  readonly set: (key: string, value: MetadataCacheValue, now: number) => Effect.Effect<void>;
   readonly invalidateGeneration: (generation: number) => Effect.Effect<void>;
   readonly size: () => Effect.Effect<number>;
 }
@@ -223,13 +225,13 @@ export interface MetadataCacheShape {
 interface MetadataCacheEntry {
   readonly generation: number;
   readonly storedAt: number;
-  readonly value: unknown;
+  readonly value: MetadataCacheValue;
 }
 
 export const makeMetadataCache = (options: {
   readonly capacity: number;
   readonly ttlMs: number;
-}): MetadataCacheShape => {
+}): MetadataCacheContract => {
   if (!Number.isInteger(options.capacity) || options.capacity < 1) {
     throw new Error("metadata cache capacity must be a positive integer");
   }
@@ -491,12 +493,12 @@ export const CompositionLayer: Layer.Layer<CompositionServices, never, never> = 
 );
 
 export const makeCompositionLayer = (
-  config: CompositionConfigShape,
+  config: CompositionConfigContract,
 ): Layer.Layer<CompositionServices, never, never> =>
   Layer.provideMerge(ownerLayer, Layer.provideMerge(leafLayers, configLayer(config)));
 
 export const makeConfigLayer = (
-  config: CompositionConfigShape,
+  config: CompositionConfigContract,
 ): Layer.Layer<CompositionConfig, never, never> => configLayer(config);
 
 /**
@@ -504,7 +506,7 @@ export const makeConfigLayer = (
  * service is stateless (pending/run are the existing pure functions), so one composed instance can
  * serve every backend in a process without sharing session state.
  */
-export const composeBootstrapOwner = (): BootstrapShape =>
+export const composeBootstrapOwner = (): BootstrapContract =>
   Effect.runSync(
     Effect.provide(
       Bootstrap.use((owner) => Effect.succeed(owner)),
@@ -512,4 +514,4 @@ export const composeBootstrapOwner = (): BootstrapShape =>
     ),
   );
 
-export const bootstrapOwner: BootstrapShape = composeBootstrapOwner();
+export const bootstrapOwner: BootstrapContract = composeBootstrapOwner();
