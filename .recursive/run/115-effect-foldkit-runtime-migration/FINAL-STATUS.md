@@ -1,4 +1,4 @@
-# Run 115 - consolidated status (written at round 78, from evidence in this directory)
+# Run 115 - consolidated status (written at round 78, refreshed at round 124, from evidence in this directory)
 
 This file exists because the disposition rows are the run's completion argument, and 39 rows with 32 blocked cannot be summarised by any single one of them. It states what is verified, what is blocked, and what would unblock each category - derived from the evidence files, not from intent.
 
@@ -19,13 +19,18 @@ I am not claiming completion. Five of thirty-nine requirements are verified, and
 | Packaged candidate `0.0.20-81-g17cbdd21` ships the Foldkit client (2,660,667 B) and answers `/models` 200 text/html | `s97-repackaged-verified.md` (exe sha256 recomputed by the lead) |
 | **Cross-origin write vulnerability closed** - foreign Origin -> 403 `cross_origin_write_rejected`, no ACAO, no state change; same-origin and no-Origin 200; GET keeps ACAO `*` | `s84-origin-gate-verified.md` (read + ran the falsifiable test), `s86-packaged-verification.md` (packaged proofs) |
 | Acquisition owned by ONE scope; both release paths through it; index 218/218 | `s95-acquisition-wired.md` (wired by the lead) |
-| Full host suite 2,620/2,626, one classified pre-existing failure | `s100-host-suite-final.md`, `s98-host-full-after-scope.md`, `s53a` baseline reproduction |
-| Client suite 257/257 (26 files), `tsc` 0 | `s85-repairs-verified.md` and repeated serial runs |
+| Full host suite **2,673/2,679**, one classified pre-existing failure (reproduces at baseline `24678a66`) | `s100-host-suite-final.md`, `s132-suite-after-slices.md`, `s53a` baseline reproduction |
+| Client suite **289/289** (28 files), `tsc` 0, plus nav-resolution (25), per-route accessible names (7) and focus-visible/reduced-motion pins | `s85-repairs-verified.md`, `s110-nav-audit.md`, `s111-a11y-audit.md`, `s112-css-a11y.md` |
 | D-vs-C **byte-identical** on 6 of 7 surfaces under one fixture config | `s91-byte-parity.md` |
 | R/D/C triple with **zero migration regressions** | `s89-rdc-triple.md` |
 | R staged byte-identical (159 files, same exe sha256) and run isolated on its own state | `s90-r-staging.md` |
 | Controller PATCH and runtime-config PUT verified (falsifiable test + scripted logged E2E) | `s74-controller-verified.md`, `evidence/e2e/s86-config-editor.ps1` + `.log` |
 | R17 J3 cancel/error PASS; J4/J6 honesty PASS | `s66-r17-corrections.md`, `s67-journeys-verified.md` |
+| R39 tooling: fail-closed verifier + symmetric comparator + one-command candidate gate, **wired advisory into `build-binaries.yml`**, repo workflow contracts still 11/11 and 16/16 | `s105-r39-fail-open.md`, `s106-r39-hardened.md`, `s108-workflow-contracts.md`, `s109-packaged-candidate-gate.md` |
+| R27 slices S128-S140: **five resources scope-owned**, one uniform release path, guards against reversion, lint 64->0, behaviour parity measured on shipped binaries (8 same / 1 environment-state) | `s128-server-scope-slice.md`, `s129-backend-scope-slice.md`, `s130-packaged-slice-and-guard.md`, `s133-owner-scope-slice.md`, `s134-uniform-scope-release.md`, `s138-antislop-pass.md`, `s140-slice-behaviour-parity.md` |
+| Cross-origin gate **re-proven on the current packaged binary** (403 / 200 / ACAO* shape unchanged) | `s137-origin-gate-reproven.md` |
+| Private `run115-*` suite **85/85**; three R32 slices verified by the lead; one load-flake diagnosed and fixed | `s135-r32-private-slice-verified.md`, `s144-private-suite-flake.md` |
+| R28 retention off-by-one **demonstrated with numbers**, one-line fix proven in a sandbox copy, not shipped (preserve-semantics instruction) | `s143-r28-prune-defect.md` |
 | Every UI state (success/empty/error) witnessed on the SHIPPED build | `s101-final-visual.md` |
 
 ## The 32 blocked rows, by what would unblock them
