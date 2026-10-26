@@ -42,12 +42,7 @@ const initRoute =
           controls: emptyControls(),
           diagnostics: loadingDiagnostics(route.id),
           observability: idleObservability(),
-          readbacks: {
-            ...emptyReadbacks(),
-            ...(controlKey === "endpoints"
-              ? { configuredModels: loadingReadback(token), providers: loadingReadback(token) }
-              : {}),
-          },
+          readbacks: emptyReadbacks(),
           refresh: initialRuntimeRefreshState(),
           route,
           theme,
@@ -120,12 +115,9 @@ const initRoute =
     if (controlKey !== null) {
       const token = 1;
       const controls = { ...emptyControls(), [controlKey]: loadingControl(token), ...(controlKey === "controlController" ? { endpoints: loadingControl(token) } : {}) };
-    // S210: the endpoints page offers admission, which needs a provider account and a model.
-    // Those are route-scoped readbacks too, so request them here instead of hardcoding ids.
-    const admissionCommands = controlKey === "endpoints" ? [readReadback({ key: "providers", token }), readReadback({ key: "configuredModels", token })] : [];
     const controlCommands = controlKey === "controlController" ? [readControl({ key: controlKey, token }), readControl({ key: "endpoints", token })] : [readControl({ key: controlKey, token })];
       return {
-        commands: [...admissionCommands, ...controlCommands],
+        commands: controlCommands,
         model: {
           clicks: 0,
           controls,
