@@ -156,10 +156,27 @@ const AUDIT = `(() => {
     const contrast = ratio(fg, bg);
     if (contrast < 4.5) lowContrast.push({ text: value.slice(0, 30), ratio: Number(contrast.toFixed(2)) });
   }
+  // S194: WCAG 2.5.8 - a pointer target should be at least 24x24 CSS px. A control that is
+  // technically present but a 12px sliver is the same class of "looks fine in the DOM" defect.
+  // Measure in the FOCUSED state: a skip link is deliberately 1x1 until focused, and judging it in
+  // its hidden state reported 20 false failures on the first run of this check.
+  const smallTargets = [];
+  for (const el of controls) {
+    if (typeof el.focus !== "function") continue;
+    const active = document.activeElement;
+    el.focus();
+    const rect = el.getBoundingClientRect();
+    el.blur?.();
+    if (active && typeof active.focus === "function") active.focus();
+    if (rect.width === 0 && rect.height === 0) continue;
+    if (rect.width < 24 || rect.height < 24) {
+      smallTargets.push((el.innerText || el.getAttribute("aria-label") || el.tagName).trim().slice(0, 24) + " " + Math.round(rect.width) + "x" + Math.round(rect.height));
+    }
+  }
   const skip = [...document.querySelectorAll('a[href^="#"]')].some((a) => /skip to/i.test(a.innerText || ""));
   const overflow = document.documentElement.scrollWidth > document.documentElement.clientWidth + 2;
   const wide = overflow ? [...document.querySelectorAll("*")].filter((el) => { const r = el.getBoundingClientRect(); return r.width > 0 && r.right > document.documentElement.clientWidth + 2; }).slice(0, 4).map((el) => el.tagName + "." + String(el.className || "").slice(0, 30)) : [];
-  return { title: document.title, chars: text.length, head: text.slice(0, 70), crash, invisible, unnamed, tooLongName, lowContrast: lowContrast.slice(0, 5), lowContrastCount: lowContrast.length, skip, overflow, wide, viewport: document.documentElement.clientWidth };
+  return { title: document.title, chars: text.length, head: text.slice(0, 70), crash, invisible, unnamed, tooLongName, lowContrast: lowContrast.slice(0, 5), lowContrastCount: lowContrast.length, skip, overflow, wide, smallTargets: smallTargets.slice(0, 4), smallTargetCount: smallTargets.length, viewport: document.documentElement.clientWidth };
 })()`;
 
 const failures = [];
@@ -199,6 +216,7 @@ for (const route of routes) {
   if (audit.unnamed > 0) problems.push("unnamed controls: " + String(audit.unnamed));
   if (audit.tooLongName.length > 0) problems.push("control name repeats its content: " + audit.tooLongName.join(", "));
   if (audit.lowContrastCount > 0) problems.push("low contrast: " + audit.lowContrast.map((entry) => entry.text + " " + String(entry.ratio) + ":1").join(", "));
+  if (audit.smallTargetCount > 0) problems.push("controls under 24x24: " + audit.smallTargets.join(", "));
   if (audit.overflow) problems.push("horizontal overflow at " + String(audit.viewport) + "px: " + (audit.wide || []).join(", "));
   for (const entry of focusReport) problems.push(entry);
   if (problems.length > 0) failures.push(route + ": " + problems.join("; "));
