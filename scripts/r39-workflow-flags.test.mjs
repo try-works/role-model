@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import test from "node:test";
 
 /**
@@ -57,6 +57,24 @@ test("S215: the R39 steps use distinct loopback ports", () => {
   const ports = [...workflow.matchAll(/--(?:left-port|right-port|port)\s+(\d+)/g)].map((match) => match[1]);
   assert.ok(ports.length >= 4, "the workflow still binds several ports");
   assert.equal(new Set(ports).size, ports.length, "two R39 steps share a port: " + ports.join(","));
+});
+
+test("S225: every workspace package's declared types entry resolves", () => {
+  const root = new URL("../", import.meta.url);
+  const packages = [
+    "role-model-router/packages/effect/package.json",
+    "role-model-router/packages/protocol-routing/package.json",
+  ];
+  const missing = [];
+  for (const relative of packages) {
+    const file = new URL(relative, root);
+    const manifest = JSON.parse(readFileSync(file, "utf8"));
+    const types = manifest.exports?.["."]?.types;
+    if (typeof types !== "string") continue;
+    const target = new URL(types, file);
+    if (!existsSync(target)) missing.push(relative + " -> " + types);
+  }
+  assert.deepEqual(missing, [], "a published type entry points at a file the build does not produce");
 });
 
 test("S215: the advisory flag can be flipped to blocking", () => {
