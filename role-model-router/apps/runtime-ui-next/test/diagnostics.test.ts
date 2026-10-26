@@ -396,7 +396,7 @@ describe("diagnostics page states", () => {
     );
     expect(refresh).toBeDefined();
     expect(refresh?.tagName).toBe("BUTTON");
-    expect(refresh?.className).toContain("focus-visible:ring-2");
+    expect(refresh?.className).toContain("focus-visible:outline-2");
     expect(refresh?.className).toContain("w-full");
     expect(refresh?.disabled).toBe(false);
 
@@ -404,7 +404,7 @@ describe("diagnostics page states", () => {
     expect(links.length).toBeGreaterThanOrEqual(2);
     for (const link of links) {
       expect(link.getAttribute("href")).toBeTruthy();
-      expect((link as HTMLElement).className).toContain("focus-visible:ring-2");
+      expect((link as HTMLElement).className).toContain("focus-visible:outline-2");
     }
   });
 

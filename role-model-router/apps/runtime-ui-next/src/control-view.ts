@@ -94,10 +94,15 @@ export const renderControlPage = (
             "mt-3 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-3 py-1.5 text-[12px] font-medium text-[var(--rm-fg)] disabled:opacity-50",
           ),
           h.DataAttribute("control-action", spec.action.id),
-          h.AriaDisabled(state.actionStatus === "pending" || state.status === "loading"),
-          ...(spec.action.disabledReason === undefined
-  ? [h.OnClick(Message.ControlActionRequested({ key: spec.key, targetId: state.rows[0]?.id, token: state.token }))]
-  : [h.Disabled(true), h.AriaDisabled(true), h.Title(spec.action.disabledReason)]),
+          h.AriaDisabled(state.actionStatus === "pending" || state.status === "loading" || spec.action.disabledReason !== undefined),
+          ...(spec.action.disabledReason === undefined ? [] : [h.Disabled(true), h.Title(spec.action.disabledReason)]),
+          h.OnClick(
+            Message.ControlActionRequested({
+              key: spec.key,
+              targetId: spec.key === "controlController" ? (state.selectedEndpointId ?? state.rows[0]?.id) : state.rows[0]?.id,
+              token: state.token,
+            }),
+          ),
         ],
         [state.actionStatus === "pending" ? "Dispatching…" : spec.action.label],
       ),

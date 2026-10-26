@@ -220,8 +220,8 @@ export const CONTROL_SPECS: Readonly<Record<ControlKey, ControlSpec>> = {
   controlController: {
     action: {
       body: {},
-      disabledReason: "Use the controller endpoint select and Save controller; this row-action has no endpoint target.",
       id: "update-assignment",
+      targetField: "endpointId",
       label: "Update controller",
       method: "PATCH",
       path: CONTROL_ENDPOINTS.controllerUpdate.path,

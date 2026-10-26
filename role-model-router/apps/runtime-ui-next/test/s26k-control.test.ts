@@ -244,9 +244,26 @@ describe("S26k control surface", () => {
       ["POST", CONTROL_SPECS.endpoints.action.path],
       ["PATCH", CONTROL_SPECS.controlController.action.path],
     ]);
-    expect(JSON.parse(calls[0].body ?? "{}")).toEqual({ providerAccountId: "moonshot.personal.primary" });
-    expect(JSON.parse(calls[1].body ?? "{}")).toEqual({ modelId: "moonshot/kimi-k2.5", providerAccountId: "moonshot.personal.primary", region: "global" });
-    expect(JSON.parse(calls[2].body ?? "{}")).toEqual({ endpointId: "moonshot.personal.primary.global.kimi-k2.5" });
+    // S209: the specs no longer carry operator-catalogue sample bodies. Without an acting row the
+    // payload is empty; the row id is merged at dispatch time.
+    expect(JSON.parse(calls[0].body ?? "{}")).toEqual({});
+    expect(JSON.parse(calls[1].body ?? "{}")).toEqual({});
+    expect(JSON.parse(calls[2].body ?? "{}")).toEqual({});
+
+    const targeted: Array<{ body?: string; method?: string }> = [];
+    const targetedClients = createControlClients({
+      baseUrl: "http://localhost",
+      fetchImpl: async (_input, init) => {
+        targeted.push({ body: init?.body === undefined ? undefined : String(init.body), method: init?.method });
+        return new Response(JSON.stringify({ ok: true }), { status: 200 });
+      },
+    });
+    await targetedClients.dispatch("providers", "provider-account-1");
+    await targetedClients.dispatch("endpoints", "endpoint-1");
+    await targetedClients.dispatch("controlController", "endpoint-2");
+    expect(JSON.parse(targeted[0]?.body ?? "{}")).toEqual({ providerAccountId: "provider-account-1" });
+    expect(JSON.parse(targeted[1]?.body ?? "{}")).toEqual({});
+    expect(JSON.parse(targeted[2]?.body ?? "{}")).toEqual({ endpointId: "endpoint-2" });
   });
 
   it("keeps action bodies and read methods on the shared specs", () => {

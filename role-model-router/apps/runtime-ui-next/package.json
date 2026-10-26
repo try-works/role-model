@@ -14,7 +14,8 @@
     "./view": "./src/view.ts"
   },
   "scripts": {
-    "test": "vitest run",
+    "test": "vitest run && node --test test/*.test.mjs",
+    "test:invariants": "node --test test/*.test.mjs",
     "build": "node build.mjs"
   },
   "devDependencies": {
