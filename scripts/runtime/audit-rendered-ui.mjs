@@ -41,7 +41,11 @@ const CHROME_CANDIDATES = [
   "/usr/bin/chromium",
   "/usr/bin/chromium-browser",
 ].filter(Boolean);
-const chromePath = CHROME_CANDIDATES.find((candidate) => existsSync(candidate));
+// CHROME_PATH is authoritative when set: a wrong value must mean "not run", not "silently pick
+// another browser". That distinction is what makes an offline CI skip honest.
+const chromePath = process.env.CHROME_PATH === undefined
+  ? CHROME_CANDIDATES.find((candidate) => existsSync(candidate))
+  : (existsSync(process.env.CHROME_PATH) ? process.env.CHROME_PATH : undefined);
 if (!chromePath) { console.log("NOT RUN: no Chromium-family browser found (set CHROME_PATH)"); process.exit(2); }
 
 let base = value("--url");

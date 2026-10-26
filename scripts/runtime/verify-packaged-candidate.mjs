@@ -108,4 +108,33 @@ const result = spawnSync(
   ],
   { encoding: "utf8", stdio: "inherit" },
 );
-process.exit(result.status ?? 2);
+if (result.status !== 0) process.exit(result.status ?? 2);
+
+// S183: optional rendered audit. HTTP checks cannot see an invisible control, a mislabelled one,
+// low contrast, or a crash banner - all of which have shipped in this run (S175-S182).
+// A missing browser is NOT a failure: the audit reports 2 (not run) and this gate says so.
+if (args.includes("--rendered")) {
+  const audit = spawnSync(
+    process.execPath,
+    [
+      path.join("scripts", "runtime", "audit-rendered-ui.mjs"),
+      "--exe", executable,
+      "--static-root", staticRoot,
+      "--fixture-root", fixtureRoot,
+      "--port", String(port + 1),
+      "--width", "1440",
+      "--height", "900",
+    ],
+    { encoding: "utf8", stdio: "inherit" },
+  );
+  if (audit.status === 2) {
+    console.log("SKIP rendered: no browser available (set CHROME_PATH to enable)");
+    if (args.includes("--require-rendered")) {
+      console.log("FAIL rendered: --require-rendered was passed and no browser is available");
+      process.exit(2);
+    }
+  } else if (audit.status !== 0) {
+    process.exit(audit.status ?? 2);
+  }
+}
+process.exit(0);

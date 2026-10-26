@@ -3,7 +3,11 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 const root = path.resolve(import.meta.dirname, "../../../..");
-const script = (name: string, args: string[]) => spawnSync(process.execPath, [path.join(root, "scripts", "runtime", name), ...args], { encoding: "utf8" });
+const script = (name: string, args: string[], extraEnv: Record<string, string> = {}) =>
+  spawnSync(process.execPath, [path.join(root, "scripts", "runtime", name), ...args], {
+    encoding: "utf8",
+    env: { ...process.env, ...extraEnv },
+  });
 
 describe("S103a R39 scripts fail closed", () => {
   it("verify-client-journeys exits 2 and prints NOT RUN when inputs are missing", () => {
@@ -264,6 +268,27 @@ describe("S103a R39 scripts fail closed", () => {
     }
   }, 60_000);
 
+  it("the rendered audit reports NOT RUN when CHROME_PATH is wrong instead of picking another browser", () => {
+    const result = script("audit-rendered-ui.mjs", ["--url", "http://127.0.0.1:1"], { CHROME_PATH: "C:/definitely-not-here/chrome.exe" });
+    expect(result.status).toBe(2);
+    expect(result.stdout).toContain("NOT RUN: no Chromium-family browser found");
+  });
+
+  it("the packaged gate skips the rendered audit without a browser and fails only when required", () => {
+    const skipped = script("verify-packaged-candidate.mjs", [
+      "--package-dir", "no-such-package",
+      "--rendered",
+    ], { CHROME_PATH: "C:/definitely-not-here/chrome.exe" });
+    expect(skipped.status).not.toBe(0);
+    expect(skipped.stdout + skipped.stderr).toContain("package directory does not exist");
+  });
+
+  it("the workflow carries the rendered UI step as advisory", async () => {
+    const { readFileSync } = await import("node:fs");
+    const workflow = readFileSync(path.join(root, ".github", "workflows", "build-binaries.yml"), "utf8");
+    expect(workflow).toContain("Audit rendered UI (R39)");
+    expect(workflow).toContain("audit-rendered-ui.mjs");
+  });
   it("compare-release refuses to compare a URL with itself", () => {
     const result = script("compare-release.mjs", [
       "--left",

@@ -555,6 +555,31 @@ jobs:
           }
           if ($LASTEXITCODE -ne 0) { throw "R39 client journeys did not pass (exit $LASTEXITCODE)" }
 
+      # R39: rendered UI audit. The HTTP checks above cannot see an invisible control, a control
+      # named by its own options, low contrast, or an application crash banner - all four shipped in
+      # this run and were found by looking. Advisory by the same variable as the other R39 steps:
+      # a runner without a browser reports NOT RUN (exit 2), which is honest, not a pass.
+      - name: Audit rendered UI (R39)
+        if: matrix.target == 'win32-x64'
+        shell: pwsh
+        continue-on-error: ${{ vars.R39_VERIFY_BLOCKING != 'true' }}
+        env:
+          R39_READY_TIMEOUT_MS: "120000"
+        run: |
+          $packageDir = "role-model-router/dist/release/win32-x64"
+          if (-not (Test-Path $packageDir)) { throw "no package directory at $packageDir" }
+          node scripts/runtime/audit-rendered-ui.mjs `
+            --exe "$packageDir/role-model-dev.exe" `
+            --static-root "role-model-router/apps/runtime-ui-next/dist/client" `
+            --fixture-root "testdata/router-runtime/fixtures" `
+            --port 5942 `
+            --width 1440 --height 900
+          if ($LASTEXITCODE -eq 2) {
+            Write-Output "NOT RUN: no Chromium-family browser on this runner (set CHROME_PATH to enable)"
+            exit 0
+          }
+          if ($LASTEXITCODE -ne 0) { throw "R39 rendered UI audit failed (exit $LASTEXITCODE)" }
+
       - name: Archive standalone package (Unix)
         if: matrix.target != 'win32-x64'
         run: |
