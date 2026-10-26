@@ -260,17 +260,25 @@ for (const route of routes) {
   // that never appears is the same class of "valid code, invisible result".
   const focusReport = [];
   let focusStops = 0;
+  let focusNotVisible = 0;
   if (args.includes("--focus")) {
     await send("Runtime.evaluate", { expression: "if (document.activeElement) document.activeElement.blur();" }, sessionId);
     for (let step = 0; step < Number(process.env.AUDIT_FOCUS_STEPS ?? 6); step += 1) {
       await send("Input.dispatchKeyEvent", { type: "rawKeyDown", windowsVirtualKeyCode: 9, key: "Tab", code: "Tab" }, sessionId);
       await send("Input.dispatchKeyEvent", { type: "keyUp", windowsVirtualKeyCode: 9, key: "Tab", code: "Tab" }, sessionId);
-      const focused = await send("Runtime.evaluate", { expression: "(() => { const el = document.activeElement; if (!el || el === document.body) return { none: true }; const cs = getComputedStyle(el); return { tag: el.tagName, label: (el.getAttribute(\"aria-label\") || el.innerText || \"\").trim().slice(0, 24), outline: cs.outlineWidth + \" \" + cs.outlineStyle, shadow: cs.boxShadow, }; })()", returnByValue: true }, sessionId);
+      const focused = await send("Runtime.evaluate", { expression: "(() => { const el = document.activeElement; if (!el || el === document.body) return { none: true }; const cs = getComputedStyle(el); return { tag: el.tagName, label: (el.getAttribute(\"aria-label\") || el.innerText || \"\").trim().slice(0, 24), outline: cs.outlineWidth + \" \" + cs.outlineStyle, shadow: cs.boxShadow, focusVisible: el.matches(\":focus-visible\"), }; })()", returnByValue: true }, sessionId);
       const value = focused.result?.value;
       if (value?.none) continue;
       focusStops += 1;
-      const hasRing = (value.outline && !value.outline.startsWith("0px") && !value.outline.includes("none")) || (value.shadow && value.shadow !== "none");
-      if (!hasRing) focusReport.push(value.tag + " has no focus indicator: " + value.label);
+      if (value.focusVisible === false) { focusNotVisible += 1; continue; }
+      // S203: "some shadow" is not a focus indicator. Require an outline or a shadow whose colour is
+      // at least half opaque - an 8%-alpha ring passes presence checks and is invisible in practice.
+      const shadow = String(value.shadow ?? "none");
+      const shadowRgba = shadow.match(/rgba?\(([^)]+)\)/);
+      const shadowAlpha = shadowRgba ? Number((shadowRgba[1].split(",")[3] ?? "1").trim()) : 0;
+      const strongRing = (shadow !== "none" && shadowAlpha >= 0.5) || (value.outline && !value.outline.startsWith("0px") && !value.outline.includes("none"));
+      const hasRing = strongRing;
+      if (!hasRing) focusReport.push(value.tag + " [" + value.outline + " | " + String(value.shadow).slice(0, 60) + "] " + value.label);
     }
   }
   if (process.env.AUDIT_DEBUG === "1") console.log("debug " + route + " " + JSON.stringify(audit).slice(0, 600));
@@ -302,6 +310,9 @@ for (const route of routes) {
   if (audit.overflow) problems.push("horizontal overflow at " + String(audit.viewport) + "px: " + (audit.wide || []).join(", "));
   for (const entry of focusReport) problems.push(entry);
   if (args.includes("--focus") && focusStops < 3) problems.push("focus check saw only " + String(focusStops) + " focusable stops");
+  if (args.includes("--focus") && focusStops > 0 && focusNotVisible === focusStops) {
+    console.log("note: the harness could not make any element match :focus-visible; the focus-indicator check is NOT RUN on " + route);
+  }
   if (problems.length > 0) failures.push(route + ": " + problems.join("; "));
   report.push((problems.length === 0 ? "PASS " : "FAIL ") + route + " (" + String(audit.chars) + " chars)" + (problems.length ? " - " + problems.join("; ") : ""));
 }

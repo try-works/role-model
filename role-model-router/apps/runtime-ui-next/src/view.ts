@@ -22,7 +22,7 @@ import { type StudioField, type StudioState, StudioTabSchema, studioIdle } from 
 import { AppRoute } from "./route";
 
 const focusRingClass =
-  "rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--rm-accent-subtle)]";
+  "rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--rm-accent)]";
 
 const routeTitle = (route: Model["route"]): string =>
   AppRoute.match(route, {
