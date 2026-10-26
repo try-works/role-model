@@ -1025,7 +1025,7 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
           ),
           h.main(
             [
-              h.Class("rm3-next-shell ml-3 w-full max-w-[1138px] flex-1 py-4"),
+              h.Class("rm3-next-shell ml-3 min-w-0 flex-1 max-w-[1138px] py-4"),
               h.DataAttribute("shell-main", ""),
               h.Id("main-content"),
               h.DataAttribute("refresh-revision", String(model.refresh.lastAppliedRevision)),

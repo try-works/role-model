@@ -82,7 +82,8 @@
     "runtime:verify-client-journeys": "node scripts/runtime/verify-client-journeys.mjs",
     "runtime:compare-release": "node scripts/runtime/compare-release.mjs",
     "runtime:verify-packaged-candidate": "node scripts/runtime/verify-packaged-candidate.mjs",
-    "runtime:smoke-host-source": "node scripts/runtime/smoke-host-source.mjs"
+    "runtime:smoke-host-source": "node scripts/runtime/smoke-host-source.mjs",
+    "runtime:audit-rendered-ui": "node scripts/runtime/audit-rendered-ui.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
