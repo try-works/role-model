@@ -171,6 +171,63 @@ describe("S103a R39 scripts fail closed", () => {
     expect(result.status).toBe(2);
     expect(result.stdout).toContain("must differ");
   });
+  it("compare-release classifies URL pairs: same, environment-state, and a real value difference", async () => {
+    const { spawn } = await import("node:child_process");
+    // The servers must live in another process: the CLI under test is spawned synchronously, which
+    // would block this process and leave its own event loop unable to answer (S171).
+    const serverSource = `
+      const { createServer } = require("node:http");
+      const endpoints = {
+        "/healthz": () => ({ status: "healthy" }),
+        "/api/role-model/runtime/summary": () => ({ runtimeStateRoot: "/state", language: process.env.RIGHT === "1" ? "fr" : "en" }),
+        "/api/role-model/models": () => ({ models: ["m1"] }),
+        "/api/role-model/endpoints": () => ({ endpoints: ["e1"] }),
+        "/api/role-model/router/summary": () => ({ routes: 1 }),
+        "/api/role-model/telemetry/summary": () => ({ requestCount: process.env.RIGHT === "1" ? 7 : 0 }),
+        "/api/role-model/operator/learning": () => ({ knowledge: "ok" }),
+        "/api/role-model/operator/replay/jobs": () => ({ jobs: [] }),
+        "/api/role-model/operator/evaluation/jobs": () => ({ jobs: [] }),
+      };
+      const server = createServer((request, response) => {
+        const handler = endpoints[request.url];
+        if (!handler) { response.statusCode = 404; response.end(); return; }
+        response.setHeader("content-type", "application/json");
+        response.end(JSON.stringify(handler()));
+      });
+      server.listen(0, "127.0.0.1", () => { console.log(String(server.address().port)); });
+    `;
+    const startServer = (right: boolean) =>
+      new Promise<{ port: string; stop: () => void }>((resolve, reject) => {
+        const child = spawn(process.execPath, ["-e", serverSource], {
+          env: { ...process.env, RIGHT: right ? "1" : "0" },
+          stdio: ["ignore", "pipe", "inherit"],
+        });
+        let buffer = "";
+        child.stdout.on("data", (chunk) => {
+          buffer += String(chunk);
+          const line = buffer.split("\n")[0];
+          if (line && /^\d+$/.test(line.trim())) resolve({ port: line.trim(), stop: () => child.kill() });
+        });
+        child.on("error", reject);
+      });
+    const left = await startServer(false);
+    const right = await startServer(true);
+    try {
+      const result = script("compare-release.mjs", [
+        "--left", `http://127.0.0.1:${left.port}`,
+        "--right", `http://127.0.0.1:${right.port}`,
+        "--fixture-root", process.cwd(),
+      ]);
+      expect(result.status).toBe(1);
+      expect(result.stdout).toContain("different /api/role-model/runtime/summary");
+      expect(result.stdout).toContain("environment-state /api/role-model/telemetry/summary");
+      expect(result.stdout).toContain("value-diff /api/role-model/runtime/summary");
+    } finally {
+      left.stop();
+      right.stop();
+    }
+  }, 120_000);
+
   it("compare-release refuses to compare a URL with itself", () => {
     const result = script("compare-release.mjs", [
       "--left",

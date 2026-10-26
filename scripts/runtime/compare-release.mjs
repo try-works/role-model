@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { spawn } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync } from "node:fs";
+import { mkdtempSync, existsSync, mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import os from "node:os";
 
@@ -72,18 +72,24 @@ const waitReady = async (base) => {
 
 let child;
 let leftChild;
+// S171: a per-run temporary state directory, so a stale fixed directory can never block a
+// legitimate package or silently reuse another run's state.
+const freshStateDir = (prefix) => mkdtempSync(path.join(os.tmpdir(), prefix + "-"));
+// Per-side state directories, used only to normalise path-shaped values in the comparison.
+let leftStateForDiff = undefined;
+let rightStateForDiff = undefined;
 let leftBase = left;
 if (leftExe) {
-  const leftStateResolved = path.resolve(leftState ?? path.join(os.tmpdir(), "compare-release-left-state"));
+  const leftStateResolved = leftState === undefined ? freshStateDir("compare-left") : path.resolve(leftState);
+  leftStateForDiff = leftStateResolved;
   mkdirSync(leftStateResolved, { recursive: true });
   leftChild = spawn(leftExe, ["--repo-root", path.dirname(leftExe), "--runtime-state-root", leftStateResolved, "--host", "127.0.0.1", "--port", String(Number(leftPort)), "--fixture-root", fixtureRoot], { stdio: ["ignore", "pipe", "pipe"] });
   leftBase = "http://127.0.0.1:" + String(Number(leftPort));
 }
 let rightBase = right;
 if (rightExe) {
-  const rightStateResolved = path.resolve(
-    rightState ?? path.join(os.tmpdir(), "compare-release-state"),
-  );
+  const rightStateResolved = rightState === undefined ? freshStateDir("compare-right") : path.resolve(rightState);
+  rightStateForDiff = rightStateResolved;
   mkdirSync(rightStateResolved, { recursive: true });
   child = spawn(
     rightExe,
@@ -106,7 +112,10 @@ if (rightExe) {
   }
 }
 const endpoints = ["/healthz", "/api/role-model/runtime/summary", "/api/role-model/models", "/api/role-model/endpoints", "/api/role-model/router/summary", "/api/role-model/telemetry/summary", "/api/role-model/operator/learning", "/api/role-model/operator/replay/jobs", "/api/role-model/operator/evaluation/jobs"];
-const IDENTITY = new Set(["version", "release_version", "commit", "build_date", "executable_sha256", "core_payload_sha256", "source_tree", "runtimeStateRoot", "endpoint", "port", "startedAt", "finishedAt", "stages", "pid", "rssBytes", "path", "reconciledAt"]);
+const IDENTITY = new Set(["version", "release_version", "commit", "build_date", "executable_sha256", "core_payload_sha256", "source_tree", "runtimeStateRoot", "runtime_state_root", "stateRoot", "repoRoot", "repo_root", "staticRoot", "databasePath", "database_path", "port", "host", "startedAt", "started_at", "finishedAt", "finished_at", "pid"]);
+// S171 (review): the previous set also stripped the generic keys "endpoint" and "path", which
+// turned a real controller/runtime configuration difference into a silent "same". Only identity
+// and per-side runtime location are stripped; anything a client configures stays compared.
 const readJson = async (url) => {
   const response = await fetchWithTimeout(url);
   if (!response) return { response: undefined };
@@ -116,11 +125,55 @@ const readJson = async (url) => {
   try { return { response, body: JSON.parse(text) }; } catch { return { response, body: undefined, notJson: true }; }
 };
 const strip = (value) => { if (Array.isArray(value)) return value.map(strip); if (value && typeof value === "object") return Object.fromEntries(Object.entries(value).filter(([key]) => !IDENTITY.has(key)).map(([key, item]) => [key, strip(item)])); return value; };
+// S171: 162 commits apart, a surface legitimately gains keys. Equality alone reported that as
+// "different" and hid which keys were new, which is the shape of the answer a reviewer needs.
+const valueDiff = (left, right, leftState, rightState, prefix = "", out = []) => {
+  if (out.length >= 12) return out;
+  if (left === right) return out;
+  const bothObjects = left && right && typeof left === "object" && typeof right === "object";
+  if (!bothObjects) {
+    const pathname = prefix.slice(0, -1);
+    out.push({ path: pathname, left, right, environmental: isEnvironmental(pathname, left, right, leftState, rightState) });
+    return out;
+  }
+  for (const key of Object.keys(left)) {
+    if (!(key in right)) continue;
+    valueDiff(left[key], right[key], leftState, rightState, prefix + key + ".", out);
+  }
+  return out;
+};
+const shapeDelta = (left, right, prefix = "", out = []) => {
+  if (left === null || right === null || typeof left !== "object" || typeof right !== "object") return out;
+  const leftKeys = Object.keys(left);
+  const rightKeys = Object.keys(right);
+  for (const key of leftKeys) if (!rightKeys.includes(key)) out.push("-" + prefix + key);
+  for (const key of rightKeys) if (!leftKeys.includes(key)) out.push("+" + prefix + key);
+  for (const key of leftKeys) {
+    if (!rightKeys.includes(key)) continue;
+    const next = prefix + key + ".";
+    if (left[key] && right[key] && typeof left[key] === "object" && typeof right[key] === "object") shapeDelta(left[key], right[key], next, out);
+  }
+  return out;
+};
+// S171: a per-side state path, a process memory figure and a reconciliation timestamp differ
+// between ANY two runs; treating them as a parity difference made the tool report "different"
+// for a candidate that was fine, and stripping whole subtrees hid real configuration keys.
+const ENV_KEY_PATTERN = /(^|\.)(rssBytes|heapUsedBytes|heapTotalBytes|externalBytes|uptimeMs|uptimeSeconds|reconciledAt|generatedAt|refreshedAt|atMs|startedAt|finishedAt|durationMs|pid)$/;
+const ENV_PATH_KEY = /(^|\.)(path|stateRoot|runtimeStateRoot|databasePath|staticRoot)$/;
+const isEnvironmental = (pathname, leftValue, rightValue, leftState, rightState) => {
+  if (ENV_KEY_PATTERN.test(pathname)) return true;
+  if (!ENV_PATH_KEY.test(pathname)) return false;
+  if (typeof leftValue !== "string" || typeof rightValue !== "string") return false;
+  const normalize = (value, stateDir) => (stateDir && value.startsWith(stateDir) ? "<state>" + value.slice(stateDir.length) : value);
+  return normalize(leftValue, leftState) === normalize(rightValue, rightState);
+};
 const FETCH_TIMEOUT_MS = Number(process.env.R39_FETCH_TIMEOUT_MS ?? 10_000);
 
-if (leftChild) { const ok = await waitReady(leftBase); if (!ok) { leftChild.kill(); console.log("NOT RUN: --left-exe did not become healthy on " + leftBase); process.exit(2); } }
+if (leftChild) { const ok = await waitReady(leftBase); if (!ok) { leftChild.kill(); child?.kill(); console.log("NOT RUN: --left-exe did not become healthy on " + leftBase); process.exit(2); } }
 
 const rows = [];
+const shapeDeltas = {};
+const valueDeltas = {};
 try { for (const endpoint of endpoints) { let leftResult, rightResult; leftResult = await readJson(leftBase + endpoint); rightResult = await readJson(rightBase + endpoint); const lj = leftResult.body; const rj = rightResult.body; const ls = leftResult.response?.status; const rs = rightResult.response?.status; if (leftResult.notJson || rightResult.notJson) { rows.push({ endpoint, leftStatus: ls, rightStatus: rs, classification: "not-run" }); continue; }
       const isOk = (status) => typeof status === "number" && status >= 200 && status < 300;
       let classification;
@@ -137,15 +190,43 @@ try { for (const endpoint of endpoints) { let leftResult, rightResult; leftResul
         classification =
           JSON.stringify(lj) === JSON.stringify(rj) ? "same" : "environment-state";
       } else {
-        classification = JSON.stringify(strip(lj)) === JSON.stringify(strip(rj)) ? "same" : "different";
+        const strippedLeft = strip(lj);
+        const strippedRight = strip(rj);
+        if (JSON.stringify(strippedLeft) === JSON.stringify(strippedRight)) {
+          classification = "same";
+        } else {
+          const delta = shapeDelta(strippedLeft, strippedRight);
+          // A key-set change is reported separately from a value change: it is version skew
+          // unless a shared key also changed value.
+          classification = delta.length > 0 ? "shape-delta" : "different";
+          if (delta.length > 0) shapeDeltas[endpoint] = delta;
+          else {
+            const diffs = valueDiff(strippedLeft, strippedRight, leftStateForDiff, rightStateForDiff);
+            if (diffs.every((entry) => entry.environmental)) {
+              classification = "environment-state";
+              valueDeltas[endpoint] = diffs;
+            } else {
+              valueDeltas[endpoint] = diffs.filter((entry) => !entry.environmental);
+            }
+          }
+        }
       }
       rows.push({ endpoint, leftStatus: ls, rightStatus: rs, classification }); } } finally { child?.kill(); leftChild?.kill(); }
 for (const row of rows) console.log(row.classification + " " + row.endpoint + " (" + String(row.leftStatus) + "/" + String(row.rightStatus) + ")");
+for (const [endpoint, diff] of Object.entries(valueDeltas)) {
+  console.log("value-diff " + endpoint + ": " + diff.map((entry) => entry.path + " (" + JSON.stringify(entry.left) + " -> " + JSON.stringify(entry.right) + ")").join(" | "));
+}
+for (const [endpoint, delta] of Object.entries(shapeDeltas)) {
+  console.log("shape-delta keys " + endpoint + ": " + delta.slice(0, 12).join(", ") + (delta.length > 12 ? " (+" + String(delta.length - 12) + " more)" : ""));
+}
 const counts = rows.reduce((map, row) => ({ ...map, [row.classification]: (map[row.classification] ?? 0) + 1 }), {});
 console.log(JSON.stringify(counts));
 const notRun = counts["not-run"] ?? 0;
 if (notRun > 0) {
   console.log("NOT RUN: " + String(notRun) + " endpoint(s) were unreachable or did not answer 2xx on both sides; a comparison is not evidence");
-  process.exit((counts.different ?? 0) > 0 ? 1 : 2);
+  // S171: exitCode, not process.exit - exiting while fetch sockets are still closing trips a libuv
+  // assertion on Windows (0xC0000409), which reports a crash for a comparison that completed.
+  process.exitCode = (counts.different ?? 0) > 0 ? 1 : 2;
+} else {
+  process.exitCode = (counts.different ?? 0) > 0 ? 1 : 0;
 }
-process.exit((counts.different ?? 0) > 0 ? 1 : 0);
