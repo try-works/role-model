@@ -207,10 +207,14 @@ const rightVersion = await healthVersionOf(rightBase);
 const versionMismatches = [];
 if (expectLeftVersion !== undefined && leftVersion !== expectLeftVersion) versionMismatches.push("left is " + String(leftVersion) + ", expected " + expectLeftVersion);
 if (expectRightVersion !== undefined && rightVersion !== expectRightVersion) versionMismatches.push("right is " + String(rightVersion) + ", expected " + expectRightVersion);
+let identityFailed = false;
 if (versionMismatches.length > 0) {
   console.log("FAIL identity: " + versionMismatches.join("; "));
   child?.kill();
-  process.exit(2);
+  identityFailed = true;
+  // S171: process.exit here trips a libuv assertion (0xC0000409) while fetch sockets close. Skip the
+  // comparison instead and set the exit code at the end, where the script already does it.
+  endpoints.splice(0, endpoints.length);
 }
 console.log("identity left=" + String(leftVersion) + " right=" + String(rightVersion));
 const rows = [];
@@ -278,3 +282,4 @@ if (notRun > 0) {
 } else {
   process.exitCode = (counts.different ?? 0) > 0 ? 1 : 0;
 }
+if (identityFailed) process.exitCode = 2;
