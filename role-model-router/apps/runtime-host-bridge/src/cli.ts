@@ -12426,7 +12426,25 @@ export async function main(): Promise<void> {
           qaExtensions,
         }),
       );
-      hostScope.register("extensionRuntimeOwner", async () => { if (extensionRuntimeOwner !== null) await extensionRuntimeOwner.close(); });
+      /**
+       * S133 (R27 fourth slice): the extension runtime owner is owned by an Effect scope. The owner
+       * is created above (it starts its runtime promise immediately), so this is addFinalizer rather
+       * than acquireRelease - the acquisition cannot be moved without reordering startup, and moving
+       * it is a separate change. Ownership is what R27 counts, and close still runs exactly once
+       * because the owner memoizes its closePromise.
+       */
+      const extensionOwnerScope = Effect.runSync(Scope.make());
+      await Effect.runPromise(
+        Scope.addFinalizer(
+          extensionOwnerScope,
+          Effect.promise(async () => {
+            if (extensionRuntimeOwner !== null) await extensionRuntimeOwner.close();
+          }),
+        ),
+      );
+      hostScope.register("extensionRuntimeOwner", async () => {
+        await Effect.runPromise(Scope.close(extensionOwnerScope, Exit.void));
+      });
       const packagedScope = Effect.runSync(Scope.make());
       try {
         packagedRuntime = await Effect.runPromise(
