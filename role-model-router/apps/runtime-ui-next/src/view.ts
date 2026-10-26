@@ -907,6 +907,11 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
       h.DataAttribute("refresh-state", model.refresh.status),
     ],
     [
+      // S181: bypass block. The sidebar repeats on every route, so a keyboard user must be able to
+      // jump past it (WCAG 2.4.1). Visually hidden until focused. It is a CHILD, not an attribute:
+      // placing it in the attribute array made Foldkit treat it as an attribute builder and the app
+      // crashed with "handler is not a function" (caught by loading the page, not by the build).
+      h.a([h.Href("#main-content"), h.Class("sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded focus:bg-[var(--rm-accent)] focus:px-3 focus:py-2 focus:text-[12px] focus:text-[var(--rm-on-primary)]")], ["Skip to content"]),
       h.aside(
         [
           h.Class(
@@ -1022,6 +1027,7 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
             [
               h.Class("rm3-next-shell ml-3 w-full max-w-[1138px] flex-1 py-4"),
               h.DataAttribute("shell-main", ""),
+              h.Id("main-content"),
               h.DataAttribute("refresh-revision", String(model.refresh.lastAppliedRevision)),
               h.DataAttribute("refresh-state", model.refresh.status),
             ],
