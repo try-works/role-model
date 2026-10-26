@@ -178,7 +178,7 @@ describe("S103a R39 scripts fail closed", () => {
     const serverSource = `
       const { createServer } = require("node:http");
       const endpoints = {
-        "/healthz": () => ({ status: "healthy" }),
+        "/healthz": () => ({ status: "healthy", runtime: { channel: process.env.CHANNEL || "development" } }),
         "/api/role-model/runtime/summary": () => ({ runtimeStateRoot: "/state", language: process.env.RIGHT === "1" ? "fr" : "en" }),
         "/api/role-model/models": () => ({ models: ["m1"] }),
         "/api/role-model/endpoints": () => ({ endpoints: ["e1"] }),
@@ -196,10 +196,10 @@ describe("S103a R39 scripts fail closed", () => {
       });
       server.listen(0, "127.0.0.1", () => { console.log(String(server.address().port)); });
     `;
-    const startServer = (right: boolean) =>
+    const startServer = (right: boolean, channel = "development") =>
       new Promise<{ port: string; stop: () => void }>((resolve, reject) => {
         const child = spawn(process.execPath, ["-e", serverSource], {
-          env: { ...process.env, RIGHT: right ? "1" : "0" },
+          env: { ...process.env, RIGHT: right ? "1" : "0", CHANNEL: channel },
           stdio: ["ignore", "pipe", "inherit"],
         });
         let buffer = "";
@@ -227,6 +227,42 @@ describe("S103a R39 scripts fail closed", () => {
       right.stop();
     }
   }, 120_000);
+
+  it("compare-release refuses a URL pair whose channels differ", async () => {
+    const { spawn } = await import("node:child_process");
+    const source = `
+      const { createServer } = require("node:http");
+      createServer((request, response) => {
+        response.setHeader("content-type", "application/json");
+        if (request.url === "/healthz") { response.end(JSON.stringify({ status: "healthy", runtime: { channel: process.env.CHANNEL } })); return; }
+        response.end(JSON.stringify({}));
+      }).listen(0, "127.0.0.1", function () { console.log(String(this.address().port)); });
+    `;
+    const start = (channel: string) => new Promise<{ port: string; stop: () => void }>((resolve) => {
+      const child = spawn(process.execPath, ["-e", source], { env: { ...process.env, CHANNEL: channel }, stdio: ["ignore", "pipe", "inherit"] });
+      let buffer = "";
+      child.stdout.on("data", (chunk) => {
+        buffer += String(chunk);
+        const line = buffer.split("\n")[0].trim();
+        if (/^\d+$/.test(line)) resolve({ port: line, stop: () => child.kill() });
+      });
+    });
+    const left = await start("production");
+    const right = await start("development");
+    try {
+      const result = script("compare-release.mjs", [
+        "--left", `http://127.0.0.1:${left.port}`,
+        "--right", `http://127.0.0.1:${right.port}`,
+        "--fixture-root", process.cwd(),
+      ]);
+      expect(result.status).toBe(2);
+      expect(result.stdout).toContain("channels differ");
+      expect(result.stdout).toContain("production vs development");
+    } finally {
+      left.stop();
+      right.stop();
+    }
+  }, 60_000);
 
   it("compare-release refuses to compare a URL with itself", () => {
     const result = script("compare-release.mjs", [

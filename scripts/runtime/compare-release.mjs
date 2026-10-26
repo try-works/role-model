@@ -48,7 +48,7 @@ if (problems.length > 0) { console.log("NOT RUN: " + problems.join("; ")); proce
 
 const fetchWithTimeout = async (url) => {
   try {
-    return await fetch(url, { signal: AbortSignal.timeout(Number(process.env.R39_FETCH_TIMEOUT_MS ?? 10_000)) });
+    return await fetch(url, { headers: { connection: "close" }, signal: AbortSignal.timeout(Number(process.env.R39_FETCH_TIMEOUT_MS ?? 10_000)) });
   } catch {
     return undefined;
   }
@@ -169,6 +169,29 @@ const isEnvironmental = (pathname, leftValue, rightValue, leftState, rightState)
 };
 const FETCH_TIMEOUT_MS = Number(process.env.R39_FETCH_TIMEOUT_MS ?? 10_000);
 
+// S173 (review): cross-channel refusal only worked exe/exe. Resolve the channel of a URL side too,
+// by asking that side directly, before any comparison runs. Children started for the other side are
+// killed on refusal so nothing is left running.
+const channelOfUrl = async (base) => {
+  const result = await readJson(base + "/healthz");
+  return result.body?.runtime?.channel;
+};
+const urlBaseOf = (url, port) => url ?? (port === undefined ? undefined : "http://127.0.0.1:" + String(Number(port)));
+if (!args.includes("--allow-cross-channel")) {
+  const leftUrlBase = urlBaseOf(left, leftPort);
+  const rightUrlBase = urlBaseOf(right, rightPort);
+  const leftChannelResolved = leftChannel ?? (leftUrlBase === undefined ? undefined : await channelOfUrl(leftUrlBase.replace(/\/$/, "")));
+  const rightChannelResolved = rightChannel ?? (rightUrlBase === undefined ? undefined : await channelOfUrl(rightUrlBase.replace(/\/$/, "")));
+  if (leftChannelResolved !== undefined && rightChannelResolved !== undefined && leftChannelResolved !== rightChannelResolved) {
+    child?.kill();
+    leftChild?.kill();
+    console.log(
+      "NOT RUN: channels differ (" + leftChannelResolved + " vs " + rightChannelResolved +
+        "); pass --allow-cross-channel if that is deliberate",
+    );
+    process.exit(2);
+  }
+}
 if (leftChild) { const ok = await waitReady(leftBase); if (!ok) { leftChild.kill(); child?.kill(); console.log("NOT RUN: --left-exe did not become healthy on " + leftBase); process.exit(2); } }
 
 const rows = [];
