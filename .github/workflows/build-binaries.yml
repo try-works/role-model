@@ -555,6 +555,19 @@ jobs:
           }
           if ($LASTEXITCODE -ne 0) { throw "R39 client journeys did not pass (exit $LASTEXITCODE)" }
 
+          # S193: the same package must also serve a catalogue that names a specific worker. This is
+          # the configuration path; it does not prove a live credential (see S191/S192).
+          node scripts/runtime/verify-client-journeys.mjs `
+            --manifest "$packageDir/manifest.json" `
+            --executable "$packageDir/role-model-dev.exe" `
+            --repo-root "$packageDir" `
+            --static-root "role-model-router/apps/runtime-ui-next/dist/client" `
+            --port 5944 `
+            --state-root ($stateRoot + "-workers") `
+            --fixture-root "testdata/router-runtime/fixtures-workers" `
+            --expect-model "deepseek-official/deepseek-flash"
+          if ($LASTEXITCODE -ne 0) { throw "R39 worker-catalogue journeys did not pass (exit $LASTEXITCODE)" }
+
       # R39: rendered UI audit. The HTTP checks above cannot see an invisible control, a control
       # named by its own options, low contrast, or an application crash banner - all four shipped in
       # this run and were found by looking. Advisory by the same variable as the other R39 steps:
