@@ -1,5 +1,21 @@
 # Run 115 - consolidated status (written at round 78, refreshed at round 124, from evidence in this directory)
 
+> **Current state at round 162 (2026-10-26).** Sections below are historical and were written at rounds 78-124; the numbers in them are the numbers *then*. Everything in this first block was re-measured today.
+>
+> | Measure | Value | Evidence |
+> |---|---|---|
+> | requirement ledger | **5 verified (R4, R6, R19, R25, R26), 2 implemented (R22, R33), 32 blocked** | `03-implementation-summary.md` |
+> | public host suite | **2,687 / 2,693**, one classified pre-existing failure (`run105-review-advisory-safety`), reproduces at baseline `24678a66` | `evidence/other/s186-full-suite-after-ui.md` |
+> | private track-b suite | **2,886 / 2,931**, 39 failures: 5 diagnosed today as concurrency contention in `run108` (26/26 pass in isolation), the rest the same set as before, none individually proven | `evidence/other/s187-private-suite-after-backend.md` |
+> | packaged candidate | `0.0.20-188-gd362b404`, exe sha `e3181d50…`, private sidecar `5c09f4ef…`, **10 gate checks PASS** | `evidence/other/s188-pair-rebuilt.md` |
+> | rendered UI | 20 routes x 2 viewports x keyboard focus, **0 failures**; 5 defect classes automated (invisible control, control naming, contrast, overflow, focus) | `evidence/other/s182-rendered-ui-audit.md`, `s184-focus-visibility-check.md` |
+> | parity | **D (0.0.20-1) vs C (0.0.20-188): 7 same, 2 environment-state, 0 different**; R leg **dated**, not re-measurable with a dev candidate | `evidence/other/s189-parity-at-188.md` |
+> | R23 burndown | **44** transaction sites and **4** schema sites remain, each reason-bearing, both inventories enforced by tests that fail on any unlisted site | `addenda/01-transaction-ownership-semantics.md` |
+> | trees | public and private both **clean**; private distribution builds without the dirty allowance | `evidence/other/s163-private-tree-clean.md` |
+>
+> **Not claimed at any point:** completion. 32 rows remain blocked, each by a named external precondition (Run 88 identity, live credentials, private trace-root route, CI dispatch, or an owner decision).
+
+
 This file exists because the disposition rows are the run's completion argument, and 39 rows with 32 blocked cannot be summarised by any single one of them. It states what is verified, what is blocked, and what would unblock each category - derived from the evidence files, not from intent.
 
 ## Where the run actually stands
