@@ -140,6 +140,37 @@ describe("S103a R39 scripts fail closed", () => {
     expect(source).not.toContain('"--scope-id"');
   });
 
+  it("neither verifier forces a scope id on the child it starts", async () => {
+    const { readFileSync } = await import("node:fs");
+    for (const name of ["compare-release.mjs", "verify-client-journeys.mjs"]) {
+      const source = readFileSync(path.join(root, "scripts", "runtime", name), "utf8");
+      expect(source, name).not.toContain('"--scope-id"');
+    }
+  });
+
+  it("verify-client-journeys logs a health failure and throws instead of exiting past its finally", async () => {
+    const { readFileSync } = await import("node:fs");
+    const source = readFileSync(path.join(root, "scripts", "runtime", "verify-client-journeys.mjs"), "utf8");
+    const start = source.indexOf("if (health === undefined) {");
+    const throwAt = source.indexOf("throw new Error(\"health not ready\")", start);
+    const end = throwAt < 0 ? -1 : throwAt + "throw new Error(\"health not ready\")".length;
+    expect(start).toBeGreaterThan(-1);
+    const healthBlock = source.slice(start, end);
+    expect(healthBlock).toContain("throw new Error");
+    expect(/\n\s*process\.exit\(/.test(healthBlock)).toBe(false);
+  });
+
+  it("compare-release refuses the same port on both sides", () => {
+    const result = script("compare-release.mjs", [
+      "--left-exe", "left.exe",
+      "--left-port", "6121",
+      "--right-exe", "right.exe",
+      "--right-port", "6121",
+      "--fixture-root", process.cwd(),
+    ]);
+    expect(result.status).toBe(2);
+    expect(result.stdout).toContain("must differ");
+  });
   it("compare-release refuses to compare a URL with itself", () => {
     const result = script("compare-release.mjs", [
       "--left",

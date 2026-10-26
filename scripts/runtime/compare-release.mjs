@@ -25,6 +25,9 @@ if ((leftExe || rightExe) && !existsSync(fixtureRoot)) {
 }
 for (const [name, raw] of [["--left", left], ["--right", right]]) if (raw) { try { const url = new URL(raw); if (OPERATOR_PORTS.has(Number(url.port))) problems.push(name + " uses an operator port"); } catch { problems.push(name + " is not a URL"); } }
 if (rightPort && (!Number.isInteger(Number(rightPort)) || OPERATOR_PORTS.has(Number(rightPort)))) problems.push("--right-port is invalid or an operator port");
+// S170: the same port on both sides made the right child fail to bind while waitReady reached the
+// LEFT server, and every surface then compared left against left and reported "same".
+if (leftExe && rightExe && leftPort !== undefined && rightPort !== undefined && Number(leftPort) === Number(rightPort)) problems.push("--left-port and --right-port must differ (the same port on both sides compares one process with itself)");
 if (rightExe && !existsSync(rightExe)) problems.push("--right-exe does not exist");
 if (left && right && left.replace(/\/$/, "") === right.replace(/\/$/, "")) problems.push("--left and --right are the same URL");
 // S167: comparing a production package against a development package measures the channel
@@ -104,13 +107,21 @@ if (rightExe) {
 }
 const endpoints = ["/healthz", "/api/role-model/runtime/summary", "/api/role-model/models", "/api/role-model/endpoints", "/api/role-model/router/summary", "/api/role-model/telemetry/summary", "/api/role-model/operator/learning", "/api/role-model/operator/replay/jobs", "/api/role-model/operator/evaluation/jobs"];
 const IDENTITY = new Set(["version", "release_version", "commit", "build_date", "executable_sha256", "core_payload_sha256", "source_tree", "runtimeStateRoot", "endpoint", "port", "startedAt", "finishedAt", "stages", "pid", "rssBytes", "path", "reconciledAt"]);
+const readJson = async (url) => {
+  const response = await fetchWithTimeout(url);
+  if (!response) return { response: undefined };
+  const text = await response.text();
+  // S170: two 200 text/html bodies both parse to undefined, which compared as "same". A non-JSON
+  // body is not evidence of agreement, it is evidence that the surface did not answer as an API.
+  try { return { response, body: JSON.parse(text) }; } catch { return { response, body: undefined, notJson: true }; }
+};
 const strip = (value) => { if (Array.isArray(value)) return value.map(strip); if (value && typeof value === "object") return Object.fromEntries(Object.entries(value).filter(([key]) => !IDENTITY.has(key)).map(([key, item]) => [key, strip(item)])); return value; };
 const FETCH_TIMEOUT_MS = Number(process.env.R39_FETCH_TIMEOUT_MS ?? 10_000);
 
 if (leftChild) { const ok = await waitReady(leftBase); if (!ok) { leftChild.kill(); console.log("NOT RUN: --left-exe did not become healthy on " + leftBase); process.exit(2); } }
 
 const rows = [];
-try { for (const endpoint of endpoints) { let leftResult, rightResult; leftResult = await fetchWithTimeout(leftBase + endpoint); rightResult = await fetchWithTimeout(rightBase + endpoint); const lb = leftResult ? await leftResult.text() : ""; const rb = rightResult ? await rightResult.text() : ""; let lj, rj; try { lj = JSON.parse(lb); } catch {} try { rj = JSON.parse(rb); } catch {} const ls = leftResult?.status, rs = rightResult?.status;
+try { for (const endpoint of endpoints) { let leftResult, rightResult; leftResult = await readJson(leftBase + endpoint); rightResult = await readJson(rightBase + endpoint); const lj = leftResult.body; const rj = rightResult.body; const ls = leftResult.response?.status; const rs = rightResult.response?.status; if (leftResult.notJson || rightResult.notJson) { rows.push({ endpoint, leftStatus: ls, rightStatus: rs, classification: "not-run" }); continue; }
       const isOk = (status) => typeof status === "number" && status >= 200 && status < 300;
       let classification;
       if (!isOk(ls) || !isOk(rs)) {

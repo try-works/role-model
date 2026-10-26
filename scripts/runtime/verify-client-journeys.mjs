@@ -77,10 +77,12 @@ if (resolvedFixtureRoot === undefined) {
   process.exit(2);
 }
 const fixtureRoot = resolvedFixtureRoot;
+// S170: the scope id is not forced. Hardcoding a development scope made a production-channel
+// package refuse to start, and the verifier then reported a health failure for a binary that runs
+// fine by hand (same defect the reviewer found in compare-release).
 const childArgs = [
   "--repo-root", path.resolve(inputs.repoRoot),
   "--runtime-state-root", stateRoot,
-  "--scope-id", "standalone-runtime-dev",
   "--host", "127.0.0.1",
   "--port", String(port),
   "--fixture-root", fixtureRoot,
@@ -92,6 +94,7 @@ const child = spawn(inputs.executable, childArgs, { stdio: ["ignore", "pipe", "p
 const childStderr = [];
 child.stderr.on("data", (chunk) => { childStderr.push(String(chunk)); });
 const results = [];
+let healthFailure = null;
 const check = async (name, fn) => { try { const detail = await fn(); results.push({ name, status: "PASS", detail }); } catch (error) { results.push({ name, status: "FAIL", detail: error instanceof Error ? error.message : String(error) }); } };
 const getJson = async (pathname) => { const response = await fetch(base + pathname); const text = await response.text(); let body; try { body = JSON.parse(text); } catch { body = undefined; } return { body, status: response.status, text }; };
 try {
@@ -102,14 +105,18 @@ try {
   if (health === undefined) {
     const tail = childStderr.join("").split("\n").filter(Boolean).slice(-3).join(" | ");
     const exited = child.exitCode !== null;
-    console.log(
-      (exited ? "FAIL" : "NOT RUN") +
+    // S170: log, then THROW. A process.exit here skipped the finally that kills and waits for the
+    // child, so a failed health check could leave the package running.
+    healthFailure = {
+      exitCode: exited ? 1 : 2,
+      message:
+        (exited ? "FAIL" : "NOT RUN") +
         ": health did not become ready on port " + String(port) +
         " (child " + (exited ? "exited " + String(child.exitCode) : "still running") +
         (tail ? "; stderr: " + tail : "") + ")",
-    );
-    if (tail) console.log("stderr_tail=" + tail);
-    process.exit(exited ? 1 : 2);
+      tail,
+    };
+    throw new Error("health not ready");
   }
   await check("health", () => { if (health.status !== "healthy") throw new Error("health status " + String(health.status)); return "healthy " + String(health.runtime?.version ?? "unknown"); });
   await check("models", async () => { const r = await getJson("/api/role-model/models"); if (r.status !== 200 || !Array.isArray(r.body)) throw new Error("models HTTP " + String(r.status)); return String(r.body.length) + " models"; });
@@ -136,6 +143,11 @@ try {
       }
     }
   }
+}
+if (healthFailure !== null) {
+  console.log(healthFailure.message);
+  if (healthFailure.tail) console.log("stderr_tail=" + healthFailure.tail);
+  process.exit(healthFailure.exitCode);
 }
 const failed = results.filter((entry) => entry.status === "FAIL");
 console.log("version=" + String(results[0]?.detail ?? "unknown"));
