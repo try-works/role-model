@@ -130,7 +130,7 @@ if (workerFixtures !== undefined && workerModel !== undefined) {
       "--fixture-root", path.resolve(workerFixtures),
       "--expect-model", workerModel,
     ],
-    { encoding: "utf8", stdio: "inherit" },
+    { encoding: "utf8", stdio: "inherit", env: { ...process.env, R39_CHAT_MODEL: workerModel } },
   );
   if (workerResult.status !== 0) process.exit(workerResult.status ?? 2);
 }

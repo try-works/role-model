@@ -267,7 +267,7 @@ for (const route of routes) {
     let count = 0;
     const cardsDeadline = Date.now() + Number(process.env.AUDIT_CARDS_TIMEOUT_MS ?? 8000);
     while (Date.now() < cardsDeadline) {
-      const cards = await send("Runtime.evaluate", { expression: 'document.querySelectorAll("[data-overview-card]").length', returnByValue: true }, sessionId);
+      const cards = await send("Runtime.evaluate", { expression: '[...document.querySelectorAll("[data-overview-card]")].filter((el) => el.getBoundingClientRect().width > 0 && el.innerText.trim().length > 0).length', returnByValue: true }, sessionId);
       count = Number(cards.result?.value ?? 0);
       if (count >= Number(expectedCards)) break;
       await new Promise((resolve) => setTimeout(resolve, 250));

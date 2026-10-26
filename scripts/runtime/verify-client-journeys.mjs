@@ -185,6 +185,10 @@ try {
     const choice = body?.choices?.[0];
     if (choice?.message?.role !== "assistant") throw new Error("no assistant message");
     if (typeof body?.usage?.total_tokens !== "number") throw new Error("no usage.total_tokens");
+    // S200: a zero-token or empty-content response would have passed the shape checks above.
+    if (body.usage.total_tokens < 1) throw new Error("usage.total_tokens is " + String(body.usage.total_tokens));
+    const content = choice?.message?.content;
+    if (typeof content !== "string" || content.trim().length === 0) throw new Error("assistant content is empty");
     return requested + " total_tokens=" + String(body.usage.total_tokens);
   });
   await check("ui shell", async () => { const response = await fetch(base + "/"); const text = await response.text(); if (response.status !== 200 || !/Runtime UI|role-model/i.test(text)) throw new Error("UI shell HTTP " + String(response.status)); return String(text.length) + " bytes"; });
