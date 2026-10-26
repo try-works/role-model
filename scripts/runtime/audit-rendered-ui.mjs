@@ -248,6 +248,16 @@ for (const route of routes) {
     }
   }
   await new Promise((resolve) => setTimeout(resolve, Number(process.env.AUDIT_SETTLE_MS ?? 1200)));
+  // S214: the light theme is a real surface, not a token exercise. Apply it in the page and make the
+  // checks run against it; a mismatch between the requested and actual theme is a failure, not a skip.
+  const themeFlag = (() => { const index = args.indexOf("--theme"); return index >= 0 ? args[index + 1] : "dark"; })();
+  const currentTheme = themeFlag === "both" ? "dark" : themeFlag;
+  if (currentTheme === "light" || currentTheme === "dark") {
+    const applied = await send("Runtime.evaluate", { expression: '(() => { document.documentElement.dataset.theme = ' + JSON.stringify(currentTheme) + '; const scheme = getComputedStyle(document.documentElement).colorScheme; return document.documentElement.dataset.theme + "|" + scheme; })()', returnByValue: true }, sessionId);
+    const seen = String(applied.result?.value ?? "");
+    if (!seen.startsWith(currentTheme)) problems.push("theme " + currentTheme + " did not apply (saw " + seen + ")");
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
   const settleDeadline = Date.now() + Number(process.env.AUDIT_READYSTATE_TIMEOUT_MS ?? 8000);
   while (Date.now() < settleDeadline) {
     const state = await send("Runtime.evaluate", { expression: "document.readyState", returnByValue: true }, sessionId);

@@ -192,6 +192,7 @@ if (args.includes("--rendered")) {
       "--seed-chat",
       "--expect-overview-cards", "3",
       "--studio-run",
+      "--theme", "light",
     ],
     { encoding: "utf8", stdio: "inherit" },
   );
