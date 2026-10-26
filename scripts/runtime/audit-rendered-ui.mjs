@@ -176,6 +176,22 @@ for (const route of routes) {
     audit = undefined;
   }
   if (audit === undefined) { failures.push(route + ": audit failed to evaluate"); report.push("FAIL " + route + " (evaluation failed)"); continue; }
+  // S184: keyboard focus must be visible. Tab through the first few stops and require an outline or
+  // a box-shadow on whatever receives focus. S175-S183 found four render-only defects; a focus ring
+  // that never appears is the same class of "valid code, invisible result".
+  const focusReport = [];
+  if (args.includes("--focus")) {
+    await send("Runtime.evaluate", { expression: "if (document.activeElement) document.activeElement.blur();" }, sessionId);
+    for (let step = 0; step < Number(process.env.AUDIT_FOCUS_STEPS ?? 6); step += 1) {
+      await send("Input.dispatchKeyEvent", { type: "rawKeyDown", windowsVirtualKeyCode: 9, key: "Tab", code: "Tab" }, sessionId);
+      await send("Input.dispatchKeyEvent", { type: "keyUp", windowsVirtualKeyCode: 9, key: "Tab", code: "Tab" }, sessionId);
+      const focused = await send("Runtime.evaluate", { expression: "(() => { const el = document.activeElement; if (!el || el === document.body) return { none: true }; const cs = getComputedStyle(el); return { tag: el.tagName, label: (el.getAttribute(\"aria-label\") || el.innerText || \"\").trim().slice(0, 24), outline: cs.outlineWidth + \" \" + cs.outlineStyle, shadow: cs.boxShadow, }; })()", returnByValue: true }, sessionId);
+      const value = focused.result?.value;
+      if (value?.none) continue;
+      const hasRing = (value.outline && !value.outline.startsWith("0px") && !value.outline.includes("none")) || (value.shadow && value.shadow !== "none");
+      if (!hasRing) focusReport.push(value.tag + " has no focus indicator: " + value.label);
+    }
+  }
   const problems = [];
   if (audit.crash) problems.push("application crash banner");
   if (audit.chars < 40) problems.push("page has almost no text (" + String(audit.chars) + " chars)");
@@ -184,11 +200,12 @@ for (const route of routes) {
   if (audit.tooLongName.length > 0) problems.push("control name repeats its content: " + audit.tooLongName.join(", "));
   if (audit.lowContrastCount > 0) problems.push("low contrast: " + audit.lowContrast.map((entry) => entry.text + " " + String(entry.ratio) + ":1").join(", "));
   if (audit.overflow) problems.push("horizontal overflow at " + String(audit.viewport) + "px: " + (audit.wide || []).join(", "));
+  for (const entry of focusReport) problems.push(entry);
   if (problems.length > 0) failures.push(route + ": " + problems.join("; "));
   report.push((problems.length === 0 ? "PASS " : "FAIL ") + route + " (" + String(audit.chars) + " chars)" + (problems.length ? " - " + problems.join("; ") : ""));
 }
 
 for (const line of report) console.log(line);
-console.log(JSON.stringify({ routes: routes.length, failures: failures.length, skipLink: "checked on / only" }));
+console.log(JSON.stringify({ routes: routes.length, failures: failures.length, focus: args.includes("--focus") }));
 cleanup();
 process.exit(failures.length === 0 ? 0 : 1);

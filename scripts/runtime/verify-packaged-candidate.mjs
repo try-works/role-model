@@ -124,6 +124,7 @@ if (args.includes("--rendered")) {
       "--port", String(port + 1),
       "--width", "1440",
       "--height", "900",
+      "--focus",
     ],
     { encoding: "utf8", stdio: "inherit" },
   );

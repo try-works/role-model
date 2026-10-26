@@ -573,7 +573,8 @@ jobs:
             --static-root "role-model-router/apps/runtime-ui-next/dist/client" `
             --fixture-root "testdata/router-runtime/fixtures" `
             --port 5942 `
-            --width 1440 --height 900
+            --width 1440 --height 900 `
+            --focus
           if ($LASTEXITCODE -eq 2) {
             Write-Output "NOT RUN: no Chromium-family browser on this runner (set CHROME_PATH to enable)"
             exit 0
