@@ -13,6 +13,18 @@
 > | R23 burndown | **44** transaction sites and **4** schema sites remain, each reason-bearing, both inventories enforced by tests that fail on any unlisted site | `addenda/01-transaction-ownership-semantics.md` |
 > | trees | public and private both **clean**; private distribution builds without the dirty allowance | `evidence/other/s163-private-tree-clean.md` |
 >
+>
+> **Round 184 additions to that block (UI journeys, not just rendering):**
+>
+> | Journey | Result |
+> |---|---|
+> | controller select + Save | works, model follows endpoint (S190) |
+> | Studio request (click Run) | works after the route-scoped catalogue fix (S207); now a gate check |
+> | endpoint admission | **not implemented**; control disabled with a reason (S208-S210) |
+> | provider reconnect | targets a real account; **not exercised** |
+>
+> The packaged gate now drives: 10 HTTP checks, a real `/v1/chat/completions` request, the worker catalogue with a required model, 20 rendered routes at 1440x900 **and** 390x844 with focus checks, seeded Overview cards, and one Studio request. Three CI steps, all advisory pending `vars.R39_VERIFY_BLOCKING`.
+>
 > **Not claimed at any point:** completion. 32 rows remain blocked, each by a named external precondition (Run 88 identity, live credentials, private trace-root route, CI dispatch, or an owner decision).
 
 
