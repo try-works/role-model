@@ -178,23 +178,26 @@ describe("S26k control surface", () => {
   });
 
   it("renders the exact action failure phrase", async () => {
+    // S246: this used the controller row-action, which S209 deliberately disabled (it has no endpoint
+    // target). The phrase is a property of the control surface, so it is exercised on the providers
+    // action, which is enabled and posts a real row id.
     mountAt(
-      "/control/controller",
+      "/control/providers",
       client({
         dispatch: async () => ({ body: { reason: "rejected" }, status: 500 }),
-        read: async () => ({ body: { mode: "auto" }, status: 200 }),
+        read: async () => ({ body: [{ id: "provider-1" }], status: 200 }),
       }),
     );
     const button = (await waitFor(
-      () => document.querySelector("[data-control-action='update-assignment']") ?? undefined,
-      "controller action",
+      () => document.querySelector("[data-control-action='reconnect']") ?? undefined,
+      "providers action",
     )) as HTMLButtonElement;
     button.click();
     const failed = await waitFor(
       () => document.querySelector("[data-control-action-state='error']") ?? undefined,
       "action error",
     );
-    expect(failed.textContent).toContain("Controller action failed: HTTP 500");
+    expect(failed.textContent).toContain("Providers action failed: HTTP 500");
   });
 
   it("ties every control endpoint to the parsed host route table including method", () => {
