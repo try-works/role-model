@@ -1,0 +1,19 @@
+COMMAND: node vitest run test/s303-scoped-service.test.ts test/s303-sea-leg.test.ts
+CWD: role-model-router/packages/process-supervisor ; S303 scoped + SEA tests
+EXIT_CODE=0
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/process-supervisor
+
+ ✓ test/s303-scoped-service.test.ts (3 tests) 2553ms
+   ✓ S303 scoped process service > scoped vendor preserves env, cwd and logs, and close stops the child  1306ms
+   ✓ S303 scoped process service > stopping a scoped vendor kills its grandchild tree  1227ms
+ ✓ test/s303-sea-leg.test.ts (1 test) 24833ms
+   ✓ S303 SEA supervision > starts the pinned sealed SEA, becomes healthy, stops it, and records its identity  24827ms
+
+ Test Files  2 passed (2)
+      Tests  4 passed (4)
+   Start at  01:55:30
+   Duration  29.56s (transform 377ms, setup 0ms, collect 696ms, tests 27.39s, environment 1ms, prepare 4.44s)
+
+

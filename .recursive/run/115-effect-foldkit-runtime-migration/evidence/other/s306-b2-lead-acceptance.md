@@ -1,0 +1,9 @@
+# S306 — B2/R22 scoped process service Lead acceptance
+
+- Reviewer: s9 (deepseek-flash) FINAL PASS after three HOLD rounds — evidence/other/s305-b2-scoped-service-review.md sha256 `5158E34D4DFA45ACE4F616D17A1E701C0A98BE984008447251049F39A9D10E29`.
+- Frozen bytes verified by Lead: src/index.ts `EEA23FBA8076A9F860D205D3F3AFA67491539F3633DA39205268B5EB08B20A20` (24349 B), scoped test `2FE4CB2119A1931999EA788F5855D200E75FB1F010CF83E0C8A90885B60A1906` (12737 B), sea-leg test `16534BB621433D972E038E1D82B5BA946EE66D3FFABE245E2EEA7F884A65F0BB` (6672 B).
+- Lead suite verification: `corepack pnpm --filter @role-model-router/process-supervisor test` → Test Files 6 passed (6) under BOTH default TMP (D:\DEV\dsh-temp) and TMP/TEMP=E:\rm-tmp.
+- Lead lint: both new test files clean; src/index.ts retains ONLY the pre-existing no-unknown-parameters at :488 (existing catch, unchanged by this slice).
+- SEA leg: pinned sealed candidate 0.0.20-269-g35103383 sha d2bc6231… asserted (sha/size/version), supervised healthy 11.5 s / stop 1.1 s, endpoint down; rootOnDrive E: fail-fast with override + clean skip when unavailable; win32-gated.
+- R22 status: scoped ownership (reverse-order release-all, AggregateError, shared closePromise, register-throw rollback with surfaced stop failure), env/cwd/logs/token/loopback positive evidence, Windows grandchild tree kill, hung health/partial startup/repeated stop/force escalation proven. R22 moves from PARTIAL toward closure; the plain-TS scoped pattern deviation is recorded and reviewed (package has no Effect dependency).
+- Non-blocking residual adopted from s9: Node URL.hostname yields `[::1]` for IPv6 while the helper list has `::1` — a legitimate IPv6 loopback would be falsely rejected (false negative). Named follow-on only if IPv6 loopback is required.

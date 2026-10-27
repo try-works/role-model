@@ -1,0 +1,55 @@
+COMMAND: node vitest run (TMP/TEMP=D:\DEV\dsh-temp) ; S305 r2 RED
+EXIT_CODE=1
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/process-supervisor
+
+ ✓ test/s5c-supervisor-repairs.test.ts (2 tests | 1 skipped) 2121ms
+   ✓ S5c supervisor repairs > a failed taskkill rejects within the stop bound instead of hanging  2115ms
+ ✓ test/s5b-process-lifecycle.test.ts (5 tests | 2 skipped) 4160ms
+   ✓ S5b process lifecycle damage paths > repeated and concurrent stops settle once, signal once, and resolve after deletion  1973ms
+   ✓ S5b process lifecycle damage paths > a child that dies during startup surfaces the startup failure with stderr, not a readiness timeout  562ms
+   ✓ S5b process lifecycle damage paths > Windows records the force-only stop limitation for a console child  1618ms
+ ✓ test/health-wait-timeout.test.ts (3 tests) 4705ms
+   ✓ process-supervisor bounded health wait > rejects within startupTimeoutMs when the health peer accepts and never responds  671ms
+   ✓ process-supervisor bounded health wait > becomes healthy when a responsive endpoint replies after about 200ms  1412ms
+   ✓ process-supervisor bounded health wait > stops polling after a health timeout and shuts down cleanly  2615ms
+ ❯ test/s303-scoped-service.test.ts (6 tests | 1 failed) 5474ms
+   ✓ S303 scoped process service > scope close runs every release in reverse order even when an earlier release rejects 19ms
+   ✓ S303 scoped process service > scoped vendor preserves env, cwd and logs, and close stops the child  1960ms
+   ✓ S303 scoped process service > starting into a closed scope rolls the vendor back and kills the child  1701ms
+   × S303 scoped process service > a rejecting stop during the rollback is surfaced, never swallowed 49ms
+     → expected Error: VendorScope is closed; a release r… to be an instance of AggregateError
+   ✓ S303 scoped process service > two concurrent closes join one teardown instead of returning early 146ms
+   ✓ S303 scoped process service > stopping a scoped vendor kills its grandchild tree  1592ms
+ ✓ test/index.test.ts (6 tests) 13300ms
+   ✓ process-supervisor > starts a vendor process, waits for health, and reports it as healthy  1918ms
+   ✓ process-supervisor > can run supervised vendors without inheriting provider credential variables  1694ms
+   ✓ process-supervisor > tracks crash callbacks when a managed vendor exits unexpectedly  1415ms
+   ✓ process-supervisor > captures child logs and restarts an unexpectedly crashed vendor with backoff  2749ms
+   ✓ process-supervisor > forces bounded shutdown when a vendor ignores the initial termination signal  1826ms
+   ✓ process-supervisor > stops spawned child processes when a managed vendor shuts down on Windows  3665ms
+ ✓ test/s303-sea-leg.test.ts (2 tests) 24435ms
+   ✓ S303 SEA supervision > starts the pinned sealed SEA, becomes healthy, stops it, and asserts its identity  24421ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s303-scoped-service.test.ts > S303 scoped process service > a rejecting stop during the rollback is surfaced, never swallowed
+AssertionError: expected Error: VendorScope is closed; a release r… to be an instance of AggregateError
+ ❯ test/s303-scoped-service.test.ts:195:20
+    193|       vendorId: "s303-stop-failure",
+    194|     }).catch((error: unknown) => error);
+    195|     expect(caught).toBeInstanceOf(AggregateError);
+       |                    ^
+    196|     expect(calls).toEqual(["stop"]);
+    197|     const aggregate = caught instanceof AggregateError ? caught : unde…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 5 passed (6)
+      Tests  1 failed | 20 passed | 3 skipped (24)
+   Start at  02:27:18
+   Duration  27.31s (transform 1.02s, setup 0ms, collect 2.34s, tests 54.19s, environment 6ms, prepare 5.27s)
+
+
