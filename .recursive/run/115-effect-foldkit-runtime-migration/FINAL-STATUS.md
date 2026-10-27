@@ -25,7 +25,16 @@
 >
 > The packaged gate now drives: 10 HTTP checks, a real `/v1/chat/completions` request, the worker catalogue with a required model, 20 rendered routes at 1440x900 **and** 390x844 with focus checks, seeded Overview cards, and one Studio request. Three CI steps, all advisory pending `vars.R39_VERIFY_BLOCKING`.
 >
-> **Not claimed at any point:** completion. 32 rows remain blocked, each by a named external precondition (Run 88 identity, live credentials, private trace-root route, CI dispatch, or an owner decision).
+> **Foldkit upstream adoption (owner-approved plan, S247):**
+>
+> | Phase | Status | Evidence |
+> |---|---|---|
+> | 1 scene/story tests (pinned) | **started** - click budget ratchet in place (30 sites, monotonic down), scene smoke test adopted | `s247-foldkit-adoption-plan.md`, `s248-click-budget.md` |
+> | 2 @foldkit/ui controls (pinned) | planned - 2 selects, 1 input, 2 textareas in `view.ts` | `s247` |
+> | 3 Blocks/Effect Layers | planned, blocked on PR #1655 merging to main + effect peer check + CI dispatch | `s245-foldkit-workspace-reference.md`, `s247` |
+>
+> Phase 3 is the path to R27's closed Layer DAG; phases 1-2 need no dependency change.
+>> **Not claimed at any point:** completion. 32 rows remain blocked, each by a named external precondition (Run 88 identity, live credentials, private trace-root route, CI dispatch, or an owner decision).
 
 
 This file exists because the disposition rows are the run's completion argument, and 39 rows with 32 blocked cannot be summarised by any single one of them. It states what is verified, what is blocked, and what would unblock each category - derived from the evidence files, not from intent.
