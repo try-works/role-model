@@ -21,7 +21,7 @@ const BUDGET = {
   "s40b-overview.test.ts": 1,
   "s46a-studio.test.ts": 3,
   "s73a-controller.test.ts": 1,
-  "s76a-runtime-config.test.ts": 11
+  "s76a-runtime-config.test.ts": 9
 };
 
 const testDirectory = path.join(import.meta.dirname);

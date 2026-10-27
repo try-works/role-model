@@ -10,21 +10,20 @@ const editor = () => document.querySelector("[data-runtime-config-editor]") as H
 const setText = (text: string) => { const node = editor(); node.value = text; node.dispatchEvent(new Event("input", { bubbles: true })); };
 afterEach(() => { for (const entry of mounted.splice(0)) { entry.handle.dispose(); entry.container.remove(); } window.history.replaceState({}, "", "/"); });
 
+/**
+ * S76a: the runtime-config wiring that needs a real client.
+ *
+ * The "not loaded yet" panel, the invalid-JSON paint and the review/saved rendering that used to live here moved
+ * to test/s256-runtime-config-rendering-scene.test.ts (scene, no click) and the invalid-save rule moved to
+ * test/s257-runtime-config-invalid-save.test.ts (update, no click). What stays here is what needs the fetch path:
+ * the stale-confirm guard, the exact PUT body and the 409 path. The PUT wire shape itself is s222.
+ */
 describe("S76a runtime config editor", () => {
   it("validates JSON and lists changed top-level keys without sending", () => {
     expect("error" in parseRuntimeConfigText("{bad")).toBe(true);
     expect("error" in parseRuntimeConfigText("[]")).toBe(true);
     expect(runtimeConfigDiff({ a: 1, b: 2 }, { a: 1, b: 3, c: 4 })).toEqual(["changed: b", "added: c"]);
     expect(runtimeConfigDiff({ a: 1, b: 2 }, { a: 1 })).toEqual(["removed: b"]);
-  });
-
-  it("does not offer Review before Load", async () => {
-    const calls: string[] = [];
-    mount(async (input, init) => { calls.push((init?.method ?? "GET") + " " + String(input)); return json({ applied: false, config: { a: 1 } }); });
-    await waitFor(() => document.querySelector("[data-runtime-config-load]") ? true : undefined, "load button");
-    expect(document.querySelector("[data-runtime-config-editor]")).toBeNull();
-    expect(document.querySelector("[data-runtime-config-save]")).toBeNull();
-    expect(calls.filter((call) => call.startsWith("PUT"))).toHaveLength(0);
   });
 
   it("refuses to PUT when the server changed between Load and Confirm", async () => {
@@ -44,20 +43,7 @@ describe("S76a runtime config editor", () => {
     expect(document.querySelector("[data-runtime-config-error]")?.textContent).toContain("changed since Load");
   });
 
-  it("blocks invalid JSON with no request", async () => {
-    const calls: string[] = [];
-    mount(async (input, init) => { calls.push((init?.method ?? "GET") + " " + String(input)); return json({ applied: false, config: { a: 1 } }); });
-    await waitFor(() => document.querySelector("[data-runtime-config-load]") ? true : undefined, "load");
-    (document.querySelector("[data-runtime-config-load]") as HTMLButtonElement).click();
-    await waitFor(() => editor()?.value.includes('"a"') ? true : undefined, "editor");
-    setText("{bad");
-    (document.querySelector("[data-runtime-config-save]") as HTMLButtonElement).click();
-    await waitFor(() => document.querySelector("[data-runtime-config-error]") ? true : undefined, "invalid alert");
-    expect(calls.filter((call) => call.startsWith("PUT"))).toHaveLength(0);
-    expect(editor().value).toBe("{bad");
-  });
-
-  it("shows the diff, PUTs exact body, and displays the server's applied snapshot", async () => {
+  it("PUTs the exact edited body from the confirm step", async () => {
     const calls: Array<{ body: unknown; method: string }> = [];
     let saved = false;
     mount(async (input, init) => {
@@ -71,13 +57,12 @@ describe("S76a runtime config editor", () => {
     setText(JSON.stringify({ a: 1, b: 3 }, null, 2));
     (document.querySelector("[data-runtime-config-save]") as HTMLButtonElement).click();
     await waitFor(() => document.querySelector("[data-runtime-config-confirm]") ? true : undefined, "confirm");
-    expect(document.querySelector("[data-runtime-config-confirm]")?.textContent).toContain("changed: b");
     (document.querySelector("[data-runtime-config-confirm-save]") as HTMLButtonElement).click();
+    // The notice is the completion signal for the PUT + the applied re-read; its text and the resulting
+    // editor snapshot are rendering assertions and live in s256-runtime-config-rendering-scene.test.ts.
     await waitFor(() => document.querySelector("[data-runtime-config-notice]") ? true : undefined, "notice");
     expect(calls.at(-1)?.body).toEqual({ a: 1, b: 3 });
     expect(calls.at(-1)?.method).toBe("PUT");
-    expect(editor().value).toContain('"b": 99');
-    expect(document.querySelector("[data-runtime-config-notice]")?.textContent).toContain("Applied snapshot from server");
   });
 
   it("keeps the previous snapshot and text on 4xx", async () => {
