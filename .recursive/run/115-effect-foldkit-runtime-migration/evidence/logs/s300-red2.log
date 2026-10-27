@@ -1,0 +1,40 @@
+COMMAND: node --test scripts/s4-contracts-inventory.test.mjs
+CWD: public worktree ; S301 strict RED: weak guard accepts a reworded SQL exclusion
+EXIT_CODE=1
+
+✔ the hand-written sample inventory validates (62.6687ms)
+✔ the real inventory validates against the code (900.7787ms)
+✔ the inventory covers every kind and every disposition (2.6794ms)
+✔ a deliberately wrong citation fails (2393.9915ms)
+✔ R19/B0: the SQL service is a live product surface, never excluded as callerless (5.0901ms)
+✖ S301 reworded false SQL exclusion is rejected by the structured guard (7.4683ms)
+✔ duplicate ids, unknown dispositions and unknown kinds are rejected (2779.6153ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 6
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6525.3542
+
+✖ failing tests:
+
+test at scripts\s4-contracts-inventory.test.mjs:260:1
+✖ S301 reworded false SQL exclusion is rejected by the structured guard (7.4683ms)
+  AssertionError [ERR_ASSERTION]: a reworded SQL exclusion must be rejected, got: 
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/s4-contracts-inventory.test.mjs:267:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+

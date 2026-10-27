@@ -24,10 +24,6 @@
         "reason": "Dist-only package (no workspace src definition); a built artifact wrapper, not inventoried as a code surface."
       },
       {
-        "area": "role-model-router/packages/sql-sqlite-node/src/service.ts",
-        "reason": "Effect SQLite service has no product caller in the public host today (its callers are package tests only), so it is not counted as a live product surface; R23 wiring is tracked elsewhere."
-      },
-      {
         "area": "role-model-router/apps/runtime-ui (legacy React) and app pages",
         "reason": "Client surfaces belong to R7/R8; only wrapper call sites in runtime-ui-next are cited."
       },
@@ -156,7 +152,7 @@
       "disposition": "existing-effect",
       "definition": {
         "file": "role-model-router/apps/runtime-host-bridge/src/run108-observability.ts",
-        "line": 322
+        "line": 333
       },
       "callers": [
         {
@@ -341,6 +337,363 @@
         }
       ],
       "reason": "Imports effect at line 3; parseUnifiedRuntimeConfigText is the runtime config boundary used by the host."
+    },
+    {
+      "id": "sql-service-make",
+      "kind": "operation",
+      "disposition": "existing-effect",
+      "definition": {
+        "file": "role-model-router/packages/sql-sqlite-node/src/service.ts",
+        "line": 490
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 11,
+          "note": "product caller"
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 19,
+          "note": "product caller"
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/queue-runtime/admin.ts",
+          "line": 19,
+          "note": "product caller"
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/route-challenge-evidence.ts",
+          "line": 2,
+          "note": "product caller"
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/route-ladder-census.ts",
+          "line": 3,
+          "note": "product caller"
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/track-b-runtime.ts",
+          "line": 30,
+          "note": "product caller"
+        }
+      ],
+      "reason": "Body-verified: make(config) maps attemptOpenAsync over the open-retry Effect into buildService; async Effect factory."
+    },
+    {
+      "id": "sql-service-make-sync",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sql-sqlite-node/src/service.ts",
+        "line": 494
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 11,
+          "note": "product caller"
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 19,
+          "note": "product caller"
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/queue-runtime/admin.ts",
+          "line": 19,
+          "note": "product caller"
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/route-challenge-evidence.ts",
+          "line": 2,
+          "note": "product caller"
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/route-ladder-census.ts",
+          "line": 3,
+          "note": "product caller"
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/track-b-runtime.ts",
+          "line": 30,
+          "note": "product caller"
+        }
+      ],
+      "reason": "Body-verified: makeSync(config) = buildService(config, openWithRetrySync(config)) — synchronous, constructs no Effect; the sync siblings are pure too (the service it builds uses Effect internally, but the entry's own body is sync)."
+    },
+    {
+      "id": "sql-service-query",
+      "kind": "operation",
+      "disposition": "existing-effect",
+      "definition": {
+        "file": "role-model-router/packages/sql-sqlite-node/src/service.ts",
+        "line": 337
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 19,
+          "note": "product caller"
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/queue-runtime/admin.ts",
+          "line": 19,
+          "note": "product caller"
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/route-challenge-evidence.ts",
+          "line": 2,
+          "note": "product caller"
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/route-ladder-census.ts",
+          "line": 3,
+          "note": "product caller"
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/track-b-runtime.ts",
+          "line": 30,
+          "note": "product caller"
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/queue-runtime/store.ts",
+          "line": 18,
+          "note": "product caller"
+        }
+      ],
+      "reason": "Body-verified: query() rejects nested effect work, serializes through the semaphore, ensures open, and returns readRows in Effect.try."
+    },
+    {
+      "id": "sql-service-exec",
+      "kind": "operation",
+      "disposition": "existing-effect",
+      "definition": {
+        "file": "role-model-router/packages/sql-sqlite-node/src/service.ts",
+        "line": 350
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 19,
+          "note": "product caller"
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/queue-runtime/admin.ts",
+          "line": 19,
+          "note": "product caller"
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/route-challenge-evidence.ts",
+          "line": 2,
+          "note": "product caller"
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/route-ladder-census.ts",
+          "line": 3,
+          "note": "product caller"
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/track-b-runtime.ts",
+          "line": 30,
+          "note": "product caller"
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/queue-runtime/store.ts",
+          "line": 18,
+          "note": "product caller"
+        }
+      ],
+      "reason": "Body-verified: exec() serializes through the semaphore, ensures open, runs runExec in Effect.try."
+    },
+    {
+      "id": "sql-service-transaction",
+      "kind": "operation",
+      "disposition": "existing-effect",
+      "definition": {
+        "file": "role-model-router/packages/sql-sqlite-node/src/service.ts",
+        "line": 363
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 19,
+          "note": "product caller"
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/track-b-runtime.ts",
+          "line": 30,
+          "note": "product caller"
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/route-challenge-evidence.ts",
+          "line": 2,
+          "note": "product caller"
+        }
+      ],
+      "reason": "Body-verified: transaction(work) takes the semaphore, records fiber ownership, BEGIN IMMEDIATE, commits on success and rolls back via the ensuring finalizer on failure/interruption."
+    },
+    {
+      "id": "sql-service-query-sync",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sql-sqlite-node/src/service.ts",
+        "line": 425
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 11,
+          "note": "product caller"
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 19,
+          "note": "product caller"
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/track-b-runtime.ts",
+          "line": 30,
+          "note": "product caller"
+        }
+      ],
+      "reason": "Body-verified: querySync() checks open + transaction ownership synchronously, then readRows; no Effect."
+    },
+    {
+      "id": "sql-service-exec-sync",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sql-sqlite-node/src/service.ts",
+        "line": 431
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 11,
+          "note": "product caller"
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 19,
+          "note": "product caller"
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/queue-runtime/admin.ts",
+          "line": 19,
+          "note": "product caller"
+        }
+      ],
+      "reason": "Body-verified: execSync() checks open + ownership synchronously, then runExec; no Effect."
+    },
+    {
+      "id": "sql-service-transaction-sync",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sql-sqlite-node/src/service.ts",
+        "line": 437
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 11,
+          "note": "product caller"
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 19,
+          "note": "product caller"
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/track-b-runtime.ts",
+          "line": 30,
+          "note": "product caller"
+        }
+      ],
+      "reason": "Body-verified: transactionSync(work) checks open/ownership, BEGIN IMMEDIATE, runs work, commits or rolls back in catch; no Effect."
+    },
+    {
+      "id": "sql-service-close",
+      "kind": "operation",
+      "disposition": "existing-effect",
+      "definition": {
+        "file": "role-model-router/packages/sql-sqlite-node/src/service.ts",
+        "line": 451
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 19,
+          "note": "product caller"
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/queue-runtime/admin.ts",
+          "line": 19,
+          "note": "product caller"
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/track-b-runtime.ts",
+          "line": 30,
+          "note": "product caller"
+        }
+      ],
+      "reason": "Body-verified: close() serializes through the semaphore, marks closed once via Ref, closes the database in Effect.try."
+    },
+    {
+      "id": "sql-service-close-sync",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sql-sqlite-node/src/service.ts",
+        "line": 465
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 11,
+          "note": "product caller"
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 19,
+          "note": "product caller"
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/track-b-runtime.ts",
+          "line": 30,
+          "note": "product caller"
+        }
+      ],
+      "reason": "Body-verified: closeSync() returns when already closed, refuses unless transaction owner, marks closed and closes the database; no Effect."
+    },
+    {
+      "id": "sql-service-is-open",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sql-sqlite-node/src/service.ts",
+        "line": 474
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 19,
+          "note": "product caller"
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/track-b-runtime.ts",
+          "line": 30,
+          "note": "product caller"
+        },
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/route-ladder-census.ts",
+          "line": 3,
+          "note": "product caller"
+        }
+      ],
+      "reason": "Body-verified: isOpen() reads the open Ref synchronously; no Effect."
     }
   ]
 }

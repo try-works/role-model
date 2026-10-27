@@ -1,0 +1,16 @@
+✔ the hand-written sample inventory validates (64.3739ms)
+✔ the real inventory validates against the code (924.8376ms)
+✔ the inventory covers every kind and every disposition (2.0632ms)
+✔ a deliberately wrong citation fails (1640.1883ms)
+✔ R19/B0: the SQL service is a live product surface, never excluded as callerless (2.8232ms)
+✔ S301 reworded false SQL exclusion is rejected by the structured guard (2.305ms)
+✔ duplicate ids, unknown dispositions and unknown kinds are rejected (2740.3084ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5729.5977
+

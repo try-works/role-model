@@ -1,0 +1,65 @@
+COMMAND: node --test scripts/s4-contracts-inventory.test.mjs
+CWD: public worktree ; S300 strict RED: R19/B0 false SQL no-product-caller exclusion
+EXIT_CODE=1
+
+✔ the hand-written sample inventory validates (61.3804ms)
+✖ the real inventory validates against the code (515.9705ms)
+✔ the inventory covers every kind and every disposition (3.3163ms)
+✔ a deliberately wrong citation fails (751.1511ms)
+✖ R19/B0: the SQL service is a live product surface, never excluded as callerless (4.0875ms)
+✔ duplicate ids, unknown dispositions and unknown kinds are rejected (1467.4258ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 4
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3151.3198
+
+✖ failing tests:
+
+test at scripts\s4-contracts-inventory.test.mjs:177:1
+✖ the real inventory validates against the code (515.9705ms)
+  AssertionError [ERR_ASSERTION]: observability-snapshot: definition cites a blank line: role-model-router/apps/runtime-host-bridge/src/run108-observability.ts:322
+  + actual - expected
+  
+  + [
+  +   'observability-snapshot: definition cites a blank line: role-model-router/apps/runtime-host-bridge/src/run108-observability.ts:322'
+  + ]
+  - []
+  
+      at assertValid (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/s4-contracts-inventory.test.mjs:126:10)
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/s4-contracts-inventory.test.mjs:178:3)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ 'observability-snapshot: definition cites a blank line: role-model-router/apps/runtime-host-bridge/src/run108-observability.ts:322' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at scripts\s4-contracts-inventory.test.mjs:224:1
+✖ R19/B0: the SQL service is a live product surface, never excluded as callerless (4.0875ms)
+  AssertionError [ERR_ASSERTION]: the inventory must not claim the SQL service has no product caller
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/s4-contracts-inventory.test.mjs:227:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
