@@ -19,9 +19,11 @@ const BUDGET = {
   "s26b-wave1.test.ts": 3,
   "s26k-control.test.ts": 1,
   "s40b-overview.test.ts": 1,
-  "s46a-studio.test.ts": 3,
+  // S258 coverage repair: retain pointer/idle and tab -> real client integration.
+  "s46a-studio.test.ts": 6,
   "s73a-controller.test.ts": 1,
-  "s76a-runtime-config.test.ts": 9
+  // S258: restore invalid-save no-PUT integration; scene states alone are not equivalent.
+  "s76a-runtime-config.test.ts": 11
 };
 
 const testDirectory = path.join(import.meta.dirname);

@@ -46,8 +46,8 @@
     },
     "byStatus": {
       "absent": 38,
-      "verified": 36,
-      "wired": 1
+      "verified": 33,
+      "wired": 4
     },
     "newOnly": 1
   },
@@ -762,7 +762,7 @@
         "/app/studio/advanced"
       ],
       "source": "role-model-router/apps/runtime-ui/app/routes/studio-advanced.tsx",
-      "status": "verified",
+      "status": "wired",
       "hostEndpoints": [
         "/v1/responses",
         "/v1/messages",
@@ -770,9 +770,9 @@
         "/v1/embeddings"
       ],
       "requiresHostEndpoint": true,
-      "proofTest": "role-model-router/apps/runtime-ui-next/test/s254-studio-request-shape.test.ts",
-      "proofTestName": "every tab produces a POST with a distinct path and its own body",
-      "note": "endpoint absent in reference 0.0.20 too; packaged returns 404 JSON honestly"
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s46a-studio.test.ts",
+      "proofTestName": "dispatches each tab with the exact method, path and body",
+      "note": "Mounted-shell fixture verifies one request per tab and honest 404 presentation, not live endpoint capability. Audio voices/transcriptions, reranking alias, and advanced messages/count_tokens/embeddings remain unverified where listed. Broad rows are wired, not fully verified."
     },
     {
       "category": "media",
@@ -782,16 +782,16 @@
         "/app/studio/audio"
       ],
       "source": "role-model-router/apps/runtime-ui/app/routes/studio-audio.tsx",
-      "status": "verified",
+      "status": "wired",
       "hostEndpoints": [
         "/v1/audio/voices",
         "/v1/audio/speech",
         "/v1/audio/transcriptions"
       ],
       "requiresHostEndpoint": true,
-      "proofTest": "role-model-router/apps/runtime-ui-next/test/s254-studio-request-shape.test.ts",
-      "proofTestName": "every tab produces a POST with a distinct path and its own body",
-      "note": "endpoint absent in reference 0.0.20 too; packaged returns 404 JSON honestly"
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s46a-studio.test.ts",
+      "proofTestName": "dispatches each tab with the exact method, path and body",
+      "note": "Mounted-shell fixture verifies one request per tab and honest 404 presentation, not live endpoint capability. Audio voices/transcriptions, reranking alias, and advanced messages/count_tokens/embeddings remain unverified where listed. Broad rows are wired, not fully verified."
     },
     {
       "category": "media",
@@ -806,9 +806,9 @@
         "/v1/images/generations"
       ],
       "requiresHostEndpoint": true,
-      "proofTest": "role-model-router/apps/runtime-ui-next/test/s254-studio-request-shape.test.ts",
-      "proofTestName": "every tab produces a POST with a distinct path and its own body",
-      "note": "endpoint absent in reference 0.0.20 too; packaged returns 404 JSON honestly"
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s46a-studio.test.ts",
+      "proofTestName": "dispatches each tab with the exact method, path and body",
+      "note": "Verified only at mounted-shell fixture level: exact generation request and honest 404 presentation. Live image-generation capability and configured-model execution are not verified by this test."
     },
     {
       "category": "studio",
@@ -818,15 +818,15 @@
         "/app/studio/rerank"
       ],
       "source": "role-model-router/apps/runtime-ui/app/routes/studio-rerank.tsx",
-      "status": "verified",
+      "status": "wired",
       "hostEndpoints": [
         "/v1/rerank",
         "/v1/reranking"
       ],
       "requiresHostEndpoint": true,
-      "proofTest": "role-model-router/apps/runtime-ui-next/test/s254-studio-request-shape.test.ts",
-      "proofTestName": "every tab produces a POST with a distinct path and its own body",
-      "note": "endpoint absent in reference 0.0.20 too; packaged returns 404 JSON honestly"
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s46a-studio.test.ts",
+      "proofTestName": "dispatches each tab with the exact method, path and body",
+      "note": "Mounted-shell fixture verifies one request per tab and honest 404 presentation, not live endpoint capability. Audio voices/transcriptions, reranking alias, and advanced messages/count_tokens/embeddings remain unverified where listed. Broad rows are wired, not fully verified."
     },
     {
       "category": "read",
