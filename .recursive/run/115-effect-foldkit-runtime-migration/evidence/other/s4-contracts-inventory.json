@@ -109,7 +109,7 @@
     {
       "id": "core-advisory-rung",
       "kind": "operation",
-      "disposition": "existing-effect",
+      "disposition": "pure",
       "definition": {
         "file": "role-model-router/packages/core/src/route-advisory-ladder.ts",
         "line": 66
@@ -124,12 +124,12 @@
           "line": 100
         }
       ],
-      "reason": "Imports effect at line 1 (Data.TaggedEnum/TaggedError); resolveAdvisoryRung is called by the router walk."
+      "reason": "S321 body-verified: pure Schema decode + sort + Set lookup, no Effect execution (the Effect import is type-only); disposition corrected existing-effect -> pure."
     },
     {
       "id": "observability-scope",
       "kind": "operation",
-      "disposition": "existing-effect",
+      "disposition": "pure",
       "definition": {
         "file": "role-model-router/apps/runtime-host-bridge/src/run108-observability.ts",
         "line": 58
@@ -144,7 +144,7 @@
           "line": 5468
         }
       ],
-      "reason": "Metric.MetricRegistry scope created from vendored Effect (Context/Metric imports at 1-6); host and CLI create one at their roots."
+      "reason": "S321 body-verified: returns a plain {scopeId, registry: new Map()} object (the Effect boundary is inScope, not this entry); disposition corrected existing-effect -> pure."
     },
     {
       "id": "observability-snapshot",
@@ -212,7 +212,7 @@
       "disposition": "adapter",
       "definition": {
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-        "line": 17098
+        "line": 17058
       },
       "callers": [
         {
@@ -232,7 +232,7 @@
       "disposition": "convert",
       "definition": {
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-        "line": 17488
+        "line": 17447
       },
       "callers": [
         {
@@ -248,7 +248,7 @@
       "disposition": "adapter",
       "definition": {
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-        "line": 20537
+        "line": 20840
       },
       "callers": [
         {
@@ -268,7 +268,7 @@
       "disposition": "convert",
       "definition": {
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-        "line": 30214
+        "line": 30485
       },
       "callers": [
         {
@@ -288,7 +288,7 @@
       "disposition": "convert",
       "definition": {
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-        "line": 5347
+        "line": 4930
       },
       "callers": [
         {
@@ -301,7 +301,7 @@
     {
       "id": "traffic-class",
       "kind": "operation",
-      "disposition": "existing-effect",
+      "disposition": "pure",
       "definition": {
         "file": "role-model-router/apps/runtime-host-bridge/src/traffic-class.ts",
         "line": 34
@@ -316,12 +316,12 @@
           "line": 28675
         }
       ],
-      "reason": "Imports effect at line 1; the persisted traffic-class mapping is used on the request path."
+      "reason": "S321 body-verified: Match.value/Match.exhaustive only, no Effect execution; disposition corrected existing-effect -> pure."
     },
     {
       "id": "unified-runtime-config",
       "kind": "operation",
-      "disposition": "existing-effect",
+      "disposition": "pure",
       "definition": {
         "file": "role-model-router/apps/runtime-host-bridge/src/unified-runtime-config.ts",
         "line": 2016
@@ -336,7 +336,7 @@
           "line": 30742
         }
       ],
-      "reason": "Imports effect at line 3; parseUnifiedRuntimeConfigText is the runtime config boundary used by the host."
+      "reason": "S321 body-verified: YAML parse/validate/normalize with pure Schema.decodeUnknownResult, no Effect runtime; disposition corrected existing-effect -> pure."
     },
     {
       "id": "sql-service-make",
@@ -647,7 +647,7 @@
       "disposition": "pure",
       "definition": {
         "file": "role-model-router/packages/sql-sqlite-node/src/service.ts",
-        "line": 465
+        "line": 575
       },
       "callers": [
         {
