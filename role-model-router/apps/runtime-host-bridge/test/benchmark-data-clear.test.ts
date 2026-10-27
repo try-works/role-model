@@ -124,7 +124,7 @@ describe("benchmark global data clear", () => {
         readRuntimeSummary: backend.readRuntimeSummary,
         readHealthStatus: backend.readHealthStatus,
         clearBenchmarkData: backend.clearBenchmarkData,
-      });
+      }, { allowTestSeamBackend: true });
 
       try {
         const response = await fetch(

@@ -1,0 +1,37 @@
+COMMAND: node vitest run (S314 r4 guard + spot-run 10 files)
+EXIT_CODE=0
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+ ✓ test/s313-caller-seam.test.ts (3 tests) 98ms
+(node:27504) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/benchmark-data-clear.test.ts (3 tests) 2713ms
+   ✓ benchmark global data clear > DELETE /api/role-model/benchmark/data clears sqlite samples and artifact runs  2493ms
+(node:49176) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s21c-bootstrap-owner-wiring.test.ts (2 tests) 2025ms
+   ✓ S21c bootstrap owner wiring > the host calls the exact Bootstrap instance it received from the DAG  2016ms
+(node:74076) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s310b-backend-owner.test.ts (5 tests) 502ms
+(node:73128) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s6b-cli-sqlite-service-migration.test.ts (7 tests) 464ms
+(node:24196) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/cli-startup-readiness.test.ts (3 tests) 240ms
+ ✓ test/s21a-composition-dag.test.ts (6 tests) 352ms
+   ✓ S21a composition DAG shape > rejects callers beyond permit + waiter capacity instead of parking them unboundedly  306ms
+ ✓ test/cli-composition-scope.test.ts (7 tests) 155ms
+ ✓ test/s128-scope-owned-server.test.ts (3 tests) 25ms
+(node:62080) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s313-server-owner.test.ts (5 tests) 26ms
+
+ Test Files  10 passed (10)
+      Tests  44 passed (44)
+   Start at  06:37:31
+   Duration  56.73s (transform 9.05s, setup 0ms, collect 40.72s, tests 6.60s, environment 6ms, prepare 3.57s)
+
+

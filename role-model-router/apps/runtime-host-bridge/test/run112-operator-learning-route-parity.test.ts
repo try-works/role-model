@@ -64,7 +64,7 @@ test("run112 every Learning readback answers without a private operations endpoi
     anonymousLearningReads: "on",
     operatorContext,
     ...learningCallbacks,
-  });
+  }, { allowTestSeamBackend: true });
   try {
     const failures: string[] = [];
     for (const route of READ_ROUTES) {
@@ -90,7 +90,7 @@ test("run112 the profile readback answers the bounded state, not the transport p
     anonymousLearningReads: "on",
     operatorContext,
     ...learningCallbacks,
-  });
+  }, { allowTestSeamBackend: true });
   try {
     const response = await fetch(
       `http://127.0.0.1:${server.port}/api/role-model/operator/learning/profile?scopeId=standalone-runtime-stage`,
@@ -115,7 +115,7 @@ test("run112 a Learning readback the runtime does not provide is the only accept
     operatorContext,
     ...learningCallbacks,
     readLearningAdvisory: undefined,
-  });
+  }, { allowTestSeamBackend: true });
   try {
     const response = await fetch(
       `http://127.0.0.1:${server.port}/api/role-model/operator/learning/advisory`,

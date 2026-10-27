@@ -78,7 +78,7 @@ const startServer = () =>
     executeResponses: async () => {
       throw new Error("not used");
     },
-  });
+  }, { allowTestSeamBackend: true });
 
 const readSnapshot = async (server: { port: number }): Promise<SnapshotPayload> => {
   const response = await fetch(`http://127.0.0.1:${server.port}${SNAPSHOT_PATH}`, {

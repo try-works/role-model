@@ -118,7 +118,7 @@ const server = await startBridgeServer({
   updatePeers: backend.updatePeers,
   checkPeerHealth: backend.checkPeerHealth,
   getRoutableInventory: backend.getRoutableInventory,
-});
+}, { allowTestSeamBackend: true });
 
 console.log(`Runtime running at http://127.0.0.1:${port}`);
 console.log("Press Ctrl+C to stop");

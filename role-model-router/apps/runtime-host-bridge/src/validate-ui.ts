@@ -204,7 +204,7 @@ export async function runRuntimeUiValidation(
     readRouterDecision: backend.readRouterDecision,
     getRoutableInventory: backend.getEffectiveRoutableInventory,
     readHealthStatus: backend.readHealthStatus,
-  });
+  }, { allowTestSeamBackend: true });
   traceValidation("startBridgeServer:done");
 
   try {

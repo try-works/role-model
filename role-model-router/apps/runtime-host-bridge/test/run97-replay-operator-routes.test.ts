@@ -21,7 +21,7 @@ test("run97 operator routes expose replay status and pause/resume control", asyn
       else throw new Error("replay control action must be pause or resume");
       return { action, status: { paused } };
     },
-  });
+  }, { allowTestSeamBackend: true });
   try {
     const statusResponse = await fetch(
       `http://127.0.0.1:${server.port}/api/role-model/track-b/replay/status`,
@@ -74,7 +74,7 @@ test("run97 operator routes fail closed on an unknown control action", async () 
       }
       return { action: body.action };
     },
-  });
+  }, { allowTestSeamBackend: true });
   try {
     const response = await fetch(
       `http://127.0.0.1:${server.port}/api/role-model/track-b/replay/control`,
@@ -98,7 +98,7 @@ test("run97 operator routes stay absent when the loop is not configured", async 
     host: "127.0.0.1",
     port: 0,
     registry: { revision: 0, endpoints: [] },
-  });
+  }, { allowTestSeamBackend: true });
   try {
     const statusResponse = await fetch(
       `http://127.0.0.1:${server.port}/api/role-model/track-b/replay/status`,

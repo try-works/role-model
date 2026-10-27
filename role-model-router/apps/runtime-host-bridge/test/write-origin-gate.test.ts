@@ -12,7 +12,7 @@ const start = async (state: State, operatorAuthToken?: string, extra: Record<str
     activateEndpoint: async (body) => { state.endpoint = body; return body; },
     ...(operatorAuthToken === undefined ? {} : { operatorAuthToken }),
     ...extra,
-  } as Parameters<typeof startBridgeServer>[0]);
+  } as Parameters<typeof startBridgeServer>[0], { allowTestSeamBackend: true });
   servers.push(server);
   return { base: "http://127.0.0.1:" + String(server.port), server };
 };

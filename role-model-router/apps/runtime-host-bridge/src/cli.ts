@@ -5180,9 +5180,9 @@ export async function main(): Promise<void> {
     current: ((body: Record<string, unknown>) => Promise<unknown>) | null;
   } = { current: null };
 
-  const startServer = () =>
-    startBridgeServer(
-    createCliServerOptions(
+  const startServer = () => {
+    let backendOwner: import("./composition-dag.js").BackendOwner | undefined;
+    const serverOptions = createCliServerOptions(
       {
         host: options.host,
         port: options.port,
@@ -5228,8 +5228,12 @@ export async function main(): Promise<void> {
         onExtensionRuntimeFailure: failExtensionRuntime,
       },
       shutdown,
-    ),
-  );
+      (owner) => {
+        backendOwner = owner;
+      },
+    );
+    return startBridgeServer(serverOptions, backendOwner === undefined ? undefined : { backend: backendOwner });
+  };
 
   /**
    * S128 (R27 first rewiring slice): the server is the first host resource owned by an Effect

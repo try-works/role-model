@@ -7709,7 +7709,7 @@ describe("runtime-host-bridge", () => {
         vendors: {},
         inactiveVendors: [],
       }),
-    });
+    }, { allowTestSeamBackend: true });
 
     try {
       const healthResponse = await fetch(`http://127.0.0.1:${server.port}/healthz`);
@@ -7781,7 +7781,7 @@ describe("runtime-host-bridge", () => {
       },
       listRecentRequestIds,
       listRecentRequestObservations,
-    });
+    }, { allowTestSeamBackend: true });
 
     try {
       const latestIdsResponse = await fetch(
@@ -7830,7 +7830,7 @@ describe("runtime-host-bridge", () => {
       executeChatCompletions: async () => {
         throw new Error("not used");
       },
-    });
+    }, { allowTestSeamBackend: true });
 
     try {
       const response = await fetch(
@@ -7888,7 +7888,7 @@ describe("runtime-host-bridge", () => {
           ],
         },
       }),
-    });
+    }, { allowTestSeamBackend: true });
 
     try {
       const modelsResponse = await fetch(`http://127.0.0.1:${server.port}/v1/models`);
@@ -8015,7 +8015,7 @@ describe("runtime-host-bridge", () => {
           ],
         },
       }),
-    });
+    }, { allowTestSeamBackend: true });
 
     try {
       const modelsResponse = await fetch(`http://127.0.0.1:${server.port}/v1/models`);
@@ -8098,7 +8098,7 @@ describe("runtime-host-bridge", () => {
             }
           : null,
       readLogs: async () => "role-model bridge ready\nrecent request complete\n",
-    });
+    }, { allowTestSeamBackend: true });
 
     try {
       const versionResponse = await fetch(`http://127.0.0.1:${server.port}/api/version`);
@@ -8180,7 +8180,7 @@ describe("runtime-host-bridge", () => {
       executeChatCompletions: async () => {
         throw new Error("not used");
       },
-    });
+    }, { allowTestSeamBackend: true });
 
     try {
       const response = await fetch(`http://127.0.0.1:${server.port}/logs/stream`);
@@ -8225,7 +8225,7 @@ describe("runtime-host-bridge", () => {
       executeChatCompletions: async () => {
         throw new Error("not used");
       },
-    });
+    }, { allowTestSeamBackend: true });
 
     try {
       for (const route of ["/", "/app", "/app/router/strategy"]) {
@@ -8307,7 +8307,7 @@ describe("runtime-host-bridge", () => {
         throw new Error("not used");
       },
       readLlamaSwapVendorStatus: () => vendorStatus,
-    });
+    }, { allowTestSeamBackend: true });
 
     try {
       const proxied = await fetch(
@@ -8398,7 +8398,7 @@ describe("runtime-host-bridge", () => {
           },
         };
       },
-    });
+    }, { allowTestSeamBackend: true });
 
     try {
       const response = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
@@ -8485,7 +8485,7 @@ describe("runtime-host-bridge", () => {
         throw new Error("induced post-commit stream failure");
       },
       readRuntimeSummary: async () => ({ status: "healthy" }),
-    });
+    }, { allowTestSeamBackend: true });
     const abortController = new AbortController();
 
     try {
@@ -8560,7 +8560,7 @@ describe("runtime-host-bridge", () => {
         );
         throw new Error("induced post-commit Responses failure");
       },
-    });
+    }, { allowTestSeamBackend: true });
     const abortController = new AbortController();
 
     try {
@@ -8620,7 +8620,7 @@ describe("runtime-host-bridge", () => {
           },
         };
       },
-    });
+    }, { allowTestSeamBackend: true });
 
     try {
       for (let index = 0; index < 2; index += 1) {
@@ -8943,7 +8943,7 @@ describe("runtime-host-bridge", () => {
         ],
         observeRequestPath: `/app/observe/requests/${requestId}`,
       }),
-    });
+    }, { allowTestSeamBackend: true });
 
     try {
       const summaryResponse = await fetch(
@@ -9484,7 +9484,7 @@ describe("runtime-host-bridge", () => {
           endpointId: "moonshot.personal.primary.global.kimi-k2.5",
         },
       ],
-    });
+    }, { allowTestSeamBackend: true });
 
     try {
       const summaryResponse = await fetch(
@@ -9568,7 +9568,7 @@ describe("runtime-host-bridge", () => {
         buckets: [],
         ranking: null,
       }),
-    });
+    }, { allowTestSeamBackend: true });
 
     try {
       const analyticsResponse = await fetch(
@@ -9624,7 +9624,7 @@ describe("runtime-host-bridge", () => {
       executeChatCompletions: async () => {
         throw new Error("not used");
       },
-    });
+    }, { allowTestSeamBackend: true });
 
     try {
       const response = await fetch(
@@ -9729,7 +9729,7 @@ describe("runtime-host-bridge", () => {
           costUsd: 0.0042,
         },
       }),
-    });
+    }, { allowTestSeamBackend: true });
 
     try {
       const response = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
@@ -9889,7 +9889,7 @@ describe("runtime-host-bridge", () => {
           },
         };
       },
-    });
+    }, { allowTestSeamBackend: true });
 
     try {
       const response = await fetch(`http://127.0.0.1:${server.port}/v1/responses`, {
@@ -10030,7 +10030,7 @@ describe("runtime-host-bridge", () => {
           },
         ],
       }),
-    });
+    }, { allowTestSeamBackend: true });
 
     try {
       const response = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
@@ -10226,7 +10226,7 @@ describe("runtime-host-bridge", () => {
           },
         };
       },
-    });
+    }, { allowTestSeamBackend: true });
 
     try {
       const response = await fetch(`http://127.0.0.1:${server.port}/v1/responses`, {
@@ -10448,7 +10448,7 @@ describe("runtime-host-bridge", () => {
           },
         };
       },
-    });
+    }, { allowTestSeamBackend: true });
 
     try {
       const response = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
@@ -10600,7 +10600,7 @@ describe("runtime-host-bridge", () => {
           outputTokens: 1,
         },
       }),
-    });
+    }, { allowTestSeamBackend: true });
 
     try {
       const response = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
@@ -10713,7 +10713,7 @@ describe("runtime-host-bridge", () => {
           },
         };
       },
-    });
+    }, { allowTestSeamBackend: true });
 
     try {
       const response = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
@@ -10803,7 +10803,7 @@ describe("runtime-host-bridge", () => {
           },
         };
       },
-    });
+    }, { allowTestSeamBackend: true });
 
     try {
       const response = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
@@ -10893,7 +10893,7 @@ describe("runtime-host-bridge", () => {
           },
         };
       },
-    });
+    }, { allowTestSeamBackend: true });
 
     try {
       const response = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
@@ -10971,7 +10971,7 @@ describe("runtime-host-bridge", () => {
           },
         };
       },
-    });
+    }, { allowTestSeamBackend: true });
 
     try {
       const response = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
@@ -13572,7 +13572,7 @@ describe("runtime-host-bridge", () => {
       executeResponses: backend.executeResponses,
       listTelemetryRequests: backend.listTelemetryRequests,
       readRequestObservation: backend.readRequestObservation,
-    });
+    }, { allowTestSeamBackend: true });
 
     try {
       const clientRequestId = "req-controller-http-regression-001";
@@ -14360,7 +14360,7 @@ describe("runtime-host-bridge", () => {
       listRoles: backend.listRoles,
       readRolePolicy: backend.readRolePolicy,
       listTaskDefinitions: backend.listTaskDefinitions,
-    });
+    }, { allowTestSeamBackend: true });
 
     try {
       const [rolesResponse, rolePolicyResponse, tasksResponse] = await Promise.all([
@@ -17006,7 +17006,7 @@ describe("runtime-host-bridge", () => {
         executeResponses: backend.executeResponses,
         listTelemetryRequests: backend.listTelemetryRequests,
         readRequestObservation: backend.readRequestObservation,
-      });
+      }, { allowTestSeamBackend: true });
 
       try {
         const httpClientRequestId = "req-runtime-bridge-codex-timeout-http-001";
@@ -21113,7 +21113,7 @@ describe("runtime-host-bridge", () => {
       listRecentRequestObservations: backend.listRecentRequestObservations,
       readRequestObservation: backend.readRequestObservation,
       readEndpointProfile: backend.readEndpointProfile,
-    });
+    }, { allowTestSeamBackend: true });
 
     try {
       const clientRequestId = "req-runtime-bridge-route-001";
@@ -22583,7 +22583,7 @@ describe("runtime-host-bridge", () => {
       executeResponses: backend.executeResponses,
       listTelemetryRequests: backend.listTelemetryRequests,
       readRequestObservation: backend.readRequestObservation,
-    });
+    }, { allowTestSeamBackend: true });
 
     try {
       for (let index = 0; index < 2; index += 1) {
@@ -22696,7 +22696,7 @@ describe("runtime-host-bridge", () => {
       executeResponses: backend.executeResponses,
       listTelemetryRequests: backend.listTelemetryRequests,
       readRequestObservation: backend.readRequestObservation,
-    });
+    }, { allowTestSeamBackend: true });
 
     try {
       const clientRequestId = "req-client-failure-001";
@@ -23084,7 +23084,7 @@ describe("runtime-host-bridge", () => {
       listTelemetryComparisonRows: backend.listTelemetryComparisonRows,
       listTelemetryRequests: backend.listTelemetryRequests,
       subscribeTelemetry: backend.subscribeTelemetry,
-    });
+    }, { allowTestSeamBackend: true });
 
     const abortController = new AbortController();
 
@@ -23209,7 +23209,7 @@ describe("runtime-host-bridge", () => {
         };
       },
       executeResponses: async () => ({}),
-    });
+    }, { allowTestSeamBackend: true });
 
     const abortController = new AbortController();
 

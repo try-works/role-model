@@ -46,7 +46,7 @@ describe("run98 a54 operator guardrail-breach route", () => {
           rollout: { state: "active" },
         };
       },
-    });
+    }, { allowTestSeamBackend: true });
     try {
       const response = await fetch(
         `http://127.0.0.1:${server.port}/api/role-model/operator/learning/scenario-restore`,
@@ -90,7 +90,7 @@ describe("run98 a54 operator guardrail-breach route", () => {
       executeResponses: async () => {
         throw new Error("not used");
       },
-    });
+    }, { allowTestSeamBackend: true });
     try {
       const response = await fetch(
         `http://127.0.0.1:${server.port}/api/role-model/operator/learning/scenario-restore`,
@@ -136,7 +136,7 @@ describe("run98 a54 operator guardrail-breach route", () => {
           rollback: null,
         };
       },
-    });
+    }, { allowTestSeamBackend: true });
     try {
       const response = await fetch(
         `http://127.0.0.1:${server.port}/api/role-model/operator/learning/guardrail-breach`,
@@ -177,7 +177,7 @@ describe("run98 a54 operator guardrail-breach route", () => {
       executeResponses: async () => {
         throw new Error("not used");
       },
-    });
+    }, { allowTestSeamBackend: true });
     try {
       const response = await fetch(
         `http://127.0.0.1:${server.port}/api/role-model/operator/learning/guardrail-breach`,

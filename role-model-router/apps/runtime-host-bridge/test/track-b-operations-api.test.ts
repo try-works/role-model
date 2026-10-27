@@ -118,7 +118,7 @@ describe("Track B operations APIs", () => {
       port: 0,
       registry: { revision: 0, endpoints: [] },
       readDevelopmentVerificationStatus: async () => expected,
-    });
+    }, { allowTestSeamBackend: true });
     try {
       const response = await fetch(
         `http://127.0.0.1:${server.port}/api/role-model/development-verification`,
@@ -772,7 +772,7 @@ describe("Track B operations APIs", () => {
         requestId: body.requestId,
         status: "recovered",
       }),
-    });
+    }, { allowTestSeamBackend: true });
     try {
       const base = `http://127.0.0.1:${server.port}`;
       expect(await (await fetch(`${base}/api/role-model/extensions`)).json()).toEqual(extensions);
@@ -898,7 +898,7 @@ describe("Track B operations APIs", () => {
       getRegistry: () => backend.registry,
       executeChatCompletions: backend.executeChatCompletions,
       executeResponses: backend.executeResponses,
-    });
+    }, { allowTestSeamBackend: true });
     try {
       expect(
         (await fetch(`http://127.0.0.1:${server.port}/api/role-model/extensions`)).status,
@@ -1306,7 +1306,7 @@ describe("Track B operations APIs", () => {
         executeChatCompletions: backend.executeChatCompletions,
         executeResponses: backend.executeResponses,
         exportVerifiersTrace: backend.exportVerifiersTrace,
-      });
+      }, { allowTestSeamBackend: true });
       try {
         const response = await fetch(
           `http://127.0.0.1:${exportServer.port}/api/role-model/track-b/verifiers-export`,
@@ -2800,7 +2800,7 @@ describe("Track B operations APIs", () => {
       listRecommendations: () => backend.listRecommendations(),
       dismissRecommendation: (body) => backend.dismissRecommendation(body),
       applyRecommendation: (body) => backend.applyRecommendation(body),
-    });
+    }, { allowTestSeamBackend: true });
     try {
       const base = `http://127.0.0.1:${server.port}`;
       const mutateResponse = await fetch(`${base}/api/role-model/extensions/mutate`, {

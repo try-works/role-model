@@ -1590,7 +1590,7 @@ async function startRuntimeForConfig(input: {
     listRecentRequestObservations: backend.listRecentRequestObservations,
     readRequestObservation: backend.readRequestObservation,
     readEndpointProfile: backend.readEndpointProfile,
-  });
+  }, { allowTestSeamBackend: true });
 
   return {
     backend,

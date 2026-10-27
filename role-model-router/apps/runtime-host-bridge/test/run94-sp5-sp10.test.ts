@@ -538,7 +538,7 @@ test("GREEN: exposes extension readback through the Track B HTTP surface", async
       providerPathLatencyP95Ms: 18,
       sqliteLockWaitP95Ms: 2,
     }),
-  });
+  }, { allowTestSeamBackend: true });
   try {
     const response = await fetch(
       `http://127.0.0.1:${server.port}/api/role-model/track-b/extension-readback`,
@@ -606,7 +606,7 @@ test("Run96 S3 RED: exposes an explicit authenticated supervised replay command 
     executeChatCompletions: backend.executeChatCompletions,
     executeResponses: backend.executeResponses,
     runTrackBSupervisedReplay: backend.runTrackBSupervisedReplay,
-  });
+  }, { allowTestSeamBackend: true });
   try {
     const response = await fetch(`http://127.0.0.1:${server.port}/api/role-model/track-b/replay`, {
       method: "POST",

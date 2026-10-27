@@ -23,7 +23,7 @@ describe("taxonomy discovery API", () => {
       },
       readHealthStatus: async () => ({ status: "healthy" }),
       getRoutableInventory: () => null,
-    });
+    }, { allowTestSeamBackend: true });
 
     try {
       const baseUrl = `http://127.0.0.1:${server.port}`;
@@ -111,7 +111,7 @@ describe("taxonomy discovery API", () => {
       },
       readHealthStatus: async () => ({ status: "healthy" }),
       getRoutableInventory: () => null,
-    });
+    }, { allowTestSeamBackend: true });
 
     try {
       const baseUrl = `http://127.0.0.1:${server.port}`;
@@ -210,7 +210,7 @@ describe("taxonomy discovery API", () => {
       },
       readHealthStatus: async () => ({ status: "healthy" }),
       getRoutableInventory: () => null,
-    });
+    }, { allowTestSeamBackend: true });
 
     try {
       const baseUrl = `http://127.0.0.1:${server.port}`;

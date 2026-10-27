@@ -32,7 +32,7 @@ describe("system open-url API", () => {
         throw new Error("unused");
       },
       openExternalUrl,
-    });
+    }, { allowTestSeamBackend: true });
 
     try {
       const response = await fetch(
@@ -79,7 +79,7 @@ describe("system open-url API", () => {
         throw new Error("unused");
       },
       openExternalUrl,
-    });
+    }, { allowTestSeamBackend: true });
 
     try {
       const response = await fetch(

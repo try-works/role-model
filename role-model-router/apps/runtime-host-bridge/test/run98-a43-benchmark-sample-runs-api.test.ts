@@ -76,7 +76,7 @@ test("run98 a43 S4: the API reports sample-backed sweeps with a state that canno
       readRuntimeSummary: backend.readRuntimeSummary,
       readHealthStatus: backend.readHealthStatus,
       readBenchmarkSampleRunStates: backend.readBenchmarkSampleRunStates,
-    });
+    }, { allowTestSeamBackend: true });
 
     try {
       const response = await fetch(

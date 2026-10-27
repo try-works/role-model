@@ -534,6 +534,7 @@ export interface BackendOwner {
 }
 
 const BACKEND_OWNER_BRAND = Symbol.for("role-model-router.backend-owner");
+const BACKEND_OWNER_REF = Symbol.for("role-model-router.backend-owner-ref");
 
 export const isComposedBackendOwner = (owner: { readonly id?: string } | null): owner is BackendOwner =>
   owner !== null && Object.prototype.hasOwnProperty.call(owner, BACKEND_OWNER_BRAND) && Object(owner)[BACKEND_OWNER_BRAND] === true;
@@ -803,6 +804,85 @@ export const composeBackendOwner = (input: BackendOwnerInput): BackendOwner => {
   // withBackendProviderPermits), so both the route binding here and the raw backend consumers (the
   // pairwise judge's executeChatCompletions handle) run under the same DAG permit.
   const owner = Object.freeze({ [BACKEND_OWNER_BRAND]: true, id: "backend-owner:" + DEFAULT_COMPOSITION_CONFIG.instanceId, options });
+  // The owner travels WITH its options (non-enumerable symbol), so the server facade recovers the REAL
+  // composed owner instead of re-branding plain options. Object.keys is unaffected (181-key ledger).
+  Object.defineProperty(options, BACKEND_OWNER_REF, { enumerable: false, value: owner });
+  return owner;
+};
+
+/** Recovers the REAL composed Backend owner that travels with its options (undefined for bare/test options). */
+export const composedBackendOwnerOf = (options: StartBridgeServerOptions): BackendOwner | undefined => {
+  const ref = Object(options)[BACKEND_OWNER_REF];
+  return ref !== undefined && isComposedBackendOwner(ref) ? ref : undefined;
+};
+// S313 (R27): the DAG Server owner is the ONE lifecycle construction site. It consumes the composed
+// Backend owner options plus a typed transport bundle from index.ts (listener factory, createServer,
+// listen, close) and keeps the exact start/stop ordering: listener -> createServer -> listen; close is
+// the transport's server.close only.
+export const SERVER_OWNER_BRAND = Symbol.for("role-model-router.server-owner");
+
+export const isComposedServerOwner = (owner: { readonly id?: string } | null | undefined): owner is ServerOwner =>
+  owner !== null && Object.prototype.hasOwnProperty.call(owner, SERVER_OWNER_BRAND) && Object(owner)[SERVER_OWNER_BRAND] === true;
+
+export const assertComposedServerOwner = (owner: { readonly id?: string } | null | undefined): ServerOwner => {
+  if (!isComposedServerOwner(owner)) {
+    throw new Error("Server owner was not constructed by the composition DAG (legacy local construction refused)");
+  }
+  return owner;
+};
+
+/** Opaque http server handle: the DAG never inspects it, it only passes it back to listen/close. */
+export interface ServerHandle {
+  readonly close?: unknown;
+}
+
+export interface ServerTransport {
+  readonly createListener: (
+    options: StartBridgeServerOptions,
+    handlerFactory: (options: StartBridgeServerOptions) => (request: never, response: never) => Promise<void>,
+  ) => (request: never, response: never) => void;
+  readonly createServer: (listener: (request: never, response: never) => void, options: StartBridgeServerOptions) => ServerHandle;
+  readonly listen: (server: ServerHandle, host: string, port: number) => Promise<number>;
+  readonly close: (server: ServerHandle) => Promise<void>;
+}
+
+export interface ServerOwner {
+  readonly id: string;
+  readonly backend: BackendOwner;
+  readonly start: () => Promise<{ readonly port: number; readonly close: () => Promise<void> }>;
+}
+
+export const composeServerOwner = (input: {
+  readonly backend: BackendOwner;
+  readonly handlerFactory: (options: StartBridgeServerOptions) => (request: never, response: never) => Promise<void>;
+  readonly transport: ServerTransport;
+}): ServerOwner => {
+  const backend = assertComposedBackendOwner(input.backend);
+  // SAFETY: the brand symbol is the runtime identity marker; the static type is BackendOwner.
+  const brandedBackend = backend as BackendOwner;
+  return Object.freeze({
+    [SERVER_OWNER_BRAND]: true,
+    backend: brandedBackend,
+    id: "server-owner:" + DEFAULT_COMPOSITION_CONFIG.instanceId,
+    async start() {
+      const listener = input.transport.createListener(backend.options, input.handlerFactory);
+      const server = input.transport.createServer(listener, backend.options);
+      const port = await input.transport.listen(server, backend.options.host, backend.options.port);
+      return {
+        async close() {
+          await input.transport.close(server);
+        },
+        port,
+      };
+    },
+  });
+};
+
+/** TEST SEAM ONLY: bare StartBridgeServerOptions (tests that do not go through composeBackendOwner) are
+ * branded for the facade. Production options always carry the REAL composed owner (composedBackendOwnerOf). */
+export const testSeamBackendOwner = (options: StartBridgeServerOptions): BackendOwner => {
+  const owner: BackendOwner = { id: "backend-owner:facade", options };
+  Object.defineProperty(owner, BACKEND_OWNER_BRAND, { enumerable: false, value: true });
   return owner;
 };
 

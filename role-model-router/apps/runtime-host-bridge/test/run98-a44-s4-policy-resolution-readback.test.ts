@@ -55,7 +55,7 @@ const startServer = async (options: Record<string, unknown>) => {
     readHealthStatus: async () => ({ status: "ok" }),
     operatorContext: { channel: "stage", scope: "run98-a44-s4", authorizationEpoch: 1 },
     ...options,
-  } as never);
+  } as never, { allowTestSeamBackend: true });
   return server;
 };
 

@@ -34,7 +34,7 @@ const startServer = async (options: Record<string, unknown>) => {
     // credential rule rather than the context rule.
     operatorContext: { channel: "development", scope: "run98-a46", authorizationEpoch: 1 },
     ...options,
-  } as never);
+  } as never, { allowTestSeamBackend: true });
   return server;
 };
 

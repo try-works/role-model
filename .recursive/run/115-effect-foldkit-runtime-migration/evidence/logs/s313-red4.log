@@ -1,0 +1,36 @@
+COMMAND: node vitest run test/benchmark-data-clear.test.ts (S314 r3 RED: fail-closed regression)
+EXIT_CODE=1
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:72904) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/benchmark-data-clear.test.ts (3 tests | 1 failed) 2487ms
+   ✓ benchmark global data clear > clearAllObservedBenchmarkData removes all benchmark samples and rebuilds profiles 247ms
+   ✓ benchmark global data clear > clearBenchmarkRunArtifacts removes benchmark run directories 9ms
+   × benchmark global data clear > DELETE /api/role-model/benchmark/data clears sqlite samples and artifact runs 2225ms
+     → Server options were not produced by composeBackendOwner; production requires the DAG-composed Backend owner (the branded test seam is explicit-only via allowTestSeamBackend)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/benchmark-data-clear.test.ts > benchmark global data clear > DELETE /api/role-model/benchmark/data clears sqlite samples and artifact runs
+Error: Server options were not produced by composeBackendOwner; production requires the DAG-composed Backend owner (the branded test seam is explicit-only via allowTestSeamBackend)
+ ❯ startBridgeServer src/index.ts:20829:11
+    20827|   const realBackend = lifecycle?.backend ?? composedBackendOwnerOf(opt…
+    20828|   if (realBackend === undefined && lifecycle?.allowTestSeamBackend !==…
+    20829|     throw new Error(
+       |           ^
+    20830|       "Server options were not produced by composeBackendOwner; produc…
+    20831|         "(the branded test seam is explicit-only via allowTestSeamBack…
+ ❯ test/benchmark-data-clear.test.ts:117:28
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  06:12:04
+   Duration  18.86s (transform 10.29s, setup 0ms, collect 15.11s, tests 2.49s, environment 1ms, prepare 561ms)
+
+

@@ -53,7 +53,7 @@ test("a40 L1: the handler reports the client-visible duration after the response
     recordClientLatency: (input) => {
       calls.push(input);
     },
-  });
+  }, { allowTestSeamBackend: true });
 
   try {
     const response = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
@@ -91,7 +91,7 @@ test("a40 L1: a request whose execution fails still reports the duration the cli
     recordClientLatency: (input) => {
       calls.push(input);
     },
-  });
+  }, { allowTestSeamBackend: true });
 
   try {
     const response = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {

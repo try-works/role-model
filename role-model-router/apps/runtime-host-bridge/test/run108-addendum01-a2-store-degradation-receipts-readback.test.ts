@@ -50,7 +50,7 @@ describe("run108 addendum-01 A2 store degradation receipts readback", () => {
       executeResponses: async () => {
         throw new Error("not used");
       },
-    });
+    }, { allowTestSeamBackend: true });
     try {
       const response = await fetch(
         `http://127.0.0.1:${server.port}/api/role-model/operator/store-degradation-receipts`,
@@ -110,7 +110,7 @@ describe("run108 addendum-01 A2 store degradation receipts readback", () => {
         expect(query).toEqual({});
         return payload;
       },
-    });
+    }, { allowTestSeamBackend: true });
     try {
       const response = await fetch(
         `http://127.0.0.1:${server.port}/api/role-model/operator/store-degradation-receipts`,
@@ -137,7 +137,7 @@ describe("run108 addendum-01 A2 store degradation receipts readback", () => {
       executeResponses: async () => {
         throw new Error("not used");
       },
-    });
+    }, { allowTestSeamBackend: true });
     try {
       const response = await fetch(
         `http://127.0.0.1:${server.port}/api/role-model/operator/store-degradation-receipts`,

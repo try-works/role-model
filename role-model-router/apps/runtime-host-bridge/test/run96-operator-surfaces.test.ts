@@ -81,7 +81,7 @@ describe("Run 96 operator evidence routes", () => {
         calls.push("advisory");
         return { availability: "available", reason: "shadow-only" };
       },
-    });
+    }, { allowTestSeamBackend: true });
 
     try {
       const baseUrl = `http://127.0.0.1:${server.port}`;
@@ -167,7 +167,7 @@ describe("Run 96 operator evidence routes", () => {
       executeResponses: async () => {
         throw new Error("not used");
       },
-    });
+    }, { allowTestSeamBackend: true });
 
     try {
       const response = await fetch(
@@ -217,7 +217,7 @@ describe("Run 96 operator evidence routes", () => {
         error: "operator_capability_unavailable",
         capability: "learning advisory",
       }),
-    });
+    }, { allowTestSeamBackend: true });
 
     try {
       const response = await fetch(
@@ -272,7 +272,7 @@ describe("Run 96 operator evidence routes", () => {
       executeResponses: async () => {
         throw new Error("not used");
       },
-    });
+    }, { allowTestSeamBackend: true });
 
     try {
       const response = await fetch(
@@ -463,7 +463,7 @@ describe("Run 96 operator evidence routes", () => {
       executeResponses: async () => {
         throw new Error("not used");
       },
-    });
+    }, { allowTestSeamBackend: true });
     try {
       const response = await fetch(
         `http://127.0.0.1:${server.port}/api/role-model/operator/learning/materialize-route-ladders`,

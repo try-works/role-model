@@ -57,7 +57,7 @@ const start = (overrides: Readonly<Record<string, unknown>> = {}) =>
     }),
     readLearningPolicy: async () => ({ policyVersion: 21 }),
     ...overrides,
-  });
+  }, { allowTestSeamBackend: true });
 
 describe("run99 anonymous loopback Learning readbacks", () => {
   test("serves the Learning readbacks without a token and keeps everything else gated", async () => {

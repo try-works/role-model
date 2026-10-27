@@ -170,7 +170,7 @@ export async function runRestartRehydrationValidation(
         readHealthStatus: restartedBackend.readHealthStatus,
         getRoutableInventory: restartedBackend.getRoutableInventory,
         listEndpoints: restartedBackend.listEndpoints,
-      });
+      }, { allowTestSeamBackend: true });
 
       try {
         const baseUrl = `http://127.0.0.1:${server.port}`;

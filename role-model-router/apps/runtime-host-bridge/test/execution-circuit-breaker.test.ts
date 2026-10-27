@@ -213,7 +213,7 @@ describe("execution circuit breaker policy", () => {
         registry: backend.registry,
         executeChatCompletions: backend.executeChatCompletions,
         executeResponses: backend.executeResponses,
-      });
+      }, { allowTestSeamBackend: true });
 
       const response = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
         method: "POST",

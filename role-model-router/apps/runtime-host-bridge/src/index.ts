@@ -279,9 +279,15 @@ import {
   writeBenchmarkPreferences,
 } from "./benchmark-summary.js";
 import {
+  type BackendOwner,
   type BootstrapContract,
-  withBackendProviderPermits,
+  type ServerOwner,
+  type ServerTransport,
   bootstrapOwner as composedBootstrapOwner,
+  composedBackendOwnerOf,
+  composeServerOwner,
+  testSeamBackendOwner,
+  withBackendProviderPermits,
 } from "./composition-dag.js";
 import {
   computeConfiguredMembershipRevision,
@@ -20727,67 +20733,116 @@ export const recordRouteCaptureAtHostEdge = async (
   return await operations.recordLocalRouteCapture(input, signal === undefined ? {} : { signal });
 };
 
-export async function startBridgeServer(options: StartBridgeServerOptions): Promise<BridgeServer> {
-  // ONE composition edge: the listener builds the writer once for the host's lifetime and injects
-  // its source into the existing diagnostics read seam (see wireModuleHealth).
-  const requestListener = createBridgeRequestListener(options, createRequestHandler);
-  const server = createServer((request, response) => {
-    const requestStart = Date.now();
-    const requestPath = new URL(request.url ?? "/", "http://127.0.0.1").pathname;
-    const runtimeStateRoot = options.runtimeStateRoot;
-    const runtimeChannel = options.runtimeChannel ?? "development";
-    const shouldTraceRequest =
-      typeof runtimeStateRoot === "string" &&
-      runtimeStateRoot.length > 0 &&
-      request.method === "GET" &&
-      (requestPath === "/" ||
-        requestPath === "/app" ||
-        requestPath.startsWith("/assets/") ||
-        requestPath === "/favicon.ico");
-    if (shouldTraceRequest) {
-      appendRuntimeHttpTrace(
-        runtimeStateRoot,
-        runtimeChannel,
-        `request-start method=${request.method} path=${requestPath}`,
-      );
-      response.on("finish", () => {
+/**
+ * S313 (R27): the typed transport bundle the DAG Server owner consumes. The listener factory,
+ * createServer (with the trace wrapper), listen and close construction stay in this file; the DAG owns the
+ * lifecycle ordering, identity and the no-fallback refusal, never the http construction.
+ */
+export const bridgeServerTransport: ServerTransport = {
+  createListener: (options, handlerFactory) =>
+    // SAFETY: the handler factory is the host's real request handler; the DAG only passes it through,
+    // and the returned listener is only invoked by this file's createServer.
+    createBridgeRequestListener(options, handlerFactory as never) as unknown as (
+      request: unknown,
+      response: unknown,
+    ) => void,
+  createServer: (requestListener, options) =>
+    createServer((request, response) => {
+      const requestStart = Date.now();
+      const requestPath = new URL(request.url ?? "/", "http://127.0.0.1").pathname;
+      const runtimeStateRoot = options.runtimeStateRoot;
+      const runtimeChannel = options.runtimeChannel ?? "development";
+      const shouldTraceRequest =
+        typeof runtimeStateRoot === "string" &&
+        runtimeStateRoot.length > 0 &&
+        request.method === "GET" &&
+        (requestPath === "/" ||
+          requestPath === "/app" ||
+          requestPath.startsWith("/assets/") ||
+          requestPath === "/favicon.ico");
+      if (shouldTraceRequest) {
         appendRuntimeHttpTrace(
           runtimeStateRoot,
           runtimeChannel,
-          `request-finish method=${request.method} path=${requestPath} status=${response.statusCode} duration_ms=${Date.now() - requestStart}`,
+          "request-start method=" + String(request.method) + " path=" + requestPath,
         );
-      });
-      response.on("close", () => {
-        if (!response.writableEnded) {
+        response.on("finish", () => {
           appendRuntimeHttpTrace(
             runtimeStateRoot,
             runtimeChannel,
-            `request-close method=${request.method} path=${requestPath} duration_ms=${Date.now() - requestStart}`,
+            "request-finish method=" + String(request.method) + " path=" + requestPath +
+              " status=" + String(response.statusCode) + " duration_ms=" + String(Date.now() - requestStart),
           );
-        }
-      });
-    }
-    // S10b reporting edge: the request program has settled (finalizers ran) and the failure has not
-    // yet been translated to the wire. One place, not per route.
-    requestListener(request, response);
-  });
-  const port = await listen(server, options.host, options.port);
-
-  return {
-    port,
-    async close(): Promise<void> {
-      await new Promise<void>((resolve, reject) => {
-        server.close((error) => {
-          if (error) {
-            reject(error);
-            return;
-          }
-          resolve();
         });
+        response.on("close", () => {
+          if (!response.writableEnded) {
+            appendRuntimeHttpTrace(
+              runtimeStateRoot,
+              runtimeChannel,
+              "request-close method=" + String(request.method) + " path=" + requestPath +
+                " duration_ms=" + String(Date.now() - requestStart),
+            );
+          }
+        });
+      }
+      // S10b reporting edge: the request program has settled (finalizers ran) and the failure has not
+      // yet been translated to the wire. One place, not per route.
+      (requestListener as (incoming: IncomingMessage, outgoing: ServerResponse) => void)(request, response);
+    }),
+  listen: (server, host, port) => listen(server as Server, host, port),
+  close: (server) =>
+    new Promise<void>((resolve, reject) => {
+      (server as Server).close((error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve();
       });
-    },
-  };
+    }),
+};
+
+/** S313: lifecycle inputs for the facade (tests inject the transport/handler factory/owner observer). */
+export interface BridgeServerLifecycleOptions {
+  readonly backend?: BackendOwner;
+  readonly transport?: ServerTransport;
+  readonly handlerFactory?: (options: StartBridgeServerOptions) => BridgeRequestHandler;
+  readonly onServerOwner?: (owner: ServerOwner) => void;
+  /** TEST SEAM ONLY: bare test options that never went through composeBackendOwner may get the branded
+   * testSeamBackendOwner. Production paths must pass a real composed Backend owner (or owned options). */
+  readonly allowTestSeamBackend?: boolean;
 }
+
+/**
+ * S313 (R27) facade: EVERY caller (tests, validate scripts, CLI) goes through the DAG Server owner. There is
+ * no local listen/lifecycle construction in this function; the DAG composes the owner and owns the ordering.
+ */
+export async function startBridgeServer(
+  options: StartBridgeServerOptions,
+  lifecycle?: BridgeServerLifecycleOptions,
+): Promise<BridgeServer & { readonly serverOwner?: ServerOwner }> {
+  // Production options carry the REAL composed Backend owner (composedBackendOwnerOf). The branded
+  // testSeamBackendOwner is reachable ONLY through the explicit allowTestSeamBackend flag: bare options
+  // outside the test seam fail closed instead of fabricating a production owner.
+  const realBackend = lifecycle?.backend ?? composedBackendOwnerOf(options);
+  if (realBackend === undefined && lifecycle?.allowTestSeamBackend !== true) {
+    throw new Error(
+      "Server options were not produced by composeBackendOwner; production requires the DAG-composed Backend owner " +
+        "(the branded test seam is explicit-only via allowTestSeamBackend)",
+    );
+  }
+  const backend = realBackend ?? testSeamBackendOwner(options);
+  const owner = composeServerOwner({
+    backend,
+    // SAFETY: createRequestHandler is the host's real request handler; the DAG only carries it to the transport.
+    handlerFactory: (lifecycle?.handlerFactory ?? createRequestHandler) as never,
+    transport: lifecycle?.transport ?? bridgeServerTransport,
+  });
+  lifecycle?.onServerOwner?.(owner);
+  const started = await owner.start();
+  return { close: started.close, port: started.port, serverOwner: owner };
+}
+
 
 /**
  * Project the opaque provider-attempt identifiers retained by a persisted runtime

@@ -32,7 +32,7 @@ describe("session readiness API", () => {
         readRuntimeSummary: backend.readRuntimeSummary,
         readHealthStatus: backend.readHealthStatus,
         getRoutableInventory: backend.getRoutableInventory,
-      });
+      }, { allowTestSeamBackend: true });
 
       try {
         let health = await backend.readHealthStatus();
