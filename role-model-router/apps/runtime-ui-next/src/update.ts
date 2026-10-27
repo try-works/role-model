@@ -272,6 +272,49 @@ export const createUpdate =
       };
     };
 
+    // S278 (R12): a telemetry invalidation re-reads only the current route, through the same real
+    // commands a contiguous revision uses. It writes nothing to `refresh`: the telemetry payload
+    // carries no revision, so this transition must never advance the watermark, bump the
+    // gap/resync token, or claim the topology moved. Routes without a readback or observability
+    // reader (control, learning) have no telemetry invalidation yet; that is explicit remaining
+    // coverage, not a fabricated refresh.
+    const invalidateCurrentRoute = (model: Model): UpdateReturn<Model, Message> => {
+      const readbackKey = readbackKeyForRouteTag(model.route._tag);
+      if (readbackKey !== null) {
+        const token = model.readbacks[readbackKey].token + 1;
+        const detailId =
+          model.route._tag === "RequestDetail" || model.route._tag === "RouterDecisionDetail"
+            ? model.route.requestId
+            : undefined;
+        // S280A: mirror the current route's own read arguments. The Index overview
+        // (readback.ts:914-920) and the Dashboard summary (:757-763) take their window as the query /
+        // id (update.ts:493/503, init.ts:146); omitting them requests an empty windowMs and silently
+        // drops the selected overview window and filters.
+        const windowMs = model.overviewWindowMs ?? 86_400_000;
+        const id = readbackKey === "dashboard" ? String(windowMs) : detailId;
+        const query =
+          readbackKey === "overviewMetrics"
+            ? overviewQuery(model.overviewFilters ?? DEFAULT_OVERVIEW_FILTERS, windowMs)
+            : undefined;
+        return {
+          // The command's id/query args are typed optional, so undefined forwards as "absent".
+          commands: [readReadback({ id, key: readbackKey, query, token })],
+          model: {
+            ...model,
+            readbacks: { ...model.readbacks, [readbackKey]: loadingReadback(token) },
+          },
+        };
+      }
+      if (model.route._tag === "Observability") {
+        const token = model.observability.token + 1;
+        return {
+          commands: [readObservability({ token })],
+          model: { ...model, observability: loadingObservability(token) },
+        };
+      }
+      return { model };
+    };
+
     return (model: Model, message: Message): UpdateReturn<Model, Message> =>
     Message.match<UpdateReturn<Model, Message>>(message, {
       ChangedUrl: ({ url }) => {
@@ -699,6 +742,7 @@ export const createUpdate =
           },
         };
       },
+      RuntimeTelemetryReceived: () => invalidateCurrentRoute(model),
       ThemeApplied: () => ({ model }),
       ToggledTheme: () => {
         const theme = model.theme === "light" ? "dark" : "light";

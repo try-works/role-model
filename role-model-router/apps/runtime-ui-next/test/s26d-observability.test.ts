@@ -198,7 +198,8 @@ describe("S26d observability page", () => {
     );
     expect(fetchCalls).toBe(1);
     expect(active).toBe(1);
-    expect([...listeners.keys()]).toEqual(["revision.update"]);
+    // S278: the original runtime refresh contract has two event types on one owned source.
+    expect([...listeners.keys()].sort()).toEqual(["revision.update", "telemetry.update"]);
 
     listeners.get("revision.update")?.({
       data: JSON.stringify({ revision: 1 }),

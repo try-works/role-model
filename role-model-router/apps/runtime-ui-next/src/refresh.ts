@@ -1,6 +1,6 @@
 import { Subscription } from "@role-model-router/foldkit";
 import type { Subscriptions } from "@role-model-router/foldkit/subscription";
-import { Effect, Queue, Schema, Stream } from "effect";
+import { Effect, Option, Queue, Schema, Stream } from "effect";
 
 import { Message } from "./message";
 import type { Model } from "./model";
@@ -47,6 +47,34 @@ export const initialRuntimeRefreshState = (): RuntimeRefreshState => ({
   status: "idle",
 });
 
+/**
+ * S278 (R12): the real telemetry event contract (`runtime-api.ts:693-698`): eventName,
+ * emittedAtMs and the persisted request. It carries NO revision, so this decoder can only ever
+ * produce a route invalidation — never a topology revision number.
+ */
+const RuntimeTelemetryEvent = Schema.Struct({
+  emittedAtMs: Schema.Number,
+  eventName: Schema.Literals(["telemetry.update"]),
+  request: Schema.Struct({ requestId: Schema.String }),
+});
+
+const decodeTelemetry = (
+  event: MessageEvent<string>,
+): { readonly emittedAtMs: number; readonly requestId: string } | null => {
+  try {
+    const decoded = Schema.decodeUnknownOption(RuntimeTelemetryEvent)(JSON.parse(event.data));
+    if (Option.isNone(decoded)) return null;
+    const { emittedAtMs, request } = decoded.value;
+    // `Schema.Number` only proves the value is a number: JSON.parse turns 1e999 into Infinity, and a
+    // fractional timestamp is not a real emittedAtMs either. Require the same bounded integer the
+    // revision decoder requires, and an identity that can invalidate something honestly.
+    if (!Number.isSafeInteger(emittedAtMs)) return null;
+    return request.requestId.length === 0 ? null : { emittedAtMs, requestId: request.requestId };
+  } catch {
+    return null;
+  }
+};
+
 const decodeRevision = (event: MessageEvent<string>): number | null => {
   try {
     const parsed = JSON.parse(event.data) as { revision?: unknown };
@@ -65,15 +93,40 @@ export const refreshRevisionStream = (
     Effect.acquireRelease(
       Effect.sync(() => {
         const source = factory(REFRESH_STREAM_URL);
+        // A real EventSource detaches its listeners on close, but a retaining source can still invoke
+        // them. Offering into a finalised queue must never happen, so every offer is guarded by this
+        // stream instance's own active flag, set false by the finalizer before the source closes.
+        const state = { active: true };
+        const offer = (message: Message): void => {
+          if (state.active) Queue.offerUnsafe(queue, message);
+        };
         source.addEventListener("revision.update", (event) => {
           const revision = decodeRevision(event);
           if (revision !== null) {
-            Queue.offerUnsafe(queue, Message.RuntimeRevisionReceived({ revision }));
+            offer(Message.RuntimeRevisionReceived({ revision }));
           }
         });
-        return source;
+        // S278 (R12): the same one source also carries newly persisted telemetry requests. A
+        // malformed event is ignored rather than classified as a revision, so the watermark and the
+        // gap/resync token can never be polluted by a telemetry payload.
+        source.addEventListener("telemetry.update", (event) => {
+          const telemetry = decodeTelemetry(event);
+          if (telemetry !== null) {
+            offer(
+              Message.RuntimeTelemetryReceived({
+                emittedAtMs: telemetry.emittedAtMs,
+                requestId: telemetry.requestId,
+              }),
+            );
+          }
+        });
+        return { source, state };
       }),
-      (source) => Effect.sync(() => source.close()),
+      ({ source, state }) =>
+        Effect.sync(() => {
+          state.active = false;
+          source.close();
+        }),
     ),
   );
 

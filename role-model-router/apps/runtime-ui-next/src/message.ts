@@ -106,6 +106,10 @@ export const Message: MessageUnion<{
   readonly RuntimeConfigSaved: { readonly recordJson: typeof Schema.String; readonly status: typeof Schema.Number; readonly token: typeof Schema.Number };
   readonly RuntimeConfigSaveFailed: { readonly message: typeof Schema.String; readonly status: typeof Schema.Number; readonly token: typeof Schema.Number };
   readonly RuntimeRevisionReceived: { readonly revision: typeof Schema.Number };
+  readonly RuntimeTelemetryReceived: {
+    readonly emittedAtMs: typeof Schema.Number;
+    readonly requestId: typeof Schema.String;
+  };
   readonly ThemeApplied: EmptyFields;
   readonly ToggledTheme: EmptyFields;
 }> = defineMessageUnion({
@@ -144,6 +148,7 @@ export const Message: MessageUnion<{
   RuntimeConfigSaved: { recordJson: Schema.String, status: Schema.Number, token: Schema.Number },
   RuntimeConfigSaveFailed: { message: Schema.String, status: Schema.Number, token: Schema.Number },
   RuntimeRevisionReceived: { revision: Schema.Number },
+  RuntimeTelemetryReceived: { emittedAtMs: Schema.Number, requestId: Schema.String },
   ThemeApplied: {},
   ToggledTheme: {},
 });
