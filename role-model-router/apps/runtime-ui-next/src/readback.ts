@@ -2,6 +2,7 @@ import type { Html, HtmlBuilder } from "@role-model-router/foldkit/html";
 import { Schema } from "effect";
 
 import type { Message } from "./message";
+import { createReadbackFlightTransport } from "./readback-flight";
 import { READBACK_PATHS } from "./runtime-endpoints";
 
 /** S26e/R13 wave 2: one shared readback surface for four read routes. */
@@ -1009,42 +1010,52 @@ export const createReadbackClient = (
 
 export const createReadbackClients = (
   options: ReadbackClientOptions = {},
-): Readonly<Record<ReadbackKey, ReadbackReader>> => ({
-  dashboard: createReadbackClient(READBACK_SPECS.dashboard, options),
-  localLogs: createReadbackClient(READBACK_SPECS.localLogs, options),
-  localPeers: createReadbackClient(READBACK_SPECS.localPeers, options),
-  systemPeers: createReadbackClient(READBACK_SPECS.systemPeers, options),
-  localSwap: createReadbackClient(READBACK_SPECS.localSwap, options),
-  observeActivity: createReadbackClient(READBACK_SPECS.observeActivity, options),
-  observeLogs: createReadbackClient(READBACK_SPECS.observeLogs, options),
-  observeRouting: createReadbackClient(READBACK_SPECS.observeRouting, options),
-  queues: createReadbackClient(READBACK_SPECS.queues, options),
-  requests: createReadbackClient(READBACK_SPECS.requests, options),
-  router: createReadbackClient(READBACK_SPECS.router, options),
-  routerCandidates: createReadbackClient(READBACK_SPECS.routerCandidates, options),
-  routerDecisions: createReadbackClient(READBACK_SPECS.routerDecisions, options),
-  runtime: createReadbackClient(READBACK_SPECS.runtime, options),
-  runtimeConfig: createReadbackClient(READBACK_SPECS.runtimeConfig, options),
-  sessionReadiness: createReadbackClient(READBACK_SPECS.sessionReadiness, options),
-  storeReceipts: createReadbackClient(READBACK_SPECS.storeReceipts, options),
-  requestDetail: createReadbackClient(READBACK_SPECS.requestDetail, options),
-  routerDecisionDetail: createReadbackClient(READBACK_SPECS.routerDecisionDetail, options),
-  localPeerModels: createReadbackClient(READBACK_SPECS.localPeerModels, options),
-  queueConfig: createReadbackClient(READBACK_SPECS.queueConfig, options),
-  downstreamOpenAI: createReadbackClient(READBACK_SPECS.downstreamOpenAI, options),
-  integrationProviders: createReadbackClient(READBACK_SPECS.integrationProviders, options),
-  benchmarkSuite: createReadbackClient(READBACK_SPECS.benchmarkSuite, options),
-  storageRetention: createReadbackClient(READBACK_SPECS.storageRetention, options),
-  models: createReadbackClient(READBACK_SPECS.models, options),
-  runtimeSummary: createReadbackClient(READBACK_SPECS.runtimeSummary, options),
-  health: createReadbackClient(READBACK_SPECS.health, options),
-  learning: createReadbackClient(READBACK_SPECS.learning, options),
-  configuredModels: createReadbackClient(READBACK_SPECS.configuredModels, options),
-  modelEndpoints: createReadbackClient(READBACK_SPECS.modelEndpoints, options),
-  replayJobs: createReadbackClient(READBACK_SPECS.replayJobs, options),
-  evaluationJobs: createReadbackClient(READBACK_SPECS.evaluationJobs, options),
-  overviewMetrics: createReadbackClient(READBACK_SPECS.overviewMetrics, options),
-});
+): Readonly<Record<ReadbackKey, ReadbackReader>> => {
+  // S279 (R12): one owner-local in-flight transport per createReadbackClients call. Aliases with
+  // the same effective GET share only while it is pending; there is no settled-response cache and
+  // no global/shared-shell transport. A standalone createReadbackClient keeps its own fetch impl
+  // and the caller's exact signal identity.
+  const transport = createReadbackFlightTransport(options.fetchImpl ?? fetch);
+  const clientOptions: ReadbackClientOptions = { ...options, fetchImpl: transport.fetch };
+  const client = (spec: ReadbackRouteSpec): ReadbackReader =>
+    createReadbackClient(spec, clientOptions);
+  return {
+    dashboard: client(READBACK_SPECS.dashboard),
+    localLogs: client(READBACK_SPECS.localLogs),
+    localPeers: client(READBACK_SPECS.localPeers),
+    systemPeers: client(READBACK_SPECS.systemPeers),
+    localSwap: client(READBACK_SPECS.localSwap),
+    observeActivity: client(READBACK_SPECS.observeActivity),
+    observeLogs: client(READBACK_SPECS.observeLogs),
+    observeRouting: client(READBACK_SPECS.observeRouting),
+    queues: client(READBACK_SPECS.queues),
+    requests: client(READBACK_SPECS.requests),
+    router: client(READBACK_SPECS.router),
+    routerCandidates: client(READBACK_SPECS.routerCandidates),
+    routerDecisions: client(READBACK_SPECS.routerDecisions),
+    runtime: client(READBACK_SPECS.runtime),
+    runtimeConfig: client(READBACK_SPECS.runtimeConfig),
+    sessionReadiness: client(READBACK_SPECS.sessionReadiness),
+    storeReceipts: client(READBACK_SPECS.storeReceipts),
+    requestDetail: client(READBACK_SPECS.requestDetail),
+    routerDecisionDetail: client(READBACK_SPECS.routerDecisionDetail),
+    localPeerModels: client(READBACK_SPECS.localPeerModels),
+    queueConfig: client(READBACK_SPECS.queueConfig),
+    downstreamOpenAI: client(READBACK_SPECS.downstreamOpenAI),
+    integrationProviders: client(READBACK_SPECS.integrationProviders),
+    benchmarkSuite: client(READBACK_SPECS.benchmarkSuite),
+    storageRetention: client(READBACK_SPECS.storageRetention),
+    models: client(READBACK_SPECS.models),
+    runtimeSummary: client(READBACK_SPECS.runtimeSummary),
+    health: client(READBACK_SPECS.health),
+    learning: client(READBACK_SPECS.learning),
+    configuredModels: client(READBACK_SPECS.configuredModels),
+    modelEndpoints: client(READBACK_SPECS.modelEndpoints),
+    replayJobs: client(READBACK_SPECS.replayJobs),
+    evaluationJobs: client(READBACK_SPECS.evaluationJobs),
+    overviewMetrics: client(READBACK_SPECS.overviewMetrics),
+  };
+};
 
 export const readbackFromResult = (
   spec: ReadbackRouteSpec,

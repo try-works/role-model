@@ -360,7 +360,11 @@ describe("S26e shared readback client", () => {
     for (const call of calls) {
       expect(new Headers(call.init?.headers).get("authorization")).toBe("Bearer s26e-token");
       expect(call.init?.method).toBe("GET");
-      expect(call.init?.signal).toBe(controller.signal);
+      // S279: shared readers use an owner-controlled signal so one alias cannot cancel another.
+      // The physical signal and per-consumer abort propagation are exercised in S279; the standalone
+      // createReadbackClient still preserves exact caller signal identity.
+      expect(call.init?.signal).toBeInstanceOf(AbortSignal);
+      expect(call.init?.signal?.aborted).toBe(false);
     }
   });
 });
@@ -471,7 +475,8 @@ describe("S26e shared readback routes", () => {
       );
       expect(fetchCalls).toBe(1);
       expect(active).toBe(1);
-      expect([...listeners.keys()]).toEqual(["revision.update"]);
+      // S278 restores the legacy two-event contract on this same single source.
+      expect([...listeners.keys()].sort()).toEqual(["revision.update", "telemetry.update"]);
       listeners.get("revision.update")?.({
         data: JSON.stringify({ revision: 1 }),
       } as MessageEvent<string>);
