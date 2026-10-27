@@ -1,0 +1,61 @@
+COMMAND: node --test scripts/runtime/parity-selfcheck.test.mjs (both TMP separator styles)
+STYLE=forward TMP=E:/rm-tmp EXIT=0
+✔ S294 PASSED when both builds are deterministic, clean and the dual comparison is recorded (8.1193ms)
+✔ S294 a React-vs-Foldkit difference is classified, never forced equal (1.2352ms)
+✔ S294 FAILED when a build is nondeterministic across the two runs (1.7185ms)
+✔ S294 FAILED when a capture surfaces console or network issues (1.1327ms)
+✔ S294 FAILED (not NOT_RUN) when a build target is unavailable (0.7305ms)
+✔ S294 NOT_RUN with exit 2 only when no browser is available (0.4917ms)
+✔ S294 runSelfcheck captures every target twice (two runs) and evaluates the result (3.9751ms)
+✔ S294 partitions favicon harness noise out of the capture issues while recording it (1.1449ms)
+✔ S295 FAILED when a target has fewer than exactly two captures (0.795ms)
+✔ S295 FAILED when a target entry is missing from the plan (1.2503ms)
+✔ S295 emits per-target ignoredIssues and an ignored count in the JSON (1.2334ms)
+✔ S295 emits comparisons on the FAILED path and computes reactVsReact from the two react shas (0.7507ms)
+✔ S295 evidence.targets lists both run PNGs per target and echoes executable/temp roots (0.7057ms)
+✔ S295 runSelfcheck contains a capture failure as a FAILED JSON result, not a rejection (1.0329ms)
+✔ S295 r2 FAILED unless there are exactly two runs and one capture per target per run (0.7676ms)
+✔ S295 r2 enforces the required temp drive (E: passes, another drive fails) (0.9356ms)
+✔ S295 r2 launchChrome kills its child when the DevTools endpoint never appears (212.0662ms)
+✔ S295 r2 main emits FAILED JSON when the injected launch rejects (no uncaught rejection) (1294.9132ms)
+✔ S295 r3 launchChrome rejects a spawn error and kills the child (no orphan, no uncaught error) (24.8455ms)
+✔ S294 planTargets names the React and Foldkit static roots from the repo root (1.025ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 20
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1905.0354
+
+STYLE=backslash TMP=E:\rm-tmp EXIT=0
+✔ S294 PASSED when both builds are deterministic, clean and the dual comparison is recorded (11.4968ms)
+✔ S294 a React-vs-Foldkit difference is classified, never forced equal (1.4831ms)
+✔ S294 FAILED when a build is nondeterministic across the two runs (2.0704ms)
+✔ S294 FAILED when a capture surfaces console or network issues (1.3427ms)
+✔ S294 FAILED (not NOT_RUN) when a build target is unavailable (1.2748ms)
+✔ S294 NOT_RUN with exit 2 only when no browser is available (1.4752ms)
+✔ S294 runSelfcheck captures every target twice (two runs) and evaluates the result (7.7056ms)
+✔ S294 partitions favicon harness noise out of the capture issues while recording it (2.4969ms)
+✔ S295 FAILED when a target has fewer than exactly two captures (1.4812ms)
+✔ S295 FAILED when a target entry is missing from the plan (3.1031ms)
+✔ S295 emits per-target ignoredIssues and an ignored count in the JSON (1.6604ms)
+✔ S295 emits comparisons on the FAILED path and computes reactVsReact from the two react shas (1.2304ms)
+✔ S295 evidence.targets lists both run PNGs per target and echoes executable/temp roots (1.4401ms)
+✔ S295 runSelfcheck contains a capture failure as a FAILED JSON result, not a rejection (1.6229ms)
+✔ S295 r2 FAILED unless there are exactly two runs and one capture per target per run (1.1371ms)
+✔ S295 r2 enforces the required temp drive (E: passes, another drive fails) (1.7903ms)
+✔ S295 r2 launchChrome kills its child when the DevTools endpoint never appears (204.8634ms)
+✔ S295 r2 main emits FAILED JSON when the injected launch rejects (no uncaught rejection) (1592.6661ms)
+✔ S295 r3 launchChrome rejects a spawn error and kills the child (no orphan, no uncaught error) (38.4349ms)
+✔ S294 planTargets names the React and Foldkit static roots from the repo root (1.6406ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 20
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2341.9416
+

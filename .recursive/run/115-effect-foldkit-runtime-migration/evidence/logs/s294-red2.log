@@ -1,0 +1,133 @@
+COMMAND: node --test scripts/runtime/parity-selfcheck.test.mjs
+CWD: public worktree ; S295 strict RED: 6 new HOLD-repair tests against the S294 runner
+EXIT_CODE=1
+
+✔ S294 PASSED when both builds are deterministic, clean and the dual comparison is recorded (11.3491ms)
+✔ S294 a React-vs-Foldkit difference is classified, never forced equal (1.304ms)
+✔ S294 FAILED when a build is nondeterministic across the two runs (2.8638ms)
+✔ S294 FAILED when a capture surfaces console or network issues (1.2753ms)
+✔ S294 FAILED (not NOT_RUN) when a build target is unavailable (1.2731ms)
+✔ S294 NOT_RUN with exit 2 only when no browser is available (0.8117ms)
+✔ S294 runSelfcheck captures every target twice (two runs) and evaluates the result (5.2464ms)
+✔ S294 partitions favicon harness noise out of the capture issues while recording it (4.3903ms)
+✖ S295 FAILED when a target has fewer than exactly two captures (7.3632ms)
+✖ S295 FAILED when a target entry is missing from the plan (1.6464ms)
+✖ S295 emits per-target ignoredIssues and an ignored count in the JSON (3.7519ms)
+✖ S295 emits comparisons on the FAILED path and computes reactVsReact from the two react shas (0.9947ms)
+✖ S295 evidence.targets lists both run PNGs per target and echoes executable/temp roots (2.8889ms)
+✖ S295 runSelfcheck contains a capture failure as a FAILED JSON result, not a rejection (1.0803ms)
+✔ S294 planTargets names the React and Foldkit static roots from the repo root (1.8853ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 9
+ℹ fail 6
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 477.3575
+
+✖ failing tests:
+
+test at scripts\runtime\parity-selfcheck.test.mjs:141:1
+✖ S295 FAILED when a target has fewer than exactly two captures (7.3632ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  'PASSED' !== 'FAILED'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/runtime/parity-selfcheck.test.mjs:148:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'PASSED',
+    expected: 'FAILED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts\runtime\parity-selfcheck.test.mjs:153:1
+✖ S295 FAILED when a target entry is missing from the plan (1.6464ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  'PASSED' !== 'FAILED'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/runtime/parity-selfcheck.test.mjs:160:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'PASSED',
+    expected: 'FAILED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts\runtime\parity-selfcheck.test.mjs:164:1
+✖ S295 emits per-target ignoredIssues and an ignored count in the JSON (3.7519ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + undefined
+  - [
+  -   'network: http://127.0.0.1:1/favicon.ico -> 404',
+  -   'network: http://127.0.0.1:1/favicon.ico -> 404'
+  - ]
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/runtime/parity-selfcheck.test.mjs:173:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: [ 'network: http://127.0.0.1:1/favicon.ico -> 404', 'network: http://127.0.0.1:1/favicon.ico -> 404' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at scripts\runtime\parity-selfcheck.test.mjs:177:1
+✖ S295 emits comparisons on the FAILED path and computes reactVsReact from the two react shas (0.9947ms)
+  TypeError: Cannot read properties of undefined (reading 'reactVsReact')
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/runtime/parity-selfcheck.test.mjs:184:35)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7)
+
+test at scripts\runtime\parity-selfcheck.test.mjs:189:1
+✖ S295 evidence.targets lists both run PNGs per target and echoes executable/temp roots (2.8889ms)
+  TypeError: Cannot read properties of undefined (reading 'length')
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/runtime/parity-selfcheck.test.mjs:201:27)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7)
+
+test at scripts\runtime\parity-selfcheck.test.mjs:207:1
+✖ S295 runSelfcheck contains a capture failure as a FAILED JSON result, not a rejection (1.0803ms)
+  Error: capture boom
+      at capture (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/runtime/parity-selfcheck.test.mjs:210:13)
+      at runSelfcheck (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/runtime/parity-selfcheck.mjs:135:26)
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/runtime/parity-selfcheck.test.mjs:208:24)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7)
+

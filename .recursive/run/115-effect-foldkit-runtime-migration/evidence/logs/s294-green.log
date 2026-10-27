@@ -1,0 +1,22 @@
+COMMAND: node --test scripts/runtime/parity-selfcheck.test.mjs
+CWD: public worktree ; S294 GREEN: contract tests + favicon-noise partition
+EXIT_CODE=0
+
+✔ S294 PASSED when both builds are deterministic, clean and the dual comparison is recorded (7.0734ms)
+✔ S294 a React-vs-Foldkit difference is classified, never forced equal (1.3762ms)
+✔ S294 FAILED when a build is nondeterministic across the two runs (1.5133ms)
+✔ S294 FAILED when a capture surfaces console or network issues (0.9557ms)
+✔ S294 FAILED (not NOT_RUN) when a build target is unavailable (1.0648ms)
+✔ S294 NOT_RUN with exit 2 only when no browser is available (0.5479ms)
+✔ S294 runSelfcheck captures every target twice (two runs) and evaluates the result (4.8597ms)
+✔ S294 partitions favicon harness noise out of the capture issues while recording it (1.382ms)
+✔ S294 planTargets names the React and Foldkit static roots from the repo root (2.4375ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 426.9789
+
