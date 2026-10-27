@@ -19,7 +19,7 @@ const BUDGET = {
   "s26b-wave1.test.ts": 3,
   "s26k-control.test.ts": 1,
   "s40b-overview.test.ts": 1,
-  "s46a-studio.test.ts": 6,
+  "s46a-studio.test.ts": 3,
   "s73a-controller.test.ts": 1,
   "s76a-runtime-config.test.ts": 11
 };

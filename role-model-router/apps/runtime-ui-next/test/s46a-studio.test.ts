@@ -25,53 +25,15 @@ afterEach(() => {
   window.history.replaceState({}, "", "/");
 });
 
+/**
+ * S46a: the Studio wiring that needs a real client.
+ *
+ * The tab/form/idle-response rendering that used to live here (and the four tab clicks plus the ArrowRight
+ * keydown that drove it) moved to test/s255-studio-rendering-scene.test.ts: it is a rendering assertion over the
+ * Studio state, so a scene covers it without a DOM click (S249). What stays here is the part that needs a real
+ * fetch: typed field values reach the client, a 404 paints the raw body, and a chat response paints.
+ */
 describe("S46a Studio", () => {
-  it("renders five tabs with per-tab idle raw text and fields", async () => {
-    mountStudio("s46a-tabs", async () => new Response("{}", { status: 200 }));
-    await waitFor(() => document.querySelector("[data-route='studio']") ?? undefined, "studio");
-    expect(document.querySelectorAll("[data-studio-tab]")).toHaveLength(5);
-    expect(document.querySelector("[role='tablist']")).not.toBeNull();
-    expect(document.querySelector("[role='tab'][aria-selected='true']")?.getAttribute("data-studio-tab")).toBe("chat");
-    const selected = document.querySelector("[role='tab'][aria-selected='true']") as HTMLButtonElement;
-    selected.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, key: "ArrowRight" }));
-    await waitFor(() => document.querySelector("[role='tab'][aria-selected='true']")?.getAttribute("data-studio-tab") === "images" ? true : undefined, "arrow tab");
-    expect(document.body.textContent).toContain("RAW RESPONSE");
-    expect(document.body.textContent).toContain("Run a Studio request to see the raw response.");
-    for (const tab of ["images", "audio", "rerank", "advanced"]) {
-      (document.querySelector("[data-studio-tab='" + tab + "']") as HTMLButtonElement).click();
-      await waitFor(() => document.querySelector("[data-studio-form='" + tab + "']") ?? undefined, tab + " form");
-    }
-  });
-
-  it("dispatches each tab with the exact method, path and body", async () => {
-    const calls: Array<{ path: string; init: RequestInit }> = [];
-    mountStudio("s46a-dispatch", async (input, init) => {
-      calls.push({ path: new URL(String(input), "http://localhost").pathname, init: init ?? {} });
-      return new Response(JSON.stringify({ error: "not found" }), { status: 404, headers: { "content-type": "application/json" } });
-    });
-    await waitFor(() => document.querySelector("[data-route='studio']") ?? undefined, "studio");
-    for (const tab of ["chat", "images", "audio", "rerank", "advanced"]) {
-      (document.querySelector("[data-studio-tab='" + tab + "']") as HTMLButtonElement).click();
-      await waitFor(() => document.querySelector("[data-studio-form='" + tab + "']") ?? undefined, tab + " form");
-      await waitFor(() => document.querySelector("[data-studio-raw='idle']") ?? undefined, tab + " idle");
-      (document.querySelector("[data-studio-run]") as HTMLButtonElement).click();
-      await waitFor(() => document.querySelector("[role='alert']") ?? undefined, tab + " error");
-      const call = calls.filter((entry) => entry.path.startsWith("/v1/")).at(-1);
-      expect(call, tab).toBeDefined();
-      expect(call?.init.method).toBe("POST");
-      const body = JSON.parse(String(call?.init.body)) as Record<string, unknown>;
-      expect(Object.keys(body).length).toBeGreaterThan(0);
-    }
-    const bodies = calls.filter((entry) => entry.path.startsWith("/v1/")).map((entry) => JSON.parse(String(entry.init.body)) as Record<string, unknown>);
-    expect(bodies[0]).toEqual({ messages: [{ content: "A quiet harbour at dawn", role: "user" }], model: "moonshot/kimi-k2.5", stream: false });
-    expect(bodies[1]).toEqual({ mode: "generate", model: "moonshot/kimi-k2.5", prompt: "A quiet harbour at dawn", size: "1024x1024" });
-    expect(bodies[2]).toEqual({ input: "A quiet harbour at dawn", model: "moonshot/kimi-k2.5", response_format: "mp3", voice: "alloy" });
-    expect(bodies[3]).toEqual({ documents: ["first document", "second document"], model: "moonshot/kimi-k2.5", query: "Which document is first?", top_n: 5 });
-    expect(bodies[4]).toMatchObject({ max_tokens: 64, model: "moonshot/kimi-k2.5" });
-    const paths = calls.filter((entry) => entry.path.startsWith("/v1/")).map((entry) => entry.path);
-    expect(paths).toEqual(["/v1/chat/completions", "/v1/images/generations", "/v1/audio/speech", "/v1/rerank", "/v1/responses"]);
-  });
-
   it("dispatches typed values, including a custom model and prompt", async () => {
     let body: Record<string, unknown> | undefined;
     mountStudio("s46a-typed", async (_input, init) => {
