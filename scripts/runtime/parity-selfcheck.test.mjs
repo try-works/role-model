@@ -5,12 +5,14 @@ import os from "node:os";
 
 import {
   enforceTempRoot,
+  evaluateMutationCheck,
   evaluateSelfcheck,
   exitCodeFor,
   launchChrome,
   main,
   partitionCaptureIssues,
   planTargets,
+  runMutationCheck,
   runSelfcheck,
 } from "./parity-selfcheck.mjs";
 
@@ -319,6 +321,116 @@ test("S295 r3 launchChrome rejects a spawn error and kills the child (no orphan,
   errorListener(new Error("spawn ENOENT"));
   await assert.rejects(promise, /spawn ENOENT/);
   assert.equal(child.killed, true, "a spawn error must kill the child");
+});
+
+const CLASS_MUTATION = { file: "assets/root.css", from: "display:flex", selector: ".flex", to: "display:block" };
+
+test("S297 PASSED when the one-class mutant changes the capture and the unchanged pair is identical", () => {
+  const result = evaluateMutationCheck({
+    baselineShas: ["a".repeat(64), "a".repeat(64)],
+    classMutation: CLASS_MUTATION,
+    mutatedSha: "b".repeat(64),
+  });
+  assert.equal(result.status, "PASSED");
+  assert.equal(result.mode, "mutation");
+  assert.equal(exitCodeFor(result.status), 0);
+  assert.equal(result.mutationCheck.applied, "one-class");
+  assert.deepEqual(result.mutationCheck.classMutation, CLASS_MUTATION);
+  assert.equal(result.mutationCheck.detected, true);
+  assert.equal(result.mutationCheck.noFalseMutation, true);
+  assert.equal(result.mutationCheck.baselineSha, "a".repeat(64));
+  assert.equal(result.mutationCheck.mutatedSha, "b".repeat(64));
+});
+
+test("S297 FAILED when the mutant capture is identical to the baseline (blind harness)", () => {
+  const result = evaluateMutationCheck({
+    baselineShas: ["a".repeat(64), "a".repeat(64)],
+    classMutation: CLASS_MUTATION,
+    mutatedSha: "a".repeat(64),
+  });
+  assert.equal(result.status, "FAILED");
+  assert.equal(exitCodeFor(result.status), 1);
+  assert.match(String(result.reason), /mutation-not-detected/);
+});
+
+test("S297 FAILED when the harness reports detected:false although the shas differ", () => {
+  const result = evaluateMutationCheck({
+    baselineShas: ["a".repeat(64), "a".repeat(64)],
+    classMutation: CLASS_MUTATION,
+    mutatedSha: "b".repeat(64),
+    reportedDetected: false,
+  });
+  assert.equal(result.status, "FAILED");
+  assert.match(String(result.reason), /inconsistent-detection/);
+});
+
+test("S297 FAILED when the unchanged baseline pair itself differs", () => {
+  const result = evaluateMutationCheck({
+    baselineShas: ["a".repeat(64), "c".repeat(64)],
+    classMutation: CLASS_MUTATION,
+    mutatedSha: "b".repeat(64),
+  });
+  assert.equal(result.status, "FAILED");
+  assert.match(String(result.reason), /nondeterministic/);
+});
+
+test("S297 FAILED on capture issues and NOT_RUN (exit 2) without a browser", () => {
+  const failed = evaluateMutationCheck({
+    baselineShas: ["a".repeat(64), "a".repeat(64)],
+    classMutation: CLASS_MUTATION,
+    issues: ["console: TypeError: boom"],
+    mutatedSha: "b".repeat(64),
+  });
+  assert.equal(failed.status, "FAILED");
+  assert.match(String(failed.reason), /capture-issues/);
+  const notRun = evaluateMutationCheck({ chromeAvailable: false });
+  assert.equal(notRun.status, "NOT_RUN");
+  assert.equal(exitCodeFor(notRun.status), 2);
+});
+
+test("S297 runMutationCheck captures baseline twice and the mutant once via the adapter", async () => {
+  const calls = [];
+  const result = await runMutationCheck({
+    capture: async (request) => {
+      calls.push(request);
+      if (request.kind === "mutated") return { classMutation: CLASS_MUTATION, sha256: "b".repeat(64) };
+      return { sha256: "a".repeat(64) };
+    },
+    chromeAvailable: true,
+    repoRoot: "/repo",
+  });
+  assert.equal(result.status, "PASSED");
+  assert.equal(calls.filter((call) => call.kind === "baseline").length, 2);
+  assert.equal(calls.filter((call) => call.kind === "mutated").length, 1);
+  assert.equal(result.mutationCheck.detected, true);
+});
+
+test("S298 mutation JSON carries ignoredIssues/ignoredCount, baseline run identity and PNG evidence", () => {
+  const faviconNet = "network: http://127.0.0.1:1/favicon.ico -> 404";
+  const faviconEcho = "console: Failed to load resource: the server responded with a status of 404 (Not Found)";
+  const result = evaluateMutationCheck({
+    baselineCaptures: [
+      { evidencePath: "/caps/baseline-run0.png", ignoredIssues: [faviconNet, faviconEcho], run: 0, sha256: "a".repeat(64) },
+      { evidencePath: "/caps/baseline-run1.png", ignoredIssues: [], run: 1, sha256: "a".repeat(64) },
+    ],
+    classMutation: CLASS_MUTATION,
+    mutatedCapture: { evidencePath: "/caps/mutated-run0.png", ignoredIssues: [faviconNet], run: 0, sha256: "b".repeat(64) },
+  });
+  assert.equal(result.status, "PASSED");
+  assert.equal(result.ignoredCount, 3);
+  assert.equal(result.targets.length, 1);
+  const target = result.targets[0];
+  assert.equal(target === undefined ? undefined : target.id, "react");
+  assert.equal(target?.captures.length, 3);
+  assert.equal(target?.captures[0]?.role, "baseline");
+  assert.equal(target?.captures[0]?.run, 0);
+  assert.equal(target?.captures[1]?.run, 1);
+  assert.equal(target?.captures[2]?.role, "mutant");
+  assert.deepEqual(target?.captures[0]?.ignoredIssues, [faviconNet, faviconEcho]);
+  assert.deepEqual(target?.ignoredIssues, [faviconNet, faviconEcho, faviconNet]);
+  assert.equal(target?.captures[0]?.evidencePath, "/caps/baseline-run0.png");
+  assert.deepEqual(result.evidence.baseline, ["/caps/baseline-run0.png", "/caps/baseline-run1.png"]);
+  assert.equal(result.evidence.mutant, "/caps/mutated-run0.png");
 });
 
 test("S294 planTargets names the React and Foldkit static roots from the repo root", () => {

@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
-import { createReadStream, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { cpSync, createReadStream, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createServer } from "node:net";
 import os from "node:os";
 import path from "node:path";
@@ -39,6 +39,129 @@ export const resolveTargets = ({ exists = existsSync, repoRoot }) =>
   planTargets({ repoRoot }).map((target) => ({ ...target, available: exists(target.staticRoot) }));
 
 export const exitCodeFor = (status) => (status === "PASSED" ? 0 : status === "FAILED" ? 1 : 2);
+
+/** S297: the exact one-class change, applied at the shipped-artifact level in the copied static root. */
+export const MUTATION_FROM = ".flex{display:flex}";
+export const MUTATION_TO = ".flex{display:block}";
+
+export const prepareMutationRoot = ({ sourceDir, tempRoot = os.tmpdir() }) => {
+  const dir = mkdtempSync(path.join(tempRoot, "s297-mutated-"));
+  cpSync(sourceDir, dir, { recursive: true });
+  const assetsDir = path.join(dir, "assets");
+  const cssName = readdirSync(assetsDir).filter((name) => name.endsWith(".css")).sort().pop();
+  if (cssName === undefined) throw new Error("mutation target: no CSS asset in " + assetsDir);
+  const cssPath = path.join(assetsDir, cssName);
+  const css = readFileSync(cssPath, "utf8");
+  if (!css.includes(MUTATION_FROM)) throw new Error("mutation target not found: " + MUTATION_FROM);
+  writeFileSync(cssPath, css.replace(MUTATION_FROM, MUTATION_TO));
+  return {
+    classMutation: { file: "assets/" + cssName, from: "display:flex", selector: ".flex", to: "display:block" },
+    staticRoot: dir,
+  };
+};
+
+/**
+ * Detection is by capture sha only. The mutation code path never reports "I mutated"; a conflicting
+ * reportedDetected is a FAILED harness, and an identical mutant sha is FAILED - never a pass.
+ */
+export const evaluateMutationCheck = ({ baselineCaptures, baselineShas = [], chromeAvailable = true, classMutation, issues = [], mutatedCapture, mutatedSha, reportedDetected }) => {
+  const base = { classMutation, mode: "mutation", scope: "browser-parity" };
+  if (!chromeAvailable) return { ...base, reason: "no-browser-available", status: "NOT_RUN" };
+  // S298: the mutation JSON carries the same ignoredIssues/ignoredCount surface as the normal lane, plus the
+  // distinct baseline run identity (run0/run1) and the PNG paths for every capture.
+  const baselines = baselineCaptures ?? baselineShas.map((sha256, run) => ({ run, sha256 }));
+  const mutant = mutatedCapture ?? (mutatedSha === undefined ? undefined : { run: 0, sha256: mutatedSha });
+  const captures = [
+    ...baselines.map((entry, index) => ({
+      evidencePath: entry.evidencePath,
+      ignoredIssues: entry.ignoredIssues ?? [],
+      issues: entry.issues ?? [],
+      role: "baseline",
+      run: entry.run ?? index,
+      sha256: entry.sha256,
+    })),
+    ...(mutant === undefined ? [] : [{
+      evidencePath: mutant.evidencePath,
+      ignoredIssues: mutant.ignoredIssues ?? [],
+      issues: mutant.issues ?? [],
+      role: "mutant",
+      run: mutant.run ?? 0,
+      sha256: mutant.sha256,
+    }]),
+  ];
+  const shas = baselines.map((entry) => entry.sha256);
+  const capturedIssues = captures.flatMap((entry) => entry.issues);
+  const allIssues = [...issues, ...capturedIssues];
+  const ignoredIssues = captures.flatMap((entry) => entry.ignoredIssues);
+  const target = {
+    captures,
+    id: REACT_TARGET,
+    ignoredIssues,
+    issues: capturedIssues,
+    sha256: shas[0],
+  };
+  const captureSurface = {
+    evidence: {
+      baseline: baselines.map((entry) => entry.evidencePath),
+      mutant: mutant === undefined ? undefined : mutant.evidencePath,
+    },
+    ignoredCount: ignoredIssues.length,
+    targets: [target],
+  };
+  const mutationCheck = {
+    applied: "one-class",
+    baselineSha: shas[0],
+    classMutation,
+    detected: false,
+    mutatedDiffers: false,
+    mutatedSha: mutant === undefined ? undefined : mutant.sha256,
+    noFalseMutation: false,
+    reportedDetected,
+  };
+  const finish = (status, reason) => {
+    const result = { ...base, ...captureSurface, mutationCheck, status };
+    if (reason === undefined) return result;
+    return allIssues.length > 0 ? { ...result, issues: allIssues, reason } : { ...result, reason };
+  };
+  if (allIssues.length > 0) return finish("FAILED", "capture-issues");
+  const noFalseMutation = shas.length === DEFAULT_RUN_COUNT && shas.every((sha) => sha === shas[0]);
+  const mutatedDiffers = mutant !== undefined && shas.every((sha) => mutant.sha256 !== sha);
+  const detected = noFalseMutation && mutatedDiffers;
+  mutationCheck.detected = detected;
+  mutationCheck.mutatedDiffers = mutatedDiffers;
+  mutationCheck.noFalseMutation = noFalseMutation;
+  if (reportedDetected !== undefined && reportedDetected !== detected) {
+    return finish("FAILED", "inconsistent-detection: the harness reported " + String(reportedDetected) + " while the captures " + (mutatedDiffers ? "differ" : "match"));
+  }
+  if (!noFalseMutation) return finish("FAILED", "nondeterministic: the unchanged baseline pair differs");
+  if (!mutatedDiffers) return finish("FAILED", "mutation-not-detected: the one-class mutant produced the baseline sha");
+  return finish("PASSED", undefined);
+};
+
+export const runMutationCheck = async ({ capture, chromeAvailable, repoRoot, target = REACT_TARGET }) => {
+  if (!chromeAvailable) return evaluateMutationCheck({ chromeAvailable: false });
+  try {
+    const baseline = [];
+    for (let run = 0; run < DEFAULT_RUN_COUNT; run += 1) {
+      baseline.push(await capture({ kind: "baseline", route: SCENARIO_ROUTE, run, target }));
+    }
+    const mutated = await capture({ kind: "mutated", route: SCENARIO_ROUTE, run: 0, target });
+    return evaluateMutationCheck({
+      baselineCaptures: baseline,
+      classMutation: mutated.classMutation,
+      mutatedCapture: mutated,
+      reportedDetected: mutated.reportedDetected,
+    });
+  } catch (error) {
+    const text = String(error);
+    return {
+      mode: "mutation",
+      reason: "capture-failed: " + (text.startsWith("Error: ") ? text.slice("Error: ".length) : text),
+      scope: "browser-parity",
+      status: "FAILED",
+    };
+  }
+};
 
 export const DEFAULT_TEMP_DRIVE = "E:";
 
@@ -383,7 +506,38 @@ const captureWithChrome = async ({ cdp, evidenceDir, run, staticRoot, target }) 
   }
 };
 
-export const main = async ({ chromePath = process.env.CHROME_PATH, evidenceDir, executablePath, fixtureRoot, launchChromeImpl = launchChrome, requiredTempDrive = DEFAULT_TEMP_DRIVE, repoRoot = process.cwd(), runCount = DEFAULT_RUN_COUNT, targets: injectedTargets } = {}) => {
+/**
+ * S297: serve one static root from a fresh packaged host and capture it. Used only by mutation mode, so the
+ * reviewed normal lane is untouched.
+ */
+const captureServed = async ({ cdp, evidenceDir, exe, fixtures, label, port: fixedPort, staticRoot, target = REACT_TARGET, tempRoot }) => {
+  const port = fixedPort ?? (await freePort());
+  const stateRoot = mkdtempSync(path.join(tempRoot, "s297-state-" + label + "-"));
+  const host = spawn(exe, [
+    "--repo-root", path.dirname(exe),
+    "--runtime-state-root", stateRoot,
+    "--host", "127.0.0.1",
+    "--port", String(port),
+    "--fixture-root", fixtures,
+    "--static-root", staticRoot,
+  ], { stdio: ["ignore", "pipe", "pipe"] });
+  let hostFailure = null;
+  host.on("error", (error) => { hostFailure = error; });
+  host.on("exit", (code) => { if (code !== null && code !== 0 && hostFailure === null) hostFailure = new Error("packaged host exited " + String(code) + " for " + label); });
+  try {
+    const hostBase = "http://127.0.0.1:" + String(port);
+    if (!(await waitForHealth(hostBase))) throw hostFailure ?? new Error("packaged host did not become healthy for " + label);
+    return await captureWithChrome({ cdp, evidenceDir, run: label, staticRoot: hostBase + SCENARIO_ROUTE, target });
+  } finally {
+    try {
+      host.kill();
+    } catch {
+      // best effort
+    }
+  }
+};
+
+export const main = async ({ chromePath = process.env.CHROME_PATH, evidenceDir, executablePath, fixtureRoot, launchChromeImpl = launchChrome, mutation = false, requiredTempDrive = DEFAULT_TEMP_DRIVE, repoRoot = process.cwd(), runCount = DEFAULT_RUN_COUNT, targets: injectedTargets } = {}) => {
   const tempRoot = os.tmpdir();
   const targets = injectedTargets ?? resolveTargets({ repoRoot });
   const exe = executablePath ?? path.join(repoRoot, "role-model-router", "dist", "release", "win32-x64", "role-model-dev.exe");
@@ -431,6 +585,25 @@ export const main = async ({ chromePath = process.env.CHROME_PATH, evidenceDir, 
     userDataDir = mkdtempSync(path.join(tempRoot, "s294-chrome-"));
     chrome = await launchChromeImpl({ chromePath, userDataDir });
     cdp = await connectCdp(chrome.endpoint);
+    if (mutation) {
+      const reactTarget = targets.find((target) => target.id === REACT_TARGET);
+      if (reactTarget === undefined || !reactTarget.available) {
+        return { ...base, chromeUserDataRoot: userDataDir, evidenceDir: outputDir, exitCode: 1, mode: "mutation", reason: "target-unavailable: react", status: "FAILED" };
+      }
+      // The React UI renders its own endpoint URL, so the ephemeral port is harness state: all three captures
+      // must use the SAME port or a sha difference would be attributable to the port, not to the class change.
+      const mutationPort = await freePort();
+      const baseline0 = await captureServed({ cdp, evidenceDir: outputDir, exe, fixtures, label: "baseline0", port: mutationPort, staticRoot: reactTarget.staticRoot, tempRoot });
+      const baseline1 = await captureServed({ cdp, evidenceDir: outputDir, exe, fixtures, label: "baseline1", port: mutationPort, staticRoot: reactTarget.staticRoot, tempRoot });
+      const prepared = prepareMutationRoot({ sourceDir: reactTarget.staticRoot, tempRoot });
+      const mutated = await captureServed({ cdp, evidenceDir: outputDir, exe, fixtures, label: "mutated", port: mutationPort, staticRoot: prepared.staticRoot, tempRoot });
+      const evaluation = evaluateMutationCheck({
+        baselineCaptures: [baseline0, baseline1],
+        classMutation: prepared.classMutation,
+        mutatedCapture: mutated,
+      });
+      return { ...base, ...evaluation, chromeUserDataRoot: userDataDir, evidenceDir: outputDir, exitCode: exitCodeFor(evaluation.status) };
+    }
     const ports = new Map();
     for (const target of targets) ports.set(target.id, await freePort());
     const runs = [];
@@ -482,7 +655,7 @@ export const main = async ({ chromePath = process.env.CHROME_PATH, evidenceDir, 
 
 const isMain = process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href;
 if (isMain) {
-  const result = await main({});
+  const result = await main({ mutation: process.argv.slice(2).includes("--mutation") });
   process.stdout.write(JSON.stringify(result) + "\n");
   process.exitCode = result.exitCode ?? exitCodeFor(result.status);
 }
