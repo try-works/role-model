@@ -743,6 +743,9 @@ export const createUpdate =
         };
       },
       RuntimeTelemetryReceived: () => invalidateCurrentRoute(model),
+      // S290: a persisted pageshow restore is a real page-lifecycle fact, not telemetry or a revision:
+      // re-read the current route with the same query-preserving invalidator and leave the watermark.
+      RuntimePageRestored: () => invalidateCurrentRoute(model),
       ThemeApplied: () => ({ model }),
       ToggledTheme: () => {
         const theme = model.theme === "light" ? "dark" : "light";

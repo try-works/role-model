@@ -110,6 +110,7 @@ export const Message: MessageUnion<{
     readonly emittedAtMs: typeof Schema.Number;
     readonly requestId: typeof Schema.String;
   };
+  readonly RuntimePageRestored: EmptyFields;
   readonly ThemeApplied: EmptyFields;
   readonly ToggledTheme: EmptyFields;
 }> = defineMessageUnion({
@@ -149,6 +150,7 @@ export const Message: MessageUnion<{
   RuntimeConfigSaveFailed: { message: Schema.String, status: Schema.Number, token: Schema.Number },
   RuntimeRevisionReceived: { revision: Schema.Number },
   RuntimeTelemetryReceived: { emittedAtMs: Schema.Number, requestId: Schema.String },
+  RuntimePageRestored: {},
   ThemeApplied: {},
   ToggledTheme: {},
 });

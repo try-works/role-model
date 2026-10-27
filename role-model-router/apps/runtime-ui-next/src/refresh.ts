@@ -20,6 +20,12 @@ export interface RuntimeEventSourceLike {
 
 export type RuntimeEventSourceFactory = (url: string) => RuntimeEventSourceLike;
 
+/** The browser page lifecycle surface the stream owns; injectable so tests need no global mock. */
+export interface RuntimePageLifecycle {
+  addEventListener(type: "pagehide" | "pageshow", listener: (event: Event) => void): void;
+  removeEventListener(type: "pagehide" | "pageshow", listener: (event: Event) => void): void;
+}
+
 export const REFRESH_STREAM_URL = "/api/role-model/telemetry/stream";
 
 const inertSource: RuntimeEventSourceLike = {
@@ -86,47 +92,123 @@ const decodeRevision = (event: MessageEvent<string>): number | null => {
   }
 };
 
+interface RefreshGeneration {
+  readonly source: RuntimeEventSourceLike;
+  active: boolean;
+}
+
+interface EventPersisted extends Event {
+  readonly persisted: boolean;
+}
+
+const isPersistedPageshow = (event: Event): event is EventPersisted =>
+  "persisted" in event && event.persisted === true;
+
 export const refreshRevisionStream = (
   factory: RuntimeEventSourceFactory,
+  pageLifecycle?: RuntimePageLifecycle,
 ): Stream.Stream<Message, never> =>
   Stream.callback<Message>((queue) =>
     Effect.acquireRelease(
       Effect.sync(() => {
-        const source = factory(REFRESH_STREAM_URL);
-        // A real EventSource detaches its listeners on close, but a retaining source can still invoke
-        // them. Offering into a finalised queue must never happen, so every offer is guarded by this
-        // stream instance's own active flag, set false by the finalizer before the source closes.
-        const state = { active: true };
-        const offer = (message: Message): void => {
-          if (state.active) Queue.offerUnsafe(queue, message);
+        const target = pageLifecycle ?? (typeof window === "undefined" ? undefined : window);
+        // S290: the stream owns ONE browser connection at a time. Each opened generation carries its
+        // own active guard, so a retired source that still invokes its listeners can never publish
+        // after a persisted pageshow reopened the connection, and the acquireRelease owner is the only
+        // place that closes it.
+        let current: RefreshGeneration | null = null;
+        let disposed = false;
+        const closeCurrent = (): void => {
+          const generation = current;
+          current = null;
+          if (generation === null) return;
+          generation.active = false;
+          try {
+            generation.source.close();
+          } catch {
+            // A source that already closed itself must not fail the owner; the guard is retired above.
+          }
         };
-        source.addEventListener("revision.update", (event) => {
-          const revision = decodeRevision(event);
-          if (revision !== null) {
-            offer(Message.RuntimeRevisionReceived({ revision }));
+        const open = (announceRestore: boolean): void => {
+          const generation: RefreshGeneration = { active: true, source: factory(REFRESH_STREAM_URL) };
+          current = generation;
+          const publish = (message: Message): void => {
+            if (generation.active) Queue.offerUnsafe(queue, message);
+          };
+          try {
+            generation.source.addEventListener("revision.update", (event) => {
+              const revision = decodeRevision(event);
+              if (revision !== null) publish(Message.RuntimeRevisionReceived({ revision }));
+            });
+            // S278 (R12): the same one source also carries newly persisted telemetry requests. A
+            // malformed event is ignored rather than classified as a revision, so the watermark and the
+            // gap/resync token can never be polluted by a telemetry payload.
+            generation.source.addEventListener("telemetry.update", (event) => {
+              const telemetry = decodeTelemetry(event);
+              if (telemetry !== null) {
+                publish(
+                  Message.RuntimeTelemetryReceived({
+                    emittedAtMs: telemetry.emittedAtMs,
+                    requestId: telemetry.requestId,
+                  }),
+                );
+              }
+            });
+          } catch (error) {
+            // A partially attached generation must not leak: retire and close it, then propagate.
+            generation.active = false;
+            if (current === generation) current = null;
+            try {
+              generation.source.close();
+            } catch {
+              // The attach failure is the error worth propagating.
+            }
+            throw error;
           }
-        });
-        // S278 (R12): the same one source also carries newly persisted telemetry requests. A
-        // malformed event is ignored rather than classified as a revision, so the watermark and the
-        // gap/resync token can never be polluted by a telemetry payload.
-        source.addEventListener("telemetry.update", (event) => {
-          const telemetry = decodeTelemetry(event);
-          if (telemetry !== null) {
-            offer(
-              Message.RuntimeTelemetryReceived({
-                emittedAtMs: telemetry.emittedAtMs,
-                requestId: telemetry.requestId,
-              }),
-            );
+          if (announceRestore) publish(Message.RuntimePageRestored({}));
+        };
+        open(false);
+        // BFCache-safe: pagehide always releases the connection (a persisted page may be suspended for
+        // an unbounded time); only a persisted pageshow may reopen it, and only once per suspension.
+        const onPagehide = (): void => {
+          if (!disposed) closeCurrent();
+        };
+        const reportRestoreFailure = (error: unknown): void => {
+          try {
+            console.error("[refresh] persisted pageshow restore failed", error);
+          } catch {
+            // Reporting must never turn a failed restore into a thrown page callback.
           }
-        });
-        return { source, state };
+        };
+        const onPageshow = (event: Event): void => {
+          if (disposed || current !== null || !isPersistedPageshow(event)) return;
+          // A factory failure must not escape a page callback: report it, keep the owner usable and
+          // let the next persisted pageshow retry the reopen.
+          try {
+            open(true);
+          } catch (error) {
+            reportRestoreFailure(error);
+          }
+        };
+        try {
+          target?.addEventListener("pagehide", onPagehide);
+          target?.addEventListener("pageshow", onPageshow);
+        } catch (error) {
+          target?.removeEventListener("pagehide", onPagehide);
+          target?.removeEventListener("pageshow", onPageshow);
+          closeCurrent();
+          throw error;
+        }
+        return {
+          dispose: (): void => {
+            disposed = true;
+            closeCurrent();
+            target?.removeEventListener("pagehide", onPagehide);
+            target?.removeEventListener("pageshow", onPageshow);
+          },
+        };
       }),
-      ({ source, state }) =>
-        Effect.sync(() => {
-          state.active = false;
-          source.close();
-        }),
+      ({ dispose }) => Effect.sync(dispose),
     ),
   );
 
