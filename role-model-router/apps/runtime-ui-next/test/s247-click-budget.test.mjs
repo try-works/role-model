@@ -17,7 +17,7 @@ const BUDGET = {
   "routes.test.ts": 1,
   "s25b-refresh-owner-gap.test.ts": 1,
   "s26b-wave1.test.ts": 3,
-  "s26k-control.test.ts": 3,
+  "s26k-control.test.ts": 1,
   "s40b-overview.test.ts": 1,
   "s46a-studio.test.ts": 7,
   "s73a-controller.test.ts": 1,
@@ -30,7 +30,9 @@ const countClicks = async () => {
   const counts = {};
   for (const file of (await readdir(testDirectory)).filter((name) => name.endsWith(".test.ts"))) {
     const source = await readFile(path.join(testDirectory, file), "utf8");
-    const clicks = (source.match(/\.click\(\)/g) ?? []).length;
+    // Strip comments first: a doc comment that mentions element.click() is documentation, not a click.
+    const code = source.replace(/\/\*[\s\S]*?\*\//g, "").split("\n").filter((line) => !line.trim().startsWith("//")).join("\n");
+    const clicks = (code.match(/\.click\(\)/g) ?? []).length;
     if (clicks > 0) counts[file] = clicks;
   }
   return counts;

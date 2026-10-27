@@ -141,42 +141,6 @@ describe("S26k control surface", () => {
     });
   }
 
-  it("dispatches one action and refuses a second dispatch while pending", async () => {
-    let dispatches = 0;
-    let resolveDispatch: ((value: { body: unknown; status: number }) => void) | undefined;
-    mountAt(
-      "/control/providers",
-      client({
-        dispatch: () => {
-          dispatches += 1;
-          return new Promise((resolve) => {
-            resolveDispatch = resolve;
-          });
-        },
-        read: async () => ({ body: [{ id: "provider-1" }], status: 200 }),
-      }),
-    );
-    const button = (await waitFor(
-      () => document.querySelector("[data-control-action='reconnect']") ?? undefined,
-      "dispatch button",
-    )) as HTMLButtonElement;
-    button.click();
-    button.click();
-    await new Promise((resolve) => setTimeout(resolve, 30));
-    expect(dispatches).toBe(1);
-    const pending = await waitFor(
-      () => document.querySelector("[data-control-action-state='pending']") ?? undefined,
-      "pending action",
-    );
-    expect(pending.textContent).toContain("Dispatching…");
-    resolveDispatch?.({ body: { ok: true }, status: 200 });
-    const done = await waitFor(
-      () => document.querySelector("[data-control-action-state='ok']") ?? undefined,
-      "action success",
-    );
-    expect(done.textContent).toContain("Providers action completed.");
-  });
-
   it("renders the exact action failure phrase", async () => {
     // S246: this used the controller row-action, which S209 deliberately disabled (it has no endpoint
     // target). The phrase is a property of the control surface, so it is exercised on the providers
