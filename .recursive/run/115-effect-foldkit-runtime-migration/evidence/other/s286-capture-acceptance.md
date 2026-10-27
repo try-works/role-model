@@ -1,0 +1,11 @@
+# S286 R14 capture primitive bounded acceptance
+
+NativeFlash s5author/s9independentreviewer; product2files scripts/runtime/parity-capture.mjs and scripts/parity-capture.test.mjs. ActualfrozenSHAE7C4978453262F203E881E3188E939520E88C8708F03C871DDE174449849CA03 /952F5771FB019435CA04325EF025572C9C965A8A0E9F4F8AE5AD9A27CC070AE1. StrictprotocolRED8failoriginalskeleton, thenS285reviewHOLD5findings -> strict6fail/8pass behavioralbeforefix ->14PASS. Leadnode--test14PASS onrepairedfrozenbytes. NativeS285recheckPASS readbyLead; no authorapprovesself.
+
+Repair actualCDP domainsenable/cacheoff, everycdpsend remainingdeadlinebound/timercleanup, callableconstructible frozenDateProxy, MutationObserverdocumentfallback, fetch/XHRpendingreadiness withoutSSEnetworkidle. Console/networkerror surfaced; eventchannelunavailable isnotclean. PNGstablebyteequality and boundedunstabletimeout; mockprotocolalone notproof.
+
+LeadREALChrome smoke (isolatedownprocess/context/server, nooperator): twofreshcontexts syntheticfixture delayeddatafetch250ms, Date()callable/new/clock1700000000000/seededrandom, mutations3/pending0, cleantrue eventchannelcomplete, twoidenticalconsecutivePNGpercontext. BothPNGsha a76c3544a0d06bfb4728eff2686dd262e2059abf51fc1c15f22259f99089fd96/21246bytes1440x900. RealPNG reviewed. Durable smokeharness s285-real-capture-smoke.mjs andlogs/s285-real-capture-smoke.log. InitialLeadsmokeharnesssyntaxerror fixed; notproductRED. Sourceunchanged. Reviewerreadactualsmokelog/harnesspresence, no fakebrowserPASS.
+
+anti_slop_lintTOOL testclean1file15rules; module8no-runtime-typeof at I/Oboundary validation (184/190/191/192/197/222/233/259) explicitlydisclosed/notclean, no targetconfigurationchange or suppression. ProxyReflect.get isinsideinjectedbrowserstring notunexaminedtypecast.
+
+Accepted LOWLEVELprimitive only. It isNOTwired runtime:parity --selfcheck, noReactvsReact capture, no classmutationactualbrowser, no perceptual/structure/accessibility/requestcomparators or canvaschartsettle. Currentfunctioncaller mustsupplyownedCDP and cleanup; pendingrequests countsheadercompletion, notfullJSONbody/completedapplication state. Realfixture provesfinitecase only. NotfullR14approval; integrate runner/per-scenario applicationreadiness next, neverclaimnochangeparity from syntheticwhitepage.

@@ -1,0 +1,36 @@
+{
+  "status": "PASS",
+  "scope": "real-chrome-synthetic-fixture-not-React-parity",
+  "captures": [
+    {
+      "sha256": "a76c3544a0d06bfb4728eff2686dd262e2059abf51fc1c15f22259f99089fd96",
+      "bytes": 21246,
+      "screenshots": 2,
+      "clean": true,
+      "events": {
+        "channel": "subscribed",
+        "complete": true
+      },
+      "observed": {
+        "text": "settled-real-data {\"callable\":\"string\",\"now\":1700000000000,\"random\":0.3588899802416563,\"instance\":true}",
+        "mutations": 3,
+        "pending": 0
+      }
+    },
+    {
+      "sha256": "a76c3544a0d06bfb4728eff2686dd262e2059abf51fc1c15f22259f99089fd96",
+      "bytes": 21246,
+      "screenshots": 2,
+      "clean": true,
+      "events": {
+        "channel": "subscribed",
+        "complete": true
+      },
+      "observed": {
+        "text": "settled-real-data {\"callable\":\"string\",\"now\":1700000000000,\"random\":0.3588899802416563,\"instance\":true}",
+        "mutations": 3,
+        "pending": 0
+      }
+    }
+  ]
+}
