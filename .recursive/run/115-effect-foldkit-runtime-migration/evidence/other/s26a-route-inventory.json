@@ -770,8 +770,8 @@
         "/v1/embeddings"
       ],
       "requiresHostEndpoint": true,
-      "proofTest": "role-model-router/apps/runtime-ui-next/test/s46a-studio.test.ts",
-      "proofTestName": "dispatches each tab with the exact method, path and body",
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s254-studio-request-shape.test.ts",
+      "proofTestName": "every tab produces a POST with a distinct path and its own body",
       "note": "endpoint absent in reference 0.0.20 too; packaged returns 404 JSON honestly"
     },
     {
@@ -789,8 +789,8 @@
         "/v1/audio/transcriptions"
       ],
       "requiresHostEndpoint": true,
-      "proofTest": "role-model-router/apps/runtime-ui-next/test/s46a-studio.test.ts",
-      "proofTestName": "dispatches each tab with the exact method, path and body",
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s254-studio-request-shape.test.ts",
+      "proofTestName": "every tab produces a POST with a distinct path and its own body",
       "note": "endpoint absent in reference 0.0.20 too; packaged returns 404 JSON honestly"
     },
     {
@@ -806,8 +806,8 @@
         "/v1/images/generations"
       ],
       "requiresHostEndpoint": true,
-      "proofTest": "role-model-router/apps/runtime-ui-next/test/s46a-studio.test.ts",
-      "proofTestName": "dispatches each tab with the exact method, path and body",
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s254-studio-request-shape.test.ts",
+      "proofTestName": "every tab produces a POST with a distinct path and its own body",
       "note": "endpoint absent in reference 0.0.20 too; packaged returns 404 JSON honestly"
     },
     {
@@ -824,8 +824,8 @@
         "/v1/reranking"
       ],
       "requiresHostEndpoint": true,
-      "proofTest": "role-model-router/apps/runtime-ui-next/test/s46a-studio.test.ts",
-      "proofTestName": "dispatches each tab with the exact method, path and body",
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s254-studio-request-shape.test.ts",
+      "proofTestName": "every tab produces a POST with a distinct path and its own body",
       "note": "endpoint absent in reference 0.0.20 too; packaged returns 404 JSON honestly"
     },
     {
