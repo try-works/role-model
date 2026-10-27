@@ -47,7 +47,6 @@ describe("S76a runtime config editor", () => {
   it("blocks invalid JSON with no request", async () => {
     const calls: string[] = [];
     mount(async (input, init) => { calls.push((init?.method ?? "GET") + " " + String(input)); return json({ applied: false, config: { a: 1 } }); });
-    await new Promise((resolve) => setTimeout(resolve, 600)); console.log("BODY", document.body.textContent?.slice(0,300), "HAS", !!editor());
     await waitFor(() => document.querySelector("[data-runtime-config-load]") ? true : undefined, "load");
     (document.querySelector("[data-runtime-config-load]") as HTMLButtonElement).click();
     await waitFor(() => editor()?.value.includes('"a"') ? true : undefined, "editor");
