@@ -16,6 +16,8 @@ const modelFields = {
   overviewFilters: Schema.optional(Schema.Struct({ breakdown: Schema.Literals(["all", "endpoint", "model", "provider"]), breakdownValue: Schema.String, difficulty: Schema.Literals(["all", "easy", "medium", "hard"]), source: Schema.Literals(["all", "local", "remote"]), status: Schema.Literals(["all", "success", "failure", "unknown"]) })),
   runtimeConfigEditor: Schema.optional(Schema.Struct({ diff: Schema.Array(Schema.String), message: Schema.optional(Schema.String), notice: Schema.optional(Schema.String), originalText: Schema.String, status: Schema.Literals(["not-loaded", "loading", "editing", "confirming", "invalid", "pending", "saved", "error"]), text: Schema.String, token: Schema.Number })),
   overviewWindowMs: Schema.optional(Schema.Number),
+  /** S272: canonical href of the one pending Navigation.replaceUrl echo, keyed by exact URL. */
+  pendingRedirectHref: Schema.optional(Schema.String),
   readbacks: ReadbacksState,
   refresh: RuntimeRefreshState,
   route: AppRoute,

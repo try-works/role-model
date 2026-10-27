@@ -1,6 +1,7 @@
-import { Command, Navigation, Url } from "@role-model-router/foldkit";
+import { Command, Navigation } from "@role-model-router/foldkit";
 import { UrlRequest } from "@role-model-router/foldkit/navigation";
 import type { Return as UpdateReturn } from "@role-model-router/foldkit/update";
+import { type Url, toString as urlToString } from "@role-model-router/foldkit/url";
 import { Effect, Schema } from "effect";
 
 import { DEFAULT_OVERVIEW_FILTERS, overviewQuery, type OverviewFilters } from "./overview-filters";
@@ -31,6 +32,7 @@ import {
   loadingControl,
 } from "./control";
 import { failedDiagnostics, idleDiagnostics, loadingDiagnostics } from "./diagnostics";
+import { canonicalHrefForUrl, replaceLegacyUrlCommand } from "./legacy-redirects";
 import { Message } from "./message";
 import type { Model } from "./model";
 import { failedObservability, idleObservability, loadingObservability } from "./observability";
@@ -41,8 +43,8 @@ import {
   loadingReadback,
   readbackKeyForRouteTag,
 } from "./readback";
-import { routeFromUrl } from "./route";
-import { studioIdle, studioLoading } from "./studio";
+import { type AppRoute, type ResolvedAppUrl, resolveAppUrl, sameRoute } from "./route";
+import { studioIdle, studioLoading, studioTabFromUrl } from "./studio";
 import { applyThemeCommand, scrollShellToTopCommand } from "./shell-commands";
 
 /** In-app navigation is a Command, not a history call inside update. */
@@ -116,6 +118,23 @@ const runtimeConfigSnapshot = (model: Model): { config: Readonly<Record<string, 
   if (meta !== undefined) { try { const parsed = JSON.parse(meta) as { config?: unknown }; const config = parsed.config; if (config !== null && typeof config === "object" && !Array.isArray(config)) return { config: config as Readonly<Record<string, unknown>>, text: JSON.stringify(config, null, 2) }; } catch {} }
   return { config: {}, text: "{}" };
 };
+
+/**
+ * S272: the pending marker is the exact canonical href of the replace Command we just emitted.
+ * Only the first URL change that matches it exactly is that Command's `foldkit:urlchange` echo.
+ * There is no other source identity in `ChangedUrl`, so one identical URL change is consumed as
+ * the echo; the real echo then becomes a genuine navigation, never a silent drop.
+ */
+const isPendingRedirectEcho = (
+  model: Model,
+  resolved: ResolvedAppUrl,
+  incomingHref: string,
+): boolean =>
+  resolved.redirectHref === undefined &&
+  model.pendingRedirectHref !== undefined &&
+  model.pendingRedirectHref === incomingHref &&
+  sameRoute(resolved.route, model.route);
+
 export const createUpdate =
   (
     readDiagnostics: ReadDiagnosticsCommand,
@@ -126,95 +145,80 @@ export const createUpdate =
     dispatchControl: DispatchControlCommand = noopDispatchControl,
     dispatchStudio: DispatchStudioCommand = noopDispatchStudio,
     saveRuntimeConfig: SaveRuntimeConfigCommand | undefined = undefined,
-  ) =>
-  (model: Model, message: Message): UpdateReturn<Model, Message> =>
-    Message.match<UpdateReturn<Model, Message>>(message, {
-      ChangedUrl: ({ url }) => {
-        const route = routeFromUrl(url);
-        if (route._tag === "Diagnostics") {
-          return {
-            commands: [readDiagnostics({ id: route.id }), scrollShellToTopCommand()],
-            model: {
-              ...model,
-              diagnostics: loadingDiagnostics(route.id),
-              observability: idleObservability(),
-              readbacks: emptyReadbacks(),
-              refresh: {
-                ...model.refresh,
-                message: undefined,
-                resyncToken: model.refresh.resyncToken + 1,
-                status: "idle",
-              },
-              route,
-            },
-          };
-        }
-        if (route._tag === "Observability") {
-          const token = model.observability.token + 1;
-          return {
-            commands: [readObservability({ token }), scrollShellToTopCommand()],
-            model: {
-              ...model,
-              diagnostics: idleDiagnostics(),
-              observability: loadingObservability(token),
-              readbacks: emptyReadbacks(),
-              refresh: {
-                ...model.refresh,
-                message: undefined,
-                resyncToken: model.refresh.resyncToken + 1,
-                status: "idle",
-              },
-              route,
-            },
-          };
-        }
-        const controlKey = controlKeyForRouteTag(route._tag);
-        if (controlKey !== null) {
-          const token = model.controls[controlKey].token + 1;
-          return {
-            commands: [readControl({ key: controlKey, token }), scrollShellToTopCommand()],
-            model: {
-              ...model,
-              controls: { ...model.controls, [controlKey]: loadingControl(token) },
-              diagnostics: idleDiagnostics(),
-              observability: idleObservability(),
-              readbacks: emptyReadbacks(),
-              refresh: {
-                ...model.refresh,
-                message: undefined,
-                resyncToken: model.refresh.resyncToken + 1,
-                status: "idle",
-              },
-              route,
-            },
-          };
-        }
-        const readbackKey = readbackKeyForRouteTag(route._tag);
-        if (readbackKey !== null) {
-          const token = model.readbacks[readbackKey].token + 1;
-          const readbacks = { ...model.readbacks, [readbackKey]: loadingReadback(token) };
-          return {
-            commands: [readReadback({ id: route._tag === "RequestDetail" || route._tag === "RouterDecisionDetail" ? route.requestId : undefined, key: readbackKey, token }), scrollShellToTopCommand()],
-            model: {
-              ...model,
-              diagnostics: idleDiagnostics(),
-              observability: idleObservability(),
-              readbacks,
-              refresh: {
-                ...model.refresh,
-                message: undefined,
-                resyncToken: model.refresh.resyncToken + 1,
-                status: "idle",
-              },
-              route,
-            },
-          };
-        }
+  ) => {
+    const navigateToRoute = (
+      model: Model,
+      route: AppRoute,
+      canonicalUrl: Url,
+    ): UpdateReturn<Model, Message> => {
+      if (route._tag === "Diagnostics") {
         return {
-          commands: [scrollShellToTopCommand()],
+          commands: [readDiagnostics({ id: route.id }), scrollShellToTopCommand()],
           model: {
             ...model,
-            controls: emptyControls(),
+            diagnostics: loadingDiagnostics(route.id),
+            observability: idleObservability(),
+            readbacks: emptyReadbacks(),
+            refresh: {
+              ...model.refresh,
+              message: undefined,
+              resyncToken: model.refresh.resyncToken + 1,
+              status: "idle",
+            },
+            route,
+          },
+        };
+      }
+      if (route._tag === "Observability") {
+        const token = model.observability.token + 1;
+        return {
+          commands: [readObservability({ token }), scrollShellToTopCommand()],
+          model: {
+            ...model,
+            diagnostics: idleDiagnostics(),
+            observability: loadingObservability(token),
+            readbacks: emptyReadbacks(),
+            refresh: {
+              ...model.refresh,
+              message: undefined,
+              resyncToken: model.refresh.resyncToken + 1,
+              status: "idle",
+            },
+            route,
+          },
+        };
+      }
+      if (route._tag === "Studio") {
+        const token = model.readbacks.configuredModels.token + 1;
+        return {
+          commands: [
+            readReadback({ key: "configuredModels", token }),
+            scrollShellToTopCommand(),
+          ],
+          model: {
+            ...model,
+            diagnostics: idleDiagnostics(),
+            observability: idleObservability(),
+            readbacks: { ...emptyReadbacks(), configuredModels: loadingReadback(token) },
+            refresh: {
+              ...model.refresh,
+              message: undefined,
+              resyncToken: model.refresh.resyncToken + 1,
+              status: "idle",
+            },
+            route,
+            studio: studioIdle(studioTabFromUrl(canonicalUrl) ?? "chat"),
+          },
+        };
+      }
+      const controlKey = controlKeyForRouteTag(route._tag);
+      if (controlKey !== null) {
+        const token = model.controls[controlKey].token + 1;
+        return {
+          commands: [readControl({ key: controlKey, token }), scrollShellToTopCommand()],
+          model: {
+            ...model,
+            controls: { ...model.controls, [controlKey]: loadingControl(token) },
             diagnostics: idleDiagnostics(),
             observability: idleObservability(),
             readbacks: emptyReadbacks(),
@@ -227,13 +231,78 @@ export const createUpdate =
             route,
           },
         };
+      }
+      const readbackKey = readbackKeyForRouteTag(route._tag);
+      if (readbackKey !== null) {
+        const token = model.readbacks[readbackKey].token + 1;
+        const readbacks = { ...model.readbacks, [readbackKey]: loadingReadback(token) };
+        return {
+          commands: [readReadback({ id: route._tag === "RequestDetail" || route._tag === "RouterDecisionDetail" ? route.requestId : undefined, key: readbackKey, token }), scrollShellToTopCommand()],
+          model: {
+            ...model,
+            diagnostics: idleDiagnostics(),
+            observability: idleObservability(),
+            readbacks,
+            refresh: {
+              ...model.refresh,
+              message: undefined,
+              resyncToken: model.refresh.resyncToken + 1,
+              status: "idle",
+            },
+            route,
+          },
+        };
+      }
+      return {
+        commands: [scrollShellToTopCommand()],
+        model: {
+          ...model,
+          controls: emptyControls(),
+          diagnostics: idleDiagnostics(),
+          observability: idleObservability(),
+          readbacks: emptyReadbacks(),
+          refresh: {
+            ...model.refresh,
+            message: undefined,
+            resyncToken: model.refresh.resyncToken + 1,
+            status: "idle",
+          },
+          route,
+        },
+      };
+    };
+
+    return (model: Model, message: Message): UpdateReturn<Model, Message> =>
+    Message.match<UpdateReturn<Model, Message>>(message, {
+      ChangedUrl: ({ url }) => {
+        const resolved = resolveAppUrl(url);
+        const incomingHref = canonicalHrefForUrl(url);
+        // S272: consume exactly the pending replace echo of our own Navigation.replaceUrl
+        // Command. The marker is keyed to the exact canonical href, so a genuine same-route
+        // navigation (the same URL after the echo, a changed query, another detail ID, or an
+        // interleaved route) runs the baseline read/reset/resync/scroll instead of being dropped.
+        if (isPendingRedirectEcho(model, resolved, incomingHref)) {
+          return { model: { ...model, pendingRedirectHref: undefined } };
+        }
+        const result = navigateToRoute(model, resolved.route, resolved.canonicalUrl);
+        if (resolved.redirectHref === undefined) {
+          return { ...result, model: { ...result.model, pendingRedirectHref: undefined } };
+        }
+        return {
+          ...result,
+          commands: [
+            ...(result.commands ?? []),
+            replaceLegacyUrlCommand({ href: resolved.redirectHref }),
+          ],
+          model: { ...result.model, pendingRedirectHref: resolved.redirectHref },
+        };
       },
       Clicked: () => ({ model: { ...model, clicks: model.clicks + 1 } }),
       ClickedLink: ({ request }) =>
         UrlRequest.match<UpdateReturn<Model, Message>>(request, {
           External: () => ({ model }),
           Internal: ({ url }) => ({
-            commands: [pushInternal({ href: Url.toString(url) })],
+            commands: [pushInternal({ href: urlToString(url) })],
             model,
           }),
         }),
@@ -639,3 +708,4 @@ export const createUpdate =
         };
       },
     });
+  };

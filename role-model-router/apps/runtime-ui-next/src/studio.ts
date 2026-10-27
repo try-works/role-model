@@ -1,7 +1,19 @@
-import { Schema } from "effect";
+import type { Url } from "@role-model-router/foldkit/url";
+import { Option, Schema } from "effect";
 
 export const StudioTabSchema = Schema.Literals(["chat", "images", "audio", "rerank", "advanced"]);
 export type StudioTab = typeof StudioTabSchema.Type;
+
+/** S269: typed `?tab=` decoding for the canonical Studio tab alias. */
+export const studioTabFromSearch = (search: string | undefined): StudioTab | undefined => {
+  if (search === undefined || search.length === 0) return undefined;
+  const value = new URLSearchParams(search).get("tab");
+  if (value === null) return undefined;
+  return Option.getOrUndefined(Schema.decodeUnknownOption(StudioTabSchema)(value));
+};
+
+export const studioTabFromUrl = (url: Url): StudioTab | undefined =>
+  studioTabFromSearch(Option.getOrUndefined(url.search));
 export const StudioFieldSchema = Schema.Literals(["advancedBody", "documents", "mode", "model", "prompt", "query", "size"]);
 export type StudioField = typeof StudioFieldSchema.Type;
 export const StudioStatusSchema = Schema.Literals(["idle", "loading", "success", "error"]);

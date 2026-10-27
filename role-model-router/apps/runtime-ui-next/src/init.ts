@@ -9,6 +9,7 @@ import type {
 } from "./commands";
 import { type ControlKey, controlKeyForRouteTag, emptyControls, loadingControl } from "./control";
 import { idleDiagnostics, loadingDiagnostics } from "./diagnostics";
+import { replaceLegacyUrlCommand } from "./legacy-redirects";
 import type { Message } from "./message";
 import type { Model } from "./model";
 import { idleObservability, loadingObservability } from "./observability";
@@ -19,7 +20,8 @@ import {
   readbackKeyForRouteTag,
 } from "./readback";
 import { initialRuntimeRefreshState } from "./refresh";
-import { routeFromUrl } from "./route";
+import { resolveAppUrl } from "./route";
+import { studioIdle, studioTabFromUrl } from "./studio";
 import { applyDocumentTheme, readInitialTheme } from "./theme";
 
 /** Routing init: the runtime passes the Url derived from window.location at startup. */
@@ -33,14 +35,132 @@ const initRoute =
   (url: Url): UpdateReturn<Model, Message> => {
     const theme = readInitialTheme();
     applyDocumentTheme(theme);
-    const route = routeFromUrl(url);
-    if (route._tag === "Diagnostics") {
+    const resolved = resolveAppUrl(url);
+    const route = resolved.route;
+    // S269: a legacy Studio path carries its tab in the canonical `?tab=` alias.
+    const studioTab =
+      route._tag === "Studio" ? studioTabFromUrl(resolved.canonicalUrl) ?? "chat" : undefined;
+    const initial = (): UpdateReturn<Model, Message> => {
+      if (route._tag === "Diagnostics") {
+        return {
+          commands: [readDiagnostics({ id: route.id })],
+          model: {
+            clicks: 0,
+            controls: emptyControls(),
+            diagnostics: loadingDiagnostics(route.id),
+            observability: idleObservability(),
+            readbacks: emptyReadbacks(),
+            refresh: initialRuntimeRefreshState(),
+            route,
+            theme,
+          },
+        };
+      }
+      if (route._tag === "Observability") {
+        const token = 1;
+        return {
+          commands: [readObservability({ token })],
+          model: {
+            clicks: 0,
+            controls: emptyControls(),
+            diagnostics: idleDiagnostics(),
+            observability: loadingObservability(token),
+            readbacks: emptyReadbacks(),
+            refresh: initialRuntimeRefreshState(),
+            route,
+            theme,
+          },
+        };
+      }
+      if (route._tag === "Models") {
+        const token = 1;
+        return {
+          commands: [readReadback({ key: "configuredModels", token }), readReadback({ key: "modelEndpoints", token })],
+          model: { clicks: 0, controls: emptyControls(), diagnostics: idleDiagnostics(), observability: idleObservability(), readbacks: { ...emptyReadbacks(), configuredModels: loadingReadback(token), modelEndpoints: loadingReadback(token) }, refresh: initialRuntimeRefreshState(), route, theme },
+        };
+      }
+      if (route._tag === "Studio") {
+        // S207: Studio needs the configured catalogue so its model field can default to a model this
+        // host actually serves. The readback is route-scoped, so it has to be requested here - the
+        // sidebar count comes from a different readback and does not fill this one.
+        const token = 1;
+        return {
+          commands: [readReadback({ key: "configuredModels", token })],
+          model: {
+            clicks: 0,
+            controls: emptyControls(),
+            diagnostics: idleDiagnostics(),
+            observability: idleObservability(),
+            readbacks: { ...emptyReadbacks(), configuredModels: loadingReadback(token) },
+            refresh: initialRuntimeRefreshState(),
+            route,
+            studio: studioIdle(studioTab),
+            theme,
+          },
+        };
+      }
+      if (route._tag === "Learning") {
+        const token = 1;
+        return {
+          commands: [
+            readReadback({ key: "learning", token }),
+            readReadback({ key: "replayJobs", token }),
+            readReadback({ key: "evaluationJobs", token }),
+          ],
+          model: {
+            clicks: 0,
+            controls: emptyControls(),
+            diagnostics: idleDiagnostics(),
+            observability: idleObservability(),
+            readbacks: { ...emptyReadbacks(), learning: loadingReadback(token), replayJobs: loadingReadback(token), evaluationJobs: loadingReadback(token) },
+            refresh: initialRuntimeRefreshState(),
+            route,
+            theme,
+          },
+        };
+      }
+      const controlKey = controlKeyForRouteTag(route._tag);
+      if (controlKey !== null) {
+        const token = 1;
+        const controls = { ...emptyControls(), [controlKey]: loadingControl(token), ...(controlKey === "controlController" ? { endpoints: loadingControl(token) } : {}) };
+      const controlCommands = controlKey === "controlController" ? [readControl({ key: controlKey, token }), readControl({ key: "endpoints", token })] : [readControl({ key: controlKey, token })];
+        return {
+          commands: controlCommands,
+          model: {
+            clicks: 0,
+            controls,
+            diagnostics: idleDiagnostics(),
+            observability: idleObservability(),
+            readbacks: emptyReadbacks(),
+            refresh: initialRuntimeRefreshState(),
+            route,
+            theme,
+          },
+        };
+      }
+      const readbackKey = readbackKeyForRouteTag(route._tag);
+      if (readbackKey !== null) {
+        const token = 1;
+        const readbacks = { ...emptyReadbacks(), [readbackKey]: loadingReadback(token) };
+        return {
+          commands: [readReadback({ id: route._tag === "RequestDetail" || route._tag === "RouterDecisionDetail" ? route.requestId : route._tag === "Index" || route._tag === "Dashboard" ? "86400000" : undefined, key: readbackKey as ReadbackKey, token })],
+          model: {
+            clicks: 0,
+            controls: emptyControls(),
+            diagnostics: idleDiagnostics(),
+            observability: idleObservability(),
+            readbacks,
+            refresh: initialRuntimeRefreshState(),
+            route,
+            theme,
+          },
+        };
+      }
       return {
-        commands: [readDiagnostics({ id: route.id })],
         model: {
           clicks: 0,
           controls: emptyControls(),
-          diagnostics: loadingDiagnostics(route.id),
+          diagnostics: idleDiagnostics(),
           observability: idleObservability(),
           readbacks: emptyReadbacks(),
           refresh: initialRuntimeRefreshState(),
@@ -48,117 +168,13 @@ const initRoute =
           theme,
         },
       };
-    }
-    if (route._tag === "Observability") {
-      const token = 1;
-      return {
-        commands: [readObservability({ token })],
-        model: {
-          clicks: 0,
-          controls: emptyControls(),
-          diagnostics: idleDiagnostics(),
-          observability: loadingObservability(token),
-          readbacks: emptyReadbacks(),
-          refresh: initialRuntimeRefreshState(),
-          route,
-          theme,
-        },
-      };
-    }
-    if (route._tag === "Models") {
-      const token = 1;
-      return {
-        commands: [readReadback({ key: "configuredModels", token }), readReadback({ key: "modelEndpoints", token })],
-        model: { clicks: 0, controls: emptyControls(), diagnostics: idleDiagnostics(), observability: idleObservability(), readbacks: { ...emptyReadbacks(), configuredModels: loadingReadback(token), modelEndpoints: loadingReadback(token) }, refresh: initialRuntimeRefreshState(), route, theme },
-      };
-    }
-    if (route._tag === "Studio") {
-      // S207: Studio needs the configured catalogue so its model field can default to a model this
-      // host actually serves. The readback is route-scoped, so it has to be requested here - the
-      // sidebar count comes from a different readback and does not fill this one.
-      const token = 1;
-      return {
-        commands: [readReadback({ key: "configuredModels", token })],
-        model: {
-          clicks: 0,
-          controls: emptyControls(),
-          diagnostics: idleDiagnostics(),
-          observability: idleObservability(),
-          readbacks: { ...emptyReadbacks(), configuredModels: loadingReadback(token) },
-          refresh: initialRuntimeRefreshState(),
-          route,
-          theme,
-        },
-      };
-    }
-    if (route._tag === "Learning") {
-      const token = 1;
-      return {
-        commands: [
-          readReadback({ key: "learning", token }),
-          readReadback({ key: "replayJobs", token }),
-          readReadback({ key: "evaluationJobs", token }),
-        ],
-        model: {
-          clicks: 0,
-          controls: emptyControls(),
-          diagnostics: idleDiagnostics(),
-          observability: idleObservability(),
-          readbacks: { ...emptyReadbacks(), learning: loadingReadback(token), replayJobs: loadingReadback(token), evaluationJobs: loadingReadback(token) },
-          refresh: initialRuntimeRefreshState(),
-          route,
-          theme,
-        },
-      };
-    }
-    const controlKey = controlKeyForRouteTag(route._tag);
-    if (controlKey !== null) {
-      const token = 1;
-      const controls = { ...emptyControls(), [controlKey]: loadingControl(token), ...(controlKey === "controlController" ? { endpoints: loadingControl(token) } : {}) };
-    const controlCommands = controlKey === "controlController" ? [readControl({ key: controlKey, token }), readControl({ key: "endpoints", token })] : [readControl({ key: controlKey, token })];
-      return {
-        commands: controlCommands,
-        model: {
-          clicks: 0,
-          controls,
-          diagnostics: idleDiagnostics(),
-          observability: idleObservability(),
-          readbacks: emptyReadbacks(),
-          refresh: initialRuntimeRefreshState(),
-          route,
-          theme,
-        },
-      };
-    }
-    const readbackKey = readbackKeyForRouteTag(route._tag);
-    if (readbackKey !== null) {
-      const token = 1;
-      const readbacks = { ...emptyReadbacks(), [readbackKey]: loadingReadback(token) };
-      return {
-        commands: [readReadback({ id: route._tag === "RequestDetail" || route._tag === "RouterDecisionDetail" ? route.requestId : route._tag === "Index" || route._tag === "Dashboard" ? "86400000" : undefined, key: readbackKey as ReadbackKey, token })],
-        model: {
-          clicks: 0,
-          controls: emptyControls(),
-          diagnostics: idleDiagnostics(),
-          observability: idleObservability(),
-          readbacks,
-          refresh: initialRuntimeRefreshState(),
-          route,
-          theme,
-        },
-      };
-    }
+    };
+    const result = initial();
+    if (resolved.redirectHref === undefined) return result;
     return {
-      model: {
-        clicks: 0,
-        controls: emptyControls(),
-        diagnostics: idleDiagnostics(),
-        observability: idleObservability(),
-        readbacks: emptyReadbacks(),
-        refresh: initialRuntimeRefreshState(),
-        route,
-        theme,
-      },
+      ...result,
+      commands: [...(result.commands ?? []), replaceLegacyUrlCommand({ href: resolved.redirectHref })],
+      model: { ...result.model, pendingRedirectHref: resolved.redirectHref },
     };
   };
 export const createInit =

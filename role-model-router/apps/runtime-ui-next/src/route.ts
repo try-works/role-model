@@ -3,6 +3,8 @@ import type { RouteUnion } from "@role-model-router/foldkit/route";
 import type { Url } from "@role-model-router/foldkit/url";
 import { Schema, pipe } from "effect";
 
+import { legacyRedirectForUrl } from "./legacy-redirects";
+
 /**
  * Run 115 S14b (R11/R21): the route union for the Foldkit shell.
  *
@@ -167,5 +169,47 @@ export const appRouter = Route.oneOf(
 
 export const urlToRoute = Route.parseUrlWithFallback(appRouter, AppRoute.NotFound);
 
+export interface ResolvedAppUrl {
+  /** The URL the typed route was parsed from (the canonical target for a legacy URL). */
+  readonly canonicalUrl: Url;
+  /** Present only when this URL is an original `/app/*` path that needs a replace Command. */
+  readonly redirectHref?: string;
+  readonly route: AppRoute;
+}
+
+/**
+ * S269 (R11): one resolution entry point for initial load, in-app URL changes and tests.
+ *
+ * A supported original `/app/*` path parses against its canonical target, so callers get the same
+ * real typed route as the bare URL and one `redirectHref` to replace the address bar. Unrelated
+ * and missing paths still fall through to NotFound.
+ */
+export const resolveAppUrl = (url: Url): ResolvedAppUrl => {
+  const redirect = legacyRedirectForUrl(url);
+  if (redirect === undefined) return { canonicalUrl: url, route: urlToRoute(url) };
+  return {
+    canonicalUrl: redirect.url,
+    redirectHref: redirect.href,
+    route: urlToRoute(redirect.url),
+  };
+};
+
 /** The initial route comes from the URL the runtime passes to the routing init. */
-export const routeFromUrl = (url: Url): AppRoute => urlToRoute(url);
+export const routeFromUrl = (url: Url): AppRoute => resolveAppUrl(url).route;
+
+/**
+ * True when two routes address the same route instance. update uses this to ignore the
+ * `foldkit:urlchange` echo of its own redirect replace instead of issuing a second route read.
+ */
+export const sameRoute = (left: AppRoute, right: AppRoute): boolean => {
+  if (left._tag !== right._tag) return false;
+  if (left._tag === "Diagnostics" && right._tag === "Diagnostics") return left.id === right.id;
+  if (left._tag === "RequestDetail" && right._tag === "RequestDetail") {
+    return left.requestId === right.requestId;
+  }
+  if (left._tag === "RouterDecisionDetail" && right._tag === "RouterDecisionDetail") {
+    return left.requestId === right.requestId;
+  }
+  if (left._tag === "NotFound" && right._tag === "NotFound") return left.path === right.path;
+  return true;
+};
