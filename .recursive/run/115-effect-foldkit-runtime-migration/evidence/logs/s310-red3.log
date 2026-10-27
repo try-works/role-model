@@ -1,0 +1,53 @@
+COMMAND: node vitest run test/s310b-backend-owner.test.ts (S311 RED)
+EXIT_CODE=1
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:33700) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/s310b-backend-owner.test.ts (4 tests | 2 failed) 198ms
+   ✓ S310b DAG Backend owner > the host uses the DAG-built Backend owner by identity (and a legacy construction is rejected) 24ms
+   ✓ S310b DAG Backend owner > executeChatCompletions runs under the DAG ProviderPermits bound (defaults preserved) 121ms
+   × S310b DAG Backend owner > composed owner exposes the restored getRoutableInventory and conditional anonymousLearningReads 44ms
+     → expected 'undefined' to be 'function' // Object.is equality
+   × S310b DAG Backend owner > raw backend execution path is bounded by the DAG permits too (judge bypass closed) 2ms
+     → withBackendProviderPermits is not a function
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s310b-backend-owner.test.ts > S310b DAG Backend owner > composed owner exposes the restored getRoutableInventory and conditional anonymousLearningReads
+AssertionError: expected 'undefined' to be 'function' // Object.is equality
+
+Expected: "function"
+Received: "undefined"
+
+ ❯ test/s310b-backend-owner.test.ts:72:49
+     70|       backend as never,
+     71|     );
+     72|     expect(typeof options.getRoutableInventory).toBe("function");
+       |                                                 ^
+     73|     expect(options.getRoutableInventory?.()).toBeNull();
+     74|     expect(options.anonymousLearningReads).toBe("on");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/s310b-backend-owner.test.ts > S310b DAG Backend owner > raw backend execution path is bounded by the DAG permits too (judge bypass closed)
+TypeError: withBackendProviderPermits is not a function
+ ❯ test/s310b-backend-owner.test.ts:82:21
+     80|     const { withBackendProviderPermits } = await import("../src/compos…
+     81|     const { backend, stats } = makeBackend();
+     82|     const bounded = withBackendProviderPermits(backend as never);
+       |                     ^
+     83|     await Promise.all(Array.from({ length: 6 }, () => bounded.executeC…
+     84|     expect(stats().maxActive).toBeLessThanOrEqual(4);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 2 passed (4)
+   Start at  04:17:20
+   Duration  19.07s (transform 11.73s, setup 0ms, collect 17.80s, tests 198ms, environment 1ms, prepare 354ms)
+
+

@@ -280,6 +280,7 @@ import {
 } from "./benchmark-summary.js";
 import {
   type BootstrapContract,
+  withBackendProviderPermits,
   bootstrapOwner as composedBootstrapOwner,
 } from "./composition-dag.js";
 import {
@@ -30280,7 +30281,7 @@ export async function createRuntimeBridgeBackend(
    * last two, which reported a degraded-but-serving runtime as a fifty-three.
    */
   let sessionBootstrapState: SessionBootstrapState = bootstrapOwner.pending();
-  const backend = {
+  const backend = withBackendProviderPermits({
     operatorAuthToken: options.operatorAuthToken,
     get registry(): EndpointRegistryResult {
       return currentRegistry;
@@ -34719,7 +34720,7 @@ export async function createRuntimeBridgeBackend(
       await Promise.all([currentLlamaSwapVendor?.shutdown(), currentLiteLLMVendor?.shutdown()]);
       await supervisor?.shutdown();
     },
-  };
+  });
 
   void (async () => {
     sessionBootstrapState = {

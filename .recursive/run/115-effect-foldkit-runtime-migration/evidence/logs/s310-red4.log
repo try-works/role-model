@@ -1,0 +1,44 @@
+COMMAND: node vitest run test/s310b-backend-owner.test.ts (S312 RED: getter snapshot)
+EXIT_CODE=1
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:76256) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/s310b-backend-owner.test.ts (5 tests | 1 failed) 502ms
+   ✓ S310b DAG Backend owner > the host uses the DAG-built Backend owner by identity (and a legacy construction is rejected) 9ms
+   ✓ S310b DAG Backend owner > executeChatCompletions/executeResponses run under the DAG permit bound and release on failure 286ms
+   ✓ S310b DAG Backend owner > raw backend consumers (pairwise judge path) are permit-bounded through the DAG wrapper 186ms
+   ✓ S310b DAG Backend owner > restored getRoutableInventory/anonymousLearningReads keep the 181-name options ledger complete 3ms
+   × S310b DAG Backend owner > withBackendProviderPermits preserves live getters (effectiveRegistry follows execution-mode changes) 14ms
+     → expected [] to have a length of 1 but got +0
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s310b-backend-owner.test.ts > S310b DAG Backend owner > withBackendProviderPermits preserves live getters (effectiveRegistry follows execution-mode changes)
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ test/s310b-backend-owner.test.ts:145:49
+    143|     expect(wrapped.effectiveRegistry.endpoints).toHaveLength(0);
+    144|     executionMode = "remote";
+    145|     expect(wrapped.effectiveRegistry.endpoints).toHaveLength(1);
+       |                                                 ^
+    146|     expect(wrapped.effectiveRegistry.endpoints[0]?.endpointId).toBe("r…
+    147|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 passed (5)
+   Start at  04:49:39
+   Duration  17.99s (transform 10.99s, setup 0ms, collect 16.35s, tests 502ms, environment 1ms, prepare 474ms)
+
+

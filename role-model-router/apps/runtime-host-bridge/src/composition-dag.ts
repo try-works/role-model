@@ -506,6 +506,306 @@ export const makeConfigLayer = (
  * service is stateless (pending/run are the existing pure functions), so one composed instance can
  * serve every backend in a process without sharing session state.
  */
+
+// S310b (R27): the composition DAG is the construction site for the Backend owner. The host's CLI
+// passes only its closures; every bindBackendMethod wire and the base/lifecycle fields are constructed here.
+import type { StartBridgeServerOptions } from "./index.js";
+
+type BackendResolver = () => BackendLike | null | undefined;
+
+type BackendLike = {
+  readonly effectiveRegistry?: StartBridgeServerOptions["registry"];
+  readonly operatorAuthToken?: string;
+  readonly getExecutionCatalog?: () => ReturnType<NonNullable<StartBridgeServerOptions["getExecutionCatalog"]>>;
+  readonly getEffectiveRoutableInventory?: () => ReturnType<NonNullable<StartBridgeServerOptions["getRoutableInventory"]>>;
+};
+
+const readBackendMember = (backend: BackendLike, key: string): ((...args: readonly never[]) => never) => {
+  const member = Object(backend)[key];
+  if (member === undefined) throw new Error("runtime backend member is not available: " + key);
+  return member;
+};
+
+const NO_OPTION_OVERRIDES: Readonly<Record<never, never>> = Object.freeze({});
+
+export interface BackendOwner {
+  readonly id: string;
+  readonly options: StartBridgeServerOptions;
+}
+
+const BACKEND_OWNER_BRAND = Symbol.for("role-model-router.backend-owner");
+
+export const isComposedBackendOwner = (owner: { readonly id?: string } | null): owner is BackendOwner =>
+  owner !== null && Object.prototype.hasOwnProperty.call(owner, BACKEND_OWNER_BRAND) && Object(owner)[BACKEND_OWNER_BRAND] === true;
+
+export const assertComposedBackendOwner = (owner: { readonly id?: string } | null): BackendOwner => {
+  if (!isComposedBackendOwner(owner)) {
+    throw new Error("Backend options were not constructed by the composition DAG (legacy local construction refused)");
+  }
+  return owner;
+};
+
+const OWNER_PERMITS = Effect.runSync(
+  Effect.provide(ProviderPermits.use((permits) => Effect.succeed(permits)), makeCompositionLayer(DEFAULT_COMPOSITION_CONFIG)),
+);
+
+/** Wraps BOTH provider methods on a backend instance so every consumer runs under the DAG permit. */
+export const withBackendProviderPermits = <
+  T extends { readonly executeChatCompletions: unknown; readonly executeResponses: unknown },
+>(backend: T): T => {
+  // The wrapper INHERITS from the backend (prototype chain) instead of spreading: registry,
+  // effectiveRegistry and every other getter keep evaluating live on each access, so execution-mode and
+  // config changes are visible immediately. Only the two provider methods become own data properties
+  // bound to the DAG permit.
+  // SAFETY: the wrapper is a prototype view of the same backend; the two provider methods are the only overrides.
+  const wrapped = Object.create(backend) as T;
+  // SAFETY: each wrapped field is the same provider method; the cast only restores the exact field type.
+  Object.defineProperty(wrapped, "executeChatCompletions", {
+    configurable: true,
+    enumerable: true,
+    value: withProviderPermit(backend.executeChatCompletions as never),
+    writable: false,
+  });
+  // SAFETY: as above, the responses provider method keeps its exact field type after the wrap.
+  Object.defineProperty(wrapped, "executeResponses", {
+    configurable: true,
+    enumerable: true,
+    value: withProviderPermit(backend.executeResponses as never),
+    writable: false,
+  });
+  return wrapped;
+};
+
+// SAFETY: F is the exact provider-method field type; the runtime shape is the same function with the
+// same parameters, only wrapped so the call runs inside the DAG permit.
+const withProviderPermit =
+  (fn: (...args: readonly never[]) => Promise<never>) =>
+  (...args: readonly never[]): Promise<never> =>
+    Effect.runPromise(
+      OWNER_PERMITS.withPermit(
+        Effect.tryPromise({ try: () => fn(...args), catch: (cause) => cause }),
+      ) as Effect.Effect<never, never>,
+    ) as Promise<never>;
+
+export interface BackendOwnerInput {
+  readonly host: string;
+  readonly port: number;
+  readonly staticRoot?: string;
+  readonly runtimeStateRoot?: string;
+  readonly runtimeChannel?: StartBridgeServerOptions["runtimeChannel"];
+  readonly operatorAuthToken?: string;
+  readonly operatorContext?: StartBridgeServerOptions["operatorContext"];
+  readonly observabilityScope?: StartBridgeServerOptions["observabilityScope"];
+  readonly anonymousLearningReads?: "on" | "off";
+  readonly rescoreLearningScores?: StartBridgeServerOptions["rescoreLearningScores"];
+  readonly resolveLearningPolicySource?: StartBridgeServerOptions["resolveLearningPolicySource"];
+  readonly shutdown?: () => Promise<void>;
+  readonly resolveBackend: BackendResolver;
+  readonly readBootstrapState: () => unknown;
+  readonly projectCliStartupReadiness: (state: never) => unknown;
+  readonly emptyRegistry: StartBridgeServerOptions["registry"];
+  readonly emptyCatalog: ReturnType<NonNullable<StartBridgeServerOptions["getExecutionCatalog"]>>;
+  readonly overrides: Readonly<Partial<Pick<StartBridgeServerOptions,
+    | "readCaptureEvidence" | "readLogs" | "readHealthStatus" | "readTrackBReplayStatus"
+    | "controlTrackBReplay" | "readTrackBLearningSummary" | "readStoreDegradationReceipts">>>;
+}
+
+export const composeBackendOwner = (input: BackendOwnerInput): BackendOwner => {
+  const resolveBackend = input.resolveBackend;
+  const bindBackendMethod = (resolve: BackendResolver, key: string) =>
+    ((...args: readonly never[]) => {
+      const backend = resolve();
+      if (backend === undefined || backend === null) throw new Error("runtime backend is not ready");
+      return readBackendMember(backend, key)(...args);
+    }) as never;
+  const options = {
+    host: input.host,
+    port: input.port,
+    staticRoot: input.staticRoot,
+    runtimeStateRoot: input.runtimeStateRoot,
+    runtimeChannel: input.runtimeChannel,
+    operatorAuthToken: input.operatorAuthToken,
+    operatorContext: input.operatorContext,
+    ...(input.observabilityScope ? { observabilityScope: input.observabilityScope } : NO_OPTION_OVERRIDES),
+    ...(input.anonymousLearningReads ? { anonymousLearningReads: input.anonymousLearningReads } : NO_OPTION_OVERRIDES),
+    ...(input.rescoreLearningScores ? { rescoreLearningScores: input.rescoreLearningScores } : NO_OPTION_OVERRIDES),
+    ...(input.resolveLearningPolicySource ? { resolveLearningPolicySource: input.resolveLearningPolicySource } : NO_OPTION_OVERRIDES),
+    shutdown: input.shutdown,
+    registry: resolveBackend()?.effectiveRegistry ?? input.emptyRegistry,
+    getRegistry: () => resolveBackend()?.effectiveRegistry ?? input.emptyRegistry,
+    getExecutionCatalog: () => resolveBackend()?.getExecutionCatalog?.() ?? input.emptyCatalog,
+    // SAFETY: the CLI's readiness projection accepts the CLI bootstrap state; the owner passes the same
+    // state value through, so the never-cast only satisfies the structural input type.
+    readStartupReadiness: () => input.projectCliStartupReadiness(input.readBootstrapState() as never),
+    getRoutableInventory: () => resolveBackend()?.getEffectiveRoutableInventory?.() ?? null,
+    readLlamaSwapVendorStatus: bindBackendMethod(resolveBackend, "readLlamaSwapVendorStatus") as StartBridgeServerOptions["readLlamaSwapVendorStatus"],
+    executeChatCompletions: bindBackendMethod(resolveBackend, "executeChatCompletions") as StartBridgeServerOptions["executeChatCompletions"],
+    executeResponses: bindBackendMethod(resolveBackend, "executeResponses") as StartBridgeServerOptions["executeResponses"],
+    readVersionInfo: bindBackendMethod(resolveBackend, "readVersionInfo") as StartBridgeServerOptions["readVersionInfo"],
+    listActivityMetrics: bindBackendMethod(resolveBackend, "listActivityMetrics") as StartBridgeServerOptions["listActivityMetrics"],
+    listActivityMetricsPage: bindBackendMethod(resolveBackend, "listActivityMetricsPage") as StartBridgeServerOptions["listActivityMetricsPage"],
+    readActivityCapture: bindBackendMethod(resolveBackend, "readActivityCapture") as StartBridgeServerOptions["readActivityCapture"],
+    recordClientLatency: bindBackendMethod(resolveBackend, "recordClientLatency") as StartBridgeServerOptions["recordClientLatency"],
+    proxyVendorLogStream: bindBackendMethod(resolveBackend, "proxyVendorLogStream") as StartBridgeServerOptions["proxyVendorLogStream"],
+    readRuntimeSummary: bindBackendMethod(resolveBackend, "readRuntimeSummary") as StartBridgeServerOptions["readRuntimeSummary"],
+    readRuntimeConfig: bindBackendMethod(resolveBackend, "readRuntimeConfig") as StartBridgeServerOptions["readRuntimeConfig"],
+    updateRuntimeConfig: bindBackendMethod(resolveBackend, "updateRuntimeConfig") as StartBridgeServerOptions["updateRuntimeConfig"],
+    readTelemetrySummary: bindBackendMethod(resolveBackend, "readTelemetrySummary") as StartBridgeServerOptions["readTelemetrySummary"],
+    listTelemetryComparisonRows: bindBackendMethod(resolveBackend, "listTelemetryComparisonRows") as StartBridgeServerOptions["listTelemetryComparisonRows"],
+    listTelemetryRequests: bindBackendMethod(resolveBackend, "listTelemetryRequests") as StartBridgeServerOptions["listTelemetryRequests"],
+    listTelemetryRequestPage: bindBackendMethod(resolveBackend, "listTelemetryRequestPage") as StartBridgeServerOptions["listTelemetryRequestPage"],
+    queryTelemetryAnalytics: bindBackendMethod(resolveBackend, "queryTelemetryAnalytics") as StartBridgeServerOptions["queryTelemetryAnalytics"],
+    subscribeTelemetry: bindBackendMethod(resolveBackend, "subscribeTelemetry") as StartBridgeServerOptions["subscribeTelemetry"],
+    listProviders: bindBackendMethod(resolveBackend, "listProviders") as StartBridgeServerOptions["listProviders"],
+    listModels: bindBackendMethod(resolveBackend, "listModels") as StartBridgeServerOptions["listModels"],
+    listExtensions: bindBackendMethod(resolveBackend, "listExtensions") as StartBridgeServerOptions["listExtensions"],
+    mutateExtension: bindBackendMethod(resolveBackend, "mutateExtension") as StartBridgeServerOptions["mutateExtension"],
+    readTrackBQaExtensions: bindBackendMethod(resolveBackend, "readTrackBQaExtensions") as StartBridgeServerOptions["readTrackBQaExtensions"],
+    readTrackBShadowReceipts: bindBackendMethod(resolveBackend, "readTrackBShadowReceipts") as StartBridgeServerOptions["readTrackBShadowReceipts"],
+    readTrackBPostObservationReceipt: bindBackendMethod(resolveBackend, "readTrackBPostObservationReceipt") as StartBridgeServerOptions["readTrackBPostObservationReceipt"],
+    recordTrackBContributionAggregate: bindBackendMethod(resolveBackend, "recordTrackBContributionAggregate") as StartBridgeServerOptions["recordTrackBContributionAggregate"],
+    retryTrackBContributionAggregates: bindBackendMethod(resolveBackend, "retryTrackBContributionAggregates") as StartBridgeServerOptions["retryTrackBContributionAggregates"],
+    readTrackBExtensionReadback: bindBackendMethod(resolveBackend, "readTrackBExtensionReadback") as StartBridgeServerOptions["readTrackBExtensionReadback"],
+    runTrackBSupervisedReplay: bindBackendMethod(resolveBackend, "runTrackBSupervisedReplay") as StartBridgeServerOptions["runTrackBSupervisedReplay"],
+    readOperatorStatus: bindBackendMethod(resolveBackend, "readOperatorStatus") as StartBridgeServerOptions["readOperatorStatus"],
+    listOperatorTraceRoots: bindBackendMethod(resolveBackend, "listOperatorTraceRoots") as StartBridgeServerOptions["listOperatorTraceRoots"],
+    readOperatorTraceRoot: bindBackendMethod(resolveBackend, "readOperatorTraceRoot") as StartBridgeServerOptions["readOperatorTraceRoot"],
+    listReplayJobs: bindBackendMethod(resolveBackend, "listReplayJobs") as StartBridgeServerOptions["listReplayJobs"],
+    createReplayJob: bindBackendMethod(resolveBackend, "createReplayJob") as StartBridgeServerOptions["createReplayJob"],
+    cancelReplayJob: bindBackendMethod(resolveBackend, "cancelReplayJob") as StartBridgeServerOptions["cancelReplayJob"],
+    readReplayJob: bindBackendMethod(resolveBackend, "readReplayJob") as StartBridgeServerOptions["readReplayJob"],
+    readReplayResults: bindBackendMethod(resolveBackend, "readReplayResults") as StartBridgeServerOptions["readReplayResults"],
+    listEvaluationJobs: bindBackendMethod(resolveBackend, "listEvaluationJobs") as StartBridgeServerOptions["listEvaluationJobs"],
+    readEvaluationJob: bindBackendMethod(resolveBackend, "readEvaluationJob") as StartBridgeServerOptions["readEvaluationJob"],
+    listEvaluationTrials: bindBackendMethod(resolveBackend, "listEvaluationTrials") as StartBridgeServerOptions["listEvaluationTrials"],
+    listEvaluationScorers: bindBackendMethod(resolveBackend, "listEvaluationScorers") as StartBridgeServerOptions["listEvaluationScorers"],
+    listEvaluationComparisons: bindBackendMethod(resolveBackend, "listEvaluationComparisons") as StartBridgeServerOptions["listEvaluationComparisons"],
+    listEvaluationGroups: bindBackendMethod(resolveBackend, "listEvaluationGroups") as StartBridgeServerOptions["listEvaluationGroups"],
+    cancelEvaluationJob: bindBackendMethod(resolveBackend, "cancelEvaluationJob") as StartBridgeServerOptions["cancelEvaluationJob"],
+    retryEvaluationJob: bindBackendMethod(resolveBackend, "retryEvaluationJob") as StartBridgeServerOptions["retryEvaluationJob"],
+    readLearningState: bindBackendMethod(resolveBackend, "readLearningState") as StartBridgeServerOptions["readLearningState"],
+    readLearningProfile: bindBackendMethod(resolveBackend, "readLearningProfile") as StartBridgeServerOptions["readLearningProfile"],
+    readLearningAdvisory: bindBackendMethod(resolveBackend, "readLearningAdvisory") as StartBridgeServerOptions["readLearningAdvisory"],
+    updateLearningMode: bindBackendMethod(resolveBackend, "updateLearningMode") as StartBridgeServerOptions["updateLearningMode"],
+    rollbackLearning: bindBackendMethod(resolveBackend, "rollbackLearning") as StartBridgeServerOptions["rollbackLearning"],
+    readLearningRollout: bindBackendMethod(resolveBackend, "readLearningRollout") as StartBridgeServerOptions["readLearningRollout"],
+    readLearningRecords: bindBackendMethod(resolveBackend, "readLearningRecords") as StartBridgeServerOptions["readLearningRecords"],
+    readLearningDecisions: bindBackendMethod(resolveBackend, "readLearningDecisions") as StartBridgeServerOptions["readLearningDecisions"],
+    readLearningMeasurement: bindBackendMethod(resolveBackend, "readLearningMeasurement") as StartBridgeServerOptions["readLearningMeasurement"],
+    readLearningActivity: bindBackendMethod(resolveBackend, "readLearningActivity") as StartBridgeServerOptions["readLearningActivity"],
+    readLearningHistory: bindBackendMethod(resolveBackend, "readLearningHistory") as StartBridgeServerOptions["readLearningHistory"],
+    readQueues: bindBackendMethod(resolveBackend, "readQueues") as StartBridgeServerOptions["readQueues"],
+    readQueueJobs: bindBackendMethod(resolveBackend, "readQueueJobs") as StartBridgeServerOptions["readQueueJobs"],
+    readQueueJob: bindBackendMethod(resolveBackend, "readQueueJob") as StartBridgeServerOptions["readQueueJob"],
+    readQueueReceipts: bindBackendMethod(resolveBackend, "readQueueReceipts") as StartBridgeServerOptions["readQueueReceipts"],
+    readQueueConfig: bindBackendMethod(resolveBackend, "readQueueConfig") as StartBridgeServerOptions["readQueueConfig"],
+    setQueueConfig: bindBackendMethod(resolveBackend, "setQueueConfig") as StartBridgeServerOptions["setQueueConfig"],
+    retryQueueJob: bindBackendMethod(resolveBackend, "retryQueueJob") as StartBridgeServerOptions["retryQueueJob"],
+    cancelQueueJob: bindBackendMethod(resolveBackend, "cancelQueueJob") as StartBridgeServerOptions["cancelQueueJob"],
+    setQueueDrain: bindBackendMethod(resolveBackend, "setQueueDrain") as StartBridgeServerOptions["setQueueDrain"],
+    readLearningPolicy: bindBackendMethod(resolveBackend, "readLearningPolicy") as StartBridgeServerOptions["readLearningPolicy"],
+    setLearningPolicy: bindBackendMethod(resolveBackend, "setLearningPolicy") as StartBridgeServerOptions["setLearningPolicy"],
+    rollbackLearningPolicy: bindBackendMethod(resolveBackend, "rollbackLearningPolicy") as StartBridgeServerOptions["rollbackLearningPolicy"],
+    activateLearningPack: bindBackendMethod(resolveBackend, "activateLearningPack") as StartBridgeServerOptions["activateLearningPack"],
+    rollbackLearningPack: bindBackendMethod(resolveBackend, "rollbackLearningPack") as StartBridgeServerOptions["rollbackLearningPack"],
+    materializeRouteLadders: bindBackendMethod(resolveBackend, "materializeRouteLadders") as StartBridgeServerOptions["materializeRouteLadders"],
+    recordLearningGuardrailBreach: bindBackendMethod(resolveBackend, "recordLearningGuardrailBreach") as StartBridgeServerOptions["recordLearningGuardrailBreach"],
+    restoreLearningScenarioActivation: bindBackendMethod(resolveBackend, "restoreLearningScenarioActivation") as StartBridgeServerOptions["restoreLearningScenarioActivation"],
+    engageLearningKillSwitch: bindBackendMethod(resolveBackend, "engageLearningKillSwitch") as StartBridgeServerOptions["engageLearningKillSwitch"],
+    measureNoRichCaptureBaseline: bindBackendMethod(resolveBackend, "measureNoRichCaptureBaseline") as StartBridgeServerOptions["measureNoRichCaptureBaseline"],
+    readDevelopmentVerificationStatus: bindBackendMethod(resolveBackend, "readDevelopmentVerificationStatus") as StartBridgeServerOptions["readDevelopmentVerificationStatus"],
+    readGraphMigration: bindBackendMethod(resolveBackend, "readGraphMigration") as StartBridgeServerOptions["readGraphMigration"],
+    advanceGraphMigration: bindBackendMethod(resolveBackend, "advanceGraphMigration") as StartBridgeServerOptions["advanceGraphMigration"],
+    rollbackGraphMigration: bindBackendMethod(resolveBackend, "rollbackGraphMigration") as StartBridgeServerOptions["rollbackGraphMigration"],
+    readStorageRetention: bindBackendMethod(resolveBackend, "readStorageRetention") as StartBridgeServerOptions["readStorageRetention"],
+    dryRunStorageRetention: bindBackendMethod(resolveBackend, "dryRunStorageRetention") as StartBridgeServerOptions["dryRunStorageRetention"],
+    updateStorageRetentionPolicy: bindBackendMethod(resolveBackend, "updateStorageRetentionPolicy") as StartBridgeServerOptions["updateStorageRetentionPolicy"],
+    executeStorageRetention: bindBackendMethod(resolveBackend, "executeStorageRetention") as StartBridgeServerOptions["executeStorageRetention"],
+    cancelStorageRetentionJob: bindBackendMethod(resolveBackend, "cancelStorageRetentionJob") as StartBridgeServerOptions["cancelStorageRetentionJob"],
+    rollbackStorageRetention: bindBackendMethod(resolveBackend, "rollbackStorageRetention") as StartBridgeServerOptions["rollbackStorageRetention"],
+    readContributionState: bindBackendMethod(resolveBackend, "readContributionState") as StartBridgeServerOptions["readContributionState"],
+    updateContributionState: bindBackendMethod(resolveBackend, "updateContributionState") as StartBridgeServerOptions["updateContributionState"],
+    listRecommendations: bindBackendMethod(resolveBackend, "listRecommendations") as StartBridgeServerOptions["listRecommendations"],
+    downloadRecommendations: bindBackendMethod(resolveBackend, "downloadRecommendations") as StartBridgeServerOptions["downloadRecommendations"],
+    applyRecommendation: bindBackendMethod(resolveBackend, "applyRecommendation") as StartBridgeServerOptions["applyRecommendation"],
+    dismissRecommendation: bindBackendMethod(resolveBackend, "dismissRecommendation") as StartBridgeServerOptions["dismissRecommendation"],
+    readActivePack: bindBackendMethod(resolveBackend, "readActivePack") as StartBridgeServerOptions["readActivePack"],
+    listRoles: bindBackendMethod(resolveBackend, "listRoles") as StartBridgeServerOptions["listRoles"],
+    listAccounts: bindBackendMethod(resolveBackend, "listAccounts") as StartBridgeServerOptions["listAccounts"],
+    listProviderDeviceAuthorizations: bindBackendMethod(resolveBackend, "listProviderDeviceAuthorizations") as StartBridgeServerOptions["listProviderDeviceAuthorizations"],
+    upsertProviderAccount: bindBackendMethod(resolveBackend, "upsertProviderAccount") as StartBridgeServerOptions["upsertProviderAccount"],
+    startProviderDeviceAuthorization: bindBackendMethod(resolveBackend, "startProviderDeviceAuthorization") as StartBridgeServerOptions["startProviderDeviceAuthorization"],
+    pollProviderDeviceAuthorization: bindBackendMethod(resolveBackend, "pollProviderDeviceAuthorization") as StartBridgeServerOptions["pollProviderDeviceAuthorization"],
+    reconnectProviderAccount: bindBackendMethod(resolveBackend, "reconnectProviderAccount") as StartBridgeServerOptions["reconnectProviderAccount"],
+    updateProviderApiKey: bindBackendMethod(resolveBackend, "updateProviderApiKey") as StartBridgeServerOptions["updateProviderApiKey"],
+    openExternalUrl: bindBackendMethod(resolveBackend, "openExternalUrl") as StartBridgeServerOptions["openExternalUrl"],
+    removeProviderAccountModel: bindBackendMethod(resolveBackend, "removeProviderAccountModel") as StartBridgeServerOptions["removeProviderAccountModel"],
+    activateEndpoint: bindBackendMethod(resolveBackend, "activateEndpoint") as StartBridgeServerOptions["activateEndpoint"],
+    activateEndpointBatch: bindBackendMethod(resolveBackend, "activateEndpointBatch") as StartBridgeServerOptions["activateEndpointBatch"],
+    removeEndpoint: bindBackendMethod(resolveBackend, "removeEndpoint") as StartBridgeServerOptions["removeEndpoint"],
+    readControllerAssignment: bindBackendMethod(resolveBackend, "readControllerAssignment") as StartBridgeServerOptions["readControllerAssignment"],
+    updateControllerAssignment: bindBackendMethod(resolveBackend, "updateControllerAssignment") as StartBridgeServerOptions["updateControllerAssignment"],
+    readRouterSummary: bindBackendMethod(resolveBackend, "readRouterSummary") as StartBridgeServerOptions["readRouterSummary"],
+    readRouterConfig: bindBackendMethod(resolveBackend, "readRouterConfig") as StartBridgeServerOptions["readRouterConfig"],
+    listRouterCandidates: bindBackendMethod(resolveBackend, "listRouterCandidates") as StartBridgeServerOptions["listRouterCandidates"],
+    listRouterDecisions: bindBackendMethod(resolveBackend, "listRouterDecisions") as StartBridgeServerOptions["listRouterDecisions"],
+    listRouterDecisionPage: bindBackendMethod(resolveBackend, "listRouterDecisionPage") as StartBridgeServerOptions["listRouterDecisionPage"],
+    readRouterDecision: bindBackendMethod(resolveBackend, "readRouterDecision") as StartBridgeServerOptions["readRouterDecision"],
+    listEndpoints: bindBackendMethod(resolveBackend, "listEndpoints") as StartBridgeServerOptions["listEndpoints"],
+    listRecentRequestIds: bindBackendMethod(resolveBackend, "listRecentRequestIds") as StartBridgeServerOptions["listRecentRequestIds"],
+    listRecentRequestObservations: bindBackendMethod(resolveBackend, "listRecentRequestObservations") as StartBridgeServerOptions["listRecentRequestObservations"],
+    readRequestObservation: bindBackendMethod(resolveBackend, "readRequestObservation") as StartBridgeServerOptions["readRequestObservation"],
+    exportVerifiersTrace: bindBackendMethod(resolveBackend, "exportVerifiersTrace") as StartBridgeServerOptions["exportVerifiersTrace"],
+    recoverLegacyTerminalFailure: bindBackendMethod(resolveBackend, "recoverLegacyTerminalFailure") as StartBridgeServerOptions["recoverLegacyTerminalFailure"],
+    readEndpointProfile: bindBackendMethod(resolveBackend, "readEndpointProfile") as StartBridgeServerOptions["readEndpointProfile"],
+    readBenchmarkSuite: bindBackendMethod(resolveBackend, "readBenchmarkSuite") as StartBridgeServerOptions["readBenchmarkSuite"],
+    runBenchmark: bindBackendMethod(resolveBackend, "runBenchmark") as StartBridgeServerOptions["runBenchmark"],
+    readBenchmarkRun: bindBackendMethod(resolveBackend, "readBenchmarkRun") as StartBridgeServerOptions["readBenchmarkRun"],
+    readActiveBenchmarkRun: bindBackendMethod(resolveBackend, "readActiveBenchmarkRun") as StartBridgeServerOptions["readActiveBenchmarkRun"],
+    clearBenchmarkEndpointData: bindBackendMethod(resolveBackend, "clearBenchmarkEndpointData") as StartBridgeServerOptions["clearBenchmarkEndpointData"],
+    clearBenchmarkData: bindBackendMethod(resolveBackend, "clearBenchmarkData") as StartBridgeServerOptions["clearBenchmarkData"],
+    readBenchmarkSummary: bindBackendMethod(resolveBackend, "readBenchmarkSummary") as StartBridgeServerOptions["readBenchmarkSummary"],
+    readBenchmarkPortfolio: bindBackendMethod(resolveBackend, "readBenchmarkPortfolio") as StartBridgeServerOptions["readBenchmarkPortfolio"],
+    listBenchmarkRuns: bindBackendMethod(resolveBackend, "listBenchmarkRuns") as StartBridgeServerOptions["listBenchmarkRuns"],
+    readBenchmarkSampleRunStates: bindBackendMethod(resolveBackend, "readBenchmarkSampleRunStates") as StartBridgeServerOptions["readBenchmarkSampleRunStates"],
+    readBenchmarkSummariesByMode: bindBackendMethod(resolveBackend, "readBenchmarkSummariesByMode") as StartBridgeServerOptions["readBenchmarkSummariesByMode"],
+    readBenchmarkPreferences: bindBackendMethod(resolveBackend, "readBenchmarkPreferences") as StartBridgeServerOptions["readBenchmarkPreferences"],
+    updateBenchmarkPreferences: bindBackendMethod(resolveBackend, "updateBenchmarkPreferences") as StartBridgeServerOptions["updateBenchmarkPreferences"],
+    listLocalModels: bindBackendMethod(resolveBackend, "listLocalModels") as StartBridgeServerOptions["listLocalModels"],
+    listPeerLocalModels: bindBackendMethod(resolveBackend, "listPeerLocalModels") as StartBridgeServerOptions["listPeerLocalModels"],
+    listLlamaSwapLocalModels: bindBackendMethod(resolveBackend, "listLlamaSwapLocalModels") as StartBridgeServerOptions["listLlamaSwapLocalModels"],
+    loadLocalModel: bindBackendMethod(resolveBackend, "loadLocalModel") as StartBridgeServerOptions["loadLocalModel"],
+    loadPeerModel: bindBackendMethod(resolveBackend, "loadPeerModel") as StartBridgeServerOptions["loadPeerModel"],
+    loadLlamaSwapModel: bindBackendMethod(resolveBackend, "loadLlamaSwapModel") as StartBridgeServerOptions["loadLlamaSwapModel"],
+    setPeerModelRoles: bindBackendMethod(resolveBackend, "setPeerModelRoles") as StartBridgeServerOptions["setPeerModelRoles"],
+    setLlamaSwapModelRoles: bindBackendMethod(resolveBackend, "setLlamaSwapModelRoles") as StartBridgeServerOptions["setLlamaSwapModelRoles"],
+    unloadPeerModel: bindBackendMethod(resolveBackend, "unloadPeerModel") as StartBridgeServerOptions["unloadPeerModel"],
+    unloadLocalModel: bindBackendMethod(resolveBackend, "unloadLocalModel") as StartBridgeServerOptions["unloadLocalModel"],
+    readLocalPolicy: bindBackendMethod(resolveBackend, "readLocalPolicy") as StartBridgeServerOptions["readLocalPolicy"],
+    updateLocalPolicy: bindBackendMethod(resolveBackend, "updateLocalPolicy") as StartBridgeServerOptions["updateLocalPolicy"],
+    readRolePolicy: bindBackendMethod(resolveBackend, "readRolePolicy") as StartBridgeServerOptions["readRolePolicy"],
+    createRolePolicyRole: bindBackendMethod(resolveBackend, "createRolePolicyRole") as StartBridgeServerOptions["createRolePolicyRole"],
+    updateRolePolicyRole: bindBackendMethod(resolveBackend, "updateRolePolicyRole") as StartBridgeServerOptions["updateRolePolicyRole"],
+    listTaskDefinitions: bindBackendMethod(resolveBackend, "listTaskDefinitions") as StartBridgeServerOptions["listTaskDefinitions"],
+    updateTaskDefinitions: bindBackendMethod(resolveBackend, "updateTaskDefinitions") as StartBridgeServerOptions["updateTaskDefinitions"],
+    listSwapHistory: bindBackendMethod(resolveBackend, "listSwapHistory") as StartBridgeServerOptions["listSwapHistory"],
+    getLocalLogs: bindBackendMethod(resolveBackend, "getLocalLogs") as StartBridgeServerOptions["getLocalLogs"],
+    readModelOverrides: bindBackendMethod(resolveBackend, "readModelOverrides") as StartBridgeServerOptions["readModelOverrides"],
+    updateModelOverrides: bindBackendMethod(resolveBackend, "updateModelOverrides") as StartBridgeServerOptions["updateModelOverrides"],
+    readPeers: bindBackendMethod(resolveBackend, "readPeers") as StartBridgeServerOptions["readPeers"],
+    updatePeers: bindBackendMethod(resolveBackend, "updatePeers") as StartBridgeServerOptions["updatePeers"],
+    checkPeerHealth: bindBackendMethod(resolveBackend, "checkPeerHealth") as StartBridgeServerOptions["checkPeerHealth"],
+    ...input.overrides,
+  // SAFETY: the literal above supplies the complete 181-name field set; the cast names the exact
+  // StartBridgeServerOptions type (every field comes from the moved binding ledger).
+  } as StartBridgeServerOptions;
+  // The provider methods are wrapped ON THE BACKEND (index.ts createRuntimeBridgeBackend ->
+  // withBackendProviderPermits), so both the route binding here and the raw backend consumers (the
+  // pairwise judge's executeChatCompletions handle) run under the same DAG permit.
+  const owner = Object.freeze({ [BACKEND_OWNER_BRAND]: true, id: "backend-owner:" + DEFAULT_COMPOSITION_CONFIG.instanceId, options });
+  return owner;
+};
+
 export const composeBootstrapOwner = (): BootstrapContract =>
   Effect.runSync(
     Effect.provide(
