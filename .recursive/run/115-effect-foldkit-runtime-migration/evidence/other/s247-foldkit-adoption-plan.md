@@ -1,4 +1,6 @@
-# S247 Foldkit adoption plan (from S245/S246 analysis)
+# S247 Foldkit adoption plan (historical; effective update below)
+
+> EFFECTIVE UPDATE 2026-10-27: superseded where inconsistent by `../../REASSESSMENT-AND-EXECUTION.md` and `../../addenda/02-workspace-reference-implementation.md`. Workspace is a required feature-architecture reference, not a click-reduction exercise. Preview pin adoption has an exact compatibility gate; it is NOT a dependency of backend R27. Keep real mounted/client wiring tests. No <=5-click completion target.
 
 Three phases, ordered by risk and by what can be verified here. Phases 1-2 need no dependency change
 (pinned foldkit@0.169.0 / @foldkit/ui@0.169.0). Phase 3 needs a vendor bump and a decision.

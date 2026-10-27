@@ -1,4 +1,6 @@
-# Run 115 - consolidated status (written at round 78, refreshed at round 124, from evidence in this directory)
+# Run 115 - consolidated status (historical sections retained)
+
+> CURRENT AUTHORITY 2026-10-27: read `REASSESSMENT-AND-EXECUTION.md`, `addenda/02-workspace-reference-implementation.md`, and S261/S262/S263 assessments. Earlier counts/blocker rationales below are historical. Workspace governs frontend feature boundaries/typed composition/async/draft/control/testing contracts. Preview adoption is compatibility-gated; frontend Layers do NOT close backend R27. Full URL/route waves, actual backend Layers, dual-build parity and ordinary-client/persisted R/D/C remain open.
 
 > **Current state at round 162 (2026-10-26).** Sections below are historical and were written at rounds 78-124; the numbers in them are the numbers *then*. Everything in this first block was re-measured today.
 >

@@ -1,5 +1,7 @@
 # Run115 implementation summary
 
+> Effective 2026-10-27 reassessment: `REASSESSMENT-AND-EXECUTION.md` plus `addenda/02-workspace-reference-implementation.md` supersede stale/misnumbered progress claims below. Required Workspace implementation mapping is part of route-family architecture, not only test cleanup. Old five-verified/32-blocked totals and frontend-Blocks-closes-R27 claims are not acceptance authority. Original locked requirements remain unchanged.
+
 Run: `/.recursive/run/115-effect-foldkit-runtime-migration/`
 Phase: `03 Implementation`
 Status: `DRAFT`
