@@ -3,7 +3,7 @@ import { DatabaseSync } from "node:sqlite";
 /** The bind shapes node:sqlite accepts; its own SQLInputValue alias is not exported. */
 type SqlBindValue = null | number | bigint | string | NodeJS.ArrayBufferView;
 
-import { Duration, Effect, Exit, Ref, Semaphore } from "effect";
+import { Duration, Effect, Exit, Fiber, Ref, Semaphore } from "effect";
 
 /**
  * Run 115 S6a (R23/B3): a first-party SQLite service over the vendored SQLite client's
@@ -104,7 +104,13 @@ export interface SqliteService {
   readonly transaction: <A, E>(
     work: (tx: SqliteTransaction) => Effect.Effect<A, E>,
   ) => Effect.Effect<A, E | SqliteServiceError>;
-  /** Compatible synchronous facade (SEA startup, migrations, sync test helpers). */
+  /**
+   * Compatible synchronous facade (SEA startup, migrations, sync test helpers). While a
+   * *different* fiber's async transaction owns the connection, every sync facade operation
+   * refuses with a typed SqliteServiceError; the owning fiber keeps using the transaction
+   * handle. A sync call cannot await the semaphore without blocking the event loop, so this
+   * is an intentional ownership refusal, not asynchronous serialization.
+   */
   readonly querySync: (sql: string, params?: ReadonlyArray<unknown>) => SqliteRows;
   readonly execSync: (sql: string) => void;
   readonly transactionSync: <A>(work: (tx: SqliteTransaction) => A) => A;
@@ -272,6 +278,25 @@ const buildService = (config: SqliteServiceConfig, database: DatabaseSync): Sqli
       "nested SQLite service call inside a transaction: use the transaction handle",
     );
 
+  const syncOwnershipError = (operation: string): SqliteServiceError =>
+    new SqliteServiceError(
+      operation,
+      undefined,
+      `SQLite ${operation} refused: an active async Effect transaction owns the connection; a synchronous call cannot await the semaphore, so use the transaction handle or await the transaction`,
+    );
+
+  /**
+   * R23 mixed-owner fence: the sync facade may not touch the connection while a *different*
+   * fiber's async transaction owns it. The owner fiber (and the transaction handle) keeps
+   * working; everyone else gets the typed refusal before any prepare/exec/close.
+   */
+  const refuseUnlessTransactionOwnerSync = (operation: string): void => {
+    const owner = Ref.getUnsafe(activeTransaction);
+    if (owner !== null && Fiber.getCurrent()?.id !== owner) {
+      throw syncOwnershipError(operation);
+    }
+  };
+
   const ensureOpenSync = (operation: string): void => {
     if (!Ref.getUnsafe(openState)) {
       throw closedError(operation);
@@ -338,17 +363,24 @@ const buildService = (config: SqliteServiceConfig, database: DatabaseSync): Sqli
   const transaction = <A, E>(work: (tx: SqliteTransaction) => Effect.Effect<A, E>) =>
     serialize(
       Effect.gen(function* () {
-        yield* ensureOpenEffect("transaction");
-        const fiberId = yield* Effect.fiberId;
-        yield* Effect.sync(() => {
-          Effect.runSync(Ref.set(activeTransaction, fiberId));
-        });
+        // Set inside the protected region so every exit path (success, failure, interruption)
+        // rolls an open BEGIN back and clears ownership before the next operation.
+        let transactionOpen = false;
 
         return yield* Effect.ensuring(
           Effect.gen(function* () {
+            yield* ensureOpenEffect("transaction");
+            const fiberId = yield* Effect.fiberId;
+            yield* Effect.sync(() => {
+              Effect.runSync(Ref.set(activeTransaction, fiberId));
+            });
+
             const begin = yield* Effect.exit(
               Effect.try({
-                try: () => database.exec("BEGIN IMMEDIATE"),
+                try: () => {
+                  database.exec("BEGIN IMMEDIATE");
+                  transactionOpen = true;
+                },
                 catch: (cause) => new SqliteServiceError("begin-transaction", cause),
               }),
             );
@@ -361,38 +393,50 @@ const buildService = (config: SqliteServiceConfig, database: DatabaseSync): Sqli
             if (Exit.isSuccess(workExit)) {
               const commit = yield* Effect.exit(
                 Effect.try({
-                  try: () => database.exec("COMMIT"),
+                  try: () => {
+                    database.exec("COMMIT");
+                    transactionOpen = false;
+                  },
                   catch: (cause) => new SqliteServiceError("commit", cause),
                 }),
               );
               if (Exit.isSuccess(commit)) {
                 return workExit.value;
               }
-              // A failed commit is the primary error; rollback/close must not replace it.
-              rollbackAndMaybeClose();
+              // A failed commit is the primary error; the finalizer's rollback/close must not
+              // replace it.
               return yield* Effect.failCause(commit.cause);
             }
 
-            rollbackAndMaybeClose();
             return yield* Effect.failCause(workExit.cause);
           }),
-          Effect.sync(clearTransactionOwner),
+          Effect.sync(() => {
+            // Interruption aborts `Effect.exit(work)` before the body can roll back, so the
+            // finalizer is the single rollback authority for that path too.
+            if (transactionOpen) {
+              rollbackAndMaybeClose();
+            }
+            clearTransactionOwner();
+          }),
         );
       }),
     );
 
   const querySync = (sql: string, params: ReadonlyArray<unknown> = []): SqliteRows => {
     ensureOpenSync("querySync");
+    refuseUnlessTransactionOwnerSync("querySync");
     return readRows(database, sql, params);
   };
 
   const execSync = (sql: string): void => {
     ensureOpenSync("execSync");
+    refuseUnlessTransactionOwnerSync("execSync");
     runExec(database, sql);
   };
 
   const transactionSync = <A>(work: (tx: SqliteTransaction) => A): A => {
     ensureOpenSync("transactionSync");
+    refuseUnlessTransactionOwnerSync("transactionSync");
     database.exec("BEGIN IMMEDIATE");
     try {
       const result = work(buildTransaction(database));
@@ -422,6 +466,7 @@ const buildService = (config: SqliteServiceConfig, database: DatabaseSync): Sqli
     if (!Ref.getUnsafe(openState)) {
       return;
     }
+    refuseUnlessTransactionOwnerSync("closeSync");
     markClosed();
     database.close();
   };
