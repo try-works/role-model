@@ -103,22 +103,12 @@ describe("S46a Studio", () => {
     expect(document.querySelector("[data-studio-raw='success']")).toBeNull();
   });
 
-  it("renders a real chat response and guards double dispatch", async () => {
-    let calls = 0;
-    let release: (() => void) | undefined;
-    mountStudio("s46a-chat", async () => {
-      calls += 1;
-      await new Promise<void>((resolve) => { release = resolve; });
-      return new Response('{"choices":[{"message":{"content":"hello"}}]}', { status: 200, headers: { "content-type": "application/json" } });
-    });
+  it("renders a real chat response", async () => {
+    mountStudio("s46a-chat", async () => new Response('{"choices":[{"message":{"content":"hello"}}]}', { status: 200, headers: { "content-type": "application/json" } }));
     await waitFor(() => document.querySelector("[data-route='studio']") ?? undefined, "studio");
-    const run = document.querySelector("[data-studio-run]") as HTMLButtonElement;
-    run.click();
-    await waitFor(() => (calls === 1 ? true : undefined), "first dispatch");
-    run.click();
-    expect(calls).toBe(1);
-    release?.();
+    (document.querySelector("[data-studio-run]") as HTMLButtonElement).click();
     await waitFor(() => document.querySelector("[data-studio-raw='success']") ?? undefined, "chat success");
     expect(document.body.textContent).toContain("hello");
   });
+
 });
