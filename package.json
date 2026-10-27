@@ -39,6 +39,8 @@
     "runtime:validate-catalog-economics": "corepack pnpm --filter @role-model-router/runtime-host-bridge exec tsx src/validate-catalog-economics.ts",
     "runtime:validate-state": "corepack pnpm --filter @role-model-router/sqlite-memory exec tsx src/cli.ts",
     "runtime:parity": "node --import tsx scripts/runtime-parity.mjs",
+    "runtime:parity-selfcheck": "node --import tsx scripts/runtime-parity.mjs --selfcheck",
+    "runtime:parity-mutation": "node scripts/runtime/parity-selfcheck.mjs --mutation",
     "runtime:test-parity": "corepack pnpm --filter @role-model-router/ui-parity test",
     "runtime:test-critical": "corepack pnpm run runtime:test-parity && corepack pnpm run runtime:build-test-deps && corepack pnpm --filter @role-model-router/runtime-host-bridge run test:critical:ci && corepack pnpm --filter @role-model-router/runtime-ui run test:critical && corepack pnpm run runtime:validate-ui && corepack pnpm run runtime:validate-observability",
     "runtime:test-browser": "corepack pnpm --filter @role-model-router/runtime-ui run test:browser",
