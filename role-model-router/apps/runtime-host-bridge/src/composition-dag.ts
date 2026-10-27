@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { Context, Effect, Layer, Ref, Semaphore } from "effect";
 
 import {
@@ -181,7 +182,8 @@ export type CompositionServices =
   | Refresh
   | Drain
   | Benchmark
-  | Cli;
+  | Cli
+  | MetadataCacheService;
 
 export const DEFAULT_COMPOSITION_CONFIG: CompositionConfigContract = Object.freeze({
   channel: "development",
@@ -272,6 +274,77 @@ export const makeMetadataCache = (options: {
     size: () => Effect.suspend(() => Effect.succeed(entries.size)),
   };
 };
+// S318 (R27): MetadataCache service with explicit identity: authority + configuration generation + model,
+// TTL/cap bounded, generation invalidation on config change. The host reads routing metadata through this owner.
+export interface MetadataCacheOwnerContract extends MetadataCacheContract {
+  readonly authorityId: string;
+  readonly generation: () => number;
+  readonly keyFor: (modelId: string) => string;
+  readonly noteConfig: (configIdentity: string) => { readonly generation: number; readonly invalidated: number };
+  readonly getSync: (key: string, now: number) => MetadataCacheValue | undefined;
+  readonly setSync: (key: string, value: MetadataCacheValue, now: number) => void;
+  readonly sizeSync: () => number;
+}
+
+export class MetadataCacheService extends Context.Service<MetadataCacheService, MetadataCacheOwnerContract>()(
+  "MetadataCache",
+) {}
+
+const makeMetadataCacheOwner = (
+  authorityId: string,
+  options?: { readonly capacity?: number; readonly ttlMs?: number },
+): MetadataCacheOwnerContract => {
+  const cache = makeMetadataCache({ capacity: options?.capacity ?? 256, ttlMs: options?.ttlMs ?? 30_000 });
+  let generation = 1;
+  let identity: string | null = null;
+  return {
+    ...cache,
+    authorityId,
+    generation: () => generation,
+    getSync: (key, now) => Effect.runSync(cache.get(key, now)),
+    keyFor: (modelId) => metadataCacheKey({ authorityId, configGeneration: generation, modelId }),
+    noteConfig: (configIdentity) => {
+      if (identity === null || identity === configIdentity) {
+        identity = configIdentity;
+        return { generation, invalidated: 0 };
+      }
+      const old = generation;
+      const before = Effect.runSync(cache.size());
+      Effect.runSync(cache.invalidateGeneration(old));
+      const after = Effect.runSync(cache.size());
+      identity = configIdentity;
+      generation = old + 1;
+      return { generation, invalidated: before - after };
+    },
+    setSync: (key, value, now) => {
+      Effect.runSync(cache.set(key, value, now));
+    },
+    sizeSync: () => Effect.runSync(cache.size()),
+  };
+};
+
+export const metadataCacheLayer = Layer.effect(
+  MetadataCacheService,
+  Effect.map(
+    CompositionConfig.useSync((config) => config),
+    (config) => MetadataCacheService.of(makeMetadataCacheOwner("metadata:" + config.instanceId)),
+  ),
+);
+
+export const composeMetadataCacheOwner = (options?: {
+  readonly capacity?: number;
+  readonly ttlMs?: number;
+}): MetadataCacheOwnerContract =>
+  makeMetadataCacheOwner("metadata:" + DEFAULT_COMPOSITION_CONFIG.instanceId, options);
+
+/** Stable identity for a host config object (sha256 hex); a changed config yields a new generation. */
+/**
+ * Host-config snapshot boundary: only the JSON serialization is used. The generic object constraint keeps
+ * the real UnifiedRuntimeConfig callers assignable while naming the snapshot boundary explicitly.
+ */
+export const metadataConfigIdentity = <T extends object>(config: T | null | undefined): string =>
+  createHash("sha256").update(JSON.stringify(config ?? null)).digest("hex");
+
 export const artifactAuthorityLayer: Layer.Layer<ArtifactStoreAuthority, never, CompositionConfig> =
   Layer.effect(
     ArtifactStoreAuthority,
@@ -488,14 +561,14 @@ const ownerLayer = Layer.provideMerge(cliLayer, serverOwnerLayer);
  * and every leaf is constructed once by `provideMerge`.
  */
 export const CompositionLayer: Layer.Layer<CompositionServices, never, never> = Layer.provideMerge(
-  ownerLayer,
+  Layer.mergeAll(ownerLayer, metadataCacheLayer),
   dependencyLayer,
 );
 
 export const makeCompositionLayer = (
   config: CompositionConfigContract,
 ): Layer.Layer<CompositionServices, never, never> =>
-  Layer.provideMerge(ownerLayer, Layer.provideMerge(leafLayers, configLayer(config)));
+  Layer.provideMerge(Layer.mergeAll(ownerLayer, metadataCacheLayer), Layer.provideMerge(leafLayers, configLayer(config)));
 
 export const makeConfigLayer = (
   config: CompositionConfigContract,

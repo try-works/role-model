@@ -281,6 +281,9 @@ import {
 import {
   type BackendOwner,
   type BootstrapContract,
+  composeMetadataCacheOwner,
+  metadataCacheKey,
+  metadataConfigIdentity,
   type ServerOwner,
   type ServerTransport,
   bootstrapOwner as composedBootstrapOwner,
@@ -21214,6 +21217,8 @@ export async function createRuntimeBridgeBackend(
   // starve request handling). `ROLE_MODEL_ROUTING_PREP_CACHE_TTL_MS=0` disables the snapshot.
   const routingPrepCacheTtlMs = resolveRoutingPrepCacheTtlMs(process.env);
   const routingPrepCache = createRoutingPrepCache({ ttlMs: routingPrepCacheTtlMs });
+// S318 (R27): the DAG metadata cache owner (authority + config generation identity).
+const metadataCacheOwner = composeMetadataCacheOwner({ capacity: 1024, ttlMs: routingPrepCacheTtlMs });
   const recordDirectContribution = (input: DirectContributionInput): Promise<void> =>
     recordDirectContributionWith(runtimeTrackBOperations, input, {
       scopeId: options.scopeId,
@@ -27310,23 +27315,47 @@ export async function createRuntimeBridgeBackend(
       )
       .digest("hex")
       .slice(0, 16);
-    const routingPrepTickKey = `${routingPrepRegistryIdentity}:${
-      routingPrepCacheTtlMs > 0
-        ? Math.floor(routingTimeMs / routingPrepCacheTtlMs)
-        : `t${routingTimeMs}`
-    }`;
+    // S318 (R27): the live routing-prep key carries the DAG identity: authority + configuration generation
+    // + registry model identity, then the TTL bucket. A config change bumps the generation and invalidates.
+    const routingPrepConfigIdentity = metadataConfigIdentity(currentUnifiedRuntimeConfig);
+    const routingPrepGeneration = metadataCacheOwner.noteConfig(routingPrepConfigIdentity).generation;
+    const routingPrepTickKey =
+      metadataCacheKey({
+        authorityId: metadataCacheOwner.authorityId,
+        configGeneration: routingPrepGeneration,
+        modelId: routingPrepRegistryIdentity,
+      }) +
+      ":" +
+      (routingPrepCacheTtlMs > 0
+        ? String(Math.floor(routingTimeMs / routingPrepCacheTtlMs))
+        : "t" + String(routingTimeMs));
     const observedDifficultyBucket = resolveObservedDifficultyBucketForPlan(plan);
-    const runtimeObservedProfiles = await routingPrepCache.read(
-      `observed-profiles:${routingPrepTickKey}:${observedDifficultyBucket ?? "none"}`,
-      () =>
-        readObservedProfilesForRouting({
-          databasePath: initialization.databasePath,
-          registry: executionSnapshot.registry,
-          observedDataConfig,
-          difficultyBucket: observedDifficultyBucket,
-          routingTimeMs,
-        }),
+    // S319 (R27): the DAG cache holds the REAL observed-profiles payload the routing decision reads, keyed by
+    // authority + config generation + registry identity (not an identity marker). TTL/cap come from the DAG
+    // owner configured with the routing-prep TTL; routingPrepCache keeps in-flight coalescing.
+    const observedProfilesMetadataKey = metadataCacheOwner.keyFor(
+      "observed-profiles:" + routingPrepRegistryIdentity + ":" + String(observedDifficultyBucket ?? "none"),
     );
+    const cachedObservedProfilesJson = metadataCacheOwner.getSync(observedProfilesMetadataKey, routingTimeMs);
+    const runtimeObservedProfiles =
+      typeof cachedObservedProfilesJson === "string"
+        ? (JSON.parse(cachedObservedProfilesJson) as Awaited<ReturnType<typeof readObservedProfilesForRouting>>)
+        : await routingPrepCache
+            .read(
+              `observed-profiles:${routingPrepTickKey}:${observedDifficultyBucket ?? "none"}`,
+              () =>
+                readObservedProfilesForRouting({
+                  databasePath: initialization.databasePath,
+                  registry: executionSnapshot.registry,
+                  observedDataConfig,
+                  difficultyBucket: observedDifficultyBucket,
+                  routingTimeMs,
+                }),
+            )
+            .then((profiles) => {
+              metadataCacheOwner.setSync(observedProfilesMetadataKey, JSON.stringify(profiles), routingTimeMs);
+              return profiles;
+            });
     const telemetryScoresByEndpointId = await routingPrepCache.read(
       `live-telemetry:${routingPrepTickKey}:${observedDataConfig.aggregation.minSamples}`,
       () =>
