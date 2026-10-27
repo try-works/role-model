@@ -1,0 +1,66 @@
+COMMAND: node vitest run test/s307-maintenance-owner-fence.test.ts (S308 RED)
+EXIT_CODE=1
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/sql-sqlite-node
+
+(node:56468) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/s307-maintenance-owner-fence.test.ts (8 tests | 3 failed) 639ms
+   ✓ S307 maintenance owner fence > maintenance refuses immediately while an async transaction owns the connection 65ms
+   ✓ S307 maintenance owner fence > drain times out with a typed failure instead of waiting unbounded 109ms
+   ✓ S307 maintenance owner fence > reset and restore re-apply the store's actual PRAGMAs; the naive loss hook shows the failure 50ms
+   ✓ S307 maintenance owner fence > bounded drain polls the event loop rather than blocking it (measured probe) 130ms
+   × S307 maintenance owner fence > concurrent maintenance reserves the slot synchronously: the second caller gets MAINTENANCE_BUSY 136ms
+     → expected { Object (durationMs, kind, ...) } to be an instance of MaintenanceBusyError
+   ✓ S307 maintenance owner fence > maintenance is refused while a synchronous facade owner holds the connection 30ms
+   × S307 maintenance owner fence > non-finite drain budgets are rejected with a typed validation error before any loop 78ms
+     → expected { Object (durationMs, kind, ...) } to be an instance of MaintenanceBudgetError
+   × S307 maintenance owner fence > a rejected/no-op pragma re-apply is surfaced by the post-re-apply verification 35ms
+     → expected { durationMs: 6, kind: 'reset', …(1) } to be an instance of MaintenancePragmaVerificationError
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s307-maintenance-owner-fence.test.ts > S307 maintenance owner fence > concurrent maintenance reserves the slot synchronously: the second caller gets MAINTENANCE_BUSY
+AssertionError: expected { Object (durationMs, kind, ...) } to be an instance of MaintenanceBusyError
+ ❯ test/s307-maintenance-owner-fence.test.ts:176:26
+    174|     const [firstResult, secondResult] = await Promise.all([first, seco…
+    175|     expect(firstResult.kind).toBe("backup");
+    176|     expect(secondResult).toBeInstanceOf(MaintenanceBusyError);
+       |                          ^
+    177|     const busy = secondResult instanceof MaintenanceBusyError ? second…
+    178|     expect(busy?.owner).toBe("another maintenance operation");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  test/s307-maintenance-owner-fence.test.ts > S307 maintenance owner fence > non-finite drain budgets are rejected with a typed validation error before any loop
+AssertionError: expected { Object (durationMs, kind, ...) } to be an instance of MaintenanceBudgetError
+ ❯ test/s307-maintenance-owner-fence.test.ts:199:22
+    197|         .backup(path.join(root, "never.db"), { drainTimeoutMs: budget …
+    198|         .catch((error) => error);
+    199|       expect(caught).toBeInstanceOf(MaintenanceBudgetError);
+       |                      ^
+    200|       const invalid = caught instanceof MaintenanceBudgetError ? caugh…
+    201|       expect(invalid?.code).toBe("MAINTENANCE_INVALID_BUDGET");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  test/s307-maintenance-owner-fence.test.ts > S307 maintenance owner fence > a rejected/no-op pragma re-apply is surfaced by the post-re-apply verification
+AssertionError: expected { durationMs: 6, kind: 'reset', …(1) } to be an instance of MaintenancePragmaVerificationError
+ ❯ test/s307-maintenance-owner-fence.test.ts:211:20
+    209|       .reset({ reapplyFailurePragma: "busy_timeout" })
+    210|       .catch((error) => error);
+    211|     expect(caught).toBeInstanceOf(MaintenancePragmaVerificationError);
+       |                    ^
+    212|     const unverified = caught instanceof MaintenancePragmaVerification…
+    213|     expect(unverified?.code).toBe("MAINTENANCE_PRAGMA_UNVERIFIED");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 5 passed (8)
+   Start at  03:06:35
+   Duration  9.11s (transform 4.04s, setup 0ms, collect 6.33s, tests 639ms, environment 2ms, prepare 836ms)
+
+

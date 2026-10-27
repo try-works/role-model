@@ -1,0 +1,56 @@
+COMMAND: node vitest run test/s307-maintenance-owner-fence.test.ts (S309 micro RED)
+EXIT_CODE=1
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/sql-sqlite-node
+
+(node:55308) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/s307-maintenance-owner-fence.test.ts (9 tests | 1 failed) 494ms
+   ✓ S307 maintenance owner fence > maintenance refuses immediately while an async transaction owns the connection 56ms
+   ✓ S307 maintenance owner fence > drain times out with a typed failure instead of waiting unbounded 112ms
+   ✓ S307 maintenance owner fence > reset and restore re-apply the store's actual PRAGMAs; the naive loss hook shows the failure 46ms
+   ✓ S307 maintenance owner fence > bounded drain polls the event loop rather than blocking it (measured probe) 126ms
+   ✓ S307 maintenance owner fence > concurrent maintenance reserves the slot synchronously: the second caller gets MAINTENANCE_BUSY 32ms
+   ✓ S307 maintenance owner fence > maintenance is refused while a synchronous facade owner holds the connection 24ms
+   ✓ S307 maintenance owner fence > non-finite drain budgets are rejected with a typed validation error before any loop 18ms
+   ✓ S307 maintenance owner fence > a rejected/no-op pragma re-apply is surfaced by the post-re-apply verification 29ms
+   × S307 maintenance owner fence > a refused drain leaves the store untouched: no PRAGMA writes and no backup target (busy + timeout) 44ms
+     → expected { busy_timeout: '5000', …(8) } to deeply equal { busy_timeout: '777', …(8) }
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s307-maintenance-owner-fence.test.ts > S307 maintenance owner fence > a refused drain leaves the store untouched: no PRAGMA writes and no backup target (busy + timeout)
+AssertionError: expected { busy_timeout: '5000', …(8) } to deeply equal { busy_timeout: '777', …(8) }
+
+- Expected
++ Received
+
+@@ -1,8 +1,8 @@
+  {
+    "auto_vacuum": "0",
+-   "busy_timeout": "777",
++   "busy_timeout": "5000",
+    "cache_size": "-2000",
+    "foreign_keys": "1",
+    "journal_mode": "wal",
+    "locking_mode": "normal",
+    "synchronous": "1",
+
+ ❯ test/s307-maintenance-owner-fence.test.ts:227:45
+    225|       const busyTarget = path.join(root, "busy-refused.db");
+    226|       await service.maintenance.backup(busyTarget).catch(() => undefin…
+    227|       expect(service.maintenance.pragmas()).toEqual(before);
+       |                                             ^
+    228|       expect(existsSync(busyTarget)).toBe(false);
+    229| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 8 passed (9)
+   Start at  03:16:17
+   Duration  9.72s (transform 4.18s, setup 0ms, collect 6.57s, tests 494ms, environment 1ms, prepare 680ms)
+
+

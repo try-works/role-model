@@ -1,0 +1,7 @@
+{
+  "drainTimeoutMs": 100,
+  "elapsedMs": 110,
+  "eventLoopTicks": 7,
+  "mode": "async-poll-drain",
+  "statement": "DatabaseSync remains blocking; only the fence drain yields, measured by a 10ms interval"
+}
