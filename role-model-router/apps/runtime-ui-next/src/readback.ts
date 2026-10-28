@@ -41,6 +41,10 @@ export type ReadbackKey =
   | "learningDecisions"
   | "learningEvidence"
   | "learningHistory"
+  | "localLlamaSwapModels"
+  | "operatorStatus"
+  | "operatorTraceRoots"
+  | "extensions"
   | "replayJobs"
   | "evaluationJobs"
   | "configuredModels"
@@ -83,6 +87,10 @@ export const ReadbackKeySchema = Schema.Literals([
   "learningDecisions",
   "learningEvidence",
   "learningHistory",
+  "localLlamaSwapModels",
+  "operatorStatus",
+  "operatorTraceRoots",
+  "extensions",
   "replayJobs",
   "evaluationJobs",
   "configuredModels",
@@ -146,6 +154,10 @@ export const ReadbacksState = Schema.Struct({
   learningDecisions: ReadbackState,
   learningEvidence: ReadbackState,
   learningHistory: ReadbackState,
+  localLlamaSwapModels: ReadbackState,
+  operatorStatus: ReadbackState,
+  operatorTraceRoots: ReadbackState,
+  extensions: ReadbackState,
   replayJobs: ReadbackState,
   evaluationJobs: ReadbackState,
   configuredModels: ReadbackState,
@@ -203,6 +215,10 @@ export const emptyReadbacks = (): ReadbacksState => ({
   learningDecisions: idleReadback(),
   learningEvidence: idleReadback(),
   learningHistory: idleReadback(),
+  localLlamaSwapModels: idleReadback(),
+  operatorStatus: idleReadback(),
+  operatorTraceRoots: idleReadback(),
+  extensions: idleReadback(),
   replayJobs: idleReadback(),
   evaluationJobs: idleReadback(),
   configuredModels: idleReadback(),
@@ -981,6 +997,10 @@ export const READBACK_SPECS: Readonly<Record<ReadbackKey, ReadbackRouteSpec>> = 
   learningDecisions: { emptyText: "No learning decisions rows.", key: "learningDecisions", label: "Learning decisions", parse: parseLearningFamily("Learning decisions"), path: READBACK_PATHS.learningDecisions },
   learningEvidence: { emptyText: "No learning evidence rows.", key: "learningEvidence", label: "Learning evidence", parse: parseLearningFamily("Learning evidence"), path: READBACK_PATHS.learningEvidence },
   learningHistory: { emptyText: "No learning history rows.", key: "learningHistory", label: "Learning history", parse: parseLearningFamily("Learning history"), path: READBACK_PATHS.learningHistory },
+  localLlamaSwapModels: { emptyText: "No llama-swap models rows.", key: "localLlamaSwapModels", label: "llama-swap models", parse: parseLearningFamily("llama-swap models"), path: READBACK_PATHS.localLlamaSwapModels },
+  operatorStatus: { emptyText: "No operator status rows.", key: "operatorStatus", label: "Operator status", parse: parseLearningFamily("Operator status"), path: READBACK_PATHS.operatorStatus },
+  operatorTraceRoots: { emptyText: "No operator trace-root rows.", key: "operatorTraceRoots", label: "Operator trace roots", parse: parseLearningFamily("Operator trace roots"), path: READBACK_PATHS.operatorTraceRoots },
+  extensions: { emptyText: "No extension rows.", key: "extensions", label: "Extensions", parse: parseLearningFamily("Extensions"), path: READBACK_PATHS.extensions },
   replayJobs: {
     emptyText: "No replay jobs.",
     key: "replayJobs",
@@ -1139,6 +1159,10 @@ export const createReadbackClients = (
   learningDecisions: client(READBACK_SPECS.learningDecisions),
   learningEvidence: client(READBACK_SPECS.learningEvidence),
   learningHistory: client(READBACK_SPECS.learningHistory),
+  localLlamaSwapModels: client(READBACK_SPECS.localLlamaSwapModels),
+  operatorStatus: client(READBACK_SPECS.operatorStatus),
+  operatorTraceRoots: client(READBACK_SPECS.operatorTraceRoots),
+  extensions: client(READBACK_SPECS.extensions),
     configuredModels: client(READBACK_SPECS.configuredModels),
     modelEndpoints: client(READBACK_SPECS.modelEndpoints),
     replayJobs: client(READBACK_SPECS.replayJobs),

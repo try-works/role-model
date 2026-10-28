@@ -261,15 +261,15 @@ describe("S269 mounted legacy redirects", () => {
   });
 
   it("leaves a missing original feature target NotFound instead of redirecting to a generic page", async () => {
-    mountAt("/app/local/llama-swap/models");
+    mountAt("/app/local/llama-swap/policy");
 
     const page = await waitFor(
       () => document.querySelector("[data-route='not-found']") ?? undefined,
       "the explicit not-found state",
     );
 
-    expect(window.location.pathname).toBe("/app/local/llama-swap/models");
-    expect(page.textContent).toContain("Not found: /app/local/llama-swap/models");
+    expect(window.location.pathname).toBe("/app/local/llama-swap/policy");
+    expect(page.textContent).toContain("Not found: /app/local/llama-swap/policy");
     expect(document.querySelector("[data-route='learning']")).toBeNull();
     expect(countPath("/api/role-model/operator/learning")).toBe(0);
   });

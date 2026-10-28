@@ -22,11 +22,8 @@ import { shellModel, shellUpdate } from "./support/runtime-shell";
  */
 
 const MISSING_PATHS = [
-  "/app/local/llama-swap/models",
   "/app/local/llama-swap/policy",
   "/app/local/llama-swap/matrix",
-  "/app/system/extensions",
-  "/app/system/operator",
 ] as const;
 
 const REDIRECT_ROUTE_ENTRIES: readonly string[] = [
@@ -370,16 +367,16 @@ describe("S269 original redirect entries: 18 resolvable targets + 2 missing", ()
 });
 
 describe("S269 53-pattern partition", () => {
-  it("partitions 47 supported original paths + / + 5 missing into the 53 original patterns", async () => {
+  it("partitions 50 supported original paths + / + 2 missing into the 53 original patterns", async () => {
     const module = await legacy();
     const supported = module.SUPPORTED_ORIGINAL_PATHS;
-    expect(supported).toHaveLength(47);
-    expect(supported.filter((path) => !path.includes(":requestId"))).toHaveLength(45);
+    expect(supported).toHaveLength(50);
+    expect(supported.filter((path) => !path.includes(":requestId"))).toHaveLength(48);
     expect(supported.filter((path) => path.includes(":requestId"))).toEqual([
       "/app/observe/requests/:requestId",
       "/app/router/decisions/:requestId",
     ]);
-    expect(module.MISSING_ORIGINAL_TARGETS).toHaveLength(5);
+    expect(module.MISSING_ORIGINAL_TARGETS).toHaveLength(2);
     const partition = new Set([
       ...supported,
       "/",

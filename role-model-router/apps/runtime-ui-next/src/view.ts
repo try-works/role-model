@@ -53,6 +53,9 @@ const routeTitle = (route: Model["route"]): string =>
     LearningDecisions: () => "Learning decisions | RM3 Foldkit shell",
     LearningEvidence: () => "Learning evidence | RM3 Foldkit shell",
     LearningHistory: () => "Learning history | RM3 Foldkit shell",
+    LocalLlamaSwapModels: () => "llama-swap models | RM3 Foldkit shell",
+    SystemOperator: () => "Operator | RM3 Foldkit shell",
+    SystemExtensions: () => "Extensions | RM3 Foldkit shell",
     Models: () => "Models | RM3 Foldkit shell",
     ModelsRoles: () => "Model roles | RM3 Foldkit shell",
     RouterStrategy: () => "Router strategy | RM3 Foldkit shell",
@@ -194,6 +197,9 @@ const shellNavItems = (route: Model["route"]): ReadonlyArray<ShellNavItem> => [
   { active: route._tag === "LearningDecisions", dataNav: "learning-decisions", href: "/learning/decisions", label: "Learning decisions" },
   { active: route._tag === "LearningEvidence", dataNav: "learning-evidence", href: "/learning/evidence", label: "Learning evidence" },
   { active: route._tag === "LearningHistory", dataNav: "learning-history", href: "/learning/history", label: "Learning history" },
+  { active: route._tag === "LocalLlamaSwapModels", dataNav: "local-llama-swap-models", href: "/local/llama-swap/models", label: "llama-swap models" },
+  { active: route._tag === "SystemOperator", dataNav: "system-operator", href: "/system/operator", label: "Operator" },
+  { active: route._tag === "SystemExtensions", dataNav: "system-extensions", href: "/system/extensions", label: "Extensions" },
   { active: route._tag === "Models", dataNav: "models", href: "/models", label: "Models" },
   {
     active: route._tag === "ModelsRoles",
@@ -795,6 +801,17 @@ const modelsPage = (readbacks: ReadbacksState, h: HtmlBuilder<Message>): Html =>
   return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "models"), h.DataAttribute("models-state", "success")], [h.h2([h.Class("rm3-next-route-title text-[16px] font-semibold")], ["Configured models"]), h.ul([h.Class("mt-3 grid gap-2")], rows)]);
 };
 
+const finalFamilyPage = (label: string, routeName: string, sections: ReadonlyArray<{ label: string; spec: Parameters<typeof renderReadbackPage>[0]; readback: ReadbacksState[keyof ReadbacksState] }>, h: HtmlBuilder<Message>): Html => {
+  const first = sections[0];
+  const status = first.readback.status === "idle" ? "loading" : first.readback.status;
+  return h.section(
+    [h.Class("rm3-next-route mt-4"), h.DataAttribute("route", routeName), h.DataAttribute("final-family-state", status)],
+    [
+      h.h2([h.Class("rm3-next-route-title")], [label]),
+      ...sections.flatMap((section) => [h.h3([], [section.label]), renderReadbackPage(section.spec, section.readback, h)]),
+    ],
+  );
+};
 const learningFamilyPage = (label: string, routeName: string, spec: Parameters<typeof renderReadbackPage>[0], readback: ReadbacksState[keyof ReadbacksState], h: HtmlBuilder<Message>): Html => {
   const status = readback.status === "idle" ? "loading" : readback.status;
   return h.section(
@@ -884,6 +901,9 @@ const routeContent = (
     LearningPacks: () => learningFamilyPage("Learning packs", "learning-packs", READBACK_SPECS.learningPacks, readbacks.learningPacks, h),
     LearningDecisions: () => learningFamilyPage("Learning decisions", "learning-decisions", READBACK_SPECS.learningDecisions, readbacks.learningDecisions, h),
     LearningEvidence: () => learningFamilyPage("Learning evidence", "learning-evidence", READBACK_SPECS.learningEvidence, readbacks.learningEvidence, h),
+    LocalLlamaSwapModels: () => finalFamilyPage("llama-swap models", "local-llama-swap-models", [{ label: "Models", spec: READBACK_SPECS.localLlamaSwapModels, readback: readbacks.localLlamaSwapModels }], h),
+    SystemOperator: () => finalFamilyPage("Operator", "system-operator", [{ label: "Operator status", spec: READBACK_SPECS.operatorStatus, readback: readbacks.operatorStatus }, { label: "Trace roots", spec: READBACK_SPECS.operatorTraceRoots, readback: readbacks.operatorTraceRoots }], h),
+    SystemExtensions: () => finalFamilyPage("Extensions", "system-extensions", [{ label: "Extensions", spec: READBACK_SPECS.extensions, readback: readbacks.extensions }], h),
     LearningHistory: () => learningFamilyPage("Learning history", "learning-history", READBACK_SPECS.learningHistory, readbacks.learningHistory, h),
     Models: () => modelsPage(readbacks, h),
     ModelsRoles: () => modelsRolesPage(readbacks, h),

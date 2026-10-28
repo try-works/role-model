@@ -72,6 +72,21 @@ const initRoute =
           },
         };
       }
+      if (route._tag === "LocalLlamaSwapModels" || route._tag === "SystemExtensions") {
+        const token = 1;
+        const key: "localLlamaSwapModels" | "extensions" = route._tag === "LocalLlamaSwapModels" ? "localLlamaSwapModels" : "extensions";
+        return {
+          commands: [readReadback({ key, token })],
+          model: { clicks: 0, controls: emptyControls(), diagnostics: idleDiagnostics(), observability: idleObservability(), readbacks: { ...emptyReadbacks(), [key]: loadingReadback(token) }, refresh: initialRuntimeRefreshState(), route, theme },
+        };
+      }
+      if (route._tag === "SystemOperator") {
+        const token = 1;
+        return {
+          commands: [readReadback({ key: "operatorStatus", token }), readReadback({ key: "operatorTraceRoots", token })],
+          model: { clicks: 0, controls: emptyControls(), diagnostics: idleDiagnostics(), observability: idleObservability(), readbacks: { ...emptyReadbacks(), operatorStatus: loadingReadback(token), operatorTraceRoots: loadingReadback(token) }, refresh: initialRuntimeRefreshState(), route, theme },
+        };
+      }
       if (route._tag === "LearningConfiguration" || route._tag === "LearningPacks" || route._tag === "LearningDecisions" || route._tag === "LearningEvidence" || route._tag === "LearningHistory") {
         const token = 1;
         const key: "learningConfiguration" | "learningPacks" | "learningDecisions" | "learningEvidence" | "learningHistory" = route._tag === "LearningConfiguration" ? "learningConfiguration" : route._tag === "LearningPacks" ? "learningPacks" : route._tag === "LearningDecisions" ? "learningDecisions" : route._tag === "LearningEvidence" ? "learningEvidence" : "learningHistory";

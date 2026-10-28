@@ -125,6 +125,9 @@ const CANONICAL_TARGETS = {
   "/app/studio/chat": "/studio?tab=chat",
   "/app/studio/images": "/studio?tab=images",
   "/app/studio/rerank": "/studio?tab=rerank",
+  "/app/local/llama-swap/models": "/local/llama-swap/models",
+  "/app/system/extensions": "/system/extensions",
+  "/app/system/operator": "/system/operator",
   "/app/system/peers": "/system/peers",
   "/app/system/runtime": "/runtime",
   "/app/system/runtime-config": "/runtime",
@@ -169,10 +172,6 @@ export const MISSING_ORIGINAL_TARGETS: readonly {
   readonly reason: string;
 }[] = [
   {
-    path: "/app/local/llama-swap/models",
-    reason: "llama-swap model catalogue page is not implemented",
-  },
-  {
     path: "/app/local/llama-swap/policy",
     reason: "llama-swap policy page is not implemented",
   },
@@ -180,8 +179,6 @@ export const MISSING_ORIGINAL_TARGETS: readonly {
     path: "/app/local/llama-swap/matrix",
     reason: "llama-swap compatibility matrix page is not implemented",
   },
-  { path: "/app/system/extensions", reason: "the extensions surface is not implemented" },
-  { path: "/app/system/operator", reason: "operator controls are not implemented" },
 ];
 
 const normalizePath = (pathname: string): string => {
