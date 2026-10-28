@@ -15,6 +15,8 @@ import {
   type ReadObservabilityCommand,
   type DeviceAuthCommands,
   type EndpointAdmissionCommands,
+  type RequestsRankingCommands,
+  noopRequestsRankingCommands,
   type LearningRankingCommands,
   noopLearningRankingCommands,
   noopEndpointAdmissionCommands,
@@ -40,6 +42,7 @@ import {
   loadingControl,
 } from "./control";
 import { failedDiagnostics, idleDiagnostics, loadingDiagnostics } from "./diagnostics";
+import { buildRequestsRankingQuery, initialRequestsRankingState, requestsRankingMetricOf, requestsRankingTargetOf } from "./requests-ranking";
 import {
   initialLearningRankingState,
   learningLadderRowKey,
@@ -200,6 +203,7 @@ export const createUpdate =
     providerAccountCommands: ProviderAccountCommands = noopProviderAccountCommands,
     endpointAdmissionCommands: EndpointAdmissionCommands = noopEndpointAdmissionCommands,
     learningRankingCommands: LearningRankingCommands = noopLearningRankingCommands,
+    requestsRankingCommands: RequestsRankingCommands = noopRequestsRankingCommands,
   ) => {
     const navigateToRoute = (
       model: Model,
@@ -1041,6 +1045,52 @@ export const createUpdate =
         const state = model.providerAccount ?? initialProviderAccountState();
         if (token !== state.token) return { model };
         return { model: { ...model, providerAccount: { ...state, error: message, pendingAction: undefined, status: "error" } } };
+      },
+      RequestsRankingFieldChanged: ({ field, value }) => {
+        const state = model.requestsRanking ?? initialRequestsRankingState();
+        const nextState = { ...state, [field]: value, message: undefined };
+        const metric = requestsRankingMetricOf(nextState.metric);
+        const rankingTarget = requestsRankingTargetOf(nextState.rankingTarget);
+        if (metric === undefined || rankingTarget === undefined) {
+          // S418: invalidate the active token so a late result for the previous valid selection
+          // cannot clear this validation error or publish its stale rows.
+          const token = state.token + 1;
+          return { model: { ...model, requestsRanking: { ...nextState, message: "Select a supported metric and ranking target.", status: "error", token } } };
+        }
+        // S417: latest selection wins. A change while a query is loading bumps the token and
+        // supersedes the in-flight query, so an old result can never render under new labels.
+        const token = state.token + 1;
+        const payload = buildRequestsRankingQuery({ metric, rankingTarget });
+        return {
+          commands: [requestsRankingCommands.query({ payload: JSON.stringify(payload), token })],
+          model: { ...model, requestsRanking: { ...nextState, status: "loading", token } },
+        };
+      },
+      RequestsRankingSubmitRequested: () => {
+        const state = model.requestsRanking ?? initialRequestsRankingState();
+        if (state.status === "loading") return { model };
+        const metric = requestsRankingMetricOf(state.metric);
+        const rankingTarget = requestsRankingTargetOf(state.rankingTarget);
+        if (metric === undefined || rankingTarget === undefined) {
+          const token = state.token + 1;
+          return { model: { ...model, requestsRanking: { ...state, message: "Select a supported metric and ranking target.", status: "error", token } } };
+        }
+        const token = state.token + 1;
+        const payload = buildRequestsRankingQuery({ metric, rankingTarget });
+        return {
+          commands: [requestsRankingCommands.query({ payload: JSON.stringify(payload), token })],
+          model: { ...model, requestsRanking: { ...state, message: undefined, status: "loading", token } },
+        };
+      },
+      RequestsRankingLoaded: ({ rows, token }) => {
+        const state = model.requestsRanking ?? initialRequestsRankingState();
+        if (token !== state.token) return { model };
+        return { model: { ...model, requestsRanking: { ...state, message: undefined, rows, status: rows.length === 0 ? "empty" : "ok" } } };
+      },
+      RequestsRankingFailed: ({ message, token }) => {
+        const state = model.requestsRanking ?? initialRequestsRankingState();
+        if (token !== state.token) return { model };
+        return { model: { ...model, requestsRanking: { ...state, message, status: "error" } } };
       },
       LearningLadderToggleRequested: ({ rolledBack, roleId, taskTypeId }) => {
         const state = model.learningRanking ?? initialLearningRankingState();

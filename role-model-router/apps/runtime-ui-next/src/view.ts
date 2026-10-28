@@ -7,6 +7,8 @@ import { renderControlPage, renderDeviceAuthorizationForm, renderEndpointAdmissi
 import { chartInteractionForRoute, chartStateForReadback, type ChartInteractionState } from "./chart-interaction";
 import { type LearningRankingState } from "./learning-ranking";
 import { renderLearningRanking } from "./learning-ranking-view";
+import { RequestsRankingStateSchema, REQUESTS_RANKING_METRIC_OPTIONS, REQUESTS_RANKING_TARGET_OPTIONS, type RequestsRankingState } from "./requests-ranking";
+import { renderRequestsRanking } from "./requests-ranking-view";
 import { initialDeviceAuthState, type DeviceAuthState } from "./device-auth";
 import { initialProviderAccountState, type ProviderAccountState } from "./provider-account";
 import { initialEndpointAdmissionState, type EndpointAdmissionState } from "./endpoint-admission";
@@ -884,6 +886,7 @@ const routeContent = (
   endpointAdmission: EndpointAdmissionState,
   chartInteraction: ChartInteractionState | undefined,
   learningRanking: LearningRankingState | undefined,
+  requestsRanking: RequestsRankingState | undefined,
   h: HtmlBuilder<Message>,
 ) =>
   AppRoute.match(route, {
@@ -902,7 +905,11 @@ const routeContent = (
     LocalLogs: () => renderReadbackPage(READBACK_SPECS.localLogs, readbacks.localLogs, h),
     RouterCandidates: () =>
       renderReadbackPage(READBACK_SPECS.routerCandidates, readbacks.routerCandidates, h),
-    Requests: () => renderReadbackPage(READBACK_SPECS.requests, readbacks.requests, h),
+    Requests: () =>
+      h.section([], [
+        renderRequestsRanking(requestsRanking, REQUESTS_RANKING_METRIC_OPTIONS, REQUESTS_RANKING_TARGET_OPTIONS, h),
+        renderReadbackPage(READBACK_SPECS.requests, readbacks.requests, h),
+      ]),
     RequestDetail: () => renderReadbackPage(READBACK_SPECS.requestDetail, readbacks.requestDetail, h),
     RouterDecisions: () =>
       renderReadbackPage(READBACK_SPECS.routerDecisions, readbacks.routerDecisions, h),
@@ -1233,6 +1240,7 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
     model.endpointAdmission ?? initialEndpointAdmissionState(),
     model.chartInteraction,
     model.learningRanking,
+    model.requestsRanking,
                 h,
               ),
             ],

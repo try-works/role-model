@@ -9,6 +9,7 @@ import { ObservabilityState } from "./observability";
 import { ReadbackKeySchema, ReadbackState } from "./readback";
 import { DeviceAuthFieldSchema, DeviceAuthSessionSchema, DeviceAuthSessionsSchema } from "./device-auth";
 import { LearningRankingStateSchema } from "./learning-ranking";
+import { RequestsRankingFieldSchema, RequestsRankingRowsSchema } from "./requests-ranking";
 import { EndpointAdmissionFieldSchema } from "./endpoint-admission";
 import { ProviderAccountFieldSchema } from "./provider-account";
 import { StudioFieldSchema, StudioTabSchema } from "./studio";
@@ -76,6 +77,10 @@ export const Message: MessageUnion<{
     readonly snapshot: typeof ObservabilityState;
     readonly token: typeof Schema.Number;
   };
+  readonly RequestsRankingFieldChanged: { readonly field: typeof RequestsRankingFieldSchema; readonly value: typeof Schema.String };
+  readonly RequestsRankingSubmitRequested: EmptyFields;
+  readonly RequestsRankingLoaded: { readonly rows: typeof RequestsRankingRowsSchema; readonly token: typeof Schema.Number };
+  readonly RequestsRankingFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
   readonly LearningLadderToggleRequested: { readonly rolledBack: typeof Schema.Boolean; readonly roleId: typeof Schema.String; readonly taskTypeId: typeof Schema.String };
   readonly LearningLadderUpdated: { readonly rolledBack: typeof Schema.Boolean; readonly roleId: typeof Schema.String; readonly taskTypeId: typeof Schema.String; readonly token: typeof Schema.Number };
   readonly LearningLadderFailed: { readonly message: typeof Schema.String; readonly roleId: typeof Schema.String; readonly taskTypeId: typeof Schema.String; readonly token: typeof Schema.Number };
@@ -178,6 +183,10 @@ export const Message: MessageUnion<{
   NavigationCompleted: {},
   ObservabilityFailed: { message: Schema.String, token: Schema.Number },
   ObservabilityLoaded: { snapshot: ObservabilityState, token: Schema.Number },
+  RequestsRankingFieldChanged: { field: Schema.Literals(["metric", "rankingTarget"]), value: Schema.String },
+  RequestsRankingSubmitRequested: {},
+  RequestsRankingLoaded: { rows: RequestsRankingRowsSchema, token: Schema.Number },
+  RequestsRankingFailed: { message: Schema.String, token: Schema.Number },
   LearningLadderToggleRequested: { rolledBack: Schema.Boolean, roleId: Schema.String, taskTypeId: Schema.String },
   LearningLadderUpdated: { rolledBack: Schema.Boolean, roleId: Schema.String, taskTypeId: Schema.String, token: Schema.Number },
   LearningLadderFailed: { message: Schema.String, roleId: Schema.String, taskTypeId: Schema.String, token: Schema.Number },

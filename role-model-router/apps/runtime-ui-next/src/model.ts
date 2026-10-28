@@ -3,6 +3,7 @@ import { Schema } from "effect";
 import { ControlsState } from "./control";
 import { ChartInteractionStateSchema } from "./chart-interaction";
 import { LearningRankingStateSchema } from "./learning-ranking";
+import { RequestsRankingStateSchema } from "./requests-ranking";
 import { DeviceAuthStateSchema } from "./device-auth";
 import { EndpointAdmissionStateSchema } from "./endpoint-admission";
 import { ProviderAccountStateSchema } from "./provider-account";
@@ -19,6 +20,7 @@ const modelFields = {
   deviceAuth: Schema.optional(DeviceAuthStateSchema),
   chartInteraction: Schema.optional(ChartInteractionStateSchema),
   diagnostics: DiagnosticsSnapshot,
+  requestsRanking: Schema.optional(RequestsRankingStateSchema),
   learningRanking: Schema.optional(LearningRankingStateSchema),
   endpointAdmission: Schema.optional(EndpointAdmissionStateSchema),
   providerAccount: Schema.optional(ProviderAccountStateSchema),

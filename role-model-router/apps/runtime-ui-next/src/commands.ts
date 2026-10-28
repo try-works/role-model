@@ -18,6 +18,7 @@ import { type DeviceAuthClient, type DeviceAuthStartPayload, type DeviceActivati
 import { type ProviderAccountClient, type ProviderAccountCreatePayload } from "./provider-account";
 import { type EndpointActivationPayload, type EndpointAdmissionClient, type EndpointBatchPayload } from "./endpoint-admission";
 import { type LearningRankingClient, type LearningRollbackPayload } from "./learning-ranking";
+import { type RequestsRankingClient, type RequestsRankingQuery } from "./requests-ranking";
 import { Message } from "./message";
 import type { RuntimeConfigClient } from "./runtime-config";
 import { type StudioClient, StudioState, studioRequestFor } from "./studio";
@@ -511,3 +512,28 @@ export const defineLearningRankingCommands = (client: LearningRankingClient) => 
 export type LearningRankingCommands = ReturnType<typeof defineLearningRankingCommands>;
 const noopLearningRankingClient: LearningRankingClient = { rollbackLadder: async () => undefined };
 export const noopLearningRankingCommands = defineLearningRankingCommands(noopLearningRankingClient);
+
+export const defineRequestsRankingCommands = (client: RequestsRankingClient) => ({
+  query: Command.define("QueryRequestsRanking", {
+    args: { payload: Schema.String, token: Schema.Number },
+    execute: ({ payload, token }) =>
+      Effect.flatMap(
+        Effect.exit(
+          Effect.tryPromise({
+            catch: (cause) => new Error(describeCause(cause)),
+            // SAFETY: payload is JSON.stringify of the typed RequestsRankingQuery built by buildRequestsRankingQuery.
+            try: () => client.query(JSON.parse(payload) as RequestsRankingQuery),
+          }),
+        ),
+        (exit) => Effect.succeed(
+          Exit.isSuccess(exit)
+            ? Message.RequestsRankingLoaded({ rows: exit.value, token })
+            : Message.RequestsRankingFailed({ message: describeCause(Option.getOrElse(Exit.findErrorOption(exit), () => new Error("telemetry ranking query failed"))), token }),
+        ),
+      ),
+    messages: [Message.RequestsRankingLoaded, Message.RequestsRankingFailed],
+  }),
+});
+export type RequestsRankingCommands = ReturnType<typeof defineRequestsRankingCommands>;
+const noopRequestsRankingClient: RequestsRankingClient = { query: async () => [] };
+export const noopRequestsRankingCommands = defineRequestsRankingCommands(noopRequestsRankingClient);
