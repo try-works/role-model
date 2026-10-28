@@ -1,14 +1,33 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { Effect } from "effect";
+import { describe, expect, it } from "vitest";
 
-import { Message } from "../src/message";
+import {
+  Command,
+  click,
+  expect as sceneExpect,
+  given,
+  inside,
+  label,
+  role,
+  scene,
+  selector,
+  tap,
+  text,
+  type,
+  type SceneSimulation,
+} from "@role-model-router/foldkit/scene";
+import { renderToString } from "@role-model-router/foldkit/experimental/server";
+
+import { defineDeviceAuthCommands } from "../src/commands";
 import {
   createDeviceAuthClient,
   deviceAuthPollDelayMs,
   initialDeviceAuthState,
   type DeviceAuthSession,
 } from "../src/device-auth";
-import { mountShell } from "../src/mount";
-import { createReadbackClients } from "../src/readback";
+import type { Model } from "../src/model";
+import { Message } from "../src/message";
+import { view } from "../src/view";
 import { shellModel, shellUpdate } from "./support/runtime-shell";
 
 /**
@@ -260,142 +279,217 @@ describe("S425 cancel clears inflight and fences stale results", () => {
   });
 });
 
-describe("S425 pending view (mounted)", () => {
-  const mounted: Array<{ container: HTMLElement; handle: { dispose(): void } }> = [];
-  afterEach(() => {
-    for (const entry of mounted.splice(0)) { entry.handle.dispose(); entry.container.remove(); }
-    window.history.replaceState({}, "", "/");
-  });
 
-  const waitFor = async <T extends Element>(
-    read: () => T | null | undefined,
-    label: string,
-  ): Promise<T> => {
-    const end = Date.now() + 3000;
-    while (Date.now() < end) {
-      const value = read();
-      if (value !== null && value !== undefined) return value;
-      await new Promise((resolve) => setTimeout(resolve, 10));
-    }
-    throw new Error("Timed out waiting for " + label);
+
+describe("S442 pending view (scene + real client bridge)", () => {
+  /**
+   * S442 (repairs the S440 hold): each rendered click goes through the real view and update. For every
+   * command the test needs to replay, ONE exact args object is used twice: it builds and executes the
+   * production command effect with the real client (real Effect.sleep of the generated 1s/5s), and the
+   * same object is asserted in the scene with Command.expectHas plus a tap deep-equality check of the
+   * actual pending command args. The scene does not execute the client; the actual client result is fed
+   * back with Command.resolve. Honest split: scene = view -> update -> command args; the effect run in
+   * this test = those same args -> real client result.
+   */
+  type ShellMessage = Parameters<typeof shellUpdate>[1];
+  type ShellScene = SceneSimulation<Model, ShellMessage>;
+  type DeviceAuthReadArgs = Readonly<{ token: number }>;
+  type DeviceAuthPollArgs = Readonly<{
+    authRequestId: string;
+    delayMs: number;
+    intervalMs: number;
+    token: number;
+  }>;
+  type DeviceAuthCommandArgs = DeviceAuthReadArgs | DeviceAuthPollArgs;
+  const SAFE_URL = "https://auth.openai.com/device?user_code=ABCD-EFGH";
+  const ACCOUNT = "openai.personal.openai-codex-subscription";
+  const readArgs: DeviceAuthReadArgs = { token: 1 };
+  const expiredPollBody = {
+    authRequestId: "auth-pending",
+    lastError: "Device code expired.",
+    providerAccountId: ACCOUNT,
+    status: "expired",
   };
+  const captureCommand = (name: string, expectedArgs: DeviceAuthCommandArgs) =>
+    tap((simulation: ShellScene) => {
+      const pending = [...simulation.commands].reverse().find((command) => command.name === name);
+      expect(pending?.args).toEqual(expectedArgs);
+    });
+  /**
+   * The providers route renders BOTH the device-auth form and the provider-account form, and both use
+   * the labels Provider / Provider kind / Variant / Model. Scope the typing and Add model click to the
+   * device-authorization section so no locator can resolve into the provider-account form.
+   */
+  const draftSteps = () => [
+    inside(
+      selector('[data-route="device-authorization"]'),
+      type(label("Provider"), "openai"),
+      type(label("Variant"), "openai-codex-subscription"),
+      type(label("Model"), "gpt-6"),
+      click(role("button", { name: "Add model" })),
+    ),
+  ];
 
-  const mountDeviceAuth = (
-    listBody: readonly HostReadbackBody[],
-    pollBody: HostPollBody = {
-      authRequestId: "auth-pending",
-      providerAccountId: "openai.personal.openai-codex-subscription",
-      retryAfterSeconds: 5,
-      status: "pending",
-    },
-    pollCalls: string[] = [],
-  ): void => {
-    window.history.replaceState({}, "", "/control/providers");
-    // SAFETY: the stub only answers the device readback/poll; every other reader gets an empty list.
+  it("start click restores the host pending session and renders the code + safe link", async () => {
+    const calls: Array<{ body?: string; method: string; url: string }> = [];
+    // SAFETY: this test stub serves the host readback/poll bodies; the production client owns the requests.
+    const fetchImpl = (async (url: string, init?: { body?: string; method?: string }) => {
+      const href = String(url);
+      calls.push({ body: init?.body, method: init?.method ?? "GET", url: href });
+      return href.endsWith("/accounts/device") ? json([pendingReadback(SAFE_URL)]) : json(expiredPollBody);
+    }) as typeof fetch;
+    const commands = defineDeviceAuthCommands(createDeviceAuthClient({ fetchImpl }));
+    const pollArgs = { authRequestId: "auth-pending", delayMs: 5_000, intervalMs: 5_000, token: 2 };
+    const readMessage = await Effect.runPromise(commands.read(readArgs).effect);
+    const terminalPollMessage = await Effect.runPromise(commands.poll(pollArgs).effect);
+    expect(calls.map((call) => [call.method, new URL(call.url, "http://localhost").pathname])).toEqual([
+      ["GET", "/api/role-model/accounts/device"],
+      ["POST", "/api/role-model/accounts/device/poll"],
+    ]);
+    expect(JSON.parse(calls[1]?.body ?? "{}")).toEqual({ authRequestId: "auth-pending" });
+    scene(
+      { update: shellUpdate, view },
+      given(shellModel({ deviceAuth: initialDeviceAuthState(), route: { _tag: "Providers" } })),
+      ...draftSteps(),
+      click(role("button", { name: "Start device authorization" })),
+      captureCommand("ReadDeviceAuthorizations", readArgs),
+      Command.expectHas({ name: "ReadDeviceAuthorizations", args: readArgs }),
+      Command.resolve(commands.read, readMessage),
+      sceneExpect(selector("[data-device-auth-user-code]")).toContainText("ABCD-EFGH"),
+      sceneExpect(role("link", { name: "Open verification page" })).toHaveAttr("href", SAFE_URL),
+      sceneExpect(role("link", { name: "Open verification page" })).toHaveAttr("target", "_blank"),
+      sceneExpect(role("link", { name: "Open verification page" })).toHaveAttr("rel", "noreferrer noopener"),
+      captureCommand("PollDeviceAuthorization", pollArgs),
+      Command.expectHas({ name: "PollDeviceAuthorization", args: pollArgs }),
+      Command.resolve(commands.poll, terminalPollMessage),
+      sceneExpect(text("Device code expired.")).toExist(),
+    );
+  }, 20_000);
+
+  it("a real minimal pending poll keeps the code and link after the first poll", async () => {
+    let pollCount = 0;
+    // SAFETY: this test stub serves the host readback/poll bodies; the production client owns the requests.
     const fetchImpl = (async (url: string) => {
       const href = String(url);
-      if (href.endsWith("/accounts/device")) return json(listBody);
-      if (href.includes("/accounts/device/poll")) {
-        pollCalls.push(href);
-        return json(pollBody);
+      if (href.endsWith("/accounts/device")) {
+        return json([{ ...pendingReadback(SAFE_URL), intervalSeconds: 1 }]);
       }
-      return json([]);
+      pollCount += 1;
+      return pollCount === 1
+        ? json({ authRequestId: "auth-pending", providerAccountId: ACCOUNT, retryAfterSeconds: 1, status: "pending" })
+        : json(expiredPollBody);
     }) as typeof fetch;
-    const container = document.createElement("div");
-    container.id = "s425-device-auth";
-    document.body.append(container);
-    const handle = mountShell(container, {
-      deviceAuthFetchImpl: fetchImpl,
-      readbackReaders: createReadbackClients({ fetchImpl }),
-    });
-    mounted.push({ container, handle });
-  };
-
-  const fieldAt = (index: number): HTMLInputElement => {
-    const section = document.querySelector<HTMLElement>('[data-route="device-authorization"]');
-    const fields = section === null ? [] : Array.from(section.querySelectorAll<HTMLInputElement>("input"));
-    const field = fields[index];
-    if (field === undefined) throw new Error("device-auth field " + index + " is missing");
-    return field;
-  };
-  const fill = (index: number, value: string): void => {
-    const field = fieldAt(index);
-    field.value = value;
-    field.dispatchEvent(new Event("input", { bubbles: true }));
-  };
-  const clickButton = (label: string): void => {
-    const section = document.querySelector<HTMLElement>('[data-route="device-authorization"]');
-    const button = section === null
-      ? undefined
-      : Array.from(section.querySelectorAll("button")).find((candidate) => candidate.textContent === label);
-    if (button === undefined) throw new Error("button " + label + " is missing");
-    button.click();
-  };
-  const startDeviceAuth = async (): Promise<void> => {
-    await waitFor(() => document.querySelector<HTMLElement>("[data-device-auth-start]"), "start button");
-    fill(0, "openai");
-    fill(2, "openai-codex-subscription");
-    fill(5, "gpt-6");
-    clickButton("Add model");
-    await waitFor(() => document.querySelector<HTMLElement>("[data-device-auth-start]"), "start button after draft");
-    document.querySelector<HTMLElement>("[data-device-auth-start]")?.click();
-  };
-
-  it("renders the host user code and a keyboard-focusable safe verification link while pending", async () => {
-    mountDeviceAuth([pendingReadback("https://auth.openai.com/device?user_code=ABCD-EFGH")]);
-    await startDeviceAuth();
-    const code = await waitFor(
-      () => document.querySelector<HTMLElement>("[data-device-auth-user-code]"),
-      "pending user code",
+    const commands = defineDeviceAuthCommands(createDeviceAuthClient({ fetchImpl }));
+    const restorePollArgs = { authRequestId: "auth-pending", delayMs: 1_000, intervalMs: 1_000, token: 2 };
+    const nextPollArgs = { authRequestId: "auth-pending", delayMs: 1_000, intervalMs: 1_000, token: 3 };
+    const readMessage = await Effect.runPromise(commands.read(readArgs).effect);
+    const pendingPollMessage = await Effect.runPromise(commands.poll(restorePollArgs).effect);
+    const terminalPollMessage = await Effect.runPromise(commands.poll(nextPollArgs).effect);
+    scene(
+      { update: shellUpdate, view },
+      given(shellModel({ deviceAuth: initialDeviceAuthState(), route: { _tag: "Providers" } })),
+      ...draftSteps(),
+      click(role("button", { name: "Start device authorization" })),
+      captureCommand("ReadDeviceAuthorizations", readArgs),
+      Command.expectHas({ name: "ReadDeviceAuthorizations", args: readArgs }),
+      Command.resolve(commands.read, readMessage),
+      sceneExpect(selector("[data-device-auth-user-code]")).toContainText("ABCD-EFGH"),
+      captureCommand("PollDeviceAuthorization", restorePollArgs),
+      Command.expectHas({ name: "PollDeviceAuthorization", args: restorePollArgs }),
+      Command.resolve(commands.poll, pendingPollMessage),
+      sceneExpect(selector("[data-device-auth-user-code]")).toContainText("ABCD-EFGH"),
+      sceneExpect(role("link", { name: "Open verification page" })).toHaveAttr("href", SAFE_URL),
+      captureCommand("PollDeviceAuthorization", nextPollArgs),
+      Command.expectHas({ name: "PollDeviceAuthorization", args: nextPollArgs }),
+      Command.resolve(commands.poll, terminalPollMessage),
     );
-    expect(code.textContent?.trim()).toBe("ABCD-EFGH");
-    const link = await waitFor(
-      () => document.querySelector<HTMLAnchorElement>("a[data-device-auth-verification-link]"),
-      "verification link",
-    );
-    expect(link.tagName).toBe("A");
-    expect(link.getAttribute("href")).toBe("https://auth.openai.com/device?user_code=ABCD-EFGH");
-    expect(link.getAttribute("target")).toBe("_blank");
-    expect(String(link.getAttribute("rel"))).toContain("noreferrer");
-    expect(link.tabIndex).toBe(0);
-  });
-
-  it("still renders the code and verification link after the first real pending poll", async () => {
-    const pollCalls: string[] = [];
-    mountDeviceAuth(
-      [{ ...pendingReadback("https://auth.openai.com/device?user_code=ABCD-EFGH"), intervalSeconds: 1 }],
-      {
-        authRequestId: "auth-pending",
-        providerAccountId: "openai.personal.openai-codex-subscription",
-        retryAfterSeconds: 1,
-        status: "pending",
-      },
-      pollCalls,
-    );
-    await startDeviceAuth();
-    const code = await waitFor(
-      () => document.querySelector<HTMLElement>("[data-device-auth-user-code]"),
-      "pending user code before the poll",
-    );
-    expect(code.textContent?.trim()).toBe("ABCD-EFGH");
-    await waitFor(() => (pollCalls.length > 0 ? document.body : undefined), "first device poll");
-    await new Promise((resolve) => setTimeout(resolve, 80));
-    expect(
-      document.querySelector<HTMLElement>("[data-device-auth-user-code]")?.textContent?.trim(),
-    ).toBe("ABCD-EFGH");
-    expect(
-      document.querySelector<HTMLAnchorElement>("a[data-device-auth-verification-link]")?.getAttribute("href"),
-    ).toBe("https://auth.openai.com/device?user_code=ABCD-EFGH");
-  });
+  }, 20_000);
 
   it("refuses an unsafe verification URL protocol instead of linking it", async () => {
-    mountDeviceAuth([pendingReadback("javascript:alert('s425')")]);
-    await startDeviceAuth();
-    await waitFor(
-      () => document.querySelector<HTMLElement>("[data-device-auth-verification-unavailable]"),
-      "verification unavailable notice",
+    // SAFETY: this test stub serves the host readback/poll bodies; the production client owns the requests.
+    const fetchImpl = (async (url: string) =>
+      String(url).endsWith("/accounts/device")
+        ? json([pendingReadback("javascript:alert('s442')")])
+        : json(expiredPollBody)) as typeof fetch;
+    const commands = defineDeviceAuthCommands(createDeviceAuthClient({ fetchImpl }));
+    const pollArgs = { authRequestId: "auth-pending", delayMs: 5_000, intervalMs: 5_000, token: 2 };
+    const readMessage = await Effect.runPromise(commands.read(readArgs).effect);
+    const terminalPollMessage = await Effect.runPromise(commands.poll(pollArgs).effect);
+    scene(
+      { update: shellUpdate, view },
+      given(shellModel({ deviceAuth: initialDeviceAuthState(), route: { _tag: "Providers" } })),
+      ...draftSteps(),
+      click(role("button", { name: "Start device authorization" })),
+      captureCommand("ReadDeviceAuthorizations", readArgs),
+      Command.resolve(commands.read, readMessage),
+      sceneExpect(text("Verification link unavailable.")).toExist(),
+      sceneExpect(role("link", { name: "Open verification page" })).toBeAbsent(),
+      sceneExpect(selector('a[href^="javascript:"]')).toBeAbsent(),
+      captureCommand("PollDeviceAuthorization", pollArgs),
+      Command.expectHas({ name: "PollDeviceAuthorization", args: pollArgs }),
+      Command.resolve(commands.poll, terminalPollMessage),
     );
-    expect(document.querySelector('a[data-device-auth-verification-link]')).toBeNull();
-    expect(document.querySelector('[href^="javascript:"]')).toBeNull();
+  }, 20_000);
+
+  it("cancel clears the pending session and a rendered start click re-dispatches the read", async () => {
+    // SAFETY: this test stub answers the device read with the host error body; the production client owns the request.
+    const fetchImpl = (async () =>
+      new Response(JSON.stringify({ error: "device read failed" }), {
+        headers: { "content-type": "application/json" },
+        status: 500,
+      })) as typeof fetch;
+    const commands = defineDeviceAuthCommands(createDeviceAuthClient({ fetchImpl }));
+    const restartReadArgs = { token: 4 };
+    const failedReadMessage = await Effect.runPromise(commands.read(restartReadArgs).effect);
+    scene(
+      { update: shellUpdate, view },
+      given(shellModel({
+        deviceAuth: {
+          ...initialDeviceAuthState(),
+          draft,
+          inflight: true,
+          session: { ...pendingReadback(SAFE_URL), intervalSeconds: 5, status: "pending" as const },
+          status: "pending" as const,
+          token: 2,
+        },
+        route: { _tag: "Providers" },
+      })),
+      sceneExpect(role("button", { name: "Cancel" })).toExist(),
+      click(role("button", { name: "Cancel" })),
+      Command.expectNone(),
+      sceneExpect(role("button", { name: "Cancel" })).toBeAbsent(),
+      sceneExpect(role("button", { name: "Start device authorization" })).toBeEnabled(),
+      click(role("button", { name: "Start device authorization" })),
+      captureCommand("ReadDeviceAuthorizations", restartReadArgs),
+      Command.expectHas({ name: "ReadDeviceAuthorizations", args: restartReadArgs }),
+      Command.resolve(commands.read, failedReadMessage),
+      sceneExpect(text("device read failed")).toExist(),
+    );
+  });
+
+  it("renders the pending verification link as a keyboard-focusable anchor (tabindex 0)", async () => {
+    const pendingModel = shellModel({
+      deviceAuth: {
+        ...initialDeviceAuthState(),
+        draft,
+        inflight: true,
+        session: { ...pendingReadback(SAFE_URL), status: "pending" as const },
+        status: "pending" as const,
+        token: 1,
+      },
+      route: { _tag: "Providers" },
+    });
+    const rendered = await Effect.runPromise(renderToString({
+      init: () => ({ model: pendingModel, commands: [] }),
+      view,
+    }, { isHydratable: false }));
+    const container = document.createElement("div");
+    container.innerHTML = rendered.html;
+    const link = container.querySelector<HTMLAnchorElement>("a[data-device-auth-verification-link]");
+    expect(link?.tagName).toBe("A");
+    expect(link?.tabIndex).toBe(0);
+    expect(link?.getAttribute("href")).toBe(SAFE_URL);
+    expect(link?.getAttribute("target")).toBe("_blank");
+    expect(link?.getAttribute("rel")).toBe("noreferrer noopener");
   });
 });

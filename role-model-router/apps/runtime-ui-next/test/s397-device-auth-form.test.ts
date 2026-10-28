@@ -1,9 +1,21 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { Effect } from "effect";
+import { describe, expect, it } from "vitest";
 
-import { mountShell } from "../src/mount";
-import { createReadbackClients } from "../src/readback";
+import {
+  Command,
+  click,
+  expect as sceneExpect,
+  given,
+  role,
+  scene,
+  tap,
+  text,
+  type SceneSimulation,
+} from "@role-model-router/foldkit/scene";
 
+import { defineDeviceAuthCommands } from "../src/commands";
 import { Message } from "../src/message";
+import type { Model } from "../src/model";
 import {
   activationPlanForConnectedSession,
   createDeviceAuthClient,
@@ -12,6 +24,7 @@ import {
   validateDeviceAuthDraft,
   type DeviceAuthSession,
 } from "../src/device-auth";
+import { view } from "../src/view";
 import { shellModel, shellUpdate } from "./support/runtime-shell";
 
 /**
@@ -239,44 +252,63 @@ describe("S396a device-authorization update transitions", () => {
   });
 });
 
-describe("S398 device-authorization retry control (DOM)", () => {
-  const mounted: Array<{ container: HTMLElement; handle: { dispose(): void } }> = [];
-  afterEach(() => {
-    for (const entry of mounted.splice(0)) { entry.handle.dispose(); entry.container.remove(); }
-    window.history.replaceState({}, "", "/");
-  });
-  const waitFor = async (read: () => HTMLElement | undefined, label: string): Promise<HTMLElement> => {
-    const end = Date.now() + 3000;
-    while (Date.now() < end) {
-      const value = read();
-      if (value !== undefined) return value;
-      await new Promise((resolve) => setTimeout(resolve, 10));
-    }
-    throw new Error("Timed out waiting for " + label);
-  };
-  it("shows a retry control after a failed read and retries the device read on click", async () => {
-    window.history.replaceState({}, "", "/control/providers");
-    const deviceReads: string[] = [];
-    // SAFETY: this test stub only reads the URL; the production client calls fetch with the same signature.
-    const fetchImpl = (async (url: string) => {
-      if (url.includes("/accounts/device")) {
-        deviceReads.push(url);
-        return new Response(JSON.stringify({ error: "device read failed" }), { headers: { "content-type": "application/json" }, status: 500 });
-      }
-      return new Response(JSON.stringify([]), { headers: { "content-type": "application/json" }, status: 200 });
+describe("S398 device-authorization retry control (scene + real client)", () => {
+  /**
+   * S440: replaces the S398 mount/.click() drive. The rendered click goes through the real view and
+   * update (scene dispatches the VNode handler, not a synthetic DOM click). Scene does not execute a
+   * Command's client, so the test first runs the production Command against the real client and feeds
+   * its ACTUAL result Message back through Command.resolve - never a hand-built substitute.
+   */
+
+  it("start click dispatches the read, its real client result renders retry, and retry click re-dispatches it", async () => {
+    const deviceReads: Array<{ body: string | undefined; method: string; url: string }> = [];
+    // SAFETY: this test stub only records the request; the production client calls fetch with the same signature.
+    const fetchImpl = (async (url: string, init?: { body?: string; method?: string }) => {
+      deviceReads.push({ body: init?.body, method: init?.method ?? "GET", url: String(url) });
+      return new Response(JSON.stringify({ error: "device read failed" }), { headers: { "content-type": "application/json" }, status: 500 });
     }) as typeof fetch;
-    const container = document.createElement("div");
-    container.id = "s398-retry";
-    document.body.append(container);
-    const handle = mountShell(container, { deviceAuthFetchImpl: fetchImpl, readbackReaders: createReadbackClients({ fetchImpl }) });
-    mounted.push({ container, handle });
-    const start = await waitFor(() => document.querySelector<HTMLElement>("[data-device-auth-start]") ?? undefined, "start button");
-    start.click();
-    const retry = await waitFor(() => document.querySelector<HTMLElement>("[data-device-auth-retry]") ?? undefined, "retry button");
-    expect(document.querySelector("[data-device-auth-state='error']")).not.toBeNull();
-    const before = deviceReads.length;
-    retry.click();
-    await waitFor(() => (deviceReads.length > before ? retry : undefined), "retry device read");
-    expect(deviceReads.length).toBeGreaterThan(before);
+    const commands = defineDeviceAuthCommands(createDeviceAuthClient({ fetchImpl }));
+    // S442: ONE exact args object per read is used to execute the production Command against the real
+    // client AND asserted in the scene; the actual returned Message is replayed with Command.resolve.
+    // Scene does not execute the client (honest split: scene = view -> update -> command args).
+    type ReadCommandArgs = Readonly<{ token: number }>;
+    type ShellMessage = Parameters<typeof shellUpdate>[1];
+    type ShellScene = SceneSimulation<Model, ShellMessage>;
+    const startReadArgs: ReadCommandArgs = { token: 1 };
+    const retryReadArgs: ReadCommandArgs = { token: 2 };
+    const startReadResult = await Effect.runPromise(commands.read(startReadArgs).effect);
+    const retryReadResult = await Effect.runPromise(commands.read(retryReadArgs).effect);
+    expect(startReadResult._tag).toBe("DeviceAuthFailed");
+    expect(retryReadResult._tag).toBe("DeviceAuthFailed");
+    // Retry exact request surface and multiplicity: two GETs, no body, the device readback path.
+    expect(deviceReads).toEqual([
+      { body: undefined, method: "GET", url: "/api/role-model/accounts/device" },
+      { body: undefined, method: "GET", url: "/api/role-model/accounts/device" },
+    ]);
+    scene(
+      { update: shellUpdate, view },
+      given(shellModel({
+        deviceAuth: { ...initialDeviceAuthState(), draft },
+        route: { _tag: "Providers" },
+      })),
+      sceneExpect(role("button", { name: "Start device authorization" })).toExist(),
+      click(role("button", { name: "Start device authorization" })),
+      tap((simulation: ShellScene) => {
+        const pending = [...simulation.commands].reverse().find((command) => command.name === "ReadDeviceAuthorizations");
+        expect(pending?.args).toEqual(startReadArgs);
+      }),
+      Command.expectHas({ name: "ReadDeviceAuthorizations", args: startReadArgs }),
+      Command.resolve(commands.read, startReadResult),
+      sceneExpect(text("device read failed")).toExist(),
+      sceneExpect(role("button", { name: "Retry" })).toExist(),
+      click(role("button", { name: "Retry" })),
+      tap((simulation: ShellScene) => {
+        const pending = [...simulation.commands].reverse().find((command) => command.name === "ReadDeviceAuthorizations");
+        expect(pending?.args).toEqual(retryReadArgs);
+      }),
+      Command.expectHas({ name: "ReadDeviceAuthorizations", args: retryReadArgs }),
+      Command.resolve(commands.read, retryReadResult),
+      sceneExpect(text("device read failed")).toExist(),
+    );
   });
 });

@@ -1,0 +1,11 @@
+# S442 lint evidence — anti_slop_lint (15 vendored rules), ABSOLUTE targets, filesScanned>0
+
+file: role-model-router/apps/runtime-ui-next/test/s397-device-auth-form.test.ts
+  status: clean; filesScanned: 1; rulesRun: 15; findings: 0
+  rules: {}
+
+file: role-model-router/apps/runtime-ui-next/test/s425-device-auth-correctness.test.ts
+  status: clean; filesScanned: 1; rulesRun: 15; findings: 0
+  rules: {}
+
+Named command-args union + SceneSimulation-typed tap replace the previous Record<string, unknown> dictionaries; no new finding.

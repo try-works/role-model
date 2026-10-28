@@ -1,0 +1,14 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s397-device-auth-form.test.ts (15 tests) 166ms
+ ✓ test/s425-device-auth-correctness.test.ts (17 tests) 12471ms
+   ✓ S442 pending view (scene + real client bridge) > start click restores the host pending session and renders the code + safe link  5192ms
+   ✓ S442 pending view (scene + real client bridge) > a real minimal pending poll keeps the code and link after the first poll  2065ms
+   ✓ S442 pending view (scene + real client bridge) > refuses an unsafe verification URL protocol instead of linking it  5052ms
+
+ Test Files  2 passed (2)
+      Tests  32 passed (32)
+   Start at  07:01:52
+   Duration  21.45s (transform 4.58s, setup 0ms, collect 13.96s, tests 12.64s, environment 1.66s, prepare 697ms)
+

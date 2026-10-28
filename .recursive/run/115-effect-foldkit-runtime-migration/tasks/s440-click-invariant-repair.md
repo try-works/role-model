@@ -1,0 +1,9 @@
+# S440 — preserve coverage while repairing click invariants
+
+Status: pending
+TDD Mode: strict (testmaintenance baselineRED)
+Public basisd6043768; S420audit/S438checkpoint/02plan scene-first guidance. ExistingS247 ratchet currently31clicks>27, perfileunregistered s397/s425. Expectedwrites ONLY test/s397-device-auth-form.test.ts,test/s425-device-auth-correctness.test.ts and NEW dedicatedscene tests if needed. May read allsupport/scenes, but do NOT change source/helpers or s247budget. Endpointauthor owns source and s404, no overlaps.
+
+Baseline run node --test test/s247-click-budget.test.mjs and capture actual3fail BEFORE editing. Convert appropriate new authmount clickdriven scenarios to genuine Foldkit scene/story steps capturing/rendering actual viewevents+update+command contracts using existing support. Preserve exactrequest paths/bodies, viewevent-to-command integration, retry/cancel/restore/poll code+link and no-double-submit assertions. No delete/commentout coverage. NO replacing .click() with disguised dispatchEvent/newMouseEvent/call/bracketaccess/helper containing equivalentclick outside scan. No addingbudget/renamingfiles/extensions/hidingtests. If scene tool cannot prove same mount+client behavior, STOP with exact evidence, propose a design; do not forcegreen by hiding the test. A genuine dispatchOf rendered Html event through scene and running real command/client is acceptable per existing scene pattern, not hand-made state-only substitute.
+
+Need mutation sensitivity: a temporary disposable copy/probe (no sourceoverwrite) with retry/start eventwiring disconnected must fail retained integrationassertion; report if infeasible, donot fabricate. Then run bothauthsuites/newscene+all20nodeinvariants+UItsc, capture s440-green; anti_slop_lint absnonempty. Live verifyFlash; sharedtasklist/get/claim; no commits; finalhashes freezes. Independentreview mandatory. If 0clickratchet can be achieved only losingUIcoverage, STOP.

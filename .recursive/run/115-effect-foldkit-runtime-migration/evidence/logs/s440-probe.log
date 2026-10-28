@@ -1,0 +1,18 @@
+# S440 mutation-sensitivity probes (DISPOSABLE COPIES ONLY; worktree untouched)
+Each copy is role-model-router/apps/runtime-ui-next with tsconfig localized and node_modules junctioned; only the COPY's src/control-view.ts is mutated.
+---- CASE start-disconnected: removed=1 remaining-other-handler=1
+ FAIL  test/s425-device-auth-correctness.test.ts > S440 pending view (scene + real client) > start click restores the host pending session and renders the code + safe link
+Error: I found an element matching button "Start device authorization" but neither it nor any ancestor has a click handler.
+ FAIL  test/s425-device-auth-correctness.test.ts > S440 pending view (scene + real client) > a real minimal pending poll keeps the code and link after the first poll
+Error: I found an element matching button "Start device authorization" but neither it nor any ancestor has a click handler.
+ FAIL  test/s425-device-auth-correctness.test.ts > S440 pending view (scene + real client) > refuses an unsafe verification URL protocol instead of linking it
+Error: I found an element matching button "Start device authorization" but neither it nor any ancestor has a click handler.
+ FAIL  test/s425-device-auth-correctness.test.ts > S440 pending view (scene + real client) > cancel clears the pending session and a rendered start click re-dispatches the read
+Error: I found an element matching button "Start device authorization" but neither it nor any ancestor has a click handler.
+exit=1
+---- CASE retry-disconnected: removed=1 remaining-other-handler=1
+ FAIL  test/s397-device-auth-form.test.ts > S398 device-authorization retry control (scene + real client) > start click dispatches the read, its real client result renders retry, and retry click re-dispatches it
+Error: I found an element matching button "Retry" but neither it nor any ancestor has a click handler.
+ Test Files  1 failed (1)
+      Tests  1 failed | 14 passed (15)
+exit=1

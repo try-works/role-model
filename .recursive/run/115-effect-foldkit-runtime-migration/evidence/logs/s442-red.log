@@ -1,0 +1,56 @@
+# S442 RED — the replayed poll result must be executed with the ACTUAL generated schedule args
+command: vitest run test/s425-device-auth-correctness.test.ts -t 'S442 baseline'
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s425-device-auth-correctness.test.ts (17 tests | 1 failed | 16 skipped) 34ms
+   ↓ S425 host device poll parsing > keeps a real host failed poll status instead of normalizing it to pending
+   ↓ S425 host device poll parsing > keeps a real host expired poll status and its reason
+   ↓ S425 host device poll parsing > keeps the transient pending reason and honors the host retry interval
+   ↓ S425 host device poll parsing > ignores a non-positive host retry interval instead of busy-looping
+   ↓ S425 host device poll parsing > keeps the readback user code and verification URL the pending view needs
+   ↓ S425 failed/expired poll transitions > surfaces the host failure reason and stops polling
+   ↓ S425 failed/expired poll transitions > surfaces the expired reason instead of a connected claim
+   ↓ S425 failed/expired poll transitions > uses the host retry interval for the next pending poll
+   ↓ S432 pending poll keeps the authorization challenge > keeps the restored userCode and verification URL after a minimal pending poll for the same authorization
+   ↓ S432 pending poll keeps the authorization challenge > never inherits another authorization's challenge
+   ↓ S432 pending poll keeps the authorization challenge > keeps a terminal poll's own reason without resurrecting the old pending challenge
+   ↓ S425 cancel clears inflight and fences stale results > permits a new start after cancel while a late poll stays fenced
+   ↓ S440 pending view (scene + real client) > start click restores the host pending session and renders the code + safe link
+   ↓ S440 pending view (scene + real client) > a real minimal pending poll keeps the code and link after the first poll
+   ↓ S440 pending view (scene + real client) > refuses an unsafe verification URL protocol instead of linking it
+   ↓ S440 pending view (scene + real client) > cancel clears the pending session and a rendered start click re-dispatches the read
+   × S442 baseline probe (removed after RED capture) > S442 baseline: the poll result must be executed with the generated schedule args 29ms
+     → expected { authRequestId: 'auth-pending', …(3) } to deeply equal { authRequestId: 'auth-pending', …(3) }
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s425-device-auth-correctness.test.ts > S442 baseline probe (removed after RED capture) > S442 baseline: the poll result must be executed with the generated schedule args
+AssertionError: expected { authRequestId: 'auth-pending', …(3) } to deeply equal { authRequestId: 'auth-pending', …(3) }
+
+- Expected
++ Received
+
+  {
+    "authRequestId": "auth-pending",
+-   "delayMs": 5000,
+-   "intervalMs": 5000,
++   "delayMs": 0,
++   "intervalMs": 1000,
+    "token": 2,
+  }
+
+ ❯ test/s425-device-auth-correctness.test.ts:421:30
+    419|     // WHAT THE SCENE GENERATED (restore of a readback session with in…
+    420|     const generatedPollArgs = { authRequestId: "auth-pending", delayMs…
+    421|     expect(executedPollArgs).toEqual(generatedPollArgs);
+       |                              ^
+    422|   });
+    423| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 16 skipped (17)
+EXIT=
