@@ -220,7 +220,8 @@ export type CompositionServices =
   | Drain
   | Benchmark
   | Cli
-  | MetadataCacheService;
+  | MetadataCacheService
+  | Readiness;
 
 export const DEFAULT_COMPOSITION_CONFIG: CompositionConfigContract = Object.freeze({
   channel: "development",
@@ -381,6 +382,81 @@ export const composeMetadataCacheOwner = (options?: {
  */
 export const metadataConfigIdentity = <T extends object>(config: T | null | undefined): string =>
   createHash("sha256").update(JSON.stringify(config ?? null)).digest("hex");
+
+// S324 (R27 early readiness): the DAG owns the bootstrap readiness transition and the Server admission gate.
+export type ReadinessStatus = "pending" | "ready" | "failed";
+
+export interface ReadinessState {
+  readonly status: ReadinessStatus;
+  readonly message?: string;
+}
+
+export interface ReadinessContract {
+  readonly id: string;
+  readonly state: () => ReadinessState;
+  readonly ready: () => boolean;
+  readonly markReady: () => void;
+  readonly markFailed: (message: string) => void;
+}
+
+export type ServerAdmissionReadiness = ReadinessContract;
+
+/** S325: the exact host-gate refusal bytes (writeJson appends one newline; message only when truthy). */
+export const startupReadinessRefusalBody = (state: { readonly status: string; readonly message?: string }): string => {
+  // Field order is the host contract: error, status, message. A falsy message omits the field.
+  const body = {
+    error: "runtime_initializing",
+    status: state.status,
+    message: state.message,
+  };
+  if (!state.message) Reflect.deleteProperty(body, "message");
+  return JSON.stringify(body) + "\n";
+};
+
+const composedReadinessOwners = new WeakSet<object>();
+
+export class Readiness extends Context.Service<Readiness, ReadinessContract>()("Readiness") {}
+
+const makeReadinessOwner = (id: string): ReadinessContract => {
+  const pending: ReadinessState = { status: "pending" };
+  let state: ReadinessState = pending;
+  const owner: ReadinessContract = {
+    id,
+    markFailed: (message) => {
+      if (state.status === "pending") state = { message, status: "failed" };
+    },
+    markReady: () => {
+      if (state.status === "pending") state = { status: "ready" };
+    },
+    ready: () => state.status === "ready",
+    state: () => state,
+  };
+  composedReadinessOwners.add(owner);
+  return Object.freeze(owner);
+};
+
+export const isComposedReadiness = (value: ReadinessContract): boolean =>
+  composedReadinessOwners.has(value);
+
+export const assertComposedReadiness = (value: ReadinessContract): ReadinessContract => {
+  if (!isComposedReadiness(value)) {
+    throw new Error("Server readiness must be a composed readiness owner (no fallback owner)");
+  }
+  return value;
+};
+
+export const readinessLayer = Layer.effect(
+  Readiness,
+  Effect.sync(() => makeReadinessOwner("readiness:" + DEFAULT_COMPOSITION_CONFIG.instanceId)),
+);
+
+export const composeReadinessOwner = (): ReadinessContract =>
+  Effect.runSync(
+    Effect.provide(
+      Readiness.use((owner) => Effect.succeed(owner)),
+      CompositionLayer,
+    ),
+  );
 
 export const artifactAuthorityLayer: Layer.Layer<ArtifactStoreAuthority, never, CompositionConfig> =
   Layer.effect(
@@ -598,14 +674,14 @@ const ownerLayer = Layer.provideMerge(cliLayer, serverOwnerLayer);
  * and every leaf is constructed once by `provideMerge`.
  */
 export const CompositionLayer: Layer.Layer<CompositionServices, never, never> = Layer.provideMerge(
-  Layer.mergeAll(ownerLayer, metadataCacheLayer),
+  Layer.mergeAll(ownerLayer, metadataCacheLayer, readinessLayer),
   dependencyLayer,
 );
 
 export const makeCompositionLayer = (
   config: CompositionConfigContract,
 ): Layer.Layer<CompositionServices, never, never> =>
-  Layer.provideMerge(Layer.mergeAll(ownerLayer, metadataCacheLayer), Layer.provideMerge(leafLayers, configLayer(config)));
+  Layer.provideMerge(Layer.mergeAll(ownerLayer, metadataCacheLayer, readinessLayer), Layer.provideMerge(leafLayers, configLayer(config)));
 
 export const makeConfigLayer = (
   config: CompositionConfigContract,
@@ -987,6 +1063,8 @@ export const composeServerOwner = (input: {
   readonly backend: BackendOwner;
   readonly handlerFactory: (options: StartBridgeServerOptions) => (request: never, response: never) => Promise<void>;
   readonly transport: ServerTransport;
+  /** DAG readiness owner; when present the Server refuses admission until ready (same 503 shape). */
+  readonly readiness?: ServerAdmissionReadiness;
   /** Bounded join/drain before interrupt (default 10s). */
   readonly joinTimeoutMs?: number;
 }): ServerOwner => {
@@ -1000,7 +1078,35 @@ export const composeServerOwner = (input: {
     backend: brandedBackend,
     id: "server-owner:" + DEFAULT_COMPOSITION_CONFIG.instanceId,
     async start() {
-      const listener = input.transport.createListener(backend.options, input.handlerFactory);
+      const readiness = input.readiness === undefined ? undefined : assertComposedReadiness(input.readiness);
+      // SAFETY: the gate preserves the host handler's request/response contract; the DAG only inspects
+      // method/url and writes the exact existing 503 readiness body before delegating.
+      const gatedFactory = (serverOptions: StartBridgeServerOptions) => {
+        const inner = input.handlerFactory(serverOptions);
+        if (readiness === undefined) return inner;
+        return async (request: never, response: never) => {
+          const state = readiness.state();
+          // SAFETY: the transport hands the host's opaque request; this reads only method/url.
+          const req = request as { method?: string; url?: string };
+          const url = new URL(req.url ?? "/", "http://localhost");
+          const isStaticUi =
+            Boolean(serverOptions.staticRoot) &&
+            req.method === "GET" &&
+            !url.pathname.startsWith("/api/") &&
+            !url.pathname.startsWith("/v1/") &&
+            url.pathname !== "/logs" &&
+            !url.pathname.startsWith("/logs/");
+          if (state.status !== "ready" && !isStaticUi) {
+            // SAFETY: the transport hands the host's opaque response; this writes the exact host 503 bytes.
+            const res = response as { writeHead: (status: number, headers: Record<string, string>) => void; end?: (body?: string) => void };
+            res.writeHead(503, { "content-type": "application/json" });
+            res.end?.(startupReadinessRefusalBody(state));
+            return;
+          }
+          await inner(request, response);
+        };
+      };
+      const listener = input.transport.createListener(backend.options, gatedFactory);
       const server = input.transport.createServer(listener, backend.options);
       handle = server;
       const port = await input.transport.listen(server, backend.options.host, backend.options.port);

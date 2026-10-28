@@ -282,6 +282,7 @@ import {
   type BackendOwner,
   type BootstrapContract,
   composeMetadataCacheOwner,
+  startupReadinessRefusalBody,
   metadataCacheKey,
   metadataConfigIdentity,
   type ServerOwner,
@@ -17531,11 +17532,8 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       url.pathname !== "/logs" &&
       !url.pathname.startsWith("/logs/");
     if (startupReadiness && !startupReadiness.ready && !isPotentialStaticUiRequest) {
-      writeJson(response, 503, {
-        error: "runtime_initializing",
-        status: startupReadiness.status,
-        ...(startupReadiness.message ? { message: startupReadiness.message } : {}),
-      });
+      // S325: byte-for-byte the same refusal bytes as the DAG admission gate (shared helper).
+      writeText(response, 503, startupReadinessRefusalBody(startupReadiness), "application/json");
       return;
     }
 
@@ -20741,6 +20739,8 @@ export const recordRouteCaptureAtHostEdge = async (
  * createServer (with the trace wrapper), listen and close construction stay in this file; the DAG owns the
  * lifecycle ordering, identity and the no-fallback refusal, never the http construction.
  */
+const closingServers = new WeakMap<object, Promise<void>>();
+
 export const bridgeServerTransport: ServerTransport = {
   createListener: (options, handlerFactory) =>
     // SAFETY: the handler factory is the host's real request handler; the DAG only passes it through,
@@ -20793,22 +20793,38 @@ export const bridgeServerTransport: ServerTransport = {
       (requestListener as (incoming: IncomingMessage, outgoing: ServerResponse) => void)(request, response);
     }),
   listen: (server, host, port) => listen(server as Server, host, port),
-  close: (server) =>
-    new Promise<void>((resolve, reject) => {
-      (server as Server).close((error) => {
+  stopAccepting: (server) => {
+    const httpServer = server as Server;
+    if (!closingServers.has(httpServer)) {
+      closingServers.set(httpServer, new Promise<void>((resolve) => { httpServer.close(() => resolve()); }));
+    }
+    return Promise.resolve();
+  },
+  join: (server) => closingServers.get(server as Server) ?? Promise.resolve(),
+  interrupt: (server) => {
+    (server as Server).closeAllConnections?.();
+  },
+  close: (server) => {
+    const httpServer = server as Server;
+    const pending = closingServers.get(httpServer);
+    if (pending !== undefined) return pending;
+    return new Promise<void>((resolve, reject) => {
+      httpServer.close((error) => {
         if (error) {
           reject(error);
           return;
         }
         resolve();
       });
-    }),
+    });
+  },
 };
 
 /** S313: lifecycle inputs for the facade (tests inject the transport/handler factory/owner observer). */
 export interface BridgeServerLifecycleOptions {
   readonly backend?: BackendOwner;
   readonly transport?: ServerTransport;
+  readonly readiness?: import("./composition-dag.js").ReadinessContract;
   readonly handlerFactory?: (options: StartBridgeServerOptions) => BridgeRequestHandler;
   readonly onServerOwner?: (owner: ServerOwner) => void;
   /** TEST SEAM ONLY: bare test options that never went through composeBackendOwner may get the branded
@@ -20840,6 +20856,7 @@ export async function startBridgeServer(
     // SAFETY: createRequestHandler is the host's real request handler; the DAG only carries it to the transport.
     handlerFactory: (lifecycle?.handlerFactory ?? createRequestHandler) as never,
     transport: lifecycle?.transport ?? bridgeServerTransport,
+    ...(lifecycle?.readiness === undefined ? {} : { readiness: lifecycle.readiness }),
   });
   lifecycle?.onServerOwner?.(owner);
   const started = await owner.start();

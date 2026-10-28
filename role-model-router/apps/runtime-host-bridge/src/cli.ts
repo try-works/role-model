@@ -31,7 +31,7 @@ import {
   resolveBridgeServerOptions,
   startBridgeServer,
 } from "./index.js";
-import { assertComposedBackendOwner, composeBackendOwner, onceClose } from "./composition-dag.js";
+import { assertComposedBackendOwner, composeBackendOwner, composeReadinessOwner, onceClose } from "./composition-dag.js";
 import { validateRun88PrivateDistributionIdentity } from "./kw-private-loader.js";
 import {
   describeRouterPolicyResolution,
@@ -5112,6 +5112,8 @@ export async function main(): Promise<void> {
    * itself here, and shutdown/failure release through this scope instead of hand-picking.
    */
   const hostScope = createHostRuntimeScope();
+  // S324 (R27 early readiness): the production readiness owner consumed by the Server admission gate.
+  const readinessOwner = composeReadinessOwner();
   // S321/S322 (R27): backend teardown runs through the DAG Backend close member; the shared idempotent
   // closer closes the packaged SCOPE (the acquireRelease finalizer owns the runtime), so the DAG path and
   // the later hostScope path can never close it twice.
@@ -5132,6 +5134,7 @@ export async function main(): Promise<void> {
     bootstrapState.status = "failed";
     bootstrapState.message =
       error instanceof Error ? error.message : "extension runtime failed after startup";
+    readinessOwner.markFailed(bootstrapState.message);
     backend = null;
     extensionRuntimeRef.current = null;
     stopExtensionRuntimeWatchdog?.();
@@ -5242,7 +5245,7 @@ export async function main(): Promise<void> {
       },
       closePackagedRuntimeOnce,
     );
-    return startBridgeServer(serverOptions, backendOwner === undefined ? undefined : { backend: backendOwner });
+    return startBridgeServer(serverOptions, backendOwner === undefined ? undefined : { backend: backendOwner, readiness: readinessOwner });
   };
 
   /**
@@ -12190,6 +12193,7 @@ export async function main(): Promise<void> {
         await Effect.runPromise(Scope.close(backendScope, Exit.void));
       });
       bootstrapState.status = "ready";
+    readinessOwner.markReady();
       delete bootstrapState.message;
     }
   } catch (error) {

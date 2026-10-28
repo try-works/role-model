@@ -1,0 +1,93 @@
+COMMAND: node vitest run test/s324-readiness.test.ts (S324 RED: pre-implementation)
+EXIT_CODE=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/s324-readiness.test.ts (5 tests | 5 failed) 21ms
+   × S324 early readiness owner and admission gate > pending -> ready transition 5ms
+     → (0 , composeReadinessOwner) is not a function
+   × S324 early readiness owner and admission gate > pending -> failed transition carries the message and never becomes ready 1ms
+     → (0 , composeReadinessOwner) is not a function
+   × S324 early readiness owner and admission gate > server admission is refused with the existing 503 shape while pending, served after ready 1ms
+     → (0 , composeReadinessOwner) is not a function
+   × S324 early readiness owner and admission gate > failed readiness is refused with the message and static UI assets stay allowed 1ms
+     → (0 , composeReadinessOwner) is not a function
+   × S324 early readiness owner and admission gate > an unbranded readiness object fails closed (no fallback owner) 11ms
+     → expected [Function] to throw an error
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s324-readiness.test.ts > S324 early readiness owner and admission gate > pending -> ready transition
+TypeError: (0 , composeReadinessOwner) is not a function
+ ❯ test/s324-readiness.test.ts:55:23
+     53| describe("S324 early readiness owner and admission gate", () => {
+     54|   test("pending -> ready transition", () => {
+     55|     const readiness = composeReadinessOwner();
+       |                       ^
+     56|     expect(readiness.state().status).toBe("pending");
+     57|     expect(readiness.ready()).toBe(false);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  test/s324-readiness.test.ts > S324 early readiness owner and admission gate > pending -> failed transition carries the message and never becomes ready
+TypeError: (0 , composeReadinessOwner) is not a function
+ ❯ test/s324-readiness.test.ts:64:23
+     62| 
+     63|   test("pending -> failed transition carries the message and never bec…
+     64|     const readiness = composeReadinessOwner();
+       |                       ^
+     65|     readiness.markFailed("bootstrap exploded");
+     66|     expect(readiness.state()).toEqual({ message: "bootstrap exploded",…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  test/s324-readiness.test.ts > S324 early readiness owner and admission gate > server admission is refused with the existing 503 shape while pending, served after ready
+TypeError: (0 , composeReadinessOwner) is not a function
+ ❯ test/s324-readiness.test.ts:72:23
+     70| 
+     71|   test("server admission is refused with the existing 503 shape while …
+     72|     const readiness = composeReadinessOwner();
+       |                       ^
+     73|     expect(isComposedReadiness(readiness)).toBe(true);
+     74|     const captured: { listener?: (request: unknown, response: unknown)…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  test/s324-readiness.test.ts > S324 early readiness owner and admission gate > failed readiness is refused with the message and static UI assets stay allowed
+TypeError: (0 , composeReadinessOwner) is not a function
+ ❯ test/s324-readiness.test.ts:95:23
+     93| 
+     94|   test("failed readiness is refused with the message and static UI ass…
+     95|     const readiness = composeReadinessOwner();
+       |                       ^
+     96|     readiness.markFailed("boom");
+     97|     const captured: { listener?: (request: unknown, response: unknown)…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  test/s324-readiness.test.ts > S324 early readiness owner and admission gate > an unbranded readiness object fails closed (no fallback owner)
+AssertionError: expected [Function] to throw an error
+
+- Expected: 
+null
+
++ Received: 
+undefined
+
+ ❯ test/s324-readiness.test.ts:121:7
+    119|         transport: makeTransport({}),
+    120|       }),
+    121|     ).toThrow(/composed Readiness/);
+       |       ^
+    122|   });
+    123| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed (5)
+   Start at  08:26:07
+   Duration  3.23s (transform 1.65s, setup 0ms, collect 2.66s, tests 21ms, environment 0ms, prepare 201ms)
+
+
